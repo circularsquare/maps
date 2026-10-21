@@ -226,18 +226,11 @@ not held, and the focused zone stays where it was. A built station that reaches 
 that zone. One helper answers it, `placeAt` in `game/zones.ts`, kept in `viewedZone`
 (`game/cities.ts`).
 
-**Zones not opened** [T-729]: each game keeps the zones it has opened, in order (the save header's
-`opened`). A zone not on the list is loaded for viewing exactly as dead space is above (nothing
-fetched, no card, the clock not held), though the top bar still names it with "–" for the split, and
-it is drawn as one grey bubble at every zoom (docs/ui-demand-views.md "Cities not opened"). A click
-on the bubble adds it and opens it bare, wherever the view is; a built station within reach (4.5 km)
-adds it too, so the list only ever stops a zone opening for viewing, never for a solve, and no demand
-figure depends on it. Nothing removes a zone from the list. A new game opens its start city only (a
-start on the map, none); a save from before T-729 starts with the zone in view as it opens and the
-zones its stations reach. `?opened=all` treats every zone as opened and leaves the list alone, for
-checks that pan.
+**The opened list** [T-729, T-801]: each game's save header keeps `opened`, the zones it has
+started in or a station has reached, in order. Nothing reads it for loading or drawing: every zone
+loads for the view on pan as above. A save without it loads as any other.
 
-**Nearby zones** are drawn too: every opened zone whose boundary is on screen (at most
+**Nearby zones** are drawn too: every zone whose boundary is on screen (at most
 three, nearest first) shows its own bubbles beside the focused zone's, so a zone line is not a cliff
 in the bubbles. A click on a nearby zone's bubble focuses that zone and selects the bubble.
 
@@ -246,7 +239,8 @@ With no station within reach (T-325) it opens **bare**, in the auxiliary demand 
 bubbles and city figures come from a no-rail pass there (all walking and driving, exactly what a
 solve would give it), and no solve covers it or is started for it. A click on its bubble draws the
 far end as a solved zone's does (T-336): local trips from the auxiliary worker, longer trips and
-commutes between zones from the solving workers, which hold the market. A new game opens the
+commutes between zones from the solving workers, which open the zone's market for the selection
+(T-801). A new game opens the
 viewed city bare from the start (T-351); a saved game's viewed city opens in every worker, since
 its pack downloads before the network's reach is known (docs/demand-runtime.md "Bare zones").
 A station built within reach downloads the pack again and opens it in every worker; the next solve
@@ -307,10 +301,9 @@ between them are place to place, and clusters merge only through track (T-362 de
 - **Opening.** A non-city zone is a pack the size of a small city (Worcester County 860k people,
   about Providence's), opened only when viewed or reached, like a city: 0.05-0.3 s natively with its
   everyday layer. Commute packs open from shipped factors as now (a few ms).
-- **A zone's market pack** is opened only once the zone is viewed or reached, or a station lies
-  within 30 km of its box, and closes with the zone (T-396, T-377; demand.md "Which cities are
-  open"), so the market a worker holds grows with what is viewed and reached, not with the
-  registry. Its pairs are built only between zones a station serves, so a solve's pair loop grows
+- **A zone's market pack** is opened only once the zone is reached or selected, or a station lies
+  within 30 km of its box, never for viewing alone (T-396, T-377, T-801; demand-runtime.md), so the
+  market a worker holds grows with what is reached, not with the registry or the pan. Its pairs are built only between zones a station serves, so a solve's pair loop grows
   with the network's reach; pairs to every other place come from the market rows (one row per
   zone, about 0.9 KB, `game/market-rows.json`), which every solving worker holds once a market pack opens.
   Cross-zone commute pairs add a second pass over served pairs to the market's per-period work
@@ -318,7 +311,7 @@ between them are place to place, and clusters merge only through track (T-362 de
 - **The joint gravity** is offline only (`joint_gravity`, about a minute natively on three
   threads over the 13 packs' 25.6k zones, about three over 65k); a runtime edit never reruns it.
 - **Startup** must not grow with the number of zones beyond the registry index (T-776): a zone adds
-  about 310 bytes to the bundled `registry.json` (what the map, the grey bubbles, the new game
+  about 310 bytes to the bundled `registry.json` (what the map, the zoomed-out bubbles, the new game
   sheet's search and the save header need before it opens) and about 0.9 KB to the market rows,
   which the page downloads only with the first market pack; its files are fetched
   on demand (section 6). A mask installed while a big network is loaded reworks the

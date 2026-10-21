@@ -239,37 +239,27 @@ commuters and inter-region riders are in its inspector only ([ui-inspectors.md](
   with a mode bar (train blue, the rest red, plane included).
 - A selection survives a pan to another zone.
 
-## Cities not opened: grey bubbles
-
-[T-729; `map/greyCities.ts`, `game/openedZones.ts`; docs/zones.md 6] Every zone the game has not
-opened is one grey bubble at its registry centre, at every zoom and whatever the demand buttons say:
-sized by the pipeline's `localTrips` on the zoomed-out scale below (`overviewRadius`), in the
-theme's `greyCity` (`shadeTable.ts`) at the bubbles' opacity, drawn over every other disc. Zoomed
-in over a grey city there is only that bubble and the zone outline. The hover lightens it (T-730's
-hook) and says the name, "19.2M trips a day within Philadelphia" and "Click to open". A click with
-the select tool opens it, before the track, a station or another bubble under it; the camera stays
-and the selection is kept; the zone's loading bar shows, then its coloured bubbles. Grey bubbles are
-hidden while a bubble or city selection is shown, since its partner bubbles sit at the same centres.
-Over a grey city the top bar names it with "–" for the split, and Homes and Destinations stay usable.
-
 ## Zoomed far out: one bubble per zone
 
 [T-186, T-276; `OVERVIEW_ZOOM` 8.5 in `map/intercityView.ts`] At zoom 8.5 and below, with Homes or
-Destinations on and no bubble selection, every opened zone in the regional market, the focused
+Destinations on and no bubble selection, every zone in the regional market, the focused
 one included, is one bubble at its registry centre in place of the focused zone's own bubbles:
 all its trips a day (its local trips, from the open zone's view or the pipeline's no-rail count in
-`zones.json`, plus the regional layer's to and from it), coloured by `modeMix` of train, walking
-and the rest [T-576: an open zone's walking is green, from its split; an opened zone not loaded in
+`zones.json`, plus the regional layer's to and from it, which counts only zones whose market pack
+is open: reached, near a station or selected [T-801]; with no market result yet, as on a start on
+the world map, local trips alone), coloured by `modeMix` of train, walking
+and the rest [T-576: an open zone's walking is green, from its split; a zone not loaded in
 this session has no walk split, so its walking counts in the red; regional trips have no walking], labelled
 "Philadelphia · 187k trips/day" (at most eight labels on screen, the biggest first [T-493]). The hover
 has two lines, each with a mode bar [T-494]: "1.6m trips per day within Yamanashi" (bar from
-the zone's modelled split, none for a zone not opened) and "120k inter-region trips per day on
+the zone's modelled split, none for a zone not loaded) and "120k inter-region trips per day on
 average to and from Yamanashi" (train blue, the rest red). One scale that depends on the zoom
 alone, never on what is on screen [T-525, T-530]: 60,000 trips a day per px² of bubble area at
 zoom 6.5 (`TRIPS_PER_PX2`, `SCALE_ZOOM`), before the size slider, the radius times
 2^(0.35 x (zoom - 6.5)) (`ZOOM_GROWTH`), so bubbles shrink somewhat as the map zooms out: New
 York's 71M is a 34 px radius at 6.5, 55 px at 8.5 and 21 px at 4.5, a 1.6M prefecture 5 px at
-6.5. Homes and Destinations look the same. Under a local purpose the focused zone's own
+6.5. Homes and Destinations look the same, and both work zoomed out even over dead space, where
+the buttons are otherwise off; a start on the world map turns Homes on [T-801]. Under a local purpose the focused zone's own
 bubbles stay instead. Toronto (`market: -1`) has none.
 
 A click on one selects the zone (a `city` selection, kept at any zoom): it is outlined, with one
@@ -283,7 +273,7 @@ selection shows from afar [T-520], and the city
 inspector (`ui/inspector/CityInspector.tsx`, T-600) has two figures, each with a thin mode bar
 under it (the game's mode colours; every segment and number has a hover with its count and share):
 "Within Philadelphia" (train, walking, car from the open zone's split; the count alone for a zone
-not opened) and "To other places" (the inter-region trips, both directions, train blue and the rest
+not loaded) and "To other places" (the inter-region trips, both directions, train blue and the rest
 red), then the three places with the most trips, name and trips a day, and
 a "Go to Philadelphia" button that moves the camera to its centre and clears the selection
 [T-220]. No table of every place and no purpose split. The overview catches up over a game day like the local bubbles; a selection's

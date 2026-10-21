@@ -24,8 +24,9 @@ pack (16 ms New York, 1-7 ms the others, natively); the cost is each city's ever
 the four small ones 0.02-0.06 s, since T-397's sample counts; in Chrome, measured before T-397
 with about twice the samples, New York 1.3-1.9 s in each of five workers, Philadelphia 1.1-1.2 s
 and Washington 1.7-1.8 s). A zone's **market pack** (T-377, `<id>.market.json`) opens in the
-solving workers once the zone is viewed, beside the view or reached, or a built station lies
-within 30 km of its box (T-396's rule, per zone); before that no solve waits for it or covers it,
+solving workers once the zone is reached, a built station lies within 30 km of its box (T-396's
+rule, per zone), or the zone is selected (a zone selection, or a bubble selection in it); never for
+viewing alone (T-801: tens of MB in every solving worker); before that no solve waits for it or covers it,
 and a solve sent without a market pack open since is sent again. The workers compose the market
 from the packs they hold (`MarketPacks.market`) whenever one opens or closes. **Packs close when
 nobody needs them** (T-301): a zone that is

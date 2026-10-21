@@ -433,13 +433,14 @@ busy track, and names the places it waits most (notes/T-031.md).
 
 Money is present, not tight, as in NIMBY Rails: construction, train purchase, operating cost per
 car-km, a player-set fare curve by distance. One price list worldwide. Track costs a **base of
-US$45M per route-km of double track** (single track 0.6x; ramps at the dearer level) times a
-multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-16, T-467):
+US$90M per route-km of double track** (single track 0.6x; ramps at the dearer level) times a
+multiplier per level (Anita, 2026-10-08). The reference is a cheap-country metro such as Korea's
+or Spain's, about US$100-150M a tunnelled km with its stations (Anita, 2026-10-21, T-805):
 
 | Level | +3 | +2 | +1 | 0 | -1 | -2 | -3 |
 |---|---|---|---|---|---|---|---|
 | Multiplier | 1.8 | 1.3 | 0.8 | 0.3 | 1.0 | 1.1 | 1.2 |
-| US$M per km | 81 | 58.5 | 36 | 13.5 | 45 | 49.5 | 54 |
+| US$M per km | 162 | 117 | 72 | 27 | 90 | 99 | 108 |
 
 In a **sandbox** game [T-728] every price, fare and cost is the same, but no edit is refused for
 money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-panels.md).
@@ -449,7 +450,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   pack (T-030).
 - The Build tab shows only the multiplier and price of the level currently selected, not the
   whole table.
-- Stations (200 m, two platform tracks): 5 at grade, 15/20/25 at +1/+2/+3, 30/50/70 at
+- Stations (200 m, two platform tracks), US$M: 10 at grade, 30/40/50 at +1/+2/+3, 60/100/140 at
   -1/-2/-3; scaled by `0.4 + 0.6 x length / 200`.
 - Junction: 0.25 km of track at its level; a flyover adds 0.6 km one level away; flat
   crossing 0.1 km (cheap to build, dear in delay). A crossover: two junctions, all told (6.1,
@@ -484,8 +485,9 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   Loaded fleets count as already paid. The Money tab lists cars owned, needed and spare; the line
   panel's train buttons say in their hover what a step buys or frees; the blueprint quote and a
   planned line's Construct button include the cars.
-- **Running cost** US$2.25 per car-km (trains an hour each way x line length x cars; set for play,
-  well under a real figure, T-091, T-485), and **fares**,
+- **Running cost** US$3 per car-km (trains an hour each way x line length x cars; under a real
+  figure so fares can cover it, high enough that thin areas lose money, T-805; real figures in
+  research/running-costs.md), and **fares**,
   are settled by the clock worker into the cash and a ledger per day (30 kept) and per hour (48
   kept, T-447) as the game runs, not once an hour (T-284). The ledgers hold one entry per day or
   hour, in order; a load merges any day or hour an older save lists twice. Money time never goes
@@ -554,12 +556,12 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   the average day (the top bar's goal number as it shows by default; never the weekday or weekend
   view, so switching the day shown earns nothing), reaches 10%. The header keeps the game second it was
   earned (`stars`), and it stays if the share falls. Drawn stamps come later.
-- **Starting money $3B** (T-485): the build price of one real first line, about a 20 km line at -2
-  with 18 stations plus its trains, leaves room for a few more lines.
+- **Starting money $6B** (T-805): about one real first line, a 20 km line at -2 with 18 stations
+  plus its trains (about $4.2B), with room for a short second one.
 - **Economy at 100x** (Anita, 2026-10-09, as Subway Builder does; T-081): fares and running costs
   per game day count 100 times the real figures (`ECONOMY` in `sim/src/track/params.rs`, the one
   constant; running costs scale in the track model, fares in `app/src/game/money.ts`), so a game
-  day earns and spends what a hundred real days would. The fare the player sets and the US$2.25 a
+  day earns and spends what a hundred real days would. The fare the player sets and the US$3 a
   car-km shown are the figures before that scaling; construction and train prices are not scaled. The
   Money tab says so in the hover of "A day at this schedule".
 

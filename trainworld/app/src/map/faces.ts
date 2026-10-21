@@ -1,5 +1,5 @@
-// Faces rising from platforms as riders get off a train (T-686): a happy one, or a red unhappy one
-// when the platform's riders waited long (map/stationLife.ts decides). Two pre-drawn sprites on a
+// Faces rising from platforms as riders get off a train (T-686): a happy one, a tired one when the
+// platform's riders waited long, a sad one when it is crowded (map/stationLife.ts decides). Three pre-drawn sprites on a
 // 2D canvas of their own over the network, moved on the map's own projection. The canvas is
 // drawn only while a face is alive: an animation frame loop starts with the first face and stops
 // with the last, so with none there is no work at all. Motion by design, like the trains.
@@ -25,17 +25,27 @@ interface Face {
   dx: number;
   dy: number;
   born: number;
-  red: boolean;
+  mood: Mood;
   /** sideways sway, px */
   sway: number;
 }
 
-export function sprite(red: boolean): HTMLCanvasElement {
+export type Mood = "happy" | "tired" | "sad";
+const MOODS: Mood[] = ["happy", "tired", "sad"];
+
+// No red: a red face reads as angry (T-802). Tired is a drained yellow, sad is blue.
+const LOOK: Record<Mood, { fill: string; edge: string; ink: string }> = {
+  happy: { fill: "#ffe2a0", edge: "#e2b45e", ink: "#74513c" },
+  tired: { fill: "#e4dcc0", edge: "#b3a77c", ink: "#5f5640" },
+  sad: { fill: "#b9d5f2", edge: "#6f9ed0", ink: "#2f4d78" },
+};
+
+export function sprite(mood: Mood): HTMLCanvasElement {
   const c = document.createElement("canvas");
   c.width = c.height = SPRITE;
   const g = c.getContext("2d")!;
   const m = SPRITE / 2;
-  const fill = red ? "#f48a8c" : "#ffe2a0", edge = red ? "#d4545e" : "#e2b45e", ink = red ? "#7c2a36" : "#74513c";
+  const { fill, edge, ink } = LOOK[mood];
   g.lineCap = "round";
   g.beginPath();
   g.arc(m, m, m - 4, 0, Math.PI * 2);
@@ -47,8 +57,23 @@ export function sprite(red: boolean): HTMLCanvasElement {
   g.fillStyle = ink;
   g.strokeStyle = ink;
   g.lineWidth = 3;
-  if (red) {
-    // sad: brows raised at the inner ends, round eyes, a small frown and a tear
+  if (mood === "tired") {
+    // heavy lids over half-closed eyes, bags under them, a flat mouth
+    for (const x of [-8, 8]) {
+      g.beginPath(); g.arc(m + x, m - 3, 3.6, 0, Math.PI); g.fill();
+      g.lineWidth = 2.6;
+      g.beginPath(); g.moveTo(m + x - 5.5, m - 3); g.lineTo(m + x + 5.5, m - 3); g.stroke();
+    }
+    g.lineWidth = 1.8;
+    g.strokeStyle = edge;
+    for (const x of [-8, 8]) { g.beginPath(); g.arc(m + x, m + 1, 5, Math.PI * 0.2, Math.PI * 0.8); g.stroke(); }
+    g.strokeStyle = ink;
+    g.lineWidth = 3;
+    g.beginPath();
+    g.moveTo(m - 6, m + 13); g.lineTo(m + 6, m + 13);
+    g.stroke();
+  } else if (mood === "sad") {
+    // brows raised at the inner ends, round eyes, a small frown and a tear
     g.lineWidth = 2.4;
     g.beginPath();
     g.moveTo(m - 14, m - 6); g.lineTo(m - 5, m - 11);
@@ -59,7 +84,7 @@ export function sprite(red: boolean): HTMLCanvasElement {
     g.beginPath();
     g.arc(m, m + 17, 7, Math.PI * 1.2, Math.PI * 1.8);
     g.stroke();
-    g.fillStyle = "#8ec5f0";
+    g.fillStyle = "#ffffff";
     g.beginPath();
     g.ellipse(m + 11, m + 7, 2.4, 3.4, 0, 0, Math.PI * 2);
     g.fill();
@@ -77,7 +102,7 @@ export function sprite(red: boolean): HTMLCanvasElement {
 export class Faces {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
-  private sprites: [HTMLCanvasElement, HTMLCanvasElement] | null = null;
+  private sprites: Record<Mood, HTMLCanvasElement> | null = null;
   private faces: Face[] = [];
   private raf = 0;
 
@@ -98,7 +123,7 @@ export class Faces {
 
   /** `count` faces from the platform of `station` (centre `lng`, `lat`, `length` m along `heading`),
    * staggered over the next stretch of the train's stop. */
-  spawn(station: string, lng: number, lat: number, length: number, heading: number, count: number, red: boolean) {
+  spawn(station: string, lng: number, lat: number, length: number, heading: number, count: number, mood: Mood) {
     const room = Math.min(count, MAX_PER_PLATFORM - this.on(station), MAX_ALIVE - this.faces.length);
     if (room <= 0) return;
     this.ensure();
@@ -107,7 +132,7 @@ export class Faces {
     for (let i = 0; i < room; i++) {
       const along = (Math.random() * 2 - 1) * half, across = (Math.random() * 2 - 1) * 2;
       const dx = Math.cos(heading) * along - Math.sin(heading) * across, dy = Math.sin(heading) * along + Math.cos(heading) * across;
-      this.faces.push({ station, lng, lat, dx, dy, born: now + i * 160 + Math.random() * 220, red, sway: (Math.random() * 2 - 1) * 5 });
+      this.faces.push({ station, lng, lat, dx, dy, born: now + i * 160 + Math.random() * 220, mood, sway: (Math.random() * 2 - 1) * 5 });
     }
     if (!this.raf) this.raf = requestAnimationFrame(() => this.frame());
   }
@@ -127,7 +152,7 @@ export class Faces {
     this.overlay.canvas.after(c);
     this.canvas = c;
     this.ctx = c.getContext("2d");
-    this.sprites = [sprite(false), sprite(true)];
+    this.sprites = Object.fromEntries(MOODS.map((m) => [m, sprite(m)])) as Record<Mood, HTMLCanvasElement>;
     this.size();
   }
 
@@ -166,7 +191,7 @@ export class Faces {
       const ease = 1 - (1 - u) * (1 - u);
       ctx.globalAlpha = Math.min(1, u * 8) * (u < 0.55 ? 1 : 1 - (u - 0.55) / 0.45) * 0.95;
       const x = p.x + f.sway * Math.sin(u * Math.PI * 2), y = p.y - RISE_PX * ease - 4;
-      ctx.drawImage(sp[f.red ? 1 : 0], x - size / 2, y - size / 2, size, size);
+      ctx.drawImage(sp[f.mood],x - size / 2, y - size / 2, size, size);
     }
     ctx.globalAlpha = 1;
     this.raf = requestAnimationFrame(() => this.frame());

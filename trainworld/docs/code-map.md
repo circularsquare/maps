@@ -69,7 +69,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
-  (the track model's refusals in plain words), `openedZones.ts` (the zones the game has opened, T-729), `loading.ts` (what is loading, the startup gate and
+  (the track model's refusals in plain words), `openedZones.ts` (the zones the game has started in or reached, kept for the save, T-729, T-801), `loading.ts` (what is loading, the startup gate and
   the clock hold, T-149, T-172; whether the start menu is up, T-677), `palette.ts`, `shades.ts` over `shadeTable.ts` (the light and dark themes' map
   colours: basemap, line casing, map ink, blueprint off, outside shade, thumbnails; the table has no
   page behind it so the clock worker reads it, T-039, T-543), `format.ts`.
@@ -105,8 +105,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Demand views (T-084, T-097): `demandViews.ts` (wiring, a station's riders for its inspector), `demandLayers.ts`
   (line width, station use circles, train fill; the figures from `game/stationUse.ts`, T-482), `commuterView.ts` and `bubbles.ts` (commuter bubbles and
   bubble selections), `intercityView.ts` (longer trips of a selection or station, one bubble per
-  far zone, T-118, T-120; one per city zoomed far out, T-186), `greyCities.ts` (one grey bubble per
-  city not opened, its hover and click, T-729), `catchUp.ts` (the bubbles catching
+  far zone, T-118, T-120; one per city zoomed far out, T-186), `catchUp.ts` (the bubbles catching
   up over a game day, T-156), `demandOverlay.ts` (their canvas, over the network's),
   `demandHover.ts` (the count tag by the pointer), `modeBar.ts` (the tag's mode bar, T-494, and `localModes`, an open zone's local legs by mode, T-576), `airportMarks.ts` (the plane badge on an
   airport and its hover, T-448, T-674; paths shared with the icons in `glyphs.ts`).
@@ -151,8 +150,7 @@ T-285).
 with demand timings and `client.qlog` per query; `window.twViews` with the demand views'),
 `?paused=1`, `?new=1` (a new game; it owns no slot and never writes one
 until a copy is saved, T-320, so it is safe in a browser profile holding real games),
-`?continue=1` (the game opened last; checks that reopen a stored game use it), `&opened=all` (every
-zone counts as opened, as before T-729, for checks that pan; the game's list is left alone), each of these and
+`?continue=1` (the game opened last; checks that reopen a stored game use it), each of these and
 the two below skipping the start menu (T-677),
 `?synth=1&lines=500&trains=10000`, `?demandTest=1` (demand on T-005's hand-made network; both also
 never autosave), `?backupMs=N` (wall ms between a slot's backups, T-744), `?demandWorkers=N`, `?perfOff=...` / `?perfTry=...` (CPU A/B switches,
@@ -194,10 +192,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   timed to their final, every final figure hashed against `?perfOff=clusters`), `t409-split.mjs` (a
   Boston and a Philadelphia line, in a new game or on the real save, edits timed, against
   `?perfOff=split`), `t301-pan.mjs` (a long pan, Washington to Toronto and back, bubbles on: worker
-  memory, open packs, reopening times; `SAVE=1` on the real save; `QS=&opened=all` to open every
-  zone), `t729-grey.mjs` (grey cities: a new New York game's Philadelphia grey, lightened on hover,
-  not loaded by a pan, opened by a click with the camera still; the real save's opened list and a
-  clicked city in it after a reload; a map start all grey; screenshots `t729-*.png`), `t124-periods.mjs`
+  memory, open packs, reopening times; `SAVE=1` on the real save), `t801-no-grey.mjs` (no grey
+  cities: a map start in a fresh profile turning Homes on, its zoomed-out bubbles, a click selecting
+  one; a new New York game's Philadelphia an ordinary bubble zoomed out, loaded by a pan with no
+  market pack; screenshots `t801-*.png`), `t124-periods.mjs`
   (the real save: a one-level train-count edit and an every-level edit timed to their final, hashed
   against `?perfOff=periods`), `t488-money-days.mjs` (the real save's clock run fast and pulled back
   across midnight: money days and hours one each, in order, none empty; uses the app's Vite, port

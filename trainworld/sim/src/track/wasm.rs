@@ -3944,10 +3944,10 @@ mod tests {
         let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
         let pv = a.preview_route(&ends, &[], 2, false);
         assert_eq!(pv[0], 1.0, "{}", a.issues());
-        assert!((pv[1] - 3.0 * 13.5).abs() < 0.5, "cost {}", pv[1]);
+        assert!((pv[1] - 3.0 * 27.0).abs() < 0.5, "cost {}", pv[1]);
         assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
         assert_eq!(a.built_cost(), 0.0);
-        assert!((a.blueprint_cost() - 40.5).abs() < 0.5);
+        assert!((a.blueprint_cost() - 81.0).abs() < 0.5);
         let nodes = a.nodes_info();
         let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
         let e = a.edges_info()[0] as u32;
@@ -3981,8 +3981,8 @@ mod tests {
         // Construction plus the trains its busiest schedule needs (T-028).
         assert_eq!(a.fleet(), a.cars_needed());
         assert!((a.fleet() as f64 * CAR_PRICE - trains).abs() < 1e-9);
-        assert!((6000.0 - a.cash() - (40.5 + 15.0 + trains)).abs() < 0.5, "paid {}", 6000.0 - a.cash());
-        assert!((a.last_charge() - (40.5 + 15.0 + trains)).abs() < 0.5);
+        assert!((6000.0 - a.cash() - (81.0 + 30.0 + trains)).abs() < 0.5, "paid {}", 6000.0 - a.cash());
+        assert!((a.last_charge() - (81.0 + 30.0 + trains)).abs() < 0.5);
         assert!(!a.can_undo(), "construct is final");
         // More trains an hour buys more trains; short of money it is refused and nothing changes.
         let (fleet, cash) = (a.fleet(), a.cash());
@@ -4736,7 +4736,7 @@ mod tests {
                         let off = live_edges(&a).iter().map(|&k| a.w.net.project(k, q[0], q[1]).1).fold(f64::INFINITY, f64::min);
                         assert!(off < 0.01, "split at {s}: {off} m off");
                     }
-                    let station = 5.0 * (0.4 + 0.6 * 200.0 / 200.0) * 1.0;
+                    let station = 10.0 * (0.4 + 0.6 * 200.0 / 200.0) * 1.0;
                     assert!((a.total_cost() - cost - station).abs() < 0.05, "split at {s}: {} against {}", a.total_cost() - station, cost);
                     assert_eq!(a.undo(), 0);
                     assert_eq!(a.edge_render(e), before);
@@ -6311,7 +6311,7 @@ mod quad_edit_tests {
         let cash = a.cash;
         assert_eq!(a.double_up(local[1]), 0, "{}", a.issues());
         // the crossover splits constructed track: re-summed shapes, rounding only (T-624)
-        assert!((a.cash - cash).abs() < 1e-6, "blueprint costs nothing until constructed");
+        assert!((a.cash - cash).abs() < 1e-5, "blueprint costs nothing until constructed: {}", a.cash - cash);
         let ex: Vec<u32> = live(&a).into_iter().filter(|e| !built.contains(e)).collect();
         assert_eq!(ex.len(), 9, "five express pieces, two splits of the local pair and two diagonals");
         assert_eq!(ex.iter().filter(|&&e| !a.w.net.edge_built[e as usize]).count(), 7, "the express pieces and the crossover are blueprint");

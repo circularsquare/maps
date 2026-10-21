@@ -196,10 +196,9 @@ export function bubbleLevel(z: number): number {
 }
 
 /** Disc layers, drawn in this order. */
-export type DiscLayer = "inter" | "far" | "near" | "grey";
-// "inter": a selection's longer trips (T-118), under the commuters' discs; "grey": the cities not
-// opened (T-729), over everything, as they take the click
-const LAYERS: DiscLayer[] = ["inter", "far", "near", "grey"];
+export type DiscLayer = "inter" | "far" | "near";
+// "inter": a selection's longer trips (T-118), under the commuters' discs
+const LAYERS: DiscLayer[] = ["inter", "far", "near"];
 
 interface DiscSet {
   vao: WebGLVertexArrayObject;

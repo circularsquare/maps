@@ -77,9 +77,9 @@ export function placeAt(lon: number, lat: number): CityId | null {
 }
 
 /** Zones other than `focus` whose boundaries touch the box, nearest to (lon, lat) first, at most
- * NEARBY, of those `keep` passes; zones whose boundaries are not in yet are left out until they arrive. */
-export function zonesInBox(focus: CityId, lon: number, lat: number, w: number, s: number, e: number, n: number, keep: (id: CityId) => boolean = () => true): CityId[] {
-  const ids = zonesTouching(w, s, e, n).map((c) => c.id).filter((id) => id !== focus && keep(id));
+ * NEARBY; zones whose boundaries are not in yet are left out until they arrive. */
+export function zonesInBox(focus: CityId, lon: number, lat: number, w: number, s: number, e: number, n: number): CityId[] {
+  const ids = zonesTouching(w, s, e, n).map((c) => c.id).filter((id) => id !== focus);
   footprintsOf(ids);
   return ids
     .map((id) => footprintOf(id))

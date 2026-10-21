@@ -254,9 +254,13 @@ those who got on, less the load carried on.
 
 - **Faces**: one per 20 riders getting off (rounded at random), at most 4 per train, 5 per platform
   and 36 in all. Each rises 30 px from a random point along the platform over 2 s and fades, 14 px
-  across at zoom 14 to 20 px at 17. Happy (pale yellow, blushing); sad (red, brows raised at the inner ends, a tear,
-  a frown) when the riders waited 10 minutes or more (`RED_WAIT_S`) [T-696]: the time since the platform's last train left, doubled
-  when that train left riders behind. Two sprites on a 2D canvas over the network; a frame loop
+  across at zoom 14 to 20 px at 17. Happy (pale yellow, blushing); sad (blue, brows raised at the
+  inner ends, a tear, a frown) when the train before left 20 or more riders behind (`CROWDED_LEFT`);
+  tired (drained yellow, heavy lids, a flat mouth) when the riders waiting have waited 10 minutes
+  or more on average (`TIRED_WAIT_S`) [T-696, T-802]. The average counts the newcomers at half the
+  time since the last train left and the riders it left behind at that plus half the gap before it;
+  the hour's first arrival at a platform has no figure and is happy. Sad wins over tired; no face
+  is red. Three sprites on a 2D canvas over the network; a frame loop
   runs only while a face is alive. Not in the demand views' way: the bubbles draw over them.
 - **Sound** (WebAudio, no files): one soft sine note as the train pulls in, the line's own, one of the 12 semitones from C5
   [T-706]: a city's first five lines (a line's city is where its first stop is) take C, E, G, D, A in
@@ -264,8 +268,7 @@ those who got on, less the load carried on.
   code first meets the line, and kept in the save (`notes` in the header: note and city, per line id,
   kept after the line is deleted), so deleting a line changes nobody else's; a line's rank is how
   many lines were given a note in its city before it. Older saves get theirs on load, in line
-  number order. A line with no stops or in no city is not stored. A sad-face
-  platform sounds a minor third lower, softer, sagging [T-696]; then pops (a short
+  number order. A line with no stops or in no city is not stored. A platform with sad or tired faces sounds a minor third lower, softer, sagging [T-696]; then pops (a short
   falling blip) as riders get off (higher) and on (lower), 1 to 4 each by the rider count. Silent
   until the first click or key. Volume is the setting times a zoom gain (a quarter at 14, full from
   17), shared down by the arrivals sounding in the last second; a second one sounding together gets

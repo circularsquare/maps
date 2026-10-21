@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { activeCity, CITIES, cityById, viewedZone, type City } from "../game/cities";
 import { live } from "../map/live";
+import { display } from "../game/ui";
 import type { GameMode, NewGameSpec } from "../workers/saveFile";
 
 /** The suggested starts (T-728): the cities the demand model was checked on, each with a real
@@ -49,6 +50,8 @@ export function viewStart(start?: string) {
     viewedZone.value = c.id;
   }
   live.map?.jumpTo(c ? { center: c.center, zoom: c.zoom } : WORLD_VIEW);
+  // T-801: a start on the map is picked from the zones' zoomed-out bubbles, so Homes goes on
+  if (!c) display.value = { ...display.peek(), commuters: true, commuterEnd: "home" };
 }
 
 /** The real network's save for a start city (T-731). */

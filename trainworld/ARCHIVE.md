@@ -1,5 +1,10 @@
 ﻿# Archive
 
+- T-805 [P2] Prices against cheap-country metros. Done 2026-10-21: track base $90M a km and stations doubled back (T-467 undone), running cost $3 a car-km, start $6B; sim tests updated.
+- T-801 [P2] Undo the grey city bubbles. Done 2026-10-21: every zone loads on pan with its ordinary bubbles; market packs open only for reached, near-station or selected zones (Northeast pan: solving workers 8 MB, not 311); a map start turns Homes on. notes/T-801.md.
+- T-778 [P3] t728-newgame's opened-list expectation. Done 2026-10-21 with T-801: the start zone first, reached zones after.
+- T-802 [P2] Station faces looked angry. Done 2026-10-21: red was a colour reading as anger on a wait figure that was the longest wait, doubled for one rider left behind; now tired (average wait 10 min) or sad (20+ left behind), no red; unhappy arrivals on the real save 26% to 12%. notes/T-802.md.
+- T-806 [P2] Running-cost research. Done 2026-10-21: cheap operators spend about US$3.5-6 a car-km (Barcelona 3.49, China 3.49, Seoul about 6); only about a quarter of a metro's cost grows with car-km; options in research/running-costs.md (T-807).
 - T-792 [P2] Agent worktrees. Done 2026-10-21: `checks/agent-tree.mjs` new, list, land (one squashed commit on master, fast-forwarded) and remove; tried end to end, smoke passed inside a tree; CLAUDE.md "Agent worktrees".
 - T-789 [P1] The freeze after a stop edit. Done 2026-10-20: the market's every place pair summed on the main thread (3.4-6 s tasks); now only pairs with trips, sums kept by key, the cache written in a worker; longest task 0-56 ms. notes/T-789.md.
 - T-786 [P2] Parallel country batches. Done 2026-10-20: cross-process locks, `run --no-join` and `join`; Portugal and Greece at once (48 min regions, 6 min join), 44 zones shipped, every-pack-opens and smoke passed. notes/T-786.md.

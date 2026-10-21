@@ -113,7 +113,7 @@ below 700 px the bar takes two rows (name, cash, time and speed over the split).
 - **Cash**, to the dollar, moving as fares are paid and running costs drain [T-284]. Fixed width
   (room for "-$99,999,999,999") with the digits left-aligned after the $ in tabular figures, so a
   changing figure never moves the rest of the bar [T-305, T-310]. In a sandbox the box says
-  "Sandbox" in the muted colour, with the money since day 1 (the cash less the $3B start) and
+  "Sandbox" in the muted colour, with the money since day 1 (the cash less the $6B start) and
   today's fares and running costs in its hover [T-728].
 - **The clock**: day of the week, day and time ("Sat 13", hover "Saturday, day 13 · High demand":
   the demand level is only in the hover [T-406]), the local
@@ -226,7 +226,7 @@ not the browser's.
 
 ## Money tab
 
-Cash (always the whole network's; in a sandbox "Since day 1" instead, the cash less the $3B start,
+Cash (always the whole network's; in a sandbox "Since day 1" instead, the cash less the $6B start,
 T-728); yesterday and today (fares, running trains, new trains,
 construction, net), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
 for all three): with the place on, these figures and History are that region's (T-531; the
@@ -298,7 +298,7 @@ bottom so the figures above come first; there is no list until a station is buil
   "Autosave is off in this test page. Save a copy to keep the game.", a `?new=1` page marks no
   card Playing, and Save as a copy gives the game a slot of its own, which autosaves from then on.
 
-**A new game** starts on day 1 at 07:00 with $3B, empty or (a sandbox) from a real network, on its
+**A new game** starts on day 1 at 07:00 with $6B, empty or (a sandbox) from a real network, on its
 start city's registry centre and zoom, or on the world map (centre 20° E 30° N, zoom 1.8: the
 Americas, Europe and East Asia) with no start city. Opening the page shows the start menu (below).
 For a loaded game the URL's view says only which city or zone; the map starts at that city's
@@ -313,7 +313,9 @@ registry centre and zoom, or over New York with none [T-310].
   the registry's cities and zones whose name has a word starting with the text (case and accents
   ignored, so "hague" finds Rotterdam [The Hague]), biggest by local trips first, each with its
   country (the registry's code, named by the browser). Up and down move, Enter or a click picks;
-  a pick of one of the five lights its button. Nothing picked starts on the world map.
+  a pick of one of the five lights its button. Nothing picked starts on the world map with Homes on,
+  so the zones' zoomed-out bubbles show and take a click as anywhere (ui-demand-views.md "Zoomed far
+  out").
 - **Real network** (ticked to begin with): only for a sandbox in New York, London, Paris, Tokyo,
   Seoul, Toronto or Sendai, the cities with a real network (`REAL_NETWORKS`; architecture.md 11). The
   game starts from that network, built and running.

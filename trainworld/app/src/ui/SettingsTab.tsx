@@ -78,7 +78,7 @@ export function SettingsTab() {
       <div class="h">Stations up close</div>
       <div class="checks">
         <Check checked={d.faces} onChange={(v) => setDisplay("faces", v)}>
-          <span data-tip="A small face rises from the platform for every 20 or so riders who get off. Red where riders waited 10 minutes or more. From street zooms.">Faces</span>
+          <span data-tip="A small face rises from the platform for every 20 or so riders who get off. Tired where riders have waited 10 minutes on average, sad where the last train left 20 or more behind. From street zooms.">Faces</span>
         </Check>
         <Check checked={d.sound} onChange={(v) => setDisplay("sound", v)}>
           <span data-tip="A chime as a train pulls in and soft pops as riders get on and off. From street zooms, louder the closer you are. Starts after your first click.">Sound</span>

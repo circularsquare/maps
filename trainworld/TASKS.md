@@ -88,6 +88,7 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-187 [P3] Trip chains: work to a nearby leisure place and then home. Whether and how to model it. Idea, not a priority (Anita 2026-10-12).
 
 ## Track and trains
+- T-807 [P2] Running cost per train-km plus per car-km (research/running-costs.md option B: $9 a train-km plus $2 a car-km, a 9-car train as now; option C adds route-km and station upkeep). Waits on Anita's pick.
 - T-794 [P2] A station on open ground (Anita 2026-10-21): the station tool clicked off track lays a straight blueprint piece one platform long and puts the station on it, so a line can start from stations alone. Heading and what a later track drawn into it joins are the agent's call. Open.
 - T-797 [P2] Lines that backtrack (Anita 2026-10-21): a line may reverse partway along its route (at a station or a track end), with throughput limited hard there (a long reversal hold, say) so it stays a stopgap. Design first, then build. Open.
 - T-798 [P2] Loop lines (Anita 2026-10-21): a line whose route comes back to its first station runs round continuously with no turnback. Design first (schedules, fleet, demand routing); may share work with T-797. Open.
@@ -105,13 +106,11 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 ## Interface
 Anita's playtest of 2026-10-19 (the 9e466a4 build): notes/playtest-2026-10-19.md, a section a task.
 - T-793 [P2] The loading bar's last 5% takes most of the wait (Anita 2026-10-21): time the stages behind the bar on a new game and the real save, and weight the bar by time so it moves evenly. Open.
-- T-801 [P2] Undo the grey city bubbles (T-729; Anita 2026-10-21: "lets actually undo the gray bubble thing"; with demand set to None, grey bubbles over unopened zones and none over opened cities read oddly). Default: every zone loads for the view on pan as before T-729 (the save's `opened` list kept but unused), the map start picks from the ordinary zoomed-out city bubbles; check the pan memory T-728 measured (56 loads to 4) still holds up. Open; notes/T-728.md.
 - T-795 [P2] Finer local trip bubbles (Anita 2026-10-21: "split a bit more, and add a dial"): one H3 level finer per zoom band, and a Settings control for the level. Open.
 - T-804 [P2] Other colour schemes for the main demand bubbles (Anita 2026-10-21): a Settings choice besides the mode mix, such as pink to green by transit share or two colour pickers for 0% and 100% transit use, so several can be tried. Open.
 - T-799 [P2] Zone outlines lighter (Anita 2026-10-21): where two zones' outlines meet the shared edge draws twice, twice as heavy; draw it once or lighter. Open.
 - T-800 [P2] Zone outlines always there (Anita 2026-10-21): on a first pan over a region most outlines are missing; load a coarse outline of every zone at start and refine on pan and zoom. Open.
 - T-796 [P2] Base map colours (Anita 2026-10-21): water lighter in the dark theme, land a little less beige in the light one. Small; see T-676's palette. Open.
-- T-802 [P2] Station faces look angry (Anita 2026-10-21: "why are emojis angry, see in station"): find which rule draws them (the red face after a 10 minute wait, the crowded face) on the real save and whether its wait figure is right. Open.
 - T-803 [P3] More station faces (Anita 2026-10-21): some by time of day and a few rare ones. Open.
 - T-719 [P2] Covering whole regions (all of Spain, as Japan) rather than lone metros, timings and speedups: note written 2026-10-19, waits on Anita's decisions (its last section); notes/T-719.md.
 - T-771 [P3] A Spain module (T-719 item 6, later tailoring): the transport ministry's mobile-phone trip tables (a curve per zone, jobs at work) and INE's 1 km census grid; would rebuild mad bar val sev mal and the 40 zones. Open; notes/T-719.md.
@@ -134,10 +133,9 @@ Anita's playtest of 2026-10-18 (her TODO.md "short term"), filed 2026-10-19. Pla
 - T-682 [P3] Real-world rail layer for reference (noritetsu's tiles), then a trace tool that follows a real line. Stage 1 (view only, Settings > Real network) done 2026-10-19; the trace tool is T-727; notes/T-682.md.
 - T-683 [P3] Accounts (optional, skippable), cloud saves and city ridership leaderboards on shonei-server. After T-684; notes/T-684.md.
 - T-685 [P3] City stamps at 10% rail share (the goal number): stars done (T-684's round, 2026-10-19), drawn stamps later. Open; notes/T-684.md.
-- T-651 [P3] Zoomed out, zones not opened look fully red while opened ones look yellowish from their green walkers (Anita's TODO 2026-10-17): the same as T-602, give unopened zones their walk split. Moot since T-729 for zones never opened (grey); left for opened zones not loaded this session. Open.
+- T-651 [P3] Zoomed out, zones not opened look fully red while opened ones look yellowish from their green walkers (Anita's TODO 2026-10-17): the same as T-602, give unopened zones their walk split. Open.
 - T-777 [P3] Market rows per country: `market-rows.json` (0.9 KB a zone, about 1 MB for Europe, 5-15 MB for the world) is fetched and parsed whole by every solving worker once a market pack opens, since the market reads every place's row (pairs to unopened places, departures elsewhere); loading only the countries near the network needs the Rust market to work from partial rows without changing demand. notes/T-776.md. Open.
-- T-778 [P3] `checks/t728-newgame.mjs` "slot named after the start" wants the Tokyo sandbox's opened list to be `tyo` alone, but since T-729 it also holds the zones the real network reaches (tcg gnm yns szo): update the expectation. Open.
-- T-602 [P3] Walk split for zones not opened (rest of T-576; since T-729 only for opened zones not loaded this session, never-opened ones are grey): `zone_summary` (sim) gives a walk count per zone, `pipeline/zones.py` `local_trips()` stores it as `localWalk` in registry.json beside `localTrips`, `intercityView.ts` draws it green. Open.
+- T-602 [P3] Walk split for zones not loaded (rest of T-576): `zone_summary` (sim) gives a walk count per zone, `pipeline/zones.py` `local_trips()` stores it as `localWalk` in registry.json beside `localTrips`, `intercityView.ts` draws it green. Open.
 - T-561 [P3] Page freezes at 1,500x or faster in a fresh game with a line in each of Toronto and Boston (T-550's agent); not reproduced on 2026-10-16's tree. Open until seen again with exact steps; notes/T-561.md.
 - T-560 [P3] Crush load per country (found in T-552): every city's trains fill at `api::CRUSH_PER_CAR`'s 160 riders a 20 m car, stranding Tokyo's riders early; take published figures per stock from the pack. Open; notes/T-552.md.
 - T-330 [P3] Line chips without a symbol show the name's first letter (every New York subway chip reads "S"); default to the line's short name ("subway 6X" to "6X"). Open. Detail in notes/T-330.md.

@@ -28,7 +28,6 @@
 
 import { computed, effect, signal } from "@preact/signals";
 import { zoneLoads } from "../game/loading";
-import { isOpened, openedZones } from "../game/openedZones";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES } from "../game/cities";
 import { clock } from "../game/clock";
@@ -78,11 +77,6 @@ const SELECTED_TRIPS_PER_PX2 = 1400;
  * zoomed out, about as before T-525 at zooms 4-7, but far less than the map itself). */
 const SCALE_ZOOM = 6.5;
 const ZOOM_GROWTH = 0.35;
-/** The overview's radius for `trips` a day at `zoom`, in local units before the size slider; the
- * grey bubbles of cities not opened (T-729) are sized by it at every zoom. */
-export function overviewRadius(trips: number, zoom: number): number {
-  return Math.sqrt(trips / TRIPS_PER_PX2) * 2 ** (ZOOM_GROWTH * (zoom - SCALE_ZOOM)) / (512 * 2 ** zoom / EARTH_C);
-}
 /** The lines from a selected zone to the others (T-520). */
 const ZONE_LINE_ALPHA = 0.5;
 /** The zones' pointers are this many times the neighbourhoods' length (T-739). */
@@ -93,6 +87,9 @@ const MAX_LABELS = 8;
 /** The city bubbles are drawn in place of the focused city's own: zoomed far out, or a city
  * selected (T-186). The commuter view hides its bubbles and leaves clicks and hover to these. */
 export const cityOverview = signal(false);
+/** The map is zoomed out to one bubble per zone (`OVERVIEW_ZOOM`), whatever the demand buttons say;
+ * the buttons work there even over dead space (T-801). */
+export const zoomedOut = signal(false);
 
 interface Marks {
   discs: Float32Array;
@@ -116,6 +113,7 @@ ZONE_PLACES.forEach((p, i) => (zoneIndex[p] = i));
 const zoneOf = (place: number) => (place >= 0 && place < PLACES ? zoneIndex[place] : -1);
 /** where each zone place's totals start in `pairs` */
 const TOTALS = Z * Z * 3;
+let noPairs: Float64Array | null = null;
 
 /** Longer trips a day between every two zone places, both directions, all modes then by train and
  * (T-378) by plane: [trips, rail, air] at (a * Z + b) * 3 (`zoneOf` indices), the same for (b, a);
@@ -197,11 +195,11 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     marketF = f;
     if (f >= 1) marketFrom = null;
     const a = anchor();
-    const m = drawnPairs(f);
-    if (!m) {
-      view.setDiscs("inter", null);
-      return;
-    }
+    // T-801: before any market result (a start on the world map) the overview is the local trips
+    // alone, and stays while a zone is selected, since its pairs need a solve
+    const pairsIn = drawnPairs(f);
+    if (!pairsIn) selected = null;
+    const m = pairsIn ?? (noPairs ??= new Float64Array(TOTALS + Z * 3));
     const at = (o: number) => (o < 0 ? { all: 0, rail: 0, air: 0 } : { all: m[o], rail: m[o + 1], air: m[o + 2] });
     const pair = (a: number, b: number) => { const za = zoneOf(a), zb = zoneOf(b); return at(za < 0 || zb < 0 ? -1 : (za * Z + zb) * 3); };
     const total = (a: number) => { const za = zoneOf(a); return at(za < 0 ? -1 : TOTALS + za * 3); };
@@ -235,8 +233,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
           ? [interLine, interBar, `(${localLine})`]
           : [`${count(t.all)} trips ${day} between ${own.name} and ${c.name}`, interBar];
       return { ...t, city: c, isOwn, tag };
-    // T-421: a zone still loading has its bar instead; T-729: one not opened, its grey bubble
-    }).filter((p) => p.isOwn || (p.all > 0 && !(!own && (zoneLoads.peek().has(p.city.id) || !isOpened(p.city.id)))));
+    // T-421: a zone still loading has its bar instead
+    }).filter((p) => p.isOwn || (p.all > 0 && !(!own && zoneLoads.peek().has(p.city.id))));
     points.sort((a, b) => b.all - a.all);
     const zoom = map.getZoom();
     const pxPerUnit = 512 * 2 ** zoom / EARTH_C;
@@ -327,10 +325,12 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     purposeFilter.value;
     anchorVersion.value; // the discs are measured from the draw anchor (T-317)
     loadingZones.value;
-    openedZones.value;
     render();
   });
   map.on("zoom", render);
+  const zoomed = () => { const z = map.getZoom() <= OVERVIEW_ZOOM; if (z !== zoomedOut.peek()) zoomedOut.value = z; };
+  map.on("zoom", zoomed);
+  zoomed();
   map.on("move", placeLabels);
   map.on("resize", placeLabels);
 

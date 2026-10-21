@@ -209,9 +209,9 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   clock are dropped on load and their net returned to the cash ([track-and-service.md](track-and-service.md)
   6.4, T-715). `mode` (`normal` or `sandbox`), `start` (the start zone's id, absent for a start on
   the world map) and `opened` (the zones opened in this game, in order: the start zone at first, then
-  each zone clicked open or reached by a station; T-729, docs/zones.md 6) are absent in saves before
-  T-728, which read as normal with no start and take the zone in view and the zones reached as their
-  opened list; the slot's summary has `mode` too, for the saves cards. The clock worker sends the
+  each zone reached by a station; T-729, kept but read by nothing since T-801, docs/zones.md 6) are
+  absent in saves before T-728, which read as normal with no start and take the zone in view and the
+  zones reached as their opened list; the slot's summary has `mode` too, for the saves cards. The clock worker sends the
   list (`opened`, before a game's snapshot) and the main thread sends it back whole when it grows.
 - **Sandbox** [T-728]: the track model's `set_unlimited` makes every money check pass (the edit
   still pays, so the cash can go below zero); the clock worker sets it from the header's mode and on

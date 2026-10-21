@@ -61,15 +61,16 @@ pub const BRAKE: f64 = 0.9;
 
 // ---- costs, US$M (SPEC 6.4) ----
 
-/// Per route-km of double track at multiplier 1 (halved in T-467).
-pub const BASE_COST_PER_KM: f64 = 45.0;
+/// Per route-km of double track at multiplier 1. Against cheap-country metros (Korea, Spain: about
+/// $100-150M a tunnelled km with stations; Anita, 2026-10-21, undoing T-467's halving).
+pub const BASE_COST_PER_KM: f64 = 90.0;
 /// Multiplier per level, index `level + 3` (-3 .. +3). Anita, 2026-10-08 (+2 and +3 lowered from
 /// 1.4 and 2.0 the same day).
 pub const LEVEL_MULT: [f64; 7] = [1.2, 1.1, 1.0, 0.3, 0.8, 1.3, 1.8];
 pub const SINGLE_TRACK_COST: f64 = 0.6;
 pub const WATER_COST: f64 = 2.0;
 /// 200 m station with two platform tracks, per level, index `level + 3`.
-pub const STATION_COST_200: [f64; 7] = [70.0, 50.0, 30.0, 5.0, 15.0, 20.0, 25.0];
+pub const STATION_COST_200: [f64; 7] = [140.0, 100.0, 60.0, 10.0, 30.0, 40.0, 50.0];
 pub const SINGLE_TRACK_STATION: f64 = 0.7;
 pub const JUNCTION_KM: f64 = 0.25;
 pub const FLYOVER_KM: f64 = 0.6;
@@ -79,11 +80,10 @@ pub const WATER_STEP: f64 = 12.5;
 /// Price of one 20 m car, US$M (T-028; a New York R211 car is about 2.6). Trains are bought when
 /// the running lines need more cars than the network owns; spare cars are kept, never sold.
 pub const CAR_PRICE: f64 = 2.5;
-/// Running cost per car-km, US$. Set for play, not realism (Anita, 2026-10-09): T-028's real-ish
-/// 6 (New York's subway spends about 9 a car-km all in) made running costs beat fares even at
-/// 100x, so the real New York network lost $0.65B a game day. A quarter of that left it about
-/// $1.1B a day ahead; raised by half to 2.25 in T-485 (Anita, 2026-10-16).
-pub const RUN_COST_CAR_KM: f64 = 2.25;
+/// Running cost per car-km, US$. Under real figures so fares can cover it at 100x (New York's
+/// subway spends about 9 a car-km all in), but high enough that thin areas lose money (Anita,
+/// 2026-10-21); research/running-costs.md for cheap-country figures.
+pub const RUN_COST_CAR_KM: f64 = 3.0;
 /// The economy runs at 100x (T-081; Anita, 2026-10-09, as Subway Builder does): fares and running
 /// costs per game day are this many times the real figures, so a line pays back in about a game
 /// week. Construction and train prices stay real. The one constant: running costs here, fares in

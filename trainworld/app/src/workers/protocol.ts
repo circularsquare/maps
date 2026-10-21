@@ -154,7 +154,7 @@ export type ToClock =
   /** load a save file (T-029); answered with "loaded". It and "newGame" start a slot named `name`
    * (T-743): no slot is ever written over with another game */
   | { kind: "import"; bytes: ArrayBuffer; name?: string }
-  /** start again: empty city (or `game.real`'s network), $3B, day 1 07:00; answered with "loaded" */
+  /** start again: empty city (or `game.real`'s network), $6B, day 1 07:00; answered with "loaded" */
   | { kind: "newGame"; name?: string; game?: NewGameSpec }
   /** T-728: make this normal game a sandbox, for good */
   | { kind: "sandbox" }

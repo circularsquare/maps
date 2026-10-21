@@ -70,9 +70,8 @@ city packs), **non-city zones** (county-sized units touching two city zones, bui
 same pipeline, `kind: "zone"`) and **dead space**, where no trip starts or ends. Only zones a
 built station reaches join the demand solves; a zone viewed or beside the view that no station
 reaches opens **bare** in one auxiliary worker, its figures, bubbles and clicks from a no-rail pass
-that equals a solve's to the bit, so panning never re-solves [T-325]. Each game keeps the list of
-zones it has **opened** [T-729]; any other zone is one grey bubble at every zoom and loads nothing on
-a pan, until a click on it or a station within reach opens it for good. Zones that share no rider
+that equals a solve's to the bit, so panning never re-solves [T-325]. Every zone loads for the view
+on a pan [T-801]. Zones that share no rider
 (Toronto and the Northeast, London, Paris) fall into separate **clusters**, each solved on its own
 lines; an edit re-solves only the clusters it touched, the others keep their figures [T-326,
 [docs/demand-runtime.md](docs/demand-runtime.md) "Clusters"].
@@ -249,10 +248,10 @@ the boarding account. Fares are paid into the cash as trains pick up riders and 
 drain evenly [T-284], each hour's share following when riders travel and trains run, fares
 landing as rides end [T-736]; the economy runs at 100x real days [T-081]. Changing a line's trains moves no
 running train: added ones enter at a terminal, removed ones leave at one [T-206]. A new game starts
-with $3B in an empty New York [T-485]; double track costs a base of US$45M a km times a
-multiplier per elevation (US$13.5M at grade) [T-467], a 20 m car costs US$2.5M, bought as a line's
-fleet grows and kept in the depot for any line when it shrinks [T-028, T-631], and running costs are
-US$2.25 a car-km. The fare is typed or stepped in the Money tab [T-626].
+with $6B in an empty New York [T-805]; double track costs a base of US$90M a km times a
+multiplier per elevation (US$27M at grade), priced against cheap-country metros such as Korea's
+[T-805], a 20 m car costs US$2.5M, bought as a line's fleet grows and kept in the depot for any line
+when it shrinks [T-028, T-631], and running costs are US$3 a car-km. The fare is typed or stepped in the Money tab [T-626].
 **Points** measure each city's network: what it earned in the past 24 game hours, recomputed
 once a game hour, at 20 a rail trip (a rider's whole journey, changes included, counted in the
 city it starts in) and 1 a passenger-km; not a running total, and they unlock nothing yet [T-684,

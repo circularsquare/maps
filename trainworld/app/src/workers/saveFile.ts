@@ -20,8 +20,8 @@ export const SAVE_MAGIC = "TWG1";
 export const SAVE_FORMAT = 1;
 /** SPEC 8: a new game starts on day 1 at 07:00 (game seconds). */
 export const START_CLOCK = 86400 + 7 * 3600;
-/** SPEC 6.4: US$3B to start, in US$M; a sandbox's money since the start is the cash less this (T-728). */
-export const START_CASH = 3000;
+/** SPEC 6.4: US$6B to start, in US$M; a sandbox's money since the start is the cash less this (T-728). */
+export const START_CASH = 6000;
 
 /** One game day's money, US$M (T-028). */
 export interface DayLedger {

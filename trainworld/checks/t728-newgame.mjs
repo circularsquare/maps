@@ -68,7 +68,7 @@ try {
     await page.waitForSelector('.saves-panel .save-files');
     await wait(200);
   };
-  /** a train order far beyond $3B on the first line: [ok, issues, cash after] */
+  /** a train order far beyond the $6B start on the first line: [ok, issues, cash after] */
   const bigOrder = () => page.evaluate(async () => {
     const l = window.tw.world.value.save.lines[0];
     const a = await window.tw.client.edit({ op: 'setTrainCount', line: l.num, trains: [600, 600, 600] });
@@ -108,10 +108,10 @@ try {
     `(centre ${g.lng.toFixed(2)}, ${g.lat.toFixed(2)} z${g.zoom.toFixed(1)}, ${g.lines} lines, mode ${g.mode}, top bar "${g.bar}", clock "${g.time}")`);
   await page.locator('#topbar').screenshot({ path: shot('topbar-light') });
   const order = await bigOrder();
-  report('a sandbox refuses nothing for money', order.ok && order.charge > 3000 && order.cash < 0, `(ok ${order.ok}, paid $${Math.round(order.charge)}M, cash $${Math.round(order.cash)}M ${order.issues})`);
+  report('a sandbox refuses nothing for money', order.ok && order.charge > 6000 && order.cash < 0, `(ok ${order.ok}, paid $${Math.round(order.charge)}M, cash $${Math.round(order.cash)}M ${order.issues})`);
   await flush();
   const t = await stored(T);
-  report('slot named after the start, header recorded', t?.name === 'Tokyo sandbox' && t.mode === 'sandbox' && t.hmode === 'sandbox' && t.start === 'tyo' && t.opened?.join() === 'tyo',
+  report('slot named after the start, header recorded', t?.name === 'Tokyo sandbox' && t.mode === 'sandbox' && t.hmode === 'sandbox' && t.start === 'tyo' && t.opened?.[0] === 'tyo',
     `(${T} "${t?.name}", summary ${t?.mode}, header ${t?.hmode}, start ${t?.start}, opened ${JSON.stringify(t?.opened)})`);
 
   // 2. the saves panel's sheet: a normal game in London, found by search

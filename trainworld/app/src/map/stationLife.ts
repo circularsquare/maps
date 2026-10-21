@@ -10,8 +10,8 @@
 // (game/boarding.ts); who got on is the platform's crowd when the train came, plus who arrive
 // until it leaves, less who it leaves behind.
 //
-// A face is red when the platform's riders waited RED_WAIT_S or more: the time since the last
-// train left it, doubled when that train left riders behind (they sat through the headway before).
+// A face is sad when the train before left CROWDED_LEFT or more riders behind, else tired when the
+// platform's riders have waited TIRED_WAIT_S or more on average (boardedAt, T-802).
 
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
@@ -20,7 +20,7 @@ import { clock } from "../game/clock";
 import { display } from "../game/ui";
 import type { LineInput, StationInput } from "../game/types";
 import { world } from "../game/world";
-import { Faces } from "./faces";
+import { Faces, type Mood } from "./faces";
 import { profileS } from "./network";
 import type { Overlay } from "./overlay";
 import { STATION_BOX_ZOOM } from "./stationGeometry";
@@ -34,8 +34,11 @@ const SAMPLE_MS = 125;
 /** A longer gap than this between samples (game seconds: a jump in time, a tab that slept) is not
  * read as trains arriving. */
 const MAX_GAP_S = 150;
-/** Riders who waited this long or longer make red faces: ten minutes. */
-export const RED_WAIT_S = 600;
+/** Riders who have waited this long or longer on average make tired faces: ten minutes, orange on
+ * the crowding dot's scale. */
+export const TIRED_WAIT_S = 600;
+/** The train before left this many riders or more: a crowded platform, sad faces. */
+export const CROWDED_LEFT = 20;
 /** One face per this many riders getting off. */
 const RIDERS_PER_FACE = 20;
 const MAX_FACES_PER_TRAIN = 4;
@@ -61,9 +64,11 @@ function queueOf(b: BoardHour, node: number, line: number, run: number): number 
   return m.get(`${node}|${line}|${run}`) ?? -1;
 }
 
-/** Riders who got on at queue `q` when a train arrived at `t` (seconds from the hour's epoch), and
- * how long the riders waiting had waited, s. */
-export function boardedAt(b: BoardHour, q: number, t: number): { boarded: number; waited: number } {
+/** Riders who got on at queue `q` when a train arrived at `t` (seconds from the hour's epoch), the
+ * average time the riders waiting had waited, s, and how many the train before left behind. The
+ * newcomers arrived evenly since that train left (half the gap each); those it left behind add the
+ * gap before it, again half on average. Nothing is known of the hour's first arrival: 0. */
+export function boardedAt(b: BoardHour, q: number, t: number): { boarded: number; waited: number; left: number } {
   const Q = b.queues, E = b.events, o = q * QUEUE_STRIDE;
   const first = Q[o + 8], end = first + Q[o + 9];
   let e = first;
@@ -71,12 +76,13 @@ export function boardedAt(b: BoardHour, q: number, t: number): { boarded: number
   while (e < end && E[e * 2] < t - 8) e++;
   const waiting = crowdAt(b, q, t).waiting;
   const boarded = e < end ? Math.max(0, waiting + Q[o + 4] * Math.max(0, E[e * 2] - t) - E[e * 2 + 1]) : 0;
-  let waited = 0;
-  if (e - 1 >= first) {
-    waited = t - E[(e - 1) * 2];
-    if (E[(e - 1) * 2 + 1] >= 1 && e - 2 >= first) waited += E[(e - 1) * 2] - E[(e - 2) * 2];
-  }
-  return { boarded, waited };
+  const p = e - 1;
+  if (p < first) return { boarded, waited: 0, left: 0 };
+  const gap = Math.max(0, t - E[p * 2]), left = E[p * 2 + 1];
+  const before = p - 1 >= first ? E[p * 2] - E[(p - 1) * 2] : gap;
+  const fresh = Math.max(0, waiting - left), riders = left + fresh;
+  const waited = riders > 0 ? (left * (gap + before / 2) + (fresh * gap) / 2) / riders : 0;
+  return { boarded, waited, left };
 }
 
 /** Each line's note (T-706): chosen once and kept in the save (the clock worker's `lineNotes`, the
@@ -188,7 +194,7 @@ export function startStationLife(map: MlMap, overlay: Overlay, post: (notes: Rec
   };
 
   const arrive = (i: number, vl: VisLine, run: number, k: number, s: StationInput, tEpoch: number, board: BoardHour | null, d: ReturnType<typeof display.peek>, speed: number) => {
-    let off = 0, on = 0, red = false;
+    let off = 0, on = 0, mood: Mood = "happy";
     if (board) {
       const n = vl.line.stops.length;
       const stretch = (seg: number) => (run === 0 ? seg : n - 2 - seg);
@@ -196,19 +202,19 @@ export function startStationLife(map: MlMap, overlay: Overlay, post: (notes: Rec
       const after = k < n - 1 ? tripLoad(board, i, stretch(k)) : 0;
       const q = queueOf(board, s.num, vl.num, run);
       if (before !== null && after !== null) {
-        const b = q >= 0 ? boardedAt(board, q, tEpoch) : { boarded: 0, waited: 0 };
+        const b = q >= 0 ? boardedAt(board, q, tEpoch) : { boarded: 0, waited: 0, left: 0 };
         on = b.boarded;
         off = Math.max(0, before + on - after);
-        red = b.waited >= RED_WAIT_S;
+        mood = b.left >= CROWDED_LEFT ? "sad" : b.waited >= TIRED_WAIT_S ? "tired" : "happy";
       }
     }
     if (d.sound) {
       const p = map.project([s.lng, s.lat]);
-      sound.play({ pan: (p.x / Math.max(1, overlay.cssW)) * 2 - 1, zoom: map.getZoom(), volume: d.soundVolume, speed, off: popsFor(off), on: popsFor(on), note: lineNotes(world.peek()!.save).get(vl.line.id) ?? 0, crowded: red });
+      sound.play({ pan: (p.x / Math.max(1, overlay.cssW)) * 2 - 1, zoom: map.getZoom(), volume: d.soundVolume, speed, off: popsFor(off), on: popsFor(on), note: lineNotes(world.peek()!.save).get(vl.line.id) ?? 0, crowded: mood !== "happy" });
     }
     if (d.faces && off >= 1) {
       const count = Math.min(MAX_FACES_PER_TRAIN, Math.floor(off / RIDERS_PER_FACE + Math.random()));
-      if (count > 0) faces.spawn(s.id, s.lng, s.lat, s.length, s.heading, count, red);
+      if (count > 0) faces.spawn(s.id, s.lng, s.lat, s.length, s.heading, count, mood);
     }
   };
 

@@ -106,9 +106,6 @@ export function hoverAt(map: MlMap, px: number, py: number, under = false): stri
   return null;
 }
 
-/** Hide the tag until the pointer next moves (a grey city just opened by a click, T-729). */
-export let hideHover = () => {};
-
 /** The tag itself: one DOM element in the map, moved and filled on mouse moves. */
 export function startHover(map: MlMap) {
   const tag = document.createElement("div");
@@ -121,7 +118,6 @@ export function startHover(map: MlMap) {
     last = "";
     setPointerDisc(null);
   };
-  hideHover = hide;
   const show = (e: MouseEvent, px: number, py: number) => {
     if (restHolds(px, py)) return; // on the way to the resting hover's list (T-732)
     if (e.buttons) return hide();

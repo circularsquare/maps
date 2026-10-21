@@ -29,7 +29,7 @@ import { effect } from "@preact/signals";
 import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, LEGACY_FRAME, marketToWorld, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
 import { DEMAND_DAYS, type DemandDay } from "../game/days";
-import { display, shownDay, tool } from "../game/ui";
+import { display, selection, shownDay, tool } from "../game/ui";
 import {
   cityDemandViews, demandByDay, intercityDemand,
   type DayDemand,
@@ -67,7 +67,7 @@ import { perfOff } from "../perfFlags";
 import { marketZonesNear } from "./demandClusters";
 import { citiesReached, footprintOf, loadFootprints, REACH_M, zonesNearStations, type Footprint } from "./cityReach";
 import { nearbyZones } from "../game/zones";
-import { addOpened, isOpened, openedZones } from "../game/openedZones";
+import { addOpened } from "../game/openedZones";
 import type { BareFigures, DemandNetwork, FromDemand, OpenRejected, ToDemand } from "./demandProtocol";
 import { readTripPeriod, setTripQuery, tripKey, type RouteNodes, type Trip } from "../game/trip";
 import { demandTestSnapshot } from "./demandTest";
@@ -561,17 +561,10 @@ class DemandClient {
     }
     // the viewed city loads when it changes (a pan, the city buttons)
     effect(() => { activeCity.value; viewedZone.value; this.ensure(); });
-    // T-729: a zone just opened (a click on its grey bubble) loads even when off the view's centre
-    let openedSeen = openedZones.peek();
-    effect(() => {
-      const o = openedZones.value;
-      if (o !== "all" && o !== null && openedSeen !== "all" && openedSeen !== null)
-        for (const id of o) if (!openedSeen.has(id)) this.asked.add(id);
-      openedSeen = o;
-      this.ensure();
-    });
     // and the zones beside it with bubbles on screen (T-276), once nothing waits on them
     effect(() => { nearbyZones.value; this.ensure(); });
+    // T-801: a selected zone's market opens for its partner bubbles
+    effect(() => { selection.value; this.ensure(); });
     // T-351: a building tool picked in a game with no station readies the viewed zone for its solve
     effect(() => { tool.value; this.prefetchViewed(); });
   }
@@ -586,7 +579,7 @@ class DemandClient {
     const t = tool.peek();
     if ((t !== "track" && t !== "station" && t !== "blueprint") || perfOff("bareStart")) return;
     const svc = this.latest(), id = activeCity.peek();
-    if (this.hold || !svc || svc.stations.length || !viewedZone.peek() || !isOpened(id) || this.status.startsWith("failed")) return;
+    if (this.hold || !svc || svc.stations.length || !viewedZone.peek() || this.status.startsWith("failed")) return;
     if (!this.fetchingBare.has(id) || this.fetching.has(id) || this.fetchingUndecided.has(id)) return;
     this.prefetched.add(id);
     this.fetchCity(id, "full");
@@ -603,14 +596,10 @@ class DemandClient {
 
   // --- Loading only what is needed (T-149) -------------------------------------------------------
 
-  /** T-318: the viewed zone alone; empty over dead space, where nothing loads for the view, and
-   * (T-729) over a zone this game has not opened. */
+  /** T-318: the viewed zone alone; empty over dead space, where nothing loads for the view. */
   private viewedSet(): Set<CityId> {
-    return this.withoutBroken(new Set(viewedZone.peek() && isOpened(activeCity.peek()) ? [activeCity.peek()] : []));
+    return this.withoutBroken(new Set(viewedZone.peek() ? [activeCity.peek()] : []));
   }
-
-  /** T-729: zones opened by a click, loaded (bare unless reached) until they are open */
-  private asked = new Set<CityId>();
 
   /** T-318: a network is in hand and neither the view nor any station needs a pack: nothing to
    * load or solve. The clock's hold goes, and no card or status says "Loading data". */
@@ -722,12 +711,18 @@ class DemandClient {
     return this.ready === this.workers.length && this.marketWanted.every((id) => this.opened.has(marketItem(id))) && [...need].every((id) => this.opened.has(id));
   }
 
-  /** T-396, T-377: a zone's market pack is opened once the zone is viewed, beside the view or
-   * reached, or a station is within its riders' reach (`marketZonesNear`); it closes as a city pack
-   * does (`sweep`). */
+  /** T-396, T-377, T-801: a zone's market pack is opened once the zone is reached, a station is
+   * within its riders' reach (`marketZonesNear`), or it is selected (a zone, or a bubble selection in
+   * it); never for viewing alone, since each is tens of MB in every solving worker. It closes as a
+   * city pack does (`sweep`). */
   private marketWanted: CityId[] = [];
-  private wantsMarket(svc: Service | null, need: Set<CityId>): CityId[] {
-    const out = new Set<CityId>([...need, ...nearbyZones.peek(), ...(svc ? this.nearOf(svc).markets : [])]);
+  private marketZones(svc: Service | null): Set<CityId> {
+    const sel = selection.peek();
+    const picked = sel?.kind === "city" ? sel.city : sel?.kind === "commuters" ? activeCity.peek() : null;
+    return new Set<CityId>([...(this.knownReach() ?? []), ...(svc ? this.nearOf(svc).markets : []), ...(picked ? [picked] : [])]);
+  }
+  private wantsMarket(svc: Service | null): CityId[] {
+    const out = this.marketZones(svc);
     this.marketWanted = CITIES.map((c) => c.id).filter((id) => out.has(id) && !this.broken.has(marketItem(id)));
     return this.marketWanted;
   }
@@ -739,18 +734,14 @@ class DemandClient {
     const need = known ?? this.viewedSet();
     demandIdle.value = known?.size === 0; // T-318
     // over dead space with no station in reach there is nothing to open, the market included
-    if (need.size) for (const id of this.wantsMarket(this.latest(), need)) if (!this.fetching.has(marketItem(id))) this.fetchMarket(id);
+    if (need.size) for (const id of this.wantsMarket(this.latest())) if (!this.fetching.has(marketItem(id))) this.fetchMarket(id);
     // T-325: a city no station reaches opens bare; while the reach is not known (startup), the
     // viewed city's pack is fetched and decided once downloaded (T-351)
     const reached = this.knownReach();
-    // T-729: a zone a station reaches is opened for good
+    // T-729: the save's list of zones reached
     if (reached?.size) addOpened(reached);
     for (const id of need) this.want(id, reached === null ? null : reached.has(id));
     if (this.nearbyOpen()) for (const id of nearbyZones.peek()) this.want(id, !!reached?.has(id));
-    for (const id of this.asked) {
-      if (this.isOpen(id) || this.broken.has(id)) this.asked.delete(id);
-      else this.want(id, !!reached?.has(id));
-    }
     this.flush();
     this.progress();
     this.sweep();
@@ -759,16 +750,13 @@ class DemandClient {
   // --- Closing what is no longer needed (T-301) ---------------------------------------------------
 
   /** What must stay open: the zones viewed, beside the view, reached or in the load in hand, and the
-   * market while one of those is its zone or a station is in its reach. Null while the reach is not
-   * known. */
+   * markets `marketZones` wants. Null while the reach is not known. */
   private keepSet(): Set<string> | null {
     const reached = this.knownReach();
     if (!reached) return null;
-    const keep = new Set<string>([...this.viewedSet(), ...nearbyZones.peek(), ...reached, ...this.asked]);
+    const keep = new Set<string>([...this.viewedSet(), ...nearbyZones.peek(), ...reached]);
     if (this.job) for (const id of this.job.items) keep.add(id);
-    const svc = this.latest();
-    for (const id of [...keep]) if (!isMarket(id)) keep.add(marketItem(id as CityId));
-    if (svc) for (const id of this.nearOf(svc).markets) keep.add(marketItem(id));
+    for (const id of this.marketZones(this.latest())) keep.add(marketItem(id));
     return keep;
   }
 
@@ -1363,7 +1351,7 @@ class DemandClient {
       const need = this.solveNeed(svc);
       const cities = Object.keys(stored.packs ?? {}).filter((k) => !isMarket(k));
       if (!need || need.size !== cities.length || cities.some((id) => !need.has(id))) return void (log.miss = "zones");
-      const markets = this.wantsMarket(svc, need);
+      const markets = this.wantsMarket(svc);
       const had = Object.keys(stored.packs ?? {}).filter(isMarket).map(marketZone);
       if (had.length !== markets.length || markets.some((id) => !had.includes(id))) return void (log.miss = "zones");
       const why = sameKey(stored, await this.keyFor(cities, markets));
