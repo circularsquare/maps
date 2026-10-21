@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-798 L1+L2 [P2] Loop lines. Done 2026-10-21: clicking the first stop closes or opens a loop; circles and balloons run both ways on even fleets, riders take the short way round; one-way loops are L3. notes/T-797.md.
+- T-817 b2+b3 [P2] High-speed running. Done 2026-10-21: per-line high-speed trains up to 320 km/h on high-speed track, their own fleet, price and running cost.
 - T-835 [P2] Period-start frequency on long lines. Done 2026-10-21: every period leaves the ends half a run early, so the middle changes on time (frequent lines' 06h wait 4.21 to 3.29 min); a period before no service runs to its end. notes/T-835.md.
 
 - T-834 [P2] A station on open ground in two clicks. Done 2026-10-21: the middle, then the direction; R key and nearest-station aim gone.
