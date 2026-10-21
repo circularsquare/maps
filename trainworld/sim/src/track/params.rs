@@ -77,6 +77,10 @@ pub const BASE_COST_PER_KM: f64 = 90.0;
 /// 1.4 and 2.0 the same day).
 pub const LEVEL_MULT: [f64; 7] = [1.2, 1.1, 1.0, 0.3, 0.8, 1.3, 1.8];
 pub const SINGLE_TRACK_COST: f64 = 0.6;
+/// High-speed track's price over double track at the same level (T-817, notes/T-817.md).
+pub const HSR_COST: f64 = 1.5;
+/// The track count a blueprint quote row gives high-speed track (`blueprint_cost_items`).
+pub const HSR_ROW: u8 = 3;
 pub const WATER_COST: f64 = 2.0;
 /// 200 m station with two platform tracks, per level, index `level + 3`.
 pub const STATION_COST_200: [f64; 7] = [140.0, 100.0, 60.0, 10.0, 30.0, 40.0, 50.0];

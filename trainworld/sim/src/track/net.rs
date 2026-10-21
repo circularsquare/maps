@@ -145,6 +145,8 @@ pub struct EdgeData {
     pub thru: Vec<Pi>,
     /// One diagonal of a crossover (T-338): fixed shape, `V_CROSSOVER`, priced as a junction.
     pub crossover: bool,
+    /// High-speed track (T-817): always double, priced at `HSR_COST`.
+    pub hsr: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -247,6 +249,8 @@ pub enum Issue {
     NoParallel { edge: u32 },
     /// Doubling up track that has track beside it already (T-708).
     Alongside { edge: u32 },
+    /// Doubling up high-speed track, which has no quad form (T-817).
+    HighSpeed { edge: u32 },
 }
 
 /// What the raw setters touched since the last `take_touch`.
@@ -310,6 +314,7 @@ pub struct Network {
     /// Per edge: the points a T-079 edge was drawn through (`EdgeData::thru`), else empty.
     pub edge_thru: Vec<Vec<Pi>>,
     pub edge_crossover: Vec<bool>,
+    pub edge_hsr: Vec<bool>,
     pub edge_len: Vec<f64>,
     pub edge_pieces: Vec<Span>,
     pub edge_vert: Vec<Span>,
@@ -518,6 +523,7 @@ impl Network {
             edge_pis: vec![],
             edge_thru: vec![],
             edge_crossover: vec![],
+            edge_hsr: vec![],
             edge_len: vec![],
             edge_pieces: vec![],
             edge_vert: vec![],
@@ -665,6 +671,7 @@ impl Network {
         self.edge_pis.push(Span::default());
         self.edge_thru.push(vec![]);
         self.edge_crossover.push(false);
+        self.edge_hsr.push(false);
         self.edge_len.push(0.0);
         self.edge_pieces.push(Span::default());
         self.edge_vert.push(Span::default());
@@ -730,7 +737,7 @@ impl Network {
     pub fn edge_data(&self, e: u32) -> Option<EdgeData> {
         self.edge_ok(e).then(|| {
             let i = e as usize;
-            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i] }
+            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i], hsr: self.edge_hsr[i] }
         })
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
@@ -882,7 +889,7 @@ impl Network {
             if d.a == d.b {
                 return Err(Issue::EdgeLoop { edge: id });
             }
-            if d.tracks != 1 && d.tracks != 2 {
+            if (d.tracks != 1 && d.tracks != 2) || (d.hsr && (d.tracks != 2 || d.crossover)) {
                 return Err(Issue::Tracks { edge: id });
             }
             for (node, which) in [(d.a, 0u32), (d.b, 1u32)] {
@@ -912,6 +919,7 @@ impl Network {
                 self.edge_pis[i] = self.pis.replace(self.edge_pis[i], &d.pis);
                 self.edge_thru[i] = d.thru;
                 self.edge_crossover[i] = d.crossover;
+                self.edge_hsr[i] = d.hsr;
                 self.node_ports[d.a as usize].add(id << 1);
                 self.node_ports[d.b as usize].add(id << 1 | 1);
                 self.touch_node(d.a);
@@ -929,6 +937,7 @@ impl Network {
                 self.edge_pis[i] = Span::default();
                 self.edge_thru[i] = vec![];
                 self.edge_crossover[i] = false;
+                self.edge_hsr[i] = false;
                 self.edge_free.push(id);
             }
         }
@@ -1105,7 +1114,7 @@ impl Network {
             self.edge_cost[i] = if self.edge_crossover[i] {
                 cost::junction_cost(self.node_level[self.edge_a[i] as usize], false, !wet.is_empty())
             } else {
-                cost::track_cost(f.len, &f.vert, &wet, self.edge_tracks[i])
+                cost::track_cost(f.len, &f.vert, &wet, self.edge_tracks[i], self.edge_hsr[i])
             };
             let cap = self.v_cap(e);
             self.edge_time[i] = f.pieces.iter().map(|p| p.len / p.v_limit().min(cap)).sum::<f64>().max(1e-3);
@@ -1547,8 +1556,8 @@ impl Network {
 
     // ---------------------------------------------------------------- cost
 
-    /// Unbuilt costs grouped by kind, charged level, track count, water and ramp.
-    /// Seven numbers per row: those five keys, metres/count, US$M.
+    /// Unbuilt costs grouped by kind, charged level, track count (`HSR_ROW` for high-speed track),
+    /// water and ramp. Seven numbers per row: those five keys, metres/count, US$M.
     pub fn blueprint_cost_items(&self) -> Vec<f64> {
         let mut rows = std::collections::BTreeMap::<(u8, i8, u8, bool, bool), (f64, f64)>::new();
         let mut add = |kind, level, tracks, wet, ramp, qty, cost| {
@@ -1561,8 +1570,9 @@ impl Network {
                 let a = self.edge_a[e] as usize;
                 add(2, self.node_level[a], 0, !self.edge_water(e as u32).is_empty(), false, 1.0, self.edge_cost[e]);
             } else if self.edge_alive[e] && !self.edge_built[e] && !self.edge_off[e] {
-                cost::track_cost_parts(self.edge_len[e], self.edge_vert(e as u32), self.edge_water(e as u32), self.edge_tracks[e], |level, wet, ramp, m, c| {
-                    add(0, level, self.edge_tracks[e], wet, ramp, m, c);
+                let (tracks, hsr) = (self.edge_tracks[e], self.edge_hsr[e]);
+                cost::track_cost_parts(self.edge_len[e], self.edge_vert(e as u32), self.edge_water(e as u32), tracks, hsr, |level, wet, ramp, m, c| {
+                    add(0, level, if hsr { HSR_ROW } else { tracks }, wet, ramp, m, c);
                 });
             }
         }
@@ -1919,7 +1929,7 @@ impl Network {
             }
         }
         let i = e as usize;
-        let (tracks, built, off) = (self.edge_tracks[i], self.edge_built[i], self.edge_off[i]);
+        let (tracks, built, off, hsr) = (self.edge_tracks[i], self.edge_built[i], self.edge_off[i], self.edge_hsr[i]);
         // A T-079 edge's clicked points go with the half they lie on; one at the split is the
         // node now.
         let (mut t1, mut t2) = (vec![], vec![]);
@@ -1931,8 +1941,8 @@ impl Network {
                 t2.push(*p);
             }
         }
-        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false };
-        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false };
+        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false, hsr };
+        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false, hsr };
         Ok((node, a, b))
     }
 }

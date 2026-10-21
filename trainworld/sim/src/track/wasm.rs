@@ -53,6 +53,8 @@ pub struct TrackApi {
     route_tangent: bool,
     /// T-817: the auto radius cap of the corners the drawing tool makes, ground m (`set_design_speed`).
     route_cap: f64,
+    /// T-817: double track the drawing tool lays is high-speed track (`set_route_hsr`).
+    route_hsr: bool,
     /// The last tangent route's circle: centre x, y and ground radius, else empty.
     route_arc: Vec<f64>,
     /// The end node of the last route asked about (new or existing).
@@ -134,6 +136,7 @@ struct Reshape {
     op: Op,
     verts: Vec<Pi>,
     tracks: u8,
+    hsr: bool,
     before: Vec<Pi>,
     after: Vec<Pi>,
 }
@@ -158,6 +161,7 @@ impl TrackApi {
             bridge_refused: false,
             route_tangent: false,
             route_cap: R_CAP,
+            route_hsr: false,
             route_arc: vec![],
             route_end: u32::MAX,
             preview_speeds: vec![],
@@ -565,7 +569,7 @@ impl TrackApi {
         if self.w.net.edge_ok(id) && self.w.net.edge_built[id as usize] {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
-        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false }) })
+        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, hsr: false }) })
     }
     /// Reshape a blueprint edge (T-064): new PIs (x, y, radius 0 = auto, level each), same ends
     /// and tracks. One undoable edit. Constructed track cannot be reshaped.
@@ -589,7 +593,7 @@ impl TrackApi {
             }
         };
         let t = self.w.trial(r.op);
-        let mut out = self.preview_out(t, &r.verts, &[], r.tracks);
+        let mut out = self.preview_out(t, &r.verts, &[], r.tracks, r.hsr);
         if r.before.is_empty() && r.after.is_empty() {
             return out;
         }
@@ -651,9 +655,9 @@ impl TrackApi {
         }
         relax_radii(net, &mut d, &moved, &|k, p| same_count && old[k].radius == p.radius);
         let verts = vertices_of(net, &d, &moved);
-        let tracks = d.tracks;
+        let (tracks, hsr) = (d.tracks, d.hsr);
         if moved.is_empty() {
-            return Ok(Reshape { op: Op::Edge { id, data: Some(d) }, verts, tracks, before: vec![], after: vec![] });
+            return Ok(Reshape { op: Op::Edge { id, data: Some(d) }, verts, tracks, hsr, before: vec![], after: vec![] });
         }
         let mut ops = vec![];
         for &(n, x, y) in &moved {
@@ -680,7 +684,7 @@ impl TrackApi {
             }
             ops.push(Op::Edge { id: o, data: Some(od) });
         }
-        Ok(Reshape { op: Op::Batch(ops), verts, tracks, before, after })
+        Ok(Reshape { op: Op::Batch(ops), verts, tracks, hsr, before, after })
     }
 
     /// The other piece at a joint of a stroke (T-244) that may follow a corner of `e` next to it
@@ -723,9 +727,9 @@ impl TrackApi {
     /// chainage `s`, so something placed at `s` has room; and where `s` is on the joined edge,
     /// which keeps `e`'s id and direction. The shape is unchanged (a radius the joined fit would
     /// change is set to the one it had), lines through it follow. Pieces join when both are
-    /// constructed or both blueprint (switched alike), with the same track count (T-624); a built
-    /// piece's cost is derived from its shape, so the joined edge costs what the two did. None if
-    /// no joint is that near.
+    /// constructed or both blueprint (switched alike), with the same track count (T-624) and type
+    /// (high speed or not, T-817); a built piece's cost is derived from its shape, so the joined
+    /// edge costs what the two did. None if no joint is that near.
     fn unjoin_near(&self, e: u32, s: f64, reach: f64) -> Option<(Vec<Op>, f64)> {
         let net = &self.w.net;
         let d = net.edge_data(e)?;
@@ -743,7 +747,7 @@ impl TrackApi {
             let mut cur = e;
             while gap < reach {
                 let Some((o, which, od, _, _)) = self.free_joint(node, cur, corner, true) else { break };
-                if seen.contains(&o) || od.built != d.built || od.off != d.off || od.tracks != d.tracks || od.crossover || d.crossover {
+                if seen.contains(&o) || od.built != d.built || od.off != d.off || od.tracks != d.tracks || od.hsr != d.hsr || od.crossover || d.crossover {
                     break;
                 }
                 seen.push(o);
@@ -798,7 +802,7 @@ impl TrackApi {
                 pis[j].radius = quant(want);
             }
         }
-        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![], crossover: false };
+        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![], crossover: false, hsr: d.hsr };
         // each part's direction that runs the joined edge's way
         let mut forward: Vec<(u32, u32)> = vec![(e, 0)];
         forward.extend(sides[0].iter().map(|&(o, which, _)| (o, if which == 1 { 0 } else { 1 })));
@@ -1081,14 +1085,14 @@ impl TrackApi {
     /// `shape` (T-656) is the alignment actually built where it differs from `verts`, the one the
     /// player drew (a bridge over water): it gives the polyline, length and price; `verts` gives
     /// the rows.
-    fn preview_out(&mut self, r: Result<EditResult, Vec<Issue>>, verts: &[Pi], shape: &[Pi], tracks: u8) -> Vec<f64> {
-        let (f, track, _) = self.w.preview(if shape.is_empty() { verts } else { shape }, tracks);
+    fn preview_out(&mut self, r: Result<EditResult, Vec<Issue>>, verts: &[Pi], shape: &[Pi], tracks: u8, hsr: bool) -> Vec<f64> {
+        let (f, track, _) = self.w.preview(if shape.is_empty() { verts } else { shape }, tracks, hsr);
         self.preview_marks = trial_crossings(&r);
         let (ok, cost) = match &r {
             Ok(r) => (1.0, r.cost_after - r.cost_before),
             Err(_) => (0.0, track),
         };
-        let base = BASE_COST_PER_KM * f.len / 1000.0 * if tracks == 1 { SINGLE_TRACK_COST } else { 1.0 };
+        let base = BASE_COST_PER_KM * f.len / 1000.0 * super::cost::track_factor(tracks, hsr);
         let mult = if base > 0.0 { track / base } else { 0.0 };
         self.done(r.map(|mut r| {
             r.dirty = Default::default();
@@ -1178,6 +1182,8 @@ impl TrackApi {
         let mut ops = ra.ops.clone();
         ops.extend(rb.ops.clone());
         // Quad track (T-255): the drawn pair, and an express pair beside it from end to end.
+        // High-speed track is double only (T-817).
+        let hsr = self.route_hsr && tracks == 2;
         let tracks = if quad { 2 } else { tracks };
         // One piece of track per corner clicked (T-244), joined at plain nodes, the shape unchanged.
         // T-656: ground level over water is a bridge, raised over the water with ramps on land.
@@ -1189,7 +1195,7 @@ impl TrackApi {
             _ => clicks,
         };
         let pieces = stroke_pieces(bridged.as_deref().unwrap_or(&verts), first_click, cut(&bridged, verts.len(), pis.len()), scaled);
-        self.push_pieces(&pieces, ra.node, rb.node, tracks, &mut ops, &mut new_nodes, &mut new_edges);
+        self.push_pieces(&pieces, ra.node, rb.node, tracks, hsr, &mut ops, &mut new_nodes, &mut new_edges);
         self.route_bridged = bridged.unwrap_or_default();
         let mut express = vec![];
         if quad {
@@ -1224,7 +1230,7 @@ impl TrackApi {
                 Some(b) => stroke_pieces(b, first, cut(&ex_bridged, ex.len(), clicks), scaled),
                 None => stroke_pieces(&ex, first, clicks, scaled),
             };
-            self.push_pieces(&pieces, own_a.map_or(ra.node, |o| o.0), own_b.map_or(rb.node, |o| o.0), tracks, &mut ops, &mut new_nodes, &mut new_edges);
+            self.push_pieces(&pieces, own_a.map_or(ra.node, |o| o.0), own_b.map_or(rb.node, |o| o.0), tracks, false, &mut ops, &mut new_nodes, &mut new_edges);
             express = ex_bridged.unwrap_or(ex);
         }
         // A junction this route makes (it had two edge ends, or it splits track) is flying if
@@ -1339,14 +1345,14 @@ impl TrackApi {
         self.release(&nn, &ne);
         let r = if self.bridge_refused { r.map_err(bridge_refusal) } else { r };
         let shape = std::mem::take(&mut self.route_bridged);
-        let mut out = self.preview_out(r, &verts, &shape, tracks.min(2));
+        let mut out = self.preview_out(r, &verts, &shape, tracks.min(2), self.route_hsr && tracks == 2);
         for j in &self.route_junctions {
             self.preview_marks.extend([j[0], j[1], 1.0]);
         }
         if !self.route_express.is_empty() && out.len() > 5 {
             // T-711: the multiplier over both pairs' track, as the price is
-            let (fl, tl, _) = self.w.preview(if shape.is_empty() { &verts } else { &shape }, 2);
-            let (fe, te, _) = self.w.preview(&self.route_express, 2);
+            let (fl, tl, _) = self.w.preview(if shape.is_empty() { &verts } else { &shape }, 2, false);
+            let (fe, te, _) = self.w.preview(&self.route_express, 2, false);
             let base = BASE_COST_PER_KM * (fl.len + fe.len) / 1000.0;
             out[4] = if base > 0.0 { (tl + te) / base } else { 0.0 };
             // a quad route's express pair, drawn on from the end back to the start (T-255)
@@ -1376,6 +1382,12 @@ impl TrackApi {
     pub fn set_design_speed(&mut self, kmh: f64) {
         let kmh = if kmh.is_finite() { kmh.clamp(DESIGN_SPEEDS[0], DESIGN_SPEEDS[DESIGN_SPEEDS.len() - 1]) } else { DESIGN_SPEEDS[0] };
         self.route_cap = design_radius(kmh);
+    }
+
+    /// T-817: whether double track drawn after this (routes and stations on open ground) is
+    /// high-speed track. Single and quad track are never.
+    pub fn set_route_hsr(&mut self, on: bool) {
+        self.route_hsr = on;
     }
 
     /// The circle of the last route preview's tangent arc (T-418): centre x, y and ground radius,
@@ -1411,7 +1423,7 @@ impl TrackApi {
     /// Edges for the pieces of a stroke (`stroke_pieces`) from node `a` to node `b`, with new
     /// joints between them.
     #[allow(clippy::too_many_arguments)]
-    fn push_pieces(&mut self, pieces: &[Vec<Pi>], a: u32, b: u32, tracks: u8, ops: &mut Vec<Op>, nodes: &mut Vec<u32>, edges: &mut Vec<u32>) {
+    fn push_pieces(&mut self, pieces: &[Vec<Pi>], a: u32, b: u32, tracks: u8, hsr: bool, ops: &mut Vec<Op>, nodes: &mut Vec<u32>, edges: &mut Vec<u32>) {
         let mut from = a;
         for (k, p) in pieces.iter().enumerate() {
             let to = if k + 1 == pieces.len() {
@@ -1425,7 +1437,7 @@ impl TrackApi {
             };
             let edge = self.w.net.alloc_edge();
             edges.push(edge);
-            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false }) });
+            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, hsr }) });
             from = to;
         }
     }
@@ -1829,6 +1841,9 @@ impl TrackApi {
         if net.edge_tracks[edge as usize] != 2 {
             return Err(Issue::Tracks { edge });
         }
+        if net.edge_hsr[edge as usize] {
+            return Err(Issue::HighSpeed { edge });
+        }
         let doubled = |e: u32| self.twin_at(e, net.edge_len[e as usize] / 2.0).is_some();
         if doubled(edge) {
             return Err(Issue::Alongside { edge });
@@ -1845,7 +1860,7 @@ impl TrackApi {
                 }
                 let Some(&c) = p.ends().iter().find(|&&c| c >> 1 != from) else { break };
                 let e = c >> 1;
-                if run.iter().any(|r| r.0 == e) || net.edge_crossover[e as usize] || net.edge_tracks[e as usize] != 2 || doubled(e) {
+                if run.iter().any(|r| r.0 == e) || net.edge_crossover[e as usize] || net.edge_tracks[e as usize] != 2 || net.edge_hsr[e as usize] || doubled(e) {
                     break;
                 }
                 // c & 1 is the end of e at `node`: walking forward, e runs a to b when that is its a
@@ -1919,7 +1934,7 @@ impl TrackApi {
             let id = self.w.net.alloc_edge();
             ne.push(id);
             let (na, nb) = (a.map_or(nodes[i], |o| o.0), b.map_or(nodes[i + 1], |o| o.0));
-            ops.push(Op::Edge { id, data: Some(EdgeData { a: na, b: nb, tracks: 2, pis: ex[1..ex.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false }) });
+            ops.push(Op::Edge { id, data: Some(EdgeData { a: na, b: nb, tracks: 2, pis: ex[1..ex.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, hsr: false }) });
         }
         Ok((Op::Batch(ops), nn, ne))
     }
@@ -1968,6 +1983,12 @@ impl TrackApi {
             out.extend(pts);
         }
         out
+    }
+
+    /// Edges of high-speed track (T-817).
+    pub fn hsr_edges(&self) -> Vec<u32> {
+        let net = &self.w.net;
+        (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && net.edge_hsr[e as usize]).collect()
     }
 
     /// Edges that are a crossover's diagonals.
@@ -2089,7 +2110,7 @@ impl TrackApi {
             ];
             let id = self.w.net.alloc_edge();
             new_edges.push(id);
-            ops.push(Op::Edge { id, data: Some(EdgeData { a: nodes[p], b: nodes[q], tracks, pis: pis.clone(), built: false, off: false, thru: vec![], crossover: true }) });
+            ops.push(Op::Edge { id, data: Some(EdgeData { a: nodes[p], b: nodes[q], tracks, pis: pis.clone(), built: false, off: false, thru: vec![], crossover: true, hsr: false }) });
             let mut v = vec![Pi::new(px, py, 0.0, pl)];
             v.extend(pis);
             v.push(Pi::new(qx, qy, 0.0, ql));
@@ -4935,7 +4956,7 @@ mod tests {
         // as T-079 stored it: fitted PIs with set radii, and the point clicked
         let fitted = vec![Pi::new(1200.0, 380.0, 1500.0, 0), Pi::new(2800.0, 380.0, 1500.0, 0)];
         let clicks = vec![Pi::new(2000.0, 300.0, 0.0, 0)];
-        let op = Op::Edge { id: e, data: Some(EdgeData { a: n0, b: n1, tracks: 2, pis: fitted.clone(), built: false, off: false, thru: clicks.clone(), crossover: false }) };
+        let op = Op::Edge { id: e, data: Some(EdgeData { a: n0, b: n1, tracks: 2, pis: fitted.clone(), built: false, off: false, thru: clicks.clone(), crossover: false, hsr: false }) };
         assert!(a.w.apply(op).is_ok());
         let bytes = a.save();
         assert_eq!(&bytes[..4], b"TWT4");
@@ -5473,6 +5494,83 @@ mod tests {
         a.set_design_speed(160.0);
         a.preview_route(&ends, &[], 2, false);
         assert!(a.w.net.fit(&a.route_vertices).radius.iter().all(|&r| r <= R_CAP + 1e-6));
+    }
+
+    /// T-817 b1: high-speed track is drawn as double track only, costs 1.5x double track as
+    /// previewed and quoted (its own quote rows), and survives a save.
+    #[test]
+    fn high_speed_track_costs_half_again_and_is_saved() {
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
+        let mut plain = api();
+        assert_eq!(plain.add_route(&ends, &[], 2, false), 0, "{}", plain.issues());
+        let mut a = api();
+        a.set_route_hsr(true);
+        let pv = a.preview_route(&ends, &[], 2, false);
+        assert_eq!(pv[0], 1.0, "{}", a.issue_kinds());
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        let hsr = a.hsr_edges();
+        assert!(!hsr.is_empty() && hsr == live_edges(&a));
+        assert!((a.blueprint_cost() - HSR_COST * plain.blueprint_cost()).abs() < 1e-6, "{} against {}", a.blueprint_cost(), plain.blueprint_cost());
+        assert!((pv[1] - a.blueprint_cost()).abs() < 1e-6, "previewed {} built {}", pv[1], a.blueprint_cost());
+        // the preview's multiplier is level and water only, as for single track
+        assert!((pv[4] - plain.preview_route(&ends, &[], 2, false)[4]).abs() < 1e-9);
+        let rows = a.blueprint_cost_items();
+        assert!(rows.chunks_exact(7).filter(|r| r[0] == 0.0).all(|r| r[2] == HSR_ROW as f64));
+        assert!((rows.chunks_exact(7).map(|r| r[6]).sum::<f64>() - a.blueprint_cost()).abs() < 1e-6);
+        // single and quad track drawn with the setting on are ordinary track
+        for (y, tracks) in [(2000.0, 1u8), (4000.0, 4)] {
+            let e: Vec<f64> = free(0.0, y).iter().chain(free(3000.0, y).iter()).copied().collect();
+            assert_eq!(a.add_route(&e, &[], tracks, false), 0, "{}", a.issues());
+        }
+        assert_eq!(a.hsr_edges(), hsr);
+        // saved with flag 64 and loaded as it was; a save without it loads with none
+        let bytes = a.save();
+        let mut b = api();
+        assert!(b.load(&bytes));
+        assert_eq!(b.hsr_edges().len(), hsr.len());
+        assert_eq!(b.save(), bytes);
+        assert!((b.blueprint_cost() - a.blueprint_cost()).abs() < 1e-6);
+        let mut c = api();
+        assert!(c.load(&plain.save()));
+        assert!(c.hsr_edges().is_empty());
+        // high-speed track has no quad form
+        assert_ne!(a.double_up(hsr[0]), 0);
+        assert!(a.issue_kinds().contains("HighSpeed"), "{}", a.issue_kinds());
+    }
+
+    /// T-817 b1: a split keeps high-speed track high speed; two high-speed pieces join under a
+    /// platform as double track does, but never with ordinary track, which still meets it at a
+    /// plain node.
+    #[test]
+    fn high_speed_track_survives_split_and_join() {
+        for second in [true, false] {
+            let mut a = api();
+            a.set_route_hsr(true);
+            let mut ends = free_at(0.0, 0.0, 0);
+            ends.extend(free_at(1000.0, 0.0, 0));
+            assert_eq!(a.add_route(&ends, &[], 2, false), 0);
+            let n = a.route_end();
+            a.set_route_hsr(second);
+            let mut ends = vec![1.0, n as f64, 0.0, 0.0, 0.0];
+            ends.extend(free_at(2000.0, 0.0, 0));
+            assert_eq!(a.add_route(&ends, &[], 2, false), 0, "ordinary track joins at a plain node: {}", a.issues());
+            assert_eq!(a.hsr_edges().len(), if second { 2 } else { 1 });
+            let e = edge_under(&a, 960.0, 0.0);
+            let r = a.add_station(2, e, 960.0, 0.0, 200, "P".into());
+            if second {
+                assert_eq!(r, 0, "{}", a.issues());
+                assert_eq!(live_edges(&a).len(), 2, "joined, then split at the station");
+                assert_eq!(a.hsr_edges(), live_edges(&a), "both halves high speed");
+            } else {
+                assert_ne!(r, 0, "high-speed and ordinary track are not joined");
+                assert!(a.issue_kinds().contains("PlatformJoint"), "{}", a.issue_kinds());
+                // a station clear of the joint splits the high-speed piece into two high-speed halves
+                let e = edge_under(&a, 400.0, 0.0);
+                assert_eq!(a.add_station(2, e, 400.0, 0.0, 200, "Q".into()), 0, "{}", a.issues());
+                assert_eq!(a.hsr_edges().len(), 2);
+                assert_eq!(live_edges(&a).len(), 3);
+            }
+        }
     }
 
     /// T-442: a click beyond a quarter turn is still one arc of radius d / (2 sin a) through it,

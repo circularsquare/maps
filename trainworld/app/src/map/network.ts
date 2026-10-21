@@ -24,6 +24,8 @@ export const F_BAD = 16;
 export const F_PLACEMENT = 32;
 /** A crossover where lines turn back (T-658d): its lane values are signed, drawn close in only. */
 export const F_TURNBACK = 128;
+/** High-speed track (T-817), and lines over it: a thin centre line along the stroke. */
+export const F_HSR = 256;
 
 export interface Strokes {
   /** per segment: x0, y0, x1, y1 */
@@ -208,10 +210,10 @@ function linesOnEdges(s: ClockState) {
   return onEdge;
 }
 
-/** `lane`: as `Strokes.lane`, 0 for single track (T-658) */
-export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false, simMarks?: ArrayLike<number>, lane = 255): Strokes {
+/** `lane`: as `Strokes.lane`, 0 for single track (T-658); `hsr`: high-speed track's look (T-817) */
+export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false, simMarks?: ArrayLike<number>, lane = 255, hsr = false): Strokes {
   const b = new StrokeBuilder();
-  const flags = F_BLUEPRINT | (bad ? F_BAD : 0) | (placement ? F_PLACEMENT : 0);
+  const flags = F_BLUEPRINT | (bad ? F_BAD : 0) | (placement ? F_PLACEMENT : 0) | (hsr ? F_HSR : 0);
   // a negative speed is a step with no track (between quad's two pairs' own ends, T-423): not drawn
   let from = 0;
   if (speed) {
@@ -439,6 +441,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   const edgePts = new Map<number, Float32Array>();
   const builtEdge = new Map<number, boolean>();
   const offEdge = new Set<number>(s.edges.filter((e) => e.off).map((e) => e.id));
+  const hsrEdge = new Set<number>(s.edges.filter((e) => e.hsr).map((e) => e.id));
   /** edges whose polyline, ends and flags are as in the last build */
   const kept = new Set<number>();
   const trackParts: Strokes[] = [];
@@ -464,7 +467,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     const pts = r.edgePts.subarray(r.edgeOff[i] * 3, r.edgeOff[i + 1] * 3);
     edgePts.set(e.id, pts);
     builtEdge.set(e.id, e.built);
-    const flags = e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0);
+    const flags = (e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0)) | (e.hsr ? F_HSR : 0);
     const lanes = (e.tracks === 2 ? 1 : 0) | (e.tracks === 2 && taperAt(e.a) ? 2 : 0) | (e.tracks === 2 && taperAt(e.b) ? 4 : 0);
     let c = cache.edges.get(e.id);
     if (c && c.a === e.a && c.b === e.b && c.flags === flags && c.lanes === lanes && sameFloats(c.pts, pts)) kept.add(e.id);
@@ -516,7 +519,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
         const dr = drawn.get(e);
         const ends = edgeEnds.get(e);
         if (dr) {
-          const flags = l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0));
+          const flags = (l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (hsrEdge.has(e) ? F_HSR : 0);
           // one slot per edge since T-190: no line sits beside another
           const info: [number, number, number, number] = [Math.min(stretch, Math.max(0, l.stops.length - 2)), 0, 1, 1];
           if (dr.lpts.length >= 6) firstStroke[k] = lines.count;

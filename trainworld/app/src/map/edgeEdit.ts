@@ -151,8 +151,8 @@ export class EdgeEditor {
     this.client.previewEdge(edge, pis.map(toInput), (a) => {
       if (!this.drag || this.edge !== edge) return;
       this.preview = a;
-      const single = world.peek()?.edges.find((x) => x.id === edge)?.tracks === 1;
-      this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, undefined, false, a.marks, single ? 0 : 255) : null);
+      const d = world.peek()?.edges.find((x) => x.id === edge);
+      this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, undefined, false, a.marks, d?.tracks === 1 ? 0 : 255, !!d?.hsr) : null);
       this.overlay.invalidate();
       this.place();
     });

@@ -427,6 +427,7 @@ function buildState(): ClockState {
   const a = api!;
   const ei = a.edges_info();
   const offEdges = new Set<number>(a.off_edges());
+  const hsrEdges = new Set<number>(a.hsr_edges());
   const crossoverIds = a.crossover_edges(), crossoverPartners = a.crossover_partners();
   const crossovers = new Map<number, number>(Array.from(crossoverIds, (id, k) => [id, crossoverPartners[k] === 0xffffffff ? -1 : crossoverPartners[k]]));
   const offStations = new Set<number>(a.off_stations());
@@ -437,7 +438,7 @@ function buildState(): ClockState {
   for (let i = 0; i < ei.length; i += 10) {
     const id = ei[i];
     edges.push({
-      id, a: ei[i + 1], b: ei[i + 2], tracks: ei[i + 3] as 1 | 2, built: ei[i + 4] === 1, off: offEdges.has(id), crossover: crossovers.has(id), partner: crossovers.get(id) ?? -1, lengthM: ei[i + 5], cost: ei[i + 6],
+      id, a: ei[i + 1], b: ei[i + 2], tracks: ei[i + 3] as 1 | 2, built: ei[i + 4] === 1, off: offEdges.has(id), hsr: hsrEdges.has(id), crossover: crossovers.has(id), partner: crossovers.get(id) ?? -1, lengthM: ei[i + 5], cost: ei[i + 6],
       vminKmh: ei[i + 7], levelMin: ei[i + 8], levelMax: ei[i + 9],
     });
     let d = edgeDrawn.get(id);
@@ -1444,6 +1445,7 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
     case "route": {
       a.set_route_tangent(!!op.through);
       a.set_design_speed(op.design ?? 160);
+      a.set_route_hsr(!!op.hsr);
       const r = a.add_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false);
       return { r, node: r === 0 ? a.route_end() : undefined };
     }
@@ -1470,7 +1472,7 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
         ? { r: a.add_station(1, op.at.node, 0, 0, op.platform, op.name) }
         : op.at.kind === "edge"
           ? { r: a.add_station(2, op.at.edge, op.at.x, op.at.y, op.platform, op.name) }
-          : { r: a.add_free_station(freeEnds(op.at), op.at.quad ? 4 : 2, op.platform, op.name) };
+          : (a.set_route_hsr(!!op.at.hsr), { r: a.add_free_station(freeEnds(op.at), op.at.quad ? 4 : 2, op.platform, op.name) });
     case "crossover":
       return { r: a.add_crossover(op.edge, op.x, op.y) };
     case "doubleUp":
@@ -1712,7 +1714,7 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
 /** Before an edit that makes new track: the masks its geometry needs (worked out as its preview). */
 async function masksFor(op: EditOp) {
   const a = api!;
-  if (op.op === "route") await withMasks(() => (a.set_route_tangent(!!op.through), a.set_design_speed(op.design ?? 160), a.preview_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false)), routePoints);
+  if (op.op === "route") await withMasks(() => (a.set_route_tangent(!!op.through), a.set_design_speed(op.design ?? 160), a.set_route_hsr(!!op.hsr), a.preview_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false)), routePoints);
   else if (op.op === "edgePis") await withMasks(() => a.preview_edge(op.edge, pisArr(op.pis)), routePoints);
   else if (op.op === "moveNode") await withMasks(() => a.preview_move_node(op.node, op.x, op.y), nodePoints);
   else if (op.op === "moveNodes") await withMasks(() => a.preview_move_nodes(new Uint32Array(op.nodes), op.dx, op.dy), nodePoints);
@@ -1853,7 +1855,7 @@ async function handle(msg: ToClock) {
     const at = msg.at;
     const r = at.kind === "node" ? api.preview_station(1, at.node, 0, 0, msg.platform)
       : at.kind === "edge" ? api.preview_station(2, at.edge, at.x, at.y, msg.platform)
-      : api.preview_free_station(freeEnds(at), at.quad ? 4 : 2, msg.platform);
+      : (api.set_route_hsr(!!at.hsr), api.preview_free_station(freeEnds(at), at.quad ? 4 : 2, msg.platform));
     send({ kind: "stationCheck", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues(), cost: r === 0 ? api.station_cost() : 0 });
   } else if (msg.kind === "previewCrossover") {
     const out = api.preview_crossover(msg.edge, msg.x, msg.y);
@@ -1877,7 +1879,7 @@ async function handle(msg: ToClock) {
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {
     const a = api;
     const out = await withMasks(() => msg.kind === "preview"
-      ? (a.set_route_tangent(!!msg.through), a.set_design_speed(msg.design ?? 160), a.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false))
+      ? (a.set_route_tangent(!!msg.through), a.set_design_speed(msg.design ?? 160), a.set_route_hsr(!!msg.hsr), a.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false))
       : a.preview_edge(msg.edge, pisArr(msg.pis)), routePoints);
     let arc: Float64Array | undefined;
     const ra = msg.kind === "preview" ? a.route_arc() : null;

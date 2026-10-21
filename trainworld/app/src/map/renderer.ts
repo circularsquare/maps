@@ -147,8 +147,13 @@ in float a_full;            // T-819: 1 on a line segment whose track is at capa
 out vec3 v_color;
 out float v_alpha;
 out vec4 v_cap;             // px: along from the segment's start, along to its end, across, half the width
+flat out vec4 v_stripe;     // T-817: high-speed track's centre line, its colour and half width (px), 0 none
+flat out float v_stripe_only; // 1: only that line is drawn (bare track between its parted tracks)
 void main() {
   int flags = int(a_flags + 0.5);
+  bool hsr = (flags & 256) != 0;
+  v_stripe = vec4(0.0);
+  v_stripe_only = 0.0;
   bool sel = (u_kind == 1 && int(a_colour) == u_sel_line) || (u_kind == 0 && int(a_edge) == u_sel_edge);
   bool blueprint = (flags & 1) != 0;
   bool placement = (flags & 32) != 0;
@@ -189,7 +194,7 @@ void main() {
     float band = max(core * (bpTrack || bpLine ? 1.0 : a_wmul), lfm * 2.0 * half_ + wl);
     bool casing = u_casing > 0.0;
     bool keep = u_lane_mode == 1
-      ? (casing ? !bpTrack : u_kind == 1 && !blueprint)
+      ? (casing ? !bpTrack : (u_kind == 1 && !blueprint) || (hsr && u_kind == 0))
       : (casing ? bpTrack : true) && (u_lane_mode == 2 || lfm > 0.0);
     if (!keep) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
     w = u_lane_mode == 1 ? band + extra + cas
@@ -248,10 +253,19 @@ void main() {
   else v_color = texelFetch(u_line_colours, ivec2(int(a_colour) % ${LINES_W}, int(a_colour) / ${LINES_W}), 0).rgb;
   // other blueprint colours (a planned line, a selected blueprint, by height or speed) lighter
   if (bp && !bpMid && u_casing <= 0.0) v_color = swOff ? mix(v_color, u_bp_off_fade, 0.8) : mix(v_color, vec3(1.0), 0.45);
-  // the band behind a line's two tracks, pale so they stand out on it
-  if (u_lane_mode == 1 && u_casing <= 0.0) v_color = mix(v_color, u_casing_rgb, 0.6 * t);
   bool hot = (u_kind == 1 && int(a_colour) == u_hot.x) || (u_kind == 0 && int(a_edge) == u_hot.y);
   if (hot && u_casing <= 0.0) v_color = mix(v_color, vec3(1.0), ${HOT_LINE_MIX});
+  // high-speed track (T-817): a thin centre line along the stroke, light on built track (dark in
+  // the dark theme), the rail colour on blueprint; once its tracks part, the stroke's own colour
+  // between them
+  vec3 rail = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement ? u_sel : u_casing_rgb;
+  if (hsr && u_casing <= 0.0 && u_lane_mode < 2 && !full) {
+    float hs = max(0.3, (u_lane_mode == 0 ? 0.18 * w : 0.08 * G));
+    v_stripe = vec4(u_lane_mode == 0 ? rail : (bpTrack || placement ? rail : v_color), hs);
+    v_stripe_only = u_lane_mode == 1 && u_kind == 0 ? 1.0 : 0.0;
+  }
+  // the band behind a line's two tracks, pale so they stand out on it
+  if (u_lane_mode == 1 && u_casing <= 0.0) v_color = mix(v_color, u_casing_rgb, 0.6 * t);
 }`;
 
 const STROKE_FS = `#version 300 es
@@ -259,11 +273,19 @@ precision mediump float;
 in vec3 v_color;
 in float v_alpha;
 in vec4 v_cap;
+flat in vec4 v_stripe;
+flat in float v_stripe_only;
 out vec4 o;
 void main() {
   float past = -min(v_cap.x, v_cap.y);
   float a = past > 0.0 ? clamp(0.5 - (length(vec2(past, v_cap.z)) - v_cap.w), 0.0, 1.0) * v_alpha : v_alpha;
-  o = vec4(v_color * a, a);
+  vec3 c = v_color;
+  if (v_stripe.w > 0.0) {
+    float s = clamp(v_stripe.w + 0.5 - abs(v_cap.z), 0.0, 1.0);
+    c = mix(c, v_stripe.rgb, s);
+    if (v_stripe_only > 0.5) { c = v_stripe.rgb; a *= s; }
+  }
+  o = vec4(c * a, a);
 }`;
 
 // Stations (T-144, T-189, T-217): a platform is a band along its track at its true length, bent as

@@ -10,11 +10,13 @@ import { Icon } from "./widgets";
 
 const LEVEL_NAME: Record<Level, string> = { 3: "High viaduct", 2: "Viaduct", 1: "Viaduct", 0: "Ground level", [-1]: "Cut and cover", [-2]: "Tunnel", [-3]: "Deep tunnel" };
 const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "Trains"];
+/** a quote row's track count for high-speed track (sim `HSR_ROW`, T-817) */
+const HSR_ROW = 3;
 
 function description(r: BlueprintItem) {
   if (r.kind === 5) return `${r.quantity} new ${r.quantity === 1 ? "car" : "cars"}, after spare cars`;
   const quantity = r.kind === 0 ? distance(r.quantity) : `${r.quantity} ${r.kind === 1 ? (r.quantity === 1 ? "station" : "stations") : (r.quantity === 1 ? "item" : "items")}`;
-  return [quantity, r.ramp ? "ramp" : "", r.tracks ? (r.tracks === 1 ? "single track" : "double track") : "", r.wet ? "over water" : "on land"].filter(Boolean).join(", ");
+  return [quantity, r.ramp ? "ramp" : "", r.tracks ? (r.tracks === 1 ? "single track" : r.tracks === HSR_ROW ? "high-speed track" : "double track") : "", r.wet ? "over water" : "on land"].filter(Boolean).join(", ");
 }
 
 /** Build's quote and undo controls. Every item is priced by the clock worker's track model. */

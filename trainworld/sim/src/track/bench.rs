@@ -165,7 +165,7 @@ pub fn synth(km: f64, stations: usize, lines: usize, seed: u64) -> Network {
                 V::Node(n) => {
                     if let Some(a) = from {
                         let id = net.alloc_edge();
-                        net.set_edge(id, Some(EdgeData { a, b: n, tracks: 2, pis: std::mem::take(&mut pis), built: true, off: false, thru: vec![], crossover: false })).unwrap();
+                        net.set_edge(id, Some(EdgeData { a, b: n, tracks: 2, pis: std::mem::take(&mut pis), built: true, off: false, thru: vec![], crossover: false, hsr: false })).unwrap();
                     }
                     from = Some(n);
                     pis.clear();
@@ -385,7 +385,7 @@ pub fn run(km: f64, stations: usize, lines: usize, reps: usize) -> (String, Vec<
         Op::Batch(vec![
             Op::Node { id: a, data: Some(NodeData { x: far, y: 0.0, level: 0, flying: false }) },
             Op::Node { id: b, data: Some(NodeData { x: far + 3000.0, y: 4000.0, level: 0, flying: false }) },
-            Op::Edge { id: e, data: Some(EdgeData { a, b, tracks: 2, pis: vec![Pi::new(far + 3000.0, 0.0, 0.0, 0)], built: true, off: false, thru: vec![], crossover: false }) },
+            Op::Edge { id: e, data: Some(EdgeData { a, b, tracks: 2, pis: vec![Pi::new(far + 3000.0, 0.0, 0.0, 0)], built: true, off: false, thru: vec![], crossover: false, hsr: false }) },
         ])
     });
     out += &report("delete the busiest edge (lines reroute or break)", &mut w, &|_| Op::DeleteEdge { id: busiest });

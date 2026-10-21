@@ -137,7 +137,7 @@ export interface DockLayout {
  * saved the old default with everything else, so that setting is dropped once and the new default applies. */
 const VERSION = 6;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; keep: boolean; snap: boolean; design: number }>; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; design: number }>; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -219,6 +219,29 @@ export const snapReal = signal(saved.build?.snap === true);
 export const DESIGN_SPEEDS = [160, 200, 250, 320] as const;
 export type DesignSpeed = (typeof DESIGN_SPEEDS)[number];
 export const designSpeed = signal<DesignSpeed>(DESIGN_SPEEDS.includes(saved.build?.design as DesignSpeed) ? (saved.build!.design as DesignSpeed) : 160);
+/** T-817: the track tool lays high-speed track, always double (`trackCount` is 2 meanwhile). */
+export const highSpeed = signal(saved.build?.hsr === true && trackCount.peek() === 2);
+/** The design speed before High speed was picked, put back when Double or Quad is picked again. */
+let designBeforeHsr: DesignSpeed | null = null;
+export type TrackType = 2 | 4 | "hsr";
+export const trackType = computed<TrackType>(() => (highSpeed.value ? "hsr" : trackCount.value));
+/** The Build tab's Double / Quad / High speed choice. High speed sets the design speed to its top
+ * (the player can step it down); leaving it puts back the speed there was before. */
+export function setTrackType(t: TrackType) {
+  const was = highSpeed.peek();
+  if (t === "hsr") {
+    if (was) return;
+    designBeforeHsr = designSpeed.peek();
+    trackCount.value = 2;
+    highSpeed.value = true;
+    designSpeed.value = DESIGN_SPEEDS[DESIGN_SPEEDS.length - 1];
+  } else {
+    trackCount.value = t;
+    highSpeed.value = false;
+    if (was && designBeforeHsr !== null) designSpeed.value = designBeforeHsr;
+    designBeforeHsr = null;
+  }
+}
 /** the real network is being snapped to: the switch on and the track tool in hand */
 export const snapping = computed(() => snapReal.value && tool.value === "track");
 
@@ -255,7 +278,7 @@ effect(() => {
   void loadFont(k).then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 });
 effect(() => {
-  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, tracks: trackCount.value, keep: keepPlacing.value, snap: snapReal.value, design: designSpeed.value }, v: VERSION };
+  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, tracks: trackCount.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, design: designSpeed.value }, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

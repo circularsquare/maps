@@ -72,6 +72,8 @@ export interface TrackEdge {
   built: boolean;
   /** a blueprint switched off (T-333): Construct skips it */
   off?: boolean;
+  /** high-speed track (T-817): always double */
+  hsr?: boolean;
   /** one diagonal of a crossover (T-338): fixed shape, deleted with the other */
   crossover?: boolean;
   /** a crossover diagonal's other diagonal, -1 if none */

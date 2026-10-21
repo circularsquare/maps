@@ -183,6 +183,15 @@ Full design, numbers and sources: `notes/T-008.md`.
   edit fails) the stations go in without one, and so they do when the cash covers them but not it.
   Full price, two junctions. So between any two neighbouring quad stations a line can change pairs
   once, either way. Removing the station leaves its crossover as track.
+- **High-speed track** (T-817, design notes/T-817.md): the third setting, always double track
+  (4 m apart; there is no high-speed quad, so four tracks are HSR and double drawn side by side).
+  An edge flag (`EdgeData::hsr`, `TrackApi::set_route_hsr`), so a station placed on open ground
+  with it set lays high-speed track too. It costs `HSR_COST` (1.5x) double track's price at the
+  same level (6.4); stations, junctions and flyovers on it cost as on double track. It meets
+  ordinary track at plain nodes like any two pieces; a split keeps the flag on both halves, and
+  two pieces join under a platform only when both are high speed or both are not (`unjoin_near`).
+  It cannot be doubled up (`HighSpeed`). Trains on it run as on double track, at most 160 km/h,
+  until T-817 stage b2.
 - **Doubling up** (T-708, `TrackApi::double_up`): double track already placed, blueprint or
   built, becomes quad with one undoable edit that adds the express pair as blueprint (built track
   too: Construct pays for the pair as for any blueprint). It covers the run the selected piece is
@@ -195,7 +204,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   preview's price includes them. At a junction end the pair swings in to meet the junction (the T-255 taper), so lines
   can change pairs there; at any other end it has its own loose end beside the drawn pair's, or
   carries on from a loose end of the pair beside that is there already (quad drawn earlier). Refused
-  on single track (`Tracks`), a crossover, and track with a pair beside it (`Alongside`).
+  on single track (`Tracks`), high-speed track (`HighSpeed`), a crossover, and track with a pair
+  beside it (`Alongside`); a run stops at high-speed track as at single track.
 - **Crossovers** (T-338, design notes/T-334.md): a crossover joins a track to the track running
   beside it. The game places them past quad stations (above); the player has no tool for them
   since T-733, but `TrackApi::add_crossover` stays and saves keep theirs. It finds the nearest other track whose centre line is 6-15 m
@@ -476,7 +486,8 @@ partway (when the line does) and waiting at busy track, and names the places it 
 
 Money is present, not tight, as in NIMBY Rails: construction, train purchase, operating cost per
 train-km and car-km, a player-set fare curve by distance. One price list worldwide. Track costs a **base of
-US$90M per route-km of double track** (single track 0.6x; ramps at the dearer level) times a
+US$90M per route-km of double track** (single track 0.6x, high-speed track 1.5x, T-817; ramps at
+the dearer level) times a
 multiplier per level (Anita, 2026-10-08). The reference is a cheap-country metro such as Korea's
 or Spain's, about US$100-150M a tunnelled km with its stations (Anita, 2026-10-21, T-805):
 

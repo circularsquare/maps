@@ -38,7 +38,7 @@ export type RouteEnd =
 export type StationAt =
   | { kind: "node"; node: NodeId }
   | { kind: "edge"; edge: EdgeId; x: number; y: number }
-  | { kind: "free"; x0: number; y0: number; x1: number; y1: number; level: Level; quad: boolean };
+  | { kind: "free"; x0: number; y0: number; x1: number; y1: number; level: Level; quad: boolean; hsr?: boolean };
 
 /** One edit. Blueprint edits are undoable; construct and removing constructed things are final
  * (SPEC 6.4). Line ids are the track model's numbers. */
@@ -46,7 +46,7 @@ export type EditOp =
   /** a route turning at the clicked points `pis`; a junction it makes is flat (T-080) */
   /** `through` (T-418): a route with no PIs from a heading to open ground is one tangent arc */
   /** `design` (T-817): the design speed its curves are laid out for, km/h; 160 when absent */
-  | { op: "route"; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number }
+  | { op: "route"; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean }
   | { op: "removeEdge"; edge: EdgeId }
   /** reshape blueprint track (T-064): its PIs replaced (moved, or a radius set), same ends */
   | { op: "edgePis"; edge: EdgeId; pis: PiInput[] }
@@ -109,7 +109,7 @@ export type ToClock =
   | { kind: "shade"; shade: "light" | "dark" }
   | { kind: "edit"; seq: number; op: EditOp }
   /** what a route would cost and whether it can be built; answered with "preview" */
-  | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number }
+  | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean }
   /** what giving blueprint track new PIs would do (T-064); answered with "preview" */
   | { kind: "previewEdge"; seq: number; edge: EdgeId; pis: PiInput[] }
   /** what moving a blueprint node would do (T-093); answered with "preview", one part per edge */
@@ -224,6 +224,8 @@ export interface ClockEdge {
   built: boolean;
   /** a blueprint switched off (T-333) */
   off: boolean;
+  /** high-speed track (T-817) */
+  hsr: boolean;
   /** one diagonal of a crossover (T-338) */
   crossover: boolean;
   /** the crossover's other diagonal, -1 if none */

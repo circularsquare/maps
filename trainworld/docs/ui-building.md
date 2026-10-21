@@ -13,17 +13,20 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 - **Tools**: draw track (key 1), station (2), delete (3), select (5, [below](#the-select-tool)), three
   buttons on the first row and one on the second; then the elevation (seven buttons
   tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692) with its
-  multiplier and price per km, double or quad track [T-255; single track not offered since T-733],
+  multiplier and price per km (with High speed picked, high-speed track's: 1.5x, so 0.45x at
+  ground), Double, Quad or High speed track [T-255, T-817; single track not offered since T-733],
   the design speed (a row under the track choice: a stepper through 160, 200, 250 and 320 km/h, 160
   by default; higher lays the curves of newly drawn track wider, [track-and-service.md](track-and-service.md)
-  6.1; its hover: "Track you draw curves wide enough to take this speed") [T-817], and the platform
+  6.1; its hover: "Track you draw curves wide enough to take this speed") [T-817]; picking High
+  speed sets it to 320 (it can still be stepped down) and picking Double or Quad again puts back
+  the speed from before [T-817], and the platform
   length for new stations (the next row, no heading; the label's hover says it is for new stations). There is no crossover tool: the game places
   crossovers past quad stations [T-733, [track-and-service.md](track-and-service.md) 6.1].
   Everything the player reads says elevation, never level (code keeps `level`) [T-526].
   Beside keep placing, the **snap switch** (a magnet, "Snap track to the real network") [T-727]: while
   it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
-  The elevation, the double or quad choice, the design speed, the keep placing switch and the snap switch are remembered per
+  The elevation, the double, quad or high speed choice, the design speed, the keep placing switch and the snap switch are remembered per
   browser; a remembered single (from before T-733) reads as double (localStorage with the other panel settings, not in the save) [T-468]. Caps Lock only
   changes the switch when its state changes after the page loads, so a stored setting wins over a
   Caps Lock left on or off [T-487].
@@ -38,7 +41,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   and redo, and "Construct blueprints", which builds every blueprint that is not disabled
   ([below](#the-select-tool)). The total is red when it is more than the cash on hand [T-527]. It includes the new
   train cars that constructing starts, after spare cars. An expandable cost breakdown shows track
-  by priced level, single or double, land or water and ramps (charged at the dearer end), stations,
+  by priced level, single, double or high-speed, land or water and ramps (charged at the dearer end), stations,
   junction switches, flyovers and flat crossings, with lengths, counts and prices from the track
   model. The fleet quote previews the constructed service, so lines started together include their
   resulting delays, without changing the game.
@@ -201,7 +204,7 @@ switch on, the track tool follows the real network the layer draws.
 - **On open ground** [T-794, T-834; `freePiece`, `freeGhost` in `map/tools.ts`]: where the
   pointer is not within reach of track or a node (above), a station is placed like track, in two
   clicks: it lays a straight blueprint piece of track one platform long (plus 10 m each end) at the
-  selected elevation, double or quad as set, with the station at its middle, one undoable edit
+  selected elevation, double, quad or high speed as set, with the station at its middle, one undoable edit
   (rules: [track-and-service.md](track-and-service.md) 6.1). The first click sets the middle; the
   piece then turns about it to point at the pointer, its length unchanged, and the second click
   (anywhere, track or not) places it. Within 8 px of the middle it keeps the last heading. Esc after
@@ -311,7 +314,8 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   built) the title carries **Double up** [T-708; `DoubleUp` in `ui/inspector/others.tsx`], an
   icon of two rails and a plus: a click adds the express pair beside its run as blueprint
   ([track-and-service.md](track-and-service.md) 6.1 "Doubling up"). Its hover gives the price, or
-  why not, greyed (a pair beside already).
+  why not, greyed (a pair beside already). The title names the track: Double track, Single track
+  or High-speed track [T-817]; high-speed track has no Double up.
 - **On a crossover's diagonal** [T-391] the track inspector is titled "Crossover" and drops the
   corners and elevation controls; it shows the slowest curve, the price of both diagonals, Construct
   (builds both) and Remove crossover.

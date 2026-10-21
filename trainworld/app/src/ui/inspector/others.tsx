@@ -660,8 +660,8 @@ export function TrackInspector({ edge }: { edge: number }) {
   return (
     <>
       <div class="title">
-        <span class="name">{e.crossover ? "Crossover" : e.tracks === 2 ? "Double track" : "Single track"}</span>
-        {e.tracks === 2 && !e.crossover && <DoubleUp edge={e.id} version={w.version} />}
+        <span class="name">{e.crossover ? "Crossover" : e.hsr ? "High-speed track" : e.tracks === 2 ? "Double track" : "Single track"}</span>
+        {e.tracks === 2 && !e.crossover && !e.hsr && <DoubleUp edge={e.id} version={w.version} />}
       </div>
       <div class="sub muted">
         {distance(e.lengthM)}, {lv}

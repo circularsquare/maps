@@ -12,7 +12,7 @@ import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { DEMAND_INDEX, LEVELS, type Level, type LineInput, type LineStats, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
-import { buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, display, keepPlacing, lineSort, selection, setDisplay, snapReal, stationSort, trackCount, tool, type StationUseMode, type Tool } from "../game/ui";
+import { buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, display, keepPlacing, lineSort, selection, setDisplay, setTrackType, snapReal, stationSort, tool, trackType, type StationUseMode, type Tool, type TrackType } from "../game/ui";
 import { setFares, world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { cityById, viewedZone } from "../game/cities";
@@ -39,6 +39,8 @@ const natural = new Intl.Collator(undefined, { numeric: true, sensitivity: "base
 // SPEC 6.4. A display copy: the track model (sim/src/track/params.rs) owns the real price list.
 const BASE_M_PER_KM = 90;
 const MULT: Record<Level, number> = { 3: 1.8, 2: 1.3, 1: 0.8, 0: 0.3, [-1]: 1.0, [-2]: 1.1, [-3]: 1.2 };
+/** high-speed track's price over double track (params.rs `HSR_COST`, T-817) */
+const HSR_COST = 1.5;
 const LEVEL_NAME: Record<Level, string> = {
   3: "High viaduct",
   2: "Viaduct",
@@ -76,6 +78,7 @@ export function pickTool(v: Tool) {
 export function BuildTab() {
   const t = tool.value;
   const lv = buildLevel.value;
+  const hsrF = trackType.value === "hsr" ? HSR_COST : 1;
   return (
     <>
       <div class="build-options">
@@ -97,11 +100,11 @@ export function BuildTab() {
           ))}
         </div>
         <p class="muted small price">
-          {LEVEL_NAME[lv]} at ${Math.round(perDistance(BASE_M_PER_KM * MULT[lv]) * 10) / 10}M per {distUnit()} ({MULT[lv].toFixed(1)}x)
+          {LEVEL_NAME[lv]} at ${Math.round(perDistance(BASE_M_PER_KM * MULT[lv] * hsrF) * 10) / 10}M per {distUnit()} ({(MULT[lv] * hsrF).toFixed(hsrF === 1 ? 1 : 2)}x)
         </p>
         <div class="h">Track</div>
         <div class="track-row">
-          <Segmented<2 | 4> options={[[2, "Double"], [4, "Quad"]]} value={trackCount.value} onChange={(v) => (trackCount.value = v)} />
+          <Segmented<TrackType> options={[[2, "Double"], [4, "Quad"], ["hsr", "High speed"]]} value={trackType.value} onChange={setTrackType} />
           <button class={"btn icon" + (keepPlacing.value ? " on" : "")} aria-label="Keep placing track" aria-pressed={keepPlacing.value}
             data-tip="Keep placing track (Caps Lock). Double click or press Esc to stop."
             onClick={() => (keepPlacing.value = !keepPlacing.peek())}><Icon.keepPlacing /></button>

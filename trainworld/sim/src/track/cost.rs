@@ -196,16 +196,21 @@ pub fn level_of(z: f64) -> i8 {
 }
 
 /// Cost of one edge's track, US$M: per sub-interval, the level's multiplier (a ramp at the dearer
-/// of its two levels), 2x over water, 0.6x for single track.
-pub fn track_cost(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks: u8) -> f64 {
+/// of its two levels), 2x over water, `track_factor` for the track type.
+pub fn track_cost(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks: u8, hsr: bool) -> f64 {
     let mut c = 0.0;
-    track_cost_parts(len, vert, water, tracks, |_, _, _, _, cost| c += cost);
+    track_cost_parts(len, vert, water, tracks, hsr, |_, _, _, _, cost| c += cost);
     c
+}
+
+/// A track type's price over double track: 0.6x single, 1.5x high speed (always double).
+pub fn track_factor(tracks: u8, hsr: bool) -> f64 {
+    if tracks == 1 { SINGLE_TRACK_COST } else if hsr { HSR_COST } else { 1.0 }
 }
 
 /// Visit each priced interval: charged level, water, ramp, metres, US$M.
 /// Shared by the price and its explanation, including the dearer end of a ramp.
-pub fn track_cost_parts(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks: u8, mut part: impl FnMut(i8, bool, bool, f64, f64)) {
+pub fn track_cost_parts(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks: u8, hsr: bool, mut part: impl FnMut(i8, bool, bool, f64, f64)) {
     let mut cuts: Vec<f64> = Vec::with_capacity(vert.len() + 2 * water.len() + 2);
     cuts.push(0.0);
     cuts.push(len);
@@ -216,7 +221,7 @@ pub fn track_cost_parts(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks:
     }
     cuts.sort_by(|a, b| a.total_cmp(b));
     cuts.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
-    let track_f = if tracks == 1 { SINGLE_TRACK_COST } else { 1.0 };
+    let track_f = track_factor(tracks, hsr);
     for w in cuts.windows(2) {
         let (u, v) = (w[0].max(0.0), w[1].min(len));
         if v <= u {
@@ -293,7 +298,7 @@ mod tests {
     fn spec_worked_example_20km_at_minus2_with_18_stations() {
         // SPEC 6.4: a 20 km line at -2 with 18 stations is about 3.8B.
         let vert = [[0.0, -16.0], [20000.0, -16.0]];
-        let track = track_cost(20000.0, &vert, &[], 2);
+        let track = track_cost(20000.0, &vert, &[], 2, false);
         assert!((track - 1980.0).abs() < 1e-9);
         let stations = 18.0 * station_cost(-2, 200, 2, false);
         assert!((stations - 1800.0).abs() < 1e-9);
@@ -304,18 +309,29 @@ mod tests {
     #[test]
     fn multipliers_ramps_water_single() {
         let flat0 = [[0.0, 0.0], [1000.0, 0.0]];
-        assert!((track_cost(1000.0, &flat0, &[], 2) - 27.0).abs() < 1e-9);
-        assert!((track_cost(1000.0, &flat0, &[], 1) - 16.2).abs() < 1e-9);
+        assert!((track_cost(1000.0, &flat0, &[], 2, false) - 27.0).abs() < 1e-9);
+        assert!((track_cost(1000.0, &flat0, &[], 1, false) - 16.2).abs() < 1e-9);
         // +1 viaduct over 500 m of water: 72 x 0.5 + 144 x 0.5
         let v1 = [[0.0, 8.0], [1000.0, 8.0]];
-        assert!((track_cost(1000.0, &v1, &[[250.0, 750.0]], 2) - 108.0).abs() < 1e-9);
+        assert!((track_cost(1000.0, &v1, &[[250.0, 750.0]], 2, false) - 108.0).abs() < 1e-9);
         // 0 -> -2 ramp over 400 m in a 1000 m edge: 300 m at 0.3, 400 m at 1.1 (dearer), 300 m at 1.1.
         let ramp = [[0.0, 0.0], [300.0, 0.0], [700.0, -16.0], [1000.0, -16.0]];
         let want = 90.0 * (0.3 * 0.3 + 0.4 * 1.1 + 0.3 * 1.1);
-        assert!((track_cost(1000.0, &ramp, &[], 2) - want).abs() < 1e-9);
+        assert!((track_cost(1000.0, &ramp, &[], 2, false) - want).abs() < 1e-9);
         // Ramp +1 -> -1 is priced at the dearer end level (-1: 1.0), not at 0.
         let r2 = [[0.0, 8.0], [400.0, -8.0]];
-        assert!((track_cost(400.0, &r2, &[], 2) - 36.0).abs() < 1e-9);
+        assert!((track_cost(400.0, &r2, &[], 2, false) - 36.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn high_speed_track_is_half_again_double() {
+        // T-817: 1.5x double track at its level, water and ramps priced as for double
+        let flat0 = [[0.0, 0.0], [1000.0, 0.0]];
+        assert!((track_cost(1000.0, &flat0, &[], 2, true) - 40.5).abs() < 1e-9);
+        let v1 = [[0.0, 8.0], [1000.0, 8.0]];
+        assert!((track_cost(1000.0, &v1, &[[250.0, 750.0]], 2, true) - 162.0).abs() < 1e-9);
+        // single track has no high-speed form: the flag is ignored there
+        assert!((track_cost(1000.0, &flat0, &[], 1, true) - 16.2).abs() < 1e-9);
     }
 
     #[test]
@@ -333,7 +349,7 @@ mod tests {
     fn breakdown_splits_water_ramps_and_single_track() {
         let vert = [[0.0, 0.0], [300.0, 0.0], [700.0, -16.0], [1000.0, -16.0]];
         let mut rows = vec![];
-        track_cost_parts(1000.0, &vert, &[[500.0, 900.0]], 1, |l, wet, ramp, m, c| rows.push((l, wet, ramp, m, c)));
+        track_cost_parts(1000.0, &vert, &[[500.0, 900.0]], 1, false, |l, wet, ramp, m, c| rows.push((l, wet, ramp, m, c)));
         assert_eq!(rows.iter().map(|r| r.3).sum::<f64>(), 1000.0);
         assert_eq!(rows.iter().filter(|r| r.1).map(|r| r.3).sum::<f64>(), 400.0);
         assert_eq!(rows.iter().filter(|r| r.2).map(|r| r.3).sum::<f64>(), 400.0);

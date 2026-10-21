@@ -230,10 +230,12 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
 
 ## 6. Building and running
 
-The player draws curved track (straights and circular arcs, double or quad, at elevations
+The player draws curved track (straights and circular arcs, double, quad or high speed, at elevations
 -3 to +3, "levels" in the code) two clicks per segment, each segment one curve through the click leaving along the track, up
 to 350 degrees round [T-418, T-422, T-442], its curves laid out for a design speed the player picks
-(160 to 320 km/h, wider curves for faster; T-817), places stations (on track, or on open ground with a
+(160 to 320 km/h, wider curves for faster; T-817; high-speed track is double track at 1.5x the
+price, its design speed 320 by default, and trains on it still run at most 160 until T-817 b2),
+places stations (on track, or on open ground with a
 straight piece of their own track, one click for its middle and one for its direction [T-794,
 T-834]), and makes lines, all as
 **blueprints** that are free to edit and undo, then pays to **construct** them. A segment is one

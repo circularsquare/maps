@@ -27,7 +27,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { speedColour } from "../game/palette";
 import { metresBetween } from "../game/walks";
-import { ask, buildLevel, buildPlatform, designSpeed, keepPlacing, lineDraft, selection, shownDayPhrase, trackCount, tool } from "../game/ui";
+import { ask, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, selection, shownDayPhrase, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -130,12 +130,12 @@ export class Tools {
     // outside the marks' layer, so no demand tag covers it (T-526)
     map.getContainer().appendChild(this.tag);
     overlay.afterMapFrame.push(() => this.place());
-    effect(() => { buildPlatform.value; buildLevel.value; trackCount.value; if (tool.value === "station") this.place(); else { this.freeAt = null; this.clearFree(); } });
+    effect(() => { buildPlatform.value; buildLevel.value; trackCount.value; highSpeed.value; if (tool.value === "station") this.place(); else { this.freeAt = null; this.clearFree(); } });
     // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
     // fetched when the station tool is picked, not at startup (T-400)
     effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); warmStreetNames(this.map); } });
     map.on("idle", () => tool.peek() === "station" && warmStreetNames(map));
-    effect(() => { buildLevel.value; trackCount.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
+    effect(() => { buildLevel.value; trackCount.value; highSpeed.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
     // T-727d: the snap switch's routes along the real network
     this.real = new RealSnap(map, overlay, client, (r) => this.realReq(r), (a) => {
       if (a) return this.start && this.showPreview(a, "");
@@ -445,7 +445,7 @@ export class Tools {
   }
 
   private routeReq(to: RouteEnd) {
-    return { from: this.start!.end, to, pis: [], single: false, quad: trackCount.peek() === 4, through: true, design: designSpeed.peek() };
+    return { from: this.start!.end, to, pis: [], single: false, quad: trackCount.peek() === 4, through: true, design: designSpeed.peek(), hsr: highSpeed.peek() };
   }
 
   /** A real route's request (T-727d): from the start, or on open ground from the route's first
@@ -453,7 +453,7 @@ export class Tools {
   private realReq(r: RealRoute, at: Snap | null = this.hover) {
     const free = ([lng, lat]: [number, number]): RouteEnd => ({ kind: "free", ...lngLatToPack(lng, lat), level: buildLevel.peek() });
     const se = this.start!.end;
-    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: false, quad: trackCount.peek() === 4, through: true, design: designSpeed.peek() };
+    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: false, quad: trackCount.peek() === 4, through: true, design: designSpeed.peek(), hsr: highSpeed.peek() };
   }
 
   private requestPreview() {
@@ -476,7 +476,7 @@ export class Tools {
     this.lastPreview = a;
     this.previewKey = key;
     // single track previews as one track close in, double and quad as two each (T-658)
-    this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true, a.marks, 255) : null);
+    this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true, a.marks, 255, highSpeed.peek() && trackCount.peek() === 2) : null);
     this.overlay.invalidate();
     this.place();
   }
@@ -860,7 +860,7 @@ export class Tools {
       twin = { x: tx, y: ty, ways: [new Float32Array([tx, ty, z, qbx, qby, z]), new Float32Array([tx, ty, z, qax, qay, z])] };
     }
     const pa = lngLatToPack(...a), pb = lngLatToPack(...b);
-    const stationAt: StationAt = { kind: "free", x0: pa.x, y0: pa.y, x1: pb.x, y1: pb.y, level, quad };
+    const stationAt: StationAt = { kind: "free", x0: pa.x, y0: pa.y, x1: pb.x, y1: pb.y, level, quad, hsr: highSpeed.peek() };
     return { stationAt, track, ways, twin, perM: 1 / cos, lengthM: 2 * half, key: `${JSON.stringify(stationAt)}:${buildPlatform.peek()}:${w?.version}` };
   }
 

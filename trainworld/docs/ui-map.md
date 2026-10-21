@@ -78,6 +78,13 @@ there is no high-speed class and no hover yet.
   `map/network.ts`); at a junction a single-track branch leaves from the centre line. Quad
   track is four tracks 4 m apart; a crossover between double tracks is two double tracks in an
   X. Clicks and the hover reach half the pair's width from the centre line once it has grown.
+- **High-speed track** [T-817, `F_HSR` in `map/network.ts`, the stroke shaders in
+  `map/renderer.ts`]: double track's width and colours with a thin centre line along the stroke,
+  18% of its width (at least 0.6 px): the casing colour on built track (light, dark in the dark
+  theme), the rail colour on blueprint, the ink on the drawing ghost; lines over it carry it too.
+  Far out, where the stroke is a pixel or two, it shows as a paler built stroke and a darker
+  blueprint one. Once the two tracks part, the line runs between them in the track's or the
+  line's own colour.
 - **Lines sharing track are drawn over each other** [T-190, T-533], each of the two tracks too
   close in: interlining is not represented.
   One order for all lines: a line with no trains (fleet zero) goes under every line that runs
