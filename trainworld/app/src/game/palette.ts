@@ -25,8 +25,10 @@ export const LEVEL_COLOURS: Record<Level, string> = {
   [-3]: "#c2351c",
 };
 
-/** The Max speed display's key, km/h and colour; renderer.ts's stroke shader blends the same stops. */
-export const SPEED_STOPS: [number, string][] = [[40, "#d85b4b"], [80, "#d9a437"], [120, "#55a886"], [160, "#397bc1"]];
+/** The Max speed display's key, km/h and colour; renderer.ts builds its stroke shader's blend from the
+ * same stops. Warm red to blue up to 160 (ordinary track), then indigo and violet up to high-speed
+ * track's 320 (T-843). */
+export const SPEED_STOPS: [number, string][] = [[40, "#d85b4b"], [80, "#d9a437"], [120, "#55a886"], [160, "#397bc1"], [240, "#5b4fc9"], [320, "#a03fc2"]];
 
 /** The colour the Max speed display gives `kmh`. */
 export function speedColour(kmh: number): string {

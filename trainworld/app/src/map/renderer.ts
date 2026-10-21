@@ -11,7 +11,7 @@ import { BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connec
 // each hour's trips (and the next hour's, ahead); when the hour turns, only that buffer is
 // re-uploaded. Phase tables change only on edits.
 
-import { LEVEL_COLOURS, NET_INK, PLATFORM_BLUE, rgb } from "../game/palette";
+import { LEVEL_COLOURS, NET_INK, PLATFORM_BLUE, rgb, SPEED_STOPS } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { platformRoom, pulsesBetween, readBoardHour, QUEUE_STRIDE, type BoardHour } from "../game/boarding";
 import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, PSI_PER_UNIT } from "./geo";
@@ -90,6 +90,13 @@ const SEL_RING_GAP_PX = 6;
 /** Hovered (T-730): a line's or bare track's colour mixed this far toward white; a station's rim
  * likewise, `HOT_STATIONS` of a complex at most. */
 const HOT_LINE_MIX = "0.3";
+/** The Max speed colour as GLSL (T-843): `SPEED_STOPS` blended in order, so the stops cannot drift from the key. */
+const SPEED_BLEND = (() => {
+  const v3 = (hex: string) => `vec3(${rgb(hex).map((c) => (c / 255).toFixed(4)).join(", ")})`;
+  const s = SPEED_STOPS;
+  return [`v_color = ${v3(s[0][1])};`, ...s.slice(1).map(([kmh, hex], i) =>
+    `v_color = mix(v_color, ${v3(hex)}, clamp((a_speed - ${s[i][0].toFixed(1)}) / ${(kmh - s[i][0]).toFixed(1)}, 0.0, 1.0));`)].join("\n    ");
+})();
 const HOT_RIM_MIX = "0.6";
 const HOT_STATIONS = 16;
 /** Stations as the complex rule's distances group them (game/complexView.ts `dotGroups`): zoomed out
@@ -241,11 +248,7 @@ void main() {
   else if ((flags & 16) != 0) v_color = u_bad;
   else if ((u_kind == 2 && !placement) || u_by_level == 1) v_color = lc;
   else if (u_by_speed == 1) {
-    vec3 slow = vec3(0.8471, 0.3569, 0.2941), medium = vec3(0.8510, 0.6431, 0.2157);
-    vec3 fast = vec3(0.3333, 0.6588, 0.5255), top = vec3(0.2235, 0.4824, 0.7569);
-    v_color = a_speed < 80.0 ? mix(slow, medium, clamp((a_speed - 40.0) / 40.0, 0.0, 1.0))
-      : a_speed < 120.0 ? mix(medium, fast, (a_speed - 80.0) / 40.0)
-      : mix(fast, top, clamp((a_speed - 120.0) / 40.0, 0.0, 1.0));
+    ${SPEED_BLEND}
   }
   else if (placement) v_color = vec3(1.0);
   else if (u_kind == 0 && bpTrack && !sel) { v_color = swOff ? u_bp_off_mid : u_bp_mid; bpMid = true; }

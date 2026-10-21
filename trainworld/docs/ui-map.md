@@ -105,9 +105,11 @@ there is no high-speed class and no hover yet.
     at ground, warm below (deep): +3 #4a2c9a, +2 #2f6fd0, +1 #16a39a, 0 #58b04a, -1 #f0b928, -2 #ee7a1a,
     -3 #c2351c (`LEVEL_COLOURS`, T-413, T-478, T-480; neighbours at least 30 apart in CIELAB). The same table colours
     the Build tab's elevation buttons, the Settings key and the elevation in the track tags.
-  - **Max speed**: the geometry's allowed speed at each section, curve limits included, capped at
-    160 km/h (not a train's speed), keyed 40/80/120/160 km/h from warm red through ochre and green
-    to blue (`SPEED_STOPS`, the stroke shader blends the same stops).
+  - **Max speed**: the geometry's allowed speed at each section, curve limits included (not a
+    train's speed): 160 km/h on ordinary track, up to 320 on high-speed track. Keyed 40/80/120/160/240/320 km/h
+    from warm red through ochre and green to blue, then indigo (#5b4fc9) and violet (#a03fc2)
+    (`SPEED_STOPS`; the stroke shader is built from the same stops, and the key beside the display
+    buttons lists them).
   In Elevation and Max speed the width is uniform and trains keep their line colours.
 - **Blueprint track** [T-311, T-322, T-331, T-333] is drawn solid and opaque as two rails in every
   track view: a light blue middle (#a9cdf3) between dark blue rails (#2f62b3). The whole width is 75%
