@@ -355,7 +355,13 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
 - Hover says "Click to add a stop", "Click to add a stop and change the route", "Click to add a
   stop. Trains reverse at <station>" (`stop_tiers` gives tier 4 with the station), "Click to remove
   the stop" or "No track joins it to this line", under the station's name; a click on the last says
-  why in its own tag for four seconds. The markers take no pointer events (the map's pick handles clicks), so the wheel
+  why in its own tag for four seconds.
+- **Loops** (T-798): the first stop's marker says "Click to close the loop" (tier 5) while the line
+  has two or more stops and track leads round from the last stop back to it without the train going
+  back the way it came; the click appends the first stop (`setStops`). On a loop it says "Click to
+  open the loop" (tier 6) and the click takes the closing stop off. The closing stop's cross in the
+  stop list also opens it ("Open the loop"). New stops on a loop go between its first stop and the
+  closing one (`best_insert`). The markers take no pointer events (the map's pick handles clicks), so the wheel
   and dragging work over them.
 - A panel at the map's lower left shows "Editing stops on <line>: N stops" and Done; Enter and
   Escape also leave. Red removal crosses show in the stop list while editing.

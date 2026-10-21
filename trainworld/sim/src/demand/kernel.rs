@@ -2024,8 +2024,12 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     let (mut rn_dx, mut rn_dy) = (vec![], vec![]);
     let mut st_spread = vec![false; s];
     let platforms = net.stop_x.len() == net.line_stops.len() && net.stop_y.len() == net.line_stops.len();
+    // route nodes where a circle's train rides on round to the first stop (T-798): nobody boards
+    // there, since the first stop's own route node has the same trains
+    let mut rn_wrap: Vec<bool> = vec![];
     for l in 0..net.n_lines() {
         let (a, b) = (net.line_off[l] as usize, net.line_off[l + 1] as usize);
+        let wrap = net.line_wrap.get(l).copied().unwrap_or(false);
         for dir in 0..2 {
             let base = s + rn_station.len();
             let len = b - a;
@@ -2048,11 +2052,14 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
                     } else {
                         net.hop_back[k]
                     }
+                } else if wrap {
+                    if dir == 0 || net.hop_back.is_empty() { net.hop_min[b - 1] } else { net.hop_back[a] }
                 } else {
                     0.0
                 };
                 rn_ride.push(ride);
-                rn_next.push(if i + 1 < len { (base + i + 1) as u32 } else { NONE });
+                rn_next.push(if i + 1 < len { (base + i + 1) as u32 } else if wrap { base as u32 } else { NONE });
+                rn_wrap.push(wrap && i + 1 == len);
             }
         }
     }
@@ -2062,7 +2069,9 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         let node = (s + r) as u32;
         let l = rn_line[r] as usize;
         if rn_next[r] != NONE {
-            edges.push((st, node, board_cost(net.line_headway_min[l][p.period], p), NONE));
+            if !rn_wrap[r] {
+                edges.push((st, node, board_cost(net.line_headway_min[l][p.period], p), NONE));
+            }
             edges.push((node, rn_next[r], rn_ride[r], node));
         }
         edges.push((node, st, 0.0, NONE));
@@ -4115,7 +4124,7 @@ mod tests {
             hop_min: vec![], hop_back: vec![], line_speed_kmh: vec![0.0; lines.len()],
             line_headway_min: tph.iter().map(|t| [if *t > 0.0 { 60.0 / t } else { f32::INFINITY }; network::PERIODS]).collect(),
             line_seats: vec![100.0; lines.len()], line_crush: vec![200.0; lines.len()],
-            st_group: vec![], stop_x: vec![], stop_y: vec![],
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![],
         };
         for (l, stops) in lines.iter().enumerate() {
             net.line_stops.extend_from_slice(stops);
@@ -4127,6 +4136,50 @@ mod tests {
 
     fn common_test_params() -> Params {
         Params { xfer_walk_m: 0.0, ..Params::default() }
+    }
+
+    /// T-798: a circle 0-1-2-3-4-5-0, 12 tph, 2 minutes a stop and half a minute standing at 0.
+    /// Riders take the short way round through 0 without changing; a line that is not a circle
+    /// sends them the long way.
+    #[test]
+    fn a_circle_rides_the_short_way_through_its_first_stop() {
+        let p = common_test_params();
+        let ring = |wrap: bool| {
+            let st: Vec<(f32, f32)> = (0..6).map(|i| { let a = i as f32 * std::f32::consts::PI / 3.0; (3000.0 * a.cos(), 3000.0 * a.sin()) }).collect();
+            let stops = [0u32, 1, 2, 3, 4, 5, 0];
+            let ride: Vec<f32> = (0..7).map(|k| if k < 6 { 2.0 } else if wrap { 0.5 } else { 0.0 }).collect();
+            let back: Vec<f32> = (0..7).map(|k| if k > 0 { 2.0 } else if wrap { 0.5 } else { 0.0 }).collect();
+            Network {
+                st_x: st.iter().map(|s| s.0).collect(), st_y: st.iter().map(|s| s.1).collect(),
+                line_name: vec![String::new()], line_off: vec![0, 7], line_stops: stops.to_vec(),
+                hop_min: ride, hop_back: back, line_speed_kmh: vec![0.0],
+                line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_crush: vec![200.0],
+                st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap],
+            }
+        };
+        let g = build_graph(&ring(true), &p);
+        let s = g.n_st;
+        assert_eq!(g.n - s, 14, "two route nodes a stop a direction, as for any line");
+        let sk = skims(&g, &p);
+        // 5 to 1: half a headway's wait at 5, two stops and the stand at 0
+        let short = 2.5 + 2.0 + 0.5 + 2.0;
+        assert!((sk.r[5 * s + 1] - short).abs() < 1e-4, "{} against {short}", sk.r[5 * s + 1]);
+        assert!((sk.r[1 * s + 5] - short).abs() < 1e-4, "the other way: {}", sk.r[1 * s + 5]);
+        let mut od = vec![0.0; s * s];
+        od[5 * s + 1] = 100.0;
+        od[1 * s + 5] = 40.0;
+        let loads = assign(&g, &sk, &od);
+        // route nodes: run 0 = 0..7 (stations 0,1,2,3,4,5,0), run 1 = 7..14 (0,5,4,3,2,1,0)
+        assert_eq!(loads.seg[6], 100.0, "riders stay aboard through 0 on run 0");
+        assert_eq!(loads.seg[13], 40.0, "and on run 1");
+        assert_eq!(loads.rn_board.iter().sum::<f32>(), 140.0, "one boarding each");
+        assert_eq!((loads.rn_board[5], loads.rn_alight[1]), (100.0, 100.0));
+        assert_eq!((loads.rn_board[12], loads.rn_alight[8]), (40.0, 40.0));
+        // nobody boards at a wrapped last stop: the first stop's route node has the same trains
+        assert_eq!(loads.rn_board[6] + loads.rn_board[13], 0.0);
+        // without the wrap the trip is the long way: four stops
+        let plain = skims(&build_graph(&ring(false), &p), &p);
+        assert!((plain.r[5 * s + 1] - (2.5 + 8.0)).abs() < 1e-4, "{}", plain.r[5 * s + 1]);
     }
 
     #[test]

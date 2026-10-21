@@ -138,7 +138,8 @@ interface Service {
   fare: { base: number; perKm: number };
   /** `complex`: the station's complex (T-161); absent = a complex of its own */
   stations: { id: string; x: number; y: number; complex?: number }[];
-  lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; dwellS: number[][][]; cars: number }[];
+  /** `wrapS`: a circle's stand at its first stop, riding on round (T-798) */
+  lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; dwellS: number[][][]; wrapS?: number; cars: number }[];
 }
 
 /** A day's corridors summed over the periods (`DemandClient.corridorSums`): in full, and as if no
@@ -452,7 +453,7 @@ function serviceFromSnapshot(s: NetworkSnapshot): Service {
     frame: s.frame ?? LEGACY_FRAME,
     fare: s.fare ?? { base: 2, perKm: 0 }, // legacy fixed 6 perceived minutes
     stations: s.stations.map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex })),
-    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, dwellS: l.dwellS, cars: l.cars })),
+    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars })),
   };
 }
 
@@ -487,6 +488,8 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
       for (let k = 0; k < n - 1; k++) net.times[at(0) + k] = (h0[k] ?? 0) + (d0[k] ?? 0);
       // run 1 travels the stops reversed: its j-th hop leaves stop n - 1 - j
       for (let j = 0; j < n - 1; j++) net.times[at(1) + n - 1 - j] = (h1[j] ?? 0) + (d1[j] ?? 0);
+      // T-798: a circle rides on round from its last stop to its first (`demand::Network::line_wrap`)
+      if (l.wrapS) net.times[at(0) + n - 1] = net.times[at(1)] = l.wrapS;
     }
     // Fare distances use actual track length. Old/test snapshots fall back to station distance.
     for (let run = 0; run < 2; run++) for (let k = 0; k < n - 1; k++) {
@@ -2167,7 +2170,7 @@ class DemandClient {
     if (!solve) return null;
     const at: RouteNodes = [];
     for (const { id, o, n, stops } of solve.layout)
-      for (let k = 0; k < n; k++) at[o + k] = at[o + 2 * n - 1 - k] = { station: stops[k], line: id, k };
+      for (let k = 0; k < n; k++) at[o + k] = at[o + 2 * n - 1 - k] = { station: stops[k], line: id, k, o, n };
     const periods: Trip["periods"] = PERIODS.map(() => null);
     let mask = 0, outside = false;
     for (const r of await this.ask((id) => ({ kind: "trip", id, version: t.version, from, to, ...(purpose >= 0 ? { purpose } : {}) }), undefined, [], undefined, t)) {

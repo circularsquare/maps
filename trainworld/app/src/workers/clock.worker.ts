@@ -491,6 +491,7 @@ function buildState(): ClockState {
       // in the state, not asked for after it, so the line panel never draws new stops with old gaps (T-648)
       passed: [...a.passed_stations(id)],
       reversals: [...a.line_reversals(id)],
+      loopKind: a.line_loop(id),
     });
   }
   // Keyframes: phase tables, profile meta, and run 0 of every line resampled.
@@ -1421,6 +1422,8 @@ function buildSnapshot(): NetworkSnapshot {
       id, name: a.line_name(id), stops: [...a.line_stops(id)], tph: [li[i + 5], li[i + 6], li[i + 7]], hopS, dwellS,
       hopKm: [0, 1].map((run) => { const s = a.line_stop_s(id, run); return Array.from({ length: s.length - 1 }, (_, k) => (s[k + 1] - s[k]) / 1000); }),
       turnaroundS: li[i + 20], cars: li[i + 21],
+      // T-798: a circle's riders ride on round through its first stop, standing the dwell there
+      ...(a.line_loop(id) === 1 ? { wrapS: Math.max(1, li[i + 19]) } : {}),
     });
   }
   return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: { ...fares } };

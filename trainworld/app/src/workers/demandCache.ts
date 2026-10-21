@@ -57,7 +57,7 @@ interface Svc {
   frame: unknown;
   fare: unknown;
   stations: { id: string; x: number; y: number; complex?: number }[];
-  lines: { id: string; stops: string[]; tph: unknown; hopS: unknown; hopKm?: unknown; dwellS: unknown; cars: number }[];
+  lines: { id: string; stops: string[]; tph: unknown; hopS: unknown; hopKm?: unknown; dwellS: unknown; wrapS?: number; cars: number }[];
 }
 
 /** The network as demand reads it with ids replaced by places (stations, lines) and complexes
@@ -70,7 +70,8 @@ export function canonical(svc: Svc): { text: string; stationIds: string[]; lineI
     if (s.complex !== undefined) { if (!cx.has(s.complex)) cx.set(s.complex, cx.size); c = cx.get(s.complex)!; }
     return [s.x, s.y, c];
   });
-  const lines = svc.lines.map((l) => ({ stops: l.stops.map((s) => place.get(s) ?? -1), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm ?? null, dwellS: l.dwellS, cars: l.cars }));
+  // a circle's stand (T-798) only where there is one, so other networks keep their keys
+  const lines = svc.lines.map((l) => ({ stops: l.stops.map((s) => place.get(s) ?? -1), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm ?? null, dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars }));
   return { text: JSON.stringify({ frame: svc.frame, fare: svc.fare, stations, lines }), stationIds: svc.stations.map((s) => s.id), lineIds: svc.lines.map((l) => l.id) };
 }
 

@@ -53,7 +53,9 @@ export function stepTrainCount(id: LineId, demand: Demand, by: number) {
   const base = trainsShown(id);
   if (!base) return;
   const t: [number, number, number] = [...base] as [number, number, number];
-  t[DEMAND_INDEX[demand]] = Math.max(0, Math.round(t[DEMAND_INDEX[demand]] + by));
+  // a loop's trains are half each way, so its count moves by two (T-798)
+  const k = trainStep(id);
+  t[DEMAND_INDEX[demand]] = Math.max(0, Math.round(t[DEMAND_INDEX[demand]] / k + by) * k);
   setTrainCounts(id, t);
 }
 
@@ -61,8 +63,14 @@ export function setTrainCount(id: LineId, demand: Demand, trains: number) {
   const base = trainsShown(id);
   if (!base) return;
   const t: [number, number, number] = [...base] as [number, number, number];
-  t[DEMAND_INDEX[demand]] = Math.max(0, Math.round(trains));
+  const k = trainStep(id);
+  t[DEMAND_INDEX[demand]] = Math.max(0, Math.ceil(Math.round(trains) / k) * k);
   setTrainCounts(id, t);
+}
+
+/** The step of a line's train count: 2 on a loop, whose trains are half each way (T-798). */
+export function trainStep(id: LineId): number {
+  return world.value?.lineStats[id]?.loop ? 2 : 1;
 }
 
 /** T-625: a train count or headway edit refused for want of cash: the line, the levels it changed,
@@ -128,8 +136,9 @@ export function nextHeadway(s: number, dir: number): number {
 }
 /** The fewest trains that keep a headway over a round trip, as the sim works it out; with the
  * line's shortest headway `limitS`, no more than fit when the headway is at that limit (T-679,
- * `clamp_auto`). */
-export function autoTrainsFor(roundTripS: number, headwayS: number, limitS = 0): number {
+ * `clamp_auto`). A loop (T-798) keeps it each way over half its round trip with half its trains. */
+export function autoTrainsFor(roundTripS: number, headwayS: number, limitS = 0, loop = false): number {
+  if (loop) return 2 * autoTrainsFor(roundTripS / 2, headwayS, limitS);
   const want = headwayS > 0 && roundTripS > 0 ? Math.min(9999, Math.ceil(roundTripS / (headwayS * AUTO_SLACK) - 1e-6)) : 0;
   if (!(want > 0) || !(limitS > 0) || !Number.isFinite(limitS) || headwayS * AUTO_SLACK < limitS) return want;
   return Math.min(want, Math.max(1, Math.floor(roundTripS / limitS + 1e-6)));
@@ -200,7 +209,7 @@ export function setAutoTrains(id: LineId, on: boolean) {
     const exact = Math.ceil(trip / k);
     for (const step of [60, 30, 10, 5]) {
       const h = Math.ceil(exact / step) * step;
-      if (autoTrainsFor(trip, h) === k) return h;
+      if (autoTrainsFor(trip, h, 0, !!st.loop) === k) return h;
     }
     return exact;
   }) as [number, number, number];

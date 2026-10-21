@@ -284,8 +284,9 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
     for (let k = 0; k < p; k++) stops[o + k] = stLocal[n.stops[g + a + k]];
     for (let r = 0; r < 6; r++) {
       times.set(n.times.subarray(6 * g + r * m + a, 6 * g + r * m + b + 1), 6 * o + r * p);
-      // run 0 ends at the span's last stop, run 1 at its first
-      times[6 * o + r * p + (r < 3 ? p - 1 : 0)] = 0;
+      // run 0 ends at the span's last stop, run 1 at its first; a whole circle keeps its ride on
+      // round through its first stop (T-798)
+      if (a > 0 || b < m - 1) times[6 * o + r * p + (r < 3 ? p - 1 : 0)] = 0;
     }
     // route nodes: the span's p stops in order, then reversed (the whole line's alike)
     for (let j = 0; j < p; j++) {

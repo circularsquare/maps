@@ -90,7 +90,10 @@ works on two levels:
    on every edit in 16-27 ms on the hand-made network and ~57 ms on the real one in WASM (before
    the bands).
 4. **Station-to-station times**: one reverse strategy search per destination station over station
-   nodes plus one node per stop per direction per line (T-069). At each station, useful lines
+   nodes plus one node per stop per direction per line (T-069). On a circle line (T-798,
+   `Network::line_wrap`) each direction's last node rides on to its first, costing the stand at
+   the first stop, and nobody boards at the last: a rider rides through the first stop the short
+   way round without changing. At each station, useful lines
    share their departure frequency: boarding costs the wait (half the combined headway, in plain
    minutes: T-585) plus their frequency-weighted downstream cost.
    A change of trains costs a fixed 2 perceived minutes (`transfer_min`, Anita, T-717), its wait

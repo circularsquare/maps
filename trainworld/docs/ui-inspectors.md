@@ -164,7 +164,11 @@ purpose filter the purpose drawn is ringed in the bar.
   the lines that use or cross it ("Flat crossing near Harbour", "Crosses Cross"); the round trip split into running, dwell, turning and waiting,
   naming where it waits most [T-031]; and last the average speed, both ways over the round trip
   less the turning at the ends, so stops and waiting at busy track count (hover gives the
-  distance and time) [T-549].
+  distance and time) [T-549]. A **loop** [T-798] shows its lap (one way round, the longer way's)
+  in place of the round trip, split the same way, with no turning row for a circle and "Turning at
+  the end" for a balloon; its average speed is once round over the lap (a balloon's less its
+  turning); its trains steppers move by 2 and the count's hover says how many run each way; the
+  stop count under the name counts the first stop once.
 - A line's riders count every line actually boarded, transfers included; inter-region trips show
   only in its purpose split [T-182].
 

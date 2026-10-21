@@ -247,7 +247,11 @@ track is not offered (saves and imports keep theirs, which run as before) [T-733
 a train length in cars, by default the most its shortest platform fits (20 m cars) and never more
 [T-733], and ordinary trains (160 km/h) or high-speed trains (320 km/h on high-speed track, cars
 1.5x the price, dearer to run, a fleet of their own), the player's choice [T-817]. A line may reverse partway at a stop, standing its turnaround there, at most 12 reversals an
-hour per station side, and a large icon marks the station [T-797]. Lines set a whole number of trains for high, medium and low demand, or a headway for each, run with the fewest trains that keep it, or at the track's limit the most that fit [T-625, T-679]; capacity and
+hour per station side, and a large icon marks the station [T-797]. A line whose last stop is its first
+is a loop, closed and opened by clicking its first stop while editing stops: a circle carries on round
+through it, a balloon turns back there; both run both ways with half their (even) trains each way,
+holding at the first stop to the headway, and riders ride through a circle's first stop the short
+way round [T-798]. Lines set a whole number of trains for high, medium and low demand, or a headway for each, run with the fewest trains that keep it, or at the track's limit the most that fit [T-625, T-679]; capacity and
 junction conflicts add delay, computed from the schedules in the clock worker before demand runs,
 and no track, platform or junction carries more trains than its capacity: a line's fleet past that
 waits at its ends [T-517].

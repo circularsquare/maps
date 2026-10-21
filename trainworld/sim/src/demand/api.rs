@@ -169,6 +169,8 @@ pub(crate) struct Service {
     pub(crate) stop_xy: Vec<f32>,
     /// Seconds, 6 per stop: per run and level, `(run * 3 + level) * n + k` from the line's
     /// offset x 6. Run 0: stop k to k + 1 (0 at the last); run 1: stop k to k - 1 (0 at the first).
+    /// On a circle (T-798) the last of run 0 and the first of run 1 are the stand at the first stop,
+    /// riding on round.
     pub(crate) times: Vec<f32>,
     pub(crate) tph: Vec<[f32; LEVELS]>,
     pub(crate) cars: Vec<f32>,
@@ -428,6 +430,7 @@ impl DemandApi {
             st_group: svc.group.clone(),
             stop_x: svc.stop_xy.iter().step_by(2).copied().collect(),
             stop_y: svc.stop_xy.iter().skip(1).step_by(2).copied().collect(),
+            line_wrap: vec![false; nl],
         };
         for l in 0..nl {
             let (a, b) = (svc.line_off[l] as usize, svc.line_off[l + 1] as usize);
@@ -436,6 +439,9 @@ impl DemandApi {
                 net.hop_min[a + k] = svc.times[6 * a + lev * n + k] / 60.0;
                 net.hop_back[a + k] = svc.times[6 * a + (3 + lev) * n + k] / 60.0;
             }
+            // T-798: a circle is a line whose last stop is its first, with a time to ride on
+            // round from it (`Service::times`)
+            net.line_wrap[l] = n >= 3 && svc.stops[a] == svc.stops[b - 1] && svc.times[6 * a + lev * n + n - 1] > 0.0;
             let hw: [f32; PERIODS] = std::array::from_fn(|p| {
                 let t = svc.tph[l][PERIOD_LEVEL[p]];
                 if t > 0.0 { 60.0 / t } else { f32::INFINITY }

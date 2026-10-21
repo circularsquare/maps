@@ -41,7 +41,7 @@ import { circleOnScreen } from "./curveCircle";
 import { strokesFromParts, strokesFromPreview } from "./network";
 import { pairBeside, PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
-import type { StopMarkers } from "./stopMarkers";
+import type { StopMarkers, StopTier } from "./stopMarkers";
 import { chip, elevationFact, factRow, speedFact } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
@@ -704,24 +704,31 @@ export class Tools {
     this.toggleStop(hit);
   }
 
-  /** Add the station as a stop, or take it out if the line stops there (T-233). Clicks queue and
+  /** Add the station as a stop, or take it out if the line stops there (T-233); on the first stop,
+   * close the line into a loop or open it when its marker says so (`tier`, T-798). Clicks queue and
    * each reads the latest stops. */
-  toggleStop(station: number) {
+  toggleStop(station: number, tier?: StopTier) {
     const session = this.lineSession;
-    this.stopClicks = this.stopClicks.then(() => this.toggle(station, session)).catch(() => {
+    this.stopClicks = this.stopClicks.then(() => this.toggle(station, session, tier)).catch(() => {
       if (session === this.lineSession) say("Could not change that stop. Please try again.", true);
     });
   }
 
-  private async toggle(station: number, session: number) {
+  private async toggle(station: number, session: number, tier?: StopTier) {
     if (session !== this.lineSession || tool.peek() !== "line") return;
     const id = lineDraft.peek().line;
     const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
     if (id === null || !line) return;
     const before = line.stops.map(Number);
     if (!before.includes(station)) return this.addStop(station, session);
-    // taking a stop out: the route between its neighbours is the worker's, as the inspector's crosses
-    const a = await edit({ op: "setStops", line: id, stops: before.filter((s) => s !== station) });
+    const n = before.length;
+    const closedLoop = n >= 3 && before[0] === before[n - 1];
+    // a loop's first stop opens it; a first stop the marker offers to close closes it (T-798)
+    const stops = station === before[0] && closedLoop ? before.slice(0, -1)
+      : station === before[0] && tier === "close" && !closedLoop ? [...before, station]
+      // taking a stop out: the route between its neighbours is the worker's, as the inspector's crosses
+      : before.filter((s) => s !== station);
+    const a = await edit({ op: "setStops", line: id, stops });
     if (a.ok && session === this.lineSession && tool.peek() === "line") {
       const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
       if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };

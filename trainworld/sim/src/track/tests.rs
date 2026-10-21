@@ -1134,3 +1134,201 @@ fn a_320_section_takes_16_trains_an_hour() {
     assert_eq!((3600.0 / hw).floor(), 16.0);
     assert_eq!((3600.0 / (SECTION_BASE_S + V_TOP / SIGNAL_BRAKE)).floor(), 24.0);
 }
+
+// ---- T-798: loop lines
+
+/// Six stations round a circle of 3 km, double track between them, each edge bent at the meeting
+/// of the circle's tangents, so a train carries straight on through every station.
+pub fn ring_fixture() -> (TrackWorld, Vec<u32>) {
+    let mut w = world();
+    let r = 3000.0;
+    let ns: Vec<u32> = (0..6).map(|i| {
+        let a = i as f64 * std::f64::consts::PI / 3.0;
+        node(&mut w, r * a.cos(), r * a.sin(), 0)
+    }).collect();
+    let pi = r / (std::f64::consts::PI / 6.0).cos();
+    for i in 0..6 {
+        let a = (i as f64 + 0.5) * std::f64::consts::PI / 3.0;
+        edge(&mut w, ns[i], ns[(i + 1) % 6], &[(pi * a.cos(), pi * a.sin())], 0).unwrap();
+    }
+    for &n in &ns {
+        station(&mut w, n, 200);
+    }
+    (w, ns)
+}
+
+fn closed(ns: &[u32]) -> Vec<u32> {
+    let mut v = ns.to_vec();
+    v.push(ns[0]);
+    v
+}
+
+#[test]
+fn a_circle_runs_both_ways_with_its_own_trains() {
+    use super::net::LoopKind;
+    let (mut w, ns) = ring_fixture();
+    let id = line(&mut w, &closed(&ns), [12.0, 6.0, 3.0]);
+    assert!(w.net.check_line(id).is_ok());
+    assert_eq!(w.net.line_loop(id), LoopKind::Circle);
+    assert!(w.net.path_reversals(w.net.line_path(id)).is_empty());
+    let ls = &w.svc.lines[id as usize];
+    assert!(ls.ok && ls.running && ls.kind == LoopKind::Circle);
+    for r in 0..2 {
+        let run = &ls.runs[r];
+        assert_eq!(run.stop_idx, vec![0, 1, 2, 3, 4, 5, 6]);
+        assert_eq!(run.nodes[0], run.nodes[6]);
+        assert!(run.turn.iter().all(|&t| !t));
+    }
+    // run 1 goes the other way round
+    assert_eq!(ls.runs[1].nodes[1], ns[5]);
+    // a lap is a run and the dwell at the first stop; each way has its own trains
+    let dwell = w.net.line_dwell[id as usize] as f64;
+    for lev in 0..LEVELS {
+        let lap = |r: usize| ls.runs[r].prof[lev].duration + dwell;
+        assert!((ls.round_trip[lev] - 2.0 * lap(0).max(lap(1))).abs() < 1e-9);
+        assert!((ls.trip_len(&w.net, id, 0, lev) - lap(0)).abs() < 1e-9);
+        let each = (lap(0).max(lap(1)) * w.net.line_tph[id as usize][lev] as f64 / 3600.0 - 1e-9).ceil() as u32;
+        assert_eq!(ls.trains[lev], 2 * each, "level {lev}");
+    }
+    // no turnaround anywhere: the first stop is a platform stop for both runs
+    let cap = &w.svc.cap;
+    assert!(cap.res.iter().all(|r| r.kind != ResKind::Terminus), "no terminus on a circle");
+    let at_a: usize = (0..cap.res.len()).filter(|&r| cap.res[r].node == ns[0] && cap.res[r].kind == ResKind::Platform).map(|r| cap.users_of(r).len()).sum();
+    assert_eq!(at_a, 2, "each run stops at the first stop once");
+    // the middle is half a lap from the first stop
+    let lat = w.svc.lattice(&w.net, id as usize).unwrap();
+    assert!((lat.lead - 0.25 * (ls.runs[0].prof[MEDIUM].duration + ls.runs[1].prof[MEDIUM].duration)).abs() < 1e-9);
+    assert_eq!(lat.off, [0.0; 3]);
+}
+
+#[test]
+fn a_circle_fleet_is_even_and_each_train_carries_on_round() {
+    let (mut w, ns) = ring_fixture();
+    let id = line(&mut w, &closed(&ns), [12.0, 6.0, 3.0]);
+    set_counts(&mut w, id, [7, 4, 2]);
+    assert_eq!(w.net.line_trains[id as usize], Some([8, 4, 2]), "an odd count rounds up");
+    let ls = &w.svc.lines[id as usize];
+    assert_eq!(ls.trains, [8, 4, 2]);
+    // four trains each way: the headway is the longer lap over four
+    let lap = ls.round_trip[HIGH] / 2.0;
+    assert!((3600.0 / w.net.line_tph[id as usize][HIGH] as f64 - lap / 4.0).abs() < 1.0);
+    // in steady service a train finishing a lap takes its own run's next departure, standing at
+    // the first stop under a headway
+    let day = 2.0 * 86400.0;
+    let trips = w.svc.trips(&w.net, day + 7.0 * 3600.0, day + 9.0 * 3600.0);
+    let mid: Vec<_> = trips.iter().filter(|t| t.line == id && t.dep > day + 7.0 * 3600.0 && t.dep < day + 8.0 * 3600.0).collect();
+    assert!(mid.len() >= 8);
+    for t in mid {
+        let n = t.next.expect("every train carries on");
+        assert!(trips.iter().any(|u| u.line == id && u.draw == n && u.run == t.run), "{t:?} goes on round the same way");
+        let ready = t.draw + ls.trip_len(&w.net, id, t.run as usize, t.level as usize);
+        assert!(n >= ready - 1.0 && n - ready < t.hw, "{t:?}: stands {} s", n - ready);
+    }
+    // headway mode keeps the count even
+    w.apply(Op::AutoTrains { id, auto: Some([300, 600, 1200]), trains: Some([8, 4, 2]) }).unwrap();
+    let ls = &w.svc.lines[id as usize];
+    for lev in 0..LEVELS {
+        let c = w.net.line_trains[id as usize].unwrap()[lev];
+        let h = [300.0, 600.0, 1200.0][lev];
+        assert_eq!(c % 2, 0, "level {lev}");
+        assert_eq!(c, 2 * super::world::auto_trains(ls.round_trip[lev] / 2.0, h as u32), "level {lev}");
+    }
+}
+
+/// A dead-end station A, a stop M on the stem, and a loop at the junction J through K.
+pub fn balloon_fixture() -> (TrackWorld, [u32; 4]) {
+    let mut w = world();
+    let a = node(&mut w, -3000.0, 0.0, 0);
+    let m = node(&mut w, 0.0, 0.0, 0);
+    let j = node(&mut w, 3000.0, 0.0, 0);
+    let k = node(&mut w, 5000.0, 1500.0, 0);
+    edge(&mut w, a, m, &[], 0).unwrap();
+    edge(&mut w, m, j, &[], 0).unwrap();
+    edge(&mut w, j, k, &[(3400.0, 0.0)], 0).unwrap();
+    edge(&mut w, k, j, &[(6600.0, 3000.0), (8000.0, -1500.0), (3800.0, 0.0)], 0).unwrap();
+    for n in [a, m, k] {
+        station(&mut w, n, 200);
+    }
+    (w, [a, m, j, k])
+}
+
+#[test]
+fn a_balloon_turns_back_at_its_first_stop() {
+    use super::net::LoopKind;
+    let (mut w, [a, m, _, k]) = balloon_fixture();
+    let id = line(&mut w, &[a, m, k, m, a], [12.0, 6.0, 3.0]);
+    assert!(w.net.check_line(id).is_ok());
+    assert_eq!(w.net.line_loop(id), LoopKind::Balloon);
+    assert_eq!(w.net.turn_count(w.net.line_stops(id), w.net.line_path(id)), 1);
+    let ls = &w.svc.lines[id as usize];
+    assert!(ls.ok && ls.running && ls.kind == LoopKind::Balloon);
+    // each run passes M twice, on the way out and back
+    for r in 0..2 {
+        assert_eq!(ls.runs[r].stop_idx.len(), 5);
+        assert!(ls.runs[r].turn.iter().all(|&t| !t));
+    }
+    // the closing stand is the turnaround; A is a dead-end terminus
+    let turn = w.net.line_turn[id as usize] as f64;
+    for lev in 0..LEVELS {
+        let lap = |r: usize| ls.runs[r].prof[lev].duration + turn;
+        assert!((ls.round_trip[lev] - 2.0 * lap(0).max(lap(1))).abs() < 1e-9);
+        assert_eq!(ls.trains[lev] % 2, 0);
+    }
+    let cap = &w.svc.cap;
+    assert!((0..cap.res.len()).any(|r| cap.res[r].node == a && cap.res[r].kind == ResKind::Terminus));
+    assert!((0..cap.res.len()).all(|r| cap.res[r].node != a || cap.wire_kind(r) != 9), "no reversing limiter at a loop's own end");
+    // the loop itself is plain track: no terminus or limiter at K
+    assert!((0..cap.res.len()).all(|r| cap.res[r].node != k || cap.res[r].kind == ResKind::Platform));
+    // trains take their own run's next departure from A
+    let day = 2.0 * 86400.0;
+    let trips = w.svc.trips(&w.net, day + 7.0 * 3600.0, day + 9.0 * 3600.0);
+    for t in trips.iter().filter(|t| t.dep > day + 7.0 * 3600.0 && t.dep < day + 8.0 * 3600.0) {
+        let n = t.next.unwrap();
+        assert!(trips.iter().any(|u| u.draw == n && u.run == t.run), "{t:?}");
+    }
+}
+
+#[test]
+fn loops_save_round_trip_and_open_again() {
+    use super::net::LoopKind;
+    let (mut w, ns) = ring_fixture();
+    let c = line(&mut w, &closed(&ns), [12.0, 6.0, 3.0]);
+    set_counts(&mut w, c, [8, 4, 2]);
+    let (mut v, [a, m, _, k]) = balloon_fixture();
+    let b = line(&mut v, &[a, m, k, m, a], [6.0, 3.0, 0.0]);
+    for (w, l, kind) in [(&w, c, LoopKind::Circle), (&v, b, LoopKind::Balloon)] {
+        let bytes = super::save::encode(&w.net);
+        let back = TrackWorld::new(super::save::decode(&bytes).unwrap());
+        assert_eq!(super::save::encode(&back.net), bytes);
+        // positions are saved to a millimetre or so: the times agree to well under a second
+        assert_eq!(back.svc.lines[l as usize].kind, kind);
+        assert!((back.svc.lines[l as usize].round_trip[HIGH] - w.svc.lines[l as usize].round_trip[HIGH]).abs() < 1e-3);
+        assert_eq!(back.svc.lines[l as usize].trains, w.svc.lines[l as usize].trains);
+        assert_eq!(back.net.line_path(l), w.net.line_path(l));
+    }
+    // an odd count in a save rounds up on load
+    let mut net = super::save::decode(&super::save::encode(&w.net)).unwrap();
+    net.line_trains[c as usize] = Some([7, 3, 1]);
+    let back = TrackWorld::new(net);
+    assert_eq!(back.net.line_trains[c as usize], Some([8, 4, 2]));
+    // opening the loop again (the closing stop removed) makes a plain line
+    let mut d = w.net.line_data(c).unwrap();
+    d.stops.pop();
+    d.path = w.net.route(&d.stops).unwrap();
+    w.apply(Op::Line { id: c, data: Some(d) }).unwrap();
+    let ls = &w.svc.lines[c as usize];
+    assert!(ls.ok && ls.kind == LoopKind::None);
+    assert!((ls.round_trip[HIGH] - (ls.runs[0].prof[HIGH].duration + ls.runs[1].prof[HIGH].duration + 2.0 * w.net.line_turn[c as usize] as f64)).abs() < 1e-9);
+}
+
+/// The real save has no line whose last stop is its first (T-798 checks before loading them as
+/// loops). `T798_TRACK=<track bytes> cargo test --release t798_real -- --ignored --nocapture`.
+#[test]
+#[ignore]
+fn t798_real_save_has_no_loops() {
+    let bytes = std::fs::read(std::env::var("T798_TRACK").expect("T798_TRACK: the save's track bytes")).unwrap();
+    let net = super::save::decode(&bytes).unwrap();
+    let loops: Vec<u32> = (0..net.line_count() as u32).filter(|&l| net.line_ok(l) && net.line_stops(l).len() >= 2 && net.line_stops(l).first() == net.line_stops(l).last()).collect();
+    println!("{} lines, {} whose last stop is their first: {loops:?}", (0..net.line_count() as u32).filter(|&l| net.line_ok(l)).count(), loops.len());
+    assert!(loops.is_empty());
+}

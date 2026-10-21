@@ -33,6 +33,10 @@ pub struct Network {
     /// change of trains walks between platforms (T-717). Empty: every platform at its station.
     pub stop_x: Vec<f32>,
     pub stop_y: Vec<f32>,
+    /// Per line, a circle (T-798): its last stop is its first and trains carry on round, so a
+    /// rider may ride through it (`hop_min` at the last stop and `hop_back` at the first are the
+    /// stand there). Empty: none.
+    pub line_wrap: Vec<bool>,
 }
 
 #[derive(Clone, Copy)]
@@ -135,6 +139,7 @@ pub fn synth_network() -> Network {
         st_group: vec![],
         stop_x: vec![],
         stop_y: vec![],
+        line_wrap: vec![],
     };
     for &(name, kind, pts) in LINES {
         let mut stops: Vec<u32> = vec![];

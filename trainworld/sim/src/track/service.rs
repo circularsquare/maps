@@ -4,7 +4,7 @@
 
 use super::capacity::{self, Capacity};
 use super::geom;
-use super::net::{path_dir, path_edge, Network};
+use super::net::{path_dir, path_edge, LoopKind, Network};
 use super::params::*;
 use super::profile::{self, Hold, Profile};
 
@@ -47,10 +47,14 @@ pub struct LineSvc {
     pub running: bool,
     /// The stops these profiles were built for (a change wakes demand).
     pub stops: Vec<u32>,
+    /// A loop (T-798): each run goes from the first stop round to it again, and its trains take
+    /// that run's next departure there.
+    pub kind: LoopKind,
     pub runs: [Run; 2],
     pub cars: u32,
     pub train_len: f64,
-    /// Per demand level: both directions with dwell, holds and two turnarounds.
+    /// Per demand level: both runs with dwell, holds and their closing stands (`LineSvc::lap`);
+    /// for a loop, twice the longer lap.
     pub round_trip: [f64; 3],
     pub trains: [u32; 3],
     /// Per demand level: capacity delay over the round trip.
@@ -71,9 +75,27 @@ impl LineSvc {
         let p = &self.runs[run].prof[level];
         (0..p.arr.len()).map(|i| if i == 0 { 0.0 } else { p.arr[i] - p.dep[i - 1] }).collect()
     }
-    /// Seconds a trip of this direction is drawn: run, then standing for the turnaround.
+    /// Seconds a trip of this direction is drawn: run, then the closing stand.
     pub fn trip_len(&self, net: &Network, line: u32, run: usize, level: usize) -> f64 {
-        self.runs[run].prof[level].duration + net.line_turn[line as usize] as f64
+        self.runs[run].prof[level].duration + self.close_stand(net, line)
+    }
+    /// What a train stands at the end of a run: the turnaround, or the dwell where a circle carries
+    /// on round (T-798).
+    pub fn close_stand(&self, net: &Network, line: u32) -> f64 {
+        if self.kind == LoopKind::Circle { net.line_dwell[line as usize] as f64 } else { net.line_turn[line as usize] as f64 }
+    }
+    pub fn is_loop(&self) -> bool {
+        self.kind != LoopKind::None
+    }
+    /// Trains a round trip needs at `tph` each way; a loop's count is even, the same each way.
+    pub fn fleet(&self, round_trip: f64, tph: f64) -> u32 {
+        if tph <= 0.0 {
+            0
+        } else if self.is_loop() {
+            2 * (0.5 * round_trip * tph / 3600.0 - 1e-9).ceil() as u32
+        } else {
+            (round_trip * tph / 3600.0 - 1e-9).ceil() as u32
+        }
     }
 }
 
@@ -405,6 +427,7 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
     }
     ls.stops = net.line_stops(l).to_vec();
     if ls.stops.len() < 2 { return ls; }
+    ls.kind = net.line_loop(l);
     let min_plat = net.line_stops(l).iter().map(|&s| net.node_platform[s as usize]).min().unwrap_or(0) as f64;
     let fit = (min_plat / CAR_LEN).floor().max(1.0) as u32;
     let want = net.line_cars[l as usize] as u32;
@@ -538,13 +561,12 @@ impl Service {
             }
             let resched = rescheduled.binary_search(&(l as u32)).is_ok();
             if changed || resched {
+                let stand = ls.close_stand(net, l as u32);
                 for lev in 0..LEVELS {
-                    let turn = net.line_turn[l] as f64;
                     let (a, b) = (&ls.runs[0].prof[lev], &ls.runs[1].prof[lev]);
-                    ls.round_trip[lev] = a.duration + b.duration + 2.0 * turn;
+                    ls.round_trip[lev] = if ls.is_loop() { 2.0 * (a.duration.max(b.duration) + stand) } else { a.duration + b.duration + 2.0 * stand };
                     ls.delay[lev] = a.hold + b.hold;
-                    let tph = net.line_tph[l][lev] as f64;
-                    ls.trains[lev] = if tph > 0.0 { (ls.round_trip[lev] * tph / 3600.0 - 1e-9).ceil() as u32 } else { 0 };
+                    ls.trains[lev] = ls.fleet(ls.round_trip[lev], net.line_tph[l][lev] as f64);
                 }
             }
             if changed {
@@ -599,8 +621,9 @@ impl Service {
         // stays evenly spaced around the complete circuit.
         let off = std::array::from_fn(|lev| {
             let t = tph[lev] as f64;
-            if net.line_trains[l].is_some() && t > 0.0 { ls.trip_len(net, l as u32, 0, lev) % (3600.0 / t) } else { 0.0 }
+            if net.line_trains[l].is_some() && t > 0.0 && !ls.is_loop() { ls.trip_len(net, l as u32, 0, lev) % (3600.0 / t) } else { 0.0 }
         });
+        // a loop's middle is half a lap from its first stop (T-798): the same figure
         let lead = (0.25 * (ls.runs[0].prof[1].duration + ls.runs[1].prof[1].duration)).clamp(0.0, LEAD_MAX_S);
         Some(Lattice { tph, off, lead, shift: ls.shift })
     }
@@ -791,7 +814,9 @@ impl Service {
     /// service there; a train that finds another already waiting for the next departure, or no
     /// departure soon enough, leaves service at the end of its turnaround. In steady service with
     /// a whole-line fleet every train is ready exactly at its next departure, so nothing changes.
-    fn hand_over(trips: &mut [Trip], eras: &[Era]) {
+    /// On a loop (T-798) a train finishing a run takes that run's next departure, which is where
+    /// it stands; its stand there is the timing hold.
+    fn hand_over(trips: &mut [Trip], eras: &[Era], is_loop: bool) {
         let ready: Vec<f64> = trips.iter().map(|t| t.end).collect();
         // whether train `w` may stand until `d`: within the departure's headway, and not across a
         // change unless it was drawn then
@@ -801,13 +826,14 @@ impl Service {
                 && eras.iter().all(|e| !(ready[w] < e.until && d > e.until) || e.drawn.contains(&(trips[w].run, trips[w].dep)))
         };
         for r in 0..2u8 {
-            // trains finishing run r stand at the first stop of the other run
+            // trains finishing run r stand at the first stop of the other run, or of run r on a loop
             let mut ev: Vec<(f64, u8, usize)> = vec![];
             let mut deps: Vec<(f64, f64)> = vec![];
             for (i, t) in trips.iter().enumerate() {
                 if t.run == r {
                     ev.push((ready[i] - HANDOVER_TOL_S, 0, i));
-                } else {
+                }
+                if (t.run == r) == is_loop {
                     ev.push((t.draw, 1, i));
                     deps.push((t.draw, t.hw));
                 }
@@ -856,7 +882,7 @@ impl Service {
                 self.run_deps(net, l, r, a, b, &mut buf);
             }
             let eras = self.eras_of(l);
-            Self::hand_over(&mut buf, eras);
+            Self::hand_over(&mut buf, eras, ls.is_loop());
             // a train that had left service before a change stays gone, whatever the new profile
             // says about how long its trip would have taken
             let gone = |t: &Trip| eras.iter().any(|e| t.draw < e.until && t.end > e.until && !e.drawn.contains(&(t.run, t.dep)));

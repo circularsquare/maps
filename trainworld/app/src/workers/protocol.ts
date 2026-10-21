@@ -306,6 +306,8 @@ export interface ClockLine {
   passed: number[];
   /** the stops (indices into `stops`) where its trains reverse partway (`TrackApi::line_reversals`, T-797) */
   reversals: number[];
+  /** a loop (`TrackApi::line_loop`, T-798): 0 none, 1 a circle, 2 a balloon */
+  loopKind: number;
 }
 
 /** Everything drawn, in local units (map/geo.ts). */
@@ -512,6 +514,9 @@ export interface SnapshotLine {
   dwellS: number[][][];
   /** layover at each end, s */
   turnaroundS: number;
+  /** a circle line (T-798): its last stop is its first and trains ride on round, standing this
+   * long there, s; absent otherwise */
+  wrapS?: number;
   /** cars per train (20 m each) */
   cars: number;
 }

@@ -167,6 +167,9 @@ export interface LineStats {
   passed: { gap: number; node: number }[];
   /** the stops (indices) where its trains reverse partway, standing the turnaround (T-797) */
   reversals: number[];
+  /** a loop (T-798): its last stop is its first; a circle carries on round there, a balloon turns
+   * back. Each way has its own trains, half the line's. */
+  loop: "circle" | "balloon" | null;
 }
 
 export interface ModeSplit {

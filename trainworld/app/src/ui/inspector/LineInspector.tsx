@@ -129,23 +129,26 @@ function markTip(m: RouteMark): string {
 /** The round trip at the level in force, split into running, dwell, turnaround and delay (T-031),
  * and where the delay is. */
 function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stops: number; spots: { text: string; s: number }[] }) {
-  const total = st.roundTripByLevel[lev] ?? st.roundTripS;
+  // T-798: a loop shows its lap, one way round (the longer way's, half its round trip); a circle
+  // stands the dwell at its first stop and turns nowhere, a balloon turns there
+  const runs = st.loop ? 1 : 2;
+  const total = (st.roundTripByLevel[lev] ?? st.roundTripS) / (st.loop ? 2 : 1);
   // T-797: a stop where trains reverse stands the turnaround both ways, not the dwell
   const reversals = st.reversals?.length ?? 0;
-  const dwell = 2 * Math.max(0, stops - 2 - reversals) * st.dwellS;
-  const turn = 2 * st.turnaroundS;
-  const reversing = 2 * reversals * st.turnaroundS;
-  const delay = st.delayS[lev] ?? 0;
+  const dwell = runs * Math.max(0, stops - 2 - reversals) * st.dwellS + (st.loop === "circle" ? st.dwellS : 0);
+  const turn = st.loop === "circle" ? 0 : st.loop === "balloon" ? st.turnaroundS : 2 * st.turnaroundS;
+  const reversing = runs * reversals * st.turnaroundS;
+  const delay = (st.delayS[lev] ?? 0) / (st.loop ? 2 : 1);
   const running = Math.max(0, total - dwell - turn - reversing - delay);
   return (
     <>
       <ul class="rows">
-        <Row label="Round trip" bold>
+        <Row label={st.loop ? "Lap" : "Round trip"} bold>
           {duration(total)}
         </Row>
         <Row label="Running">{duration(running)}</Row>
         <Row label="Dwell at stops">{duration(dwell)}</Row>
-        <Row label="Turning at the ends">{duration(turn)}</Row>
+        {turn > 0 && <Row label={st.loop ? "Turning at the end" : "Turning at the ends"}>{duration(turn)}</Row>}
         {reversals > 0 && <Row label="Reversing partway">{duration(reversing)}</Row>}
         {delay > 0 && <Row label="Waiting at busy track">{duration(delay)}</Row>}
       </ul>
@@ -165,12 +168,18 @@ function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stop
 /** The line's average speed end to end: the distance both ways over the round trip less the turning
  * at the ends, so it counts the stops and the waiting at busy track but not the layover. */
 function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
-  const s = (st.roundTripByLevel[lev] ?? st.roundTripS) - 2 * st.turnaroundS;
+  const rt = st.roundTripByLevel[lev] ?? st.roundTripS;
+  // T-798: a loop once round in its lap, less a balloon's turning
+  const s = st.loop ? rt / 2 - (st.loop === "balloon" ? st.turnaroundS : 0) : rt - 2 * st.turnaroundS;
   if (!(s > 0) || !(st.km > 0)) return null;
-  const kmh = (2 * st.km) / (s / 3600);
+  const km = st.loop ? st.km : 2 * st.km;
+  const kmh = km / (s / 3600);
+  const tip = st.loop
+    ? `${distance(km * 1000)} once round in ${duration(s)}${st.loop === "balloon" ? ", the lap less the turning at the end" : ""}. Dwell at stops and waiting at busy track are in it.`
+    : `${distance(km * 1000)} there and back in ${duration(s)}, the round trip less the turning at the ends. Dwell at stops and waiting at busy track are in it, so it is the average speed of both directions together.`;
   return (
     <ul class="rows">
-      <li data-tip={`${distance(2 * st.km * 1000)} there and back in ${duration(s)}, the round trip less the turning at the ends. Dwell at stops and waiting at busy track are in it, so it is the average speed of both directions together.`}>
+      <li data-tip={tip}>
         <span class="grow">Average speed</span>
         <span class="val">{speed(kmh)}</span>
       </li>
@@ -415,13 +424,16 @@ function LevelCells({ l, st, d, auto, limit }: { l: LineInput; st: LineStats; d:
   const shake = refused !== null && performance.now() - refused.at < SHAKE_MS;
   const wrap = (child: ComponentChildren) => <span key={refused?.at ?? 0} class={shake ? "shake" : undefined}>{child}</span>;
   const n = <span class={broke ? "bad" : undefined}>{counts[lev]}</span>;
+  // T-798: a loop's trains are half each way, so its count steps by two
+  const k = st.loop ? 2 : 1;
+  const loop = !!st.loop;
   if (!auto) {
     const over = limit !== null && counts[lev] > 0 && counts[lev] - trip / limit.s > 0.01;
     return (
       <>
         <td>
           {wrap(<Stepper value={n} label="trains on the entire line" jump onStep={(s) => stepTrainCount(l.id, d, s)}
-            tipDown={changeTip(counts, lev, Math.max(0, counts[lev] - 1), st)} tipUp={changeTip(counts, lev, counts[lev] + 1, st)} />)}
+            tipDown={changeTip(counts, lev, Math.max(0, counts[lev] - k), st)} tipUp={changeTip(counts, lev, counts[lev] + k, st)} />)}
         </td>
         <td>{over ? <span class="bad" data-tip={`${limitText(limit)}, so the trains past that wait at the ends`}>{headway(l.tph[d])}</span> : headway(l.tph[d])}</td>
       </>
@@ -435,13 +447,15 @@ function LevelCells({ l, st, d, auto, limit }: { l: LineInput; st: LineStats; d:
   return (
     <>
       <td>
-        <span class={"num" + (broke ? " bad" : "")} data-tip={`${counts[lev]} ${counts[lev] === 1 ? "train" : "trains"} on the entire line keep the headway over its round trip of ${duration(trip)}`}>{counts[lev]}</span>
+        <span class={"num" + (broke ? " bad" : "")} data-tip={loop
+          ? `${counts[lev]} trains on the entire line, ${counts[lev] / 2} each way, keep the headway over its lap of ${duration(trip / 2)}`
+          : `${counts[lev]} ${counts[lev] === 1 ? "train" : "trains"} on the entire line keep the headway over its round trip of ${duration(trip)}`}>{counts[lev]}</span>
       </td>
       <td>
         {clamped && <span class="hw-real" data-tip={`${limitText(limit)}, so ${counts[lev]} ${counts[lev] === 1 ? "train runs" : "trains run"} every ${duration(real)}`}>{headwayText(real)}</span>}
         {wrap(<Stepper wide label="headway" value={short ? <span class="bad">{headwayText(auto[lev])}</span> : headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
-          tipDown={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], -1), lim), st)}
-          tipUp={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], 1), lim), st)}
+          tipDown={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], -1), lim, loop), st)}
+          tipUp={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], 1), lim, loop), st)}
           type={{ text: auto[lev] ? String(+(auto[lev] / 60).toFixed(2)) : "0", set: (v) => setHeadway(l.id, d, headwayFromMinutes(v)), tip: short ? `${limitText(limit)}, so the trains past that wait at the ends.\n${typeTip}` : typeTip }} />)}
       </td>
     </>
@@ -655,7 +669,7 @@ export function LineInspector({ id }: { id: string }) {
               <StopToday line={l.id} i={i} />
               <RouteMarks marks={marks.filter((m) => m.gap === i)} />
               {editingStops && (
-                <button class="btn icon mini danger" data-tip="Take this stop out of the line" aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
+                <button class="btn icon mini danger" data-tip={st.loop && i > 0 && i === l.stops.length - 1 ? "Open the loop" : "Take this stop out of the line"} aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
                   <Icon.cross />
                 </button>
               )}
@@ -692,7 +706,7 @@ export function LineInspector({ id }: { id: string }) {
         </div>
       )}
       <div class="sub muted">
-        {l.stops.length} stops, {distance(st.km * 1000)}
+        {l.stops.length - (st.loop ? 1 : 0)} stops, {distance(st.km * 1000)}
       </div>
       {l.stops.length < 2 && <p class="muted small">No route: fewer than two stops.</p>}
       {st.status === "planned" && l.stops.length >= 2 && (

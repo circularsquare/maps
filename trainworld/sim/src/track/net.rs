@@ -382,6 +382,16 @@ impl Ord for Key {
     }
 }
 
+/// T-798: a line whose last stop is its first is a loop. A circle carries straight on through
+/// the first stop; a balloon turns back there.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum LoopKind {
+    #[default]
+    None,
+    Circle,
+    Balloon,
+}
+
 pub fn path_edge(p: u32) -> u32 {
     p >> 1
 }
@@ -1566,6 +1576,25 @@ impl Network {
         (1..path.len()).filter(|&k| self.turns_back(path[k - 1], path[k])).collect()
     }
 
+    /// What kind of loop stops and a path make (T-798).
+    pub fn loop_kind(&self, stops: &[u32], path: &[u32]) -> LoopKind {
+        match (stops.first(), stops.last(), path.first(), path.last()) {
+            (Some(a), Some(b), Some(&p0), Some(&p1)) if stops.len() >= 3 && a == b => {
+                if self.turns_back(p1, p0) { LoopKind::Balloon } else { LoopKind::Circle }
+            }
+            _ => LoopKind::None,
+        }
+    }
+
+    pub fn line_loop(&self, l: u32) -> LoopKind {
+        self.loop_kind(self.line_stops(l), self.line_path(l))
+    }
+
+    /// Where a line's trains reverse: partway, and where a balloon loop closes.
+    pub fn turn_count(&self, stops: &[u32], path: &[u32]) -> usize {
+        self.path_reversals(path).len() + (self.loop_kind(stops, path) == LoopKind::Balloon) as usize
+    }
+
     // ---------------------------------------------------------------- cost
 
     /// Unbuilt costs grouped by kind, charged level, track count (`HSR_ROW` for high-speed track),
@@ -1735,6 +1764,12 @@ impl Network {
     /// the other side, or turns back there at `REVERSAL_SEARCH_S` extra (T-797: reversing only at
     /// a stop). Returns the path and the side it arrives on at `to`.
     pub fn find_path(&self, from: u32, to: u32, arrived: Option<u8>) -> Option<(Vec<u32>, u8)> {
+        self.find_path_side(from, to, arrived, None)
+    }
+
+    /// `find_path` arriving at `to` on the side `want` when given (T-798: a loop's closing hop
+    /// arrives so the train carries on round).
+    pub fn find_path_side(&self, from: u32, to: u32, arrived: Option<u8>, want: Option<u8>) -> Option<(Vec<u32>, u8)> {
         let ne = self.edge_count();
         let mut dist = vec![f64::INFINITY; 2 * ne];
         let mut prev = vec![u32::MAX; 2 * ne];
@@ -1753,7 +1788,7 @@ impl Network {
             }
             let (_, node) = self.path_nodes(st);
             let arr_side = self.port_side(path_edge(st), 1 - path_dir(st)).unwrap_or(0);
-            if node == to {
+            if node == to && want.map_or(true, |w| w == arr_side) {
                 let mut path = vec![st];
                 let mut cur = st;
                 while prev[cur as usize] != u32::MAX {
@@ -1784,14 +1819,23 @@ impl Network {
     /// Fastest path through a list of stops, hop by hop; it may turn back at a stop.
     pub fn route(&self, stops: &[u32]) -> Option<Vec<u32>> {
         if stops.iter().any(|&s| !self.node_ok(s) || self.node_platform[s as usize] == 0) { return None; }
-        let mut path = vec![];
+        let mut path: Vec<u32> = vec![];
         let mut side = None;
-        for w in stops.windows(2) {
-            let (p, s) = self.find_path(w[0], w[1], side)?;
+        let closes = stops.len() >= 3 && stops[0] == stops[stops.len() - 1];
+        for (k, w) in stops.windows(2).enumerate() {
+            let want = if closes && k + 2 == stops.len() { self.carry_on_side(&path) } else { None };
+            let (p, s) = want.and_then(|_| self.find_path_side(w[0], w[1], side, want)).or_else(|| self.find_path(w[0], w[1], side))?;
             path.extend(p);
             side = Some(s);
         }
         Some(path)
+    }
+
+    /// The side a path ending at its first node must arrive on to carry straight on into its first
+    /// entry (T-798: a circle line).
+    pub fn carry_on_side(&self, path: &[u32]) -> Option<u8> {
+        let &p0 = path.first()?;
+        self.port_side(path_edge(p0), path_dir(p0)).map(|s| 1 - s)
     }
 
     /// Where to split an edge at chainage `s` without changing its geometry (notes/T-008.md 4.1):

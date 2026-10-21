@@ -325,6 +325,9 @@ impl Boarding {
         h.add(net.line_trains[l].is_some() as u64);
         h.f(net.line_turn[l] as f64);
         h.f(ls.shift);
+        if ls.is_loop() {
+            h.add(ls.kind as u64 + 100);
+        }
         for t in net.line_tph[l] {
             h.f(t as f64);
         }
@@ -675,8 +678,13 @@ impl Boarding {
             let n = ra.n;
             for j in 0..ra.deps.len() {
                 let lv = ra.levels[j] as usize;
-                let turn = ((ls.round_trip[lv] - ls.runs[0].prof[lv].duration - ls.runs[1].prof[lv].duration) / 2.0).max(0.0);
-                if (tod - ra.deps[j]).rem_euclid(DAY) >= ls.runs[r].prof[lv].duration + turn {
+                // a loop's train is out until the next one of its run could leave (T-798)
+                let span = if ls.is_loop() {
+                    ls.round_trip[lv] / 2.0
+                } else {
+                    ls.runs[r].prof[lv].duration + ((ls.round_trip[lv] - ls.runs[0].prof[lv].duration - ls.runs[1].prof[lv].duration) / 2.0).max(0.0)
+                };
+                if (tod - ra.deps[j]).rem_euclid(DAY) >= span {
                     continue;
                 }
                 on += 1.0;
@@ -928,14 +936,26 @@ impl RunAccount {
 }
 
 /// Alighting share per period and stop: demand's alightings over the riders it has arriving.
-fn alight_shares(lr: &LineRiders, r: usize) -> Vec<f64> {
+/// On a circle (`wrap`) the last stop lets off its share too; elsewhere everyone.
+fn alight_shares(lr: &LineRiders, r: usize, wrap: bool) -> Vec<f64> {
     let n = lr.n;
     let mut out = vec![0.0; PERIODS * n];
     let mut day_in = vec![0.0; n];
     let mut day_off = vec![0.0; n];
     for p in 0..PERIODS {
         let base = (p * 2 + r) * n;
-        let mut on = 0.0;
+        // a circle's train reaches its first stop with riders from the lap before: at least
+        // enough that no stop sees fewer than nobody aboard
+        let mut on = 0.0f64;
+        if wrap {
+            let (mut x, mut low) = (0.0f64, 0.0f64);
+            for k in 0..n {
+                x -= lr.alight[base + k];
+                low = low.min(x);
+                x += lr.board[base + k];
+            }
+            on = -low;
+        }
         for k in 0..n {
             let a = lr.alight[base + k];
             day_in[k] += on;
@@ -950,7 +970,9 @@ fn alight_shares(lr: &LineRiders, r: usize) -> Vec<f64> {
                 out[p * n + k] = if day_in[k] > 1e-6 { (day_off[k] / day_in[k]).clamp(0.0, 1.0) } else { 0.0 };
             }
         }
-        out[p * n + n - 1] = 1.0;
+        if !wrap {
+            out[p * n + n - 1] = 1.0;
+        }
     }
     out
 }
@@ -979,6 +1001,35 @@ pub const START_HOUR: f64 = 3.0;
 /// with `warm`, from a day earlier, keeping the second day. `leftover` says whether anyone was
 /// still waiting when the day ended (then the warm run is the right one).
 pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool) -> RunAccount {
+    // T-798: on a circle the riders still aboard at the last stop ride on round: a second pass
+    // queues them at the first stop when their train arrives there, ahead of later arrivals
+    let wrap = svc.lines[l].kind == crate::track::net::LoopKind::Circle;
+    let mut through = vec![];
+    let acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, &[], &mut through);
+    if !wrap || through.is_empty() {
+        return acc;
+    }
+    through.sort_by(|a, b| a.0.total_cmp(&b.0));
+    let mut sum = 0.0;
+    for x in &mut through {
+        sum += x.1;
+        x.1 = sum;
+    }
+    simulate_carry(net, svc, l, r, lr, peak, warm, wrap, &through, &mut vec![])
+}
+
+/// Riders arrived at a platform by a time.
+struct Cum<'a>(&'a dyn Fn(f64) -> f64);
+impl Cum<'_> {
+    fn cum(&self, t: f64) -> f64 {
+        (self.0)(t)
+    }
+}
+
+/// `simulate`, with `carry_in` (time, riders so far, in time order) joining the first stop's queue,
+/// and on a circle (`wrap`) the riders staying aboard at the last stop pushed to `carry_out`.
+#[allow(clippy::too_many_arguments)]
+fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool, wrap: bool, carry_in: &[(f64, f64)], carry_out: &mut Vec<(f64, f64)>) -> RunAccount {
     let ls = &svc.lines[l];
     let n = lr.n;
     let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
@@ -1001,7 +1052,7 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
     let arrivals: Vec<Arrivals> = (0..n)
         .map(|k| Arrivals::new(std::array::from_fn(|p| lr.board[(p * 2 + r) * n + k]), peak))
         .collect();
-    let alpha = alight_shares(lr, r);
+    let alpha = alight_shares(lr, r, wrap);
     let ride_km = ride_km(&alpha, &ls.runs[r].stop_s, n);
     let time = |i: usize, k: usize| trips[i].dep + stop_dep[trips[i].level as usize].get(k).copied().unwrap_or(0.0);
     // the last day's trips are the account, by time of day
@@ -1037,7 +1088,9 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
     let mut hist: Vec<(f64, f64)> = Vec::with_capacity(m);
     for k in 0..n {
         order.sort_by(|&a, &b| time(a, k).total_cmp(&time(b, k)));
-        let arr = &arrivals[k];
+        let arrs = &arrivals[k];
+        let carried = |t: f64| if k > 0 { 0.0 } else { carry_in[..carry_in.partition_point(|x| x.0 <= t)].last().map_or(0.0, |x| x.1) };
+        let arr = Cum(&|t| arrs.cum(t) + carried(t));
         let mut q = 0.0f64;
         let mut c_prev = f64::NAN;
         let mut t_prev = f64::NEG_INFINITY;
@@ -1083,6 +1136,9 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
             let load = on + b;
             let q_after = q_before - b;
             carry[i] = if k + 1 < n { load } else { 0.0 };
+            if wrap && k + 1 == n && load > 0.0 {
+                carry_out.push((t, load));
+            }
             if kept(i) {
                 let j = slot[i] as usize;
                 acc.load[j * n + k] = if k + 1 < n { load as f32 } else { 0.0 };
@@ -1213,6 +1269,46 @@ mod tests {
         // 8-9 in the morning peak: 500 an hour at each end on a weekday, 100 on Saturday
         assert!((arriving(&h_mon) / arriving(&h_sat) - 5.0).abs() < 0.01, "{} {}", arriving(&h_mon), arriving(&h_sat));
         assert_ne!(b.line_summary_day(&w.svc, l as usize, 1)[0], b.line_summary_day(&w.svc, l as usize, 0)[0]);
+    }
+
+    /// T-798: on a circle 0-1-2-3-4-5-0, riders from 4 to 1 ride on through the first stop: the
+    /// train leaves it with them aboard, and they count as boarding there again.
+    #[test]
+    fn a_circle_carries_its_riders_round_through_the_first_stop() {
+        let (mut w, ns) = crate::track::tests::ring_fixture();
+        let mut stops = ns.clone();
+        stops.push(ns[0]);
+        let l = line(&mut w, &stops, [10.0, 5.0, 2.5]);
+        let n = 7;
+        let mut v = vec![1.0; PERIODS];
+        v.extend([l as f32, n as f32]);
+        for p in 0..PERIODS {
+            let (h0, h1) = PERIOD_HOURS[p];
+            let x = 100.0 * (h1 - h0) as f32;
+            let mut board = vec![0.0; 2 * n];
+            let mut alight = vec![0.0; 2 * n];
+            board[4] = x;
+            alight[1] = x;
+            v.extend(board);
+            v.extend(alight);
+        }
+        let mut b = Boarding::default();
+        b.set_riders(&v);
+        b.ensure(&w.net, &w.svc);
+        let acc = b.accounts[0][l as usize].as_ref().unwrap();
+        let ra = &acc.runs[0];
+        let i = ra.deps.iter().position(|&d| d > 8.0 * 3600.0).unwrap();
+        // ten an hour at 100 an hour: about ten aboard from 4 round to 1
+        for k in [4, 5, 0] {
+            assert!((ra.load[i * n + k] - 10.0).abs() < 1.5, "stop {k}: {}", ra.load[i * n + k]);
+        }
+        assert!(ra.load[i * n + 1] < 0.5 && ra.load[i * n + 2] < 0.5, "they leave at 1");
+        assert_eq!(ra.load[i * n + 6], 0.0);
+        assert!(ra.q_after.iter().all(|&q| q < 1e-3), "nobody is left at the first stop");
+        assert!((ra.boarded - ra.alighted).abs() < 1e-6 * ra.boarded.max(1.0));
+        // demand's riders board once at 4 and once more, staying aboard, at the first stop
+        let day = 100.0 * 24.0;
+        assert!((ra.boarded - 2.0 * day).abs() < 0.02 * day, "{}", ra.boarded);
     }
 
     #[test]

@@ -340,19 +340,31 @@ function strokesByLine(net: NetworkBuffers | null): Map<number, number[]> {
  * runs from where the ride boards), in local units. Null when the drawn network does not have it
  * as the solve saw it (the line not drawn, or the ends not at the stations' dots).
  */
-function rideTrack(net: NetworkBuffers | null, segs: number[] | undefined, k0: number, k1: number, a: [number, number] | null, b: [number, number] | null): [number, number][] | null {
+function rideTrack(net: NetworkBuffers | null, segs: number[] | undefined, k0: number, k1: number, a: [number, number] | null, b: [number, number] | null, wrapN = 0): [number, number][] | null {
   if (!net?.lines.info || !segs || k0 < 0 || k1 < 0 || k0 === k1) return null;
   const s = net.lines, info = net.lines.info;
-  const lo = Math.min(k0, k1), hi = Math.max(k0, k1);
-  const pts: [number, number][] = [];
-  for (const c of segs) {
-    const k = info[c * 4];
-    if (k < lo || k >= hi) continue;
-    if (!pts.length) pts.push([s.seg[c * 4], s.seg[c * 4 + 1]]);
-    pts.push([s.seg[c * 4 + 2], s.seg[c * 4 + 3]]);
+  const span = (lo: number, hi: number) => {
+    const pts: [number, number][] = [];
+    for (const c of segs) {
+      const k = info[c * 4];
+      if (k < lo || k >= hi) continue;
+      if (!pts.length) pts.push([s.seg[c * 4], s.seg[c * 4 + 1]]);
+      pts.push([s.seg[c * 4 + 2], s.seg[c * 4 + 3]]);
+    }
+    return pts;
+  };
+  let pts: [number, number][];
+  if (wrapN) {
+    // T-798: round a circle through its first stop, from the higher stop to the closing one and on
+    // from the first; run 1 the same way reversed
+    const [from, to] = k0 > k1 ? [k0, k1] : [k1, k0];
+    pts = [...span(from, wrapN - 1), ...span(0, to).slice(1)];
+    if (k0 < k1) pts.reverse();
+  } else {
+    pts = span(Math.min(k0, k1), Math.max(k0, k1));
+    if (k0 > k1) pts.reverse();
   }
   if (pts.length < 2) return null;
-  if (k0 > k1) pts.reverse();
   const near = (p: [number, number], q: [number, number] | null) => !q || Math.hypot(p[0] - q[0], p[1] - q[1]) <= TRACK_TOL;
   return near(pts[0], a) && near(pts[pts.length - 1], b) ? pts : null;
 }
@@ -376,7 +388,7 @@ function build(t: TripPeriod, fromPack: [number, number], toPack: [number, numbe
   const name = (id: string) => st.get(id)?.name ?? "a station";
   const from = packLocal(fromPack), to = packLocal(toPack);
   const segs = strokesByLine(net);
-  const track = (l: TripLeg) => rideTrack(net, segs.get(Number(l.line)), l.k0, l.k1, pos(l.from), pos(l.to));
+  const track = (l: TripLeg) => rideTrack(net, segs.get(Number(l.line)), l.k0, l.k1, pos(l.from), pos(l.to), l.wrapN ?? 0);
   const out: Drawn = { parts: [], stops: [] };
   const share = (r: TripRoute) => `${Math.round(100 * r.share)}% of this trip's train riders take this route`;
   const routes = [...t.routes].reverse(); // the main one last, on top

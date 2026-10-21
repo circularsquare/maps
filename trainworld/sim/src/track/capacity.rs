@@ -10,7 +10,7 @@
 //! the global pass's, in another order (tests below check it on random edit sequences).
 
 use super::geom;
-use super::net::{path_dir, path_edge, CrossKind, Crossing, Network};
+use super::net::{path_dir, path_edge, CrossKind, Crossing, LoopKind, Network};
 use super::params::*;
 use super::profile::{self, Hold};
 use super::service::LineSvc;
@@ -372,13 +372,16 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
         if !ls.running {
             continue;
         }
+        // a circle's runs carry on through their first stop (T-798)
+        let wrap = ls.kind == LoopKind::Circle;
         for run in &ls.runs {
-            for i in 0..run.segs.len().saturating_sub(1) {
+            let ns = run.segs.len();
+            for i in 0..if wrap { ns } else { ns.saturating_sub(1) } {
                 let node = run.nodes[i + 1] as usize;
                 if net.node_ports[node].n != 2 {
                     continue;
                 }
-                let (p, q) = (run.segs[i], run.segs[i + 1]);
+                let (p, q) = (run.segs[i], run.segs[(i + 1) % ns]);
                 if net.turns_back(p, q) {
                     continue;
                 }
@@ -513,7 +516,27 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                 }
             }
             let n = run.nodes[k_last];
-            if in_n(n) {
+            if in_n(n) && ls.kind == LoopKind::Circle {
+                // T-798: a circle's first stop is a stop on the way round, and the move from the
+                // last entry into the first a junction move; the timing hold there is not counted
+                let (p, q) = (run.segs[k_last - 1], run.segs[0]);
+                let side_in = net.port_side(path_edge(p), 1 - path_dir(p)).unwrap_or(0);
+                let tracks = active_node_tracks(net, n);
+                let track = if tracks == 1 { 0 } else { side_in };
+                let at = run.stop_s.last().unwrap() - hold_back(lines, l);
+                plat.push((n, track, l as u32, r as u8, -1, at, dwell + PLATFORM_MARGIN_S, false));
+                if tracks > 1 { through.push((n, track, l as u32, r as u8, -1, at)); }
+                if net.node_ports[n as usize].n >= 3 && !net.node_flying[n as usize] {
+                    let (ein, win) = (path_edge(p), 1 - path_dir(p));
+                    let (eout, wout) = (path_edge(q), path_dir(q));
+                    let (pa, pb) = if side_in == 0 {
+                        (track_pos(net, n, ein, win, true), track_pos(net, n, eout, wout, true))
+                    } else {
+                        (track_pos(net, n, eout, wout, false), track_pos(net, n, ein, win, false))
+                    };
+                    moves.push((n, pa, pb, l as u32, r as u8, run.node_s[k_last] - hold_back(lines, l)));
+                }
+            } else if in_n(n) {
                 let reach = net.node_platform[n as usize] as f64;
                 let at = run.stop_s.last().unwrap() - reach.max(ls.train_len) - HOLD_MARGIN_M;
                 let tracks = active_node_tracks(net, n);
@@ -1407,5 +1430,40 @@ mod tests {
         let r = (0..cap.res.len()).find(|&r| cap.wire_kind(r) == 9).unwrap();
         assert_eq!(cap.users_of(r).len(), 4);
         assert!((cap.line_limits(&w.net)[other as usize][HIGH].0 - 3.0).abs() < 1e-9);
+    }
+
+    /// T-798: a circle's sections join across its first stop, and the incremental pass agrees
+    /// with the global one around loops.
+    #[test]
+    fn loops_join_sections_and_update_incrementally() {
+        use super::super::tests::{balloon_fixture, line, ring_fixture};
+        let (mut w, ns) = ring_fixture();
+        let mut stops = ns.clone();
+        stops.push(ns[0]);
+        let c = line(&mut w, &stops, [12.0, 6.0, 3.0]);
+        same_as_global(&w, "circle");
+        let partial = line(&mut w, &ns[1..4], [6.0, 3.0, 0.0]);
+        same_as_global(&w, "circle and a line beside it");
+        // the circle alone on S4 - S5 - S0 - S1: one section a direction runs through S0
+        let cap = &w.svc.cap;
+        let e_in = w.net.line_path(c)[5] >> 1;
+        let e_out = w.net.line_path(c)[0] >> 1;
+        let joined = (0..cap.res.len()).filter(|&r| cap.res[r].kind == ResKind::Section).any(|r| match cap.tag[r] {
+            Tag::Section { first, count } => {
+                let ks = &cap.keys[first as usize..(first + count) as usize];
+                ks.iter().any(|k| k / 2 == e_in) && ks.iter().any(|k| k / 2 == e_out)
+            }
+            _ => false,
+        });
+        assert!(joined);
+        w.apply(Op::Line { id: partial, data: None }).unwrap();
+        same_as_global(&w, "beside removed");
+        w.undo().unwrap().unwrap();
+        same_as_global(&w, "beside undone");
+        let (mut v, [a, m, _, k]) = balloon_fixture();
+        line(&mut v, &[a, m, k, m, a], [12.0, 6.0, 3.0]);
+        same_as_global(&v, "balloon");
+        line(&mut v, &[m, k], [6.0, 3.0, 0.0]);
+        same_as_global(&v, "balloon and a line onto its loop");
     }
 }

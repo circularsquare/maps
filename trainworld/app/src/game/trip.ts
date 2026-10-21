@@ -30,6 +30,9 @@ export interface TripLeg {
    * so the map can draw it along the line's track (T-208); -1 for a walk */
   k0: number;
   k1: number;
+  /** a ride on a circle through its first stop (T-798): the line's stop count, else 0; then
+   * `k0 > k1` rides run 0 round past the last stop and `k0 < k1` run 1 */
+  wrapN?: number;
   stops: number;
   /** real minutes riding or walking, and perceived (a ride's with crowding, without its fare) */
   min: number;
@@ -148,8 +151,16 @@ export interface Trip {
 }
 
 /** Route node -> line, snapshot station and its index in the line's stops, from the solve's layout
- * (as `transfers`). */
-export type RouteNodes = { line: string; station: string; k: number }[];
+ * (as `transfers`); `o` the line's first route node and `n` its stops. */
+export type RouteNodes = { line: string; station: string; k: number; o?: number; n?: number }[];
+
+/** The route node after `rn` on its run: past a circle's last stop, its first (T-798). */
+function nextNode(at: RouteNodes, rn: number): number {
+  const a = at[rn];
+  if (!a || a.o === undefined || !a.n) return rn + 1;
+  const start = a.o + (rn - a.o < a.n ? 0 : a.n);
+  return rn === start + a.n - 1 ? start : rn + 1;
+}
 
 const HEAD = 41, PAIR_LEN = 14, LEG_LEN = 12;
 
@@ -173,8 +184,14 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
       const l = v.subarray(o, o + LEG_LEN);
       if (l[0] === 1) {
         const stations: string[] = [];
-        for (let rn = l[1]; rn <= l[2]; rn++) stations.push(st(rn));
-        legs.push({ kind: "ride", line: at[l[1]]?.line ?? "", from: st(l[1]), to: st(l[2]), stations, k0: at[l[1]]?.k ?? -1, k1: at[l[2]]?.k ?? -1, stops: l[10], min: l[5], perceived: l[6], farePerceived: l[7], waitMin: l[8], waitPerceived: l[9], changePerceived: l[11] });
+        // a ride on a circle may carry on round past its last stop (T-798): its first stop is
+        // both route nodes there, named once
+        for (let rn = l[1], i = 0; i <= at.length; rn = nextNode(at, rn), i++) {
+          if (stations[stations.length - 1] !== st(rn)) stations.push(st(rn));
+          if (rn === l[2]) break;
+        }
+        const wrapN = l[1] > l[2] ? at[l[1]]?.n ?? 0 : 0;
+        legs.push({ kind: "ride", line: at[l[1]]?.line ?? "", from: st(l[1]), to: st(l[2]), stations, k0: at[l[1]]?.k ?? -1, k1: at[l[2]]?.k ?? -1, ...(wrapN ? { wrapN } : {}), stops: l[10], min: l[5], perceived: l[6], farePerceived: l[7], waitMin: l[8], waitPerceived: l[9], changePerceived: l[11] });
       } else {
         const from = st(l[1]), to = st(l[2]);
         legs.push({ kind: "walk", line: "", from, to, stations: [from, to], k0: -1, k1: -1, stops: 0, min: l[5], perceived: l[6], farePerceived: 0, waitMin: 0, waitPerceived: 0, changePerceived: 0 });

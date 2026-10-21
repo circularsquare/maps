@@ -15,7 +15,7 @@ use super::bridge;
 use super::cost::{GeoMask, NoWater, RunMask, TransformedMask, UnionMask, WaterMask};
 use super::frame::FrameKind;
 use super::geom::{self, GeomIssue, Pi};
-use super::net::{CrossKind, EdgeData, Issue, LineData, Network, NodeData, StationData};
+use super::net::{CrossKind, EdgeData, Issue, LineData, LoopKind, Network, NodeData, StationData};
 use super::params::*;
 use super::profile;
 use super::save;
@@ -2700,8 +2700,9 @@ impl TrackApi {
     /// node, `[node, tier, reversal]`, tier 0 a stop of the line, 1 adding it keeps the line's
     /// path (a station on it, or past an end on track the path can carry on over: the path is
     /// extended), 2 adding it changes the path, 3 it cannot be added, 4 adding it makes trains
-    /// reverse at the station `reversal` where they did not (T-797; -1 for the other tiers).
-    /// Worked out with `insert_stop`'s own search, so the markers say what a click does. Empty
+    /// reverse at the station `reversal` where they did not (T-797; -1 for the other tiers), 5 the
+    /// first stop, where a click closes the line into a loop, 6 a loop's first stop, where a click
+    /// opens it (T-798). Worked out with `insert_stop`'s own search, so the markers say what a click does. Empty
     /// if the line is not there.
     pub fn stop_tiers(&self, line: u32) -> Vec<f64> {
         let net = &self.w.net;
@@ -2718,7 +2719,11 @@ impl TrackApi {
             if !net.node_ok(n) || net.node_platform[n as usize] == 0 {
                 continue;
             }
-            let (tier, at) = if stops.contains(&n) {
+            let (tier, at) = if stops.first() == Some(&n) && closed(stops) {
+                (6.0, -1.0)
+            } else if stops.first() == Some(&n) && close_path(net, line, &mut memo).is_some() {
+                (5.0, -1.0)
+            } else if stops.contains(&n) {
                 (0.0, -1.0)
             } else if !stops.is_empty() && !reach[n as usize] {
                 (3.0, -1.0)
@@ -2735,6 +2740,15 @@ impl TrackApi {
             out.extend([n as f64, tier, at]);
         }
         out
+    }
+
+    /// A line's loop (T-798): 0 none, 1 a circle, 2 a balloon.
+    pub fn line_loop(&self, line: u32) -> u8 {
+        match self.w.svc.lines.get(line as usize).filter(|l| l.ok).map(|l| l.kind) {
+            Some(LoopKind::Circle) => 1,
+            Some(LoopKind::Balloon) => 2,
+            _ => 0,
+        }
     }
 
     /// The stops where a line's trains reverse partway, as indices into its stops (T-797).
@@ -3188,13 +3202,16 @@ impl TrackApi {
 
     /// A line's dwell over a round trip at a level, s: the dwell at every intermediate stop both
     /// ways (capacity holds at platforms are delay, not dwell), and the turnarounds: two at the
-    /// ends and two at each stop where trains reverse partway (T-797).
+    /// ends and two at each stop where trains reverse partway (T-797). A circle stands the dwell
+    /// at its first stop and turns nowhere at its ends (T-798).
     pub fn line_dwell_split(&self, line: u32) -> Vec<f64> {
         let n = &self.w.net;
         let Some(ls) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![0.0, 0.0] };
         let turns = ls.runs[0].turn.iter().filter(|&&t| t).count() as f64;
-        let stops = ls.runs[0].stop_s.len().saturating_sub(2) as f64 - turns;
-        vec![2.0 * stops * n.line_dwell[line as usize] as f64, (2.0 + 2.0 * turns) * n.line_turn[line as usize] as f64]
+        let circle = ls.kind == LoopKind::Circle;
+        let stops = ls.runs[0].stop_s.len().saturating_sub(2) as f64 - turns + if circle { 1.0 } else { 0.0 };
+        let ends = if circle { 0.0 } else { 2.0 };
+        vec![2.0 * stops * n.line_dwell[line as usize] as f64, (ends + 2.0 * turns) * n.line_turn[line as usize] as f64]
     }
 
     /// Capacity markers for a level (SPEC 6.2 shows 75% and up): x, y, utilisation, delay s, kind,
@@ -3390,23 +3407,47 @@ fn vertex_rows(f: &geom::Fit, verts: &[Pi], out: &mut Vec<f64>, cap: f64) {
 
 /// Hops already searched while trying stops (T-237): `(from, to, side arrived on at from, 2 for
 /// none)` to `Network::find_path`'s answer. Valid for one state of the network.
-type HopMemo = std::collections::HashMap<(u32, u32, u8), Option<(Vec<u32>, u8)>>;
+type HopMemo = std::collections::HashMap<(u32, u32, u8, u8), Option<(Vec<u32>, u8)>>;
 
 /// `Network::route`, with each hop's search kept in `memo`: the same answer, but trying a stop in
-/// every slot searches each hop once.
+/// every slot searches each hop once. A loop's closing hop asks for the side that carries on round
+/// first (T-798), as `route` does.
 fn route_memo(net: &Network, stops: &[u32], memo: &mut HopMemo) -> Option<Vec<u32>> {
     if stops.iter().any(|&s| !net.node_ok(s) || net.node_platform[s as usize] == 0) {
         return None;
     }
     let mut path = vec![];
     let mut side = None;
-    for w in stops.windows(2) {
-        let hop = memo.entry((w[0], w[1], side.unwrap_or(2))).or_insert_with(|| net.find_path(w[0], w[1], side));
-        let (p, s) = hop.as_ref()?;
+    let closes = stops.len() >= 3 && stops[0] == stops[stops.len() - 1];
+    for (k, w) in stops.windows(2).enumerate() {
+        let want = if closes && k + 2 == stops.len() { net.carry_on_side(&path) } else { None };
+        let found = |memo: &mut HopMemo, x: Option<u8>| memo.entry((w[0], w[1], side.unwrap_or(2), x.unwrap_or(2))).or_insert_with(|| net.find_path_side(w[0], w[1], side, x)).is_some();
+        let x = if want.is_some() && found(memo, want) { want } else { None };
+        found(memo, x);
+        let (p, s) = memo[&(w[0], w[1], side.unwrap_or(2), x.unwrap_or(2))].as_ref()?;
         path.extend_from_slice(p);
         side = Some(*s);
     }
     Some(path)
+}
+
+/// Whether a line's stops are a loop's (T-798): its last stop is its first.
+fn closed(stops: &[u32]) -> bool {
+    stops.len() >= 3 && stops[0] == stops[stops.len() - 1]
+}
+
+/// The path a line would take closed into a loop at its first stop (T-798), when track leads
+/// round from its last stop without turning back there (a train that has to go back the way it
+/// came makes no loop).
+fn close_path(net: &Network, line: u32, memo: &mut HopMemo) -> Option<Vec<u32>> {
+    let stops = net.line_stops(line);
+    if stops.len() < 2 || closed(stops) || stops.len() == 2 && stops[0] == stops[1] {
+        return None;
+    }
+    let mut s = stops.to_vec();
+    s.push(stops[0]);
+    let path = route_memo(net, &s, memo)?;
+    (net.path_reversals(&path).len() == net.path_reversals(net.line_path(line)).len()).then_some(path)
 }
 
 /// The line's stops with `station` inserted where its path is shortest, and that path
@@ -3422,7 +3463,9 @@ fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Op
     }
     let mut best = None;
     let mut best_len = f64::INFINITY;
-    for slot in (0..=old.len()).rev() {
+    // a loop takes new stops between its first stop and its closing one (T-798)
+    let slots = if closed(old) { 1..=old.len() - 1 } else { 0..=old.len() };
+    for slot in slots.rev() {
         let mut stops = old.to_vec();
         stops.insert(slot, station);
         if let Some(path) = route_memo(net, &stops, memo) {
@@ -5248,6 +5291,39 @@ mod tests {
         assert_eq!(a.set_line(lone, &[first], 0.0, 0.0, 0.0, 30.0, 180.0, 0, 0, "One".into()), 0, "{}", a.issues());
         let tiers: std::collections::HashMap<u32, f64> = a.stop_tiers(lone).chunks(3).map(|c| (c[0] as u32, c[1])).collect();
         assert_eq!((tiers[&past_end], tiers[&bypass], tiers[&other]), (1.0, 1.0, 3.0));
+    }
+
+    /// T-798: on a ring the first stop's marker closes the line into a circle, then opens it; a
+    /// closed line takes new stops inside the loop only.
+    #[test]
+    fn the_first_stop_closes_and_opens_a_loop() {
+        let mut a = api();
+        let (w, ns) = super::super::tests::ring_fixture();
+        a.w = w;
+        let id = a.new_line_id();
+        assert_eq!(a.set_line(id, &ns[..4], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+        let tier = |a: &TrackApi, n: u32| a.stop_tiers(id).chunks(3).find(|c| c[0] as u32 == n).unwrap()[1];
+        assert_eq!(tier(&a, ns[0]), 5.0, "closes");
+        assert_eq!(tier(&a, ns[3]), 0.0);
+        let mut stops = ns[..4].to_vec();
+        stops.push(ns[0]);
+        assert_eq!(a.set_stops(id, &stops), 0, "{}", a.issues());
+        assert_eq!(a.line_loop(id), 1, "a circle");
+        assert_eq!(tier(&a, ns[0]), 6.0, "opens");
+        // S4 and S5 lie on the closing stretch: added between S3 and the closing S0
+        let grown: Vec<u32> = a.insert_stop(id, ns[4]).iter().map(|&s| s as u32).collect();
+        assert_eq!(grown, vec![ns[0], ns[1], ns[2], ns[3], ns[4], ns[0]]);
+        assert_eq!(tier(&a, ns[5]), 1.0, "on the loop's path");
+        assert_eq!(a.set_stops(id, &ns[..4]), 0);
+        assert_eq!(a.line_loop(id), 0);
+        // two stops are enough when the track leads on round (on straight track, going back the
+        // way it came makes no loop: the T-797 test above keeps tier 0 there)
+        let mut b = api();
+        let (w, ns) = super::super::tests::ring_fixture();
+        b.w = w;
+        let id = b.new_line_id();
+        assert_eq!(b.set_line(id, &ns[..2], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0);
+        assert_eq!(b.stop_tiers(id).chunks(3).find(|c| c[0] as u32 == ns[0]).unwrap()[1], 5.0, "the ring leads round");
     }
 
     /// T-244: the corners of a stroke, and the same stroke as one edge (set directly).

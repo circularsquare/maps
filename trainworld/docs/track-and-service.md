@@ -315,6 +315,11 @@ route conflict with every move on the other.
   station usually arrive on the same side, so one such line runs every 10 minutes each way at best;
   in its queueing delay a line's two directions count as one stream (one timetable), so a line
   alone there waits only once it is over the limit.
+- a loop line (T-798): a circle's first stop is a stop on the way round (dwell + 60 s on its arrival
+  platform, the move from its last path entry into its first a junction move, sections joined across
+  it); the hold there to the headway is not counted. A balloon's first stop is a terminus as any
+  line's end (short turn or pooled dead end), with no reversing limiter. The loop itself is plain
+  track, so a balloon has no turnback limit (about 34 an hour at 80 km/h).
 - junction move, with the moves it crosses; flat crossing, all moves: 90 s
 
 **Delay per train** (seconds), Kingman's queueing formula with a small variability term because
@@ -411,6 +416,15 @@ partway (when the line does) and waiting at busy track, and names the places it 
   the ground; d is half the train at a through station, half the platform at a dead end), so it is
   drawn jumping once as it stops. The stand is inside the run's duration, so the round trip, fleet
   and demand need nothing new; trains still enter and leave only at the two ends.
+  **Loops** (T-798, notes/T-797.md): a line whose last stop is its first (three stops or more) is a
+  loop; nothing else stores it. A **circle** carries straight on through its first stop A (its last
+  path entry and first are a through move); a **balloon** turns back there (e.g. out along a stem,
+  round a loop, back down the stem). The route search's closing hop asks to arrive on the side that
+  carries on round, and only without such a path arrives on the other (a balloon); a reroute after
+  a deletion never turns a circle into a balloon (the closing turn counts as a reversal). Run 0 goes
+  round one way and run 1 the other, each from A to A with its own trains; a circle stands the dwell
+  at A between laps, a balloon the turnaround. Every loop runs both ways (one-way loops are T-798's
+  stage L3).
   Empty and one-stop lines are valid inactive drafts with an empty path. Stop edits use the same
   turn-valid route search for every insertion position, choosing minimum total path length plus
   the reversal penalty (append wins ties). Copying preserves stops, exact path, schedule, dwell, turnaround, cars,
@@ -423,6 +437,9 @@ partway (when the line does) and waiting at busy track, and names the places it 
   most 80 rounds, ending at the first round that changes no rate or round trip, T-747);
   extending track or changing congestion adjusts the headway while preserving the allocation.
   It never exceeds what the line's track can carry (6.2): trains beyond that wait at the ends.
+  A loop's lap is a run and its closing stand; its round trip is twice the longer lap, and its count
+  is even, half each way (the stepper moves by 2, headway mode doubles each way's count, an odd
+  count from a save or an edit rounds up), so each way's trains keep the headway over their lap.
   Resources used by count schedules keep continuous delays so rounding cannot make the solve
   oscillate. Legacy saves preserve their original frequencies until a schedule is edited.
 - **Headway mode** (T-625, `LineData::auto`, `Op::AutoTrains`): instead of a count per level a
@@ -452,7 +469,8 @@ partway (when the line does) and waiting at busy track, and names the places it 
   start and then one a headway, until half a run before its end (T-835, `Lattice::lead`: the mean
   of the two runs at medium, at most 2 hours). So a train belongs to the period in force when it
   reaches the line's middle, which changes service on the hour; stops near the ends change up to
-  half a run early or late. A period followed by no service (the evening before a line's night
+  half a run early or late. A loop's middle is half a lap from its first stop (the same figure), and
+  both its runs leave A together. A period followed by no service (the evening before a line's night
   without trains, a peak before an empty midday) departs until its own end, so the line's last
   trains are not pulled early; it runs half a run longer at its level. Trains still run end to end.
   A whole-line fleet's reverse departures are offset by the forward trip so
@@ -470,7 +488,9 @@ partway (when the line does) and waiting at busy track, and names the places it 
   headway (an hour at most), standing at the platform until then; a departure no train waits for
   is a train entering service there; a train that finds another already waiting, or no departure
   soon enough, leaves service at the end of its turnaround. So an added train enters at a
-  terminal, a removed one finishes its trip and leaves at a terminal, and headways even out as
+  terminal, a removed one finishes its trip and leaves at a terminal (on a loop, a train finishing
+  a run takes that run's next departure from A, standing there as the timing hold, and trains enter
+  and leave service at A only), and headways even out as
   trains turn; the same happens at every change of period. A train that had left service before
   a change never comes back. In steady service with a whole-line fleet every train is ready at
   exactly its next departure and nothing stands longer. Each drawn trip names the departure its
@@ -690,7 +710,10 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   it takes whoever is waiting up to its crush load (160 a car). The rest wait for the next train of
   the same line and direction. Lines sharing stops keep separate queues: demand has already split
   the riders between them by frequency (4.4's common lines), and a rider left behind does not
-  switch to another line.
+  switch to another line. On a circle (T-798) the last stop lets off only its share; the riders
+  staying aboard join the first stop's queue when their train arrives there, ahead of later
+  arrivals, so they leave on that run's next departure, normally the same train after its hold (a
+  second pass of the account). In the books they leave and board again there.
 - **Local time** (T-309): a line's account runs on its own local time (`LineAccount::shift`): its
   hours, busiest hours, kind of day and "today" from its local midnight. The money settles each
   local time's lines by their own period and day (`localGroups` in the clock worker).

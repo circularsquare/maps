@@ -33,7 +33,11 @@ export type StopTier =
   /** no track joins it to the line */
   | "cut"
   /** adding it makes the line's trains reverse at a station where they did not (T-797) */
-  | "reverse";
+  | "reverse"
+  /** the first stop, where a click closes the line into a loop (T-798) */
+  | "close"
+  /** a loop's first stop, where a click opens it */
+  | "open";
 
 /** Marker diameter by zoom, CSS px. */
 const SIZE: [number, number][] = [[9, 9], [12, 14], [14, 20], [16, 24]];
@@ -56,12 +60,12 @@ function sizeAt(zoom: number): number {
 
 /**
  * The tiers as the clock worker works them out (`TrackApi::stop_tiers`, T-237): per station node
- * its tier, 0 on, 1 route, 2 reroute, 3 cut, 4 reverse, and for 4 the station trains would
- * reverse at (T-797), from the same search a click makes, so a station past an end that the line
- * can carry on to is on route.
+ * its tier, 0 on, 1 route, 2 reroute, 3 cut, 4 reverse, 5 close, 6 open, and for 4 the station
+ * trains would reverse at (T-797), from the same search a click makes, so a station past an end
+ * that the line can carry on to is on route.
  */
 function tiersFrom(d: Float64Array, w: WorldView, revAt: Map<string, string>): Map<string, StopTier> {
-  const names: StopTier[] = ["on", "route", "reroute", "cut", "reverse"];
+  const names: StopTier[] = ["on", "route", "reroute", "cut", "reverse", "close", "open"];
   const byNum = new Map(w.save.stations.map((s) => [s.num, s.id]));
   const out = new Map<string, StopTier>();
   revAt.clear();
@@ -102,8 +106,11 @@ export function stopTiers(w: WorldView, line: LineInput): Map<string, StopTier> 
   for (let k = 0; k < queue.length; k++)
     for (const m of adj.get(queue[k]) ?? []) if (!joined.has(m)) (joined.add(m), queue.push(m));
   const hasRoute = line.stops.length >= 2 && routeNodes.size > 0;
+  const n = line.stops.length;
+  const loop = n >= 3 && line.stops[0] === line.stops[n - 1];
   for (const s of w.save.stations) {
-    if (stops.has(s.id)) out.set(s.id, "on");
+    if (loop && s.id === line.stops[0]) out.set(s.id, "open");
+    else if (stops.has(s.id)) out.set(s.id, "on");
     else if (!line.stops.length) out.set(s.id, "route");
     else if (hasRoute) out.set(s.id, routeNodes.has(s.num) ? "route" : joined.has(s.num) ? "reroute" : "cut");
     else out.set(s.id, joined.has(s.num) ? "route" : "cut");
@@ -122,7 +129,7 @@ interface Mark {
 }
 
 /** In the order a click prefers when markers overlap: the stops, then the ones that can be added. */
-const RANK: Record<StopTier, number> = { on: 3, route: 2, reroute: 1, reverse: 1, cut: 0 };
+const RANK: Record<StopTier, number> = { on: 3, close: 3, open: 3, route: 2, reroute: 1, reverse: 1, cut: 0 };
 
 export class StopMarkers {
   private box: HTMLDivElement;
@@ -149,7 +156,7 @@ export class StopMarkers {
   private seenWorld: WorldView | null = null;
   private seenLine: number | null = null;
 
-  constructor(private map: MlMap, private overlay: Overlay, private toggle: (station: number) => void) {
+  constructor(private map: MlMap, private overlay: Overlay, private toggle: (station: number, tier: StopTier) => void) {
     this.box = document.createElement("div");
     this.box.className = "stop-marks";
     this.box.style.display = "none";
@@ -261,7 +268,9 @@ export class StopMarkers {
         this.marks.set(id, m);
         this.box.appendChild(el);
       }
-      const cls = "stop-mark " + tier;
+      // the first stop that closes or opens a loop is drawn as the stop it is
+      const stop = tier === "on" || tier === "close" || tier === "open";
+      const cls = "stop-mark " + (stop ? "on" : tier);
       if (m.cls !== cls) {
         m.cls = cls;
         m.el.className = cls;
@@ -272,7 +281,7 @@ export class StopMarkers {
       }
       m.x = x;
       m.y = y;
-      m.d = tier === "on" ? size : tier === "route" ? size * NEAR_SCALE : size * FAR_SCALE;
+      m.d = stop ? size : tier === "route" ? size * NEAR_SCALE : size * FAR_SCALE;
       m.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
     }
     // stations that left the list (an undo): their markers go
@@ -303,6 +312,8 @@ export class StopMarkers {
     const name = this.names.get(id) ?? "Station";
     switch (this.tierOf(id)) {
       case "on": return [name, "Click to remove the stop"];
+      case "close": return [name, "Click to close the loop"];
+      case "open": return [name, "Click to open the loop"];
       case "route": return [name, "Click to add a stop"];
       case "reroute": return [name, "Click to add a stop and change the route"];
       case "reverse": return [name, `Click to add a stop. Trains reverse at ${this.names.get(this.revAt.get(id) ?? "") ?? "a station"}`];
@@ -349,6 +360,6 @@ export class StopMarkers {
       return;
     }
     this.hideTag();
-    this.toggle(Number(id));
+    this.toggle(Number(id), this.tierOf(id));
   }
 }
