@@ -94,6 +94,9 @@ export interface Bubbles {
   /** the anchor the discs' positions are relative to */
   anchor: Anchor;
   ms: number;
+  /** the colour scheme the main thread last painted the discs in (game/palette.ts
+   * `bubbleSchemeKey`); the worker builds them as the mode mix, "mode" */
+  coloured?: string;
 }
 
 export type FromCommuters = Ready | Bubbles | Summed | Moved;

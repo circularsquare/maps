@@ -5,6 +5,7 @@
 import { computed, effect, signal } from "@preact/signals";
 import { AVERAGE_DAY, DEMAND_DAY_PHRASE, type DemandDay } from "./days";
 import { DEFAULT_FONT, FONT_KEYS, fontStack, loadFont, type FontKey } from "./fonts";
+import { DEFAULT_RAMP, setBubbleColours, type BubbleScheme } from "./palette";
 import type { PurposeFilter } from "./purposes";
 import { LEVELS, type Level, type Selection } from "./types";
 
@@ -61,6 +62,15 @@ export interface DisplaySettings {
   bubbleSize: number;
   /** bubbles' opacity as a multiple of the built alpha (T-470); the default is 10% under it */
   bubbleOpacity: number;
+  /** T-795: how fine the bubbles are, in steps of one aggregation level: 0 groups trips as before
+   * the setting existed (res 8 from zoom 11.8 in), 1 is a level finer (the default), and the finest
+   * res 9 is never passed (map/demandOverlay.ts `bubbleLevel`) */
+  bubbleDetail: number;
+  /** T-804: bubbles coloured by the mix of mode colours, or by a ramp over the train share from
+   * `rampFrom` at 0% to `rampTo` at 100% (hex) */
+  bubbleColours: BubbleScheme;
+  rampFrom: string;
+  rampTo: string;
   /** T-247: the size of the page's panels and text, 0.8-1.2 (UI_SCALES); the map itself is not scaled */
   uiScale: number;
   /** T-698: the panels' font, a trial (game/fonts.ts); the map's labels stay Zen Maru Gothic */
@@ -100,6 +110,10 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   commuterEnd: "home",
   bubbleSize: 1,
   bubbleOpacity: 0.9,
+  bubbleDetail: 1,
+  bubbleColours: "mode",
+  rampFrom: DEFAULT_RAMP.from,
+  rampTo: DEFAULT_RAMP.to,
   uiScale: 0.9,
   font: DEFAULT_FONT,
   dayShown: "average",
@@ -146,6 +160,9 @@ const trackColour = oldDisplay?.trackColour === "line" && legacyLineLoad !== und
 export const tab = signal<Tab>(saved.tab && TABS.includes(saved.tab) ? saved.tab : "lines");
 export const selection = signal<Selection>(null);
 export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, trackColour });
+// bubble colours are module state in palette.ts (the bubble worker has its own); views that colour
+// bubbles read the setting and call this again before building, so the order of effects is moot
+effect(() => setBubbleColours(display.value.bubbleColours, display.value.rampFrom, display.value.rampTo));
 export const dockLayout = signal<DockLayout>({ dockW: saved.dock?.dockW ?? null, paneH: saved.dock?.paneH ?? null });
 const savedTheme = OLD_THEME[saved.theme as string] ?? saved.theme;
 export const theme = signal<Theme>(THEMES.includes(savedTheme as Theme) ? (savedTheme as Theme) : "pink");

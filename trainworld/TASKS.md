@@ -88,7 +88,6 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-187 [P3] Trip chains: work to a nearby leisure place and then home. Whether and how to model it. Idea, not a priority (Anita 2026-10-12).
 
 ## Track and trains
-- T-794 [P2] A station on open ground (Anita 2026-10-21): the station tool clicked off track lays a straight blueprint piece one platform long and puts the station on it, so a line can start from stations alone. Heading and what a later track drawn into it joins are the agent's call. Open.
 - T-797 [P2] Lines that backtrack (Anita 2026-10-21): a line may reverse partway along its route (at a station or a track end), with throughput limited hard there (a long reversal hold, say) so it stays a stopgap. Design in notes/T-797.md (2026-10-21), waits on Anita.
 - T-798 [P2] Loop lines (Anita 2026-10-21): a line whose route comes back to its first station runs round continuously with no turnback. Design first (schedules, fleet, demand routing); may share work with T-797. Design in notes/T-797.md (2026-10-21), waits on Anita.
 - T-691 [P3] A station tried on edges 997 and 1130 of the real save (an overlapping pair, 688/1075) is refused with a track-drawing reason ("The curve is too tight... would run on top of existing track"): find where the worker's station trial produces it and give the station's own reason. Found in T-671. Open.

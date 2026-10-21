@@ -2,7 +2,7 @@
 // them. Pure functions, used by the bubble worker for whole-city views and on the main thread for
 // the small sets (a selection's own bubbles and far end).
 
-import { modeMix } from "../game/palette";
+import { bubbleColour } from "../game/palette";
 import { DISC, type Grouping } from "../workers/commutersProtocol";
 import { kAtY, type Anchor } from "./geo";
 
@@ -73,9 +73,23 @@ export function reorder(g: Groups, order: Uint32Array): Groups {
   return { group: pick(g.group), x: pick(g.x), y: pick(g.y), train: pick(g.train), walk: pick(g.walk), drive: pick(g.drive) };
 }
 
+/** Colour built discs again under the scheme now chosen (T-804), in place: `levels` carry each
+ * disc's trips by mode in the discs' order. */
+export function recolour(levels: { discs: Float32Array; train: Float32Array; walk: Float32Array; drive: Float32Array }[]) {
+  for (const l of levels) {
+    const n = l.train.length;
+    for (let i = 0; i < n; i++) {
+      const c = bubbleColour(l.train[i], l.walk[i], l.drive[i]);
+      l.discs[i * DISC + 3] = c[0] / 255;
+      l.discs[i * DISC + 4] = c[1] / 255;
+      l.discs[i * DISC + 5] = c[2] / 255;
+    }
+  }
+}
+
 /**
  * Discs for groups, in their order: area `perCommuter` m² for each commuter (no minimum: nobody,
- * no disc), coloured by the mode mix (`modeMix`), or by `colour` when given. `a` is the anchor the
+ * no disc), coloured by the chosen scheme (`bubbleColour`), or by `colour` when given. `a` is the anchor the
  * groups' positions are relative to (T-317): a disc's radius is in metres of ground times k where
  * the disc is.
  */
@@ -84,7 +98,7 @@ export function discs(g: Groups, perCommuter: number, alpha: number, edge: numbe
   const out = new Float32Array(n * DISC);
   for (let i = 0; i < n; i++) {
     const all = g.train[i] + g.walk[i] + g.drive[i];
-    const c = colour ?? modeMix(g.train[i], g.walk[i], g.drive[i]);
+    const c = colour ?? bubbleColour(g.train[i], g.walk[i], g.drive[i]);
     out[i * DISC] = g.x[i];
     out[i * DISC + 1] = g.y[i];
     out[i * DISC + 2] = Math.sqrt((all * perCommuter) / Math.PI) * kAtY(g.y[i], a);

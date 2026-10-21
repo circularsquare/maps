@@ -222,6 +222,13 @@ body.resizing, body.resizing * { user-select: none; }
 .slider input::-moz-range-track { height: 3px; background: var(--rule); }
 .slider input::-webkit-slider-thumb { appearance: none; width: 3px; height: 14px; margin-top: -5.5px; background: var(--accent); }
 .slider input::-moz-range-thumb { width: 3px; height: 14px; border: 0; border-radius: 0; background: var(--accent); }
+/* T-804: the two colour pickers of the bubbles' train-share ramp */
+.pickers { display: flex; gap: 16px; margin-top: 8px; }
+.pickers label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.pickers input { appearance: none; width: 22px; height: 22px; padding: 0; margin: 0; border: 1px solid var(--rule); background: none; cursor: pointer; }
+.pickers input::-webkit-color-swatch-wrapper { padding: 0; }
+.pickers input::-webkit-color-swatch { border: 0; }
+.pickers input::-moz-color-swatch { border: 0; }
 .checks { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
 .stack { display: grid; justify-items: start; gap: 6px; }
 .check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }

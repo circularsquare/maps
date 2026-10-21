@@ -14,14 +14,14 @@
 // clock, so their hover tags read what they show. A selection, its far end and the inspector are
 // the current forecast at once.
 
-import { effect, signal } from "@preact/signals";
+import { computed, effect, signal } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, getWorldFrame, worldFrameEpoch, type CityId } from "../game/cities";
 import { nearbyZones } from "../game/zones";
 import { clock } from "../game/clock";
 import { cellModes, cityCells, demandUpdating, demandView, flows, type CellModes, type CityCells, type DemandView, type FarEnd, type Flows, type PurposeTrips } from "../game/demand";
 import { count, wholeDistance } from "../game/format";
-import { BUBBLE_ALPHA } from "../game/palette";
+import { BUBBLE_ALPHA, bubbleSchemeKey, setBubbleColours } from "../game/palette";
 import { tripOpenedFrom } from "../game/trip";
 import { compass } from "../game/places";
 import { purposeWords, type PurposeFilter } from "../game/purposes";
@@ -29,7 +29,7 @@ import type { Selection } from "../game/types";
 import { display, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { BUBBLE_DENSITY, DISC, RES_AREA_M2, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
-import { aggregate, discs, type Groups } from "./bubbles";
+import { aggregate, discs, recolour, type Groups } from "./bubbles";
 import { CATCH_STEP, CATCH_WALL_MS, caughtUp, tripsDone } from "./catchUp";
 import { cityOverview } from "./intercityView";
 import { anchorVersion } from "./anchorVersion";
@@ -187,6 +187,15 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   // bubble worker of its own, built as the focused zone's are but always at the current forecast
   // (no catch-up), and nothing else: no selection, far end or inspector. A click on one focuses
   // its zone, which takes over its worker and bubbles.
+  /** The worker builds the mode mix; bubbles are painted in the chosen scheme here (T-804). */
+  const painted = (b: Bubbles): Bubbles => {
+    const key = bubbleSchemeKey();
+    if ((b.coloured ?? "mode") !== key) {
+      recolour(b.levels);
+      b.coloured = key;
+    }
+    return b;
+  };
   type ZoneShown = { dv: DemandView; end: "home" | "work"; purpose: PurposeFilter; bubbles: Bubbles; modes: CellModes };
   const zones = new Map<CityId, { worker: Worker | null; city: Ready | null; cellsWorld: Float32Array | null; start?: Promise<boolean> | null; ask: number; shown: ZoneShown | null }>();
   const dropZone = (id: CityId) => {
@@ -211,7 +220,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       if (sameFrame && worker && city && cellsWorld && !zones.has(old)) {
         const keep = was && was.f >= 1 ? { dv: was.dv, end: was.end, purpose: was.purpose, bubbles: was.bubbles, modes: was.modes } : null;
         zones.set(old, { worker, city, cellsWorld, start: Promise.resolve(true), ask: 0, shown: keep });
-        if (keep) view.setNearbyBubbles(old, keep.bubbles.levels.map((l) => l.discs), keep.bubbles.anchor);
+        if (keep) view.setNearbyBubbles(old, painted(keep.bubbles).levels.map((l) => l.discs), keep.bubbles.anchor);
       } else worker?.terminate();
       focusSeen = focus; frameSeen = frameNow; focusEpoch++; wanted++;
       worker = null; workerReady = null; city = null; cellsWorld = null;
@@ -369,7 +378,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         const b = await buildOn(entry.worker, end, MODE_KEYS.slice(o, o + 3).map((k) => modes[k].slice()));
         if (!live()) return;
         entry.shown = { dv, end, purpose, bubbles: b, modes };
-        view.setNearbyBubbles(id, b.levels.map((l) => l.discs), b.anchor);
+        view.setNearbyBubbles(id, painted(b).levels.map((l) => l.discs), b.anchor);
         commuterStats.nearbyMs = performance.now() - t0;
         commuterStats.nearbyBuilds++;
         commuterStats.nearbyShown[id] = performance.now();
@@ -386,7 +395,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   const showBubbles = (s: NonNullable<typeof shown>) => {
     shown = s;
     if (s.f >= 1 && catching?.version === s.modes.version) catching = null;
-    view.setBubbles(s.bubbles.levels.map((l) => l.discs), s.bubbles.anchor);
+    view.setBubbles(painted(s.bubbles).levels.map((l) => l.discs), s.bubbles.anchor);
     commuterStats.uploadMs = view.uploadMs;
   };
   // On the game clock's minutes: rebuild with the new share when it has moved a step (and not
@@ -412,6 +421,18 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   // the size slider in the settings pane scales every commuter bubble on the GPU (T-099)
   effect(() => view.setBubbleSize(display.value.bubbleSize));
   effect(() => view.setBubbleOpacity(display.value.bubbleOpacity));
+  effect(() => view.setBubbleDetail(display.value.bubbleDetail));
+  // a new colour scheme (T-804): the bubbles on show are painted again without a rebuild
+  const colourKey = computed(() => `${display.value.bubbleColours}${display.value.rampFrom}${display.value.rampTo}`);
+  effect(() => {
+    colourKey.value;
+    const d = display.peek();
+    setBubbleColours(d.bubbleColours, d.rampFrom, d.rampTo);
+    for (const [id, z] of zones) if (z.shown) view.setNearbyBubbles(id, painted(z.shown.bubbles).levels.map((l) => l.discs), z.shown.bubbles.anchor);
+    if (!shown) return;
+    view.setBubbles(painted(shown.bubbles).levels.map((l) => l.discs), shown.bubbles.anchor);
+    drawPick();
+  });
 
   // ---- hover ----
   const endWord = (end: "home" | "work") => (end === "home" ? "from here" : "to here");

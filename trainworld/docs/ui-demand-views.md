@@ -28,7 +28,8 @@ and the regional layer. Changing zone clears cell-indexed selections and cached 
 train blue #1e3ce6, walking green #1eaa3c, near-pure so a mix reads as RGB (all car red, all train
 blue, half and half magenta). A bubble's mix is pulled towards a grey (190, 190, 190) as its smallest
 mode share rises to a third (`modeMix`; fully grey at a third each, unchanged when a mode has none), so an
-even three-way mix is not white [T-653]. Bars and swatches by mode keep the true colours.
+even three-way mix is not white [T-653]. Bars and swatches by mode keep the true colours, whichever
+bubble colours are chosen (the Colours setting, "Local trip bubbles").
 Trips by "other" (bus, taxi and bike for homes without a car, T-513, [demand-mode.md](demand-mode.md) 4.3)
 count as driving in every bar, split, bubble and hover, with no colour of their own; the sim
 reports them apart only as a total (`summary` index 10).
@@ -95,16 +96,25 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
 
 ## Local trip bubbles
 
-[T-066, T-097, T-099, T-101]
+[T-066, T-097, T-099, T-101, T-795, T-804]
 
 - **What**: every modelled trip leg at the chosen end (`cellModes`, [demand-views.md](demand-views.md)), the
-  zone's res-9 cells summed into their H3 parent by zoom (resolution 9 from zoom 13.6 in, 8 from
-  11.8, 7 from 10, 6 further out), each bubble at its trips' weighted centre.
+  zone's res-9 cells summed into their H3 parent by zoom, each bubble at its trips' weighted
+  centre. The **Detail** setting (Settings, 4 steps, default the third) starts resolution 9 at zoom
+  15.4, 13.6, 11.8 (default) or 10, and each coarser level (8, 7, 6) 1.8 zoom levels further out
+  (`bubbleLevel`), so the default is one level finer than the original banding (9 from 13.6, 8 from
+  11.8, 7 from 10, 6 further out). Resolution 9 is the finest at any step. All levels are built at
+  once, so the setting costs no rebuild.
 - **Area is trip legs**, outward and return, at a fixed density: 50,000 legs/km² for homes and
   160,000 for destinations, times the Bubble size setting (0.5-2x width). No minimum size; nobody
   means no bubble.
-- **Colour mixes the mode colours by share**, at 80% opacity times the Opacity setting (90% by
-  default, T-470), biggest bubbles under smaller ones. Bubbles have no outline; only a selected
+- **Colour** by the **Colours** setting: **Mode mix** (default) blends the mode colours by share;
+  **Train share** colours by the train share of the bubble's legs along a ramp from a start colour
+  at 0% (default pink #e0457b) to an end colour at 100% (green #2fa84f), blended in OKLab, with two
+  colour pickers shown while it is chosen (`game/palette.ts` `bubbleColour`). It colours the local
+  bubbles, the zone bubbles zoomed out and the zone inspector's mark; bars, swatches by mode and
+  the hovers keep the mode colours and state the shares. Drawn at 80% opacity times the Opacity
+  setting (90% by default, T-470), biggest bubbles under smaller ones. Bubbles have no outline; only a selected
   one has its dark outline [T-549].
   Drawn over the network and capacity tags, under station names.
 - **Hover** [T-323, T-494]: "422 trips per day from here" (Homes; "to here" for

@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-794 [P2] A station on open ground. Done 2026-10-21: the station tool lays a straight piece one platform plus 20 m long with the station on it, one undo; aims at the nearest station or loose end, R turns it (`add_free_station`, tools.ts `freeGhost`).
 - T-795 [P2] Finer local trip bubbles. Done 2026-10-21: Settings "Detail" slider (4 steps, default one level finer than before: res 9 from zoom 11.8); the real save at zoom 12 draws 61,577 discs against 30,808, a draw under 0.3 ms, no rebuild.
 - T-804 [P2] Other bubble colours. Done 2026-10-21: Settings "Colours" choice, Mode mix (default) or Train share, a ramp pink #e0457b to green #2fa84f in OKLab with two pickers; repaints in about 7 ms, no rebuild.
 - T-808 [P2] No London - Paris demand. Abandoned 2026-10-21: Anita found the Channel demand, only small (the market's one border rule gives about 9,600 a day against Eurostar's 30,000; docs/demand-worldwide.md).

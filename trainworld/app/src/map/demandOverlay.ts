@@ -186,13 +186,22 @@ function compile(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgr
   return prog;
 }
 
-/**
- * Which aggregation level (index into BUBBLE_RES: resolution 9, 8, 7, 6) to show at a zoom. Each
- * step is a 7 times larger area, about 1.4 zoom levels, so the bubbles keep about the same spacing
- * on screen: 40-60 px between neighbours.
- */
+/** Where aggregation levels 0, 1 and 2 (resolutions 9, 8, 7) start, as zoom, at detail 0. Each step
+ * is a 7 times larger area, `LEVEL_ZOOM_STEP` zoom levels, so the bubbles keep about the same
+ * spacing on screen: 40-60 px between neighbours. */
+const LEVEL_ZOOMS = [13.6, 11.8, 10];
+const LEVEL_ZOOM_STEP = 1.8;
+/** The bubble detail setting (T-795): each step moves every band one aggregation level finer. */
+export const DETAIL_RANGE = { min: -1, max: 2 };
+let detail = 1;
+/** The zoom from which bubbles are the finest (resolution 9) at a detail setting. */
+export const finestFromZoom = (d: number) => LEVEL_ZOOMS[0] - LEVEL_ZOOM_STEP * d;
+
+/** Which aggregation level (index into BUBBLE_RES: resolution 9, 8, 7, 6) to show at a zoom; level
+ * 0, resolution 9, is as fine as it gets at any detail. */
 export function bubbleLevel(z: number): number {
-  return z >= 13.6 ? 0 : z >= 11.8 ? 1 : z >= 10 ? 2 : 3;
+  const s = z + LEVEL_ZOOM_STEP * detail;
+  return s >= LEVEL_ZOOMS[0] ? 0 : s >= LEVEL_ZOOMS[1] ? 1 : s >= LEVEL_ZOOMS[2] ? 2 : 3;
 }
 
 /** Disc layers, drawn in this order. */
@@ -332,6 +341,14 @@ export class DemandOverlay {
   setBubbleSize(s: number) {
     if (s === this.bubbleSize) return;
     this.bubbleSize = s;
+    this.invalidate();
+  }
+
+  /** How finely bubbles aggregate (the settings slider, T-795): the level on screen may change. */
+  setBubbleDetail(d: number) {
+    const v = Math.round(Math.min(DETAIL_RANGE.max, Math.max(DETAIL_RANGE.min, Number.isFinite(d) ? d : 1)));
+    if (v === detail) return;
+    detail = v;
     this.invalidate();
   }
 

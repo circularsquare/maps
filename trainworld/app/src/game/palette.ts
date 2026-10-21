@@ -83,6 +83,61 @@ const MIX_GREY = 190;
 let MIX: [number, number, number][] | null = null;
 const MIX_TOP = Math.max(...rgb(MODE_COLOURS.train), ...rgb(MODE_COLOURS.walk), ...rgb(MODE_COLOURS.drive));
 
+/** How the demand bubbles are coloured (T-804): the mode mix above, or a ramp by train share from
+ * one colour at 0% to another at 100%. */
+export type BubbleScheme = "mode" | "ramp";
+export const DEFAULT_RAMP = { from: "#e0457b", to: "#2fa84f" } as const;
+let schemeKey = "mode";
+/** the ramp as 256 rgb triples */
+let rampLut: Uint8ClampedArray | null = null;
+
+/** Set the bubble colouring for everything built from now on (the map views, the inspectors'
+ * swatches); the same arguments again change nothing. */
+export function setBubbleColours(s: BubbleScheme, from: string, to: string) {
+  const key = s === "ramp" ? `ramp${from}${to}` : "mode";
+  if (key === schemeKey) return;
+  schemeKey = key;
+  rampLut = s === "ramp" ? buildRamp(HEX.test(from) ? from : DEFAULT_RAMP.from, HEX.test(to) ? to : DEFAULT_RAMP.to) : null;
+}
+/** Names the scheme set now ("mode", or "ramp" with its two colours), to tell built discs apart. */
+export const bubbleSchemeKey = () => schemeKey;
+const HEX =/^#[0-9a-f]{6}$/i;
+
+/** A bubble's colour under the chosen scheme: `modeMix`, or the ramp at the train share. */
+export function bubbleColour(train: number, walk: number, drive: number): [number, number, number] {
+  if (!rampLut) return modeMix(train, walk, drive);
+  const all = train + walk + drive;
+  if (all <= 0) return [163, 155, 143];
+  const k = Math.round((train / all) * 255) * 3;
+  return [rampLut[k], rampLut[k + 1], rampLut[k + 2]];
+}
+
+// OKLab (Ottosson): even steps of lightness and hue, so the middle of pink to green is not muddy
+const toLinear = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+const fromLinear = (v: number) => (v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055);
+function toOklab(hex: string): [number, number, number] {
+  const [r, g, b] = rgb(hex).map((v) => toLinear(v / 255));
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s, 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s];
+}
+function fromOklab([L, a, b]: [number, number, number]): [number, number, number] {
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s]
+    .map((v) => Math.round(255 * fromLinear(Math.min(1, Math.max(0, v))))) as [number, number, number];
+}
+function buildRamp(from: string, to: string): Uint8ClampedArray {
+  const a = toOklab(from), b = toOklab(to), out = new Uint8ClampedArray(256 * 3);
+  for (let i = 0; i < 256; i++) {
+    const t = i / 255;
+    out.set(fromOklab([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]), i * 3);
+  }
+  return out;
+}
+
 /** Commuter bubbles are this opaque, so the network shows through where they pile up. */
 export const BUBBLE_ALPHA = 0.8;
 

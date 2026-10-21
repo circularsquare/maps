@@ -20,8 +20,8 @@
 // trip scale. Same-city longer trips of a selection remain in the inspector only (T-139). Regional
 // zooms aggregate a selection's trips to one labeled circle per other market (T-135, T-136). Area
 // represents total travellers, without a minimum radius or additive size offset. All use the same
-// opacity and size slider, coloured by `modeMix(rail, 0, everything else)`: blue train, red the
-// rest. They are always drawn (the setting that hid them went with T-222), except under a local
+// opacity and size slider, coloured by `bubbleColour(rail, 0, everything else)`: by default blue
+// train, red the rest. They are always drawn (the setting that hid them went with T-222), except under a local
 // purpose filter; the numbers stay in the inspectors.
 // Asked for, not pushed, and asked again whenever `demandView` changes, keeping the last answer
 // meanwhile.
@@ -35,7 +35,7 @@ import { packToLngLat } from "../game/coords";
 import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type Corridors, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
 import { selectedScope } from "../game/complexView";
 import { count } from "../game/format";
-import { BUBBLE_ALPHA, modeMix } from "../game/palette";
+import { BUBBLE_ALPHA, bubbleColour, setBubbleColours } from "../game/palette";
 import { display, purposeFilter, selection, shownDayPhrase } from "../game/ui";
 import type { Selection } from "../game/types";
 import { DISC } from "../workers/commutersProtocol";
@@ -242,7 +242,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const discs = new Float32Array(points.length * DISC);
     points.forEach((p, i) => {
       const [x, y] = toLocal(p.city.center[0], p.city.center[1], a);
-      const c = modeMix(p.rail, p.walk, Math.max(0, p.all - p.rail - p.walk));
+      const c = bubbleColour(p.rail, p.walk, Math.max(0, p.all - p.rail - p.walk));
       const r = Math.sqrt(p.all / (own ? SELECTED_TRIPS_PER_PX2 : TRIPS_PER_PX2)) * zoomScale / pxPerUnit;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, p.isOwn ? 2 : 1], i * DISC);
       label(`${p.city.name} · ${count(p.all)} trips/day`);
@@ -303,7 +303,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     points.forEach((z, i) => {
       const [lng, lat] = z.ll;
       const [x, y] = toLocal(lng, lat, a);
-      const c = modeMix(z.rail, 0, Math.max(0, z.all - z.rail));
+      const c = bubbleColour(z.rail, 0, Math.max(0, z.all - z.rail));
       // Area, not radius, represents total travellers. Before the common radius scale, the
       // biggest regional circle is 38px and detailed zones scale against their busiest zone.
       // No minimum distorts smaller counts.
@@ -322,6 +322,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   effect(() => {
     display.value.bubbleSize;
     display.value.commuters;
+    setBubbleColours(display.value.bubbleColours, display.value.rampFrom, display.value.rampTo);
     purposeFilter.value;
     anchorVersion.value; // the discs are measured from the draw anchor (T-317)
     loadingZones.value;

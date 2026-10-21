@@ -8,6 +8,9 @@
 import { FONT_KEYS, FONTS, type FontKey } from "../game/fonts";
 import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, tool, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
 import { moneyState } from "../game/money";
+import type { BubbleScheme } from "../game/palette";
+import { DETAIL_RANGE, finestFromZoom } from "../map/demandOverlay";
+import { RES_AREA_M2 } from "../workers/commutersProtocol";
 import { makeSandbox } from "../workers/clockClient";
 import { pickTool, TRIP_KEY } from "./tabs";
 import { Check, Segmented, Stepper } from "./widgets";
@@ -15,6 +18,7 @@ import { Check, Segmented, Stepper } from "./widgets";
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
 const SHADE_NAME: Record<Shade, string> = { light: "Light", dark: "Dark" };
 type DayShown = "average" | "weekday" | "weekend";
+const SCHEME_OPTIONS: [BubbleScheme, string][] = [["mode", "Mode mix"], ["ramp", "Train share"]];
 const DAY_OPTIONS: [DayShown, string][] = [["average", "Average"], ["weekday", "Weekday"], ["weekend", "Weekend"]];
 
 export function SettingsTab() {
@@ -34,6 +38,30 @@ export function SettingsTab() {
         <input type="range" min="0.2" max="1" step="0.05" value={d.bubbleOpacity} data-tip={`Bubbles at ${Math.round(d.bubbleOpacity * 100)}% of their full opacity`}
           onInput={(e) => setDisplay("bubbleOpacity", Number((e.target as HTMLInputElement).value))} />
       </label>
+      {/* T-795: finer bubbles are more and smaller ones, at the same area per trip */}
+      <label class="slider">
+        <span>Detail</span>
+        <input type="range" min={DETAIL_RANGE.min} max={DETAIL_RANGE.max} step="1" value={d.bubbleDetail}
+          data-tip={`Smallest bubbles group trips by areas of ${(RES_AREA_M2[0] / 1e6).toFixed(1)} km², from zoom ${finestFromZoom(d.bubbleDetail).toFixed(1)}`}
+          onInput={(e) => setDisplay("bubbleDetail", Number((e.target as HTMLInputElement).value))} />
+      </label>
+      {/* T-804: the bubbles' colours; bars and swatches by mode keep the mode colours */}
+      <div class="slider" data-tip="Mode mix blends red for driving, blue for train and green for walking by share. Train share runs from one colour where nobody rides a train to another where everyone does.">
+        <span>Colours</span>
+        <Segmented<BubbleScheme> options={SCHEME_OPTIONS} value={d.bubbleColours === "ramp" ? "ramp" : "mode"} onChange={(v) => setDisplay("bubbleColours", v)} />
+      </div>
+      {d.bubbleColours === "ramp" && (
+        <div class="pickers">
+          <label data-tip="Bubbles where nobody goes by train">
+            <input type="color" value={d.rampFrom} onInput={(e) => setDisplay("rampFrom", (e.target as HTMLInputElement).value)} />
+            0% train
+          </label>
+          <label data-tip="Bubbles where everyone goes by train">
+            <input type="color" value={d.rampTo} onInput={(e) => setDisplay("rampTo", (e.target as HTMLInputElement).value)} />
+            100% train
+          </label>
+        </div>
+      )}
       {/* T-222: longer-trip bubbles are always drawn; their setting is gone */}
       {/* T-703: the day the demand views are for (T-464), here since it left the map; the track display is on the map (ui/DemandSelector.tsx) */}
       <div class="slider" data-tip="The day the demand figures are for. The average counts 5 weekdays and 2 weekend days over 7. Trains, platforms and riders over the past 24 hours follow the clock.">

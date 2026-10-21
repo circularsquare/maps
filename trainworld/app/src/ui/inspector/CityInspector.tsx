@@ -8,8 +8,8 @@ import { cityById, type CityId } from "../../game/cities";
 import { cityDemandViews, intercityDemand, INTERCITY_PLACES } from "../../game/demand";
 import { count } from "../../game/format";
 import { zoneLoads } from "../../game/loading";
-import { BUBBLE_ALPHA, modeMix } from "../../game/palette";
-import { purposeFilter, shownDayPhrase } from "../../game/ui";
+import { BUBBLE_ALPHA, bubbleColour, setBubbleColours } from "../../game/palette";
+import { display, purposeFilter, shownDayPhrase } from "../../game/ui";
 import { localModes } from "../../map/modeBar";
 import { goTo } from "../Search";
 
@@ -67,7 +67,9 @@ export function CityInspector({ id }: { id: string }) {
   // the title mark is the zone's bubble colour (map/intercityView.ts): local and inter-region together
   const walk = lm?.walk ?? 0;
   const rail = interRail + (lm?.train ?? 0);
-  const mix = modeMix(rail, walk, Math.max(0, interAll + localAll - rail - walk));
+  const d = display.value;
+  setBubbleColours(d.bubbleColours, d.rampFrom, d.rampTo);
+  const mix = bubbleColour(rail, walk, Math.max(0, interAll + localAll - rail - walk));
   const filter = purposeFilter.value;
   const drawn = filter === "all";
   const top = places.slice(0, 3);
