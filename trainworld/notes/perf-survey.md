@@ -100,6 +100,12 @@ blank for the edited line once the worker drops its riders, until demand returns
 state, not drawing). `artifacts/trainworld/t648-*.json`, strips `t648-before-strip.png` and
 `t648-after-strip.png` (same click, panel and map).
 
+**The freeze after a stop edit (T-789, 2026-10-20, notes/T-789.md).** With Europe covered the market's
+corridors were every place pair (300,700 at d8592be, 501,501 with 1,001 places), summed on the main
+thread per period, day and publish: tasks of 3.4-6 s, 7-10 s frozen after each edit in any city. Now
+only pairs with trips, the rest of a day's sums kept by key, the cache written in a worker: longest
+task 0-56 ms in Paris and Grevena. Still growing with zones squared: each result message (T-790).
+
 **Station circles zoomed far out (T-630, 2026-10-19).** Anita's world save (world-map-day73: 143
 lines, 2,367 stations, Toronto to Tokyo) and the real New York save, circles on, clock at 240x,
 zooms 5-10 over New York, Washington and Japan, 1400x900 and 2400x1300 at 1.5x. Drawing was never

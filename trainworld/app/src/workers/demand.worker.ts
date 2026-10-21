@@ -707,6 +707,50 @@ function marketStationFlows(at: Version, c: JobCluster | undefined, m: Intercity
   return station < at.stations ? m.no_station_flows() : new Float64Array(0);
 }
 
+/** `marketFigures`' sum over the parts for a long array: the first part's numbers, with column
+ * `col` of every `stride` added up over the parts (the rail, which is each part's own network's). */
+function sum64(parts: IntercityApi[], read: (p: IntercityApi) => Float64Array, stride: number, col: number): Float64Array {
+  let out: Float64Array | null = null;
+  for (const p of parts) {
+    const v = read(p);
+    if (!v.length) continue;
+    if (!out) out = v;
+    else for (let i = col; i < v.length; i += stride) out[i] += v[i];
+  }
+  return out ?? new Float64Array(0);
+}
+
+/**
+ * T-789: the corridors (from, to, trips, rail) and their commutes (legs, rail legs) with only the
+ * pairs that have longer trips or commutes. Which pairs those are depends on neither the period
+ * nor the network, so every period's list holds the same pairs in the same order. Most of the
+ * market's place pairs have none, and every pair cost the main thread its share of each publish.
+ * Also a key of everything in them but the rail, which no network changes, and the pairs with rail
+ * (index, rail, commute rail legs), so the main thread works out only those when the key is one it
+ * has seen.
+ */
+function keptCorridors(c: Float64Array, k: Float64Array): { corridors: Float64Array; commuteCorridors: Float64Array; corridorKey: string; corridorRail: Float64Array } {
+  const n = c.length / 4, hasK = k.length === 2 * n;
+  let kept = 0, railed = 0;
+  for (let i = 0; i < n; i++) if (c[4 * i + 2] > 0 || (hasK && k[2 * i] > 0)) { kept++; if (c[4 * i + 3] !== 0 || (hasK && k[2 * i + 1] !== 0)) railed++; }
+  const oc = new Float64Array(4 * kept), ok = new Float64Array(hasK ? 2 * kept : 0), rail = new Float64Array(3 * railed);
+  for (let i = 0, j = 0, r = 0; i < n; i++) {
+    if (!(c[4 * i + 2] > 0 || (hasK && k[2 * i] > 0))) continue;
+    oc.set(c.subarray(4 * i, 4 * i + 4), 4 * j);
+    if (hasK) { ok[2 * j] = k[2 * i]; ok[2 * j + 1] = k[2 * i + 1]; }
+    if (c[4 * i + 3] !== 0 || (hasK && ok[2 * j + 1] !== 0)) { rail[3 * r] = j; rail[3 * r + 1] = c[4 * i + 3]; rail[3 * r + 2] = hasK ? ok[2 * j + 1] : 0; r++; }
+    j++;
+  }
+  // FNV-1a over the bits of from, to and trips, and of the commute legs
+  const b = new Uint32Array(oc.buffer), bk = new Uint32Array(ok.buffer);
+  let h = 0x811c9dc5, g = 0x811c9dc5;
+  for (let j = 0; j < kept; j++) {
+    for (let w = 8 * j; w < 8 * j + 6; w++) h = Math.imul(h ^ b[w], 0x01000193);
+    if (hasK) g = Math.imul(Math.imul(g ^ bk[4 * j], 0x01000193) ^ bk[4 * j + 1], 0x01000193);
+  }
+  return { corridors: oc, commuteCorridors: ok, corridorKey: `${kept}:${hasK ? 1 : 0}:${(h >>> 0).toString(36)}:${(g >>> 0).toString(36)}`, corridorRail: rail };
+}
+
 /**
  * T-409: the market's figures in period q over its parts (`jobClusters` order). Each part's rail
  * is its own network's; the trips, pairs and corridor trips need no network and are the same in
@@ -726,11 +770,11 @@ function marketFigures(parts: IntercityApi[], q: number) {
   // round, trips, rail, 0, ms, pairs, segments over seats, then the worst loads: the largest part's
   const summary = of((p) => p.summary(q), (i) => i === 2 || i === 4 || i === 6);
   if (parts.length > 1 && summary.length) for (const i of [7, 8, 9]) summary[i] = Math.max(...parts.map((p) => p.summary(q)[i] ?? 0));
+  const kept = keptCorridors(sum64(parts, (p) => p.corridor_summary(q), 4, 3), sum64(parts, (p) => p.commute_corridors(q), 2, 1));
   return {
     summary,
     parts: of((p) => p.part_summary(q), (i) => i % 2 === 1),
-    corridors: of((p) => p.corridor_summary(q), (i) => i % 4 === 3),
-    commuteCorridors: of((p) => p.commute_corridors(q), (i) => i % 2 === 1),
+    ...kept,
     // T-378: the same in every part
     corridorModes: parts.length ? parts[0].corridor_modes() : new Float32Array(0),
     elsewhere: parts.length ? Array.from(parts[0].elsewhere(q)) : [],
@@ -1008,8 +1052,9 @@ async function run() {
           if (e) for (let k = 0; k < Math.min(e.length, 3 * (local - 1)); k++) v[3 + k] = e[k];
           return [id, v];
         })) as Record<CityId, number[]>;
-        const msg = { version: job.version, period: q, summary, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridors: market ? market.corridors : [], commuteCorridors: market ? market.commuteCorridors : [], corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, loadOfCrush, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
-        return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, loadOfCrush.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer] };
+        const msg = { version: job.version, period: q, summary, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridors: market ? market.corridors : new Float64Array(0), commuteCorridors: market ? market.commuteCorridors : new Float64Array(0), corridorKey: market?.corridorKey, corridorRail: market?.corridorRail, corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, loadOfCrush, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
+        const big = market ? [market.corridors.buffer, market.commuteCorridors.buffer, market.corridorRail.buffer, market.corridorModes.buffer] : [];
+        return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, loadOfCrush.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...big] };
       };
       for (const c of early) {
         setUp(c);

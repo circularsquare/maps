@@ -151,6 +151,8 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   constant per country or purpose, a fitted curve): propose it to Anita first.
 - **Built cities are not fixed** (Anita, 2026-10-20): when covering a whole country, a metro built
   earlier may be cut down or grown if that makes the country's zones fit together better.
+- **Countryside zones hold at least about 0.5M people** (Anita, 2026-10-20), merged with neighbours
+  within their region where units are smaller; zones built before keep their size until rebuilt.
 - **Simple, predictable prices** (Anita, 2026-10-20): fares and costs the player reasons about
   (flights, crossings) follow a simple rule (a base plus per-km), not per-route real data.
 - **General sources and methods only** (2026-10-12, stressed 2026-10-13). Prefer global sources

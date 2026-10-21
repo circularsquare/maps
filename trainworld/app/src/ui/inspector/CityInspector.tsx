@@ -45,12 +45,14 @@ export function CityInspector({ id }: { id: string }) {
   const market = zoneLoads.value.has(id as CityId) ? null : intercityDemand.value;
   if (!city) return null;
   const byPlace = new Map<number, { all: number; rail: number }>();
-  for (const c of market?.corridors ?? []) {
-    if (c.from === c.to || (c.from !== city.place && c.to !== city.place)) continue;
-    const other = c.from === city.place ? c.to : c.from;
+  const c = market?.corridors;
+  for (let i = 0; c && i < c.n; i++) {
+    const from = c.from[i], to = c.to[i];
+    if (from === to || (from !== city.place && to !== city.place)) continue;
+    const other = from === city.place ? to : from;
     const p = byPlace.get(other) ?? { all: 0, rail: 0 };
-    p.all += c.trips;
-    p.rail += c.rail;
+    p.all += c.trips[i];
+    p.rail += c.rail[i];
     byPlace.set(other, p);
   }
   const places = [...byPlace].filter(([, p]) => p.all > 0).sort((a, b) => b[1].all - a[1].all);

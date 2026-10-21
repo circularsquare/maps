@@ -33,7 +33,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES } from "../game/cities";
 import { clock } from "../game/clock";
 import { packToLngLat } from "../game/coords";
-import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
+import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type Corridors, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
 import { selectedScope } from "../game/complexView";
 import { count } from "../game/format";
 import { BUBBLE_ALPHA, modeMix } from "../game/palette";
@@ -107,18 +107,29 @@ interface Marks {
 }
 
 const PLACES = INTERCITY_PLACES.length;
+/** T-789: the city view draws zones only, so it keeps the places that hold a zone (`Z` of them),
+ * not every place of the market. */
+const ZONE_PLACES = [...new Set(CITIES.map((c) => c.place).filter((p) => p >= 0 && p < PLACES))];
+const Z = ZONE_PLACES.length;
+const zoneIndex = new Int32Array(PLACES).fill(-1);
+ZONE_PLACES.forEach((p, i) => (zoneIndex[p] = i));
+const zoneOf = (place: number) => (place >= 0 && place < PLACES ? zoneIndex[place] : -1);
+/** where each zone place's totals start in `pairs` */
+const TOTALS = Z * Z * 3;
 
-/** Longer trips a day between every two places, both directions, all modes then by train and
- * (T-378) by plane: [trips, rail, air] at (a * PLACES + b) * 3, the same for (b, a). */
-function pairs(corridors: { from: number; to: number; trips: number; rail: number; air?: number }[]): Float64Array {
-  const m = new Float64Array(PLACES * PLACES * 3);
-  for (const c of corridors) {
-    if (c.from === c.to || c.from >= PLACES || c.to >= PLACES) continue;
-    for (const [a, b] of [[c.from, c.to], [c.to, c.from]]) {
-      m[(a * PLACES + b) * 3] += c.trips;
-      m[(a * PLACES + b) * 3 + 1] += c.rail;
-      m[(a * PLACES + b) * 3 + 2] += c.air ?? 0;
-    }
+/** Longer trips a day between every two zone places, both directions, all modes then by train and
+ * (T-378) by plane: [trips, rail, air] at (a * Z + b) * 3 (`zoneOf` indices), the same for (b, a);
+ * then each zone place's with every other place of the market at TOTALS + a * 3. */
+function pairs(c: Corridors): Float64Array {
+  const m = new Float64Array(TOTALS + Z * 3);
+  for (let i = 0; i < c.n; i++) {
+    const from = c.from[i], to = c.to[i];
+    if (from === to || from >= PLACES || to >= PLACES) continue;
+    const a = zoneOf(from), b = zoneOf(to), t = c.trips[i], r = c.rail[i], f = c.air[i];
+    if (a >= 0) { m[TOTALS + a * 3] += t; m[TOTALS + a * 3 + 1] += r; m[TOTALS + a * 3 + 2] += f; }
+    if (b >= 0) { m[TOTALS + b * 3] += t; m[TOTALS + b * 3 + 1] += r; m[TOTALS + b * 3 + 2] += f; }
+    if (a < 0 || b < 0) continue;
+    for (const o of [(a * Z + b) * 3, (b * Z + a) * 3]) { m[o] += t; m[o + 1] += r; m[o + 2] += f; }
   }
   return m;
 }
@@ -191,12 +202,9 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       view.setDiscs("inter", null);
       return;
     }
-    const pair = (a: number, b: number) => ({ all: m[(a * PLACES + b) * 3], rail: m[(a * PLACES + b) * 3 + 1], air: m[(a * PLACES + b) * 3 + 2] });
-    const total = (a: number) => {
-      let all = 0, rail = 0, air = 0;
-      for (let b = 0; b < PLACES; b++) if (b !== a) (all += m[(a * PLACES + b) * 3]), (rail += m[(a * PLACES + b) * 3 + 1]), (air += m[(a * PLACES + b) * 3 + 2]);
-      return { all, rail, air };
-    };
+    const at = (o: number) => (o < 0 ? { all: 0, rail: 0, air: 0 } : { all: m[o], rail: m[o + 1], air: m[o + 2] });
+    const pair = (a: number, b: number) => { const za = zoneOf(a), zb = zoneOf(b); return at(za < 0 || zb < 0 ? -1 : (za * Z + zb) * 3); };
+    const total = (a: number) => { const za = zoneOf(a); return at(za < 0 ? -1 : TOTALS + za * 3); };
     const own = selected ? cityById(selected) : null;
     // T-276: zoomed out, a zone is one bubble as if it were one place: its local trips (the city
     // view's, or with no rail the pipeline's count for a zone not opened) and the regional

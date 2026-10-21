@@ -195,12 +195,17 @@ export type FromDemand =
       /** T-276: IntercityApi.part_summary(): longer trips and rail, then commute legs between
        * zones and rail (both in `intercitySummary`) */
       intercityParts?: number[];
-      /** per market pair (from, to, longer trips, rail) */
-      corridors: number[];
-      /** T-276: per market pair in `corridors` order, commute legs between zones and rail legs */
-      commuteCorridors?: number[];
-      /** T-378: per market pair in `corridors` order, the shares of its longer trips not by rail
-       * that fly and that drive (`IntercityApi.corridor_modes`, the same every period) */
+      /** per market pair with trips (from, to, longer trips, rail); T-789: pairs with no longer
+       * trips and no commutes are left out, the same pairs in every period and network */
+      corridors: Float64Array;
+      /** T-276: per pair in `corridors` order, commute legs between zones and rail legs */
+      commuteCorridors?: Float64Array;
+      /** T-789: a key of the corridors less their rail (the same whatever the network), and the
+       * pairs with rail as (index in `corridors`, rail, commute rail legs) */
+      corridorKey?: string;
+      corridorRail?: Float64Array;
+      /** T-378: per market pair, every one in `IntercityApi.corridor_summary` order (`corridorOf`),
+       * the shares of its longer trips not by rail that fly and that drive (the same every period) */
       corridorModes?: Float32Array;
       /** T-378: per place, its longer trips in the period with places that have no zone, each way */
       elsewhere?: number[];

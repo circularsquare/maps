@@ -139,7 +139,7 @@ and families, then the fit in steps on a track model of its own, dropped for a n
 the network: `TrackApi`, notes/T-025.md; money and autosave too), `saveFile.ts` (the save format
 and IndexedDB, T-029; slots' backups, T-744), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),
-`demandProtocol.ts`, `demandClusters.ts` (the network split into clusters that share no rider,
+`demandProtocol.ts`, `cacheWrite.worker.ts` (the demand cache's IndexedDB write, off the main thread, T-789), `demandClusters.ts` (the network split into clusters that share no rider,
 each a sub-network, T-326; `reachView`, a city's own network inside its cluster, T-756; `marketReaches`, which stations the market's riders use, T-396), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
 reach, T-149; the footprints fetched on demand by registry box, T-404), `commuters.worker.ts` and `commutersProtocol.ts` (the commuter bubbles' sums,
 T-097), `selectionMerge.ts` (a bubble selection's everyday far end added up over the workers,

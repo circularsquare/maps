@@ -56,6 +56,7 @@ import {
   type StationDemand,
   type StationRiders,
   type ZoneRiders,
+  type Corridors,
   demandSolving,
 } from "../game/demand";
 import { makeFrame } from "../game/frame";
@@ -140,7 +141,11 @@ interface Service {
   lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; dwellS: number[][][]; cars: number }[];
 }
 
-type Result = Extract<FromDemand, { kind: "result" }>;
+/** A day's corridors summed over the periods (`DemandClient.corridorSums`): in full, and as if no
+ * pair had rail (`bare`), with the longer trips alone (`tl`), the commutes and each pair's shares. */
+interface CorridorBase { full: Corridors; tl: Float64Array; commutes: Float64Array; airShare: Float64Array; carShare: Float64Array; bare: { air: Float64Array; car: Float64Array } }
+/** `corridorDay`: a kind of day's factors for the corridors' longer trips and commutes (`dayResult`) */
+type Result = Extract<FromDemand, { kind: "result" }> & { corridorDay?: [number, number] };
 type QueryKind = "cells" | "subSums" | "cellModes" | "station" | "flowRail" | "flows" | "purposes" | "icSel" | "icStation" | "purposeModes" | "transfers" | "trip" | "bare" | "bareFlows" | "bareSquares";
 type Reply = Extract<FromDemand, { kind: QueryKind }>;
 type QueryMessage = Extract<ToDemand, { kind: QueryKind }>;
@@ -461,6 +466,12 @@ class DemandClient {
   private cityVersion = new Map<CityId, number>();
   /** T-378: the market's per-corridor shares of the longer trips not by rail by plane and by car */
   private corridorModes: Float32Array | null = null;
+  /** T-789: a day's corridor sums by the periods' corridor keys and day factors (`sumCorridors`) */
+  private corridorBase = new Map<string, CorridorBase>();
+  /** T-789: the demand cache's writer (`writeStored`) and its writes waiting for an answer */
+  private cacheWriter: Worker | null = null;
+  private cacheWrites_ = new Map<number, (ok: boolean) => void>();
+  private cacheWriteId = 0;
   /** a service waiting for the pool to start */
   private waiting: { svc: Service; arrivedAt: number } | null = null;
   private lastKey = "";
@@ -1409,9 +1420,45 @@ class DemandClient {
     if (hash === this.cachedHash && (this.cachedModes || !cm)) return;
     const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive]) };
     const ms = performance.now() - t0;
-    const ok = await writeDemandCache(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}) } satisfies StoredDemand);
+    const bytes = storedSize(stored) + (modes?.data.byteLength ?? 0);
+    const ok = await this.writeStored(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}) } satisfies StoredDemand);
     this.cachedHash = hash;
-    (this.cacheLog ??= { at: t0 }).wrote = { at: performance.now(), ms, bytes: storedSize(stored) + (modes?.data.byteLength ?? 0), ok };
+    (this.cacheLog ??= { at: t0 }).wrote = { at: performance.now(), ms, bytes, ok };
+  }
+
+  /**
+   * T-789: the cache written by a worker of its own (`cacheWrite.worker.ts`), the corridors copied a
+   * day per task and transferred, since cloning them into IndexedDB took the main thread longer
+   * than a frame. Where no worker starts, written here as before.
+   */
+  private async writeStored(slot: string, hash: string, v: StoredDemand): Promise<boolean> {
+    if (!this.cacheWriter) {
+      try {
+        const w = new Worker(new URL("./cacheWrite.worker.ts", import.meta.url), { type: "module" });
+        w.onmessage = (e: MessageEvent<{ id: number; ok: boolean }>) => { this.cacheWrites_.get(e.data.id)?.(e.data.ok); this.cacheWrites_.delete(e.data.id); };
+        w.onerror = () => { for (const done of this.cacheWrites_.values()) done(false); this.cacheWrites_.clear(); };
+        this.cacheWriter = w;
+      } catch {
+        return writeDemandCache(slot, hash, v);
+      }
+    }
+    const transfer: ArrayBuffer[] = [];
+    const days: StoredDemand["days"] = [];
+    for (const d of v.days) {
+      const c = d.intercity?.corridors;
+      if (c) {
+        const copy: Corridors = { n: c.n, from: c.from.slice(), to: c.to.slice(), trips: c.trips.slice(), rail: c.rail.slice(), commutes: c.commutes.slice(), commuteRail: c.commuteRail.slice(), air: c.air.slice(), car: c.car.slice() };
+        for (const a of [copy.from, copy.to, copy.trips, copy.rail, copy.commutes, copy.commuteRail, copy.air, copy.car]) transfer.push(a.buffer as ArrayBuffer);
+        days.push({ ...d, intercity: { ...d.intercity!, corridors: copy } });
+        await new Promise((r) => setTimeout(r, 0));
+      } else days.push(d);
+    }
+    if (v.modes) transfer.push(v.modes.data.buffer as ArrayBuffer);
+    const id = ++this.cacheWriteId;
+    return new Promise((resolve) => {
+      this.cacheWrites_.set(id, resolve);
+      this.cacheWriter!.postMessage({ id, slot, hash, value: { ...v, days } }, transfer);
+    });
   }
 
   /**
@@ -2327,7 +2374,7 @@ class DemandClient {
         demandUpdating.value = false;
         demandSolving.value = null;
         this.unsettled = null;
-        void this.writeCache(s); // T-328
+        setTimeout(() => void this.writeCache(s), 0); // T-328; a task of its own (T-789)
       }
       const t = this.timeRest;
       if (t?.version === s.version) {
@@ -2358,7 +2405,7 @@ class DemandClient {
     demandByDay.value = days.map((d, k) => {
       const day = k as DemandDay;
       if (!d.view) return d;
-      const est = this.dayDemand(part, 0, false, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day))).view!;
+      const est = this.dayDemand(part, 0, false, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day)), true).view!;
       const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
       for (const { id } of fresh) {
         const l = est.lines.get(id);
@@ -2394,7 +2441,7 @@ class DemandClient {
     const days = demandByDay.peek();
     const fresh = Array.from(c.lines, (l) => s.layout[l]).filter(Boolean);
     const part = { ...s, layout: fresh };
-    const of = (day: DemandDay, final: boolean) => this.dayDemand(part, round, final, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day)));
+    const of = (day: DemandDay, final: boolean, corridors = true) => this.dayDemand(part, round, final, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day)), !corridors);
     // T-402: with nothing shown yet, or only this solve's own figures of the cluster, a view of the
     // cluster alone, which the solve's own results replace (its totals are the cluster's, so never
     // the solve's final); its rounds before the last only where the solve's estimates are shown
@@ -2406,7 +2453,7 @@ class DemandClient {
       demandByDay.value = days.map((d, k) => {
         const day = k as DemandDay;
         if (!d.view) return d;
-        const est = of(day, final);
+        const est = of(day, final, c.market);
         const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
         // lines the network no longer has go too
         for (const id of lines.keys()) if (!ids.has(id)) lines.delete(id);
@@ -2532,18 +2579,16 @@ class DemandClient {
     if (ip && ip.length >= 4) { intercitySummary[1] = ip[0] * fl + ip[2] * fw; intercitySummary[2] = ip[1] * fl + ip[3] * fw; }
     else { intercitySummary[1] *= fl; intercitySummary[2] *= fl; }
     const intercityParts = ip?.map((v, i) => v * (i < 2 ? fl : fw));
-    const corridors = r.corridors.slice();
-    for (let i = 0; i + 3 < corridors.length; i += 4) { corridors[i + 2] *= fl; corridors[i + 3] *= fl; }
-    const commuteCorridors = r.commuteCorridors?.map((v) => v * fw);
     const elsewhere = r.elsewhere?.map((v) => v * fl);
     const summary = r.summary.slice();
     summary[1] = summary[2] = summary[3] = 0;
     for (const v of [...Object.values(citySummary), intercitySummary]) for (const k of [1, 2, 3]) summary[k] += v[k] ?? 0;
-    return { ...r, seg, board, alight, loadOfCrush, citySummary, intercitySummary, intercityParts, corridors, commuteCorridors, elsewhere, summary, parts: { keys: p.keys, seg: ps, board: pb, alight: pa } };
+    // the corridors keep the weekday's numbers and their factors, applied as `sumCorridors` adds them (T-789)
+    return { ...r, seg, board, alight, loadOfCrush, citySummary, intercitySummary, intercityParts, corridorDay: [fl, fw], elsewhere, summary, parts: { keys: p.keys, seg: ps, board: pb, alight: pa } };
   }
 
   /** The views of one kind of day from its period results. */
-  private dayDemand(s: Solve, round: number, final: boolean, day: DemandDay, res: Result[]): DayDemand {
+  private dayDemand(s: Solve, round: number, final: boolean, day: DemandDay, res: Result[], noCorridors = false): DayDemand {
     let trips = 0, rail = 0, walk = 0;
     const byPeriod: [string, number][] = [];
     res.forEach((r, q) => {
@@ -2616,7 +2661,6 @@ class DemandClient {
     // T-325: and the zones open bare, from their own figures
     for (const id of this.bareIds()) if (!cities.has(id)) cities.set(id, this.bareView(id, day, network));
     // the regional layer between places: longer trips and (T-276) commutes between zones together
-    const corridors = new Map<string, {from: number; to: number; trips: number; rail: number; commutes: number; commuteRail: number; air: number; car: number}>();
     let interTrips = 0, interRail = 0, commuteTrips = 0, commuteRail = 0;
     const elsewhere = INTERCITY_PLACES.map(() => 0);
     for (const r of res) {
@@ -2624,18 +2668,107 @@ class DemandClient {
       if (r.intercityParts && r.intercityParts.length >= 4) { commuteTrips += r.intercityParts[2]; commuteRail += r.intercityParts[3]; }
       if (r.corridorModes?.length) this.corridorModes = r.corridorModes;
       r.elsewhere?.forEach((v, p) => { if (p < elsewhere.length) elsewhere[p] += v; });
-      for (let i = 0, k = 0; i < r.corridors.length; i += 4, k += 2) {
-        const [from, to, trips, rail] = r.corridors.slice(i, i + 4), key = `${from}:${to}`;
-        const ct = r.commuteCorridors?.[k] ?? 0, cr = r.commuteCorridors?.[k + 1] ?? 0;
-        const old = corridors.get(key) ?? {from, to, trips: 0, rail: 0, commutes: 0, commuteRail: 0, air: 0, car: 0};
-        // T-378: the longer trips not by rail split by the corridor's shares; commutes never fly
-        const [air, car] = corridorSplit(this.corridorModes, i / 4, trips - rail);
-        old.trips += trips + ct; old.rail += rail + cr; old.commutes += ct; old.commuteRail += cr;
-        old.air += air; old.car += car + ct - cr;
-        corridors.set(key, old);
+    }
+    return { view: network, cities, intercity: {version: s.version, round, tripsPerDay: interTrips, railTripsPerDay: interRail, commuteTripsPerDay: commuteTrips, commuteRailPerDay: commuteRail, corridors: this.sumCorridors(noCorridors ? [] : res), elsewhere} };
+  }
+
+  /**
+   * The periods' corridors added up, the pairs in the first period's order (T-789: every period
+   * holds the same pairs in the same order; a period that differs is matched pair by pair). Only the
+   * rail changes with the network, so the rest of a day's sums is kept by the periods' corridor keys
+   * and their day factors, and a later result works out only its pairs with rail.
+   */
+  private sumCorridors(res: Result[]): Corridors {
+    const first = res.find((r) => r.corridors.length)?.corridors;
+    const n = first ? first.length / 4 : 0;
+    if (!first) return { n: 0, from: new Uint32Array(0), to: new Uint32Array(0), trips: new Float64Array(0), rail: new Float64Array(0), commutes: new Float64Array(0), commuteRail: new Float64Array(0), air: new Float64Array(0), car: new Float64Array(0) };
+    const same = res.every((r) => { const v = r.corridors; return v.length === 4 * n && v[0] === first[0] && v[1] === first[1] && v[4 * n - 4] === first[4 * n - 4] && v[4 * n - 3] === first[4 * n - 3]; });
+    const keyed = same && res.every((r) => r.corridorKey && r.corridorRail);
+    const key = keyed ? `${this.corridorModes?.length ?? 0}|` + res.map((r) => `${r.corridorKey}*${r.corridorDay?.join("/") ?? "1/1"}`).join("|") : null;
+    let base = key ? this.corridorBase.get(key) : undefined;
+    if (!base) {
+      base = this.corridorSums(res, first, n);
+      if (key) {
+        this.corridorBase.set(key, base);
+        // a weekday and two weekend days, for the market as it is and as it was
+        if (this.corridorBase.size > 6) this.corridorBase.delete(this.corridorBase.keys().next().value!);
+      }
+      if (!keyed) return base.full;
+    }
+    // the base's longer trips have no rail: each pair with rail as the full sum works it out
+    const { tl, commutes: C, airShare, carShare } = base;
+    const rl = new Float64Array(n), cr = new Float64Array(n), air = base.bare.air.slice(), car = base.bare.car.slice();
+    const touched: number[] = [];
+    const seen = new Uint8Array(n);
+    for (const r of res) {
+      const v = r.corridorRail!, [fl, fw] = r.corridorDay ?? [1, 1];
+      for (let i = 0; i < v.length; i += 3) {
+        const j = v[i];
+        rl[j] += v[i + 1] * fl;
+        cr[j] += v[i + 2] * fw;
+        if (!seen[j]) { seen[j] = 1; touched.push(j); }
       }
     }
-    return { view: network, cities, intercity: {version: s.version, round, tripsPerDay: interTrips, railTripsPerDay: interRail, commuteTripsPerDay: commuteTrips, commuteRailPerDay: commuteRail, corridors: [...corridors.values()], elsewhere} };
+    const rail = new Float64Array(n);
+    for (const j of touched) {
+      const rest = tl[j] - rl[j];
+      air[j] = rest * airShare[j];
+      car[j] = rest * carShare[j] + C[j] - cr[j];
+      rail[j] = rl[j] + cr[j];
+    }
+    return { ...base.full, rail, commuteRail: cr, air, car };
+  }
+
+  /** A day's corridors in full from every pair of every period (`sumCorridors`), with the parts a
+   * later result with rail on other pairs starts from: the longer trips alone and each pair's shares. */
+  private corridorSums(res: Result[], first: Float64Array, n: number): CorridorBase {
+    const c: Corridors = { n, from: new Uint32Array(n), to: new Uint32Array(n), trips: new Float64Array(n), rail: new Float64Array(n), commutes: new Float64Array(n), commuteRail: new Float64Array(n), air: new Float64Array(n), car: new Float64Array(n) };
+    // T-378: each pair's shares of its longer trips not by rail by plane and by car (before any are
+    // known, all by car); commutes never fly
+    const modes = this.corridorModes;
+    const airShare = new Float64Array(n), carShare = new Float64Array(n);
+    for (let j = 0; j < n; j++) {
+      c.from[j] = first[4 * j]; c.to[j] = first[4 * j + 1];
+      const mi = 2 * corridorOf(c.from[j], c.to[j]);
+      if (modes && mi + 1 < modes.length) { airShare[j] = modes[mi]; carShare[j] = modes[mi + 1]; } else carShare[j] = 1;
+    }
+    let index: Int32Array | null = null;
+    const P = INTERCITY_PLACES.length + 1;
+    // the longer trips and their rail first, then the commutes in `commutes` and `commuteRail`
+    const T = c.trips, R = c.rail, C = c.commutes, CR = c.commuteRail;
+    for (const r of res) {
+      let v = r.corridors, k = r.commuteCorridors && r.commuteCorridors.length === v.length / 2 ? r.commuteCorridors : null;
+      const [fl, fw] = r.corridorDay ?? [1, 1];
+      const m = v.length / 4;
+      if (!(m === n && v[0] === first[0] && v[1] === first[1] && v[4 * n - 4] === first[4 * n - 4] && v[4 * n - 3] === first[4 * n - 3])) {
+        // put this period's pairs in the first period's order
+        if (!index) { index = new Int32Array(P * P).fill(-1); for (let j = 0; j < n; j++) index[c.from[j] * P + c.to[j]] = j; }
+        const v2 = new Float64Array(4 * n), k2 = k ? new Float64Array(2 * n) : null;
+        for (let i = 0; i < m; i++) {
+          const at = v[4 * i] * P + v[4 * i + 1], j = at < index.length ? index[at] : -1;
+          if (j < 0) continue;
+          v2[4 * j + 2] = v[4 * i + 2]; v2[4 * j + 3] = v[4 * i + 3];
+          if (k && k2) { k2[2 * j] = k[2 * i]; k2[2 * j + 1] = k[2 * i + 1]; }
+        }
+        v = v2; k = k2;
+      }
+      for (let j = 0; j < n; j++) { T[j] += v[4 * j + 2] * fl; R[j] += v[4 * j + 3] * fl; }
+      if (k) for (let j = 0; j < n; j++) { C[j] += k[2 * j] * fw; CR[j] += k[2 * j + 1] * fw; }
+    }
+    // T-378: the longer trips not by rail split by the pair's shares; commutes never fly. Then
+    // trips and rail take the commutes in.
+    const tl = T.slice();
+    for (let j = 0; j < n; j++) {
+      const rest = T[j] - R[j];
+      c.air[j] = rest * airShare[j];
+      c.car[j] = rest * carShare[j] + C[j] - CR[j];
+      T[j] += C[j];
+      R[j] += CR[j];
+    }
+    // the base a later result patches: these sums as if no pair had rail
+    const air = new Float64Array(n), car = new Float64Array(n);
+    for (let j = 0; j < n; j++) { air[j] = tl[j] * airShare[j]; car[j] = tl[j] * carShare[j] + C[j]; }
+    return { full: c, tl, commutes: C, airShare, carShare, bare: { air, car } };
   }
 }
 

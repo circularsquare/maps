@@ -50,10 +50,12 @@ export function railTripsByRegion(d: DayDemand): Map<string, number> {
     const ids = byPlace.get(place);
     if (ids) for (const id of ids) add(out, id, v / ids.length);
   };
-  for (const c of d.intercity?.corridors ?? []) {
-    if (!(c.rail > 0)) continue;
-    if (c.from === c.to) give(c.from, c.rail);
-    else { give(c.from, c.rail / 2); give(c.to, c.rail / 2); }
+  const c = d.intercity?.corridors;
+  for (let i = 0; c && i < c.n; i++) {
+    const rail = c.rail[i];
+    if (!(rail > 0)) continue;
+    if (c.from[i] === c.to[i]) give(c.from[i], rail);
+    else { give(c.from[i], rail / 2); give(c.to[i], rail / 2); }
   }
   return out;
 }

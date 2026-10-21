@@ -276,7 +276,8 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   as before, their estimates not shown, other purposes' or days' bubbles wait for them, a click is
   answered from the newest round the workers reach ([demand-runtime.md](demand-runtime.md) "The pool", T-327),
   and the fresh final replaces the cache in one step (it is bit for bit the same). A test page, `?new=1` and a tab without the slot never
-  write it.
+  write it. The write runs in a worker of its own (`workers/cacheWrite.worker.ts`, T-789), the
+  market's corridors copied a day per task and transferred to it.
 - **Old saves are a nicety** (Anita, 2026-10-12): only Anita has saves, so no real effort goes into
   migrations.
 - **Later**: sharing by link (upload a save, get a link, M4); accounts only for sync and sharing,

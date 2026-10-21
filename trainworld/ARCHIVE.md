@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-789 [P1] The freeze after a stop edit. Done 2026-10-20: the market's every place pair summed on the main thread (3.4-6 s tasks); now only pairs with trips, sums kept by key, the cache written in a worker; longest task 0-56 ms. notes/T-789.md.
 - T-786 [P2] Parallel country batches. Done 2026-10-20: cross-process locks, `run --no-join` and `join`; Portugal and Greece at once (48 min regions, 6 min join), 44 zones shipped, every-pack-opens and smoke passed. notes/T-786.md.
 - T-781 [P3] Joint groups for a covered continent. Done 2026-10-20 in T-786: a group spanning countries is solved a country at a time, neighbours held fixed; pack-line commutes within 2% of the one group, Portugal's join 48 s of solve. notes/T-786.md.
 - T-775 [P3] The rest of T-613's runner proposals. Done 2026-10-20 in T-786: three parks in a row on one reason stop the run; the TW_SIM_DIR copy is checked against HEAD's sim/ (a warning). notes/T-786.md.

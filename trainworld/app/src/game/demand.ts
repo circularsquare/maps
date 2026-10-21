@@ -92,7 +92,9 @@ export function stationRidersFor(dv: DemandView | null, id: string, purpose: Pur
  * corridor's trips and rail are both parts together, `commutes` and `commuteRail` the commute legs;
  * T-378: `air` and `car` the rest by plane and by car, `elsewhere` each place's longer trips with
  * places that have no zone, each way. */
-export interface IntercityDemand { version: number; round: number; tripsPerDay: number; railTripsPerDay: number; commuteTripsPerDay?: number; commuteRailPerDay?: number; corridors: {from: number; to: number; trips: number; rail: number; commutes?: number; commuteRail?: number; air?: number; car?: number}[]; elsewhere?: number[] }
+export interface IntercityDemand { version: number; round: number; tripsPerDay: number; railTripsPerDay: number; commuteTripsPerDay?: number; commuteRailPerDay?: number; corridors: Corridors; elsewhere?: number[] }
+/** The corridors with trips, one column an array (T-789: hundreds of thousands of place pairs). */
+export interface Corridors { n: number; from: Uint32Array; to: Uint32Array; trips: Float64Array; rail: Float64Array; commutes: Float64Array; commuteRail: Float64Array; air: Float64Array; car: Float64Array }
 
 /** One kind of day's results (T-260, game/days.ts): the network's view, each city's, the market's.
  * Written together by workers/demandClient.ts. */
