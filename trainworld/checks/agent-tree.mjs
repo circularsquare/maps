@@ -98,7 +98,7 @@ if (cmd === 'new') {
     fail(`the rebase onto master stopped on a conflict in ${dir}: resolve there and \`git rebase --continue\`, or \`git rebase --abort\`; then land again`);
   }
   gitLoud(dir, 'reset', '-q', '--soft', 'master');
-  gitLoud(dir, 'commit', '-q', '-m', message);
+  gitLoud(dir, 'commit', '-q', '-m', message, '-m', 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>');
   try { gitLoud(maps, 'merge', '-q', '--ff-only', branch); } catch {
     fail(`master did not fast-forward to ${branch} (an uncommitted edit in master's tree touches the same file, or master moved): the commit waits on the branch`);
   }
