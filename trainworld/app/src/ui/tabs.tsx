@@ -7,7 +7,7 @@ import { PERIODS, periodAt } from "../game/periods";
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { createLine } from "../game/lineActions";
 import type { JSX } from "preact";
-import { count, distUnit, length, levelLabel, money, perDistance, perKmFrom, shortDistance } from "../game/format";
+import { count, distUnit, length, levelLabel, money, perDistance, perKmFrom, runCostRule, shortDistance } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { DEMAND_INDEX, LEVELS, type Level, type LineInput, type LineStats, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
@@ -492,7 +492,7 @@ export function MoneyTab() {
           <TodayCell zone={zone} v={(d) => d.fares} />
         </tr>
         <tr>
-          <td>Running trains</td>
+          <td data-tip={`Running costs ${runCostRule(m)}`}>Running trains</td>
           {cell(prev, (d) => -d.running)}
           <TodayCell zone={zone} v={(d) => -d.running} />
         </tr>
@@ -529,7 +529,7 @@ export function MoneyTab() {
       </ul>
       <div class="h">Trains</div>
       <ul class="rows">
-        <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)} and $${perDistance(m.runCostCarKm).toFixed(2)} a ${distUnit()} to run. Cars are bought when a line needs more than the spare ones.`}>Cars owned</span>}>
+        <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)}. Running costs ${runCostRule(m)}. Cars are bought when a line needs more than the spare ones.`}>Cars owned</span>}>
           <span data-tip={`${m.fleet.toLocaleString("en-US")} cars bought at ${money(m.carPrice * 1e6)} each, ${money(m.fleet * m.carPrice * 1e6)} in all`}>{m.fleet}</span>
         </Row>
         <Row label="Cars the lines need">

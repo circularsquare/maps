@@ -85,7 +85,7 @@ export function runningToday(l: LineInput, st: LineStats): number {
   let cost = 0;
   for (let h = Math.floor(t0); h < t; h++) {
     const lev = PERIODS[periodAt(h * 3600)].demand;
-    cost += tph[lev] * 2 * st.km * st.cars * m.runCostCarKm * m.economy * (Math.min(h + 1, t) - Math.max(h, t0));
+    cost += tph[lev] * 2 * st.km * (m.runCostTrainKm + st.cars * m.runCostCarKm) * m.economy *(Math.min(h + 1, t) - Math.max(h, t0));
   }
   return cost;
 }

@@ -391,10 +391,10 @@ impl TrackApi {
     pub fn cars_needed(&self) -> u32 {
         cars_needed(&self.w)
     }
-    /// [price of a car US$M, running cost per car-km US$, economy scale] (params.rs). The real
-    /// running cost per car-km; the game counts it, and fares, `ECONOMY` times (T-081).
+    /// [price of a car US$M, running cost per car-km US$, economy scale, running cost per train-km
+    /// US$] (params.rs). The real running costs; the game counts them, and fares, `ECONOMY` times (T-081).
     pub fn money_params(&self) -> Vec<f64> {
-        vec![CAR_PRICE, RUN_COST_CAR_KM, ECONOMY]
+        vec![CAR_PRICE, RUN_COST_CAR_KM, ECONOMY, RUN_COST_TRAIN_KM]
     }
     /// Running cost of the running lines per hour at a demand level, US$M: trains an hour in each
     /// direction times the line's length and cars, at the game's economy scale (T-081).
@@ -404,13 +404,15 @@ impl TrackApi {
     /// `running_cost` of the lines on one local time (`running_shifts`, T-309); NaN: every line.
     pub fn running_cost_in(&self, level: usize, shift: f64) -> f64 {
         let n = &self.w.net;
-        let mut car_km = 0.0;
+        let (mut train_km, mut car_km) = (0.0, 0.0);
         for (l, s) in self.w.svc.lines.iter().enumerate() {
             if s.running && (shift.is_nan() || s.shift == shift) {
-                car_km += n.line_tph[l][level.min(LEVELS - 1)] as f64 * 2.0 * s.runs[0].len / 1000.0 * s.cars as f64;
+                let tk = n.line_tph[l][level.min(LEVELS - 1)] as f64 * 2.0 * s.runs[0].len / 1000.0;
+                train_km += tk;
+                car_km += tk * s.cars as f64;
             }
         }
-        car_km * RUN_COST_CAR_KM * ECONOMY / 1e6
+        (train_km * RUN_COST_TRAIN_KM + car_km * RUN_COST_CAR_KM) * ECONOMY / 1e6
     }
     /// What the trains a planned line needs would cost once it runs, US$M, after the spare cars.
     pub fn line_train_cost(&self, line: u32) -> f64 {
@@ -4004,10 +4006,13 @@ mod tests {
         assert_eq!(a.redo(), 0);
         assert_eq!(a.set_schedule(id, 30.0, 8.0, 4.0), 0);
         assert_eq!((a.fleet(), a.cash()), (fleet, cash));
-        // Running cost: trains an hour both ways times length and cars.
+        // Running cost (T-807): 9 a train-km plus 2 a car-km, trains an hour both ways times length.
         let len_km = a.lines_info()[9] / 1000.0;
         let cars = a.lines_info()[21];
-        assert!((a.running_cost(0) - 30.0 * 2.0 * len_km * cars * RUN_COST_CAR_KM * ECONOMY / 1e6).abs() < 1e-9);
+        let train_km = 30.0 * 2.0 * len_km;
+        assert_eq!((RUN_COST_TRAIN_KM, RUN_COST_CAR_KM), (9.0, 2.0));
+        assert_eq!(a.money_params(), vec![CAR_PRICE, 2.0, ECONOMY, 9.0]);
+        assert!((a.running_cost(0) - (9.0 * train_km + 2.0 * train_km * cars) * ECONOMY / 1e6).abs() < 1e-9);
         // In debt, edits that cost nothing still go through.
         a.set_cash(-50.0);
         assert_eq!(a.set_schedule(id, 20.0, 8.0, 4.0), 0, "{}", a.issues());

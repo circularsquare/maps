@@ -251,7 +251,7 @@ running train: added ones enter at a terminal, removed ones leave at one [T-206]
 with $6B in an empty New York [T-805]; double track costs a base of US$90M a km times a
 multiplier per elevation (US$27M at grade), priced against cheap-country metros such as Korea's
 [T-805], a 20 m car costs US$2.5M, bought as a line's fleet grows and kept in the depot for any line
-when it shrinks [T-028, T-631], and running costs are US$3 a car-km. The fare is typed or stepped in the Money tab [T-626].
+when it shrinks [T-028, T-631], and running costs are US$9 a train-km plus US$2 a car-km [T-807]. The fare is typed or stepped in the Money tab [T-626].
 **Points** measure each city's network: what it earned in the past 24 game hours, recomputed
 once a game hour, at 20 a rail trip (a rider's whole journey, changes included, counted in the
 city it starts in) and 1 a passenger-km; not a running total, and they unlock nothing yet [T-684,

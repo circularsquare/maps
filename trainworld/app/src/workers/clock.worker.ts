@@ -193,7 +193,7 @@ async function intoNewSlot(name: string, load: () => Promise<unknown> | void, wr
 }
 /** the empty network's save, for a new game (keeps the water mask) */
 let emptyTrack: Uint8Array | null = null;
-let moneyParams = [2.5, 6, 100];
+let moneyParams = [2.5, 2, 100, 9];
 
 function send(msg: FromClock, transfer: Transferable[] = []) {
   postMessage(msg, { transfer });
@@ -592,12 +592,12 @@ function regionNow(): RegionNow {
 /** T-531: the running lines' money by region for settling: each line's fare income tables and its
  * running cost per game hour at each demand level (as `running_cost`), with its local time. */
 function regionLines() {
-  const a = api!, li = a.lines_info(), unit = moneyParams[1] * moneyParams[2] / 1e6;
+  const a = api!, li = a.lines_info(), unit = moneyParams[2] / 1e6;
   const costs: { shift: number; run: number[]; shares: [string, number][] }[] = [];
   for (let i = 0; i < li.length; i += 22) {
     if (li[i + 3] !== 1) continue;
     const id = li[i], km = li[i + 9] / 1000, cars = li[i + 21] || li[i + 8];
-    costs.push({ shift: a.line_shift(id), run: [0, 1, 2].map((l) => li[i + 5 + l] * 2 * km * cars * unit), shares: lineShares.get(id)?.run ?? [] });
+    costs.push({ shift: a.line_shift(id), run: [0, 1, 2].map((l) => li[i + 5 + l] * 2 * km * (moneyParams[3] + moneyParams[1] * cars) * unit), shares: lineShares.get(id)?.run ?? [] });
   }
   const fares = [...lineIncome].map(([id, per]) => ({ shift: a.line_shift(id), per, shares: lineShares.get(id)?.fare ?? [] }));
   const rides = [...lineRides].map(([id, per]) => ({ shift: a.line_shift(id), per, shares: lineShares.get(id)?.ride ?? [] }));
@@ -714,6 +714,7 @@ function moneyState(): MoneyState {
     carsNeeded: a.cars_needed(),
     carPrice: moneyParams[0],
     runCostCarKm: moneyParams[1],
+    runCostTrainKm: moneyParams[3],
     economy: moneyParams[2],
     fares: { ...fares },
     runningPerHour: [0, 1, 2].map((l) => a.running_cost(l)) as [number, number, number],

@@ -120,6 +120,19 @@ export function perDistance(perKm: number): number {
   return us() ? perKm * (M_PER_MILE / 1000) : perKm;
 }
 
+const perUnitText = (perKm: number) => {
+  const v = +perDistance(perKm).toFixed(2);
+  return "$" + (Number.isInteger(v) ? v : v.toFixed(2));
+};
+/** T-807: "$9 a train-km plus $2 a car-km", in the shown unit. */
+export function runCostRule(m: { runCostTrainKm: number; runCostCarKm: number }): string {
+  return `${perUnitText(m.runCostTrainKm)} a train-${distUnit()} plus ${perUnitText(m.runCostCarKm)} a car-${distUnit()}`;
+}
+/** What a train of `cars` costs to run: "$27 a train-km". */
+export function trainRunCost(m: { runCostTrainKm: number; runCostCarKm: number }, cars: number): string {
+  return `${perUnitText(m.runCostTrainKm + cars * m.runCostCarKm)} a train-${distUnit()}`;
+}
+
 /** The inverse of `perDistance`. */
 export function perKmFrom(perUnit: number): number {
   return us() ? perUnit / (M_PER_MILE / 1000) : perUnit;

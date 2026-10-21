@@ -80,10 +80,13 @@ pub const WATER_STEP: f64 = 12.5;
 /// Price of one 20 m car, US$M (T-028; a New York R211 car is about 2.6). Trains are bought when
 /// the running lines need more cars than the network owns; spare cars are kept, never sold.
 pub const CAR_PRICE: f64 = 2.5;
-/// Running cost per car-km, US$. Under real figures so fares can cover it at 100x (New York's
-/// subway spends about 9 a car-km all in), but high enough that thin areas lose money (Anita,
-/// 2026-10-21); research/running-costs.md for cheap-country figures.
-pub const RUN_COST_CAR_KM: f64 = 3.0;
+/// Running cost per train-km, US$, and per car-km on top. Only about a quarter of a real metro's
+/// cost grows with train length, so a base per train carries the crew, stations and track upkeep;
+/// a 9-car train costs 27 a train-km (T-805's flat 3 a car-km) and a 4-car one 17. Under real
+/// figures so fares can cover it at 100x, but high enough that thin areas lose money
+/// (research/running-costs.md option B, Anita 2026-10-21).
+pub const RUN_COST_TRAIN_KM: f64 = 9.0;
+pub const RUN_COST_CAR_KM: f64 = 2.0;
 /// The economy runs at 100x (T-081; Anita, 2026-10-09, as Subway Builder does): fares and running
 /// costs per game day are this many times the real figures, so a line pays back in about a game
 /// week. Construction and train prices stay real. The one constant: running costs here, fares in

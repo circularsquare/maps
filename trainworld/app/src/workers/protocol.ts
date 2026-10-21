@@ -184,9 +184,10 @@ export interface MoneyState {
   /** cars owned, and the cars the running lines need */
   fleet: number;
   carsNeeded: number;
-  /** US$M per car, US$ per car-km (the real figure) (sim/src/track/params.rs) */
+  /** US$M per car, US$ per car-km and per train-km (the real figures) (sim/src/track/params.rs) */
   carPrice: number;
   runCostCarKm: number;
+  runCostTrainKm: number;
   /** fares and running costs count this many times over in a game day (T-081, `ECONOMY`) */
   economy: number;
   fares: { base: number; perKm: number };

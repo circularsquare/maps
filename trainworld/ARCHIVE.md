@@ -1,5 +1,9 @@
 ﻿# Archive
 
+- T-795 [P2] Finer local trip bubbles. Done 2026-10-21: Settings "Detail" slider (4 steps, default one level finer than before: res 9 from zoom 11.8); the real save at zoom 12 draws 61,577 discs against 30,808, a draw under 0.3 ms, no rebuild.
+- T-804 [P2] Other bubble colours. Done 2026-10-21: Settings "Colours" choice, Mode mix (default) or Train share, a ramp pink #e0457b to green #2fa84f in OKLab with two pickers; repaints in about 7 ms, no rebuild.
+- T-808 [P2] No London - Paris demand. Abandoned 2026-10-21: Anita found the Channel demand, only small (the market's one border rule gives about 9,600 a day against Eurostar's 30,000; docs/demand-worldwide.md).
+- T-807 [P2] Running cost per train-km plus per car-km. Done 2026-10-21: $9 a train-km plus $2 a car-km (`RUN_COST_TRAIN_KM`, `RUN_COST_CAR_KM`; option B), the line panel, Money tab and train length hovers state it.
 - T-799 [P2] Zone outlines lighter. Done 2026-10-21: each shared edge drawn once (`OutlineEdges`, boundaryGeometry.ts), 0.7 px at 0.36 opacity; the focused zone's borders left to its focus lines. First agent worktree landed.
 - T-796 [P2] Base map colours. Done 2026-10-21: light land #f3eee5 (was #f4ecdd), dark water #274042 (was #1e3032), in shadeTable.ts.
 - T-805 [P2] Prices against cheap-country metros. Done 2026-10-21: track base $90M a km and stations doubled back (T-467 undone), running cost $3 a car-km, start $6B; sim tests updated.

@@ -244,7 +244,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   stores its cars, 0 (a new line's default) for the most its shortest platform fits; a set length
   runs as set, at most that cap. A platform later shortened below it caps the trains while the
   setting stays, so lengthening the platform brings the set length back. Riders a train holds
-  (160 a car at crush), the cars the fleet needs and the running cost per car-km follow the cars
+  (160 a car at crush), the cars the fleet needs and the running cost (US$9 a train-km plus US$2 a car-km) follow the cars
   run. One undoable edit, buying any cars it needs as other fleet growth does (6.4).
   Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot, and platforms within 100 m of each other count as one station (4.4). Stations whose platforms come within 50 m form a station complex, which a click on a station selects as one (T-249) and the demand circles can show as one (8, T-146); the player can link any two stations up to 1 km apart into one complex and unlink them (T-197, saved with the network as `Network::links`, not in the undo history). Riders change between any two stations of a complex on foot, however far apart (4.4, T-161).
 
@@ -432,7 +432,7 @@ busy track, and names the places it waits most (notes/T-031.md).
 ### 6.4 Costs and money
 
 Money is present, not tight, as in NIMBY Rails: construction, train purchase, operating cost per
-car-km, a player-set fare curve by distance. One price list worldwide. Track costs a **base of
+train-km and car-km, a player-set fare curve by distance. One price list worldwide. Track costs a **base of
 US$90M per route-km of double track** (single track 0.6x; ramps at the dearer level) times a
 multiplier per level (Anita, 2026-10-08). The reference is a cheap-country metro such as Korea's
 or Spain's, about US$100-150M a tunnelled km with its stations (Anita, 2026-10-21, T-805):
@@ -485,9 +485,11 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   Loaded fleets count as already paid. The Money tab lists cars owned, needed and spare; the line
   panel's train buttons say in their hover what a step buys or frees; the blueprint quote and a
   planned line's Construct button include the cars.
-- **Running cost** US$3 per car-km (trains an hour each way x line length x cars; under a real
-  figure so fares can cover it, high enough that thin areas lose money, T-805; real figures in
-  research/running-costs.md), and **fares**,
+- **Running cost** US$9 per train-km plus US$2 per car-km (trains an hour each way x line length,
+  times 9 + 2 x cars: a 4-car train US$17 a train-km, 9 cars US$27, 12 cars US$33; under real
+  figures so fares can cover it, high enough that thin areas lose money, T-805; the train part
+  stands for crew, stations and track upkeep, which do not grow with length; T-807, real figures in
+  research/running-costs.md; `RUN_COST_TRAIN_KM` and `RUN_COST_CAR_KM`), and **fares**,
   are settled by the clock worker into the cash and a ledger per day (30 kept) and per hour (48
   kept, T-447) as the game runs, not once an hour (T-284). The ledgers hold one entry per day or
   hour, in order; a load merges any day or hour an older save lists twice. Money time never goes
@@ -561,9 +563,9 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
 - **Economy at 100x** (Anita, 2026-10-09, as Subway Builder does; T-081): fares and running costs
   per game day count 100 times the real figures (`ECONOMY` in `sim/src/track/params.rs`, the one
   constant; running costs scale in the track model, fares in `app/src/game/money.ts`), so a game
-  day earns and spends what a hundred real days would. The fare the player sets and the US$3 a
-  car-km shown are the figures before that scaling; construction and train prices are not scaled. The
-  Money tab says so in the hover of "A day at this schedule".
+  day earns and spends what a hundred real days would. The fare the player sets and the US$9 a
+  train-km plus US$2 a car-km shown (Money tab, line panel and train length hovers) are the figures
+  before that scaling; construction and train prices are not scaled.
 
 ### 6.5 Edits
 

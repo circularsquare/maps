@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { queryClock } from "../../workers/clockClient";
 import { clock, demandAt } from "../../game/clock";
-import { clockTime, count, distance, duration, headway, length, money, speed } from "../../game/format";
+import { clockTime, count, distance, duration, headway, length, money, runCostRule, speed, trainRunCost } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS, periodAt } from "../../game/periods";
 import { crowdColour, crowdGrade, crowding, runningToday, today, useToday, waitText } from "../../game/today";
@@ -181,6 +181,8 @@ function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
   const d = today.value.get(l.id);
   if (!d) return null;
   const run = runningToday(l, st);
+  const m = moneyState.value;
+  const rule = m ? `\nRunning costs ${runCostRule(m)}: ${trainRunCost(m, st.cars)} for this line's ${carsText(st.cars)}` : "";
   return (
     <>
       <div class="h divided">
@@ -189,7 +191,7 @@ function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
       <ul class="rows flat">
         <Row label="Riders">{count(d.riders)}</Row>
         <PurposeSplit scope={[{ line: l.id }]} unit="riders" />
-        <li data-tip={`Fares ${money(d.fares)} less running cost ${money(run)} for the trains: ${money(d.fares - run)} net`}>
+        <li data-tip={`Fares ${money(d.fares)} less running cost ${money(run)} for the trains: ${money(d.fares - run)} net${rule}`}>
           <span class="grow">Profit</span>
           <span class="val">{money(d.fares)} −<span class="crowd-bad">{money(run)}</span></span>
         </li>
@@ -290,6 +292,7 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   const tip = (to: number) => {
     let t = `${carsText(to)}, ${(to * CRUSH_PER_CAR).toLocaleString("en-US")} riders a train at most`;
     const m = moneyState.value, trains = Math.max(...st.trainsNeeded);
+    if (m) t += `\nRunning costs ${trainRunCost(m, to)}${to !== cars ? `, ${trainRunCost(m, cars)} now` : ""}`;
     if (m && st.status === "running" && to > cars) {
       const more = (to - cars) * trains, bought = Math.max(0, more - Math.max(0, m.fleet - m.carsNeeded));
       t += bought > 0 ? `\nBuys ${carsText(bought)} for ${money(bought * m.carPrice * 1e6)}` : `\nUses ${carsText(more)} from the depot`;

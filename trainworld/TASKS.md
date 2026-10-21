@@ -88,10 +88,9 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-187 [P3] Trip chains: work to a nearby leisure place and then home. Whether and how to model it. Idea, not a priority (Anita 2026-10-12).
 
 ## Track and trains
-- T-807 [P2] Running cost per train-km plus per car-km (research/running-costs.md option B: $9 a train-km plus $2 a car-km, a 9-car train as now; option C adds route-km and station upkeep). Waits on Anita's pick.
 - T-794 [P2] A station on open ground (Anita 2026-10-21): the station tool clicked off track lays a straight blueprint piece one platform long and puts the station on it, so a line can start from stations alone. Heading and what a later track drawn into it joins are the agent's call. Open.
-- T-797 [P2] Lines that backtrack (Anita 2026-10-21): a line may reverse partway along its route (at a station or a track end), with throughput limited hard there (a long reversal hold, say) so it stays a stopgap. Design first, then build. Open.
-- T-798 [P2] Loop lines (Anita 2026-10-21): a line whose route comes back to its first station runs round continuously with no turnback. Design first (schedules, fleet, demand routing); may share work with T-797. Open.
+- T-797 [P2] Lines that backtrack (Anita 2026-10-21): a line may reverse partway along its route (at a station or a track end), with throughput limited hard there (a long reversal hold, say) so it stays a stopgap. Design in notes/T-797.md (2026-10-21), waits on Anita.
+- T-798 [P2] Loop lines (Anita 2026-10-21): a line whose route comes back to its first station runs round continuously with no turnback. Design first (schedules, fleet, demand routing); may share work with T-797. Design in notes/T-797.md (2026-10-21), waits on Anita.
 - T-691 [P3] A station tried on edges 997 and 1130 of the real save (an overlapping pair, 688/1075) is refused with a track-drawing reason ("The curve is too tight... would run on top of existing track"): find where the worker's station trial produces it and give the station's own reason. Found in T-671. Open.
 - T-623 [P3] A station cut inside an arc, or a ramp overlapping a curve, still shifts the ramp (T-622 holds ramps on straights only). Open.
 - T-663 [P3] The select tool's drag handle covers a blueprint junction's fork badge; and check whether the quiet crossing marks get busy on a big built network (340 on the real save; `QUIET_R`, `QUIET_ZOOM` in gradeMarks.ts). Open.
@@ -106,8 +105,7 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 ## Interface
 Anita's playtest of 2026-10-19 (the 9e466a4 build): notes/playtest-2026-10-19.md, a section a task.
 - T-793 [P2] The loading bar's last 5% takes most of the wait (Anita 2026-10-21): time the stages behind the bar on a new game and the real save, and weight the bar by time so it moves evenly. Open.
-- T-795 [P2] Finer local trip bubbles (Anita 2026-10-21: "split a bit more, and add a dial"): one H3 level finer per zoom band, and a Settings control for the level. Open.
-- T-804 [P2] Other colour schemes for the main demand bubbles (Anita 2026-10-21): a Settings choice besides the mode mix, such as pink to green by transit share or two colour pickers for 0% and 100% transit use, so several can be tried. Open.
+- T-809 [P2] A gentler border for the EU, Schengen and the UK (Anita 2026-10-21): the market's one border rule (0.26 x origin income^1.5) cuts London - Paris to about 9,600 trips a day against Eurostar's 30,000; pairs inside that area get a milder factor, one constant, checked on a few corridors. Taking, 2026-10-21.
 - T-800 [P2] Zone outlines always there (Anita 2026-10-21): on a first pan over a region most outlines are missing; load a coarse outline of every zone at start and refine on pan and zoom. Open.
 - T-803 [P3] More station faces (Anita 2026-10-21): some by time of day and a few rare ones. Open.
 - T-719 [P2] Covering whole regions (all of Spain, as Japan) rather than lone metros, timings and speedups: note written 2026-10-19, waits on Anita's decisions (its last section); notes/T-719.md.
