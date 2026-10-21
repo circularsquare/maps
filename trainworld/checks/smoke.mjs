@@ -196,7 +196,7 @@ async function browserChecks(BASE) {
         const all = Object.values(by).reduce((s, x) => s + x, 0);
         return { lines: v.lines.size, rail: v.railTripsPerDay, round: v.round, work: all > 0 ? (by.work ?? 0) / all : NaN, longer: all > 0 ? (by.longer ?? 0) / all : NaN };
       });
-      report('demand final', v.rail > 0, `(round ${v.round}, ${v.lines} lines, ${Math.round(v.rail).toLocaleString('en-US')} rail trips a day, ${(100 * v.work).toFixed(0)}% of boardings commutes, ${(100 * v.longer).toFixed(0)}% regional, the rest everyday, ${secs()})`);
+      report('demand final', v.rail > 0, `(round ${v.round}, ${v.lines} lines, ${Math.round(v.rail).toLocaleString('en-US')} rail trips a day, ${(100 * v.work).toFixed(0)}% of boardings commutes, ${(100 * v.longer).toFixed(2)}% regional, the rest everyday, ${secs()})`);
     } catch (e) {
       report('demand final', false, e.message.split('\n')[0]);
     }

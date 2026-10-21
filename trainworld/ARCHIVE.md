@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-846 [P3] Smoke's "0% regional" on the real save. Done 2026-10-21, no fix: real and by design since T-636 (10-17), then T-718; longer trips by rail 116k to 4.7k a day, market packs all open, nothing today moved it. notes/T-846.md.
 - T-845 [P2] Demand waiting forever in a far new game. Done 2026-10-21: only a network reaching no zone, viewed from dead space, hung (T-318's idle skipped its solve); it is now solved with no pack. Cities all worked. Smoke checks it. notes/T-845.md.
 - T-843 [P3] Max speed colours above 160. Done 2026-10-21: stops at 240 (indigo) and 320 (violet) continue the ramp, the stroke shader is built from `SPEED_STOPS`, and the key shows six speeds.
 - T-798 L1+L2 [P2] Loop lines. Done 2026-10-21: clicking the first stop closes or opens a loop; circles and balloons run both ways on even fleets, riders take the short way round; one-way loops are L3. notes/T-797.md.
