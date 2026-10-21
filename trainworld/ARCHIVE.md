@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-842 [P2] Riders know each stop's service span. Done 2026-10-21: tolerance log-uniform 0.5-6 h, a boarding penalty where many would not wait, the account's arrivals masked alike; real save -0.3% rail trips, sparse lines -8.5%; first-train wait gap 13.5% to -2.4%. notes/T-842.md.
 - T-811 [P2] T-809's open-border area in the normalisers. Done 2026-10-21: `market_zones.py` takes the sim's `OPEN_AREA` list and max(0.5, general rule); every zone and the rows rebuilt. London - Paris 25,640 a day (estimate 28.5k, published about 26k a weekday); a 76-zone every-pack-opens sample passed. notes/T-809.md.
 - T-841 [P3] Single-piece elevation and the selection bar's width. Done 2026-10-21: a straight blueprint piece's inspector has "Elevation of the stretch" (the `edgesLevel` op on one edge); the bar is about 580 px, wraps in a narrow map and stays 260 px clear of each side.
 - T-836 [P3] Aliases from the join. Done 2026-10-21: `world_run.py join` runs `zone_aliases.py` after `zone_outlines.py`, warning only on failure; the zone-names look is T-847.
