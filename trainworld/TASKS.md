@@ -88,7 +88,7 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-187 [P3] Trip chains: work to a nearby leisure place and then home. Whether and how to model it. Idea, not a priority (Anita 2026-10-12).
 
 ## Track and trains
-- T-797 [P2] Lines that backtrack (Anita 2026-10-21): a line may reverse partway along its route (at a station or a track end), with throughput limited hard there (a long reversal hold, say) so it stays a stopgap. Design in notes/T-797.md; Anita approved 2026-10-21 with a big reversal icon, 12 reversals an hour a side. B1+B2 done 2026-10-21 (landed a8aede2); B3 (bare track ends) open; loops (T-798) next.
+- T-797 [P2] Lines that backtrack (Anita 2026-10-21): a line may reverse partway along its route (at a station or a track end), with throughput limited hard there (a long reversal hold, say) so it stays a stopgap. Design in notes/T-797.md; Anita approved 2026-10-21 with a big reversal icon, 12 reversals an hour a side. B1+B2 done 2026-10-21 (landed a8aede2); B3 done 2026-10-21 (landed 6ee77db). Archive.
 - T-798 L3 [P3] One-way loops (from T-798): `LineData::one_way`, its op and undo, a `LOW1` save block, run 1 off everywhere, a panel toggle, a balloon one way by default; `passed_stations` on a balloon's return leg. Open; notes/T-797.md.
 - T-691 [P3] A station tried on edges 997 and 1130 of the real save (an overlapping pair, 688/1075) is refused with a track-drawing reason ("The curve is too tight... would run on top of existing track"): find where the worker's station trial produces it and give the station's own reason. Found in T-671. Open.
 - T-623 [P3] A station cut inside an arc, or a ramp overlapping a curve, still shifts the ramp (T-622 holds ramps on straights only). Open.
