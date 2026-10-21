@@ -29,8 +29,10 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
 
   with `s = min(y / y_US, 1)^0.7` (GDP per head at PPP), `u` the people of the site's H3 r5 cell
   over 100,000, `a_j` people times `s_j` (inside a pack its `population + 2 x jobs`, rescaled to
-  the pack's people), and `b` 1 within a country, else `0.26 x min(y_i / y_US, 1)^1.5` (the
-  origin's income). Each 6 km zone's two normalisers are computed offline at its centre.
+  the pack's people), and `b` 1 within a country, 0.5 between two countries of the open-border
+  area (the EU 27, Norway, Iceland, Switzerland, Liechtenstein and the UK, by the rows' `country`;
+  `OPEN_AREA_BORDER`, T-809), else `0.26 x min(y_i / y_US, 1)^1.5` (the origin's income). Each
+  6 km zone's two normalisers are computed offline at its centre.
 - **Pairs**: places whose centres are under **250 km** apart pair 6 km zone to 6 km zone at their
   own distance; farther places pair at the distance between the places' centres, so their 6 km
   pairs add up to the places' trips exactly, each end's share by its zones' departures over the

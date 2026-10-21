@@ -509,6 +509,23 @@ fn world_rows_add_up_and_open_as_the_game_opens_them() {
     bad[1]["zones"] = 9.into();
     assert!(IntercityApi::new(&composition(&packs, Some(&serde_json::to_string(&bad).unwrap()))).is_err());
 }
+/// T-809: a pair inside the open-border area takes its milder factor whatever the income; a pair
+/// with an end outside keeps the rule's.
+#[test]
+fn open_border_area_takes_its_own_factor() {
+    let b = |aa: &str, bb: &str| {
+        let packs: Vec<String> = world_packs().iter().map(|p| p.replace("\"AA\"", &format!("\"{aa}\"")).replace("\"BB\"", &format!("\"{bb}\""))).collect();
+        let w = IntercityApi::new(&composition(&packs, None)).unwrap();
+        (w.m.pr(2, 0).b, w.m.pr(0, 2).b, w.m.pr(0, 1).b)
+    };
+    let general = (0.26 * 0.6f64.powf(1.503), 0.26);
+    assert_eq!(b("FR", "GB"), (OPEN_AREA_BORDER, OPEN_AREA_BORDER, 1.));
+    assert_eq!(b("CH", "DE"), (OPEN_AREA_BORDER, OPEN_AREA_BORDER, 1.));
+    for (aa, bb) in [("US", "GB"), ("MA", "FR"), ("FR", "TR")] {
+        let (x, y, z) = b(aa, bb);
+        assert!((x - general.0).abs() < 1e-12 && (y - general.1).abs() < 1e-12 && z == 1., "{aa}-{bb}: {x} {y}");
+    }
+}
 /// Lines in place 0 and place 1 (joined) and in place 2 (apart); stations as longitude and
 /// latitude, each place in its own frame.
 fn world_lines(a: &mut IntercityApi, with_far: bool, across_sea: bool) {

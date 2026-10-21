@@ -58,7 +58,7 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-438 [P3] The market's destination choice: a giant metro takes most of a smaller neighbour's 80-300 km trips, and big job centres draw too little for commutes; a competing destinations term. Proposed, waits on Anita; notes/T-379.md, notes/T-500.md.
 - T-427 [P3] Longer-trip answers sent only for zones with trips (a selection's answer is about 600 kB per worker at 5,894 zones). Open; notes/T-377.md.
 - T-428 [P3] `data/packs/intercity.json` (14 MB) is only the joint gravity's input and output, never read by the game since T-377: move it to data/work, out of what is published. Open; notes/T-428.md.
-- T-429 [P3] Cross-border long trips in Europe: T-376's one border rule gives London - Paris 9,600 a day (Eurostar alone about 30,000); a factor per country pair. Open; notes/T-377.md.
+- T-429 [P3] Cross-border long trips in Europe: T-809's one open-area factor (0.5) fits London - Paris but leaves land pairs (Paris - Brussels, Amsterdam - Brussels) about half to two thirds low; a factor per country pair if country tailoring wants it. Open; notes/T-809.md.
 - T-605 [P3] Move the measurement trails still inside the demand-*.md paragraphs (before/after tables, how a figure was reached) to notes/, one file at a time, as each is next edited. Open.
 - T-283 [P3] Toronto's Yonge test line lost all its airport riders once routes were added (567 to none): are Pearson's terminals cut off from stations by routed walks or drives? May affect US airports. Open; notes/T-277.md.
 - T-279 [P2] Routed drives for the regional market and between packs: its car is still 1.25 x the great circle (docs/regional.md 5.1); new packs need `routes.py <id>`. Open; notes/T-275.md.
@@ -88,8 +88,8 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-187 [P3] Trip chains: work to a nearby leisure place and then home. Whether and how to model it. Idea, not a priority (Anita 2026-10-12).
 
 ## Track and trains
-- T-797 [P2] Lines that backtrack (Anita 2026-10-21): a line may reverse partway along its route (at a station or a track end), with throughput limited hard there (a long reversal hold, say) so it stays a stopgap. Design in notes/T-797.md (2026-10-21), waits on Anita.
-- T-798 [P2] Loop lines (Anita 2026-10-21): a line whose route comes back to its first station runs round continuously with no turnback. Design first (schedules, fleet, demand routing); may share work with T-797. Design in notes/T-797.md (2026-10-21), waits on Anita.
+- T-797 [P2] Lines that backtrack (Anita 2026-10-21): a line may reverse partway along its route (at a station or a track end), with throughput limited hard there (a long reversal hold, say) so it stays a stopgap. Design in notes/T-797.md; Anita approved 2026-10-21 with a big reversal icon, 12 reversals an hour a side. B1+B2 taking, 2026-10-21 (worktree t797); B3 (bare track ends) later.
+- T-798 [P2] Loop lines (Anita 2026-10-21): a line whose route comes back to its first station runs round continuously with no turnback. Design first (schedules, fleet, demand routing); may share work with T-797. Design in notes/T-797.md; Anita approved 2026-10-21 (loops at ends lift the terminal limit, fine). Builds after T-797's B1 lands (same files).
 - T-691 [P3] A station tried on edges 997 and 1130 of the real save (an overlapping pair, 688/1075) is refused with a track-drawing reason ("The curve is too tight... would run on top of existing track"): find where the worker's station trial produces it and give the station's own reason. Found in T-671. Open.
 - T-623 [P3] A station cut inside an arc, or a ramp overlapping a curve, still shifts the ramp (T-622 holds ramps on straights only). Open.
 - T-663 [P3] The select tool's drag handle covers a blueprint junction's fork badge; and check whether the quiet crossing marks get busy on a big built network (340 on the real save; `QUIET_R`, `QUIET_ZOOM` in gradeMarks.ts). Open.
@@ -104,7 +104,8 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 ## Interface
 Anita's playtest of 2026-10-19 (the 9e466a4 build): notes/playtest-2026-10-19.md, a section a task.
 - T-793 [P2] The loading bar's last 5% takes most of the wait (Anita 2026-10-21): time the stages behind the bar on a new game and the real save, and weight the bar by time so it moves evenly. Open.
-- T-809 [P2] A gentler border for the EU, Schengen and the UK (Anita 2026-10-21): the market's one border rule (0.26 x origin income^1.5) cuts London - Paris to about 9,600 trips a day against Eurostar's 30,000; pairs inside that area get a milder factor, one constant, checked on a few corridors. Taking, 2026-10-21.
+- T-811 [P2] T-809's open-border area in the normalisers: `pipeline/market_zones.py` `Field.normalisers` (line 137) takes the sim's rule (`OPEN_AREA`, 0.5), then `..\venv\Scripts\python.exe pipeline/market_zones.py` from trainworld/ for every zone and the rows, once the Europe batches finish. Until then European places' departures run high (far pairs about 8-17%, tail more) and near pairs' place totals are the old rule's. Open; notes/T-809.md.
+- T-810 [P3] Commutes across an open border: `pipeline/borders.json`'s national 0.05 is far too strong inside the EU, Schengen and the UK (Luxembourg, Geneva, Basel); its own value fitted on cross-border commuter counts, then the joint gravity groups rebuilt. Open; notes/T-809.md.
 - T-803 [P3] More station faces (Anita 2026-10-21): some by time of day and a few rare ones. Open.
 - T-719 [P2] Covering whole regions (all of Spain, as Japan) rather than lone metros, timings and speedups: note written 2026-10-19, waits on Anita's decisions (its last section); notes/T-719.md.
 - T-771 [P3] A Spain module (T-719 item 6, later tailoring): the transport ministry's mobile-phone trip tables (a curve per zone, jobs at work) and INE's 1 km census grid; would rebuild mad bar val sev mal and the 40 zones. Open; notes/T-719.md.

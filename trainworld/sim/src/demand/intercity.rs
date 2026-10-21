@@ -120,6 +120,25 @@ impl Rule {
         }
     }
 }
+/// T-809: the open-border area, the EU 27, Schengen's other members and the UK (ISO 3166 codes as
+/// the rows carry them). A pair in two of its countries takes `OPEN_AREA_BORDER` in place of the
+/// rule's border factor, whatever the origin's income; checked on Channel and Benelux corridors
+/// (notes/T-809.md). pipeline/market_zones.py's normalisers must use the same rule.
+const OPEN_AREA: [&str; 32] = [
+    "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "NO", "IS", "CH", "LI", "GB",
+];
+const OPEN_AREA_BORDER: f64 = 0.5;
+/// The border factor from a place in country `a` with income `inc` to one in country `b`.
+fn border_factor(rule: &Rule, a: &str, inc: f64, b: &str) -> f64 {
+    let general = rule.border * inc.powf(rule.border_eps);
+    if a == b {
+        1.
+    } else if OPEN_AREA.contains(&a) && OPEN_AREA.contains(&b) {
+        OPEN_AREA_BORDER.max(general)
+    } else {
+        general
+    }
+}
 /// T-276: the onset, where the market takes over from the local layer's outings (0 at
 /// `ONSET_KM`, 1 at twice it; everyday.rs tapers its outings by the complement).
 pub const ONSET_KM: f32 = 25.;
@@ -1190,7 +1209,7 @@ fn build(b: Built) -> Result<Market, String> {
             } else {
                 ((p.x - q.x).hypot(p.y - q.y) / 1000.) as f64
             };
-            let b = if p.country == q.country { 1. } else { rule.border * p.inc.powf(rule.border_eps) };
+            let b = border_factor(&rule, &countries[p.country as usize], p.inc, &countries[q.country as usize]);
             let rel = if p.inc > 0. { (q.inc / p.inc).min(1.).powf(rule.eps_t) } else { 1. };
             let near = km < near_km;
             // T-378: a car within a landmass; a plane between far places each with an airport;

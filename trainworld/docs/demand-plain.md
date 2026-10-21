@@ -18,6 +18,9 @@ changing, T-718's route choice between cities and T-720's walking bands). The fu
   are the ones people walk.
 - **Between cities.** A world market of longer trips by rail, car and air, plus commuters between
   neighbouring cities. Where two cities meet, commuting across the line will be damped (0.4).
+  A longer trip into another country is damped too: to half inside the EU, Schengen and the UK
+  (London - Paris about 30,000 a weekday), and much more elsewhere, the more so the poorer the
+  traveller's country (0.26 for the richest).
 
 ## How each trip picks a mode
 

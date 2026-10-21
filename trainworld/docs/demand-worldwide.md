@@ -739,15 +739,19 @@ notes/T-420.md has the tables.
   market whose normalisers run over the world field: the NHTS ground curve (0.107 departures,
   onset 25-50 km, max(d, 25)^-2.37) and a long-haul tail (0.00473, from 300-700 km, d^-0.70, toward
   dense places), both scaled by GDP per head^0.7, a poorer destination damped by its income over
-  the origin's, a border factor 0.26 x origin income^1.5. Fitted on NHTS 2017, US, UK, Japanese and
-  Indian residents' trips abroad and flights pairs (notes/T-376.md). Why it may not carry over: one
-  border rule for every country pair; inside the EU (Schengen, one currency, Eurostar) it cuts
-  London - Paris to 9,600 trips a day both ways, against about 30,000 by Eurostar alone, and
-  Japan's residents go abroad 6x too often; the ground curve comes from one dense, car-owning
+  the origin's, a border factor 0.26 x origin income^1.5, except 0.5 between two countries of the
+  open-border area (the EU 27, Norway, Iceland, Switzerland, Liechtenstein and the UK; T-809).
+  Fitted on NHTS 2017, US, UK, Japanese and Indian residents' trips abroad and flights pairs
+  (notes/T-376.md); the area's 0.5 checked on London - Paris (about 28k a weekday against about
+  26k published, rail and air), Paris - Brussels and Amsterdam - Brussels (notes/T-809.md). Why it
+  may not carry over: one factor for the whole area, island or land pair alike, so the land pairs
+  come out low (Paris - Brussels about two thirds of its rail alone, Amsterdam - Brussels about
+  half); every other border, open or not (Mercosur, ASEAN, the US-Canada line), keeps the one
+  general rule; Japan's residents go abroad 6x too often; the ground curve comes from one dense, car-owning
   region; attraction is people, so a giant metro takes most of a smaller neighbour's 80-300 km trips
   (New York - Philadelphia about 2.5-6x plausible, notes/T-379.md, T-438). Check: each country's national travel survey by distance band (MiD Germany, ENTD France,
-  NTS England, Japan's Inter-Regional Travel Survey) and its cross-border counts; a factor per
-  country pair where they disagree (with country tailoring).
+  NTS England, Japan's Inter-Regional Travel Survey) and its cross-border counts; another open
+  area, or a factor per country pair, where they disagree (with country tailoring).
 - **Attraction inside a pack** (T-377). `population + 2 x jobs` rescaled to the pack's people, so
   a pack counts as many people as the world field around it, its jobs only moving where in it trips
   end. Where Kontur and a pack's census differ (the Northeast's near pairs rose 2-7% on the switch
@@ -792,7 +796,7 @@ notes/T-420.md has the tables.
   Providence 0.82x, New Haven - New York 0.92x, Hartford - New Haven 0.99x, New York - Philadelphia
   0.56x (LODES counts long office-address links, notes/T-268.md). Why it may not carry over: where
   commuting crosses national borders freely (Schengen: Basel, Geneva, Luxembourg) 0.05 is far too
-  strong; a country whose pack lines do not cut commuting as Japan's do would want a lower or
+  strong (the long trips' open area, T-809, does not apply to commutes; T-810); a country whose pack lines do not cut commuting as Japan's do would want a lower or
   higher country value in `admin1_default`. Check: the country's census commuting flows between its zones.
   **Which packs share a gravity** (T-539): those whose outlines come within 50 km of each other,
   chained, formed by `intercity.py --group auto`. In today's two groups the pairs more than 50 km
