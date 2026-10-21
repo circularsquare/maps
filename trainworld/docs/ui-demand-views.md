@@ -110,8 +110,9 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   means no bubble.
 - **Colour** by the **Colours** setting: **Mode mix** (default) blends the mode colours by share;
   **Train share** colours by the train share of the bubble's legs along a ramp from a start colour
-  at 0% (default pink #e0457b) to an end colour at 100% (green #2fa84f), blended in OKLab, with two
-  colour pickers shown while it is chosen (`game/palette.ts` `bubbleColour`). It colours the local
+  at 0% (default the driving red) to an end colour at 100% (the train blue), blended in OKLab and
+  skewed towards the end colour (position = share^0.576, so 30% train is halfway and 70% is 81% of
+  the way; Anita, T-812), with two colour pickers shown while it is chosen (`game/palette.ts` `bubbleColour`). It colours the local
   bubbles, the zone bubbles zoomed out and the zone inspector's mark; bars, swatches by mode and
   the hovers keep the mode colours and state the shares. Drawn at 80% opacity times the Opacity
   setting (90% by default, T-470), biggest bubbles under smaller ones. Bubbles have no outline; only a selected

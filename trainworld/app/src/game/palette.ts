@@ -86,7 +86,10 @@ const MIX_TOP = Math.max(...rgb(MODE_COLOURS.train), ...rgb(MODE_COLOURS.walk), 
 /** How the demand bubbles are coloured (T-804): the mode mix above, or a ramp by train share from
  * one colour at 0% to another at 100%. */
 export type BubbleScheme = "mode" | "ramp";
-export const DEFAULT_RAMP = { from: "#e0457b", to: "#2fa84f" } as const;
+export const DEFAULT_RAMP = { from: MODE_COLOURS.drive, to: MODE_COLOURS.train } as const;
+/** The ramp's position is the train share to this power, so a 30% share sits halfway (Anita, T-812:
+ * 30% purple, 70% clearly blue; 0.3^K = 0.5, and 70% lands at 81%). */
+const RAMP_SKEW = Math.log(0.5) / Math.log(0.3);
 let schemeKey = "mode";
 /** the ramp as 256 rgb triples */
 let rampLut: Uint8ClampedArray | null = null;
@@ -112,7 +115,7 @@ export function bubbleColour(train: number, walk: number, drive: number): [numbe
   return [rampLut[k], rampLut[k + 1], rampLut[k + 2]];
 }
 
-// OKLab (Ottosson): even steps of lightness and hue, so the middle of pink to green is not muddy
+// OKLab (Ottosson): even steps of lightness and hue between the two ends
 const toLinear = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
 const fromLinear = (v: number) => (v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055);
 function toOklab(hex: string): [number, number, number] {
@@ -132,7 +135,7 @@ function fromOklab([L, a, b]: [number, number, number]): [number, number, number
 function buildRamp(from: string, to: string): Uint8ClampedArray {
   const a = toOklab(from), b = toOklab(to), out = new Uint8ClampedArray(256 * 3);
   for (let i = 0; i < 256; i++) {
-    const t = i / 255;
+    const t = (i / 255) ** RAMP_SKEW;
     out.set(fromOklab([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]), i * 3);
   }
   return out;
