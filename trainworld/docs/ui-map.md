@@ -311,12 +311,13 @@ those who got on, less the load carried on.
   With select, a tag that opens nothing of its own (not a junction) selects what is under it, its
   station first.
 - **Reversal icons** [T-797; `map/reversalMarks.ts`]: over every station where a line's trains
-  reverse partway (`LineStats.reversals`, from `TrackApi::line_reversals`), a 30 px amber disc with
-  a dark U-turn arrow, floating on a short stem just above the station so the stop editing marker
+  reverse partway (`LineStats.reversals`, from `TrackApi::line_reversals`) and every bare track end
+  they reverse at (`LineStats.endTurns`, `TrackApi::line_end_turns`), a 30 px amber disc with
+  a dark U-turn arrow, floating on a short stem just above the place so the stop editing marker
   on it stays clickable. It keeps its size at every zoom and never hides for names or zoom, so a
   reversal, most often an accident, shows from far out; it shows during stop editing too. Hover
-  (a game tag) names the station, each line "<line> reverses here", and that 12 trains an hour at
-  most reverse there from each side. With select, a click selects the first of those lines (not
+  (a game tag) names the station ("Track end" at a bare end), each line "<line> reverses here", and
+  that 12 trains an hour at most reverse there (from each side, at a station). With select, a click selects the first of those lines (not
   while stops are edited); with another tool it takes no pointer events.
 
 ## Hover tags on the network

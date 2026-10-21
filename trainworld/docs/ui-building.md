@@ -347,8 +347,9 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
   the line can carry on over, T-237) are drawn on top at 80% of a stop's size, white inside a
   plain grey ring with none of the line's colour (T-476); stations reachable
   only by changing the route are 65% and grey; those reachable only by the line's trains reversing
-  at a stop where they did not before (T-797) are the same, with a dashed ring; unreachable ones
-  (no track, or only by turning back somewhere other than a stop) the same size and greyer. In the dark theme the greys are dark discs with lighter rings that fade
+  at a stop or a bare track end where they did not before (T-797) are the same, with a dashed ring;
+  unreachable ones (no track, or only by turning back at a station passed or a junction) the same
+  size and greyer. In the dark theme the greys are dark discs with lighter rings that fade
   into the land, the unreachable ones dimmest (CSS tokens `--mk-*`, T-543). The tiers come from the clock worker trying each station with the same
   insertion search a click makes (`TrackApi::stop_tiers`), so a marker always says what its click
   does; until the answer lands an estimate from the track graph shows on entering, and after an edit
@@ -356,7 +357,8 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
   (`insertStop`): the worker fits the station in where `TrackApi::insert_stop` puts it, among the
   stops it holds then.
 - Hover says "Click to add a stop", "Click to add a stop and change the route", "Click to add a
-  stop. Trains reverse at <station>" (`stop_tiers` gives tier 4 with the station), "Click to remove
+  stop. Trains reverse at <station>" (`stop_tiers` gives tier 4 with the station; "at the end of
+  the track" for a bare track end), "Click to remove
   the stop" or "No track joins it to this line", under the station's name; a click on the last says
   why in its own tag for four seconds.
 - **Loops** (T-798): the first stop's marker says "Click to close the loop" (tier 5) while the line
@@ -369,9 +371,10 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
 - A panel at the map's lower left shows "Editing stops on <line>: N stops" and Done; Enter and
   Escape also leave. Red removal crosses show in the stop list while editing.
 - **Reversals** (T-797): once a stop makes the trains reverse, the map's large reversal icon
-  ([ui-map.md](ui-map.md)) appears over that station at once, so an unintended reversal shows; the
-  stop list marks that stop with a small copy of the icon (hover: the stand and the limit of 12 an
-  hour a side), and the round trip gains a "Reversing partway" row.
+  ([ui-map.md](ui-map.md)) appears over that station, or the bare track end they reverse at, at
+  once, so an unintended reversal shows; the stop list marks a reversing stop with a small copy of
+  the icon (hover: the stand and the limit of 12 an hour a side; a bare end is no stop and has no
+  row), and the round trip gains a "Reversing partway" row counting both.
 - **Stations passed** [T-646, `TrackApi::passed_stations`]: while editing, the stop list shows,
   between two stops whose stretch of the line's own path runs through other stations, a row
   "+ 2 stations passed" (its hover lists them: "Add Foo, Bar and Baz") [T-814]; with stations passed in more than one gap, "Add

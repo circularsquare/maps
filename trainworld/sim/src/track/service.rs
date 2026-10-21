@@ -28,6 +28,10 @@ pub struct Run {
     /// this run's unfolded offsets; 0 where it does not reverse).
     pub turn: Vec<bool>,
     pub jump: Vec<f64>,
+    /// Bare track ends where trains reverse between stops (T-797 B3): index into `nodes`, where
+    /// the train's middle stands on arrival and how far on it leaves from, as `stop_s`/`jump`.
+    /// Not stops: the profile stands the turnaround there and leaves them out of `arr`/`dep`.
+    pub ends: Vec<(u32, f64, f64)>,
     /// Speed-limit breakpoints `[s, v]`, widened by half the train length.
     pub limits: Vec<[f64; 2]>,
     /// No capacity delay.
@@ -374,9 +378,25 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
     if rev {
         stops.reverse();
     }
-    let turns = net.path_reversals(&run.segs);
+    let turns = net.stop_reversals(&run.segs);
     run.stop_idx = super::net::match_stops(&run.nodes, &stops, &turns)?.into_iter().map(|k| k as u32).collect();
     let node_s: Vec<f64> = run.stop_idx.iter().map(|&i| run.node_s[i as usize]).collect();
+    let bare: Vec<usize> = net.path_reversals(&run.segs).into_iter().filter(|&k| net.bare_end(run.nodes[k])).collect();
+    // Where trains stand still, in path order: a reversal's train takes at most half the gap to
+    // its neighbours on each side.
+    let mut marks: Vec<f64> = node_s.iter().copied().chain(bare.iter().map(|&k| run.node_s[k])).collect();
+    marks.sort_by(f64::total_cmp);
+    let room = |at: f64| {
+        let i = marks.partition_point(|&m| m < at);
+        let before = if i > 0 { at - marks[i - 1] } else { f64::INFINITY };
+        let after = marks.get(i + 1).map_or(f64::INFINITY, |&m| m - at);
+        before.min(after) / 2.0
+    };
+    for &k in &bare {
+        let at = run.node_s[k];
+        let d = (train_len / 2.0 + BARE_END_CLEAR_M).min(room(at));
+        run.ends.push((k as u32, at - d, 2.0 * d));
+    }
     for (j, &st) in stops.iter().enumerate() {
         let node_at = |i: usize| node_s[i];
         let mut at = node_at(j);
@@ -391,7 +411,7 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
             // T-797: the train's middle stands d short of the node on arrival and d past it in
             // the unfolded offsets on leaving, the same place on the ground.
             let d = if ports == 1 { net.node_platform[st as usize] as f64 / 2.0 } else { train_len / 2.0 };
-            let d = d.min((at - node_at(j - 1)) / 2.0).min((node_at(j + 1) - at) / 2.0);
+            let d = d.min(room(at));
             run.stop_s.push(at - d);
             run.jump[j] = 2.0 * d;
             continue;
@@ -408,9 +428,38 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
         run.stop_s.push(at);
     }
     run.limits = profile::widen(&raw, run.len, train_len / 2.0);
-    let dw = stand_times(&run, dwell, net.line_turn[l as usize] as f64);
-    run.free = profile::run(&run.limits, &run.stop_s, &run.jump, &dw, &[]);
+    let turn = net.line_turn[l as usize] as f64;
+    let dw = stand_times(&run, dwell, turn);
+    run.free = run_profile(&run, &dw, turn, &[]);
     Some(run)
+}
+
+/// `profile::run` over a run's stops and the bare track ends it reverses at, standing `turn` at
+/// each end; `arr`/`dep` keep the stops only.
+fn run_profile(run: &Run, dw: &[f64], turn: f64, holds: &[Hold]) -> Profile {
+    if run.ends.is_empty() {
+        return profile::run(&run.limits, &run.stop_s, &run.jump, dw, holds);
+    }
+    let n = run.stop_s.len() + run.ends.len();
+    let (mut s, mut jump, mut stand, mut keep) = (Vec::with_capacity(n), Vec::with_capacity(n), Vec::with_capacity(n), Vec::with_capacity(n));
+    let mut e = 0;
+    for j in 0..run.stop_s.len() {
+        while e < run.ends.len() && run.ends[e].0 < run.stop_idx[j] {
+            s.push(run.ends[e].1);
+            jump.push(run.ends[e].2);
+            stand.push(turn);
+            keep.push(false);
+            e += 1;
+        }
+        s.push(run.stop_s[j]);
+        jump.push(run.jump[j]);
+        stand.push(dw.get(j).copied().unwrap_or(0.0));
+        keep.push(true);
+    }
+    let mut p = profile::run(&run.limits, &s, &jump, &stand, holds);
+    let pick = |v: &[f64]| v.iter().zip(&keep).filter(|x| *x.1).map(|x| *x.0).collect::<Vec<f64>>();
+    (p.arr, p.dep) = (pick(&p.arr), pick(&p.dep));
+    p
 }
 
 /// Scheduled standing time per stop: the dwell, or the turnaround where trains reverse (T-797);
@@ -447,11 +496,12 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
 }
 
 fn profile_for(net: &Network, l: u32, run: &Run, level: usize) -> Profile {
-    let mut dw = stand_times(run, net.line_dwell[l as usize] as f64, net.line_turn[l as usize] as f64);
+    let turn = net.line_turn[l as usize] as f64;
+    let mut dw = stand_times(run, net.line_dwell[l as usize] as f64, turn);
     for (d, h) in dw.iter_mut().zip(&run.stop_holds[level]) {
         *d += h;
     }
-    let mut p = profile::run(&run.limits, &run.stop_s, &run.jump, &dw, &run.holds[level]);
+    let mut p = run_profile(run, &dw, turn, &run.holds[level]);
     p.hold += run.stop_holds[level].iter().sum::<f64>();
     p
 }

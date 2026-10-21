@@ -491,6 +491,7 @@ function buildState(): ClockState {
       // in the state, not asked for after it, so the line panel never draws new stops with old gaps (T-648)
       passed: [...a.passed_stations(id)],
       reversals: [...a.line_reversals(id)],
+      endTurns: [...a.line_end_turns(id)],
       loopKind: a.line_loop(id),
     });
   }

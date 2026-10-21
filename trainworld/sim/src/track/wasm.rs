@@ -2756,6 +2756,14 @@ impl TrackApi {
         let Some(ls) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![] };
         ls.runs[0].turn.iter().enumerate().filter(|x| *x.1).map(|x| x.0 as f64).collect()
     }
+
+    /// The bare track ends where a line's trains reverse between stops, as nodes in path order
+    /// (T-797 B3).
+    pub fn line_end_turns(&self, line: u32) -> Vec<f64> {
+        let Some(ls) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![] };
+        let run = &ls.runs[0];
+        run.ends.iter().map(|x| run.nodes[x.0 as usize] as f64).collect()
+    }
     pub fn remove_line(&mut self, id: u32) -> u32 {
         self.run(Op::Line { id, data: None })
     }
@@ -3202,8 +3210,8 @@ impl TrackApi {
 
     /// A line's dwell over a round trip at a level, s: the dwell at every intermediate stop both
     /// ways (capacity holds at platforms are delay, not dwell), and the turnarounds: two at the
-    /// ends and two at each stop where trains reverse partway (T-797). A circle stands the dwell
-    /// at its first stop and turns nowhere at its ends (T-798).
+    /// ends and two at each stop or bare track end where trains reverse partway (T-797). A circle
+    /// stands the dwell at its first stop and turns nowhere at its ends (T-798).
     pub fn line_dwell_split(&self, line: u32) -> Vec<f64> {
         let n = &self.w.net;
         let Some(ls) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![0.0, 0.0] };
@@ -3211,6 +3219,7 @@ impl TrackApi {
         let circle = ls.kind == LoopKind::Circle;
         let stops = ls.runs[0].stop_s.len().saturating_sub(2) as f64 - turns + if circle { 1.0 } else { 0.0 };
         let ends = if circle { 0.0 } else { 2.0 };
+        let turns = turns + ls.runs[0].ends.len() as f64;
         vec![2.0 * stops * n.line_dwell[line as usize] as f64, (ends + 2.0 * turns) * n.line_turn[line as usize] as f64]
     }
 
@@ -3485,8 +3494,9 @@ fn turn_nodes(net: &Network, path: &[u32]) -> Vec<u32> {
     net.path_reversals(path).into_iter().map(|k| net.path_nodes(path[k]).0).collect()
 }
 
-/// Nodes a train can reach from any of `stops`, leaving it either way, over valid moves. Moves
-/// work both ways, so a node outside it has no route to or from a stop either.
+/// Nodes a train can reach from any of `stops`, leaving it either way, over valid moves and
+/// turning back at bare track ends. Moves work both ways, so a node outside it has no route to or
+/// from a stop either.
 fn reachable_from(net: &Network, stops: &[u32]) -> Vec<bool> {
     let mut seen_node = vec![false; net.node_count()];
     let mut seen = vec![false; 2 * net.edge_count()];
@@ -3508,8 +3518,9 @@ fn reachable_from(net: &Network, stops: &[u32]) -> Vec<bool> {
         seen_node[node as usize] = true;
         let arr = net.port_side(super::net::path_edge(st), 1 - super::net::path_dir(st)).unwrap_or(0);
         let p = &net.node_ports[node as usize];
+        let bare = net.bare_end(node);
         for (k, &c) in p.ends().iter().enumerate() {
-            if p.side[k] != arr && !seen[c as usize] {
+            if (p.side[k] != arr || bare) && !seen[c as usize] {
                 seen[c as usize] = true;
                 queue.push(c);
             }
@@ -5291,6 +5302,27 @@ mod tests {
         assert_eq!(a.set_line(lone, &[first], 0.0, 0.0, 0.0, 30.0, 180.0, 0, 0, "One".into()), 0, "{}", a.issues());
         let tiers: std::collections::HashMap<u32, f64> = a.stop_tiers(lone).chunks(3).map(|c| (c[0] as u32, c[1])).collect();
         assert_eq!((tiers[&past_end], tiers[&bypass], tiers[&other]), (1.0, 1.0, 3.0));
+    }
+
+    /// T-797 B3: from M, Br is reached only by running out past T to the bare end X and back.
+    #[test]
+    fn a_station_past_a_headshunt_reverses_at_the_track_end() {
+        use super::super::tests::{line, reversal_fixture_with};
+        let mut a = api();
+        let (w, [x, t, _, m, br]) = reversal_fixture_with(false);
+        a.w = w;
+        let id = line(&mut a.w, &[m], [6.0, 3.0, 0.0]);
+        let raw = a.stop_tiers(id);
+        let tier = |n: u32| raw.chunks(3).find(|c| c[0] as u32 == n).map(|c| (c[1], c[2])).unwrap();
+        assert_eq!(tier(br), (4.0, x as f64));
+        assert_eq!(tier(t), (1.0, -1.0));
+        let stops: Vec<u32> = a.insert_stop(id, br).iter().map(|&s| s as u32).collect();
+        assert_eq!(stops, vec![m, br]);
+        assert_eq!(a.set_stops(id, &stops), 0, "{}", a.issues());
+        assert_eq!(a.line_end_turns(id), vec![x as f64]);
+        assert!(a.line_reversals(id).is_empty());
+        let split = a.line_dwell_split(id);
+        assert!((split[1] - 4.0 * 180.0).abs() < 1e-9, "two ends and the track end both ways: {split:?}");
     }
 
     /// T-798: on a ring the first stop's marker closes the line into a circle, then opens it; a

@@ -137,7 +137,8 @@ function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stop
   const reversals = st.reversals?.length ?? 0;
   const dwell = runs * Math.max(0, stops - 2 - reversals) * st.dwellS + (st.loop === "circle" ? st.dwellS : 0);
   const turn = st.loop === "circle" ? 0 : st.loop === "balloon" ? st.turnaroundS : 2 * st.turnaroundS;
-  const reversing = runs * reversals * st.turnaroundS;
+  // and so does a bare track end it reverses at (B3), which is no stop
+  const reversing = runs * (reversals + (st.endTurns?.length ?? 0)) * st.turnaroundS;
   const delay = (st.delayS[lev] ?? 0) / (st.loop ? 2 : 1);
   const running = Math.max(0, total - dwell - turn - reversing - delay);
   return (
@@ -149,7 +150,7 @@ function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stop
         <Row label="Running">{duration(running)}</Row>
         <Row label="Dwell at stops">{duration(dwell)}</Row>
         {turn > 0 && <Row label={st.loop ? "Turning at the end" : "Turning at the ends"}>{duration(turn)}</Row>}
-        {reversals > 0 && <Row label="Reversing partway">{duration(reversing)}</Row>}
+        {reversing > 0 && <Row label="Reversing partway">{duration(reversing)}</Row>}
         {delay > 0 && <Row label="Waiting at busy track">{duration(delay)}</Row>}
       </ul>
       {delay > 0 && spots.length > 0 && (

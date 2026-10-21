@@ -1544,7 +1544,7 @@ impl Network {
                     return Err(Issue::LinePath { line: l });
                 }
                 // Through a node: arrive on one side, leave on the other, or turn back at a
-                // stop (T-797, checked below).
+                // stop or a bare track end (T-797, checked below).
                 if self.port_side(path_edge(prev), 1 - path_dir(prev)).is_none() {
                     return Err(Issue::LinePath { line: l });
                 }
@@ -1557,7 +1557,7 @@ impl Network {
         if stops.iter().any(|&s| !self.node_ok(s) || self.node_platform[s as usize] == 0) {
             return Err(Issue::LineStops { line: l });
         }
-        let turns = self.path_reversals(path);
+        let turns = self.stop_reversals(path);
         if match_stops(&nodes, stops, &turns).is_none() {
             return Err(if turns.is_empty() { Issue::LineStops { line: l } } else { Issue::LinePath { line: l } });
         }
@@ -1574,6 +1574,17 @@ impl Network {
     /// The indices into a path's node list (`path.len() + 1` nodes) where it turns back.
     pub fn path_reversals(&self, path: &[u32]) -> Vec<usize> {
         (1..path.len()).filter(|&k| self.turns_back(path[k - 1], path[k])).collect()
+    }
+
+    /// A track end with no station (T-797 B3): a train may reverse there without stopping for
+    /// riders, as in a headshunt.
+    pub fn bare_end(&self, n: u32) -> bool {
+        self.node_ports[n as usize].n == 1 && self.node_platform[n as usize] == 0
+    }
+
+    /// `path_reversals` that must fall on a stop: all but those at a bare track end.
+    pub fn stop_reversals(&self, path: &[u32]) -> Vec<usize> {
+        self.path_reversals(path).into_iter().filter(|&k| !self.bare_end(self.path_nodes(path[k]).0)).collect()
     }
 
     /// What kind of loop stops and a path make (T-798).
@@ -1761,8 +1772,9 @@ impl Network {
 
     /// Fastest path from `from` to `to` over valid moves, by speed-limit running time. `arrived`
     /// is the side the train came in on at `from`, or None at a line's first stop. It leaves on
-    /// the other side, or turns back there at `REVERSAL_SEARCH_S` extra (T-797: reversing only at
-    /// a stop). Returns the path and the side it arrives on at `to`.
+    /// the other side, or turns back there at `REVERSAL_SEARCH_S` extra; on the way it may turn
+    /// back at a bare track end at the same cost (T-797: never at a station it passes or a
+    /// junction). Returns the path and the side it arrives on at `to`.
     pub fn find_path(&self, from: u32, to: u32, arrived: Option<u8>) -> Option<(Vec<u32>, u8)> {
         self.find_path_side(from, to, arrived, None)
     }
@@ -1799,13 +1811,14 @@ impl Network {
                 return Some((path, arr_side));
             }
             let p = &self.node_ports[node as usize];
+            let bare = self.bare_end(node);
             for (k, &c) in p.ends().iter().enumerate() {
-                if p.side[k] == arr_side {
+                if p.side[k] == arr_side && !bare {
                     continue;
                 }
                 let (e, which) = (c >> 1, c & 1);
                 let nst = e << 1 | which;
-                let nd = d + self.edge_time[e as usize];
+                let nd = d + self.edge_time[e as usize] + if bare { REVERSAL_SEARCH_S } else { 0.0 };
                 if nd < dist[nst as usize] {
                     dist[nst as usize] = nd;
                     prev[nst as usize] = st;

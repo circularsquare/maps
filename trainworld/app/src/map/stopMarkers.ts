@@ -73,8 +73,8 @@ function tiersFrom(d: Float64Array, w: WorldView, revAt: Map<string, string>): M
     const id = byNum.get(d[i]);
     if (id === undefined) continue;
     out.set(id, names[d[i + 1]] ?? "cut");
-    const at = byNum.get(d[i + 2]);
-    if (at !== undefined) revAt.set(id, at);
+    // a node that is no station is a bare track end (T-797 B3): ""
+    if (d[i + 1] === 4) revAt.set(id, byNum.get(d[i + 2]) ?? "");
   }
   return out;
 }
@@ -151,7 +151,7 @@ export class StopMarkers {
   private asked = 0;
   /** the clock worker's last tiers for the line being edited */
   private fromWorker: Map<string, StopTier> | null = null;
-  /** for a "reverse" station, the station trains would reverse at */
+  /** for a "reverse" station, the station trains would reverse at, "" for a bare track end */
   private revAt = new Map<string, string>();
   private seenWorld: WorldView | null = null;
   private seenLine: number | null = null;
@@ -316,7 +316,10 @@ export class StopMarkers {
       case "open": return [name, "Click to open the loop"];
       case "route": return [name, "Click to add a stop"];
       case "reroute": return [name, "Click to add a stop and change the route"];
-      case "reverse": return [name, `Click to add a stop. Trains reverse at ${this.names.get(this.revAt.get(id) ?? "") ?? "a station"}`];
+      case "reverse": {
+        const at = this.revAt.get(id);
+        return [name, `Click to add a stop. Trains reverse at ${at === "" ? "the end of the track" : this.names.get(at ?? "") ?? "a station"}`];
+      }
       default: return [name, "No track joins it to this line"];
     }
   }

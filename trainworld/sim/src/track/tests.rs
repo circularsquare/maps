@@ -800,6 +800,11 @@ fn shared_track_splits_its_capacity() {
 /// T-797: X - T - J - M, and a branch J - Br leaving towards M. From T, Br is reached only by
 /// turning back (at T, a through station, or at X, a dead end).
 pub fn reversal_fixture() -> (TrackWorld, [u32; 5]) {
+    reversal_fixture_with(true)
+}
+
+/// `reversal_fixture`, with X a station or a bare track end (T-797 B3: a headshunt).
+pub fn reversal_fixture_with(x_station: bool) -> (TrackWorld, [u32; 5]) {
     let mut w = world();
     let x = node(&mut w, -3000.0, 0.0, 0);
     let t = node(&mut w, 0.0, 0.0, 0);
@@ -811,7 +816,9 @@ pub fn reversal_fixture() -> (TrackWorld, [u32; 5]) {
     edge(&mut w, j, m, &[], 0).unwrap();
     edge(&mut w, j, br, &[(3400.0, 0.0)], 0).unwrap();
     for n in [x, t, m, br] {
-        station(&mut w, n, 200);
+        if n != x || x_station {
+            station(&mut w, n, 200);
+        }
     }
     (w, [x, t, j, m, br])
 }
@@ -930,6 +937,71 @@ fn reversing_lines_save_round_trip() {
         assert_eq!(back.svc.lines[l as usize].runs[0].turn, w.svc.lines[l as usize].runs[0].turn);
     }
     let _ = (j, &mut w);
+}
+
+/// T-797 B3: with X a bare track end (a headshunt), Br to M runs out to X and back, passing T
+/// twice without stopping; it stands the turnaround there, as at a stop.
+#[test]
+fn a_line_reversing_at_a_bare_track_end_runs() {
+    let (mut w, [x, t, _, m, br]) = reversal_fixture_with(false);
+    let l = line(&mut w, &[br, m], [3.0, 6.0, 8.0]);
+    assert!(w.net.check_line(l).is_ok());
+    let path = w.net.line_path(l).to_vec();
+    assert_eq!(w.net.path_reversals(&path).len(), 1);
+    assert!(w.net.stop_reversals(&path).is_empty());
+    assert_eq!(w.net.turn_count(w.net.line_stops(l), &path), 1, "a reroute may not add one");
+    let ls = &w.svc.lines[l as usize];
+    assert!(ls.ok && ls.running);
+    for r in 0..2 {
+        let run = &ls.runs[r];
+        assert_eq!(run.turn, vec![false, false]);
+        assert_eq!(run.nodes.iter().filter(|&&n| n == t).count(), 2);
+        assert_eq!(run.ends.len(), 1);
+        let (k, s, jump) = run.ends[0];
+        assert_eq!(run.nodes[k as usize], x);
+        assert!((jump - (ls.train_len + 2.0 * BARE_END_CLEAR_M)).abs() < 1e-9);
+        let f = &run.free;
+        assert_eq!((f.arr.len(), f.dep.len()), (2, 2), "the track end is no stop");
+        // a stand of the turnaround, at the far side of the jump
+        let ph = &f.phases;
+        let i = ph.iter().position(|p| (p.s - (s + jump)).abs() < 1e-6 && p.v == 0.0 && p.a == 0.0).expect("a stand at the end");
+        assert!((ph[i + 1].t - ph[i].t - 180.0).abs() < 1e-9, "{:?}", &ph[i..i + 2]);
+        assert!(ph.windows(2).all(|p| p[1].s >= p[0].s && p[1].t >= p[0].t));
+        // the same place on the ground both ways, the train's tail 20 m short of the end
+        let a = w.svc.position(&w.net, l, r, s);
+        let b = w.svc.position(&w.net, l, r, s + jump);
+        assert!((a.0 - b.0).hypot(a.1 - b.1) < 0.5, "{a:?} {b:?}");
+        assert!((a.0 - (-3000.0 + ls.train_len / 2.0 + BARE_END_CLEAR_M)).abs() < 0.5 && a.1.abs() < 1e-6, "{a:?}");
+    }
+    let rt = ls.round_trip[HIGH];
+    assert!((rt - (ls.runs[0].prof[HIGH].duration + ls.runs[1].prof[HIGH].duration + 360.0)).abs() < 1e-9);
+    // X is a one-track terminus with the limiter: 12 reversals an hour, both directions from one side
+    let cap = &w.svc.cap;
+    let lim: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.wire_kind(r) == 9).collect();
+    assert_eq!(lim.len(), 1);
+    let r = lim[0];
+    assert_eq!((cap.res[r].node, cap.users_of(r).len()), (x, 2));
+    assert!((cap.rho[r][MEDIUM] - 1.0).abs() < 1e-12, "12 an hour fill it");
+    assert!((cap.fill(&w.net, &[(l, 10.0)], HIGH)[0] - 6.0).abs() < 1e-9);
+    assert!((0..cap.res.len()).any(|r| cap.res[r].node == x && cap.res[r].kind == ResKind::Terminus && cap.wire_kind(r) == ResKind::Terminus as u8));
+    assert!(!(0..cap.res.len()).any(|r| cap.res[r].node == t && cap.res[r].kind == ResKind::Platform && cap.users_of(r).iter().any(|u| u.stop >= 0)));
+    // more trains than the end takes are held at the ends of the line
+    set_counts(&mut w, l, [40, 3, 0]);
+    assert!(w.net.line_tph[l as usize][HIGH] <= 6.0 + 1e-6, "{:?}", w.net.line_tph[l as usize]);
+    // saves round trip
+    let bytes = super::save::encode(&w.net);
+    let back = TrackWorld::new(super::save::decode(&bytes).unwrap());
+    assert_eq!(super::save::encode(&back.net), bytes);
+    assert_eq!(back.net.line_path(l), w.net.line_path(l));
+    assert_eq!(back.svc.lines[l as usize].round_trip, w.svc.lines[l as usize].round_trip);
+    assert_eq!(back.svc.lines[l as usize].runs[0].ends, w.svc.lines[l as usize].runs[0].ends);
+    // a station on the stub is a stop like any other: X a station, the same path needs it as one
+    let mut d = w.net.line_data(l).unwrap();
+    station(&mut w, x, 200);
+    assert!(w.net.check_line(l).is_err());
+    d.stops = vec![br, x, m];
+    w.apply(Op::Line { id: l, data: Some(d) }).unwrap();
+    assert!(w.svc.lines[l as usize].runs[0].ends.is_empty());
 }
 
 // ---- T-835: a departure belongs to the period in force when it reaches the line's middle

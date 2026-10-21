@@ -32,7 +32,7 @@ export const CAPACITY_KINDS: CapacityKindText[] = [
   { name: "Turning on a platform", title: "Turning on the platform", prep: "at", ways: "", cause: "A line ends at this through station and turns on its platform, which each train holds for the turnaround and a minute more.", help: "End the line at a dead-end terminus, whose platform tracks share the turns." },
   { name: "Shared track", title: "Track shared with other lines", prep: "near", ways: EACH_WAY, cause: "Trains of several lines use this track, and each needs a gap behind it for braking and signals.", help: "Give some of the lines their own track beside it." },
   { name: "Turning across the track", title: "Turning across the track", prep: "at", ways: "", cause: "A train turning at this through station crosses the other track and waits for trains on it.", help: "End the line at a dead-end terminus." },
-  { name: "Reversing partway", title: "Reversing", prep: "at", ways: "", cause: "Trains reverse here partway along their line, and at most 12 an hour can reverse on each side of the station.", help: "Route the line through without reversing, or split it into two lines that end here." },
+  { name: "Reversing partway", title: "Reversing", prep: "at", ways: "", cause: "Trains reverse here partway along their line, and at most 12 an hour can reverse on each side of a station or at a track end.", help: "Route the line through without reversing, or split it into two lines that end here." },
 ];
 
 const kindText = (kind: number): CapacityKindText => CAPACITY_KINDS[kind] ?? CAPACITY_KINDS[0];

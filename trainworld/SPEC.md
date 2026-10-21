@@ -246,8 +246,8 @@ junctions, so lines can change pairs between neighbouring quad stations [T-338, 
 track is not offered (saves and imports keep theirs, which run as before) [T-733]. Each line has
 a train length in cars, by default the most its shortest platform fits (20 m cars) and never more
 [T-733], and ordinary trains (160 km/h) or high-speed trains (320 km/h on high-speed track, cars
-1.5x the price, dearer to run, a fleet of their own), the player's choice [T-817]. A line may reverse partway at a stop, standing its turnaround there, at most 12 reversals an
-hour per station side, and a large icon marks the station [T-797]. A line whose last stop is its first
+1.5x the price, dearer to run, a fleet of their own), the player's choice [T-817]. A line may reverse partway at a stop or a bare track end, standing its turnaround there, at most 12 reversals an
+hour per station side or track end, and a large icon marks the place [T-797]. A line whose last stop is its first
 is a loop, closed and opened by clicking its first stop while editing stops: a circle carries on round
 through it, a balloon turns back there; both run both ways with half their (even) trains each way,
 holding at the first stop to the headway, and riders ride through a circle's first stop the short

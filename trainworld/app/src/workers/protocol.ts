@@ -306,6 +306,8 @@ export interface ClockLine {
   passed: number[];
   /** the stops (indices into `stops`) where its trains reverse partway (`TrackApi::line_reversals`, T-797) */
   reversals: number[];
+  /** the bare track ends (nodes) where its trains reverse between stops (`TrackApi::line_end_turns`, T-797 B3) */
+  endTurns: number[];
   /** a loop (`TrackApi::line_loop`, T-798): 0 none, 1 a circle, 2 a balloon */
   loopKind: number;
 }

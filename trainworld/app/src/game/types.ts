@@ -167,6 +167,8 @@ export interface LineStats {
   passed: { gap: number; node: number }[];
   /** the stops (indices) where its trains reverse partway, standing the turnaround (T-797) */
   reversals: number[];
+  /** the bare track ends (node ids) where its trains reverse between stops, standing the turnaround (T-797 B3) */
+  endTurns: number[];
   /** a loop (T-798): its last stop is its first; a circle carries on round there, a balloon turns
    * back. Each way has its own trains, half the line's. */
   loop: "circle" | "balloon" | null;

@@ -137,6 +137,8 @@ pub const REVERSAL_LIMIT_S: f64 = 300.0;
 /// one wins unless it is much longer (T-797).
 pub const REVERSAL_SEARCH_S: f64 = 600.0;
 pub const REVERSAL_INSERT_M: f64 = 5000.0;
+/// How far short of a bare track end a reversing train's tail stops, m (T-797 B3).
+pub const BARE_END_CLEAR_M: f64 = 20.0;
 pub const KINGMAN_C0: f64 = 0.2;
 pub const RHO_KNEE: f64 = 0.9;
 pub const OVERLOAD_WINDOW_S: f64 = 3600.0;

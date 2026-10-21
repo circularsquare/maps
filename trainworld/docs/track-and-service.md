@@ -284,7 +284,7 @@ across track never rewrites the graph or line paths. Each edge gives one directe
 direction (shared on single track): `(edge, direction)` is the segment in SPEC 2.1's keyframes.
 At a node, every edge end leaves along the node's heading or its reverse; a move is any pair of
 ends on opposite sides. A line's path turns back (arrives and leaves on the same side) only at a
-station it stops at (T-797, 6.3). In a **junction**, two moves conflict when their paths cross at the same
+station it stops at or at a bare track end, one with no station (T-797, 6.3). In a **junction**, two moves conflict when their paths cross at the same
 level (track positions in opposite order on the two sides); merges and diverges do not, as track
 capacity counts them. A plain double-track Y has one crossing pair. A **flyover** (a flying
 junction) removes it, for its price (6.1, 6.4). A **flat crossing** makes every move on one
@@ -309,7 +309,8 @@ route conflict with every move on the other.
   in a demand level with no reversing service.
 - a line reversing partway (T-797) uses what a short turn at that station would: at a through
   station its arrival platform for turnaround + 60 s and the crossover above, at a dead end the
-  pooled terminus. It is no junction move and no through train there, and no track section joins
+  pooled terminus, and at a bare track end the same pooled terminus over the stub's tracks, with one
+  side for the limiter below. It is no junction move and no through train there, and no track section joins
   across it. On top, a stopgap limiter per station and arrival side (`REVERSAL_LIMIT_S`): 300 s per
   reversing train, so at most 12 reversals an hour a side. Both directions of a line reversing at a
   station usually arrive on the same side, so one such line runs every 10 minutes each way at best;
@@ -405,16 +406,20 @@ partway (when the line does) and waiting at busy track, and names the places it 
   deleting one reroutes by the fastest path, unless that path reverses where the old one did not,
   or marks the line broken. A line may pass a station without stopping, and may stop at a station
   twice, never twice in a row.
-  **Reversing partway** (T-797, notes/T-797.md): a line's path may turn back at a stop, nowhere
-  else (bare track ends are a later stage). Nothing stores it: a reversal is two path entries
-  arriving at and leaving a node on the same side, and stops are matched to the path so every
-  reversal falls on one. The route search may reverse at a hop's first stop for 600 s of search
-  time (`REVERSAL_SEARCH_S`), and the stop insertion counts each reversal as 5 km of path
+  **Reversing partway** (T-797, notes/T-797.md): a line's path may turn back at a stop or at a
+  bare track end (a node with one edge end and no station, such as a headshunt), nowhere else.
+  Nothing stores it: a reversal is two path entries arriving at and leaving a node on the same
+  side, and stops are matched to the path so every reversal not at a bare end falls on one. The
+  route search may reverse at a hop's first stop, or at a bare end on the way, for 600 s of search
+  time each (`REVERSAL_SEARCH_S`), and the stop insertion counts each reversal as 5 km of path
   (`REVERSAL_INSERT_M`), so a route without one wins unless it is much longer. A reversing train
   stands the line's turnaround there, not its dwell; its middle stands d short of the node on
   arrival and leaves from d past it in the run's unfolded offsets (`Run::jump`, the same place on
-  the ground; d is half the train at a through station, half the platform at a dead end), so it is
-  drawn jumping once as it stops. The stand is inside the run's duration, so the round trip, fleet
+  the ground; d is half the train at a through station, half the platform at a dead end, half the
+  train plus 20 m at a bare end, each at most half the way to the next place a train stands), so
+  it is drawn jumping once as it stops. A bare end is no stop: the profile stands the turnaround
+  there (`Run::ends`) and leaves it out of the stop times, so riders through it pay the stand in
+  their ride. The stand is inside the run's duration, so the round trip, fleet
   and demand need nothing new; trains still enter and leave only at the two ends.
   **Loops** (T-798, notes/T-797.md): a line whose last stop is its first (three stops or more) is a
   loop; nothing else stores it. A **circle** carries straight on through its first stop A (its last

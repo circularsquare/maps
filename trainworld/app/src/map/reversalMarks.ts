@@ -1,5 +1,5 @@
-// Reversal icons (T-797, docs/ui-map.md): a large U-turn sign over every station where a line's
-// trains reverse partway, the same size at every zoom so an unintended reversal shows from far
+// Reversal icons (T-797, docs/ui-map.md): a large U-turn sign over every station or bare track end
+// where a line's trains reverse partway, the same size at every zoom so an unintended reversal shows from far
 // out. It floats just above the station, clear of the stop editing marker on it. Hovering it names
 // the lines that reverse there; a click selects the first of them (not while stops are edited).
 
@@ -24,17 +24,26 @@ interface Item {
   transform: string;
 }
 
-/** Where lines reverse: per station, its name, place and the lines (id, name), from the world. */
-export function reversalsOf(w: WorldView): { station: string; name: string; lng: number; lat: number; lines: { id: string; name: string }[] }[] {
+type Reversal = { station: string; name: string; lng: number; lat: number; lines: { id: string; name: string }[] };
+
+/** Where lines reverse: per station or bare track end (T-797 B3, keyed `end:<node>`), its name,
+ * place and the lines (id, name), from the world. */
+export function reversalsOf(w: WorldView): Reversal[] {
   const stations = new Map(w.save.stations.map((s) => [s.id, s]));
-  const out = new Map<string, { station: string; name: string; lng: number; lat: number; lines: { id: string; name: string }[] }>();
+  const out = new Map<string, Reversal>();
+  const add = (key: string, name: string, lng: number, lat: number, l: { id: string; name: string }) => {
+    const at = out.get(key) ?? { station: key, name, lng, lat, lines: [] };
+    if (!at.lines.some((x) => x.id === l.id)) at.lines.push({ id: l.id, name: l.name });
+    out.set(key, at);
+  };
   for (const l of w.save.lines) {
     for (const k of w.lineStats[l.id]?.reversals ?? []) {
       const s = stations.get(l.stops[k]);
-      if (!s) continue;
-      const at = out.get(s.id) ?? { station: s.id, name: s.name, lng: s.lng, lat: s.lat, lines: [] };
-      if (!at.lines.some((x) => x.id === l.id)) at.lines.push({ id: l.id, name: l.name });
-      out.set(s.id, at);
+      if (s) add(s.id, s.name, s.lng, s.lat, l);
+    }
+    for (const n of w.lineStats[l.id]?.endTurns ?? []) {
+      const node = w.nodes.get(n);
+      if (node) add(`end:${n}`, "Track end", node.lng, node.lat, l);
     }
   }
   return [...out.values()];
@@ -80,7 +89,7 @@ export class ReversalMarks {
       const words = [
         r.name,
         ...r.lines.map((l) => `${l.name} reverses here`),
-        `${REVERSALS_AN_HOUR} trains an hour at most reverse here from each side`,
+        r.station.startsWith("end:") ? `${REVERSALS_AN_HOUR} trains an hour at most reverse here` : `${REVERSALS_AN_HOUR} trains an hour at most reverse here from each side`,
       ];
       el.onmouseenter = el.onmousemove = () => this.showTip(el, words);
       el.onmouseleave = () => (this.tip.style.display = "none");
