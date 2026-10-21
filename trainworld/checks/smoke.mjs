@@ -7,7 +7,7 @@
 // else `playwright`, else the npx cache.
 //
 // Browser: a plain load shows the start menu and its New game starts a game (T-677); a ?new=1 game
-// (no menu) loads; the real save (T-007-real-nyc.save) imported into it has 109 lines,
+// (no menu) loads; in another ?new=1 game a line over dead space and one in Tokyo reach a final (T-845); the real save (T-007-real-nyc.save) imported into it has 109 lines,
 // 1,756 stations and about 4,498.6 km of track; demand reaches a final result; a click on a station
 // and on a train picks them; no console or page error, no GL error. Node: t133, t144, t145, t146.
 import { spawn } from 'node:child_process';
@@ -72,6 +72,26 @@ function runNode(file) {
 /** the last meaningful line of a failed check's output (bundled code comes out as huge data: urls) */
 const tail = (out) => out.split('\n').filter((l) => l.trim() && !l.startsWith('data:') && l.length < 400).slice(-3).join(' | ');
 
+/** a built line of three stations 2 km apart, east to west across `[lng, lat]`, by the edit API; its number or null */
+const smokeLine = (page, [lng, lat]) => page.evaluate(async ([lng, lat]) => {
+  const tw = window.tw, c = tw.client;
+  const dLng = 2 / (111.32 * Math.cos((lat * Math.PI) / 180));
+  const xy = [-1, 0, 1].map((k) => { const p = tw.lngLatToPack(lng + k * dLng, lat); return [p.x, p.y]; });
+  const near = (p) => { let best = null, bd = 1e12; for (const n of tw.world.value.nodes.values()) { const d = Math.hypot(n.x - p[0], n.y - p[1]); if (d < bd) { bd = d; best = n.id; } } return best; };
+  const wait = (ms) => new Promise((d) => setTimeout(d, ms));
+  await c.edit({ op: 'route', from: { kind: 'free', x: xy[0][0], y: xy[0][1], level: -1 }, to: { kind: 'free', x: xy[1][0], y: xy[1][1], level: -1 }, pis: [], single: false });
+  await wait(300);
+  await c.edit({ op: 'route', from: { kind: 'node', node: near(xy[1]) }, to: { kind: 'free', x: xy[2][0], y: xy[2][1], level: -1 }, pis: [], single: false });
+  await wait(300);
+  for (const p of xy) { await c.edit({ op: 'addStation', at: { kind: 'node', node: near(p) }, platform: 200, name: '' }); await wait(150); }
+  await c.edit({ op: 'constructAll' });
+  await wait(300);
+  const r = await c.edit({ op: 'addLine', stops: xy.map(near), name: 'Check', colour: '#0a7d3b' });
+  if (r?.line === undefined) return null;
+  await c.edit({ op: 'setTrainCount', line: r.line, trains: [6, 4, 3] });
+  return r.line;
+}, [lng, lat]);
+
 async function browserChecks(BASE) {
   const { chromium } = await playwright();
   const profile = await mkdtemp(join(tmpdir(), 'tw-smoke-'));
@@ -112,6 +132,37 @@ async function browserChecks(BASE) {
     } catch (e) {
       report('new game loads', false, e.message.split('\n')[0]);
       return;
+    }
+
+    // 1b. T-845: new games away from New York reach a final: a line over dead space (no zone reaches
+    // it, the view there too), then one in Tokyo; on a page of their own, so the real save's solve
+    // below opens only what it did before
+    const far = await ctx.newPage();
+    far.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+    far.on('console', (m) => { if (m.type() === 'error' && !IGNORE.test(m.text())) errors.push(m.text()); });
+    try {
+      await far.goto(`${BASE}${sep}debug=1&new=1&paused=1&v=${Date.now()}`);
+      await far.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
+      const got = [];
+      for (const [name, at] of [['dead space', [-98.0, 38.5]], ['Tokyo', [139.70, 35.69]]]) {
+        const t = Date.now();
+        await far.evaluate((c) => window.tw.map.jumpTo({ center: c, zoom: 12 }), at);
+        if ((await smokeLine(far, at)) === null) throw new Error(`no line built in ${name}`);
+        const want = got.length + 1;
+        await far.waitForFunction((want) => {
+          const d = window.twDemand, s = d.log.at(-1), v = d.view();
+          return String(d.client.status).startsWith('failed') || (s && v && v.version === s.version && v.final && v.lines.size === want);
+        }, want, { timeout: 90000, polling: 250 });
+        const v = await far.evaluate(() => { const d = window.twDemand, v = d.view(); return { status: String(d.client.status), riders: [...v.lines.values()].map((l) => Math.round(l.ridersPerDay)) }; });
+        if (v.status.startsWith('failed')) throw new Error(`${name}: ${v.status}`);
+        got.push(`${name} ${((Date.now() - t) / 1000).toFixed(1)} s, riders ${v.riders.at(-1).toLocaleString('en-US')}`);
+      }
+      const riders = await far.evaluate(() => [...window.twDemand.view().lines.values()].map((l) => l.ridersPerDay));
+      report('far new game final', riders.length === 2 && riders.some((r) => r === 0) && riders.some((r) => r > 0), `(${got.join('; ')})`);
+    } catch (e) {
+      report('far new game final', false, e.message.split('\n')[0]);
+    } finally {
+      await far.close();
     }
 
     // 2. the real save, imported into that game

@@ -410,4 +410,5 @@ registry centre and zoom, or over New York with none [T-310].
   alert under the demand buttons says "Demand ran out of memory" or "Demand stopped", its hover
   the cause and that a reload starts it again; the status tag goes, the figures shown stay.
 - A game whose view is over dead space and whose stations reach no zone loads nothing: no card, no
-  status, the clock not held, the split "–" [T-318].
+  status, the clock not held, the split "–" [T-318]; a change to its stations or lines is still
+  solved, with no pack, so its lines get their figures (nobody aboard) [T-845].

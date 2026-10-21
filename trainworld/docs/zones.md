@@ -245,7 +245,8 @@ the rule is 120 km from a zone's centre, past the biggest metro's far edge.
 belongs to no zone. The top bar shows no name and "–" for the split. Nothing is loaded or solved
 for the view (no pack, not even the market), no "Loading data" card or status shows, the clock is
 not held, and the focused zone stays where it was. A built station that reaches a zone still loads
-that zone. One helper answers it, `placeAt` in `game/zones.ts`, kept in `viewedZone`
+that zone. A network whose stations reach no zone is still solved, with no pack, so its lines
+show their figures, nobody on them (T-845). One helper answers it, `placeAt` in `game/zones.ts`, kept in `viewedZone`
 (`game/cities.ts`).
 
 **The opened list** [T-729, T-801]: each game's save header keeps `opened`, the zones it has

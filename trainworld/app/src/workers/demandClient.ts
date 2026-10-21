@@ -656,10 +656,12 @@ class DemandClient {
   }
 
   /** T-318: a network is in hand and neither the view nor any station needs a pack: nothing to
-   * load or solve. The clock's hold goes, and no card or status says "Loading data". */
+   * load or solve. The clock's hold goes, and no card or status says "Loading data". A waiting
+   * network with stations is still solved, with no pack (T-845): its lines carry nobody, and
+   * without that solve they never get figures. */
   private idle(): boolean {
     const svc = this.latest();
-    return !!svc && this.needed(svc)?.size === 0;
+    return !!svc && this.needed(svc)?.size === 0 && !this.waiting?.svc.stations.length;
   }
 
   private settleIdle() {
