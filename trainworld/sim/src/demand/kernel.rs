@@ -1990,9 +1990,13 @@ pub struct Graph {
     /// Departures an hour for each route node in this period.
     pub rn_tph: Vec<f32>,
     /// Average extra real minutes a rider boarding at this route node waits because full trains
-    /// leave riders on the platform (T-188, `left_behind`); 0 at free flow. Added to the
+    /// leave riders on the platform (T-188, `left_behind`), plus `rn_span`. Added to the
     /// boarding's cost.
     pub rn_left: Vec<f32>,
+    /// Perceived minutes added to boarding where only a share `phi` of the period's riders have a
+    /// train due within their tolerance (T-842, `Network::span`): -ln(phi) / `Params::beta`, the
+    /// logit's own form for an option open to that share. 0 with service all period.
+    pub rn_span: Vec<f32>,
     /// Each route node's platform less its station's position, metres (`Network::stop_x`): a change
     /// of trains walks from the platform it arrives at to the one it leaves from (T-717).
     pub rn_dx: Vec<f32>,
@@ -2124,12 +2128,17 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     let mut rev_off = vec![0u32; n + 1];
     for x in &incoming { rev_off[x.0 as usize + 1] += 1; }
     for i in 0..n { rev_off[i + 1] += rev_off[i]; }
-    let rn_tph = rn_line.iter().map(|&l| {
+    let nr = rn_line.len();
+    let phi = |r: usize| if net.span.len() == super::network::PERIODS * nr { net.span[p.period * nr + r] } else { 1.0 };
+    // a share that rounds to 0 is no service at that stop (T-842)
+    let rn_tph = rn_line.iter().enumerate().map(|(r, &l)| {
         let h = net.line_headway_min[l as usize][p.period];
-        if h > 0.0 && h.is_finite() { 60.0 / h } else { 0.0 }
+        if h > 0.0 && h.is_finite() && phi(r) > 0.0 { 60.0 / h } else { 0.0 }
     }).collect();
+    let rn_span: Vec<f32> = (0..nr).map(|r| { let f = phi(r); if f > 0.0 && f < 1.0 { -f.ln() / p.beta } else { 0.0 } }).collect();
     Graph {
-        rn_left: vec![0.0; rn_ride.len()],
+        rn_left: rn_span.clone(),
+        rn_span,
         rn_dx,
         rn_dy,
         st_spread,
@@ -3990,7 +3999,8 @@ pub fn left_behind(g: &Graph, net: &Network, p: &Params, board: &[f32], alight: 
         for _dir in 0..2 {
             let run = r0..r0 + n;
             r0 += n;
-            let tph = g.rn_tph[run.start] as f64;
+            // a stop with no train due (T-842) has none in `rn_tph`; the line's trains still run
+            let tph = g.rn_tph[run.clone()].iter().fold(0.0f32, |a, &b| a.max(b)) as f64;
             let cap = net.line_crush[l] as f64;
             let b = &board[run.clone()];
             if n < 2 || tph <= 0.0 || cap <= 0.0 || b.iter().map(|&v| v as f64).sum::<f64>() < 1.0 {
@@ -4073,7 +4083,10 @@ pub fn round_costs(g: &Graph, net: &Network, p: &Params, total: &[f32]) -> Optio
     let mut loads = Loads::zero(g.n_st, nr);
     loads.seg.copy_from_slice(&total[..nr]);
     let (fac, _) = crowd_factors(g, net, &loads, p);
-    let left = if total.len() == 3 * nr && p.left_behind { left_behind(g, net, p, &total[nr..2 * nr], &total[2 * nr..]).0 } else { vec![0.0; nr] };
+    let mut left = if total.len() == 3 * nr && p.left_behind { left_behind(g, net, p, &total[nr..2 * nr], &total[2 * nr..]).0 } else { vec![0.0; nr] };
+    for (l, s) in left.iter_mut().zip(&g.rn_span) {
+        *l += s;
+    }
     Some((fac, left))
 }
 
@@ -4124,7 +4137,7 @@ mod tests {
             hop_min: vec![], hop_back: vec![], line_speed_kmh: vec![0.0; lines.len()],
             line_headway_min: tph.iter().map(|t| [if *t > 0.0 { 60.0 / t } else { f32::INFINITY }; network::PERIODS]).collect(),
             line_seats: vec![100.0; lines.len()], line_crush: vec![200.0; lines.len()],
-            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![],
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![], span: vec![],
         };
         for (l, stops) in lines.iter().enumerate() {
             net.line_stops.extend_from_slice(stops);
@@ -4154,7 +4167,7 @@ mod tests {
                 line_name: vec![String::new()], line_off: vec![0, 7], line_stops: stops.to_vec(),
                 hop_min: ride, hop_back: back, line_speed_kmh: vec![0.0],
                 line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_crush: vec![200.0],
-                st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap],
+                st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![],
             }
         };
         let g = build_graph(&ring(true), &p);

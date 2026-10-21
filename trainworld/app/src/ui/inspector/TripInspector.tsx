@@ -140,7 +140,10 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
           );
         }
         const line = ln.get(l.line);
-        const tip = `Wait ${l.waitMin.toFixed(1)} min (half the time between the useful trains), then ${l.min.toFixed(1)} min on the train over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}`;
+        // T-842: riders arriving when no train is due for hours weigh on the wait as felt
+        const span = l.waitPerceived - l.waitMin;
+        const tip = `Wait ${l.waitMin.toFixed(1)} min (half the time between the useful trains), then ${l.min.toFixed(1)} min on the train over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}` +
+          (span >= 0.05 ? `. Some riders arrive when no train is due for hours, so the wait counts as ${span.toFixed(1)} min more` : "");
         return (
           <li data-tip={tip}>
             {line && <Chip line={line} size="sm" />}

@@ -96,6 +96,22 @@ works on two levels:
    way round without changing. At each station, useful lines
    share their departure frequency: boarding costs the wait (half the combined headway, in plain
    minutes: T-585) plus their frequency-weighted downstream cost.
+   **The service span** (T-842, Anita 2026-10-21: "demand should know the schedule, roughly").
+   Riders differ in how long they would wait for the next train rather than go another way: the
+   tolerance is spread log-uniformly from 30 minutes to 6 hours (half of riders take up to 1.7 h;
+   `track::span::TOL_MIN_S`, `TOL_MAX_S`). For each line, direction, stop and period the clock
+   worker works out `phi`, the share of the period's riders (arriving by the boarding account's
+   shape, at the line's local time) whose wait for the next departure in a steady day is within
+   their tolerance, rounded to hundredths (`TrackApi.line_span`, worked out again only when a
+   line's departure pattern or stop times change). It is 1 wherever a train is never more than
+   30 minutes away, and the snapshot carries it only for lines where it is not
+   (`SnapshotLine.span`; `DemandApi.set_span`, every population alike, riders between cities
+   too). Boarding a route node with `phi` below 1 costs -ln(`phi`) / 0.10 perceived minutes more
+   (`Graph::rn_span`, added with the wait for full trains: 0.9 adds 1.1, 0.5 adds 6.9, 0.1 adds 23,
+   0.01 adds 46), the logit's own form for an option open to that share of riders; a stop whose
+   `phi` rounds to 0 has no departures in the search. A period whose `phi` changed is solved again
+   like one whose trains an hour did (T-124), and the cache key (T-328) includes it. The wait
+   inside service stays half the period's headway.
    A change of trains costs a fixed 2 perceived minutes (`transfer_min`, Anita, T-717), its wait
    and the walk between the two platforms' centres (below); the first boarding pays neither the
    fixed cost nor a platform walk. A line joins only if it improves expected trip cost;

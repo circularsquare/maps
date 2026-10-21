@@ -38,6 +38,14 @@ There is no built-in liking for the train. Rail and the car are compared on time
   homes. Without the bands a short line's group could mix 2 and 28 minute walks, and rail came out
   7-21% too high. The trip explorer works out its own two places exactly.
 - Wait on the platform: half the time between trains, in plain minutes.
+- No train for hours: people differ in how long they would wait for the next train rather than go
+  another way, from half an hour to 6 hours (half of them up to about 1 hour 45). At each stop and
+  time of day the game works out what share of that period's riders have a train coming within
+  their limit, from the timetable. A stop where everyone does (any line with a train at least
+  every half hour) is priced as above. Where only some do (after a peak-only line's last train,
+  overnight before the first) boarding counts extra: 1 minute if 90% have a train coming, 7 if
+  half do, 23 if a tenth do, and with nobody, nobody boards there. The boarding account in the
+  timetable spreads riders the same way, so nobody is shown waiting hours for a train.
 - Ride: 1 a minute, stretched once the train is 70% full: at crush load a minute counts 3, at 120%
   it counts 5.4. Below 70% nobody minds the crowd.
 - Changing trains: a fixed 2 minutes, plus the walk from the platform you arrive at to the one you

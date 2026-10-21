@@ -732,6 +732,17 @@ notes/T-420.md has the tables.
   perceived minutes a change). Check: published
   interchange times for a few big hubs (London's TfL interchange walk times, Tokyo station transfer
   guides) against what the rule gives for the same platforms.
+- **The service span** (T-842, docs/demand-kernel.md step 4). Riders' tolerance for the wait until
+  the next train is log-uniform from 30 minutes to 6 hours (Anita's range, 2026-10-21; the shape
+  and the median of 1.7 h are judgement, not fitted), and a stop where only a share `phi` of a
+  period's riders have a train due within it costs -ln(`phi`) / 0.10 minutes more to board. It
+  reads only the player's timetable, so it holds anywhere the other rules do. Why it may not carry
+  over: the arrival shape it weighs riders by is the US one per period (the busiest-hour factors),
+  and where people plan around a timetable (long-distance and rural lines, Swiss or Japanese
+  regional clock-face service, a country whose last trains run past midnight) the tolerance is
+  longer than a turn-up-and-go rider's; on long trips the logit's damping (4.3) already makes the
+  extra minutes weigh less. Check: night and late-evening rail shares on a real network with
+  service ending early (a commuter line without evening trains) against the model's.
 
 ## Intercity
 

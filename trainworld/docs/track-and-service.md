@@ -709,7 +709,13 @@ per person and does not change who travels: demand still decides that (SPEC 4).
 - **Arrivals**: a stop's boardings in a period arrive spread over it by a fixed shape, scaled so the
   busiest clock hour is the busiest-hour factor times the mean hour: a tent (rising to the middle,
   falling away) for the two peaks and midday, falling from its start for the evening, highest at
-  both ends for the night. The period's total is kept exactly.
+  both ends for the night. The period's total is kept exactly. Riders arrive only as demand's
+  service span lets them (T-842b, docs/demand-kernel.md step 4): the shape at each moment is
+  multiplied by the share of riders whose tolerance (30 minutes to 6 hours, log-uniform) covers the
+  wait for the stop's next departure in a steady day, and scaled so the period's total is the same.
+  So nobody arrives hours before a peak-only line's next train or overnight before the first; a
+  stop with a train every half hour or better arrives as before to the bit, and a period with no
+  train due within 6 hours at all keeps the plain shape (demand sends it almost nobody).
 - **Each train, in the order it leaves each stop**: the line's share alighting there gets off
   (demand's alightings over the riders it has arriving, per period; everyone at the last stop), then
   it takes whoever is waiting up to its crush load (160 a car). The rest wait for the next train of

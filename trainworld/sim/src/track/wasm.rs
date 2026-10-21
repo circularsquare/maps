@@ -75,6 +75,8 @@ pub struct TrackApi {
     /// The boarding account (T-164): demand's riders per period, and each train's load and each
     /// platform's crowd worked out from them. Never saved.
     boarding: Boarding,
+    /// Per line id, its service span for demand and the key it was worked out for (`line_span`).
+    spans: Vec<Option<(u64, Vec<f32>)>>,
     /// Game seconds now (`set_now`; NaN until the worker sets it: edits then re-space at once).
     now: f64,
     /// Pieces the last batch level change left out (T-815).
@@ -181,6 +183,7 @@ impl TrackApi {
             station_cost: 0.0,
             rasters: vec![],
             boarding: Boarding::default(),
+            spans: vec![],
             now: f64::NAN,
             skipped: 0,
         }
@@ -3015,6 +3018,28 @@ impl TrackApi {
     /// Departure time from each stop, seconds from the start of the trip.
     pub fn stop_departures(&self, line: u32, run: usize, level: usize) -> Vec<f64> {
         self.w.svc.lines.get(line as usize).filter(|l| l.ok).map_or(vec![], |l| l.runs[run].prof[level].dep.clone())
+    }
+    /// T-842: the share of each period's riders at each stop with a train due within their
+    /// tolerance (`span::line_span`), `[(period * 2 + run) * n + stop]`, each run's stops in its
+    /// travel order; empty when the line is not running. Worked out again only when the line's
+    /// steady departures change.
+    pub fn line_span(&mut self, line: u32) -> Vec<f32> {
+        let l = line as usize;
+        let (net, svc) = (&self.w.net, &self.w.svc);
+        let Some(lat) = svc.lattice(net, l) else { return vec![] };
+        let ls = &svc.lines[l];
+        let key = super::span::span_key(ls, &lat);
+        if self.spans.len() <= l {
+            self.spans.resize(l + 1, None);
+        }
+        match &self.spans[l] {
+            Some((k, v)) if *k == key => v.clone(),
+            _ => {
+                let v = super::span::line_span(ls, &lat);
+                self.spans[l] = Some((key, v.clone()));
+                v
+            }
+        }
     }
     /// Per demand level (high, medium, low): round trip s, trains needed, delay s.
     pub fn line_summary(&self, line: u32) -> Vec<f64> {

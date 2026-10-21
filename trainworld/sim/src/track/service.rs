@@ -265,7 +265,7 @@ fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8,
 /// headway: per period, `start - lead + off + k * headway`, leaving out any closer than half a
 /// headway after the period before's last (MIN_GAP_SHARE). A pure function of the pattern, so every
 /// window agrees.
-fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8, f64)>) {
+pub(crate) fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8, f64)>) {
     if !(b > a) {
         return;
     }

@@ -40,7 +40,7 @@ export interface TripLeg {
   /** a ride's distance fare, perceived minutes */
   farePerceived: number;
   /** the wait before a ride: real minutes (half the combined headway of the useful trains there)
-   * and perceived */
+   * and perceived (more where some riders have no train due for hours, T-842) */
   waitMin: number;
   waitPerceived: number;
   /** a ride's fixed cost of the change onto it, perceived minutes (0 on the first ride; T-717) */

@@ -941,6 +941,7 @@ async function run() {
           const m = viewOf(c, p).net;
           held.delete(p);
           p.set_complexes(m.complex);
+          p.set_span(m.span ?? new Float32Array(0));
           if (p instanceof IntercityApi) {
             p.set_sampled(!job.exactMarket);
             // T-377: the market takes stations as longitude and latitude, each zone in its own frame

@@ -301,8 +301,17 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
     cars[i] = n.cars[l];
     o += p;
   });
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, lineN, stops, times, tph, cars, fare: n.fare, hopKm };
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, lineN, stops, times, tph, cars, fare: n.fare, hopKm, span: spanOf(n, nodeGlobal) };
   return { net, stLocal, nodeGlobal, pads: Uint32Array.from(pads) };
+}
+
+/** T-842: the whole network's span for the route nodes `nodeGlobal` names, period by period. */
+function spanOf(n: DemandNetwork, nodeGlobal: Uint32Array): Float32Array {
+  const all = 2 * n.stops.length, here = nodeGlobal.length;
+  if (!n.span || n.span.length !== PERIODS.length * all) return new Float32Array(0);
+  const out = new Float32Array(PERIODS.length * here);
+  for (let q = 0; q < PERIODS.length; q++) for (let r = 0; r < here; r++) out[q * here + r] = n.span[q * all + nodeGlobal[r]];
+  return out.some((v) => v !== 1) ? out : new Float32Array(0);
 }
 
 function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], market: boolean, marketKey: string, stations: number[], lines: number[], rounds: number, frameKey: string): Cluster {
@@ -339,9 +348,10 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
     cars[i] = n.cars[l];
     o += m;
   });
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, lineN, stops, times, tph, cars, fare: n.fare, hopKm };
+  const span = spanOf(n, nodeGlobal);
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, lineN, stops, times, tph, cars, fare: n.fare, hopKm, span };
   const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}`;
-  const sig = hashOf([head, stXY, complex, lineN, stops, times, tph, cars, hopKm]);
+  const sig = hashOf([head, stXY, complex, lineN, stops, times, tph, cars, hopKm, span]);
   const levelSig = [0, 1, 2].map((lev) => {
     const lt = new Float32Array(2 * nStops), lp = new Float32Array(lines.length);
     let a = 0;
@@ -353,6 +363,8 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
     });
     return hashOf([`${head}|level ${lev}`, stXY, complex, lineN, stops, lt, lp, cars, hopKm]);
   });
-  const psig = PERIODS.map((p) => levelSig[LEVEL[p.demand]]);
+  // T-842: a period's own span, where there is one
+  const nr = 2 * nStops;
+  const psig = PERIODS.map((p, q) => span.length ? hashOf([levelSig[LEVEL[p.demand]], span.subarray(q * nr, (q + 1) * nr)]) : levelSig[LEVEL[p.demand]]);
   return { cities, market, marketKey, net, lines: Uint32Array.from(lines), stLocal, nodeGlobal, nodeLocal, sig, psig };
 }

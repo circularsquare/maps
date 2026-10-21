@@ -166,6 +166,9 @@ pub const LEVELS: usize = 3;
 /// peak, evening, night): start and end hour, and which demand level schedules them.
 pub const PERIOD_HOURS: [(f64, f64); 5] = [(6.0, 10.0), (10.0, 16.0), (16.0, 20.0), (20.0, 24.0), (0.0, 6.0)];
 pub const PERIOD_LEVEL: [usize; 5] = [HIGH, MEDIUM, HIGH, MEDIUM, LOW];
+/// Each period's busiest hour against its mean hour (T-087): how riders arrive over it (the
+/// boarding account's shape, demand's crowding).
+pub const PEAK_HOUR_FACTOR: [f32; 5] = [1.4, 1.15, 1.4, 1.3, 1.5];
 /// Kinds of day (T-260): weekday 0, weekend 1. Game day 1, a new game's first, is a Monday, so
 /// days 6 and 7 of each week (Saturday, Sunday) are the weekend. The main thread's copy is
 /// app/src/game/days.ts.

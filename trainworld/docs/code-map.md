@@ -11,7 +11,7 @@ tests natively.
 - `src/track/`: the track model (T-040): geometry, costs, crossings, world frames (`frame.rs`,
   T-125), the network and its edits with undo (`world.rs`; blueprint and construct, T-055),
   run-time profiles, capacity, the boarding account (`boarding.rs`: each train's load and each
-  platform's crowd, T-164), saves, local time (`localtime.rs`, T-309), and `wasm.rs` (`TrackApi`,
+  platform's crowd, T-164), each stop's service span for demand (`span.rs`, T-842), saves, local time (`localtime.rs`, T-309), and `wasm.rs` (`TrackApi`,
   the clock worker's API, with the drawing tool's routes and the crossover tool's edit, T-338). In the default build.
   `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network; feature
   `track-bench` exports it to WASM. notes/T-040.md.

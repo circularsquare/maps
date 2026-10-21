@@ -30,7 +30,7 @@ pub const TO_WORK: [f32; PERIODS] = [0.70, 0.12, 0.06, 0.04, 0.08];
 /// Same for trips home.
 pub const TO_HOME: [f32; PERIODS] = [0.02, 0.18, 0.58, 0.16, 0.06];
 /// Busiest hour of a period against its mean hour (crowding is judged at the busiest hour).
-pub const PEAK_HOUR_FACTOR: [f32; PERIODS] = [1.4, 1.15, 1.4, 1.3, 1.5];
+pub const PEAK_HOUR_FACTOR: [f32; PERIODS] = crate::track::params::PEAK_HOUR_FACTOR;
 /// A 20 m car: seats and riders at crush load (a New York subway car: ~44 seats, ~160 at crush).
 pub const SEATS_PER_CAR: f32 = 44.0;
 pub const CRUSH_PER_CAR: f32 = 160.0;
@@ -176,6 +176,13 @@ pub(crate) struct Service {
     pub(crate) cars: Vec<f32>,
     /// Each demand station's complex (`demand_groups`), empty if none were given.
     pub(crate) group: Vec<u32>,
+    /// `Network::span` (T-842), empty for 1 everywhere.
+    pub(crate) span: Vec<f32>,
+}
+
+/// `span` if it is one per period and route node of `stops` stops, else empty (T-842).
+pub(crate) fn span_for(span: &[f32], stops: usize) -> Vec<f32> {
+    if span.len() == PERIODS * 2 * stops && span.iter().any(|&v| v != 1.0) { span.iter().map(|v| v.clamp(0.0, 1.0)).collect() } else { vec![] }
 }
 
 /// Equal to the bit (T-124: a kept period must be exactly what a fresh solve would give).
@@ -210,7 +217,18 @@ impl Service {
                 })
         };
         let same: [bool; LEVELS] = std::array::from_fn(level_same);
-        (0..PERIODS).filter(|&q| same[PERIOD_LEVEL[q]]).fold(0, |m, q| m | 1 << q)
+        let nr = 2 * self.stops.len();
+        let span_same = |q: usize| {
+            fn at(s: &Service, q: usize, nr: usize) -> Option<&[f32]> {
+                if s.span.is_empty() { None } else { Some(&s.span[q * nr..(q + 1) * nr]) }
+            }
+            match (at(self, q, nr), at(o, q, nr)) {
+                (None, None) => true,
+                (Some(a), Some(b)) => same_bits(a, b),
+                (Some(a), None) | (None, Some(a)) => a.iter().all(|&v| v == 1.0),
+            }
+        };
+        (0..PERIODS).filter(|&q| same[PERIOD_LEVEL[q]] && span_same(q)).fold(0, |m, q| m | 1 << q)
     }
 }
 
@@ -359,6 +377,8 @@ pub struct DemandApi {
     open_ms: f64,
     /// The complex of each station of the next `set_network` (`set_complexes`, T-161).
     complex_in: Vec<u32>,
+    /// The service span of the next `set_network` (`set_span`, T-842).
+    span_in: Vec<f32>,
     /// T-124: the periods (bit q) whose inputs the last `set_network` and `set_fares` left as they
     /// were, so their results were kept; and whether the layout was, so access was kept.
     pub(crate) same: u32,
@@ -431,6 +451,7 @@ impl DemandApi {
             stop_x: svc.stop_xy.iter().step_by(2).copied().collect(),
             stop_y: svc.stop_xy.iter().skip(1).step_by(2).copied().collect(),
             line_wrap: vec![false; nl],
+            span: svc.span.clone(),
         };
         for l in 0..nl {
             let (a, b) = (svc.line_off[l] as usize, svc.line_off[l + 1] as usize);
@@ -710,6 +731,7 @@ impl DemandApi {
             fare_km: vec![],
             open_ms: 0.0,
             complex_in: vec![],
+            span_in: vec![],
             same: 0,
             layout_same: false,
             reusable: false,
@@ -769,7 +791,7 @@ impl DemandApi {
         let (walk_home_zone, walk_work_zone, other_all) = no_rail_trips(&z, &gr, &base, &nr);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, other_all, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0, complex_in: vec![], same: 0, layout_same: false, reusable: false })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, other_all, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0, complex_in: vec![], span_in: vec![], same: 0, layout_same: false, reusable: false })
     }
 
     /// The station complex of each station of the networks `set_network` is given from now on
@@ -779,6 +801,14 @@ impl DemandApi {
     /// length: no complexes, only the walks within `xfer_walk_m`.
     pub fn set_complexes(&mut self, complex: &[u32]) {
         self.complex_in = complex.to_vec();
+    }
+
+    /// The service span of the networks `set_network` is given from now on (T-842): per period
+    /// and route node (`q * 2 x stops + r`, each line's stops in order then reversed, as `hopKm`),
+    /// the share of the period's riders there with a train due within their tolerance
+    /// (`track::span`). Empty or another length: 1 everywhere.
+    pub fn set_span(&mut self, span: &[f32]) {
+        self.span_in = span.to_vec();
     }
 
     /// Cells, zones, home -> work trips a day, the walk share of all trips with no rail at all,
@@ -822,6 +852,7 @@ impl DemandApi {
             tph: tph.chunks_exact(3).map(|c| [c[0], c[1], c[2]]).collect(),
             cars: cars.to_vec(),
             group,
+            span: span_for(&self.span_in, nstops),
         };
         let old = self.svc.as_ref().filter(|_| self.reusable);
         self.reusable = true;
@@ -1708,6 +1739,40 @@ mod tests {
         let tph = vec![20.0, 10.0, 4.0, 12.0, 6.0, 0.0];
         let cars = vec![10.0, 8.0];
         (api, xy, vec![17, 17], stops, times, tph, cars)
+    }
+
+    /// T-842: a span of 1 everywhere changes nothing to the bit; line b with half its midday riders
+    /// in a gap loses riders, and with none due at midday nobody boards it then, while the morning
+    /// (its own span 1) is untouched. A new span forgets only the periods it moved.
+    #[test]
+    fn the_service_span_prices_stops_with_no_train_due() {
+        let nr = 68;
+        let run = |span: Option<Vec<f32>>| {
+            let (mut api, xy, n, stops, times, tph, cars) = small();
+            if let Some(s) = &span {
+                api.set_span(s);
+            }
+            api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+            assert!(api.solve(0) && api.solve(1));
+            let b = |q: usize| -> f64 { api.board(q)[nr / 2..].iter().map(|&v| v as f64).sum() };
+            (api.board(0), api.board(1), b(1), api.summary(1)[2])
+        };
+        let with_b = |phi: f32| (0..PERIODS * nr).map(|i| if i / nr == 1 && i % nr >= nr / 2 { phi } else { 1.0 }).collect::<Vec<f32>>();
+        let base = run(None);
+        let ones = run(Some(vec![1.0; PERIODS * nr]));
+        assert!(same_bits(&base.0, &ones.0) && same_bits(&base.1, &ones.1));
+        let half = run(Some(with_b(0.5)));
+        let none = run(Some(with_b(0.0)));
+        assert!(same_bits(&base.0, &half.0) && same_bits(&base.0, &none.0), "the morning keeps its riders");
+        assert!(half.2 < 0.9 * base.2 && half.2 > 0.0, "b at midday: {} against {}", half.2, base.2);
+        assert_eq!(none.2, 0.0);
+        assert!(none.3 < half.3 && half.3 < base.3);
+        // T-124: only the midday is forgotten when b's midday span moves
+        let (mut api, xy, n, stops, times, tph, cars) = small();
+        api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+        api.set_span(&with_b(0.5));
+        api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+        assert_eq!(api.same, (1 << PERIODS) - 1 - 2);
     }
 
     /// T-161: snapshot complexes carried to demand stations; a demand station in two complexes

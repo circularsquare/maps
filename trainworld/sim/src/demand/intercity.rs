@@ -16,7 +16,7 @@
 //! data/packs/intercity.json, the joint commute gravity's input, and the tests' fixtures) opens as
 //! a closed world over its own zones with the ground curve alone.
 use super::{
-    api::{demand_groups, merge_stations, same_bits, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
+    api::{demand_groups, merge_stations, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
     clock::now_ms,
     days::{load_factor, share_out, share_ret, LONGER, WEEKDAY, WORK},
     kernel::*,
@@ -1644,6 +1644,8 @@ pub struct IntercityApi {
     fare_km: Vec<f32>,
     fare_per_km: f32,
     complex_in: Vec<u32>,
+    /// `DemandApi::set_span` (T-842).
+    span_in: Vec<f32>,
     /// T-409: per served zone, the track components its stations lie in.
     served_comp: Vec<Vec<u32>>,
     st_pat: StPattern,
@@ -1872,6 +1874,7 @@ impl IntercityApi {
             fare_km: vec![],
             fare_per_km: 0.,
             complex_in: vec![],
+            span_in: vec![],
             chunk: 0.,
             served_comp: vec![],
             st_pat: StPattern::default(),
@@ -2301,6 +2304,7 @@ impl IntercityApi {
             tph: tph.chunks_exact(3).map(|v| [v[0], v[1], v[2]]).collect(),
             cars: cars.to_vec(),
             group,
+            span: span_for(&self.span_in, stops.len()),
         };
         // T-124: as `DemandApi::set_network`, access is kept with the layout and a period with
         // its level's inputs
@@ -2335,6 +2339,10 @@ impl IntercityApi {
     }
     pub fn set_complexes(&mut self, complex: &[u32]) {
         self.complex_in = complex.to_vec();
+    }
+    /// `DemandApi::set_span` (T-842): riders between cities read the same service span.
+    pub fn set_span(&mut self, span: &[f32]) {
+        self.span_in = span.to_vec();
     }
     /// T-780: zone pairs sampled in chunks of `MARKET_CHUNK` trips (`solved_pairs`), or every pair
     /// solved; the next network sets its pairs up again.

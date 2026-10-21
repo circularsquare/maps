@@ -37,6 +37,10 @@ pub struct Network {
     /// rider may ride through it (`hop_min` at the last stop and `hop_back` at the first are the
     /// stand there). Empty: none.
     pub line_wrap: Vec<bool>,
+    /// T-842: per period and route node (`q * route nodes + r`, route nodes as `kernel::build_graph`
+    /// numbers them), the share of the riders arriving there whose wait for the next train is within
+    /// their tolerance (`track::span`). Empty: 1 everywhere.
+    pub span: Vec<f32>,
 }
 
 #[derive(Clone, Copy)]
@@ -140,6 +144,7 @@ pub fn synth_network() -> Network {
         stop_x: vec![],
         stop_y: vec![],
         line_wrap: vec![],
+        span: vec![],
     };
     for &(name, kind, pts) in LINES {
         let mut stops: Vec<u32> = vec![];

@@ -1410,6 +1410,7 @@ function buildSnapshot(): NetworkSnapshot {
     if (li[i + 3] !== 1) continue; // running lines only
     const id = li[i];
     const hopS: number[][][] = [], dwellS: number[][][] = [];
+    const span = a.line_span(id);
     for (let run = 0; run < 2; run++) {
       hopS.push([]);
       dwellS.push([]);
@@ -1425,6 +1426,7 @@ function buildSnapshot(): NetworkSnapshot {
       turnaroundS: li[i + 20], cars: li[i + 21],
       // T-798: a circle's riders ride on round through its first stop, standing the dwell there
       ...(a.line_loop(id) === 1 ? { wrapS: Math.max(1, li[i + 19]) } : {}),
+      ...(span.some((v) => v !== 1) ? { span: Array.from(span) } : {}),
     });
   }
   return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: { ...fares } };

@@ -19,6 +19,7 @@
 use super::net::Network;
 use super::params::*;
 use super::service::{LineSvc, Service, Trip};
+use super::span::{self, Mask};
 use std::collections::HashMap;
 
 /// Seats and riders at crush load per 20 m car: the demand kernel's `SEATS_PER_CAR` and
@@ -87,6 +88,19 @@ pub struct Arrivals {
     pub per: [f64; PERIODS],
     pub c: [f64; PERIODS],
     pub day: f64,
+    /// T-842b: riders arrive only as the tolerance lets them (`span::Mask`: none while no train is
+    /// due for hours), each period's total kept; None: over the whole period by its shape.
+    masked: Option<Box<Masked>>,
+}
+
+#[derive(Clone, Debug, Default)]
+struct Masked {
+    m: Mask,
+    /// per period, the mask's share over its riders by this platform's shape (0: no train due all
+    /// period, and the period's riders arrive as if unmasked)
+    norm: [f64; PERIODS],
+    /// riders arrived from the start of the day to each segment's start
+    pre: Vec<f64>,
 }
 
 impl Arrivals {
@@ -95,13 +109,56 @@ impl Arrivals {
             let (h0, h1) = PERIOD_HOURS[p];
             shape_strength(SHAPE[p], h1 - h0, peak[p])
         });
-        Arrivals { per, c, day: per.iter().sum() }
+        Arrivals { per, c, day: per.iter().sum(), masked: None }
+    }
+    /// `new`, with riders spread only where `m` lets them arrive; a mask letting everyone arrive
+    /// all day changes nothing.
+    pub fn with_mask(per: [f64; PERIODS], peak: &[f64; PERIODS], m: Mask) -> Self {
+        let mut a = Self::new(per, peak);
+        let ns = m.t.len();
+        if ns == 0 || m.s.iter().all(|&s| s == 1.0) {
+            return a;
+        }
+        let ends: Vec<f64> = (0..ns).map(|i| if i + 1 < ns { m.t[i + 1] } else { DAY }).collect();
+        let mut norm = [0.0; PERIODS];
+        for i in 0..ns {
+            let p = period_at(m.t[i]);
+            norm[p] += m.s[i] * (a.w(p, ends[i]) - a.w(p, m.t[i]));
+        }
+        let mut x = Masked { m, norm, pre: Vec::with_capacity(ns) };
+        let mut tot = 0.0;
+        for i in 0..ns {
+            x.pre.push(tot);
+            tot += a.seg(&x, i, x.m.t[i], ends[i]);
+        }
+        a.day = tot;
+        a.masked = Some(Box::new(x));
+        a
+    }
+    /// Period `p`'s shape: the share of its riders (unmasked) arrived by `s` seconds into the day.
+    fn w(&self, p: usize, s: f64) -> f64 {
+        let (a, b) = (PERIOD_HOURS[p].0 * 3600.0, PERIOD_HOURS[p].1 * 3600.0);
+        shape_cum(SHAPE[p], self.c[p], ((s - a) / (b - a)).clamp(0.0, 1.0))
+    }
+    /// The mask's weight on riders in segment `i`.
+    fn eff(&self, x: &Masked, i: usize) -> f64 {
+        let p = period_at(x.m.t[i]);
+        if x.norm[p] > 1e-9 { x.m.s[i] / x.norm[p] } else { 1.0 }
+    }
+    /// Riders arriving in segment `i` between `u0` and `u1` seconds into the day.
+    fn seg(&self, x: &Masked, i: usize, u0: f64, u1: f64) -> f64 {
+        let p = period_at(x.m.t[i]);
+        self.per[p] * self.eff(x, i) * (self.w(p, u1) - self.w(p, u0))
     }
     /// Riders arrived since the start of game day 0 (negative before it).
     pub fn cum(&self, t: f64) -> f64 {
         let d = (t / DAY).floor();
         let s = t - d * DAY;
         let mut tot = d * self.day;
+        if let Some(x) = &self.masked {
+            let i = x.m.t.partition_point(|&u| u <= s).saturating_sub(1);
+            return tot + x.pre[i] + self.seg(x, i, x.m.t[i], s);
+        }
         for p in 0..PERIODS {
             let (a, b) = (PERIOD_HOURS[p].0 * 3600.0, PERIOD_HOURS[p].1 * 3600.0);
             if s >= b {
@@ -117,7 +174,11 @@ impl Arrivals {
         let p = period_at(t);
         let (a, b) = (PERIOD_HOURS[p].0 * 3600.0, PERIOD_HOURS[p].1 * 3600.0);
         let s = t.rem_euclid(DAY);
-        self.per[p] / (b - a) * (1.0 + self.c[p] * shape_g(SHAPE[p], ((s - a) / (b - a)).clamp(0.0, 1.0)))
+        let r = self.per[p] / (b - a) * (1.0 + self.c[p] * shape_g(SHAPE[p], ((s - a) / (b - a)).clamp(0.0, 1.0)));
+        match &self.masked {
+            Some(x) => r * self.eff(x, x.m.t.partition_point(|&u| u <= s).saturating_sub(1)),
+            None => r,
+        }
     }
 }
 
@@ -1049,8 +1110,17 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
     trips.sort_by(|a, b| a.dep.total_cmp(&b.dep));
     let m = trips.len();
     let stop_dep: [Vec<f64>; LEVELS] = std::array::from_fn(|lev| ls.runs[r].prof[lev].dep.clone());
+    // T-842b: riders arrive while a train is due within their tolerance, by the steady day's
+    // departures, as demand prices them
+    let deps = svc.lattice(net, l).map(|lat| span::stop_deps(ls, &lat, r)).filter(|d| d.len() == n);
     let arrivals: Vec<Arrivals> = (0..n)
-        .map(|k| Arrivals::new(std::array::from_fn(|p| lr.board[(p * 2 + r) * n + k]), peak))
+        .map(|k| {
+            let per = std::array::from_fn(|p| lr.board[(p * 2 + r) * n + k]);
+            match &deps {
+                Some(d) => Arrivals::with_mask(per, peak, span::stop_mask(&d[k])),
+                None => Arrivals::new(per, peak),
+            }
+        })
         .collect();
     let alpha = alight_shares(lr, r, wrap);
     let ride_km = ride_km(&alpha, &ls.runs[r].stop_s, n);
@@ -1212,6 +1282,38 @@ mod tests {
             assert!((d - a.rate(t)).abs() < 1e-6, "{t}: {d} {}", a.rate(t));
         }
         assert!((a.cum(DAY) - a.cum(0.0) - 2850.0).abs() < 1e-9);
+    }
+
+    /// T-842b: a peak-only stop's riders arrive only while a train is due within their tolerance,
+    /// each period's total kept; a stop served all day arrives as before to the bit.
+    #[test]
+    fn masked_arrivals_keep_each_period_and_skip_the_gaps() {
+        let per = [1000.0, 600.0, 900.0, 300.0, 50.0];
+        let peak = [1.4, 1.15, 1.4, 1.3, 1.5];
+        let every = |from: f64, to: f64| -> Vec<f64> { (0..).map(|i| from + 900.0 * i as f64).take_while(|&t| t <= to).collect() };
+        let all = Arrivals::with_mask(per, &peak, span::stop_mask(&every(0.0, DAY - 1.0)));
+        let plain = Arrivals::new(per, &peak);
+        for t in [3.0, 7.2, 13.0, 21.5] {
+            assert_eq!(all.cum(t * 3600.0).to_bits(), plain.cum(t * 3600.0).to_bits());
+        }
+        let mut deps = every(6.0 * 3600.0, 10.0 * 3600.0);
+        deps.extend(every(16.0 * 3600.0, 20.0 * 3600.0));
+        let a = Arrivals::with_mask(per, &peak, span::stop_mask(&deps));
+        assert!((a.cum(DAY) - a.cum(0.0) - 2850.0).abs() < 1e-6);
+        for (p, &(h0, h1)) in PERIOD_HOURS.iter().enumerate() {
+            let got = a.cum(h1 * 3600.0) - a.cum(h0 * 3600.0);
+            // the evening has no train within 6 h: its riders arrive as if unmasked
+            assert!((got - per[p]).abs() < 1e-6, "period {p}: {got}");
+        }
+        // nobody arrives at 10:30 (5.5 h to the next train is past most tolerances; a few)
+        assert!(a.rate(10.5 * 3600.0) < 0.2 * plain.rate(10.5 * 3600.0));
+        assert!(a.rate(10.1 * 3600.0) < 0.05 * plain.rate(10.1 * 3600.0), "5.9 h to the next train");
+        assert!(a.rate(15.8 * 3600.0) > plain.rate(15.8 * 3600.0), "the midday's riders arrive near its end");
+        // within the tolerance ramp the share steps once a minute: one second either side of a step
+        for t in [7.2 * 3600.0, 13.0 * 3600.0 + 30.0, 15.9 * 3600.0, 2.0 * 3600.0 + 30.0] {
+            let d = (a.cum(t + 1.0) - a.cum(t - 1.0)) / 2.0;
+            assert!((d - a.rate(t)).abs() < 1e-6, "{t}: {d} {}", a.rate(t));
+        }
     }
 
     /// A - B - C, a line every 6 minutes at high demand.

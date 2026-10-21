@@ -521,6 +521,10 @@ export interface SnapshotLine {
   wrapS?: number;
   /** cars per train (20 m each) */
   cars: number;
+  /** T-842: per period, run and stop (`[(period * 2 + run) * n + k]`, each run's stops in its
+   * travel order), the share of the period's riders there with a train due within their tolerance
+   * (`TrackApi.line_span`); absent when it is 1 everywhere */
+  span?: number[];
 }
 
 // ---------- demand workers: a small pool per city (T-026), later one long-distance ----------

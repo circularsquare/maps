@@ -139,7 +139,7 @@ interface Service {
   /** `complex`: the station's complex (T-161); absent = a complex of its own */
   stations: { id: string; x: number; y: number; complex?: number }[];
   /** `wrapS`: a circle's stand at its first stop, riding on round (T-798) */
-  lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; dwellS: number[][][]; wrapS?: number; cars: number }[];
+  lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[] }[];
 }
 
 /** A day's corridors summed over the periods (`DemandClient.corridorSums`): in full, and as if no
@@ -453,7 +453,7 @@ function serviceFromSnapshot(s: NetworkSnapshot): Service {
     frame: s.frame ?? LEGACY_FRAME,
     fare: s.fare ?? { base: 2, perKm: 0 }, // legacy fixed 6 perceived minutes
     stations: s.stations.map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex })),
-    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars })),
+    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span && !perfOff("span") ? { span: l.span } : {}) })),
   };
 }
 
@@ -474,7 +474,9 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     cars: new Float32Array(lines.map((l) => l.cars)),
     fare: svc.fare,
     hopKm: new Float32Array(2 * nStops),
+    span: lines.some((l) => l.span) ? new Float32Array(PERIODS.length * 2 * nStops).fill(1) : new Float32Array(0),
   };
+  const span = net.span!;
   const layout: Solve["layout"] = [];
   let a = 0;
   for (const l of lines) {
@@ -496,6 +498,9 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
       const i = run === 0 ? k : n - 1 - k, j = run === 0 ? k + 1 : n - 2 - k;
       const from = svc.stations[index.get(l.stops[i])!], to = svc.stations[index.get(l.stops[j])!];
       net.hopKm[2 * a + run * n + k] = l.hopKm?.[run]?.[k] ?? Math.hypot(to.x - from.x, to.y - from.y) / 1000;
+    }
+    if (l.span?.length === PERIODS.length * 2 * n) {
+      for (let q = 0; q < PERIODS.length; q++) for (let r = 0; r < 2 * n; r++) span[q * 2 * nStops + 2 * a + r] = l.span[q * 2 * n + r];
     }
     a += n;
   }

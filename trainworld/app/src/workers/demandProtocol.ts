@@ -40,6 +40,10 @@ export interface DemandNetwork {
   fare: { base: number; perKm: number };
   /** km per route node: each line's forward stops then reverse stops, 0 at each end */
   hopKm: Float32Array;
+  /** T-842 (`DemandApi.set_span`): per period and route node (`q * route nodes + r`, route nodes
+   * as `hopKm`), the share of riders with a train due within their tolerance; empty or absent:
+   * 1 everywhere */
+  span?: Float32Array;
 }
 
 /** T-377: a zone's part of the world market (`data/packs/<id>.market.json`). */

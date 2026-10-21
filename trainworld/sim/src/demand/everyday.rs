@@ -2205,6 +2205,10 @@ impl EverydayApi {
     pub fn set_complexes(&mut self, complex: &[u32]) {
         self.engine.set_complexes(complex);
     }
+    /// `DemandApi::set_span` (T-842).
+    pub fn set_span(&mut self, span: &[f32]) {
+        self.engine.set_span(span);
+    }
     pub fn set_network(
         &mut self,
         xy: &[f32],
