@@ -102,6 +102,8 @@ Briefs carry only the task; these hold for every agent.
   her to confirm rail facts. Design questions with a sensible default (which cities to suggest, whether
   a click moves the camera, how old saves migrate) are yours too: decide, record in DECISIONS.md and
   tell her in the report (Anita, 2026-10-19). Ask only where the choice changes what the game is.
+  Decide and show her after, visible calls included (2026-10-21); she playtests herself, so no
+  gameplay checks after every batch, and a slip gets a fix rather than a new standing process.
 
 ## Before a commit (orchestrator)
 
