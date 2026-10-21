@@ -379,9 +379,11 @@ pointer.
 ## Zone outlines
 
 [T-131, T-139, T-310; `map/cityBoundaries.ts`, `map/boundaryGeometry.ts`] Each registered pack's
-footprint (its dissolved county boundary) has a thin solid outline at regional zooms, fading
-between zoom 8.5 and 10.5. The focused zone keeps a thin boundary at closer zooms (darker outside
-stroke, lighter inside) and a subtle shade darkens the basemap outside its exact footprint,
+footprint (its dissolved county boundary) has a thin solid outline (0.7 px, 36% opacity) at
+regional zooms, fading between zoom 8.5 and 10.5. A border two zones share is drawn once, as a line
+of the first zone loaded, so every edge has the same weight (`OutlineEdges`). The focused zone keeps
+a thin boundary at closer zooms (darker outside stroke at 36%, lighter inside at 14%), and draws
+the borders it shares itself, so a neighbour's outline leaves those out. A subtle shade darkens the basemap outside its exact footprint,
 enclaves included. These are demand areas, not municipal limits. They sit under labels and game
 overlays, never take clicks, and survive basemap style changes. A change of focus swaps the shade
 in one step, never through an empty frame; the footprints are ready from startup.

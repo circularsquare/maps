@@ -4,13 +4,13 @@
 // view comes near them (their registry boxes say where they are); a zone's footprint and outside
 // shade are built when it is focused or near the view, never for every registered zone.
 import { effect } from "@preact/signals";
-import type { Feature, FeatureCollection, MultiPolygon } from "geojson";
+import type { FeatureCollection, MultiPolygon } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { cityBoundary } from "../game/boundaries";
 import { activeCity, zonesTouching } from "../game/cities";
 import { outsidePaint, SHADES, shadeColours } from "../game/shades";
 import { shade } from "../game/ui";
-import { cityGeometry, outsideCity } from "./boundaryGeometry";
+import { cityGeometry, OutlineEdges, outsideCity } from "./boundaryGeometry";
 
 const SHADE = "tw-city-outside";
 const FOCUS = "tw-city-focus";
@@ -64,7 +64,7 @@ export function startCityBoundaries(map: MlMap): () => void {
   };
   const focus = async (id: string) => {
     const mine = ++request;
-    if (map.getLayer(OUTLINES)) map.setFilter(OUTLINES, ["!=", ["get", "id"], id]);
+    redraw();
     const known = ready.get(id);
     if (known) return show(id, known.city);
     // Never shade against the previous city while the new footprint is loading.
@@ -79,9 +79,13 @@ export function startCityBoundaries(map: MlMap): () => void {
     }
   };
 
-  // the outlines drawn, by zone; the source is set again as each arrives
-  const outlines = new Map<string, Feature<MultiPolygon>>();
+  // the outlines drawn, shared borders once; the source is set again as each zone arrives
+  const edges = new OutlineEdges();
   const asked = new Set<string>();
+  const drawn = () => edges.lines(activeCity.peek());
+  const redraw = () => {
+    if (edges.size) (map.getSource(OUTLINES) as GeoJSONSource | undefined)?.setData(drawn());
+  };
   const near = () => {
     const b = map.getBounds();
     return zonesTouching(b.getWest(), b.getSouth(), b.getEast(), b.getNorth()).map((c) => c.id);
@@ -96,8 +100,8 @@ export function startCityBoundaries(map: MlMap): () => void {
       asked.add(id);
       geometry(id).then((g) => {
         if (!alive) return;
-        outlines.set(id, { type: "Feature", properties: { id }, geometry: g });
-        (map.getSource(OUTLINES) as GeoJSONSource | undefined)?.setData({ type: "FeatureCollection", features: [...outlines.values()] });
+        edges.add(id, g);
+        redraw();
       }, (error) => { asked.delete(id); console.warn("City outline unavailable", error); });
     }
   };
@@ -109,21 +113,22 @@ export function startCityBoundaries(map: MlMap): () => void {
       id: SHADE, type: "fill", source: SHADE,
       paint: shadePaint(),
     }, before);
-    if (!map.getSource(OUTLINES)) map.addSource(OUTLINES, { type: "geojson", data: { type: "FeatureCollection", features: [...outlines.values()] } });
+    if (!map.getSource(OUTLINES)) map.addSource(OUTLINES, { type: "geojson", data: drawn() });
     if (!map.getLayer(OUTLINES)) map.addLayer({
       id: OUTLINES,
       type: "line",
       source: OUTLINES,
       maxzoom: OUTLINE_MAX_ZOOM,
+      layout: { "line-join": "round", "line-cap": "round" },
       paint: {
         "line-color": "#73798b",
-        "line-width": 0.8,
-        "line-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0.5, 10.5, 0],
+        "line-width": 0.7,
+        "line-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0.36, 10.5, 0],
       },
     }, before);
     if (!map.getSource(FOCUS)) map.addSource(FOCUS, { type: "geojson", data: empty });
     // MapLibre polygon strokes use positive offsets for insets and negative for outsets.
-    for (const [id, offset, opacity] of [[INNER, 0.45, 0.18], [OUTER, -0.45, 0.48]] as const) {
+    for (const [id, offset, opacity] of [[INNER, 0.45, 0.14], [OUTER, -0.45, 0.36]] as const) {
       if (!map.getLayer(id)) map.addLayer({
         id, type: "line", source: FOCUS,
         layout: { "line-join": "round", "line-cap": "round" },
