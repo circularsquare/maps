@@ -116,7 +116,7 @@ name, which every join rewrites; the game shows its own (T-825, `app/src/game/zo
 - **Aliases** are every other name search finds a zone by: the hand-set ones, the registry's name
   and its parts, and the six biggest cities and towns (20,000 people or more) in the zone's place list with
   their OSM other names (`app/src/game/zone-aliases.json`, written by `pipeline/zone_aliases.py`
-  from `data/packs/<id>.places.json`; rerun after a join adds zones). Both the map search and the
+  from `data/packs/<id>.places.json`; run by `world_run.py join`). Both the map search and the
   new game sheet match aliases ignoring case and accents, show the zone's own name with "matched
   The Hague" beside it, and rank a match through an alias with one through the name, the name
   first among equals.

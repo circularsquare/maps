@@ -574,8 +574,12 @@ rect.now { fill-opacity: .45; }
 /* T-353: the Select tool's bar at the map's top centre, level with the demand buttons. Lower on narrower
    maps, where the demand buttons with the status tag (T-349) and the search box take the row. */
 .blueprint-bar { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 10px;
-  padding: 6px 8px 6px 12px; background: var(--bg); border: 1px solid var(--rule); white-space: nowrap; }
-.blueprint-bar .count { min-width: 76px; }
+  padding: 6px 8px 6px 12px; background: var(--bg); border: 1px solid var(--rule); white-space: nowrap;
+  /* T-841: 260 px kept clear each side (the tool panel, the debug panel); a narrower map wraps the bar's groups onto more rows */
+  flex-wrap: wrap; justify-content: center; width: max-content; max-width: max(300px, calc(100% - 520px)); }
+.blueprint-bar { gap: 6px 8px; }
+.blueprint-bar .count { min-width: 58px; }
+.blueprint-bar .btn.lv { min-width: 27px; }
 @container map-column (max-width: 1350px) { .blueprint-bar { top: 46px; } }
 @container map-column (max-width: 1000px) { .blueprint-bar { top: 80px; } }
 @container map-column (max-width: 680px) { .blueprint-bar { top: 114px; } }

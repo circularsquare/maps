@@ -270,7 +270,8 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   hovers), each greyed when it would change nothing. For either kind: Remove (key Delete) and
   Clear. The Build tab shows only "N disabled" while any blueprint is disabled, whatever the tool.
   Disabling and enabling are one undoable edit each (Ctrl+Z). Esc clears the pick, then leaves the
-  tool; leaving also clears it.
+  tool; leaving also clears it. The bar is about 580 px wide with the elevation buttons and keeps
+  260 px clear each side of the map, wrapping onto more rows where the map is narrower [T-841].
 - **Elevation** [T-815; `TrackApi.set_edges_level`]: a button puts every picked blueprint stretch
   on that elevation, one undoable edit: each piece's corners as the track inspector's "Elevation of
   the stretch" does for one, and every node all of whose track is picked (a joint, a loose end, a
@@ -309,7 +310,9 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   undoable edit, Escape puts it back.
 - **The track inspector** lists the corners with each curve's speed, a radius stepper (100 to 1,500
   m, then auto), an elevation stepper and Remove; Add corner inserts one midway along the selected
-  interval; it can put all corners at one elevation ("Elevation of the stretch"). It has Construct
+  interval; "Elevation of the stretch" puts the piece on one elevation: all its corners, or for a
+  straight piece with none its ends, as the selection bar does for one piece (`edgesLevel`; a
+  notice says when it cannot change) [T-841]. It has Construct
   and the elevation buttons for its piece [T-244], and Remove. On double track (blueprint or
   built) the title carries **Double up** [T-708; `DoubleUp` in `ui/inspector/others.tsx`], an
   icon of two rails and a plus: a click adds the express pair beside its run as blueprint

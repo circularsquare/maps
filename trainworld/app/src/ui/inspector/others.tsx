@@ -576,7 +576,13 @@ function Shape({ edge, version }: { edge: number; version: number }) {
     else r = RADII.find((x) => x > cur) ?? 0;
     void put(pis.map((q, k) => (k === i ? { ...q, radius: r >= RADII[RADII.length - 1] ? 0 : r } : q)));
   };
-  const level = pis.length && pis.every((p) => p.level === pis[0].level) ? pis[0].level : null;
+  // T-841: a straight piece has no corners, so its elevation is its ends', moved by edgesLevel as in the selection bar
+  const level = pis.length ? (pis.every((p) => p.level === pis[0].level) ? pis[0].level : null) : track && track.levelMin === track.levelMax ? track.levelMin : null;
+  const setLevel = async (l: Level) => {
+    if (pis.length) return void edit({ op: "edgeLevel", edge, level: l });
+    const a = await edit({ op: "edgesLevel", edges: [edge], level: l }, true);
+    if (!a.ok) say(`This track cannot go to elevation ${levelLabel(l)}.`, true);
+  };
   return (
     <>
       <div class="h">
@@ -606,14 +612,14 @@ function Shape({ edge, version }: { edge: number; version: number }) {
           </fieldset>}
         </>)}
       </div>
-      {pis.length > 0 && <><div class="h">Elevation of the stretch</div>
+      <div class="h">Elevation of the stretch</div>
       <div class="group levels">
         {[3, 2, 1, 0, -1, -2, -3].map((l) => (
-          <button disabled={busy} class={"btn" + (l === level ? " on" : "")} onClick={() => void edit({ op: "edgeLevel", edge, level: l as Level })}>
+          <button disabled={busy} class={"btn" + (l === level ? " on" : "")} onClick={() => void setLevel(l as Level)}>
             {levelLabel(l)}
           </button>
         ))}
-      </div></>}
+      </div>
     </>
   );
 }

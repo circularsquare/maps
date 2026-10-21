@@ -1111,6 +1111,12 @@ class Run:
                 print(f"  warning: coarse zone outlines not rebuilt: {str(tail)[-200:]}", flush=True)
         except Exception as e:
             print(f"  warning: coarse zone outlines not rebuilt: {e}", flush=True)
+        try:  # T-836: search aliases for the new zones; a failure only leaves zone-aliases.json as it was
+            ok, _, tail = self.step("zone_aliases", [], f"{L}.aliases.log")
+            if not ok:
+                print(f"  warning: zone search aliases not rebuilt: {str(tail)[-200:]}", flush=True)
+        except Exception as e:
+            print(f"  warning: zone search aliases not rebuilt: {e}", flush=True)
 
     def solve(self, u, new, L, again=False):
         """One solve unit's joint solve (`u`: name, members, fixed): members back to res-9, solved

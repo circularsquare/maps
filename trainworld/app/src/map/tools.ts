@@ -105,6 +105,8 @@ export class Tools {
   readonly real: RealSnap;
   /** the request `lastPreview` answers, as JSON */
   private previewKey = "";
+  /** the newest request asked for; an older one's answer landing late is dropped (T-830) */
+  private wantKey = "";
   /** where the last station of this session was placed (lng, lat), T-312 */
   private lastPlaced: [number, number] | null = null;
   private box: HTMLDivElement;
@@ -137,8 +139,8 @@ export class Tools {
     map.on("idle", () => tool.peek() === "station" && warmStreetNames(map));
     effect(() => { buildLevel.value; trackCount.value; highSpeed.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
     // T-727d: the snap switch's routes along the real network
-    this.real = new RealSnap(map, overlay, client, (r) => this.realReq(r), (a) => {
-      if (a) return this.start && this.showPreview(a, "");
+    this.real = new RealSnap(map, overlay, client, (r) => this.realReq(r), (a, req) => {
+      if (a) return this.start && this.showPreview(a, req ? JSON.stringify(req) : "");
       this.lastPreview = null;
       this.overlay.renderer.setPreview(null);
       this.overlay.invalidate();
@@ -404,12 +406,14 @@ export class Tools {
       if (rc?.kind === "refuse") say("No real track joins these points.", true);
       return;
     }
-    const p = this.lastPreview;
     const req = rc ? this.realReq(rc.route, s) : this.routeReq(this.endOf(s));
+    // T-830: the quote of this very request; an answer for an earlier pointer position (a slow
+    // preview landing late) would give another segment's length and cost
+    const p = this.previewKey === JSON.stringify(req) ? this.lastPreview : null;
     const a = await edit({ op: "route", ...req });
     this.placing = false;
     if (!a.ok || this.start !== from) return;
-    say(p ? `Blueprint added: ${distance(p.lengthM)}, ${money(p.cost * 1e6)} to construct.` : "Blueprint added.");
+    say(p ?`Blueprint added: ${distance(p.lengthM)}, ${money(p.cost * 1e6)} to construct.` : "Blueprint added.");
     if (!chain || this.endRun || a.node === undefined) {
       this.reset();
       return;
@@ -467,8 +471,9 @@ export class Tools {
     if (Math.hypot(ax - bx, ay - by) < 3) return;
     const req = this.routeReq(this.endOf(h));
     const key = JSON.stringify(req);
+    this.wantKey = key;
     this.client.preview(req, (a) => {
-      if (this.start && !this.real.active) this.showPreview(a, key);
+      if (this.start && !this.real.active && this.wantKey === key) this.showPreview(a, key);
     });
   }
 

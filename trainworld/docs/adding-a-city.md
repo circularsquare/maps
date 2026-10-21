@@ -88,7 +88,10 @@ background and wait once for the process.
   production build exists for each shipped pack (it copies the registry's packs, so nothing more
   needs listing). Last, `zone_outlines.py` rewrites `data/packs/outlines.json`, the coarse outline of
   every registered zone (T-800, 13 s; a failure only prints a warning and leaves the old file, so
-  the new zones have no outline until their pack loads). Status `shipped`.
+  the new zones have no outline until their pack loads), then `zone_aliases.py` rewrites
+  `app/src/game/zone-aliases.json`, the search aliases of every zone (T-836, seconds; the same
+  warning-only failure, so the new zones are found by their own name only until it is rerun).
+  Status `shipped`.
 - **Clean up**: the region's `.osm.pbf` files and the OSM caches the runner made go once the
   region is done (`--keep-downloads` keeps them); caches already on disk before, and the small
   `.admin.fgb`, stay.
@@ -347,7 +350,8 @@ For a batch outside the Northeast, `python pipeline/register.py <ids> --market -
 section and section 7's market and local-trips steps in one call, with no need to read the
 registry (T-441). A zone registered by hand also needs `python pipeline/zone_outlines.py`, which
 rewrites `data/packs/outlines.json`, the coarse outline of every registered zone the map draws
-before the zone's own boundary has loaded (T-800); `world_run.py join` runs it.
+before the zone's own boundary has loaded (T-800); `world_run.py join` runs it, then
+`pipeline/zone_aliases.py` (T-836), which a zone registered by hand needs too.
 
 - Append to `cities`: `id`, `name`, `origin` (**exactly** the `build_city.py` origin, since it is
   the pack's frame), `center` (usually the origin), `zoom` 11.2, `utcOffset`, `market`.

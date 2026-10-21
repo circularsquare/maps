@@ -76,8 +76,8 @@ export class RealSnap {
     private client: ClockClient,
     /** the route request (ends, corners, track) for a real route, as tools.ts builds them */
     private request: (r: RealRoute) => { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean },
-    /** show a preview answer as the drawing tool's own (null: none) */
-    private show: (a: PreviewAnswer | null) => void,
+    /** show a preview answer as the drawing tool's own (null: none), with the request it answers */
+    private show: (a: PreviewAnswer | null, req?: object) => void,
     private redraw: () => void,
   ) {
     map.on("moveend", () => {
@@ -310,11 +310,12 @@ export class RealSnap {
     s.phase = "preview";
     if (this.last) Object.assign(this.last, { fitMs: m.ms, corners: pis.length, worst: m.worst });
     const t = performance.now();
-    this.client.preview(this.request(s.route), (a) => {
+    const req = this.request(s.route);
+    this.client.preview(req, (a) => {
       if (this.spot !== s) return;
       s.preview = a;
       if (this.last) this.last.previewMs = performance.now() - t;
-      this.show(a);
+      this.show(a, req);
       this.finish(s, "done");
     });
   }
