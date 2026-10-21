@@ -474,6 +474,7 @@ function buildState(): ClockState {
       shift: a.line_shift(id),
       // in the state, not asked for after it, so the line panel never draws new stops with old gaps (T-648)
       passed: [...a.passed_stations(id)],
+      reversals: [...a.line_reversals(id)],
     });
   }
   // Keyframes: phase tables, profile meta, and run 0 of every line resampled.

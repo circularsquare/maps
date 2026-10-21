@@ -395,6 +395,10 @@ rect.now { fill-opacity: .45; }
 .passed-confirm { display: flex; gap: 6px; margin: 6px 0 0 28px; }
 .stops .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stops .t { margin-left: 8px; }
+/* T-797: trains reverse at this stop; the map's reversal icon in small */
+.stops .rev-stop { display: inline-flex; vertical-align: -3px; margin-left: 6px; width: 16px; height: 16px; border-radius: 50%;
+                   background: #f2b705; color: #1a1a1a; }
+.stops .rev-stop svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .stops .stop-more { flex: none; width: 10px; font-size: 12px; text-align: center; color: var(--muted); }
 .stops .n { width: 40px; text-align: right; }
 /* flat junctions and crossings on the route (T-629): between the dot above and the next one */
@@ -647,6 +651,19 @@ rect.now { fill-opacity: .45; }
              margin: calc(var(--ms) * -0.325) 0 0 calc(var(--ms) * -0.325); background: var(--mk-reroute-fill); border: 2px solid var(--mk-reroute-ring);
              box-shadow: none; opacity: 0.8; z-index: 1; }
 .stop-mark.cut { background: var(--mk-cut-fill); border-color: var(--mk-cut-ring); opacity: 0.6; z-index: 0; }
+/* T-797: adding it makes trains reverse there; grey like a reroute, with a U-turn inside */
+.stop-mark.reverse { width: calc(var(--ms) * 0.65); height: calc(var(--ms) * 0.65);
+             margin: calc(var(--ms) * -0.325) 0 0 calc(var(--ms) * -0.325); background: var(--mk-reroute-fill);
+             border: 2px dashed var(--mk-reroute-ring); box-shadow: none; opacity: 0.85; z-index: 1; }
+/* reversal icons (T-797, map/reversalMarks.ts): one size at every zoom, floating above the station */
+.rev-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+.rev-mark { position: absolute; left: 0; top: 0; width: 30px; height: 30px; margin: -42px 0 0 -15px; box-sizing: border-box;
+            border-radius: 50%; background: #f2b705; color: #1a1a1a; border: 2px solid #1a1a1a;
+            box-shadow: 0 0 0 2px #fff; pointer-events: auto; cursor: default; }
+.rev-mark svg { display: block; width: 100%; height: 100%; }
+.rev-mark::after { content: ""; position: absolute; left: 50%; top: 100%; margin: 2px 0 0 -1px; width: 2px; height: 8px; background: #1a1a1a; }
+.rev-marks.pass .rev-mark { pointer-events: none; }
+.rev-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap; }
 .stop-edit-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .stop-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap !important; }
 

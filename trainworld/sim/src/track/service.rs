@@ -23,6 +23,11 @@ pub struct Run {
     /// Per stop: index into `nodes` and where the train's middle stands.
     pub stop_idx: Vec<u32>,
     pub stop_s: Vec<f64>,
+    /// Per stop: trains reverse there (T-797), standing the line's turnaround; and how far on the
+    /// train's middle leaves from (`stop_s + jump`: the same place on the ground, past the turn in
+    /// this run's unfolded offsets; 0 where it does not reverse).
+    pub turn: Vec<bool>,
+    pub jump: Vec<f64>,
     /// Speed-limit breakpoints `[s, v]`, widened by half the train length.
     pub limits: Vec<[f64; 2]>,
     /// No capacity delay.
@@ -333,17 +338,8 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
     if rev {
         stops.reverse();
     }
-    let mut k = 0;
-    for &st in &stops {
-        while k < run.nodes.len() && run.nodes[k] != st {
-            k += 1;
-        }
-        if k == run.nodes.len() {
-            return None;
-        }
-        run.stop_idx.push(k as u32);
-        k += 1;
-    }
+    let turns = net.path_reversals(&run.segs);
+    run.stop_idx = super::net::match_stops(&run.nodes, &stops, &turns)?.into_iter().map(|k| k as u32).collect();
     let node_s: Vec<f64> = run.stop_idx.iter().map(|&i| run.node_s[i as usize]).collect();
     for (j, &st) in stops.iter().enumerate() {
         let node_at = |i: usize| node_s[i];
@@ -352,6 +348,18 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
         // Unused blueprints do not move the stops of a constructed service. Planned
         // services still preview the complete planned station geometry.
         let ports = if running { net.built_ports(st) } else { net.node_ports[st as usize].n as usize };
+        let turn = turns.contains(&(run.stop_idx[j] as usize));
+        run.turn.push(turn);
+        run.jump.push(0.0);
+        if turn {
+            // T-797: the train's middle stands d short of the node on arrival and d past it in
+            // the unfolded offsets on leaving, the same place on the ground.
+            let d = if ports == 1 { net.node_platform[st as usize] as f64 / 2.0 } else { train_len / 2.0 };
+            let d = d.min((at - node_at(j - 1)) / 2.0).min((node_at(j + 1) - at) / 2.0);
+            run.stop_s.push(at - d);
+            run.jump[j] = 2.0 * d;
+            continue;
+        }
         if ports == 1 {
             let half = net.node_platform[st as usize] as f64 / 2.0;
             // never past halfway to the next stop (T-760: two stops closer than their platforms)
@@ -364,10 +372,16 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
         run.stop_s.push(at);
     }
     run.limits = profile::widen(&raw, run.len, train_len / 2.0);
-    let n = run.stop_s.len();
-    let dw: Vec<f64> = (0..n).map(|i| if i > 0 && i + 1 < n { dwell } else { 0.0 }).collect();
-    run.free = profile::run(&run.limits, &run.stop_s, &dw, &[]);
+    let dw = stand_times(&run, dwell, net.line_turn[l as usize] as f64);
+    run.free = profile::run(&run.limits, &run.stop_s, &run.jump, &dw, &[]);
     Some(run)
+}
+
+/// Scheduled standing time per stop: the dwell, or the turnaround where trains reverse (T-797);
+/// none at the ends.
+fn stand_times(run: &Run, dwell: f64, turn: f64) -> Vec<f64> {
+    let n = run.stop_s.len();
+    (0..n).map(|i| if i == 0 || i + 1 == n { 0.0 } else if run.turn[i] { turn } else { dwell }).collect()
 }
 
 fn build_line(net: &Network, l: u32) -> LineSvc {
@@ -396,12 +410,11 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
 }
 
 fn profile_for(net: &Network, l: u32, run: &Run, level: usize) -> Profile {
-    let n = run.stop_s.len();
-    let dwell = net.line_dwell[l as usize] as f64;
-    let dw: Vec<f64> = (0..n)
-        .map(|i| if i > 0 && i + 1 < n { dwell } else { 0.0 } + run.stop_holds[level].get(i).copied().unwrap_or(0.0))
-        .collect();
-    let mut p = profile::run(&run.limits, &run.stop_s, &dw, &run.holds[level]);
+    let mut dw = stand_times(run, net.line_dwell[l as usize] as f64, net.line_turn[l as usize] as f64);
+    for (d, h) in dw.iter_mut().zip(&run.stop_holds[level]) {
+        *d += h;
+    }
+    let mut p = profile::run(&run.limits, &run.stop_s, &run.jump, &dw, &run.holds[level]);
     p.hold += run.stop_holds[level].iter().sum::<f64>();
     p
 }

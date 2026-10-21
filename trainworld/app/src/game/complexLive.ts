@@ -93,7 +93,11 @@ export function complexNow(members: StationId[]): ComplexNow | null {
       if (station === undefined) continue;
       const line = String(b.queues[base + 1]), run = b.queues[base + 2], l = lines.get(line), s = byId.get(station);
       if (!l || !s) continue;
-      const k = l.stops.indexOf(station);
+      // a line stopping here twice (T-797): the visit at the queue's offset along run 0
+      const offs = w.lineStats[line]?.stopS[0] ?? [];
+      let k = l.stops.indexOf(station);
+      for (let j = k + 1; j < l.stops.length; j++)
+        if (l.stops[j] === station && Math.abs((offs[j] ?? Infinity) - b.queues[base + 3]) < Math.abs((offs[k] ?? Infinity) - b.queues[base + 3])) k = j;
       const c = crowdAt(b, q, t);
       queues.push({ station, line, run, dir: runDir(l, run, k, s, byId), waiting: c.waiting, leftBehind: c.leftBehind });
     }

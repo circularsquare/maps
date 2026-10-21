@@ -381,6 +381,67 @@ pub fn path_dir(p: u32) -> u32 {
     p & 1
 }
 
+/// Where each stop falls in a path's node list: the earliest matching that stops at every index
+/// in `must` (the nodes where the path turns back, T-797: a train reverses only at a stop). None
+/// if there is none. Without `must`, the plain greedy match.
+pub fn match_stops(nodes: &[u32], stops: &[u32], must: &[usize]) -> Option<Vec<usize>> {
+    let (n, m) = (nodes.len(), stops.len());
+    if must.is_empty() {
+        let mut out = Vec::with_capacity(m);
+        let mut k = 0;
+        for &s in stops {
+            while k < n && nodes[k] != s {
+                k += 1;
+            }
+            if k == n {
+                return None;
+            }
+            out.push(k);
+            k += 1;
+        }
+        return Some(out);
+    }
+    if m == 0 || n == 0 {
+        return None;
+    }
+    let mut is_must = vec![false; n];
+    for &k in must {
+        if k < n {
+            is_must[k] = true;
+        }
+    }
+    // suf[j * n + k]: stop j at node k, and stops j.. can all be matched after it, no must skipped
+    let mut suf = vec![false; m * n];
+    suf[(m - 1) * n + n - 1] = nodes[n - 1] == stops[m - 1];
+    for j in (0..m - 1).rev() {
+        let mut avail = false;
+        for k in (0..n).rev() {
+            suf[j * n + k] = avail && nodes[k] == stops[j];
+            let next = suf[(j + 1) * n + k];
+            avail = if is_must[k] { next } else { avail || next };
+        }
+    }
+    if !suf[0] {
+        return None;
+    }
+    let mut out = vec![0usize];
+    for j in 1..m {
+        let prev = out[j - 1];
+        let mut k = prev + 1;
+        while k < n && !suf[j * n + k] {
+            if is_must[k] {
+                return None;
+            }
+            k += 1;
+        }
+        if k == n {
+            return None;
+        }
+        out.push(k);
+    }
+    Some(out)
+}
+
 impl Network {
     /// The network's frame (origin and kind).
     pub fn frame(&self) -> Frame {
@@ -1451,10 +1512,9 @@ impl Network {
                 if self.path_nodes(prev).1 != from {
                     return Err(Issue::LinePath { line: l });
                 }
-                // Through a node: arrive on one side, leave on the other.
-                let arr = self.port_side(path_edge(prev), 1 - path_dir(prev));
-                let dep = self.port_side(path_edge(path[k]), path_dir(path[k]));
-                if arr.is_none() || arr == dep {
+                // Through a node: arrive on one side, leave on the other, or turn back at a
+                // stop (T-797, checked below).
+                if self.port_side(path_edge(prev), 1 - path_dir(prev)).is_none() {
                     return Err(Issue::LinePath { line: l });
                 }
             }
@@ -1463,20 +1523,26 @@ impl Network {
         if stops[0] != nodes[0] || *stops.last().unwrap() != *nodes.last().unwrap() {
             return Err(Issue::LineStops { line: l });
         }
-        let mut k = 0;
-        for &s in stops {
-            if !self.node_ok(s) || self.node_platform[s as usize] == 0 {
-                return Err(Issue::LineStops { line: l });
-            }
-            while k < nodes.len() && nodes[k] != s {
-                k += 1;
-            }
-            if k == nodes.len() {
-                return Err(Issue::LineStops { line: l });
-            }
-            k += 1;
+        if stops.iter().any(|&s| !self.node_ok(s) || self.node_platform[s as usize] == 0) {
+            return Err(Issue::LineStops { line: l });
+        }
+        let turns = self.path_reversals(path);
+        if match_stops(&nodes, stops, &turns).is_none() {
+            return Err(if turns.is_empty() { Issue::LineStops { line: l } } else { Issue::LinePath { line: l } });
         }
         Ok(nodes)
+    }
+
+    /// Whether a path turns back between entries `a` and `b`: it arrives at their node and leaves
+    /// on the same side (T-797).
+    pub fn turns_back(&self, a: u32, b: u32) -> bool {
+        let arr = self.port_side(path_edge(a), 1 - path_dir(a));
+        arr.is_some() && arr == self.port_side(path_edge(b), path_dir(b))
+    }
+
+    /// The indices into a path's node list (`path.len() + 1` nodes) where it turns back.
+    pub fn path_reversals(&self, path: &[u32]) -> Vec<usize> {
+        (1..path.len()).filter(|&k| self.turns_back(path[k - 1], path[k])).collect()
     }
 
     // ---------------------------------------------------------------- cost
@@ -1643,8 +1709,9 @@ impl Network {
     // ---------------------------------------------------------------- routing
 
     /// Fastest path from `from` to `to` over valid moves, by speed-limit running time. `arrived`
-    /// is the side the train came in on at `from` (it must leave on the other), or None at a
-    /// line's first stop. Returns the path and the side it arrives on at `to`.
+    /// is the side the train came in on at `from`, or None at a line's first stop. It leaves on
+    /// the other side, or turns back there at `REVERSAL_SEARCH_S` extra (T-797: reversing only at
+    /// a stop). Returns the path and the side it arrives on at `to`.
     pub fn find_path(&self, from: u32, to: u32, arrived: Option<u8>) -> Option<(Vec<u32>, u8)> {
         let ne = self.edge_count();
         let mut dist = vec![f64::INFINITY; 2 * ne];
@@ -1652,12 +1719,10 @@ impl Network {
         let mut heap = BinaryHeap::new();
         let p = &self.node_ports[from as usize];
         for (k, &c) in p.ends().iter().enumerate() {
-            if arrived == Some(p.side[k]) {
-                continue;
-            }
+            let turn = if arrived == Some(p.side[k]) { REVERSAL_SEARCH_S } else { 0.0 };
             let (e, which) = (c >> 1, c & 1);
             let st = e << 1 | which; // leaving from end a = direction 0
-            dist[st as usize] = self.edge_time[e as usize];
+            dist[st as usize] = self.edge_time[e as usize] + turn;
             heap.push(Key(dist[st as usize], st));
         }
         while let Some(Key(d, st)) = heap.pop() {
@@ -1694,7 +1759,7 @@ impl Network {
         None
     }
 
-    /// Fastest path through a list of stops, hop by hop.
+    /// Fastest path through a list of stops, hop by hop; it may turn back at a stop.
     pub fn route(&self, stops: &[u32]) -> Option<Vec<u32>> {
         if stops.iter().any(|&s| !self.node_ok(s) || self.node_platform[s as usize] == 0) { return None; }
         let mut path = vec![];

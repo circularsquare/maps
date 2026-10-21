@@ -72,6 +72,8 @@ enum Tag {
     /// Station crossover: the first `turns` users reverse; through moves load it only while
     /// a reversing stream runs at the demand level being solved.
     Turnback { turns: u32 },
+    /// The limiter on lines reversing partway at `Resource::node`, one per arrival side (T-797).
+    Reversal,
     /// A flat crossing of `Resource::edge` with `other`.
     Crossing { other: u32 },
 }
@@ -118,12 +120,14 @@ impl Capacity {
 
     /// The kind the app words alerts by (`ResKind as u8` for 0 to 5), finer where the cause differs:
     /// 6 a line reversing on a through station's platform, 7 track several lines run over, 8 a
-    /// reversal crossing the other track at a through station.
+    /// reversal crossing the other track at a through station, 9 lines reversing partway at a
+    /// station (T-797).
     pub fn wire_kind(&self, r: usize) -> u8 {
         let kind = self.res[r].kind;
         match self.tag[r] {
             Tag::Platform { reverses: true } => 6,
             Tag::Turnback { .. } => 8,
+            Tag::Reversal => 9,
             Tag::Section { .. } if kind == ResKind::Section => {
                 let users = self.users_of(r);
                 if users.iter().any(|u| u.line != users[0].line) { 7 } else { 0 }
@@ -375,6 +379,9 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
                     continue;
                 }
                 let (p, q) = (run.segs[i], run.segs[i + 1]);
+                if net.turns_back(p, q) {
+                    continue;
+                }
                 let (Some(a), Some(b)) = (kidx(key_of(net, p)), kidx(key_of(net, q))) else { continue };
                 let (te, tf) = (net.edge_tracks[path_edge(p) as usize], net.edge_tracks[path_edge(q) as usize]);
                 let join = if te == 2 && tf == 2 { sig[a as usize] == sig[b as usize] } else { te == 1 && tf == 1 && net.node_platform[node] == 0 };
@@ -446,6 +453,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
     let mut moves: Vec<(u32, f64, f64, u32, u8, f64)> = vec![]; // node, pA, pB, line, run, at
     let mut turns: Vec<(u32, u8, u32, u8, f64)> = vec![]; // node, arrival track, line, incoming run, approach
     let mut through: Vec<(u32, u8, u32, u8, i32, f64)> = vec![]; // node, track, line, run, stop, approach
+    let mut limiter: Vec<(u32, u8, u32, u8, f64)> = vec![]; // node, arrival side, line, run, approach
     for &l in cand {
         let ls = &lines[l as usize];
         if !ls.running {
@@ -458,6 +466,26 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
             for k in 1..k_last {
                 let n = run.nodes[k];
                 if !in_n(n) {
+                    continue;
+                }
+                if net.turns_back(run.segs[k - 1], run.segs[k]) {
+                    // T-797: reversing partway uses what a short turn there would, plus the
+                    // limiter; it is no junction move and no through train.
+                    let Some(j) = run.stop_idx.iter().position(|&s| s as usize == k) else { continue };
+                    let prev = run.segs[k - 1];
+                    let side_in = net.port_side(path_edge(prev), 1 - path_dir(prev)).unwrap_or(0);
+                    let reach = net.node_platform[n as usize] as f64;
+                    let at = run.stop_s[j] - reach.max(ls.train_len) - HOLD_MARGIN_M;
+                    let tracks = active_node_tracks(net, n);
+                    let occ_s = net.line_turn[l] as f64 + TERMINUS_MARGIN_S;
+                    if net.built_ports(n) > 1 {
+                        let track = if tracks == 1 { 0 } else { side_in };
+                        plat.push((n, track, l as u32, r as u8, -1, at, occ_s, true));
+                        if tracks > 1 { turns.push((n, track, l as u32, r as u8, at)); }
+                    } else {
+                        term.push((n, l as u32, r as u8, at, occ_s / tracks as f64));
+                    }
+                    limiter.push((n, side_in, l as u32, r as u8, at));
                     continue;
                 }
                 if net.node_platform[n as usize] > 0 {
@@ -523,6 +551,15 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
         users = term[i..end].iter().map(|x| User { line: x.1, run: x.2, owner: true, occ: x.4, at: x.3, stop: -1 }).collect();
         let n = term[i].0 as usize;
         push_res(cap, ResKind::Terminus, net.node_x[n], net.node_y[n], n as u32, u32::MAX, &users, Tag::Node);
+        i = end;
+    }
+    limiter.sort_by(|a, b| (a.0, a.1, a.2, a.3).cmp(&(b.0, b.1, b.2, b.3)));
+    let mut i = 0;
+    while i < limiter.len() {
+        let end = limiter[i..].partition_point(|x| (x.0, x.1) == (limiter[i].0, limiter[i].1)) + i;
+        users = limiter[i..end].iter().map(|x| User { line: x.2, run: x.3, owner: true, occ: REVERSAL_LIMIT_S, at: x.4, stop: -1 }).collect();
+        let n = limiter[i].0 as usize;
+        push_res(cap, ResKind::Terminus, net.node_x[n], net.node_y[n], n as u32, u32::MAX, &users, Tag::Reversal);
         i = end;
     }
     turns.sort_by(|a, b| (a.0, a.1, a.2, a.3).cmp(&(b.0, b.1, b.2, b.3)));
@@ -641,7 +678,10 @@ pub fn build(net: &Network, lines: &[LineSvc]) -> Capacity {
 }
 
 /// Utilisation and delay of one resource's users for each demand level.
-fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, turns: Option<usize>) -> ([f64; 3], [f64; 3]) {
+fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, tag: Tag) -> ([f64; 3], [f64; 3]) {
+    let turns = match tag { Tag::Turnback { turns } => Some(turns as usize), _ => None };
+    // a line's two directions reversing at one station side run to one timetable (T-797): one stream
+    let by_line = matches!(tag, Tag::Reversal);
     let (mut rho_r, mut delay_r) = ([0.0; 3], [0.0; 3]);
     let continuous = us.iter().any(|u| net.line_trains[u.line as usize].is_some());
     let mut owner_streams: Vec<((u32, u8), f64)> = vec![];
@@ -657,9 +697,10 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, tu
             }
             load += tph * u.occ;
             trains += tph;
-            match streams.iter_mut().find(|s| s.0 == (u.line, u.run)) {
+            let key = (u.line, if by_line { 0 } else { u.run });
+            match streams.iter_mut().find(|s| s.0 == key) {
                 Some(s) => s.1 = s.1.max(tph),
-                None => streams.push(((u.line, u.run), tph)),
+                None => streams.push((key, tph)),
             }
         }
         if trains <= 0.0 {
@@ -702,7 +743,7 @@ pub fn solve(cap: &mut Capacity, net: &Network) {
     cap.rho.resize(n, [0.0; 3]);
     cap.delay.resize(n, [0.0; 3]);
     for r in 0..n {
-        let (rho, delay) = solve_one(cap.users_of(r), net, &mut streams, match cap.tag[r] { Tag::Turnback { turns } => Some(turns as usize), _ => None });
+        let (rho, delay) = solve_one(cap.users_of(r), net, &mut streams, cap.tag[r]);
         cap.rho[r] = rho;
         cap.delay[r] = delay;
     }
@@ -774,7 +815,7 @@ impl Capacity {
                         false
                     }
                 }
-                Tag::Node | Tag::Platform { .. } | Tag::Turnback { .. } => flag(&dn, self.res[r].node),
+                Tag::Node | Tag::Platform { .. } | Tag::Turnback { .. } | Tag::Reversal => flag(&dn, self.res[r].node),
                 Tag::Crossing { other } => flag(&de, self.res[r].edge) || flag(&de, other),
             };
             if dead {
@@ -825,7 +866,7 @@ impl Capacity {
         // ---- solve the new ones, and the old ones a rescheduled line uses
         let mut streams = vec![];
         for r in first_new..self.res.len() {
-            let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, match self.tag[r] { Tag::Turnback { turns } => Some(turns as usize), _ => None });
+            let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, self.tag[r]);
             self.rho[r] = rho;
             self.delay[r] = delay;
             for u in self.users_of(r) {
@@ -845,7 +886,7 @@ impl Capacity {
                 if !self.users_of(r).iter().any(|u| rs[u.line as usize]) {
                     continue;
                 }
-                let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, match self.tag[r] { Tag::Turnback { turns } => Some(turns as usize), _ => None });
+                let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, self.tag[r]);
                 self.rho[r] = rho;
                 if delay != self.delay[r] {
                     self.delay[r] = delay;
@@ -1319,5 +1360,52 @@ mod tests {
             }
         }
         assert!(applied > 200, "too few edits applied: {applied}");
+    }
+
+    /// T-797: a line reversing at T has T's short-turn platform and crossover, and the limiter:
+    /// 300 s a train for both directions arriving on the same side, so at most 6 an hour each way.
+    #[test]
+    fn reversing_partway_is_capped_at_twelve_an_hour_a_side() {
+        use super::super::tests::{line, reversal_fixture};
+        let (mut w, [_, t, _, m, br]) = reversal_fixture();
+        let l = line(&mut w, &[br, t, m], [3.0, 6.0, 8.0]);
+        let cap = &w.svc.cap;
+        let lim: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.wire_kind(r) == 9).collect();
+        assert_eq!(lim.len(), 1, "both directions arrive at T on the same side");
+        let r = lim[0];
+        assert_eq!(cap.res[r].node, t);
+        assert_eq!(cap.users_of(r).len(), 2);
+        assert!((cap.rho[r][HIGH] - 6.0 * REVERSAL_LIMIT_S / 3600.0).abs() < 1e-12);
+        assert!((cap.rho[r][MEDIUM] - 1.0).abs() < 1e-12, "12 an hour fill it");
+        assert_eq!(cap.delay[r][..2], [0.0; 2], "one line's two directions are one timetable: no queue until over");
+        assert!(cap.delay[r][LOW] > 0.0, "16 an hour are over");
+        let most = cap.line_limits(&w.net)[l as usize];
+        assert!((most[HIGH].0 - 6.0).abs() < 1e-9 && most[HIGH].1 as usize == r, "{most:?}");
+        assert!((cap.fill(&w.net, &[(l, 10.0)], HIGH)[0] - 6.0).abs() < 1e-9);
+        assert!((0..cap.res.len()).any(|r| cap.res[r].node == t && cap.wire_kind(r) == 6), "the arrival platform held for the turnaround");
+        assert!((0..cap.res.len()).any(|r| cap.res[r].node == t && cap.wire_kind(r) == 8), "the crossover");
+        let j = w.net.path_nodes(w.net.line_path(l)[0]).1;
+        assert!(!(0..cap.res.len()).any(|r| cap.res[r].node == t && cap.res[r].kind == ResKind::Junction));
+        // No section joins across the turn: each direction of T - J is its own.
+        let te = w.net.line_path(l)[1] >> 1;
+        for r in (0..cap.res.len()).filter(|&r| cap.res[r].kind == ResKind::Section) {
+            if let Tag::Section { first, count } = cap.tag[r] {
+                let ks = &cap.keys[first as usize..(first + count) as usize];
+                assert!(!(ks.contains(&(te * 2)) && ks.contains(&(te * 2 + 1))), "{ks:?}");
+            }
+        }
+        let _ = j;
+        same_as_global(&w, "reversal");
+        w.apply(Op::Schedule { id: l, tph: [0.0; 3] }).unwrap();
+        same_as_global(&w, "reversal off");
+        w.undo().unwrap().unwrap();
+        same_as_global(&w, "reversal undo");
+        // A second line reversing on the same side shares the limiter.
+        let other = line(&mut w, &[br, t, m], [3.0, 0.0, 0.0]);
+        same_as_global(&w, "two reversing");
+        let cap = &w.svc.cap;
+        let r = (0..cap.res.len()).find(|&r| cap.wire_kind(r) == 9).unwrap();
+        assert_eq!(cap.users_of(r).len(), 4);
+        assert!((cap.line_limits(&w.net)[other as usize][HIGH].0 - 3.0).abs() < 1e-9);
     }
 }

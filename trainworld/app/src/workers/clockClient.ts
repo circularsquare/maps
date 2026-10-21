@@ -126,6 +126,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       turnaroundS: l.turnaround,
       shift: l.shift,
       passed: Array.from({ length: l.passed.length >> 1 }, (_, k) => ({ gap: l.passed[k * 2], node: l.passed[k * 2 + 1] })),
+      reversals: l.reversals ?? [],
     };
   }
   const edges: TrackEdge[] = s.edges.map((e) => ({

@@ -240,7 +240,8 @@ game in the same edit where it fits: an X between the two pairs, 120 m long, 50 
 junctions, so lines can change pairs between neighbouring quad stations [T-338, T-733]. Single
 track is not offered (saves and imports keep theirs, which run as before) [T-733]. Each line has
 a train length in cars, by default the most its shortest platform fits (20 m cars) and never more
-[T-733]. Lines set a whole number of trains for high, medium and low demand, or a headway for each, run with the fewest trains that keep it, or at the track's limit the most that fit [T-625, T-679]; capacity and
+[T-733]. A line may reverse partway at a stop, standing its turnaround there, at most 12 reversals an
+hour per station side, and a large icon marks the station [T-797]. Lines set a whole number of trains for high, medium and low demand, or a headway for each, run with the fewest trains that keep it, or at the track's limit the most that fit [T-625, T-679]; capacity and
 junction conflicts add delay, computed from the schedules in the clock worker before demand runs,
 and no track, platform or junction carries more trains than its capacity: a line's fleet past that
 waits at its ends [T-517].

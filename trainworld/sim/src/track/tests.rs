@@ -796,3 +796,138 @@ fn shared_track_splits_its_capacity() {
     assert!(w.net.line_tph[short as usize][HIGH] > high[1][HIGH]);
     assert!(fullest(&w, HIGH) <= 1.0 + 1e-4);
 }
+
+/// T-797: X - T - J - M, and a branch J - Br leaving towards M. From T, Br is reached only by
+/// turning back (at T, a through station, or at X, a dead end).
+pub fn reversal_fixture() -> (TrackWorld, [u32; 5]) {
+    let mut w = world();
+    let x = node(&mut w, -3000.0, 0.0, 0);
+    let t = node(&mut w, 0.0, 0.0, 0);
+    let j = node(&mut w, 3000.0, 0.0, 0);
+    let m = node(&mut w, 6000.0, 0.0, 0);
+    let br = node(&mut w, 5000.0, 1500.0, 0);
+    edge(&mut w, x, t, &[], 0).unwrap();
+    edge(&mut w, t, j, &[], 0).unwrap();
+    edge(&mut w, j, m, &[], 0).unwrap();
+    edge(&mut w, j, br, &[(3400.0, 0.0)], 0).unwrap();
+    for n in [x, t, m, br] {
+        station(&mut w, n, 200);
+    }
+    (w, [x, t, j, m, br])
+}
+
+#[test]
+fn a_line_reversing_at_a_mid_stop_runs() {
+    let (mut w, [_, t, _, m, br]) = reversal_fixture();
+    let l = line(&mut w, &[br, t, m], [6.0, 3.0, 0.0]);
+    assert!(w.net.check_line(l).is_ok());
+    assert_eq!(w.net.path_reversals(w.net.line_path(l)).len(), 1);
+    let ls = &w.svc.lines[l as usize];
+    assert!(ls.ok && ls.running);
+    for r in 0..2 {
+        let run = &ls.runs[r];
+        assert_eq!(run.turn, vec![false, true, false]);
+        assert!((run.jump[1] - ls.train_len).abs() < 1e-9);
+        // It stands the turnaround, not the dwell, half a train short of T on the side it came
+        // in on, and leaves from the same place.
+        let f = &run.free;
+        assert!((f.dep[1] - f.arr[1] - 180.0).abs() < 1e-9, "{:?} {:?}", f.arr, f.dep);
+        let (s, v) = super::profile::state_at(&f.phases, f.arr[1] + 10.0);
+        assert!((s - (run.stop_s[1] + run.jump[1])).abs() < 1e-6 && v == 0.0);
+        let a = w.svc.position(&w.net, l, r, run.stop_s[1]);
+        let b = w.svc.position(&w.net, l, r, run.stop_s[1] + run.jump[1]);
+        assert!((a.0 - b.0).hypot(a.1 - b.1) < 0.5, "{a:?} {b:?}");
+        assert!((a.0 - ls.train_len / 2.0).abs() < 0.5 && a.1.abs() < 1e-6, "{a:?}");
+        // Offsets only move forward.
+        assert!(f.phases.windows(2).all(|p| p[1].s >= p[0].s && p[1].t >= p[0].t));
+        assert!(f.arr[2] > f.dep[1]);
+    }
+    let rt = ls.round_trip[HIGH];
+    assert!((rt - (ls.runs[0].prof[HIGH].duration + ls.runs[1].prof[HIGH].duration + 360.0)).abs() < 1e-9);
+    assert!(ls.runs[0].prof[HIGH].duration > ls.runs[0].free.arr[1] + 180.0);
+    // Trains are drawn through the hour.
+    let trips = w.svc.trips(&w.net, 8.0 * 3600.0, 9.0 * 3600.0);
+    assert_eq!(trips.iter().filter(|x| x.line == l && x.dep >= 8.0 * 3600.0).count(), 12);
+    // A path that turns back at a station it does not stop at is refused.
+    let mut d = w.net.line_data(l).unwrap();
+    d.stops = vec![br, m];
+    assert!(w.apply(Op::Line { id: l, data: Some(d) }).is_err());
+}
+
+#[test]
+fn a_station_stopped_at_twice_around_a_dead_end_reversal() {
+    let (mut w, [x, t, _, m, br]) = reversal_fixture();
+    let l = line(&mut w, &[br, t, x, t, m], [6.0, 3.0, 0.0]);
+    assert!(w.net.check_line(l).is_ok());
+    let ls = &w.svc.lines[l as usize];
+    assert!(ls.ok);
+    for r in 0..2 {
+        let run = &ls.runs[r];
+        assert_eq!(run.stop_idx, vec![0, 2, 3, 4, 6]);
+        assert_eq!(run.turn, vec![false, false, true, false, false]);
+        // At a dead end the train stands at the platform's middle.
+        assert!((run.jump[2] - 200.0).abs() < 1e-9);
+        let a = w.svc.position(&w.net, l, r, run.stop_s[2]);
+        assert!((a.0 + 2900.0).abs() < 0.5, "{a:?}");
+        let f = &run.free;
+        assert!(f.arr.windows(2).all(|p| p[1] > p[0]));
+        assert!((f.dep[2] - f.arr[2] - 180.0).abs() < 1e-9);
+        assert!((f.dep[1] - f.arr[1] - 30.0).abs() < 1e-9 && (f.dep[3] - f.arr[3] - 30.0).abs() < 1e-9);
+    }
+    // T is a platform stop twice a run, at the dwell; X is a pooled terminus with the limiter.
+    let cap = &w.svc.cap;
+    let at_t: usize = (0..cap.res.len()).filter(|&r| cap.res[r].node == t && cap.res[r].kind == ResKind::Platform)
+        .map(|r| cap.users_of(r).iter().filter(|u| u.line == l && u.stop >= 0).count()).sum();
+    assert_eq!(at_t, 4);
+    assert!((0..cap.res.len()).any(|r| cap.res[r].node == x && cap.wire_kind(r) == 9));
+    assert!((0..cap.res.len()).any(|r| cap.res[r].node == x && cap.res[r].kind == ResKind::Terminus && cap.wire_kind(r) == ResKind::Terminus as u8));
+    // matching skips an earlier pass of a stop when a reversal needs it later
+    let nodes = [1, 2, 1, 3, 1, 4];
+    assert_eq!(super::net::match_stops(&nodes, &[1, 3, 1, 4], &[]), Some(vec![0, 3, 4, 5]));
+    assert_eq!(super::net::match_stops(&nodes, &[1, 1, 4], &[2]), Some(vec![0, 2, 5]));
+    assert_eq!(super::net::match_stops(&nodes, &[1, 1, 4], &[3]), None);
+    assert_eq!(super::net::match_stops(&[5, 1, 6, 1, 7], &[5, 1, 7], &[3]), Some(vec![0, 3, 4]));
+}
+
+/// T-797: P - S, and from each a long way round to K and on to the dead end Q. From S, Q is
+/// reached forward over the east loop, or a little shorter by turning back at S over P.
+#[test]
+fn a_route_without_a_reversal_wins_when_similar() {
+    let mut w = world();
+    let p = node(&mut w, -3000.0, 0.0, 0);
+    let s = node(&mut w, 0.0, 0.0, 0);
+    let k = node(&mut w, 0.0, 6000.0, 0);
+    let q = node(&mut w, 0.0, 9000.0, 0);
+    edge(&mut w, p, s, &[], 0).unwrap();
+    edge(&mut w, p, k, &[(-6000.0, 0.0), (-6000.0, 3000.0), (0.0, 3000.0)], 0).unwrap();
+    edge(&mut w, s, k, &[(7000.0, 0.0), (7000.0, 4500.0), (0.0, 4500.0)], 0).unwrap();
+    edge(&mut w, k, q, &[], 0).unwrap();
+    for n in [p, s, q] {
+        station(&mut w, n, 200);
+    }
+    let len = |w: &TrackWorld, path: &[u32]| path.iter().map(|&x| w.net.edge_len[(x >> 1) as usize]).sum::<f64>();
+    let path = w.net.route(&[p, s, q]).unwrap();
+    assert!(w.net.path_reversals(&path).is_empty());
+    let back = 6000.0 + len(&w, &w.net.route(&[p, q]).unwrap());
+    let fwd = len(&w, &path);
+    assert!(fwd > back && fwd < back + 3000.0, "{fwd} vs {back}");
+    // A stop on the far side of the loop only by turning back is still found.
+    let l = line(&mut w, &[p, s, q], [4.0, 2.0, 0.0]);
+    assert!(w.svc.lines[l as usize].ok);
+}
+
+#[test]
+fn reversing_lines_save_round_trip() {
+    let (mut w, [x, t, j, m, br]) = reversal_fixture();
+    let a = line(&mut w, &[br, t, m], [6.0, 3.0, 0.0]);
+    let b = line(&mut w, &[br, t, x, t, m], [4.0, 2.0, 0.0]);
+    let bytes = super::save::encode(&w.net);
+    let back = TrackWorld::new(super::save::decode(&bytes).unwrap());
+    assert_eq!(super::save::encode(&back.net), bytes);
+    for l in [a, b] {
+        assert_eq!(back.net.line_path(l), w.net.line_path(l));
+        assert_eq!(back.svc.lines[l as usize].round_trip, w.svc.lines[l as usize].round_trip);
+        assert_eq!(back.svc.lines[l as usize].runs[0].turn, w.svc.lines[l as usize].runs[0].turn);
+    }
+    let _ = (j, &mut w);
+}

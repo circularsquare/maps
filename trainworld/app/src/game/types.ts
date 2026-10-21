@@ -158,6 +158,8 @@ export interface LineStats {
   shift: number;
   /** the stations it passes without stopping, in path order; gap i lies between stop i and i + 1 (T-646) */
   passed: { gap: number; node: number }[];
+  /** the stops (indices) where its trains reverse partway, standing the turnaround (T-797) */
+  reversals: number[];
 }
 
 export interface ModeSplit {

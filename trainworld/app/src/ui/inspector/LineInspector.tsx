@@ -130,10 +130,13 @@ function markTip(m: RouteMark): string {
  * and where the delay is. */
 function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stops: number; spots: { text: string; s: number }[] }) {
   const total = st.roundTripByLevel[lev] ?? st.roundTripS;
-  const dwell = 2 * Math.max(0, stops - 2) * st.dwellS;
+  // T-797: a stop where trains reverse stands the turnaround both ways, not the dwell
+  const reversals = st.reversals?.length ?? 0;
+  const dwell = 2 * Math.max(0, stops - 2 - reversals) * st.dwellS;
   const turn = 2 * st.turnaroundS;
+  const reversing = 2 * reversals * st.turnaroundS;
   const delay = st.delayS[lev] ?? 0;
-  const running = Math.max(0, total - dwell - turn - delay);
+  const running = Math.max(0, total - dwell - turn - reversing - delay);
   return (
     <>
       <ul class="rows">
@@ -143,6 +146,7 @@ function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stop
         <Row label="Running">{duration(running)}</Row>
         <Row label="Dwell at stops">{duration(dwell)}</Row>
         <Row label="Turning at the ends">{duration(turn)}</Row>
+        {reversals > 0 && <Row label="Reversing partway">{duration(reversing)}</Row>}
         {delay > 0 && <Row label="Waiting at busy track">{duration(delay)}</Row>}
       </ul>
       {delay > 0 && spots.length > 0 && (
@@ -588,6 +592,11 @@ export function LineInspector({ id }: { id: string }) {
                   {name.get(s)}
                 </span>
                 {i > 0 && times[i] !== undefined && <span class="t muted num">{duration(times[i])}</span>}
+                {st.reversals?.includes(i) && (
+                  <span class="rev-stop" data-tip={`Trains reverse here and stand ${duration(st.turnaroundS)}\nAt most 12 trains an hour reverse on each side`}>
+                    <Icon.uturn />
+                  </span>
+                )}
               </span>
               <StopTransfers line={l.id} stop={s} />
               <StopToday line={l.id} i={i} />

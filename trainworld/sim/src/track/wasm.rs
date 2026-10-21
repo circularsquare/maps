@@ -2389,10 +2389,12 @@ impl TrackApi {
     }
 
     /// How every station stands to a line while its stops are edited (T-233, T-237): per station
-    /// node, `[node, tier]`, tier 0 a stop of the line, 1 adding it keeps the line's path (a
-    /// station on it, or past an end on track the path can carry on over: the path is extended),
-    /// 2 adding it changes the path, 3 it cannot be added. Worked out with `insert_stop`'s own
-    /// search, so the markers say what a click does. Empty if the line is not there.
+    /// node, `[node, tier, reversal]`, tier 0 a stop of the line, 1 adding it keeps the line's
+    /// path (a station on it, or past an end on track the path can carry on over: the path is
+    /// extended), 2 adding it changes the path, 3 it cannot be added, 4 adding it makes trains
+    /// reverse at the station `reversal` where they did not (T-797; -1 for the other tiers).
+    /// Worked out with `insert_stop`'s own search, so the markers say what a click does. Empty
+    /// if the line is not there.
     pub fn stop_tiers(&self, line: u32) -> Vec<f64> {
         let net = &self.w.net;
         if !net.line_ok(line) {
@@ -2400,6 +2402,7 @@ impl TrackApi {
         }
         let stops = net.line_stops(line);
         let old = net.line_path(line);
+        let old_turns = turn_nodes(net, old);
         let reach = reachable_from(net, stops);
         let mut memo = HopMemo::new();
         let mut out = vec![];
@@ -2407,20 +2410,29 @@ impl TrackApi {
             if !net.node_ok(n) || net.node_platform[n as usize] == 0 {
                 continue;
             }
-            let tier = if stops.contains(&n) {
-                0.0
+            let (tier, at) = if stops.contains(&n) {
+                (0.0, -1.0)
             } else if !stops.is_empty() && !reach[n as usize] {
-                3.0
+                (3.0, -1.0)
             } else {
                 match best_insert(net, line, n, &mut memo) {
-                    None => 3.0,
-                    Some((_, path)) if old.is_empty() || path.windows(old.len()).any(|w| w == old) => 1.0,
-                    Some(_) => 2.0,
+                    None => (3.0, -1.0),
+                    Some((_, path)) => match turn_nodes(net, &path).into_iter().find(|t| !old_turns.contains(t)) {
+                        Some(t) => (4.0, t as f64),
+                        None if old.is_empty() || path.windows(old.len()).any(|w| w == old) => (1.0, -1.0),
+                        None => (2.0, -1.0),
+                    },
                 }
             };
-            out.extend([n as f64, tier]);
+            out.extend([n as f64, tier, at]);
         }
         out
+    }
+
+    /// The stops where a line's trains reverse partway, as indices into its stops (T-797).
+    pub fn line_reversals(&self, line: u32) -> Vec<f64> {
+        let Some(ls) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![] };
+        ls.runs[0].turn.iter().enumerate().filter(|x| *x.1).map(|x| x.0 as f64).collect()
     }
     pub fn remove_line(&mut self, id: u32) -> u32 {
         self.run(Op::Line { id, data: None })
@@ -2868,12 +2880,14 @@ impl TrackApi {
     }
 
     /// A line's dwell over a round trip at a level, s: the dwell at every intermediate stop both
-    /// ways (capacity holds at platforms are delay, not dwell), and the two turnarounds.
+    /// ways (capacity holds at platforms are delay, not dwell), and the turnarounds: two at the
+    /// ends and two at each stop where trains reverse partway (T-797).
     pub fn line_dwell_split(&self, line: u32) -> Vec<f64> {
         let n = &self.w.net;
         let Some(ls) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![0.0, 0.0] };
-        let stops = ls.runs[0].stop_s.len().saturating_sub(2) as f64;
-        vec![2.0 * stops * n.line_dwell[line as usize] as f64, 2.0 * n.line_turn[line as usize] as f64]
+        let turns = ls.runs[0].turn.iter().filter(|&&t| t).count() as f64;
+        let stops = ls.runs[0].stop_s.len().saturating_sub(2) as f64 - turns;
+        vec![2.0 * stops * n.line_dwell[line as usize] as f64, (2.0 + 2.0 * turns) * n.line_turn[line as usize] as f64]
     }
 
     /// Capacity markers for a level (SPEC 6.2 shows 75% and up): x, y, utilisation, delay s, kind,
@@ -3098,7 +3112,8 @@ fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Op
         let mut stops = old.to_vec();
         stops.insert(slot, station);
         if let Some(path) = route_memo(net, &stops, memo) {
-            let len: f64 = path.iter().map(|p| net.edge_len[(p >> 1) as usize]).sum();
+            let len: f64 = path.iter().map(|p| net.edge_len[(p >> 1) as usize]).sum::<f64>()
+                + REVERSAL_INSERT_M * net.path_reversals(&path).len() as f64;
             if len < best_len - 0.001 {
                 best_len = len;
                 best = Some((stops, path));
@@ -3106,6 +3121,11 @@ fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Op
         }
     }
     best
+}
+
+/// The nodes where a path turns back, in order (T-797).
+fn turn_nodes(net: &Network, path: &[u32]) -> Vec<u32> {
+    net.path_reversals(path).into_iter().map(|k| net.path_nodes(path[k]).0).collect()
 }
 
 /// Nodes a train can reach from any of `stops`, leaving it either way, over valid moves. Moves
@@ -4684,11 +4704,16 @@ mod tests {
         let other = station(&mut a, 6000.0, 5000.0, "E");
         let id = a.new_line_id();
         assert_eq!(a.set_line(id, &[first, last], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
-        let tiers: std::collections::HashMap<u32, f64> = a.stop_tiers(id).chunks(2).map(|c| (c[0] as u32, c[1])).collect();
+        let raw = a.stop_tiers(id);
+        let tiers: std::collections::HashMap<u32, f64> = raw.chunks(3).map(|c| (c[0] as u32, c[1])).collect();
         assert_eq!(tiers.len(), 9);
-        let want = [(first, 0.0), (last, 0.0), (between, 1.0), (past_end, 1.0), (before_start, 1.0), (bypass, 2.0), (branch, 1.0), (facing_back, 3.0), (other, 3.0)];
+        // T-797: the branch facing back is reached by reversing at B
+        let want = [(first, 0.0), (last, 0.0), (between, 1.0), (past_end, 1.0), (before_start, 1.0), (bypass, 2.0), (branch, 1.0), (facing_back, 4.0), (other, 3.0)];
         for (n, t) in want {
             assert_eq!(tiers[&n], t, "station {}", a.w.net.node_name[n as usize]);
+        }
+        for c in raw.chunks(3) {
+            assert_eq!(c[2], if c[0] as u32 == facing_back { last as f64 } else { -1.0 });
         }
         // and a click does what the marker says
         let path = a.line_path(id);
@@ -4700,13 +4725,17 @@ mod tests {
             }
             assert_eq!(a.set_stops(id, &stops), 0, "{}", a.issues());
             let grown = a.line_path(id);
-            assert_eq!(grown.windows(path.len()).any(|w| w == path), t == 1.0, "station {}", a.w.net.node_name[n as usize]);
+            if t == 4.0 {
+                assert_eq!(a.line_reversals(id), vec![1.0], "trains reverse at B, stop 1 of A, B, Z");
+            } else {
+                assert_eq!(grown.windows(path.len()).any(|w| w == path), t == 1.0, "station {}", a.w.net.node_name[n as usize]);
+            }
             assert_eq!(a.undo(), 0);
         }
         // with no route yet, every station joined to the one stop counts as on it
         let lone = a.new_line_id();
         assert_eq!(a.set_line(lone, &[first], 0.0, 0.0, 0.0, 30.0, 180.0, 0, 0, "One".into()), 0, "{}", a.issues());
-        let tiers: std::collections::HashMap<u32, f64> = a.stop_tiers(lone).chunks(2).map(|c| (c[0] as u32, c[1])).collect();
+        let tiers: std::collections::HashMap<u32, f64> = a.stop_tiers(lone).chunks(3).map(|c| (c[0] as u32, c[1])).collect();
         assert_eq!((tiers[&past_end], tiers[&bypass], tiers[&other]), (1.0, 1.0, 3.0));
     }
 

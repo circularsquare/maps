@@ -283,6 +283,8 @@ export interface ClockLine {
   shift: number;
   /** the stations it passes between stops, `[gap, node]` pairs (`TrackApi::passed_stations`, T-646) */
   passed: number[];
+  /** the stops (indices into `stops`) where its trains reverse partway (`TrackApi::line_reversals`, T-797) */
+  reversals: number[];
 }
 
 /** Everything drawn, in local units (map/geo.ts). */

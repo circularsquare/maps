@@ -49,6 +49,7 @@ import { NodeDrag } from "./map/nodeDrag";
 import { EndMarkers } from "./map/endMarkers";
 import { hoverAbove } from "./map/demandHover";
 import { CapacityMarkers } from "./map/capacityMarkers";
+import { ReversalMarks } from "./map/reversalMarks";
 import { startTrackHover } from "./map/trackHover";
 import { startRestList } from "./map/hoverRest";
 import { startStationLife } from "./map/stationLife";
@@ -207,6 +208,8 @@ const blueprintBox = new BlueprintBox(map, overlay, client);
 live.tools = tools;
 // Stop editing (T-233): a toggle marker on every station; the page class hides the demand views
 tools.stops = new StopMarkers(map, overlay, (station) => tools.toggleStop(station));
+// T-797: a large icon over every station where a line reverses partway
+if (!SYNTH) new ReversalMarks(map, overlay);
 // The trip explorer (T-195): its clicks, its query and its drawing over the demand views.
 const tripTool = startTripView(map, overlay);
 // Reshaping a selected stretch of blueprint track (T-064).

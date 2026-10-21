@@ -549,10 +549,12 @@ impl TrackWorld {
                     return Err(Issue::NoSuchEdge { edge: id });
                 }
                 let users = lines_using(n, id);
+                // a reroute never adds a reversal the player did not choose (T-797)
+                let turns: Vec<usize> = users.iter().map(|&l| n.path_reversals(n.line_path(l)).len()).collect();
                 let mut inv = vec![Op::Edge { id, data: n.set_edge(id, None)? }];
-                for l in users {
+                for (l, turns) in users.into_iter().zip(turns) {
                     let mut d = self.net.line_data(l).unwrap();
-                    if let Some(path) = self.net.route(&d.stops) {
+                    if let Some(path) = self.net.route(&d.stops).filter(|p| self.net.path_reversals(p).len() <= turns) {
                         d.path = path;
                         let old = self.net.set_line(l, Some(d))?;
                         inv.push(Op::Line { id: l, data: old });

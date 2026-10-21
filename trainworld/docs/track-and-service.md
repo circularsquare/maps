@@ -264,7 +264,8 @@ found from their geometry, costs money and loads capacity, but splits nothing, s
 across track never rewrites the graph or line paths. Each edge gives one directed track per
 direction (shared on single track): `(edge, direction)` is the segment in SPEC 2.1's keyframes.
 At a node, every edge end leaves along the node's heading or its reverse; a move is any pair of
-ends on opposite sides. In a **junction**, two moves conflict when their paths cross at the same
+ends on opposite sides. A line's path turns back (arrives and leaves on the same side) only at a
+station it stops at (T-797, 6.3). In a **junction**, two moves conflict when their paths cross at the same
 level (track positions in opposite order on the two sides); merges and diverges do not, as track
 capacity counts them. A plain double-track Y has one crossing pair. A **flyover** (a flying
 junction) removes it, for its price (6.1, 6.4). A **flat crossing** makes every move on one
@@ -287,6 +288,14 @@ route conflict with every move on the other.
   Each move receives only the extra queue from crossing traffic, subtracting its own-move
   baseline; independent opposing through trains do not compete. No crossover conflict applies
   in a demand level with no reversing service.
+- a line reversing partway (T-797) uses what a short turn at that station would: at a through
+  station its arrival platform for turnaround + 60 s and the crossover above, at a dead end the
+  pooled terminus. It is no junction move and no through train there, and no track section joins
+  across it. On top, a stopgap limiter per station and arrival side (`REVERSAL_LIMIT_S`): 300 s per
+  reversing train, so at most 12 reversals an hour a side. Both directions of a line reversing at a
+  station usually arrive on the same side, so one such line runs every 10 minutes each way at best;
+  in its queueing delay a line's two directions count as one stream (one timetable), so a line
+  alone there waits only once it is over the limit.
 - junction move, with the moves it crosses; flat crossing, all moves: 90 s
 
 **Delay per train** (seconds), Kingman's queueing formula with a small variability term because
@@ -336,7 +345,8 @@ see the junction and its flyover"). Each resource has a kind the app words by (`
 `game/capacityKinds.ts`): track, single track, platform, terminus, junction, flat crossing, a line
 turning on a through station's platform (the line ends there and holds the platform for its
 turnaround plus 60 s; helped by ending the line at a dead-end terminus), track several lines run
-over, and a turn across the other track at a through station. A line whose fleet is cut shows an
+over, a turn across the other track at a through station, and the limiter on reversing partway
+("Reversing at Nerul Village is full"). A line whose fleet is cut shows an
 alert under its schedule naming the full resource ("Turning on the platform at Nerul Village is
 full") and, per demand level, how many of its trains are held out of service (they wait at the
 ends of the line instead of running), with the resource's limit in trains an hour and what helps on
@@ -350,8 +360,9 @@ hides only when none is (T-184, [ui-map.md](ui-map.md)).
 The junction inspector (T-031) draws the junction as a small diagram and lists its moves (from
 one station or direction to another), with the lines on each, trains an hour at the level in
 force, the wait per train, which moves each crosses, and the busiest crossing's utilisation. The
-line panel splits the round trip into running, dwell at stops, turning at the ends and waiting at
-busy track, and names the places it waits most (notes/T-031.md).
+line panel splits the round trip into running, dwell at stops, turning at the ends, reversing
+partway (when the line does) and waiting at busy track, and names the places it waits most
+(notes/T-031.md).
 
 ### 6.3 Trains, lines, schedules
 
@@ -362,11 +373,23 @@ busy track, and names the places it waits most (notes/T-031.md).
   limit before it may speed up again.
 - **Lines**: ordered stops, plus the exact path between them stored as edges with a direction, so
   new track never reroutes a line by itself. Splitting an edge rewrites the paths through it;
-  deleting one reroutes by the fastest path or marks the line broken. A line may pass a station
-  without stopping.
+  deleting one reroutes by the fastest path, unless that path reverses where the old one did not,
+  or marks the line broken. A line may pass a station without stopping, and may stop at a station
+  twice, never twice in a row.
+  **Reversing partway** (T-797, notes/T-797.md): a line's path may turn back at a stop, nowhere
+  else (bare track ends are a later stage). Nothing stores it: a reversal is two path entries
+  arriving at and leaving a node on the same side, and stops are matched to the path so every
+  reversal falls on one. The route search may reverse at a hop's first stop for 600 s of search
+  time (`REVERSAL_SEARCH_S`), and the stop insertion counts each reversal as 5 km of path
+  (`REVERSAL_INSERT_M`), so a route without one wins unless it is much longer. A reversing train
+  stands the line's turnaround there, not its dwell; its middle stands d short of the node on
+  arrival and leaves from d past it in the run's unfolded offsets (`Run::jump`, the same place on
+  the ground; d is half the train at a through station, half the platform at a dead end), so it is
+  drawn jumping once as it stops. The stand is inside the run's duration, so the round trip, fleet
+  and demand need nothing new; trains still enter and leave only at the two ends.
   Empty and one-stop lines are valid inactive drafts with an empty path. Stop edits use the same
-  turn-valid route search for every insertion position, choosing minimum total path length
-  (append wins ties). Copying preserves stops, exact path, schedule, dwell, turnaround, cars,
+  turn-valid route search for every insertion position, choosing minimum total path length plus
+  the reversal penalty (append wins ties). Copying preserves stops, exact path, schedule, dwell, turnaround, cars,
   colour and custom badge as independent inputs; edits and removal are undoable.
 - **Scheduling** (T-104, Anita): every line sets a whole number of trains on the entire line,
   both directions together, for **high, medium and low demand** (the column header is "Demand").

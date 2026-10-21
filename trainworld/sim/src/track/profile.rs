@@ -236,10 +236,11 @@ fn hop_time(limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)], mids
 }
 
 /// The trip's profile. `limits` are speed-limit breakpoints `[s, v]` from 0 (already widened by
-/// half the train length); `stops` are the stop offsets in order; `dwell[i]` is the standing
-/// time at stop i (extra at the first stop delays departure; the last is ignored); `holds` are
-/// capacity delays at track points, sorted by offset.
-pub fn run(limits: &[[f64; 2]], stops: &[f64], dwell: &[f64], holds: &[Hold]) -> Profile {
+/// half the train length); `stops` are the stop offsets in order; `jump[i]` (empty for none)
+/// moves stop i's departure on from its arrival (a reversal, T-797: the train is drawn jumping
+/// once as it stops); `dwell[i]` is the standing time at stop i (extra at the first stop delays
+/// departure; the last is ignored); `holds` are capacity delays at track points, sorted by offset.
+pub fn run(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64], holds: &[Hold]) -> Profile {
     let n = stops.len();
     let mut p = Profile::default();
     if n < 2 {
@@ -247,6 +248,7 @@ pub fn run(limits: &[[f64; 2]], stops: &[f64], dwell: &[f64], holds: &[Hold]) ->
     }
     let mut dw = dwell.to_vec();
     dw.resize(n, 0.0);
+    let leave = |i: usize| stops[i] + jump.get(i).copied().unwrap_or(0.0);
     p.dwell = dw[1..n - 1].iter().sum();
     let mut per_hop: Vec<Vec<Hold>> = vec![vec![]; n - 1];
     for h in holds {
@@ -254,7 +256,7 @@ pub fn run(limits: &[[f64; 2]], stops: &[f64], dwell: &[f64], holds: &[Hold]) ->
             continue;
         }
         let i = stops.partition_point(|&s| s <= h.s).saturating_sub(1).min(n - 2);
-        if h.s - stops[i] < HOLD_NEAR_STOP_M || h.s >= stops[i + 1] - 1.0 {
+        if h.s - leave(i) < HOLD_NEAR_STOP_M || h.s >= stops[i + 1] - 1.0 {
             // At or by a stop: wait there (at the stop it is leaving).
             dw[i] += h.delay;
             p.hold += h.delay;
@@ -272,7 +274,7 @@ pub fn run(limits: &[[f64; 2]], stops: &[f64], dwell: &[f64], holds: &[Hold]) ->
     }
     p.dep.push(t);
     for i in 0..n - 1 {
-        let (a, b) = (stops[i], stops[i + 1]);
+        let (a, b) = (leave(i), stops[i + 1]);
         let mut zones: Vec<(f64, f64, f64)> = vec![];
         let mut mids: Vec<(f64, f64)> = vec![];
         for h in &per_hop[i] {
@@ -313,8 +315,9 @@ pub fn run(limits: &[[f64; 2]], stops: &[f64], dwell: &[f64], holds: &[Hold]) ->
         t = hop(limits, a, b, &zones, &mids, t, &mut out);
         p.arr.push(t);
         if i + 1 < n - 1 {
-            if dw[i + 1] > 0.0 {
-                push(&mut out, t, b, 0.0, 0.0);
+            let at = leave(i + 1);
+            if dw[i + 1] > 0.0 || at > b {
+                push(&mut out, t, at, 0.0, 0.0);
             }
             t += dw[i + 1];
         }
@@ -430,7 +433,7 @@ mod tests {
 
     #[test]
     fn one_km_straight_matches_hand_calculation() {
-        let p = run(&top(), &[0.0, 1000.0], &[0.0, 0.0], &[]);
+        let p = run(&top(), &[0.0, 1000.0], &[], &[0.0, 0.0], &[]);
         // By hand: 1.0 m/s² to 60 km/h, then 0.5 m/s², then braking at 0.9 m/s² to a stand.
         let vs: f64 = 60.0 / 3.6;
         let d1 = vs * vs / 2.0;
@@ -444,7 +447,7 @@ mod tests {
         let (s, v_end) = state_at(&p.phases, p.duration);
         assert!((s - 1000.0).abs() < 1e-6 && v_end.abs() < 1e-6);
         // Reaches top speed on a long run.
-        let p = run(&top(), &[0.0, 10000.0], &[0.0, 0.0], &[]);
+        let p = run(&top(), &[0.0, 10000.0], &[], &[0.0, 0.0], &[]);
         assert!((v_max(&p.phases, 0.0, 10000.0) - V_TOP).abs() < 1e-9);
     }
 
@@ -453,7 +456,7 @@ mod tests {
         let raw = vec![[0.0, V_TOP], [1000.0, 10.0], [1300.0, V_TOP]];
         let lim = widen(&raw, 3000.0, 50.0);
         assert_eq!(lim, vec![[0.0, V_TOP], [950.0, 10.0], [1350.0, V_TOP]]);
-        let p = run(&lim, &[0.0, 3000.0], &[0.0, 0.0], &[]);
+        let p = run(&lim, &[0.0, 3000.0], &[], &[0.0, 0.0], &[]);
         for j in 0..3000 {
             let s = j as f64;
             assert!(speed_at(&p.phases, s) <= limit_at(&lim, s) + 1e-6, "at {s}");
@@ -471,20 +474,20 @@ mod tests {
     #[test]
     fn dwell_and_holds_add_their_time() {
         let stops = [0.0, 2000.0, 5000.0];
-        let base = run(&top(), &stops, &[0.0, 30.0, 0.0], &[]);
+        let base = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[]);
         assert!((base.dep[1] - base.arr[1] - 30.0).abs() < 1e-9);
         for delay in [5.0, 20.0, 45.0, 120.0] {
-            let p = run(&top(), &stops, &[0.0, 30.0, 0.0], &[Hold { s: 3500.0, delay }]);
+            let p = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[Hold { s: 3500.0, delay }]);
             assert!((p.duration - base.duration - delay).abs() < 0.5, "delay {delay}: {} vs {}", p.duration, base.duration);
             assert!((p.arr[1] - base.arr[1]).abs() < 1e-9);
         }
         // A long hold is a stop in front of the point; a short one is not.
-        let p = run(&top(), &stops, &[0.0, 30.0, 0.0], &[Hold { s: 3500.0, delay: 120.0 }]);
+        let p = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[Hold { s: 3500.0, delay: 120.0 }]);
         assert!(p.phases.iter().any(|ph| ph.v == 0.0 && (ph.s - 3500.0).abs() < 1e-9));
-        let p = run(&top(), &stops, &[0.0, 30.0, 0.0], &[Hold { s: 3500.0, delay: 5.0 }]);
+        let p = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[Hold { s: 3500.0, delay: 5.0 }]);
         assert!(!p.phases.iter().any(|ph| ph.v == 0.0 && (ph.s - 3500.0).abs() < 1e-9));
         // A hold right after a stop becomes dwell there.
-        let p = run(&top(), &stops, &[0.0, 30.0, 0.0], &[Hold { s: 2010.0, delay: 40.0 }]);
+        let p = run(&top(), &stops, &[], &[0.0, 30.0, 0.0], &[Hold { s: 2010.0, delay: 40.0 }]);
         assert!((p.dep[1] - p.arr[1] - 70.0).abs() < 1e-9);
     }
 }

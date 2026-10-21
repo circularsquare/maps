@@ -333,7 +333,9 @@ function StationDetails({ s, lines, props, construct, remove }: {
 }) {
   // T-446: each line's boardings here in the past 24 hours (re-rendered as they move: a small part of the panel)
   const t = today.value;
-  const here = lines.map((l) => [l, t.get(l.id)?.stops[l.stops.indexOf(s.id)] ?? 0] as const);
+  // a line may stop here twice (T-797: on both sides of a reversal): both visits count
+  const visits = (l: LineInput) => l.stops.flatMap((x, k) => (x === s.id ? [k] : []));
+  const here = lines.map((l) => [l, visits(l).reduce((n, k) => n + (t.get(l.id)?.stops[k] ?? 0), 0)] as const);
   return (
     <>
       <Built built={s.built} what="The station" />
@@ -353,7 +355,7 @@ function StationDetails({ s, lines, props, construct, remove }: {
           </li>
         ))}
       </ul>
-      {lines.length > 0 && <BoardingsToday lines={lines} at={(l) => [l.stops.indexOf(s.id)]} />}
+      {lines.length > 0 && <BoardingsToday lines={lines} at={visits} />}
       <Waiting node={s.num} lines={lines} />
       <div class="pane-foot">
         {!s.built ? (

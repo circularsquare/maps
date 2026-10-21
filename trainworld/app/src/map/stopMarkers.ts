@@ -31,7 +31,9 @@ export type StopTier =
   /** joined to the route by track, off it: adding it changes the route */
   | "reroute"
   /** no track joins it to the line */
-  | "cut";
+  | "cut"
+  /** adding it makes the line's trains reverse at a station where they did not (T-797) */
+  | "reverse";
 
 /** Marker diameter by zoom, CSS px. */
 const SIZE: [number, number][] = [[9, 9], [12, 14], [14, 20], [16, 24]];
@@ -54,16 +56,21 @@ function sizeAt(zoom: number): number {
 
 /**
  * The tiers as the clock worker works them out (`TrackApi::stop_tiers`, T-237): per station node
- * its tier, 0 on, 1 route, 2 reroute, 3 cut, from the same search a click makes, so a station past
- * an end that the line can carry on to is on route.
+ * its tier, 0 on, 1 route, 2 reroute, 3 cut, 4 reverse, and for 4 the station trains would
+ * reverse at (T-797), from the same search a click makes, so a station past an end that the line
+ * can carry on to is on route.
  */
-function tiersFrom(d: Float64Array, w: WorldView): Map<string, StopTier> {
-  const names: StopTier[] = ["on", "route", "reroute", "cut"];
+function tiersFrom(d: Float64Array, w: WorldView, revAt: Map<string, string>): Map<string, StopTier> {
+  const names: StopTier[] = ["on", "route", "reroute", "cut", "reverse"];
   const byNum = new Map(w.save.stations.map((s) => [s.num, s.id]));
   const out = new Map<string, StopTier>();
-  for (let i = 0; i + 1 < d.length; i += 2) {
+  revAt.clear();
+  for (let i = 0; i + 2 < d.length; i += 3) {
     const id = byNum.get(d[i]);
-    if (id !== undefined) out.set(id, names[d[i + 1]] ?? "cut");
+    if (id === undefined) continue;
+    out.set(id, names[d[i + 1]] ?? "cut");
+    const at = byNum.get(d[i + 2]);
+    if (at !== undefined) revAt.set(id, at);
   }
   return out;
 }
@@ -115,7 +122,7 @@ interface Mark {
 }
 
 /** In the order a click prefers when markers overlap: the stops, then the ones that can be added. */
-const RANK: Record<StopTier, number> = { on: 3, route: 2, reroute: 1, cut: 0 };
+const RANK: Record<StopTier, number> = { on: 3, route: 2, reroute: 1, reverse: 1, cut: 0 };
 
 export class StopMarkers {
   private box: HTMLDivElement;
@@ -137,6 +144,8 @@ export class StopMarkers {
   private asked = 0;
   /** the clock worker's last tiers for the line being edited */
   private fromWorker: Map<string, StopTier> | null = null;
+  /** for a "reverse" station, the station trains would reverse at */
+  private revAt = new Map<string, string>();
   private seenWorld: WorldView | null = null;
   private seenLine: number | null = null;
 
@@ -192,7 +201,7 @@ export class StopMarkers {
       const asked = ++this.asked;
       void queryClock({ what: "stopTiers", line: id }).then((d) => {
         if (!d || asked !== this.asked || world.peek() !== w || !this.line) return;
-        this.tiers = this.fromWorker = tiersFrom(d, w);
+        this.tiers = this.fromWorker = tiersFrom(d, w, this.revAt);
         this.place();
         this.overlay.invalidate();
       });
@@ -296,6 +305,7 @@ export class StopMarkers {
       case "on": return [name, "Click to remove the stop"];
       case "route": return [name, "Click to add a stop"];
       case "reroute": return [name, "Click to add a stop and change the route"];
+      case "reverse": return [name, `Click to add a stop. Trains reverse at ${this.names.get(this.revAt.get(id) ?? "") ?? "a station"}`];
       default: return [name, "No track joins it to this line"];
     }
   }

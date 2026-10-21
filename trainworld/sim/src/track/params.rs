@@ -108,6 +108,13 @@ pub const PLATFORM_MARGIN_S: f64 = 60.0;
 pub const PASSING_S: f64 = 40.0;
 pub const TERMINUS_MARGIN_S: f64 = 60.0;
 pub const CONFLICT_S: f64 = 90.0;
+/// Every train reversing partway holds its station side's limiter this long: 12 an hour (T-797,
+/// a stopgap until T-657's reversing design).
+pub const REVERSAL_LIMIT_S: f64 = 300.0;
+/// A reversal's cost to the route search (s) and to the stop insertion (m), so a route without
+/// one wins unless it is much longer (T-797).
+pub const REVERSAL_SEARCH_S: f64 = 600.0;
+pub const REVERSAL_INSERT_M: f64 = 5000.0;
 pub const KINGMAN_C0: f64 = 0.2;
 pub const RHO_KNEE: f64 = 0.9;
 pub const OVERLOAD_WINDOW_S: f64 = 3600.0;
