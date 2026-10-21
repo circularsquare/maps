@@ -36,7 +36,9 @@ try {
   const bytes = await readFile(SAVE);
   await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
-  await page.waitForFunction(() => { const d = window.twDemand, v = d?.view?.(); return v && v.final && !d.client.waiting; }, undefined, { timeout: 300000, polling: 500 });
+  // (T-840: the blank game's final view still shows while the save's solve runs; the clock's hold
+  // ends with the save's own final)
+  await page.waitForFunction(() => { const d = window.twDemand, v = d?.view?.(); return v && v.final && !d.client.waiting && !window.tw.clock.held.peek(); }, undefined, { timeout: 300000, polling: 500 });
   // the fastest speed made a game day about 4 wall seconds (the module is the app's own under Vite)
   await page.evaluate(async () => { const c = await import('/src/game/clock.ts'); c.SPEEDS[2] = 20000; });
   const run = (ms) => page.evaluate(() => window.tw.clock.setSpeed(2)).then(() => wait(ms));

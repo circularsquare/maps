@@ -1711,7 +1711,8 @@ class DemandClient {
     const svc = serviceFromSnapshot(snap);
     const key = JSON.stringify(svc);
     // the first network after a whole-game load is the one the clock waits for (T-149)
-    if (takeGameLoadHold()) this.hold = {};
+    const gameLoad = takeGameLoadHold();
+    if (gameLoad) this.hold = {};
     if (key === this.lastKey) {
       // nothing demand reads changed: the solve in hand (or waiting) is the loaded game's
       if (this.hold && !this.waiting) this.hold.version = this.cur?.version;
@@ -1720,6 +1721,9 @@ class DemandClient {
     }
     this.lastKey = key;
     demandUpdating.value = true;
+    // T-840: a game loaded while the last one's bar is up starts the bar over, since its best share
+    // was measured against the last game's (smaller) solve and the bar never goes back
+    if (gameLoad && this.job) this.job = { items: [], cities: [], startup: startup.peek() === "loading", best: 0 };
     this.send(svc, performance.now());
     // T-328: a whole game's network: its last final result may be kept beside the save
     if (this.hold && this.cacheOn) void this.tryCache(svc);

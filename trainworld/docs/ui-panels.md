@@ -388,7 +388,8 @@ registry centre and zoom, or over New York with none [T-310].
   come are expected at the pace measured so far, so a slower machine or bigger network corrects the
   bar within the first wave of periods. It never
   goes back, and is never full before the work is done (a finished load shows about 95%, then the
-  card goes).
+  card goes). A game loaded while the last one's bar is still up starts the bar over from empty
+  [T-840].
 - A city opened later (a pan, construction) shows its estimate at once and the crowding rounds
   refine it with the clock running; the status says "Estimate, refining 2/4…" (hover: the figures
   are an early estimate) until the zone in view's cluster has its final [T-421].
