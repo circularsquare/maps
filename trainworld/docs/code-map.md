@@ -172,6 +172,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
 
 - `smoke.mjs [url]`: the pre-commit smoke check (CLAUDE.md "Before a commit").
 - `dev-nowatch.mjs <port>`: the app's Vite with watching and HMR off, for an agent's own loop.
+- `agent-tree.mjs new|list|land|remove`: agent worktrees in `maps/.tw-trees/<name>` on branch
+  `tw/<name>` (CLAUDE.md "Agent worktrees"); `land` squashes a tree's trainworld/ changes onto master.
 - `every-pack-opens.mjs [url] [zone ...]`: every registered zone, in a fresh new game, opens for
   the view and solves a three-station line across its centre without a demand error (T-484; about
   16 s a zone, 18 minutes for all).

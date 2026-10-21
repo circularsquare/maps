@@ -64,6 +64,16 @@ Briefs carry only the task; these hold for every agent.
   6100-6199 nobody else uses), watching and HMR off so others' edits do not reload your page;
   restart it after editing the app. What Anita opens goes through 8800 (`serve.py`), never yours;
   run checks on your own Vite, and never long sweeps against 8800 while she may be playing.
+- **Agent worktrees** (T-792; Anita 2026-10-21: used sparingly). Most agents work in the main tree.
+  A code agent whose edits would collide with another's in shared files gets its own tree from the
+  orchestrator: `node trainworld/checks/agent-tree.mjs new <name>` makes `maps/.tw-trees/<name>` on
+  branch `tw/<name>` from master, with `data`, `app/node_modules`, `artifacts/trainworld` and `venv`
+  as junctions to the main tree's and the WASM bindings copied (Rust builds into the tree's own
+  `sim/target`). The agent works and runs everything from that folder as its maps root and does not
+  commit. TASKS, ARCHIVE, DECISIONS and data or pipeline batches are edited in the main tree only.
+  The orchestrator runs smoke in the tree, then `agent-tree.mjs land <name> "<one sentence>"` (all
+  its trainworld/ changes as one commit on master, fast-forwarded), then `remove <name>`. About
+  1.2 GB a tree before its Rust build; two or three at most.
 - **Headless Chrome** through Playwright with its own temporary `--user-data-dir`. Stop only the
   PIDs you started; never kill browsers or node broadly.
 - **The real save** is `T-007-real-nyc.save` (New York, 109 lines). `?new=1` never writes a slot.
@@ -189,7 +199,7 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   orchestrator's snapshot worktree `maps/.tw-snap/` (detached HEAD, excluded by
   `.git/info/exclude`; `data` and `app/node_modules` are junctions to the main tree's; its own
   `CARGO_TARGET_DIR=maps/.tw-snap-target`), so a rebuild never waits for agents mid-edit. Agents
-  work in the one main tree (no worktree per agent).
+  work in the main tree unless given a worktree (Agent worktrees, above).
 - **Commits** (2026-10-13): the orchestrator commits trainworld work without asking, not often (end
   of a round, or when a snapshot build needs it); explicit `trainworld/` paths, one plain sentence.
   Subagents never commit. **Pushing needs Anita's word.**
