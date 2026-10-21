@@ -8,8 +8,11 @@
 // The search is A* over chains in each direction: shortest by length, a turn of more than 60
 // degrees where two chains meet refused (no running in one branch of a turnout and out the other),
 // the other family than the first click's nearest track (metro or rail) at three times its length,
-// and every chain within the snap radius of each click a candidate, its distance from the click
-// counted twice. It gives up after 2 s or 3 million states.
+// high-speed chains at HSR of theirs (T-838), and every chain within the snap radius of each click
+// a candidate, its distance from the click counted twice. It gives up after 2 s or 3 million states.
+//
+// The reach (T-839): every chain the search could get to from the first click under the same turn
+// rule, sent for the part of it in view so the map can light it up.
 
 import init, { TrackApi } from "../wasm/track/sim";
 import { NEW_GAME_FRAME } from "../game/cities";
@@ -21,14 +24,21 @@ export type ToRouter =
   /** the view: the graphs of the regions in it are fetched ahead of a click */
   | { kind: "view"; w: number; s: number; e: number; n: number }
   /** `ra`, `rb`: the snap radius at each click, ground m */
-  | { kind: "route"; seq: number; a: [number, number]; b: [number, number]; ra: number; rb: number; tracks: number; level: number; tol: number };
+  | { kind: "route"; seq: number; a: [number, number]; b: [number, number]; ra: number; rb: number; tracks: number; level: number; tol: number }
+  /** the track reachable from a first click at `a` (snap radius `ra`), in view box `box` (w, s, e,
+   * n), vertices kept `step` degrees apart; null `a` drops it */
+  | { kind: "reach"; seq: number; a: [number, number] | null; ra: number; box: [number, number, number, number]; step: number };
 
 export type FromRouter =
   /** the real line, lon, lat pairs; `why` when there is none: "off" no real track within reach of
    * a click (or no graph there), "none" nothing joins them */
   | { kind: "line"; seq: number; line: Float64Array | null; lengthM: number; why?: "off" | "none"; ms: number; states: number }
   /** the fitted corners in `add_route`'s `pis` layout (x, y, radius, level each), null if the fit failed */
-  | { kind: "fit"; seq: number; pis: Float64Array | null; worst: number; mean: number; ms: number };
+  | { kind: "fit"; seq: number; pis: Float64Array | null; worst: number; mean: number; ms: number }
+  /** the reachable chains in view: chain i's lon, lat pairs are `xy[off[i] * 2]` up to
+   * `xy[off[i + 1] * 2]`, its class `cls[i]` (0 main line, 1 other rail, 2 metro); `chains` reachable
+   * in all */
+  | { kind: "reach"; seq: number; xy: Float32Array; off: Uint32Array; cls: Uint8Array; chains: number; ms: number };
 
 const M_PER_DEG = 6371008.8 * Math.PI / 180;
 const TURN_MAX = 60 * Math.PI / 180;
@@ -41,6 +51,9 @@ const HEADING_M = 30;
 const CELL = 0.01;
 /** a border junction looks for a neighbour's graph within this, degrees */
 const BORDER_DEG = 0.05;
+/** a high-speed chain's cost per m of it, so a long snap keeps to the LGV or Shinkansen over a
+ * slightly shorter classic line (T-838); the heuristic is scaled by it to stay a lower bound */
+const HSR = 0.8;
 
 const post = (m: FromRouter, t: Transferable[] = []) => (self as unknown as Worker).postMessage(m, t);
 
@@ -106,6 +119,12 @@ const net = {
   cb: new Uint32Array(1 << 16),
   /** 0 rail, 1 metro */
   fam: new Uint8Array(1 << 16),
+  /** the cost of a m of it: 1, or HSR on high-speed track */
+  per: new Float32Array(1 << 16),
+  /** 0 main line, 1 other rail, 2 metro, as the layer colours them */
+  cls: new Uint8Array(1 << 16),
+  /** bounding box, w s e n */
+  box: new Float32Array(1 << 18),
   len: new Float64Array(1 << 16),
   /** heading leaving a into the chain, and arriving at b along it (radians, east 0, north pi/2) */
   ha: new Float32Array(1 << 16),
@@ -181,14 +200,22 @@ function join(g: RealGraph) {
   for (const k of ["len"] as const) net[k] = grow(net[k], C0 + C);
   for (const k of ["ha", "hb"] as const) net[k] = grow(net[k], C0 + C);
   net.fam = grow(net.fam, C0 + C);
+  net.per = grow(net.per, C0 + C);
+  net.cls = grow(net.cls, C0 + C);
+  net.box = grow(net.box, (C0 + C) * 4);
   net.cg = grow(net.cg, C0 + C);
   for (let c = 0; c < C; c++) {
     const gc = C0 + c, v0 = g.off[c], v1 = g.off[c + 1];
     net.ca[gc] = jmap[g.a[c]];
     net.cb[gc] = jmap[g.b[c]];
     net.fam[gc] = g.kind[c] === 2 ? 1 : 0;
+    net.per[gc] = g.flags[c] & 8 ? HSR : 1;
+    net.cls[gc] = g.kind[c] === 2 ? 2 : g.rank[c] === 0 ? 0 : 1;
     net.cg[gc] = gi;
     net.cl[gc] = c;
+    let w = 180, s = 90, e = -180, n = -90;
+    for (let v = v0; v < v1; v++) (w = Math.min(w, g.lon[v])), (e = Math.max(e, g.lon[v])), (s = Math.min(s, g.lat[v])), (n = Math.max(n, g.lat[v]));
+    net.box.set([w, s, e, n], gc * 4);
     let L = 0, lastKey = -1;
     const cells = (lon: number, lat: number) => {
       const k = cellKey(lon, lat);
@@ -286,7 +313,7 @@ async function search(seq: number, a: [number, number], b: [number, number], ra:
   const starts = candidates(a[0], a[1], ra), ends = candidates(b[0], b[1], rb);
   if (!starts.length || !ends.length) return { legs: null, why: "off", states: 0 };
   const fam0 = net.fam[starts[0].c];
-  const fac = (c: number) => (net.fam[c] === fam0 ? 1 : OTHER_FAMILY);
+  const fac = (c: number) => (net.fam[c] === fam0 ? 1 : OTHER_FAMILY) * net.per[c];
   const endsOn = new Map<number, Cand[]>();
   for (const e of ends) endsOn.set(e.c, [...(endsOn.get(e.c) ?? []), e]);
   let n2 = net.C * 2;
@@ -317,7 +344,7 @@ async function search(seq: number, a: [number, number], b: [number, number], ra:
     hf[i] = lf, hs[i] = ls;
     return [f, s] as const;
   };
-  const h = (j: number) => Math.max(0, ground(net.jLon[j], net.jLat[j], b[0], b[1]) - rb);
+  const h = (j: number) => HSR * Math.max(0, ground(net.jLon[j], net.jLat[j], b[0], b[1]) - rb);
   const arrive = (s: number) => (s & 1 ? net.ca[s >> 1] : net.cb[s >> 1]);
   starts.forEach((st, i) => {
     const c = st.c, f = fac(c), L = net.len[c];
@@ -398,6 +425,56 @@ async function search(seq: number, a: [number, number], b: [number, number], ra:
   return { legs, states, start: start!, end: best.end! };
 }
 
+// ---------------------------------------------------------------- the reach
+
+/** the chains reachable from the last first click, kept while the view moves; `C` the graph's size then */
+let reached: { key: string; C: number; on: Uint8Array; chains: number } | null = null;
+
+/** Every chain a route from (lon, lat) could run over: the search's moves without its costs. */
+function reachFrom(lon: number, lat: number, r: number): { on: Uint8Array; chains: number } {
+  const n2 = net.C * 2, seen = new Uint8Array(n2), on = new Uint8Array(net.C), stack = new Uint32Array(n2);
+  let sp = 0, chains = 0;
+  for (const { c } of candidates(lon, lat, r)) {
+    if (!on[c]) (on[c] = 1), chains++;
+    for (const s of [c * 2, c * 2 + 1]) if (!seen[s]) (seen[s] = 1), (stack[sp++] = s);
+  }
+  while (sp) {
+    const s = stack[--sp], c = s >> 1, back = s & 1, J = back ? net.ca[c] : net.cb[c];
+    const hin = back ? net.ha[c] + Math.PI : net.hb[c];
+    for (let k = net.adjStart[J]; k < net.adjStart[J + 1]; k++) {
+      const end = net.adj[k], c2 = end >> 1, s2 = end;
+      if (seen[s2] || turn(hin, end & 1 ? net.hb[c2] + Math.PI : net.ha[c2]) > TURN_MAX) continue;
+      seen[s2] = 1;
+      stack[sp++] = s2;
+      if (!on[c2]) (on[c2] = 1), chains++;
+    }
+  }
+  return { on, chains };
+}
+
+/** The reachable chains crossing the box, their vertices thinned to `step` degrees; a chain
+ * shorter than that each way (a crossover, zoomed out) is left out. */
+function reachIn(on: Uint8Array, box: [number, number, number, number], step: number) {
+  const [w, s, e, n] = box, xy: number[] = [], off: number[] = [0], cls: number[] = [];
+  const b = net.box;
+  for (let c = 0; c < on.length; c++) {
+    if (!on[c] || b[c * 4] > e || b[c * 4 + 2] < w || b[c * 4 + 1] > n || b[c * 4 + 3] < s) continue;
+    if (b[c * 4 + 2] - b[c * 4] < step && b[c * 4 + 3] - b[c * 4 + 1] < step) continue;
+    const g = net.graph[net.cg[c]], l = net.cl[c], v0 = g.off[l], v1 = g.off[l + 1];
+    let lx = g.lon[v0], ly = g.lat[v0];
+    xy.push(lx, ly);
+    for (let v = v0 + 1; v < v1; v++) {
+      const x = g.lon[v], y = g.lat[v];
+      if (v + 1 < v1 && Math.abs(x - lx) < step && Math.abs(y - ly) < step) continue;
+      xy.push(x, y);
+      (lx = x), (ly = y);
+    }
+    off.push(xy.length / 2);
+    cls.push(net.cls[c]);
+  }
+  return { xy: new Float32Array(xy), off: new Uint32Array(off), cls: new Uint8Array(cls) };
+}
+
 /** The route's line as lon, lat pairs: the snap point at each click, the track between. */
 function lineOf(legs: Leg[], start: Cand, end: Cand): { line: Float64Array; lengthM: number } {
   const out: number[] = [start.lon, start.lat];
@@ -462,10 +539,12 @@ async function traceLatest(seq: number, line: Float64Array, tol: number, tracks:
 }
 
 let queue: Promise<void> = Promise.resolve();
+let latestReach = 0;
 
 self.onmessage = (ev: MessageEvent<ToRouter>) => {
   const m = ev.data;
   if (m.kind === "route") latest = m.seq;
+  if (m.kind === "reach") latestReach = m.seq;
   queue = queue.then(() => handle(m)).catch((err) => console.error("real route", err));
 };
 
@@ -484,6 +563,20 @@ async function handle(m: ToRouter) {
       .slice(0, 3);
     // in the background: a route asked meanwhile is not held up behind it
     for (const { cc } of near) void loadRegion(cc);
+  } else if (m.kind === "reach") {
+    if (m.seq !== latestReach) return;
+    if (!m.a) return void (reached = null);
+    const t0 = performance.now();
+    const a = m.a, key = `${a[0]},${a[1]},${m.ra}`;
+    const [w, s, e, n] = m.box;
+    const here = await regionsAt(a[0], a[1], 0);
+    const all = await regionOutlines();
+    const inView = all.filter((o) => !here.includes(o.cc) && o.boxes.some((b) => b[0] <= e && b[2] >= w && b[1] <= n && b[3] >= s)).slice(0, 4).map((o) => o.cc);
+    await Promise.all([...here, ...inView].map(loadRegion));
+    if (m.seq !== latestReach) return;
+    if (reached?.key !== key || reached.C !== net.C) reached = { key, C: net.C, ...reachFrom(a[0], a[1], m.ra) };
+    const { xy, off, cls } = reachIn(reached.on, m.box, m.step);
+    post({ kind: "reach", seq: m.seq, xy, off, cls, chains: reached.chains, ms: performance.now() - t0 }, [xy.buffer, off.buffer, cls.buffer]);
   } else if (m.kind === "route") {
     if (m.seq !== latest) return;
     const t0 = performance.now();

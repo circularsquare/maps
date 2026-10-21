@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-839 [P2] Show what a snap can reach. Done 2026-10-21: after the first snap click the real track a route could reach is lit, the rest dimmed (10-25 ms to work out, under 100 ms to draw); T-816's detour limit dropped. notes/T-839.md.
+- T-838 [P2] Snapped routes prefer high-speed track. Done 2026-10-21: high-speed chains cost 0.8 of their length in the search; London-Paris 493 km by Lille and the LGV, not 451 km by Amiens. notes/T-839.md.
 - T-826 [P2] Run in background. Done 2026-10-21: a Settings checkbox (off by default; off pauses the game while its tab is hidden, as before) keeps the clock, money and autosaves at full speed hidden, hour ledgers matching a visible run. notes/T-826.md.
 - T-817a [P2] Design speed. Done 2026-10-21: a Build tab stepper (160, 200, 250, 320 km/h) sizes newly drawn curves (radius 1.8 to 7.2 km); 160 draws as before; high-speed track designed in notes/T-817.md.
 - T-797 B1+B2 [P2] Lines that reverse partway at stops. Done 2026-10-21: reversals worked out from the path, the turnaround stood at the stop, 12 an hour a side, a fourth stop tier and a large U-turn icon; B3 (track ends) open. notes/T-797.md.

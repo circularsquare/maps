@@ -15,6 +15,7 @@ import type { Level } from "../game/types";
 import { buildLevel, trackCount } from "../game/ui";
 import type { Overlay } from "./overlay";
 import { strokesFromPreview } from "./network";
+import { realReach } from "./realNetwork";
 import { EARTH_C, toLocal } from "./geo";
 
 /** the snap radius, px; and the pointer's rest before a route is searched, ms */
@@ -28,6 +29,8 @@ const SLOW_MS = 500;
 const TOL_M = 25;
 /** graph and tiles can differ by a few metres; the router looks this much further, m */
 const SLACK_M = 20;
+/** the reach's vertices are kept this far apart, px (T-839) */
+const REACH_STEP_PX = 1.5;
 
 /** The route the second click places: its real ends (lng, lat) and the fitted corners between. */
 export interface RealRoute { first: [number, number]; last: [number, number]; pis: PiInput[] }
@@ -62,6 +65,11 @@ export class RealSnap {
   /** timings of the last route, for checks (`window.tw.tools.real.last`) */
   last: { searchMs: number; states: number; fitMs: number; lengthM: number; corners: number; previewMs: number; worst: number } | null = null;
 
+  /** the reach's last answer, for checks: the worker's ms, from asking to the answer, chains reachable and drawn */
+  reachLast: { workerMs: number; ms: number; chains: number; drawn: number; points: number } | null = null;
+  private reachSeq = 0;
+  private reachAt = 0;
+
   constructor(
     private map: MlMap,
     private overlay: Overlay,
@@ -72,7 +80,29 @@ export class RealSnap {
     private show: (a: PreviewAnswer | null) => void,
     private redraw: () => void,
   ) {
-    map.on("moveend", () => this.sendView());
+    map.on("moveend", () => {
+      this.sendView();
+      if (this.from) this.askReach();
+    });
+  }
+
+  /** The real track reachable from the segment's start, for the part of the map in view and a
+   * quarter of it around (T-839). */
+  private askReach() {
+    const f = this.from;
+    if (!f) {
+      if (realReach.peek() || this.reachAt) this.post({ kind: "reach", seq: ++this.reachSeq, a: null, ra: 0, box: [0, 0, 0, 0], step: 0 });
+      this.reachAt = 0;
+      realReach.value = null;
+      return;
+    }
+    const b = this.map.getBounds(), pw = (b.getEast() - b.getWest()) / 4, ph = (b.getNorth() - b.getSouth()) / 4;
+    this.reachAt = performance.now();
+    this.post({
+      kind: "reach", seq: ++this.reachSeq, a: [f.lng, f.lat], ra: f.r,
+      box: [b.getWest() - pw, b.getSouth() - ph, b.getEast() + pw, b.getNorth() + ph],
+      step: (REACH_STEP_PX * 360) / (512 * 2 ** this.map.getZoom()),
+    });
   }
 
   private router(): Worker {
@@ -154,6 +184,7 @@ export class RealSnap {
   begin(at: [number, number] | null) {
     this.drop();
     this.from = at ? { lng: at[0], lat: at[1], r: SNAP_PX * this.perPx(at[1]) + SLACK_M } : null;
+    this.askReach();
   }
 
   /** The route between this segment's clicks is the real network's, not an ordinary segment's. */
@@ -207,6 +238,7 @@ export class RealSnap {
   reset() {
     this.from = null;
     this.drop();
+    this.askReach();
   }
 
   private drop() {
@@ -237,6 +269,12 @@ export class RealSnap {
   }
 
   private answer(m: FromRouter) {
+    if (m.kind === "reach") {
+      if (m.seq !== this.reachSeq || !this.from) return;
+      realReach.value = { xy: m.xy, off: m.off, cls: m.cls };
+      this.reachLast = { workerMs: m.ms, ms: performance.now() - this.reachAt, chains: m.chains, drawn: m.cls.length, points: m.xy.length / 2 };
+      return;
+    }
     const s = this.spot;
     if (!s || s.seq !== m.seq) return;
     if (m.kind === "line") {

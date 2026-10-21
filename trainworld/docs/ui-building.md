@@ -112,13 +112,17 @@ switch on, the track tool follows the real network the layer draws.
   a first click on the player's own track starts there as always, and the route begins from the
   real track under the click.
 - **The route**: with the start within reach of real track, the pointer resting 120 ms near real
-  track asks the router worker for the route. It is shortest by length over the graph files
+  track asks the router worker for the route. It is the cheapest over the graph files
   (`packs/realgraph/<cc>.rgr`: the drawn track, and short undrawn track joining it at two points or
   more, at most 3 km a group, so a tunnel portal or station throat no line runs over leaves no gap
   [T-816]), every chain within the snap radius (plus 20 m) a candidate at
   either click, its distance from the click counted twice; no turn sharper than 60 degrees where
   two chains meet; the other family (metro or rail) than the first click's nearest track at three
-  times its length, so a subway click follows the subway and an intercity route keeps off it. A
+  times its length, so a subway click follows the subway and an intercity route keeps off it;
+  high-speed track (flag 8 in the graph) at 0.8 times its length, so London to Paris keeps to HS1
+  and the LGV by Lille (493 km) over the shorter classic line by Amiens [T-838]; otherwise a metre
+  costs a metre. The length shown and built is the real one. A long way round is allowed: the
+  player sees it in the ghost before clicking [T-839]. A
   region's graph is fetched when the view, a click or the search first reaches it (a border
   junction loads the neighbour's file, joined by OSM node id). The search stops after 2 s or 3
   million states. The real line is drawn as the ghost, then the corners fitted to it at 25 m
@@ -129,9 +133,17 @@ switch on, the track tool follows the real network the layer draws.
 - **The second click** places the route as one segment: one edit, one undo step, Shift or keep
   placing carrying on from its end. A click before the route is ready waits for it. It ends on the
   player's own track when the pointer is on it, else at the real line's snap point.
-- **Nothing joins them** (two networks that never meet, the search ran out, or the only route is
-  longer than twice the clicks' distance apart plus 20 km, as when a click on the line beside the
-  one meant could only turn back by a loop hundreds of km round [T-816]): a red straight
+- **What the start reaches** [T-839]: from the first click until the segment is placed or dropped
+  (Escape, a click on the start, the snap switched off), the real track a route from the start
+  could run over is drawn over the layer in the layer's colours at 0.9 opacity and a little wider,
+  and the rest of the layer drops from 0.4 to 0.25. Reachable is the search's own moves without
+  its costs: every chain from the start's candidates on through junctions with no turn over 60
+  degrees, either family, the whole joined graph with no distance limit. The router worker works it
+  out once per start and sends the chains crossing the view and a quarter of it around, vertices
+  1.5 px apart and chains under that left out, again on each move or zoom; a region with no graph
+  file, or one not yet loaded (the regions at the start and up to four in view are loaded first),
+  counts as unreachable. Timings: notes/T-839.md.
+- **Nothing joins them** (two networks that never meet, or the search ran out): a red straight
   ghost and "No real track joins these points" in the tag; the click places nothing and says so.
 - **Away from real track**, or where no graph file covers the click, the tool draws an ordinary
   segment.

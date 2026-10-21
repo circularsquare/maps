@@ -14,7 +14,7 @@
 // the way noritetsu's own page decides.
 
 import * as maplibregl from "maplibre-gl";
-import { effect } from "@preact/signals";
+import { effect, signal } from "@preact/signals";
 import { Protocol } from "pmtiles";
 import { SHADES, type ShadeColours } from "../game/shadeTable";
 import { display, shade, snapping } from "../game/ui";
@@ -41,6 +41,32 @@ const OPACITY = 0.15;
 const OPACITY_SNAP = 0.4;
 
 const colour = (c: ShadeColours) => ["case", METRO, c.realMetro, MAIN, c.realMain, c.realOther];
+
+/** T-839: the real track a snapped route from the first click could reach, drawn over the layer in
+ * the same colours at full strength and a little wider, the rest of the layer dimmed. Chain i's
+ * lon, lat pairs are `xy[off[i] * 2]` to `xy[off[i + 1] * 2]`, its class `cls[i]` (0 main line,
+ * 1 other rail, 2 metro); set by map/realSnap.ts. */
+export const realReach = signal<{ xy: Float32Array; off: Uint32Array; cls: Uint8Array } | null>(null);
+const REACH = "tw-reach";
+const OPACITY_DIM = 0.25;
+const REACH_OPACITY = 0.9;
+const reachWidth = (...stops: number[]) => ["interpolate", ["exponential", 1.4], ["zoom"], ...stops.flatMap((v, i) => [MIN_ZOOM + [0, 4, 7, 10, 13, 16][i], ["case", ["==", ["get", "c"], 1], v * 0.7, v]])];
+const REACH_WIDTH = reachWidth(1, 1.5, 2.2, 3.4, 5.5, 10);
+const reachColour = (c: ShadeColours) => ["match", ["get", "c"], 2, c.realMetro, 0, c.realMain, c.realOther];
+
+function reachData(r: { xy: Float32Array; off: Uint32Array; cls: Uint8Array } | null) {
+  const lines: number[][][][] = [[], [], []];
+  if (r)
+    for (let i = 0; i + 1 < r.off.length; i++) {
+      const l: number[][] = [];
+      for (let k = r.off[i]; k < r.off[i + 1]; k++) l.push([r.xy[k * 2], r.xy[k * 2 + 1]]);
+      if (l.length > 1) lines[r.cls[i]].push(l);
+    }
+  return {
+    type: "FeatureCollection" as const,
+    features: lines.map((coordinates, c) => ({ type: "Feature" as const, properties: { c }, geometry: { type: "MultiLineString" as const, coordinates } })),
+  };
+}
 
 interface Region {
   cc: string;
@@ -108,7 +134,7 @@ export function startRealNetwork(map: maplibregl.Map) {
       .sort((x, y) => dist(x) - dist(y))
       .slice(0, PER_PASS);
     if (!hits.length) return;
-    const before = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
+    const before = map.getLayer(REACH) ? REACH : map.getStyle().layers.find((l) => l.type === "symbol")?.id;
     const colours = colour(SHADES[shade.peek()]);
     for (const { cc } of hits) {
       added.add(cc);
@@ -127,22 +153,47 @@ export function startRealNetwork(map: maplibregl.Map) {
     if (hits.length === PER_PASS) map.once("idle", ensure);
   };
 
+  const showReach = () => {
+    const r = snapping.peek() ? realReach.peek() : null;
+    // not isStyleLoaded(): that waits on every tile, which can be seconds
+    if (!map.getStyle()) return void map.once("style.load", showReach);
+    const src = map.getSource(REACH) as maplibregl.GeoJSONSource | undefined;
+    if (!src) {
+      if (!r) return;
+      map.addSource(REACH, { type: "geojson", data: reachData(r), tolerance: 0.3 });
+      map.addLayer(
+        {
+          id: REACH, type: "line", source: REACH,
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: { "line-color": reachColour(SHADES[shade.peek()]) as never, "line-width": REACH_WIDTH as never, "line-opacity": REACH_OPACITY },
+        },
+        map.getStyle().layers.find((l) => l.type === "symbol")?.id,
+      );
+      return;
+    }
+    src.setData(reachData(r));
+    map.setPaintProperty(REACH, "line-color", reachColour(SHADES[shade.peek()]) as never);
+  };
+
   effect(() => {
     // snapping shows the layer even when Settings has it off: nothing unseen is snapped to
     const snap = snapping.value;
+    const reach = snap && !!realReach.value;
     on = display.value.realNetwork || snap;
-    opacity = snap ? OPACITY_SNAP : OPACITY;
+    opacity = snap ? (reach ? OPACITY_DIM : OPACITY_SNAP) : OPACITY;
     shade.value;
     if (on) setShade(), void ensure();
     for (const id of layerIds()) {
       map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
       map.setPaintProperty(id, "line-opacity", opacity);
     }
+    showReach();
   });
   map.on("moveend", ensure);
   map.on("style.load", () => {
     added.clear();
     painted = null;
     void ensure();
+    showReach();
   });
 }
