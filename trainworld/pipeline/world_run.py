@@ -1105,6 +1105,12 @@ class Run:
             self.set_row(i, "shipped", shipped=datetime.datetime.now().isoformat(timespec="seconds"))
             self.rec(i, result="shipped")
             print(f"  {i}: SHIPPED", flush=True)
+        try:  # T-800: the coarse outline of every registered zone; a failure only leaves the file as it was
+            ok, _, tail = self.step("zone_outlines", [], f"{L}.outlines.log")
+            if not ok:
+                print(f"  warning: coarse zone outlines not rebuilt: {str(tail)[-200:]}", flush=True)
+        except Exception as e:
+            print(f"  warning: coarse zone outlines not rebuilt: {e}", flush=True)
 
     def solve(self, u, new, L, again=False):
         """One solve unit's joint solve (`u`: name, members, fixed): members back to res-9, solved

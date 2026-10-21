@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-800 [P2] Zone outlines always there. Done 2026-10-21: `packs/outlines.json` (pipeline/zone_outlines.py, 604 zones at 300 m, 1.7 MB, 0.65 MB gzipped) drawn at startup, each zone's own outline replacing its coarse one on load; rebuilt by `world_run.py join`, startup unchanged.
 - T-794 [P2] A station on open ground. Done 2026-10-21: the station tool lays a straight piece one platform plus 20 m long with the station on it, one undo; aims at the nearest station or loose end, R turns it (`add_free_station`, tools.ts `freeGhost`).
 - T-795 [P2] Finer local trip bubbles. Done 2026-10-21: Settings "Detail" slider (4 steps, default one level finer than before: res 9 from zoom 11.8); the real save at zoom 12 draws 61,577 discs against 30,808, a draw under 0.3 ms, no rebuild.
 - T-804 [P2] Other bubble colours. Done 2026-10-21: Settings "Colours" choice, Mode mix (default) or Train share, a ramp pink #e0457b to green #2fa84f in OKLab with two pickers; repaints in about 7 ms, no rebuild.

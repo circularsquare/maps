@@ -86,7 +86,9 @@ background and wait once for the process.
   <shipped and changed> --market --trips` (or `market_zones.py --rows`
   when only parks happened), and a check that every file `vite.config.ts` copies into a
   production build exists for each shipped pack (it copies the registry's packs, so nothing more
-  needs listing). Status `shipped`.
+  needs listing). Last, `zone_outlines.py` rewrites `data/packs/outlines.json`, the coarse outline of
+  every registered zone (T-800, 13 s; a failure only prints a warning and leaves the old file, so
+  the new zones have no outline until their pack loads). Status `shipped`.
 - **Clean up**: the region's `.osm.pbf` files and the OSM caches the runner made go once the
   region is done (`--keep-downloads` keeps them); caches already on disk before, and the small
   `.admin.fgb`, stay.
@@ -343,7 +345,9 @@ every registered boundary, and the Node checks open every registered pack. Then 
 the clock worker fetches a zone's mask only where the view or track comes near its box (T-302).
 For a batch outside the Northeast, `python pipeline/register.py <ids> --market --trips` does this
 section and section 7's market and local-trips steps in one call, with no need to read the
-registry (T-441).
+registry (T-441). A zone registered by hand also needs `python pipeline/zone_outlines.py`, which
+rewrites `data/packs/outlines.json`, the coarse outline of every registered zone the map draws
+before the zone's own boundary has loaded (T-800); `world_run.py join` runs it.
 
 - Append to `cities`: `id`, `name`, `origin` (**exactly** the `build_city.py` origin, since it is
   the pack's frame), `center` (usually the origin), `zoom` 11.2, `utcOffset`, `market`.

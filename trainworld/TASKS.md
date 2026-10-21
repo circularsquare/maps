@@ -105,7 +105,6 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 Anita's playtest of 2026-10-19 (the 9e466a4 build): notes/playtest-2026-10-19.md, a section a task.
 - T-793 [P2] The loading bar's last 5% takes most of the wait (Anita 2026-10-21): time the stages behind the bar on a new game and the real save, and weight the bar by time so it moves evenly. Open.
 - T-809 [P2] A gentler border for the EU, Schengen and the UK (Anita 2026-10-21): the market's one border rule (0.26 x origin income^1.5) cuts London - Paris to about 9,600 trips a day against Eurostar's 30,000; pairs inside that area get a milder factor, one constant, checked on a few corridors. Taking, 2026-10-21.
-- T-800 [P2] Zone outlines always there (Anita 2026-10-21): on a first pan over a region most outlines are missing; load a coarse outline of every zone at start and refine on pan and zoom. Open.
 - T-803 [P3] More station faces (Anita 2026-10-21): some by time of day and a few rare ones. Open.
 - T-719 [P2] Covering whole regions (all of Spain, as Japan) rather than lone metros, timings and speedups: note written 2026-10-19, waits on Anita's decisions (its last section); notes/T-719.md.
 - T-771 [P3] A Spain module (T-719 item 6, later tailoring): the transport ministry's mobile-phone trip tables (a curve per zone, jobs at work) and INE's 1 km census grid; would rebuild mad bar val sev mal and the 40 zones. Open; notes/T-719.md.

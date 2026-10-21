@@ -13,7 +13,8 @@ const CITIES = REGISTRY.cities.map((c) => c.id);
  * City packs at `packs/<city>.json`, `.bin`, `.boundary.geojson`, `.market.json` (T-377) and `.places.json` (the OSM place
  * list, pipeline/places.py, fetched only when search or station naming needs it) beside the page: served from
  * data/packs/ by the dev server and copied into dist/packs/ by a build. The clock worker reads the
- * water mask from it with a Range request, the demand workers the cells.
+ * water mask from it with a Range request, the demand workers the cells. `packs/outlines.json` (T-800) is the one file
+ * shared by every zone.
  */
 function packs(): Plugin {
   return {
@@ -52,6 +53,10 @@ function packs(): Plugin {
       const intercity = join(PACKS, REGISTRY.market.pack + ".json");
       if (existsSync(intercity)) copyFileSync(intercity, join(out, REGISTRY.market.pack + ".json"));
       else this.warn("intercity market missing: build pipeline/intercity.py");
+      // T-800: every zone's coarse outline (pipeline/zone_outlines.py)
+      const outlines = join(PACKS, "outlines.json");
+      if (existsSync(outlines)) copyFileSync(outlines, join(out, "outlines.json"));
+      else this.warn("coarse zone outlines missing: run pipeline/zone_outlines.py");
       // T-731: the real networks a sandbox can start from (pipeline/realnet.py ship)
       const real = join(PACKS, "real");
       if (existsSync(real)) {

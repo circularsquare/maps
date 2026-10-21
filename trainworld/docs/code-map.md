@@ -113,7 +113,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   stations, T-157, T-194), `hoverRest.ts` (the list of what else is under a resting pointer,
   T-732), `hovered.ts` (what is lit as hovered, from the tags and the list, read by both renderers, T-730), `trackTagRows.ts` (the elevation and speed rows with icons, shared with
   the track tool's tag, T-526), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines, one
-  layer for the zones near the view, and the outside shade, T-131, T-139, T-400), `zoneLoading.ts` (zones still loading drawn grey with a loading
+  layer for every zone, and the outside shade, T-131, T-139, T-400), `coarseOutlines.ts` (reads
+  `packs/outlines.json`, which `pipeline/zone_outlines.py` writes: every registered zone's coarse
+  outline, T-800), `zoneLoading.ts` (zones still loading drawn grey with a loading
   bar, T-343).
 
 ### src/ui/: Preact components
@@ -195,7 +197,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   memory, open packs, reopening times; `SAVE=1` on the real save), `t801-no-grey.mjs` (no grey
   cities: a map start in a fresh profile turning Homes on, its zoomed-out bubbles, a click selecting
   one; a new New York game's Philadelphia an ordinary bubble zoomed out, loaded by a pan with no
-  market pack; screenshots `t801-*.png`), `t124-periods.mjs`
+  market pack; screenshots `t801-*.png`), `t800-outlines.mjs` (a jump from New York to Europe shows
+  every zone's outline at once; `NOFILE=1` blocks the coarse file, `DELAY=<ms>` slows the boundary
+  files; screenshots `t800-*.png`), `t124-periods.mjs`
   (the real save: a one-level train-count edit and an every-level edit timed to their final, hashed
   against `?perfOff=periods`), `t488-money-days.mjs` (the real save's clock run fast and pulled back
   across midnight: money days and hours one each, in order, none empty; uses the app's Vite, port

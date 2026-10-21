@@ -29,6 +29,8 @@ export class OutlineEdges {
 
   get size() { return this.zones.size; }
 
+  has(id: string) { return this.zones.has(id); }
+
   add(id: string, city: MultiPolygon) {
     if (this.zones.has(id)) return;
     const rings = city.coordinates.flat().map((ring) => {
@@ -45,6 +47,25 @@ export class OutlineEdges {
       return { ring, keys };
     });
     this.zones.set(id, rings);
+  }
+
+  /** Takes a zone's outline back out (T-800: its coarse one, when its own arrives). */
+  remove(id: string) {
+    const rings = this.zones.get(id);
+    if (!rings) return;
+    for (const { keys } of rings) {
+      for (const key of keys) {
+        const held = this.holders.get(key);
+        if (held === id) this.holders.delete(key);
+        else if (Array.isArray(held)) {
+          const rest = held.filter((h) => h !== id);
+          if (rest.length > 1) this.holders.set(key, rest);
+          else if (rest.length) this.holders.set(key, rest[0]);
+          else this.holders.delete(key);
+        }
+      }
+    }
+    this.zones.delete(id);
   }
 
   /** One feature per zone with the lines it draws (property `id`), none for `focused`. */

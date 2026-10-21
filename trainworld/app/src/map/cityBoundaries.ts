@@ -11,6 +11,7 @@ import { activeCity, zonesTouching } from "../game/cities";
 import { outsidePaint, SHADES, shadeColours } from "../game/shades";
 import { shade } from "../game/ui";
 import { cityGeometry, OutlineEdges, outsideCity } from "./boundaryGeometry";
+import { coarseOutlines } from "./coarseOutlines";
 
 const SHADE = "tw-city-outside";
 const FOCUS = "tw-city-focus";
@@ -82,10 +83,30 @@ export function startCityBoundaries(map: MlMap): () => void {
   // the outlines drawn, shared borders once; the source is set again as each zone arrives
   const edges = new OutlineEdges();
   const asked = new Set<string>();
+  // zones drawn from the coarse file (T-800) until their own boundary arrives
+  const coarse = new Set<string>();
   const drawn = () => edges.lines(activeCity.peek());
   const redraw = () => {
     if (edges.size) (map.getSource(OUTLINES) as GeoJSONSource | undefined)?.setData(drawn());
   };
+  // zones arrive in a burst while panning: one redraw for the lot
+  let pending = 0;
+  const redrawSoon = () => {
+    if (!pending) pending = window.setTimeout(() => { pending = 0; redraw(); }, 60);
+  };
+  void coarseOutlines().then(async (zones) => {
+    let n = 0;
+    // in slices of about 30 ms, so startup never waits on one long task
+    for (const [id, g] of zones) {
+      if (!alive) return;
+      if (!edges.has(id)) {
+        edges.add(id, g);
+        coarse.add(id);
+      }
+      if (++n % 40 === 0) await new Promise((done) => setTimeout(done));
+    }
+    redraw();
+  });
   const near = () => {
     const b = map.getBounds();
     return zonesTouching(b.getWest(), b.getSouth(), b.getEast(), b.getNorth()).map((c) => c.id);
@@ -100,8 +121,9 @@ export function startCityBoundaries(map: MlMap): () => void {
       asked.add(id);
       geometry(id).then((g) => {
         if (!alive) return;
+        if (coarse.delete(id)) edges.remove(id);
         edges.add(id, g);
-        redraw();
+        redrawSoon();
       }, (error) => { asked.delete(id); console.warn("City outline unavailable", error); });
     }
   };
@@ -152,6 +174,7 @@ export function startCityBoundaries(map: MlMap): () => void {
   return () => {
     alive = false;
     request++;
+    window.clearTimeout(pending);
     dispose();
     disposeShade();
     map.off("style.load", add);
