@@ -1063,7 +1063,7 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP):
     its smallest neighbour there that keeps the two within ZONE_CAP (else its smallest neighbour), so
     one zone does not take a whole region (the longest border put Sarajevo, Zenica and Mostar in one).
     With no neighbour left in its region (a small region, or Osttirol cut off from Tirol) it joins one
-    of another region. An island (no land border with any unit) joins the most populous zone of its
+    of another region, unless it already holds 80% of `floor`. An island (no land border with any unit) joins the most populous zone of its
     region within ISLAND_KM, or within 10 km once it holds ZONE_MIN_POP (the Isle of Wight stays
     alone). One that can join nothing stays as it is (Ceuta). Returns ({lead id: [units]}, [log lines])."""
     by = {u.id: u for u in units}
@@ -1083,7 +1083,9 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP):
         g = geo(z)
         same = [o for o in zones if o != z and region[o] == region[z]]
         border = touching(g, same)
-        if not border:
+        # T-788: Rijeka and Istria (0.46M) took all of Slavonia across the region line, a zone 460 km
+        # long; one near the floor stays as it is rather than join another region's
+        if not border and n < 0.8 * floor:
             border = touching(g, [o for o in zones if o != z and region[o] != region[z]])
         island = not any(g.buffer(1000).intersects(simple[u.id]) for u in units if u.id not in zones[z])
         into, how = None, ""

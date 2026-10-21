@@ -96,6 +96,7 @@ PRODUCTS = {
 }
 MOLL_X0, MOLL_Y0, TILE_M, PIX_M = -18041000.0, 9000000.0, 1_000_000.0, 100.0
 WORLDBANK = "https://api.worldbank.org/v2/country/{iso2}/indicator/SL.EMP.TOTL.SP.ZS;SP.POP.0014.TO.ZS?source=2&format=json&date=2015:2025&per_page=100"
+WORLDBANK_NE = "https://api.worldbank.org/v2/country/{iso2}/indicator/SL.EMP.TOTL.SP.NE.ZS?format=json&date=2015:2025&per_page=100"
 WIKIDATA = "https://query.wikidata.org/sparql"
 
 # The jobs proxy's blend (shares of the job total): GHSL non-residential volume weighted by height,
@@ -285,6 +286,18 @@ def worldbank(iso2):
     for x in rows:
         if x["value"] is not None:
             by.setdefault(x["date"], {})[x["indicator"]["id"]] = x["value"] / 100.0
+    if not any(len(v) == 2 for v in by.values()):
+        # no ILO modelled ratio (Kosovo, T-788): the national estimate in its place
+        path = raw(f"worldbank_ne_{iso2}.json")
+        if not os.path.exists(path):
+            r = requests.get(WORLDBANK_NE.format(iso2=iso2), headers=b.UA, timeout=60)
+            r.raise_for_status()
+            with open(path, "w") as f:
+                json.dump(r.json(), f)
+        with open(path) as f:
+            for x in json.load(f)[1] or []:
+                if x["value"] is not None and x["date"] in by:
+                    by[x["date"]]["SL.EMP.TOTL.SP.ZS"] = x["value"] / 100.0
     year = max(y for y, v in by.items() if len(v) == 2)
     emp, kids = by[year]["SL.EMP.TOTL.SP.ZS"], by[year]["SP.POP.0014.TO.ZS"]
     return emp * (1 - kids), kids, int(year)

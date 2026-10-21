@@ -145,6 +145,7 @@ Anita's playtest of 2026-10-18 (her TODO.md "short term"), filed 2026-10-19. Pla
 ## World, tier 0 and countries
 Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pipeline follows T-535's design (notes/T-535.md "Stages").
 
+- T-853 [P3] A tertiary share where UNESCO has none (Kosovo, T-788): `tier0.tertiary_share` returns None and universities stand unscaled by OSM area, so Prizren (piz) has 933 students for 0.9M (gate relaxed); a national statistics figure or a neighbour's share. Open.
 - T-578 [P3] The other tier 0 packs (Paris, London, Sao Paulo, Japan, Toronto's test) carry OSM job rows from before T-460's land cap and T-572 to T-574's rules; rebuild each on current rules when next rebuilt. Open; notes/T-572.md.
 - T-570 [P3] Regional homes without a car: DHS's HC_TRNS_H_CAR by survey region for the 51 DHS countries, and open census small areas where they exist (Mexico's INEGI). Open; notes/T-562.md.
 - T-571 [P3] National no-car figures in `nocar.COUNTRIES` for the larger countries on T-562's GDP rule (Russia, Mexico, Iraq, Iran and others; Vietnam's 65% is too low): census share first, else a register. Open; notes/T-562.md.

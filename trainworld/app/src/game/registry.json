@@ -4490,6 +4490,262 @@
       {
         "name": "Valais",
         "regionName": "Valais region"
+      },
+      {
+        "name": "Grad Zagreb",
+        "regionName": "Grad Zagreb region"
+      },
+      {
+        "name": "Osječko-baranjska županija",
+        "regionName": "Osječko-baranjska županija region"
+      },
+      {
+        "name": "Zagrebačka županija",
+        "regionName": "Zagrebačka županija region"
+      },
+      {
+        "name": "Splitsko-dalmatinska županija",
+        "regionName": "Splitsko-dalmatinska županija region"
+      },
+      {
+        "name": "Iaşi",
+        "regionName": "Iaşi region"
+      },
+      {
+        "name": "Prahova",
+        "regionName": "Prahova region"
+      },
+      {
+        "name": "Cluj",
+        "regionName": "Cluj region"
+      },
+      {
+        "name": "Timiş",
+        "regionName": "Timiş region"
+      },
+      {
+        "name": "Constanţa",
+        "regionName": "Constanţa region"
+      },
+      {
+        "name": "Dolj",
+        "regionName": "Dolj region"
+      },
+      {
+        "name": "Bihor",
+        "regionName": "Bihor region"
+      },
+      {
+        "name": "Bacău",
+        "regionName": "Bacău region"
+      },
+      {
+        "name": "Braşov",
+        "regionName": "Braşov region"
+      },
+      {
+        "name": "Mureş",
+        "regionName": "Mureş region"
+      },
+      {
+        "name": "Galaţi",
+        "regionName": "Galaţi region"
+      },
+      {
+        "name": "Argeş",
+        "regionName": "Argeş region"
+      },
+      {
+        "name": "Arad",
+        "regionName": "Arad region"
+      },
+      {
+        "name": "Buzău",
+        "regionName": "Buzău region"
+      },
+      {
+        "name": "Suceava",
+        "regionName": "Suceava region"
+      },
+      {
+        "name": "Neamţ",
+        "regionName": "Neamţ region"
+      },
+      {
+        "name": "Maramureş",
+        "regionName": "Maramureş region"
+      },
+      {
+        "name": "Olt",
+        "regionName": "Olt region"
+      },
+      {
+        "name": "Sibiu",
+        "regionName": "Sibiu region"
+      },
+      {
+        "name": "Teleorman",
+        "regionName": "Teleorman region"
+      },
+      {
+        "name": "Gorj",
+        "regionName": "Gorj region"
+      },
+      {
+        "name": "Satu Mare",
+        "regionName": "Satu Mare region"
+      },
+      {
+        "name": "Călăraşi",
+        "regionName": "Călăraşi region"
+      },
+      {
+        "name": "Harghita",
+        "regionName": "Harghita region"
+      },
+      {
+        "name": "Tuzla",
+        "regionName": "Tuzla region"
+      },
+      {
+        "name": "Zenica",
+        "regionName": "Zenica region"
+      },
+      {
+        "name": "Banja Luka",
+        "regionName": "Banja Luka region"
+      },
+      {
+        "name": "Brcko District",
+        "regionName": "Brcko District region"
+      },
+      {
+        "name": "Goražde",
+        "regionName": "Goražde region"
+      },
+      {
+        "name": "Trebinje",
+        "regionName": "Trebinje region"
+      },
+      {
+        "name": "Nišavska oblast",
+        "regionName": "Nišavska oblast region"
+      },
+      {
+        "name": "Raška oblast",
+        "regionName": "Raška oblast region"
+      },
+      {
+        "name": "Južnobačka oblast",
+        "regionName": "Južnobačka oblast region"
+      },
+      {
+        "name": "Mačvanska oblast",
+        "regionName": "Mačvanska oblast region"
+      },
+      {
+        "name": "Sremska oblast",
+        "regionName": "Sremska oblast region"
+      },
+      {
+        "name": "Crna Gora",
+        "regionName": "Crna Gora region"
+      },
+      {
+        "name": "Skopski",
+        "regionName": "Skopski region"
+      },
+      {
+        "name": "Pološki",
+        "regionName": "Pološki region"
+      },
+      {
+        "name": "Jugoistočen",
+        "regionName": "Jugoistočen region"
+      },
+      {
+        "name": "Durrës",
+        "regionName": "Durrës region"
+      },
+      {
+        "name": "Fier",
+        "regionName": "Fier region"
+      },
+      {
+        "name": "Transnistria",
+        "regionName": "Transnistria region"
+      },
+      {
+        "name": "Chisinau",
+        "regionName": "Chisinau region"
+      },
+      {
+        "name": "Cahul",
+        "regionName": "Cahul region"
+      },
+      {
+        "name": "Drochia",
+        "regionName": "Drochia region"
+      },
+      {
+        "name": "Plovdiv",
+        "regionName": "Plovdiv region"
+      },
+      {
+        "name": "Burgas",
+        "regionName": "Burgas region"
+      },
+      {
+        "name": "Varna",
+        "regionName": "Varna region"
+      },
+      {
+        "name": "Veliko Tarnovo",
+        "regionName": "Veliko Tarnovo region"
+      },
+      {
+        "name": "Pleven",
+        "regionName": "Pleven region"
+      },
+      {
+        "name": "Blagoevgrad",
+        "regionName": "Blagoevgrad region"
+      },
+      {
+        "name": "Goražde",
+        "regionName": "Goražde region"
+      },
+      {
+        "name": "Trebinje",
+        "regionName": "Trebinje region"
+      },
+      {
+        "name": "Durrës",
+        "regionName": "Durrës region"
+      },
+      {
+        "name": "Prishtinë",
+        "regionName": "Prishtinë region"
+      },
+      {
+        "name": "Prizren",
+        "regionName": "Prizren region"
+      },
+      {
+        "name": "Blagoevgrad",
+        "regionName": "Blagoevgrad region"
+      },
+      {
+        "name": "Osječko-baranjska županija",
+        "regionName": "Osječko-baranjska županija region"
+      },
+      {
+        "name": "Primorsko-goranska županija",
+        "regionName": "Primorsko-goranska županija region"
+      },
+      {
+        "name": "Prizren",
+        "regionName": "Prizren region"
       }
     ],
     "rule": {
@@ -7296,7 +7552,7 @@
         44.788
       ],
       "place": 182,
-      "localTrips": 6354603.0,
+      "localTrips": 6285946.0,
       "country": "RO"
     },
     {
@@ -7344,7 +7600,7 @@
         45.115
       ],
       "place": 188,
-      "localTrips": 5433282.0,
+      "localTrips": 5334101.0,
       "country": "RS"
     },
     {
@@ -7464,7 +7720,7 @@
         42.915
       ],
       "place": 197,
-      "localTrips": 4314288.0,
+      "localTrips": 4271976.0,
       "country": "BG"
     },
     {
@@ -7584,7 +7840,7 @@
         41.534
       ],
       "place": 203,
-      "localTrips": 2924753.0,
+      "localTrips": 2883346.0,
       "country": "AL"
     },
     {
@@ -21276,6 +21532,1456 @@
       "place": 1117,
       "country": "CH",
       "localTrips": 2101395.0
+    },
+    {
+      "id": "grd",
+      "name": "Grad Zagreb",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.959,
+        "lat": 45.8064
+      },
+      "center": [
+        15.959,
+        45.8064
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.747,
+        45.595,
+        16.266,
+        45.988
+      ],
+      "place": 1118,
+      "country": "HR",
+      "localTrips": 2141574.0
+    },
+    {
+      "id": "zae",
+      "name": "Zagrebačka županija",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.3393,
+        "lat": 46.3077
+      },
+      "center": [
+        16.3393,
+        46.3077
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.301,
+        45.449,
+        17.333,
+        46.573
+      ],
+      "place": 1120,
+      "country": "HR",
+      "localTrips": 2159314.0
+    },
+    {
+      "id": "spi",
+      "name": "Splitsko-dalmatinska županija",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.4696,
+        "lat": 43.5161
+      },
+      "center": [
+        16.4696,
+        43.5161
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.542,
+        42.372,
+        18.559,
+        44.557
+      ],
+      "place": 1121,
+      "country": "HR",
+      "localTrips": 2126012.0
+    },
+    {
+      "id": "ias",
+      "name": "Iaşi",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.5822,
+        "lat": 47.1656
+      },
+      "center": [
+        27.5822,
+        47.1656
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        26.466,
+        46.787,
+        28.154,
+        47.608
+      ],
+      "place": 1122,
+      "country": "RO",
+      "localTrips": 1986303.0
+    },
+    {
+      "id": "prh",
+      "name": "Prahova",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.0253,
+        "lat": 44.9378
+      },
+      "center": [
+        26.0253,
+        44.9378
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        25.426,
+        44.676,
+        26.636,
+        45.541
+      ],
+      "place": 1123,
+      "country": "RO",
+      "localTrips": 1921699.0
+    },
+    {
+      "id": "clu",
+      "name": "Cluj",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.5899,
+        "lat": 46.7733
+      },
+      "center": [
+        23.5899,
+        46.7733
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.61,
+        46.378,
+        24.254,
+        47.399
+      ],
+      "place": 1124,
+      "country": "RO",
+      "localTrips": 1873695.0
+    },
+    {
+      "id": "tim",
+      "name": "Timiş",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.2219,
+        "lat": 45.7694
+      },
+      "center": [
+        21.2219,
+        45.7694
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        20.235,
+        45.174,
+        22.578,
+        46.209
+      ],
+      "place": 1125,
+      "country": "RO",
+      "localTrips": 1814751.0
+    },
+    {
+      "id": "cns",
+      "name": "Constanţa",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.637,
+        "lat": 44.1841
+      },
+      "center": [
+        28.637,
+        44.1841
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.248,
+        43.715,
+        29.02,
+        44.821
+      ],
+      "place": 1126,
+      "country": "RO",
+      "localTrips": 1729241.0
+    },
+    {
+      "id": "dol",
+      "name": "Dolj",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.7999,
+        "lat": 44.3217
+      },
+      "center": [
+        23.7999,
+        44.3217
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.816,
+        43.681,
+        24.29,
+        44.748
+      ],
+      "place": 1127,
+      "country": "RO",
+      "localTrips": 1641993.0
+    },
+    {
+      "id": "bih",
+      "name": "Bihor",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.9235,
+        "lat": 47.0721
+      },
+      "center": [
+        21.9235,
+        47.0721
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.4,
+        46.367,
+        22.847,
+        47.619
+      ],
+      "place": 1128,
+      "country": "RO",
+      "localTrips": 1480210.0
+    },
+    {
+      "id": "bca",
+      "name": "Bacău",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.9109,
+        "lat": 46.5682
+      },
+      "center": [
+        26.9109,
+        46.5682
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        25.946,
+        45.998,
+        27.537,
+        46.847
+      ],
+      "place": 1129,
+      "country": "RO",
+      "localTrips": 1513453.0
+    },
+    {
+      "id": "bav",
+      "name": "Braşov",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.6103,
+        "lat": 45.6582
+      },
+      "center": [
+        25.6103,
+        45.6582
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.613,
+        45.362,
+        26.131,
+        46.209
+      ],
+      "place": 1130,
+      "country": "RO",
+      "localTrips": 1429416.0
+    },
+    {
+      "id": "mue",
+      "name": "Mureş",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.5564,
+        "lat": 46.531
+      },
+      "center": [
+        24.5564,
+        46.531
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        23.932,
+        46.058,
+        25.345,
+        47.155
+      ],
+      "place": 1131,
+      "country": "RO",
+      "localTrips": 1407080.0
+    },
+    {
+      "id": "gal",
+      "name": "Galaţi",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.0167,
+        "lat": 45.4177
+      },
+      "center": [
+        28.0167,
+        45.4177
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.201,
+        45.372,
+        28.235,
+        46.182
+      ],
+      "place": 1132,
+      "country": "RO",
+      "localTrips": 1330316.0
+    },
+    {
+      "id": "age",
+      "name": "Argeş",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.8769,
+        "lat": 44.8549
+      },
+      "center": [
+        24.8769,
+        44.8549
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.396,
+        44.358,
+        26.018,
+        45.63
+      ],
+      "place": 1133,
+      "country": "RO",
+      "localTrips": 2850895.0
+    },
+    {
+      "id": "aad",
+      "name": "Arad",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.3204,
+        "lat": 46.1776
+      },
+      "center": [
+        21.3204,
+        46.1776
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        20.679,
+        44.567,
+        23.628,
+        46.699
+      ],
+      "place": 1134,
+      "country": "RO",
+      "localTrips": 2694417.0
+    },
+    {
+      "id": "buu",
+      "name": "Buzău",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.8176,
+        "lat": 45.1499
+      },
+      "center": [
+        26.8176,
+        45.1499
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        26.047,
+        44.717,
+        28.224,
+        46.225
+      ],
+      "place": 1135,
+      "country": "RO",
+      "localTrips": 2730584.0
+    },
+    {
+      "id": "suv",
+      "name": "Suceava",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.2469,
+        "lat": 47.6434
+      },
+      "center": [
+        26.2469,
+        47.6434
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.92,
+        47.059,
+        27.419,
+        48.284
+      ],
+      "place": 1136,
+      "country": "RO",
+      "localTrips": 2621946.0
+    },
+    {
+      "id": "nem",
+      "name": "Neamţ",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.3673,
+        "lat": 46.932
+      },
+      "center": [
+        26.3673,
+        46.932
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        25.633,
+        45.984,
+        28.288,
+        47.359
+      ],
+      "place": 1137,
+      "country": "RO",
+      "localTrips": 2031224.0
+    },
+    {
+      "id": "mrm",
+      "name": "Maramureş",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.5694,
+        "lat": 47.6528
+      },
+      "center": [
+        23.5694,
+        47.6528
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.934,
+        46.728,
+        25.123,
+        48.04
+      ],
+      "place": 1138,
+      "country": "RO",
+      "localTrips": 1928153.0
+    },
+    {
+      "id": "olx",
+      "name": "Olt",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.3721,
+        "lat": 45.0946
+      },
+      "center": [
+        24.3721,
+        45.0946
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        23.55,
+        43.665,
+        24.913,
+        45.61
+      ],
+      "place": 1139,
+      "country": "RO",
+      "localTrips": 1936846.0
+    },
+    {
+      "id": "sii",
+      "name": "Sibiu",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.1514,
+        "lat": 45.7972
+      },
+      "center": [
+        24.1514,
+        45.7972
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.637,
+        45.437,
+        24.992,
+        46.595
+      ],
+      "place": 1140,
+      "country": "RO",
+      "localTrips": 1869962.0
+    },
+    {
+      "id": "tem",
+      "name": "Teleorman",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.9668,
+        "lat": 43.891
+      },
+      "center": [
+        25.9668,
+        43.891
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.568,
+        43.6,
+        26.454,
+        44.572
+      ],
+      "place": 1141,
+      "country": "RO",
+      "localTrips": 1591387.0
+    },
+    {
+      "id": "gox",
+      "name": "Gorj",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.2774,
+        "lat": 45.03
+      },
+      "center": [
+        23.2774,
+        45.03
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.99,
+        44.077,
+        23.882,
+        45.372
+      ],
+      "place": 1142,
+      "country": "RO",
+      "localTrips": 1472012.0
+    },
+    {
+      "id": "sux",
+      "name": "Satu Mare",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.8807,
+        "lat": 47.7936
+      },
+      "center": [
+        22.8807,
+        47.7936
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.153,
+        46.835,
+        23.869,
+        48.139
+      ],
+      "place": 1143,
+      "country": "RO",
+      "localTrips": 1418539.0
+    },
+    {
+      "id": "cls",
+      "name": "Călăraşi",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.3604,
+        "lat": 44.5605
+      },
+      "center": [
+        27.3604,
+        44.5605
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        26.227,
+        44.017,
+        28.135,
+        44.876
+      ],
+      "place": 1144,
+      "country": "RO",
+      "localTrips": 1389242.0
+    },
+    {
+      "id": "hrg",
+      "name": "Harghita",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.7942,
+        "lat": 45.862
+      },
+      "center": [
+        25.7942,
+        45.862
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.827,
+        45.498,
+        26.472,
+        47.202
+      ],
+      "place": 1145,
+      "country": "RO",
+      "localTrips": 1300459.0
+    },
+    {
+      "id": "tuz",
+      "name": "Tuzla",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.6927,
+        "lat": 44.533
+      },
+      "center": [
+        18.6927,
+        44.533
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.859,
+        44.237,
+        19.076,
+        44.95
+      ],
+      "place": 1146,
+      "country": "BA",
+      "localTrips": 1417255.0
+    },
+    {
+      "id": "zec",
+      "name": "Zenica",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.3886,
+        "lat": 43.8635
+      },
+      "center": [
+        18.3886,
+        43.8635
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.521,
+        42.948,
+        18.897,
+        44.478
+      ],
+      "place": 1147,
+      "country": "BA",
+      "localTrips": 3175226.0
+    },
+    {
+      "id": "bna",
+      "name": "Banja Luka",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.1974,
+        "lat": 44.7721
+      },
+      "center": [
+        17.1974,
+        44.7721
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.703,
+        44.178,
+        17.995,
+        45.295
+      ],
+      "place": 1148,
+      "country": "BA",
+      "localTrips": 1940524.0
+    },
+    {
+      "id": "brd",
+      "name": "Brcko District",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.8113,
+        "lat": 44.8734
+      },
+      "center": [
+        18.8113,
+        44.8734
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.712,
+        43.92,
+        19.65,
+        45.17
+      ],
+      "place": 1149,
+      "country": "BA",
+      "localTrips": 1343918.0
+    },
+    {
+      "id": "niv",
+      "name": "Nišavska oblast",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.9199,
+        "lat": 43.3154
+      },
+      "center": [
+        21.9199,
+        43.3154
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        20.718,
+        42.214,
+        23.032,
+        44.841
+      ],
+      "place": 1152,
+      "country": "RS",
+      "localTrips": 4088844.0
+    },
+    {
+      "id": "rao",
+      "name": "Raška oblast",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.5073,
+        "lat": 43.1331
+      },
+      "center": [
+        20.5073,
+        43.1331
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        20.039,
+        42.814,
+        21.848,
+        44.462
+      ],
+      "place": 1153,
+      "country": "RS",
+      "localTrips": 3018169.0
+    },
+    {
+      "id": "jub",
+      "name": "Južnobačka oblast",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.8456,
+        "lat": 45.2514
+      },
+      "center": [
+        19.8456,
+        45.2514
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.822,
+        45.116,
+        20.34,
+        46.209
+      ],
+      "place": 1154,
+      "country": "RS",
+      "localTrips": 2823750.0
+    },
+    {
+      "id": "mca",
+      "name": "Mačvanska oblast",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.8318,
+        "lat": 43.8635
+      },
+      "center": [
+        19.8318,
+        43.8635
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.077,
+        42.988,
+        20.679,
+        44.96
+      ],
+      "place": 1155,
+      "country": "RS",
+      "localTrips": 2538555.0
+    },
+    {
+      "id": "srm",
+      "name": "Sremska oblast",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.6411,
+        "lat": 44.8734
+      },
+      "center": [
+        20.6411,
+        44.8734
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.963,
+        44.611,
+        21.586,
+        46.196
+      ],
+      "place": 1156,
+      "country": "RS",
+      "localTrips": 2350563.0
+    },
+    {
+      "id": "crn",
+      "name": "Crna Gora",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.1681,
+        "lat": 42.8418
+      },
+      "center": [
+        20.1681,
+        42.8418
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.408,
+        41.828,
+        20.378,
+        43.577
+      ],
+      "place": 1157,
+      "country": "ME",
+      "localTrips": 1692134.0
+    },
+    {
+      "id": "sko",
+      "name": "Skopski",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.4349,
+        "lat": 41.9801
+      },
+      "center": [
+        21.4349,
+        41.9801
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        21.125,
+        41.685,
+        21.846,
+        42.268
+      ],
+      "place": 1158,
+      "country": "MK",
+      "localTrips": 1713690.0
+    },
+    {
+      "id": "poi",
+      "name": "Pološki",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.9726,
+        "lat": 42.0072
+      },
+      "center": [
+        20.9726,
+        42.0072
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        20.428,
+        40.834,
+        21.972,
+        42.225
+      ],
+      "place": 1159,
+      "country": "MK",
+      "localTrips": 2018983.0
+    },
+    {
+      "id": "jui",
+      "name": "Jugoistočen",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.1996,
+        "lat": 41.745
+      },
+      "center": [
+        22.1996,
+        41.745
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        21.345,
+        41.082,
+        23.059,
+        42.393
+      ],
+      "place": 1160,
+      "country": "MK",
+      "localTrips": 1763228.0
+    },
+    {
+      "id": "fix",
+      "name": "Fier",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.554,
+        "lat": 40.727
+      },
+      "center": [
+        19.554,
+        40.727
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.24,
+        39.626,
+        21.082,
+        41.111
+      ],
+      "place": 1162,
+      "country": "AL",
+      "localTrips": 2119076.0
+    },
+    {
+      "id": "tns",
+      "name": "Transnistria",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.0082,
+        "lat": 47.7655
+      },
+      "center": [
+        29.0082,
+        47.7655
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        28.376,
+        46.334,
+        30.191,
+        48.201
+      ],
+      "place": 1163,
+      "country": "MD",
+      "localTrips": 1964115.0
+    },
+    {
+      "id": "chu",
+      "name": "Chisinau",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.851,
+        "lat": 47.016
+      },
+      "center": [
+        28.851,
+        47.016
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        28.53,
+        46.839,
+        29.151,
+        47.175
+      ],
+      "place": 1164,
+      "country": "MD",
+      "localTrips": 1784884.0
+    },
+    {
+      "id": "cul",
+      "name": "Cahul",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.1965,
+        "lat": 45.9084
+      },
+      "center": [
+        28.1965,
+        45.9084
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.918,
+        45.449,
+        29.537,
+        47.465
+      ],
+      "place": 1165,
+      "country": "MD",
+      "localTrips": 2746612.0
+    },
+    {
+      "id": "drh",
+      "name": "Drochia",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.3038,
+        "lat": 48.1699
+      },
+      "center": [
+        28.3038,
+        48.1699
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        26.589,
+        47.004,
+        28.786,
+        48.511
+      ],
+      "place": 1166,
+      "country": "MD",
+      "localTrips": 2591799.0
+    },
+    {
+      "id": "plv",
+      "name": "Plovdiv",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.7458,
+        "lat": 42.1249
+      },
+      "center": [
+        24.7458,
+        42.1249
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        23.73,
+        41.217,
+        26.609,
+        42.812
+      ],
+      "place": 1167,
+      "country": "BG",
+      "localTrips": 3820600.0
+    },
+    {
+      "id": "bux",
+      "name": "Burgas",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.4666,
+        "lat": 42.4966
+      },
+      "center": [
+        27.4666,
+        42.4966
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.956,
+        41.886,
+        28.061,
+        43.057
+      ],
+      "place": 1168,
+      "country": "BG",
+      "localTrips": 2677982.0
+    },
+    {
+      "id": "vrx",
+      "name": "Varna",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.9107,
+        "lat": 43.2151
+      },
+      "center": [
+        27.9107,
+        43.2151
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        25.918,
+        42.808,
+        28.635,
+        44.027
+      ],
+      "place": 1169,
+      "country": "BG",
+      "localTrips": 2505280.0
+    },
+    {
+      "id": "vek",
+      "name": "Veliko Tarnovo",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.9543,
+        "lat": 43.8452
+      },
+      "center": [
+        25.9543,
+        43.8452
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.842,
+        42.715,
+        27.721,
+        44.167
+      ],
+      "place": 1170,
+      "country": "BG",
+      "localTrips": 1986509.0
+    },
+    {
+      "id": "pln",
+      "name": "Pleven",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.6185,
+        "lat": 43.4066
+      },
+      "center": [
+        24.6185,
+        43.4066
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.332,
+        42.69,
+        25.317,
+        44.235
+      ],
+      "place": 1171,
+      "country": "BG",
+      "localTrips": 1851112.0
+    },
+    {
+      "id": "goa",
+      "name": "Goražde",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.9723,
+        "lat": 43.6623
+      },
+      "center": [
+        18.9723,
+        43.6623
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.679,
+        43.521,
+        19.557,
+        43.748
+      ],
+      "place": 1173,
+      "country": "BA",
+      "localTrips": 74788.0
+    },
+    {
+      "id": "trj",
+      "name": "Trebinje",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.3412,
+        "lat": 42.7145
+      },
+      "center": [
+        18.3412,
+        42.7145
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.949,
+        42.537,
+        18.6,
+        42.961
+      ],
+      "place": 1174,
+      "country": "BA",
+      "localTrips": 65529.0
+    },
+    {
+      "id": "drr",
+      "name": "Durrës",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.4501,
+        "lat": 41.3209
+      },
+      "center": [
+        19.4501,
+        41.3209
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.256,
+        40.688,
+        20.651,
+        42.68
+      ],
+      "place": 1175,
+      "country": "AL",
+      "localTrips": 2946999.0
+    },
+    {
+      "id": "prx",
+      "name": "Prishtinë",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.1738,
+        "lat": 42.6782
+      },
+      "center": [
+        21.1738,
+        42.6782
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.989,
+        42.427,
+        21.578,
+        43.286
+      ],
+      "place": 1176,
+      "country": "XK",
+      "localTrips": 2144785.0
+    },
+    {
+      "id": "blg",
+      "name": "Blagoevgrad",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.0869,
+        "lat": 42.0163
+      },
+      "center": [
+        23.0869,
+        42.0163
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.335,
+        41.298,
+        24.508,
+        43.219
+      ],
+      "place": 1178,
+      "country": "BG",
+      "localTrips": 1716575.0
+    },
+    {
+      "id": "osj",
+      "name": "Osječko-baranjska županija",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.6797,
+        "lat": 45.5564
+      },
+      "center": [
+        18.6797,
+        45.5564
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.935,
+        44.831,
+        19.474,
+        46.108
+      ],
+      "place": 1179,
+      "country": "HR",
+      "localTrips": 2920539.0
+    },
+    {
+      "id": "pri",
+      "name": "Primorsko-goranska županija",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.4335,
+        "lat": 45.3346
+      },
+      "center": [
+        14.4335,
+        45.3346
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.464,
+        44.422,
+        15.261,
+        45.691
+      ],
+      "place": 1180,
+      "country": "HR",
+      "localTrips": 1260300.0
+    },
+    {
+      "id": "piz",
+      "name": "Prizren",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.7392,
+        "lat": 42.2155
+      },
+      "center": [
+        20.7392,
+        42.2155
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        20.051,
+        41.839,
+        21.815,
+        42.756
+      ],
+      "place": 1181,
+      "country": "XK",
+      "localTrips": 1833533.0
     }
   ]
 }

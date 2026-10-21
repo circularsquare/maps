@@ -64353,73 +64353,11 @@
    }
   },
   {
-   "order": 1337,
-   "id": "osz",
-   "name": "Osječko-baranjska županija",
-   "kind": "zone",
-   "status": "planned",
-   "region": "europe",
-   "countries": [
-    "HRV"
-   ],
-   "iso2": "HR",
-   "people": 1508857,
-   "origin": [
-    14.4335,
-    45.3346
-   ],
-   "tz": "Europe/Zagreb",
-   "utc_offset": 1,
-   "extracts": [
-    "europe/croatia"
-   ],
-   "archetype": "D",
-   "module": null,
-   "units": {
-    "HRV": [
-     "HR025",
-     "HR031",
-     "HR036",
-     "HR028",
-     "HR026",
-     "HR024",
-     "HR027",
-     "HR021",
-     "HR022",
-     "HR023"
-    ]
-   },
-   "bbox": [
-    13.504,
-    44.442,
-    19.443,
-    46.084
-   ],
-   "source": {
-    "zone": "T-723",
-    "unit_names": [
-     "Osječko-baranjska županija",
-     "Primorsko-goranska županija",
-     "Istarska županija",
-     "Sisačko-moslavačka županija",
-     "Vukovarsko-srijemska županija",
-     "Brodsko-posavska županija",
-     "Karlovačka županija",
-     "Bjelovarsko-bilogorska županija",
-     "Virovitičko-podravska županija",
-     "Požeško-slavonska županija"
-    ]
-   },
-   "run": {
-    "claim": "20261021-145542"
-   }
-  },
-  {
    "order": 1338,
    "id": "zae",
    "name": "Zagrebačka županija",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "HRV"
@@ -64463,7 +64401,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 69.4,
+     "stations": 0.7,
+     "places": 2.3,
+     "routes": 19.1,
+     "merge": 1.0,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-21T15:10:30",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:47",
+    "shipped": "2026-10-21T17:29:48"
    }
   },
   {
@@ -64471,7 +64424,7 @@
    "id": "grd",
    "name": "Grad Zagreb",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "HRV"
@@ -64507,7 +64460,25 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 79.1,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 10.9,
+     "merge": 0.6,
+     "nocar": 0.9,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:04:00",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1140644211436805",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-21T16:38:47",
+    "shipped": "2026-10-21T17:29:48"
    }
   },
   {
@@ -64515,7 +64486,7 @@
    "id": "spi",
    "name": "Splitsko-dalmatinska županija",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "HRV"
@@ -64557,7 +64528,24 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 329.9,
+     "stations": 1.0,
+     "places": 2.5,
+     "routes": 19.9,
+     "merge": 1.5,
+     "nocar": 1.2,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:17:27",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12173943498579239"
+     ]
+    },
+    "gated": "2026-10-21T16:38:48",
+    "shipped": "2026-10-21T17:29:48"
    }
   },
   {
@@ -64565,7 +64553,7 @@
    "id": "zec",
    "name": "Zenica",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BIH"
@@ -64685,7 +64673,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 63.4,
+     "stations": 0.8,
+     "places": 1.9,
+     "routes": 25.1,
+     "merge": 1.4,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T15:34:22",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:48",
+    "shipped": "2026-10-21T17:29:48"
    }
   },
   {
@@ -64693,7 +64696,7 @@
    "id": "bna",
    "name": "Banja Luka",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BIH"
@@ -64767,7 +64770,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 55.3,
+     "stations": 0.6,
+     "places": 1.4,
+     "routes": 18.4,
+     "merge": 1.1,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:35:41",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:48",
+    "shipped": "2026-10-21T17:29:48"
    }
   },
   {
@@ -64775,7 +64793,7 @@
    "id": "brd",
    "name": "Brcko District",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BIH"
@@ -64855,7 +64873,24 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 46.1,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 16.1,
+     "merge": 1.2,
+     "nocar": 1.7,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:36:49",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12874295165259853"
+     ]
+    },
+    "gated": "2026-10-21T16:38:48",
+    "shipped": "2026-10-21T17:29:48"
    }
   },
   {
@@ -64863,7 +64898,7 @@
    "id": "tuz",
    "name": "Tuzla",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BIH"
@@ -64933,7 +64968,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 80.4,
+     "stations": 0.7,
+     "places": 1.1,
+     "routes": 9.9,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T15:32:47",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:48",
+    "shipped": "2026-10-21T17:29:49"
    }
   },
   {
@@ -64941,7 +64991,7 @@
    "id": "goa",
    "name": "Goražde",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BIH"
@@ -64982,7 +65032,30 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 31.4,
+     "stations": 0.8,
+     "places": 1.1,
+     "routes": 3.5,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:37:29",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.3483547509190269",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-10-21T15:55:50",
+    "gated": "2026-10-21T17:06:24",
+    "shipped": "2026-10-21T17:29:49"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "0.35-0.47: Gorazde and Trebinje are towns alone in dead space (each kept as its own zone), so one 2 km zone holds most of the jobs, as in Ceuta and Melilla; browser check passed (T-788)"
    }
   },
   {
@@ -64990,7 +65063,7 @@
    "id": "trj",
    "name": "Trebinje",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BIH"
@@ -65026,7 +65099,29 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 36.9,
+     "stations": 1.7,
+     "places": 1.0,
+     "routes": 2.3,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:38:13",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.46566750120999634",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-10-21T15:55:50",
+    "gated": "2026-10-21T17:06:24",
+    "shipped": "2026-10-21T17:29:49"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "0.35-0.47: Gorazde and Trebinje are towns alone in dead space (each kept as its own zone), so one 2 km zone holds most of the jobs, as in Ceuta and Melilla; browser check passed (T-788)"
    }
   },
   {
@@ -65034,7 +65129,7 @@
    "id": "niv",
    "name": "Nišavska oblast",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SRB"
@@ -65086,7 +65181,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 79.8,
+     "stations": 0.8,
+     "places": 2.0,
+     "routes": 49.0,
+     "merge": 2.9,
+     "nocar": 1.3,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:40:30",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:48",
+    "shipped": "2026-10-21T17:29:49"
    }
   },
   {
@@ -65094,7 +65204,7 @@
    "id": "rao",
    "name": "Raška oblast",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SRB"
@@ -65136,7 +65246,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 50.6,
+     "stations": 0.7,
+     "places": 1.3,
+     "routes": 25.6,
+     "merge": 1.1,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:41:51",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:48",
+    "shipped": "2026-10-21T17:29:49"
    }
   },
   {
@@ -65144,7 +65269,7 @@
    "id": "jub",
    "name": "Južnobačka oblast",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SRB"
@@ -65184,7 +65309,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 40.9,
+     "stations": 0.6,
+     "places": 1.3,
+     "routes": 10.8,
+     "merge": 0.7,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:42:47",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:48",
+    "shipped": "2026-10-21T17:29:49"
    }
   },
   {
@@ -65192,7 +65332,7 @@
    "id": "mca",
    "name": "Mačvanska oblast",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SRB"
@@ -65234,7 +65374,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 66.6,
+     "stations": 1.0,
+     "places": 2.3,
+     "routes": 32.7,
+     "merge": 1.6,
+     "nocar": 1.2,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:44:34",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:48",
+    "shipped": "2026-10-21T17:29:49"
    }
   },
   {
@@ -65242,7 +65397,7 @@
    "id": "srm",
    "name": "Sremska oblast",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SRB"
@@ -65284,7 +65439,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 67.8,
+     "stations": 0.7,
+     "places": 2.1,
+     "routes": 21.5,
+     "merge": 0.9,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:46:08",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:48",
+    "shipped": "2026-10-21T17:29:49"
    }
   },
   {
@@ -65292,7 +65462,7 @@
    "id": "crn",
    "name": "Crna Gora",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "MNE"
@@ -65328,7 +65498,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 66.2,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 10.5,
+     "merge": 0.7,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:57:50",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:49",
+    "shipped": "2026-10-21T17:29:49"
    }
   },
   {
@@ -65336,7 +65521,7 @@
    "id": "poi",
    "name": "Pološki",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "MKD"
@@ -65376,7 +65561,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 44.5,
+     "stations": 0.9,
+     "places": 1.6,
+     "routes": 10.2,
+     "merge": 0.9,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T16:02:23",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:49",
+    "shipped": "2026-10-21T17:29:49"
    }
   },
   {
@@ -65384,7 +65584,7 @@
    "id": "jui",
    "name": "Jugoistočen",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "MKD"
@@ -65426,7 +65626,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 42.6,
+     "stations": 0.7,
+     "places": 1.4,
+     "routes": 12.9,
+     "merge": 0.9,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T16:03:24",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:49",
+    "shipped": "2026-10-21T17:29:49"
    }
   },
   {
@@ -65434,7 +65649,7 @@
    "id": "sko",
    "name": "Skopski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "MKD"
@@ -65470,7 +65685,24 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 35.3,
+     "stations": 0.6,
+     "places": 1.0,
+     "routes": 3.7,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T16:01:23",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10041951973500474"
+     ]
+    },
+    "gated": "2026-10-21T16:38:49",
+    "shipped": "2026-10-21T17:29:50"
    }
   },
   {
@@ -65478,7 +65710,7 @@
    "id": "drr",
    "name": "Durrës",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ALB"
@@ -65524,7 +65756,28 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 73.6,
+     "stations": 0.8,
+     "places": 1.8,
+     "routes": 24.2,
+     "merge": 1.4,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T16:09:46",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.3616841797309096"
+     ]
+    },
+    "parked": "2026-10-21T16:14:20",
+    "gated": "2026-10-21T17:06:24",
+    "shipped": "2026-10-21T17:29:50"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.02-2.36: Blagoevgrad's Rila and Pirin valleys and northern Albania's mountains (Shkoder, Diber, Kukes), so drives between valleys run down and up again; road snapping was normal and the browser check passed (T-788)"
    }
   },
   {
@@ -65532,7 +65785,7 @@
    "id": "fix",
    "name": "Fier",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ALB"
@@ -65574,7 +65827,24 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 56.0,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 17.2,
+     "merge": 1.0,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T16:11:05",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11425449137361564"
+     ]
+    },
+    "gated": "2026-10-21T16:38:49",
+    "shipped": "2026-10-21T17:29:50"
    }
   },
   {
@@ -65582,7 +65852,7 @@
    "id": "prx",
    "name": "Prishtinë",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "XKX"
@@ -65622,7 +65892,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-164426",
+    "steps": {
+     "build": 12.5,
+     "stations": 0.6,
+     "places": 1.2,
+     "routes": 11.0,
+     "merge": 0.6,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T16:50:13",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T17:06:24",
+    "shipped": "2026-10-21T17:29:50"
    }
   },
   {
@@ -65630,7 +65915,7 @@
    "id": "piz",
    "name": "Prizren",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "XKX"
@@ -65672,7 +65957,29 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-164426",
+    "steps": {
+     "build": 11.7,
+     "stations": 0.6,
+     "places": 1.2,
+     "routes": 8.1,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T16:50:37",
+    "gate": {
+     "warn": [
+      "university_rate 0.00072",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-21T16:53:15",
+    "gated": "2026-10-21T17:08:57",
+    "shipped": "2026-10-21T17:29:50"
+   },
+   "gate_relax": {
+    "university_rate": "0.0007: UNESCO has no tertiary figure for Kosovo, so the OSM sites by area (6 sites, 933 students) stand unscaled; low against Prizren's real university, filed as a P3 task (T-788)"
    }
   },
   {
@@ -65680,7 +65987,7 @@
    "id": "age",
    "name": "Argeş",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -65718,7 +66025,24 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 47.7,
+     "stations": 0.7,
+     "places": 1.4,
+     "routes": 25.1,
+     "merge": 1.2,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T15:14:31",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14459670729767732"
+     ]
+    },
+    "gated": "2026-10-21T16:17:58",
+    "shipped": "2026-10-21T17:29:50"
    }
   },
   {
@@ -65726,7 +66050,7 @@
    "id": "aad",
    "name": "Arad",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -65766,7 +66090,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 66.8,
+     "stations": 0.8,
+     "places": 1.9,
+     "routes": 32.5,
+     "merge": 2.0,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:16:18",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:58",
+    "shipped": "2026-10-21T17:29:50"
    }
   },
   {
@@ -65774,7 +66113,7 @@
    "id": "buu",
    "name": "Buzău",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -65814,7 +66153,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 47.2,
+     "stations": 1.1,
+     "places": 1.6,
+     "routes": 23.4,
+     "merge": 1.4,
+     "nocar": 1.4,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:17:35",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:58",
+    "shipped": "2026-10-21T17:29:50"
    }
   },
   {
@@ -65822,7 +66176,7 @@
    "id": "suv",
    "name": "Suceava",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -65860,7 +66214,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 45.0,
+     "stations": 0.9,
+     "places": 1.4,
+     "routes": 21.9,
+     "merge": 1.4,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T15:18:48",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:58",
+    "shipped": "2026-10-21T17:29:50"
    }
   },
   {
@@ -65868,7 +66237,7 @@
    "id": "nem",
    "name": "Neamţ",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -65906,7 +66275,24 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 145.2,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 20.7,
+     "merge": 1.1,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T15:21:39",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12371153123527989"
+     ]
+    },
+    "gated": "2026-10-21T16:17:59",
+    "shipped": "2026-10-21T17:29:50"
    }
   },
   {
@@ -65914,7 +66300,7 @@
    "id": "ias",
    "name": "Iaşi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -65950,7 +66336,24 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 37.3,
+     "stations": 0.8,
+     "places": 1.3,
+     "routes": 14.8,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:04:05",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11675571998955751"
+     ]
+    },
+    "gated": "2026-10-21T16:17:57",
+    "shipped": "2026-10-21T17:29:51"
    }
   },
   {
@@ -65958,7 +66361,7 @@
    "id": "mrm",
    "name": "Maramureş",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -65996,7 +66399,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 53.5,
+     "stations": 0.7,
+     "places": 1.3,
+     "routes": 15.6,
+     "merge": 0.9,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:22:53",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:59",
+    "shipped": "2026-10-21T17:29:51"
    }
   },
   {
@@ -66004,7 +66422,7 @@
    "id": "olx",
    "name": "Olt",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66042,7 +66460,24 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 47.7,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 19.8,
+     "merge": 1.0,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:24:06",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13287450146644744"
+     ]
+    },
+    "gated": "2026-10-21T16:17:59",
+    "shipped": "2026-10-21T17:29:51"
    }
   },
   {
@@ -66050,7 +66485,7 @@
    "id": "prh",
    "name": "Prahova",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66086,7 +66521,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 36.0,
+     "stations": 0.7,
+     "places": 1.2,
+     "routes": 10.1,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:04:55",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:57",
+    "shipped": "2026-10-21T17:29:51"
    }
   },
   {
@@ -66094,7 +66544,7 @@
    "id": "sii",
    "name": "Sibiu",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66132,7 +66582,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 47.4,
+     "stations": 0.8,
+     "places": 1.4,
+     "routes": 16.1,
+     "merge": 1.0,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:25:15",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:59",
+    "shipped": "2026-10-21T17:29:51"
    }
   },
   {
@@ -66140,7 +66605,7 @@
    "id": "clu",
    "name": "Cluj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66176,7 +66641,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 41.8,
+     "stations": 0.7,
+     "places": 1.3,
+     "routes": 11.4,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:05:53",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:57",
+    "shipped": "2026-10-21T17:29:51"
    }
   },
   {
@@ -66184,7 +66664,7 @@
    "id": "tim",
    "name": "Timiş",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66220,7 +66700,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 44.5,
+     "stations": 0.8,
+     "places": 1.4,
+     "routes": 12.0,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:06:55",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:57",
+    "shipped": "2026-10-21T17:29:51"
    }
   },
   {
@@ -66228,7 +66723,7 @@
    "id": "cns",
    "name": "Constanţa",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66264,7 +66759,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 55.6,
+     "stations": 0.8,
+     "places": 1.3,
+     "routes": 8.9,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T15:08:05",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:58",
+    "shipped": "2026-10-21T17:29:51"
    }
   },
   {
@@ -66272,7 +66782,7 @@
    "id": "tem",
    "name": "Teleorman",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66310,7 +66820,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 46.7,
+     "stations": 0.7,
+     "places": 1.6,
+     "routes": 18.7,
+     "merge": 1.1,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T15:26:26",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:59",
+    "shipped": "2026-10-21T17:29:51"
    }
   },
   {
@@ -66318,7 +66843,7 @@
    "id": "dol",
    "name": "Dolj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66354,7 +66879,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 41.0,
+     "stations": 0.7,
+     "places": 1.2,
+     "routes": 10.9,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:09:01",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:58",
+    "shipped": "2026-10-21T17:29:51"
    }
   },
   {
@@ -66362,7 +66902,7 @@
    "id": "bih",
    "name": "Bihor",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66398,7 +66938,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 34.9,
+     "stations": 0.7,
+     "places": 1.0,
+     "routes": 11.2,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:09:51",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:58",
+    "shipped": "2026-10-21T17:29:51"
    }
   },
   {
@@ -66406,7 +66961,7 @@
    "id": "bca",
    "name": "Bacău",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66442,7 +66997,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 33.3,
+     "stations": 0.7,
+     "places": 1.1,
+     "routes": 10.7,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:10:40",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:58",
+    "shipped": "2026-10-21T17:29:52"
    }
   },
   {
@@ -66450,7 +67020,7 @@
    "id": "gox",
    "name": "Gorj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66488,7 +67058,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 42.4,
+     "stations": 0.7,
+     "places": 1.3,
+     "routes": 14.0,
+     "merge": 1.0,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:27:27",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:59",
+    "shipped": "2026-10-21T17:29:52"
    }
   },
   {
@@ -66496,7 +67081,7 @@
    "id": "sux",
    "name": "Satu Mare",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66534,7 +67119,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 42.4,
+     "stations": 0.8,
+     "places": 1.3,
+     "routes": 12.9,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:28:28",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:59",
+    "shipped": "2026-10-21T17:29:52"
    }
   },
   {
@@ -66542,7 +67142,7 @@
    "id": "bav",
    "name": "Braşov",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66578,7 +67178,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 37.2,
+     "stations": 0.8,
+     "places": 1.3,
+     "routes": 8.4,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:11:30",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:58",
+    "shipped": "2026-10-21T17:29:52"
    }
   },
   {
@@ -66586,7 +67201,7 @@
    "id": "cls",
    "name": "Călăraşi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66624,7 +67239,24 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 39.7,
+     "stations": 0.8,
+     "places": 1.2,
+     "routes": 14.4,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:29:27",
+    "gate": {
+     "warn": [
+      "osm_land_share 0.8569"
+     ]
+    },
+    "gated": "2026-10-21T16:17:59",
+    "shipped": "2026-10-21T17:29:52"
    }
   },
   {
@@ -66632,7 +67264,7 @@
    "id": "mue",
    "name": "Mureş",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66668,7 +67300,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 41.3,
+     "stations": 0.8,
+     "places": 1.3,
+     "routes": 10.8,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:12:27",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:58",
+    "shipped": "2026-10-21T17:29:52"
    }
   },
   {
@@ -66676,7 +67323,7 @@
    "id": "gal",
    "name": "Galaţi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66712,7 +67359,24 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 33.6,
+     "stations": 0.9,
+     "places": 1.1,
+     "routes": 7.1,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T15:13:13",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1055687560463775"
+     ]
+    },
+    "gated": "2026-10-21T16:17:58",
+    "shipped": "2026-10-21T17:29:52"
    }
   },
   {
@@ -66720,7 +67384,7 @@
    "id": "hrg",
    "name": "Harghita",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -66758,7 +67422,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 44.3,
+     "stations": 0.7,
+     "places": 1.3,
+     "routes": 12.7,
+     "merge": 0.8,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T15:30:29",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:59",
+    "shipped": "2026-10-21T17:29:52"
    }
   },
   {
@@ -66766,7 +67445,7 @@
    "id": "plv",
    "name": "Plovdiv",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BGR"
@@ -66810,7 +67489,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 66.6,
+     "stations": 0.7,
+     "places": 1.6,
+     "routes": 35.9,
+     "merge": 2.1,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T16:24:26",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:49",
+    "shipped": "2026-10-21T17:29:52"
    }
   },
   {
@@ -66818,7 +67512,7 @@
    "id": "bux",
    "name": "Burgas",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BGR"
@@ -66860,7 +67554,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 67.4,
+     "stations": 0.7,
+     "places": 1.5,
+     "routes": 26.7,
+     "merge": 1.3,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T16:26:06",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:49",
+    "shipped": "2026-10-21T17:29:52"
    }
   },
   {
@@ -66868,7 +67577,7 @@
    "id": "vrx",
    "name": "Varna",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BGR"
@@ -66910,7 +67619,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 57.2,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 22.3,
+     "merge": 1.3,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T16:27:31",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:49",
+    "shipped": "2026-10-21T17:29:52"
    }
   },
   {
@@ -66918,7 +67642,7 @@
    "id": "vek",
    "name": "Veliko Tarnovo",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BGR"
@@ -66962,7 +67686,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 61.1,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 24.0,
+     "merge": 1.4,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T16:29:02",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:49",
+    "shipped": "2026-10-21T17:29:53"
    }
   },
   {
@@ -66970,7 +67709,7 @@
    "id": "pln",
    "name": "Pleven",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BGR"
@@ -67014,7 +67753,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 63.3,
+     "stations": 0.7,
+     "places": 1.4,
+     "routes": 25.0,
+     "merge": 1.1,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T16:30:36",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:38:49",
+    "shipped": "2026-10-21T17:29:53"
    }
   },
   {
@@ -67022,7 +67776,7 @@
    "id": "blg",
    "name": "Blagoevgrad",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BGR"
@@ -67062,7 +67816,28 @@
     ]
    },
    "run": {
-    "claim": "20261021-145542"
+    "run_batch": "20261021-145542",
+    "steps": {
+     "build": 70.5,
+     "stations": 0.7,
+     "places": 2.4,
+     "routes": 26.7,
+     "merge": 1.5,
+     "nocar": 1.2,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T16:32:20",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.0200555277086965"
+     ]
+    },
+    "parked": "2026-10-21T16:38:47",
+    "gated": "2026-10-21T17:06:24",
+    "shipped": "2026-10-21T17:29:53"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.02-2.36: Blagoevgrad's Rila and Pirin valleys and northern Albania's mountains (Shkoder, Diber, Kukes), so drives between valleys run down and up again; road snapping was normal and the browser check passed (T-788)"
    }
   },
   {
@@ -67070,7 +67845,7 @@
    "id": "cul",
    "name": "Cahul",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "MDA"
@@ -67132,7 +67907,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 71.0,
+     "stations": 0.8,
+     "places": 2.3,
+     "routes": 25.4,
+     "merge": 1.2,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T16:11:09",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:18:00",
+    "shipped": "2026-10-21T17:29:53"
    }
   },
   {
@@ -67140,7 +67930,7 @@
    "id": "drh",
    "name": "Drochia",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "MDA"
@@ -67202,7 +67992,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 61.0,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 26.7,
+     "merge": 1.3,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T16:12:43",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:18:00",
+    "shipped": "2026-10-21T17:29:53"
    }
   },
   {
@@ -67210,7 +68015,7 @@
    "id": "tns",
    "name": "Transnistria",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "MDA"
@@ -67260,7 +68065,22 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 71.8,
+     "stations": 0.7,
+     "places": 2.1,
+     "routes": 19.5,
+     "merge": 0.9,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T16:08:32",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T16:17:59",
+    "shipped": "2026-10-21T17:29:53"
    }
   },
   {
@@ -67268,7 +68088,7 @@
    "id": "chu",
    "name": "Chisinau",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "MDA"
@@ -67304,7 +68124,24 @@
     ]
    },
    "run": {
-    "claim": "20261021-145541"
+    "run_batch": "20261021-145541",
+    "steps": {
+     "build": 45.6,
+     "stations": 0.8,
+     "places": 1.8,
+     "routes": 3.5,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T16:09:26",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-21T16:17:59",
+    "shipped": "2026-10-21T17:29:53"
    }
   },
   {
@@ -67348,6 +68185,9 @@
      "Østjylland",
      "Vestjylland"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67389,6 +68229,9 @@
     "unit_names": [
      "Sydjylland"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67430,6 +68273,9 @@
     "unit_names": [
      "Nordjylland"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67471,6 +68317,9 @@
     "unit_names": [
      "Vest- og Sydsjælland"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67512,6 +68361,9 @@
     "unit_names": [
      "Fyn"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67555,6 +68407,9 @@
      "Västra Götalands län",
      "Hallands län"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67598,6 +68453,9 @@
      "Skåne län",
      "Blekinge län"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67643,6 +68501,9 @@
      "Södermanlands län",
      "Västmanlands län"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67686,6 +68547,9 @@
      "Östergötlands län",
      "Örebro län"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67729,6 +68593,9 @@
      "Jönköpings län",
      "Kronobergs län"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67770,6 +68637,9 @@
     "unit_names": [
      "Rogaland"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67811,6 +68681,9 @@
     "unit_names": [
      "Østfold"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67852,6 +68725,9 @@
     "unit_names": [
      "Vestfold"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67899,6 +68775,9 @@
      "Kanta-Häme",
      "Kymenlaakso"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67944,6 +68823,9 @@
      "Satakunta",
      "Pohjanmaa"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -67985,6 +68867,9 @@
     "unit_names": [
      "Åland"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -68026,6 +68911,9 @@
     "unit_names": [
      "Põhja-Eesti"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -68067,6 +68955,9 @@
     "unit_names": [
      "Kirde-Eesti"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -68110,6 +69001,9 @@
      "Rīga",
      "Zemgale"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -68157,6 +69051,9 @@
      "Panevėžio apskritis",
      "Telšių apskritis"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -68204,6 +69101,9 @@
      "Alytaus apskritis",
      "Tauragės apskritis"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -68245,6 +69145,9 @@
     "unit_names": [
      "Vilniaus apskritis"
     ]
+   },
+   "run": {
+    "claim": "20261021-174702"
    }
   },
   {
@@ -68286,6 +69189,9 @@
     "unit_names": [
      "Höfuðborgarsvæði"
     ]
+   },
+   "run": {
+    "claim": "20261021-174703"
    }
   },
   {
@@ -68329,6 +69235,9 @@
      "Malta",
      "Gozo and Comino/Għawdex u Kemmuna"
     ]
+   },
+   "run": {
+    "claim": "20261021-174703"
    }
   },
   {
@@ -68370,6 +69279,143 @@
     "unit_names": [
      "Kýpros"
     ]
+   },
+   "run": {
+    "claim": "20261021-174703"
+   }
+  },
+  {
+   "order": 1388,
+   "id": "osj",
+   "name": "Osječko-baranjska županija",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "HRV"
+   ],
+   "iso2": "HR",
+   "people": 1058993,
+   "origin": [
+    18.6797,
+    45.5564
+   ],
+   "tz": "Europe/Zagreb",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/croatia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "HRV": [
+     "HR025",
+     "HR028",
+     "HR026",
+     "HR024",
+     "HR027",
+     "HR021",
+     "HR022",
+     "HR023"
+    ]
+   },
+   "bbox": [
+    14.966,
+    44.854,
+    19.443,
+    46.084
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Osječko-baranjska županija",
+     "Sisačko-moslavačka županija",
+     "Vukovarsko-srijemska županija",
+     "Brodsko-posavska županija",
+     "Karlovačka županija",
+     "Bjelovarsko-bilogorska županija",
+     "Virovitičko-podravska županija",
+     "Požeško-slavonska županija"
+    ]
+   },
+   "run": {
+    "run_batch": "20261021-164426",
+    "steps": {
+     "build": 105.1,
+     "stations": 0.7,
+     "places": 2.6,
+     "routes": 29.7,
+     "merge": 2.3,
+     "nocar": 1.2,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T17:01:31",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T17:06:24",
+    "shipped": "2026-10-21T17:29:53"
+   }
+  },
+  {
+   "order": 1389,
+   "id": "pri",
+   "name": "Primorsko-goranska županija",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "HRV"
+   ],
+   "iso2": "HR",
+   "people": 441713,
+   "origin": [
+    14.4335,
+    45.3346
+   ],
+   "tz": "Europe/Zagreb",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/croatia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "HRV": [
+     "HR031",
+     "HR036"
+    ]
+   },
+   "bbox": [
+    13.504,
+    44.442,
+    15.226,
+    45.672
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Primorsko-goranska županija",
+     "Istarska županija"
+    ]
+   },
+   "run": {
+    "run_batch": "20261021-164426",
+    "steps": {
+     "build": 109.7,
+     "stations": 0.7,
+     "places": 1.8,
+     "routes": 8.3,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T17:03:34",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T17:06:24",
+    "shipped": "2026-10-21T17:29:53"
    }
   }
  ],
@@ -69334,35 +70380,32 @@
    ]
   },
   "HRV": {
-   "built": "2026-10-20",
+   "built": "2026-10-21",
    "task": "T-788",
    "rule": "free units at or over 20 people a km2, grouped in their region until each zone holds 500,000: under 100,000 by the longest border, then the smallest neighbour keeping both within 1,500,000; another region's when none is left; islands the most populous zone within 150 km (10 km from 100,000)",
-   "kept": [],
+   "kept": [
+    "zae",
+    "grd",
+    "spi"
+   ],
    "dead": [
     {
      "unit": "HR032",
      "name": "Ličko-senjska županija",
-     "people": 43019,
+     "people": 42995,
      "per_km2": 8.1
     }
    ],
    "merges": [
     "Požeško-slavonska županija (66,693) joins Brodsko-posavska županija (shared border 97 km)",
-    "Virovitičko-podravska županija (72,918) joins Bjelovarsko-bilogorska županija (shared border 64 km)",
-    "Šibensko-kninska županija (92,505) joins Splitsko-dalmatinska županija (shared border 95 km)",
-    "Dubrovačko-neretvanska županija (100,016) joins Splitsko-dalmatinska županija (smallest neighbour, 469,550)",
-    "Međimurska županija (100,617) joins Koprivničko-križevačka županija (smallest neighbour, 101,450)",
-    "Karlovačka županija (114,116) joins Sisačko-moslavačka županija (smallest neighbour, 154,099)",
-    "Krapinsko-zagorska županija (116,571) joins Varaždinska županija (smallest neighbour, 159,625)",
-    "Vukovarsko-srijemska županija (148,735) joins Brodsko-posavska županija (smallest neighbour, 208,260)",
-    "Zadarska županija (155,363) joins Splitsko-dalmatinska županija (smallest neighbour, 569,566)",
-    "Bjelovarsko-bilogorska županija (173,253) joins Osječko-baranjska županija (smallest neighbour, 268,208)",
-    "Istarska županija (186,398) joins Primorsko-goranska županija (smallest neighbour, 255,788)",
-    "Koprivničko-križevačka županija (202,066) joins Varaždinska županija (smallest neighbour, 276,197)",
-    "Sisačko-moslavačka županija (268,215) joins Brodsko-posavska županija (smallest neighbour, 356,994)",
-    "Zagrebačka županija (320,054) joins Varaždinska županija (smallest neighbour, 478,263)",
-    "Osječko-baranjska županija (441,461) joins Brodsko-posavska županija (smallest neighbour, 625,210)",
-    "Primorsko-goranska županija (442,186) joins Brodsko-posavska županija (smallest neighbour, 1,066,671, another region)"
+    "Virovitičko-podravska županija (72,880) joins Bjelovarsko-bilogorska županija (shared border 64 km)",
+    "Karlovačka županija (113,632) joins Sisačko-moslavačka županija (smallest neighbour, 153,406)",
+    "Vukovarsko-srijemska županija (145,937) joins Brodsko-posavska županija (smallest neighbour, 204,834)",
+    "Bjelovarsko-bilogorska županija (173,146) joins Sisačko-moslavačka županija (smallest neighbour, 267,039)",
+    "Istarska županija (186,373) joins Primorsko-goranska županija (smallest neighbour, 255,340)",
+    "Osječko-baranjska županija (268,037) joins Brodsko-posavska županija (smallest neighbour, 350,771)",
+    "Sisačko-moslavačka županija (440,184) joins Brodsko-posavska županija (smallest neighbour, 618,809)",
+    "Primorsko-goranska županija (441,713) stays as it is: no zone beside it"
    ]
   },
   "BIH": {
