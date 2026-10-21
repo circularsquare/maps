@@ -59365,7 +59365,7 @@
    "id": "brx",
    "name": "Bern",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CHE"
@@ -59403,6 +59403,24 @@
      "Solothurn",
      "Jura"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 260.5,
+     "stations": 0.7,
+     "places": 6.1,
+     "routes": 56.2,
+     "merge": 1.0,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T09:11:55",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:45",
+    "shipped": "2026-10-21T13:56:34"
    }
   },
   {
@@ -59410,7 +59428,7 @@
    "id": "stl",
    "name": "St. Gallen",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CHE"
@@ -59456,6 +59474,30 @@
      "Glarus",
      "Appenzell Innerrhoden"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 156.1,
+     "stations": 0.9,
+     "places": 6.8,
+     "routes": 45.2,
+     "merge": 1.3,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T09:21:43",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.0200555277086965"
+     ]
+    },
+    "parked": "2026-10-21T09:33:14",
+    "gated": "2026-10-21T13:22:32",
+    "shipped": "2026-10-21T13:56:34"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.02-2.59: St. Gallen (with Graubuenden), Valais, Tyrol and Salzburg are Alpine valleys, so drives between valleys run down and up again; road snapping was normal and the browser check passed (T-788)"
    }
   },
   {
@@ -59463,7 +59505,7 @@
    "id": "aag",
    "name": "Aargau",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CHE"
@@ -59501,6 +59543,24 @@
      "Basel-Landschaft",
      "Basel-Stadt"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 76.7,
+     "stations": 0.9,
+     "places": 2.9,
+     "routes": 23.1,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T09:23:29",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:45",
+    "shipped": "2026-10-21T13:56:34"
    }
   },
   {
@@ -59508,7 +59568,7 @@
    "id": "vud",
    "name": "Vaud",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CHE"
@@ -59542,6 +59602,24 @@
     "unit_names": [
      "Vaud"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 80.9,
+     "stations": 0.8,
+     "places": 3.2,
+     "routes": 16.0,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T09:13:38",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:45",
+    "shipped": "2026-10-21T13:56:35"
    }
   },
   {
@@ -59549,7 +59627,7 @@
    "id": "vla",
    "name": "Valais",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CHE"
@@ -59585,6 +59663,30 @@
      "Valais / Wallis",
      "Ticino"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 77.5,
+     "stations": 0.9,
+     "places": 3.0,
+     "routes": 21.9,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T09:25:16",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.593802640698535"
+     ]
+    },
+    "parked": "2026-10-21T09:33:14",
+    "gated": "2026-10-21T13:22:32",
+    "shipped": "2026-10-21T13:56:35"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.02-2.59: St. Gallen (with Graubuenden), Valais, Tyrol and Salzburg are Alpine valleys, so drives between valleys run down and up again; road snapping was normal and the browser check passed (T-788)"
    }
   },
   {
@@ -59592,7 +59694,7 @@
    "id": "luz",
    "name": "Luzern",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CHE"
@@ -59632,6 +59734,24 @@
      "Obwalden",
      "Uri"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 73.8,
+     "stations": 0.8,
+     "places": 2.6,
+     "routes": 19.6,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T09:15:18",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:45",
+    "shipped": "2026-10-21T13:56:35"
    }
   },
   {
@@ -59639,7 +59759,7 @@
    "id": "frb",
    "name": "Fribourg",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CHE"
@@ -59675,6 +59795,24 @@
      "Fribourg / Freiburg",
      "Neuchâtel"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 87.4,
+     "stations": 0.9,
+     "places": 3.3,
+     "routes": 18.4,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T09:17:11",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:45",
+    "shipped": "2026-10-21T13:56:35"
    }
   },
   {
@@ -59682,7 +59820,7 @@
    "id": "gee",
    "name": "Genève",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CHE"
@@ -59716,6 +59854,27 @@
     "unit_names": [
      "Genève"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 49.1,
+     "stations": 0.9,
+     "places": 2.2,
+     "routes": 3.4,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T09:18:10",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1325690714107558",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-21T13:08:45",
+    "shipped": "2026-10-21T13:56:35"
    }
   },
   {
@@ -59723,7 +59882,7 @@
    "id": "grx",
    "name": "Graz",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "AUT"
@@ -59767,6 +59926,24 @@
      "Westliche Obersteiermark",
      "Liezen"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 128.9,
+     "stations": 0.8,
+     "places": 5.2,
+     "routes": 78.3,
+     "merge": 2.2,
+     "nocar": 1.4,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T10:03:18",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:46",
+    "shipped": "2026-10-21T13:56:35"
    }
   },
   {
@@ -59774,7 +59951,7 @@
    "id": "ins",
    "name": "Innsbruck",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "AUT"
@@ -59818,6 +59995,30 @@
      "Bludenz-Bregenzer Wald",
      "Außerfern"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 112.0,
+     "stations": 0.8,
+     "places": 4.4,
+     "routes": 29.4,
+     "merge": 1.5,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T10:05:48",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.218596968679145"
+     ]
+    },
+    "parked": "2026-10-21T10:22:47",
+    "gated": "2026-10-21T13:22:32",
+    "shipped": "2026-10-21T13:56:35"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.02-2.59: St. Gallen (with Graubuenden), Valais, Tyrol and Salzburg are Alpine valleys, so drives between valleys run down and up again; road snapping was normal and the browser check passed (T-788)"
    }
   },
   {
@@ -59825,7 +60026,7 @@
    "id": "ini",
    "name": "Innviertel",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "AUT"
@@ -59865,6 +60066,24 @@
      "Mühlviertel",
      "Steyr-Kirchdorf"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 127.9,
+     "stations": 0.9,
+     "places": 5.5,
+     "routes": 68.3,
+     "merge": 1.9,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-10-21T10:09:16",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:46",
+    "shipped": "2026-10-21T13:56:35"
    }
   },
   {
@@ -59872,7 +60091,7 @@
    "id": "nio",
    "name": "Niederösterreich-Süd",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "AUT"
@@ -59914,6 +60133,24 @@
      "Südburgenland",
      "Mittelburgenland"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 172.6,
+     "stations": 1.0,
+     "places": 6.8,
+     "routes": 55.0,
+     "merge": 1.1,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T10:13:15",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:46",
+    "shipped": "2026-10-21T13:56:36"
    }
   },
   {
@@ -59921,7 +60158,7 @@
    "id": "liz",
    "name": "Linz-Wels",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "AUT"
@@ -59955,6 +60192,24 @@
     "unit_names": [
      "Linz-Wels"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 75.2,
+     "stations": 1.2,
+     "places": 3.2,
+     "routes": 22.2,
+     "merge": 1.2,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-10-21T09:50:26",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:45",
+    "shipped": "2026-10-21T13:56:36"
    }
   },
   {
@@ -59962,7 +60217,7 @@
    "id": "kla",
    "name": "Klagenfurt-Villach",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "AUT"
@@ -60002,6 +60257,24 @@
      "Oberkärnten",
      "Osttirol"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 105.6,
+     "stations": 1.3,
+     "places": 3.0,
+     "routes": 48.2,
+     "merge": 2.5,
+     "nocar": 2.7,
+     "everyday": 1.2
+    },
+    "built": "2026-10-21T09:53:11",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:46",
+    "shipped": "2026-10-21T13:56:36"
    }
   },
   {
@@ -60009,7 +60282,7 @@
    "id": "mov",
    "name": "Mostviertel-Eisenwurzen",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "AUT"
@@ -60047,6 +60320,24 @@
      "Waldviertel",
      "Weinviertel"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 183.9,
+     "stations": 1.1,
+     "places": 7.5,
+     "routes": 61.9,
+     "merge": 1.4,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-10-21T09:57:29",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:46",
+    "shipped": "2026-10-21T13:56:36"
    }
   },
   {
@@ -60054,7 +60345,7 @@
    "id": "saz",
    "name": "Salzburg und Umgebung",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "AUT"
@@ -60090,6 +60381,30 @@
      "Salzburg und Umgebung",
      "Pinzgau-Pongau"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 92.8,
+     "stations": 1.0,
+     "places": 3.7,
+     "routes": 29.4,
+     "merge": 1.1,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T09:59:40",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.0841789734955687"
+     ]
+    },
+    "parked": "2026-10-21T10:22:46",
+    "gated": "2026-10-21T13:22:32",
+    "shipped": "2026-10-21T13:56:36"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.02-2.59: St. Gallen (with Graubuenden), Valais, Tyrol and Salzburg are Alpine valleys, so drives between valleys run down and up again; road snapping was normal and the browser check passed (T-788)"
    }
   },
   {
@@ -60097,7 +60412,7 @@
    "id": "jim",
    "name": "Jihomoravský kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CZE"
@@ -60134,6 +60449,24 @@
      "Jihomoravský kraj",
      "Kraj Vysočina"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 138.5,
+     "stations": 0.9,
+     "places": 3.7,
+     "routes": 43.5,
+     "merge": 1.5,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T12:32:28",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:48",
+    "shipped": "2026-10-21T13:56:36"
    }
   },
   {
@@ -60141,7 +60474,7 @@
    "id": "str",
    "name": "Středočeský kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CZE"
@@ -60175,6 +60508,24 @@
     "unit_names": [
      "Středočeský kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 160.8,
+     "stations": 1.1,
+     "places": 5.7,
+     "routes": 66.6,
+     "merge": 1.8,
+     "nocar": 1.7,
+     "everyday": 1.3
+    },
+    "built": "2026-10-21T10:29:20",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:46",
+    "shipped": "2026-10-21T13:56:36"
    }
   },
   {
@@ -60182,7 +60533,7 @@
    "id": "krv",
    "name": "Královéhradecký kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CZE"
@@ -60222,6 +60573,24 @@
      "Pardubický kraj",
      "Liberecký kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 126.8,
+     "stations": 1.9,
+     "places": 5.0,
+     "routes": 42.1,
+     "merge": 1.5,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T12:42:32",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:48",
+    "shipped": "2026-10-21T13:56:36"
    }
   },
   {
@@ -60229,7 +60598,7 @@
    "id": "mok",
    "name": "Moravskoslezský kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CZE"
@@ -60263,6 +60632,24 @@
     "unit_names": [
      "Moravskoslezský kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 86.6,
+     "stations": 1.5,
+     "places": 4.3,
+     "routes": 23.7,
+     "merge": 1.1,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-21T10:37:01",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:46",
+    "shipped": "2026-10-21T13:56:37"
    }
   },
   {
@@ -60270,7 +60657,7 @@
    "id": "use",
    "name": "Ústecký kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CZE"
@@ -60307,6 +60694,24 @@
      "Ústecký kraj",
      "Karlovarský kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 88.6,
+     "stations": 0.9,
+     "places": 3.1,
+     "routes": 22.1,
+     "merge": 1.1,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T12:50:48",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:49",
+    "shipped": "2026-10-21T13:56:37"
    }
   },
   {
@@ -60314,7 +60719,7 @@
    "id": "jic",
    "name": "Jihočeský kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CZE"
@@ -60348,6 +60753,24 @@
     "unit_names": [
      "Jihočeský kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 130.6,
+     "stations": 0.8,
+     "places": 2.8,
+     "routes": 25.0,
+     "merge": 1.4,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T10:45:15",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:46",
+    "shipped": "2026-10-21T13:56:37"
    }
   },
   {
@@ -60355,7 +60778,7 @@
    "id": "olo",
    "name": "Olomoucký kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CZE"
@@ -60389,6 +60812,24 @@
     "unit_names": [
      "Olomoucký kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 59.0,
+     "stations": 0.9,
+     "places": 2.4,
+     "routes": 14.6,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T10:50:36",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:46",
+    "shipped": "2026-10-21T13:56:37"
    }
   },
   {
@@ -60396,7 +60837,7 @@
    "id": "plz",
    "name": "Plzeňský kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CZE"
@@ -60430,6 +60871,24 @@
     "unit_names": [
      "Plzeňský kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 130.3,
+     "stations": 5.2,
+     "places": 5.8,
+     "routes": 36.4,
+     "merge": 2.2,
+     "nocar": 2.5,
+     "everyday": 2.3
+    },
+    "built": "2026-10-21T10:57:39",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:47",
+    "shipped": "2026-10-21T13:56:37"
    }
   },
   {
@@ -60437,7 +60896,7 @@
    "id": "zli",
    "name": "Zlínský kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CZE"
@@ -60471,6 +60930,24 @@
     "unit_names": [
      "Zlínský kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 49.9,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 11.6,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T11:03:52",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:47",
+    "shipped": "2026-10-21T13:56:37"
    }
   },
   {
@@ -60478,7 +60955,7 @@
    "id": "pre",
    "name": "Prešovský kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SVK"
@@ -60512,6 +60989,24 @@
     "unit_names": [
      "Prešovský kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 511.6,
+     "stations": 0.9,
+     "places": 2.2,
+     "routes": 14.8,
+     "merge": 0.9,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T11:22:49",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:47",
+    "shipped": "2026-10-21T13:56:37"
    }
   },
   {
@@ -60519,7 +61014,7 @@
    "id": "kok",
    "name": "Košický kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SVK"
@@ -60553,6 +61048,24 @@
     "unit_names": [
      "Košický kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 63.3,
+     "stations": 0.9,
+     "places": 2.6,
+     "routes": 12.8,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T11:24:12",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:47",
+    "shipped": "2026-10-21T13:56:37"
    }
   },
   {
@@ -60560,7 +61073,7 @@
    "id": "zil",
    "name": "Žilinský kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SVK"
@@ -60594,6 +61107,24 @@
     "unit_names": [
      "Žilinský kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 62.7,
+     "stations": 1.0,
+     "places": 2.2,
+     "routes": 14.4,
+     "merge": 0.8,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T11:25:35",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:47",
+    "shipped": "2026-10-21T13:56:37"
    }
   },
   {
@@ -60601,7 +61132,7 @@
    "id": "nir",
    "name": "Nitriansky kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SVK"
@@ -60635,6 +61166,24 @@
     "unit_names": [
      "Nitriansky kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 52.3,
+     "stations": 0.7,
+     "places": 1.9,
+     "routes": 15.6,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T11:26:48",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:47",
+    "shipped": "2026-10-21T13:56:37"
    }
   },
   {
@@ -60642,7 +61191,7 @@
    "id": "bay",
    "name": "Banskobystrický kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SVK"
@@ -60676,6 +61225,24 @@
     "unit_names": [
      "Banskobystrický kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 73.9,
+     "stations": 0.7,
+     "places": 1.9,
+     "routes": 15.4,
+     "merge": 0.8,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T11:28:22",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:47",
+    "shipped": "2026-10-21T13:56:38"
    }
   },
   {
@@ -60683,7 +61250,7 @@
    "id": "brt",
    "name": "Bratislavský kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SVK"
@@ -60717,6 +61284,24 @@
     "unit_names": [
      "Bratislavský kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-130922",
+    "steps": {
+     "build": 15.3,
+     "stations": 0.7,
+     "places": 1.7,
+     "routes": 5.4,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T13:17:11",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:22:32",
+    "shipped": "2026-10-21T13:56:38"
    }
   },
   {
@@ -60724,7 +61309,7 @@
    "id": "trc",
    "name": "Trenčiansky kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SVK"
@@ -60758,6 +61343,24 @@
     "unit_names": [
      "Trenčiansky kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-130922",
+    "steps": {
+     "build": 15.3,
+     "stations": 0.7,
+     "places": 1.7,
+     "routes": 9.3,
+     "merge": 0.6,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T13:17:41",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:22:32",
+    "shipped": "2026-10-21T13:56:38"
    }
   },
   {
@@ -60765,7 +61368,7 @@
    "id": "trk",
    "name": "Trnavský kraj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SVK"
@@ -60799,6 +61402,24 @@
     "unit_names": [
      "Trnavský kraj"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 65.5,
+     "stations": 0.9,
+     "places": 2.8,
+     "routes": 15.4,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T11:48:44",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:47",
+    "shipped": "2026-10-21T13:56:38"
    }
   },
   {
@@ -60806,7 +61427,7 @@
    "id": "kic",
    "name": "Kielecki",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -60842,6 +61463,24 @@
      "Kielecki",
      "Sandomiersko-jędrzejowski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 78.1,
+     "stations": 0.8,
+     "places": 2.6,
+     "routes": 24.7,
+     "merge": 1.3,
+     "nocar": 1.3,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T12:37:59",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:49",
+    "shipped": "2026-10-21T13:56:38"
    }
   },
   {
@@ -60849,7 +61488,7 @@
    "id": "zio",
    "name": "Zielonogórski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -60885,6 +61524,24 @@
      "Zielonogórski",
      "Gorzowski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 83.9,
+     "stations": 0.9,
+     "places": 2.6,
+     "routes": 28.7,
+     "merge": 1.4,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T12:47:45",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:49",
+    "shipped": "2026-10-21T13:56:38"
    }
   },
   {
@@ -60892,7 +61549,7 @@
    "id": "noc",
    "name": "Nowosądecki",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -60928,6 +61585,24 @@
      "Nowosądecki",
      "Tarnowski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 84.1,
+     "stations": 1.2,
+     "places": 3.8,
+     "routes": 20.0,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-21T12:55:36",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:49",
+    "shipped": "2026-10-21T13:56:38"
    }
   },
   {
@@ -60935,7 +61610,7 @@
    "id": "sro",
    "name": "Starogardzki",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -60973,6 +61648,24 @@
      "Słupski",
      "Chojnicki"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 122.4,
+     "stations": 0.8,
+     "places": 3.7,
+     "routes": 33.2,
+     "merge": 1.5,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T09:23:07",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:07",
+    "shipped": "2026-10-21T13:56:38"
    }
   },
   {
@@ -60980,7 +61673,7 @@
    "id": "sik",
    "name": "Siedlecki",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61018,6 +61711,24 @@
      "Płocki",
      "Żyrardowski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 202.1,
+     "stations": 1.4,
+     "places": 7.7,
+     "routes": 54.9,
+     "merge": 1.8,
+     "nocar": 1.7,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T11:59:12",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:48",
+    "shipped": "2026-10-21T13:56:39"
    }
   },
   {
@@ -61025,7 +61736,7 @@
    "id": "jee",
    "name": "Jeleniogórski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61061,6 +61772,24 @@
      "Jeleniogórski",
      "Legnicko-głogowski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 93.1,
+     "stations": 0.9,
+     "places": 2.7,
+     "routes": 26.9,
+     "merge": 1.0,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T10:14:16",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:10",
+    "shipped": "2026-10-21T13:56:39"
    }
   },
   {
@@ -61068,7 +61797,7 @@
    "id": "lsz",
    "name": "Leszczyński",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61104,6 +61833,24 @@
      "Leszczyński",
      "Pilski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 119.4,
+     "stations": 0.8,
+     "places": 4.3,
+     "routes": 41.9,
+     "merge": 1.9,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-10-21T10:00:40",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:09",
+    "shipped": "2026-10-21T13:56:39"
    }
   },
   {
@@ -61111,7 +61858,7 @@
    "id": "opl",
    "name": "Opolski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61147,6 +61894,24 @@
      "Opolski",
      "Nyski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 66.5,
+     "stations": 0.9,
+     "places": 2.1,
+     "routes": 19.1,
+     "merge": 1.1,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T13:03:34",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:50",
+    "shipped": "2026-10-21T13:56:39"
    }
   },
   {
@@ -61154,7 +61919,7 @@
    "id": "olz",
    "name": "Olsztyński",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61190,6 +61955,24 @@
      "Olsztyński",
      "Ełcki"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 98.5,
+     "stations": 0.8,
+     "places": 2.1,
+     "routes": 27.3,
+     "merge": 2.1,
+     "nocar": 1.5,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T12:21:37",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:49",
+    "shipped": "2026-10-21T13:56:39"
    }
   },
   {
@@ -61197,7 +61980,7 @@
    "id": "sze",
    "name": "Szczeciński",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61233,6 +62016,24 @@
      "Szczeciński",
      "Miasto Szczecin"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 90.9,
+     "stations": 0.9,
+     "places": 2.3,
+     "routes": 14.9,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T13:10:14",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:50",
+    "shipped": "2026-10-21T13:56:39"
    }
   },
   {
@@ -61240,7 +62041,7 @@
    "id": "osc",
    "name": "Oświęcimski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61276,6 +62077,24 @@
      "Oświęcimski",
      "Nowotarski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 103.0,
+     "stations": 0.8,
+     "places": 5.0,
+     "routes": 15.9,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T12:57:44",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:49",
+    "shipped": "2026-10-21T13:56:39"
    }
   },
   {
@@ -61283,7 +62102,7 @@
    "id": "kri",
    "name": "Krośnieński",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61319,6 +62138,25 @@
      "Krośnieński",
      "Przemyski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 116.0,
+     "stations": 0.8,
+     "places": 3.4,
+     "routes": 28.7,
+     "merge": 1.3,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-21T10:33:13",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-21T11:37:19",
+    "gated": "2026-10-21T13:14:48",
+    "shipped": "2026-10-21T13:56:39"
    }
   },
   {
@@ -61326,7 +62164,7 @@
    "id": "byd",
    "name": "Bydgosko-toruński",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61360,6 +62198,25 @@
     "unit_names": [
      "Bydgosko-toruński"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 166.6,
+     "stations": 1.1,
+     "places": 2.5,
+     "routes": 18.1,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T09:03:06",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-21T09:15:17",
+    "gated": "2026-10-21T11:29:51",
+    "shipped": "2026-10-21T13:56:39"
    }
   },
   {
@@ -61367,7 +62224,7 @@
    "id": "szi",
    "name": "Szczecinecko-pyrzycki",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61403,6 +62260,24 @@
      "Szczecinecko-pyrzycki",
      "Koszaliński"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 88.7,
+     "stations": 0.7,
+     "places": 2.9,
+     "routes": 21.1,
+     "merge": 1.2,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T13:12:11",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:50",
+    "shipped": "2026-10-21T13:56:39"
    }
   },
   {
@@ -61410,7 +62285,7 @@
    "id": "siz",
    "name": "Sieradzki",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61446,6 +62321,24 @@
      "Sieradzki",
      "Skierniewicki"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 95.5,
+     "stations": 0.8,
+     "places": 3.4,
+     "routes": 26.3,
+     "merge": 1.2,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T12:12:34",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:49",
+    "shipped": "2026-10-21T13:56:40"
    }
   },
   {
@@ -61453,7 +62346,7 @@
    "id": "puw",
    "name": "Puławski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61489,6 +62382,24 @@
      "Puławski",
      "Bialski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 101.3,
+     "stations": 1.1,
+     "places": 3.6,
+     "routes": 37.6,
+     "merge": 1.6,
+     "nocar": 2.0,
+     "everyday": 1.0
+    },
+    "built": "2026-10-21T09:35:18",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:08",
+    "shipped": "2026-10-21T13:56:40"
    }
   },
   {
@@ -61496,7 +62407,7 @@
    "id": "gri",
    "name": "Grudziądzki",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61532,6 +62443,24 @@
      "Grudziądzki",
      "Włocławski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 74.8,
+     "stations": 0.9,
+     "places": 2.5,
+     "routes": 25.4,
+     "merge": 1.7,
+     "nocar": 2.1,
+     "everyday": 1.8
+    },
+    "built": "2026-10-21T09:04:55",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:06",
+    "shipped": "2026-10-21T13:56:40"
    }
   },
   {
@@ -61539,7 +62468,7 @@
    "id": "oso",
    "name": "Ostrołęcki",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61575,6 +62504,24 @@
      "Ostrołęcki",
      "Ciechanowski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 81.4,
+     "stations": 0.8,
+     "places": 2.2,
+     "routes": 31.7,
+     "merge": 1.7,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T12:01:12",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:48",
+    "shipped": "2026-10-21T13:56:40"
    }
   },
   {
@@ -61582,7 +62529,7 @@
    "id": "tro",
    "name": "Trójmiejski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61616,6 +62563,26 @@
     "unit_names": [
      "Trójmiejski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 63.2,
+     "stations": 1.0,
+     "places": 2.4,
+     "routes": 3.7,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T09:18:32",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-21T10:52:07",
+    "shipped": "2026-10-21T13:56:40"
    }
   },
   {
@@ -61623,7 +62590,7 @@
    "id": "lul",
    "name": "Lubelski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61657,6 +62624,24 @@
     "unit_names": [
      "Lubelski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 68.6,
+     "stations": 1.1,
+     "places": 3.0,
+     "routes": 20.4,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.3
+    },
+    "built": "2026-10-21T09:30:59",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:07",
+    "shipped": "2026-10-21T13:56:40"
    }
   },
   {
@@ -61664,7 +62649,7 @@
    "id": "omy",
    "name": "Łomżyński",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61700,6 +62685,24 @@
      "Łomżyński",
      "Suwalski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 112.3,
+     "stations": 0.9,
+     "places": 2.2,
+     "routes": 27.0,
+     "merge": 1.8,
+     "nocar": 1.5,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T12:31:13",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:49",
+    "shipped": "2026-10-21T13:56:40"
    }
   },
   {
@@ -61707,7 +62710,7 @@
    "id": "bik",
    "name": "Bielski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61741,6 +62744,24 @@
     "unit_names": [
      "Bielski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 72.4,
+     "stations": 1.0,
+     "places": 2.4,
+     "routes": 13.0,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-10-21T09:45:32",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:08",
+    "shipped": "2026-10-21T13:56:40"
    }
   },
   {
@@ -61748,7 +62769,7 @@
    "id": "kli",
    "name": "Kaliski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61782,6 +62803,24 @@
     "unit_names": [
      "Kaliski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 55.0,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 22.9,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-21T09:56:08",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:09",
+    "shipped": "2026-10-21T13:56:40"
    }
   },
   {
@@ -61789,7 +62828,7 @@
    "id": "kox",
    "name": "Koniński",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61823,6 +62862,24 @@
     "unit_names": [
      "Koniński"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 68.6,
+     "stations": 0.9,
+     "places": 2.0,
+     "routes": 24.5,
+     "merge": 1.2,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-10-21T09:57:49",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:09",
+    "shipped": "2026-10-21T13:56:41"
    }
   },
   {
@@ -61830,7 +62887,7 @@
    "id": "wab",
    "name": "Wałbrzyski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61864,6 +62921,24 @@
     "unit_names": [
      "Wałbrzyski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 62.0,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 15.5,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T10:08:59",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:09",
+    "shipped": "2026-10-21T13:56:41"
    }
   },
   {
@@ -61871,7 +62946,7 @@
    "id": "mir",
    "name": "Miasto Wrocław",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61905,6 +62980,27 @@
     "unit_names": [
      "Miasto Wrocław"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 55.5,
+     "stations": 1.1,
+     "places": 2.3,
+     "routes": 3.7,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-21T10:10:05",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1269675667050808",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-21T10:52:10",
+    "shipped": "2026-10-21T13:56:41"
    }
   },
   {
@@ -61912,7 +63008,7 @@
    "id": "rze",
    "name": "Rzeszowski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61946,6 +63042,27 @@
     "unit_names": [
      "Rzeszowski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 65.1,
+     "stations": 0.9,
+     "places": 2.9,
+     "routes": 16.8,
+     "merge": 0.8,
+     "nocar": 1.8,
+     "everyday": 1.3
+    },
+    "built": "2026-10-21T10:28:57",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10680762131740057"
+     ]
+    },
+    "parked": "2026-10-21T11:37:19",
+    "gated": "2026-10-21T13:14:48",
+    "shipped": "2026-10-21T13:56:41"
    }
   },
   {
@@ -61953,7 +63070,7 @@
    "id": "gda",
    "name": "Gdański",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -61987,6 +63104,24 @@
     "unit_names": [
      "Gdański"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 86.8,
+     "stations": 1.0,
+     "places": 3.1,
+     "routes": 17.9,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T09:20:23",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:07",
+    "shipped": "2026-10-21T13:56:41"
    }
   },
   {
@@ -61994,7 +63129,7 @@
    "id": "ryb",
    "name": "Rybnicki",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -62028,6 +63163,24 @@
     "unit_names": [
      "Rybnicki"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 66.2,
+     "stations": 1.2,
+     "places": 2.6,
+     "routes": 13.7,
+     "merge": 0.9,
+     "nocar": 1.9,
+     "everyday": 1.8
+    },
+    "built": "2026-10-21T09:47:01",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:08",
+    "shipped": "2026-10-21T13:56:41"
    }
   },
   {
@@ -62035,7 +63188,7 @@
    "id": "chk",
    "name": "Chełmsko-zamojski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -62069,6 +63222,26 @@
     "unit_names": [
      "Chełmsko-zamojski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 82.9,
+     "stations": 0.8,
+     "places": 2.5,
+     "routes": 21.2,
+     "merge": 1.4,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T09:32:50",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10305805097381589"
+     ]
+    },
+    "gated": "2026-10-21T10:52:08",
+    "shipped": "2026-10-21T13:56:41"
    }
   },
   {
@@ -62076,7 +63249,7 @@
    "id": "trz",
    "name": "Tarnobrzeski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -62110,6 +63283,25 @@
     "unit_names": [
      "Tarnobrzeski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 77.8,
+     "stations": 1.1,
+     "places": 3.5,
+     "routes": 16.7,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-21T10:30:40",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-21T11:37:19",
+    "gated": "2026-10-21T13:14:48",
+    "shipped": "2026-10-21T13:56:41"
    }
   },
   {
@@ -62117,7 +63309,7 @@
    "id": "wro",
    "name": "Wrocławski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -62151,6 +63343,25 @@
     "unit_names": [
      "Wrocławski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 89.2,
+     "stations": 0.9,
+     "places": 3.0,
+     "routes": 27.2,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T10:12:09",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-21T10:24:19",
+    "gated": "2026-10-21T13:14:48",
+    "shipped": "2026-10-21T13:56:41"
    }
   },
   {
@@ -62158,7 +63369,7 @@
    "id": "rad",
    "name": "Radomski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -62192,6 +63403,26 @@
     "unit_names": [
      "Radomski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 74.3,
+     "stations": 1.3,
+     "places": 2.7,
+     "routes": 16.2,
+     "merge": 0.9,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T11:54:41",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1156276987130304"
+     ]
+    },
+    "gated": "2026-10-21T13:14:48",
+    "shipped": "2026-10-21T13:56:41"
    }
   },
   {
@@ -62199,7 +63430,7 @@
    "id": "pio",
    "name": "Piotrkowski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -62233,6 +63464,24 @@
     "unit_names": [
      "Piotrkowski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 67.4,
+     "stations": 0.7,
+     "places": 2.3,
+     "routes": 14.5,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T12:10:25",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:49",
+    "shipped": "2026-10-21T13:56:42"
    }
   },
   {
@@ -62240,7 +63489,7 @@
    "id": "inw",
    "name": "Inowrocławski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -62276,6 +63525,24 @@
      "Inowrocławski",
      "Świecki"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 84.2,
+     "stations": 1.0,
+     "places": 2.4,
+     "routes": 20.7,
+     "merge": 1.0,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-21T09:06:47",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:07",
+    "shipped": "2026-10-21T13:56:42"
    }
   },
   {
@@ -62283,7 +63550,7 @@
    "id": "elb",
    "name": "Elbląski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -62317,6 +63584,24 @@
     "unit_names": [
      "Elbląski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 71.3,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 12.3,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T12:19:24",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:49",
+    "shipped": "2026-10-21T13:56:42"
    }
   },
   {
@@ -62324,7 +63609,7 @@
    "id": "bia",
    "name": "Białostocki",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -62358,6 +63643,24 @@
     "unit_names": [
      "Białostocki"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-114047",
+    "steps": {
+     "build": 50.9,
+     "stations": 0.9,
+     "places": 2.5,
+     "routes": 12.4,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T12:28:46",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:14:49",
+    "shipped": "2026-10-21T13:56:42"
    }
   },
   {
@@ -62365,7 +63668,7 @@
    "id": "cze",
    "name": "Częstochowski",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -62399,6 +63702,24 @@
     "unit_names": [
      "Częstochowski"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085713",
+    "steps": {
+     "build": 52.1,
+     "stations": 1.3,
+     "places": 2.5,
+     "routes": 14.7,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-21T09:48:15",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T10:52:09",
+    "shipped": "2026-10-21T13:56:42"
    }
   },
   {
@@ -62406,7 +63727,7 @@
    "id": "bck",
    "name": "Bács-Kiskun",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "HUN"
@@ -62444,6 +63765,24 @@
      "Csongrád-Csanád",
      "Békés"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 77.2,
+     "stations": 0.7,
+     "places": 1.8,
+     "routes": 40.0,
+     "merge": 2.0,
+     "nocar": 1.4,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T12:07:15",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:48",
+    "shipped": "2026-10-21T13:56:42"
    }
   },
   {
@@ -62451,7 +63790,7 @@
    "id": "fee",
    "name": "Fejér",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "HUN"
@@ -62489,6 +63828,24 @@
      "Veszprém",
      "Komárom-Esztergom"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 79.5,
+     "stations": 0.8,
+     "places": 2.7,
+     "routes": 35.8,
+     "merge": 1.0,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T12:09:17",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:48",
+    "shipped": "2026-10-21T13:56:42"
    }
   },
   {
@@ -62496,7 +63853,7 @@
    "id": "hjd",
    "name": "Hajdú-Bihar",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "HUN"
@@ -62532,6 +63889,24 @@
      "Hajdú-Bihar",
      "Jász-Nagykun-Szolnok"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 56.1,
+     "stations": 0.9,
+     "places": 2.0,
+     "routes": 25.8,
+     "merge": 1.1,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T12:10:45",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:48",
+    "shipped": "2026-10-21T13:56:42"
    }
   },
   {
@@ -62539,7 +63914,7 @@
    "id": "gyr",
    "name": "Győr-Moson-Sopron",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "HUN"
@@ -62577,6 +63952,24 @@
      "Vas",
      "Zala"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 75.7,
+     "stations": 0.7,
+     "places": 2.4,
+     "routes": 27.7,
+     "merge": 1.1,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T12:12:34",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:48",
+    "shipped": "2026-10-21T13:56:42"
    }
   },
   {
@@ -62584,7 +63977,7 @@
    "id": "bny",
    "name": "Baranya",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "HUN"
@@ -62622,6 +64015,24 @@
      "Somogy",
      "Tolna"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 67.4,
+     "stations": 0.8,
+     "places": 2.4,
+     "routes": 29.2,
+     "merge": 1.3,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T12:14:18",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:48",
+    "shipped": "2026-10-21T13:56:43"
    }
   },
   {
@@ -62629,7 +64040,7 @@
    "id": "boo",
    "name": "Borsod-Abaúj-Zemplén",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "HUN"
@@ -62663,6 +64074,24 @@
     "unit_names": [
      "Borsod-Abaúj-Zemplén"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 54.2,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 17.1,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T12:03:39",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:47",
+    "shipped": "2026-10-21T13:56:43"
    }
   },
   {
@@ -62670,7 +64099,7 @@
    "id": "sza",
    "name": "Szabolcs-Szatmár-Bereg",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "HUN"
@@ -62704,6 +64133,24 @@
     "unit_names": [
      "Szabolcs-Szatmár-Bereg"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 73.2,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 12.8,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T12:05:11",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:48",
+    "shipped": "2026-10-21T13:56:43"
    }
   },
   {
@@ -62711,7 +64158,7 @@
    "id": "hee",
    "name": "Heves",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "HUN"
@@ -62747,6 +64194,24 @@
      "Heves",
      "Nógrád"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 79.6,
+     "stations": 0.8,
+     "places": 3.5,
+     "routes": 15.5,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T12:16:00",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:48",
+    "shipped": "2026-10-21T13:56:43"
    }
   },
   {
@@ -62754,7 +64219,7 @@
    "id": "pok",
    "name": "Podravska",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SVN"
@@ -62802,6 +64267,24 @@
      "Zasavska",
      "Primorsko-notranjska"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 166.3,
+     "stations": 0.9,
+     "places": 5.0,
+     "routes": 50.9,
+     "merge": 1.4,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T13:02:45",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:49",
+    "shipped": "2026-10-21T13:56:43"
    }
   },
   {
@@ -62809,7 +64292,7 @@
    "id": "osd",
    "name": "Osrednjeslovenska",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SVN"
@@ -62849,6 +64332,24 @@
      "Goriška",
      "Obalno-kraška"
     ]
+   },
+   "run": {
+    "run_batch": "20261021-085714",
+    "steps": {
+     "build": 86.5,
+     "stations": 1.0,
+     "places": 4.4,
+     "routes": 32.5,
+     "merge": 1.1,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-21T13:04:54",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T13:08:49",
+    "shipped": "2026-10-21T13:56:43"
    }
   },
   {
@@ -62908,6 +64409,9 @@
      "Virovitičko-podravska županija",
      "Požeško-slavonska županija"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -62957,6 +64461,9 @@
      "Koprivničko-križevačka županija",
      "Međimurska županija"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -62998,6 +64505,9 @@
     "unit_names": [
      "Grad Zagreb"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63045,6 +64555,9 @@
      "Dubrovačko-neretvanska županija",
      "Šibensko-kninska županija"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63170,6 +64683,9 @@
      "Istočno Novo Sarajevo",
      "Dobretići"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63249,6 +64765,9 @@
      "Čelinac",
      "Kneževo"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63334,6 +64853,9 @@
      "Domaljevac-Šamac",
      "Osmaci"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63409,6 +64931,9 @@
      "Sapna",
      "Doboj Jug"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63455,6 +64980,9 @@
      "Rudo",
      "Ustiprača"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63496,6 +65024,9 @@
     "unit_names": [
      "Trebinje"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63553,6 +65084,9 @@
      "Toplička oblast",
      "Pirotska oblast"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63600,6 +65134,9 @@
      "Rasinska oblast",
      "Pomoravska oblast"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63645,6 +65182,9 @@
      "Severnobačka oblast",
      "Zapadnobačka oblast "
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63692,6 +65232,9 @@
      "Moravička oblast",
      "Kolubarska oblast"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63739,6 +65282,9 @@
      "Srednjobanatska oblast",
      "Severnobanatska oblast"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63780,6 +65326,9 @@
     "unit_names": [
      "Crna Gora"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63825,6 +65374,9 @@
      "Pelagoniski",
      "Jugozapaden"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63872,6 +65424,9 @@
      "Severoistočen",
      "Vardarski"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63913,6 +65468,9 @@
     "unit_names": [
      "Skopski"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -63964,6 +65522,9 @@
      "Dibër",
      "Kukës"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -64011,6 +65572,9 @@
      "Vlorë",
      "Berat"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -64056,6 +65620,9 @@
      "Pejë",
      "Mitrovicë"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -64103,6 +65670,9 @@
      "Ferizaj",
      "Gjilan"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -64146,6 +65716,9 @@
      "Argeş",
      "Dâmboviţa"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64191,6 +65764,9 @@
      "Hunedoara",
      "Caraş-Severin"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64236,6 +65812,9 @@
      "Vrancea",
      "Brăila"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64279,6 +65858,9 @@
      "Suceava",
      "Botoşani"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64322,6 +65904,9 @@
      "Neamţ",
      "Vaslui"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64363,6 +65948,9 @@
     "unit_names": [
      "Iaşi"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64406,6 +65994,9 @@
      "Maramureş",
      "Bistriţa-Năsăud"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64449,6 +66040,9 @@
      "Olt",
      "Vâlcea"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64490,6 +66084,9 @@
     "unit_names": [
      "Prahova"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64533,6 +66130,9 @@
      "Sibiu",
      "Alba"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64574,6 +66174,9 @@
     "unit_names": [
      "Cluj"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64615,6 +66218,9 @@
     "unit_names": [
      "Timiş"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64656,6 +66262,9 @@
     "unit_names": [
      "Constanţa"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64699,6 +66308,9 @@
      "Teleorman",
      "Giurgiu"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64740,6 +66352,9 @@
     "unit_names": [
      "Dolj"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64781,6 +66396,9 @@
     "unit_names": [
      "Bihor"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64822,6 +66440,9 @@
     "unit_names": [
      "Bacău"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64865,6 +66486,9 @@
      "Gorj",
      "Mehedinţi"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64908,6 +66532,9 @@
      "Satu Mare",
      "Sălaj"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64949,6 +66576,9 @@
     "unit_names": [
      "Braşov"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -64992,6 +66622,9 @@
      "Călăraşi",
      "Ialomiţa"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -65033,6 +66666,9 @@
     "unit_names": [
      "Mureş"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -65074,6 +66710,9 @@
     "unit_names": [
      "Galaţi"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -65117,6 +66756,9 @@
      "Harghita",
      "Covasna"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -65166,6 +66808,9 @@
      "Kardzhali",
      "Smolyan"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -65213,6 +66858,9 @@
      "Sliven",
      "Yambol"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -65260,6 +66908,9 @@
      "Shumen",
      "Targovishte"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -65309,6 +66960,9 @@
      "Gabrovo",
      "Razgrad"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -65358,6 +67012,9 @@
      "Lovech",
      "Vidin"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -65403,6 +67060,9 @@
      "Sofia",
      "Kyustendil"
     ]
+   },
+   "run": {
+    "claim": "20261021-145542"
    }
   },
   {
@@ -65470,6 +67130,9 @@
      "Taraclia",
      "Basarabeasca"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -65537,6 +67200,9 @@
      "Ocnita",
      "Donduseni"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -65592,6 +67258,9 @@
      "Dubasari",
      "Rezina"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {
@@ -65633,6 +67302,9 @@
     "unit_names": [
      "Chisinau"
     ]
+   },
+   "run": {
+    "claim": "20261021-145541"
    }
   },
   {

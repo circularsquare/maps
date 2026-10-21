@@ -4098,6 +4098,398 @@
       {
         "name": "Würzburg",
         "regionName": "Würzburg region"
+      },
+      {
+        "name": "Bydgosko-toruński",
+        "regionName": "Bydgosko-toruński region"
+      },
+      {
+        "name": "Grudziądzki",
+        "regionName": "Grudziądzki region"
+      },
+      {
+        "name": "Inowrocławski",
+        "regionName": "Inowrocławski region"
+      },
+      {
+        "name": "Trójmiejski",
+        "regionName": "Trójmiejski region"
+      },
+      {
+        "name": "Gdański",
+        "regionName": "Gdański region"
+      },
+      {
+        "name": "Starogardzki",
+        "regionName": "Starogardzki region"
+      },
+      {
+        "name": "Bern",
+        "regionName": "Bern region"
+      },
+      {
+        "name": "Vaud",
+        "regionName": "Vaud region"
+      },
+      {
+        "name": "Luzern",
+        "regionName": "Luzern region"
+      },
+      {
+        "name": "Fribourg",
+        "regionName": "Fribourg region"
+      },
+      {
+        "name": "Genève",
+        "regionName": "Genève region"
+      },
+      {
+        "name": "St. Gallen",
+        "regionName": "St. Gallen region"
+      },
+      {
+        "name": "Aargau",
+        "regionName": "Aargau region"
+      },
+      {
+        "name": "Valais",
+        "regionName": "Valais region"
+      },
+      {
+        "name": "Lubelski",
+        "regionName": "Lubelski region"
+      },
+      {
+        "name": "Chełmsko-zamojski",
+        "regionName": "Chełmsko-zamojski region"
+      },
+      {
+        "name": "Puławski",
+        "regionName": "Puławski region"
+      },
+      {
+        "name": "Bielski",
+        "regionName": "Bielski region"
+      },
+      {
+        "name": "Rybnicki",
+        "regionName": "Rybnicki region"
+      },
+      {
+        "name": "Częstochowski",
+        "regionName": "Częstochowski region"
+      },
+      {
+        "name": "Kaliski",
+        "regionName": "Kaliski region"
+      },
+      {
+        "name": "Koniński",
+        "regionName": "Koniński region"
+      },
+      {
+        "name": "Leszczyński",
+        "regionName": "Leszczyński region"
+      },
+      {
+        "name": "Linz-Wels",
+        "regionName": "Linz-Wels region"
+      },
+      {
+        "name": "Klagenfurt-Villach",
+        "regionName": "Klagenfurt-Villach region"
+      },
+      {
+        "name": "Mostviertel-Eisenwurzen",
+        "regionName": "Mostviertel-Eisenwurzen region"
+      },
+      {
+        "name": "Salzburg und Umgebung",
+        "regionName": "Salzburg und Umgebung region"
+      },
+      {
+        "name": "Graz",
+        "regionName": "Graz region"
+      },
+      {
+        "name": "Innsbruck",
+        "regionName": "Innsbruck region"
+      },
+      {
+        "name": "Innviertel",
+        "regionName": "Innviertel region"
+      },
+      {
+        "name": "Niederösterreich-Süd",
+        "regionName": "Niederösterreich-Süd region"
+      },
+      {
+        "name": "Wałbrzyski",
+        "regionName": "Wałbrzyski region"
+      },
+      {
+        "name": "Miasto Wrocław",
+        "regionName": "Miasto Wrocław region"
+      },
+      {
+        "name": "Wrocławski",
+        "regionName": "Wrocławski region"
+      },
+      {
+        "name": "Jeleniogórski",
+        "regionName": "Jeleniogórski region"
+      },
+      {
+        "name": "Středočeský kraj",
+        "regionName": "Středočeský kraj region"
+      },
+      {
+        "name": "Rzeszowski",
+        "regionName": "Rzeszowski region"
+      },
+      {
+        "name": "Tarnobrzeski",
+        "regionName": "Tarnobrzeski region"
+      },
+      {
+        "name": "Krośnieński",
+        "regionName": "Krośnieński region"
+      },
+      {
+        "name": "Moravskoslezský kraj",
+        "regionName": "Moravskoslezský kraj region"
+      },
+      {
+        "name": "Jihočeský kraj",
+        "regionName": "Jihočeský kraj region"
+      },
+      {
+        "name": "Olomoucký kraj",
+        "regionName": "Olomoucký kraj region"
+      },
+      {
+        "name": "Bydgosko-toruński",
+        "regionName": "Bydgosko-toruński region"
+      },
+      {
+        "name": "Rzeszowski",
+        "regionName": "Rzeszowski region"
+      },
+      {
+        "name": "Tarnobrzeski",
+        "regionName": "Tarnobrzeski region"
+      },
+      {
+        "name": "Krośnieński",
+        "regionName": "Krośnieński region"
+      },
+      {
+        "name": "Plzeňský kraj",
+        "regionName": "Plzeňský kraj region"
+      },
+      {
+        "name": "Zlínský kraj",
+        "regionName": "Zlínský kraj region"
+      },
+      {
+        "name": "Rzeszowski",
+        "regionName": "Rzeszowski region"
+      },
+      {
+        "name": "Rzeszowski",
+        "regionName": "Rzeszowski region"
+      },
+      {
+        "name": "Tarnobrzeski",
+        "regionName": "Tarnobrzeski region"
+      },
+      {
+        "name": "Krośnieński",
+        "regionName": "Krośnieński region"
+      },
+      {
+        "name": "Rzeszowski",
+        "regionName": "Rzeszowski region"
+      },
+      {
+        "name": "Rzeszowski",
+        "regionName": "Rzeszowski region"
+      },
+      {
+        "name": "Tarnobrzeski",
+        "regionName": "Tarnobrzeski region"
+      },
+      {
+        "name": "Krośnieński",
+        "regionName": "Krośnieński region"
+      },
+      {
+        "name": "Wrocławski",
+        "regionName": "Wrocławski region"
+      },
+      {
+        "name": "Prešovský kraj",
+        "regionName": "Prešovský kraj region"
+      },
+      {
+        "name": "Košický kraj",
+        "regionName": "Košický kraj region"
+      },
+      {
+        "name": "Žilinský kraj",
+        "regionName": "Žilinský kraj region"
+      },
+      {
+        "name": "Nitriansky kraj",
+        "regionName": "Nitriansky kraj region"
+      },
+      {
+        "name": "Banskobystrický kraj",
+        "regionName": "Banskobystrický kraj region"
+      },
+      {
+        "name": "Trnavský kraj",
+        "regionName": "Trnavský kraj region"
+      },
+      {
+        "name": "Radomski",
+        "regionName": "Radomski region"
+      },
+      {
+        "name": "Siedlecki",
+        "regionName": "Siedlecki region"
+      },
+      {
+        "name": "Ostrołęcki",
+        "regionName": "Ostrołęcki region"
+      },
+      {
+        "name": "Piotrkowski",
+        "regionName": "Piotrkowski region"
+      },
+      {
+        "name": "Sieradzki",
+        "regionName": "Sieradzki region"
+      },
+      {
+        "name": "Borsod-Abaúj-Zemplén",
+        "regionName": "Borsod-Abaúj-Zemplén region"
+      },
+      {
+        "name": "Szabolcs-Szatmár-Bereg",
+        "regionName": "Szabolcs-Szatmár-Bereg region"
+      },
+      {
+        "name": "Bács-Kiskun",
+        "regionName": "Bács-Kiskun region"
+      },
+      {
+        "name": "Fejér",
+        "regionName": "Fejér region"
+      },
+      {
+        "name": "Hajdú-Bihar",
+        "regionName": "Hajdú-Bihar region"
+      },
+      {
+        "name": "Győr-Moson-Sopron",
+        "regionName": "Győr-Moson-Sopron region"
+      },
+      {
+        "name": "Baranya",
+        "regionName": "Baranya region"
+      },
+      {
+        "name": "Heves",
+        "regionName": "Heves region"
+      },
+      {
+        "name": "Elbląski",
+        "regionName": "Elbląski region"
+      },
+      {
+        "name": "Olsztyński",
+        "regionName": "Olsztyński region"
+      },
+      {
+        "name": "Białostocki",
+        "regionName": "Białostocki region"
+      },
+      {
+        "name": "Łomżyński",
+        "regionName": "Łomżyński region"
+      },
+      {
+        "name": "Jihomoravský kraj",
+        "regionName": "Jihomoravský kraj region"
+      },
+      {
+        "name": "Kielecki",
+        "regionName": "Kielecki region"
+      },
+      {
+        "name": "Královéhradecký kraj",
+        "regionName": "Královéhradecký kraj region"
+      },
+      {
+        "name": "Zielonogórski",
+        "regionName": "Zielonogórski region"
+      },
+      {
+        "name": "Ústecký kraj",
+        "regionName": "Ústecký kraj region"
+      },
+      {
+        "name": "Nowosądecki",
+        "regionName": "Nowosądecki region"
+      },
+      {
+        "name": "Oświęcimski",
+        "regionName": "Oświęcimski region"
+      },
+      {
+        "name": "Opolski",
+        "regionName": "Opolski region"
+      },
+      {
+        "name": "Podravska",
+        "regionName": "Podravska region"
+      },
+      {
+        "name": "Osrednjeslovenska",
+        "regionName": "Osrednjeslovenska region"
+      },
+      {
+        "name": "Salzburg und Umgebung",
+        "regionName": "Salzburg und Umgebung region"
+      },
+      {
+        "name": "Innsbruck",
+        "regionName": "Innsbruck region"
+      },
+      {
+        "name": "Szczeciński",
+        "regionName": "Szczeciński region"
+      },
+      {
+        "name": "Szczecinecko-pyrzycki",
+        "regionName": "Szczecinecko-pyrzycki region"
+      },
+      {
+        "name": "Bratislavský kraj",
+        "regionName": "Bratislavský kraj region"
+      },
+      {
+        "name": "Trenčiansky kraj",
+        "regionName": "Trenčiansky kraj region"
+      },
+      {
+        "name": "St. Gallen",
+        "regionName": "St. Gallen region"
+      },
+      {
+        "name": "Valais",
+        "regionName": "Valais region"
       }
     ],
     "rule": {
@@ -6496,7 +6888,7 @@
         52.665
       ],
       "place": 106,
-      "localTrips": 8952039.0,
+      "localTrips": 8868964.0,
       "country": "PL"
     },
     {
@@ -6520,7 +6912,7 @@
         48.077
       ],
       "place": 107,
-      "localTrips": 8636527.0,
+      "localTrips": 8540527.0,
       "country": "HU"
     },
     {
@@ -6616,7 +7008,7 @@
         50.873
       ],
       "place": 118,
-      "localTrips": 7687904.0,
+      "localTrips": 7560793.0,
       "country": "PL"
     },
     {
@@ -6640,7 +7032,7 @@
         48.663
       ],
       "place": 119,
-      "localTrips": 7765916.0,
+      "localTrips": 7712586.0,
       "country": "AT"
     },
     {
@@ -6976,7 +7368,7 @@
         47.713
       ],
       "place": 189,
-      "localTrips": 5449595.0,
+      "localTrips": 5307583.0,
       "country": "CH"
     },
     {
@@ -7144,7 +7536,7 @@
         50.196
       ],
       "place": 200,
-      "localTrips": 3939844.0,
+      "localTrips": 3836941.0,
       "country": "CZ"
     },
     {
@@ -7168,7 +7560,7 @@
         52.907
       ],
       "place": 201,
-      "localTrips": 3429705.0,
+      "localTrips": 3379338.0,
       "country": "PL"
     },
     {
@@ -7240,7 +7632,7 @@
         50.539
       ],
       "place": 207,
-      "localTrips": 4252541.0,
+      "localTrips": 4158580.0,
       "country": "PL"
     },
     {
@@ -7288,7 +7680,7 @@
         52.056
       ],
       "place": 209,
-      "localTrips": 3050005.0,
+      "localTrips": 3006875.0,
       "country": "PL"
     },
     {
@@ -7508,7 +7900,7 @@
       ],
       "place": 256,
       "localTrips": 254940.0,
-      "country": "MA"
+      "country": "ES"
     },
     {
       "id": "alc",
@@ -18859,6 +19251,2031 @@
       "place": 1019,
       "country": "DE",
       "localTrips": 2438807.0
+    },
+    {
+      "id": "gri",
+      "name": "Grudziądzki",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.0711,
+        "lat": 52.654
+      },
+      "center": [
+        19.0711,
+        52.654
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.237,
+        52.312,
+        19.792,
+        53.63
+      ],
+      "place": 1021,
+      "country": "PL",
+      "localTrips": 2075751.0
+    },
+    {
+      "id": "inw",
+      "name": "Inowrocławski",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.2643,
+        "lat": 52.8004
+      },
+      "center": [
+        18.2643,
+        52.8004
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.217,
+        52.463,
+        18.819,
+        53.8
+      ],
+      "place": 1022,
+      "country": "PL",
+      "localTrips": 1490161.0
+    },
+    {
+      "id": "tro",
+      "name": "Trójmiejski",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.6524,
+        "lat": 54.3539
+      },
+      "center": [
+        18.6524,
+        54.3539
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.326,
+        54.256,
+        18.986,
+        54.603
+      ],
+      "place": 1023,
+      "country": "PL",
+      "localTrips": 2067178.0
+    },
+    {
+      "id": "gda",
+      "name": "Gdański",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.2468,
+        "lat": 54.6016
+      },
+      "center": [
+        18.2468,
+        54.6016
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.635,
+        54.085,
+        19.68,
+        54.855
+      ],
+      "place": 1024,
+      "country": "PL",
+      "localTrips": 1616780.0
+    },
+    {
+      "id": "sro",
+      "name": "Starogardzki",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.0306,
+        "lat": 54.4628
+      },
+      "center": [
+        17.0306,
+        54.4628
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.667,
+        53.472,
+        19.614,
+        54.802
+      ],
+      "place": 1025,
+      "country": "PL",
+      "localTrips": 2749495.0
+    },
+    {
+      "id": "brx",
+      "name": "Bern",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.2501,
+        "lat": 47.1375
+      },
+      "center": [
+        7.2501,
+        47.1375
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.814,
+        46.308,
+        8.482,
+        47.523
+      ],
+      "place": 1026,
+      "country": "CH",
+      "localTrips": 3939811.0
+    },
+    {
+      "id": "vud",
+      "name": "Vaud",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.6312,
+        "lat": 46.5217
+      },
+      "center": [
+        6.6312,
+        46.5217
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.037,
+        46.168,
+        7.276,
+        47.006
+      ],
+      "place": 1027,
+      "country": "CH",
+      "localTrips": 2385415.0
+    },
+    {
+      "id": "luz",
+      "name": "Luzern",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.3065,
+        "lat": 47.0441
+      },
+      "center": [
+        8.3065,
+        47.0441
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.809,
+        46.509,
+        8.985,
+        47.306
+      ],
+      "place": 1028,
+      "country": "CH",
+      "localTrips": 1530999.0
+    },
+    {
+      "id": "frb",
+      "name": "Fribourg",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.1456,
+        "lat": 46.8013
+      },
+      "center": [
+        7.1456,
+        46.8013
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.406,
+        46.419,
+        7.407,
+        47.184
+      ],
+      "place": 1029,
+      "country": "CH",
+      "localTrips": 1454842.0
+    },
+    {
+      "id": "gee",
+      "name": "Genève",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.1428,
+        "lat": 46.2054
+      },
+      "center": [
+        6.1428,
+        46.2054
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.929,
+        46.11,
+        6.337,
+        46.383
+      ],
+      "place": 1030,
+      "country": "CH",
+      "localTrips": 1505405.0
+    },
+    {
+      "id": "aag",
+      "name": "Aargau",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.5798,
+        "lat": 47.559
+      },
+      "center": [
+        7.5798,
+        47.559
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.298,
+        47.119,
+        8.483,
+        47.64
+      ],
+      "place": 1032,
+      "country": "CH",
+      "localTrips": 3248914.0
+    },
+    {
+      "id": "lul",
+      "name": "Lubelski",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.5603,
+        "lat": 51.2477
+      },
+      "center": [
+        22.5603,
+        51.2477
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        22.09,
+        50.82,
+        23.299,
+        51.732
+      ],
+      "place": 1034,
+      "country": "PL",
+      "localTrips": 1984594.0
+    },
+    {
+      "id": "chk",
+      "name": "Chełmsko-zamojski",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.2509,
+        "lat": 50.7281
+      },
+      "center": [
+        23.2509,
+        50.7281
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        22.374,
+        50.233,
+        24.175,
+        51.393
+      ],
+      "place": 1035,
+      "country": "PL",
+      "localTrips": 1745096.0
+    },
+    {
+      "id": "puw",
+      "name": "Puławski",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.1651,
+        "lat": 50.9587
+      },
+      "center": [
+        22.1651,
+        50.9587
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        21.586,
+        50.557,
+        23.739,
+        52.306
+      ],
+      "place": 1036,
+      "country": "PL",
+      "localTrips": 2140396.0
+    },
+    {
+      "id": "bik",
+      "name": "Bielski",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.0508,
+        "lat": 49.819
+      },
+      "center": [
+        19.0508,
+        49.819
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.537,
+        49.375,
+        19.509,
+        49.978
+      ],
+      "place": 1037,
+      "country": "PL",
+      "localTrips": 1837174.0
+    },
+    {
+      "id": "ryb",
+      "name": "Rybnicki",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.5276,
+        "lat": 50.0958
+      },
+      "center": [
+        18.5276,
+        50.0958
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.006,
+        49.878,
+        18.805,
+        50.277
+      ],
+      "place": 1038,
+      "country": "PL",
+      "localTrips": 1747614.0
+    },
+    {
+      "id": "cze",
+      "name": "Częstochowski",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.1182,
+        "lat": 50.8145
+      },
+      "center": [
+        19.1182,
+        50.8145
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.583,
+        50.488,
+        19.861,
+        51.118
+      ],
+      "place": 1039,
+      "country": "PL",
+      "localTrips": 1407809.0
+    },
+    {
+      "id": "kli",
+      "name": "Kaliski",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.0894,
+        "lat": 51.7598
+      },
+      "center": [
+        18.0894,
+        51.7598
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.097,
+        51.085,
+        18.512,
+        52.164
+      ],
+      "place": 1040,
+      "country": "PL",
+      "localTrips": 1847148.0
+    },
+    {
+      "id": "kox",
+      "name": "Koniński",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.5958,
+        "lat": 52.537
+      },
+      "center": [
+        17.5958,
+        52.537
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.12,
+        51.802,
+        19.135,
+        52.758
+      ],
+      "place": 1041,
+      "country": "PL",
+      "localTrips": 1821350.0
+    },
+    {
+      "id": "lsz",
+      "name": "Leszczyński",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.9187,
+        "lat": 52.9959
+      },
+      "center": [
+        16.9187,
+        52.9959
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.746,
+        51.525,
+        17.559,
+        53.674
+      ],
+      "place": 1042,
+      "country": "PL",
+      "localTrips": 2622396.0
+    },
+    {
+      "id": "liz",
+      "name": "Linz-Wels",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.2875,
+        "lat": 48.3019
+      },
+      "center": [
+        14.2875,
+        48.3019
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.726,
+        47.984,
+        14.549,
+        48.612
+      ],
+      "place": 1043,
+      "country": "AT",
+      "localTrips": 1718566.0
+    },
+    {
+      "id": "kla",
+      "name": "Klagenfurt-Villach",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.3059,
+        "lat": 46.6241
+      },
+      "center": [
+        14.3059,
+        46.6241
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.094,
+        46.354,
+        15.092,
+        47.176
+      ],
+      "place": 1044,
+      "country": "AT",
+      "localTrips": 1730944.0
+    },
+    {
+      "id": "mov",
+      "name": "Mostviertel-Eisenwurzen",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.6088,
+        "lat": 48.4151
+      },
+      "center": [
+        15.6088,
+        48.4151
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.425,
+        47.69,
+        16.956,
+        49.039
+      ],
+      "place": 1045,
+      "country": "AT",
+      "localTrips": 1521944.0
+    },
+    {
+      "id": "grx",
+      "name": "Graz",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.4443,
+        "lat": 47.0628
+      },
+      "center": [
+        15.4443,
+        47.0628
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.536,
+        46.593,
+        16.199,
+        47.846
+      ],
+      "place": 1047,
+      "country": "AT",
+      "localTrips": 3534961.0
+    },
+    {
+      "id": "ini",
+      "name": "Innviertel",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.4225,
+        "lat": 48.0475
+      },
+      "center": [
+        14.4225,
+        48.0475
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.722,
+        47.442,
+        15.02,
+        48.791
+      ],
+      "place": 1049,
+      "country": "AT",
+      "localTrips": 2319315.0
+    },
+    {
+      "id": "nio",
+      "name": "Niederösterreich-Süd",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.2357,
+        "lat": 47.8124
+      },
+      "center": [
+        16.2357,
+        47.8124
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.133,
+        46.812,
+        17.188,
+        48.407
+      ],
+      "place": 1050,
+      "country": "AT",
+      "localTrips": 1844661.0
+    },
+    {
+      "id": "wab",
+      "name": "Wałbrzyski",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.4931,
+        "lat": 50.8433
+      },
+      "center": [
+        16.4931,
+        50.8433
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.038,
+        50.078,
+        17.194,
+        51.048
+      ],
+      "place": 1051,
+      "country": "PL",
+      "localTrips": 1820434.0
+    },
+    {
+      "id": "mir",
+      "name": "Miasto Wrocław",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.0497,
+        "lat": 51.1224
+      },
+      "center": [
+        17.0497,
+        51.1224
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.778,
+        51.024,
+        17.206,
+        51.229
+      ],
+      "place": 1052,
+      "country": "PL",
+      "localTrips": 1783902.0
+    },
+    {
+      "id": "jee",
+      "name": "Jeleniogórski",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.2043,
+        "lat": 51.4021
+      },
+      "center": [
+        16.2043,
+        51.4021
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.788,
+        50.58,
+        16.858,
+        51.823
+      ],
+      "place": 1054,
+      "country": "PL",
+      "localTrips": 2785412.0
+    },
+    {
+      "id": "str",
+      "name": "Středočeský kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.906,
+        "lat": 50.4211
+      },
+      "center": [
+        14.906,
+        50.4211
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.368,
+        49.483,
+        15.564,
+        50.637
+      ],
+      "place": 1055,
+      "country": "CZ",
+      "localTrips": 4025090.0
+    },
+    {
+      "id": "mok",
+      "name": "Moravskoslezský kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.2815,
+        "lat": 49.838
+      },
+      "center": [
+        18.2815,
+        49.838
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.118,
+        49.374,
+        18.888,
+        50.347
+      ],
+      "place": 1059,
+      "country": "CZ",
+      "localTrips": 3296554.0
+    },
+    {
+      "id": "jic",
+      "name": "Jihočeský kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.4744,
+        "lat": 48.9824
+      },
+      "center": [
+        14.4744,
+        48.9824
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.508,
+        48.533,
+        15.632,
+        49.64
+      ],
+      "place": 1060,
+      "country": "CZ",
+      "localTrips": 1727130.0
+    },
+    {
+      "id": "olo",
+      "name": "Olomoucký kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.242,
+        "lat": 49.5903
+      },
+      "center": [
+        17.242,
+        49.5903
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.683,
+        49.25,
+        17.947,
+        50.468
+      ],
+      "place": 1061,
+      "country": "CZ",
+      "localTrips": 1689622.0
+    },
+    {
+      "id": "byd",
+      "name": "Bydgosko-toruński",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.0102,
+        "lat": 53.1329
+      },
+      "center": [
+        18.0102,
+        53.1329
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.638,
+        52.812,
+        19.126,
+        53.463
+      ],
+      "place": 1062,
+      "country": "PL",
+      "localTrips": 2200859.0
+    },
+    {
+      "id": "plz",
+      "name": "Plzeňský kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.3714,
+        "lat": 49.7427
+      },
+      "center": [
+        13.3714,
+        49.7427
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.372,
+        48.923,
+        13.869,
+        50.123
+      ],
+      "place": 1066,
+      "country": "CZ",
+      "localTrips": 1613742.0
+    },
+    {
+      "id": "zli",
+      "name": "Zlínský kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.6828,
+        "lat": 49.2291
+      },
+      "center": [
+        17.6828,
+        49.2291
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.082,
+        48.836,
+        18.444,
+        49.558
+      ],
+      "place": 1067,
+      "country": "CZ",
+      "localTrips": 1563034.0
+    },
+    {
+      "id": "rze",
+      "name": "Rzeszowski",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.9966,
+        "lat": 50.0289
+      },
+      "center": [
+        21.9966,
+        50.0289
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        21.435,
+        49.726,
+        22.481,
+        50.501
+      ],
+      "place": 1073,
+      "country": "PL",
+      "localTrips": 1746718.0
+    },
+    {
+      "id": "trz",
+      "name": "Tarnobrzeski",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.6795,
+        "lat": 50.5745
+      },
+      "center": [
+        21.6795,
+        50.5745
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        21.113,
+        49.81,
+        22.717,
+        50.839
+      ],
+      "place": 1074,
+      "country": "PL",
+      "localTrips": 1673100.0
+    },
+    {
+      "id": "kri",
+      "name": "Krośnieński",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.7672,
+        "lat": 49.7904
+      },
+      "center": [
+        22.7672,
+        49.7904
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        21.213,
+        48.983,
+        23.576,
+        50.429
+      ],
+      "place": 1075,
+      "country": "PL",
+      "localTrips": 2432406.0
+    },
+    {
+      "id": "wro",
+      "name": "Wrocławski",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.3906,
+        "lat": 51.2091
+      },
+      "center": [
+        17.3906,
+        51.2091
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.302,
+        50.595,
+        17.825,
+        51.667
+      ],
+      "place": 1076,
+      "country": "PL",
+      "localTrips": 1561458.0
+    },
+    {
+      "id": "pre",
+      "name": "Prešovský kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.2398,
+        "lat": 49.0014
+      },
+      "center": [
+        21.2398,
+        49.0014
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.856,
+        48.744,
+        22.594,
+        49.479
+      ],
+      "place": 1077,
+      "country": "SK",
+      "localTrips": 2292197.0
+    },
+    {
+      "id": "kok",
+      "name": "Košický kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.2157,
+        "lat": 48.7174
+      },
+      "center": [
+        21.2157,
+        48.7174
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        20.153,
+        48.314,
+        22.416,
+        49.039
+      ],
+      "place": 1078,
+      "country": "SK",
+      "localTrips": 2232327.0
+    },
+    {
+      "id": "zil",
+      "name": "Žilinský kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.7479,
+        "lat": 49.2196
+      },
+      "center": [
+        18.7479,
+        49.2196
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.294,
+        48.722,
+        20.089,
+        49.632
+      ],
+      "place": 1079,
+      "country": "SK",
+      "localTrips": 1910019.0
+    },
+    {
+      "id": "nir",
+      "name": "Nitriansky kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.8696,
+        "lat": 48.1511
+      },
+      "center": [
+        17.8696,
+        48.1511
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.678,
+        47.713,
+        19.1,
+        48.733
+      ],
+      "place": 1080,
+      "country": "SK",
+      "localTrips": 1842964.0
+    },
+    {
+      "id": "bay",
+      "name": "Banskobystrický kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.1511,
+        "lat": 48.7363
+      },
+      "center": [
+        19.1511,
+        48.7363
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.451,
+        48.035,
+        20.498,
+        48.966
+      ],
+      "place": 1081,
+      "country": "SK",
+      "localTrips": 1809337.0
+    },
+    {
+      "id": "trk",
+      "name": "Trnavský kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.5847,
+        "lat": 48.3773
+      },
+      "center": [
+        17.5847,
+        48.3773
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.906,
+        47.74,
+        18.013,
+        48.897
+      ],
+      "place": 1082,
+      "country": "SK",
+      "localTrips": 1519559.0
+    },
+    {
+      "id": "rad",
+      "name": "Radomski",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.148,
+        "lat": 51.4021
+      },
+      "center": [
+        21.148,
+        51.4021
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        20.386,
+        50.994,
+        21.904,
+        51.88
+      ],
+      "place": 1083,
+      "country": "PL",
+      "localTrips": 1681545.0
+    },
+    {
+      "id": "sik",
+      "name": "Siedlecki",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.6951,
+        "lat": 52.5467
+      },
+      "center": [
+        19.6951,
+        52.5467
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.229,
+        51.538,
+        23.159,
+        53.009
+      ],
+      "place": 1084,
+      "country": "PL",
+      "localTrips": 2728238.0
+    },
+    {
+      "id": "oso",
+      "name": "Ostrołęcki",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.6247,
+        "lat": 52.8785
+      },
+      "center": [
+        20.6247,
+        52.8785
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.604,
+        52.362,
+        22.504,
+        53.5
+      ],
+      "place": 1085,
+      "country": "PL",
+      "localTrips": 2024199.0
+    },
+    {
+      "id": "pio",
+      "name": "Piotrkowski",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.3666,
+        "lat": 51.3538
+      },
+      "center": [
+        19.3666,
+        51.3538
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.826,
+        50.825,
+        20.563,
+        51.792
+      ],
+      "place": 1086,
+      "country": "PL",
+      "localTrips": 1611961.0
+    },
+    {
+      "id": "siz",
+      "name": "Sieradzki",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.1503,
+        "lat": 51.9536
+      },
+      "center": [
+        20.1503,
+        51.9536
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.045,
+        50.964,
+        20.689,
+        52.413
+      ],
+      "place": 1087,
+      "country": "PL",
+      "localTrips": 2172794.0
+    },
+    {
+      "id": "boo",
+      "name": "Borsod-Abaúj-Zemplén",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.7856,
+        "lat": 48.104
+      },
+      "center": [
+        20.7856,
+        48.104
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        20.024,
+        47.624,
+        22.156,
+        48.604
+      ],
+      "place": 1088,
+      "country": "HU",
+      "localTrips": 1789701.0
+    },
+    {
+      "id": "sza",
+      "name": "Szabolcs-Szatmár-Bereg",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.721,
+        "lat": 47.9534
+      },
+      "center": [
+        21.721,
+        47.9534
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        21.051,
+        47.573,
+        22.924,
+        48.444
+      ],
+      "place": 1089,
+      "country": "HU",
+      "localTrips": 1567510.0
+    },
+    {
+      "id": "bck",
+      "name": "Bács-Kiskun",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.1458,
+        "lat": 46.2519
+      },
+      "center": [
+        20.1458,
+        46.2519
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.707,
+        45.886,
+        21.716,
+        47.251
+      ],
+      "place": 1090,
+      "country": "HU",
+      "localTrips": 3351536.0
+    },
+    {
+      "id": "fee",
+      "name": "Fejér",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.4133,
+        "lat": 47.1937
+      },
+      "center": [
+        18.4133,
+        47.1937
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.046,
+        46.669,
+        18.994,
+        47.841
+      ],
+      "place": 1091,
+      "country": "HU",
+      "localTrips": 2764894.0
+    },
+    {
+      "id": "hjd",
+      "name": "Hajdú-Bihar",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.1861,
+        "lat": 47.175
+      },
+      "center": [
+        20.1861,
+        47.175
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.624,
+        46.736,
+        22.157,
+        47.984
+      ],
+      "place": 1092,
+      "country": "HU",
+      "localTrips": 2615000.0
+    },
+    {
+      "id": "gyr",
+      "name": "Győr-Moson-Sopron",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.5929,
+        "lat": 47.6809
+      },
+      "center": [
+        16.5929,
+        47.6809
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.086,
+        46.273,
+        17.964,
+        48.041
+      ],
+      "place": 1093,
+      "country": "HU",
+      "localTrips": 2680169.0
+    },
+    {
+      "id": "bny",
+      "name": "Baranya",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.2256,
+        "lat": 46.0754
+      },
+      "center": [
+        18.2256,
+        46.0754
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.849,
+        45.719,
+        19.033,
+        47.016
+      ],
+      "place": 1094,
+      "country": "HU",
+      "localTrips": 2374734.0
+    },
+    {
+      "id": "hee",
+      "name": "Heves",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.8101,
+        "lat": 48.104
+      },
+      "center": [
+        19.8101,
+        48.104
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.901,
+        47.402,
+        20.799,
+        48.269
+      ],
+      "place": 1095,
+      "country": "HU",
+      "localTrips": 1328675.0
+    },
+    {
+      "id": "elb",
+      "name": "Elbląski",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.4076,
+        "lat": 54.1659
+      },
+      "center": [
+        19.4076,
+        54.1659
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.096,
+        53.121,
+        20.446,
+        54.461
+      ],
+      "place": 1096,
+      "country": "PL",
+      "localTrips": 1465854.0
+    },
+    {
+      "id": "olz",
+      "name": "Olsztyński",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.5024,
+        "lat": 53.7418
+      },
+      "center": [
+        20.5024,
+        53.7418
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.917,
+        53.196,
+        22.837,
+        54.421
+      ],
+      "place": 1097,
+      "country": "PL",
+      "localTrips": 2547905.0
+    },
+    {
+      "id": "bia",
+      "name": "Białostocki",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.1253,
+        "lat": 53.1525
+      },
+      "center": [
+        23.1253,
+        53.1525
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        22.438,
+        52.831,
+        23.977,
+        53.74
+      ],
+      "place": 1098,
+      "country": "PL",
+      "localTrips": 1429330.0
+    },
+    {
+      "id": "omy",
+      "name": "Łomżyński",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.0708,
+        "lat": 53.1623
+      },
+      "center": [
+        22.0708,
+        53.1623
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        21.562,
+        52.261,
+        23.97,
+        54.429
+      ],
+      "place": 1099,
+      "country": "PL",
+      "localTrips": 1865299.0
+    },
+    {
+      "id": "jim",
+      "name": "Jihomoravský kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.5984,
+        "lat": 49.2101
+      },
+      "center": [
+        16.5984,
+        49.2101
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.86,
+        48.598,
+        17.675,
+        49.88
+      ],
+      "place": 1100,
+      "country": "CZ",
+      "localTrips": 4661104.0
+    },
+    {
+      "id": "kic",
+      "name": "Kielecki",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.6361,
+        "lat": 50.8722
+      },
+      "center": [
+        20.6361,
+        50.8722
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.675,
+        50.167,
+        21.899,
+        51.361
+      ],
+      "place": 1101,
+      "country": "PL",
+      "localTrips": 3465182.0
+    },
+    {
+      "id": "krv",
+      "name": "Královéhradecký kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.9148,
+        "lat": 50.5649
+      },
+      "center": [
+        15.9148,
+        50.5649
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.314,
+        49.554,
+        16.896,
+        51.042
+      ],
+      "place": 1102,
+      "country": "CZ",
+      "localTrips": 4120858.0
+    },
+    {
+      "id": "zio",
+      "name": "Zielonogórski",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.5017,
+        "lat": 51.9343
+      },
+      "center": [
+        15.5017,
+        51.9343
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.505,
+        51.345,
+        16.447,
+        53.143
+      ],
+      "place": 1103,
+      "country": "PL",
+      "localTrips": 2865962.0
+    },
+    {
+      "id": "use",
+      "name": "Ústecký kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.6375,
+        "lat": 50.4978
+      },
+      "center": [
+        13.6375,
+        50.4978
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.062,
+        49.872,
+        14.682,
+        51.074
+      ],
+      "place": 1104,
+      "country": "CZ",
+      "localTrips": 3022721.0
+    },
+    {
+      "id": "noc",
+      "name": "Nowosądecki",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.9918,
+        "lat": 50.0098
+      },
+      "center": [
+        20.9918,
+        50.0098
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.962,
+        49.277,
+        21.45,
+        50.373
+      ],
+      "place": 1105,
+      "country": "PL",
+      "localTrips": 2789321.0
+    },
+    {
+      "id": "osc",
+      "name": "Oświęcimski",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.4087,
+        "lat": 50.1436
+      },
+      "center": [
+        19.4087,
+        50.1436
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.055,
+        49.16,
+        20.646,
+        50.468
+      ],
+      "place": 1106,
+      "country": "PL",
+      "localTrips": 2410875.0
+    },
+    {
+      "id": "opl",
+      "name": "Opolski",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.9271,
+        "lat": 50.6704
+      },
+      "center": [
+        17.9271,
+        50.6704
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.879,
+        49.954,
+        18.725,
+        51.213
+      ],
+      "place": 1107,
+      "country": "PL",
+      "localTrips": 2627390.0
+    },
+    {
+      "id": "pok",
+      "name": "Podravska",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.6433,
+        "lat": 46.5589
+      },
+      "center": [
+        15.6433,
+        46.5589
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.015,
+        45.403,
+        16.623,
+        46.895
+      ],
+      "place": 1108,
+      "country": "SI",
+      "localTrips": 3073047.0
+    },
+    {
+      "id": "osd",
+      "name": "Osrednjeslovenska",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.4995,
+        "lat": 46.0475
+      },
+      "center": [
+        14.4995,
+        46.0475
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.349,
+        45.406,
+        14.955,
+        46.542
+      ],
+      "place": 1109,
+      "country": "SI",
+      "localTrips": 2827348.0
+    },
+    {
+      "id": "saz",
+      "name": "Salzburg und Umgebung",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.0256,
+        "lat": 47.8124
+      },
+      "center": [
+        13.0256,
+        47.8124
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.049,
+        46.925,
+        14.023,
+        48.06
+      ],
+      "place": 1110,
+      "country": "AT",
+      "localTrips": 1546385.0
+    },
+    {
+      "id": "ins",
+      "name": "Innsbruck",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.3894,
+        "lat": 47.2592
+      },
+      "center": [
+        11.3894,
+        47.2592
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.504,
+        46.744,
+        12.727,
+        47.762
+      ],
+      "place": 1111,
+      "country": "AT",
+      "localTrips": 3106989.0
+    },
+    {
+      "id": "sze",
+      "name": "Szczeciński",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.5442,
+        "lat": 53.4271
+      },
+      "center": [
+        14.5442,
+        53.4271
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.092,
+        52.662,
+        15.753,
+        54.178
+      ],
+      "place": 1112,
+      "country": "PL",
+      "localTrips": 2550773.0
+    },
+    {
+      "id": "szi",
+      "name": "Szczecinecko-pyrzycki",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.1767,
+        "lat": 54.1857
+      },
+      "center": [
+        16.1767,
+        54.1857
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.405,
+        52.606,
+        17.014,
+        54.588
+      ],
+      "place": 1113,
+      "country": "PL",
+      "localTrips": 2108672.0
+    },
+    {
+      "id": "brt",
+      "name": "Bratislavský kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.1188,
+        "lat": 48.1228
+      },
+      "center": [
+        17.1188,
+        48.1228
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.806,
+        47.988,
+        17.557,
+        48.673
+      ],
+      "place": 1114,
+      "country": "SK",
+      "localTrips": 1770168.0
+    },
+    {
+      "id": "trc",
+      "name": "Trenčiansky kraj",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.6166,
+        "lat": 48.7741
+      },
+      "center": [
+        18.6166,
+        48.7741
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.325,
+        48.467,
+        18.855,
+        49.338
+      ],
+      "place": 1115,
+      "country": "SK",
+      "localTrips": 1622661.0
+    },
+    {
+      "id": "stl",
+      "name": "St. Gallen",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.3756,
+        "lat": 47.4277
+      },
+      "center": [
+        9.3756,
+        47.4277
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.377,
+        46.151,
+        10.519,
+        47.827
+      ],
+      "place": 1116,
+      "country": "CH",
+      "localTrips": 3406047.0
+    },
+    {
+      "id": "vla",
+      "name": "Valais",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.959,
+        "lat": 46.0104
+      },
+      "center": [
+        8.959,
+        46.0104
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.744,
+        45.799,
+        9.186,
+        46.673
+      ],
+      "place": 1117,
+      "country": "CH",
+      "localTrips": 2101395.0
     }
   ]
 }

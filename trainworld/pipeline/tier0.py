@@ -992,11 +992,13 @@ def wikidata_students(qids):
         part = need[i:i + 200]
         q = ("SELECT ?item ?v ?t WHERE { VALUES ?item { " + " ".join(f"wd:{x}" for x in part) + " } "
              "?item p:P2196 ?s. ?s ps:P2196 ?v. OPTIONAL { ?s pq:P585 ?t } }")
-        for wait in (10, 30, 60, 120, 0):  # 429 when several builds query at once (T-420 stage 3)
+        # 429 when several builds query at once (T-420 stage 3), and for minutes at a time (T-788)
+        for wait in (10, 30, 60, 120, 300, 600, 0):
             r = requests.post(WIKIDATA, data={"query": q, "format": "json"}, headers=b.UA, timeout=120)
             if r.status_code != 429 or not wait:
                 break
-            time.sleep(wait)
+            after = r.headers.get("Retry-After", "")
+            time.sleep(max(wait, int(after)) if after.isdigit() else wait)
         r.raise_for_status()
         best = {}
         for row in r.json()["results"]["bindings"]:

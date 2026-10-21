@@ -104,6 +104,12 @@ def airports_by_zone(reg):
     return out
 
 
+# T-809: sim/src/demand/intercity.rs `OPEN_AREA` and `OPEN_AREA_BORDER`; keep the two the same
+OPEN_AREA = {"AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV",
+             "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "NO", "IS", "CH", "LI", "GB"}
+OPEN_AREA_BORDER = 0.5
+
+
 class Field:
     """The world field with the ground attraction and the tail's destination weight per cell, the
     tail's summed from r5 cells upward (notes/T-376.md "For stage 3")."""
@@ -117,6 +123,7 @@ class Field:
         self.tb = up(r5.pop * inc ** RULE["eps"] * (np.maximum(r5.pop, 1) / RULE["u_ref_people"]) ** RULE["TH"])
         self.inc = [np.minimum(lv.gdp / self.y_us, 1) for lv in (r5, r4, r3)]
         self.index = {int(c): i for i, c in enumerate(r5.h)}
+        self.open = np.array([c["iso2"] in OPEN_AREA for c in wf.countries])
 
     def normalisers(self, lon, lat, country, inc_o):
         """A place's ground and tail normalisers over the field: the sums the two kinds of
@@ -134,7 +141,9 @@ class Field:
         d = np.concatenate([p[2] for p in parts])
         c = np.concatenate([lv[l].country[ix] for l, ix, _ in parts])
         a, tb, inc = cat(self.a), cat(self.tb), cat(self.inc)
-        b = np.where(c == country, 1.0, RULE["border"] * inc_o ** RULE["border_eps"])
+        general = RULE["border"] * inc_o ** RULE["border_eps"]
+        b = np.where(c == country, 1.0,
+                     np.where(self.open[c] & self.open[country], max(OPEN_AREA_BORDER, general), general))
         on0, on1 = RULE["onset_km"]
         on = np.clip((d - on0) / (on1 - on0), 0, 1)
         t0, t1 = RULE["tail_onset_km"]
