@@ -187,7 +187,10 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
 - **Task size** (2026-10-13): split big tasks into stages, each its own id and report. A big
   task's design goes to Anita before it is built; small, quick, isolated work needs no review.
   Treat subagents well by substance: a brief they can act on (goal, decisions made, scope, done
-  looks like), leave to stop or push back, problems relayed without blame; no formulaic thanks.
+  looks like), leave to stop or push back, problems relayed without blame; no formulaic thanks on
+  briefs, but a short thanks when an agent's work is done (Anita, 2026-10-21). A long-lived agent
+  past about 500k tokens (the figure in its task notice) with substantial work left writes its state
+  to its notes and is replaced by a fresh one (Anita, 2026-10-21).
 - **Token counts** (2026-10-14): hundreds of metros are planned, so cost per city matters. Every city
   task ends with a retrospective (docs/adding-a-city.md 12); the orchestrator records each task's
   tokens with `checks/token_usage.py` and judges the proposed changes, passing edge cases to Anita.
