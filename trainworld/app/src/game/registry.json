@@ -3118,6 +3118,986 @@
       {
         "name": "Lefkada",
         "regionName": "Lefkada region"
+      },
+      {
+        "name": "Devon CC",
+        "regionName": "Devon CC region"
+      },
+      {
+        "name": "Gera",
+        "regionName": "Gera region"
+      },
+      {
+        "name": "Wartburgkreis",
+        "regionName": "Wartburgkreis region"
+      },
+      {
+        "name": "Eichsfeld",
+        "regionName": "Eichsfeld region"
+      },
+      {
+        "name": "Erfurt",
+        "regionName": "Erfurt region"
+      },
+      {
+        "name": "Staffordshire CC",
+        "regionName": "Staffordshire CC region"
+      },
+      {
+        "name": "Worcestershire CC",
+        "regionName": "Worcestershire CC region"
+      },
+      {
+        "name": "Shropshire",
+        "regionName": "Shropshire region"
+      },
+      {
+        "name": "Utrecht",
+        "regionName": "Utrecht region"
+      },
+      {
+        "name": "Veluwe",
+        "regionName": "Veluwe region"
+      },
+      {
+        "name": "Arnhem",
+        "regionName": "Arnhem region"
+      },
+      {
+        "name": "Kop van Noord-Holland",
+        "regionName": "Kop van Noord-Holland region"
+      },
+      {
+        "name": "Achterhoek",
+        "regionName": "Achterhoek region"
+      },
+      {
+        "name": "Het Gooi en Vechtstreek",
+        "regionName": "Het Gooi en Vechtstreek region"
+      },
+      {
+        "name": "Cambridgeshire CC",
+        "regionName": "Cambridgeshire CC region"
+      },
+      {
+        "name": "Halle (Saale)",
+        "regionName": "Halle (Saale) region"
+      },
+      {
+        "name": "Harz",
+        "regionName": "Harz region"
+      },
+      {
+        "name": "Magdeburg",
+        "regionName": "Magdeburg region"
+      },
+      {
+        "name": "Anhalt-Bitterfeld",
+        "regionName": "Anhalt-Bitterfeld region"
+      },
+      {
+        "name": "North Yorkshire",
+        "regionName": "North Yorkshire region"
+      },
+      {
+        "name": "Hartlepool and Stockton-on-Tees",
+        "regionName": "Hartlepool and Stockton-on-Tees region"
+      },
+      {
+        "name": "East Kent",
+        "regionName": "East Kent region"
+      },
+      {
+        "name": "East Suffolk",
+        "regionName": "East Suffolk region"
+      },
+      {
+        "name": "Twente",
+        "regionName": "Twente region"
+      },
+      {
+        "name": "Noord-Overijssel",
+        "regionName": "Noord-Overijssel region"
+      },
+      {
+        "name": "Noord-Drenthe",
+        "regionName": "Noord-Drenthe region"
+      },
+      {
+        "name": "Flevoland",
+        "regionName": "Flevoland region"
+      },
+      {
+        "name": "Somerset",
+        "regionName": "Somerset region"
+      },
+      {
+        "name": "Wiltshire",
+        "regionName": "Wiltshire region"
+      },
+      {
+        "name": "Gloucestershire CC",
+        "regionName": "Gloucestershire CC region"
+      },
+      {
+        "name": "Bath & North East Somerset and South Gloucestershire",
+        "regionName": "Bath & North East Somerset and South Gloucestershire region"
+      },
+      {
+        "name": "North Hampshire",
+        "regionName": "North Hampshire region"
+      },
+      {
+        "name": "Bremen",
+        "regionName": "Bremen region"
+      },
+      {
+        "name": "Stade",
+        "regionName": "Stade region"
+      },
+      {
+        "name": "Aurich",
+        "regionName": "Aurich region"
+      },
+      {
+        "name": "Göttingen",
+        "regionName": "Göttingen region"
+      },
+      {
+        "name": "Oldenburg (Oldenburg)",
+        "regionName": "Oldenburg (Oldenburg) region"
+      },
+      {
+        "name": "Braunschweig",
+        "regionName": "Braunschweig region"
+      },
+      {
+        "name": "Hildesheim",
+        "regionName": "Hildesheim region"
+      },
+      {
+        "name": "Osnabrück",
+        "regionName": "Osnabrück region"
+      },
+      {
+        "name": "Diepholz",
+        "regionName": "Diepholz region"
+      },
+      {
+        "name": "Celle",
+        "regionName": "Celle region"
+      },
+      {
+        "name": "Emsland",
+        "regionName": "Emsland region"
+      },
+      {
+        "name": "Peine",
+        "regionName": "Peine region"
+      },
+      {
+        "name": "Lüneburg",
+        "regionName": "Lüneburg region"
+      },
+      {
+        "name": "Cloppenburg",
+        "regionName": "Cloppenburg region"
+      },
+      {
+        "name": "Zuid-Limburg",
+        "regionName": "Zuid-Limburg region"
+      },
+      {
+        "name": "Noord-Limburg",
+        "regionName": "Noord-Limburg region"
+      },
+      {
+        "name": "Lincolnshire CC",
+        "regionName": "Lincolnshire CC region"
+      },
+      {
+        "name": "North and North East Lincolnshire",
+        "regionName": "North and North East Lincolnshire region"
+      },
+      {
+        "name": "Overig Groningen",
+        "regionName": "Overig Groningen region"
+      },
+      {
+        "name": "Leicestershire CC and Rutland",
+        "regionName": "Leicestershire CC and Rutland region"
+      },
+      {
+        "name": "Leicester",
+        "regionName": "Leicester region"
+      },
+      {
+        "name": "Overig Zeeland",
+        "regionName": "Overig Zeeland region"
+      },
+      {
+        "name": "West Sussex (South West)",
+        "regionName": "West Sussex (South West) region"
+      },
+      {
+        "name": "Zuidoost-Friesland",
+        "regionName": "Zuidoost-Friesland region"
+      },
+      {
+        "name": "Noord-Friesland",
+        "regionName": "Noord-Friesland region"
+      },
+      {
+        "name": "Düren",
+        "regionName": "Düren region"
+      },
+      {
+        "name": "Städteregion Aachen",
+        "regionName": "Städteregion Aachen region"
+      },
+      {
+        "name": "Oberbergischer Kreis",
+        "regionName": "Oberbergischer Kreis region"
+      },
+      {
+        "name": "City of Edinburgh",
+        "regionName": "City of Edinburgh region"
+      },
+      {
+        "name": "North Ayrshire and East Ayrshire",
+        "regionName": "North Ayrshire and East Ayrshire region"
+      },
+      {
+        "name": "Angus and Dundee City",
+        "regionName": "Angus and Dundee City region"
+      },
+      {
+        "name": "Aberdeen City and Aberdeenshire",
+        "regionName": "Aberdeen City and Aberdeenshire region"
+      },
+      {
+        "name": "Clackmannanshire and Fife",
+        "regionName": "Clackmannanshire and Fife region"
+      },
+      {
+        "name": "West Lothian",
+        "regionName": "West Lothian region"
+      },
+      {
+        "name": "Siegen-Wittgenstein",
+        "regionName": "Siegen-Wittgenstein region"
+      },
+      {
+        "name": "Soest",
+        "regionName": "Soest region"
+      },
+      {
+        "name": "Oxfordshire CC",
+        "regionName": "Oxfordshire CC region"
+      },
+      {
+        "name": "Regensburg",
+        "regionName": "Regensburg region"
+      },
+      {
+        "name": "Schwandorf",
+        "regionName": "Schwandorf region"
+      },
+      {
+        "name": "Flintshire and Wrexham",
+        "regionName": "Flintshire and Wrexham region"
+      },
+      {
+        "name": "South West Wales",
+        "regionName": "South West Wales region"
+      },
+      {
+        "name": "Central Valleys and Bridgend",
+        "regionName": "Central Valleys and Bridgend region"
+      },
+      {
+        "name": "Mid Wales",
+        "regionName": "Mid Wales region"
+      },
+      {
+        "name": "Rendsburg-Eckernförde",
+        "regionName": "Rendsburg-Eckernförde region"
+      },
+      {
+        "name": "Kiel",
+        "regionName": "Kiel region"
+      },
+      {
+        "name": "Nordfriesland",
+        "regionName": "Nordfriesland region"
+      },
+      {
+        "name": "Lübeck",
+        "regionName": "Lübeck region"
+      },
+      {
+        "name": "Central Bedfordshire",
+        "regionName": "Central Bedfordshire region"
+      },
+      {
+        "name": "Gent",
+        "regionName": "Gent region"
+      },
+      {
+        "name": "Hasselt",
+        "regionName": "Hasselt region"
+      },
+      {
+        "name": "Kortrijk",
+        "regionName": "Kortrijk region"
+      },
+      {
+        "name": "Brugge",
+        "regionName": "Brugge region"
+      },
+      {
+        "name": "Namur",
+        "regionName": "Namur region"
+      },
+      {
+        "name": "Leuven",
+        "regionName": "Leuven region"
+      },
+      {
+        "name": "Turnhout",
+        "regionName": "Turnhout region"
+      },
+      {
+        "name": "Tournai-Mouscron",
+        "regionName": "Tournai-Mouscron region"
+      },
+      {
+        "name": "Charleroi",
+        "regionName": "Charleroi region"
+      },
+      {
+        "name": "Neufchâteau",
+        "regionName": "Neufchâteau region"
+      },
+      {
+        "name": "East Riding of Yorkshire",
+        "regionName": "East Riding of Yorkshire region"
+      },
+      {
+        "name": "Warwickshire CC",
+        "regionName": "Warwickshire CC region"
+      },
+      {
+        "name": "Traunstein",
+        "regionName": "Traunstein region"
+      },
+      {
+        "name": "Ingolstadt",
+        "regionName": "Ingolstadt region"
+      },
+      {
+        "name": "Weilheim-Schongau",
+        "regionName": "Weilheim-Schongau region"
+      },
+      {
+        "name": "Rosenheim",
+        "regionName": "Rosenheim region"
+      },
+      {
+        "name": "Luxembourg",
+        "regionName": "Luxembourg region"
+      },
+      {
+        "name": "Saarbrücken",
+        "regionName": "Saarbrücken region"
+      },
+      {
+        "name": "Saarpfalz-Kreis",
+        "regionName": "Saarpfalz-Kreis region"
+      },
+      {
+        "name": "Zuidoost-Noord-Brabant",
+        "regionName": "Zuidoost-Noord-Brabant region"
+      },
+      {
+        "name": "Noordoost-Noord-Brabant",
+        "regionName": "Noordoost-Noord-Brabant region"
+      },
+      {
+        "name": "West-Noord-Brabant",
+        "regionName": "West-Noord-Brabant region"
+      },
+      {
+        "name": "Midden-Noord-Brabant",
+        "regionName": "Midden-Noord-Brabant region"
+      },
+      {
+        "name": "Leipzig",
+        "regionName": "Leipzig region"
+      },
+      {
+        "name": "Dresden",
+        "regionName": "Dresden region"
+      },
+      {
+        "name": "Chemnitz",
+        "regionName": "Chemnitz region"
+      },
+      {
+        "name": "Zwickau",
+        "regionName": "Zwickau region"
+      },
+      {
+        "name": "Bautzen",
+        "regionName": "Bautzen region"
+      },
+      {
+        "name": "Sächsische Schweiz-Osterzgebirge",
+        "regionName": "Sächsische Schweiz-Osterzgebirge region"
+      },
+      {
+        "name": "Leipzig, Nordsachsen",
+        "regionName": "Leipzig, Nordsachsen region"
+      },
+      {
+        "name": "Erzgebirgskreis",
+        "regionName": "Erzgebirgskreis region"
+      },
+      {
+        "name": "Mid Ulster",
+        "regionName": "Mid Ulster region"
+      },
+      {
+        "name": "Newry, Mourne and Down",
+        "regionName": "Newry, Mourne and Down region"
+      },
+      {
+        "name": "Mid-East",
+        "regionName": "Mid-East region"
+      },
+      {
+        "name": "South-West",
+        "regionName": "South-West region"
+      },
+      {
+        "name": "West",
+        "regionName": "West region"
+      },
+      {
+        "name": "Mid-West",
+        "regionName": "Mid-West region"
+      },
+      {
+        "name": "South-East",
+        "regionName": "South-East region"
+      },
+      {
+        "name": "Border",
+        "regionName": "Border region"
+      },
+      {
+        "name": "Midland",
+        "regionName": "Midland region"
+      },
+      {
+        "name": "Mons",
+        "regionName": "Mons region"
+      },
+      {
+        "name": "Gießen",
+        "regionName": "Gießen region"
+      },
+      {
+        "name": "Darmstadt-Dieburg",
+        "regionName": "Darmstadt-Dieburg region"
+      },
+      {
+        "name": "Fulda",
+        "regionName": "Fulda region"
+      },
+      {
+        "name": "Kassel",
+        "regionName": "Kassel region"
+      },
+      {
+        "name": "Lahn-Dill-Kreis",
+        "regionName": "Lahn-Dill-Kreis region"
+      },
+      {
+        "name": "Schwalm-Eder-Kreis",
+        "regionName": "Schwalm-Eder-Kreis region"
+      },
+      {
+        "name": "East Sussex CC",
+        "regionName": "East Sussex CC region"
+      },
+      {
+        "name": "Essex Thames Gateway",
+        "regionName": "Essex Thames Gateway region"
+      },
+      {
+        "name": "Essex Haven Gateway",
+        "regionName": "Essex Haven Gateway region"
+      },
+      {
+        "name": "Bamberg",
+        "regionName": "Bamberg region"
+      },
+      {
+        "name": "Hof",
+        "regionName": "Hof region"
+      },
+      {
+        "name": "Devon CC",
+        "regionName": "Devon CC region"
+      },
+      {
+        "name": "Staffordshire CC",
+        "regionName": "Staffordshire CC region"
+      },
+      {
+        "name": "Worcestershire CC",
+        "regionName": "Worcestershire CC region"
+      },
+      {
+        "name": "Shropshire",
+        "regionName": "Shropshire region"
+      },
+      {
+        "name": "Cambridgeshire CC",
+        "regionName": "Cambridgeshire CC region"
+      },
+      {
+        "name": "North Yorkshire",
+        "regionName": "North Yorkshire region"
+      },
+      {
+        "name": "Hartlepool and Stockton-on-Tees",
+        "regionName": "Hartlepool and Stockton-on-Tees region"
+      },
+      {
+        "name": "East Kent",
+        "regionName": "East Kent region"
+      },
+      {
+        "name": "Mayen-Koblenz",
+        "regionName": "Mayen-Koblenz region"
+      },
+      {
+        "name": "Trier-Saarburg",
+        "regionName": "Trier-Saarburg region"
+      },
+      {
+        "name": "Germersheim",
+        "regionName": "Germersheim region"
+      },
+      {
+        "name": "Alzey-Worms",
+        "regionName": "Alzey-Worms region"
+      },
+      {
+        "name": "Bad Kreuznach",
+        "regionName": "Bad Kreuznach region"
+      },
+      {
+        "name": "Westerwaldkreis",
+        "regionName": "Westerwaldkreis region"
+      },
+      {
+        "name": "East Suffolk",
+        "regionName": "East Suffolk region"
+      },
+      {
+        "name": "Somerset",
+        "regionName": "Somerset region"
+      },
+      {
+        "name": "Wiltshire",
+        "regionName": "Wiltshire region"
+      },
+      {
+        "name": "Gloucestershire CC",
+        "regionName": "Gloucestershire CC region"
+      },
+      {
+        "name": "Bath & North East Somerset and South Gloucestershire",
+        "regionName": "Bath & North East Somerset and South Gloucestershire region"
+      },
+      {
+        "name": "North Hampshire",
+        "regionName": "North Hampshire region"
+      },
+      {
+        "name": "Lincolnshire CC",
+        "regionName": "Lincolnshire CC region"
+      },
+      {
+        "name": "North and North East Lincolnshire",
+        "regionName": "North and North East Lincolnshire region"
+      },
+      {
+        "name": "Leicestershire CC and Rutland",
+        "regionName": "Leicestershire CC and Rutland region"
+      },
+      {
+        "name": "Leicester",
+        "regionName": "Leicester region"
+      },
+      {
+        "name": "Viersen",
+        "regionName": "Viersen region"
+      },
+      {
+        "name": "Mettmann",
+        "regionName": "Mettmann region"
+      },
+      {
+        "name": "Kleve",
+        "regionName": "Kleve region"
+      },
+      {
+        "name": "West Sussex (South West)",
+        "regionName": "West Sussex (South West) region"
+      },
+      {
+        "name": "City of Edinburgh",
+        "regionName": "City of Edinburgh region"
+      },
+      {
+        "name": "North Ayrshire and East Ayrshire",
+        "regionName": "North Ayrshire and East Ayrshire region"
+      },
+      {
+        "name": "Angus and Dundee City",
+        "regionName": "Angus and Dundee City region"
+      },
+      {
+        "name": "Aberdeen City and Aberdeenshire",
+        "regionName": "Aberdeen City and Aberdeenshire region"
+      },
+      {
+        "name": "Clackmannanshire and Fife",
+        "regionName": "Clackmannanshire and Fife region"
+      },
+      {
+        "name": "West Lothian",
+        "regionName": "West Lothian region"
+      },
+      {
+        "name": "Minden-Lübbecke",
+        "regionName": "Minden-Lübbecke region"
+      },
+      {
+        "name": "Paderborn",
+        "regionName": "Paderborn region"
+      },
+      {
+        "name": "Gütersloh",
+        "regionName": "Gütersloh region"
+      },
+      {
+        "name": "Bielefeld",
+        "regionName": "Bielefeld region"
+      },
+      {
+        "name": "Lippe",
+        "regionName": "Lippe region"
+      },
+      {
+        "name": "Oxfordshire CC",
+        "regionName": "Oxfordshire CC region"
+      },
+      {
+        "name": "Flintshire and Wrexham",
+        "regionName": "Flintshire and Wrexham region"
+      },
+      {
+        "name": "South West Wales",
+        "regionName": "South West Wales region"
+      },
+      {
+        "name": "Central Valleys and Bridgend",
+        "regionName": "Central Valleys and Bridgend region"
+      },
+      {
+        "name": "Mid Wales",
+        "regionName": "Mid Wales region"
+      },
+      {
+        "name": "Central Bedfordshire",
+        "regionName": "Central Bedfordshire region"
+      },
+      {
+        "name": "East Riding of Yorkshire",
+        "regionName": "East Riding of Yorkshire region"
+      },
+      {
+        "name": "Rastatt",
+        "regionName": "Rastatt region"
+      },
+      {
+        "name": "Karlsruhe",
+        "regionName": "Karlsruhe region"
+      },
+      {
+        "name": "Karlsruhe, Stadtkreis",
+        "regionName": "Karlsruhe, Stadtkreis region"
+      },
+      {
+        "name": "Enzkreis",
+        "regionName": "Enzkreis region"
+      },
+      {
+        "name": "Neckar-Odenwald-Kreis",
+        "regionName": "Neckar-Odenwald-Kreis region"
+      },
+      {
+        "name": "Warwickshire CC",
+        "regionName": "Warwickshire CC region"
+      },
+      {
+        "name": "Mid Ulster",
+        "regionName": "Mid Ulster region"
+      },
+      {
+        "name": "Newry, Mourne and Down",
+        "regionName": "Newry, Mourne and Down region"
+      },
+      {
+        "name": "Mid-East",
+        "regionName": "Mid-East region"
+      },
+      {
+        "name": "South-West",
+        "regionName": "South-West region"
+      },
+      {
+        "name": "West",
+        "regionName": "West region"
+      },
+      {
+        "name": "Mid-West",
+        "regionName": "Mid-West region"
+      },
+      {
+        "name": "South-East",
+        "regionName": "South-East region"
+      },
+      {
+        "name": "Midland",
+        "regionName": "Midland region"
+      },
+      {
+        "name": "East Sussex CC",
+        "regionName": "East Sussex CC region"
+      },
+      {
+        "name": "Essex Thames Gateway",
+        "regionName": "Essex Thames Gateway region"
+      },
+      {
+        "name": "Essex Haven Gateway",
+        "regionName": "Essex Haven Gateway region"
+      },
+      {
+        "name": "Cornwall and Isles of Scilly",
+        "regionName": "Cornwall and Isles of Scilly region"
+      },
+      {
+        "name": "Konstanz",
+        "regionName": "Konstanz region"
+      },
+      {
+        "name": "Bodenseekreis",
+        "regionName": "Bodenseekreis region"
+      },
+      {
+        "name": "Reutlingen",
+        "regionName": "Reutlingen region"
+      },
+      {
+        "name": "Freiburg im Breisgau",
+        "regionName": "Freiburg im Breisgau region"
+      },
+      {
+        "name": "Ravensburg",
+        "regionName": "Ravensburg region"
+      },
+      {
+        "name": "Ortenaukreis",
+        "regionName": "Ortenaukreis region"
+      },
+      {
+        "name": "Lörrach",
+        "regionName": "Lörrach region"
+      },
+      {
+        "name": "Schwarzwald-Baar-Kreis",
+        "regionName": "Schwarzwald-Baar-Kreis region"
+      },
+      {
+        "name": "Alb-Donau-Kreis",
+        "regionName": "Alb-Donau-Kreis region"
+      },
+      {
+        "name": "Breckland and South Norfolk",
+        "regionName": "Breckland and South Norfolk region"
+      },
+      {
+        "name": "Norwich and East Norfolk",
+        "regionName": "Norwich and East Norfolk region"
+      },
+      {
+        "name": "Berkshire West",
+        "regionName": "Berkshire West region"
+      },
+      {
+        "name": "Cumberland",
+        "regionName": "Cumberland region"
+      },
+      {
+        "name": "Passau",
+        "regionName": "Passau region"
+      },
+      {
+        "name": "Deggendorf",
+        "regionName": "Deggendorf region"
+      },
+      {
+        "name": "Landshut",
+        "regionName": "Landshut region"
+      },
+      {
+        "name": "Bristol, City of",
+        "regionName": "Bristol, City of region"
+      },
+      {
+        "name": "Bournemouth, Christchurch and Poole",
+        "regionName": "Bournemouth, Christchurch and Poole region"
+      },
+      {
+        "name": "Dorset",
+        "regionName": "Dorset region"
+      },
+      {
+        "name": "Augsburg",
+        "regionName": "Augsburg region"
+      },
+      {
+        "name": "Ostallgäu",
+        "regionName": "Ostallgäu region"
+      },
+      {
+        "name": "Donau-Ries",
+        "regionName": "Donau-Ries region"
+      },
+      {
+        "name": "Oberallgäu",
+        "regionName": "Oberallgäu region"
+      },
+      {
+        "name": "Neu-Ulm",
+        "regionName": "Neu-Ulm region"
+      },
+      {
+        "name": "West Northamptonshire",
+        "regionName": "West Northamptonshire region"
+      },
+      {
+        "name": "North Northamptonshire",
+        "regionName": "North Northamptonshire region"
+      },
+      {
+        "name": "Mid Lancashire",
+        "regionName": "Mid Lancashire region"
+      },
+      {
+        "name": "Chorley and West Lancashire",
+        "regionName": "Chorley and West Lancashire region"
+      },
+      {
+        "name": "Lancaster and Wyre",
+        "regionName": "Lancaster and Wyre region"
+      },
+      {
+        "name": "East Lancashire",
+        "regionName": "East Lancashire region"
+      },
+      {
+        "name": "Coventry",
+        "regionName": "Coventry region"
+      },
+      {
+        "name": "Leicester",
+        "regionName": "Leicester region"
+      },
+      {
+        "name": "Milton Keynes",
+        "regionName": "Milton Keynes region"
+      },
+      {
+        "name": "Mecklenburgische Seenplatte",
+        "regionName": "Mecklenburgische Seenplatte region"
+      },
+      {
+        "name": "Rostock",
+        "regionName": "Rostock region"
+      },
+      {
+        "name": "Spree-Neiße",
+        "regionName": "Spree-Neiße region"
+      },
+      {
+        "name": "Ostprignitz-Ruppin",
+        "regionName": "Ostprignitz-Ruppin region"
+      },
+      {
+        "name": "Vorpommern-Greifswald",
+        "regionName": "Vorpommern-Greifswald region"
+      },
+      {
+        "name": "Isle of Wight",
+        "regionName": "Isle of Wight region"
+      },
+      {
+        "name": "Border",
+        "regionName": "Border region"
+      },
+      {
+        "name": "Cheshire East",
+        "regionName": "Cheshire East region"
+      },
+      {
+        "name": "Coventry",
+        "regionName": "Coventry region"
+      },
+      {
+        "name": "Ostalbkreis",
+        "regionName": "Ostalbkreis region"
+      },
+      {
+        "name": "Border",
+        "regionName": "Border region"
+      },
+      {
+        "name": "Borken",
+        "regionName": "Borken region"
+      },
+      {
+        "name": "Steinfurt",
+        "regionName": "Steinfurt region"
+      },
+      {
+        "name": "Aschaffenburg",
+        "regionName": "Aschaffenburg region"
+      },
+      {
+        "name": "Heilbronn",
+        "regionName": "Heilbronn region"
+      },
+      {
+        "name": "Würzburg",
+        "regionName": "Würzburg region"
       }
     ],
     "rule": {
@@ -3403,7 +4383,7 @@
       "zoom": 11.2,
       "utcOffset": 0,
       "market": -1,
-      "localTrips": 43245219.0,
+      "localTrips": 42962658.0,
       "box": [
         -1.17,
         50.844,
@@ -3505,7 +4485,7 @@
         14.789,
         53.27
       ],
-      "localTrips": 16872653.0,
+      "localTrips": 16839534.0,
       "place": 19,
       "country": "DE"
     },
@@ -4820,7 +5800,7 @@
         53.704
       ],
       "place": 68,
-      "localTrips": 8837652.0,
+      "localTrips": 8731076.0,
       "country": "GB"
     },
     {
@@ -4844,7 +5824,7 @@
         53.717
       ],
       "place": 69,
-      "localTrips": 4169519.0,
+      "localTrips": 4099474.0,
       "country": "GB"
     },
     {
@@ -4868,7 +5848,7 @@
         51.358
       ],
       "place": 70,
-      "localTrips": 3965987.0,
+      "localTrips": 3906504.0,
       "country": "GB"
     },
     {
@@ -4940,7 +5920,7 @@
         53.982
       ],
       "place": 73,
-      "localTrips": 7968743.0,
+      "localTrips": 7891744.0,
       "country": "GB"
     },
     {
@@ -4964,7 +5944,7 @@
         53.559
       ],
       "place": 74,
-      "localTrips": 5160572.0,
+      "localTrips": 5087739.0,
       "country": "GB"
     },
     {
@@ -4988,7 +5968,7 @@
         53.534
       ],
       "place": 75,
-      "localTrips": 2938069.0,
+      "localTrips": 2928255.0,
       "country": "GB"
     },
     {
@@ -5012,7 +5992,7 @@
         52.681
       ],
       "place": 76,
-      "localTrips": 7197093.0,
+      "localTrips": 7037415.0,
       "country": "GB"
     },
     {
@@ -5036,7 +6016,7 @@
         55.83
       ],
       "place": 77,
-      "localTrips": 5288912.0,
+      "localTrips": 5257415.0,
       "country": "GB"
     },
     {
@@ -5060,7 +6040,7 @@
         56.05
       ],
       "place": 78,
-      "localTrips": 5330408.0,
+      "localTrips": 5280403.0,
       "country": "GB"
     },
     {
@@ -5084,7 +6064,7 @@
         55.075
       ],
       "place": 82,
-      "localTrips": 3047604.0,
+      "localTrips": 2992194.0,
       "country": "GB"
     },
     {
@@ -5108,7 +6088,7 @@
         52.002
       ],
       "place": 86,
-      "localTrips": 3315108.0,
+      "localTrips": 3220478.0,
       "country": "GB"
     },
     {
@@ -5252,7 +6232,7 @@
         51.84
       ],
       "place": 94,
-      "localTrips": 16400766.0,
+      "localTrips": 16210935.0,
       "country": "DE"
     },
     {
@@ -5276,7 +6256,7 @@
         50.519
       ],
       "place": 95,
-      "localTrips": 11482844.0,
+      "localTrips": 11308066.0,
       "country": "DE"
     },
     {
@@ -5300,7 +6280,7 @@
         51.244
       ],
       "place": 96,
-      "localTrips": 9506979.0,
+      "localTrips": 9365476.0,
       "country": "DE"
     },
     {
@@ -5444,7 +6424,7 @@
         52.347
       ],
       "place": 103,
-      "localTrips": 11039162.0,
+      "localTrips": 10933808.0,
       "country": "NL"
     },
     {
@@ -5564,7 +6544,7 @@
         54.208
       ],
       "place": 115,
-      "localTrips": 8826965.0,
+      "localTrips": 8704561.0,
       "country": "DE"
     },
     {
@@ -5588,7 +6568,7 @@
         52.696
       ],
       "place": 116,
-      "localTrips": 3619436.0,
+      "localTrips": 3541343.0,
       "country": "DE"
     },
     {
@@ -5612,7 +6592,7 @@
         48.635
       ],
       "place": 117,
-      "localTrips": 9008239.0,
+      "localTrips": 8889382.0,
       "country": "DE"
     },
     {
@@ -5684,7 +6664,7 @@
         51.062
       ],
       "place": 120,
-      "localTrips": 7118658.0,
+      "localTrips": 6996095.0,
       "country": "BE"
     },
     {
@@ -5708,7 +6688,7 @@
         51.501
       ],
       "place": 121,
-      "localTrips": 4602523.0,
+      "localTrips": 4527644.0,
       "country": "BE"
     },
     {
@@ -5732,7 +6712,7 @@
         51.031
       ],
       "place": 122,
-      "localTrips": 3662953.0,
+      "localTrips": 3595003.0,
       "country": "BE"
     },
     {
@@ -5828,7 +6808,7 @@
         49.098
       ],
       "place": 129,
-      "localTrips": 8010242.0,
+      "localTrips": 7838198.0,
       "country": "DE"
     },
     {
@@ -6116,7 +7096,7 @@
         53.653
       ],
       "place": 198,
-      "localTrips": 4276287.0,
+      "localTrips": 4219107.0,
       "country": "IE"
     },
     {
@@ -6140,7 +7120,7 @@
         49.807
       ],
       "place": 199,
-      "localTrips": 4357895.0,
+      "localTrips": 4281444.0,
       "country": "DE"
     },
     {
@@ -6236,7 +7216,7 @@
         52.633
       ],
       "place": 205,
-      "localTrips": 6104772.0,
+      "localTrips": 6010339.0,
       "country": "NL"
     },
     {
@@ -6284,7 +7264,7 @@
         51.37
       ],
       "place": 208,
-      "localTrips": 4996741.0,
+      "localTrips": 4873368.0,
       "country": "DE"
     },
     {
@@ -6452,7 +7432,7 @@
         49.773
       ],
       "place": 216,
-      "localTrips": 5728856.0,
+      "localTrips": 5621260.0,
       "country": "DE"
     },
     {
@@ -12979,6 +13959,4906 @@
       "place": 774,
       "country": "GR",
       "localTrips": 49139.0
+    },
+    {
+      "id": "gea",
+      "name": "Gera",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.5874,
+        "lat": 50.9299
+      },
+      "center": [
+        11.5874,
+        50.9299
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.715,
+        50.248,
+        12.683,
+        51.122
+      ],
+      "place": 776,
+      "country": "DE",
+      "localTrips": 2390481.0
+    },
+    {
+      "id": "wat",
+      "name": "Wartburgkreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.6983,
+        "lat": 50.9491
+      },
+      "center": [
+        10.6983,
+        50.9491
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.848,
+        50.186,
+        11.069,
+        51.173
+      ],
+      "place": 777,
+      "country": "DE",
+      "localTrips": 1428369.0
+    },
+    {
+      "id": "eic",
+      "name": "Eichsfeld",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.4558,
+        "lat": 51.2091
+      },
+      "center": [
+        10.4558,
+        51.2091
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.894,
+        50.99,
+        11.515,
+        51.668
+      ],
+      "place": 778,
+      "country": "DE",
+      "localTrips": 1195593.0
+    },
+    {
+      "id": "erf",
+      "name": "Erfurt",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.0355,
+        "lat": 50.978
+      },
+      "center": [
+        11.0355,
+        50.978
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.825,
+        50.775,
+        11.727,
+        51.139
+      ],
+      "place": 779,
+      "country": "DE",
+      "localTrips": 1119975.0
+    },
+    {
+      "id": "utr",
+      "name": "Utrecht",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.1064,
+        "lat": 52.0895
+      },
+      "center": [
+        5.1064,
+        52.0895
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.762,
+        51.839,
+        5.657,
+        52.322
+      ],
+      "place": 783,
+      "country": "NL",
+      "localTrips": 4076368.0
+    },
+    {
+      "id": "vel",
+      "name": "Veluwe",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.6652,
+        "lat": 51.973
+      },
+      "center": [
+        5.6652,
+        51.973
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.964,
+        51.715,
+        6.224,
+        52.541
+      ],
+      "place": 784,
+      "country": "NL",
+      "localTrips": 2632525.0
+    },
+    {
+      "id": "arh",
+      "name": "Arnhem",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.9226,
+        "lat": 51.9827
+      },
+      "center": [
+        5.9226,
+        51.9827
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.501,
+        51.723,
+        6.207,
+        52.107
+      ],
+      "place": 785,
+      "country": "NL",
+      "localTrips": 2211111.0
+    },
+    {
+      "id": "kop",
+      "name": "Kop van Noord-Holland",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.7597,
+        "lat": 52.9567
+      },
+      "center": [
+        4.7597,
+        52.9567
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.579,
+        52.501,
+        5.408,
+        53.204
+      ],
+      "place": 786,
+      "country": "NL",
+      "localTrips": 1896005.0
+    },
+    {
+      "id": "act",
+      "name": "Achterhoek",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.2064,
+        "lat": 52.1381
+      },
+      "center": [
+        6.2064,
+        52.1381
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.976,
+        51.809,
+        6.863,
+        52.265
+      ],
+      "place": 787,
+      "country": "NL",
+      "localTrips": 1191200.0
+    },
+    {
+      "id": "het",
+      "name": "Het Gooi en Vechtstreek",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.1841,
+        "lat": 52.2255
+      },
+      "center": [
+        5.1841,
+        52.2255
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.983,
+        52.147,
+        5.366,
+        52.407
+      ],
+      "place": 788,
+      "country": "NL",
+      "localTrips": 644694.0
+    },
+    {
+      "id": "hll",
+      "name": "Halle (Saale)",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.9717,
+        "lat": 51.489
+      },
+      "center": [
+        11.9717,
+        51.489
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.853,
+        50.94,
+        12.324,
+        51.749
+      ],
+      "place": 790,
+      "country": "DE",
+      "localTrips": 2177220.0
+    },
+    {
+      "id": "haz",
+      "name": "Harz",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.7899,
+        "lat": 51.8373
+      },
+      "center": [
+        10.7899,
+        51.8373
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.531,
+        51.547,
+        12.05,
+        52.527
+      ],
+      "place": 791,
+      "country": "DE",
+      "localTrips": 1614580.0
+    },
+    {
+      "id": "mgd",
+      "name": "Magdeburg",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.6329,
+        "lat": 52.1283
+      },
+      "center": [
+        11.6329,
+        52.1283
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.725,
+        51.982,
+        12.361,
+        53.06
+      ],
+      "place": 792,
+      "country": "DE",
+      "localTrips": 1537940.0
+    },
+    {
+      "id": "anh",
+      "name": "Anhalt-Bitterfeld",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.2457,
+        "lat": 51.8373
+      },
+      "center": [
+        12.2457,
+        51.8373
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.809,
+        51.512,
+        13.217,
+        52.122
+      ],
+      "place": 793,
+      "country": "DE",
+      "localTrips": 1059603.0
+    },
+    {
+      "id": "twe",
+      "name": "Twente",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.8908,
+        "lat": 52.2158
+      },
+      "center": [
+        6.8908,
+        52.2158
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.297,
+        52.1,
+        7.103,
+        52.514
+      ],
+      "place": 798,
+      "country": "NL",
+      "localTrips": 1918922.0
+    },
+    {
+      "id": "noe",
+      "name": "Noord-Overijssel",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.1633,
+        "lat": 52.2644
+      },
+      "center": [
+        6.1633,
+        52.2644
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.748,
+        52.199,
+        6.797,
+        52.873
+      ],
+      "place": 799,
+      "country": "NL",
+      "localTrips": 1543497.0
+    },
+    {
+      "id": "nox",
+      "name": "Noord-Drenthe",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.5578,
+        "lat": 52.9959
+      },
+      "center": [
+        6.5578,
+        52.9959
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.089,
+        52.594,
+        7.123,
+        53.222
+      ],
+      "place": 800,
+      "country": "NL",
+      "localTrips": 1458342.0
+    },
+    {
+      "id": "fle",
+      "name": "Flevoland",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.2628,
+        "lat": 52.3714
+      },
+      "center": [
+        5.2628,
+        52.3714
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.03,
+        52.231,
+        6.047,
+        52.862
+      ],
+      "place": 801,
+      "country": "NL",
+      "localTrips": 1266853.0
+    },
+    {
+      "id": "brm",
+      "name": "Bremen",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.8292,
+        "lat": 53.0742
+      },
+      "center": [
+        8.8292,
+        53.0742
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.451,
+        52.993,
+        9.021,
+        53.629
+      ],
+      "place": 807,
+      "country": "DE",
+      "localTrips": 2061355.0
+    },
+    {
+      "id": "std",
+      "name": "Stade",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.6963,
+        "lat": 53.4762
+      },
+      "center": [
+        9.6963,
+        53.4762
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.452,
+        52.749,
+        9.815,
+        53.911
+      ],
+      "place": 808,
+      "country": "DE",
+      "localTrips": 1842826.0
+    },
+    {
+      "id": "aur",
+      "name": "Aurich",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.115,
+        "lat": 53.5254
+      },
+      "center": [
+        8.115,
+        53.5254
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.624,
+        53.015,
+        8.239,
+        53.813
+      ],
+      "place": 809,
+      "country": "DE",
+      "localTrips": 1927740.0
+    },
+    {
+      "id": "got",
+      "name": "Göttingen",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.9381,
+        "lat": 51.5277
+      },
+      "center": [
+        9.9381,
+        51.5277
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.388,
+        51.277,
+        10.731,
+        52.075
+      ],
+      "place": 810,
+      "country": "DE",
+      "localTrips": 1787863.0
+    },
+    {
+      "id": "old",
+      "name": "Oldenburg (Oldenburg)",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.1777,
+        "lat": 53.1329
+      },
+      "center": [
+        8.1777,
+        53.1329
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.667,
+        52.779,
+        8.742,
+        53.634
+      ],
+      "place": 811,
+      "country": "DE",
+      "localTrips": 1687515.0
+    },
+    {
+      "id": "brw",
+      "name": "Braunschweig",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.5163,
+        "lat": 52.2644
+      },
+      "center": [
+        10.5163,
+        52.2644
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.228,
+        52.168,
+        11.039,
+        52.853
+      ],
+      "place": 812,
+      "country": "DE",
+      "localTrips": 1626346.0
+    },
+    {
+      "id": "hil",
+      "name": "Hildesheim",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.9573,
+        "lat": 52.1478
+      },
+      "center": [
+        9.9573,
+        52.1478
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.124,
+        51.627,
+        10.294,
+        52.316
+      ],
+      "place": 813,
+      "country": "DE",
+      "localTrips": 1493886.0
+    },
+    {
+      "id": "osn",
+      "name": "Osnabrück",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.0358,
+        "lat": 52.2741
+      },
+      "center": [
+        8.0358,
+        52.2741
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.575,
+        52.017,
+        8.547,
+        52.728
+      ],
+      "place": 814,
+      "country": "DE",
+      "localTrips": 1513228.0
+    },
+    {
+      "id": "die",
+      "name": "Diepholz",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.195,
+        "lat": 52.3227
+      },
+      "center": [
+        9.195,
+        52.3227
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.264,
+        52.076,
+        9.568,
+        53.072
+      ],
+      "place": 815,
+      "country": "DE",
+      "localTrips": 1415769.0
+    },
+    {
+      "id": "cel",
+      "name": "Celle",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.0515,
+        "lat": 52.6149
+      },
+      "center": [
+        10.0515,
+        52.6149
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.866,
+        52.47,
+        10.475,
+        53.613
+      ],
+      "place": 816,
+      "country": "DE",
+      "localTrips": 1389679.0
+    },
+    {
+      "id": "ems",
+      "name": "Emsland",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.0605,
+        "lat": 52.4201
+      },
+      "center": [
+        7.0605,
+        52.4201
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.651,
+        52.223,
+        7.862,
+        53.136
+      ],
+      "place": 817,
+      "country": "DE",
+      "localTrips": 1359672.0
+    },
+    {
+      "id": "pei",
+      "name": "Peine",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.5424,
+        "lat": 52.1672
+      },
+      "center": [
+        10.5424,
+        52.1672
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.966,
+        51.952,
+        11.116,
+        52.491
+      ],
+      "place": 818,
+      "country": "DE",
+      "localTrips": 1278081.0
+    },
+    {
+      "id": "luu",
+      "name": "Lüneburg",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.4052,
+        "lat": 53.2407
+      },
+      "center": [
+        10.4052,
+        53.2407
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.006,
+        52.746,
+        11.629,
+        53.404
+      ],
+      "place": 819,
+      "country": "DE",
+      "localTrips": 944598.0
+    },
+    {
+      "id": "clo",
+      "name": "Cloppenburg",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.0332,
+        "lat": 52.8394
+      },
+      "center": [
+        8.0332,
+        52.8394
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.582,
+        52.414,
+        8.504,
+        53.204
+      ],
+      "place": 820,
+      "country": "DE",
+      "localTrips": 883266.0
+    },
+    {
+      "id": "zud",
+      "name": "Zuid-Limburg",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.7237,
+        "lat": 50.8433
+      },
+      "center": [
+        5.7237,
+        50.8433
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.61,
+        50.732,
+        6.123,
+        51.091
+      ],
+      "place": 821,
+      "country": "NL",
+      "localTrips": 1837412.0
+    },
+    {
+      "id": "nol",
+      "name": "Noord-Limburg",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.9913,
+        "lat": 51.1899
+      },
+      "center": [
+        5.9913,
+        51.1899
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.537,
+        51.01,
+        6.256,
+        51.797
+      ],
+      "place": 822,
+      "country": "NL",
+      "localTrips": 1438299.0
+    },
+    {
+      "id": "ove",
+      "name": "Overig Groningen",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.5658,
+        "lat": 53.2211
+      },
+      "center": [
+        6.5658,
+        53.2211
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.137,
+        52.82,
+        7.258,
+        53.572
+      ],
+      "place": 825,
+      "country": "NL",
+      "localTrips": 1682812.0
+    },
+    {
+      "id": "ovr",
+      "name": "Overig Zeeland",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.6155,
+        "lat": 51.4987
+      },
+      "center": [
+        3.6155,
+        51.4987
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.329,
+        51.182,
+        4.307,
+        51.792
+      ],
+      "place": 828,
+      "country": "NL",
+      "localTrips": 1124376.0
+    },
+    {
+      "id": "zuo",
+      "name": "Zuidoost-Friesland",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.1023,
+        "lat": 53.1133
+      },
+      "center": [
+        6.1023,
+        53.1133
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.135,
+        52.746,
+        6.458,
+        53.178
+      ],
+      "place": 830,
+      "country": "NL",
+      "localTrips": 975319.0
+    },
+    {
+      "id": "noi",
+      "name": "Noord-Friesland",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.8079,
+        "lat": 53.2015
+      },
+      "center": [
+        5.8079,
+        53.2015
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.818,
+        53.027,
+        6.431,
+        53.537
+      ],
+      "place": 831,
+      "country": "NL",
+      "localTrips": 969095.0
+    },
+    {
+      "id": "due",
+      "name": "Düren",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.4915,
+        "lat": 50.8049
+      },
+      "center": [
+        6.4915,
+        50.8049
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.837,
+        50.304,
+        6.964,
+        51.209
+      ],
+      "place": 832,
+      "country": "DE",
+      "localTrips": 2028755.0
+    },
+    {
+      "id": "stt",
+      "name": "Städteregion Aachen",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.0897,
+        "lat": 50.7665
+      },
+      "center": [
+        6.0897,
+        50.7665
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.946,
+        50.476,
+        6.449,
+        50.968
+      ],
+      "place": 833,
+      "country": "DE",
+      "localTrips": 1650117.0
+    },
+    {
+      "id": "obr",
+      "name": "Oberbergischer Kreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.3366,
+        "lat": 51.1513
+      },
+      "center": [
+        7.3366,
+        51.1513
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.223,
+        50.8,
+        7.821,
+        51.269
+      ],
+      "place": 834,
+      "country": "DE",
+      "localTrips": 777317.0
+    },
+    {
+      "id": "sig",
+      "name": "Siegen-Wittgenstein",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.027,
+        "lat": 50.8722
+      },
+      "center": [
+        8.027,
+        50.8722
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.673,
+        50.667,
+        9.0,
+        51.567
+      ],
+      "place": 841,
+      "country": "DE",
+      "localTrips": 2024067.0
+    },
+    {
+      "id": "sox",
+      "name": "Soest",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.82,
+        "lat": 51.6727
+      },
+      "center": [
+        7.82,
+        51.6727
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.646,
+        51.37,
+        8.617,
+        51.763
+      ],
+      "place": 842,
+      "country": "DE",
+      "localTrips": 1399620.0
+    },
+    {
+      "id": "ree",
+      "name": "Regensburg",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.0927,
+        "lat": 49.0204
+      },
+      "center": [
+        12.0927,
+        49.0204
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.158,
+        48.746,
+        12.519,
+        49.779
+      ],
+      "place": 844,
+      "country": "DE",
+      "localTrips": 1883533.0
+    },
+    {
+      "id": "sch",
+      "name": "Schwandorf",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.1438,
+        "lat": 49.6855
+      },
+      "center": [
+        12.1438,
+        49.6855
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.6,
+        49.009,
+        13.199,
+        50.08
+      ],
+      "place": 845,
+      "country": "DE",
+      "localTrips": 1451201.0
+    },
+    {
+      "id": "ren",
+      "name": "Rendsburg-Eckernförde",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.4285,
+        "lat": 54.7903
+      },
+      "center": [
+        9.4285,
+        54.7903
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.031,
+        53.99,
+        10.231,
+        54.896
+      ],
+      "place": 850,
+      "country": "DE",
+      "localTrips": 1918204.0
+    },
+    {
+      "id": "kie",
+      "name": "Kiel",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.1309,
+        "lat": 54.3341
+      },
+      "center": [
+        10.1309,
+        54.3341
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.985,
+        53.861,
+        11.345,
+        54.555
+      ],
+      "place": 851,
+      "country": "DE",
+      "localTrips": 1722574.0
+    },
+    {
+      "id": "nof",
+      "name": "Nordfriesland",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.0908,
+        "lat": 54.1956
+      },
+      "center": [
+        9.0908,
+        54.1956
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.247,
+        53.696,
+        9.896,
+        55.075
+      ],
+      "place": 852,
+      "country": "DE",
+      "localTrips": 1276705.0
+    },
+    {
+      "id": "lue",
+      "name": "Lübeck",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.6841,
+        "lat": 53.8698
+      },
+      "center": [
+        10.6841,
+        53.8698
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.204,
+        53.341,
+        11.0,
+        54.012
+      ],
+      "place": 853,
+      "country": "DE",
+      "localTrips": 1200478.0
+    },
+    {
+      "id": "get",
+      "name": "Gent",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.7268,
+        "lat": 51.055
+      },
+      "center": [
+        3.7268,
+        51.055
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.302,
+        50.702,
+        4.27,
+        51.325
+      ],
+      "place": 855,
+      "country": "BE",
+      "localTrips": 2611779.0
+    },
+    {
+      "id": "hss",
+      "name": "Hasselt",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.3311,
+        "lat": 50.9299
+      },
+      "center": [
+        5.3311,
+        50.9299
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.951,
+        50.677,
+        5.885,
+        51.319
+      ],
+      "place": 856,
+      "country": "BE",
+      "localTrips": 1857598.0
+    },
+    {
+      "id": "koi",
+      "name": "Kortrijk",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.9204,
+        "lat": 51.2284
+      },
+      "center": [
+        2.9204,
+        51.2284
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.516,
+        50.69,
+        3.553,
+        51.332
+      ],
+      "place": 857,
+      "country": "BE",
+      "localTrips": 1754410.0
+    },
+    {
+      "id": "brg",
+      "name": "Brugge",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.138,
+        "lat": 51.3152
+      },
+      "center": [
+        3.138,
+        51.3152
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.93,
+        50.818,
+        3.491,
+        51.388
+      ],
+      "place": 858,
+      "country": "BE",
+      "localTrips": 1420840.0
+    },
+    {
+      "id": "nar",
+      "name": "Namur",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.8616,
+        "lat": 50.469
+      },
+      "center": [
+        4.8616,
+        50.469
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.257,
+        49.767,
+        5.432,
+        50.667
+      ],
+      "place": 859,
+      "country": "BE",
+      "localTrips": 1351778.0
+    },
+    {
+      "id": "leu",
+      "name": "Leuven",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.7018,
+        "lat": 50.8722
+      },
+      "center": [
+        4.7018,
+        50.8722
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.418,
+        50.685,
+        5.217,
+        51.068
+      ],
+      "place": 860,
+      "country": "BE",
+      "localTrips": 1308811.0
+    },
+    {
+      "id": "tuh",
+      "name": "Turnhout",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.9451,
+        "lat": 51.3249
+      },
+      "center": [
+        4.9451,
+        51.3249
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.637,
+        50.992,
+        5.292,
+        51.524
+      ],
+      "place": 861,
+      "country": "BE",
+      "localTrips": 1268048.0
+    },
+    {
+      "id": "ton",
+      "name": "Tournai-Mouscron",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.386,
+        "lat": 50.6033
+      },
+      "center": [
+        3.386,
+        50.6033
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.813,
+        50.424,
+        4.366,
+        50.829
+      ],
+      "place": 862,
+      "country": "BE",
+      "localTrips": 1230746.0
+    },
+    {
+      "id": "crl",
+      "name": "Charleroi",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.4481,
+        "lat": 50.4115
+      },
+      "center": [
+        4.4481,
+        50.4115
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.233,
+        50.296,
+        4.646,
+        50.583
+      ],
+      "place": 863,
+      "country": "BE",
+      "localTrips": 1061778.0
+    },
+    {
+      "id": "nef",
+      "name": "Neufchâteau",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.8068,
+        "lat": 49.6855
+      },
+      "center": [
+        5.8068,
+        49.6855
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.94,
+        49.478,
+        6.063,
+        50.449
+      ],
+      "place": 864,
+      "country": "BE",
+      "localTrips": 766537.0
+    },
+    {
+      "id": "tru",
+      "name": "Traunstein",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.3947,
+        "lat": 48.2076
+      },
+      "center": [
+        12.3947,
+        48.2076
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.704,
+        47.445,
+        13.127,
+        48.473
+      ],
+      "place": 867,
+      "country": "DE",
+      "localTrips": 1881967.0
+    },
+    {
+      "id": "ing",
+      "name": "Ingolstadt",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.4081,
+        "lat": 48.7741
+      },
+      "center": [
+        11.4081,
+        48.7741
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.909,
+        48.388,
+        11.772,
+        49.106
+      ],
+      "place": 868,
+      "country": "DE",
+      "localTrips": 1424816.0
+    },
+    {
+      "id": "wei",
+      "name": "Weilheim-Schongau",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.1028,
+        "lat": 47.4933
+      },
+      "center": [
+        11.1028,
+        47.4933
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.688,
+        47.375,
+        11.708,
+        48.256
+      ],
+      "place": 869,
+      "country": "DE",
+      "localTrips": 1357357.0
+    },
+    {
+      "id": "roe",
+      "name": "Rosenheim",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.1245,
+        "lat": 47.8594
+      },
+      "center": [
+        12.1245,
+        47.8594
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.571,
+        47.563,
+        12.471,
+        48.162
+      ],
+      "place": 870,
+      "country": "DE",
+      "localTrips": 1231877.0
+    },
+    {
+      "id": "lum",
+      "name": "Luxembourg",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.1404,
+        "lat": 49.5998
+      },
+      "center": [
+        6.1404,
+        49.5998
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.707,
+        49.429,
+        6.559,
+        50.201
+      ],
+      "place": 871,
+      "country": "LU",
+      "localTrips": 1768700.0
+    },
+    {
+      "id": "sab",
+      "name": "Saarbrücken",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.9972,
+        "lat": 49.2385
+      },
+      "center": [
+        6.9972,
+        49.2385
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.329,
+        49.093,
+        7.166,
+        49.632
+      ],
+      "place": 872,
+      "country": "DE",
+      "localTrips": 1893280.0
+    },
+    {
+      "id": "saf",
+      "name": "Saarpfalz-Kreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.176,
+        "lat": 49.343
+      },
+      "center": [
+        7.176,
+        49.343
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.863,
+        49.096,
+        7.433,
+        49.658
+      ],
+      "place": 873,
+      "country": "DE",
+      "localTrips": 1044931.0
+    },
+    {
+      "id": "zui",
+      "name": "Zuidoost-Noord-Brabant",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.4758,
+        "lat": 51.4407
+      },
+      "center": [
+        5.4758,
+        51.4407
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.042,
+        51.202,
+        5.961,
+        51.617
+      ],
+      "place": 874,
+      "country": "NL",
+      "localTrips": 2302223.0
+    },
+    {
+      "id": "noo",
+      "name": "Noordoost-Noord-Brabant",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.3067,
+        "lat": 51.6921
+      },
+      "center": [
+        5.3067,
+        51.6921
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.052,
+        51.503,
+        6.078,
+        51.849
+      ],
+      "place": 875,
+      "country": "NL",
+      "localTrips": 1896486.0
+    },
+    {
+      "id": "weo",
+      "name": "West-Noord-Brabant",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.7615,
+        "lat": 51.5857
+      },
+      "center": [
+        4.7615,
+        51.5857
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.161,
+        51.336,
+        4.964,
+        51.785
+      ],
+      "place": 876,
+      "country": "NL",
+      "localTrips": 1889119.0
+    },
+    {
+      "id": "mio",
+      "name": "Midden-Noord-Brabant",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.0818,
+        "lat": 51.5567
+      },
+      "center": [
+        5.0818,
+        51.5567
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.647,
+        51.375,
+        5.308,
+        51.847
+      ],
+      "place": 877,
+      "country": "NL",
+      "localTrips": 1382084.0
+    },
+    {
+      "id": "lep",
+      "name": "Leipzig",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.3761,
+        "lat": 51.3442
+      },
+      "center": [
+        12.3761,
+        51.3442
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.207,
+        51.22,
+        12.572,
+        51.467
+      ],
+      "place": 878,
+      "country": "DE",
+      "localTrips": 1805037.0
+    },
+    {
+      "id": "dre",
+      "name": "Dresden",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.7557,
+        "lat": 51.0646
+      },
+      "center": [
+        13.7557,
+        51.0646
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.55,
+        50.956,
+        13.996,
+        51.196
+      ],
+      "place": 879,
+      "country": "DE",
+      "localTrips": 1787161.0
+    },
+    {
+      "id": "chm",
+      "name": "Chemnitz",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.9017,
+        "lat": 50.8337
+      },
+      "center": [
+        12.9017,
+        50.8337
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.588,
+        50.615,
+        13.681,
+        51.255
+      ],
+      "place": 880,
+      "country": "DE",
+      "localTrips": 1745348.0
+    },
+    {
+      "id": "zwi",
+      "name": "Zwickau",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.4967,
+        "lat": 50.7184
+      },
+      "center": [
+        12.4967,
+        50.7184
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.842,
+        50.153,
+        12.835,
+        50.943
+      ],
+      "place": 881,
+      "country": "DE",
+      "localTrips": 1633361.0
+    },
+    {
+      "id": "baz",
+      "name": "Bautzen",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.987,
+        "lat": 51.1513
+      },
+      "center": [
+        14.987,
+        51.1513
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.731,
+        50.801,
+        15.071,
+        51.616
+      ],
+      "place": 882,
+      "country": "DE",
+      "localTrips": 1646548.0
+    },
+    {
+      "id": "saw",
+      "name": "Sächsische Schweiz-Osterzgebirge",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.9356,
+        "lat": 50.9587
+      },
+      "center": [
+        13.9356,
+        50.9587
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.153,
+        50.698,
+        14.432,
+        51.473
+      ],
+      "place": 883,
+      "country": "DE",
+      "localTrips": 1361985.0
+    },
+    {
+      "id": "leg",
+      "name": "Leipzig, Nordsachsen",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.3646,
+        "lat": 51.2766
+      },
+      "center": [
+        12.3646,
+        51.2766
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.118,
+        50.96,
+        13.247,
+        51.704
+      ],
+      "place": 884,
+      "country": "DE",
+      "localTrips": 1280569.0
+    },
+    {
+      "id": "erz",
+      "name": "Erzgebirgskreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.0024,
+        "lat": 50.5745
+      },
+      "center": [
+        13.0024,
+        50.5745
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.427,
+        50.379,
+        13.531,
+        50.825
+      ],
+      "place": 885,
+      "country": "DE",
+      "localTrips": 992276.0
+    },
+    {
+      "id": "mox",
+      "name": "Mons",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.9478,
+        "lat": 50.4499
+      },
+      "center": [
+        3.9478,
+        50.4499
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.626,
+        49.923,
+        4.506,
+        50.636
+      ],
+      "place": 895,
+      "country": "BE",
+      "localTrips": 1288988.0
+    },
+    {
+      "id": "gie",
+      "name": "Gießen",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.6716,
+        "lat": 50.5841
+      },
+      "center": [
+        8.6716,
+        50.5841
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.326,
+        50.367,
+        9.679,
+        51.015
+      ],
+      "place": 896,
+      "country": "DE",
+      "localTrips": 1787783.0
+    },
+    {
+      "id": "das",
+      "name": "Darmstadt-Dieburg",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.6553,
+        "lat": 49.8666
+      },
+      "center": [
+        8.6553,
+        49.8666
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.491,
+        49.452,
+        9.179,
+        50.02
+      ],
+      "place": 897,
+      "country": "DE",
+      "localTrips": 1572762.0
+    },
+    {
+      "id": "ful",
+      "name": "Fulda",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.6748,
+        "lat": 50.5553
+      },
+      "center": [
+        9.6748,
+        50.5553
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.398,
+        50.338,
+        10.266,
+        51.44
+      ],
+      "place": 898,
+      "country": "DE",
+      "localTrips": 1292927.0
+    },
+    {
+      "id": "kae",
+      "name": "Kassel",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.4808,
+        "lat": 51.3152
+      },
+      "center": [
+        9.4808,
+        51.3152
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.063,
+        51.152,
+        9.791,
+        51.676
+      ],
+      "place": 899,
+      "country": "DE",
+      "localTrips": 1321270.0
+    },
+    {
+      "id": "lal",
+      "name": "Lahn-Dill-Kreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.4961,
+        "lat": 50.5553
+      },
+      "center": [
+        8.4961,
+        50.5553
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.935,
+        50.245,
+        8.68,
+        50.902
+      ],
+      "place": 900,
+      "country": "DE",
+      "localTrips": 1241837.0
+    },
+    {
+      "id": "scl",
+      "name": "Schwalm-Eder-Kreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.0074,
+        "lat": 51.3828
+      },
+      "center": [
+        9.0074,
+        51.3828
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.444,
+        50.754,
+        9.811,
+        51.538
+      ],
+      "place": 901,
+      "country": "DE",
+      "localTrips": 973478.0
+    },
+    {
+      "id": "bab",
+      "name": "Bamberg",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.8904,
+        "lat": 49.8953
+      },
+      "center": [
+        10.8904,
+        49.8953
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.411,
+        49.569,
+        11.933,
+        50.238
+      ],
+      "place": 905,
+      "country": "DE",
+      "localTrips": 1746771.0
+    },
+    {
+      "id": "hof",
+      "name": "Hof",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.9147,
+        "lat": 50.3158
+      },
+      "center": [
+        11.9147,
+        50.3158
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.684,
+        49.915,
+        12.304,
+        50.542
+      ],
+      "place": 906,
+      "country": "DE",
+      "localTrips": 1454568.0
+    },
+    {
+      "id": "dev",
+      "name": "Devon CC",
+      "kind": "zone",
+      "origin": {
+        "lon": -4.1287,
+        "lat": 50.3732
+      },
+      "center": [
+        -4.1287,
+        50.3732
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -4.709,
+        50.183,
+        -2.858,
+        51.265
+      ],
+      "place": 907,
+      "country": "GB",
+      "localTrips": 3484892.0
+    },
+    {
+      "id": "sta",
+      "name": "Staffordshire CC",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.1311,
+        "lat": 52.9959
+      },
+      "center": [
+        -2.1311,
+        52.9959
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -2.501,
+        52.405,
+        -1.555,
+        53.245
+      ],
+      "place": 908,
+      "country": "GB",
+      "localTrips": 3324399.0
+    },
+    {
+      "id": "woc",
+      "name": "Worcestershire CC",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.7373,
+        "lat": 52.041
+      },
+      "center": [
+        -2.7373,
+        52.041
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -3.172,
+        51.808,
+        -1.728,
+        52.474
+      ],
+      "place": 909,
+      "country": "GB",
+      "localTrips": 2244472.0
+    },
+    {
+      "id": "shr",
+      "name": "Shropshire",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.7228,
+        "lat": 52.7125
+      },
+      "center": [
+        -2.7228,
+        52.7125
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -3.266,
+        52.288,
+        -2.202,
+        53.017
+      ],
+      "place": 910,
+      "country": "GB",
+      "localTrips": 1426693.0
+    },
+    {
+      "id": "cah",
+      "name": "Cambridgeshire CC",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.252,
+        "lat": 52.5857
+      },
+      "center": [
+        -0.252,
+        52.5857
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -0.53,
+        51.987,
+        0.545,
+        52.759
+      ],
+      "place": 911,
+      "country": "GB",
+      "localTrips": 2551823.0
+    },
+    {
+      "id": "nor",
+      "name": "North Yorkshire",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.4122,
+        "lat": 54.2846
+      },
+      "center": [
+        -0.4122,
+        54.2846
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -2.596,
+        53.602,
+        -0.181,
+        54.579
+      ],
+      "place": 912,
+      "country": "GB",
+      "localTrips": 2369927.0
+    },
+    {
+      "id": "hak",
+      "name": "Hartlepool and Stockton-on-Tees",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.5639,
+        "lat": 54.5322
+      },
+      "center": [
+        -1.5639,
+        54.5322
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -1.741,
+        54.433,
+        -0.757,
+        54.746
+      ],
+      "place": 913,
+      "country": "GB",
+      "localTrips": 2040194.0
+    },
+    {
+      "id": "eas",
+      "name": "East Kent",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.1805,
+        "lat": 51.0839
+      },
+      "center": [
+        1.1805,
+        51.0839
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        0.349,
+        50.892,
+        1.479,
+        51.412
+      ],
+      "place": 914,
+      "country": "GB",
+      "localTrips": 2440201.0
+    },
+    {
+      "id": "mab",
+      "name": "Mayen-Koblenz",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.4639,
+        "lat": 50.4307
+      },
+      "center": [
+        7.4639,
+        50.4307
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.923,
+        49.941,
+        8.072,
+        50.961
+      ],
+      "place": 915,
+      "country": "DE",
+      "localTrips": 1709572.0
+    },
+    {
+      "id": "trb",
+      "name": "Trier-Saarburg",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.6374,
+        "lat": 49.7522
+      },
+      "center": [
+        6.6374,
+        49.7522
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.084,
+        49.498,
+        7.292,
+        50.408
+      ],
+      "place": 916,
+      "country": "DE",
+      "localTrips": 1616690.0
+    },
+    {
+      "id": "gem",
+      "name": "Germersheim",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.1128,
+        "lat": 49.2006
+      },
+      "center": [
+        8.1128,
+        49.2006
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.26,
+        48.948,
+        8.441,
+        49.419
+      ],
+      "place": 917,
+      "country": "DE",
+      "localTrips": 1522937.0
+    },
+    {
+      "id": "aly",
+      "name": "Alzey-Worms",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.759,
+        "lat": 49.4381
+      },
+      "center": [
+        7.759,
+        49.4381
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.218,
+        49.288,
+        8.508,
+        49.918
+      ],
+      "place": 918,
+      "country": "DE",
+      "localTrips": 1417486.0
+    },
+    {
+      "id": "bdk",
+      "name": "Bad Kreuznach",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.8649,
+        "lat": 49.838
+      },
+      "center": [
+        7.8649,
+        49.838
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.0,
+        49.53,
+        8.152,
+        50.434
+      ],
+      "place": 919,
+      "country": "DE",
+      "localTrips": 1347359.0
+    },
+    {
+      "id": "wee",
+      "name": "Westerwaldkreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.5883,
+        "lat": 50.3541
+      },
+      "center": [
+        7.5883,
+        50.3541
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.449,
+        50.264,
+        8.181,
+        50.759
+      ],
+      "place": 920,
+      "country": "DE",
+      "localTrips": 935167.0
+    },
+    {
+      "id": "eat",
+      "name": "East Suffolk",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.183,
+        "lat": 52.0507
+      },
+      "center": [
+        1.183,
+        52.0507
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        0.31,
+        51.914,
+        1.793,
+        52.569
+      ],
+      "place": 921,
+      "country": "GB",
+      "localTrips": 2234152.0
+    },
+    {
+      "id": "sot",
+      "name": "Somerset",
+      "kind": "zone",
+      "origin": {
+        "lon": -3.0099,
+        "lat": 51.132
+      },
+      "center": [
+        -3.0099,
+        51.132
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -3.869,
+        50.802,
+        -2.215,
+        51.521
+      ],
+      "place": 922,
+      "country": "GB",
+      "localTrips": 2212269.0
+    },
+    {
+      "id": "wil",
+      "name": "Wiltshire",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.7792,
+        "lat": 51.5663
+      },
+      "center": [
+        -1.7792,
+        51.5663
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -2.395,
+        50.926,
+        -1.456,
+        51.722
+      ],
+      "place": 923,
+      "country": "GB",
+      "localTrips": 2097100.0
+    },
+    {
+      "id": "glo",
+      "name": "Gloucestershire CC",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.2314,
+        "lat": 51.8567
+      },
+      "center": [
+        -2.2314,
+        51.8567
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -2.718,
+        51.559,
+        -1.585,
+        52.131
+      ],
+      "place": 924,
+      "country": "GB",
+      "localTrips": 1817356.0
+    },
+    {
+      "id": "bac",
+      "name": "Bath & North East Somerset and South Gloucestershire",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.3771,
+        "lat": 51.3731
+      },
+      "center": [
+        -2.3771,
+        51.3731
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -2.737,
+        51.255,
+        -2.223,
+        51.696
+      ],
+      "place": 925,
+      "country": "GB",
+      "localTrips": 1326536.0
+    },
+    {
+      "id": "nom",
+      "name": "North Hampshire",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.7687,
+        "lat": 51.2477
+      },
+      "center": [
+        -0.7687,
+        51.2477
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -1.49,
+        51.115,
+        -0.7,
+        51.402
+      ],
+      "place": 926,
+      "country": "GB",
+      "localTrips": 1069356.0
+    },
+    {
+      "id": "lic",
+      "name": "Lincolnshire CC",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.5431,
+        "lat": 53.2211
+      },
+      "center": [
+        -0.5431,
+        53.2211
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -0.852,
+        52.622,
+        0.386,
+        53.635
+      ],
+      "place": 927,
+      "country": "GB",
+      "localTrips": 2195048.0
+    },
+    {
+      "id": "nod",
+      "name": "North and North East Lincolnshire",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.0622,
+        "lat": 53.5647
+      },
+      "center": [
+        -0.0622,
+        53.5647
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -0.981,
+        53.415,
+        0.048,
+        53.743
+      ],
+      "place": 928,
+      "country": "GB",
+      "localTrips": 972487.0
+    },
+    {
+      "id": "lei",
+      "name": "Leicestershire CC and Rutland",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.2361,
+        "lat": 52.7613
+      },
+      "center": [
+        -1.2361,
+        52.7613
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -1.628,
+        52.374,
+        -0.398,
+        52.996
+      ],
+      "place": 929,
+      "country": "GB",
+      "localTrips": 3195638.0
+    },
+    {
+      "id": "vix",
+      "name": "Viersen",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.4455,
+        "lat": 51.1899
+      },
+      "center": [
+        6.4455,
+        51.1899
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.039,
+        51.067,
+        6.655,
+        51.444
+      ],
+      "place": 931,
+      "country": "DE",
+      "localTrips": 1677602.0
+    },
+    {
+      "id": "met",
+      "name": "Mettmann",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.8562,
+        "lat": 51.2959
+      },
+      "center": [
+        6.8562,
+        51.2959
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.772,
+        51.046,
+        7.199,
+        51.4
+      ],
+      "place": 932,
+      "country": "DE",
+      "localTrips": 1318399.0
+    },
+    {
+      "id": "kle",
+      "name": "Kleve",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.1212,
+        "lat": 51.7792
+      },
+      "center": [
+        6.1212,
+        51.7792
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.915,
+        51.336,
+        6.564,
+        51.924
+      ],
+      "place": 933,
+      "country": "DE",
+      "localTrips": 900162.0
+    },
+    {
+      "id": "wes",
+      "name": "West Sussex (South West)",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.1263,
+        "lat": 50.8337
+      },
+      "center": [
+        -0.1263,
+        50.8337
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -0.987,
+        50.704,
+        0.013,
+        51.113
+      ],
+      "place": 934,
+      "country": "GB",
+      "localTrips": 2213963.0
+    },
+    {
+      "id": "cit",
+      "name": "City of Edinburgh",
+      "kind": "zone",
+      "origin": {
+        "lon": -3.2204,
+        "lat": 55.9392
+      },
+      "center": [
+        -3.2204,
+        55.9392
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -3.482,
+        55.692,
+        -2.333,
+        56.098
+      ],
+      "place": 935,
+      "country": "GB",
+      "localTrips": 2163652.0
+    },
+    {
+      "id": "noh",
+      "name": "North Ayrshire and East Ayrshire",
+      "kind": "zone",
+      "origin": {
+        "lon": -4.6599,
+        "lat": 55.6283
+      },
+      "center": [
+        -4.6599,
+        55.6283
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -5.22,
+        54.615,
+        -2.002,
+        55.964
+      ],
+      "place": 936,
+      "country": "GB",
+      "localTrips": 1836357.0
+    },
+    {
+      "id": "anu",
+      "name": "Angus and Dundee City",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.9595,
+        "lat": 56.4729
+      },
+      "center": [
+        -2.9595,
+        56.4729
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -4.888,
+        55.939,
+        -2.393,
+        57.005
+      ],
+      "place": 937,
+      "country": "GB",
+      "localTrips": 1496411.0
+    },
+    {
+      "id": "abe",
+      "name": "Aberdeen City and Aberdeenshire",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.1008,
+        "lat": 57.1516
+      },
+      "center": [
+        -2.1008,
+        57.1516
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -3.836,
+        56.729,
+        -1.732,
+        57.72
+      ],
+      "place": 938,
+      "country": "GB",
+      "localTrips": 1482462.0
+    },
+    {
+      "id": "cla",
+      "name": "Clackmannanshire and Fife",
+      "kind": "zone",
+      "origin": {
+        "lon": -3.4136,
+        "lat": 56.0598
+      },
+      "center": [
+        -3.4136,
+        56.0598
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -3.917,
+        55.987,
+        -2.553,
+        56.472
+      ],
+      "place": 939,
+      "country": "GB",
+      "localTrips": 1218034.0
+    },
+    {
+      "id": "wel",
+      "name": "West Lothian",
+      "kind": "zone",
+      "origin": {
+        "lon": -3.5336,
+        "lat": 55.8991
+      },
+      "center": [
+        -3.5336,
+        55.8991
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -4.063,
+        55.752,
+        -3.354,
+        56.126
+      ],
+      "place": 940,
+      "country": "GB",
+      "localTrips": 1017582.0
+    },
+    {
+      "id": "mib",
+      "name": "Minden-Lübbecke",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.6947,
+        "lat": 52.1186
+      },
+      "center": [
+        8.6947,
+        52.1186
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.267,
+        52.039,
+        9.168,
+        52.55
+      ],
+      "place": 941,
+      "country": "DE",
+      "localTrips": 1677806.0
+    },
+    {
+      "id": "pab",
+      "name": "Paderborn",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.7538,
+        "lat": 51.7211
+      },
+      "center": [
+        8.7538,
+        51.7211
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.373,
+        51.423,
+        9.491,
+        51.93
+      ],
+      "place": 942,
+      "country": "DE",
+      "localTrips": 1373747.0
+    },
+    {
+      "id": "gue",
+      "name": "Gütersloh",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.3717,
+        "lat": 51.9052
+      },
+      "center": [
+        8.3717,
+        51.9052
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.046,
+        51.699,
+        8.778,
+        52.153
+      ],
+      "place": 943,
+      "country": "DE",
+      "localTrips": 1042965.0
+    },
+    {
+      "id": "bil",
+      "name": "Bielefeld",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.5341,
+        "lat": 52.0216
+      },
+      "center": [
+        8.5341,
+        52.0216
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.348,
+        51.896,
+        8.693,
+        52.133
+      ],
+      "place": 944,
+      "country": "DE",
+      "localTrips": 1028389.0
+    },
+    {
+      "id": "lip",
+      "name": "Lippe",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.8745,
+        "lat": 51.9343
+      },
+      "center": [
+        8.8745,
+        51.9343
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.577,
+        51.77,
+        9.376,
+        52.213
+      ],
+      "place": 945,
+      "country": "DE",
+      "localTrips": 1011871.0
+    },
+    {
+      "id": "oxf",
+      "name": "Oxfordshire CC",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.2317,
+        "lat": 51.7405
+      },
+      "center": [
+        -1.2317,
+        51.7405
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -1.749,
+        51.441,
+        -0.84,
+        52.187
+      ],
+      "place": 946,
+      "country": "GB",
+      "localTrips": 2001540.0
+    },
+    {
+      "id": "fli",
+      "name": "Flintshire and Wrexham",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.9834,
+        "lat": 53.0546
+      },
+      "center": [
+        -2.9834,
+        53.0546
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -4.833,
+        52.523,
+        -2.693,
+        53.449
+      ],
+      "place": 947,
+      "country": "GB",
+      "localTrips": 2025655.0
+    },
+    {
+      "id": "sou",
+      "name": "South West Wales",
+      "kind": "zone",
+      "origin": {
+        "lon": -3.9707,
+        "lat": 51.6147
+      },
+      "center": [
+        -3.9707,
+        51.6147
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -5.383,
+        51.518,
+        -3.618,
+        52.161
+      ],
+      "place": 948,
+      "country": "GB",
+      "localTrips": 1644759.0
+    },
+    {
+      "id": "cet",
+      "name": "Central Valleys and Bridgend",
+      "kind": "zone",
+      "origin": {
+        "lon": -3.3728,
+        "lat": 51.7598
+      },
+      "center": [
+        -3.3728,
+        51.7598
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -3.793,
+        51.451,
+        -3.207,
+        51.854
+      ],
+      "place": 949,
+      "country": "GB",
+      "localTrips": 1282241.0
+    },
+    {
+      "id": "miw",
+      "name": "Mid Wales",
+      "kind": "zone",
+      "origin": {
+        "lon": -3.8223,
+        "lat": 51.605
+      },
+      "center": [
+        -3.8223,
+        51.605
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -4.722,
+        51.508,
+        -2.92,
+        52.92
+      ],
+      "place": 950,
+      "country": "GB",
+      "localTrips": 984612.0
+    },
+    {
+      "id": "cen",
+      "name": "Central Bedfordshire",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.4249,
+        "lat": 51.8858
+      },
+      "center": [
+        -0.4249,
+        51.8858
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -0.732,
+        51.787,
+        -0.114,
+        52.342
+      ],
+      "place": 951,
+      "country": "GB",
+      "localTrips": 1896298.0
+    },
+    {
+      "id": "ear",
+      "name": "East Riding of Yorkshire",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.3535,
+        "lat": 53.7615
+      },
+      "center": [
+        -0.3535,
+        53.7615
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -1.134,
+        53.553,
+        0.178,
+        54.195
+      ],
+      "place": 952,
+      "country": "GB",
+      "localTrips": 1793052.0
+    },
+    {
+      "id": "ras",
+      "name": "Rastatt",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.4116,
+        "lat": 48.4623
+      },
+      "center": [
+        8.4116,
+        48.4623
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.932,
+        48.282,
+        8.905,
+        49.0
+      ],
+      "place": 953,
+      "country": "DE",
+      "localTrips": 1611580.0
+    },
+    {
+      "id": "kau",
+      "name": "Karlsruhe",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.5989,
+        "lat": 49.1247
+      },
+      "center": [
+        8.5989,
+        49.1247
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.23,
+        48.794,
+        8.923,
+        49.309
+      ],
+      "place": 954,
+      "country": "DE",
+      "localTrips": 1216150.0
+    },
+    {
+      "id": "kax",
+      "name": "Karlsruhe, Stadtkreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.3908,
+        "lat": 49.0014
+      },
+      "center": [
+        8.3908,
+        49.0014
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.249,
+        48.922,
+        8.57,
+        49.11
+      ],
+      "place": 955,
+      "country": "DE",
+      "localTrips": 964547.0
+    },
+    {
+      "id": "enz",
+      "name": "Enzkreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.6898,
+        "lat": 48.8877
+      },
+      "center": [
+        8.6898,
+        48.8877
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.44,
+        48.756,
+        8.975,
+        49.081
+      ],
+      "place": 956,
+      "country": "DE",
+      "localTrips": 929057.0
+    },
+    {
+      "id": "nec",
+      "name": "Neckar-Odenwald-Kreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.1454,
+        "lat": 49.3525
+      },
+      "center": [
+        9.1454,
+        49.3525
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.911,
+        49.253,
+        9.632,
+        49.682
+      ],
+      "place": 957,
+      "country": "DE",
+      "localTrips": 406540.0
+    },
+    {
+      "id": "waw",
+      "name": "Warwickshire CC",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.526,
+        "lat": 52.2838
+      },
+      "center": [
+        -1.526,
+        52.2838
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -1.992,
+        51.937,
+        -1.142,
+        52.706
+      ],
+      "place": 958,
+      "country": "GB",
+      "localTrips": 1587631.0
+    },
+    {
+      "id": "miu",
+      "name": "Mid Ulster",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.326,
+        "lat": 54.9992
+      },
+      "center": [
+        -7.326,
+        54.9992
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -8.21,
+        54.095,
+        -5.945,
+        55.332
+      ],
+      "place": 959,
+      "country": "GB",
+      "localTrips": 1664141.0
+    },
+    {
+      "id": "ner",
+      "name": "Newry, Mourne and Down",
+      "kind": "zone",
+      "origin": {
+        "lon": -5.6841,
+        "lat": 54.6513
+      },
+      "center": [
+        -5.6841,
+        54.6513
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -6.701,
+        54.004,
+        -5.401,
+        54.718
+      ],
+      "place": 960,
+      "country": "GB",
+      "localTrips": 1002203.0
+    },
+    {
+      "id": "mis",
+      "name": "Mid-East",
+      "kind": "zone",
+      "origin": {
+        "lon": -6.1231,
+        "lat": 53.1917
+      },
+      "center": [
+        -6.1231,
+        53.1917
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -7.374,
+        52.663,
+        -5.967,
+        54.132
+      ],
+      "place": 961,
+      "country": "IE",
+      "localTrips": 2099731.0
+    },
+    {
+      "id": "soh",
+      "name": "South-West",
+      "kind": "zone",
+      "origin": {
+        "lon": -8.4796,
+        "lat": 51.9052
+      },
+      "center": [
+        -8.4796,
+        51.9052
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -10.51,
+        51.401,
+        -7.811,
+        52.61
+      ],
+      "place": 962,
+      "country": "IE",
+      "localTrips": 1999820.0
+    },
+    {
+      "id": "wex",
+      "name": "West",
+      "kind": "zone",
+      "origin": {
+        "lon": -9.1162,
+        "lat": 53.2701
+      },
+      "center": [
+        -9.1162,
+        53.2701
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -10.293,
+        52.95,
+        -7.553,
+        54.493
+      ],
+      "place": 963,
+      "country": "IE",
+      "localTrips": 1636956.0
+    },
+    {
+      "id": "mix",
+      "name": "Mid-West",
+      "kind": "zone",
+      "origin": {
+        "lon": -8.6637,
+        "lat": 52.6344
+      },
+      "center": [
+        -8.6637,
+        52.6344
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -9.969,
+        52.183,
+        -7.341,
+        53.188
+      ],
+      "place": 964,
+      "country": "IE",
+      "localTrips": 1349436.0
+    },
+    {
+      "id": "soa",
+      "name": "South-East",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.2353,
+        "lat": 52.6637
+      },
+      "center": [
+        -7.2353,
+        52.6637
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -8.193,
+        51.919,
+        -6.11,
+        52.936
+      ],
+      "place": 965,
+      "country": "IE",
+      "localTrips": 1244041.0
+    },
+    {
+      "id": "mdl",
+      "name": "Midland",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.3168,
+        "lat": 53.0448
+      },
+      "center": [
+        -7.3168,
+        53.0448
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -8.114,
+        52.763,
+        -6.902,
+        53.961
+      ],
+      "place": 966,
+      "country": "IE",
+      "localTrips": 899549.0
+    },
+    {
+      "id": "eau",
+      "name": "East Sussex CC",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.5918,
+        "lat": 50.8626
+      },
+      "center": [
+        0.5918,
+        50.8626
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -0.165,
+        50.716,
+        0.897,
+        51.166
+      ],
+      "place": 967,
+      "country": "GB",
+      "localTrips": 1625367.0
+    },
+    {
+      "id": "ess",
+      "name": "Essex Thames Gateway",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.6914,
+        "lat": 51.547
+      },
+      "center": [
+        0.6914,
+        51.547
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        0.346,
+        51.489,
+        0.99,
+        51.67
+      ],
+      "place": 968,
+      "country": "GB",
+      "localTrips": 1600171.0
+    },
+    {
+      "id": "ese",
+      "name": "Essex Haven Gateway",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.9105,
+        "lat": 51.8858
+      },
+      "center": [
+        0.9105,
+        51.8858
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        0.35,
+        51.732,
+        1.322,
+        52.106
+      ],
+      "place": 969,
+      "country": "GB",
+      "localTrips": 1399866.0
+    },
+    {
+      "id": "cnw",
+      "name": "Cornwall and Isles of Scilly",
+      "kind": "zone",
+      "origin": {
+        "lon": -5.5373,
+        "lat": 50.1245
+      },
+      "center": [
+        -5.5373,
+        50.1245
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -6.394,
+        49.864,
+        -4.138,
+        50.95
+      ],
+      "place": 970,
+      "country": "GB",
+      "localTrips": 1618856.0
+    },
+    {
+      "id": "kos",
+      "name": "Konstanz",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.1722,
+        "lat": 47.6622
+      },
+      "center": [
+        9.1722,
+        47.6622
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.249,
+        47.633,
+        9.245,
+        48.43
+      ],
+      "place": 971,
+      "country": "DE",
+      "localTrips": 1624281.0
+    },
+    {
+      "id": "boe",
+      "name": "Bodenseekreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.4775,
+        "lat": 47.6528
+      },
+      "center": [
+        9.4775,
+        47.6528
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.621,
+        47.523,
+        9.772,
+        48.436
+      ],
+      "place": 972,
+      "country": "DE",
+      "localTrips": 1578257.0
+    },
+    {
+      "id": "rel",
+      "name": "Reutlingen",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.2131,
+        "lat": 48.4811
+      },
+      "center": [
+        9.2131,
+        48.4811
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.728,
+        48.176,
+        9.665,
+        48.641
+      ],
+      "place": 973,
+      "country": "DE",
+      "localTrips": 1502788.0
+    },
+    {
+      "id": "fri",
+      "name": "Freiburg im Breisgau",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.8503,
+        "lat": 47.9911
+      },
+      "center": [
+        7.8503,
+        47.9911
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.502,
+        47.725,
+        8.468,
+        48.135
+      ],
+      "place": 974,
+      "country": "DE",
+      "localTrips": 1511896.0
+    },
+    {
+      "id": "rae",
+      "name": "Ravensburg",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.6204,
+        "lat": 47.7842
+      },
+      "center": [
+        9.6204,
+        47.7842
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.232,
+        47.583,
+        10.172,
+        48.313
+      ],
+      "place": 975,
+      "country": "DE",
+      "localTrips": 1374289.0
+    },
+    {
+      "id": "ort",
+      "name": "Ortenaukreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.9485,
+        "lat": 48.4717
+      },
+      "center": [
+        7.9485,
+        48.4717
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.653,
+        48.14,
+        8.358,
+        48.737
+      ],
+      "place": 976,
+      "country": "DE",
+      "localTrips": 1250342.0
+    },
+    {
+      "id": "loa",
+      "name": "Lörrach",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.6615,
+        "lat": 47.6153
+      },
+      "center": [
+        7.6615,
+        47.6153
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.485,
+        47.514,
+        8.656,
+        47.899
+      ],
+      "place": 977,
+      "country": "DE",
+      "localTrips": 1252801.0
+    },
+    {
+      "id": "scr",
+      "name": "Schwarzwald-Baar-Kreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.5375,
+        "lat": 48.0663
+      },
+      "center": [
+        8.5375,
+        48.0663
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.55,
+        47.752,
+        8.691,
+        48.279
+      ],
+      "place": 978,
+      "country": "DE",
+      "localTrips": 1078961.0
+    },
+    {
+      "id": "alo",
+      "name": "Alb-Donau-Kreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.9891,
+        "lat": 48.3962
+      },
+      "center": [
+        9.9891,
+        48.3962
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.461,
+        48.124,
+        10.269,
+        48.651
+      ],
+      "place": 979,
+      "country": "DE",
+      "localTrips": 893583.0
+    },
+    {
+      "id": "brc",
+      "name": "Breckland and South Norfolk",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.7679,
+        "lat": 52.4201
+      },
+      "center": [
+        0.7679,
+        52.4201
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        0.124,
+        52.337,
+        1.713,
+        52.999
+      ],
+      "place": 980,
+      "country": "GB",
+      "localTrips": 1501060.0
+    },
+    {
+      "id": "now",
+      "name": "Norwich and East Norfolk",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.2745,
+        "lat": 52.6247
+      },
+      "center": [
+        1.2745,
+        52.6247
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        0.96,
+        52.507,
+        1.776,
+        52.849
+      ],
+      "place": 981,
+      "country": "GB",
+      "localTrips": 1092425.0
+    },
+    {
+      "id": "bek",
+      "name": "Berkshire West",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.9452,
+        "lat": 51.4504
+      },
+      "center": [
+        -0.9452,
+        51.4504
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -1.617,
+        51.31,
+        -0.759,
+        51.582
+      ],
+      "place": 982,
+      "country": "GB",
+      "localTrips": 1445546.0
+    },
+    {
+      "id": "cum",
+      "name": "Cumberland",
+      "kind": "zone",
+      "origin": {
+        "lon": -3.2263,
+        "lat": 54.1165
+      },
+      "center": [
+        -3.2263,
+        54.1165
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -3.671,
+        54.026,
+        -2.128,
+        55.208
+      ],
+      "place": 983,
+      "country": "GB",
+      "localTrips": 1486355.0
+    },
+    {
+      "id": "pau",
+      "name": "Passau",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.4179,
+        "lat": 48.5661
+      },
+      "center": [
+        13.4179,
+        48.5661
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.296,
+        48.188,
+        13.868,
+        49.002
+      ],
+      "place": 984,
+      "country": "DE",
+      "localTrips": 1572405.0
+    },
+    {
+      "id": "dee",
+      "name": "Deggendorf",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.5764,
+        "lat": 48.8782
+      },
+      "center": [
+        12.5764,
+        48.8782
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.1,
+        48.58,
+        13.446,
+        49.192
+      ],
+      "place": 985,
+      "country": "DE",
+      "localTrips": 996528.0
+    },
+    {
+      "id": "lau",
+      "name": "Landshut",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.1486,
+        "lat": 48.5378
+      },
+      "center": [
+        12.1486,
+        48.5378
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.567,
+        48.298,
+        12.538,
+        49.041
+      ],
+      "place": 986,
+      "country": "DE",
+      "localTrips": 988734.0
+    },
+    {
+      "id": "brs",
+      "name": "Bristol, City of",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.6072,
+        "lat": 51.4407
+      },
+      "center": [
+        -2.6072,
+        51.4407
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -2.748,
+        51.379,
+        -2.481,
+        51.563
+      ],
+      "place": 987,
+      "country": "GB",
+      "localTrips": 1371414.0
+    },
+    {
+      "id": "bou",
+      "name": "Bournemouth, Christchurch and Poole",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.8518,
+        "lat": 50.7281
+      },
+      "center": [
+        -1.8518,
+        50.7281
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -2.069,
+        50.664,
+        -1.653,
+        50.828
+      ],
+      "place": 988,
+      "country": "GB",
+      "localTrips": 1209308.0
+    },
+    {
+      "id": "dos",
+      "name": "Dorset",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.4719,
+        "lat": 50.6129
+      },
+      "center": [
+        -2.4719,
+        50.6129
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -2.991,
+        50.494,
+        -1.762,
+        51.099
+      ],
+      "place": 989,
+      "country": "GB",
+      "localTrips": 1088708.0
+    },
+    {
+      "id": "aug",
+      "name": "Augsburg",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.8998,
+        "lat": 48.3679
+      },
+      "center": [
+        10.8998,
+        48.3679
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.467,
+        48.07,
+        11.015,
+        48.657
+      ],
+      "place": 990,
+      "country": "DE",
+      "localTrips": 1583853.0
+    },
+    {
+      "id": "ost",
+      "name": "Ostallgäu",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.1818,
+        "lat": 47.9817
+      },
+      "center": [
+        10.1818,
+        47.9817
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.049,
+        47.495,
+        10.981,
+        48.248
+      ],
+      "place": 991,
+      "country": "DE",
+      "localTrips": 1067343.0
+    },
+    {
+      "id": "doa",
+      "name": "Donau-Ries",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.9887,
+        "lat": 48.3585
+      },
+      "center": [
+        10.9887,
+        48.3585
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.227,
+        48.173,
+        11.339,
+        49.055
+      ],
+      "place": 992,
+      "country": "DE",
+      "localTrips": 1003056.0
+    },
+    {
+      "id": "obe",
+      "name": "Oberallgäu",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.3154,
+        "lat": 47.7185
+      },
+      "center": [
+        10.3154,
+        47.7185
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.531,
+        47.251,
+        10.539,
+        47.882
+      ],
+      "place": 993,
+      "country": "DE",
+      "localTrips": 911874.0
+    },
+    {
+      "id": "neu",
+      "name": "Neu-Ulm",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.002,
+        "lat": 48.3962
+      },
+      "center": [
+        10.002,
+        48.3962
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.94,
+        48.09,
+        10.628,
+        48.546
+      ],
+      "place": 994,
+      "country": "DE",
+      "localTrips": 852396.0
+    },
+    {
+      "id": "wet",
+      "name": "West Northamptonshire",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.8744,
+        "lat": 52.2449
+      },
+      "center": [
+        -0.8744,
+        52.2449
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -1.363,
+        51.959,
+        -0.675,
+        52.496
+      ],
+      "place": 995,
+      "country": "GB",
+      "localTrips": 1136857.0
+    },
+    {
+      "id": "non",
+      "name": "North Northamptonshire",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.7133,
+        "lat": 52.4006
+      },
+      "center": [
+        -0.7133,
+        52.4006
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -0.936,
+        52.173,
+        -0.312,
+        52.662
+      ],
+      "place": 996,
+      "country": "GB",
+      "localTrips": 981163.0
+    },
+    {
+      "id": "mia",
+      "name": "Mid Lancashire",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.7104,
+        "lat": 53.7713
+      },
+      "center": [
+        -2.7104,
+        53.7713
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -3.088,
+        53.653,
+        -2.153,
+        54.068
+      ],
+      "place": 997,
+      "country": "GB",
+      "localTrips": 1141035.0
+    },
+    {
+      "id": "chy",
+      "name": "Chorley and West Lancashire",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.5017,
+        "lat": 53.7516
+      },
+      "center": [
+        -2.5017,
+        53.7516
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -3.078,
+        53.464,
+        -2.332,
+        53.8
+      ],
+      "place": 998,
+      "country": "GB",
+      "localTrips": 1045859.0
+    },
+    {
+      "id": "lac",
+      "name": "Lancaster and Wyre",
+      "kind": "zone",
+      "origin": {
+        "lon": -3.0449,
+        "lat": 53.8107
+      },
+      "center": [
+        -3.0449,
+        53.8107
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -3.09,
+        53.754,
+        -2.428,
+        54.258
+      ],
+      "place": 999,
+      "country": "GB",
+      "localTrips": 1149658.0
+    },
+    {
+      "id": "eal",
+      "name": "East Lancashire",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.2133,
+        "lat": 53.8304
+      },
+      "center": [
+        -2.2133,
+        53.8304
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -2.497,
+        53.596,
+        -2.014,
+        53.971
+      ],
+      "place": 1000,
+      "country": "GB",
+      "localTrips": 950807.0
+    },
+    {
+      "id": "mit",
+      "name": "Milton Keynes",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.7501,
+        "lat": 52.0313
+      },
+      "center": [
+        -0.7501,
+        52.0313
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -0.917,
+        51.951,
+        -0.562,
+        52.215
+      ],
+      "place": 1003,
+      "country": "GB",
+      "localTrips": 787499.0
+    },
+    {
+      "id": "mek",
+      "name": "Mecklenburgische Seenplatte",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.4209,
+        "lat": 53.6335
+      },
+      "center": [
+        11.4209,
+        53.6335
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.563,
+        53.092,
+        13.826,
+        54.023
+      ],
+      "place": 1004,
+      "country": "DE",
+      "localTrips": 1603090.0
+    },
+    {
+      "id": "roo",
+      "name": "Rostock",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.1403,
+        "lat": 54.0869
+      },
+      "center": [
+        12.1403,
+        54.0869
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.717,
+        53.548,
+        12.847,
+        54.293
+      ],
+      "place": 1005,
+      "country": "DE",
+      "localTrips": 1648022.0
+    },
+    {
+      "id": "spr",
+      "name": "Spree-Neiße",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.3328,
+        "lat": 51.7598
+      },
+      "center": [
+        14.3328,
+        51.7598
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.021,
+        51.34,
+        14.796,
+        52.076
+      ],
+      "place": 1006,
+      "country": "DE",
+      "localTrips": 1300482.0
+    },
+    {
+      "id": "osp",
+      "name": "Ostprignitz-Ruppin",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.8081,
+        "lat": 52.9274
+      },
+      "center": [
+        12.8081,
+        52.9274
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.235,
+        52.663,
+        13.087,
+        53.39
+      ],
+      "place": 1007,
+      "country": "DE",
+      "localTrips": 498131.0
+    },
+    {
+      "id": "voo",
+      "name": "Vorpommern-Greifswald",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.0914,
+        "lat": 54.3143
+      },
+      "center": [
+        13.0914,
+        54.3143
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.247,
+        52.913,
+        14.482,
+        54.704
+      ],
+      "place": 1008,
+      "country": "DE",
+      "localTrips": 1661965.0
+    },
+    {
+      "id": "iso",
+      "name": "Isle of Wight",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.1616,
+        "lat": 50.7281
+      },
+      "center": [
+        -1.1616,
+        50.7281
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -1.616,
+        50.556,
+        -1.041,
+        50.786
+      ],
+      "place": 1009,
+      "country": "GB",
+      "localTrips": 406607.0
+    },
+    {
+      "id": "ceh",
+      "name": "Cheshire East",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.9241,
+        "lat": 53.2701
+      },
+      "center": [
+        -2.9241,
+        53.2701
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -3.14,
+        52.929,
+        -1.944,
+        53.406
+      ],
+      "place": 1011,
+      "country": "GB",
+      "localTrips": 2027484.0
+    },
+    {
+      "id": "cov",
+      "name": "Coventry",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.488,
+        "lat": 52.4103
+      },
+      "center": [
+        -1.488,
+        52.4103
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -1.645,
+        52.345,
+        -1.394,
+        52.483
+      ],
+      "place": 1012,
+      "country": "GB",
+      "localTrips": 1096774.0
+    },
+    {
+      "id": "osk",
+      "name": "Ostalbkreis",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.6529,
+        "lat": 48.7079
+      },
+      "center": [
+        9.6529,
+        48.7079
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.456,
+        48.491,
+        10.524,
+        49.079
+      ],
+      "place": 1013,
+      "country": "DE",
+      "localTrips": 2045201.0
+    },
+    {
+      "id": "bod",
+      "name": "Border",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.7349,
+        "lat": 54.9504
+      },
+      "center": [
+        -7.7349,
+        54.9504
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -8.838,
+        53.747,
+        -6.518,
+        55.454
+      ],
+      "place": 1014,
+      "country": "IE",
+      "localTrips": 904782.0
+    },
+    {
+      "id": "bon",
+      "name": "Borken",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.6114,
+        "lat": 51.8373
+      },
+      "center": [
+        6.6114,
+        51.8373
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.357,
+        51.639,
+        8.35,
+        52.262
+      ],
+      "place": 1015,
+      "country": "DE",
+      "localTrips": 2541315.0
+    },
+    {
+      "id": "sti",
+      "name": "Steinfurt",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.6234,
+        "lat": 51.973
+      },
+      "center": [
+        7.6234,
+        51.973
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.065,
+        51.822,
+        8.055,
+        52.494
+      ],
+      "place": 1016,
+      "country": "DE",
+      "localTrips": 2374232.0
+    },
+    {
+      "id": "asf",
+      "name": "Aschaffenburg",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.1534,
+        "lat": 49.9716
+      },
+      "center": [
+        9.1534,
+        49.9716
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.948,
+        49.555,
+        10.075,
+        50.262
+      ],
+      "place": 1017,
+      "country": "DE",
+      "localTrips": 1483372.0
+    },
+    {
+      "id": "heb",
+      "name": "Heilbronn",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.2251,
+        "lat": 49.1436
+      },
+      "center": [
+        9.2251,
+        49.1436
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.788,
+        48.84,
+        11.229,
+        49.81
+      ],
+      "place": 1018,
+      "country": "DE",
+      "localTrips": 3822614.0
+    },
+    {
+      "id": "wuz",
+      "name": "Würzburg",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.9434,
+        "lat": 49.7808
+      },
+      "center": [
+        9.9434,
+        49.7808
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.595,
+        49.462,
+        10.909,
+        50.583
+      ],
+      "place": 1019,
+      "country": "DE",
+      "localTrips": 2438807.0
     }
   ]
 }

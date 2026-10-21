@@ -805,7 +805,7 @@ def browser_check(city, header, a, f, reg, out_dir):
     if os.path.exists(jp):
         with open(jp, encoding="utf-8") as fh:
             res["checks"] = json.load(fh).get("checks", [])
-    if p.returncode != 0 and not res.get("checks"):
+    if p.returncode != 0 and not any(not k["ok"] for k in res.get("checks", [])):  # died after passing checks (T-788)
         res["error"] = (p.stderr or p.stdout)[-400:]
     return res
 

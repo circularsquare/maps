@@ -68,6 +68,10 @@ TESTS = ["tor", "lon", "par", "ber", "seo", "mum", "lag", "sao"]
 ZONE_MIN_POP = 100_000   # a zone under this joins a neighbouring zone of its region
 ZONE_MIN_DENSITY = 20.0  # people a km2: an emptier unit stays dead space
 ISLAND_KM = 150.0        # an island under ZONE_MIN_POP joins the most populous zone of its region this near
+ZONE_FLOOR = 500_000     # zones grow to this within their region (Anita, 2026-10-20, T-788)
+ZONE_CAP = 1_500_000     # a zone of ZONE_MIN_POP or more prefers neighbours keeping it within this
+# zone rows planned before the floor (T-723 to T-786) used ZONE_MIN_POP as theirs; a replan of those
+# countries would regroup their unbuilt rows only
 EUROPE_BOX = (-32.0, 27.0, 45.0, 72.0)  # lon/lat: a European country's units outside it (France's overseas départements) are not zoned (T-779)
 
 # What a city in each country can have (docs/data-register.md "Countries and their procedure");
@@ -531,7 +535,7 @@ def load_nuts(europe):
     out = collections.defaultdict(list)
     for f in gj["features"]:
         pr = f["properties"]
-        iso = pr["ISO3_CODE"]
+        iso = {"XK": "XKX"}.get(pr["ISO3_CODE"], pr["ISO3_CODE"])  # GISCO gives Kosovo no ISO3
         if iso in europe and iso != "GBR":
             out[iso].append((pr["NUTS_ID"], pr["NAME_LATN"], polygonal(to_moll(shape(f["geometry"])))))
     return dict(out)
@@ -701,7 +705,7 @@ def make_id(name, used):
     cands += [s[0] + b + c for i, b in enumerate(s[1:]) for c in s[i + 2:]]
     cands += [s[0] + b + c for b in "abcdefghijklmnopqrstuvwxyz" for c in "abcdefghijklmnopqrstuvwxyz"]
     for c in cands:
-        if c not in used:
+        if c not in used and c not in ("con", "prn", "aux", "nul"):  # Windows device names (T-788: Cornwall)
             used.add(c)
             return c
     raise RuntimeError(name)
@@ -857,7 +861,9 @@ def iso2s():
     out = {}
     for iso, adm, a2 in zip(df.ISO_A3, df.ADM0_A3, df.ISO_A2_EH):
         code = iso if iso != "-99" else adm
-        out[NE_FIX.get(adm, NE_FIX.get(code, code))] = a2
+        key = NE_FIX.get(adm, NE_FIX.get(code, code))
+        if a2 != "-99" or key not in out:  # Northern Cyprus (-99) is folded into CYP
+            out[key] = a2
     return out
 
 
@@ -1051,43 +1057,67 @@ def test_row(st, pid, out):
         f"{sum(len(v) for v in row['units'].values())} units; {out}")
 
 
-def zone_groups(units, free, region):
-    """Free units (ids) grouped into zones: smallest first, one under ZONE_MIN_POP joins the zone of
-    its region it shares the longest border with; an island (no land border with any unit) the most
-    populous zone of its region within ISLAND_KM; one with neither stays alone (Ceuta). Returns
-    ({lead id: [units]}, [log lines])."""
+def zone_groups(units, free, region, floor=ZONE_MIN_POP):
+    """Free units (ids) grouped into zones, smallest first, until each holds `floor` people. A zone
+    under ZONE_MIN_POP joins the zone of its region it shares the longest border with; a bigger one
+    its smallest neighbour there that keeps the two within ZONE_CAP (else its smallest neighbour), so
+    one zone does not take a whole region (the longest border put Sarajevo, Zenica and Mostar in one).
+    With no neighbour left in its region (a small region, or Osttirol cut off from Tirol) it joins one
+    of another region. An island (no land border with any unit) joins the most populous zone of its
+    region within ISLAND_KM, or within 10 km once it holds ZONE_MIN_POP (the Isle of Wight stays
+    alone). One that can join nothing stays as it is (Ceuta). Returns ({lead id: [units]}, [log lines])."""
     by = {u.id: u for u in units}
     simple = {u.id: u.geom.simplify(500) for u in units}
     zones, done, lines = {i: [i] for i in free}, set(), []
     ppl = lambda z: sum(by[i].free for i in zones[z])  # noqa: E731
     geo = lambda z: union_all([simple[i] for i in zones[z]])  # noqa: E731
+
+    def touching(g, pool):
+        b = [(g.boundary.intersection(geo(o).buffer(1000)).length, o) for o in pool]
+        return [x for x in b if x[0] > 0]
     while True:
-        small = sorted((ppl(z), z) for z in zones if z not in done and ppl(z) < ZONE_MIN_POP)
+        small = sorted((ppl(z), z) for z in zones if z not in done and ppl(z) < floor)
         if not small:
             break
         n, z = small[0]
         g = geo(z)
         same = [o for o in zones if o != z and region[o] == region[z]]
-        border = [(g.boundary.intersection(geo(o).buffer(1000)).length, o) for o in same]
-        border = [b for b in border if b[0] > 0]
+        border = touching(g, same)
+        if not border:
+            border = touching(g, [o for o in zones if o != z and region[o] != region[z]])
         island = not any(g.buffer(1000).intersects(simple[u.id]) for u in units if u.id not in zones[z])
         into, how = None, ""
-        if border:
+        if border and n < ZONE_MIN_POP:
             length, into = max(border)
             how = f"shared border {length / 1000:.0f} km"
+        elif border:
+            fit = [b for b in border if n + ppl(b[1]) <= ZONE_CAP]
+            into = min(fit or border, key=lambda b: (ppl(b[1]), -b[0]))[1]
+            how = f"smallest neighbour, {ppl(into):,.0f}"
         elif island:
-            near = [(ppl(o), o) for o in same if g.distance(geo(o)) <= ISLAND_KM * 1000]
+            reach = ISLAND_KM if n < ZONE_MIN_POP else 10.0
+            near = [(ppl(o), o) for o in same if g.distance(geo(o)) <= reach * 1000]
             if near:
                 into = max(near)[1]
                 how = f"island, {g.distance(geo(into)) / 1000:.0f} km"
         if into is None:
             done.add(z)
-            lines.append(f"  {by[z].name} ({n:,.0f}) stays its own zone: no zone of its region "
-                         f"{'within ' + str(ISLAND_KM) + ' km' if island else 'beside it'}")
+            lines.append(f"  {by[z].name} ({n:,.0f}) stays as it is: {'an island with no zone within reach' if island else 'no zone beside it'}")
             continue
+        if region[into] != region[z]:
+            how += ", another region"
         lines.append(f"  {by[z].name} ({n:,.0f}) joins {by[into].name} ({how})")
         zones[into] += zones.pop(z)
     return zones, lines
+
+
+def zone_name(s):
+    """A unit's name without its kind ("Rostock, Kreisfreie Stadt", "Arr. Leuven") or second language."""
+    import re
+    s = s.split("/")[0].strip()
+    s = re.sub(r",\s*(Kreisfreie Stadt|Landkreis|Stadtkreis|Kreis)$", "", s)
+    s = re.sub(r"^(Landkreis|Kreis|Regionalverband|Arr\.|Arrondissement|Bezirk)\s+", "", s)
+    return s.strip()
 
 
 def plan_zones(isos3):
@@ -1116,11 +1146,20 @@ def plan_zones(isos3):
     order = max(r.get("order", 0) for r in rows)
     record = doc.setdefault("zones", {})
     for iso in isos3:
-        src = doc["unit_sources"][iso]
         units = [u for u in st["units"] if u.iso == iso]
-        if not units:
-            raise SystemExit(f"{iso}: no units in the plan's state (data/work/worldplan/state.pkl)")
-        old = {r["id"]: r for r in rows if r.get("kind") == "zone" and iso in r.get("units", {})}
+        if not units:  # a country no metro reached, so not in the plan's state (T-788)
+            europe, meta = europe_isos()
+            whole = union_all([g for i, g in countries() if i == iso])
+            units, got = country_units(iso, meta, load_nuts(europe | {iso}), pop, shapely.Polygon(), whole)
+            if not units:
+                raise SystemExit(f"{iso}: no units at NUTS-3 or in geoBoundaries")
+            doc["unit_sources"][iso] = got
+        src = doc["unit_sources"][iso]
+        # a zone row the runner has moved on (built, gated, shipped, parked) keeps its units; only
+        # planned ones are regrouped (T-788: Anita's 0.5M floor came mid-wave)
+        old = {r["id"]: r for r in rows if r.get("kind") == "zone" and iso in r.get("units", {})
+               and r.get("status", "planned") == "planned"}
+        kept = [r for r in rows if r.get("kind") == "zone" and iso in r.get("units", {}) and r["id"] not in old]
         held = {uid for r in rows if r.get("units") and r["id"] not in old for uid in r["units"].get(iso, [])}
         ptree = STRtree([q["geom"] for q in pk.values()])
         pl = list(pk.values())
@@ -1147,15 +1186,15 @@ def plan_zones(isos3):
                 free.append(u.id)
         nuts = src["kind"] in ("NUTS3", "ITL3")
         region = {u.id: (u.parents[-1] if nuts else u.parents[0]) if u.parents else iso for u in units}
-        groups, lines = zone_groups(units, free, region)
+        groups, lines = zone_groups(units, free, region, ZONE_FLOOR)
         by = {u.id: u for u in units}
-        log(f"{iso}: {len(units)} units, {len(held)} in plan rows, {len(free)} free, {len(dead)} dead space "
+        log(f"{iso}: {len(units)} units, {len(held)} in plan rows ({len(kept)} zone rows kept), {len(free)} free, {len(dead)} dead space "
             f"(under {ZONE_MIN_DENSITY:g} a km2: {', '.join(d['name'] for d in dead)}); {len(groups)} zones"
             + (f"; outside Europe, left out: {', '.join(away)}" if away else ""))
         for ln in lines:
             log(ln)
         was = {tuple(sorted(r["units"][iso])): r for r in old.values()}
-        out, feats = [], []
+        out, feats, names = [], [], {r["name"] for r in kept}
         for lead, ids in sorted(groups.items(), key=lambda kv: -sum(by[i].free for i in kv[1])):
             us = sorted((by[i] for i in ids), key=lambda u: -u.free)
             g = polygonal(union_all([u.geom for u in us]))
@@ -1171,7 +1210,10 @@ def plan_zones(isos3):
                     best = (float(p[i]), x[i], y[i])
             lon, lat = INV.transform(best[1], best[2])
             tz = tf.timezone_at(lng=lon, lat=lat) or tf.closest_timezone_at(lng=lon, lat=lat)
-            name = us[0].name.split("/")[0].strip()
+            name = zone_name(us[0].name)
+            if name in names:  # Leipzig the city and Leipzig the Landkreis: the smaller by its two largest units
+                name = ", ".join(zone_name(u.name) for u in us[:2]) if len(us) > 1 else us[0].name
+            names.add(name)
             prev = was.get(tuple(sorted(ids)))
             arch, module = "D", None  # zones: global sources and the zone curve, no country module (T-779)
             if prev:
@@ -1202,10 +1244,12 @@ def plan_zones(isos3):
         if gone:
             log(f"  earlier zone rows with no successor, removed: {gone}")
         rows[:] = [r for r in rows if r["id"] not in old] + out
-        record[iso] = {"task": "T-723", "built": str(datetime.now().date()),
-                       "rule": f"free units at or over {ZONE_MIN_DENSITY:g} people a km2; under {ZONE_MIN_POP:,} joins "
-                               f"a zone of its region (longest border, or an island the most populous within {ISLAND_KM:g} km)",
-                       "dead": dead, "merges": [ln.strip() for ln in lines]}
+        record[iso] = {"built": str(datetime.now().date()), "task": "T-788",
+                       "rule": f"free units at or over {ZONE_MIN_DENSITY:g} people a km2, grouped in their region until each "
+                               f"zone holds {ZONE_FLOOR:,}: under {ZONE_MIN_POP:,} by the longest border, then the smallest "
+                               f"neighbour keeping both within {ZONE_CAP:,}; another region's when none is left; islands "
+                               f"the most populous zone within {ISLAND_KM:g} km (10 km from {ZONE_MIN_POP:,})",
+                       "kept": [r["id"] for r in kept], "dead": dead, "merges": [ln.strip() for ln in lines]}
         if away:
             record[iso]["outside_europe"] = away
         ext_path = WORK / "extents.geojson"

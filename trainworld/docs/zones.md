@@ -64,13 +64,21 @@ zone of their own region (NUTS-2; elsewhere the first-level unit), smallest firs
 share the longest border with, or for an island the most populous zone of the region within
 150 km (so small islands join their province's largest: La Gomera, La Palma and El Hierro
 Tenerife, Fuerteventura Gran Canaria, Menorca Mallorca). A small unit with neither stays its own
-zone (Ceuta, Melilla). A European country's units outside Europe (France's overseas départements)
-are not zoned. A zone row has `kind` "zone", is named after its most populous unit (before
+zone (Ceuta, Melilla). **Zones hold at least about 0.5M people** (Anita, 2026-10-20, T-788):
+countries planned since then keep merging within the region until each zone has **500,000**,
+from 100,000 into the smallest neighbour that keeps the two within **1.5M**, and into a zone of
+another region of the country when its own has none left (a small region, or Osttirol cut off from
+Tirol); a zone of 100,000 or more crosses water only within 10 km, and islands and enclaves that
+can join nothing stay as they are (the Isle of Wight, Åland). Rows built before the floor keep
+their size: Spain, Italy, France, Portugal and Greece, and T-788's first wave (Germany, the UK,
+Ireland and the Benelux at 0.1-1.2M). A European country's units outside Europe (France's
+overseas départements) are not zoned. A zone row has `kind` "zone", is named after its most populous unit (before
 any "/"), and has its origin at its densest square km. A replan of the metros keeps zone rows as
 they are. Countryside zones use the zone curve (section 4) and global sources only: a zone row
 never takes its country's module. Covered so far: Spain (40 zones, T-723), Italy (97), France
 (80, Creuse and Lozère dead space; T-779), Greece (31) and Portugal (13 of 16, three parked on
-their outlines, T-787; T-786).
+their outlines, T-787; T-786); the rest of Europe but Russia, Belarus and Ukraine is planned as 360
+zone rows (T-788, notes/T-788.md).
 
 **Mercer County (Trenton) is part of New York's city zone**, not a non-city zone (Anita leaned
 this way). Reasons: it is in the New York combined statistical area; LODES holds 175,000 jobs

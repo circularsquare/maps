@@ -54,7 +54,9 @@ def local_trips(reg):
     ids = [c["id"] for c in reg["cities"] if (ROOT / f"data/packs/{c['id']}.json").exists()]
     out = subprocess.run([shutil.which("cargo", path=env["PATH"]), "run", "--quiet", "--release", "--features", "demand",
                           "--bin", "zone_summary", "--manifest-path", os.path.join(os.environ.get("TW_SIM_DIR", str(ROOT / "sim")), "Cargo.toml"), "--",
-                          *[str(ROOT / f"data/packs/{i}.json") for i in ids]], env=env, check=True, capture_output=True, text=True)
+                          # names relative to data/packs: 590 absolute paths passed Windows' 32k command line (T-788)
+                          *[f"{i}.json" for i in ids]], env=env, check=True, capture_output=True, text=True,
+                         cwd=str(ROOT / "data/packs"))
     trips = json.loads(out.stdout)
     for c in reg["cities"]:
         if c["id"] in trips:

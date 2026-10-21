@@ -73,6 +73,7 @@ os.environ.setdefault("OMP_NUM_THREADS", "2")
 import io
 import json
 import math
+import re
 import time
 import zipfile
 
@@ -985,7 +986,8 @@ def wikidata_students(qids):
     if os.path.exists(path):
         with open(path) as f:
             have = json.load(f)
-    need = sorted(q for q in set(qids) if q and q not in have)
+    # OSM tags hold the odd malformed id ("Q1; Q2"), which makes the whole query a 400 (T-788, Mons)
+    need = sorted(q for q in set(qids) if re.fullmatch(r"Q\d+", q or "") and q not in have)
     for i in range(0, len(need), 200):
         part = need[i:i + 200]
         q = ("SELECT ?item ?v ?t WHERE { VALUES ?item { " + " ".join(f"wd:{x}" for x in part) + " } "
