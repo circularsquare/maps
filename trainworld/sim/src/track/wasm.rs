@@ -2285,9 +2285,7 @@ impl TrackApi {
     pub fn construct(&mut self, edges: &[u32], stations: &[u32]) -> u32 {
         let ops = self.construct_ops(edges, stations);
         if ops.is_empty() {
-            self.money_short = None;
-            self.issues = vec![];
-            return 1;
+            return self.refuse(Issue::NothingToConstruct);
         }
         self.run_charged(Op::Batch(ops))
     }
@@ -4139,6 +4137,52 @@ mod tests {
     }
     fn free(x: f64, y: f64) -> [f64; 5] {
         [0.0, 0.0, x, y, 0.0]
+    }
+
+    #[test]
+    fn an_express_added_over_constructed_track_runs() {
+        // T-849: five stations 10 km apart, an all-stops line constructed, then an express
+        // calling at every other station over the same track
+        let mut a = api();
+        a.set_cash(1e6);
+        a.set_route_hsr(true);
+        a.set_design_speed(320.0);
+        let mut st = vec![];
+        for i in 0..4 {
+            let from = if i == 0 { [0.0, 0.0, 0.0, 0.0, -1.0] } else { [1.0, st[i] as f64, 0.0, 0.0, 0.0] };
+            let ends: Vec<f64> = from.iter().chain([0.0, 0.0, (i + 1) as f64 * 10_000.0, 0.0, -1.0].iter()).copied().collect();
+            assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+            if i == 0 {
+                st.push(a.nodes_info()[0] as u32);
+            }
+            st.push(a.route_end());
+        }
+        for (i, &n) in st.iter().enumerate() {
+            assert_eq!(a.add_station(1, n, 0.0, 0.0, 400, format!("S{i}")), 0, "{}", a.issues());
+        }
+        let all = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(all, &st, 4, 3, 1, 30.0, 180.0, 0, 0, "All".into()), 0, "{}", a.issues());
+        assert_eq!(a.set_line_fast(all, true), 0, "{}", a.issues());
+        assert_eq!(a.set_line_cars(all, 10), 0, "{}", a.issues());
+        assert_eq!(a.set_auto_headway(all, 900, 1200, 3600), 0, "{}", a.issues());
+        assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        assert!(a.w.svc.lines[all as usize].running);
+        let ex = a.new_line_id();
+        // as the app adds a line: no trains, then straight to headways (the edit API's setHeadway)
+        assert_eq!(a.set_line_with_trains(ex, &[st[0], st[2], st[4]], 0, 0, 0, 30.0, 180.0, 0, 0, "Ex".into()), 0, "{}", a.issues());
+        assert!(a.w.svc.lines[ex as usize].running, "over constructed track the line runs at once");
+        assert_eq!(a.set_line_fast(ex, true), 0, "{}", a.issues());
+        assert_eq!(a.set_line_cars(ex, 10), 0, "{}", a.issues());
+        assert_eq!(a.set_auto_headway(ex, 900, 1200, 0), 0, "{}", a.issues());
+        let (trip, tph) = (a.w.svc.lines[ex as usize].round_trip, a.w.net.line_tph[ex as usize]);
+        assert_eq!(a.w.svc.lines[ex as usize].trains, [auto_trains(trip[0], 900), auto_trains(trip[1], 1200), 0]);
+        assert!(tph[0] > 3.9 && tph[1] > 2.9 && tph[2] == 0.0, "{tph:?}");
+        // nothing to construct: refused, and the issue says so
+        assert_eq!(a.construct_line(ex), 1);
+        assert_eq!(a.issue_kinds(), "NothingToConstruct");
+        assert_eq!(a.construct_all(), 1);
+        assert_eq!(a.issue_kinds(), "NothingToConstruct");
+        assert_eq!(a.w.net.line_tph[ex as usize], tph);
     }
 
     #[test]

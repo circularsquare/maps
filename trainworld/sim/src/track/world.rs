@@ -151,12 +151,15 @@ impl TrackWorld {
         let most = self.svc.cap.line_limits(&self.net);
         for l in 0..self.net.line_count() {
             let (Some(auto), Some(old)) = (self.net.line_auto[l], self.net.line_trains[l]) else { continue };
-            if !self.net.line_ok(l as u32) || !self.svc.lines[l].ok || self.switching == Some(l as u32) { continue; }
+            if !self.net.line_ok(l as u32) || !self.svc.lines[l].ok { continue; }
+            // T-752: a switch to headways keeps the trains the line has; T-849: a level with none
+            // takes its headway's count, or a new line switched straight to headways never runs
+            let switching = self.switching == Some(l as u32);
             let trip = self.svc.lines[l].round_trip;
             // a loop's two directions each keep the headway with half its trains (T-798)
             let each = if self.svc.lines[l].is_loop() { 2 } else { 1 };
             let mut counts = old;
-            for lev in 0..LEVELS {
+            for lev in (0..LEVELS).filter(|&lev| !switching || old[lev] == 0) {
                 let t = trip[lev] / each as f64;
                 let want = each * clamp_auto(auto_trains(t, auto[lev]), t, auto[lev], most[l][lev].0);
                 if want < old[lev] || !last { counts[lev] = want; }

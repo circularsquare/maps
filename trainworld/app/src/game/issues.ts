@@ -41,6 +41,7 @@ const TEXT: Record<string, string | (() => string)> = {
   Crossover: "A crossover keeps its shape.",
   Alongside: "This track has a pair beside it already.",
   HighSpeed: "High-speed track cannot be doubled up to quad.",
+  NothingToConstruct: "Everything here is constructed already.",
   NoParallel: () => `A crossover needs other track alongside within ${length(15)}, with ${length(60)} of plain track each way.`,
 };
 

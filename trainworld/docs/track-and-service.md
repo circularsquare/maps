@@ -465,7 +465,9 @@ partway (when the line does) and waiting at busy track, and names the places it 
   settled (T-752). A count that grows buys cars as any fleet growth does (6.4), and the
   edit that grows it is refused with nothing changed if the cash is short. A hand-set count ends
   the headways; switching to headways starts from the headway the current trains give. Switching
-  either way buys and sells no train: that edit keeps the line's counts as they stand (T-752). Saved in a
+  either way buys and sells no train: that edit keeps the line's counts as they stand (T-752),
+  except at a level with no trains, which takes its headway's count (T-849: a new line set
+  straight to headways runs). Saved in a
   trailing `LAU1` block of the track save (line index and three headways, only when a line has
   them); a save without it loads every line by hand.
 - **Departures** (`Service::run_deps`): per period of the line's local time (T-309: its first
@@ -547,7 +549,9 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   there: all of it, what one line still lacks (the line panel shows its price), one stretch of
   track, or one station. Only constructed track carries trains. Lines can be planned over
   blueprint track: they show their stop times, and run (load capacity, have trains, count for
-  demand) once every edge and stop they use is constructed. A junction is paid when its third
+  demand) once every edge and stop they use is constructed, so a line drawn over constructed
+  track runs as soon as it has trains; Construct with nothing left to build is refused with the
+  issue `NothingToConstruct` (T-849). A junction is paid when its third
   edge is constructed, a flat crossing when its second is.
   An unused blueprint extension leaves a constructed line's endpoint stopping position, run
   time and capacity unchanged. Planned lines preview the full planned station geometry (T-108).
@@ -735,11 +739,15 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   account holds the departures actually drawn around the change: a train that has not entered
   service carries nobody, and trains that left before the change keep their loads. When a
   line's trains start within that day (a change from a pattern with no trains: a new line, or
-  trains set on one that had none; T-680, `RunAccount::open`), its platforms are empty at that
-  moment and riders arrive from then at the arrival rate; nobody who would have arrived earlier
-  waits for it (they went another way). The hour's crowds, "today" and the riders arriving in
-  the hour start there too: departures earlier by time of day are the account's day wrapping
-  round, not trains that ran. Nothing is saved: it follows from the service and the riders. Each line's inputs are hashed, so an edit
+  trains set on one that had none; T-680, `RunAccount::open`), its platforms start empty and
+  riders arrive at the arrival rate, each stop from one headway before the first train to reach
+  it (T-848, `RunAccount::stop_open`): trains enter only at the ends, so a stop along a long line
+  sees its first train up to a run after the opening, and its riders come for that train as on
+  any day. Nobody who would have arrived earlier waits (they went another way). The hour's crowds,
+  "today" and the riders arriving in the hour start there too: departures earlier by time of day
+  are the account's day wrapping round, not trains that ran. So the opening day's account counts
+  fewer trains (none in the hours before the opening) but no rider waits for a train that could
+  not yet be there. Nothing is saved: it follows from the service and the riders. Each line's inputs are hashed, so an edit
   works out again only the lines it changed; new riders redo every line, a few lines at a time
   between the clock worker's other messages (3 a step).
 - **Each game hour** the worker sends, with the hour's trips, each trip's riders per stop-to-stop

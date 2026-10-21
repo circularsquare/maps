@@ -224,6 +224,9 @@ pub struct RunAccount {
     /// its platforms are empty then. Departures by time of day before it are the day wrapping
     /// round, not trains that ran. `NEG_INFINITY` otherwise.
     pub open: f64,
+    /// Per stop, when its platform starts filling on the day the line opens (T-848): one headway
+    /// before the first train to reach it, never before `open`. `NEG_INFINITY` otherwise.
+    pub stop_open: Vec<f64>,
     /// Per period and stop (`p * n + k`), the km a boarder there rides on this line (`ride_km`).
     pub ride_km: Vec<f64>,
 }
@@ -533,7 +536,8 @@ impl Boarding {
                         events.push(ra.q_after[i * ra.n + k]);
                     }
                     // T-680: empty when the line's trains started, and no train before then
-                    let open = ra.open - epoch;
+                    let open_k = ra.stop_open.get(k).copied().unwrap_or(ra.open);
+                    let open = open_k - epoch;
                     if (events[start * 2] as f64) < open {
                         let after = (start..events.len() / 2).find(|&e| events[e * 2] as f64 >= open).unwrap_or(events.len() / 2);
                         events.splice(start * 2..after * 2, [open as f32, 0.0]);
@@ -555,7 +559,7 @@ impl Boarding {
                         (arr.rate(mid) * (1.0 - carried)) as f32,
                         ra.left_h[k * 24 + hour],
                         ra.wait_h[k * 24 + hour],
-                        (arr.cum(epoch + 3600.0) - arr.cum(epoch.max(ra.open).min(epoch + 3600.0))) as f32,
+                        (arr.cum(epoch + 3600.0) - arr.cum(epoch.max(open_k).min(epoch + 3600.0))) as f32,
                         start as f32,
                         (events.len() / 2 - start) as f32,
                         p0 as f32,
@@ -906,8 +910,11 @@ impl Boarding {
             }
             // T-680: nothing ran before the line's trains started
             let open = ra.open - day0;
-            let from = if open > from { open - 1e-6 } else { from };
+            let line_from = if open > from { open - 1e-6 } else { from };
             for k in 0..n {
+                // T-848: a stop along the line opens with its first train
+                let open = ra.stop_open.get(k).map_or(open, |o| o - day0);
+                let from = if open > from { open - 1e-6 } else { from };
                 let arr = &ra.arrivals[k];
                 let ts = &ra.order_t[k * m..(k + 1) * m];
                 let ord = &ra.order[k * m..(k + 1) * m];
@@ -942,6 +949,7 @@ impl Boarding {
                 for k in 0..n {
                     let o = ra.stop_dep[ra.levels[j] as usize].get(k).copied().unwrap_or(0.0);
                     let s = (ra.deps[j] + o).rem_euclid(DAY);
+                    let from = ra.stop_open.get(k).map_or(line_from, |o| if o - day0 > line_from { o - day0 - 1e-6 } else { line_from });
                     if s > to || s <= from {
                         continue;
                     }
@@ -1151,6 +1159,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         alighted: 0.0,
         leftover: 0.0,
         open,
+        stop_open: vec![f64::NEG_INFINITY; n],
         ride_km,
     };
     let mut carry = vec![0.0f64; m];
@@ -1158,6 +1167,13 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
     let mut hist: Vec<(f64, f64)> = Vec::with_capacity(m);
     for k in 0..n {
         order.sort_by(|&a, &b| time(a, k).total_cmp(&time(b, k)));
+        // T-848: trains enter at the ends, so a stop along a long line sees its first an hour or
+        // more after the opening; its riders come for that train as they would on any day
+        let open = match order.get(order.partition_point(|&i| time(i, k) < open)) {
+            Some(&i) if open.is_finite() => (time(i, k) - trips[i].hw).max(open),
+            _ => open,
+        };
+        acc.stop_open[k] = open;
         let arrs = &arrivals[k];
         let carried = |t: f64| if k > 0 { 0.0 } else { carry_in[..carry_in.partition_point(|x| x.0 <= t)].last().map_or(0.0, |x| x.1) };
         let arr = Cum(&|t| arrs.cum(t) + carried(t));
@@ -1962,5 +1978,60 @@ mod tests {
         let today = b.today(&w.svc, now + 1800.0);
         assert!(today[3] <= 2.0 * 3000.0 * 0.5 + 1.0, "{} riders today", today[3]);
         assert!(today[3] > 0.0);
+    }
+
+    #[test]
+    fn a_long_lines_opening_day_runs_as_full_as_the_next() {
+        // T-848: 11 stops 10 km apart, opened at 07:20; each stop's riders ride one stop, half a
+        // train's room a train at 4 an hour, so on a steady day nobody is left behind
+        let mut w = world();
+        let n = 11;
+        let s: Vec<u32> = (0..n).map(|i| node(&mut w, i as f64 * 10_000.0, 0.0, 0)).collect();
+        for i in 1..n {
+            edge(&mut w, s[i - 1], s[i], &[], 0).unwrap();
+        }
+        for &x in &s {
+            station(&mut w, x, 200);
+        }
+        let l = line(&mut w, &s, [0.0, 0.0, 0.0]);
+        let rate = 0.5 * 4.0 * (CRUSH_PER_CAR * w.svc.lines[l as usize].cars.max(1) as f64) as f32;
+        let mut v = vec![1.0; PERIODS];
+        v.extend([l as f32, n as f32]);
+        for p in 0..PERIODS {
+            let x = rate * (PERIOD_HOURS[p].1 - PERIOD_HOURS[p].0) as f32;
+            let board: Vec<f32> = (0..2 * n).map(|k| if k % n + 1 < n { x } else { 0.0 }).collect();
+            let alight: Vec<f32> = (0..2 * n).map(|k| if k % n > 0 { x } else { 0.0 }).collect();
+            v.extend(board);
+            v.extend(alight);
+        }
+        let mut b = Boarding::default();
+        b.set_riders(&v);
+        let now = 2.0 * DAY + 7.0 * 3600.0 + 1200.0;
+        let before = w.svc.before_edit(&w.net, now);
+        w.apply(crate::track::world::Op::Schedule { id: l, tph: [4.0, 4.0, 4.0] }).unwrap();
+        w.svc.note_changes(&w.net, &before, now);
+        b.ensure(&w.net, &w.svc);
+        let opening = b.line_periods(&w.svc, l as usize, 0);
+        // the stop before the far end opens with its first train, about 50 minutes on
+        let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
+        assert!(ra.stop_open[n - 2] > now + 2400.0 && ra.stop_open[n - 2] - ra.stop_open[0] > 2400.0, "{:?}", ra.stop_open);
+        let today = b.today(&w.svc, now + 2.0 * 3600.0);
+        let later = now + DAY + 3600.0;
+        w.svc.prune_eras(&w.net, later);
+        b.ensure(&w.net, &w.svc);
+        let steady = b.line_periods(&w.svc, l as usize, 0);
+        let row = |v: &[f64], p: usize| v[p * PERIOD_STRIDE..p * PERIOD_STRIDE + 5].to_vec();
+        for p in 0..PERIODS {
+            let (o, s) = (row(&opening, p), row(&steady, p));
+            assert!(s[3] < 1.0, "steady period {p}: {s:?}");
+            assert!(o[3] < 1.0 && o[4] < 60.0, "opening period {p} leaves riders behind: {o:?}");
+            // the same riders; the opening day has no trains in the hours before 07:20
+            assert_eq!(o[2], s[2]);
+            assert!(o[0] <= s[0]);
+        }
+        assert!(row(&opening, 0)[0] < row(&steady, 0)[0]);
+        // the first two hours: no one left behind, and riders counted only from each stop's opening
+        assert!(today[5] < 1.0, "{} left behind", today[5]);
+        assert!(today[3] > 0.0 && today[3] < 2.0 * 3600.0 * rate as f64 * 2.0 * (n - 1) as f64 / 3600.0, "{} riders", today[3]);
     }
 }

@@ -253,6 +253,8 @@ pub enum Issue {
     Alongside { edge: u32 },
     /// Doubling up high-speed track, which has no quad form (T-817).
     HighSpeed { edge: u32 },
+    /// Construct with nothing left to construct (T-849).
+    NothingToConstruct,
 }
 
 /// What the raw setters touched since the last `take_touch`.
