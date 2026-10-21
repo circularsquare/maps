@@ -108,9 +108,7 @@ Anita's playtest of 2026-10-19 (the 9e466a4 build): notes/playtest-2026-10-19.md
 - T-793 [P2] The loading bar's last 5% takes most of the wait (Anita 2026-10-21): time the stages behind the bar on a new game and the real save, and weight the bar by time so it moves evenly. Open.
 - T-795 [P2] Finer local trip bubbles (Anita 2026-10-21: "split a bit more, and add a dial"): one H3 level finer per zoom band, and a Settings control for the level. Open.
 - T-804 [P2] Other colour schemes for the main demand bubbles (Anita 2026-10-21): a Settings choice besides the mode mix, such as pink to green by transit share or two colour pickers for 0% and 100% transit use, so several can be tried. Open.
-- T-799 [P2] Zone outlines lighter (Anita 2026-10-21): where two zones' outlines meet the shared edge draws twice, twice as heavy; draw it once or lighter. Open.
 - T-800 [P2] Zone outlines always there (Anita 2026-10-21): on a first pan over a region most outlines are missing; load a coarse outline of every zone at start and refine on pan and zoom. Open.
-- T-796 [P2] Base map colours (Anita 2026-10-21): water lighter in the dark theme, land a little less beige in the light one. Small; see T-676's palette. Open.
 - T-803 [P3] More station faces (Anita 2026-10-21): some by time of day and a few rare ones. Open.
 - T-719 [P2] Covering whole regions (all of Spain, as Japan) rather than lone metros, timings and speedups: note written 2026-10-19, waits on Anita's decisions (its last section); notes/T-719.md.
 - T-771 [P3] A Spain module (T-719 item 6, later tailoring): the transport ministry's mobile-phone trip tables (a curve per zone, jobs at work) and INE's 1 km census grid; would rebuild mad bar val sev mal and the 40 zones. Open; notes/T-719.md.

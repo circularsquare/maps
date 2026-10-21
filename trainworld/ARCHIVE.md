@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-799 [P2] Zone outlines lighter. Done 2026-10-21: each shared edge drawn once (`OutlineEdges`, boundaryGeometry.ts), 0.7 px at 0.36 opacity; the focused zone's borders left to its focus lines. First agent worktree landed.
+- T-796 [P2] Base map colours. Done 2026-10-21: light land #f3eee5 (was #f4ecdd), dark water #274042 (was #1e3032), in shadeTable.ts.
 - T-805 [P2] Prices against cheap-country metros. Done 2026-10-21: track base $90M a km and stations doubled back (T-467 undone), running cost $3 a car-km, start $6B; sim tests updated.
 - T-801 [P2] Undo the grey city bubbles. Done 2026-10-21: every zone loads on pan with its ordinary bubbles; market packs open only for reached, near-station or selected zones (Northeast pan: solving workers 8 MB, not 311); a map start turns Homes on. notes/T-801.md.
 - T-778 [P3] t728-newgame's opened-list expectation. Done 2026-10-21 with T-801: the start zone first, reached zones after.
