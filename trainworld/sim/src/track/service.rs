@@ -135,17 +135,24 @@ fn time_reaching(ph: &[profile::Phase], dur: f64, s: f64) -> f64 {
 /// A line's departure pattern (T-206): trains an hour per demand level, and where run 1's
 /// departures sit after each period's start (a whole-line fleet's reverse trips follow the forward
 /// ones round the circuit; 0 otherwise), and `shift`, the line's local time ahead of the game
-/// clock (T-309): its periods start on its own region's hours.
+/// clock (T-309): its periods start on its own region's hours. `lead`: seconds every period's
+/// departures leave the ends before its start, so a train belongs to the period in force when it
+/// reaches the line's middle (T-835); one figure for both runs keeps a whole-line fleet aligned.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Lattice {
     pub tph: [f32; LEVELS],
     pub off: [f64; LEVELS],
+    pub lead: f64,
     pub shift: f64,
 }
 
 impl Lattice {
-    pub const NONE: Lattice = Lattice { tph: [0.0; LEVELS], off: [0.0; LEVELS], shift: 0.0 };
+    pub const NONE: Lattice = Lattice { tph: [0.0; LEVELS], off: [0.0; LEVELS], lead: 0.0, shift: 0.0 };
 }
+
+/// The most a period's departures lead its start (a run over four hours): half the shortest period,
+/// so the periods stay in order.
+const LEAD_MAX_S: f64 = 2.0 * 3600.0;
 
 /// The pattern a line ran before a change at `until` (T-206): departures before `until` keep it,
 /// so trains already running keep their places; later departures follow the next pattern.
@@ -188,7 +195,11 @@ fn period_points(lat: &Lattice, r: usize, day: i64, p: usize) -> Option<(f64, f6
     }
     let hw = 3600.0 / tph;
     let (h0, h1) = PERIOD_HOURS[p];
-    let (start, end) = (day as f64 * DAY_S + h0 * 3600.0, day as f64 * DAY_S + h1 * 3600.0);
+    // a period followed by no service runs to its own end, so a line's last trains of the evening
+    // or of a peak are not pulled early (T-835)
+    let next = PERIOD_HOURS.iter().position(|&(a, _)| a == h1 % 24.0).map_or(0.0, |q| lat.tph[PERIOD_LEVEL[q]]);
+    let end_lead = if next > 0.0 { lat.lead } else { 0.0 };
+    let (start, end) = (day as f64 * DAY_S + h0 * 3600.0 - lat.lead, day as f64 * DAY_S + h1 * 3600.0 - end_lead);
     let ps = start + if r == 1 { lat.off[lev] } else { 0.0 };
     // the points ps + k hw before the period's end
     let mut n = ((end - ps) / hw).ceil() as i64;
@@ -225,9 +236,9 @@ fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8,
 }
 
 /// One run's departures from a pattern in `[a, b)` of the line's local time, with level and
-/// headway: per period, `start + off + k * headway`, leaving out any closer than half a headway
-/// after the period before's last (MIN_GAP_SHARE). A pure function of the pattern, so every window
-/// agrees.
+/// headway: per period, `start - lead + off + k * headway`, leaving out any closer than half a
+/// headway after the period before's last (MIN_GAP_SHARE). A pure function of the pattern, so every
+/// window agrees.
 fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8, f64)>) {
     if !(b > a) {
         return;
@@ -243,7 +254,8 @@ fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f6
             break;
         }
     }
-    for day in d0..=d1 {
+    // the next day's first periods start `lead` before it
+    for day in d0..=d1 + 1 {
         for &p in &order {
             let Some((ps, hw, n)) = period_points(lat, r, day, p) else { continue };
             let mut k0 = 0i64;
@@ -587,7 +599,8 @@ impl Service {
             let t = tph[lev] as f64;
             if net.line_trains[l].is_some() && t > 0.0 { ls.trip_len(net, l as u32, 0, lev) % (3600.0 / t) } else { 0.0 }
         });
-        Some(Lattice { tph, off, shift: ls.shift })
+        let lead = (0.25 * (ls.runs[0].prof[1].duration + ls.runs[1].prof[1].duration)).clamp(0.0, LEAD_MAX_S);
+        Some(Lattice { tph, off, lead, shift: ls.shift })
     }
 
     /// Every line's local time again, after the time zone table changed (T-309).

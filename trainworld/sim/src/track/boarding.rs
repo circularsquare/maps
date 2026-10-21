@@ -335,6 +335,7 @@ impl Boarding {
                 h.f(e.lat.tph[lev] as f64);
                 h.f(e.lat.off[lev]);
             }
+            h.f(e.lat.lead);
             h.f(e.lat.shift);
         }
         for r in 0..2 {
@@ -1472,7 +1473,8 @@ mod tests {
         // service periods: the morning peak's ten an hour start at 06:00 local, 01:00 game time
         let day = 3.0 * DAY;
         let levels = |l: u32, h: f64| -> Vec<u8> {
-            let mut v: Vec<u8> = w.svc.trips(&w.net, day + h * 3600.0, day + (h + 1.0) * 3600.0).iter().filter(|t| t.line == l && t.draw >= day + h * 3600.0).map(|t| t.level).collect();
+            // the hour's last 10 minutes left out: the next period leaves half a run early (T-835)
+            let mut v: Vec<u8> = w.svc.trips(&w.net, day + h * 3600.0, day + (h + 1.0) * 3600.0).iter().filter(|t| t.line == l && t.draw >= day + h * 3600.0 && t.draw < day + (h + 1.0) * 3600.0 - 600.0).map(|t| t.level).collect();
             v.dedup();
             v
         };

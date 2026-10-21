@@ -931,3 +931,98 @@ fn reversing_lines_save_round_trip() {
     }
     let _ = (j, &mut w);
 }
+
+// ---- T-835: a departure belongs to the period in force when it reaches the line's middle
+
+/// Departures of one run in `[a, b)`, sorted.
+fn deps_of(w: &TrackWorld, id: u32, r: usize, a: f64, b: f64) -> Vec<super::service::Trip> {
+    let mut d = vec![];
+    w.svc.run_deps(&w.net, id as usize, r, a, b, &mut d);
+    d.sort_by(|x, y| x.dep.total_cmp(&y.dep));
+    d
+}
+
+/// Departures a day the periods ask for: trains an hour times each period's hours, per run.
+fn day_count(tph: [f32; 3]) -> f64 {
+    PERIOD_HOURS.iter().zip(PERIOD_LEVEL).map(|(&(a, b), lev)| tph[lev] as f64 * (b - a)).sum()
+}
+
+#[test]
+fn the_middle_of_a_long_line_changes_period_on_time() {
+    let (mut w, ns) = corridor(31);
+    let id = line(&mut w, &ns, [12.0, 6.0, 3.0]);
+    let ls = &w.svc.lines[id as usize];
+    let lat = w.svc.lattice(&w.net, id as usize).unwrap();
+    let run = 0.5 * (ls.runs[0].prof[MEDIUM].duration + ls.runs[1].prof[MEDIUM].duration);
+    assert!(run > 1800.0, "a long line: {run} s");
+    assert!((lat.lead - run / 2.0).abs() < 1e-9);
+    let day = 2.0 * 86400.0;
+    let k = ns.len() / 2;
+    for r in 0..2 {
+        let deps = deps_of(&w, id, r, day - 86400.0, day + 2.0 * 86400.0);
+        // the busier pattern leaves each end half a run before 06:00
+        let first = deps.iter().find(|t| t.dep >= day + 3.0 * 3600.0 && t.level as usize == HIGH).unwrap();
+        assert!((first.dep - (day + 6.0 * 3600.0 - lat.lead)).abs() < 300.0 + 1e-6, "{first:?}");
+        // trains passing the middle stop: the period's headway from its start, at 06:00 and 16:00
+        let pass: Vec<(f64, usize)> = deps.iter().map(|t| (t.dep + ls.runs[r].prof[t.level as usize].dep[k], t.level as usize)).collect();
+        for (h0, h1) in [(6.0, 10.0), (16.0, 20.0)] {
+            let (s, e) = (day + h0 * 3600.0, day + h1 * 3600.0);
+            let hw = 3600.0 / 12.0;
+            let mut times: Vec<f64> = pass.iter().filter(|p| p.0 >= s - hw && p.0 < e).map(|p| p.0).collect();
+            times.sort_by(f64::total_cmp);
+            assert!(times.iter().any(|&t| t >= s && t <= s + hw + 60.0), "run {r}: no train at the middle within a headway of {h0}:00");
+            for g in times.windows(2).filter(|g| g[1] >= s) {
+                assert!(g[1] - g[0] <= hw + 60.0, "run {r}: a gap of {} s at the middle after {h0}:00", g[1] - g[0]);
+            }
+            // and the trains passing then are the peak's
+            assert!(pass.iter().filter(|p| p.0 >= s + 60.0 && p.0 < e - 60.0).all(|p| p.1 == HIGH), "run {r}: a quieter train mid-peak at the middle");
+        }
+        // a day's departures are the periods' counts, as before: the same car-km
+        let n = deps.iter().filter(|t| t.dep >= day && t.dep < day + 86400.0).count() as f64;
+        assert!((n - day_count(w.net.line_tph[id as usize])).abs() <= 1.0, "run {r}: {n} departures a day");
+    }
+}
+
+#[test]
+fn sparse_and_reversing_lines_lead_too() {
+    // two trains a period on a long line with no night service, and a line reversing at a mid stop
+    let (mut w, ns) = corridor(31);
+    let sparse = line(&mut w, &ns, [0.5, 0.25, 0.0]);
+    let (mut v, [_, t, _, m, br]) = reversal_fixture();
+    let rev = line(&mut v, &[br, t, m], [6.0, 3.0, 0.0]);
+    let day = 2.0 * 86400.0;
+    for (w, id) in [(&w, sparse), (&v, rev)] {
+        let lat = w.svc.lattice(&w.net, id as usize).unwrap();
+        assert!(lat.lead > 0.0);
+        let tph = w.net.line_tph[id as usize];
+        for r in 0..2 {
+            let deps = deps_of(w, id, r, day - 86400.0, day + 2.0 * 86400.0);
+            let today: Vec<_> = deps.iter().filter(|t| t.dep >= day && t.dep < day + 86400.0).collect();
+            // a whole number of departures a period, from its first; a period followed by no service
+            // runs to its own end, so it gains the lead
+            let want: f64 = PERIOD_HOURS.iter().zip(PERIOD_LEVEL).map(|(&(a, b), lev)| {
+                let q = PERIOD_HOURS.iter().position(|&(s, _)| s == b % 24.0).unwrap();
+                let len = (b - a) * 3600.0 + if tph[PERIOD_LEVEL[q]] <= 0.0 { lat.lead } else { 0.0 };
+                (len * tph[lev] as f64 / 3600.0 - 1e-9).ceil().max(0.0)
+            }).sum();
+            assert!((today.len() as f64 - want).abs() <= 1.0, "line {id} run {r}: {} departures, want {want}", today.len());
+            // the day's first train leaves half a run before 06:00; the evening runs to midnight
+            assert!((today[0].dep - (day + 6.0 * 3600.0 - lat.lead)).abs() < 1.0, "line {id} run {r}: {:?}", today[0]);
+            let last = today.last().unwrap();
+            let hw = 3600.0 / tph[MEDIUM] as f64;
+            assert!(last.dep > day + 86400.0 - hw - 1.0 && last.dep < day + 86400.0, "line {id} run {r}: {last:?}");
+            for p in deps.windows(2) {
+                assert!(p[1].dep - p[0].dep >= 0.5 * p[1].hw - 1e-6, "line {id} run {r}: {:?} then {:?}", p[0], p[1]);
+            }
+        }
+        // every window draws the same trips
+        let t0 = day + 6.0 * 3600.0 - lat.lead;
+        let a = w.svc.trips(&w.net, t0 - 1800.0, t0 + 1800.0);
+        let b = w.svc.trips(&w.net, t0, t0 + 3600.0);
+        for x in a.iter().filter(|x| x.line == id) {
+            if let Some(y) = b.iter().find(|y| y.line == id && y.run == x.run && y.dep == x.dep) {
+                assert_eq!((x.end, x.next), (y.end, y.next));
+            }
+        }
+    }
+}

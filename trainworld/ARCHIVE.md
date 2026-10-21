@@ -1,5 +1,9 @@
 ﻿# Archive
 
+- T-835 [P2] Period-start frequency on long lines. Done 2026-10-21: every period leaves the ends half a run early, so the middle changes on time (frequent lines' 06h wait 4.21 to 3.29 min); a period before no service runs to its end. notes/T-835.md.
+
+- T-834 [P2] A station on open ground in two clicks. Done 2026-10-21: the middle, then the direction; R key and nearest-station aim gone.
+- T-815, T-829 [P2] Select tool picks. Done 2026-10-21: box or Shift+click picks blueprint or (with none) constructed pieces; several re-levelled at once with their joints, or removed at once; one undo for blueprint.
 - T-840 [P2] t488 timed out on the clock hold. Done 2026-10-21: the hold was right (it ends with the save's final); the check took the blank game's final view for it and now waits for the hold. A game loaded during another's load restarts the bar (was stuck at 99% for 49 s). notes/T-840.md.
 - T-839 [P2] Show what a snap can reach. Done 2026-10-21: after the first snap click the real track a route could reach is lit, the rest dimmed (10-25 ms to work out, under 100 ms to draw); T-816's detour limit dropped. notes/T-839.md.
 - T-838 [P2] Snapped routes prefer high-speed track. Done 2026-10-21: high-speed chains cost 0.8 of their length in the search; London-Paris 493 km by Lille and the LGV, not 451 km by Amiens. notes/T-839.md.

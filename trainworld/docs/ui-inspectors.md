@@ -113,8 +113,9 @@ purpose filter the purpose drawn is ringed in the bar.
   line goes through (`refusedForCash` in `game/world.ts`) [T-625]; hovering High, Medium or Low gives that
   level's times of day in the line's local time, from the period table in `game/periods.ts`:
   "High demand: 06:00 to 10:00, 16:00 to 20:00"; weekends use the same hours) [T-406], then
-  "Sets how many trains start service in this interval. Trains keep running after it ends and are
-  taken out of service at the end of the line." (the steppers have no such hover) [T-823]; on a
+  "Sets how many trains run in this interval. On a long line, trains leave the ends early so the
+  middle changes on time. Trains keep running after it ends and are taken out of service at the end
+  of the line." (the steppers have no such hover) [T-823, T-835]; on a
   running line one dot before each level's name grades the level on today's kind of day by the
   average wait for a train with room, each rider counted by the fare they pay as in Trains to add
   (the level's periods averaged by those fares; High is its two peaks) [T-818], its colour running smoothly with that wait in minutes: green to 2, yellow at 3, orange

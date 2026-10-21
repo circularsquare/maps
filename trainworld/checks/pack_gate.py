@@ -790,7 +790,12 @@ def browser_check(city, header, a, f, reg, out_dir):
     pair = water_pair(header, f, reg) if f.get("mask") is not None else None
     if pair is None:
         return {"pass": False, "error": "no water run near the centre for the water pair"}
-    row = {"task": "T-538", "name": reg["name"], "centre": reg["center"], "water": pair, "lineName": "Gate test",
+    names = os.path.join(ROOT, "app", "src", "game", "zone-names.json")  # the name the game shows (T-825)
+    shown = reg["name"]
+    if os.path.exists(names):
+        with open(names, encoding="utf-8") as fh:
+            shown = (json.load(fh).get(city) or {}).get("name") or shown
+    row = {"task": "T-538", "name": shown, "centre": reg["center"], "water": pair, "lineName": "Gate test",
            "colour": "#2a7ab0", "view": reg["center"], "line": line, "purposes": required}
     rp = os.path.join(out_dir, f"{city}.row.json")
     with open(rp, "w", encoding="utf-8") as fh:

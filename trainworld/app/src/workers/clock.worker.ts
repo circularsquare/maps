@@ -75,7 +75,20 @@ const peakC: number[][] = DAY_KINDS.map(() => PERIODS.map(() => 0));
 let moneyLag = 0;
 const fareHour = (per: number[][] | undefined, tl: number) => lagged(table(per), peakC, tl, moneyLag);
 const rideHour = (per: number[][] | undefined, tl: number) => between(table(per), peakC, tl, tl + 3600);
-const costHour = (run: number[], tl: number) => lagged(((_k, p) => run[LEVEL_OF[PERIODS[p].demand]]) as PerHour, null, tl, moneyLag);
+// T-835: trains run from half a run before their period to half a run into it; `tail`, the cost a
+// day a period adds by running to its own end before no service (`runTail`), spread over it
+const costHour = (run: number[], tl: number, tail?: number[]) => lagged(((_k, p) => run[LEVEL_OF[PERIODS[p].demand]] + (tail?.[p] ?? 0) / (PERIODS[p].to - PERIODS[p].from)) as PerHour, null, tl, moneyLag, moneyLag / 2);
+/** T-835 (service.rs `period_points`): a period followed by no service runs to its own end, not
+ * half a run before it, so its line runs that much longer a day at its level; `run` per hour by
+ * level, from `lines_info` entry `i`. Per period, US$M a day. */
+function runTail(li: ArrayLike<number>, i: number, run: number[]): number[] {
+  const lead = Math.min(7200, Math.max(0, (li[i + 11] - 2 * li[i + 20]) / 4));
+  return PERIODS.map((p, k) => {
+    const next = PERIODS.findIndex((q) => q.from === p.to % 24);
+    const nextTph = next >= 0 ? li[i + 5 + LEVEL_OF[PERIODS[next].demand]] : 0;
+    return nextTph > 0 ? 0 : (run[LEVEL_OF[PERIODS[k].demand]] * lead) / 3600;
+  });
+}
 /** T-531: each region's ledgers, kept as the network's (a zone id; "" outside every zone or not yet
  * placed, so the regions add up to the network) */
 let regions = new Map<string, { days: DayLedger[]; hours: HourLedger[] }>();
@@ -595,11 +608,12 @@ function regionNow(): RegionNow {
  * running cost per game hour at each demand level (as `running_cost`), with its local time. */
 function regionLines() {
   const a = api!, li = a.lines_info(), unit = moneyParams[2] / 1e6;
-  const costs: { shift: number; run: number[]; shares: [string, number][] }[] = [];
+  const costs: { shift: number; run: number[]; tail: number[]; shares: [string, number][] }[] = [];
   for (let i = 0; i < li.length; i += 22) {
     if (li[i + 3] !== 1) continue;
     const id = li[i], km = li[i + 9] / 1000, cars = li[i + 21] || li[i + 8];
-    costs.push({ shift: a.line_shift(id), run: [0, 1, 2].map((l) => li[i + 5 + l] * 2 * km * (moneyParams[3] + moneyParams[1] * cars) * unit), shares: lineShares.get(id)?.run ?? [] });
+    const run = [0, 1, 2].map((l) => li[i + 5 + l] * 2 * km * (moneyParams[3] + moneyParams[1] * cars) * unit);
+    costs.push({ shift: a.line_shift(id), run, tail: runTail(li, i, run), shares: lineShares.get(id)?.run ?? [] });
   }
   const fares = [...lineIncome].map(([id, per]) => ({ shift: a.line_shift(id), per, shares: lineShares.get(id)?.fare ?? [] }));
   const rides = [...lineRides].map(([id, per]) => ({ shift: a.line_shift(id), per, shares: lineShares.get(id)?.ride ?? [] }));
@@ -620,7 +634,7 @@ function regionHour(t: number, rl: ReturnType<typeof regionLines>): Map<string, 
   };
   for (const f of rl.fares) spread(f.shares, fareHour(f.per, t + f.shift), 0);
   for (const f of rl.rides) spread(f.shares, rideHour(f.per, t + f.shift), 2);
-  for (const c of rl.costs) spread(c.shares, costHour(c.run, t + c.shift), 1);
+  for (const c of rl.costs) spread(c.shares, costHour(c.run, t + c.shift, c.tail), 1);
   return out;
 }
 
@@ -667,7 +681,7 @@ function unsettleAfter(clockT: number): number {
   const last = hourLedger[hourLedger.length - 1];
   if (!last || last.hour <= H) return 0;
   const groups = localGroups();
-  const costAt = (h: number) => groups.reduce((s, g) => s + costHour(g.running, h * 3600 + g.shift), 0);
+  const costAt = (h: number) => groups.reduce((s, g) => s + costHour(g.running, h * 3600 + g.shift, g.tail), 0);
   const replay = (from: number, to: number) => {
     let c = 0;
     for (let t = from; t < to;) {
@@ -747,10 +761,12 @@ function sendCash() {
 /** T-309: the running lines grouped by the local time they run on, each group's running cost per
  * demand level and its fare income per kind of day and period. With one local time (every game in
  * the Northeast and Toronto) the network's totals, as before. */
-function localGroups(): { shift: number; running: number[]; income: number[][]; rides: number[][] }[] {
+function localGroups(): { shift: number; running: number[]; tail: number[]; income: number[][]; rides: number[][] }[] {
   const a = api!;
   const shifts = [...a.running_shifts()];
-  if (shifts.length <= 1) return [{ shift: shifts[0] ?? 0, running: [0, 1, 2].map((l) => a.running_cost(l)), income: incomePerHour, rides: ridesPerHour }];
+  const costs = regionLines().costs;
+  const tail = (s: number | null) => PERIODS.map((_, p) => costs.reduce((t, c) => t + (s === null || c.shift === s ? c.tail[p] : 0), 0));
+  if (shifts.length <= 1) return [{ shift: shifts[0] ?? 0, running: [0, 1, 2].map((l) => a.running_cost(l)), tail: tail(null), income: incomePerHour, rides: ridesPerHour }];
   return shifts.map((s) => {
     const sum = (zero: number[][], by: Map<number, number[][]>) => {
       const out = zero.map((p) => p.map(() => 0));
@@ -760,7 +776,7 @@ function localGroups(): { shift: number; running: number[]; income: number[][]; 
       }
       return out;
     };
-    return { shift: s, running: [0, 1, 2].map((l) => a.running_cost_in(l, s)), income: sum(incomePerHour, lineIncome), rides: sum(ridesPerHour, lineRides) };
+    return { shift: s, running: [0, 1, 2].map((l) => a.running_cost_in(l, s)), tail: tail(s), income: sum(incomePerHour, lineIncome), rides: sum(ridesPerHour, lineRides) };
   });
 }
 
@@ -791,7 +807,7 @@ function settle(): boolean {
       const tl = t + g.shift;
       fare += fareHour(g.income, tl);
       rides += rideHour(g.rides, tl);
-      cost += costHour(g.running, tl);
+      cost += costHour(g.running, tl, g.tail);
     }
     const wf = full ? 1 : shareAt(h, end - t), wc = full ? 1 : (end - t) / 3600;
     const df = Math.max(0, wf - partFare), dc = Math.max(0, wc - partCost);

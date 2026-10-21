@@ -1,6 +1,8 @@
 // T-835: how the frequency each stop sees across a change of period compares with what demand
 // assumes, on the real New York save with demand's own riders (riders.f32 from capture.mjs).
 //   node analyse.mjs <riders.f32> <out.json>     (cwd: the maps root)
+// Option `drawn` is the game's own departures (the rule as built); `builtMismatch` lists runs where
+// the JS copy of the built rule differs from them.
 import { readFile, writeFile } from 'node:fs/promises';
 import { gunzipSync } from 'node:zlib';
 
@@ -82,7 +84,8 @@ function alightShares(lr, r) {
 
 // ---- departures: the line's lattice with movable period starts (seconds into the day, per run)
 // starts: [[sec, period]] in day order. Mirrors service.rs lattice_deps_local.
-function lattice(tph, off, r, starts, d0, d1) {
+// tailLead: a period followed by no service ends that much later (T-835 as built)
+function lattice(tph, off, r, starts, d0, d1, tailLead = 0) {
   const out = [];
   let last = null;
   const pts = (day, i) => {
@@ -91,7 +94,9 @@ function lattice(tph, off, r, starts, d0, d1) {
     if (!(t > 0)) return null;
     const hw = H / t;
     const start = day * DAY + s;
-    const end = i + 1 < starts.length ? day * DAY + starts[i + 1][0] : (day + 1) * DAY + starts[0][0];
+    const nextP = starts[(i + 1) % starts.length][1];
+    const tail = tph[PERIOD_LEVEL[nextP]] > 0 ? 0 : tailLead;
+    const end = (i + 1 < starts.length ? day * DAY + starts[i + 1][0] : (day + 1) * DAY + starts[0][0]) + tail;
     const ps = start + (r === 1 ? off[lev] : 0);
     let n = Math.ceil((end - ps) / hw);
     while (n > 0 && ps + (n - 1) * hw >= end) n--;
@@ -200,7 +205,7 @@ for (const L of lines) {
   const off = [0, 1, 2].map((lev) => (L.tph[lev] > 0 ? tripLen(0, lev) % (H / L.tph[lev]) : 0));
   // check: whole-line fleet offset or none, against the drawn trips
   const runT = [0, 1].map((r) => stopT[r][1].at(-1)); // one-way run at medium, s
-  const mk = (r, shiftUp, shiftDown, offv) => {
+  const mk = (r, shiftUp, shiftDown, offv, tailLead = 0) => {
     // shiftUp: seconds earlier for a period whose level runs more trains than the one before; shiftDown likewise
     const starts = BASE_STARTS.map(([s, p], i) => {
       const prev = BASE_STARTS[(i + 4) % 5][1];
@@ -209,7 +214,7 @@ for (const L of lines) {
     });
     // keep the first start at or after 0 by rotating (day boundary): shift the whole thing into [0, DAY)
     const norm = starts.map(([s, p]) => [((s % DAY) + DAY) % DAY, p]).sort((a, b) => a[0] - b[0]);
-    return lattice(L.tph, offv, r, norm, D - 1, D + 1);
+    return lattice(L.tph, offv, r, norm, D - 1, D + 1, tailLead);
   };
   // which offset does the game use?
   const base0 = [0, 1].map((r) => mk(r, 0, 0, off));
@@ -222,7 +227,20 @@ for (const L of lines) {
     const drawnN = [0, 1, 2].reduce((s, lev) => s + (byProf.get((L.id * 2 + r) * 3 + lev) ?? []).filter((x) => x >= D * DAY && x < (D + 1) * DAY).map((x) => Math.round(x)).filter((x, i, a) => a.indexOf(x) === i && a.indexOf(x - 1) < 0).length, 0);
     if (hit(base[r], r) !== nDay(base[r]) || drawnN !== nDay(base[r])) { mismatch++; mis.push([L.name, r, hit(base[r], r), nDay(base[r]), drawnN]); }
   }
+  // the game's own departures, whatever rule built them (before and after the change)
+  const drawnDeps = [0, 1].map((r) => {
+    const v = [];
+    for (let lev = 0; lev < 3; lev++) for (const dep of byProf.get((L.id * 2 + r) * 3 + lev) ?? []) v.push({ dep, lev, hw: L.tph[lev] > 0 ? H / L.tph[lev] : 0 });
+    v.sort((a, b) => a.dep - b.dep);
+    return v.filter((d, i) => i === 0 || d.dep - v[i - 1].dep > 0.5);
+  });
+  // T-835 as built: both runs' periods start half the mean one-way run early (medium level)
+  const lead = Math.min(2 * H, (runT[0] + runT[1]) / 4);
+  const builtOff = mk(1, lead, lead, off, lead), builtZ = mk(1, lead, lead, [0, 0, 0], lead);
+  const asBuilt = [mk(0, lead, lead, off, lead), hit(builtOff, 1) >= hit(builtZ, 1) ? builtOff : builtZ];
+  for (let r = 0; r < 2; r++) if (hit(asBuilt[r], r) !== nDay(asBuilt[r])) (out.builtMismatch ??= []).push([L.name, r, hit(asBuilt[r], r), nDay(asBuilt[r])]);
   const opts = {
+    drawn: drawnDeps,
     now: [0, 1].map((r) => base[r]),
     half: [0, 1].map((r) => mk(r, runT[r] / 2, runT[r] / 2, useOff)),
     upEarly: [0, 1].map((r) => mk(r, runT[r], 0, useOff)),
@@ -235,10 +253,10 @@ for (const L of lines) {
       const s = simulate(deps[r], stopDep[r], lr, r, L.cars, D);
       for (let h = 0; h < 24; h++) for (const f of ['left', 'arrived', 'wait1', 'waitX', 'arrA']) o[f][h] += s[f][h];
       for (const d of deps[r]) if (d.dep >= D * DAY + 3 * H && d.dep < (D + 1) * DAY + 3 * H) { o.carKm += L.cars * L.lenM / 1000; o.carKmH[Math.floor((d.dep % DAY) / H)] += L.cars * L.lenM / 1000; }
-      if (name === 'now') {
+      if (name === 'now' || name === 'drawn') {
         // a mid-line stop's trains per hour, both directions (stop nearest half the run)
         const k = stopT[r][1].reduce((b, t, j) => (Math.abs(t - runT[r] / 2) < Math.abs(stopT[r][1][b] - runT[r] / 2) ? j : b), 0);
-        (rec.mid ??= []).push({ r, k, tMin: stopT[r][1][k] / 60, trains: Array.from(s.trains[k]), arr: Array.from(s.arrK[k]).map(Math.round), left: Array.from(s.leftK[k]).map(Math.round) });
+        (rec[name === 'now' ? 'mid' : 'midDrawn'] ??= []).push({ r, k, tMin: stopT[r][1][k] / 60, trains: Array.from(s.trains[k]), arr: Array.from(s.arrK[k]).map(Math.round), left: Array.from(s.leftK[k]).map(Math.round) });
       }
     }
     rec.opt[name] = { arrA: Array.from(o.arrA), left: Array.from(o.left), arrived: Array.from(o.arrived), wait1: Array.from(o.wait1), waitX: Array.from(o.waitX), carKm: o.carKm, carKmH: Array.from(o.carKmH) };

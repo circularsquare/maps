@@ -63,12 +63,14 @@ export function between(per: PerHour, c: number[][] | null, u0: number, u1: numb
 const SAMPLES = 6;
 
 /** The local hour starting at `tl`'s amount of `per` when it lands up to `lag` seconds after it
- * starts (evenly over that window): a ride ends or a train runs on after it set out. */
-export function lagged(per: PerHour, c: number[][] | null, tl: number, lag: number): number {
-  if (!(lag > 0)) return between(per, c, tl, tl + 3600);
+ * starts (evenly over that window): a ride ends or a train runs on after it set out. `lead`: the
+ * amount set out that long before its period's time (a train leaves the ends half a run before
+ * the period it belongs to, T-835). */
+export function lagged(per: PerHour, c: number[][] | null, tl: number, lag: number, lead = 0): number {
+  if (!(lag > 0)) return between(per, c, tl + lead, tl + 3600 + lead);
   let sum = 0;
   for (let j = 0; j < SAMPLES; j++) {
-    const v = (lag * (j + 0.5)) / SAMPLES;
+    const v = (lag * (j + 0.5)) / SAMPLES - lead;
     sum += between(per, c, tl - v, tl + 3600 - v);
   }
   return sum / SAMPLES;

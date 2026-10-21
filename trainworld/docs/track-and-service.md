@@ -431,8 +431,14 @@ partway (when the line does) and waiting at busy track, and names the places it 
   them); a save without it loads every line by hand.
 - **Departures** (`Service::run_deps`): per period of the line's local time (T-309: its first
   stop's region's, `Lattice::shift`; a New York to Toronto line is on one offset, a London to
-  Paris line would run on London's), the first departure at the period's start and
-  then one a headway; a whole-line fleet's reverse departures are offset by the forward trip so
+  Paris line would run on London's), the first departure half a one-way run before the period's
+  start and then one a headway, until half a run before its end (T-835, `Lattice::lead`: the mean
+  of the two runs at medium, at most 2 hours). So a train belongs to the period in force when it
+  reaches the line's middle, which changes service on the hour; stops near the ends change up to
+  half a run early or late. A period followed by no service (the evening before a line's night
+  without trains, a peak before an empty midday) departs until its own end, so the line's last
+  trains are not pulled early; it runs half a run longer at its level. Trains still run end to end.
+  A whole-line fleet's reverse departures are offset by the forward trip so
   each train turns straight back. When the pattern changes (a new period, or an edit) a new
   departure closer than half a headway after the old pattern's last one is left out, so trains
   never leave a terminal in pairs.
@@ -545,8 +551,10 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   or valley, at the busiest-hour factor of that kind of day), counted when riders set out; its fares
   and points follow the same shape but land as the ride ends, spread over a trailing window as long
   as the network's typical one-way run (each running line's one-way run at medium, weighted by its
-  car-km; at most 2 hours); its running cost is the timetable's car-km spread over the same window,
-  as trains that left on one timetable keep running into the next period. So no period or day
+  car-km; at most 2 hours); its running cost is the timetable's car-km spread over the same window
+  moved half its length earlier, as trains leave half a run before their period (T-835) and keep
+  running into the next; a period followed by no service adds its line's half run at its level a
+  day, spread over the period (`runTail` in the clock worker). So no period or day
   change is a cliff, a ride late on Friday pays on Saturday, and any run of whole days with the same
   tables keeps its totals. **Within the hour**, its fares are paid as that hour's trains pick up
   riders (the boarding account's trains leaving platforms, 6.6, weighted by the riders each takes;
