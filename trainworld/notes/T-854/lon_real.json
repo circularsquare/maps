@@ -1,0 +1,826 @@
+{
+ "city": "lon",
+ "mode": "real",
+ "notes": [],
+ "errors": [],
+ "version": 2,
+ "round": 3,
+ "all": {
+  "trips": 163006504,
+  "rail": 7882898,
+  "split": {
+   "train": 4.835940808345293,
+   "walk": 12.172412070436641,
+   "drive": 82.99164712121807
+  }
+ },
+ "cities": {
+  "lon": {
+   "trips": 41380546,
+   "rail": 7838625,
+   "split": {
+    "train": 18.94277748127614,
+    "walk": 27.88921299984782,
+    "drive": 53.16800951887604
+   }
+  },
+  "por": {
+   "trips": 3833433,
+   "rail": 0,
+   "split": {
+    "train": 0,
+    "walk": 35.976846749614694,
+    "drive": 64.0231532503853
+   }
+  },
+  "cah": {
+   "trips": 2452270,
+   "rail": 1,
+   "split": {
+    "train": 0.000051632463595941105,
+    "walk": 38.467803717593796,
+    "drive": 61.53214464994261
+   }
+  },
+  "eas": {
+   "trips": 2343599,
+   "rail": 87,
+   "split": {
+    "train": 0.003697684495775097,
+    "walk": 39.73799920889801,
+    "drive": 60.25830310660621
+   }
+  },
+  "nom": {
+   "trips": 1034236,
+   "rail": 835,
+   "split": {
+    "train": 0.08069327862593974,
+    "walk": 40.20214256917301,
+    "drive": 59.71716415220104
+   }
+  },
+  "wes": {
+   "trips": 2127329,
+   "rail": 0,
+   "split": {
+    "train": 0.0000067807638774557474,
+    "walk": 42.22350509368956,
+    "drive": 57.77648812554656
+   }
+  },
+  "oxf": {
+   "trips": 1924996,
+   "rail": 0,
+   "split": {
+    "train": 0,
+    "walk": 39.94835762266645,
+    "drive": 60.05164237733355
+   }
+  },
+  "cen": {
+   "trips": 1827747,
+   "rail": 0,
+   "split": {
+    "train": 6.037929390847633e-7,
+    "walk": 38.10753102283564,
+    "drive": 61.89246837337142
+   }
+  },
+  "eau": {
+   "trips": 1561712,
+   "rail": 2,
+   "split": {
+    "train": 0.00010466980040507146,
+    "walk": 41.00034681534946,
+    "drive": 58.99954851485013
+   }
+  },
+  "ess": {
+   "trips": 1542103,
+   "rail": 62,
+   "split": {
+    "train": 0.003996558909321269,
+    "walk": 37.75572636868765,
+    "drive": 62.24027707240303
+   }
+  },
+  "ese": {
+   "trips": 1347393,
+   "rail": 0,
+   "split": {
+    "train": 0,
+    "walk": 40.24860683548981,
+    "drive": 59.75139316451019
+   }
+  },
+  "bek": {
+   "trips": 1394586,
+   "rail": 0,
+   "split": {
+    "train": 0.00002848235165989048,
+    "walk": 36.064801600673356,
+    "drive": 63.93516991697498
+   }
+  },
+  "nyc": {
+   "trips": 68466173,
+   "rail": 0,
+   "split": {
+    "train": 0,
+    "walk": 26.414867228918904,
+    "drive": 73.58513277108109
+   }
+  }
+ },
+ "intercity": {
+  "trips": 100236554,
+  "rail": 43287
+ },
+ "lines": [
+  {
+   "name": "tfl Bakerloo",
+   "riders": 250149
+  },
+  {
+   "name": "tfl Bakerloo",
+   "riders": 127302
+  },
+  {
+   "name": "tfl Bakerloo",
+   "riders": 155950
+  },
+  {
+   "name": "tfl Central",
+   "riders": 431927
+  },
+  {
+   "name": "tfl Central",
+   "riders": 441517
+  },
+  {
+   "name": "tfl Central",
+   "riders": 9141
+  },
+  {
+   "name": "tfl Central",
+   "riders": 66192
+  },
+  {
+   "name": "tfl Circle",
+   "riders": 286562
+  },
+  {
+   "name": "tfl District",
+   "riders": 135452
+  },
+  {
+   "name": "tfl District",
+   "riders": 353317
+  },
+  {
+   "name": "tfl District",
+   "riders": 315671
+  },
+  {
+   "name": "tfl District",
+   "riders": 417082
+  },
+  {
+   "name": "tfl DLR",
+   "riders": 94748
+  },
+  {
+   "name": "tfl DLR",
+   "riders": 118759
+  },
+  {
+   "name": "tfl DLR",
+   "riders": 238695
+  },
+  {
+   "name": "tfl DLR",
+   "riders": 97049
+  },
+  {
+   "name": "tfl DLR",
+   "riders": 100083
+  },
+  {
+   "name": "tfl windrush",
+   "riders": 131390
+  },
+  {
+   "name": "tfl windrush",
+   "riders": 149843
+  },
+  {
+   "name": "tfl windrush",
+   "riders": 59852
+  },
+  {
+   "name": "tfl windrush",
+   "riders": 136870
+  },
+  {
+   "name": "tfl Elizabeth",
+   "riders": 323529
+  },
+  {
+   "name": "tfl Elizabeth",
+   "riders": 311257
+  },
+  {
+   "name": "tfl Elizabeth",
+   "riders": 218530
+  },
+  {
+   "name": "tfl Elizabeth",
+   "riders": 130835
+  },
+  {
+   "name": "tfl suffragette",
+   "riders": 52002
+  },
+  {
+   "name": "tfl Hammersmith & City",
+   "riders": 259532
+  },
+  {
+   "name": "tfl Jubilee",
+   "riders": 741949
+  },
+  {
+   "name": "tfl Metropolitan",
+   "riders": 312218
+  },
+  {
+   "name": "tfl Metropolitan",
+   "riders": 27715
+  },
+  {
+   "name": "tfl Metropolitan",
+   "riders": 62519
+  },
+  {
+   "name": "tfl Metropolitan",
+   "riders": 86015
+  },
+  {
+   "name": "tfl Metropolitan",
+   "riders": 64633
+  },
+  {
+   "name": "tfl mildmay",
+   "riders": 156658
+  },
+  {
+   "name": "tfl mildmay",
+   "riders": 216556
+  },
+  {
+   "name": "tfl Northern",
+   "riders": 602457
+  },
+  {
+   "name": "tfl Northern",
+   "riders": 410488
+  },
+  {
+   "name": "tfl Northern",
+   "riders": 290665
+  },
+  {
+   "name": "tfl Northern",
+   "riders": 78497
+  },
+  {
+   "name": "tfl Northern",
+   "riders": 101236
+  },
+  {
+   "name": "tfl Piccadilly",
+   "riders": 491941
+  },
+  {
+   "name": "tfl Piccadilly",
+   "riders": 110510
+  },
+  {
+   "name": "tfl Piccadilly",
+   "riders": 235340
+  },
+  {
+   "name": "tfl liberty",
+   "riders": 10452
+  },
+  {
+   "name": "tfl Victoria",
+   "riders": 717507
+  },
+  {
+   "name": "tfl Waterloo & City",
+   "riders": 72831
+  },
+  {
+   "name": "tfl weaver",
+   "riders": 85085
+  },
+  {
+   "name": "tfl weaver",
+   "riders": 108151
+  },
+  {
+   "name": "tfl weaver",
+   "riders": 87483
+  },
+  {
+   "name": "tfl lioness",
+   "riders": 81126
+  },
+  {
+   "name": "nr c2c",
+   "riders": 71578
+  },
+  {
+   "name": "nr c2c",
+   "riders": 28464
+  },
+  {
+   "name": "nr c2c",
+   "riders": 50797
+  },
+  {
+   "name": "nr c2c",
+   "riders": 16353
+  },
+  {
+   "name": "nr Chiltern Railways",
+   "riders": 13767
+  },
+  {
+   "name": "nr Chiltern Railways",
+   "riders": 281
+  },
+  {
+   "name": "nr Chiltern Railways",
+   "riders": 3556
+  },
+  {
+   "name": "nr Chiltern Railways",
+   "riders": 11370
+  },
+  {
+   "name": "nr Great Northern",
+   "riders": 78750
+  },
+  {
+   "name": "nr Great Northern",
+   "riders": 91602
+  },
+  {
+   "name": "nr Great Northern",
+   "riders": 39359
+  },
+  {
+   "name": "nr Great Northern",
+   "riders": 38877
+  },
+  {
+   "name": "nr Great Northern",
+   "riders": 411
+  },
+  {
+   "name": "nr Great Northern",
+   "riders": 4574
+  },
+  {
+   "name": "nr GWR",
+   "riders": 9063
+  },
+  {
+   "name": "nr GWR",
+   "riders": 5677
+  },
+  {
+   "name": "nr GWR",
+   "riders": 4657
+  },
+  {
+   "name": "nr GWR",
+   "riders": 586
+  },
+  {
+   "name": "nr GWR",
+   "riders": 2507
+  },
+  {
+   "name": "nr GWR",
+   "riders": 11263
+  },
+  {
+   "name": "nr GWR",
+   "riders": 1193
+  },
+  {
+   "name": "nr GWR",
+   "riders": 791
+  },
+  {
+   "name": "nr Gatwick Express",
+   "riders": 3180
+  },
+  {
+   "name": "nr Gatwick Express",
+   "riders": 2624
+  },
+  {
+   "name": "nr Gatwick Express",
+   "riders": 1420
+  },
+  {
+   "name": "nr Heathrow Express",
+   "riders": 34269
+  },
+  {
+   "name": "nr Greater Anglia",
+   "riders": 41995
+  },
+  {
+   "name": "nr Greater Anglia",
+   "riders": 29380
+  },
+  {
+   "name": "nr Greater Anglia",
+   "riders": 37538
+  },
+  {
+   "name": "nr Greater Anglia",
+   "riders": 15212
+  },
+  {
+   "name": "nr Greater Anglia",
+   "riders": 70162
+  },
+  {
+   "name": "nr Greater Anglia",
+   "riders": 4879
+  },
+  {
+   "name": "nr Greater Anglia",
+   "riders": 117
+  },
+  {
+   "name": "nr Greater Anglia",
+   "riders": 41341
+  },
+  {
+   "name": "nr Greater Anglia",
+   "riders": 586
+  },
+  {
+   "name": "nr Greater Anglia",
+   "riders": 18892
+  },
+  {
+   "name": "nr Greater Anglia",
+   "riders": 5642
+  },
+  {
+   "name": "nr LNR",
+   "riders": 38829
+  },
+  {
+   "name": "nr LNR",
+   "riders": 6255
+  },
+  {
+   "name": "nr LNR",
+   "riders": 4204
+  },
+  {
+   "name": "nr LNR",
+   "riders": 1613
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 80004
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 7323
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 112785
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 25536
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 74717
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 53877
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 60341
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 73066
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 60510
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 52874
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 38819
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 60066
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 24290
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 6626
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 20568
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 24447
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 13743
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 146251
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 5643
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 133873
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 2181
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 20553
+  },
+  {
+   "name": "nr Southeastern",
+   "riders": 2433
+  },
+  {
+   "name": "nr Southern",
+   "riders": 34017
+  },
+  {
+   "name": "nr Southern",
+   "riders": 55038
+  },
+  {
+   "name": "nr Southern",
+   "riders": 61491
+  },
+  {
+   "name": "nr Southern",
+   "riders": 22128
+  },
+  {
+   "name": "nr Southern",
+   "riders": 93384
+  },
+  {
+   "name": "nr Southern",
+   "riders": 76456
+  },
+  {
+   "name": "nr Southern",
+   "riders": 19869
+  },
+  {
+   "name": "nr Southern",
+   "riders": 22539
+  },
+  {
+   "name": "nr Southern",
+   "riders": 31445
+  },
+  {
+   "name": "nr Southern",
+   "riders": 38233
+  },
+  {
+   "name": "nr Southern",
+   "riders": 67111
+  },
+  {
+   "name": "nr Southern",
+   "riders": 45795
+  },
+  {
+   "name": "nr Southern",
+   "riders": 17848
+  },
+  {
+   "name": "nr Southern",
+   "riders": 2198
+  },
+  {
+   "name": "nr Southern",
+   "riders": 7321
+  },
+  {
+   "name": "nr Southern",
+   "riders": 50341
+  },
+  {
+   "name": "nr Southern",
+   "riders": 35752
+  },
+  {
+   "name": "nr Southern",
+   "riders": 31987
+  },
+  {
+   "name": "nr Southern",
+   "riders": 14074
+  },
+  {
+   "name": "nr Southern",
+   "riders": 10366
+  },
+  {
+   "name": "nr SWR",
+   "riders": 40704
+  },
+  {
+   "name": "nr SWR",
+   "riders": 1547
+  },
+  {
+   "name": "nr SWR",
+   "riders": 4094
+  },
+  {
+   "name": "nr SWR",
+   "riders": 25892
+  },
+  {
+   "name": "nr SWR",
+   "riders": 44870
+  },
+  {
+   "name": "nr SWR",
+   "riders": 69600
+  },
+  {
+   "name": "nr SWR",
+   "riders": 35017
+  },
+  {
+   "name": "nr SWR",
+   "riders": 47593
+  },
+  {
+   "name": "nr SWR",
+   "riders": 56378
+  },
+  {
+   "name": "nr SWR",
+   "riders": 42321
+  },
+  {
+   "name": "nr SWR",
+   "riders": 903
+  },
+  {
+   "name": "nr SWR",
+   "riders": 1774
+  },
+  {
+   "name": "nr SWR",
+   "riders": 30629
+  },
+  {
+   "name": "nr SWR",
+   "riders": 35664
+  },
+  {
+   "name": "nr SWR",
+   "riders": 14602
+  },
+  {
+   "name": "nr SWR",
+   "riders": 4589
+  },
+  {
+   "name": "nr SWR",
+   "riders": 94722
+  },
+  {
+   "name": "nr SWR",
+   "riders": 16339
+  },
+  {
+   "name": "nr SWR",
+   "riders": 897
+  },
+  {
+   "name": "nr SWR",
+   "riders": 0
+  },
+  {
+   "name": "nr SWR",
+   "riders": 59365
+  },
+  {
+   "name": "nr SWR",
+   "riders": 64607
+  },
+  {
+   "name": "nr Stansted Express",
+   "riders": 21942
+  },
+  {
+   "name": "nr Stansted Express",
+   "riders": 17391
+  },
+  {
+   "name": "nr Stansted Express",
+   "riders": 26722
+  },
+  {
+   "name": "nr Thameslink",
+   "riders": 83142
+  },
+  {
+   "name": "nr Thameslink",
+   "riders": 49549
+  },
+  {
+   "name": "nr Thameslink",
+   "riders": 85328
+  },
+  {
+   "name": "nr Thameslink",
+   "riders": 63529
+  },
+  {
+   "name": "nr Thameslink",
+   "riders": 30719
+  },
+  {
+   "name": "nr Thameslink",
+   "riders": 103757
+  },
+  {
+   "name": "nr Thameslink",
+   "riders": 91935
+  },
+  {
+   "name": "nr Thameslink",
+   "riders": 64388
+  },
+  {
+   "name": "nr Thameslink",
+   "riders": 72932
+  },
+  {
+   "name": "nr Thameslink",
+   "riders": 31241
+  },
+  {
+   "name": "nr Thameslink",
+   "riders": 112643
+  },
+  {
+   "name": "nr Thameslink",
+   "riders": 16592
+  }
+ ]
+}

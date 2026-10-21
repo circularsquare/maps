@@ -1,0 +1,492 @@
+{
+ "city": "nyc",
+ "mode": "zero",
+ "notes": [
+  "nyc zero: car-free 0.0%",
+  "nhv zero: car-free 0.0%",
+  "lit zero: car-free 0.0%"
+ ],
+ "errors": [],
+ "version": 2,
+ "round": 3,
+ "all": {
+  "trips": 171578800,
+  "rail": 9004652,
+  "split": {
+   "train": 5.248114524547099,
+   "walk": 9.466126167533462,
+   "drive": 85.28575930791943
+  }
+ },
+ "cities": {
+  "nyc": {
+   "trips": 68466173,
+   "rail": 8999793,
+   "split": {
+    "train": 13.144875434992812,
+    "walk": 22.655473713032542,
+    "drive": 64.19965085197464
+   }
+  },
+  "nhv": {
+   "trips": 2463397,
+   "rail": 0,
+   "split": {
+    "train": 8.307836008581602e-8,
+    "walk": 24.685332960929205,
+    "drive": 75.31466695599244
+   }
+  },
+  "lit": {
+   "trips": 461181,
+   "rail": 0,
+   "split": {
+    "train": 0,
+    "walk": 26.5475270721706,
+    "drive": 73.4524729278294
+   }
+  }
+ },
+ "intercity": {
+  "trips": 100188049,
+  "rail": 4859
+ },
+ "lines": [
+  {
+   "name": "subway 1",
+   "riders": 886307
+  },
+  {
+   "name": "subway 2",
+   "riders": 587768
+  },
+  {
+   "name": "subway 3",
+   "riders": 534801
+  },
+  {
+   "name": "subway 4",
+   "riders": 686278
+  },
+  {
+   "name": "subway 5",
+   "riders": 542287
+  },
+  {
+   "name": "subway 6",
+   "riders": 459431
+  },
+  {
+   "name": "subway 6",
+   "riders": 262254
+  },
+  {
+   "name": "subway 6X",
+   "riders": 279936
+  },
+  {
+   "name": "subway 7",
+   "riders": 726951
+  },
+  {
+   "name": "subway 7X",
+   "riders": 126473
+  },
+  {
+   "name": "subway A",
+   "riders": 299988
+  },
+  {
+   "name": "subway A",
+   "riders": 310358
+  },
+  {
+   "name": "subway B",
+   "riders": 487028
+  },
+  {
+   "name": "subway C",
+   "riders": 439194
+  },
+  {
+   "name": "subway D",
+   "riders": 697881
+  },
+  {
+   "name": "subway E",
+   "riders": 490277
+  },
+  {
+   "name": "subway F",
+   "riders": 800528
+  },
+  {
+   "name": "subway S",
+   "riders": 33141
+  },
+  {
+   "name": "subway FX",
+   "riders": 1374
+  },
+  {
+   "name": "subway G",
+   "riders": 287480
+  },
+  {
+   "name": "subway S",
+   "riders": 63041
+  },
+  {
+   "name": "subway S",
+   "riders": 9862
+  },
+  {
+   "name": "subway J",
+   "riders": 342654
+  },
+  {
+   "name": "subway L",
+   "riders": 633606
+  },
+  {
+   "name": "subway M",
+   "riders": 561048
+  },
+  {
+   "name": "subway N",
+   "riders": 513374
+  },
+  {
+   "name": "subway Q",
+   "riders": 609600
+  },
+  {
+   "name": "subway R",
+   "riders": 794431
+  },
+  {
+   "name": "subway SIR",
+   "riders": 25758
+  },
+  {
+   "name": "subway W",
+   "riders": 318658
+  },
+  {
+   "name": "subway Z",
+   "riders": 24566
+  },
+  {
+   "name": "path PATH",
+   "riders": 6151
+  },
+  {
+   "name": "path PATH",
+   "riders": 113503
+  },
+  {
+   "name": "path PATH",
+   "riders": 104366
+  },
+  {
+   "name": "path PATH",
+   "riders": 193205
+  },
+  {
+   "name": "path PATH",
+   "riders": 169818
+  },
+  {
+   "name": "lirr Babylon Branch",
+   "riders": 61542
+  },
+  {
+   "name": "lirr Babylon Branch",
+   "riders": 44999
+  },
+  {
+   "name": "lirr Port Jefferson Branch",
+   "riders": 92805
+  },
+  {
+   "name": "lirr Port Jefferson Branch",
+   "riders": 3518
+  },
+  {
+   "name": "lirr City Terminal Zone",
+   "riders": 49350
+  },
+  {
+   "name": "lirr Greenport Service",
+   "riders": 182
+  },
+  {
+   "name": "lirr Hempstead Branch",
+   "riders": 19197
+  },
+  {
+   "name": "lirr Hempstead Branch",
+   "riders": 9708
+  },
+  {
+   "name": "lirr Hempstead Branch",
+   "riders": 5302
+  },
+  {
+   "name": "lirr Oyster Bay Branch",
+   "riders": 10297
+  },
+  {
+   "name": "lirr Ronkonkoma Branch",
+   "riders": 79714
+  },
+  {
+   "name": "lirr Ronkonkoma Branch",
+   "riders": 20709
+  },
+  {
+   "name": "lirr Ronkonkoma Branch",
+   "riders": 7419
+  },
+  {
+   "name": "lirr Montauk Branch",
+   "riders": 1258
+  },
+  {
+   "name": "lirr Montauk Branch",
+   "riders": 13
+  },
+  {
+   "name": "lirr Montauk Branch",
+   "riders": 2
+  },
+  {
+   "name": "lirr Montauk Branch",
+   "riders": 3758
+  },
+  {
+   "name": "lirr Montauk Branch",
+   "riders": 66
+  },
+  {
+   "name": "lirr Long Beach Branch",
+   "riders": 16612
+  },
+  {
+   "name": "lirr Long Beach Branch",
+   "riders": 20372
+  },
+  {
+   "name": "lirr Long Beach Branch",
+   "riders": 8571
+  },
+  {
+   "name": "lirr Far Rockaway Branch",
+   "riders": 39633
+  },
+  {
+   "name": "lirr Far Rockaway Branch",
+   "riders": 10208
+  },
+  {
+   "name": "lirr West Hempstead Branch",
+   "riders": 5190
+  },
+  {
+   "name": "lirr West Hempstead Branch",
+   "riders": 8968
+  },
+  {
+   "name": "lirr Port Washington Branch",
+   "riders": 42229
+  },
+  {
+   "name": "lirr Port Washington Branch",
+   "riders": 34270
+  },
+  {
+   "name": "lirr Port Washington Branch",
+   "riders": 4239
+  },
+  {
+   "name": "lirr Port Washington Branch",
+   "riders": 1919
+  },
+  {
+   "name": "mnr Hudson",
+   "riders": 79743
+  },
+  {
+   "name": "mnr Hudson",
+   "riders": 30935
+  },
+  {
+   "name": "mnr Harlem",
+   "riders": 97909
+  },
+  {
+   "name": "mnr Harlem",
+   "riders": 48457
+  },
+  {
+   "name": "mnr Harlem",
+   "riders": 132
+  },
+  {
+   "name": "mnr Harlem",
+   "riders": 877
+  },
+  {
+   "name": "mnr New Haven",
+   "riders": 95600
+  },
+  {
+   "name": "mnr New Haven",
+   "riders": 27415
+  },
+  {
+   "name": "mnr New Haven",
+   "riders": 2543
+  },
+  {
+   "name": "mnr New Canaan",
+   "riders": 211
+  },
+  {
+   "name": "mnr New Canaan",
+   "riders": 829
+  },
+  {
+   "name": "mnr Danbury",
+   "riders": 953
+  },
+  {
+   "name": "mnr Waterbury",
+   "riders": 72
+  },
+  {
+   "name": "mnr Waterbury",
+   "riders": 141
+  },
+  {
+   "name": "njt NEC",
+   "riders": 123154
+  },
+  {
+   "name": "njt NEC",
+   "riders": 12065
+  },
+  {
+   "name": "njt NEC",
+   "riders": 13457
+  },
+  {
+   "name": "njt NJCL",
+   "riders": 6057
+  },
+  {
+   "name": "njt NJCL",
+   "riders": 80476
+  },
+  {
+   "name": "njt NJCLL",
+   "riders": 906
+  },
+  {
+   "name": "njt NLR",
+   "riders": 37199
+  },
+  {
+   "name": "njt NLR",
+   "riders": 38177
+  },
+  {
+   "name": "njt NLR",
+   "riders": 4347
+  },
+  {
+   "name": "njt NLR",
+   "riders": 3887
+  },
+  {
+   "name": "njt PASC",
+   "riders": 28897
+  },
+  {
+   "name": "njt RARV",
+   "riders": 8378
+  },
+  {
+   "name": "njt RARV",
+   "riders": 5612
+  },
+  {
+   "name": "njt RARV",
+   "riders": 6654
+  },
+  {
+   "name": "njt BNTN",
+   "riders": 4177
+  },
+  {
+   "name": "njt BNTNM",
+   "riders": 30584
+  },
+  {
+   "name": "njt BNTNM",
+   "riders": 2684
+  },
+  {
+   "name": "njt HBLR",
+   "riders": 105139
+  },
+  {
+   "name": "njt HBLR",
+   "riders": 43689
+  },
+  {
+   "name": "njt HBLR",
+   "riders": 76777
+  },
+  {
+   "name": "njt MNBN",
+   "riders": 47101
+  },
+  {
+   "name": "njt MNBN",
+   "riders": 12130
+  },
+  {
+   "name": "njt MNBN",
+   "riders": 14569
+  },
+  {
+   "name": "njt MNBN",
+   "riders": 4985
+  },
+  {
+   "name": "njt MNBNP",
+   "riders": 315
+  },
+  {
+   "name": "njt MNBNP",
+   "riders": 1064
+  },
+  {
+   "name": "njt MNBNP",
+   "riders": 10761
+  },
+  {
+   "name": "njt MNE",
+   "riders": 97452
+  },
+  {
+   "name": "njt MNEG",
+   "riders": 9041
+  },
+  {
+   "name": "njt MNEG",
+   "riders": 1035
+  }
+ ]
+}
