@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-850 [P2] Sparse cells measured. Done 2026-10-21: cells under 5 people are 24% of 5.14M but hold 3.2% of jobs, so not dropped; merging cells under 50 trip ends saves about 18% of pack bytes and 10% of countryside memory (T-850b); zones matter more (T-852). notes/T-850.md.
 - T-828 [P2] Eurostar and crowding near the cities. Done 2026-10-21: no demand change; London - Paris riders are not put off (left-behind 0 at the terminals, crowding +2-6 perceived min at peaks); through riders grow with reach into the cities, not with trains; the red Anita saw is T-848. notes/T-828.md.
 - T-837 [P3] Sparse lines' end of service. Done 2026-10-21 by T-842: riders now expect each stop's service span; sparse lines' first-train wait went from far over demand's to 10.9% under.
 - T-842 [P2] Riders know each stop's service span. Done 2026-10-21: tolerance log-uniform 0.5-6 h, a boarding penalty where many would not wait, the account's arrivals masked alike; real save -0.3% rail trips, sparse lines -8.5%; first-train wait gap 13.5% to -2.4%. notes/T-842.md.
