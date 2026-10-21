@@ -144,8 +144,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   and rolls it back (`TrackApi.preview_station`, T-311), so the ghost and the click cannot
   disagree, cash included.
 - **Curve speed** `v = sqrt(a_lat * R)`, **a_lat = 1.1 m/s²** (LGV design: 7,000 m for 320 km/h).
-  100 m: 38 km/h, 300 m: 65, 1,000 m: 119, 1,800 m: 160. **Minimum radius 100 m.** The track has no
-  speed cap of its own; the M1 train's top speed is **160 km/h**. Grades do not change speed.
+  100 m: 38 km/h, 300 m: 65, 1,000 m: 119, 1,800 m: 160, 7,183 m: 320. **Minimum radius 100 m.**
+  Each piece of track runs at the **lowest of its curve speed, its track's cap and the line's
+  trains' top speed** (T-817): track caps at **160 km/h**, high-speed track at **320**, a crossover
+  at 50; ordinary trains top out at 160, high-speed trains at 320 (6.3). Grades do not change speed.
 - **Levels** -3 to +3, **8 m apart** (+1 viaduct, -1 cut and cover, -2 bored, -3 deep). **Max
   grade 4%**, so a ramp is **200 m per level**. Level is set per PI, at the level selected when it
   was clicked; a ramp is centred between vertices of different levels. Nodes and platforms sit at
@@ -190,8 +192,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   same level (6.4); stations, junctions and flyovers on it cost as on double track. It meets
   ordinary track at plain nodes like any two pieces; a split keeps the flag on both halves, and
   two pieces join under a platform only when both are high speed or both are not (`unjoin_near`).
-  It cannot be doubled up (`HighSpeed`). Trains on it run as on double track, at most 160 km/h,
-  until T-817 stage b2.
+  It cannot be doubled up (`HighSpeed`). Its cap is 320 km/h, which only a line's high-speed
+  trains use; ordinary trains run on it at 160. The track inspector shows the limit.
 - **Doubling up** (T-708, `TrackApi::double_up`): double track already placed, blueprint or
   built, becomes quad with one undoable edit that adds the express pair as blueprint (built track
   too: Construct pays for the pair as for any blueprint). It covers the run the selected piece is
@@ -383,11 +385,16 @@ partway (when the line does) and waiting at busy track, and names the places it 
 
 ### 6.3 Trains, lines, schedules
 
-- **One train kind.** Later kinds, if any, differ by speed profile and cost (HSR, light rail, as in
-  Subway Builder), never by urban vs intercity. The M1 train accelerates at 1.0 m/s² to 60 km/h
-  and 0.5 m/s² above (a power-limited EMU, kept as two constant rates so motion stays exact) and
-  brakes at 0.9 m/s²: a 1 km stop-to-stop run takes 67.5 s. The whole train must be under a curve
-  limit before it may speed up again.
+- **Two train kinds, chosen per line** (T-817; Anita 2026-10-21): **ordinary** (top speed 160
+  km/h) and **high speed** (320, on high-speed track only; 160 elsewhere). They differ by top speed
+  and cost (6.4), never by urban vs intercity; a line's choice is saved with it (`LineData::fast`,
+  old saves ordinary). Both accelerate at 1.0 m/s² to 60 km/h, 0.5 m/s² to 200 and 0.3 m/s² above
+  (a power-limited EMU, kept as constant rates so motion stays exact; only high-speed trains reach
+  the third band: 0 to 320 in 206 s and 11 km) and brake at 0.9 m/s²: a 1 km stop-to-stop run
+  takes 67.5 s. The whole train must be under a limit before it may speed up again, so where
+  high-speed track meets ordinary track the train brakes to 160 before the joint as for a curve.
+  The line panel's stop times carry a hover with the top speed reached from the stop before and
+  what limits it (the trains, ordinary track, curves or a crossover; `TrackApi.line_stretch_speeds`).
 - **Lines**: ordered stops, plus the exact path between them stored as edges with a direction, so
   new track never reroutes a line by itself. Splitting an edge rewrites the paths through it;
   deleting one reroutes by the fastest path, unless that path reverses where the old one did not,
@@ -530,20 +537,25 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   schedules. Constructing, removing anything constructed, making a constructed junction flying and
   lengthening a constructed platform are final (the last two are paid at once): they clear the
   undo history, so undo never builds or unbuilds anything for free.
-- **Trains** (T-028): a 20 m car costs US$2.5M. The network owns cars; the running lines need
+- **Trains** (T-028): a 20 m car costs US$2.5M, a high-speed car US$3.75M (T-817). The network owns cars of
+  each kind apart, and spares of one kind never serve the other: a line switched to high-speed
+  trains buys its cars beyond the spare high-speed ones, and its ordinary cars stay as spares (and
+  the same the other way). The running lines need
   their busiest schedule's trains times their cars. Any edit that makes them need more than are
   owned (a construct that starts a line, a larger allocation, a headway that needs more trains,
   longer trains, or an undo) buys the difference with it, and is refused with nothing changed if
   construction plus trains is more than the cash. Cars are never sold or refunded: those a line no
   longer needs stay in the depot as spares and serve the next line that grows, any line's (T-631).
-  Loaded fleets count as already paid. The Money tab lists cars owned, needed and spare; the line
+  Loaded fleets count as already paid. The Money tab lists cars owned, needed and spare (and the
+  high-speed cars owned and spare, once there are any); the line
   panel's train buttons say in their hover what a step buys or frees; the blueprint quote and a
   planned line's Construct button include the cars.
 - **Running cost** US$9 per train-km plus US$2 per car-km (trains an hour each way x line length,
   times 9 + 2 x cars: a 4-car train US$17 a train-km, 9 cars US$27, 12 cars US$33; under real
   figures so fares can cover it, high enough that thin areas lose money, T-805; the train part
   stands for crew, stations and track upkeep, which do not grow with length; T-807, real figures in
-  research/running-costs.md; `RUN_COST_TRAIN_KM` and `RUN_COST_CAR_KM`), and **fares**,
+  research/running-costs.md; `RUN_COST_TRAIN_KM` and `RUN_COST_CAR_KM`; high-speed trains US$12 a
+  train-km plus US$3 a car-km, `HS_RUN_COST_*`, T-817), and **fares**,
   are settled by the clock worker into the cash and a ledger per day (30 kept) and per hour (48
   kept, T-447) as the game runs, not once an hour (T-284). The ledgers hold one entry per day or
   hour, in order; a load merges any day or hour an older save lists twice. Money time never goes

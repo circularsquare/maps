@@ -483,6 +483,8 @@ function buildState(): ClockState {
       stops: [...a.line_stops(id)], path: [...a.line_path(id)],
       fromStart: [0, 1, 2].map((lev) => [...a.stop_times(id, 0, lev)]),
       stopS: [[...a.line_stop_s(id, 0)], [...a.line_stop_s(id, 1)]],
+      fast: a.line_fast(id),
+      stretchSpeeds: ok ? [...a.line_stretch_speeds(id)] : [],
       buildCost: ok && !running ? a.line_build_cost(id) : 0,
       trainCost: ok && !running ? a.line_train_cost(id) : 0,
       shift: a.line_shift(id),
@@ -729,6 +731,11 @@ function moneyState(): MoneyState {
     mode,
     fleet: a.fleet(),
     carsNeeded: a.cars_needed(),
+    fleetFast: a.fleet_fast(),
+    carsNeededFast: a.cars_needed_fast(),
+    hsCarPrice: moneyParams[4],
+    hsRunCostCarKm: moneyParams[5],
+    hsRunCostTrainKm: moneyParams[6],
     carPrice: moneyParams[0],
     runCostCarKm: moneyParams[1],
     runCostTrainKm: moneyParams[3],
@@ -940,7 +947,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened] };
+  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened] };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -1174,6 +1181,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   if (!api!.load(net)) throw new Error("This save is damaged.");
   await masksForLoaded(net);
   api!.set_fleet(h.fleet ?? 0);
+  api!.set_fleet_fast(h.fleetFast ?? 0);
   fares = { ...START_FARES, ...h.fares };
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
@@ -1229,6 +1237,7 @@ async function newGame(spec?: NewGameSpec) {
   api!.load(emptyTrack!);
   api!.set_cash(START_CASH);
   api!.set_fleet(0);
+  api!.set_fleet_fast(0);
   fares = { ...START_FARES };
   ledger = [];
   hourLedger = [];
@@ -1523,6 +1532,8 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
       return { r: a.remove_line(op.line) };
     case "lineCars":
       return { r: a.set_line_cars(op.line, Math.max(0, Math.min(255, Math.round(op.cars)))) };
+    case "lineFast":
+      return { r: a.set_line_fast(op.line, op.fast) };
     case "fares":
       fares = { base: Math.max(0, op.base), perKm: Math.max(0, op.perKm) };
       return { r: 0 };

@@ -151,6 +151,11 @@ export interface LineStats {
   buildCost: number;
   /** what the trains it needs will cost when it is constructed, after spare cars, US$ (T-028) */
   trainCost: number;
+  /** high-speed trains (T-817) */
+  fast: boolean;
+  /** per stretch between stops, run 0: the top speed reached and the limit there, km/h, and what
+   * sets the limit (0 the trains, 1 ordinary track, 2 curves, 3 a crossover) */
+  stretches: { reached: number; limit: number; why: number }[];
   /** where each stop is along run 0's and run 1's path, m */
   stopS: [number[], number[]];
   /** dwell at each intermediate stop, and the layover at each end, s */

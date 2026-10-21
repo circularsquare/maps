@@ -123,6 +123,8 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       carsSet: l.carsSet,
       buildCost: l.buildCost * 1e6,
       trainCost: l.trainCost * 1e6,
+      fast: l.fast,
+      stretches: Array.from({ length: l.stretchSpeeds.length / 3 }, (_, k) => ({ reached: l.stretchSpeeds[3 * k], limit: l.stretchSpeeds[3 * k + 1], why: l.stretchSpeeds[3 * k + 2] })),
       stopS: l.stopS,
       dwellS: l.dwell,
       turnaroundS: l.turnaround,

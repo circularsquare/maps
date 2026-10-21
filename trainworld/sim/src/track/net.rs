@@ -179,6 +179,8 @@ pub struct LineData {
     pub turnaround_s: f32,
     /// Cars per train; 0 = as many as the shortest platform allows.
     pub cars: u8,
+    /// High-speed trains (T-817): top speed 320 km/h on high-speed track, dearer cars and running.
+    pub fast: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -341,6 +343,7 @@ pub struct Network {
     pub line_dwell: Vec<f32>,
     pub line_turn: Vec<f32>,
     pub line_cars: Vec<u8>,
+    pub line_fast: Vec<bool>,
     /// Derived: the path uses a deleted edge or no longer fits the stops.
     pub line_broken: Vec<bool>,
     line_free: Vec<u32>,
@@ -548,6 +551,7 @@ impl Network {
             line_dwell: vec![],
             line_turn: vec![],
             line_cars: vec![],
+            line_fast: vec![],
             line_broken: vec![],
             line_free: vec![],
             stops: Pool::default(),
@@ -693,6 +697,7 @@ impl Network {
         self.line_dwell.push(DEFAULT_DWELL_S);
         self.line_turn.push(DEFAULT_TURNAROUND_S);
         self.line_cars.push(0);
+        self.line_fast.push(false);
         self.line_broken.push(false);
     }
     fn claim_node(&mut self, id: u32) {
@@ -759,6 +764,7 @@ impl Network {
                 dwell_s: self.line_dwell[i],
                 turnaround_s: self.line_turn[i],
                 cars: self.line_cars[i],
+                fast: self.line_fast[i],
             }
         })
     }
@@ -822,9 +828,14 @@ impl Network {
         let p = &self.node_ports[n as usize];
         p.ends().iter().map(|&c| self.edge_tracks[(c >> 1) as usize]).max().unwrap_or(2)
     }
-    /// The speed limit an edge puts on every curve of it, m/s: `V_CROSSOVER` on a crossover.
+    /// The speed limit an edge puts on every piece of it, m/s: `V_CROSSOVER` on a crossover, 320
+    /// km/h on high-speed track, 160 on any other (T-817).
     pub fn v_cap(&self, e: u32) -> f64 {
-        if self.edge_crossover[e as usize] { V_CROSSOVER } else { V_TOP }
+        if self.edge_crossover[e as usize] { V_CROSSOVER } else if self.edge_hsr[e as usize] { V_HSR } else { V_TOP }
+    }
+    /// A line's trains' top speed, m/s: high-speed trains or ordinary ones (T-817).
+    pub fn line_top(&self, l: u32) -> f64 {
+        if self.line_fast[l as usize] { V_HSR } else { V_TOP }
     }
     /// Edge ends at a node that are not crossovers and pass `keep`. A crossover pays for its own
     /// turnouts (T-338), so the nodes at its ends are priced as junctions only with three others.
@@ -996,6 +1007,7 @@ impl Network {
                 self.line_dwell[i] = d.dwell_s;
                 self.line_turn[i] = d.turnaround_s;
                 self.line_cars[i] = d.cars;
+                self.line_fast[i] = d.fast;
             }
             None => {
                 if old.is_none() {
@@ -1117,7 +1129,7 @@ impl Network {
                 cost::track_cost(f.len, &f.vert, &wet, self.edge_tracks[i], self.edge_hsr[i])
             };
             let cap = self.v_cap(e);
-            self.edge_time[i] = f.pieces.iter().map(|p| p.len / p.v_limit().min(cap)).sum::<f64>().max(1e-3);
+            self.edge_time[i] = f.pieces.iter().map(|p| p.len / p.v_curve().min(cap)).sum::<f64>().max(1e-3);
             self.edge_pieces[i] = self.pieces.replace(old, &f.pieces);
             self.edge_vert[i] = self.verts.replace(self.edge_vert[i], &f.vert);
             self.edge_water[i] = self.water.replace(self.edge_water[i], &wet);

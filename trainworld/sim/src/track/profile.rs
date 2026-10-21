@@ -7,7 +7,7 @@
 //!
 //! Method: per stretch between two standstills, the minimum-time profile is the pointwise minimum
 //! of the limit, the forward acceleration envelope and the backward braking envelope. In v² against
-//! distance both envelopes are straight lines (two slopes for the two traction bands), so every
+//! distance both envelopes are piecewise straight lines (one slope per traction band), so every
 //! crossing point is solved exactly.
 
 use super::params::*;
@@ -42,31 +42,48 @@ pub struct Hold {
     pub delay: f64,
 }
 
-const VS2: f64 = ACCEL_SWITCH_V * ACCEL_SWITCH_V;
+/// Traction bands: (speed where the band ends, acceleration). The last band is open; only
+/// high-speed trains go past 200 km/h, so ordinary trains never reach it (T-817).
+const BANDS: [(f64, f64); 3] = [(ACCEL_SWITCH_V, ACCEL_LOW), (ACCEL_TOP_V, ACCEL_HIGH), (f64::INFINITY, ACCEL_TOP)];
+
+/// The band a train at speed² u2 accelerates in, and the speed² where that band ends.
+fn band(u2: f64) -> (usize, f64) {
+    let k = BANDS.iter().position(|b| u2 < b.0 * b.0).unwrap_or(BANDS.len() - 1);
+    (k, BANDS[k].0 * BANDS[k].0)
+}
 
 /// Distance to accelerate from u² to v².
 fn acc_dist(u2: f64, v2: f64) -> f64 {
     if v2 <= u2 {
-        0.0
-    } else if u2 >= VS2 {
-        (v2 - u2) / (2.0 * ACCEL_HIGH)
-    } else if v2 <= VS2 {
-        (v2 - u2) / (2.0 * ACCEL_LOW)
-    } else {
-        (VS2 - u2) / (2.0 * ACCEL_LOW) + (v2 - VS2) / (2.0 * ACCEL_HIGH)
+        return 0.0;
+    }
+    let (mut k, mut end) = band(u2);
+    let mut from = u2;
+    let mut d = 0.0;
+    loop {
+        if v2 <= end {
+            return d + (v2 - from) / (2.0 * BANDS[k].1);
+        }
+        d += (end - from) / (2.0 * BANDS[k].1);
+        from = end;
+        k += 1;
+        end = BANDS[k].0 * BANDS[k].0;
     }
 }
 
 /// v² after accelerating `d` metres from u².
 fn acc_v2(u2: f64, d: f64) -> f64 {
-    if u2 >= VS2 {
-        return u2 + 2.0 * ACCEL_HIGH * d;
-    }
-    let d1 = (VS2 - u2) / (2.0 * ACCEL_LOW);
-    if d <= d1 {
-        u2 + 2.0 * ACCEL_LOW * d
-    } else {
-        VS2 + 2.0 * ACCEL_HIGH * (d - d1)
+    let (mut k, mut end) = band(u2);
+    let (mut from, mut at) = (u2, 0.0);
+    loop {
+        let dk = (end - from) / (2.0 * BANDS[k].1);
+        if d - at <= dk {
+            return from + 2.0 * BANDS[k].1 * (d - at);
+        }
+        at += dk;
+        from = end;
+        k += 1;
+        end = BANDS[k].0 * BANDS[k].0;
     }
 }
 
@@ -84,24 +101,26 @@ fn accel(out: &mut Vec<Phase>, mut t: f64, x0: f64, x1: f64, u2: f64) -> f64 {
     if x1 <= x0 + 1e-12 {
         return t;
     }
-    let v0 = u2.max(0.0).sqrt();
-    if u2 < VS2 {
-        let d1 = (VS2 - u2) / (2.0 * ACCEL_LOW);
-        let e = x1.min(x0 + d1);
+    let (mut k, mut end) = band(u2);
+    let (mut v0, mut s) = (u2.max(0.0).sqrt(), x0);
+    // each band's end as a distance from x0, as acc_v2 measures it, so speeds are taken from u2
+    let (mut from, mut reach) = (u2, 0.0);
+    loop {
+        let a = BANDS[k].1;
+        reach += (end - from) / (2.0 * a);
+        let e = x1.min(x0 + reach);
         let v1 = acc_v2(u2, e - x0).sqrt();
-        push(out, t, x0, v0, ACCEL_LOW);
-        t += (v1 - v0) / ACCEL_LOW;
-        if x1 > x0 + d1 {
-            let v2 = acc_v2(u2, x1 - x0).sqrt();
-            push(out, t, x0 + d1, ACCEL_SWITCH_V, ACCEL_HIGH);
-            t += (v2 - ACCEL_SWITCH_V) / ACCEL_HIGH;
+        push(out, t, s, v0, a);
+        t += (v1 - v0) / a;
+        if x1 <= x0 + reach {
+            return t;
         }
-    } else {
-        let v1 = acc_v2(u2, x1 - x0).sqrt();
-        push(out, t, x0, v0, ACCEL_HIGH);
-        t += (v1 - v0) / ACCEL_HIGH;
+        s = x0 + reach;
+        v0 = BANDS[k].0;
+        from = end;
+        k += 1;
+        end = BANDS[k].0 * BANDS[k].0;
     }
-    t
 }
 
 /// Brake from x0 to x1, ending at speed² w2.
@@ -157,15 +176,22 @@ fn segment(iv: &[(f64, f64, f64)], mut t: f64, out: &mut Vec<Phase>) -> f64 {
             } else if acc_v2(u2, len) <= w2 {
                 xb
             } else {
-                // acc_v2(u2, d) = w2 + 2B(len - d), solved per traction band.
+                // acc_v2(u2, d) = w2 + 2B(len - d), solved per traction band: v² = c + 2 a d there.
                 let rhs = w2 + 2.0 * BRAKE * len;
-                let d1 = if u2 < VS2 { (VS2 - u2) / (2.0 * ACCEL_LOW) } else { 0.0 };
-                let d = if u2 < VS2 && (rhs - u2) / (2.0 * (ACCEL_LOW + BRAKE)) <= d1 {
-                    (rhs - u2) / (2.0 * (ACCEL_LOW + BRAKE))
-                } else {
-                    // Band 2: v² = c + 2 A2 d.
-                    let c = if u2 < VS2 { VS2 - 2.0 * ACCEL_HIGH * d1 } else { u2 };
-                    (rhs - c) / (2.0 * (ACCEL_HIGH + BRAKE))
+                let (mut k, mut end) = band(u2);
+                let (mut from, mut at) = (u2, 0.0);
+                let d = loop {
+                    let a = BANDS[k].1;
+                    let dk = (end - from) / (2.0 * a);
+                    let c = from - 2.0 * a * at;
+                    let d = (rhs - c) / (2.0 * (a + BRAKE));
+                    if d <= at + dk || k + 1 == BANDS.len() {
+                        break d;
+                    }
+                    at += dk;
+                    from = end;
+                    k += 1;
+                    end = BANDS[k].0 * BANDS[k].0;
                 };
                 xa + d.clamp(0.0, len)
             };
@@ -294,7 +320,7 @@ pub fn run(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64], hold
                 mids = with_stop;
             } else {
                 // Slow approach: bisect the zone speed for the delay (extra time falls with speed).
-                let (mut lo, mut hi) = (0.5, V_TOP);
+                let (mut lo, mut hi) = (0.5, limits.iter().map(|l| l[1]).fold(V_TOP, f64::max));
                 for _ in 0..40 {
                     let mid = 0.5 * (lo + hi);
                     let extra = crawl(mid, &mut scratch);

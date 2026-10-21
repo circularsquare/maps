@@ -36,8 +36,9 @@ pub struct TrackApi {
     /// A sandbox game (T-728): nothing is refused for money; the cash still pays and may go negative.
     unlimited: bool,
     /// Cars the network owns (T-028). Running lines need `cars_needed`; an edit that needs more
-    /// buys them, spare cars stay for later.
-    fleet: u32,
+    /// buys them, spare cars stay for later. Ordinary cars, then high-speed ones (T-817): spares of
+    /// one kind never serve the other.
+    fleet: [u32; 2],
     /// What the last edit paid for trains, US$M.
     last_trains: f64,
     /// The last route the drawing tool asked about: (cost, length, issues), and its vertices.
@@ -88,9 +89,19 @@ struct PackWater {
 }
 
 /// Cars the running lines need: each line's busiest schedule's trains times its cars (T-028).
-fn cars_needed(w: &TrackWorld) -> u32 {
-    w.svc.lines.iter().filter(|l| l.running).map(|l| l.trains.iter().copied().max().unwrap_or(0) * l.cars).sum()
+/// Ordinary cars, then high-speed ones (T-817).
+fn cars_needed(w: &TrackWorld) -> [u32; 2] {
+    let mut out = [0; 2];
+    for (i, l) in w.svc.lines.iter().enumerate() {
+        if l.running {
+            out[w.net.line_fast[i] as usize] += l.trains.iter().copied().max().unwrap_or(0) * l.cars;
+        }
+    }
+    out
 }
+
+/// Price of a car of each kind, US$M.
+const CAR_PRICES: [f64; 2] = [CAR_PRICE, HS_CAR_PRICE];
 
 fn pis_from(flat: &[f64]) -> Vec<Pi> {
     flat.chunks_exact(4).map(|c| Pi::new(c[0], c[1], c[2], c[3] as i8).quantised()).collect()
@@ -153,7 +164,7 @@ impl TrackApi {
             money_short: None,
             cash: 6000.0,
             unlimited: false,
-            fleet: 0,
+            fleet: [0, 0],
             last_trains: 0.0,
             route_vertices: vec![],
             route_express: vec![],
@@ -395,19 +406,31 @@ impl TrackApi {
     }
     /// Cars owned (T-028).
     pub fn fleet(&self) -> u32 {
-        self.fleet
+        self.fleet[0]
     }
     pub fn set_fleet(&mut self, cars: u32) {
-        self.fleet = cars;
+        self.fleet[0] = cars;
     }
-    /// Cars the running lines need now.
+    /// High-speed cars owned (T-817).
+    pub fn fleet_fast(&self) -> u32 {
+        self.fleet[1]
+    }
+    pub fn set_fleet_fast(&mut self, cars: u32) {
+        self.fleet[1] = cars;
+    }
+    /// Ordinary cars the running lines need now.
     pub fn cars_needed(&self) -> u32 {
-        cars_needed(&self.w)
+        cars_needed(&self.w)[0]
+    }
+    /// High-speed cars the running lines need now (T-817).
+    pub fn cars_needed_fast(&self) -> u32 {
+        cars_needed(&self.w)[1]
     }
     /// [price of a car US$M, running cost per car-km US$, economy scale, running cost per train-km
-    /// US$] (params.rs). The real running costs; the game counts them, and fares, `ECONOMY` times (T-081).
+    /// US$, then a high-speed car's price, its car-km and train-km costs] (params.rs). The real
+    /// running costs; the game counts them, and fares, `ECONOMY` times (T-081).
     pub fn money_params(&self) -> Vec<f64> {
-        vec![CAR_PRICE, RUN_COST_CAR_KM, ECONOMY, RUN_COST_TRAIN_KM]
+        vec![CAR_PRICE, RUN_COST_CAR_KM, ECONOMY, RUN_COST_TRAIN_KM, HS_CAR_PRICE, HS_RUN_COST_CAR_KM, HS_RUN_COST_TRAIN_KM]
     }
     /// Running cost of the running lines per hour at a demand level, US$M: trains an hour in each
     /// direction times the line's length and cars, at the game's economy scale (T-081).
@@ -417,22 +440,68 @@ impl TrackApi {
     /// `running_cost` of the lines on one local time (`running_shifts`, T-309); NaN: every line.
     pub fn running_cost_in(&self, level: usize, shift: f64) -> f64 {
         let n = &self.w.net;
-        let (mut train_km, mut car_km) = (0.0, 0.0);
+        let (mut train_km, mut car_km) = ([0.0; 2], [0.0; 2]);
         for (l, s) in self.w.svc.lines.iter().enumerate() {
             if s.running && (shift.is_nan() || s.shift == shift) {
                 let tk = n.line_tph[l][level.min(LEVELS - 1)] as f64 * 2.0 * s.runs[0].len / 1000.0;
-                train_km += tk;
-                car_km += tk * s.cars as f64;
+                let k = n.line_fast[l] as usize;
+                train_km[k] += tk;
+                car_km[k] += tk * s.cars as f64;
             }
         }
-        (train_km * RUN_COST_TRAIN_KM + car_km * RUN_COST_CAR_KM) * ECONOMY / 1e6
+        let ordinary = train_km[0] * RUN_COST_TRAIN_KM + car_km[0] * RUN_COST_CAR_KM;
+        let fast = train_km[1] * HS_RUN_COST_TRAIN_KM + car_km[1] * HS_RUN_COST_CAR_KM;
+        (ordinary + fast) * ECONOMY / 1e6
     }
-    /// What the trains a planned line needs would cost once it runs, US$M, after the spare cars.
+    /// What the trains a planned line needs would cost once it runs, US$M, after the spare cars of
+    /// its kind.
     pub fn line_train_cost(&self, line: u32) -> f64 {
         let Some(s) = self.w.svc.lines.get(line as usize).filter(|s| s.ok && !s.running) else { return 0.0 };
         let want = s.trains.iter().copied().max().unwrap_or(0) * s.cars;
-        let spare = self.fleet.saturating_sub(cars_needed(&self.w));
-        want.saturating_sub(spare) as f64 * CAR_PRICE
+        let k = self.w.net.line_fast[line as usize] as usize;
+        let spare = self.fleet[k].saturating_sub(cars_needed(&self.w)[k]);
+        want.saturating_sub(spare) as f64 * CAR_PRICES[k]
+    }
+    /// Whether a line runs high-speed trains (T-817).
+    pub fn line_fast(&self, line: u32) -> bool {
+        self.w.net.line_fast.get(line as usize).copied().unwrap_or(false)
+    }
+    /// A line's trains: high-speed (true) or ordinary (T-817). Choosing high-speed buys the cars
+    /// the line needs beyond the spare high-speed ones; its ordinary cars stay as spares, and the
+    /// other way round.
+    pub fn set_line_fast(&mut self, id: u32, fast: bool) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        d.fast = fast;
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// Per stretch between stops of run 0 (T-817): the highest speed the trains reach there, the
+    /// highest the limits allow, km/h, and what sets that limit: 0 the trains' top speed, 1 the
+    /// track (ordinary track's 160), 2 curves, 3 a crossover.
+    pub fn line_stretch_speeds(&self, line: u32) -> Vec<f64> {
+        let net = &self.w.net;
+        let Some(s) = self.w.svc.lines.get(line as usize).filter(|s| s.ok) else { return vec![] };
+        let run = &s.runs[0];
+        let top = net.line_top(line);
+        let mut out = vec![];
+        for i in 0..run.stop_idx.len().saturating_sub(1) {
+            let (n0, n1) = (run.stop_idx[i] as usize, run.stop_idx[i + 1] as usize);
+            let (mut best, mut why) = (0.0f64, 0.0);
+            for &p in &run.segs[n0..n1] {
+                let e = super::net::path_edge(p);
+                let cap = net.v_cap(e);
+                for pc in net.edge_pieces(e) {
+                    let curve = pc.v_curve();
+                    let v = curve.min(cap).min(top);
+                    if v > best + 1e-9 {
+                        best = v;
+                        why = if top <= cap && top <= curve { 0.0 } else if cap <= curve { if net.edge_crossover[e as usize] { 3.0 } else { 1.0 } } else { 2.0 };
+                    }
+                }
+            }
+            let reached = profile::v_max(&run.free.phases, run.stop_s[i], run.stop_s[i + 1]);
+            out.extend([reached * 3.6, best * 3.6, why]);
+        }
+        out
     }
     /// What the last edit paid for trains, US$M (also in `last_charge`).
     pub fn last_train_charge(&self) -> f64 {
@@ -463,9 +532,9 @@ impl TrackApi {
             let fleet = self.fleet;
             // Starting several lines together can change junction delays and their fleet needs.
             // Quote the derived constructed service, not a sum of the planned lines' estimates.
-            let cost = self.w.trial_with(Op::Batch(ops), |w| trains_to_buy(w, fleet)).map_or(0.0, |(_, c)| c);
+            let (cost, cars) = self.w.trial_with(Op::Batch(ops), |w| (trains_to_buy(w, fleet), cars_to_buy(w, fleet))).map_or((0.0, 0), |(_, c)| c);
             if cost > 0.0 {
-                rows.extend([5.0, 0.0, 0.0, 0.0, 0.0, cost / CAR_PRICE, cost]);
+                rows.extend([5.0, 0.0, 0.0, 0.0, 0.0, cars as f64, cost]);
             }
         }
         rows
@@ -533,7 +602,8 @@ impl TrackApi {
         match r {
             Ok((r, trains)) => {
                 self.cash -= r.charge + trains;
-                self.fleet = self.fleet.max(cars_needed(&self.w));
+                let need = cars_needed(&self.w);
+                self.fleet = [self.fleet[0].max(need[0]), self.fleet[1].max(need[1])];
                 let out = self.done(Ok(r));
                 self.last_trains = trains;
                 out
@@ -604,7 +674,7 @@ impl TrackApi {
         if !r.before.is_empty() {
             let f = self.w.net.fit(&r.before);
             render_samples(&f.pieces, &f.vert, &mut out);
-            speeds.extend(render_speeds(&f.pieces, &f.vert));
+            speeds.extend(render_speeds(&f.pieces, &f.vert, if r.hsr { V_HSR } else { V_TOP }));
             speeds.push(joint_speed);
         }
         out.extend(main);
@@ -613,7 +683,7 @@ impl TrackApi {
             let f = self.w.net.fit(&r.after);
             speeds.push(joint_speed);
             render_samples(&f.pieces, &f.vert, &mut out);
-            speeds.extend(render_speeds(&f.pieces, &f.vert));
+            speeds.extend(render_speeds(&f.pieces, &f.vert, if r.hsr { V_HSR } else { V_TOP }));
         }
         self.preview_speeds = speeds;
         out
@@ -937,7 +1007,7 @@ impl TrackApi {
         for verts in &shapes {
             let f = self.w.net.fit(verts);
             out.push(verts.len() as f64);
-            vertex_rows(&f, verts, &mut out);
+            vertex_rows(&f, verts, &mut out, V_TOP);
             let mut pts = vec![];
             render_samples(&f.pieces, &f.vert, &mut pts);
             out.push((pts.len() / 3) as f64);
@@ -1101,12 +1171,12 @@ impl TrackApi {
         self.last = None;
         let mut out = vec![ok, cost, f.len, verts.len() as f64, mult];
         if shape.is_empty() {
-            vertex_rows(&f, verts, &mut out);
+            vertex_rows(&f, verts, &mut out, if hsr { V_HSR } else { V_TOP });
         } else {
-            vertex_rows(&self.w.net.fit(verts), verts, &mut out);
+            vertex_rows(&self.w.net.fit(verts), verts, &mut out, if hsr { V_HSR } else { V_TOP });
         }
         render_samples(&f.pieces, &f.vert, &mut out);
-        self.preview_speeds = render_speeds(&f.pieces, &f.vert);
+        self.preview_speeds = render_speeds(&f.pieces, &f.vert, if hsr { V_HSR } else { V_TOP });
         out
     }
 
@@ -1364,7 +1434,7 @@ impl TrackApi {
             let joint = if (back[0].x - end.x).hypot(back[0].y - end.y) > 0.5 { -1.0 } else { self.preview_speeds.last().copied().unwrap_or((V_TOP * 3.6) as f32) };
             self.preview_speeds.push(joint);
             render_samples(&f.pieces, &f.vert, &mut out);
-            self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert));
+            self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, V_TOP));
         }
         self.route_vertices = verts;
         out
@@ -2535,7 +2605,7 @@ impl TrackApi {
         let Some(path) = self.w.net.route(stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false }) })
     }
     /// Add a line with a whole-line fleet at each demand level.
     #[allow(clippy::too_many_arguments)]
@@ -2543,7 +2613,7 @@ impl TrackApi {
         let Some(path) = self.w.net.route(stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, stops: stops.to_vec(), path, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, dwell_s, turnaround_s, cars }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, stops: stops.to_vec(), path, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, dwell_s, turnaround_s, cars, fast: false }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
@@ -2787,7 +2857,7 @@ impl TrackApi {
                 continue;
             }
             let i = e as usize;
-            let vmin = n.edge_pieces(e).iter().map(|p| p.v_limit()).fold(n.v_cap(e), f64::min);
+            let vmin = n.edge_pieces(e).iter().map(|p| p.v_curve()).fold(n.v_cap(e), f64::min);
             let zs = n.edge_vert(e).iter().map(|v| v[1]);
             let (lo, hi) = zs.fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), z| (a.min(z), b.max(z)));
             out.extend([e as f64, n.edge_a[i] as f64, n.edge_b[i] as f64, n.edge_tracks[i] as f64, n.edge_built[i] as u8 as f64, n.edge_len[i], n.edge_cost[i], vmin * 3.6, (lo / LEVEL_H).round(), (hi / LEVEL_H).round()]);
@@ -2799,8 +2869,7 @@ impl TrackApi {
     pub fn edge_render_speeds(&self, e: u32) -> Vec<f32> {
         let n = &self.w.net;
         if !n.edge_ok(e) { return vec![]; }
-        let cap = (n.v_cap(e) * 3.6) as f32;
-        render_speeds(n.edge_pieces(e), n.edge_vert(e)).into_iter().map(|v| v.min(cap)).collect()
+        render_speeds(n.edge_pieces(e), n.edge_vert(e), n.v_cap(e))
     }
 
     pub fn edge_render(&self, e: u32) -> Vec<f64> {
@@ -3271,8 +3340,15 @@ impl TrackApi {
 }
 
 /// What buying the cars the running lines need beyond `fleet` costs, US$M.
-fn trains_to_buy(w: &TrackWorld, fleet: u32) -> f64 {
-    cars_needed(w).saturating_sub(fleet) as f64 * CAR_PRICE
+fn trains_to_buy(w: &TrackWorld, fleet: [u32; 2]) -> f64 {
+    let need = cars_needed(w);
+    (0..2).map(|k| need[k].saturating_sub(fleet[k]) as f64 * CAR_PRICES[k]).sum()
+}
+
+/// How many cars of either kind that buys.
+fn cars_to_buy(w: &TrackWorld, fleet: [u32; 2]) -> u32 {
+    let need = cars_needed(w);
+    (0..2).map(|k| need[k].saturating_sub(fleet[k])).sum()
 }
 
 /// An edge's vertices: its a node, its PIs, its b node; `moved` puts one node somewhere else.
@@ -3304,11 +3380,11 @@ fn relax_radii(net: &Network, d: &mut EdgeData, moved: &[(u32, f64, f64)], may: 
 
 /// Per vertex of a fitted alignment: x, y (the middle of its curve, or the vertex where it has
 /// none), radius used (0 = no curve), speed limit km/h.
-fn vertex_rows(f: &geom::Fit, verts: &[Pi], out: &mut Vec<f64>) {
+fn vertex_rows(f: &geom::Fit, verts: &[Pi], out: &mut Vec<f64>, cap: f64) {
     for (i, v) in verts.iter().enumerate() {
         let rad = f.radius.get(i).copied().unwrap_or(0.0);
         let (x, y) = if rad > 0.0 && !f.pieces.is_empty() { let (x, y, _) = geom::pos_at(&f.pieces, f.vert_s[i]); (x, y) } else { (v.x, v.y) };
-        out.extend([x, y, rad, if rad > 0.0 { geom::curve_speed(rad) * 3.6 } else { V_TOP * 3.6 }]);
+        out.extend([x, y, rad, if rad > 0.0 { (A_LAT * rad).sqrt().min(cap) * 3.6 } else { cap * 3.6 }]);
     }
 }
 
@@ -3828,12 +3904,12 @@ fn lead_in_capped(x: f64, y: f64, level: i8, dir: f64, toward: (f64, f64), scale
 
 /// Points along an alignment for drawing: x, y, height triples; arcs within 5 cm, straights
 /// every 100 m (so ramps show), ramp ends included.
-fn render_speeds(pieces: &[geom::Piece], vert: &[[f64; 2]]) -> Vec<f32> {
+fn render_speeds(pieces: &[geom::Piece], vert: &[[f64; 2]], cap: f64) -> Vec<f32> {
     if pieces.is_empty() { return vec![]; }
     render_chainages(pieces, vert).windows(2).map(|pair| {
         let mid = (pair[0] + pair[1]) * 0.5;
         let i = pieces.partition_point(|p| p.s0 <= mid).saturating_sub(1);
-        (pieces[i].v_limit() * 3.6) as f32
+        (pieces[i].v_curve().min(cap) * 3.6) as f32
     }).collect()
 }
 
@@ -4363,6 +4439,71 @@ mod tests {
         assert_eq!(a.line_auto(id).len(), 3, "undo brings the headways back");
     }
 
+    /// T-817: high-speed trains per line, their own fleet, prices, running costs and saves.
+    #[test]
+    fn high_speed_trains_are_a_fleet_of_their_own() {
+        let mut a = api();
+        a.set_cash(1e6);
+        a.set_route_hsr(true);
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(30000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        let nodes = a.nodes_info();
+        let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
+        assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "West".into()), 0, "{}", a.issues());
+        assert_eq!(a.add_station(1, n1, 0.0, 0.0, 200, "East".into()), 0, "{}", a.issues());
+        let id = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(id, &[n0, n1], 4, 4, 2, 30.0, 180.0, 0, 0xd7263d, "Line 1".into()), 0, "{}", a.issues());
+        assert!(!a.line_fast(id));
+        // a planned line's train quote follows its kind
+        let ordinary_quote = a.line_train_cost(id);
+        assert_eq!(a.set_line_fast(id, true), 0, "{}", a.issues());
+        assert!((a.line_train_cost(id) - ordinary_quote * 1.5).abs() < 1e-9);
+        assert_eq!(a.set_line_fast(id, false), 0);
+        assert_eq!(a.construct_line(id), 0, "{}", a.issues());
+        let need = a.cars_needed();
+        assert!(need > 0);
+        assert_eq!((a.fleet(), a.fleet_fast(), a.cars_needed_fast()), (need, 0, 0));
+        let slow = a.stop_times(id, 0, 0)[1];
+        let speeds = a.line_stretch_speeds(id);
+        assert!((speeds[0] - 160.0).abs() < 1e-6 && (speeds[1] - 160.0).abs() < 1e-6 && speeds[2] == 0.0, "{speeds:?}");
+        // choosing high-speed trains buys the cars at 3.75 each; the ordinary ones stay as spares
+        let cash = a.cash();
+        assert_eq!(a.set_line_fast(id, true), 0, "{}", a.issues());
+        assert!(a.line_fast(id));
+        let hs = a.cars_needed_fast();
+        assert_eq!((a.cars_needed(), a.fleet(), a.fleet_fast()), (0, need, hs));
+        assert!((cash - a.cash() - hs as f64 * HS_CAR_PRICE).abs() < 1e-6, "paid {}", cash - a.cash());
+        assert!(a.stop_times(id, 0, 0)[1] < slow * 0.75, "{} against {slow}", a.stop_times(id, 0, 0)[1]);
+        let speeds = a.line_stretch_speeds(id);
+        assert!((speeds[0] - 320.0).abs() < 1e-6 && (speeds[1] - 320.0).abs() < 1e-6 && speeds[2] == 0.0, "{speeds:?}");
+        // running costs 12 a train-km plus 3 a car-km
+        let info = a.lines_info();
+        let (len_km, tph, cars) = (info[9] / 1000.0, info[5], info[21]);
+        let tk = tph * 2.0 * len_km;
+        assert!((a.running_cost(0) - (12.0 * tk + 3.0 * tk * cars) * ECONOMY / 1e6).abs() < 1e-9);
+        // back to ordinary trains and forward again: both kinds are owned, nothing is paid
+        let cash = a.cash();
+        assert_eq!(a.set_line_fast(id, false), 0);
+        assert_eq!((a.fleet(), a.fleet_fast(), a.cash()), (need, hs, cash));
+        let tk = a.lines_info()[5] * 2.0 * len_km;
+        assert!((a.running_cost(0) - (9.0 * tk + 2.0 * tk * cars) * ECONOMY / 1e6).abs() < 1e-9);
+        // the spare high-speed cars never serve an ordinary line that grows
+        assert_eq!(a.set_train_counts(id, 6, 4, 2), 0, "{}", a.issues());
+        assert!((cash - a.cash() - (a.cars_needed() - need) as f64 * CAR_PRICE).abs() < 1e-6);
+        assert_eq!(a.fleet_fast(), hs);
+        assert_eq!(a.set_line_fast(id, true), 0);
+        // saves keep the kind; a save without the block loads as ordinary
+        let bytes = a.save();
+        let at = bytes.windows(4).rposition(|w| w == b"LHS1").expect("LHS1 written");
+        let mut b = api();
+        assert!(b.load(&bytes));
+        assert!(b.line_fast(0));
+        assert_eq!(b.stop_times(0, 0, 0), a.stop_times(id, 0, 0));
+        assert!(save::decode(&bytes[..at]).map(|n| !n.line_fast[0]).unwrap());
+        assert_eq!(a.set_line_fast(id, false), 0);
+        assert!(!a.save().windows(4).any(|w| w == b"LHS1"));
+    }
+
     #[test]
     fn blueprint_construct_run() {
         let mut a = api();
@@ -4435,7 +4576,7 @@ mod tests {
         let cars = a.lines_info()[21];
         let train_km = 30.0 * 2.0 * len_km;
         assert_eq!((RUN_COST_TRAIN_KM, RUN_COST_CAR_KM), (9.0, 2.0));
-        assert_eq!(a.money_params(), vec![CAR_PRICE, 2.0, ECONOMY, 9.0]);
+        assert_eq!(a.money_params(), vec![CAR_PRICE, 2.0, ECONOMY, 9.0, 3.75, 3.0, 12.0]);
         assert!((a.running_cost(0) - (9.0 * train_km + 2.0 * train_km * cars) * ECONOMY / 1e6).abs() < 1e-9);
         // In debt, edits that cost nothing still go through.
         a.set_cash(-50.0);

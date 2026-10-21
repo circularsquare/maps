@@ -63,6 +63,8 @@ export interface SaveHeader {
   cash: number;
   /** cars owned */
   fleet: number;
+  /** high-speed cars owned (T-817; absent in older saves) */
+  fleetFast?: number;
   /** fare curve: US$ a ride plus US$ a km */
   fares: { base: number; perKm: number };
   /** recent days, oldest first (today last) */

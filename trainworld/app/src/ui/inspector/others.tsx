@@ -669,6 +669,12 @@ export function TrackInspector({ edge }: { edge: number }) {
       <Built built={e.built} what={e.crossover ? "This crossover" : "This track"} />
       {!e.built && e.off && <p class="muted" data-tip={`Construct leaves ${e.crossover ? "this crossover" : "this track"} out until it is enabled`}>Disabled</p>}
       <ul class="rows">
+        {!e.crossover && (
+          <li data-tip={e.hsr ? "High-speed trains run up to 320 km/h here and ordinary trains up to 160 km/h" : "Trains run up to 160 km/h here. Over 160 needs high-speed track."}>
+            <span class="grow">Speed limit</span>
+            <span class="val">{speed(e.hsr ? 320 : 160)}</span>
+          </li>
+        )}
         <Row label="Slowest curve">{speed(e.vminKmh)}</Row>
         <Row label={e.built ? "Cost to build" : "Cost to construct"}>{money(cost)}</Row>
       </ul>

@@ -128,6 +128,13 @@ const perUnitText = (perKm: number) => {
 export function runCostRule(m: { runCostTrainKm: number; runCostCarKm: number }): string {
   return `${perUnitText(m.runCostTrainKm)} a train-${distUnit()} plus ${perUnitText(m.runCostCarKm)} a car-${distUnit()}`;
 }
+type Fleets = { carPrice: number; runCostTrainKm: number; runCostCarKm: number; hsCarPrice: number; hsRunCostTrainKm: number; hsRunCostCarKm: number; fleet: number; carsNeeded: number; fleetFast: number; carsNeededFast: number };
+/** One kind of train's car price, running costs and spare cars (T-817: high-speed or ordinary). */
+export function trainKind(m: Fleets, fast: boolean): { carPrice: number; runCostTrainKm: number; runCostCarKm: number; spare: number } {
+  return fast
+    ? { carPrice: m.hsCarPrice, runCostTrainKm: m.hsRunCostTrainKm, runCostCarKm: m.hsRunCostCarKm, spare: Math.max(0, m.fleetFast - m.carsNeededFast) }
+    : { carPrice: m.carPrice, runCostTrainKm: m.runCostTrainKm, runCostCarKm: m.runCostCarKm, spare: Math.max(0, m.fleet - m.carsNeeded) };
+}
 /** What a train of `cars` costs to run: "$27 a train-km". */
 export function trainRunCost(m: { runCostTrainKm: number; runCostCarKm: number }, cars: number): string {
   return `${perUnitText(m.runCostTrainKm + cars * m.runCostCarKm)} a train-${distUnit()}`;

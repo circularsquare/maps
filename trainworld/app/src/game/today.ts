@@ -13,6 +13,7 @@ import { world } from "./world";
 import { queryClock } from "../workers/clockClient";
 import { accountVersion } from "./boarding";
 import { moneyState } from "./money";
+import { trainKind } from "./format";
 import { PERIODS, periodAt } from "./periods";
 import type { LineInput, LineStats } from "./types";
 
@@ -90,10 +91,11 @@ export function runningToday(l: LineInput, st: LineStats): number {
   // T-309: in the line's own local time
   const t = (clock.now() + st.shift) / 3600, t0 = t - 24;
   const tph = { high: l.tph.high, medium: l.tph.medium, low: l.tph.low };
+  const k = trainKind(m, st.fast);
   let cost = 0;
   for (let h = Math.floor(t0); h < t; h++) {
     const lev = PERIODS[periodAt(h * 3600)].demand;
-    cost += tph[lev] * 2 * st.km * (m.runCostTrainKm + st.cars * m.runCostCarKm) * m.economy *(Math.min(h + 1, t) - Math.max(h, t0));
+    cost += tph[lev] * 2 * st.km * (k.runCostTrainKm + st.cars * k.runCostCarKm) * m.economy *(Math.min(h + 1, t) - Math.max(h, t0));
   }
   return cost;
 }

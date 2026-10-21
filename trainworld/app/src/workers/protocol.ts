@@ -87,6 +87,7 @@ export type EditOp =
   | { op: "removeLine"; line: number }
   /** a line's train length in cars, 0 for the most its shortest platform fits (T-733) */
   | { op: "lineCars"; line: number; cars: number }
+  | { op: "lineFast"; line: number; fast: boolean }
   /** the fare curve (T-028): US$ a ride plus US$ a km; not undoable, a setting */
   | { op: "fares"; base: number; perKm: number }
   /** link two stations into one complex, or undo a link (T-197): node ids; not undoable, a setting */
@@ -194,10 +195,17 @@ export interface MoneyState {
   /** cars owned, and the cars the running lines need */
   fleet: number;
   carsNeeded: number;
+  /** high-speed cars owned and needed (T-817): spares of one kind never serve the other */
+  fleetFast: number;
+  carsNeededFast: number;
   /** US$M per car, US$ per car-km and per train-km (the real figures) (sim/src/track/params.rs) */
   carPrice: number;
   runCostCarKm: number;
   runCostTrainKm: number;
+  /** the same for high-speed cars (T-817) */
+  hsCarPrice: number;
+  hsRunCostCarKm: number;
+  hsRunCostTrainKm: number;
   /** fares and running costs count this many times over in a game day (T-081, `ECONOMY`) */
   economy: number;
   fares: { base: number; perKm: number };
@@ -287,6 +295,11 @@ export interface ClockLine {
   buildCost: number;
   /** US$M for the trains it will need once constructed, after spare cars (T-028) */
   trainCost: number;
+  /** high-speed trains (T-817) */
+  fast: boolean;
+  /** per stretch between stops of run 0: top speed reached, the limit there (km/h), what sets
+   * the limit (`TrackApi::line_stretch_speeds`, T-817) */
+  stretchSpeeds: number[];
   /** seconds its local time runs ahead of the game clock: its first stop's region's (T-309) */
   shift: number;
   /** the stations it passes between stops, `[gap, node]` pairs (`TrackApi::passed_stations`, T-646) */

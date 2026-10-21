@@ -319,23 +319,25 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
     run.nodes.push(net.path_nodes(run.segs[0]).0);
     run.node_s.push(0.0);
     let mut raw: Vec<[f64; 2]> = vec![];
+    let top = net.line_top(l);
     for &p in &run.segs {
         let e = path_edge(p);
         let len = net.edge_len[e as usize];
         run.seg_off.push(s);
         let pcs = net.edge_pieces(e);
-        let cap = net.v_cap(e);
+        // T-817: the lowest of the curve's speed, the track's cap and the trains' top speed
+        let cap = net.v_cap(e).min(top);
         let mut add = |a: f64, v: f64| match raw.last() {
             Some(l) if l[1] == v => {}
             _ => raw.push([a, v]),
         };
         if path_dir(p) == 0 {
             for pc in pcs {
-                add(s + pc.s0, pc.v_limit().min(cap));
+                add(s + pc.s0, pc.v_curve().min(cap));
             }
         } else {
             for pc in pcs.iter().rev() {
-                add(s + len - (pc.s0 + pc.len), pc.v_limit().min(cap));
+                add(s + len - (pc.s0 + pc.len), pc.v_curve().min(cap));
             }
         }
         s += len;

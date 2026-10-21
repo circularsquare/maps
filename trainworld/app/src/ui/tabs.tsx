@@ -549,6 +549,16 @@ export function MoneyTab() {
         <Row label="Spare cars">
           <span data-tip="Cars kept in the depot after a line shrank. A line that grows uses them before any are bought.">{Math.max(0, m.fleet - m.carsNeeded)}</span>
         </Row>
+        {(m.fleetFast > 0 || m.carsNeededFast > 0) && (
+          <>
+            <Row label={<span data-tip={`A high-speed car costs ${money(m.hsCarPrice * 1e6)}. Running costs ${runCostRule({ runCostTrainKm: m.hsRunCostTrainKm, runCostCarKm: m.hsRunCostCarKm })}. Lines with high-speed trains use only these.`}>High-speed cars owned</span>}>
+              <span data-tip={`${m.carsNeededFast.toLocaleString("en-US")} on the running lines`}>{m.fleetFast}</span>
+            </Row>
+            <Row label="Spare high-speed cars">
+              <span data-tip="High-speed cars kept in the depot. A line with high-speed trains uses them before any are bought.">{Math.max(0, m.fleetFast - m.carsNeededFast)}</span>
+            </Row>
+          </>
+        )}
       </ul>
       <ul class="rows">
         <Row label="Track and stations built"><Money dollars={w.money.builtValue} /></Row>

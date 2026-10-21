@@ -6,8 +6,10 @@
 pub const A_LAT: f64 = 1.1;
 /// Smallest radius a player may build, m (38 km/h).
 pub const MIN_RADIUS: f64 = 100.0;
-/// Top speed of the M1 train, m/s (160 km/h). The track itself has no cap.
+/// Top speed of an ordinary train, m/s (160 km/h), and the cap on track other than high speed.
 pub const V_TOP: f64 = 160.0 / 3.6;
+/// Top speed of a high-speed train and the cap on high-speed track, m/s (T-817).
+pub const V_HSR: f64 = 320.0 / 3.6;
 /// Auto radius cap: the smallest whole-metre radius that already allows V_TOP
 /// (ceil(44.44² / 1.1) = 1,796 m; T-008 rounds it to 1,800).
 pub const R_CAP: f64 = 1796.0;
@@ -60,12 +62,15 @@ pub const CAR_LEN: f64 = 20.0;
 pub const DEFAULT_DWELL_S: f32 = 30.0;
 pub const DEFAULT_TURNAROUND_S: f32 = 180.0;
 
-/// Traction: 1.0 m/s² up to 60 km/h, 0.5 m/s² above (a constant-power EMU falls off with speed;
-/// two bands keep every phase at constant acceleration, so keyframes stay exact). Braking 0.9 m/s²
-/// (normal service braking; 1.1-1.3 is the usual maximum service rate). notes/T-040.md.
+/// Traction: 1.0 m/s² up to 60 km/h, 0.5 m/s² to 200 km/h, 0.3 m/s² above, which only high-speed
+/// trains reach (T-817). A constant-power EMU falls off with speed; bands keep every phase at
+/// constant acceleration, so keyframes stay exact. Braking 0.9 m/s² (normal service braking;
+/// 1.1-1.3 is the usual maximum service rate). notes/T-040.md.
 pub const ACCEL_LOW: f64 = 1.0;
 pub const ACCEL_HIGH: f64 = 0.5;
+pub const ACCEL_TOP: f64 = 0.3;
 pub const ACCEL_SWITCH_V: f64 = 60.0 / 3.6;
+pub const ACCEL_TOP_V: f64 = 200.0 / 3.6;
 pub const BRAKE: f64 = 0.9;
 
 // ---- costs, US$M (SPEC 6.4) ----
@@ -100,6 +105,10 @@ pub const CAR_PRICE: f64 = 2.5;
 /// (research/running-costs.md option B, Anita 2026-10-21).
 pub const RUN_COST_TRAIN_KM: f64 = 9.0;
 pub const RUN_COST_CAR_KM: f64 = 2.0;
+/// A high-speed car's price and running costs (T-817, notes/T-817.md): 1.5x a car, 12 + 3.
+pub const HS_CAR_PRICE: f64 = 3.75;
+pub const HS_RUN_COST_TRAIN_KM: f64 = 12.0;
+pub const HS_RUN_COST_CAR_KM: f64 = 3.0;
 /// The economy runs at 100x (T-081; Anita, 2026-10-09, as Subway Builder does): fares and running
 /// costs per game day are this many times the real figures, so a line pays back in about a game
 /// week. Construction and train prices stay real. The one constant: running costs here, fares in

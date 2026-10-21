@@ -125,7 +125,12 @@ purpose filter the purpose drawn is ringed in the bar.
   a line naming the worst period and its wait when that period's grade is worse than the
   level's, and "Most of the waiting is at Gare du Nord" (the stop with the most rider-minutes
   waited over the level's periods, from the tail of `line_periods`) when anyone waits [T-818]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
-  [T-516]; under the table a **Train length** stepper in cars [T-733], 1 up to what the line's
+  [T-516]; under the table a **Trains** row with an Ordinary / High speed switch [T-817], each
+  option's hover giving its top speed ("High-speed trains run up to 320 km/h on high-speed track
+  and 160 km/h on other track"), a car's price and the running costs, and on a running line what
+  switching buys or takes from the depot and that the cars running now stay in the depot; then
+  **Top speed**, the highest speed the trains reach on the line (hover: over 160 km/h needs
+  high-speed trains on high-speed track); then a **Train length** stepper in cars [T-733], 1 up to what the line's
   shortest platform fits (platform / 20 m), each button's hover giving the length it leads to,
   the riders a train then holds at crush ("7 cars, 1,120 riders a train at most"), the cars it
   buys or takes from the depot on a running line, and the cap ("The 160 m platform at East fits
@@ -148,7 +153,9 @@ purpose filter the purpose drawn is ringed in the bar.
   wanted a train (boarded plus left behind) [T-230, T-239, T-293, T-669]; the block's heading is
   "Past 24 hours" (no Yesterday view since T-669), with a rule above it and none between its rows
   (the only other rule is above Stops) [T-692]; the stops (above Schedule while being edited [T-670]) with their time from
-  the start and boardings in the past 24 hours, each transfer stop (any station of its complex
+  the start (its hover: "Trains reach 320 km/h" from the stop before, then what limits them there:
+  the trains' top speed, ordinary track, curves or a crossover, and when the stops are too close
+  to reach it [T-817]) and boardings in the past 24 hours, each transfer stop (any station of its complex
   served by another line) showing the two other lines with most boardings there in the past
   24 hours as bullets and, when there are more, a "+" whose hover names the rest [T-549]; **flat junctions and
   flat crossings on the route** [T-629, `TrackApi.line_marks`] as small marks on the diagram's bar between the

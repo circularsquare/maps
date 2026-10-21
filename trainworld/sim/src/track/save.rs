@@ -17,7 +17,9 @@ use super::params::*;
 /// tracks | 4) has none and still loads. Optional trailing blocks follow the lines: `LUI1` (line
 /// numbers and symbols) and, when the player linked stations, `LNK1` (T-197: count, then node
 /// pairs in the dense ids). A save without them loads with none. An edge's flags `| 32` mark a
-/// crossover's diagonal (T-338), `| 64` high-speed track (T-817); older saves have none.
+/// crossover's diagonal (T-338), `| 64` high-speed track (T-817); older saves have none. A
+/// trailing `LHS1` block (T-817) lists the lines running high-speed trains; without it all are
+/// ordinary.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -214,6 +216,13 @@ pub fn encode(net: &Network) -> Vec<u8> {
             for s in a { w.u(s as u64); }
         }
     }
+    // T-817: the lines running high-speed trains, after LAU1 and only when there are any
+    let fast: Vec<usize> = lines.iter().enumerate().filter(|(_, &l)| net.line_fast[l as usize]).map(|(i, _)| i).collect();
+    if !fast.is_empty() {
+        w.0.extend_from_slice(b"LHS1");
+        w.u(fast.len() as u64);
+        for i in fast { w.u(i as u64); }
+    }
     w.0
 }
 
@@ -353,7 +362,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
             prev += v >> 1;
             path.push((prev as u32) << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false })).map_err(|e| format!("{e:?}"))?;
     }
     net.next_line_number = n_lines as u32 + 1;
     if r.0.get(r.1..r.1 + 4) == Some(b"LUI1") {
@@ -376,6 +385,13 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
             let i = r.u()? as usize;
             let auto = [r.u()? as u32, r.u()? as u32, r.u()? as u32];
             if i < n_lines && net.line_trains[i].is_some() { net.line_auto[i] = Some(auto); }
+        }
+    }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LHS1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            if i < n_lines { net.line_fast[i] = true; }
         }
     }
     net.take_touch();

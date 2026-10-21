@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { queryClock } from "../../workers/clockClient";
 import { clock, demandAt } from "../../game/clock";
-import { clockTime, count, distance, duration, headway, length, money, runCostRule, speed, trainRunCost } from "../../game/format";
+import { clockTime, count, distance, duration, headway, length, money, runCostRule, speed, trainKind, trainRunCost } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS, periodAt } from "../../game/periods";
 import { crowdColour, crowdGrade, crowding, runningToday, today, useToday, waitText } from "../../game/today";
@@ -187,7 +187,8 @@ function LineToday({ l, st, periods, kind }: { l: LineInput; st: LineStats; peri
   const load = periods ? averageLoad(periods, st) : null;
   const run = runningToday(l, st);
   const m = moneyState.value;
-  const rule = m ? `\nRunning costs ${runCostRule(m)}: ${trainRunCost(m, st.cars)} for this line's ${carsText(st.cars)}` : "";
+  const k = m && trainKind(m, st.fast);
+  const rule = k ? `\nRunning costs ${runCostRule(k)}: ${trainRunCost(k, st.cars)} for this line's ${carsText(st.cars)}` : "";
   return (
     <>
       <div class="h divided">
@@ -304,8 +305,9 @@ function changeTip(counts: [number, number, number], lev: number, to: number, st
   next[lev] = to;
   const cars = (Math.max(...next) - Math.max(...counts)) * st.cars;
   if (cars > 0) {
-    const bought = Math.max(0, cars - Math.max(0, m.fleet - m.carsNeeded));
-    return head + (bought > 0 ? `\nBuys ${carsText(bought)} for ${money(bought * m.carPrice * 1e6)}` : `\nUses ${carsText(cars)} from the depot`);
+    const k = trainKind(m, st.fast);
+    const bought = Math.max(0, cars - k.spare);
+    return head + (bought > 0 ? `\nBuys ${carsText(bought)} for ${money(bought * k.carPrice * 1e6)}` : `\nUses ${carsText(cars)} from the depot`);
   }
   return cars < 0 ? head + `\nFrees ${carsText(-cars)}, which stay in the depot` : head;
 }
@@ -323,10 +325,11 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   const tip = (to: number) => {
     let t = `${carsText(to)}, ${(to * CRUSH_PER_CAR).toLocaleString("en-US")} riders a train at most`;
     const m = moneyState.value, trains = Math.max(...st.trainsNeeded);
-    if (m) t += `\nRunning costs ${trainRunCost(m, to)}${to !== cars ? `, ${trainRunCost(m, cars)} now` : ""}`;
-    if (m && st.status === "running" && to > cars) {
-      const more = (to - cars) * trains, bought = Math.max(0, more - Math.max(0, m.fleet - m.carsNeeded));
-      t += bought > 0 ? `\nBuys ${carsText(bought)} for ${money(bought * m.carPrice * 1e6)}` : `\nUses ${carsText(more)} from the depot`;
+    const k = m && trainKind(m, st.fast);
+    if (k) t += `\nRunning costs ${trainRunCost(k, to)}${to !== cars ? `, ${trainRunCost(k, cars)} now` : ""}`;
+    if (k && st.status === "running" && to > cars) {
+      const more = (to - cars) * trains, bought = Math.max(0, more - k.spare);
+      t += bought > 0 ? `\nBuys ${carsText(bought)} for ${money(bought * k.carPrice * 1e6)}` : `\nUses ${carsText(more)} from the depot`;
     }
     return t + "\n" + capText;
   };
@@ -342,6 +345,56 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
       </li>
     </ul>
   );
+}
+
+/** T-817: the line's kind of train, ordinary or high speed, and the top speed its trains reach. A
+ * switch buys the line's cars of the other kind beyond that kind's spares; the cars it leaves
+ * stay in the depot. */
+function TrainType({ l, st }: { l: LineInput; st: LineStats }) {
+  const m = moneyState.value;
+  const tip = (fast: boolean) => {
+    const k = m && trainKind(m, fast);
+    let t = fast ? "High-speed trains run up to 320 km/h on high-speed track and 160 km/h on other track" : "Ordinary trains run up to 160 km/h";
+    if (!k) return t;
+    t += `\nA car costs ${money(k.carPrice * 1e6)}. Running costs ${runCostRule(k)}`;
+    const need = Math.max(...st.trainsNeeded) * st.cars;
+    if (fast !== st.fast && st.status === "running" && need > 0) {
+      const bought = Math.max(0, need - k.spare);
+      t += bought > 0 ? `\nBuys ${carsText(bought)} for ${money(bought * k.carPrice * 1e6)}` : `\nUses ${carsText(need)} from the depot`;
+      t += `\nThe ${carsText(need)} running now stay in the depot`;
+    }
+    return t;
+  };
+  const top = st.stretches.reduce((v, s) => Math.max(v, s.reached), 0);
+  return (
+    <ul class="rows">
+      <li>
+        <span class="grow">Trains</span>
+        <Segmented<boolean>
+          options={[
+            [false, <span data-tip={tip(false)}>Ordinary</span>],
+            [true, <span data-tip={tip(true)}>High speed</span>],
+          ]}
+          value={st.fast}
+          onChange={(fast) => { if (fast !== st.fast) void edit({ op: "lineFast", line: l.num, fast }); }}
+        />
+      </li>
+      {top > 0 && (
+        <li data-tip={`The fastest the trains run on this line.\nOver 160 km/h needs high-speed trains on high-speed track.`}>
+          <span class="grow">Top speed</span>
+          <span class="val">{speed(top)}</span>
+        </li>
+      )}
+    </ul>
+  );
+}
+
+/** The hover on a stop's time: how fast the trains run from the stop before, and what holds them. */
+function stretchTip(s: { reached: number; limit: number; why: number } | undefined): string | undefined {
+  if (!s) return undefined;
+  const lim = speed(s.limit);
+  const why = s.why === 0 ? `The trains' top speed is ${lim}` : s.why === 1 ? `Ordinary track holds trains to ${lim}` : s.why === 2 ? `Curves hold trains to ${lim} here` : `A crossover holds trains to ${lim} here`;
+  return `Trains reach ${speed(s.reached)}\n${why}` + (s.reached < s.limit - 1 ? "\nThe stops are too close together to reach it" : "");
 }
 
 const headwayText = (s: number) => (s > 0 ? `${+(s / 60).toFixed(2)} min` : "none");
@@ -591,7 +644,7 @@ export function LineInspector({ id }: { id: string }) {
                 <span class="stop-name" onClick={() => (selection.value = { kind: "station", station: s })}>
                   {name.get(s)}
                 </span>
-                {i > 0 && times[i] !== undefined && <span class="t muted num">{duration(times[i])}</span>}
+                {i > 0 && times[i] !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[i - 1])}>{duration(times[i])}</span>}
                 {st.reversals?.includes(i) && (
                   <span class="rev-stop" data-tip={`Trains reverse here and stand ${duration(st.turnaroundS)}\nAt most 12 trains an hour reverse on each side`}>
                     <Icon.uturn />
@@ -689,6 +742,7 @@ export function LineInspector({ id }: { id: string }) {
           </tr>
         ))}
       </table>
+      {st.status !== "broken" && <TrainType l={l} st={st} />}
       {st.status !== "broken" && <TrainLength l={l} st={st} />}
       {st.status === "running" && held.length > 0 && (
         <ul class="alerts">

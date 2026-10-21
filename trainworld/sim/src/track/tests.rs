@@ -31,7 +31,7 @@ pub fn station(w: &mut TrackWorld, n: u32, platform: u16) {
 pub fn line(w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]) -> u32 {
     let path = w.net.route(stops).expect("no route");
     let id = w.net.alloc_line();
-    let d = LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0 };
+    let d = LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false };
     w.apply(Op::Line { id, data: Some(d) }).unwrap();
     id
 }
@@ -1025,4 +1025,112 @@ fn sparse_and_reversing_lines_lead_too() {
             }
         }
     }
+}
+
+// ---- T-817: high-speed track and trains
+
+/// A - B - C in a straight line, 40 km each, stations at A and C only; `hsr` per edge, then a line
+/// A to C with high-speed trains or not.
+fn hsr_world(hsr: [bool; 2], fast: bool) -> (TrackWorld, u32) {
+    let mut w = world();
+    let a = node(&mut w, 0.0, 0.0, 0);
+    let b = node(&mut w, 40000.0, 0.0, 0);
+    let c = node(&mut w, 80000.0, 0.0, 0);
+    for (k, (p, q)) in [(a, b), (b, c)].into_iter().enumerate() {
+        let id = w.net.alloc_edge();
+        w.apply(Op::Edge { id, data: Some(EdgeData { a: p, b: q, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, hsr: hsr[k] }) }).unwrap();
+    }
+    station(&mut w, a, 200);
+    station(&mut w, c, 200);
+    let l = line(&mut w, &[a, c], [4.0, 2.0, 1.0]);
+    let mut d = w.net.line_data(l).unwrap();
+    d.fast = fast;
+    w.apply(Op::Line { id: l, data: Some(d) }).unwrap();
+    (w, l)
+}
+
+fn top_kmh(w: &TrackWorld, l: u32, s0: f64, s1: f64) -> f64 {
+    super::profile::v_max(&w.svc.lines[l as usize].runs[0].free.phases, s0, s1) * 3.6
+}
+
+#[test]
+fn high_speed_trains_reach_320_only_on_high_speed_track() {
+    let (w, l) = hsr_world([true, true], true);
+    assert!((top_kmh(&w, l, 0.0, 80000.0) - 320.0).abs() < 1e-6);
+    let fast = w.svc.lines[l as usize].runs[0].free.duration;
+    // ordinary trains on high-speed track: 160
+    let (w, l) = hsr_world([true, true], false);
+    assert!((top_kmh(&w, l, 0.0, 80000.0) - 160.0).abs() < 1e-6);
+    let slow = w.svc.lines[l as usize].runs[0].free.duration;
+    assert!(fast < slow * 0.6, "{fast} against {slow}");
+    // high-speed trains on ordinary track: 160, and the same run as ordinary trains
+    let (w, l) = hsr_world([false, false], true);
+    assert!((top_kmh(&w, l, 0.0, 80000.0) - 160.0).abs() < 1e-6);
+    assert_eq!(w.svc.lines[l as usize].runs[0].free.duration, slow);
+}
+
+#[test]
+fn a_mixed_line_runs_each_stretch_at_its_own_limit() {
+    let (w, l) = hsr_world([true, false], true);
+    assert!((top_kmh(&w, l, 1000.0, 30000.0) - 320.0).abs() < 1e-6);
+    // past the joint at 40 km, with the train's half length, it is down to 160
+    assert!((top_kmh(&w, l, 40200.0, 79000.0) - 160.0).abs() < 1e-6);
+    let lim = &w.svc.lines[l as usize].runs[0].limits;
+    assert!(lim.iter().any(|x| (x[1] - V_HSR).abs() < 1e-9) && lim.iter().any(|x| (x[1] - V_TOP).abs() < 1e-9));
+    // the other way round too
+    let (w, l) = hsr_world([false, true], true);
+    assert!((top_kmh(&w, l, 1000.0, 39000.0) - 160.0).abs() < 1e-6);
+    assert!((top_kmh(&w, l, 50000.0, 70000.0) - 320.0).abs() < 1e-6);
+}
+
+#[test]
+fn curves_cap_high_speed_trains_below_the_track_cap() {
+    let mut w = world();
+    let a = node(&mut w, 0.0, 0.0, 0);
+    let c = node(&mut w, 80000.0, 8000.0, 0);
+    let id = w.net.alloc_edge();
+    // one bend of 3,000 m radius in the middle: sqrt(1.1 x 3000) = 57.4 m/s, 207 km/h
+    let pis = vec![Pi::new(40000.0, 0.0, 3000.0, 0)];
+    w.apply(Op::Edge { id, data: Some(EdgeData { a, b: c, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr: true }) }).unwrap();
+    station(&mut w, a, 200);
+    station(&mut w, c, 200);
+    let l = line(&mut w, &[a, c], [4.0, 2.0, 1.0]);
+    let mut d = w.net.line_data(l).unwrap();
+    d.fast = true;
+    w.apply(Op::Line { id: l, data: Some(d) }).unwrap();
+    let run = &w.svc.lines[l as usize].runs[0];
+    let curve = (A_LAT * 3000.0f64).sqrt();
+    assert!(run.limits.iter().any(|x| (x[1] - curve).abs() < 1e-6), "{:?}", run.limits);
+    assert!((top_kmh(&w, l, 0.0, 30000.0) - 320.0).abs() < 1e-6);
+    let mid = run.len / 2.0;
+    assert!(super::profile::speed_at(&run.free.phases, mid) <= curve + 1e-6);
+}
+
+#[test]
+fn high_speed_acceleration_takes_the_third_band() {
+    use super::profile::{run, time_at, speed_at};
+    let p = run(&[[0.0, V_HSR]], &[0.0, 60000.0], &[], &[0.0, 0.0], &[]);
+    // 0-60 at 1.0, 60-200 at 0.5, 200-320 at 0.3 (notes/T-817.md): 206 s and 10.97 km
+    let (v1, v2, v3) = (ACCEL_SWITCH_V, ACCEL_TOP_V, V_HSR);
+    let d = v1 * v1 / 2.0 + (v2 * v2 - v1 * v1) / 1.0 + (v3 * v3 - v2 * v2) / 0.6;
+    let t = v1 + (v2 - v1) / 0.5 + (v3 - v2) / 0.3;
+    assert!((d - 10972.0).abs() < 1.0 && (t - 205.6).abs() < 0.1, "{d} {t}");
+    assert!((speed_at(&p.phases, d) - V_HSR).abs() < 1e-6);
+    assert!((time_at(&p.phases, d) - t).abs() < 1e-6);
+    assert!(speed_at(&p.phases, d - 100.0) < V_HSR - 0.1);
+    // the time is exact: d / v at 320 for the rest, braking at 0.9
+    let brake = V_HSR * V_HSR / (2.0 * BRAKE);
+    let want = t + (60000.0 - d - brake) / V_HSR + V_HSR / BRAKE;
+    assert!((p.duration - want).abs() < 1e-6, "{} {want}", p.duration);
+    // an ordinary train never leaves the second band: 0-160 unchanged
+    let q = run(&[[0.0, V_TOP]], &[0.0, 60000.0], &[], &[0.0, 0.0], &[]);
+    assert!(q.phases.iter().all(|ph| ph.a != ACCEL_TOP));
+}
+
+#[test]
+fn a_320_section_takes_16_trains_an_hour() {
+    // T-517's headway: 70 s plus v / 0.6
+    let hw = SECTION_BASE_S + V_HSR / SIGNAL_BRAKE;
+    assert_eq!((3600.0 / hw).floor(), 16.0);
+    assert_eq!((3600.0 / (SECTION_BASE_S + V_TOP / SIGNAL_BRAKE)).floor(), 24.0);
 }

@@ -138,7 +138,16 @@ impl Piece {
             self.radius() / self.g
         }
     }
-    /// Curve speed limit, capped at the train's top speed (SPEC 6.1).
+    /// The curve's own speed limit, uncapped (infinite on a straight); trains take the lowest of
+    /// it, the track's cap and their top speed (T-817).
+    pub fn v_curve(&self) -> f64 {
+        if self.k == 0.0 {
+            f64::INFINITY
+        } else {
+            (A_LAT * self.ground_radius()).sqrt()
+        }
+    }
+    /// Curve speed limit, capped at an ordinary train's top speed (SPEC 6.1).
     pub fn v_limit(&self) -> f64 {
         if self.k == 0.0 {
             V_TOP

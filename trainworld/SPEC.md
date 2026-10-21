@@ -234,7 +234,7 @@ The player draws curved track (straights and circular arcs, double, quad or high
 -3 to +3, "levels" in the code) two clicks per segment, each segment one curve through the click leaving along the track, up
 to 350 degrees round [T-418, T-422, T-442], its curves laid out for a design speed the player picks
 (160 to 320 km/h, wider curves for faster; T-817; high-speed track is double track at 1.5x the
-price, its design speed 320 by default, and trains on it still run at most 160 until T-817 b2),
+price, its design speed 320 by default; track caps trains at 160 km/h, high-speed track at 320),
 places stations (on track, or on open ground with a
 straight piece of their own track, one click for its middle and one for its direction [T-794,
 T-834]), and makes lines, all as
@@ -245,7 +245,8 @@ game in the same edit where it fits: an X between the two pairs, 120 m long, 50 
 junctions, so lines can change pairs between neighbouring quad stations [T-338, T-733]. Single
 track is not offered (saves and imports keep theirs, which run as before) [T-733]. Each line has
 a train length in cars, by default the most its shortest platform fits (20 m cars) and never more
-[T-733]. A line may reverse partway at a stop, standing its turnaround there, at most 12 reversals an
+[T-733], and ordinary trains (160 km/h) or high-speed trains (320 km/h on high-speed track, cars
+1.5x the price, dearer to run, a fleet of their own), the player's choice [T-817]. A line may reverse partway at a stop, standing its turnaround there, at most 12 reversals an
 hour per station side, and a large icon marks the station [T-797]. Lines set a whole number of trains for high, medium and low demand, or a headway for each, run with the fewest trains that keep it, or at the track's limit the most that fit [T-625, T-679]; capacity and
 junction conflicts add delay, computed from the schedules in the clock worker before demand runs,
 and no track, platform or junction carries more trains than its capacity: a line's fleet past that
