@@ -137,7 +137,7 @@ export interface DockLayout {
  * saved the old default with everything else, so that setting is dropped once and the new default applies. */
 const VERSION = 6;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; keep: boolean; snap: boolean }>; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; keep: boolean; snap: boolean; design: number }>; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -215,6 +215,10 @@ export const keepPlacing = signal(saved.build?.keep === true);
 /** T-727: the track tool snaps to the real network (noritetsu's lines); while it does, the layer is
  * drawn at full strength */
 export const snapReal = signal(saved.build?.snap === true);
+/** T-817: the speed the track tool lays curves out for, km/h (`TrackApi::set_design_speed`). */
+export const DESIGN_SPEEDS = [160, 200, 250, 320] as const;
+export type DesignSpeed = (typeof DESIGN_SPEEDS)[number];
+export const designSpeed = signal<DesignSpeed>(DESIGN_SPEEDS.includes(saved.build?.design as DesignSpeed) ? (saved.build!.design as DesignSpeed) : 160);
 /** the real network is being snapped to: the switch on and the track tool in hand */
 export const snapping = computed(() => snapReal.value && tool.value === "track");
 
@@ -251,7 +255,7 @@ effect(() => {
   void loadFont(k).then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 });
 effect(() => {
-  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, tracks: trackCount.value, keep: keepPlacing.value, snap: snapReal.value }, v: VERSION };
+  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, tracks: trackCount.value, keep: keepPlacing.value, snap: snapReal.value, design: designSpeed.value }, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

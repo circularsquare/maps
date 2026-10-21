@@ -37,10 +37,17 @@ Full design, numbers and sources: `notes/T-008.md`.
   hairpin past a half turn, T-442), is split into equal corners of at most 90 degrees, each PI
   r tan(turn / 2n) from the arc's tangent points, so every leg between two corners is shared
   exactly and the auto radius is the arc's at each; a level change ramps on the middle leg. **Where
-  that arc would be wider than the 1,796 m cap** (T-471), the segment is the capped curve from the
+  that arc would be wider than the design radius** (T-471), the segment is the capped curve from the
   start, turning until it faces the click, then a straight to the click: one round curve of any
-  turn, still through the click but arriving on its own heading rather than 2a. At r = 1,796 m the
-  straight is nil, so the shape grows out of the arc without a jump. A segment from a free point is straight. A segment ending on track or a node joins
+  turn, still through the click but arriving on its own heading rather than 2a. At r = the design
+  radius the straight is nil, so the shape grows out of the arc without a jump. **The design
+  radius** (T-817) follows the Build tab's design speed: the smallest whole-metre radius for it at
+  a_lat (below), 1,796 m at 160 km/h (the default and the auto cap), 2,806 at 200, 4,385 at 250,
+  7,183 at 320 (`design_radius`, `TrackApi::set_design_speed`). It also sizes the lead-in curves of
+  a drawn segment (`lead_in_capped`). Above 160, a corner the tool makes whose curve comes out
+  wider than 1,796 m gets that radius set, since an auto radius is always capped at 1,796 m; so
+  drawn track keeps its shape, existing track is untouched, and a corner of a real line's snapped
+  route (fitted at 1,796 m) stays auto. Trains still run at most their top speed. A segment from a free point is straight. A segment ending on track or a node joins
   it like a turnout, so it has the lead-in shape (a lead-in PI at each end). Refused: a curve under
   100 m (the ghost and circle red), a click within 5 degrees of straight behind the start ("turn
   back on itself": the circle grows without bound), and anything the edit refuses (water, crossing

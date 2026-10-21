@@ -51,6 +51,8 @@ pub struct TrackApi {
     bridge_refused: bool,
     /// T-418: a route from a heading to a free end is one tangent arc (`set_route_tangent`).
     route_tangent: bool,
+    /// T-817: the auto radius cap of the corners the drawing tool makes, ground m (`set_design_speed`).
+    route_cap: f64,
     /// The last tangent route's circle: centre x, y and ground radius, else empty.
     route_arc: Vec<f64>,
     /// The end node of the last route asked about (new or existing).
@@ -153,6 +155,7 @@ impl TrackApi {
             route_bridged: vec![],
             bridge_refused: false,
             route_tangent: false,
+            route_cap: R_CAP,
             route_arc: vec![],
             route_end: u32::MAX,
             preview_speeds: vec![],
@@ -1145,7 +1148,7 @@ impl TrackApi {
         let beside_b = if quad && through { quad_beside(&self.w.net, rb.node).filter(|b| b.1 == -side) } else { None };
         let tangent = through && rb.dirs.is_empty() && (!quad || beside_a.is_some());
         if let (true, Some(dir)) = (tangent, nearer_dir(&ra, next_a)) {
-            let (pi, circle) = tangent_arc(ra.x, ra.y, ra.level, rb.level, dir, next_a, scaled);
+            let (pi, circle) = tangent_arc(ra.x, ra.y, ra.level, rb.level, dir, next_a, scaled, self.route_cap);
             if let Some(c) = circle {
                 self.route_arc = c.to_vec();
             }
@@ -1156,15 +1159,19 @@ impl TrackApi {
                     return Err(Issue::Geom { edge: u32::MAX, issue: GeomIssue::Reversal(1) });
                 }
             }
-        } else if let Some(p) = lead_in(&ra, next_a, scaled) {
+        } else if let Some(p) = lead_in(&ra, next_a, scaled, self.route_cap) {
             verts.push(p);
         }
         let first_click = verts.len();
         verts.extend_from_slice(&pis);
-        if let Some(p) = lead_in(&rb, prev_b, scaled) {
+        let lead_b = lead_in(&rb, prev_b, scaled, self.route_cap);
+        if let Some(p) = lead_b {
             verts.push(p);
         }
         verts.push(Pi::new(rb.x, rb.y, 0.0, rb.level));
+        // T-817: the corners made here, not the clicked ones (a real line's, fitted at R_CAP)
+        let made: Vec<usize> = (1..first_click).chain(lead_b.map(|_| verts.len() - 2)).collect();
+        design_radii(&mut verts, &made, self.route_cap, scaled);
         let mut ops = ra.ops.clone();
         ops.extend(rb.ops.clone());
         // Quad track (T-255): the drawn pair, and an express pair beside it from end to end.
@@ -1359,6 +1366,13 @@ impl TrackApi {
     /// loose quad end, T-423).
     pub fn set_route_tangent(&mut self, on: bool) {
         self.route_tangent = on;
+    }
+
+    /// T-817: the design speed of routes after this, km/h: their curves are laid out for it, up to
+    /// `design_radius(kmh)`. Clamped to 160..320; 160 is the drawing tool as before.
+    pub fn set_design_speed(&mut self, kmh: f64) {
+        let kmh = if kmh.is_finite() { kmh.clamp(DESIGN_SPEEDS[0], DESIGN_SPEEDS[DESIGN_SPEEDS.len() - 1]) } else { DESIGN_SPEEDS[0] };
+        self.route_cap = design_radius(kmh);
     }
 
     /// The circle of the last route preview's tangent arc (T-418): centre x, y and ground radius,
@@ -3467,8 +3481,8 @@ const MIN_JOINT_LEG: f64 = 20.0;
 /// would run on top of the main line (an overlap). `toward` is the next vertex of the route; of
 /// the directions the node allows, the one nearer to it. None where the node has no track yet
 /// or the route already leaves along the heading.
-fn lead_in(r: &Resolved, toward: (f64, f64), scaled: bool) -> Option<Pi> {
-    lead_in_along(r.x, r.y, r.level, nearer_dir(r, toward)?, toward, scaled)
+fn lead_in(r: &Resolved, toward: (f64, f64), scaled: bool, cap: f64) -> Option<Pi> {
+    lead_in_capped(r.x, r.y, r.level, nearer_dir(r, toward)?, toward, scaled, cap)
 }
 
 /// Of the directions an end allows a new edge to leave in, the one nearer to `toward`.
@@ -3489,10 +3503,11 @@ const TANGENT_MAX_OFF: f64 = 175.0 * PI / 180.0;
 /// arc's tangent points: the legs between are twice that, of which the auto radius uses half, so
 /// it is the arc's again; the express pair of quad track offsets each corner concentric, which it
 /// cannot do for one corner turning back. Empty where `to` is on the heading; Err where it is more
-/// than `TANGENT_MAX_OFF` off it. An arc wider than `R_CAP` becomes the capped curve then a
-/// straight (T-471). Also the curve's circle (centre x, y, ground radius); None for a straight.
-#[allow(clippy::type_complexity)]
-fn tangent_arc(x: f64, y: f64, level: i8, level_to: i8, dir: f64, to: (f64, f64), scaled: bool) -> (Result<Vec<Pi>, ()>, Option<[f64; 3]>) {
+/// than `TANGENT_MAX_OFF` off it. An arc wider than `cap` (the design speed's radius, T-817)
+/// becomes the capped curve then a straight (T-471). Also the curve's circle (centre x, y, ground
+/// radius); None for a straight.
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
+fn tangent_arc(x: f64, y: f64, level: i8, level_to: i8, dir: f64, to: (f64, f64), scaled: bool, cap: f64) -> (Result<Vec<Pi>, ()>, Option<[f64; 3]>) {
     let (dx, dy) = (to.0 - x, to.1 - y);
     let d = dx.hypot(dy);
     let off = geom::wrap(dy.atan2(dx) - dir);
@@ -3504,7 +3519,7 @@ fn tangent_arc(x: f64, y: f64, level: i8, level_to: i8, dir: f64, to: (f64, f64)
     let (ux, uy) = (dir.cos(), dir.sin());
     let (nx, ny) = (-uy * off.signum(), ux * off.signum());
     let r = d / (2.0 * a.sin());
-    let rc = R_CAP * k;
+    let rc = cap * k;
     if a > TANGENT_MAX_OFF {
         return (Err(()), Some([x + nx * r, y + ny * r, r / k]));
     }
@@ -3537,9 +3552,41 @@ fn tangent_arc(x: f64, y: f64, level: i8, level_to: i8, dir: f64, to: (f64, f64)
     (Ok(pis), circle)
 }
 
+/// T-817: at a design radius `cap` above `R_CAP`, each auto corner of `verts` named in `made`
+/// whose curve under that cap is wider than `R_CAP` gets that radius set, since every later fit
+/// caps an auto radius at `R_CAP`. Floored to the millimetre and eased like `stroke_pieces` where
+/// the scale at the arc's middle leaves it a hair too long for its legs.
+fn design_radii(verts: &mut [Pi], made: &[usize], cap: f64, scaled: bool) {
+    if cap <= R_CAP || made.is_empty() {
+        return;
+    }
+    let f = geom::fit_capped(verts, scaled, cap);
+    let mut set = vec![];
+    for &i in made {
+        if verts[i].radius == 0.0 && f.radius[i] > R_CAP {
+            verts[i].radius = (f.radius[i] / QUANT).floor() * QUANT;
+            set.push(i);
+        }
+    }
+    for _ in 0..4 {
+        let over: Vec<usize> = geom::fit_in(verts, scaled).issues.iter().filter_map(|g| if let GeomIssue::ArcDoesNotFit(j) = g { Some(*j) } else { None }).filter(|j| set.contains(j)).collect();
+        if over.is_empty() {
+            break;
+        }
+        for j in over {
+            verts[j].radius = quant(verts[j].radius * (1.0 - 1e-4));
+        }
+    }
+}
+
 /// A lead-in PI leaving (x, y) on heading `dir` towards `toward` (`lead_in`), or None when the
 /// way to `toward` is already within the node's tolerance of the heading.
 fn lead_in_along(x: f64, y: f64, level: i8, dir: f64, toward: (f64, f64), scaled: bool) -> Option<Pi> {
+    lead_in_capped(x, y, level, dir, toward, scaled, R_CAP)
+}
+
+/// `lead_in_along` for a curve of up to `cap` (ground m; the drawing tool's design radius, T-817).
+fn lead_in_capped(x: f64, y: f64, level: i8, dir: f64, toward: (f64, f64), scaled: bool, cap: f64) -> Option<Pi> {
     let (dx, dy) = (toward.0 - x, toward.1 - y);
     let dist = dx.hypot(dy);
     if dist < 1.0 {
@@ -3551,7 +3598,7 @@ fn lead_in_along(x: f64, y: f64, level: i8, dir: f64, toward: (f64, f64), scaled
     }
     // The arc at the lead-in uses the whole first leg (auto radius, notes/T-008.md 1.2) as long
     // as its radius stays under the cap; 0.3 of the way keeps it inside half the next leg.
-    let d = (R_CAP * kk(scaled, y) * (delta / 2.0).tan()).min(0.3 * dist).max(0.5);
+    let d = (cap * kk(scaled, y) * (delta / 2.0).tan()).min(0.3 * dist).max(0.5);
     Some(Pi::new(x + dir.cos() * d, y + dir.sin() * d, 0.0, level).quantised())
 }
 
@@ -5036,6 +5083,96 @@ mod tests {
         assert!(f.radius[1] < 450.0, "old lead-in: {}", f.radius[1]);
     }
 
+    /// T-817: the radius each design speed lays curves out for, and 160 is the old cap.
+    #[test]
+    fn design_radius_per_speed() {
+        assert_eq!(design_radius(160.0), R_CAP);
+        for (kmh, want) in [(160.0, 1796.0), (200.0, 2806.0), (250.0, 4385.0), (320.0, 7183.0)] {
+            let r = design_radius(kmh);
+            assert_eq!(r, want, "{kmh} km/h");
+            assert!((A_LAT * r).sqrt() >= kmh / 3.6 && (A_LAT * (r - 1.0)).sqrt() < kmh / 3.6, "{kmh} km/h: {r} is the smallest");
+        }
+        assert_eq!(DESIGN_SPEEDS[0], 160.0);
+    }
+
+    /// T-817: at 160 the drawing tool sets no radius and lays every shape as before; at a higher
+    /// design speed a click past 1,796 m is one wider arc through it (radius set, so it keeps its
+    /// shape), and past the design radius the capped curve then a straight.
+    #[test]
+    fn design_speed_lays_wider_curves() {
+        let clicks = [(500.0, 30.0), (5000.0, 40.0), (9000.0, -100.0), (20000.0, 30.0), (3000.0, 8.0)];
+        for tracks in [2u8, 4] {
+            // 160, named or by default, draws exactly what the default does
+            let (mut plain, east) = if tracks == 4 { quad_start() } else { tangent_start() };
+            let (mut at160, _) = if tracks == 4 { quad_start() } else { tangent_start() };
+            at160.set_design_speed(160.0);
+            for (d, deg) in clicks {
+                let off: f64 = (deg as f64).to_radians();
+                let ends = from_node(east, 1000.0 + d * off.cos(), d * off.sin());
+                assert_eq!(plain.preview_route(&ends, &[], tracks, false), at160.preview_route(&ends, &[], tracks, false), "{tracks} tracks, {d} m at {deg}");
+                assert_eq!(plain.route_vertices, at160.route_vertices);
+                assert!(plain.route_vertices.iter().all(|p| p.radius == 0.0), "{tracks} tracks, {d} m at {deg}: no radius set at 160");
+            }
+            for kmh in [200.0, 250.0, 320.0] {
+                let cap = design_radius(kmh);
+                for (d, deg) in clicks {
+                    let (mut a, east) = if tracks == 4 { quad_start() } else { tangent_start() };
+                    a.set_design_speed(kmh);
+                    let what = format!("{tracks} tracks at {kmh}, {d} m at {deg}");
+                    let off: f64 = (deg as f64).to_radians();
+                    let (x, y) = (1000.0 + d * off.cos(), d * off.sin());
+                    let ends = from_node(east, x, y);
+                    assert_eq!(a.preview_route(&ends, &[], tracks, false)[0], 1.0, "{what}: {}", a.issue_kinds());
+                    let f = a.w.net.fit(&a.route_vertices);
+                    let (ex, ey, eh) = geom::pos_at(&f.pieces, f.len);
+                    assert!((ex - x).hypot(ey - y) < 0.01, "{what}: ends at {ex}, {ey}");
+                    let want = d / (2.0 * off.abs().sin());
+                    let arc = a.route_arc();
+                    let curves: Vec<_> = f.pieces.iter().filter(|p| p.k != 0.0).collect();
+                    if want <= cap {
+                        assert!(geom::wrap(eh - 2.0 * off).abs() < 1e-4, "{what}: leaves on {eh}");
+                        assert!(curves.iter().all(|p| (p.radius() - want).abs() < 0.01), "{what}: one radius, {want}");
+                        assert!(f.pieces.iter().all(|p| p.k != 0.0 || p.len < 0.05), "{what}: one arc, no straight");
+                        assert!((arc[2] - want).abs() < 0.01, "{what}: circle {arc:?}");
+                    } else {
+                        assert!(curves.iter().all(|p| (p.radius() - cap).abs() < 0.01), "{what}: every curve at the design radius");
+                        assert_eq!(f.pieces.last().unwrap().k, 0.0, "{what}: then a straight");
+                        assert!((arc[2] - cap).abs() < 1e-6, "{what}: circle {arc:?}");
+                    }
+                    // placed, every piece keeps the shape (the radius set where it is over 1,796 m)
+                    let before = live_edges(&a);
+                    assert_eq!(a.add_route(&ends, &[], tracks, false), 0, "{what}: {}", a.issues());
+                    if tracks == 2 && want.min(cap) > R_CAP {
+                        for e in live_edges(&a).into_iter().filter(|e| !before.contains(e)) {
+                            for p in a.w.net.edge_pieces(e).iter().filter(|p| p.k != 0.0) {
+                                assert!((p.radius() - want.min(cap)).abs() < 0.01, "{what}: built at {}", p.radius());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// T-817: a segment ending on track at a higher design speed: its lead-in curves may be wider
+    /// than 1,796 m, still starting at the node.
+    #[test]
+    fn design_speed_widens_the_lead_in() {
+        let (mut a, east) = tangent_start();
+        a.set_design_speed(320.0);
+        // from far off to the east end, arriving well off its heading
+        let ends: Vec<f64> = free(20000.0, 6000.0).iter().copied().chain([1.0, east as f64, 0.0, 0.0, 0.0]).collect();
+        assert_eq!(a.preview_route(&ends, &[], 2, false)[0], 1.0, "{}", a.issue_kinds());
+        let f = a.w.net.fit(&a.route_vertices);
+        let r = f.radius.iter().copied().fold(0.0, f64::max);
+        assert!(r > R_CAP && r <= 7183.0 + 1e-6, "lead-in radius {r}");
+        let last = f.pieces.last().unwrap();
+        assert!(last.k != 0.0 || last.len < 0.05, "the curve reaches the node");
+        a.set_design_speed(160.0);
+        a.preview_route(&ends, &[], 2, false);
+        assert!(a.w.net.fit(&a.route_vertices).radius.iter().all(|&r| r <= R_CAP + 1e-6));
+    }
+
     /// T-442: a click beyond a quarter turn is still one arc of radius d / (2 sin a) through it,
     /// up to 350 degrees, split into corners of at most 90 degrees; on quad track the express pair
     /// is concentric all the way round; a level change finds room on a hairpin.
@@ -6174,6 +6311,30 @@ mod bridge_tests {
             assert!((pv[2] - len_w).abs() < 0.05);
             assert!(pv[1] > first_edge_cost(&dry) * 0.99);
             assert!(problems(&wet).is_empty());
+        }
+    }
+
+    /// T-817: a wide curve drawn at 320 km/h bridges a river like any other.
+    #[test]
+    fn a_design_speed_curve_bridges_a_river() {
+        for world in [false, true] {
+            for (tx, ty, from) in [(4000.0, 1000.0, 2000.0), (6000.0, 2500.0, 3000.0), (3000.0, 1500.0, 1500.0)] {
+                for width in [40.0, 120.0] {
+                    let mut a = if world { merc() } else { api() };
+                    water(&mut a, &[(from, from + width)]);
+                    assert_eq!(a.add_route(&ends(&a, (0.0, 0.0), (600.0, 0.0)), &[], 2, false), 0);
+                    let node = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - base(&a).0 - 600.0).abs() < 1.0).unwrap();
+                    a.set_route_tangent(true);
+                    a.set_design_speed(320.0);
+                    let (bx, by) = base(&a);
+                    let e = [1.0, node as f64, 0.0, 0.0, 0.0, 0.0, 0.0, bx + tx, by + ty, 0.0];
+                    let r = a.add_route(&e, &[], 2, false);
+                    assert_eq!(r, 0, "world {world} to ({tx}, {ty}), water {from} + {width}: {}", a.issue_kinds());
+                    let w = *alive(&a).iter().max_by(|&&p, &&q| a.w.net.edge_len[p as usize].total_cmp(&a.w.net.edge_len[q as usize])).unwrap();
+                    assert!(!a.w.net.edge_water(w).is_empty(), "the curve crosses the water");
+                    bridge_ok(&a, w);
+                }
+            }
         }
     }
 

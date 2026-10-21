@@ -11,6 +11,15 @@ pub const V_TOP: f64 = 160.0 / 3.6;
 /// Auto radius cap: the smallest whole-metre radius that already allows V_TOP
 /// (ceil(44.44² / 1.1) = 1,796 m; T-008 rounds it to 1,800).
 pub const R_CAP: f64 = 1796.0;
+/// Design speeds the drawing tool offers, km/h (T-817): the auto radius of track it draws is
+/// capped at `design_radius` of the one chosen. 160 is `R_CAP`.
+pub const DESIGN_SPEEDS: [f64; 4] = [160.0, 200.0, 250.0, 320.0];
+
+/// The smallest whole-metre radius that allows `kmh`: 1,796 m at 160, 2,806 at 200, 4,385 at 250,
+/// 7,183 at 320.
+pub fn design_radius(kmh: f64) -> f64 {
+    ((kmh / 3.6).powi(2) / A_LAT).ceil()
+}
 /// Positions and radii are quantised to this (1 mm) when the player places them, so derived
 /// geometry is a deterministic f64 function of the save.
 pub const QUANT: f64 = 0.001;

@@ -14,14 +14,16 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   buttons on the first row and one on the second; then the elevation (seven buttons
   tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692) with its
   multiplier and price per km, double or quad track [T-255; single track not offered since T-733],
-  and the platform length for new stations (a row under the track choice, no heading; the label's
-  hover says it is for new stations). There is no crossover tool: the game places
+  the design speed (a row under the track choice: a stepper through 160, 200, 250 and 320 km/h, 160
+  by default; higher lays the curves of newly drawn track wider, [track-and-service.md](track-and-service.md)
+  6.1; its hover: "Track you draw curves wide enough to take this speed") [T-817], and the platform
+  length for new stations (the next row, no heading; the label's hover says it is for new stations). There is no crossover tool: the game places
   crossovers past quad stations [T-733, [track-and-service.md](track-and-service.md) 6.1].
   Everything the player reads says elevation, never level (code keeps `level`) [T-526].
   Beside keep placing, the **snap switch** (a magnet, "Snap track to the real network") [T-727]: while
   it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
-  The elevation, the double or quad choice, the keep placing switch and the snap switch are remembered per
+  The elevation, the double or quad choice, the design speed, the keep placing switch and the snap switch are remembered per
   browser; a remembered single (from before T-733) reads as double (localStorage with the other panel settings, not in the save) [T-468]. Caps Lock only
   changes the switch when its state changes after the page loads, so a stored setting wins over a
   Caps Lock left on or off [T-487].

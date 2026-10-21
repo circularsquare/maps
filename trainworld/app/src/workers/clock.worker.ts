@@ -1427,6 +1427,7 @@ function apply(op: EditOp): { r: number; line?: number; node?: number } {
   switch (op.op) {
     case "route": {
       a.set_route_tangent(!!op.through);
+      a.set_design_speed(op.design ?? 160);
       const r = a.add_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false);
       return { r, node: r === 0 ? a.route_end() : undefined };
     }
@@ -1689,7 +1690,7 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
 /** Before an edit that makes new track: the masks its geometry needs (worked out as its preview). */
 async function masksFor(op: EditOp) {
   const a = api!;
-  if (op.op === "route") await withMasks(() => (a.set_route_tangent(!!op.through), a.preview_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false)), routePoints);
+  if (op.op === "route") await withMasks(() => (a.set_route_tangent(!!op.through), a.set_design_speed(op.design ?? 160), a.preview_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false)), routePoints);
   else if (op.op === "edgePis") await withMasks(() => a.preview_edge(op.edge, pisArr(op.pis)), routePoints);
   else if (op.op === "moveNode") await withMasks(() => a.preview_move_node(op.node, op.x, op.y), nodePoints);
   else if (op.op === "moveNodes") await withMasks(() => a.preview_move_nodes(new Uint32Array(op.nodes), op.dx, op.dy), nodePoints);
@@ -1854,7 +1855,7 @@ async function handle(msg: ToClock) {
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {
     const a = api;
     const out = await withMasks(() => msg.kind === "preview"
-      ? (a.set_route_tangent(!!msg.through), a.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false))
+      ? (a.set_route_tangent(!!msg.through), a.set_design_speed(msg.design ?? 160), a.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false))
       : a.preview_edge(msg.edge, pisArr(msg.pis)), routePoints);
     let arc: Float64Array | undefined;
     const ra = msg.kind === "preview" ? a.route_arc() : null;

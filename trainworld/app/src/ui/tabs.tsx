@@ -7,12 +7,12 @@ import { PERIODS, periodAt } from "../game/periods";
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { createLine } from "../game/lineActions";
 import type { JSX } from "preact";
-import { count, distUnit, length, levelLabel, money, perDistance, perKmFrom, runCostRule, shortDistance } from "../game/format";
+import { count, distUnit, length, levelLabel, money, perDistance, perKmFrom, runCostRule, shortDistance, speed } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { DEMAND_INDEX, LEVELS, type Level, type LineInput, type LineStats, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
-import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, setDisplay, snapReal, stationSort, trackCount, tool, type StationUseMode, type Tool } from "../game/ui";
+import { buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, display, keepPlacing, lineSort, selection, setDisplay, snapReal, stationSort, trackCount, tool, type StationUseMode, type Tool } from "../game/ui";
 import { setFares, world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { cityById, viewedZone } from "../game/cities";
@@ -110,6 +110,13 @@ export function BuildTab() {
             onClick={() => (snapReal.value = !snapReal.peek())}><Icon.snapReal /></button>
         </div>
         <ul class="rows">
+          <li>
+            <span class="grow" data-tip="Track you draw curves wide enough to take this speed">Design speed</span>
+            <Stepper value={speed(designSpeed.value, 5)} wide label="design speed" onStep={(s) => {
+              const i = DESIGN_SPEEDS.indexOf(designSpeed.value) + s;
+              designSpeed.value = DESIGN_SPEEDS[Math.max(0, Math.min(DESIGN_SPEEDS.length - 1, i))];
+            }} />
+          </li>
           <li>
             <span class="grow" data-tip="Platform length for new stations">Platform length</span>
             <Stepper value={length(buildPlatform.value)} wide label="platform length" onStep={(s) => (buildPlatform.value = Math.max(60, Math.min(400, buildPlatform.value + s * 20)))} />

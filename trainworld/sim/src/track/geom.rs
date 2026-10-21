@@ -239,6 +239,12 @@ pub fn fit(v: &[Pi]) -> Fit {
 /// the minimum radius and the fit tolerance likewise, and every piece gets its ground length.
 /// `Fit::radius` is the ground radius. Unscaled, this is the original fit, bit for bit.
 pub fn fit_in(v: &[Pi], scaled: bool) -> Fit {
+    fit_capped(v, scaled, R_CAP)
+}
+
+/// `fit_in` with the auto radius capped at `cap` (ground m) rather than `R_CAP`: what the drawing
+/// tool's corners would take at a design speed above 160 (T-817).
+pub fn fit_capped(v: &[Pi], scaled: bool, cap: f64) -> Fit {
     let n = v.len();
     let kv = |i: usize| if scaled { merc_k(v[i].y) } else { 1.0 };
     let mut f = Fit { vert_s: vec![0.0; n], radius: vec![0.0; n], tangent: vec![0.0; n], ..Default::default() };
@@ -278,7 +284,7 @@ pub fn fit_in(v: &[Pi], scaled: bool) -> Fit {
             let t = (d.abs() / 2.0).tan();
             let avail_in = if i == 1 { leg_len[0] } else { leg_len[i - 1] / 2.0 };
             let avail_out = if i == n - 2 { leg_len[i] } else { leg_len[i] / 2.0 };
-            let pick = |k: f64| if v[i].radius > 0.0 { v[i].radius * k } else { (avail_in.min(avail_out) / t).min(R_CAP * k) };
+            let pick = |k: f64| if v[i].radius > 0.0 { v[i].radius * k } else { (avail_in.min(avail_out) / t).min(cap * k) };
             let mut k = kv(i);
             if scaled {
                 // The scale where the arc is, not at the PI: its middle lies `r (sec(d/2) - 1)`
