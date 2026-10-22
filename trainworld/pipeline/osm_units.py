@@ -239,12 +239,18 @@ def build(cid, row, sources):
             return memo[k]
         return cached
 
+    def clip(water, g):
+        # polygons only: clip_by_rect leaves lines along the box's edge, and a difference with a
+        # collection holding lines ran over an hour on Highland (T-903; 3.5 s without them)
+        c = shapely.clip_by_rect(water, *g.bounds)
+        c = shapely.MultiPolygon([q for x in shapely.get_parts(c) for q in shapely.get_parts(x) if q.geom_type == "Polygon"])
+        return c if c.is_valid else make_valid(c)
+
     @once
     def landed(g):  # the sea within the shape's box only: a difference with a whole archipelago's coast never ends (Stockholm)
         if g.is_empty:
             return g
-        c = shapely.clip_by_rect(sea, *g.bounds)
-        return g.difference(c if c.is_valid else make_valid(c)).buffer(0)
+        return g.difference(clip(sea, g)).buffer(0)
     admin["geometry"] = [landed(g) for g in admin.geometry]
     units = [(uid, name, landed(g), kind) for uid, name, g, kind in units]
 
@@ -252,8 +258,7 @@ def build(cid, row, sources):
     def dried(g):  # the water within the shape's box only: a difference with all of it is slow
         if g.is_empty:
             return g
-        c = shapely.clip_by_rect(wet, *g.bounds)
-        return g.difference(c if c.is_valid else make_valid(c))
+        return g.difference(clip(wet, g))
     dry = admin.copy()
     dry["geometry"] = [dried(g) for g in admin.geometry]
     picks = match([(u[0], u[1], dried(u[2]), u[3]) for u in units], dry, lat0)

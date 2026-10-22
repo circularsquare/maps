@@ -572,8 +572,9 @@ rect.now { fill-opacity: .45; }
 .save-sandbox { margin-left: 6px; padding: 0 5px; border: 1px solid var(--rule); font-weight: 400; color: var(--muted); }
 .cash.sandbox { color: var(--muted); }
 .game-mode { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.choosing #dock-root, .choosing #topbar-root, .choosing #tools-root, .choosing .map-top-left, .choosing .map-search,
-.choosing .blueprint-bar, .choosing .maplibregl-ctrl-bottom-right { visibility: hidden; }
+/* T-927: the dock and top bar take no room either, so the world map fills the page behind the menu */
+.choosing #dock-root, .choosing #topbar-root, .choosing #tools-root { display: none; }
+.choosing .map-top-left, .choosing .map-search, .choosing .blueprint-bar, .choosing .maplibregl-ctrl-bottom-right { visibility: hidden; }
 /* T-243: the load's progress as a filling bar (its percentage on hover); the fill jumps, no transition */
 .load-bar { display: block; height: 8px; margin: 8px 0 6px; border: 1px solid var(--rule); background: var(--bg); pointer-events: auto; }
 .load-fill { display: block; height: 100%; background: var(--accent); }

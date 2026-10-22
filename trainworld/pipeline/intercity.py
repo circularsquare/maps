@@ -193,13 +193,29 @@ def country_of(reg, root=ROOT):
     return out
 
 
+# packs made by hand, which have no plan row to carry a `solve_region` (T-897)
+SOLVE_REGION_PACKS = {"sha": "jiangsu"}
+
+
+def solve_key(reg, root=ROOT):
+    """Each registered pack's solve region: its country, or for a country solved in parts (China,
+    T-897) the country and its plan row's `solve_region` ("CN-jiangsu")."""
+    cc = country_of(reg, root)
+    plan = root / "pipeline/world_plan.json"
+    sub = dict(SOLVE_REGION_PACKS)
+    if plan.exists():
+        sub.update({r["id"]: r["solve_region"] for r in json.loads(plan.read_text(encoding="utf-8"))["metros"]
+                    if r.get("solve_region")})
+    return {i: f"{c}-{sub[i]}" if i in sub else c for i, c in cc.items()}
+
+
 def solve_units(reg, root=ROOT, only=(), gap=None):
     """T-786 (T-781): what each joint solve covers. A group of one country is solved whole; a group
     spanning countries is solved a country at a time, the group's packs of other countries within
     CUT_KM of that country's held at their factors (`fixed`), so a country's join never re-solves
-    its neighbours and no solve grows past one country. [{name, members, fixed, country}] for every
-    unit, or those holding a pack of `only`."""
-    cc = country_of(reg, root)
+    its neighbours and no solve grows past one country (or one of its solve regions, solve_key).
+    [{name, members, fixed, country}] for every unit, or those holding a pack of `only`."""
+    cc = solve_key(reg, root)
     units = []
     for g in auto_groups(reg, root, gap=gap):
         by = {}

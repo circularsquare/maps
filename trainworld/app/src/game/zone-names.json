@@ -225,6 +225,10 @@
 "vri": {"name": "Turku", "aliases": ["Åbo", "Varsinais-Suomi", "Southwest Finland", "Lahti", "Kymenlaakso", "Kanta-Häme"]},
 "pik": {"name": "Tampere", "aliases": ["Tammerfors", "Pirkanmaa", "Pori", "Vaasa", "Satakunta"]},
 "aan": {"name": "Åland", "aliases": ["Aland", "Mariehamn"]},
+"poj": {"name": "Oulu", "aliases": ["Uleåborg", "Pohjois-Pohjanmaa", "North Ostrobothnia"]},
+"ves": {"name": "Bergen", "aliases": ["Vestland", "Hordaland", "Sogn og Fjordane"]},
+"trd": {"name": "Trondheim", "aliases": ["Trøndelag", "Trondhjem"]},
+"hih": {"name": "Inverness", "aliases": ["Highlands and Islands", "Highlands", "Scottish Highlands"]},
 "pos": {"name": "Tallinn", "aliases": ["Põhja-Eesti", "North Estonia", "Harju"]},
 "kid": {"name": "Narva", "aliases": ["Kirde-Eesti", "Ida-Viru"]},
 "ria": {"name": "Riga", "aliases": ["Rīga", "Zemgale", "Jelgava"]},
@@ -232,5 +236,14 @@
 "kup": {"name": "Kaunas", "aliases": ["Marijampolė", "Alytus", "Tauragė"]},
 "vil": {"name": "Vilnius"},
 "hou": {"name": "Reykjavík", "aliases": ["Höfuðborgarsvæðið", "Iceland"]},
-"kyp": {"name": "Cyprus", "aliases": ["Kýpros", "Kıbrıs", "Nicosia", "Lefkosia"]}
+"kyp": {"name": "Cyprus", "aliases": ["Kýpros", "Kıbrıs", "Nicosia", "Lefkosia"]},
+"hua": {"name": "Huai'an", "aliases": ["Huaiyin", "Qinghe"]},
+"hia": {"name": "Huai'an District", "aliases": ["Chuzhou"]},
+"zha": {"aliases": ["Jiangyin"]},
+"jid": {"name": "Yangzhou", "aliases": ["Jiangdu"]},
+"suc": {"name": "Suqian", "aliases": ["Sucheng"]},
+"tii": {"name": "Yixing"},
+"hiz": {"name": "Lianyungang", "aliases": ["Haizhou"]},
+"hli": {"name": "Taizhou", "aliases": ["Hailing"]},
+"qic": {"name": "Qidong"}
 }

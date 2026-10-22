@@ -10,6 +10,7 @@ import { cityBoundary } from "../game/boundaries";
 import { activeCity, zonesTouching } from "../game/cities";
 import { ZONE_LOAD_ZOOM } from "../game/zones";
 import { perfOff } from "../perfFlags";
+import { choosing } from "../game/loading";
 import { outsidePaint, SHADES, shadeColours } from "../game/shades";
 import { shade } from "../game/ui";
 import { cityGeometry, OutlineEdges, outsideCity } from "./boundaryGeometry";
@@ -179,7 +180,14 @@ export function startCityBoundaries(map: MlMap): () => void {
     }
     void focus(activeCity.peek());
     follow();
+    showUnlessChoosing();
   };
+  // T-927: a clean world map behind the start menu
+  const showUnlessChoosing = () => {
+    const visibility = choosing.peek() ? "none" : "visible";
+    for (const id of [SHADE, OUTLINES, INNER, OUTER]) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", visibility);
+  };
+  const disposeChoosing = effect(() => { void choosing.value; showUnlessChoosing(); });
   map.on("style.load", add);
   map.on("moveend", follow);
   if (map.isStyleLoaded()) add();
@@ -194,6 +202,7 @@ export function startCityBoundaries(map: MlMap): () => void {
     window.clearTimeout(pending);
     dispose();
     disposeShade();
+    disposeChoosing();
     map.off("style.load", add);
     map.off("moveend", follow);
     const ids = [INNER, OUTER, FOCUS, SHADE, OUTLINES];

@@ -67,7 +67,7 @@ import { startSearch } from "./ui/Search";
 import { startTips } from "./ui/tip";
 import { startLoadingGate } from "./ui/LoadingScreen";
 import { startGameWait } from "./game/loading";
-import { choiceFromUrl, showStartMenu } from "./ui/StartMenu";
+import { choiceFromUrl, showStartMenu, worldCover } from "./ui/StartMenu";
 import { viewStart } from "./ui/NewGame";
 import { startOpenFit } from "./ui/locate";
 import { ClockClient, clockWorkerStatus, onNetworkSnapshot, onStationsAhead } from "./workers/clockClient";
@@ -115,7 +115,10 @@ if (urlChoice) {
 }
 
 // ---- map and overlay ----
+// T-927: the menu's class goes on before the map is made, so the map is sized without the dock
+if (!urlChoice) document.documentElement.classList.add("choosing");
 const map = createMap(document.getElementById("map")!);
+if (!urlChoice) map.jumpTo(worldCover(map.getContainer()));
 startCityBoundaries(map);
 startZoneLoading(map); // T-343: zones whose demand has not arrived, grey with a loading bar
 const demandSelectorRoot = document.createElement("div");

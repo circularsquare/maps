@@ -61,7 +61,7 @@ THRESHOLDS = {
     "pop_vs_ghsl": {"fail": (0.7, 1.4), "warn": (0.85, 1.2)},    # GHSL-built pack / GHSL 2025 in its outline
     "pop_vs_ghsl_other": {"warn": (0.7, 1.4)},                   # census-built pack / the same
     "near_main_piece_pop_share": {"fail": (0.95, None)},         # a city's people within NEAR_KM of its main piece
-    "area_km2": {"fail": (None, 40000)},
+    "area_km2": {"warn": (None, 40000)},                         # big zones are fine (Anita, T-903); flags a runaway outline
     "jobs_per_resident": {"fail": (0.25, 0.7)},
     "top_cell_jobs": {"fail": (None, 50000)},                    # New York's densest cell 48,900, London's 44,200
     # tier 0 proxy jobs: the densest cell's jobs over the square root of the pack's jobs in thousands.
@@ -186,9 +186,12 @@ def water_polygons(header, outline):
     for e in have:
         df = pyogrio.read_dataframe(osm_water.water_path(e), bbox=tuple(outline.bounds), columns=[])
         for g in df.geometry.to_numpy():
-            if g is None or not outline.intersects(g):
+            if g is None:
                 continue
-            g = shapely.make_valid(g).intersection(outline)
+            g = shapely.make_valid(g)  # an invalid water polygon fails even `intersects` (T-897: Donghai)
+            if not outline.intersects(g):
+                continue
+            g = g.intersection(outline)
             geoms.extend(p for p in shapely.get_parts(g) if p.geom_type == "Polygon")
     return geoms, have
 

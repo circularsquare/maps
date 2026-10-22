@@ -11,11 +11,11 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 
 - **Nunito** (Zen Maru Gothic for kana and kanji; the font is a Settings choice, T-703) everywhere, station names, map DOM controls and form controls included (the
   map container inherits it rather than MapLibre's Helvetica) [T-101]. Few font sizes and weights:
-  the mock's 3 sizes and 2 weights are the ceiling. The basemap's labels use it too, Regular only,
-  faint grey, from glyph tiles hosted beside the app (`app/public/fonts/`, `pipeline/glyphs.py`,
+  3 sizes and 2 weights at most (the T-009 mock's, `mock/`). The basemap's labels are Zen Maru
+  Gothic whatever the font setting, Regular only, faint grey, from glyph tiles hosted beside the app (`app/public/fonts/`, `pipeline/glyphs.py`,
   Noto Sans merged in for other scripts); kana and kanji are drawn in the system font for now
   [T-057, notes/T-056.md].
-- **Few colour tokens**: background, text, one accent, plus `--bad` and `--warn` for warnings, as
+- **Few colour tokens**: background, text, one accent, plus `--bad`, `--warn` and `--yellow` for warnings, as
   CSS variables (`ui/style.css`); everything else is mixed from them, so a theme is a token swap.
   No paper texture. **Light or dark** [T-039], each with **three colours**: pink (cream, sakura
   accent), blue (cornflower), green (matcha); in dark the background is a near-black tinted towards
@@ -33,7 +33,6 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 - **Panels show what can change** (Anita) [T-253]: labels, numbers and states. No explanatory
   notes or how-it-works sentences; a fact worth keeping goes in the hover of the label it explains.
   Icons with hovers over word labels where the icon is clear.
-- The T-009 mock (`mock/`) was the approved starting point for the look.
 - Player-facing text follows the copy rules in Anita's global CLAUDE.md (no dash-joined phrases,
   sentence case, no softeners, no hype).
 
@@ -87,13 +86,12 @@ flexible part [T-406]: it takes the width the fixed parts leave, so its length f
 are the walk and car icons (the walk and drive mode colours) with the share beside them, each
 with its own hover. They drop below 860 px of map column. The clock is centred in the room between the cash and the
 speed buttons [T-832, T-861].
-Below 700 px the bar takes two rows (name, cash, time and speed over the split).
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
   everyday outings, school and university), so the shares are of rides per day, not people [T-342].
-  The labels after it give the train share, after a blue mark ("18.5%"; no word "Train" [T-650], no
-  rides count since T-832: the hover has it) and the
+  The labels after it give the train share, after a blue mark ("18.5%"; no word "Train" [T-650] and
+  no rides count [T-832]: the hover has it) and the
   walking and driving shares as icons; the hover gives all three counts and the total, and an
   icon's own hover its share and rides. The player's job is
   to make the train share grow. It shows "–" and an empty bar until the zone has figures of its own
@@ -127,12 +125,11 @@ Below 700 px the bar takes two rows (name, cash, time and speed over the split).
   (`game/sun.ts`): dark blue night with stars, a short pink and warm sunrise and sunset, light blue
   day [T-882]. Flat clouds sit at fixed game times, none to two a day as the day's number falls,
   white by day and dim blue at night [T-902]. Along the bottom is a track with sleepers, darker at
-  night (no grass since T-902). At now sits the present-time marker: a red train (18 by 5 px, lit windows, nose
+  night. At now sits the present-time marker: a red train (18 by 5 px, lit windows, nose
   to the right) on the track, with the sun, or a crescent moon at night, peeking in from the top
   edge above it. Everything but the train and the sun or moon is fixed to its time and slides left
   under them as game time passes. It is redrawn on animation frames from the clock's `now()`
-  whenever it has moved a fifth of a device pixel, never through Preact (about 0.7 ms a draw, 7
-  draws a second at the top speed). The band under it has each
+  whenever it has moved a fifth of a device pixel, never through Preact. The band under it has each
   hour's demand level (red high, yellow medium, blue low: `--dl-*` in style.css, both themes), so
   the colour under the sun or moon is the level now; its hover says "Currently low demand until 06:00", the time the level next changes
   [T-902]. A public holiday in a country
@@ -145,7 +142,8 @@ Below 700 px the bar takes two rows (name, cash, time and speed over the split).
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
   on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
   tab is shown again [T-826].
-- **Narrow maps**: secondary labels drop first; two rows below 700 px, a different two below 520
+- **Narrow maps**: secondary labels drop first; two rows below 700 px (name, cash, time and speed
+  over the split), a different two below 520
   px (speed beside the split), three below 300 px, with cash, time, train share and all speed
   controls kept. Hovering the split or the time gives what
   was dropped [T-106].
@@ -153,8 +151,7 @@ Below 700 px the bar takes two rows (name, cash, time and speed over the split).
   games.
 
 **Demand shown for** [T-260, T-266, T-464; `ui/DemandSelector.tsx`, display setting `dayShown`]: a
-"Day" choice in Settings, right under the demand bubbles' Opacity (it left the map's demand bar,
-T-703): Average (the default), Weekday or Weekend. The average is 5 weekdays and 2 weekend days over 7 ([demand-timing.md](demand-timing.md)
+"Day" choice in Settings, right under the demand bubbles' Opacity [T-703]: Average (the default), Weekday or Weekend. The average is 5 weekdays and 2 weekend days over 7 ([demand-timing.md](demand-timing.md)
 4.2). It sets the day every demand view shows, the split included, and does not follow the clock,
 so nothing jumps when the clock enters a weekend. Hovers state the day beside every demand figure ("12,400 trip legs per day",
 "per weekday", "per weekend day": `shownDayPhrase` in `game/ui.ts`). A switch of day shows at
@@ -229,7 +226,7 @@ dismissed, and the map and tools are blocked meanwhile.
 
 `ui/SettingsTab.tsx`, remembered per browser, in order: Demand bubbles, three sliders: Size
 (0.5-2x, [T-099]), Opacity (20-100% of the built alpha, default 90%, [T-470]; for the
-commuter and longer-trip bubbles, not station discs) and Detail (4 steps from coarser to finer,
+commuter and longer-trip bubbles, not station discs; ignored while a bubble is selected, T-936) and Detail (4 steps from coarser to finer,
 the third by default; its hover names the zoom the finest bubbles start at; [T-795]), the Colours
 choice (Train share by default [T-833], which shows two colour pickers labelled 0% train and
 100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles") and the Day choice (Average, Weekday, Weekend;
@@ -249,8 +246,7 @@ kana and kanji fall back to Zen Maru Gothic, which `index.html` loads from Googl
 station names and map controls follow the `--font` variable (`game/fonts.ts`, `game/ui.ts`); the
 other choices' stylesheets are fetched from Google Fonts (all SIL OFL) only when first chosen, and
 station names and capacity tags are measured again once a font has loaded. The map's own labels are
-glyph tiles and stay Zen Maru Gothic. Stored settings from before T-703 (stored version below 3) lose
-their saved font and size once, so they get Nunito and 90%.
+glyph tiles and stay Zen Maru Gothic.
 
 **Units and performance** [T-381]: "US units" (off by default) shows every distance, length and
 speed in miles, mph and feet instead of kilometres, km/h and metres: panels, inspectors, hovers, the
@@ -287,7 +283,7 @@ scale, cut at the top with a dark cap when larger, so a build day does not flatt
 [T-452]; the top's figure at the right. Then net as bars up or down from zero (losses red). Then
 train rides [T-565] as bars up from zero, the top's figure at the right (hover: it exactly), the
 region's with the place on and the network's with the globe, from the same ledger entries (rides
-are counted as in track-and-service.md 6.4; a day from a save made before T-565 has none). Days are the ledger's, one each in order (T-488), up to the past 30;
+are counted as in track-and-service.md 6.4). Days are the ledger's, one each in order (T-488), up to the past 30;
 hours up to the past 48; a young game's few sit at the right of at least 7 days or 12 hours. The
 day or hour now is drawn as it fills (a dashed last segment, a paler bar) and moves as fares land.
 Hovering a column gives its day or hour ("Fri 5", "Sat 6, 04:00", "so far" for now) with fares,
@@ -309,8 +305,10 @@ in `ui/widgets.tsx`], clamped as a drag is), a bin button removing it while ther
 and what a 10 km or mile ride costs; cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
-**The Cities tab** [T-550, `ui/Cities.tsx`; its own tab since T-749, no longer last in Money],
-whatever the Lines toggle says: a list of every region (the toggle's regions) with a built station, one row each, under a first
+
+## Cities tab
+
+[T-550, T-749, `ui/Cities.tsx`] Whatever the Lines toggle says: a list of every region (the toggle's regions) with a built station, one row each, under a first
 row "All cities" that sums them [T-857] (its split bar weighs every region's trips, its rides, profit and points are the sums; hovers as a
 row's, over all cities; it is not clickable or sorted): its name
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
@@ -324,10 +322,8 @@ region's local time) [T-685]. The top bar's city name has the same points in its
 list keeps about six characters of each name (60 px): below that the star goes first, then the
 profit column (container queries on `.cities-box`) [T-693]. Sorted by rides, largest first; a click on a header sorts by that
 column (name, train share, rides, profit, points) as in the Lines tab; a click on a row moves the camera to
-the region as search does, and the viewed region's row is tinted. It lives here and not in
-Stations because the row's profit is this tab's region ledger and a click on a row changes the
-region the table above follows; a fifth dock tab button was ruled out by [T-532]. It sits at the
-bottom so the figures above come first; there is no list until a station is built.
+the region as search does, and the viewed region's row is tinted. With no built station the tab
+reads "No stations yet."
 
 ## Saved games
 
@@ -348,8 +344,7 @@ bottom so the figures above come first; there is no list until a station is buil
   per station, so a dense network shows lines alone. The city's name is text over the panel's top
   left in that theme's ink with a land-coloured halo, and with two or more panels its station
   count under it; the hover gives both. A network with no station in a city is one unnamed panel
-  over all of it. Pictures saved before T-894 (one frame, no names) show as they are until the
-  slot is next saved. Then its name, "Autosaved 2 min ago"
+  over all of it. Then its name, "Autosaved 2 min ago"
   for the game being played or "Saved ..." for the others (exact time on hover), the game day, the
   cities its stations are in, lines, stations and cash. The game being played is marked Playing;
   every other card has Open (closes the panel and loads it) and Delete (asked first); every card
@@ -394,11 +389,13 @@ registry centre and zoom, or over New York with none [T-310].
 
 [T-677; `ui/StartMenu.tsx`; the startup order in [architecture.md](architecture.md) "Loading and readiness"]
 
-- Every page load opens on a card over the bare map, in the loading card's look: "anitabuilder",
-  New game, then "Saved games", one button per browser slot, the most recent first, each with the
+- Every page load opens on a card over the bare map, in the loading card's look: "Welcome to
+  anitabuilder!", New game, then "Saved games", one button per browser slot, the most recent first, each with the
   saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash).
-  With no saved game it is New game alone. The dock, top bar and map controls are hidden under it,
-  it takes every key outside itself, and nothing loads behind it but the map.
+  With no saved game it is New game alone. The dock and top bar are taken out of the page and the
+  map controls hidden, so the map fills the page; it shows the world from 60° S to 75° N covering
+  the page (all of it on a wide screen, its centre around 10° E, 20° N on a narrow one) [T-927;
+  `worldCover`], with the zone outlines and outside shade hidden until the pick. The menu takes every key outside itself, and nothing loads behind it but the map.
 - A click on a save opens that slot (a sandbox's name has the "Sandbox" mark). New game shows the
   new game sheet (above) in the card, headed "New game", with Back to the menu; its Start starts the
   game in a new slot, so no saved game is replaced. The slot is first written once the network has

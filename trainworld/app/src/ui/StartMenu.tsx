@@ -26,6 +26,14 @@ export function choiceFromUrl(): GameChoice | null {
   return null;
 }
 
+/** T-927: the view behind the menu, the band of the world from 60° S to 75° N covering the page:
+ * all of it on a wide screen, its centre on a narrow one. Mercator y of 75° N is 2.028, of 60° S
+ * -1.317, so the band is 3.345 / 2π of the world's 512 px tile height at zoom 0. */
+export function worldCover(el: HTMLElement): { center: [number, number]; zoom: number } {
+  const w = Math.max(1, el.clientWidth), h = Math.max(1, el.clientHeight);
+  return { center: [10, 20], zoom: Math.max(0, Math.log2(w / 512), Math.log2(h / (512 * 3.345 / (2 * Math.PI)))) };
+}
+
 function Menu({ slots, pick }: { slots: SaveSlot[]; pick: (c: GameChoice) => void }) {
   const first = useRef<HTMLButtonElement>(null);
   const [sheet, setSheet] = useState(false);
@@ -40,7 +48,7 @@ function Menu({ slots, pick }: { slots: SaveSlot[]; pick: (c: GameChoice) => voi
   </div>;
   return <div class="start-menu" role="dialog" aria-modal="true" aria-labelledby="start-title">
     <div class="start-box">
-      <h1 id="start-title" class="big">anitabuilder</h1>
+      <h1 id="start-title" class="big">Welcome to anitabuilder!</h1>
       <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>New game</button>
       {slots.length > 0 && <>
         <h2 class="start-head">Saved games</h2>

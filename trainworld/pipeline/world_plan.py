@@ -70,9 +70,42 @@ ZONE_MIN_DENSITY = 20.0  # people a km2: an emptier unit stays dead space
 ISLAND_KM = 150.0        # an island under ZONE_MIN_POP joins the most populous zone of its region this near
 ZONE_FLOOR = 500_000     # zones grow to this within their region (Anita, 2026-10-20, T-788)
 ZONE_CAP = 1_500_000     # a zone of ZONE_MIN_POP or more prefers neighbours keeping it within this
+DEAD_KEEP = 0.8          # a unit under the density floor holding this share of the zone floor is a zone anyway (T-903: Bergen)
 # zone rows planned before the floor (T-723 to T-786) used ZONE_MIN_POP as theirs; a replan of those
 # countries would regroup their unbuilt rows only
 EUROPE_BOX = (-32.0, 27.0, 45.0, 72.0)  # lon/lat: a European country's units outside it (France's overseas départements) are not zoned (T-779)
+# per-country zone rules over the defaults above (Anita, 2026-10-22, T-897): China's counties are already the
+# size of a European zone, and open land is handled well since T-852, so no unit is dead space by density
+# one official clock for a country whose rows' points fall in other tz zones (T-897: Xinjiang's
+# Asia/Urumqi is unofficial local time; timetables keep Beijing time)
+COUNTRY_TZ = {"CHN": "Asia/Shanghai"}
+# de_facto's lines (T-897): for a country, the Natural Earth countries (de facto borders) whose land its
+# units lose; only real lines of control and the territories Anita keeps apart (Hong Kong, Macau,
+# Taiwan), since elsewhere geoBoundaries and Natural Earth differ only by drawing, and Natural Earth
+# gives autonomous parts rows of their own (Åland). Crimea and the Golan go with the side holding
+# them, as Natural Earth has them (Anita, 2026-10-22).
+# A side with a lon/lat box is that side's land within the box only: India and Pakistan's line of
+# control in Kashmir, not the Punjab and Sindh border, where the two sources differ only by drawing.
+KASHMIR = (73.0, 32.95, 80.5, 37.5)
+CRIMEA = (32.4, 44.3, 36.7, 46.3)
+GOLAN = (35.6, 32.6, 36.0, 33.4)
+DE_FACTO = {"CHN": {"IND": None, "BTN": None, "TWN": None, "HKG": None, "MAC": None}, "TWN": {"CHN": None},
+            "IND": {"CHN": None, "PAK": KASHMIR, "KAS": None}, "PAK": {"IND": KASHMIR, "KAS": None},
+            "UKR": {"RUS": CRIMEA}, "SYR": {"ISR": GOLAN}}
+ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, "contiguous": True},
+              "TWN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, "contiguous": True}}
+# a zone's parts touch by land or across at most this much water (a bridge, a narrow strait): the
+# `contiguous` rule of zone_groups (Anita, 2026-10-22: no exclaves)
+WATER_GAP_KM = 10.0
+ARCHIPELAGO_KM = 50.0  # with `contiguous`, island zones this near join as one archipelago (Anita, 2026-10-22)
+ZONE_ALONE_MIN = 10_000  # with `contiguous`, a zone that joined nothing and holds fewer people is dead space
+# a country's joint commute solve split by first-level unit (T-897: one China group would pass
+# intercity.MAX_GROUP_ZONES); first-level names as geoBoundaries gives them, to the solve region's
+# name; a first-level unit not listed is its own region, named by its first word
+SOLVE_REGIONS = {"CHN": {"Beijing Municipality": "jingjinji", "Tianjin Municipality": "jingjinji",
+                         "Hebei Province": "jingjinji", "Shanghai Municipality": "jiangsu",
+                         "Guangzhou Province": "guangdong", "Ningxia Ningxia Hui Autonomous Region": "ningxia",
+                         "Inner Mongolia Autonomous Region": "innermongolia"}}
 
 # What a city in each country can have (docs/data-register.md "Countries and their procedure");
 # every other country is archetype D. England's module covers England's ITL3 units only.
@@ -212,6 +245,39 @@ def countries():
         code = iso if iso != "-99" else adm
         out.append((NE_FIX.get(adm, NE_FIX.get(code, code)), polygonal(to_moll(g))))
     return out
+
+
+_NE = []
+
+
+def de_facto(iso, g):
+    """A unit of country `iso` (Mollweide) less the land Natural Earth gives other countries, whose
+    borders are the lines each side holds (T-897: geoBoundaries' Cona County runs over Arunachal
+    Pradesh, India's Ladakh over Aksai Chin, China's file holds Taiwan, Hong Kong and Macau). None
+    when more of it lies in other countries than in its own and under a tenth in its own: a unit of
+    the other side."""
+    if not _NE:
+        ne = countries()
+        _NE[:] = [ne, STRtree([h for _, h in ne])]
+    ne, tree = _NE
+    sides = DE_FACTO.get(iso, {})
+    other = []
+    for i in tree.query(g, predicate="intersects"):
+        c, h = ne[i]
+        if c in sides:
+            box = sides[c]
+            other.append(h if box is None else h.intersection(to_moll(shapely.box(*box).segmentize(0.1))))
+    if not other:
+        return g
+    cut = union_all(other)
+    lost = g.intersection(cut).area
+    if lost <= 0:
+        return g
+    if lost > 0.5 * g.area:
+        own = sum(g.intersection(ne[i][1]).area for i in tree.query(g, predicate="intersects") if ne[i][0] == iso)
+        if own < lost and own < 0.1 * g.area:
+            return None
+    return polygonal(g.difference(cut))
 
 
 def iso_at(ne, tree, pts):
@@ -377,9 +443,21 @@ def gb_level(meta, iso, adm):
     return max(rows, key=lambda r: int(r["admUnitCount"])) if rows else None
 
 
+GAP_MIN_KM2 = 5.0  # land of the country no unit covers, from this size, joins a unit (T-897)
+GB_CACHE = "t897e"  # bump when gb_units' rules change: the cache beside each file is then rebuilt
+
+
 def gb_units(meta, iso, adm):
+    """[(shapeID, name, Mollweide geometry)] of a geoBoundaries level: each unit on its own side of
+    the de facto lines (de_facto), and the country's land the file leaves out (Qingdao's and Nanshan's
+    old centres in China's ADM3) added to the unit it shares the longest border with. Cached beside
+    the file."""
+    import pickle
     r = gb_level(meta, iso, adm)
     path = fetch(f"{iso}_{adm}.geojson", r["simplifiedGeometryGeoJSON"], "geoboundaries")
+    cache = path.with_suffix(f".{GB_CACHE}.pkl")
+    if cache.exists() and cache.stat().st_mtime >= path.stat().st_mtime:
+        return pickle.loads(cache.read_bytes())
     gj = json.loads(path.read_text(encoding="utf-8"))
     out = []
     for f in gj["features"]:
@@ -390,7 +468,46 @@ def gb_units(meta, iso, adm):
         b = g.bounds
         if g.is_empty or b[2] - b[0] > 2.0e7:  # wrapped across the antimeridian; far from any metro
             continue
+        g = de_facto(iso, g)
+        if g is None or g.is_empty:
+            continue
         out.append((p.get("shapeID") or f"{iso}-{adm}-{len(out)}", p.get("shapeName") or "", g))
+    out = fill_gaps(iso, out)
+    tmp = cache.with_suffix(".part")
+    tmp.write_bytes(pickle.dumps(out))
+    os.replace(tmp, cache)
+    return out
+
+
+def fill_gaps(iso, units):
+    """Units with the pieces of their country's land (Natural Earth) that no unit covers, from
+    GAP_MIN_KM2, each added to the unit it shares the longest border with."""
+    if not _NE:
+        de_facto(iso, shapely.Point(0, 0))
+    ne = _NE[0]
+    own = [h for c, h in ne if c == iso]
+    if not own or not units:
+        return units
+    gaps = polygonal(union_all(own).difference(union_all([g for _, _, g in units])))
+    pieces = [p for p in shapely.get_parts(gaps) if p.area >= GAP_MIN_KM2 * 1e6]
+    if not pieces:
+        return units
+    tree = STRtree([g for _, _, g in units])
+    add = collections.defaultdict(list)
+    for p in pieces:
+        near = tree.query(p, predicate="dwithin", distance=100.0)
+        if not len(near):
+            continue
+        k = max(near, key=lambda k: p.boundary.intersection(units[k][2].buffer(100)).length)
+        add[int(k)].append(p)
+        if p.area >= 500e6:
+            log(f"  {iso}: {p.area / 1e6:,.0f} km2 no unit covers, added to {units[k][1]}")
+    log(f"  {iso}: {sum(len(v) for v in add.values())} pieces of land no unit covers ({sum(p.area for v in add.values() for p in v) / 1e6:,.0f} km2) "
+        f"added to {len(add)} units")
+    out = list(units)
+    for k, ps in add.items():
+        uid, name, g = out[k]
+        out[k] = (uid, name, polygonal(union_all([g] + [p.buffer(1) for p in ps])))
     return out
 
 
@@ -1057,17 +1174,20 @@ def test_row(st, pid, out):
         f"{sum(len(v) for v in row['units'].values())} units; {out}")
 
 
-def zone_groups(units, free, region, floor=ZONE_MIN_POP):
+def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguous=False):
     """Free units (ids) grouped into zones, smallest first, until each holds `floor` people. A zone
     under ZONE_MIN_POP joins the zone of its region it shares the longest border with; a bigger one
-    its smallest neighbour there that keeps the two within ZONE_CAP (else its smallest neighbour), so
+    its smallest neighbour there that keeps the two within `cap` (else its smallest neighbour), so
     one zone does not take a whole region (the longest border put Sarajevo, Zenica and Mostar in one).
     With no neighbour left in its region (a small region, or Osttirol cut off from Tirol) it joins one
     of another region, unless it already holds 80% of `floor`. An island (no land border with any unit) joins the most populous zone of its
     region within ISLAND_KM, or within 10 km once it holds ZONE_MIN_POP (the Isle of Wight stays
-    alone). One that can join nothing stays as it is (Ceuta). Returns ({lead id: [units]}, [log lines])."""
+    alone). One that can join nothing stays as it is (Ceuta). With `contiguous` (T-897), a zone with no
+    land neighbour left joins the nearest zone within WATER_GAP_KM across water instead of the island
+    rule, so every zone's parts touch. Returns ({lead id: [units]}, [log lines])."""
     by = {u.id: u for u in units}
-    simple = {u.id: u.geom.simplify(500) for u in units}
+    # simplifying can leave invalid rings, which the unions below fail on (T-897, China's counties)
+    simple = {u.id: polygonal(u.geom.simplify(500)) for u in units}
     zones, done, lines = {i: [i] for i in free}, set(), []
     ppl = lambda z: sum(by[i].free for i in zones[z])  # noqa: E731
     geo = lambda z: union_all([simple[i] for i in zones[z]])  # noqa: E731
@@ -1093,9 +1213,29 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP):
             length, into = max(border)
             how = f"shared border {length / 1000:.0f} km"
         elif border:
-            fit = [b for b in border if n + ppl(b[1]) <= ZONE_CAP]
+            fit = [b for b in border if n + ppl(b[1]) <= cap]
             into = min(fit or border, key=lambda b: (ppl(b[1]), -b[0]))[1]
             how = f"smallest neighbour, {ppl(into):,.0f}"
+        elif contiguous:
+            # T-897 (Anita, 2026-10-22): no exclaves; across water only as far as a bridge or a narrow
+            # strait reaches, to the nearest zone, its own region's first
+            for pool in (same, [o for o in zones if o != z and region[o] != region[z]]):
+                near = [(d, o) for d, o in ((g.distance(geo(o)), o) for o in pool) if d <= WATER_GAP_KM * 1000]
+                if near:
+                    into = min(near)[1]
+                    how = f"across water, {min(near)[0] / 1000:.0f} km"
+                    break
+            if into is None and island:
+                # an archipelago is one zone (Penghu, Kinmen, Matsu): an island joins the nearest
+                # island zone of its region within ARCHIPELAGO_KM, never the mainland's
+                def alone(o):
+                    go = geo(o).buffer(1000)
+                    return not any(go.intersects(simple[u.id]) for u in units if u.id not in zones[o])
+                near = sorted((g.distance(geo(o)), o) for o in same if g.distance(geo(o)) <= ARCHIPELAGO_KM * 1000)
+                near = [x for x in near if alone(x[1])]
+                if near:
+                    into = near[0][1]
+                    how = f"archipelago, {near[0][0] / 1000:.0f} km"
         elif island:
             reach = ISLAND_KM if n < ZONE_MIN_POP else 10.0
             near = [(ppl(o), o) for o in same if g.distance(geo(o)) <= reach * 1000]
@@ -1113,13 +1253,23 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP):
     return zones, lines
 
 
-def zone_name(s):
+def zone_name(s, iso=None):
     """A unit's name without its kind ("Rostock, Kreisfreie Stadt", "Arr. Leuven") or second language."""
     import re
     s = s.split("/")[0].strip()
     s = re.sub(r",\s*(Kreisfreie Stadt|Landkreis|Stadtkreis|Kreis)$", "", s)
+    if iso == "CHN":  # T-897: "Xinhui District", "Weichang Manchu and Mongol Autonomous County"
+        s = re.sub(r"\s+((\w+ )*(and \w+ )?Autonomous (County|Banner)|County|District|City|Banner|New Area|Forest Area|Special District)$", "", s)
     s = re.sub(r"^(Landkreis|Kreis|Regionalverband|Arr\.|Arrondissement|Bezirk)\s+", "", s)
     return s.strip()
+
+
+def solve_region(iso, u):
+    """The joint commute solve region of a unit's row (SOLVE_REGIONS), or None for a country solved whole."""
+    if iso not in SOLVE_REGIONS or not u.parents:
+        return None
+    first = u.parents[0][1]
+    return SOLVE_REGIONS[iso].get(first) or ascii_name(first.split()[0]).lower()
 
 
 def plan_zones(isos3):
@@ -1149,14 +1299,26 @@ def plan_zones(isos3):
     record = doc.setdefault("zones", {})
     for iso in isos3:
         units = [u for u in st["units"] if u.iso == iso]
-        if not units:  # a country no metro reached, so not in the plan's state (T-788)
+        # a country no metro reached, so not in the plan's state (T-788); or one with its own zone
+        # rules, read afresh since the state's units predate gb_units' de facto lines and gaps (T-897)
+        if not units or iso in ZONE_RULES:
             europe, meta = europe_isos()
             whole = union_all([g for i, g in countries() if i == iso])
             units, got = country_units(iso, meta, load_nuts(europe | {iso}), pop, shapely.Polygon(), whole)
             if not units:
                 raise SystemExit(f"{iso}: no units at NUTS-3 or in geoBoundaries")
             doc["unit_sources"][iso] = got
+        else:  # the state's units predate de_facto (T-897)
+            for u in units:
+                u.geom = de_facto(iso, u.geom)
+            gone = [u.name for u in units if u.geom is None or u.geom.is_empty]
+            units = [u for u in units if u.geom is not None and not u.geom.is_empty]
+            if gone:
+                log(f"{iso}: {len(gone)} units held by another country on the ground, left out: {', '.join(gone)}")
         src = doc["unit_sources"][iso]
+        rule = ZONE_RULES.get(iso, {})
+        floor, cap = rule.get("floor", ZONE_FLOOR), rule.get("cap", ZONE_CAP)
+        min_density = rule.get("min_density", ZONE_MIN_DENSITY)
         # a zone row the runner has moved on (built, gated, shipped, parked) keeps its units; only
         # planned ones are regrouped (T-788: Anita's 0.5M floor came mid-wave)
         old = {r["id"]: r for r in rows if r.get("kind") == "zone" and iso in r.get("units", {})
@@ -1182,16 +1344,20 @@ def plan_zones(isos3):
             if u.id in held or (tot > 0 and u.free < UNIT_SHARE * tot) or u.free <= 0:
                 continue
             dens = u.free / (u.geom.area / 1e6)
-            if dens < ZONE_MIN_DENSITY:
+            if dens < min_density and u.free < DEAD_KEEP * floor:
                 dead.append({"unit": u.id, "name": u.name, "people": round(u.free), "per_km2": round(dens, 1)})
             else:
                 free.append(u.id)
         nuts = src["kind"] in ("NUTS3", "ITL3")
         region = {u.id: (u.parents[-1] if nuts else u.parents[0]) if u.parents else iso for u in units}
-        groups, lines = zone_groups(units, free, region, ZONE_FLOOR)
+        groups, lines = zone_groups(units, free, region, floor, cap, rule.get("contiguous", False))
         by = {u.id: u for u in units}
+        if rule.get("contiguous"):  # T-897: no pack for an islet of a few hundred people that can join nothing
+            for lead in [k for k, ids in groups.items() if sum(by[i].free for i in ids) < ZONE_ALONE_MIN]:
+                for i in groups.pop(lead):
+                    dead.append({"unit": i, "name": by[i].name, "people": round(by[i].free), "alone": True})
         log(f"{iso}: {len(units)} units, {len(held)} in plan rows ({len(kept)} zone rows kept), {len(free)} free, {len(dead)} dead space "
-            f"(under {ZONE_MIN_DENSITY:g} a km2: {', '.join(d['name'] for d in dead)}); {len(groups)} zones"
+            f"(under {min_density:g} a km2: {', '.join(d['name'] for d in dead)}); {len(groups)} zones"
             + (f"; outside Europe, left out: {', '.join(away)}" if away else ""))
         for ln in lines:
             log(ln)
@@ -1203,6 +1369,12 @@ def plan_zones(isos3):
             cut = [q["geom"] for q in pk.values() if q["geom"].intersects(g)]
             if cut:
                 g = polygonal(g.difference(union_all(cut)))
+            if rule.get("contiguous"):
+                parts = sorted(shapely.get_parts(g), key=lambda p: -p.area)
+                far = [p for p in parts[1:] if p.distance(parts[0]) > WATER_GAP_KM * 1000 and p.area > 1e6]
+                if far:
+                    log(f"  {us[0].name}: {len(far)} parts over {WATER_GAP_KM:g} km from its main part "
+                        f"({sum(p.area for p in far) / 1e6:,.0f} km2; a unit's own exclave or a pack's cut)")
             ll = to_ll(g)
             best = None
             for u in us:
@@ -1211,10 +1383,12 @@ def plan_zones(isos3):
                     i = int(np.argmax(p))
                     best = (float(p[i]), x[i], y[i])
             lon, lat = INV.transform(best[1], best[2])
-            tz = tf.timezone_at(lng=lon, lat=lat) or tf.closest_timezone_at(lng=lon, lat=lat)
-            name = zone_name(us[0].name)
+            tz = COUNTRY_TZ.get(iso) or tf.timezone_at(lng=lon, lat=lat) or tf.closest_timezone_at(lng=lon, lat=lat)
+            # the most populous unit with a name in Latin script (Taiwan's file has some in Chinese only)
+            named = [u for u in us if latin(zone_name(u.name, iso))] or us
+            name = zone_name(named[0].name, iso)
             if name in names:  # Leipzig the city and Leipzig the Landkreis: the smaller by its two largest units
-                name = ", ".join(zone_name(u.name) for u in us[:2]) if len(us) > 1 else us[0].name
+                name = ", ".join(zone_name(u.name, iso) for u in named[:2]) if len(named) > 1 else named[0].name
             names.add(name)
             prev = was.get(tuple(sorted(ids)))
             arch, module = "D", None  # zones: global sources and the zone curve, no country module (T-779)
@@ -1229,6 +1403,9 @@ def plan_zones(isos3):
                    "extracts": extracts(ll, ex, kids), "archetype": arch, "module": module,
                    "units": {iso: [u.id for u in us]}, "bbox": [round(v, 3) for v in ll.bounds],
                    "source": {"zone": "T-723", "unit_names": [u.name for u in us]}}
+            sr = solve_region(iso, us[0])
+            if sr:
+                row["solve_region"] = sr
             if prev:
                 for k in ("status", "run", "gate_relax"):
                     if k in prev:
@@ -1246,10 +1423,10 @@ def plan_zones(isos3):
         if gone:
             log(f"  earlier zone rows with no successor, removed: {gone}")
         rows[:] = [r for r in rows if r["id"] not in old] + out
-        record[iso] = {"built": str(datetime.now().date()), "task": "T-788",
-                       "rule": f"free units at or over {ZONE_MIN_DENSITY:g} people a km2, grouped in their region until each "
-                               f"zone holds {ZONE_FLOOR:,}: under {ZONE_MIN_POP:,} by the longest border, then the smallest "
-                               f"neighbour keeping both within {ZONE_CAP:,}; another region's when none is left; islands "
+        record[iso] = {"built": str(datetime.now().date()), "task": "T-897" if iso in ZONE_RULES else "T-788",
+                       "rule": f"free units at or over {min_density:g} people a km2 (or holding {DEAD_KEEP * floor:,.0f}), grouped in their region until each "
+                               f"zone holds {floor:,}: under {ZONE_MIN_POP:,} by the longest border, then the smallest "
+                               f"neighbour keeping both within {cap:,}; another region's when none is left; islands "
                                f"the most populous zone within {ISLAND_KM:g} km (10 km from {ZONE_MIN_POP:,})",
                        "kept": [r["id"] for r in kept], "dead": dead, "merges": [ln.strip() for ln in lines]}
         if away:
