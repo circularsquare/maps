@@ -1318,6 +1318,9 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
     // an unreadable network converts to nothing: let the load below say so
     if (c.length) { net = c; converted = true; }
   }
+  // T-889: the demand pool opens the zones the built stations reach while the network is worked out
+  const st = TrackApi.save_stations(net);
+  if (st.length > 3) send({ kind: "stationsAhead", frame: { kind: frameKindName(st[0]), lon: st[1], lat: st[2] }, xy: st.slice(3) });
   await masksBeforeLoad(net);
   if (!api!.load(net)) throw new Error("This save is damaged.");
   await masksForLoaded(net);

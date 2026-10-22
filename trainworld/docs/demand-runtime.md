@@ -28,7 +28,10 @@ solving workers once the zone is reached, a built station lies within 30 km of i
 rule, per zone), or the zone is selected (a zone selection, or a bubble selection in it); never for
 viewing alone (T-801: tens of MB in every solving worker); before that no solve waits for it or covers it,
 and a solve sent without a market pack open since is sent again. The workers compose the market
-from the packs they hold (`MarketPacks.market`) whenever one opens or closes. **Packs close when
+from the packs they hold (`MarketPacks.market`) whenever packs open or close: a composition costs
+about as much for one pack as for forty (0.7-3.5 s in Chrome on a big game), so the page sends the
+market packs downloaded together in one `open` once none is still downloading, and a worker opens
+the `open`s waiting for it together, one composition for them all (T-889). **Packs close when
 nobody needs them** (T-301): a zone that is
 neither viewed, beside the view, reached by a station nor part of the load in hand closes in every
 worker (bare or not) once it has been so for 60 s, or at once when more than two such zones are

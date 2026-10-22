@@ -350,6 +350,42 @@ function closeDeferred() {
   closeLater.markets.clear();
 }
 
+/** T-889: `open`s not yet taken up, each with the count of `close`s that came before it. Opens
+ * that arrive together are opened together: composing the market costs about as much for one pack
+ * as for forty, so a big game's packs, composed one by one, took 0.7-0.9 s each. */
+const openQueue: { msg: Extract<ToDemand, { kind: "open" }>; epoch: number }[] = [];
+let closeEpoch = 0;
+
+let oneByOne = false;
+
+function openQueued(epoch: number): Promise<void> {
+  // a macrotask, so the opens already posted are delivered and join this one
+  return (oneByOne ? Promise.resolve() : new Promise<void>((r) => setTimeout(r, 0))).then(() => {
+    const first = openQueue[0];
+    // taken up by an earlier batch, or after a close that comes before it in the chain
+    if (!first || first.epoch !== epoch) return;
+    const isBare = !!first.msg.bare && aux;
+    let n = 1;
+    while (!oneByOne && n < openQueue.length && openQueue[n].epoch === epoch && (!!openQueue[n].msg.bare && aux) === isBare) n++;
+    const batch = openQueue.splice(0, n).map((q) => q.msg);
+    if (!started) return;
+    try {
+      const t0 = performance.now();
+      for (const m of batch) if (m.rows && !marketPacks) marketRows = m.rows;
+      const packs = batch.flatMap((m) => m.packs), market = batch.flatMap((m) => m.intercity ?? []);
+      const rejected: OpenRejected[] = [];
+      const cityInfo = openPacks(packs, market, isBare, rejected);
+      const openMs = performance.now() - t0;
+      const warmMs = warmUp();
+      const figures = isBare ? Object.fromEntries(packs.filter(({ id }) => bare.has(id)).map(({ id }) => [id, bare.get(id)!.figures])) : undefined;
+      const markets = market.map((m) => m.id).filter((id) => !rejected.some((r) => r.market && r.id === id));
+      sendMessage({ kind: "opened", cityInfo, markets, openMs, warmMs, memBytes: wasm_memory_bytes(), ...(figures ? { bare: figures } : {}), ...(rejected.length ? { rejected } : {}) });
+    } catch (err) {
+      sendMessage({ kind: "failed", error: String(err) });
+    }
+  });
+}
+
 /** Warm-up solves on the first city a worker opens, so V8 has optimised the kernel before the first real one. */
 function warmUp(): number {
   if (warmed || !cities.size) return 0;
@@ -366,6 +402,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
         await init();
         const t1 = performance.now();
         aux = !!msg.aux;
+        oneByOne = !!msg.oneByOne;
         mine = msg.periods;
         groupMasks = (msg.groups ?? []).map((g) => g.reduce((m, q) => m | (1 << q), 0));
         // T-173: one worker opens a small synthetic everyday layer first, so the browser has
@@ -384,25 +421,13 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     });
   } else if (msg.kind === "open") {
     // T-149: packs arrive one by one, the viewed city's first; a worker busy solving opens them
-    // between populations (its job keeps the cities it started with)
-    opening = opening.then(() => {
-      if (!started) return;
-      try {
-        const t0 = performance.now();
-        const isBare = !!msg.bare && aux;
-        if (msg.rows && !marketPacks) marketRows = msg.rows;
-        const rejected: OpenRejected[] = [];
-        const cityInfo = openPacks(msg.packs, msg.intercity, isBare, rejected);
-        const openMs = performance.now() - t0;
-        const warmMs = warmUp();
-        const figures = isBare ? Object.fromEntries(msg.packs.filter(({ id }) => bare.has(id)).map(({ id }) => [id, bare.get(id)!.figures])) : undefined;
-        const markets = (msg.intercity ?? []).map((m) => m.id).filter((id) => !rejected.some((r) => r.market && r.id === id));
-        sendMessage({ kind: "opened", cityInfo, markets, openMs, warmMs, memBytes: wasm_memory_bytes(), ...(figures ? { bare: figures } : {}), ...(rejected.length ? { rejected } : {}) });
-      } catch (err) {
-        sendMessage({ kind: "failed", error: String(err) });
-      }
-    });
+    // between populations (its job keeps the cities it started with); T-889: those waiting together
+    // open together
+    const epoch = closeEpoch;
+    openQueue.push({ msg, epoch });
+    opening = opening.then(() => openQueued(epoch));
   } else if (msg.kind === "close") {
+    closeEpoch++;
     // in the opening chain, so a close and a reopen of the same pack keep their order
     opening = opening.then(() => {
       if (!started) return;

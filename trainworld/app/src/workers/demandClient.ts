@@ -290,8 +290,8 @@ interface Download { got: number; total: number; at: number; end?: number }
  * worker, solving every period to its first estimate) weighs as long as it is expected to take,
  * and within a step the bar moves with the time spent against that expectation, up to
  * STEP_CAP, until the step's real completion lands. Expected times, measured on Anita's desktop
- * (notes/T-243.md, T-793): opening a city pack 220 ms per MB of its .bin, a market pack 450 ms and
- * 20 ms per MB; the first estimate 600 ms plus 2.2 ms per line stop, and each crowding round about
+ * (notes/T-243.md, T-793, T-889): opening a city pack 220 ms per MB of its .bin, the market packs 20 ms
+ * per MB and one composition for them all; the first estimate 600 ms plus 2.2 ms per line stop, and each crowding round about
  * as long (ROUND_WEIGHT). A download's expected length is its own rate so far. The last startup's
  * solve time and stop count are remembered per browser (LAST_SOLVE) and scale the estimate, so a
  * slower machine corrects it after one load; until the clock worker has sent the network, its stop
@@ -300,8 +300,10 @@ interface Download { got: number; total: number; at: number; end?: number }
  * spread over the rest of the bar.
  */
 const OPEN_MS_PER_MB = { city: 220, market: 20 };
-/** a market pack's opening is mostly a fixed cost, nearly the same for 0.3 and 1.8 MB (T-793) */
-const OPEN_MARKET_MS = 450;
+/** composing the market from the packs opened together, nearly the same for one pack as for forty
+ * (0.7 s for one of Japan's, 1.5 s for 45, 1.4-3.6 s for the world save's 22-39; T-889), shared out
+ * among a load's market packs */
+const OPEN_MARKET_MS = 1500;
 /** T-484: the waits before each new try of a failed pack download, and, once those are spent, before
  * the zone is tried again (the last repeating) */
 const RETRY_MS = [500, 1500, 4000];
@@ -643,7 +645,7 @@ class DemandClient {
       this.periodsOf.push(i < n ? periodsOfWorker(i, n) : []);
       // the WASM starts at once; packs follow as they arrive (T-149)
       // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
-      const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], aux: i === n, warmEveryday: i === 0 && n > 1 && !perfOff("stagger"), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
+      const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], aux: i === n, warmEveryday: i === 0 && n > 1 && !perfOff("stagger"), ...(perfOff("batchOpen") ? { oneByOne: true } : {}),...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
       w.postMessage(msg);
     }
     // the viewed city loads when it changes (a pan, the city buttons)
@@ -671,8 +673,57 @@ class DemandClient {
     this.prefetched.add(id);
     this.fetchCity(id, "full");
   }
-  /** T-351: zones opened in every worker ahead of a station (`prefetchViewed`) */
+  /** T-351: zones opened in every worker ahead of a station (`prefetchViewed`, `stationsAhead`) */
   private prefetched = new Set<CityId>();
+
+  /**
+   * T-889: a save being loaded has these built stations (x, y in `frame`). Working its network out
+   * takes the clock worker several seconds on a big game (Japan's about 8), so the zones the stations
+   * reach and the markets `wantsMarket` will want for them start downloading and opening now, as
+   * `ensure` opens them once the network arrives. They count as prefetched, so no solve covers one
+   * the network turns out not to reach; a market it does not want is closed (`settleAhead`).
+   */
+  stationsAhead(frame: FrameSpec, xy: Float64Array) {
+    if (this.status.startsWith("failed") || perfOff("openAhead") || xy.length < 2) return;
+    const stations: Service["stations"] = [];
+    for (let k = 0; k + 1 < xy.length; k += 2) stations.push({ id: "", x: xy[k], y: xy[k + 1] });
+    const svc: Service = { frame, fare: { base: 0, perKm: 0 }, stations, lines: [] };
+    this.ahead = { svc, markets: new Set() };
+    void loadFootprints(this.nearOf(svc).near).then(() => {
+      const a = this.ahead;
+      if (a?.svc !== svc || this.status.startsWith("failed")) return;
+      const reached = this.reachedSet(svc);
+      if (!reached?.size) return;
+      for (const id of new Set([...reached, ...this.nearOf(svc).markets])) {
+        const item = marketItem(id);
+        if (this.fetching.has(item) || this.broken.has(item)) continue;
+        a.markets.add(id);
+        this.fetchMarket(id);
+      }
+      for (const id of this.withoutBroken(new Set(reached))) {
+        if (this.fetching.has(id) || this.fetchingUndecided.has(id)) continue;
+        this.prefetched.add(id);
+        this.fetchCity(id, "full");
+      }
+      this.progress();
+    });
+  }
+  /** `arrived`: the loaded game's network is in */
+  private ahead: { svc: Service; markets: Set<CityId>; arrived?: boolean } | null = null;
+
+  /** T-889: the loaded game's network has arrived with its reach (`reached`): markets opened ahead
+   * that it does not want close, before a solve of it would count them. */
+  private settleAhead(reached: Set<CityId>) {
+    const a = this.ahead;
+    if (!a?.arrived) return;
+    this.ahead = null;
+    const want = reached.size ? this.marketZones(this.latest()) : new Set<CityId>();
+    const extra = [...a.markets].filter((id) => !want.has(id));
+    if (!extra.length) return;
+    console.warn("demand: markets opened ahead that the network does not want", extra);
+    const open = extra.filter((id) => this.opened.has(marketItem(id)));
+    if (open.length) this.closeFull([], open);
+  }
 
   /** T-276: nearby zones open for their bubbles only after the startup load and outside a loaded
    * game's clock hold, so they never hold the clock; they show no loading bar and a solve never
@@ -822,9 +873,12 @@ class DemandClient {
     if (this.status.startsWith("failed")) return;
     const known = this.needed(this.latest());
     const need = known ?? this.viewedSet();
-    demandIdle.value = known?.size === 0; // T-318
+    // T-318; T-889: not while a loaded game's network is on its way (the camera moving to its view
+    // may pass over dead space, which hid the card for a moment)
+    demandIdle.value = known?.size === 0 && !gameLoadArmed();
     // over dead space with no station in reach there is nothing to open, the market included
     if (need.size) for (const id of this.wantsMarket(this.latest())) if (!this.fetching.has(marketItem(id))) this.fetchMarket(id);
+    if (known) this.settleAhead(known);
     // T-325: a city no station reaches opens bare; while the reach is not known (startup), the
     // viewed city's pack is fetched and decided once downloaded (T-351)
     const reached = this.knownReach();
@@ -996,7 +1050,7 @@ class DemandClient {
 
   /** Post an `open` to every worker (the last takes the original buffer, the others copies).
    * T-173: until the first worker is ready, the other solving workers' city packs wait (`held`). */
-  private post(open: { pack?: { id: CityId; header: string; bin: ArrayBuffer }; intercity?: { id: CityId; bytes: Uint8Array }; rows?: Uint8Array }) {
+  private post(open: { pack?: { id: CityId; header: string; bin: ArrayBuffer }; intercity?: { id: CityId; bytes: Uint8Array }[]; rows?: Uint8Array }) {
     // T-776: the market's rows go with the first market pack, the same way as its bytes
     const rows = open.intercity && !this.rowsSent ? open.rows : undefined;
     if (rows) this.rowsSent = true;
@@ -1006,12 +1060,11 @@ class DemandClient {
       // T-180: a market pack as bytes, each solving worker its own copy (the last solving one the
       // original), decoded there: decoding megabytes and cloning the text six times held the main
       // thread up while the player could already pan. The aux worker never opens one: empty bytes.
-      const m = open.intercity;
       const own = <T extends Uint8Array>(b: T) => (i === this.computeN ? new Uint8Array(0) : i === this.computeN - 1 ? b : b.slice());
-      const bytes = m && own(m.bytes), r = rows && own(rows);
-      const msg: ToDemand = { kind: "open", packs: pack ? [pack] : [], ...(m ? { intercity: [{ id: m.id, pack: bytes! }] } : {}), ...(r?.byteLength ? { rows: r } : {}) };
+      const ms = open.intercity?.map((m) => ({ id: m.id, pack: own(m.bytes) })), r = rows && own(rows);
+      const msg: ToDemand = { kind: "open", packs: pack ? [pack] : [], ...(ms ? { intercity: ms } : {}), ...(r?.byteLength ? { rows: r } : {}) };
       const transfer: Transferable[] = pack ? [pack.bin] : [];
-      if (bytes?.byteLength) transfer.push(bytes.buffer as ArrayBuffer);
+      for (const m of ms ?? []) if (m.pack.byteLength) transfer.push(m.pack.buffer as ArrayBuffer);
       if (r?.byteLength) transfer.push(r.buffer as ArrayBuffer);
       const send = () => w.postMessage(msg, transfer);
       if (pack && i > 0 && i < this.computeN && this.held) this.held.push(send);
@@ -1065,13 +1118,34 @@ class DemandClient {
     this.fetching.add(item);
     const log: LoadLog = { item, requestedAt: performance.now() };
     this.start.loads.push(log);
+    this.marketsDownloading.add(id);
     Promise.all([this.download(`${id}.market.json`), this.marketRows()]).then(([bytes, rows]) => {
       log.downloadedAt = performance.now();
       this.recovered(item);
       this.bytes.set(item, bytes.byteLength);
       this.hashPack(item, [bytes]);
-      this.post({ intercity: { id, bytes }, rows });
-    }).catch((err) => this.unreachable(item, id, `market pack ${id}: ${String(err)}`));
+      this.marketsDownloading.delete(id);
+      this.marketsHeld.push({ id, bytes });
+      this.heldRows = rows;
+      this.postMarkets();
+    }).catch((err) => {
+      this.marketsDownloading.delete(id);
+      this.unreachable(item, id, `market pack ${id}: ${String(err)}`);
+      this.postMarkets();
+    });
+  }
+
+  /** T-889: a market pack downloaded while others still download waits for them, so the solving
+   * workers compose the market once for them all (1.5-3.5 s a time on a big game's markets). */
+  private marketsDownloading = new Set<CityId>();
+  private marketsHeld: { id: CityId; bytes: Uint8Array }[] = [];
+  private heldRows: Uint8Array | null = null;
+  private postMarkets() {
+    if ((this.marketsDownloading.size && !perfOff("batchOpen")) || !this.marketsHeld.length) return;
+    // (one closed or given up on meanwhile is not sent)
+    const held = this.marketsHeld.filter((m) => this.fetching.has(marketItem(m.id)));
+    this.marketsHeld = [];
+    if (held.length) this.post({ intercity: held, rows: this.heldRows ?? undefined });
   }
 
   /** T-776: the world market's rows, downloaded once, beside the first market pack (a fraction of
@@ -1304,6 +1378,9 @@ class DemandClient {
     if (this.status.startsWith("failed")) return;
     const known = this.needed(this.latest());
     if (known?.size === 0) {
+      // T-889: a game load's own load waiting for its network goes on (the camera moving to the save's
+      // view may pass over dead space or zoom out past the zones' loading)
+      if (this.job && this.job.wait !== null && !this.latest()) return;
       // T-318: nothing to load or solve (dead space); the load in hand, if any, finishes unseen
       if (this.job) { this.job = null; clearInterval(this.progressTick); this.progressTick = 0; }
       loadProgress.value = null;
@@ -1374,6 +1451,7 @@ class DemandClient {
     let got = 0, total = 0, dlStart = Infinity, dlEnd = 0;
     // Opening: each item in every worker, expected from its size; worker acks are its real progress.
     let openMs = 0, openDone = 0, openStart = Infinity;
+    const markets = job.items.filter(isMarket).length;
     for (const item of job.items) {
       let size = 0;
       for (const f of isMarket(item) ? [`${marketZone(item)}.market.json`] : [`${item}.json`, `${item}.bin`]) {
@@ -1381,7 +1459,7 @@ class DemandClient {
         if (d) { got += Math.min(d.got, d.total || d.got); total += d.total || d.got; dlStart = Math.min(dlStart, d.at); dlEnd = Math.max(dlEnd, d.end ?? now); size += d.total || d.got; }
       }
       const mb = (this.bytes.get(item) ?? (size || GUESS_BYTES)) / 1e6;
-      const ms = isMarket(item) ? OPEN_MARKET_MS + mb * OPEN_MS_PER_MB.market : mb * OPEN_MS_PER_MB.city;
+      const ms = isMarket(item) ? OPEN_MARKET_MS / markets + mb * OPEN_MS_PER_MB.market : mb * OPEN_MS_PER_MB.city;
       openMs += ms;
       openDone += loaded(item) ? ms : ms * (this.acks.get(item) ?? 0) / this.workers.length;
       const log = lastLoad(this.start.loads, (l) => l.item === item);
@@ -1783,6 +1861,7 @@ class DemandClient {
     // the first network after a whole-game load is the one the clock waits for (T-149)
     const gameLoad = takeGameLoadHold();
     if (gameLoad) this.hold = {};
+    if (gameLoad && this.ahead) this.ahead.arrived = true;
     if (key === this.lastKey) {
       // nothing demand reads changed: the solve in hand (or waiting) is the loaded game's
       if (this.hold && !this.waiting) this.hold.version = this.cur?.version;
@@ -2954,6 +3033,11 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   if (TEST) c.submitNetwork(demandTestSnapshot());
   if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose) };
   return c;
+}
+
+/** T-889: a loading save's built stations (clockClient's onStationsAhead). */
+export function stationsAhead(frame: FrameSpec, xy: Float64Array) {
+  if (!TEST) client?.stationsAhead(frame, xy);
 }
 
 /** Hand the clock worker's NetworkSnapshot to the pool (from clockClient's onNetworkSnapshot). */

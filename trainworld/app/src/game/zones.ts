@@ -7,7 +7,7 @@
 // answer falls back to the nearest centre, so it never flips as boundaries arrive one by one.
 
 import { signal } from "@preact/signals";
-import { cityNear, cityWithin, hashView, zonesTouching, ZONE_REACH_M, type CityId } from "./cities";
+import { CITIES, cityNear, cityWithin, hashView, zoneBox, zonesTouching, ZONE_REACH_M, type CityId } from "./cities";
 import { perfOff } from "../perfFlags";
 import { distanceTo, footprintOf, loadFootprints, touchesBox, type Footprint } from "../workers/cityReach";
 
@@ -53,7 +53,22 @@ function footprintsOf(ids: CityId[]): Footprint[] | null {
 
 /** The zones whose boundary (lon, lat) can be within `ZONE_REACH_M` of: their boxes say. */
 function around(lon: number, lat: number): CityId[] {
-  return zonesTouching(lon, lat, lon, lat, ZONE_REACH_M).map((c) => c.id);
+  const b = (reachBoxes ??= reachBoxesOf());
+  const out: CityId[] = [];
+  for (let i = 0; i < CITIES.length; i++) if (lon <= b[4 * i + 2] && lon >= b[4 * i] && lat <= b[4 * i + 3] && lat >= b[4 * i + 1]) out.push(CITIES[i].id);
+  return out;
+}
+/** T-889: each zone's box widened by `ZONE_REACH_M` as `zonesTouching` widens it (west, south, east,
+ * north), worked out once: `around` runs for every station and track edge a game places. */
+let reachBoxes: Float64Array | null = null;
+function reachBoxesOf(): Float64Array {
+  const b = new Float64Array(4 * CITIES.length);
+  CITIES.forEach((c, i) => {
+    const [bw, bs, be, bn] = zoneBox(c);
+    const dy = ZONE_REACH_M / 111_320, dx = dy / Math.cos(Math.min(85, Math.max(Math.abs(bs), Math.abs(bn))) * Math.PI / 180);
+    b.set([bw - dx, bs - dy, be + dx, bn + dy], 4 * i);
+  });
+  return b;
 }
 
 /** The zone whose boundary holds (lon, lat); else the nearest boundary within reach; else the

@@ -153,7 +153,11 @@ Web first, so it can be shared as a link.
   chooses the game (`?new=1`, `?synth=1`, `?demandTest=1`, `?paused=1`, `?continue=1`;
   `choiceFromUrl` in ui/StartMenu.tsx) skips the menu, and the pool then starts before the map is
   set up, as it did before the menu. A new game, from the menu or `?new=1`, opens its viewed zone
-  bare (`startDemand`'s `newGame`). **The registry is split** [T-776]: `game/registry.json`, bundled,
+  bare (`startDemand`'s `newGame`). **A save's packs open while its network is worked out**
+  [T-889]: the clock worker reads the save's built stations (`TrackApi.save_stations`) before it
+  derives the track (about 5 s for Japan's 709 lines) and sends them (`stationsAhead`); the pool
+  downloads and opens the zones they reach and those zones' markets at once, as prefetched zones, so
+  no solve covers one the network does not reach, and a market the network does not want closes. **The registry is split** [T-776]: `game/registry.json`, bundled,
   is the index of what is needed before a zone opens (each zone's id, name, kind, country, origin,
   centre, zoom, box, place, UTC offset and `localTrips`; the market's frame, rule and place names);
   the world market's rows, the only per-zone detail, are `game/market-rows.json` (a hashed file in

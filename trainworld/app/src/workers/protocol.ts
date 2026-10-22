@@ -449,6 +449,8 @@ export type FromClock =
   /** `frame`: the game now in the worker; `converted`: its save was in an older frame and was
    * converted to the world's on the way in (T-308); `game` counts the worker's loads, for "clock" */
   | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string; converted?: boolean; game: number }
+  /** T-889: a save being loaded: its built stations' x, y in `frame`, before its network is worked out */
+  | { kind: "stationsAhead"; frame: FrameSpec; xy: Float64Array }
   /** T-729: the opened zones of the game in hand, sent before its snapshot; null for a save from
    * before T-729 */
   | { kind: "opened"; zones: string[] | null }

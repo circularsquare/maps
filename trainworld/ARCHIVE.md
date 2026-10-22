@@ -1,6 +1,9 @@
 ﻿# Archive
 
-- T-893 [P2] Spacing and divider in the blueprint cost breakdown. Done 2026-10-22: its rows take the 6 px padding of the zone-trips rows and no dotted divider (`.blueprint-items`, `ui/Blueprint.tsx`).
+- T-889 [P2] Big-game loading. Done 2026-10-22: a save's packs open while its network is worked out, market packs compose once, outline distances through an edge grid. Pick to solve: Japan 63 s to 12-13 s, world save 41 s to 9-11 s (card 69 to 39-43 s); figures identical. notes/T-889.md.
+- T-850b [P3] Merge cells under 50 trip ends into the nearest busier cell of their zone part. Done 2026-10-22: `merge_cells.py` `FLOOR = 50`, all 757 packs remerged (5.61M to 3.87M cells, `.bin` 751 to 615 MB), all ship; the real save 11,342,122 to 11,342,685 rail trips. notes/T-850.md 5.
+- T-888 [P2] Slow builds on archipelago coasts. Done 2026-10-22: the time was the zone outline in `osm_units`, not water; five fixes (one GHSL read, no repeated cuts, islets under 0.05 km² as sea) take Åland 1,343 to about 300 s and Varsinais-Suomi 3,048 to about 1,070 s, packs byte-identical. notes/T-888.md.
+- T-893 [P2] Spacing and divider in the Build tab's Track section and the blueprint cost breakdown. Done 2026-10-22: their rows take the 6 px padding of the zone-trips rows and no dotted divider (`.blueprint-items`, `ui/Blueprint.tsx`).
 - T-895 [P2] A saved game opens fitted to its network. Done 2026-10-22: a start-menu pick, slot open or imported file jumps to every built station in view as the first state arrives, before demand; max zoom 12; no stations: the opened zone or the world. docs/ui-panels.md.
 - T-894 [P2] Save previews readable across cities. Done 2026-10-22: one panel per city (most stations first, up to four, fringes under 8% left out), names and station counts as text over it, 240 x 160 in the saves panel and start menu. Check `checks/t894-previews.mjs`.
 - T-896 [P2] The sky banner's train as the now marker. Done 2026-10-22: now is the banner's middle (12 h each way); an 18 by 5 px train sits there on the track under the sun or moon while the scene slides under it. docs/ui-panels.md.

@@ -70,8 +70,8 @@ import { startGameWait } from "./game/loading";
 import { choiceFromUrl, showStartMenu } from "./ui/StartMenu";
 import { viewStart } from "./ui/NewGame";
 import { startOpenFit } from "./ui/locate";
-import { ClockClient, clockWorkerStatus, onNetworkSnapshot } from "./workers/clockClient";
-import { startDemand, submitNetwork } from "./workers/demandClient";
+import { ClockClient, clockWorkerStatus, onNetworkSnapshot, onStationsAhead } from "./workers/clockClient";
+import { startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
 import { startTripView } from "./map/tripView";
 import { modeColours } from "./game/palette";
@@ -437,6 +437,7 @@ render(h(Toolbar, null), document.getElementById("tools-root")!);
 
 // ---- demand (the pool started at the top, or with the pick) ----
 onNetworkSnapshot(submitNetwork);
+onStationsAhead(stationsAhead);
 
 // ---- T-677: the start menu; the pick starts demand, then the clock worker, in startup's order ----
 if (!urlChoice) showStartMenu((choice) => {

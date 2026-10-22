@@ -407,6 +407,20 @@ impl TrackApi {
         }
         out
     }
+    /// T-889: a save's built stations as `nodes_info` lists them, read without deriving it: the
+    /// frame (kind, origin lon, lat), then x, y per station in node order. The demand pool opens the
+    /// zones they reach while the clock worker works the network out. Empty if it does not decode.
+    pub fn save_stations(bytes: &[u8]) -> Vec<f64> {
+        let Ok(net) = save::decode(bytes) else { return vec![] };
+        let mut out = vec![net.frame_kind as u8 as f64, net.origin_lon, net.origin_lat];
+        for k in 0..net.node_count() as u32 {
+            let i = k as usize;
+            if net.node_ok(k) && net.node_platform[i] > 0 && net.node_built[i] {
+                out.extend([net.node_x[i], net.node_y[i]]);
+            }
+        }
+        out
+    }
     pub fn save(&self) -> Vec<u8> {
         save::encode(&self.w.net)
     }

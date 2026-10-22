@@ -114,7 +114,7 @@ export function BuildTab() {
             data-tip="Snap track to the real network"
             onClick={() => (snapReal.value = !snapReal.peek())}><Icon.snapReal /></button>
         </div>
-        <ul class="rows">
+        <ul class="rows flat build-rows">
           <li>
             <span class="grow" data-tip="Track you draw curves wide enough to take this speed">Design speed</span>
             <Stepper value={speed(designSpeed.value, 5)} wide label="design speed" onStep={(s) => {

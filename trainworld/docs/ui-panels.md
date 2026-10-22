@@ -433,8 +433,8 @@ registry centre and zoom, or over New York with none [T-310].
   pace, that memory may move the step model's estimate only between 0.7 and 1.5 times, and past its
   length a quarter of the time so far is still expected. The step model, used alone with nothing
   remembered: downloads at their rate; opening at its rate once a quarter of it is in (each pack in
-  every worker), before that 220 ms per MB of city pack and 450 ms plus 20 ms per MB for a market
-  pack; the solve as the first estimate about 0.6 s plus 2.2 ms per line stop, scaled by this
+  every worker), before that 220 ms per MB of city pack, 20 ms per MB of market pack and 1.5 s for
+  composing the market once for the load's market packs (T-889); the solve as the first estimate about 0.6 s plus 2.2 ms per line stop, scaled by this
   browser's last solve of the zone in view (a game of 1,000 stops is assumed with none), each
   crowding round about as long again (weights 1, 1.1, 1.05, 0.55), the rounds still to come at the
   pace measured so far, and a round running late expected to go on a further 15% of its time so far.

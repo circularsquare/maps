@@ -78,7 +78,7 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | Germany | U Zensus 2022 100 m grid scaled to Gemeinde totals (VG250-EW) | U BKG VG250-EW | 1 / 1 |
 | Japan | U 2020 census 500 m mesh | U KSJ N03 municipalities | Tokyo 0.56 / 0.68; other packs about 0.33-1 |
 | Brazil | U IBGE 2022 census tracts | U IBGE tracts dissolved | 0.24 / 0.17 |
-| China | U 2020 census by district (city bulletin), GHSL inside | U OSM admin_level 6; skip geoBoundaries ADM2 (1:4M) | 0.07 / 0.13 |
+| China | U 2020 census by district (city bulletin), GHSL inside; N 2020 census by county (github.com/leiii/census, MIT; Xinjiang from hongheiku), N ASPECT 100 m grid from 40,718 townships' 2020 counts (figshare 27323106), T-897 | U OSM admin_level 6; skip geoBoundaries ADM2 (1:4M); world plan units geoBoundaries ADM3 (holds Taiwan and Arunachal: clip, T-897) | 0.07 / 0.13 (Shanghai); Henan 0.01 / 0.01, Guangdong 0.05 / 0.07 (T-897) |
 | South Korea | U resident registration by si-gun-gu (MOIS, open CSV); skip eup-myeon-dong (same file, little gain at 2 km); G 2020 census table (KOSIS: no account without a Korean ID; browser download only) | U OSM relations by Korean name | 0.51 / 0.93 |
 | India | U Census 2011 by sub-district, grown by district to 2020; 2027 census not out | U OSM admin_level 5 and 6 by name; G SHRUG polygons (non-commercial, checks only) | 0.04 / 0.05 |
 | Nigeria | U GHSL alone; - no credible count (census 2006); ? GRID3 100 m estimates, T-507 | U OSM LGAs | 0.02 / 0.01 (owe aba abo the same) |
@@ -118,7 +118,7 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | Germany | U Pendlerrechnung 2024 by Gemeinde of work (Berlin one unit; - no Bezirk table found; a suppressed count, "-", counts as 0, T-613) | - Regionaldatenbank 13111 has 4 groups by Gemeinde, too coarse | ? not looked for |
 | Japan | U 2021 economic census 500 m mesh, scaled to census workers by municipality of work (public service left out, T-461) | U the same mesh by major industry, 9-1B splits by municipality | N 2020 census industry by municipality of residence, T-500 |
 | Brazil | U OD 2017 survey, workers by zone of first job | ? survey's job sector, not checked | ? survey's job sector, not checked |
-| China | U 5th economic census by district (legal-person units) | ? economic census by district x sector, T-503 | - |
+| China | U 5th economic census by district (legal-person units; district tables only in some cities' bulletins); N its province totals (national bulletin no. 7, table 7-2), T-897 | ? economic census by district x sector, T-503 | - |
 | South Korea | tier 0 proxy; G Census on Establishments by si-gun-gu (KOSIS: no account without a Korean ID; browser download only), T-504 | G the same census by sector, T-504 | - |
 | India | tier 0 proxy (population 0.5); N 6th Economic Census 2013 by ward, T-388 | - | - |
 | Nigeria | tier 0 proxy (population 0.5, land cap) | - | - |
@@ -232,7 +232,7 @@ lengths are not used; its share of trips under 2 km is the check (docs/demand-wo
 | Germany | U tier 0 OSM (school files per Land) | ? Destatis 21311 by institution, T-505 | U OSM | U Wikidata |
 | Japan | U KSJ P29 points, mesh children 0-14 | U tier 0 (short in some zones, T-462) | U OSM, beds almost never tagged (sized by rule, T-387) | U Wikidata; Narita 0.8 by judgement |
 | Brazil | U tier 0 OSM; ? INEP school census, T-506 | U tier 0 | U OSM; ? CNES beds by establishment, T-506 | U GRU via the press, Congonhas Wikidata |
-| China | U tier 0 OSM | U tier 0 | U OSM, one hospital with beds (sized by rule, T-387) | U CAAC bulletin via the press |
+| China | U tier 0 OSM | U tier 0 | U OSM, one hospital with beds (sized by rule, T-387) | U CAAC bulletin via the press; N the bulletin itself, every airport (2025 edition: 270), T-897 |
 | South Korea | U tier 0 OSM | U tier 0 (3 of 217 sites with Wikidata counts) | U OSM, no beds tagged (sized by rule, T-387) | U Wikidata; Incheon 0.85 by judgement |
 | India | U tier 0 OSM; G UDISE+ enrolment (behind the portal) | U tier 0 | U OSM, one hospital with beds (sized by rule, T-387) | U the operator's total via the press |
 | Nigeria | U tier 0 OSM; ? GRID3 schools, T-507 | U tier 0 (World Bank rate from 2011) | U OSM, no beds; ? GRID3 health facilities, T-507 | U FAAN via the press |

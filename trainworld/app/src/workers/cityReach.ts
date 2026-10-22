@@ -111,8 +111,129 @@ function reaches(f: Footprint, lon: number, lat: number): boolean {
   return inside;
 }
 
+/** T-889: a footprint's outline edges by grid cell over its bbox, so `distanceTo` looks at the
+ * edges near the place instead of a whole coastline (placing Japan's stations and track walked every
+ * prefecture's outline for each: 4 s of a 5 s freeze on load). `seg` holds ring and index pairs. */
+interface EdgeGrid { nx: number; ny: number; cw: number; ch: number; start: Uint32Array; seg: Uint32Array; stamp: Uint32Array; visit: number }
+const grids = new WeakMap<Footprint, EdgeGrid | null>();
+/** below this many edges the plain walk is as quick */
+const GRID_MIN_EDGES = 256;
+
+function edgeGrid(f: Footprint): EdgeGrid | null {
+  let g = grids.get(f);
+  if (g !== undefined) return g;
+  let edges = 0;
+  for (const r of f.rings) edges += r.length / 2;
+  const [w, s, e, n] = f.bbox;
+  if (edges < GRID_MIN_EDGES || !(e > w) || !(n > s)) { grids.set(f, null); return null; }
+  // about four edges a cell
+  const side = Math.max(1, Math.min(512, Math.round(Math.sqrt(edges / 4))));
+  const nx = side, ny = side, cw = (e - w) / nx, ch = (n - s) / ny;
+  const col = (x: number) => Math.min(nx - 1, Math.max(0, Math.floor((x - w) / cw)));
+  const row = (y: number) => Math.min(ny - 1, Math.max(0, Math.floor((y - s) / ch)));
+  const count = new Uint32Array(nx * ny + 1);
+  const each = (fn: (cell: number, ri: number, k: number) => void) => {
+    f.rings.forEach((ring, ri) => {
+      for (let k = 0, m = ring.length / 2; k < m; k++) {
+        const j = (k + 1) % m;
+        const x0 = col(Math.min(ring[2 * k], ring[2 * j])), x1 = col(Math.max(ring[2 * k], ring[2 * j]));
+        const y0 = row(Math.min(ring[2 * k + 1], ring[2 * j + 1])), y1 = row(Math.max(ring[2 * k + 1], ring[2 * j + 1]));
+        for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) fn(y * nx + x, ri, k);
+      }
+    });
+  };
+  each((c) => count[c + 1]++);
+  for (let c = 0; c < nx * ny; c++) count[c + 1] += count[c];
+  const start = count.slice(), fill = count.slice(0, nx * ny), seg = new Uint32Array(2 * start[nx * ny]);
+  each((c, ri, k) => { const at = fill[c]++; seg[2 * at] = ri; seg[2 * at + 1] = k; });
+  g = { nx, ny, cw, ch, start, seg, stamp: new Uint32Array(edges), visit: 0 };
+  grids.set(f, g);
+  return g;
+}
+
 /** Metres from (lon, lat) to the footprint: 0 inside it (T-276, the zone under the view). */
 export function distanceTo(f: Footprint, lon: number, lat: number): number {
+  const g = edgeGrid(f);
+  return g ? gridDistance(f, g, lon, lat) : walkDistance(f, lon, lat);
+}
+
+/** `walkDistance`'s answer from the edges near the place: inside by the edges in the place's row of
+ * cells (only they can cross its latitude), else the nearest edge by rings of cells outwards until
+ * no nearer one can be left, ties to the first edge in outline order as the walk takes them. */
+function gridDistance(f: Footprint, g: EdgeGrid, lon: number, lat: number): number {
+  const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180), ky = M_PER_DEG;
+  const [w, s, , n] = f.bbox;
+  const { nx, ny, cw, ch, start, seg, stamp } = g;
+  // edge ids for the stamp: each ring's first edge's number
+  const base = ringBase(f);
+  if (++g.visit === 0xffffffff) { stamp.fill(0); g.visit = 1; }
+  let visit = g.visit;
+  if (lat >= s && lat <= n) {
+    let inside = false;
+    const y = Math.min(ny - 1, Math.max(0, Math.floor((lat - s) / ch)));
+    for (let c = y * nx, end = c + nx; c < end; c++) {
+      for (let q = start[c]; q < start[c + 1]; q++) {
+        const ri = seg[2 * q], k = seg[2 * q + 1], id = base[ri] + k;
+        if (stamp[id] === visit) continue;
+        stamp[id] = visit;
+        const ring = f.rings[ri], m = ring.length / 2, j = (k + 1) % m;
+        const ay = (ring[2 * k + 1] - lat) * ky, by = (ring[2 * j + 1] - lat) * ky;
+        if ((ay > 0) !== (by > 0)) {
+          const ax = (ring[2 * k] - lon) * kx, bx = (ring[2 * j] - lon) * kx;
+          const dx = bx - ax, dy = by - ay;
+          if (ax - (ay * dx) / dy > 0) inside = !inside;
+        }
+      }
+    }
+    if (inside) return 0;
+    if (++g.visit === 0xffffffff) { stamp.fill(0); g.visit = 1; }
+    visit = g.visit;
+  }
+  const cx = Math.min(nx - 1, Math.max(0, Math.floor((lon - w) / cw))), cy = Math.min(ny - 1, Math.max(0, Math.floor((lat - s) / ch)));
+  // every cell r rings out is at least r - 1 whole cells from the place
+  const step = Math.min(cw * kx, ch * ky) * (1 - 1e-9);
+  let best = Infinity, bestId = Infinity, bx0 = 0, by0 = 0;
+  const most = Math.max(cx, nx - 1 - cx, cy, ny - 1 - cy);
+  for (let r = 0; r <= most; r++) {
+    const lb = Math.max(0, r - 1) * step;
+    if (lb * lb > best) break;
+    for (let y = cy - r; y <= cy + r; y++) {
+      if (y < 0 || y >= ny) continue;
+      const edge = y === cy - r || y === cy + r;
+      for (let x = cx - r; x <= cx + r; x += edge ? 1 : 2 * r || 1) {
+        if (x < 0 || x >= nx) continue;
+        const c = y * nx + x;
+        for (let q = start[c]; q < start[c + 1]; q++) {
+          const ri = seg[2 * q], k = seg[2 * q + 1], id = base[ri] + k;
+          if (stamp[id] === visit) continue;
+          stamp[id] = visit;
+          const ring = f.rings[ri], m = ring.length / 2, j = (k + 1) % m;
+          const ax = (ring[2 * k] - lon) * kx, ay = (ring[2 * k + 1] - lat) * ky;
+          const bx = (ring[2 * j] - lon) * kx, by = (ring[2 * j + 1] - lat) * ky;
+          const dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
+          const t = len > 0 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len)) : 0;
+          const px = ax + t * dx, py = ay + t * dy, d2 = px * px + py * py;
+          if (d2 < best || (d2 === best && id < bestId)) (best = d2), (bestId = id), (bx0 = px), (by0 = py);
+        }
+      }
+    }
+  }
+  return best === Infinity ? Infinity : Math.hypot(bx0, by0);
+}
+
+const ringBases = new WeakMap<Footprint, Uint32Array>();
+function ringBase(f: Footprint): Uint32Array {
+  let b = ringBases.get(f);
+  if (!b) {
+    b = new Uint32Array(f.rings.length);
+    for (let i = 1; i < f.rings.length; i++) b[i] = b[i - 1] + f.rings[i - 1].length / 2;
+    ringBases.set(f, b);
+  }
+  return b;
+}
+
+/** Every edge of the outline, in order. */
+function walkDistance(f: Footprint, lon: number, lat: number): number {
   const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180), ky = M_PER_DEG;
   // T-348: the nearest point by its squared distance, and Math.hypot (slow) for that one only:
   // placing 1,756 stations walked New York's outline for each in about 140 ms

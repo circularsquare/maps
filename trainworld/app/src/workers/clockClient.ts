@@ -21,6 +21,7 @@ import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd,
 import { anchorVersion } from "../map/anchorVersion";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
 import type { NewGameSpec } from "./saveFile";
+import type { FrameSpec } from "../game/frame";
 
 export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[] }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
 export function manageSaveSlot(action: "refresh" | "create" | "open" | "rename" | "delete" | "restore", key?: string, name?: string) {
@@ -71,6 +72,12 @@ const snapshotListeners: ((s: NetworkSnapshot) => void)[] = [];
 export function onNetworkSnapshot(f: (s: NetworkSnapshot) => void) {
   snapshotListeners.push(f);
   if (networkSnapshot.peek()) f(networkSnapshot.peek()!);
+}
+
+let stationsAheadSink: ((frame: FrameSpec, xy: Float64Array) => void) | null = null;
+/** T-889: call `f` with a loading save's built stations, before its first snapshot. */
+export function onStationsAhead(f: (frame: FrameSpec, xy: Float64Array) => void) {
+  stationsAheadSink = f;
 }
 
 
@@ -492,6 +499,9 @@ export class ClockClient {
         break;
       case "opened":
         setGameOpened(msg.zones, viewedZone.peek() ? activeCity.peek() : null);
+        break;
+      case "stationsAhead":
+        stationsAheadSink?.(msg.frame, msg.xy);
         break;
       case "loaded":
         // the game now in the worker may be in the other frame (T-125); first, before anything reads positions
