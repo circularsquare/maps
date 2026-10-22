@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-788 [P2] Whole-country cover for the rest of Europe. Done 2026-10-22: four waves, every non-held country whole (wave 4: DK SE NO FI EE LV LT IS MT CY, 25 zones); Russia, Belarus and Ukraine stay held. notes/T-788.md.
 - T-884 [P1] The loading bar, again. Done 2026-10-21: the bar is time so far against time still expected, remembered per slot; the stall was big games freezing the page (placing every station and edge, 99 s on Japan) after a pre-network bar ran ahead. Check `checks/t884-loadbar.mjs`. notes/T-884.md.
 - T-885 [P2] The trip explorer in every combination. Done 2026-10-21: city to city (areas weighted), city then local bubble or group, city to a box of cities, trip tool ends outside the zone; a table of every pair in notes/T-885.md.
 - T-881 [P3] Shift box over inter-region bubbles. Done 2026-10-21 with T-885: the far places or areas in the box are asked each and merged into one far end. notes/T-885.md.

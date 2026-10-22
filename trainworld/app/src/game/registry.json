@@ -4826,6 +4826,66 @@
       {
         "name": "Pirkanmaa",
         "regionName": "Pirkanmaa region"
+      },
+      {
+        "name": "Põhja-Eesti",
+        "regionName": "Põhja-Eesti region"
+      },
+      {
+        "name": "Kirde-Eesti",
+        "regionName": "Kirde-Eesti region"
+      },
+      {
+        "name": "Vilniaus apskritis",
+        "regionName": "Vilniaus apskritis region"
+      },
+      {
+        "name": "Klaipėdos apskritis",
+        "regionName": "Klaipėdos apskritis region"
+      },
+      {
+        "name": "Kauno apskritis",
+        "regionName": "Kauno apskritis region"
+      },
+      {
+        "name": "Västra Götalands län",
+        "regionName": "Västra Götalands län region"
+      },
+      {
+        "name": "Skåne län",
+        "regionName": "Skåne län region"
+      },
+      {
+        "name": "Uppsala län",
+        "regionName": "Uppsala län region"
+      },
+      {
+        "name": "Östergötlands län",
+        "regionName": "Östergötlands län region"
+      },
+      {
+        "name": "Jönköpings län",
+        "regionName": "Jönköpings län region"
+      },
+      {
+        "name": "Rīga",
+        "regionName": "Rīga region"
+      },
+      {
+        "name": "Sydjylland",
+        "regionName": "Sydjylland region"
+      },
+      {
+        "name": "Fyn",
+        "regionName": "Fyn region"
+      },
+      {
+        "name": "Åland",
+        "regionName": "Åland region"
+      },
+      {
+        "name": "Pirkanmaa",
+        "regionName": "Pirkanmaa region"
       }
     ],
     "rule": {
@@ -7584,7 +7644,7 @@
         60.241
       ],
       "place": 179,
-      "localTrips": 7225206.0,
+      "localTrips": 7184910.0,
       "country": "SE"
     },
     {
@@ -7656,7 +7716,7 @@
         56.218
       ],
       "place": 183,
-      "localTrips": 6251735.0,
+      "localTrips": 6219041.0,
       "country": "DK"
     },
     {
@@ -7752,7 +7812,7 @@
         61.11
       ],
       "place": 193,
-      "localTrips": 4808937.0,
+      "localTrips": 4791893.0,
       "country": "NO"
     },
     {
@@ -7776,7 +7836,7 @@
         60.86
       ],
       "place": 195,
-      "localTrips": 4720335.0,
+      "localTrips": 4689678.0,
       "country": "FI"
     },
     {
@@ -23085,7 +23145,8 @@
         64.399
       ],
       "place": 1182,
-      "country": "IS"
+      "country": "IS",
+      "localTrips": 733825.0
     },
     {
       "id": "mlt",
@@ -23109,7 +23170,8 @@
         36.101
       ],
       "place": 1183,
-      "country": "MT"
+      "country": "MT",
+      "localTrips": 1497212.0
     },
     {
       "id": "kyp",
@@ -23133,7 +23195,8 @@
         35.714
       ],
       "place": 1184,
-      "country": "CY"
+      "country": "CY",
+      "localTrips": 3669314.0
     },
     {
       "id": "noj",
@@ -23157,7 +23220,8 @@
         57.771
       ],
       "place": 1193,
-      "country": "DK"
+      "country": "DK",
+      "localTrips": 1670545.0
     },
     {
       "id": "vet",
@@ -23181,7 +23245,8 @@
         56.029
       ],
       "place": 1194,
-      "country": "DK"
+      "country": "DK",
+      "localTrips": 1658963.0
     },
     {
       "id": "sty",
@@ -23205,7 +23270,8 @@
         56.865
       ],
       "place": 1195,
-      "country": "DK"
+      "country": "DK",
+      "localTrips": 3853159.0
     },
     {
       "id": "rog",
@@ -23229,7 +23295,8 @@
         59.863
       ],
       "place": 1196,
-      "country": "NO"
+      "country": "NO",
+      "localTrips": 1432178.0
     },
     {
       "id": "stf",
@@ -23253,7 +23320,8 @@
         59.789
       ],
       "place": 1197,
-      "country": "NO"
+      "country": "NO",
+      "localTrips": 858532.0
     },
     {
       "id": "vef",
@@ -23277,31 +23345,8 @@
         59.693
       ],
       "place": 1198,
-      "country": "NO"
-    },
-    {
-      "id": "aan",
-      "name": "Åland",
-      "kind": "zone",
-      "origin": {
-        "lon": 19.9371,
-        "lat": 60.102
-      },
-      "center": [
-        19.9371,
-        60.102
-      ],
-      "zoom": 10.5,
-      "utcOffset": 2,
-      "market": -1,
-      "box": [
-        19.274,
-        59.817,
-        21.141,
-        60.548
-      ],
-      "place": 1199,
-      "country": "FI"
+      "country": "NO",
+      "localTrips": 716276.0
     },
     {
       "id": "vri",
@@ -23325,7 +23370,358 @@
         61.82
       ],
       "place": 1200,
-      "country": "FI"
+      "country": "FI",
+      "localTrips": 2810642.0
+    },
+    {
+      "id": "pos",
+      "name": "Põhja-Eesti",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.8045,
+        "lat": 59.4234
+      },
+      "center": [
+        24.8045,
+        59.4234
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        23.694,
+        58.973,
+        25.991,
+        59.704
+      ],
+      "place": 1202,
+      "country": "EE",
+      "localTrips": 1901472.0
+    },
+    {
+      "id": "kid",
+      "name": "Kirde-Eesti",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.4052,
+        "lat": 59.3506
+      },
+      "center": [
+        27.4052,
+        59.3506
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        26.666,
+        58.769,
+        28.246,
+        59.49
+      ],
+      "place": 1203,
+      "country": "EE",
+      "localTrips": 365818.0
+    },
+    {
+      "id": "vil",
+      "name": "Vilniaus apskritis",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.2847,
+        "lat": 54.681
+      },
+      "center": [
+        25.2847,
+        54.681
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.355,
+        54.109,
+        26.791,
+        55.536
+      ],
+      "place": 1204,
+      "country": "LT",
+      "localTrips": 2440950.0
+    },
+    {
+      "id": "kld",
+      "name": "Klaipėdos apskritis",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.118,
+        "lat": 55.7185
+      },
+      "center": [
+        21.118,
+        55.7185
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        20.921,
+        55.162,
+        26.078,
+        56.469
+      ],
+      "place": 1205,
+      "country": "LT",
+      "localTrips": 2618620.0
+    },
+    {
+      "id": "kup",
+      "name": "Kauno apskritis",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.9186,
+        "lat": 54.8997
+      },
+      "center": [
+        23.9186,
+        54.8997
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.618,
+        53.878,
+        25.057,
+        55.707
+      ],
+      "place": 1206,
+      "country": "LT",
+      "localTrips": 2600079.0
+    },
+    {
+      "id": "vag",
+      "name": "Västra Götalands län",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.9328,
+        "lat": 57.6916
+      },
+      "center": [
+        11.9328,
+        57.6916
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.931,
+        56.305,
+        14.813,
+        59.282
+      ],
+      "place": 1207,
+      "country": "SE",
+      "localTrips": 5862047.0
+    },
+    {
+      "id": "skn",
+      "name": "Skåne län",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.0149,
+        "lat": 55.5883
+      },
+      "center": [
+        13.0149,
+        55.5883
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.413,
+        55.318,
+        16.093,
+        56.552
+      ],
+      "place": 1208,
+      "country": "SE",
+      "localTrips": 4511262.0
+    },
+    {
+      "id": "ups",
+      "name": "Uppsala län",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.6458,
+        "lat": 59.8613
+      },
+      "center": [
+        17.6458,
+        59.8613
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.386,
+        58.582,
+        18.721,
+        60.68
+      ],
+      "place": 1209,
+      "country": "SE",
+      "localTrips": 2614513.0
+    },
+    {
+      "id": "osx",
+      "name": "Östergötlands län",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.6187,
+        "lat": 58.4094
+      },
+      "center": [
+        15.6187,
+        58.4094
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.25,
+        57.681,
+        17.078,
+        60.13
+      ],
+      "place": 1210,
+      "country": "SE",
+      "localTrips": 2170453.0
+    },
+    {
+      "id": "jok",
+      "name": "Jönköpings län",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.1576,
+        "lat": 57.7836
+      },
+      "center": [
+        14.1576,
+        57.7836
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.042,
+        56.34,
+        15.871,
+        58.21
+      ],
+      "place": 1211,
+      "country": "SE",
+      "localTrips": 1533859.0
+    },
+    {
+      "id": "ria",
+      "name": "Rīga",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.1267,
+        "lat": 56.9587
+      },
+      "center": [
+        24.1267,
+        56.9587
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.677,
+        56.033,
+        26.659,
+        57.429
+      ],
+      "place": 1212,
+      "country": "LV",
+      "localTrips": 3012788.0
+    },
+    {
+      "id": "syj",
+      "name": "Sydjylland",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.7598,
+        "lat": 55.5682
+      },
+      "center": [
+        9.7598,
+        55.5682
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.042,
+        54.782,
+        10.104,
+        55.975
+      ],
+      "place": 1213,
+      "country": "DK",
+      "localTrips": 2089106.0
+    },
+    {
+      "id": "fyn",
+      "name": "Fyn",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.3872,
+        "lat": 55.3982
+      },
+      "center": [
+        10.3872,
+        55.3982
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.643,
+        54.703,
+        10.988,
+        55.665
+      ],
+      "place": 1214,
+      "country": "DK",
+      "localTrips": 1464860.0
+    },
+    {
+      "id": "aan",
+      "name": "Åland",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.9371,
+        "lat": 60.102
+      },
+      "center": [
+        19.9371,
+        60.102
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        19.274,
+        59.817,
+        21.141,
+        60.548
+      ],
+      "place": 1215,
+      "country": "FI",
+      "localTrips": 84857.0
     },
     {
       "id": "pik",
@@ -23348,8 +23744,9 @@
         25.574,
         63.879
       ],
-      "place": 1201,
-      "country": "FI"
+      "place": 1216,
+      "country": "FI",
+      "localTrips": 2539896.0
     }
   ]
 }

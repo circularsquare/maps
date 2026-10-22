@@ -411,7 +411,7 @@ def signals(city, cfg, boundary, mask):
     blend_osm = cfg.get("job_blend", JOB_BLEND)
     blend_osm = (blend_osm() if callable(blend_osm) else blend_osm)["osm"]
     if not cfg.get("jobs") and blend_osm > 0:  # jobs from the proxy alone: T-583's place cap
-        in_pack = np.array([int(c) in index for c in pids])
+        in_pack = np.array([int(c) in index for c in pids], bool)
         place_w, out["osm_w0"], out["osm_wcap"] = cap_places(places, in_pack, blend_osm)
     for kind in ("errand", "leisure", "job", "land"):
         out["osm_" + kind] = np.zeros(len(cells))
