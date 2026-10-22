@@ -24,7 +24,7 @@ import { CITIES, cityToMarket, cityToWorld, HOME_CITY, marketWorld, setWorldFram
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
 import { curveKnots } from "../game/fareCurve";
-import type { BareFigures, DemandNetwork, FromDemand, MarketPack, MarketRows, OpenRejected, ToDemand } from "./demandProtocol";
+import { TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
 
 /** WASM started (and the market opened if `init` carried it): `open` and solves wait for this. */
@@ -835,7 +835,7 @@ function marketFigures(parts: IntercityApi[], q: number) {
 /** A `DemandApi.trip` answer's route nodes (trip.ts `PAIR_LEN`, `LEG_LEN`) from its cluster's
  * network to the whole network's, the ones the client reads. */
 function tripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
-  const HEAD = 41, PAIR_LEN = 14, LEG_LEN = 12;
+  const { HEAD, PAIR_LEN, LEG_LEN } = TRIP_LAYOUT;
   const g = (i: number) => { if (v[i] >= 0) v[i] = nodeGlobal[v[i]]; };
   const np = v[24], nr = v[25];
   for (let k = 0; k < np; k++) { g(HEAD + k * PAIR_LEN + 2); g(HEAD + k * PAIR_LEN + 3); }

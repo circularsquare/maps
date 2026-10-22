@@ -2,9 +2,8 @@
 // network's mode split, not the one from before the line. A new Tokyo game (?new=1), Destinations on
 // under All purposes; a line from Hamamatsucho through Shinagawa to Haneda's busiest terminal cell;
 // after the final solve the plane's hover shares must agree within 1 point with the worker's own
-// airport legs summed round that cell (`cellModes("airport")`), and carry some train. Then, a game
-// day later at the fastest speed (the bubbles' catch-up, T-156), the destination bubble beside the
-// plane reads the same with and without a selection. About four minutes.
+// airport legs summed round that cell (`cellModes("airport")`), and carry some train. Then the
+// destination bubble beside the plane reads the same with and without a selection. About three minutes.
 //   node trainworld/checks/t674-airport-modes.mjs [url]   (from the maps root; default localhost:6144)
 // Prints PASS or FAIL lines and exits 1 on failure. Writes artifacts/trainworld/t674-airport.json.
 import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
@@ -134,9 +133,7 @@ try {
   const want = await truth(page, p1);
   const got = await hoverAt(page, p1.x, p1.y);
   log.after = { plane: got, truth: want, bubble: await hoverAt(page, p1.x + 25, p1.y) };
-  // the bubbles catch up over a game day of trips (T-156): run a day at the fastest speed (90 s)
-  const t0 = await page.evaluate(() => { window.tw.clock.setSpeed(2); return window.tw.clock.now(); });
-  await page.waitForFunction((t0) => window.tw.clock.now() > t0 + 86400 + 600, t0, { timeout: 240000, polling: 1000 });
+  // the bubbles show a new result at once (T-906)
   await page.evaluate(() => window.tw.clock.setRunning(false));
   await page.waitForTimeout(1500);
   log.after.dayLater = await hoverAt(page, p1.x + 25, p1.y);

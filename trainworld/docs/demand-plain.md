@@ -65,9 +65,13 @@ There is no built-in liking for the train. Rail and the car are compared on time
   length: on a 4 hour trip 5 minutes apart is 70%. The trips between cities choose their stations
   the same way, their length being the drive's. At a station, riders take the first
   train that helps.
-- Or drive to the station: 15 minutes to start, the drive (counted 1.33 a minute), the cheaper of
-  parking there or a 10 minute drop-off, and the parking at home (below). Only for trips of 5 km or
-  more.
+- Or drive to the station: 15 minutes to start, the drive (counted 2.66 a minute, twice a minute of
+  driving the whole way, so a short drive to the station is common and a long one rare), the car's
+  cost per trip (below), the cheaper of parking there or a 10 minute drop-off, and the parking at
+  home (below). Only for trips of 5 km or more. A drive of 10 km to a station counts about
+  64 minutes in a suburb, so the drive and the walk at the other end together soon pass the
+  80 minute limit on getting to and from stations: drives much over 15-20 minutes are not taken.
+  The trip explorer's hover for the effective time by train lists each of these parts.
 
 **By car**
 - Road time from the distance and the place: fast highways in the middle, slow streets at the ends

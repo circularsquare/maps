@@ -61,7 +61,8 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 - A row of icon tabs, names in their hovers: **Build** (a wrench), **Lines** (a route with stops),
   **Stations** (a platform under its canopy), **Money** (a bill and a coin), **Cities** (a skyline) [T-749], sharing the row's width
   equally [T-532] (each at least 34 px); at the row's right end
-  the saved games button (a floppy disk) [T-251] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
+  the saved games button (a floppy disk) [T-251], the **Controls** button (a question mark in a
+  circle, [Controls](#controls)) [T-908] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
   area like a tab. There is no City tab [T-220]; a browser that last had it open starts on Lines.
 - Under the tab content, the **inspector** ([ui-inspectors.md](ui-inspectors.md)). The tab area has
   a fixed height and scrolls, so the inspector's top edge never moves when the tab changes.
@@ -124,17 +125,19 @@ Below 700 px the bar takes two rows (name, cash, time and speed over the split).
   (`ui/SkyBanner.tsx`, one canvas) shows 24 hours, 12 back and 12 ahead, now being its middle
   [T-896]. Its sky takes flat colours by the sun's height at the view's centre on that date
   (`game/sun.ts`): dark blue night with stars, a short pink and warm sunrise and sunset, light blue
-  day [T-882]. Along the bottom are triangles of grass on a green strip and a track with sleepers,
-  darker at night. At now sits the present-time marker: a red train (18 by 5 px, lit windows, nose
+  day [T-882]. Flat clouds sit at fixed game times, none to two a day as the day's number falls,
+  white by day and dim blue at night [T-902]. Along the bottom is a track with sleepers, darker at
+  night (no grass since T-902). At now sits the present-time marker: a red train (18 by 5 px, lit windows, nose
   to the right) on the track, with the sun, or a crescent moon at night, peeking in from the top
   edge above it. Everything but the train and the sun or moon is fixed to its time and slides left
   under them as game time passes. It is redrawn on animation frames from the clock's `now()`
   whenever it has moved a fifth of a device pixel, never through Preact (about 0.7 ms a draw, 7
-  draws a second at the top speed). Its hover gives today's sunrise and sunset. The band under it has each
+  draws a second at the top speed). The band under it has each
   hour's demand level (red high, yellow medium, blue low: `--dl-*` in style.css, both themes), so
-  the colour under the sun or moon is the level now; its hover names the period, when it ends and the next. A public holiday in a country
+  the colour under the sun or moon is the level now; its hover says "Currently low demand until 06:00", the time the level next changes
+  [T-902]. A public holiday in a country
   with the player's stations [T-862] is a pink ribbon along the sky's top over its day (its
-  country's local day), with a tick where it starts; the sky's hover lists those in view ("Tomorrow:
+  country's local day), with a tick where it starts; the sky's hover lists those in view, and is the sky's only hover ("Tomorrow:
   Thanksgiving Day, United States", or "Tomorrow from 06:00: …" for a country on another local
   time), and on the day itself a pink dot sits before the date, whose hover names it. In the dark theme the
   scene is mixed 15% towards the background. Pause and three
@@ -155,7 +158,7 @@ T-703): Average (the default), Weekday or Weekend. The average is 5 weekdays and
 4.2). It sets the day every demand view shows, the split included, and does not follow the clock,
 so nothing jumps when the clock enters a weekend. Hovers state the day beside every demand figure ("12,400 trip legs per day",
 "per weekday", "per weekend day": `shownDayPhrase` in `game/ui.ts`). A switch of day shows at
-once (the bubbles' catch-up is for a new forecast, not another day). The trains, platforms, the
+once. The trains, platforms, the
 past 24 hours' riders and the panels' Today counts always follow the clock.
 
 ## Stations full
@@ -205,6 +208,18 @@ own box gives Ctrl+K and Ctrl+F to selecting its text). Another form control kee
 keys (arrows, Home, End, Page Up and Down, Enter, Space, and in a select a letter); the rest reach
 the game. A select picked with the mouse gives up focus at once, so the next Space pauses; one
 reached with Tab keeps it. Buttons show the browser's focus ring for keyboard focus only [T-169].
+
+## Controls
+
+[T-908, `ui/HelpPanel.tsx`] The "?" in the dock's tab row (hover "Controls") opens a panel over the
+map beside the dock, under the tab row, listing only the controls no button shows: the bubble
+gestures (Shift+drag box, hold then drag, Shift+click, Shift+drag over far bubbles), building
+modifiers (Shift+click, double click or Enter, Backspace, Caps Lock, right drag and D, E, Delete in
+the blueprint tool), the keys (tool numbers, T, N, L, C, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
+the letters read from `TOOL_KEYS`, `ACTION_KEYS` and `TRIP_KEY`) and panel gestures (double click
+a fare node, a name, a list row; Shift or Ctrl on the train stepper). Esc (before the game's own
+Esc, so the selection stays), a press outside or the button again closes it. A control added or
+changed that a button does not show gets its row here.
 
 **Confirmations** [T-113]: a centred "Are you sure?" dialog with operation-specific text, cancel
 and action buttons. Cancel has initial focus, Tab stays inside, Escape cancels, focus returns when

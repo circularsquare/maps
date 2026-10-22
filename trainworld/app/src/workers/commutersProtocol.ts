@@ -81,6 +81,8 @@ export interface BubbleLevel {
   train: Float32Array;
   walk: Float32Array;
   drive: Float32Array;
+  /** per disc, the same smoothed among nearby cells (T-900): its colour only */
+  shade?: { train: Float32Array; walk: Float32Array; drive: Float32Array };
 }
 
 export interface Bubbles {

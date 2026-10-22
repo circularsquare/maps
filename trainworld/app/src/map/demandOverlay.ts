@@ -53,14 +53,21 @@ void main() {
 const HOT_MIX = "0.3";
 
 /** A disc's edge value says how it is drawn (the disc's last float): 0 or 1 plain, 2 with a dark
- * outline, and from `PIE_STEP` up a pie rim (T-863): `outline + PIE_STEP * (1 + round(share * PIE_SHARE))`,
- * `share` the train share, 0 to 1. The rim is two arcs, train then the rest, round a faint white fill. */
-const PIE_STEP = 3;
-const PIE_SHARE = 1000;
-const PIE_FILL = "0.35";
-const PIE_TRAIN = Float32Array.from(rgb(MODE_COLOURS.train), (v) => v / 255);
-const PIE_REST = Float32Array.from(rgb(MODE_COLOURS.drive), (v) => v / 255);
-export const pieEdge = (outline: 0 | 1 | 2, share: number) => outline + PIE_STEP * (1 + Math.round(Math.min(1, Math.max(0, share)) * PIE_SHARE));
+ * outline, and from `SPLIT_STEP` up a red dot with a blue dot inside (T-901):
+ * `outline + SPLIT_STEP * (1 + steps)`, `steps` the train share in 1/`SPLIT_SHARE`, at least 1 when
+ * there is any train. The blue dot's area is the train share of the red one's. */
+const SPLIT_STEP = 3;
+const SPLIT_SHARE = 1000;
+/** Any train at all shows: the blue dot is at least this radius, CSS px, but no more than
+ * `SPLIT_MIN_OF_R` of the red one's unless its share makes it bigger. */
+const SPLIT_MIN_PX = "2.0";
+const SPLIT_MIN_OF_R = "0.6";
+const SPLIT_TRAIN = Float32Array.from(rgb(MODE_COLOURS.train), (v) => v / 255);
+const SPLIT_REST = Float32Array.from(rgb(MODE_COLOURS.drive), (v) => v / 255);
+export const splitEdge = (outline: 0 | 1 | 2, share: number) => {
+  const s = Math.min(1, Math.max(0, share));
+  return outline + SPLIT_STEP * (1 + (s > 0 ? Math.max(1, Math.round(s * SPLIT_SHARE)) : 0));
+};
 
 // A disc per instance: radius in local units, colour and alpha, and an edge (0 none, 2 a dark
 // outline of 2 px, a selected bubble's). No minimum size: a tiny count is a tiny disc.
@@ -99,39 +106,28 @@ const DISC_FS = `#version 300 es
 precision highp float;
 uniform vec3 u_ink;
 uniform float u_dpr;
-uniform vec3 u_pie_train;
-uniform vec3 u_pie_rest;
+uniform vec3 u_split_train;
+uniform vec3 u_split_rest;
 in vec2 v_p;
 in float v_r;
 in float v_edge;
 in float v_hot;
 in vec4 v_col;
 out vec4 o;
-float rimWidth(float r) { return min(r, clamp(r * 0.3, 2.0 * u_dpr, 4.5 * u_dpr)); }
 void main() {
   float d = length(v_p);
   float cover = clamp(v_r - d + 0.5, 0.0, 1.0);
   if (cover <= 0.0) discard;
-  // a pie rim (${PIE_STEP} and over: see pieEdge): the rim in two arcs from 12 o'clock clockwise, train
-  // then the rest, round a faint white interior
-  float pk = floor(v_edge / ${PIE_STEP}.0 + 0.001);
+  // a red dot with a blue dot inside (${SPLIT_STEP} and over: see splitEdge)
+  float pk = floor(v_edge / ${SPLIT_STEP}.0 + 0.001);
   if (pk >= 1.0) {
-    float outline = v_edge - pk * ${PIE_STEP}.0;
-    float inset = outline > 1.5 ? 2.0 * u_dpr : 0.0;
-    float share = (pk - 1.0) / ${PIE_SHARE}.0;
-    float edge = rimWidth(v_r - inset);
-    float inside = clamp(v_r - inset - d + 0.5, 0.0, 1.0);
-    float ring = inside * clamp(d - (v_r - inset - edge) + 0.5, 0.0, 1.0);
-    float ang = atan(v_p.x, v_p.y);
-    ang += ang < 0.0 ? 6.2831853 : 0.0;
-    float wt = share >= 0.999 ? 1.0 : share <= 0.001 ? 0.0 : clamp(ang * d + 0.5, 0.0, 1.0) * clamp((share * 6.2831853 - ang) * d + 0.5, 0.0, 1.0);
-    vec3 rim = mix(u_pie_rest, u_pie_train, wt);
-    vec3 white = vec3(1.0);
-    rim = mix(rim, white, v_hot * ${HOT_MIX});
-    float aRing = v_col.a;
-    float aIn = v_col.a * (${PIE_FILL} + v_hot * 0.2);
-    float a = mix(aIn * inside, aRing, ring);
-    vec3 c = mix(white, rim, ring);
+    float outline = v_edge - pk * ${SPLIT_STEP}.0;
+    float share = (pk - 1.0) / ${SPLIT_SHARE}.0;
+    float ri = sqrt(share) * v_r;
+    if (share > 0.0) ri = max(ri, min(${SPLIT_MIN_PX} * u_dpr, ${SPLIT_MIN_OF_R} * v_r));
+    float inner = share > 0.0 ? clamp(ri - d + 0.5, 0.0, 1.0) : 0.0;
+    vec3 c = mix(mix(u_split_rest, u_split_train, inner), vec3(1.0), v_hot * ${HOT_MIX});
+    float a = v_col.a;
     if (outline > 1.5) {
       float t = clamp(d - (v_r - 2.0 * u_dpr) + 0.5, 0.0, 1.0);
       c = mix(c, u_ink, t);
@@ -308,7 +304,7 @@ export class DemandOverlay {
     if (!gl) throw new Error("no WebGL2");
     this.gl = gl;
     this.prog = compile(gl, DISC_VS, DISC_FS);
-    for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_hot", "u_pie_train", "u_pie_rest"]) this.u[n] = gl.getUniformLocation(this.prog, n);
+    for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_hot", "u_split_train", "u_split_rest"]) this.u[n] = gl.getUniformLocation(this.prog, n);
     this.timerExt = gl.getExtension("EXT_disjoint_timer_query_webgl2");
     this.size();
     map.on("resize", () => {
@@ -539,8 +535,8 @@ export class DemandOverlay {
     gl.uniform1f(this.u.u_px_per_unit, pxPerUnit);
     gl.uniform3fv(this.u.u_ink, rgb(shadeColours().mapInk).map((v) => v / 255));
     gl.uniform1f(this.u.u_dpr, dpr);
-    gl.uniform3fv(this.u.u_pie_train, PIE_TRAIN);
-    gl.uniform3fv(this.u.u_pie_rest, PIE_REST);
+    gl.uniform3fv(this.u.u_split_train, SPLIT_TRAIN);
+    gl.uniform3fv(this.u.u_split_rest, SPLIT_REST);
     gl.uniform1f(this.u.u_rscale, this.bubbleSize);
     gl.uniform1f(this.u.u_opacity, this.bubbleOpacity);
     this.discsDrawn = 0;

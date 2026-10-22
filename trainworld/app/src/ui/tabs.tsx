@@ -2,7 +2,10 @@
 // (T-220): the city overview's bubbles and the city inspector show its trips, search goes to a
 // city, and Explore a trip is at the bottom of Settings.
 
+import { untracked } from "@preact/signals";
 import { clock, demandAt } from "../game/clock";
+import { demandView } from "../game/demand";
+import { stationUse, useFigure } from "../game/stationUse";
 import { PERIODS, periodAt } from "../game/periods";
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { createLine } from "../game/lineActions";
@@ -12,7 +15,7 @@ import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { DEMAND_INDEX, LEVELS, type Level, type LineInput, type LineStats, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
-import { buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, display, keepPlacing, lineSort, selection, setDisplay, setTrackType, snapReal, stationSort, tool, trackType, type StationUseMode, type Tool, type TrackType } from "../game/ui";
+import { buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, display, keepPlacing, lineSort, selection, setDisplay, setTrackType, shownDayPhrase, snapReal, stationSort, tool, trackType, type StationUseMode, type Tool, type TrackType } from "../game/ui";
 import { world } from "../game/world";
 import { fareAt } from "../game/fareCurve";
 import { liveMoney, moneyState } from "../game/money";
@@ -202,12 +205,27 @@ function TotalToday() {
   return <span class="muted">{count(n)} riders in the past 24 hours</span>;
 }
 
-/** T-446: a station's or complex's boardings in the past 24 hours. */
-function StationToday({ ids }: { ids: string[] }) {
-  const by = stationsToday.value;
+/** T-905: a station's or complex's riders: under the map's Origins or Transfers, the circle's own
+ * figure (the demand solve's, game/stationUse.ts); otherwise its boardings in the past 24 hours (T-446). */
+function stationRiders(ids: string[], mode: StationUseMode): number | null {
+  const split = mode === "origins" || mode === "transfers";
+  const by = stationsToday.value, dv = demandView.value;
+  if (split) void stationUse.value;
   let n: number | null = null;
-  for (const id of ids) { const v = by.get(id); if (v !== undefined) n = (n ?? 0) + v; }
-  return <span class="val w-num" data-tip={n !== null ? `${count(n)} boardings in the past 24 hours` : undefined}>{n !== null ? count(n) : ""}</span>;
+  for (const id of ids) {
+    const v = split ? useFigure(dv, mode, id) : by.get(id);
+    if (v !== undefined) n = (n ?? 0) + v;
+  }
+  return n;
+}
+function stationRidersTip(n: number, mode: StationUseMode): string {
+  return mode === "origins" ? `${count(n)} riders start a rail trip here ${shownDayPhrase.value}`
+    : mode === "transfers" ? `${count(n)} riders change lines here ${shownDayPhrase.value}`
+    : `${count(n)} boardings in the past 24 hours`;
+}
+function StationToday({ ids }: { ids: string[] }) {
+  const mode = display.value.stationUse, n = stationRiders(ids, mode);
+  return <span class="val w-num" data-tip={n !== null ? stationRidersTip(n, mode) : undefined}>{n !== null ? count(n) : ""}</span>;
 }
 
 export function LinesTab() {
@@ -401,15 +419,19 @@ export function StationsTab() {
   const w = world.value;
   if (!w) return null;
   const sel = selection.value;
-  const by = stationsToday.peek();
   const { key, dir } = stationSort.value;
+  const d = display.value;
   const sc = scopedLists(w.save.stations, w.save.lines, (k, id) => k === "station" && sel?.kind === "station" && sel.station === id);
-  const riders = (r: StationRow) => r.members.reduce((t, id) => t + (by.get(id) ?? 0), 0);
+  // re-sorted each game hour (the past 24 hours), or as the split for the map's mode arrives
+  const riders = (r: StationRow) => untracked(() => stationRiders(r.members, d.stationUse)) ?? 0;
+  const split = d.stationUse === "origins" || d.stationUse === "transfers";
+  if (split) void stationUse.value;
   const st = stationRows(sc.stations, w.save.stations, w.save.lines, sc.stationDist).sort((a, b) =>
     (key === "riders" ? (riders(a) - riders(b)) * dir
       : key === "near" ? byNear(a.dist, b.dist, dir) : 0)
     || a.lead.name.localeCompare(b.lead.name) * (key === "name" ? dir : 1));
-  const d = display.value;
+  const ridersWhat = d.stationUse === "origins" ? `riders starting a rail trip ${shownDayPhrase.value}`
+    : d.stationUse === "transfers" ? `riders changing lines ${shownDayPhrase.value}` : "boardings in the past 24 hours";
   return (
     <>
       <div class="line-list-actions"><ScopeToggle /></div>
@@ -434,7 +456,7 @@ export function StationsTab() {
       {st.length === 0 && <p class="muted">{w.save.stations.length === 0 ? "No stations yet." : "No stations here."}</p>}
       {st.length > 0 && <SortHead sort={stationSort} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
-        { key: "riders", label: "24 h", tip: "Sort by boardings in the past 24 hours", first: -1, cls: "w-num" },
+        { key: "riders", label: "Riders", tip: `Sort by ${ridersWhat}`, first: -1, cls: "w-num" },
         { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
       <ul class="rows pick stations">
@@ -449,7 +471,7 @@ export function StationsTab() {
       </ul>
       {st.length > 0 && (
         <div class="pane-foot">
-          <span class="muted">{sc.zone ? `${st.length} of ${complexes.value.members.length}` : st.length} stations, boardings in the past 24 hours</span>
+          <span class="muted">{sc.zone ? `${st.length} of ${complexes.value.members.length}` : st.length} stations, {ridersWhat}</span>
         </div>
       )}
     </>

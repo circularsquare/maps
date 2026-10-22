@@ -39,7 +39,7 @@ purpose filter the purpose drawn is ringed in the bar.
   column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
   column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
   by name. The name keeps at least about six characters; the Money column goes first when the
-  dock is too narrow, then the City column beside Near [T-746]. Lines default to by name. The sort is kept while the page is open and re-runs each game hour.
+  dock is too narrow, then the City column beside Near [T-746]. Lines default to by riders, most first [T-905]. The sort is kept while the page is open and re-runs each game hour.
   A double click on a row fits the map to the line's stops (a jump, as search does) after the
   single click selected it [T-569, `ui/locate.ts`]; the line inspector's locate button (cross
   hairs, hover "Show on the map", beside the pencil) does the same.
@@ -199,10 +199,13 @@ purpose filter the purpose drawn is ringed in the bar.
 - **The Stations tab** has, above its list, the "Show station ridership" choice (None, Origins, Transfers,
   Total, each described in its hover) and, while circles are drawn, "One circle per station
   complex" [T-213, T-482; [ui-demand-views.md](ui-demand-views.md)]. The list sorts like the Lines
-  tab's [T-310], by Name, 24 h (boardings in the past 24 hours) or Near, boardings by default. The scope
+  tab's [T-310], by Name, Riders or Near, Riders by default. Riders follows the ridership choice
+  [T-905]: under Origins or Transfers it is the map circle's own figure (riders starting a rail trip,
+  or changing lines, a day from the demand solve shown, `game/stationUse.ts`); under None or Total it
+  is boardings in the past 24 hours. Its hovers, header and footer say which. The scope
   toggle and distance column are the Lines tab's (above); the footer reads "N of M stations" when
   only the viewed place is listed. A row is a station complex [T-530]: the name of its member with
-  the most lines, every line stopping at any member, boardings summed over the members, and a
+  the most lines, every line stopping at any member, riders summed over the members, and a
   click selects the complex as a click on the map does and a double click also moves the map to
   that member, to zoom 14 or closer so its platform boxes show [T-569]; a station on its own is its own row, and
   M counts complexes. The boardings figure is a fixed column, right-aligned. The name comes first
@@ -395,6 +398,18 @@ destinations at the end, and how the demand model's people would make one of the
   walk row shows when walking the whole way takes under 30 minutes [T-628], else walking is only
   the bar's segment. When the view counts no trips between them, the headline is the representative
   trip's chances in the period shown.
+- **Whole trips** [T-911]: counted shares are rounded to what whole trips allow: the trip count
+  rounded (at least 1; under half a trip the line reads "Under 1 trip") is dealt among the modes by
+  largest remainder (`wholePeople` in `game/trip.ts`), and each share is its trips over that count,
+  so 1 trip at 30% train and 70% drive shows 100% drive. The bar, the rows and the market view's
+  Train / Plane / Car (over the day's trips, and each Train by period row over its period's) are
+  rounded so; the rows' hovers add the model's own share ("Model: 30.4%"). The route shares under
+  By train (main route's sentence, Other routes, Smaller routes, Busiest routes) are dealt the same
+  way among the train riders the headline counts (the market's: the period's train trips), the
+  routes too small to list taking a leftover rider only after every listed route, and routes no
+  one takes at that count left out; with no counted train riders they stay the model's. The
+  representative trip's own chances (Train by period, a trip the view counts none of) are not
+  rounded. Past a couple of hundred trips the rounding changes no whole percent.
 - **The representative trip**: everything below the headline is one trip read by the model: under
   All purposes the purpose with most of the trips between the two places (work when none), else
   the filter's (school and university: the kind with more trips between the two areas); a commute
@@ -406,13 +421,17 @@ destinations at the end, and how the demand model's people would make one of the
 - **The inspector**: under "By train" the main route as rows (walk to the first
   station, each line ridden with its chip and the station it goes to, each change and walk, the
   walk from the last station; each row's minutes its wait and ride; a ride access [T-374] reads
-  "Drive to" with its drive minutes, its hover adding the ride's fixed cost and the station's
-  parking or drop-off; the hovers give real minutes only), the fare, **Time** (real minutes; its
+  "Drive to" with its drive minutes; the hovers give real minutes only), the fare, and on a route
+  that starts with a drive to the station a **Car** row [T-915] (dollars: the car's cost per trip
+  and per km on the road to the station plus any paid parking there, its hover the two apart),
+  **Time** (real minutes; its
   hover the sum, "Walk 6.3 + wait 2.1 + ride 10.1 = 19 min") and **Effective time** [T-699, T-549]
   (the minutes the model weighs against the other methods; its hover is only the equation, the
   first route's terms in the rows' order, each real amount times its weight, "Walk 6.3 × 1.47 +
   wait 2.1 + ride 10.1 × 1.1 + change 2 + fare $1.92 × 3 − choice of routes 11.8 = 16 min", two
-  changes or more as "changes 2 × 2" [T-717]; the
+  changes or more as "changes 2 × 2" [T-717]; a drive to the station is its parts [T-915],
+  "Starting the drive 15 + drive 9.2 × 2.66 + parking at the station 7 + parking at home 3 + car
+  $2.85 × 3", or "drop-off 10" where that is cheaper than parking; the
   last term is what the model's pooled figure, over every station and route people use, is below
   this route's sum, so the equation always adds to the row, and one plain line under the equation
   says choice of routes is the time saved by having several ways to go; the terms are the worker's
@@ -434,8 +453,13 @@ destinations at the end, and how the demand model's people would make one of the
   Effective time ("Drive 17.6 × 1.33 + parking 67.3 + ownership $1.99 × 3 = 97 min"). Walking: one
   Effective time row [T-704] (its hover "Walk 52.4 × 1.5 = 79 min" holds the real minutes of
   walking the whole way); over 10 km it says walks are not offered. "Train by period": a row a period with the representative
-  trip's chance of the train, a click showing that period. Without a train it says why (no station in reach, walks too long, no
-  service in the period). Every row and bar segment has a hover with its figure and what it is made
+  trip's chance of the train, a click showing that period. Without a train it says why [T-910]: no
+  station within a walk or a drive of the start, none within a walk of the end, no service in the
+  period, or the way to and from the trains over `pair_walk_max` (80 felt minutes together), named
+  by what holds it back: on a trip under `ride_min_km` (5 km) "too far to walk to, and the trip is
+  too short to drive to one"; with no station within a drive, "none is within a drive of the start";
+  else the bigger end, "The walk from the nearest station to the end is too long" or "The stations
+  near the start are too far, even by car". Its hover gives the two ends' felt minutes and the limit. Every row and bar segment has a hover with its figure and what it is made
   of. The trip is the two places' own (each one's walk to its stations, T-720); where the map's
   bubbles count it differently, grouped with the homes and places near each end, the period rows'
   hovers add that count ("Counted with the homes and places near here, as the map's bubbles count

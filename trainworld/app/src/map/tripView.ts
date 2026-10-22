@@ -13,6 +13,7 @@ import { clock } from "../game/clock";
 import { CITIES } from "../game/cities";
 import { lngLatToPack, packToLngLat } from "../game/coords";
 import { cityCells, demandView, flows, intercitySelection } from "../game/demand";
+import { dealFlows } from "../game/farChunks";
 import { count, distance } from "../game/format";
 import { NET_INK } from "../game/palette";
 import { shadeColours } from "../game/shades";
@@ -296,8 +297,11 @@ async function explore(from: [number, number], to: [number, number], filter: Pur
   }
   const p0 = commute.periods.find((p) => p);
   const at = places ?? (p0 ? { end: "home" as const, near: Uint32Array.of(p0.cells[0]), far: Uint32Array.of(p0.cells[1]) } : null);
-  const f = at ? await flows(at.end, at.near) : null;
-  if (at && !f) return null;
+  const asked = at ? await flows(at.end, at.near) : null;
+  if (at && !asked) return null;
+  // opened from far bubbles: their trips grouped as the bubbles draw them (T-909)
+  const xy = asked && places ? (await cityCells())?.xy : null;
+  const f = asked && xy ? dealFlows(asked, filter, xy) : asked;
   const mix = f && at ? tripMix(f, at.far, filter) : null;
   const top = mix?.purposes[0];
   const purpose: PurposeKey = filter !== "all" ? filter : top && top.rail + top.walk + top.drive > 0 ? top.key : "work";

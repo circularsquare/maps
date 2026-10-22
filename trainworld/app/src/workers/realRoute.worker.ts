@@ -11,6 +11,9 @@
 // high-speed chains at HSR of theirs (T-838), and every chain within the snap radius of each click
 // a candidate, its distance from the click counted twice. It gives up after 2 s or 3 million states.
 //
+// Only regions listed in the graphs' `index.json` are loaded, and their outlines go to the page,
+// which snaps only inside them (T-913).
+//
 // The reach (T-839): every chain the search could get to from the first click under the same turn
 // rule, sent for the part of it in view so the map can light it up.
 
@@ -38,7 +41,10 @@ export type FromRouter =
   /** the reachable chains in view: chain i's lon, lat pairs are `xy[off[i] * 2]` up to
    * `xy[off[i + 1] * 2]`, its class `cls[i]` (0 main line, 1 other rail, 2 metro); `chains` reachable
    * in all */
-  | { kind: "reach"; seq: number; xy: Float32Array; off: Uint32Array; cls: Uint8Array; chains: number; ms: number };
+  | { kind: "reach"; seq: number; xy: Float32Array; off: Uint32Array; cls: Uint8Array; chains: number; ms: number }
+  /** where a graph exists (T-913): the outline rings (lon, lat pairs) of the regions that have one;
+   * `all` when the graphs' index is missing, so every region is tried */
+  | { kind: "cover"; rings: Float64Array[]; all: boolean };
 
 const M_PER_DEG = 6371008.8 * Math.PI / 180;
 const TURN_MAX = 60 * Math.PI / 180;
@@ -54,6 +60,9 @@ const BORDER_DEG = 0.05;
 /** a high-speed chain's cost per m of it, so a long snap keeps to the LGV or Shinkansen over a
  * slightly shorter classic line (T-838); the heuristic is scaled by it to stay a lower bound */
 const HSR = 0.8;
+/** where the two clicks' nearest track is of different families, each also looks this far for the
+ * other's, ground m (T-923: Tianjin's high-speed platforms are 149 m from the metro under them) */
+const FAMILY_M = 400;
 
 const post = (m: FromRouter, t: Transferable[] = []) => (self as unknown as Worker).postMessage(m, t);
 
@@ -158,15 +167,31 @@ function ground(lon1: number, lat1: number, lon2: number, lat2: number) {
   return Math.hypot(x, y);
 }
 
+/** The regions with a graph (`index.json`, written by realgraph.py); null if the index is missing. */
+let built: Promise<Set<string> | null> | null = null;
+function builtRegions() {
+  return (built ??= fetch(graphBase + "index.json")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((j) => (Array.isArray(j?.regions) ? new Set<string>(j.regions) : null))
+    .catch(() => null));
+}
+
+/** Tell the page where graphs exist, so it snaps only there. */
+async function sendCover() {
+  const [all, have] = await Promise.all([regionOutlines(), builtRegions()]);
+  const rings = have ? all.filter((o) => have.has(o.cc)).flatMap((o) => o.rings.map((r) => r.slice())) : [];
+  post({ kind: "cover", rings, all: !have }, rings.map((r) => r.buffer));
+}
+
 /** Load a region's graph and join it in; false if it has none. */
 function loadRegion(cc: string): Promise<boolean> {
   let p = tried.get(cc);
   if (!p) {
-    p = realGraph(cc, graphBase).then((g) => {
+    p = builtRegions().then((have) => (have && !have.has(cc) ? false : realGraph(cc, graphBase).then((g) => {
       if (!g) return false;
       join(g);
       return true;
-    }, () => false);
+    }, () => false)));
     tried.set(cc, p);
   }
   return p;
@@ -312,6 +337,13 @@ async function search(seq: number, a: [number, number], b: [number, number], ra:
   await Promise.all([...(await regionsAt(a[0], a[1], 0)), ...(await regionsAt(b[0], b[1], 0))].map(loadRegion));
   const starts = candidates(a[0], a[1], ra), ends = candidates(b[0], b[1], rb);
   if (!starts.length || !ends.length) return { legs: null, why: "off", states: 0 };
+  // one end on a metro under a main-line station, the other on rail (T-923): each end also takes the
+  // other's family within FAMILY_M, so a route of one family can exist
+  const fs = new Set(starts.map((s) => net.fam[s.c])), fe = new Set(ends.map((e) => net.fam[e.c]));
+  if (![...fs].some((f) => fe.has(f))) {
+    starts.push(...candidates(a[0], a[1], Math.max(ra, FAMILY_M)).filter((s) => fe.has(net.fam[s.c]) && !fs.has(net.fam[s.c])));
+    ends.push(...candidates(b[0], b[1], Math.max(rb, FAMILY_M)).filter((e) => fs.has(net.fam[e.c]) && !fe.has(net.fam[e.c])));
+  }
   const fam0 = net.fam[starts[0].c];
   const fac = (c: number) => (net.fam[c] === fam0 ? 1 : OTHER_FAMILY) * net.per[c];
   const endsOn = new Map<number, Cand[]>();
@@ -552,7 +584,7 @@ async function handle(m: ToRouter) {
   if (m.kind === "init") {
     pageBase = m.page;
     graphBase = m.graphs;
-    void regionOutlines();
+    void sendCover();
   } else if (m.kind === "view") {
     const all = await regionOutlines();
     const cx = (m.w + m.e) / 2, cy = (m.s + m.n) / 2;

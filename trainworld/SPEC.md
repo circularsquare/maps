@@ -238,7 +238,7 @@ to 350 degrees round [T-418, T-422, T-442], its curves laid out for a design spe
 (160 to 320 km/h, wider curves for faster; T-817; high-speed track is double track at 1.5x the
 price, its design speed 320 by default; track caps trains at 160 km/h, high-speed track at 320),
 places stations (on track, or on open ground with a
-straight piece of their own track, one click for its middle and one for its direction [T-794,
+straight piece of their own track, one click for one end of the platform and one for its direction [T-794, T-907, T-917,
 T-834]), and makes lines, all as
 **blueprints** that are free to edit and undo, then pays to **construct** them. A segment is one
 piece of track [T-244]; the Select tool picks many at once, blueprint or else constructed, to

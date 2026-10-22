@@ -35,8 +35,8 @@ const ROUTE_MIN: f32 = 0.005;
 const MAX_ROUTES: usize = 8;
 
 /// Numbers in the answer's head, per station pair, and per leg (`DemandApi::trip`).
-pub const HEAD: usize = 41;
-pub const PAIR_LEN: usize = 14;
+pub const HEAD: usize = 44;
+pub const PAIR_LEN: usize = 20;
 pub const LEG_LEN: usize = 12;
 
 /// Why rail is not offered for a trip (`HEAD` slot 26).
@@ -45,6 +45,16 @@ pub const NO_STATION_AT_START: u32 = 1;
 pub const NO_STATION_AT_END: u32 = 2;
 pub const WALKS_TOO_LONG: u32 = 3;
 pub const NO_ROUTE: u32 = 4;
+
+/// Whether the home end could drive to a station (`HEAD` slot 41, T-910): the trip is shorter than
+/// `Params::ride_min_km`, the drives were among its ways to a station, or it has no station
+/// within a drive.
+pub const RIDE_TOO_SHORT: u8 = 0;
+pub const RIDE_TRIED: u8 = 1;
+pub const RIDE_NONE: u8 = 2;
+const fn ride_state(by_ride: bool, has_rides: bool) -> u8 {
+    if by_ride { RIDE_TRIED } else if has_rides { RIDE_TOO_SHORT } else { RIDE_NONE }
+}
 
 /// The model's choice for one (origin subzone, destination subzone) pair in a period, computed as
 /// `kernel::mode_choice` computes it.
@@ -64,6 +74,8 @@ pub(crate) struct PairChoice {
     /// The cheapest perceived walk at each end (the logsum's offsets).
     pub m_u: f32,
     pub m_v: f32,
+    /// The home end's drive to a station (T-910): `RIDE_TOO_SHORT`, `RIDE_TRIED` or `RIDE_NONE`.
+    pub ride: u8,
     /// The rail cost the logsum over station pairs gives (perceived minutes).
     pub rail: f32,
     /// Utility of rail against a driver who parks free, and rail's share of all trips
@@ -162,7 +174,8 @@ pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims
     let pairs: Vec<(usize, usize, f32)> = pairs.into_iter().map(|(a, t, w)| (a, t, if why == RAIL_OFFERED { w / ssum } else { 0.0 })).collect();
     let walk_lost = r * w_none;
     let pw = w_none - walk_lost;
-    PairChoice { pw, d_m: d, drive_min, park, road, why, m_u, m_v, rail, util, r, walk_lost, pairs }
+    let ride = ride_state(by_ride, !sz.ride(u).is_empty());
+    PairChoice { pw, d_m: d, drive_min, park, road, why, m_u, m_v, ride, rail, util, r, walk_lost, pairs }
 }
 
 /// The everyday layer's choice (T-586, T-201) for purpose inputs `ev`, home subzone `u` and
@@ -239,7 +252,8 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
         }
     }
     let walk_lost = r * w_none;
-    PairChoice { pw: w_none - walk_lost, d_m: distance, drive_min, park, road, why, m_u, m_v, rail, util, r, walk_lost, pairs }
+    let ride = ride_state(by_ride, !sz.ride(u).is_empty());
+    PairChoice { pw: w_none - walk_lost, d_m: distance, drive_min, park, road, why, m_u, m_v, ride, rail, util, r, walk_lost, pairs }
 }
 
 /// One leg of a route: a ride (kind 1) from boarding to alighting route node, or a walk between
@@ -570,6 +584,8 @@ impl DemandApi {
         h[38] = gc.r as f64;
         h[39] = (1.0 - gc.pw - gc.r).max(0.0) as f64;
         h[40] = grouped.walk(u).min_by(|&a, &b| grouped.acc_w[a].total_cmp(&grouped.acc_w[b])).map_or(-1.0, |k| grouped.acc_t[k] as f64);
+        // the rides the two cells take are the home subzone's, its parking at home included
+        let ride_home_park = grouped.home_park[u];
         let (sz, u, v) = (&cz, 0, 1);
         let pc = choose(sz, u, v, true);
         let rail = pc.r;
@@ -593,6 +609,9 @@ impl DemandApi {
         h[20] = pc.m_u as f64;
         h[21] = pc.m_v as f64;
         h[26] = pc.why as f64;
+        h[41] = pc.ride as f64;
+        h[42] = p.ride_min_km as f64;
+        h[43] = p.pair_walk_max as f64;
         if pc.why != RAIL_OFFERED {
             h[31] = 1.0;
             return h;
@@ -606,12 +625,24 @@ impl DemandApi {
             rep[stn as usize] = r as f64;
         }
         let mut body = vec![];
+        let mut sq = None;
         for &(ka, kt, share) in &pairs {
             let (a, t) = (sz.acc_st[ka] as usize, sz.acc_st[kt] as usize);
-            // a ride entry (T-371): its perceived minutes less the drive's are the ride's fixed cost and the station end
             let ride = sz.ride(u).contains(&ka);
-            let station_end = if ride { sz.acc_w[ka] - p.w_drive * sz.acc_t[ka] } else { 0.0 };
-            body.extend([a as f64, t as f64, rep[a], rep[t], sz.acc_d[ka] as f64, sz.acc_w[ka] as f64, sz.acc_d[kt] as f64, sz.acc_w[kt] as f64, sk.r[a * s + t] as f64, share as f64, sz.acc_t[ka] as f64, sz.acc_t[kt] as f64, ride as u8 as f64, station_end as f64]);
+            // a ride entry (T-371, T-915): its perceived minutes beyond the drive's, and their parts
+            let mut parts = [0f32; 7];
+            if ride {
+                let svc = self.svc.as_ref().unwrap();
+                let sq = sq.get_or_insert_with(|| self.z.by_square());
+                let (zm, x0, y0) = (self.z.zone_m, self.z.x0, self.z.y0);
+                let sz_j = self.z.zone_at(sq, ((svc.st_x[a] - x0) / zm).floor() as i32, ((svc.st_y[a] - y0) / zm).floor() as i32);
+                let (end, money, drop) = p.ride_station_end(&self.z, sz_j, End::Home);
+                let extra = sz.acc_w[ka] - p.ride_w() * sz.acc_t[ka];
+                // the car's cost is what is left: its per-trip part and its part by distance on the road there
+                parts = [extra, p.p_ride, end, money, drop as u8 as f32, ride_home_park, extra - p.p_ride - end - ride_home_park];
+            }
+            body.extend([a as f64, t as f64, rep[a], rep[t], sz.acc_d[ka] as f64, sz.acc_w[ka] as f64, sz.acc_d[kt] as f64, sz.acc_w[kt] as f64, sk.r[a * s + t] as f64, share as f64, sz.acc_t[ka] as f64, sz.acc_t[kt] as f64, ride as u8 as f64]);
+            body.extend(parts.iter().map(|&x| x as f64));
         }
         // routes over the bigger pairs, by their share of the whole trip's rail riders
         let mut all: Vec<(usize, f32, Vec<Leg>)> = vec![];
@@ -663,7 +694,8 @@ impl DemandApi {
     /// minutes (T-628); an everyday purpose's subzone pair's trips a day (0: a commute, or no
     /// sample joins the two subzones); the drive's length by road, km, and the weight a minute of walking the whole way counts at (T-699);
     /// the subzones' chance of walking, rail and driving, and their cheapest walk at the home end,
-    /// real minutes (-1 none).
+    /// real minutes (-1 none); whether the home end could drive to a station (`RIDE_TOO_SHORT`..
+    /// `RIDE_NONE`, T-910), `Params::ride_min_km` and `Params::pair_walk_max`.
     ///
     /// Then per station pair, biggest share first, `PAIR_LEN` numbers: access and egress demand
     /// stations, a route node at each (-1 none), the access walk's straight-line metres and
@@ -671,8 +703,10 @@ impl DemandApi {
     /// minutes, the base fare and first boarding's transfer penalty not included), the pair's
     /// share of the trip's rail riders, the two walks' real minutes (the access entry's are a
     /// ride's drive minutes, its metres the straight line to the station), whether the access
-    /// entry is a ride (1/0) and, for a ride, the perceived minutes beyond the drive's (the ride's
-    /// fixed cost and the parking or drop-off at the station).
+    /// entry is a ride (1/0) and, for a ride (else 0), the perceived minutes beyond the drive's and
+    /// their parts (T-915): the ride's fixed cost (`p_ride`), the parking or drop-off at the
+    /// station, the part of that which is money (perceived), 1 if it is the drop-off, parking at
+    /// home, and the car's ownership cost.
     ///
     /// Then per route, biggest first: its station pair's index, its share of the trip's rail
     /// riders, its legs; then `LEG_LEN` numbers a leg: kind (1 ride, 2 walk between stations or
@@ -998,6 +1032,42 @@ mod tests {
         let morning = api.trip(0, -6000.0, 0.0, 6000.0, 0.0)[18];
         let night = api.trip(4, -6000.0, 0.0, 6000.0, 0.0)[18];
         assert!(morning > night, "morning {morning} night {night}");
+    }
+
+    /// T-915, T-916: a drive to a station is priced as its parts say: the drive at `ride_w` a
+    /// minute, then the fixed cost, the station end, parking at home and the car's cost, which add
+    /// up to the entry's perceived minutes beyond the drive.
+    #[test]
+    fn ride_parts_add_up() {
+        let (mut api, _) = small();
+        api.solve(0);
+        let p = api.period(0).unwrap().p.clone();
+        assert_eq!(p.ride_w(), 2.0 * p.w_drive);
+        let mut rides = 0;
+        for (ox, oy) in [(-6000.0, 0.0), (-9000.0, 2000.0), (0.0, -8000.0), (-8000.0, -6000.0)] {
+            for (dx, dy) in [(6000.0, 0.0), (0.0, 6000.0), (500.0, 500.0)] {
+                let v = api.trip(0, ox, oy, dx, dy);
+                if v[0] != 1.0 || v[13] != 1.0 {
+                    continue;
+                }
+                for k in 0..v[24] as usize {
+                    let e = &v[HEAD + k * PAIR_LEN..HEAD + (k + 1) * PAIR_LEN];
+                    if e[12] != 1.0 {
+                        assert!(e[13..].iter().all(|&x| x == 0.0));
+                        continue;
+                    }
+                    rides += 1;
+                    let (extra, start, end, money, drop, home, car) = (e[13], e[14], e[15], e[16], e[17], e[18], e[19]);
+                    assert!((e[5] - extra - p.ride_w() as f64 * e[10]).abs() < 1e-3, "the drive at ride_w: {e:?}");
+                    assert!((start + end + home + car - extra).abs() < 1e-4);
+                    assert_eq!(start, p.p_ride as f64);
+                    assert!(car >= p.car_own_min() as f64 - 1e-3, "the car's cost {car}");
+                    assert!(end <= p.d_drop as f64 + 1e-6 && money >= 0.0 && money <= end);
+                    assert!(drop == 0.0 || (end == p.d_drop as f64 && money == 0.0));
+                }
+            }
+        }
+        assert!(rides > 0, "no drive to a station among the trips");
     }
 
     /// The real New York pack and network (nyc_real_track.json), free flow in the morning peak:

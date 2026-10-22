@@ -67,8 +67,8 @@ function packs(): Plugin {
       const graphs = join(PACKS, "realgraph");
       if (existsSync(graphs)) {
         mkdirSync(join(out, "realgraph"), { recursive: true });
-        for (const f of readdirSync(graphs)) if (f.endsWith(".rgr")) copyFileSync(join(graphs, f), join(out, "realgraph", f));
-      } else this.warn("real-network graphs missing: run pipeline/realgraph.py jp us gb fr de");
+        for (const f of readdirSync(graphs)) if (f.endsWith(".rgr") || f === "index.json") copyFileSync(join(graphs, f), join(out, "realgraph", f));
+      } else this.warn("real-network graphs missing: run pipeline/realgraph.py <regions>");
     },
   };
 }

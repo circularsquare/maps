@@ -26,6 +26,7 @@ const OUTLINE_MAX_ZOOM = 10.5;
  * coarse ones stand (T-871: the zoom zones load at, game/zones.ts) */
 const OUTLINE_MIN_ZOOM = Math.max(5, ZONE_LOAD_ZOOM);
 const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
+const everywhere = outsideCity({ type: "MultiPolygon", coordinates: [] });
 /** The one shade of "not the zone in view": outside the focused zone, and (T-350) a zone still
  * loading; the theme's own (game/shades.ts, T-543). */
 export const shadePaint = () => ({ ...outsidePaint(shadeColours()) });
@@ -71,8 +72,9 @@ export function startCityBoundaries(map: MlMap): () => void {
     redraw();
     const known = ready.get(id);
     if (known) return show(id, known.city);
-    // Never shade against the previous city while the new footprint is loading.
-    (map.getSource(SHADE) as GeoJSONSource | undefined)?.setData(empty);
+    // While the new footprint loads, the shade covers everything, the new zone too: never against the
+    // previous city, and never empty (T-904: an empty shade flashed the whole map pale until it came).
+    (map.getSource(SHADE) as GeoJSONSource | undefined)?.setData(everywhere);
     (map.getSource(FOCUS) as GeoJSONSource | undefined)?.setData(empty);
     try {
       const city = await geometry(id);
@@ -145,7 +147,7 @@ export function startCityBoundaries(map: MlMap): () => void {
 
   const add = () => {
     const before = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
-    if (!map.getSource(SHADE)) map.addSource(SHADE, { type: "geojson", data: empty });
+    if (!map.getSource(SHADE)) map.addSource(SHADE, { type: "geojson", data: everywhere });
     if (!map.getLayer(SHADE)) map.addLayer({
       id: SHADE, type: "fill", source: SHADE,
       paint: shadePaint(),

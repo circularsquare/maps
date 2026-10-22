@@ -503,8 +503,8 @@ notes/T-420.md has the tables.
 - **Walking and riding to a station** (T-371, T-389, docs/demand-mode.md 4.3). The walk is 6 km/h on a
   path 1.3x the straight line at weight 1.5; a commute or everyday trip of 5 km or more may
   instead ride from home (car, bus, bike
-  or a lift, one mode) to the cheapest station of each line within 15 km, at `p_ride` 15 + 1.33 x
-  the density-model drive + the cheaper of parking by the station zone's job density and a
+  or a lift, one mode) to the cheapest station of each line within 15 km, at `p_ride` 15 + 2.66 x
+  the density-model drive (twice the whole-way drive's weight, T-916) + the cheaper of parking by the station zone's job density and a
   drop-off of 10. Nothing in it is per country: drive speeds come from density, parking from job
   density, and nobody lacks the ride for want of a car. Why it may not carry over: `p_ride` stands
   for getting the car out and walking from the car park, a North American picture; where the ride

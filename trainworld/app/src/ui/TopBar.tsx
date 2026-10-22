@@ -9,9 +9,6 @@ import { demandView, modeRides, modeSplit, viewFinal, viewUpdating } from "../ga
 import { clockTime, count, dayOf, money, moneyCash } from "../game/format";
 import { dateName, dateOf, MONTH_LONG, weekdayOf } from "../game/days";
 import { PERIODS, periodAt } from "../game/periods";
-import { sunTimes } from "../game/sun";
-import { CLOCK_UTC_OFFSET, viewShift } from "../game/localTime";
-import { viewCentre } from "../game/listScope";
 import { SkyBanner } from "./SkyBanner";
 import { countryName, holidaysNear, loadHolidays, type HolidaySpan } from "../game/holidays";
 import { useEffect } from "preact/hooks";
@@ -33,20 +30,17 @@ const NO_CLOCK = perfOff("clock");
 
 const hourTime = (h: number) => clockTime(Math.round(h * 60) % 1440);
 
-/** The demand band's hover: this period, then the next. */
+/** The demand band's hover (T-902, Anita): "Currently low demand until 06:00", the end being where
+ * the level next changes. */
 function periodTip(minute: number): string {
-  const p = PERIODS[periodAt(minute * 60)], next = PERIODS.find((q) => q.from === p.to % 24)!;
-  const lower = (s: string) => s[0].toLowerCase() + s.slice(1);
-  return `${p.name}, ${p.demand} demand until ${hourTime(p.to)}\nThen ${lower(next.name)}, ${next.demand} demand until ${hourTime(next.to)}`;
-}
-
-/** The sky's hover: today's sunrise and sunset at the view's centre (T-861, game/sun.ts). */
-function sunTip(day: number): string {
-  const [lon, lat] = viewCentre.value ?? [-74.0, 40.7];
-  const s = sunTimes(day, lon, lat, CLOCK_UTC_OFFSET + viewShift.value / 3600);
-  if (s === "up") return "The sun does not set today";
-  if (s === "down") return "The sun does not rise today";
-  return `Sunrise ${hourTime(s[0])}, sunset ${hourTime(s[1])}`;
+  let p = PERIODS[periodAt(minute * 60)];
+  const level = p.demand;
+  for (let k = 0; k < PERIODS.length; k++) {
+    const next = PERIODS.find((q) => q.from === p.to % 24)!;
+    if (next.demand !== level) break;
+    p = next;
+  }
+  return `Currently ${level} demand until ${hourTime(p.to)}`;
 }
 
 /** T-862: one line per holiday on the sky, "Today: Thanksgiving Day, United States", "Tomorrow: …",
@@ -80,7 +74,7 @@ function Clock() {
           <b class={"time lg" + (held ? " held" : "")}>{clockTime(minute)}</b>
           <span class="date">{todayHols.length > 0 && <i class="holiday-dot" />}{dateName(day)}</span>
         </div>
-        <SkyBanner skyTip={[sunTip(day), ...hols].join("\n")} bandTip={periodTip(minute)} />
+        <SkyBanner skyTip={hols.length ? hols.join("\n") : undefined} bandTip={periodTip(minute)} />
       </div>
     </div>
   );

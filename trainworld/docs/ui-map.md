@@ -416,4 +416,6 @@ a thin boundary at closer zooms (darker outside stroke at 36%, lighter inside at
 the borders it shares itself, so a neighbour's outline leaves those out. A subtle shade darkens the basemap outside its exact footprint,
 enclaves included. These are demand areas, not municipal limits. They sit under labels and game
 overlays, never take clicks, and survive basemap style changes. A change of focus swaps the shade
-in one step, never through an empty frame; the footprints are ready from startup.
+in one step, never through an empty frame [T-904]: a zone near the view has its shade ready at each
+pan's end, and a zone focused before its footprint has arrived (a long pan straight onto it) has
+the shade over the whole map, itself included, until it comes.

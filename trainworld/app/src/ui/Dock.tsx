@@ -11,6 +11,7 @@ import { Inspector } from "./inspector/Inspector";
 import { BuildTab, CitiesTab, LinesTab, MoneyTab, StationsTab } from "./tabs";
 import { SavesPanel, savesOpen } from "./SavesPanel";
 import { SettingsTab } from "./SettingsTab";
+import { HelpPanel, helpOpen } from "./HelpPanel";
 import { Icon } from "./widgets";
 
 /** T-252: the tabs are icons, their names in the hover */
@@ -108,11 +109,15 @@ export function Dock() {
         <button class="tab gear save" data-tip="Saved games" aria-label="Saved games" onClick={() => (savesOpen.value = true)}>
           <Icon.save />
         </button>
+        <button class={"tab gear help" + (helpOpen.value ? " on" : "")} data-tip="Controls" aria-label="Controls" aria-pressed={helpOpen.value} onClick={() => (helpOpen.value = !helpOpen.peek())}>
+          <Icon.help />
+        </button>
         <button class={"tab gear" + (t === "settings" ? " on" : "")} data-tip="Settings" aria-label="Settings" aria-pressed={t === "settings"} onClick={() => (tab.value = "settings")}>
           <Icon.gear />
         </button>
       </nav>
       <SavesPanel />
+      <HelpPanel />
       <section class={"pane" + (t === "build" ? " build-pane" : "")} ref={paneRef}
         onScrollCapture={(e) => { if (!restoring.current) scrolls.current[t] = (e.target as HTMLElement).scrollTop; }}>
         <Pane />

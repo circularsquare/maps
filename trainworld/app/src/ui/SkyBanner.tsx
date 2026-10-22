@@ -1,7 +1,8 @@
-// The top bar's sky (T-861, T-882, T-896): a little scene of the day at the place in view, 12 hours
-// back and 12 ahead, sliding left as game time passes: flat sky colours by the sun's height, stars
-// at night, grass and a track along the bottom, and at now in the middle a small train on the
-// track with the sun or moon peeking in from the top above it, and the demand level of each hour in a 2 px band under it. Drawn into one canvas from the clock's own `now()` on animation frames, never through
+// The top bar's sky (T-861, T-882, T-896, T-902): a little scene of the day at the place in view, 12
+// hours back and 12 ahead, sliding left as game time passes: flat sky colours by the sun's height,
+// stars at night, a few clouds, a track along the bottom, and at now in the middle a small train on
+// the track with the sun or moon peeking in from the top above it, and the demand level of each
+// hour in a 2 px band under it. Drawn into one canvas from the clock's own `now()` on animation frames, never through
 // Preact, and only when it has moved a fraction of a pixel, so it costs next to nothing between
 // game minutes. A holiday in a country with the player's stations (T-862, game/holidays.ts) is a
 // ribbon along the sky's top over its day, with a tick where it starts.
@@ -53,14 +54,13 @@ function skyAt(e: number): RGB {
 /** 0 at night to 1 by day: how lit the ground is */
 const daylight = (e: number) => Math.min(1, Math.max(0, (e + 5) / 10));
 
-const GROUND: [RGB, RGB] = [hex("#2f5d4a"), hex("#7cc46c")];
-const TUFT: [RGB, RGB] = [hex("#25503e"), hex("#5cae56")];
 const RAIL: [RGB, RGB] = [hex("#1c2733"), hex("#6a5a50")];
+const CLOUD: [RGB, RGB] = [hex("#55639a"), hex("#ffffff")];
 const css = (c: RGB) => `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
 
-/** Scene rows, css px from the top: grass from GROUND_Y, the rail at RAIL_Y, tufts up to TUFT_H
- * above the grass. Scenery repeats every so many css px of time, so it slides with the sky. */
-const GROUND_Y = 13, RAIL_Y = 15.5, TUFT_EVERY = 4, SLEEPER_EVERY = 3, STAR_EVERY = 7;
+/** Scene rows, css px from the top: stars above STAR_LOW, the rail at RAIL_Y. Sleepers and stars
+ * repeat every so many css px of time, so they slide with the sky. */
+const STAR_LOW = 10, RAIL_Y = 15.5, SLEEPER_EVERY = 3, STAR_EVERY = 7;
 /** T-896: the train sits at now, nose to the right, the scene sliding under it: css px. */
 const TRAIN_LEN = 18, TRAIN_H = 5;
 
@@ -104,16 +104,16 @@ function startSky(cv: HTMLCanvasElement): () => void {
     lastKey = key; last = now; lastMarks = marks;
     const off = CLOCK_UTC_OFFSET + shift / 3600, scale = h / (SKY + GAP + BAND);
     const skyRows = Math.round(SKY * scale), bandFrom = h - Math.max(1, Math.round(BAND * scale));
-    const groundRow = Math.round(GROUND_Y * scale), railRow = Math.floor(RAIL_Y * scale), railRows = Math.max(1, Math.round(scale));
+    const railRow = Math.floor(RAIL_Y * scale), railRows = Math.max(1, Math.round(scale));
     const dim = colours.dark ? 0.15 : 0;
     const shade = (c: RGB) => (dim ? mix(c, colours.bg, dim) : c);
     const lit = (pair: [RGB, RGB], l: number) => shade(mix(pair[0], pair[1], l));
     const elevAt = (x: number) => sunElevation(now + (x - nowX) * secPx, lon, lat, off);
     for (let x = 0; x < w; x++) {
       const t = now + (x + 0.5 - nowX) * secPx, e = sunElevation(t, lon, lat, off), l = daylight(e);
-      const sky = shade(skyAt(e)), ground = lit(GROUND, l), rail = lit(RAIL, l);
+      const sky = shade(skyAt(e)), rail = lit(RAIL, l);
       for (let y = 0; y < skyRows; y++) {
-        const c = y < groundRow ? sky : y >= railRow && y < railRow + railRows ? rail : ground, i = (y * w + x) * 4;
+        const c = y >= railRow && y < railRow + railRows ? rail : sky, i = (y * w + x) * 4;
         d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255;
       }
       for (let y = skyRows; y < bandFrom; y++) d[(y * w + x) * 4 + 3] = 0;
@@ -146,14 +146,25 @@ function startSky(cv: HTMLCanvasElement): () => void {
       const l = daylight(elevAt(x));
       if (l > 0.3) return;
       ctx.fillStyle = `rgba(255,250,225,${(0.9 * (1 - l / 0.3)).toFixed(2)})`;
-      ctx.fillRect(x + hash(k) * 4 * scale, (1 + hash(k + 0.5) * (GROUND_Y - 5)) * scale, scale, scale);
+      ctx.fillRect(x + hash(k) * 4 * scale, (1 + hash(k + 0.5) * (STAR_LOW - 2)) * scale, scale, scale);
     });
-    // grass: triangles on the ground's edge, two heights
-    each(TUFT_EVERY, (x, k) => {
-      const tall = (k & 1 ? 1.6 : 2.6) * scale, base = groundRow;
-      ctx.fillStyle = css(lit(TUFT, daylight(elevAt(x))));
-      ctx.beginPath(); ctx.moveTo(x - 1.5 * scale, base); ctx.lineTo(x, base - tall); ctx.lineTo(x + 1.5 * scale, base); ctx.fill();
-    });
+    // T-902: clouds at fixed times, none to two a day as the day's number falls, white by day and
+    // dim blue at night
+    const day0 = Math.floor((now - nowX * secPx) / 86400);
+    for (let dd = day0 - 1; dd <= day0 + 2; dd++) {
+      const r = hash(dd + 0.25), n = r < 0.35 ? 0 : r < 0.8 ? 1 : 2;
+      for (let i = 0; i < n; i++) {
+        const t = (dd + (i + hash(dd * 7 + i + 0.1)) / n) * 86400, x = nowX + (t - now) / secPx;
+        const s = (0.8 + 0.5 * hash(dd * 3 + i + 0.7)) * scale, y = (4 + 5 * hash(dd * 13 + i + 0.3)) * scale;
+        if (x < -16 * s || x > w + 4 * s) continue;
+        ctx.fillStyle = css(lit(CLOUD, daylight(elevAt(x + 6 * s))));
+        ctx.beginPath();
+        ctx.roundRect(x, y, 12 * s, 3 * s, 1.5 * s);
+        ctx.moveTo(x + 6.4 * s, y + 0.4 * s); ctx.arc(x + 4 * s, y + 0.4 * s, 2.4 * s, 0, 2 * Math.PI);
+        ctx.moveTo(x + 10.4 * s, y); ctx.arc(x + 7.4 * s, y, 3 * s, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
     // sleepers under the rail
     each(SLEEPER_EVERY, (x) => {
       ctx.fillStyle = css(lit(RAIL, daylight(elevAt(x))));
@@ -164,7 +175,7 @@ function startSky(cv: HTMLCanvasElement): () => void {
       const x0 = nowX + (m.t0 - now) / secPx, x1 = nowX + (m.t1 - now) / secPx;
       if (x1 <= 0 || x0 >= w) continue;
       ctx.fillRect(x0, 0, x1 - x0, 2 * scale);
-      ctx.fillRect(x0 - scale / 2, 0, scale, groundRow);
+      ctx.fillRect(x0 - scale / 2, 0, scale, railRow);
     }
     // the sun, or the moon, peeking in from the top at now
     const e = sunElevation(now, lon, lat, off);
@@ -194,7 +205,7 @@ function startSky(cv: HTMLCanvasElement): () => void {
   return () => { cancelAnimationFrame(raf); ro.disconnect(); mo.disconnect(); };
 }
 
-export function SkyBanner({ skyTip, bandTip }: { skyTip: string; bandTip: string }) {
+export function SkyBanner({ skyTip, bandTip }: { skyTip?: string; bandTip: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => startSky(ref.current!), []);
   return (

@@ -2,7 +2,9 @@
 // clicks from Tokyo Station to Shin-Osaka and two from Penn Station to Emeryville each place the
 // whole route as one edit, and one undo takes each away; Tokyo to London (two networks that never
 // meet) is refused with "No real track joins these points"; a second click away from real track
-// draws an ordinary segment. Reports the router's and the fit's times and the page's longest task.
+// draws an ordinary segment. Brussels to Rotterdam snaps across the Belgian-Dutch border; in
+// Mumbai, with coverage switched off as if no graph were built, there is no ring and the clicks draw an ordinary segment (T-913).
+// Reports the router's and the fit's times and the page's longest task.
 //   node trainworld/checks/t727-snap.mjs [url]     (from the maps root; about 2 minutes)
 // Writes artifacts/trainworld/t727-snap.json and t727d-*.png screenshots.
 import { mkdtemp, rm, readdir, writeFile, mkdir } from 'node:fs/promises';
@@ -90,6 +92,17 @@ try {
   for (const [name, a, b, zA, zB, km] of [
     ['tokyo-osaka', [139.7671, 35.6812], [135.5001, 34.7334], 13, 13, [500, 530]],
     ['nyc-emeryville', [-73.9935, 40.7506], [-122.2916, 37.8405], 13, 13, [5200, 5600]],
+    // T-913: Belgium and the Netherlands' graphs, joined at their border (on to Amsterdam fails at
+    // ground level on water by Schiphol, T-914)
+    ['brussels-rotterdam', [4.3571, 50.8455], [4.4686, 51.9244], 13, 13, [125, 165]],
+    // T-727e, T-919: China station to station, each click on the high-speed platform track (at
+    // Tianjin the metro below is nearer a few metres off, and a route from rail to it fails)
+    ['beijing-tianjin', [116.37853, 39.86549], [117.20939, 39.13414], 13, 13, [110, 125]],
+    ['hongqiao-hangzhou', [121.31702, 31.19403], [120.2122, 30.29045], 13, 13, [150, 170]],
+    // T-923: a click on Tianjin station that rings on the metro below still finds the high-speed line,
+    // as the end and as the start
+    ['beijing-tianjin-metro', [116.37853, 39.86549], [117.2105, 39.1361], 13, 13, [110, 125]],
+    ['tianjin-metro-beijing', [117.2105, 39.1361], [116.37853, 39.86549], 13, 13, [110, 125]],
   ]) {
     await page.evaluate(() => window.tw.tools.reset());
     const e0 = (await count()).edges;
@@ -123,7 +136,7 @@ try {
     await page.waitForTimeout(500);
     const e1 = (await count()).edges, n1 = await notice();
     report[name].placed = { edges: e1 - e0, notice: n1, longestTaskMs: await longest(t0), clickToPlacedLongest: await longest(t1) };
-    result(e1 - e0 > 100 && /Blueprint added/.test(n1), `${name}: placed by the second click`, `${e1 - e0} pieces; "${n1}"; longest main-thread task ${report[name].placed.longestTaskMs.toFixed(0)} ms`);
+    result(e1 - e0 > 20 && /Blueprint added/.test(n1), `${name}: placed by the second click`, `${e1 - e0} pieces; "${n1}"; longest main-thread task ${report[name].placed.longestTaskMs.toFixed(0)} ms`);
     await page.evaluate(([a, b]) => window.tw.map.fitBounds([[Math.min(a[0], b[0]), Math.min(a[1], b[1])], [Math.max(a[0], b[0]), Math.max(a[1], b[1])]], { padding: 80, animate: false }), [a, b]);
     await page.waitForTimeout(1500);
     await shot(`${name}-placed`);
@@ -165,6 +178,26 @@ try {
     const e1 = (await count()).edges, n = await notice();
     result(!ring && e1 > e0 && e1 - e0 <= 3 && /Blueprint added/.test(n), 'away from real track: an ordinary segment', `${e1 - e0} pieces, "${n}"`);
     await shot('ordinary');
+  }
+
+  // ---- T-913: where no region has a graph, no ring and no snap, though the line is drawn. Every
+  // region has one since T-727e, so Mumbai stands in with the coverage switched off.
+  {
+    await page.evaluate(() => { window.tw.tools.reset(); window.tw.tools.real.covers = () => false; });
+    const e0 = (await count()).edges;
+    // Mumbai CSMT, then 1.2 km north along the line
+    const ring = await go(72.8355, 18.9398, 13);
+    const drawn = await page.evaluate(() => { const { map, tools } = window.tw, p = map.project([72.8355, 18.9398]); return tools.real.nearestDrawn(p.x, p.y); });
+    await click(72.8355, 18.9398);
+    const ring2 = await go(72.8330, 18.9505, 13);
+    const spot = await page.evaluate(() => window.tw.tools.real.spot?.phase ?? null);
+    await click(72.8330, 18.9505);
+    await waitEdges(e0);
+    await page.waitForTimeout(400);
+    const e1 = (await count()).edges, n = await notice();
+    result(drawn && !ring && !ring2 && !spot && e1 > e0 && e1 - e0 <= 3 && /Blueprint added/.test(n), 'no graph (Mumbai): no ring, an ordinary segment', `drawn line at the click ${drawn ? 'yes' : 'no'}; ${e1 - e0} pieces, "${n}"`);
+    await shot('no-graph');
+    await page.evaluate(() => { delete window.tw.tools.real.covers; window.tw.tools.reset(); });
   }
   await writeFile(join(OUT, 't727-snap.json'), JSON.stringify(report, null, 1));
 } catch (e) {

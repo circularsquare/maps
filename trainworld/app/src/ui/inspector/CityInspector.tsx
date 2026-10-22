@@ -1,8 +1,7 @@
 // A city picked on the map zoomed far out (T-186, SPEC 8): its trips within the zone and its longer
 // trips to and from other places, each a figure with a mode bar, and the three biggest places
 // (T-600, Anita: brief statistics of what the hover has, no table of every place). The map draws
-// the city outlined and one bubble per other city (map/intercityView.ts). These numbers are the
-// current forecast; the map's bubbles catch up to them over a game day after a change (T-156).
+// the city outlined and one bubble per other city (map/intercityView.ts).
 
 import { cityById, type CityId } from "../../game/cities";
 import { cityDemandViews, intercityDemand, INTERCITY_PLACES } from "../../game/demand";

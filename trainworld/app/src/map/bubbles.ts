@@ -73,13 +73,15 @@ export function reorder(g: Groups, order: Uint32Array): Groups {
   return { group: pick(g.group), x: pick(g.x), y: pick(g.y), train: pick(g.train), walk: pick(g.walk), drive: pick(g.drive) };
 }
 
+type Modes = { train: Float32Array; walk: Float32Array; drive: Float32Array };
 /** Colour built discs again under the scheme now chosen (T-804), in place: `levels` carry each
- * disc's trips by mode in the discs' order. */
-export function recolour(levels: { discs: Float32Array; train: Float32Array; walk: Float32Array; drive: Float32Array }[]) {
+ * disc's trips by mode in the discs' order, and their smoothed `shade` where there is one (T-900). */
+export function recolour(levels: (Modes & { discs: Float32Array; shade?: Modes })[]) {
   for (const l of levels) {
-    const n = l.train.length;
+    const m = l.shade ?? l;
+    const n = m.train.length;
     for (let i = 0; i < n; i++) {
-      const c = bubbleColour(l.train[i], l.walk[i], l.drive[i]);
+      const c = bubbleColour(m.train[i], m.walk[i], m.drive[i]);
       l.discs[i * DISC + 3] = c[0] / 255;
       l.discs[i * DISC + 4] = c[1] / 255;
       l.discs[i * DISC + 5] = c[2] / 255;

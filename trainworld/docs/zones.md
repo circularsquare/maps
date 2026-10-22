@@ -79,6 +79,15 @@ never takes its country's module. Covered so far: Spain (40 zones, T-723), Italy
 (80, Creuse and Lozère dead space; T-779), Greece (31) and Portugal (13 of 16, three parked on
 their outlines, T-787; T-786); the rest of Europe but Russia, Belarus and Ukraine is planned as 360
 zone rows (T-788, notes/T-788.md).
+**China and Taiwan** (Anita, 2026-10-22, T-897) have their own rules (`world_plan.ZONE_RULES`):
+zones of at least **1M** (cap 2.5M) from geoBoundaries counties merged within their province, no
+dead space by density, and **no exclaves**: a zone's parts touch by land or across at most 10 km of
+water, island zones of one region join within 50 km (Penghu, Kinmen), and a zone that can join
+nothing with under 10,000 people is dead space. Hong Kong, Macau and Taiwan are countries of their
+own, never in a Chinese zone. Units follow the de facto lines (`world_plan.DE_FACTO`: Arunachal
+Pradesh is India's, Aksai Chin China's). Chinese rows solve their joint commutes by province
+(`solve_region`; Beijing, Tianjin and Hebei as one, Shanghai with Jiangsu), each held against its
+neighbours as countries are (section 7). notes/T-897.md.
 
 **Mercer County (Trenton) is part of New York's city zone**, not a non-city zone (Anita leaned
 this way). Reasons: it is in the New York combined statistical area; LODES holds 175,000 jobs

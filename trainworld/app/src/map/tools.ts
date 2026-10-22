@@ -22,7 +22,7 @@ import { effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
-import { count, distance, money, moneyShort, speed, unitMetres, unitShort } from "../game/format";
+import { count, distance, length, money, moneyShort, speed, unitMetres, unitShort } from "../game/format";
 import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { speedColour } from "../game/palette";
@@ -510,8 +510,9 @@ export class Tools {
     if (this.freeAt) return this.freeStationClick(e);
     const first = this.snap(e.point.x, e.point.y, e.lngLat);
     if (first.kind === "free") {
-      // T-834: open ground, the first click sets the centre and the second the direction
+      // T-907: open ground, the two clicks are the platform's two ends
       this.freeAt = first;
+      this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
       this.place();
       return;
     }
@@ -535,16 +536,16 @@ export class Tools {
   private async freeStationClick(e: MapMouseEvent) {
     const h = this.freeAt!;
     this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
-    const phi = this.freeHeading();
-    const p = this.freePiece(h, phi);
+    const { phi, plat } = this.freeSpan(h);
+    const p = this.freePiece(h, phi, plat);
     this.freeAt = null;
     this.lastHeading = phi;
     this.clearFree();
     this.place();
-    const name = await this.nameFor(...this.screen(h.lx, h.ly));
-    const a = await edit({ op: "addStation", at: p.stationAt, platform: buildPlatform.peek(), name }, true);
+    const name = await this.nameFor(...this.screen(p.mid.lx, p.mid.ly));
+    const a = await edit({ op: "addStation", at: p.stationAt, platform: plat, name }, true);
     if (a.ok) {
-      this.lastPlaced = toLngLat(h.lx, h.ly);
+      this.lastPlaced = toLngLat(p.mid.lx, p.mid.ly);
       say(`${name} added as a blueprint station.`);
     } else say(describeIssues(a.issues), true);
   }
@@ -805,8 +806,8 @@ export class Tools {
 
   /** The platform box at (lx, ly) along `ways` (the track from the spot each way), and the twin's
    * on quad. */
-  private boxGhost(lx: number, ly: number, ways: ArrayLike<number>[], perM: number, bad: boolean, twinAt: { x: number; y: number; ways: ArrayLike<number>[] } | null) {
-    const sh=platformShape(ways,0,buildPlatform.peek()/2*perM);
+  private boxGhost(lx: number, ly: number, ways: ArrayLike<number>[], perM: number, bad: boolean, twinAt: { x: number; y: number; ways: ArrayLike<number>[] } | null, plat = buildPlatform.peek()) {
+    const sh=platformShape(ways,0,plat/2*perM);
     // always the full box at its true length, whatever the zoom (T-311): the map's own style
     // draws dots below STATION_BOX_ZOOM
     const style={...this.overlay.renderer.stationStyle,boxes:true};
@@ -825,7 +826,7 @@ export class Tools {
     this.ghost.firstElementChild!.setAttribute("d",stationPath(shape));
     let twin=this.ghost.children[1] as SVGPathElement|undefined;
     if (twinAt) {
-      const ts=stationShape(twinAt.x,twinAt.y,platformShape(twinAt.ways,0,buildPlatform.peek()/2*perM),PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),style,false);
+      const ts=stationShape(twinAt.x,twinAt.y,platformShape(twinAt.ways,0,plat/2*perM),PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),style,false);
       if (!twin) twin=this.ghost.appendChild(document.createElementNS("http://www.w3.org/2000/svg","path"));
       twin.setAttribute("d",stationPath(ts));
       twin.setAttribute("transform",`translate(${ts.x-shape.x},${ts.y-shape.y})`);
@@ -833,47 +834,49 @@ export class Tools {
     } else if (twin) twin.style.display="none";
   }
 
-  /** T-794, T-834: a station on open ground lays a straight piece of double track (quad with the
-   * tool's quad) at the selected elevation under it, FREE_MARGIN_M longer than the platform at each
-   * end, centred on the first click and heading `phi` (radians from east, ground). */
+  /** T-794, T-834, T-907: a station on open ground lays a straight piece of double track (quad with
+   * the tool's quad) at the selected elevation under it, FREE_MARGIN_M longer than the platform at
+   * each end. The first click is one end of the platform, which points towards the pointer. */
   private freeAt: Extract<Snap, { kind: "free" }> | null = null;
-  /** the heading of the last station placed on open ground, shown before a first click */
+  /** the heading of the last station placed on open ground, used while the pointer is on the first end */
   private lastHeading = 0;
   private pointer: { px: number; py: number; lng: number; lat: number } | null = null;
-  /** The heading from the first click towards the pointer; the last one while the pointer is on it. */
-  private freeHeading(): number {
-    const c = this.freeAt, p = this.pointer;
-    if (!c || !p) return this.lastHeading;
-    const [sx, sy] = this.screen(c.lx, c.ly);
-    if (Math.hypot(p.px - sx, p.py - sy) < 8) return this.lastHeading;
-    const [lng0, lat0] = toLngLat(c.lx, c.ly);
-    return Math.atan2(p.lat - lat0, (p.lng - lng0) * Math.cos((lat0 * Math.PI) / 180));
+  /** The heading from the first end towards the pointer (radians from east, ground), and the set
+   * platform length (T-917). */
+  private freeSpan(a: Extract<Snap, { kind: "free" }>): { phi: number; plat: number } {
+    const p = this.pointer, plat = buildPlatform.peek();
+    if (!p) return { phi: this.lastHeading, plat };
+    const [sx, sy] = this.screen(a.lx, a.ly);
+    if (Math.hypot(p.px - sx, p.py - sy) < 8) return { phi: this.lastHeading, plat };
+    const [lng0, lat0] = toLngLat(a.lx, a.ly);
+    return { phi: Math.atan2(p.lat - lat0, (p.lng - lng0) * Math.cos((lat0 * Math.PI) / 180)), plat };
   }
-  private freePiece(h: Extract<Snap, { kind: "free" }>, phi: number) {
+  private freePiece(h: Extract<Snap, { kind: "free" }>, phi: number, plat: number) {
     const w = world.peek();
     const [lng0, lat0] = toLngLat(h.lx, h.ly);
     const cos = Math.cos((lat0 * Math.PI) / 180), deg = 180 / Math.PI;
     const level = buildLevel.peek(), quad = trackCount.peek() === 4, z = level * 8;
-    const half = buildPlatform.peek() / 2 + FREE_MARGIN_M;
-    // ground metres east and north of the spot to lng, lat
+    // ground metres east and north of the first end to lng, lat
     const at = (e: number, n: number): [number, number] => [lng0 + (e / (EARTH_R * cos)) * deg, lat0 + (n / EARTH_R) * deg];
     const [ce, sn] = [Math.cos(phi), Math.sin(phi)];
-    const a = at(-half * ce, -half * sn), b = at(half * ce, half * sn);
+    const s0 = -FREE_MARGIN_M, s1 = plat + FREE_MARGIN_M, sm = plat / 2;
+    const a = at(s0 * ce, s0 * sn), b = at(s1 * ce, s1 * sn);
     const loc = (p: [number, number]) => toLocal(p[0], p[1]);
-    const [ax, ay] = loc(a), [bx, by] = loc(b);
+    const [ax, ay] = loc(a), [bx, by] = loc(b), [mx, my] = loc(at(sm * ce, sm * sn));
     const track = [new Float32Array([ax, ay, z, bx, by, z])];
-    const ways = [new Float32Array([h.lx, h.ly, z, bx, by, z]), new Float32Array([h.lx, h.ly, z, ax, ay, z])];
+    const ways = [new Float32Array([mx, my, z, bx, by, z]), new Float32Array([mx, my, z, ax, ay, z])];
     let twin: { x: number; y: number; ways: ArrayLike<number>[] } | null = null;
     if (quad) {
       // the express pair QUAD_SPACING_M to the left, as the track model lays it (T-255)
       const [ox, on] = [-sn * QUAD_SPACING_M, ce * QUAD_SPACING_M];
-      const [qax, qay] = loc(at(-half * ce + ox, -half * sn + on)), [qbx, qby] = loc(at(half * ce + ox, half * sn + on)), [tx, ty] = loc(at(ox, on));
+      const [qax, qay] = loc(at(s0 * ce + ox, s0 * sn + on)), [qbx, qby] = loc(at(s1 * ce + ox, s1 * sn + on)), [tx, ty] = loc(at(sm * ce + ox, sm * sn + on));
       track.push(new Float32Array([qax, qay, z, qbx, qby, z]));
       twin = { x: tx, y: ty, ways: [new Float32Array([tx, ty, z, qbx, qby, z]), new Float32Array([tx, ty, z, qax, qay, z])] };
     }
     const pa = lngLatToPack(...a), pb = lngLatToPack(...b);
     const stationAt: StationAt = { kind: "free", x0: pa.x, y0: pa.y, x1: pb.x, y1: pb.y, level, quad, hsr: highSpeed.peek() };
-    return { stationAt, track, ways, twin, perM: 1 / cos, lengthM: 2 * half, key: `${JSON.stringify(stationAt)}:${buildPlatform.peek()}:${w?.version}` };
+    const mid: Extract<Snap, { kind: "free" }> = { kind: "free", lx: mx, ly: my };
+    return { stationAt, plat, mid, track, ways, twin, perM: 1 / cos, lengthM: s1 - s0, key: `${JSON.stringify(stationAt)}:${plat}:${w?.version}` };
   }
 
   /** the worker's answer for the last free piece asked about (T-794) */
@@ -882,11 +885,12 @@ export class Tools {
   /** the free piece's track drawn as the preview (its key), so it is set once, not every frame */
   private freeDrawn = "";
 
-  private freeGhost(h: Extract<Snap, { kind: "free" }>): { ok: boolean | null; why: string; cost: number; lengthM: number } {
-    const p = this.freePiece(h, this.freeHeading());
+  private freeGhost(h: Extract<Snap, { kind: "free" }>): { ok: boolean | null; why: string; cost: number; lengthM: number; plat: number; mid: Extract<Snap, { kind: "free" }> } {
+    const { phi, plat } = this.freeSpan(h);
+    const p = this.freePiece(h, phi, plat);
     if (this.freeAsked !== p.key) {
       this.freeAsked = p.key;
-      this.client.checkStation(p.stationAt, buildPlatform.peek(), (ok, issues, cost) => {
+      this.client.checkStation(p.stationAt, plat, (ok, issues, cost) => {
         this.freeAns = { key: p.key, ok, why: ok ? "" : describeIssues(issues) || "Cannot be built here.", cost };
         if (tool.peek() === "station") this.place();
       });
@@ -899,8 +903,8 @@ export class Tools {
       this.overlay.renderer.setPreview(strokesFromParts(p.track, bad, true));
       this.overlay.invalidate();
     }
-    this.boxGhost(h.lx, h.ly, p.ways, p.perM, bad, p.twin);
-    return { ok: ans ? ans.ok : null, why: ans?.why ?? "", cost: ans?.cost ?? 0, lengthM: p.lengthM };
+    this.boxGhost(p.mid.lx, p.mid.ly, p.ways, p.perM, bad, p.twin, plat);
+    return { ok: ans ? ans.ok : null, why: ans?.why ?? "", cost: ans?.cost ?? 0, lengthM: p.lengthM, plat, mid: p.mid };
   }
 
   /** Take the free piece's track off the preview, if it is there. */
@@ -1173,23 +1177,31 @@ export class Tools {
     const h = t === "station" ? this.freeAt ?? this.stationSpot() : this.hover;
     const v = t === "station" ? this.verdict() : null;
     if (t === "station") this.shown = h && h.kind !== "free" ? v : null;
+    if (t === "station" && h?.kind === "free" && !this.freeAt) {
+      // T-907: open ground before the first click, the snap ring as a marker and no ghost
+      this.clearFree();
+      this.ring.style.display = "";
+      put(this.ring, h.lx, h.ly);
+      this.tag.style.display = "none";
+      return;
+    }
     if (t === "station" && h?.kind === "free") {
-      // T-794: open ground, the station with its own piece of track
+      // T-794, T-907: open ground after the first click, the station with its own piece of track
       this.ring.style.display = "none";
-      this.stationRings(h);
       const g = this.freeGhost(h);
+      this.stationRings(g.mid);
       this.tag.style.display = "";
       if (g.ok === false) {
         this.tag.className = "tool-tag build-tag bad";
         this.tag.textContent = g.why;
       } else {
         this.tag.className = "tool-tag build-tag";
-        this.tag.replaceChildren(...this.helpLines(h, g.ok ? `Station and ${distance(g.lengthM)} of track, ${moneyShort(g.cost * 1e6)}` : null)
+        this.tag.replaceChildren(...this.helpLines(g.mid, g.ok ? `${length(g.plat)} platform and ${length(g.lengthM)} of track, ${moneyShort(g.cost * 1e6)}` : null)
           .map((s) => Object.assign(document.createElement("div"), { textContent: s })));
         if (!this.tag.firstChild) this.tag.style.display = "none";
       }
-      // T-834: while the direction is set, the tag follows the pointer
-      const p = this.freeAt && this.pointer;
+      // T-834: the tag follows the pointer
+      const p = this.pointer;
       if (p) this.tag.style.transform = `translate(${Math.round(p.px + 14)}px, ${Math.round(p.py + 12)}px)`;
       else put(this.tag, h.lx, h.ly, 14, 12);
       return;

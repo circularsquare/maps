@@ -138,7 +138,7 @@ loads the lines, so they add up to its entries and exits.
 The regional layer rides to stations as the local layer does ([demand-mode.md](demand-mode.md) 4.3, T-371),
 through the same `kernel::access_options` [T-373]: from each 2 km zone of the market's sites
 (their homes and jobs, as a local zone's, give the drive's speeds and the parking), the cheapest
-station of each of the 6 cheapest lines within 15 km, at `p_ride` 15 + 1.33 x the drive + at the
+station of each of the 6 cheapest lines within 15 km, at `p_ride` 15 + 2.66 x the drive (T-916) + at the
 station a cost that depends on the end:
 
 - **Commutes between zones**: at the home end, the cheaper of parking at the station and a

@@ -187,11 +187,13 @@ pub struct Params {
     /// level; water, bays and sparse roads still lengthen a pair against the others.
     pub road_routed_scale: f32,
     /// The ride to a station (car, bus, bike or a lift as one mode, T-371), at the home end of
-    /// commutes whose zones' centres are at least `ride_min_km` apart: `p_ride` + `w_drive` x the
-    /// drive from the home zone's centre + at the station the cheaper of parking there (as at a
-    /// destination) and a drop-off, `d_drop`. Per home zone, the cheapest station of each of the
-    /// `ride_lines` cheapest lines within `ride_max_m` (straight line); 0 lines turns it off.
+    /// commutes whose zones' centres are at least `ride_min_km` apart: `p_ride` + `ride_drive_f` x
+    /// `w_drive` x the drive from the home zone's centre + at the station the cheaper of parking
+    /// there (as at a destination) and a drop-off, `d_drop`. Per home zone, the cheapest station of
+    /// each of the `ride_lines` cheapest lines within `ride_max_m` (straight line); 0 lines turns
+    /// it off. `ride_drive_f` 2 (T-916): long drives to a station became rare, short ones stayed.
     pub p_ride: f32,
+    pub ride_drive_f: f32,
     pub d_drop: f32,
     pub ride_min_km: f32,
     pub ride_max_m: f32,
@@ -320,6 +322,7 @@ impl Default for Params {
             road_routed_scale: 1.3 / 1.210,
             // T-372: fitted on the real New York network (notes/T-372.md)
             p_ride: 15.0,
+            ride_drive_f: 2.0,
             d_drop: 10.0,
             ride_min_km: 5.0,
             ride_max_m: 15_000.0,
@@ -381,6 +384,7 @@ impl Params {
             "road_far_kmh" => self.road_far_kmh = v,
             "left_behind" => self.left_behind = v != 0.0,
             "p_ride" => self.p_ride = v,
+            "ride_drive_f" => self.ride_drive_f = v,
             "d_drop" => self.d_drop = v,
             "ride_min_km" => self.ride_min_km = v,
             "ride_max_m" => self.ride_max_m = v,
@@ -553,6 +557,38 @@ impl Params {
     pub fn park_mean(&self, z: &Zones, j: usize) -> f32 {
         let (fixed, paid, free) = self.park_parts(z, j);
         fixed + (1.0 - free) * paid
+    }
+    /// A ride's cost at the station in zone `z` (perceived minutes), the part of it that is money
+    /// (paid parking and any cordon charge), and whether it is the drop-off. At the home end the
+    /// cheaper of parking there, as at a destination (its mean over drivers, less the ownership
+    /// cost, which the drive pays on its own road), and a drop-off, `d_drop`; at the far end there
+    /// is no car to park, only a drop-off (T-621).
+    pub fn ride_station_end(&self, zones: &Zones, z: Option<usize>, end: End) -> (f32, f32, bool) {
+        if end == End::Far {
+            return (self.d_drop, 0.0, true);
+        }
+        let (park, money) = match z {
+            Some(z) => {
+                let (fixed, paid, free) = self.park_parts(zones, z);
+                let cordon = fixed - self.park_min - self.car_own_min();
+                (fixed + (1.0 - free) * paid - self.car_own_min(), cordon + (1.0 - free) * paid)
+            }
+            None => (self.park_min, 0.0),
+        };
+        if park <= self.d_drop { (park, money, false) } else { (self.d_drop, 0.0, true) }
+    }
+    /// What a minute of the drive to a station counts, perceived minutes.
+    #[inline]
+    pub fn ride_w(&self) -> f32 {
+        self.ride_drive_f * self.w_drive
+    }
+    /// A ride's ownership cost over `road_km` of road to the station: none at the far end.
+    #[inline]
+    pub fn ride_own(&self, road_km: f32, end: End) -> f32 {
+        match end {
+            End::Far => 0.0,
+            End::Home => self.car_own_min() + road_km * self.car_own_km_min(),
+        }
     }
     /// The mode choice's logit scale for a trip whose car costs `car` perceived minutes (the
     /// regional layer's car even where none can go, so rail against air never depends on it): `beta` up to `damp_min`, then `beta` x sqrt(`damp_min` / `car`), so a
@@ -1866,16 +1902,8 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
     }
     let dens = zones.density();
     let place = |z: Option<usize>| p.place_min_per_km(z.map_or(0.0, |z| dens[z]));
-    // parking as at a destination, its mean over drivers (the ownership cost is the drive's, on
-    // its own road, whether the rider parks or is dropped off; none at the far end: T-621)
-    let station_end = |z: Option<usize>| match end {
-        End::Far => p.d_drop,
-        End::Home => z.map_or(p.park_min, |z| p.park_mean(zones, z) - p.car_own_min()).min(p.d_drop),
-    };
-    let own = |road_km: f32| match end {
-        End::Far => 0.0,
-        End::Home => p.car_own_min() + road_km * p.car_own_km_min(),
-    };
+    let station_end = |z: Option<usize>| p.ride_station_end(zones, z, end).0;
+    let own = |road_km: f32| p.ride_own(road_km, end);
     let sq = zones.by_square();
     let st_zone: Vec<Option<usize>> = (0..net.n_stations())
         .map(|s| {
@@ -1910,7 +1938,7 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
                 let j = st_zone[s];
                 let f = j.map_or(p.road_detour, |j| p.drive_factor(i, j));
                 let t = p.drive_min_f(d, f, a, place(j));
-                let cost = p.p_ride + p.w_drive * t + own(d * 0.001 * f) + station_end(j);
+                let cost = p.p_ride + p.ride_w() * t + own(d * 0.001 * f) + station_end(j);
                 for &l in &st_lines[s] {
                     let b = &mut best[l as usize];
                     if b.1 == NONE {

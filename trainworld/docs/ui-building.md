@@ -121,7 +121,9 @@ switch on, the track tool follows the real network the layer draws.
   (`packs/realgraph/<cc>.rgr`: the drawn track, and short undrawn track joining it at two points or
   more, at most 3 km a group, so a tunnel portal or station throat no line runs over leaves no gap
   [T-816]), every chain within the snap radius (plus 20 m) a candidate at
-  either click, its distance from the click counted twice; no turn sharper than 60 degrees where
+  either click, its distance from the click counted twice; where the two clicks' candidates share
+  no family (one on the metro under a main-line station, the other on rail), each click also takes
+  the other's family within 400 m [T-923]; no turn sharper than 60 degrees where
   two chains meet; the other family (metro or rail) than the first click's nearest track at three
   times its length, so a subway click follows the subway and an intercity route keeps off it;
   high-speed track (flag 8 in the graph) at 0.8 times its length, so London to Paris keeps to HS1
@@ -145,13 +147,17 @@ switch on, the track tool follows the real network the layer draws.
   its costs: every chain from the start's candidates on through junctions with no turn over 60
   degrees, either family, the whole joined graph with no distance limit. The router worker works it
   out once per start and sends the chains crossing the view and a quarter of it around, vertices
-  1.5 px apart and chains under that left out, again on each move or zoom; a region with no graph
-  file, or one not yet loaded (the regions at the start and up to four in view are loaded first),
+  1.5 px apart and chains under that left out, again on each move or zoom; a region with no graph,
+  or one not yet loaded (the regions at the start and up to four in view are loaded first),
   counts as unreachable. Timings: notes/T-839.md.
 - **Nothing joins them** (two networks that never meet, or the search ran out): a red straight
   ghost and "No real track joins these points" in the tag; the click places nothing and says so.
-- **Away from real track**, or where no graph file covers the click, the tool draws an ordinary
-  segment.
+- **Away from real track** the tool draws an ordinary segment.
+- **Where no graph exists** [T-913] the tool places track as with the switch off: no ring, no
+  search, no reach. The router worker sends the page the outlines (noritetsu's `regions.json`) of
+  the regions listed in `packs/realgraph/index.json`; a point inside one, or within 0.05 degrees of
+  one (outlines are coarse at coasts and borders), is covered. Until that answer comes nothing is.
+  Every noritetsu region has a graph (118) but Jordan and Mauritius, which have no drawn track.
 
 ## Placing stations
 
@@ -203,18 +209,20 @@ switch on, the track tool follows the real network the layer draws.
   A refused spot shows only the reason. Two thin rings at 1 km and
   2 km of ground distance, each labelled at its top, follow the spot under the ghost
   (`stationRings` in `map/tools.ts`, an SVG layer, fixed grey ink at 35%).
-- **On open ground** [T-794, T-834; `freePiece`, `freeGhost` in `map/tools.ts`]: where the
-  pointer is not within reach of track or a node (above), a station is placed like track, in two
-  clicks: it lays a straight blueprint piece of track one platform long (plus 10 m each end) at the
-  selected elevation, double, quad or high speed as set, with the station at its middle, one undoable edit
-  (rules: [track-and-service.md](track-and-service.md) 6.1). The first click sets the middle; the
-  piece then turns about it to point at the pointer, its length unchanged, and the second click
-  (anywhere, track or not) places it. Within 8 px of the middle it keeps the last heading. Esc after
-  the first click drops it and the tool stays on. Before the first click the ghost follows the
-  pointer at the heading of the last station placed this way (east and west at first). The ghost
+- **On open ground** [T-794, T-834, T-907, T-917; `freeSpan`, `freePiece`, `freeGhost` in `map/tools.ts`]:
+  where the pointer is not within reach of track or a node (above), a station is placed like track,
+  in two clicks: it lays a straight blueprint piece of track one platform long (plus 10 m each end)
+  at the selected elevation, double, quad or high speed as set, with the station at its middle, one
+  undoable edit (rules: [track-and-service.md](track-and-service.md) 6.1). The first click is one
+  end of the platform. Before it there is no ghost, only the snap ring at the pointer. After it the
+  platform, at the set platform length, runs from that end towards the pointer, and the second
+  click (anywhere, track or not) sets that direction and places it. Within 8 px of the first end
+  it keeps the heading of the last station placed this way (east at first). Esc after the first
+  click drops it and the tool stays on. The ghost
   is the piece's track drawn as the track tool's (red when refused) with the platform box on it
-  (and the twin's on quad), and the tag (by the pointer) has the price of both, "Station and
-  240 m of track, $31M", over the placement help lines for the middle. The clock worker tries the
+  (and the twin's on quad), the 1 and 2 km rings round its middle, and the tag (by the pointer) has
+  the lengths and the price, "200 m platform and 220 m of track, $16M", over the placement help
+  lines for the middle. The clock worker tries the
   same edit and rolls it back (`TrackApi.preview_free_station`), so the ghost and the click agree;
   a refused spot shows the reason instead.
 - How a new station is named: [track-and-service.md](track-and-service.md) 6.1. A double click on

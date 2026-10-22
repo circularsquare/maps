@@ -4,8 +4,7 @@
 //
 // - Network layers (line width, station use circles, train fill): map/demandLayers.ts, rebuilt when the
 //   network, the world, the demand result, the period in force or a setting changes.
-// - Commuter bubbles and a bubble selection: map/commuterView.ts; they catch up over a game day
-//   after a new result (T-156, map/catchUp.ts).
+// - Commuter bubbles and a bubble selection: map/commuterView.ts.
 // - Longer trips of a selection, and one bubble per city zoomed far out: map/intercityView.ts.
 // - A selected station's riders: `stationRiders(id)`, listed in the station inspector from
 //   `stationView`. A station selection leaves the map as it was (T-519).

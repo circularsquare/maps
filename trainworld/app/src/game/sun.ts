@@ -26,16 +26,3 @@ export function sunElevation(t: number, lon: number, lat: number, utcOffset: num
   const h = (solar - 12) * 15 * RAD, phi = lat * RAD;
   return Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(h)) / RAD;
 }
-
-/** Sunrise and sunset on game day `day` in local clock hours (0-24, may wrap), or "up" or "down" for
- * a day the sun never sets or never rises. */
-export function sunTimes(day: number, lon: number, lat: number, utcOffset: number): [number, number] | "up" | "down" {
-  const [dec, eot] = sunDay(dayOfYear(day));
-  const phi = lat * RAD;
-  const c = (Math.sin(-0.833 * RAD) - Math.sin(phi) * Math.sin(dec)) / (Math.cos(phi) * Math.cos(dec));
-  if (c <= -1) return "up";
-  if (c >= 1) return "down";
-  const half = Math.acos(c) / RAD / 15, noon = 12 - solarLead(lon, utcOffset, eot);
-  const wrap = (x: number) => ((x % 24) + 24) % 24;
-  return [wrap(noon - half), wrap(noon + half)];
-}

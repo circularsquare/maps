@@ -13,8 +13,7 @@
 //   selection, every city is one bubble of its longer trips, the focused city too, in place
 //   of the focused city's own bubbles (T-186). A click on one selects the city (a `city`
 //   selection): it is drawn outlined, with one bubble per other city for the trips between them.
-//   These come from the market's corridors (`intercityDemand`), and catch up over a game day after
-//   a new result like the commuter bubbles (T-156, map/catchUp.ts).
+//   These come from the market's corridors (`intercityDemand`), each new result shown as it lands.
 //
 // Up close every positive far 6 km zone outside the focused market is shown on its own relative
 // trip scale. Same-city longer trips of a selection remain in the inspector only (T-139). Regional
@@ -30,7 +29,6 @@ import { computed, effect, signal } from "@preact/signals";
 import { zoneLoads } from "../game/loading";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES } from "../game/cities";
-import { clock } from "../game/clock";
 import { lngLatToPack, packToLngLat } from "../game/coords";
 import { marketGroup, tripOpenedFrom } from "../game/trip";
 import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type Corridors, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
@@ -40,11 +38,10 @@ import { BUBBLE_ALPHA, bubbleColour, setBubbleColours } from "../game/palette";
 import { display, purposeFilter, selection, shownDayPhrase } from "../game/ui";
 import type { Selection } from "../game/types";
 import { DISC } from "../workers/commutersProtocol";
-import { CATCH_STEP, caughtUp, tripsDone } from "./catchUp";
 import { anchorVersion } from "./anchorVersion";
 import { localModes, modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt } from "./demandHover";
-import { LINE, pieEdge, type DemandOverlay } from "./demandOverlay";
+import { LINE, splitEdge, type DemandOverlay } from "./demandOverlay";
 import { anchor, EARTH_C, kAtLat, toLocal, toLngLat, type Anchor } from "./geo";
 
 /** A bubble selection's longer trips, for the commuters inspector; null while unknown. */
@@ -82,12 +79,12 @@ const ZOOM_GROWTH = 0.35;
 const ZONE_LINE_ALPHA = 0.8;
 /** The zones' pointers are this many times the neighbourhoods' length (T-739). */
 const ZONE_STUB = 2;
-/** Intercity bubbles drawn as a pie rim, train blue and the rest red, round a faint white fill
- * (T-863, Anita: to try); false brings back the solid disc coloured by the mix. */
-const PIE_BUBBLES = true;
-/** A bubble's edge value: its outline (0 none, 1 plain, 2 the selected one's), and under `PIE_BUBBLES`
- * the pie by train share; a bubble nobody travels in stays a plain grey disc. */
-const edgeOf = (outline: 0 | 1 | 2, rail: number, all: number) => (PIE_BUBBLES && all > 0 ? pieEdge(outline, rail / all) : outline);
+/** Intercity bubbles drawn as a red dot with a blue dot inside, the blue's area the train share
+ * (T-901); false brings back the solid disc coloured by the mix. */
+const SPLIT_BUBBLES = true;
+/** A bubble's edge value: its outline (0 none, 1 plain, 2 the selected one's), and under
+ * `SPLIT_BUBBLES` the train share; a bubble nobody travels in stays a plain grey disc. */
+const edgeOf = (outline: 0 | 1 | 2, rail: number, all: number) => (SPLIT_BUBBLES && all > 0 ? splitEdge(outline, rail / all) : outline);
 /** Most place labels on screen at once, the biggest first (T-493). */
 const MAX_LABELS = 8;
 
@@ -180,20 +177,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     labels.appendChild(el);
   };
 
-  // ---- the market's corridors, catching up over a game day (T-156) ----
+  // ---- the market's corridors ----
   let market: Float64Array | null = null;
-  let marketVersion = -1;
-  /** the pairs drawn when the newest result landed, and when (catchUp.ts); null: caught up */
-  let marketFrom: Float64Array | null = null, marketStart = 0;
-  /** the share last drawn */
-  let marketF = 1;
-  const marketShare = () => (marketFrom ? caughtUp(marketStart, clock.now()) : 1);
-  const drawnPairs = (f: number): Float64Array | null => {
-    if (!market || !marketFrom || f >= 1) return market;
-    const out = new Float64Array(market.length);
-    for (let i = 0; i < out.length; i++) out[i] = marketFrom[i] + (market[i] - marketFrom[i]) * f;
-    return out;
-  };
 
   /** What the city view draws: the overview, a selected city, or neither. */
   const cityMode = (): "overview" | "selected" | null => {
@@ -208,13 +193,10 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
 
   /** One bubble per city, or a selected city and one bubble per other city (T-186). */
   const renderCities = (selected: string | null) => {
-    const f = marketShare();
-    marketF = f;
-    if (f >= 1) marketFrom = null;
     const a = anchor();
     // T-801: before any market result (a start on the world map) the overview is the local trips
     // alone, and stays while a zone is selected, since its pairs need a solve
-    const pairsIn = drawnPairs(f);
+    const pairsIn = market;
     if (!pairsIn) selected = null;
     const m = pairsIn ?? (noPairs ??= new Float64Array(TOTALS + Z * 3));
     const at = (o: number) => (o < 0 ? { all: 0, rail: 0, air: 0 } : { all: m[o], rail: m[o + 1], air: m[o + 2] });
@@ -353,29 +335,11 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   map.on("move", placeLabels);
   map.on("resize", placeLabels);
 
-  // a new market result: from a new network, the city bubbles catch up from what they show now;
-  // a refined round of the same carries on (T-156)
   effect(() => {
     const r = intercityDemand.value;
     if (!r) return;
-    const next = pairs(r.corridors);
-    if (r.version !== marketVersion) {
-      const fresh = market && marketVersion >= 0 && !clock.held.peek();
-      // where the bubbles are now, drawn or not
-      marketFrom = fresh ? drawnPairs(marketShare()) : null;
-      marketStart = tripsDone(clock.now());
-      marketF = fresh ? 0 : 1;
-      marketVersion = r.version;
-    }
-    market = next;
+    market = pairs(r.corridors);
     if (cityMode()) render();
-  });
-  // on the game clock's minutes, redraw the city bubbles when the share has moved a step
-  effect(() => {
-    clock.minute.value;
-    if (!marketFrom || !cityMode() || !cityOverview.peek()) return;
-    const f = marketShare();
-    if (f >= 1 || f - marketF >= CATCH_STEP) render();
   });
 
   // under the commuter discs (order 10): where both are under the pointer, the commuters answer

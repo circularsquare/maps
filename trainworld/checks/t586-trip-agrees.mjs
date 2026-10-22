@@ -2,7 +2,8 @@
 // save) and Mumbai (a ?new=1 game with T-292's Western line test), for bubble pairs (a selected
 // bubble and two of its far-end bubbles, homes and destinations), under every purpose filter and on
 // the weekday, the weekend and the average day: the hover's train, walk and drive shares (its mode
-// bar's widths), the explorer's headline (its bar's widths and rows) and the worker's own numbers
+// bar's widths), the explorer's headline (its rows' model shares, and its bar's widths against the
+// worker's rounded to whole trips, T-911) and the worker's own numbers
 // (the selection's far end, `flows`, summed over the far bubble's cells here) agree within 1 point,
 // and the two trip counts match. Writes artifacts/trainworld/t586-agree.json, and with SHOTS=1 the
 // hover and the explorer side by side, light and dark, as artifacts/trainworld/t586-*.png.
@@ -126,6 +127,16 @@ const farOnScreen = (page) => page.evaluate(() => {
 
 const shares = (r, w, d) => { const n = r + w + d; return n > 0 ? [r / n, w / n, d / n] : [0, 0, 0]; };
 const off = (a, b) => Math.max(...a.map((v, i) => Math.abs(v - b[i])));
+// T-911: the explorer's bar is in whole trips (game/trip.ts `wholePeople`, `peopleOf`): largest remainder
+const whole = (s, n) => {
+  const N = n > 0 ? Math.max(1, Math.round(n)) : 0, t = s.reduce((a, b) => a + b, 0);
+  if (!N || !t) return s;
+  const raw = s.map((x) => (x / t) * N), out = raw.map(Math.floor);
+  const order = raw.map((_, i) => i).sort((a, b) => raw[b] - out[b] - (raw[a] - out[a]) || s[b] - s[a]);
+  const left = N - out.reduce((a, b) => a + b, 0);
+  for (let k = 0; k < left; k++) out[order[k]]++;
+  return out.map((p) => p / N);
+};
 
 /** One far bubble under the setting: the hover, the click, the explorer and the worker's sums. */
 async function pair(page, sel, far, filter) {
@@ -139,7 +150,7 @@ async function pair(page, sel, far, filter) {
   await page.mouse.click(box.left + far.x, box.top + far.y);
   await page.waitForFunction(() => { const s = window.tw.selection.value; return s?.kind === 'trip'; }, undefined, { timeout: 10000 });
   await page.waitForFunction(() => { const v = window.__t586.trip.tripView.value; return v && !v.asking && v.trip && document.querySelector('#inspector .trip-modes'); }, undefined, { timeout: 120000, polling: 250 });
-  const ex = await page.evaluate(async (sel) => {
+  const ex = await page.evaluate(async ([sel, filter]) => {
     const m = await import('/src/game/trip.ts');
     // settled: answered, and the inspector drawn from that answer
     let v = null;
@@ -154,17 +165,21 @@ async function pair(page, sel, far, filter) {
     const bar = ['seg-train', 'seg-walk', 'seg-drive'].map((c) => segs.find((s) => s.cls.includes(c))?.w ?? 0);
     const rowsEl = [...document.querySelectorAll('#inspector .trip-modes .rows li')].map((li) => ({ name: li.querySelector('.grow')?.textContent, tip: li.getAttribute('data-tip') }));
     const line = document.querySelector('#inspector .trip-modes')?.previousElementSibling?.textContent ?? '';
-    // the worker's numbers: the selection's far end, summed here over the far bubble's cells
-    const f = await window.twDemand.flows(sel.end, Uint32Array.from(sel.cells));
+    // the worker's numbers: the selection's far end, grouped as the far bubbles draw it (T-909),
+    // summed here over the far bubble's cells
+    const raw = await window.twDemand.flows(sel.end, Uint32Array.from(sel.cells));
+    const xy = (await (await import('/src/game/demand.ts')).cityCells())?.xy;
+    const f = raw && xy ? (await import('/src/game/farChunks.ts')).dealFlows(raw, filter, xy) : raw;
     const inFar = new Set(places?.far ?? []);
     return { bar, rows: rowsEl, line, purpose: v.purpose, period: v.busiest, walkMin: v.trip.periods.find((p) => p)?.walkMin, f: f && {
       all: (() => { let r = 0, w = 0, d = 0; f.cells.forEach((c, i) => { if (inFar.has(c)) { r += f.farRail[i]; w += f.farWalk[i]; d += f.farDrive[i]; } }); return [r, w, d]; })(),
       by: Object.fromEntries([...(f.byPurpose ?? new Map())].map(([k, fe]) => { let r = 0, w = 0, d = 0; fe.cells.forEach((c, i) => { if (inFar.has(c)) { r += fe.farRail[i]; w += fe.farWalk[i]; d += fe.farDrive[i]; } }); return [k, [r, w, d]]; })),
     } };
-  }, sel);
+  }, [sel, filter]);
   if (!ex) return { skip: 'the explorer did not settle' };
   const worker = !ex.f ? null : filter === 'all' ? ex.f.all : ex.f.by[filter] ?? [0, 0, 0];
-  const rowShare = (n) => { const r = ex.rows.find((x) => x.name === n); const m = r?.tip?.match(/: ([0-9.]+)%/); return m ? Number(m[1]) / 100 : null; };
+  // T-911: the rows' hovers carry the model's exact share after "Model:"
+  const rowShare = (n) => { const r = ex.rows.find((x) => x.name === n); const m = r?.tip?.match(/Model: ([0-9.]+)%/) ?? r?.tip?.match(/: ([0-9.]+)%/); return m ? Number(m[1]) / 100 : null; };
   return { hover: shares(...grow), hoverCount, explorer: ex.bar, rows: { train: rowShare('Train'), walk: rowShare('Walk'), drive: rowShare('Drive') }, line: ex.line, worker: worker && shares(...worker), workerN: worker && worker.reduce((a, b) => a + b, 0), purpose: ex.purpose, period: ex.period, walkMin: ex.walkMin };
 }
 
@@ -213,10 +228,11 @@ try {
       }
     }
     const mine = rows.filter((r) => r.city === city && !r.skip && r.worker);
-    const bad = mine.filter((r) => off(r.hover, r.worker) > TOL || off(r.explorer, r.worker) > TOL || (r.rows.train !== null && Math.abs(r.rows.train - r.worker[0]) > TOL) || (r.rows.drive !== null && Math.abs(r.rows.drive - r.worker[2]) > TOL) || (r.rows.walk !== null && Math.abs(r.rows.walk - r.worker[1]) > TOL));
-    const worst = Math.max(0, ...mine.map((r) => Math.max(off(r.hover, r.worker), off(r.explorer, r.worker))));
+    const bad = mine.filter((r) => off(r.hover, r.worker) > TOL || off(r.explorer, whole(r.worker, r.workerN)) > TOL || (r.rows.train !== null && Math.abs(r.rows.train - r.worker[0]) > TOL) || (r.rows.drive !== null && Math.abs(r.rows.drive - r.worker[2]) > TOL) || (r.rows.walk !== null && Math.abs(r.rows.walk - r.worker[1]) > TOL));
+    const worst = Math.max(0, ...mine.map((r) => Math.max(off(r.hover, r.worker), off(r.explorer, whole(r.worker, r.workerN)))));
     report(`${city}: hover, explorer and worker shares within 1 point`, mine.length > 0 && bad.length === 0, `(${mine.length} pair settings, ${rows.filter((r) => r.city === city && r.skip).length} skipped, worst ${(100 * worst).toFixed(2)} points${bad.length ? `, ${bad.length} off: ${JSON.stringify(bad[0])}` : ''})`);
-    const counts = mine.filter((r) => !r.line.startsWith(r.hoverCount + ' '));
+    // under half a trip the explorer says "Under 1" (T-911)
+    const counts = mine.filter((r) => !r.line.startsWith(r.hoverCount + ' ') && !(r.hoverCount === '0' && r.line.startsWith('Under 1 ')));
     report(`${city}: the explorer's trip count is the hover's`, counts.length === 0, counts.length ? JSON.stringify(counts[0]) : `(${mine.length})`);
     const walkRows = mine.filter((r) => (r.rows.walk !== null) !== (r.walkMin < 30));
     report(`${city}: a walk row exactly when the walk is under 30 min`, walkRows.length === 0, walkRows.length ? JSON.stringify(walkRows[0]) : `(${mine.filter((r) => r.rows.walk !== null).length} with one)`);

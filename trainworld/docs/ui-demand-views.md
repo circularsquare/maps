@@ -122,6 +122,13 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   the hovers use the mode colours of the scheme (Colours, above) and state the shares. Drawn at 80% opacity times the Opacity
   setting (90% by default, T-470), biggest bubbles under smaller ones. Bubbles have no outline; only a selected
   one has its dark outline [T-549].
+- **The colour is smoothed** [T-900, `smooth` in `workers/commuters.worker.ts`]: the model gives
+  every cell of a station's subzone one rail share and every cell of a zone one walk share, so
+  for the colour alone each res-9 cell takes its neighbours' legs by mode within 1,250 m, weighted
+  by a Gaussian of the distance (sigma 500 m); a bubble is coloured by its cells' smoothed legs.
+  Size, hover and clicks, and a selection's own outlined bubbles, keep the real figures. Worked
+  out in the bubble worker with each result, not per frame. Nearby zones' bubbles smooth within
+  their own zone only.
   Drawn over the network and capacity tags, under station names.
 - **Hover** [T-323, T-494]: "422 trips per day from here" (Homes; "to here" for
   Destinations, a purpose's name before "trips" under a filter), then a thin **mode bar**
@@ -140,16 +147,9 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
 - There is no corner summary box: the zone's split is in the top bar, local splits in hovers and
   the inspector.
 
-**The bubbles catch up over a game day** [T-156, `map/catchUp.ts`]. Riders, loads, fares and the
-split follow a new result at once; the bubbles move to it over about one game day, as if each
-person switches on their next trip: each cell's legs by mode are old x (1 - f) + new x f, where f
-is the share of a day's trips that have left since the result landed, by the commute's period
-profile (36/15/32/10/7% over the five periods, even within each). So they move fastest in the
-peaks and are caught up after 24 game hours; paused, nothing moves. A result landing mid catch-up
-starts a new one from what is shown; during startup's estimates the refined rounds carry on the
-first estimate's. The first result, a change of purpose or zone, and a result landing while the
-clock is held show at once. Rebuilt in their worker when f has moved 0.01, at most four times a
-second. Inspectors, selections and the top bar are the current forecast at once.
+**The bubbles show a new result as soon as it lands** [T-906]: the local bubbles, nearby zones'
+and the zoomed-out overview, like the inspectors, selections and the top bar. Money and the
+riders counters keep their own smoothing (Live feel).
 
 ## The focused zone and nearby zones
 
@@ -163,10 +163,10 @@ second. Inspectors, selections and the top bar are the current forecast at once.
   Search picks the zone by the nearest boundary.
 - **Nearby zones**: up to three more zones whose boundaries touch the visible map, nearest first,
   show their own bubbles with the same look, end, purpose and day, under the focused zone's, while
-  Homes or Destinations is on and above zoom 8.5. Each has its own bubble worker and shows the
-  current forecast (no catch-up); their hovers read as the focused zone's. A click on one focuses
+  Homes or Destinations is on and above zoom 8.5. Each has its own bubble worker; their hovers
+  read as the focused zone's. A click on one focuses
   its zone, which takes over that zone's worker and bubbles, and selects the bubble. Selections,
-  far ends, the catch-up and the inspector are the focused zone's only. The demand pool opens a
+  far ends and the inspector are the focused zone's only. The demand pool opens a
   nearby zone's pack like a viewed city's, but only after the startup load and outside a clock
   hold, with no top bar progress (only the bar over the zone, below); a solve never waits for it.
   A zone no station reaches (the usual nearby zone) opens bare in the auxiliary worker and starts
@@ -191,8 +191,11 @@ second. Inspectors, selections and the top bar are the current forecast at once.
 
 ## Bubble selections
 
-- **Selecting**: a click selects a bubble, Shift+click adds one, and holding the mouse still 0.4 s
-  then dragging draws a box selecting every bubble whose centre is in it. Shift+drag draws the box
+- **Selecting**: a click selects a bubble, Shift+click adds one, and pressing on a bubble and
+  holding within 6 px for 0.3 s arms a box (a 16 px ring at the pointer), then dragging draws a box
+  selecting every bubble whose centre is in it [T-908]. While the press waits the map does not pan
+  (its small moves are kept from MapLibre); moving past 6 px first makes it an ordinary pan, the map
+  catching up the whole distance. Shift+drag draws the box
   at once [T-865] (MapLibre's own Shift-drag zoom is off while the bubbles are on): started on a
   city bubble or a selected one, or with nothing selected, it adds the bubbles in it to the
   selection; with a selection and started anywhere else, it takes the inter-region bubbles whose
@@ -205,6 +208,13 @@ second. Inspectors, selections and the top bar are the current forecast at once.
   (destinations for Homes, homes for Destinations) is drawn as bubbles sized among themselves (the
   biggest about its hexagon's area) and coloured by their own mix (`flows`) [T-098]. A click on a
   far-end bubble opens the trip explorer for the pair [T-208].
+- **The far end is grouped** [T-909, `game/farChunks.ts`]: far cells under `FAR_CHUNK` (10) trips
+  a day, as the hover counts them, are walked along a Hilbert curve over the city's cells and dealt
+  their total in draws of total / floor(total / 10), systematic from a fixed start; a drawn cell
+  carries the trips (by mode and purpose) since the draw before it, so every far bubble at every
+  level holds at least 10 and every total is exact. The draws follow the far end under the purpose
+  filter, and every purpose's far end moves the same way. Display only: demand is untouched. The
+  trip explorer opened from far bubbles counts the grouped trips, so it agrees with the hover.
 - **Lines to the selection** [T-520, on trial: `LINES_TO_SELECTION` in `map/commuterView.ts`
   turns them off]: from each far-end bubble's edge a 1.5 px line of constant width in that bubble's
   own colour, 80% opaque at the bubble's edge and fading linearly to nothing at the tip [T-858], points at the selection's centre (its bubbles' centres weighted by area),
@@ -256,7 +266,7 @@ commuters and inter-region riders are in its inspector only ([ui-inspectors.md](
   per other zone at its registry centre (the largest 19 px radius before the size slider), names and
   daily totals as labels that avoid each other and stay on screen, at most eight at once, the biggest
   first (T-493). Area is total travellers with no
-  floor; each is a pie rim, train blue and the rest (car and plane) red [T-863, below]. They lie under the local discs; hover names the place and the direction,
+  floor; each is a red dot with a blue train dot inside [T-901, below]. They lie under the local discs; hover names the place and the direction,
   with a mode bar (train blue, the rest red, plane included).
 - A selection survives a pan to another zone.
 
@@ -268,10 +278,12 @@ one included, is one bubble at its registry centre in place of the focused zone'
 all its trips a day (its local trips, from the open zone's view or the pipeline's no-rail count in
 `zones.json`, plus the regional layer's to and from it, which counts only zones whose market pack
 is open: reached, near a station or selected [T-801]; with no market result yet, as on a start on
-the world map, local trips alone), drawn as a pie rim [T-863]: blue for the train share from 12
-o'clock clockwise, the rest red (walking too), the rim 30% of the radius (2 to 4.5 px), round a
-faint white fill (35% of the bubble opacity); the selected zone keeps its dark outline outside the
-rim. A bubble nobody travels in is a plain grey disc. With `PIE_BUBBLES` off in
+the world map, local trips alone), drawn as a red dot (all its trips; car, plane and walking all
+red) with a concentric blue dot inside whose area is the train share, so its radius is the square
+root of the share times the red one's [T-901]. Any train at all shows: the blue dot is at least
+2 px in radius, or 0.6 of the red one's if that is smaller (`SPLIT_MIN_PX`, `SPLIT_MIN_OF_R` in
+`map/demandOverlay.ts`). Both at the bubble opacity; the selected zone keeps its dark outline at
+the edge. A bubble nobody travels in is a plain grey disc. With `SPLIT_BUBBLES` off in
 `map/intercityView.ts` the bubble is a solid disc coloured by `modeMix` of train, walking and the
 rest [T-576: an open zone's walking is green, from its split; a zone not loaded in this session
 has no walk split, so its walking counts in the red; regional trips have no walking]. Labelled
@@ -304,5 +316,4 @@ under it (the game's mode colours; every segment and number has a hover with its
 not loaded) and "To other places" (the inter-region trips, both directions, train blue and the rest
 red), then the three places with the most trips, name and trips a day, and
 a "Go to Philadelphia" button that moves the camera to its centre and clears the selection
-[T-220]. No table of every place and no purpose split. The overview catches up over a game day like the local bubbles; a selection's
-inter-region bubbles do not.
+[T-220]. No table of every place and no purpose split.

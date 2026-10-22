@@ -2,6 +2,7 @@
 
     python realgraph.py jp us gb fr de      build these regions
     python realgraph.py --check jp ...      read the files back and print what they hold
+    python realgraph.py                     only rewrite index.json from the files there
     --out DIR                               write or read the files there instead
 
 Reads noritetsu's extract (`noritetsu/data/proc/<cc>/ways.pkl`, `rels.pkl`, `coords.npz`) and its
@@ -13,7 +14,8 @@ over, each with some line in ways.json running over it. The track tool snaps onl
 more go in too, so a portal or station throat no line runs over does not cut the graph (T-816,
 `gap_fillers`); they are not drawn, so a click never starts on one.
 
-Writes `data/packs/realgraph/<cc>.rgr`, gzip of the little-endian layout below; the app reads it
+Writes `data/packs/realgraph/<cc>.rgr`, and `index.json` listing every region built there (the
+track tool tries to snap only inside those, T-913); gzip of the little-endian layout below; the app reads it
 with `game/realGraph.ts` and a production build copies it (vite.config.ts). Coordinates are
 degrees times 1e6 (0.1 m). Vertices are thinned to 3 m (Douglas-Peucker), chain ends kept.
 
@@ -233,6 +235,9 @@ def build(cc, boxes):
         (keep if shown else spare).append((pos, KIND[rw], min(rank, 1), flags))
     del ways
     keep += gap_fillers(keep, spare, cx, cy, cid.size)
+    if not keep:
+        print(f"{cc}: no drawn track, no graph", flush=True)
+        return
 
     allpos = np.concatenate([k[0] for k in keep])
     uniq, counts = np.unique(allpos, return_counts=True)
@@ -340,7 +345,7 @@ def check(cc):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("regions", nargs="+")
+    ap.add_argument("regions", nargs="*", help="none: only rewrite index.json")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--out", help="write or check the files here instead")
     args = ap.parse_args()
@@ -352,6 +357,16 @@ def main():
     boxes = region_boxes()
     for cc in args.regions:
         build(cc, boxes)
+    write_index()
+
+
+def write_index():
+    """index.json: the regions with a graph, so the track tool snaps only where one exists (T-913)."""
+    built = sorted(p.stem for p in OUT.glob("*.rgr"))
+    tmp = OUT / "index.json.tmp"
+    tmp.write_text(json.dumps({"regions": built}), encoding="utf-8")
+    os.replace(tmp, OUT / "index.json")
+    print(f"index.json: {len(built)} regions", flush=True)
 
 
 if __name__ == "__main__":

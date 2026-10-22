@@ -50,7 +50,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - `types.ts` (the save's inputs, worker results, `WorldView`, `Selection`), `world.ts` (the
   snapshot signal and the edit functions), `ui.ts` (tab, selection, display settings, theme).
 - Time: `clock.ts`, `localTime.ts` (each region's local time and the local time in view, T-309),
-  `sun.ts` (the sun's height and sunrise for the top bar's sky, T-861; the calendar is in `days.ts`),
+  `sun.ts` (the sun's height for the top bar's sky, T-861; the calendar is in `days.ts`),
   `holidays.ts` (public holidays by country from `holidays.json`, made by `pipeline/holidays_json.py`, T-862;
   a line's and the view's country, T-872), `holidayCalendar.ts` (the plain lookups the clock worker shares:
   a holiday's name, `kindOfIn` a country's kind of each day, T-872),
@@ -107,7 +107,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   keep their elements across edits unless their text changes, T-496), `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
   for names and tags).
 - Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
-  second click's route, T-727d), `pick.ts`, `cellIndex.ts` and `snapIndex.ts` (grids built in idle time that narrow a pick
+  second click's route, T-727d; only where a graph covers the click, `covers`, T-913), `pick.ts`, `cellIndex.ts` and `snapIndex.ts` (grids built in idle time that narrow a pick
   and the build tools' snap to what is near the pointer, T-724), `tools.ts` (drawing track, placing stations, the line tool), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
   (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `curveCircle.ts` (the circle of the segment being drawn, T-418),
   `blueprintBox.ts` (the Select tool's drag box, T-333, and dragging its pick, T-475; its state is `game/blueprintPick.ts`),
@@ -117,9 +117,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `tripView.ts` (the trip explorer's route, T-195; its panel is `ui/inspector/TripInspector.tsx`; between zones `MarketTrip.tsx`, T-866; between two groups of bubbles, the Shift+drag box and its samples in `commuterView.ts` `farTrip`, the average in `game/trip.ts` `averageTrips`, T-865; place ends and far groups between zones: `game/trip.ts` `mergeMarketPeriods`, `map/intercityView.ts` `placeTrip` and `interBox`, `IntercityApi::market_trip_between`, T-885).
 - Demand views (T-084, T-097): `demandViews.ts` (wiring, a station's riders for its inspector), `demandLayers.ts`
   (line width, station use circles, train fill; the figures from `game/stationUse.ts`, T-482), `commuterView.ts` and `bubbles.ts` (commuter bubbles and
-  bubble selections), `intercityView.ts` (longer trips of a selection or station, one bubble per
-  far zone, T-118, T-120; one per city zoomed far out, T-186), `catchUp.ts` (the bubbles catching
-  up over a game day, T-156), `demandOverlay.ts` (their canvas, over the network's),
+  bubble selections; the far end grouped into at least 10 trips a bubble in `game/farChunks.ts`, T-909), `intercityView.ts` (longer trips of a selection or station, one bubble per
+  far zone, T-118, T-120; one per city zoomed far out, T-186), `demandOverlay.ts` (their canvas, over the network's),
   `demandHover.ts` (the count tag by the pointer), `modeBar.ts` (the tag's mode bar, T-494, and `localModes`, an open zone's local legs by mode, T-576), `airportMarks.ts` (the plane badge on an
   airport and its hover, T-448, T-674; paths shared with the icons in `glyphs.ts`).
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
@@ -136,7 +135,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 
 ### src/ui/: Preact components
 
-`Dock.tsx` (the dock, its icon tabs and resizing, T-252); `tabs.tsx` (Build, Lines, Stations, Money and the Cities tab);
+`Dock.tsx` (the dock, its icon tabs and resizing, T-252); `HelpPanel.tsx` (the "?" button's list of controls no button shows, T-908); `tabs.tsx` (Build, Lines, Stations, Money and the Cities tab);
 `MoneyHistory.tsx` (the Money tab's history charts, T-447); `FareGraph.tsx` (the fare curve graph, its nodes added, dragged both ways and removed, and the selected node's steppers, T-864, T-883); `Cities.tsx` (the Cities list, T-550, T-749); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251; `SlotThumb`, a save's picture with each panel's city named over it, T-894); `bullet.ts` (`bulletText`, `bulletNode`: a line bullet as one SVG, its circle and its symbol placed from the canvas-measured ink box with the baseline on a whole device pixel, per font, symbol, size and scale, T-705, T-745; the sizes in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
 checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `SkyBanner.tsx` (the clock's sky and demand band, a canvas, T-861); `StatusTag.tsx` (the demand status tag on the map's top row); `Toolbar.tsx` (tool hints and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
@@ -152,7 +151,7 @@ the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the s
 ### src/workers/
 
 `realRoute.worker.ts` (the real-network router: graphs joined at borders, A* with the turn limit
-and families, then the fit in steps on a track model of its own, dropped for a newer request, T-727d, T-754); `protocol.ts` (edit ops, clock messages, the network snapshot for demand), `clock.worker.ts` (owns
+and families, then the fit in steps on a track model of its own, dropped for a newer request, T-727d, T-754; the outlines of the regions with a graph sent to the page, T-913); `protocol.ts` (edit ops, clock messages, the network snapshot for demand), `clock.worker.ts` (owns
 the network: `TrackApi`, notes/T-025.md; money and autosave too; `slotSummary`, a save's picture
 with a panel per city, T-894), `saveFile.ts` (the save format
 and IndexedDB, T-029; slots' backups, T-744), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
@@ -279,6 +278,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   frames over 50 ms; options for a throttled CPU, a trace per thread, settings, a tool),
   `t871-europe-pan.mjs` (drags across Europe in a new game: fails if a zoom at or below 7.5 opens
   a pack or fetches a water mask, or zoom 9 opens none; reports long tasks; about 2 minutes),
+  `t908-longpress.mjs` (real mouse events on home bubbles: a quick drag pans, a held press then a
+  drag boxes bubbles with no pan, the controls panel opens and closes; about a minute),
   `t884-loadbar.mjs` (the loading card's bar through the start menu: a new game, the real save and
   the world save, each slot twice: fails over 25% of a wait above 90%, a bar going back, or a fill
   over 30 points from the share of the wait gone; about 5 minutes),
@@ -413,7 +414,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `realgraph.py <cc ...> [--check] [--out DIR]` (T-727b): the real network the layer draws as a routing
   graph per noritetsu region, plus short undrawn track that fills its gaps (T-816), from noritetsu's
   extract and `ways.json` (read only), into `data/packs/realgraph/<cc>.rgr` (gzip, layout in its
-  docstring; 2.0-3.7 MB, about 15 s a region); built so far for jp, us, gb, fr, de. Rerun after
+  docstring; 0.01-6.6 MB, 1-32 s a region) and `index.json` (the regions built, which the track
+  tool snaps inside, T-913; no regions given rewrites only it). Built for all 118 noritetsu regions
+  with drawn track (39.6 MB, about 5 min at 2 cores; T-727e), copied into the build. Rerun after
   noritetsu rebuilds a region.
 - Basemap glyph tiles (`app/public/fonts/`, checked in): `glyphs.py` rebuilds them, after a
   one-off `cargo install build_pbf_glyphs --locked` (on Windows set `CFLAGS` to a libz-sys zlib

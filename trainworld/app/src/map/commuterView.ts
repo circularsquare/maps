@@ -7,22 +7,18 @@
 // Data is asked for, not pushed: `cellModes()` when the demand result changes (a solve's first
 // estimate and its refined result, not the crowding rounds between), `flows(end, cells)` when the
 // selection or the demand result changes. Whole-city aggregation runs in
-// workers/commuters.worker.ts; the selection's few thousand cells are summed here.
-//
-// After a new result from an edit the city's bubbles catch up over a game day (T-156,
-// map/catchUp.ts): rebuilt from the old legs per cell blended into the new ones, on the game
-// clock, so their hover tags read what they show. A selection, its far end and the inspector are
-// the current forecast at once.
+// workers/commuters.worker.ts; the selection's few thousand cells are summed here. The bubbles
+// show each new result as soon as it lands (T-906).
 
 import { computed, effect, signal } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, getWorldFrame, worldFrameEpoch, type CityId } from "../game/cities";
 import { lngLatToPack } from "../game/coords";
 import { nearbyZones } from "../game/zones";
-import { clock } from "../game/clock";
 import { cellModes, cityCells, demandUpdating, demandView, flows, type CellModes, type CityCells, type DemandView, type FarEnd, type Flows, type PurposeTrips } from "../game/demand";
 import { count, wholeDistance } from "../game/format";
 import { BUBBLE_ALPHA, bubbleSchemeKey, setBubbleColours } from "../game/palette";
+import { dealFlows } from "../game/farChunks";
 import { GROUP_SAMPLE_SIDE, marketGroup, tripOpenedFrom, type TripPlaces } from "../game/trip";
 import { compass, stationNameNear } from "../game/places";
 import { purposeWords, type PurposeFilter } from "../game/purposes";
@@ -31,7 +27,6 @@ import { display, purposeFilter, selection, shownDayPhrase, tool } from "../game
 import { world } from "../game/world";
 import { BUBBLE_DENSITY, DISC, RES_AREA_M2, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
 import { aggregate, discs, recolour, type Groups } from "./bubbles";
-import { CATCH_STEP, CATCH_WALL_MS, caughtUp, tripsDone } from "./catchUp";
 import { cityOverview, interBox, setNearPoint } from "./intercityView";
 import { anchorVersion } from "./anchorVersion";
 import { modeBar } from "./modeBar";
@@ -104,6 +99,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   let workerReady: Promise<boolean> | null = null;
   /** each cell's world metres (the trip explorer's points, T-208) */
   let cellsWorld: Float32Array | null = null;
+  /** a far end as drawn: grouped into at least `FAR_CHUNK` trips a bubble (T-909) */
+  const dealtOf = (f: Flows, purpose: PurposeFilter) => (cellsWorld ? dealFlows(f, purpose, cellsWorld) : f);
   let nextId = 1;
   /** replies of every bubble worker (the focused zone's and the nearby zones'), by message id */
   const pending = new Map<number, (b: any) => void>();
@@ -172,23 +169,16 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     })());
 
   // ---- the city's bubbles ----
-  // `modes` is the current forecast; the bubbles show `from` blended into it by `f` while they
-  // catch up over a game day (T-156, map/catchUp.ts), and `modes` itself once f is 1.
-  let shown: { dv: DemandView; end: "home" | "work"; purpose: PurposeFilter; bubbles: Bubbles; modes: CellModes; from: Float32Array[] | null; f: number } | null = null;
+  let shown: { dv: DemandView; end: "home" | "work"; purpose: PurposeFilter; bubbles: Bubbles; modes: CellModes } | null = null;
   let built: { dv: DemandView; purpose: PurposeFilter; modes: CellModes; ends: Map<string, Bubbles> } | null = null;
-  /** Catching up to the result `version` from `from`, the legs per cell drawn when it landed
-   * (homes by rail, walking, driving, then destinations the same), since `start` (catchUp.ts). */
-  let catching: { version: number; day: number; purpose: PurposeFilter; from: Float32Array[]; start: number } | null = null;
   commuterStats.probe = () => (shown ? { anchor: shown.bubbles.anchor, levels: shown.bubbles.levels.map((l) => ({ discs: l.discs, group: l.group })) } : null);
   let wanted = 0;
-  /** builds of the city's bubbles in flight (a new result's); the catch-up's redraws wait for them */
-  let building = 0;
 
   // ---- nearby zones' bubbles (T-276, docs/zones.md 6) ----
   // Up to three zones beside the focused one (game/zones.ts `nearbyZones`) show their bubbles too,
   // with the same look, end, purpose filter and day, so a zone line is not a cliff. Each has a
-  // bubble worker of its own, built as the focused zone's are but always at the current forecast
-  // (no catch-up), and nothing else: no selection, far end or inspector. A click on one focuses
+  // bubble worker of its own, built as the focused zone's are, and nothing else: no selection,
+  // far end or inspector. A click on one focuses
   // its zone, which takes over its worker and bubbles.
   /** The worker builds the mode mix; bubbles are painted in the chosen scheme here (T-804). */
   const painted = (b: Bubbles): Bubbles => {
@@ -221,14 +211,13 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       }
       const old = focusSeen, was = shown;
       if (sameFrame && worker && city && cellsWorld && !zones.has(old)) {
-        const keep = was && was.f >= 1 ? { dv: was.dv, end: was.end, purpose: was.purpose, bubbles: was.bubbles, modes: was.modes } : null;
+        const keep = was ? { dv: was.dv, end: was.end, purpose: was.purpose, bubbles: was.bubbles, modes: was.modes } : null;
         zones.set(old, { worker, city, cellsWorld, start: Promise.resolve(true), ask: 0, shown: keep });
         if (keep) view.setNearbyBubbles(old, painted(keep.bubbles).levels.map((l) => l.discs), keep.bubbles.anchor);
       } else worker?.terminate();
       focusSeen = focus; frameSeen = frameNow; focusEpoch++; wanted++;
       worker = null; workerReady = null; city = null; cellsWorld = null;
       shown = built = null;
-      catching = null;
       near = far = null; nearDiscs = farDiscs = null; farCells = null;
       view.setBubbles([]); view.setDiscs("near", null); view.setDiscs("far", null); view.setLines("far", null);
       if (adopted?.worker && adopted.city && adopted.cellsWorld) {
@@ -237,7 +226,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         const a = adopted.shown;
         if (a) {
           built = { dv: a.dv, purpose: a.purpose, modes: a.modes, ends: new Map([[a.end, a.bubbles]]) };
-          showBubbles({ ...a, from: null, f: 1 });
+          showBubbles(a);
         }
       } else adopted?.worker?.terminate();
       commuterPick.value = null;
@@ -264,7 +253,6 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     // a solve's first estimate, and its refined result once the crowding rounds are done
     if (shown && shown.dv.version === dv.version && shown.dv.day === dv.day && shown.end === end && shown.purpose === purpose && (shown.dv === dv || updating) && shown.bubbles.anchor.version === anchor().version) return;
     const ask = ++wanted;
-    building++;
     void (async () => {
       const same = built?.dv === dv && built.purpose === purpose;
       let modes = same ? built!.modes : null;
@@ -275,54 +263,28 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         if (!modes || ask !== wanted) return;
         built = { dv, purpose, modes, ends: new Map() };
       }
-      catchUpTo(modes, purpose);
-      const f = share();
-      // a whole build is kept for a later switch of end only when it is not part way caught up
-      let b = f >= 1 && built?.modes === modes ? built.ends.get(end) : undefined;
+      let b = built?.modes === modes ? built.ends.get(end) : undefined;
       if (b && b.anchor.version !== anchor().version) b = undefined;
       if (!b) {
         if (!(await startWorker())) return;
         const t0 = performance.now();
-        b = await buildBubbles(modes, end, f);
+        b = await buildOn(worker!, end, endCells(modes, end));
         commuterStats.workerMs = b.ms;
         commuterStats.roundTripMs = performance.now() - t0;
         commuterStats.builds++;
-        if (f >= 1 && built?.modes === modes && b.anchor.version === anchor().version) built.ends.set(end, b);
+        if (built?.modes === modes && b.anchor.version === anchor().version) built.ends.set(end, b);
       }
       if (ask !== wanted) return;
-      showBubbles({ dv, end, purpose, bubbles: b, modes, from: f < 1 ? catching!.from : null, f });
+      showBubbles({ dv, end, purpose, bubbles: b, modes });
       if (selection.peek()?.kind === "commuters") refreshPick();
-    })().finally(() => building--);
+    })();
   });
 
-  // ---- catching up over a game day (T-156) ----
   const MODE_KEYS = ["homeRail", "homeWalk", "homeDrive", "workRail", "workWalk", "workDrive"] as const;
-  const mix = (a: Float32Array, b: Float32Array, f: number) => {
-    const out = new Float32Array(b.length);
-    for (let c = 0; c < b.length; c++) out[c] = a[c] + (b[c] - a[c]) * f;
-    return out;
-  };
-  /** The legs per cell a drawing shows, both ends. */
-  const drawnCells = (s: NonNullable<typeof shown>): Float32Array[] =>
-    MODE_KEYS.map((k, i) => (s.from && s.f < 1 ? mix(s.from[i], s.modes[k], s.f) : s.modes[k]));
-  const share = () => (catching ? caughtUp(catching.start, clock.now()) : 1);
-  /**
-   * A result has come: from a new network, the bubbles start catching up from what they show now;
-   * a refined round of the result they are catching up to carries on. The first result, another
-   * purpose and anything that lands while the clock is held (a game loading) show at once.
-   */
-  const catchUpTo = (m: CellModes, purpose: PurposeFilter) => {
-    if (catching && catching.version === m.version && catching.purpose === purpose && catching.day === m.day) return;
-    const s = shown;
-    // another kind of day (T-260) is another view, not a new forecast: shown at once
-    const fresh = s && s.purpose === purpose && s.modes.day === m.day && s.modes.version !== m.version && s.modes.homeRail.length === m.homeRail.length && !clock.held.peek();
-    catching = fresh ? { version: m.version, day: m.day, purpose, from: drawnCells(s), start: tripsDone(clock.now()) } : null;
-  };
-  /** The city's bubbles for one end, `f` of the way from `catching.from` to `m` (in the worker). */
-  const buildBubbles = (m: CellModes, end: "home" | "work", f: number) => {
+  /** One end's legs per cell (rail, walking, driving), copies to transfer to a worker. */
+  const endCells = (m: CellModes, end: "home" | "work") => {
     const o = end === "home" ? 0 : 3;
-    const cells = MODE_KEYS.slice(o, o + 3).map((k, i) => (f < 1 && catching ? mix(catching.from[o + i], m[k], f) : m[k].slice()));
-    return buildOn(worker!, end, cells);
+    return MODE_KEYS.slice(o, o + 3).map((k) => m[k].slice());
   };
   /** Bubbles of one end from legs per cell (rail, walking, driving; transferred), in worker `w`. */
   const buildOn = (w: Worker, end: "home" | "work", cells: Float32Array[]) => {
@@ -377,8 +339,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         // null: the zone is not in the solve shown yet (opened since); the next result asks again
         const modes = await cellModes(purpose, id);
         if (!modes || !live() || !entry.worker) return;
-        const o = end === "home" ? 0 : 3;
-        const b = await buildOn(entry.worker, end, MODE_KEYS.slice(o, o + 3).map((k) => modes[k].slice()));
+        const b = await buildOn(entry.worker, end, endCells(modes, end));
         if (!live()) return;
         entry.shown = { dv, end, purpose, bubbles: b, modes };
         view.setNearbyBubbles(id, painted(b).levels.map((l) => l.discs), b.anchor);
@@ -397,29 +358,9 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   });
   const showBubbles = (s: NonNullable<typeof shown>) => {
     shown = s;
-    if (s.f >= 1 && catching?.version === s.modes.version) catching = null;
     view.setBubbles(painted(s.bubbles).levels.map((l) => l.discs), s.bubbles.anchor);
     commuterStats.uploadMs = view.uploadMs;
   };
-  // On the game clock's minutes: rebuild with the new share when it has moved a step (and not
-  // more than four times a second); a paused clock moves nothing. Only while catching up.
-  let redrawing = false, redrawnAt = 0;
-  effect(() => {
-    clock.minute.value;
-    const s = shown, c = catching;
-    if (!s || !c || redrawing || building || !worker || s.modes.version !== c.version || s.modes.day !== c.day || s.purpose !== c.purpose) return;
-    const f = share();
-    if (f < 1 && (f - s.f < CATCH_STEP || performance.now() - redrawnAt < CATCH_WALL_MS)) return;
-    redrawing = true;
-    redrawnAt = performance.now();
-    const ask = wanted;
-    void buildBubbles(s.modes, s.end, f).then((b) => {
-      redrawing = false;
-      // a new result or another end took over meanwhile
-      if (ask !== wanted || shown !== s) return;
-      showBubbles({ ...s, bubbles: b, from: f < 1 ? c.from : null, f });
-    });
-  });
 
   // the size slider in the settings pane scales every commuter bubble on the GPU (T-099)
   effect(() => view.setBubbleSize(display.value.bubbleSize));
@@ -521,7 +462,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
    * weighted mean) can fall in a park or the water with nobody.
    */
   const farTrip = (sel: Extract<Selection, { kind: "commuters" }>, idx: number[]): Selection | null => {
-    const fe = lastFlows?.sel === sel && shown ? farOf(lastFlows.f, shown.purpose) : null;
+    const fe = lastFlows?.sel === sel && shown ? farOf(dealtOf(lastFlows.f, shown.purpose), shown.purpose) : null;
     if (!fe || !far || !city || !cellsWorld || !shown || !idx.length || idx.some((i) => i >= far!.group.length)) return null;
     const g = city.levels[bubbleLevel(map.getZoom())];
     const qs = new Set(idx.map((i) => far!.group[i]));
@@ -639,7 +580,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   box.style.display = "none";
   map.getContainer().appendChild(box);
   let press: { x: number; y: number; timer: number; on: boolean; add: boolean; far: boolean } | null = null;
-  const LONG_MS = 400, STILL_PX = 5;
+  const LONG_MS = 300, STILL_PX = 6, RING_PX = 16;
   const canvas = map.getCanvasContainer();
   const rel = (e: MouseEvent) => {
     const r = map.getContainer().getBoundingClientRect();
@@ -650,10 +591,14 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     map.dragPan.disable();
     map.getCanvas().style.cursor = "crosshair";
     box.style.display = "";
-    Object.assign(box.style, { left: p.x + "px", top: p.y + "px", width: "0px", height: "0px" });
+    // a long press arms with a ring at the pointer (T-908), until the drag draws the box
+    const r = p.add ? 0 : RING_PX / 2;
+    box.classList.toggle("armed", !p.add);
+    Object.assign(box.style, { left: p.x - r + "px", top: p.y - r + "px", width: 2 * r + "px", height: 2 * r + "px" });
   };
   const boxOff = () => {
     box.style.display = "none";
+    box.classList.remove("armed");
     map.dragPan.enable();
     map.getCanvas().style.cursor = "";
   };
@@ -692,17 +637,24 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     press = null;
     e.stopImmediatePropagation();
   }, true);
+  // While a long press waits, MapLibre does not see the pointer's small moves (its drag pan listens
+  // on the document, capture phase, and would start after 3 px, T-908); past STILL_PX the press is
+  // a pan, and MapLibre's first move carries the whole distance from the press.
   window.addEventListener("mousemove", (e) => {
     const p = press;
-    if (!p) return;
+    if (!p || p.on) return;
     const [x, y] = rel(e);
-    if (!p.on) {
-      if (Math.hypot(x - p.x, y - p.y) > STILL_PX) {
-        clearTimeout(p.timer);
-        press = null;
-      }
-      return;
-    }
+    if (Math.hypot(x - p.x, y - p.y) > STILL_PX) {
+      clearTimeout(p.timer);
+      press = null;
+    } else e.stopPropagation();
+  }, true);
+  window.addEventListener("mousemove", (e) => {
+    const p = press;
+    if (!p?.on) return;
+    const [x, y] = rel(e);
+    if (box.classList.contains("armed") && Math.hypot(x - p.x, y - p.y) <= STILL_PX) return;
+    box.classList.remove("armed");
     Object.assign(box.style, { left: Math.min(x, p.x) + "px", top: Math.min(y, p.y) + "px", width: Math.abs(x - p.x) + "px", height: Math.abs(y - p.y) + "px" });
   });
   window.addEventListener("mouseup", (e) => {
@@ -846,7 +798,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       lastFlows = { sel, dv, f };
       commuterStats.flowsAt = performance.now();
       commuterStats.flowsMs = commuterStats.flowsAt - t1;
-      const fe = farOf(f, purpose);
+      const fe = farOf(dealtOf(f, purpose), purpose);
       commuterStats.farCells = fe?.cells.length ?? 0;
       const ft: [number, number, number] = fe ? [fe.rail - fe.cutRail, fe.walk - fe.cutWalk, fe.drive - fe.cutDrive] : [0, 0, 0];
       // summed into the bubble levels in the worker, not here

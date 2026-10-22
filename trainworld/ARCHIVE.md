@@ -1,5 +1,32 @@
 ﻿# Archive
 
+- T-915 [P2] A drive to the station's costs in the trip explorer. Done 2026-10-22: the train's effective time hover lists starting the drive, the drive, station parking or drop-off, home parking and the car's cost, summing to the figure; a Car row in dollars beside the fare. docs/ui-inspectors.md.
+- T-916 [P2] Driving to a station wins too often. Done 2026-10-22: the drive to a station counts 2.66 a minute (`ride_drive_f` 2); an hour out, park and ride into the core 52% to 38% (New York), 38% to 25% (London); real New York 10.81M to 10.67M, its commuter rail -3.6%. notes/T-916.md.
+
+- T-923 [P3] A station click on the metro under a main line. Done 2026-10-22: where the clicks' candidates share no family, each also takes the other's within 400 m; Tianjin's metro click to or from Beijing South routes 116.8 km on the high-speed line. `checks/t727-snap.mjs`; docs/ui-building.md.
+
+- T-919 [P3] China snaps from big stations. Checked 2026-10-22, no data change: clicked on the high-speed platforms, Beijing South-Tianjin (116.8 km), Hongqiao-Hangzhou East (159.0) and Hongqiao-Beijing South (1,310) route on the existing graph; the failures were clicks on a metro or the airport link. Both cases in `checks/t727-snap.mjs`; T-923. notes/T-727.md.
+
+- T-727e [P3] Real-network graphs for the other regions. Done 2026-10-22: all 118 noritetsu regions with drawn track (Jordan, Mauritius have none), 39.6 MB, about 5 min at 2 cores, bundled; R2 is T-920.
+
+- T-917 [P2] A free station's platform is the set length. Done 2026-10-22: the first click is one end, the platform at the Build tab's length points at the pointer, the second click sets the direction (replaces T-907's length from the drag). Screens `artifacts/trainworld/stn2/`.
+- T-909 [P2] Trips of about one person hard to see. Done 2026-10-22: a selection's far end grouped for display only (`game/farChunks.ts`), every far bubble at least 10 trips, totals exact; a New York cell's 5,325 specks become 119 bubbles. Model option measured, filed as T-921. notes/T-909.md.
+
+- T-913 [P2] Snapping where no real-network graph exists. Done 2026-10-22: no ring or snap outside built regions (track placed normally); graphs built for Europe and Canada (32 more regions, 2 min, 23 MB in all). Brussels-Rotterdam snaps; `checks/t727-snap.mjs`; screens `artifacts/trainworld/snap/`.
+
+- T-911 [P2] Trip explorer shares in whole trips. Done 2026-10-22: counted shares dealt to whole trips by largest remainder ("Under 1 trip" counts as one), route shares among the counted train riders; hovers keep "Model: 30.4%". `checks/t586-trip-agrees.mjs` compares the rounded bar. docs/ui-inspectors.md.
+- T-910 [P2] Trip explorer's "walks too long". Done 2026-10-22: the no-train line names the cause (trip too short to drive to a station, none within a drive, the far end's walk, the start even by car) from a new answer slot. Screens `artifacts/trainworld/tripfix/`. docs/ui-inspectors.md.
+
+- T-912 [P2] A drive to a station pays the car's home-end cost and station parking. Checked 2026-10-22, no change: both were already charged in commutes, everyday trips both ways and the trip explorer (`access_options` plus the subzone's `home_park`); the regional layer charges neither for driving either. docs/demand-mode.md "Riding to a station".
+- T-908 [P2] Long press on bubbles; controls panel. Done 2026-10-22: hand jitter started MapLibre's pan during the hold; small moves are now held back, 0.3 s arms a ring, then the box. A "?" in the dock lists non-obvious controls. Check `checks/t908-longpress.mjs`. docs/ui-panels.md.
+- T-900 [P2] Local bubbles' colour smoothed. Done 2026-10-22: the blocks were one rail share per station subzone and one walk share per zone; colour only now blends nearby cells (Gaussian, sigma 500 m, trip-weighted) in the bubble worker. Screens `artifacts/trainworld/bubbles/row-*`. docs/ui-demand-views.md.
+- T-907 [P2] Station on open ground by its two ends. Done 2026-10-22: the clicks are the platform's ends (length the distance, 20 m steps, 60-400 m); no ghost before the first click, only the snap ring. Screens `artifacts/trainworld/stn2/`. docs/ui-building.md.
+- T-901 [P2] Zone bubbles as a red dot with a blue dot inside. Done 2026-10-22: blue area = train share, at least 2 px radius when any train; replaces the pie rim (T-863). Screens `artifacts/trainworld/bubbles/t901-*`. docs/ui-demand-views.md.
+- T-905 [P2] Lines by riders; stations' Riders column. Done 2026-10-22: lines default to riders, most first; the stations' "24 h" header is "Riders", showing the map circle's origins or transfers a day under those modes, else boardings in the past 24 hours. docs/ui-inspectors.md.
+- T-904 [P2] Map flashes pale when a pan lands on another zone. Done 2026-10-22: the outside shade was emptied while the new zone's footprint loaded (up to about 1 s); it now covers the whole map until the footprint arrives (`map/cityBoundaries.ts`). docs/ui-map.md.
+
+- T-906 [P2] Demand bubbles show a new result at once. Done 2026-10-22: the day-long catch-up (T-156, `map/catchUp.ts`) removed from the local bubbles, nearby zones and the zoomed-out overview; money and riders counters keep their smoothing. docs/ui-demand-views.md.
+- T-902 [P2] Sky banner: clouds, no grass. Done 2026-10-22: grass gone (track kept), 0-2 flat clouds a day at fixed times seeded by the day, no sunrise hover (sky hover only for holidays), band hover "Currently low demand until 06:00". docs/ui-panels.md.
 - T-889 [P2] Big-game loading. Done 2026-10-22: a save's packs open while its network is worked out, market packs compose once, outline distances through an edge grid. Pick to solve: Japan 63 s to 12-13 s, world save 41 s to 9-11 s (card 69 to 39-43 s); figures identical. notes/T-889.md.
 - T-850b [P3] Merge cells under 50 trip ends into the nearest busier cell of their zone part. Done 2026-10-22: `merge_cells.py` `FLOOR = 50`, all 757 packs remerged (5.61M to 3.87M cells, `.bin` 751 to 615 MB), all ship; the real save 11,342,122 to 11,342,685 rail trips. notes/T-850.md 5.
 - T-888 [P2] Slow builds on archipelago coasts. Done 2026-10-22: the time was the zone outline in `osm_units`, not water; five fixes (one GHSL read, no repeated cuts, islets under 0.05 km² as sea) take Åland 1,343 to about 300 s and Varsinais-Suomi 3,048 to about 1,070 s, packs byte-identical. notes/T-888.md.
