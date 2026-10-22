@@ -233,8 +233,9 @@ above)** perceived minutes: the drive is the whole-trip drive's rule (below), fr
 the station's zone, and parking is a destination's mean over drivers (Parking, above). In a suburb
 a ride to a station 1 km off costs about 32, 3 km 43, 10 km 64, so past about 2 km it is cheaper
 than walking. The drive counts double a minute of driving the whole way, so short drives to a
-station stay common and long ones are rare; with the access bound below (80 for both ends), a
-drive of much over 15-20 minutes leaves no room for the walk at the far end. Which stations: within 15 km straight line (`ride_max_m`), the
+station stay common and long ones are rare. The access bound below sees the drive at 1.33, not
+2.66 (`Subzones::bound_min`), so the heavier drive prices long drives without cutting them off
+where streets are slow (central Tokyo, T-916). Which stations: within 15 km straight line (`ride_max_m`), the
 cheapest station of each line, then those of the 6 cheapest lines (`ride_lines`), so a rider
 skips the local stop for the line they want. Homes beyond every walk (3 km) are one subzone per
 6 km square (3 x 3 zones) with rides only, from its home-weighted centre, keeping each zone's
@@ -248,7 +249,7 @@ same function, `access_options` ([regional.md](regional.md) 5.3).
 Two **computational bounds** keep the work down and are set where little rail is left: stations
 are looked for within 3 km straight line of a walk (`walk_cutoff_m`), and a pair of places is
 offered rail only if its access and egress together cost at most 80 perceived minutes
-(`pair_walk_max`; a 3 km walk costs 59).
+(`pair_walk_max`; a 3 km walk costs 59; a drive to a station counted at 1.33 a minute, above).
 
 Driving is the alternative for the whole trip. Roughly calibrated on the real New York network
 (section 9, notes/T-078.md, T-090.md, T-371.md).

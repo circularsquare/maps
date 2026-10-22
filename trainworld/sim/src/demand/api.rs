@@ -2287,9 +2287,6 @@ mod tests {
     #[test]
     fn flows_add_up() {
         let (mut api, xy, n, stops, times, tph, cars) = small();
-        // the homes far from the lines (below) drive about 6 km to a station, past the access
-        // bound at the ride's weight (T-916)
-        api.params_mut().set_extra("pair_walk_max", 1e9).unwrap();
         api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
         for q in 0..PERIODS {
             api.solve(q);

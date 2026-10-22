@@ -150,7 +150,8 @@ pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims
     let park = fixed + (1.0 - free) * paid + sz.home_park[u];
     let road = car + park;
     let cw = walk_cost(api, i, j);
-    let why = if m_v > p.pair_walk_max - m_u {
+    let b_u = if by_ride { sz.bound_min(p, u) } else { m_u };
+    let why = if m_v > p.pair_walk_max - b_u {
         WALKS_TOO_LONG
     } else if ssum < 1e-30 {
         NO_ROUTE
@@ -227,7 +228,8 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
     let park = fixed + (1.0 - free) * paid + sz.home_park[u];
     let road = car + park;
     let cw = p.walk_trip_cost(distance * walk_factor / 1000.0);
-    let why = if m_u + m_v > p.pair_walk_max {
+    let b_u = if by_ride { sz.bound_min(p, u) } else { m_u };
+    let why = if b_u + m_v > p.pair_walk_max {
         WALKS_TOO_LONG
     } else if sum < 1e-30 {
         NO_ROUTE
@@ -1068,6 +1070,13 @@ mod tests {
             }
         }
         assert!(rides > 0, "no drive to a station among the trips");
+        // the access bound sees each drive at `w_drive`: under the priced cheapest by its extra weight
+        let sz = api.sz.as_ref().unwrap();
+        for u in (0..sz.n).filter(|&u| !sz.ride(u).is_empty()) {
+            let k = sz.ride(u).min_by(|&a, &b| sz.acc_w[a].total_cmp(&sz.acc_w[b])).unwrap();
+            let want = sz.acc_w[k] - (p.ride_w() - p.w_drive) * sz.acc_t[k];
+            assert!(sz.bound_min(&p, u) <= want + 1e-4);
+        }
     }
 
     /// The real New York pack and network (nyc_real_track.json), free flow in the morning peak:

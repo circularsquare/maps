@@ -1,7 +1,7 @@
 ﻿# Archive
 
 - T-915 [P2] A drive to the station's costs in the trip explorer. Done 2026-10-22: the train's effective time hover lists starting the drive, the drive, station parking or drop-off, home parking and the car's cost, summing to the figure; a Car row in dollars beside the fare. docs/ui-inspectors.md.
-- T-916 [P2] Driving to a station wins too often. Done 2026-10-22: the drive to a station counts 2.66 a minute (`ride_drive_f` 2); an hour out, park and ride into the core 52% to 38% (New York), 38% to 25% (London); real New York 10.81M to 10.67M, its commuter rail -3.6%. notes/T-916.md.
+- T-916 [P2] Driving to a station wins too often. Done 2026-10-22: the drive to a station counts 2.66 a minute (`ride_drive_f` 2); an hour out, park and ride into the core 52% to 38% (New York), 38% to 25% (London); the access bound still sees 1.33 (else slow Tokyo streets lost every drive); real New York 10.81M to 10.68M, its commuter rail -3.2%. notes/T-916.md.
 
 - T-923 [P3] A station click on the metro under a main line. Done 2026-10-22: where the clicks' candidates share no family, each also takes the other's within 400 m; Tianjin's metro click to or from Beijing South routes 116.8 km on the high-speed line. `checks/t727-snap.mjs`; docs/ui-building.md.
 

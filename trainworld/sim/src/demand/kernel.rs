@@ -582,6 +582,12 @@ impl Params {
     pub fn ride_w(&self) -> f32 {
         self.ride_drive_f * self.w_drive
     }
+    /// A ride entry's perceived minutes `w` (its drive `t` real minutes) as the access bound sees
+    /// them, the drive at `w_drive` (`Subzones::bound_min`).
+    #[inline]
+    pub fn ride_bound_cost(&self, w: f32, t: f32) -> f32 {
+        w - (self.ride_w() - self.w_drive) * t
+    }
     /// A ride's ownership cost over `road_km` of road to the station: none at the far end.
     #[inline]
     pub fn ride_own(&self, road_km: f32, end: End) -> f32 {
@@ -1856,6 +1862,13 @@ impl Subzones {
     #[inline]
     pub fn ride(&self, u: usize) -> std::ops::Range<usize> {
         self.acc_mid[u] as usize..self.acc_off[u + 1] as usize
+    }
+    /// Subzone `u`'s cheapest walk or ride as `Params::pair_walk_max` sees it: a ride's drive at
+    /// `w_drive`, not `ride_w` (T-916: the heavier drive prices long drives without cutting them
+    /// off where streets are slow).
+    pub fn bound_min(&self, p: &Params, u: usize) -> f32 {
+        let walk = self.walk(u).map(|k| self.acc_w[k]).fold(f32::INFINITY, f32::min);
+        self.ride(u).map(|k| p.ride_bound_cost(self.acc_w[k], self.acc_t[k])).fold(walk, f32::min)
     }
     /// Subzone `u`'s part of the home -> work trips of the period (`share` of the day): its
     /// homes' share of their zones' gravity row factors. A ride-only subzone's homes keep their
@@ -3446,6 +3459,8 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     // m the cheapest of walks and rides (`ride_m`)
     let mut acc_m = vec![f32::INFINITY; sz.n];
     let mut ride_m = vec![f32::INFINITY; sz.n];
+    // the same as the access bound sees it (`Subzones::bound_min`)
+    let mut ride_b = vec![f32::INFINITY; sz.n];
     let mut acc_e = vec![0f32; nb * na];
     let min_of = |r: std::ops::Range<usize>| sz.acc_w[r].iter().cloned().fold(f32::INFINITY, f32::min);
     for v in 0..sz.n {
@@ -3453,6 +3468,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
         let mr = m.min(min_of(sz.ride(v)));
         acc_m[v] = m;
         ride_m[v] = mr;
+        ride_b[v] = sz.bound_min(p, v);
         for (b, &(th, _)) in bands.iter().enumerate() {
             for k in sz.walk(v) {
                 acc_e[b * na + k] = fast_exp(-th * (sz.acc_w[k] - m));
@@ -3495,7 +3511,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     // how many of them origin subzone u visits: past this, the cheapest walk there takes every
     // pair over `pair_walk_max` (u's own cheapest walk, or walk or ride when it has rides)
     let reach = |u: usize| {
-        let lim = p.pair_walk_max - if sz.ride(u).is_empty() { acc_m[u] } else { ride_m[u] };
+        let lim = p.pair_walk_max - if sz.ride(u).is_empty() { acc_m[u] } else { ride_b[u] };
         dstep.partition_point(|&m| m as f32 * 10.0 <= lim)
     };
     // Everything the pair loop reads about a destination, packed in visiting order: per zone,
@@ -3680,7 +3696,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             // past this, a destination's walk takes the pair over `pair_walk_max` (by walk, and
             // by walk or ride)
             let wmax = p.pair_walk_max - m_u;
-            let wmax_r = p.pair_walk_max - m_r;
+            let wmax_r = p.pair_walk_max - ride_b[u];
             let hp8 = F8::splat(sz.home_park[u]);
             let nz = reach(u);
             // the bands this origin's pairs fall in

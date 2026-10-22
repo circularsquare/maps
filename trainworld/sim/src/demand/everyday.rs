@@ -1842,6 +1842,8 @@ impl EverydayApi {
             let na = sz.acc_st.len();
             let mut min = vec![0.0; sz.n];
             let mut min_r = vec![f32::INFINITY; sz.n];
+            // `min_r` as the access bound sees it (`Subzones::bound_min`)
+            let mut min_rb = vec![f32::INFINITY; sz.n];
             let mut accs = vec![0.0; bands.len() * na];
             let mut acc_rs = vec![0.0; bands.len() * na];
             let lowest = |r: std::ops::Range<usize>| sz.acc_w[r].iter().copied().fold(f32::INFINITY, f32::min);
@@ -1851,6 +1853,7 @@ impl EverydayApi {
                 let all = sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize;
                 if !sz.ride(u).is_empty() {
                     min_r[u] = lowest(all.clone());
+                    min_rb[u] = sz.bound_min(&p, u);
                 }
                 for (b, &(th, _)) in bands.iter().enumerate() {
                     for k in r.clone() {
@@ -1883,10 +1886,10 @@ impl EverydayApi {
                 // rides (T-389, as the commute's `ride_offered` but on the pair's own distance);
                 // the activity end walks
                 let h = pair.u() as usize;
-                let (hr, hm, hw) = if pair.distance >= ride_m && min_r[h].is_finite() {
-                    (sz.acc_off[h] as usize..sz.acc_off[h + 1] as usize, min_r[h], &acc_r)
+                let (hr, hm, hw, hb) = if pair.distance >= ride_m && min_r[h].is_finite() {
+                    (sz.acc_off[h] as usize..sz.acc_off[h + 1] as usize, min_r[h], &acc_r, min_rb[h])
                 } else {
-                    (sz.walk(h), min[h], &acc)
+                    (sz.walk(h), min[h], &acc, min[h])
                 };
                 let x = pair.v as usize;
                 let (xr, xm) = (sz.walk(x), min[x]);
@@ -1898,7 +1901,7 @@ impl EverydayApi {
                     } else {
                         ((xr.clone(), xm, &acc), (hr.clone(), hm, hw))
                     };
-                    if ma + mb > p.pair_walk_max {
+                    if hb + xm > p.pair_walk_max {
                         continue;
                     }
                     let (u, v) = if direction == 0 { (h, x) } else { (x, h) };

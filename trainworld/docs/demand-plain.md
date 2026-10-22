@@ -69,9 +69,9 @@ There is no built-in liking for the train. Rail and the car are compared on time
   driving the whole way, so a short drive to the station is common and a long one rare), the car's
   cost per trip (below), the cheaper of parking there or a 10 minute drop-off, and the parking at
   home (below). Only for trips of 5 km or more. A drive of 10 km to a station counts about
-  64 minutes in a suburb, so the drive and the walk at the other end together soon pass the
-  80 minute limit on getting to and from stations: drives much over 15-20 minutes are not taken.
-  The trip explorer's hover for the effective time by train lists each of these parts.
+  64 minutes in a suburb. The game offers the train only where getting to and from the stations
+  costs 80 minutes or less, and for that limit the drive still counts 1.33 a minute, so long
+  drives are dearer but not ruled out where streets are slow. The trip explorer's hover for the effective time by train lists each of these parts.
 
 **By car**
 - Road time from the distance and the place: fast highways in the middle, slow streets at the ends
