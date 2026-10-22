@@ -5,7 +5,7 @@
 // every drawn quantity has a hover with it.
 
 import { Fragment } from "preact";
-import { count, distance, roughDistance, speed } from "../../game/format";
+import { count, distance, speed } from "../../game/format";
 import { MODE_COLOURS, modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
@@ -544,14 +544,16 @@ export function TripInspector() {
           <span class="val">{min(t.roadPerceived)}</span>
         </li>
       </ul>
-      <div class="h">By walking</div>
-      {t.distM > WALK_REACH_M ? <p class="muted">Walks over {roughDistance(WALK_REACH_M)} are not offered.</p> : (
-        <ul class="rows">
-          <li data-tip={equation([{ label: "walk", real: num(t.walkMin), weight: t.walkWeight, perceived: t.walkMin * t.walkWeight }])}>
-            <span class="grow">Effective time</span>
-            <span class="val">{min(t.walkMin * t.walkWeight)}</span>
-          </li>
-        </ul>
+      {t.distM <= WALK_REACH_M && (
+        <>
+          <div class="h">By walking</div>
+          <ul class="rows">
+            <li data-tip={equation([{ label: "walk", real: num(t.walkMin), weight: t.walkWeight, perceived: t.walkMin * t.walkWeight }])}>
+              <span class="grow">Effective time</span>
+              <span class="val">{min(t.walkMin * t.walkWeight)}</span>
+            </li>
+          </ul>
+        </>
       )}
       <ByPeriod periods={trip.periods} words={words} />
     </>

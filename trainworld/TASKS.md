@@ -17,8 +17,6 @@ moves). Rules for every agent are in CLAUDE.md; history in ARCHIVE.md.
 - T-940 [P2] Doc tidy (Anita 2026-10-22: are the docs getting bloated?): tighten CLAUDE.md, SPEC.md, TASKS.md and adding-a-city.md, move measurements and history out of docs/ into notes/, prune notes/. Taking, 2026-10-22; notes/T-940.md.
 
 ## Demand and data
-- T-938 [P2] Driving a little faster and owning a car a little dearer (Anita's TODO.md, 2026-10-22): raise car speed slightly and the ownership cost (T-620's $1.50 a trip + $0.10/km) a bit; measure her ceiling tests (notes/T-636.md) and the real save before and after. Open.
-- T-937 [P3] Do the trip explorer's car and walking legs follow real roads, and do travel times (Anita's TODO.md, 2026-10-22)? Find out; if the legs are drawn straight, say what tracing them along roads would cost. Open.
 - T-878 [P3] Drop the `nocar` build step from `pipeline/world_run.py` (`BUILD_STEPS`) and `everyday_rates.py`'s import of `nocar.country_of`, between batches: demand stopped reading car ownership in T-854. Keep `nocar.py` for `country_of` or move that function; with T-926. Open.
 - T-632 [P3] Walking feels too strong to play against (Anita 2026-10-17): the model walks at or under the surveys; showing trips no train could win apart from the demand played against is parked (Anita: try later). notes/T-632.md.
 - T-551 [P2] Demand review for Anita (her playtest notes, 2026-10-16): measured, nothing changed (notes/T-551.md). Waits for Anita, who decides at the deep calibration.
@@ -79,9 +77,6 @@ moves). Rules for every agent are in CLAUDE.md; history in ARCHIVE.md.
 
 ## Interface
 Anita's TODO.md "short term", filed 2026-10-21 (late) and 2026-10-22.
-- T-935 [P2] Trip explorer: no walking section at all when walking is not offered (over 10 km), in place of the "walks over 10 km are not offered" line. Open.
-- T-936 [P2] With a demand bubble selected, demand bubbles and intercity bubbles at full opacity, and 2 px added to every bubble's radius, so a hovered Paris bubble reads over London's network. Open.
-- T-939 [P2] Many regions loading at once: show only a few loading bars, not one overlapping bar per region. Open.
 - T-873 [P3] A train can empty fully mid-line in the boarding account: in the real save the D northbound in the morning period lets everyone off at 34 St-Herald Sq (load 629 to 0, then 64 after Bryant Pk), because demand's per-stop alightings for the period exceed its own running load there and the alighting share clamps to 1 (`alight_shares` in sim/src/track/boarding.rs). Look at why the period's boardings and alightings disagree. Open.
 - T-880 [P3] The trip explorer between zones shows inter-region trips only: add the commutes between zones (their own choice, `CPair` in intercity.rs) as a second purpose, so it matches the bubbles' counts. Open.
 Anita's notes, filed 2026-10-22 (fifth set).

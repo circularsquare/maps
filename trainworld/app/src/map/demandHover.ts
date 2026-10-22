@@ -6,7 +6,7 @@ import { DISC } from "../workers/commutersProtocol";
 import { EARTH_C, toLocal, type Anchor } from "./geo";
 import { hoverHeld } from "../ui/blurHold";
 import { restHolds } from "./hoverRest";
-import { setPointerDisc, type DiscHit } from "./hovered";
+import { bubblePad, setPointerDisc, type DiscHit } from "./hovered";
 
 /** Where the pointer is on the ground. Each disc set is in the local units of its own draw anchor
  * (T-317, map/geo.ts), so a finder turns the pointer into those (`discAt`, `pointerLocal`). */
@@ -51,10 +51,10 @@ export function hoverDisc(): DiscHit | null {
 function discIn(discs: Float32Array | null, p: Pointer, a: Anchor, scale: number): number {
   if (!discs) return -1;
   const [x, y] = toLocal(p.lng, p.lat, a);
-  const n = discs.length / DISC, minR = (p.lpx ?? 0) * MIN_PICK_PX;
+  const n = discs.length / DISC, minR = (p.lpx ?? 0) * MIN_PICK_PX, pad = (p.lpx ?? 0) * bubblePad.px;
   let top = -1;
   for (let i = n - 1; i >= 0; i--) {
-    const dx = discs[i * DISC] - x, dy = discs[i * DISC + 1] - y, r = discs[i * DISC + 2] * scale;
+    const dx = discs[i * DISC] - x, dy = discs[i * DISC + 1] - y, r = discs[i * DISC + 2] * scale + pad;
     if (dx * dx + dy * dy <= r * r) {
       top = i;
       break;
@@ -63,8 +63,8 @@ function discIn(discs: Float32Array | null, p: Pointer, a: Anchor, scale: number
   if (!minR) return top;
   let best = top, bestD = Infinity;
   for (let i = n - 1; i > top; i--) {
-    const r = discs[i * DISC + 2] * scale;
-    if (!(r > 0) || r >= minR || !(discs[i * DISC + 6] > 0)) continue;
+    const r = discs[i * DISC + 2] * scale + pad;
+    if (!(discs[i * DISC + 2] > 0) || r >= minR || !(discs[i * DISC + 6] > 0)) continue;
     const dx = discs[i * DISC] - x, dy = discs[i * DISC + 1] - y, d = dx * dx + dy * dy;
     if (d <= minR * minR && d < bestD) (best = i), (bestD = d);
   }

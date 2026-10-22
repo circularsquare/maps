@@ -84,8 +84,7 @@ purpose filter the purpose drawn is ringed in the bar.
   line with the stations at the track's two ends, else empty.
 - **The line editor** [T-670, T-672]: a double click on the badge, a click on it, a double click on the
   name or the pencil open one editor under the title: the name box (focused), a Symbol box and the
-  colour picker (`ui/ColourPicker.tsx`, after languagedots' swatch editor: a saturation and brightness
-  area, a hue strip, a hex box with the colour beside it, the palette swatches). Leaving the name box
+  colour picker (`ui/ColourPicker.tsx`: a saturation and brightness area, a hue strip, a hex box with the colour beside it, the palette swatches). Leaving the name box
   keeps the name and leaves the editor open; Enter in it, the check button (hover "Done") that
   replaces the pencil, a click anywhere outside the title and editor, or Esc closes it (Esc in the name box
   drops the typed name). A symbol with several characters widens the rounded badge; a blank symbol
@@ -151,7 +150,7 @@ purpose filter the purpose drawn is ringed in the bar.
   reached a stop in the 24 hours (the fourth number from the end of each `past_day` block) [T-481]
   and the riders left on the platform as "x/y", x those a full train left behind and y those who
   wanted a train (boarded plus left behind) [T-230, T-239, T-293, T-669]; the block's heading is
-  "Past 24 hours" (no Yesterday view since T-669), with a rule above it and none between its rows
+  "Past 24 hours", with a rule above it and none between its rows
   (the only other rule is above Stops) [T-692]; the stops (above Schedule while being edited [T-670]) with their time from
   the start (its hover: "Trains reach 320 km/h" from the stop before, then what limits them there:
   the trains' top speed, ordinary track, curves or a crossover, and when the stops are too close
@@ -440,7 +439,7 @@ destinations at the end, and how the demand model's people would make one of the
   the train users on this trip take this route, the rest use different routes."), with up to four
   "Other routes" and their shares, then a "Smaller routes" row with what is left [T-709]; the
   sentence's and the row's hover say how many pairs of stations the users spread over and what the
-  busiest pair takes (in New York the main route has 5 to 12% and the rest is thin, notes/T-709.md).
+  busiest pair takes [T-709].
   **A click on an other route opens it** under its row, one at a time, a second click closing it
   [T-870, `openRoute` in `game/trip.ts`]: its legs as the main route's rows, Fare, Time, Effective
   time (the route's own sum, its hover the equation without choice of routes) and "Against the
@@ -452,7 +451,7 @@ destinations at the end, and how the demand model's people would make one of the
   price of parking and any congestion charge counted as minutes), **Car ownership** (dollars) and
   Effective time ("Drive 17.6 × 1.33 + parking 67.3 + ownership $1.99 × 3 = 97 min"). Walking: one
   Effective time row [T-704] (its hover "Walk 52.4 × 1.5 = 79 min" holds the real minutes of
-  walking the whole way); over 10 km it says walks are not offered. "Train by period": a row a period with the representative
+  walking the whole way); over 10 km the whole walking section is left out [T-935]. "Train by period": a row a period with the representative
   trip's chance of the train, a click showing that period. Without a train it says why [T-910]: no
   station within a walk or a drive of the start, none within a walk of the end, no service in the
   period, or the way to and from the trains over `pair_walk_max` (80 felt minutes together), named

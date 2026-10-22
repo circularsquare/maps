@@ -365,6 +365,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   // the size slider in the settings pane scales every commuter bubble on the GPU (T-099)
   effect(() => view.setBubbleSize(display.value.bubbleSize));
   effect(() => view.setBubbleOpacity(display.value.bubbleOpacity));
+  // T-936: with a bubble selected, every bubble full opacity and 2 px larger
+  effect(() => view.setSelecting(selection.value?.kind === "commuters" || selection.value?.kind === "city"));
   effect(() => view.setBubbleDetail(display.value.bubbleDetail));
   // a new colour scheme (T-804): the bubbles on show are painted again without a rebuild
   const colourKey = computed(() => `${display.value.bubbleColours}${display.value.rampFrom}${display.value.rampTo}`);

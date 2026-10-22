@@ -88,13 +88,14 @@ driving 1.33 (2.66 on a ride to a station, below), plus parking (below).
 `sim/src/demand/kernel.rs`). The road is the straight line times the two zones' routed factor
 (below) times 1.074, or 1.3x the straight line in a pack without routes. From each end it runs 2 km
 on that end's local streets, then 8 km on that end's main roads, and anything left in the middle
-is open highway at 100 km/h (T-370); a road too short for all that splits it evenly between its two
+is open highway at 110 km/h (T-370, T-938); a road too short for all that splits it evenly between its two
 ends (at most half each for the local streets, then half the rest each for the main roads). Each
 place has a speed for its streets and main roads, by its density (commuters living and working per
-km² of land in its 2 km zone): local streets 40 km/h and main roads 80 km/h in open country, both
-falling towards 15 km/h where it is dense, half way at 5,000 per km². So a dense end slows only its
-own last 10 km: 3 km inside Manhattan takes about 13 minutes, Brooklyn to Midtown (10 km) about
-30, 25 km between suburbs about 28, and 60 km from a suburb into a 30,000/km² centre about 71.
+km² of land in its 2 km zone): local streets 44 km/h and main roads 88 km/h in open country, both
+falling towards 16.5 km/h where it is dense, half way at 5,000 per km² (T-090's fit, every speed
+10% quicker since T-938). So a dense end slows only its
+own last 10 km: 3 km inside Manhattan takes about 12 minutes, Brooklyn to Midtown (10 km) about
+27, 25 km between suburbs about 25, and 60 km from a suburb into a 30,000/km² centre about 65.
 
 **Parking** (T-380, T-372; `Params::park_parts`). At the destination every driver pays `park_min`, 7
 perceived minutes (T-636, T-637; the base of every car trip, with the ownership cost below), to park and any congestion charge there; a paid space costs `15 x ln(d / 3,000)` more per
@@ -117,8 +118,8 @@ household keeps a car either way); the regional layer does not. Owning a car add
 `car_own_usd_trip` dollars a car trip (`car_own_min`, in `park_parts`' fixed part) plus
 `car_own_usd_km` a km of the car's own road (`Params::car_drive`), at 3 minutes a dollar; a drive to
 a station pays both on its own road, parked or dropped off; the longer trips (`market_params`)
-pay none. The shipped values are $1.50 a trip and $0.10 a km (T-621,
-T-636), so a typical trip pays $2.20-4.00 and a driver's day about $10. The same rule serves all
+pay none. The shipped values are $2.00 a trip and $0.13 a km (T-621,
+T-636, T-938), so a typical trip pays $2.90-5.25 and a driver's day about $13. The same rule serves all
 three layers: the commutes and the everyday layer call `park_parts` (both take the mix of the two
 drivers' choices per pair, `Params::car_choice`); the regional layer's market pack holds each
 site's mean over drivers (`site_park`), written by `pipeline/intercity.py park_by_cell`, which

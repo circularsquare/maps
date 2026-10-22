@@ -268,11 +268,12 @@ impl Default for Params {
             road_detour: 1.3,
             road_local_km: 2.0,
             road_end_km: 8.0,
-            road_open_kmh: 100.0,
-            road_city_kmh: 15.0,
-            road_town_kmh: 40.0,
+            // T-938: T-090's fitted speeds and T-370's 100 km/h, each 10% quicker (Anita)
+            road_open_kmh: 110.0,
+            road_city_kmh: 16.5,
+            road_town_kmh: 44.0,
             road_dens50: 5000.0,
-            road_far_kmh: 80.0,
+            road_far_kmh: 88.0,
             w_drive: 1.33,
             park_min: 7.0,
             // T-380: within about half of real prices from Croydon to Midtown (notes/T-380.md)
@@ -283,8 +284,9 @@ impl Default for Params {
             // T-854: dense cores keep about the rail share the car-free split gave them
             home_park_f: 0.4,
             home_dens: None,
-            car_own_usd_trip: 1.5,
-            car_own_usd_km: 0.1,
+            // T-938: T-621's $1.50 + $0.10 raised about 30% (Anita)
+            car_own_usd_trip: 2.0,
+            car_own_usd_km: 0.13,
             cordon: None,
             period: 0,
             period_share: 0.45,

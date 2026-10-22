@@ -8,7 +8,7 @@
 `map/demandHover.ts`]
 
 **Two kinds of figure.** Line widths, station circles and bubbles are demand's whole-day forecast
-from the latest solve, for the day shown: the average day unless the demand bar's day choice says a
+from the latest solve, for the day shown: the average day unless the Day choice in Settings says a
 weekday or a weekend day ([ui-panels.md](ui-panels.md) "Demand shown for"); every hover says which. Train
 fill and platform crowds are the boarding account ([track-and-service.md](track-and-service.md)
 6.6): made from that forecast but counted train by train as the trains run, so they follow the
@@ -30,11 +30,9 @@ blue, half and half magenta). A bubble's mix is pulled towards a grey (190, 190,
 mode share rises to a third (`modeMix`; fully grey at a third each, unchanged when a mode has none), so an
 even three-way mix is not white [T-653]. Bars and swatches by mode follow the bubble colours chosen
 (the Colours setting, "Local trip bubbles"; `modeColours()` in `game/palette.ts`, the CSS
-variables `--mode-*`): under Mode mix they are the colours above, under Train share (the default)
-walking is yellow #f0c814 and planes orange #f07a14, car red and train blue unchanged [T-833]. Yellow
-because a walker pulls a Train share bubble towards red and the ramp has no green; orange stands for
-"other", the one mode that is none of car, walk or train, which is planes (the longer-trip tables'
-plane column icon; muted grey under Mode mix).
+variables `--mode-*`): under Mode mix they are the colours above with planes muted grey, under Train share (the
+default) walking is yellow #f0c814 and planes orange #f07a14, car red and train blue unchanged
+[T-833]. Planes are the longer-trip tables' plane column icon.
 The local layers' modes are train, walk and car; "car" stands for every way of getting about but
 those two (T-854, [demand-mode.md](demand-mode.md) 4.3).
 
@@ -48,8 +46,8 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   remembered per browser. Destinations is every activity end (work, shopping, social, school and
   university, airport, medical).
 - **Track display** [T-703, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in the
-  same style, four buttons: Line, Traffic (line colours, thickness by traffic), Elevation and Max
-  speed; the key of the last two (height colours, speed limits) sits beside them. Remembered per browser.
+  same style, four buttons (Line, Traffic, Elevation, Max speed; [ui-map.md](ui-map.md) "Lines and
+  track"), with the key of the last two (height colours, speed limits) beside them.
 - **Day** [T-464, T-703]: a Settings choice under the bubbles' Opacity, not on the map; see "Demand
   shown for" in [ui-panels.md](ui-panels.md).
 - **Readiness** [T-143]: while the focused zone has no published result, Homes and Destinations fade
@@ -71,7 +69,7 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
 
 ## Line width by riders
 
-[T-227, T-267, T-274] In Line + traffic thickness, each stretch between two stops is as wide as
+[T-227, T-267, T-274] In the Traffic track display, each stretch between two stops is as wide as
 its riders over the whole day shown, both directions together, linear: 0.5 times the normal width
 with no riders up to 6.6 times for the network's busiest stretch-day (`busiestDay`: the purpose
 shown, the larger of the days, so a weekend's or the average's lines are thinner). The width does not
@@ -83,13 +81,10 @@ change as the periods pass. At zoom 15 the widest line is 44 px. Stations keep t
 [T-144, T-146, T-209, T-213, T-482; `game/stationUse.ts`] A choice at the top of the Stations tab,
 "Show station ridership": None (default), Origins, Transfers or Total, remembered per browser. Large
 translucent circles behind stations, area proportional to riders per day with no cap (the radius
-is the zoom's circle radius, 18 to 56 px, times the square root of riders over 140,000, so 140,000
-riders have that radius, the real New York save's biggest total (Penn Station's complex, 681,000)
-is about 200 px across at zoom 13, and a circle with any riders is never under a tenth of that
-radius) [T-722]: **origins** are riders
+is the zoom's circle radius, 18 to 56 px, times the square root of riders over 140,000, and a
+circle with any riders is never under a tenth of that radius) [T-722]: **origins** are riders
 starting their rail trip at the station, **transfers** riders changing lines there, **total** every
-boarding there (origins plus transfers). From the demand solve shown, for the day the demand bar
-picks, every purpose whatever the purpose filter: boardings are the solve's per station, transfers
+boarding there (origins plus transfers). From the demand solve shown, for the day shown, every purpose whatever the purpose filter: boardings are the solve's per station, transfers
 its transfer pairs over every station (`complexTransfers`) counted at the station the rider boards,
 origins the rest. Origins and Transfers keep the last split while a new solve's is asked for. The
 circle's hover and the station's say the figure and never the number of stations in a complex:
@@ -106,8 +101,7 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   zone's res-9 cells summed into their H3 parent by zoom, each bubble at its trips' weighted
   centre. The **Detail** setting (Settings, 4 steps, default the third) starts resolution 9 at zoom
   15.4, 13.6, 11.8 (default) or 10, and each coarser level (8, 7, 6) 1.8 zoom levels further out
-  (`bubbleLevel`), so the default is one level finer than the original banding (9 from 13.6, 8 from
-  11.8, 7 from 10, 6 further out). Resolution 9 is the finest at any step. All levels are built at
+  (`bubbleLevel`). Resolution 9 is the finest at any step. All levels are built at
   once, so the setting costs no rebuild.
 - **Area is trip legs**, outward and return, at a fixed density: 50,000 legs/km² for homes and
   160,000 for destinations, times the Bubble size setting (0.5-2x width). No minimum size; nobody
@@ -120,7 +114,10 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   blends the mode colours by share. Either colours the local
   bubbles, the zone bubbles zoomed out and the zone inspector's mark; bars, swatches by mode and
   the hovers use the mode colours of the scheme (Colours, above) and state the shares. Drawn at 80% opacity times the Opacity
-  setting (90% by default, T-470), biggest bubbles under smaller ones. Bubbles have no outline; only a selected
+  setting (90% by default, T-470), biggest bubbles under smaller ones. While a bubble (local or
+  zone) is selected every bubble is drawn at the Opacity slider's 100% and 2 CSS px larger in
+  radius, with the connecting lines starting at the larger edge, so a small bubble reads over the
+  network; hover and click use the larger radius too [T-936, `DemandOverlay.setSelecting`]. Bubbles have no outline; only a selected
   one has its dark outline [T-549].
 - **The colour is smoothed** [T-900, `smooth` in `workers/commuters.worker.ts`]: the model gives
   every cell of a station's subzone one rail share and every cell of a zone one walk share, so
@@ -144,8 +141,6 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   the plane (the plane itself, so the job bubbles beside a terminal keep their own hover, T-681),
   says "228k trips per day to and from this airport" with the mode split, the whole airport's
   legs, read again with each demand result.
-- There is no corner summary box: the zone's split is in the top bar, local splits in hovers and
-  the inspector.
 
 **The bubbles show a new result as soon as it lands** [T-906]: the local bubbles, nearby zones'
 and the zoomed-out overview, like the inspectors, selections and the top bar. Money and the
@@ -184,7 +179,8 @@ riders counters keep their own smoothing (Live feel).
   under the outside shade, and a second fill would darken it. A thin bar sits a little under the zone's centre, kept inside the zone's on-screen part,
   filling as it loads (hover "Loading Toronto, 40%"; the top bar's load for the zones in it, a
   loaded game's zone still solving its solve's rounds and time against its expected final, else
-  the zone's own download and opening). A loading zone has no bubble in the zoomed-out overview, and the city inspector says "Calculating
+  the zone's own download and opening). At most 3 bars show at once: the zone in view, then the
+  loading zones whose centres are nearest the map's centre, chosen again when the map stops moving [T-939]. A loading zone has no bubble in the zoomed-out overview, and the city inspector says "Calculating
   demand." for it [T-421]. The grey and bar go in one step when the figures arrive. A
   zone re-solving after an edit keeps its figures and is not grey. The bars hide while the startup
   card is up.
@@ -293,9 +289,8 @@ the zone's modelled split, none for a zone not loaded) and "120k inter-region tr
 average to and from Yamanashi" (train blue, the rest red). One scale that depends on the zoom
 alone, never on what is on screen [T-525, T-530]: 60,000 trips a day per px² of bubble area at
 zoom 6.5 (`TRIPS_PER_PX2`, `SCALE_ZOOM`), before the size slider, the radius times
-2^(0.35 x (zoom - 6.5)) (`ZOOM_GROWTH`), so bubbles shrink somewhat as the map zooms out: New
-York's 71M is a 34 px radius at 6.5, 55 px at 8.5 and 21 px at 4.5, a 1.6M prefecture 5 px at
-6.5. Homes and Destinations look the same, and both work zoomed out even over dead space, where
+2^(0.35 x (zoom - 6.5)) (`ZOOM_GROWTH`), so bubbles shrink somewhat as the map zooms out.
+Homes and Destinations look the same, and both work zoomed out even over dead space, where
 the buttons are otherwise off; a start on the world map turns Homes on [T-801]. Under a local purpose the focused zone's own
 bubbles stay instead. Toronto (`market: -1`) has none.
 
@@ -305,8 +300,8 @@ another place opens the trip explorer between them and the selected zone [T-885]
 another zone's bubble, or a Shift box over several, opens it between the zones): it is outlined, with one
 bubble per other zone for the regional trips between the two, on a scale of its own that changes
 with the zoom the same way [T-525, T-530]: 1,400 trips a day per px² at zoom 6.5
-(`SELECTED_TRIPS_PER_PX2`), so there the selected zone's own inter-region trips (New York's 1.57M)
-are a 33 px radius, Philadelphia's 796k 24 px, a 15k partner 3 px and a few hundred a dot (the selected zone's hover: the inter-region line and its bar first, the local figure in brackets under it; the
+(`SELECTED_TRIPS_PER_PX2`), the selected zone's own bubble its inter-region trips on that scale
+(the selected zone's hover: the inter-region line and its bar first, the local figure in brackets under it; the
 others: "N trips a day between A and B" and a bar), a fading line from each other bubble toward
 it (Lines to the selection, above), under the bubbles with no hover, so the
 selection shows from afar [T-520, T-858], and the city

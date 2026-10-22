@@ -26,9 +26,10 @@ in `DECISIONS.md`, finished work in `ARCHIVE.md`, measurements in `notes/`. Wher
 
 ## 1. Priorities, in order
 
-When two goals conflict, the higher one wins. **Current focus (Anita): the whole world, with demand
-realism at the core.** Performance is open work (2026-10-15): each item's impact is measured, and
-those with high impact or that let the game scale to hundreds of cities come first.
+When two goals conflict, the higher one wins. **Current focus (Anita): the whole world, with
+sensible demand at the core** (2026-10-17: sensible and fun over fitting real cities). Performance
+is open work (2026-10-15): each item's impact is measured, and those with high impact or that let
+the game scale to hundreds of cities come first.
 
 1. **The game never freezes.** The main thread draws and handles input, nothing else. Anything
    that can take more than a few milliseconds runs in a worker, and the UI keeps showing the last
@@ -36,9 +37,9 @@ those with high impact or that let the game scale to hundreds of cities come fir
 2. **Low CPU.** Work happens when something changes, not every frame. The ~10k-train goal is about
    passengers, whose cost scales with network and demand, not train count.
 3. **Demand that feels earned.** Ridership follows from where people live and work and how good the
-   trip is, and the player can see why. Realism is for rough calibration, not a goal in itself: a
-   real network should give ridership of the right order (section 9). Prefer simple, interpretable
-   rules over faithful ones.
+   trip is, and the player can see why. Building rail must matter: Anita's two ceiling tests are the
+   targets and real networks a loose check of the right order (section 9). Prefer simple,
+   interpretable rules over faithful ones.
 4. **Many cities, one world.** Several full cities, links between them and to smaller places, in
    one save.
 5. **Cute, clear look** (section 8).
@@ -66,8 +67,9 @@ only demand is split into layers. **Local time** [T-309]: the clock keeps UTC-5;
 periods, weekends and fares run on its own `utcOffset`, a line on its first stop's (rest: T-321).
 
 **Zones** [T-276, [docs/zones.md](docs/zones.md)]: the world is divided into **city zones** (the
-city packs), **non-city zones** (county-sized units touching two city zones, built as packs by the
-same pipeline, `kind: "zone"`) and **dead space**, where no trip starts or ends. Only zones a
+metro packs), **countryside zones** (the rest of a covered country in units grown to at least
+about 0.5M people, 1M in China, built as packs by the same pipeline, `kind: "zone"`) and **dead
+space**, where no trip starts or ends. Only zones a
 built station reaches join the demand solves; a zone viewed or beside the view that no station
 reaches opens **bare** in one auxiliary worker, its figures, bubbles and clicks from a no-rail pass
 that equals a solve's to the bit, so panning never re-solves [T-325]. Every zone loads for the view
@@ -174,8 +176,8 @@ institutions** (prisons, nursing homes and the like, T-234).
   near a short trip takes some walkers and a long walk loses to the train. Rail and the car split
   the rest on the ratio of their costs [T-918]: rail's share is 1 / (1 + (rail / car)^3), so twice
   as dear gets 1 in 9, symmetric for the car, fading to nothing from 3 to 4 times either way; no
-  rail constant (time and money alone), car ownership $1.50 a trip plus $0.10 a km and 7 minutes to
-  park [T-636, T-637]. The regional market keeps a damped logit with the plane [T-495, T-502].
+  rail constant (time and money alone), car ownership $2.00 a trip plus $0.13 a km and 7 minutes to
+  park [T-636, T-637, T-938]. The regional market keeps a damped logit with the plane [T-495, T-502].
 - **No car ownership** [T-854]: everyone can drive, and the car stands for every way about but
   rail and walking. Instead, every car trip from a home pays parking at the home end, 0.4 of the
   destination's paid-space rule on the home zone's residents per km², so dense places drive less.

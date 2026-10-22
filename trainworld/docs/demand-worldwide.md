@@ -1,14 +1,14 @@
 # Demand assumptions to recheck for cities around the world
 
-Started 2026-10-12 at Anita's request. Every demand rule was built and fitted on nine US Northeast
-cities. Before the first city outside the US (and whenever a rule changes), go through this list
-and ask: does it hold for a city with a very different density pattern, commute culture, car
-ownership or income? Each entry says what the game does now, what it was fitted on, why it might
-not carry over, and what would check it. Add entries as new rules appear; strike through (do not
-delete) ones that have been checked, with the date and outcome.
+Anita's list (2026-10-12): every demand rule must hold up worldwide, so for a city with a very
+different density pattern, commute culture, car ownership or income. Each entry says what the
+game does now, why it might not carry over, and what would check it; a task that adds or changes a
+demand rule updates its entry. Demand is simple on purpose (Anita, 2026-10-17, T-636): no fitted
+calibration, Anita's two ceiling tests the targets, real cities loose checks. The measurements
+behind the entries are in the notes each cites and in notes/demand-measurements.md.
 
 Which sources each country has, which are used, and which procedure its packs follow:
-`docs/data-register.md`. The sections below hold the rules those sources feed.
+[data-register.md](data-register.md). The sections below hold the rules those sources feed.
 
 ## The first country outside the US: Canada (Toronto, T-277, 2026-10-13)
 
@@ -29,8 +29,7 @@ What Canada's data changed, rule by rule (sources in notes/T-277.md, the adapter
   Hamilton and Oshawa included (28.3% and 27.3% at home in 2021; their own current share is
   probably a little lower). US packs use ACS by tract and industry.
 - **The distance curve** fitted on Canada's census flows between municipalities is much steeper
-  than the US one: d^-1.2 exp(-d/20 km), mean commute 11.0 km, 5.6% of commutes misplaced between
-  municipality pairs against 15.1% at the US curve (notes/T-277.md). Partly real (a strongly
+  than the US one: d^-1.2 exp(-d/20 km) (notes/T-277.md). Partly real (a strongly
   centred city, as the "distance curve shape" entry below predicted), partly the lockdown: the
   commuters of May 2021 were the ones still going in, more local than office commuters. Recheck
   on the 2026 census flows.
@@ -46,16 +45,16 @@ What Canada's data changed, rule by rule (sources in notes/T-277.md, the adapter
 
 ## Tier 0: global sources only (`pipeline/tier0.py`, T-287, 2026-10-14)
 
-The adapter for countries with no small-area census inputs (Shanghai, Mumbai first). Measured by
-building Toronto from tier 0 against the real pack (notes/T-287.md has every table):
+The adapter for countries with no small-area census inputs, with a country's own inputs in place
+of its proxies where it has them. Measured by building Toronto from tier 0 against the real pack
+(notes/T-287.md has every table; London's in notes/T-288.md and T-360):
 
-- **Population** is GHSL GHS-POP (100 m) scaled to district totals: 2.0% misplaced between
-  Toronto's 28 municipalities, but municipalities built up after 2020 come out 15-27% short (the
-  GHSL epoch lags). Use the latest epoch and the newest district totals for fast-growing cities.
+- **Population** is GHSL GHS-POP (100 m) scaled to district totals; areas built up after the GHSL
+  epoch come out short (Toronto's newest municipalities 15-27%), so use the latest epoch and the
+  newest district totals for fast-growing cities.
 - **Jobs** are a proxy: population x the World Bank employment rate, spread 30% by GHSL
-  non-residential volume weighted by height^2, 50% by OSM job places, 20% by population (T-360:
-  the best joint fit on Toronto's census and London's BRES, both in-sample; 18.1% and 26.1% of
-  jobs misplaced between 2 km zones). The height in that weight stops at 40 m (`HEIGHT_CAP_M`,
+  non-residential volume weighted by height^2, 50% by OSM job places, 20% by population (T-360,
+  the best joint fit on Toronto's census and London's BRES). The height in that weight stops at 40 m (`HEIGHT_CAP_M`,
   T-573): above it a cell's weight grows with its volume alone, since GHSL's mean height on a
   100 m pixel with one tower or hangar on little floor (Berlin's Treptowers, 70 m) otherwise gave
   that cell a city's share. OSM industrial, commercial and retail land counts one job
@@ -67,45 +66,37 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
   to the population part, and the pack's jobs source says how many. Only packs where OSM and GHSL
   are thin reach them. A country with workplace counts by small area (England's
   BRES by LSOA) replaces the total and the proxy only spreads each area's count (tier0's `jobs`
-  hook). Why it may not carry over: an old mid-rise centre with a large commuter shed defeats it.
-  London's proxy gives Westminster and the City a third of their BRES jobs (483k against 1.51M)
-  and Greater London 4.36M against 5.88M, and no blend, height power or concentration exponent
-  fixes it without wrecking Toronto, whose centre is towers (the height weight that finds
-  Toronto's core misses London's). The total is the residents' rate, so a pack that draws
-  commuters from beyond its edge is short (London -19%; Toronto +9%). Where much work is informal
+  hook). Why it may not carry over: an old mid-rise centre with a large commuter shed defeats it
+  (London's proxy gives Westminster and the City a third of their BRES jobs, and no blend fixes it
+  without wrecking Toronto, whose centre is towers). The total is the residents' rate, so a pack
+  that draws commuters from beyond its edge is short (London -19%). Where much work is informal
   or at home (Mumbai), buildings miss it, so the population share rises: in a planned city it is
   the country's ILO vulnerable employment share held to 0.2-0.5, the other two shares moving with
   it to 0.2 and 0.3 at the top (T-537; a national figure with farming in it, so it overstates a
   middle-income city's informal work); where industry is
   large, industrial land overdraws (Brampton +40%). Check, for the next big old centre (Paris):
   the proxy's core against any published central job count.
-- **Where workers live** is population x one rate (no source by residence): 3.8% misplaced
-  between municipalities in Toronto. Student and retiree areas send too many commuters.
+- **Where workers live** is population x one rate (no source by residence), so student and
+  retiree areas send too many commuters.
 - **The distance curve without flows**: with no flow table and no distance bands, the city
   borrows one curve (`"curve": "borrowed"`, `tier0.borrowed_curve`): of the fitted cities'
-  curves (`pipeline/fitted_curves.json`, 59 packs in 8 countries), the one that misplaces the
-  fewest commuters beyond each city's own, averaged by country; today d^-1.8 exp(-d/80 km).
-  Held out a country at a time it costs 2.9 points on average by country, against 3.3-3.9 for
-  nearest by population and vehicles, by income group, a world median or a length scaled to the
-  city's size (T-314). Why it may not carry over: no fitted country has the US's flat d^-0.8
-  curve, and the US packs lose 4-14 points under any borrowed curve, so a sprawling car city
-  would be served worst. A **non-city zone** with no flow table (a countryside zone of a covered
-  country, T-723; Anita, T-719 decision 5) borrows by the same rule over the 38 fitted Japanese
-  prefecture zones only (`"curve": "borrowed_zone"`): today d^-1.4 exp(-d/16 km), 0.3 points over
-  each zone's own on average, where the metros' curve would send rural commuters far too far
-  (Japan's zones keep 52-91% of commuters in their own municipality). Why it may not carry over:
+  curves (`pipeline/fitted_curves.json`), the one that misplaces the fewest commuters beyond each
+  city's own, averaged by country; today d^-1.8 exp(-d/80 km). Held out a country at a time it
+  beat nearest by population and vehicles, by income group, a world median and a length scaled to
+  the city's size (T-314). Why it may not carry over: no fitted country has the US's flat d^-0.8
+  curve, so a sprawling car city would be served worst. A **non-city zone** with no flow table (a
+  countryside zone of a covered country, T-723; Anita, T-719 decision 5) borrows by the same rule
+  over the fitted Japanese prefecture zones only (`"curve": "borrowed_zone"`): today d^-1.4
+  exp(-d/16 km), where the metros' curve would send rural commuters far too far. Why it may not carry over:
   every fitted zone is Japanese, so a country with longer rural commutes (Spain's interior,
   dispersed farm work) may sit on too short a curve. Where a distance distribution exists (India's census bands, a travel
-  survey), fit both parameters; reported (road) distances are divided by 1.3, which matches the
-  routed drive factor of Mumbai's commutes at the band edges (1.30-1.45; the near zone pairs'
-  unweighted median of 1.62 is not the commuters' factor). A published median or mean alone fits
+  survey), fit both parameters; reported (road) distances are divided by 1.3, the routed drive
+  factor of Mumbai's commutes at the band edges (T-292). A published median or mean alone fits
   only the length at power 1.4 (`tier0.fit_curve`); medians are often of exact or road distances
   and fit too flat a curve (Toronto's 10.5 km gave 95 km), so check one against any flow table.
 - **Schools** are OSM sites sized by the square root of site area with pupils from the national
-  share aged 0-14 (-6% in Toronto, 5.3% misplaced; London -8% against GIAS's pupils on roll,
-  which include sixth forms, but 21% misplaced between 2 km zones and 14% between districts:
-  OSM's school polygons are uneven, and site area is a weak guide to pupils). Public and
-  private alike. One site holds at most 3,000 pupils (`SCHOOL_SITE_MAX`, T-574, about a large
+  share aged 0-14 (OSM's school polygons are uneven, and site area is a weak guide to pupils:
+  London's came out far more misplaced than Toronto's). Public and private alike. One site holds at most 3,000 pupils (`SCHOOL_SITE_MAX`, T-574, about a large
   secondary school) and the sites in one pack cell 6,000 together (`SCHOOL_CELL_MAX`: a campus
   mapped as several schools), the excess going to the other sites in proportion; where OSM maps too few
   schools for that (Lagos 861 sites for 5.0M pupils, Mumbai 803 for 6.2M), the pupils no site
@@ -114,21 +105,17 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
   which is right for primary pupils and short for secondary ones. A country register with pupils
   and coordinates (England's GIAS) replaces the sites and sizes (tier0's `schools` hook).
 - **Population by small area**: GHSL scaled to district totals is already close at the game's
-  scale in London (3.3% misplaced between 2 km zones against Census 2021 by LSOA, 13% between
-  LSOAs), so finer census counts (tier0's `population` hook) matter little for commuting.
-- **Universities** are OSM campuses with Wikidata student counts, which few OSM campuses carry
-  (4 of 63 in Toronto), so most are sized by area. Since T-288 the total is population x the
-  national tertiary students a resident (UNESCO enrolment via the World Bank, SE.TER.ENRL over
-  SP.POP.TOTL; UK 0.037 in 2018, Canada 0.044), and the counts and areas only spread it: London's
-  counted institutions are dense central buildings (1,925 students a hectare at the median), which
-  sized suburban campuses at 50-150k students and the pack at 2.4M against about half a million.
-  Why it may not carry over: students gather in university cities, so a national rate undercounts
-  a city with many campuses (Toronto -20% against Ontario's files; Boston or Oxford would be far
-  under) and overcounts one with few. Check: London against HESA (T-382).
-- **District totals matter in old dense centres**: GHSL put 12-19% too many people in London's
-  central boroughs (Westminster, Kensington and Chelsea, Camden, Hammersmith) before scaling to
-  Census 2021 districts (T-288).
-- **Airports**: Wikidata's patronage matched StatCan's within 0.3% for Toronto's three airports.
+  2 km scale (London against Census 2021 by LSOA), so finer census counts (tier0's `population`
+  hook) matter little for commuting. **District totals matter in old dense centres**: GHSL put
+  12-19% too many people in London's central boroughs before scaling (T-288).
+- **Universities** are OSM campuses with Wikidata student counts, which few OSM campuses carry,
+  so most are sized by area. The total is population x the national tertiary students a resident
+  (UNESCO enrolment via the World Bank, SE.TER.ENRL over SP.POP.TOTL; T-288), and the counts and
+  areas only spread it (counts alone sized London at several times its students). Why it may not
+  carry over: students gather in university cities, so a national rate undercounts a city with
+  many campuses (Toronto -20% against Ontario's files) and overcounts one with few. Check: London
+  against HESA (T-382).
+- **Airports**: patronage from Wikidata (it matched StatCan's for Toronto's three airports).
 
 ## France (Paris, `pipeline/france.py`, T-289, 2026-10-15)
 
@@ -137,15 +124,12 @@ Tier 0 with two INSEE upgrades; notes/T-289.md has the tables.
 - **Jobs**: INSEE's census flows (Mobilités professionnelles 2022, every flow, Paris by
   arrondissement) summed by commune of work, spread inside each commune by tier 0's blend. The
   census counts teleworkers at their usual workplace, so no lockdown correction. Communes are the
-  finest unit published; inside Paris an arrondissement is 0.9-16 km². Tier 0's proxy alone gives
-  Paris 60% of its INSEE jobs (the 8th arrondissement a quarter) and Ile-de-France 89%, but
-  misplaces 17% between 2 km zones, better than in London (27.5%): Paris's core is closer to the
-  proxy than London's, and still well short.
+  finest unit published; inside Paris an arrondissement is 0.9-16 km². Tier 0's proxy alone falls
+  well short in Paris's core, if less than in London's.
 - **Population**: the legal population by commune (geo.api.gouv.fr serves the latest), GHSL
   inside each commune. Filosofi's 200 m squares would refine it (T-384).
-- **Curve**: fitted on the same flows, d^-1.3 exp(-d/20 km). The surface is flat near it:
-  Toronto's curve scores the same, tier 0's one-parameter rule (power 1.4, length to the flows'
-  median of 6.3 km) within half a point, London's d^-1.85 two points worse and the US curve five.
+- **Curve**: fitted on the same flows, d^-1.3 exp(-d/20 km). The fit is flat near it (tier 0's
+  one-parameter rule within half a point).
 - **Work from home**: one national share, 0.12, from Eurostat's LFS (lfsa_ehomp: 11.1% usually,
   24.4% sometimes, France 2025), judged at 0.6 and 0.2 of their days. Ile-de-France works at home
   more than France as a whole; not modelled.
@@ -158,24 +142,21 @@ Tier 0 with district totals; notes/T-291.md has the tables.
 - **Districts**: OSM admin_level 6 relations, clipped to land by the OSM coastline (Chinese district
   lines run far out to sea). Relations that do not assemble are rebuilt from their admin_level 8
   units or as the province's remainder. geoBoundaries' China ADM2 is too coarse (1:4M, 2017).
-- **Population**: the 2020 census by district, GHSL inside each. GHSL has 24% too many people in
-  Shanghai overall and 23-34% too many in the central districts and Chongming: tier 0 needs
-  district totals in China as in London.
+- **Population**: the 2020 census by district, GHSL inside each. GHSL has about a quarter too
+  many people in Shanghai: tier 0 needs district totals in China as in London.
 - **Jobs**: the 2023 economic census, persons employed in legal-person units by district (each
   province's bulletin no. 1 has the table), the proxy inside each. Individual businesses are left
-  out of that table. The proxy alone gives the seven central districts 19% of jobs against 36%,
-  the same old-core shortfall as London's, and overdraws the industrial outer districts (Baoshan,
-  Jinshan nearly double).
+  out of that table. The proxy alone has London's old-core shortfall and overdraws the industrial
+  outer districts.
 - **Curve**: power 1.4, length fitted to the published mean commute (10.2 km, the city's 2024-2025
-  transport survey) taken as straight-line: CAUPD-Baidu's yearly commute report (location data,
-  about 45 cities) gives 9.8 km for Shanghai. That report is the general source for other Chinese
-  cities.
+  transport survey) taken as straight-line, as CAUPD-Baidu's yearly commute report (location data,
+  about 45 cities) confirms; that report is the general source for other Chinese cities.
 - **Work from home**: 0.
 - **Airports**: CAAC's yearly airport bulletin (passengers / 2) in place of Wikidata.
 - **Names**: OSM `name:en`, then `name:zh-Latn-pinyin`, for places (two thirds of Shanghai's have
   one); the Chinese name stays a search alias.
-- **OSM is thinner**: 10 airport terminals, one hospital with beds, 18k job points and 22k job areas
-  for 25M people, 551 medical sites; medical and everyday destinations are likely short; not checked.
+- **OSM is thinner** (one hospital with beds, few job places and medical sites for 25M people):
+  medical and everyday destinations are likely short; not checked.
 
 ## India (Mumbai, `pipeline/india.py`, T-292, 2026-10-15)
 
@@ -187,20 +168,20 @@ Tier 0 with sub-district totals and a curve fitted to distance bands; notes/T-29
   the group is scaled as one (`india.GROUPS`). SHRUG's PC11 polygons are non-commercial: checks only.
 - **Population**: the latest census is 2011. Its Primary Census Abstract by sub-district (one
   workbook a district on censusindia.gov.in/nada), grown to 2020 by each district's 2001-2011
-  growth (table A-2), GHSL inside each. GHSL's total is within 3% of that, but it has the island
-  city 14% high and the fast-growing Thane suburbs 10-24% low.
+  growth (table A-2), GHSL inside each (GHSL alone has the island city high and the fast-growing
+  suburbs low).
 - **Jobs**: no workplace table; the proxy with population 0.5 of the blend (`job_blend`) for
-  informal and home-based work. It gives Greater Mumbai 45% of jobs, below its 52% share of the
-  2011 workers by residence, and overdraws port and industrial talukas (Uran, Khalapur, Palghar).
+  informal and home-based work. It puts Greater Mumbai's share of jobs below its share of workers
+  and overdraws port and industrial talukas (T-388 would add the economic census).
 - **Curve**: Census 2011 table B-28 ('other workers' by distance band and mode, by district) for
   the pack's districts; both parameters fitted (`tier0.fit_curve_bands`), the reported distances
   read as travel distance and divided by 1.3: d^-1.65 exp(-d/32.7 km). Every Indian district has
   this table, so this is the rule for India.
 - **Work from home**: B-28's 'no travel' share of other workers (20.1% in Mumbai's districts).
 - **Airports**: the operator's yearly total via the press (passengers / 2) through `boardings`.
-- **Names**: OSM `name` is usually already Latin in Maharashtra (12 places of 1,460 had `name:en`).
-- **OSM is thin**: 803 school sites for 6.2M pupils, one hospital with beds (the rest sized by the
-  "Medical" rule below), a median drive factor of 1.62 between near zones (creeks and hills).
+- **Names**: OSM `name` is usually already Latin in Maharashtra.
+- **OSM is thin**: few school sites for the pupils, one hospital with beds (the rest sized by the
+  "Medical" rule below), long drive detours between near zones (creeks and hills).
 
 ## Nigeria (Lagos, `pipeline/nigeria.py`, T-459, 2026-10-16)
 
@@ -208,23 +189,19 @@ Tier 0 from global sources alone, the data-poor test; notes/T-459.md has the tab
 
 - **Units**: OSM local government areas (admin_level 6), every one in the config's states plus named
   ones beyond. Holes in the dissolved outline are lagoon no LGA covers, so they are filled.
-- **Population**: GHSL E2020 unscaled (13.8M). The last census is 2006 and the state's own figures
-  (20M and more) are not credible; UN WUP 2018 (14.4M for 2020) and Africapolis (13.8M Lagos plus
-  1.6M Ikorodu) bracket GHSL within about 10%, so scaling would only move it inside that range.
-  GHSL lags the fast fringe (Ikorodu LGA 0.7M against Africapolis's 1.6M agglomeration): use the
-  latest epoch once the game moves past 2020.
+- **Population**: GHSL E2020 unscaled. The last census is 2006 and the state's own figures are not
+  credible; UN WUP and Africapolis bracket GHSL within about 10%, so scaling would only move it
+  inside that range. GHSL lags the fast fringe (Ikorodu): use the latest epoch once the game moves
+  past 2020.
 - **Jobs**: the proxy with population 0.5 of the blend (as Mumbai). **Where OSM maps few places,
-  land use dominates the OSM signal** (Lagos: 81% of it), and one big industrial area would be one
-  huge job lump at its centroid (the 23 km² Dangote refinery would take 425k jobs, 6.5% of the
-  city). The tier 0 default for every city (T-460) caps one area's weight at 1 km² and spreads it
-  over a 0.003 degree grid (~330 m) inside it, as in "Tier 0" above. Markets (Balogun, Alaba,
-  Oshodi) get almost nothing from buildings or OSM; their jobs come only from the population share.
-- **Everyday destinations**: OSM has 0.09 errand and 0.04 leisure places per 1,000 residents
-  (Mumbai 0.29 and 0.19, London 5.9 and 4.0), in 2% of cells holding 7% of the people, gathered in
-  Lekki, Victoria Island and Ikeja, so the destinations rest almost wholly on jobs and residents
-  (completeness 0.02, "Everyday destinations" below).
+  land use dominates the OSM signal**, and one big industrial area would be one huge job lump at
+  its centroid (the Dangote refinery). The tier 0 default for every city (T-460) caps one area's
+  weight at 1 km² and spreads it over a 0.003 degree grid (~330 m) inside it, as in "Tier 0"
+  above. Markets (Balogun, Alaba, Oshodi) get almost nothing from buildings or OSM; their jobs come
+  only from the population share.
+- **Everyday destinations**: OSM maps very few errand and leisure places, so the destinations rest
+  almost wholly on jobs and residents (completeness 0.02, "Everyday destinations" below).
 - **Curve**: no flows or distance table; borrowed by the rule (T-314), d^-1.8 exp(-d/80 km).
-  Model mean 9.0 km (a 2010 survey's mean trip, Osoba, 12 km by road).
 - **Work from home**: 0 (no source); informal work near home is in the population share instead.
 - **Universities**: the World Bank's tertiary rate is from 2011 (0.0088 a resident).
 - **Medical**: no OSM hospital carries beds; all are sized by the "Medical" rule below, to Nigeria's
@@ -236,8 +213,7 @@ Tier 0 with census tracts and a household travel survey; notes/T-458.md has the 
 
 - **Units, population**: IBGE's 2022 census tracts with their people (the "malha com atributos"
   GeoPackage, one per state, open); the pack's municipalities by code, the outline their tracts
-  dissolved. GHSL is within 5% of the census in most municipalities but 15-23% low in the
-  fast-growing western suburbs (Barueri, Cajamar, Cotia, Santana de Parnaiba).
+  dissolved (GHSL alone runs low in the fast-growing western suburbs).
 - **Jobs, work from home, curve: a household travel survey** (the Metro's OD 2017 microdata), the
   rule for any city with one: workers by survey zone of their first job, scaled from the survey's
   population to the census's, spread inside each zone by the proxy; work from home is the share of
@@ -245,10 +221,9 @@ Tier 0 with census tracts and a household travel survey; notes/T-458.md has the 
   straight-line distances, with the bands under 4 km as one (2 km zones cannot split them):
   d^-1.8 exp(-d/19 km), mean 8.5 km as the survey's. Other Brazilian metros have published OD
   surveys (the odbr R package gathers them); IBGE's census has no workplace table by small area.
-- **Everyday rates and scales** (T-509) are Brazil's from the OD 2017 microdata ("Everyday trip
-  rates" below): errands 0.106, social 0.057, medical 0.044 outings a resident, scales 2.3, 1.9
-  and 3.7 km. Before them the game's social outings ran 10.8 km against the survey's 4.9 and sent
-  twice its share to the centre.
+- **Everyday rates** (T-509) are Brazil's from the OD 2017 microdata ("Everyday trip rates"
+  below): errands 0.106, social 0.057, medical 0.044 outings a resident; the decay lengths are the
+  worldwide set (T-637).
 - **Names**: OSM `name` is Portuguese; no `latin_names`.
 
 ## Germany (Berlin, `pipeline/germany.py`, T-290, 2026-10-15)
@@ -259,24 +234,20 @@ Tier 0 with three national upgrades; notes/T-290.md has the tables.
   each Gemeinde's population (the Länder's figure on the Zensus 2022 base). Berlin and Hamburg are
   one Gemeinde each.
 - **Population**: the Zensus 2022 100 m grid (residents per square, every square in one 153 MB CSV),
-  scaled to each Gemeinde's current population. GHSL is within 2.5% of the census in Berlin but
-  6-10% low in most ring Kreise.
+  scaled to each Gemeinde's current population.
 - **Jobs**: the Länder's Pendlerrechnung (Pendleratlas): everyone employed, by Gemeinde of work
   (in-commuters plus those working where they live), so civil servants and the self-employed are
   in, unlike the BA's insured employees. Spread by tier 0's blend inside each Gemeinde, so inside
-  Berlin the jobs have the proxy's shape. The proxy alone gives Berlin 78% of its jobs and the
-  ring Kreise 1.3-1.9 times theirs (14% misplaced between Gemeinden).
+  Berlin the jobs have the proxy's shape.
 - **Curve**: fitted on the same atlas's flows, which publish each Gemeinde's ten largest in- and
-  out-flows and its own workers (IOP), scored on those pairs only: d^-1.4 exp(-d/28 km). The surface
-  is flat: Paris's and Toronto's curves score the same, London's two points worse, the US curve
-  three. Berlin's own 1.67M internal commuters are one cell, so the fit says little inside Berlin.
+  out-flows and its own workers (IOP), scored on those pairs only: d^-1.4 exp(-d/28 km). Berlin's
+  own internal commuters are one cell, so the fit says little inside Berlin.
 - **Work from home**: 0.10, Eurostat LFS (lfsa_ehomp: 13.0% usually, 11.7% sometimes, Germany
   2025), judged at 0.6 and 0.2 of their days.
-- **Schools and universities**: tier 0 (schools are per Land in Germany). The national tertiary
-  rate gives 209k students; Berlin holds more than its share of Germany's students, so likely
-  short (no figure checked).
-- **OSM is rich**: 70k job points and 190k job areas, 1,737 school sites, 4,024 medical sites; a
-  median drive factor of 1.42 between near zones (lakes and forests).
+- **Schools and universities**: tier 0 (schools are per Land in Germany). Berlin holds more than
+  its share of Germany's students, so the national tertiary rate likely leaves it short (no
+  figure checked).
+- **OSM is rich** in job places, schools and medical sites.
 
 ## South Korea (Seoul, `pipeline/korea.py`, T-457, 2026-10-16)
 
@@ -287,16 +258,16 @@ Tier 0 with one national upgrade; notes/T-457.md has the sources.
   2026 gu), so a table from an earlier year needs its units mapped onto today's.
 - **Population**: the Ministry of the Interior and Safety's resident registration count by
   si-gun-gu (monthly, open CSV, down to eup-myeon-dong), the census month's. Registered foreigners
-  are left out. GHSL is off by more than 50% in the new towns of the 2010s (Hanam +65%, Gimpo
-  +57%, Gwangju +62%) and 15-27% high in old dense districts: district totals matter here.
+  are left out. GHSL is far off in the new towns of the 2010s and high in old dense districts:
+  district totals matter here.
 - **Jobs**: tier 0's proxy (the Census on Establishments by si-gun-gu is on KOSIS only, behind a
   key or the interactive site).
 - **Curve**: length fitted to Statistics Korea's mobile-data mean commute (20.4 km in the capital
   area, read as one way along the route, 15.7 km straight-line): at tier 0's power 1.4 that needs
   a 156 km length, close to a pure power curve.
 - **Work from home**: 0 (telework is uncommon; no figure checked).
-- **Universities**: Wikidata has student counts for only 3 of 217 sites; the national tertiary
-  rate scales the total, so only the spread by site area is weak.
+- **Universities**: Wikidata has student counts for few sites; the national tertiary rate scales
+  the total, so only the spread by site area is weak.
 
 ## Japan (Tokyo, `pipeline/japan.py`, T-420, 2026-10-15)
 
@@ -315,47 +286,39 @@ notes/T-420.md has the tables.
   their neighbour, so the mesh totals are the census's (Greater Tokyo within 0.01%).
 - **Jobs**: the 2021 economic census 500 m mesh (persons employed, government included), spread
   inside each mesh by tier 0's proxy and scaled per municipality to the 2020 census's employed
-  people by place of work. The economic census counts 9% more than the census (dispatched and
-  multiple jobholders; no farms); the scaling moves single wards by up to 38% (Yokohama Nishi-ku
-  down, Saitama Chuo-ku up).
-- **Curve**: fitted on the census's municipality flows with the pack's own margins: the surface is
-  flat from London's power 1.85 to 2.3, and only the steep end keeps the census's 34.9% working in
-  their own municipality: d^-2.2 exp(-d/80 km). Keihanshin's and Chukyo's flows fit it as well as
-  any other (T-431), so it is Japan's metro curve. The regional metros fit a little flatter and
-  shorter, each its own (T-432): Fukuoka d^-2.0 exp(-d/32), Sendai d^-1.8 exp(-d/50), Hiroshima
-  d^-1.9 exp(-d/32); Sapporo ties Tokyo's curve and keeps it. Their best fits misplace 8-12% of
-  commuters between municipalities, where Tokyo's curve misplaces 9-12%. Each non-city zone fits
-  its own over a fixed grid (power 1.2-2.4, length 16-160 km; `japan_zones.fit`) on its
-  at-home-corrected margins: most fit flatter and shorter still (d^-1.4 exp(-d/16) the
-  commonest), with 52-91% working in their own municipality, and misplace 3-11%.
+  people by place of work (the economic census counts dispatched and multiple jobholders and no
+  farms).
+- **Curve**: fitted on the census's municipality flows with the pack's own margins; only the steep
+  end keeps the census's share working in their own municipality: d^-2.2 exp(-d/80 km).
+  Keihanshin's and Chukyo's flows fit it as well as any other (T-431), so it is Japan's metro
+  curve. The regional metros fit a little flatter and shorter, each its own (T-432): Fukuoka
+  d^-2.0 exp(-d/32), Sendai d^-1.8 exp(-d/50), Hiroshima d^-1.9 exp(-d/32); Sapporo ties Tokyo's
+  curve and keeps it. Each non-city zone fits its own over a fixed grid (power 1.2-2.4, length
+  16-160 km; `japan_zones.fit`) on its at-home-corrected margins: most fit flatter and shorter
+  still (d^-1.4 exp(-d/16) the commonest).
 - **Work from home**, per cell: the census's share working at home in the cell's municipality of
   work (table 4; 0.5% in Chiyoda, 21% in Suginami: shopkeepers and farmers work at home in the
   suburbs, office workers do not, T-465), then MLIT's 2024 telework survey share of the region's
   employed, judged at 2 days in 5, on the rest: Greater Tokyo 0.15 (37.5%), Keihanshin 0.098
-  (Kinki's 24.4%), Chukyo 0.078 (19.6%), every other pack 0.067 (16.8% outside the three). A pack's
-  mean comes to Greater Tokyo 0.23, Keihanshin 0.17, the zones 0.14-0.23.
+  (Kinki's 24.4%), Chukyo 0.078 (19.6%), every other pack 0.067 (16.8% outside the three).
 - **Commutes between packs**: Japan's 45 packs are one joint commute gravity (docs/zones.md 4), each
-  pair across packs on the home pack's curve, cut at 150 km, times 0.4: fitted so the commuters
-  between packs match the 2020 census's between the same prefectures less telework (at 1 the
-  gravity sent 1.9 times as many). Prefecture lines inside a pack take no factor, as the curves
-  were fitted. 1.6% of Japan's commuters cross a pack line; the spread over pack pairs is a quarter
-  off the census's (a symmetric crow-flies gravity: Shiga's one-way pull into Kyoto and Osaka comes
-  out at a third, Shiga to Nagoya over the Suzuka range at 3x).
+  pair across packs on the home pack's curve, cut at 150 km, times 0.4, so the commuters between
+  packs match the 2020 census's between the same prefectures less telework. Prefecture lines
+  inside a pack take no factor, as the curves were fitted. Why it may not carry over: a symmetric
+  crow-flies gravity misses one-way pulls (Shiga into Kyoto and Osaka) and mountain ranges.
 - **Schools**: KSJ P29 points (no pupil counts); each 500 m mesh's children 0-14 x 0.9 go to the
   nearest elementary, junior high, compulsory or secondary school. Universities stay tier 0 (where
   no campus has a Wikidata count, as in Fukuoka, the national total is split by campus area).
-- **Names**: OSM's `name:en` (64% of Greater Tokyo's places), else romaji from a kana reading
-  (`japan.kana_romaji`, Hepburn with long vowels written short, so ASCII like every other name;
-  1.2%), else from the kanji's reading in a dictionary (`japan.kanji_romaji`, UniDic through
-  fugashi; 35%), else kanji (0.5%). The dictionary takes the analysis with most of the name in
+- **Names**: OSM's `name:en`, else romaji from a kana reading (`japan.kana_romaji`, Hepburn with
+  long vowels written short, so ASCII like every other name), else from the kanji's reading in a
+  dictionary (`japan.kanji_romaji`, UniDic through fugashi), else kanji. The dictionary takes the analysis with most of the name in
   proper nouns, reads a split-off first 上 下 東 西 南 北 中 新 元 小 as in place names, a final 町
   as cho, ケ between kanji as ga, and writes a block as "N-chome"; about one name in four or five
   it gives is misread (against `name:en`, T-426). The kanji stays as a search alias.
-- **Rail constant**: none since T-636 (Japan's +0.5 of T-509 stage 7 is gone with the worldwide one).
-  Japan's cycling to stations and its trains' share of commuting (Tokyo's 2020 census 52%) are not
-  in the time and money the choice reads; the packs' rail then falls short of the counts where
-  habit carries it (every Japanese test cross carries 0.4-0.7 of its rail trips against before).
-  Check: Tokyo's and Sendai's station entries against the model's level.
+- **Rail constant**: none (T-636), as everywhere. Japan's cycling to stations and its trains'
+  share of commuting (Tokyo's 2020 census 52%) are not in the time and money the choice reads, so
+  the packs' rail falls short of the counts where habit carries it. Check: Tokyo's and Sendai's
+  station entries against the model's level.
 
 ## Homes (docs/demand-sources.md 4.1)
 
@@ -380,38 +343,23 @@ notes/T-420.md has the tables.
 
 ## Commute flows (SPEC 4, docs/demand-kernel.md 4.4)
 
-- **Distance curve shape.** Work gravity uses d^-0.8 exp(-d/30 km) (T-198, from T-185; was
-  d^-1 exp(-d/40 km), T-162), one value for the nine US packs, carried in each pack. What the nine
-  showed (notes/T-198.md): the flatter near end helped most in the small and middle-sized packs
-  (New Haven, Hartford, Springfield, Providence, Baltimore: trips misplaced down 5-9 points), less
-  in Philadelphia, Boston and Washington, and was about neutral in New York, the densest and most
-  centre-heavy (16.2% to 16.7%; its own-county share fell 2 points below LODES). Job-centre
-  residents' trips lengthened by about the same 0.6-1.3 km everywhere and stay 9-19% short;
-  bedroom areas' trips were too long before and still are; in New Haven, Hartford, Springfield and
-  Boston the mean trip now runs 0.1-1.1 km over LODES. So the gain is not tied to density as such: in every pack, people
-  living among many jobs still take jobs about as far down the list of nearest ones as anyone
-  else (two-earner households, matching by skill), which a steep near end misses. Why it may not
-  carry over: all nine are US metros with high car use and dispersed suburban jobs. In a strongly
-  centre-heavy city (Paris, Tokyo, Seoul) the centre's pull may dominate and New York's neutral
-  result hints the steeper curve could fit as well or better; in sprawling car cities (Los
-  Angeles, Houston) both parameters may need to be longer; informal-job cities have no workplace
-  register to fit to. The two centre-heavy non-US cities bear that out: Toronto fits d^-1.2
-  exp(-d/20 km), London d^-1.85 exp(-d/30 km) on its pack's inputs (d^-1.5 exp(-d/20 km) on the
-  2011 flows' own margins; T-360), and the US curve misplaces 15% of Toronto's and 32% of
-  London's commutes. Check: one non-US commuting-flow table per new country (Japan's census
-  commuting tables, Korea's), fit the two parameters, compare
-  with T-185's relative measures (local job ratio, nearest-job rank), not absolute density.
+- **Distance curve shape.** Work gravity uses a curve d^-a exp(-d/L) carried in each pack: in the
+  US d^-0.8 exp(-d/30 km) (T-198, from T-185), one value for the nine US packs, fitted on LODES
+  (notes/T-198.md); elsewhere a curve fitted on the country's flows or distance bands, or borrowed
+  ("Tier 0" above). The flat US near end reflects that people living among many jobs still take
+  jobs about as far down the list of nearest ones as anyone else (two-earner households, matching
+  by skill). Why it may not carry over: centre-heavy cities fit steeper curves (Toronto d^-1.2
+  exp(-d/20 km), London d^-1.85 exp(-d/30 km), T-360), and sprawling car cities (Los Angeles,
+  Houston) may need both parameters longer; informal-job cities have no workplace register to fit
+  to. Check: one commuting-flow table per new country, fit the two parameters, compare with
+  T-185's relative measures (local job ratio, nearest-job rank), not absolute density.
 - **Border factor.** Cross-state US commutes are multiplied by 0.23 (Washington 0.45), fitted to
   LODES; outside the US the policy is national borders only, weaker inside Schengen (T-181). It
   does not stop NJ to NYC commuting (Hudson to Manhattan stays near the real figure); it removes
   the excess the plain gravity produced. Anita is unsure state lines matter much in practice.
-  T-185 and T-198 showed the distance curve does not explain the cross-border gap: at the
-  flatter curve the fitted factor is the same (New York 0.228, Philadelphia 0.207). T-171
-  tested what could replace it on five packs' LODES: water or toll-crossing terms cannot (land
-  borders with no water or tolls show the same cut), a factor only between metros cannot (half
-  of New York's cross-state commuting is inside one urban centre), and per-pair factors only
-  separate city-states (DC 0.61-0.66) from real states (0.17-0.37). So in the US the effect is
-  the state line itself, inside metros too. Check: for each new country, whether its regional
+  Neither the distance curve, water or toll crossings nor a factor between metros explains the
+  gap, so in the US the effect is the state line itself, inside metros too (T-171, T-185, T-198).
+  Check: for each new country, whether its regional
   borders show any measurable effect in its flow data, and whether a city-state (Berlin, Vienna,
   Mexico City) behaves like DC (a weak factor) rather than a state.
 - **Doubly constrained balancing.** Every zone's jobs are filled from homes. Holds where job
@@ -441,13 +389,11 @@ notes/T-420.md has the tables.
   (MLIT's Inter-Regional Travel Survey, Eurostat, NEC FUTURE) at two lengths, so the slope as well
   as the level is seen.
 - **Rail propensity** (T-636, docs/demand-mode.md 4.3). None: `asc_rail` is 0 everywhere, so rail
-  and the car are judged on time and money alone, by the ratio curve. T-509 had fitted 0.4
-  (8 perceived minutes), everyday trips 1.1 lower and Japan +0.5 to six real networks; Anita chose a
-  sensible and clear model over fitting the real cities (DECISIONS 2026-10-17). A rail constant for
-  the everyday layer apart from the commutes' exists as a parameter at 0 (`everyday_asc_rail`), and
-  the country table (`api::COUNTRY_ASC_RAIL`) is empty. With the new values the model carries
-  x3.1 New York's station entries, x2.0 London's (the counts are the loose check; notes/T-636.md).
-  Why it may not carry over: with no constant, habit, income, bus competition and what the car is
+  and the car are judged on time and money alone, by the ratio curve; Anita chose a sensible and
+  clear model over fitting the real cities (DECISIONS 2026-10-17). A rail constant for the
+  everyday layer exists as a parameter at 0 (`everyday_asc_rail`), and the country table
+  (`api::COUNTRY_ASC_RAIL`) is empty. The real cities' station entries are the loose check
+  (notes/T-636.md). Why it may not carry over: with no constant, habit, income, bus competition and what the car is
   good for show up only where time and money show them; countries where rail is the norm beyond
   its minutes (Japan, Switzerland) will look low, and where bus riders crowd the train (Seoul,
   London) high. Check: a new country's station entries against the model's level, and its census
@@ -476,16 +422,16 @@ notes/T-420.md has the tables.
   a city across a strait has only its bridges and tunnels. Check: per new country, the
   commute-weighted factor the pipeline reports and the median snapping distance (US packs:
   94-213 m); a city's ACS-like car commute times against the model's, as T-090 did.
-- **Long drives** (T-370, docs/demand-mode.md 4.3). Each end's density speeds last its own first 10 km
-  of road (2 local, 8 main); anything beyond is open highway at 100 km/h. Why it may not carry
-  over: 100 km/h assumes a motorway between the ends (US, Canada, western Europe); where long
+- **Long drives** (T-370, T-938, docs/demand-mode.md 4.3). Each end's density speeds (16.5-88 km/h)
+  last its own first 10 km of road (2 local, 8 main); anything beyond is open highway at 110 km/h.
+  Why it may not carry over: 110 km/h assumes a motorway between the ends (US, Canada, western Europe); where long
   roads are two-lane or congested end to end (much of India, Indonesia, Lagos) the middle is far
   slower, and a sprawling metro whose dense core is wider than 10 km (Mexico City, Jakarta) is
   slow for longer. Check: a few typical door-to-door drives of 50-130 km per new country against
   the model's (notes/T-295.md has the US, Toronto and London ones).
 - **Parking** (T-380, T-372, T-440, docs/demand-mode.md 4.3). One rule for the commute, everyday and
-  regional layers. In minutes, not money: 7 to park (T-636, T-637; with the car ownership of $1.50 a trip
-  and $0.10 a km, local layers only), plus for a paid
+  regional layers. In minutes, not money: 7 to park (T-636, T-637; with the car ownership of $2.00 a trip
+  and $0.13 a km, T-938, local layers only), plus for a paid
   space 15 x ln(d / 3,000) per one-way trip (capped at 50), d the destination zone's jobs per km²
   of land; a share 1 / (1 + d / 8,000) parks free; congestion charges from a short list of
   charging areas (`kernel::CORDONS`: Manhattan, central London). Checked against real prices in New
@@ -530,12 +476,9 @@ notes/T-420.md has the tables.
 - **Walking the whole way** (T-558, T-636, docs/demand-mode.md 4.3 "Walking"). A mode in the choice
   beside rail and the car (or other), at 1.5 perceived minutes a minute at every length, with a
   bonus of 10 perceived minutes against the car (`walk_bonus_min`) for what a short drive costs beyond
-  its road time, one value for commutes and everyday trips and for every country. T-558's version
-  (2.80 and 3.21, worth 56 minutes at the old scale, and 4 a minute past 10 minutes) had been set to
-  keep New York and London walking as before; T-636 replaced it with pieces that can be explained.
-  A commute walks between six home and six job cells of its zones, not their 2 km centres (T-587),
-  so its walk shares by distance follow the everyday layer's. New York's real trips walk 58% within
-  2 km (NHTS 2017); the model walks 55% there with the rail network of the real save. Why it may not
+  its road time, one value for commutes and everyday trips and for every country. A commute walks
+  between six home and six job cells of its zones, not their 2 km centres (T-587), so its walk
+  shares by distance follow the everyday layer's. Why it may not
   carry over: walking tolerance differs by climate, culture, street design and safety, and the
   bonus also stands for how much a short drive costs beyond its road time, which differs with car
   ownership and parking. Check: a country's travel survey walk shares by distance (NHTS,
@@ -552,8 +495,8 @@ notes/T-420.md has the tables.
   5-15 perceived minutes on one, wait and walk often included. Why it may not carry over: where trains are
   sparse and timetabled (rural lines, intercity) riders plan for the departure and the half
   headway overstates the wait, while on unreliable or exposed platforms a minute feels longer.
-  Check: the deep calibration's fit on station entries, where a wait weight shows up as too much
-  or too little pull to frequent lines.
+  Check: station entries against the counts, where a wait weight shows up as too much or too
+  little pull to frequent lines.
 - **Route choice by relative difference** (Anita, T-710, docs/demand-mode.md "Access and
   egress"). Riders share station pairs by a logit whose scale is 20 over the trip's rough length
   (25 + 3 perceived minutes a straight km, held at 60), in four distance bands. One rule
@@ -594,13 +537,9 @@ notes/T-420.md has the tables.
   Japan (Tokyo PT 2018) 0.273 / 0.122 / 0.037, Korea (KTDB 2016) 0.189 / 0.110, Brazil (Sao
   Paulo OD 2017) 0.106 / 0.057 / 0.044; elsewhere (Canada, China, India, Nigeria) the median,
   0.497 / 0.291 / 0.044. The distance scales are one worldwide set (T-637, `everyday::DECAY`;
-  a pack's block carries none): errands 1.3 km, social 1.4, school 1.4, medical 2.0, university
-  3.5, airport 20. They are set for the share of trips under 2 km, not the mean: one exponential
-  over 2 km zones cannot give surveys' many very short trips and their long tail at once, and
-  each country's scale fitted to its survey's mean put too few trips where people walk (New York
-  23% of errands under 2 km against NHTS's 50%; London's everyday trips walked 18-27% against
-  LTDS's 41-44%). Surveys agree on that shape (about half of everyday trips under 2 km in New
-  York and London alike), so one set stands everywhere. Why the rates may not carry over: surveys
+  a pack's block carries none; the values in demand-sources.md 4.1), set for the share of trips
+  under 2 km, not the mean, since surveys agree on that share (about half of everyday trips in New
+  York and London alike; notes/T-637.md). Why the rates may not carry over: surveys
   differ in what they count (short walks, trip chains, ages 5 or 6 and up, a weekday or the whole
   week), medical is split out only in the US, Brazil and Japan (elsewhere 0.044 is taken out of
   errands), and poorer countries' surveys (Sao Paulo 2.0 trips a resident) run far below rich
@@ -608,7 +547,7 @@ notes/T-420.md has the tables.
   city where errands are a long drive (US exurbs, car-built new towns) has fewer short trips than
   New York or London. Check: a new country's national survey by purpose and its share of
   everyday trips under 2 km, and its rail share by purpose against the game's everyday rail
-  share (New York's NHTS legs: errands 4.7%, social 7.2%, against the game's 13%).
+  share.
 - **Social destinations** are population, leisure jobs and parks (46 / 46 / 8%, T-196). ATUS 2023
   puts only 23% of US leisure outings at someone else's home against the model's 46% population
   draw (the population draw also stands for neighbourhood leisure LODES misses), worth a look
@@ -625,8 +564,7 @@ notes/T-420.md has the tables.
   - *A source is used only if plausible* (T-456 section 7): its total 8-20% of the pack's jobs for
     errands, 4-15% for leisure; and under 5% of it in 2 km zones holding over 3 times their share
     of both residents and the purpose's OSM places (+1 a zone), skipped where OSM is under 30%
-    complete. Japan's mesh with wholesale left in fails the second (11% in Tokyo); at LSOAs the
-    test failed BRES on noise, so it runs on 2 km zones. A country's source is judged on its
+    complete. The test runs on 2 km zones (at LSOAs it failed BRES on noise). A country's source is judged on its
     best-mapped metro (Japan's on Tokyo) and its sparser packs run only the level test, since
     their OSM misses roadside malls and resort hotels. Toronto's retail and other services fail
     it (suburban business parks with retail jobs), so Toronto's errands use the fallback.
@@ -681,8 +619,8 @@ notes/T-420.md has the tables.
   from NHTS 2017 (work 0.30, shopping and errands 1.22, social and leisure 1.60, school 0.08,
   university 0.22, medical 0.24, trips of 50 miles or more 1.58) and TSA checkpoint counts
   (airport 1.01); weekend timing is the weekday's shifted by NHTS's weekend/weekday ratio per
-  period. England's NTS 0504b gives nearly the same (commuting 0.28, shopping 1.26, leisure 1.57,
-  education 0.03), so the shape holds at least for rich car-owning countries. Why it may not carry
+  period. England's NTS 0504b gives nearly the same, so the shape holds at least for rich
+  car-owning countries. Why it may not carry
   over: the weekend is not Saturday and Sunday everywhere (Friday and Saturday in much of the
   Middle East, Friday alone or Friday and Saturday elsewhere; six-day working weeks in parts of
   Asia and Africa), so the calendar must become per country (T-262); where Saturday work and
@@ -723,7 +661,7 @@ notes/T-420.md has the tables.
   over: the arrival shape it weighs riders by is the US one per period (the busiest-hour factors),
   and where people plan around a timetable (long-distance and rural lines, Swiss or Japanese
   regional clock-face service, a country whose last trains run past midnight) the tolerance is
-  longer than a turn-up-and-go rider's; on long trips the logit's damping (4.3) already makes the
+  longer than a turn-up-and-go rider's; on long trips the cost ratio (4.3) already makes the
   extra minutes weigh less. Check: night and late-evening rail shares on a real network with
   service ending early (a commuter line without evening trains) against the model's.
 
@@ -736,11 +674,9 @@ notes/T-420.md has the tables.
   the origin's, a border factor 0.26 x origin income^1.5, except 0.5 between two countries of the
   open-border area (the EU 27, Norway, Iceland, Switzerland, Liechtenstein and the UK; T-809).
   Fitted on NHTS 2017, US, UK, Japanese and Indian residents' trips abroad and flights pairs
-  (notes/T-376.md); the area's 0.5 checked on London - Paris (about 28k a weekday against about
-  26k published, rail and air), Paris - Brussels and Amsterdam - Brussels (notes/T-809.md). Why it
-  may not carry over: one factor for the whole area, island or land pair alike, so the land pairs
-  come out low (Paris - Brussels about two thirds of its rail alone, Amsterdam - Brussels about
-  half); every other border, open or not (Mercosur, ASEAN, the US-Canada line), keeps the one
+  (notes/T-376.md); the area's 0.5 checked on London - Paris, Paris - Brussels and Amsterdam -
+  Brussels (notes/T-809.md). Why it may not carry over: one factor for the whole area, island or
+  land pair alike, so the land pairs come out low; every other border, open or not (Mercosur, ASEAN, the US-Canada line), keeps the one
   general rule; Japan's residents go abroad 6x too often; the ground curve comes from one dense, car-owning
   region; attraction is people, so a giant metro takes most of a smaller neighbour's 80-300 km trips
   (New York - Philadelphia about 2.5-6x plausible, notes/T-379.md, T-438). Check: each country's national travel survey by distance band (MiD Germany, ENTD France,
@@ -756,14 +692,11 @@ notes/T-420.md has the tables.
   have airports: drives to the airports, 90 minutes there (T-712, Anita 2026-10-20), 750 km/h plus
   30 minutes, 60 more with no direct flight, and a fare of $100 + 5 cents a km at 3 perceived
   minutes a dollar. The fare is one simple rule on purpose (Anita: predictable for the player),
-  checked against published averages (notes/T-712.md): $150 at 1,000 km sits between the US
-  ($200-220 each way at 400-2,000 km, DOT's Consumer Airfare Report Table 6, 2025, taxes in, bags
-  out) and Japan and Germany (JAL's domestic revenue a passenger, about ¥15,700 or $108 at 770 km,
-  FY2023; DLR's Low Cost Monitor, €81-141 one way, 2026); all three barely rise with distance, so
-  the base is large and the per-km small. On ideal access rail holds about 99% of rail and air at
-  3 hours on the train, 92% at 4 and 56% at 5 (European studies: 70%, half, a fifth): a lean to
-  rail Anita accepted ("if someone puts in the effort to build a long distance rail it should feel
-  rewarding"); over whole corridors the station's reach brings it down (notes/T-712.md).
+  checked against published averages (notes/T-712.md): $150 at 1,000 km sits between the US and
+  Japan and Germany, all of which barely rise with distance, so the base is large and the per-km
+  small. On ideal access rail holds far more of rail and air at 3 to 5 hours on the train than
+  European studies find: a lean to rail Anita accepted ("if someone puts in the effort to build a
+  long distance rail it should feel rewarding"; figures in notes/T-712.md).
   Airports from OurAirports (global, public domain), their size and direct routes from FR24 (two
   days in May 2026, offline). Why it may not carry over: fares (the US pays about twice Japan and
   Europe; low-cost India, subsidised routes), airport times (US security is slower than a Japanese
@@ -786,27 +719,24 @@ notes/T-420.md has the tables.
   pack's own curve and border factor inside it, region pairs across packs from the pack holding
   both, else the country's admin-1 default (US 0.23, Japan 0.4), else the pack-line default 0.4
   (`pack_line_default`, Japan's fit; T-584), national borders 0.05 (US-Canada, judgement).
-  Checked, not fitted, against LODES jobs between packs: Baltimore - Washington 0.89x, Boston -
-  Providence 0.82x, New Haven - New York 0.92x, Hartford - New Haven 0.99x, New York - Philadelphia
-  0.56x (LODES counts long office-address links, notes/T-268.md). Why it may not carry over: where
+  Checked, not fitted, against LODES jobs between packs (notes/T-268.md). Why it may not carry over: where
   commuting crosses national borders freely (Schengen: Basel, Geneva, Luxembourg) 0.05 is far too
   strong (the long trips' open area, T-809, does not apply to commutes; T-810); a country whose pack lines do not cut commuting as Japan's do would want a lower or
   higher country value in `admin1_default`. Check: the country's census commuting flows between its zones.
   **Which packs share a gravity** (T-539): those whose outlines come within 50 km of each other,
-  chained, formed by `intercity.py --group auto`. In today's two groups the pairs more than 50 km
-  apart carry 0.3% (Northeast) and 0.5% (Japan) of the commuters crossing a pack line. Why it may
-  not carry over: two cities 50-150 km apart with nothing between them exchange no one, and a pack
-  line between packs in a country with no fitted factor takes Japan's 0.4 (T-584; a plain gravity
-  sent 1.9 times the census's). Check: the country's census commuting flows between the packs,
+  chained, formed by `intercity.py --group auto` (pairs more than 50 km apart carry well under 1%
+  of the commuters crossing a pack line). Why it may not carry over: two cities 50-150 km apart
+  with nothing between them exchange no one, and a pack line between packs in a country with no
+  fitted factor takes Japan's 0.4 (T-584). Check: the country's census commuting flows between the packs,
   when one is fitted.
-- **Zones** (T-276, docs/zones.md 2). Non-city zones are county-sized units touching two city zones;
-  the unit (US county, Canadian census division, NUTS-3) differs in size by country, and where
-  admin-2 units are tiny (French communes, Japanese municipalities) a coarser statistical unit is
-  needed.
+- **Zones** (T-276, T-719, T-788, docs/zones.md). Non-city zones are built from a country's units
+  (US county, Canadian census division, NUTS-3), merged within their region to at least about 0.5M
+  people (Anita, 2026-10-20); the unit differs in size by country, and where admin-2 units are tiny
+  (French communes, Japanese municipalities) a coarser statistical unit is needed.
 - **Zone pairs in chunks** (T-780, docs/regional.md 5.1). The longer trips' 6 km zone pairs under
   about 1 trip a day are dealt in chunks of that size, each zone's trips with each place kept. It
-  saves most where many small zones trade a little over long distances (all of Japan: 12.4 million
-  pairs to 3.1 million); a sparse country with few zones gains little and moves little. Why it may
+  saves most where many small zones trade a little over long distances (all of Japan); a sparse
+  country with few zones gains little and moves little. Why it may
   not carry over: a station fed by few small pairs (a rural stop on a long-distance line) shows the
   sampling most, by a quarter or so of its market riders on Japan. Check: `t756-reach.mjs compare
   <label> chunks` on the country's network.

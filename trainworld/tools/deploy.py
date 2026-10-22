@@ -55,7 +55,7 @@ REMOTE = "r2:anitamaps/trainworld"
 PUBLIC = "https://data.anita.garden/trainworld"
 PAGE = "https://anita.garden/trainworld/"
 
-RCLONE = ["rclone", "--s3-no-check-bucket", "--checksum", "--transfers", "8", "--stats-one-line", "--stats", "30s",
+RCLONE = ["rclone", "--s3-no-check-bucket", "--checksum", "--transfers", "32", "--stats-one-line", "--stats", "30s",
           "--header-upload", "Cache-Control: public, max-age=31536000, immutable"]
 GZ = ["--header-upload", "Content-Encoding: gzip", "--header-upload", "Content-Type: application/json"]
 GZ_EXT = (".json", ".geojson")

@@ -24,6 +24,8 @@ const EXPECT = { lines: 109, stations: 1756, trackKm: 4498.6, kmTolerance: 1 };
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 // network noise that is not the game's: the basemap's tiles and fonts when offline, the favicon
 const IGNORE = /favicon|openfreemap|AJAXError/;
+// a glyph range glyphs.py leaves out on purpose: its 404 makes MapLibre draw the codepoints locally
+const GLYPH_404 = /\/fonts\/[^/]+\/\d+-\d+\.pbf$/;
 
 const results = [];
 const report = (name, ok, detail = '') => {
@@ -103,7 +105,7 @@ async function browserChecks(BASE) {
     // SMOKE_SHADE=dark runs it all in the dark theme (T-039)
     await page.addInitScript((shade) => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade, display: { dayShown: 'weekday' }, v: 2 })); } catch {} }, process.env.SMOKE_SHADE ?? 'light');
     page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-    page.on('console', (m) => { if (m.type() === 'error' && !IGNORE.test(m.text())) errors.push(m.text()); });
+    page.on('console', (m) => { if (m.type() === 'error' && !IGNORE.test(m.text()) && !GLYPH_404.test(m.location()?.url ?? '')) errors.push(m.text()); });
     const sep = BASE.includes('?') ? '&' : '?';
 
     // 0. the start menu (T-677): a plain load waits on it with no worker started; New game starts one
@@ -139,7 +141,7 @@ async function browserChecks(BASE) {
     // below opens only what it did before
     const far = await ctx.newPage();
     far.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-    far.on('console', (m) => { if (m.type() === 'error' && !IGNORE.test(m.text())) errors.push(m.text()); });
+    far.on('console', (m) => { if (m.type() === 'error' && !IGNORE.test(m.text()) && !GLYPH_404.test(m.location()?.url ?? '')) errors.push(m.text()); });
     try {
       await far.goto(`${BASE}${sep}debug=1&new=1&paused=1&v=${Date.now()}`);
       await far.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });

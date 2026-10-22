@@ -26,6 +26,7 @@ const SHADE = "tw-zone-loading";
 const EDGE = 48;
 /** how far under the zone's centre a bar sits, px */
 const BELOW = 24;
+const MAX_BARS = 3;
 
 type Box = [number, number, number, number];
 
@@ -80,6 +81,20 @@ export function startZoneLoading(map: MlMap): () => void {
     }
   };
 
+  /** T-939: at most MAX_BARS bars: the zone in view, then the zones nearest the map's centre. */
+  const barsShown = (): Map<CityId, number> => {
+    if (loads.size <= MAX_BARS) return new Map(loads);
+    const c = map.getContainer(), cx = c.clientWidth / 2, cy = c.clientHeight / 2;
+    const focus = activeCity.value;
+    const far = (id: CityId) => {
+      if (id === focus) return -1;
+      const p = map.project(cityById(id).center);
+      return Math.hypot(p.x - cx, p.y - cy);
+    };
+    const picked = [...loads.keys()].sort((a, b) => far(a) - far(b)).slice(0, MAX_BARS);
+    return new Map(picked.map((id) => [id, loads.get(id)!]));
+  };
+
   const draw = () => {
     const fc: FeatureCollection<MultiPolygon> = { type: "FeatureCollection", features: [] };
     for (const id of grey) {
@@ -88,8 +103,9 @@ export function startZoneLoading(map: MlMap): () => void {
     }
     (map.getSource(SHADE) as GeoJSONSource | undefined)?.setData(fc);
     const cardUp = loadingCardShown();
-    for (const [id, el] of bars) if (!loads.has(id) || cardUp) { render(null, el); el.remove(); bars.delete(id); }
-    if (!cardUp) for (const [id, f] of loads) {
+    const shown = cardUp ? new Map<CityId, number>() : barsShown();
+    for (const [id, el] of bars) if (!shown.has(id)) { render(null, el); el.remove(); bars.delete(id); }
+    for (const [id, f] of shown) {
       shape(id);
       let el = bars.get(id);
       if (!el) {
@@ -120,6 +136,8 @@ export function startZoneLoading(map: MlMap): () => void {
   if (map.isStyleLoaded()) add();
   map.on("move", place);
   map.on("resize", place);
+  const repick = () => { if (loads.size > MAX_BARS) draw(); };
+  map.on("moveend", repick);
 
   const dispose = effect(() => {
     loads = loadFailure.value ? new Map() : zoneLoads.value;
@@ -142,6 +160,7 @@ export function startZoneLoading(map: MlMap): () => void {
     map.off("style.load", add);
     map.off("move", place);
     map.off("resize", place);
+    map.off("moveend", repick);
     for (const el of bars.values()) render(null, el);
     layer.remove();
     if (map.getLayer(SHADE)) map.removeLayer(SHADE);

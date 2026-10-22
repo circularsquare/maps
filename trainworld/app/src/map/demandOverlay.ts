@@ -11,7 +11,7 @@ import { MODE_COLOURS, rgb } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { DISC } from "../workers/commutersProtocol";
 import { anchor, EARTH_C, localToMercMatrix, mul4, type Anchor } from "./geo";
-import { hot, onHot } from "./hovered";
+import { bubblePad, hot, onHot, SELECTED_PAD_PX } from "./hovered";
 import type { Overlay } from "./overlay";
 import { PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, type StationShape } from "./stationGeometry";
 
@@ -78,7 +78,8 @@ uniform vec2 u_viewport;
 uniform float u_px_per_unit;
 uniform float u_rscale;   // the player's bubble size (T-099)
 uniform float u_opacity;  // the player's bubble opacity (T-470)
-uniform int u_hot;        // the hovered disc of this set, -1 none (T-730)
+uniform float u_pad;      // device px added to every radius while a bubble is selected (T-936)
+uniform int u_hot;       // the hovered disc of this set, -1 none (T-730)
 in vec3 a_geo;    // x, y, radius (local units)
 in vec4 a_col;    // r, g, b, a
 in float a_edge;
@@ -90,7 +91,7 @@ out vec4 v_col;
 void main() {
   bool hot = gl_InstanceID == u_hot;
   v_hot = hot ? 1.0 : 0.0;
-  float r = a_geo.z * u_rscale * u_px_per_unit;
+  float r = a_geo.z * u_rscale * u_px_per_unit + u_pad;
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
   vec4 c = u_matrix * vec4(a_geo.xy, 0.0, 1.0);
   vec2 off = corner * (r + 2.0);
@@ -173,6 +174,7 @@ uniform float u_rscale;
 uniform float u_stub;     // device px
 uniform float u_width;    // device px
 uniform float u_full;     // device px: the source radius that gives the full alpha
+uniform float u_pad;      // device px added to every disc radius (T-936)
 in vec3 a_from;
 in vec3 a_to;
 in vec2 a_style;          // stub length factor, alpha
@@ -189,8 +191,8 @@ void main() {
   vec2 d = p1 - p0;
   float len = length(d);
   vec2 u = len > 0.0 ? d / len : vec2(1.0, 0.0);
-  float s0 = a_from.z * u_rscale * u_px_per_unit;
-  float s1 = len - a_to.z * u_rscale * u_px_per_unit;
+  float s0 = a_from.z * u_rscale * u_px_per_unit + u_pad;
+  float s1 = len - a_to.z * u_rscale * u_px_per_unit - u_pad;
   if (a_style.x > 0.5) s1 = min(s1, s0 + u_stub * a_style.x);
   float along = (gl_VertexID & 1) == 1 ? s1 : s0;
   float side = gl_VertexID < 2 ? -1.0 : 1.0;
@@ -304,7 +306,7 @@ export class DemandOverlay {
     if (!gl) throw new Error("no WebGL2");
     this.gl = gl;
     this.prog = compile(gl, DISC_VS, DISC_FS);
-    for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_hot", "u_split_train", "u_split_rest"]) this.u[n] = gl.getUniformLocation(this.prog, n);
+    for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_pad", "u_hot", "u_split_train", "u_split_rest"]) this.u[n] = gl.getUniformLocation(this.prog, n);
     this.timerExt = gl.getExtension("EXT_disjoint_timer_query_webgl2");
     this.size();
     map.on("resize", () => {
@@ -405,6 +407,16 @@ export class DemandOverlay {
     this.invalidate();
   }
 
+  /** T-936: a bubble is selected: every bubble at full opacity (the slider ignored) and SELECTED_PAD_PX
+   * larger in radius, so a small one reads over the network. */
+  private selecting = false;
+  setSelecting(on: boolean) {
+    if (on === this.selecting) return;
+    this.selecting = on;
+    bubblePad.px = on ? SELECTED_PAD_PX : 0;
+    this.invalidate();
+  }
+
   /** Show or hide the city's bubbles (kept on the GPU while hidden). */
   setBubblesVisible(v: boolean) {
     if (v === this.showBubbles) return;
@@ -434,7 +446,7 @@ export class DemandOverlay {
     const gl = this.gl;
     if (!this.lineProg) {
       this.lineProg = compile(gl, LINE_VS, LINE_FS);
-      for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_rscale", "u_stub", "u_width", "u_full"]) this.lineU[n] = gl.getUniformLocation(this.lineProg, n);
+      for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_rscale", "u_stub", "u_width", "u_full", "u_pad"]) this.lineU[n] = gl.getUniformLocation(this.lineProg, n);
     }
     const buf = gl.createBuffer()!;
     const vao = gl.createVertexArray()!;
@@ -462,6 +474,7 @@ export class DemandOverlay {
     gl.uniform1f(u.u_stub, STUB_SCREEN * Math.max(this.canvas.width, this.canvas.height));
     gl.uniform1f(u.u_width, LINE_PX * dpr);
     gl.uniform1f(u.u_full, LINE_FULL_PX * dpr);
+    gl.uniform1f(u.u_pad, bubblePad.px * dpr);
     for (const s of this.lines.values()) {
       let m = matrices.get(s.anchor.version);
       if (!m) matrices.set(s.anchor.version, (m = mul4(m0, localToMercMatrix(s.anchor))));
@@ -538,7 +551,8 @@ export class DemandOverlay {
     gl.uniform3fv(this.u.u_split_train, SPLIT_TRAIN);
     gl.uniform3fv(this.u.u_split_rest, SPLIT_REST);
     gl.uniform1f(this.u.u_rscale, this.bubbleSize);
-    gl.uniform1f(this.u.u_opacity, this.bubbleOpacity);
+    gl.uniform1f(this.u.u_opacity, this.selecting ? 1 : this.bubbleOpacity);
+    gl.uniform1f(this.u.u_pad, bubblePad.px * dpr);
     this.discsDrawn = 0;
     let uploaded = -1;
     const lit = hot().disc;

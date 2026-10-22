@@ -1,5 +1,10 @@
 ﻿# Archive
 
+- T-939 [P2] Many regions loading at once. Done 2026-10-22: at most 3 loading bars, the zone in view then the loading zones nearest the map's centre, picked again when a move ends (`map/zoneLoading.ts`).
+- T-936 [P2] Bubbles stand out while one is selected. Done 2026-10-22: demand and zone bubbles at full opacity and 2 CSS px larger (hover and click too, lines start at the larger edge); `DemandOverlay.setSelecting`.
+- T-935 [P2] Trip explorer without a walking section over 10 km. Done 2026-10-22: the "By walking" heading and its line are left out, nothing replaces them.
+- T-938 [P2] Driving a little faster, owning a car a little dearer. Done 2026-10-22: drive speeds x 1.1 (16.5/44/88, highway 110 km/h), ownership $2.00 a trip + $0.13/km; ceilings A and B up about a point (all pass), real save rail +0.4%. notes/T-938.md.
+- T-937 [P3] Do the trip explorer's car and walking legs follow real roads? Answered 2026-10-22: drawn straight; times use per-zone-pair factors from OSM road routing, walks a water-and-bridges raster; road-traced drives would need a new pack graph (3-5 MB) and a routes rerun. notes/T-937.md.
 - T-797 [P2] Lines that backtrack. Done 2026-10-21: B1 to B3 landed (reversals at stops and at track ends, 12 an hour a side, the big U-turn icon); one-way loops are T-798 L3. Archived in T-940's tidy. notes/T-797.md.
 - T-817 [P2] Design speed and high-speed track. Done 2026-10-21: stage a (design speed in the Build tab) and b1 to b3 (high-speed track type, high-speed trains picked per line) landed. Archived in T-940's tidy. notes/T-817.md.
 - T-852 [P3] A coarser grid for very rural areas. Done 2026-10-22: 4 km blocks at 1,000 trip ends, on for every region run (`--coarse 1000`); the first such runs (T-897's Jiangsu pilot, T-903's Trondheim and Oulu) built, gated and joined clean. notes/T-852.md.

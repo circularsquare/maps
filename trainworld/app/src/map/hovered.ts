@@ -19,6 +19,11 @@ export interface Hot {
   disc: DiscHit | null;
 }
 
+/** T-936: CSS px added to every drawn bubble radius while a bubble is selected (the overlay's
+ * `setSelecting` sets it); hit tests add it too. */
+export const bubblePad = { px: 0 };
+export const SELECTED_PAD_PX = 2;
+
 const NONE: Hot = { line: -1, edge: -1, stations: [], disc: null };
 
 let pointerNet: Hot = NONE;
