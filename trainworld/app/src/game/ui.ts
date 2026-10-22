@@ -133,9 +133,9 @@ export interface DockLayout {
 }
 
 /** The stored settings' version: 2 since complex view became the default (T-192), 3 since Nunito and
- * 90% did (T-703), 4 since the real network did (T-727), 5 since the ramp went red to blue (T-812), 6 since Train share became the bubble colouring (T-833). Settings stored before a version had
+ * 90% did (T-703), 4 since the real network did (T-727), 5 since the ramp went red to blue (T-812), 6 since Train share became the bubble colouring (T-833), 7 since keep placing is on by default (T-942). Settings stored before a version had
  * saved the old default with everything else, so that setting is dropped once and the new default applies. */
-const VERSION = 6;
+const VERSION = 7;
 
 function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; design: number }>; v: number }> {
   try {
@@ -212,7 +212,7 @@ export const buildLevel = signal<Level>(LEVELS.includes(saved.build?.level as Le
 export const trackCount = signal<2 | 4>(saved.build?.tracks === 4 ? 4 : 2);
 /** T-445: the track tool starts each segment where the last ended. The Build tab's button and
  * Caps Lock set it; Shift continues a run for one click without it. */
-export const keepPlacing = signal(saved.build?.keep === true);
+export const keepPlacing = signal((saved.v ?? 1) < 7 || saved.build?.keep !== false);
 /** T-727: the track tool snaps to the real network (noritetsu's lines); while it does, the layer is
  * drawn at full strength */
 export const snapReal = signal(saved.build?.snap === true);

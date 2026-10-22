@@ -27,9 +27,8 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
   The elevation, the double, quad or high speed choice, the design speed, the keep placing switch and the snap switch are remembered per
-  browser (localStorage with the other panel settings, not in the save) [T-468]. Caps Lock only
-  changes the switch when its state changes after the page loads, so a stored setting wins over a
-  Caps Lock left on or off [T-487].
+  browser (localStorage with the other panel settings, not in the save) [T-468]; keep placing is on
+  by default [T-942].
   The number keys work from any tab and open the Build tab; the key of the tool already on does
   nothing. Each button shows its key. Three letter keys work from any tab [T-670, `ACTION_KEYS` in
   `ui/tabs.tsx`]: C constructs all blueprints (the same as "Construct blueprints" below, nothing when
@@ -62,8 +61,8 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   undo step), the track passing through the click, at the level selected. A click with Shift held
   places the segment and starts the next one at its end; without Shift the tool is ready for a new
   start. The **keep placing** button (an icon beside the Double and Quad choice) does the
-  same for every click until it is switched off, and so does Caps Lock, which is the same switch
-  (the button shows it) [T-445]. A double click, Escape or Enter ends the run (the first click of
+  same for every click until it is switched off; it is on by default, and each press of Caps Lock
+  flips it, whatever the lock's own light shows (the button shows the switch) [T-445, T-942]. A double click, Escape or Enter ends the run (the first click of
   the double places the last segment); the button stays on. A click on the start (within 6 px, or
   on its node) does the same at any later time: it ends the run, or drops a start that has no
   segment yet [T-707]; a segment never ends where it starts, so no loop is lost. To carry on later, click the loose end

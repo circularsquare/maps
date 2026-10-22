@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-942 [P2] Keep placing on by default (Anita 2026-10-22). Done 2026-10-22: the setting starts on (stored settings below version 7 take the new default once), and Caps Lock flips it on each press rather than mirroring the lock's light. docs/ui-building.md.
 - T-924 [P1] Publish the game. Done 2026-10-22: live at https://anita.garden/trainworld/ (website 465731b, build 107a329, 799 zones), data on R2 at `trainworld/2026-10-22/` (1.04 GB); `deploy.py --verify --page` passes, smoke on the live page passes but for expected 404s (T-941). notes/T-924.md.
 - T-551 [P2] Demand review for Anita. Settled 2026-10-22: there is no deep calibration to wait for (Anita: it happens in parts); its points were taken up by the ceiling tests (T-636), car ownership (T-620, T-938) and car speeds (T-938). notes/T-551.md.
 - T-928 [P1] Faster batches. Done 2026-10-22: one browser session per gate (about 10 s a zone, was 27-30), publishing from a hard-linked freeze made after each clean join (`pipeline/freeze.py`); the incremental join was measured and dropped (slower on compact units, up to 0.9% off the full join per zone). notes/T-928.md.

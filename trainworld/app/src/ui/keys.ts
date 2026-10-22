@@ -35,22 +35,12 @@ export function keyIsTheirs(e: KeyboardEvent): boolean {
   return select && !e.ctrlKey && !e.metaKey && !e.altKey && /^\p{L}$/u.test(e.key);
 }
 
-/** Caps Lock is the same switch as the Build tab's keep-placing button (T-445): each change of its
- * state, seen on any key or press, sets `keepPlacing`; the button sets it too and the two follow
- * whichever moved last. The state is unknown until the first event, which only records it (unless
- * it is the Caps Lock key), so the stored setting stands over a Caps Lock left on (T-487). */
+/** Caps Lock flips the Build tab's keep-placing switch (T-445), whatever the lock's own state: keep
+ * placing is on by default (T-942), so mirroring the lock would make an unlit Caps Lock mean on. */
 export function followCapsLock() {
-  let last: boolean | null = null;
-  const sync = (e: Event) => {
-    if (!(e instanceof KeyboardEvent) && !(e instanceof MouseEvent)) return;
-    const on = e.getModifierState("CapsLock");
-    const first = last === null;
-    if (on === last) return;
-    last = on;
-    if (first && !(e instanceof KeyboardEvent && e.key === "CapsLock")) return;
-    keepPlacing.value = on;
-  };
-  for (const type of ["keydown", "keyup", "pointerdown"]) window.addEventListener(type, sync, true);
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "CapsLock" && !e.repeat) keepPlacing.value = !keepPlacing.peek();
+  }, true);
 }
 
 /** After a pick made with the mouse, a <select> gives up its focus, so the game's keys work at
