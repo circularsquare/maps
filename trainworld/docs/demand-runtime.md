@@ -11,25 +11,19 @@ walk plus a margin for edge cells and pack frames, `app/src/workers/cityReach.ts
 activity end walks, so a station only a ride from the pack carries none of its riders (T-394; the
 regional market carries riders between zones). Any
 other city has no subzone with a station, so all its trips walk or drive and it adds nothing to
-any line's load, fare or crowding: leaving it unloaded changes no number elsewhere. A worker
-check solved a Midtown line with all nine packs open and with New York alone; every line load,
-boarding, crowding figure, New York and market summary and corridor was bit-identical, and the
-other eight cities had zero rail (notes/T-149.md). Packs arrive in `open` messages after the
+any line's load, fare or crowding: leaving it unloaded changes no number elsewhere (checked
+bit-identical, notes/T-149.md). Packs arrive in `open` messages after the
 WASM starts, the viewed city's first; a solve covers the cities open when it starts, and the
 client sends one only when every city its network needs is open in every worker. A city that
 construction reaches later joins at the next solve, which the client sends at once; a city only
-viewed or on screen opens bare instead (below). Opening is cheap for a commute
-pack (16 ms New York, 1-7 ms the others, natively); the cost is each city's everyday purposes
-(natively New York 0.6 s, Washington 0.3 s, Philadelphia 0.2 s, Boston 0.2 s, Baltimore 0.1 s,
-the four small ones 0.02-0.06 s, since T-397's sample counts; in Chrome, measured before T-397
-with about twice the samples, New York 1.3-1.9 s in each of five workers, Philadelphia 1.1-1.2 s
-and Washington 1.7-1.8 s). A zone's **market pack** (T-377, `<id>.market.json`) opens in the
+viewed or on screen opens bare instead (below). Opening a commute pack is cheap; the cost is each
+city's everyday purposes (timings: notes/demand-measurements.md). A zone's **market pack** (T-377, `<id>.market.json`) opens in the
 solving workers once the zone is reached, a built station lies within 30 km of its box (T-396's
 rule, per zone), or the zone is selected (a zone selection, or a bubble selection in it); never for
 viewing alone (T-801: tens of MB in every solving worker); before that no solve waits for it or covers it,
 and a solve sent without a market pack open since is sent again. The workers compose the market
 from the packs they hold (`MarketPacks.market`) whenever packs open or close: a composition costs
-about as much for one pack as for forty (0.7-3.5 s in Chrome on a big game), so the page sends the
+about as much for one pack as for forty, so the page sends the
 market packs downloaded together in one `open` once none is still downloading, and a worker opens
 the `open`s waiting for it together, one composition for them all (T-889). **Packs close when
 nobody needs them** (T-301): a zone that is
@@ -45,24 +39,18 @@ pack) rather than lowering it. `?perfOff=close` keeps everything open. A new gam
 opens only New York; a save with construction in several cities pays
 each of their openings once, in every worker. Only the cells with a budget for a purpose hold its
 destination samples and their pair indices (T-395; about half of all cells x purposes have none),
-and a cell holds one sample per 8 of its trips (T-397): natively New York's everyday layer holds
-2.3M samples, about 18 MB with their pair indices. A sample's
+and a cell holds one sample per 8 of its trips (T-397). A sample's
 pair index is held only once a network gives its layer a pair, written in place on the next
 network, and the pairs are found through a 4-byte-a-slot table sized from the last network's count
 (T-398). A city's everyday layer is opened beside its commutes (`EverydayApi::beside`, T-399) and
 shares their cells, zone grid, gravity and routes; its own are the zones' sums of residents and
 jobs, and the station access and subzones built on those weights (not the commute weights), so
-each network sets up the two layers' subzones separately. Natively a solving worker on the real
-save holding three periods has about 156 MB of heap after a solve and 188 MB at its peak; with
-all nine Northeast cities open, 282 and 318 MB (notes/T-399.md).
-T-172 made the everyday opening cheap: zone centres sit on the zone grid, so the destination
-gravity's decay comes from one table per purpose by grid offset instead of a square root and an
-exp per zone pair (the sampled destinations agree with before to 7 significant figures in every
-purpose's trips, walk share and trip length), and the long loops of the opening and of
-`set_network` run in functions called once per zone or per 16k samples, because a browser
-optimises a WebAssembly function only between calls (a single long call stays in the baseline
-compiler throughout: in Chrome that made the opening 3-5x slower than natively). Startup
-timings: notes/T-172.md, notes/T-174.md.
+each network sets up the two layers' subzones separately (memory: notes/T-399.md).
+Zone centres sit on the zone grid, so the everyday destination gravity's decay comes from one
+table per purpose by grid offset (T-172), and the long loops of the opening and of `set_network`
+run in functions called once per zone or per 16k samples, because a browser optimises a
+WebAssembly function only between calls (a single long call stays in the baseline compiler
+throughout). Startup timings: notes/T-172.md, notes/T-174.md.
 
 **Bare zones** (T-325, T-336). A zone viewed or on screen beside the view (above zoom 7.5, T-871)
 that no built station reaches opens **bare**: its pack goes to the auxiliary worker alone, which sets its commute and
@@ -84,37 +72,25 @@ solved with no station in it.
   then and leaves the zone out, else to every worker. A new game (`?new=1`) has no station, so its
   reach is known at once: the viewed zone opens bare, the solving workers open only the market and
   solve it (under 0.1 s), and the loading card and held clock go when the bare figures arrive,
-  which are final as they come (`holdDone`). New York's city figures and bubbles are identical to
+  which are final as they come (`holdDone`). The city figures and bubbles are identical to
   the bit to the full solve's; the network's own totals leave the bare zone out, as after a pan.
-  Card gone 2.6-2.8 s after navigation (dev server, warm), against 6.6-7.1 s before; the bare
-  opening is 2.0-2.2 s of it, 0.4 s more without the everyday warm-up, which stays. A saved game's
-  network arrives after its viewed pack has downloaded (about 2.1 s against 0.65 s for the real
-  New York save), so a save opens as before; waiting for the reach would cost every save that
-  reaches its viewed zone about 1.4 s.
+  A saved game's network arrives after its viewed pack has downloaded, so a save's viewed pack
+  goes to every worker; waiting for the reach would cost every save that reaches its viewed zone
+  more than it saves.
 - **The first station** (T-351): with no station in the game, picking the track, station or
-  blueprint tool opens the bare viewed zone in every solving worker as well (`prefetchViewed`,
-  2.4-2.6 s for New York), with no solve started for it, so a first line's solve need not wait:
-  its first estimate came 2.0-2.1 s after the build, as when the zone was open everywhere; built
-  with no tool picked first, 4.4-4.6 s. notes/T-351.md.
+  blueprint tool opens the bare viewed zone in every solving worker as well (`prefetchViewed`),
+  with no solve started for it, so a first line's solve need not wait. Timings: notes/T-351.md.
 - A station built within reach downloads the pack again (the page keeps no copy) and opens it in
   every worker; the solve waits for it and covers it from then on. Its bare figures serve until a
   shown solve covers it. The auxiliary worker keeps its bare copy (WASM memory never shrinks).
-- **Memory and time** (real New York save, five solving workers, a 13-step pan): each solving
-  worker stayed at 354 MB, against 855-955 MB when every zone on the way opened in every worker
-  and was solved (10 solves); the auxiliary worker grew from 76 to 477 MB; the pool from about
-  4.6 GB to 2.25 GB. A bare zone's bubbles came 1.5-3.6 s after arriving, against a final result
-  16.6-22.6 s after. A click on a bare zone's bubble drew its far end in 155 ms. Opening bare took
-  0.7-1.4 s (Toronto, Philadelphia) in Node.
+  Memory and timings of a pan with bare zones: notes/demand-measurements.md.
 
-**Everyday warm-up** (T-173). Even so, five workers opening New York's everyday layer at the same
-time from baseline code took 7-8 s each instead of 1.3-1.8 s in most page loads (one worker alone
-1.6 s, three 4.1 s each: as if they shared one core; never with Chrome's
-`--no-wasm-dynamic-tiering`; not the module cache, efficiency mode or the tiering budget). So
-worker 0 opens a small synthetic everyday layer first (`warm.rs`, 22,500 cells, about 150 ms;
-ready 0.36-0.66 s after navigation, about when New York has downloaded), and the client holds the other solving workers' city packs
-until it is ready (`demandClient.ts` `held`). Compiled code is shared by a page's workers, so
-they all open on optimised code: New York 1.3-1.8 s in every worker in 10 of 10 page loads,
-against 3.4-7.3 s in 7 of 10 without (`?perfOff=stagger`, same build).
+**Everyday warm-up** (T-173). Several workers opening a big everyday layer at once from the
+browser's baseline code each take several times as long as one alone. So worker 0 opens a small
+synthetic everyday layer first (`warm.rs`, 22,500 cells), and the client holds the other solving
+workers' city packs until it is ready (`demandClient.ts` `held`). Compiled code is shared by a
+page's workers, so they all open on optimised code. `?perfOff=stagger` turns it off; timings in
+notes/T-174.md and notes/demand-measurements.md.
 
 **The pool and the bubbles' chain** (T-119). The pool is half the logical cores less one, at most
 5, at least 1 workers that solve, and one more that holds no period ([architecture.md](architecture.md) 7). Periods go to workers

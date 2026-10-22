@@ -15,11 +15,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   each adjacent leg (the whole leg next to an end), capped at what the top speed needs (1,796 m). A
   curve under the minimum radius is refused ("The curve is too tight"). A route starting or ending
   on existing track gets a lead-in PI on that track's heading, so it leaves like a turnout and its
-  first curve starts at the node (it never runs on top of the main line). Track drawn while the
-  track ran through the clicks (T-079, saves from that day) keeps its shape; the points it was drawn
-  through are kept with it, and its first reshape makes them its PIs (auto radius) like on any other
-  track.
-- **Drawing through points** (T-418; the only way to draw since T-422, Anita 2026-10-15): click
+  first curve starts at the node (it never runs on top of the main line). Track in a save that
+  keeps the points it was drawn through (T-079) keeps its shape; its first reshape makes those
+  points its PIs (auto radius).
+- **Drawing through points** (T-418, T-422; the only way to draw, Anita 2026-10-15): click
   where the track starts (open ground, a track end, a node, or track: a new junction, built flat),
   then where it goes, at the level selected. The second click places the segment at once and later
   clicks never change it; Shift held chains the next segment from its end, Backspace takes the last
@@ -64,9 +63,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   straight); one ending on track or a node has both pairs meet there.
 - **One piece per segment** (T-244, Anita: deleting one stretch should not delete the whole
   path): each segment drawn is one edge (each pair's, on quad track), joined to the next at a
-  plain node (two edge ends, no station). The route edit still accepts clicked corners (`pis`) and
-  then makes one piece per corner, cut in the middle of the leg between two corners, the shape
-  unchanged; the drawing tool no longer sends any. The delete tool, Construct in the track
+  plain node (two edge ends, no station). A route edit given clicked corners (`pis`, as the
+  real-network snap sends them, T-727; the drawing tool sends none) makes one piece per corner, cut
+  in the middle of the leg between two corners, the shape unchanged. The delete tool, Construct in the track
   inspector and the track inspector itself act on one piece, and removing a piece leaves its
   neighbours with track ends where it was. The joints are not drawn and cost nothing; trains pass
   them with no speed limit or delay (a track section runs on through a plain node, 6.2). A station placed
@@ -83,7 +82,7 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **Reshaping blueprint track** (T-064, T-092, T-071): a selected stretch of blueprint track shows its PIs
   as squares on the map; dragging one previews the new shape with each curve's radius and speed
   (or why it cannot be built), letting go applies it as one undoable edit, Escape puts it back. The
-  track inspector lists the corners with each curve's speed and a radius stepper (100 to 1,500 m,
+  track inspector lists the corners with each curve's speed and a radius stepper (100 to 1,796 m,
   then auto), a level stepper and Remove for each corner. Add corner inserts an auto-radius
   point midway along the selected interval between an end and a corner, or two corners; the
   new square can then be dragged. Removing the last corner restores a straight stretch.
@@ -95,8 +94,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   or goes to the curve's end when it is within a few metres of it, T-258). A joint between two
   pieces of a route (T-244: a plain node on the straight between the corners either side of it)
   moves with a corner dragged next to it, to the same fraction of the way between the corners, and
-  the preview shows the neighbouring piece too, so a corner drags as it did when the route was one
-  edge. Constructed track cannot be reshaped (remove it and draw it again). notes/T-064.md.
+  the preview shows the neighbouring piece too, so a corner drags as on a route of one edge.
+  Constructed track cannot be reshaped (remove it and draw it again). notes/T-064.md.
 - **Moving blueprint nodes** (T-093): with the select tool, a track end, junction or station can be
   dragged while every edge meeting there is blueprint and its station is not constructed; the
   blueprint track there follows, previewed like a reshape (each curve's radius and speed, or why
@@ -210,7 +209,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   beside it (`Alongside`); a run stops at high-speed track as at single track.
 - **Crossovers** (T-338, design notes/T-334.md): a crossover joins a track to the track running
   beside it. The game places them past quad stations (above); the player has no tool for them
-  since T-733, but `TrackApi::add_crossover` stays and saves keep theirs. It finds the nearest other track whose centre line is 6-15 m
+  (T-733), and saves keep theirs. `TrackApi::add_crossover` finds the nearest other track whose centre line is 6-15 m
   from the click and parallel there (quad's other pair, or a separate route drawn alongside), splits
   both 60 m either side of the click (or uses a plain joint within 8 m of that point), and joins
   the four new nodes with two diagonals in an X, one each way, so a train can change track in
@@ -226,12 +225,11 @@ Full design, numbers and sources: `notes/T-008.md`.
   junction or a station. A crossover keeps its shape: no corners to drag, no level change, its end
   nodes cannot be moved or made a flyover, no station or junction on a diagonal. Deleting either
   diagonal deletes both (the four nodes stay as plain joints); constructing either builds both.
-- **Junctions in plain words** (T-080): a new junction is built flat (the branch crosses the other
-  direction's track at the same level: cheaper, trains may wait for each other). The junction
-  inspector says so in plain words and offers "Build a flyover" with its price (paid at once on a
-  constructed junction, else added to the blueprint) and the waiting it saves per train at the
-  demand level in force; a junction's capacity marker opens that inspector. A blueprint flyover can
-  be removed again. No setting while drawing.
+- **Junctions** (T-080): a new junction is built flat (the branch crosses the other direction's
+  track at the same level: cheaper, trains may wait for each other); there is no setting while
+  drawing. A flyover is bought from the junction inspector ([ui-building.md](ui-building.md)), which
+  gives its price and the waiting it saves per train at the demand level in force: paid at once on
+  a constructed junction, else added to the blueprint, where it can be removed again.
 - **No track at ground level over water** (level 0 is invalid where the water mask says water);
   bridges and tunnels over or under water cost 2x (6.4). The mask is 25 m pixels in the city
   pack; water narrower than ~50 m (creeks, ditches, small ponds) is not in it, since a railway
@@ -264,15 +262,20 @@ Full design, numbers and sources: `notes/T-008.md`.
   other nodes along it; curved platforms are fine. Through a station the platform is centred on
   the node; at a dead end it runs from the node along the track and trains stop at its middle
   (`service.rs`). The map draws it there, at its true length and bent as the track is, from
-  zoom 14, as a box whose width is fixed on the ground too (16 m, a quarter narrower than a plain line and its rim, the same for every station and mode; never under 7.5 px on screen), so its shape is the same at every zoom from 15 in
-  ([ui-map.md](ui-map.md) "Stations"; T-189, T-204, T-239). Platform length caps train length (20 m cars).
+  zoom 14 ([ui-map.md](ui-map.md) "Stations"). Platform length caps train length (20 m cars).
+  Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot,
+  and platforms within 100 m of each other count as one station (4.4). Stations whose platforms
+  come within 50 m form a station complex, which a click on a station selects as one (T-249) and
+  the demand circles can show as one (8, T-146); the player can link any two stations up to 1 km
+  apart into one complex and unlink them (T-197, saved with the network as `Network::links`, not in
+  the undo history). Riders change between any two stations of a complex on foot, however far
+  apart (4.4, T-161).
 - **Train length** (T-733, `TrackApi::set_line_cars`, `build_line` in `service.rs`): each line
   stores its cars, 0 (a new line's default) for the most its shortest platform fits; a set length
   runs as set, at most that cap. A platform later shortened below it caps the trains while the
   setting stays, so lengthening the platform brings the set length back. Riders a train holds
   (160 a car at crush), the cars the fleet needs and the running cost (US$4 a train-km plus US$2 a car-km) follow the cars
   run. One undoable edit, buying any cars it needs as other fleet growth does (6.4).
-  Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot, and platforms within 100 m of each other count as one station (4.4). Stations whose platforms come within 50 m form a station complex, which a click on a station selects as one (T-249) and the demand circles can show as one (8, T-146); the player can link any two stations up to 1 km apart into one complex and unlink them (T-197, saved with the network as `Network::links`, not in the undo history). Riders change between any two stations of a complex on foot, however far apart (4.4, T-161).
 
 ### 6.2 Capacity and junctions
 
@@ -295,8 +298,7 @@ route conflict with every move on the other.
 
 - track section (a run with the same set of lines), per direction: `s = 70 s + v / 0.6 m/s²`
   (v the top speed reached on it), so at most 41 trains/h at 40 km/h, 34 at 80, 29 at 120, 25 at
-  160, 16 at 320: the published maxima of the Victoria line, Chuo Rapid, Thameslink and the
-  Tokaido Shinkansen (T-517)
+  160, 16 at 320 (T-517)
 - single-track section between passing points: run time + 60 s, counting both directions
 - platform track: dwell + 60 s per stopping train, 40 s per passing one, turnaround + 60 s
   for a short-turn ending at a through station. A single-track platform shares both directions.
@@ -376,18 +378,13 @@ alert under its schedule naming the full resource ("Turning on the platform at N
 full") and, per demand level, how many of its trains are held out of service (they wait at the
 ends of the line instead of running), with the resource's limit in trains an hour and what helps on
 hover (`TrackApi.line_held`). Markers sit over the
-network and under the demand views' bubbles (T-099). Like station names, they hide
-below zoom 12 and reserve space around each tag (48 px horizontally / 28 px vertically before
-zoom 14, then 20 / 12 px). Larger delays win collisions, then higher utilisation (T-102).
-Markers never cover a station name: each takes the first spot around its resource that is clear
-of names and earlier markers (above right, above left, below right, below left, right, left), and
-hides only when none is (T-184, [ui-map.md](ui-map.md)).
-The junction inspector (T-031) draws the junction as a small diagram and lists its moves (from
+network and under the demand views' bubbles (T-099). Like station names, they hide below zoom 12
+and keep the names' padding; larger delays win collisions, then higher utilisation (T-102); they
+never cover a station name ([ui-map.md](ui-map.md) "Station names and capacity tags", T-184).
+The junction inspector (T-031, [ui-building.md](ui-building.md)) lists the junction's moves (from
 one station or direction to another), with the lines on each, trains an hour at the level in
 force, the wait per train, which moves each crosses, and the busiest crossing's utilisation. The
-line panel splits the round trip into running, dwell at stops, turning at the ends, reversing
-partway (when the line does) and waiting at busy track, and names the places it waits most
-(notes/T-031.md).
+line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md](ui-inspectors.md).
 
 ### 6.3 Trains, lines, schedules
 
@@ -508,12 +505,11 @@ partway (when the line does) and waiting at busy track, and names the places it 
   no train of theirs can be drawn (an hour plus the longest trip and two headways after the
   change), and a loaded game starts without them. Deterministic: the drawn trips are a function
   of the service, its eras and the hour asked for, and every window agrees.
-- **Changing a train count is quick** (T-229, notes/T-229.md). The stepper shows the new count at
+- **Changing a train count** (T-229, notes/T-229.md). The stepper shows the new count at
   once (`game/world.ts` `pendingTrains`), and clicks made while an edit is in flight are folded
   into one edit sent when it lands. The worker sends a service-only state for it: no geometry
   moved, so it skips rebuilding the renderer's buffers and the main thread swaps in only the new
-  run profiles (`renderer.setService`). On the real New York save an edit takes 36-48 ms in the
-  worker and 6-10 ms on the main thread.
+  run profiles (`renderer.setService`).
 - **Trip times on the stops list**: each stop shows the time from the start of the line, next to
   the station (e.g. Grand Central 1m23s, Long Island City 2m59s), and the panel shows the whole
   round trip.
@@ -633,8 +629,8 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   follows one curve of trip length for the network, set in the Money tab [T-883,
   `app/src/game/fareCurve.ts`]: straight between the player's nodes, carried on past the first and
   last node at that stretch's slope (so a level last stretch is a cap), never below $0, never
-  falling. It starts as $1.50 + $0.10 a km (nodes at 1 and 100 km; a save from before T-883 loads
-  its base and rate the same way); a trip that changes lines pays it once on its whole length. In
+  falling. It starts as $1.50 + $0.10 a km (nodes at 1 and 100 km; a save with a base and rate
+  instead loads them the same way); a trip that changes lines pays it once on its whole length. In
   demand, route search charges the first stretch as a base and a rate per km, and each station
   pair's cost adds the rest of the curve on the expected km of its strategy (`FareCurve` in
   `sim/src/demand/kernel.rs`); the trip explorer shows the curve's fare on the route's own length.
@@ -693,7 +689,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
 The clock worker owns the network. The main thread sends edit operations (each with an inverse,
 for undo); the worker answers with the new state, then the edit's answer (or the reasons it was
 refused). The alignment being drawn is previewed by the worker as a trial edit, applied, measured
-and rolled back, so the preview knows everything an edit would refuse (0.4 ms a round trip). The
+and rolled back, so the preview knows everything an edit would refuse (timings in notes/T-025.md). The
 worker sends the whole network state after an edit, with the renderer's buffers already built;
 the main thread uploads them. Both sides redo only what the edit changed (T-496): the worker keeps
 each edge's, line's and station's piece of the buffers from the last build and reuses any whose
@@ -712,15 +708,8 @@ cancels a running solve. An edit is refused only for problems it adds (radius, r
 platforms, ground over water); problems already there, say from a newer water mask, do not block
 edits nearby. Every edit returns its inverse, which is undo (for blueprint edits; 6.4). Blueprint
 track wakes neither profiles nor demand until it is constructed, except a line planned over it,
-which may show a preview. An edit and the profiles it changes
-take 0.4-2.6 ms in WASM on a 2,000 km, 60-line network, and 1.5-2.5 ms at 10,000 km with 400
-lines except on track many lines share (about 20 ms for an edge of 23 lines, nearly all of it
-their profiles); track no line uses, under 0.1 ms (notes/T-050.md). A save holds
-PIs (format TWT4 also keeps the T-079 original drawn points and optional whole-line allocations; TWT5
-(T-125) is TWT4 in the Northeast conic and TWT6 (T-306) TWT4 in the Mercator world frame, the
-only difference being the magic; TWT2 and TWT3 saves load),
-nodes, stations and lines: ~100 KB compressed for 10,000 route-km on a synthetic network
-(notes/T-040.md).
+which may show a preview. Edit timings: notes/T-050.md. A save holds PIs, nodes, stations and
+lines; its format is in [architecture.md](architecture.md) 11.
 
 ### 6.6 Boarding: each train's load, each platform's crowd
 
@@ -742,7 +731,7 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   multiplied by the share of riders whose tolerance (30 minutes to 6 hours, log-uniform) covers the
   wait for the stop's next departure in a steady day, and scaled so the period's total is the same.
   So nobody arrives hours before a peak-only line's next train or overnight before the first; a
-  stop with a train every half hour or better arrives as before to the bit, and a period with no
+  stop with a train every half hour or better arrives by the plain shape exactly, and a period with no
   train due within 6 hours at all keeps the plain shape (demand sends it almost nobody).
 - **Each train, in the order it leaves each stop**: the line's share alighting there gets off
   (demand's alightings over the riders it has arriving, per period; everyone at the last stop), then
@@ -796,32 +785,19 @@ per person and does not change who travels: demand still decides that (SPEC 4).
 - **Room on a platform** (T-219, `platformRoom` in `game/boarding.ts`): what counts as a full
   platform for drawing. Each direction's riders wait on one side, 2.5 m of usable width (half a
   6 m island platform less the edge strip kept clear) along the platform's length, at 0.3 m² a
-  rider: the roomy end of Fruin's queuing level of service E (0.2-0.3 m² a person, standing in
-  contact with others; the TCQSM's platform scale), about a train's standing density at crush. A
-  150 m platform holds 1,250 a side. Only the drawing uses it: the account still lets a crowd
-  grow past it (nobody is turned away from a platform).
-- **Cost** on the real New York save (109 lines, 3,294 platforms): new riders 40-60 ms of the clock
-  worker in steps of at most about 5 ms; an hour's slice about 11 ms (3-4 of them
-  without the pulses) and about 870 kB with its 48,000 pulses, transferred; drawing the crowds 0.2-0.5 ms each game second on the main thread;
-  the transfer pairs 12,000, asked of the demand workers once per result shown, about 20 ms.
-
-- **How full trains get** (T-207, notes/T-207.md). On the real New York save, of the trains leaving
-  between 08:00 and 09:00 the median is at 48% of crush at its fullest stretch, the 90th
-  percentile at 78%, and 23 of 878 reach crush; between 17:00 and 18:00, 70%, 98% and 71 of 836.
-  A player's Manhattan trunk (18 stops Harlem to Fulton St, 14 ten-car trains at the peaks) is
-  packed full on every peak train. Trains reach crush mostly in the busiest half hour: arrivals
-  peak at 1.8 times the period's mean at its middle, against demand's 1.4 for the busiest hour.
-  Demand's crowding penalty (docs/demand-kernel.md step 7) starts once seats run out, so its equilibrium
-  usually sits between seated and crush loads.
+  rider (why: DECISIONS, T-219). A 150 m platform holds 1,250 a side. Only the drawing uses it: the
+  account still lets a crowd grow past it (nobody is turned away from a platform).
+- **Cost and how full trains get**: measured on the real New York save in notes/T-164.md,
+  notes/T-554.md and notes/T-207.md.
 - **What the panels show** (T-230): every train-fullness figure is the account's: the gauge on
   trains, the train tag and inspector, the line inspector's "Trains today" (`Boarding::line_summary`:
   fullest train, trains leaving full and when, riders left behind a day, longest wait), the Lines
   tab's train count and the schedule's crowding dots (riders' extra wait after full trains
   against their ride, `Boarding::crowding`, T-491; each rider counted by the fare they pay, the
   base plus the per-km rate times the km a boarder at that stop rides on average with every stop
-  letting off its share, `ride_km`, T-818) and the platforms. Demand's busiest-hour average train is not shown: on the real New York save 28 of the
-  93 lines it put under 100% leave riders behind in the account (the L: 87%, yet 13 trains leave
-  full 17:51-18:34 and 4,300 are left behind), because riders arrive fastest mid-peak.
+  letting off its share, `ride_km`, T-818) and the platforms. Demand's busiest-hour average train
+  is not shown: riders arrive fastest mid-peak, so a line it puts under 100% can still leave riders
+  behind (notes/T-230.md).
 
 Riders left behind feed back into demand (T-188): each crowding round runs this rule on the
 period's own trains and adds the average extra wait at each line, direction and stop to that

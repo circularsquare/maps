@@ -6,10 +6,8 @@ Sections 2, 7 and 11 of the spec in detail. Where files live: `docs/code-map.md`
 
 ## 2. The core performance idea
 
-**Trains are cheap; passengers are expensive.** Subway Builder's changelog points at passenger
-work: a timetable search per 200-person group, "15 minute lag spikes" from every group re-deciding
-at once, freezes when drawing track on big networks. It is Electron + React + MapLibre, so the map
-library is not the problem; bursty per-group passenger work is.
+**Trains are cheap; passengers are expensive.** Passenger work is what has to stay cheap and
+never come in bursts (the evidence from Subway Builder: notes/architecture-history.md).
 
 - **Trains are a function of time, not things that get stepped.** A line has a route, a run-time
   profile (accelerate, cruise at the curve-limited speed, brake, dwell, plus junction delays,
@@ -35,9 +33,8 @@ Borrowed from Factorio and NIMBY Rails (`research/performance-factorio-nimby.md`
 - Thread only independent, mostly-read work, each worker owning its memory (FFF-215, FFF-421).
 - Deterministic simulation: save = inputs, replays and bug repro for free (FFF-76).
 - Snapshot-then-compress saving off the main thread (FFF-201).
-- NIMBY Rails hands the renderer a small motion snapshot each frame and routes passengers over a
-  graph of transfer stations only; it simulates individual riders, and overfull queues slow its
-  whole sim. The flow model is meant to go far past that.
+
+How NIMBY Rails does it, for comparison: notes/architecture-history.md.
 
 ### 2.1 No signals, with the door left open
 
@@ -67,8 +64,8 @@ Web first, so it can be shared as a link.
   worker ([track-and-service.md](track-and-service.md) 6.5).
 - **Map**: MapLibre GL 6 for the basemap (it has a globe, which our layer does not draw on yet,
   T-033). Track, stations and trains are drawn by our own WebGL2 renderer on a **separate canvas
-  over the map**: not GeoJSON sources (per-frame `setData` pins a core) and not a MapLibre custom
-  layer (that repaints the whole basemap on every train frame). Track buffers are built in the clock
+  over the map**, neither GeoJSON sources nor a drawing custom layer (why:
+  notes/architecture-history.md). Track buffers are built in the clock
   worker and replaced on each edit, made from per-edge, per-line and per-station pieces the worker
   keeps and rebuilds only when their inputs change (`NetCache` in map/network.ts, T-496); trains are instanced and positioned on the GPU from keyframes
   and the clock. World coordinates and the moving draw anchor: [world.md](world.md).
@@ -128,8 +125,8 @@ Web first, so it can be shared as a link.
   small synthetic everyday layer (`warm.rs`) and the others get packs only once it is ready, so
   every worker opens on optimised code [T-173]. The clock worker's network snapshot after each
   service change goes to every worker; a worker takes a newer one between populations. Messages:
-  `workers/demandProtocol.ts`; results land in `game/demand.ts`. Timings: [demand-kernel.md](demand-kernel.md)
-  4.4, notes/demand-measurements.md.
+  `workers/demandProtocol.ts`; results land in `game/demand.ts`. Timings:
+  notes/demand-measurements.md, notes/demand-kernel-history.md.
 - **Only final results replace final results** [T-232, T-324]: after an edit every figure keeps the
   last finished forecast until the new solve's last round lands; earlier rounds are shown only where
   nothing final is (startup, a whole-game load, a city just opened), and for lines new or changed by
@@ -139,11 +136,9 @@ Web first, so it can be shared as a link.
   [ui-panels.md](ui-panels.md) "Loading".
 - **Loading and readiness** [T-149, T-172, T-180, T-243, T-347, T-351]: input is never blocked. A
   loaded game holds only the clock until every needed city is open and the fresh solve's final
-  round has landed (`HOLD_ROUND`, `holdDone`); T-172 released it at the first estimate and T-328 at
-  the cached result, but the game then lagged through the crowding rounds, so Anita had it wait
-  (T-347). A viewed zone open bare is final from its opening: a new game (no station) opens its
-  viewed zone bare, its solve covers the market alone, and the card goes when the bare figures
-  arrive, about 2.7 s after navigation instead of about 7 s (T-351). The cached result
+  round has landed (`HOLD_ROUND`, `holdDone`; Anita, T-347). A viewed zone open bare is final from
+  its opening: a new game (no station) opens its viewed zone bare, its solve covers the market
+  alone, and the card goes when the bare figures arrive (T-351). The cached result
   (section 11) is drawn behind the loading card without releasing it. A city opened later (a pan,
   construction) is a load without a hold and counts as done at its first estimate (`READY_ROUND`).
   **Startup order** (main.ts) [T-677]: the page sets up the map, overlay and UI, then waits on the
@@ -152,10 +147,10 @@ Web first, so it can be shared as a link.
   map loads under the menu and a load from the pick runs on a map already drawn. A URL switch that
   chooses the game (`?new=1`, `?synth=1`, `?demandTest=1`, `?paused=1`, `?continue=1`;
   `choiceFromUrl` in ui/StartMenu.tsx) skips the menu, and the pool then starts before the map is
-  set up, as it did before the menu. A new game, from the menu or `?new=1`, opens its viewed zone
+  set up. A new game, from the menu or `?new=1`, opens its viewed zone
   bare (`startDemand`'s `newGame`). **A save's packs open while its network is worked out**
   [T-889]: the clock worker reads the save's built stations (`TrackApi.save_stations`) before it
-  derives the track (about 5 s for Japan's 709 lines) and sends them (`stationsAhead`); the pool
+  derives the track and sends them (`stationsAhead`); the pool
   downloads and opens the zones they reach and those zones' markets at once, as prefetched zones, so
   no solve covers one the network does not reach, and a market the network does not want closes. **The registry is split** [T-776]: `game/registry.json`, bundled,
   is the index of what is needed before a zone opens (each zone's id, name, kind, country, origin,
@@ -175,9 +170,7 @@ Web first, so it can be shared as a link.
   does not open in a worker (a parse or WASM error, or a market pack whose zone count disagrees
   with its market row) is treated the same way: the worker answers its `open` naming the pack
   in `rejected`, every worker drops it, the zone is left out and flagged, and it is tried again
-  once after 10 s; a second failure is final until the page is reloaded (T-492). A market pack
-  mismatched with its row, as in a snapshot built mid pack rebuild, is isolated per zone like any
-  other. Only an error outside opening a pack stops the pool ("Demand could not load" at startup, the
+  once after 10 s; a second failure is final until the page is reloaded (T-492). Only an error outside opening a pack stops the pool ("Demand could not load" at startup, the
   "Demand stopped" alert later, the figures shown kept [T-757]).
   `checks/every-pack-opens.mjs --broken` serves a broken city pack and market pack.
   `game/loading.ts`; timings in notes/T-172.md, frame times in notes/T-180.md.
@@ -190,42 +183,45 @@ Web first, so it can be shared as a link.
   per zone (boundary, cells with population, jobs and attractor weights, the solved gravity, road
   speeds per period, fitted constants, sources; format in notes/T-004.md) and the regional market
   pack (sites, commute list, trip parameters, the `derived` block). Binary arrays with a small JSON
-  header. Today they sit beside the page (`packs/<id>.json`, `.bin`, `packs/intercity.json`); the
-  main thread fetches each once and hands each worker a copy. Published, they move to R2 under a
-  versioned path, compressed and cached for good (T-060, notes/T-026.md).
+  header. Locally they sit beside the page (`packs/<id>.json`, `.bin`, `packs/intercity.json`);
+  published, they are on R2 under a versioned prefix that `tools/deploy.py` writes into the page as
+  a `tw-data` meta, never chosen by hostname (`game/dataBase.ts`, T-924; T-060, notes/T-026.md).
+  The main thread fetches each once and hands each worker a copy.
 - **Determinism**: the simulation is a pure function of (save, pack versions, game time), except
   for the hour or two after an edit to a line's service, when the trains drawn also depend on the
   game time the edit was made [T-206; not saved, so a reload re-spaces them once].
 
 ## 11. Saves
 
-A save is the player's inputs only: track, stations, lines, schedules, fares, money (cash, cars
-owned, the ledgers' last 30 days and 48 hours, for the network and for each region, which are the
+A save is the player's inputs only: track, stations, lines, schedules, fares, each line's station
+note [T-706], money (cash, cars owned of each kind, the ledgers' last 30 days and 48 hours, for the network and for each region, which are the
 Money tab's history charts: fares, costs, net and train rides; T-447, T-531, T-565, T-567), clock,
 empty line drafts, custom badge symbols, the line-name counter, and the player's station links. Population, jobs and travel come from versioned packs;
-all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
+all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
 
 - **Format** [T-029, `workers/saveFile.ts`]: `TWG1`, a JSON header and the track model's network
   bytes, gzipped. The header keeps `city: nyc` and adds optional region and pack metadata. The
   network bytes are TWT6 (the Mercator world frame, T-306), which is TWT5 byte for byte but for the
   magic; its origin fields keep the game's home origin, unused by the frame, and its radii are ground
-  metres. Optional trailing blocks: TWT4 metadata (drafts, symbols, the counter, T-110/T-111) and
-  `LNK1` for links, written only when there are any [T-197]. Every zone's track, service and money
-  is in the one network [T-116]. The header's `ledger`, `hours` and `regions` (per zone id, "" for
-  outside every zone) hold the history charts' data, loaded back as they were, so a reload keeps the
-  charts; money is saved to the dollar and rides to a tenth, which gzips to about 60% of full
-  precision. An entry without `rides` (a save from before T-565) reads as 0 rides, and a save with
-  no `hours` or `regions` starts those empty. Sizes: notes/T-567.md. Each ledger entry's
-  `points` (whole points) and `stars` (each region's star, the game second it was earned) are
-  absent in saves before T-684 and T-685, which start with none. A header `points` block (per region
-  totals, written by builds between T-684 and T-694) is ignored. Ledger entries after the header's
-  clock are dropped on load and their net returned to the cash ([track-and-service.md](track-and-service.md)
-  6.4, T-715). `mode` (`normal` or `sandbox`), `start` (the start zone's id, absent for a start on
-  the world map) and `opened` (the zones opened in this game, in order: the start zone at first, then
-  each zone reached by a station; T-729, kept but read by nothing since T-801, docs/zones.md 6) are
-  absent in saves before T-728, which read as normal with no start and take the zone in view and the
-  zones reached as their opened list; the slot's summary has `mode` too, for the saves cards. The clock worker sends the
-  list (`opened`, before a game's snapshot) and the main thread sends it back whole when it grows.
+  metres. After the lines come optional trailing blocks (`sim/src/track/save.rs`): `LUI1` (custom
+  badge symbols and the line-name counter, T-110/T-111), then, each only when there are any, `LNK1`
+  links [T-197], `LAU1` lines kept by headway [T-625] and `LHS1` lines running high-speed trains
+  [T-817]; a save without one loads with none. Every zone's track, service and money is in the one
+  network [T-116]. The header's `ledger`, `hours` and `regions` (per zone id, "" for outside every
+  zone) hold the history charts' data, loaded back as they were, so a reload keeps the charts; money
+  is saved to the dollar and rides to a tenth. Ledger entries' `points` are whole points; the
+  header's `stars` keeps each region's star, the game second it was earned. A field a save lacks
+  reads as empty: no `rides` or `points` as 0, no `hours`, `regions` or `stars` as none, no
+  `fleetFast` as no high-speed cars. A header `points` block (per region totals, written by builds
+  between T-684 and T-694) is ignored. Ledger entries after the header's clock are dropped on load
+  and their net returned to the cash ([track-and-service.md](track-and-service.md) 6.4, T-715).
+  `mode` (`normal` or `sandbox`), `start` (the start zone's id, absent for a start on the world map)
+  and `opened` (the zones opened in this game, in order: the start zone at first, then each zone
+  reached by a station; T-729, kept but read by nothing, T-801, docs/zones.md 6) come from T-728; a
+  save without them reads as normal with no start and takes the zone in view and the zones reached
+  as its opened list. The slot's summary has `mode` too, for the saves cards. The clock worker sends
+  the list (`opened`, before a game's snapshot) and the main thread sends it back whole when it
+  grows.
 - **Sandbox** [T-728]: the track model's `set_unlimited` makes every money check pass (the edit
   still pays, so the cash can go below zero); the clock worker sets it from the header's mode and on
   the one-way `sandbox` message from Settings.
@@ -253,10 +249,10 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   slot of its own ("Game N"). The start menu's New game always takes a new slot, even with nothing
   saved (T-728); the original slot `autosave` is only ever an old one.
 - **Real networks** [T-731]: `packs/real/<id>.save` for New York, London, Paris, Tokyo, Seoul,
-  Toronto and Sendai (7-80 KB each, `pipeline/realnet.py ship` copies them from realnet's game
+  Toronto and Sendai (`pipeline/realnet.py ship` copies them from realnet's game
   files into `data/packs/real/`, and the build copies that folder). A sandbox started from one loads
   it as a new game: its network, fleet and fares, with the clock, cash, ledgers and stars of a new
-  game. They are in older frames and converted as they load (below).
+  game. They are in older frames and converted as they load (above).
 - **Backups** [T-744]: two per slot in the same store, `backup:<slot>:0` and `:1`, the slot's record
   without its picture. An autosave at least 5 wall minutes after the slot's newest backup (or with
   none) is also written over the older backup, so backups only follow changes. The saves panel lists
@@ -275,18 +271,18 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   state and a persistent notice, with file export still available; browsers without locks disable
   browser writes. notes/T-029.md, notes/T-068.md.
 - **Demand cache** [T-328, `workers/demandCache.ts`]: each final demand result is kept beside its
-  slot in the same IndexedDB store (`demand:<slot>:<network hash>`, one per slot, 7.3 MB for the
-  real New York save, 4.9 MB of it the bubbles; a deleted slot takes its cache along). It holds what
+  slot in the same IndexedDB store (`demand:<slot>:<network hash>`, one per slot; a deleted slot
+  takes its cache along; sizes and timings in notes/T-328.md). It holds what
   the page shows from a final solve (every kind of day's lines, stations, purposes, each solved
   zone's split, the market's trips, and the viewed zone's weekday bubbles of every purpose when they
   were on show), not worker state; lines and stations by their place in the network, since a load
   renumbers ids. Its key is a SHA-256 of the network demand reads, of every pack the solve covered
   and of the market, the app build, the worker count and the perfOff flags; the zones must be the
   ones the new solve covers. When a whole game loads and the key matches, the result shows at once
-  (about 0.1 s after the network is drawn; the bubbles once the zone's cells are open, about 3.7 s),
-  the loading card stays up and the clock held until the fresh final (T-347), the cached figures
-  drawn behind the card with the status "Updating demand" (hover text as before); the workers solve
-  as before, their estimates not shown, other purposes' or days' bubbles wait for them, a click is
+  (the bubbles once the zone's cells are open), the loading card stays up and the clock held until
+  the fresh final (T-347), the cached figures drawn behind the card with the status "Updating
+  demand"; the workers solve as on any load, their estimates not shown, other purposes' or days'
+  bubbles wait for them, a click is
   answered from the newest round the workers reach ([demand-runtime.md](demand-runtime.md) "The pool", T-327),
   and the fresh final replaces the cache in one step (it is bit for bit the same). A test page, `?new=1` and a tab without the slot never
   write it. The write runs in a worker of its own (`workers/cacheWrite.worker.ts`, T-789), the

@@ -78,64 +78,23 @@ on a pan [T-801]. Zones that share no rider
 lines; an edit re-solves only the clusters it touched, the others keep their figures [T-326,
 [docs/demand-runtime.md](docs/demand-runtime.md) "Clusters"].
 
-- **City zones**: New York (with Mercer County since T-276), Philadelphia-Camden-Wilmington,
-  Boston (with southern New Hampshire), Washington (with surrounding Maryland, Virginia and
-  Jefferson County WV), Baltimore, Providence, New Haven, Hartford and Springfield, in one regional
-  market [T-116, T-134, T-137]; **Toronto** (the Greater Toronto and Hamilton Area), the first
-  outside the US, built from Statistics Canada by Canadian adapters with its own fitted commute
-  curve [T-277]; **London** (Greater London and
-  every ITL3 unit touching it, with Gatwick's and Medway's: 14.5M people), the first sampler city,
-  built by tier 0 with England's own inputs in place of its proxies (BRES jobs, Census 2021
-  population by LSOA, GIAS schools, a curve fitted on the 2011 census flows), on UTC+0 [T-288,
-  T-360]; **Paris** (Ile-de-France, its 8 départements: 12.5M people), tier 0
-  with INSEE's jobs by commune of work and a curve fitted on its 2022 commune flows, population
-  scaled to each commune's legal population, on UTC+1 [T-289]; **Shanghai**
-  (the municipality's 16 districts, Chongming included: 24.9M people), tier 0 with population
-  and jobs scaled to each district's census totals (2020 population census, 2023 economic census)
-  and the curve's length fitted to the published mean commute, place names in Latin script where
-  OSM has them, on UTC+8 [T-291]; **Mumbai** (the metropolitan region as
-  Mumbai's two districts and 15 whole talukas: 28.3M people), tier 0 with population scaled to
-  2011 census sub-district totals grown to 2020 by district, half the jobs proxy on population
-  (informal work), the census's no-travel workers at home, and both curve parameters fitted to
-  the 2011 census commute distance bands, on UTC+5 [T-292]; **Lagos** (Lagos State's 20 LGAs and
-  Ado-Odo/Ota, Ifo and Obafemi Owode in Ogun: 13.8M people), tier 0 from global sources alone
-  (GHSL unscaled, half the jobs proxy on population, OSM land use capped at 1 km² an area and
-  spread over it, Mumbai's curve), a data-poor test, on UTC+1 [T-459]; **São Paulo** (the 39
-  municipalities of the metropolitan region: 20.7M people), tier 0 with the 2022 census by tract,
-  jobs, work from home and both curve parameters from the Metro's 2017 origin-destination survey
-  (workers by zone of work, home-to-job distances), Portuguese place names, on UTC-3 [T-458];
-  **Berlin** (Berlin,
-  Potsdam, the eight Landkreise touching Berlin, Brandenburg an der Havel and Frankfurt (Oder):
-  5.5M people), tier 0 with the Zensus 2022 100 m grid scaled to each Gemeinde's population, the
-  Länder's Pendlerrechnung for jobs by Gemeinde of work and a curve fitted on its flows, on UTC+1
-  [T-290]; **Seoul** (the Seoul Capital Area: Seoul, Incheon less Ongjin's islands and Gyeonggi
-  whole, 26.0M people), tier 0 with population scaled to each si-gun-gu's resident registration
-  count (November 2020), the jobs proxy, the curve's length fitted to Statistics Korea's mean
-  commute, on UTC+9 [T-457]; **Tokyo** (Greater Tokyo: Tokyo, Kanagawa, Saitama, Chiba and
-  Ibaraki prefectures whole, Tokyo's Izu and Ogasawara islands left out: 39.8M people), the first stage of
-  covering all of Japan, tier 0 with the 2020 census 500 m mesh population, the 2021 economic
-  census 500 m mesh jobs scaled to the census's workers by municipality of work, a curve fitted on
-  the census's municipality flows, the census's at-home workers plus a telework share, KSJ school
-  points, and place names in romaji (OSM's, else made from the kana reading or a kanji reading
-  dictionary), on UTC+9 [T-420, T-426, research/japan.md]; **Osaka** (Keihanshin: Osaka, Kyoto,
-  Hyogo and Nara prefectures whole, 18.2M people) and **Nagoya** (Chukyo: Aichi, Gifu and Mie
-  whole, 11.3M), with the same inputs and curve [T-431]; **Fukuoka** (the prefecture, 5.1M),
-  **Sapporo** (Ishikari subprefecture and Otaru, 2.5M), **Sendai** (Miyagi, 2.3M) and
-  **Hiroshima** (the prefecture, 2.8M), with the same inputs, each its own fitted curve
-  (Sapporo Tokyo's) and the telework share of Japan outside the three big metros [T-432].
-- **Non-city zones**: Worcester, Windham, New London and Litchfield Counties. Modelled space stays
-  between city zones, with no ring round each city, for now (Anita, T-300), except in Japan, which
-  is covered whole: the 31 prefectures outside the metro packs are a zone each (Okinawa included)
-  and Hokkaido's other subprefectures 8 zones after the under-100k rule, 38 zones and 46.6M
-  people with the metros' inputs and each zone's own fitted curve [T-420 stage 3,
-  `pipeline/japan_zones.py`].
-- **City additions** in the US are paused; a **sampler of other countries' cities** comes next
-  (London, Paris, Shanghai, Mumbai, Lagos, São Paulo, Berlin, Seoul and all of Japan built: 67
-  zones in all), each a low-fidelity first pass from general sources (`research/world-sampler.md`).
-  **Cells** are H3 resolution 9 (about 0.1 km²); sparse ones merge [T-044, T-466, T-510]: a res-8
+- **What is covered** (2026-10-22, about 800 zones): the US Northeast's nine city packs in one
+  regional market with the four counties between them (Anita, T-300: no ring round each city;
+  new US cities are paused); Toronto; Japan whole (seven metros and 38 prefecture zones); Europe
+  whole but for Russia, Belarus and Ukraine (held, Anita 2026-10-19; Moscow, Saint Petersburg and
+  Voronezh built); China's Jiangsu with Shanghai (T-897); and the sampler metros Mumbai, São Paulo,
+  Lagos (with three more Nigerian rows) and Seoul. Every place outside the US is tier 0, a
+  low-fidelity first pass on global sources with a country's own inputs where it has a module;
+  each country's sources and procedure are in [docs/data-register.md](docs/data-register.md), the
+  rules in [docs/demand-worldwide.md](docs/demand-worldwide.md). New rows come from the world plan
+  (`pipeline/world_plan.json`) through the unattended runner (`pipeline/world_run.py`,
+  [docs/adding-a-city.md](docs/adding-a-city.md)).
+- **Cells** are H3 resolution 9 (about 0.1 km²); sparse ones merge [T-044, T-466, T-510]: a res-8
   parent under 2,500 trip ends a weekday becomes one cell, in busier parents touching children under
-  1,250 each merge, and a cell under 1,250 left alone joins a touching merged cell of its zone
-  across its parent's edge ([docs/demand-sources.md](docs/demand-sources.md) 4.1).
+  1,250 each merge, a cell under 1,250 left alone joins a touching merged cell of its zone
+  across its parent's edge, and any cell still under 50 joins the nearest busier one [T-850b]; in
+  very rural packs 2x2 blocks of 2 km demand zones under 1,000 trip ends each become one 4 km zone
+  [T-852] ([docs/demand-sources.md](docs/demand-sources.md) 4.1).
 
 ## 4. Demand: local trips
 
@@ -217,11 +176,9 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
   transfers carry real loads; nothing bypasses the player's local network.
 - **5.3 Park-and-ride** [T-295, T-371, T-389, T-373, T-372]: a commute or everyday trip of 5 km or more
   may ride (car, bus, bike or a lift, one mode) from home to the cheapest station of each nearby
-  line within 15 km, at a fixed cost plus the drive plus parking or a drop-off at the station; the
-  walk is a true 6 km/h walk. Fitted on New York (T-372): 53-66% of commuter rail riders ride to
-  their station; a lone station in a small city keeps nearly all its corridor riders without
-  feeder lines, and New York's commuter rail without the subway keeps 29% of the city's rail
-  commutes. The car pays parking by the destination's job density with a free-parking share, and
+  line within 15 km, at a fixed cost plus the drive, counted double a minute of driving the whole
+  way [T-916], plus parking or a drop-off at the station; the walk is a true 6 km/h walk. Its
+  constants are fitted on New York (T-372). The car pays parking by the destination's job density with a free-parking share, and
   congestion charges in Manhattan and central London (T-380, docs/demand-mode.md 4.3). The regional layer's commutes between zones ride at the home end and
   its inter-region trips at both ends, the far end a drop-off only, through the same
   `access_options`, so a lone station in a new city draws riders from beyond walking reach. A
@@ -314,16 +271,15 @@ their riders.
 
 Rough on purpose: the bar is the right order (section 1).
 
-- **Calibration on real networks** [T-007, T-509, notes/T-509.md]: a city's real rail network (the
-  operators' GTFS, else OSM routes; `realnet.py net <city>`) is solved natively through the sim's
-  demand code (the `calib` bin) and scored by `calib.py` against census rail shares by area, station
-  entries and line counts where published, and NHTS's New York everyday rail shares. New York (at
-  half weight), London, Paris, Seoul, Tokyo and Sendai are fitted jointly and Toronto is held out;
-  the fit set the rail constants and the everyday walking of then, which T-558's walking constants
-  hold until the deep calibration fits them (section 4). The bar is
-  plausible: a moderate overshoot where real riders shun transit (New York) is accepted. Known gaps
-  are open tasks (Tokyo's commute rail share, T-529; PATH low, T-270; commuter rail high, T-271;
-  subway peak loads, T-216).
+- **Anita's two ceiling tests are the targets** [T-636, notes/T-636.md]: rail's share of rail +
+  car with a straight free train between every pair of points (A, at least 85%) and with a slower
+  fared one (B, at least 50%). A change to a demand rule is measured on both.
+- **Real networks are loose checks** [T-007, T-509]: a city's real rail network (the operators'
+  GTFS, else OSM routes; `realnet.py net <city>`) is solved natively through the sim's demand code
+  (the `calib` bin) and compared by `calib.py` with census rail shares by area, station entries and
+  line counts where published. Nothing is fitted to them (Anita, 2026-10-17); a moderate overshoot
+  where real riders shun transit (New York) is accepted. Known gaps are open tasks (Tokyo's commute
+  rail share, T-529; commuter rail high, T-271; subway peak loads, T-216).
 - **Tier-2 check** against LODES OD: commute lengths and county pairs (notes/T-198.md).
 - To do: long-distance rail share on corridors with known rail and air numbers (Northeast
   Corridor first).
@@ -333,9 +289,9 @@ Rough on purpose: the bar is the right order (section 1).
 - **M0, spikes** and **M1, New York sandbox**: done.
 - **M2, Northeast**: nine cities, the regional market, zones, commutes between them and
   park-and-ride are in; water between packs for intercity track remains (T-358).
-- **M3, world** (under way): packs for many metros at tiers 0 and 1, world view, per-city dirty
-  flags under load. In so far: the sampler of other countries' cities, all of Japan, the world
-  market with air, and clusters that re-solve only what an edit touched.
+- **M3, world** (under way): whole countries from the world plan by the unattended runner, the
+  world market with air, clusters that re-solve only what an edit touched, and the game published
+  by direct link (T-924). Covered so far: section 3.
 - **M4**: POIs, the look pass, sharing saves by link, accounts.
 
 ## 11. Saves and accounts

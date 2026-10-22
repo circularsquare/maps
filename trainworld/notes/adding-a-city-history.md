@@ -143,3 +143,19 @@ What was hard, for the next country:
   and is the fallback for every OSM input.
 - **The fitted curve.** Toronto's fits much steeper than the US curve (d^-1.2 exp(-d/20 km));
   the game now takes each pack's shipped curve rather than the US default.
+
+## What London taught (cut from "Outside the US" in T-940, 2026-10-22)
+
+- **Look at the outline before anything else**: whole units can leave a hole (Medway between
+  Gravesham and Swale cut Sheppey off as an island until it was added).
+- **Some GHSL tiles are cut short** at the ocean edge (GHS-BUILT-V NRES R3_C18 starts 1,000 pixels
+  east of its nominal corner); `tier0._read_tile_window` places each tile by its GeoTIFF tie point.
+- **District totals matter in dense old centres**: GHSL had 12-19% too many people in central
+  London boroughs.
+- **The jobs proxy undercounts an old mid-rise core** (Westminster and the City at a third of
+  BRES) and no blend fixes it without breaking Toronto; use workplace counts wherever a country
+  has them (demand-worldwide.md).
+- **Measure each upgrade against tier 0 before switching** (`notes/t360_*.py`); a 2 km zone
+  difference is what the game feels.
+- From the `osm_signal` paragraph: where few shops are mapped, land use dominates the signal (Lagos
+  71%), and uncapped one refinery took 6.5% of all jobs (T-460).

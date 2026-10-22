@@ -6,10 +6,8 @@ Loads by purpose, transfers and the trip explorer; the interface side is in the 
 
 **Loads by purpose** (T-158, the map's purpose filter, [ui-demand-views.md](ui-demand-views.md)). Every period's result also
 carries its segment loads, boardings and alightings split by purpose: work is the local city
-populations together, then the everyday layer's six purposes (four before T-142's airports and
-medical visits), then the regional market as
-longer trips. The populations were already separate; the everyday layer's purposes are kept apart
-inside its pass. Its pairs are stored purpose by purpose, so one station-pair matrix is filled
+populations together, then the everyday layer's six purposes, then the regional market as
+longer trips. The everyday layer's purposes are kept apart inside its pass: its pairs are stored purpose by purpose, so one station-pair matrix is filled
 by a purpose's pairs and then packed into that purpose's columns
 (origin stations and trips, by destination), and the matrix reused for the next. One walk of each
 destination's strategy then carries every purpose at once, a lane per purpose (T-433,
@@ -39,23 +37,15 @@ in one array, the regional market), each round, averaged across rounds with the 
 The everyday walk notes an arrival's riders summed over its purposes' lanes, so its transfers
 equal the purpose-by-purpose count to float rounding, not to the bit (T-433).
 Check: at every station the transfers leaving equal its boardings less its first boardings, and
-on the real network the commutes' transfers equal all boardings less entries
-(2,278,897 in periods 0 and 2; 593k of them walk between demand stations).
+the commutes' transfers equal all boardings less entries.
 Query: `transfers(sel)` on each API gives (route node in, route node out, riders) for every
 pair with either end at a route node marked in `sel`, for each period held; the worker adds every
 population's and period's by pair and answers the `transfers` message with the route nodes of one
 complex, on request only (never pushed with results). The client adds the workers' answers and
 names each end by station and line, both runs together (`complexTransfers(members)`).
-Cost on the real New York network (native, period 0): one commute assignment 36 ms, 42 ms counting
-transfers (riders arriving at a station x its useful departures, about half of them, for each
-destination); whole free-flow stages best of five, counted against not, commute 1,027 against
-1,024 ms and everyday 337 against 339 ms, within the noise, so they are counted every round rather
-than on the last only. Memory: 28,538 slots, 111 kB a period and population plus a 43 kB index
-(about 0.5 MB a worker holding one period of New York commutes, its everyday purposes and the
-market). The New York save's Penn Station answer is 886 pairs, 10.6 kB, 9 ms in the worker.
-Loads with and without counting are bit-identical natively (`transfers_real_network`, two periods,
-free flow and three rounds, commutes and everyday) and in the WASM worker (five periods, three
-rounds, the market too; notes/T-147.md).
+Counting costs nothing measurable, so transfers are counted every round rather than on the last
+only; loads with and without counting are bit-identical (`transfers_real_network`). Costs and
+memory: notes/T-147.md.
 
 **The trip explorer** (T-195, `sim/src/demand/trip.rs`, the interface in [ui-inspectors.md](ui-inspectors.md)). One trip
 between two points, as the commute model decides it in each period: `DemandApi.trip(q, from, to)`
@@ -92,14 +82,8 @@ its chances equal the subzones' to 1e-4 (`t720.rs`). Over every destination subz
 the solve's own for that origin subzone, and the station pairs' shares to its station-pair
 matrix, within 1e-6 (f32 summation order) on the synthetic city, free flow and crowded
 (`pair_choice_reproduces_mode_choice`), and within 6e-6 for the three origins of
-`trip_real_network` on the real New York network; the WASM worker's answers for those three
-trips equal the native ones to 1.7e-7 relative (rail and drive chances identical). On the real
-save in Chrome a trip is answered in 3-14 ms. Park Slope to Midtown in the morning peak: train
-91%, drive 9% (the drive is 36 minutes plus parking that counts as 43); the busiest route is the
-F from 7 Av to 47-50 Sts-Rockefeller Ctr with 17% of the trip's train riders, the rest spread over
-neighbouring stations at both ends and the 42 St stations. Jersey City (Journal Square) to Wall
-St: train 62% (PATH to World Trade Center, then the 1 or a walk). Mineola to Hicksville: drive
-63%, train 37%.
+`trip_real_network` on the real New York network, and the WASM worker's answers equal the native
+ones. Timings and example answers: notes/demand-measurements.md.
 
 An everyday purpose's trip (T-586, T-201): `EverydayApi.trip(kind, q, from, to)` answers in the
 same layout as the everyday pass chooses, on its own period graph and parameters (its rail and

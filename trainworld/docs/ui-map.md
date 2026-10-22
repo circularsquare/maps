@@ -41,7 +41,7 @@ there is no high-speed class and no hover yet.
 - **Zoom 10 to 14** [`TRAINS_ZOOM`]: stations are dots; trains are pills, drawn and picked from 10.
 - **From zoom 14** (`STATION_BOX_ZOOM`, T-553): a station is its platform, trains show their cars, and
   platform crowds are drawn.
-- **About zoom 17** (T-658; by 4 m on screen, so the same in every city: 16.7 to 17.2 in New York):
+- **About zoom 17** (T-658; set by 4 m on screen, so the same in every city):
   double track opens into its two tracks ("Lines and track").
 - Station names and capacity tags hide below zoom 12 [T-101].
 
@@ -68,7 +68,7 @@ there is no high-speed class and no hover yet.
   a dead-end terminus's platform, and at a through station one diagonal just outside the
   platform on the side the line arrives from, from the arrival track to the departure track. Not
   picked, no hover of its own.
-  Trains keep right (T-319): each line's run 0 is drawn on the right-hand track of its direction
+- **Close in, trains keep right** [T-319]: each line's run 0 is drawn on the right-hand track of its direction
   and run 1 on the left. Under a line's two tracks is a band as wide as the pair or its traffic
   width, whichever is wider, in the line colour mixed 60% towards the casing, over one casing
   band (Anita, 2026-10-19: the tracks over the traffic width). Bare track is two grey tracks as
@@ -90,9 +90,9 @@ there is no high-speed class and no hover yet.
   One order for all lines: a line with no trains (fleet zero) goes under every line that runs
   trains; within each group the shorter route (end to end, one direction) is on top, ties to the
   higher id. The line on top wins a click. It is rebuilt when lines or fleets change.
-- **Track display** [T-105; on the map under the demand buttons since T-703], four choices, remembered per browser:
+- **Track display** [T-105, T-703; on the map under the demand buttons], four choices, remembered per browser:
   - **Line**: uniform width in the line colours.
-  - **Line + traffic thickness** (the default): width by riders over the day shown
+  - **Traffic** (the default): line colours, width by riders over the day shown
     ([ui-demand-views.md](ui-demand-views.md) "Line width by riders"). A line on track at
     capacity [T-819] (an edge of a track or single-track section, or either track of a flat
     crossing, at `FULL_RHO` for the demand level in force, as the capacity tags take it;
@@ -113,20 +113,20 @@ there is no high-speed class and no hover yet.
   In Elevation and Max speed the width is uniform and trains keep their line colours.
 - **Blueprint track** [T-311, T-322, T-331, T-333] is drawn solid and opaque as two rails in every
   track view: a light blue middle (#a9cdf3) between dark blue rails (#2f62b3). The whole width is 75%
-  of what T-322 drew (a line plus a rail of 16% of a line width, at least 1 px, either side), the
-  rails never under 1 px: 6.5 px at zoom 15 (4.5 middle), 4.4 at zoom 12. A line planned along it
-  fills the middle, not a full line width. **Switched off** [T-333, T-543]: grey rails (#9aa3ae) round a
-  nearly white middle (#f2f4f7) in the light theme, a dim middle (#383e46) between lighter grey rails
-  (#6c747e) in the dark one, and a station at 30% instead of 60%; in Elevation and Max speed, and for
-  a line planned along it, the colour is mixed 80% towards white (towards #383e46 in the dark theme)
-  instead of 45% towards white. **Picked** with the blueprint tool: an ink band
-  3 px beyond the rails, drawn under the track, and the stations' selection outline. All rails are drawn before any middle, as the casing is, so curves
-  and joints join cleanly. Blueprint track and the lines planned on it are drawn after built track
-  and its lines [T-695], so where they overlap the blueprint is on top and wins the click, as the
-  station tool prefers it; the order of lines sharing track (above) holds within each. In Elevation and Max speed the middle keeps the view's colour mixed 45%
-  towards white; a selected blueprint's middle is the selection ink mixed the same way. A line
-  planned along blueprint track fills the middle in its colour mixed 45% towards white. Lines that
-  do not run stay see-through at 55%.
+  (`BP_NARROW`) of a line plus a rail of 16% of a line width (at least 1 px) either side, the rails
+  never under 1 px: 6.5 px at zoom 15 (4.5 middle), 4.4 at zoom 12. A line planned along it fills
+  the middle (not a full line width) in its colour mixed 45% towards white; in Elevation and Max
+  speed the middle is the view's colour mixed the same, and a selected blueprint's middle the
+  selection ink mixed so. Lines that do not run stay see-through at 55%. **Switched off** [T-333,
+  T-543]: grey rails (#9aa3ae) round a nearly white middle (#f2f4f7) in the light theme, a dim
+  middle (#383e46) between lighter grey rails (#6c747e) in the dark one, and a station at 30%
+  instead of 60%; a planned line's colour and the Elevation and Max speed colours are mixed 80%
+  towards white (towards #383e46 in the dark theme) in place of 45%. **Picked** with the blueprint
+  tool: an ink band 3 px beyond the rails, drawn under the track, and the stations' selection
+  outline. All rails are drawn before any middle, as the casing is, so curves and joints join
+  cleanly. Blueprint track and the lines planned on it are drawn after built track and its lines
+  [T-695], so where they overlap the blueprint is on top and wins the click, as the station tool
+  prefers it; the order of lines sharing track (above) holds within each.
 - **Line colours** [T-223, `LINE_PALETTE` in `game/palette.ts`]: a normal, fairly saturated transit
   palette, sixteen defaults: red, blue, green, orange, purple, yellow, brown, teal, gray,
   yellow-green, pink, magenta, light blue, olive, coral and lavender, every pair at least 19 apart in
@@ -176,7 +176,7 @@ there is no high-speed class and no hover yet.
   `PLATFORM_POINTS`; straight on past an edge that stops short), flat-ended, centred on the station
   node, or at a dead end running from the node along the track. Its width is fixed on the ground
   like its length from zoom 15 (`BOX_WIDTH_ZOOM`): 1.125 times a plain line and its rim
-  there (11.25 px, about 24 m at New York's latitude; `BOX_NARROW`, 50% wider since T-652), so its shape never changes with zoom and it is
+  there (11.25 px, about 24 m at New York's latitude; `BOX_NARROW`, T-652), so its shape never changes with zoom and it is
   never shorter than it is wide. Further out, to zoom 14, it keeps that 11.25 px on screen (white 7.25 px
   across) while its length keeps shrinking with the ground, about 40-55 px at zoom 14. The same
   width in every mode: a wide traffic line can be wider than its stations. Everything that draws or
@@ -408,7 +408,7 @@ pointer.
 `map/coarseOutlines.ts`] Each registered pack's footprint (its dissolved county boundary) has a thin
 solid outline (0.7 px, 36% opacity) at regional zooms, fading between zoom 8.5 and 10.5. Every
 zone has one from the start: `packs/outlines.json` (pipeline/zone_outlines.py: all registered
-zones, simplified to 300 m, 0.65 MB gzipped) is read at startup and drawn at once, and a zone's own
+zones, simplified to 300 m) is read at startup and drawn at once, and a zone's own
 boundary replaces its coarse outline when it loads for a view between zoom 5 and 10.5. A border two
 zones share is drawn once, as a line of the first zone loaded, so every edge has the same weight
 (`OutlineEdges`; the coarse file keeps shared runs identical in both zones). The focused zone keeps

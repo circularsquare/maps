@@ -76,11 +76,6 @@ their weekday timing (too few weekend trips in NHTS to shape them):
 **The average day** (T-464) is a third day the views and queries can be asked for: 5 weekdays and
 2 weekend days over 7, taken on each purpose's rate and period shares (`days.rs` `AVERAGE`), so
 every figure linear in them is the same blend of the weekday's and the weekend's. It is the demand
-views' default; the clock, the money and the boarding account know only the two kinds.
-
-On New York's real network a weekend day has 0.77 of a weekday's local rail legs (6.39M against
-8.29M; commutes 1.04M against 3.46M, social 2.60M against 1.62M), its busiest period is midday,
-and each purpose keeps its weekday rail share. Costs: no extra solve or opening; the weekend's
-views about 7 ms on the main thread a publish; the boarding account twice the work (one account
-per kind of day); weekend bubbles are asked for only while shown (about 0.6 s in each solving
-worker). Weekday results are bit-identical to before (notes/T-170.md).
+views' default; the clock, the money and the boarding account know only the two kinds. Weekend
+bubbles are asked for only while shown; New York's weekend figures and the costs are in
+notes/T-170.md.

@@ -20,8 +20,9 @@ plane's, with no car), and the split of the rest by plane and car is the pair's
 and `commute_trips`, from `bin/joint_gravity.rs` by way of `data/packs/intercity.json`
 (pipeline/market_zones.py); at opening merged by zone pair, at `set_network` kept between served
 zones (`cpairs`), and in each period's pass chosen
-once per commuter on its home-to-work station pairs (logit 0.10 damped as in 4.3, drive x 1.33 + parking at work,
-access weights at that scale, the home end with rides, [regional.md](regional.md) 5.3), outward legs at `TO_WORK[q]`, the trip home at `TO_HOME[q]` on the
+once per commuter on its home-to-work station pairs (rail against the car on the cost ratio as in
+4.3, T-918; drive x 1.33 + parking at work; access weights at the damped logit's scale; the home
+end with rides, [regional.md](regional.md) 5.3), outward legs at `TO_WORK[q]`, the trip home at `TO_HOME[q]` on the
 same pairs reversed; their own assignment (`c_avg`) is the work purpose's share of the market's
 loads (`commute_loads`; the worker moves it from longer trips to work), with their own corridors
 (`commute_corridors`), parts (`part_summary`: longer trips and rail, then commute legs and rail)
@@ -34,7 +35,7 @@ there, T-296). Measurements on the real New York network: notes/T-276.md.
 registry's frame, rule and every place's row) plus the packs of the places a worker holds
 (`MarketPacks`, each parsed once). The figures that need all pairs (the day's trips, each
 corridor's, the departures to places with no zone) come from the rows, the same in every
-composition, so opening one parses its packs and visits no pair (all 20 places: 0.66 s natively).
+composition, so opening one parses its packs and visits no pair.
 `set_network_ll` takes stations as longitude and latitude; each place's sites see them in the
 place's own frame for access and rides (each place on its own, so its figures never depend on which
 other packs are open), the graph in the first place's. It builds pairs only between zones some
@@ -77,8 +78,7 @@ far zone (all modes and rail, starts and ends; the bubbles), then every zone's o
 are the same on every worker and so are not added up by the client. Both answer over the periods a
 worker holds, versioned and round-aware like `flows`. Tests: place and zone totals equal the
 selection's trips, rail never above all, zone positions are the zones', station rows equal entries
-and exits. A period's regional solve costs about 8 ms on the small real-pack profile
-(3.7 ms before).
+and exits.
 
 Each solving worker holds both local APIs and the regional API; stations transform from the loaded
 game's world frame (T-125) through longitude and latitude into each pack's own frame (the regional

@@ -182,8 +182,8 @@ background and wait once for the process.
 - **Reference figures with sources**, gathered before the build, never from memory: population
   (census), jobs in the core and in all, the commute mode share, one real line's daily riders.
   Look for population and jobs by district (for the `population` and `jobs` hooks) before the
-  first build too, and print GHSL's total in each unit against its census figure: Shanghai found
-  its jobs table late and Mumbai its mismatched talukas late, and each built twice (T-291, T-292).
+  first build too, and print GHSL's total in each unit against its census figure (a late find
+  means a second build, T-291, T-292).
 - Take the task line in TASKS.md (`taking, <date>`), start `notes/T-###.md`.
 
 ## 2. Back up
@@ -388,12 +388,13 @@ existing packs change here too: record the commuters between packs it prints and
 trips before and after. Any other pack whose outline comes within 50 km of another registered
 pack's is in a joint gravity group with it (T-539; `intercity.py --groups` lists them, `--plan`
 with the world plan's metros too). Once it is registered: `merge_cells.py <every member> --undo`,
-`intercity.py --group auto <id> --no-market` (it rewrites every member's factors; Japan's 45 packs
-about 5 minutes with `OMP_NUM_THREADS=8`), `merge_cells.py` on them again, then `register.py
+`intercity.py --group auto <id> --no-market` (it rewrites every member's factors), `merge_cells.py`
+on them again, then `register.py
 <every member> --market --trips`. A pack with no neighbour that close needs none of this.
 
-A non-city zone is a `CITIES` entry in `build_city.py` with `"kind": "zone"` and a `"name"`, one
-county-sized unit (docs/zones.md 2).
+A countryside zone made by hand is a `CITIES` entry in `build_city.py` with `"kind": "zone"` and a
+`"name"`; a covered country's zones are world plan zone rows instead ("Running the pipeline",
+docs/zones.md 2).
 
 ## 8. Tests that list cities
 
@@ -441,7 +442,7 @@ outline) opens with that purpose empty and only WARNs.
 Browser (own Vite with HMR and watching off, `checks/dev-nowatch.mjs`; headless Chrome through
 Playwright with its own profile directory; never touch app/dist): the gate's `--browser` (section 8)
 runs `checks/city-browser.mjs` on a row it makes, about half a minute a pack; run it in the
-background with one wait, since a 10-minute foreground run let the cache expire (T-289). A new game,
+background with one wait (CLAUDE.md "Keep your context lean"). A new game,
 then for each new city:
 
 - jump to its centre: it becomes the active city, its pack opens (`twDemand.client.start.loads`),
@@ -462,8 +463,8 @@ city, so a new city should add only its boundary and water-mask fetches.
 
 ## 10. Docs
 
-- `SPEC.md` section 3 (the playable cities), section 5 if the market changed.
-- `CLAUDE.md` layout: the registered cities and the market id list.
+- `SPEC.md` section 3 (what is covered), section 5 if the market changed.
+- `docs/data-register.md`: the country's row.
 - `docs/demand-worldwide.md`: every rule the new country's data changed or could not follow.
 - `notes/T-###.md`: footprint and why, sources, the pack table, checks, what was deleted.
 - `DECISIONS.md` for anything decided; `ARCHIVE.md` line, task off TASKS.md.
@@ -476,8 +477,8 @@ rebuild. A state's `<st>2020.pl.zip` can go once `pl2020_p5_<fips>.csv.gz` exist
 extracts go once `routes.py` and any OSM reads have cached their results, and the extract's OSM
 caches (`<extract>.points.fgb`, `.areas.fgb`, `.water.fgb`, `.ways2.npz`) go too once the city is
 verified (Anita, 2026-10-15: disk is the limit at hundreds of cities; a full rebuild downloads the
-extract again). Keep the small derived tables the build reads. Delete `data/work/pre-T###/` when
-the batch is accepted.
+extract again). Keep the small derived tables the build reads. Delete `data/work/pre-T###/` once
+a later state is checked clean, without asking (Anita, 2026-10-22).
 
 ## 12. Retrospective
 
@@ -523,8 +524,8 @@ industrial, commercial and retail land as job places (one per 5,000 m²), each a
 at 1 km² (`land_cap_km2`) and spread over a 0.003 degree grid inside it (`land_spread_deg`); a
 config sets either to 0 to turn it off, or to another value. The rows cached in
 `data/raw/tier0/osm_jobs_<id>.csv.gz` keep the settings they were made with: delete the file to
-remake them. Where few shops are mapped, land use dominates the signal (Lagos 71%), and uncapped
-one refinery took 6.5% of all jobs. Every build prints one line for the gate (`checks/pack_gate.py`):
+remake them. Where few shops are mapped, land use dominates the signal. Every build prints one line
+for the gate (`checks/pack_gate.py`):
 
     osm_signal: errand=1101 leisure=527 job=2464 land=10232 land_share=0.7143 top_place=w732895785 top_place_jobs_share=0.00419 top_cell=6.4348,3.3586 top_cell_jobs_share=0.00288 top_place_name=-
 
@@ -569,21 +570,9 @@ T-288 and T-360, notes/T-288.md) is the worked example: the outline as whole ITL
 Census 2021 population by LSOA, BRES jobs by LSOA, GIAS schools, the curve fitted on the 2011
 WU01EW flows (`notes/t360_curve.py`), work from home one national share. The chain: read the
 extract's features and water, `build_city.py lon` (reads every OSM input from the feature cache),
-`routes.py lon --extracts europe/united-kingdom/england`, `places.py`.
-
-What London taught, for the next tier 0 city:
-
-- **Look at the outline before anything else**: whole units can leave a hole (Medway between
-  Gravesham and Swale cut Sheppey off as an island until it was added).
-- **Some GHSL tiles are cut short** at the ocean edge (GHS-BUILT-V NRES R3_C18 starts 1,000 pixels
-  east of its nominal corner); `tier0._read_tile_window` places each tile by its GeoTIFF tie point.
-- **District totals matter in dense old centres**: GHSL had 12-19% too many people in central
-  London boroughs.
-- **The jobs proxy undercounts an old mid-rise core** (Westminster and the City at a third of
-  BRES) and no blend fixes it without breaking Toronto; use workplace counts wherever a country
-  has them (demand-worldwide.md).
-- **Measure each upgrade against tier 0 before switching** (`notes/t360_*.py`); a 2 km zone
-  difference is what the game feels.
+`routes.py lon --extracts europe/united-kingdom/england`, `places.py`. Measure each upgrade
+against tier 0 before switching, at the 2 km zone the game feels; use district totals and
+workplace counts wherever a country has them (London's lessons: `notes/adding-a-city-history.md`).
 
 **Worked examples by country**, one per archetype, for the chain of commands (what each took and its
 timings: `notes/adding-a-city-history.md`; the notes of each task have the sources):
@@ -645,10 +634,7 @@ timings: `notes/adding-a-city-history.md`; the notes of each task have the sourc
   `data/raw/tier0/korea/<id>_admin.fgb`. Check the district names against OSM first: units renamed or
   split since the table's year need a mapping (`REGIONS[...]["osm_names"]`).
 
-What was hard, for the next country (Toronto): a statistics office's geography server may sit
-behind a bot check (StatCan's www12), so look for mirrors early (ArcGIS Online copies) and list
-the official URLs for Anita; a census taken in a lockdown needs its at-home workers put back;
-education data may be provincial, not national, so a second province needs its own files; when
-Overpass is down, reading the Geofabrik extract with GDAL is the fallback for every OSM input; and a
-fitted curve can differ much from the US one (Toronto's d^-1.2 exp(-d/20 km)), which is why each
-pack ships its own.
+For a new country (Toronto's lessons, `notes/adding-a-city-history.md`): look early for mirrors of
+a statistics office behind a bot check and list the official URLs for Anita; put back the at-home
+workers of a census taken in a lockdown; reading the Geofabrik extract is the fallback for every
+OSM input when Overpass is down.

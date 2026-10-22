@@ -8,7 +8,7 @@ and **commutes between zones**. The design and its reasons are in [zones.md](zon
 notes/T-362.md; the kernel's side (`sim/src/demand/intercity.rs`: compositions, served pairs,
 queries) in [demand-market.md](demand-market.md) "The world market" and after. Every registered zone is a
 **place** of the market (`place` in the registry); place ids are stable and new zones append;
-Trenton's (2) stays with no sites since Mercer joined New York.
+Trenton's (2) is kept with no sites (Mercer is in New York's pack).
 
 ## 5.1 The total travel market, then rail's share
 
@@ -69,9 +69,10 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   trips with places that have no zone; shown, never solved, their modes not modelled.
 
 **Mode choice.** Inter-region trips choose rail, car and plane in one logit at 3 perceived minutes
-a dollar [T-378], damped by the trip's length as every trip is ([demand-mode.md](demand-mode.md) 4.3,
-T-495): 0.10 x sqrt(60 / T) per perceived minute, T the car's perceived minutes over the zone
-pair's distance, even across a sea where no car goes (so rail against air never depends on it), so about 0.058 at 3 hours by car and 0.028 at 13. The scale covers the whole
+a dollar [T-378], damped by the trip's length as the local walking share is
+([demand-mode.md](demand-mode.md) 4.3, T-495): 0.10 x sqrt(60 / T) per perceived minute, T the
+car's perceived minutes over the zone pair's distance, even across a sea where no car goes (so
+rail against air never depends on it). The scale covers the whole
 rail trip, access included. Rail's cost is chosen as in the local layers (T-718, demand-mode.md
 4.3, T-710): the pair's riders spread over its station pairs (up to 8 access stations at each end)
 by their whole cost, access and egress included, at the station choice's scale for the zones'
@@ -79,9 +80,8 @@ distance (0.33 a perceived minute from 12 km, so nearly every pair), softened pa
 sqrt(60 / T) with T the car's perceived minutes (`rel_soft`: 0.19 at 3 hours by car, 0.12 at 8),
 so a long trip spreads over more of its stations, and rail is priced at that logsum before the
 damped mode choice. Each zone's access weights (built at 0.10, 5.3) are taken to
-that scale by raising them to the power of the scale over 0.10. On the market's own costs (T-378's
-ideal access) rail then holds about 100%, 99%, 92% and 56% of rail and air at 2, 3, 4 and 5 hours
-on the train.
+that scale by raising them to the power of the scale over 0.10. Rail's resulting share against
+air by hours on the train: notes/T-712.md.
 
 - *Car*: 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus 15 cents a road km
   and the destination's parking (the local rule, docs/demand-mode.md 4.3, baked into the market pack's
@@ -147,17 +147,17 @@ station a cost that depends on the end:
 - **Inter-region trips**: at the home end as a commute's; at the far end a drop-off only
   (`d_drop`), since the traveller has no car there.
 
-A site's access at each end is its walks (the mean of their weights at 0.10 a minute, as
-before rides) nested with its zone's rides at the station choice's scale from 12 km (0.33 per
+A site's access at each end is its walks (the mean of their weights at 0.10 a minute) nested
+with its zone's rides at the station choice's scale from 12 km (0.33 per
 minute, T-718), so a
 ride dearer than the walk adds little, and a site beyond every walk is reached by its rides alone.
 Zones that only a ride reaches are served (5.1), so a lone intercity station draws on everyone
-within the ride's reach. Player-built feeder lines take part in regional routing as before.
+within the ride's reach. Player-built feeder lines take part in regional routing.
 
 ## 5.4 Size
 
 A place's market pack holds its sites, its 6 km zones' normalisers and its commutes to other
-places (New York's 3.4 MB, Toronto's 1.1 MB). The solving workers open it with the zone (viewed,
+places (sizes: notes/regional-history.md). The solving workers open it with the zone (viewed,
 beside the view, reached, or a station within 30 km of its box) and close it as they close the
 zone; a worker composes the market from the packs it holds. It runs in the same worker pool as the
 zone packs, periods divided among workers. Each period advances all populations from one frozen

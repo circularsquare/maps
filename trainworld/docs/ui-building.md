@@ -14,7 +14,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   buttons on the first row and one on the second; then the elevation (seven buttons
   tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692) with its
   multiplier and price per km (with High speed picked, high-speed track's: 1.5x, so 0.45x at
-  ground), Double, Quad or High speed track [T-255, T-817; single track not offered since T-733],
+  ground), Double, Quad or High speed track [T-255, T-817; no single track, T-733],
   the design speed (a row under the track choice: a stepper through 160, 200, 250 and 320 km/h, 160
   by default; higher lays the curves of newly drawn track wider, [track-and-service.md](track-and-service.md)
   6.1; its hover: "Track you draw curves wide enough to take this speed") [T-817]; picking High
@@ -27,7 +27,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
   The elevation, the double, quad or high speed choice, the design speed, the keep placing switch and the snap switch are remembered per
-  browser; a remembered single (from before T-733) reads as double (localStorage with the other panel settings, not in the save) [T-468]. Caps Lock only
+  browser (localStorage with the other panel settings, not in the save) [T-468]. Caps Lock only
   changes the switch when its state changes after the page loads, so a stored setting wins over a
   Caps Lock left on or off [T-487].
   The number keys work from any tab and open the Build tab; the key of the tool already on does
@@ -50,14 +50,13 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 - **Esc** undoes one thing at a time: a question waiting is answered Keep, a drag goes back, a
   half-drawn route is dropped (the tool stays on), then the tool is left for selecting, then the
   selection clears.
-- Tool hints and a refused edit's reason show at the map's bottom left.
+- Tool hints and a refused edit's reason show at the map's bottom left ([ui-panels.md](ui-panels.md) "The dock").
 
 ## Drawing track
 
 [T-023, T-085, T-092, T-244, T-311, T-322, T-418, T-422, T-442]
 
-Track is drawn through points, double and quad alike [T-418, T-423; Corners retired with
-T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
+Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
 
 - **Clicks**: the first click is the start, the second places a segment ending at it at once (one
   undo step), the track passing through the click, at the level selected. A click with Shift held
@@ -77,9 +76,11 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
   [`map/curveCircle.ts`]; none for a straight segment. A click beyond the 1,796 m circle gets that
   circle's curve then a straight to the click [T-471].
 - **Curve labels**: while drawing, the start shows as a square and the curve its speed limit, on
-  the speed colour at half strength [T-417; no radius since T-530] (one label for a curve split
+  the speed colour at half strength, no radius [T-417, T-530] (one label for a curve split
   into several corners); the same labels show while a selected blueprint stretch is reshaped or a
-  node dragged (`setCurveLabel`, `map/tools.ts`).
+  node dragged (`setCurveLabel`, `map/tools.ts`). They show only for curves on screen and never
+  over one another (64 by 22 px), at most 300, so a long snapped route zoomed out keeps a few
+  [T-727d].
 - **Loose ends** [T-416; `map/endMarkers.ts`]: while the track or station tool is on, a small white
   circle with a dark border marks every loose end (a node with one piece of track and no
   station), blueprint or built. A track click on one starts or continues the route from it; the
@@ -104,8 +105,6 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
 - **Placed blueprint track** is drawn as blue rails ([ui-map.md](ui-map.md) "Lines and track").
 - A segment is one piece (each pair's on quad); the delete tool, Construct and the track
   inspector act on one piece [T-244].
-- **Curve labels** show only for curves on screen and never over one another (64 by 22 px), at
-  most 300, so a long snapped route zoomed out keeps a few [T-727d].
 
 ## Snapping to the real network
 
@@ -182,9 +181,8 @@ switch on, the track tool follows the real network the layer draws.
   length it was given in: a refusal the layout cannot explain (water, a ramp, a crossing that is
   not flat, a curve, cash) stands for spots on that track within 16 px of where it was tried, and
   that track is not asked again there, so while the pointer moves each answer gets further down
-  the list. Where 7 or more candidates are under the pointer and the worker has not yet confirmed
-  the guess (a bundle of overlapping tracks, where the guess was often wrong on the real save), the
-  ghost stays as it was if it was within 10 px, else shows nothing, until the answer. The click
+  the list. Where 7 or more candidates are under the pointer (a bundle of overlapping tracks) and
+  the worker has not yet confirmed the guess, the ghost stays as it was if it was within 10 px, else shows nothing, until the answer. The click
   tries the ghost's spot first, so the ghost and the click cannot disagree.
 - **What is under the pointer** [T-469, T-671]: the ghost and the click take the first spot the
   track model would accept (the same trial edit as above), tried in this order: the nodes within
@@ -234,8 +232,8 @@ switch on, the track tool follows the real network the layer draws.
 crossovers. A station placed on quad track, or doubling up through stations, adds one past each
 station in the same edit; the station ghost does not draw it, and it shows on the map as blueprint
 once placed, its price in the blueprint total and in the double-up button's price. A crossover is
-selected, constructed and removed whole like other track (below). The clock worker still answers
-`previewCrossover` and the `crossover` edit, for checks.
+selected, constructed and removed whole like other track (below). The clock worker's
+`previewCrossover` and `crossover` edit are for checks only.
 
 ## Deleting
 

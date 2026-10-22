@@ -15,7 +15,7 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
 | `notes/T-###.md` | Working notes for a task too big for one line; analysis scripts a note cites | the task's agent |
 | `checks/` | Standing checks, `smoke.mjs` first (code-map.md lists them) | agents |
 | `research/` | Background reports with sources, one file per topic | agents |
-| `TODO.md` | Anita's own list | Anita only; agents never edit it |
+| `TODO.md` | Anita's own list, where her playtest notes land: read it and file new items as tasks | Anita only; agents never edit it |
 | `docs/demand-plain.md` | How demand works in plain words, one page, for Anita | any agent that changes a demand rule it mentions |
 
 ## Doc rules
@@ -39,7 +39,9 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
   and a notes/ link for detail. Old long entries stay as they are.
 - **Tasks.** One line each in `TASKS.md`:
   `- T-012 [P2] short title. State, owner if taken, link to notes/T-012.md if any.`
-  Ids are never reused (next after the highest in TASKS.md and ARCHIVE.md). P1 = blocking or
+  Ids are never reused (next after the highest in TASKS.md and ARCHIVE.md). With several agents
+  at once, the orchestrator hands out ids: a brief names the ids its agent may file, or the agent
+  asks (two agents picking "the next id" at once collided, 2026-10-22). P1 = blocking or
   now, P2 = this milestone, P3 = later or ideas. Add `taking, <date>` before starting. More than
   ~3 lines of context goes in `notes/T-###.md`.
 - **A task is done when** the work runs, the spec matches it, any decision is in DECISIONS.md, and
@@ -60,20 +62,24 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
 
 Briefs carry only the task; these hold for every agent.
 
+- **Before starting**, check `git status` and the "taking" marks in TASKS.md; several agents work at
+  once, each owning named files, so leave others' alone.
 - **Your own Vite**: `node trainworld/checks/dev-nowatch.mjs <port>` (from the maps root; a port in
   6100-6199 nobody else uses), watching and HMR off so others' edits do not reload your page;
   restart it after editing the app. What Anita opens goes through 8800 (`serve.py`), never yours;
   run checks on your own Vite, and never long sweeps against 8800 while she may be playing.
 - **Agent worktrees** (T-792; Anita 2026-10-21: used sparingly). Most agents work in the main tree.
-  A code agent whose edits would collide with another's in shared files gets its own tree from the
-  orchestrator: `node trainworld/checks/agent-tree.mjs new <name>` makes `maps/.tw-trees/<name>` on
-  branch `tw/<name>` from master, with `data`, `app/node_modules`, `artifacts/trainworld` and `venv`
-  as junctions to the main tree's and the WASM bindings copied (Rust builds into the tree's own
-  `sim/target`). The agent works and runs everything from that folder as its maps root and does not
-  commit. TASKS, ARCHIVE, DECISIONS and data or pipeline batches are edited in the main tree only.
-  The orchestrator runs smoke in the tree, then `agent-tree.mjs land <name> "<one sentence>"` (all
-  its trainworld/ changes as one commit on master, fast-forwarded), then `remove <name>`. About
-  1.2 GB a tree before its Rust build; two or three at most.
+  A code agent whose edits would collide with another's gets its own tree from the orchestrator:
+  `node trainworld/checks/agent-tree.mjs new <name>` makes `maps/.tw-trees/<name>` on branch
+  `tw/<name>` from master (`data`, `app/node_modules`, `artifacts/trainworld` and `venv` junctioned
+  to the main tree's, WASM bindings copied, Rust building into its own `sim/target`). The agent runs
+  everything from that folder as its maps root and does not commit; TASKS, ARCHIVE, DECISIONS and
+  data or pipeline batches are edited in the main tree only. The orchestrator runs smoke in the
+  tree, then `agent-tree.mjs land <name> "<one sentence>"` (one commit on master, fast-forwarded),
+  then `remove <name>`. About 1.2 GB a tree before its Rust build; two or three at most.
+  **An agent that changes the WASM interface** (adds, renames or removes a function the app calls)
+  gets its own tree while others run pages in the main tree; in the main tree it builds the Rust
+  function before any app code calls it (such breaks stopped every agent's demand loading, 2026-10-22).
 - **Headless Chrome** through Playwright with its own temporary `--user-data-dir`. Stop only the
   PIDs you started; never kill browsers or node broadly.
 - **The real save** is `T-007-real-nyc.save` (New York, 109 lines). `?new=1` never writes a slot.
@@ -81,8 +87,11 @@ Briefs carry only the task; these hold for every agent.
   orchestrator builds and commits. `npm run wasm --prefix app` is fine when Rust changed.
 - **Rust**: `CARGO_BUILD_JOBS=3`; keep the crate compiling between edits, since others build it
   too. Shells started before Rust was installed lack it on PATH: prepend `%USERPROFILE%\.cargo\bin`.
-- **CPU**: at most 6 of 16 cores in all, every agent together, while Anita is using the machine;
-  up to 12 overnight (Anita, 2026-10-16).
+- **CPU**: at most 10 of 16 cores in all, every agent together, while Anita is using the machine;
+  12-15 overnight or while she is away (Anita, 2026-10-22).
+- **Pack rebuilds** back up to `data/work/pre-T###/` first; a backup goes, without asking, once a
+  later state is checked clean (Anita, 2026-10-22). `data/work/res9/` stays.
+- **A refused permission check**: make the step safer, review, retry; don't wait for Anita.
 - **Calibration of new cities** (Anita, 2026-10-16): cities added through the world plan need no
   calibration beyond the pipeline's gate; a deep calibration comes once everything is in.
 - **Bash**: one simple command per call (no `&&`, pipes or loops); scripts go in a file in your
@@ -94,18 +103,19 @@ Briefs carry only the task; these hold for every agent.
 - **Stop at a clean point** if the work outgrows one context: finish the stage you are on, write
   the rest as tasks, hand back. Compacting means the task was sized too big.
 - **Keep your context lean** (T-288's retrospective): each step re-reads your whole conversation,
-  and waking after more than about 5 idle minutes re-caches all of it (29% of London's cost). Wait
-  for a long job with one background wait on the process ending (not on a log line, which a script
-  may never print: T-292), not progress polling, and never wait in the foreground
-  for more than about 4 minutes (T-289, T-291: each such wait cost about 270k); do other work meanwhile. Start
-  independent long jobs together and wait once (T-360: six separate waits were still 36%). Write
-  long logs to a file and read summaries; read doc sections, not whole files; grep TASKS.md.
-- **Long runs are checked, not trusted** (T-613's batch, 2026-10-19: the runner ended early, its STOP file
-  was in the wrong folder and the sim copy's junctions vanished mid-run, and the agent sat "waiting" for hours
-  with 26 rows parked). Before a long run, check the sim copy's `data`/`app` junctions and the paths it will
-  write; after it ends, read `world_run.py status` and report the shipped/parked counts with causes, never just
-  "waiting". The orchestrator checks the process exists and the status table at least every couple of hours.
-  A batch agent may start subagents (one region or one fault each) when that is quicker than one queue.
+  and waking after more than about 5 idle minutes re-caches all of it. Wait for a long job with one
+  background wait on the process ending (not on a log line, which a script may never print), never
+  progress polling, and never wait in the foreground for more than about 4 minutes; do other work
+  meanwhile. Start independent long jobs together and wait once. Write long logs to a file and read
+  summaries; read doc sections, not whole files; grep TASKS.md.
+- **Long runs are checked, not trusted** (T-613, 2026-10-19). Before a long run, check the sim
+  copy's `data`/`app` junctions and the paths it will write; after it ends, read `world_run.py
+  status` and report the shipped and parked counts with causes, never just "waiting". The
+  orchestrator checks the process and the status table at least every couple of hours. A batch
+  agent may start subagents (one region or one fault each) when that is quicker than one queue.
+  **Start every long run detached** (a `.cmd` or `start` that outlives the session, its log to a
+  file; a run started from a session dies with it) and write its batch id, log path, liveness check
+  and restart command into the task's notes before waiting.
 - **Reports to the orchestrator are short**: what changed and where, check results, anything for
   Anita. Detail goes in notes/, not the report.
 - **open** in the spec means Anita decides. Otherwise decide, record why, and carry on; never ask
@@ -119,19 +129,16 @@ Briefs carry only the task; these hold for every agent.
 
 `node trainworld/checks/smoke.mjs [url]` from the maps root: Node checks, then a new game and the
 real save in headless Chrome (counts, demand final, station and train clicks, no console or GL
-errors). About half a minute with its own Vite; one PASS or FAIL line per check. After rebuilding
-8800's snapshot, run it once more against `http://localhost:8800/trainworld/`, also with
-`SMOKE_SHADE=dark`: a production build copies only the pack files `vite.config.ts` lists, and the dev
-server serves everything (T-377's market packs were missing there, 2026-10-15).
-
-After each commit, in order:
-1. Smoke on the dev server (above).
+errors); about half a minute, one PASS or FAIL line per check. In order:
+1. Smoke on the dev server.
 2. Commit explicit paths only; check the staged diff right before committing, since agents edit shared
    files while you stage.
 3. Rebuild 8800: `git -C maps/.tw-snap checkout --detach <commit>`, then in `.tw-snap` with
    `CARGO_TARGET_DIR=maps/.tw-snap-target`, `CARGO_BUILD_JOBS=2` and `%USERPROFILE%\.cargo\bin` on PATH,
    `npm run build` through `cmd /c` (PowerShell treats wasm-pack's stderr as an error).
-4. Smoke against `http://localhost:8800/trainworld/`, then again with `SMOKE_SHADE=dark`.
+4. Smoke against `http://localhost:8800/trainworld/`, then again with `SMOKE_SHADE=dark`: a
+   production build copies only the pack files `vite.config.ts` lists, while the dev server serves
+   everything (T-377).
 
 Several agents at once work well when each owns named files; give every brief the others' files to
 leave alone.
@@ -144,18 +151,12 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
 
 ## Working here (Anita's decisions)
 
-- **The goal is the whole world; sensible demand is core** (2026-10-13; "sensible" over "realistic" since 2026-10-17, below). New US cities stay paused.
-  Instead a sampler of other countries' cities (Toronto done; London, Paris, Shanghai, Mumbai, São Paulo, Lagos, Berlin, Seoul and
-  Tokyo, Osaka, Nagoya, Fukuoka, Sapporo, Sendai and Hiroshima, with the rest of Japan as 38 prefecture zones, all at tier 0 with their country's inputs; 67 zones in all) to learn which demand methods work everywhere. Each is a
-  low-fidelity first pass: missing data (medical, say) is left out, extents pragmatic, basic
-  checks, no deep calibration. The global build is the baseline everywhere; the reach goal is
-  tailoring country by country, first for likely-popular countries (China, Japan, the UK, Germany
-  and the like) (2026-10-14). Whole-world estimate, 2026-10-14: about 40-60 agent hours (robust
-  unattended tier 0, a few sampler cities, automatic city and zone choice, runtime scaling), then
-  days of machine time for the build. In tokens (notes/city-costs.md): London's tier 0 city cost
-  about 6.8M weighted with first-time tooling; the Japanese batches since came to 1.6-3.4M a pack
-  with a country module, so 200 metros about 300-700M, a quarter to three quarters of one week's
-  limit in all.
+- **The goal is the whole world; sensible demand is core** (2026-10-13; "sensible" over
+  "realistic" since 2026-10-17, below). New US cities stay paused. The global build (tier 0) is the
+  baseline everywhere, each place a low-fidelity first pass: missing data (medical, say) left out,
+  extents pragmatic, basic checks, no deep calibration. The reach goal is tailoring country by
+  country, first for likely-popular countries (China, Japan, the UK, Germany and the like)
+  (2026-10-14). Token costs per city: notes/city-costs.md.
 - **Demand is simple on purpose** (Anita, 2026-10-17, replacing T-509's fitted calibration): the
   model aims at sensible and fun, so building rail matters, over fitting real cities. Her two
   ceiling tests are the targets (rail of rail + car: A at least 85%, B at least 50%; notes/T-636.md);
@@ -201,8 +202,7 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   `localhost:8800/trainworld/`; relative URLs only. 8800 serves a build of the last commit from the
   orchestrator's snapshot worktree `maps/.tw-snap/` (detached HEAD, excluded by
   `.git/info/exclude`; `data` and `app/node_modules` are junctions to the main tree's; its own
-  `CARGO_TARGET_DIR=maps/.tw-snap-target`), so a rebuild never waits for agents mid-edit. Agents
-  work in the main tree unless given a worktree (Agent worktrees, above).
+  `CARGO_TARGET_DIR=maps/.tw-snap-target`), so a rebuild never waits for agents mid-edit.
 - **Commits** (2026-10-13): the orchestrator commits trainworld work without asking, not often (end
   of a round, or when a snapshot build needs it); explicit `trainworld/` paths, one plain sentence.
   Subagents never commit. **Pushing needs Anita's word.**

@@ -2,20 +2,20 @@
 
 # Zones (T-276)
 
-Written 2026-10-13. Anita's decisions behind it: option 2 of `research/intercity-review.md`
-(retune the regional market and add commutes between cities) inside a world divided into zones;
-Mercer County joins New York. Which parts are built is in section 9.
+Anita's decisions behind it (2026-10-13): option 2 of `research/intercity-review.md` (retune the
+regional market and add commutes between cities) inside a world divided into zones.
 
 ## 1. What a zone is
 
 The world is divided into **zones**, and every place is in exactly one zone or in dead space.
 
-- A **city zone** is a metro area with a hand-drawn extent: the nine Northeast city packs and
-  Toronto (T-277).
-- A **non-city zone** is land between and around city zones that is not part of any metro: the
-  country between Providence, Hartford, Springfield and Boston, say.
-- **Dead space** is everything else: Nunavut, and for now most of the world. Nothing there makes or
-  attracts a trip in any layer, so a line through it carries only riders going through.
+- A **city zone** is a metro area: a world plan row (adding-a-city.md 1) or a hand-drawn extent
+  (the nine Northeast city packs, Toronto).
+- A **non-city zone** (countryside zone) is land around city zones that is not part of any metro:
+  the rest of a covered country (section 2), or in the US the counties between city zones.
+- **Dead space** is everything else: countries not covered yet, and very empty units inside
+  covered ones. Nothing there makes or attracts a trip in any layer, so a line through it carries
+  only riders going through.
 
 Both kinds of zone are the same thing in the code: a **pack** in the registry
 (`app/src/game/registry.json`, its `cities` list), built by the same pipeline from the same
@@ -58,8 +58,9 @@ Russian-administered southern Kurils and uninhabited islets more than 50 km from
 **Whole countries** (Anita, 2026-10-19, T-719; built for Spain, T-723) are covered by zone rows in
 the world plan (`world_plan.py zones --countries ES`), built by the runner like metro rows. Every
 unit of the plan's unit level (NUTS-3 in Europe) that no plan row holds and no pack holds half of is
-a candidate. A unit under **20 people a km²** stays dead space for now (Spain: Soria, Teruel, Cuenca,
-Huesca, Zamora, Palencia, Ávila, Cáceres and Segovia, 1.46M people). Units **under 100,000** join a
+a candidate. A unit under **20 people a km²** stays dead space for now unless it holds 0.8 of the
+zone floor (0.4M at 0.5M; `DEAD_KEEP`, T-903: Bergen, Trondheim, Oulu, Inverness); Spain's dead
+space is Soria, Teruel, Cuenca, Huesca, Zamora, Palencia, Ávila, Cáceres and Segovia. Units **under 100,000** join a
 zone of their own region (NUTS-2; elsewhere the first-level unit), smallest first: the one they
 share the longest border with, or for an island the most populous zone of the region within
 150 km (so small islands join their province's largest: La Gomera, La Palma and El Hierro
@@ -75,10 +76,8 @@ Ireland and the Benelux at 0.1-1.2M). A European country's units outside Europe 
 overseas départements) are not zoned. A zone row has `kind` "zone", is named after its most populous unit (before
 any "/"), and has its origin at its densest square km. A replan of the metros keeps zone rows as
 they are. Countryside zones use the zone curve (section 4) and global sources only: a zone row
-never takes its country's module. Covered so far: Spain (40 zones, T-723), Italy (97), France
-(80, Creuse and Lozère dead space; T-779), Greece (31) and Portugal (13 of 16, three parked on
-their outlines, T-787; T-786); the rest of Europe but Russia, Belarus and Ukraine is planned as 360
-zone rows (T-788, notes/T-788.md).
+never takes its country's module. Which countries are covered, and with how many zones:
+docs/data-register.md.
 **China and Taiwan** (Anita, 2026-10-22, T-897) have their own rules (`world_plan.ZONE_RULES`):
 zones of at least **1M** (cap 2.5M) from geoBoundaries counties merged within their province, no
 dead space by density, and **no exclaves**: a zone's parts touch by land or across at most 10 km of
@@ -328,9 +327,7 @@ is known without its files (T-302, T-400):
 ## 7. Other countries and borders
 
 Every rule above is per country: the unit (US county, Canadian census division, NUTS-3), the data
-adapters, the border factors. Toronto (T-277) is a city zone of Canada with Canadian census
-divisions around it as its non-city zones once modelled space reaches them. The joint commute
-gravity spans countries: a pair across the US-Canada border takes the national border factor, and
+adapters, the border factors. The joint commute gravity spans countries: a pair across the US-Canada border takes the national border factor, and
 the market's longer trips across any border T-376's factor (0.26 times the origin's income factor
 to the power 1.5). A world with separate clusters of zones (the Northeast, Toronto, London, Tokyo)
 needs nothing special: the commute gravity has no pairs between them, the market's longer trips
@@ -338,45 +335,23 @@ between them are place to place, and clusters merge only through track (T-362 de
 
 ## 8. Performance
 
-- **Opening.** A non-city zone is a pack the size of a small city (Worcester County 860k people,
-  about Providence's), opened only when viewed or reached, like a city: 0.05-0.3 s natively with its
-  everyday layer. Commute packs open from shipped factors as now (a few ms).
+- **Opening.** A countryside zone is a pack the size of a small city, opened only when viewed or
+  reached, like a city; commute packs open from shipped factors.
 - **A zone's market pack** is opened only once the zone is reached or selected, or a station lies
   within 30 km of its box, never for viewing alone (T-396, T-377, T-801; demand-runtime.md), so the
   market a worker holds grows with what is reached, not with the registry or the pan. Its pairs are built only between zones a station serves, so a solve's pair loop grows
   with the network's reach; pairs to every other place come from the market rows (one row per
   zone, about 0.9 KB, `game/market-rows.json`), which every solving worker holds once a market pack opens.
-  Cross-zone commute pairs add a second pass over served pairs to the market's per-period work
-  (the market pass was 0.06 s natively a period on the real New York network).
-- **The joint gravity** is offline only (`joint_gravity`, about a minute natively on three
-  threads over the 13 packs' 25.6k zones, about three over 65k); a runtime edit never reruns it.
+  Cross-zone commute pairs add a second pass over served pairs to the market's per-period work.
+- **The joint gravity** is offline only (`joint_gravity`); a runtime edit never reruns it.
 - **Startup** must not grow with the number of zones beyond the registry index (T-776): a zone adds
   about 310 bytes to the bundled `registry.json` (what the map, the zoomed-out bubbles, the new game
   sheet's search and the save header need before it opens) and about 0.9 KB to the market rows,
   which the page downloads only with the first market pack; its files are fetched
   on demand (section 6). A mask installed while a big network is loaded reworks the
-  whole network once (about 0.2 s on the real New York network). A zone opened only for its bubbles opens bare in the auxiliary worker (T-325):
-  0.3-1.5 s, and its everyday layer once rather than in every solving worker.
+  whole network once. A zone opened only for its bubbles opens bare in the auxiliary worker
+  (T-325), its everyday layer once rather than in every solving worker.
 - **Closing** (T-301; demand-runtime.md "Which cities are open"). A zone nobody views, sees beside the view
   or reaches closes after 60 s, or at once beyond two such zones, so a long pan holds a few zones'
   packs at a time, not every zone it passed.
 
-## 9. What is built (T-276)
-
-All five stages are built; numbers and checks in [notes/T-276.md](../notes/T-276.md).
-
-1. Mercer County in New York's pack (207,766 cells, 21.97M people).
-2. The market retuned: 0.107 departures a weekday, onset 25-50 km, `max(d, 25)^-2.37`, the outside
-   world (0.76M of 5.13M departures leave the map), the car's running cost and parking.
-3. Commutes between zones: `joint_gravity`, 1.51M commuters across pack lines among the 13 zones
-   (1.12M among the nine cities before the non-city zones), in the regional layer at commute timing and the local commute's mode choice.
-4. Non-city zones Worcester, Windham, New London and Litchfield Counties (`wor`, `wnd`, `nlc`,
-   `lit`); the focus follows the zone under the view, and up to three nearby zones' bubbles show
-   beside the focused zone's (app/src/game/zones.ts, map/zoneFocus.ts, map/commuterView.ts).
-5. The far-zoomed per-zone bubble: local trips plus the regional layer's, coloured by train share.
-
-Not built, each its own task: park-and-ride (T-295), the market's routed drives (T-279), the
-commute part's own weekend factor in a station's far-zone rows (T-296), commutes shown apart from longer trips (T-298), the market's seam trips against NEC
-FUTURE (T-299), and
-fetching zones' water masks and boundaries on demand rather than at startup (T-302; today every
-registered zone's are fetched at startup, as cities' are).

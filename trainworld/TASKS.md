@@ -13,9 +13,6 @@ commit, publishing (T-924), faster batches (T-928), China's waves 1-4 (T-897). P
 work (notes/perf-survey.md; `checks/t714-pan.mjs` guards panning, `checks/t724-hover.mjs` pointer
 moves). Rules for every agent are in CLAUDE.md; history in ARCHIVE.md.
 
-## Docs
-- T-940 [P2] Doc tidy (Anita 2026-10-22: are the docs getting bloated?): tighten CLAUDE.md, SPEC.md, TASKS.md and adding-a-city.md, move measurements and history out of docs/ into notes/, prune notes/. Taking, 2026-10-22; notes/T-940.md.
-
 ## Demand and data
 - T-878 [P3] Drop the `nocar` build step from `pipeline/world_run.py` (`BUILD_STEPS`) and `everyday_rates.py`'s import of `nocar.country_of`, between batches: demand stopped reading car ownership in T-854. Keep `nocar.py` for `country_of` or move that function; with T-926. Open.
 - T-632 [P3] Walking feels too strong to play against (Anita 2026-10-17): the model walks at or under the surveys; showing trips no train could win apart from the demand played against is parked (Anita: try later). notes/T-632.md.
@@ -34,7 +31,7 @@ moves). Rules for every agent are in CLAUDE.md; history in ARCHIVE.md.
 - T-427 [P3] Longer-trip answers sent only for zones with trips (a selection's answer is about 600 kB per worker at 5,894 zones). Open; notes/T-377.md.
 - T-428 [P3] `data/packs/intercity.json` (14 MB) is only the joint gravity's input and output, never read by the game since T-377: move it to data/work, out of what is published. Open; notes/T-428.md.
 - T-429 [P3] Cross-border long trips in Europe: T-809's one open-area factor (0.5) fits London - Paris but leaves land pairs (Paris - Brussels, Amsterdam - Brussels) about half to two thirds low; a factor per country pair if country tailoring wants it. Open; notes/T-809.md.
-- T-605 [P3] Move the measurement trails still inside the demand-*.md paragraphs (before/after tables, how a figure was reached) to notes/, one file at a time, as each is next edited. Open.
+- T-605 [P3] Move the measurement trails still inside demand-mode.md (before/after tables, how a figure was reached) to notes/ when it is next edited; the other demand-*.md files were done in T-940. Open.
 - T-283 [P3] Toronto's Yonge test line lost all its airport riders once routes were added (567 to none): are Pearson's terminals cut off from stations by routed walks or drives? May affect US airports. Open; notes/T-277.md.
 - T-279 [P2] Routed drives for the regional market and between packs: its car is still 1.25 x the great circle (docs/regional.md 5.1); new packs need `routes.py <id>`. Open; notes/T-275.md.
 - T-390 [P3] A station's walked/drove split covers commutes only; extend it to everyday trips and the regional layer, then to the hover and catchment. Open; notes/T-374.md.

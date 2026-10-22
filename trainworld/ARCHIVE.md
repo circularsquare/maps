@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-940 [P2] Doc tidy. Done 2026-10-22: CLAUDE.md, SPEC.md, TASKS.md (10 tasks archived), adding-a-city.md, zones.md and 17 docs/ files cut to current rules, measurements and history moved to notes/; 33 one-off notes files deleted. notes/T-940.md.
 - T-939 [P2] Many regions loading at once. Done 2026-10-22: at most 3 loading bars, the zone in view then the loading zones nearest the map's centre, picked again when a move ends (`map/zoneLoading.ts`).
 - T-936 [P2] Bubbles stand out while one is selected. Done 2026-10-22: demand and zone bubbles at full opacity and 2 CSS px larger (hover and click too, lines start at the larger edge); `DemandOverlay.setSelecting`.
 - T-935 [P2] Trip explorer without a walking section over 10 km. Done 2026-10-22: the "By walking" heading and its line are left out, nothing replaces them.
