@@ -1,0 +1,19 @@
+# Northern Mariana Islands (2020 Island Areas Census, PCT24 language spoken at home). The twelve
+# labels are Guam's (tree.d/gu.txt has the Glottolog checks), so every node is a repeat, without
+# colour except where gu.txt fixed one (Carolinian, `pacific_other`), so the CNMI stands on its
+# own under `build.py --only`. No new node.
+indoeuropean.germanic.english | English
+austronesian | Austronesian
+austronesian.chamorro | Chamorro
+austronesian.palauan | Palauan
+austronesian.philippine | Philippine
+austronesian.oceanic | Oceanic
+austronesian.oceanic.chuukese | Chuukese
+austronesian.oceanic.carolinian | Carolinian | 0.82 0.13 255.0
+pacific_other | Other Pacific Island languages | 0.66 0.06 210
+sinotibetan.sinitic | Chinese
+japonic | Japonic
+japonic.japanese | Japanese
+koreanic | Koreanic
+koreanic.korean | Korean
+other | Other or unclassified

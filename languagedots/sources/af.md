@@ -346,3 +346,36 @@ asks household language (not checked).
 From `note_public`: "The shares are applied to each province's settled population in the
 statistics authority's estimate for 2025-26, and within a province the dots follow Kontur's
 population grid."
+
+## Coverage gap: the Kuchis (2026-10-19, session eca0185b-gap)
+
+The 1.5 million nomadic Kuchis (NSIA's 2025-26 figure, held fixed; `KUCHI` in `countries/af.py`) were
+the "gap" of the MICS build: no province in the settled population and outside MICS's household
+frame. They are now drawn, `modelled`, so Afghanistan is 36,435,197 people (34,935,197 settled + 1,500,000).
+Files: `sources/af_kuchi.py` (writes `data/normalized/af_kuchi.csv`), `countries/af.py`.
+
+**Where.** The MRRD provincial profiles (c. 2008) quote, for every province, the Kuchi population
+that winters there from the 2003-04 National Multi-sectoral Assessment on Kuchi (NMAK). The profiles
+are in the CALL Handbook 11-16 page `af_mrrd.py` already downloads; `af_kuchi.py` checks each of the
+34 figures occurs verbatim in it (Nangarhar's 558,627 is the 23% the profile prints). They sum to
+2,426,386, the NMAK's "2.4 million". The 1.5 million is spread by those provincial shares:
+Nangarhar 23%, Takhar 7.1%, Farah 6.8%, Badghis 4.7%, Khost 4.3%, Herat 4.1%, Faryab 4.0%,
+Baghlan 4.0%... Ghor, Bamyan and Daykundi (summer areas only) and Panjshir (a very small Pashtun
+Kuchi population, no figure) get none. Summer ranges (Logar 208,000, Ghor 167,000, Badakhshan 185,000)
+are not drawn: winter is where they are counted and where NSIA's survey year would find them.
+
+**Language.** Pashto for all, except Helmand's winter Kuchis, 17% of whom the profile says are
+"all belonging to the Baochi tribes": those go on Balochi (16,200). Baloch nomads in Nimroz and
+Farah are not stated, so not drawn. The Kuchis are Pashtun nomads by every account; this is a
+proxy (ethnicity read as language), uncited beyond the profiles.
+
+**Within a province.** Kuchis go on the rural hexes: those left once the densest hexes holding the
+province's urban population (religiondots' `af_lookup.csv` urban column) are taken out. That is a
+stand-in for pastures and winter camps; no source places them finer than the province.
+Implemented in `_AfWeighter.weights`, which recognises a (province, language) row that holds Kuchis by
+its count (settled + Kuchi) and weights the two parts apart.
+
+**Calls someone might reverse.** 1.5 million (NSIA now) rather than 2.4 million (NMAK 2004, many of
+whom had settled since); the 2004 provincial shares for 2026; winter, not summer, ranges; Pashto for
+all but Helmand's Baloch. **Room for improvement:** the NMAK report itself (district winter areas),
+NRVA 2007/08's Kuchi tables, a Baloch and Brahui nomad estimate for the south-west.

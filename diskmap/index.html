@@ -28,6 +28,11 @@ header h1 { font-size: 15px; font-weight: 600; margin: 0; }
 .modes button:first-child { border-radius: 4px 0 0 4px; }
 .modes button:last-child { border-radius: 0 4px 4px 0; margin-left: -1px; }
 .modes button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.rescan { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rescan button { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+                 padding: 3px 9px; cursor: pointer; border-radius: 4px; }
+.rescan button:disabled { cursor: default; color: var(--muted); }
+.rescan small { color: var(--muted); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 nav { padding: 0 16px 6px; display: flex; flex-wrap: wrap; gap: 2px; align-items: baseline; }
 nav a { color: var(--ink); text-decoration: none; padding: 1px 4px; border-radius: 3px; cursor: pointer; }
 nav a:hover { background: var(--line); }
@@ -76,6 +81,9 @@ aside li .p b { color: var(--ink); font-weight: 400; }
   <div class="usage"><div class="usagebar" id="ubar"></div><small id="utext"></small></div>
   <div class="modes">
     <button id="m-folder" class="on" title="One colour per folder at this level">By folder</button><button id="m-age" title="Colour by when most of the bytes inside were last changed">By age</button>
+  </div>
+  <div class="rescan">
+    <button id="rescan" title="Scan the drive again. Takes about two minutes">Rescan</button><small id="rstate"></small>
   </div>
 </header>
 <nav id="crumbs"></nav>
@@ -242,6 +250,31 @@ for (const m of ['folder', 'age']) document.getElementById('m-' + m).onclick = (
 let rt; new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(draw, 100); })
   .observe(document.getElementById('map'));
 header(); draw();
+
+// Rescan: serve.py runs scan.py and reports its latest progress line; reload when it finishes.
+const RUN = '_run/rescan';
+const rbtn = document.getElementById('rescan'), rstate = document.getElementById('rstate');
+function watch(s) {
+  if (s.running) {
+    rbtn.disabled = true;
+    const m = s.line.match(/^\s*(\d+)s\s+([\d,]+) folders\s+([\d,]+) files/);
+    rstate.textContent = m ? `Scanning, ${m[1]} s, ${m[3]} files so far` : 'Scanning';
+    setTimeout(() => fetch(RUN).then(r => r.json()).then(watch, fail), 2000);
+  } else if (s.code === 0 && rbtn.disabled) {
+    location.reload();
+  } else {
+    rbtn.disabled = false;
+    rstate.textContent = s.code ? `The scan stopped with an error: ${s.line}` : '';
+  }
+}
+function fail(e) { rbtn.disabled = false; rstate.textContent = `Rescan failed (${e.message || e})`; }
+rbtn.onclick = () => {
+  rbtn.disabled = true;
+  fetch(RUN, {method: 'POST', headers: {'X-Maps-Run': '1'}})
+    .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status)).then(watch, fail);
+};
+// a scan started earlier (or in another tab) may still be running
+fetch(RUN).then(r => r.ok ? r.json() : null).then(s => { if (s && s.running) { rbtn.disabled = true; watch(s); } }, () => {});
 </script>
 </body>
 </html>

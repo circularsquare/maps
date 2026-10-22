@@ -215,7 +215,8 @@ Banjar, Javanese, Sundanese, `other`, sign language, the unnamed remainder, any 
 points are over 150 km from all of a province's people, and any language with 40% or more of its
 province (Acehnese in Aceh, Balinese in Bali, Sasak in NTB). Minangkabau and Buginese use their
 points where they are minorities; Madurese is seeded on Madura's four regencies (its point,
-used as a kernel, filled Surabaya at 59% before Sumenep). Dayak uses every non-Malay Austronesian
+used as a kernel, filled Surabaya at 59% before Sumenep; since 2026-10-19 Java's big
+languages are seeded by homeland priors instead, §12). Dayak uses every non-Malay Austronesian
 language Glottolog places in Indonesian Borneo. Checked by regency (kernel 30 km): Madura 89%
 Madurese, Toba Samosir 81% Toba, Tana Toraja 41% Toraja, Majene 59% Mandar, Jayawijaya 52% Dani,
 Minahasa 53% Manado Malay. **Known weakness:** languages with even seeds take their provincial
@@ -445,6 +446,209 @@ Calls someone might reverse:
 - 2020 shares placing 2010 counts: twelve years of urban growth are assumed not to move the
   pattern, only its level.
 - Papua and Papua Barat left on their own regency model (Indonesian even there).
+
+## 12. Java's big languages placed by homeland (2026-10-19, session eca0185b-id)
+
+Anita, 2026-10-08 and 2026-10-19: "too Sundanese in places ... the totals are reasonable but
+its probably just like allocation / shifting", and the Madurese of the Tapal Kuda missing.
+Javanese, Sundanese and Madurese had even seeds inside their province (Madurese: Madura's four
+regencies at 1, the rest of East Java at 0.02), Cirebonese and Betawi one Glottolog point each,
+so Sundanese filled Indramayu (72%) and Serang (83%), and Jember, Bondowoso and Situbondo drew
+East Java's off-Madura average (14% Madurese).
+
+**Counts or placement?** Placement, for Madurese: L4.5 has 7,380,244 Madurese speakers in East
+Java (21.5% of the province), about what Madura (3.6M people) and the Tapal Kuda can hold. No
+count is changed. One count looks wrong and is left (see the last call below): Banten's Javanese.
+
+**Source search** (on top of §2): sensus.bps.go.id's 2020 long form has, besides table 201,
+tables 197-198 "Bahasa Pertama yang Dikuasai" (first language) and 202-204 (regional language
+with neighbours) by regency, all in four boxes only (Indonesian / regional / foreign / sign), no
+language named; tables 190-214 were probed. Web searches for a regency suku table of East Java
+(2010 or 2000) found only national and province figures. Ananta's province appendix stays
+paywalled and would not give regencies anyway.
+
+**So the priors are homeland knowledge, recorded as such**, in `sources/id_homeland.py` (its
+comments name each kecamatan): for each language a rough share of a regency's or kecamatan's
+regional-language speakers, used as its seed in the kecamatan rake (times 1 - the 2020 Tidak
+share, as every regional language). The rake still meets the 2010 province counts and Kontur's
+people, so a prior says only where. Main lines: Sundanese 0.95 in Priangan and in Pandeglang,
+Lebak and southern Serang; Cirebonese 0.9 in Cirebon and Indramayu, with Sundanese in south
+Indramayu (Haurgeulis, Gantar, Kroya) and south-west Cirebon (Pasaleman, Sedong, Beber) and a
+Cirebonese/Sundanese mix on Subang's coast; Betawi in Kota Bekasi, Depok, north-west Kab. Bekasi
+and north-east Kab. Tangerang, eastern Kab. Bekasi Sundanese; Banten Javanese in northern Serang,
+Kota Serang (Kasemen), Cilegon and north-west Tangerang; Sundanese in Brebes (Salem,
+Bantarkawung, Banjarharjo ...) and Cilacap (Dayeuhluhur, Wanareja, Majenang ...), Javanese the
+rest of Central Java (Suyanto, NUSA 2018); Madurese 0.97 on Madura, 0.92 Situbondo and
+Bondowoso, 0.85 Probolinggo east of Wonomerto, Jember's north and east 0.85 and its south-west
+0.12, north-east Lumajang 0.6, eastern Pasuruan 0.65, northern Banyuwangi (Wongsorejo 0.9), the
+Osing kecamatan and Tengger (Tosari, Senduro, Sukapura) 0.02, Surabaya 0.2, Javanese the rest of
+East Java. `python sources/id_homeland.py` asserts every code is a unit of the hex layer.
+
+**Effect** (drawn share of Kontur population, before -> after):
+
+| regency | before | after |
+|---|---|---|
+| Kota Bekasi | Indonesian 84, Sundanese 11, Betawi 4 | Indonesian 86, Betawi 6, Sundanese 5, Javanese 2.5 |
+| Depok | Indonesian 77, Sundanese 18, Betawi 3 | Indonesian 77, Betawi 10, Sundanese 9.5, Javanese 3 |
+| Kab. Bekasi | Indonesian 54, Sundanese 34, Betawi 10 | Indonesian 56, Sundanese 20, Betawi 19, Javanese 5 |
+| Cirebon | Cirebonese 49, Sundanese 46 | Cirebonese 85, Sundanese 7 |
+| Indramayu | Sundanese 72, Cirebonese 23 | Cirebonese 82, Sundanese 13 |
+| Kuningan | Sundanese 56, Cirebonese 40 | Sundanese 91, Cirebonese 5 |
+| Garut | Sundanese 88, Cirebonese 7 | Sundanese 97.5 |
+| Serang | Sundanese 83, Javanese 4 | Sundanese 76, Javanese 12 |
+| Cilegon | Sundanese 53, Indonesian 42 | Indonesian 58, Sundanese 28, Javanese 10 |
+| Brebes | Javanese 97, Sundanese 2 | Javanese 78, Sundanese 21 |
+| Sumenep | Madurese 90 | Madurese 94 |
+| Bondowoso, Situbondo | Javanese 81, Madurese 14 | Madurese 82, Javanese 11.5 |
+| Probolinggo | Javanese 81, Madurese 14 | Madurese 57, Javanese 37.5 |
+| Jember | Javanese 82, Madurese 14 | Javanese 55, Madurese 42 |
+| Banyuwangi | Javanese 83, Madurese 14 | Javanese 80, Madurese 17 |
+| Malang | Javanese 83, Madurese 14.5 | Javanese 90, Madurese 8 |
+
+Scatter: 213,349 dots, 114 rings, unchanged in number.
+
+Calls someone might reverse:
+- Priors from knowledge at 5-10 point resolution, no count below the province behind them.
+  Kab. Bogor and Karawang are at regency grain (Betawi in northern Bogor and Javanese on
+  Karawang's coast are not split out); Surabaya's Madurese north is not split either.
+- Osing (Banyuwangi) stays Javanese, as BPS counts it; its kecamatan are kept for Javanese.
+- **Banten's Javanese count, left alone at this stage; split on 2026-10-21, §15.** L4.5 has 259,981 Javanese in Banten against a Banten
+  Javanese homeland (north Serang, Kota Serang, Cilegon, north-west Tangerang) of perhaps 1.5M
+  aged 5+, and 4.97M Sundanese against a Sundanese homeland of about 4.2M. BPS's L4.1 has no
+  Banten language (§1), so Banten Javanese was most likely coded Sunda. Moving ~1M from
+  Sundanese to Javanese in Banten would be a count change on knowledge alone, which this
+  session's brief did not allow; so Serang stays 76% Sundanese and the Javanese it does have sit
+  in the north. This is the one thing left in Anita's 2026-10-08 complaint; it needs a ruling
+  (split Banten's "Sunda" by place, as India's Pahari was) or a BPS table naming the code.
+
+Outside Java: §13.
+
+## 13. Malay, Banjar, Javanese and Bugis outside Java (2026-10-19, same session, stage 2)
+
+The same method (`sources/id_homeland.py`, the `PRIORS.update` block), regency grain only, for
+the languages that were still even-seeded in Sumatra and Kalimantan: Malay (BPS's Melayu) in
+North Sumatra, Riau, Jambi, the Riau Islands, West and East Kalimantan; Banjar in Riau, Jambi
+and the three other Kalimantan provinces; Javanese transmigrants and plantation workers in
+North Sumatra, Riau, Jambi, South Sumatra, Lampung, the Riau Islands and Kalimantan; Sundanese
+in Lampung; Madurese in West Kalimantan; Bugis in Jambi, South and East Kalimantan (its point in
+Bone is over 150 km from them, so it was even). Sulawesi, Nusa Tenggara, Bengkulu, Bangka
+Belitung and Aceh are left as they were. 37 (province, language) pairs now have homeland seeds,
+11 of them Java's (§12, unchanged by this stage). Counts unchanged.
+
+**Effect** (drawn %, before -> after):
+
+| regency | before | after |
+|---|---|---|
+| Indragiri Hilir (Riau) | Malay 39, Javanese 23, Banjar 5 | Banjar 29, Malay 23, Javanese 18 |
+| Siak (Riau) | Malay 23, Javanese 14 | Malay 19, Javanese 23 |
+| Kuantan Singingi (Riau) | Malay 25, Javanese 14 | Malay 37, Javanese 6 |
+| Tanjung Jabung Timur (Jambi) | Malay 58, Javanese 21, Banjar 2, Bugis 2 | Malay 32, Javanese 27, Bugis 13, Banjar 12 |
+| Kota Jambi | Malay 59, Javanese 21 | Malay 64, Javanese 19 |
+| OKU Timur (S. Sumatra) | Javanese 33 | Javanese 56 |
+| Batu Bara (N. Sumatra) | Malay 6, Javanese 15 | Malay 23, Javanese 20 |
+| Sambas (W. Kalimantan) | Malay 36, Dayak 47 | Malay 56, Dayak 34 |
+| Landak (W. Kalimantan) | Malay 37, Dayak 41 | Malay 8, Dayak 64 |
+| Kubu Raya (W. Kalimantan) | Madurese 7 | Madurese 17 |
+| Kotawaringin Timur (C. Kal.) | Banjar 32 | Banjar 41 |
+| Gunung Mas (C. Kal.) | Banjar 34, Dayak 11 | Banjar 10, Dayak 17, unnamed 38 |
+| Banjarmasin | Banjar 81, Javanese 9 | Banjar 90, Javanese 2 |
+| Hulu Sungai Selatan | Banjar 84, Javanese 10 | Banjar 93, Javanese 2 |
+| Tanah Bumbu (S. Kal.) | Banjar 77, Javanese 9, Bugis 2 | Banjar 52, Javanese 25, Bugis 9 |
+| Berau (E. Kal.) | Malay 7 | Malay 14 |
+
+Calls someone might reverse:
+- Kerinci kept Malay's default prior at this stage (a low one filled the valley with Javanese,
+  28%); superseded by §14, which moves the valley's Malay onto Kerinci.
+- Gunung Mas and Murung Raya now draw the unnamed remainder (38%, 23%) more than before: Central
+  Kalimantan's 387,000 unnamed are most likely Dayak languages nobody names, and they fill what
+  Banjar and Javanese leave upriver. Left even.
+- North Sumatra's Javanese stays small beside Indonesian (Deli Serdang 12%) because the 2020
+  Tidak share puts Indonesian there; the 2010 count is 885,000 Javanese speakers.
+- Regency grain only; the priors are judgement, as in §12.
+
+## 14. Kerinci split from Jambi's Malay (2026-10-21, session eca0185b-id)
+
+Anita, 2026-10-21: "sure we can draw kerinci as own". Jambi's whole "other regional languages"
+remainder in 2010 is 33,000 people, of whom the share-out gave Kerinci 26,655, so most of the
+Kerinci valley's speakers were coded Melayu in L4.5; §13's map drew Kerinci regency 68% Malay
+and 9% Kerinci.
+
+**The count.** No census or survey counts Kerinci speakers by regency. Joshua Project's
+Indonesian figure (312,000, after Ethnologue; `data/raw/pg/joshuaproject_pgic.csv`) is all ages
+and about the two units' whole 2010 population (229,495 + 82,293 = 311,788), so it is not used
+as the count, only as a ceiling. The count is from knowledge, recorded as such: Kerinci speakers
+are about 85% of Kerinci regency's people and 80% of Sungai Penuh's (the rest are Minangkabau
+traders, Javanese transmigrants and Jambi Malays). Applied to the people aged 5+ the map draws
+there (164,772 and 60,241: Kontur scaled to Jambi's 2010 count, so the moved people fit the
+valley's rows; the census's own 5+ figure would be about 279,000 and would spill Kerinci out of
+it) gives 188,249, less the 20,273 Kerinci already drawn there: **168,000 people moved from
+Jambi's measured Malay (1,670,695 -> 1,502,695) to Kerinci (26,655 -> 194,655)**, the moved row
+`modelled`. In `countries/id.py` (`KERINCI_FROM_MALAY`, applied in `_counts()`, asserted against
+Jambi's one measured Malay row); `parts` adjusted by the same amount.
+
+**Placement.** `sources/id_homeland.py`: Kerinci's prior 0.95 in Kerinci regency and 0.9 in
+Sungai Penuh, 0.002 elsewhere in Jambi (it had followed its Glottolog point, keri1250, confirmed
+in `data/raw/glottolog/languages.csv`); Malay's there 0.03 and 0.08.
+
+| unit | before | after |
+|---|---|---|
+| Kerinci regency | Malay 68, Minangkabau 14, Kerinci 9, Javanese 5 | Kerinci 83, Minangkabau 10, Javanese 3, Malay 1 |
+| Sungai Penuh | Malay 68, Kerinci 10, Minangkabau 10, Javanese 5 | Kerinci 82, Minangkabau 7, Malay 4, Javanese 3 |
+| Merangin, Bungo, Kota Jambi | Malay 64-68 | Malay unchanged; Bungo's Minangkabau 5 -> 6.5 |
+
+Minangkabau in the valley falls a little as Kerinci fills it, and the rake puts it in Bungo
+and Merangin instead. **Tree:** `austronesian.malayic.kerinci` already existed (the share-out's Kerinci).
+It now has a hand-picked colour, 0.62 0.14 300, a mid purple, apart from Malay's light green,
+Minangkabau's olive and Rejang's coral across the Bengkulu border. No regroup line: Kerinci is a
+language of its own under Malayic, not a dialect of Minangkabau, though Glottolog puts both in
+one Kerinci-Minangkabau group. Scatter: 213,349 dots, 114 rings.
+
+Call someone might reverse: the 85% and 80% shares, which are judgement.
+
+## 15. Banten Javanese split from Banten's Sundanese (2026-10-21, session eca0185b-id)
+
+Anita, 2026-10-21: yes to splitting Banten's census Sundanese by place (§12's open call). L4.5
+has 4,972,928 Sundanese and 259,981 Javanese in Banten; BPS's L4.1 has no Banten language, and
+the Sundanese count is about 0.8M more than Banten's Sundanese homeland holds, so the Banten
+Javanese of the north were mostly coded Sunda.
+
+**Source search.** No speaker estimate for Banten Javanese (Jawa Serang) and no BPS suku table by
+regency was found (a web search on 2026-10-21; Ethnologue and Joshua Project do not separate it
+from Javanese; the papers found describe its area, northern Kab. Serang, Kota Serang and
+Cilegon, without counts). So the count is from knowledge, recorded as such.
+
+**The count.** In the 39 kecamatan of the Banten Javanese homeland as `sources/id_homeland.py`
+draws it (north Serang's twelve at a Javanese prior of 0.85, Anyar, Mancak and Waringinkurung
+0.45, all of Kota Serang 0.55 with Kasemen 0.9, Cilegon 0.8, north-west Tangerang's seven 0.6,
+Pasarkemis, Sindang Jaya and Balaraja 0.3), each prior times the people the map drew there as
+regional-language speakers (1,418,408 of 2,155,867; the rest Indonesian) gives 864,462 Javanese,
+less the 235,879 already drawn there: **629,000 people moved from Banten's measured Sundanese
+(4,972,928 -> 4,343,928) to Javanese (259,981 -> 888,981)**, the moved row `modelled`. The
+Sundanese left (4.34M) is near the 4.2M §12 estimated Banten's Sundanese homeland holds.
+In `countries/id.py` (`SPLITS`, with Kerinci; a check that Banten's measured Sundanese row is
+L4.5's 4,972,928 before anything moves); `parts` has a row for the two splits (797,000).
+
+**Placement:** the §12 priors, unchanged.
+
+| regency | before | after |
+|---|---|---|
+| Serang | Sundanese 76, Javanese 12, Indonesian 8 | Sundanese 60, Javanese 32, Indonesian 6 |
+| Kota Serang | Sundanese 55, Indonesian 35, Javanese 7 | Sundanese 38, Javanese 30, Indonesian 30 |
+| Cilegon | Indonesian 58, Sundanese 28, Javanese 10 | Indonesian 44, Javanese 37, Sundanese 16 |
+| Kab. Tangerang | Sundanese 53, Indonesian 33, Betawi 11, Javanese 2 | Sundanese 45, Indonesian 35, Betawi 11, Javanese 7 |
+| Pandeglang | Sundanese 98 | Sundanese 96 |
+| Lebak | Sundanese 98 | Sundanese 97 |
+
+Of the 889,000 Javanese, 764,000 now sit in the homeland kecamatan; the rest are spread over
+the Tangerang cities and the south at the low default prior, as migrants. Serang regency stays
+Sundanese-majority overall because its southern half is Sundanese; its north is Javanese.
+Indonesian falls in Cilegon (58 -> 44) because the rake had been filling Cilegon with Indonesian
+for want of Javanese to put there. Cilegon's 2020 Tidak share (57%) is the check on that, and it
+is now under it.
+
+Calls someone might reverse: the homeland priors and shares; computing the move from the drawn
+table, so it depends on where Indonesian was drawn at the time (recomputing after the move would
+give about 200,000 more, because Indonesian moves out of the homeland; not iterated).
 
 ## Moved from countries/id.py text (2026-10-06 sweep)
 

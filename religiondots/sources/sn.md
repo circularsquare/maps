@@ -207,3 +207,56 @@ Afrobarometer's named Christians 83% (n=165, noisy); the Church's 2023 claim (92
 larger than any census count of Christians. Ziguinchor is probably above 92% and Dakar below.
 `sources/wa_christian.py sn` writes `sn_split.csv`; the régions' rows are `tier="derived"`, never
 ring, and roll back through `sn1988.COLUMNS`.
+
+## RGPH-5 2023 source upgrade: checked, no religion table printed (2026-10-19, session `eca0185b-sn`)
+
+**Outcome: nothing changed.** Senegal stays on the 1988 census (Tableau 1.15 and Diourbel's
+Tableau 1.12); `countries/sn.py`, the mapping, the placement layer and every dot are untouched.
+Lead was the languagedots sn agent's find that ANSD put 14 regional reports online in April 2026
+(`languagedots/sources/sn.md`). They are real, but their sociocultural section has no religion.
+
+**What was read** (text layer of each PDF, searched for religion, musulman, chrétien, catholique,
+confrérie, islam, mouride, tidjane, animis, confession, culte; the 14 regional reports and
+chapter 1 were the copies languagedots pinned in `languagedots/data/raw/sn/`, the rest fetched
+2026-10-19 with `curl -k` from `https://www.ansd.sn/sites/default/files/recensements/rapport/`):
+
+- **The 14 regional reports** ("RGPH-5 : Rapport de présentation des résultats, Région de ...",
+  listed at `https://www.ansd.sn/rapports/rgph-5-2023`; Dakar 173 pp, Diourbel 192, Fatick 160,
+  Kaffrine 195, Kaolack 197, Kédougou 174, Kolda 197, Louga 204, Matam 177, Saint-Louis 158,
+  Sédhiou 174, Tambacounda 161, Thiès 152, Ziguinchor 167). Chapter II's "Caractéristiques
+  socioculturelles" (read in Dakar's table of contents, p12-14: three items, principale
+  nationalité, principale langue couramment parlée, possession d'un acte de naissance; the other
+  contents pages were not read one by one, the text search below covers them). Every hit for
+  "religion" in the 14 is the definitions sentence "le sexe, l'âge, le niveau d'instruction,
+  l'ethnie, la nationalité, la langue, la religion, etc." or, in Sédhiou, prose on religious
+  marriage and religious leaders. No table, no figure.
+- **National final report, chapter 1** (`Chapitre-1_ETAT-STRUCTURE-POPULATION-Rapport-def-RGPH-5.pdf`,
+  62 pp): its list of tables ends I-31 nationality, I-32 language (the one languagedots used),
+  I-33 birth certificate. Same single hit, the definitions sentence. Its own text names the
+  sociocultural characteristics as "nationalité, langue parlée, etc."
+- **National chapters A and 2 to 12** (methodology, education, economy, natality-fertility,
+  mortality, migrations, marriage, housing, households, agriculture, handicap, women): hits only for
+  religious foyers and Islamic schools in education, religious reasons for migrating, and
+  religious marriage as a union type in chapter 7. None is a religion by population table.
+- **Atlas démographique RGPH-5** (`.../autres_produits/Atlas-demographique_RGPH5.pdf`, 35 pp): no
+  hit. **Projections démographiques 2023-2073**: not opened (a projection, not a tabulation).
+- **`https://www.ansd.sn/recensement/rgph-5-2023` and `https://www.ansd.sn/donnees-recensements`**:
+  the second is the répertoire des localités (population by village for 1988, 2002, 2013, 2023),
+  with CSV and XLSX export; columns are ménages, hommes, femmes, population. No religion.
+
+**So the question was asked in 2023 (sixteen codes, §1) and ANSD has not published it**, at any
+level, in anything on its RGPH-5 pages as of 2026-10-19. It is not a case of a national table
+without a regional one: the national report has none either. Checks asked of the upgrade
+(units sum to the national figure; a second table agrees) have nothing to run on.
+
+**What is left, not tried** (all would be a new route, not this one):
+- ANSD's NADA microdata catalogue for RGPH-5 (`licensed` per §11aq). A request there is Anita's
+  account and identity, so not attempted.
+- Further ANSD releases: the reports are the "rapport définitif" and regional presentations, and
+  thematic analysis volumes may follow. Re-check `https://www.ansd.sn/rapports/rgph-5-2023` and
+  the Calendrier de publications.
+- The 2002 regional reports (religion by département, quoted in 2013's Ziguinchor report) are
+  still the only post-1988 sub-national lead; not located.
+- The 1988 base is still the finest religion data for Senegal, so `gap`, the placement on 2023
+  Kontur and `note_public`'s statement that no later regional table has been found all stand;
+  that statement now rests on the 2023 reports as well.

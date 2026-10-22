@@ -27,6 +27,10 @@ tests natively.
   walk bands in `t720.rs`), `lanes.rs` (f32 lanes, wasm
   SIMD or SSE2, for the commute pair loop, T-036). The commute pair loop is `kernel::mode_choice`;
   its small zone pairs are dealt in chunks there (`COMMUTE_CHUNK`, T-874; `DemandApi::set_chunked`).
+  Zones of two sizes (T-852: `kernel::coarsen`, `Zones::size`): every zone-pair table goes through
+  `kernel::table_layout` and `Gravity::base`/`key` (`PairKey` elsewhere), near pairs through
+  `Zones::near`, a square's zone through `Zones::zone_at`, centre distances through `Zones::d2_m`.
+  `calib --cells --exact` dumps every figure unrounded, for before/after checks.
   `cargo test --release --features demand nyc_day -- --ignored --nocapture` solves a day on the
   real pack natively. notes/T-026.md.
 - `src/bin/`: native tools behind feature `demand`, built in `data/work/target`: `realnet` (a day
@@ -323,6 +327,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   and World Bank beds per 1,000 that `enrich_medical.py` reads (T-387); `check nyc` is the
   held-out check, `survey` every pack's beds under the rule. Rerun `pool` before re-enriching
   if packs with well-tagged beds change.
+- `coarse_zones.py <ids> [--under 1000]` re-solves a res-9 pack's gravity with 4 km blocks where
+  every 2 km zone of a block makes under that many trip ends a weekday (T-852, `pack_gravity
+  --coarse`, `kernel::coarsen`); before routes and the merge (`world_run.py --coarse`).
 - `routes.py <ids>` adds routed walking and driving to finished packs (OSM from Geofabrik, cached
   in `data/raw/osm/`; the sim's `pack_walk` bin; 1-8 minutes a pack; rerun after anything that
   changes a pack's zones, `--check` lists stale ones; T-275).

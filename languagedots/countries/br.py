@@ -146,13 +146,15 @@ def _weight(place):
 ENTRY = dict(
     name="Brazil",
     source="Censo Demográfico 2022, Tabela complementar 26 and SIDRA tables 10392 and 10157 "
-           "(IBGE); SISMIGRA active registrations (Polícia Federal, via OBMigra); France's "
+           "(IBGE); SISMIGRA active registrations (Polícia Federal, via OBMigra), SIDRA 10161 for where "
+           "recent arrivals live; France's "
            "TeO2 survey for how many immigrants keep their language; Altenhofen, Morello et "
            "al., Hunsrückisch: inventário de uma língua do Brasil (2018), for Hunsrik and "
            "Talian; IPOL (2014) for Pomerano; Censo 2010 Lutherans per município for placing "
            "German varieties",
     how="census, 2022, indigenous languages spoken at home, several allowed; immigrants by "
-        "their state's mix of nationalities; Hunsrik, Talian and Pomerano from published "
+        "their state's mix of nationalities, placed by where each nationality arrived in the "
+        "last five years; Hunsrik, Talian and Pomerano from published "
         "speaker estimates; everyone else drawn as Portuguese",
     parts=[
         dict(covers="Indigenous languages",
@@ -160,8 +162,9 @@ ENTRY = dict(
                     "across the languages they named", people=472_360),
         dict(covers="People born abroad, languages other than Portuguese",
              source="2022 census count per município, by the state's federal police "
-                    "registrations by nationality; some moved to Portuguese by France's TeO2 "
-                    "survey", people=690_173),
+                    "registrations by nationality, placed among the state's municípios by the "
+                    "census's count of people who lived abroad five years earlier; some moved "
+                    "to Portuguese by France's TeO2 survey", people=690_173),
         dict(covers="Hunsrik, Talian and Pomerano",
              source="published speaker estimates (Altenhofen, Morello et al. 2018; IPOL 2014), "
                     "placed by where Lutherans lived in 2010 and in the Italian colonies",
@@ -171,7 +174,7 @@ ENTRY = dict(
         dict(covers="Everyone else", source="drawn as Portuguese", rest=True),
     ],
     grain="5,570 municípios, 36,000 people on average; indigenous languages in 1,990 of them; "
-          "immigrant mixes by state",
+          "immigrant mixes by state, placed by município",
     gap="2,495 indigenous people who speak an indigenous language the census could not name",
     # mainland only: Martim Vaz and Trindade belong to Vitória (religiondots' reasoning)
     view=[-74.2, -34.0, -34.2, 5.5],
@@ -184,8 +187,10 @@ ENTRY = dict(
         "The 2022 census asked about language only of indigenous people aged 2 or over. "
         "Everyone else is drawn as a Portuguese speaker, except in three groups. People "
         "born abroad (about a million) are drawn by the languages of their nationality: the "
-        "census counts them per município, and the federal police register gives each "
-        "state's mix of nationalities. Since no Brazilian survey asks which language "
+        "census counts them per município, the federal police register gives each "
+        "state's mix of nationalities, and the census's count of people who lived abroad "
+        "five years earlier, by country, places Venezuelans, Haitians, Bolivians and the "
+        "other recent arrivals among the state's municípios. Since no Brazilian survey asks which language "
         "immigrants speak at home, a share of them is drawn as Portuguese, the share of "
         "immigrants in France who speak only French with their children. Hunsrik, a German "
         "language, is drawn at about 1.2 million speakers in Rio Grande do Sul, Santa Catarina "

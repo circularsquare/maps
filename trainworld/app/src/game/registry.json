@@ -4746,6 +4746,86 @@
       {
         "name": "Prizren",
         "regionName": "Prizren region"
+      },
+      {
+        "name": "Höfuðborgarsvæði",
+        "regionName": "Höfuðborgarsvæði region"
+      },
+      {
+        "name": "Malta",
+        "regionName": "Malta region"
+      },
+      {
+        "name": "Kýpros",
+        "regionName": "Kýpros region"
+      },
+      {
+        "name": "Sydjylland",
+        "regionName": "Sydjylland region"
+      },
+      {
+        "name": "Nordjylland",
+        "regionName": "Nordjylland region"
+      },
+      {
+        "name": "Vest- og Sydsjælland",
+        "regionName": "Vest- og Sydsjælland region"
+      },
+      {
+        "name": "Østjylland",
+        "regionName": "Østjylland region"
+      },
+      {
+        "name": "Rogaland",
+        "regionName": "Rogaland region"
+      },
+      {
+        "name": "Østfold",
+        "regionName": "Østfold region"
+      },
+      {
+        "name": "Vestfold",
+        "regionName": "Vestfold region"
+      },
+      {
+        "name": "Sydjylland",
+        "regionName": "Sydjylland region"
+      },
+      {
+        "name": "Nordjylland",
+        "regionName": "Nordjylland region"
+      },
+      {
+        "name": "Vest- og Sydsjælland",
+        "regionName": "Vest- og Sydsjælland region"
+      },
+      {
+        "name": "Østjylland",
+        "regionName": "Østjylland region"
+      },
+      {
+        "name": "Rogaland",
+        "regionName": "Rogaland region"
+      },
+      {
+        "name": "Østfold",
+        "regionName": "Østfold region"
+      },
+      {
+        "name": "Vestfold",
+        "regionName": "Vestfold region"
+      },
+      {
+        "name": "Åland",
+        "regionName": "Åland region"
+      },
+      {
+        "name": "Varsinais-Suomi",
+        "regionName": "Varsinais-Suomi region"
+      },
+      {
+        "name": "Pirkanmaa",
+        "regionName": "Pirkanmaa region"
       }
     ],
     "rule": {
@@ -22982,6 +23062,294 @@
       "place": 1181,
       "country": "XK",
       "localTrips": 1833533.0
+    },
+    {
+      "id": "hou",
+      "name": "Höfuðborgarsvæði",
+      "kind": "zone",
+      "origin": {
+        "lon": -21.8853,
+        "lat": 64.113
+      },
+      "center": [
+        -21.8853,
+        64.113
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -22.173,
+        63.811,
+        -21.121,
+        64.399
+      ],
+      "place": 1182,
+      "country": "IS"
+    },
+    {
+      "id": "mlt",
+      "name": "Malta",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.4689,
+        "lat": 35.8941
+      },
+      "center": [
+        14.4689,
+        35.8941
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.161,
+        35.787,
+        14.599,
+        36.101
+      ],
+      "place": 1183,
+      "country": "MT"
+    },
+    {
+      "id": "kyp",
+      "name": "Kýpros",
+      "kind": "zone",
+      "origin": {
+        "lon": 33.3117,
+        "lat": 35.3342
+      },
+      "center": [
+        33.3117,
+        35.3342
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        32.247,
+        34.544,
+        34.611,
+        35.714
+      ],
+      "place": 1184,
+      "country": "CY"
+    },
+    {
+      "id": "noj",
+      "name": "Nordjylland",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.9156,
+        "lat": 57.05
+      },
+      "center": [
+        9.9156,
+        57.05
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.187,
+        56.532,
+        11.234,
+        57.771
+      ],
+      "place": 1193,
+      "country": "DK"
+    },
+    {
+      "id": "vet",
+      "name": "Vest- og Sydsjælland",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.356,
+        "lat": 55.4082
+      },
+      "center": [
+        11.356,
+        55.4082
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.836,
+        54.541,
+        12.586,
+        56.029
+      ],
+      "place": 1194,
+      "country": "DK"
+    },
+    {
+      "id": "sty",
+      "name": "Østjylland",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.1986,
+        "lat": 56.1504
+      },
+      "center": [
+        10.1986,
+        56.1504
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.065,
+        55.65,
+        11.696,
+        56.865
+      ],
+      "place": 1195,
+      "country": "DK"
+    },
+    {
+      "id": "rog",
+      "name": "Rogaland",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.7373,
+        "lat": 58.9565
+      },
+      "center": [
+        5.7373,
+        58.9565
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.809,
+        58.259,
+        7.25,
+        59.863
+      ],
+      "place": 1196,
+      "country": "NO"
+    },
+    {
+      "id": "stf",
+      "name": "Østfold",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.945,
+        "lat": 59.2156
+      },
+      "center": [
+        10.945,
+        59.2156
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.551,
+        58.858,
+        11.866,
+        59.789
+      ],
+      "place": 1197,
+      "country": "NO"
+    },
+    {
+      "id": "vef",
+      "name": "Vestfold",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.4083,
+        "lat": 59.2675
+      },
+      "center": [
+        10.4083,
+        59.2675
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.719,
+        58.939,
+        10.614,
+        59.693
+      ],
+      "place": 1198,
+      "country": "NO"
+    },
+    {
+      "id": "aan",
+      "name": "Åland",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.9371,
+        "lat": 60.102
+      },
+      "center": [
+        19.9371,
+        60.102
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        19.274,
+        59.817,
+        21.141,
+        60.548
+      ],
+      "place": 1199,
+      "country": "FI"
+    },
+    {
+      "id": "vri",
+      "name": "Varsinais-Suomi",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.2498,
+        "lat": 60.4485
+      },
+      "center": [
+        22.2498,
+        60.4485
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.029,
+        59.756,
+        28.029,
+        61.82
+      ],
+      "place": 1200,
+      "country": "FI"
+    },
+    {
+      "id": "pik",
+      "name": "Pirkanmaa",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.7555,
+        "lat": 61.4961
+      },
+      "center": [
+        23.7555,
+        61.4961
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        20.561,
+        60.853,
+        25.574,
+        63.879
+      ],
+      "place": 1201,
+      "country": "FI"
     }
   ]
 }

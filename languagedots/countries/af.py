@@ -3,7 +3,10 @@
 # NSIA's 1404 settled population (sources/af_mics.py), placed on religiondots' 34-province Kontur
 # hexes. Languages MICS does not list come from cited speaker estimates (ask 019 route), kept to
 # their homeland (ZONES). The 2006-07 village-majority proxy this replaced is sources/af_mrrd.py,
-# kept as a comparison (data/normalized/af_mrrd.csv). Record: sources/af.md.
+# kept as a comparison (data/normalized/af_mrrd.csv). Coverage gap (2026-10-19): NSIA's 1.5 million
+# nomadic Kuchis, whom the settled population and MICS leave out, are added as Pashto (Helmand's
+# Baloch tribes as Balochi) by the provincial winter shares of the 2003-04 National Multi-sectoral
+# Assessment on Kuchi, on the provinces' rural hexes (sources/af_kuchi.py). Record: sources/af.md.
 from _shared import *  # noqa: F401,F403
 import numpy as np
 
@@ -55,10 +58,25 @@ def _table():
     return df
 
 
+def _kuchi():
+    """Kuchis per (unit, node): sources/af_kuchi.py's rows, mapped to nodes."""
+    import sys
+    sys.path.insert(0, str(ROOT / "sources"))
+    import af2022
+    import af_kuchi
+    out = pd.DataFrame(af_kuchi.rows(), columns=["unit", "label", "count"])
+    if abs(out["count"].sum() - KUCHI) > 1e-6:
+        raise SystemExit(f"af: Kuchis sum to {out['count'].sum():,.0f}, expected {KUCHI:,}")
+    out["node"] = out["label"].map(af2022.resolve)
+    return out[["unit", "node", "count"]]
+
+
 def _counts():
     df = _table()
     df["tier"] = "modelled"
-    return df.groupby(["unit", "node", "tier"], as_index=False)["count"].sum()
+    df = df[["unit", "node", "count", "tier"]]
+    k = _kuchi().assign(tier="modelled")
+    return pd.concat([df, k], ignore_index=True).groupby(["unit", "node", "tier"], as_index=False)["count"].sum()
 
 
 class _AfWeighter:
@@ -75,8 +93,26 @@ class _AfWeighter:
         c = place.geometry.to_crs(3857).centroid.to_crs(4326)
         self.x, self.y = c.x.to_numpy(), c.y.to_numpy()
         self.unit = place["unit"].astype(str).to_numpy()
-        self.n = {"zone": 0, "strata": 0, "pop": 0, "none": 0}
+        self.n = {"zone": 0, "strata": 0, "pop": 0, "none": 0, "kuchi": 0}
         t = _table()
+        # Kuchis: (unit, node) -> (settled people, Kuchi people). scatter.py calls weights() with
+        # the row's total, so a row is recognised by settled + Kuchi, and its weights are the two
+        # parts' weights added in proportion (rings and other calls fall through to settled).
+        k = _kuchi().groupby(["unit", "node"])["count"].sum()
+        sett = t.groupby(["unit", "node"])["count"].sum()
+        self.kuchi = {key: (float(sett.get(key, 0.0)), float(v)) for key, v in k.items()}
+        # the densest hexes up to each province's urban population are "urban"; Kuchis go on the rest
+        lk = pd.read_csv(RD_GEO / "af" / "af_lookup.csv", dtype={"geo_id": str})
+        ushare_all = (lk.set_index("unit")["urban"] / lk.set_index("unit")["pop"]).to_dict()
+        self.rural = np.ones(len(self.pop), dtype=bool)
+        for u, s_ in ushare_all.items():
+            i = np.where(self.unit == u)[0]
+            if not len(i) or s_ <= 0:
+                continue
+            o = i[np.argsort(-self.pop[i], kind="stable")]
+            cum = np.cumsum(self.pop[o])
+            kk = int(np.searchsorted(cum, s_ * cum[-1])) + 1
+            self.rural[o[:kk]] = False
         st = t[t["stratum"].isin(["urban", "rural"])]
         g = st.groupby(["unit", "node", "stratum"])["count"].sum().unstack(fill_value=0)
         self.f_urban = (g["urban"] / (g["urban"] + g["rural"])).to_dict()
@@ -109,6 +145,23 @@ class _AfWeighter:
         raise ValueError(z)
 
     def weights(self, node, idx, count, plain=False):
+        key = (self.unit[idx[0]], node)
+        sk = self.kuchi.get(key)
+        if sk is not None and abs(count - (sk[0] + sk[1])) < 0.5:
+            base = self._settled(node, idx)
+            pop = self.pop[idx]
+            r = pop * self.rural[idx]
+            if r.sum() <= 0:
+                r = pop
+            self.n["kuchi"] += 1
+            tot = sk[0] + sk[1]
+            kw = r / r.sum() * (sk[1] / tot)
+            if sk[0] <= 0 or base is None:
+                return kw if sk[0] <= 0 else kw + (pop / pop.sum()) * (sk[0] / tot)
+            return base / base.sum() * (sk[0] / tot) + kw
+        return self._settled(node, idx)
+
+    def _settled(self, node, idx):
         pop = self.pop[idx]
         if pop.sum() <= 0:
             self.n["none"] += 1
@@ -133,7 +186,8 @@ class _AfWeighter:
     def summary(self):
         return (f"{self.n['zone']} (province, language) rows kept to their homeland, "
                 f"{self.n['strata']} placed by MICS's urban and rural strata, "
-                f"{self.n['pop']:,} on population, {self.n['none']} on equal shares")
+                f"{self.n['pop']:,} on population, {self.n['none']} on equal shares, "
+                f"{self.n['kuchi']} rows with Kuchis added on the rural hexes")
 
 
 def _weight(place):
@@ -160,13 +214,17 @@ ENTRY = dict(
              nodes=[f"{IR}.shughni", f"{IR}.wakhi", f"{IR}.munji", f"{IR}.sanglechi",
                     f"{IR}.ishkashimi", f"{IR}.parachi", "turkic.kyrgyz",
                     "indoeuropean.indoaryan.dardic.gawarbati", "dravidian.northern.brahui"]),
+        dict(covers="Nomadic Kuchis",
+             source="the statistics authority's 1.5 million, placed by the winter shares of the "
+                    "2003-04 national assessment of the Kuchi, drawn as Pashto",
+             people=KUCHI),
         dict(covers="Everyone else",
              source="UNICEF MICS 2022-23, about 23,000 households, language of the household "
                     "head, on the 2025-26 population",
              rest=True),
     ],
     grain="34 provinces, 1,028,000 people on average",
-    gap="1.5 million nomadic Kuchis, who have no province in the population figures (4.1%)",
+    gap="Baloch and other non-Pashtun nomads among the Kuchis, whom no source separates",
     view=[60.5, 29.3, 75.0, 38.5],
     counts=_counts,
     mappings=["af2022"],
@@ -186,5 +244,11 @@ ENTRY = dict(
         "mostly Ethnologue's, placed in their home valleys and taken out of the language their "
         "speakers would most likely have given (Brahui out of Balochi). They are estimates, not "
         "counts. The survey visited 28 places in most provinces, so a minority living in a few "
-        "valleys can be missed. The 1.5 million nomadic Kuchis are not on the map."),
+        "valleys can be missed. The 1.5 million nomadic Kuchis, whom the statistics authority "
+        "counts apart from the provinces and the survey cannot reach, are added as Pashto, "
+        "except Helmand's Baloch tribes. Their provinces come from the winter figures of the "
+        "2003-04 national assessment of the Kuchi, which put a quarter of them in Nangarhar, "
+        "and their dots sit away from the provinces' towns. Both the total and the split are "
+        "estimates, twenty years apart; in summer many move to the highlands of Ghazni, Logar, "
+        "Ghor and Badakhshan, which this does not show."),
 )

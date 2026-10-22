@@ -16,6 +16,8 @@ agent judgement (docs/adding-a-city.md "Running the pipeline"; design notes/T-53
              --no-join        stop after the regions: gated rows stay registered, status "gated",
                               for one `join` once every parallel run is done (T-786)
              --keep-downloads keep the region's .osm.pbf and OSM caches
+             --coarse T       4 km blocks where every 2 km zone makes under T trip ends a weekday
+                              (T-852, coarse_zones.py, a step before routes); off by default
              --root DIR       a scratch tree instead of this one (below)
 
 Several runs at once (T-786): each claims its rows (a row claimed by a live run is not selected),
@@ -887,8 +889,11 @@ class Run:
         cmds = {"build": ("build_city", [cid]), "stations": ("pack_gate", ["stations", cid, "--extracts", ex]),
                 "places": ("places", [cid]),
                 "routes": ("routes", [cid, "--extracts", ex, "--workers", str(self.threads), "--keep-pbf"]),
-                "merge": ("merge_cells", [cid]), "nocar": ("nocar", [cid]), "everyday": ("everyday_rates", [cid])}
-        for s in BUILD_STEPS:
+                "merge": ("merge_cells", [cid]), "nocar": ("nocar", [cid]), "everyday": ("everyday_rates", [cid]),
+                "coarse": ("coarse_zones", [cid, "--under", str(self.o.get("coarse"))])}
+        # T-852: the coarse grid re-solves the gravity before the routes are made for its zones
+        order = BUILD_STEPS if not self.o.get("coarse") else [x for s in BUILD_STEPS for x in (["coarse", s] if s == "routes" else [s])]
+        for s in order:
             mod, args = cmds[s]
             big = r["people"] > BIG_PEOPLE
             ok, secs, tail = self.step(mod, args, f"{L}.{s}.log", big=big)
@@ -1292,7 +1297,7 @@ def parse(argv):
     o = {}
     flags = {"--no-browser": "no_browser", "--keep-downloads": "keep_downloads", "--no-join": "no_join"}
     valued = {"--rows": "rows", "--countries": "countries", "--limit": "limit", "--jobs": "jobs",
-              "--port": "port", "--root": "root", "--workers": "workers"}
+              "--port": "port", "--root": "root", "--workers": "workers", "--coarse": "coarse"}
     i = 0
     while i < len(argv):
         a = argv[i]

@@ -562,6 +562,57 @@ def read():
     return out
 
 
+# ---------------------------------------------------------------- INE's mis-filed communes
+
+# (province, municipality that holds the people, municipality they belong to, people, the
+#  religion universe INE printed for each, and the language universe both should have).
+# Quadro 7.1 of the Malanje and Moxico volumes attaches one commune to the wrong neighbour:
+# Soqueco (Cacuso, 5,480 people of all ages) to Ngola Luiji and Cassongo (Luena, 2,967) to
+# Lucusse. Evidence (sources/ao.md section 10): Ngola Luiji's 2+ universe, 23,725, exceeds its
+# whole population, 19,723 (Quadro 1.1), and Lucusse's 19,250 exceeds 17,360; the language and
+# ethnicity tables of the same volumes (Quadros 6.1 and 6.2, languagedots' check) give 56,342 /
+# 18,601 and 340,536 / 16,469, and the pair totals agree. The religion mix of the moved people is
+# printed nowhere, so they are taken out of the holder at the holder's own religious shares
+# (Anita, 2026-10-21). Province totals do not move.
+MISFILED = [
+    ("Malanje", "Ngola Luiji", "Cacuso", 5124, (23725, 51218), (18601, 56342)),
+    ("Moxico", "Lucusse", "Luena", 2781, (19250, 337755), (16469, 340536)),
+]
+
+
+def correct_misfiled(data):
+    """Move each MISFILED block of people between its two municipalities, in every body.
+
+    Asserts that the printed universes are still the over-counted ones, so a re-fetch of a
+    corrected volume stops here instead of being corrected twice, and that afterwards both
+    universes equal the language table's. The amount is shared over the holder's bodies in
+    proportion to its own figures, largest remainder, so it leaves the holder to the person.
+    """
+    for prov, holder, owner, n, (hu, ou), (hu2, ou2) in MISFILED:
+        d = data[prov]
+        if (d["universe"][holder], d["universe"][owner]) != (hu, ou):
+            raise SystemExit(f"{prov}: {holder}/{owner} universes are now "
+                             f"{d['universe'][holder]:,}/{d['universe'][owner]:,}, not the "
+                             f"printed {hu:,}/{ou:,}; INE may have corrected the volume, so "
+                             "check MISFILED before moving anyone")
+        if hu - n != hu2 or ou + n != ou2:
+            raise SystemExit(f"{prov}: moving {n:,} does not reach the language universes")
+        vals = {c: d["values"][(holder, c)] for c in d["categories"]}
+        tot = sum(vals.values())
+        exact = {c: n * v / tot for c, v in vals.items()}
+        move = {c: int(x) for c, x in exact.items()}
+        for c in sorted(vals, key=lambda k: -(exact[k] - move[k]))[:n - sum(move.values())]:
+            move[c] += 1
+        assert sum(move.values()) == n and all(move[c] <= vals[c] for c in vals)
+        for c, m in move.items():
+            d["values"][(holder, c)] -= m
+            d["values"][(owner, c)] += m
+        d["universe"][holder] -= n
+        d["universe"][owner] += n
+        print(f"  mis-filed commune: {n:,} people moved {holder} -> {owner} at {holder}'s "
+              f"shares; universes now {d['universe'][holder]:,} / {d['universe'][owner]:,}")
+
+
 # ---------------------------------------------------------------- the truncated volumes
 
 
@@ -827,6 +878,7 @@ if __name__ == "__main__":
         fetch()
         sys.exit()
     data = read()
+    correct_misfiled(data)
     if "--report" in sys.argv:
         report(data)
     check(data)

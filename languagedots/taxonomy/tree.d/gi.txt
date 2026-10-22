@@ -1,0 +1,21 @@
+# Gibraltar (2022 census Q12, main language, aged 14 and over). Every node is a repeat, bare, of one
+# that tree.txt or another fragment defines; no new node. The census's "Arabic" is drawn on Moroccan
+# Arabic (Darija), see taxonomy/gi2022.py.
+afroasiatic.darija | Moroccan Arabic (Darija)
+afroasiatic.hebrew | Hebrew
+austronesian | Austronesian
+austronesian.philippine | Philippine
+austronesian.philippine.filipino | Filipino
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.spanish | Spanish
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.west | West Slavic
+indoeuropean.slavic.west.polish | Polish
+signlanguage.bsl | British Sign Language
+sinotibetan.sinitic | Chinese

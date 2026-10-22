@@ -98,8 +98,7 @@ pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims
     let s = sk.s;
     let (i, j) = (sz.zone[u] as usize, sz.zone[v] as usize);
     // T-710: the zone pair's distance band, as `mode_choice` takes it
-    let (fx, fy) = ((z.gx[j] - z.gx[i]) as f32, (z.gy[j] - z.gy[i]) as f32);
-    let (th, off) = p.band(p.band_of_d2((fx * fx + fy * fy) * z.zone_m * z.zone_m));
+    let (th, off) = p.band(p.band_of_d2(z.d2_m(i, j)));
     let ends = |r: std::ops::Range<usize>| {
         let m = sz.acc_w[r.clone()].iter().cloned().fold(f32::INFINITY, f32::min);
         (r, m)

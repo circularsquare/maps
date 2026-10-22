@@ -190,3 +190,21 @@ Francisco Javier Mina, San Gregorio Atzompa (21125; ITER 4,059 people), scaled t
   arrivals after 2021 are not in it.
 - No cited US-born adult split; no Latin American retention survey; the smaller Mennonite
   colonies.
+
+## Scout, 2026-10-19 (session eca0185b-brmx): nothing more to build
+
+The follow-up asked whether INEGI publishes birthplace by municipio and whether it is a clean
+proxy. It does, and it was already built (section "Immigrant and settler languages", 2026-10-05):
+the census cube's "Lugar de nacimiento" by country per municipio, aged 3+, no indigenous
+language. Re-read the build against the question's cases:
+- Guatemalans in Chiapas: 25,868 born in Guatemala and not speaking an indigenous language in
+  the state (Tapachula, INEGI 07089, holds 8,478; Suchiate 07087 3,818). They are drawn as
+  Spanish, the rule for Spanish-speaking origins; Mam,
+  Q'anjob'al and the other Mayan languages are measured already among those who answered the
+  indigenous-language question yes.
+- US-born: 732,142 aged 3+ no indigenous language; the 464,325 aged 3-17 are Spanish (call kept,
+  see above). A birthplace-by-municipio table cannot tell a returned Mexican family from a
+  retiree, so no better proxy exists in the census; only a language survey could.
+- Placement inside a municipio stays on the non-speaker weight; no per-locality foreign-born
+  count is used (not searched for in ITER's 2020 columns beyond what mx_geo.py reads).
+No change was made to `countries/mx.py` in this pass.

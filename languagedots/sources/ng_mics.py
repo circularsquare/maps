@@ -49,6 +49,9 @@ HOW MICS ENTERS (per state):
      (Anita's rulings): English at the Afrobarometer R7 mother-tongue share, shrunk as in
      ng_afro.state_shares; Pidgin at Ethnologue's 4.7 million, spread by ng_afro.pidgin_pattern.
      Every other answer is scaled to what is left.
+  4. (2026-10-19) What step 2 leaves unnamed is named by name_unnamed: by the languages whose
+     homelands lie in the state (Joshua Project populations, sources/ng_homeland.py) and by the
+     other-language mix of the state MICS's women had moved from (WB17). sources/ng.md §8.
   The current build's "Hausa outside Hausaland" step (R7 mother-tongue shrink, ask 018) is
   dropped: HC1B is itself a mother-tongue item, so MICS's Hausa replaces it everywhere.
 
@@ -228,6 +231,156 @@ def afro():
     return w, eng, pid
 
 
+MIN_WOMEN = 30     # women in a state's other-language households needed to use their origins
+ORIGIN_MIN = 0.2   # share of those women from other states needed for them to stand for all
+CAP = 1.0          # a homeland language takes at most this x its Joshua Project population
+ADDED = {}         # (state, answer) -> share added by name_unnamed, for the notes
+
+
+def migrants():
+    """Where the women (15-49) of each state's other-language households lived before (WB17,
+    "state prior to moving to current place"), weighted (wmweight): state -> {origin: share},
+    with "_local" for those who never moved or moved inside the state (or gave no answer) and
+    "_abroad" for OUTSIDE OF COUNTRY. A state with fewer than MIN_WOMEN such women is all
+    "_local"."""
+    import pyreadstat
+    hh, _ = pyreadstat.read_sav(str(RAW / "hh.sav"), apply_value_formats=True,
+                                usecols=["HH1", "HH2", "HH7", "HC1B", "hhweight"])
+    wm, _ = pyreadstat.read_sav(str(RAW / "wm.sav"), apply_value_formats=True,
+                                usecols=["HH1", "HH2", "WB17", "wmweight"])
+    d = wm[wm["wmweight"] > 0].merge(hh[hh["hhweight"] > 0], on=["HH1", "HH2"])
+    d = d[d["HC1B"].astype(str) == "OTHER LANGUAGE"].copy()
+    d["state"] = d["HH7"].map(state_of)
+    say(d["state"].notna().all(), "WB17 table: every woman's HH7 is a state")
+    w17 = d["WB17"].astype(str)
+    origin = w17.map(lambda x: state_of(x) if state_of(x) else None)
+    d["origin"] = np.where(w17 == "OUTSIDE OF COUNTRY", "_abroad",
+                           np.where(origin.isna() | (origin == d["state"]), "_local", origin))
+    out, n = {}, d.groupby("state").size()
+    for st, g in d.groupby("state"):
+        t = g.groupby("origin")["wmweight"].sum()
+        out[st] = ((t / t.sum()).to_dict(), int(n[st]))
+    print(f"  WB17: {len(d):,} women in other-language households; states with under "
+          f"{MIN_WOMEN} (their origins used only for what the homeland cannot take): "
+          f"{sorted(s for s in n.index if n[s] < MIN_WOMEN)}")
+    return out
+
+
+def _fill(amount, weights, caps):
+    """Share `amount` over keys by `weights`, none above its cap; returns (given, left over)."""
+    give = {k: 0.0 for k in weights}
+    live = {k for k in weights if caps[k] > 0}
+    left = amount
+    while left > 1e-15 and live:
+        tot = sum(weights[k] for k in live)
+        nxt = set()
+        spent = 0.0
+        for k in live:
+            v = min(left * weights[k] / tot, caps[k] - give[k])
+            give[k] += v
+            spent += v
+            if caps[k] - give[k] > 1e-15:
+                nxt.add(k)
+        left -= spent
+        if nxt == live:
+            break
+        live = nxt
+    return give, max(left, 0.0)
+
+
+def name_unnamed(rows, mig, pop):
+    """Name the unnamed part of each state ("Other Nigerian language": MICS's other language
+    the Afrobarometer could not split, and its own unidentified answers). Anita's standing word:
+    bias toward splitting (sources/ng.md §8). Per state, that share U is divided by where the
+    women of MICS's other-language households lived before (migrants()):
+      * local (never moved, or moved within the state) and abroad: the languages whose homeland
+        is in the state and which nothing has named there yet, i.e. Joshua Project groups whose
+        point lies in the state, not one of NOT_CANDIDATE or an answer the state already draws,
+        in proportion to their Joshua Project populations (sources/ng_homeland.py). Abroad goes
+        here too: in the border states those are the cross-border peoples.
+      * from another state j: state j's mix of its other languages (not the ten MICS answers,
+        English, Pidgin or the unnamed), as named by this same step's first pass.
+    No homeland language takes more than CAP x its Joshua Project population in the state (a
+    lone small candidate otherwise swallowed a whole remainder: Ayere, 7,100 people, would
+    have drawn 160,000 in Kogi). What the homeland part cannot place goes to the origin states
+    if the state's women name other states at all (a fifth of them or more, ORIGIN_MIN), even
+    where there are under MIN_WOMEN of them; else it stays unnamed."""
+    import ng_homeland as H
+    pts = H.load()
+    jp = pts[(pts["source"] == "joshuaproject") & pts["ng_home"]]
+    home = jp.groupby(["state", "answer"])["pop"].sum()
+    O = A.OTHER_NG
+    how = {}
+
+    def candidates(st, s):
+        if st not in home.index.get_level_values(0):
+            return {}
+        c = home.loc[st]
+        c = c[[a not in H.NOT_CANDIDATE and s.get(a, 0) <= 0 for a in c.index]]
+        return {a: float(v) for a, v in c.items() if v > 0}
+
+    # pass 1: the local (and abroad) part, by homeland, capped
+    first, plan = {}, {}
+    for st, s in rows.items():
+        U = s.get(O, 0.0)
+        m, nw = mig.get(st, ({"_local": 1.0}, 0))
+        orig_all = {j: f for j, f in m.items() if not j.startswith("_")}
+        orig = orig_all if nw >= MIN_WOMEN else {}
+        hf = 1.0 - sum(orig.values())                  # the homeland's part of U
+        cand = candidates(st, s)
+        caps = {a: CAP * v / pop[st] for a, v in cand.items()}
+        give, left = _fill(U * hf, cand, caps) if cand else ({}, U * hf)
+        s1 = dict(s)
+        for a, v in give.items():
+            if v > 0:
+                s1[a] = s1.get(a, 0.0) + v
+                ADDED[(st, a)] = ADDED.get((st, a), 0.0) + v
+        s1[O] = U - sum(give.values())
+        # what goes to origins in pass 2: their own part, plus the homeland's leftover if the
+        # women name other states enough to stand for it
+        to_orig = U * sum(orig.values())
+        tot_all = sum(orig_all.values())
+        use = orig if orig else orig_all
+        if left > 0 and tot_all >= ORIGIN_MIN:
+            to_orig += left
+            use = orig_all
+        first[st] = s1
+        plan[st] = (U, sum(give.values()), to_orig, use, len(cand))
+
+    def other_mix(j):
+        s = first[j]
+        c = {a: v for a, v in s.items() if a not in H.NOT_CANDIDATE and a != O and v > 0}
+        t = sum(c.values())
+        return {a: v / t for a, v in c.items()} if t > 0 else {}
+
+    # pass 2: the migrants' part, by their origin state's other languages
+    out = {}
+    for st, s1 in first.items():
+        U, homed, part, use, ncand = plan[st]
+        s2 = dict(s1)
+        moved = 0.0
+        if part > 0 and use:
+            mixes = {j: other_mix(j) for j in use}
+            ok = {j: f for j, f in use.items() if mixes[j]}
+            tot = sum(ok.values())
+            if tot > 0:
+                s2[O] = s1[O] - part
+                for j, f in ok.items():
+                    for a, g in mixes[j].items():
+                        v = part * f / tot * g
+                        s2[a] = s2.get(a, 0.0) + v
+                        ADDED[(st, a)] = ADDED.get((st, a), 0.0) + v
+                moved = part
+        s2[O] = max(s2.get(O, 0.0), 0.0)
+        if s2[O] < 1e-12:
+            s2.pop(O, None)
+        top = sorted(use.items(), key=lambda kv: -kv[1])[:3]
+        how[st] = (f"homeland {homed:.1%} over {ncand} languages; migrants {moved:.1%} by origin "
+                   f"({', '.join(f'{j} {f:.0%}' for j, f in top)})")
+        out[st] = s2
+    return out, how
+
+
 def main():
     p, clusters, n_hh = mics()
     w, eng, pid = afro()
@@ -277,6 +430,15 @@ def main():
                       f"{split[A.OTHER_NG] * other:6.1%}")
         if abs(sum(s.values()) - 1) >= 1e-9:
             raise SystemExit(f"{st}: MICS shares sum to {sum(s.values())}")
+        rows[st] = s
+        notes[st] = other
+    unnamed_before = {st: rows[st].get(A.OTHER_NG, 0.0) for st in rows}
+    rows, how = name_unnamed(rows, migrants(), pop)
+    unnamed_after = {st: rows[st].get(A.OTHER_NG, 0.0) for st in rows}
+    for st in p.index:
+        s = rows[st]
+        if abs(sum(s.values()) - 1) >= 1e-9:
+            raise SystemExit(f"{st}: shares sum to {sum(s.values())} after naming the unnamed")
         fixed = {"English": eng[st]}
         if pl1[st] > 0:
             fixed["Nigerian Pidgin"] = pl1[st]
@@ -284,7 +446,12 @@ def main():
         s = {a: v * k for a, v in s.items()}
         s.update(fixed)
         rows[st] = s
-        notes[st] = other
+    nat_u0 = sum(unnamed_before[st] * pop[st] for st in rows) / pop.sum()
+    nat_u1 = sum(unnamed_after[st] * pop[st] for st in rows) / pop.sum()
+    print(f"  unnamed (Other Nigerian language), before English and Pidgin are set: "
+          f"{nat_u0:.2%} -> after naming by homeland and migrants' origin: {nat_u1:.2%}")
+    for st in sorted(rows, key=lambda x: -unnamed_before[x])[:12]:
+        print(f"    {st:26s} {unnamed_before[st]:6.1%} -> {unnamed_after[st]:6.1%}   {how[st]}")
     worst = max(abs(sum(s.values()) - 1) for s in rows.values())
     say(worst < 1e-9, f"every state's shares sum to 1 (worst {worst:.1e})")
 
@@ -309,10 +476,16 @@ def main():
                 src, note = "afrobarometer_r7_q2a", f"R7 mother tongue, shrunk: {s[a]:.4f}"
             elif a == "Nigerian Pidgin":
                 src, note = "ethnologue_2023", f"4.7M L1 spread by R7-R9 home answers: {s[a]:.4f}"
+            elif ADDED.get((st, a), 0) > 0.5 * s[a] / (1 - sum(
+                    v for k, v in s.items() if k in ("English", "Nigerian Pidgin"))):
+                src, note = ("mics6_2021_hc1b+joshuaproject",
+                             f"MICS6 other language {notes[st]:.4f}, the part the "
+                             f"Afrobarometer cannot split named by homeland (Joshua Project "
+                             f"populations) and MICS women's prior state")
             else:
                 src, note = ("mics6_2021_hc1b+afrobarometer",
                              f"MICS6 other language {notes[st]:.4f}, split by the Afrobarometer "
-                             f"R4-R9 other answers in the state")
+                             f"R3-R10 other answers in the state")
             out.append(dict(geo_id=gid[st], geo_level="state", geo_name=st,
                             source_category=a, count=cnt[a], tier="modelled", source_id=src,
                             year="2021", note=note))

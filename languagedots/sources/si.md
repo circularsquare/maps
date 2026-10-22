@@ -124,3 +124,12 @@ No change. 2002 is the last mother-tongue census: Hungarian 7,430 placeable of 7
 settlement lists would sharpen placement of Hungarian and Italian inside their municipalities
 (needs settlement polygons) but not the counts. Verdict: right for 2002. (Bosnian and Serbian
 both sum to 31,294 over the municipalities: checked against the raw table, a coincidence.)
+
+## Bosnian / Serbian identical sum: not a data bug (2026-10-19, session eca0185b-bug)
+
+Rechecked on `data/normalized/si.csv`, 192 municipality rows. Bosnian and Serbian each sum to
+31,294, but the columns are different: only 14 municipalities hold equal values (zeros and small
+cells), 142 hold both, and the large ones differ (Ljubljana 9,060 Bosnian against 10,896 Serbian;
+Kranj 1,064 / 2,162; Jesenice 3,614 / 1,023). Correlation 0.94. The national rows differ too (31,499
+and 31,329). The equal sums are a coincidence, as the 2026-10-13 audit above found against the raw
+table; the followups item can be closed. No change to data, mapping or dots.

@@ -1,0 +1,21 @@
+# Isle of Man (2021 census, Table 2.11 language mainly spoken at home). Every node is a repeat,
+# bare, of one that tree.txt or another fragment defines; no new node. "Chinese" ("includes all
+# Chinese languages", the report's footnote) sits on the Sinitic group, "Other" on `other`.
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.west | West Slavic
+indoeuropean.slavic.west.polish | Polish
+austronesian | Austronesian
+austronesian.philippine | Philippine
+austronesian.philippine.filipino | Filipino
+indoeuropean.slavic.south | South Slavic
+indoeuropean.slavic.south.bulgarian | Bulgarian
+sinotibetan.sinitic | Chinese
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.afrikaans | Afrikaans
+uralic | Uralic
+uralic.hungarian | Hungarian
+indoeuropean.romance | Romance
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.romanian | Romanian
+indoeuropean.romance.spanish | Spanish
+indoeuropean.romance.italian | Italian

@@ -144,7 +144,8 @@ by a native bin (`joint_gravity`) with the kernel's own code. Every home's commu
 over every job in reach, in its own zone or another, so moving a zone line moves no commuter.
 
 - **Within one pack** a pair uses the pack's own decay table and border factor, exactly as the pack
-  does at runtime.
+  does at runtime (with thin country's 4 km blocks too, docs/demand-kernel.md 1, T-852). Across
+  packs a block stands at the middle of its four squares.
 - **Across packs** a pair uses the great-circle distance between the two gravity zones' centres,
   cut at 150 km (beyond it the decay is under a thousandth of a 10 km pair's, and LODES's long
   links are mostly head-office addresses, notes/T-268.md), and a **border factor per region pair**:

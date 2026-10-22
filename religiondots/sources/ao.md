@@ -404,3 +404,55 @@ they stood before the cut, verbatim, so nothing they said is lost. The cut versi
 - `fill`: from the same census at province level, for the ten bodies Uíge's and Moxico Leste's volumes did not print
 - `grain`: municipalities, 106,000 people on average
 - `gap`: the 2.3% who did not answer or did not know; and children under 2, who were not asked the religion question
+
+## 10. Cacuso, Ngola Luiji, Luena, Lucusse: INE's religion table is the odd one out, 2026-10-19 (`eca0185b-rdbug`); corrected 2026-10-21.
+
+**Correction, 2026-10-21 (Anita approved option (b) below).** `sources/ao.py` `correct_misfiled`
+(table `MISFILED`) moves the people back before the checks and the write, so a re-run reproduces
+it: Ngola Luiji -> Cacuso 5,124 and Lucusse -> Luena 2,781, each shared over the holder's 21 bodies
+at the holder's own religious shares, largest remainder. It asserts that the printed universes are
+still the over-counted ones (a corrected volume would stop it) and that both reach the language
+universes. Religion universe before -> after: Cacuso 51,218 -> 56,342, Ngola Luiji 23,725 ->
+18,601, Luena 337,755 -> 340,536, Lucusse 19,250 -> 16,469; each now sits under its Quadro 1.1
+population (60,495, 19,723, 359,847, 17,360) and equals the language table's. 84 rows of
+`ao.csv` changed, all in these four; province totals and `check()` unchanged. Both editions
+rescattered (33,689 and 3,360 dots). `note_public` not touched: about 8 dots. The text below is
+the finding as first written.
+
+languagedots (`languagedots/sources/ao.md`, "Checks") found that in two pairs of municipalities
+the religion table's universe differs from the language and ethnicity tables' while each pair's
+total agrees. **Confirmed, and it is not an extraction slip: `data/normalized/ao.csv` carries
+exactly what the PDF prints** (Malanje volume p.119, Moxico volume p.101). The religion table
+itself is wrong, and Quadro 1.1 of the same two volumes shows it.
+
+| municipality | religion (Quadro 7.1) | language and ethnicity (Quadros 6.1, 6.2) | all ages (Quadro 1.1) | religion less language |
+|---|---|---|---|---|
+| Cacuso (Malanje) | 51,218 | 56,342 | 60,495 | -5,124 |
+| Ngola Luiji (Malanje) | 23,725 | 18,601 | 19,723 | +5,124 |
+| Luena (Moxico) | 337,755 | 340,536 | 359,847 | -2,781 |
+| Lucusse (Moxico) | 19,250 | 16,469 | 17,360 | +2,781 |
+
+- **Ngola Luiji's religion universe (people aged 2 and over, 23,725) is larger than its whole
+  population (19,723, all ages); Lucusse's (19,250) is larger than its 17,360.** Not possible, so
+  the religion table is the wrong one. The language figures sit at 93-95% of all ages, as the
+  other 322 municipalities do (nationally 34,492,888 of 36,175,745, 95.3%).
+- **The shifted amounts are commune-sized.** Quadro 1.1 gives Cacuso's commune Soqueco 5,480
+  people and Luena's commune Cassongo 2,967; the shifts are 5,124 and 2,781, both 93.5-93.7% of
+  them. Reading: INE's religion tabulation attached Soqueco to Ngola Luiji and Cassongo to Lucusse,
+  and the language and ethnicity tabulations did not. A guess at the cause, but the arithmetic
+  fits both pairs.
+- **Every other municipality's religion universe equals its language universe** (322 of 326,
+  languagedots' check), and the provincial totals agree, so nothing outside these four moves.
+- **What it costs on the map**: about 5 dots in Malanje drawn in Ngola Luiji that belong in
+  Cacuso, and about 3 in Moxico drawn in Lucusse that belong in Luena, at 1:1,000. Provinces,
+  religion totals and every other municipality are unaffected.
+- **Why nothing was changed.** The totals are fixable from the volume, but the religious make-up
+  of the 5,124 and the 2,781 is not printed anywhere: Quadro 7.1 is by municipality only, so
+  Soqueco's and Cassongo's own counts are inside the wrong rows. Moving them means assuming a
+  mix. That is a judgement and not a correction of the extraction, so it is left for Anita.
+  Options, smallest first: (a) leave as INE printed it, error recorded here; (b) move the
+  difference between the two rows of each pair at the donor row's own religious shares (Ngola
+  Luiji's for Cacuso, Lucusse's for Luena), which keeps the donor's shares and cannot go
+  negative; (c) as (b) at the receiving row's shares. (b) is the one I would take, and it needs
+  a patch to `data/normalized/ao.csv` after `sources/ao.py` (the script rewrites the file) plus
+  a re-scatter of ao.

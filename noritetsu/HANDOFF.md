@@ -19,8 +19,11 @@ sign-in. Anita's calls: profiles private until a share link is made; public view
 dates, notes or when rides were logged (dates are kept on the server for the owner);
 leaderboards only total km and % per country, opt-in, no join button with 0 rides; no friends,
 no feed; About panel opens on arrival (her wording). Agents cannot ssh to the box (the
-permission classifier blocks it): hand her the commands. **Open**: saves on the box are not
-backed up; `RESEND_API_KEY` appears twice in `/opt/shonei/shonei.env`.
+permission classifier blocks it): hand her the commands. Saves on the box are not backed up
+(Anita, 2026-10-19: "not that important"). Ridden lines draw ~3 s after load on live (geometry
+fetched in parallel, `paintRidden`); "Loading rides…" (`rideLoadNote`) is centred on the first
+load and under the title box after that. **Open**: `RESEND_API_KEY` appears twice in
+`/opt/shonei/shonei.env`.
 
 **72 regions are built** (Vietnam, Argentina, Chile, New Zealand, South Africa, Brazil,
 Iran, Morocco, Algeria, Tunisia, Egypt, Belarus, Moldova, the five Central Asian ones and the

@@ -1,0 +1,12 @@
+# American Samoa (2020 Island Areas Census, PCT24 language spoken at home). Samoan and Tongan are
+# Polynesian, inside Oceanic (Glottolog: Samoan samo1305, Tongan tong1325, both in Austronesian);
+# regroup.txt moves them under austronesian.oceanic.polynesian. No new node: every line repeats
+# one tree.txt or another fragment defines (be.txt for Samoan and Tongan, gu.txt for
+# `pacific_other`), without colour except where that fragment fixed one.
+indoeuropean.germanic.english | English
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+austronesian.oceanic.samoan | Samoan
+austronesian.oceanic.tongan | Tongan
+pacific_other | Other Pacific Island languages | 0.66 0.06 210
+other | Other or unclassified

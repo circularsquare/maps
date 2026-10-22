@@ -85,6 +85,21 @@ def main():
 
     g = g.merge(x[["lau", "unit", "pop", "name"]], on="lau", how="left")
 
+    # THE WORKBOOK ROTATES THREE CITIES' POPULATIONS (found by languagedots 2026-10-05, which saw
+    # the Jelgava/Jekabpils pair; Jurmala is the third leg, found 2026-10-19). Each of the three
+    # carries the next one's number, and the pop the workbook gives is CSP's own 1 Jan 2021 figure
+    # for the wrong city (CSP table IRS031, POP_SY, 2021). Regions Zemgale and Pierīga are off by
+    # exactly +-5,088 until fixed; with it they equal CSP's region totals.
+    pop_fix = {"0090000": (21629, 55336),    # Jelgava   (workbook, CSP)
+               "0110000": (50248, 21629),    # Jēkabpils
+               "0130000": (55336, 50248)}    # Jūrmala
+    for lau, (wrong, right) in pop_fix.items():
+        have = g.loc[g["lau"] == lau, "pop"]
+        if len(have) != 1 or int(have.iloc[0]) != wrong:
+            sys.exit(f"!! {lau}: expected the workbook's swapped {wrong}, got {have.tolist()}; "
+                     f"a new vintage may have fixed it, check pop_fix")
+        g.loc[g["lau"] == lau, "pop"] = right
+
     # The join above matched on code; check it also matched on name, since a padding slip that
     # happened to line up two different LAUs would pass the set comparison.
     shp_name = g["LAU_NAME"].astype(str).str.strip().str.lower()

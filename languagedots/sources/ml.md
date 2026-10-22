@@ -174,3 +174,38 @@ geoBoundaries ADM2 (religiondots' copy) only keys hexes, nothing of it is drawn.
 ## Cross-border groups (2026-10-06, 5d7dac7e-xb)
 
 Bambara, Maninka, Khassonké and Marka are in a Manding group with Guinea's Maninka and Burkina's and Côte d'Ivoire's Dyula; Tamasheq is in a Tuareg group with Niger's Tamajaq. Groups only (taxonomy/regroup.txt): no label's node or count changed, each keeps its leaf and colour; dots rewritten in place. The full table of cases is in followups.md (2026-10-06, languages that stop at a border).
+
+## Coverage gap: the people in areas not enumerated (2026-10-19, session eca0185b-gap)
+
+The 941,335 people in 1,087 enumeration sections the census could not reach are now drawn,
+`modelled`, 853,176 of them (aged 3 and over), so Mali is 19,997,804 people (was 19,144,628). Files:
+`sources/ml_uncounted.py` (writes `data/normalized/ml_uncounted.csv`; checks every figure against
+the PDF), `countries/ml.py`.
+
+**Source.** INSTAT, RGPH5 state and structure volume (religiondots' copy, read only), section 1.2.3
+and Tableau 1.2 (PDF p.44-45): GRID3 estimated the population of the localities not covered or
+partly covered from building footprints, roads and census variables. By région, all ages:
+Tombouctou 280,392; Ségou 228,421; Douentza 154,979; Ménaka 93,653; Mopti 90,120; Gao 44,795;
+Nara 28,873; Koutiala 12,508; Kidal 3,744; Koulikoro 1,786; Bougouni 1,078; Bandiagara 986. 99.4%
+rural. Douentza has more people uncounted than counted (134,128 drawn before).
+
+**Language.** Each région's own A06 mix (the enumerated people's, foreign languages included).
+Nothing finer exists, and it is what INSTAT's percentages already assume for the non-response.
+This is the weakest part: the sections are rural, insecure and in the north and centre, where
+the enumerated mix is the towns' (Bambara and Songhay in town, more Fula, Tamasheq and Dogon
+outside). Tombouctou's uncounted 256,603 are drawn at the enumerated 634,862's mix.
+
+**Age.** A06's universe is aged 3 and over in ordinary households, 0.897 of each région's
+ordinary population (Effectif / `census_pop_ordinary_2022`); the same factor is applied, so
+853,176 drawn and 88,159 under-threes in the gap. Under-threes are drawn nowhere on this map.
+
+**Placement.** Not one place in the report: no cercle or commune table of the uncounted. They go on
+the région's rural hexes, those left once the densest Kontur hexes holding the région's urban
+population (Tableau 2.5) are taken out, weighted as the région's enumerated people of that
+language are (CLEAR Global's cercle shares). `_MlWeighter` in `countries/ml.py` recognises the
+rows by their count. Kontur is 0.27x the census in Ménaka and 2.5x in Douentza, so the dots are
+rough within those régions.
+
+**Calls someone might reverse:** drawn at 3+ (853,176) not all ages (941,335); région mix not a
+rural mix; rural hexes by density rank. **Room for improvement:** a cercle table of the uncounted
+sections (INSTAT's NADA catalogue 95 may hold it), a rural-only mother-tongue table.

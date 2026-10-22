@@ -636,38 +636,31 @@ impl DemandApi {
         let ns = 6;
         let (home, work) = walk_points(&self.city, z, ns);
         let fine = !gr.wf_off.is_empty();
-        let (sq_off, at) = z.by_square();
-        let r = WALK_FINE_R;
+        let sq = z.by_square();
         let (mut d, mut e) = (vec![0f32; ns * ns], vec![0f32; ns * ns]);
         for i in 0..z.n {
             if gr.row[i] == 0.0 || home[i * ns] == u32::MAX {
                 continue;
             }
-            for gx in (z.gx[i] - r).max(0)..=(z.gx[i] + r).min(z.w - 1) {
-                for gy in (z.gy[i] - r).max(0)..=(z.gy[i] + r).min(z.h - 1) {
-                    let s = (gx * z.h + gy) as usize;
-                    for &j in &at[sq_off[s] as usize..sq_off[s + 1] as usize] {
-                        let j = j as usize;
-                        if work[j * ns] == u32::MAX {
-                            continue;
-                        }
-                        let k = (gr.base(z, i) + gr.key(z, j)) as usize;
-                        let t = gr.t(z, i, j) / (ns * ns) as f64;
-                        let w = self.nr.split(gr, p, i, j, k);
-                        let (road, paid, free) = self.nr.road(gr, p, i, j, k);
-                        for (n, (&a, &b)) in home[i * ns..(i + 1) * ns].iter().flat_map(|a| work[j * ns..(j + 1) * ns].iter().map(move |b| (a, b))).enumerate() {
-                            d[n] = cell_walk_m(&self.city, a, b) / 1000.0;
-                            let f = gr.walk_factor_cells(z, a as usize, b as usize);
-                            e[n] = if fine { p.walk_no_rail(road, paid, free, gr.wcost.at(d[n] * f)) } else { w };
-                        }
-                        for n in 0..ns * ns {
-                            let band = WALK_BANDS_KM.partition_point(|&b| b <= d[n]);
-                            out[band] += t;
-                            out[nb + band] += t * e[n] as f64;
-                        }
-                    }
+            z.near(&sq, i, WALK_FINE_R, |j| {
+                if work[j * ns] == u32::MAX {
+                    return;
                 }
-            }
+                let k = (gr.base(z, i) + gr.key(z, j)) as usize;
+                let t = gr.t(z, i, j) / (ns * ns) as f64;
+                let w = self.nr.split(gr, p, i, j, k);
+                let (road, paid, free) = self.nr.road(gr, p, i, j, k);
+                for (n, (&a, &b)) in home[i * ns..(i + 1) * ns].iter().flat_map(|a| work[j * ns..(j + 1) * ns].iter().map(move |b| (a, b))).enumerate() {
+                    d[n] = cell_walk_m(&self.city, a, b) / 1000.0;
+                    let f = gr.walk_factor_cells(z, a as usize, b as usize);
+                    e[n] = if fine { p.walk_no_rail(road, paid, free, gr.wcost.at(d[n] * f)) } else { w };
+                }
+                for n in 0..ns * ns {
+                    let band = WALK_BANDS_KM.partition_point(|&b| b <= d[n]);
+                    out[band] += t;
+                    out[nb + band] += t * e[n] as f64;
+                }
+            });
         }
         out
     }
@@ -1654,8 +1647,8 @@ impl DemandApi {
                 out.push((sx[i] / sn[i] as f64) as f32);
                 out.push((sy[i] / sn[i] as f64) as f32);
             } else {
-                out.push(self.z.x0 + (self.z.gx[i] as f32 + 0.5) * zm);
-                out.push(self.z.y0 + (self.z.gy[i] as f32 + 0.5) * zm);
+                out.push(self.z.x0 + self.z.hx(i) as f32 * 0.5 * zm);
+                out.push(self.z.y0 + self.z.hy(i) as f32 * 0.5 * zm);
             }
         }
         out

@@ -12,3 +12,76 @@ austronesian.malayic | Malayic | 0.74 0.12 175
 # and Tamil share every HDB block in Singapore. A lighter green keeps it in the Austronesian
 # part of the wheel and clear of Tamil's teal. (Malay is also drawn, small, in au, ca and us.)
 austronesian.malayic.malay | Malay | 0.82 0.15 150
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment sg) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+austroasiatic.khmer | Khmer
+austroasiatic.mon | Mon
+austroasiatic.muong | Muong (Mường)
+austroasiatic.vietnamese | Vietnamese
+austronesian.acehnese | Acehnese
+austronesian.balinese | Balinese
+austronesian.buginese | Buginese
+austronesian.cirebonese | Cirebonese
+austronesian.javanese | Javanese
+austronesian.madurese | Madurese
+austronesian.malayic.banjar | Banjar
+austronesian.malayic.betawi | Betawi
+austronesian.malayic.indonesian | Indonesian
+austronesian.malayic.minangkabau | Minangkabau
+austronesian.malayic.pattani_malay | Pattani Malay (Yawi)
+austronesian.oceanic | Oceanic
+austronesian.oceanic.maori | Māori
+austronesian.philippine | Philippine
+austronesian.philippine.bikol | Bikol
+austronesian.philippine.boholano | Boholano
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.kapampangan | Kapampangan
+austronesian.philippine.maguindanao | Maguindanao
+austronesian.philippine.maranao | Maranao
+austronesian.philippine.pangasinan | Pangasinan
+austronesian.philippine.tagalog | Tagalog
+austronesian.philippine.tausug | Tausug
+austronesian.philippine.waray | Waray-Waray
+austronesian.sasak | Sasak
+austronesian.sundanese | Sundanese
+creole | Creoles
+creole.french_based | French-based creoles
+creole.french_based.reunionese | Reunion Creole
+hmongmien | Hmong-Mien
+hmongmien.hmong | Hmong
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.german | German
+indoeuropean.indoaryan.eastern.chittagonian | Chittagonian
+indoeuropean.indoaryan.eastern.rohingya | Rohingya
+indoeuropean.indoaryan.eastern.sylheti | Sylheti
+indoeuropean.indoaryan.sinhala | Sinhala
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.romance.spanish | Spanish
+japonic | Japonic
+japonic.japanese | Japanese
+koreanic | Koreanic
+koreanic.korean | Korean
+kradai | Kra-Dai (Tai-Kadai)
+kradai.isan | Isan (Northeastern Thai)
+kradai.northern_thai | Northern Thai (Tai Yuan, Nhuan)
+kradai.shan | Shan
+kradai.southern_thai | Southern Thai (Pak Tai)
+kradai.tai_vietnam | Tai Dam and Tai Don (Thái)
+kradai.tay | Tay (Tày)
+kradai.thai | Thai
+kradai.zhuang | Zhuang
+seasia_other | Other indigenous languages of mainland Southeast Asia
+sinotibetan.burmish.burmese | Burmese
+sinotibetan.burmish.rakhine | Rakhine
+sinotibetan.kachin | Kachin languages (Jingpho, Zaiwa, Lhaovo, Rawang)
+sinotibetan.karen | Karen languages
+sinotibetan.karen.pao | Pa'o
+sinotibetan.sinitic.gan | Gan
+sinotibetan.sinitic.hakka | Hakka
+sinotibetan.sinitic.jin | Jin
+sinotibetan.sinitic.wu | Wu
+sinotibetan.sinitic.xiang | Xiang
+# --- end origin_mix borrowed nodes ---

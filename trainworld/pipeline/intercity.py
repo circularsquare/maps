@@ -88,7 +88,8 @@ def park_by_cell(h, a, lon, lat):
     jobs = a["jobs"].astype(np.float64)
     res8 = ((a["h3"] >> np.uint64(52)) & np.uint64(0xF)) == 8
     ncell = np.bincount(zone, np.where(res8, 7.0, 1.0), nz)
-    land = np.minimum(np.maximum(ncell, 1) * CELL_KM2, (h["gravity"]["zone_m"] / 1000.0) ** 2)
+    side = a["zone_size"].astype(np.float64) if "zone_size" in a else 1.0  # T-852: a block's 16 km²
+    land = np.minimum(np.maximum(ncell, 1) * CELL_KM2, (side * h["gravity"]["zone_m"] / 1000.0) ** 2)
     zj = np.bincount(zone, jobs, nz)
     d = zj / land
     paid = np.minimum(PARK_PAID_MIN * np.log(np.maximum(d, PARK_PAID_D0) / PARK_PAID_D0), PARK_PAID_CAP_MIN)

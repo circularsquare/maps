@@ -2,6 +2,9 @@
 # languages through taxonomy/mm2018.py: a proxy under AGENT_BRIEF section 2's ethnicity rule, every
 # row `derived`. No retention share exists for any group (sources/mm.md). Placed on Kontur hexes
 # for 325 townships (sources/mm_geo.py). The record is sources/mm.md.
+# Coverage gap (2026-10-19): the five Wa and Mongla townships GAD has no office in, 433,000 people at
+# their 2014 census figures, are added as `modelled` rows at published ethnic shares read as
+# languages (sources/mm_wa.py), on their own Kontur hexes.
 from _shared import *  # noqa: F401,F403
 
 
@@ -19,7 +22,10 @@ def _counts():
     df["unit"] = df["geo_id"]
     df = df[df["count"] > 0]
     out = df.groupby(["unit", "node", "tier"], as_index=False)["count"].sum()
-    return pd.concat([out, _rohingya(set(out["unit"]))], ignore_index=True)
+    import sys
+    sys.path.insert(0, str(ROOT / "sources"))
+    import mm_wa
+    return pd.concat([out, _rohingya(set(out["unit"])), mm_wa.counts()], ignore_index=True)
 
 
 def _rohingya(units):
@@ -45,9 +51,12 @@ ENTRY = dict(
     name="Myanmar",
     source=("General Administration Department, 2018 Township Profiles, Table 14, ethnic "
             "nationalities living in the township (records as of 1 April 2017), as transcribed by "
-            "the U.S. Census Bureau (HDX, CC BY)"),
+            "the U.S. Census Bureau (HDX, CC BY); 2014 census population of the Wa and Mongla "
+            "townships (same transcription); World Food Programme and Burma Link on the "
+            "Wa and Mongla populations' ethnic groups"),
     how=("administrative records, 2017, ethnic group, each group drawn as its language; "
-         "Rohingya in Rakhine from the same offices' religion records"),
+         "Rohingya in Rakhine from the same offices' religion records; the Wa and Mongla "
+         "townships modelled from their 2014 population and published ethnic shares"),
     parts=[
         dict(covers="Recognised ethnic groups",
              source="GAD township records, 2017, ethnic group drawn as its language",
@@ -55,10 +64,13 @@ ENTRY = dict(
         dict(covers="Rohingya in Rakhine",
              source="GAD township records, 2017, Muslims missing from the ethnic records",
              nodes=["indoeuropean.indoaryan.eastern.rohingya"]),
+        dict(covers="Wa and Mongla townships",
+             source="2014 census population of five townships with no records, drawn at "
+                    "published ethnic shares (about 70% Wa in the Wa area, 35% in Mongla)",
+             people=433_000),
     ],
-    grain="325 townships, 147,000 people on average",
-    gap=("people recorded with no ethnic group outside Rakhine, 620,241 (271,848 in Yangon), and "
-         "the Wa and Mongla townships, about 433,000 people in 2014, which have no records"),
+    grain="330 townships, 147,000 people on average",
+    gap=("people recorded with no ethnic group outside Rakhine, 620,241 (271,848 in Yangon)"),
     view=[92.0, 9.4, 101.4, 28.7],
     counts=_counts,
     mappings=["mm2018"],
@@ -77,8 +89,11 @@ ENTRY = dict(
         "ethnic records. In Rakhine the Muslims in the religion records who are missing from "
         "the ethnic records are drawn as Rohingya, 577,182 people, counted before most fled to "
         "Bangladesh in 2017. Elsewhere 620,241 people are missing the same way, with nothing to "
-        "say who they are, and are left empty, as are the Wa and Mongla areas, which have no "
-        "records. The records count only 5,638 Chinese and 1,921 Indians, far below the real "
+        "say who they are, and are left empty. The Wa and Mongla areas, which have no "
+        "records, are drawn from their 2014 census populations (433,000 people) and published "
+        "ethnic shares: the World Food Programme puts the Wa at about 70% of their division, "
+        "and Mongla is reported to be 35% Wa, with Shan, Lahu, Akha and Lisu. The rest of "
+        "each mix is a guess, and the dots follow Kontur's population grid. The records count only 5,638 Chinese and 1,921 Indians, far below the real "
         "numbers. The war since 2021 has displaced millions of people, so this is a picture of "
         "2017."),
 )

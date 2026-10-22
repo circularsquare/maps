@@ -23,7 +23,8 @@ ENTRY = dict(
     view=[67.5, 6.5, 97.8, 36.0],
     counts=_counts,
     mappings=["in2011"],
-    place=RD_GEO / "in" / "in_places.gpkg",
+    # religiondots' layer with Pakistan's side of the border cut away (sources/in_loc.py)
+    place=GEO / "in" / "in_places.gpkg",
     place_unit=lambda g: g["unit"].astype(str),
     place_weight=pop_weight,
     note_public="The census counts Sylheti as Bengali. In the Barak Valley (Cachar, Karimganj, "

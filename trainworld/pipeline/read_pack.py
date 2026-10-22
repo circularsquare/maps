@@ -37,6 +37,11 @@ def load_pack(city, packs=PACKS):
     return header, arrays
 
 
+def zone_side(a, nz):
+    """Each zone's side in squares (T-852: `zone_size`, 2 for a 2x2 block; 1 without it)."""
+    return a["zone_size"].astype(np.int64) if "zone_size" in a else np.ones(nz, np.int64)
+
+
 def check_gravity(header, a):
     """The shipped zone gravity, checked from scratch: zone ids against cell positions, and the
     balancing factors against the two constraints (row sums = workers, column sums = jobs)."""
@@ -49,7 +54,9 @@ def check_gravity(header, a):
     zm, (x0, y0), (w, h) = g["zone_m"], g["grid_origin_m"], g["grid"]
     zone = a["zone"].astype(np.int64)
     gx, gy = a["zone_gx"].astype(np.int64), a["zone_gy"].astype(np.int64)
-    assert zone.max() < nz and gx.max() < w and gy.max() < h
+    side = zone_side(a, nz)
+    assert zone.max() < nz and (gx + side).max() <= w and (gy + side).max() <= h
+    assert set(np.unique(side)) <= {1, 2} and (gx[side == 2] % 2 == 0).all() and (gy[side == 2] % 2 == 0).all(), "a block off the even squares"
     # T-162: zones are (square, region); a pack without zone_region is one region, factor 1
     zr = a["zone_region"].astype(np.int64) if "zone_region" in a else np.zeros(nz, np.int64)
     assert len(zr) == nz, "zone_region is not one per zone"
@@ -62,7 +69,7 @@ def check_gravity(header, a):
         assert zr.max() < len(header["regions"]["ids"]), "zone region outside the header's list"
     cx = ((a["x_m"] - np.float32(x0)) / np.float32(zm)).astype(np.int64)
     cy = ((a["y_m"] - np.float32(y0)) / np.float32(zm)).astype(np.int64)
-    bad = int(((cx != gx[zone]) | (cy != gy[zone])).sum())
+    bad = int(((cx - gx[zone] < 0) | (cx - gx[zone] >= side[zone]) | (cy - gy[zone] < 0) | (cy - gy[zone] >= side[zone])).sum())
     assert bad == 0, f"{bad} cells sit outside their zone's square"
     # the gravity balances on commuters when the pack has them (T-042), else on pop and jobs
     hw = a["commute_home"] if "commute_home" in a else a["pop"]
@@ -75,14 +82,31 @@ def check_gravity(header, a):
     rsum = np.zeros(nz)
     csum = np.zeros(nz)
     tot = dsum = cross = 0.0
+    # T-852: a pair with a block decays as the mean over their squares; distances are the centres'
+    subs = [(0, 0)] if side.max() == 1 else [(u, v) for u in (0, 1) for v in (0, 1)]
+    wsub = {q: np.where(side == 2, 0.25, 1.0 if q == (0, 0) else 0.0) for q in subs}
     for s in range(0, nz, 400):
         e = min(nz, s + 400)
         dx = gx[s:e, None] - gx[None, :]
         dy = gy[s:e, None] - gy[None, :]
-        d = zk * np.sqrt(dx * dx + dy * dy)
-        d[d == 0] = g["intrazonal_km"]
+        f = 0.0
+        for qi in subs:
+            for qj in subs:
+                wq = wsub[qi][s:e, None] * wsub[qj][None, :]
+                if not wq.any():
+                    continue
+                ex, ey = dx + qi[0] - qj[0], dy + qi[1] - qj[1]
+                dq = zk * np.sqrt(ex * ex + ey * ey)
+                dq[dq == 0] = g["intrazonal_km"]
+                f = f + wq * np.exp(-dq / g["decay_km"]) * dq ** -a_pow
+        if len(subs) == 1:
+            d = dq
+        else:
+            hx, hy = 2 * dx + side[s:e, None] - side[None, :], 2 * dy + side[s:e, None] - side[None, :]
+            d = zk * 0.5 * np.sqrt(hx * hx + hy * hy)
+            d = np.where(d == 0, g["intrazonal_km"] * side[s:e, None], d)
         other = zr[s:e, None] != zr[None, :]
-        t = row[s:e, None] * col[None, :] * np.exp(-d / g["decay_km"]) * d ** -a_pow * np.where(other, bf, 1.0)
+        t = row[s:e, None] * col[None, :] * f * np.where(other, bf, 1.0)
         rsum[s:e] = t.sum(axis=1)
         csum += t.sum(axis=0)
         tot += t.sum()

@@ -287,7 +287,7 @@ impl std::fmt::Debug for Routes {
 pub fn zones_check(z: &Zones) -> u64 {
     let mut h: u64 = 0;
     for i in 0..z.n {
-        let v = (z.gx[i] as u64) * 1_000_003 + (z.gy[i] as u64) * 1_009 + z.region[i] as u64;
+        let v = (z.gx[i] as u64) * 1_000_003 + (z.gy[i] as u64) * 1_009 + z.region[i] as u64 + z.big(i) as u64 * 500;
         h = h.wrapping_add((i as u64 + 1).wrapping_mul(v));
     }
     h % (1u64 << 52)
@@ -715,7 +715,9 @@ pub fn walk_tables(grid: &WalkGrid, z: &Zones, x: &[f32], y: &[f32], w: &[f64], 
     // the parts, searched as far as a walk across the zone and back
     let mut part = vec![0u8; x.len()];
     let mut reps: Vec<Vec<usize>> = vec![vec![]; n];
-    let part_reach = z.zone_m * 2.5;
+    // (a block's zone is two squares across, T-852)
+    let side = if z.mixed() { 2.0 } else { 1.0 };
+    let part_reach = z.zone_m * 2.5 * side;
     let mut split_zones = 0;
     for zi in 0..n {
         if members[zi].is_empty() {
@@ -791,8 +793,8 @@ pub fn walk_tables(grid: &WalkGrid, z: &Zones, x: &[f32], y: &[f32], w: &[f64], 
         }
         v
     };
-    // the search reaches the window's farthest cells: (W + 1) squares on each axis
-    let reach = z.zone_m * (win as f32 + 1.0) * std::f32::consts::SQRT_2;
+    // the search reaches the window's farthest cells: (W + 1) squares on each axis, W + 2 with blocks
+    let reach = z.zone_m * (win as f32 + side) * std::f32::consts::SQRT_2;
     let fmax = (255.0 / Q_SCALE).exp();
     let mut f: Vec<Vec<f32>> = Vec::with_capacity(unit_off[n]);
     let mut wins: Vec<Vec<usize>> = Vec::with_capacity(unit_off[n]);
@@ -941,6 +943,7 @@ mod tests {
             pop: vec![1.0; n],
             jobs: vec![1.0; n],
             ncell: vec![1; n],
+            size: vec![],
         };
         let cell = |px: f32, py: f32| x.iter().zip(&y).position(|(&a, &b)| a == px && b == py).unwrap();
         // west bank: 4,625 in the astride zone, 4,375 too, 3,875 in the zone west of it

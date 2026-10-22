@@ -35,6 +35,14 @@ def _counts():
         raise SystemExit(f"az_karabakh.csv sums to {kb['count'].sum():,.0f}; re-run sources/az_karabakh.py")
     kb["unit"] = kb["geo_id"]
     kb["node"] = kb["source_category"].map(az2026_karabakh.resolve)
+    # The resettled were counted in 2019 where they lived then (Baku, Sumgayit, Barda...). Take
+    # them back out of the 2019 Azerbaijani rows, pro rata to each unit's Azerbaijanis (no table
+    # gives the displaced by rayon), so the country stays at the census total (sources/az.md,
+    # "Karabakh double count removed", 2026-10-19). Only the modelled build has rayon rows.
+    if MODEL:
+        isaz = df["source_category"].eq("Azerbaijani")
+        tot = df.loc[isaz, "count"].sum()
+        df.loc[isaz, "count"] = df.loc[isaz, "count"] * (1 - _KB / tot)
     df = pd.concat([df[["unit", "node", "count", "tier"]], kb[["unit", "node", "count", "tier"]]])
     return df.groupby(["unit", "node", "tier"], as_index=False)["count"].sum()
 
@@ -87,7 +95,8 @@ ENTRY = dict(
         "Karabakh's Armenians, more than 100,000 people, left for Armenia in September 2023, "
         "and they are not drawn here. The map draws Karabakh as it is now: the displaced "
         "Azerbaijanis the government has resettled there since 2022, spread over the resettled "
-        "towns and villages using partial official and press figures. They are also in the "
-        "2019 census figures where they lived before, so they are drawn twice; that is 0.4% "
-        "of the country."),
+        "towns and villages using partial official and press figures. Since the census counted "
+        "them where they lived before, the same 40,000 are taken off the Azerbaijani figures "
+        "of the other rayons, in proportion to each rayon's Azerbaijanis, so nobody is drawn "
+        "twice."),
 )

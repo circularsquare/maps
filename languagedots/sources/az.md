@@ -141,8 +141,8 @@ reads it). Units `KB-*`, inside `az` as religiondots keeps the area.
   1,837, Aghdara 2,996, Shusha 1,396, Khojaly 3,954, Jabrayil 3,646) was seen only as a search
   excerpt: the page is behind a Cloudflare wall and not in the Wayback Machine. It contradicts the
   January 2025 settlement table (Lachin district 3,128 then), so it was not used.
-- All 40,000 drawn as Azerbaijani, `modelled`. **Double count**: they are also in the 2019 census
-  where they lived then; 0.4% of the country, said in `note_public`. Workers and students living
+- All 40,000 drawn as Azerbaijani, `modelled`. (The double count this first left in is removed,
+  see the 2026-10-19 section below.) Workers and students living
   there without resettling (Hajiyev: about 100,000 "working, living and studying" in all) are not
   drawn; said in `gap` and the note.
 - The Armenians: more than 100,000 left in September 2023 (UNHCR); the few dozen who stayed in
@@ -152,3 +152,16 @@ reads it). Units `KB-*`, inside `az` as religiondots keeps the area.
   religiondots' layer. Kontur's 2023 grid shows the pre-2023 population there and is not used.
 - Room for improvement: a published count by settlement (the State Committee announces each
   convoy, so a running tally could be built from APA/Trend reports, about 200 of them).
+
+## Karabakh double count removed (2026-10-19, session eca0185b-bug)
+
+**Was wrong:** the 40,000 resettled Azerbaijanis were drawn in Karabakh and also stayed inside the
+66 rayons' 2019 Azerbaijani figures where they lived before, so the map held 9,983,958 people
+against the census's existing population of 9,943,958 (40,000 over, 0.4%); `note_public` admitted it.
+**Changed:** `countries/az.py` `_counts()` now takes 40,000 off the 2019 Azerbaijani rows, pro rata to
+each unit's Azerbaijanis (factor 1 - 40,000/9,549,520 = 0.99581, every rayon's Azerbaijanis down 0.42%). No table
+gives the displaced by rayon, so this is a proxy; IDPs actually sit more in Baku, Sumgayit, Barda
+and the frontline-adjacent rayons. **Check:** `check_country az` ok, 9,943,958 people (= the census
+existing population, 81 units), Azerbaijani 9,549,520 (96.0%) as in Table 30; the Karabakh units
+still sum to 40,000. Rescattered: 9,934 dots. `note_public` reworded. Post-2019 population growth
+is not modelled, as before.

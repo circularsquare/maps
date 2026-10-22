@@ -145,3 +145,18 @@ build refuses a second colour for a node and ca.txt is not this session's.
 - Retention by origin is "with children often/always Dutch", looser than "mostly Dutch"; most
   origins take a common rate; Ukrainians borrow the Polish figure.
 - Frisian gemeente weights are atlas bands (ranges), not exact values.
+
+## Belgium-born: which record was right (2026-10-19, session eca0185b-bug)
+
+Followups asked whether the Belgium-born are drawn as Dutch or on Belgium's own Dutch/French shares.
+**Dutch.** `origin_mix.OVERRIDES[("BE", "nl")]` is 100% Dutch (uncited, "Flemish next door"; the home
+mix would have been Dutch 59 / French 40), and `origin_mix.mix("BE", "nl")` returns
+`{dutch: 1.0}`. `lang_of("BE")` gives Dutch 1.0, so `non_dutch("BE")` is 0 and Belgium-born people
+take no retention. A re-run of `nl_build.main()` to a scratch file draws French at 13,370 people
+nationally (the existing `data/normalized/nl.csv` 12,215 plus node renames), nowhere near the
+~40,000 that Belgian French would add, so the data was always Dutch. Only two records were wrong:
+the `lang_of` docstring in `nl_build.py` said Belgium and South Africa "went back to the home mix"
+(fixed), and §2 above names `NL_OVERRIDES` as the source for Belgium and South Africa, when it is now
+origin_mix's table; South Africa there is Afrikaans 75 / English 25, not Afrikaans alone. No data
+change, no re-scatter. (`nl.csv` still carries pre-regroup node ids such as
+`indoeuropean.romance.french`; the next `nl_build.py` run writes `...french.french`.)

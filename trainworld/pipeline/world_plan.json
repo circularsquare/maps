@@ -68149,7 +68149,7 @@
    "id": "sty",
    "name": "Østjylland",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "europe",
    "countries": [
     "DNK"
@@ -68187,7 +68187,21 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410",
+    "run_batch": "20261021-174702",
+    "steps": {
+     "build": 135.4,
+     "stations": 0.8,
+     "places": 3.1,
+     "routes": 61.9,
+     "merge": 1.7,
+     "nocar": 1.5,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T18:07:25",
+    "gate": {
+     "warn": []
+    }
    }
   },
   {
@@ -68195,7 +68209,7 @@
    "id": "syj",
    "name": "Sydjylland",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "DNK"
@@ -68231,7 +68245,29 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410",
+    "run_batch": "20261021-190410",
+    "built": "2026-10-21T19:13:08",
+    "steps": {
+     "build": 93.8,
+     "stations": 1.0,
+     "places": 2.5,
+     "routes": 54.8,
+     "merge": 2.0,
+     "nocar": 2.4,
+     "everyday": 1.5
+    },
+    "reason": "gate: pop_vs_plan 1.6980794631613207; pop_vs_ghsl 1.7040688255250525 GHSL 2025 719,918",
+    "gate": {
+     "fail": [
+      "pop_vs_plan 1.6980794631613207",
+      "pop_vs_ghsl 1.7040688255250525 GHSL 2025 719,918"
+     ],
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-21T19:23:25"
    }
   },
   {
@@ -68239,7 +68275,7 @@
    "id": "noj",
    "name": "Nordjylland",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "europe",
    "countries": [
     "DNK"
@@ -68275,7 +68311,21 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410",
+    "run_batch": "20261021-174702",
+    "steps": {
+     "build": 97.6,
+     "stations": 0.9,
+     "places": 2.0,
+     "routes": 28.2,
+     "merge": 1.5,
+     "nocar": 2.2,
+     "everyday": 1.1
+    },
+    "built": "2026-10-21T17:59:14",
+    "gate": {
+     "warn": []
+    }
    }
   },
   {
@@ -68283,7 +68333,7 @@
    "id": "vet",
    "name": "Vest- og Sydsjælland",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "europe",
    "countries": [
     "DNK"
@@ -68319,7 +68369,21 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410",
+    "run_batch": "20261021-174702",
+    "steps": {
+     "build": 122.7,
+     "stations": 1.0,
+     "places": 3.1,
+     "routes": 31.4,
+     "merge": 1.0,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T18:01:55",
+    "gate": {
+     "warn": []
+    }
    }
   },
   {
@@ -68327,7 +68391,7 @@
    "id": "fyn",
    "name": "Fyn",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "DNK"
@@ -68363,7 +68427,13 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410",
+    "run_batch": "20261021-190410",
+    "steps": {
+     "build": 126.5
+    },
+    "reason": "build failed: ls(city, cfg, boundary, mask)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\tier0.py\", line 415, in signals\n    place_w, out[\"osm_w0\"], out[\"osm_wcap\"] = cap_places(places, in_pack, blend_osm)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\tier0.py\", line 501, in cap_places\n    w0 = float(w[in_pack].sum())\nIndexError: arrays used as indices must be of integer (or boolean) type",
+    "parked": "2026-10-21T19:16:15"
    }
   },
   {
@@ -68409,7 +68479,7 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410"
    }
   },
   {
@@ -68455,7 +68525,7 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410"
    }
   },
   {
@@ -68503,7 +68573,7 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410"
    }
   },
   {
@@ -68549,7 +68619,7 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410"
    }
   },
   {
@@ -68595,7 +68665,7 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410"
    }
   },
   {
@@ -68603,7 +68673,7 @@
    "id": "rog",
    "name": "Rogaland",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "europe",
    "countries": [
     "NOR"
@@ -68639,7 +68709,21 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410",
+    "run_batch": "20261021-174702",
+    "steps": {
+     "build": 377.1,
+     "stations": 1.2,
+     "places": 2.0,
+     "routes": 11.3,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T18:26:28",
+    "gate": {
+     "warn": []
+    }
    }
   },
   {
@@ -68647,7 +68731,7 @@
    "id": "stf",
    "name": "Østfold",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "europe",
    "countries": [
     "NOR"
@@ -68683,7 +68767,21 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410",
+    "run_batch": "20261021-174702",
+    "steps": {
+     "build": 185.7,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 11.5,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T18:38:44",
+    "gate": {
+     "warn": []
+    }
    }
   },
   {
@@ -68691,7 +68789,7 @@
    "id": "vef",
    "name": "Vestfold",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "europe",
    "countries": [
     "NOR"
@@ -68727,7 +68825,21 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410",
+    "run_batch": "20261021-174702",
+    "steps": {
+     "build": 123.5,
+     "stations": 0.8,
+     "places": 1.3,
+     "routes": 7.5,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T18:41:00",
+    "gate": {
+     "warn": []
+    }
    }
   },
   {
@@ -68735,7 +68847,7 @@
    "id": "vri",
    "name": "Varsinais-Suomi",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "europe",
    "countries": [
     "FIN"
@@ -68777,7 +68889,18 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410",
+    "run_batch": "20261021-190410",
+    "steps": {
+     "build": 3048.1,
+     "stations": 1.9,
+     "places": 9.3,
+     "routes": 133.9,
+     "merge": 5.3,
+     "nocar": 2.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T20:49:37"
    }
   },
   {
@@ -68785,7 +68908,7 @@
    "id": "pik",
    "name": "Pirkanmaa",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "europe",
    "countries": [
     "FIN"
@@ -68825,7 +68948,18 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410",
+    "run_batch": "20261021-190410",
+    "steps": {
+     "build": 1569.1,
+     "stations": 1.6,
+     "places": 4.5,
+     "routes": 113.9,
+     "merge": 6.6,
+     "nocar": 2.0,
+     "everyday": 1.0
+    },
+    "built": "2026-10-21T21:17:56"
    }
   },
   {
@@ -68833,7 +68967,7 @@
    "id": "aan",
    "name": "Åland",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "europe",
    "countries": [
     "FIN"
@@ -68869,7 +69003,18 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410",
+    "run_batch": "20261021-190410",
+    "steps": {
+     "build": 1343.1,
+     "stations": 1.4,
+     "places": 2.5,
+     "routes": 4.3,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T19:56:15"
    }
   },
   {
@@ -68913,7 +69058,7 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410"
    }
   },
   {
@@ -68957,7 +69102,7 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410"
    }
   },
   {
@@ -69003,7 +69148,7 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410"
    }
   },
   {
@@ -69053,7 +69198,7 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410"
    }
   },
   {
@@ -69103,7 +69248,7 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410"
    }
   },
   {
@@ -69147,7 +69292,7 @@
     ]
    },
    "run": {
-    "claim": "20261021-174702"
+    "claim": "20261021-190410"
    }
   },
   {
@@ -69155,7 +69300,7 @@
    "id": "hou",
    "name": "Höfuðborgarsvæði",
    "kind": "zone",
-   "status": "planned",
+   "status": "gated",
    "region": "europe",
    "countries": [
     "ISL"
@@ -69191,7 +69336,21 @@
     ]
    },
    "run": {
-    "claim": "20261021-174703"
+    "run_batch": "20261021-174703",
+    "steps": {
+     "build": 135.8,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 9.4,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-21T17:51:04",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T18:05:17"
    }
   },
   {
@@ -69199,7 +69358,7 @@
    "id": "mlt",
    "name": "Malta",
    "kind": "zone",
-   "status": "planned",
+   "status": "gated",
    "region": "europe",
    "countries": [
     "MLT"
@@ -69237,7 +69396,23 @@
     ]
    },
    "run": {
-    "claim": "20261021-174703"
+    "run_batch": "20261021-174703",
+    "steps": {
+     "build": 46.1,
+     "stations": 0.7,
+     "places": 1.3,
+     "routes": 1.8,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.8
+    },
+    "built": "2026-10-21T17:57:17",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-21T18:05:18"
    }
   },
   {
@@ -69245,7 +69420,7 @@
    "id": "kyp",
    "name": "Kýpros",
    "kind": "zone",
-   "status": "planned",
+   "status": "gated",
    "region": "world",
    "countries": [
     "CYP"
@@ -69281,7 +69456,21 @@
     ]
    },
    "run": {
-    "claim": "20261021-174703"
+    "run_batch": "20261021-174703",
+    "steps": {
+     "build": 117.6,
+     "stations": 0.7,
+     "places": 1.8,
+     "routes": 26.6,
+     "merge": 0.8,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-21T18:03:03",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-21T18:05:18"
    }
   },
   {

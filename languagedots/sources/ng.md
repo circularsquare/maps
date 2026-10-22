@@ -5,9 +5,18 @@ microdata** (§0); the Afrobarometer build below now writes `data/normalized/ng_
 the comparison, and still supplies the split of MICS's "other language", English, Pidgin's spread
 and the placement inside states.
 
+**Since 2026-10-19 (session eca0185b-ng)** the pool has eight rounds (R3 2005 and R10 2024
+added), what the Afrobarometer still cannot split is named by homeland and by migrants' origin,
+and placement inside states is an LGA rake pulled towards each minority language's homeland
+points (§8). 461 answers drawn, against 119; unnamed 3.9% -> 0.7%.
+
 ```
+python sources/ng_afro.py --fetch   # extract (R3 and R10 download themselves to data/raw/ng/afro_extra/)
 python sources/ng_afro.py           # ng_afro.csv (comparison) and ng_lga.csv (placement)
+python sources/ng_homeland.py       # ng_homeland.csv: Joshua Project + Glottolog points by state
 python sources/ng_mics.py           # ng.csv, the drawn counts
+python sources/ng_homeland.py --blocks   # the generated nodes in tree.d/ng.txt and ng2022.py
+python taxonomy/build.py
 python tools/check_country.py ng
 python scatter.py --country ng
 ```
@@ -353,8 +362,94 @@ not tried; REACH's MSNA microdata could sharpen the six north-eastern and north-
 ## Terms
 
 Afrobarometer data: free download, citation requested ("Afrobarometer Data, Nigeria, Rounds
-4-9, 2008-2022, available at http://www.afrobarometer.org"). CLEAR Global CC BY-SA 4.0, used
+3-10, 2005-2024, available at http://www.afrobarometer.org"). CLEAR Global CC BY-SA 4.0, used
 only as a check. COD-AB and COD-PS (OCHA) CC BY-IGO; Kontur CC BY 4.0; Glottolog CC BY.
+Joshua Project people-group data, as for Papua New Guinea and South Sudan (`sources/pg.md`).
+
+## 8. Naming the remainder, and homeland placement (2026-10-19, session eca0185b-ng)
+
+Anita, 2026-10-19: "lets work on ... nigeria". The queued weak point: MICS's "other language"
+(25% of people) split only by the Afrobarometer, 3.8% drawn unnamed, ~119 of ~500 languages.
+
+**Sources searched.** MICS6 itself has nothing finer: HC1B, HH16, WM14 and HC2 (ethnicity) all
+carry the same ten codes; no LGA. NDHS needs DHS registration (off); GHS-Panel/LSMS and NLSS
+need a World Bank account and were not tried. Afrobarometer rounds not yet pooled: Nigeria's
+own files for R2 (2003), R3 (2005) and R10 (2024) are plain downloads from the survey-resource
+pages (URLs in `ng_afro.EXTRA_URL`); R1 has none. **R2 is not used**: its region variable is
+six zones plus Lagos. **R3 and R10 are added** (2,363 + 1,600 respondents; pool 11,923 ->
+15,886): R3 has state codes and LGA names but no free text for its 224 "Others"; R10 is like
+R9 (verbatims read into VERBATIM, 40 new spellings). Both rounds' LGA labels fall inside their
+own state (9 unmatched spellings of 10,478 placed respondents, against R7's shifted column), so
+both join the placement table (`LGA_ROUNDS` 3, 4, 6, 9, 10; 33 new aliases). R3's WITHINWT
+averages 0.932 and is rescaled to 1. New coded answers: Itsekiri, Bokyi (Boki), Ukpet-Ehom
+(R3 "Bahumono"), Izi-Ezaa-Ikwo-Mgbo (R10 "Ezza", verbatim "Izzi"), Kupa, Nyankpa (Yeskwa), Gun
+("Agonyin"). R3's bare "Others" raise the unnamed share before the step below (5.1% before
+English and Pidgin are set).
+
+**Homeland (`sources/ng_homeland.py`).** Joshua Project's people-groups file (already in the
+repo, `data/raw/pg/joshuaproject_pgic.csv`): 531 Nigerian groups, each with a population, an
+ISO 639-3 language and a point. Glottolog gives each code's language (dialect codes read as
+their language), classification and a second point; COD-AB the state. `EXISTING` lists the ISO
+codes of every answer already drawn, each read against Glottolog's names (Bassa is Basa bzw
+and Bassa-Kontagora bsr; Ogoni is Gokana and Tee; Kambari four codes); any other language is a
+new answer named as Glottolog names it, under the tree group its classification gives (`GROUP`:
+Tula-Longuda under Adamawa as Waja and Tula already; Wide Grassfields under cm.txt's
+Grassfields; "Benue-Congo" with no subgroup on `nigercongo`). 22 groups skipped (sign
+language, Chinese, French, Arabic, and 15 small groups Glottolog files as bookkeeping or
+unattested: Kofa, Kitimi, Ruruma...). A Joshua Project point is a homeland only if Glottolog
+lists Nigeria among the language's countries (JP also pins migrant groups: Ewe in Oyo,
+Gourmanchéma and Jenaama Bozo in Kebbi).
+
+**The split (`ng_mics.name_unnamed`).** Per state, the unnamed share U ("Other Nigerian
+language" after the Afrobarometer split) is divided by where the women (15-49) of MICS's
+other-language households lived before (WB17, weighted):
+- never moved, moved inside the state, or from abroad: the state's homeland languages that
+  nothing names there yet, in proportion to Joshua Project's population, **each capped at its
+  Joshua Project population** (without the cap Ayere, 7,100 people, took 160,000 in Kogi, and
+  Lame all of Kano's remainder);
+- from another state: that state's mix of its other languages (first pass of this step).
+- a state with under 30 such women (11 states) gives the homeland everything; what the
+  homeland cannot take goes to the origin states if a fifth or more of the women came from
+  another state, else it stays unnamed.
+
+Rows are `modelled`, source_id `mics6_2021_hc1b+joshuaproject` where most of the row is from
+this step. 8.7M people (4.0%) are on such rows, 336 new nodes (generated block in
+`tree.d/ng.txt`; 10 reuse a node another country wrote: Daba, Mafa, Wandala, Limbum, Lamnso',
+Yamba, Esimbi...).
+
+| state | unnamed before -> after | named by this step (top) |
+|---|---|---|
+| Nasarawa | 15.2 -> 0 | Bassa 7.0, Ajiri 2.2, Duya 2.1, Mama 1.4 |
+| Adamawa | 10.0 -> 0 | Bata 4.2, Hwana 2.9, Mom Jango 2.6, Gude 2.3, Nzanyi 2.2 |
+| Taraba | 11.4 -> 0 | Chamba 3.3, Bitare 2.2, Batu 1.6, Kulung 1.5 |
+| Cross River | 11.6 -> 0 | Bekwarra 1.9, Olulumo-Ikom 1.7, Obanliku 1.2 |
+| Ekiti | 8.9 -> 0 | Igala 2.3, Ebira 1.7 (women from Kogi, 32%), Ehueun 0.8, Ukue 0.8 |
+| Ondo | 5.6 -> 0 | Okpamheri 1.2, Ukaan 0.7, Iyayu 0.6 |
+| Edo | 11.4 -> 4.4 | Oko-Eni-Osayen, Uneme, Ososo...; capped |
+| Kebbi | 7.4 -> 3.4 | Ut-Main, Cicipu, Shanga; capped |
+| Kogi | 5.8 -> 3.4 | only Ayere is left unnamed there; capped |
+| Oyo | 5.0 -> 4.4 | 29 of 49 women came from abroad; no Nigerian homeland language in Oyo |
+| Osun | 1.8 -> 1.8 | 27 women, no homeland language |
+
+Nationally: unnamed 3.9% -> 0.7%; 119 -> 461 answers. Named answers' shares otherwise move
+by R3/R10 only (Fulfulde 7.1%, Hausa 27.7%, Yoruba 15.8%, Igbo 13.4% unchanged, being MICS).
+
+**Placement (`countries/ng.py`, `_rake`).** Per state an LGA x language table raked to each
+LGA's people (less Pidgin) and the state's counts, seeded by the Afrobarometer LGA share (as
+before) times, for a language under 40% of the state with a homeland point within 150 km,
+0.01 + 0.99 x exp(-distance to its nearest point / 25 km). The rake makes the big languages
+yield the minorities' LGAs. 1,772 (state, language) rows pulled. Checks, share of dots: Berom
+Jos South 35%, Barikin Ladi 23%, Riyom 15%; Ngas Pankshin 43%; Gera Bauchi LGA 55%, Ganjuwa
+19%; Bata Fufore 32%; Obanliku Obudu 37%, Obanliku 22%; Jju Jema'a 29%, Jaba 17%, Lere 13%
+(was Lere 30%).
+
+**Calls someone might reverse.** Joshua Project's populations as weights (ethnic, not
+speakers; they total 242M); the cap at 1x; WB17 (last move, women only) as the migrants'
+origin; abroad treated as local; the 30-women and one-fifth thresholds; dropping R2.
+
+**Still open.** Edo's, Kebbi's and Kogi's capped remainders (Akoko-Edo's many languages are
+likely under-counted by Joshua Project); Oyo's foreign-born households (Benin's Bariba, Fon,
+Nago?); a speaker-count source (Ethnologue is 403) would beat Joshua Project's figures.
 
 ## Cross-border groups (2026-10-06, 5d7dac7e-xb)
 

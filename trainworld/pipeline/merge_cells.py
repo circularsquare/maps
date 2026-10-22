@@ -156,9 +156,10 @@ def _place(header, a, e, cells, inv, cand=None):
     zm, (x0, y0) = g["zone_m"], g["grid_origin_m"]
     zg = a["zone"].astype(np.int64)[first]
     gx, gy = a["zone_gx"].astype(np.int64)[zg], a["zone_gy"].astype(np.int64)[zg]
+    side = read_pack.zone_side(a, header["zones"])[zg]  # T-852: a block's four squares
     cx = ((mx32 - np.float32(x0)) / np.float32(zm)).astype(np.int64)
     cy = ((my32 - np.float32(y0)) / np.float32(zm)).astype(np.int64)
-    off_sq = (cx != gx) | (cy != gy)
+    off_sq = (cx < gx) | (cx >= gx + side) | (cy < gy) | (cy >= gy + side)
     wet = np.zeros(ng, bool)
     idx = np.nonzero(~off_sq & (True if cand is None else cand))[0]
     wet[idx] = on_water(header, a, mx32[idx].astype(np.float64), my32[idx].astype(np.float64))

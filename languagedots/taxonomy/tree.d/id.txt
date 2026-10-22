@@ -97,7 +97,7 @@ austronesian.batak.alas_kluet | Alas-Kluet | 0.70 0.12 275
 austronesian.batak.singkil | Singkil
 austronesian.malayic.aneuk_jamee | Aneuk Jamee
 austronesian.malayic.tamiang | Tamiang Malay
-austronesian.malayic.kerinci | Kerinci
+austronesian.malayic.kerinci | Kerinci | 0.62 0.14 300
 austronesian.malayic.musi | Musi (Palembang) | 0.60 0.12 185
 austronesian.malayic.central_malay | Central Malay (Besemah, Semendo, Ogan, Enim) | 0.82 0.11 95
 austronesian.malayic.col | Lembak (Col)

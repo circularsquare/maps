@@ -823,3 +823,17 @@ After the revert: check_country ok; scatter 1,409,742 dots. Guangxi's hold match
 If Guangxi is revisited: a rake that spreads Hakka thinly (by the 1987 polygons and the gazetteer's
 floors only, not scaling the existing Hakka counties) would answer Anita's objection; the 2012
 atlas's Hakka 4.2M is the newer total to aim at.
+
+## 13. Bug sweep: Luhe and Shenzhen rechecked (2026-10-19, session eca0185b-bug)
+
+**Luhe (441523).** The followups item ("filed as Yue") was already fixed by §12 on 2026-10-06. Rechecked:
+`TABLE_FIX` is in `cn_dialect.py`, and both `data/normalized/cn_dialect.csv` and `cn_dialect_mcp.csv`
+hold 441523 as Non-Mandarin / Hakka / Hailu, share 1.0. No change needed.
+
+**Shenzhen's total, which record is right.** §9 is right. `data/normalized/cn.csv` today holds Shenzhen's
+nine districts (4403xx) at 17,493,774 people (census 17,560,061; short 0.4%, the Shenzhen-Shanwei
+zone), all `estimated=1` rows rescaled by `cn_totals.py`. The 10.5M figure is the pre-2026-10-06
+state. The same file gives Shanwei 2,738,384 and the nation 1,409,778,724. The older
+"10.5M vs 17.6M" sentences in §8 are marked as from before the fix; `followups.md` and
+`handoff/SUPERVISOR.md` ("leave chinaethnicity's estimated county totals") describe the problem
+as open and should say it was closed inside languagedots by §9, with chinaethnicity itself untouched.

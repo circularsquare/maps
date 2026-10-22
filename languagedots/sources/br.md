@@ -178,3 +178,47 @@ Scatter 2026-10-06: 202,953 dots, 783 rings; 125,261 people under one dot per la
 New files: `sources/br_immig.py`, `sources/br_settlers.py`, `data/raw/br/sismigra_ativos.zip`,
 `sidra_10157_n6.json`, `sidra_10157_n1.json`, `ibge_municipios.json`,
 `hunsrik_inventario_2018.pdf`, `data/normalized/br_immig.csv`, `br_settlers.csv`.
+
+## Immigrants placed by recent arrivals (2026-10-19, session eca0185b-brmx)
+
+The follow-up "scout: non-native speakers in Brazil and Mexico" turned out to be built already
+(sections above, 2026-10-06). This pass changed one thing: where inside a UF each nationality
+is drawn.
+
+- **Scout result.** IBGE has published no country of birth or nationality per município
+  (SIDRA 631 has birthplace by UF only; 10157 has nationality as natos / naturalizados /
+  estrangeiros). The nearest table is **SIDRA 10161**: people aged 5+ who lived abroad five
+  years before the census, by country (195), at N6. 457,003 people (Venezuela 199,067, United
+  States 27,993, Bolivia 23,875, Haiti 23,507, Paraguay 18,637, Argentina 15,800, Colombia
+  15,700, Portugal 13,566, Japan 9,262). It is "lived abroad in 2017", not "born abroad":
+  Brazilians coming home are in it. 2,669 municípios have any; the municípios sum to 456,916
+  (the national less 'country not known' and small-cell noise). The API answers 500 to MG in one
+  request: `sources/br_immig.py` fetches one UF and 25 countries at a time.
+- **Use.** Counts do not change (still 1,009,330 naturalised + foreign, from 10157, and the
+  register's UF shares). 10161 only decides which municípios of a UF hold each nationality.
+  `rake()` in `sources/br_immig.py`: rows are each município's foreign total, columns are the
+  UF's total split by the register's shares (as before), seed is the município's recent arrivals
+  from that country plus the rest of the column (older stock) spread over the foreign people a
+  município has beyond its recent arrivals; iterative proportional fitting (300 rounds; columns
+  exact to 1e-15, rows exact). Cells under 0.01 person are dropped and the row rescaled.
+- **Call: returnee origins.** United States, Canada, Japan, South Korea, Israel, the Gulf,
+  Australia, New Zealand and every western and northern European origin
+  (`RETURNEE_ORIGINS`) are not placed by arrivals, because most of their "lived abroad" people
+  are Brazilians returning (decasségui from Japan, emigrants from the US and Portugal). Their
+  stock is spread over the foreign people beyond recent arrivals. Neighbouring countries
+  (Paraguay, Bolivia, Argentina, Uruguay) are placed by arrivals although some are returning
+  Brazilians (brasiguaios): the foreign-born live in the same border towns, and Foz do Iguaçu's
+  Paraguayans came out at 2,597 against 1,196 before, which reads right.
+- **Effect (people drawn on a language other than Portuguese, same national totals).**
+  Venezuelans in Roraima, Boa Vista 56,952 -> 57,203, Pacaraima 6,366 -> 6,290 (Roraima as
+  a whole 73,730 Venezuelan-origin people; the state was already near-uniform). Elsewhere the
+  change is large: São Paulo city Venezuelans 14,432 -> 11,173 and Bolivians 43,045 -> 46,002;
+  Chapecó Haitians 1,666 -> 2,107; Foz do Iguaçu Venezuelans 6,057 -> 4,485, Paraguayans
+  1,196 -> 2,597; Curitiba Paraguayans 2,107 -> 481; Manaus Colombians 2,483 -> 1,341.
+- **Not done.** Registered nationality is still per UF (SISMIGRA has no município). Japanese
+  speakers among Brazilian-born Nikkei still have no figure and stay Portuguese. Naturalised
+  Brazilians still take the UF's active-registration mix.
+- Files: `sources/br_immig.py` (fetch, `arrivals()`, `rake()`, checks), `data/raw/br/
+  sidra_10161_n6.json` (condensed: município -> country name -> people), `data/normalized/
+  br_immig.csv` (197,546 rows), `countries/br.py` (`how`, `parts`, `grain`, `note_public`).
+  Scatter: 202,954 dots, 765 rings.

@@ -125,6 +125,17 @@ SPLIT = {
     "DZ21": [(CHA, 0.5), (KAB, 0.5)], "DZ25": [(CHA, 0.5), (KAB, 0.5)], "DZ43": [(CHA, 0.5), (KAB, 0.5)],
 }
 
+# The Berber homelands, where the ethnic-group share tracks the 1966 census (r = +0.886 overall,
+# near 1 here) and is drawn whole. Everywhere else retention applies (shares(), sources/dz.md 9).
+HEARTLAND = {"DZ15", "DZ06", "DZ10", "DZ35",       # Tizi Ouzou Bejaia Bouira Boumerdes
+             "DZ05", "DZ40",                       # Batna Khenchela (the Aures)
+             "DZ47",                               # Ghardaia
+             "DZ11", "DZ33"}                       # Tamanrasset Illizi
+
+# Chaoui wilayas whose first-language answers are zero Berber (Oum El Bouaghi 0 of 62, Tebessa 0
+# of 65, Biskra 1.8%): drawn at min(ethnic share, 1966 surface), no midpoint (sources/dz.md 9).
+CAP_ONLY = {"DZ04", "DZ12", "DZ07"}
+
 ALIAS = {   # survey spellings -> religiondots `name` (folded)
     "algeris": "algiers", "alger": "algiers", "bouria": "bouira", "bejia": "bejaia",
     "beskra": "biskra", "tbessa": "tebessa", "stif": "setif", "bashar": "bechar",
@@ -329,11 +340,30 @@ def shares():
 
     # the language waves' own Berber share, for the record's comparison
     lb = l.assign(b=(l["cls"] == "berber") * l["w"]).groupby("geo_id").agg(b=("b", "sum"), n=("w", "sum"))
-    return lut, sh, n, fsh, lb, nat
+
+    # RETENTION outside the Berber homelands (2026-10-21, sources/dz.md section 9): there, draw
+    # Berber at the midpoint of the ethnic share and the pooled first-language share (the latter
+    # shrunk to its national share with K respondents), never above the ethnic share or the
+    # wilaya's 1966 Berber-speaking share; the difference goes to Arab (Algerian Arabic).
+    sh_eth = sh.copy()
+    lbr = lb.reindex(sh.index)
+    natb = lb["b"].sum() / lb["n"].sum()
+    lang = (lbr["b"].fillna(0) + K * natb) / (lbr["n"].fillna(0) + K)
+    mid = (sh["Amazigh"] + lang) / 2
+    # where the first-language surveys read zero because of the Arabic-interview bias (the Chaoui
+    # wilayas below), the midpoint is dropped: the ethnic share capped at the 1966 level only
+    mid = mid.where(~sh.index.isin(CAP_ONLY), sh["Amazigh"])
+    new = np.minimum(np.minimum(mid, p66), sh["Amazigh"])
+    keep = sh.index.isin(HEARTLAND)
+    cut = (sh["Amazigh"] - new).where(~keep, 0.0)
+    sh = sh.copy()
+    sh["Amazigh"] = sh["Amazigh"] - cut
+    sh["Arab"] = sh["Arab"] + cut
+    return lut, sh, n, fsh, lb, nat, sh_eth
 
 
 def build():
-    lut, sh, n, fsh, lb, nat = shares()
+    lut, sh, n, fsh, lb, nat, sh_eth = shares()
     split = variety_split(lut)
     rows = []
     for _, u in lut.iterrows():
@@ -462,19 +492,20 @@ def variety_split(lut):
 def check1966():
     a = anchors()
     print(a[["place", "pct", "geonames", "lat", "lon", "gn_pop"]].to_string())
-    lut, sh, n, fsh, lb, nat = shares()
+    lut, sh, n, fsh, lb, nat, sh_eth = shares()
     t = pd.DataFrame({"name": lut.set_index("geo_id")["name"]})
     t["1966_surface"] = wilaya_1966(lut).reindex(t.index) * 100
-    t["ethnic_VI_VII"] = (sh["Amazigh"] + sh["Tourag"]) * 100
+    t["ethnic_VI_VII"] = (sh_eth["Amazigh"] + sh_eth["Tourag"]) * 100
+    t["drawn_after_retention"] = sh["Amazigh"] * (1 - fsh.reindex(t.index)) * 100
     t["n_eth"] = n
     t["lang_waves"] = (lb["b"] / lb["n"] * 100).reindex(t.index)
     t["n_lang"] = lb["n"].reindex(t.index)
     pop = lut.set_index("geo_id")["pop"]
     print(t.round(1).to_string())
-    for col in ("1966_surface", "ethnic_VI_VII", "lang_waves"):
+    for col in ("1966_surface", "ethnic_VI_VII", "drawn_after_retention", "lang_waves"):
         v = t[col].fillna(0)
         print(f"  national, on 2008 populations: {col} {(v * pop).sum() / pop.sum():.1f}%")
-    for col in ("ethnic_VI_VII", "lang_waves"):
+    for col in ("ethnic_VI_VII", "drawn_after_retention", "lang_waves"):
         ok = t[col].notna()
         print(f"  r(1966 surface, {col}) across {ok.sum()} wilayas = "
               f"{np.corrcoef(t.loc[ok, '1966_surface'], t.loc[ok, col])[0, 1]:+.3f}")

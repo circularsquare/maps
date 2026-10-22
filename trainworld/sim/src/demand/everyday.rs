@@ -188,14 +188,20 @@ impl PairIndex {
 }
 
 /// exp(-d / decay) between two zone centres by their grid offset (T-172). Zones of one square
-/// (the same zone, or zones a region border splits, T-162) are 0.52 of a zone apart.
+/// (the same zone, or zones a region border splits, T-162) are 0.52 of a zone apart. With blocks
+/// (T-852) a table by `Gravity`'s layout (`kernel::pair_decay`, `kernel::PairKey`).
 struct DecayTable {
     span: usize,
     v: Vec<f32>,
+    layout: Option<PairKey>,
 }
 
 impl DecayTable {
-    fn new(gx: &[i32], gy: &[i32], zone_m: f32, decay: f32) -> DecayTable {
+    fn new(z: &Zones, decay: f32) -> DecayTable {
+        if z.mixed() {
+            return DecayTable { span: 0, v: pair_decay(z, |d_km| (-d_km * 1000.0 / decay).exp()), layout: Some(PairKey::of(z)) };
+        }
+        let (gx, gy, zone_m) = (&z.gx, &z.gy, z.zone_m);
         let range = |g: &[i32]| g.iter().max().zip(g.iter().min()).map_or(1, |(a, b)| (a - b) as usize + 1);
         let (wx, wy) = (range(gx), range(gy));
         let mut v = vec![0.0; wx * wy];
@@ -206,16 +212,32 @@ impl DecayTable {
                 v[ax * wy + ay] = (-d / decay).exp();
             }
         }
-        DecayTable { span: wy, v }
+        DecayTable { span: wy, v, layout: None }
     }
-    /// The running sum of `mass` x decay from the zone at (`gx`, `gy`) to each listed zone, into
+    /// The listed zones' positions as `cdf` takes them.
+    fn places(&self, z: &Zones, zones: &[usize]) -> (Vec<i32>, Vec<i32>) {
+        match &self.layout {
+            Some(g) => (zones.iter().map(|&k| g.key(z, k)).collect(), vec![]),
+            None => (zones.iter().map(|&k| z.gx[k]).collect(), zones.iter().map(|&k| z.gy[k]).collect()),
+        }
+    }
+    /// The running sum of `mass` x decay from zone `o` to each listed zone (`places`), into
     /// `cdf`; returns the total. Kept out of line: a browser optimises a WebAssembly function only
     /// between calls (no on-stack replacement), so this one is fast after the first few origins
     /// while one long loop inside the constructor would stay in the baseline compiler throughout.
     #[inline(never)]
-    fn cdf(&self, gx: i32, gy: i32, zx: &[i32], zy: &[i32], mass: &[f64], cdf: &mut Vec<f64>) -> f64 {
+    fn cdf(&self, z: &Zones, o: usize, zx: &[i32], zy: &[i32], mass: &[f64], cdf: &mut Vec<f64>) -> f64 {
         cdf.clear();
         let mut total = 0.0;
+        if let Some(g) = &self.layout {
+            let base = g.base(z, o);
+            for k in 0..zx.len() {
+                total += mass[k] * self.v[(base + zx[k]) as usize] as f64;
+                cdf.push(total);
+            }
+            return total;
+        }
+        let (gx, gy) = (z.gx[o], z.gy[o]);
         for k in 0..zx.len() {
             let o = (zx[k] - gx).unsigned_abs() as usize * self.span + (zy[k] - gy).unsigned_abs() as usize;
             total += mass[k] * self.v[o] as f64;
@@ -231,11 +253,10 @@ impl DecayTable {
 /// mass x decay from its zone, and every airport receives exactly its trips (before the 150 m
 /// exclusion and the 40-80 km taper, which apply to every purpose).
 fn airport_draw(z: &Zones, members: &[Vec<usize>], origin: &[f32], trips: &[f32], decay_m: f32) -> Vec<f32> {
-    let table = DecayTable::new(&z.gx, &z.gy, z.zone_m, decay_m);
+    let table = DecayTable::new(z, decay_m);
     let w: Vec<f64> = members.iter().map(|m| m.iter().map(|&c| origin[c] as f64).sum()).collect();
     let zones: Vec<usize> = (0..z.n).filter(|&k| w[k] > 0.0).collect();
-    let zx: Vec<i32> = zones.iter().map(|&k| z.gx[k]).collect();
-    let zy: Vec<i32> = zones.iter().map(|&k| z.gy[k]).collect();
+    let (zx, zy) = table.places(z, &zones);
     let zw: Vec<f64> = zones.iter().map(|&k| w[k]).collect();
     let mut draw = vec![None; z.n];
     let mut cdf = Vec::with_capacity(zones.len());
@@ -245,7 +266,7 @@ fn airport_draw(z: &Zones, members: &[Vec<usize>], origin: &[f32], trips: &[f32]
             continue;
         }
         let a = z.cell_zone[c] as usize;
-        let d = *draw[a].get_or_insert_with(|| table.cdf(z.gx[a], z.gy[a], &zx, &zy, &zw, &mut cdf));
+        let d = *draw[a].get_or_insert_with(|| table.cdf(z, a, &zx, &zy, &zw, &mut cdf));
         if d > 0.0 {
             mass[c] = (t as f64 / d) as f32;
         }
@@ -274,6 +295,47 @@ mod tests {
             h["arrays"].as_array_mut().unwrap().push(serde_json::json!({"name":name,"dtype":"f32","per":"cell","count":2,"offset":offset}));
         }
         (h.to_string(), bin)
+    }
+    /// T-852: with blocks, a zone's draw on the others is the mean decay between their squares.
+    #[test]
+    fn decay_table_with_blocks() {
+        let full = crate::demand::synth::synth_city(1);
+        let keep: Vec<usize> = (0..full.len()).filter(|&c| full.x[c].hypot(full.y[c]) < 12_000.0).collect();
+        let city = pack::City {
+            name: "t".into(),
+            h3: keep.iter().map(|&c| full.h3[c]).collect(),
+            x: keep.iter().map(|&c| full.x[c]).collect(),
+            y: keep.iter().map(|&c| full.y[c]).collect(),
+            pop: keep.iter().map(|&c| full.pop[c]).collect(),
+            jobs: keep.iter().map(|&c| full.jobs[c]).collect(),
+            region: vec![],
+            gravity: None,
+        };
+        let z0 = build_zones(&city, 2000.0);
+        let ends: Vec<f64> = (0..z0.n).map(|i| (z0.gx[i] + z0.gy[i]) as f64).collect();
+        let z = coarsen(&z0, &ends, 9.0);
+        assert!(z.mixed());
+        let t = DecayTable::new(&z, 3000.0);
+        let all: Vec<usize> = (0..z.n).collect();
+        let (zx, zy) = t.places(&z, &all);
+        let mass: Vec<f64> = (0..z.n).map(|j| 1.0 + j as f64).collect();
+        let sq = |i: usize| -> Vec<(i32, i32)> {
+            let (s, gx, gy) = (z.side(i), z.gx[i], z.gy[i]);
+            (0..s).flat_map(|a| (0..s).map(move |b| (gx + a, gy + b))).collect()
+        };
+        for o in [0, z.n / 2, z.n - 1] {
+            let mut cdf = vec![];
+            let got = t.cdf(&z, o, &zx, &zy, &mass, &mut cdf);
+            let want: f64 = (0..z.n).map(|j| {
+                let (a, b) = (sq(o), sq(j));
+                let m: f64 = a.iter().flat_map(|p| b.iter().map(move |q| (p, q))).map(|(p, q)| {
+                    let d = if p == q { 1040.0 } else { 2000.0 * (((p.0 - q.0).pow(2) + (p.1 - q.1).pow(2)) as f64).sqrt() };
+                    (-d / 3000.0).exp()
+                }).sum::<f64>() / (a.len() * b.len()) as f64;
+                mass[j] * m
+            }).sum();
+            assert!((got / want - 1.0).abs() < 1e-5, "{got} vs {want}");
+        }
     }
     fn network(a: &mut EverydayApi, distance: f32, tph: [f32; 3]) {
         let times = [
@@ -2064,10 +2126,9 @@ impl EverydayApi {
             // T-172: zone centres sit on the zone grid, so the decay between two zones depends
             // only on their grid offset: one table per purpose instead of a square root and an
             // exp for every zone pair (5 s for New York's four purposes, now a fraction of that).
-            let zx: Vec<i32> = zones.iter().map(|&z| engine.z.gx[z]).collect();
-            let zy: Vec<i32> = zones.iter().map(|&z| engine.z.gy[z]).collect();
             let zmass: Vec<f64> = zones.iter().map(|&z| mass[z]).collect();
-            let table = DecayTable::new(&engine.z.gx, &engine.z.gy, engine.z.zone_m, decay[kind]);
+            let table = DecayTable::new(&engine.z, decay[kind]);
+            let (zx, zy) = table.places(&engine.z, &zones);
             let budget = budget_of(kind);
             row.fill(NONE);
             for (i, &c) in live[kind].iter().enumerate() {
@@ -2093,7 +2154,7 @@ impl EverydayApi {
                 if !members[oz].iter().any(|&c| budget.get(c).copied().unwrap_or(0.0) > 0.0) {
                     continue;
                 }
-                let total = table.cdf(engine.z.gx[oz], engine.z.gy[oz], &zx, &zy, &zmass, &mut cdf);
+                let total = table.cdf(&engine.z, oz, &zx, &zy, &zmass, &mut cdf);
                 if kind == AIRPORT {
                     airport_scale[oz] = total;
                 }

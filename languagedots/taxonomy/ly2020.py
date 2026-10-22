@@ -7,7 +7,8 @@ Record: sources/ly.md.
 - Berber: the cards' "Berber; Amazigh; Tamazight" and Arab Barometer's "Amazigh". In Libya's
   north-west that is the Nafusi cluster (Glottolog nafu1238: Jadu, Nalut, Yafran, and Zuwara's
   dialect); a new leaf, since the answer names Libyan Berber, not Algeria's or Morocco's.
-  Ghadames (Nalut) and Awjila (Ajdabiya) speakers, a few thousand each, sit inside it unsplit.
+  2026-10-19: Zuwara's, Ghadames' and Awjila's speakers are split off it by place in
+  countries/ly.py (sources/ly.md section 6); the survey label stays "Berber" here.
 - Tamahaq: Tahaggart Tamahaq (Glottolog taha1241, LY among its countries), Algeria's `tamahaq` leaf.
 - Tedaga: Tebu, on the `tubu` (Teda-Daza) leaf.
 """
@@ -20,7 +21,9 @@ NAMES = {
     "Other": "other",
 }
 
-EXTRA_NODES = []
+# the leaves countries/ly.py carves out of Nafusi and Libyan Arabic (not survey labels)
+EXTRA_NODES = ["afroasiatic.berber.zuwara", "afroasiatic.berber.ghadames",
+               "afroasiatic.berber.awjila"]
 
 
 def resolve(label):

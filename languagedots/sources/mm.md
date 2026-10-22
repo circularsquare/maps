@@ -129,3 +129,49 @@ crossing ethnicity with home language would give retention shares (Mon above all
 the delta, Shan outside Shan State, Chinese and Indian descent). The 620,000 unrecorded outside
 Rakhine and the five Wa and Mongla townships are the gaps; the Rohingya figure is a residual of
 two office tables, not a count of anyone.
+
+## 7. Coverage gap: the Wa and Mongla townships (2026-10-19, session eca0185b-gap)
+
+The five townships GAD has no office in (section 3) are now drawn, `modelled`: **433,000 people**,
+so Myanmar is 48,808,586 drawn (was 48,375,586). Files: `sources/mm_wa.py` (counts, mixes, and
+`--build` for the hexes), `data/geo/mm/mm_hexes.gpkg` (2,527 hexes added; 330 units), `countries/mm.py`.
+
+**People.** The 2014 census table of the same townships, in USCB's transcription already in
+`data/raw/mm/burma_uscb_202003.xlsx` (sheet Age-Sex, `BTOTL`): Mongmao 70,683, Pangwaun 97,097,
+Pangsang 105,972 (incl. Mankan subtownship), Narphan 116,180, Mongla 43,068 = 433,000. Not grown to
+2017 (the rest of the map is April 2017 records) and not checked against the 2024 census, whose
+township tables for these areas are partial. Kontur against the census: Mongmao 1.22, Pangwaun
+1.07, Pangsang 1.44, Narphan 0.93, Mongla 1.13, so the grid is usable as a within-township weight.
+
+**Languages.** No count of ethnicity or language exists for them; the 2014 ethnicity tables were
+never released. Ethnic shares read as language, as everywhere in this country; rows `modelled`
+(AGENT_BRIEF section 2, no measured source).
+- *Wa Self-Administered Division* (Mongmao, Pangwaun, Pangsang, Narphan): World Food Programme,
+  "Wa Self-Administered Division" (docs.wfp.org/api/documents/WFP-0000107118/download): 558,000
+  people, 16 minority groups, "ethnic Wa account for 70 percent of the total population, with
+  Lahu and Shan as the second and third largest". Mix used, one for all four: Wa 70, Lahu 12, Shan 8,
+  Akha 4, Mandarin 3 (Han and Kokang Chinese), Lisu 1, Palaung 1, other 1. Only the 70% and the
+  Lahu-then-Shan order are cited; the rest is judgement. The two tabulated townships of the same
+  division, Hopan (Kokang 38, Wa 33, Shan 17) and Makman (Wa 47, Lahu 42, Shan 11), are on the
+  division's edge and under government offices; not representative of the army-held core, not used.
+- *Mongla* (Special Region 4, NDAA): Burma Link's page on Special Region 4, "approximately 35% of the
+  population are Wa and the rest are of Shan, Lahu, Akha, Lisu and Loi ethnicities"; RFA, 17 Sep 2019,
+  "In Myanmar's Remote Mongla Region, Mandarin Supplants the Burmese Language": 13 minority
+  languages besides Burmese (Shan, Akha, Lahu, Lweh named), children mainly speak Chinese. Mix: Wa 35,
+  Shan 25, Akha 15, Lahu 12, Lisu 5, Mandarin 5, other 3 (Loi, with no node here). The Wa 35% is cited;
+  the rest is judgement. Burma Link is an advocacy site and the figure is undated.
+- Wa people in these townships who speak Chinese at home are not separated: no source gives it
+  (Mandarin is the Wa State's working language, and children are taught in it).
+
+Result added: Wa 288,026, Lahu 51,960, Shan 41,962, Akha 22,057, Mandarin 13,851, Lisu 6,053, other
+5,191, Palaung 3,899. Wa goes from 117,483 (GAD's records elsewhere in Shan State) to 405,509 drawn nationally.
+The heartland had no records, which is why the recorded Wa count was so low.
+
+**Placement.** Their own Kontur hexes (the layer had left them out by name, `NO_TABLE` in
+`sources/mm_geo.py`); `python sources/mm_wa.py --build` appends them to `mm_hexes.gpkg` and is
+idempotent. `sources/mm_geo.py` was not edited: re-running it alone would drop the five units again,
+so run `mm_wa.py --build` after it.
+
+**Calls someone might reverse:** 2014 figures not grown; one mix for all four Wa townships; the
+Wa and Mongla non-Wa shares. **Room for improvement:** the 2024 census township language table if
+DOP publishes it, MIMU's Wa SAD baseline, a language survey of the Wa State.

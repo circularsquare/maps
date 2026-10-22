@@ -6,7 +6,7 @@
 //!   cargo run --release --features demand --bin calib -- --net data/work/realnet/nyc_real.json
 //!       --out run.json [--pack data/packs/nyc.json] [--rounds 3] [--areas cell_area.u8]
 //!       [--params p.json] [--set name=value,..] [--fares 1.5,0.1 | --no-fares] [--no-everyday]
-//!       [--info-only]
+//!       [--info-only] [--cells] [--exact]
 //!
 //! The pack defaults to the network's `pack` under `TW_ROOT` (default the crate's parent; a
 //! binary built from a copy of sim/ points it at the main tree). Parameters: `--params` a JSON object of
@@ -18,6 +18,8 @@
 //! in 6-10; per line the day's boardings and changes between two trains of the same line; per
 //! operator (the lines' `operator`) trips using it, boardings less changes within it (T-171); per
 //! home area the commutes' rail trips, walks and all trips; totals by layer; milliseconds by stage.
+//! `--cells` adds the day's riders over each route node's segment and rail trips by home cell
+//! (commutes, and everyday legs from home); `--exact` leaves every figure unrounded.
 
 use serde_json::{json, Map, Value};
 use std::collections::BTreeMap;
@@ -34,6 +36,9 @@ fn arr_u32(v: &Value, k: &str) -> Vec<u32> {
     v[k].as_array().unwrap_or_else(|| panic!("network: no {k}")).iter().map(|x| x.as_u64().unwrap() as u32).collect()
 }
 fn r1(v: &[f64]) -> Vec<f64> {
+    if std::env::args().any(|a| a == "--exact") {
+        return v.to_vec();
+    }
     v.iter().map(|&x| (x * 10.0).round() / 10.0).collect()
 }
 fn add(acc: &mut Vec<f64>, v: &[f32]) {
@@ -155,6 +160,7 @@ fn main() {
     let mut kinds: Vec<f64> = vec![];
     let mut walks_all: Vec<f64> = vec![];
     let mut periods = vec![];
+    let mut home_rail: Vec<f64> = vec![];
     for q in 0..PERIODS {
         api.solve(q);
         if let Some(e) = ev.as_mut() {
@@ -208,6 +214,9 @@ fn main() {
             add(&mut ent_e, &e.entries(q));
             add(&mut board, &e.board(q));
             add(&mut seg_all, &e.seg(q));
+        }
+        if has("--cells") {
+            add(&mut home_rail, &api.rail_by_cell(q));
         }
         if q == 0 {
             add(&mut ent_am, &api.entries(q));
@@ -294,6 +303,11 @@ fn main() {
         "areas": {"rail": r1(&area_rail), "trips": r1(&area_trips), "walk": r1(&area_walk)},
         "periods": periods,
     });
+    let mut out = out;
+    if has("--cells") {
+        let ev_rail: Vec<f64> = ev.as_ref().map(|e| e.cell_modes()[..home_rail.len()].iter().map(|&v| v as f64).collect()).unwrap_or_default();
+        out["cells"] = json!({"seg": r1(&seg_all), "commute_home_rail": r1(&home_rail), "everyday_home_rail": r1(&ev_rail)});
+    }
     std::fs::write(&out_path, serde_json::to_string(&out).unwrap()).unwrap();
     eprintln!("-> {out_path}");
 }

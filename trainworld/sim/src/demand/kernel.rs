@@ -532,7 +532,7 @@ impl Params {
     /// any cordon charge and the ownership cost), what a paid space costs on top, and the share
     /// who park free.
     pub fn park_parts(&self, z: &Zones, j: usize) -> (f32, f32, f32) {
-        let land = (z.ncell[j].max(1) as f32 * CELL_KM2).min((z.zone_m / 1000.0).powi(2));
+        let land = (z.ncell[j].max(1) as f32 * CELL_KM2).min(z.square_km2(j));
         let d = z.jobs[j] as f32 / land;
         let paid = if d > self.park_paid_d0 { (self.park_paid_min * (d / self.park_paid_d0).ln()).min(self.park_paid_cap_min) } else { 0.0 };
         let fixed = self.park_min + self.car_own_min() + self.cordon.as_ref().and_then(|c| c.get(j)).map_or(0.0, |&c| c);
@@ -704,12 +704,87 @@ pub struct Zones {
     pub jobs: Vec<f64>,
     /// Resolution 9 cells in each zone (its land, at `CELL_KM2` a cell; `res9_cells`).
     pub ncell: Vec<u32>,
+    /// T-852: each zone's side in squares, 1 or 2 (a 2x2 block, `gx`, `gy` its lower-left
+    /// square, in one region); empty: every zone one square.
+    pub size: Vec<u8>,
 }
 
 /// Mean area of an H3 resolution 9 cell, km².
 pub const CELL_KM2: f32 = 0.1053;
 
 impl Zones {
+    /// Whether the pack has blocks (T-852).
+    #[inline]
+    pub fn mixed(&self) -> bool {
+        !self.size.is_empty()
+    }
+    /// Whether zone i is a 2x2 block.
+    #[inline]
+    pub fn big(&self, i: usize) -> bool {
+        self.size.get(i).is_some_and(|&s| s == 2)
+    }
+    /// Zone i's side in squares.
+    #[inline]
+    pub fn side(&self, i: usize) -> i32 {
+        1 + self.big(i) as i32
+    }
+    /// Zone i's centre in half squares from the grid's corner.
+    #[inline]
+    pub fn hx(&self, i: usize) -> i32 {
+        2 * self.gx[i] + self.side(i)
+    }
+    #[inline]
+    pub fn hy(&self, i: usize) -> i32 {
+        2 * self.gy[i] + self.side(i)
+    }
+    /// Squared metres between the centres of zones i and j (for one-square zones exactly the
+    /// squares' offset squared x `zone_m`²).
+    #[inline]
+    pub fn d2_m(&self, i: usize, j: usize) -> f32 {
+        let (fx, fy) = ((self.hx(j) - self.hx(i)) as f32 * 0.5, (self.hy(j) - self.hy(i)) as f32 * 0.5);
+        (fx * fx + fy * fy) * self.zone_m * self.zone_m
+    }
+    /// Zone i's whole square in km², the cap on its land.
+    #[inline]
+    pub fn square_km2(&self, i: usize) -> f32 {
+        (self.side(i) as f32 * self.zone_m / 1000.0).powi(2)
+    }
+    /// Every zone with a square within `r` squares (each way) of one of zone i's, once, in the
+    /// order of their lower-left squares (`by_square`'s index `sq`).
+    #[inline]
+    pub fn near(&self, sq: &(Vec<u32>, Vec<u32>), i: usize, r: i32, mut f: impl FnMut(usize)) {
+        let (off, at) = sq;
+        let (m, e) = (self.mixed() as i32, self.side(i) - 1);
+        for gx in (self.gx[i] - r - m).max(0)..=(self.gx[i] + e + r).min(self.w - 1) {
+            for gy in (self.gy[i] - r - m).max(0)..=(self.gy[i] + e + r).min(self.h - 1) {
+                let s = (gx * self.h + gy) as usize;
+                for &j in &at[off[s] as usize..off[s + 1] as usize] {
+                    let j = j as usize;
+                    if m == 1 {
+                        let ej = self.side(j) - 1;
+                        let gap = |a: i32, b: i32| (b - a - e).max(a - b - ej).max(0);
+                        if gap(self.gx[i], gx) > r || gap(self.gy[i], gy) > r {
+                            continue;
+                        }
+                    }
+                    f(j);
+                }
+            }
+        }
+    }
+    /// The zone holding square (gx, gy) (`by_square`'s index `sq`): the first one at that square,
+    /// else a block covering it.
+    pub fn zone_at(&self, sq: &(Vec<u32>, Vec<u32>), gx: i32, gy: i32) -> Option<usize> {
+        let (off, at) = sq;
+        let first = |gx: i32, gy: i32, block: bool| {
+            if gx < 0 || gy < 0 || gx >= self.w || gy >= self.h {
+                return None;
+            }
+            let s = (gx * self.h + gy) as usize;
+            at[off[s] as usize..off[s + 1] as usize].iter().map(|&j| j as usize).find(|&j| !block || self.big(j))
+        };
+        first(gx, gy, false).or_else(|| if self.mixed() { first(gx - 1, gy, true).or_else(|| first(gx, gy - 1, true)).or_else(|| first(gx - 1, gy - 1, true)) } else { None })
+    }
     /// Homes and jobs per km² of land, per zone (the drive's local street speed).
     pub fn density(&self) -> Vec<f32> {
         (0..self.n).map(|i| ((self.pop[i] + self.jobs[i]) / (self.ncell[i].max(1) as f64 * CELL_KM2 as f64)) as f32).collect()
@@ -721,11 +796,12 @@ impl Zones {
         for (c, &zi) in self.cell_zone.iter().enumerate() {
             p[zi as usize] += pop.get(c).copied().unwrap_or(0.0) as f64;
         }
-        let d: Vec<f32> = (0..self.n).map(|i| (p[i] / (self.ncell[i].max(1) as f32 * CELL_KM2).min((self.zone_m / 1000.0).powi(2)) as f64) as f32).collect();
+        let d: Vec<f32> = (0..self.n).map(|i| (p[i] / (self.ncell[i].max(1) as f32 * CELL_KM2).min(self.square_km2(i)) as f64) as f32).collect();
         self.cell_zone.iter().map(|&zi| d[zi as usize]).collect()
     }
     /// The zones of each grid square, CSR by square index gx * h + gy (usually one; two or more
-    /// where a region border cuts the square).
+    /// where a region border cuts the square); a block under its lower-left square only
+    /// (`zone_at` finds it from the others).
     pub fn by_square(&self) -> (Vec<u32>, Vec<u32>) {
         let ns = (self.w * self.h) as usize;
         let mut off = vec![0u32; ns + 1];
@@ -798,7 +874,7 @@ pub fn cordon_by_zone(city: &City, z: &Zones, origin: (f64, f64)) -> Option<Vec<
 pub fn build_zones(city: &City, zone_m: f32) -> Zones {
     if city.len() == 0 {
         // the extent folds below would be infinite and w * h overflow (T-449)
-        return Zones { zone_m, n: 0, cell_zone: vec![], gx: vec![], gy: vec![], region: vec![], w: 0, h: 0, x0: 0., y0: 0., pop: vec![], jobs: vec![], ncell: vec![] };
+        return Zones { zone_m, n: 0, cell_zone: vec![], gx: vec![], gy: vec![], region: vec![], w: 0, h: 0, x0: 0., y0: 0., pop: vec![], jobs: vec![], ncell: vec![], size: vec![] };
     }
     let minx = city.x.iter().cloned().fold(f32::INFINITY, f32::min);
     let miny = city.y.iter().cloned().fold(f32::INFINITY, f32::min);
@@ -808,7 +884,7 @@ pub fn build_zones(city: &City, zone_m: f32) -> Zones {
     let h = ((maxy - miny) / zone_m) as i32 + 1;
     let nreg = city.region.iter().copied().max().map_or(1, |r| r as usize + 1);
     let mut grid = vec![NONE; (w * h) as usize * nreg];
-    let mut z = Zones { zone_m, n: 0, cell_zone: vec![0; city.len()], gx: vec![], gy: vec![], region: vec![], w, h, x0: minx, y0: miny, pop: vec![], jobs: vec![], ncell: vec![] };
+    let mut z = Zones { zone_m, n: 0, cell_zone: vec![0; city.len()], gx: vec![], gy: vec![], region: vec![], w, h, x0: minx, y0: miny, pop: vec![], jobs: vec![], ncell: vec![], size: vec![] };
     for c in 0..city.len() {
         let gx = ((city.x[c] - minx) / zone_m) as i32;
         let gy = ((city.y[c] - miny) / zone_m) as i32;
@@ -831,6 +907,58 @@ pub fn build_zones(city: &City, zone_m: f32) -> Zones {
         z.jobs[zi] += city.jobs[c] as f64;
     }
     z
+}
+
+/// T-852: one-square zones `z` with each 2x2 block of squares (aligned to the grid, even `gx`
+/// and `gy` at its lower-left) as one zone where its zones of one region are at least two and
+/// each makes under `under` trip ends a weekday (`ends`, per zone). Zone ids in order of each
+/// zone's first cell, as `build_zones`; the grid grows to an even size so every block is in it.
+pub fn coarsen(z: &Zones, ends: &[f64], under: f64) -> Zones {
+    assert!(!z.mixed() && ends.len() == z.n);
+    let key = |i: usize| ((z.gx[i] / 2) as u64) << 40 | ((z.gy[i] / 2) as u64) << 8 | z.region[i] as u64;
+    let mut blocks: HashMap<u64, (u32, bool)> = HashMap::new();
+    for i in 0..z.n {
+        let e = blocks.entry(key(i)).or_insert((0, true));
+        e.0 += 1;
+        e.1 &= ends[i] < under;
+    }
+    let coarse = |i: usize| blocks[&key(i)].0 >= 2 && blocks[&key(i)].1;
+    if !(0..z.n).any(coarse) {
+        return z.clone();
+    }
+    let mut out = Zones { zone_m: z.zone_m, n: 0, cell_zone: vec![0; z.cell_zone.len()], gx: vec![], gy: vec![], region: vec![], w: z.w + z.w % 2, h: z.h + z.h % 2, x0: z.x0, y0: z.y0, pop: vec![], jobs: vec![], ncell: vec![], size: vec![] };
+    let mut new_of = vec![NONE; z.n];
+    let mut block_id: HashMap<u64, u32> = HashMap::new();
+    for c in 0..z.cell_zone.len() {
+        let i = z.cell_zone[c] as usize;
+        if new_of[i] == NONE {
+            let big = coarse(i);
+            let id = if big { block_id.get(&key(i)).copied() } else { None };
+            new_of[i] = id.unwrap_or_else(|| {
+                out.gx.push(if big { z.gx[i] & !1 } else { z.gx[i] });
+                out.gy.push(if big { z.gy[i] & !1 } else { z.gy[i] });
+                out.region.push(z.region[i]);
+                out.size.push(1 + big as u8);
+                out.n += 1;
+                if big {
+                    block_id.insert(key(i), out.n as u32 - 1);
+                }
+                out.n as u32 - 1
+            });
+        }
+        out.cell_zone[c] = new_of[i];
+    }
+    out.pop = vec![0.0; out.n];
+    out.jobs = vec![0.0; out.n];
+    out.ncell = vec![0; out.n];
+    for i in 0..z.n {
+        if let Some(&k) = new_of.get(i).filter(|&&k| k != NONE) {
+            out.pop[k as usize] += z.pop[i];
+            out.jobs[k as usize] += z.jobs[i];
+            out.ncell[k as usize] += z.ncell[i];
+        }
+    }
+    out
 }
 
 #[derive(Clone)]
@@ -861,6 +989,8 @@ pub struct Gravity {
     pub th: i32,
     pub offx: i32,
     pub offy: i32,
+    /// A block's key shift (T-852, `table_layout`); 0 without blocks.
+    pub kb: i32,
     pub iters: usize,
     pub max_err: f64,
     pub mean_km: f64,
@@ -871,11 +1001,11 @@ impl Gravity {
     /// Index offset to add to `key(J)` for origin zone I.
     #[inline]
     pub fn base(&self, z: &Zones, i: usize) -> i32 {
-        (self.offx - z.gx[i]) * self.th + self.offy - z.gy[i]
+        (self.offx - z.gx[i]) * self.th + self.offy - z.gy[i] - 2 * self.kb * z.big(i) as i32
     }
     #[inline]
     pub fn key(&self, z: &Zones, j: usize) -> i32 {
-        z.gx[j] * self.th + z.gy[j]
+        z.gx[j] * self.th + z.gy[j] + self.kb * z.big(j) as i32
     }
     /// The region factor between zones i and j: 1 in one region, `border` across.
     #[inline]
@@ -889,7 +1019,7 @@ impl Gravity {
     /// Fill `wctab` and `wdtab` from the zone-centre distances (the same ones `decay_table` uses);
     /// the walks between cells go (`set_walk_fine` after).
     pub fn set_walk(&mut self, z: &Zones, p: &Params) {
-        let (_, dtab) = decay_table(z.w, z.h, z.zone_m, 1.0, 0.0);
+        let (_, dtab) = decay_tables(z, 1.0, 0.0);
         self.wcost = p.walk_cost();
         self.wctab = dtab.iter().map(|&d| self.wcost.at(d)).collect();
         self.wroutes = p.routes.clone().filter(|r| r.walk_window() > 0);
@@ -910,9 +1040,8 @@ impl Gravity {
             return;
         }
         let (home, work) = walk_points(city, z, ns);
-        let (sq_off, at) = z.by_square();
+        let sq = z.by_square();
         let w2 = 1.0 / (ns * ns) as f32;
-        let r = WALK_FINE_R;
         let mut row: Vec<(u32, f32, f32)> = vec![];
         let mut c = vec![0f32; ns * ns];
         for i in 0..z.n {
@@ -922,40 +1051,35 @@ impl Gravity {
                 continue;
             }
             row.clear();
-            for gx in (z.gx[i] - r).max(0)..=(z.gx[i] + r).min(z.w - 1) {
-                for gy in (z.gy[i] - r).max(0)..=(z.gy[i] + r).min(z.h - 1) {
-                    let s = (gx * z.h + gy) as usize;
-                    for &j in &at[sq_off[s] as usize..sq_off[s + 1] as usize] {
-                        let wj = &work[j as usize * ns..(j as usize + 1) * ns];
-                        if wj[0] == NONE {
-                            continue;
-                        }
-                        let (ju, k) = (j as usize, (self.base(z, i) + self.key(z, j as usize)) as usize);
-                        for (n, &a) in hi.iter().enumerate() {
-                            for (m, &b) in wj.iter().enumerate() {
-                                let f = self.walk_factor_cells(z, a as usize, b as usize) * 0.001;
-                                c[n * ns + m] = self.wcost.at(cell_walk_m(city, a, b) * f);
-                            }
-                        }
-                        let (road, paid, free) = nr.road(self, p, i, ju, k);
-                        let bt = p.mode_beta(road);
-                        let (mut m0, mut sw) = (0f32, 0f32);
-                        for &x in &c {
-                            sw += p.walk_no_rail(road, paid, free, x);
-                            if x < NO_WALK {
-                                m0 += 1.0 / (1.0 + fast_exp(-(bt * (road - x) + p.asc_walk())));
-                            }
-                        }
-                        let cw = if m0 > 0.0 {
-                            let m0 = (m0 * w2).clamp(1e-7, 1.0 - 1e-6);
-                            road - ((m0 / (1.0 - m0)).ln() - p.asc_walk()) / bt
-                        } else {
-                            NO_WALK
-                        };
-                        row.push((j, cw, sw * w2));
+            z.near(&sq, i, WALK_FINE_R, |ju| {
+                let wj = &work[ju * ns..(ju + 1) * ns];
+                if wj[0] == NONE {
+                    return;
+                }
+                let k = (self.base(z, i) + self.key(z, ju)) as usize;
+                for (n, &a) in hi.iter().enumerate() {
+                    for (m, &b) in wj.iter().enumerate() {
+                        let f = self.walk_factor_cells(z, a as usize, b as usize) * 0.001;
+                        c[n * ns + m] = self.wcost.at(cell_walk_m(city, a, b) * f);
                     }
                 }
-            }
+                let (road, paid, free) = nr.road(self, p, i, ju, k);
+                let bt = p.mode_beta(road);
+                let (mut m0, mut sw) = (0f32, 0f32);
+                for &x in &c {
+                    sw += p.walk_no_rail(road, paid, free, x);
+                    if x < NO_WALK {
+                        m0 += 1.0 / (1.0 + fast_exp(-(bt * (road - x) + p.asc_walk())));
+                    }
+                }
+                let cw = if m0 > 0.0 {
+                    let m0 = (m0 * w2).clamp(1e-7, 1.0 - 1e-6);
+                    road - ((m0 / (1.0 - m0)).ln() - p.asc_walk()) / bt
+                } else {
+                    NO_WALK
+                };
+                row.push((ju as u32, cw, sw * w2));
+            });
             row.sort_unstable_by_key(|x| x.0);
             self.wf_j.extend(row.iter().map(|x| x.0));
             self.wf_c.extend(row.iter().map(|x| x.1));
@@ -970,12 +1094,29 @@ impl Gravity {
         if self.wf_off.is_empty() {
             return None;
         }
-        let (dx, dy) = (k as i32 / self.th - self.offx, k as i32 % self.th - self.offy);
-        if dx.abs() > WALK_FINE_R || dy.abs() > WALK_FINE_R {
+        let (dx, dy) = self.square_offset(k);
+        // a block's pairs reach a square further (`Zones::near`)
+        let r = WALK_FINE_R + (self.kb != 0) as i32;
+        if dx.abs() > r || dy.abs() > r {
             return None;
         }
         let a = self.wf_off[i] as usize;
         self.wf_j[a..self.wf_off[i + 1] as usize].binary_search(&(j as u32)).ok().map(|n| a + n)
+    }
+
+    /// The offset in squares of table index `k`'s pair (with blocks, T-852, within a square of
+    /// their centres' offset).
+    #[inline]
+    fn square_offset(&self, k: usize) -> (i32, i32) {
+        let (r, y) = (k as i32 / self.th - self.offx, k as i32 % self.th);
+        let h = self.kb / 2;
+        if self.kb == 0 || y < 2 * h - 1 {
+            (r, y - self.offy)
+        } else if y < 4 * h - 1 {
+            (r, y - 3 * h + 1)
+        } else {
+            (r + 1, y - 5 * h + 2)
+        }
     }
 
     /// The walk's factor round water between zones i and j (T-275), at least 1.
@@ -1026,31 +1167,25 @@ impl Gravity {
         // the walk factor round water is at most this (`routes`' byte tables), so past this many
         // squares no walk is offered
         let r = (WALK_REACH_KM * 1000.0 / z.zone_m).ceil() as i32 + 1;
-        let (off, at) = z.by_square();
+        let sq = z.by_square();
         for i in 0..z.n {
             if self.row[i] == 0.0 {
                 continue;
             }
             let base = self.base(z, i);
-            for gx in (z.gx[i] - r).max(0)..=(z.gx[i] + r).min(z.w - 1) {
-                for gy in (z.gy[i] - r).max(0)..=(z.gy[i] + r).min(z.h - 1) {
-                    let s = (gx * z.h + gy) as usize;
-                    let k = (base + gx * self.th + gy) as usize;
-                    if self.wctab[k] >= NO_WALK {
-                        continue;
-                    }
-                    for &j in &at[off[s] as usize..off[s + 1] as usize] {
-                        let j = j as usize;
-                        let w = nr.split(self, p, i, j, k);
-                        if w <= 0.0 {
-                            continue;
-                        }
-                        let t = self.row[i] * self.col[j] * (self.ftab[k] * self.k(z, i, j)) as f64;
-                        wh[i] += t * w as f64;
-                        ww[j] += t * w as f64;
-                    }
+            z.near(&sq, i, r, |j| {
+                let k = (base + self.key(z, j)) as usize;
+                if self.wctab[k] >= NO_WALK {
+                    return;
                 }
-            }
+                let w = nr.split(self, p, i, j, k);
+                if w <= 0.0 {
+                    return;
+                }
+                let t = self.row[i] * self.col[j] * (self.ftab[k] * self.k(z, i, j)) as f64;
+                wh[i] += t * w as f64;
+                ww[j] += t * w as f64;
+            });
         }
         [wh, ww]
     }
@@ -1131,6 +1266,120 @@ pub fn decay_table(w: i32, h: i32, zone_m: f32, decay_km: f32, decay_pow: f32) -
     (ftab, dtab)
 }
 
+/// The pair tables' layout for zones `z` (`Gravity`'s `th`, `offx`, `offy`, `kb`), and its
+/// rows. One-square zones: `decay_table`'s. With blocks (T-852) each row holds three runs,
+/// one per kind of pair: two one-square zones by their squares' offset, a square and a block
+/// by the half-square offset of their centres, two blocks by their blocks' offset; a block's key
+/// is `kb` on and its base `2 kb` off, which lands each pair in its run (`Gravity::base`).
+pub fn table_layout(z: &Zones) -> (i32, i32, i32, i32, i32) {
+    let (w, h) = (z.w.max(1), z.h.max(1));
+    if z.mixed() {
+        (6 * h - 1, w - 1, h - 1, 2 * h, 2 * w - 1)
+    } else {
+        (2 * h - 1, w - 1, h - 1, 0, 2 * w - 1)
+    }
+}
+
+/// `Gravity::base` and `key` alone, for other tables of `table_layout`'s.
+#[derive(Clone, Copy, Debug)]
+pub struct PairKey {
+    th: i32,
+    offx: i32,
+    offy: i32,
+    kb: i32,
+}
+
+impl PairKey {
+    pub fn of(z: &Zones) -> PairKey {
+        let (th, offx, offy, kb, _) = table_layout(z);
+        PairKey { th, offx, offy, kb }
+    }
+    #[inline]
+    pub fn base(&self, z: &Zones, i: usize) -> i32 {
+        (self.offx - z.gx[i]) * self.th + self.offy - z.gy[i] - 2 * self.kb * z.big(i) as i32
+    }
+    #[inline]
+    pub fn key(&self, z: &Zones, j: usize) -> i32 {
+        z.gx[j] * self.th + z.gy[j] + self.kb * z.big(j) as i32
+    }
+}
+
+/// Each entry of a mixed layout (`table_layout`): `f` gets its index, the centres' offset in
+/// squares and its run (0 squares, 1 a square and a block, 2 blocks).
+fn mixed_entries(z: &Zones, mut f: impl FnMut(usize, f32, f32, u8)) {
+    let (th, offx, offy, _, tw) = table_layout(z);
+    let h = z.h.max(1);
+    for r in 0..tw {
+        let dx = r - offx;
+        for y in 0..th {
+            let k = (r * th + y) as usize;
+            if y < 2 * h - 1 {
+                f(k, dx as f32, (y - offy) as f32, 0);
+            } else if y < 4 * h - 1 {
+                f(k, dx as f32 + 0.5, (y - 3 * h + 1) as f32 + 0.5, 1);
+            } else {
+                f(k, (dx + 1) as f32, (y - 5 * h + 2) as f32, 2);
+            }
+        }
+    }
+}
+
+/// A pair table over zones `z` of `decay(d_km)`: by `decay_table`'s rule for one-square zones;
+/// with blocks (T-852), a pair with a block takes the mean of the decay between its squares (each
+/// square's centre, one square's own 0.52 of a side), so a block draws as its four squares would
+/// with its homes and jobs spread evenly over them.
+pub fn pair_decay(z: &Zones, decay: impl Fn(f32) -> f32) -> Vec<f32> {
+    let zk = z.zone_m / 1000.0;
+    let (th, _, _, _, tw) = table_layout(z);
+    // by absolute square offset, one more each way than the grid for a block's far squares
+    let (qw, qh) = (z.w.max(1) as usize + 2, z.h.max(1) as usize + 2);
+    let mut q = vec![0f32; qw * qh];
+    for ax in 0..qw {
+        for ay in 0..qh {
+            let d = if ax == 0 && ay == 0 { 0.52 * zk } else { zk * ((ax * ax + ay * ay) as f32).sqrt() };
+            q[ax * qh + ay] = decay(d);
+        }
+    }
+    let fq = |dx: i32, dy: i32| q[(dx.unsigned_abs() as usize).min(qw - 1) * qh + (dy.unsigned_abs() as usize).min(qh - 1)];
+    let mut out = vec![0f32; (tw * th) as usize];
+    mixed_entries(z, |k, dx, dy, kind| {
+        out[k] = match kind {
+            0 => fq(dx as i32, dy as i32),
+            1 => {
+                let (x, y) = ((dx - 0.5) as i32, (dy - 0.5) as i32);
+                0.25 * (fq(x, y) + fq(x + 1, y) + fq(x, y + 1) + fq(x + 1, y + 1))
+            }
+            _ => {
+                let (x, y) = (dx as i32, dy as i32);
+                let wt = [0.25f32, 0.5, 0.25];
+                let mut s = 0.0;
+                for (a, wa) in wt.iter().enumerate() {
+                    for (b, wb) in wt.iter().enumerate() {
+                        s += wa * wb * fq(x + a as i32 - 1, y + b as i32 - 1);
+                    }
+                }
+                s
+            }
+        };
+    });
+    out
+}
+
+/// The pair tables of `decay_table` for zones `z`: decay and centre distance (km). With blocks
+/// (T-852) the decay is `pair_decay`'s and a block's own pair is 0.52 of its side apart.
+pub fn decay_tables(z: &Zones, decay_km: f32, decay_pow: f32) -> (Vec<f32>, Vec<f32>) {
+    if !z.mixed() {
+        return decay_table(z.w, z.h, z.zone_m, decay_km, decay_pow);
+    }
+    let ftab = pair_decay(z, |d| (-d / decay_km).exp() * if decay_pow != 0.0 { d.powf(-decay_pow) } else { 1.0 });
+    let zk = z.zone_m / 1000.0;
+    let mut dtab = vec![0f32; ftab.len()];
+    mixed_entries(z, |k, dx, dy, kind| {
+        dtab[k] = if dx == 0.0 && dy == 0.0 { 0.52 * zk * if kind == 2 { 2.0 } else { 1.0 } } else { zk * (dx * dx + dy * dy).sqrt() };
+    });
+    (ftab, dtab)
+}
+
 /// Zones and gravity for a city: from the pack when it ships them for these parameters (city
 /// open, a few ms), otherwise solved here (seconds). Returns whether the pack's were used.
 pub fn city_gravity(city: &City, p: &Params) -> (Zones, Gravity, bool) {
@@ -1164,6 +1413,7 @@ pub fn zones_from_pack(city: &City, pg: &PackGravity) -> Zones {
         pop: vec![0.0; n],
         jobs: vec![0.0; n],
         ncell: vec![0; n],
+        size: if pg.size.len() == n && pg.size.iter().any(|&s| s == 2) { pg.size.clone() } else { vec![] },
     };
     for c in 0..city.len() {
         let zi = z.cell_zone[c] as usize;
@@ -1187,7 +1437,8 @@ fn res9_cells(city: &City, c: usize) -> u32 {
 }
 
 pub fn gravity_from_pack(z: &Zones, pg: &PackGravity) -> Gravity {
-    let (ftab, _) = decay_table(z.w, z.h, z.zone_m, pg.decay_km, pg.decay_pow);
+    let (ftab, _) = decay_tables(z, pg.decay_km, pg.decay_pow);
+    let (th, offx, offy, kb, _) = table_layout(z);
     Gravity {
         row: pg.row.clone(),
         col: pg.col.clone(),
@@ -1200,9 +1451,10 @@ pub fn gravity_from_pack(z: &Zones, pg: &PackGravity) -> Gravity {
         wf_off: vec![],
         wf_j: vec![],
         wf_c: vec![], wf_s: vec![],
-        th: 2 * z.h - 1,
-        offx: z.w - 1,
-        offy: z.h - 1,
+        th,
+        offx,
+        offy,
+        kb,
         iters: pg.iters,
         max_err: pg.max_err,
         mean_km: pg.mean_km,
@@ -1237,6 +1489,7 @@ pub fn to_pack_gravity(z: &Zones, g: &Gravity, p: &Params) -> PackGravity {
         work: vec![],
         joint: None,
         cells9: vec![],
+        size: z.size.clone(),
     }
 }
 
@@ -1244,20 +1497,18 @@ pub fn to_pack_gravity(z: &Zones, g: &Gravity, p: &Params) -> PackGravity {
 /// The decay depends on zone-centre distance only, so f is a small table by grid offset; it is
 /// multiplied by `p.border_factor` between zones of different regions (T-162).
 pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
-    let (w, h) = (z.w, z.h);
-    let th = 2 * h - 1;
-    let (offx, offy) = (w - 1, h - 1);
-    let (ftab, dtab) = decay_table(w, h, z.zone_m, p.decay_km, p.decay_pow);
+    let (th, offx, offy, kb, _) = table_layout(z);
+    let (ftab, dtab) = decay_tables(z, p.decay_km, p.decay_pow);
     let tp: f64 = z.pop.iter().sum();
     let tj: f64 = z.jobs.iter().sum();
     let o: Vec<f64> = z.pop.iter().map(|&v| v * tj / tp).collect();
     let rows: Vec<usize> = (0..z.n).filter(|&i| o[i] > 0.0).collect();
     let cols: Vec<usize> = (0..z.n).filter(|&j| z.jobs[j] > 0.0).collect();
-    let ckey: Vec<i32> = cols.iter().map(|&j| z.gx[j] * th + z.gy[j]).collect();
+    let ckey: Vec<i32> = cols.iter().map(|&j| z.gx[j] * th + z.gy[j] + kb * z.big(j) as i32).collect();
     let creg: Vec<u8> = cols.iter().map(|&j| z.region[j]).collect();
     // the factor by "regions differ" (index 0 same, 1 different)
     let kf = [1.0f64, p.border_factor as f64];
-    let mut g = Gravity { row: vec![0.0; z.n], col: z.jobs.clone(), border: p.border_factor, ftab, wctab: vec![], wdtab: vec![], wroutes: None, wcost: WalkCost::default(), wf_off: vec![], wf_j: vec![], wf_c: vec![], wf_s: vec![], th, offx, offy, iters: 0, max_err: 0.0, mean_km: 0.0, total: 0.0 };
+    let mut g = Gravity { row: vec![0.0; z.n], col: z.jobs.clone(), border: p.border_factor, ftab, wctab: vec![], wdtab: vec![], wroutes: None, wcost: WalkCost::default(), wf_off: vec![], wf_j: vec![], wf_c: vec![], wf_s: vec![], th, offx, offy, kb, iters: 0, max_err: 0.0, mean_km: 0.0, total: 0.0 };
     let mut colc: Vec<f64> = cols.iter().map(|&j| g.col[j]).collect();
     let mut acc = vec![0f64; cols.len()];
     for it in 0..max_iters {
@@ -1558,8 +1809,7 @@ impl Subzones {
 /// Whether a commute between zones `i` and `j` is long enough to be offered the ride (T-371).
 #[inline]
 pub fn ride_offered(z: &Zones, p: &Params, i: usize, j: usize) -> bool {
-    let (dx, dy) = ((z.gx[i] - z.gx[j]) as f32, (z.gy[i] - z.gy[j]) as f32);
-    (dx * dx + dy * dy) * z.zone_m * z.zone_m >= (p.ride_min_km * 1000.0).powi(2)
+    z.d2_m(i, j) >= (p.ride_min_km * 1000.0).powi(2)
 }
 
 /// A ride entry (T-371): station, perceived minutes, straight metres, real drive minutes.
@@ -1598,16 +1848,12 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
         End::Far => 0.0,
         End::Home => p.car_own_min() + road_km * p.car_own_km_min(),
     };
-    let (sq_off, sq) = zones.by_square();
+    let sq = zones.by_square();
     let st_zone: Vec<Option<usize>> = (0..net.n_stations())
         .map(|s| {
             let gx = ((net.st_x[s] - zones.x0) / zones.zone_m).floor() as i32;
             let gy = ((net.st_y[s] - zones.y0) / zones.zone_m).floor() as i32;
-            if gx < 0 || gy < 0 || gx >= zones.w || gy >= zones.h {
-                return None;
-            }
-            let k = (gx * zones.h + gy) as usize;
-            (sq_off[k] < sq_off[k + 1]).then(|| sq[sq_off[k] as usize] as usize)
+            zones.zone_at(&sq, gx, gy)
         })
         .collect();
     let mut st_lines: Vec<Vec<u32>> = vec![vec![]; net.n_stations()];
@@ -3124,9 +3370,12 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
         dv: f32,
         q0: u32,
         q1: u32,
-        // its square and drive supercell, for the zone pair's factors without reading `z`
+        // its lower-left square, centre in half squares and drive supercell, for the zone
+        // pair's factors without reading `z`
         gx: i32,
         gy: i32,
+        hx: i32,
+        hy: i32,
         sup: u16,
     }
     let mut dz: Vec<DZone> = Vec::with_capacity(dzones.len());
@@ -3165,7 +3414,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             dd_sub.push(v as u32);
         }
         let q1 = dd.len() as u32;
-        dz.push(DZone { key: gr.key(z, j), reg: z.region[j], zid: j as u32, min: zmin(j), max: dd[q1 as usize - 1][1][2], dv: dvz, q0, q1, gx: z.gx[j], gy: z.gy[j], sup: p.routes.as_ref().map_or(0, |r| r.sup_of(j)) });
+        dz.push(DZone { key: gr.key(z, j), reg: z.region[j], zid: j as u32, min: zmin(j), max: dd[q1 as usize - 1][1][2], dv: dvz, q0, q1, gx: z.gx[j], gy: z.gy[j], hx: z.hx(j), hy: z.hy(j), sup: p.routes.as_ref().map_or(0, |r| r.sup_of(j)) });
     }
     // T-874: destination zones by block of `CHUNK_BLOCK` square, in zone order within one: the
     // order an origin zone's small pairs are dealt their chunks in, so an edit re-deals only the
@@ -3213,13 +3462,13 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
         // this zone's origins reaches, once for all of them
         let ri = z.region[i];
         let nzi = us.iter().map(|&u| reach(u as usize)).max().unwrap_or(0);
-        let (gxi, gyi) = (z.gx[i], z.gy[i]);
+        let (gxi, gyi, hxi, hyi) = (z.gx[i], z.gy[i], z.hx(i), z.hy(i));
         for ((o, zb), zj) in fz[..nzi].iter_mut().zip(fzb.iter_mut()).zip(&dz) {
             let k = (base + zj.key) as usize;
             let [f, w] = fw[k];
             // `ride_offered`
             let (dx, dy) = (zj.gx - gxi, zj.gy - gyi);
-            let (fx, fy) = (dx as f32, dy as f32);
+            let (fx, fy) = ((zj.hx - hxi) as f32 * 0.5, (zj.hy - hyi) as f32 * 0.5);
             let d2 = (fx * fx + fy * fy) * z.zone_m * z.zone_m;
             let long = (d2 >= ride_min2) as u32 as f32;
             *zb = p.band_of_d2(d2) as u8;
@@ -4259,7 +4508,7 @@ mod tests {
         let dens = [2000.0, 10000.0, 200000.0, 10000.0, 8000.0];
         let z = Zones {
             zone_m: 2000.0, n, cell_zone: vec![], gx: vec![0; n], gy: vec![0; n], region: vec![0; n], w: 1, h: 1, x0: 0.0, y0: 0.0,
-            pop: vec![0.0; n], jobs: (0..n).map(|j| dens[j] * km2[j]).collect(), ncell,
+            pop: vec![0.0; n], jobs: (0..n).map(|j| dens[j] * km2[j]).collect(), ncell, size: vec![],
         };
         let mut p = Params::default();
         let near = |a: f32, b: f32| (a - b).abs() < 0.05;
@@ -4294,7 +4543,7 @@ mod tests {
     fn car_ownership_adds_dollars_per_trip_and_km() {
         let z = Zones {
             zone_m: 2000.0, n: 1, cell_zone: vec![], gx: vec![0], gy: vec![0], region: vec![0], w: 1, h: 1, x0: 0.0, y0: 0.0,
-            pop: vec![0.0], jobs: vec![0.0], ncell: vec![38],
+            pop: vec![0.0], jobs: vec![0.0], ncell: vec![38], size: vec![],
         };
         let mut p = Params::default();
         p.set_extra("car_own_usd_trip", 0.0).unwrap();
@@ -4850,6 +5099,137 @@ mod tests {
         for (i, j) in [(0, 1), (3, z.n - 1), (z.n / 2, z.n / 3)] {
             assert!((gb.t(&zb, i, j) / gk.t(&z, i, j).max(1e-30) - 1.0).abs() < 1e-5 || gk.t(&z, i, j) < 1e-12);
         }
+    }
+
+    /// T-852: the synthetic city's inner 15 km, two regions (border at x = 300 m), with every
+    /// aligned block of zones whose centres are over 6 km out made one zone.
+    fn mixed_city() -> (crate::demand::pack::City, Zones, Zones) {
+        let full = synth::synth_city(1);
+        let keep: Vec<usize> = (0..full.len()).filter(|&c| full.x[c].hypot(full.y[c]) < 15_000.0).collect();
+        let city = crate::demand::pack::City {
+            name: "t".into(),
+            h3: keep.iter().map(|&c| full.h3[c]).collect(),
+            x: keep.iter().map(|&c| full.x[c]).collect(),
+            y: keep.iter().map(|&c| full.y[c]).collect(),
+            pop: keep.iter().map(|&c| full.pop[c]).collect(),
+            jobs: keep.iter().map(|&c| full.jobs[c]).collect(),
+            region: keep.iter().map(|&c| (full.x[c] > 300.0) as u8).collect(),
+            gravity: None,
+        };
+        let z0 = build_zones(&city, 2000.0);
+        let out = |i: usize| (z0.x0 + (z0.gx[i] as f32 + 0.5) * 2000.0).hypot(z0.y0 + (z0.gy[i] as f32 + 0.5) * 2000.0) > 6000.0;
+        let ends: Vec<f64> = (0..z0.n).map(|i| if out(i) { 10.0 } else { 1e6 }).collect();
+        let z = coarsen(&z0, &ends, 1000.0);
+        (city, z0, z)
+    }
+
+    /// T-852: zones of two sizes. Every pair's table entry is the mean of the decay between their
+    /// squares and its distance that of their centres; the gravity balances to the same trips as
+    /// the squares'; near pairs, a square's zone and the pack round trip hold.
+    #[test]
+    fn mixed_zones() {
+        let (mut city, z0, z) = mixed_city();
+        let blocks = z.size.iter().filter(|&&s| s == 2).count();
+        assert!(blocks > 20 && z.n < z0.n - blocks && z.w % 2 == 0, "{blocks} blocks, {} of {} zones", z.n, z0.n);
+        assert!((z.pop.iter().sum::<f64>() / z0.pop.iter().sum::<f64>() - 1.0).abs() < 1e-9);
+        for c in 0..city.len() {
+            let i = z.cell_zone[c] as usize;
+            let (gx, gy) = (((city.x[c] - z.x0) / 2000.0) as i32, ((city.y[c] - z.y0) / 2000.0) as i32);
+            assert!(gx - z.gx[i] < z.side(i) && gx >= z.gx[i] && gy - z.gy[i] < z.side(i) && gy >= z.gy[i] && z.region[i] == city.region[c]);
+        }
+        let p = Params::default();
+        let g = gravity(&z, &p, 300, 1e-7);
+        let g0 = gravity(&z0, &p, 300, 1e-7);
+        assert!((g.total / g0.total - 1.0).abs() < 1e-5 && (g.mean_km / g0.mean_km - 1.0).abs() < 0.04, "{} km against {}", g.mean_km, g0.mean_km);
+        let (_, dtab) = decay_tables(&z, 1.0, 0.0);
+        let f = |d: f32| (-d / p.decay_km).exp() * d.powf(-p.decay_pow);
+        let sq = |i: usize| -> Vec<(i32, i32)> {
+            let (s, gx, gy) = (z.side(i), z.gx[i], z.gy[i]);
+            (0..s).flat_map(|a| (0..s).map(move |b| (gx + a, gy + b))).collect()
+        };
+        for i in 0..z.n {
+            for j in 0..z.n {
+                let k = g.base(&z, i) + g.key(&z, j);
+                assert!(k >= 0 && (k as usize) < g.ftab.len());
+                let (si, sj) = (sq(i), sq(j));
+                let mean = si.iter().flat_map(|a| sj.iter().map(move |b| (a, b))).map(|(a, b)| {
+                    let d = if a == b { 1.04 } else { 2.0 * (((a.0 - b.0).pow(2) + (a.1 - b.1).pow(2)) as f32).sqrt() };
+                    f(d)
+                }).sum::<f32>() / (si.len() * sj.len()) as f32;
+                let got = g.ftab[k as usize];
+                assert!((got / mean - 1.0).abs() < 1e-5, "{i} {j}: {got} vs {mean}");
+                let d = (z.d2_m(i, j).sqrt() / 1000.0).max(if z.d2_m(i, j) == 0.0 { 1.04 * z.side(i) as f32 } else { 0.0 });
+                assert!((dtab[k as usize] - d).abs() < 1e-4, "{i} {j}: {} km vs {d}", dtab[k as usize]);
+            }
+            // both margins
+            let r: f64 = (0..z.n).map(|j| g.t(&z, i, j)).sum();
+            let c: f64 = (0..z.n).map(|j| g.t(&z, j, i)).sum();
+            assert!((c - z.jobs[i]).abs() <= 1e-4 * z.jobs[i] + 1e-6 && r >= 0.0, "column {i}");
+        }
+        // near pairs by squares, and the walk between cells for each of them
+        let mut gw = g.clone();
+        gw.set_walk(&z, &p);
+        gw.set_walk_fine(&city, &z, &p, &NoRail::new(&z, &p));
+        let byq = z.by_square();
+        for i in 0..z.n {
+            let mut got = vec![];
+            z.near(&byq, i, 2, |j| got.push(j));
+            let (si, mut want) = (sq(i), vec![]);
+            for j in 0..z.n {
+                if sq(j).iter().any(|b| si.iter().any(|a| (a.0 - b.0).abs() <= 2 && (a.1 - b.1).abs() <= 2)) {
+                    want.push(j);
+                }
+            }
+            got.sort();
+            assert_eq!(got, want, "near {i}");
+            let fine = &gw.wf_j[gw.wf_off[i] as usize..gw.wf_off[i + 1] as usize];
+            for &j in fine {
+                let k = (gw.base(&z, i) + gw.key(&z, j as usize)) as usize;
+                assert!(gw.fine_at(i, j as usize, k).is_some(), "fine {i} {j}");
+            }
+        }
+        // a square's zone (one region: the squares west of the border)
+        for c in (0..city.len()).filter(|&c| city.region[c] == 0) {
+            let (gx, gy) = (((city.x[c] - z.x0) / 2000.0) as i32, ((city.y[c] - z.y0) / 2000.0) as i32);
+            let at = z.zone_at(&byq, gx, gy).unwrap();
+            assert!(at == z.cell_zone[c] as usize || z.region[at] != 0);
+        }
+        // shipped and rebuilt
+        city.gravity = Some(to_pack_gravity(&z, &g, &p));
+        let (h, b) = crate::demand::pack::write(&city);
+        assert!(h.contains("\"zone_size\""));
+        let back = crate::demand::pack::parse(&h, &b).unwrap();
+        let (zb, gb, from_pack) = city_gravity(&back, &p);
+        assert!(from_pack && zb.size == z.size && zb.w == z.w);
+        for (i, j) in [(0, 1), (3, z.n - 1), (z.n / 2, z.n / 3), (z.n - 1, z.n - 1)] {
+            assert!((gb.t(&zb, i, j) / g.t(&z, i, j).max(1e-30) - 1.0).abs() < 1e-5 || g.t(&z, i, j) < 1e-12);
+        }
+    }
+
+    /// T-852: commutes on the synthetic network with the outer zones in blocks keep their rail
+    /// and their trips offered rail close to the squares'.
+    #[test]
+    fn mixed_zones_ride_like_squares() {
+        let (city, z0, z) = mixed_city();
+        let net = network::synth_network();
+        let p = Params::default();
+        let run = |z: &Zones| {
+            let mut gr = gravity(z, &p, 200, 1e-5);
+            gr.set_walk(z, &p);
+            let nr = NoRail::new(z, &p);
+            gr.set_walk_fine(&city, z, &p, &nr);
+            let acc = build_access(&city, &net, &p);
+            let sz = build_subzones(&city, z, &acc, &net, &p);
+            let g = build_graph(&net, &p);
+            let sk = skims(&g, &p);
+            let er = station_exp(&sk, &p);
+            let mo = mode_choice(z, &gr, &sz, &er, g.n_st, &p, &nr);
+            let walk: f64 = gr.no_rail_by_zone(z, &p, &nr)[0].iter().sum();
+            (mo.rail, mo.trips_access, walk)
+        };
+        let (r0, a0, w0) = run(&z0);
+        let (r, a, w) = run(&z);
+        assert!(r0 > 0.0 && (r / r0 - 1.0).abs() < 0.05 && (a / a0 - 1.0).abs() < 0.05 && (w / w0 - 1.0).abs() < 0.05, "rail {r} vs {r0}, offered {a} vs {a0}, walk {w} vs {w0}");
     }
 
     /// The ring search finds the same K nearest stations within the bound as a full scan.

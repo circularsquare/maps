@@ -199,3 +199,32 @@ Light review after the Gulf rule, 2026-10-03 (`fafd1067-rev11`): map shot fine; 
 match §8. Two wording fixes in `note_public`: "records religion by nationality" now "by region of
 origin" (Bahrain's census prints religion by nationality too), and "Its Buddhists are about ten
 times Pew's figure" (read as Pew's) now "The Buddhists drawn are".
+
+## 9. Kontur's false desert blocks lowered, 2026-10-19 (`eca0185b-rdbug`)
+
+languagedots found (`languagedots/sources/om.md` "Placement layer", 2026-10-07) that this layer
+puts Thumrayt's people 29% on the Fasad oil field and Hayma's 14% on one empty hex. **Confirmed
+against this layer: its hexes were identical to the ones languagedots read.** Counts are the
+register's per wilaya and do not move; §5's "Kontur's error moves dots only inside a wilaya" is
+exactly this.
+
+- **Why `kontur_cap.py` is not the home.** It finds blocks at Kontur's 46,200/km2 cap (hexes at
+  15,000/km2 or more around a hex at the cap). Fasad's top hex is 44,302/km2, under the cap, and
+  Hayma's hex is 13,825/km2, under the 15,000 that makes a block, so neither is a block to
+  it. The rule belongs in the layer's own builder.
+- **Rule** (languagedots', same numbers): every hex above 8,000/km2 (UTM 40N hex area) is lowered
+  to 8,000, except within 5 km of a GeoNames wilaya seat (PPLA, PPLA2, PPLC). Outside Al Mazyunah
+  town no real Omani hex reads above 7,712/km2 (Mutrah, Muscat), so 8,000 sits above every real
+  hex. Only Al Mazyunah town is spared: capping it would hand its weight to the villages Jajwal,
+  Shifya and Mitan, which Kontur inflates as much. `sources/om_grid.py` `lower_false_blocks` does
+  it as the last step and asserts which wilayat lose and keep hexes (Al Mazyunah, Thumrayt, Hayma;
+  Al Mazyunah spared) and that no hex elsewhere reads above 7,712.
+- **Layer**: `data/geo/om/om_hexes.gpkg` now has `unit`, `pop` (lowered), `kontur_pop` (Kontur's
+  own, unchanged). 31,249 hexes, same order and geometry; 20 hexes lowered, 96,151 Kontur people
+  (Al Mazyunah 15, Thumrayt 4, Hayma 1). Weight sitting in the lowered hexes: Thumrayt 49.5% ->
+  28.0%, Hayma 13.6% -> 8.4%, Al Mazyunah 27.5% -> 16.6%. Matches languagedots figure for figure.
+- **Dots** (1:1,000; 5,261 before and after): of Thumrayt's 18 dots, 8 sat in those four hexes
+  and 5 do now. Hayma's 13 dots: 2 and 2 (the expected number falls from 1.8 to 1.1; two dots is
+  chance). Al Mazyunah's 10: 0 and 2. Kontur cap registry: no row needed, `kontur_cap.py om` no stops.
+- `om_grid.py` rebuilds the layer from `data/raw/om/` (it unzips Kontur's `.gz` and the unzipped
+  file was deleted again afterwards). Both editions rescattered (5,261 / 521 dots).

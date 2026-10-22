@@ -6,7 +6,8 @@ own files; this list is the agents'.)
 
 ## Queued
 
-- **Scout: non-native speakers in Brazil and Mexico** (Anita, 2026-10-05: "put it on a queue and
+- **Done 2026-10-19 (stale: both already drew immigrant languages since 2026-10-05/06; br now
+  placed inside states by SIDRA 10161, `sources/br.md`).** Scout: non-native speakers in Brazil and Mexico (Anita, 2026-10-05: "put it on a queue and
   scout, no need to do it right away"). Both censuses ask language only of indigenous people, so
   everyone else snaps to Portuguese / Spanish (derived). Find whether IBGE (2022) and INEGI (2020)
   publish birthplace or nationality by municipio, and whether it would make a clean, marked proxy
@@ -350,6 +351,9 @@ placement by CLEAR Global département/cercle shares. Outcomes go in runlog.md a
       22%, Fulfulde 3.7 -> 7.1% nationally (an upper reading, HH16 gives 5.4%). Still open:
       MICS's "other language" (25%) is split by the same Afrobarometer, still state grain, and
       3.8% is now drawn unnamed where the Afrobarometer met too few speakers (Ekiti, Oyo).
+      **Done 2026-10-19** (`sources/ng.md` §8): Afrobarometer R3 and R10 pooled in, the rest named
+      by Joshua Project people groups, LGA placement by homeland points; 461 languages, unnamed
+      0.7% (Oyo and Edo still 4.4%).
 - [ ] cn: nationality -> language with one retention share; Han on the county's main dialect
       (Hakka 27M vs the usual 40-50M); 15 provinces on 2000 mixes; Guangxi off its gazetteer
       (Hakka, Pinghua, Yue); Hainan Putonghua 10% vs WVS 52%; Luhe filed as Yue. Tibetan (Ü-Tsang /
@@ -364,7 +368,9 @@ placement by CLEAR Global département/cercle shares. Outcomes go in runlog.md a
       Open: no source settles it. Leads are an age-weighted share, or a city-core vs county split.
 - [ ] id: 2010, 8 languages measured, the rest from ethnicity; Javanese, Sundanese, Malay, Banjar
       seeded evenly across provinces (Madurese of the Tapal Kuda missing). Regency homelands for
-      the even-seeded languages would help.
+      the even-seeded languages would help. **Done 2026-10-19 for Java, Sumatra and Kalimantan**
+      (`sources/id.md` §12-13, homeland priors from knowledge, counts unchanged). Open: Banten's
+      Javanese count (260k vs a ~1.5M homeland), Kerinci counted as Malay, Sulawesi/Nusa Tenggara.
 - [ ] id, "too Sundanese" in places (viewers' complaints, Anita 2026-10-08: "the totals are
       reasonable but its probably just like allocation / shifting"). Likely the even seed above:
       West Java's and Banten's Sundanese spread by population alone, so it also lands where other
@@ -450,12 +456,13 @@ placement by CLEAR Global département/cercle shares. Outcomes go in runlog.md a
 - [ ] Old censuses draw fewer people than today (et 56%, td 54% since 2026-10-09 (was 40%, the
       6+ universe), bf 53%, mz 62%, ne 63%):
       a density step at borders. Rescaling to today's population is against spec §1 (Anita's call).
-- [ ] Coverage: af 1.5M Kuchis (Takhar/Kunduz drawn from MICS since 2026-10-09); my non-citizens 2.69M (23.7% of
+- [x] **Done 2026-10-19** (eca0185b-gap, eca0185b-terr, eca0185b-ber): all of the next line
+      drawn, modelled, plus gi nu tk; Tindouf camps on dz. Coverage: af 1.5M Kuchis (Takhar/Kunduz drawn from MICS since 2026-10-09); my non-citizens 2.69M (23.7% of
       Sabah); sg non-residents 1.64M; mm Wa/Mongla 433k; ml 941k not enumerated; ly 827k
       non-Libyans; Tindouf camps 174k; no entry for Isle of Man, Channel Islands, American Samoa,
       Northern Marianas, Cook Islands, Falklands (~0.4M).
-- [ ] Lumped: mm Karen/Chin/Kachin on groups; my Chinese 6.9M not by dialect (DOSM table?); dz
-      Berber 3.45M (place split possible: Kabylie, Aurès, M'zab); tj Pamiri as Tajik; pg Tok
+- [ ] Lumped: mm Karen/Chin/Kachin on groups; ~~my Chinese 6.9M not by dialect~~ (done
+      2026-10-19, `sources/my.md` §9); ~~dz Berber 3.45M~~ (split by place 2026-10-19, `sources/dz.md` §4); tj Pamiri as Tajik; pg Tok
       Pisin not drawn; th Bangkok ~1% Isan. (af's Dari/Pashto split in Kabul, Herat, Kandahar
       closed 2026-10-09 by MICS6; Hazaragi still drawn as Dari, MICS does not name it.)
 - [ ] Placement, coarse: ir, tr, et zones, iq governorates, td régions (measured by MICS since
@@ -464,10 +471,17 @@ placement by CLEAR Global département/cercle shares. Outcomes go in runlog.md a
       layer across the LoC near Poonch, az Karabakh resettlers counted twice.
 - [ ] Unanswered shares likely not random: ru 16.6M no native language, ro 13%, hu 12%, bg 10%.
 - [ ] Logins only Anita can use: za 2022 by municipality (DataFirst), ss World Bank phone survey.
-- [ ] Record conflict: the Shenzhen item under "Not ours" vs sources/cn.md §9, which says county
-      totals were rescaled to 2020 on 2026-10-06.
+- [x] Record conflict, settled 2026-10-19: sources/cn.md §9 is right. Shenzhen's county totals
+      were rescaled to 2020 inside languagedots on 2026-10-06 (`sources/cn_totals.py`, 17.49M
+      drawn); chinaethnicity itself is untouched. Also 2026-10-19: India's layer clipped at the
+      LoC (`sources/in_loc.py`), az Karabakh double count removed, cn Luhe already Hakka, nl and
+      si contradictions were record-only.
 
 ## Not ours, noted for religiondots
+
+2026-10-19 (eca0185b-rdbug, eca0185b-sn): Latvia fixed (three cities rotated, not two), Oman fixed
+(20 hexes lowered), Angola found to be INE's own commune mis-filing and left for Anita's call
+(`religiondots/sources/ao.md` §10), Senegal's 2023 reports print no religion (`religiondots/sources/sn.md`).
 
 - **Angola religion totals** (found by the ao agent, 2026-10-05). In Cacuso, Ngola Luiji, Luena and
   Lucusse, religiondots' religion-table totals differ from the RGPH 2024 provincial volumes, whose

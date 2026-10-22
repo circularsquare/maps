@@ -58,6 +58,7 @@ background and wait once for the process.
   region's extracts are downloaded (four tries) unless their caches or `.osm.pbf` are on disk, and
   read once into the caches (`osm_features`, inland water, roads, admin relations).
 - **Per row**: `build_city`, `pack_gate stations` (the gate's station file, section 8), `places`,
+  with `--coarse T` `coarse_zones` (4 km blocks in thin country, T-852; off by default),
   `routes --keep-pbf`, `merge_cells` (which runs `read_pack`'s checks on its output before it
   replaces the pack, and fails the step otherwise), `nocar`, `everyday_rates`, each its own process
   and log; a failed step runs once more after a minute (a timed-out one does not), then the row

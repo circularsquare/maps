@@ -1,0 +1,5 @@
+# Niue (2022 census, household languages). Every node is a repeat, bare, of one that tree.txt or
+# another fragment defines (au.txt for Niuean); no new node.
+austronesian | Austronesian
+austronesian.oceanic | Oceanic
+austronesian.oceanic.niuean | Niuean

@@ -78,6 +78,8 @@ pub struct PackGravity {
     /// Per zone, its res-9 cells before merging (`zone_cells9`, T-466): a merged cell's land is
     /// not in its index. Empty: counted from the cells (`kernel::res9_cells`).
     pub cells9: Vec<u32>,
+    /// T-852: per zone its side in squares (`zone_size`, 1 or 2); empty: every zone one square.
+    pub size: Vec<u8>,
 }
 
 fn dtype_size(dtype: &str) -> Result<usize, String> {
@@ -154,7 +156,7 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
     let mut city = City { name, h3: vec![], x: vec![], y: vec![], pop: vec![], jobs: vec![], region: vec![], gravity: None };
     let (mut cz, mut gx, mut gy, mut row, mut col, mut zr) = (vec![], vec![], vec![], vec![], vec![], vec![]);
     let (mut ch, mut cw) = (vec![], vec![]);
-    let (mut zhome, mut zwork, mut zc9) = (vec![], vec![], vec![]);
+    let (mut zhome, mut zwork, mut zc9, mut zsize) = (vec![], vec![], vec![], vec![]);
     for a in v["arrays"].as_array().ok_or("header has no arrays")? {
         let aname = a["name"].as_str().unwrap_or("");
         let dtype = a["dtype"].as_str().unwrap_or("");
@@ -163,7 +165,7 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
         let count = a["count"].as_u64().unwrap_or(0) as usize;
         let known = match per {
             "cell" => matches!(aname, "h3" | "x_m" | "y_m" | "pop" | "jobs" | "zone" | "commute_home" | "commute_work" | "region"),
-            "zone" => matches!(aname, "zone_gx" | "zone_gy" | "zone_row" | "zone_col" | "zone_region" | "zone_home" | "zone_work" | "zone_cells9"),
+            "zone" => matches!(aname, "zone_gx" | "zone_gy" | "zone_row" | "zone_col" | "zone_region" | "zone_home" | "zone_work" | "zone_cells9" | "zone_size"),
             _ => false,
         };
         if !known {
@@ -194,6 +196,13 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
             "zone_home" => zhome = read_f64s(bin, off, count, dtype)?,
             "zone_work" => zwork = read_f64s(bin, off, count, dtype)?,
             "zone_cells9" => zc9 = read_ints(bin, off, count, dtype)?.into_iter().map(|v| v.max(0) as u32).collect(),
+            "zone_size" => {
+                let v = read_ints(bin, off, count, dtype)?;
+                if v.iter().any(|&s| s != 1 && s != 2) {
+                    return Err("zone_size holds a size other than 1 or 2".into());
+                }
+                zsize = v.into_iter().map(|s| s as u8).collect();
+            }
             "region" | "zone_region" => {
                 let v = read_ints(bin, off, count, dtype)?;
                 if v.iter().any(|&r| !(0..=255).contains(&r)) {
@@ -274,6 +283,7 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
             work: zwork,
             joint: g.get("joint").cloned(),
             cells9: zc9,
+            size: zsize,
         });
     }
     Ok(city)
@@ -314,7 +324,7 @@ pub fn with_gravity(header: &str, bin: &[u8], g: &PackGravity) -> Result<(String
     if !g.zone_region.is_empty() && g.zone_region.len() != nz {
         return Err(format!("{} zone regions for {nz} zones", g.zone_region.len()));
     }
-    let gravity_array = |a: &Value| matches!(a["name"].as_str().unwrap_or(""), "zone" | "zone_gx" | "zone_gy" | "zone_row" | "zone_col" | "zone_region" | "zone_home" | "zone_work" | "zone_cells9");
+    let gravity_array = |a: &Value| matches!(a["name"].as_str().unwrap_or(""), "zone" | "zone_gx" | "zone_gy" | "zone_row" | "zone_col" | "zone_region" | "zone_home" | "zone_work" | "zone_cells9" | "zone_size");
     if !g.home.is_empty() && (g.home.len() != nz || g.work.len() != nz) {
         return Err(format!("{} zone_home and {} zone_work for {nz} zones", g.home.len(), g.work.len()));
     }
@@ -344,6 +354,9 @@ pub fn with_gravity(header: &str, bin: &[u8], g: &PackGravity) -> Result<(String
     if !g.zone_region.is_empty() {
         w.push("zone_region", "u8", "zone", nz, g.zone_region.clone());
     }
+    if g.size.iter().any(|&s| s == 2) {
+        w.push("zone_size", "u8", "zone", nz, g.size.clone());
+    }
     w.push("zone_row", "f32", "zone", nz, le_f32(g.row.iter().map(|&v| v as f32)));
     w.push("zone_col", "f32", "zone", nz, le_f32(g.col.iter().map(|&v| v as f32)));
     if !g.home.is_empty() {
@@ -351,6 +364,8 @@ pub fn with_gravity(header: &str, bin: &[u8], g: &PackGravity) -> Result<(String
         w.push("zone_work", "f32", "zone", nz, le_f32(g.work.iter().map(|&v| v as f32)));
     }
     arrays.extend(w.entries);
+    // T-852: the rule the blocks were made by (`pack_gravity --coarse`), kept while they stand
+    let coarse = v["gravity"]["coarse"].clone();
     v["format"] = json!(FORMAT);
     v["zones"] = json!(nz);
     v["arrays"] = Value::Array(arrays);
@@ -371,6 +386,9 @@ pub fn with_gravity(header: &str, bin: &[u8], g: &PackGravity) -> Result<(String
         "trips": g.trips,
         "solver": "trainworld-sim kernel::gravity (sim/src/bin/pack_gravity.rs)",
     });
+    if g.size.iter().any(|&s| s == 2) && !coarse.is_null() {
+        v["gravity"]["coarse"] = coarse;
+    }
     if let Some(j) = &g.joint {
         v["gravity"]["joint"] = j.clone();
         v["gravity"]["solver"] = json!("trainworld-sim bin/joint_gravity.rs: every zone pack's gravity solved together (T-276)");
@@ -506,6 +524,7 @@ mod tests {
             work: vec![],
             joint: None,
             cells9: vec![],
+            size: vec![],
         }
     }
 

@@ -13,6 +13,8 @@ few words for the front page.  Register a map while it is being worked on and re
 it is not.  The running server re-reads served.json on every request, so add and remove take
 effect on the next page load without a restart.
 
+A page can also start one of the scripts listed in ACTIONS below (diskmap's rescan button).
+
 It speaks HTTP Range, which plain `python -m http.server` does not.  A .pmtiles archive is
 read through range requests, and without them the map loads with a basemap and nothing on
 it.  It also sends Cache-Control: no-store, so a rebuild shows up on refresh.
@@ -29,7 +31,9 @@ import json
 import os
 import pathlib
 import re
+import subprocess
 import sys
+import threading
 import time
 import urllib.parse
 
@@ -39,6 +43,14 @@ PORT = 8800
 
 RANGE = re.compile(r"^bytes=(\d*)-(\d*)$")
 NAME = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
+
+# Scripts a page may start: POST /<name>/_run/<action> starts one, GET on the same path gives
+# {"running", "line" (its latest output line), "code" (exit code once done)}.  Only these run.
+# The POST must carry an X-Maps-Run header, which a page on another site cannot send without
+# a CORS preflight this server never grants.
+ACTIONS = {("diskmap", "rescan"): "diskmap/scan.py"}
+RUNS = {}           # (name, action) -> {"proc", "line", "code"}
+RUNS_LOCK = threading.Lock()
 
 
 def load():
@@ -145,9 +157,53 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self.send_front_page(False)
         super().do_HEAD()
 
+    def action(self):
+        """(name, action) if this request is for /<name>/_run/<action>, else None."""
+        parts = urllib.parse.urlsplit(self.path).path.split("/")
+        if len(parts) == 4 and parts[2] == "_run":
+            return parts[1], parts[3]
+        return None
+
+    def send_json(self, code, obj):
+        body = json.dumps(obj).encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def run_state(self, key):
+        run = RUNS.get(key)
+        if not run:
+            return {"running": False, "line": "", "code": None}
+        return {"running": run["code"] is None, "line": run["line"], "code": run["code"]}
+
+    def do_POST(self):
+        key = self.action()
+        if key not in ACTIONS:
+            return self.send_error(404)
+        if not self.headers.get("X-Maps-Run"):
+            return self.send_error(403)
+        with RUNS_LOCK:
+            run = RUNS.get(key)
+            if not run or run["code"] is not None:
+                proc = subprocess.Popen(
+                    [sys.executable, "-u", str(HERE / ACTIONS[key])], cwd=HERE,
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                    text=True, encoding="utf-8", errors="replace")
+                run = RUNS[key] = {"proc": proc, "line": "starting", "code": None}
+                threading.Thread(target=follow, args=(run,), daemon=True).start()
+            state = self.run_state(key)
+        self.send_json(202, state)
+
     def do_GET(self):
         if urllib.parse.urlsplit(self.path).path == "/":
             return self.send_front_page(True)
+        key = self.action()
+        if key in ACTIONS:
+            with RUNS_LOCK:
+                state = self.run_state(key)
+            return self.send_json(200, state)
         rng = self.headers.get("Range")
         if rng and self.serve_range(rng):
             return
@@ -194,11 +250,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         pass
 
 
+def follow(run):
+    """Keep the latest output line of a started script, then its exit code."""
+    for line in run["proc"].stdout:
+        if line.strip():
+            run["line"] = line.strip()
+    code = run["proc"].wait()
+    with RUNS_LOCK:
+        run["code"] = code
+
+
 class Server(http.server.ThreadingHTTPServer):
     daemon_threads = True
     # Windows refuses (not delays) connections past a full backlog; the default 5 lost 60% of
     # a 200-connection burst, as when a game opens many packs and tiles at once (trainworld T-490).
     request_queue_size = 128
+    # On Windows SO_REUSEADDR lets a second serve.py bind 8800 beside the first, and requests
+    # then go to either one at random; without it the second exits with "port is taken".
+    allow_reuse_address = sys.platform != "win32"
 
     def handle_error(self, request, client_address):
         # The browser drops tile requests it no longer needs whenever the map moves;

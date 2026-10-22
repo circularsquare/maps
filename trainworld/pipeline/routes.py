@@ -418,6 +418,8 @@ class ZoneSet:
         self.gy = a["zone_gy"].astype(np.int64)
         self.n = len(self.gx)
         self.reg = a["zone_region"].astype(np.int64) if "zone_region" in a else np.zeros(self.n, np.int64)
+        # T-852: 1 for a 2x2 block (`zone_size`); windows go by its lower-left square, as the sim's
+        self.big = (a["zone_size"].astype(np.int64) == 2) if "zone_size" in a else np.zeros(self.n, bool)
         self.nreg = int(self.reg.max()) + 1
         self.cx, self.cy = a["x_m"].astype(np.float64), a["y_m"].astype(np.float64)
         if "commute_home" in a:
@@ -637,7 +639,7 @@ def zones_check(zs):
     """The zones the tables are laid out by, as the sim checks them (`routes::zones_check`)."""
     h = 0
     for i in range(zs.n):
-        v = int(zs.gx[i]) * 1_000_003 + int(zs.gy[i]) * 1_009 + int(zs.reg[i])
+        v = int(zs.gx[i]) * 1_000_003 + int(zs.gy[i]) * 1_009 + int(zs.reg[i]) + 500 * int(zs.big[i])
         h = (h + (i + 1) * v) % (1 << 64)
     return h % (1 << 52)
 

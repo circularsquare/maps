@@ -1,0 +1,44 @@
+# Falkland Islands (2016 census Table 5a, language other than English spoken at home). Every node
+# is a repeat, bare, of one that tree.txt or another fragment defines; no new node. The Gaelic,
+# Chinese and French Arabic rows sit on the Celtic, Sinitic and Arabic groups (variety not given);
+# "Sri Lankan" and "Swiss" go on `other`.
+austronesian | Austronesian
+austronesian.philippine | Philippine
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.filipino | Filipino
+austronesian.philippine.tagalog | Tagalog
+indoeuropean.baltic | Baltic
+indoeuropean.baltic.lithuanian | Lithuanian
+indoeuropean.celtic | Celtic
+indoeuropean.celtic.welsh | Welsh
+indoeuropean.germanic.continental | Continental West Germanic
+indoeuropean.germanic.continental.afrikaans | Afrikaans
+indoeuropean.germanic.continental.dutch | Dutch
+indoeuropean.germanic.continental.german | German
+indoeuropean.germanic.north | North Germanic
+indoeuropean.germanic.north.danish | Danish
+indoeuropean.romance | Romance
+indoeuropean.romance.french | French
+indoeuropean.romance.italian | Italian
+indoeuropean.romance.portuguese | Portuguese
+indoeuropean.romance.romanian | Romanian
+indoeuropean.romance.spanish | Spanish
+indoeuropean.slavic | Slavic
+indoeuropean.slavic.east | East Slavic
+indoeuropean.slavic.east.russian | Russian
+indoeuropean.slavic.west | West Slavic
+indoeuropean.slavic.west.czech | Czech
+indoeuropean.slavic.west.polish | Polish
+japonic | Japonic
+japonic.japanese | Japanese
+kartvelian | Kartvelian
+kartvelian.georgian | Georgian
+kradai | Kra-Dai (Tai-Kadai)
+kradai.thai | Thai
+nigercongo | Niger-Congo
+nigercongo.bantu | Bantu
+nigercongo.bantu.shona | Shona
+nigercongo.bantu.sotho_tswana | Sotho-Tswana
+nigercongo.bantu.sotho_tswana.setswana | Setswana
+sinotibetan.sinitic | Chinese
+sinotibetan.sinitic.cantonese | Cantonese

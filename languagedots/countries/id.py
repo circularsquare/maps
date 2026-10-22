@@ -22,6 +22,28 @@ MAJORITY = 0.4      # a language with this share of its province or more (Acehne
                     # that is most of the province, and the minorities' pulls place it
 
 
+MALAY = "austronesian.malayic.malay"
+KERINCI = "austronesian.malayic.kerinci"
+# 85% of Kerinci regency's and 80% of Sungai Penuh's people aged 5+ as drawn (164,772 and
+# 60,241, Kontur scaled to Jambi's 2010 count), less the 20,273 Kerinci the share-out had
+# already put there: indigenous shares from knowledge, sources/id.md §14
+KERINCI_FROM_MALAY = 168_000
+SUNDANESE = "austronesian.sundanese"
+JAVANESE = "austronesian.javanese"
+# Banten Javanese (Anita, 2026-10-21, yes to splitting Banten's Sundanese by place): L4.5 has
+# 4,972,928 Sundanese and 259,981 Javanese in Banten, and BPS's language list has no Banten
+# language, so the Banten Javanese of north Serang, Kota Serang, Cilegon and north-west
+# Tangerang were mostly coded Sunda. Moved: in those 39 kecamatan, the Javanese prior
+# (sources/id_homeland.py) x the people drawn there as regional-language speakers (1,418,408),
+# 864,462, less the 235,879 Javanese already drawn there. Shares from knowledge, sources/id.md
+# §15.
+BANTEN_SUNDA = 4_972_928
+JAVANESE_FROM_SUNDANESE = 629_000
+# (province, from, to, people): a measured row's people moved onto another node, `modelled`
+SPLITS = [("15", MALAY, KERINCI, KERINCI_FROM_MALAY),
+          ("36", SUNDANESE, JAVANESE, JAVANESE_FROM_SUNDANESE)]
+
+
 def _counts():
     import id2010
     df = pd.read_csv(NORM / "id.csv", dtype={"geo_id": str})
@@ -33,6 +55,20 @@ def _counts():
         raise SystemExit(f"id.csv categories that resolve to nothing: {unresolved}")
     df = df[df["node"].notna()].copy()
     df["unit"] = df["geo_id"]
+    # Kerinci (Anita, 2026-10-21: "sure we can draw kerinci as own"): BPS coded most of the
+    # Kerinci valley's speakers Melayu (Jambi's whole "other regional" remainder is 33,000), so
+    # KERINCI_FROM_MALAY of Jambi's measured Malay is moved onto Kerinci, `modelled`
+    # (sources/id.md §14 has the arithmetic); the same for Banten's Sundanese (§15)
+    b = (df["unit"] == "36") & (df["node"] == SUNDANESE) & (df["tier"] == "measured")
+    if b.sum() != 1 or df.loc[b, "count"].iloc[0] != BANTEN_SUNDA:
+        raise SystemExit("id: Banten's measured Sundanese row is not L4.5's 4,972,928")
+    for prov, src, dst, n in SPLITS:
+        r = (df["unit"] == prov) & (df["node"] == src) & (df["tier"] == "measured")
+        if r.sum() != 1 or df.loc[r, "count"].iloc[0] <= n:
+            raise SystemExit(f"id: {prov}'s measured {src} row is not what the split expects")
+        df.loc[r, "count"] -= n
+        df = pd.concat([df, pd.DataFrame([dict(unit=prov, node=dst, tier="modelled",
+                                               count=n)])], ignore_index=True)
     # the share-out of "other regional languages" (ask 009; sources/id_shareout.py) is
     # `modelled`; the source script asserts it sums to each province's measured remainder
     if set(df["tier"]) != {"measured", "modelled"}:
@@ -74,11 +110,11 @@ def _ipf(seed, rows, cols, iters=500):
 # Banjar have none that stands for a homeland (Banjar's is in East Kalimantan's interior).
 MEASURED_POINTS = {"austronesian.malayic.minangkabau": ["mina1268"],
                    "austronesian.buginese": ["bugi1244"]}
-# Madurese's point is on Madura, but a kernel from it filled Surabaya (59%) before the far end of
-# the island. Its seed is instead the island itself, the regencies of Bangkalan, Sampang,
-# Pamekasan and Sumenep, against a low even seed elsewhere in East Java, so the half of East
-# Java's Madurese speakers who do not fit on Madura spread with the population.
-REGION_SEED = {"austronesian.madurese": ({"3526", "3527", "3528", "3529"}, 0.02)}
+# Homelands by regency and kecamatan (2026-10-19; sources/id_homeland.py, sources/id.md §12-13):
+# in West Java, Banten, Central and East Java, Javanese, Sundanese, Madurese, Cirebonese and
+# Betawi, and in Sumatra and Kalimantan Malay, Banjar, Javanese and Bugis, are seeded by a prior share of each kecamatan's regional-language speakers, in place of
+# an even seed or a Glottolog point (Madurese had been seeded on Madura's four regencies and
+# evenly elsewhere, so the Tapal Kuda drew East Java's average).
 
 
 def node_points():
@@ -196,6 +232,7 @@ class _IdWeighter:
             dmin[n] = best
 
         counts = _counts().groupby(["unit", "node"])["count"].sum()
+        import id_homeland
         pap_by, pap_reg = _papua_seeds()
         tidak = _lf2020_tidak()
         missing = sorted({r for r, p in zip(ureg, uprov) if p not in PAPUA} - set(tidak))
@@ -203,7 +240,7 @@ class _IdWeighter:
             raise SystemExit(f"id: regencies with no 2020 home-language share: {missing}")
         self.n_papua = 0
         self.share = {}          # node -> per-unit people of that language per Kontur person
-        self.n_point = self.n_even = 0
+        self.n_point = self.n_even = self.n_home = 0
         for p in sorted(PROVINCES_2010):
             us = np.where(uprov == p)[0]
             c = counts.loc[p]
@@ -217,10 +254,10 @@ class _IdWeighter:
                                                   us, pap_by, pap_reg)
                     self.n_papua += 1
                     continue
-                if n in REGION_SEED and np.isin(ureg[us], list(REGION_SEED[n][0])).any():
-                    seed[:, j] = np.where(np.isin(ureg[us], list(REGION_SEED[n][0])), 1.0,
-                                          REGION_SEED[n][1])
-                    self.n_point += 1
+                hp = id_homeland.prior(p, n, [uk[i] for i in us])
+                if hp is not None:
+                    seed[:, j] = np.asarray(hp, dtype=float) + 1e-6
+                    self.n_home += 1
                 elif (n in dmin and dmin[n][us].min() <= FAR_KM
                         and cols[j] < MAJORITY * cols.sum()):
                     k = np.exp(-dmin[n][us] / KERNEL_KM)
@@ -235,6 +272,9 @@ class _IdWeighter:
                         seed[:, j] *= t
                     elif n not in EVEN_NODES:
                         seed[:, j] *= 1 - t
+            if not id_homeland.nodes(p) <= set(nodes):
+                raise SystemExit(f"id_homeland: province {p} has no counts for "
+                                 f"{sorted(id_homeland.nodes(p) - set(nodes))}")
             X = _ipf(seed, rows, cols)
             if np.abs(X.sum(0) - cols).max() > max(1.0, 1e-6 * cols.sum()):
                 raise SystemExit(f"id: the placement rake does not meet province {p}'s counts")
@@ -269,7 +309,8 @@ class _IdWeighter:
 
     def summary(self):
         return (f"placed inside provinces by kecamatan rakes: {self.n_point} (province, "
-                f"language) pairs seeded by Glottolog points, {self.n_even} even, "
+                f"language) pairs seeded by Glottolog points, {self.n_home} by regency and "
+                f"kecamatan homelands, {self.n_even} even, "
                 f"{self.n_papua} in Papua and Papua Barat by regency; elsewhere Indonesian and "
                 f"regional languages by the 2020 regency share using no regional language")
 
@@ -288,19 +329,25 @@ ENTRY = dict(
     parts=[
         dict(covers="Indonesian, seven large regional languages, foreign languages",
              source="2010 census, language used daily at home, by province",
-             people=170_935_033),
+             people=170_138_033),    # less the SPLITS' 797,000
         dict(covers="Other regional languages",
              source="the census's national language groups, shared by province through its "
                     "ethnic groups, Ananta et al.'s counts (2015) and own-language retention "
                     "(IUSSP 2013)",
              people=40_916_879),
+        dict(covers="Kerinci in Jambi, Banten Javanese in Banten",
+             source="the census's Malay in the Kerinci valley and Sundanese in north Banten, "
+                    "moved by the place's known language",
+             people=797_000),
         dict(covers="Papuan languages",
              source="Ananta, Utami and Handayani (2016) by regency, Joshua Project speaker "
                     "estimates, Glottolog",
              rest=True),
     ],
     grain=("33 provinces, 6.5 million people on average; inside a province each language is "
-           "placed by where Glottolog puts it, and Indonesian by regency from the 2020 census; "
+           "placed by where Glottolog puts it, the large languages of Java, Sumatra and "
+           "Kalimantan by their home districts, "
+           "and Indonesian by regency from the 2020 census; "
            "in Papua and Papua Barat, by regency"),
     gap=("22.7 million children under five, who were not asked; 905,695 people counted on the "
          "census's shorter forms, which did not ask it; and 561,711 who gave no answer"),
@@ -321,7 +368,14 @@ ENTRY = dict(
         "province. About 2 million people, of peoples nobody has counted one by one, are drawn "
         "as other regional languages of Indonesia. Inside a province, each regional language "
         "is drawn towards where Glottolog places it, and the large languages fill the rest by "
-        "population, so a district's mix is an estimate. Indonesian is drawn more thickly in "
+        "population, so a district's mix is an estimate. In Java, Sumatra and Kalimantan, the "
+        "large languages (Javanese, Sundanese, Madurese, Cirebonese, Betawi, Malay, Banjar and "
+        "Buginese) are drawn towards their home districts and settlements as described in the "
+        "literature (Madurese on Madura and in the east of East Java, Cirebonese around Cirebon "
+        "and Indramayu, Banjar on Riau's Indragiri coast), with no census count below the "
+        "province behind it. Some of the census's Malay in Jambi's Kerinci valley is drawn "
+        "as Kerinci, and some of its Sundanese in northern Banten as Javanese, the languages "
+        "spoken there, which the census's language list had no separate entry for. Indonesian is drawn more thickly in "
         "the regencies where the 2020 census found more families using no regional language at "
         "home, such as Jakarta's suburbs, and the province's totals stay those of 2010. In Papua and Papua Barat (the 2010 "
         "provinces), the people who spoke a Papuan language at home are shared among about 230 "

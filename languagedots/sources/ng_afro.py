@@ -1,4 +1,5 @@
-"""Nigeria: home language from six pooled Afrobarometer rounds (2008-2022), by state.
+"""Nigeria: home language from eight pooled Afrobarometer rounds (2005-2024), by state.
+(R3 and R10 added 2026-10-19 from Nigeria's own files; see ROUNDS.)
 
     python sources/ng_afro.py --fetch   extract Nigeria's rows from religiondots' six merged
                                         .sav files (read-only) -> data/raw/ng/ab_ng_language.csv
@@ -293,6 +294,21 @@ VERBATIM = {
     "Tehl": OTHER_NG, "U Tonko": OTHER_NG, "Utenko": OTHER_NG, "Ufiyer": OTHER_NG,
     "Uwa": OTHER_NG, "Wurkum": OTHER_NG, "Wurkun": OTHER_NG, "Youm": OTHER_NG,
     "Zamji": OTHER_NG,
+    # R10 (2024) free text, added 2026-10-19
+    "Agonyin": "Gun",                                      # Gbe-speaking Agonyin of Lagos
+    "Ataba": "Obolo",                                      # an Andoni town
+    "Bokyi": "Bokyi", "Bolanci": "Bole",                   # Bolanci: Bole's Hausa name
+    "Ibagwa Aka": "Igbo", "Obukpa": "Igbo", "Ndoki": "Igbo", "Isuka": "Igbo",  # Igbo towns
+    "Ibivie": "Okpela", "Ivie": "Okpela",                  # Ivbie, of Ivbie North-Okpela-Arhe
+    "Itsekiri": "Itsekiri", "Izzi": "Izi-Ezaa-Ikwo-Mgbo", "Kupa": "Kupa",
+    "Ninzo": "Ninzo", "Yakurr": "Yakurr", "Yagba": "Yoruba",
+    "Nyankpa": "Nyankpa (Yeskwa)", "Nyekpa": "Nyankpa (Yeskwa)",
+    "Ba Maige": OTHER_NG, "Maigecin": OTHER_NG, "Magachi": OTHER_NG, "Magawa": OTHER_NG,
+    "Babule": OTHER_NG, "Barawa": OTHER_NG, "Barbanchi": OTHER_NG, "Ebas": OTHER_NG,
+    "Ekpa": OTHER_NG, "Fomi": OTHER_NG, "Gwantu": OTHER_NG, "Ibaas": OTHER_NG,
+    "Imiakebu": OTHER_NG, "Kaju": OTHER_NG, "Mfom": OTHER_NG, "Muna": OTHER_NG,
+    "Ribinawa": OTHER_NG, "Uwano": OTHER_NG, "Uwanu": OTHER_NG, "Warri": OTHER_NG,
+    "Yasawa": OTHER_NG, "Zoh": OTHER_NG,
 }
 
 # Every Afrobarometer REGION label -> COD-AB state name (religiondots' sources/ng.py NORM).
@@ -440,7 +456,8 @@ ETH_VERBATIM = {
     # Pidgin-at-home respondents' groups (ask 018, 2026-10-05)
     "Bonny": "Ibani",                                      # Bonny's language is Ibani
     "Heggi": "Kamwe", "Jukun-Kona": "Jukun",
-    "Izzi": OTHER_NG,                                      # Izii, an Igboid language of its own
+    "Izzi": "Izi-Ezaa-Ikwo-Mgbo",                          # Izii, an Igboid language of its own
+    "Mumuyie": "Mumuye", "Ibii": OTHER_NG,                # R10 (2026-10-19)
     "Gure": OTHER_NG, "Echoji": OTHER_NG, "Isen- Udm": OTHER_NG, "Jassa.": OTHER_NG,
 }
 
@@ -701,7 +718,7 @@ def split_half(a):
         r = np.corrcoef(h1.get(k, 0).reindex(h1.index, fill_value=0),
                         h2.get(k, 0).reindex(h1.index, fill_value=0))[0, 1]
         print(f"    {k:26s} {nat[k]:6.1%}   r = {r:+.3f}")
-        if nat[k] >= 0.03:
+        if nat[k] >= 0.03 and k != OTHER_NG:     # R3's 224 bare "Others" put it over 3%
             say(r > 0.9, f"{k}: the two halves agree on where it is (r {r:+.3f})")
 
 
@@ -777,6 +794,25 @@ LGA_ALIAS = {
     ("Rivers", "port harcourt city"): "port harcourt",
     ("Rivers", "port harourt"): "port harcourt",
     ("Sokoto", "wamakko"): "wamako",
+    # R3 and R10 spellings (2026-10-19)
+    ("Bayelsa", "yenagoa northern"): "yenegoa", ("Bayelsa", "yenagoa nothern"): "yenegoa",
+    ("Edo", "orihionmwon"): "orhionmwon", ("Cross River", "akampka"): "akamkpa",
+    ("Cross River", "ugep north"): "yakurr", ("Cross River", "ugep south (abi)"): "abi",
+    ("Akwa Ibom", "essien udiun"): "essien udim", ("Anambra", "akwa north"): "awka north",
+    ("Anambra", "idemilli north"): "idemili north", ("Benue", "ushongu"): "ushongo",
+    ("Kaduna", "birni gwari"): "birnin gwari", ("Kaduna", "kuban"): "kubau",
+    ("Kaduna", "kachila"): "kachia", ("Kano", "ugogo"): "ungogo",
+    ("Kogi", "kotokaife lokoja"): "lokoja", ("Kogi", "mopa"): "mopa muro",
+    ("Kogi", "olamaboro"): "olamabolo", ("Kwara", "isi"): "isin",
+    ("Niger", "katangora"): "kontagora", ("Niger", "lawun"): "lavun", ("Niger", "rijan"): "rijau",
+    ("Ogun", "ado ota"): "ado odo ota", ("Ogun", "imeko_afon"): "imeko afon",
+    ("Ondo", "okiti pupa"): "okitipupa", ("Ondo", "okiti pupa (ikale)"): "okitipupa",
+    ("Rivers", "abual odual"): "abua odual", ("Rivers", "ahoda west"): "ahoada west",
+    ("Rivers", "emuoha"): "emohua", ("Rivers", "ikwere"): "ikwerre",
+    ("Rivers", "ogba egbene ndoni"): "ogba egbema ndoni", ("Taraba", "saraduna"): "sardauna",
+    ("Zamfara", "namoda"): "kaura namoda", ("Adamawa", "gire"): "girei",
+    ("Imo", "abiazu mbaise"): "ahiazu mbaise", ("Oyo", "orire"): "ori ire",
+    ("Ekiti", "aiyekire (gbonyi)"): "aiyekire (gbonyin)",
 }
 # Left unplaced on purpose (their respondents still count in their state; only the LGA is
 # unknown): "Obioma Ngwa" (Abia; Obi Ngwa or Osisioma Ngwa), "Uquo Ibeno(Esit Eket" (two LGAs

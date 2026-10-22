@@ -51,7 +51,8 @@ struct Pk {
     city: pack::City,
     z: kernel::Zones,
     ftab: Vec<f32>,
-    th: i32,
+    /// the runtime's index into `ftab` (T-852: zones of two sizes)
+    pk: kernel::PairKey,
     border: f32,
     decay_km: f32,
     decay_pow: f32,
@@ -114,7 +115,7 @@ fn main() {
         let city = pack::parse(&header, &bin).unwrap_or_else(|e| panic!("{id}: {e}"));
         let pg = city.gravity.clone().unwrap_or_else(|| panic!("{id} has no gravity"));
         let z = kernel::zones_from_pack(&city, &pg);
-        let (ftab, _) = kernel::decay_table(z.w, z.h, z.zone_m, pg.decay_km, pg.decay_pow);
+        let (ftab, _) = kernel::decay_tables(&z, pg.decay_km, pg.decay_pow);
         let hv: Value = serde_json::from_str(&header).unwrap();
         // packs built before headers carried a country (tor, lon, par, sao) take the registry's (T-590)
         let country = hv["country"].as_str().or(c["country"].as_str()).unwrap_or("US").to_uppercase();
@@ -132,7 +133,7 @@ fn main() {
             })
             .collect();
         let n = z.n;
-        packs.push(Pk { id, header, bin, th: 2 * z.h - 1, border: pg.border_factor, decay_km: pg.decay_km, decay_pow: pg.decay_pow, zone_m: pg.zone_m, city, z, ftab, regions, off, market: market.max(0) as usize, fixed });
+        packs.push(Pk { id, header, bin, pk: kernel::PairKey::of(&z), border: pg.border_factor, decay_km: pg.decay_km, decay_pow: pg.decay_pow, zone_m: pg.zone_m, city, z, ftab, regions, off, market: market.max(0) as usize, fixed });
         off += n;
     }
     let nz = off;
@@ -225,8 +226,8 @@ fn main() {
             let g = p.off + i;
             zp[g] = pi as u16;
             zr[g] = p.regions[p.z.region[i] as usize] as u16;
-            let x = p.z.x0 as f64 + (p.z.gx[i] as f64 + 0.5) * p.zone_m as f64;
-            let y = p.z.y0 as f64 + (p.z.gy[i] as f64 + 0.5) * p.zone_m as f64;
+            let x = p.z.x0 as f64 + p.z.hx(i) as f64 * 0.5 * p.zone_m as f64;
+            let y = p.z.y0 as f64 + p.z.hy(i) as f64 * 0.5 * p.zone_m as f64;
             let (lon, lat) = fr.to_lonlat(x, y);
             let (wx, wy) = world.from_lonlat(lon, lat);
             px[g] = wx;
@@ -297,7 +298,7 @@ fn main() {
     };
     // within one pack: zone i's sum over the pack's zones of v_j x f x k (the runtime's table)
     let within = |p: &Pk, i: usize, v: &[f64]| -> f64 {
-        let base = (p.z.w - 1 - p.z.gx[i]) * p.th + (p.z.h - 1) - p.z.gy[i];
+        let base = p.pk.base(&p.z, i);
         let ri = p.z.region[i];
         let mut s = 0.0;
         for j in 0..p.z.n {
@@ -306,7 +307,7 @@ fn main() {
                 continue;
             }
             let k = if p.z.region[j] == ri { 1.0 } else { p.border };
-            s += vj * (p.ftab[(base + p.z.gx[j] * p.th + p.z.gy[j]) as usize] * k) as f64;
+            s += vj * (p.ftab[(base + p.pk.key(&p.z, j)) as usize] * k) as f64;
         }
         s
     };

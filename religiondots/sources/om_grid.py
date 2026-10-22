@@ -1,6 +1,7 @@
 """Oman: the placement layer, Kontur 400 m population hexagons inside the 61 wilayat.
 
-Writes data/geo/om/om_hexes.gpkg (`unit`, `pop` as Kontur has it, geometry).
+Writes data/geo/om/om_hexes.gpkg (`unit`, `pop`, `kontur_pop`, geometry). `kontur_pop` is Kontur's
+own figure; `pop` is the same with Kontur's false desert blocks lowered (`lower_false_blocks`).
 
 Oman is 310,000 km2 and most of it is desert; the register counts 1.5 million people in Muscat
 governorate alone. Spread flat, a wilaya's dots would sit in the sand; with Kontur an empty hex
@@ -76,6 +77,12 @@ HOLE_RATIO = 0.10
 LOW_RATIO = 0.5
 KONTUR_HOLES = set()
 
+CAP = 8_000.0           # people per km2, lower_false_blocks
+SEAT_KM = 5.0
+REAL_MAX = 7_712        # Mutrah's densest hex: the bar CAP sits above
+EXPECT_CAPPED = {"Al Mazyunah", "Thumrayt", "Hayma"}    # wilayat that lose a hex
+EXPECT_SPARED = {"Al Mazyunah"}                           # a seat town above CAP
+
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/128.0 Safari/537.36")
 GEONAMES_COLS = ["geonameid", "name", "asciiname", "alternatenames", "lat", "lon", "fclass",
@@ -149,6 +156,60 @@ def seat_check(out, units, rel):
     if holes != KONTUR_HOLES:
         raise SystemExit(f"seats with under {HOLE_RATIO:.0%} of their people in Kontur, in a wilaya "
                          f"under {LOW_RATIO} of its count: {sorted(holes)}, not {sorted(KONTUR_HOLES)}")
+
+
+def lower_false_blocks(out):
+    """Kontur's false desert blocks, lowered (2026-10-19; rule from languagedots/sources/om_place.py).
+
+    Kontur OM reads 0.889 of the register, but some desert wilayat far over it (Al Mazyunah
+    491,949 against 11,117). Counts follow the register per wilaya, so no count moves; what moves
+    is placement INSIDE a wilaya: Thumrayt had 29% of its weight on the Fasad oil field (five
+    hexes, one at 44,302/km2) against 16% on Thumrayt town, and Hayma 14% on one empty hex 7 km
+    from Qarayayn. Outside Al Mazyunah town no real hex reads above `REAL_MAX` (Mutrah, Muscat),
+    so every hex above `CAP` /km2 is lowered to `CAP`, except within `SEAT_KM` of a GeoNames
+    wilaya seat (PPLA/PPLA2/PPLC), where a dense hex is the town. Only Al Mazyunah town is
+    spared; capping it would hand its weight to the villages Kontur inflates as much.
+
+    This is not kontur_cap.py's job: that finds blocks at Kontur's 46,200/km2 cap, and these sit
+    at 8,000 to 44,302 (Fasad's top hex is under the cap, Hayma's is 13,825/km2, under the 15,000
+    that makes a block). `pop` is lowered, `kontur_pop` keeps Kontur's own figure.
+    """
+    import geopandas as gpd
+
+    m = out.to_crs(METRIC)
+    area = m.area.to_numpy() / 1e6
+    pop = out["pop"].to_numpy(dtype=float)
+    dens = pop / area
+    with zipfile.ZipFile(GEONAMES) as zf:
+        t = pd.read_csv(zf.open("OM.txt"), sep="\t", header=None, names=GEONAMES_COLS,
+                        quoting=3, dtype=str, keep_default_na=False)
+    s = t[t["fcode"].isin(["PPLA", "PPLA2", "PPLC"])]
+    seats = gpd.GeoDataFrame(geometry=gpd.points_from_xy(s["lon"].astype(float),
+                                                         s["lat"].astype(float)),
+                             crs=4326).to_crs(METRIC)
+    near = m.geometry.centroid.distance(seats.geometry.union_all()).to_numpy() <= SEAT_KM * 1000
+    unit = out["unit"].astype(str).to_numpy()
+    over = dens > CAP
+    capped, spared = over & ~near, over & near
+    if set(unit[capped]) != EXPECT_CAPPED or set(unit[spared]) != EXPECT_SPARED:
+        raise SystemExit(f"false-block rule: lowered in {sorted(set(unit[capped]))}, spared in "
+                         f"{sorted(set(unit[spared]))}; expected {sorted(EXPECT_CAPPED)} and "
+                         f"{sorted(EXPECT_SPARED)}")
+    ok = dens[~np.isin(unit, list(EXPECT_CAPPED))]
+    if ok.max() > REAL_MAX + 1:
+        raise SystemExit(f"a hex outside the flagged wilayat reads {ok.max():,.0f}/km2 > {REAL_MAX}")
+    new = np.where(capped, CAP * area, pop)
+    print(f"\n  false desert blocks: {int(capped.sum())} hexes above {CAP:,.0f}/km2 away from a "
+          f"wilaya seat lowered to it ({(pop - new).sum():,.0f} Kontur people), "
+          f"{int(spared.sum())} spared within {SEAT_KM:g} km of a seat")
+    for u in sorted(EXPECT_CAPPED):
+        k = unit == u
+        print(f"      {u}: {int((capped & k).sum())} lowered; weight in the lowered hexes "
+              f"{pop[k & capped].sum() / pop[k].sum():.1%} -> {new[k & capped].sum() / new[k].sum():.1%}")
+    out = out.copy()
+    out["kontur_pop"] = pop
+    out["pop"] = new
+    return out
 
 
 def main():
@@ -244,8 +305,10 @@ def main():
 
     seat_check(out, units, rel)
 
+    out = lower_false_blocks(out)
+
     os.makedirs(GEO, exist_ok=True)
-    out[["unit", "pop", "geometry"]].to_file(OUT, layer="hexes", driver="GPKG")
+    out[["unit", "pop", "kontur_pop", "geometry"]].to_file(OUT, layer="hexes", driver="GPKG")
     print(f"\nwrote {OUT} ({len(out):,} cells)")
 
 

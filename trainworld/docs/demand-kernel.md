@@ -50,6 +50,20 @@ works on two levels:
    the line between two packs of one country takes `pack_line_default` 0.4 (T-584, Japan's fit)
    unless the country has its own value.
 
+   **4 km blocks in thin country** (T-852, `zone_size`). A pack may join an aligned 2x2 block of
+   squares (even `gx`, `gy` at its lower-left) into one zone when at least two of its zones of one
+   region lie there and each makes under 1,000 trip ends a weekday (`kernel::coarsen`); towns stay
+   at 2 km. A pair with a block takes the mean of the decay between their squares, so a block draws
+   as its four squares would with its homes and jobs spread evenly over them; distances (the drive,
+   the walk, trip length, distance bands, the ride's minimum) are between centres, a block's own
+   pair 0.52 of its 4 km side apart, and its land cap is its 16 km². The everyday destinations'
+   decay takes the same mean. The pair tables hold three runs per row (two squares, a square and a
+   block at their centres' half-square offset, two blocks; `kernel::table_layout`), three times a
+   2 km pack's. A station's zone is the square's or the block covering it; near pairs (the walk
+   between cells, walking with no rail) are those with squares within reach of each other; the
+   routes' windows go by each zone's lower-left square. A pack without `zone_size` is all squares
+   and solves exactly as before.
+
    **The curve** (T-198, from T-185's diagnosis). T-006 fitted d^-1 on New York; T-162 kept that
    shape and moved its length from 29 to 40 km to give back the trip length the border factor
    removes. T-185 found the steep near end kept residents of job-rich places too close to home:

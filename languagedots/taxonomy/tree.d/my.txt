@@ -80,3 +80,60 @@ austronesian.north_borneo.kanowit | Kanowit
 austroasiatic | Austroasiatic
 austroasiatic.aslian | Aslian | 0.66 0.15 335
 sinotibetan.sinitic | Chinese
+# Chinese varieties (2026-10-19 rework): Hokkien (min_nan), Hakka, Cantonese, Teochew, Hainanese,
+# Foochow (min_dong, Eastern Min: Fuzhou is its prestige variety) and Mandarin are in other
+# fragments (hk, sg, cn, bn) and repeated by the borrowed block below. Kwongsai is new: the
+# Guangxi Chinese, who speak Yue varieties of the Cantonese branch (Wuzhou, Yulin and others);
+# the census prints Kwongsai as a group of its own (1.0% of Chinese, in Pahang 9.5%), so it gets
+# a leaf beside Cantonese rather than being folded into it.
+# hand-picked: generated, Kwongsai came out #ff6c79 beside Cantonese's #fca0a7, and in Bentong
+# and Raub the two share every town; a gold keeps it off Cantonese's pink and Mandarin's orange
+sinotibetan.sinitic.kwongsai | Kwongsai (Guangxi Yue) | 0.76 0.13 85
+# --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment my) ---
+# Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
+austroasiatic.mon | Mon
+austronesian.acehnese | Acehnese
+austronesian.balinese | Balinese
+austronesian.buginese | Buginese
+austronesian.cirebonese | Cirebonese
+austronesian.lamaholot | Lamaholot
+austronesian.madurese | Madurese
+austronesian.malayic.banjar | Banjar
+austronesian.malayic.betawi | Betawi
+austronesian.malayic.indonesian | Indonesian
+austronesian.malayic.minangkabau | Minangkabau
+austronesian.manggarai | Manggarai
+austronesian.philippine.bikol | Bikol
+austronesian.philippine.boholano | Boholano
+austronesian.philippine.cebuano | Cebuano
+austronesian.philippine.hiligaynon | Hiligaynon
+austronesian.philippine.ilocano | Ilocano
+austronesian.philippine.kapampangan | Kapampangan
+austronesian.philippine.maguindanao | Maguindanao
+austronesian.philippine.maranao | Maranao
+austronesian.philippine.pangasinan | Pangasinan
+austronesian.philippine.tagalog | Tagalog
+austronesian.philippine.waray | Waray-Waray
+austronesian.sama_bajaw.sama | Sama
+austronesian.sasak | Sasak
+austronesian.sundanese | Sundanese
+austronesian.toraja | Toraja-Sa'dan
+indoeuropean.indoaryan.eastern.chittagonian | Chittagonian
+indoeuropean.indoaryan.eastern.rohingya | Rohingya
+indoeuropean.indoaryan.eastern.sylheti | Sylheti
+indoeuropean.indoaryan.sinhala | Sinhala
+kradai | Kra-Dai (Tai-Kadai)
+kradai.shan | Shan
+sinotibetan.burmish.burmese | Burmese
+sinotibetan.burmish.rakhine | Rakhine
+sinotibetan.kachin | Kachin languages (Jingpho, Zaiwa, Lhaovo, Rawang)
+sinotibetan.karen | Karen languages
+sinotibetan.karen.pao | Pa'o
+sinotibetan.sinitic.cantonese | Cantonese
+sinotibetan.sinitic.hainanese | Hainanese (Qiong-Wen Min)
+sinotibetan.sinitic.hakka | Hakka
+sinotibetan.sinitic.mandarin | Mandarin
+sinotibetan.sinitic.min_dong | Min Dong
+sinotibetan.sinitic.min_nan | Min Nan (Taiwanese, Hokkien)
+sinotibetan.sinitic.teochew | Teochew (Chiu Chau)
+# --- end origin_mix borrowed nodes ---

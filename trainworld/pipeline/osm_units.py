@@ -123,12 +123,21 @@ def match(units, admin, lat0):
             if loc[i].intersection(cover).area < INSIDE * loc[i].area:
                 taken.append(i)
                 cover = cover.union(loc[i])
-        multi = 0.0
-        if len(taken) > 1:
-            inter = gl.intersection(cover).area
-            multi = inter / (gl.area + cover.area - inter)
+        # each level alone too: a coarse relation mostly inside the unit can shadow the finer ones
+        # that fit it (Region Syddanmark, 71% inside Sydjylland, hid its kommuner and took in Fyn: T-788)
+        cands = [(taken, cover)] if len(taken) > 1 else []
+        for lv in sorted({levels[i] for i in inside}):
+            idx = [i for i in inside if levels[i] == lv]
+            if len(idx) > 1:
+                cands.append((idx, union_all([loc[i] for i in idx])))
+        multi, multi_idx = 0.0, []
+        for idx, cov in cands:
+            inter = gl.intersection(cov).area
+            iou = inter / (gl.area + cov.area - inter)
+            if iou > multi:
+                multi, multi_idx = iou, idx
         if multi > best[1] and multi >= MATCH:
-            out.append((taken, multi))
+            out.append((multi_idx, multi))
         elif best[1] >= MATCH:
             out.append(([best[0]], best[1]))
         else:

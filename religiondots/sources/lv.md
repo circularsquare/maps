@@ -319,3 +319,33 @@ GISCO LAU 2021: 119 LAUs, 1,892,623 people
   survey's 13.6%) does not support; the Lutheran figure stays. Not pushed to counts.json
   (`tiles.py --refresh-meta`) while other builders are live. Screenshot: dots on land in all six
   regions, heaviest in Riga, Daugavpils and Liepaja, none in the sea.
+
+## 10. Placement populations: three cities rotated in GISCO's workbook, 2026-10-19 (`eca0185b-rdbug`)
+
+languagedots (`languagedots/sources/lv.md` §4, 2026-10-05) saw that the GISCO LAU 2021 workbook
+gives Jelgava city (0090000) and Jēkabpils city (0110000) each other's population. **Confirmed,
+and it is a three-way rotation: Jūrmala (0130000, Pierīga) is the third leg.** Against CSP's own
+population at the beginning of 2021 (table IRS031 "Population at the beginning of year ... in
+regions, cities, towns and municipalities", `POP_SY`, PxWeb
+`OSP_PUB/POP/IR/IRS/IRS031`, queried 2026-10-19):
+
+| LAU | workbook `pop` (was in `lv_lau.gpkg`) | CSP, 1 Jan 2021 | the workbook's number is |
+|---|---|---|---|
+| Jelgava 0090000 | 21,629 | 55,336 | Jēkabpils's |
+| Jēkabpils 0110000 | 50,248 | 21,629 | Jūrmala's |
+| Jūrmala 0130000 | 55,336 | 50,248 | Jelgava's |
+
+The other six republican cities (Rīga 614,618, Daugavpils 80,627, Liepāja 67,964, Rēzekne 26,839,
+Valmiera 22,971, Ventspils 33,372) equal CSP's. The check that finds the third leg: CSP's own
+regional totals. Zemgale was 5,088 under CSP's 227,520 and Pierīga 5,088 over its 378,982; with
+the three numbers put right both equal CSP exactly. (Kurzeme is 600 under CSP's 236,022 and the
+country 600 under 1,893,223; a revision or one more LAU, not looked into, and it moves nothing
+visible.)
+
+- **Fix**: `sources/lv_geo.py` now carries `pop_fix` (the three CSP figures), asserts the workbook
+  still has the rotated numbers (it stops if a new vintage fixed them), and rewrites
+  `data/geo/lv/lv_lau.gpkg`. Total unchanged at 1,892,623, so the script's own assertion holds.
+- **Effect**: counts do not move (they are the six regions'); only where the dots sit inside
+  Zemgale and Pierīga. Dots at 1:1,000 (1,864 in all, before and after), by LAU: Jelgava 21 -> 55,
+  Jēkabpils 51 -> 20, Jūrmala 54 -> 51. Jelgava's share of Zemgale's placement weight is 9.7% -> 24.3%.
+- Rescattered both editions (1:1,000 and 1:10,000: 1,864 and 180 dots).

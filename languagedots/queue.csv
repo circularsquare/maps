@@ -217,3 +217,13 @@ dj,DJI,Djibouti,E,1.17,drawn,yes,unknown,2009,,,none,,freed 2026-10-05 under AGE
 bt,BTN,Bhutan,E,0.79,drawn,yes,none,2017,,,none,https://www.nsb.gov.bt/,freed 2026-10-05 under AGENT_BRIEF §2 rulings (ethnicity / survey / regional+immigrant)
 tw,TWN,Taiwan,B,23.4,drawn,,home_language,2020,township/district (county reports t006/t007 on stat.gov.tw),368,open_table,https://segis.moi.gov.tw/STATCloud/QueryInterfaceView?COL=bDhjBLjaYkG6VIk7ahD1kA%3D%3D&MCOL=dR9iGyjNqInFlqyg96HAdg%3D%3D,built as tw (cn-tw was Natural Earth's code; countries.py and religiondots use tw)
 xs,,,,,drawn,,,,,,,,
+mp,MNP,Northern Mariana Islands,A,0.05,drawn,,home_language,2020,village/tract (2020 Island Areas DHC),,open_table,https://www2.census.gov/programs-surveys/decennial/2020/data/island-areas/cnmi/,"added 2026-10-19 coverage gaps (eca0185b-terr); no religiondots geography, Kontur MP"
+as,ASM,American Samoa,A,0.05,drawn,yes,home_language,2020,county/village (2020 Island Areas DHC),,open_table,https://www2.census.gov/programs-surveys/decennial/2020/data/island-areas/american-samoa/,added 2026-10-19 coverage gaps (eca0185b-terr)
+je,JEY,Jersey,C,0.1,drawn,yes,none,2021,island,1,none,https://www.gov.je/Government/Census/,added 2026-10-19 coverage gaps (eca0185b-terr)
+im,IMN,Isle of Man,B,0.08,drawn,yes,manx_only,2021,island,1,open_table,https://www.gov.im/about-the-government/statistics/census/,added 2026-10-19 coverage gaps (eca0185b-terr)
+gg,GGY,Guernsey,C,0.065,drawn,,none,2021,island,1,none,https://www.gov.gg/population,"added 2026-10-19 coverage gaps (eca0185b-terr); no religiondots geography, Kontur GG"
+ck,COK,Cook Islands,B,0.015,drawn,yes,unknown,2016/2021,island,1,open_table,https://stats.gov.ck/,added 2026-10-19 coverage gaps (eca0185b-terr)
+fk,FLK,Falkland Islands,C,0.0035,drawn,yes,none,2021,3 locations,3,none,https://www.falklands.gov.fk/policy/census,added 2026-10-19 coverage gaps (eca0185b-terr)
+gi,GIB,Gibraltar,C,0.038,drawn,yes,none,2022,territory,1,none,https://www.gibraltar.gov.gi/,added 2026-10-19 coverage gaps (eca0185b-terr)
+nu,NIU,Niue,B,0.0016,drawn,yes,unknown,2022,island,1,open_table,https://niue.prism.spc.int/,added 2026-10-19 coverage gaps (eca0185b-terr)
+tk,TKL,Tokelau,B,0.0015,drawn,yes,unknown,2016,atoll,3,open_table,https://tokelau.prism.spc.int/,added 2026-10-19 coverage gaps (eca0185b-terr)

@@ -4,7 +4,11 @@
 //!
 //!   cargo run --release --features demand --bin pack_gravity -- IN.json OUT.json
 //!       [--zone-m 2000] [--decay-km K] [--decay-pow A] [--border-factor F] [--tol 1e-4]
+//!       [--coarse UNDER --ends FILE]
 //!       (defaults: kernel::Params; the border factor's is 1, no effect)
+//!
+//! `--coarse` (T-852): blocks of 2x2 squares in thin country (`kernel::coarsen`), judged on each
+//! square's trip ends a weekday, FILE holding one little-endian f32 per cell (`coarse_zones.py`).
 //!
 //! IN may be a finished pack (T-162: re-solving with regions); its old gravity is replaced.
 //! Zones are split by the cells' `region` array when the pack has one, and the decay between
@@ -20,6 +24,7 @@ fn main() {
     let mut pos = vec![];
     let mut p = kernel::Params::default();
     let mut tol = 1e-4f64;
+    let (mut coarse, mut ends_path) = (None::<f64>, None::<String>);
     let mut i = 0;
     while i < args.len() {
         let val = || args.get(i + 1).cloned().expect("missing value");
@@ -45,6 +50,14 @@ fn main() {
                 tol = val().parse().unwrap();
                 i += 1;
             }
+            "--coarse" => {
+                coarse = Some(val().parse().unwrap());
+                i += 1;
+            }
+            "--ends" => {
+                ends_path = Some(val());
+                i += 1;
+            }
             a if a.starts_with("--") => panic!("unknown argument {a}"),
             a => pos.push(a.to_string()),
         }
@@ -54,7 +67,20 @@ fn main() {
     let (header, bin) = pack::load_raw(&inp).unwrap_or_else(|e| panic!("{e}"));
     let city = pack::parse(&header, &bin).unwrap_or_else(|e| panic!("{e}"));
     let t0 = now_ms();
-    let z = kernel::build_zones(&city, p.zone_m);
+    let mut z = kernel::build_zones(&city, p.zone_m);
+    if let Some(under) = coarse {
+        let path = ends_path.as_ref().expect("--coarse needs --ends");
+        let raw = std::fs::read(path).unwrap_or_else(|e| panic!("{path}: {e}"));
+        assert_eq!(raw.len(), 4 * city.len(), "{path}: not one f32 per cell");
+        let mut ends = vec![0f64; z.n];
+        for (c, b) in raw.chunks_exact(4).enumerate() {
+            ends[z.cell_zone[c] as usize] += f32::from_le_bytes(b.try_into().unwrap()) as f64;
+        }
+        let n0 = z.n;
+        z = kernel::coarsen(&z, &ends, under);
+        let blocks = z.size.iter().filter(|&&s| s == 2).count();
+        println!("coarse: {blocks} blocks of 2x2 squares under {under} trip ends a square; zones {n0} -> {}", z.n);
+    }
     let g = kernel::gravity(&z, &p, 1000, tol);
     let ms = now_ms() - t0;
     if g.max_err > tol {
@@ -79,7 +105,12 @@ fn main() {
         println!("  trips between regions: {:.0} ({:.2}%)", cross, 100.0 * cross / g.total);
     }
     let pg = kernel::to_pack_gravity(&z, &g, &p);
-    let (h2, b2) = pack::with_gravity(&header, &bin, &pg).unwrap_or_else(|e| panic!("{e}"));
+    let (mut h2, b2) = pack::with_gravity(&header, &bin, &pg).unwrap_or_else(|e| panic!("{e}"));
+    if let (Some(under), true) = (coarse, z.mixed()) {
+        let mut v: serde_json::Value = serde_json::from_str(&h2).unwrap();
+        v["gravity"]["coarse"] = serde_json::json!({"under_trip_ends": under, "blocks": z.size.iter().filter(|&&s| s == 2).count(), "rule": "a 2x2 block of squares is one zone where at least two of its zones of one region each make under this many trip ends a weekday (T-852)"});
+        h2 = serde_json::to_string_pretty(&v).unwrap() + "\n";
+    }
     // read back what is about to be written before replacing anything
     let back = pack::parse(&h2, &b2).unwrap_or_else(|e| panic!("written pack does not parse: {e}"));
     let bg = back.gravity.as_ref().expect("gravity missing after write");

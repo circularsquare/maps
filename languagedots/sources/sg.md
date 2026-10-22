@@ -111,3 +111,64 @@ Cut from the reader-facing text and not recorded above; verbatim from the old `n
 
 - The 1.64 million non-residents, the work permit and employment pass holders, dependants and students, are not asked at all: the dormitories at Tuas and the domestic workers in flats across the island are missing from these numbers.
 - Thirty planning areas are named and the other twenty-five, home to 25,353 of the people counted, share one row: Rochor, with Little India and Kampong Glam, is among them.
+
+## Coverage gap: the 1,641,590 non-residents (2026-10-19, session eca0185b-gap)
+
+Added as `modelled` rows (AGENT_BRIEF §2, "no measured source at all"), so Singapore now draws
+5,237,872 people: the 3,596,282 residents the census asked plus 1,641,590 it did not. The census
+rows are unchanged. Files: `sources/sg_nonres.py` (stock, mixes, placement; `--build` writes the
+layer), `data/geo/sg/sg_places.gpkg` (religiondots' 332 subzones + 29 dormitory sites + 66
+industrial units), `data/normalized/sg_nonres_sites.csv`, `data/raw/sg/osm_worker_dorms.json` and
+`mp2019_business2.geojson` (Master Plan 2019 Business 2 land, cut from data.gov.sg
+`d_90d86daa5bfaa371668b84fa5f01424f`; the 174 MB source was deleted).
+
+**Stock, June 2020** (the date of the 1,641,590). MOM Foreign workforce numbers, Jun 2020
+column, read from a Wayback snapshot of mom.gov.sg/documents-and-publications/foreign-workforce-numbers
+(2021-03-01; the live page starts at Dec 2021): Employment Pass 189,700; S Pass 188,800; Work Permit
+940,200 = foreign domestic workers 252,600 + construction/marine/process 351,800 + other 335,800;
+other work passes 33,100; total 1,351,800. The 289,790 left of 1,641,590 are dependants,
+long-term visit pass holders and students (MHA's 2018-23 averages are ~150,000 Dependant's Pass
+and ~100,000 non-family LTVP, so the residue is plausible; no student pass count was found).
+Malaysian work permit holders who commute daily are probably in MOM's table and not in the
+non-resident population; the residue absorbs that, so the 289,790 is a floor on dependants.
+
+**Dormitories** (SUTD "Rethinking dorms", 26 May 2020, quoting MOM): about 323,000 workers in
+dormitories: 43 purpose-built (198,320 residents, Tan et al., JAMA 2021), about 1,200
+factory-converted (95,000), construction temporary quarters (20,000). TODAY, May 2020: 85,000
+construction work permit and S Pass holders lived outside dormitories. So: 266,800 construction/
+marine/process workers in dormitories (351,800 - 85,000) and 56,200 other work permit holders.
+
+**Nationality.** MOM does not publish nationality for any pass type (it says so in reply to
+questions; searched parliamentary replies, MOM, Population in Brief 2020 and DESA without finding one).
+Cited fragments: dormitory workers 44% Bangladeshi, 40% Indian, 16% other (a 1,089-worker survey at
+five dormitories, Aug-Nov 2022, PMC11471231; its sectors were 60% construction, 25% marine); Myanmar
+domestic workers ~30,000 of ~250,000 (Inquirer 2015). Everything else is **uncited judgement**:
+the 16% split (Chinese 7, Burmese 4, Thai 2, Malaysian 2, Filipino 1); Indonesian 48 / Filipino 40 /
+Burmese 12 for domestic workers; other work permits Malaysian 25, Chinese 20, Indian 15,
+Bangladeshi 10...; S Pass Malaysian 28, Indian 22, Chinese 20...; Employment Pass Indian 27, Chinese
+15, Malaysian 10, Japanese/American/British 5 each...; dependants and students Indian 25, Chinese
+22, Malaysian 14... (all in `sg_nonres.py`). Nationality -> language through
+`origin_mix.mix(iso, "sg")` (home mix of the origin's drawn map), with two local overrides: Indian
+dormitory workers 60% Tamil (Tamil Nadu is the main source of Indian construction labour; uncited),
+and Malaysians 45% Malay / 38% Chinese languages / 8% Tamil / 6% English (home mix would draw them
+60% Malay; uncited).
+
+**Placement.** Dormitory residents (323,000) on dormitory sites: 29 OSM-named worker dormitories
+(Sungei Tengah Lodge, S11, Tuas View, Westlite sites, Penjuru...) with MOM/press bed counts where
+found (Papan 7,900, Jalan Tukang 3,420, Kranji Way 1,300) and otherwise the mean of the 43
+(198,320/43 = 4,612); the purpose-built residents those 29 do not hold, and the factory-converted
+95,000, go on Master Plan 2019 Business 2 land by subzone (66 subzones with 5+ ha). OSM footprints
+do not track beds, so area was not used. The remaining 29,680 dormitory residents (construction
+quarters and the rounding in "about") and every other group go to planning areas by resident
+population (the same subzone weight as residents). No open source places domestic workers, Employment
+Pass holders or students more finely; HDB/private dwelling type or campus locations would improve it.
+
+**Result.** Non-residents add Bengali 208,000, Mandarin 205,000, Tamil 156,000, Malay 96,000, Hindi
+82,000, Tagalog 63,000, Javanese 60,000, English 59,000, Burmese 57,000, Cebuano 49,000, Indonesian,
+Sundanese, Vietnamese... 102 languages. Singapore's Bengali goes from 0 to 208,000. English (residents'
+48%) falls to 34% of the drawn people.
+
+**Calls someone might reverse:** modelled nationality mixes (above); the dormitory/home split; Malaysian
+commuters treated as absorbed in the residue; using residents' population as the home weight.
+**Room for improvement:** MOM's dormitory list with addresses and capacities (MOM's site did not give one
+openly); MOM nationality by pass type if ever published; HDB sublet and dwelling type by planning area.

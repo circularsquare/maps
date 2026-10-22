@@ -200,9 +200,9 @@ DUTCH_NODE = "indoeuropean.germanic.continental.dutch"
 def lang_of(iso):
     """The shared origin table (sources/origin_mix.py, 2026-10-05): {node: share}, Dutch as the
     label "Dutch". NIDI's SPLITS above are origin_mix overrides for the Netherlands now;
-    NL_OVERRIDES and EXTRA_LANG are kept for the record (the uncited calls, Belgium -> Dutch and
-    South Africa -> Afrikaans, went back to the home mix; Indonesia's FIRST_GEN of 0 still puts
-    the Indonesia-born on Dutch)."""
+    NL_OVERRIDES and EXTRA_LANG are kept for the record (the uncited calls came back as
+    origin_mix overrides on 2026-10-05: Belgium -> Dutch 100%, South Africa -> Afrikaans 75 /
+    English 25; Indonesia's FIRST_GEN of 0 still puts the Indonesia-born on Dutch)."""
     from origin_mix import mix
     return {("Dutch" if n == DUTCH_NODE else n): s for n, s in mix(iso, "nl").items()}
 
