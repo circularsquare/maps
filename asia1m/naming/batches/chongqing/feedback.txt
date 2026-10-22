@@ -1,0 +1,32 @@
+batch chongqing
+1: pick Daba
+2: pick Kaizhou
+3: pick Kuizhou
+4: pick Yunyang
+5: pick Wanzhou
+6: pick Liangping
+7: pick Zhongxian
+8: pick Hechuan
+9: pick Changshou
+10: pick Tongliang
+11: pick Beibei
+12: pick Fuling
+13: pick Yubei
+14: pick Fengdu
+15: pick Jialing
+16: pick Jiangbei
+17: pick Dazu
+18: pick Wuling
+19: pick Shapingba
+20: pick Chongqing
+21: pick Bishan
+22: pick Nan'an
+23: pick Jiulongpo
+24: pick Rongchang
+25: pick Banan
+26: pick Jinfo
+27: pick Yongchuan
+28: pick Jiangjin
+29: pick Qijiang
+30: pick Simian. would baisha be ok? thouh i think simian also ok
+31: pick Xiushan

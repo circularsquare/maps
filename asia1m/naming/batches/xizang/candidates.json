@@ -1,0 +1,128 @@
+{
+  "batch": "xizang",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#f9faf6",
+      "settled": null,
+      "summary": "Huge west and south: Shigatse prefecture (Sangzhuzi, Namling, Gyangze, Lhaze, Ngamring, Tingri, Sa'gya) plus Ngari's Gerze and the Changtang counties Nyima, Bange, Xainza.",
+      "candidates": [
+        {
+          "name": "Shigatse",
+          "local": "日喀则",
+          "origin": "city",
+          "meaning": "Tibetan 'Zhi ka rtse', 'the best estate'; the Chinese 日喀则 is a transliteration. Usual English form, used in place of the official pinyin Xigaze.",
+          "fit": "Sangzhuzi (the city) is 13% of the people and the prefecture holds about 75% of the region; the city is the second largest in Tibet and the seat of Tsang.",
+          "recognisability": "Current prefecture-level city, famous for Tashilhunpo monastery and the Panchen Lama.",
+          "source_url": "https://zh.wikipedia.org/wiki/%E6%A1%91%E7%8F%A0%E5%AD%9C%E5%8C%BA",
+          "source_note": "14世纪初，帕竹王朝在此建城，名“溪卡桑珠孜”…藏语意为“最美的庄园”，汉语译音日喀则",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Tsang",
+          "local": "藏",
+          "origin": "historical",
+          "meaning": "Traditional Tibetan province (gTsang) of the Yarlung Tsangpo valley west of Ü, centred on Shigatse; the 'Tsang' of Ü-Tsang.",
+          "fit": "Tsang is roughly today's Shigatse prefecture, which holds three quarters of the region's people; it does not cover the Changtang counties.",
+          "recognisability": "Own zh-wiki article (衛藏, with the 后藏 sense), 283 hits for 后藏 with 西藏, top ones about Shigatse places.",
+          "source_url": "https://zh.wikipedia.org/wiki/%E8%A1%9B%E8%97%8F",
+          "source_note": "后藏，大致相当于现今的日喀则市（北方小部除外）",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Romanisation: Tibetan forms as used in English (Shigatse, Tsang), not Hanyu Pinyin, since Tibetan is what most people speak. Northern Changtang counties (Nyima, Gerze, Xainza, Bange) are about 12% of the people and most of the area; Changtang (羌塘, https://zh.wikipedia.org/wiki/%E8%97%8F%E5%8C%97%E9%AB%98%E5%8E%9F) would suit that landscape but the people are in Tsang."
+    },
+    {
+      "n": 2,
+      "key": "#f9f8ee",
+      "settled": null,
+      "summary": "Huge north and east: Nagqu (Nagchu, Biru, Baqen, Sog, Amdo, Lhari, Nyainrong), Nyingchi, Bomi, Gongbo'gyamda, western Chamdo (Dengqen, Lhorong, Banbar) and Lhoka's Lhunze and Nagarze.",
+      "candidates": [
+        {
+          "name": "Nagqu",
+          "local": "那曲",
+          "origin": "city",
+          "meaning": "Tibetan 'nag chu', 'black river' (the upper Salween, Nu Jiang); the prefecture and its seat take the name. Spelled Nagqu after the Tibetan pinyin used in English.",
+          "fit": "Nagqu county is the largest unit (13%) and Nagqu prefecture holds 40% of the people and covers most of the region's north; Nyingchi and Chamdo parts lie to the south and east.",
+          "recognisability": "Current prefecture-level city and county; known as the main town of the northern Tibetan plateau.",
+          "source_url": "https://zh.wikipedia.org/wiki/%E9%82%A3%E6%9B%B2%E5%8E%BF",
+          "source_note": "那曲镇 is the largest town in the region (5.9% of its people)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Nyenchen Tanglha",
+          "local": "念青唐古拉",
+          "origin": "mountain",
+          "meaning": "Tibetan 'gnyan chen thang lha', 'mighty grassland god'; the range of snow peaks between the Nagqu plateau and the Lhasa valley.",
+          "fit": "The range runs through Lhari, Biru, Nagqu and Gongbo'gyamda, the middle of this region, and its southern flank borders Lhasa; the region's people live north and east of it, so a landscape name that stands for the whole.",
+          "recognisability": "Own zh-wiki article, 34 hits with 西藏, several about neighbouring rivers and the plateau.",
+          "source_url": "https://zh.wikipedia.org/wiki/%E5%BF%B5%E9%9D%92%E5%94%90%E5%8F%A4%E6%8B%89%E5%B1%B1",
+          "source_note": "位于西藏自治区中东部。近东西走向",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Salween",
+          "local": "怒江",
+          "origin": "river",
+          "meaning": "The Nu River (Tibetan Gyalmo Ngulchu, 'queen's silver river'), which rises in Amdo county and flows east through Nagqu, Biru, Dengqen and Lhorong before turning south to Yunnan and Myanmar. English name Salween used because the river is known abroad by it; Mandarin form would be Nujiang.",
+          "fit": "Runs through the Nagqu and western Chamdo parts, about 60% of the people; not Nyingchi or the Lhoka bits, which are on the Yarlung Tsangpo side.",
+          "recognisability": "Own zh-wiki article, 774 hits with 西藏; a river of world rank, but the name also suggests Yunnan and Myanmar.",
+          "source_url": "https://zh.wikipedia.org/wiki/%E6%80%92%E6%B1%9F",
+          "source_note": "发源于西藏自治區那曲市安多县境内唐古拉山南麓…流经西藏自治区、云南省，流入缅甸",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Kongpo",
+          "local": "工布",
+          "origin": "historical",
+          "meaning": "Tibetan 'kong po', 'hollow with a great valley mouth'; the traditional region on the upper Nyang River, today's Nyingchi.",
+          "fit": "Only Nyingchi, Bomi and Gongbo'gyamda (about 14% of the people) lie in Kongpo; the rest of the region is steppe and Kham, so it fits a corner, not the whole.",
+          "recognisability": "Own zh-wiki article, 282 hits with 西藏, mostly about Nyingchi places.",
+          "source_url": "https://zh.wikipedia.org/wiki/%E5%B7%A5%E5%B8%83%E5%9C%B0%E5%8C%BA",
+          "source_note": "工布…是西藏东部的一个传统地区，地处尼洋河上游…即现今西藏林芝市下属的巴宜区、工布江达县、米林县…",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Neighbour #f0f4e6 is already Kham, so Kham is not offered here. The region spans several cultural zones (Nagqu steppe, Kongpo around Nyingchi, western Kham), so a mountain name may fit better than the town; both are rated as written."
+    },
+    {
+      "n": 3,
+      "key": "#f3f4e3",
+      "settled": null,
+      "summary": "Lhasa valley: Chengguan, Linzhou, Doilungdeqen, Maizhokunggar, Dagze, Qushui, Nyemo plus Lhoka's Nedong (Zetang), Gonggar, Zhanang, Qonggyai.",
+      "candidates": [
+        {
+          "name": "Lhasa",
+          "local": "拉萨",
+          "origin": "city",
+          "meaning": "Tibetan 'lha sa', 'place of the gods' (another account: 'earth carried by goats'); Tang Chinese rendered it Luoxie.",
+          "fit": "Lhasa prefecture holds 77% of the people and Chengguan alone 35%; it is the central region of the city, which the brief says to name after the city.",
+          "recognisability": "Capital of Xizang and the best known city of the plateau.",
+          "source_url": "https://zh.wikipedia.org/wiki/%E6%8B%89%E8%90%A8%E5%B8%82",
+          "source_note": "寺成为王国的象征并且初命名拉萨，意为藏语“神圣的土地”",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "U",
+          "local": "卫 (衛)",
+          "origin": "historical",
+          "meaning": "Tibetan 'dBus', 'centre'; the traditional central province of Tibet around Lhasa and the lower Yarlung Tsangpo, the 'Ü' of Ü-Tsang. Written Ü in Tibetan romanisation, U in plain English.",
+          "fit": "Ü covers Lhasa and the Zetang area (Lhoka), which together are the whole region.",
+          "recognisability": "Own zh-wiki article (衛藏), 169 hits for 卫藏 with 西藏, mostly about Ü-Tsang culture and Lhasa monasteries; a one-letter name is easily misread.",
+          "source_url": "https://zh.wikipedia.org/wiki/%E8%A1%9B%E8%97%8F",
+          "source_note": "前藏（卫）土语：分布在包括拉萨市、山南市北部和林芝市西部",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Lhasa's urban population in simplemaps (868k) is under 1M, so the city rule is met only loosely; Lhasa is still the obvious name. If Ü is chosen for this region, Tsang pairs with it for region 1."
+    }
+  ]
+}

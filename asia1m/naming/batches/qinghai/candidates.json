@@ -1,0 +1,307 @@
+{
+  "batch": "qinghai",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#c6f3ed",
+      "settled": null,
+      "summary": "North of Xining along the Datong River: Datong 40%, Huzhu 34%, Menyuan 13%, part of Huangzhong 10%.",
+      "candidates": [
+        {
+          "name": "Datong",
+          "local": "大通",
+          "origin": "county",
+          "meaning": "\"Great passage\": the county and river are named for the Song-era Datong fortress town built on the river.",
+          "fit": "Largest unit (40% of people, whole county); the Datong River also runs through Menyuan and Huzhu, the rest of the region.",
+          "recognisability": "Current county (Datong Hui and Tu Autonomous County) and a river with its own zh-wiki article. Not the same characters as Datong in Shanxi (大同), so no clash on the map, but the spelling is identical.",
+          "source_url": "https://zh.wikipedia.org/wiki/大通河",
+          "source_note": "大通河，因宋代在河畔建大通城得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Huzhu",
+          "local": "互助",
+          "origin": "county",
+          "meaning": "\"Mutual aid\": 1929 county name; the county is the Tu (Monguor) heartland.",
+          "fit": "Second unit (34% of people, 94% of the county).",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/互助土族自治县",
+          "source_note": "互助土族自治县 ... 面积3321平方公里，总人口约34万人",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Menyuan",
+          "local": "亹源",
+          "origin": "county",
+          "meaning": "\"Source of the Men (gorge)\": old name of the county at the head of the Datong River, spelled 亹 (mén), now 门.",
+          "fit": "Only 13% of people but 46% of the area; the upper valley of the river.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/门源回族自治县",
+          "source_note": "门源回族自治县，旧称亹（mén）源",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Xining's own prefecture holds 52% of this region's people (Datong and part of Huangzhong), but only region 3 gets the name Xining. Datong is the usual pinyin for two unrelated places; the Shanxi one is 大同. Pacify-type check: Datong, Huzhu and Menyuan are clean."
+    },
+    {
+      "n": 2,
+      "key": "#f4f5ef",
+      "settled": null,
+      "summary": "Huge western Qinghai: Golmud 24%, Delingha 13%, Gonghe 10%, Dulan 8%, Xinghai 7%, Maqên (Golog) 5%, Maqu (Gansu) 4%, plus Qinghai Lake counties Haiyan and Gangca and the rest of Golog.",
+      "candidates": [
+        {
+          "name": "Chaidamu",
+          "local": "柴达木",
+          "origin": "plain",
+          "meaning": "Qaidam basin (Tsaidam), from Mongolian for \"salt marsh/salt lake\"; the basin between the Altun, Qilian and Kunlun ranges.",
+          "fit": "Golmud, Delingha, Dulan, Wulan and Tianjun (about 53% of the people) lie in or on the rim of the basin; Qinghai Lake and Golog counties are outside it.",
+          "recognisability": "Own zh-wiki article, 401 hits with 青海, top ones about this place. Pinyin used because Haixi is mostly Han and Mongol in name only.",
+          "source_url": "https://zh.wikipedia.org/wiki/柴达木盆地",
+          "source_note": "柴达木盆地（藏语：ཚྭ་འདམ་གཤོང་）地处青海省西北部，阿尔金山、祁连山和昆仑山之间，面积約為120,000平方公里",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Golmud",
+          "local": "格尔木",
+          "origin": "city",
+          "meaning": "Mongolian Golmud, \"rivers\" (plural of river bend); pinyin Geermu. Spelled Golmud as that is the usual English form.",
+          "fit": "Largest unit (24% of people, 99% of the county-level city), but only 215k, and the city itself is a small part of the region.",
+          "recognisability": "Current county-level city, a known name (railway terminus, salt lakes).",
+          "source_url": "https://zh.wikipedia.org/wiki/格尔木市",
+          "source_note": "市名源于蒙古语卫拉特方言，是河曲（高勒）的复数形式",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "The region is very large and mixed (Mongol and Han in the basin, Tibetan around Qinghai Lake and Golog). Qinghai Lake (Kokonor / Tso Ngonpo) lies in it but not at its centre, so I left it out; Amdo is kept for region 6. No pacify-type names here."
+    },
+    {
+      "n": 3,
+      "key": "#63e2e2",
+      "settled": null,
+      "summary": "Central Xining: Chengdong, Chengbei, Chengxi, Chengzhong urban districts (2.47M city).",
+      "candidates": [
+        {
+          "name": "Xining",
+          "local": "西宁",
+          "origin": "city",
+          "meaning": "\"Western peace\": Song name for the prefecture (Xining Zhou, 1104), set when the Song took the Huangshui valley from the Tibetan Tsongkha kingdom.",
+          "fit": "Holds the old centre of the city; all four urban districts.",
+          "recognisability": "Provincial capital, a city over 1M. Older names: Qingtang cheng, Shanzhou, Xiping jun.",
+          "source_url": "https://zh.wikipedia.org/wiki/西宁市",
+          "source_note": "西宁市，古称鄯州、西平郡、青唐城",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Frontier-name check: 宁 here is the Song 'pacify the west' sense, and the region is largely Han and Hui. But Xining is plainly the name the city is known by, and the brief says the central region of a 1M+ city takes the city's name, so I rank it first with no alternative. If Anita wants one, Qingtang (the Tsongkha-era city, 青唐城) is the old name but is far less known."
+    },
+    {
+      "n": 4,
+      "key": "#adf0f0",
+      "settled": null,
+      "summary": "Upper Huangshui west of Xining: Huangzhong 56%, Huangyuan 22%, outer Xining districts.",
+      "candidates": [
+        {
+          "name": "Huangzhong",
+          "local": "湟中",
+          "origin": "county",
+          "meaning": "\"Middle of the Huang\": the county in the Huangshui valley, renamed in 1946 from Xining county to avoid the clash with Xining city.",
+          "fit": "Largest unit (56% of people, 73% of the county); also holds Kumbum Monastery.",
+          "recognisability": "Current district (Huangzhong, Xining).",
+          "source_url": "https://zh.wikipedia.org/wiki/湟中区",
+          "source_note": "民国三十五年（1946年），因与西宁市同名，西宁县改名湟中县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Kumbum",
+          "local": "塔尔寺",
+          "origin": "other",
+          "meaning": "Tibetan for \"hundred thousand images\" (Kumbum, Ta'er Si), the Gelug monastery at Lushar and birthplace of Tsongkhapa.",
+          "fit": "Sits in Huangzhong's Lusar town, which is in this region (Lushar is 10% of the people).",
+          "recognisability": "Own zh-wiki article, 575 hits with 青海, top ones about this place; one of the six Gelug great monasteries.",
+          "source_url": "https://zh.wikipedia.org/wiki/塔尔寺",
+          "source_note": "则合称格鲁派六大寺院（甘南拉卜楞寺、青海塔尔寺）",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Huangyuan",
+          "local": "湟源",
+          "origin": "county",
+          "meaning": "\"Source of the Huang\": 1913 county name because the Huangshui rises there; its town was Dan'gar.",
+          "fit": "Second unit (22% of people, whole county) and the upper Huangshui.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/湟源县",
+          "source_note": "民国二年（1913年）...丹噶尔厅改为湟源县，因湟水河发源于本县境内",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Old names checked and left out: Linqiang (临羌, Han county seat, only 4 hits with 青海, and 'overlooking the Qiang') and Dan'gar (13 hits). Kumbum is Tibetan in origin although most people here are Han or Hui, so pinyin Ta'ersi would be the Mandarin form; Kumbum is the usual English."
+    },
+    {
+      "n": 5,
+      "key": "#ccf3e7",
+      "settled": null,
+      "summary": "Haidong prefecture: Minhe 35%, Ledu 26%, Hualong 18%, Xunhua 13%, Ping'an 8%; the lower Huangshui and Yellow River.",
+      "candidates": [
+        {
+          "name": "Hehuang",
+          "local": "河湟",
+          "origin": "plain",
+          "meaning": "\"Yellow River and Huangshui\": the old name of the valley land between the two rivers.",
+          "fit": "The region is the lower Huangshui plus the Yellow River at Xunhua and Minhe, with Ledu as the old seat.",
+          "recognisability": "125 zh-wiki pages with 青海 (Hehuang Tibetan kingdom, Hehuang uprisings, Hehuang hua'er songs); no own valley article found.",
+          "source_url": "https://zh.wikipedia.org/wiki/唃厮啰国",
+          "source_note": "唃廝囉政權及其後人在河湟地區百多年的統治",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Ledu",
+          "local": "乐都",
+          "origin": "county",
+          "meaning": "\"Happy capital\": the Southern Liang capital; Tang Shanzhou's seat and the Haidong city seat.",
+          "fit": "Second unit (26% of people, whole district); the historic centre of the valley.",
+          "recognisability": "Current district; capital of Southern Liang (397-414).",
+          "source_url": "https://zh.wikipedia.org/wiki/乐都区",
+          "source_note": "十六国时南凉国建立，定都乐都 ... 开元二年（714年），唐置陇右节度使于鄯州",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Haidong",
+          "local": "海东",
+          "origin": "prefecture",
+          "meaning": "\"East of the sea\" (Qinghai Lake): the prefecture-level city.",
+          "fit": "The region holds 98% of its people, 69% of the prefecture.",
+          "recognisability": "Current prefecture-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/海东市",
+          "source_note": "海东市是中华人民共和国青海省下辖的地级市",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Minhe",
+          "local": "民和",
+          "origin": "county",
+          "meaning": "\"People in harmony\": 1929 county name (mixed Hui, Tu, Han).",
+          "fit": "Largest unit (35% of people).",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/民和回族土族自治县",
+          "source_note": "民和回族土族自治县 ... 面积1891平方公里，总人口约33万人",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Rejected Minhe because it is a generic 1929 name and a corner county on the Gansu border. Hehuang also covers Xining's area, which has already been named Xining, so it does not claim the whole valley. Pacify-type names (Anyi, Poqiang, Ningsai) avoided."
+    },
+    {
+      "n": 6,
+      "key": "#ebf3e6",
+      "settled": null,
+      "summary": "Amdo's south-east: Gannan Tibetan prefecture 46% (Lintan, Jonê, Hezuo, Xiahe, Têwo, Luqu), Huangnan 26% (Tongren, Jainca, Zêkog, Henan), Hainan's Guide, Guinan, Tongde 25%.",
+      "candidates": [
+        {
+          "name": "Amdo",
+          "local": "安多",
+          "origin": "ethnic",
+          "meaning": "Tibetan A mdo, one of the three traditional Tibetan regions (with Ü-Tsang and Kham); here in the usual Tibetan romanisation (Wylie A-mdo).",
+          "fit": "The region holds Labrang, Rebgong and Tao River Tibetans, the south-east core of Amdo; the name also covers much of the rest of Qinghai.",
+          "recognisability": "Own zh-wiki article, 547 hits with 青海, top ones about this place. Tibetan is what most people speak here.",
+          "source_url": "https://zh.wikipedia.org/wiki/安多地区",
+          "source_note": "藏人传统的安多地区被从西藏地方划出",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Rebgong",
+          "local": "热贡",
+          "origin": "historical",
+          "meaning": "Tibetan Reb kong (Rêbgong), the valley of Tongren with its thangka painting; Wylie. Chinese: Regong, Tongren.",
+          "fit": "Tongren, Jainca, Zêkog and Henan (Huangnan prefecture, 26% of people), not the Gannan half.",
+          "recognisability": "18 zh-wiki pages with 青海; own article for Regong art, Tongren article gives the Tibetan name.",
+          "source_url": "https://zh.wikipedia.org/wiki/同仁市",
+          "source_note": "同仁市（藏語：རེབ་ཀོང་，威利转写：reb kong，藏语拼音：Rêbgong）",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Labrang",
+          "local": "拉卜楞",
+          "origin": "other",
+          "meaning": "Tibetan bla brang, from Labrang (lama's residence): the Labrang Tashikyil monastery town at Xiahe.",
+          "fit": "Xiahe is 7.5% of the region and Hezuo (next door) 8.6%; the monastery is the centre of the Gannan half.",
+          "recognisability": "333 zh-wiki pages with 甘肃; own articles for the monastery, the town and the old Labrang district.",
+          "source_url": "https://zh.wikipedia.org/wiki/拉卜楞寺",
+          "source_note": "“拉卜楞”由“拉章”音变而来 ... 因拉卜楞寺而得名",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Taozhou",
+          "local": "洮州",
+          "origin": "prefecture",
+          "meaning": "Prefecture on the Tao River (Taozhou, 561 to 1267, then a Ming garrison), seat at Lintan.",
+          "fit": "Seat Lintan (12%); the Tao River also runs through Jonê and Luqu, which add 12% more.",
+          "recognisability": "Own zh-wiki article, 253 hits with 甘肃; the walled garrison city still stands.",
+          "source_url": "https://zh.wikipedia.org/wiki/洮州",
+          "source_note": "北周保定元年（561年）于吐谷浑洮阳城置，治所在美相县（今甘肃省临潭县）",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Split roughly evenly between Gansu (47%) and Qinghai (52%). Tibetan is the spoken language, but Lintan and Guide have many Hui and Han, so Taozhou is a Han-era name. Guide (贵德, 10% of people) is left out: it and the old Guide suo (归德所, 'return to virtue') carry a submit-to-the-court sense. Labrang and Rebgong are in the same Tibetan dialect group (拉卜楞-热贡方言). Amdo is distinct from the named neighbours Ngawa and Kham."
+    },
+    {
+      "n": 7,
+      "key": "#f7f9ee",
+      "settled": null,
+      "summary": "Yushu prefecture and its neighbours: Yushu 15%, Qamdo 12%, Nangqên 10%, Jomdo 8%, Dêgê 8%, Sêrxü 8%, Chindu, Zadoi, and others across Qinghai, Tibet and Sichuan.",
+      "candidates": [
+        {
+          "name": "Yushu",
+          "local": "玉树",
+          "origin": "prefecture",
+          "meaning": "Chinese rendering of Tibetan Yul shul (Yüxü; Wylie). The seat is Gyêgu (Jyekundo).",
+          "fit": "Largest unit (15%) and the prefecture of the same name holds 44% of the region's people; Tibetan is the spoken language.",
+          "recognisability": "Current prefecture and city; also known for the 2010 earthquake.",
+          "source_url": "https://zh.wikipedia.org/wiki/玉树市",
+          "source_note": "玉树市（藏語：ཡུལ་ཤུལ་གྲོང་ཁྱེར།，威利转写：yul shul，藏语拼音：Yüxü）",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Qamdo",
+          "local": "昌都",
+          "origin": "city",
+          "meaning": "Tibetan Chab mdo, \"where the waters meet\": the Dza and Ngom rivers join at the town.",
+          "fit": "Second unit (12%) and the biggest city here (the whole prefecture is 798k); 39% of the region's people are in Qamdo prefecture.",
+          "recognisability": "Current prefecture-level city (Qamdo, Xizang).",
+          "source_url": "https://zh.wikipedia.org/wiki/卡若区",
+          "source_note": "昌都在藏语中的意思是“水汇合口处”",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Nangchen",
+          "local": "囊谦",
+          "origin": "historical",
+          "meaning": "Tibetan Nang chen, a kingdom of 20 kings that ruled most of the Yushu area for over 600 years; also a county. Wylie.",
+          "fit": "10% of people, whole county; the historical state covered much of the south of the region.",
+          "recognisability": "Current county; the kingdom is described in the county article's history section.",
+          "source_url": "https://zh.wikipedia.org/wiki/囊谦县",
+          "source_note": "囊谦王家族逐步取得玉树大部分地区的统治权，并沿传二十代，统治当地600多年",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Part of Kham culturally (the neighbour Kham, #f0f4e6, is already named), so Yushu and Nangchen sit near that name; Tongtian River (通天河) was checked (75 hits) but is a river that runs through Yushu and Zhidoi only, so it is not listed."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+batch xinjiang-south
+1: pick Yanqi
+2: pick Aksu
+3: pick Korla
+4: pick Kucha
+5: pick Tarim
+6: pick Kashgar
+7: pick Payzawat. Went with Payzawat (Jiashi's Uyghur name, as on en-wiki); nearly all Uyghur.
+8: pick Maralbexi
+9: pick Taklamakan
+10: pick Kizilsu
+11: pick Yarkand
+12: pick Hotan

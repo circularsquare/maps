@@ -1,0 +1,1714 @@
+{
+ "name": "qinghai",
+ "province": "Qinghai",
+ "prefectures": [],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 4874,
+   "y": 2705,
+   "w": 800,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    2,
+    7
+   ]
+  },
+  {
+   "tag": "2",
+   "x": 5674,
+   "y": 2705,
+   "w": 773,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ]
+  },
+  {
+   "tag": "3",
+   "x": 4874,
+   "y": 3505,
+   "w": 800,
+   "h": 669,
+   "scale": 2,
+   "regions": [
+    2,
+    7
+   ]
+  },
+  {
+   "tag": "4",
+   "x": 5674,
+   "y": 3505,
+   "w": 773,
+   "h": 669,
+   "scale": 2,
+   "regions": [
+    2,
+    6,
+    7
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#c6f3ed",
+   "color": "#c6f3ed",
+   "lon": 101.7561,
+   "lat": 37.192,
+   "bbox": [
+    5963,
+    3066,
+    6115,
+    3208
+   ],
+   "area_px": 12457,
+   "people": 1199804,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Datonghuizutuzu",
+     "local": "大通回族土族自治县",
+     "prefecture": "Xining",
+     "prefecture_local": "西宁市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.401,
+     "area_share": 0.228,
+     "cover": 1.0
+    },
+    {
+     "name": "Huzhu Tu",
+     "local": "互助土族自治县",
+     "prefecture": "Haidong",
+     "prefecture_local": "海东市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.337,
+     "area_share": 0.243,
+     "cover": 0.944
+    },
+    {
+     "name": "Menyuan Hui",
+     "local": "门源回族自治县",
+     "prefecture": "Haibeizangzu",
+     "prefecture_local": "海北藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.131,
+     "area_share": 0.459,
+     "cover": 0.999
+    },
+    {
+     "name": "Huangzhong",
+     "local": "湟中县",
+     "prefecture": "Xining",
+     "prefecture_local": "西宁市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.103,
+     "area_share": 0.058,
+     "cover": 0.238
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Qinghai",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.189
+    },
+    {
+     "level": "prefecture",
+     "name": "Xining",
+     "local": "西宁市",
+     "province": "Qinghai",
+     "country": "China",
+     "people_share": 0.516,
+     "cover": 0.247
+    },
+    {
+     "level": "prefecture",
+     "name": "Haidong",
+     "local": "海东市",
+     "province": "Qinghai",
+     "country": "China",
+     "people_share": 0.351,
+     "cover": 0.284
+    },
+    {
+     "level": "prefecture",
+     "name": "Haibei Tibetan Autonomous Prefecture",
+     "local": "海北藏族自治州",
+     "province": "Qinghai",
+     "country": "China",
+     "people_share": 0.131,
+     "cover": 0.548
+    }
+   ],
+   "towns": [
+    {
+     "town": "桥头镇",
+     "county": "大通回族土族自治县",
+     "city": "西宁市",
+     "people_share": 0.083,
+     "cover": 1.0
+    },
+    {
+     "town": "长宁镇",
+     "county": "大通回族土族自治县",
+     "city": "西宁市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "威远镇",
+     "county": "互助土族自治县",
+     "city": "海东市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "拦隆口镇",
+     "county": "湟中县",
+     "city": "西宁市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "红崖子沟乡",
+     "county": "互助土族自治县",
+     "city": "海东市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "黄家寨镇",
+     "county": "大通回族土族自治县",
+     "city": "西宁市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Qiaotou",
+     "admin": "Qinghai",
+     "pop": 114712
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f4f5ef",
+     "border_px": 2011
+    },
+    {
+     "key": "#ddfaf9",
+     "border_px": 1293
+    },
+    {
+     "key": "#d1f1f7",
+     "border_px": 1261
+    },
+    {
+     "key": "#ccf3e7",
+     "border_px": 1148
+    },
+    {
+     "key": "#d0faf8",
+     "border_px": 764
+    },
+    {
+     "key": "#adf0f0",
+     "border_px": 733
+    },
+    {
+     "key": "#63e2e2",
+     "border_px": 346
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 5910,
+    "y0": 3013,
+    "k": 1.0,
+    "w": 258,
+    "h": 248
+   }
+  },
+  {
+   "key": "#f4f5ef",
+   "color": "#f4f5ef",
+   "lon": 96.6536,
+   "lat": 36.6556,
+   "bbox": [
+    5074,
+    2905,
+    6114,
+    3654
+   ],
+   "area_px": 376014,
+   "people": 1215800,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Golmud",
+     "local": "格尔木市",
+     "prefecture": "Haiximengguzuzangzu",
+     "prefecture_local": "海西蒙古族藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.244,
+     "area_share": 0.171,
+     "cover": 0.986
+    },
+    {
+     "name": "Delingha",
+     "local": "德令哈市",
+     "prefecture": "Haiximengguzuzangzu",
+     "prefecture_local": "海西蒙古族藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.129,
+     "area_share": 0.236,
+     "cover": 1.0
+    },
+    {
+     "name": "Gonghe",
+     "local": "共和县",
+     "prefecture": "Hainanzangzu",
+     "prefecture_local": "海南藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.104,
+     "area_share": 0.035,
+     "cover": 0.995
+    },
+    {
+     "name": "Dulan",
+     "local": "都兰县",
+     "prefecture": "Haiximengguzuzangzu",
+     "prefecture_local": "海西蒙古族藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.075,
+     "area_share": 0.109,
+     "cover": 1.0
+    },
+    {
+     "name": "Xinghai",
+     "local": "兴海县",
+     "prefecture": "Hainanzangzu",
+     "prefecture_local": "海南藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.073,
+     "area_share": 0.029,
+     "cover": 0.997
+    },
+    {
+     "name": "Maqên",
+     "local": "玛沁县",
+     "prefecture": "Guoluozangzu",
+     "prefecture_local": "果洛藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.051,
+     "area_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "name": "Maqu",
+     "local": "玛曲县",
+     "prefecture": "Gannanzangzu",
+     "prefecture_local": "甘南藏族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.044,
+     "area_share": 0.023,
+     "cover": 0.999
+    },
+    {
+     "name": "Wulan",
+     "local": "乌兰县",
+     "prefecture": "Haiximengguzuzangzu",
+     "prefecture_local": "海西蒙古族藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.039,
+     "area_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "name": "Gadê",
+     "local": "甘德县",
+     "prefecture": "Guoluozangzu",
+     "prefecture_local": "果洛藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.035,
+     "area_share": 0.017,
+     "cover": 1.0
+    },
+    {
+     "name": "Tianjun",
+     "local": "天峻县",
+     "prefecture": "Haiximengguzuzangzu",
+     "prefecture_local": "海西蒙古族藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.035,
+     "area_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "name": "Haiyan",
+     "local": "海晏县",
+     "prefecture": "Haibeizangzu",
+     "prefecture_local": "海北藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.034,
+     "area_share": 0.01,
+     "cover": 0.997
+    },
+    {
+     "name": "Gangca",
+     "local": "刚察县",
+     "prefecture": "Haibeizangzu",
+     "prefecture_local": "海北藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.033,
+     "area_share": 0.02,
+     "cover": 1.0
+    },
+    {
+     "name": "Darlag",
+     "local": "达日县",
+     "prefecture": "Guoluozangzu",
+     "prefecture_local": "果洛藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.026,
+     "area_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "name": "Jigzhi",
+     "local": "久治县",
+     "prefecture": "Guoluozangzu",
+     "prefecture_local": "果洛藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.024,
+     "area_share": 0.02,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Qinghai",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.947,
+     "cover": 0.181
+    },
+    {
+     "level": "prefecture",
+     "name": "Haixi Mongolian Autonomous Prefecture",
+     "local": "海西蒙古族自治州",
+     "province": "Qinghai",
+     "country": "China",
+     "people_share": 0.523,
+     "cover": 0.993
+    },
+    {
+     "level": "prefecture",
+     "name": "Hainan Tibetan Autonomous Prefecture",
+     "local": "海南藏族自治州",
+     "province": "Qinghai",
+     "country": "China",
+     "people_share": 0.179,
+     "cover": 0.444
+    },
+    {
+     "level": "prefecture",
+     "name": "Golog Tibetan Autonomous Prefecture",
+     "local": "果洛藏族自治州",
+     "province": "Qinghai",
+     "country": "China",
+     "people_share": 0.164,
+     "cover": 0.953
+    },
+    {
+     "level": "prefecture",
+     "name": "Haibei Tibetan Autonomous Prefecture",
+     "local": "海北藏族自治州",
+     "province": "Qinghai",
+     "country": "China",
+     "people_share": 0.077,
+     "cover": 0.327
+    }
+   ],
+   "towns": [
+    {
+     "town": "郭勒木德镇",
+     "county": "格尔木市",
+     "city": "海西蒙古族藏族自治州",
+     "people_share": 0.151,
+     "cover": 1.0
+    },
+    {
+     "town": "恰卜恰镇",
+     "county": "共和县",
+     "city": "海南藏族自治州",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "花土沟镇",
+     "county": "德令哈市",
+     "city": "海西蒙古族藏族自治州",
+     "people_share": 0.029,
+     "cover": 1.0
+    },
+    {
+     "town": "怀头他拉镇",
+     "county": "德令哈市",
+     "city": "海西蒙古族藏族自治州",
+     "people_share": 0.025,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Golmud",
+     "admin": "Qinghai",
+     "pop": 215214
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f7f9ee",
+     "border_px": 11478
+    },
+    {
+     "key": "#e9f4f6",
+     "border_px": 8594
+    },
+    {
+     "key": "#f9faf6",
+     "border_px": 7426,
+     "name": "Tsang"
+    },
+    {
+     "key": "#edf4e9",
+     "border_px": 6052,
+     "name": "Ngawa"
+    },
+    {
+     "key": "#ebf3e6",
+     "border_px": 5731
+    },
+    {
+     "key": "#ddfaf9",
+     "border_px": 3227
+    },
+    {
+     "key": "#f1ecf7",
+     "border_px": 3122
+    },
+    {
+     "key": "#c6f3ed",
+     "border_px": 2011
+    },
+    {
+     "key": "#adf0f0",
+     "border_px": 1133
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 4710,
+    "y0": 2541,
+    "k": 0.29411764705882354,
+    "w": 520,
+    "h": 434
+   }
+  },
+  {
+   "key": "#63e2e2",
+   "color": "#63e2e2",
+   "lon": 101.7582,
+   "lat": 36.6353,
+   "bbox": [
+    6031,
+    3188,
+    6048,
+    3204
+   ],
+   "area_px": 181,
+   "people": 1215550,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Chengdong",
+     "local": "城东区",
+     "prefecture": "Xining",
+     "prefecture_local": "西宁市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.289,
+     "area_share": 0.276,
+     "cover": 0.9
+    },
+    {
+     "name": "Chengbei",
+     "local": "城北区",
+     "prefecture": "Xining",
+     "prefecture_local": "西宁市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.241,
+     "area_share": 0.309,
+     "cover": 0.85
+    },
+    {
+     "name": "Chengxi",
+     "local": "城西区",
+     "prefecture": "Xining",
+     "prefecture_local": "西宁市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.231,
+     "area_share": 0.199,
+     "cover": 0.957
+    },
+    {
+     "name": "Chengzhong",
+     "local": "城中区",
+     "prefecture": "Xining",
+     "prefecture_local": "西宁市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.207,
+     "area_share": 0.16,
+     "cover": 0.766
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Qinghai",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.191
+    },
+    {
+     "level": "prefecture",
+     "name": "Xining",
+     "local": "西宁市",
+     "province": "Qinghai",
+     "country": "China",
+     "people_share": 0.986,
+     "cover": 0.479
+    }
+   ],
+   "towns": [
+    {
+     "town": "韵家口镇",
+     "county": "城东区",
+     "city": "西宁市",
+     "people_share": 0.119,
+     "cover": 0.912
+    },
+    {
+     "town": "虎台街道",
+     "county": "城西区",
+     "city": "西宁市",
+     "people_share": 0.085,
+     "cover": 1.0
+    },
+    {
+     "town": "朝阳街道",
+     "county": "城北区",
+     "city": "西宁市",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "小桥大街街道",
+     "county": "城北区",
+     "city": "西宁市",
+     "people_share": 0.064,
+     "cover": 1.0
+    },
+    {
+     "town": "南川西路街道",
+     "county": "城中区",
+     "city": "西宁市",
+     "people_share": 0.063,
+     "cover": 0.963
+    },
+    {
+     "town": "南滩街道",
+     "county": "城中区",
+     "city": "西宁市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "清真巷街道",
+     "county": "城东区",
+     "city": "西宁市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "马坊街道",
+     "county": "城北区",
+     "city": "西宁市",
+     "people_share": 0.047,
+     "cover": 0.85
+    },
+    {
+     "town": "西关大街街道",
+     "county": "城西区",
+     "city": "西宁市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "胜利路街道",
+     "county": "城西区",
+     "city": "西宁市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "彭家寨镇",
+     "county": "城西区",
+     "city": "西宁市",
+     "people_share": 0.036,
+     "cover": 0.775
+    },
+    {
+     "town": "火车站街道",
+     "county": "城东区",
+     "city": "西宁市",
+     "people_share": 0.034,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xining",
+     "admin": "Qinghai",
+     "pop": 2467965
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#adf0f0",
+     "border_px": 380
+    },
+    {
+     "key": "#c6f3ed",
+     "border_px": 346
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 5991,
+    "y0": 3148,
+    "k": 4.0,
+    "w": 388,
+    "h": 384
+   }
+  },
+  {
+   "key": "#adf0f0",
+   "color": "#adf0f0",
+   "lon": 101.3968,
+   "lat": 36.5493,
+   "bbox": [
+    5968,
+    3175,
+    6051,
+    3240
+   ],
+   "area_px": 3122,
+   "people": 688260,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Huangzhong",
+     "local": "湟中县",
+     "prefecture": "Xining",
+     "prefecture_local": "西宁市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.555,
+     "area_share": 0.471,
+     "cover": 0.732
+    },
+    {
+     "name": "Huangyuan",
+     "local": "湟源县",
+     "prefecture": "Xining",
+     "prefecture_local": "西宁市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.217,
+     "area_share": 0.44,
+     "cover": 0.996
+    },
+    {
+     "name": "Chengzhong",
+     "local": "城中区",
+     "prefecture": "Xining",
+     "prefecture_local": "西宁市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.111,
+     "area_share": 0.036,
+     "cover": 0.234
+    },
+    {
+     "name": "Chengbei",
+     "local": "城北区",
+     "prefecture": "Xining",
+     "prefecture_local": "西宁市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.05,
+     "area_share": 0.014,
+     "cover": 0.1
+    },
+    {
+     "name": "Chengdong",
+     "local": "城东区",
+     "prefecture": "Xining",
+     "prefecture_local": "西宁市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.044,
+     "area_share": 0.016,
+     "cover": 0.078
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Qinghai",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.108
+    },
+    {
+     "level": "prefecture",
+     "name": "Xining",
+     "local": "西宁市",
+     "province": "Qinghai",
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.274
+    }
+   ],
+   "towns": [
+    {
+     "town": "多巴镇",
+     "county": "湟中县",
+     "city": "西宁市",
+     "people_share": 0.101,
+     "cover": 0.989
+    },
+    {
+     "town": "鲁沙尔镇",
+     "county": "湟中县",
+     "city": "西宁市",
+     "people_share": 0.097,
+     "cover": 1.0
+    },
+    {
+     "town": "总寨镇",
+     "county": "城中区",
+     "city": "西宁市",
+     "people_share": 0.084,
+     "cover": 0.898
+    },
+    {
+     "town": "田家寨镇",
+     "county": "湟中县",
+     "city": "西宁市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "大华镇",
+     "county": "湟源县",
+     "city": "西宁市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "上新庄镇",
+     "county": "湟中县",
+     "city": "西宁市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "共和镇",
+     "county": "湟中县",
+     "city": "西宁市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "甘河滩镇",
+     "county": "湟中县",
+     "city": "西宁市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "西堡镇",
+     "county": "湟中县",
+     "city": "西宁市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "大堡子镇",
+     "county": "城北区",
+     "city": "西宁市",
+     "people_share": 0.041,
+     "cover": 0.973
+    },
+    {
+     "town": "申中乡",
+     "county": "湟源县",
+     "city": "西宁市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "大才乡",
+     "county": "湟中县",
+     "city": "西宁市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f4f5ef",
+     "border_px": 1133
+    },
+    {
+     "key": "#c6f3ed",
+     "border_px": 733
+    },
+    {
+     "key": "#ebf3e6",
+     "border_px": 663
+    },
+    {
+     "key": "#ccf3e7",
+     "border_px": 599
+    },
+    {
+     "key": "#63e2e2",
+     "border_px": 380
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 5928,
+    "y0": 3135,
+    "k": 2.0,
+    "w": 326,
+    "h": 290
+   }
+  },
+  {
+   "key": "#ccf3e7",
+   "color": "#ccf3e7",
+   "lon": 102.4106,
+   "lat": 36.1544,
+   "bbox": [
+    6034,
+    3173,
+    6144,
+    3319
+   ],
+   "area_px": 8702,
+   "people": 1038799,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Minhehuizutuzu",
+     "local": "民和回族土族自治县",
+     "prefecture": "Haidong",
+     "prefecture_local": "海东市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.346,
+     "area_share": 0.196,
+     "cover": 0.987
+    },
+    {
+     "name": "Ledu",
+     "local": "乐都区",
+     "prefecture": "Haidong",
+     "prefecture_local": "海东市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.26,
+     "area_share": 0.256,
+     "cover": 0.999
+    },
+    {
+     "name": "Hualong Hui",
+     "local": "化隆回族自治县",
+     "prefecture": "Haidong",
+     "prefecture_local": "海东市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.177,
+     "area_share": 0.277,
+     "cover": 0.965
+    },
+    {
+     "name": "Xunhua Salar",
+     "local": "循化撒拉族自治县",
+     "prefecture": "Haidong",
+     "prefecture_local": "海东市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.127,
+     "area_share": 0.185,
+     "cover": 0.995
+    },
+    {
+     "name": "Ping'an",
+     "local": "平安县",
+     "prefecture": "Haidong",
+     "prefecture_local": "海东市",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.081,
+     "area_share": 0.074,
+     "cover": 0.925
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Qinghai",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.987,
+     "cover": 0.161
+    },
+    {
+     "level": "prefecture",
+     "name": "Haidong",
+     "local": "海东市",
+     "province": "Qinghai",
+     "country": "China",
+     "people_share": 0.985,
+     "cover": 0.69
+    }
+   ],
+   "towns": [
+    {
+     "town": "碾伯镇",
+     "county": "乐都区",
+     "city": "海东市",
+     "people_share": 0.073,
+     "cover": 1.0
+    },
+    {
+     "town": "川口镇",
+     "county": "民和回族土族自治县",
+     "city": "海东市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "平安镇",
+     "county": "平安县",
+     "city": "海东市",
+     "people_share": 0.036,
+     "cover": 0.91
+    },
+    {
+     "town": "清水乡",
+     "county": "循化撒拉族自治县",
+     "city": "海东市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ebf3e6",
+     "border_px": 2071
+    },
+    {
+     "key": "#c6f3ed",
+     "border_px": 1148
+    },
+    {
+     "key": "#d1f1f7",
+     "border_px": 925
+    },
+    {
+     "key": "#a6f1b7",
+     "border_px": 782
+    },
+    {
+     "key": "#bfeede",
+     "border_px": 629
+    },
+    {
+     "key": "#adf0f0",
+     "border_px": 599
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 5983,
+    "y0": 3122,
+    "k": 1.0,
+    "w": 212,
+    "h": 248
+   }
+  },
+  {
+   "key": "#ebf3e6",
+   "color": "#ebf3e6",
+   "lon": 102.0468,
+   "lat": 34.977,
+   "bbox": [
+    5909,
+    3226,
+    6247,
+    3512
+   ],
+   "area_px": 52046,
+   "people": 1081012,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Lintan",
+     "local": "临潭县",
+     "prefecture": "Gannanzangzu",
+     "prefecture_local": "甘南藏族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.122,
+     "area_share": 0.024,
+     "cover": 0.999
+    },
+    {
+     "name": "Guide",
+     "local": "贵德县",
+     "prefecture": "Hainanzangzu",
+     "prefecture_local": "海南藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.103,
+     "area_share": 0.061,
+     "cover": 0.999
+    },
+    {
+     "name": "Tongren",
+     "local": "同仁县",
+     "prefecture": "Huangnanzangzu",
+     "prefecture_local": "黄南藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.093,
+     "area_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "name": "Jonê",
+     "local": "卓尼县",
+     "prefecture": "Gannanzangzu",
+     "prefecture_local": "甘南藏族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.088,
+     "area_share": 0.084,
+     "cover": 0.938
+    },
+    {
+     "name": "Hezuo",
+     "local": "合作市",
+     "prefecture": "Gannanzangzu",
+     "prefecture_local": "甘南藏族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.086,
+     "area_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "name": "Guinan",
+     "local": "贵南县",
+     "prefecture": "Hainanzangzu",
+     "prefecture_local": "海南藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.079,
+     "area_share": 0.115,
+     "cover": 0.982
+    },
+    {
+     "name": "Xiahe",
+     "local": "夏河县",
+     "prefecture": "Gannanzangzu",
+     "prefecture_local": "甘南藏族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.075,
+     "area_share": 0.109,
+     "cover": 0.994
+    },
+    {
+     "name": "Jainca",
+     "local": "尖扎县",
+     "prefecture": "Huangnanzangzu",
+     "prefecture_local": "黄南藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.07,
+     "area_share": 0.027,
+     "cover": 0.973
+    },
+    {
+     "name": "Tongde",
+     "local": "同德县",
+     "prefecture": "Hainanzangzu",
+     "prefecture_local": "海南藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.069,
+     "area_share": 0.081,
+     "cover": 0.991
+    },
+    {
+     "name": "Zêkog",
+     "local": "泽库县",
+     "prefecture": "Huangnanzangzu",
+     "prefecture_local": "黄南藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.066,
+     "area_share": 0.115,
+     "cover": 1.0
+    },
+    {
+     "name": "Têwo",
+     "local": "迭部县",
+     "prefecture": "Gannanzangzu",
+     "prefecture_local": "甘南藏族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.046,
+     "area_share": 0.082,
+     "cover": 1.0
+    },
+    {
+     "name": "Henan Mongol",
+     "local": "河南蒙古族自治县",
+     "prefecture": "Huangnanzangzu",
+     "prefecture_local": "黄南藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.036,
+     "area_share": 0.11,
+     "cover": 0.923
+    },
+    {
+     "name": "Luqu",
+     "local": "碌曲县",
+     "prefecture": "Gannanzangzu",
+     "prefecture_local": "甘南藏族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.033,
+     "area_share": 0.075,
+     "cover": 0.994
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Qinghai",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.523,
+     "cover": 0.089
+    },
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.467,
+     "cover": 0.02
+    },
+    {
+     "level": "prefecture",
+     "name": "Gannan Tibetan Autonomous Prefecture",
+     "local": "甘南藏族自治州",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.456,
+     "cover": 0.717
+    },
+    {
+     "level": "prefecture",
+     "name": "Huangnan Tibetan Autonomous Prefecture",
+     "local": "黄南藏族自治州",
+     "province": "Qinghai",
+     "country": "China",
+     "people_share": 0.261,
+     "cover": 0.983
+    },
+    {
+     "level": "prefecture",
+     "name": "Hainan Tibetan Autonomous Prefecture",
+     "local": "海南藏族自治州",
+     "province": "Qinghai",
+     "country": "China",
+     "people_share": 0.251,
+     "cover": 0.554
+    }
+   ],
+   "towns": [
+    {
+     "town": "尕巴松多镇",
+     "county": "同德县",
+     "city": "海南藏族自治州",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "河西镇",
+     "county": "贵德县",
+     "city": "海南藏族自治州",
+     "people_share": 0.028,
+     "cover": 1.0
+    },
+    {
+     "town": "那吾乡",
+     "county": "合作市",
+     "city": "甘南藏族自治州",
+     "people_share": 0.026,
+     "cover": 1.0
+    },
+    {
+     "town": "隆务镇",
+     "county": "同仁县",
+     "city": "黄南藏族自治州",
+     "people_share": 0.025,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Hezuo",
+     "admin": "Gansu",
+     "pop": 112173
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f4f5ef",
+     "border_px": 5731
+    },
+    {
+     "key": "#edf4e9",
+     "border_px": 2818,
+     "name": "Ngawa"
+    },
+    {
+     "key": "#ccf3e7",
+     "border_px": 2071
+    },
+    {
+     "key": "#e4ebe5",
+     "border_px": 1758
+    },
+    {
+     "key": "#c0f3cc",
+     "border_px": 1084
+    },
+    {
+     "key": "#daf0e9",
+     "border_px": 834
+    },
+    {
+     "key": "#adf0f0",
+     "border_px": 663
+    },
+    {
+     "key": "#a6f1b7",
+     "border_px": 375
+    },
+    {
+     "key": "#f1ebe7",
+     "border_px": 76
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 5791,
+    "y0": 3108,
+    "k": 0.9059233449477352,
+    "w": 520,
+    "h": 472
+   }
+  },
+  {
+   "key": "#f7f9ee",
+   "color": "#f7f9ee",
+   "lon": 96.2031,
+   "lat": 33.1156,
+   "bbox": [
+    5272,
+    3303,
+    5901,
+    3974
+   ],
+   "area_px": 224108,
+   "people": 1010543,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yushu",
+     "local": "玉树市",
+     "prefecture": "Yushuzangzu",
+     "prefecture_local": "玉树藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.147,
+     "area_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "name": "Qamdo",
+     "local": "昌都县",
+     "prefecture": "Changdou",
+     "prefecture_local": "昌都地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.124,
+     "area_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "name": "Nangqên",
+     "local": "囊谦县",
+     "prefecture": "Yushuzangzu",
+     "prefecture_local": "玉树藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.1,
+     "area_share": 0.049,
+     "cover": 0.999
+    },
+    {
+     "name": "Jomdo",
+     "local": "江达县",
+     "prefecture": "Changdou",
+     "prefecture_local": "昌都地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.083,
+     "area_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "name": "Dêgê",
+     "local": "德格县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.079,
+     "area_share": 0.046,
+     "cover": 0.998
+    },
+    {
+     "name": "Sêrxü",
+     "local": "石渠县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.078,
+     "area_share": 0.091,
+     "cover": 1.0
+    },
+    {
+     "name": "Chindu",
+     "local": "称多县",
+     "prefecture": "Yushuzangzu",
+     "prefecture_local": "玉树藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.068,
+     "area_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "name": "Zadoi",
+     "local": "杂多县",
+     "prefecture": "Yushuzangzu",
+     "prefecture_local": "玉树藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.061,
+     "area_share": 0.143,
+     "cover": 1.0
+    },
+    {
+     "name": "Zhag'yab",
+     "local": "察雅县",
+     "prefecture": "Changdou",
+     "prefecture_local": "昌都地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.059,
+     "area_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "name": "Riwoqê",
+     "local": "类乌齐县",
+     "prefecture": "Changdou",
+     "prefecture_local": "昌都地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.052,
+     "area_share": 0.026,
+     "cover": 1.0
+    },
+    {
+     "name": "Gonjo",
+     "local": "贡觉县",
+     "prefecture": "Changdou",
+     "prefecture_local": "昌都地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.038,
+     "area_share": 0.021,
+     "cover": 0.826
+    },
+    {
+     "name": "Qumarleb",
+     "local": "曲麻莱县",
+     "prefecture": "Yushuzangzu",
+     "prefecture_local": "玉树藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.033,
+     "area_share": 0.188,
+     "cover": 0.998
+    },
+    {
+     "name": "Baxoi",
+     "local": "八宿县",
+     "prefecture": "Changdou",
+     "prefecture_local": "昌都地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.032,
+     "area_share": 0.036,
+     "cover": 0.757
+    },
+    {
+     "name": "Zhidoi",
+     "local": "治多县",
+     "prefecture": "Yushuzangzu",
+     "prefecture_local": "玉树藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.032,
+     "area_share": 0.134,
+     "cover": 0.925
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Qinghai",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.441,
+     "cover": 0.07
+    },
+    {
+     "level": "prefecture",
+     "name": "Yushu Tibetan Autonomous Prefecture",
+     "local": "玉树藏族自治州",
+     "province": "Qinghai",
+     "country": "China",
+     "people_share": 0.441,
+     "cover": 0.994
+    },
+    {
+     "level": "province",
+     "name": "Xizang",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.389,
+     "cover": 0.12
+    },
+    {
+     "level": "prefecture",
+     "name": "Qamdo",
+     "local": "昌都市",
+     "province": "Xizang",
+     "country": "China",
+     "people_share": 0.389,
+     "cover": 0.558
+    },
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.17,
+     "cover": 0.002
+    },
+    {
+     "level": "prefecture",
+     "name": "Garzê Tibetan Autonomous Prefecture",
+     "local": "甘孜藏族自治州",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.17,
+     "cover": 0.158
+    }
+   ],
+   "towns": [
+    {
+     "town": "结古镇",
+     "county": "玉树市",
+     "city": "玉树藏族自治州",
+     "people_share": 0.075,
+     "cover": 1.0
+    },
+    {
+     "town": "城关镇",
+     "county": "昌都县",
+     "city": "昌都地区",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "香达镇",
+     "county": "囊谦县",
+     "city": "玉树藏族自治州",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "吉曲乡",
+     "county": "囊谦县",
+     "city": "玉树藏族自治州",
+     "people_share": 0.018,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Qamdo",
+     "admin": "Tibet",
+     "pop": 798067
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f4f5ef",
+     "border_px": 11478
+    },
+    {
+     "key": "#f9f8ee",
+     "border_px": 10673
+    },
+    {
+     "key": "#f0f4e6",
+     "border_px": 8292,
+     "name": "Kham"
+    },
+    {
+     "key": "#f9faf6",
+     "border_px": 5564,
+     "name": "Tsang"
+    },
+    {
+     "key": "#edf4e9",
+     "border_px": 478,
+     "name": "Ngawa"
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 5038,
+    "y0": 3069,
+    "k": 0.456540825285338,
+    "w": 500,
+    "h": 520
+   }
+  }
+ ]
+}

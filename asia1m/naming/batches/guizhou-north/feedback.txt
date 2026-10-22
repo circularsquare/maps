@@ -1,0 +1,16 @@
+batch guizhou-north
+1: pick Pengshui
+2: pick Furongjiang
+3: pick Tongzi
+4: pick Dejiang
+5: pick Maotai
+6: pick Tongren
+7: pick Sinan
+9: pick Bozhou
+10: pick Bijie
+11: pick Meitan
+12: pick Dafang
+13: pick Hezhang
+14: pick Qianxi
+15: pick Caohai
+16: pick Nayong

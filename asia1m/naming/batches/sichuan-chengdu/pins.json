@@ -58,16 +58,7 @@
  ],
  "14": [],
  "15": [],
- "16": [
-  {
-   "i": 1,
-   "name": "Longquanshan",
-   "x": 88.0,
-   "y": 140.1,
-   "inside": true,
-   "src": "zh-wiki"
-  }
- ],
+ "16": [],
  "17": [
   {
    "i": 0,
@@ -82,6 +73,30 @@
  "19": [
   {
    "i": 0,
+   "name": "Liulichang",
+   "x": 163.7,
+   "y": 175.9,
+   "inside": true,
+   "src": "zh-wiki"
+  },
+  {
+   "i": 1,
+   "name": "Sansheng",
+   "x": 181.5,
+   "y": 178.5,
+   "inside": true,
+   "src": "zh-wiki"
+  },
+  {
+   "i": 2,
+   "name": "Shizishan",
+   "x": 172.9,
+   "y": 165.3,
+   "inside": true,
+   "src": "zh-wiki"
+  },
+  {
+   "i": 3,
    "name": "Jinjiang",
    "x": 159.0,
    "y": 150.3,

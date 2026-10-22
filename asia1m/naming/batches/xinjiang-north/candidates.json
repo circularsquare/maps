@@ -1,0 +1,587 @@
+{
+  "batch": "xinjiang-north",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#f4eef6",
+      "settled": null,
+      "summary": "Altay prefecture almost whole (Altay city, Fuyun, Habahe, Fuhai, Burqin, Qinghe, Jeminay) plus Beitun, Altai range and the Irtysh and Ulungur basins.",
+      "candidates": [
+        {
+          "name": "Altay",
+          "local": "阿勒泰",
+          "origin": "prefecture",
+          "meaning": "\"Golden mountain\" (Mongol/Turkic), the Altai range; the prefecture and seat city carry the name.",
+          "fit": "The region is 99.8% of Altay prefecture, and Altay city is its seat; the range runs along the north of it. Kazakh form Altay, same spelling as the usual English.",
+          "recognisability": "Current prefecture and city; the Altai range is widely known.",
+          "source_url": "https://zh.wikipedia.org/wiki/阿勒泰地区",
+          "source_note": "“阿勒泰”即“金山”之意",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Irtysh",
+          "local": "额尔齐斯河",
+          "origin": "river",
+          "meaning": "The Irtysh (Kazakh Ertis, Chinese Eerqisi), Siberia's great river, which rises in the Altai and crosses the region from east to west.",
+          "fit": "Runs through Fuyun, Altay, Burqin, Beitun and Habahe, so through the heart of the region; the Kazakh majority form is Ertis, but Irtysh is the English name people look up.",
+          "recognisability": "Own zh-wiki article, 121 hits with 新疆, top ones about this river basin.",
+          "source_url": "https://zh.wikipedia.org/wiki/额尔齐斯河",
+          "source_note": "额尔齐斯河从湿地南侧由东向西横穿而过 (Koksu wetland, Altay)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Kanas",
+          "local": "喀纳斯",
+          "origin": "lake",
+          "meaning": "Kanas Lake in the Altai, deep glacial lake in Burqin county (Mongol, Tuva area name).",
+          "fit": "Lake sits in the far north of the region, in Burqin (7% of the people), so it stands for the mountains more than for the whole region.",
+          "recognisability": "Own zh-wiki article, 770 hits with 新疆; a famous tourist lake.",
+          "source_url": "https://zh.wikipedia.org/wiki/喀纳斯湖",
+          "source_note": "位于阿尔泰山脉中，……布尔津县……境内的著名淡水湖",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Region includes about a third of its people across the border in East Kazakhstan (Ust-Kamenogorsk side) per facts.json parents, so Altay and Irtysh both suit."
+    },
+    {
+      "n": 2,
+      "key": "#e2edf9",
+      "settled": null,
+      "summary": "Karamay oil city (three districts) with the Tarbagatay basin: Tacheng, Emin, Toli, Yumin, part of Hoboksar.",
+      "candidates": [
+        {
+          "name": "Karamay",
+          "local": "克拉玛依",
+          "origin": "city",
+          "meaning": "Uyghur Qaramay, \"black oil\", after the asphalt seeps at the oilfield.",
+          "fit": "Karamay districts hold 37% of the region's people, the largest block; the city is under 1M so the big-city rule does not apply. Mandarin pinyin would be Kelamayi; Karamay is the usual English form and the one I used.",
+          "recognisability": "Current prefecture-level city, well known as the oil city.",
+          "source_url": "https://zh.wikipedia.org/wiki/克拉玛依区",
+          "source_note": "维吾尔文：Qaramay Rayoni",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Tarbagatay",
+          "local": "塔尔巴哈台",
+          "origin": "historical",
+          "meaning": "Mongol \"place with marmots\", the Tarbagatay range on the Kazakh border; also the name of the Qing and early Republic district (Tarbagatay Ting).",
+          "fit": "The Qing Tarbagatay Ting covered today's Tacheng, Emin, Yumin and Toli, which together are most of the region outside Karamay; the range lies just north of Tacheng. I used the Kazakh/Uyghur form Tarbagatay (people in the Tacheng basin are mixed, Kazakh large); pinyin would be Taerbahatai.",
+          "recognisability": "Own zh-wiki article, 295 hits with 新疆, top ones about this place. The mountain and the old district are both known.",
+          "source_url": "https://zh.wikipedia.org/wiki/塔尔巴哈台",
+          "source_note": "塔尔巴哈台厅……治所在今新疆维吾尔自治区塔城市……辖境相当今新疆塔城、额敏、裕民、托里等市县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Tacheng",
+          "local": "塔城",
+          "origin": "city",
+          "meaning": "\"Tower city\" (Chinese short form of Tarbagatay; Uyghur Chöchek, Kazakh Shäweshek).",
+          "fit": "Seat of the prefecture; city holds 17% of the region's people, with Emin 20%. Does not cover Karamay, so Tarbagatay fits better.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/塔城市",
+          "source_note": "维吾尔文 Chöchek Shehiri；原称塔尔巴哈台绥靖城",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Tacheng city was first named Tarbagatay Suijing cheng (绥靖, 'pacify and calm'); that is only the old fort name and I did not propose it. Emin (额敏, from the Emin River, Yemil of the Qara Khitai capital) is 20% and was left out as a lesser fit."
+    },
+    {
+      "n": 3,
+      "key": "#d6e4f4",
+      "settled": null,
+      "summary": "Western Dzungaria and Bortala valley: Wusu, Kuitun, Dushanzi, Shuanghe, Bole, Jinghe, Wenquan, around Ebinur Lake.",
+      "candidates": [
+        {
+          "name": "Bortala",
+          "local": "博尔塔拉",
+          "origin": "prefecture",
+          "meaning": "Mongol, roughly \"grey-green steppe\"; the Bortala river and the Mongol autonomous prefecture.",
+          "fit": "Bole, Jinghe and Wenquan hold 38% of the people and the whole prefecture is inside the region. Used the usual English form Bortala (pinyin Boertala); the towns here are mostly Mandarin-speaking.",
+          "recognisability": "Current prefecture; the Bortala river has its own article.",
+          "source_url": "https://zh.wikipedia.org/wiki/博尔塔拉蒙古自治州",
+          "source_note": "博乐市是博尔塔拉蒙古自治州首府……博尔塔拉河",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Wusu",
+          "local": "乌苏",
+          "origin": "county",
+          "meaning": "Mongol usu, \"water\"; the Qing settlement was Kur Kara Usu, \"black water\".",
+          "fit": "Wusu city is the single largest unit (32% of the people, 89% of its own). The Qing city built here was Qingsui (庆绥), which I did not propose.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/乌苏市",
+          "source_note": "1757年……称库尔喀喇乌苏；1772年修筑庆绥城，仍名库尔喀喇乌苏",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Ebinur",
+          "local": "艾比湖",
+          "origin": "lake",
+          "meaning": "Ebinur Lake (Aibi), a salt lake in Jinghe at 189 m, the second lowest spot in Xinjiang; Mongol-origin name, meaning not confirmed in my sources.",
+          "fit": "Lake lies at 83.0 E, 44.9 N, near the region's centre of mass, with the Kuitun, Jing and Bortala rivers all ending in it.",
+          "recognisability": "Own zh-wiki article, 211 hits with 新疆, top ones about this lake basin.",
+          "source_url": "https://zh.wikipedia.org/wiki/艾比湖",
+          "source_note": "艾比湖位于中国新疆博尔塔拉州精河县境内；44.883°N 83.000°E",
+          "rating": 3,
+          "status": "suggested",
+          "lat": 44.883,
+          "lon": 83.0
+        }
+      ],
+      "notes": "Jinghe (精河, Jing river, 'crystal river' in the Qing) is not a pacify name and also fits at 16%. Dushanzi and Kuitun are small parts."
+    },
+    {
+      "n": 4,
+      "key": "#d1e4f1",
+      "settled": null,
+      "summary": "North slope of the Bogda range and the plain beyond: Midong (Ürümqi north), Fukang, Jimsar, Qitai, Wujiaqu, a corner of Changji.",
+      "candidates": [
+        {
+          "name": "Beiting",
+          "local": "北庭",
+          "origin": "historical",
+          "meaning": "\"Northern court\": the Tang Beiting Protectorate (Beshbalik, Uyghur 'five cities') seated at the ruins in Jimsar.",
+          "fit": "Seat (Beiting old city) is in Jimsar, inside the region; the Tang Ting prefecture had Jinman (Jimsar), Pulei and others, covering the Fukang to Qitai belt where most of the region's people live.",
+          "recognisability": "Own zh-wiki article for the protectorate, 462 hits with 新疆, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/北庭大都护府",
+          "source_note": "府治在庭州（今中国新疆吉木萨尔北庭镇北）",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Bogda",
+          "local": "博格达",
+          "origin": "mountain",
+          "meaning": "Mongol bogd, \"sacred\"; the Bogda range, peak 5,445 m, with Tianchi lake on its north side in Fukang.",
+          "fit": "Range stands over the whole southern edge of the region (Fukang, Midong, Jimsar, Qitai); the peak itself is at about 88.3 E, 43.8 N, just at the southern edge or over it.",
+          "recognisability": "Own zh-wiki articles for the range and the peak, 241 hits with 新疆.",
+          "source_url": "https://zh.wikipedia.org/wiki/博格达峰",
+          "source_note": "海拔5,445米，位于东经88.3度，北纬43.8度",
+          "rating": 4,
+          "status": "suggested",
+          "lat": 43.8,
+          "lon": 88.3
+        },
+        {
+          "name": "Qitai",
+          "local": "奇台",
+          "origin": "county",
+          "meaning": "Uncertain: from the seventh Qing watchtower ('seven' sounds like qi), from well-platforms, or from Khitan.",
+          "fit": "Largest by area (36% of the region, 18% of the people); 'Gold Qitai' was one of Xinjiang's four old great cities.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/奇台县",
+          "source_note": "“奇台”地名的来源存在多种说法",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Midong",
+          "local": "米东",
+          "origin": "county",
+          "meaning": "\"East of Miquan\": district made in 2007 from Miquan city and Dongshan district.",
+          "fit": "Largest unit at 30% of the people, but a new administrative name made from a direction word on a lost name, so it reads as part of a whole.",
+          "recognisability": "",
+          "source_url": "https://zh.wikipedia.org/wiki/米东区",
+          "source_note": "2007年由原乌鲁木齐市东山区和昌吉回族自治州米泉市合并而成",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Fukang (阜康, 'prosper and be at ease', Qing gift name) is 17% and sits at the foot of Bogda, if Anita wants a county name."
+    },
+    {
+      "n": 5,
+      "key": "#cbe6f9",
+      "settled": null,
+      "summary": "Changji city, Hutubi and most of Manas on the north-Tianshan plain, with part of Toutunhe and Wujiaqu fringe.",
+      "candidates": [
+        {
+          "name": "Changji",
+          "local": "昌吉",
+          "origin": "city",
+          "meaning": "Chinese rendering of the Uyghur/Mongol name Sanji; its meaning is not given in the sources I read.",
+          "fit": "Changji city holds 39% of the people (75% of the city); it is the seat of the prefecture. The city is under 1M, so it is not reserved. Mostly Mandarin-speaking, so pinyin.",
+          "recognisability": "Current prefecture seat and county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/昌吉市",
+          "source_note": "昌吉回族自治州的州府",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Hutubi",
+          "local": "呼图壁",
+          "origin": "county",
+          "meaning": "From the Hutubi river (Hutukebai), Dzungar Mongol for \"auspicious\", or \"place with a spirit\".",
+          "fit": "Whole county, 33% of the people; avoids repeating the city name of the prefecture.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/呼图壁县",
+          "source_note": "“呼图壁”因呼图克拜郭勒（今呼图壁河）而得名……意为“吉祥”",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Manas",
+          "local": "玛纳斯",
+          "origin": "river",
+          "meaning": "Oirat \"patrol\" or \"guard\"; the Manas river, which ends in Manas Lake.",
+          "fit": "Manas county holds 20% here (and 7% of Shihezi's region); the river runs on the boundary with the Shihezi region, so it is shared.",
+          "recognisability": "Own zh-wiki article for the county; the epic Manas is Kyrgyz and a different place, which lowers its fit.",
+          "source_url": "https://zh.wikipedia.org/wiki/玛纳斯县",
+          "source_note": "得名于流经于此地的玛纳斯河，“玛纳斯”在卫拉特语中意为“巡逻者”",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Suilai",
+          "local": "绥来",
+          "origin": "historical",
+          "meaning": "\"Pacify and bring (the people) to come\": the Qing name of today's Manas county seat (1778 to 1954).",
+          "fit": "Old name of Manas county only, a minority part.",
+          "recognisability": "",
+          "source_url": "https://zh.wikipedia.org/wiki/玛纳斯县",
+          "source_note": "乾隆四十三年（1778）置绥来县治……1954年2月1日，改绥来县为玛纳斯县",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Suilai rejected for its pacify meaning; Manas is the current name and works as the alternative."
+    },
+    {
+      "n": 6,
+      "key": "#cfe3f6",
+      "settled": null,
+      "summary": "Shihezi city (52%) and Shawan county (38%), plus a corner of Manas.",
+      "candidates": [
+        {
+          "name": "Shihezi",
+          "local": "石河子",
+          "origin": "city",
+          "meaning": "\"Stone river\": a small stream with a stony bed east of the town.",
+          "fit": "City holds 52% of the people (99.9% of itself), seat of the Eighth Division; under 1M, so a plain city name fits.",
+          "recognisability": "Current prefecture-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/石河子市",
+          "source_note": "东有泉水汇成的小河，其底多石，因以得名",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Shawan",
+          "local": "沙湾",
+          "origin": "county",
+          "meaning": "\"Sand bay\" (Chinese name, old Shawan is a town in the county).",
+          "fit": "County holds 38% of the people and 67% of the area; Shihezi city was part of Shawan until 1976.",
+          "recognisability": "Current county-level city (2021).",
+          "source_url": "https://zh.wikipedia.org/wiki/沙湾市",
+          "source_note": "2021年1月，经国务院批准撤销沙湾县，设立县级沙湾市",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 7,
+      "key": "#e4c4fa",
+      "settled": null,
+      "summary": "Ghulja (Yining city, 68%) and the nearby part of Yining county (31%) in the Ili valley; very small on the map.",
+      "candidates": [
+        {
+          "name": "Ghulja",
+          "local": "伊宁",
+          "origin": "city",
+          "meaning": "Uyghur Ghulja, Kazakh Qulja, Qing Turkic Gholja; the city of the Ili valley, nicknamed the flower city.",
+          "fit": "City (68%) and county (31%) are both Ghulja in Uyghur, Qulja in Kazakh; Uyghur is the largest speech community here, so I used the Uyghur romanisation Ghulja. Chinese 'Yining' derives from the old Ningyuan (宁远, 'pacify the far'), which is why I put Ghulja first.",
+          "recognisability": "Standard English alternative for Yining, appears on simplemaps as Ghulja.",
+          "source_url": "https://zh.wikipedia.org/wiki/伊宁市",
+          "source_note": "拉丁维吾尔文：Ghulja Shehiri；清代突厥语地名称固勒扎",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Yining",
+          "local": "伊宁",
+          "origin": "city",
+          "meaning": "Chinese name, from Ili plus ning ('peace'), after the Qing county Ningyuan (宁远, 'tranquil/pacify far').",
+          "fit": "The current city and county; the same place as Ghulja, in Mandarin.",
+          "recognisability": "Current county-level city and the prefecture seat.",
+          "source_url": "https://zh.wikipedia.org/wiki/伊宁县",
+          "source_note": "伊宁县原名“宁远县”，始建于清光绪十四年（1888年），因县治宁远城而得名",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Ghulja and Yining are the same place; it is a choice of form. Another unit name, Ili, is on region 10 so it is not repeated here."
+    },
+    {
+      "n": 8,
+      "key": "#6bbbf4",
+      "settled": null,
+      "summary": "Ürümqi's west side: most of Xinshi district and part of Shayibake (Xishan, development zone, Diwopu airport area).",
+      "candidates": [
+        {
+          "name": "Shayibake",
+          "local": "沙依巴克",
+          "origin": "county",
+          "meaning": "Uyghur Saybagh (probably sai 'stream bed' plus bagh 'garden'); a district name, not confirmed in sources I read.",
+          "fit": "Holds 36% of the people (40% of the district); Xinshi is the bigger unit at 63%.",
+          "recognisability": "Current district of Ürümqi; Uyghur form Saybagh. I used the Mandarin spelling.",
+          "source_url": "https://zh.wikipedia.org/wiki/沙依巴克区",
+          "source_note": "沙依巴克区（维吾尔语：سايباغ رايونى）",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Xinshi",
+          "local": "新市区",
+          "origin": "county",
+          "meaning": "\"New city district\"; Uyghur Yengisheher, 'new city'.",
+          "fit": "Largest unit at 63% of the people, but a generic modern district name.",
+          "recognisability": "",
+          "source_url": "https://zh.wikipedia.org/wiki/新市区_(乌鲁木齐市)",
+          "source_note": "维吾尔文：Yëngisheher Rayoni",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Few good options in this small city region. Diwopu (地窝堡, 'dugout', the airport name) has only 68 hits with 新疆 and no article of its own, so I left it out."
+    },
+    {
+      "n": 9,
+      "key": "#298bf1",
+      "settled": null,
+      "summary": "Ürümqi's north-east side: Shuimogou district (50%), part of Tianshan, Xinshi and Midong.",
+      "candidates": [
+        {
+          "name": "Shuimogou",
+          "local": "水磨沟",
+          "origin": "county",
+          "meaning": "\"Watermill gully\", the stream with watermills and hot springs; Uyghur name Bulaqtagh, \"spring mountain\".",
+          "fit": "District holds 50% of the people (88% of the district).",
+          "recognisability": "Current district; known for the Shuimogou hot springs and park.",
+          "source_url": "https://zh.wikipedia.org/wiki/水磨沟区",
+          "source_note": "维吾尔文：Bulaqtagh Rayoni",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Only one good name found."
+    },
+    {
+      "n": 10,
+      "key": "#f9eaf5",
+      "settled": null,
+      "summary": "Lower Ili valley west of Ghulja: Huocheng, Qapqal, Horgos, with the border and some Kazakhstan land (about a third of the people).",
+      "candidates": [
+        {
+          "name": "Ili",
+          "local": "伊犁",
+          "origin": "river",
+          "meaning": "The Ili river, which flows west through the region to Lake Balkhash; also the name of the prefecture.",
+          "fit": "River forms the boundary between Huocheng and Qapqal here and runs on into Kazakhstan, which fits the region's cross-border part. Ghulja region (n=7) on its east end is not named Ili.",
+          "recognisability": "Own zh-wiki article for the river; the prefecture and valley are widely known.",
+          "source_url": "https://zh.wikipedia.org/wiki/伊犁河",
+          "source_note": "全长1439公里。发源于天山山脉，流经中国新疆伊犁哈萨克自治州与哈萨克斯坦阿拉木图州，最终注入巴尔喀什湖",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Almaliq",
+          "local": "阿力麻里",
+          "origin": "historical",
+          "meaning": "Turkic \"apple place\" (Almalik, Almaliq): capital of the Chagatai khans, in Huocheng northwest of Shuiding town.",
+          "fit": "Ruins in Huocheng county, the largest unit (29%); the Chagatai capital sat at its centre.",
+          "recognisability": "Own zh-wiki article, 103 hits with 新疆, top ones about this city and its khans.",
+          "source_url": "https://zh.wikipedia.org/wiki/阿力麻里",
+          "source_note": "阿力麻里（今新疆霍城县水定镇西北）",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Huocheng",
+          "local": "霍城",
+          "origin": "county",
+          "meaning": "From the Horgos (霍尔果斯) fort town; Uyghur Qorghas, 'fortress'. The Qing county seat Suiding (绥定, 'pacify and settle') is not used.",
+          "fit": "County holds 29% of the people (all of it); next is Qapqal Xibe 17%.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/霍城县",
+          "source_note": "霍城县，即霍尔果斯拱宸城……光绪十四年设绥定县治",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Region includes land across the border (Almaty and Jetisu regions, 32% of people), so a river name fits better than a county name. Horgos city is a small part."
+    },
+    {
+      "n": 11,
+      "key": "#498eed",
+      "settled": null,
+      "summary": "Old centre of Ürümqi: Shayibake (50%) and Tianshan (48%) districts, the walled city and Hongshan area.",
+      "candidates": [
+        {
+          "name": "Ürümqi",
+          "local": "乌鲁木齐",
+          "origin": "city",
+          "meaning": "Probably Oirat Mongol \"beautiful pasture\"; some give an old Saka reading as \"willow grove\".",
+          "fit": "The most central region, with Tianshan district (the Qing walled city) and the south-west centre; named after the city as the brief says. Mandarin and Uyghur forms are the same in English.",
+          "recognisability": "The city.",
+          "source_url": "https://zh.wikipedia.org/wiki/乌鲁木齐市",
+          "source_note": "乌鲁木齐为蒙古语，意为“优美的牧场”",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Dihua",
+          "local": "迪化",
+          "origin": "historical",
+          "meaning": "\"Enlighten and civilise\": the name given to Ürümqi by the Qianlong emperor in 1763, used until 1954.",
+          "fit": "Same place, but it is a civilising frontier name for a mixed Uyghur, Hui, Kazakh city.",
+          "recognisability": "",
+          "source_url": "https://zh.wikipedia.org/wiki/乌鲁木齐市",
+          "source_note": "乾隆帝将乌鲁木齐城赐名为迪化城，“迪化”解释为“启迪教化”",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Dihua is rejected for its meaning and because the city name is already used for this region."
+    },
+    {
+      "n": 12,
+      "key": "#d3ddf4",
+      "summary": "Turpan basin and the south Ürümqi mountains: Turpan city (45%), part of Ürümqi county, Dabancheng, Toutunhe.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Turpan",
+          "local": "吐鲁番",
+          "origin": "city",
+          "meaning": "Meaning disputed; one reading is Turkic and Hephthalite for \"place of long residence\".",
+          "fit": "Turpan city holds 45% of the people (77% of it). Uyghur is the main speech here, so I used the Uyghur-based Turpan (pinyin Tulufan) which is also the usual English.",
+          "recognisability": "Current prefecture-level city, known for the oasis and the basin.",
+          "source_url": "https://zh.wikipedia.org/wiki/吐鲁番市",
+          "source_note": "古称吐鲁番（Turpan），其意有争议……语义即“久居之地”",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Gaochang",
+          "local": "高昌",
+          "origin": "historical",
+          "meaning": "\"High and prosperous\": Han garrison commandery of 327, then the Gaochang kingdom (Qocho) and the Uyghur Qocho; today also the Turpan city district.",
+          "fit": "Seat (Karakhoja) is east of Turpan city, inside Turpan city's area of the region; named for the whole basin in the Tang and Uyghur periods.",
+          "recognisability": "Own zh-wiki articles (Gaochang commandery, Qu clan kingdom, Gaochang district), 911 hits with 新疆.",
+          "source_url": "https://zh.wikipedia.org/wiki/高昌郡",
+          "source_note": "前涼建興十五年（327年）……置高昌郡",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Dabancheng",
+          "local": "达坂城",
+          "origin": "county",
+          "meaning": "\"Pass town\" (daban, Turkic for mountain pass), the Dabancheng valley on the road to Turpan.",
+          "fit": "District holds only 9% of the people but 28% of the area; known from a famous folk song.",
+          "recognisability": "Current district of Ürümqi.",
+          "source_url": "https://zh.wikipedia.org/wiki/乌鲁木齐市",
+          "source_note": "2002年……达坂城镇……划归乌鲁木齐市南泉区管辖",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Region ties Turpan city's urban east to Ürümqi's mountain county, an odd cut, but Turpan is the only large unit. Turpan Prefecture's other half (Shanshan) is in region 14."
+    },
+    {
+      "n": 13,
+      "key": "#ece5fa",
+      "settled": null,
+      "summary": "Upper Ili valley: Xinyuan, Nilka, Zhaosu, Tekes, part of Gongliu and Yining county, around the Tekes, Kunes and Kash rivers.",
+      "candidates": [
+        {
+          "name": "Tekes",
+          "local": "特克斯",
+          "origin": "county",
+          "meaning": "The Tekes river, the main source of the Ili (Kazakh Tekes); Turkic, probably from teke, 'wild goat'; not confirmed in my sources.",
+          "fit": "River and county in the south of the region, with Zhaosu in its basin; county 13% of people but river drains Tekes and Zhaosu, the south half.",
+          "recognisability": "Current county, famous for its eight-trigrams town; the river has its own article (35 hits with 新疆).",
+          "source_url": "https://zh.wikipedia.org/wiki/特克斯河",
+          "source_note": "特克斯河……是伊犁河的支流之一",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Xinyuan",
+          "local": "新源",
+          "origin": "county",
+          "meaning": "\"New source\": county name from the Republic (Kunes county renamed).",
+          "fit": "Largest unit at 28% of the people (all of the county), home of the Narat grassland.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/新源县",
+          "source_note": "",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Kunes",
+          "local": "巩乃斯",
+          "origin": "river",
+          "meaning": "The Kunes river (Uyghur Künes), rising in the Narat mountains, which waters Xinyuan and Gongliu; meaning not confirmed.",
+          "fit": "Runs the length of the northern half (Xinyuan, Gongliu, Tekes junction).",
+          "recognisability": "Own zh-wiki article, 222 hits with 新疆 but several about Hejing's Kunes town.",
+          "source_url": "https://zh.wikipedia.org/wiki/巩乃斯河",
+          "source_note": "巩乃斯河……發源於那拉提山，是伊犁河的支流之一",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Zhaosu (昭苏, Uyghur Mongghulküre) and Nilka (尼勒克) are 14% each and were not proposed."
+    },
+    {
+      "n": 14,
+      "key": "#e5f0f9",
+      "settled": null,
+      "summary": "East Xinjiang: Hami city (56%), Shanshan (26%), Barkol, Mori and Yiwu.",
+      "candidates": [
+        {
+          "name": "Hami",
+          "local": "哈密",
+          "origin": "city",
+          "meaning": "Chinese form of Uyghur Qumul (Kumul); meaning not settled in my sources. Also the Ming Hami garrison (卫, 1406 to 1476) with its seat in today's Hami city.",
+          "fit": "City holds 56% of the people (99.9% of it), and the whole of Hami prefecture's people are here. I used Hami because it is the usual English form (melons, the Ming guard); Kumul is the Uyghur form used by many locals outside the city.",
+          "recognisability": "Current prefecture-level city; the Hami garrison is documented in CHGIS.",
+          "source_url": "https://zh.wikipedia.org/wiki/哈密市",
+          "source_note": "哈密卫（卫，1406-1476）今新疆哈密市",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Shanshan",
+          "local": "鄯善",
+          "origin": "county",
+          "meaning": "Ancient oasis kingdom of Shanshan (Loulan) whose name the county reuses; Uyghur Pichan.",
+          "fit": "County holds 26% of the people, the second largest unit.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/鄯善县",
+          "source_note": "",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Barkol",
+          "local": "巴里坤",
+          "origin": "county",
+          "meaning": "Turkic Barköl, probably \"tiger lake\" (bars plus köl); a lake and steppe at the foot of the Tianshan, Kazakh autonomous county.",
+          "fit": "Holds 8% of the people but 19% of the area, the steppe to the north.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/哈密市",
+          "source_note": "",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Neighbour name on the map is Dunhuang (south-east). Barkol meaning is my reading, not from a source I read."
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+batch qinghai
+1: pick Datong
+2: pick Qaidam. She picked Chaidamu but wants the non-Han name; Qaidam is the standard English form (Tsaidam older). Qinghai rejected: reads as the whole province.
+3: pick Xining
+4: pick Huangzhong
+5: pick Hehuang
+6: pick Amdo
+7: pick Qamdo. She asked Qamdo vs Yushu; close (Yushu pref 44%, Qamdo pref 39%); kept Qamdo.

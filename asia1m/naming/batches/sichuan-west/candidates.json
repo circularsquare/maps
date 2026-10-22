@@ -175,6 +175,18 @@
       "summary": "Yalong river country and the upper Anning valley: Mianning, Yanyuan, Xide, Muli, Jiulong, part of Xichang.",
       "candidates": [
         {
+          "name": "Yalong",
+          "local": "雅砻江",
+          "origin": "river",
+          "meaning": "The Yalong River (Tibetan Nyag Chu), a major tributary of the Jinsha; rises in the Bayan Har mountains, runs south through Garzê and then down between Muli and Yanyuan, past Mianning's west side to join the Jinsha at Panzhihua. Pinyin Yalong is the usual form; Nyag Chu is the Tibetan, but Mandarin Yalong is used since most of the region's people are Yi and Han.",
+          "fit": "It is the spine of the west of the region: the Jiulong River joins it in Jiulong, it forms the Muli and Yanyuan boundary and the Jinping and Mianning west edge, with Yanyuan, Muli, Jiulong and Mianning on its banks (roughly 55% of the region's people by county share, not measured along the river). The Anning valley half (Mianning, Xide) is on its tributary, and the river follows the edge rather than the dead centre.",
+          "recognisability": "Own zh-wiki article, 556 hits with 四川, top ones the river, its tributaries and the Ertan and Lianghekou dams.",
+          "source_url": "https://zh.wikipedia.org/wiki/雅砻江",
+          "source_note": "雅砻江发源于巴颜喀拉山系……流经四川；九龙河是雅砻江的一级支流；二滩水电站位于雅砻江下游",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
           "name": "Yanyuan",
           "local": "盐源",
           "origin": "county",

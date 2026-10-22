@@ -510,19 +510,54 @@
       "summary": "South-east inner ring: Jinjiang (58%) and part of Longquanyi (25%), the Sansheng flower villages.",
       "candidates": [
         {
+          "name": "Liulichang",
+          "local": "琉璃场",
+          "origin": "historical",
+          "meaning": "\"Glazed-tile yard\": old place name from the Tang-Song Liulichang kiln site; the Liuli township (琉璃乡) was split in 2004 into Liujiang and Chenglong Road sub-districts.",
+          "fit": "Liujiang (19%) and Chenglong Road (25%) are its successors, 44% of the region's people; the kiln and the old name lie at the region's western edge.",
+          "recognisability": "17 hits with 四川, no own article for the name, but the kiln has one; known locally from a metro station.",
+          "source_url": "https://zh.wikipedia.org/wiki/成都琉璃厂窑",
+          "source_note": "其所在地的地名“琉璃场”……均因琉璃厂窑而得名; 2004年撤销琉璃乡、三圣乡，设立柳江街道、成龙路街道、三圣街道 (锦江区)",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Sansheng",
+          "local": "三圣",
+          "origin": "other",
+          "meaning": "Township (三圣乡) until 2004, now Sansheng sub-district; I found no source for the origin of the name.",
+          "fit": "Sansheng is 9% of the region's people; it is the flower-village countryside on the south-east edge of the old Jinjiang.",
+          "recognisability": "Own zh-wiki article, but only 24 hits with 四川.",
+          "source_url": "https://zh.wikipedia.org/wiki/三圣街道",
+          "source_note": "三圣街道，原为三圣乡，位于成都市主城区东南部",
+          "rating": 2,
+          "status": "suggested"
+        },
+        {
+          "name": "Shizishan",
+          "local": "狮子山",
+          "origin": "mountain",
+          "meaning": "\"Lion hill\": an old local hill name, now a sub-district with Sichuan Normal University.",
+          "fit": "Lion Hill sub-district is only 5% of the region.",
+          "recognisability": "272 hits with 四川 but most are other places called Shizishan (Ziyang, Liangshan).",
+          "source_url": "https://zh.wikipedia.org/wiki/狮子山街道_(成都市)",
+          "source_note": "狮子山街道，是成都市锦江区下辖的一个乡镇级行政单位; 因老地名“狮子山”而得名",
+          "rating": 1,
+          "status": "suggested"
+        },
+        {
           "name": "Jinjiang",
           "local": "锦江区",
           "origin": "river",
           "meaning": "\"Brocade river\": the river through Chengdu where Shu brocade was washed; the district is named for it.",
-          "fit": "Holds 53% of the district and is 58% of the region; the region lies east of the river, in the old Huayang county.",
-          "recognisability": "Current district; the river is Chengdu's nickname, Jinguan.",
+          "fit": "Holds 53% of the district and is 58% of the region by people.",
+          "recognisability": "Current district.",
           "source_url": "https://zh.wikipedia.org/wiki/锦江区",
           "source_note": "原名东城区，因流经其区域的锦江得名",
-          "rating": 4,
-          "status": "suggested"
+          "status": "rejected"
         }
       ],
-      "notes": "Only one candidate. Jinjiang is also a city in Fujian (晋江, different characters); a repeat only by spelling."
+      "notes": "Anita rejected Jinjiang: the actual Jinjiang is in the city centre, far from this region. No historic county seat and no real river run through this area; names are all weak. Dongfeng Canal (东风渠, 18 hits) and Damian (大面, 2 hits) were checked and dropped."
     },
     {
       "n": 20,

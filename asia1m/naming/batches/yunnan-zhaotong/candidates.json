@@ -1,0 +1,204 @@
+{
+  "batch": "yunnan-zhaotong",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#ebe1bf",
+      "settled": null,
+      "summary": "Narrow Jinsha-side valleys of northeast Yunnan: Yanjin, Daguan, Suijiang, Shuifu, plus a bit of Yibin county in Sichuan.",
+      "candidates": [
+        {
+          "name": "Yanjin",
+          "local": "盐津",
+          "origin": "county",
+          "meaning": "\"Salt ford\": named for salt wells and a ferry crossing.",
+          "fit": "Yanjin county is 33% of the region's people and nearly all of it is inside; seat of the Nanguang commandery for 247 years.",
+          "recognisability": "Current county; the 'narrowest county town' and cliff coffins.",
+          "source_url": "https://zh.wikipedia.org/wiki/盐津县",
+          "source_note": "因曾拥有盐井产盐并设渡口渡汛而得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Hengjiang",
+          "local": "横江",
+          "origin": "river",
+          "meaning": "\"Cross river\": the Guan River, a right-bank tributary of the Jinsha.",
+          "fit": "Flows down the valleys of this region to join the Jinsha at Shuifu, though its upper course is in the Ludian/Zhaoyang regions.",
+          "recognisability": "Own zh-wiki article, 649 hits with 云南, top ones about this river.",
+          "source_url": "https://zh.wikipedia.org/wiki/横江_(金沙江支流)",
+          "source_note": "亦称关河……在云南省水富县云富镇汇入金沙江",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Daguan",
+          "local": "大关",
+          "origin": "county",
+          "meaning": "\"Great pass\": many fortified passes and stockades in rugged terrain.",
+          "fit": "Daguan county is 23% of the region; Yanjin is larger and the better known of the two.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/大关县",
+          "source_note": "以全县地势险要、关口众多……而得名",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Suijiang (绥江, 13% of people) not offered: 绥 means to pacify."
+    },
+    {
+      "n": 2,
+      "key": "#f1eabe",
+      "settled": null,
+      "summary": "Eastern Zhaotong: Yiliang, Weixin and a part of Zhenxiong, around Zhaxi and Jiaokui.",
+      "candidates": [
+        {
+          "name": "Yiliang",
+          "local": "彝良",
+          "origin": "county",
+          "meaning": "From the old Yiniang tribal area (易娘部, Yiliang zhou 益良州); modern characters read 'Yi people, good'.",
+          "fit": "Yiliang county is 39% of the region's people; its seat Jiaokui (Xiezhou, Dong'an) is in the region.",
+          "recognisability": "Current county, known for the 2012 earthquake.",
+          "source_url": "https://zh.wikipedia.org/wiki/彝良县",
+          "source_note": "于易娘部置益良州（治今彝良县）",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Zhaxi",
+          "local": "扎西",
+          "origin": "city",
+          "meaning": "Old name of Weixin town; the Zhaxi Conference of 1935 was held here.",
+          "fit": "Zhaxi town is the region's largest town (13%) and Weixin county is 35% of it.",
+          "recognisability": "Famous through the Zhaxi Conference; a town of 144k in the city list.",
+          "source_url": "https://zh.wikipedia.org/wiki/威信县",
+          "source_note": "扎西会议 (1935)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Weixin",
+          "local": "威信",
+          "origin": "county",
+          "meaning": "\"Prestige and good faith\".",
+          "fit": "35% of the region's people.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/威信县",
+          "source_note": "威信县……赤水河上游",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Weixin is rejected only because Zhaxi is better known and the Weixin name is 20th century; Yiliang and Zhaxi are both good."
+    },
+    {
+      "n": 3,
+      "key": "#edf3c0",
+      "settled": null,
+      "summary": "Zhenxiong county (99%), the Chishui headwaters and old Mangbu seat.",
+      "candidates": [
+        {
+          "name": "Mangbu",
+          "local": "芒部",
+          "origin": "historical",
+          "meaning": "Name of the Yi chieftaincy (Mangbu 茫部/茫布部) that ruled this area; the name is a transcription.",
+          "fit": "Mangbu route/prefecture was seated at today's Mangbu town in this region for 268 years; it also covered Yiliang and Weixin.",
+          "recognisability": "Own zh-wiki articles for the route and prefecture, 230 hits with 云南, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/芒部府",
+          "source_note": "治所在今云南省镇雄县北芒部；辖境相当今云南省镇雄、彝良、威信等县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Zhenxiong",
+          "local": "镇雄",
+          "origin": "county",
+          "meaning": "\"Subdue the strong\": Ming renaming of Mangbu prefecture after the 1526 gaitu guiliu.",
+          "fit": "Zhenxiong county is 99% of the region's people; the prefecture seat is here.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/镇雄县",
+          "source_note": "嘉靖五年（1526年）改土归流，芒部府改名镇雄军民府",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Zhenxiong is the plain county name but the meaning is a conquest name for a largely Yi area, so Mangbu is ranked first; Anita's call."
+    },
+    {
+      "n": 4,
+      "key": "#f0e3b9",
+      "settled": null,
+      "summary": "Southwest Zhaotong: Ludian, Qiaojia and Yongshan on the Jinsha, including Xiluodu.",
+      "candidates": [
+        {
+          "name": "Ludian",
+          "local": "鲁甸",
+          "origin": "county",
+          "meaning": "Origin of the name not confirmed in the sources read.",
+          "fit": "Ludian county is 36% of the region's people and the region holds all of it.",
+          "recognisability": "Current county, known for the 2014 earthquake.",
+          "source_url": "https://zh.wikipedia.org/wiki/鲁甸县",
+          "source_note": "县人民政府驻文屏街道",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Niulan",
+          "local": "牛栏",
+          "origin": "river",
+          "meaning": "\"Ox pen\": a stone shaped like an ox lies in the river near its mouth.",
+          "fit": "The Niulan River runs along the southwest edge toward the Jinsha, mostly past Ludian and Qiaojia rather than through the middle.",
+          "recognisability": "Own zh-wiki article; the Han-period Tanglang River.",
+          "source_url": "https://zh.wikipedia.org/wiki/牛栏江",
+          "source_note": "因河口附近有一天然巨石形状似牛，横卧江心，故得名",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Qiaojia (26%) and Yongshan (26%) are not offered because the region holds only part of each. Huize to the south is already named."
+    },
+    {
+      "n": 5,
+      "key": "#ebe3a1",
+      "settled": null,
+      "summary": "Zhaotong city (Zhaoyang district) on the Wumeng-area plateau, with a slice of Weining county in Guizhou.",
+      "candidates": [
+        {
+          "name": "Zhaotong",
+          "local": "昭通",
+          "origin": "city",
+          "meaning": "\"Bright and open\": the 1731 renaming of Wumeng prefecture, roughly 'make the way clear'.",
+          "fit": "Holds the city centre; Zhaoyang district is 87% of the region's people; the seat of the prefecture of that name.",
+          "recognisability": "Prefecture-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/昭通市",
+          "source_note": "昭通府 (1731-1911) 今云南省昭通市治",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Wumeng",
+          "local": "乌蒙",
+          "origin": "historical",
+          "meaning": "Name of the old Wumeng tribal territory, a transcription; also the Wumeng mountains.",
+          "fit": "Wumeng route and prefecture were seated here for 450 years in all.",
+          "recognisability": "Own zh-wiki articles for the route, prefecture and mountains, 324 hits with 云南.",
+          "source_url": "https://zh.wikipedia.org/wiki/乌蒙府",
+          "source_note": "治所在今云南省昭通市",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Shushi",
+          "local": "朱提",
+          "origin": "historical",
+          "meaning": "Han county of the Shushi commandery, a transcription; usually read Zhuti in Chinese, Shushi in Wikipedia.",
+          "fit": "County seat 109 BC to AD 764 here; the commandery lay around Zhaotong.",
+          "recognisability": "Own zh-wiki article for the commandery, 337 hits with 云南.",
+          "source_url": "https://zh.wikipedia.org/wiki/朱提郡",
+          "source_note": "朱提（Shúshí）郡",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Zhaotong's urban population (Zhaoyang district) is under 1M, so the city rule does not force it. The name 昭通 is a Qing gaitu guiliu renaming but means opening the way, not pacifying the frontier, so I kept it first; Wumeng is the alternative if Anita prefers the older name."
+    }
+  ]
+}

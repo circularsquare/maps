@@ -1,0 +1,27 @@
+batch sichuan-south
+1: pick Shehong
+2: pick Suining
+3: pick Jianyang
+4: pick Anju
+5: pick Ziyang
+6: pick Meishan
+7: pick Anyue
+8: pick Renshou
+9: pick Qingyi
+10: pick Zizhong
+11: pick Leshan
+12: pick Neijiang
+13: pick Rongxian
+14: pick Dadu
+15: pick Qianwei
+16: pick Zigong
+17: pick Fushun
+18: pick Luxian
+19: pick Luzhou
+20: pick Xuzhou
+21: pick Yibin
+22: pick Hejiang
+23: pick Changning
+24: pick Nanguang
+25: pick Gulin
+26: pick Xingwen

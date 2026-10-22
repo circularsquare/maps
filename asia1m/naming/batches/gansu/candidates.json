@@ -1,0 +1,1054 @@
+{
+  "batch": "gansu",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#e9f4f6",
+      "settled": null,
+      "summary": "Far west of the Hexi Corridor: Jiayuguan, Dunhuang, Yumen, Guazhou, Jinta and the west edge of Jiuquan.",
+      "candidates": [
+        {
+          "name": "Dunhuang",
+          "local": "敦煌",
+          "origin": "city",
+          "meaning": "\"Great and blazing\" (敦, large; 煌, flourishing), the Han commandery set up in 111 BC.",
+          "fit": "Dunhuang city holds 17% of the region's people and over a fifth of its area; the commandery also covered Guazhou, so the name reaches across the western half.",
+          "recognisability": "Current county-level city, famous worldwide for the Mogao caves.",
+          "source_url": "https://zh.wikipedia.org/wiki/敦煌市",
+          "source_note": "元鼎六年（前111年）设置敦煌郡，意“敦，大也，煌，盛也”",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Jiayuguan",
+          "local": "嘉峪关",
+          "origin": "city",
+          "meaning": "Named after the Ming pass at the west end of the Great Wall (Jiayu, a pass name; guan, pass).",
+          "fit": "The city is the largest single unit (24.5% of the people) but covers only a small area at the east end of the region.",
+          "recognisability": "Prefecture-level city and one of the best known Great Wall sites.",
+          "source_url": "https://zh.wikipedia.org/wiki/嘉峪关市",
+          "source_note": "得名于明长城西端的嘉峪关",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Guazhou",
+          "local": "瓜州",
+          "origin": "prefecture",
+          "meaning": "\"Melon prefecture\", from the good melons of the area; used for Tang and earlier prefectures here.",
+          "fit": "Guazhou county holds 15% of the people and 21% of the area; the old Guazhou seats (Suoyang city, near Dunhuang) lie in the region.",
+          "recognisability": "Current county name (renamed from Anxi 安西, 'pacify the west', in 2006).",
+          "source_url": "https://zh.wikipedia.org/wiki/敦煌市",
+          "source_note": "春秋时，此地因“地产好瓜”得名瓜州",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yumen (Jade Gate, 15% of people, oil city) is the other big unit; Dunhuang and Jiayuguan together cover the famous names. Anxi (old name of Guazhou) means pacify the west, so it is not listed."
+    },
+    {
+      "n": 2,
+      "key": "#d5f4f6",
+      "settled": null,
+      "summary": "Middle Hexi Corridor: Jiuquan city (Suzhou district), Zhangye city (Ganzhou district), Gaotai, Linze.",
+      "candidates": [
+        {
+          "name": "Zhangye",
+          "local": "张掖",
+          "origin": "city",
+          "meaning": "From the Han saying \"stretch the nation's arm and its armpit (掖) to open the Western Regions\"; commandery set up in 111 BC.",
+          "fit": "Ganzhou district (the Zhangye city centre) holds 35% of the people, with Linze and Gaotai in the same commandery area.",
+          "recognisability": "Current prefecture-level city; the Zhangye Danxia landscape is known.",
+          "source_url": "https://zh.wikipedia.org/wiki/张掖市",
+          "source_note": "以“张国臂掖，以通西域”而得名",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Jiuquan",
+          "local": "酒泉",
+          "origin": "city",
+          "meaning": "\"Wine spring\": Huo Qubing is said to have poured the emperor's wine into a spring to share it with his troops in 121 BC.",
+          "fit": "Suzhou district (the Jiuquan city centre) holds 36% of the people and three quarters of its own population is here.",
+          "recognisability": "Prefecture-level city, also the name of the satellite launch centre.",
+          "source_url": "https://zh.wikipedia.org/wiki/酒泉市",
+          "source_note": "霍去病……倾酒于泉中，与将士共饮，自此便有“酒泉”之名",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Suzhou",
+          "local": "肃州",
+          "origin": "county",
+          "meaning": "\"Solemn prefecture\", the old name of Jiuquan used from 602 to 1911.",
+          "fit": "Same Suzhou district as above, 36% of the people.",
+          "recognisability": "Reads as the Jiangsu city Suzhou in pinyin, and Jiuquan is the better known name.",
+          "source_url": "https://zh.wikipedia.org/wiki/肃州区",
+          "source_note": "酒泉市，古称肃州",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Two big city names compete for one region. Zhangye and Jiuquan are both 5; Heihe (river) was dropped because 黑河 mostly means the city in Heilongjiang."
+    },
+    {
+      "n": 3,
+      "key": "#ddfaf9",
+      "settled": null,
+      "summary": "East Hexi at the foot of the Qilian range: Jinchang, Yongchang, Minle, Shandan, with bits of Zhangye, Wuwei and Qinghai's Qilian county.",
+      "candidates": [
+        {
+          "name": "Jinchang",
+          "local": "金昌",
+          "origin": "city",
+          "meaning": "Made up in 1981 from Jinchuan (\"gold stream\", the nickel town) and Yongchang.",
+          "fit": "Jinchuan and Yongchang together are 40% of the people and the whole of Jinchang prefecture is inside.",
+          "recognisability": "Current prefecture-level city, known as China's nickel city.",
+          "source_url": "https://zh.wikipedia.org/wiki/金川区",
+          "source_note": "金川区是中华人民共和国甘肃省金昌市的主要部分和市辖区",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Qilian",
+          "local": "祁连",
+          "origin": "mountain",
+          "meaning": "The Qilian mountains, from a Xiongnu word said to mean heaven (tengri).",
+          "fit": "The range's northeast end stands behind Minle, Shandan and Yongchang, and the region holds three quarters of Qinghai's Qilian county; the range is much longer than the region.",
+          "recognisability": "Own zh-wiki article, 327 hits with 甘肃, nearly all about this range.",
+          "source_url": "https://zh.wikipedia.org/wiki/祁连山",
+          "source_note": "祁连山脉……沿甘肃、青海省界呈西北-东南走向",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Yanzhi",
+          "local": "焉支山",
+          "origin": "mountain",
+          "meaning": "The Yanzhi mountain between Yongchang and Shandan, rouge mountain, after the red safflower grown there (the name may come from the Xiongnu queen title yanzhi).",
+          "fit": "Stands on the Yongchang and Shandan border, both in the region.",
+          "recognisability": "Own zh-wiki article, 17 hits with 甘肃; known from the Xiongnu lament for losing Qilian and Yanzhi.",
+          "source_url": "https://zh.wikipedia.org/wiki/焉支山",
+          "source_note": "位於河西走廊的南部，今日中國甘肅山丹縣城東南50公里處",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "If a Qinghai neighbour already uses Qilian, move this one to Jinchang first."
+    },
+    {
+      "n": 4,
+      "key": "#d0faf8",
+      "settled": null,
+      "summary": "Wuwei city (Liangzhou) and Gulang, at the east end of the Hexi Corridor.",
+      "candidates": [
+        {
+          "name": "Liangzhou",
+          "local": "凉州",
+          "origin": "prefecture",
+          "meaning": "\"Cold prefecture\", set up in 106 BC for being in the west and often chilly; capital of several Liang states.",
+          "fit": "Liangzhou district is 69% of the people; the prefecture seat was the city of Wuwei and covered the whole corridor.",
+          "recognisability": "Current district name and the title of the Tang Liangzhou poems.",
+          "source_url": "https://zh.wikipedia.org/wiki/凉州区",
+          "source_note": "元封五年（前106），始置凉州，意思是“地处西方，常寒凉也”",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Wuwei",
+          "local": "武威",
+          "origin": "city",
+          "meaning": "\"Martial might\", the Han commandery named for Huo Qubing's victory over the Xiongnu in 121 BC.",
+          "fit": "The commandery seat and the modern city are in the region, but the city name is carried by the whole prefecture.",
+          "recognisability": "Current prefecture-level city, known for the Flying Horse bronze.",
+          "source_url": "https://zh.wikipedia.org/wiki/武威市",
+          "source_note": "古称凉州、姑臧，是国家历史文化名城，河西四郡之一",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Shiyang",
+          "local": "石羊河",
+          "origin": "river",
+          "meaning": "The Stone Sheep River, ancient Gu River, which waters the Wuwei oasis.",
+          "fit": "The basin is mostly in Wuwei and the river runs through Liangzhou district.",
+          "recognisability": "Own zh-wiki article, 32 hits with 甘肃, all about this river basin.",
+          "source_url": "https://zh.wikipedia.org/wiki/石羊河",
+          "source_note": "石羊河，古名谷水，是中国河西走廊的一条内流河……主要在甘肃省武威市境内",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Gulang",
+          "local": "古浪",
+          "origin": "county",
+          "meaning": "Named in 1377 after an old water name; the county was Changsong in older times.",
+          "fit": "28% of the people, almost the whole county.",
+          "recognisability": "Current county, but small and unknown beside Liangzhou.",
+          "source_url": "https://zh.wikipedia.org/wiki/古浪县",
+          "source_note": "明洪武十年（1377），凉州千户江亨防守和戎，因旧水名改为古浪",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 5,
+      "key": "#c9f3f1",
+      "settled": null,
+      "summary": "Baiyin city, Jingyuan, Jingtai and Pingchuan on the Yellow River bend north of Lanzhou.",
+      "candidates": [
+        {
+          "name": "Baiyin",
+          "local": "白银",
+          "origin": "city",
+          "meaning": "\"White silver\", from the Ming silver works Baiyinchang; now the copper city.",
+          "fit": "Baiyin district is 24% of the people and the prefecture seat; the prefecture's four other counties are mostly in this region.",
+          "recognisability": "Current prefecture-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/白银市",
+          "source_note": "明朝洪武年间，官方曾在此设立办矿机构“白银厂”，白银缘此而得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Huizhou",
+          "local": "会州",
+          "origin": "historical",
+          "meaning": "Hui prefecture (hui, to meet or gather), set up by the Western Wei at today's Jingyuan and later the Tang Huining commandery.",
+          "fit": "Seated at Jingyuan for most of its life, which is 39% of the region; the Yuan prefecture also took in the Yellow River east bank.",
+          "recognisability": "Own zh-wiki article, 62 hits with 甘肃, top ones about this area.",
+          "source_url": "https://zh.wikipedia.org/wiki/会州",
+          "source_note": "西魏末宇文泰行军至今甘肃省靖远县一带置会州",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Jingyuan",
+          "local": "靖远",
+          "origin": "county",
+          "meaning": "\"Pacify the distant\": from the Ming Jinglu garrison (\"pacify the captives\") renamed Jingyuan in 1645.",
+          "fit": "39% of the people and 40% of the area.",
+          "recognisability": "Current county name.",
+          "source_url": "https://zh.wikipedia.org/wiki/靖远县",
+          "source_note": "正统二年（公元1437年），裁迭烈逊巡检司，置靖虏卫",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Jingyuan is the biggest unit but the name is a frontier-pacifying one; Baiyin is first."
+    },
+    {
+      "n": 6,
+      "key": "#d1f1f7",
+      "settled": null,
+      "summary": "Yongdeng, Gaolan, Honggu and Tianzhu, the Zhuanglang and Datong valleys north and west of Lanzhou.",
+      "candidates": [
+        {
+          "name": "Yongdeng",
+          "local": "永登",
+          "origin": "county",
+          "meaning": "Name given in 1927 to the county, which had been Zhuanglang and then Pingfan (\"pacify the barbarians\"); an earlier Yongdeng county of 316 sat in the Guangwu commandery.",
+          "fit": "49% of the people and 43% of the area.",
+          "recognisability": "Current county name.",
+          "source_url": "https://zh.wikipedia.org/wiki/永登县",
+          "source_note": "中华民国十六年（1927年），平番县更名为永登县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Gaolan",
+          "local": "皋兰",
+          "origin": "county",
+          "meaning": "After Gaolan mountain south of Lanzhou, which gave Lanzhou its name.",
+          "fit": "The county holds 18% of the people (92% of its own); the mountain itself is just outside the region.",
+          "recognisability": "Current county name; Gaolan county was the seat of Lanzhou prefecture in the Qing.",
+          "source_url": "https://zh.wikipedia.org/wiki/皋兰县",
+          "source_note": "因城南有皋兰山，改金城郡为兰州（兰州 article)",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "The Zhuanglang River runs through this region but 庄浪 is also the county in region 17, so it is not offered. Tianzhu Tibetan county is 13% of the people and cut across several regions."
+    },
+    {
+      "n": 7,
+      "key": "#e9eed0",
+      "settled": null,
+      "summary": "North Qingyang: Huan, Qingcheng, Zhenyuan, Heshui, Huachi, the loess hills of Longdong.",
+      "candidates": [
+        {
+          "name": "Qingzhou",
+          "local": "庆州",
+          "origin": "prefecture",
+          "meaning": "\"Celebration prefecture\", set up in 596; seated in today's Qingcheng; Qingyang (\"sunny side of the Qing\") was its later name.",
+          "fit": "Seat at Qingcheng (26% of the region) and covered Heshui and Huachi as well; the Qingyang prefecture of the Ming and Qing took in the whole region.",
+          "recognisability": "Own zh-wiki article, 519 hits with 甘肃, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/庆州",
+          "source_note": "庆州 (庆阳)：隋文帝开皇十六年（596年）以弘化郡置庆州。治所在合水县（……今甘肃省庆阳市）",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Huanzhou",
+          "local": "环州",
+          "origin": "prefecture",
+          "meaning": "Prefecture named after the Huan River (huan, ring), seated at Huan county from 952 to 1368.",
+          "fit": "Huan county is 28% of the people and half the area.",
+          "recognisability": "Short zh-wiki article; the county name 环县 is current.",
+          "source_url": "https://zh.wikipedia.org/wiki/环县",
+          "source_note": "环州 (州, 952-1368) 今甘肃省环县 (CHGIS, sources.md Region 7)",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Zhenyuan",
+          "local": "镇原",
+          "origin": "county",
+          "meaning": "\"Garrison the plain\": Yuan prefecture, then Ming county.",
+          "fit": "24% of the people but only 62% of the county.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/镇原县",
+          "source_note": "汉朝置临泾县，元朝为镇原州，明朝改镇原县",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Qingzhou and region 14's Qingyang both come from the same prefecture, with different characters. Longdong (陇东, east of the Long mountains) is the usual name of the whole area but it is a part-of-a-whole name, so not offered."
+    },
+    {
+      "n": 8,
+      "key": "#7adaf1",
+      "settled": null,
+      "summary": "West Lanzhou: Xigu and Anning districts along the Yellow River.",
+      "candidates": [
+        {
+          "name": "Xigu",
+          "local": "西固",
+          "origin": "county",
+          "meaning": "From the old \"West ancient city\" (西古城); Lanzhou's petrochemical district.",
+          "fit": "40% of the people and 97% of Xigu district, over half the area.",
+          "recognisability": "Current district name, known for Lanzhou's oil and chemical industry.",
+          "source_url": "https://zh.wikipedia.org/wiki/西固区",
+          "source_note": "今名“西固”源于历史上的西古城",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Anning",
+          "local": "安宁",
+          "origin": "county",
+          "meaning": "\"Peace and quiet\"; district of the Lanzhou universities and the Anning peach.",
+          "fit": "44% of the people, 80% of Anning district.",
+          "recognisability": "Current district name; same characters as Anning in Yunnan, which is far away.",
+          "source_url": "https://zh.wikipedia.org/wiki/安宁区",
+          "source_note": "位于黄河北岸，和七里河区隔河相对",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "No historical seats in CHGIS here."
+    },
+    {
+      "n": 9,
+      "key": "#5bd7f4",
+      "settled": null,
+      "summary": "Central-west Lanzhou: the Qilihe and west Chengguan parts of the city.",
+      "candidates": [
+        {
+          "name": "Jincheng",
+          "local": "金城",
+          "origin": "historical",
+          "meaning": "\"Golden city\", the Han commandery set up in 81 BC and the usual nickname of Lanzhou.",
+          "fit": "The commandery seat sat in the Lanzhou city area and covered the whole Lanzhou valley.",
+          "recognisability": "Own zh-wiki article, 96 hits with 甘肃, top ones about this place; Lanzhou's nickname per zh-wiki.",
+          "source_url": "https://zh.wikipedia.org/wiki/金城郡",
+          "source_note": "兰州市，简称兰，别称金城（兰州市 article)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Qilihe",
+          "local": "七里河",
+          "origin": "county",
+          "meaning": "\"Seven li river\", after the stream; Lanzhou district between Chengguan and Xigu.",
+          "fit": "45% of the people, 61% of Qilihe district.",
+          "recognisability": "Current district name.",
+          "source_url": "https://zh.wikipedia.org/wiki/七里河区",
+          "source_note": "位于黄河南岸城关区和西固区之间",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Chengguan",
+          "local": "城关",
+          "origin": "county",
+          "meaning": "\"Town gate\": the generic name of a county seat's urban district.",
+          "fit": "48% of the people but only half of Chengguan district.",
+          "recognisability": "Current district name; dozens of Chengguan across China.",
+          "source_url": "https://zh.wikipedia.org/wiki/城关区_(兰州市)",
+          "source_note": "城关区位于兰州市区的最东面",
+          "status": "rejected"
+        }
+      ],
+      "notes": "This region holds the Lanzhou dot (3.07M) in the data, but CHGIS puts the old Lanzhou seat in region 10, so I put 'Lanzhou' on 10. Swap if you read the map the other way."
+    },
+    {
+      "n": 10,
+      "key": "#12bced",
+      "settled": null,
+      "summary": "East Lanzhou: old city seat, railway station, Yantan, Donggang in Chengguan district.",
+      "candidates": [
+        {
+          "name": "Lanzhou",
+          "local": "兰州",
+          "origin": "city",
+          "meaning": "Named in 583 after Gaolan mountain (兰, from Gaolan); the city is the provincial capital.",
+          "fit": "CHGIS seats for Lanzhou, Wuquan and Jincheng county all lie in this region, which is 100% Chengguan district.",
+          "recognisability": "Provincial capital.",
+          "source_url": "https://zh.wikipedia.org/wiki/兰州市",
+          "source_note": "隋朝改金城郡为兰州，兰州因此得名",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Wuquan",
+          "local": "五泉",
+          "origin": "mountain",
+          "meaning": "\"Five springs\": the Wuquan mountain park south of the old city and the Wuquan county seated here for 439 years (583 to 1104).",
+          "fit": "The mountain is in Chengguan district, and the old county was the city seat.",
+          "recognisability": "Own zh-wiki article for the mountain, 159 hits with 甘肃, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/五泉山",
+          "source_note": "五泉山位于中国甘肃省兰州市南，地处皋兰山北麓",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Only the central region of Lanzhou gets the city name; see the note on region 9."
+    },
+    {
+      "n": 11,
+      "key": "#d1f1eb",
+      "settled": null,
+      "summary": "Huining, Anding (Dingxi city) and the Yuzhong east side, the dry central Gansu loess.",
+      "candidates": [
+        {
+          "name": "Huining",
+          "local": "会宁",
+          "origin": "county",
+          "meaning": "From Hui prefecture plus ning (calm); Tang Huining commandery; Red Army armies met here in 1936.",
+          "fit": "43% of the people and 46% of the area, the whole county.",
+          "recognisability": "Current county, famous for the 1936 Red Army junction and for its many university students.",
+          "source_url": "https://zh.wikipedia.org/wiki/会宁县",
+          "source_note": "因其穷苦，教育以及1936年10月22日红军在此会师而出名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Yuzhong",
+          "local": "榆中",
+          "origin": "county",
+          "meaning": "\"Among the elms\": Han county set up in 127 BC, capital of Western Qin in 385.",
+          "fit": "23% of the people but only 54% of the county; the rest is region 12.",
+          "recognisability": "Current county name.",
+          "source_url": "https://zh.wikipedia.org/wiki/榆中县",
+          "source_note": "汉武帝元朔二年（前127年）置榆中县……秦宣烈王于建义一年（385）定都榆中，建立西秦",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Dingxi",
+          "local": "定西",
+          "origin": "city",
+          "meaning": "\"Pacify the west\": a Song frontier city named in 1081 after its conquest from the Western Xia.",
+          "fit": "Anding district (the Dingxi city seat) is 34% of the people.",
+          "recognisability": "Prefecture-level city, China's potato town.",
+          "source_url": "https://zh.wikipedia.org/wiki/定西市",
+          "source_note": "北宋元丰四年（1081年），宋神宗赐名“定相城”（今定西城区），为“定西”得名之始",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Anding (安定, 'secure and settle') is the district's own name and is a frontier-settling name like Dingxi."
+    },
+    {
+      "n": 12,
+      "key": "#bfeede",
+      "settled": null,
+      "summary": "Lintao, Yongjing and the south edge of Lanzhou, Yuzhong and Weiyuan around the Tao river mouth.",
+      "candidates": [
+        {
+          "name": "Lintao",
+          "local": "临洮",
+          "origin": "county",
+          "meaning": "\"Overlooking the Tao\": after the Tao River that runs through it; Qin Longxi commandery seat, once called Didao.",
+          "fit": "34% of the people and 43% of the area, 97% of the county.",
+          "recognisability": "Current county, the old Qin Great Wall start and Longxi commandery seat.",
+          "source_url": "https://zh.wikipedia.org/wiki/临洮县",
+          "source_note": "由于黄河主要支流洮河穿境而过，注入刘家峡水库而得名",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Taohe",
+          "local": "洮河",
+          "origin": "river",
+          "meaning": "The Tao River, a major Yellow River tributary (Tibetan Luqu) which meets the Yellow River at Liujiaxia in Yongjing.",
+          "fit": "It runs through Lintao and ends in Yongjing, both in the region; most of its length is further south.",
+          "recognisability": "Own zh-wiki article, 273 hits with 甘肃, top ones about this river.",
+          "source_url": "https://zh.wikipedia.org/wiki/洮河",
+          "source_note": "洮河……是中國黃河上游的一條支流",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 13,
+      "key": "#a6f1b7",
+      "settled": null,
+      "summary": "Linxia city and county, with Jishishan on the Yellow River: the old Hezhou, a Hui and Dongxiang centre.",
+      "candidates": [
+        {
+          "name": "Linxia",
+          "local": "临夏",
+          "origin": "city",
+          "meaning": "\"Beside the Xia\": after the Daxia River; capital of the Linxia Hui autonomous prefecture.",
+          "fit": "Linxia city and county together are 65% of the people.",
+          "recognisability": "Current city and prefecture name, known as the 'Little Mecca of China'.",
+          "source_url": "https://zh.wikipedia.org/wiki/临夏市",
+          "source_note": "旧名河州……在中国被称为“中国的小麦加”",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Hezhou",
+          "local": "河州",
+          "origin": "prefecture",
+          "meaning": "\"River prefecture\" (the Yellow River), set up in 344 and the name of Linxia for most of 1,500 years.",
+          "fit": "The seat was at Linxia city; the prefecture covered Linxia, Jishishan and the other counties of the Linxia area.",
+          "recognisability": "Own zh-wiki article, 449 hits with 甘肃, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/河州_(甘肃省)",
+          "source_note": "河州 (州, 344-1911) 今甘肃省临夏市新集镇古城村 (CHGIS)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Jishishan",
+          "local": "积石山",
+          "origin": "mountain",
+          "meaning": "Jishi mountain (\"piled stones\") on the Yellow River in the northwest; also the Bonan, Dongxiang and Salar county.",
+          "fit": "The county is 25% of the people and cover is 98%.",
+          "recognisability": "County name; the long full county name is mainly a list of its three peoples.",
+          "source_url": "https://zh.wikipedia.org/wiki/积石山保安族东乡族撒拉族自治县",
+          "source_note": "小积石山位于该县西部；被视为祁连山东延部分",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Linxia city has 356k people. Both 'Linxia' and 'Hezhou' point at the same city; Hezhou is the more distinctive name."
+    },
+    {
+      "n": 14,
+      "key": "#eeeebf",
+      "settled": null,
+      "summary": "Xifeng (the Qingyang city centre), Ning county and the Dongzhi loess plain.",
+      "candidates": [
+        {
+          "name": "Qingyang",
+          "local": "庆阳",
+          "origin": "city",
+          "meaning": "\"Sunny side of the Qing\" (the Qing river's north bank) in 1117, for the Song prefecture seat.",
+          "fit": "Xifeng district (41%), the current seat of Qingyang prefecture, is here.",
+          "recognisability": "Current prefecture-level city; the 1490 meteorite shower is famous.",
+          "source_url": "https://zh.wikipedia.org/wiki/庆阳市",
+          "source_note": "古人以水北为阳，故名“庆阳”",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Ningzhou",
+          "local": "宁州",
+          "origin": "prefecture",
+          "meaning": "\"Calm prefecture\", set up by the Western Wei in 554, seated at Ning county for over 780 years.",
+          "fit": "Ning county is 44% of the people and the old prefecture's seat.",
+          "recognisability": "Own zh-wiki article, 238 hits with 甘肃, but the Jin dynasty Ningzhou in Yunnan is better known.",
+          "source_url": "https://zh.wikipedia.org/wiki/宁州_(西魏)",
+          "source_note": "宁州，中国古代的州……治所在定安县（今甘肃省宁县）",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Dongzhi",
+          "local": "董志塬",
+          "origin": "plain",
+          "meaning": "Dongzhi Plateau, the largest and best preserved loess tableland, under the Xifeng district.",
+          "fit": "Xifeng is on the heart of the plateau; it also extends into Qingcheng and Zhenyuan.",
+          "recognisability": "No article of its own, 7 hits with 甘肃; explained in the loess landform article.",
+          "source_url": "https://zh.wikipedia.org/wiki/黄土地貌",
+          "source_note": "世界上现存的面积最大最典型的黄土塬是中国甘肃省东部的董志塬",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "If region 7 takes Qingzhou, Qingyang here sits close to it in sound; both are the same prefecture."
+    },
+    {
+      "n": 15,
+      "key": "#c0f3cc",
+      "settled": null,
+      "summary": "Guanghe, Dongxiang, Kangle and Hezheng: the Hui and Dongxiang hills south and east of Linxia.",
+      "candidates": [
+        {
+          "name": "Dongxiang",
+          "local": "东乡",
+          "origin": "ethnic",
+          "meaning": "The Dongxiang people and county, \"east of Hezhou\", where over half the Dongxiang live.",
+          "fit": "26% of the people, 75% of the county; the region is the Dongxiang heartland.",
+          "recognisability": "Autonomous county and national minority.",
+          "source_url": "https://zh.wikipedia.org/wiki/东乡族自治县",
+          "source_note": "因地处河州之东而得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Hezheng",
+          "local": "和政",
+          "origin": "county",
+          "meaning": "\"Harmonious government\": county made in 1929 from Lintao and Linxia; the Tang Hezheng commandery was another place.",
+          "fit": "19% of the people, 86% of the county.",
+          "recognisability": "Current county name; known for its fossil museum.",
+          "source_url": "https://zh.wikipedia.org/wiki/和政县",
+          "source_note": "1929年由临洮、临夏两县析置",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Guanghe",
+          "local": "广河",
+          "origin": "county",
+          "meaning": "Named in 1956 after the Guangtong River, a Tao tributary.",
+          "fit": "28% of the people, the whole county.",
+          "recognisability": "Current county name.",
+          "source_url": "https://zh.wikipedia.org/wiki/广河县",
+          "source_note": "以洮河支流广通河得名",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Kangle",
+          "local": "康乐",
+          "origin": "county",
+          "meaning": "\"Health and joy\": from the Song Kangle fort built in 1073.",
+          "fit": "24% of the people, 93% of the county.",
+          "recognisability": "Current county name.",
+          "source_url": "https://zh.wikipedia.org/wiki/康乐县",
+          "source_note": "诏名康乐城为康乐寨",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Taizi mountain (太子山) runs through Kangle and Hezheng but has no article of its own and mostly hits a forest farm elsewhere, so it is left out."
+    },
+    {
+      "n": 16,
+      "key": "#e4eed5",
+      "settled": null,
+      "summary": "Pingliang (Kongdong), Jingchuan, Huating, Lingtai, Chongxin: the Jing and Liupan east foot.",
+      "candidates": [
+        {
+          "name": "Pingliang",
+          "local": "平凉",
+          "origin": "city",
+          "meaning": "\"Level and cool\": county from 572; the prefecture was Weizhou, then Pingliang from the Jin.",
+          "fit": "Kongdong district is 47% of the people and the prefecture seat.",
+          "recognisability": "Current prefecture-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/平凉市",
+          "source_note": "北周建德元年（572年），置平凉县",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Kongdong",
+          "local": "崆峒",
+          "origin": "mountain",
+          "meaning": "Kongdong mountain, a Taoist mountain next to Pingliang, where the Yellow Emperor is said to have sought the Way.",
+          "fit": "The district is 47% of the people, named after the mountain.",
+          "recognisability": "Own zh-wiki article via the district; a famous Taoist mountain.",
+          "source_url": "https://zh.wikipedia.org/wiki/崆峒区",
+          "source_note": "因崆峒山得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Jingzhou",
+          "local": "泾州",
+          "origin": "prefecture",
+          "meaning": "Prefecture on the Jing River, from 430 to 1911 seated at Jingchuan.",
+          "fit": "Seat at Jingchuan (16%), also covered Lingtai and Chongxin.",
+          "recognisability": "Own zh-wiki article, 87 hits with 甘肃, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/涇州",
+          "source_note": "430年（神䴥3年），北魏設置涇州，治所在安定郡（今甘肃省泾川县）",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Binzhou and Fengxiang are already named to the east in Shaanxi."
+    },
+    {
+      "n": 17,
+      "key": "#cce8d9",
+      "settled": null,
+      "summary": "Jingning, Qin'an and Zhuanglang on the Hulu river, west foot of Liupan.",
+      "candidates": [
+        {
+          "name": "Chengji",
+          "local": "成纪",
+          "origin": "historical",
+          "meaning": "Old county and Han seat, birthplace of Fuxi and ancestral seat of the Longxi Li clan.",
+          "fit": "The ruined city is in Jingning, and the later counties were in Qin'an: the two largest units.",
+          "recognisability": "Own zh-wiki article, 216 hits with 甘肃, top ones about this area; also an old name of Tianshui.",
+          "source_url": "https://zh.wikipedia.org/wiki/成纪县",
+          "source_note": "成纪故城遗址位於甘肃省静宁县治平乡刘河村……（成纪故城遗址 article)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Liupan",
+          "local": "六盘山",
+          "origin": "mountain",
+          "meaning": "\"Six coils\", the old Long mountains, on the Gansu and Ningxia border.",
+          "fit": "Its west foot is in Jingning and Zhuanglang, but the main body is in Ningxia next to Guyuan.",
+          "recognisability": "Own zh-wiki article, 677 hits with 甘肃, top ones about the range.",
+          "source_url": "https://zh.wikipedia.org/wiki/六盘山",
+          "source_note": "六盘山……古称陇山，主体呈南北走向，横跨宁夏中……",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Jingning",
+          "local": "静宁",
+          "origin": "county",
+          "meaning": "\"Quiet and calm\": renamed from Dexun (\"virtuous obedience\") prefecture in 1304, a Song frontier fort before that.",
+          "fit": "36% of the people, the whole county.",
+          "recognisability": "Current county name.",
+          "source_url": "https://zh.wikipedia.org/wiki/静宁县",
+          "source_note": "元成宗大德八年（1304年）改德顺州为静宁州",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Qin'an",
+          "local": "秦安",
+          "origin": "county",
+          "meaning": "\"Qin pacified\": the Jin dynasty added an to the Song stockade Qin in 1157.",
+          "fit": "34% of the people, 78% of the county.",
+          "recognisability": "Current county name; Dadiwan neolithic site is here.",
+          "source_url": "https://zh.wikipedia.org/wiki/秦安县",
+          "source_note": "金正隆二年（1157年）……在原寨名“秦”字上加一“安”字，是为秦安县名之始",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Liupan is the same range as Longshan (陇山) per zh-wiki; Anita named both, so I put Longshan's other end, the Long prefecture, on region 20 instead."
+    },
+    {
+      "n": 18,
+      "key": "#d0eee8",
+      "settled": null,
+      "summary": "Gangu, Tongwei and Wushan on the Wei river above Tianshui.",
+      "candidates": [
+        {
+          "name": "Gangu",
+          "local": "甘谷",
+          "origin": "county",
+          "meaning": "\"Sweet valley\": a Jin dynasty city name; it was Ji county and Fuqiang (\"subdue the Qiang\") until 1928.",
+          "fit": "49% of the people, the whole county.",
+          "recognisability": "Current county name.",
+          "source_url": "https://zh.wikipedia.org/wiki/甘谷县",
+          "source_note": "金朝时，为甘谷城的所在地，改置甘谷县……民国十七年（1928年），重新设置甘谷县至今",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Ji",
+          "local": "冀",
+          "origin": "historical",
+          "meaning": "Ji county, set up by Qin in 688 BC and the Han Hanyang commandery seat for 994 years; the earliest county on record.",
+          "fit": "Seat in Gangu, the largest unit.",
+          "recognisability": "Own zh-wiki article, 42 hits with 甘肃, top ones about this place; Ji is also Hebei's short name.",
+          "source_url": "https://zh.wikipedia.org/wiki/冀县",
+          "source_note": "冀县，中国历史记载最早的县，在今甘肃省天水市甘谷县境內",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Tongwei",
+          "local": "通渭",
+          "origin": "county",
+          "meaning": "\"Reaching the Wei\": a Song fort named for the Niugu stream leading to the Wei River.",
+          "fit": "28% of the people, 93% of the county.",
+          "recognisability": "Current county name.",
+          "source_url": "https://zh.wikipedia.org/wiki/通渭县",
+          "source_note": "因牛谷河通往渭河而得名",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Fuqiang (伏羌) is the old name of Gangu and Wushan was Ningyuan: both frontier-pacifying, not offered."
+    },
+    {
+      "n": 19,
+      "key": "#daf0e9",
+      "settled": null,
+      "summary": "Longxi, Weiyuan, Zhang, Min and Wushan: the Wei river source.",
+      "candidates": [
+        {
+          "name": "Longxi",
+          "local": "陇西",
+          "origin": "county",
+          "meaning": "\"West of the Long\" (the Long mountains): Qin commandery of 272 BC and Han to Tang seat; once named for all of Gansu.",
+          "fit": "38% of the people, the whole county.",
+          "recognisability": "Current county name and famous historic commandery.",
+          "source_url": "https://zh.wikipedia.org/wiki/陇西县",
+          "source_note": "陇西古时辖区甚广，一度包括今甘肃的天水、兰州等地区",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Weiyuan",
+          "local": "渭源",
+          "origin": "county",
+          "meaning": "\"Source of the Wei\": the Wei River rises on Niaoshu mountain here.",
+          "fit": "18% of the people, 70% of the county.",
+          "recognisability": "Current county name.",
+          "source_url": "https://zh.wikipedia.org/wiki/渭河",
+          "source_note": "渭河……发源于中国甘肃省渭源县的鸟鼠山东侧和西秦岭北侧",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Gongchang",
+          "local": "巩昌",
+          "origin": "prefecture",
+          "meaning": "Jin dynasty prefecture renamed from Gong prefecture (gong, firm; chang, flourishing); seat of the Ming and Qing prefecture at Longxi.",
+          "fit": "Seated at Longxi and covered the whole Wei and Tao basin.",
+          "recognisability": "Own zh-wiki article, 121 hits with 甘肃, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/巩昌府",
+          "source_note": "正大中改巩州置，治所在陇西县",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 20,
+      "key": "#d4e5ce",
+      "settled": null,
+      "summary": "Qingshui, Zhangjiachuan, Long county (Shaanxi), parts of Chencang and Maiji: the Long and Guan mountain crossing.",
+      "candidates": [
+        {
+          "name": "Longzhou",
+          "local": "陇州",
+          "origin": "prefecture",
+          "meaning": "Prefecture named after the Long mountains, set up in 554, seated at Long county.",
+          "fit": "Seat at Long county (20%), and covered Qianyang (6%).",
+          "recognisability": "Own zh-wiki article, top hits in Shaanxi and Gansu both.",
+          "source_url": "https://zh.wikipedia.org/wiki/隴州",
+          "source_note": "554年，西魏改东秦州设置，因陇山得名。治所在汧源县",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Qingshui",
+          "local": "清水",
+          "origin": "county",
+          "meaning": "\"Clear water\": the old Qingshui commandery.",
+          "fit": "22% of the people, the whole county.",
+          "recognisability": "Current county name.",
+          "source_url": "https://zh.wikipedia.org/wiki/清水县",
+          "source_note": "清水郡 (郡, 464-582) 今甘肃省清水县西北 (CHGIS)",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Zhangjiachuan",
+          "local": "张家川",
+          "origin": "ethnic",
+          "meaning": "\"Zhang family plain\": Hui autonomous county made in 1953, local people also call it Ayang after the Han county.",
+          "fit": "21% of the people, the whole county, which is Hui majority.",
+          "recognisability": "Current county name.",
+          "source_url": "https://zh.wikipedia.org/wiki/张家川回族自治县",
+          "source_note": "张家川县有时亦被雅称作阿阳",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "The region crosses into Shaanxi: Long county and Chencang district are 30% of the people. Baoji and Fengxiang to the east are already named."
+    },
+    {
+      "n": 21,
+      "key": "#bfe7da",
+      "settled": null,
+      "summary": "Tianshui city: Qinzhou and Maiji districts.",
+      "candidates": [
+        {
+          "name": "Tianshui",
+          "local": "天水",
+          "origin": "city",
+          "meaning": "\"Heaven's water\": from the legend of the Heavenly River pouring water; Han commandery of 114 BC.",
+          "fit": "Qinzhou and Maiji districts hold the whole city, 99% of the people.",
+          "recognisability": "Current prefecture-level city, Maiji grottoes in it.",
+          "source_url": "https://zh.wikipedia.org/wiki/天水市",
+          "source_note": "汉武帝元鼎三年（前114年）分陇西郡设天水郡，其名源自于“天河注水”的传说",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Maiji",
+          "local": "麦积",
+          "origin": "mountain",
+          "meaning": "\"Wheat stack\": Maiji mountain with its cave temples, a World Heritage site.",
+          "fit": "Maiji district is 40% of the people.",
+          "recognisability": "Current district name.",
+          "source_url": "https://zh.wikipedia.org/wiki/麦积区",
+          "source_note": "因境内有麦积山石窟而得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Qinzhou",
+          "local": "秦州",
+          "origin": "prefecture",
+          "meaning": "Qin prefecture, set up in 220 and seated at Tianshui until 1911.",
+          "fit": "Qinzhou district is 59% of the people and was the prefecture seat.",
+          "recognisability": "Current district name.",
+          "source_url": "https://zh.wikipedia.org/wiki/天水市",
+          "source_note": "直至清代，秦州直隶州辖境仍相当于今日天水之范围",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 22,
+      "key": "#e4ebe5",
+      "settled": null,
+      "summary": "Li, Min, Dangchang and Zhugqu: the upper Min, Tao and West Han valleys in the Min mountains.",
+      "candidates": [
+        {
+          "name": "Minzhou",
+          "local": "岷州",
+          "origin": "prefecture",
+          "meaning": "Prefecture named after Min mountain, set up in 544 and kept to 1911.",
+          "fit": "Seated at Min county (29%), covered Dangchang as well.",
+          "recognisability": "Own zh-wiki article, 103 hits with 甘肃, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/岷州",
+          "source_note": "岷州，中国古代的州，在今甘肃省境。北朝西魏文帝元宝炬于大统十年（544年）始置，治所在溢乐县（原临洮县），因县南一里有岷山，故名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Li",
+          "local": "礼县",
+          "origin": "county",
+          "meaning": "\"Rites county\": from the Yuan Lidian garrison; the Qin ancestors' burial hills are at Dabuzishan here.",
+          "fit": "35% of the people, 81% of the county.",
+          "recognisability": "Current county name; as -xian: Lixian.",
+          "source_url": "https://zh.wikipedia.org/wiki/大堡子山遗址及墓群",
+          "source_note": "大堡子山遗址及墓群位于甘肃省陇南市礼县城东13公里……此处为史书所载的秦西犬丘，西垂",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Dangchang",
+          "local": "宕昌",
+          "origin": "county",
+          "meaning": "After Dangchang mountain; the Qiang kingdom of Dangchang from 424 to 566.",
+          "fit": "25% of the people, the whole county.",
+          "recognisability": "Current county name; also known for the Hadapu Long March meeting.",
+          "source_url": "https://zh.wikipedia.org/wiki/宕昌县",
+          "source_note": "宕昌以宕昌山而得名。晋朝至南北朝时期，羌人在此建“宕昌国”",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "The Tianshui and Longnan prefecture names around here are not offered: Longnan (陇南) is a part-of-a-whole name."
+    },
+    {
+      "n": 23,
+      "key": "#e5e8e3",
+      "settled": null,
+      "summary": "Xihe, Cheng, Hui, Liangdang and a bit of Feng and Li: the upper Jialing valley.",
+      "candidates": [
+        {
+          "name": "Chengzhou",
+          "local": "成州",
+          "origin": "prefecture",
+          "meaning": "Prefecture set up by the Western Wei in 554 and seated around Cheng county and Xihe until 1376, then Cheng county from the Ming.",
+          "fit": "Cheng and Xihe, 55% of the people, were its core.",
+          "recognisability": "Own zh-wiki article ('成州 (甘肃省)'); 成县 is current.",
+          "source_url": "https://zh.wikipedia.org/wiki/成县",
+          "source_note": "西魏改称成州……元灭宋，改同庆府为成州。明初，改成州为成县",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Jialing",
+          "local": "嘉陵",
+          "origin": "river",
+          "meaning": "The Jialing River, a Yangtze tributary whose upper course flows through Hui and Liangdang and whose west branch, the Xihan, drains Li and Xihe.",
+          "fit": "The upper river and its west branch run through most of the region; the river is far longer than the region.",
+          "recognisability": "Own zh-wiki article, 320 hits with 甘肃; better known for Sichuan and Chongqing.",
+          "source_url": "https://zh.wikipedia.org/wiki/嘉陵江",
+          "source_note": "天水市……嘉陵江西源——西汉水（天水市 article)",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Xihe",
+          "local": "西和",
+          "origin": "county",
+          "meaning": "The Song Xihe prefecture of 1142, \"west made peaceful\"; Chouchi capital of the Qiang and Di kingdoms is here.",
+          "fit": "33% of the people, the whole county.",
+          "recognisability": "Current county name.",
+          "source_url": "https://zh.wikipedia.org/wiki/西和县",
+          "source_note": "五胡十六国时期前仇池和后仇池的国都仇池城即位于西和县",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Hui (徽县) as Huizhou is not offered: 徽州 is famous in Anhui. Neighbours Mianxian and Yangxian are named in Shaanxi."
+    },
+    {
+      "n": 24,
+      "key": "#f1ebe7",
+      "settled": null,
+      "summary": "Wudu city, Wen, plus Qingchuan and Pingwu in Sichuan: the middle Bailong river in the Min mountains.",
+      "candidates": [
+        {
+          "name": "Wudu",
+          "local": "武都",
+          "origin": "city",
+          "meaning": "Han commandery of 111 BC (wu, martial); today the seat of Longnan prefecture.",
+          "fit": "Wudu district is 45% of the people and 98% of the district.",
+          "recognisability": "Current district name; Longnan, the prefecture, was 'Wudu' in older times.",
+          "source_url": "https://zh.wikipedia.org/wiki/陇南市",
+          "source_note": "陇南市，古称武都，是中华人民共和国甘肃省下辖的地级市",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Bailong",
+          "local": "白龙江",
+          "origin": "river",
+          "meaning": "\"White dragon river\", Tibetan Zhouqu, a Jialing headwater.",
+          "fit": "Runs through Wudu and Wen, the largest units.",
+          "recognisability": "Own zh-wiki article, 72 hits with 甘肃, top ones about this river.",
+          "source_url": "https://zh.wikipedia.org/wiki/白龙江",
+          "source_note": "位于嘉陵江上源或支流。发源于岷山北麓……",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Region crosses into Sichuan: Qingchuan and Pingwu are 30% of the people. Yinping (Wen county's old commandery, 98 hits) was left out as only 19%."
+    }
+  ]
+}

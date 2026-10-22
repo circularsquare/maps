@@ -1,0 +1,25 @@
+﻿batch sichuan-chengdu
+1: pick Mianzhu
+2: pick Deyang
+3: pick Dujiangyan
+4: pick Pengzhou
+5: pick Guanghan
+6: pick Zhongjiang
+7: pick Pixian
+8: pick Xindu
+9: pick Xipu
+10: pick Wenjiang
+11: pick Jinniu
+12: pick Chenghua
+13: pick Qingyang
+14: pick Chengdu
+15: pick Wuhou
+16: pick Longquanyi
+17: pick Tianfu
+18: pick Chongzhou
+19: pick Liulichang. (Round one: Jinjiang rejected, the real Jinjiang is in the city centre.)
+20: pick Shuangliu
+21: pick Jintang
+22: pick Huayang
+23: pick Qionglai
+24: pick Xinjin

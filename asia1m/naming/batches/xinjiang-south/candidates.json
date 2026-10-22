@@ -1,0 +1,421 @@
+{
+  "batch": "xinjiang-south",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#e4e4f6",
+      "settled": null,
+      "summary": "Tianshan foot and Yanqi basin north of the Tarim: Baicheng, Hejing, Yanqi, Bohu, Hoxud, Luntai, part of Korla, Toksun and part of Turfan.",
+      "candidates": [
+        {
+          "name": "Yanqi",
+          "local": "焉耆",
+          "origin": "historical",
+          "meaning": "Han-era oasis kingdom (Agni), the Chinese transcription of a Kuchean-language name *Ārke-; also the current Yanqi Hui county.",
+          "fit": "Yanqi basin holds Yanqi, Hejing, Bohu and Hoxud, over a third of the region's people; Tang Yanqi garrison was one of the Four Garrisons of Anxi.",
+          "recognisability": "Current county name, own zh-wiki article, ancient kingdom and Anxi garrison well documented.",
+          "source_url": "https://zh.wikipedia.org/wiki/焉耆回族自治县",
+          "source_note": "汉代为焉耆国…唐贞观二十二年（648年），设置焉耆都护府，为安西四镇之一",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Bosten",
+          "local": "博斯腾",
+          "origin": "lake",
+          "meaning": "Bosten Lake, China's largest inland freshwater lake; the name is Uyghur for 'oasis'. Used in its usual English form (pinyin Bositeng).",
+          "fit": "Lake lies at the heart of the Yanqi basin in Bohu county, with Yanqi, Hejing and Hoxud around it; the lake itself is drawn inside this region.",
+          "recognisability": "Own zh-wiki article, 379 hits with 新疆, top ones about this lake and its river and county.",
+          "source_url": "https://zh.wikipedia.org/wiki/博斯腾湖",
+          "source_note": "中国古称敦薨之浦，湖名来自维吾尔语意为绿洲",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Baicheng",
+          "local": "拜城",
+          "origin": "county",
+          "meaning": "Uyghur Bay, 'rich'; the Chinese county name is a transliteration. Home of the Kizil Caves.",
+          "fit": "Largest single county here by people (19%), held whole, but it is only the western end of a long region.",
+          "recognisability": "Current county; no clash with Baicheng 白城 in Jilin (different characters).",
+          "source_url": "https://zh.wikipedia.org/wiki/拜城县",
+          "source_note": "拉丁维吾尔文：Bay Nahiyisi",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Hejing",
+          "local": "和静",
+          "origin": "county",
+          "meaning": "Named 和靖 in 1947 ('harmony and pacification'), changed to 和静 ('harmony and calm') in 1965; the county holds the Mongol grassland of Bayanbulak.",
+          "fit": "14% of the region's people, whole county, but mostly Han and the name carries the old pacification sense.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/和静县",
+          "source_note": "1947年设和靖县，1965年改和静县",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Region also holds 21% of Korla (Tashidian township) and 23% of Turfan; Korla goes to region 3."
+    },
+    {
+      "n": 2,
+      "key": "#e6ccf9",
+      "settled": null,
+      "summary": "Aksu city and Wensu county on the Aksu river, north of the Tarim.",
+      "candidates": [
+        {
+          "name": "Aksu",
+          "local": "阿克苏",
+          "origin": "city",
+          "meaning": "Uyghur 'white water', after the Aksu river. Uyghur form used.",
+          "fit": "Aksu city holds 62% of the people, Wensu the rest; the prefecture seat.",
+          "recognisability": "Current city and prefecture name.",
+          "source_url": "https://zh.wikipedia.org/wiki/阿克苏市",
+          "source_note": "城市以阿克苏河得名。“阿克苏”直译为“白水”",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Gumo",
+          "local": "姑墨",
+          "origin": "historical",
+          "meaning": "Han-era oasis kingdom (Gumo), later a Tang prefecture (Gumo-zhou), centred near today's Aksu and Wensu.",
+          "fit": "Territory covered today's Aksu city, Wensu and Baicheng; its capital lay just east of Aksu city.",
+          "recognisability": "Own zh-wiki article but only 28 hits with 新疆; known mostly to historians.",
+          "source_url": "https://zh.wikipedia.org/wiki/姑墨",
+          "source_note": "今新疆阿克苏、温宿一带",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 3,
+      "key": "#d4d7f1",
+      "settled": null,
+      "summary": "Korla city (85% of the people) with Yuli on the Kongque river.",
+      "candidates": [
+        {
+          "name": "Korla",
+          "local": "库尔勒",
+          "origin": "city",
+          "meaning": "Uyghur, 'to look out' (a lookout post on the old road); the pear city. Spelling Korla in its usual English form.",
+          "fit": "Prefecture seat; city holds 85% of the region's people and is over 700k.",
+          "recognisability": "Current city name.",
+          "source_url": "https://zh.wikipedia.org/wiki/库尔勒市",
+          "source_note": "库尔勒在维吾尔语中是“眺望”之意",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Korla is mixed, with a Han majority in the city; Mandarin and English forms agree."
+    },
+    {
+      "n": 4,
+      "key": "#e8d5f6",
+      "settled": null,
+      "summary": "Kucha, Shayar and Toksu on the Weigan river.",
+      "candidates": [
+        {
+          "name": "Kucha",
+          "local": "库车",
+          "origin": "city",
+          "meaning": "Uyghur Kucha; Kucha was a Buddhist oasis kingdom on the northern Silk Road.",
+          "fit": "Kucha is 49% of the people, Shayar 32%, Toksu 20%.",
+          "recognisability": "Current city; English form Kucha is established.",
+          "source_url": "https://zh.wikipedia.org/wiki/库车市",
+          "source_note": "古代龟兹王国之地",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Qiuci",
+          "local": "龟兹",
+          "origin": "historical",
+          "meaning": "Han and Tang name of the oasis kingdom of Kucha; seat of the Anxi Protectorate.",
+          "fit": "Kingdom centred on the Kucha oasis, covering the Aksu and Bayingolin parts of this basin.",
+          "recognisability": "Own zh-wiki article, 398 hits with 新疆, top ones about this place; but the name is the same place as Kucha.",
+          "source_url": "https://zh.wikipedia.org/wiki/龟兹",
+          "source_note": "龟兹国以库车绿洲为中心…相当于今新疆阿克苏地区和巴音郭楞蒙古自治州部分地区",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 5,
+      "key": "#edddf9",
+      "settled": null,
+      "summary": "Awat, Wushen, Alar and Kalpin where the three rivers meet to form the Tarim.",
+      "candidates": [
+        {
+          "name": "Tarim",
+          "local": "塔里木",
+          "origin": "river",
+          "meaning": "China's longest inland river and the basin it drains; the Aksu, Yarkand and Hotan rivers meet at Alar to form it.",
+          "fit": "River begins in this region (Alar) though it then runs mostly east through other regions.",
+          "recognisability": "Own zh-wiki article, 173 hits with 新疆, top ones about this river.",
+          "source_url": "https://zh.wikipedia.org/wiki/塔里木河",
+          "source_note": "阿克苏河、叶尔羌河、和田河交汇之处的塔里木河上游 (阿拉尔市)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Awat",
+          "local": "阿瓦提",
+          "origin": "county",
+          "meaning": "Uyghur Awat, 'prosperous, flourishing place'.",
+          "fit": "Largest county here (30% of the people), held whole.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/阿瓦提县",
+          "source_note": "阿瓦提县（维吾尔语：ئاۋات ناھىيىسى）",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Wushen",
+          "local": "乌什",
+          "origin": "county",
+          "meaning": "Chinese form of Uyghur Uchturpan, 'three Turfans'; Tang Wensu prefecture was seated here.",
+          "fit": "25% of the people, the mountain valley part.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/乌什县",
+          "source_note": "拉丁维吾尔文：Uchturpan Nahiyisi",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Alar (25%) is a Bingtuan city with no old roots, so left out."
+    },
+    {
+      "n": 6,
+      "key": "#d2a7f3",
+      "settled": null,
+      "summary": "Kashgar city, the old oasis centre, with parts of Shufu and Shule.",
+      "candidates": [
+        {
+          "name": "Kashgar",
+          "local": "喀什",
+          "origin": "city",
+          "meaning": "Uyghur Qeshqer, English Kashgar, from an Indo-Iranian name (Chinese Jiashiqili); ancient Chinese name Shule. Meaning of the root is uncertain.",
+          "fit": "Central region of a 900k urban area; city is 77% of the people.",
+          "recognisability": "Current city, well known on the Silk Road.",
+          "source_url": "https://zh.wikipedia.org/wiki/喀什市",
+          "source_note": "喀什…古称“疏勒”",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Name is the usual English form (Uyghur spoken). The meaning given is not firmly sourced; the article only gives the Indo-Iranian origin."
+    },
+    {
+      "n": 7,
+      "key": "#dfc6f3",
+      "settled": null,
+      "summary": "Jiashi, Shule county (south of Kashgar), Yopurga and part of Yengisar.",
+      "candidates": [
+        {
+          "name": "Jiashi",
+          "local": "伽师",
+          "origin": "county",
+          "meaning": "Chinese county name taken in 1902 from the Tang city Jiashi (迦师); Uyghur name Peyzawat (from Persian Faizabad, 'abode of plenty').",
+          "fit": "45% of the people, whole county.",
+          "recognisability": "Current county; a Chinese name for an Uyghur place, but the one people look up.",
+          "source_url": "https://zh.wikipedia.org/wiki/伽师县",
+          "source_note": "汉名“伽师”则源于光绪二十八年设县时，取唐代“迦师”为县名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Shule",
+          "local": "疏勒",
+          "origin": "county",
+          "meaning": "Chinese transcription of a Saka name meaning 'new city'; Uyghur Yengisheher. Also the ancient kingdom of Kashgar.",
+          "fit": "Shule county holds 26% of this region; its seat is also in the Kashgar area, and the kingdom's name belongs more to Kashgar.",
+          "recognisability": "Current county and Han-era kingdom.",
+          "source_url": "https://zh.wikipedia.org/wiki/疏勒县",
+          "source_note": "“疏勒”之名音译自东伊朗语系的塞语，意为“新城子”",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yengisar (Yingjisha, 'new fortress') is 12% here but 16% of region 10, so left out."
+    },
+    {
+      "n": 8,
+      "key": "#f2d9fc",
+      "settled": null,
+      "summary": "Bachu (Maralbexi), Makit and the north bank of the Yarkand river down to Tumushuke.",
+      "candidates": [
+        {
+          "name": "Maralbexi",
+          "local": "巴楚",
+          "origin": "county",
+          "meaning": "Uyghur Maralbexi (Maralbeshi), 'deer head'; Chinese county name is Bachu. Uyghur form used.",
+          "fit": "Bachu is 34% of the people and 45% of the area.",
+          "recognisability": "Current county; English Wikipedia carries both Bachu and Maralbeshi.",
+          "source_url": "https://zh.wikipedia.org/wiki/巴楚县",
+          "source_note": "拉丁维吾尔文：Maralbéshi Nahiyisi，玛热勒巴什县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Makit",
+          "local": "麦盖提",
+          "origin": "county",
+          "meaning": "Uyghur Makit (Markit), transcribed to Chinese.",
+          "fit": "27% of the people, whole county.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/麦盖提县",
+          "source_note": "麦盖提县是中国新疆维吾尔自治区喀什地区所辖的一个县",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "The meaning of Maralbexi comes from general knowledge; the article only gives the Uyghur spelling."
+    },
+    {
+      "n": 9,
+      "key": "#f1ecf7",
+      "settled": null,
+      "summary": "Huge desert and southern edge of the Tarim: Yutian (Keriya), Lop, Qira, Niya, Cherchen and Charklik, plus the Taklamakan.",
+      "candidates": [
+        {
+          "name": "Taklamakan",
+          "local": "塔克拉玛干",
+          "origin": "other",
+          "meaning": "The sand desert filling the Tarim basin; commonly glossed as 'go in and you will not come out'. Usual English form.",
+          "fit": "Region is mostly desert and lies along the southern basin; a landscape name does not claim the whole feature.",
+          "recognisability": "Own zh-wiki article, 140 hits with 新疆.",
+          "source_url": "https://zh.wikipedia.org/wiki/塔克拉玛干沙漠",
+          "source_note": "位于塔里木盆地中部",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Keriya",
+          "local": "于田",
+          "origin": "river",
+          "meaning": "Uyghur Keriye; the Keriya river ends in the desert, and Yutian county is also called Keriya County in English. Not the same characters as Yutian 于阗, the old Khotan.",
+          "fit": "Yutian is 29% of the people and the river runs through the region.",
+          "recognisability": "English Wikipedia has Keriya River and Keriya County; Chinese name is 于田/克里雅.",
+          "source_url": "https://en.wikipedia.org/wiki/Keriya_River",
+          "source_note": "also transliterated from Uyghur as Keriya County",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Region 9 is 12% in Bayingolin (Qiemo, Ruoqiang) and the rest in Hotan; Lop Nur lies in Ruoqiang."
+    },
+    {
+      "n": 10,
+      "key": "#f7e8f4",
+      "settled": null,
+      "summary": "Atush and Akto, with Wuqia, Akqi, parts of Shufu and Yengisar, Taxkorgan: the Kizilsu prefecture.",
+      "candidates": [
+        {
+          "name": "Atush",
+          "local": "阿图什",
+          "origin": "city",
+          "meaning": "Uyghur 'between two mountains'; seat of the Kizilsu Kirgiz prefecture. Uyghur form used (also written Artux).",
+          "fit": "Largest unit (22% of the people), prefecture seat, Uyghur majority.",
+          "recognisability": "Current city.",
+          "source_url": "https://zh.wikipedia.org/wiki/阿图什市",
+          "source_note": "“阿图什”为维吾尔语，意为“两山之间”",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Kizilsu",
+          "local": "克孜勒苏",
+          "origin": "river",
+          "meaning": "Kirghiz 'red water' (Kizil Su), after the Kizilsu river; also the prefecture name.",
+          "fit": "Prefecture holds 98% of its people here; the river crosses Wuqia and Atush.",
+          "recognisability": "Prefecture name; the same name appears on the Kyrgyz side.",
+          "source_url": "https://zh.wikipedia.org/wiki/克孜勒苏柯尔克孜自治州",
+          "source_note": "意为“红水”或“红河”",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Kirghiz are about a quarter of the prefecture; Kizilsu is a Kirghiz name, Atush Uyghur."
+    },
+    {
+      "n": 11,
+      "key": "#e9d5f9",
+      "settled": null,
+      "summary": "Yarkand oasis: Shache, Poskam and Yecheng on the Yarkand river.",
+      "candidates": [
+        {
+          "name": "Yarkand",
+          "local": "莎车",
+          "origin": "city",
+          "meaning": "Uyghur Yeken, Qing Yerqiang; 'a broad land'. Han kingdom Shache and capital of the Yarkand Khanate. Usual English form.",
+          "fit": "Shache is 47% of the people; city holds the old Khanate centre.",
+          "recognisability": "Current county; the English form Yarkand is well known.",
+          "source_url": "https://zh.wikipedia.org/wiki/莎车县",
+          "source_note": "《西域同文志》释为：“叶尔，谓地；羌，宽广之意。地宽广，故名。”",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yecheng (27%, Uyghur Kargilik) and Poskam (25%, named after the river Zepulshan) are the other large units."
+    },
+    {
+      "n": 12,
+      "key": "#ceadeb",
+      "settled": null,
+      "summary": "Hotan city with Hotan county, Moyu and Lop edges.",
+      "candidates": [
+        {
+          "name": "Hotan",
+          "local": "和田",
+          "origin": "city",
+          "meaning": "Uyghur Xoten (Khotan); ancient Kingdom of Khotan, centre of jade and silk. Written Hotan; Khotan is the older spelling.",
+          "fit": "City 50% of the people, with Hotan county 24%.",
+          "recognisability": "Current city and prefecture name.",
+          "source_url": "https://zh.wikipedia.org/wiki/和田市",
+          "source_note": "古代于阗王国是世界上最早的佛教国家之一",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 13,
+      "key": "#efe2f9",
+      "settled": null,
+      "summary": "Moyu, Pishan and Yecheng foothills along the Karakash river west of Hotan.",
+      "candidates": [
+        {
+          "name": "Karakash",
+          "local": "墨玉",
+          "origin": "river",
+          "meaning": "Uyghur Qaraqash, 'black jade'; Moyu is the Chinese translation. Named after the Karakash river, famous for jade.",
+          "fit": "Moyu is 47% of the people; the river passes through the county.",
+          "recognisability": "Own zh-wiki article, county and river both known as Moyu.",
+          "source_url": "https://zh.wikipedia.org/wiki/喀拉喀什河",
+          "source_note": "即「黑玉河」之意，因出产墨玉又名墨玉河",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Pishan",
+          "local": "皮山",
+          "origin": "county",
+          "meaning": "Han-era oasis kingdom of Pishan (Uyghur Guma); the county keeps the old name.",
+          "fit": "Pishan is 33% of the people and 60% of the area, held whole.",
+          "recognisability": "Current county with an ancient kingdom of the same name.",
+          "source_url": "https://zh.wikipedia.org/wiki/皮山国",
+          "source_note": "汉朝时王治皮山城（今新疆皮山县东南）。属西域都护",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Moyu town sits in region 12, so Karakash fits through the river and county more than the town."
+    }
+  ]
+}

@@ -1,0 +1,578 @@
+{
+  "batch": "guizhou-north",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#d5e5cf",
+      "settled": null,
+      "summary": "Lower Wu River borderland: Pengshui (Chongqing, 42%), Wuchuan and Daozhen (Zunyi, 30% and 23%).",
+      "candidates": [
+        {
+          "name": "Pengshui",
+          "local": "彭水",
+          "origin": "county",
+          "meaning": "\"Peng River\": the county took its name in 593 from the river now called the Yu River, then known as the Peng.",
+          "fit": "Holds 80% of Pengshui county and 42% of the region's people, its biggest single part.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/彭水苗族土家族自治县",
+          "source_note": "隋开皇十三年（593年）置彭水县…县以江名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Wuchuan",
+          "local": "务川",
+          "origin": "county",
+          "meaning": "County name since 599; the Yuan court respelled it 婺川 after a falling star was read as the Wu star, and it went back to 务川 in 1959.",
+          "fit": "Holds 98% of the county and 30% of the region; the county seat (Duru) was also the seat of Song Sizhou.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/务川仡佬族苗族自治县",
+          "source_note": "务川于隋开皇十九年（599年）置县至今",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Daozhen",
+          "local": "道真",
+          "origin": "county",
+          "meaning": "Named for Yin Zhen, courtesy name Daozhen, a Han-dynasty scholar who taught the local people.",
+          "fit": "Holds 98% of the county and 23% of the region; the Gelao homeland.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/道真仡佬族苗族自治县",
+          "source_note": "相传汉儒尹珍（字道真）先生在此兴教办学教化先民，因而得名",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Region crosses into Chongqing; Pengshui is a Chongqing county."
+    },
+    {
+      "n": 2,
+      "key": "#eeecb6",
+      "settled": null,
+      "summary": "Upper Furong River: Zheng'an and Suiyang (36% and 34%) with parts of Tongzi and Fenggang.",
+      "candidates": [
+        {
+          "name": "Furongjiang",
+          "local": "芙蓉江",
+          "origin": "river",
+          "meaning": "Furong River (also called Pangu River), the largest tributary of the Wu River.",
+          "fit": "Rises in Suiyang and runs through Zheng'an, so it crosses the two main counties of the region; 87% of its length is in Guizhou.",
+          "recognisability": "Own zh-wiki article, 72 hits with 贵州, top ones about this river.",
+          "source_url": "https://zh.wikipedia.org/wiki/芙蓉江",
+          "source_note": "发源于贵州省绥阳县境内的大娄山，由西南向东北…汇入乌江",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Zheng'an",
+          "local": "正安",
+          "origin": "county",
+          "meaning": "\"Upright and secure\": Qing name from 1724, changed from Zhen'an 真安 to avoid a character in the Yongzheng emperor's name.",
+          "fit": "Holds 99% of the county, 36% of the region; the Tang prefecture Zhenzhou was seated at Anchang here.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/正安县",
+          "source_note": "清朝雍正二年（1724年），避雍正帝讳改为正安州",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Suiyang",
+          "local": "绥阳",
+          "origin": "county",
+          "meaning": "Sui-dynasty county name; 绥 means to soothe or pacify, though here it is just the old county name, not a frontier phrase.",
+          "fit": "Holds 99% of the county, 34% of the region, and the upper Furong River.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/绥阳县",
+          "source_note": "隋朝时，置绥阳县，后废…于万历二十九年（1601年）以旧绥阳县地，置绥阳县",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Zhenzhou (珍州, Tang prefecture, 31 hits with 贵州) was left out: zh-wiki puts its seat at Tongzi's Yelang town while CHGIS puts it at Zheng'an."
+    },
+    {
+      "n": 3,
+      "key": "#f1e8ac",
+      "settled": null,
+      "summary": "Loushan pass country: Xishui (43%) and Tongzi (40%) plus a slice of Qijiang in Chongqing.",
+      "candidates": [
+        {
+          "name": "Tongzi",
+          "local": "桐梓",
+          "origin": "county",
+          "meaning": "\"Paulownia and catalpa\": two tree names; county created in 1601 after the defeat of the Bozhou Yang chieftaincy.",
+          "fit": "Holds 69% of Tongzi county and 40% of the region, including the county seat at Loushanguan.",
+          "recognisability": "Current county; known for the 200,000-year-old Tongzi Man site and the Tongzi military clique.",
+          "source_url": "https://zh.wikipedia.org/wiki/桐梓县",
+          "source_note": "明万历二十九年（1601年），置桐梓县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Loushan",
+          "local": "娄山",
+          "origin": "mountain",
+          "meaning": "The Dalou (Loushan) range, the divide between the Wu River and the Chishui, with the Loushan pass on its crest.",
+          "fit": "The pass sits at Loushanguan, the region's largest town (17%), on the Tongzi and Huichuan border.",
+          "recognisability": "Loushan pass has its own zh-wiki article, 175 hits with 贵州, top ones about the pass.",
+          "source_url": "https://zh.wikipedia.org/wiki/娄山关",
+          "source_note": "娄山关又名娄关，是大娄山脉的主峰，位于中国贵州省北部…北距桐梓县城13公里",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Xishui",
+          "local": "习水",
+          "origin": "county",
+          "meaning": "\"Xi River\": the county is named after the Xi River, a tributary of the Chishui.",
+          "fit": "Holds 71% of Xishui county and 43% of the region's people, the largest part.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/遵义市",
+          "source_note": "主要河流还有…赤水河、习水河、桐梓河等",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Qijiang (Chongqing) is already named on the map; nothing here repeats it."
+    },
+    {
+      "n": 4,
+      "key": "#c7e0ce",
+      "settled": null,
+      "summary": "Wu River gorge country: Dejiang (37%), Yanhe (35%), Yinjiang (26%).",
+      "candidates": [
+        {
+          "name": "Dejiang",
+          "local": "德江",
+          "origin": "county",
+          "meaning": "\"De River\": the old name Shui Dejiang for the lower Wu River, from which the county takes its name.",
+          "fit": "Holds 98% of the county and 37% of the region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/德江县",
+          "source_note": "德江，一称水德江，即乌江之下流…以境内德江河为名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Yanhe",
+          "local": "沿河",
+          "origin": "county",
+          "meaning": "\"Along the river\": the county lies on the Wu River; it grew from the Yanhe Youxi chieftaincy of 1376.",
+          "fit": "Holds 77% of Yanhe Tujia county and 35% of the region; the Wu River gorge scenic area and Tujia mountain songs are here.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/沿河土家族自治县",
+          "source_note": "位于贵州省东北部…沿河乌江山峡风景名胜区",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Dejiang and Yanhe are about equal. Sizhou (Tang prefecture seated at Yanhe) was left out because the Ming Sizhou is a different, better-known place."
+    },
+    {
+      "n": 5,
+      "key": "#ddebb9",
+      "settled": null,
+      "summary": "Chishui valley and Renhuai liquor country: Renhuai (55%), plus parts of Zunyi county, Huichuan and Honghuagang.",
+      "candidates": [
+        {
+          "name": "Renhuai",
+          "local": "仁怀",
+          "origin": "city",
+          "meaning": "\"Cherishing benevolence\": Song-era fort name for tribal lands that submitted in 1109, so a mild frontier name; the place is now known as the liquor capital.",
+          "fit": "Holds 97% of Renhuai city and 55% of the region, on the Chishui River.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/仁怀市",
+          "source_note": "仁怀被誉为中国酒都…宋王朝在这些地区建立滋州、纯州、祥州等州。滋州领仁怀县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Maotai",
+          "local": "茅台",
+          "origin": "other",
+          "meaning": "\"Thatch platform\": the Gelao people covered their sacrificial platform with thatch, hence Maotai; it is the home of Moutai liquor.",
+          "fit": "Maotai town holds only 4% of the region, but the name is what the whole Chishui stretch is known for.",
+          "recognisability": "Own zh-wiki article, 64 hits with 贵州, top ones about the town and the liquor.",
+          "source_url": "https://zh.wikipedia.org/wiki/茅台镇",
+          "source_note": "古獠人在祭祀台上栽满茅草，称祭祀台为茅草祭台，简称茅台，此地因而得名",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "The small label 'zunyi' on the picture sits partly over this region, but it belongs to the tiny region 8 beside it (city centre). Hailongtun (Bozhou Yang fortress, UNESCO) is in Gaoping town here but is a very small share. A Chishui River name would clash if Chishui city is named in a neighbouring batch."
+    },
+    {
+      "n": 6,
+      "key": "#c9e8de",
+      "settled": null,
+      "summary": "Tongren city and Jiangkou, Songtao, Wanshan: the eastern edge near Fanjingshan.",
+      "candidates": [
+        {
+          "name": "Tongren",
+          "local": "铜仁",
+          "origin": "city",
+          "meaning": "Originally \"bronze man\" 铜人: fishermen were said to have found three bronze statues in the river; the Ming changed the second character to 仁 \"benevolence\".",
+          "fit": "Holds the city centre (Bijiang, 46% of the region) and the seat of the prefecture.",
+          "recognisability": "Current prefecture-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/铜仁市",
+          "source_note": "铜仁原名铜人…及置长官司，始易人为仁",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Fanjingshan",
+          "local": "梵净山",
+          "origin": "mountain",
+          "meaning": "\"Pure Buddhist land\" mountain, the main peak of the Wuling range (2,572 m), a World Heritage site since 2018.",
+          "fit": "The range lies at the Jiangkou, Yinjiang and Songtao meeting point; Jiangkou (20%) and part of Songtao are in this region, Yinjiang mostly in region 4.",
+          "recognisability": "Own zh-wiki article, 576 hits with 贵州, top ones about the mountain.",
+          "source_url": "https://zh.wikipedia.org/wiki/梵净山",
+          "source_note": "梵净山位于中国贵州铜仁市的印江县、江口县、松桃县交界处，为武陵山脉主峰",
+          "lat": 27.817,
+          "lon": 108.75,
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Fenghuang (Hunan) neighbour is already named; no clash."
+    },
+    {
+      "n": 7,
+      "key": "#c7e0d7",
+      "settled": null,
+      "summary": "Middle Wu River: Sinan (47%), Shiqian (30%), Fenggang (21%).",
+      "candidates": [
+        {
+          "name": "Sinan",
+          "local": "思南",
+          "origin": "prefecture",
+          "meaning": "Ming prefecture and pacification commission of Sinan, seated at Sitang town on the Wu River; the old county was Anhua.",
+          "fit": "Holds 99% of Sinan county and 47% of the region; the Ming Sinan prefecture seat is at Sitang, the largest town.",
+          "recognisability": "Current county; own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/思南县",
+          "source_note": "位于贵州东北部，乌江斜贯…明置安化县，为思南府治，1913年改设思南县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Wujiang",
+          "local": "乌江",
+          "origin": "river",
+          "meaning": "\"Black River\", the Wu River, the largest river of Guizhou, flowing north to the Yangtze at Fuling.",
+          "fit": "The river crosses the middle of the region through Sinan; it also runs through region 1 and region 4.",
+          "recognisability": "Own zh-wiki article; very well known.",
+          "source_url": "https://zh.wikipedia.org/wiki/乌江",
+          "source_note": "乌江干流横穿贵州中部和东北部，于重庆市涪陵区汇入长江",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Shiqian",
+          "local": "石阡",
+          "origin": "county",
+          "meaning": "\"Stone path\": a Ming prefecture seat and now the county famous for its hot springs.",
+          "fit": "Holds 99% of Shiqian county and 30% of the region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/石阡县",
+          "source_note": "石阡县是贵州矿泉最多的县",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Wujiang (乌江) is also a town in Anhui (Xiang Yu's last stand); only a clash if that is named on the map."
+    },
+    {
+      "n": 8,
+      "key": "#c6e575",
+      "settled": "zunyi",
+      "summary": "Tiny patch holding the Zunyi city centre (Honghuagang and Huichuan); the 'zun / yi' label sits beside it.",
+      "candidates": [],
+      "notes": "Treated as settled because the label reads zunyi right next to this small region and the city centre is here. If the label was meant for region 5 instead, this region and region 9 need names."
+    },
+    {
+      "n": 9,
+      "key": "#d6ebba",
+      "settled": null,
+      "summary": "Zunyi county country around the city: Zunyi county (now Bozhou district, 73%) with parts of Honghuagang and Huichuan.",
+      "candidates": [
+        {
+          "name": "Bozhou",
+          "local": "播州",
+          "origin": "county",
+          "meaning": "Tang prefecture name (639) and seat of the Yang chieftaincy that ruled here for some 700 years; the old Zunyi county was renamed Bozhou district in 2016.",
+          "fit": "Holds 70% of the old Zunyi county and 73% of the region.",
+          "recognisability": "Current district; own zh-wiki article; the Bozhou campaign of 1600 is well known.",
+          "source_url": "https://zh.wikipedia.org/wiki/播州区",
+          "source_note": "2016年，中国国务院批准原遵义县改为播州区",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Zunyi",
+          "local": "遵义",
+          "origin": "county",
+          "meaning": "\"Follow the right\": from the Book of Documents line 遵王之义; Tang county name since 642.",
+          "fit": "The old Zunyi county is 73% of the region, but the name is already on the map for the city centre.",
+          "recognisability": "Prefecture-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/遵义市",
+          "source_note": "遵义之名相传出自《尚书》：无偏无陂，遵王之义",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Bozhou shares its spelling with Bozhou (亳州) in Anhui; different characters, so no clash."
+    },
+    {
+      "n": 10,
+      "key": "#dbf0ac",
+      "settled": null,
+      "summary": "Bijie city centre: Qixingguan district (99%).",
+      "candidates": [
+        {
+          "name": "Bijie",
+          "local": "毕节",
+          "origin": "city",
+          "meaning": "A Yi tribal name, said to be from Yi \"Biji\"; folk etymologies link it to the Bi River or to a New Year's Eve fortress wall.",
+          "fit": "Holds the old Bijie county seat (Ming Bijie garrison) and 80% of Qixingguan, the prefecture's city; the central region takes the city name.",
+          "recognisability": "Current prefecture-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/毕节市",
+          "source_note": "毕节是彝语比跻的谐音，乃彝族部族名",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Qixingguan",
+          "local": "七星关",
+          "origin": "other",
+          "meaning": "\"Seven star pass\": district name for a pass on the Bijie road; Qixing is the Big Dipper.",
+          "fit": "The district is 99% of the region.",
+          "recognisability": "Current district; own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/七星关区",
+          "source_note": "七星关区是中华人民共和国贵州省毕节市下辖的一个市辖区",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 11,
+      "key": "#d7eec7",
+      "settled": null,
+      "summary": "Mei and Weng rivers tea country: Weng'an (37%, Qiannan), Meitan (35%), Yuqing (24%).",
+      "candidates": [
+        {
+          "name": "Meitan",
+          "local": "湄潭",
+          "origin": "county",
+          "meaning": "\"Mei River pool\": the county is on the Mei River; Guizhou's top tea county (Meitan Cuiya, Zunyi Hong).",
+          "fit": "Holds 95% of Meitan county and 35% of the region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/湄潭县",
+          "source_note": "湄潭是…茶城、酒乡、烟县、粮仓…贵州第一茶县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Weng'an",
+          "local": "瓮安",
+          "origin": "county",
+          "meaning": "From the Weng River (瓮水) and the Weng River pacification commission of the Ming; county since 1601.",
+          "fit": "Holds 99% of Weng'an county and 37% of the region, the largest part.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/瓮安县",
+          "source_note": "瓮安县…位于贵州省中部",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yuqing (余庆, 24%) was left out as the smallest of the three."
+    },
+    {
+      "n": 12,
+      "key": "#ddeec3",
+      "settled": null,
+      "summary": "Dafang county (71%) and eastern Jinsha (28%): the old Yi heartland of Mu'ege.",
+      "candidates": [
+        {
+          "name": "Dafang",
+          "local": "大方",
+          "origin": "county",
+          "meaning": "\"Great and square\": the 1958 replacement for Dading 大定 \"great stability\", an old pacification name.",
+          "fit": "Holds 84% of Dafang county and 71% of the region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/大方县",
+          "source_note": "清朝康熙五年设大定府；民国二年废府设大定县；1958年更名为大方县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Mu'ege",
+          "local": "慕俄格",
+          "origin": "ethnic",
+          "meaning": "Yi name for the Shuixi polity and its capital, Mu'ege ancient city, which stands in Dafang town.",
+          "fit": "The capital's site is in this region; the polity covered much of Bijie.",
+          "recognisability": "57 hits with 贵州, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/水西",
+          "source_note": "水西，彝语音译慕俄格或慕俄勾…明清以来汉人习惯称之为水西",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Jinsha",
+          "local": "金沙",
+          "origin": "county",
+          "meaning": "\"Gold sand\"; county on the Chishui, more familiar as the name of the upper Yangtze.",
+          "fit": "Only 47% of Jinsha county is here, so it fits poorly.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/金沙县",
+          "source_note": "金沙县…北隔赤水河邻接四川省",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Mu'ege and Shuixi (region 14) are the same Yi polity under two names; use only one if Anita prefers."
+    },
+    {
+      "n": 13,
+      "key": "#e8f3c0",
+      "settled": null,
+      "summary": "Hezhang county (68%) and western Qixingguan, up to the Wumeng summit Jiucaiping.",
+      "candidates": [
+        {
+          "name": "Hezhang",
+          "local": "赫章",
+          "origin": "county",
+          "meaning": "County created in 1942 from northeast Weining; no meaning recorded in the sources I read.",
+          "fit": "Holds 95% of Hezhang county and 68% of the region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/赫章县",
+          "source_note": "赫章县…贵州最高峰韭菜坪位于此县，海拔2900.6米",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Wumeng",
+          "local": "乌蒙",
+          "origin": "mountain",
+          "meaning": "The Wumeng mountains, the Yangtze and Pearl River divide; its main peak Jiucaiping (2,900 m) lies on the Hezhang border.",
+          "fit": "The peak is in Hezhang, so this is the range's heart in Guizhou; the range reaches much further into Yunnan.",
+          "recognisability": "Own zh-wiki article; widely known.",
+          "source_url": "https://zh.wikipedia.org/wiki/乌蒙山",
+          "source_note": "乌蒙山主峰韭菜坪位于贵州六盘水和毕节赫章县交界地区，海拔2900米，为贵州最高峰",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Kele (可乐, Yelang-era site in Hezhang) was dropped: 'Kele' reads as the word for cola."
+    },
+    {
+      "n": 14,
+      "key": "#d2edb8",
+      "settled": null,
+      "summary": "Qianxi city and the Ya River: Qianxi (69%) and western Jinsha (29%).",
+      "candidates": [
+        {
+          "name": "Shuixi",
+          "local": "水西",
+          "origin": "historical",
+          "meaning": "\"West of the water\": the Yi Anshi chieftaincy (Shuixi xuanweisi, 1373-1664), west of the Ya River; Chinese name for Mu'ege.",
+          "fit": "The Shuixi seat is at Qianxi, 69% of the region; the chieftaincy ruled most of Bijie.",
+          "recognisability": "Own zh-wiki article, 615 hits with 贵州, top ones about this chieftaincy and its wars.",
+          "source_url": "https://zh.wikipedia.org/wiki/水西",
+          "source_note": "水西宣慰司 (1373-1664) 今贵州省黔西县治 (CHGIS)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Qianxi",
+          "local": "黔西",
+          "origin": "county",
+          "meaning": "\"West Guizhou\": Qing prefecture of 1666, made from Anshi land; now a county-level city.",
+          "fit": "Holds 99% of Qianxi and 69% of the region.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/黔西市",
+          "source_note": "清康熙五年以安氏的则窝、以著、雄所则溪地置黔西府，改土设流",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Qianxi is a Qing 'convert chieftaincy to regular rule' name; Shuixi is the older local name. Shuixi and Mu'ege (region 12) are the same polity."
+    },
+    {
+      "n": 15,
+      "key": "#f0f1be",
+      "settled": null,
+      "summary": "Weining plateau: Weining county (99%), with Caohai lake.",
+      "candidates": [
+        {
+          "name": "Caohai",
+          "local": "草海",
+          "origin": "lake",
+          "meaning": "\"Grass sea\": Guizhou's largest natural lake (about 20 km2), choked with water plants; winter home of the black-necked crane.",
+          "fit": "The lake is at the county seat; Caohai town holds 20% of the region.",
+          "recognisability": "Own zh-wiki article, 361 hits with 贵州, top ones about this lake.",
+          "source_url": "https://zh.wikipedia.org/wiki/草海",
+          "source_note": "草海又名松坡湖、南海子、八仙湖，位于威宁彝族回族苗族自治县县城西南隅，因湖中水草繁茂，故名",
+          "lat": 26.85,
+          "lon": 104.25,
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Wusa",
+          "local": "乌撒",
+          "origin": "historical",
+          "meaning": "Yi name of the Wusa tribe and its prefecture, seated at today's Weining from 1278 to 1728.",
+          "fit": "The seat was at Weining, 99% of the region.",
+          "recognisability": "67 hits with 贵州, top ones about Wusa prefectures; no article for the bare name.",
+          "source_url": "https://zh.wikipedia.org/wiki/乌撒府",
+          "source_note": "乌撒府…治所在乌撒（今贵州省威宁彝族回族苗族自治县）",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Weining",
+          "local": "威宁",
+          "origin": "county",
+          "meaning": "\"Might and peace\": the Qing name from 1664, a pacify-the-frontier name in a county with Yi, Hui and Miao majorities.",
+          "fit": "Holds 79% of the county and 99% of the region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/威宁彝族回族苗族自治县",
+          "source_note": "威宁府 (1664-1728) 威宁州 (1729-1911) 今贵州省威宁县治 (CHGIS)",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Weining is listed only because it is what the place is known as; Caohai or Wusa ranks above it."
+    },
+    {
+      "n": 16,
+      "key": "#ddf3c0",
+      "settled": null,
+      "summary": "Nayong county (67%), with parts of Shuicheng and Dafang.",
+      "candidates": [
+        {
+          "name": "Nayong",
+          "local": "纳雍",
+          "origin": "county",
+          "meaning": "County created in 1941; no meaning recorded in the sources I read. Home of a third of the Chuanqing people.",
+          "fit": "Holds 97% of Nayong county and 67% of the region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/纳雍县",
+          "source_note": "纳雍县…其中有穿青人20多万，占穿青人人口的1/3",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Shuicheng (19% of the region) is already named on the map, so it is not offered. Only one good name found."
+    },
+    {
+      "n": 17,
+      "key": "#cee8bd",
+      "settled": "zhijin",
+      "summary": "Zhijin county and part of Puding; already labelled.",
+      "candidates": [],
+      "notes": ""
+    }
+  ]
+}

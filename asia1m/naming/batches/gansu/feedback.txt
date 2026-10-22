@@ -1,0 +1,25 @@
+﻿batch gansu
+1: pick Dunhuang
+2: pick Jiuquan. (She thought Zhangye city lay outside; the region holds both city centres.)
+3: pick Qilian
+4: pick Liangzhou
+5: pick Baiyin
+6: pick Yongdeng
+7: pick Huanxian. Did huanxian for googleability (and the river), not Huanzhou.
+8: pick Xigu
+9: pick Jincheng
+10: pick Lanzhou
+11: pick Huining
+12: pick Lintao
+13: pick Linxia
+14: pick Qingyang
+15: pick Dongxiang
+16: pick Pingliang
+17: pick Liupan
+18: pick Gangu
+19: pick Longxi
+20: pick Longxian
+21: pick Tianshui
+22: pick Lixian
+23: pick Chengxian
+24: pick Bailong

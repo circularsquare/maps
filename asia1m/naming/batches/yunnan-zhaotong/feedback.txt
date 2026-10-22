@@ -1,0 +1,6 @@
+batch yunnan-zhaotong
+1: pick Hengjiang
+2: pick Yiliang
+3: pick Mangbu
+4: pick Ludian
+5: pick Zhaotong

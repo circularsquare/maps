@@ -1,0 +1,4836 @@
+{
+ "name": "gansu",
+ "province": "Gansu",
+ "prefectures": [],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 5064,
+   "y": 2455,
+   "w": 800,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "tag": "2",
+   "x": 5864,
+   "y": 2455,
+   "w": 800,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    14
+   ]
+  },
+  {
+   "tag": "3",
+   "x": 5864,
+   "y": 3255,
+   "w": 800,
+   "h": 633,
+   "scale": 2,
+   "regions": [
+    7,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#e9f4f6",
+   "color": "#e9f4f6",
+   "lon": 96.0597,
+   "lat": 40.1342,
+   "bbox": [
+    5264,
+    2655,
+    5874,
+    2972
+   ],
+   "area_px": 102252,
+   "people": 993109,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jiayuguan",
+     "local": "嘉峪关市",
+     "prefecture": "Jiayuguan",
+     "prefecture_local": "嘉峪关市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.245,
+     "area_share": 0.011,
+     "cover": 1.0
+    },
+    {
+     "name": "Dunhuang",
+     "local": "敦煌市",
+     "prefecture": "Jiuquan",
+     "prefecture_local": "酒泉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.167,
+     "area_share": 0.223,
+     "cover": 1.0
+    },
+    {
+     "name": "Yumen",
+     "local": "玉门市",
+     "prefecture": "Jiuquan",
+     "prefecture_local": "酒泉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.154,
+     "area_share": 0.114,
+     "cover": 1.0
+    },
+    {
+     "name": "Guazhou",
+     "local": "瓜州县",
+     "prefecture": "Jiuquan",
+     "prefecture_local": "酒泉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.148,
+     "area_share": 0.209,
+     "cover": 1.0
+    },
+    {
+     "name": "Jinta",
+     "local": "金塔县",
+     "prefecture": "Jiuquan",
+     "prefecture_local": "酒泉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.145,
+     "area_share": 0.118,
+     "cover": 0.996
+    },
+    {
+     "name": "Suzhou",
+     "local": "肃州区",
+     "prefecture": "Jiuquan",
+     "prefecture_local": "酒泉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.107,
+     "area_share": 0.009,
+     "cover": 0.247
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.039
+    },
+    {
+     "level": "prefecture",
+     "name": "Jiuquan",
+     "local": "酒泉市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.75,
+     "cover": 0.694
+    },
+    {
+     "level": "prefecture",
+     "name": "Jiayuguan",
+     "local": "嘉峪关市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.245,
+     "cover": 1.0
+    }
+   ],
+   "towns": [
+    {
+     "town": "长城区",
+     "county": "嘉峪关市",
+     "city": "嘉峪关市",
+     "people_share": 0.08,
+     "cover": 1.0
+    },
+    {
+     "town": "镜铁区",
+     "county": "嘉峪关市",
+     "city": "嘉峪关市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "文殊镇",
+     "county": "嘉峪关市",
+     "city": "嘉峪关市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "月牙泉镇",
+     "county": "敦煌市",
+     "city": "酒泉市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "莫高镇",
+     "county": "敦煌市",
+     "city": "酒泉市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "赤金镇",
+     "county": "玉门市",
+     "city": "酒泉市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "雄关区",
+     "county": "嘉峪关市",
+     "city": "嘉峪关市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "果园乡",
+     "county": "肃州区",
+     "city": "酒泉市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "银达镇",
+     "county": "肃州区",
+     "city": "酒泉市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "渊泉镇",
+     "county": "瓜州县",
+     "city": "酒泉市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yingmen",
+     "admin": "Gansu",
+     "pop": 350000
+    },
+    {
+     "name": "Jiayuguan",
+     "admin": "Gansu",
+     "pop": 312663
+    },
+    {
+     "name": "Dunhuang",
+     "admin": "Gansu",
+     "pop": 185231
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f4f5ef",
+     "border_px": 8594
+    },
+    {
+     "key": "#f6f5ea",
+     "border_px": 7078
+    },
+    {
+     "key": "#f1ecf7",
+     "border_px": 3258
+    },
+    {
+     "key": "#d5f4f6",
+     "border_px": 2779
+    },
+    {
+     "key": "#e5f0f9",
+     "border_px": 2453
+    },
+    {
+     "key": "#ddfaf9",
+     "border_px": 344
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 5051,
+    "y0": 2442,
+    "k": 0.5019305019305019,
+    "w": 520,
+    "h": 372
+   }
+  },
+  {
+   "key": "#d5f4f6",
+   "color": "#d5f4f6",
+   "lon": 99.6934,
+   "lat": 39.4362,
+   "bbox": [
+    5749,
+    2853,
+    5953,
+    2959
+   ],
+   "area_px": 11673,
+   "people": 909633,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Suzhou",
+     "local": "肃州区",
+     "prefecture": "Jiuquan",
+     "prefecture_local": "酒泉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.355,
+     "area_share": 0.186,
+     "cover": 0.753
+    },
+    {
+     "name": "Ganzhou",
+     "local": "甘州区",
+     "prefecture": "Zhangye",
+     "prefecture_local": "张掖市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.349,
+     "area_share": 0.159,
+     "cover": 0.689
+    },
+    {
+     "name": "Gaotai",
+     "local": "高台县",
+     "prefecture": "Zhangye",
+     "prefecture_local": "张掖市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.148,
+     "area_share": 0.334,
+     "cover": 0.999
+    },
+    {
+     "name": "Linze",
+     "local": "临泽县",
+     "prefecture": "Zhangye",
+     "prefecture_local": "张掖市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.144,
+     "area_share": 0.209,
+     "cover": 0.984
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.036
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhangye",
+     "local": "张掖市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.644,
+     "cover": 0.521
+    },
+    {
+     "level": "prefecture",
+     "name": "Jiuquan",
+     "local": "酒泉市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.356,
+     "cover": 0.301
+    }
+   ],
+   "towns": [
+    {
+     "town": "泉湖乡",
+     "county": "肃州区",
+     "city": "酒泉市",
+     "people_share": 0.127,
+     "cover": 0.988
+    },
+    {
+     "town": "新墩镇",
+     "county": "甘州区",
+     "city": "张掖市",
+     "people_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "town": "长安乡",
+     "county": "甘州区",
+     "city": "张掖市",
+     "people_share": 0.054,
+     "cover": 0.997
+    },
+    {
+     "town": "总寨镇",
+     "county": "肃州区",
+     "city": "酒泉市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "梁家墩镇",
+     "county": "甘州区",
+     "city": "张掖市",
+     "people_share": 0.04,
+     "cover": 0.962
+    },
+    {
+     "town": "巷道乡",
+     "county": "高台县",
+     "city": "张掖市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "鸭暖乡",
+     "county": "临泽县",
+     "city": "张掖市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Zhangye",
+     "admin": "Gansu",
+     "pop": 1199515
+    },
+    {
+     "name": "Xibeijie",
+     "admin": "Gansu",
+     "pop": 1095947
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e9f4f6",
+     "border_px": 2779
+    },
+    {
+     "key": "#ddfaf9",
+     "border_px": 2381
+    },
+    {
+     "key": "#f6f5ea",
+     "border_px": 2194
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 5678,
+    "y0": 2782,
+    "k": 1.0,
+    "w": 346,
+    "h": 248
+   }
+  },
+  {
+   "key": "#ddfaf9",
+   "color": "#ddfaf9",
+   "lon": 100.9648,
+   "lat": 38.4393,
+   "bbox": [
+    5805,
+    2922,
+    6125,
+    3085
+   ],
+   "area_px": 27483,
+   "people": 1151482,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yongchang",
+     "local": "永昌县",
+     "prefecture": "Jinchang",
+     "prefecture_local": "金昌市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.204,
+     "area_share": 0.149,
+     "cover": 1.0
+    },
+    {
+     "name": "Jinchuan",
+     "local": "金川区",
+     "prefecture": "Jinchang",
+     "prefecture_local": "金昌市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.201,
+     "area_share": 0.062,
+     "cover": 0.997
+    },
+    {
+     "name": "Minle",
+     "local": "民乐县",
+     "prefecture": "Zhangye",
+     "prefecture_local": "张掖市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.176,
+     "area_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "name": "Shandan",
+     "local": "山丹县",
+     "prefecture": "Zhangye",
+     "prefecture_local": "张掖市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.134,
+     "area_share": 0.177,
+     "cover": 0.999
+    },
+    {
+     "name": "Ganzhou",
+     "local": "甘州区",
+     "prefecture": "Zhangye",
+     "prefecture_local": "张掖市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.124,
+     "area_share": 0.053,
+     "cover": 0.311
+    },
+    {
+     "name": "Liangzhou",
+     "local": "凉州区",
+     "prefecture": "Wuwei",
+     "prefecture_local": "武威市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.088,
+     "area_share": 0.02,
+     "cover": 0.106
+    },
+    {
+     "name": "Qilian",
+     "local": "祁连县",
+     "prefecture": "Haibeizangzu",
+     "prefecture_local": "海北藏族自治州",
+     "province": "青海省",
+     "country": "China",
+     "people_share": 0.031,
+     "area_share": 0.124,
+     "cover": 0.739
+    },
+    {
+     "name": "Sunan Yugur",
+     "local": "肃南裕固族自治县",
+     "prefecture": "Zhangye",
+     "prefecture_local": "张掖市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.027,
+     "area_share": 0.318,
+     "cover": 0.758
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.969,
+     "cover": 0.044
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhangye",
+     "local": "张掖市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.463,
+     "cover": 0.475
+    },
+    {
+     "level": "prefecture",
+     "name": "Jinchang",
+     "local": "金昌市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.404,
+     "cover": 0.998
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuwei",
+     "local": "武威市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.101,
+     "cover": 0.069
+    }
+   ],
+   "towns": [
+    {
+     "town": "宁远堡镇",
+     "county": "金川区",
+     "city": "金昌市",
+     "people_share": 0.096,
+     "cover": 0.999
+    },
+    {
+     "town": "滨河路街道",
+     "county": "金川区",
+     "city": "金昌市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "清泉镇",
+     "county": "山丹县",
+     "city": "张掖市",
+     "people_share": 0.058,
+     "cover": 0.998
+    },
+    {
+     "town": "河西堡镇",
+     "county": "永昌县",
+     "city": "金昌市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "城关镇",
+     "county": "永昌县",
+     "city": "金昌市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "双城镇",
+     "county": "凉州区",
+     "city": "武威市",
+     "people_share": 0.033,
+     "cover": 0.98
+    },
+    {
+     "town": "民联乡",
+     "county": "民乐县",
+     "city": "张掖市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Jinchang",
+     "admin": "Gansu",
+     "pop": 438026
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f4f5ef",
+     "border_px": 3227
+    },
+    {
+     "key": "#f6f5ea",
+     "border_px": 3115
+    },
+    {
+     "key": "#d5f4f6",
+     "border_px": 2381
+    },
+    {
+     "key": "#d0faf8",
+     "border_px": 1298
+    },
+    {
+     "key": "#c6f3ed",
+     "border_px": 1293
+    },
+    {
+     "key": "#e9f4f6",
+     "border_px": 344
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 5693,
+    "y0": 2810,
+    "k": 0.9558823529411765,
+    "w": 520,
+    "h": 369
+   }
+  },
+  {
+   "key": "#d0faf8",
+   "color": "#d0faf8",
+   "lon": 102.8945,
+   "lat": 37.6695,
+   "bbox": [
+    6057,
+    3026,
+    6204,
+    3124
+   ],
+   "area_px": 9612,
+   "people": 1231450,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Liangzhou",
+     "local": "凉州区",
+     "prefecture": "Wuwei",
+     "prefecture_local": "武威市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.692,
+     "area_share": 0.344,
+     "cover": 0.893
+    },
+    {
+     "name": "Gulang",
+     "local": "古浪县",
+     "prefecture": "Wuwei",
+     "prefecture_local": "武威市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.283,
+     "area_share": 0.42,
+     "cover": 0.965
+    },
+    {
+     "name": "Tianzhu Tibetan",
+     "local": "天祝藏族自治县",
+     "prefecture": "Wuwei",
+     "prefecture_local": "武威市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.025,
+     "area_share": 0.23,
+     "cover": 0.196
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.048
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuwei",
+     "local": "武威市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.723
+    }
+   ],
+   "towns": [
+    {
+     "town": "高坝镇",
+     "county": "凉州区",
+     "city": "武威市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "黄羊镇",
+     "county": "凉州区",
+     "city": "武威市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "武南镇",
+     "county": "凉州区",
+     "city": "武威市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "永昌镇",
+     "county": "凉州区",
+     "city": "武威市",
+     "people_share": 0.047,
+     "cover": 0.953
+    },
+    {
+     "town": "金沙乡",
+     "county": "凉州区",
+     "city": "武威市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "张义镇",
+     "county": "凉州区",
+     "city": "武威市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "金羊镇",
+     "county": "凉州区",
+     "city": "武威市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "土门镇",
+     "county": "古浪县",
+     "city": "武威市",
+     "people_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "town": "怀安乡",
+     "county": "凉州区",
+     "city": "武威市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Wuwei",
+     "admin": "Gansu",
+     "pop": 1815059
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#d1f1f7",
+     "border_px": 1565
+    },
+    {
+     "key": "#f6f5ea",
+     "border_px": 1514
+    },
+    {
+     "key": "#ddfaf9",
+     "border_px": 1298
+    },
+    {
+     "key": "#c9f3f1",
+     "border_px": 873
+    },
+    {
+     "key": "#c6f3ed",
+     "border_px": 764
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 6006,
+    "y0": 2975,
+    "k": 1.0,
+    "w": 249,
+    "h": 200
+   }
+  },
+  {
+   "key": "#c9f3f1",
+   "color": "#c9f3f1",
+   "lon": 104.418,
+   "lat": 36.8896,
+   "bbox": [
+    6178,
+    3081,
+    6337,
+    3230
+   ],
+   "area_px": 12582,
+   "people": 1084459,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jingyuan",
+     "local": "靖远县",
+     "prefecture": "Baiyin",
+     "prefecture_local": "白银市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.394,
+     "area_share": 0.4,
+     "cover": 0.995
+    },
+    {
+     "name": "Baiyin",
+     "local": "白银区",
+     "prefecture": "Baiyin",
+     "prefecture_local": "白银市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.24,
+     "area_share": 0.052,
+     "cover": 0.841
+    },
+    {
+     "name": "Jingtai",
+     "local": "景泰县",
+     "prefecture": "Baiyin",
+     "prefecture_local": "白银市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.204,
+     "area_share": 0.365,
+     "cover": 0.988
+    },
+    {
+     "name": "Pingchuan",
+     "local": "平川区",
+     "prefecture": "Baiyin",
+     "prefecture_local": "白银市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.151,
+     "area_share": 0.136,
+     "cover": 0.971
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.043
+    },
+    {
+     "level": "prefecture",
+     "name": "Baiyin",
+     "local": "白银市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.988,
+     "cover": 0.653
+    }
+   ],
+   "towns": [
+    {
+     "town": "纺织路街道",
+     "county": "白银区",
+     "city": "白银市",
+     "people_share": 0.102,
+     "cover": 0.962
+    },
+    {
+     "town": "宝积乡",
+     "county": "平川区",
+     "city": "白银市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "王岘镇",
+     "county": "白银区",
+     "city": "白银市",
+     "people_share": 0.059,
+     "cover": 0.933
+    },
+    {
+     "town": "乌兰镇",
+     "county": "靖远县",
+     "city": "白银市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "东湾镇",
+     "county": "靖远县",
+     "city": "白银市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "芦阳镇",
+     "county": "景泰县",
+     "city": "白银市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "公园路街道",
+     "county": "白银区",
+     "city": "白银市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "北滩乡",
+     "county": "靖远县",
+     "city": "白银市",
+     "people_share": 0.04,
+     "cover": 0.997
+    },
+    {
+     "town": "三滩乡",
+     "county": "靖远县",
+     "city": "白银市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "水泉镇",
+     "county": "平川区",
+     "city": "白银市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "喜泉镇",
+     "county": "景泰县",
+     "city": "白银市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "北湾镇",
+     "county": "靖远县",
+     "city": "白银市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Baiyin",
+     "admin": "Gansu",
+     "pop": 1512110
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#d1f1f7",
+     "border_px": 2013
+    },
+    {
+     "key": "#ccf6c4",
+     "border_px": 1822,
+     "name": "Zhongwei"
+    },
+    {
+     "key": "#d1f1eb",
+     "border_px": 1550
+    },
+    {
+     "key": "#d0faf8",
+     "border_px": 873
+    },
+    {
+     "key": "#f6f5ea",
+     "border_px": 612
+    },
+    {
+     "key": "#dff3d5",
+     "border_px": 558,
+     "name": "Haiyuan"
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 6123,
+    "y0": 3026,
+    "k": 1.0,
+    "w": 269,
+    "h": 259
+   }
+  },
+  {
+   "key": "#d1f1f7",
+   "color": "#d1f1f7",
+   "lon": 103.3188,
+   "lat": 36.7015,
+   "bbox": [
+    6091,
+    3112,
+    6253,
+    3245
+   ],
+   "area_px": 12284,
+   "people": 916454,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yongdeng",
+     "local": "永登县",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.492,
+     "area_share": 0.426,
+     "cover": 0.998
+    },
+    {
+     "name": "Gaolan",
+     "local": "皋兰县",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.184,
+     "area_share": 0.18,
+     "cover": 0.918
+    },
+    {
+     "name": "Tianzhu Tibetan",
+     "local": "天祝藏族自治县",
+     "prefecture": "Wuwei",
+     "prefecture_local": "武威市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.135,
+     "area_share": 0.305,
+     "cover": 0.797
+    },
+    {
+     "name": "Honggu",
+     "local": "红古区",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.102,
+     "area_share": 0.029,
+     "cover": 0.867
+    },
+    {
+     "name": "Baiyin",
+     "local": "白银区",
+     "prefecture": "Baiyin",
+     "prefecture_local": "白银市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.052,
+     "area_share": 0.047,
+     "cover": 0.154
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.995,
+     "cover": 0.036
+    },
+    {
+     "level": "prefecture",
+     "name": "Lanzhou",
+     "local": "兰州市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.799,
+     "cover": 0.186
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuwei",
+     "local": "武威市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.144,
+     "cover": 0.078
+    },
+    {
+     "level": "prefecture",
+     "name": "Baiyin",
+     "local": "白银市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.051,
+     "cover": 0.028
+    }
+   ],
+   "towns": [
+    {
+     "town": "忠和镇",
+     "county": "皋兰县",
+     "city": "兰州市",
+     "people_share": 0.057,
+     "cover": 0.781
+    },
+    {
+     "town": "城关镇",
+     "county": "永登县",
+     "city": "兰州市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "河桥镇",
+     "county": "永登县",
+     "city": "兰州市",
+     "people_share": 0.047,
+     "cover": 0.992
+    },
+    {
+     "town": "石洞镇",
+     "county": "皋兰县",
+     "city": "兰州市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "中川镇",
+     "county": "永登县",
+     "city": "兰州市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "华藏寺镇",
+     "county": "天祝藏族自治县",
+     "city": "武威市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "连城镇",
+     "county": "永登县",
+     "city": "兰州市",
+     "people_share": 0.04,
+     "cover": 0.999
+    },
+    {
+     "town": "海石湾镇",
+     "county": "红古区",
+     "city": "兰州市",
+     "people_share": 0.039,
+     "cover": 0.974
+    },
+    {
+     "town": "武胜驿镇",
+     "county": "永登县",
+     "city": "兰州市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "红古乡",
+     "county": "红古区",
+     "city": "兰州市",
+     "people_share": 0.036,
+     "cover": 0.985
+    },
+    {
+     "town": "秦川镇",
+     "county": "永登县",
+     "city": "兰州市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "民乐乡",
+     "county": "永登县",
+     "city": "兰州市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#c9f3f1",
+     "border_px": 2013
+    },
+    {
+     "key": "#d0faf8",
+     "border_px": 1565
+    },
+    {
+     "key": "#c6f3ed",
+     "border_px": 1261
+    },
+    {
+     "key": "#ccf3e7",
+     "border_px": 925
+    },
+    {
+     "key": "#d1f1eb",
+     "border_px": 842
+    },
+    {
+     "key": "#7adaf1",
+     "border_px": 726
+    },
+    {
+     "key": "#5bd7f4",
+     "border_px": 295
+    },
+    {
+     "key": "#bfeede",
+     "border_px": 177
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 6035,
+    "y0": 3056,
+    "k": 1.0,
+    "w": 274,
+    "h": 245
+   }
+  },
+  {
+   "key": "#e9eed0",
+   "color": "#e9eed0",
+   "lon": 107.3806,
+   "lat": 36.3447,
+   "bbox": [
+    6423,
+    3115,
+    6601,
+    3287
+   ],
+   "area_px": 17018,
+   "people": 981295,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Huan",
+     "local": "环县",
+     "prefecture": "Qingyang",
+     "prefecture_local": "庆阳市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.277,
+     "area_share": 0.486,
+     "cover": 0.996
+    },
+    {
+     "name": "Qingcheng",
+     "local": "庆城县",
+     "prefecture": "Qingyang",
+     "prefecture_local": "庆阳市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.257,
+     "area_share": 0.143,
+     "cover": 0.999
+    },
+    {
+     "name": "Zhenyuan",
+     "local": "镇原县",
+     "prefecture": "Qingyang",
+     "prefecture_local": "庆阳市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.243,
+     "area_share": 0.13,
+     "cover": 0.615
+    },
+    {
+     "name": "Heshui",
+     "local": "合水县",
+     "prefecture": "Qingyang",
+     "prefecture_local": "庆阳市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.126,
+     "area_share": 0.095,
+     "cover": 0.938
+    },
+    {
+     "name": "Huachi",
+     "local": "华池县",
+     "prefecture": "Qingyang",
+     "prefecture_local": "庆阳市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.094,
+     "area_share": 0.14,
+     "cover": 0.84
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.039
+    },
+    {
+     "level": "prefecture",
+     "name": "Qingyang",
+     "local": "庆阳市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.479
+    }
+   ],
+   "towns": [
+    {
+     "town": "环城镇",
+     "county": "环县",
+     "city": "庆阳市",
+     "people_share": 0.065,
+     "cover": 1.0
+    },
+    {
+     "town": "庆城镇",
+     "county": "庆城县",
+     "city": "庆阳市",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "驿马镇",
+     "county": "庆城县",
+     "city": "庆阳市",
+     "people_share": 0.047,
+     "cover": 0.995
+    },
+    {
+     "town": "城关镇",
+     "county": "镇原县",
+     "city": "庆阳市",
+     "people_share": 0.046,
+     "cover": 0.999
+    },
+    {
+     "town": "西华池镇",
+     "county": "合水县",
+     "city": "庆阳市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "孟坝镇",
+     "county": "镇原县",
+     "city": "庆阳市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "柔远镇",
+     "county": "华池县",
+     "city": "庆阳市",
+     "people_share": 0.032,
+     "cover": 0.998
+    },
+    {
+     "town": "三十里铺镇",
+     "county": "庆城县",
+     "city": "庆阳市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#dff3d5",
+     "border_px": 2437,
+     "name": "Haiyuan"
+    },
+    {
+     "key": "#eeeebf",
+     "border_px": 2054
+    },
+    {
+     "key": "#e8e6d7",
+     "border_px": 1404,
+     "name": "Jingbian"
+    },
+    {
+     "key": "#cbf1cb",
+     "border_px": 1254,
+     "name": "Guyuan"
+    },
+    {
+     "key": "#f3edda",
+     "border_px": 1147,
+     "name": "Luochuan"
+    },
+    {
+     "key": "#e4eed5",
+     "border_px": 574
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 6361,
+    "y0": 3053,
+    "k": 1.0,
+    "w": 302,
+    "h": 296
+   }
+  },
+  {
+   "key": "#7adaf1",
+   "color": "#7adaf1",
+   "lon": 103.4862,
+   "lat": 36.1508,
+   "bbox": [
+    6160,
+    3234,
+    6208,
+    3252
+   ],
+   "area_px": 496,
+   "people": 713227,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Anning",
+     "local": "安宁区",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.437,
+     "area_share": 0.141,
+     "cover": 0.8
+    },
+    {
+     "name": "Xigu",
+     "local": "西固区",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.403,
+     "area_share": 0.554,
+     "cover": 0.972
+    },
+    {
+     "name": "Qilihe",
+     "local": "七里河区",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.123,
+     "area_share": 0.04,
+     "cover": 0.099
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.028
+    },
+    {
+     "level": "prefecture",
+     "name": "Lanzhou",
+     "local": "兰州市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.995,
+     "cover": 0.18
+    }
+   ],
+   "towns": [
+    {
+     "town": "十里店街道",
+     "county": "安宁区",
+     "city": "兰州市",
+     "people_share": 0.102,
+     "cover": 0.5
+    },
+    {
+     "town": "安宁堡街道",
+     "county": "安宁区",
+     "city": "兰州市",
+     "people_share": 0.095,
+     "cover": 0.928
+    },
+    {
+     "town": "秀川街道",
+     "county": "七里河区",
+     "city": "兰州市",
+     "people_share": 0.081,
+     "cover": 0.91
+    },
+    {
+     "town": "陈坪街道",
+     "county": "西固区",
+     "city": "兰州市",
+     "people_share": 0.081,
+     "cover": 1.0
+    },
+    {
+     "town": "四季青街道",
+     "county": "西固区",
+     "city": "兰州市",
+     "people_share": 0.069,
+     "cover": 0.996
+    },
+    {
+     "town": "沙井驿街道",
+     "county": "安宁区",
+     "city": "兰州市",
+     "people_share": 0.068,
+     "cover": 0.999
+    },
+    {
+     "town": "西路街道",
+     "county": "安宁区",
+     "city": "兰州市",
+     "people_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "town": "新城镇",
+     "county": "西固区",
+     "city": "兰州市",
+     "people_share": 0.058,
+     "cover": 0.997
+    },
+    {
+     "town": "培黎街道",
+     "county": "安宁区",
+     "city": "兰州市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "彭家坪镇",
+     "county": "七里河区",
+     "city": "兰州市",
+     "people_share": 0.042,
+     "cover": 0.497
+    },
+    {
+     "town": "河口乡",
+     "county": "西固区",
+     "city": "兰州市",
+     "people_share": 0.04,
+     "cover": 0.981
+    },
+    {
+     "town": "西柳沟街道",
+     "county": "西固区",
+     "city": "兰州市",
+     "people_share": 0.039,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d1f1f7",
+     "border_px": 726
+    },
+    {
+     "key": "#bfeede",
+     "border_px": 684
+    },
+    {
+     "key": "#5bd7f4",
+     "border_px": 138
+    }
+   ],
+   "text_px": 0,
+   "n": 8,
+   "thumb": {
+    "x0": 6120,
+    "y0": 3194,
+    "k": 3.0,
+    "w": 384,
+    "h": 294
+   }
+  },
+  {
+   "key": "#5bd7f4",
+   "color": "#5bd7f4",
+   "lon": 103.8453,
+   "lat": 36.0885,
+   "bbox": [
+    6205,
+    3241,
+    6225,
+    3253
+   ],
+   "area_px": 172,
+   "people": 1182024,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Chengguan",
+     "local": "城关区",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.479,
+     "area_share": 0.692,
+     "cover": 0.51
+    },
+    {
+     "name": "Qilihe",
+     "local": "七里河区",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.454,
+     "area_share": 0.203,
+     "cover": 0.606
+    },
+    {
+     "name": "Anning",
+     "local": "安宁区",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.054,
+     "area_share": 0.041,
+     "cover": 0.163
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.047
+    },
+    {
+     "level": "prefecture",
+     "name": "Lanzhou",
+     "local": "兰州市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.3
+    }
+   ],
+   "towns": [
+    {
+     "town": "靖远路街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.119,
+     "cover": 0.922
+    },
+    {
+     "town": "盐场路街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.092,
+     "cover": 0.975
+    },
+    {
+     "town": "西果园镇",
+     "county": "七里河区",
+     "city": "兰州市",
+     "people_share": 0.085,
+     "cover": 0.491
+    },
+    {
+     "town": "草场街街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.071,
+     "cover": 1.0
+    },
+    {
+     "town": "八里镇",
+     "county": "七里河区",
+     "city": "兰州市",
+     "people_share": 0.067,
+     "cover": 0.661
+    },
+    {
+     "town": "十里店街道",
+     "county": "安宁区",
+     "city": "兰州市",
+     "people_share": 0.054,
+     "cover": 0.438
+    },
+    {
+     "town": "西湖街道",
+     "county": "七里河区",
+     "city": "兰州市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "西园街道",
+     "county": "七里河区",
+     "city": "兰州市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "魏岭乡",
+     "county": "七里河区",
+     "city": "兰州市",
+     "people_share": 0.051,
+     "cover": 0.504
+    },
+    {
+     "town": "西站街道",
+     "county": "七里河区",
+     "city": "兰州市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "青白石街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.038,
+     "cover": 0.991
+    },
+    {
+     "town": "临夏路街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.034,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Lanzhou",
+     "admin": "Gansu",
+     "pop": 3067141
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#d1f1f7",
+     "border_px": 295
+    },
+    {
+     "key": "#12bced",
+     "border_px": 144
+    },
+    {
+     "key": "#7adaf1",
+     "border_px": 138
+    },
+    {
+     "key": "#bfeede",
+     "border_px": 126
+    },
+    {
+     "key": "#d1f1eb",
+     "border_px": 87
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 6165,
+    "y0": 3201,
+    "k": 4.0,
+    "w": 400,
+    "h": 368
+   }
+  },
+  {
+   "key": "#12bced",
+   "color": "#12bced",
+   "lon": 103.8788,
+   "lat": 36.0477,
+   "bbox": [
+    6215,
+    3250,
+    6221,
+    3253
+   ],
+   "area_px": 34,
+   "people": 383987,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Chengguan",
+     "local": "城关区",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 1.0,
+     "area_share": 1.0,
+     "cover": 0.346
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Lanzhou",
+     "local": "兰州市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.097
+    }
+   ],
+   "towns": [
+    {
+     "town": "雁南街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.152,
+     "cover": 0.973
+    },
+    {
+     "town": "火车站街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.144,
+     "cover": 1.0
+    },
+    {
+     "town": "东岗街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.13,
+     "cover": 0.875
+    },
+    {
+     "town": "渭源路街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.096,
+     "cover": 1.0
+    },
+    {
+     "town": "东岗西路街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.096,
+     "cover": 1.0
+    },
+    {
+     "town": "嘉峪关路街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.096,
+     "cover": 1.0
+    },
+    {
+     "town": "焦家湾街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "铁路西村街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "伏龙坪街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.048,
+     "cover": 0.104
+    },
+    {
+     "town": "团结新村街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "高新区",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "拱星墩街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.037,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#5bd7f4",
+     "border_px": 144
+    },
+    {
+     "key": "#bfeede",
+     "border_px": 116
+    },
+    {
+     "key": "#d1f1eb",
+     "border_px": 22
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 6175,
+    "y0": 3210,
+    "k": 4.0,
+    "w": 344,
+    "h": 332
+   }
+  },
+  {
+   "key": "#d1f1eb",
+   "color": "#d1f1eb",
+   "lon": 104.7783,
+   "lat": 35.8787,
+   "bbox": [
+    6223,
+    3202,
+    6355,
+    3326
+   ],
+   "area_px": 10946,
+   "people": 1190320,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Huining",
+     "local": "会宁县",
+     "prefecture": "Baiyin",
+     "prefecture_local": "白银市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.426,
+     "area_share": 0.465,
+     "cover": 0.994
+    },
+    {
+     "name": "Anding",
+     "local": "安定区",
+     "prefecture": "Dingxi",
+     "prefecture_local": "定西市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.338,
+     "area_share": 0.3,
+     "cover": 1.0
+    },
+    {
+     "name": "Yuzhong",
+     "local": "榆中县",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.226,
+     "area_share": 0.215,
+     "cover": 0.542
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.047
+    },
+    {
+     "level": "prefecture",
+     "name": "Baiyin",
+     "local": "白银市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.432,
+     "cover": 0.313
+    },
+    {
+     "level": "prefecture",
+     "name": "Dingxi",
+     "local": "定西市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.339,
+     "cover": 0.158
+    },
+    {
+     "level": "prefecture",
+     "name": "Lanzhou",
+     "local": "兰州市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.228,
+     "cover": 0.069
+    }
+   ],
+   "towns": [
+    {
+     "town": "凤翔镇",
+     "county": "安定区",
+     "city": "定西市",
+     "people_share": 0.102,
+     "cover": 1.0
+    },
+    {
+     "town": "内官镇",
+     "county": "安定区",
+     "city": "定西市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "会师镇",
+     "county": "会宁县",
+     "city": "白银市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "来紫堡乡",
+     "county": "榆中县",
+     "city": "兰州市",
+     "people_share": 0.039,
+     "cover": 0.885
+    },
+    {
+     "town": "三角城乡",
+     "county": "榆中县",
+     "city": "兰州市",
+     "people_share": 0.032,
+     "cover": 0.876
+    }
+   ],
+   "cities": [
+    {
+     "name": "Dingxi",
+     "admin": "Gansu",
+     "pop": 2524097
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#c9f3f1",
+     "border_px": 1550
+    },
+    {
+     "key": "#bfeede",
+     "border_px": 1526
+    },
+    {
+     "key": "#cbf1cb",
+     "border_px": 873,
+     "name": "Guyuan"
+    },
+    {
+     "key": "#d1f1f7",
+     "border_px": 842
+    },
+    {
+     "key": "#d0eee8",
+     "border_px": 685
+    },
+    {
+     "key": "#daf0e9",
+     "border_px": 545
+    },
+    {
+     "key": "#cce8d9",
+     "border_px": 447
+    },
+    {
+     "key": "#dff3d5",
+     "border_px": 399,
+     "name": "Haiyuan"
+    },
+    {
+     "key": "#5bd7f4",
+     "border_px": 87
+    },
+    {
+     "key": "#12bced",
+     "border_px": 22
+    }
+   ],
+   "text_px": 0,
+   "n": 11,
+   "thumb": {
+    "x0": 6177,
+    "y0": 3156,
+    "k": 1.0,
+    "w": 224,
+    "h": 216
+   }
+  },
+  {
+   "key": "#bfeede",
+   "color": "#bfeede",
+   "lon": 103.7462,
+   "lat": 35.6958,
+   "bbox": [
+    6137,
+    3237,
+    6272,
+    3357
+   ],
+   "area_px": 5991,
+   "people": 1435307,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Lintao",
+     "local": "临洮县",
+     "prefecture": "Dingxi",
+     "prefecture_local": "定西市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.335,
+     "area_share": 0.426,
+     "cover": 0.974
+    },
+    {
+     "name": "Qilihe",
+     "local": "七里河区",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.182,
+     "area_share": 0.051,
+     "cover": 0.295
+    },
+    {
+     "name": "Yuzhong",
+     "local": "榆中县",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.156,
+     "area_share": 0.101,
+     "cover": 0.451
+    },
+    {
+     "name": "Yongjing",
+     "local": "永靖县",
+     "prefecture": "Linxiahuizu",
+     "prefecture_local": "临夏回族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.153,
+     "area_share": 0.283,
+     "cover": 0.961
+    },
+    {
+     "name": "Chengguan",
+     "local": "城关区",
+     "prefecture": "Lanzhou",
+     "prefecture_local": "兰州市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.101,
+     "area_share": 0.005,
+     "cover": 0.13
+    },
+    {
+     "name": "Weiyuan",
+     "local": "渭源县",
+     "prefecture": "Dingxi",
+     "prefecture_local": "定西市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.06,
+     "area_share": 0.117,
+     "cover": 0.293
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.056
+    },
+    {
+     "level": "prefecture",
+     "name": "Lanzhou",
+     "local": "兰州市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.456,
+     "cover": 0.166
+    },
+    {
+     "level": "prefecture",
+     "name": "Dingxi",
+     "local": "定西市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.395,
+     "cover": 0.223
+    },
+    {
+     "level": "prefecture",
+     "name": "Linxia Hui Autonomous Prefecture",
+     "local": "临夏回族自治州",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.147,
+     "cover": 0.109
+    }
+   ],
+   "towns": [
+    {
+     "town": "伏龙坪街道",
+     "county": "城关区",
+     "city": "兰州市",
+     "people_share": 0.096,
+     "cover": 0.781
+    },
+    {
+     "town": "洮阳镇",
+     "county": "临洮县",
+     "city": "定西市",
+     "people_share": 0.081,
+     "cover": 0.983
+    },
+    {
+     "town": "西果园镇",
+     "county": "七里河区",
+     "city": "兰州市",
+     "people_share": 0.073,
+     "cover": 0.509
+    },
+    {
+     "town": "和平镇",
+     "county": "榆中县",
+     "city": "兰州市",
+     "people_share": 0.065,
+     "cover": 0.938
+    },
+    {
+     "town": "魏岭乡",
+     "county": "七里河区",
+     "city": "兰州市",
+     "people_share": 0.042,
+     "cover": 0.496
+    },
+    {
+     "town": "城关镇",
+     "county": "榆中县",
+     "city": "兰州市",
+     "people_share": 0.033,
+     "cover": 0.956
+    },
+    {
+     "town": "盐锅峡镇",
+     "county": "永靖县",
+     "city": "临夏回族自治州",
+     "people_share": 0.033,
+     "cover": 0.979
+    }
+   ],
+   "cities": [
+    {
+     "name": "Taoyang",
+     "admin": "Gansu",
+     "pop": 109300
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#c0f3cc",
+     "border_px": 1685
+    },
+    {
+     "key": "#d1f1eb",
+     "border_px": 1526
+    },
+    {
+     "key": "#daf0e9",
+     "border_px": 1185
+    },
+    {
+     "key": "#7adaf1",
+     "border_px": 684
+    },
+    {
+     "key": "#ccf3e7",
+     "border_px": 629
+    },
+    {
+     "key": "#a6f1b7",
+     "border_px": 372
+    },
+    {
+     "key": "#d1f1f7",
+     "border_px": 177
+    },
+    {
+     "key": "#5bd7f4",
+     "border_px": 126
+    },
+    {
+     "key": "#12bced",
+     "border_px": 116
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 6090,
+    "y0": 3190,
+    "k": 1.0,
+    "w": 229,
+    "h": 214
+   }
+  },
+  {
+   "key": "#a6f1b7",
+   "color": "#a6f1b7",
+   "lon": 103.0231,
+   "lat": 35.6186,
+   "bbox": [
+    6121,
+    3278,
+    6178,
+    3330
+   ],
+   "area_px": 2146,
+   "people": 913007,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Linxia",
+     "local": "临夏县",
+     "prefecture": "Linxiahuizu",
+     "prefecture_local": "临夏回族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.433,
+     "area_share": 0.426,
+     "cover": 0.998
+    },
+    {
+     "name": "Jishishan Bonan, Dongxiang and Salar",
+     "local": "积石山保安族东乡族撒拉族自治县",
+     "prefecture": "Linxiahuizu",
+     "prefecture_local": "临夏回族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.248,
+     "area_share": 0.371,
+     "cover": 0.985
+    },
+    {
+     "name": "Linxia",
+     "local": "临夏市",
+     "prefecture": "Linxiahuizu",
+     "prefecture_local": "临夏回族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.219,
+     "area_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "name": "Dongxiang",
+     "local": "东乡族自治县",
+     "prefecture": "Linxiahuizu",
+     "prefecture_local": "临夏回族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.071,
+     "area_share": 0.116,
+     "cover": 0.231
+    },
+    {
+     "name": "Hezheng",
+     "local": "和政县",
+     "prefecture": "Linxiahuizu",
+     "prefecture_local": "临夏回族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.028,
+     "area_share": 0.039,
+     "cover": 0.144
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.036
+    },
+    {
+     "level": "prefecture",
+     "name": "Linxia Hui Autonomous Prefecture",
+     "local": "临夏回族自治州",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.471
+    }
+   ],
+   "towns": [
+    {
+     "town": "北塬乡",
+     "county": "临夏县",
+     "city": "临夏回族自治州",
+     "people_share": 0.073,
+     "cover": 1.0
+    },
+    {
+     "town": "枹罕镇",
+     "county": "临夏市",
+     "city": "临夏回族自治州",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "城郊镇",
+     "county": "临夏市",
+     "city": "临夏回族自治州",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "南龙镇",
+     "county": "临夏市",
+     "city": "临夏回族自治州",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "吹麻滩镇",
+     "county": "积石山保安族东乡族撒拉族自治县",
+     "city": "临夏回族自治州",
+     "people_share": 0.035,
+     "cover": 0.996
+    },
+    {
+     "town": "尹集镇",
+     "county": "临夏县",
+     "city": "临夏回族自治州",
+     "people_share": 0.03,
+     "cover": 0.992
+    }
+   ],
+   "cities": [
+    {
+     "name": "Linxia Chengguanzhen",
+     "admin": "Gansu",
+     "pop": 355968
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#c0f3cc",
+     "border_px": 1099
+    },
+    {
+     "key": "#ccf3e7",
+     "border_px": 782
+    },
+    {
+     "key": "#ebf3e6",
+     "border_px": 375
+    },
+    {
+     "key": "#bfeede",
+     "border_px": 372
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 6081,
+    "y0": 3238,
+    "k": 3.0,
+    "w": 411,
+    "h": 396
+   }
+  },
+  {
+   "key": "#eeeebf",
+   "color": "#eeeebf",
+   "lon": 107.9024,
+   "lat": 35.5771,
+   "bbox": [
+    6505,
+    3243,
+    6608,
+    3315
+   ],
+   "area_px": 4195,
+   "people": 861230,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Ning",
+     "local": "宁县",
+     "prefecture": "Qingyang",
+     "prefecture_local": "庆阳市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.441,
+     "area_share": 0.573,
+     "cover": 0.995
+    },
+    {
+     "name": "Xifeng",
+     "local": "西峰区",
+     "prefecture": "Qingyang",
+     "prefecture_local": "庆阳市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.408,
+     "area_share": 0.211,
+     "cover": 0.996
+    },
+    {
+     "name": "Zhenyuan",
+     "local": "镇原县",
+     "prefecture": "Qingyang",
+     "prefecture_local": "庆阳市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.081,
+     "area_share": 0.116,
+     "cover": 0.179
+    },
+    {
+     "name": "Jingchuan",
+     "local": "泾川县",
+     "prefecture": "Pingliang",
+     "prefecture_local": "平凉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.053,
+     "area_share": 0.068,
+     "cover": 0.171
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.034
+    },
+    {
+     "level": "prefecture",
+     "name": "Qingyang",
+     "local": "庆阳市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.943,
+     "cover": 0.397
+    },
+    {
+     "level": "prefecture",
+     "name": "Pingliang",
+     "local": "平凉市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.053,
+     "cover": 0.021
+    }
+   ],
+   "towns": [
+    {
+     "town": "温泉乡",
+     "county": "西峰区",
+     "city": "庆阳市",
+     "people_share": 0.107,
+     "cover": 0.999
+    },
+    {
+     "town": "董志镇",
+     "county": "西峰区",
+     "city": "庆阳市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "后官寨乡",
+     "county": "西峰区",
+     "city": "庆阳市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "春荣乡",
+     "county": "宁县",
+     "city": "庆阳市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "焦村乡",
+     "county": "宁县",
+     "city": "庆阳市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "和盛镇",
+     "county": "宁县",
+     "city": "庆阳市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "南街街道",
+     "county": "西峰区",
+     "city": "庆阳市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "彭原乡",
+     "county": "西峰区",
+     "city": "庆阳市",
+     "people_share": 0.04,
+     "cover": 0.977
+    },
+    {
+     "town": "屯字镇",
+     "county": "镇原县",
+     "city": "庆阳市",
+     "people_share": 0.036,
+     "cover": 0.99
+    },
+    {
+     "town": "肖金镇",
+     "county": "西峰区",
+     "city": "庆阳市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "西街街道",
+     "county": "西峰区",
+     "city": "庆阳市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "新庄镇",
+     "county": "宁县",
+     "city": "庆阳市",
+     "people_share": 0.034,
+     "cover": 0.986
+    }
+   ],
+   "cities": [
+    {
+     "name": "Qinbaling",
+     "admin": "Gansu",
+     "pop": 2179716
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e9eed0",
+     "border_px": 2054
+    },
+    {
+     "key": "#ebeec8",
+     "border_px": 1189,
+     "name": "Binzhou"
+    },
+    {
+     "key": "#e4eed5",
+     "border_px": 693
+    },
+    {
+     "key": "#f3edda",
+     "border_px": 414,
+     "name": "Luochuan"
+    }
+   ],
+   "text_px": 0,
+   "n": 14,
+   "thumb": {
+    "x0": 6465,
+    "y0": 3203,
+    "k": 2.0,
+    "w": 366,
+    "h": 304
+   }
+  },
+  {
+   "key": "#c0f3cc",
+   "color": "#c0f3cc",
+   "lon": 103.4708,
+   "lat": 35.4538,
+   "bbox": [
+    6146,
+    3268,
+    6218,
+    3359
+   ],
+   "area_px": 3435,
+   "people": 802261,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Guanghe",
+     "local": "广河县",
+     "prefecture": "Linxiahuizu",
+     "prefecture_local": "临夏回族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.284,
+     "area_share": 0.143,
+     "cover": 0.997
+    },
+    {
+     "name": "Dongxiang",
+     "local": "东乡族自治县",
+     "prefecture": "Linxiahuizu",
+     "prefecture_local": "临夏回族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.264,
+     "area_share": 0.322,
+     "cover": 0.754
+    },
+    {
+     "name": "Kangle",
+     "local": "康乐县",
+     "prefecture": "Linxiahuizu",
+     "prefecture_local": "临夏回族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.245,
+     "area_share": 0.192,
+     "cover": 0.932
+    },
+    {
+     "name": "Hezheng",
+     "local": "和政县",
+     "prefecture": "Linxiahuizu",
+     "prefecture_local": "临夏回族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.19,
+     "area_share": 0.325,
+     "cover": 0.856
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.032
+    },
+    {
+     "level": "prefecture",
+     "name": "Linxia Hui Autonomous Prefecture",
+     "local": "临夏回族自治州",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.986,
+     "cover": 0.408
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "广河县",
+     "city": "临夏回族自治州",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "三甲集镇",
+     "county": "广河县",
+     "city": "临夏回族自治州",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "附城镇",
+     "county": "康乐县",
+     "city": "临夏回族自治州",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "祁家集镇",
+     "county": "广河县",
+     "city": "临夏回族自治州",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "齐家镇",
+     "county": "广河县",
+     "city": "临夏回族自治州",
+     "people_share": 0.033,
+     "cover": 0.973
+    },
+    {
+     "town": "新庄乡",
+     "county": "和政县",
+     "city": "临夏回族自治州",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "康丰乡",
+     "county": "康乐县",
+     "city": "临夏回族自治州",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "达浪乡",
+     "county": "和政县",
+     "city": "临夏回族自治州",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#bfeede",
+     "border_px": 1685
+    },
+    {
+     "key": "#a6f1b7",
+     "border_px": 1099
+    },
+    {
+     "key": "#ebf3e6",
+     "border_px": 1084
+    },
+    {
+     "key": "#daf0e9",
+     "border_px": 24
+    }
+   ],
+   "text_px": 0,
+   "n": 15,
+   "thumb": {
+    "x0": 6106,
+    "y0": 3228,
+    "k": 2.0,
+    "w": 304,
+    "h": 342
+   }
+  },
+  {
+   "key": "#e4eed5",
+   "color": "#e4eed5",
+   "lon": 107.0322,
+   "lat": 35.3066,
+   "bbox": [
+    6432,
+    3268,
+    6547,
+    3358
+   ],
+   "area_px": 6646,
+   "people": 1385952,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Kongdong",
+     "local": "崆峒区",
+     "prefecture": "Pingliang",
+     "prefecture_local": "平凉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.467,
+     "area_share": 0.259,
+     "cover": 0.998
+    },
+    {
+     "name": "Jingchuan",
+     "local": "泾川县",
+     "prefecture": "Pingliang",
+     "prefecture_local": "平凉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.158,
+     "area_share": 0.156,
+     "cover": 0.824
+    },
+    {
+     "name": "Huating",
+     "local": "华亭县",
+     "prefecture": "Pingliang",
+     "prefecture_local": "平凉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.128,
+     "area_share": 0.141,
+     "cover": 0.997
+    },
+    {
+     "name": "Lingtai",
+     "local": "灵台县",
+     "prefecture": "Pingliang",
+     "prefecture_local": "平凉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.12,
+     "area_share": 0.252,
+     "cover": 0.933
+    },
+    {
+     "name": "Chongxin",
+     "local": "崇信县",
+     "prefecture": "Pingliang",
+     "prefecture_local": "平凉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.068,
+     "area_share": 0.116,
+     "cover": 0.999
+    },
+    {
+     "name": "Zhenyuan",
+     "local": "镇原县",
+     "prefecture": "Qingyang",
+     "prefecture_local": "庆阳市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.056,
+     "area_share": 0.068,
+     "cover": 0.202
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.997,
+     "cover": 0.054
+    },
+    {
+     "level": "prefecture",
+     "name": "Pingliang",
+     "local": "平凉市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.942,
+     "cover": 0.609
+    },
+    {
+     "level": "prefecture",
+     "name": "Qingyang",
+     "local": "庆阳市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.055,
+     "cover": 0.037
+    }
+   ],
+   "towns": [
+    {
+     "town": "柳湖乡",
+     "county": "崆峒区",
+     "city": "平凉市",
+     "people_share": 0.136,
+     "cover": 1.0
+    },
+    {
+     "town": "白庙乡",
+     "county": "崆峒区",
+     "city": "平凉市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "四十里铺镇",
+     "county": "崆峒区",
+     "city": "平凉市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "峡门乡",
+     "county": "崆峒区",
+     "city": "平凉市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "东华镇",
+     "county": "华亭县",
+     "city": "平凉市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "西华镇",
+     "county": "华亭县",
+     "city": "平凉市",
+     "people_share": 0.031,
+     "cover": 0.999
+    }
+   ],
+   "cities": [
+    {
+     "name": "Pingliang",
+     "admin": "Gansu",
+     "pop": 2068033
+    },
+    {
+     "name": "Donghua",
+     "admin": "Gansu",
+     "pop": 182449
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#cbf1cb",
+     "border_px": 1283,
+     "name": "Guyuan"
+    },
+    {
+     "key": "#d4e5ce",
+     "border_px": 1244
+    },
+    {
+     "key": "#eeeebf",
+     "border_px": 693
+    },
+    {
+     "key": "#dae5ab",
+     "border_px": 612,
+     "name": "Fengxiang"
+    },
+    {
+     "key": "#e9eed0",
+     "border_px": 574
+    },
+    {
+     "key": "#ebeec8",
+     "border_px": 466,
+     "name": "Binzhou"
+    }
+   ],
+   "text_px": 0,
+   "n": 16,
+   "thumb": {
+    "x0": 6392,
+    "y0": 3228,
+    "k": 2.0,
+    "w": 390,
+    "h": 340
+   }
+  },
+  {
+   "key": "#cce8d9",
+   "color": "#cce8d9",
+   "lon": 105.7267,
+   "lat": 35.2529,
+   "bbox": [
+    6345,
+    3276,
+    6421,
+    3382
+   ],
+   "area_px": 4380,
+   "people": 1130363,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jingning",
+     "local": "静宁县",
+     "prefecture": "Pingliang",
+     "prefecture_local": "平凉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.364,
+     "area_share": 0.443,
+     "cover": 0.985
+    },
+    {
+     "name": "Qin'an",
+     "local": "秦安县",
+     "prefecture": "Tianshui",
+     "prefecture_local": "天水市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.336,
+     "area_share": 0.258,
+     "cover": 0.783
+    },
+    {
+     "name": "Zhuanglang",
+     "local": "庄浪县",
+     "prefecture": "Pingliang",
+     "prefecture_local": "平凉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.259,
+     "area_share": 0.227,
+     "cover": 0.797
+    },
+    {
+     "name": "Tongwei",
+     "local": "通渭县",
+     "prefecture": "Dingxi",
+     "prefecture_local": "定西市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.02,
+     "area_share": 0.048,
+     "cover": 0.067
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.981,
+     "cover": 0.044
+    },
+    {
+     "level": "prefecture",
+     "name": "Pingliang",
+     "local": "平凉市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.618,
+     "cover": 0.326
+    },
+    {
+     "level": "prefecture",
+     "name": "Tianshui",
+     "local": "天水市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.34,
+     "cover": 0.113
+    }
+   ],
+   "towns": [
+    {
+     "town": "西川镇",
+     "county": "秦安县",
+     "city": "天水市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "郭嘉镇",
+     "county": "秦安县",
+     "city": "天水市",
+     "people_share": 0.043,
+     "cover": 0.996
+    },
+    {
+     "town": "水洛镇",
+     "county": "庄浪县",
+     "city": "平凉市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "兴国镇",
+     "county": "秦安县",
+     "city": "天水市",
+     "people_share": 0.039,
+     "cover": 0.999
+    },
+    {
+     "town": "仁大乡",
+     "county": "静宁县",
+     "city": "平凉市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "叶堡乡",
+     "county": "秦安县",
+     "city": "天水市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "古城乡",
+     "county": "静宁县",
+     "city": "平凉市",
+     "people_share": 0.031,
+     "cover": 0.993
+    },
+    {
+     "town": "八里镇",
+     "county": "静宁县",
+     "city": "平凉市",
+     "people_share": 0.031,
+     "cover": 0.996
+    },
+    {
+     "town": "安伏乡",
+     "county": "秦安县",
+     "city": "天水市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#cbf1cb",
+     "border_px": 1417,
+     "name": "Guyuan"
+    },
+    {
+     "key": "#d4e5ce",
+     "border_px": 1350
+    },
+    {
+     "key": "#d0eee8",
+     "border_px": 1288
+    },
+    {
+     "key": "#d1f1eb",
+     "border_px": 447
+    },
+    {
+     "key": "#bfe7da",
+     "border_px": 320
+    }
+   ],
+   "text_px": 0,
+   "n": 17,
+   "thumb": {
+    "x0": 6305,
+    "y0": 3236,
+    "k": 2.0,
+    "w": 312,
+    "h": 372
+   }
+  },
+  {
+   "key": "#d0eee8",
+   "color": "#d0eee8",
+   "lon": 105.1588,
+   "lat": 34.995,
+   "bbox": [
+    6302,
+    3305,
+    6363,
+    3421
+   ],
+   "area_px": 4690,
+   "people": 1079277,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Gangu",
+     "local": "甘谷县",
+     "prefecture": "Tianshui",
+     "prefecture_local": "天水市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.493,
+     "area_share": 0.303,
+     "cover": 0.997
+    },
+    {
+     "name": "Tongwei",
+     "local": "通渭县",
+     "prefecture": "Dingxi",
+     "prefecture_local": "定西市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.283,
+     "area_share": 0.513,
+     "cover": 0.925
+    },
+    {
+     "name": "Wushan",
+     "local": "武山县",
+     "prefecture": "Tianshui",
+     "prefecture_local": "天水市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.219,
+     "area_share": 0.174,
+     "cover": 0.557
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.042
+    },
+    {
+     "level": "prefecture",
+     "name": "Tianshui",
+     "local": "天水市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.714,
+     "cover": 0.228
+    },
+    {
+     "level": "prefecture",
+     "name": "Dingxi",
+     "local": "定西市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.285,
+     "cover": 0.121
+    }
+   ],
+   "towns": [
+    {
+     "town": "新兴镇",
+     "county": "甘谷县",
+     "city": "天水市",
+     "people_share": 0.115,
+     "cover": 1.0
+    },
+    {
+     "town": "洛门镇",
+     "county": "武山县",
+     "city": "天水市",
+     "people_share": 0.085,
+     "cover": 1.0
+    },
+    {
+     "town": "大像山镇",
+     "county": "甘谷县",
+     "city": "天水市",
+     "people_share": 0.07,
+     "cover": 1.0
+    },
+    {
+     "town": "磐安镇",
+     "county": "甘谷县",
+     "city": "天水市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "城关镇",
+     "county": "武山县",
+     "city": "天水市",
+     "people_share": 0.06,
+     "cover": 0.95
+    },
+    {
+     "town": "平襄镇",
+     "county": "通渭县",
+     "city": "定西市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "安远镇",
+     "county": "甘谷县",
+     "city": "天水市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "金山乡",
+     "county": "甘谷县",
+     "city": "天水市",
+     "people_share": 0.036,
+     "cover": 0.99
+    },
+    {
+     "town": "马营镇",
+     "county": "通渭县",
+     "city": "定西市",
+     "people_share": 0.03,
+     "cover": 0.996
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#daf0e9",
+     "border_px": 1444
+    },
+    {
+     "key": "#cce8d9",
+     "border_px": 1288
+    },
+    {
+     "key": "#d1f1eb",
+     "border_px": 685
+    },
+    {
+     "key": "#bfe7da",
+     "border_px": 565
+    },
+    {
+     "key": "#e4ebe5",
+     "border_px": 358
+    }
+   ],
+   "text_px": 0,
+   "n": 18,
+   "thumb": {
+    "x0": 6262,
+    "y0": 3265,
+    "k": 2.0,
+    "w": 282,
+    "h": 392
+   }
+  },
+  {
+   "key": "#daf0e9",
+   "color": "#daf0e9",
+   "lon": 104.4036,
+   "lat": 34.8836,
+   "bbox": [
+    6213,
+    3319,
+    6318,
+    3422
+   ],
+   "area_px": 7177,
+   "people": 1144037,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Longxi",
+     "local": "陇西县",
+     "prefecture": "Dingxi",
+     "prefecture_local": "定西市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.378,
+     "area_share": 0.301,
+     "cover": 0.997
+    },
+    {
+     "name": "Weiyuan",
+     "local": "渭源县",
+     "prefecture": "Dingxi",
+     "prefecture_local": "定西市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.18,
+     "area_share": 0.161,
+     "cover": 0.705
+    },
+    {
+     "name": "Wushan",
+     "local": "武山县",
+     "prefecture": "Tianshui",
+     "prefecture_local": "天水市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.164,
+     "area_share": 0.137,
+     "cover": 0.442
+    },
+    {
+     "name": "Zhang",
+     "local": "漳县",
+     "prefecture": "Dingxi",
+     "prefecture_local": "定西市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.159,
+     "area_share": 0.272,
+     "cover": 0.993
+    },
+    {
+     "name": "Min",
+     "local": "岷县",
+     "prefecture": "Dingxi",
+     "prefecture_local": "定西市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.111,
+     "area_share": 0.085,
+     "cover": 0.305
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.045
+    },
+    {
+     "level": "prefecture",
+     "name": "Dingxi",
+     "local": "定西市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.827,
+     "cover": 0.371
+    },
+    {
+     "level": "prefecture",
+     "name": "Tianshui",
+     "local": "天水市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.167,
+     "cover": 0.056
+    }
+   ],
+   "towns": [
+    {
+     "town": "巩昌镇",
+     "county": "陇西县",
+     "city": "定西市",
+     "people_share": 0.077,
+     "cover": 1.0
+    },
+    {
+     "town": "文峰镇",
+     "county": "陇西县",
+     "city": "定西市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "清源镇",
+     "county": "渭源县",
+     "city": "定西市",
+     "people_share": 0.045,
+     "cover": 0.982
+    },
+    {
+     "town": "会川镇",
+     "county": "渭源县",
+     "city": "定西市",
+     "people_share": 0.041,
+     "cover": 0.983
+    },
+    {
+     "town": "梅川镇",
+     "county": "岷县",
+     "city": "定西市",
+     "people_share": 0.04,
+     "cover": 0.995
+    },
+    {
+     "town": "马力镇",
+     "county": "武山县",
+     "city": "天水市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "首阳镇",
+     "county": "陇西县",
+     "city": "定西市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "福星镇",
+     "county": "陇西县",
+     "city": "定西市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "云田镇",
+     "county": "陇西县",
+     "city": "定西市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Hongzhai",
+     "admin": "Gansu",
+     "pop": 355037
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e4ebe5",
+     "border_px": 1546
+    },
+    {
+     "key": "#d0eee8",
+     "border_px": 1444
+    },
+    {
+     "key": "#bfeede",
+     "border_px": 1185
+    },
+    {
+     "key": "#ebf3e6",
+     "border_px": 834
+    },
+    {
+     "key": "#d1f1eb",
+     "border_px": 545
+    },
+    {
+     "key": "#c0f3cc",
+     "border_px": 24
+    }
+   ],
+   "text_px": 0,
+   "n": 19,
+   "thumb": {
+    "x0": 6173,
+    "y0": 3279,
+    "k": 2.0,
+    "w": 370,
+    "h": 366
+   }
+  },
+  {
+   "key": "#d4e5ce",
+   "color": "#d4e5ce",
+   "lon": 106.4932,
+   "lat": 34.7662,
+   "bbox": [
+    6384,
+    3318,
+    6506,
+    3430
+   ],
+   "area_px": 8905,
+   "people": 1238270,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Qingshui",
+     "local": "清水县",
+     "prefecture": "Tianshui",
+     "prefecture_local": "天水市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.218,
+     "area_share": 0.202,
+     "cover": 0.993
+    },
+    {
+     "name": "Zhangjiachuan Hui",
+     "local": "张家川回族自治县",
+     "prefecture": "Tianshui",
+     "prefecture_local": "天水市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.214,
+     "area_share": 0.127,
+     "cover": 0.993
+    },
+    {
+     "name": "Long",
+     "local": "陇县",
+     "prefecture": "Baoji",
+     "prefecture_local": "宝鸡市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.198,
+     "area_share": 0.229,
+     "cover": 0.994
+    },
+    {
+     "name": "Chencang",
+     "local": "陈仓区",
+     "prefecture": "Baoji",
+     "prefecture_local": "宝鸡市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.102,
+     "area_share": 0.168,
+     "cover": 0.205
+    },
+    {
+     "name": "Qin'an",
+     "local": "秦安县",
+     "prefecture": "Tianshui",
+     "prefecture_local": "天水市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.083,
+     "area_share": 0.035,
+     "cover": 0.211
+    },
+    {
+     "name": "Maiji",
+     "local": "麦积区",
+     "prefecture": "Tianshui",
+     "prefecture_local": "天水市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.062,
+     "area_share": 0.107,
+     "cover": 0.13
+    },
+    {
+     "name": "Zhuanglang",
+     "local": "庄浪县",
+     "prefecture": "Pingliang",
+     "prefecture_local": "平凉市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.06,
+     "area_share": 0.041,
+     "cover": 0.202
+    },
+    {
+     "name": "Qianyang",
+     "local": "千阳县",
+     "prefecture": "Baoji",
+     "prefecture_local": "宝鸡市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.059,
+     "area_share": 0.058,
+     "cover": 0.597
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.638,
+     "cover": 0.031
+    },
+    {
+     "level": "prefecture",
+     "name": "Tianshui",
+     "local": "天水市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.579,
+     "cover": 0.212
+    },
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.362,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Baoji",
+     "local": "宝鸡市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.362,
+     "cover": 0.121
+    },
+    {
+     "level": "prefecture",
+     "name": "Pingliang",
+     "local": "平凉市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.059,
+     "cover": 0.034
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "陇县",
+     "city": "宝鸡市",
+     "people_share": 0.071,
+     "cover": 1.0
+    },
+    {
+     "town": "永清镇",
+     "county": "清水县",
+     "city": "天水市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "张家川镇",
+     "county": "张家川回族自治县",
+     "city": "天水市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "县功镇",
+     "county": "陈仓区",
+     "city": "宝鸡市",
+     "people_share": 0.037,
+     "cover": 0.974
+    }
+   ],
+   "cities": [
+    {
+     "name": "Beidao",
+     "admin": "Gansu",
+     "pop": 1225000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#cce8d9",
+     "border_px": 1350
+    },
+    {
+     "key": "#e4eed5",
+     "border_px": 1244
+    },
+    {
+     "key": "#e5e8e3",
+     "border_px": 1129
+    },
+    {
+     "key": "#bfe7da",
+     "border_px": 705
+    },
+    {
+     "key": "#dae5ab",
+     "border_px": 637,
+     "name": "Fengxiang"
+    },
+    {
+     "key": "#e2ee84",
+     "border_px": 413,
+     "name": "Baoji"
+    },
+    {
+     "key": "#cbf1cb",
+     "border_px": 164,
+     "name": "Guyuan"
+    }
+   ],
+   "text_px": 0,
+   "n": 20,
+   "thumb": {
+    "x0": 6342,
+    "y0": 3276,
+    "k": 2.0,
+    "w": 412,
+    "h": 392
+   }
+  },
+  {
+   "key": "#bfe7da",
+   "color": "#bfe7da",
+   "lon": 105.6651,
+   "lat": 34.5167,
+   "bbox": [
+    6341,
+    3379,
+    6415,
+    3436
+   ],
+   "area_px": 2413,
+   "people": 1253895,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Qinzhou",
+     "local": "秦州区",
+     "prefecture": "Tianshui",
+     "prefecture_local": "天水市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.594,
+     "area_share": 0.561,
+     "cover": 0.906
+    },
+    {
+     "name": "Maiji",
+     "local": "麦积区",
+     "prefecture": "Tianshui",
+     "prefecture_local": "天水市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.402,
+     "area_share": 0.428,
+     "cover": 0.851
+    },
+    {
+     "name": "Li",
+     "local": "礼县",
+     "prefecture": "Longnan",
+     "prefecture_local": "陇南市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.002,
+     "area_share": 0.002,
+     "cover": 0.006
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.049
+    },
+    {
+     "level": "prefecture",
+     "name": "Tianshui",
+     "local": "天水市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.989,
+     "cover": 0.366
+    }
+   ],
+   "towns": [
+    {
+     "town": "玉泉镇",
+     "county": "秦州区",
+     "city": "天水市",
+     "people_share": 0.235,
+     "cover": 1.0
+    },
+    {
+     "town": "花牛镇",
+     "county": "麦积区",
+     "city": "天水市",
+     "people_share": 0.089,
+     "cover": 0.993
+    },
+    {
+     "town": "渭南镇",
+     "county": "麦积区",
+     "city": "天水市",
+     "people_share": 0.065,
+     "cover": 1.0
+    },
+    {
+     "town": "马跑泉镇",
+     "county": "麦积区",
+     "city": "天水市",
+     "people_share": 0.062,
+     "cover": 0.998
+    },
+    {
+     "town": "七里墩街道",
+     "county": "秦州区",
+     "city": "天水市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "平南镇",
+     "county": "秦州区",
+     "city": "天水市",
+     "people_share": 0.042,
+     "cover": 0.995
+    },
+    {
+     "town": "社棠镇",
+     "county": "麦积区",
+     "city": "天水市",
+     "people_share": 0.031,
+     "cover": 0.823
+    },
+    {
+     "town": "甘泉镇",
+     "county": "麦积区",
+     "city": "天水市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "皂郊镇",
+     "county": "秦州区",
+     "city": "天水市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "天水镇",
+     "county": "秦州区",
+     "city": "天水市",
+     "people_share": 0.03,
+     "cover": 0.904
+    }
+   ],
+   "cities": [
+    {
+     "name": "Qincheng",
+     "admin": "Gansu",
+     "pop": 2984659
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e5e8e3",
+     "border_px": 960
+    },
+    {
+     "key": "#d4e5ce",
+     "border_px": 705
+    },
+    {
+     "key": "#d0eee8",
+     "border_px": 565
+    },
+    {
+     "key": "#e4ebe5",
+     "border_px": 468
+    },
+    {
+     "key": "#cce8d9",
+     "border_px": 320
+    }
+   ],
+   "text_px": 0,
+   "n": 21,
+   "thumb": {
+    "x0": 6301,
+    "y0": 3339,
+    "k": 2.0,
+    "w": 308,
+    "h": 274
+   }
+  },
+  {
+   "key": "#e4ebe5",
+   "color": "#e4ebe5",
+   "lon": 104.5826,
+   "lat": 34.1239,
+   "bbox": [
+    6214,
+    3410,
+    6364,
+    3516
+   ],
+   "area_px": 10413,
+   "people": 995193,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Li",
+     "local": "礼县",
+     "prefecture": "Longnan",
+     "prefecture_local": "陇南市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.354,
+     "area_share": 0.34,
+     "cover": 0.809
+    },
+    {
+     "name": "Min",
+     "local": "岷县",
+     "prefecture": "Dingxi",
+     "prefecture_local": "定西市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.287,
+     "area_share": 0.251,
+     "cover": 0.687
+    },
+    {
+     "name": "Dangchang",
+     "local": "宕昌县",
+     "prefecture": "Longnan",
+     "prefecture_local": "陇南市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.249,
+     "area_share": 0.286,
+     "cover": 0.987
+    },
+    {
+     "name": "Zhugqu",
+     "local": "舟曲县",
+     "prefecture": "Gannanzangzu",
+     "prefecture_local": "甘南藏族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.09,
+     "area_share": 0.104,
+     "cover": 0.64
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.039
+    },
+    {
+     "level": "prefecture",
+     "name": "Longnan",
+     "local": "陇南市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.611,
+     "cover": 0.246
+    },
+    {
+     "level": "prefecture",
+     "name": "Dingxi",
+     "local": "定西市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.289,
+     "cover": 0.113
+    },
+    {
+     "level": "prefecture",
+     "name": "Gannan Tibetan Autonomous Prefecture",
+     "local": "甘南藏族自治州",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.089,
+     "cover": 0.129
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "礼县",
+     "city": "陇南市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "十里镇",
+     "county": "岷县",
+     "city": "定西市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "岷阳镇",
+     "county": "岷县",
+     "city": "定西市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "清水乡",
+     "county": "岷县",
+     "city": "定西市",
+     "people_share": 0.037,
+     "cover": 0.979
+    },
+    {
+     "town": "闾井镇",
+     "county": "岷县",
+     "city": "定西市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "哈达铺镇",
+     "county": "宕昌县",
+     "city": "陇南市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ebf3e6",
+     "border_px": 1758
+    },
+    {
+     "key": "#daf0e9",
+     "border_px": 1546
+    },
+    {
+     "key": "#f1ebe7",
+     "border_px": 1433
+    },
+    {
+     "key": "#e5e8e3",
+     "border_px": 1327
+    },
+    {
+     "key": "#bfe7da",
+     "border_px": 468
+    },
+    {
+     "key": "#d0eee8",
+     "border_px": 358
+    }
+   ],
+   "text_px": 0,
+   "n": 22,
+   "thumb": {
+    "x0": 6162,
+    "y0": 3358,
+    "k": 1.0,
+    "w": 254,
+    "h": 210
+   }
+  },
+  {
+   "key": "#e5e8e3",
+   "color": "#e5e8e3",
+   "lon": 106.043,
+   "lat": 33.9586,
+   "bbox": [
+    6334,
+    3414,
+    6497,
+    3514
+   ],
+   "area_px": 11741,
+   "people": 1087975,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xihe",
+     "local": "西和县",
+     "prefecture": "Longnan",
+     "prefecture_local": "陇南市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.334,
+     "area_share": 0.141,
+     "cover": 0.992
+    },
+    {
+     "name": "Cheng",
+     "local": "成县",
+     "prefecture": "Longnan",
+     "prefecture_local": "陇南市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.217,
+     "area_share": 0.13,
+     "cover": 0.996
+    },
+    {
+     "name": "Hui",
+     "local": "徽县",
+     "prefecture": "Longnan",
+     "prefecture_local": "陇南市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.174,
+     "area_share": 0.208,
+     "cover": 0.998
+    },
+    {
+     "name": "Feng",
+     "local": "凤县",
+     "prefecture": "Baoji",
+     "prefecture_local": "宝鸡市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.083,
+     "area_share": 0.205,
+     "cover": 0.854
+    },
+    {
+     "name": "Li",
+     "local": "礼县",
+     "prefecture": "Longnan",
+     "prefecture_local": "陇南市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.074,
+     "area_share": 0.025,
+     "cover": 0.184
+    },
+    {
+     "name": "Qinzhou",
+     "local": "秦州区",
+     "prefecture": "Tianshui",
+     "prefecture_local": "天水市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.058,
+     "area_share": 0.059,
+     "cover": 0.077
+    },
+    {
+     "name": "Liangdang",
+     "local": "两当县",
+     "prefecture": "Longnan",
+     "prefecture_local": "陇南市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.039,
+     "area_share": 0.11,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.917,
+     "cover": 0.039
+    },
+    {
+     "level": "prefecture",
+     "name": "Longnan",
+     "local": "陇南市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.851,
+     "cover": 0.375
+    },
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.083,
+     "cover": 0.002
+    },
+    {
+     "level": "prefecture",
+     "name": "Baoji",
+     "local": "宝鸡市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.082,
+     "cover": 0.024
+    },
+    {
+     "level": "prefecture",
+     "name": "Tianshui",
+     "local": "天水市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.066,
+     "cover": 0.021
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "成县",
+     "city": "陇南市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "十里乡",
+     "county": "西和县",
+     "city": "陇南市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "盐官镇",
+     "county": "礼县",
+     "city": "陇南市",
+     "people_share": 0.036,
+     "cover": 0.906
+    },
+    {
+     "town": "双石铺镇",
+     "county": "凤县",
+     "city": "宝鸡市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "姜席镇",
+     "county": "西和县",
+     "city": "陇南市",
+     "people_share": 0.031,
+     "cover": 0.979
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f7e5dc",
+     "border_px": 1990,
+     "name": "Mianxian"
+    },
+    {
+     "key": "#e4ebe5",
+     "border_px": 1327
+    },
+    {
+     "key": "#d4e5ce",
+     "border_px": 1129
+    },
+    {
+     "key": "#bfe7da",
+     "border_px": 960
+    },
+    {
+     "key": "#f9e7dc",
+     "border_px": 817,
+     "name": "Yangxian"
+    },
+    {
+     "key": "#f1ebe7",
+     "border_px": 364
+    },
+    {
+     "key": "#e2ee84",
+     "border_px": 303,
+     "name": "Baoji"
+    }
+   ],
+   "text_px": 0,
+   "n": 23,
+   "thumb": {
+    "x0": 6277,
+    "y0": 3357,
+    "k": 1.0,
+    "w": 277,
+    "h": 214
+   }
+  },
+  {
+   "key": "#f1ebe7",
+   "color": "#f1ebe7",
+   "lon": 104.7956,
+   "lat": 32.8492,
+   "bbox": [
+    6238,
+    3501,
+    6394,
+    3688
+   ],
+   "area_px": 18696,
+   "people": 1144241,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Wudu",
+     "local": "武都区",
+     "prefecture": "Longnan",
+     "prefecture_local": "陇南市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.448,
+     "area_share": 0.218,
+     "cover": 0.979
+    },
+    {
+     "name": "Wen",
+     "local": "文县",
+     "prefecture": "Longnan",
+     "prefecture_local": "陇南市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.192,
+     "area_share": 0.242,
+     "cover": 0.999
+    },
+    {
+     "name": "Qingchuan",
+     "local": "青川县",
+     "prefecture": "Guangyuan",
+     "prefecture_local": "广元市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.169,
+     "area_share": 0.154,
+     "cover": 0.996
+    },
+    {
+     "name": "Pingwu",
+     "local": "平武县",
+     "prefecture": "Mianyang",
+     "prefecture_local": "绵阳市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.131,
+     "area_share": 0.264,
+     "cover": 0.993
+    },
+    {
+     "name": "Zhugqu",
+     "local": "舟曲县",
+     "prefecture": "Gannanzangzu",
+     "prefecture_local": "甘南藏族自治州",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.044,
+     "area_share": 0.087,
+     "cover": 0.359
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.69,
+     "cover": 0.031
+    },
+    {
+     "level": "prefecture",
+     "name": "Longnan",
+     "local": "陇南市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.651,
+     "cover": 0.302
+    },
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.31,
+     "cover": 0.005
+    },
+    {
+     "level": "prefecture",
+     "name": "Guangyuan",
+     "local": "广元市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.174,
+     "cover": 0.084
+    },
+    {
+     "level": "prefecture",
+     "name": "Mianyang",
+     "local": "绵阳市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.132,
+     "cover": 0.037
+    }
+   ],
+   "towns": [
+    {
+     "town": "城郊乡",
+     "county": "武都区",
+     "city": "陇南市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "城关镇",
+     "county": "武都区",
+     "city": "陇南市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "龙安镇",
+     "county": "平武县",
+     "city": "绵阳市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "城关镇",
+     "county": "文县",
+     "city": "陇南市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Longba",
+     "admin": "Gansu",
+     "pop": 2407272
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#edf4e9",
+     "border_px": 4038,
+     "name": "Ngawa"
+    },
+    {
+     "key": "#f7e5dc",
+     "border_px": 1959,
+     "name": "Mianxian"
+    },
+    {
+     "key": "#eec7cc",
+     "border_px": 1489,
+     "name": "Jianmen"
+    },
+    {
+     "key": "#e4ebe5",
+     "border_px": 1433
+    },
+    {
+     "key": "#edc4bf",
+     "border_px": 469,
+     "name": "Guangyuan"
+    },
+    {
+     "key": "#e5e8e3",
+     "border_px": 364
+    },
+    {
+     "key": "#ebf3e6",
+     "border_px": 76
+    }
+   ],
+   "text_px": 0,
+   "n": 24,
+   "thumb": {
+    "x0": 6173,
+    "y0": 3436,
+    "k": 1.0,
+    "w": 286,
+    "h": 317
+   }
+  }
+ ]
+}

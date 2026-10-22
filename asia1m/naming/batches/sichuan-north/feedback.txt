@@ -1,0 +1,26 @@
+batch sichuan-north
+1: pick Micang
+2: pick Guangyuan
+3: pick Tongjiang
+4: pick Jianmen
+5: pick Bazhong
+6: pick Jiangyou
+7: pick Pingchang
+8: pick Anzhou
+9: pick Xuanhan
+10: pick Yilong
+11: pick Mianyang
+12: pick Langzhong
+13: pick Dazhou
+14: pick Dachuan
+15: pick Santai
+16: pick Yanting
+17: pick Peng'an
+18: pick Quxian
+19: pick Gaoping. (Round two added Xichong and Guozhou; she kept Gaoping.) i did use jialing for chongqing (dont wanna use liangjiang there), and gaoping does feel kinda generic. anything else?
+20: pick Nanchong
+21: pick Dazhu
+22: pick Yuechi
+23: pick Guang'an
+24: pick Wusheng
+25: pick Linshui

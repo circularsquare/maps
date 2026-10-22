@@ -1,0 +1,2795 @@
+{
+ "name": "xinjiang-south",
+ "province": "Xinjiang Uygur",
+ "prefectures": [
+  "Kashi Prefecture",
+  "Aksu Prefecture",
+  "Hotan Prefecture",
+  "Bayingolin Mongolia Autonomous Prefecture",
+  "Kizilsu Kirgiz Autonomous Prefecture"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 3549,
+   "y": 2244,
+   "w": 800,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    2,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    13
+   ]
+  },
+  {
+   "tag": "2",
+   "x": 4349,
+   "y": 2244,
+   "w": 800,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    9
+   ]
+  },
+  {
+   "tag": "3",
+   "x": 5149,
+   "y": 2244,
+   "w": 434,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    9
+   ]
+  },
+  {
+   "tag": "4",
+   "x": 3549,
+   "y": 3044,
+   "w": 800,
+   "h": 410,
+   "scale": 2,
+   "regions": [
+    9,
+    10,
+    12,
+    13
+   ]
+  },
+  {
+   "tag": "5",
+   "x": 4349,
+   "y": 3044,
+   "w": 800,
+   "h": 410,
+   "scale": 2,
+   "regions": [
+    9
+   ]
+  },
+  {
+   "tag": "6",
+   "x": 5149,
+   "y": 3044,
+   "w": 434,
+   "h": 410,
+   "scale": 2,
+   "regions": [
+    9
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#e4e4f6",
+   "color": "#e4e4f6",
+   "lon": 85.5618,
+   "lat": 42.315,
+   "bbox": [
+    4350,
+    2444,
+    5058,
+    2712
+   ],
+   "area_px": 108479,
+   "people": 1309612,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Baicheng",
+     "local": "拜城县",
+     "prefecture": "Akesu",
+     "prefecture_local": "阿克苏地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.19,
+     "area_share": 0.131,
+     "cover": 0.999
+    },
+    {
+     "name": "Ku'erlei",
+     "local": "库尔勒市",
+     "prefecture": "Bayinguolengmenggu",
+     "prefecture_local": "巴音郭楞蒙古自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.143,
+     "area_share": 0.018,
+     "cover": 0.208
+    },
+    {
+     "name": "Hejing",
+     "local": "和静县",
+     "prefecture": "Bayinguolengmenggu",
+     "prefecture_local": "巴音郭楞蒙古自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.136,
+     "area_share": 0.292,
+     "cover": 0.999
+    },
+    {
+     "name": "Yanqi Hui",
+     "local": "焉耆回族自治县",
+     "prefecture": "Bayinguolengmenggu",
+     "prefecture_local": "巴音郭楞蒙古自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.107,
+     "area_share": 0.02,
+     "cover": 1.0
+    },
+    {
+     "name": "Toksun",
+     "local": "托克逊县",
+     "prefecture": "Tulufan",
+     "prefecture_local": "吐鲁番地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.103,
+     "area_share": 0.138,
+     "cover": 1.0
+    },
+    {
+     "name": "Luntai",
+     "local": "轮台县",
+     "prefecture": "Bayinguolengmenggu",
+     "prefecture_local": "巴音郭楞蒙古自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.1,
+     "area_share": 0.119,
+     "cover": 1.0
+    },
+    {
+     "name": "Hoxud",
+     "local": "和硕县",
+     "prefecture": "Bayinguolengmenggu",
+     "prefecture_local": "巴音郭楞蒙古自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.062,
+     "area_share": 0.089,
+     "cover": 1.0
+    },
+    {
+     "name": "Turfan",
+     "local": "吐鲁番市",
+     "prefecture": "Tulufan",
+     "prefecture_local": "吐鲁番地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.053,
+     "area_share": 0.06,
+     "cover": 0.234
+    },
+    {
+     "name": "Kuche",
+     "local": "库车县",
+     "prefecture": "Akesu",
+     "prefecture_local": "阿克苏地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.052,
+     "area_share": 0.075,
+     "cover": 0.136
+    },
+    {
+     "name": "Bohu",
+     "local": "博湖县",
+     "prefecture": "Bayinguolengmenggu",
+     "prefecture_local": "巴音郭楞蒙古自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.049,
+     "area_share": 0.025,
+     "cover": 0.996
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.052
+    },
+    {
+     "level": "prefecture",
+     "name": "Bayingolin Mongolia Autonomous Prefecture",
+     "local": "巴音郭楞蒙古自治州",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.605,
+     "cover": 0.451
+    },
+    {
+     "level": "prefecture",
+     "name": "Aksu Prefecture",
+     "local": "阿克苏地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.242,
+     "cover": 0.116
+    },
+    {
+     "level": "prefecture",
+     "name": "Turpan",
+     "local": "吐鲁番市",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.152,
+     "cover": 0.292
+    }
+   ],
+   "towns": [
+    {
+     "town": "塔什店镇",
+     "county": "库尔勒市",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.127,
+     "cover": 0.746
+    },
+    {
+     "town": "和静镇",
+     "county": "和静县",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "米吉克乡",
+     "county": "拜城县",
+     "city": "阿克苏地区",
+     "people_share": 0.034,
+     "cover": 0.999
+    },
+    {
+     "town": "轮南镇",
+     "county": "轮台县",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.028,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ece5fa",
+     "border_px": 6327
+    },
+    {
+     "key": "#d4d7f1",
+     "border_px": 4552
+    },
+    {
+     "key": "#e8d5f6",
+     "border_px": 3994
+    },
+    {
+     "key": "#d3ddf4",
+     "border_px": 3702
+    },
+    {
+     "key": "#f1ecf7",
+     "border_px": 2471
+    },
+    {
+     "key": "#e5f0f9",
+     "border_px": 2228
+    },
+    {
+     "key": "#e6ccf9",
+     "border_px": 1748
+    },
+    {
+     "key": "#cfe3f6",
+     "border_px": 1346
+    },
+    {
+     "key": "#cbe6f9",
+     "border_px": 942
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 4103,
+    "y0": 2197,
+    "k": 0.43261231281198004,
+    "w": 520,
+    "h": 329
+   }
+  },
+  {
+   "key": "#e6ccf9",
+   "color": "#e6ccf9",
+   "lon": 80.4559,
+   "lat": 41.5092,
+   "bbox": [
+    4254,
+    2541,
+    4410,
+    2700
+   ],
+   "area_px": 15080,
+   "people": 739577,
+   "land_share": 0.982,
+   "country": "China",
+   "units": [
+    {
+     "name": "Aksu",
+     "local": "阿克苏市",
+     "prefecture": "Akesu",
+     "prefecture_local": "阿克苏地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.624,
+     "area_share": 0.09,
+     "cover": 0.862
+    },
+    {
+     "name": "Wensu",
+     "local": "温宿县",
+     "prefecture": "Akesu",
+     "prefecture_local": "阿克苏地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.371,
+     "area_share": 0.856,
+     "cover": 0.993
+    },
+    {
+     "name": "Awat",
+     "local": "阿瓦提县",
+     "prefecture": "Akesu",
+     "prefecture_local": "阿克苏地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.003,
+     "area_share": 0.001,
+     "cover": 0.008
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.029
+    },
+    {
+     "level": "prefecture",
+     "name": "Aksu Prefecture",
+     "local": "阿克苏地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.27
+    }
+   ],
+   "towns": [
+    {
+     "town": "栏杆街道",
+     "county": "阿克苏市",
+     "city": "阿克苏地区",
+     "people_share": 0.105,
+     "cover": 1.0
+    },
+    {
+     "town": "南城街道",
+     "county": "阿克苏市",
+     "city": "阿克苏地区",
+     "people_share": 0.079,
+     "cover": 1.0
+    },
+    {
+     "town": "依干其乡",
+     "county": "阿克苏市",
+     "city": "阿克苏地区",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "新城街道",
+     "county": "阿克苏市",
+     "city": "阿克苏地区",
+     "people_share": 0.064,
+     "cover": 1.0
+    },
+    {
+     "town": "柯柯牙街道",
+     "county": "阿克苏市",
+     "city": "阿克苏地区",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "依希来木其乡",
+     "county": "温宿县",
+     "city": "阿克苏地区",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "库木巴希乡",
+     "county": "阿克苏市",
+     "city": "阿克苏地区",
+     "people_share": 0.038,
+     "cover": 0.988
+    },
+    {
+     "town": "阿热勒镇",
+     "county": "温宿县",
+     "city": "阿克苏地区",
+     "people_share": 0.037,
+     "cover": 0.937
+    },
+    {
+     "town": "克孜勒镇",
+     "county": "温宿县",
+     "city": "阿克苏地区",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "古勒阿瓦提乡",
+     "county": "温宿县",
+     "city": "阿克苏地区",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "阿依库勒镇",
+     "county": "阿克苏市",
+     "city": "阿克苏地区",
+     "people_share": 0.034,
+     "cover": 0.83
+    },
+    {
+     "town": "托普鲁克乡",
+     "county": "阿克苏市",
+     "city": "阿克苏地区",
+     "people_share": 0.034,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Aksu",
+     "admin": "Xinjiang",
+     "pop": 535657
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#edddf9",
+     "border_px": 3592
+    },
+    {
+     "key": "#e4e4f6",
+     "border_px": 1748
+    },
+    {
+     "key": "#f6e4f0",
+     "border_px": 1083
+    },
+    {
+     "key": "#e8d5f6",
+     "border_px": 627
+    },
+    {
+     "key": "#ece5fa",
+     "border_px": 574
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 4199,
+    "y0": 2486,
+    "k": 1.0,
+    "w": 266,
+    "h": 269
+   }
+  },
+  {
+   "key": "#d4d7f1",
+   "color": "#d4d7f1",
+   "lon": 86.5771,
+   "lat": 41.2416,
+   "bbox": [
+    4667,
+    2619,
+    4928,
+    2776
+   ],
+   "area_px": 20154,
+   "people": 841959,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Ku'erlei",
+     "local": "库尔勒市",
+     "prefecture": "Bayinguolengmenggu",
+     "prefecture_local": "巴音郭楞蒙古自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.845,
+     "area_share": 0.207,
+     "cover": 0.792
+    },
+    {
+     "name": "Yuli",
+     "local": "尉犁县",
+     "prefecture": "Bayinguolengmenggu",
+     "prefecture_local": "巴音郭楞蒙古自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.113,
+     "area_share": 0.354,
+     "cover": 0.98
+    },
+    {
+     "name": "Tiemenguan",
+     "local": "铁门关市",
+     "prefecture": "Tiemenguan",
+     "prefecture_local": "铁门关市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.04,
+     "area_share": 0.026,
+     "cover": 0.96
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.033
+    },
+    {
+     "level": "prefecture",
+     "name": "Bayingolin Mongolia Autonomous Prefecture",
+     "local": "巴音郭楞蒙古自治州",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.48
+    }
+   ],
+   "towns": [
+    {
+     "town": "英下乡",
+     "county": "库尔勒市",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.158,
+     "cover": 1.0
+    },
+    {
+     "town": "天山街道",
+     "county": "库尔勒市",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.113,
+     "cover": 0.999
+    },
+    {
+     "town": "恰尔巴格乡",
+     "county": "库尔勒市",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.107,
+     "cover": 1.0
+    },
+    {
+     "town": "建设街道",
+     "county": "库尔勒市",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.082,
+     "cover": 1.0
+    },
+    {
+     "town": "塔什店镇",
+     "county": "库尔勒市",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.067,
+     "cover": 0.254
+    },
+    {
+     "town": "新城街道",
+     "county": "库尔勒市",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "库尔勒市兰干乡",
+     "county": "库尔勒市",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "阿瓦提乡",
+     "county": "库尔勒市",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "萨依巴格街道",
+     "county": "库尔勒市",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "铁克其乡",
+     "county": "库尔勒市",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "团结街道",
+     "county": "库尔勒市",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "兵团三十一团",
+     "county": "尉犁县",
+     "city": "巴音郭楞蒙古自治州",
+     "people_share": 0.03,
+     "cover": 0.999
+    }
+   ],
+   "cities": [
+    {
+     "name": "Korla",
+     "admin": "Xinjiang",
+     "pop": 770000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f1ecf7",
+     "border_px": 5408
+    },
+    {
+     "key": "#e4e4f6",
+     "border_px": 4552
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 4576,
+    "y0": 2528,
+    "k": 1.0,
+    "w": 443,
+    "h": 339
+   }
+  },
+  {
+   "key": "#e8d5f6",
+   "color": "#e8d5f6",
+   "lon": 82.7707,
+   "lat": 41.2146,
+   "bbox": [
+    4397,
+    2617,
+    4610,
+    2737
+   ],
+   "area_px": 17258,
+   "people": 896338,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Kuche",
+     "local": "库车县",
+     "prefecture": "Akesu",
+     "prefecture_local": "阿克苏地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.485,
+     "area_share": 0.287,
+     "cover": 0.864
+    },
+    {
+     "name": "Shayar",
+     "local": "沙雅县",
+     "prefecture": "Akesu",
+     "prefecture_local": "阿克苏地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.315,
+     "area_share": 0.435,
+     "cover": 0.985
+    },
+    {
+     "name": "Toksu",
+     "local": "新和县",
+     "prefecture": "Akesu",
+     "prefecture_local": "阿克苏地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.2,
+     "area_share": 0.271,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.035
+    },
+    {
+     "level": "prefecture",
+     "name": "Aksu Prefecture",
+     "local": "阿克苏地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.327
+    }
+   ],
+   "towns": [
+    {
+     "town": "乌恰镇",
+     "county": "库车县",
+     "city": "阿克苏地区",
+     "people_share": 0.065,
+     "cover": 1.0
+    },
+    {
+     "town": "依西哈拉镇",
+     "county": "库车县",
+     "city": "阿克苏地区",
+     "people_share": 0.058,
+     "cover": 0.714
+    },
+    {
+     "town": "托依堡勒迪镇",
+     "county": "沙雅县",
+     "city": "阿克苏地区",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "海楼乡",
+     "county": "沙雅县",
+     "city": "阿克苏地区",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "依其艾日克乡",
+     "county": "新和县",
+     "city": "阿克苏地区",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "阿拉哈格镇",
+     "county": "库车县",
+     "city": "阿克苏地区",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "乌尊镇",
+     "county": "库车县",
+     "city": "阿克苏地区",
+     "people_share": 0.048,
+     "cover": 0.997
+    },
+    {
+     "town": "红旗镇",
+     "county": "沙雅县",
+     "city": "阿克苏地区",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "齐满镇",
+     "county": "库车县",
+     "city": "阿克苏地区",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "英买力镇",
+     "county": "沙雅县",
+     "city": "阿克苏地区",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "东城街道",
+     "county": "库车县",
+     "city": "阿克苏地区",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "哈尼喀塔木乡",
+     "county": "库车县",
+     "city": "阿克苏地区",
+     "people_share": 0.039,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Kuqa",
+     "admin": "Xinjiang",
+     "pop": 462588
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e4e4f6",
+     "border_px": 3994
+    },
+    {
+     "key": "#f1ecf7",
+     "border_px": 2630
+    },
+    {
+     "key": "#edddf9",
+     "border_px": 1029
+    },
+    {
+     "key": "#e6ccf9",
+     "border_px": 627
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 4323,
+    "y0": 2543,
+    "k": 1.0,
+    "w": 361,
+    "h": 268
+   }
+  },
+  {
+   "key": "#edddf9",
+   "color": "#edddf9",
+   "lon": 79.7819,
+   "lat": 40.6653,
+   "bbox": [
+    4119,
+    2586,
+    4438,
+    2804
+   ],
+   "area_px": 31982,
+   "people": 831643,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Awat",
+     "local": "阿瓦提县",
+     "prefecture": "Akesu",
+     "prefecture_local": "阿克苏地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.295,
+     "area_share": 0.151,
+     "cover": 0.982
+    },
+    {
+     "name": "Wushen",
+     "local": "乌什县",
+     "prefecture": "Akesu",
+     "prefecture_local": "阿克苏地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.25,
+     "area_share": 0.248,
+     "cover": 0.993
+    },
+    {
+     "name": "Ala'er",
+     "local": "阿拉尔市",
+     "prefecture": "Ala'er",
+     "prefecture_local": "阿拉尔市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.248,
+     "area_share": 0.116,
+     "cover": 1.0
+    },
+    {
+     "name": "Aksu",
+     "local": "阿克苏市",
+     "prefecture": "Akesu",
+     "prefecture_local": "阿克苏地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.089,
+     "area_share": 0.13,
+     "cover": 0.138
+    },
+    {
+     "name": "Kalpin",
+     "local": "柯坪县",
+     "prefecture": "Akesu",
+     "prefecture_local": "阿克苏地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.057,
+     "area_share": 0.252,
+     "cover": 0.998
+    },
+    {
+     "name": "Tumushuke",
+     "local": "图木舒克市",
+     "prefecture": "Tumushuke",
+     "prefecture_local": "图木舒克市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.057,
+     "area_share": 0.028,
+     "cover": 0.452
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.033
+    },
+    {
+     "level": "prefecture",
+     "name": "Aksu Prefecture",
+     "local": "阿克苏地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.941,
+     "cover": 0.285
+    },
+    {
+     "level": "prefecture",
+     "name": "Kashi Prefecture",
+     "local": "喀什地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.059,
+     "cover": 0.011
+    }
+   ],
+   "towns": [
+    {
+     "town": "乌鲁却勒镇",
+     "county": "阿瓦提县",
+     "city": "阿克苏地区",
+     "people_share": 0.07,
+     "cover": 1.0
+    },
+    {
+     "town": "幸福路街道",
+     "county": "阿拉尔市",
+     "city": "阿拉尔市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "喀勒塔勒镇",
+     "county": "阿克苏市",
+     "city": "阿克苏地区",
+     "people_share": 0.044,
+     "cover": 0.979
+    },
+    {
+     "town": "阿克托海乡",
+     "county": "乌什县",
+     "city": "阿克苏地区",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "英艾日克乡",
+     "county": "阿瓦提县",
+     "city": "阿克苏地区",
+     "people_share": 0.042,
+     "cover": 0.992
+    },
+    {
+     "town": "拜什艾日克镇",
+     "county": "阿瓦提县",
+     "city": "阿克苏地区",
+     "people_share": 0.041,
+     "cover": 0.949
+    },
+    {
+     "town": "阿依巴格乡",
+     "county": "阿瓦提县",
+     "city": "阿克苏地区",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "阿合雅镇",
+     "county": "乌什县",
+     "city": "阿克苏地区",
+     "people_share": 0.04,
+     "cover": 0.997
+    },
+    {
+     "town": "兵团十二团",
+     "county": "阿拉尔市",
+     "city": "阿拉尔市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "兵团十团",
+     "county": "阿拉尔市",
+     "city": "阿拉尔市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "奥特贝希乡",
+     "county": "乌什县",
+     "city": "阿克苏地区",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "依麻木乡",
+     "county": "乌什县",
+     "city": "阿克苏地区",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Aral",
+     "admin": "Xinjiang",
+     "pop": 158593
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e6ccf9",
+     "border_px": 3592
+    },
+    {
+     "key": "#f1ecf7",
+     "border_px": 2837
+    },
+    {
+     "key": "#f7e8f4",
+     "border_px": 2564
+    },
+    {
+     "key": "#f2d9fc",
+     "border_px": 2066
+    },
+    {
+     "key": "#f6e4f0",
+     "border_px": 1380
+    },
+    {
+     "key": "#e8d5f6",
+     "border_px": 1029
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 4008,
+    "y0": 2475,
+    "k": 0.9611829944547134,
+    "w": 520,
+    "h": 422
+   }
+  },
+  {
+   "key": "#d2a7f3",
+   "color": "#d2a7f3",
+   "lon": 76.0764,
+   "lat": 39.4902,
+   "bbox": [
+    3933,
+    2790,
+    3974,
+    2817
+   ],
+   "area_px": 886,
+   "people": 767586,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Kashgar",
+     "local": "喀什市",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.77,
+     "area_share": 0.621,
+     "cover": 0.992
+    },
+    {
+     "name": "Shufu",
+     "local": "疏附县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.115,
+     "area_share": 0.249,
+     "cover": 0.28
+    },
+    {
+     "name": "Shule",
+     "local": "疏勒县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.114,
+     "area_share": 0.122,
+     "cover": 0.245
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.03
+    },
+    {
+     "level": "prefecture",
+     "name": "Kashi Prefecture",
+     "local": "喀什地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.987,
+     "cover": 0.168
+    }
+   ],
+   "towns": [
+    {
+     "town": "乃则尔巴格镇",
+     "county": "喀什市",
+     "city": "喀什地区",
+     "people_share": 0.177,
+     "cover": 1.0
+    },
+    {
+     "town": "夏马勒巴格镇",
+     "county": "喀什市",
+     "city": "喀什地区",
+     "people_share": 0.11,
+     "cover": 1.0
+    },
+    {
+     "town": "多来特巴格乡",
+     "county": "喀什市",
+     "city": "喀什地区",
+     "people_share": 0.108,
+     "cover": 1.0
+    },
+    {
+     "town": "荒地乡",
+     "county": "喀什市",
+     "city": "喀什地区",
+     "people_share": 0.105,
+     "cover": 0.981
+    },
+    {
+     "town": "巴仁乡",
+     "county": "疏勒县",
+     "city": "喀什地区",
+     "people_share": 0.065,
+     "cover": 0.939
+    },
+    {
+     "town": "浩罕乡",
+     "county": "喀什市",
+     "city": "喀什地区",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "英吾斯塘乡",
+     "county": "疏附县",
+     "city": "喀什地区",
+     "people_share": 0.053,
+     "cover": 0.988
+    },
+    {
+     "town": "恰萨街道",
+     "county": "喀什市",
+     "city": "喀什地区",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "帕哈太克里乡",
+     "county": "喀什市",
+     "city": "喀什地区",
+     "people_share": 0.047,
+     "cover": 0.967
+    },
+    {
+     "town": "吾库萨克镇",
+     "county": "疏附县",
+     "city": "喀什地区",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "疏勒镇",
+     "county": "疏勒县",
+     "city": "喀什地区",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Kashgar",
+     "admin": "Xinjiang",
+     "pop": 920000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f7e8f4",
+     "border_px": 1123
+    },
+    {
+     "key": "#dfc6f3",
+     "border_px": 529
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 3893,
+    "y0": 2750,
+    "k": 3.0,
+    "w": 363,
+    "h": 321
+   }
+  },
+  {
+   "key": "#dfc6f3",
+   "color": "#dfc6f3",
+   "lon": 76.9103,
+   "lat": 39.3294,
+   "bbox": [
+    3949,
+    2768,
+    4110,
+    2921
+   ],
+   "area_px": 11735,
+   "people": 916324,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jiashi",
+     "local": "伽师县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.448,
+     "area_share": 0.501,
+     "cover": 0.999
+    },
+    {
+     "name": "Shule",
+     "local": "疏勒县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.257,
+     "area_share": 0.144,
+     "cover": 0.66
+    },
+    {
+     "name": "Yopurga",
+     "local": "岳普湖县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.161,
+     "area_share": 0.144,
+     "cover": 0.912
+    },
+    {
+     "name": "Yengisar",
+     "local": "英吉沙县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.118,
+     "area_share": 0.174,
+     "cover": 0.369
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.036
+    },
+    {
+     "level": "prefecture",
+     "name": "Kashi Prefecture",
+     "local": "喀什地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.997,
+     "cover": 0.202
+    }
+   ],
+   "towns": [
+    {
+     "town": "和夏阿瓦提乡",
+     "county": "伽师县",
+     "city": "喀什地区",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "克孜勒苏乡",
+     "county": "伽师县",
+     "city": "喀什地区",
+     "people_share": 0.053,
+     "cover": 0.996
+    },
+    {
+     "town": "英买里乡",
+     "county": "伽师县",
+     "city": "喀什地区",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "卧里托格拉克乡",
+     "county": "伽师县",
+     "city": "喀什地区",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "克孜勒博依乡",
+     "county": "伽师县",
+     "city": "喀什地区",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "米夏乡",
+     "county": "伽师县",
+     "city": "喀什地区",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "塔孜洪乡",
+     "county": "疏勒县",
+     "city": "喀什地区",
+     "people_share": 0.036,
+     "cover": 0.952
+    },
+    {
+     "town": "克孜勒乡",
+     "county": "英吉沙县",
+     "city": "喀什地区",
+     "people_share": 0.035,
+     "cover": 0.987
+    },
+    {
+     "town": "萨罕乡",
+     "county": "英吉沙县",
+     "city": "喀什地区",
+     "people_share": 0.033,
+     "cover": 0.993
+    },
+    {
+     "town": "牙甫泉镇",
+     "county": "疏勒县",
+     "city": "喀什地区",
+     "people_share": 0.032,
+     "cover": 0.993
+    },
+    {
+     "town": "夏普吐勒乡",
+     "county": "伽师县",
+     "city": "喀什地区",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f7e8f4",
+     "border_px": 3639
+    },
+    {
+     "key": "#f2d9fc",
+     "border_px": 3058
+    },
+    {
+     "key": "#d2a7f3",
+     "border_px": 529
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 3893,
+    "y0": 2712,
+    "k": 1.0,
+    "w": 273,
+    "h": 265
+   }
+  },
+  {
+   "key": "#f2d9fc",
+   "color": "#f2d9fc",
+   "lon": 77.9442,
+   "lat": 39.2413,
+   "bbox": [
+    3982,
+    2762,
+    4243,
+    2942
+   ],
+   "area_px": 17304,
+   "people": 1098764,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Bachu",
+     "local": "巴楚县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.335,
+     "area_share": 0.451,
+     "cover": 0.993
+    },
+    {
+     "name": "Shache",
+     "local": "莎车县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.327,
+     "area_share": 0.207,
+     "cover": 0.43
+    },
+    {
+     "name": "Makit",
+     "local": "麦盖提县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.273,
+     "area_share": 0.215,
+     "cover": 0.996
+    },
+    {
+     "name": "Tumushuke",
+     "local": "图木舒克市",
+     "prefecture": "Tumushuke",
+     "prefecture_local": "图木舒克市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.052,
+     "area_share": 0.049,
+     "cover": 0.548
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.043
+    },
+    {
+     "level": "prefecture",
+     "name": "Kashi Prefecture",
+     "local": "喀什地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.243
+    }
+   ],
+   "towns": [
+    {
+     "town": "荒地镇",
+     "county": "莎车县",
+     "city": "喀什地区",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "塔尕尔其乡",
+     "county": "莎车县",
+     "city": "喀什地区",
+     "people_share": 0.046,
+     "cover": 0.978
+    },
+    {
+     "town": "阿纳库勒乡",
+     "county": "巴楚县",
+     "city": "喀什地区",
+     "people_share": 0.045,
+     "cover": 0.997
+    },
+    {
+     "town": "巴楚镇",
+     "county": "巴楚县",
+     "city": "喀什地区",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "艾力西湖镇",
+     "county": "莎车县",
+     "city": "喀什地区",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "阿拉根乡",
+     "county": "巴楚县",
+     "city": "喀什地区",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "兵团四十五团",
+     "county": "麦盖提县",
+     "city": "喀什地区",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "色力布亚镇",
+     "county": "巴楚县",
+     "city": "喀什地区",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "琼库恰克乡",
+     "county": "巴楚县",
+     "city": "喀什地区",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "兵团四十四团",
+     "county": "图木舒克市",
+     "city": "图木舒克市",
+     "people_share": 0.034,
+     "cover": 0.969
+    },
+    {
+     "town": "央塔克乡",
+     "county": "麦盖提县",
+     "city": "喀什地区",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "尕孜库勒乡",
+     "county": "麦盖提县",
+     "city": "喀什地区",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#dfc6f3",
+     "border_px": 3058
+    },
+    {
+     "key": "#f1ecf7",
+     "border_px": 3026
+    },
+    {
+     "key": "#edddf9",
+     "border_px": 2066
+    },
+    {
+     "key": "#e9d5f9",
+     "border_px": 1557
+    },
+    {
+     "key": "#f7e8f4",
+     "border_px": 425
+    }
+   ],
+   "text_px": 0,
+   "n": 8,
+   "thumb": {
+    "x0": 3891,
+    "y0": 2671,
+    "k": 1.0,
+    "w": 443,
+    "h": 362
+   }
+  },
+  {
+   "key": "#f1ecf7",
+   "color": "#f1ecf7",
+   "lon": 85.069,
+   "lat": 38.948,
+   "bbox": [
+    4070,
+    2678,
+    5383,
+    3237
+   ],
+   "area_px": 449023,
+   "people": 956460,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yutian",
+     "local": "于田县",
+     "prefecture": "Hetian",
+     "prefecture_local": "和田地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.291,
+     "area_share": 0.062,
+     "cover": 0.999
+    },
+    {
+     "name": "Lop",
+     "local": "洛浦县",
+     "prefecture": "Hetian",
+     "prefecture_local": "和田地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.238,
+     "area_share": 0.028,
+     "cover": 0.823
+    },
+    {
+     "name": "Celei",
+     "local": "策勒县",
+     "prefecture": "Hetian",
+     "prefecture_local": "和田地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.171,
+     "area_share": 0.048,
+     "cover": 0.999
+    },
+    {
+     "name": "Hetian",
+     "local": "和田县",
+     "prefecture": "Hetian",
+     "prefecture_local": "和田地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.117,
+     "area_share": 0.029,
+     "cover": 0.383
+    },
+    {
+     "name": "Qiemo",
+     "local": "且末县",
+     "prefecture": "Bayinguolengmenggu",
+     "prefecture_local": "巴音郭楞蒙古自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.079,
+     "area_share": 0.297,
+     "cover": 0.981
+    },
+    {
+     "name": "Ruoqiang",
+     "local": "若羌县",
+     "prefecture": "Bayinguolengmenggu",
+     "prefecture_local": "巴音郭楞蒙古自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.042,
+     "area_share": 0.284,
+     "cover": 0.963
+    },
+    {
+     "name": "Minfeng",
+     "local": "民丰县",
+     "prefecture": "Hetian",
+     "prefecture_local": "和田地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.038,
+     "area_share": 0.074,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.038
+    },
+    {
+     "level": "prefecture",
+     "name": "Hotan Prefecture",
+     "local": "和田地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.871,
+     "cover": 0.371
+    },
+    {
+     "level": "prefecture",
+     "name": "Bayingolin Mongolia Autonomous Prefecture",
+     "local": "巴音郭楞蒙古自治州",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.122,
+     "cover": 0.066
+    }
+   ],
+   "towns": [
+    {
+     "town": "山普鲁乡",
+     "county": "洛浦县",
+     "city": "和田地区",
+     "people_share": 0.053,
+     "cover": 0.966
+    },
+    {
+     "town": "杭桂乡",
+     "county": "洛浦县",
+     "city": "和田地区",
+     "people_share": 0.052,
+     "cover": 0.978
+    },
+    {
+     "town": "策勒镇",
+     "county": "策勒县",
+     "city": "和田地区",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "恰尔巴格乡",
+     "county": "洛浦县",
+     "city": "和田地区",
+     "people_share": 0.044,
+     "cover": 0.907
+    },
+    {
+     "town": "恰哈乡",
+     "county": "策勒县",
+     "city": "和田地区",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "多鲁乡",
+     "county": "洛浦县",
+     "city": "和田地区",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "木尕拉镇",
+     "county": "于田县",
+     "city": "和田地区",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "固拉哈玛乡",
+     "county": "策勒县",
+     "city": "和田地区",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "阿热勒乡",
+     "county": "于田县",
+     "city": "和田地区",
+     "people_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "town": "奥依托格拉克乡",
+     "county": "于田县",
+     "city": "和田地区",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f9faf6",
+     "border_px": 14230,
+     "name": "Tsang"
+    },
+    {
+     "key": "#efe2f9",
+     "border_px": 5482
+    },
+    {
+     "key": "#d4d7f1",
+     "border_px": 5408
+    },
+    {
+     "key": "#e5f0f9",
+     "border_px": 4615
+    },
+    {
+     "key": "#e9f4f6",
+     "border_px": 3258,
+     "name": "Dunhuang"
+    },
+    {
+     "key": "#f4f5ef",
+     "border_px": 3122,
+     "name": "Qaidam"
+    },
+    {
+     "key": "#f2d9fc",
+     "border_px": 3026
+    },
+    {
+     "key": "#edddf9",
+     "border_px": 2837
+    },
+    {
+     "key": "#e8d5f6",
+     "border_px": 2630
+    },
+    {
+     "key": "#e4e4f6",
+     "border_px": 2471
+    },
+    {
+     "key": "#ceadeb",
+     "border_px": 1018
+    },
+    {
+     "key": "#e9d5f9",
+     "border_px": 817
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 3611,
+    "y0": 2219,
+    "k": 0.23307933662034963,
+    "w": 520,
+    "h": 344
+   }
+  },
+  {
+   "key": "#f7e8f4",
+   "color": "#f7e8f4",
+   "lon": 75.9755,
+   "lat": 38.8074,
+   "bbox": [
+    3749,
+    2623,
+    4195,
+    3231
+   ],
+   "area_px": 99675,
+   "people": 1154694,
+   "land_share": 0.985,
+   "country": "China",
+   "units": [
+    {
+     "name": "Artux",
+     "local": "阿图什市",
+     "prefecture": "Kezileisuke'erkezi",
+     "prefecture_local": "克孜勒苏柯尔克孜自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.224,
+     "area_share": 0.142,
+     "cover": 0.994
+    },
+    {
+     "name": "Akto",
+     "local": "阿克陶县",
+     "prefecture": "Kezileisuke'erkezi",
+     "prefecture_local": "克孜勒苏柯尔克孜自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.192,
+     "area_share": 0.224,
+     "cover": 0.994
+    },
+    {
+     "name": "Shufu",
+     "local": "疏附县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.185,
+     "area_share": 0.024,
+     "cover": 0.681
+    },
+    {
+     "name": "Yengisar",
+     "local": "英吉沙县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.16,
+     "area_share": 0.011,
+     "cover": 0.631
+    },
+    {
+     "name": "Wuqia",
+     "local": "乌恰县",
+     "prefecture": "Kezileisuke'erkezi",
+     "prefecture_local": "克孜勒苏柯尔克孜自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.089,
+     "area_share": 0.174,
+     "cover": 0.999
+    },
+    {
+     "name": "Akqi",
+     "local": "阿合奇县",
+     "prefecture": "Kezileisuke'erkezi",
+     "prefecture_local": "克孜勒苏柯尔克孜自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.037,
+     "area_share": 0.105,
+     "cover": 0.999
+    },
+    {
+     "name": "Taxkorgan Tajik",
+     "local": "塔什库尔干塔吉克自治县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.036,
+     "area_share": 0.219,
+     "cover": 1.0
+    },
+    {
+     "name": "Yecheng",
+     "local": "叶城县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.032,
+     "area_share": 0.087,
+     "cover": 0.076
+    },
+    {
+     "name": "Shule",
+     "local": "疏勒县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.029,
+     "area_share": 0.002,
+     "cover": 0.095
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.046
+    },
+    {
+     "level": "prefecture",
+     "name": "Kizilsu Kirgiz Autonomous Prefecture",
+     "local": "克孜勒苏柯尔克孜自治州",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.531,
+     "cover": 0.978
+    },
+    {
+     "level": "prefecture",
+     "name": "Kashi Prefecture",
+     "local": "喀什地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.467,
+     "cover": 0.119
+    }
+   ],
+   "towns": [
+    {
+     "town": "松他克乡",
+     "county": "阿图什市",
+     "city": "克孜勒苏柯尔克孜自治州",
+     "people_share": 0.073,
+     "cover": 1.0
+    },
+    {
+     "town": "皮拉勒乡",
+     "county": "阿克陶县",
+     "city": "克孜勒苏柯尔克孜自治州",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "乌帕尔乡",
+     "county": "疏附县",
+     "city": "喀什地区",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "膘尔托阔依乡",
+     "county": "乌恰县",
+     "city": "克孜勒苏柯尔克孜自治州",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "阿扎克乡",
+     "county": "阿图什市",
+     "city": "克孜勒苏柯尔克孜自治州",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "乌恰乡",
+     "county": "英吉沙县",
+     "city": "喀什地区",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "布拉克苏乡",
+     "county": "疏附县",
+     "city": "喀什地区",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "巴仁乡",
+     "county": "阿克陶县",
+     "city": "克孜勒苏柯尔克孜自治州",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "上阿图什镇",
+     "county": "阿图什市",
+     "city": "克孜勒苏柯尔克孜自治州",
+     "people_share": 0.033,
+     "cover": 0.968
+    },
+    {
+     "town": "芒辛乡",
+     "county": "英吉沙县",
+     "city": "喀什地区",
+     "people_share": 0.031,
+     "cover": 0.98
+    }
+   ],
+   "cities": [
+    {
+     "name": "Atushi",
+     "admin": "Xinjiang",
+     "pop": 240368
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f6e4f0",
+     "border_px": 5642
+    },
+    {
+     "key": "#dfc6f3",
+     "border_px": 3639
+    },
+    {
+     "key": "#efe2f9",
+     "border_px": 3562
+    },
+    {
+     "key": "#f4e1eb",
+     "border_px": 2766
+    },
+    {
+     "key": "#edddf9",
+     "border_px": 2564
+    },
+    {
+     "key": "#e9d5f9",
+     "border_px": 1611
+    },
+    {
+     "key": "#d2a7f3",
+     "border_px": 1123
+    },
+    {
+     "key": "#f2d9fc",
+     "border_px": 425
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 3537,
+    "y0": 2411,
+    "k": 0.5038759689922481,
+    "w": 438,
+    "h": 520
+   }
+  },
+  {
+   "key": "#e9d5f9",
+   "color": "#e9d5f9",
+   "lon": 77.154,
+   "lat": 38.0908,
+   "bbox": [
+    3966,
+    2919,
+    4075,
+    3011
+   ],
+   "area_px": 6452,
+   "people": 986724,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shache",
+     "local": "莎车县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.472,
+     "area_share": 0.511,
+     "cover": 0.557
+    },
+    {
+     "name": "Yecheng",
+     "local": "叶城县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.273,
+     "area_share": 0.345,
+     "cover": 0.56
+    },
+    {
+     "name": "Poskam",
+     "local": "泽普县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.254,
+     "area_share": 0.142,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.039
+    },
+    {
+     "level": "prefecture",
+     "name": "Kashi Prefecture",
+     "local": "喀什地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.218
+    }
+   ],
+   "towns": [
+    {
+     "town": "依提木孔乡",
+     "county": "叶城县",
+     "city": "喀什地区",
+     "people_share": 0.091,
+     "cover": 0.997
+    },
+    {
+     "town": "米夏乡",
+     "county": "莎车县",
+     "city": "喀什地区",
+     "people_share": 0.089,
+     "cover": 0.98
+    },
+    {
+     "town": "莎车镇",
+     "county": "莎车县",
+     "city": "喀什地区",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "赛力乡",
+     "county": "泽普县",
+     "city": "喀什地区",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "白什坎特镇",
+     "county": "莎车县",
+     "city": "喀什地区",
+     "people_share": 0.04,
+     "cover": 0.958
+    },
+    {
+     "town": "古勒巴格乡",
+     "county": "莎车县",
+     "city": "喀什地区",
+     "people_share": 0.038,
+     "cover": 0.963
+    },
+    {
+     "town": "托木吾斯塘乡",
+     "county": "莎车县",
+     "city": "喀什地区",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "依肯苏乡",
+     "county": "泽普县",
+     "city": "喀什地区",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Shache",
+     "admin": "Xinjiang",
+     "pop": 851374
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f7e8f4",
+     "border_px": 1611
+    },
+    {
+     "key": "#f2d9fc",
+     "border_px": 1557
+    },
+    {
+     "key": "#efe2f9",
+     "border_px": 855
+    },
+    {
+     "key": "#f1ecf7",
+     "border_px": 817
+    }
+   ],
+   "text_px": 0,
+   "n": 11,
+   "thumb": {
+    "x0": 3926,
+    "y0": 2879,
+    "k": 2.0,
+    "w": 378,
+    "h": 344
+   }
+  },
+  {
+   "key": "#ceadeb",
+   "color": "#ceadeb",
+   "lon": 79.851,
+   "lat": 37.1419,
+   "bbox": [
+    4216,
+    3072,
+    4250,
+    3111
+   ],
+   "area_px": 919,
+   "people": 712088,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Khotan",
+     "local": "和田市",
+     "prefecture": "Hetian",
+     "prefecture_local": "和田地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.498,
+     "area_share": 0.372,
+     "cover": 0.992
+    },
+    {
+     "name": "Hetian",
+     "local": "和田县",
+     "prefecture": "Hetian",
+     "prefecture_local": "和田地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.244,
+     "area_share": 0.368,
+     "cover": 0.592
+    },
+    {
+     "name": "Moyu",
+     "local": "墨玉县",
+     "prefecture": "Hetian",
+     "prefecture_local": "和田地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.189,
+     "area_share": 0.164,
+     "cover": 0.243
+    },
+    {
+     "name": "Lop",
+     "local": "洛浦县",
+     "prefecture": "Hetian",
+     "prefecture_local": "和田地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.069,
+     "area_share": 0.096,
+     "cover": 0.177
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.028
+    },
+    {
+     "level": "prefecture",
+     "name": "Hotan Prefecture",
+     "local": "和田地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.317
+    }
+   ],
+   "towns": [
+    {
+     "town": "吐沙拉乡",
+     "county": "和田市",
+     "city": "和田地区",
+     "people_share": 0.104,
+     "cover": 0.998
+    },
+    {
+     "town": "喀拉喀什镇",
+     "county": "墨玉县",
+     "city": "和田地区",
+     "people_share": 0.072,
+     "cover": 0.969
+    },
+    {
+     "town": "罕艾日克镇",
+     "county": "和田县",
+     "city": "和田地区",
+     "people_share": 0.071,
+     "cover": 1.0
+    },
+    {
+     "town": "伊里其乡",
+     "county": "和田市",
+     "city": "和田地区",
+     "people_share": 0.064,
+     "cover": 1.0
+    },
+    {
+     "town": "布亚乡",
+     "county": "洛浦县",
+     "city": "和田地区",
+     "people_share": 0.059,
+     "cover": 0.985
+    },
+    {
+     "town": "肖尔巴格乡",
+     "county": "和田市",
+     "city": "和田地区",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "巴格其镇",
+     "county": "和田县",
+     "city": "和田地区",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "布扎克乡",
+     "county": "和田县",
+     "city": "和田地区",
+     "people_share": 0.048,
+     "cover": 0.998
+    },
+    {
+     "town": "玉龙喀什镇",
+     "county": "和田市",
+     "city": "和田地区",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "纳尔巴格街道",
+     "county": "和田市",
+     "city": "和田地区",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "拉斯奎镇",
+     "county": "和田市",
+     "city": "和田地区",
+     "people_share": 0.037,
+     "cover": 0.994
+    },
+    {
+     "town": "加汗巴格乡",
+     "county": "墨玉县",
+     "city": "和田地区",
+     "people_share": 0.035,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Hotan",
+     "admin": "Xinjiang",
+     "pop": 322300
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f1ecf7",
+     "border_px": 1018
+    },
+    {
+     "key": "#efe2f9",
+     "border_px": 628
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 4176,
+    "y0": 3032,
+    "k": 3.0,
+    "w": 342,
+    "h": 357
+   }
+  },
+  {
+   "key": "#efe2f9",
+   "color": "#efe2f9",
+   "lon": 78.1621,
+   "lat": 36.8174,
+   "bbox": [
+    3979,
+    2982,
+    4236,
+    3254
+   ],
+   "area_px": 44596,
+   "people": 871428,
+   "land_share": 0.999,
+   "country": "China",
+   "units": [
+    {
+     "name": "Moyu",
+     "local": "墨玉县",
+     "prefecture": "Hetian",
+     "prefecture_local": "和田地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.467,
+     "area_share": 0.091,
+     "cover": 0.734
+    },
+    {
+     "name": "Pishan",
+     "local": "皮山县",
+     "prefecture": "Hetian",
+     "prefecture_local": "和田地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.327,
+     "area_share": 0.604,
+     "cover": 1.0
+    },
+    {
+     "name": "Yecheng",
+     "local": "叶城县",
+     "prefecture": "Kashi",
+     "prefecture_local": "喀什地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.201,
+     "area_share": 0.303,
+     "cover": 0.364
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.034
+    },
+    {
+     "level": "prefecture",
+     "name": "Hotan Prefecture",
+     "local": "和田地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.799,
+     "cover": 0.31
+    },
+    {
+     "level": "prefecture",
+     "name": "Kashi Prefecture",
+     "local": "喀什地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.2,
+     "cover": 0.039
+    }
+   ],
+   "towns": [
+    {
+     "town": "萨依巴格乡",
+     "county": "墨玉县",
+     "city": "和田地区",
+     "people_share": 0.075,
+     "cover": 0.995
+    },
+    {
+     "town": "扎瓦镇",
+     "county": "墨玉县",
+     "city": "和田地区",
+     "people_share": 0.065,
+     "cover": 0.961
+    },
+    {
+     "town": "科克铁热克乡",
+     "county": "皮山县",
+     "city": "和田地区",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "普恰克其乡",
+     "county": "墨玉县",
+     "city": "和田地区",
+     "people_share": 0.047,
+     "cover": 0.964
+    },
+    {
+     "town": "雅瓦乡",
+     "county": "墨玉县",
+     "city": "和田地区",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "奎牙镇",
+     "county": "墨玉县",
+     "city": "和田地区",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "伯西热克乡",
+     "county": "叶城县",
+     "city": "喀什地区",
+     "people_share": 0.04,
+     "cover": 0.975
+    },
+    {
+     "town": "洛克乡",
+     "county": "叶城县",
+     "city": "喀什地区",
+     "people_share": 0.038,
+     "cover": 0.998
+    },
+    {
+     "town": "喀尔赛乡",
+     "county": "墨玉县",
+     "city": "和田地区",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "桑株乡",
+     "county": "皮山县",
+     "city": "和田地区",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "阔依其乡",
+     "county": "墨玉县",
+     "city": "和田地区",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "固玛镇",
+     "county": "皮山县",
+     "city": "和田地区",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f1ecf7",
+     "border_px": 5482
+    },
+    {
+     "key": "#f7e8f4",
+     "border_px": 3562
+    },
+    {
+     "key": "#f9faf6",
+     "border_px": 1087,
+     "name": "Tsang"
+    },
+    {
+     "key": "#e9d5f9",
+     "border_px": 855
+    },
+    {
+     "key": "#ceadeb",
+     "border_px": 628
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 3884,
+    "y0": 2887,
+    "k": 1.0,
+    "w": 447,
+    "h": 462
+   }
+  }
+ ]
+}

@@ -1,0 +1,86 @@
+{
+ "1": [],
+ "2": [
+  {
+   "i": 0,
+   "name": "Chaidamu",
+   "x": 214.0,
+   "y": 163.7,
+   "inside": true,
+   "src": "zh-wiki"
+  }
+ ],
+ "3": [],
+ "4": [
+  {
+   "i": 1,
+   "name": "Kumbum",
+   "x": 195.9,
+   "y": 158.4,
+   "inside": true,
+   "src": "zh-wiki"
+  }
+ ],
+ "5": [
+  {
+   "i": 0,
+   "name": "Hehuang",
+   "x": 191.2,
+   "y": 123.9,
+   "inside": true,
+   "src": "wikidata"
+  },
+  {
+   "i": 2,
+   "name": "Haidong",
+   "x": 84.7,
+   "y": 88.0,
+   "inside": true,
+   "src": "zh-wiki"
+  }
+ ],
+ "6": [
+  {
+   "i": 1,
+   "name": "Rebgong",
+   "x": 248.7,
+   "y": 190.0,
+   "inside": true,
+   "src": "wikidata"
+  },
+  {
+   "i": 2,
+   "name": "Labrang",
+   "x": 287.4,
+   "y": 220.2,
+   "inside": true,
+   "src": "zh-wiki"
+  },
+  {
+   "i": 3,
+   "name": "Taozhou",
+   "x": 354.3,
+   "y": 266.7,
+   "inside": true,
+   "src": "CHGIS"
+  }
+ ],
+ "7": [
+  {
+   "i": 0,
+   "name": "Yushu",
+   "x": 279.6,
+   "y": 245.6,
+   "inside": true,
+   "src": "wikidata"
+  },
+  {
+   "i": 2,
+   "name": "Nangchen",
+   "x": 259.4,
+   "y": 285.6,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ]
+}

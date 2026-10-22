@@ -1,0 +1,937 @@
+{
+ "name": "xizang",
+ "province": "Xizang",
+ "prefectures": [],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 3856,
+   "y": 2826,
+   "w": 800,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1
+   ]
+  },
+  {
+   "tag": "2",
+   "x": 4656,
+   "y": 2826,
+   "w": 800,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    2
+   ]
+  },
+  {
+   "tag": "3",
+   "x": 5456,
+   "y": 2826,
+   "w": 468,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    2
+   ]
+  },
+  {
+   "tag": "4",
+   "x": 3856,
+   "y": 3626,
+   "w": 800,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1
+   ]
+  },
+  {
+   "tag": "5",
+   "x": 4656,
+   "y": 3626,
+   "w": 800,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "tag": "6",
+   "x": 5456,
+   "y": 3626,
+   "w": 468,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    2
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#f9faf6",
+   "color": "#f9faf6",
+   "lon": 85.8952,
+   "lat": 33.0741,
+   "bbox": [
+    4056,
+    3026,
+    5352,
+    4235
+   ],
+   "area_px": 935805,
+   "people": 985243,
+   "land_share": 0.999,
+   "country": "China",
+   "units": [
+    {
+     "name": "Sangzhuzi",
+     "local": "桑珠孜区",
+     "prefecture": "Shigatse",
+     "prefecture_local": "日喀则市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.134,
+     "area_share": 0.004,
+     "cover": 1.0
+    },
+    {
+     "name": "Namling",
+     "local": "南木林县",
+     "prefecture": "Shigatse",
+     "prefecture_local": "日喀则市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.085,
+     "area_share": 0.008,
+     "cover": 1.0
+    },
+    {
+     "name": "Gyangzê",
+     "local": "江孜县",
+     "prefecture": "Shigatse",
+     "prefecture_local": "日喀则市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.069,
+     "area_share": 0.004,
+     "cover": 1.0
+    },
+    {
+     "name": "Lhazê",
+     "local": "拉孜县",
+     "prefecture": "Shigatse",
+     "prefecture_local": "日喀则市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.058,
+     "area_share": 0.004,
+     "cover": 1.0
+    },
+    {
+     "name": "Ngamring",
+     "local": "昂仁县",
+     "prefecture": "Shigatse",
+     "prefecture_local": "日喀则市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.056,
+     "area_share": 0.027,
+     "cover": 1.0
+    },
+    {
+     "name": "Tingri",
+     "local": "定日县",
+     "prefecture": "Shigatse",
+     "prefecture_local": "日喀则市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.05,
+     "area_share": 0.014,
+     "cover": 1.0
+    },
+    {
+     "name": "Sa'gya",
+     "local": "萨迦县",
+     "prefecture": "Shigatse",
+     "prefecture_local": "日喀则市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.048,
+     "area_share": 0.006,
+     "cover": 1.0
+    },
+    {
+     "name": "Bainang",
+     "local": "白朗县",
+     "prefecture": "Shigatse",
+     "prefecture_local": "日喀则市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.046,
+     "area_share": 0.003,
+     "cover": 1.0
+    },
+    {
+     "name": "Bange",
+     "local": "班戈县",
+     "prefecture": "Naqu",
+     "prefecture_local": "那曲地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.04,
+     "area_share": 0.026,
+     "cover": 1.0
+    },
+    {
+     "name": "Xaitongmoin",
+     "local": "谢通门县",
+     "prefecture": "Shigatse",
+     "prefecture_local": "日喀则市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.034,
+     "area_share": 0.014,
+     "cover": 1.0
+    },
+    {
+     "name": "Nyima",
+     "local": "尼玛县",
+     "prefecture": "Naqu",
+     "prefecture_local": "那曲地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.034,
+     "area_share": 0.072,
+     "cover": 1.0
+    },
+    {
+     "name": "Gêrzê",
+     "local": "改则县",
+     "prefecture": "Ali",
+     "prefecture_local": "阿里地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.027,
+     "area_share": 0.132,
+     "cover": 1.0
+    },
+    {
+     "name": "Kangmar",
+     "local": "康马县",
+     "prefecture": "Shigatse",
+     "prefecture_local": "日喀则市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.024,
+     "area_share": 0.006,
+     "cover": 1.0
+    },
+    {
+     "name": "Zhongba",
+     "local": "仲巴县",
+     "prefecture": "Shigatse",
+     "prefecture_local": "日喀则市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.024,
+     "area_share": 0.042,
+     "cover": 0.998
+    },
+    {
+     "name": "Xainza",
+     "local": "申扎县",
+     "prefecture": "Naqu",
+     "prefecture_local": "那曲地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.023,
+     "area_share": 0.024,
+     "cover": 0.998
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xizang",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.975,
+     "cover": 0.292
+    },
+    {
+     "level": "prefecture",
+     "name": "Xigazê",
+     "local": "日喀则市",
+     "province": "Xizang",
+     "country": "China",
+     "people_share": 0.748,
+     "cover": 0.987
+    },
+    {
+     "level": "prefecture",
+     "name": "Nagqu Prefecture",
+     "local": "那曲地区",
+     "province": "Xizang",
+     "country": "China",
+     "people_share": 0.116,
+     "cover": 0.222
+    },
+    {
+     "level": "prefecture",
+     "name": "Ngari Prefecture",
+     "local": "阿里地区",
+     "province": "Xizang",
+     "country": "China",
+     "people_share": 0.11,
+     "cover": 1.0
+    }
+   ],
+   "towns": [
+    {
+     "town": "城南街道",
+     "county": "桑珠孜区",
+     "city": "日喀则市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "甲措雄乡",
+     "county": "桑珠孜区",
+     "city": "日喀则市",
+     "people_share": 0.028,
+     "cover": 1.0
+    },
+    {
+     "town": "城北街道",
+     "county": "桑珠孜区",
+     "city": "日喀则市",
+     "people_share": 0.015,
+     "cover": 1.0
+    },
+    {
+     "town": "东嘎乡",
+     "county": "桑珠孜区",
+     "city": "日喀则市",
+     "people_share": 0.012,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xigazê",
+     "admin": "Tibet",
+     "pop": 798153
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f1ecf7",
+     "border_px": 14230
+    },
+    {
+     "key": "#f9f8ee",
+     "border_px": 7566
+    },
+    {
+     "key": "#f4f5ef",
+     "border_px": 7426
+    },
+    {
+     "key": "#f7f9ee",
+     "border_px": 5564
+    },
+    {
+     "key": "#f3f4e3",
+     "border_px": 3045
+    },
+    {
+     "key": "#f7eed0",
+     "border_px": 2692
+    },
+    {
+     "key": "#faedd4",
+     "border_px": 2337
+    },
+    {
+     "key": "#efe2f9",
+     "border_px": 1087
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 3603,
+    "y0": 2573,
+    "k": 0.23614895549500453,
+    "w": 520,
+    "h": 499
+   }
+  },
+  {
+   "key": "#f9f8ee",
+   "color": "#f9f8ee",
+   "lon": 93.5826,
+   "lat": 30.4005,
+   "bbox": [
+    5041,
+    3616,
+    5724,
+    4180
+   ],
+   "area_px": 206785,
+   "people": 991794,
+   "land_share": 0.999,
+   "country": "China",
+   "units": [
+    {
+     "name": "Nagchu",
+     "local": "那曲县",
+     "prefecture": "Naqu",
+     "prefecture_local": "那曲地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.131,
+     "area_share": 0.071,
+     "cover": 1.0
+    },
+    {
+     "name": "Dêngqên",
+     "local": "丁青县",
+     "prefecture": "Changdou",
+     "prefecture_local": "昌都地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.076,
+     "area_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "name": "Nyingchi",
+     "local": "林芝县",
+     "prefecture": "Linzhi",
+     "prefecture_local": "林芝地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.061,
+     "area_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "name": "Biru",
+     "local": "比如县",
+     "prefecture": "Naqu",
+     "prefecture_local": "那曲地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.058,
+     "area_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "name": "Baqên",
+     "local": "巴青县",
+     "prefecture": "Naqu",
+     "prefecture_local": "那曲地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.053,
+     "area_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "name": "Lhorong",
+     "local": "洛隆县",
+     "prefecture": "Changdou",
+     "prefecture_local": "昌都地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.051,
+     "area_share": 0.035,
+     "cover": 0.998
+    },
+    {
+     "name": "Sog",
+     "local": "索县",
+     "prefecture": "Naqu",
+     "prefecture_local": "那曲地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.048,
+     "area_share": 0.026,
+     "cover": 1.0
+    },
+    {
+     "name": "Amdo",
+     "local": "安多县",
+     "prefecture": "Naqu",
+     "prefecture_local": "那曲地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.04,
+     "area_share": 0.07,
+     "cover": 0.886
+    },
+    {
+     "name": "Bomi",
+     "local": "波密县",
+     "prefecture": "Linzhi",
+     "prefecture_local": "林芝地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.04,
+     "area_share": 0.073,
+     "cover": 1.0
+    },
+    {
+     "name": "Lhari",
+     "local": "嘉黎县",
+     "prefecture": "Naqu",
+     "prefecture_local": "那曲地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.04,
+     "area_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "name": "Banbar",
+     "local": "边坝县",
+     "prefecture": "Changdou",
+     "prefecture_local": "昌都地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.038,
+     "area_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "name": "Gongbo'gyamda",
+     "local": "工布江达县",
+     "prefecture": "Linzhi",
+     "prefecture_local": "林芝地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.035,
+     "area_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "name": "Lhünzê",
+     "local": "隆子县",
+     "prefecture": "Shannan",
+     "prefecture_local": "山南地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.033,
+     "area_share": 0.032,
+     "cover": 0.597
+    },
+    {
+     "name": "Nyainrong",
+     "local": "聂荣县",
+     "prefecture": "Naqu",
+     "prefecture_local": "那曲地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.033,
+     "area_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "name": "Nagarzê",
+     "local": "浪卡子县",
+     "prefecture": "Shannan",
+     "prefecture_local": "山南地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.03,
+     "area_share": 0.032,
+     "cover": 0.83
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xizang",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.997,
+     "cover": 0.301
+    },
+    {
+     "level": "prefecture",
+     "name": "Nagqu Prefecture",
+     "local": "那曲地区",
+     "province": "Xizang",
+     "country": "China",
+     "people_share": 0.403,
+     "cover": 0.777
+    },
+    {
+     "level": "prefecture",
+     "name": "Nyingchi",
+     "local": "林芝市",
+     "province": "Xizang",
+     "country": "China",
+     "people_share": 0.214,
+     "cover": 0.936
+    },
+    {
+     "level": "prefecture",
+     "name": "Lhoka",
+     "local": "山南市",
+     "province": "Xizang",
+     "country": "China",
+     "people_share": 0.179,
+     "cover": 0.507
+    },
+    {
+     "level": "prefecture",
+     "name": "Qamdo",
+     "local": "昌都市",
+     "province": "Xizang",
+     "country": "China",
+     "people_share": 0.17,
+     "cover": 0.24
+    }
+   ],
+   "towns": [
+    {
+     "town": "那曲镇",
+     "county": "那曲县",
+     "city": "那曲地区",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "八一镇",
+     "county": "林芝县",
+     "city": "林芝地区",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "尺犊镇",
+     "county": "丁青县",
+     "city": "昌都地区",
+     "people_share": 0.017,
+     "cover": 1.0
+    },
+    {
+     "town": "拉西镇",
+     "county": "巴青县",
+     "city": "那曲地区",
+     "people_share": 0.015,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Nagqu",
+     "admin": "Tibet",
+     "pop": 504838
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f7f9ee",
+     "border_px": 10673
+    },
+    {
+     "key": "#f9faf6",
+     "border_px": 7566
+    },
+    {
+     "key": "#f3f4e3",
+     "border_px": 7252
+    },
+    {
+     "key": "#f7e9d6",
+     "border_px": 5789
+    },
+    {
+     "key": "#f7eed0",
+     "border_px": 3598
+    },
+    {
+     "key": "#f1ead4",
+     "border_px": 3266
+    },
+    {
+     "key": "#f0f4e6",
+     "border_px": 2208,
+     "name": "Kham"
+    },
+    {
+     "key": "#f4e9d6",
+     "border_px": 753
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 4802,
+    "y0": 3377,
+    "k": 0.4478897502153316,
+    "w": 520,
+    "h": 466
+   }
+  },
+  {
+   "key": "#f3f4e3",
+   "color": "#f3f4e3",
+   "lon": 91.0645,
+   "lat": 29.7065,
+   "bbox": [
+    5018,
+    3874,
+    5248,
+    4066
+   ],
+   "area_px": 28184,
+   "people": 777692,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Chengguan",
+     "local": "城关区",
+     "prefecture": "Lasa",
+     "prefecture_local": "拉萨市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.353,
+     "area_share": 0.017,
+     "cover": 1.0
+    },
+    {
+     "name": "Lhünzhub",
+     "local": "林周县",
+     "prefecture": "Lasa",
+     "prefecture_local": "拉萨市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.108,
+     "area_share": 0.144,
+     "cover": 1.0
+    },
+    {
+     "name": "Doilungdêqên",
+     "local": "堆龙德庆县",
+     "prefecture": "Lasa",
+     "prefecture_local": "拉萨市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.102,
+     "area_share": 0.086,
+     "cover": 1.0
+    },
+    {
+     "name": "Nêdong",
+     "local": "乃东县",
+     "prefecture": "Shannan",
+     "prefecture_local": "山南地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.071,
+     "area_share": 0.052,
+     "cover": 0.883
+    },
+    {
+     "name": "Gonggar",
+     "local": "贡嘎县",
+     "prefecture": "Shannan",
+     "prefecture_local": "山南地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.066,
+     "area_share": 0.076,
+     "cover": 0.999
+    },
+    {
+     "name": "Maizhokunggar",
+     "local": "墨竹工卡县",
+     "prefecture": "Lasa",
+     "prefecture_local": "拉萨市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.058,
+     "area_share": 0.132,
+     "cover": 0.908
+    },
+    {
+     "name": "Zhanang",
+     "local": "扎囊县",
+     "prefecture": "Shannan",
+     "prefecture_local": "山南地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.046,
+     "area_share": 0.069,
+     "cover": 1.0
+    },
+    {
+     "name": "Dagzê",
+     "local": "达孜县",
+     "prefecture": "Lasa",
+     "prefecture_local": "拉萨市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.042,
+     "area_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "name": "Qüxü",
+     "local": "曲水县",
+     "prefecture": "Lasa",
+     "prefecture_local": "拉萨市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.039,
+     "area_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "name": "Nyêmo",
+     "local": "尼木县",
+     "prefecture": "Lasa",
+     "prefecture_local": "拉萨市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.039,
+     "area_share": 0.103,
+     "cover": 0.999
+    },
+    {
+     "name": "Damxung",
+     "local": "当雄县",
+     "prefecture": "Lasa",
+     "prefecture_local": "拉萨市",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.033,
+     "area_share": 0.152,
+     "cover": 0.497
+    },
+    {
+     "name": "Qonggyai",
+     "local": "琼结县",
+     "prefecture": "Shannan",
+     "prefecture_local": "山南地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.023,
+     "area_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xizang",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.237
+    },
+    {
+     "level": "prefecture",
+     "name": "Lhasa",
+     "local": "拉萨市",
+     "province": "Xizang",
+     "country": "China",
+     "people_share": 0.773,
+     "cover": 0.951
+    },
+    {
+     "level": "prefecture",
+     "name": "Lhoka",
+     "local": "山南市",
+     "province": "Xizang",
+     "country": "China",
+     "people_share": 0.214,
+     "cover": 0.476
+    }
+   ],
+   "towns": [
+    {
+     "town": "纳金乡",
+     "county": "城关区",
+     "city": "拉萨市",
+     "people_share": 0.087,
+     "cover": 1.0
+    },
+    {
+     "town": "蔡公堂乡",
+     "county": "城关区",
+     "city": "拉萨市",
+     "people_share": 0.075,
+     "cover": 1.0
+    },
+    {
+     "town": "泽当镇",
+     "county": "乃东县",
+     "city": "山南地区",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "松盘乡",
+     "county": "林周县",
+     "city": "拉萨市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "金珠西路街道",
+     "county": "城关区",
+     "city": "拉萨市",
+     "people_share": 0.034,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Lhasa",
+     "admin": "Tibet",
+     "pop": 867891
+    },
+    {
+     "name": "Zêtang",
+     "admin": "Tibet",
+     "pop": 382610
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f9f8ee",
+     "border_px": 7252
+    },
+    {
+     "key": "#f9faf6",
+     "border_px": 3045
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 4938,
+    "y0": 3794,
+    "k": 1.0,
+    "w": 390,
+    "h": 352
+   }
+  }
+ ]
+}

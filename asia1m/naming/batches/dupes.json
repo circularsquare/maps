@@ -22,26 +22,42 @@
   "picked": null
  },
  "chongqing 11|shapingba": {
-  "places": [
-   "chongqing 19"
-  ],
-  "picked": null
+  "places": [],
+  "picked": "chongqing 19"
  },
  "chongqing 26|fuling": {
-  "places": [
-   "chongqing 12"
-  ],
-  "picked": null
+  "places": [],
+  "picked": "chongqing 12"
  },
  "chongqing 30|hejiang": {
+  "places": [],
+  "picked": "sichuan-south 22"
+ },
+ "chongqing 30|jiangjin": {
+  "places": [],
+  "picked": "chongqing 28"
+ },
+ "gansu 17|liupan": {
   "places": [
-   "sichuan-south 22"
+   "ningxia 7"
   ],
   "picked": null
  },
- "chongqing 30|jiangjin": {
+ "gansu 23|jialing": {
   "places": [
-   "chongqing 28"
+   "shaanxi-rest 18"
+  ],
+  "picked": null
+ },
+ "guizhou-north 12|jinsha": {
+  "places": [
+   "sichuan-chengdu 13"
+  ],
+  "picked": null
+ },
+ "guizhou-north 13|wumeng": {
+  "places": [
+   "yunnan-zhaotong 5"
   ],
   "picked": null
  },
@@ -194,10 +210,8 @@
   "picked": null
  },
  "hunan-north 14|ziyang": {
-  "places": [
-   "sichuan-south 5"
-  ],
-  "picked": null
+  "places": [],
+  "picked": "sichuan-south 5"
  },
  "hunan-north 15|meishan": {
   "places": [],
@@ -219,9 +233,13 @@
   "places": [],
   "picked": "henan-south 15"
  },
+ "ningxia 7|liupan": {
+  "places": [],
+  "picked": "gansu 17"
+ },
  "shaanxi-rest 18|jialing": {
   "places": [
-   "sichuan-north 19"
+   "gansu 23"
   ],
   "picked": null
  },
@@ -256,22 +274,31 @@
   "picked": null
  },
  "sichuan-north 3|daba": {
+  "places": [],
+  "picked": "chongqing 1"
+ },
+ "sichuan-north 16|xichong": {
   "places": [
-   "chongqing 1"
+   "sichuan-north 19"
+  ],
+  "picked": null
+ },
+ "sichuan-north 19|xichong": {
+  "places": [
+   "sichuan-north 16"
   ],
   "picked": null
  },
  "sichuan-north 19|jialing": {
   "places": [
+   "gansu 23",
    "shaanxi-rest 18"
   ],
   "picked": null
  },
  "sichuan-north 24|hechuan": {
-  "places": [
-   "chongqing 8"
-  ],
-  "picked": null
+  "places": [],
+  "picked": "chongqing 8"
  },
  "sichuan-south 9|dongpo": {
   "places": [
@@ -288,6 +315,12 @@
  "sichuan-south 22|hejiang": {
   "places": [
    "chongqing 30"
+  ],
+  "picked": null
+ },
+ "yunnan-zhaotong 5|wumeng": {
+  "places": [
+   "guizhou-north 13"
   ],
   "picked": null
  }

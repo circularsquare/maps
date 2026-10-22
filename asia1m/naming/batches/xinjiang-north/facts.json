@@ -1,0 +1,3003 @@
+{
+ "name": "xinjiang-north",
+ "province": "Xinjiang Uygur",
+ "prefectures": [
+  "Ürümqi",
+  "Changji Hui Autonomous Prefecture",
+  "Shihezi",
+  "Ili Kazak Autonomous Prefecture",
+  "Tarbaĝatay Prefecture",
+  "Bortala Mongol Autonomous Prefecture",
+  "Altay Prefecture",
+  "Hami"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 3883,
+   "y": 1480,
+   "w": 800,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    10
+   ]
+  },
+  {
+   "tag": "2",
+   "x": 4683,
+   "y": 1480,
+   "w": 800,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "tag": "3",
+   "x": 3883,
+   "y": 2280,
+   "w": 800,
+   "h": 672,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    6,
+    7,
+    10,
+    13
+   ]
+  },
+  {
+   "tag": "4",
+   "x": 4683,
+   "y": 2280,
+   "w": 800,
+   "h": 672,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    11,
+    12,
+    13,
+    14
+   ]
+  },
+  {
+   "tag": "5",
+   "x": 5483,
+   "y": 2280,
+   "w": 303,
+   "h": 672,
+   "scale": 2,
+   "regions": [
+    14
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#f4eef6",
+   "color": "#f4eef6",
+   "lon": 86.2633,
+   "lat": 47.7728,
+   "bbox": [
+    4466,
+    1680,
+    5180,
+    2292
+   ],
+   "area_px": 211868,
+   "people": 1050753,
+   "land_share": 0.997,
+   "country": "China",
+   "units": [
+    {
+     "name": "Altay",
+     "local": "阿勒泰市",
+     "prefecture": "Aleitai",
+     "prefecture_local": "阿勒泰地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.158,
+     "area_share": 0.086,
+     "cover": 1.0
+    },
+    {
+     "name": "Fuyun",
+     "local": "富蕴县",
+     "prefecture": "Aleitai",
+     "prefecture_local": "阿勒泰地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.09,
+     "area_share": 0.242,
+     "cover": 0.998
+    },
+    {
+     "name": "Habahe",
+     "local": "哈巴河县",
+     "prefecture": "Aleitai",
+     "prefecture_local": "阿勒泰地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.084,
+     "area_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "name": "Fuhai",
+     "local": "福海县",
+     "prefecture": "Aleitai",
+     "prefecture_local": "阿勒泰地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.078,
+     "area_share": 0.234,
+     "cover": 1.0
+    },
+    {
+     "name": "Burqin",
+     "local": "布尔津县",
+     "prefecture": "Aleitai",
+     "prefecture_local": "阿勒泰地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.07,
+     "area_share": 0.083,
+     "cover": 1.0
+    },
+    {
+     "name": "Qinghe",
+     "local": "青河县",
+     "prefecture": "Aleitai",
+     "prefecture_local": "阿勒泰地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.059,
+     "area_share": 0.118,
+     "cover": 0.985
+    },
+    {
+     "name": "Beitun",
+     "local": "北屯市",
+     "prefecture": "Beitun",
+     "prefecture_local": "北屯市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.055,
+     "area_share": 0.008,
+     "cover": 1.0
+    },
+    {
+     "name": "Jeminay",
+     "local": "吉木乃县",
+     "prefecture": "Aleitai",
+     "prefecture_local": "阿勒泰地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.034,
+     "area_share": 0.058,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.631,
+     "cover": 0.026
+    },
+    {
+     "level": "prefecture",
+     "name": "Altay Prefecture",
+     "local": "阿勒泰地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.626,
+     "cover": 0.998
+    },
+    {
+     "level": "province",
+     "name": "East Kazakhstan Region",
+     "local": null,
+     "province": null,
+     "country": "Kazakhstan",
+     "people_share": 0.331,
+     "cover": 0.473
+    }
+   ],
+   "towns": [
+    {
+     "town": "阿苇滩镇",
+     "county": "阿勒泰市",
+     "city": "阿勒泰地区",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "红墩镇",
+     "county": "阿勒泰市",
+     "city": "阿勒泰地区",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "兵团一八八团",
+     "county": "北屯市",
+     "city": "北屯市",
+     "people_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "town": "解特阿热勒乡",
+     "county": "福海县",
+     "city": "阿勒泰地区",
+     "people_share": 0.027,
+     "cover": 0.999
+    }
+   ],
+   "cities": [
+    {
+     "name": "Altay",
+     "admin": "Xinjiang",
+     "pop": 142000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f3f4ed",
+     "border_px": 7776
+    },
+    {
+     "key": "#f4e9e9",
+     "border_px": 6477
+    },
+    {
+     "key": "#e2edf9",
+     "border_px": 6383
+    },
+    {
+     "key": "#faecf7",
+     "border_px": 5409
+    },
+    {
+     "key": "#d1e4f1",
+     "border_px": 3382
+    },
+    {
+     "key": "#fcf1f8",
+     "border_px": 2950
+    },
+    {
+     "key": "#cbe6f9",
+     "border_px": 1241
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 4217,
+    "y0": 1431,
+    "k": 0.429042904290429,
+    "w": 520,
+    "h": 476
+   }
+  },
+  {
+   "key": "#e2edf9",
+   "color": "#e2edf9",
+   "lon": 84.432,
+   "lat": 46.0396,
+   "bbox": [
+    4508,
+    2055,
+    4847,
+    2332
+   ],
+   "area_px": 58501,
+   "people": 1095694,
+   "land_share": 0.993,
+   "country": "China",
+   "units": [
+    {
+     "name": "Karamay",
+     "local": "克拉玛依区",
+     "prefecture": "Kelamayi",
+     "prefecture_local": "克拉玛依市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.306,
+     "area_share": 0.059,
+     "cover": 0.999
+    },
+    {
+     "name": "Emin",
+     "local": "额敏县",
+     "prefecture": "Tacheng",
+     "prefecture_local": "塔城地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.201,
+     "area_share": 0.138,
+     "cover": 1.0
+    },
+    {
+     "name": "Tacheng",
+     "local": "塔城市",
+     "prefecture": "Tacheng",
+     "prefecture_local": "塔城地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.17,
+     "area_share": 0.061,
+     "cover": 0.999
+    },
+    {
+     "name": "Toli",
+     "local": "托里县",
+     "prefecture": "Tacheng",
+     "prefecture_local": "塔城地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.11,
+     "area_share": 0.313,
+     "cover": 0.999
+    },
+    {
+     "name": "Baijiantan",
+     "local": "白碱滩区",
+     "prefecture": "Kelamayi",
+     "prefecture_local": "克拉玛依市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.062,
+     "area_share": 0.02,
+     "cover": 1.0
+    },
+    {
+     "name": "Yumin",
+     "local": "裕民县",
+     "prefecture": "Tacheng",
+     "prefecture_local": "塔城地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.057,
+     "area_share": 0.094,
+     "cover": 1.0
+    },
+    {
+     "name": "Hoboksar Mongol",
+     "local": "和布克赛尔蒙古自治县",
+     "prefecture": "Tacheng",
+     "prefecture_local": "塔城地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.047,
+     "area_share": 0.253,
+     "cover": 0.902
+    },
+    {
+     "name": "Wusu",
+     "local": "乌苏市",
+     "prefecture": "Tacheng",
+     "prefecture_local": "塔城地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.034,
+     "area_share": 0.014,
+     "cover": 0.099
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.043
+    },
+    {
+     "level": "prefecture",
+     "name": "Tarbaĝatay Prefecture",
+     "local": "塔城地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.615,
+     "cover": 0.66
+    },
+    {
+     "level": "prefecture",
+     "name": "Karamay",
+     "local": "克拉玛依市",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.371,
+     "cover": 0.999
+    }
+   ],
+   "towns": [
+    {
+     "town": "昆仑路街道",
+     "county": "克拉玛依区",
+     "city": "克拉玛依市",
+     "people_share": 0.135,
+     "cover": 1.0
+    },
+    {
+     "town": "二工镇",
+     "county": "塔城市",
+     "city": "塔城地区",
+     "people_share": 0.062,
+     "cover": 0.999
+    },
+    {
+     "town": "中兴路街道",
+     "county": "白碱滩区",
+     "city": "克拉玛依市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "银河路街道",
+     "county": "克拉玛依区",
+     "city": "克拉玛依市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "郊区乡",
+     "county": "额敏县",
+     "city": "塔城地区",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "天山路街道",
+     "county": "克拉玛依区",
+     "city": "克拉玛依市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "额敏镇",
+     "county": "额敏县",
+     "city": "塔城地区",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "胜利路街道",
+     "county": "克拉玛依区",
+     "city": "克拉玛依市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Karamay",
+     "admin": "Xinjiang",
+     "pop": 487000
+    },
+    {
+     "name": "Tacheng",
+     "admin": "Xinjiang",
+     "pop": 161037
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f4eef6",
+     "border_px": 6383
+    },
+    {
+     "key": "#fcf1f8",
+     "border_px": 3037
+    },
+    {
+     "key": "#d6e4f4",
+     "border_px": 2940
+    },
+    {
+     "key": "#cfe3f6",
+     "border_px": 956
+    },
+    {
+     "key": "#cbe6f9",
+     "border_px": 890
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 4390,
+    "y0": 1937,
+    "k": 0.9043478260869565,
+    "w": 520,
+    "h": 463
+   }
+  },
+  {
+   "key": "#d6e4f4",
+   "color": "#d6e4f4",
+   "lon": 82.8644,
+   "lat": 44.6251,
+   "bbox": [
+    4320,
+    2236,
+    4712,
+    2423
+   ],
+   "area_px": 33931,
+   "people": 1068890,
+   "land_share": 0.992,
+   "country": "China",
+   "units": [
+    {
+     "name": "Wusu",
+     "local": "乌苏市",
+     "prefecture": "Tacheng",
+     "prefecture_local": "塔城地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.317,
+     "area_share": 0.327,
+     "cover": 0.893
+    },
+    {
+     "name": "Bole",
+     "local": "博乐市",
+     "prefecture": "Bo'ertalamenggu",
+     "prefecture_local": "博尔塔拉蒙古自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.159,
+     "area_share": 0.169,
+     "cover": 1.0
+    },
+    {
+     "name": "Jinghe",
+     "local": "精河县",
+     "prefecture": "Bo'ertalamenggu",
+     "prefecture_local": "博尔塔拉蒙古自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.157,
+     "area_share": 0.292,
+     "cover": 1.0
+    },
+    {
+     "name": "Kuitun",
+     "local": "奎屯市",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.111,
+     "area_share": 0.01,
+     "cover": 0.944
+    },
+    {
+     "name": "Dushanzi",
+     "local": "独山子区",
+     "prefecture": "Kelamayi",
+     "prefecture_local": "克拉玛依市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.095,
+     "area_share": 0.009,
+     "cover": 0.952
+    },
+    {
+     "name": "Shuanghe",
+     "local": "双河市",
+     "prefecture": "Shuanghe",
+     "prefecture_local": "双河市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.088,
+     "area_share": 0.026,
+     "cover": 1.0
+    },
+    {
+     "name": "Wenquan",
+     "local": "温泉县",
+     "prefecture": "Bo'ertalamenggu",
+     "prefecture_local": "博尔塔拉蒙古自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.065,
+     "area_share": 0.156,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.997,
+     "cover": 0.042
+    },
+    {
+     "level": "prefecture",
+     "name": "Bortala Mongol Autonomous Prefecture",
+     "local": "博尔塔拉蒙古自治州",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.474,
+     "cover": 1.0
+    },
+    {
+     "level": "prefecture",
+     "name": "Tarbaĝatay Prefecture",
+     "local": "塔城地区",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.316,
+     "cover": 0.331
+    },
+    {
+     "level": "prefecture",
+     "name": "Changji Hui Autonomous Prefecture",
+     "local": "昌吉回族自治州",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.207,
+     "cover": 0.083
+    }
+   ],
+   "towns": [
+    {
+     "town": "茫丁乡",
+     "county": "精河县",
+     "city": "博尔塔拉蒙古自治州",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "大河沿子镇",
+     "county": "精河县",
+     "city": "博尔塔拉蒙古自治州",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "金山路街道",
+     "county": "独山子区",
+     "city": "克拉玛依市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "青得里乡",
+     "county": "博乐市",
+     "city": "博尔塔拉蒙古自治州",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "兵团八十四团",
+     "county": "双河市",
+     "city": "双河市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "八十四户乡",
+     "county": "乌苏市",
+     "city": "塔城地区",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "西宁路街道",
+     "county": "独山子区",
+     "city": "克拉玛依市",
+     "people_share": 0.03,
+     "cover": 0.887
+    },
+    {
+     "town": "小营盘镇",
+     "county": "博乐市",
+     "city": "博尔塔拉蒙古自治州",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Bole",
+     "admin": "Xinjiang",
+     "pop": 235585
+    },
+    {
+     "name": "Kuytun",
+     "admin": "Xinjiang",
+     "pop": 166261
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#ece5fa",
+     "border_px": 3771
+    },
+    {
+     "key": "#fcf1f8",
+     "border_px": 3362
+    },
+    {
+     "key": "#e2edf9",
+     "border_px": 2940
+    },
+    {
+     "key": "#f9eaf5",
+     "border_px": 1676
+    },
+    {
+     "key": "#cfe3f6",
+     "border_px": 1601
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 4183,
+    "y0": 2099,
+    "k": 0.7807807807807807,
+    "w": 520,
+    "h": 359
+   }
+  },
+  {
+   "key": "#d1e4f1",
+   "color": "#d1e4f1",
+   "lon": 89.0439,
+   "lat": 44.5426,
+   "bbox": [
+    4872,
+    2265,
+    5199,
+    2476
+   ],
+   "area_px": 42023,
+   "people": 1261633,
+   "land_share": 0.999,
+   "country": "China",
+   "units": [
+    {
+     "name": "Midong",
+     "local": "米东区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.296,
+     "area_share": 0.073,
+     "cover": 0.822
+    },
+    {
+     "name": "Qitai",
+     "local": "奇台县",
+     "prefecture": "Changjihuizu",
+     "prefecture_local": "昌吉回族自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.181,
+     "area_share": 0.359,
+     "cover": 0.999
+    },
+    {
+     "name": "Fukang",
+     "local": "阜康市",
+     "prefecture": "Changjihuizu",
+     "prefecture_local": "昌吉回族自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.169,
+     "area_share": 0.184,
+     "cover": 1.0
+    },
+    {
+     "name": "Jimsar",
+     "local": "吉木萨尔县",
+     "prefecture": "Changjihuizu",
+     "prefecture_local": "昌吉回族自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.096,
+     "area_share": 0.175,
+     "cover": 1.0
+    },
+    {
+     "name": "Changji",
+     "local": "昌吉市",
+     "prefecture": "Changjihuizu",
+     "prefecture_local": "昌吉回族自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.09,
+     "area_share": 0.052,
+     "cover": 0.245
+    },
+    {
+     "name": "Wujiaqu",
+     "local": "五家渠市",
+     "prefecture": "Wujiaqu",
+     "prefecture_local": "五家渠市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.06,
+     "area_share": 0.016,
+     "cover": 1.0
+    },
+    {
+     "name": "Toutunhe",
+     "local": "头屯河区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.052,
+     "area_share": 0.001,
+     "cover": 0.316
+    },
+    {
+     "name": "Ürümqi",
+     "local": "乌鲁木齐县",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.026,
+     "area_share": 0.003,
+     "cover": 0.391
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.05
+    },
+    {
+     "level": "prefecture",
+     "name": "Changji Hui Autonomous Prefecture",
+     "local": "昌吉回族自治州",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.85,
+     "cover": 0.401
+    },
+    {
+     "level": "prefecture",
+     "name": "Ürümqi",
+     "local": "乌鲁木齐市",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.149,
+     "cover": 0.049
+    }
+   ],
+   "towns": [
+    {
+     "town": "古牧地镇",
+     "county": "米东区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.082,
+     "cover": 0.971
+    },
+    {
+     "town": "城关镇",
+     "county": "阜康市",
+     "city": "昌吉回族自治州",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "兵团十二师五一农场",
+     "county": "头屯河区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.052,
+     "cover": 0.728
+    },
+    {
+     "town": "铁厂沟镇",
+     "county": "米东区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "西北湾乡",
+     "county": "奇台县",
+     "city": "昌吉回族自治州",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "六工镇",
+     "county": "昌吉市",
+     "city": "昌吉回族自治州",
+     "people_share": 0.035,
+     "cover": 0.916
+    },
+    {
+     "town": "芦草沟乡",
+     "county": "米东区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Fukang",
+     "admin": "Xinjiang",
+     "pop": 165006
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f4eef6",
+     "border_px": 3382
+    },
+    {
+     "key": "#e5f0f9",
+     "border_px": 3073
+    },
+    {
+     "key": "#d3ddf4",
+     "border_px": 2832
+    },
+    {
+     "key": "#cbe6f9",
+     "border_px": 1973
+    },
+    {
+     "key": "#f3f4ed",
+     "border_px": 1035
+    },
+    {
+     "key": "#6bbbf4",
+     "border_px": 229
+    },
+    {
+     "key": "#298bf1",
+     "border_px": 134
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 4758,
+    "y0": 2151,
+    "k": 0.9369369369369369,
+    "w": 520,
+    "h": 411
+   }
+  },
+  {
+   "key": "#cbe6f9",
+   "color": "#cbe6f9",
+   "lon": 86.5783,
+   "lat": 44.3924,
+   "bbox": [
+    4747,
+    2263,
+    4897,
+    2498
+   ],
+   "area_px": 20021,
+   "people": 905926,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Changji",
+     "local": "昌吉市",
+     "prefecture": "Changjihuizu",
+     "prefecture_local": "昌吉回族自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.387,
+     "area_share": 0.243,
+     "cover": 0.755
+    },
+    {
+     "name": "Hutubi",
+     "local": "呼图壁县",
+     "prefecture": "Changjihuizu",
+     "prefecture_local": "昌吉回族自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.329,
+     "area_share": 0.435,
+     "cover": 1.0
+    },
+    {
+     "name": "Manas",
+     "local": "玛纳斯县",
+     "prefecture": "Changjihuizu",
+     "prefecture_local": "昌吉回族自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.205,
+     "area_share": 0.297,
+     "cover": 0.729
+    },
+    {
+     "name": "Toutunhe",
+     "local": "头屯河区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.078,
+     "area_share": 0.001,
+     "cover": 0.341
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.036
+    },
+    {
+     "level": "prefecture",
+     "name": "Changji Hui Autonomous Prefecture",
+     "local": "昌吉回族自治州",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.93,
+     "cover": 0.315
+    },
+    {
+     "level": "prefecture",
+     "name": "Ürümqi",
+     "local": "乌鲁木齐市",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.069,
+     "cover": 0.016
+    }
+   ],
+   "towns": [
+    {
+     "town": "石梯子哈萨克民族乡",
+     "county": "呼图壁县",
+     "city": "昌吉回族自治州",
+     "people_share": 0.08,
+     "cover": 1.0
+    },
+    {
+     "town": "兵团芳草湖总场",
+     "county": "呼图壁县",
+     "city": "昌吉回族自治州",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "建国路街道",
+     "county": "昌吉市",
+     "city": "昌吉回族自治州",
+     "people_share": 0.071,
+     "cover": 1.0
+    },
+    {
+     "town": "绿洲路街道",
+     "county": "昌吉市",
+     "city": "昌吉回族自治州",
+     "people_share": 0.057,
+     "cover": 0.795
+    },
+    {
+     "town": "五工台镇",
+     "county": "呼图壁县",
+     "city": "昌吉回族自治州",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "兵团十二师三坪农场",
+     "county": "头屯河区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.051,
+     "cover": 0.562
+    },
+    {
+     "town": "中山路街道",
+     "county": "昌吉市",
+     "city": "昌吉回族自治州",
+     "people_share": 0.049,
+     "cover": 0.916
+    },
+    {
+     "town": "兵团农六师新湖农场",
+     "county": "玛纳斯县",
+     "city": "昌吉回族自治州",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "三工镇",
+     "county": "昌吉市",
+     "city": "昌吉回族自治州",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "北京南路街道",
+     "county": "昌吉市",
+     "city": "昌吉回族自治州",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "园户村镇",
+     "county": "呼图壁县",
+     "city": "昌吉回族自治州",
+     "people_share": 0.036,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yan’an Beilu",
+     "admin": "Xinjiang",
+     "pop": 426253
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#cfe3f6",
+     "border_px": 2769
+    },
+    {
+     "key": "#d1e4f1",
+     "border_px": 1973
+    },
+    {
+     "key": "#d3ddf4",
+     "border_px": 1447
+    },
+    {
+     "key": "#f4eef6",
+     "border_px": 1241
+    },
+    {
+     "key": "#e4e4f6",
+     "border_px": 942
+    },
+    {
+     "key": "#e2edf9",
+     "border_px": 890
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 4665,
+    "y0": 2181,
+    "k": 1.0,
+    "w": 314,
+    "h": 399
+   }
+  },
+  {
+   "key": "#cfe3f6",
+   "color": "#cfe3f6",
+   "lon": 85.4927,
+   "lat": 44.1605,
+   "bbox": [
+    4671,
+    2289,
+    4801,
+    2463
+   ],
+   "area_px": 14846,
+   "people": 922100,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shihezi",
+     "local": "石河子市",
+     "prefecture": "Shihezi",
+     "prefecture_local": "石河子市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.525,
+     "area_share": 0.044,
+     "cover": 0.999
+    },
+    {
+     "name": "Shawan",
+     "local": "沙湾县",
+     "prefecture": "Tacheng",
+     "prefecture_local": "塔城地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.383,
+     "area_share": 0.669,
+     "cover": 0.999
+    },
+    {
+     "name": "Manas",
+     "local": "玛纳斯县",
+     "prefecture": "Changjihuizu",
+     "prefecture_local": "昌吉回族自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.075,
+     "area_share": 0.157,
+     "cover": 0.271
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.037
+    },
+    {
+     "level": "prefecture",
+     "name": "Shihezi",
+     "local": "石河子市[1]",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.521,
+     "cover": 1.0
+    },
+    {
+     "level": "prefecture",
+     "name": "Changji Hui Autonomous Prefecture",
+     "local": "昌吉回族自治州",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.476,
+     "cover": 0.164
+    }
+   ],
+   "towns": [
+    {
+     "town": "北泉镇",
+     "county": "石河子市",
+     "city": "石河子市",
+     "people_share": 0.191,
+     "cover": 0.998
+    },
+    {
+     "town": "石河子乡",
+     "county": "石河子市",
+     "city": "石河子市",
+     "people_share": 0.095,
+     "cover": 1.0
+    },
+    {
+     "town": "东城街道",
+     "county": "石河子市",
+     "city": "石河子市",
+     "people_share": 0.076,
+     "cover": 1.0
+    },
+    {
+     "town": "老街街道",
+     "county": "石河子市",
+     "city": "石河子市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "大泉乡",
+     "county": "沙湾县",
+     "city": "塔城地区",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "三道河子镇",
+     "county": "沙湾县",
+     "city": "塔城地区",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "兵团一四三团",
+     "county": "沙湾县",
+     "city": "塔城地区",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "红山街道",
+     "county": "石河子市",
+     "city": "石河子市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "兵团一四二团",
+     "county": "沙湾县",
+     "city": "塔城地区",
+     "people_share": 0.035,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Shihezi",
+     "admin": "Xinjiang",
+     "pop": 717000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#cbe6f9",
+     "border_px": 2769
+    },
+    {
+     "key": "#d6e4f4",
+     "border_px": 1601
+    },
+    {
+     "key": "#e4e4f6",
+     "border_px": 1346
+    },
+    {
+     "key": "#e2edf9",
+     "border_px": 956
+    },
+    {
+     "key": "#ece5fa",
+     "border_px": 586
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 4611,
+    "y0": 2229,
+    "k": 1.0,
+    "w": 250,
+    "h": 294
+   }
+  },
+  {
+   "key": "#e4c4fa",
+   "color": "#e4c4fa",
+   "lon": 81.5245,
+   "lat": 43.8975,
+   "bbox": [
+    4413,
+    2371,
+    4451,
+    2406
+   ],
+   "area_px": 839,
+   "people": 631624,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yining",
+     "local": "伊宁市",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.683,
+     "area_share": 0.267,
+     "cover": 0.848
+    },
+    {
+     "name": "Yining",
+     "local": "伊宁县",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.311,
+     "area_share": 0.727,
+     "cover": 0.457
+    },
+    {
+     "name": "Qapqal Xibe",
+     "local": "察布查尔锡伯自治县",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.006,
+     "area_share": 0.006,
+     "cover": 0.02
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.025
+    },
+    {
+     "level": "prefecture",
+     "name": "Ili Kazak Autonomous Prefecture",
+     "local": "伊犁哈萨克自治州[5]",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.256
+    }
+   ],
+   "towns": [
+    {
+     "town": "艾兰木巴格街道",
+     "county": "伊宁市",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.125,
+     "cover": 1.0
+    },
+    {
+     "town": "达达木图乡",
+     "county": "伊宁市",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.106,
+     "cover": 0.964
+    },
+    {
+     "town": "伊宁市边境经济合作区",
+     "county": "伊宁市",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.069,
+     "cover": 0.979
+    },
+    {
+     "town": "愉群翁回族乡",
+     "county": "伊宁县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.058,
+     "cover": 0.937
+    },
+    {
+     "town": "喀尔墩乡",
+     "county": "伊宁市",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "墩买里街道",
+     "county": "伊宁市",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "萨依布依街道",
+     "county": "伊宁市",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "解放路街道",
+     "county": "伊宁市",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "胡地于孜乡",
+     "county": "伊宁县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "潘津乡",
+     "county": "伊宁市",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.045,
+     "cover": 0.911
+    },
+    {
+     "town": "吉里于孜镇",
+     "county": "伊宁县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.043,
+     "cover": 0.965
+    }
+   ],
+   "cities": [
+    {
+     "name": "Ghulja",
+     "admin": "Xinjiang",
+     "pop": 542507
+    },
+    {
+     "name": "Ailan Mubage",
+     "admin": "Xinjiang",
+     "pop": 526745
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#ece5fa",
+     "border_px": 853
+    },
+    {
+     "key": "#f9eaf5",
+     "border_px": 833
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 4373,
+    "y0": 2331,
+    "k": 3.0,
+    "w": 354,
+    "h": 345
+   }
+  },
+  {
+   "key": "#6bbbf4",
+   "color": "#6bbbf4",
+   "lon": 87.5335,
+   "lat": 43.8813,
+   "bbox": [
+    4894,
+    2413,
+    4906,
+    2430
+   ],
+   "area_px": 148,
+   "people": 1159814,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xinshi",
+     "local": "新市区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.625,
+     "area_share": 0.709,
+     "cover": 0.793
+    },
+    {
+     "name": "Shayibake",
+     "local": "沙依巴克区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.356,
+     "area_share": 0.223,
+     "cover": 0.403
+    },
+    {
+     "name": "Midong",
+     "local": "米东区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.018,
+     "area_share": 0.054,
+     "cover": 0.047
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.046
+    },
+    {
+     "level": "prefecture",
+     "name": "Ürümqi",
+     "local": "乌鲁木齐市",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.985,
+     "cover": 0.299
+    }
+   ],
+   "towns": [
+    {
+     "town": "西山街道",
+     "county": "沙依巴克区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.211,
+     "cover": 0.997
+    },
+    {
+     "town": "乌鲁木齐经济技术开发区街道",
+     "county": "新市区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.168,
+     "cover": 0.995
+    },
+    {
+     "town": "红庙子街道",
+     "county": "沙依巴克区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.094,
+     "cover": 0.851
+    },
+    {
+     "town": "石油新村街道",
+     "county": "新市区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.082,
+     "cover": 1.0
+    },
+    {
+     "town": "三工街道",
+     "county": "新市区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "二工乡",
+     "county": "新市区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.065,
+     "cover": 0.998
+    },
+    {
+     "town": "长春中路街道",
+     "county": "新市区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.045,
+     "cover": 0.72
+    },
+    {
+     "town": "喀什东路街道",
+     "county": "新市区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.043,
+     "cover": 0.752
+    },
+    {
+     "town": "地窝堡乡",
+     "county": "新市区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.042,
+     "cover": 0.828
+    },
+    {
+     "town": "北站东路街道",
+     "county": "新市区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "杭州路街道",
+     "county": "新市区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "兵团农十二师一零四团",
+     "county": "沙依巴克区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.035,
+     "cover": 0.896
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d1e4f1",
+     "border_px": 229
+    },
+    {
+     "key": "#d3ddf4",
+     "border_px": 212
+    },
+    {
+     "key": "#298bf1",
+     "border_px": 166
+    },
+    {
+     "key": "#498eed",
+     "border_px": 81
+    }
+   ],
+   "text_px": 0,
+   "n": 8,
+   "thumb": {
+    "x0": 4854,
+    "y0": 2373,
+    "k": 4.0,
+    "w": 368,
+    "h": 388
+   }
+  },
+  {
+   "key": "#298bf1",
+   "color": "#298bf1",
+   "lon": 87.6375,
+   "lat": 43.8541,
+   "bbox": [
+    4902,
+    2418,
+    4913,
+    2430
+   ],
+   "area_px": 116,
+   "people": 1029569,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shuimogou",
+     "local": "水磨沟区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.498,
+     "area_share": 0.603,
+     "cover": 0.88
+    },
+    {
+     "name": "Tianshan",
+     "local": "天山区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.259,
+     "area_share": 0.103,
+     "cover": 0.314
+    },
+    {
+     "name": "Xinshi",
+     "local": "新市区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.158,
+     "area_share": 0.155,
+     "cover": 0.178
+    },
+    {
+     "name": "Midong",
+     "local": "米东区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.058,
+     "area_share": 0.121,
+     "cover": 0.131
+    },
+    {
+     "name": "Shayibake",
+     "local": "沙依巴克区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.027,
+     "area_share": 0.017,
+     "cover": 0.027
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.041
+    },
+    {
+     "level": "prefecture",
+     "name": "Ürümqi",
+     "local": "乌鲁木齐市",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.27
+    }
+   ],
+   "towns": [
+    {
+     "town": "碱泉街道",
+     "county": "天山区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.173,
+     "cover": 0.889
+    },
+    {
+     "town": "水磨沟街道",
+     "county": "水磨沟区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.143,
+     "cover": 0.915
+    },
+    {
+     "town": "苇湖梁街道",
+     "county": "水磨沟区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.09,
+     "cover": 1.0
+    },
+    {
+     "town": "六道湾街道",
+     "county": "水磨沟区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.073,
+     "cover": 1.0
+    },
+    {
+     "town": "银川路街道",
+     "county": "新市区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.069,
+     "cover": 1.0
+    },
+    {
+     "town": "红雁街道",
+     "county": "天山区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.065,
+     "cover": 0.606
+    },
+    {
+     "town": "南湖南路街道",
+     "county": "水磨沟区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.062,
+     "cover": 0.769
+    },
+    {
+     "town": "七道湾街道",
+     "county": "水磨沟区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "卡子湾街道",
+     "county": "米东区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.052,
+     "cover": 0.929
+    },
+    {
+     "town": "新民路街道",
+     "county": "水磨沟区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.043,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Ürümqi",
+     "admin": "Xinjiang",
+     "pop": 4335017
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#6bbbf4",
+     "border_px": 166
+    },
+    {
+     "key": "#d1e4f1",
+     "border_px": 134
+    },
+    {
+     "key": "#498eed",
+     "border_px": 113
+    },
+    {
+     "key": "#d3ddf4",
+     "border_px": 109
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 4862,
+    "y0": 2378,
+    "k": 4.0,
+    "w": 364,
+    "h": 368
+   }
+  },
+  {
+   "key": "#f9eaf5",
+   "color": "#f9eaf5",
+   "lon": 79.6999,
+   "lat": 43.7589,
+   "bbox": [
+    4083,
+    2280,
+    4479,
+    2497
+   ],
+   "area_px": 42173,
+   "people": 1115097,
+   "land_share": 0.994,
+   "country": "China",
+   "units": [
+    {
+     "name": "Huocheng",
+     "local": "霍城县",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.29,
+     "area_share": 0.306,
+     "cover": 1.0
+    },
+    {
+     "name": "Qapqal Xibe",
+     "local": "察布查尔锡伯自治县",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.172,
+     "area_share": 0.373,
+     "cover": 0.98
+    },
+    {
+     "name": "Yining",
+     "local": "伊宁县",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.077,
+     "area_share": 0.042,
+     "cover": 0.2
+    },
+    {
+     "name": "Yining",
+     "local": "伊宁市",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.066,
+     "area_share": 0.032,
+     "cover": 0.144
+    },
+    {
+     "name": "Huo'erguosi",
+     "local": "霍尔果斯市",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.042,
+     "area_share": 0.154,
+     "cover": 1.0
+    },
+    {
+     "name": "Gongliu",
+     "local": "巩留县",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.032,
+     "area_share": 0.088,
+     "cover": 0.203
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.679,
+     "cover": 0.03
+    },
+    {
+     "level": "prefecture",
+     "name": "Ili Kazak Autonomous Prefecture",
+     "local": "伊犁哈萨克自治州[5]",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.679,
+     "cover": 0.307
+    },
+    {
+     "level": "province",
+     "name": "Almaty Region",
+     "local": null,
+     "province": null,
+     "country": "Kazakhstan",
+     "people_share": 0.201,
+     "cover": 0.133
+    },
+    {
+     "level": "province",
+     "name": "Jetisu Region",
+     "local": null,
+     "province": null,
+     "country": "Kazakhstan",
+     "people_share": 0.118,
+     "cover": 0.214
+    }
+   ],
+   "towns": [
+    {
+     "town": "兰干乡",
+     "county": "霍城县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "清水河镇",
+     "county": "霍城县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "芦草沟镇",
+     "county": "霍城县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "兵团六十六团",
+     "county": "霍城县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "巴彦岱镇",
+     "county": "伊宁市",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.03,
+     "cover": 0.957
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ece5fa",
+     "border_px": 5242
+    },
+    {
+     "key": "#fcf1f8",
+     "border_px": 2631
+    },
+    {
+     "key": "#f6e4f0",
+     "border_px": 2516
+    },
+    {
+     "key": "#f3d4e0",
+     "border_px": 1918
+    },
+    {
+     "key": "#d6e4f4",
+     "border_px": 1676
+    },
+    {
+     "key": "#e4c4fa",
+     "border_px": 833
+    },
+    {
+     "key": "#ffe4ee",
+     "border_px": 97
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 3945,
+    "y0": 2142,
+    "k": 0.7738095238095238,
+    "w": 520,
+    "h": 381
+   }
+  },
+  {
+   "key": "#498eed",
+   "color": "#498eed",
+   "lon": 87.5927,
+   "lat": 43.7565,
+   "bbox": [
+    4899,
+    2428,
+    4908,
+    2439
+   ],
+   "area_px": 104,
+   "people": 1122179,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shayibake",
+     "local": "沙依巴克区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.5,
+     "area_share": 0.51,
+     "cover": 0.546
+    },
+    {
+     "name": "Tianshan",
+     "local": "天山区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.483,
+     "area_share": 0.481,
+     "cover": 0.638
+    },
+    {
+     "name": "Shuimogou",
+     "local": "水磨沟区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.017,
+     "area_share": 0.01,
+     "cover": 0.033
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.044
+    },
+    {
+     "level": "prefecture",
+     "name": "Ürümqi",
+     "local": "乌鲁木齐市",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.294
+    }
+   ],
+   "towns": [
+    {
+     "town": "雅玛里克山街道",
+     "county": "沙依巴克区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.193,
+     "cover": 0.997
+    },
+    {
+     "town": "燕儿窝街道",
+     "county": "天山区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.106,
+     "cover": 0.999
+    },
+    {
+     "town": "炉院街街道",
+     "county": "沙依巴克区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.094,
+     "cover": 0.994
+    },
+    {
+     "town": "赛马场街道",
+     "county": "天山区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "仓房沟片区街道",
+     "county": "沙依巴克区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.064,
+     "cover": 0.988
+    },
+    {
+     "town": "扬子江路街道",
+     "county": "沙依巴克区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "黑甲山街道",
+     "county": "天山区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "东门街道",
+     "county": "天山区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "幸福路街道",
+     "county": "天山区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "八一街道",
+     "county": "沙依巴克区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.034,
+     "cover": 0.667
+    },
+    {
+     "town": "团结路街道",
+     "county": "天山区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "town": "新华南路街道",
+     "county": "天山区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d3ddf4",
+     "border_px": 322
+    },
+    {
+     "key": "#298bf1",
+     "border_px": 113
+    },
+    {
+     "key": "#6bbbf4",
+     "border_px": 81
+    }
+   ],
+   "text_px": 0,
+   "n": 11,
+   "thumb": {
+    "x0": 4859,
+    "y0": 2388,
+    "k": 4.0,
+    "w": 356,
+    "h": 364
+   }
+  },
+  {
+   "key": "#d3ddf4",
+   "color": "#d3ddf4",
+   "lon": 88.4116,
+   "lat": 43.3855,
+   "bbox": [
+    4839,
+    2412,
+    5084,
+    2533
+   ],
+   "area_px": 14468,
+   "people": 502842,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Turfan",
+     "local": "吐鲁番市",
+     "prefecture": "Tulufan",
+     "prefecture_local": "吐鲁番地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.451,
+     "area_share": 0.399,
+     "cover": 0.766
+    },
+    {
+     "name": "Toutunhe",
+     "local": "头屯河区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.142,
+     "area_share": 0.018,
+     "cover": 0.342
+    },
+    {
+     "name": "Ürümqi",
+     "local": "乌鲁木齐县",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.102,
+     "area_share": 0.255,
+     "cover": 0.605
+    },
+    {
+     "name": "Dabancheng",
+     "local": "达坂城区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.09,
+     "area_share": 0.28,
+     "cover": 0.92
+    },
+    {
+     "name": "Tianshan",
+     "local": "天山区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.082,
+     "area_share": 0.006,
+     "cover": 0.048
+    },
+    {
+     "name": "Shuimogou",
+     "local": "水磨沟区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.075,
+     "area_share": 0.011,
+     "cover": 0.065
+    },
+    {
+     "name": "Shayibake",
+     "local": "沙依巴克区",
+     "prefecture": "Ürümqi",
+     "prefecture_local": "乌鲁木齐市",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.049,
+     "area_share": 0.019,
+     "cover": 0.024
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.02
+    },
+    {
+     "level": "prefecture",
+     "name": "Ürümqi",
+     "local": "乌鲁木齐市",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.548,
+     "cover": 0.072
+    },
+    {
+     "level": "prefecture",
+     "name": "Turpan",
+     "local": "吐鲁番市",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.452,
+     "cover": 0.333
+    }
+   ],
+   "towns": [
+    {
+     "town": "亚尔乡",
+     "county": "吐鲁番市",
+     "city": "吐鲁番地区",
+     "people_share": 0.199,
+     "cover": 0.995
+    },
+    {
+     "town": "红雁街道",
+     "county": "天山区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.081,
+     "cover": 0.372
+    },
+    {
+     "town": "胜金乡",
+     "county": "吐鲁番市",
+     "city": "吐鲁番地区",
+     "people_share": 0.073,
+     "cover": 0.998
+    },
+    {
+     "town": "葡萄乡",
+     "county": "吐鲁番市",
+     "city": "吐鲁番地区",
+     "people_share": 0.072,
+     "cover": 0.989
+    },
+    {
+     "town": "兵团十二师三坪农场",
+     "county": "头屯河区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.071,
+     "cover": 0.438
+    },
+    {
+     "town": "水磨沟区农村事务管理办公室",
+     "county": "水磨沟区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.048,
+     "cover": 0.997
+    },
+    {
+     "town": "柴窝堡管委会",
+     "county": "达坂城区",
+     "city": "乌鲁木齐市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "水西沟镇",
+     "county": "乌鲁木齐县",
+     "city": "乌鲁木齐市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Turpan",
+     "admin": "Xinjiang",
+     "pop": 622903
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e4e4f6",
+     "border_px": 3702
+    },
+    {
+     "key": "#d1e4f1",
+     "border_px": 2832
+    },
+    {
+     "key": "#cbe6f9",
+     "border_px": 1447
+    },
+    {
+     "key": "#e5f0f9",
+     "border_px": 926
+    },
+    {
+     "key": "#498eed",
+     "border_px": 322
+    },
+    {
+     "key": "#6bbbf4",
+     "border_px": 212
+    },
+    {
+     "key": "#298bf1",
+     "border_px": 109
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 4754,
+    "y0": 2327,
+    "k": 1.0,
+    "w": 415,
+    "h": 291
+   }
+  },
+  {
+   "key": "#ece5fa",
+   "color": "#ece5fa",
+   "lon": 81.9862,
+   "lat": 43.226,
+   "bbox": [
+    4247,
+    2329,
+    4695,
+    2553
+   ],
+   "area_px": 45440,
+   "people": 1124354,
+   "land_share": 0.999,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xinyuan",
+     "local": "新源县",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.276,
+     "area_share": 0.173,
+     "cover": 1.0
+    },
+    {
+     "name": "Nilka",
+     "local": "尼勒克县",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.146,
+     "area_share": 0.248,
+     "cover": 0.994
+    },
+    {
+     "name": "Zhaosu",
+     "local": "昭苏县",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.141,
+     "area_share": 0.243,
+     "cover": 1.0
+    },
+    {
+     "name": "Tekes",
+     "local": "特克斯县",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.135,
+     "area_share": 0.189,
+     "cover": 1.0
+    },
+    {
+     "name": "Yining",
+     "local": "伊宁县",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.131,
+     "area_share": 0.068,
+     "cover": 0.344
+    },
+    {
+     "name": "Gongliu",
+     "local": "巩留县",
+     "prefecture": "Yilihasake",
+     "prefecture_local": "伊犁哈萨克自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.124,
+     "area_share": 0.072,
+     "cover": 0.797
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.958,
+     "cover": 0.043
+    },
+    {
+     "level": "prefecture",
+     "name": "Ili Kazak Autonomous Prefecture",
+     "local": "伊犁哈萨克自治州[5]",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.956,
+     "cover": 0.436
+    }
+   ],
+   "towns": [
+    {
+     "town": "乔拉克铁热克镇",
+     "county": "特克斯县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "喀拉亚尕奇乡",
+     "county": "伊宁县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.039,
+     "cover": 0.962
+    },
+    {
+     "town": "塔斯托别乡",
+     "county": "巩留县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.039,
+     "cover": 0.972
+    },
+    {
+     "town": "齐勒乌泽克乡",
+     "county": "特克斯县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "那拉提镇",
+     "county": "新源县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "克令乡",
+     "county": "尼勒克县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.032,
+     "cover": 0.971
+    },
+    {
+     "town": "阿勒玛勒乡",
+     "county": "新源县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "塔勒德镇",
+     "county": "新源县",
+     "city": "伊犁哈萨克自治州",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e4e4f6",
+     "border_px": 6327
+    },
+    {
+     "key": "#f9eaf5",
+     "border_px": 5242
+    },
+    {
+     "key": "#d6e4f4",
+     "border_px": 3771
+    },
+    {
+     "key": "#f6e4f0",
+     "border_px": 1289
+    },
+    {
+     "key": "#e4c4fa",
+     "border_px": 853
+    },
+    {
+     "key": "#cfe3f6",
+     "border_px": 586
+    },
+    {
+     "key": "#e6ccf9",
+     "border_px": 574
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 4091,
+    "y0": 2173,
+    "k": 0.6842105263157895,
+    "w": 520,
+    "h": 366
+   }
+  },
+  {
+   "key": "#e5f0f9",
+   "color": "#e5f0f9",
+   "lon": 92.7128,
+   "lat": 42.9476,
+   "bbox": [
+    5039,
+    2301,
+    5586,
+    2752
+   ],
+   "area_px": 172461,
+   "people": 978142,
+   "land_share": 0.998,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hami",
+     "local": "哈密市",
+     "prefecture": "Hami",
+     "prefecture_local": "哈密地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.557,
+     "area_share": 0.425,
+     "cover": 0.999
+    },
+    {
+     "name": "Shanshan",
+     "local": "鄯善县",
+     "prefecture": "Tulufan",
+     "prefecture_local": "吐鲁番地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.262,
+     "area_share": 0.208,
+     "cover": 0.997
+    },
+    {
+     "name": "Balikunhasake",
+     "local": "巴里坤哈萨克自治县",
+     "prefecture": "Hami",
+     "prefecture_local": "哈密地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.084,
+     "area_share": 0.192,
+     "cover": 1.0
+    },
+    {
+     "name": "Mori",
+     "local": "木垒哈萨克自治县",
+     "prefecture": "Changjihuizu",
+     "prefecture_local": "昌吉回族自治州",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.07,
+     "area_share": 0.071,
+     "cover": 0.991
+    },
+    {
+     "name": "Yiwu",
+     "local": "伊吾县",
+     "prefecture": "Hami",
+     "prefecture_local": "哈密地区",
+     "province": "新疆维吾尔自治区",
+     "country": "China",
+     "people_share": 0.027,
+     "area_share": 0.102,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Xinjiang Uygur",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.039
+    },
+    {
+     "level": "prefecture",
+     "name": "Hami",
+     "local": "哈密市",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.667,
+     "cover": 1.0
+    },
+    {
+     "level": "prefecture",
+     "name": "Turpan",
+     "local": "吐鲁番市",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.262,
+     "cover": 0.375
+    },
+    {
+     "level": "prefecture",
+     "name": "Changji Hui Autonomous Prefecture",
+     "local": "昌吉回族自治州",
+     "province": "Xinjiang Uygur",
+     "country": "China",
+     "people_share": 0.07,
+     "cover": 0.026
+    }
+   ],
+   "towns": [
+    {
+     "town": "兵团火箭农场",
+     "county": "哈密市",
+     "city": "哈密地区",
+     "people_share": 0.072,
+     "cover": 1.0
+    },
+    {
+     "town": "陶家宫镇",
+     "county": "哈密市",
+     "city": "哈密地区",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "鄯善镇",
+     "county": "鄯善县",
+     "city": "吐鲁番地区",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "新市区街道",
+     "county": "哈密市",
+     "city": "哈密地区",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "辟展乡",
+     "county": "鄯善县",
+     "city": "吐鲁番地区",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "东河区街道",
+     "county": "哈密市",
+     "city": "哈密地区",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "连木沁镇",
+     "county": "鄯善县",
+     "city": "吐鲁番地区",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "回城乡",
+     "county": "哈密市",
+     "city": "哈密地区",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "吐峪沟乡",
+     "county": "鄯善县",
+     "city": "吐鲁番地区",
+     "people_share": 0.033,
+     "cover": 0.977
+    }
+   ],
+   "cities": [
+    {
+     "name": "Kumul",
+     "admin": "Xinjiang",
+     "pop": 673383
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f3f4ed",
+     "border_px": 7116
+    },
+    {
+     "key": "#f1ecf7",
+     "border_px": 4615
+    },
+    {
+     "key": "#d1e4f1",
+     "border_px": 3073
+    },
+    {
+     "key": "#e9f4f6",
+     "border_px": 2453,
+     "name": "Dunhuang"
+    },
+    {
+     "key": "#e4e4f6",
+     "border_px": 2228
+    },
+    {
+     "key": "#f6f5ea",
+     "border_px": 1959
+    },
+    {
+     "key": "#d3ddf4",
+     "border_px": 926
+    }
+   ],
+   "text_px": 0,
+   "n": 14,
+   "thumb": {
+    "x0": 4848,
+    "y0": 2110,
+    "k": 0.5597416576964478,
+    "w": 520,
+    "h": 466
+   }
+  }
+ ]
+}

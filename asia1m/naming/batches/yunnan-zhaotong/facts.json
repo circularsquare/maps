@@ -1,0 +1,1086 @@
+{
+ "name": "yunnan-zhaotong",
+ "province": "Yunnan",
+ "prefectures": [
+  "Zhaotong"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 5987,
+   "y": 3862,
+   "w": 613,
+   "h": 611,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#ebe1bf",
+   "color": "#ebe1bf",
+   "lon": 104.0909,
+   "lat": 28.1478,
+   "bbox": [
+    6255,
+    4062,
+    6321,
+    4179
+   ],
+   "area_px": 5957,
+   "people": 1159046,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yanjin",
+     "local": "盐津县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.33,
+     "area_share": 0.306,
+     "cover": 0.995
+    },
+    {
+     "name": "Daguan",
+     "local": "大关县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.227,
+     "area_share": 0.258,
+     "cover": 0.971
+    },
+    {
+     "name": "Suijiang",
+     "local": "绥江县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.126,
+     "area_share": 0.11,
+     "cover": 0.958
+    },
+    {
+     "name": "Yibin",
+     "local": "宜宾县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.092,
+     "area_share": 0.069,
+     "cover": 0.146
+    },
+    {
+     "name": "Shuifu",
+     "local": "水富县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.09,
+     "area_share": 0.066,
+     "cover": 0.99
+    },
+    {
+     "name": "Yiliang",
+     "local": "彝良县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.076,
+     "area_share": 0.095,
+     "cover": 0.163
+    },
+    {
+     "name": "Yongshan",
+     "local": "永善县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.046,
+     "area_share": 0.083,
+     "cover": 0.152
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Yunnan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.887,
+     "cover": 0.021
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhaotong",
+     "local": "昭通市",
+     "province": "Yunnan",
+     "country": "China",
+     "people_share": 0.887,
+     "cover": 0.195
+    },
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.113,
+     "cover": 0.002
+    },
+    {
+     "level": "prefecture",
+     "name": "Yibin",
+     "local": "宜宾市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.113,
+     "cover": 0.032
+    }
+   ],
+   "towns": [
+    {
+     "town": "天星镇",
+     "county": "大关县",
+     "city": "昭通市",
+     "people_share": 0.064,
+     "cover": 1.0
+    },
+    {
+     "town": "盐井镇",
+     "county": "盐津县",
+     "city": "昭通市",
+     "people_share": 0.064,
+     "cover": 0.999
+    },
+    {
+     "town": "中城镇",
+     "county": "绥江县",
+     "city": "昭通市",
+     "people_share": 0.062,
+     "cover": 0.976
+    },
+    {
+     "town": "云富街道",
+     "county": "水富县",
+     "city": "昭通市",
+     "people_share": 0.059,
+     "cover": 0.985
+    },
+    {
+     "town": "普洱镇",
+     "county": "盐津县",
+     "city": "昭通市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "庙坝镇",
+     "county": "盐津县",
+     "city": "昭通市",
+     "people_share": 0.04,
+     "cover": 0.976
+    },
+    {
+     "town": "翠华镇",
+     "county": "大关县",
+     "city": "昭通市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "双龙镇",
+     "county": "宜宾县",
+     "city": "宜宾市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "兴隆乡",
+     "county": "盐津县",
+     "city": "昭通市",
+     "people_share": 0.031,
+     "cover": 0.987
+    },
+    {
+     "town": "小草坝镇",
+     "county": "彝良县",
+     "city": "昭通市",
+     "people_share": 0.031,
+     "cover": 0.991
+    },
+    {
+     "town": "牛寨乡",
+     "county": "盐津县",
+     "city": "昭通市",
+     "people_share": 0.03,
+     "cover": 0.998
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yunfu",
+     "admin": "Yunnan",
+     "pop": 103532
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eedab0",
+     "border_px": 1296
+    },
+    {
+     "key": "#f0e3b9",
+     "border_px": 1036
+    },
+    {
+     "key": "#f0cfac",
+     "border_px": 965
+    },
+    {
+     "key": "#f1eabe",
+     "border_px": 949
+    },
+    {
+     "key": "#e7ddc7",
+     "border_px": 500
+    },
+    {
+     "key": "#ebe3a1",
+     "border_px": 248
+    },
+    {
+     "key": "#f0bb74",
+     "border_px": 178
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 6215,
+    "y0": 4022,
+    "k": 2.0,
+    "w": 292,
+    "h": 394
+   }
+  },
+  {
+   "key": "#f1eabe",
+   "color": "#f1eabe",
+   "lon": 104.5736,
+   "lat": 27.6879,
+   "bbox": [
+    6273,
+    4120,
+    6397,
+    4213
+   ],
+   "area_px": 4442,
+   "people": 1148295,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yiliang",
+     "local": "彝良县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.389,
+     "area_share": 0.437,
+     "cover": 0.83
+    },
+    {
+     "name": "Weixin",
+     "local": "威信县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.349,
+     "area_share": 0.278,
+     "cover": 0.988
+    },
+    {
+     "name": "Zhenxiong",
+     "local": "镇雄县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.253,
+     "area_share": 0.275,
+     "cover": 0.22
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Yunnan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.024
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhaotong",
+     "local": "昭通市",
+     "province": "Yunnan",
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.217
+    }
+   ],
+   "towns": [
+    {
+     "town": "扎西镇",
+     "county": "威信县",
+     "city": "昭通市",
+     "people_share": 0.134,
+     "cover": 1.0
+    },
+    {
+     "town": "角奎镇",
+     "county": "彝良县",
+     "city": "昭通市",
+     "people_share": 0.101,
+     "cover": 0.995
+    },
+    {
+     "town": "罗坎镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.062,
+     "cover": 0.998
+    },
+    {
+     "town": "洛泽河镇",
+     "county": "彝良县",
+     "city": "昭通市",
+     "people_share": 0.05,
+     "cover": 0.989
+    },
+    {
+     "town": "罗布镇",
+     "county": "威信县",
+     "city": "昭通市",
+     "people_share": 0.047,
+     "cover": 0.988
+    },
+    {
+     "town": "奎香苗族彝族乡",
+     "county": "彝良县",
+     "city": "昭通市",
+     "people_share": 0.04,
+     "cover": 0.994
+    },
+    {
+     "town": "龙街苗族彝族乡",
+     "county": "彝良县",
+     "city": "昭通市",
+     "people_share": 0.036,
+     "cover": 0.981
+    },
+    {
+     "town": "牛场镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.035,
+     "cover": 0.974
+    },
+    {
+     "town": "牛街镇",
+     "county": "彝良县",
+     "city": "昭通市",
+     "people_share": 0.034,
+     "cover": 0.94
+    },
+    {
+     "town": "盐源镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.032,
+     "cover": 0.998
+    }
+   ],
+   "cities": [
+    {
+     "name": "Zhaxi",
+     "admin": "Yunnan",
+     "pop": 144259
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#edf3c0",
+     "border_px": 1192
+    },
+    {
+     "key": "#ebe1bf",
+     "border_px": 949
+    },
+    {
+     "key": "#eedab0",
+     "border_px": 882
+    },
+    {
+     "key": "#eee5c2",
+     "border_px": 850
+    },
+    {
+     "key": "#e8f3c0",
+     "border_px": 554
+    },
+    {
+     "key": "#f0f1be",
+     "border_px": 460
+    },
+    {
+     "key": "#ebe3a1",
+     "border_px": 355
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 6230,
+    "y0": 4077,
+    "k": 2.0,
+    "w": 420,
+    "h": 358
+   }
+  },
+  {
+   "key": "#edf3c0",
+   "color": "#edf3c0",
+   "lon": 104.9343,
+   "lat": 27.5296,
+   "bbox": [
+    6331,
+    4157,
+    6400,
+    4207
+   ],
+   "area_px": 2096,
+   "people": 998168,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Zhenxiong",
+     "local": "镇雄县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.991,
+     "area_share": 0.984,
+     "cover": 0.748
+    },
+    {
+     "name": "Qixingguan",
+     "local": "七星关区",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.006,
+     "area_share": 0.01,
+     "cover": 0.005
+    },
+    {
+     "name": "Hezhang",
+     "local": "赫章县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.001,
+     "area_share": 0.005,
+     "cover": 0.002
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Yunnan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.021
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhaotong",
+     "local": "昭通市",
+     "province": "Yunnan",
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.189
+    }
+   ],
+   "towns": [
+    {
+     "town": "乌峰镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.164,
+     "cover": 1.0
+    },
+    {
+     "town": "母享镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.081,
+     "cover": 1.0
+    },
+    {
+     "town": "泼机镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.081,
+     "cover": 0.974
+    },
+    {
+     "town": "赤水源镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.081,
+     "cover": 1.0
+    },
+    {
+     "town": "场坝镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.064,
+     "cover": 0.998
+    },
+    {
+     "town": "塘房镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "以勒镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.061,
+     "cover": 0.993
+    },
+    {
+     "town": "芒部镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.057,
+     "cover": 0.946
+    },
+    {
+     "town": "坡头镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "五德镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.048,
+     "cover": 0.994
+    },
+    {
+     "town": "坪上镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.034,
+     "cover": 0.914
+    },
+    {
+     "town": "大湾镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.034,
+     "cover": 0.88
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f1eabe",
+     "border_px": 1192
+    },
+    {
+     "key": "#e8f3c0",
+     "border_px": 986
+    },
+    {
+     "key": "#dbf0ac",
+     "border_px": 506
+    },
+    {
+     "key": "#eee5c2",
+     "border_px": 70
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 6291,
+    "y0": 4117,
+    "k": 2.0,
+    "w": 298,
+    "h": 260
+   }
+  },
+  {
+   "key": "#f0e3b9",
+   "color": "#f0e3b9",
+   "lon": 103.3936,
+   "lat": 27.4045,
+   "bbox": [
+    6187,
+    4110,
+    6267,
+    4273
+   ],
+   "area_px": 5935,
+   "people": 1109850,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Ludian",
+     "local": "鲁甸县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.359,
+     "area_share": 0.226,
+     "cover": 0.991
+    },
+    {
+     "name": "Qiaojia",
+     "local": "巧家县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.262,
+     "area_share": 0.288,
+     "cover": 0.602
+    },
+    {
+     "name": "Yongshan",
+     "local": "永善县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.259,
+     "area_share": 0.332,
+     "cover": 0.814
+    },
+    {
+     "name": "Zhaoyang",
+     "local": "昭阳区",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.05,
+     "area_share": 0.075,
+     "cover": 0.066
+    },
+    {
+     "name": "Huize",
+     "local": "会泽县",
+     "prefecture": "Qujing",
+     "prefecture_local": "曲靖市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.045,
+     "area_share": 0.068,
+     "cover": 0.054
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Yunnan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.983,
+     "cover": 0.023
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhaotong",
+     "local": "昭通市",
+     "province": "Yunnan",
+     "country": "China",
+     "people_share": 0.937,
+     "cover": 0.198
+    }
+   ],
+   "towns": [
+    {
+     "town": "溪洛渡镇",
+     "county": "永善县",
+     "city": "昭通市",
+     "people_share": 0.071,
+     "cover": 0.933
+    },
+    {
+     "town": "老店镇",
+     "county": "巧家县",
+     "city": "昭通市",
+     "people_share": 0.06,
+     "cover": 0.981
+    },
+    {
+     "town": "文屏镇",
+     "county": "鲁甸县",
+     "city": "昭通市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "水磨镇",
+     "county": "鲁甸县",
+     "city": "昭通市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "龙头山镇",
+     "county": "鲁甸县",
+     "city": "昭通市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "黄华镇",
+     "county": "永善县",
+     "city": "昭通市",
+     "people_share": 0.036,
+     "cover": 0.974
+    },
+    {
+     "town": "药山镇",
+     "county": "巧家县",
+     "city": "昭通市",
+     "people_share": 0.035,
+     "cover": 0.996
+    },
+    {
+     "town": "小河镇",
+     "county": "巧家县",
+     "city": "昭通市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "桃源回族乡",
+     "county": "鲁甸县",
+     "city": "昭通市",
+     "people_share": 0.033,
+     "cover": 0.962
+    },
+    {
+     "town": "大寨镇",
+     "county": "巧家县",
+     "city": "昭通市",
+     "people_share": 0.032,
+     "cover": 0.992
+    },
+    {
+     "town": "乐红镇",
+     "county": "鲁甸县",
+     "city": "昭通市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "莲峰镇",
+     "county": "永善县",
+     "city": "昭通市",
+     "people_share": 0.031,
+     "cover": 0.985
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e7e5c7",
+     "border_px": 1694
+    },
+    {
+     "key": "#ebe3a1",
+     "border_px": 1555
+    },
+    {
+     "key": "#f5edb4",
+     "border_px": 1387
+    },
+    {
+     "key": "#ebe1bf",
+     "border_px": 1036
+    },
+    {
+     "key": "#e7ddc7",
+     "border_px": 621
+    },
+    {
+     "key": "#e6d7c0",
+     "border_px": 262
+    },
+    {
+     "key": "#f0f1be",
+     "border_px": 81
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 6130,
+    "y0": 4053,
+    "k": 1.0,
+    "w": 194,
+    "h": 277
+   }
+  },
+  {
+   "key": "#ebe3a1",
+   "color": "#ebe3a1",
+   "lon": 103.7165,
+   "lat": 27.3581,
+   "bbox": [
+    6237,
+    4177,
+    6283,
+    4251
+   ],
+   "area_px": 2028,
+   "people": 905082,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Zhaoyang",
+     "local": "昭阳区",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.868,
+     "area_share": 0.748,
+     "cover": 0.933
+    },
+    {
+     "name": "Weining Yi, Hui and Miao",
+     "local": "威宁彝族回族苗族自治县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.126,
+     "area_share": 0.237,
+     "cover": 0.094
+    },
+    {
+     "name": "Ludian",
+     "local": "鲁甸县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.004,
+     "area_share": 0.006,
+     "cover": 0.009
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Yunnan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.873,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhaotong",
+     "local": "昭通市",
+     "province": "Yunnan",
+     "country": "China",
+     "people_share": 0.873,
+     "cover": 0.15
+    },
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.127,
+     "cover": 0.003
+    },
+    {
+     "level": "prefecture",
+     "name": "Bijie",
+     "local": "毕节市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.127,
+     "cover": 0.018
+    }
+   ],
+   "towns": [
+    {
+     "town": "凤凰街道",
+     "county": "昭阳区",
+     "city": "昭通市",
+     "people_share": 0.136,
+     "cover": 1.0
+    },
+    {
+     "town": "旧圃镇",
+     "county": "昭阳区",
+     "city": "昭通市",
+     "people_share": 0.112,
+     "cover": 1.0
+    },
+    {
+     "town": "太平街道",
+     "county": "昭阳区",
+     "city": "昭通市",
+     "people_share": 0.1,
+     "cover": 1.0
+    },
+    {
+     "town": "永丰镇",
+     "county": "昭阳区",
+     "city": "昭通市",
+     "people_share": 0.061,
+     "cover": 0.982
+    },
+    {
+     "town": "守望回族乡",
+     "county": "昭阳区",
+     "city": "昭通市",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "龙泉街道",
+     "county": "昭阳区",
+     "city": "昭通市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "洒渔镇",
+     "county": "昭阳区",
+     "city": "昭通市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "牛棚镇",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.046,
+     "cover": 0.962
+    },
+    {
+     "town": "北闸镇",
+     "county": "昭阳区",
+     "city": "昭通市",
+     "people_share": 0.043,
+     "cover": 0.997
+    },
+    {
+     "town": "中水镇",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.043,
+     "cover": 0.999
+    },
+    {
+     "town": "靖安镇",
+     "county": "昭阳区",
+     "city": "昭通市",
+     "people_share": 0.043,
+     "cover": 0.982
+    },
+    {
+     "town": "小龙洞回族彝族乡",
+     "county": "昭阳区",
+     "city": "昭通市",
+     "people_share": 0.036,
+     "cover": 0.999
+    }
+   ],
+   "cities": [
+    {
+     "name": "Zhaotong",
+     "admin": "Yunnan",
+     "pop": 5092611
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f0e3b9",
+     "border_px": 1555
+    },
+    {
+     "key": "#f0f1be",
+     "border_px": 810
+    },
+    {
+     "key": "#f1eabe",
+     "border_px": 355
+    },
+    {
+     "key": "#ebe1bf",
+     "border_px": 248
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 6197,
+    "y0": 4137,
+    "k": 2.0,
+    "w": 252,
+    "h": 308
+   }
+  }
+ ]
+}

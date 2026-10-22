@@ -1,0 +1,3247 @@
+{
+ "name": "guizhou-north",
+ "province": "Guizhou",
+ "prefectures": [
+  "Zunyi",
+  "Bijie",
+  "Tongren"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 6064,
+   "y": 3704,
+   "w": 800,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#d5e5cf",
+   "color": "#d5e5cf",
+   "lon": 107.9638,
+   "lat": 29.0174,
+   "bbox": [
+    6573,
+    3904,
+    6675,
+    4080
+   ],
+   "area_px": 7905,
+   "people": 935185,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Pengshuimiaozutujiazu",
+     "local": "彭水苗族土家族自治县",
+     "prefecture": "Chongqing",
+     "prefecture_local": "重庆市",
+     "province": "重庆市",
+     "country": "China",
+     "people_share": 0.424,
+     "area_share": 0.367,
+     "cover": 0.803
+    },
+    {
+     "name": "Wuchuangelaozumiaozu",
+     "local": "务川仡佬族苗族自治县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.301,
+     "area_share": 0.314,
+     "cover": 0.981
+    },
+    {
+     "name": "Daozhengelaozumiaozu",
+     "local": "道真仡佬族苗族自治县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.231,
+     "area_share": 0.241,
+     "cover": 0.985
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.553,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Zunyi",
+     "local": "遵义市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.538,
+     "cover": 0.083
+    },
+    {
+     "level": "province",
+     "name": "Chongqing",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.446,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Chongqing Municipality",
+     "local": "重庆市",
+     "province": "Chongqing",
+     "country": "China",
+     "people_share": 0.446,
+     "cover": 0.013
+    }
+   ],
+   "towns": [
+    {
+     "town": "玉溪镇",
+     "county": "道真仡佬族苗族自治县",
+     "city": "遵义市",
+     "people_share": 0.083,
+     "cover": 1.0
+    },
+    {
+     "town": "都濡镇",
+     "county": "务川仡佬族苗族自治县",
+     "city": "遵义市",
+     "people_share": 0.083,
+     "cover": 1.0
+    },
+    {
+     "town": "汉葭街道",
+     "county": "彭水苗族土家族自治县",
+     "city": "重庆市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "靛水街道",
+     "county": "彭水苗族土家族自治县",
+     "city": "重庆市",
+     "people_share": 0.052,
+     "cover": 0.999
+    },
+    {
+     "town": "保家镇",
+     "county": "彭水苗族土家族自治县",
+     "city": "重庆市",
+     "people_share": 0.042,
+     "cover": 0.989
+    },
+    {
+     "town": "绍庆街道",
+     "county": "彭水苗族土家族自治县",
+     "city": "重庆市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ebddb5",
+     "border_px": 1887,
+     "name": "Fengdu"
+    },
+    {
+     "key": "#eeecb6",
+     "border_px": 1724
+    },
+    {
+     "key": "#c8e8cb",
+     "border_px": 1391,
+     "name": "Wuling"
+    },
+    {
+     "key": "#c7e0ce",
+     "border_px": 1018
+    },
+    {
+     "key": "#c4e4c7",
+     "border_px": 829,
+     "name": "Xiushan"
+    },
+    {
+     "key": "#c8e5c5",
+     "border_px": 235,
+     "name": "Shizhu"
+    },
+    {
+     "key": "#f7dfb2",
+     "border_px": 218,
+     "name": "Jinfo"
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 6512,
+    "y0": 3843,
+    "k": 1.0,
+    "w": 224,
+    "h": 298
+   }
+  },
+  {
+   "key": "#eeecb6",
+   "color": "#eeecb6",
+   "lon": 107.2633,
+   "lat": 28.414,
+   "bbox": [
+    6520,
+    3998,
+    6620,
+    4134
+   ],
+   "area_px": 7298,
+   "people": 1011994,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Zheng'an",
+     "local": "正安县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.359,
+     "area_share": 0.318,
+     "cover": 0.995
+    },
+    {
+     "name": "Suiyang",
+     "local": "绥阳县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.343,
+     "area_share": 0.313,
+     "cover": 0.99
+    },
+    {
+     "name": "Tongzi",
+     "local": "桐梓县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.141,
+     "area_share": 0.202,
+     "cover": 0.305
+    },
+    {
+     "name": "Fenggang",
+     "local": "凤冈县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.078,
+     "area_share": 0.07,
+     "cover": 0.273
+    },
+    {
+     "name": "Nanchuan",
+     "local": "南川区",
+     "prefecture": "Chongqing",
+     "prefecture_local": "重庆市",
+     "province": "重庆市",
+     "country": "China",
+     "people_share": 0.054,
+     "area_share": 0.069,
+     "cover": 0.071
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.947,
+     "cover": 0.028
+    },
+    {
+     "level": "prefecture",
+     "name": "Zunyi",
+     "local": "遵义市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.947,
+     "cover": 0.159
+    },
+    {
+     "level": "province",
+     "name": "Chongqing",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.053,
+     "cover": 0.002
+    },
+    {
+     "level": "prefecture",
+     "name": "Chongqing Municipality",
+     "local": "重庆市",
+     "province": "Chongqing",
+     "country": "China",
+     "people_share": 0.053,
+     "cover": 0.002
+    }
+   ],
+   "towns": [
+    {
+     "town": "洋川镇",
+     "county": "绥阳县",
+     "city": "遵义市",
+     "people_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "town": "风华镇",
+     "county": "绥阳县",
+     "city": "遵义市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "安场镇",
+     "county": "正安县",
+     "city": "遵义市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "凤仪镇",
+     "county": "正安县",
+     "city": "遵义市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "旺草镇",
+     "county": "绥阳县",
+     "city": "遵义市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "郑场镇",
+     "county": "绥阳县",
+     "city": "遵义市",
+     "people_share": 0.035,
+     "cover": 0.983
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d5e5cf",
+     "border_px": 1724
+    },
+    {
+     "key": "#f1e8ac",
+     "border_px": 1205
+    },
+    {
+     "key": "#d7eec7",
+     "border_px": 643
+    },
+    {
+     "key": "#f7d79b",
+     "border_px": 622,
+     "name": "Qijiang"
+    },
+    {
+     "key": "#f7dfb2",
+     "border_px": 561,
+     "name": "Jinfo"
+    },
+    {
+     "key": "#ddebb9",
+     "border_px": 337
+    },
+    {
+     "key": "#d6ebba",
+     "border_px": 331
+    },
+    {
+     "key": "#c7e0ce",
+     "border_px": 274
+    },
+    {
+     "key": "#c7e0d7",
+     "border_px": 141
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 6473,
+    "y0": 3951,
+    "k": 1.0,
+    "w": 194,
+    "h": 230
+   }
+  },
+  {
+   "key": "#f1e8ac",
+   "color": "#f1e8ac",
+   "lon": 106.5607,
+   "lat": 28.3504,
+   "bbox": [
+    6464,
+    4031,
+    6545,
+    4123
+   ],
+   "area_px": 4211,
+   "people": 802472,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xishui",
+     "local": "习水县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.43,
+     "area_share": 0.504,
+     "cover": 0.712
+    },
+    {
+     "name": "Tongzi",
+     "local": "桐梓县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.401,
+     "area_share": 0.33,
+     "cover": 0.687
+    },
+    {
+     "name": "Qijiang",
+     "local": "綦江区",
+     "prefecture": "Chongqing",
+     "prefecture_local": "重庆市",
+     "province": "重庆市",
+     "country": "China",
+     "people_share": 0.133,
+     "area_share": 0.075,
+     "cover": 0.111
+    },
+    {
+     "name": "Jiangjin",
+     "local": "江津区",
+     "prefecture": "Chongqing",
+     "prefecture_local": "重庆市",
+     "province": "重庆市",
+     "country": "China",
+     "people_share": 0.029,
+     "area_share": 0.071,
+     "cover": 0.013
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.84,
+     "cover": 0.019
+    },
+    {
+     "level": "prefecture",
+     "name": "Zunyi",
+     "local": "遵义市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.84,
+     "cover": 0.112
+    },
+    {
+     "level": "province",
+     "name": "Chongqing",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.16,
+     "cover": 0.004
+    },
+    {
+     "level": "prefecture",
+     "name": "Chongqing Municipality",
+     "local": "重庆市",
+     "province": "Chongqing",
+     "country": "China",
+     "people_share": 0.16,
+     "cover": 0.004
+    }
+   ],
+   "towns": [
+    {
+     "town": "娄山关镇",
+     "county": "桐梓县",
+     "city": "遵义市",
+     "people_share": 0.17,
+     "cover": 0.999
+    },
+    {
+     "town": "东皇镇",
+     "county": "习水县",
+     "city": "遵义市",
+     "people_share": 0.123,
+     "cover": 0.968
+    },
+    {
+     "town": "打通镇",
+     "county": "綦江区",
+     "city": "重庆市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "温水镇",
+     "county": "习水县",
+     "city": "遵义市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "石壕镇",
+     "county": "綦江区",
+     "city": "重庆市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "花秋镇",
+     "county": "桐梓县",
+     "city": "遵义市",
+     "people_share": 0.042,
+     "cover": 0.996
+    },
+    {
+     "town": "安稳镇",
+     "county": "綦江区",
+     "city": "重庆市",
+     "people_share": 0.033,
+     "cover": 0.978
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eeecb6",
+     "border_px": 1205
+    },
+    {
+     "key": "#ddebb9",
+     "border_px": 1176
+    },
+    {
+     "key": "#f0e7b4",
+     "border_px": 834
+    },
+    {
+     "key": "#eed5a7",
+     "border_px": 660,
+     "name": "Simian"
+    },
+    {
+     "key": "#f7d79b",
+     "border_px": 589,
+     "name": "Qijiang"
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 6424,
+    "y0": 3991,
+    "k": 2.0,
+    "w": 322,
+    "h": 344
+   }
+  },
+  {
+   "key": "#c7e0ce",
+   "color": "#c7e0ce",
+   "lon": 108.2965,
+   "lat": 28.2681,
+   "bbox": [
+    6618,
+    4023,
+    6704,
+    4131
+   ],
+   "area_px": 4818,
+   "people": 905766,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Dejiang",
+     "local": "德江县",
+     "prefecture": "Tongren",
+     "prefecture_local": "铜仁市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.372,
+     "area_share": 0.379,
+     "cover": 0.984
+    },
+    {
+     "name": "Yanhe Tujia",
+     "local": "沿河土家族自治县",
+     "prefecture": "Tongren",
+     "prefecture_local": "铜仁市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.353,
+     "area_share": 0.303,
+     "cover": 0.773
+    },
+    {
+     "name": "Yinjiangtujiazumiaozu",
+     "local": "印江土家族苗族自治县",
+     "prefecture": "Tongren",
+     "prefecture_local": "铜仁市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.263,
+     "area_share": 0.295,
+     "cover": 0.87
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.026
+    },
+    {
+     "level": "prefecture",
+     "name": "Tongren",
+     "local": "铜仁市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.307
+    }
+   ],
+   "towns": [
+    {
+     "town": "峨岭镇",
+     "county": "印江土家族苗族自治县",
+     "city": "铜仁市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "玉水街道",
+     "county": "德江县",
+     "city": "铜仁市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "和平镇",
+     "county": "沿河土家族自治县",
+     "city": "铜仁市",
+     "people_share": 0.044,
+     "cover": 0.955
+    },
+    {
+     "town": "官舟镇",
+     "county": "沿河土家族自治县",
+     "city": "铜仁市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "煎茶镇",
+     "county": "德江县",
+     "city": "铜仁市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "甘溪乡",
+     "county": "沿河土家族自治县",
+     "city": "铜仁市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "谯家镇",
+     "county": "沿河土家族自治县",
+     "city": "铜仁市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#c7e0d7",
+     "border_px": 1478
+    },
+    {
+     "key": "#c4e4c7",
+     "border_px": 1059,
+     "name": "Xiushan"
+    },
+    {
+     "key": "#d5e5cf",
+     "border_px": 1018
+    },
+    {
+     "key": "#c9e8de",
+     "border_px": 1005
+    },
+    {
+     "key": "#eeecb6",
+     "border_px": 274
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 6578,
+    "y0": 3983,
+    "k": 2.0,
+    "w": 332,
+    "h": 376
+   }
+  },
+  {
+   "key": "#ddebb9",
+   "color": "#ddebb9",
+   "lon": 106.5341,
+   "lat": 27.8081,
+   "bbox": [
+    6463,
+    4104,
+    6551,
+    4178
+   ],
+   "area_px": 3579,
+   "people": 924400,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Renhuai",
+     "local": "仁怀市",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.548,
+     "area_share": 0.442,
+     "cover": 0.973
+    },
+    {
+     "name": "Zunyi",
+     "local": "遵义县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.229,
+     "area_share": 0.37,
+     "cover": 0.245
+    },
+    {
+     "name": "Huichuan",
+     "local": "汇川区",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.125,
+     "area_share": 0.114,
+     "cover": 0.226
+    },
+    {
+     "name": "Honghuagang",
+     "local": "红花岗区",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.088,
+     "area_share": 0.056,
+     "cover": 0.089
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.027
+    },
+    {
+     "level": "prefecture",
+     "name": "Zunyi",
+     "local": "遵义市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.993,
+     "cover": 0.152
+    }
+   ],
+   "towns": [
+    {
+     "town": "高坪镇",
+     "county": "汇川区",
+     "city": "遵义市",
+     "people_share": 0.074,
+     "cover": 0.997
+    },
+    {
+     "town": "盐津街道",
+     "county": "仁怀市",
+     "city": "遵义市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "金鼎山镇",
+     "county": "红花岗区",
+     "city": "遵义市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "中枢街道",
+     "county": "仁怀市",
+     "city": "遵义市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "坛厂镇",
+     "county": "仁怀市",
+     "city": "遵义市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "山盆镇",
+     "county": "遵义县",
+     "city": "遵义市",
+     "people_share": 0.041,
+     "cover": 0.96
+    },
+    {
+     "town": "鲁班镇",
+     "county": "仁怀市",
+     "city": "遵义市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "茅台镇",
+     "county": "仁怀市",
+     "city": "遵义市",
+     "people_share": 0.037,
+     "cover": 0.964
+    },
+    {
+     "town": "马蹄镇",
+     "county": "遵义县",
+     "city": "遵义市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "泮水镇",
+     "county": "遵义县",
+     "city": "遵义市",
+     "people_share": 0.034,
+     "cover": 0.942
+    },
+    {
+     "town": "三合镇",
+     "county": "仁怀市",
+     "city": "遵义市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "苍龙街道",
+     "county": "仁怀市",
+     "city": "遵义市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Zhongshu",
+     "admin": "Guizhou",
+     "pop": 679624
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f1e8ac",
+     "border_px": 1176
+    },
+    {
+     "key": "#f0e7b4",
+     "border_px": 956
+    },
+    {
+     "key": "#ddeec3",
+     "border_px": 695
+    },
+    {
+     "key": "#d2edb8",
+     "border_px": 412
+    },
+    {
+     "key": "#d6ebba",
+     "border_px": 395
+    },
+    {
+     "key": "#c6e575",
+     "border_px": 339
+    },
+    {
+     "key": "#eeecb6",
+     "border_px": 337
+    }
+   ],
+   "text_px": 60,
+   "n": 5,
+   "thumb": {
+    "x0": 6423,
+    "y0": 4064,
+    "k": 2.0,
+    "w": 336,
+    "h": 308
+   }
+  },
+  {
+   "key": "#c9e8de",
+   "color": "#c9e8de",
+   "lon": 108.9434,
+   "lat": 27.7796,
+   "bbox": [
+    6685,
+    4072,
+    6771,
+    4162
+   ],
+   "area_px": 4511,
+   "people": 791000,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Bijiang",
+     "local": "碧江区",
+     "prefecture": "Tongren",
+     "prefecture_local": "铜仁市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.458,
+     "area_share": 0.2,
+     "cover": 0.995
+    },
+    {
+     "name": "Jiangkou",
+     "local": "江口县",
+     "prefecture": "Tongren",
+     "prefecture_local": "铜仁市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.201,
+     "area_share": 0.372,
+     "cover": 0.993
+    },
+    {
+     "name": "Songtao Miao",
+     "local": "松桃苗族自治县",
+     "prefecture": "Tongren",
+     "prefecture_local": "铜仁市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.177,
+     "area_share": 0.22,
+     "cover": 0.32
+    },
+    {
+     "name": "Wanshan",
+     "local": "万山区",
+     "prefecture": "Tongren",
+     "prefecture_local": "铜仁市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.135,
+     "area_share": 0.17,
+     "cover": 0.99
+    },
+    {
+     "name": "Yinjiangtujiazumiaozu",
+     "local": "印江土家族苗族自治县",
+     "prefecture": "Tongren",
+     "prefecture_local": "铜仁市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.022,
+     "area_share": 0.026,
+     "cover": 0.065
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.995,
+     "cover": 0.023
+    },
+    {
+     "level": "prefecture",
+     "name": "Tongren",
+     "local": "铜仁市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.268
+    }
+   ],
+   "towns": [
+    {
+     "town": "河西街道",
+     "county": "碧江区",
+     "city": "铜仁市",
+     "people_share": 0.122,
+     "cover": 1.0
+    },
+    {
+     "town": "环北街道",
+     "county": "碧江区",
+     "city": "铜仁市",
+     "people_share": 0.097,
+     "cover": 1.0
+    },
+    {
+     "town": "灯塔街道",
+     "county": "碧江区",
+     "city": "铜仁市",
+     "people_share": 0.078,
+     "cover": 1.0
+    },
+    {
+     "town": "双江镇",
+     "county": "江口县",
+     "city": "铜仁市",
+     "people_share": 0.064,
+     "cover": 1.0
+    },
+    {
+     "town": "滑石乡",
+     "county": "碧江区",
+     "city": "铜仁市",
+     "people_share": 0.047,
+     "cover": 0.979
+    },
+    {
+     "town": "寨英镇",
+     "county": "松桃苗族自治县",
+     "city": "铜仁市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "孟溪镇",
+     "county": "松桃苗族自治县",
+     "city": "铜仁市",
+     "people_share": 0.03,
+     "cover": 0.986
+    },
+    {
+     "town": "川硐镇",
+     "county": "碧江区",
+     "city": "铜仁市",
+     "people_share": 0.03,
+     "cover": 0.993
+    },
+    {
+     "town": "坝黄镇",
+     "county": "碧江区",
+     "city": "铜仁市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Tongren",
+     "admin": "Guizhou",
+     "pop": 3168800
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#c9e8d8",
+     "border_px": 1419,
+     "name": "Fenghuang"
+    },
+    {
+     "key": "#c3dee6",
+     "border_px": 1166
+    },
+    {
+     "key": "#c7e0ce",
+     "border_px": 1005
+    },
+    {
+     "key": "#c7e0d7",
+     "border_px": 516
+    },
+    {
+     "key": "#c4e4c7",
+     "border_px": 412,
+     "name": "Xiushan"
+    },
+    {
+     "key": "#c7e1da",
+     "border_px": 298
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 6645,
+    "y0": 4032,
+    "k": 2.0,
+    "w": 332,
+    "h": 340
+   }
+  },
+  {
+   "key": "#c7e0d7",
+   "color": "#c7e0d7",
+   "lon": 108.084,
+   "lat": 27.7001,
+   "bbox": [
+    6606,
+    4093,
+    6693,
+    4185
+   ],
+   "area_px": 5390,
+   "people": 955364,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Sinan",
+     "local": "思南县",
+     "prefecture": "Tongren",
+     "prefecture_local": "铜仁市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.468,
+     "area_share": 0.365,
+     "cover": 0.99
+    },
+    {
+     "name": "Shiqian",
+     "local": "石阡县",
+     "prefecture": "Tongren",
+     "prefecture_local": "铜仁市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.296,
+     "area_share": 0.361,
+     "cover": 0.994
+    },
+    {
+     "name": "Fenggang",
+     "local": "凤冈县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.212,
+     "area_share": 0.215,
+     "cover": 0.7
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.028
+    },
+    {
+     "level": "prefecture",
+     "name": "Tongren",
+     "local": "铜仁市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.783,
+     "cover": 0.255
+    },
+    {
+     "level": "prefecture",
+     "name": "Zunyi",
+     "local": "遵义市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.216,
+     "cover": 0.034
+    }
+   ],
+   "towns": [
+    {
+     "town": "思唐镇",
+     "county": "思南县",
+     "city": "铜仁市",
+     "people_share": 0.07,
+     "cover": 1.0
+    },
+    {
+     "town": "龙泉镇",
+     "county": "凤冈县",
+     "city": "遵义市",
+     "people_share": 0.058,
+     "cover": 0.994
+    },
+    {
+     "town": "汤山镇",
+     "county": "石阡县",
+     "city": "铜仁市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "塘头镇",
+     "county": "思南县",
+     "city": "铜仁市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "本庄镇",
+     "county": "石阡县",
+     "city": "铜仁市",
+     "people_share": 0.036,
+     "cover": 0.998
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d7eec7",
+     "border_px": 1499
+    },
+    {
+     "key": "#c7e0ce",
+     "border_px": 1478
+    },
+    {
+     "key": "#c9e8de",
+     "border_px": 516
+    },
+    {
+     "key": "#c6d4d8",
+     "border_px": 495
+    },
+    {
+     "key": "#c3dee6",
+     "border_px": 353
+    },
+    {
+     "key": "#eeecb6",
+     "border_px": 141
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 6566,
+    "y0": 4053,
+    "k": 2.0,
+    "w": 334,
+    "h": 344
+   }
+  },
+  {
+   "key": "#c6e575",
+   "color": "#c6e575",
+   "lon": 106.9173,
+   "lat": 27.6978,
+   "bbox": [
+    6534,
+    4141,
+    6551,
+    4159
+   ],
+   "area_px": 215,
+   "people": 1009400,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Honghuagang",
+     "local": "红花岗区",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.64,
+     "area_share": 0.609,
+     "cover": 0.712
+    },
+    {
+     "name": "Huichuan",
+     "local": "汇川区",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.354,
+     "area_share": 0.363,
+     "cover": 0.699
+    },
+    {
+     "name": "Zunyi",
+     "local": "遵义县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.006,
+     "area_share": 0.028,
+     "cover": 0.007
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.029
+    },
+    {
+     "level": "prefecture",
+     "name": "Zunyi",
+     "local": "遵义市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.167
+    }
+   ],
+   "towns": [
+    {
+     "town": "长征镇",
+     "county": "红花岗区",
+     "city": "遵义市",
+     "people_share": 0.283,
+     "cover": 0.995
+    },
+    {
+     "town": "高桥镇",
+     "county": "汇川区",
+     "city": "遵义市",
+     "people_share": 0.146,
+     "cover": 0.976
+    },
+    {
+     "town": "上海路街道",
+     "county": "汇川区",
+     "city": "遵义市",
+     "people_share": 0.081,
+     "cover": 1.0
+    },
+    {
+     "town": "董公寺镇",
+     "county": "汇川区",
+     "city": "遵义市",
+     "people_share": 0.08,
+     "cover": 0.928
+    },
+    {
+     "town": "忠庄镇",
+     "county": "红花岗区",
+     "city": "遵义市",
+     "people_share": 0.065,
+     "cover": 0.994
+    },
+    {
+     "town": "南关镇",
+     "county": "红花岗区",
+     "city": "遵义市",
+     "people_share": 0.06,
+     "cover": 0.937
+    },
+    {
+     "town": "南门关街道",
+     "county": "红花岗区",
+     "city": "遵义市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "中华路街道",
+     "county": "红花岗区",
+     "city": "遵义市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "洗马路街道",
+     "county": "汇川区",
+     "city": "遵义市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "老城街道",
+     "county": "红花岗区",
+     "city": "遵义市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "舟水桥街道",
+     "county": "红花岗区",
+     "city": "遵义市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d6ebba",
+     "border_px": 463
+    },
+    {
+     "key": "#ddebb9",
+     "border_px": 339
+    }
+   ],
+   "text_px": 0,
+   "n": 8,
+   "thumb": {
+    "x0": 6494,
+    "y0": 4101,
+    "k": 4.0,
+    "w": 388,
+    "h": 392
+   }
+  },
+  {
+   "key": "#d6ebba",
+   "color": "#d6ebba",
+   "lon": 107.0064,
+   "lat": 27.5556,
+   "bbox": [
+    6517,
+    4130,
+    6580,
+    4201
+   ],
+   "area_px": 2532,
+   "people": 831133,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Zunyi",
+     "local": "遵义县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.732,
+     "area_share": 0.836,
+     "cover": 0.704
+    },
+    {
+     "name": "Honghuagang",
+     "local": "红花岗区",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.217,
+     "area_share": 0.089,
+     "cover": 0.199
+    },
+    {
+     "name": "Huichuan",
+     "local": "汇川区",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.045,
+     "area_share": 0.061,
+     "cover": 0.073
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.024
+    },
+    {
+     "level": "prefecture",
+     "name": "Zunyi",
+     "local": "遵义市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.995,
+     "cover": 0.137
+    }
+   ],
+   "towns": [
+    {
+     "town": "新蒲镇",
+     "county": "红花岗区",
+     "city": "遵义市",
+     "people_share": 0.161,
+     "cover": 0.85
+    },
+    {
+     "town": "南白镇",
+     "county": "遵义县",
+     "city": "遵义市",
+     "people_share": 0.123,
+     "cover": 1.0
+    },
+    {
+     "town": "龙坑镇",
+     "county": "遵义县",
+     "city": "遵义市",
+     "people_share": 0.073,
+     "cover": 0.913
+    },
+    {
+     "town": "三合镇",
+     "county": "遵义县",
+     "city": "遵义市",
+     "people_share": 0.066,
+     "cover": 0.97
+    },
+    {
+     "town": "虾子镇",
+     "county": "遵义县",
+     "city": "遵义市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "团溪镇",
+     "county": "遵义县",
+     "city": "遵义市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "新舟镇",
+     "county": "遵义县",
+     "city": "遵义市",
+     "people_share": 0.051,
+     "cover": 0.925
+    },
+    {
+     "town": "深溪镇",
+     "county": "红花岗区",
+     "city": "遵义市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "鸭溪镇",
+     "county": "遵义县",
+     "city": "遵义市",
+     "people_share": 0.048,
+     "cover": 0.965
+    },
+    {
+     "town": "团泽镇",
+     "county": "汇川区",
+     "city": "遵义市",
+     "people_share": 0.045,
+     "cover": 0.98
+    },
+    {
+     "town": "石板镇",
+     "county": "遵义县",
+     "city": "遵义市",
+     "people_share": 0.038,
+     "cover": 0.978
+    },
+    {
+     "town": "龙坪镇",
+     "county": "遵义县",
+     "city": "遵义市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Zunyi",
+     "admin": "Guizhou",
+     "pop": 6606675
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#ceedb8",
+     "border_px": 819
+    },
+    {
+     "key": "#d7eec7",
+     "border_px": 816
+    },
+    {
+     "key": "#c6e575",
+     "border_px": 463
+    },
+    {
+     "key": "#ddebb9",
+     "border_px": 395
+    },
+    {
+     "key": "#d2edb8",
+     "border_px": 386
+    },
+    {
+     "key": "#eeecb6",
+     "border_px": 331
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 6477,
+    "y0": 4090,
+    "k": 2.0,
+    "w": 286,
+    "h": 302
+   }
+  },
+  {
+   "key": "#dbf0ac",
+   "color": "#dbf0ac",
+   "lon": 105.3974,
+   "lat": 27.4566,
+   "bbox": [
+    6389,
+    4153,
+    6438,
+    4227
+   ],
+   "area_px": 2058,
+   "people": 1085618,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Qixingguan",
+     "local": "七星关区",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.994,
+     "area_share": 0.989,
+     "cover": 0.797
+    },
+    {
+     "name": "Dafang",
+     "local": "大方县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.006,
+     "area_share": 0.008,
+     "cover": 0.008
+    },
+    {
+     "name": "Xuyong",
+     "local": "叙永县",
+     "prefecture": "Luzhou",
+     "prefecture_local": "泸州市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.001,
+     "area_share": 0.002,
+     "cover": 0.001
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.031
+    },
+    {
+     "level": "prefecture",
+     "name": "Bijie",
+     "local": "毕节市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.168
+    }
+   ],
+   "towns": [
+    {
+     "town": "大新桥街道",
+     "county": "七星关区",
+     "city": "毕节市",
+     "people_share": 0.136,
+     "cover": 1.0
+    },
+    {
+     "town": "鸭池镇",
+     "county": "七星关区",
+     "city": "毕节市",
+     "people_share": 0.1,
+     "cover": 1.0
+    },
+    {
+     "town": "何官屯镇",
+     "county": "七星关区",
+     "city": "毕节市",
+     "people_share": 0.079,
+     "cover": 0.975
+    },
+    {
+     "town": "市西街道",
+     "county": "七星关区",
+     "city": "毕节市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "德溪街道",
+     "county": "七星关区",
+     "city": "毕节市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "观音桥街道",
+     "county": "七星关区",
+     "city": "毕节市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "碧海街道",
+     "county": "七星关区",
+     "city": "毕节市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "三板桥街道",
+     "county": "七星关区",
+     "city": "毕节市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "梨树镇",
+     "county": "七星关区",
+     "city": "毕节市",
+     "people_share": 0.037,
+     "cover": 0.978
+    },
+    {
+     "town": "小吉场镇",
+     "county": "七星关区",
+     "city": "毕节市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Bijie",
+     "admin": "Guizhou",
+     "pop": 6899636
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#ddeec3",
+     "border_px": 1004
+    },
+    {
+     "key": "#eee5c2",
+     "border_px": 537
+    },
+    {
+     "key": "#e8f3c0",
+     "border_px": 512
+    },
+    {
+     "key": "#edf3c0",
+     "border_px": 506
+    },
+    {
+     "key": "#f0e7b4",
+     "border_px": 182
+    },
+    {
+     "key": "#ddf3c0",
+     "border_px": 95
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 6349,
+    "y0": 4113,
+    "k": 2.0,
+    "w": 258,
+    "h": 308
+   }
+  },
+  {
+   "key": "#d7eec7",
+   "color": "#d7eec7",
+   "lon": 107.5079,
+   "lat": 27.4341,
+   "bbox": [
+    6569,
+    4105,
+    6647,
+    4234
+   ],
+   "area_px": 5048,
+   "people": 934195,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Weng'an",
+     "local": "瓮安县",
+     "prefecture": "Qiannanbuyizumiaozu",
+     "prefecture_local": "黔南布依族苗族自治州",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.365,
+     "area_share": 0.347,
+     "cover": 0.989
+    },
+    {
+     "name": "Meitan",
+     "local": "湄潭县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.348,
+     "area_share": 0.305,
+     "cover": 0.95
+    },
+    {
+     "name": "Yuqing",
+     "local": "余庆县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.237,
+     "area_share": 0.283,
+     "cover": 0.986
+    },
+    {
+     "name": "Zunyi",
+     "local": "遵义县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.03,
+     "area_share": 0.038,
+     "cover": 0.033
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.027
+    },
+    {
+     "level": "prefecture",
+     "name": "Zunyi",
+     "local": "遵义市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.623,
+     "cover": 0.096
+    },
+    {
+     "level": "prefecture",
+     "name": "Qiannan Buyi and Miao Autonomous Prefecture",
+     "local": "黔南布依族苗族自治州",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.366,
+     "cover": 0.117
+    }
+   ],
+   "towns": [
+    {
+     "town": "雍阳街道",
+     "county": "瓮安县",
+     "city": "黔南布依族苗族自治州",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "猴场镇",
+     "county": "瓮安县",
+     "city": "黔南布依族苗族自治州",
+     "people_share": 0.048,
+     "cover": 0.994
+    },
+    {
+     "town": "兴隆镇",
+     "county": "湄潭县",
+     "city": "遵义市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "永兴镇",
+     "county": "湄潭县",
+     "city": "遵义市",
+     "people_share": 0.045,
+     "cover": 0.997
+    },
+    {
+     "town": "湄江街道",
+     "county": "湄潭县",
+     "city": "遵义市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "瓮水街道",
+     "county": "瓮安县",
+     "city": "黔南布依族苗族自治州",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "白泥镇",
+     "county": "余庆县",
+     "city": "遵义市",
+     "people_share": 0.038,
+     "cover": 0.963
+    },
+    {
+     "town": "珠藏镇",
+     "county": "瓮安县",
+     "city": "黔南布依族苗族自治州",
+     "people_share": 0.037,
+     "cover": 0.973
+    },
+    {
+     "town": "龙溪镇",
+     "county": "余庆县",
+     "city": "遵义市",
+     "people_share": 0.035,
+     "cover": 0.989
+    },
+    {
+     "town": "复兴镇",
+     "county": "湄潭县",
+     "city": "遵义市",
+     "people_share": 0.034,
+     "cover": 0.996
+    },
+    {
+     "town": "银盏镇",
+     "county": "瓮安县",
+     "city": "黔南布依族苗族自治州",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "永乐镇",
+     "county": "遵义县",
+     "city": "遵义市",
+     "people_share": 0.03,
+     "cover": 0.864
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#c7e0d7",
+     "border_px": 1499
+    },
+    {
+     "key": "#c6d4d8",
+     "border_px": 1207
+    },
+    {
+     "key": "#d6ebba",
+     "border_px": 816
+    },
+    {
+     "key": "#ceedb8",
+     "border_px": 644
+    },
+    {
+     "key": "#eeecb6",
+     "border_px": 643
+    },
+    {
+     "key": "#c6e8d2",
+     "border_px": 621
+    }
+   ],
+   "text_px": 0,
+   "n": 11,
+   "thumb": {
+    "x0": 6524,
+    "y0": 4060,
+    "k": 1.0,
+    "w": 168,
+    "h": 219
+   }
+  },
+  {
+   "key": "#ddeec3",
+   "color": "#ddeec3",
+   "lon": 105.7993,
+   "lat": 27.3426,
+   "bbox": [
+    6408,
+    4152,
+    6493,
+    4243
+   ],
+   "area_px": 3717,
+   "people": 868667,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Dafang",
+     "local": "大方县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.708,
+     "area_share": 0.718,
+     "cover": 0.835
+    },
+    {
+     "name": "Jinsha",
+     "local": "金沙县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.279,
+     "area_share": 0.265,
+     "cover": 0.468
+    },
+    {
+     "name": "Qianxi",
+     "local": "黔西县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.005,
+     "area_share": 0.005,
+     "cover": 0.006
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.025
+    },
+    {
+     "level": "prefecture",
+     "name": "Bijie",
+     "local": "毕节市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.135
+    }
+   ],
+   "towns": [
+    {
+     "town": "西洛街道",
+     "county": "金沙县",
+     "city": "毕节市",
+     "people_share": 0.081,
+     "cover": 1.0
+    },
+    {
+     "town": "黄泥塘镇",
+     "county": "大方县",
+     "city": "毕节市",
+     "people_share": 0.055,
+     "cover": 0.999
+    },
+    {
+     "town": "顺德街道",
+     "county": "大方县",
+     "city": "毕节市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "理化乡",
+     "county": "大方县",
+     "city": "毕节市",
+     "people_share": 0.038,
+     "cover": 0.996
+    },
+    {
+     "town": "红旗街道",
+     "county": "大方县",
+     "city": "毕节市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "响水乡",
+     "county": "大方县",
+     "city": "毕节市",
+     "people_share": 0.032,
+     "cover": 0.934
+    },
+    {
+     "town": "双山镇",
+     "county": "大方县",
+     "city": "毕节市",
+     "people_share": 0.032,
+     "cover": 0.911
+    },
+    {
+     "town": "慕俄格古城街道",
+     "county": "大方县",
+     "city": "毕节市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "岩孔街道",
+     "county": "金沙县",
+     "city": "毕节市",
+     "people_share": 0.031,
+     "cover": 0.963
+    },
+    {
+     "town": "鼓场街道",
+     "county": "金沙县",
+     "city": "毕节市",
+     "people_share": 0.03,
+     "cover": 0.986
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d2edb8",
+     "border_px": 1203
+    },
+    {
+     "key": "#dbf0ac",
+     "border_px": 1004
+    },
+    {
+     "key": "#ddebb9",
+     "border_px": 695
+    },
+    {
+     "key": "#f0e7b4",
+     "border_px": 443
+    },
+    {
+     "key": "#ddf3c0",
+     "border_px": 439
+    },
+    {
+     "key": "#cee8bd",
+     "border_px": 218
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 6368,
+    "y0": 4112,
+    "k": 2.0,
+    "w": 330,
+    "h": 342
+   }
+  },
+  {
+   "key": "#e8f3c0",
+   "color": "#e8f3c0",
+   "lon": 104.7224,
+   "lat": 27.1695,
+   "bbox": [
+    6304,
+    4194,
+    6398,
+    4263
+   ],
+   "area_px": 3728,
+   "people": 873873,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hezhang",
+     "local": "赫章县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.682,
+     "area_share": 0.745,
+     "cover": 0.953
+    },
+    {
+     "name": "Qixingguan",
+     "local": "七星关区",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.262,
+     "area_share": 0.226,
+     "cover": 0.169
+    },
+    {
+     "name": "Zhenxiong",
+     "local": "镇雄县",
+     "prefecture": "Zhaotong",
+     "prefecture_local": "昭通市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.049,
+     "area_share": 0.02,
+     "cover": 0.032
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.953,
+     "cover": 0.024
+    },
+    {
+     "level": "prefecture",
+     "name": "Bijie",
+     "local": "毕节市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.953,
+     "cover": 0.129
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "赫章县",
+     "city": "毕节市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "杨家湾镇",
+     "county": "七星关区",
+     "city": "毕节市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "中屯镇",
+     "county": "镇雄县",
+     "city": "昭通市",
+     "people_share": 0.045,
+     "cover": 0.66
+    },
+    {
+     "town": "撒拉溪镇",
+     "county": "七星关区",
+     "city": "毕节市",
+     "people_share": 0.042,
+     "cover": 0.997
+    },
+    {
+     "town": "财神镇",
+     "county": "赫章县",
+     "city": "毕节市",
+     "people_share": 0.039,
+     "cover": 0.995
+    },
+    {
+     "town": "德卓乡",
+     "county": "赫章县",
+     "city": "毕节市",
+     "people_share": 0.038,
+     "cover": 0.956
+    },
+    {
+     "town": "达依乡",
+     "county": "赫章县",
+     "city": "毕节市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "双坪乡",
+     "county": "赫章县",
+     "city": "毕节市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "妈姑镇",
+     "county": "赫章县",
+     "city": "毕节市",
+     "people_share": 0.036,
+     "cover": 0.991
+    },
+    {
+     "town": "六曲河镇",
+     "county": "赫章县",
+     "city": "毕节市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "野马川镇",
+     "county": "赫章县",
+     "city": "毕节市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "白果镇",
+     "county": "赫章县",
+     "city": "毕节市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0f1be",
+     "border_px": 1045
+    },
+    {
+     "key": "#edf3c0",
+     "border_px": 986
+    },
+    {
+     "key": "#ddf3c0",
+     "border_px": 773
+    },
+    {
+     "key": "#f1eabe",
+     "border_px": 554
+    },
+    {
+     "key": "#dbf0ac",
+     "border_px": 512
+    },
+    {
+     "key": "#cdf8aa",
+     "border_px": 200
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 6264,
+    "y0": 4154,
+    "k": 2.0,
+    "w": 348,
+    "h": 298
+   }
+  },
+  {
+   "key": "#d2edb8",
+   "color": "#d2edb8",
+   "lon": 106.2219,
+   "lat": 27.1646,
+   "bbox": [
+    6450,
+    4172,
+    6528,
+    4260
+   ],
+   "area_px": 3692,
+   "people": 952425,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Qianxi",
+     "local": "黔西县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.694,
+     "area_share": 0.624,
+     "cover": 0.992
+    },
+    {
+     "name": "Jinsha",
+     "local": "金沙县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.285,
+     "area_share": 0.343,
+     "cover": 0.524
+    },
+    {
+     "name": "Dafang",
+     "local": "大方县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.01,
+     "area_share": 0.018,
+     "cover": 0.013
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.028
+    },
+    {
+     "level": "prefecture",
+     "name": "Bijie",
+     "local": "毕节市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.992,
+     "cover": 0.147
+    }
+   ],
+   "towns": [
+    {
+     "town": "莲城街道",
+     "county": "黔西县",
+     "city": "毕节市",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "沙土镇",
+     "county": "金沙县",
+     "city": "毕节市",
+     "people_share": 0.054,
+     "cover": 0.999
+    },
+    {
+     "town": "文峰街道",
+     "county": "黔西县",
+     "city": "毕节市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "柳塘镇",
+     "county": "金沙县",
+     "city": "毕节市",
+     "people_share": 0.042,
+     "cover": 0.912
+    },
+    {
+     "town": "杜鹃街道",
+     "county": "黔西县",
+     "city": "毕节市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "观音洞镇",
+     "county": "黔西县",
+     "city": "毕节市",
+     "people_share": 0.032,
+     "cover": 0.986
+    },
+    {
+     "town": "水西街道",
+     "county": "黔西县",
+     "city": "毕节市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "钟山镇",
+     "county": "黔西县",
+     "city": "毕节市",
+     "people_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "town": "金碧镇",
+     "county": "黔西县",
+     "city": "毕节市",
+     "people_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "town": "甘棠镇",
+     "county": "黔西县",
+     "city": "毕节市",
+     "people_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "town": "林泉镇",
+     "county": "黔西县",
+     "city": "毕节市",
+     "people_share": 0.03,
+     "cover": 0.98
+    }
+   ],
+   "cities": [
+    {
+     "name": "Qianxi",
+     "admin": "Guizhou",
+     "pop": 695947
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#ddeec3",
+     "border_px": 1203
+    },
+    {
+     "key": "#ceedb8",
+     "border_px": 802
+    },
+    {
+     "key": "#cee8bd",
+     "border_px": 578
+    },
+    {
+     "key": "#c2edae",
+     "border_px": 415
+    },
+    {
+     "key": "#ddebb9",
+     "border_px": 412
+    },
+    {
+     "key": "#d6ebba",
+     "border_px": 386
+    }
+   ],
+   "text_px": 0,
+   "n": 14,
+   "thumb": {
+    "x0": 6410,
+    "y0": 4132,
+    "k": 2.0,
+    "w": 316,
+    "h": 336
+   }
+  },
+  {
+   "key": "#f0f1be",
+   "color": "#f0f1be",
+   "lon": 104.1113,
+   "lat": 26.9107,
+   "bbox": [
+    6264,
+    4200,
+    6347,
+    4300
+   ],
+   "area_px": 4700,
+   "people": 965955,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Weining Yi, Hui and Miao",
+     "local": "威宁彝族回族苗族自治县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.991,
+     "area_share": 0.986,
+     "cover": 0.789
+    },
+    {
+     "name": "Hezhang",
+     "local": "赫章县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.003,
+     "area_share": 0.005,
+     "cover": 0.005
+    },
+    {
+     "name": "Xuanwei",
+     "local": "宣威市",
+     "prefecture": "Qujing",
+     "prefecture_local": "曲靖市",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.003,
+     "area_share": 0.004,
+     "cover": 0.002
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.992,
+     "cover": 0.028
+    },
+    {
+     "level": "prefecture",
+     "name": "Bijie",
+     "local": "毕节市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.992,
+     "cover": 0.149
+    }
+   ],
+   "towns": [
+    {
+     "town": "草海镇",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.197,
+     "cover": 1.0
+    },
+    {
+     "town": "炉山镇",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "羊街镇",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.063,
+     "cover": 0.996
+    },
+    {
+     "town": "小海镇",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "雪山镇",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "黑石头镇",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "东风镇",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "麻乍乡",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "哲觉镇",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.039,
+     "cover": 0.981
+    },
+    {
+     "town": "金钟镇",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.037,
+     "cover": 0.998
+    },
+    {
+     "town": "迤那镇",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.035,
+     "cover": 0.943
+    },
+    {
+     "town": "龙街镇",
+     "county": "威宁彝族回族苗族自治县",
+     "city": "毕节市",
+     "people_share": 0.034,
+     "cover": 0.987
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e8f3c0",
+     "border_px": 1045
+    },
+    {
+     "key": "#dbeead",
+     "border_px": 859
+    },
+    {
+     "key": "#ebe3a1",
+     "border_px": 810
+    },
+    {
+     "key": "#f5edb4",
+     "border_px": 730
+    },
+    {
+     "key": "#f1eabe",
+     "border_px": 460
+    },
+    {
+     "key": "#cdf8aa",
+     "border_px": 379
+    },
+    {
+     "key": "#f0e3b9",
+     "border_px": 81
+    }
+   ],
+   "text_px": 0,
+   "n": 15,
+   "thumb": {
+    "x0": 6224,
+    "y0": 4160,
+    "k": 2.0,
+    "w": 326,
+    "h": 360
+   }
+  },
+  {
+   "key": "#ddf3c0",
+   "color": "#ddf3c0",
+   "lon": 105.2255,
+   "lat": 26.8171,
+   "bbox": [
+    6361,
+    4229,
+    6435,
+    4292
+   ],
+   "area_px": 3229,
+   "people": 912784,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Nayong",
+     "local": "纳雍县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.666,
+     "area_share": 0.642,
+     "cover": 0.97
+    },
+    {
+     "name": "Shuicheng",
+     "local": "水城县",
+     "prefecture": "Liupanshui",
+     "prefecture_local": "六盘水市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.188,
+     "area_share": 0.188,
+     "cover": 0.205
+    },
+    {
+     "name": "Dafang",
+     "local": "大方县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.116,
+     "area_share": 0.131,
+     "cover": 0.144
+    },
+    {
+     "name": "Hezhang",
+     "local": "赫章县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.022,
+     "area_share": 0.033,
+     "cover": 0.031
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.026
+    },
+    {
+     "level": "prefecture",
+     "name": "Bijie",
+     "local": "毕节市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.771,
+     "cover": 0.109
+    },
+    {
+     "level": "prefecture",
+     "name": "Liupanshui",
+     "local": "六盘水市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.229,
+     "cover": 0.063
+    }
+   ],
+   "towns": [
+    {
+     "town": "阳长镇",
+     "county": "纳雍县",
+     "city": "毕节市",
+     "people_share": 0.076,
+     "cover": 1.0
+    },
+    {
+     "town": "南开苗族彝族乡",
+     "county": "水城县",
+     "city": "六盘水市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "雍熙街道",
+     "county": "纳雍县",
+     "city": "毕节市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "文昌街道",
+     "county": "纳雍县",
+     "city": "毕节市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "鼎新乡",
+     "county": "大方县",
+     "city": "毕节市",
+     "people_share": 0.037,
+     "cover": 0.977
+    },
+    {
+     "town": "化作乡",
+     "county": "纳雍县",
+     "city": "毕节市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "董地乡",
+     "county": "纳雍县",
+     "city": "毕节市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "猫场镇",
+     "county": "大方县",
+     "city": "毕节市",
+     "people_share": 0.035,
+     "cover": 0.999
+    },
+    {
+     "town": "寨乐乡",
+     "county": "纳雍县",
+     "city": "毕节市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "居仁街道",
+     "county": "纳雍县",
+     "city": "毕节市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#cee8bd",
+     "border_px": 797
+    },
+    {
+     "key": "#e8f3c0",
+     "border_px": 773
+    },
+    {
+     "key": "#cdf8aa",
+     "border_px": 599
+    },
+    {
+     "key": "#ddeec3",
+     "border_px": 439
+    },
+    {
+     "key": "#d4eec3",
+     "border_px": 369
+    },
+    {
+     "key": "#dbf0ac",
+     "border_px": 95
+    }
+   ],
+   "text_px": 0,
+   "n": 16,
+   "thumb": {
+    "x0": 6321,
+    "y0": 4189,
+    "k": 2.0,
+    "w": 308,
+    "h": 286
+   }
+  },
+  {
+   "key": "#cee8bd",
+   "color": "#cee8bd",
+   "lon": 105.7721,
+   "lat": 26.6118,
+   "bbox": [
+    6414,
+    4243,
+    6485,
+    4316
+   ],
+   "area_px": 3228,
+   "people": 891302,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Zhijin",
+     "local": "织金县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.809,
+     "area_share": 0.796,
+     "cover": 0.988
+    },
+    {
+     "name": "Puding",
+     "local": "普定县",
+     "prefecture": "Anshun",
+     "prefecture_local": "安顺市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.169,
+     "area_share": 0.156,
+     "cover": 0.416
+    },
+    {
+     "name": "Nayong",
+     "local": "纳雍县",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.017,
+     "area_share": 0.037,
+     "cover": 0.024
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.026
+    },
+    {
+     "level": "prefecture",
+     "name": "Bijie",
+     "local": "毕节市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.824,
+     "cover": 0.114
+    },
+    {
+     "level": "prefecture",
+     "name": "Anshun",
+     "local": "安顺市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.173,
+     "cover": 0.064
+    }
+   ],
+   "towns": [
+    {
+     "town": "双堰街道",
+     "county": "织金县",
+     "city": "毕节市",
+     "people_share": 0.092,
+     "cover": 1.0
+    },
+    {
+     "town": "三甲街道",
+     "county": "织金县",
+     "city": "毕节市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "珠藏镇",
+     "county": "织金县",
+     "city": "毕节市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "猫场镇",
+     "county": "织金县",
+     "city": "毕节市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "龙场乡",
+     "county": "普定县",
+     "city": "安顺市",
+     "people_share": 0.037,
+     "cover": 0.966
+    },
+    {
+     "town": "绮陌街道",
+     "county": "织金县",
+     "city": "毕节市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "鸡场坡乡",
+     "county": "普定县",
+     "city": "安顺市",
+     "people_share": 0.036,
+     "cover": 0.926
+    },
+    {
+     "town": "牛场镇",
+     "county": "织金县",
+     "city": "毕节市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "熊家场乡",
+     "county": "织金县",
+     "city": "毕节市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "八步街道",
+     "county": "织金县",
+     "city": "毕节市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ddf3c0",
+     "border_px": 797
+    },
+    {
+     "key": "#c2edae",
+     "border_px": 685
+    },
+    {
+     "key": "#d2edb8",
+     "border_px": 578
+    },
+    {
+     "key": "#d4eec3",
+     "border_px": 556
+    },
+    {
+     "key": "#c8f3ab",
+     "border_px": 546
+    },
+    {
+     "key": "#ddeec3",
+     "border_px": 218
+    }
+   ],
+   "text_px": 63,
+   "n": 17,
+   "thumb": {
+    "x0": 6374,
+    "y0": 4203,
+    "k": 2.0,
+    "w": 302,
+    "h": 306
+   }
+  }
+ ]
+}

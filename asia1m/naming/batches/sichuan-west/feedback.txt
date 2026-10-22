@@ -1,0 +1,8 @@
+batch sichuan-west
+1: pick Ngawa
+2: pick Yaan
+3: pick Kham
+4: pick Yuexi
+5: pick Yalong. (Her idea: the river runs through the middle.)
+6: pick Liangshan
+7: pick Xichang

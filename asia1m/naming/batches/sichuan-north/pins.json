@@ -82,12 +82,12 @@
  ],
  "19": [
   {
-   "i": 0,
-   "name": "Jialing",
-   "x": 137.0,
-   "y": 154.7,
+   "i": 2,
+   "name": "Guozhou",
+   "x": 144.4,
+   "y": 143.9,
    "inside": true,
-   "src": "wikidata"
+   "src": "CHGIS"
   }
  ],
  "20": [

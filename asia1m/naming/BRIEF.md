@@ -69,6 +69,10 @@ Anita's rules:
   `lookup.py hits` shows the name is mostly about somewhere else, or barely appears, it is weak.
   Don't run the check for current county, city or prefecture names: those always score well.
   Use it for historical, river, mountain and other names.
+- Rate for how easily someone can look the name up, not only for how much it covers. An old
+  -zhou name that only historians know (Minzhou, Chengzhou, Longzhou) rates below the county
+  form people can find (Minxian, Chengxian, Longxian), even if the prefecture covered more of the
+  region. Anita keeps choosing the -xian form for this reason (Huanxian over Huanzhou).
 - An old prefecture form of a county (Fenyang → Fenzhou) is a good name when the prefecture also
   covered the region's other counties, so it fits the whole region better than one county does,
   and the -zhou name points to this place. Avoid it when the same -zhou name is famous somewhere

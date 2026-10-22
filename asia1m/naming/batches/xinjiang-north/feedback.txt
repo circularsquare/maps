@@ -1,0 +1,15 @@
+batch xinjiang-north
+1: pick Altay
+2: pick Tarbagatay
+3: pick Bortala
+4: pick Bogda
+5: pick Changji
+6: pick Shihezi
+7: pick Ghulja
+8: pick Shayibake
+9: pick Shuimogou
+10: pick Ili
+11: pick Ürümqi
+12: pick Turpan
+13: pick Tekes
+14: pick Hami

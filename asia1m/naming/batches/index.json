@@ -252,5 +252,68 @@
    "Panzhihua"
   ],
   "count": 9
+ },
+ {
+  "name": "guizhou-north",
+  "province": "Guizhou",
+  "prefectures": [
+   "Zunyi",
+   "Bijie",
+   "Tongren"
+  ],
+  "count": 17
+ },
+ {
+  "name": "yunnan-zhaotong",
+  "province": "Yunnan",
+  "prefectures": [
+   "Zhaotong"
+  ],
+  "count": 5
+ },
+ {
+  "name": "gansu",
+  "province": "Gansu",
+  "prefectures": [],
+  "count": 24
+ },
+ {
+  "name": "xizang",
+  "province": "Xizang",
+  "prefectures": [],
+  "count": 3
+ },
+ {
+  "name": "qinghai",
+  "province": "Qinghai",
+  "prefectures": [],
+  "count": 7
+ },
+ {
+  "name": "xinjiang-north",
+  "province": "Xinjiang Uygur",
+  "prefectures": [
+   "Ürümqi",
+   "Changji Hui Autonomous Prefecture",
+   "Shihezi",
+   "Ili Kazak Autonomous Prefecture",
+   "Tarbaĝatay Prefecture",
+   "Bortala Mongol Autonomous Prefecture",
+   "Altay Prefecture",
+   "Hami"
+  ],
+  "count": 14
+ },
+ {
+  "name": "xinjiang-south",
+  "province": "Xinjiang Uygur",
+  "prefectures": [
+   "Kashi Prefecture",
+   "Aksu Prefecture",
+   "Hotan Prefecture",
+   "Bayingolin Mongolia Autonomous Prefecture",
+   "Kizilsu Kirgiz Autonomous Prefecture"
+  ],
+  "count": 13
  }
 ]

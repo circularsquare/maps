@@ -1,0 +1,4 @@
+﻿batch xizang
+1: pick Tsang
+2: pick Nagqu
+3: pick Lhasa
