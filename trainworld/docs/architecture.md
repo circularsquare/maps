@@ -114,7 +114,7 @@ Web first, so it can be shared as a link.
   (one per period), at the next load; `?demandWorkers=N` overrides both. Plus one auxiliary worker with no periods
   that answers at once what needs no period's result (a city's cells, each bubble's commuters by
   mode). Worker i owns periods i, i + n, .... Every worker opens only the packs the game needs, each
-  its own copy: the viewed zone first, and every zone with a built station inside its footprint or
+  its own copy: the viewed zone first (only above zoom 7.5, docs/zones.md, T-871), and every zone with a built station inside its footprint or
   within 4.5 km of it, since only those can put a rider on a line (`workers/cityReach.ts`); a zone
   viewed or on screen that no station reaches opens bare in the auxiliary worker alone [T-325,
   [demand-runtime.md](demand-runtime.md) "Bare zones"], the viewed zone of a new game from the start [T-351]. Solving

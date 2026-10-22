@@ -32,6 +32,8 @@ use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
+mod market_trip;
+
 pub const SHARES: [f32; PERIODS] = [0.20, 0.35, 0.25, 0.15, 0.05];
 
 /// T-377: the market's rule (pipeline/longhaul.json, notes/T-376.md), as the registry's
@@ -1845,7 +1847,7 @@ fn solved_pairs(m: &Market, served: &[usize], joined: &impl Fn(usize, usize) -> 
     (any, each)
 }
 /// A number in [0, 1) fixed by two ids (splitmix64).
-fn unit_hash(a: u32, b: u32) -> f64 {
+pub(crate) fn unit_hash(a: u32, b: u32) -> f64 {
     let mut z = ((a as u64) << 32 | b as u64).wrapping_add(0x9e37_79b9_7f4a_7c15);
     z = (z ^ (z >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
     z = (z ^ (z >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);

@@ -68,11 +68,12 @@ export class OutlineEdges {
     this.zones.delete(id);
   }
 
-  /** One feature per zone with the lines it draws (property `id`), none for `focused`. */
-  lines(focused: string): FeatureCollection<MultiLineString> {
+  /** One feature per zone with the lines it draws (property `id`), none for `focused`; only the zones
+   * in `only` when given (T-871: those near the view). */
+  lines(focused: string, only?: Set<string>): FeatureCollection<MultiLineString> {
     const features: Feature<MultiLineString>[] = [];
     for (const [id, rings] of this.zones) {
-      if (id === focused) continue;
+      if (id === focused || (only && !only.has(id))) continue;
       const coordinates: Position[][] = [];
       for (const { ring, keys } of rings) {
         const drawn = keys.map((key) => {

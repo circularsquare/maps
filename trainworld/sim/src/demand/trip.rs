@@ -67,14 +67,10 @@ pub(crate) struct PairChoice {
     /// The rail cost the logsum over station pairs gives (perceived minutes).
     pub rail: f32,
     /// Utility of rail against a driver who parks free, and rail's share of all trips
-    /// (`Params::car_choice` for those with a car, mixed with those without).
+    /// (`Params::car_choice` within `Params::rail_bounds`).
     pub util: f32,
     pub r: f32,
-    /// Shares of all trips: by rail without a car times other's share of their trips not by
-    /// rail (T-513, `kernel::ModeOut::other_lost`), and the walkers rail takes (T-558,
-    /// `ModeOut::rail_walk`).
-    #[cfg_attr(not(test), allow(dead_code))]
-    pub other_lost: f32,
+    /// The walkers rail takes, a share of all trips (T-558, `ModeOut::rail_walk`).
     #[cfg_attr(not(test), allow(dead_code))]
     pub walk_lost: f32,
     /// (access entry, egress entry, share of the trip's rail riders) over every station pair
@@ -138,8 +134,9 @@ pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims
     let (fixed, paid, free) = p.park_parts(z, j);
     let rk = d * 0.001 * p.drive_factor(i, j);
     let car = p.car_drive(drive_min, rk);
-    let road_free = car + fixed;
-    let park = fixed + (1.0 - free) * paid;
+    // T-854: and parking at the home end
+    let road_free = car + fixed + sz.home_park[u];
+    let park = fixed + (1.0 - free) * paid + sz.home_park[u];
     let road = car + park;
     let cw = walk_cost(api, i, j);
     let why = if m_v > p.pair_walk_max - m_u {
@@ -154,60 +151,19 @@ pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims
     let (rail, util, r_car) = if why == RAIL_OFFERED {
         let rail = m_u + m_v + p.fare_min - fast_ln(ssum) / th + off;
         let util = bt * (road_free - rail) + p.asc_rail;
-        (rail, util, p.car_choice(util, uw, bt, paid, free))
+        // T-854: within the curve's floor and ceiling
+        let r = p.car_choice(util, uw, bt, paid, free);
+        (rail, util, p.rail_bounds(r, fast_exp(uw - util), rail, road_free + (1.0 - free) * paid))
     } else {
         (f32::INFINITY, f32::NEG_INFINITY, 0.0)
     };
-    // T-511, T-513: the home's people without a car choose among rail, walking to stations,
-    // walking the whole way and other; with rides offered, their rail is on the walks alone
-    let cu = sz.nocar[u];
-    let oth = rk * p.other_min_km() + p.other_wait();
     // the zone pair's walking with no rail, of which rail takes its share (`mode_choice`)
-    let w_none = if cw < NO_WALK { api.nr.split(&api.gr, p, i, j, (api.gr.base(z, i) + api.gr.key(z, j)) as usize).0 } else { 0.0 };
-    let mut r = r_car;
-    let mut other_lost = 0.0;
-    let mut pairs: Vec<(usize, usize, f32)> = pairs.into_iter().map(|(a, t, w)| (a, t, if why == RAIL_OFFERED { w / ssum } else { 0.0 })).collect();
-    if why == RAIL_OFFERED && cu > 0.0 {
-        let (rw, m_w) = ends(sz.walk(u));
-        let mut sn = 0.0f32;
-        let mut wn = vec![];
-        if by_ride {
-            for kt in rv.clone() {
-                let t = sz.acc_st[kt] as usize;
-                let mut a_row = 0.0f32;
-                for ka in rw.clone() {
-                    a_row += acc_e(ka, m_w) * er(sz.acc_st[ka] as usize, t);
-                }
-                let eg = acc_e(kt, m_v);
-                sn += a_row * eg;
-                for ka in rw.clone() {
-                    wn.push((ka, kt, acc_e(ka, m_w) * er(sz.acc_st[ka] as usize, t) * eg));
-                }
-            }
-        }
-        let ok_n = !by_ride || !(p.pair_walk_max - m_w < m_v || sn < 1e-30);
-        let rail_n = if by_ride { m_w + m_v + p.fare_min - fast_ln(sn) / th + off } else { rail };
-        let (r_n, q) = p.nocar_choice(cw, oth, ok_n.then_some(rail_n));
-        r = r_car + cu * (r_n - r_car);
-        other_lost = cu * r_n * q;
-        // each station pair's share of all the trip's rail riders
-        if by_ride && r > 0.0 {
-            let (fc, fnc) = ((r - cu * r_n) / r, cu * r_n / r);
-            for e in pairs.iter_mut() {
-                e.2 *= fc;
-            }
-            // a walk entry is in both lists, at the same place in each egress station's run
-            let (nr, nw) = (ru.len(), rw.len());
-            for (q, &(ka, _, w)) in wn.iter().enumerate() {
-                if sn >= 1e-30 {
-                    pairs[(q / nw) * nr + (ka - ru.start)].2 += fnc * w / sn;
-                }
-            }
-        }
-    }
+    let w_none = if cw < NO_WALK { api.nr.split(&api.gr, p, i, j, (api.gr.base(z, i) + api.gr.key(z, j)) as usize) } else { 0.0 };
+    let r = r_car;
+    let pairs: Vec<(usize, usize, f32)> = pairs.into_iter().map(|(a, t, w)| (a, t, if why == RAIL_OFFERED { w / ssum } else { 0.0 })).collect();
     let walk_lost = r * w_none;
     let pw = w_none - walk_lost;
-    PairChoice { pw, d_m: d, drive_min, park, road, why, m_u, m_v, rail, util, r, other_lost, walk_lost, pairs }
+    PairChoice { pw, d_m: d, drive_min, park, road, why, m_u, m_v, rail, util, r, walk_lost, pairs }
 }
 
 /// The everyday layer's choice (T-586, T-201) for purpose inputs `ev`, home subzone `u` and
@@ -255,8 +211,8 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
     let drive_min = p.drive_min_f(distance, f, density(i), density(j));
     let (fixed, paid, free) = p.park_parts(z, j);
     let car = p.car_drive(drive_min, distance * 0.001 * f);
-    let road_free = car + fixed;
-    let park = fixed + (1.0 - free) * paid;
+    let road_free = car + fixed + sz.home_park[u];
+    let park = fixed + (1.0 - free) * paid + sz.home_park[u];
     let road = car + park;
     let cw = p.walk_trip_cost(distance * walk_factor / 1000.0);
     let why = if m_u + m_v > p.pair_walk_max {
@@ -266,50 +222,17 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
     } else {
         RAIL_OFFERED
     };
-    let (mut rail, mut util, mut r, mut other_lost) = (f32::INFINITY, f32::NEG_INFINITY, 0.0f32, 0.0f32);
-    let w_none = ev.no_rail.0;
+    let (mut rail, mut util, mut r) = (f32::INFINITY, f32::NEG_INFINITY, 0.0f32);
+    let w_none = ev.no_rail;
     if why == RAIL_OFFERED {
         rail = m_u + m_v + p.fare_min - fast_ln(sum) / th + off;
         let bt = p.mode_beta(road_free);
         util = bt * (road_free - rail) + p.asc_rail;
-        let r_car = p.car_choice(util, bt * (road_free - cw) + p.asc_walk(), bt, paid, free);
-        r = r_car;
-        let cu = sz.nocar[u];
-        // those without a car on a ride trip: their rail is on the home's walks alone
-        let mut walks: Option<(Vec<(usize, usize, f32)>, f32)> = None;
-        let mut fnc = 0.0;
-        if cu > 0.0 {
-            let mut rail_n = Some(rail);
-            if by_ride {
-                rail_n = None;
-                let (rw, m_w) = ends(sz.walk(u));
-                if m_w + m_v <= p.pair_walk_max {
-                    let mut wn = vec![];
-                    let sn = logsum(&rw, m_w, &mut wn);
-                    if sn >= 1e-30 {
-                        rail_n = Some(m_w + m_v + p.fare_min - fast_ln(sn) / th + off);
-                        walks = Some((wn, sn));
-                    }
-                }
-            }
-            let rk = distance * 0.001 * p.drive_factor(i, j);
-            let (r_n, qn) = p.nocar_choice(cw, rk * p.other_min_km() + p.other_wait(), rail_n);
-            r = r_car + cu * (r_n - r_car);
-            other_lost = cu * r_n * qn;
-            if walks.is_some() && r > 0.0 {
-                fnc = cu * r_n / r;
-            }
-        }
+        let uw = bt * (road_free - cw) + p.asc_walk();
+        r = p.rail_bounds(p.car_choice(util, uw, bt, paid, free), fast_exp(uw - util), rail, road_free + (1.0 - free) * paid);
         // each station pair's share of the trip's rail riders
         for e in pairs.iter_mut() {
-            e.2 *= (1.0 - fnc) / sum;
-        }
-        if let Some((wn, sn)) = walks {
-            // a walk entry is in both lists, at the same place in each egress entry's run
-            let nv = rv.len();
-            for &(ka, kb, w) in &wn {
-                pairs[(ka - ru.start) * nv + (kb - rv.start)].2 += fnc * w / sn;
-            }
+            e.2 *= 1.0 / sum;
         }
     } else {
         for e in pairs.iter_mut() {
@@ -317,7 +240,7 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
         }
     }
     let walk_lost = r * w_none;
-    PairChoice { pw: w_none - walk_lost, d_m: distance, drive_min, park, road, why, m_u, m_v, rail, util, r, other_lost, walk_lost, pairs }
+    PairChoice { pw: w_none - walk_lost, d_m: distance, drive_min, park, road, why, m_u, m_v, rail, util, r, walk_lost, pairs }
 }
 
 /// One leg of a route: a ride (kind 1) from boarding to alighting route node, or a walk between
@@ -509,7 +432,6 @@ impl DemandApi {
             w
         };
         let home = self.pop()[o];
-        let nocar = p.nocar.as_ref().map_or(0.0, |n| if home > 0.0 { n[o].min(1.0) } else { 0.0 });
         let mut cz = Subzones {
             n: 2,
             zone: vec![sz.zone[u], sz.zone[v]],
@@ -517,7 +439,7 @@ impl DemandApi {
             jobs: vec![0.0, self.jobs()[d]],
             cx: vec![city.x[o], city.x[d]],
             cy: vec![city.y[o], city.y[d]],
-            nocar: vec![nocar, 0.0],
+            home_park: vec![if home > 0.0 { p.home_park_cell(o) } else { 0.0 }, 0.0],
             acc_off: vec![0],
             acc_mid: vec![],
             acc_st: vec![],
@@ -586,15 +508,15 @@ impl DemandApi {
             let (i, j) = (self.z.cell_zone[o] as usize, self.z.cell_zone[d] as usize);
             let dm = h[6] as f32;
             let drive = p.drive_min_f(dm, p.drive_factor(i, j), p.place_min_per_km(zone_density(&self.z, i)), p.place_min_per_km(zone_density(&self.z, j)));
-            let park = p.park_mean(&self.z, j);
+            let hp = p.home_park_cell(o);
+            let park = p.park_mean(&self.z, j) + hp;
             let rk = dm * 0.001 * p.drive_factor(i, j);
             let car = p.car_drive(drive, rk);
             // walking against that drive, as the zones' totals have it (`NoRail::split`)
             let (fixed, paid, free) = p.park_parts(&self.z, j);
-            let cu = p.nocar.as_ref().map_or(0.0, |n| n[o]);
             let pw = match m {
-                Model::Commute => p.no_rail_split(cu, car + fixed, paid, free, rk, walk_cost(self, i, j)).0,
-                Model::Everyday(ev) => ev.no_rail.0,
+                Model::Commute => p.walk_no_rail(car + fixed + hp, paid, free, walk_cost(self, i, j)),
+                Model::Everyday(ev) => ev.no_rail,
             };
             h[7] = dm as f64;
             h[8] = pw as f64;
@@ -793,8 +715,8 @@ mod tests {
     fn small() -> (DemandApi, Vec<f32>) {
         let (h, b, n) = small_pack();
         let mut api = DemandApi::new(&h, &b).unwrap();
-        // T-511: some homes without a car, from none to most
-        api.params_mut().nocar = Some(std::sync::Arc::new((0..n).map(|c| (c % 5) as f32 * 0.2).collect()));
+        // T-854: parking at home from none to most, cell by cell
+        api.params_mut().home_dens = Some(std::sync::Arc::new((0..n).map(|c| (c % 5) as f32 * 10_000.0).collect()));
         let (xy, stops, times, km) = small_net();
         api.set_network(&xy, &[17, 17], &stops, &times, &[20.0, 10.0, 4.0, 12.0, 6.0, 0.0], &[10.0, 8.0]).unwrap();
         api.set_fares(2.9, 0.1, &km).unwrap();
@@ -813,7 +735,7 @@ mod tests {
             h["arrays"].as_array_mut().unwrap().push(serde_json::json!({"name": name, "dtype": "f32", "per": "cell", "count": n, "offset": offset}));
         }
         let mut e = EverydayApi::new(&h.to_string(), &b).unwrap();
-        e.params_mut().nocar = Some(std::sync::Arc::new((0..n).map(|c| (c % 5) as f32 * 0.2).collect()));
+        e.params_mut().home_dens = Some(std::sync::Arc::new((0..n).map(|c| (c % 5) as f32 * 10_000.0).collect()));
         let (xy, stops, times, km) = small_net();
         e.set_network(&xy, &[17, 17], &stops, &times, &[20.0, 10.0, 4.0, 12.0, 6.0, 0.0], &[10.0, 8.0]).unwrap();
         e.set_fares(2.9, 0.1, &km).unwrap();
@@ -902,7 +824,7 @@ mod tests {
                     let sum: f32 = pc.pairs.iter().map(|x| x.2).sum();
                     assert!((sum - 1.0).abs() < 1e-4, "pair shares add to {sum}");
                 }
-                assert!((pc.pw - ev.no_rail.0 * (1.0 - pc.r)).abs() < 1e-6);
+                assert!((pc.pw - ev.no_rail * (1.0 - pc.r)).abs() < 1e-6);
             }
             println!("period {q}: {} pairs, {checked} with rail, mean rail {:.3}, worst {worst:.1e}", samples.len(), rail / samples.len() as f32);
             assert!(checked > 100 && rail > 0.0);
@@ -923,6 +845,8 @@ mod tests {
     #[test]
     fn pair_choice_reproduces_mode_choice() {
         let (mut api, _) = small();
+        // every pair solved, none dealt in chunks (T-874), so each one's trips are its own
+        api.params_mut().set_extra("commute_chunk", 0.0).unwrap();
         for q in [0usize, 2] {
             api.solve(q);
             for round in 0..2 {
@@ -941,7 +865,7 @@ mod tests {
                 let (z, gr) = (&api.z, &api.gr);
                 let share = p.period_share as f64;
                 let mut od = vec![0f64; s * s];
-                let (mut worst, mut tot, mut lost_tot, mut walk_tot) = (0f64, 0f64, 0f64, 0f64);
+                let (mut worst, mut tot, mut walk_tot) = (0f64, 0f64, 0f64);
                 let mut checked = 0;
                 for u in 0..sz.n {
                     let i = sz.zone[u] as usize;
@@ -950,7 +874,6 @@ mod tests {
                     }
                     let ou = sz.origin_weight(u, z, gr, share);
                     let mut rail = 0f64;
-                    let mut lost = 0f64;
                     let mut walk_lost = 0f64;
                     for v in 0..sz.n {
                         let j = sz.zone[v] as usize;
@@ -965,7 +888,6 @@ mod tests {
                         let f = gr.ftab[(gr.base(z, i) + gr.key(z, j)) as usize] * gr.k(z, i, j);
                         let x = ou * f * dv * pc.r;
                         rail += x as f64;
-                        lost += (ou * f * dv * pc.other_lost) as f64;
                         walk_lost += (ou * f * dv * pc.walk_lost) as f64;
                         for &(ka, kt, w) in &pc.pairs {
                             od[sz.acc_st[ka] as usize * s + sz.acc_st[kt] as usize] += (x * w) as f64;
@@ -973,14 +895,10 @@ mod tests {
                     }
                     let want = mo.rail_by_sub[u] as f64;
                     worst = worst.max((rail - want).abs() / want.max(1e-3));
-                    // T-513: what rail takes from other, the no-car group's three-way choice
-                    let want_o = mo.other_lost_by_sub[u] as f64;
-                    worst = worst.max((lost - want_o).abs() / want.max(1e-3));
                     // T-558: and the walkers it takes
                     let want_w = mo.walk_lost_by_sub[u] as f64;
                     worst = worst.max((walk_lost - want_w).abs() / want.max(1e-3));
                     walk_tot += want_w;
-                    lost_tot += want_o;
                     tot += want;
                     if want > 0.0 {
                         checked += 1;
@@ -990,7 +908,7 @@ mod tests {
                         assert_eq!(st.sub.rail_home[u], mo.rail_by_sub[u]);
                     }
                 }
-                assert!(checked > 100 && tot > 0.0 && lost_tot > 0.01 * tot && walk_tot > 0.01 * tot, "other and walking must be in play: {checked} origins, rail {tot:.0}, other {lost_tot:.0}, walking {walk_tot:.0}");
+                assert!(checked > 100 && tot > 0.0 && walk_tot > 0.01 * tot, "walking must be in play: {checked} origins, rail {tot:.0}, walking {walk_tot:.0}");
                 assert!(worst < 1e-4, "period {q} round {round}: worst origin off by {worst:.2e}");
                 let (mut d, mut m) = (0f64, 0f64);
                 for k in 0..s * s {

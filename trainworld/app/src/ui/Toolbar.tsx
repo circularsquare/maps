@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { ask, lineDraft, selection, tool, type Tool } from "../game/ui";
 import { notice, world } from "../game/world";
 import { live } from "../map/live";
+import { Chip } from "./widgets";
 
 const HINT: Record<Tool, string> = {
   select: "",
@@ -45,6 +46,14 @@ function Ask() {
     }}>
       <h2 id="confirmation-title">Are you sure?</h2>
       <p id="confirmation-text">{q.text}</p>
+      {q.lines?.length ? (
+        <ul class="confirmation-lines">
+          {q.lines.map((r) => {
+            const l = world.value?.save.lines.find((x) => x.num === r.line);
+            return <li key={r.line}>{l && <Chip line={l} size="sm" plain />}<span>{r.text}</span></li>;
+          })}
+        </ul>
+      ) : null}
       <div class="confirmation-actions">
         <button class="btn text" ref={cancel} onClick={() => (ask.value = null)}>
           {q.no}

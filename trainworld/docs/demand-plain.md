@@ -21,6 +21,9 @@ changing, T-718's route choice between cities and T-720's walking bands). The fu
   A longer trip into another country is damped too: to half inside the EU, Schengen and the UK
   (London - Paris about 30,000 a weekday), and much more elsewhere, the more so the poorer the
   traveller's country (0.26 for the richest).
+- **Weekends and holidays.** Saturdays and Sundays have their own, smaller weekend demand. A public
+  holiday counts as a weekend day for the lines in its country (a line's country is its first
+  stop's), so Thanksgiving runs a New York line on weekend demand and fares that day only.
 
 ## How each trip picks a mode
 
@@ -61,8 +64,9 @@ There is no built-in liking for the train. Rail and the car are compared on time
   length: on a 4 hour trip 5 minutes apart is 70%. The trips between cities choose their stations
   the same way, their length being the drive's. At a station, riders take the first
   train that helps.
-- Or drive to the station: 15 minutes to start, the drive (counted 1.33 a minute), and the cheaper of
-  parking there or a 10 minute drop-off. Only for trips of 5 km or more.
+- Or drive to the station: 15 minutes to start, the drive (counted 1.33 a minute), the cheaper of
+  parking there or a 10 minute drop-off, and the parking at home (below). Only for trips of 5 km or
+  more.
 
 **By car**
 - Road time from the distance and the place: fast highways in the middle, slow streets at the ends
@@ -70,9 +74,14 @@ There is no built-in liking for the train. Rail and the car are compared on time
 - Driving counts 1.33 a minute.
 - Parking: 7 minutes to park on every trip, plus a price where jobs are dense (none in suburbs, up
   to 50 perceived minutes in the densest centres), plus congestion charges (Manhattan, London).
+- Parking at home: where people live densely, the car costs something to keep there too, 0.4 of
+  what parking costs at work by the same density rule (none under 3,000 people a km², 7 minutes at
+  10,000, 16 at 40,000). This is why dense neighbourhoods take the train more; there is no
+  "households without a car" figure.
 - Owning the car: $1.50 a trip plus $0.10 a km, at 3 minutes a dollar. A typical trip pays $2.20
-  to $4.00, and a driver's day comes to about $10. Homes without a car pay none, and so do the
-  long trips between cities.
+  to $4.00, and a driver's day comes to about $10. The long trips between cities pay none.
+- Everyone can drive. "Car" in the game means the car and every other way of getting about (bus,
+  taxi, bike).
 
 **Between cities** (the car and the plane against the train)
 - Car: the drive at 85 km/h on a road 1.25 times the straight line, plus $0.15 a km and parking,
@@ -97,7 +106,11 @@ There is no built-in liking for the train. Rail and the car are compared on time
 - A commute's distance for walking is between actual homes and jobs (six of each per 2 km zone),
   not between zone centres, so a 1 km commute across a zone line walks like a 1 km one.
 
-**Homes without a car** choose train, walking or "other" (bus, taxi, bike), never the car.
+**Some always take the train, some never do.** Where a train serves the trip, 5% of the people
+not walking take it whatever, while the train costs no more than driving; that fades to nobody
+when the train costs three times the drive, so a useless detour line gets no free riders. The same
+the other way: 5% always drive while driving costs no more than the train, fading to nobody when
+the train costs a third of the drive.
 
 ## Why rail is hard to win in the suburbs
 
@@ -108,11 +121,11 @@ parking is paid, rail wins easily (Hempstead to Midtown). The trip explorer show
 ## Anita's two tests
 
 Both ask what rail could carry if a straight train ran between every pair of places. Walking
-and "other" are left out of the comparison; the figure is rail out of rail plus car.
+is left out of the comparison; the figure is rail out of rail plus car.
 - **A**: 140 km/h, free, a 3 minute walk at each end, a train every 5 minutes. Target at least 85%.
-  New York 86%, London 85.5%. As a share of all trips, walks and the rest included: 79% and 75%.
+  New York 86%, London 85.6%, Paris 87.7%, Tokyo 87.8%; Houston, all suburb, 75.7%.
 - **B**: 100 km/h, a 3 minute walk at each end, a fare of $1.50 plus $0.05 a km. Target at least 50%.
-  New York 79%, London 79%. Of all trips: 71% and 67%.
+  New York 79%, London 78.5%.
 - The real networks, for comparison: New York's rail takes 20% of rail plus car (14% of all trips),
   London's 29% (19%); before the route choice was sharpened (T-710) and changes cost 2 minutes
   (T-717), 23% and 32%. Short trips are where

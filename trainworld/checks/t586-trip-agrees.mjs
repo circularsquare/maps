@@ -131,8 +131,8 @@ const off = (a, b) => Math.max(...a.map((v, i) => Math.abs(v - b[i])));
 async function pair(page, sel, far, filter) {
   const hover = await page.evaluate(([x, y]) => window.twViews.hover(x, y), [far.x, far.y]);
   if (!hover || !hover.some((l) => /Click to explore/.test(l))) return { skip: 'no far-bubble hover there' };
-  // the bar's flex-grow by colour: train blue, walking green, driving red (map/modeBar.ts)
-  const cols = await page.evaluate(async () => { const p = await import('/src/game/palette.ts'); return [p.MODE_COLOURS.train, p.MODE_COLOURS.walk, p.MODE_COLOURS.drive]; });
+  // the bar's flex-grow by colour, in the scheme in force (map/modeBar.ts; walking is yellow under Train share, T-833)
+  const cols = await page.evaluate(async () => { const c = (await import('/src/game/palette.ts')).modeColours(); return [c.train, c.walk, c.drive]; });
   const grow = cols.map((c) => { const m = hover[1].match(new RegExp(`flex-grow:([0-9.e+-]+);background:${c.replace(/[#()]/g, (s) => '\\' + s)}`)); return m ? Number(m[1]) : 0; });
   const hoverCount = hover[0].match(/^([0-9.,]+k?)/)?.[1];
   const box = await page.evaluate(() => window.tw.map.getContainer().getBoundingClientRect().toJSON());

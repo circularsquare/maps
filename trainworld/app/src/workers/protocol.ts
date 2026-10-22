@@ -142,7 +142,7 @@ export type ToClock =
   | { kind: "income"; perHour: number[][]; rides: number[][]; lines?: { line: number; perHour: number[][]; rides: number[][] }[] }
   /** T-531: each running line's fares, train rides and running cost by region, [region, share] pairs
    * (game/regionMoney.ts) */
-  | { kind: "regionShares"; lines: { line: number; fare: [string, number][]; ride: [string, number][]; run: [string, number][] }[] }
+  | { kind: "regionShares"; lines: { line: number; fare: [string, number][]; ride: [string, number][]; run: [string, number][] }[]; upkeep: [string, number][] }
   /** T-684: each running line's points per game hour by region, `[region, perHour[dayKind][period]]`
    * (game/points.ts) */
   | { kind: "points"; lines: { line: number; regions: [string, number[][]][] }[] }
@@ -177,11 +177,12 @@ export type ToClock =
    * (`TrackApi.junction_info`), where a line waits at a demand level (`line_delays`), a blueprint
    * stretch's PIs with their curves (`edge_pis`, T-064), a flyover's price (`[US$M]`, T-080), or
    * what doubling up a track adds to the blueprint (`[US$M]`, or `[-1, ...]` and the refusal's
-   * kinds as character codes, joined by newlines; T-708) */
+   * kinds as character codes, joined by newlines; T-708), or what removing pieces does to lines
+   * (`removal_lines`, T-859) */
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "removal"; edges: number[]; stations: number[] };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -206,6 +207,14 @@ export interface MoneyState {
   hsCarPrice: number;
   hsRunCostCarKm: number;
   hsRunCostTrainKm: number;
+  /** T-867: upkeep a day, real US$, per km of double track and per station, and single and
+   * high-speed track's upkeep over double track's */
+  upkeepTrackKm: number;
+  upkeepStation: number;
+  upkeepSingle: number;
+  upkeepHsr: number;
+  /** T-867: the network's upkeep a game day, US$M (track and stations), the route-km and stations behind it */
+  upkeep: { track: number; stations: number; km: number; count: number };
   /** fares and running costs count this many times over in a game day (T-081, `ECONOMY`) */
   economy: number;
   fares: { base: number; perKm: number };
@@ -297,6 +306,8 @@ export interface ClockLine {
   trainCost: number;
   /** high-speed trains (T-817) */
   fast: boolean;
+  /** its share of the upkeep of the track and stations it uses, US$M a game day (T-867) */
+  upkeep: number;
   /** per stretch between stops of run 0: top speed reached, the limit there (km/h), what sets
    * the limit (`TrackApi::line_stretch_speeds`, T-817) */
   stretchSpeeds: number[];

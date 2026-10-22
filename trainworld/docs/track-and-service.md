@@ -270,7 +270,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   stores its cars, 0 (a new line's default) for the most its shortest platform fits; a set length
   runs as set, at most that cap. A platform later shortened below it caps the trains while the
   setting stays, so lengthening the platform brings the set length back. Riders a train holds
-  (160 a car at crush), the cars the fleet needs and the running cost (US$9 a train-km plus US$2 a car-km) follow the cars
+  (160 a car at crush), the cars the fleet needs and the running cost (US$4 a train-km plus US$2 a car-km) follow the cars
   run. One undoable edit, buying any cars it needs as other fleet growth does (6.4).
   Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot, and platforms within 100 m of each other count as one station (4.4). Stations whose platforms come within 50 m form a station complex, which a click on a station selects as one (T-249) and the demand circles can show as one (8, T-146); the player can link any two stations up to 1 km apart into one complex and unlink them (T-197, saved with the network as `Network::links`, not in the undo history). Riders change between any two stations of a complex on foot, however far apart (4.4, T-161).
 
@@ -404,7 +404,9 @@ partway (when the line does) and waiting at busy track, and names the places it 
 - **Lines**: ordered stops, plus the exact path between them stored as edges with a direction, so
   new track never reroutes a line by itself. Splitting an edge rewrites the paths through it;
   deleting one reroutes by the fastest path, unless that path reverses where the old one did not,
-  or marks the line broken. A line may pass a station without stopping, and may stop at a station
+  or marks the line broken. Removing a station a line stops at takes it out of the line's stops
+  and routes the line through the rest the same way, else leaves it broken (T-859); one undo
+  restores both. A line may pass a station without stopping, and may stop at a station
   twice, never twice in a row.
   **Reversing partway** (T-797, notes/T-797.md): a line's path may turn back at a stop or at a
   bare track end (a node with one edge end and no station, such as a headshunt), nowhere else.
@@ -579,12 +581,26 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   high-speed cars owned and spare, once there are any); the line
   panel's train buttons say in their hover what a step buys or frees; the blueprint quote and a
   planned line's Construct button include the cars.
-- **Running cost** US$9 per train-km plus US$2 per car-km (trains an hour each way x line length,
-  times 9 + 2 x cars: a 4-car train US$17 a train-km, 9 cars US$27, 12 cars US$33; under real
-  figures so fares can cover it, high enough that thin areas lose money, T-805; the train part
-  stands for crew, stations and track upkeep, which do not grow with length; T-807, real figures in
-  research/running-costs.md; `RUN_COST_TRAIN_KM` and `RUN_COST_CAR_KM`; high-speed trains US$12 a
-  train-km plus US$3 a car-km, `HS_RUN_COST_*`, T-817), and **fares**,
+- **Running cost** US$4 per train-km plus US$2 per car-km (trains an hour each way x line length,
+  times 4 + 2 x cars: a 4-car train US$12 a train-km, 9 cars US$22, 12 cars US$28; under real
+  figures so fares can cover it, T-805, T-807, real figures in research/running-costs.md;
+  `RUN_COST_TRAIN_KM` and `RUN_COST_CAR_KM`; high-speed trains US$5 a train-km plus US$3 a car-km,
+  `HS_RUN_COST_*`, T-817, T-867).
+- **Upkeep** (T-867, notes/T-867.md): constructed track and stations cost money every game day
+  whether trains run or not, draining evenly through the day: US$30k a route-km of double track
+  times its price factor (`track_factor`: high-speed 1.5x, single 0.6x; quad is two double-track
+  edges, so twice), US$50k a constructed station at any elevation; crossovers, junctions and
+  flyovers nothing on top; blueprint nothing (`UPKEEP_TRACK_KM`, `UPKEEP_STATION`, real US$300 and
+  500 times `ECONOMY`; `TrackApi::upkeep`). A line's share (`TrackApi::line_upkeep`): each edge's
+  upkeep split between the running lines on it by their trains a weekday, each station's between
+  the running lines stopping there; what no running line uses counts only for the network. Its
+  profit (line panel, Lines tab) is fares less its running cost and that share. By region, each
+  edge's upkeep counts where its midpoint is and each station's in its own region
+  (`upkeepShares`, game/regionMoney.ts). The ledgers keep it as `upkeep` beside `running`. Shown
+  in the Money tab's Upkeep row, an Upkeep row a day in the station panel (constructed stations)
+  and the track inspector (not on crossovers), and "then $X a day upkeep" under the Build tab's
+  blueprint total (the pieces switched off left out); each hover states the rule.
+- Running costs, upkeep and **fares**
   are settled by the clock worker into the cash and a ledger per day (30 kept) and per hour (48
   kept, T-447) as the game runs, not once an hour (T-284). The ledgers hold one entry per day or
   hour, in order; a load merges any day or hour an older save lists twice. Money time never goes
@@ -660,9 +676,10 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
 - **Economy at 100x** (Anita, 2026-10-09, as Subway Builder does; T-081): fares and running costs
   per game day count 100 times the real figures (`ECONOMY` in `sim/src/track/params.rs`, the one
   constant; running costs scale in the track model, fares in `app/src/game/money.ts`), so a game
-  day earns and spends what a hundred real days would. The fare the player sets and the US$9 a
+  day earns and spends what a hundred real days would. The fare the player sets and the US$4 a
   train-km plus US$2 a car-km shown (Money tab, line panel and train length hovers) are the figures
-  before that scaling; construction and train prices are not scaled.
+  before that scaling; upkeep is shown as the game day's figure (US$30k, real US$300); construction
+  and train prices are not scaled.
 
 ### 6.5 Edits
 

@@ -128,6 +128,10 @@ const perUnitText = (perKm: number) => {
 export function runCostRule(m: { runCostTrainKm: number; runCostCarKm: number }): string {
   return `${perUnitText(m.runCostTrainKm)} a train-${distUnit()} plus ${perUnitText(m.runCostCarKm)} a car-${distUnit()}`;
 }
+/** T-867: "$30k a km of track and $50k a station a day", at the game's economy, in the shown unit. */
+export function upkeepRule(m: { upkeepTrackKm: number; upkeepStation: number; economy: number }): string {
+  return `${money(perDistance(m.upkeepTrackKm * m.economy))} a ${distUnit()} of track and ${money(m.upkeepStation * m.economy)} a station a day`;
+}
 type Fleets = { carPrice: number; runCostTrainKm: number; runCostCarKm: number; hsCarPrice: number; hsRunCostTrainKm: number; hsRunCostCarKm: number; fleet: number; carsNeeded: number; fleetFast: number; carsNeededFast: number };
 /** One kind of train's car price, running costs and spare cars (T-817: high-speed or ordinary). */
 export function trainKind(m: Fleets, fast: boolean): { carPrice: number; runCostTrainKm: number; runCostCarKm: number; spare: number } {

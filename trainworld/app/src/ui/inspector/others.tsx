@@ -6,7 +6,7 @@ import { clock, SPEEDS } from "../../game/clock";
 import { demandView, lineDemand } from "../../game/demand";
 import { loadFailure } from "../../game/loading";
 import { PERIODS, periodAt } from "../../game/periods";
-import { count, distance, distanceOf, duration, length, levelLabel, money, roughDistance, speed } from "../../game/format";
+import { count, distance, distanceOf, duration, length, levelLabel, money, roughDistance, speed, upkeepRule } from "../../game/format";
 import { compass, stationTowards } from "../../game/places";
 import { DEMAND_INDEX, type Level, type LineInput, type Selection, type StationInput } from "../../game/types";
 import { complexOf, inComplexView, openAlone } from "../../game/complexView";
@@ -26,6 +26,8 @@ import { describeIssues } from "../../game/issues";
 import { tripAt } from "../../map/network";
 import { nextLeavingAt, platformsAt, tripLoad } from "../../game/boarding";
 import { today, useToday, type LineToday } from "../../game/today";
+import { moneyState } from "../../game/money";
+import { edgeUpkeep, stationUpkeep } from "../../game/regionMoney";
 import { Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { nextSuggestion } from "../../map/stationNames";
 import { NameEdit } from "./NameEdit";
@@ -35,6 +37,7 @@ import { StationLongerTrips } from "./LongerTrips";
 import { ComplexMap } from "./ComplexMap";
 import { ClosestStations } from "./ClosestStations";
 import { PurposeSplit } from "./PurposeSplit";
+import { TrainStops } from "./TrainStops";
 
 function StationGlyph() {
   return <span class="st-glyph" />;
@@ -336,6 +339,7 @@ function StationDetails({ s, lines, props, construct, remove }: {
   // a line may stop here twice (T-797: on both sides of a reversal): both visits count
   const visits = (l: LineInput) => l.stops.flatMap((x, k) => (x === s.id ? [k] : []));
   const here = lines.map((l) => [l, visits(l).reduce((n, k) => n + (t.get(l.id)?.stops[k] ?? 0), 0)] as const);
+  const m = moneyState.value;
   return (
     <>
       <Built built={s.built} what="The station" />
@@ -344,6 +348,11 @@ function StationDetails({ s, lines, props, construct, remove }: {
           <span class="grow">Platforms</span>
           <Stepper value={length(s.length)} wide label="platform length" onStep={(d) => props(Math.max(60, Math.min(400, s.length + d * 20)))} />
         </li>
+        {s.built && m && (
+          <Row label="Upkeep">
+            <span data-tip={`Each constructed station costs ${money(stationUpkeep(m))} a day to keep up, at any elevation, whether trains stop or not. The lines stopping here share it by their trains a day.`}>{money(stationUpkeep(m))} a day</span>
+          </Row>
+        )}
       </ul>
       {lines.length > 0 && <div class="h">Lines<span class="right muted small">boardings, past 24 h</span></div>}
       <ul class="rows pick">
@@ -529,6 +538,7 @@ function OnBoard({ line, run, s, stopS, cars, profile, dep }: { line: LineInput;
         <Row label="Seats">{seats.toLocaleString("en-US")}</Row>
         <Row label="Full at">{crush.toLocaleString("en-US")}</Row>
       </ul>
+      {!atEnd && dm && <TrainStops line={line} dm={dm} board={b} trip={i} run={run} seg={seg} stopS={stopS} profile={profile} dep={dep} />}
     </>
   );
 }
@@ -657,6 +667,7 @@ export function TrackInspector({ edge }: { edge: number }) {
   // a crossover is one thing: both diagonals are priced, built and removed together (T-391)
   const other = e.crossover ? w.edges.find((x) => x.id === e.partner) : undefined;
   const cost = e.cost + (other?.cost ?? 0);
+  const m = moneyState.value;
   const construct = async () => {
     const a = await edit({ op: "construct", edges: [e.id], stations: [] });
     if (a.ok) say(`${e.crossover ? "Crossover" : "Track"} constructed for ${money(a.charge * 1e6)}.`);
@@ -683,6 +694,13 @@ export function TrackInspector({ edge }: { edge: number }) {
         )}
         <Row label="Slowest curve">{speed(e.vminKmh)}</Row>
         <Row label={e.built ? "Cost to build" : "Cost to construct"}>{money(cost)}</Row>
+        {!e.crossover && m && (
+          <Row label="Upkeep">
+            <span data-tip={`${e.built ? "Upkeep" : "Once constructed, upkeep"} is ${upkeepRule(m)}, whether trains run or not. High-speed track costs ${m.upkeepHsr} times as much and single track ${m.upkeepSingle} times. The lines on it share it by their trains a day.`}>
+              {money(edgeUpkeep({ ...e, built: true }, m))} a day
+            </span>
+          </Row>
+        )}
       </ul>
       {!e.built && !e.crossover && <Shape edge={e.id} version={w.version} />}
       {lines.length > 0 && <div class="h">Lines on it</div>}

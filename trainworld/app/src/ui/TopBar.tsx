@@ -1,5 +1,5 @@
 // Top bar: city, the mode split (the goal number, train first, in the fixed mode colours), cash,
-// day and time (the demand level is in the clock's hover), speed and pause. The clock is its own
+// time and date over the sky and demand band, speed and pause. The clock is its own
 // component so a game minute re-renders only it.
 
 import type { ComponentChildren } from "preact";
@@ -7,7 +7,14 @@ import { clock, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandView, modeRides, modeSplit, viewFinal, viewUpdating } from "../game/demand";
 import { clockTime, count, dayOf, money, moneyCash } from "../game/format";
-import { weekdayName, weekdayOf } from "../game/days";
+import { dateName, dateOf, MONTH_LONG, weekdayOf } from "../game/days";
+import { PERIODS, periodAt } from "../game/periods";
+import { sunTimes } from "../game/sun";
+import { CLOCK_UTC_OFFSET, viewShift } from "../game/localTime";
+import { viewCentre } from "../game/listScope";
+import { SkyBanner } from "./SkyBanner";
+import { countryName, holidaysNear, loadHolidays, type HolidaySpan } from "../game/holidays";
+import { useEffect } from "preact/hooks";
 import { shownDay } from "../game/ui";
 import { splitTip } from "../game/splitTip";
 
@@ -24,18 +31,57 @@ import { savesOpen } from "./SavesPanel";
 
 const NO_CLOCK = perfOff("clock");
 
-const DEMAND_NAME = { high: "High demand", medium: "Medium demand", low: "Low demand" };
+const hourTime = (h: number) => clockTime(Math.round(h * 60) % 1440);
 
+/** The demand band's hover: this period, then the next. */
+function periodTip(minute: number): string {
+  const p = PERIODS[periodAt(minute * 60)], next = PERIODS.find((q) => q.from === p.to % 24)!;
+  const lower = (s: string) => s[0].toLowerCase() + s.slice(1);
+  return `${p.name}, ${p.demand} demand until ${hourTime(p.to)}\nThen ${lower(next.name)}, ${next.demand} demand until ${hourTime(next.to)}`;
+}
+
+/** The sky's hover: today's sunrise and sunset at the view's centre (T-861, game/sun.ts). */
+function sunTip(day: number): string {
+  const [lon, lat] = viewCentre.value ?? [-74.0, 40.7];
+  const s = sunTimes(day, lon, lat, CLOCK_UTC_OFFSET + viewShift.value / 3600);
+  if (s === "up") return "The sun does not set today";
+  if (s === "down") return "The sun does not rise today";
+  return `Sunrise ${hourTime(s[0])}, sunset ${hourTime(s[1])}`;
+}
+
+/** T-862: one line per holiday on the sky, "Today: Thanksgiving Day, United States", "Tomorrow: …",
+ * or with the hour it starts where its country keeps another local time. */
+function holidayLines(minute: number, list: HolidaySpan[]): string[] {
+  const now = minute * 60, today = Math.floor(now / 86400);
+  return list.filter((h) => h.t1 > now && h.t0 < now + 18 * 3600).map((h) => {
+    const at = `${h.name}, ${countryName(h.country)}`;
+    if (h.t0 <= now) return `Today: ${at}`;
+    const when = Math.floor(h.t0 / 86400) === today ? "Today" : "Tomorrow";
+    return h.t0 % 86400 === 0 ? `${when}: ${at}` : `${when} from ${clockTime(h.t0 / 60)}: ${at}`;
+  });
+}
+
+/** T-861: the time and date over the sky banner (ui/SkyBanner.tsx) and its demand band. */
 function Clock() {
   // ?perfOff=clock (T-045, measurement only): read without subscribing, so it never re-renders.
   // T-309: the local time and day where the player is looking
   const minute = NO_CLOCK ? clock.local.peek() : clock.local.value;
   // T-172: a loaded game's clock waits for its first demand estimate; building does not
   const held = clock.held.value;
+  const day = dayOf(minute), { month, date } = dateOf(day);
+  useEffect(loadHolidays, []);
+  const hols = holidayLines(minute, holidaysNear.value);
+  const todayHols = hols.filter((l) => l.startsWith("Today: "));
+  const dateTip = `${WEEKDAY_LONG[weekdayOf(day)]}, ${MONTH_LONG[month]} ${date}, day ${day}`;
   return (
-    <div class="clock" data-tip={held ? "The clock starts when demand has loaded" : `${WEEKDAY_LONG[weekdayOf(dayOf(minute))]}, day ${dayOf(minute)} · ${DEMAND_NAME[NO_CLOCK ? clock.demand.peek() : clock.demand.value]}`}>
-      <span class="day sm">{weekdayName(dayOf(minute))} {dayOf(minute)}</span>
-      <b class={"time lg" + (held ? " held" : "")}>{clockTime(minute)}</b>
+    <div class="clock">
+      <div class="clock-box">
+        <div class="clock-text" data-tip={held ? "The clock starts when demand has loaded" : [dateTip, ...todayHols].join("\n")}>
+          <b class={"time lg" + (held ? " held" : "")}>{clockTime(minute)}</b>
+          <span class="date">{todayHols.length > 0 && <i class="holiday-dot" />}{dateName(day)}</span>
+        </div>
+        <SkyBanner skyTip={[sunTip(day), ...hols].join("\n")} bandTip={periodTip(minute)} />
+      </div>
     </div>
   );
 }
@@ -45,7 +91,7 @@ function Clock() {
 function Cash() {
   const live = liveMoney.value, m = moneyState.value;
   const today = live.today;
-  const tip = today ? `Today: fares ${money(today.fares * 1e6)}, running trains ${money(-today.running * 1e6)}` : undefined;
+  const tip = today ? `Today: fares ${money(today.fares * 1e6)}, running trains ${money(-today.running * 1e6)}, upkeep ${money(-(today.upkeep ?? 0) * 1e6)}` : undefined;
   // T-728: a sandbox shows no cash; the hover has the money since the start
   if (m?.mode === "sandbox") return <div class="cash sandbox" data-tip={["Sandbox: nothing is refused for money", `Since day 1: ${money((live.cash - START_CASH) * 1e6)}`, ...(tip ? [tip] : [])].join("\n")}>Sandbox</div>;
   // T-305: a box of fixed width, the minus then the $ at fixed places and the digits left-aligned after the $

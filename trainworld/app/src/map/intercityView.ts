@@ -31,7 +31,8 @@ import { zoneLoads } from "../game/loading";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES } from "../game/cities";
 import { clock } from "../game/clock";
-import { packToLngLat } from "../game/coords";
+import { lngLatToPack, packToLngLat } from "../game/coords";
+import { tripOpenedFrom } from "../game/trip";
 import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type Corridors, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
 import { selectedScope } from "../game/complexView";
 import { count } from "../game/format";
@@ -43,7 +44,7 @@ import { CATCH_STEP, caughtUp, tripsDone } from "./catchUp";
 import { anchorVersion } from "./anchorVersion";
 import { localModes, modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt } from "./demandHover";
-import { LINE, type DemandOverlay } from "./demandOverlay";
+import { LINE, pieEdge, type DemandOverlay } from "./demandOverlay";
 import { anchor, EARTH_C, kAtLat, toLocal, toLngLat, type Anchor } from "./geo";
 
 /** A bubble selection's longer trips, for the commuters inspector; null while unknown. */
@@ -78,9 +79,15 @@ const SELECTED_TRIPS_PER_PX2 = 1400;
 const SCALE_ZOOM = 6.5;
 const ZOOM_GROWTH = 0.35;
 /** The lines from a selected zone to the others (T-520). */
-const ZONE_LINE_ALPHA = 0.5;
+const ZONE_LINE_ALPHA = 0.8;
 /** The zones' pointers are this many times the neighbourhoods' length (T-739). */
 const ZONE_STUB = 2;
+/** Intercity bubbles drawn as a pie rim, train blue and the rest red, round a faint white fill
+ * (T-863, Anita: to try); false brings back the solid disc coloured by the mix. */
+const PIE_BUBBLES = true;
+/** A bubble's edge value: its outline (0 none, 1 plain, 2 the selected one's), and under `PIE_BUBBLES`
+ * the pie by train share; a bubble nobody travels in stays a plain grey disc. */
+const edgeOf = (outline: 0 | 1 | 2, rail: number, all: number) => (PIE_BUBBLES && all > 0 ? pieEdge(outline, rail / all) : outline);
 /** Most place labels on screen at once, the biggest first (T-493). */
 const MAX_LABELS = 8;
 
@@ -101,6 +108,9 @@ interface Marks {
   cities?: string[];
   /** the disc whose label is placed first (the selected city's) */
   first?: number;
+  /** per disc, a bubble selection's far end it stands for (T-866: a click opens the trip
+   * explorer): its place, its 6 km zone (-1 the whole place) and where it is, world metres */
+  far?: { place: number; gid: number; at: [number, number] }[];
 }
 
 const PLACES = INTERCITY_PLACES.length;
@@ -145,13 +155,17 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     // discs run biggest first, so the cap keeps the biggest on screen (T-493)
     const order = Array.from(labels.children, (_, i) => i);
     if (marks.first !== undefined && marks.first > 0) order.unshift(...order.splice(marks.first, 1));
+    // T-871: a label past the cap or off screen is hidden unmeasured; the overview holds one per zone,
+    // and each measure after a write lays the page out again
+    const W = map.getContainer().clientWidth, H = map.getContainer().clientHeight;
     for (const i of order) {
       const el = labels.children[i] as HTMLElement;
       const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], marks.anchor));
       const r = marks.discs[i * DISC + 2] * (512 * 2 ** map.getZoom() / EARTH_C) * view.bubbleSize;
+      if (used.length >= MAX_LABELS || p.x < -r - W || p.x > W + r + W || p.y < -r - H || p.y > H + r + H) { el.style.visibility = "hidden"; continue; }
       const w = el.offsetWidth, h = el.offsetHeight;
       const positions = [[p.x + r + 5, p.y - h / 2], [p.x - w - r - 5, p.y - h / 2], [p.x - w / 2, p.y + r + 5], [p.x - w / 2, p.y - h - r - 5]];
-      const at = used.length >= MAX_LABELS ? undefined : positions.find(([x, y]) => x >= 0 && y >= 0 && x + w <= map.getContainer().clientWidth && y + h <= map.getContainer().clientHeight && !used.some(a => x < a.x + a.w + 4 && x + w + 4 > a.x && y < a.y + a.h + 4 && y + h + 4 > a.y));
+      const at = positions.find(([x, y]) => x >= 0 && y >= 0 && x + w <= W && y + h <= H && !used.some(a => x < a.x + a.w + 4 && x + w + 4 > a.x && y < a.y + a.h + 4 && y + h + 4 > a.y));
       el.style.visibility = at ? "" : "hidden";
       if (at) {
         el.style.transform = `translate(${Math.round(at[0])}px, ${Math.round(at[1])}px)`;
@@ -244,7 +258,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const [x, y] = toLocal(p.city.center[0], p.city.center[1], a);
       const c = bubbleColour(p.rail, p.walk, Math.max(0, p.all - p.rail - p.walk));
       const r = Math.sqrt(p.all / (own ? SELECTED_TRIPS_PER_PX2 : TRIPS_PER_PX2)) * zoomScale / pxPerUnit;
-      discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, p.isOwn ? 2 : 1], i * DISC);
+      discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, edgeOf(p.isOwn ? 2 : 1, p.rail, p.all)], i * DISC);
       label(`${p.city.name} · ${count(p.all)} trips`);
     });
     const first = points.findIndex((p) => p.isOwn);
@@ -290,7 +304,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const points = regional ? current.flows.places.filter(p => p.all > 0 && p.place !== current!.own).map(p => {
       const city = CITIES.find(c => c.place === p.place);
       const ll = city?.center ?? packToLngLat(p.x, p.y);
-      return { ...p, ll, name: INTERCITY_PLACES[p.place] };
+      return { ...p, ll, name: INTERCITY_PLACES[p.place], gid: -1 };
     }) : current.flows.zones.filter(z => z.all > 0 && z.place !== current!.own).map(z => ({...z, ll: packToLngLat(z.x, z.y), name: ""}));
     points.sort((a, b) => b.all - a.all);
     const { verb } = current;
@@ -310,12 +324,13 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const unscaledRadius = regional ? 38 * Math.sqrt(z.all / max) / pxPerUnit
         : Math.sqrt(0.6 * 6000 ** 2 / Math.PI * z.all / max) * kAtLat(lat);
       const r = unscaledRadius * INTERCITY_RADIUS_SCALE;
-      discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, 1], i * DISC);
+      discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, edgeOf(1, z.rail, z.all)], i * DISC);
       const place = z.name || "here";
-      tags.push([`${count(z.all)} inter-region trips ${shownDayPhrase.peek()} ${verb} ${place}`, modeBar(z.rail, 0, Math.max(0, z.all - z.rail))]);
+      tags.push([`${count(z.all)} inter-region trips ${shownDayPhrase.peek()} ${verb} ${place}`, modeBar(z.rail, 0, Math.max(0, z.all - z.rail)), "Click to explore these trips"]);
       if (regional) label(`${z.name} · ${count(z.all)} trips`);
     });
-    marks = { discs, anchor: a, tags };
+    const far = points.map((z) => { const p = lngLatToPack(z.ll[0], z.ll[1]); return { place: z.place, gid: z.gid, at: [p.x, p.y] as [number, number] }; });
+    marks = { discs, anchor: a, tags, far };
     view.setDiscs("inter", discs, a);
     placeLabels();
   };
@@ -419,11 +434,22 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
 
   /** A click with the select tool on a city bubble: that city selected (the selected one's own
    * bubble keeps the selection); undefined when no city bubble is there. */
-  const click = (px: number, py: number): Selection | undefined => {
+  const click = (px: number, py: number, nearPoint?: (sel: Extract<Selection, { kind: "commuters" }>) => [number, number] | null): Selection | undefined => {
+    const sel = selection.peek();
+    // T-866: with a bubble selection, a far place or 6 km zone opens the trip explorer between them
+    if (marks?.far && sel?.kind === "commuters" && nearPoint) {
+      const i = discAt(marks.discs, pointerAt(map, px, py), marks.anchor, view.bubbleSize);
+      const f = i >= 0 ? marks.far[i] : undefined;
+      const near = f ? nearPoint(sel) : null;
+      if (!f || !near) return undefined;
+      const far = { place: f.place, gid: f.gid };
+      const trip: Selection = sel.end === "home" ? { kind: "trip", from: near, to: f.at, far } : { kind: "trip", from: f.at, to: near, far };
+      tripOpenedFrom.value = { trip, from: sel, places: { end: sel.end, near: Uint32Array.from(sel.cells), far: new Uint32Array(0) } };
+      return trip;
+    }
     if (!marks?.cities) return undefined;
     const i = discAt(marks.discs, pointerAt(map, px, py), marks.anchor, view.bubbleSize);
     if (i < 0) return undefined;
-    const sel = selection.peek();
     return sel?.kind === "city" && sel.city === marks.cities[i] ? sel : { kind: "city", city: marks.cities[i] };
   };
   return { click };

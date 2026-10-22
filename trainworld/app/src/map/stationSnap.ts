@@ -124,8 +124,11 @@ export function layoutIssues(c: Candidate, platform: number, lay: Layout): strin
     if (!n || n.platform > 0 || n.ports > 2) return ["StationPorts"];
     const reach = n.ports <= 1 ? platform : platform / 2;
     for (const id of byNode.get(c.node) ?? []) {
-      const e = byId.get(id)!, other = e.a === c.node ? e.b : e.a;
-      if (reach + ends(other) > e.lengthM - 1) out.add(joint(other) ? "PlatformJoint" : "PlatformTooLong");
+      const e = byId.get(id)!;
+      let other = e.a === c.node ? e.b : e.a, gap = e.lengthM;
+      // at a loose end the joints within the platform are joined through first (T-860)
+      if (n.ports <= 1) [other, gap] = joinThrough(e, other, gap, reach + 2, lay, joint);
+      if (reach + ends(other) > gap - 1) out.add(joint(other) ? "PlatformJoint" : "PlatformTooLong");
       if (e.a === c.node ? crossed(id, 0, reach) : crossed(id, e.lengthM - reach, e.lengthM)) out.add("PlatformCrossing");
     }
     return [...out];
@@ -134,23 +137,29 @@ export function layoutIssues(c: Candidate, platform: number, lay: Layout): strin
   if (!e0) return [];
   const mine = platform / 2, s0 = c.frac * e0.lengthM;
   if (crossed(e0.id, s0 - mine, s0 + mine)) out.add("PlatformCrossing");
-  const same = (o: SnapEdge) => o.built === e0.built && !!o.off === !!e0.off && (o.tracks ?? 1) === (e0.tracks ?? 1) && !o.crossover && !e0.crossover;
   for (const [start, gap0] of [[e0.a, c.frac * e0.lengthM], [e0.b, (1 - c.frac) * e0.lengthM]] as const) {
-    let node = start, gap = gap0, from = e0.id;
-    const seen = new Set([from]);
-    // joints within the platform's reach (and 2 m) are joined through, as unjoin_near does
-    while (gap < mine + 2 && joint(node)) {
-      const next = (byNode.get(node) ?? []).find((id) => id !== from);
-      const o = next === undefined ? undefined : byId.get(next);
-      if (!o || seen.has(o.id) || !same(o)) break;
-      seen.add(o.id);
-      gap += o.lengthM;
-      node = o.a === node ? o.b : o.a;
-      from = o.id;
-    }
+    const [node, gap] = joinThrough(e0, start, gap0, mine + 2, lay, joint);
     if (mine + ends(node) > gap - 1) out.add(joint(node) ? "PlatformJoint" : "PlatformTooLong");
   }
   return [...out];
+}
+
+/** From `node`, `gap` metres along `e0`, on through plain joints while the gap is under `reach`,
+ * as unjoin_near joins them: the node reached and the gap to it. */
+function joinThrough(e0: SnapEdge, node: number, gap: number, reach: number, lay: Layout, joint: (n: number) => boolean): [number, number] {
+  const same = (o: SnapEdge) => o.built === e0.built && !!o.off === !!e0.off && (o.tracks ?? 1) === (e0.tracks ?? 1) && !o.crossover && !e0.crossover;
+  let from = e0.id;
+  const seen = new Set([from]);
+  while (gap < reach && joint(node)) {
+    const next = (lay.byNode.get(node) ?? []).find((id) => id !== from);
+    const o = next === undefined ? undefined : lay.byId.get(next);
+    if (!o || seen.has(o.id) || !same(o)) break;
+    seen.add(o.id);
+    gap += o.lengthM;
+    node = o.a === node ? o.b : o.a;
+    from = o.id;
+  }
+  return [node, gap];
 }
 
 /** A refusal only because the platform would run off the end of its track. */

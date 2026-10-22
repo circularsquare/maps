@@ -174,10 +174,12 @@ institutions** (prisons, nursing homes and the like, T-234).
   0.10 a perceived minute with no rail constant (time and money alone), car ownership $1.50 a trip
   plus $0.10 a km and 7 minutes to park [T-636, T-637]. Past 60 perceived car-minutes a minute weighs less
   (0.10 x sqrt(60 / T)), in every layer [T-495, T-502].
-- **Homes without a car** [T-511, T-513]: each cell carries the people in households with no car
-  (census by tract, LSOA or prefecture, else the national rate); they choose between rail, walking
-  and "other" (bus, taxi and bike as one mode, on the road at 12 km/h plus a wait), shown as
-  driving.
+- **No car ownership** [T-854]: everyone can drive, and the car stands for every way about but
+  rail and walking. Instead, every car trip from a home pays parking at the home end, 0.4 of the
+  destination's paid-space rule on the home zone's residents per km², so dense places drive less.
+  The choice curve has a floor and a ceiling where rail is offered: 5% of the trips not walking
+  always take rail and 5% never do while the two cost about the same, each fading to none where
+  one costs 3 times the other, so a useless detour line gets no free riders.
 - **Walks and drives follow real paths** [T-275] round water and over OSM roads. Riders walk
   between stations within 300 m after a ride, and between any two stations of a complex [T-161].
 - **Homes and places are grouped for the choice**: the cells of a 2 km zone that share their
@@ -263,7 +265,10 @@ running train: added ones enter at a terminal, removed ones leave at one [T-206]
 with $6B in an empty New York [T-805]; double track costs a base of US$90M a km times a
 multiplier per elevation (US$27M at grade), priced against cheap-country metros such as Korea's
 [T-805], a 20 m car costs US$2.5M, bought as a line's fleet grows and kept in the depot for any line
-when it shrinks [T-028, T-631], and running costs are US$9 a train-km plus US$2 a car-km [T-807]. The fare is typed or stepped in the Money tab [T-626].
+when it shrinks [T-028, T-631], and running costs are US$4 a train-km plus US$2 a car-km [T-807]. Constructed
+track and stations cost upkeep whether trains run or not, US$30k a km of double track and US$50k a station a game
+day, draining evenly; a line's profit takes off its share, each piece's split by the trains a day of the lines
+using it [T-867]. The fare is typed or stepped in the Money tab [T-626].
 **Points** measure each city's network: what it earned in the past 24 game hours, recomputed
 once a game hour, at 20 a rail trip (a rider's whole journey, changes included, counted in the
 city it starts in) and 1 a passenger-km; not a running total, and they unlock nothing yet [T-684,
@@ -293,8 +298,8 @@ A pastel style in Zen Maru Gothic, light or dark (Settings, Theme) with three co
 Panels take CSS tokens (`ui/style.css`); the map's light and dark colours (basemap, line casing, map
 ink) are one table, `game/shades.ts`, whose basemap palette is warm paper land, soft teal water and sage parks [T-676]. The network takes the line colours, the same in both themes. One dock on the left holds the icon tabs (Build, Lines, Stations, Money, Cities), the
 saved games button and the Settings gear, with the inspector under them, whose top edge never
-moves. The top bar holds the mode split (the goal number), the cash, the local day and time, the
-demand level, pause and three speeds. **Panels show what can change**: labels, numbers and states,
+moves. The top bar holds the mode split (the goal number), the cash, the local time and date over
+a moving sky and a band in the demand level's colours (T-861), pause and three speeds. **Panels show what can change**: labels, numbers and states,
 no explanatory notes [T-253]. **Everything drawn that encodes a number has a hover**, always the
 game's own tag, never a browser tooltip [T-194, T-210]. No CSS transitions; trains are the only
 motion. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels

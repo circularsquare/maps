@@ -1,4 +1,5 @@
-import { distance, levelLabel, money } from "../game/format";
+import { distance, levelLabel, money, upkeepRule } from "../game/format";
+import { edgeUpkeep, stationUpkeep } from "../game/regionMoney";
 import { clearBpPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
 import { liveMoney, moneyState } from "../game/money";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
@@ -24,16 +25,28 @@ export function BlueprintControls() {
   const w = world.value;
   const items = w?.money.blueprintItems ?? [];
   const total = items.reduce((sum, r) => sum + r.cost, 0);
+  const m = moneyState.value;
+  // T-867: what the blueprint will cost a day once constructed, the pieces switched off left out
+  let upkeep = 0;
+  if (w && m && total > 0) {
+    for (const e of w.edges) if (!e.built && !e.off) upkeep += edgeUpkeep({ ...e, built: true }, m);
+    for (const s of w.save.stations) if (!s.built && !s.off) upkeep += stationUpkeep(m);
+  }
   return (
     <div class="blueprint-controls">
       <div class="blueprint-head">
         <span class="b">Blueprint</span>
-        <b class={"num" + (moneyState.value?.mode !== "sandbox" && total > liveMoney.value.cash * 1e6 ? " bad" : "")} data-total={total} data-tip="Total construction cost">{money(total)}</b>
+        <b class={"num" + (m?.mode !== "sandbox" && total > liveMoney.value.cash * 1e6 ? " bad" : "")} data-total={total} data-tip="Total construction cost">{money(total)}</b>
         <div class="group">
           <button class="btn icon" data-tip="Undo (Ctrl+Z)" aria-label="Undo" disabled={!w?.canUndo} onClick={() => void undo()}><Icon.undo /></button>
           <button class="btn icon" data-tip="Redo (Ctrl+Y)" aria-label="Redo" disabled={!w?.canRedo} onClick={() => void redo()}><Icon.redo /></button>
         </div>
       </div>
+      {m && upkeep > 0 && (
+        <p class="small muted blueprint-upkeep" data-upkeep={upkeep} data-tip={`Once constructed, upkeep is ${upkeepRule(m)}, whether trains run or not. High-speed track costs ${m.upkeepHsr} times as much and single track ${m.upkeepSingle} times.`}>
+          then {money(upkeep)} a day upkeep
+        </p>
+      )}
       <button class="btn text blueprint-construct" data-tip="Construct every blueprint piece (C)" disabled={total <= 0} onClick={() => void constructBlueprints()}>Construct blueprints<span class="key muted">C</span></button>
     </div>
   );
@@ -82,7 +95,7 @@ export function BlueprintBar() {
           <button class="btn text" data-tip="Enable the selection (E)" disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn />Enable</button>
         </div>
       )}
-      <button class="btn text" data-tip={s.built ? "Remove the selection (Delete). Nothing is refunded" : "Remove the selection (Delete)"} onClick={() => removePicked()}><Icon.bin />Remove</button>
+      <button class="btn text" data-tip={s.built ? "Remove the selection (Delete). Nothing is refunded" : "Remove the selection (Delete)"} onClick={() => void removePicked()}><Icon.bin />Remove</button>
       <button class="btn text" data-tip="Clear the selection (Esc)" onClick={() => clearBpPicked()}><Icon.cross />Clear</button>
     </div>
   );

@@ -77,7 +77,7 @@ fn main() {
     for (k, &x) in &set {
         api.params_mut().set_extra(k, x).unwrap_or_else(|e| panic!("{e}"));
     }
-    // the walk shares and other's trips with no rail (T-513) on the parameters as set
+    // the walk shares with no rail on the parameters as set
     if !set.is_empty() {
         api.refresh_walk();
     }
@@ -150,7 +150,7 @@ fn main() {
     let (mut ent_c, mut ent_e, mut ent_am) = (vec![], vec![], vec![]);
     let (mut board, mut area_rail, mut area_trips, mut area_walk) = (vec![], vec![0f64; n_area], vec![0f64; n_area], vec![0f64; n_area]);
     let mut seg_all: Vec<f64> = vec![];
-    // trips, rail, walked, other (T-513)
+    // trips, rail, walked, and 0 where trips by other were before T-854
     let (mut c_tot, mut e_tot) = ([0f64; 4], [0f64; 4]);
     let mut kinds: Vec<f64> = vec![];
     let mut walks_all: Vec<f64> = vec![];
@@ -183,7 +183,7 @@ fn main() {
         }
         let s = api.summary(q);
         let es = ev.as_ref().map(|e| e.summary(q)).unwrap_or_default();
-        for (i, k) in [1, 2, 3, 10].into_iter().enumerate() {
+        for (i, k) in [1, 2, 3].into_iter().enumerate() {
             c_tot[i] += s[k];
             e_tot[i] += es.get(k).copied().unwrap_or(0.0);
         }
@@ -264,8 +264,8 @@ fn main() {
     }
     let t_all = now_ms() - t0;
     eprintln!(
-        "commutes {:.0} trips, rail {:.0} ({:.1}%), other {:.1}%; everyday {:.0}, rail {:.0} ({:.1}%), other {:.1}%; open {:.1} s, network {:.1} s, solve {:.1} s, all {:.1} s",
-        c_tot[0], c_tot[1], 100.0 * c_tot[1] / c_tot[0].max(1e-9), 100.0 * c_tot[3] / c_tot[0].max(1e-9), e_tot[0], e_tot[1], 100.0 * e_tot[1] / e_tot[0].max(1e-9), 100.0 * e_tot[3] / e_tot[0].max(1e-9),
+        "commutes {:.0} trips, rail {:.0} ({:.1}%), walk {:.1}%; everyday {:.0}, rail {:.0} ({:.1}%), walk {:.1}%; open {:.1} s, network {:.1} s, solve {:.1} s, all {:.1} s",
+        c_tot[0], c_tot[1], 100.0 * c_tot[1] / c_tot[0].max(1e-9), 100.0 * c_tot[2] / c_tot[0].max(1e-9), e_tot[0], e_tot[1], 100.0 * e_tot[1] / e_tot[0].max(1e-9), 100.0 * e_tot[2] / e_tot[0].max(1e-9),
         t_open / 1e3, t_net / 1e3, t_solve / 1e3, t_all / 1e3
     );
     eprintln!("operators: {}", ops.iter().map(|(k, v)| format!("{k} {:.0}", v)).collect::<Vec<_>>().join(", "));

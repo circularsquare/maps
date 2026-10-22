@@ -16,6 +16,7 @@ import { liveMoney, moneyState } from "./money";
 import { placeAt, zonesLoaded } from "./zones";
 import { world } from "./world";
 import type { WorldView } from "./types";
+import type { MoneyState } from "../workers/protocol";
 import type { DayLedger, HourLedger } from "../workers/saveFile";
 
 /** [region, share] pairs adding up to 1 ("" outside every zone). */
@@ -81,6 +82,30 @@ export const lineShares = computed(() => {
     out.set(l.num, { fare, ride, run });
   }
   return out;
+});
+
+/** T-867: a constructed edge's upkeep a game day, US$ (0 for blueprint and crossovers). */
+export function edgeUpkeep(e: { built: boolean; crossover?: boolean; tracks: number; hsr?: boolean; lengthM: number }, m: MoneyState): number {
+  if (!e.built || e.crossover) return 0;
+  return (e.lengthM / 1000) * m.upkeepTrackKm * (e.tracks === 1 ? m.upkeepSingle : e.hsr ? m.upkeepHsr : 1) * m.economy;
+}
+/** T-867: a constructed station's upkeep a game day, US$. */
+export const stationUpkeep = (m: MoneyState) => m.upkeepStation * m.economy;
+
+/** T-867: how the network's upkeep divides between regions: each constructed edge by its midpoint,
+ * each constructed station by its own region. */
+export const upkeepShares = computed<Shares>(() => {
+  const w = world.value, m = moneyState.value;
+  if (!w || !m || m.upkeepTrackKm === undefined) return [];
+  void zonesLoaded.value;
+  const out = new Map<string, number>();
+  for (const e of w.edges) {
+    const u = edgeUpkeep(e, m);
+    const a = u > 0 && w.nodes.get(e.a), b = u > 0 && w.nodes.get(e.b);
+    if (a && b) add(out, placeAt((a.lng + b.lng) / 2, (a.lat + b.lat) / 2) ?? "", u);
+  }
+  for (const s of w.save.stations) if (s.built) add(out, stationZone(s) ?? "", stationUpkeep(m));
+  return norm(out);
 });
 
 /** How the last paid edit's charge divides: construction by the cost of the track it built in each

@@ -83,8 +83,9 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
 - **Loose ends** [T-416; `map/endMarkers.ts`]: while the track or station tool is on, a small white
   circle with a dark border marks every loose end (a node with one piece of track and no
   station), blueprint or built. A track click on one starts or continues the route from it; the
-  station tool's pointer snaps to it, so the station goes at the line's end. The markers take no
-  presses, and show from zoom 9.
+  station tool's pointer snaps to it, so the station goes at the line's end, its platform running
+  back along the track through the joints of a drawn route as a platform on a piece does [T-860].
+  The markers take no presses, and show from zoom 9.
 - **The tag by the cursor** [T-411, T-526] has two lines: the segment's length, average cost
   multiplier and price ("1.5 km, cost 1.33x, $12.8M"), then the elevations the segment passes
   and its lowest speed limit with the track tag's icons and colours ("↕ 0 +2  » 67 km/h": where
@@ -97,6 +98,7 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
   build tools' tags are drawn over the bubbles' tags; the track tag shows above the pointer when
   it is on existing track.
 - **Shift**: with a tool on, MapLibre's shift-drag zoom is off so a shift-click reaches the tool.
+  In the select tool with demand bubbles on, Shift+drag draws a bubble box instead [T-865].
 - **The ghost** is solid with a dark casing: white in the Line and traffic views, coloured by the
   Elevation or Max speed view from the preview's fitted geometry; red when invalid.
 - **Placed blueprint track** is drawn as blue rails ([ui-map.md](ui-map.md) "Lines and track").
@@ -234,7 +236,11 @@ drawn red (one piece of a drawn route, or "the crossover", both diagonals drawn 
 flyover ringed, its name by the cursor. Blueprint is
 removed at once (undoable); anything constructed only after a yes in the confirmation dialog
 ("Remove 1.2 km of constructed track? Nothing is refunded." with Remove and Keep; Esc is Keep). The
-inspectors' Remove buttons ask the same way. Lines are removed from the line panel.
+inspectors' Remove buttons and the Select tool's Remove ask the same way. A removal that changes a
+line asks too, built or not [T-859]: a row per line under the question, its bullet then what
+happens ("subway 4 will lose its stop at Nevins St and stop running until you fix its route."),
+from the track model's trial of the removal (`TrackApi.removal_lines`). Lines are removed from the
+line panel.
 
 ## The Select tool
 
@@ -379,7 +385,7 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
   between two stops whose stretch of the line's own path runs through other stations, a row
   "+ 2 stations passed" (its hover lists them: "Add Foo, Bar and Baz") [T-814]; with stations passed in more than one gap, "Add
   all 5 stations the line passes" heads the list. A click shows those stations in the list as
-  faint "+ Name" rows, in path order, with Add and Cancel under the list; Add makes them stops in
+  faint "+ Name" rows, in path order, with Add and Cancel above the list, where "Add all" was [T-855]; Add makes them stops in
   one undoable edit. Only stations on the line's path count: a quad twin on the pair beside, or a
   station on a branch, is not offered. The passed stations come in the clock state with each line
   (`ClockLine.passed`), so the list never shows new stops with the old gaps (T-648).

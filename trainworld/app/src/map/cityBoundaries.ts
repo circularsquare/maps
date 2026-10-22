@@ -8,6 +8,8 @@ import type { FeatureCollection, MultiPolygon } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { cityBoundary } from "../game/boundaries";
 import { activeCity, zonesTouching } from "../game/cities";
+import { ZONE_LOAD_ZOOM } from "../game/zones";
+import { perfOff } from "../perfFlags";
 import { outsidePaint, SHADES, shadeColours } from "../game/shades";
 import { shade } from "../game/ui";
 import { cityGeometry, OutlineEdges, outsideCity } from "./boundaryGeometry";
@@ -20,8 +22,9 @@ const OUTER = "tw-city-focus-outer";
 export const OUTLINES = "tw-city-boundaries";
 /** outlines fade out by this zoom (the layer's maxzoom) */
 const OUTLINE_MAX_ZOOM = 10.5;
-/** below this zoom a view spans so many zones that their outlines are not fetched for it */
-const OUTLINE_MIN_ZOOM = 5;
+/** below this zoom a view spans so many zones that their exact outlines are not fetched for it; the
+ * coarse ones stand (T-871: the zoom zones load at, game/zones.ts) */
+const OUTLINE_MIN_ZOOM = Math.max(5, ZONE_LOAD_ZOOM);
 const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
 /** The one shade of "not the zone in view": outside the focused zone, and (T-350) a zone still
  * loading; the theme's own (game/shades.ts, T-543). */
@@ -85,7 +88,14 @@ export function startCityBoundaries(map: MlMap): () => void {
   const asked = new Set<string>();
   // zones drawn from the coarse file (T-800) until their own boundary arrives
   const coarse = new Set<string>();
-  const drawn = () => edges.lines(activeCity.peek());
+  // T-871: only the zones within a view's width of the screen are drawn, so a redraw costs what is
+  // near, not every outline fetched on a long pan
+  let around = new Set<string>();
+  const aroundView = () => {
+    const b = map.getBounds(), w = b.getWest(), s = b.getSouth(), e = b.getEast(), n = b.getNorth();
+    return new Set(zonesTouching(w - (e - w), s - (n - s), e + (e - w), n + (n - s)).map((c) => c.id));
+  };
+  const drawn = () => edges.lines(activeCity.peek(), perfOff("zoneZoom") ? undefined : around);
   const redraw = () => {
     if (edges.size) (map.getSource(OUTLINES) as GeoJSONSource | undefined)?.setData(drawn());
   };
@@ -112,8 +122,13 @@ export function startCityBoundaries(map: MlMap): () => void {
     return zonesTouching(b.getWest(), b.getSouth(), b.getEast(), b.getNorth()).map((c) => c.id);
   };
   const follow = () => {
+    const next = aroundView();
+    if (next.size !== around.size || [...next].some((id) => !around.has(id))) {
+      around = next;
+      redrawSoon();
+    }
     const z = map.getZoom();
-    if (z < OUTLINE_MIN_ZOOM) return;
+    if (z <= OUTLINE_MIN_ZOOM) return;
     for (const id of near()) {
       // a zone near the view has its shade ready, so focusing it does not wait
       void geometry(id).then((g) => { if (alive) prepared(id, g); }, () => {});

@@ -7,7 +7,8 @@
 // answer falls back to the nearest centre, so it never flips as boundaries arrive one by one.
 
 import { signal } from "@preact/signals";
-import { cityNear, cityWithin, zonesTouching, ZONE_REACH_M, type CityId } from "./cities";
+import { cityNear, cityWithin, hashView, zonesTouching, ZONE_REACH_M, type CityId } from "./cities";
+import { perfOff } from "../perfFlags";
 import { distanceTo, footprintOf, loadFootprints, touchesBox, type Footprint } from "../workers/cityReach";
 
 /** Metres per degree, as workers/cityReach.ts measures. */
@@ -18,6 +19,14 @@ export const NEARBY = 3;
 
 /** The zones beside the focused one with their bubbles drawn, nearest first (never the focused one). */
 export const nearbyZones = signal<CityId[]>([]);
+
+/** T-871: zones load for viewing (their packs, their exact outlines) only above this zoom, one level
+ * out from where their own bubbles show (`OVERVIEW_ZOOM`, map/intercityView.ts); further out the
+ * overview's per-zone bubbles need no pack. */
+export const ZONE_LOAD_ZOOM = perfOff("zoneZoom") ? -1 : 7.5;
+
+/** The view is zoomed in past `ZONE_LOAD_ZOOM` (map/zoneFocus.ts sets it after each move). */
+export const zonesLoadForView = signal((() => { const v = hashView(); return !v || v.zoom > ZONE_LOAD_ZOOM; })());
 
 /** Bumped when boundaries arrive, so the caller can place the view again. */
 export const zonesLoaded = signal(0);

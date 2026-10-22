@@ -31,6 +31,8 @@ export interface DayLedger {
   running: number;
   trains: number;
   build: number;
+  /** track and station upkeep (T-867); absent in days saved before it, read as 0 */
+  upkeep?: number;
   /** train rides taken (T-565); absent in days saved before it, read as 0 */
   rides?: number;
   /** points earned (T-684); absent before it, read as 0 */
@@ -44,6 +46,8 @@ export interface HourLedger {
   running: number;
   trains: number;
   build: number;
+  /** upkeep (T-867), as in `DayLedger` */
+  upkeep?: number;
   /** train rides taken (T-565), as in `DayLedger` */
   rides?: number;
   /** points earned (T-684), as in `DayLedger` */

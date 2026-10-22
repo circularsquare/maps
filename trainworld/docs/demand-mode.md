@@ -2,13 +2,15 @@
 
 # Demand: mode choice and catchment (4.3)
 
-The generalised cost, walking, driving, parking, access to stations and homes without a car.
+The generalised cost, walking, driving, parking, access to stations and the curve's floor and
+ceiling.
 
 ### 4.3 Mode choice and catchment
 
 Per OD pair and period, rail, driving and walking the whole way (below) compete in one logit by
-**generalised cost** in minutes. Buses are out of scope
-(Anita, 2026-10-09), except as part of "other", the choice of homes without a car (below).
+**generalised cost** in minutes. Buses are out of scope (Anita, 2026-10-09). Everyone can drive:
+there is no car ownership in demand (Anita, 2026-10-21, T-854), and "car" in every view stands for
+the car and every other way of getting about (bus, taxi, bike).
 
 - rail = walk to a station + wait (half the headway, capped) + ride + walks between platforms +
   walk from station + fare / value of time (a change costs a fixed 2 perceived minutes, its wait
@@ -24,6 +26,15 @@ at 0 as a tool for a later fit; there is no country constant (`api::COUNTRY_ASC_
 table). T-509 had fitted 0.4 (-0.7 for everyday trips, Japan +0.5) to six real networks; T-636
 dropped the fit so that the game is sensible and building a line has a clear effect, and the real
 cities are loose checks (notes/T-636.md).
+**The curve's floor and ceiling** (Anita, 2026-10-21, T-854; `Params::rail_bounds`): where rail is
+offered, some riders always take it and some never do. Of the trips not walking, rail's share R
+becomes lo + (1 - lo - hi) R, walking keeping its share. lo is 5% (`rail_floor`) while rail costs
+at most what the car does (perceived minutes, the car's mean over drivers who park free and those
+who pay), fading linearly to none where rail costs 3 times the car's (`rail_floor_ratio`); hi is
+the mirror, 5% while the car costs at most rail's, none where rail costs a third of the car's. So
+a slow line keeps a few riders, a fast one loses a few, and a detour three times worse than driving
+gets nothing from the floor, which a player could otherwise farm. Commutes, everyday trips and the
+trip explorer alike; not the regional layer.
 **Cost damping** (T-495, `Params::mode_beta`): past 60 perceived minutes of
 the car's trip T, the scale is 0.10 x sqrt(60 / T), so a minute counts for less on a long trip
 (0.058 at 3 hours, 0.028 at 13); one rule for commutes, everyday trips and the regional layer
@@ -40,11 +51,10 @@ actual track length. Distance fare affects route choice as well as mode choice, 
 multiplies ride time without multiplying fare (T-067).
 
 **Walking** (Anita, T-558) is a third mode in the same logit, at the same scale (damped on the
-car's minutes, as rail): rail, the car and walking for those with a car (drivers parking free and
-those paying for a space choose apart, as for rail), rail, walking and other for those without
-(below). The walk's real minutes are its distance at 6 km/h along a path 1.3 times the straight
+car's minutes, as rail): rail, the car and walking (drivers parking free and those paying for a
+space choose apart, as for rail). The walk's real minutes are its distance at 6 km/h along a path 1.3 times the straight
 line (13 minutes a straight km); every minute weighs 1.5 (`walk_trip_w`, one rate), so 500 m costs
-10 perceived minutes, 1 km 19.5, 2 km 39 and 3 km 58.5. Against the car (or other) a walk gets a
+10 perceived minutes, 1 km 19.5, 2 km 39 and 3 km 58.5. Against the car a walk gets a
 bonus of **10 perceived minutes** (`walk_bonus_min`; the logit's `asc_walk` is that times `beta`, so
 1.0 at 0.10, and it follows `beta`): what a short drive costs beyond its road time, which the car
 side does not otherwise carry (getting to the car, the walk from the space). One constant for
@@ -56,7 +66,7 @@ Commutes walk between cells (T-587, `Gravity::set_walk_fine`): each zone's homes
 six cells (`walk_samples`), those where the zone's cumulative weight in pack order crosses 1/12,
 3/12 ... 11/12, and a zone pair within 3 squares each way (`WALK_FINE_R`) is its 36 cell pairs,
 each walking its cells' centre distance (a cell to itself 0.52 of its square's side). Its
-commuters walk and take other with no rail at the cell pairs' mean shares; its walk in the choice
+commuters walk with no rail at the cell pairs' mean share; its walk in the choice
 with rail is the one cost whose share against a driver parking free is that mean. Farther pairs,
 whose cells are at least 6 km apart, use the zone-centre distance, and the drive between them
 stays at the zone centres. Everyday purposes walk the sampled cell-centre distance (a pair of
@@ -93,11 +103,19 @@ of two logit results, one against the free driver and one against the paying one
 that share, not one result at the mean price. Congestion charges (`kernel::CORDONS`, a place's
 charging area and its charge, half the day's charge at 3 minutes a dollar) apply to the share of a
 zone's jobs inside the area: Manhattan south of 60th Street 13.5 minutes ($9), central London 35.1
-(£18); nowhere else. A ride to a station pays the mean over drivers there. Owning a car adds
+(£18); nowhere else. A ride to a station pays the mean over drivers there. **At the home end**
+(Anita, 2026-10-21, T-854; `Params::home_park_at`) every car trip from a home pays 0.4
+(`home_park_f`) times the paid-space rule on the home zone's residents per km² of land (the pack's
+`pop` over the zone's land, as jobs are measured at a destination): none under 3,000, 3 minutes at
+5,000, 7 at 10,000, 13 at 25,000, 16 at 40,000, at most 20. It stands for finding and paying for a
+space where people live densely, and replaces a car-free share by place: where homes are dense,
+fewer drive. Every driver pays it, in the commutes, the everyday layer (both ways of the round
+trip, the car being kept at home), the zones' choice with no rail and a ride to a station (the
+household keeps a car either way); the regional layer does not. Owning a car adds
 `car_own_usd_trip` dollars a car trip (`car_own_min`, in `park_parts`' fixed part) plus
 `car_own_usd_km` a km of the car's own road (`Params::car_drive`), at 3 minutes a dollar; a drive to
-a station pays both on its own road, parked or dropped off; homes without a car and the longer
-trips (`market_params`) pay none. The shipped values are $1.50 a trip and $0.10 a km (T-621,
+a station pays both on its own road, parked or dropped off; the longer trips (`market_params`)
+pay none. The shipped values are $1.50 a trip and $0.10 a km (T-621,
 T-636), so a typical trip pays $2.20-4.00 and a driver's day about $10. The same rule serves all
 three layers: the commutes and the everyday layer call `park_parts` (the everyday layer takes the
 mix of two logit results per pair, `rail_share_parked`); the regional layer's market pack holds each
@@ -206,8 +224,8 @@ least 5 km (`ride_min_km`: shorter, the ride cannot beat driving the whole way),
 zone's home-weighted centre: for a commute, 5 km between its two zones' centres; for an everyday
 trip, its own mean distance between home and activity cells, at the home end both ways (the trip
 out boards there, the trip home leaves the train there). It costs **`p_ride` 15 + 1.33 x the drive
-to the station + the cheaper of parking at the station and a drop-off, `d_drop` 10** perceived
-minutes: the drive is the whole-trip drive's rule (below), from the home zone to the station's
+to the station + the cheaper of parking at the station and a drop-off, `d_drop` 10 + the home
+end's parking (Parking, above)** perceived minutes: the drive is the whole-trip drive's rule (below), from the home zone to the station's
 zone, and parking is a destination's mean over drivers (Parking, above). In a suburb
 a ride to a station 1 km off costs about 21, 3 km 26, 10 km 35, so past about 1 km it is cheaper
 than walking and access flattens out: a long commute's rail cost grows slowly with the distance to
@@ -220,33 +238,6 @@ only. Car parks are automatic and unlimited. `p_ride`, `d_drop` and `w_walk` are
 New York network (T-372: about 55-65% of commuter rail riders ride to their station).
 The regional layer's rides (commutes between zones, inter-region trips at both ends) come from the
 same function, `access_options` ([regional.md](regional.md) 5.3).
-
-**Homes without a car** (Anita, 2026-10-16, T-511). Each cell carries the people living in a
-household with no car (the pack's `nocar`, `pipeline/nocar.py`); a home subzone's share is their
-share of its homes. In the commutes and the everyday layer that share of each origin's trips
-cannot drive. It chooses among three by one logit (`Params::nocar_choice`), with the same
-propensity on rail:
-- **rail**, walking to stations at the home end too (no ride; where the home has rides, its rail
-  is priced on the walks alone, and a home with no station on foot gets no rail for it);
-- **walking the whole way**, at the walk's cost and constant as everyone's (Walking, above;
-  T-558);
-- **other** (Anita, 2026-10-16, T-513), standing in for bus, taxi and bike: the drive's road at
-  12 km/h door to door (`other_kmh`, 5 minutes a km) plus a wait of 8 minutes
-  (`other_wait_min`, plain minutes) plus `other_asc`, no parking. The speed and wait are
-  fixed for every city (a city bus's average speed with stops, and half a 15-minute headway with
-  some walk to the stop); `other_asc` is 10 perceived minutes (`kernel::OTHER_ASC`, set on New
-  York's boroughs against ACS; T-509's joint fit of six cities kept it).
-
-The scale is damped on other's minutes, as the car's on the car's. Rail's share of a pair's
-trips is `(1 - c) r_car + c r_nocar`, c the home's share without a car; the people with a car
-choose as above. Trips by other are counted with driving in every view (docs/ui-demand-views.md); the sim keeps
-them apart (`summary` index 10, per layer: trips by other with no rail, from the zone pairs or the
-everyday samples, less the no-car rail trips times other's share of the non-rail choice, which
-in a logit is the same with or without rail).
-The regional layer has no such group yet. Shares by country: the US by tract (ACS B08201),
-England and Wales by LSOA (Census 2021 TS045), Scotland and Northern Ireland by data zone, Japan
-by prefecture (AIRIA cars per household), elsewhere a national figure from a register, a household
-survey or GDP per head (docs/demand-worldwide.md "Driving alternative"). A pack without `nocar` has everyone able to drive.
 
 Two **computational bounds** keep the work down and are set where little rail is left: stations
 are looked for within 3 km straight line of a walk (`walk_cutoff_m`), and a pair of places is

@@ -35,9 +35,8 @@ walking is yellow #f0c814 and planes orange #f07a14, car red and train blue unch
 because a walker pulls a Train share bubble towards red and the ramp has no green; orange stands for
 "other", the one mode that is none of car, walk or train, which is planes (the longer-trip tables'
 plane column icon; muted grey under Mode mix).
-Trips by "other" (bus, taxi and bike for homes without a car, T-513, [demand-mode.md](demand-mode.md) 4.3)
-count as driving in every bar, split, bubble and hover, with no colour of their own; the sim
-reports them apart only as a total (`summary` index 10).
+The local layers' modes are train, walk and car; "car" stands for every way of getting about but
+those two (T-854, [demand-mode.md](demand-mode.md) 4.3).
 
 **Purpose colours** [T-142, T-143, T-192]: work blue, school and university blue-green,
 social/leisure purple, shopping/errands red, airport olive, medical pink (CIEDE2000 22 apart at the
@@ -193,18 +192,22 @@ second. Inspectors, selections and the top bar are the current forecast at once.
 ## Bubble selections
 
 - **Selecting**: a click selects a bubble, Shift+click adds one, and holding the mouse still 0.4 s
-  then dragging draws a box selecting every bubble whose centre is in it. Visible bubbles take
-  priority over stations and trains for clicks, hover and starting a box, but not over dragging a
-  blueprint point [T-474]. Escape or an empty click
-  clears it.
+  then dragging draws a box selecting every bubble whose centre is in it. Shift+drag draws the box
+  at once [T-865] (MapLibre's own Shift-drag zoom is off while the bubbles are on): started on a
+  city bubble or a selected one, or with nothing selected, it adds the bubbles in it to the
+  selection; with a selection and started anywhere else, it takes the far-end bubbles whose
+  centres are in it and opens the trip explorer between the two groups. Escape while drawing drops
+  the box. Visible bubbles take priority over stations and trains for clicks, hover and starting a
+  box, but not over dragging a blueprint point [T-474]. Escape or an empty click clears the
+  selection.
 - **On the map**: the other bubbles hide; the selected ones are outlined, and their far end
   (destinations for Homes, homes for Destinations) is drawn as bubbles sized among themselves (the
   biggest about its hexagon's area) and coloured by their own mix (`flows`) [T-098]. A click on a
   far-end bubble opens the trip explorer for the pair [T-208].
 - **Lines to the selection** [T-520, on trial: `LINES_TO_SELECTION` in `map/commuterView.ts`
   turns them off]: from each far-end bubble's edge a 1.5 px line of constant width in that bubble's
-  own colour, 50% opaque, points at the selection's centre (its bubbles' centres weighted by area),
-  6% of the map's longer side long and cut square (no taper, no fade) [T-739], stopping at the
+  own colour, 80% opaque at the bubble's edge and fading linearly to nothing at the tip [T-858], points at the selection's centre (its bubbles' centres weighted by area),
+  6% of the map's longer side long and cut square (no taper) [T-739], stopping at the
   selected bubble's edge when there is one.
   Opacity scales with the source bubble's drawn radius: full at 8 CSS px or more, in proportion
   below, so a bubble too small to see has no visible line [T-524]. A selected zone's lines to the
@@ -252,7 +255,7 @@ commuters and inter-region riders are in its inspector only ([ui-inspectors.md](
   per other zone at its registry centre (the largest 19 px radius before the size slider), names and
   daily totals as labels that avoid each other and stay on screen, at most eight at once, the biggest
   first (T-493). Area is total travellers with no
-  floor; colour is blue for train and red for the rest (car and plane), mixed by share. They lie under the local discs; hover names the place and the direction,
+  floor; each is a pie rim, train blue and the rest (car and plane) red [T-863, below]. They lie under the local discs; hover names the place and the direction,
   with a mode bar (train blue, the rest red, plane included).
 - A selection survives a pan to another zone.
 
@@ -264,9 +267,13 @@ one included, is one bubble at its registry centre in place of the focused zone'
 all its trips a day (its local trips, from the open zone's view or the pipeline's no-rail count in
 `zones.json`, plus the regional layer's to and from it, which counts only zones whose market pack
 is open: reached, near a station or selected [T-801]; with no market result yet, as on a start on
-the world map, local trips alone), coloured by `modeMix` of train, walking
-and the rest [T-576: an open zone's walking is green, from its split; a zone not loaded in
-this session has no walk split, so its walking counts in the red; regional trips have no walking], labelled
+the world map, local trips alone), drawn as a pie rim [T-863]: blue for the train share from 12
+o'clock clockwise, the rest red (walking too), the rim 30% of the radius (2 to 4.5 px), round a
+faint white fill (35% of the bubble opacity); the selected zone keeps its dark outline outside the
+rim. A bubble nobody travels in is a plain grey disc. With `PIE_BUBBLES` off in
+`map/intercityView.ts` the bubble is a solid disc coloured by `modeMix` of train, walking and the
+rest [T-576: an open zone's walking is green, from its split; a zone not loaded in this session
+has no walk split, so its walking counts in the red; regional trips have no walking]. Labelled
 "Philadelphia · 187k trips" (plain text on the map with a halo, no box [T-824]; at most eight labels on screen, the biggest first [T-493]). The hover
 has two lines, each with a mode bar [T-494]: "1.6m trips per day within Yamanashi" (bar from
 the zone's modelled split, none for a zone not loaded) and "120k inter-region trips per day on
@@ -284,9 +291,9 @@ bubble per other zone for the regional trips between the two, on a scale of its 
 with the zoom the same way [T-525, T-530]: 1,400 trips a day per px² at zoom 6.5
 (`SELECTED_TRIPS_PER_PX2`), so there the selected zone's own inter-region trips (New York's 1.57M)
 are a 33 px radius, Philadelphia's 796k 24 px, a 15k partner 3 px and a few hundred a dot (the selected zone's hover: the inter-region line and its bar first, the local figure in brackets under it; the
-others: "N trips a day between A and B" and a bar), a 1 px line in the network ink, 30% opaque,
-from its bubble's edge to each other bubble's edge, under the bubbles with no hover, so the
-selection shows from afar [T-520], and the city
+others: "N trips a day between A and B" and a bar), a fading line from each other bubble toward
+it (Lines to the selection, above), under the bubbles with no hover, so the
+selection shows from afar [T-520, T-858], and the city
 inspector (`ui/inspector/CityInspector.tsx`, T-600) has two figures, each with a thin mode bar
 under it (the game's mode colours; every segment and number has a hover with its count and share):
 "Within Philadelphia" (train, walking, car from the open zone's split; the count alone for a zone

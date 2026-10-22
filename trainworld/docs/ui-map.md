@@ -128,9 +128,10 @@ there is no high-speed class and no hover yet.
   planned along blueprint track fills the middle in its colour mixed 45% towards white. Lines that
   do not run stay see-through at 55%.
 - **Line colours** [T-223, `LINE_PALETTE` in `game/palette.ts`]: a normal, fairly saturated transit
-  palette, thirteen defaults: red, blue, green, orange, purple, yellow, brown, teal, gray,
-  yellow-green, pink, magenta and light blue, every pair at least 19 apart in CIEDE2000; chips on
-  the light ones take dark letters. A new line takes the first default no line uses.
+  palette, sixteen defaults: red, blue, green, orange, purple, yellow, brown, teal, gray,
+  yellow-green, pink, magenta, light blue, olive, coral and lavender, every pair at least 19 apart in
+  CIEDE2000 and at least 17 from the land, water and parks of both themes; chips on
+  the light ones take dark letters. A new line takes a random default no line in its city uses [T-856].
 - **Marks on the track** [T-629, T-655; `map/gradeMarks.ts`, data in `map/markData.ts`], drawn by the
   renderer over the track and under stations and trains, from zoom 9 (blueprint and drawing) or 11
   (built):

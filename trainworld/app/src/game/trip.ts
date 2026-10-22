@@ -76,6 +76,9 @@ export interface TripPair {
   /** perceived minutes station to station (waits, rides, changes, distance fare; no base fare) */
   strategy: number;
   share: number;
+  /** T-865: the cell pair's own two ends in an averaged trip (world metres), where its walks are drawn from */
+  from?: [number, number];
+  to?: [number, number];
 }
 
 /** Why the train is not a choice for a trip. */
@@ -135,6 +138,10 @@ export interface TripPeriod {
   groupTrain: number;
   groupDrive: number;
   groupWalkStartMin: number;
+  /** T-865: the period is several cell pairs averaged (`averageTrips`): how many, and how many of
+   * them the train is offered for */
+  sampled?: number;
+  railSampled?: number;
 }
 
 export interface Trip {
@@ -174,8 +181,21 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
     const p = v.subarray(HEAD + k * PAIR_LEN, HEAD + (k + 1) * PAIR_LEN);
     pairs.push({ access: st(p[2]), egress: st(p[3]), accessM: p[4], accessPerceived: p[5], egressM: p[6], egressPerceived: p[7], strategy: p[8], share: p[9], accessMin: p[10], egressMin: p[11], accessRide: p[12] === 1, rideExtra: p[13] });
   }
+  const routes = readRoutes(v, HEAD + np * PAIR_LEN, nr, at);
+  const offered = v[13] === 1;
+  return {
+    round: v[1], from: [v[27], v[28]], to: [v[29], v[30]], cells: [v[2], v[3]], walkMin: v[33], walkWeight: v[36], pairTrips: v[34], distM: v[6], driveDistM: v[7], driveRoadKm: v[35],
+    driveMin: v[9], drivePerceived: v[10], parkPerceived: v[11], carOwnPerceived: v[32], roadPerceived: v[12],
+    railOffered: offered, why: WHY[v[26]] ?? "", railPerceived: offered ? v[14] : NaN, railOfMotor: v[15], utility: v[16],
+    pWalk: v[17], pTrain: v[18], pDrive: v[19], baseFarePerceived: v[22], minPerUsd: v[23], walkStartPerceived: v[20], walkEndPerceived: v[21], pairs, routes, cut: v[31],
+    groupWalk: v[37], groupTrain: v[38], groupDrive: v[39], groupWalkStartMin: v[40],
+  };
+}
+
+/** `nr` routes packed from `o` (`DemandApi.trip`'s layout, and `IntercityApi.market_trip`'s). */
+function readRoutes(v: Float64Array, o: number, nr: number, at: RouteNodes): TripRoute[] {
+  const st = (rn: number) => (rn >= 0 && at[rn] ? at[rn].station : "");
   const routes: TripRoute[] = [];
-  let o = HEAD + np * PAIR_LEN;
   for (let k = 0; k < nr; k++) {
     const pair = v[o], share = v[o + 1], n = v[o + 2];
     o += 3;
@@ -199,15 +219,74 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
     }
     routes.push({ share, pair, legs });
   }
-  const offered = v[13] === 1;
+  return routes;
+}
+
+/** Why the market's rail is not offered between two zones (T-866). */
+export type MarketNoRail = "" | "farClosed" | "noRail" | "unmatched";
+const MARKET_WHY: MarketNoRail[] = ["", "farClosed", "noRail", "unmatched"];
+
+/**
+ * T-866: the longer trips between a selection and a far place (or one of its 6 km zones) in one
+ * period, as the regional market chooses them (`IntercityApi.market_trip`): every zone pair's
+ * choice added up by its trips. Minutes are perceived where named so. The station pairs' walks
+ * are not known here (`accessM` and the real minutes NaN): their perceived minutes are the zones'
+ * access weights' mean cost.
+ */
+export interface MarketPeriod {
+  round: number;
+  /** the period's longer trips between the two ends, and by train, plane and car */
+  trips: number;
+  rail: number;
+  air: number;
+  car: number;
+  /** rail's perceived cost over the zone pairs it can serve, the car's, and the reference mode's
+   * (the car's, or the plane's where no car goes), trip weighted; NaN none */
+  railPerceived: number;
+  carPerceived: number;
+  refPerceived: number;
+  /** the zone pairs' mean distance, km, and how many were counted */
+  km: number;
+  zonePairs: number;
+  /** the trips' share on zone pairs rail can serve */
+  served: number;
+  baseFarePerceived: number;
+  minPerUsd: number;
+  why: MarketNoRail;
+  pairs: TripPair[];
+  routes: TripRoute[];
+  cut: number;
+}
+
+const MT_HEAD = 20, MT_PAIR_LEN = 7;
+
+/** Read one period's `IntercityApi.market_trip` answer. */
+export function readMarketPeriod(v: Float64Array, at: RouteNodes): MarketPeriod | null {
+  if (v.length < MT_HEAD || v[0] !== 1) return null;
+  const st = (rn: number) => (rn >= 0 && at[rn] ? at[rn].station : "");
+  const np = v[11], nr = v[12];
+  const pairs: TripPair[] = [];
+  for (let k = 0; k < np; k++) {
+    const p = v.subarray(MT_HEAD + k * MT_PAIR_LEN, MT_HEAD + (k + 1) * MT_PAIR_LEN);
+    pairs.push({ access: st(p[0]), egress: st(p[1]), accessM: NaN, accessPerceived: p[2], egressM: NaN, egressPerceived: p[3], strategy: p[4], share: p[5], accessMin: NaN, egressMin: NaN, accessRide: false, rideExtra: 0 });
+  }
+  const nan = (x: number) => (x < 0 ? NaN : x);
   return {
-    round: v[1], from: [v[27], v[28]], to: [v[29], v[30]], cells: [v[2], v[3]], walkMin: v[33], walkWeight: v[36], pairTrips: v[34], distM: v[6], driveDistM: v[7], driveRoadKm: v[35],
-    driveMin: v[9], drivePerceived: v[10], parkPerceived: v[11], carOwnPerceived: v[32], roadPerceived: v[12],
-    railOffered: offered, why: WHY[v[26]] ?? "", railPerceived: offered ? v[14] : NaN, railOfMotor: v[15], utility: v[16],
-    pWalk: v[17], pTrain: v[18], pDrive: v[19], baseFarePerceived: v[22], minPerUsd: v[23], walkStartPerceived: v[20], walkEndPerceived: v[21], pairs, routes, cut: v[31],
-    groupWalk: v[37], groupTrain: v[38], groupDrive: v[39], groupWalkStartMin: v[40],
+    round: v[1], trips: v[2], rail: v[3], air: v[4], car: v[5], railPerceived: nan(v[6]), carPerceived: nan(v[7]), refPerceived: v[17],
+    km: v[8], zonePairs: v[18], served: v[15], baseFarePerceived: v[9], minPerUsd: v[10], why: MARKET_WHY[v[14]] ?? "noRail",
+    pairs, routes: readRoutes(v, MT_HEAD + np * MT_PAIR_LEN, nr, at), cut: v[13],
   };
 }
+
+let marketQuery: ((end: "home" | "work", cells: Uint32Array, far: number, farGid: number) => Promise<(MarketPeriod | null)[] | null>) | null = null;
+/** Set by workers/demandClient.ts when the pool starts. */
+export function setMarketTripQuery(q: typeof marketQuery) {
+  marketQuery = q;
+}
+/** Ask the workers about the longer trips between a selection's cells (`end`: as the bubble
+ * selection's) and far place `far`, or its 6 km zone `farGid` (-1 the whole place), per period. */
+export const askMarketTrip = (end: "home" | "work", cells: Uint32Array, far: number, farGid = -1): Promise<(MarketPeriod | null)[] | null> =>
+  marketQuery?.(end, cells, far, farGid) ?? Promise.resolve(null);
 
 /** A route's totals: real minutes driving to the station (a ride access), walking, waiting, riding
  * and walking between stations, the changes, and the fare in dollars (base fare included). */
@@ -263,6 +342,15 @@ export function routeTerms(t: TripPeriod, r: TripRoute): CostTerm[] {
   return out;
 }
 
+/** Routes that read the same in the explorer: the same lines to a station of the same name
+ * (`names`: station id to name). */
+export const routeLabel = (names: Map<string, string>) => (r: TripRoute) =>
+  r.legs.filter((l) => l.kind === "ride").map((l) => l.line).join(">") + ">" + (names.get(r.legs[r.legs.length - 1]?.to ?? "") ?? "");
+
+/** T-870: the other route opened in the explorer, by its `routeLabel`, so it stays open through
+ * new rounds and periods while the trip is the same. */
+export const openRoute = signal<string | null>(null);
+
 let query: ((from: [number, number], to: [number, number], purpose: number) => Promise<Trip | null>) | null = null;
 /** Set by workers/demandClient.ts when the pool starts. */
 export function setTripQuery(q: typeof query) {
@@ -279,6 +367,71 @@ export interface TripPlaces {
   end: "home" | "work";
   near: Uint32Array;
   far: Uint32Array;
+  /** T-865: an end of more than one bubble: how many at each end, the station nearest each end's
+   * centre (or ""), and the cell pairs the routes and times are averaged over, `from` homes to
+   * `to` destinations (world metres), each weighted by its two bubbles' trips */
+  group?: { near: number; far: number; nearName: string; farName: string; samples: { from: [number, number]; to: [number, number]; w: number }[] };
+}
+
+/** T-865: how many cell pairs a group's trip is averaged over at most, a side. */
+export const GROUP_SAMPLE_SIDE = 3;
+
+/**
+ * T-865: the trips of several cell pairs as one, each weighted by `w`: per period, the weighted
+ * mean of the times, distances and mode chances; the train's effective time over the pairs it is
+ * offered for; the routes merged by `label` and weighted by the pair's weight, its train chance and
+ * the route's share, the five biggest kept, each with its own pair (and that pair's two ends, so
+ * the map draws its walks from them). The rest is the heaviest pair's. `sampled` is the pair count.
+ */
+export function averageTrips(trips: { trip: Trip; w: number }[], label: (r: TripRoute) => string): Trip {
+  const top = trips.reduce((a, b) => (b.w > a.w ? b : a));
+  const periods = top.trip.periods.map((_, q) => {
+    const xs = trips.flatMap(({ trip, w }) => (trip.periods[q] && w > 0 ? [{ t: trip.periods[q]!, w }] : []));
+    if (!xs.length) return null;
+    const W = xs.reduce((s, x) => s + x.w, 0);
+    const mean = (f: (t: TripPeriod) => number) => xs.reduce((s, x) => s + x.w * f(x.t), 0) / W;
+    const rail = xs.filter((x) => x.t.railOffered && Number.isFinite(x.t.railPerceived));
+    const railW = rail.reduce((s, x) => s + x.w, 0);
+    const base = xs.reduce((a, b) => (b.w > a.w ? b : a)).t;
+    const walkMin = mean((t) => t.walkMin), walkPerc = mean((t) => t.walkMin * t.walkWeight);
+    // routes: weight of each pair's train riders on it
+    const pairs: TripPair[] = [];
+    const merged = new Map<string, TripRoute>();
+    let riders = 0;
+    for (const { t, w } of rail) {
+      const on = w * t.pTrain;
+      riders += on;
+      const off = pairs.length;
+      pairs.push(...t.pairs.map((p) => ({ ...p, from: t.from, to: t.to })));
+      for (const r of t.routes) {
+        const k = label(r), m = merged.get(k);
+        if (m) m.share += on * r.share;
+        else merged.set(k, { ...r, pair: r.pair + off, share: on * r.share });
+      }
+    }
+    const routes = [...merged.values()].sort((a, b) => b.share - a.share).slice(0, 5);
+    for (const r of routes) r.share = riders > 0 ? r.share / riders : 0;
+    // only the kept routes' pairs, re-indexed
+    const used = [...new Set(routes.map((r) => r.pair))];
+    const keptPairs = used.map((i) => pairs[i]);
+    for (const r of routes) r.pair = used.indexOf(r.pair);
+    const p: TripPeriod = {
+      ...base,
+      walkMin, walkWeight: walkMin > 0 ? walkPerc / walkMin : base.walkWeight,
+      distM: mean((t) => t.distM), driveDistM: mean((t) => t.driveDistM), driveRoadKm: mean((t) => t.driveRoadKm),
+      driveMin: mean((t) => t.driveMin), drivePerceived: mean((t) => t.drivePerceived), parkPerceived: mean((t) => t.parkPerceived),
+      carOwnPerceived: mean((t) => t.carOwnPerceived), roadPerceived: mean((t) => t.roadPerceived),
+      railOffered: rail.length > 0, why: rail.length ? "" : base.why,
+      railPerceived: railW > 0 ? rail.reduce((s, x) => s + x.w * x.t.railPerceived, 0) / railW : NaN,
+      railOfMotor: mean((t) => t.railOfMotor), utility: mean((t) => t.utility),
+      pWalk: mean((t) => t.pWalk), pTrain: mean((t) => t.pTrain), pDrive: mean((t) => t.pDrive),
+      groupWalk: mean((t) => t.groupWalk), groupTrain: mean((t) => t.groupTrain), groupDrive: mean((t) => t.groupDrive),
+      pairs: keptPairs, routes, cut: Math.max(0, 1 - routes.reduce((s, r) => s + r.share, 0)),
+      sampled: xs.length, railSampled: rail.length,
+    };
+    return p;
+  });
+  return { ...top.trip, periods };
 }
 
 /** Trips a day (legs both ways) between two places by mode, under the purpose filter. */
@@ -339,6 +492,14 @@ export interface TripShown {
   purpose: PurposeKey;
   /** the period with most of its trips (null: none counted) */
   busiest: number | null;
+  /** T-866: the trips are between zones, as the regional market chooses them (`trip` is then null) */
+  market?: MarketShown | null;
+}
+
+/** T-866: what the explorer shows between zones: the far end, its name, and each period's answer. */
+export interface MarketShown {
+  far: { place: number; gid: number };
+  periods: (MarketPeriod | null)[];
 }
 
 /** The trip shown (asked for by map/tripView.ts when the selection, the purpose filter or the

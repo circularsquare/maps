@@ -25,13 +25,14 @@ export function nextLineName(city: CityId | null): string {
   for (let k = 1; ; k++) if (!taken.has(`Line ${k}`)) return `Line ${k}`;
 }
 
-/** T-813: the first palette colour no line in the city uses, else the first of the least used. */
+/** T-813, T-856: a random palette colour no line in the city uses, else a random one of the least used. */
 export function nextFreeColour(city: CityId | null): string {
   const uses = new Map<string, number>();
   for (const l of lineMates(city)) uses.set(l.colour.toLowerCase(), (uses.get(l.colour.toLowerCase()) ?? 0) + 1);
   const n = (c: string) => uses.get(c.toLowerCase()) ?? 0;
   const least = Math.min(...LINE_PALETTE.map(n));
-  return LINE_PALETTE.find((c) => n(c) === least)!;
+  const pool = LINE_PALETTE.filter((c) => n(c) === least);
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 /** Reveal the line before asking for stops, so even an empty line can be named and edited. Given a

@@ -15,7 +15,8 @@ import { levelHours, PERIODS, periodAt } from "../../game/periods";
 import { crowdColour, crowdGrade, crowding, runningToday, today, useToday, waitText } from "../../game/today";
 import { accountVersion } from "../../game/boarding";
 import { complexOf } from "../../game/complexView";
-import { DAY_KIND_NAME, dayKindAt } from "../../game/days";
+import { DAY_KIND_NAME } from "../../game/days";
+import { kindIn, lineCountry } from "../../game/holidays";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
 import { ask, lineDraft, renameLinePrompt, selection, tool } from "../../game/ui";
 import { liveMoney, moneyState } from "../../game/money";
@@ -207,9 +208,9 @@ function LineToday({ l, st, periods, kind }: { l: LineInput; st: LineStats; peri
       <ul class="rows flat">
         <Row label="Riders">{count(d.riders)}</Row>
         <PurposeSplit scope={[{ line: l.id }]} unit="riders" />
-        <li data-tip={`Fares ${money(d.fares)} less running cost ${money(run)} for the trains: ${money(d.fares - run)} net${rule}`}>
+        <li data-tip={`Fares ${money(d.fares)} less running cost ${money(run)} for the trains and upkeep of its track and stations ${money(st.upkeep)}: ${money(d.fares - run - st.upkeep)} net${rule}\nUpkeep of track and stations several lines use is shared by their trains a day.`}>
           <span class="grow">Profit</span>
-          <span class="val">{money(d.fares)} −<span class="crowd-bad">{money(run)}</span></span>
+          <span class="val">{money(d.fares)} −<span class="crowd-bad">{money(run + st.upkeep)}</span></span>
         </li>
         {load !== null && (
           <li data-tip={`Riders aboard on average, as a share of the ${(st.cars * CRUSH_PER_CAR).toLocaleString("en-US")} a train holds at crush, over every trip on a ${DAY_KIND_NAME[kind].toLowerCase()}. Each trip counts for as long as it runs.`}>
@@ -525,7 +526,8 @@ export function LineInspector({ id }: { id: string }) {
     return () => { on = false; };
   }, [l?.num, w?.version]);
   // T-477, T-491: crowding by period on today's kind of day, asked again as the account changes
-  const kind = dayKindAt(clock.hour.value * 3600 + (w?.lineStats[id]?.shift ?? 0));
+  // T-872: a holiday in the line's country is a weekend day
+  const kind = kindIn(lineCountry(l?.stops ?? []), Math.floor((clock.hour.value * 3600 + (w?.lineStats[id]?.shift ?? 0)) / 86400));
   const [periods, setPeriods] = useState<Float64Array | null>(null);
   const acct = accountVersion.value;
   useEffect(() => {
@@ -637,6 +639,12 @@ export function LineInspector({ id }: { id: string }) {
           <Icon.plus />Add all {stationsText(passed.length)} the line passes
         </button>
       )}
+      {editingStops && pending && adding.length > 0 && (
+        <div class="passed-confirm">
+          <button class="btn text" onClick={() => void addPassed()}>Add {stationsText(adding.length)}</button>
+          <button class="btn text" onClick={() => setPending(null)}>Cancel</button>
+        </div>
+      )}
       <ul class="stops" style={{ "--c": shown }}>
         {l.stops.map((s, i) => {
           const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id));
@@ -679,12 +687,6 @@ export function LineInspector({ id }: { id: string }) {
           </>);
         })}
       </ul>
-      {editingStops && pending && adding.length > 0 && (
-        <div class="passed-confirm">
-          <button class="btn text" onClick={() => void addPassed()}>Add {stationsText(adding.length)}</button>
-          <button class="btn text" onClick={() => setPending(null)}>Cancel</button>
-        </div>
-      )}
     </>
   );
 

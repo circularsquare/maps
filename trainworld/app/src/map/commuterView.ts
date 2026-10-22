@@ -22,8 +22,8 @@ import { clock } from "../game/clock";
 import { cellModes, cityCells, demandUpdating, demandView, flows, type CellModes, type CityCells, type DemandView, type FarEnd, type Flows, type PurposeTrips } from "../game/demand";
 import { count, wholeDistance } from "../game/format";
 import { BUBBLE_ALPHA, bubbleSchemeKey, setBubbleColours } from "../game/palette";
-import { tripOpenedFrom } from "../game/trip";
-import { compass } from "../game/places";
+import { GROUP_SAMPLE_SIDE, tripOpenedFrom, type TripPlaces } from "../game/trip";
+import { compass, nearestStation } from "../game/places";
 import { purposeWords, type PurposeFilter } from "../game/purposes";
 import type { Selection } from "../game/types";
 import { display, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
@@ -60,7 +60,9 @@ const tripWords = () => {
 /** With a bubble selection, a short faint line from each far-end bubble toward the selection
  * (T-520, Anita: to try and maybe undo; false turns them off). */
 const LINES_TO_SELECTION = true;
-const STUB_ALPHA = 0.5;
+const STUB_ALPHA = 0.8;
+/** T-865: a group of bubbles is named by the station nearest its centre within this, m. */
+const GROUP_NAME_M = 3000;
 
 /** One stub per far disc (`LINE` floats, relative to `farA`), pointing at the selection's centre:
  * its discs' centres weighted by area. A single selected disc's edge stops the stub. */
@@ -510,32 +512,63 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
    * where most of the trips the bubbles count start or end, where a bubble's drawn centre (their
    * weighted mean) can fall in a park or the water with nobody.
    */
-  const farTrip = (sel: Extract<Selection, { kind: "commuters" }>, i: number): Selection | null => {
+  const farTrip = (sel: Extract<Selection, { kind: "commuters" }>, idx: number[]): Selection | null => {
     const fe = lastFlows?.sel === sel && shown ? farOf(lastFlows.f, shown.purpose) : null;
-    if (!fe || !far || !city || !cellsWorld || !shown || i >= far.group.length) return null;
+    if (!fe || !far || !city || !cellsWorld || !shown || !idx.length || idx.some((i) => i >= far!.group.length)) return null;
     const g = city.levels[bubbleLevel(map.getZoom())];
-    const q = far.group[i];
-    let to = -1, toN = 0;
+    const qs = new Set(idx.map((i) => far!.group[i]));
+    // each end's bubbles at the zoom on screen: their trips, and their busiest cell
+    type Side = Map<number, { n: number; best: number; bestN: number }>;
+    const tally = (side: Side, q: number, c: number, n: number) => {
+      const s = side.get(q) ?? { n: 0, best: -1, bestN: 0 };
+      s.n += n;
+      if (n > s.bestN) (s.bestN = n), (s.best = c);
+      side.set(q, s);
+    };
+    const farSide: Side = new Map(), nearSide: Side = new Map();
     for (let k = 0; k < fe.cells.length; k++) {
-      const c = fe.cells[k];
-      if (g.groupOf[c] !== q) continue;
-      const n = fe.farRail[k] + fe.farWalk[k] + fe.farDrive[k];
-      if (n > toN) (toN = n), (to = c);
+      const c = fe.cells[k], q = g.groupOf[c];
+      if (qs.has(q)) tally(farSide, q, c, fe.farRail[k] + fe.farWalk[k] + fe.farDrive[k]);
     }
     const m = shown.modes;
     const [mt, mw, md] = sel.end === "home" ? [m.homeRail, m.homeWalk, m.homeDrive] : [m.workRail, m.workWalk, m.workDrive];
-    let own = -1, ownN = 0;
-    for (const c of sel.cells) {
-      const n = mt[c] + mw[c] + md[c];
-      if (n > ownN) (ownN = n), (own = c);
-    }
-    if (to < 0 || own < 0) return null;
+    for (const c of sel.cells) tally(nearSide, g.groupOf[c], c, mt[c] + mw[c] + md[c]);
+    const busiest = (side: Side) => [...side.values()].filter((s) => s.best >= 0).sort((a, b) => b.n - a.n);
+    const farB = busiest(farSide), nearB = busiest(nearSide);
+    const bestOf = (b: ReturnType<typeof busiest>) => b.reduce((x, s) => (s.bestN > x.bestN ? s : x), b[0]);
+    if (!farB.length || !nearB.length) return null;
+    const to = bestOf(farB).best, own = bestOf(nearB).best;
     const xy = cellsWorld;
     const at = (c: number): [number, number] => [xy[c * 2], xy[c * 2 + 1]];
-    const trip: Selection = sel.end === "home" ? { kind: "trip", from: at(own), to: at(to) } : { kind: "trip", from: at(to), to: at(own) };
-    // T-586: the explorer counts the trips between the selection and every cell of the far bubble,
-    // as this bubble's hover does
-    const places = { end: sel.end, near: Uint32Array.from(sel.cells), far: g.members.slice(g.off[q], g.off[q + 1]) };
+    const pairOf = (n: number, f: number): { from: [number, number]; to: [number, number] } => (sel.end === "home" ? { from: at(n), to: at(f) } : { from: at(f), to: at(n) });
+    const trip: Selection = { kind: "trip", ...pairOf(own, to) };
+    // T-586: the explorer counts the trips between the selection and every cell of the far bubbles,
+    // as their hovers do
+    const farCells: number[] = [];
+    for (const q of qs) for (let k = g.off[q]; k < g.off[q + 1]; k++) farCells.push(g.members[k]);
+    const places: TripPlaces = { end: sel.end, near: Uint32Array.from(sel.cells), far: Uint32Array.from(farCells) };
+    // T-865: several bubbles at an end: the busiest few a side, each to each, weighted by the near
+    // bubble's trip legs times the far bubble's trips with the selection
+    if (nearB.length > 1 || farB.length > 1) {
+      /** the station nearest the trip-weighted centre of `cells`, if near enough to name them by */
+      const centre = (cells: Iterable<number>, weight: (c: number) => number) => {
+        let sx = 0, sy = 0, sw = 0;
+        for (const c of cells) {
+          const w = weight(c);
+          (sx += xy[c * 2] * w), (sy += xy[c * 2 + 1] * w), (sw += w);
+        }
+        const s = sw > 0 ? nearestStation(sx / sw, sy / sw) : null;
+        return s && s.d <= GROUP_NAME_M ? s.name : "";
+      };
+      const farN = new Map<number, number>();
+      for (let k = 0; k < fe.cells.length; k++) if (qs.has(g.groupOf[fe.cells[k]])) farN.set(fe.cells[k], fe.farRail[k] + fe.farWalk[k] + fe.farDrive[k]);
+      const samples = nearB.slice(0, GROUP_SAMPLE_SIDE).flatMap((a) => farB.slice(0, GROUP_SAMPLE_SIDE).map((b) => ({ ...pairOf(a.best, b.best), w: a.n * b.n })));
+      places.group = {
+        near: nearB.length, far: farB.length, samples,
+        nearName: centre(sel.cells, (c) => mt[c] + mw[c] + md[c]),
+        farName: centre(farN.keys(), (c) => farN.get(c) ?? 0),
+      };
+    }
     tripOpenedFrom.value = { trip, from: sel, places };
     return trip;
   };
@@ -551,7 +584,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       if (discAt(nearDiscs, p, nearAnchor, view.bubbleSize) >= 0) return sel;
       // a far-end bubble opens the trip explorer for the pair (T-208)
       const i = discAt(farDiscs, p, farAnchor, view.bubbleSize);
-      return i >= 0 ? farTrip(sel, i) ?? sel : undefined;
+      return i >= 0 ? farTrip(sel, [i]) ?? sel : undefined;
     }
     const s = selectGroups(groupsAt(p), add);
     if (s) return s;
@@ -563,36 +596,77 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     return activeCity.peek() === hit.id && focusSeen === hit.id ? selectGroups(groupsAt(p), false) ?? undefined : undefined;
   };
 
-  // Long press, then drag: a box; the bubbles whose centres are in it are selected.
+  /** T-865: the far-end discs whose centres are in a box: their indices. */
+  const farIn = (p0: Pointer, p1: Pointer): number[] => {
+    if (!farDiscs) return [];
+    const [x0, y0] = pointerLocal(p0, farAnchor), [x1, y1] = pointerLocal(p1, farAnchor);
+    const out: number[] = [];
+    for (let i = 0; i < farDiscs.length / DISC; i++) {
+      const x = farDiscs[i * DISC], y = farDiscs[i * DISC + 1];
+      if (x >= Math.min(x0, x1) && x <= Math.max(x0, x1) && y >= Math.min(y0, y1) && y <= Math.max(y0, y1)) out.push(i);
+    }
+    return out;
+  };
+
+  // A box: after a long press on a bubble, or at once with Shift held (T-865). On a city bubble or
+  // a selected one it selects the bubbles whose centres are in it; with Shift and a selection,
+  // started anywhere else, it takes the far-end bubbles in it and opens the trip explorer for them.
   const box = document.createElement("div");
   box.className = "demand-box";
   box.style.display = "none";
   map.getContainer().appendChild(box);
-  let press: { x: number; y: number; timer: number; on: boolean; add: boolean } | null = null;
+  let press: { x: number; y: number; timer: number; on: boolean; add: boolean; far: boolean } | null = null;
   const LONG_MS = 400, STILL_PX = 5;
   const canvas = map.getCanvasContainer();
   const rel = (e: MouseEvent) => {
     const r = map.getContainer().getBoundingClientRect();
     return [e.clientX - r.left, e.clientY - r.top] as const;
   };
+  const boxOn = (p: NonNullable<typeof press>) => {
+    p.on = true;
+    map.dragPan.disable();
+    map.getCanvas().style.cursor = "crosshair";
+    box.style.display = "";
+    Object.assign(box.style, { left: p.x + "px", top: p.y + "px", width: "0px", height: "0px" });
+  };
+  const boxOff = () => {
+    box.style.display = "none";
+    map.dragPan.enable();
+    map.getCanvas().style.cursor = "";
+  };
+  const boxes = () => tool.peek() === "select" && display.peek().commuters && !!shown && !cityOverview.peek();
+  // MapLibre's own Shift-drag zoom (main.ts keeps it on in the select tool) is off from before its
+  // handlers see the press (they listen on the canvas container too, registered first) until the
+  // button is up
+  let zoomOff = false;
+  map.getContainer().addEventListener("mousedown", (e) => {
+    if (e.button !== 0 || !e.shiftKey || !canvas.contains(e.target as Node) || !boxes()) return;
+    map.boxZoom.disable();
+    zoomOff = true;
+  }, true);
   canvas.addEventListener("mousedown", (e) => {
-    if (e.button !== 0 || tool.peek() !== "select" || !display.peek().commuters || !shown || cityOverview.peek()) return;
+    if (e.button !== 0 || !boxes()) return;
     const [x, y] = rel(e);
     const sel = selection.peek();
     const at = pointerAt(map, x, y);
-    // Start a bubble box only on a visible city/selected-home bubble. A long press on a train,
-    // station, empty map or a destination disc should keep its ordinary interaction.
-    if (sel?.kind === "commuters" ? discAt(nearDiscs, at, nearAnchor, view.bubbleSize) < 0 : !groupsAt(at).length) return;
-    const p = { x, y, on: false, add: e.shiftKey, timer: 0 };
-    p.timer = window.setTimeout(() => {
-      p.on = true;
-      map.dragPan.disable();
-      map.getCanvas().style.cursor = "crosshair";
-      box.style.display = "";
-      Object.assign(box.style, { left: x + "px", top: y + "px", width: "0px", height: "0px" });
-    }, LONG_MS);
+    const onNear = sel?.kind === "commuters" ? discAt(nearDiscs, at, nearAnchor, view.bubbleSize) >= 0 : groupsAt(at).length > 0;
+    const farBox = e.shiftKey && sel?.kind === "commuters" && !onNear;
+    // Without Shift a box starts only on a visible city or selected bubble: a long press on a
+    // train, station, empty map or a far disc keeps its ordinary interaction.
+    if (!onNear && !e.shiftKey) return;
+    const p = { x, y, on: false, add: e.shiftKey, far: farBox, timer: 0 };
     press = p;
+    if (e.shiftKey) boxOn(p);
+    else p.timer = window.setTimeout(() => boxOn(p), LONG_MS);
   });
+  // Escape drops a box being drawn and nothing changes (before main.ts's Escape clears the selection)
+  window.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || !press) return;
+    clearTimeout(press.timer);
+    if (press.on) boxOff();
+    press = null;
+    e.stopImmediatePropagation();
+  }, true);
   window.addEventListener("mousemove", (e) => {
     const p = press;
     if (!p) return;
@@ -607,17 +681,24 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     Object.assign(box.style, { left: Math.min(x, p.x) + "px", top: Math.min(y, p.y) + "px", width: Math.abs(x - p.x) + "px", height: Math.abs(y - p.y) + "px" });
   });
   window.addEventListener("mouseup", (e) => {
+    if (zoomOff && tool.peek() === "select") map.boxZoom.enable();
+    zoomOff = false;
     const p = press;
     press = null;
     if (!p) return;
     clearTimeout(p.timer);
     if (!p.on) return;
-    box.style.display = "none";
-    map.dragPan.enable();
-    map.getCanvas().style.cursor = "";
+    boxOff();
     const [x, y] = rel(e);
-    if (Math.hypot(x - p.x, y - p.y) <= STILL_PX) return; // a long press in place: the click decides
-    const s = selectGroups(groupsIn(pointerAt(map, p.x, p.y), pointerAt(map, x, y)), p.add);
+    if (Math.hypot(x - p.x, y - p.y) <= STILL_PX) return; // a press in place: the click decides
+    const p0 = pointerAt(map, p.x, p.y), p1 = pointerAt(map, x, y);
+    const sel = selection.peek();
+    if (p.far) {
+      const t = sel?.kind === "commuters" ? farTrip(sel, farIn(p0, p1)) : null;
+      if (t) selection.value = t;
+      return;
+    }
+    const s = selectGroups(groupsIn(p0, p1), p.add);
     if (s) selection.value = s;
   });
 
@@ -788,5 +869,18 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     if (sel?.kind === "commuters" && (!d.commuters || sel.end !== d.commuterEnd)) selection.value = null;
   });
 
-  return { click };
+  /** T-866: a bubble selection's busiest cell (as `farTrip` takes its own end), world metres. */
+  const nearPoint = (sel: Extract<Selection, { kind: "commuters" }>): [number, number] | null => {
+    if (!shown || !cellsWorld) return null;
+    const m = shown.modes;
+    const [mt, mw, md] = sel.end === "home" ? [m.homeRail, m.homeWalk, m.homeDrive] : [m.workRail, m.workWalk, m.workDrive];
+    let own = -1, ownN = -1;
+    for (const c of sel.cells) {
+      const n = mt[c] + mw[c] + md[c];
+      if (n > ownN) (ownN = n), (own = c);
+    }
+    return own < 0 ? null : [cellsWorld[own * 2], cellsWorld[own * 2 + 1]];
+  };
+
+  return { click, nearPoint };
 }

@@ -16,6 +16,7 @@ import { effect } from "@preact/signals";
 import { h, render } from "preact";
 import { clock, SPEEDS, startClock } from "./game/clock";
 import { getWorldFrame, HOME_CITY } from "./game/cities";
+import { ZONE_LOAD_ZOOM } from "./game/zones";
 import { packToLngLat, lngLatToPack } from "./game/coords";
 import { ask, display, isBuildTool, selection, shade, stopEditing, tab, tool } from "./game/ui";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
@@ -194,7 +195,8 @@ if (SYNTH) {
   map.on("moveend", () => {
     const c = map.getCenter();
     client.followView(c.lng, c.lat, map.getZoom());
-    bounds();
+    // T-871: zoomed out, water masks are left to the edits that need them
+    if (map.getZoom() > ZONE_LOAD_ZOOM) bounds();
   });
   bounds();
   client.onAnchor = () => {

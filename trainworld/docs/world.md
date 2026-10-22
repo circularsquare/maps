@@ -185,7 +185,7 @@ player is looking.
 - **One clock, world time.** The game clock counts game seconds in the registry's
   `clockUtcOffset`, UTC-5 (New York's standard time), so every save made before local time reads
   the same and the Northeast and Toronto run exactly as before. Game day 1 is a Monday in that
-  time; a region's local day is the clock's day at its local time.
+  time (its date: Calendar, below); a region's local day is the clock's day at its local time.
 - **A region's offset** is its registry entry's `utcOffset`: a whole hour of standard time, no
   daylight saving (a seasonal hour would move every period twice a year for nothing the game
   models). Half-hour offsets round to a whole hour so period boundaries stay on the hour; India's
@@ -208,6 +208,27 @@ player is looking.
 - **Not yet local** (T-321): the money ledger's days, the catch-up of the demand bubbles over a
   day, and the world market's longer trips between zones of different offsets (London - Paris,
   Tokyo - New York), which take no period rule yet.
+
+### Calendar
+
+- **Dates** (T-861, T-862; `game/days.ts`): a 365-day year with no leap day. Game day 1 is Monday
+  January 27 (`DAY1_OF_YEAR`), the first Monday on which no country with registered zones has a
+  public holiday. Weekdays run on from the day number, so each game year starts a weekday later.
+- **Holidays** (T-862; `game/holidays.ts`, `holidays.json` from `pipeline/holidays_json.py` and the
+  Python `holidays` package): each country's national public holidays, no substitute days. A game
+  year takes the holidays of the real non-leap year whose January 1 is the same weekday (Monday
+  2029, Tuesday 2030, Wednesday 2031, Thursday 2026, Friday 2027, Saturday 2033, Sunday 2034;
+  year 0 is 2031), so a holiday tied to a weekday keeps it and Easter moves between years. A
+  holiday is a whole day of its country's local time. The top bar marks those in countries with
+  the player's stations ([ui-panels.md](ui-panels.md)).
+- **A holiday is a weekend day in its country** (T-872, `game/holidayCalendar.ts` `kindOfIn`). A
+  line's country is its first stop's zone's, as its local time is; a line outside every zone has
+  none. On a holiday the line's boarding account reads the weekend's riders (`TrackApi`
+  `set_line_holidays`: the clock worker sends each line's holiday weekdays from yesterday to 8 days
+  ahead), and its fares, rides and points settle at the weekend's rates: money groups split by
+  local time and country. Running costs do not depend on the kind of day. The demand views' Today
+  follows the view centre's country, the line inspector its line's. The demand solve is unchanged:
+  it already has a weekend result.
 
 ### NIMBY Rails
 

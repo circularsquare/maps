@@ -72,8 +72,8 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 
 ## The top bar
 
-`ui/TopBar.tsx`, left to right, 46 px high, **every part centred on one line** [T-349]: city name,
-the split (bar, then its labels), cash, day and time, speed buttons. **Three type
+`ui/TopBar.tsx`, left to right, 54 px high, **every part centred on one line** [T-349]: city name,
+the split (bar, then its labels), cash, the clock, speed buttons. **Three type
 styles only**: normal (14 px, regular, text colour: name, "Train", cash), figure (18 px, bold: the
 train share and the time) and small (12 px, regular, muted: rides, walking and driving shares,
 day, status). **Every part has a fixed width** [T-341], so no city name or status moves the split
@@ -84,8 +84,8 @@ nothing under it: the status is a tag over the map (Status, below). The mode bar
 flexible part [T-406]: it takes the width the fixed parts leave, so its length follows the window
 (at least 80 px) and never the numbers beside it, and grows on wide windows. Walking and driving
 are the walk and car icons (the walk and drive mode colours) with the share beside them, each
-with its own hover. They drop below 860 px of map column. The day ("Mon 1", the weekday and the
-game's day number) is always shown, centred in the room between the cash and the time [T-832].
+with its own hover. They drop below 860 px of map column. The clock is centred in the room between the cash and the
+speed buttons [T-832, T-861].
 Below 700 px the bar takes two rows (name, cash, time and speed over the split).
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
@@ -117,9 +117,23 @@ Below 700 px the bar takes two rows (name, cash, time and speed over the split).
   changing figure never moves the rest of the bar [T-305, T-310]. In a sandbox the box says
   "Sandbox" in the muted colour, with the money since day 1 (the cash less the $6B start) and
   today's fares and running costs in its hover [T-728].
-- **The clock**: day of the week, day and time ("Sat 13", hover "Saturday, day 13 · High demand":
-  the demand level is only in the hover [T-406]), the local
-  time where the player is looking [T-309]; pause and three
+- **The clock** [T-861], 148 px wide, all of it the local time where the player is looking
+  [T-309]: the time (figure style) and the date without the year (normal style, "13:24" then
+  "Mon Feb 24"; hover "Monday, February 24, day 29"), over a 12 px sky and a 2 px demand band.
+  The calendar is in [world.md](world.md) "Calendar". The sky
+  (`ui/SkyBanner.tsx`, one canvas) shows 24 hours, 6 back and 18 ahead, coloured by the sun's
+  height at the view's centre on that date (`game/sun.ts`: night, twilight, a warm horizon at
+  sunrise and sunset, day), with a white line at now and the sun on it while it is up; it slides
+  left as game time passes, redrawn on animation frames from the clock's `now()` whenever it has
+  moved a fifth of a device pixel, never through Preact, so it moves smoothly at every speed. Its
+  hover gives today's sunrise and sunset. The band under it has each hour's demand level (red high,
+  yellow medium, blue low: `--dl-*` in style.css, both themes), so the colour under the line is the
+  level now; its hover names the period, when it ends and the next. A public holiday in a country
+  with the player's stations [T-862] is a pink ribbon along the sky's top over its day (its
+  country's local day), with a tick where it starts; the sky's hover lists those in view ("Tomorrow:
+  Thanksgiving Day, United States", or "Tomorrow from 06:00: …" for a country on another local
+  time), and on the day itself a pink dot sits before the date, whose hover names it. In the dark theme the
+  sky is mixed 22% towards the background. Pause and three
   speeds. **Space** pauses and resumes at the speed that was running, even with a button focused.
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
   on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
@@ -238,8 +252,8 @@ not the browser's.
 ## Money tab
 
 Cash (always the whole network's; in a sandbox "Since day 1" instead, the cash less the $6B start,
-T-728); yesterday and today (fares, running trains, new trains,
-construction, net), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
+T-728); yesterday and today (fares, running trains, upkeep, new trains,
+construction, net; Upkeep's hover gives the rule and the network's track, stations and upkeep a day, T-867), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
 for all three): with the place on, these figures and History are that region's (T-531; the
 place's hover adds how a region's money is counted), with the globe the network's. A region with
 nothing in it shows $0. Money figures
@@ -248,7 +262,7 @@ as "$450k"; under $500 "$0") and a negative one is in the alert red (`ui/MoneyTe
 `game/format.ts`) [T-722]; the cash (top bar and this tab) has four ("$11.36B", "$893.6M"; to the dollar under a million) and is red
 with its minus when negative; hovers may give more. History
 [T-447, `ui/MoneyHistory.tsx`]: a Days / Hours switch (Days by default, kept while the game is
-open) over three charts. The first has fares (accent) and running costs (grey) as lines, scaled to
+open) over three charts. The first has fares (accent) and running costs with upkeep (grey, T-867) as lines, scaled to
 the larger of the two, and one-off costs (new trains and construction) as pale bars on the same
 scale, cut at the top with a dark cap when larger, so a build day does not flatten the lines
 [T-452]; the top's figure at the right. Then net as bars up or down from zero (losses red). Then
@@ -260,27 +274,37 @@ day or hour now is drawn as it fills (a dashed last segment, a paler bar) and mo
 Hovering a column gives its day or hour ("Fri 5", "Sat 6, 04:00", "so far" for now) with fares,
 costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
 charts are saved with the game and are there after a reload [T-567]. Then, for the whole
-network whatever the toggle: the fare curve
+network whatever the toggle: the fare curve, drawn as a graph of the fare against distance on a log
+axis from 1 to 1,000 km or miles, the fare on a log axis from $0.10, its top the smallest 1, 1.5, 2, 3, 4, 5, 6
+or 8 times a power of ten (at least $10) that is at least twice the fare at 100, so the base node moves
+about $0.09 a pixel at $2 [T-864, `ui/FareGraph.tsx`]. Two nodes are dragged up or down:
+the one at 1 sets the base fare (to $0.05, the curve shifts), the one at 100 the fare for each km or mile
+(to the cent, the curve pivots on its start, never below the base). A drag changes the graph and the
+figures below it as the pointer moves, and sends the fare to the game once on release (each change
+restarts demand; fares are outside the undo history). A hover anywhere on the graph names the fare at that distance, a
+node's hover its amount. Below it
 (each ride, each km, and what a 10 km ride costs; each amount steps with the buttons, or a click
 on it opens a box to type it, Enter or leaving the box applying and Escape cancelling, with
 the stepper's rounding to the cent and floor of $0 [T-626, `TypedValue` in `ui/widgets.tsx`]); cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
 **The Cities tab** [T-550, `ui/Cities.tsx`; its own tab since T-749, no longer last in Money],
-whatever the Lines toggle says: a list of every region (the toggle's regions) with a built station, one row each: its name
+whatever the Lines toggle says: a list of every region (the toggle's regions) with a built station, one row each, under a first
+row "All cities" that sums them [T-857] (its split bar weighs every region's trips, its rides, profit and points are the sums; hovers as a
+row's, over all cities; it is not clickable or sorted): its name
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
-same hover), its train rides per day and its money a day, fares less running trains (yesterday's, today so far
-until the game has a first full day; hover: fares and running trains, then new trains and
+same hover), its train rides per day and its profit a day (the column is headed Profit), fares less running trains and upkeep (yesterday's, today so far
+until the game has a first full day; hover: fares, running trains and upkeep, then new trains and
 construction, left out of the figure, when there were any; losses red), and its points, those of the
 past 24 game hours, changing once a game hour, to three significant digits ("512k", "4.56M", "103M"; `pointsShort`) [T-831] (hover: the exact figure, points a day with the
 riders now on the day shown, and the rule) [T-684, T-694]. A star after the name marks a region
 whose train share has reached 10% (hover: when it was earned, "Monday, day 71, at 14:08" in the
 region's local time) [T-685]. The top bar's city name has the same points in its hover. A narrow
 list keeps about six characters of each name (60 px): below that the star goes first, then the
-money column (container queries on `.cities-box`) [T-693]. Sorted by rides, largest first; a click on a header sorts by that
-column (name, train share, rides, money, points) as in the Lines tab; a click on a row moves the camera to
+profit column (container queries on `.cities-box`) [T-693]. Sorted by rides, largest first; a click on a header sorts by that
+column (name, train share, rides, profit, points) as in the Lines tab; a click on a row moves the camera to
 the region as search does, and the viewed region's row is tinted. It lives here and not in
-Stations because the row's money is this tab's region ledger and a click on a row changes the
+Stations because the row's profit is this tab's region ledger and a click on a row changes the
 region the table above follows; a fifth dock tab button was ruled out by [T-532]. It sits at the
 bottom so the figures above come first; there is no list until a station is built.
 

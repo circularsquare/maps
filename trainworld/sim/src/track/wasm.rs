@@ -105,6 +105,19 @@ fn cars_needed(w: &TrackWorld) -> [u32; 2] {
 /// Price of a car of each kind, US$M.
 const CAR_PRICES: [f64; 2] = [CAR_PRICE, HS_CAR_PRICE];
 
+/// A constructed edge's upkeep a game day, US$M; None for blueprint, and for crossovers, which cost
+/// nothing on top of their track (T-867).
+fn edge_upkeep(n: &Network, e: usize) -> Option<f64> {
+    (n.edge_alive[e] && n.edge_built[e] && !n.edge_crossover[e])
+        .then(|| n.edge_len[e] / 1000.0 * UPKEEP_TRACK_KM * super::cost::track_factor(n.edge_tracks[e], n.edge_hsr[e]) * ECONOMY / 1e6)
+}
+fn upkept_station(n: &Network, i: usize) -> bool {
+    n.node_alive[i] && n.node_platform[i] > 0 && n.node_built[i]
+}
+fn station_upkeep() -> f64 {
+    UPKEEP_STATION * ECONOMY / 1e6
+}
+
 fn pis_from(flat: &[f64]) -> Vec<Pi> {
     flat.chunks_exact(4).map(|c| Pi::new(c[0], c[1], c[2], c[3] as i8).quantised()).collect()
 }
@@ -201,6 +214,11 @@ impl TrackApi {
     /// the timing of drawn platform crowds reads them.
     pub fn set_transfers(&mut self, packed: Vec<f32>) {
         self.boarding.set_transfers(&packed);
+    }
+    /// Each line's public holidays, read as weekend days (T-872, `Boarding::set_holidays`): per
+    /// line its id, a count, then that many local game days. Replaces the last list.
+    pub fn set_line_holidays(&mut self, packed: Vec<f64>) {
+        self.boarding.set_holidays(&packed);
     }
     /// A line's day in the boarding account for its panel (T-230, `Boarding::line_summary`), on
     /// a kind of day (T-260); empty before riders.
@@ -430,10 +448,15 @@ impl TrackApi {
         cars_needed(&self.w)[1]
     }
     /// [price of a car US$M, running cost per car-km US$, economy scale, running cost per train-km
-    /// US$, then a high-speed car's price, its car-km and train-km costs] (params.rs). The real
-    /// running costs; the game counts them, and fares, `ECONOMY` times (T-081).
+    /// US$, then a high-speed car's price, its car-km and train-km costs, upkeep a day per km of
+    /// double track and per station US$, and single and high-speed track's upkeep over double
+    /// track's (T-867)] (params.rs). The real running costs; the game counts them, and fares,
+    /// `ECONOMY` times (T-081).
     pub fn money_params(&self) -> Vec<f64> {
-        vec![CAR_PRICE, RUN_COST_CAR_KM, ECONOMY, RUN_COST_TRAIN_KM, HS_CAR_PRICE, HS_RUN_COST_CAR_KM, HS_RUN_COST_TRAIN_KM]
+        vec![
+            CAR_PRICE, RUN_COST_CAR_KM, ECONOMY, RUN_COST_TRAIN_KM, HS_CAR_PRICE, HS_RUN_COST_CAR_KM, HS_RUN_COST_TRAIN_KM,
+            UPKEEP_TRACK_KM, UPKEEP_STATION, super::cost::track_factor(1, false), super::cost::track_factor(2, true),
+        ]
     }
     /// Running cost of the running lines per hour at a demand level, US$M: trains an hour in each
     /// direction times the line's length and cars, at the game's economy scale (T-081).
@@ -455,6 +478,68 @@ impl TrackApi {
         let ordinary = train_km[0] * RUN_COST_TRAIN_KM + car_km[0] * RUN_COST_CAR_KM;
         let fast = train_km[1] * HS_RUN_COST_TRAIN_KM + car_km[1] * HS_RUN_COST_CAR_KM;
         (ordinary + fast) * ECONOMY / 1e6
+    }
+    /// Upkeep a game day (T-867): [total US$M, track US$M, stations US$M, route-km of constructed
+    /// track, constructed stations].
+    pub fn upkeep(&self) -> Vec<f64> {
+        let n = &self.w.net;
+        let (mut km, mut track) = (0.0, 0.0);
+        for e in 0..n.edge_alive.len() {
+            if let Some(u) = edge_upkeep(n, e) {
+                km += n.edge_len[e] / 1000.0;
+                track += u;
+            }
+        }
+        let count = (0..n.node_alive.len()).filter(|&i| upkept_station(n, i)).count() as f64;
+        let stations = count * station_upkeep();
+        vec![track + stations, track, stations, km, count]
+    }
+    /// Each running line's share of the upkeep a game day, US$M, as `[line, share]` pairs, then
+    /// `[-1, rest]` for the track and stations no running line uses (T-867). Each edge's upkeep is
+    /// split between the lines on it by their trains a day, each station's between the lines
+    /// stopping there. `hours`: hours a day at each demand level.
+    pub fn line_upkeep(&self, hours: &[f64]) -> Vec<f64> {
+        let n = &self.w.net;
+        let w: Vec<f64> = self.w.svc.lines.iter().enumerate().map(|(l, s)| {
+            if !s.running { return 0.0 }
+            (0..LEVELS).map(|k| n.line_tph[l][k] as f64 * hours.get(k).copied().unwrap_or(0.0)).sum()
+        }).collect();
+        let weight = |l: u32| w.get(l as usize).copied().unwrap_or(0.0);
+        let mut share = vec![0.0; w.len()];
+        let mut rest = 0.0;
+        for e in 0..n.edge_alive.len() {
+            let Some(u) = edge_upkeep(n, e) else { continue };
+            let on = n.lines_on_edge(e as u32);
+            let total: f64 = on.iter().map(|&l| weight(l)).sum();
+            if total > 0.0 {
+                for &l in on { share[l as usize] += u * weight(l) / total; }
+            } else {
+                rest += u;
+            }
+        }
+        let mut stopping: std::collections::HashMap<u32, (f64, Vec<u32>)> = Default::default();
+        for l in 0..w.len() as u32 {
+            if weight(l) <= 0.0 || !n.line_ok(l) { continue }
+            let mut stops = n.line_stops(l).to_vec();
+            stops.sort_unstable();
+            stops.dedup();
+            for s in stops {
+                let e = stopping.entry(s).or_default();
+                e.0 += weight(l);
+                e.1.push(l);
+            }
+        }
+        let u = station_upkeep();
+        for i in 0..n.node_alive.len() {
+            if !upkept_station(n, i) { continue }
+            match stopping.get(&(i as u32)) {
+                Some((total, lines)) => for &l in lines { share[l as usize] += u * weight(l) / total },
+                None => rest += u,
+            }
+        }
+        let mut out: Vec<f64> = share.iter().enumerate().filter(|(_, &s)| s > 0.0).flat_map(|(l, &s)| [l as f64, s]).collect();
+        out.extend([-1.0, rest]);
+        out
     }
     /// What the trains a planned line needs would cost once it runs, US$M, after the spare cars of
     /// its kind.
@@ -1589,7 +1674,7 @@ impl TrackApi {
                     }
                 }
             }
-            return self.attempt(Op::Station { node: id, data: Some(st) }, dry);
+            return self.station_ops(None, &[(u32::MAX, id as f64)], &st, dry);
         }
         if !self.w.net.edge_ok(id) {
             return self.refuse(Issue::NoSuchEdge { edge: id });
@@ -1696,9 +1781,19 @@ impl TrackApi {
         let mut first = None;
         for &(e, s) in at {
             if e == u32::MAX {
-                // an existing node, `s` its id
-                ops.push(Op::Station { node: s as u32, data: Some(st.clone()) });
-                first.get_or_insert(s as u32);
+                // an existing node, `s` its id; at a loose end the platform runs its whole length
+                // back along the track, so the joints within it go first as they do for a split (T-860)
+                let n = s as u32;
+                let p = self.w.net.node_ports[n as usize];
+                if p.n == 1 {
+                    let (pe, which) = (p.ends()[0] >> 1, p.ends()[0] & 1);
+                    let ps = if which == 0 { 0.0 } else { self.w.net.edge_len[pe as usize] };
+                    if let Some((more, _)) = self.unjoin_near(pe, ps, st.platform as f64 + 2.0) {
+                        ops.extend(more);
+                    }
+                }
+                ops.push(Op::Station { node: n, data: Some(st.clone()) });
+                first.get_or_insert(n);
                 continue;
             }
             let (more, s) =self.unjoin_near(e, s, st.platform as f64 / 2.0 + 2.0).unwrap_or((vec![], s));
@@ -2204,23 +2299,14 @@ impl TrackApi {
         }
     }
 
-    /// Remove a station (and its node if no track is left there). Constructed: final, no refund.
-    /// Its links (T-197) go with it, and undoing the removal does not bring them back.
+    /// Remove a station (and its node if no track is left there), as `delete_pieces` does.
+    /// Constructed: final, no refund. Its links (T-197) go with it, and undoing the removal does
+    /// not bring them back.
     pub fn remove_station(&mut self, node: u32) -> u32 {
-        let Some(old) = self.w.net.station_data(node) else { return self.refuse(Issue::NoSuchNode { node }) };
-        let mut ops = vec![Op::Station { node, data: None }];
-        if self.w.net.node_ports[node as usize].n == 0 {
-            ops.push(Op::Node { id: node, data: None });
+        if self.w.net.station_data(node).is_none() {
+            return self.refuse(Issue::NoSuchNode { node });
         }
-        let r = if old.built {
-            self.run_charged(Op::Batch(ops))
-        } else {
-            self.run(Op::Batch(ops))
-        };
-        if r == 0 {
-            self.w.net.links.retain(|&[a, b]| a != node && b != node);
-        }
-        r
+        self.delete_pieces(&[], &[node])
     }
 
     // ---- station links (T-197): stations the player joins into one complex
@@ -2552,8 +2638,42 @@ impl TrackApi {
 
     /// Remove several edges and stations at once (T-829): one edit, undoable when all of it is
     /// blueprint, else final with no refund, as `delete_edge` and `remove_station` are for one. A
-    /// crossover goes whole; nodes left with no track and no station go too.
+    /// crossover goes whole; nodes left with no track and no station go too. A line that stops at
+    /// a removed station loses that stop and is routed again through the rest (T-859), else left
+    /// broken, as removed track leaves it.
     pub fn delete_pieces(&mut self, edges: &[u32], stations: &[u32]) -> u32 {
+        let Some((ops, built, st)) = self.pieces_ops(edges, stations) else {
+            return self.refuse(Issue::NoSuchEdge { edge: edges.first().copied().unwrap_or(u32::MAX) });
+        };
+        let r = if built { self.run_charged(Op::Batch(ops)) } else { self.run(Op::Batch(ops)) };
+        if r == 0 {
+            self.w.net.links.retain(|&[a, b]| st.binary_search(&a).is_err() && st.binary_search(&b).is_err());
+        }
+        r
+    }
+
+    /// What `delete_pieces` would do to lines (T-859), tried and rolled back: per line that stops
+    /// at a removed station or would be left broken (and was not), three numbers: the line, 1 if
+    /// it loses a stop, 1 if it would be broken.
+    pub fn removal_lines(&mut self, edges: &[u32], stations: &[u32]) -> Vec<f64> {
+        let Some((ops, _, st)) = self.pieces_ops(edges, stations) else { return vec![] };
+        let net = &self.w.net;
+        let lines: Vec<u32> = (0..net.line_count() as u32).filter(|&l| net.line_ok(l)).collect();
+        let was: Vec<bool> = lines.iter().map(|&l| net.line_broken[l as usize]).collect();
+        let stopping: Vec<bool> = lines.iter().map(|&l| net.line_stops(l).iter().any(|s| st.binary_search(s).is_ok())).collect();
+        let Ok((_, after)) = self.w.trial_with(Op::Batch(ops), |w| lines.iter().map(|&l| w.net.line_broken[l as usize]).collect::<Vec<_>>()) else { return vec![] };
+        let mut out = vec![];
+        for (i, &l) in lines.iter().enumerate() {
+            if stopping[i] || (after[i] && !was[i]) {
+                out.extend([l as f64, stopping[i] as u8 as f64, after[i] as u8 as f64]);
+            }
+        }
+        out
+    }
+
+    /// The ops of `delete_pieces`, whether any of it is constructed, and the stations removed
+    /// (sorted); None when nothing named is there.
+    fn pieces_ops(&mut self, edges: &[u32], stations: &[u32]) -> Option<(Vec<Op>, bool, Vec<u32>)> {
         let net = &self.w.net;
         let mut gone: Vec<u32> = edges.iter().copied().filter(|&e| net.edge_ok(e)).collect();
         for &e in edges {
@@ -2567,11 +2687,11 @@ impl TrackApi {
         st.sort_unstable();
         st.dedup();
         if gone.is_empty() && st.is_empty() {
-            return self.refuse(Issue::NoSuchEdge { edge: edges.first().copied().unwrap_or(u32::MAX) });
+            return None;
         }
         let built = gone.iter().any(|&e| net.edge_built[e as usize]) || st.iter().any(|&n| net.node_built[n as usize]);
         let mut ops: Vec<Op> = gone.iter().map(|&id| Op::DeleteEdge { id }).collect();
-        ops.extend(st.iter().map(|&node| Op::Station { node, data: None }));
+        let mut tail = vec![];
         let mut nodes: Vec<u32> = gone.iter().flat_map(|&e| [net.edge_a[e as usize], net.edge_b[e as usize]]).chain(st.iter().copied()).collect();
         nodes.sort_unstable();
         nodes.dedup();
@@ -2579,14 +2699,33 @@ impl TrackApi {
             let left = net.node_ports[n as usize].ends().iter().any(|&c| gone.binary_search(&(c >> 1)).is_err());
             let station = net.node_platform[n as usize] > 0 && st.binary_search(&n).is_err();
             if !left && !station {
-                ops.push(Op::Node { id: n, data: None });
+                tail.push(Op::Node { id: n, data: None });
             }
         }
-        let r = if built { self.run_charged(Op::Batch(ops)) } else { self.run(Op::Batch(ops)) };
-        if r == 0 {
-            self.w.net.links.retain(|&[a, b]| st.binary_search(&a).is_err() && st.binary_search(&b).is_err());
+        // lines stopping at a removed station: routed on the track as it will be, the stop left out,
+        // never with a reversal the old path did not make (as DeleteEdge reroutes, T-797)
+        let users: Vec<_> = (0..net.line_count() as u32)
+            .filter(|&l| net.line_ok(l) && net.line_stops(l).iter().any(|s| st.binary_search(s).is_ok()))
+            .filter_map(|l| net.line_data(l).map(|d| (l, net.turn_count(&d.stops, &d.path), d)))
+            .collect();
+        if !users.is_empty() {
+            let inv = self.w.sketch(Op::Batch(ops.clone()), false).ok();
+            for (l, turns, mut d) in users {
+                let mut stops: Vec<u32> = d.stops.iter().copied().filter(|s| st.binary_search(s).is_err()).collect();
+                stops.dedup();
+                if let Some(p) = self.w.net.route(&stops).filter(|p| self.w.net.turn_count(&stops, p) <= turns) {
+                    d.path = p;
+                }
+                d.stops = stops;
+                ops.push(Op::Line { id: l, data: Some(d) });
+            }
+            if let Some(inv) = inv {
+                self.w.unsketch(inv);
+            }
         }
-        r
+        ops.extend(st.iter().map(|&node| Op::Station { node, data: None }));
+        ops.extend(tail);
+        Some((ops, built, st))
     }
 
     /// Construct what a line needs to run: its path's edges and its stops.
@@ -4140,6 +4279,50 @@ mod tests {
     }
 
     #[test]
+    fn upkeep_of_a_ten_km_line_and_its_shares() {
+        // T-867: 10 km of double track with a station every km: $30k a km and $50k a station a day
+        let mut a = api();
+        a.set_cash(1e6);
+        let mut st = vec![];
+        for i in 0..10 {
+            let from = if i == 0 { [0.0, 0.0, 0.0, 0.0, -1.0] } else { [1.0, st[i] as f64, 0.0, 0.0, 0.0] };
+            let ends: Vec<f64> = from.iter().chain([0.0, 0.0, (i + 1) as f64 * 1000.0, 0.0, -1.0].iter()).copied().collect();
+            assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+            if i == 0 {
+                st.push(a.nodes_info()[0] as u32);
+            }
+            st.push(a.route_end());
+        }
+        for (i, &n) in st.iter().enumerate() {
+            assert_eq!(a.add_station(1, n, 0.0, 0.0, 120, format!("S{i}")), 0, "{}", a.issues());
+        }
+        assert_eq!(a.upkeep(), vec![0.0, 0.0, 0.0, 0.0, 0.0], "blueprint costs nothing");
+        let l1 = a.new_line_id();
+        assert_eq!(a.set_line(l1, &st, 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0xd7263d, "L1".into()), 0, "{}", a.issues());
+        assert_eq!(a.set_line_cars(l1, 6), 0, "{}", a.issues());
+        assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        let up = a.upkeep();
+        assert!((up[0] - 0.85).abs() < 1e-3 && (up[3] - 10.0).abs() < 1e-3 && up[4] == 11.0, "{up:?}");
+        let hours = [8.0, 10.0, 6.0];
+        let day: f64 = (0..3).map(|l| hours[l] * a.running_cost(l)).sum();
+        let len = a.lines_info()[9] / 1000.0;
+        assert!((day - 2000.0 * len / 10.0 * (4.0 + 2.0 * 6.0) * ECONOMY / 1e6).abs() < 1e-6, "{day} for {len} km");
+        let s = a.line_upkeep(&hours);
+        assert!(s.len() == 4 && s[0] == l1 as f64 && (s[1] - 0.85).abs() < 1e-3 && s[3].abs() < 1e-9, "{s:?}");
+        // a second line as busy over the first half shares that half's track and stations
+        let l2 = a.new_line_id();
+        assert_eq!(a.set_line(l2, &st[..6], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0x2d7dd2, "L2".into()), 0, "{}", a.issues());
+        let s = a.line_upkeep(&hours);
+        let share = |l: u32| s.chunks(2).find(|c| c[0] == l as f64).map_or(0.0, |c| c[1]);
+        assert!((share(l1) - 0.625).abs() < 1e-3 && (share(l2) - 0.225).abs() < 1e-3, "{s:?}");
+        // without trains the first line carries nothing; its own half goes to the rest
+        assert_eq!(a.set_schedule(l1, 0.0, 0.0, 0.0), 0, "{}", a.issues());
+        let s = a.line_upkeep(&hours);
+        assert!(!s.chunks(2).any(|c| c[0] == l1 as f64), "{s:?}");
+        assert!((s[s.len() - 1] - 0.4).abs() < 1e-3 && (s.chunks(2).map(|c| c[1]).sum::<f64>() - 0.85).abs() < 1e-3, "{s:?}");
+    }
+
+    #[test]
     fn an_express_added_over_constructed_track_runs() {
         // T-849: five stations 10 km apart, an all-stops line constructed, then an express
         // calling at every other station over the same track
@@ -4599,17 +4782,17 @@ mod tests {
         assert!(a.stop_times(id, 0, 0)[1] < slow * 0.75, "{} against {slow}", a.stop_times(id, 0, 0)[1]);
         let speeds = a.line_stretch_speeds(id);
         assert!((speeds[0] - 320.0).abs() < 1e-6 && (speeds[1] - 320.0).abs() < 1e-6 && speeds[2] == 0.0, "{speeds:?}");
-        // running costs 12 a train-km plus 3 a car-km
+        // running costs 5 a train-km plus 3 a car-km
         let info = a.lines_info();
         let (len_km, tph, cars) = (info[9] / 1000.0, info[5], info[21]);
         let tk = tph * 2.0 * len_km;
-        assert!((a.running_cost(0) - (12.0 * tk + 3.0 * tk * cars) * ECONOMY / 1e6).abs() < 1e-9);
+        assert!((a.running_cost(0) - (5.0 * tk + 3.0 * tk * cars) * ECONOMY / 1e6).abs() < 1e-9);
         // back to ordinary trains and forward again: both kinds are owned, nothing is paid
         let cash = a.cash();
         assert_eq!(a.set_line_fast(id, false), 0);
         assert_eq!((a.fleet(), a.fleet_fast(), a.cash()), (need, hs, cash));
         let tk = a.lines_info()[5] * 2.0 * len_km;
-        assert!((a.running_cost(0) - (9.0 * tk + 2.0 * tk * cars) * ECONOMY / 1e6).abs() < 1e-9);
+        assert!((a.running_cost(0) - (4.0 * tk + 2.0 * tk * cars) * ECONOMY / 1e6).abs() < 1e-9);
         // the spare high-speed cars never serve an ordinary line that grows
         assert_eq!(a.set_train_counts(id, 6, 4, 2), 0, "{}", a.issues());
         assert!((cash - a.cash() - (a.cars_needed() - need) as f64 * CAR_PRICE).abs() < 1e-6);
@@ -4694,13 +4877,22 @@ mod tests {
         assert_eq!(a.redo(), 0);
         assert_eq!(a.set_schedule(id, 30.0, 8.0, 4.0), 0);
         assert_eq!((a.fleet(), a.cash()), (fleet, cash));
-        // Running cost (T-807): 9 a train-km plus 2 a car-km, trains an hour both ways times length.
+        // Running cost (T-807, T-867): 4 a train-km plus 2 a car-km, trains an hour both ways times length.
         let len_km = a.lines_info()[9] / 1000.0;
         let cars = a.lines_info()[21];
         let train_km = 30.0 * 2.0 * len_km;
-        assert_eq!((RUN_COST_TRAIN_KM, RUN_COST_CAR_KM), (9.0, 2.0));
-        assert_eq!(a.money_params(), vec![CAR_PRICE, 2.0, ECONOMY, 9.0, 3.75, 3.0, 12.0]);
-        assert!((a.running_cost(0) - (9.0 * train_km + 2.0 * train_km * cars) * ECONOMY / 1e6).abs() < 1e-9);
+        assert_eq!((RUN_COST_TRAIN_KM, RUN_COST_CAR_KM), (4.0, 2.0));
+        assert_eq!(a.money_params(), vec![CAR_PRICE, 2.0, ECONOMY, 4.0, 3.75, 3.0, 5.0, 300.0, 500.0, 0.6, 1.5]);
+        assert!((a.running_cost(0) - (4.0 * train_km + 2.0 * train_km * cars) * ECONOMY / 1e6).abs() < 1e-9);
+        // Upkeep (T-867): $30k a km of double track and $50k a station a game day, all on the one
+        // line; built track no line uses goes to the rest.
+        let up = a.upkeep();
+        assert!((up[3] - 3.0).abs() < 0.01 && up[4] == 3.0, "{up:?}");
+        assert!((up[1] - 0.03 * up[3]).abs() < 1e-9 && (up[2] - 0.15).abs() < 1e-9);
+        let shares = a.line_upkeep(&[8.0, 10.0, 6.0]);
+        assert_eq!(shares.len(), 4, "{shares:?}");
+        assert_eq!(shares[0], id as f64);
+        assert!((shares[1] - up[0]).abs() < 1e-9 && shares[3].abs() < 1e-9, "{shares:?}");
         // In debt, edits that cost nothing still go through.
         a.set_cash(-50.0);
         assert_eq!(a.set_schedule(id, 20.0, 8.0, 4.0), 0, "{}", a.issues());
@@ -5985,6 +6177,65 @@ mod tests {
         assert!(a.w.net.node_platform.iter().any(|&p| p == 400));
         assert_eq!(a.undo(), 0);
         assert_eq!(live_edges(&a).len(), 6);
+    }
+
+    /// T-859: removing stations a line stops at takes them out of its stops and routes it again;
+    /// where the track between its stops is gone too it is left broken. One undo restores it all.
+    #[test]
+    fn removing_a_stop_reroutes_or_breaks_the_line() {
+        let mut a = api();
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        let node_at = |a: &TrackApi, x: f64| (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - x).abs() < 1.0 && a.w.net.node_y[n as usize].abs() < 1.0).unwrap();
+        for x in [1000.0, 2000.0] {
+            let e = edge_under(&a, x, 0.0);
+            assert_eq!(a.add_station(2, e, x, 0.0, 200, format!("S{x}")), 0, "{}", a.issues());
+        }
+        for x in [0.0, 3000.0] {
+            let n = node_at(&a, x);
+            assert_eq!(a.add_station(1, n, 0.0, 0.0, 200, format!("S{x}")), 0, "{}", a.issues());
+        }
+        let st: Vec<u32> = [0.0, 1000.0, 2000.0, 3000.0].iter().map(|&x| node_at(&a, x)).collect();
+        let l = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(l, &st, 0, 0, 0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+        assert!(!a.w.net.line_broken[l as usize]);
+        // a middle stop, its track kept: the line runs on past it
+        assert_eq!(a.removal_lines(&[], &[st[1]]), vec![l as f64, 1.0, 0.0]);
+        assert_eq!(a.remove_station(st[1]), 0, "{}", a.issues());
+        assert_eq!(a.w.net.line_stops(l), &[st[0], st[2], st[3]]);
+        assert!(!a.w.net.line_broken[l as usize]);
+        assert_eq!(a.undo(), 0);
+        assert_eq!(a.w.net.line_stops(l), &st[..]);
+        // the end stop and its track: the line ends a stop sooner
+        let last = edge_under(&a, 2500.0, 0.0);
+        assert_eq!(a.delete_pieces(&[last], &[st[3]]), 0, "{}", a.issues());
+        assert_eq!(a.w.net.line_stops(l), &st[..3]);
+        assert!(!a.w.net.line_broken[l as usize]);
+        assert_eq!(a.undo(), 0);
+        // a middle stop and the track on to the next: broken, until undone
+        let mid = edge_under(&a, 1500.0, 0.0);
+        assert_eq!(a.removal_lines(&[mid], &[st[1]]), vec![l as f64, 1.0, 1.0]);
+        assert_eq!(a.delete_pieces(&[mid], &[st[1]]), 0, "{}", a.issues());
+        assert!(a.w.net.line_broken[l as usize]);
+        assert_eq!(a.undo(), 0);
+        assert!(!a.w.net.line_broken[l as usize]);
+        assert_eq!(a.w.net.line_stops(l), &st[..]);
+    }
+
+    /// T-860: a station on a loose end whose last segment is shorter than the platform joins the
+    /// segments behind it first, as a split does; one undo puts the joint back.
+    #[test]
+    fn a_station_on_a_short_last_segment_end() {
+        let (mut a, east) = tangent_start();
+        assert_eq!(a.add_route(&from_node(east, 1080.0, 0.0), &[], 2, false), 0, "{}", a.issues());
+        let end = a.route_end();
+        assert_eq!(live_edges(&a).len(), 2);
+        assert_eq!(a.preview_station(1, end, 0.0, 0.0, 200), 0, "{}", a.issues());
+        assert_eq!(a.add_station(1, end, 0.0, 0.0, 200, "End".into()), 0, "{}", a.issues());
+        assert_eq!(live_edges(&a).len(), 1, "joined under the platform");
+        assert_eq!(a.w.net.node_platform[end as usize], 200);
+        assert_eq!(a.undo(), 0);
+        assert_eq!(live_edges(&a).len(), 2);
     }
 
     // ---- T-622: a platform beside a crossing or a joint

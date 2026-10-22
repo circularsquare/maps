@@ -153,6 +153,8 @@ export interface LineStats {
   trainCost: number;
   /** high-speed trains (T-817) */
   fast: boolean;
+  /** its share of the upkeep of the track and stations it uses, US$ a game day (T-867) */
+  upkeep: number;
   /** per stretch between stops, run 0: the top speed reached and the limit there, km/h, and what
    * sets the limit (0 the trains, 1 ordinary track, 2 curves, 3 a crossover) */
   stretches: { reached: number; limit: number; why: number }[];
@@ -246,5 +248,8 @@ export type Selection =
   /** the trip explorer (T-195): where a trip starts and ends, world metres; `to` null until the
    * second click. An end picked by clicking a station (T-221) is at the station's position and
    * names it. */
-  | { kind: "trip"; from: [number, number]; to: [number, number] | null; fromStation?: StationId; toStation?: StationId }
+  | { kind: "trip"; from: [number, number]; to: [number, number] | null; fromStation?: StationId; toStation?: StationId;
+      /** T-866: the far end is another zone's: a market place, or one of its 6 km zones (`gid`, -1
+       * the whole place); the trips are the regional market's */
+      far?: { place: number; gid: number } }
   | null;

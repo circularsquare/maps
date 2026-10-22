@@ -316,7 +316,7 @@ export class BlueprintBox {
   key(e: KeyboardEvent): boolean {
     if (tool.peek() !== "blueprint" || e.ctrlKey || e.metaKey || e.altKey) return false;
     if (e.key === "Delete") {
-      removePicked();
+      void removePicked();
       return true;
     }
     const k = e.key.toLowerCase();

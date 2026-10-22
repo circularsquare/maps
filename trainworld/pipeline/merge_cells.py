@@ -4,6 +4,7 @@
     python pipeline/merge_cells.py --all             every registered pack in data/packs
     python pipeline/merge_cells.py <id> --stats      counts only, nothing written
     python pipeline/merge_cells.py <id> --stats --child 500   the same with another sparse-child threshold
+    python pipeline/merge_cells.py <id> --floor 100  the floor rule at 100 trip ends (FLOOR the default; 0 off)
     python pipeline/merge_cells.py <id> --undo       put the res-9 pack back in data/packs
 
 A res-8 parent whose present children make under THRESHOLD trip ends a weekday merges; only the
@@ -13,7 +14,10 @@ are unchanged. In a parent over THRESHOLD, children under CHILD trip ends that t
 share a zone merge together (T-466), keeping the res-9 index of their busiest child. A cell under
 CHILD left alone by both joins the touching merged cell of its zone with the fewest trip ends, across
 its parent's edge, and lone cells touching only each other merge among themselves (T-510), so long as
-no member ends up over REACH from the group's centre. A merged cell sums every per-cell weight and
+no member ends up over REACH from the group's centre. With a floor (T-850b, FLOOR or `--floor`), a
+merged or single cell still under that many trip ends joins the nearest cell of its zone part at or
+over it, which keeps its index and its place; a zone part with no such cell becomes its busiest
+cell. A merged cell sums every per-cell weight and
 sits at its children's trip-end-weighted centre. A group stays unmerged if that centre would leave
 its zone square or stand on water. Where the pack has `walk_part` (T-700), each part of a zone counts
 as a zone here: a merged cell never spans two banks (T-725). The merged pack also carries
@@ -44,6 +48,9 @@ REGISTRY = os.path.join(ROOT, "app", "src", "game", "registry.json")
 THRESHOLD = 2500.0  # trip ends a weekday per res-8 parent (DECISIONS 2026-10-16, T-453)
 CHILD = THRESHOLD / 2  # per res-9 child of a busier parent (T-466)
 REACH = 700.0  # m, a lone cell's group at most this far from its centre: about a merged parent's own (T-510)
+# trip ends a weekday under which a cell joins its zone part's nearest cell at or over it (T-850b);
+# None until every pack is remerged with it, since nocar.py and everyday_rates.py remerge by the default
+FLOOR = None
 RES_MASK = np.uint64(0xF) << np.uint64(52)
 INT_SAME = ("zone", "region", "walk_part")  # integer per-cell arrays, equal within a merged cell
 
@@ -270,13 +277,56 @@ def _join_lone(header, a, e, h3, head, nx, ny, merged, lone):
     return info, joined
 
 
-def merge(header, a, threshold=THRESHOLD, child=None):
+def _floor(a, e, h3, head, nx, ny, floor):
+    """T-850b: each unit (a cell and the cells merged into it) under `floor` trip ends joins the
+    nearest unit of its zone part at or over the floor, by centre; in a part with none, every unit
+    joins the busiest. The unit joined keeps its index and its place (not the group's weighted
+    centre: that would move the busier unit too, more trip-end metres in all, and could stand it on
+    water). Writes head in place; returns a summary."""
+    n = len(head)
+    units = np.nonzero(head == np.arange(n))[0]
+    ue = np.bincount(head, weights=e, minlength=n)[units]
+    bank = _bank(a)[units]
+    x, y = nx[units].astype(np.float64), ny[units].astype(np.float64)
+    to = np.arange(len(units))
+    low, big = ue < floor, ue >= floor
+    li = np.nonzero(low)[0]
+    found = np.zeros(len(li), bool)
+    if len(li) and big.any():
+        from scipy.spatial import cKDTree
+        bi = np.nonzero(big)[0]
+        # a zone part a third axis 1e7 m apart, so the nearest within 1e6 m is in the same part
+        zb = bank.astype(np.float64) * 1e7
+        d, k = cKDTree(np.c_[x[bi], y[bi], zb[bi]]).query(np.c_[x[li], y[li], zb[li]], distance_upper_bound=1e6)
+        found = np.isfinite(d)
+        to[li[found]] = bi[k[found]]
+    orphan = li[~found]
+    if len(orphan):
+        o = orphan[np.lexsort((h3[units[orphan]], -ue[orphan], bank[orphan]))]
+        start = np.r_[True, bank[o][1:] != bank[o][:-1]]
+        to[o] = o[start][np.cumsum(start) - 1]
+    moved = to != np.arange(len(units))
+    head[:] = units[to][np.searchsorted(units, head)]
+    w, dist = ue[moved], np.hypot(x - x[to], y - y[to])[moved]
+    o = np.argsort(dist)
+    cw = np.cumsum(w[o])
+    at = lambda q: float(dist[o][np.searchsorted(cw, q * cw[-1])]) if len(o) and cw[-1] > 0 else 0.0  # noqa: E731
+    return {"floor_trip_ends": float(floor), "floor_cells": int(moved.sum()),
+            "floor_parts_alone": int(len(np.unique(bank[orphan]))),
+            "floor_ends": float(w.sum() / max(e.sum(), 1e-30)),
+            "floor_mean_m": float((w * dist).sum() / max(w.sum(), 1e-30)),
+            "floor_p50_m": at(0.5), "floor_p95_m": at(0.95), "floor_max_m": float(dist.max()) if len(dist) else 0.0}
+
+
+def merge(header, a, threshold=THRESHOLD, child=None, floor=None):
     """The merged pack's cell arrays {name: array} and a summary. Three rules (docs/demand.md 4.1):
     a res-8 parent under `threshold` trip ends merges its children within each zone (T-044);
     in a busier parent, children under `child` trip ends that touch merge among themselves
     (T-466), the merged cell keeping the index of its busiest child; such a child left alone
-    joins a touching group across its parent's edge (T-510, `_join_lone`)."""
+    joins a touching group across its parent's edge (T-510, `_join_lone`); with a floor (None takes
+    FLOOR, 0 none), a unit still under it joins its zone part's nearest unit at or over it (T-850b)."""
     child = CHILD if child is None else child
+    floor = FLOOR if floor is None else floor
     n = header["cells"]
     assert header["h3_res"] == 9 and "merged" not in header, "merge from a res-9 pack"
     cell = [e for e in header["arrays"] if e.get("per") == "cell"]
@@ -342,6 +392,7 @@ def merge(header, a, threshold=THRESHOLD, child=None):
     m2 = np.zeros(n, bool)
     m2[m2c] = True
     lone_info, m3 = _join_lone(header, a, e, h3, head, nx, ny, m1 | m2, sparse & ~m2)
+    floor_info = _floor(a, e, h3, head, nx, ny, floor) if floor else {}
     # one output row per unit
     keep = head == allc
     row = np.cumsum(keep) - 1
@@ -364,13 +415,16 @@ def merge(header, a, threshold=THRESHOLD, child=None):
     out = {k: v[order] for k, v in out.items()}
     # a pack without walk parts keeps the block it always had, so its re-merge (a joint solve) is unchanged
     parts = {"parents_split_by_part": int(twin.sum())} if "walk_part" in a else {}
-    info = {"cells_before": n, "cells": m, "parents": int((want & ~twin).sum()), **parts,
+    # a merged parent that joined a busier cell under the floor is no longer a cell of its own
+    parents = int((want & ~twin).sum()) if not floor_info else int((((out["h3"] & RES_MASK) >> np.uint64(52)) == 8).sum())
+    info = {"cells_before": n, "cells": m, "parents": parents, **parts,
             "cells_merged": int(m1.sum()),
             "sparse_groups": int(ok.sum()), "sparse_cells_merged": int(m2.sum()),
             "sparse_child_trip_ends": float(child),
-            "ends_merged": float(e[m1 | m2 | m3].sum() / max(e.sum(), 1e-30)),
+            "ends_merged": float(e[(m1 | m2 | m3) if not floor_info else np.bincount(head, minlength=n)[head] > 1].sum()
+                                 / max(e.sum(), 1e-30)),
             "kept_square": kept_sq + int(s_sq.sum()), "kept_water": kept_wet + int((~s_sq & s_wet).sum()),
-            **lone_info}
+            **lone_info, **floor_info}
     return out, info
 
 
@@ -429,10 +483,10 @@ def written(city):
         return json.load(f)
 
 
-def run(city, stats=False, child=None):
+def run(city, stats=False, child=None, floor=None):
     src = res9_copy(city, copy=not stats)
     header, a = load_pack(city, src)
-    cells, info = merge(header, a, child=child)
+    cells, info = merge(header, a, child=child, floor=floor)
     line = (f"{city}: {info['cells_before']:,} -> {info['cells']:,} cells ({1 - info['cells'] / info['cells_before']:.0%} fewer), "
             f"{info['parents']:,} merged parents from {info['cells_merged']:,}, {info['sparse_groups']:,} merged siblings "
             f"from {info['sparse_cells_merged']:,}; of {info['lone']:,} lone sparse cells {info['lone_joined']:,} joined a "
@@ -441,15 +495,22 @@ def run(city, stats=False, child=None):
             f"groups left alone: {info['kept_square']} off their square, {info['kept_water']} on water; lone cells left "
             f"alone: {info['lone_kept_square']} off their square, {info['lone_kept_water']} on water, "
             f"{info['lone_kept_reach']} too wide")
+    if "floor_cells" in info:
+        line += (f"; under the floor of {info['floor_trip_ends']:,.0f} trip ends {info['floor_cells']:,} cells joined a busier one "
+                 f"({info['floor_parts_alone']:,} zone parts with none became one cell), moving {info['floor_ends']:.2%} of trip "
+                 f"ends {info['floor_mean_m']:,.0f} m on average (half under {info['floor_p50_m']:,.0f} m, 95% under "
+                 f"{info['floor_p95_m']:,.0f} m, at most {info['floor_max_m']:,.0f} m)")
     if stats:
         print(line)
         return info
-    block = {"task": "T-044, T-466, T-510", "rule": "res-8 parents under the threshold of weekday trip ends (commutes and "
+    block = {"task": "T-044, T-466, T-510" + (", T-850b" if "floor_cells" in info else ""), "rule": "res-8 parents under the threshold of weekday trip ends (commutes and "
              "everyday outings, both ends) merge, children within one zone together, at their trip-end-weighted centre; "
              "in a busier parent, touching children within one zone each under the sparse-child threshold merge "
              "together, with their busiest child's index; a cell under that threshold left alone joins the touching "
              "merged cell of its zone with the fewest trip ends, or merges with touching lone cells of its zone"
-             + ("; with walk parts, 'zone' is one walk part of a zone (T-725)" if "walk_part" in a else ""),
+             + ("; with walk parts, 'zone' is one walk part of a zone (T-725)" if "walk_part" in a else "")
+             + ("; then a cell under the floor of trip ends joins the nearest cell of its zone at or over it, which keeps its "
+                "index and place, or the zone's busiest cell where it has none (T-850b)" if "floor_cells" in info else ""),
              "threshold_trip_ends": THRESHOLD, **info,
              "source": stamp(src, city)}
     size9 = os.path.getsize(os.path.join(src, f"{city}.bin"))
@@ -494,18 +555,24 @@ def registered():
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    child = None
+    child = floor = None
     if "--child" in args:  # --stats only: another sparse-child threshold
         i = args.index("--child")
         child = float(args.pop(i + 1))
+        args.pop(i)
+    if "--floor" in args:
+        i = args.index("--floor")
+        floor = float(args.pop(i + 1))
         args.pop(i)
     ids = registered() if "--all" in args else [x for x in args if not x.startswith("--")]
     if not ids:
         sys.exit(__doc__)
     if child is not None and "--stats" not in args:
         sys.exit("--child is for --stats")
+    if floor is not None and "--stats" not in args and floor != (FLOOR or 0):
+        sys.exit("--floor other than FLOOR is for --stats: nocar.py and everyday_rates.py remerge by FLOOR")
     for cid in ids:
         if "--undo" in args:
             undo(cid)
         else:
-            run(cid, stats="--stats" in args, child=child)
+            run(cid, stats="--stats" in args, child=child, floor=floor)

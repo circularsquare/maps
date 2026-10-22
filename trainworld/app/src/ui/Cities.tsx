@@ -1,6 +1,6 @@
 // The Cities tab (T-550, its own tab since T-749): one row for every region (a city pack or a zone, the
 // regions of the Lines tab's place toggle) where the player has a station, with its mode split bar
-// as the top bar draws it, its train rides a day, its money a day (fares less running trains), its
+// as the top bar draws it, its train rides a day, its profit a day (fares less running trains and upkeep), its
 // points over the past 24 game hours (T-684, T-694) and its star once earned (T-685). A click moves the camera to the region.
 
 import { activeCity, cityById, viewedZone, type City, type CityId } from "../game/cities";
@@ -29,12 +29,12 @@ export function goToCity(city: City) {
   if (tool.peek() === "select") selection.value = null;
 }
 
-/** Fares less running trains: the figure of a row, so a build day does not swamp it. */
-const net = (d: DayLedger) => d.fares - d.running;
+/** Fares less running trains and upkeep (T-867): the figure of a row, so a build day does not swamp it. */
+const net = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0);
 const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const collate = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" }).compare;
 
-/** A region's money for the figure: yesterday's ledger once there is one, before that today so far. */
+/** A region's profit for the figure: yesterday's ledger once there is one, before that today so far. */
 function figures(zone: CityId, m: MoneyState): { d: DayLedger; yesterday: boolean } | null {
   const todayDay = m.ledger.at(-1)?.day;
   if (todayDay === undefined) return null;
@@ -46,13 +46,14 @@ function figures(zone: CityId, m: MoneyState): { d: DayLedger; yesterday: boolea
   return today ? { d: today, yesterday: false } : null;
 }
 
-/** The hover of a row's money: fares and running trains, then new trains and construction (not in the figure) when there were any. */
+/** The hover of a row's profit: fares and running trains, then new trains and construction (not in the figure) when there were any. */
 function moneyTip(name: string, f: { d: DayLedger; yesterday: boolean }): string {
   const { d } = f;
   const rows = [
-    `${f.yesterday ? "Yesterday" : "Today so far"} in ${name}: ${money(net(d) * 1e6)} a day, fares less running trains`,
+    `Profit ${f.yesterday ? "yesterday" : "today so far"} in ${name}: ${money(net(d) * 1e6)} a day, fares less running trains and upkeep`,
     `Fares ${money(d.fares * 1e6)}`,
     `Running trains ${money(-d.running * 1e6)}`,
+    `Upkeep ${money(-(d.upkeep ?? 0) * 1e6)}`,
   ];
   if (d.trains) rows.push(`New trains ${money(-d.trains * 1e6)}`);
   if (d.build) rows.push(`Construction ${money(-d.build * 1e6)}`);
@@ -86,6 +87,54 @@ interface CityRow {
   trainShare: number | null;
   rides: number | null;
   money: { d: DayLedger; yesterday: boolean } | null;
+}
+
+/** T-857: the first row, the sums over every row below: rides, profit and points, and the mode split
+ * of all their trips. Not a region, so a click does nothing. */
+function TotalRow({ rows, day }: { rows: CityRow[]; day: string }) {
+  const stations = rows.reduce((n, r) => n + r.stations, 0);
+  let all = 0, train = 0, walk = 0, drive = 0, rides = 0, seen = false;
+  for (const r of rows) {
+    if (!r.view) continue;
+    const a = r.view.tripsPerDay;
+    seen = true;
+    all += a; train += r.view.railTripsPerDay; walk += a * r.view.split.walk / 100; drive += a * r.view.split.drive / 100;
+    rides += r.view.railTripsPerDay;
+  }
+  const split = seen && all > 0 ? { train: 100 * train / all, walk: 100 * walk / all, drive: 100 * drive / all } : null;
+  const s = split ?? { train: 0, walk: 0, drive: 0 };
+  const where = ` in all cities${day}`;
+  const sum: DayLedger = { day: 0, fares: 0, running: 0, trains: 0, build: 0 };
+  let yesterday = true, counted = 0;
+  for (const r of rows) {
+    if (!r.money) continue;
+    const d = r.money.d;
+    sum.fares += d.fares; sum.running += d.running; sum.upkeep = (sum.upkeep ?? 0) + (d.upkeep ?? 0); sum.trains += d.trains; sum.build += d.build;
+    yesterday &&= r.money.yesterday;
+    counted++;
+  }
+  const past = pointsPast24h.value, rate = pointsPerDay.value;
+  const pastAll = rows.reduce((n, r) => n + (past.get(r.id) ?? 0), 0);
+  const rateAll = rows.reduce((n, r) => n + (rate.get(r.id)?.[shownDay.value] ?? 0), 0);
+  const pointsTip = [
+    `${pointsExact(pastAll)} points in all cities in the past 24 hours`,
+    `${pointsExact(rateAll)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`,
+  ].join("\n");
+  return (
+    <li class="total">
+      <span class="grow" data-tip={`All cities\n${rows.length} ${rows.length === 1 ? "city" : "cities"}, ${stations} ${stations === 1 ? "station" : "stations"}`}>All cities</span>
+      <span class="city-bar" data-tip={splitTip(where, split, split ? { all, train, walk, drive } : null, "")}>
+        <span class="bar">
+          <i class="seg seg-train" style={{ width: s.train + "%" }} />
+          <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
+          <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
+        </span>
+      </span>
+      <span class="val w-riders c-cities" data-tip={seen ? `${count(rides)} train rides per day${where}` : undefined}>{seen ? count(rides) : "–"}</span>
+      <span class={"val w-money c-cities c-money" + (counted && net(sum) * 1e6 <= -500 ? " neg" : "")} data-tip={counted ? moneyTip("all cities", { d: sum, yesterday }) : undefined}>{counted ? money(net(sum) * 1e6) : "–"}</span>
+      <span class="val w-points c-cities" data-tip={pointsTip}>{pointsShort(pastAll)}</span>
+    </li>
+  );
 }
 
 export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
@@ -125,10 +174,11 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         { key: "train", label: "Train", tip: "Sort by the train share of rides", first: -1, cls: "w-citybar c-cities" },
         { key: "rides", label: "Rides", tip: "Sort by train rides per day", first: -1, cls: "w-riders c-cities" },
-        { key: "money", label: "Money", tip: "Sort by money a day, fares less running trains", first: -1, cls: "w-money c-cities c-money" },
+        { key: "money", label: "Profit", tip: "Sort by profit a day, fares less running trains and upkeep", first: -1, cls: "w-money c-cities c-money" },
         { key: "points", label: "Points", tip: "Sort by points in the past 24 hours", first: -1, cls: "w-points c-cities" },
       ]} />
       <ul class="rows pick cities">
+        <TotalRow rows={rows} day={day} />
         {rows.map((r) => {
           const v = r.view, where = ` in ${r.name}${day}`;
           const all = v?.tripsPerDay ?? 0;

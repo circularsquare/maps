@@ -87,7 +87,7 @@ const sampler = (async () => {
 /** jump to (lon, lat); ms until the zone in view (if `id`) is open, bare or in every worker */
 const go = async (id, lon, lat) => {
   const t0 = Date.now();
-  await page.evaluate(([lon, lat, z]) => window.tw.map.jumpTo({ center: [lon, lat], zoom: z }), [lon, lat, ZOOM]);
+  await page.evaluate(([lon, lat, z]) => { window.tw.map.jumpTo({ center: [lon, lat], zoom: z }); }, [lon, lat, ZOOM]);
   let r = { focusMs: null, openMs: null };
   if (id) {
     // ms until the focus is the zone, then ms from then until it is open (0: open already)

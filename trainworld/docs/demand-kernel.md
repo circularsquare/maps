@@ -179,7 +179,14 @@ works on two levels:
    destination's egress weights, up to 6 multiply-adds, one ln and one logit per pair. Pairs whose
    two walks together pass `pair_walk_max` (80 perceived minutes, 4.3) are skipped without being
    visited: each zone's destinations are kept cheapest walk first, and the destination zones by
-   their cheapest walk, so an origin stops at the first that is too far. That bound is what holds
+   their cheapest walk, so an origin stops at the first that is too far. Zone pairs carrying under
+   0.1 trips in the period (`COMMUTE_CHUNK`; dealing them halves the pair visits on the real save)
+   are dealt their trips in chunks (T-874, as the market's, T-780): per origin zone and block of
+   8 x 8 destination zones, the block's small pairs in zone order are sampled by trips from a
+   start fixed by the zone and block, each pair drawn carrying its draws' trips and the rest
+   skipped. Each block's trips stay exact and the deal depends on trips alone, never on rail's
+   costs, so crowding rounds and timetable changes deal the same pairs and an edit re-deals only
+   the blocks whose zones' trips it changed. `?perfOff=chunks` solves every pair. That bound is what holds
    the pairs where the 2.5 km edge had them: hand-made network 4.2M pairs (4.1M before T-090;
    with the 4 km reach and no pair bound 9.3M), real network 13.8M (13.6M; 31.8M). What a pair
    reads about its destination is packed in visiting order, its egress list padded to 6 with

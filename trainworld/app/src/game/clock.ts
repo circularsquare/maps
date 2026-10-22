@@ -7,8 +7,10 @@
 
 import { computed, effect, signal, type Signal } from "@preact/signals";
 import { PERIODS, periodAt } from "./periods";
-import { currentDay, dayKindAt } from "./days";
+import { currentDay } from "./days";
 import { viewShift } from "./localTime";
+import { viewCentre } from "./listScope";
+import { countryAt, kindIn } from "./holidays";
 import type { Demand } from "./types";
 
 /** Game seconds per wall second for the three speed buttons. Provisional. */
@@ -48,9 +50,11 @@ class GameClock {
     this.anchorSim = start;
     this.minute = signal(Math.floor(start / 60));
     // T-266, T-309: the demand views on "Today" follow the local day in view into and out of a
-    // weekend, as the minutes pass or the view pans into another time zone
+    // weekend, as the minutes pass or the view pans into another time zone; T-872: a holiday in
+    // the view's country is a weekend day
     effect(() => {
-      const k = dayKindAt(this.local.value * 60);
+      const c = viewCentre.value;
+      const k = kindIn(c ? countryAt(c[0], c[1]) : null, Math.floor(this.local.value / 1440));
       if (k !== currentDay.peek()) currentDay.value = k;
     });
   }

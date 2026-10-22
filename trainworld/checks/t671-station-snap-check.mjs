@@ -98,7 +98,10 @@ assert.deepEqual(r, { spot: null, issues: [] }, 'stops when the pointer has move
   assert.deepEqual(L(on(43, 0.1), 200), ['PlatformJoint'], 'blueprint beyond built track is not joined');
   edges[0].built = true;
   assert.deepEqual(L(node(41), 200), [], 'a terminal: the platform runs 200 m from the end');
-  assert.deepEqual(L(node(41), 300), ['PlatformJoint'], 'a 300 m platform reaches the joint');
+  assert.deepEqual(L(node(41), 300), [], 'T-860: a 300 m platform from the end joins through the joint');
+  edges[1].built = false;
+  assert.deepEqual(L(node(41), 300), ['PlatformJoint'], 'but not into blueprint beyond built track');
+  edges[1].built = true;
   assert.deepEqual(L(node(44), 200), ['StationPorts'], 'never on a junction');
   assert.deepEqual(L(on(47, 0.5), 200), ['PlatformCrossing'], 'the crossing 50 m away is under the platform');
   assert.deepEqual(L(on(47, 0.7), 200), [], 'the crossing 150 m away is not');

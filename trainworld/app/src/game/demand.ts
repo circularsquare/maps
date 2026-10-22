@@ -290,6 +290,8 @@ export interface PlaceTrips {
 export interface ZoneTrips {
   /** Exact market membership from the demand pack, not inferred from a zone's centroid. */
   place: number;
+  /** the zone's global id in the market (T-866: the trip explorer asks about it) */
+  gid: number;
   /** the zone's own position, pack metres (as `PlaceTrips.x`) */
   x: number;
   y: number;

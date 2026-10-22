@@ -7,7 +7,7 @@
 // changes. While the game plays with the camera still it is never touched.
 
 import type { Map as MlMap } from "maplibre-gl";
-import { rgb } from "../game/palette";
+import { MODE_COLOURS, rgb } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { DISC } from "../workers/commutersProtocol";
 import { anchor, EARTH_C, localToMercMatrix, mul4, type Anchor } from "./geo";
@@ -52,6 +52,16 @@ void main() {
 /** A hovered bubble's colour mixed this far toward white (T-730). */
 const HOT_MIX = "0.3";
 
+/** A disc's edge value says how it is drawn (the disc's last float): 0 or 1 plain, 2 with a dark
+ * outline, and from `PIE_STEP` up a pie rim (T-863): `outline + PIE_STEP * (1 + round(share * PIE_SHARE))`,
+ * `share` the train share, 0 to 1. The rim is two arcs, train then the rest, round a faint white fill. */
+const PIE_STEP = 3;
+const PIE_SHARE = 1000;
+const PIE_FILL = "0.35";
+const PIE_TRAIN = Float32Array.from(rgb(MODE_COLOURS.train), (v) => v / 255);
+const PIE_REST = Float32Array.from(rgb(MODE_COLOURS.drive), (v) => v / 255);
+export const pieEdge = (outline: 0 | 1 | 2, share: number) => outline + PIE_STEP * (1 + Math.round(Math.min(1, Math.max(0, share)) * PIE_SHARE));
+
 // A disc per instance: radius in local units, colour and alpha, and an edge (0 none, 2 a dark
 // outline of 2 px, a selected bubble's). No minimum size: a tiny count is a tiny disc.
 const DISC_VS = `#version 300 es
@@ -68,9 +78,11 @@ in float a_edge;
 out vec2 v_p;
 out float v_r;
 out float v_edge;
+out float v_hot;
 out vec4 v_col;
 void main() {
   bool hot = gl_InstanceID == u_hot;
+  v_hot = hot ? 1.0 : 0.0;
   float r = a_geo.z * u_rscale * u_px_per_unit;
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
   vec4 c = u_matrix * vec4(a_geo.xy, 0.0, 1.0);
@@ -87,15 +99,48 @@ const DISC_FS = `#version 300 es
 precision highp float;
 uniform vec3 u_ink;
 uniform float u_dpr;
+uniform vec3 u_pie_train;
+uniform vec3 u_pie_rest;
 in vec2 v_p;
 in float v_r;
 in float v_edge;
+in float v_hot;
 in vec4 v_col;
 out vec4 o;
+float rimWidth(float r) { return min(r, clamp(r * 0.3, 2.0 * u_dpr, 4.5 * u_dpr)); }
 void main() {
   float d = length(v_p);
   float cover = clamp(v_r - d + 0.5, 0.0, 1.0);
   if (cover <= 0.0) discard;
+  // a pie rim (${PIE_STEP} and over: see pieEdge): the rim in two arcs from 12 o'clock clockwise, train
+  // then the rest, round a faint white interior
+  float pk = floor(v_edge / ${PIE_STEP}.0 + 0.001);
+  if (pk >= 1.0) {
+    float outline = v_edge - pk * ${PIE_STEP}.0;
+    float inset = outline > 1.5 ? 2.0 * u_dpr : 0.0;
+    float share = (pk - 1.0) / ${PIE_SHARE}.0;
+    float edge = rimWidth(v_r - inset);
+    float inside = clamp(v_r - inset - d + 0.5, 0.0, 1.0);
+    float ring = inside * clamp(d - (v_r - inset - edge) + 0.5, 0.0, 1.0);
+    float ang = atan(v_p.x, v_p.y);
+    ang += ang < 0.0 ? 6.2831853 : 0.0;
+    float wt = share >= 0.999 ? 1.0 : share <= 0.001 ? 0.0 : clamp(ang * d + 0.5, 0.0, 1.0) * clamp((share * 6.2831853 - ang) * d + 0.5, 0.0, 1.0);
+    vec3 rim = mix(u_pie_rest, u_pie_train, wt);
+    vec3 white = vec3(1.0);
+    rim = mix(rim, white, v_hot * ${HOT_MIX});
+    float aRing = v_col.a;
+    float aIn = v_col.a * (${PIE_FILL} + v_hot * 0.2);
+    float a = mix(aIn * inside, aRing, ring);
+    vec3 c = mix(white, rim, ring);
+    if (outline > 1.5) {
+      float t = clamp(d - (v_r - 2.0 * u_dpr) + 0.5, 0.0, 1.0);
+      c = mix(c, u_ink, t);
+      a = mix(a, 1.0, t);
+    }
+    a *= cover;
+    o = vec4(c * a, a);
+    return;
+  }
   vec3 col = v_col.rgb;
   float a = v_col.a;
   if (v_edge > 1.5) {
@@ -111,8 +156,9 @@ void main() {
 /** Floats per line instance: x0, y0, r0, x1, y1, r1 (local units, radii before the bubble size),
  * a stub length factor (0 = a line), alpha, and the colour r, g, b (the first disc's own). A line
  * runs edge to edge between the two discs; a stub runs from the first disc's edge toward the
- * second, `STUB_SCREEN` of the screen long times its factor, at constant width and alpha (T-520,
- * T-739). Its alpha is scaled by the first disc's drawn size (T-524). */
+ * second, `STUB_SCREEN` of the screen long times its factor, at constant width (T-520, T-739). Its
+ * alpha is scaled by the first disc's drawn size (T-524) and fades linearly from the first disc's
+ * edge to nothing at the far end (T-858). */
 export const LINE = 11;
 /** A stub's length (factor 1) as a share of the map's longer side. */
 const STUB_SCREEN = 0.06;
@@ -137,6 +183,7 @@ in vec2 a_style;          // stub length factor, alpha
 in vec3 a_col;
 out float v_across;
 out float v_alpha;
+out float v_t;            // 0 at the source disc, 1 at the far end
 out vec3 v_col;
 void main() {
   vec4 c0 = u_matrix * vec4(a_from.xy, 0.0, 1.0);
@@ -157,6 +204,7 @@ void main() {
   gl_Position = s1 > s0 ? vec4(p / u_viewport * 2.0 - 1.0, 0.0, 1.0) : vec4(2.0, 2.0, 2.0, 1.0);
   v_across = side * half_w;
   v_alpha = a_style.y * clamp(s0 / u_full, 0.0, 1.0);
+  v_t = (gl_VertexID & 1) == 1 ? 1.0 : 0.0;
   v_col = a_col;
 }`;
 
@@ -165,10 +213,11 @@ precision highp float;
 uniform float u_width;
 in float v_across;
 in float v_alpha;
+in float v_t;
 in vec3 v_col;
 out vec4 o;
 void main() {
-  float a = v_alpha * clamp(u_width * 0.5 - abs(v_across) + 0.5, 0.0, 1.0);
+  float a = v_alpha * (1.0 - v_t) * clamp(u_width * 0.5 - abs(v_across) + 0.5, 0.0, 1.0);
   o = vec4(v_col * a, a);
 }`;
 
@@ -259,7 +308,7 @@ export class DemandOverlay {
     if (!gl) throw new Error("no WebGL2");
     this.gl = gl;
     this.prog = compile(gl, DISC_VS, DISC_FS);
-    for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_hot"]) this.u[n] = gl.getUniformLocation(this.prog, n);
+    for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_hot", "u_pie_train", "u_pie_rest"]) this.u[n] = gl.getUniformLocation(this.prog, n);
     this.timerExt = gl.getExtension("EXT_disjoint_timer_query_webgl2");
     this.size();
     map.on("resize", () => {
@@ -490,6 +539,8 @@ export class DemandOverlay {
     gl.uniform1f(this.u.u_px_per_unit, pxPerUnit);
     gl.uniform3fv(this.u.u_ink, rgb(shadeColours().mapInk).map((v) => v / 255));
     gl.uniform1f(this.u.u_dpr, dpr);
+    gl.uniform3fv(this.u.u_pie_train, PIE_TRAIN);
+    gl.uniform3fv(this.u.u_pie_rest, PIE_REST);
     gl.uniform1f(this.u.u_rscale, this.bubbleSize);
     gl.uniform1f(this.u.u_opacity, this.bubbleOpacity);
     this.discsDrawn = 0;

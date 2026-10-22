@@ -219,7 +219,7 @@ export function setAutoTrains(id: LineId, on: boolean) {
 /** The fare curve for the whole network (T-028): US$ a ride plus US$ a km. */
 export function setFares(base: number, perKm: number) {
   const r = (v: number) => Math.max(0, Math.round(v * 100) / 100);
-  void edit({ op: "fares", base: r(base), perKm: r(perKm) });
+  return edit({ op: "fares", base: r(base), perKm: r(perKm) });
 }
 
 export function renameLine(id: LineId, name: string) {

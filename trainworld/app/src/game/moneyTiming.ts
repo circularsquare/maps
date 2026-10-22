@@ -9,7 +9,7 @@
 // functions: the clock worker imports them.
 
 import { PERIODS } from "./periods";
-import { dayKindOf } from "./days";
+import { dayKindOf, type DayKind } from "./days";
 
 const enum Shape { Tent, Falling, Valley }
 /** boarding.rs `SHAPE`, in PERIODS order */
@@ -38,12 +38,16 @@ export function strengths(peak: ArrayLike<number>): number[] {
 /** A table by kind of day and period: per game hour, evenly over the period. */
 export type PerHour = (kind: number, period: number) => number;
 
+/** The kind of each local game day: `dayKindOf`, or with a country's holidays (T-872,
+ * game/holidayCalendar.ts `kindOfIn`). */
+export type KindOf = (day: number) => DayKind;
+
 /** What `per` adds up to over local seconds [u0, u1): shaped as the boarding account's arrivals by
  * `c[kind][period]`, or evenly where `c` is null. */
-export function between(per: PerHour, c: number[][] | null, u0: number, u1: number): number {
+export function between(per: PerHour, c: number[][] | null, u0: number, u1: number, kindOf: KindOf = dayKindOf): number {
   let sum = 0;
   for (let u = u0; u < u1;) {
-    const day = Math.floor(u / 86400), k = dayKindOf(day);
+    const day = Math.floor(u / 86400), k = kindOf(day);
     const s = (u - day * 86400) / 3600;
     const p = PERIODS.findIndex((x) => s >= x.from && s < x.to);
     const P = PERIODS[p], a = day * 86400 + P.from * 3600, len = (P.to - P.from) * 3600;
@@ -66,12 +70,12 @@ const SAMPLES = 6;
  * starts (evenly over that window): a ride ends or a train runs on after it set out. `lead`: the
  * amount set out that long before its period's time (a train leaves the ends half a run before
  * the period it belongs to, T-835). */
-export function lagged(per: PerHour, c: number[][] | null, tl: number, lag: number, lead = 0): number {
-  if (!(lag > 0)) return between(per, c, tl + lead, tl + 3600 + lead);
+export function lagged(per: PerHour, c: number[][] | null, tl: number, lag: number, lead = 0, kindOf: KindOf = dayKindOf): number {
+  if (!(lag > 0)) return between(per, c, tl + lead, tl + 3600 + lead, kindOf);
   let sum = 0;
   for (let j = 0; j < SAMPLES; j++) {
     const v = (lag * (j + 0.5)) / SAMPLES - lead;
-    sum += between(per, c, tl - v, tl + 3600 - v);
+    sum += between(per, c, tl - v, tl + 3600 - v, kindOf);
   }
   return sum / SAMPLES;
 }

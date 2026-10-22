@@ -240,8 +240,6 @@ pub(crate) struct Period {
     avg: Loads,
     rail: f64,
     walk: f64,
-    /// Trips by other (T-513), counted with driving in the display.
-    other: f64,
     trips: f64,
     pub(crate) round: usize,
     ms: f64,
@@ -279,16 +277,13 @@ pub(crate) struct SubOut {
     pub(crate) od: Vec<f32>,
     /// Rail trips by the perceived minutes of both walks together (`ModeOut::rail_walksum`).
     walksum: Vec<f32>,
-    /// What rail takes from other (`ModeOut::other_lost`).
-    other_lost: f64,
 }
 
 impl SubOut {
     fn empty() -> SubOut {
-        SubOut { rail_home: vec![], rail_work: vec![], walk_lost_home: vec![], walk_lost_work: vec![], acc_home: vec![], acc_work: vec![], od: vec![], walksum: vec![], other_lost: 0.0 }
+        SubOut { rail_home: vec![], rail_work: vec![], walk_lost_home: vec![], walk_lost_work: vec![], acc_home: vec![], acc_work: vec![], od: vec![], walksum: vec![] }
     }
     fn msa(&mut self, new: &SubOut, round: usize) {
-        self.other_lost += (new.other_lost - self.other_lost) / (round as f64 + 1.0);
         msa(&mut self.rail_home, &new.rail_home, round);
         msa(&mut self.rail_work, &new.rail_work, round);
         msa(&mut self.walk_lost_home, &new.walk_lost_home, round);
@@ -300,27 +295,11 @@ impl SubOut {
     }
 }
 
-/// What the zone pairs' choice with no rail reads (`NoRail`): each zone's share without a car its
-/// homes' (0 with no `Params::nocar`).
-fn no_rail_ctx(city: &City, z: &Zones, p: &Params) -> NoRail {
-    let mut cz = vec![];
-    if let Some(nc) = &p.nocar {
-        cz = vec![0f32; z.n];
-        for c in 0..city.len() {
-            let i = z.cell_zone[c] as usize;
-            if z.pop[i] > 0.0 {
-                cz[i] += (city.pop[c] as f64 * nc[c] as f64 / z.pop[i]) as f32;
-            }
-        }
-    }
-    NoRail::new(z, p, cz)
-}
-
-/// T-513, T-558: all-day trips with no rail that walk, by home zone and by work zone, and all
-/// that take other (`Gravity::no_rail_by_zone`).
-fn no_rail_trips(z: &Zones, gr: &Gravity, p: &Params, nr: &NoRail) -> (Vec<f64>, Vec<f64>, f64) {
-    let [wh, ww, oh, _] = gr.no_rail_by_zone(z, p, nr);
-    (wh, ww, oh.iter().sum())
+/// T-558: all-day trips with no rail that walk, by home zone and by work zone
+/// (`Gravity::no_rail_by_zone`).
+fn no_rail_trips(z: &Zones, gr: &Gravity, p: &Params, nr: &NoRail) -> (Vec<f64>, Vec<f64>) {
+    let [wh, ww] = gr.no_rail_by_zone(z, p, nr);
+    (wh, ww)
 }
 
 /// T-276: `DemandApi::home_k` and `work_k`. With a joint gravity shipped for these zones, each
@@ -355,8 +334,6 @@ pub struct DemandApi {
     walk_all: f64,
     walk_home_zone: Vec<f64>,
     walk_work_zone: Vec<f64>,
-    /// T-513: all-day trips by other with no rail (`Gravity::no_rail_by_zone`).
-    other_all: f64,
     /// T-276: per zone, the pack's trips a day per unit of home weight (`city.pop`) and of work
     /// weight (`city.jobs`). One number everywhere for a pack's own gravity; with a joint gravity
     /// each zone's share kept in the pack (`PackGravity::home`, `work`): the rest commute to
@@ -511,7 +488,6 @@ impl DemandApi {
             acc_work: mo.acc_work,
             od: self.compact_od(&mo.od, g.n_st),
             walksum: mo.rail_walksum.iter().map(|&v| v as f32).collect(),
-            other_lost: mo.other_lost,
         };
         (mo.rail, mo.rail_walk, l, mo.pairs, sub)
     }
@@ -634,19 +610,18 @@ impl DemandApi {
         self.reusable = false;
         &mut self.base
     }
-    /// Rebuild the walk's costs and the trips walking and by other with no rail after changing
+    /// Rebuild the walk's costs and the trips walking with no rail after changing
     /// their parameters through `params_mut` (the gravity holds them from `new`); before
     /// `EverydayApi::beside`.
     pub fn refresh_walk(&mut self) {
         let mut gr = (*self.gr).clone();
         gr.set_walk(&self.z, &self.base);
-        self.nr = Arc::new(no_rail_ctx(&self.city, &self.z, &self.base));
+        self.nr = Arc::new(NoRail::new(&self.z, &self.base));
         gr.set_walk_fine(&self.city, &self.z, &self.base, &self.nr);
-        let (home, work, other) = no_rail_trips(&self.z, &gr, &self.base, &self.nr);
+        let (home, work) = no_rail_trips(&self.z, &gr, &self.base, &self.nr);
         self.walk_all = home.iter().sum();
         self.walk_home_zone = home;
         self.walk_work_zone = work;
-        self.other_all = other;
         self.gr = Arc::new(gr);
         self.reusable = false;
     }
@@ -678,12 +653,12 @@ impl DemandApi {
                         }
                         let k = (gr.base(z, i) + gr.key(z, j)) as usize;
                         let t = gr.t(z, i, j) / (ns * ns) as f64;
-                        let w = self.nr.split(gr, p, i, j, k).0;
-                        let (road, paid, free, road_km) = self.nr.road(gr, p, i, j, k);
+                        let w = self.nr.split(gr, p, i, j, k);
+                        let (road, paid, free) = self.nr.road(gr, p, i, j, k);
                         for (n, (&a, &b)) in home[i * ns..(i + 1) * ns].iter().flat_map(|a| work[j * ns..(j + 1) * ns].iter().map(move |b| (a, b))).enumerate() {
                             d[n] = cell_walk_m(&self.city, a, b) / 1000.0;
                             let f = gr.walk_factor_cells(z, a as usize, b as usize);
-                            e[n] = if fine { p.no_rail_split(self.nr.cz[i], road, paid, free, road_km, gr.wcost.at(d[n] * f)).0 } else { w };
+                            e[n] = if fine { p.walk_no_rail(road, paid, free, gr.wcost.at(d[n] * f)) } else { w };
                         }
                         for n in 0..ns * ns {
                             let band = WALK_BANDS_KM.partition_point(|&b| b <= d[n]);
@@ -718,7 +693,6 @@ impl DemandApi {
             walk_all: self.walk_all,
             walk_home_zone: self.walk_home_zone.clone(),
             walk_work_zone: self.walk_work_zone.clone(),
-            other_all: self.other_all,
             home_k: self.home_k.clone(),
             work_k: self.work_k.clone(),
             svc: None,
@@ -772,9 +746,10 @@ impl DemandApi {
             base.routes = Some(Arc::new(r));
             gr.set_walk(&z, &base);
         }
-        // T-511: each cell's share of residents without a car
-        if let (Some(nc), Some(pop)) = (pack::cell_weights(header, bin, "nocar", city.len())?, pack::cell_weights(header, bin, "pop", city.len())?) {
-            base.nocar = Some(Arc::new(nc.iter().zip(&pop).map(|(&n, &p)| if p > 0.0 { (n / p).min(1.0) } else { 0.0 }).collect()));
+        // T-854: residents per km² by zone, for parking at the home end (the pack's `nocar` is
+        // not read)
+        if let Some(pop) = pack::cell_weights(header, bin, "pop", city.len())? {
+            base.home_dens = Some(Arc::new(z.home_density(&pop)));
         }
         // T-509 stage 4: the everyday rates of the pack's country; an older block's `decay_m` is
         // ignored, the decay lengths being one worldwide set (T-637)
@@ -786,12 +761,12 @@ impl DemandApi {
         // the pack's country: the header's own, else the one its everyday block was written for
         let country = h["country"].as_str().or_else(|| h["everyday"]["country"].as_str()).unwrap_or("");
         base.set_extra("country_asc_rail", country_asc_rail(country))?;
-        let nr = Arc::new(no_rail_ctx(&city, &z, &base));
+        let nr = Arc::new(NoRail::new(&z, &base));
         gr.set_walk_fine(&city, &z, &base, &nr);
-        let (walk_home_zone, walk_work_zone, other_all) = no_rail_trips(&z, &gr, &base, &nr);
+        let (walk_home_zone, walk_work_zone) = no_rail_trips(&z, &gr, &base, &nr);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, other_all, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0, complex_in: vec![], span_in: vec![], same: 0, layout_same: false, reusable: false })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0, complex_in: vec![], span_in: vec![], same: 0, layout_same: false, reusable: false })
     }
 
     /// The station complex of each station of the networks `set_network` is given from now on
@@ -809,6 +784,15 @@ impl DemandApi {
     /// (`track::span`). Empty or another length: 1 everywhere.
     pub fn set_span(&mut self, span: &[f32]) {
         self.span_in = span.to_vec();
+    }
+
+    /// T-874: commute zone pairs under `COMMUTE_CHUNK` trips a period dealt in chunks
+    /// (`Params::commute_chunk`), or every pair solved (`?perfOff=chunks`).
+    pub fn set_chunked(&mut self, on: bool) {
+        let c = if on { COMMUTE_CHUNK } else { 0.0 };
+        if c != self.base.commute_chunk {
+            self.params_mut().commute_chunk = c;
+        }
     }
 
     /// Cells, zones, home -> work trips a day, the walk share of all trips with no rail at all,
@@ -971,8 +955,7 @@ impl DemandApi {
         } else {
             (0.0, 0.0, Loads::zero(g.n_st, g.n - g.n_st), 0, SubOut::empty())
         };
-        let other = self.other_all * p.period_share as f64 - sub.other_lost;
-        self.per[q] = Some(Period { net, p, g, avg, rail, walk: walk0 - rail_walk, other, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac: no_crowding, uniform: true, seen: vec![], xi, xfer });
+        self.per[q] = Some(Period { net, p, g, avg, rail, walk: walk0 - rail_walk, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac: no_crowding, uniform: true, seen: vec![], xi, xfer });
         true
     }
 
@@ -1023,7 +1006,6 @@ impl DemandApi {
             st.rail += (rail - st.rail) * w;
             let walk = self.walk_all * st.p.period_share as f64 - rail_walk;
             st.walk += (walk - st.walk) * w;
-            st.other = self.other_all * st.p.period_share as f64 - st.sub.other_lost;
         } else {
             st.round += 1;
         }
@@ -1034,8 +1016,7 @@ impl DemandApi {
 
     /// Period `q`: round (0 = free flow), trips, rail trips, walked trips, ms of the last stage,
     /// subzone pairs, segments over seats at the busiest hour, worst load as a share of crush,
-    /// rider-weighted p50 and p90 crowding penalty, trips by other (T-513: part of the trips
-    /// neither rail nor walked, which the display counts as driving). Empty if `q` has no solve.
+    /// rider-weighted p50 and p90 crowding penalty. Empty if `q` has no solve.
     pub fn summary(&self, q: usize) -> Vec<f64> {
         let Some(Some(st)) = self.per.get(q) else { return vec![] };
         let (_, cs) = crowd_factors(&st.g, &st.net, &st.avg, &st.p);
@@ -1050,7 +1031,6 @@ impl DemandApi {
             cs.max_load_of_crush as f64,
             cs.p50 as f64,
             cs.p90 as f64,
-            st.other,
         ]
     }
 
@@ -1551,7 +1531,7 @@ impl DemandApi {
                 let t = wz[a] * self.gr.row[i] * self.gr.col[j] * (self.gr.ftab[idx] * self.gr.k(&self.z, i, j)) as f64 * rate as f64;
                 t_z[b] += t;
                 if wt && self.gr.wctab[idx] < NO_WALK {
-                    w_z[b] += t * nr.split(&self.gr, &self.base, i, j, idx).0 as f64;
+                    w_z[b] += t * nr.split(&self.gr, &self.base, i, j, idx) as f64;
                 }
             }
         }

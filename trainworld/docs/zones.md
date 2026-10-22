@@ -253,6 +253,13 @@ show their figures, nobody on them (T-845). One helper answers it, `placeAt` in 
 started in or a station has reached, in order. Nothing reads it for loading or drawing: every zone
 loads for the view on pan as above. A save without it loads as any other.
 
+**Zoomed out, nothing loads for the view** [T-871]: the viewed zone's pack and the zones' exact
+outlines load only above zoom 7.5 (`ZONE_LOAD_ZOOM`, `game/zones.ts`), one level out from where a
+zone's own bubbles show (8.5). Further out the overview's one bubble per zone needs no pack (a zone
+not open shows the registry's local trips), outlines are the coarse ones, and only zones a station
+reaches are open, with their markets, so demand figures are the same at every zoom. A viewed zone
+left behind closes as any pack does (T-301: after a minute, or at once past two spare).
+
 **Nearby zones** are drawn too: every zone whose boundary is on screen (at most
 three, nearest first) shows its own bubbles beside the focused zone's, so a zone line is not a cliff
 in the bubbles. A click on a nearby zone's bubble focuses that zone and selects the bubble.

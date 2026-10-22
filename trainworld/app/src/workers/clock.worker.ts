@@ -9,13 +9,14 @@
 
 import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { anchor, makeAnchor, setAnchor, toLocal } from "../map/geo";
-import { CITIES, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
+import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
 import { SHADES } from "../game/shadeTable";
-import { DAY_KINDS } from "../game/days";
+import { DAY_KINDS, dayKindOf } from "../game/days";
+import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
 import { shiftAt, timeZoneTable } from "../game/localTime";
-import { between, lagged, runLag, strengths, table, type PerHour } from "../game/moneyTiming";
+import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } from "../game/moneyTiming";
 import { networkFromState, newNetCache, runsTrains } from "../map/network";
 import { buildComplexes } from "../game/complexes";
 import { decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
@@ -37,6 +38,8 @@ let backupMs = 5 * 60_000;
 const LEDGER_DAYS = 30;
 const LEDGER_HOURS = 48;
 const LEVEL_OF = { high: 0, medium: 1, low: 2 } as const;
+/** T-867: hours a day at each demand level, which weigh each line's trains a day for its upkeep share */
+const LEVEL_HOURS = new Float64Array([0, 1, 2].map((l) => PERIODS.reduce((s, p) => s + (LEVEL_OF[p.demand] === l ? p.to - p.from : 0), 0)));
 
 let api: TrackApi | null = null;
 let city = HOME_CITY;
@@ -73,8 +76,40 @@ let lineRides = new Map<number, number[][]>();
  * (s) money lands after riders set out (game/moneyTiming.ts) */
 const peakC: number[][] = DAY_KINDS.map(() => PERIODS.map(() => 0));
 let moneyLag = 0;
-const fareHour = (per: number[][] | undefined, tl: number) => lagged(table(per), peakC, tl, moneyLag);
-const rideHour = (per: number[][] | undefined, tl: number) => between(table(per), peakC, tl, tl + 3600);
+const fareHour = (per: number[][] | undefined, tl: number, kindOf?: KindOf) => lagged(table(per), peakC, tl, moneyLag, 0, kindOf);
+const rideHour = (per: number[][] | undefined, tl: number, kindOf?: KindOf) => between(table(per), peakC, tl, tl + 3600, kindOf);
+
+/** T-872: the holiday calendar (its own chunk, fetched once), and each line's country: its first
+ * stop's zone's, as its local time is ("" outside every zone). A holiday is a weekend day there. */
+let holidayData: HolidayData | null = null;
+let lineCountries = new Map<number, string>();
+let holidaysSent = "";
+const kindOfLine = (id: number): KindOf => kindOfIn(holidayData, lineCountries.get(id));
+function loadHolidays() {
+  void import("../game/holidays.json").then((m) => {
+    holidayData = m.default as unknown as HolidayData;
+    if (syncHolidays()) sendTrips();
+  }, () => {});
+}
+/** Send the track model each line's holiday days on weekdays, from yesterday to 8 days ahead in
+ * its local time; true if they changed. Cheap when nothing did: called before every read of the
+ * boarding account by day. */
+function syncHolidays(): boolean {
+  if (!api || !holidayData) return false;
+  const now = gameNow(), out: number[] = [];
+  for (const [id, c] of lineCountries) {
+    if (!c) continue;
+    const kindOf = kindOfIn(holidayData, c), d0 = Math.floor((now + api.line_shift(id)) / 86400);
+    const days: number[] = [];
+    for (let d = d0 - 1; d <= d0 + 8; d++) if (kindOf(d) !== dayKindOf(d)) days.push(d);
+    if (days.length) out.push(id, days.length, ...days);
+  }
+  const key = out.join();
+  if (key === holidaysSent) return false;
+  holidaysSent = key;
+  api.set_line_holidays(new Float64Array(out));
+  return true;
+}
 // T-835: trains run from half a run before their period to half a run into it; `tail`, the cost a
 // day a period adds by running to its own end before no service (`runTail`), spread over it
 const costHour = (run: number[], tl: number, tail?: number[]) => lagged(((_k, p) => run[LEVEL_OF[PERIODS[p].demand]] + (tail?.[p] ?? 0) / (PERIODS[p].to - PERIODS[p].from)) as PerHour, null, tl, moneyLag, moneyLag / 2);
@@ -94,6 +129,8 @@ function runTail(li: ArrayLike<number>, i: number, run: number[]): number[] {
 let regions = new Map<string, { days: DayLedger[]; hours: HourLedger[] }>();
 /** T-531: each running line's fares and running cost by region, [region, share] (game/regionMoney.ts) */
 let lineShares = new Map<number, { fare: [string, number][]; ride: [string, number][]; run: [string, number][] }>();
+/** T-867: how the network's upkeep divides between regions, [region, share] (game/regionMoney.ts) */
+let upkeepRegions: [string, number][] = [];
 /** T-684: each running line's points per game hour by region and kind of day and period (game/points.ts) */
 let linePoints = new Map<number, [string, number[][]][]>();
 /** T-685: each region's star, the game second it was earned */
@@ -473,11 +510,14 @@ function buildState(): ClockState {
   }
   const li = a.lines_info();
   const lines: ClockLine[] = [];
+  const lu = a.line_upkeep(LEVEL_HOURS), upkeepOf = new Map<number, number>();
+  for (let k = 0; k + 1 < lu.length; k += 2) upkeepOf.set(lu[k], lu[k + 1]);
   for (let i = 0; i < li.length; i += 22) {
     const id = li[i];
     const ok = li[i + 2] === 1, running = li[i + 3] === 1;
     const t3 = (k: number) => [li[i + k], li[i + k + 1], li[i + k + 2]] as [number, number, number];
     lines.push({
+      upkeep: upkeepOf.get(id) ?? 0,
       id, name: a.line_name(id), letter: a.line_symbol(id), colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8], carsSet: li[i + 8],
       lengthM: li[i + 9], roundTrip: t3(10), trains: t3(13), auto: autoOf(a.line_auto(id)), delay: t3(16), dwell: li[i + 19], turnaround: li[i + 20],
       stops: [...a.line_stops(id)], path: [...a.line_path(id)],
@@ -495,6 +535,12 @@ function buildState(): ClockState {
       loopKind: a.line_loop(id),
     });
   }
+  const nodeAt = new Map(nodes.map((n) => [n.id, n]));
+  lineCountries = new Map(lines.map((l) => {
+    const n = nodeAt.get(l.stops[0]), z = n ? cityWithin(n.lng, n.lat) : null;
+    return [l.id, z ? cityById(z).country ?? "" : ""];
+  }));
+  syncHolidays();
   // Keyframes: phase tables, profile meta, and run 0 of every line resampled.
   const meta = a.profile_meta();
   const nLines = meta.length / 24;
@@ -620,8 +666,8 @@ function regionLines() {
     const run = [0, 1, 2].map((l) => li[i + 5 + l] * 2 * km * (moneyParams[3] + moneyParams[1] * cars) * unit);
     costs.push({ shift: a.line_shift(id), run, tail: runTail(li, i, run), shares: lineShares.get(id)?.run ?? [] });
   }
-  const fares = [...lineIncome].map(([id, per]) => ({ shift: a.line_shift(id), per, shares: lineShares.get(id)?.fare ?? [] }));
-  const rides = [...lineRides].map(([id, per]) => ({ shift: a.line_shift(id), per, shares: lineShares.get(id)?.ride ?? [] }));
+  const fares = [...lineIncome].map(([id, per]) => ({ shift: a.line_shift(id), kindOf: kindOfLine(id), per, shares: lineShares.get(id)?.fare ?? [] }));
+  const rides = [...lineRides].map(([id, per]) => ({ shift: a.line_shift(id), kindOf: kindOfLine(id), per, shares: lineShares.get(id)?.ride ?? [] }));
   return { costs, fares, rides };
 }
 
@@ -637,8 +683,8 @@ function regionHour(t: number, rl: ReturnType<typeof regionLines>): Map<string, 
       e[k] += v * s;
     }
   };
-  for (const f of rl.fares) spread(f.shares, fareHour(f.per, t + f.shift), 0);
-  for (const f of rl.rides) spread(f.shares, rideHour(f.per, t + f.shift), 2);
+  for (const f of rl.fares) spread(f.shares, fareHour(f.per, t + f.shift, f.kindOf), 0);
+  for (const f of rl.rides) spread(f.shares, rideHour(f.per, t + f.shift, f.kindOf), 2);
   for (const c of rl.costs) spread(c.shares, costHour(c.run, t + c.shift, c.tail), 1);
   return out;
 }
@@ -657,7 +703,7 @@ function savedRegions(copy: <T extends object>(e: T) => T = (e) => ({ ...e })): 
  * charts cannot tell from the full figures and which gzips to about 60% of them. */
 function rounded<T extends object>(e: T): T {
   const out: Record<string, number> = { ...e } as Record<string, number>;
-  for (const k of ["fares", "running", "trains", "build"]) if (typeof out[k] === "number") out[k] = Math.round(out[k] * 1e6) / 1e6;
+  for (const k of ["fares", "running", "upkeep", "trains", "build"]) if (typeof out[k] === "number") out[k] = Math.round(out[k] * 1e6) / 1e6;
   if (typeof out.rides === "number") out.rides = Math.round(out.rides * 10) / 10;
   if (typeof out.points === "number") out.points = Math.round(out.points);
   return out as T;
@@ -665,12 +711,12 @@ function rounded<T extends object>(e: T): T {
 
 /** A saved ledger in order with one entry per day or hour: saves written before T-488 can list a
  * day twice, the second time empty, which merging adds back where it belongs. */
-function mergeLedger<T extends { fares: number; running: number; trains: number; build: number; rides?: number; points?: number }>(list: T[] | undefined, at: (e: T) => number): T[] {
+function mergeLedger<T extends { fares: number; running: number; trains: number; build: number; upkeep?: number; rides?: number; points?: number }>(list: T[] | undefined, at: (e: T) => number): T[] {
   const by = new Map<number, T>();
   for (const e of list ?? []) {
     const k = at(e), d = by.get(k);
     if (!d) by.set(k, { ...e, rides: e.rides ?? 0, points: e.points ?? 0 });
-    else { d.fares += e.fares; d.running += e.running; d.trains += e.trains; d.build += e.build; d.rides = (d.rides ?? 0) + (e.rides ?? 0); d.points = (d.points ?? 0) + (e.points ?? 0); }
+    else { d.fares += e.fares; d.running += e.running; d.upkeep = (d.upkeep ?? 0) + (e.upkeep ?? 0); d.trains += e.trains; d.build += e.build; d.rides = (d.rides ?? 0) + (e.rides ?? 0); d.points = (d.points ?? 0) + (e.points ?? 0); }
   }
   return [...by.values()].sort((a, b) => at(a) - at(b));
 }
@@ -702,13 +748,16 @@ function unsettleAfter(clockT: number): number {
   const full = costAt(last.hour) * times;
   const end = last.hour * 3600 + 3600 * (full > 0 ? Math.min(1, last.running / full) : 1);
   const back = times * replay(Math.max(clockT, end - 86400 * 366), end); // settle's year at most
+  // T-867: upkeep drains evenly, so its hours since the clock are worked out again the same way
+  const upHour = upkeepPerHour(), upEnd = last.hour * 3600 + 3600 * (upHour > 0 ? Math.min(1, (last.upkeep ?? 0) / upHour) : 0);
+  const upBack = upHour * Math.min(366 * 24, Math.max(0, upEnd - clockT) / 3600);
   const trim = (days: DayLedger[], hours: HourLedger[]) => {
     const later = days.filter((d) => d.day > D), laterH = hours.filter((e) => e.hour > H);
     const today = laterH.filter((e) => Math.floor(e.hour / 24) === D);
     const fares = [...later, ...today].reduce((s, e) => s + e.fares, 0);
     const keep = { days: days.filter((d) => d.day <= D), hours: hours.filter((e) => e.hour <= H) };
     const d = keep.days.find((x) => x.day === D);
-    if (d) for (const e of today) { d.fares -= e.fares; d.running -= e.running; d.rides = (d.rides ?? 0) - (e.rides ?? 0); d.points = (d.points ?? 0) - (e.points ?? 0); }
+    if (d) for (const e of today) { d.fares -= e.fares; d.running -= e.running; d.upkeep = (d.upkeep ?? 0) - (e.upkeep ?? 0); d.rides = (d.rides ?? 0) - (e.rides ?? 0); d.points = (d.points ?? 0) - (e.points ?? 0); }
     const carry = <T extends DayLedger | HourLedger>(list: T[], from: T[], at: (e: T) => number, key: number, make: () => T, cap: number) => {
       const trains = from.reduce((s, e) => s + e.trains, 0), build = from.reduce((s, e) => s + e.build, 0);
       if (trains || build) { const e = entryIn(list, at, key, make, cap); e.trains += trains; e.build += build; }
@@ -721,7 +770,16 @@ function unsettleAfter(clockT: number): number {
   ledger = net.days;
   hourLedger = net.hours;
   for (const [k, r] of regions) { const t = trim(r.days, r.hours); regions.set(k, { days: t.days, hours: t.hours }); }
-  return back - net.fares;
+  return back + upBack - net.fares;
+}
+
+/** T-867: the network's upkeep, US$M a game hour: it drains evenly through the day, trains or none. */
+function upkeepPerHour(): number {
+  return (api?.upkeep()[0] ?? 0) / 24;
+}
+function upkeepNow(): MoneyState["upkeep"] {
+  const u = api!.upkeep();
+  return { track: u[1], stations: u[2], km: u[3], count: u[4] };
 }
 
 function moneyState(): MoneyState {
@@ -741,6 +799,11 @@ function moneyState(): MoneyState {
     carPrice: moneyParams[0],
     runCostCarKm: moneyParams[1],
     runCostTrainKm: moneyParams[3],
+    upkeepTrackKm: moneyParams[7],
+    upkeepStation: moneyParams[8],
+    upkeepSingle: moneyParams[9],
+    upkeepHsr: moneyParams[10],
+    upkeep: upkeepNow(),
     economy: moneyParams[2],
     fares: { ...fares },
     runningPerHour: [0, 1, 2].map((l) => a.running_cost(l)) as [number, number, number],
@@ -768,25 +831,32 @@ function sendCash() {
   send({ kind: "cash", cash, today: { ...today }, hour: { ...hour }, regions: regionNow() });
 }
 
+/** One local time's fares and rides in one country (T-872): per kind of day and period. */
+interface CountryPart { kindOf: KindOf; income: number[][]; rides: number[][] }
+
 /** T-309: the running lines grouped by the local time they run on, each group's running cost per
- * demand level and its fare income per kind of day and period. With one local time (every game in
- * the Northeast and Toronto) the network's totals, as before. */
-function localGroups(): { shift: number; running: number[]; tail: number[]; income: number[][]; rides: number[][] }[] {
+ * demand level (the same on every kind of day) and its fare income per kind of day and period,
+ * split by country (T-872: each country's holidays are its weekend days). With one local time and
+ * one country (every game in the Northeast) the network's totals. */
+function localGroups(): { shift: number; running: number[]; tail: number[]; parts: CountryPart[] }[] {
   const a = api!;
   const shifts = [...a.running_shifts()];
   const costs = regionLines().costs;
   const tail = (s: number | null) => PERIODS.map((_, p) => costs.reduce((t, c) => t + (s === null || c.shift === s ? c.tail[p] : 0), 0));
-  if (shifts.length <= 1) return [{ shift: shifts[0] ?? 0, running: [0, 1, 2].map((l) => a.running_cost(l)), tail: tail(null), income: incomePerHour, rides: ridesPerHour }];
-  return shifts.map((s) => {
-    const sum = (zero: number[][], by: Map<number, number[][]>) => {
+  const countries = [...new Set([...lineIncome.keys(), ...lineRides.keys()].map((id) => lineCountries.get(id) ?? ""))];
+  const one = shifts.length <= 1;
+  if (one && countries.length <= 1) return [{ shift: shifts[0] ?? 0, running: [0, 1, 2].map((l) => a.running_cost(l)), tail: tail(null), parts: [{ kindOf: kindOfIn(holidayData, countries[0]), income: incomePerHour, rides: ridesPerHour }] }];
+  return (one ? [shifts[0] ?? 0] : shifts).map((s) => {
+    const sum = (zero: number[][], by: Map<number, number[][]>, c: string) => {
       const out = zero.map((p) => p.map(() => 0));
       for (const [id, per] of by) {
-        if (a.line_shift(id) !== s) continue;
+        if ((!one && a.line_shift(id) !== s) || (lineCountries.get(id) ?? "") !== c) continue;
         per.forEach((row, k) => row.forEach((v, p) => { if (out[k]) out[k][p] += v; }));
       }
       return out;
     };
-    return { shift: s, running: [0, 1, 2].map((l) => a.running_cost_in(l, s)), tail: tail(s), income: sum(incomePerHour, lineIncome), rides: sum(ridesPerHour, lineRides) };
+    const parts = countries.map((c) => ({ kindOf: kindOfIn(holidayData, c), income: sum(incomePerHour, lineIncome, c), rides: sum(ridesPerHour, lineRides, c) }));
+    return { shift: s, running: [0, 1, 2].map((l) => (one ? a.running_cost(l) : a.running_cost_in(l, s))), tail: tail(one ? null : s), parts };
   });
 }
 
@@ -803,8 +873,9 @@ function settle(): boolean {
     partFare = partCost = 0;
   }
   if (now <= settledT) return false;
-  const groups = localGroups(), rl = regionLines();
-  const pl = [...linePoints].map(([id, regs]) => ({ shift: api!.line_shift(id), regs }));
+  const groups = localGroups(), rl = regionLines(), up = upkeepPerHour();
+  const upShares: [string, number][] = upkeepRegions.length ? upkeepRegions : [["", 1]];
+  const pl = [...linePoints].map(([id, regs]) => ({ shift: api!.line_shift(id), kindOf: kindOfLine(id), regs }));
   let cash = api.cash(), ended = false;
   while (settledT < now) {
     const h = Math.floor(settledT / 3600);
@@ -815,30 +886,37 @@ function settle(): boolean {
     let fare = 0, cost = 0, rides = 0;
     for (const g of groups) {
       const tl = t + g.shift;
-      fare += fareHour(g.income, tl);
-      rides += rideHour(g.rides, tl);
+      for (const c of g.parts) {
+        fare += fareHour(c.income, tl, c.kindOf);
+        rides += rideHour(c.rides, tl, c.kindOf);
+      }
       cost += costHour(g.running, tl, g.tail);
     }
     const wf = full ? 1 : shareAt(h, end - t), wc = full ? 1 : (end - t) / 3600;
     const df = Math.max(0, wf - partFare), dc = Math.max(0, wc - partCost);
     partFare = Math.max(partFare, wf);
     partCost = Math.max(partCost, wc);
-    cash += fare * df - cost * dc;
+    cash += fare * df - (cost + up) * dc;
     const d = dayEntry(Math.floor(t / 86400));
     d.fares += fare * df;
     d.running += cost * dc;
+    d.upkeep = (d.upkeep ?? 0) + up * dc;
     d.rides = (d.rides ?? 0) + rides * df;
     const e = hourEntry(h);
     e.fares += fare * df;
     e.running += cost * dc;
+    e.upkeep = (e.upkeep ?? 0) + up * dc;
     e.rides = (e.rides ?? 0) + rides * df;
     for (const [z, [f, c, n]] of regionHour(t, rl)) {
       for (const r of regionEntries(z, d.day, h)) { r.fares += f * df; r.running += c * dc; r.rides = (r.rides ?? 0) + n * df; }
     }
+    if (up * dc > 0) for (const [z, s] of upShares) {
+      for (const r of regionEntries(z, d.day, h)) r.upkeep = (r.upkeep ?? 0) + up * dc * s;
+    }
     // T-684: points land as fares do, each line's at its own local period and kind of day
-    if (df > 0) for (const { shift, regs } of pl) {
+    if (df > 0) for (const { shift, kindOf, regs } of pl) {
       for (const [z, per] of regs) {
-        const v = fareHour(per, t + shift) * df;
+        const v = fareHour(per, t + shift, kindOf) * df;
         if (!(v > 0)) continue;
         d.points = (d.points ?? 0) + v;
         e.points = (e.points ?? 0) + v;
@@ -870,6 +948,7 @@ interface LineDay { id: number; block: ArrayLike<number>; fare: number }
  * 24 hours instead (T-446). */
 function lineDaysAt(now: number, closed: boolean, shift?: number, past = false): LineDay[] {
   const a = api!;
+  syncHolidays();
   const v = past ? a.past_day(now) : a.today(now), count = v[0], hNow = Math.floor(now / 3600);
   const out: LineDay[] = [];
   let i = 1;
@@ -883,7 +962,7 @@ function lineDaysAt(now: number, closed: boolean, shift?: number, past = false):
       const wNow = closed ? 1 : hNow === partHour ? partFare : 0;
       if (per) for (let h = h0; h <= hNow; h++) {
         const t = h * 3600 + sh, w = h === hNow ? wNow : past && h === h0 ? 1 - wNow : 1;
-        f += fareHour(per, t) * w;
+        f += fareHour(per, t, kindOfLine(id)) * w;
       }
       out.push({ id, block: v.subarray(i, i + len), fare: f });
     }
@@ -1356,6 +1435,7 @@ function stepBoarding() {
 function sendTrips() {
   if (!api || !Number.isFinite(epoch)) return;
   api.set_now(gameNow());
+  syncHolidays();
   timing.trips = 0;
   timing.board = 0;
   for (const e of [epoch, epoch + 3600]) {
@@ -1606,6 +1686,7 @@ async function processMessage(msg: ToClock) {
       api = new TrackApi(NEW_GAME_FRAME.lon, NEW_GAME_FRAME.lat, true);
       // T-309: each region's local time, kept across loads
       api.set_time_zones(timeZoneTable());
+      loadHolidays();
       api.set_empty_frame(frameKindNumber(NEW_GAME_FRAME.kind));
       syncFrame();
       api.clear_water();
@@ -1809,6 +1890,7 @@ async function handle(msg: ToClock) {
     lineRides = new Map((msg.lines ?? []).map((l) => [l.line, l.rides]));
   } else if (msg.kind === "regionShares") {
     lineShares = new Map(msg.lines.map((l) => [l.line, { fare: l.fare, ride: l.ride, run: l.run }]));
+    upkeepRegions = msg.upkeep ?? [];
   } else if (msg.kind === "points") {
     linePoints = new Map(msg.lines.map((l) => [l.line, l.regions]));
   } else if (msg.kind === "star") {
@@ -1866,6 +1948,7 @@ async function handle(msg: ToClock) {
       : q.what === "today" ? today()
       : q.what === "lineHeld" ? api.line_held(q.line)
       : q.what === "lineMarks" ? api.line_marks(q.line)
+      : q.what === "removal" ? new Float64Array(api.removal_lines(new Uint32Array(q.edges), new Uint32Array(q.stations)))
       : api.line_delays(q.line, q.level);
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
   } else if (msg.kind === "previewStation") {

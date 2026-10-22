@@ -445,41 +445,17 @@ notes/T-420.md has the tables.
   London) high. Check: a new country's station entries against the model's level, and its census
   rail share by area where it has one; a country constant only where a real network's counts show
   a gap the worldwide value cannot close.
-- **Driving alternative and homes without a car** (T-511, docs/demand-mode.md 4.3). Drive times and
-  costs are the US car's; the people living in a household with no car (per cell, `nocar`) cannot
-  drive and choose among rail, walking the whole way and "other" (T-513: bus, taxi and bike as one
-  mode, the drive's road at a fixed 12 km/h door to door plus an 8-minute wait in plain
-  minutes, plus one fitted constant `other_asc`, no parking). Sources, finest first: census car-free
-  households by small area (US ACS B08201 by tract, people directly; England and Wales Census 2021
-  TS045 by LSOA; Scotland's Census 2022 UV405 by data zone; Northern Ireland's Census 2021 by data
-  zone, people directly); else cars per household `c` by region or country, households with no car
-  `exp(-1.30 c^1.33)` (fitted on US tracts and English LSOAs together, each country alone within
-  0.06 of it; rmse 0.04), Japan by prefecture (AIRIA); else a national figure, the first of
-  (`nocar.national`, T-562): a national register's passenger cars per 1,000 people times household
-  size (`COUNTRIES`: the first eight packs' countries, Hong Kong, Singapore, Taiwan); a DHS survey's
-  households possessing a car, 2015 on; Eurostat's cars per 1,000 times its household size; a DHS
-  survey from 2010; households with a car from GDP per head (PPP, World Bank) by
-  `logit = -15.10 + 1.502 ln(GDP)`, fitted on the 100 countries above but the two city states
-  (rmse 0.14; 0.05 under $5,000 a head, 0.25 from $15,000 to $40,000); a country with no GDP
-  figure takes its income group's median. Households become people at a no-car household 0.693
-  times the size of a car household (ACS national). Why it may not carry over: the curve is two
-  rich countries' (where cars are concentrated in fewer households, as in Brazil, India or
-  Nigeria, it puts too few without one: Brazil's 36% of households against about half in its
-  household survey; Albania's register gives 19% where its 2017 DHS has 63%, hence surveys before
-  Eurostat); national figures miss the city (Paris's own 65% of households without a car against
-  France's 17%, Seoul and Shanghai likewise); registers that never retire cars (Brazil, China)
-  overcount; the GDP rule cannot see where two-wheelers stand in for cars (it gives Vietnam 65%
-  of households without a car, surely too few) and is loose for middle incomes (Russia, Mexico,
-  Iran, Iraq take it); a cross-border pack (Hong Kong with Shenzhen) takes its row's country
-  throughout. Other's speed and wait are one bus network's everywhere: bus
-  speeds run from about 10 km/h (Manhattan, central London, Lagos traffic) to 20 and more
-  (suburban and BRT routes), headways from 3 minutes on trunk routes to an hour in rural areas
-  and small towns, so other is too good where buses are sparse (rural Japan, US suburbs, where
-  car-free homes are few anyway) and too poor where minibuses, motorbike taxis or cycling carry
-  most trips (Lagos, Mumbai, Dutch and Japanese cycling cities); one `other_asc` cannot tell them
-  apart. Check: a city's car-free share against its own survey (INSEE IRIS
-  for France, KOSIS for Korea, city yearbooks), and rail share of commuters by area where the
-  census has mode (T-509).
+- **Driving alternative, parking at home and the curve's bounds** (T-854, docs/demand-mode.md 4.3).
+  Everyone can drive; drive times and costs are the US car's, and the car stands for every way of
+  getting about but rail and walking. Parking at the home end, 0.4 of the destination's paid-space
+  rule on the home zone's residents per km² of land, needs only the pack's `pop`, so it is one rule
+  in every country, with no car-ownership data anywhere. The curve's floor and
+  ceiling (5% each way, fading to none at 3 times) need no data. Why it may not carry over: density
+  cannot see income, so a dense poor district where few own cars (Lagos, Mumbai) drives as much as a
+  dense rich one, and a city of minibuses, motorbike taxis or bicycles is priced as if those riders
+  drove; car ownership's real spread between countries (Paris's 65% of households without a car
+  against Houston's few) shows only through density. Check: a city's rail share by area against its
+  census mode share where it has one (T-509), dense cores against suburbs.
 - **Routed drives** (T-275, docs/demand-mode.md 4.3). A drive's road is the straight line times a
   per-pack routed factor over OSM roads (every public road but service ways, shortest distance),
   times one scale, 1.3 / 1.210, that puts New York's commute-weighted factor back at the 1.3 its

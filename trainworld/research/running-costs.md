@@ -7,6 +7,10 @@ Research note, 2026-10-21 (T-806). The game charges US$3 per 20 m car-km (docs/t
 construction is priced at market-rate Korea/Spain costs. Inflation to 2026 is not applied (add
 roughly 20-30% to the 2017-2018 figures).
 
+Taken up: option B was built by T-807, then option C's idea (upkeep per route-km and per station)
+by T-867 at US$30k a km and US$50k a station a game day with trains at US$4 a train-km plus US$2 a
+car-km (notes/T-867.md; the game's rule is in docs/track-and-service.md 6.4).
+
 ## Summary
 
 | Metro | Year | Per car-km | What it includes | Tag |

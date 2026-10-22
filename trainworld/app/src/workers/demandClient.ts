@@ -66,10 +66,10 @@ import { EVERYDAY_KEYS, membersOf, PURPOSES, shownKey, type PurposeFilter, type 
 import { perfOff } from "../perfFlags";
 import { marketZonesNear } from "./demandClusters";
 import { citiesReached, footprintOf, loadFootprints, REACH_M, zonesNearStations, type Footprint } from "./cityReach";
-import { nearbyZones } from "../game/zones";
+import { nearbyZones, zonesLoadForView } from "../game/zones";
 import { addOpened } from "../game/openedZones";
 import type { BareFigures, DemandNetwork, FromDemand, OpenRejected, ToDemand } from "./demandProtocol";
-import { readTripPeriod, setTripQuery, tripKey, type RouteNodes, type Trip } from "../game/trip";
+import { readMarketPeriod, readTripPeriod, setMarketTripQuery, setTripQuery, tripKey, type MarketPeriod, type RouteNodes, type Trip } from "../game/trip";
 import { demandTestSnapshot } from "./demandTest";
 import { mergeEveryday } from "./selectionMerge";
 import type { NetworkSnapshot } from "./protocol";
@@ -147,7 +147,7 @@ interface Service {
 interface CorridorBase { full: Corridors; tl: Float64Array; commutes: Float64Array; airShare: Float64Array; carShare: Float64Array; bare: { air: Float64Array; car: Float64Array } }
 /** `corridorDay`: a kind of day's factors for the corridors' longer trips and commutes (`dayResult`) */
 type Result = Extract<FromDemand, { kind: "result" }> & { corridorDay?: [number, number] };
-type QueryKind = "cells" | "subSums" | "cellModes" | "station" | "flowRail" | "flows" | "purposes" | "icSel" | "icStation" | "purposeModes" | "transfers" | "trip" | "bare" | "bareFlows" | "bareSquares";
+type QueryKind = "cells" | "subSums" | "cellModes" | "station" | "flowRail" | "flows" | "purposes" | "icSel" | "icStation" | "purposeModes" | "transfers" | "trip" | "icTrip" | "bare" | "bareFlows" | "bareSquares";
 type Reply = Extract<FromDemand, { kind: QueryKind }>;
 type QueryMessage = Extract<ToDemand, { kind: QueryKind }>;
 type WithoutCity<T> = T extends unknown ? Omit<T, "city" | "round"> : never;
@@ -619,7 +619,7 @@ class DemandClient {
       w.postMessage(msg);
     }
     // the viewed city loads when it changes (a pan, the city buttons)
-    effect(() => { activeCity.value; viewedZone.value; this.ensure(); });
+    effect(() => { activeCity.value; viewedZone.value; zonesLoadForView.value; this.ensure(); });
     // and the zones beside it with bubbles on screen (T-276), once nothing waits on them
     effect(() => { nearbyZones.value; this.ensure(); });
     // T-801: a selected zone's market opens for its partner bubbles
@@ -655,9 +655,10 @@ class DemandClient {
 
   // --- Loading only what is needed (T-149) -------------------------------------------------------
 
-  /** T-318: the viewed zone alone; empty over dead space, where nothing loads for the view. */
+  /** T-318: the viewed zone alone; empty over dead space, where nothing loads for the view, and
+   * (T-871) zoomed out past `ZONE_LOAD_ZOOM`. */
   private viewedSet(): Set<CityId> {
-    return this.withoutBroken(new Set(viewedZone.peek() ? [activeCity.peek()] : []));
+    return this.withoutBroken(new Set(viewedZone.peek() && zonesLoadForView.peek() ? [activeCity.peek()] : []));
   }
 
   /** T-318: a network is in hand and neither the view nor any station needs a pack: nothing to
@@ -1600,7 +1601,7 @@ class DemandClient {
 
   private receive(i: number, msg: FromDemand) {
     if (msg.kind === "failed") return this.fail(`worker ${i}: ${msg.error}`);
-    if (msg.kind === "cells" || msg.kind === "subSums" || msg.kind === "cellModes" || msg.kind === "station" || msg.kind === "flowRail" || msg.kind === "flows" || msg.kind === "purposes" || msg.kind === "icSel" || msg.kind === "icStation" || msg.kind === "purposeModes" || msg.kind === "transfers" || msg.kind === "trip" || msg.kind === "bare" || msg.kind === "bareFlows" || msg.kind === "bareSquares") {
+    if (msg.kind === "cells" || msg.kind === "subSums" || msg.kind === "cellModes" || msg.kind === "station" || msg.kind === "flowRail" || msg.kind === "flows" || msg.kind === "purposes" || msg.kind === "icSel" || msg.kind === "icStation" || msg.kind === "purposeModes" || msg.kind === "transfers" || msg.kind === "trip" || msg.kind === "icTrip" || msg.kind === "bare" || msg.kind === "bareFlows" || msg.kind === "bareSquares") {
       const w = this.pendingQueries.get(msg.id);
       if (!w) return;
       const t = msg as { qStart?: number; qMs?: number };
@@ -2193,6 +2194,36 @@ class DemandClient {
     return { version, round, key: tripKey(from, to), purpose, periods, outside };
   }
 
+  /** T-866: the trip explorer between zones (game/trip.ts `MarketTrip`): the longer trips of a
+   * bubble selection's cells with place `far`, or its 6 km zone `farGid` (-1 the whole place). */
+  marketTrip(end: "home" | "work", cells: Uint32Array, far: number, farGid: number): Promise<(MarketPeriod | null)[] | null> {
+    if (cells.length === 0) return Promise.resolve(null);
+    return this.viaRound(`icTrip|${end}|${cells.join(",")}|${far}|${farGid}`, (t) => this.marketTripAt(t, end, cells, far, farGid));
+  }
+  private async marketTripAt(t: Target, end: "home" | "work", cells: Uint32Array, far: number, farGid: number): Promise<(MarketPeriod | null)[] | null> {
+    const solve = t.solve;
+    if (!solve) return null;
+    const e = end === "home" ? 0 : 1;
+    let sq: { xy: Float32Array; share: Float32Array } | undefined;
+    if (this.isBare(activeCity.peek())) {
+      const [r] = await this.ask((id) => ({ kind: "bareSquares", id, version: t.view, end: e, cells }), [this.computeN]);
+      if (r?.kind !== "bareSquares" || !r.xy || !r.share) return null;
+      sq = { xy: r.xy, share: r.share };
+    }
+    const at: RouteNodes = [];
+    for (const { id, o, n, stops } of solve.layout)
+      for (let k = 0; k < n; k++) at[o + k] = at[o + 2 * n - 1 - k] = { station: stops[k], line: id, k, o, n };
+    const periods: (MarketPeriod | null)[] = PERIODS.map(() => null);
+    let mask = 0;
+    for (const r of await this.ask((id) => ({ kind: "icTrip", id, version: t.version, end: e, cells, far, farGid, ...(sq ? { sq } : {}) }), undefined, [], undefined, t)) {
+      if (r.kind !== "icTrip" || !r.answers) return null;
+      mask |= r.mask;
+      r.periods.forEach((q, i) => (periods[q] = readMarketPeriod(r.answers![i], at)));
+    }
+    if (mask !== ALL_PERIODS || !this.still(t)) return null;
+    return periods;
+  }
+
   /** Where the commuters of a set of cells go (T-098; game/demand.ts `Flows`): every worker's rail
    * part of its periods, added up, then one worker spreads all modes over the far end. */
   flows(end: "home" | "work", cells: Uint32Array): Promise<Flows | null> {
@@ -2365,7 +2396,7 @@ class DemandClient {
       for (let z = 0; z < nz; z++) {
         const c = tail + 4 * P + 4 * z + 2 * dir;
         const a = v[head + 4 * z + 2 * dir] + (v[c] ?? 0);
-        if (a > 0) zones.push({ ...marketXY(v[xy + 3 * z], v[xy + 3 * z + 1]), place: v[xy + 3 * z + 2], all: a, rail: v[head + 4 * z + 2 * dir + 1] + (v[c + 1] ?? 0) });
+        if (a > 0) zones.push({ ...marketXY(v[xy + 3 * z], v[xy + 3 * z + 1]), place: v[xy + 3 * z + 2], gid: z, all: a, rail: v[head + 4 * z + 2 * dir + 1] + (v[c + 1] ?? 0) });
       }
       return { all, rail, air, car, elsewhere: v[v.length - 2 + dir] ?? 0, places: places.sort((a, b) => b.all - a.all), zones: zones.sort((a, b) => b.all - a.all) };
     };
@@ -2409,7 +2440,7 @@ class DemandClient {
       const zones: ZoneTrips[] = [];
       for (let z = 0; z < nz; z++) {
         const c = v[head + dir * nz + z];
-        if (c > 0) zones.push({ ...marketXY(v[xy + 3 * z], v[xy + 3 * z + 1]), place: v[xy + 3 * z + 2], all: c, rail: c });
+        if (c > 0) zones.push({ ...marketXY(v[xy + 3 * z], v[xy + 3 * z + 1]), place: v[xy + 3 * z + 2], gid: z, all: c, rail: c });
       }
       return { all: rail, rail, air: 0, car: 0, elsewhere: 0, places: places.sort((a, b) => b.all - a.all), zones: zones.sort((a, b) => b.all - a.all) };
     };
@@ -2855,6 +2886,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   NEW_GAME = newGame && !TEST && !perfOff("bareStart");
   const c = (client = new DemandClient(city));
   setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
+  setMarketTripQuery((end, cells, far, farGid) => c.marketTrip(end, cells, far, farGid)); // T-866
   setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
   if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose) };

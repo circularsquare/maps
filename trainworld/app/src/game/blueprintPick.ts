@@ -5,6 +5,7 @@
 
 import { computed, effect, signal } from "@preact/signals";
 import { distance, levelLabel } from "./format";
+import { lineEffects } from "./remove";
 import type { Level } from "./types";
 import { ask, tool } from "./ui";
 import { edit, say, world } from "./world";
@@ -91,9 +92,9 @@ export async function levelPicked(level: Level) {
   else say(`${count(n, "piece", "pieces")} set to ${to}.`);
 }
 
-/** T-829: remove every picked piece in one edit: blueprint at once (one undo), constructed after a
- * yes, final and refunding nothing, as for one piece (game/remove.ts). */
-export function removePicked() {
+/** T-829: remove every picked piece in one edit: blueprint at once (one undo), constructed or
+ * changing a line after a yes, as for one piece (game/remove.ts). */
+export async function removePicked() {
   const p = bpPicked.peek(), s = pickedState.peek();
   if (!p.edges.length && !p.stations.length) return;
   const what = [s.edges ? `${distance(s.lengthM)} of ${p.built ? "constructed " : ""}track` : "", s.stations ? count(s.stations, p.built ? "constructed station" : "station", p.built ? "constructed stations" : "stations") : ""].filter(Boolean).join(" and ");
@@ -102,8 +103,9 @@ export function removePicked() {
     const a = await edit({ op: "removePieces", edges: p.edges, stations: p.stations });
     if (a.ok) say(`Removed ${what}.`);
   };
-  if (!p.built) return void go();
-  ask.value = { text: `Remove ${what}? Nothing is refunded.`, yes: "Remove", no: "Keep", run: () => void go() };
+  const lines = await lineEffects(p.edges, p.stations);
+  if (!p.built && !lines.length) return void go();
+  ask.value = { text: `Remove ${what}?${p.built ? " Nothing is refunded." : ""}`, yes: "Remove", no: "Keep", run: () => void go(), lines };
 }
 
 // Pieces removed, or no longer of the pick's kind (blueprint constructed), drop out of the pick;

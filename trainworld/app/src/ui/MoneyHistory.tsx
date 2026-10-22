@@ -1,4 +1,4 @@
-// The Money tab's history (T-447): fares against costs, then net, then train rides (T-565), per game day over the ledger's 30
+// The Money tab's history (T-447): fares against costs (running trains plus upkeep, T-867), then net, then train rides (T-565), per game day over the ledger's 30
 // days or per game hour over its 48 (the clock worker keeps both and saves them). Days and hours are
 // the game clock's (T-321). The day and hour now are drawn so far, moving as fares land (T-284).
 // The network's, or the region the Money tab is set to (T-531).
@@ -14,15 +14,16 @@ import { Money } from "./MoneyText";
 /** Days or hours, kept while the game is open. */
 const span = signal<"day" | "hour">("day");
 
-interface Entry { at: number; fares: number; running: number; trains: number; build: number; rides?: number }
+interface Entry { at: number; fares: number; running: number; upkeep?: number; trains: number; build: number; rides?: number }
 
 const W = 300, H = 96, PAD = 3;
 /** A young game's few entries sit at the right of this many slots, not stretched over the width. */
 const MIN_SLOTS = { day: 7, hour: 12 };
 
 const oneOff = (e: Entry) => e.trains + e.build;
-const costs = (e: Entry) => e.running + oneOff(e);
-const run = (e: Entry) => e.running;
+/** T-867: the cost line, running trains plus upkeep */
+const run = (e: Entry) => e.running + (e.upkeep ?? 0);
+const costs = (e: Entry) => run(e) + oneOff(e);
 const net = (e: Entry) => e.fares - costs(e);
 const usd = (v: number) => money(v * 1e6);
 const rides = (e: Entry) => e.rides ?? 0;
@@ -63,7 +64,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   // fares and running costs as lines, scaled to the larger of the two; one-off costs (new trains,
   // construction) as bars on the same scale, cut at the top with a cap so a build day cannot
   // flatten the lines (T-452)
-  const top = Math.max(...list.map((e) => Math.max(e.fares, e.running)), 1e-9);
+  const top = Math.max(...list.map((e) => Math.max(e.fares, run(e))), 1e-9);
   const y1 = (v: number) => H - PAD - (v / top) * (H - 2 * PAD);
   // the day or hour now is drawn dashed: it is still filling
   const pt = (v: (e: Entry) => number, i: number) => `${cx(i).toFixed(1)},${y1(v(list[i])).toFixed(1)}`;
@@ -72,7 +73,9 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   const tip1 = (e: Entry, i: number) => [
     name(e, i),
     `Fares ${usd(e.fares)}`,
+    `Running costs ${usd(-run(e))}`,
     `Running trains ${usd(-e.running)}`,
+    `Upkeep ${usd(-(e.upkeep ?? 0))}`,
     ...(oneOff(e) > 0 ? [`One-off costs ${usd(-oneOff(e))}`] : []),
     ...(e.trains > 0 ? [`New trains ${usd(-e.trains)}`] : []),
     ...(e.build > 0 ? [`Construction ${usd(-e.build)}`] : []),
@@ -104,7 +107,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
           />
         </span>
       </div>
-      <div class="hist-title small"><span><span class="hist-fares">Fares</span>, <span class="hist-costs">running costs</span> and <span class="hist-oneoff">one-off costs</span></span><span class="right muted" data-tip={`The chart's top is ${usd(top)}`}>{usd(top)}</span></div>
+      <div class="hist-title small"><span><span class="hist-fares">Fares</span>, <span class="hist-costs">running costs with upkeep</span> and <span class="hist-oneoff">one-off costs</span></span><span class="right muted" data-tip={`The chart's top is ${usd(top)}`}>{usd(top)}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
         <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />
         {list.map((e, i) => {
@@ -120,7 +123,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
         <path class="hist-fares" d={path((e) => e.fares)} />
         <path class="hist-costs now" d={tail(run)} />
         <path class="hist-fares now" d={tail((e) => e.fares)} />
-        {list.map((e, i) => <circle class="hist-costs dot" cx={cx(i)} cy={y1(e.running)} r={1.6} />)}
+        {list.map((e, i) => <circle class="hist-costs dot" cx={cx(i)} cy={y1(run(e))} r={1.6} />)}
         {list.map((e, i) => <circle class="hist-fares dot" cx={cx(i)} cy={y1(e.fares)} r={1.6} />)}
         {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={tip1(e, i)} />)}
       </svg>

@@ -9,7 +9,7 @@ import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities
 import { setGameOpened, setOpenedSink } from "../game/openedZones";
 import { holdForGameLoad } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, moneyState, setMoneyState } from "../game/money";
-import { chargeShares, lineShares } from "../game/regionMoney";
+import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
 import { linePoints, STAR_SHARE } from "../game/points";
 import { AVERAGE_DAY, DAY_KINDS } from "../game/days";
 import { demandByDay, demandView, platformTransfers } from "../game/demand";
@@ -124,6 +124,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       buildCost: l.buildCost * 1e6,
       trainCost: l.trainCost * 1e6,
       fast: l.fast,
+      upkeep: (l.upkeep ?? 0) * 1e6,
       stretches: Array.from({ length: l.stretchSpeeds.length / 3 }, (_, k) => ({ reached: l.stretchSpeeds[3 * k], limit: l.stretchSpeeds[3 * k + 1], why: l.stretchSpeeds[3 * k + 2] })),
       stopS: l.stopS,
       dwellS: l.dwell,
@@ -335,11 +336,11 @@ export class ClockClient {
     // T-531: each line's money by region, whenever lines, riders or zone boundaries change it
     let lastShares = "";
     effect(() => {
-      const lines = [...lineShares.value].map(([line, s]) => ({ line, ...s }));
-      const key = JSON.stringify(lines);
+      const lines = [...lineShares.value].map(([line, s]) => ({ line, ...s })), upkeep = upkeepShares.value;
+      const key = JSON.stringify([lines, upkeep]);
       if (key !== lastShares) {
         lastShares = key;
-        this.post({ kind: "regionShares", lines });
+        this.post({ kind: "regionShares", lines, upkeep });
       }
     });
     // T-684: each line's points by region, whenever riders, lines or zone boundaries change them

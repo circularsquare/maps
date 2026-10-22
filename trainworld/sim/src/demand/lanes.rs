@@ -133,6 +133,10 @@ impl F8 {
         F8(self.0.min(b.0), self.1.min(b.1))
     }
     #[inline(always)]
+    pub fn max(self, b: F8) -> F8 {
+        F8(self.0.max(b.0), self.1.max(b.1))
+    }
+    #[inline(always)]
     pub fn sqrt(self) -> F8 {
         F8(self.0.sqrt(), self.1.sqrt())
     }

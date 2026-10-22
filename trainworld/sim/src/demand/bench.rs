@@ -105,7 +105,7 @@ pub fn recompute(city: &City, net: &Network, z: &Zones, gr: &Gravity, p: &Params
     let (mut g, _) = timed!(rep, "network graph", build_graph(net, p));
     let (sk, _) = timed!(rep, "station-to-station search", skims(&g, p));
     let (er, _) = timed!(rep, "station-to-station exp table", station_exp(&sk, p));
-    let (mo, _) = timed!(rep, "mode choice over subzone pairs", mode_choice(z, gr, &sz, &er, g.n_st, p, &NoRail::new(z, p, vec![])));
+    let (mo, _) = timed!(rep, "mode choice over subzone pairs", mode_choice(z, gr, &sz, &er, g.n_st, p, &NoRail::new(z, p)));
     let (loads0, _) = timed!(rep, "assignment", assign(&g, &sk, &mo.od));
     let ms_first = now_ms() - t_start;
     if verbose {
@@ -163,7 +163,7 @@ pub fn recompute(city: &City, net: &Network, z: &Zones, gr: &Gravity, p: &Params
         set_crowding(&mut g, &fac);
         let sk = skims(&g, p);
         let er = station_exp(&sk, p);
-        let mo = mode_choice(z, gr, &sz, &er, g.n_st, p, &NoRail::new(z, p, vec![]));
+        let mo = mode_choice(z, gr, &sz, &er, g.n_st, p, &NoRail::new(z, p));
         let l = assign(&g, &sk, &mo.od);
         msa(&mut avg_loads.seg, &l.seg, round);
         msa(&mut avg_loads.board, &l.board, round);

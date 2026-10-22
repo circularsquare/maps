@@ -268,6 +268,9 @@ pub struct Boarding {
     /// Riders a day changing onto each platform (line, run, stop in the run's order) from other
     /// platforms (T-554, `set_transfers`). Only the timing of drawn crowds reads them.
     pub xfer: HashMap<(u32, u8, u32), Vec<Feeder>>,
+    /// Per line id, the local game days its country has a public holiday, read as weekend days
+    /// (T-872, `set_holidays`). The clock worker keeps a window around now.
+    pub holidays: HashMap<u32, Vec<i64>>,
 }
 
 /// A platform riders change from, and riders a day making that change (T-554).
@@ -370,10 +373,26 @@ impl Boarding {
         !self.riders[0].is_empty()
     }
 
-    /// The kind of day whose account game time `t` reads: its own, or the weekday's while it
-    /// has no riders.
-    pub fn kind_at(&self, t: f64) -> usize {
-        self.kind(day_kind_at(t))
+    /// Each line's holiday days (T-872): per line, its id, a count, then that many local game days.
+    pub fn set_holidays(&mut self, packed: &[f64]) {
+        self.holidays.clear();
+        let mut i = 0;
+        while i + 2 <= packed.len() {
+            let (id, n) = (packed[i] as u32, packed[i + 1] as usize);
+            let days = &packed[(i + 2).min(packed.len())..(i + 2 + n).min(packed.len())];
+            if !days.is_empty() {
+                self.holidays.insert(id, days.iter().map(|&d| d as i64).collect());
+            }
+            i += 2 + n;
+        }
+    }
+
+    /// The kind of day whose account line `line`'s local time `t` reads: its own (a holiday in the
+    /// line's country is a weekend day, T-872), or the weekday's while that kind has no riders.
+    pub fn kind_at(&self, t: f64, line: usize) -> usize {
+        let day = (t / DAY).floor() as i64;
+        let holiday = self.holidays.get(&(line as u32)).map_or(false, |d| d.contains(&day));
+        self.kind(if holiday { 1 } else { day_kind_at(t) })
     }
     fn kind(&self, day: usize) -> usize {
         let day = day.min(DAY_KINDS - 1);
@@ -493,7 +512,7 @@ impl Boarding {
         let mut offs: Vec<f32> = Vec::with_capacity(trips.len() * 2);
         let mut loads: Vec<f32> = vec![];
         for t in &trips {
-            let day = self.kind_at(epoch + shift(t.line as usize));
+            let day = self.kind_at(epoch + shift(t.line as usize), t.line as usize);
             offs.push(self.trip_loads(t, day, &mut loads));
             offs.push(svc.lines[t.line as usize].runs[t.run as usize].prof[t.level as usize].duration as f32);
         }
@@ -503,7 +522,7 @@ impl Boarding {
         for l in 0..nl {
             // the hour in the line's local time
             let epoch = epoch + shift(l);
-            let day = self.kind_at(epoch);
+            let day = self.kind_at(epoch, l);
             let Some(Some(acc)) = self.accounts[day].get(l) else { continue };
             let h0 = epoch.rem_euclid(DAY);
             let hour = ((h0 / 3600.0).floor() as usize).min(23);
@@ -603,7 +622,7 @@ impl Boarding {
             let fl = f.line as usize;
             let Some(fls) = svc.lines.get(fl) else { continue };
             let fe = epoch + fls.shift;
-            let Some(Some(acc)) = self.accounts[self.kind_at(fe)].get(fl) else { continue };
+            let Some(Some(acc)) = self.accounts[self.kind_at(fe, fl)].get(fl) else { continue };
             let ra = &acc.runs[(f.run as usize).min(1)];
             let (m, n, kf) = (ra.deps.len(), ra.n, f.stop as usize);
             // nobody arrives at a first stop
@@ -860,11 +879,11 @@ impl Boarding {
             // the line's own day and time of day (T-309: its local time)
             let t = t + ls.shift;
             let tod = t.rem_euclid(DAY);
-            let Some(Some(acc)) = self.accounts[self.kind_at(t)].get(l) else { continue };
+            let Some(Some(acc)) = self.accounts[self.kind_at(t, l)].get(l) else { continue };
             let n = acc.runs[0].n;
             let mut w = Tally { stops: vec![0.0f64; n], ..Default::default() };
             if past {
-                if let Some(Some(ya)) = self.accounts[self.kind_at(t - DAY)].get(l) {
+                if let Some(Some(ya)) = self.accounts[self.kind_at(t - DAY, l)].get(l) {
                     if ya.runs[0].n == n {
                         self.tally(ya, ls, tod, DAY, -DAY, t - tod - DAY, &mut w);
                     }
@@ -976,7 +995,7 @@ impl Boarding {
         // the line's local time (T-309): both kinds of day's accounts carry the same shift
         let shift = self.accounts[0].get(line as usize).and_then(|a| a.as_ref()).map_or(0.0, |a| a.shift);
         let dep = dep + shift;
-        let ra = &self.accounts[self.kind_at(dep)].get(line as usize)?.as_ref()?.runs[run];
+        let ra = &self.accounts[self.kind_at(dep, line as usize)].get(line as usize)?.as_ref()?.runs[run];
         let i = ra.find(dep)?;
         Some(ra.load[i * ra.n..(i + 1) * ra.n].to_vec())
     }
@@ -1374,19 +1393,43 @@ mod tests {
         b.set_riders_day(&riders(l, [500.0, 200.0, 500.0, 200.0, 50.0]), 0);
         // before the weekend's riders, a weekend hour reads the weekday's
         let sat = 6.0 * 86400.0 + 8.0 * 3600.0;
-        assert_eq!(b.kind_at(sat), 0);
+        assert_eq!(b.kind_at(sat, l as usize), 0);
         b.set_riders_day(&riders(l, [100.0, 300.0, 200.0, 200.0, 50.0]), 1);
-        assert_eq!(b.kind_at(sat), 1);
+        assert_eq!(b.kind_at(sat, l as usize), 1);
         let mon = 8.0 * 86400.0 + 8.0 * 3600.0;
         let (h_sat, h_mon) = (b.hour(&w.net, &w.svc, sat), b.hour(&w.net, &w.svc, mon));
-        let arriving = |h: &[f32]| {
-            let (nt, nl, nq) = (h[0] as usize, h[1] as usize, h[2] as usize);
-            let q0 = 5 + 2 * nt + nl;
-            (0..nq).map(|k| h[q0 + k * QUEUE_STRIDE + 7]).sum::<f32>()
-        };
         // 8-9 in the morning peak: 500 an hour at each end on a weekday, 100 on Saturday
         assert!((arriving(&h_mon) / arriving(&h_sat) - 5.0).abs() < 0.01, "{} {}", arriving(&h_mon), arriving(&h_sat));
         assert_ne!(b.line_summary_day(&w.svc, l as usize, 1)[0], b.line_summary_day(&w.svc, l as usize, 0)[0]);
+    }
+
+    fn arriving(h: &[f32]) -> f32 {
+        let (nt, nl, nq) = (h[0] as usize, h[1] as usize, h[2] as usize);
+        let q0 = 5 + 2 * nt + nl;
+        (0..nq).map(|k| h[q0 + k * QUEUE_STRIDE + 7]).sum::<f32>()
+    }
+
+    #[test]
+    fn a_holiday_hour_reads_the_weekend_account_on_its_line_only() {
+        // T-872: Monday, game day 8, is a holiday for line `l` only
+        let (w, l) = setup(10.0);
+        let mut b = Boarding::default();
+        b.set_riders_day(&riders(l, [500.0, 200.0, 500.0, 200.0, 50.0]), 0);
+        b.set_riders_day(&riders(l, [100.0, 300.0, 200.0, 200.0, 50.0]), 1);
+        let (sat, mon, tue) = (6.0 * DAY + 8.0 * 3600.0, 8.0 * DAY + 8.0 * 3600.0, 9.0 * DAY + 8.0 * 3600.0);
+        let h_sat = b.hour(&w.net, &w.svc, sat);
+        let (h_mon, h_tue) = (b.hour(&w.net, &w.svc, mon), b.hour(&w.net, &w.svc, tue));
+        assert!((arriving(&h_mon) / arriving(&h_sat) - 5.0).abs() < 0.01);
+        b.set_holidays(&[l as f64, 2.0, 8.0, 20.0]);
+        assert_eq!(b.kind_at(mon, l as usize), 1);
+        assert_eq!(b.kind_at(mon, l as usize + 1), 0);
+        assert_eq!(b.kind_at(tue, l as usize), 0);
+        assert_eq!(arriving(&b.hour(&w.net, &w.svc, mon)), arriving(&h_sat));
+        assert_eq!(arriving(&b.hour(&w.net, &w.svc, tue)), arriving(&h_tue));
+        // the day's account is the weekend's: today at Monday's end equals Saturday's
+        assert_eq!(b.today(&w.svc, mon + 15.0 * 3600.0), b.today(&w.svc, sat + 15.0 * 3600.0));
+        b.set_holidays(&[]);
+        assert_eq!(arriving(&b.hour(&w.net, &w.svc, mon)), arriving(&h_mon));
     }
 
     /// T-798: on a circle 0-1-2-3-4-5-0, riders from 4 to 1 ride on through the first stop: the

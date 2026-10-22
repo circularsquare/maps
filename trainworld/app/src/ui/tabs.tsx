@@ -7,7 +7,7 @@ import { PERIODS, periodAt } from "../game/periods";
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { createLine } from "../game/lineActions";
 import type { JSX } from "preact";
-import { count, distUnit, length, levelLabel, money, perDistance, perKmFrom, runCostRule, shortDistance, speed } from "../game/format";
+import { count, distUnit, length, levelLabel, money, perDistance, perKmFrom, runCostRule, shortDistance, speed, upkeepRule } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { DEMAND_INDEX, LEVELS, type Level, type LineInput, type LineStats, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
@@ -20,12 +20,13 @@ import { listScope, scopedLists, scopeEmpty, scopeZone, stationZone } from "../g
 import { regionLedger } from "../game/regionMoney";
 import { accountVersion } from "../game/boarding";
 import { crowdClass, crowding, runningToday, stationsToday, today, todayLoaded, useToday, waitText, type LineToday } from "../game/today";
-import type { DayLedger } from "../workers/protocol";
+import type { DayLedger, MoneyState } from "../workers/protocol";
 import { live } from "../map/live";
 import { Check, Chip, Icon, Row, Segmented, SortHead, Stepper } from "./widgets";
 import { Money } from "./MoneyText";
 import { START_CASH } from "../workers/saveFile";
 import { CitiesList } from "./Cities";
+import { FareGraph, farePreview } from "./FareGraph";
 import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
 import { MoneyHistory } from "./MoneyHistory";
 import { locateLine, locateStation } from "./locate";
@@ -168,15 +169,15 @@ function RidersToday({ line }: { line: string }) {
   return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in the past 24 hours` : undefined}>{d ? count(d.riders) : ""}</span>;
 }
 
-/** T-735: a line's fares less running cost over the past 24 hours. */
-const lineNet = (d: LineToday | undefined, l: LineInput, st: LineStats) => (d ? d.fares - runningToday(l, st) : 0);
+/** T-735, T-867: a line's fares less running cost and its share of upkeep over the past 24 hours. */
+const lineNet = (d: LineToday | undefined, l: LineInput, st: LineStats) => (d ? d.fares - runningToday(l, st) - st.upkeep : 0);
 function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
   const d = today.value.get(l.id);
   if (!d) return <span class="val w-linemoney" />;
-  const run = runningToday(l, st);
+  const run = runningToday(l, st), net = d.fares - run - st.upkeep;
   return (
-    <span class="val w-linemoney" data-tip={`Fares ${money(d.fares)} less running cost ${money(run)} in the past 24 hours: ${money(d.fares - run)} net`}>
-      <Money dollars={d.fares - run} />
+    <span class="val w-linemoney" data-tip={`Fares ${money(d.fares)} less running cost ${money(run)} and upkeep of its track and stations ${money(st.upkeep)} in the past 24 hours: ${money(net)} net`}>
+      <Money dollars={net} />
     </span>
   );
 }
@@ -259,7 +260,7 @@ export function LinesTab() {
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         ...(showCity ? [{ key: "city" as const, label: "City", tip: "Sort by the city of the first stop", first: 1 as const, cls: "w-city", left: true }] : []),
         { key: "riders", label: "Riders", tip: "Sort by riders in the past 24 hours", first: -1, cls: "w-riders" },
-        { key: "money", label: "Money", tip: "Sort by money in the past 24 hours, fares less running cost", first: -1, cls: "w-linemoney" },
+        { key: "money", label: "Money", tip: "Sort by money in the past 24 hours, fares less running cost and upkeep", first: -1, cls: "w-linemoney" },
         { key: "trains", label: "Trains", tip: "Sort by trains needed", first: -1, cls: "w-trains" },
         { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen, by the nearest stop", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
@@ -454,7 +455,14 @@ export function StationsTab() {
   );
 }
 
-const ledgerNet = (d: DayLedger) => d.fares - d.running - d.trains - d.build;
+const ledgerNet = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0) - d.trains - d.build;
+
+/** T-867: the Upkeep row's hover: the rule and the network's track and stations behind it. */
+function upkeepTip(m: MoneyState): string {
+  const u = m.upkeep;
+  return `Upkeep is ${upkeepRule(m)}, whether trains run or not. High-speed track costs ${m.upkeepHsr} times as much and single track ${m.upkeepSingle} times.\n`
+    + `The network has ${shortDistance(u.km * 1000)} of track and ${u.count.toLocaleString("en-US")} stations: ${money((u.track + u.stations) * 1e6)} a day.`;
+}
 
 /** T-284: the cash as fares land, to the dollar, as in the top bar. */
 function LiveCash() {
@@ -468,7 +476,7 @@ function TodayCell({ v, zone }: { v: (d: DayLedger) => number; zone: string | nu
 }
 
 /** T-531: how a region's money is counted, in the scope toggle's hover. */
-const REGION_SPLIT = "A line's fares count where its riders board and travel, its running costs where its trains run. Construction counts where it was built.";
+const REGION_SPLIT = "A line's fares count where its riders board and travel, its running costs where its trains run. Construction and upkeep count where the track and stations are.";
 
 export function MoneyTab() {
   const w = world.value;
@@ -482,13 +490,13 @@ export function MoneyTab() {
   const prev = zone === null || !prevAll ? prevAll
     : regionLedger(zone).ledger.find((d) => d.day === todayDay - 1) ?? { day: todayDay - 1, fares: 0, running: 0, trains: 0, build: 0 };
   const cell = (d: DayLedger | null, v: (d: DayLedger) => number) => <td class="num">{d ? <Money dollars={v(d) * 1e6} /> : ""}</td>;
-  const f = m.fares;
+  const f = farePreview.value ?? m.fares;
   return (
     <>
       <ul class="rows">
         {m.mode === "sandbox"
           // T-728: a sandbox's cash is not shown; its money since the start is
-          ? <Row label={<span data-tip="Sandbox: fares less running costs, trains and construction since day 1">Since day 1</span>} bold><Money dollars={(liveMoney.value.cash - START_CASH) * 1e6} /></Row>
+          ? <Row label={<span data-tip="Sandbox: fares less running costs, upkeep, trains and construction since day 1">Since day 1</span>} bold><Money dollars={(liveMoney.value.cash - START_CASH) * 1e6} /></Row>
           : <Row label="Cash" bold><LiveCash /></Row>}
       </ul>
       <table class="ledger">
@@ -508,6 +516,11 @@ export function MoneyTab() {
           <TodayCell zone={zone} v={(d) => -d.running} />
         </tr>
         <tr>
+          <td data-tip={upkeepTip(m)}>Upkeep</td>
+          {cell(prev, (d) => -(d.upkeep ?? 0))}
+          <TodayCell zone={zone} v={(d) => -(d.upkeep ?? 0)} />
+        </tr>
+        <tr>
           <td>New trains</td>
           {cell(prev, (d) => -d.trains)}
           <TodayCell zone={zone} v={(d) => -d.trains} />
@@ -525,6 +538,7 @@ export function MoneyTab() {
       </table>
       <MoneyHistory zone={zone} />
       <div class="h">Fare</div>
+      <FareGraph base={m.fares.base} perKm={m.fares.perKm} />
       <ul class="rows">
         <li>
           <span class="grow">Each ride</span>

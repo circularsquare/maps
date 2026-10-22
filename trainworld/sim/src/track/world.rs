@@ -488,12 +488,13 @@ impl TrackWorld {
     }
 
     /// Problems on what an edit touched: its edges, their nodes and stations, their crossings,
-    /// and lines it set.
+    /// and lines it set. A line whose path runs over removed track is left broken, not refused
+    /// (removing a station it stopped at with that track, T-859).
     fn check(&self, t: &super::net::Touch, der: &super::net::Derived) -> Vec<Issue> {
         let alive: Vec<u32> = der.edges.iter().copied().filter(|&e| self.net.edge_ok(e)).collect();
         let mut issues = self.net.validate(&alive, &der.nodes, &[]);
         for &l in &t.lines {
-            if self.net.line_ok(l) {
+            if self.net.line_ok(l) && self.net.line_path(l).iter().all(|&p| self.net.edge_ok(path_edge(p))) {
                 if let Err(i) = self.net.check_line(l) {
                     issues.push(i);
                 }

@@ -10,7 +10,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, viewedZone } from "../game/cities";
 import { display, selection } from "../game/ui";
 import { viewCentre } from "../game/listScope";
-import { nearbyZones, placeAt, zonesInBox, zonesLoaded } from "../game/zones";
+import { nearbyZones, placeAt, ZONE_LOAD_ZOOM, zonesInBox, zonesLoaded, zonesLoadForView } from "../game/zones";
 import { OVERVIEW_ZOOM } from "./intercityView";
 import { shiftAt, viewShift } from "../game/localTime";
 
@@ -24,6 +24,7 @@ export function startZoneFocus(map: MlMap) {
       viewCentre.value = [c.lng, c.lat]; // T-332: the Lines and Stations lists sort by it
       if (here && moved && k !== "commuters" && k !== "station" && k !== "trip") activeCity.value = here;
       viewedZone.value = here;
+      zonesLoadForView.value = map.getZoom() > ZONE_LOAD_ZOOM;
     });
     nearby();
   };

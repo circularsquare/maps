@@ -61,8 +61,8 @@ optimises a WebAssembly function only between calls (a single long call stays in
 compiler throughout: in Chrome that made the opening 3-5x slower than natively). Startup
 timings: notes/T-172.md, notes/T-174.md.
 
-**Bare zones** (T-325, T-336). A zone viewed or on screen beside the view that no built station
-reaches opens **bare**: its pack goes to the auxiliary worker alone, which sets its commute and
+**Bare zones** (T-325, T-336). A zone viewed or on screen beside the view (above zoom 7.5, T-871)
+that no built station reaches opens **bare**: its pack goes to the auxiliary worker alone, which sets its commute and
 everyday layers on an empty network and solves every period once. With no station in reach every
 trip walks or drives, so these are exactly the figures any solve gives it. No solving worker opens
 it and no solve is started or waited for, so a pan never re-solves. The `opened` reply carries

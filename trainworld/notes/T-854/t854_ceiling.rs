@@ -1,12 +1,14 @@
-//! T-854: Anita's ceiling tests (A, B) and two made-up services (T a typical metro, S a slow
-//! line), with the car-free split replaced by other rules, by home density. Built only in a
-//! private copy of the crate (as T-636's test); the shared crate never sees it.
+//! T-854: Anita's ceiling tests (A, B), two made-up services (T a typical metro, S a slow line)
+//! and rail at fixed multiples of the car's cost (R1.5, R2, R3), by home density, for the old
+//! car-free split, home-end parking, and floors and ceilings inside the choice curve. Built only in
+//! a private copy of the crate (as T-636's test), as `everyday::t854_ceiling`; the shared crate
+//! never sees it.
 //!
 //!   T854_PACK=<pack .json> T854_OUT=out.json cargo test --release --features demand --lib t854 -- --ignored --nocapture
 //!
 //! Every choice uses the model's own `Params` expressions (`drive_min_f`, `car_drive`,
-//! `park_parts`, `mode_beta`, the walk costs, `other_min_km`); new are only the made-up trains'
-//! costs, the home-end parking and the tails, all here.
+//! `park_parts`, `home_park_at`, `mode_beta`, the walk costs, `other_min_km`); new are only the
+//! made-up trains' costs and the variants' rules, all here.
 
 use super::*;
 use crate::demand::api::{DemandApi, FARE_MIN_PER_USD};
@@ -28,77 +30,72 @@ struct Scen {
     wait_min: f32,
     base_usd: f32,
     km_usd: f32,
+    /// > 0: rail costs this times the car's mean perceived cost instead
+    ratio: f32,
 }
-const SCENS: [(&str, Scen); 4] = [
-    ("A", Scen { kmh: 140.0, walk_min: 3.0, wait_min: 2.5, base_usd: 0.0, km_usd: 0.0 }),
-    ("B", Scen { kmh: 100.0, walk_min: 3.0, wait_min: 2.5, base_usd: 1.5, km_usd: 0.05 }),
-    // a typical metro reached on foot: 30 km/h door to platform average, 6 minutes' walk each end,
-    // a train every 6 minutes, the game's starting fares
-    ("T", Scen { kmh: 30.0, walk_min: 6.0, wait_min: 3.0, base_usd: 1.5, km_usd: 0.1 }),
-    // a slow, sparse line: 20 km/h, 10 minutes' walk each end, every 15 minutes
-    ("S", Scen { kmh: 20.0, walk_min: 10.0, wait_min: 7.5, base_usd: 1.5, km_usd: 0.1 }),
+const fn sc(kmh: f32, walk_min: f32, wait_min: f32, base_usd: f32, km_usd: f32) -> Scen {
+    Scen { kmh, walk_min, wait_min, base_usd, km_usd, ratio: 0.0 }
+}
+const fn rs(ratio: f32) -> Scen {
+    Scen { kmh: 0.0, walk_min: 0.0, wait_min: 0.0, base_usd: 0.0, km_usd: 0.0, ratio }
+}
+const SCENS: [(&str, Scen); 8] = [
+    ("A", sc(140.0, 3.0, 2.5, 0.0, 0.0)),
+    ("B", sc(100.0, 3.0, 2.5, 1.5, 0.05)),
+    ("T", sc(30.0, 6.0, 3.0, 1.5, 0.1)),
+    ("S", sc(20.0, 10.0, 7.5, 1.5, 0.1)),
+    ("R1.2", rs(1.2)),
+    ("R1.5", rs(1.5)),
+    ("R2", rs(2.0)),
+    ("R3", rs(3.0)),
 ];
 const NS: usize = SCENS.len();
 
-fn rail_cost(s: &Scen, p: &Params, d_m: f32) -> f32 {
+fn rail_cost(s: &Scen, p: &Params, d_m: f32, car_mean: f32) -> f32 {
+    if s.ratio > 0.0 {
+        return s.ratio * car_mean;
+    }
     let km = d_m / 1000.0;
     let walk = s.walk_min.min(p.walk_easy_min) * p.w_walk + (s.walk_min - p.walk_easy_min).max(0.0) * p.w_walk_far;
     km / s.kmh * 60.0 + 2.0 * walk + s.wait_min + (s.base_usd + s.km_usd * km) * FARE_MIN_PER_USD
 }
 
-/// How a variant treats homes without a car, the home end's parking and the choice's tail.
 #[derive(Clone, Copy)]
 struct Var {
-    /// 0 the pack's, 1 nobody, 2 one density curve, 3 the pack's mean everywhere
+    /// 0 the pack's car-free shares, 1 nobody car-free
     nocar: u8,
-    /// home-end parking: this times the destination's paid-space rule on residential density
     home_f: f32,
-    /// 0 none; 1 blend: a share `a` at scale `b`; 2 classes: `a` rail-leaning (rail cost x `b`),
-    /// `a` never rail; 3 floor: rail at least `a` and at most 1 - `a` where it exists;
-    /// 4 ratio: a share `a` choosing on log cost at `b`
-    tail: u8,
+    /// the curve's bounds: `a` of rail + car always rail where rail costs at most the car's, fading
+    /// to none at `rmax` times; with `ceil`, the same share never rail, mirrored on car / rail
     a: f32,
-    b: f32,
+    rmax: f32,
+    ceil: bool,
 }
-const fn v(nocar: u8, home_f: f32, tail: u8, a: f32, b: f32) -> Var {
-    Var { nocar, home_f, tail, a, b }
+const fn v(nocar: u8, home_f: f32, a: f32, rmax: f32, ceil: bool) -> Var {
+    Var { nocar, home_f, a, rmax, ceil }
 }
-const VARS: [(&str, Var); 20] = [
-    ("now", v(0, 0.0, 0, 0.0, 0.0)),
-    ("nocar0", v(1, 0.0, 0, 0.0, 0.0)),
-    ("flat", v(3, 0.0, 0, 0.0, 0.0)),
-    ("curve", v(2, 0.0, 0, 0.0, 0.0)),
-    ("home0.25", v(1, 0.25, 0, 0.0, 0.0)),
-    ("home0.5", v(1, 0.5, 0, 0.0, 0.0)),
-    ("home0.75", v(1, 0.75, 0, 0.0, 0.0)),
-    ("home1", v(1, 1.0, 0, 0.0, 0.0)),
-    ("home1.5", v(1, 1.5, 0, 0.0, 0.0)),
-    ("home2", v(1, 2.0, 0, 0.0, 0.0)),
-    ("h.5+blend5/.025", v(1, 0.5, 1, 0.05, 0.025)),
-    ("h.5+blend10/.025", v(1, 0.5, 1, 0.10, 0.025)),
-    ("h.5+blend10/.02", v(1, 0.5, 1, 0.10, 0.02)),
-    ("h.5+classes5/.5", v(1, 0.5, 2, 0.05, 0.5)),
-    ("h.5+classes10/.5", v(1, 0.5, 2, 0.10, 0.5)),
-    ("h.5+floor2", v(1, 0.5, 3, 0.02, 0.0)),
-    ("h.5+floor5", v(1, 0.5, 3, 0.05, 0.0)),
-    ("h.5+ratio10/2", v(1, 0.5, 4, 0.10, 2.0)),
-    ("h.5+ratio10/3", v(1, 0.5, 4, 0.10, 3.0)),
-    ("h1+blend10/.025", v(1, 1.0, 1, 0.10, 0.025)),
+const VARS: [(&str, Var); 19] = [
+    ("old", v(0, 0.0, 0.0, 0.0, false)),
+    ("home0.4", v(1, 0.4, 0.0, 0.0, false)),
+    ("home0.5", v(1, 0.5, 0.0, 0.0, false)),
+    ("b2/1.5", v(1, 0.4, 0.02, 1.5, true)),
+    ("b2/2", v(1, 0.4, 0.02, 2.0, true)),
+    ("b2/3", v(1, 0.4, 0.02, 3.0, true)),
+    ("b2/4", v(1, 0.4, 0.02, 4.0, true)),
+    ("b5/1.5", v(1, 0.4, 0.05, 1.5, true)),
+    ("b5/2", v(1, 0.4, 0.05, 2.0, true)),
+    ("b5/3", v(1, 0.4, 0.05, 3.0, true)),
+    ("b5/4", v(1, 0.4, 0.05, 4.0, true)),
+    ("b10/1.5", v(1, 0.4, 0.10, 1.5, true)),
+    ("b10/2", v(1, 0.4, 0.10, 2.0, true)),
+    ("b10/3", v(1, 0.4, 0.10, 3.0, true)),
+    ("b10/4", v(1, 0.4, 0.10, 4.0, true)),
+    ("f5/3", v(1, 0.4, 0.05, 3.0, false)),
+    ("f10/3", v(1, 0.4, 0.10, 3.0, false)),
+    ("f5/2", v(1, 0.4, 0.05, 2.0, false)),
+    ("b5/2.5", v(1, 0.4, 0.05, 2.5, true)),
 ];
 const NV: usize = VARS.len();
-
-fn curve(d: f32) -> f32 {
-    0.75 / (1.0 + (11500.0 / d.max(1.0)).powf(1.9))
-}
-
-/// Home-end parking, perceived minutes a car trip: the destination's paid-space rule
-/// (`park_parts`) on people per km2, times `f`.
-fn home_park(p: &Params, d: f32, f: f32) -> f32 {
-    if f == 0.0 || d <= p.park_paid_d0 {
-        return 0.0;
-    }
-    f * (p.park_paid_min * (d / p.park_paid_d0).ln()).min(p.park_paid_cap_min)
-}
 
 /// Drivers' shares [rail, walk, car]: free parkers and payers apart, at scale `bt`.
 fn drivers(p: &Params, bt: f32, road: f32, paid: f32, free: f32, rail: f32, cw: f32) -> [f64; 3] {
@@ -116,44 +113,33 @@ fn drivers(p: &Params, bt: f32, road: f32, paid: f32, free: f32, rail: f32, cw: 
     [f * a[0] + (1.0 - f) * b[0], f * a[1] + (1.0 - f) * b[1], f * a[2] + (1.0 - f) * b[2]]
 }
 
-/// One trip's shares [rail, walk, car, other] under variant `v`. `home` the home-end parking,
-/// `cu` the share without a car.
+/// The bounds inside the curve, on rail of rail + car; walking keeps its share.
+fn bounds(m: [f64; 3], v: &Var, rail: f32, car: f32) -> [f64; 3] {
+    if v.a <= 0.0 || rail >= 1e5 {
+        return m;
+    }
+    let rho = (rail / car.max(1e-6)) as f64;
+    let g = |x: f64| ((v.rmax as f64 - x) / (v.rmax as f64 - 1.0)).clamp(0.0, 1.0);
+    let a = v.a as f64;
+    let lo = a * g(rho);
+    let hi = if v.ceil { a * g(1.0 / rho.max(1e-6)) } else { 0.0 };
+    let n = 1.0 - m[1];
+    if n <= 0.0 {
+        return m;
+    }
+    let r = lo + (1.0 - lo - hi) * m[0] / n;
+    [r * n, m[1], (1.0 - r) * n]
+}
+
+/// One trip's shares [rail, walk, car, other].
 #[allow(clippy::too_many_arguments)]
-fn shares(p: &Params, v: &Var, rail: f32, cw: f32, drive: f32, park: (f32, f32, f32), home: f32, cu: f32, rk: f32) -> [f64; 4] {
+fn shares(p: &Params, v: &Var, sc: &Scen, d_m: f32, cw: f32, drive: f32, park: (f32, f32, f32), home: f32, cu: f32, rk: f32) -> [f64; 4] {
     let (fixed, paid, free) = park;
     let road = p.car_drive(drive, rk) + fixed + home;
+    let car_mean = road + (1.0 - free) * paid;
+    let rail = rail_cost(sc, p, d_m, car_mean);
     let bt = p.mode_beta(road);
-    let base = drivers(p, bt, road, paid, free, rail, cw);
-    let m: [f64; 3] = match v.tail {
-        1 => {
-            let t = drivers(p, bt * v.b / p.beta, road, paid, free, rail, cw);
-            let a = v.a as f64;
-            std::array::from_fn(|k| (1.0 - a) * base[k] + a * t[k])
-        }
-        2 => {
-            let lean = drivers(p, bt, road, paid, free, rail * v.b, cw);
-            let never = drivers(p, bt, road, paid, free, 1e6, cw);
-            let a = v.a as f64;
-            std::array::from_fn(|k| (1.0 - 2.0 * a) * base[k] + a * lean[k] + a * never[k])
-        }
-        3 if rail < 1e5 => {
-            let e = v.a as f64;
-            let r = e + (1.0 - 2.0 * e) * base[0];
-            let s = if base[0] < 1.0 { (1.0 - r) / (1.0 - base[0]) } else { 0.0 };
-            [r, base[1] * s, base[2] * s]
-        }
-        4 => {
-            let g = v.b as f64;
-            let car = (road + (1.0 - free) * paid) as f64;
-            let er = if rail < 1e5 { (car / rail.max(1.0) as f64).powf(g) } else { 0.0 };
-            let ew = if cw < NO_WALK { (car / (cw - p.walk_bonus_min).max(1.0) as f64).powf(g) } else { 0.0 };
-            let d = 1.0 + er + ew;
-            let a = v.a as f64;
-            let t = [er / d, ew / d, 1.0 / d];
-            std::array::from_fn(|k| (1.0 - a) * base[k] + a * t[k])
-        }
-        _ => base,
-    };
+    let m = bounds(drivers(p, bt, road, paid, free, rail, cw), v, rail, car_mean);
     if cu <= 0.0 {
         return [m[0], m[1], m[2], 0.0];
     }
@@ -185,15 +171,13 @@ impl Acc {
 
 /// Residential density per zone (people per km2 of its cells' land) and the zone's mean share
 /// without a car, from the cells.
-fn zone_homes(z: &Zones, pop: &[f32], nocar: Option<&Vec<f32>>) -> (Vec<f32>, Vec<f32>) {
+fn zone_homes(z: &Zones, pop: &[f32], nocar: &[f32]) -> (Vec<f32>, Vec<f32>) {
     let mut pp = vec![0f64; z.n];
     let mut nc = vec![0f64; z.n];
     for c in 0..pop.len() {
         let i = z.cell_zone[c] as usize;
         pp[i] += pop[c] as f64;
-        if let Some(n) = nocar {
-            nc[i] += pop[c] as f64 * n[c] as f64;
-        }
+        nc[i] += pop[c] as f64 * nocar[c] as f64;
     }
     let land = |i: usize| (z.ncell[i].max(1) as f32 * CELL).min((z.zone_m / 1000.0).powi(2));
     ((0..z.n).map(|i| pp[i] as f32 / land(i)).collect(), (0..z.n).map(|i| if pp[i] > 0.0 { (nc[i] / pp[i]) as f32 } else { 0.0 }).collect())
@@ -207,31 +191,24 @@ fn t854() {
     let (h, b) = pack::load_raw(&pack_path).unwrap();
     let api = DemandApi::new(&h, &b).unwrap();
     let ev = EverydayApi::beside(&api, &h, &b).unwrap();
+    let n = api.city.len();
     // people, not the commute's home weights (`City::pop`)
-    let pop: Vec<f32> = pack::cell_weights(&h, &b, "pop", api.city.len()).unwrap().unwrap();
-    let mut acc = Acc(vec![[0.0; 5]; NV * NS * NG]);
-    let mut mean_nc = 0.0f64;
-    let mut pop_all = 0.0f64;
-    if let Some(n) = &api.base.nocar {
-        for c in 0..pop.len() {
-            mean_nc += pop[c] as f64 * n[c] as f64;
-            pop_all += pop[c] as f64;
-        }
-    }
-    let flat = if pop_all > 0.0 { (mean_nc / pop_all) as f32 } else { 0.0 };
-    let cu_of = |v: &Var, now: f32, dens: f32| match v.nocar {
-        0 => now,
-        2 => curve(dens),
-        3 => flat,
-        _ => 0.0,
+    let pop: Vec<f32> = pack::cell_weights(&h, &b, "pop", n).unwrap().unwrap();
+    // the pack's car-free shares, as the model read them before T-854
+    let nocar: Vec<f32> = match pack::cell_weights(&h, &b, "nocar", n).unwrap() {
+        Some(nc) => nc.iter().zip(&pop).map(|(&x, &p)| if p > 0.0 { (x / p).min(1.0) } else { 0.0 }).collect(),
+        None => vec![0.0; n],
     };
+    let mut acc = Acc(vec![[0.0; 5]; NV * NS * NG]);
+    let hp = |p: &Params, d: f32, f: f32| Params { home_park_f: f, ..p.clone() }.home_park_at(d);
     // ---- commutes, by zone pair
     {
         let (z, gr, p) = (&*api.z, &*api.gr, &api.base);
         let (_, dtab) = decay_table(z.w, z.h, z.zone_m, 1.0, 0.0);
         let place: Vec<(f32, f32)> = z.density().iter().map(|&x| p.place_min_per_km(x)).collect();
         let park: Vec<(f32, f32, f32)> = (0..z.n).map(|j| p.park_parts(z, j)).collect();
-        let (dres, cz) = zone_homes(z, &pop, p.nocar.as_deref());
+        let (dres, cz) = zone_homes(z, &pop, &nocar);
+        let homes: Vec<[f32; NV]> = dres.iter().map(|&d| std::array::from_fn(|vi| hp(p, d, VARS[vi].1.home_f))).collect();
         for i in 0..z.n {
             if gr.row[i] == 0.0 {
                 continue;
@@ -249,10 +226,10 @@ fn t854() {
                 let f = p.drive_factor(i, j);
                 let drive = p.drive_min_f(d_km * 1000.0, f, place[i], place[j]);
                 for (s, (_, sc)) in SCENS.iter().enumerate() {
-                    let rail = rail_cost(sc, p, d_km * 1000.0);
                     for (vi, (_, v)) in VARS.iter().enumerate() {
-                        let sh = shares(p, v, rail, cw, drive, park[j], home_park(p, dres[i], v.home_f), cu_of(v, cz[i], dres[i]), d_km * f);
-                        acc.add(vi, s, g, t as f64, sh);
+                        let cu = if v.nocar == 0 { cz[i] } else { 0.0 };
+                        let sh = shares(p, v, sc, d_km * 1000.0, cw, drive, park[j], homes[i][vi], cu, d_km * f);
+                        acc.add(vi, s, g, t, sh);
                     }
                 }
             }
@@ -265,22 +242,21 @@ fn t854() {
         let p = ev.ep.clone();
         let place: Vec<(f32, f32)> = pz.density().iter().map(|&x| p.place_min_per_km(x)).collect();
         let park: Vec<(f32, f32, f32)> = (0..pz.n).map(|j| p.park_parts(pz, j)).collect();
-        let (dres, _) = zone_homes(pz, &pop, None);
-        let nocar = p.nocar.clone();
+        let (dres, _) = zone_homes(pz, &pop, &nocar);
+        let homes: Vec<[f32; NV]> = dres.iter().map(|&d| std::array::from_fn(|vi| hp(&p, d, VARS[vi].1.home_f))).collect();
         for k in 0..ev.destinations.len() {
             let Some((_, c, dd, w, _)) = ev.edge(k) else { continue };
             let dist = ev.distance(c, dd);
             let (hz, az) = (pz.cell_zone[c] as usize, pz.cell_zone[dd] as usize);
-            let cu_now = nocar.as_ref().map_or(0.0, |n| n[c]);
             let g = group(dres[hz]);
             let cw = p.walk_trip_cost(dist * ev.walk_factor(c, dd) / 1000.0);
             for (s, (_, sc)) in SCENS.iter().enumerate() {
-                let rail = rail_cost(sc, &p, dist);
                 for (u, v2) in [(hz, az), (az, hz)] {
                     let f = p.drive_factor(u, v2);
                     let drive = p.drive_min_f(dist, f, place[u], place[v2]);
                     for (vi, (_, v)) in VARS.iter().enumerate() {
-                        let sh = shares(&p, v, rail, cw, drive, park[v2], home_park(&p, dres[hz], v.home_f), cu_of(v, cu_now, dres[hz]), dist * 0.001 * f);
+                        let cu = if v.nocar == 0 { nocar[c] } else { 0.0 };
+                        let sh = shares(&p, v, sc, dist, cw, drive, park[v2], homes[hz][vi], cu, dist * 0.001 * f);
                         acc.add(vi, s, g, w as f64, sh);
                     }
                 }
@@ -291,7 +267,6 @@ fn t854() {
         "pack": pack_path, "groups": ["<3k", "3-10k", "10-20k", ">=20k", "all"],
         "scens": SCENS.iter().map(|s| s.0).collect::<Vec<_>>(),
         "vars": VARS.iter().map(|v| v.0).collect::<Vec<_>>(),
-        "flat": flat,
         "acc": acc.0.iter().map(|a| a.to_vec()).collect::<Vec<_>>(),
     });
     std::fs::write(&out_path, serde_json::to_string(&out).unwrap()).unwrap();

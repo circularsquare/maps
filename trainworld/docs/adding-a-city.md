@@ -312,8 +312,8 @@ a sparse cell left alone joins a touching merged cell of its zone across its par
 Every other step reads and writes the res-9 pack: to rerun one on a merged pack,
 `merge_cells.py wor --undo` first, then the step, then `merge_cells.py wor` again (it refuses a
 merged pack some step has changed since). `merge_cells.py --all` remerges every registered pack.
-Then `nocar.py wor` (homes without a car, T-511; every country has a figure by T-562's rules,
-docs/data-register.md "Car ownership", and `nocar.py --plan` lists each planned country's) and
+Then `nocar.py wor` (homes without a car, T-511; demand has not read it since T-854, so it may be skipped;
+docs/data-register.md "Car ownership") and
 `everyday_rates.py wor` (the country's everyday rates, T-509; a worldwide median without a survey),
 seconds each; both write the merged pack and its res-9 copy, so rerun them after any step that
 rebuilds the pack. The market's zone file (`market_zones.py`, section 7) is made after the merge.

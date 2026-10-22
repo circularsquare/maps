@@ -85,7 +85,7 @@ export type ToDemand =
       oneMarket?: boolean;
       /** T-756 `?perfOff=reach`: every population on its whole cluster, not its reach */
       wide?: boolean;
-      /** T-780 `?perfOff=chunks`: the market solves every zone pair, none sampled */
+      /** T-780, T-874 `?perfOff=chunks`: the market and the commutes solve every zone pair, none sampled */
       exactMarket?: boolean;
       /** T-124 `?perfOff=periods`: a cluster solved solves every period, none kept */
       fresh?: boolean;
@@ -141,6 +141,11 @@ export type ToDemand =
    * worker holds, as a commute (`DemandApi.trip`), or with `purpose` (T-586: an index into
    * `EVERYDAY_KEYS`) as that everyday purpose (`EverydayApi.trip`; answers 0 for a city without it) */
   | { kind: "trip"; id: number; city: CityId; version: number; round: number; from: [number, number]; to: [number, number]; purpose?: number }
+  /** T-866: the trip explorer between zones, in every period this worker holds
+   * (`IntercityApi.market_trip`): the longer trips of a selection's cells (as `icSel`) with place
+   * `far`, or its 6 km zone `farGid` (-1 the whole place) */
+  | { kind: "icTrip"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array; far: number; farGid: number;
+      sq?: { xy: Float32Array; share: Float32Array } }
   /** T-325, the aux worker: a bare zone's legs per cell with no rail, any version. `purpose` -1:
    * commutes and every everyday purpose, -2: commutes alone, k >= 0: everyday kind k alone */
   | { kind: "bare"; id: number; city: CityId; version: number; round: number; purpose: number }
@@ -188,8 +193,8 @@ export type FromDemand =
       kind: "result";
       version: number;
       period: number;
-      /** DemandApi.summary(): round, trips, rail, walk, ms, pairs, crowding stats, then at 10 the
-       * trips by other (T-513), which every view counts with driving (trips less rail and walk) */
+      /** DemandApi.summary(): round, trips, rail, walk, ms, pairs, crowding stats; driving is
+       * trips less rail and walk */
       summary: number[];
       citySummary: Record<CityId, number[]>;
       /** T-260: per city, trips, rail trips and walked trips of each purpose (`parts.keys` order,
@@ -270,6 +275,9 @@ export type FromDemand =
   /** one `DemandApi.trip` answer per period in `periods` (the cells' x, y turned into world
    * metres); null: no network, or not `version` and `round` */
   | { kind: "trip"; id: number; city: CityId; version: number; mask: number; periods: number[]; answers: Float64Array[] | null }
+  /** T-866: one `IntercityApi.market_trip` answer per period in `periods`, from the market part
+   * with the most rail (its route nodes the whole network's); null as `trip` */
+  | { kind: "icTrip"; id: number; city: CityId; version: number; mask: number; periods: number[]; answers: Float64Array[] | null }
   /** T-325: `commute` as `cellModes`'s six blocks (commuters, not legs); `parts` one block set per
    * solving worker's periods (`masks`), the everyday legs as that worker's `sums` message would
    * carry them (empty arrays for a kind the zone lacks; none without an everyday layer). Null

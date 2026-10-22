@@ -15,6 +15,9 @@
 :root[data-shade="dark"][data-theme="green"] { --bg: #22241d; --text: #e3e6d8; --accent: #9dbb68; }
 :root { --bad: #b23a3a; --warn: #c0661c; --yellow: #c9a01c; --map-land: #f2f2ef; --map-ink: #2b2b2b; }
 :root[data-shade="dark"] { color-scheme: dark; --bad: #ec7b7b; --warn: #eb9a52; --yellow: #e5c34a; }
+/* the top bar's demand band (ui/SkyBanner.tsx, T-861): high, medium and low demand; six-digit hex only */
+:root { --dl-high: #d64545; --dl-medium: #e5b22a; --dl-low: #3f7fd4; }
+:root[data-shade="dark"] { --dl-high: #ec6b6b; --dl-medium: #edc54c; --dl-low: #6aa2ea; }
 /* stop editing's grey markers (map/stopMarkers.ts, T-543): a station the line reaches by track it
    already uses, one it reaches by a new route, one it cannot reach; dark ones fade into the land */
 :root { --mk-route-ring: #7d7872; --mk-reroute-fill: #e6e3df; --mk-reroute-ring: #a8a39d; --mk-cut-fill: #d6d3cf; --mk-cut-ring: #b9b5b0; }
@@ -28,7 +31,7 @@
   --tint: color-mix(in srgb, var(--accent) 18%, var(--bg));
   --net-ink: #2b2b2b; /* station rims, in both themes */
   --dock-w: clamp(304px, 24vw, 352px);
-  --bar-h: 46px; /* T-349: one centre line; the status lies under the bar */
+  --bar-h: 54px; /* T-349: one centre line; the status lies under the bar. T-861: room for the sky */
 }
 
 * { box-sizing: border-box; }
@@ -193,6 +196,8 @@ body.resizing, body.resizing * { user-select: none; }
 @container cities (max-width: 298px) { .cities-box .rows.cities .city-star { display: none; } }
 @container cities (max-width: 277px) { .cities-box .c-money { display: none; } }
 .rows.cities .bar { height: 10px; }
+.rows.pick.cities > li.total { cursor: default; border-bottom: 1px solid var(--rule); }
+.rows.pick.cities > li.total:hover { background: none; }
 .rows.cities .val.neg, .money-neg { color: var(--bad); }
 .group.scope .btn { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .group.scope .btn svg { width: 14px; height: 14px; flex: none; }
@@ -278,6 +283,9 @@ body.resizing, body.resizing * { user-select: none; }
 .confirmation::backdrop { background: rgb(0 0 0 / 28%); }
 .confirmation h2 { font-size: 18px; margin: 0 0 12px; }
 .confirmation p { margin: 0 0 18px; }
+.confirmation-lines { list-style: none; margin: -6px 0 18px; padding: 0; display: grid; gap: 8px; }
+.confirmation-lines li { display: flex; align-items: baseline; gap: 8px; }
+.confirmation-lines .chip { flex: none; }
 .confirmation-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 
 /* ---------- inspector ---------- */
@@ -354,6 +362,19 @@ rect.hist-oneoff, path.hist-oneoff { fill: color-mix(in srgb, var(--text) 18%, v
 path.hist-oneoff.cap { fill: var(--muted); }
 svg.hist { width: 100%; height: auto; stroke-width: 1.5; }
 .hist-axis { stroke: var(--rule); stroke-width: 1; }
+/* T-864: the fare curve and its two draggable nodes */
+svg.fare-graph { width: 100%; height: auto; margin: 4px 0 6px; user-select: none; touch-action: none; stroke: none; }
+.fg-grid { stroke: var(--rule); stroke-width: 1; stroke-opacity: .5; }
+.fg-axis { stroke: var(--rule); stroke-width: 1; }
+.fg-label { fill: var(--muted); font-size: 9px; }
+.fg-curve { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.fg-hover { fill: transparent; }
+.fg-guide { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 2; pointer-events: none; }
+.fg-dot { fill: var(--accent); pointer-events: none; }
+.fg-node { cursor: ns-resize; }
+.fg-hit { fill: transparent; }
+.fg-knob { fill: var(--accent); stroke: var(--bg); stroke-width: 1.5; }
+.fg-node:hover .fg-knob { stroke: var(--text); }
 path.hist-fares { stroke: var(--accent); }
 path.hist-costs { stroke: var(--muted); }
 circle.hist-fares { fill: var(--accent); stroke: none; }
@@ -392,7 +413,7 @@ rect.now { fill-opacity: .45; }
 .stops li.adding { color: var(--muted); }
 .stops li.adding::after { opacity: 0.45; }
 .passed-all { margin: 2px 0 4px; }
-.passed-confirm { display: flex; gap: 6px; margin: 6px 0 0 28px; }
+.passed-confirm { display: flex; gap: 6px; margin: 2px 0 4px; }
 .stops .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stops .t { margin-left: 8px; }
 /* T-797: trains reverse at this stop; the map's reversal icon in small */
@@ -457,11 +478,19 @@ rect.now { fill-opacity: .45; }
 .cash { flex: none; width: 16ch; display: flex; font-variant-numeric: tabular-nums; }
 .cash-sign, .cash-cur { flex: none; width: 1ch; }
 .cash-digits { flex: 1; min-width: 0; text-align: left; }
-/* T-832: the clock takes the room between the cash and the time, the date centred in it */
-.clock { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+/* T-832, T-861: the clock is centred in the room between the cash and the speed buttons: the time and
+   date over the sky (ui/SkyBanner.tsx), its demand band under that, all 148 px wide */
+.clock { flex: 1; min-width: 0; display: flex; justify-content: center; font-variant-numeric: tabular-nums; }
+.clock-box { flex: none; width: 148px; display: flex; flex-direction: column; gap: 2px; }
+.clock-text { display: flex; align-items: baseline; justify-content: space-between; line-height: 20px; }
 .clock .time.held { color: var(--muted); }
-.clock .day { flex: 1; min-width: 58px; text-align: center; }
-.clock .time { min-width: 46px; }
+.sky { position: relative; height: 15px; }
+.sky-canvas { display: block; width: 100%; height: 15px; }
+.sky-hit, .band-hit { position: absolute; left: 0; right: 0; }
+.sky-hit { top: 0; height: 12px; }
+.band-hit { top: 12px; height: 6px; }
+/* T-862: today is a holiday in a country with the player's stations; SkyBanner.tsx HOLIDAY_COLOUR */
+.holiday-dot { display: inline-block; width: 6px; height: 6px; margin: 0 5px 2px 0; border-radius: 50%; background: #ff5fa2; vertical-align: middle; }
 .save-notice { flex: none; padding: 6px 10px; border-bottom: 1px solid var(--accent);
   background: var(--tint); display: flex; align-items: center; gap: 8px; font-size: 12px; }
 .save-notice span { flex: 1; min-width: 0; }
@@ -921,6 +950,10 @@ rect.now { fill-opacity: .45; }
 #map canvas.overlay.trip { z-index: 2; }
 .trip-modes .trip-bar { width: 100%; max-width: none; height: 10px; margin: 6px 0 2px; }
 .trip-legs > li { min-height: 26px; }
+/* T-870: an other route opened under its row */
+.rows.pick > li.trip-alt-row { display: block; cursor: default; background: var(--tint); padding: 0 6px 4px 18px; }
+.rows.pick > li.rest { cursor: default; }
+.rows.pick > li.rest:hover { background: none; }
 .trip-hbar { width: 60px; flex: none; display: flex; align-items: center; }
 /* T-220: Explore a trip at the bottom of Settings */
 .trip-start .key { margin-left: 6px; }

@@ -26,6 +26,31 @@ const WEEKDAY_NAME = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export const weekdayOf = (day: number): number => ((day - 1) % 7 + 7) % 7;
 export const weekdayName = (day: number): string => WEEKDAY_NAME[weekdayOf(day)];
 export const dayKindOf = (day: number): DayKind => (weekdayOf(day) >= 5 ? 1 : 0);
+/** T-861, T-862: the calendar is a 365-day year with no leap day. Game day 1 is Monday January 27,
+ * the first Monday of the year on which no country with registered zones has a holiday and its
+ * week has the fewest (pipeline/holidays_json.py). The weekday stays the day number's (above), so
+ * each year starts a weekday later, as real non-leap years do. */
+export const DAY1_OF_YEAR = 26;
+const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+export const MONTH_LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+/** Day of the year of game day `day`, 0 January 1. */
+export const dayOfYear = (day: number): number => ((day - 1 + DAY1_OF_YEAR) % 365 + 365) % 365;
+/** The weekday (0 Monday) of January 1 of game day `day`'s year: which real year's holidays it
+ * takes (game/holidays.ts). */
+export const newYearWeekday = (day: number): number => weekdayOf(day - dayOfYear(day));
+/** Month (0 January) and day of the month of game day `day`. */
+export function dateOf(day: number): { month: number; date: number } {
+  let d = dayOfYear(day), month = 0;
+  while (d >= MONTH_DAYS[month]) d -= MONTH_DAYS[month++];
+  return { month, date: d + 1 };
+}
+/** "Mon Feb 24" */
+export function dateName(day: number): string {
+  const { month, date } = dateOf(day);
+  return `${weekdayName(day)} ${MONTH_SHORT[month]} ${date}`;
+}
+
 /** The kind of day at time `t` (seconds). Callers pass local time (T-309, game/localTime.ts): a
  * line's or a view's, never the bare game clock outside New York's time zone. */
 export const dayKindAt = (t: number): DayKind => dayKindOf(Math.floor(t / 86400));

@@ -182,8 +182,9 @@ export const tool = signal<Tool>("select");
 /** The Build tab's tools: while one is on, the demand views draw beneath the network (T-526). */
 export const isBuildTool = (t: Tool) => t === "track" || t === "station" || t === "delete" || t === "blueprint";
 /** A question waiting in a centered modal (T-096/T-113: removing something
- * constructed): `run` on the yes button, nothing on the no button or Esc. */
-export const ask = signal<{ text: string; yes: string; no: string; run: () => void } | null>(null);
+ * constructed): `run` on the yes button, nothing on the no button or Esc. `lines`: a row each
+ * under the text, after the line's bullet (T-859: what a removal does to lines). */
+export const ask = signal<{ text: string; yes: string; no: string; run: () => void; lines?: { line: number; text: string }[] } | null>(null);
 /** The selected line whose stops the map tool is editing. */
 export const lineDraft = signal<{ line: number | null; stops: number[] }>({ line: null, stops: [] });
 /** Stop editing is on (T-233): the line tool with a line to edit. The map then hides the demand

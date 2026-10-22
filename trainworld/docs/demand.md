@@ -9,7 +9,7 @@ comments that cite "docs/demand.md" with a section number or a paragraph name fi
 |---|---|
 | [demand-sources.md](demand-sources.md) | 4.1 Where trips come from: tiers, cells, res 8 where it is sparse, jobs data, people in institutions, people who work at home, everyday outings, parks, trips below 150 m, school attendance, university attendance, airport ground trips, medical visits |
 | [demand-timing.md](demand-timing.md) | 4.2 Time of day: kinds of day, the average day |
-| [demand-mode.md](demand-mode.md) | 4.3 Mode choice and catchment: generalised cost, cost damping, walking, driving, parking, routed walking and driving, the interface, lookup, access and egress, walking to a station, riding to a station, homes without a car |
+| [demand-mode.md](demand-mode.md) | 4.3 Mode choice and catchment: generalised cost, cost damping, walking, driving, parking, routed walking and driving, the interface, lookup, access and egress, walking to a station, riding to a station, the curve's floor and ceiling |
 | [demand-kernel.md](demand-kernel.md) | 4.4 Cost of computing it: commuting does not enumerate cell pairs, and steps 1 to 7 (gravity between zones, access per cell, access subzones, station-to-station times, mode choice per subzone pair, loading, crowding), if a bigger network makes it slow |
 | [demand-runtime.md](demand-runtime.md) | 4.4: which cities are open, bare zones, everyday warm-up, the pool and the bubbles' chain, clusters |
 | [demand-market.md](demand-market.md) | 4.4: the world market, a composition opens without its zone pairs, the market's distances are on the ground |

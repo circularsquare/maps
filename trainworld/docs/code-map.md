@@ -19,13 +19,14 @@ tests natively.
   `TrackApi::trace_route` and the real-network snap; `Tracer` runs it in steps (`RouteTrace` in
   WASM, T-754); notes/T-727.md.
 - `src/demand/`: the demand kernel, behind feature `demand` (on in the app's build): `api.rs`
-  (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market; on a big cluster its pass searches destinations one at a time,
+  (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market; `intercity/market_trip.rs` its trip explorer query, T-866; on a big cluster its pass searches destinations one at a time,
   `pass_streamed` with `kernel::DestSearch` and `DestAssign`, T-761), `warm.rs` (the
   everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (the weekend's factors per
   purpose and period, T-260), `routes.rs` (routed walks round water and drives over OSM roads from
   the pack, T-275), `trip.rs` (the trip explorer's query, T-195; its two cells' own trip, T-720, checked with the
   walk bands in `t720.rs`), `lanes.rs` (f32 lanes, wasm
-  SIMD or SSE2, for the commute pair loop, T-036).
+  SIMD or SSE2, for the commute pair loop, T-036). The commute pair loop is `kernel::mode_choice`;
+  its small zone pairs are dealt in chunks there (`COMMUTE_CHUNK`, T-874; `DemandApi::set_chunked`).
   `cargo test --release --features demand nyc_day -- --ignored --nocapture` solves a day on the
   real pack natively. notes/T-026.md.
 - `src/bin/`: native tools behind feature `demand`, built in `data/work/target`: `realnet` (a day
@@ -45,6 +46,10 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - `types.ts` (the save's inputs, worker results, `WorldView`, `Selection`), `world.ts` (the
   snapshot signal and the edit functions), `ui.ts` (tab, selection, display settings, theme).
 - Time: `clock.ts`, `localTime.ts` (each region's local time and the local time in view, T-309),
+  `sun.ts` (the sun's height and sunrise for the top bar's sky, T-861; the calendar is in `days.ts`),
+  `holidays.ts` (public holidays by country from `holidays.json`, made by `pipeline/holidays_json.py`, T-862;
+  a line's and the view's country, T-872), `holidayCalendar.ts` (the plain lookups the clock worker shares:
+  a holiday's name, `kindOfIn` a country's kind of each day, T-872),
   `periods.ts` (the five periods), `days.ts` (weekday and weekend, the shown day, T-260).
 - Demand and riders: `demand.ts` (results: mode split, riders), `boarding.ts` (the boarding
   account's hour on the main thread: riders packed for the clock worker, platform crowds, T-164),
@@ -104,7 +109,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `stopMarkers.ts` (the toggle markers of stop editing, T-233), `reversalMarks.ts` (the icon over
   stations where a line reverses partway, T-797).
 - Trains and trips: `trainFollow.ts` (a selected train followed onto its next trip, T-245),
-  `tripView.ts` (the trip explorer's route, T-195; its panel is `ui/inspector/TripInspector.tsx`).
+  `tripView.ts` (the trip explorer's route, T-195; its panel is `ui/inspector/TripInspector.tsx`; between zones `MarketTrip.tsx`, T-866; between two groups of bubbles, the Shift+drag box and its samples in `commuterView.ts` `farTrip`, the average in `game/trip.ts` `averageTrips`, T-865).
 - Demand views (T-084, T-097): `demandViews.ts` (wiring, a station's riders for its inspector), `demandLayers.ts`
   (line width, station use circles, train fill; the figures from `game/stationUse.ts`, T-482), `commuterView.ts` and `bubbles.ts` (commuter bubbles and
   bubble selections), `intercityView.ts` (longer trips of a selection or station, one bubble per
@@ -116,20 +121,23 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   stations, T-157, T-194), `hoverRest.ts` (the list of what else is under a resting pointer,
   T-732), `hovered.ts` (what is lit as hovered, from the tags and the list, read by both renderers, T-730), `trackTagRows.ts` (the elevation and speed rows with icons, shared with
   the track tool's tag, T-526), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines, one
-  layer for every zone, and the outside shade, T-131, T-139, T-400), `coarseOutlines.ts` (reads
+  layer for the zones near the view, exact ones fetched only above `ZONE_LOAD_ZOOM`, and the outside
+  shade, T-131, T-139, T-400, T-871), `coarseOutlines.ts` (reads
   `packs/outlines.json`, which `pipeline/zone_outlines.py` writes: every registered zone's coarse
   outline, T-800), `zoneLoading.ts` (zones still loading drawn grey with a loading
-  bar, T-343).
+  bar, T-343), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and
+  `zonesLoadForView`, the zoom test of `game/zones.ts` `ZONE_LOAD_ZOOM` that decides whether zones
+  load for viewing, T-276, T-318, T-871).
 
 ### src/ui/: Preact components
 
 `Dock.tsx` (the dock, its icon tabs and resizing, T-252); `tabs.tsx` (Build, Lines, Stations, Money and the Cities tab);
-`MoneyHistory.tsx` (the Money tab's history charts, T-447); `Cities.tsx` (the Cities list, T-550, T-749); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `bullet.ts` (`bulletText`, `bulletNode`: a line bullet as one SVG, its circle and its symbol placed from the canvas-measured ink box with the baseline on a whole device pixel, per font, symbol, size and scale, T-705, T-745; the sizes in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
-checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `StatusTag.tsx` (the demand status tag on the map's top row); `Toolbar.tsx` (tool hints and the confirmation
+`MoneyHistory.tsx` (the Money tab's history charts, T-447); `FareGraph.tsx` (the fare curve graph and its draggable nodes, T-864); `Cities.tsx` (the Cities list, T-550, T-749); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `bullet.ts` (`bulletText`, `bulletNode`: a line bullet as one SVG, its circle and its symbol placed from the canvas-measured ink box with the baseline on a whole device pixel, per font, symbol, size and scale, T-705, T-745; the sizes in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
+checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `SkyBanner.tsx` (the clock's sky and demand band, a canvas, T-861); `StatusTag.tsx` (the demand status tag on the map's top row); `Toolbar.tsx` (tool hints and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
 per selection kind: `others.tsx` holds station, train, track, junction and cell or zone;
-`ComplexMap.tsx` the complex map; `NameEdit.tsx` a station's or line's name edited in place, T-534); `LoadingScreen.tsx` (the clock hold at startup, the loading card,
+`ComplexMap.tsx` the complex map; `TrainStops.tsx` a train's next stops and who gets off, T-868; `NameEdit.tsx` a station's or line's name edited in place, T-534); `LoadingScreen.tsx` (the clock hold at startup, the loading card,
 the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the start menu and the URL switches that skip it, T-677); `NewGame.tsx` (the new game sheet: mode, start city, search, real network; `START_CITIES`, `REAL_NETWORKS`, T-728, T-731); `Spinner.tsx` (the small spinner, T-647, and the bunny's train, T-677); `Search.tsx` (T-148); `DemandStopped.tsx` (the alert when demand stops after startup, T-757), `StationsFull.tsx`
 (the "N stations full" button, T-231); `keys.ts` (which keys a focused control keeps, T-183); `locate.ts` (the camera to a station or a line: search picks, the tabs' double click, the inspectors' locate button, T-569);
 `tip.ts` (the hover tag for every panel and control, from `data-tip`, never `title`, T-210);
@@ -222,6 +230,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   slot's backups go; port 6150 by default),
   `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
   rides and running costs, with the largest hour-to-hour change beside the flat booking's),
+  `t872-holidays.mjs` (the real save over the next Thanksgiving: that day's boarding account, fares
+  and ledger are Saturday's, the days around it weekdays; the day is a weekday in Canada and the UK),
   `t745-bullets.mjs` (the real save's line bullets in the Lines tab, the line inspector and the map
   tags, plus digits, two characters and kana, light and dark, 100% and 90% UI, pixel ratio 1 and 2:
   each symbol's ink centred in its drawn circle within 0.6 device px, measured on the screenshot;
@@ -259,6 +269,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   trace spent its time on), `t714-pan.mjs` (frame time while dragging and wheel-zooming the
   real save at zoom 11-16 with the clock running: fails over 12 ms of main thread a frame or 5% of
   frames over 50 ms; options for a throttled CPU, a trace per thread, settings, a tool),
+  `t871-europe-pan.mjs` (drags across Europe in a new game: fails if a zoom at or below 7.5 opens
+  a pack or fetches a water mask, or zoom 9 opens none; reports long tasks; about 2 minutes),
   `t724-hover.mjs` (what a pointer move costs on the real save with the select and station tools,
   timers and the station name included, then a wheel zoom's frame placers: fails over 8 ms at the
   95th percentile in any view),
@@ -269,7 +281,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t756-reach.mjs` (`capture <save> <label>` records a save's demand network and packs from the
   page; `compare <label>` solves it with the real worker in Node, every population on its whole
   cluster and on its reach, and fails when a figure moves past the tolerance; `compare <label>
-  chunks` the market with every zone pair against pairs dealt in chunks (T-780); New York about 1.5
+  chunks` the market and the commutes with every zone pair against pairs dealt in chunks (T-780, T-874); New York about 1.5
   minutes, Japan's seven cities about 15; notes/T-756.md),
   `t161-complexes.mjs` (the real save's complexes for the native
   comparison), `t125-fingerprint.mjs` (a save's derived geometry, before and after a frame
@@ -318,8 +330,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   res-8 parent within a zone, touching sparse children of busier parents together (T-466), and
   sparse cells still alone into a touching merged cell across the parent's edge (T-510), the
   res-9 pack kept in `data/work/res9/`; `--undo` puts it back
-  before any step that rewrites a pack (enrichments, routes, `intercity.py`), `--stats` only counts.
-- `nocar.py <ids> | --all` adds `nocar` (people in households with no car, per cell; T-511) to
+  before any step that rewrites a pack (enrichments, routes, `intercity.py`), `--stats` only counts;
+  `--stats --floor N` counts T-850b's floor rule (`FLOOR`, off until its run, notes/T-850.md 5).
+- `nocar.py <ids> | --all` (not read by demand since T-854) adds `nocar` (people in households with no car, per cell; T-511) to
   the res-9 copy and the merged pack, append-only; rerun it after anything that rebuilds a pack
   (its sources: docs/data-register.md "Car ownership"); `--plan` prints every planned country's
   share and source, writing nothing.

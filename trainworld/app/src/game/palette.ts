@@ -4,12 +4,12 @@
 import { signal } from "@preact/signals";
 import type { Level } from "./types";
 
-/** Default line colours in order: a normal saturated metro palette (SPEC 8). The last five (gray,
- * yellow-green, pink, magenta, light blue; Anita, T-223) keep every pair at least 19 apart in
- * CIEDE2000 (the first eight's closest pair, orange and yellow, is 20); yellow-green, pink and
- * light blue are light enough that their chips take dark letters (`inkOn`). */
+/** Default line colours: a normal saturated metro palette (SPEC 8), a new line taking a random unused
+ * one (T-856). Every pair is at least 19 apart in CIEDE2000 (T-223, T-856) and at least 17 from the
+ * map's land, water and parks in both themes (the closest, light blue on light water); yellow-green,
+ * pink, light blue and lavender are light enough that their chips take dark letters (`inkOn`). */
 export const LINE_PALETTE = ["#d7263d", "#1f6fd1", "#1a9a4a", "#f08a00", "#8a3fb8", "#f2c200", "#8f5a2a", "#0e9a9a",
-  "#74797e", "#9ccb19", "#f59dc6", "#e62aa6", "#5cc3f0"];
+  "#74797e", "#9ccb19", "#f59dc6", "#e62aa6", "#5cc3f0", "#6f7a0f", "#ee7d63", "#a9a0e8"];
 
 /** Track colour by height: blue-green, blue and indigo going up (open sky), green at ground, then
  * yellow, orange and red-orange going down (deep; T-480). Neighbours are at least 30 apart in

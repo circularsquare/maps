@@ -77,7 +77,7 @@ purpose filter the purpose drawn is ringed in the bar.
   ([ui-building.md](ui-building.md)) and focuses its `Line m` name, text selected [T-813]. m is the lowest number no line in the same
   city has as its name (a line's city is its first stop's zone, as the City column; a line with no
   stops yet counts in the city being viewed), so a renamed line frees its number. The line's colour
-  is the first `LINE_PALETTE` colour no line in that city uses, else the first of the least used
+  is a random `LINE_PALETTE` colour no line in that city uses, else a random one of the least used [T-856]
   (`nextLineName`, `nextFreeColour` in `game/lineActions.ts`). A copy is named "<name> copy". The N key does it from any tab
   [T-670]; the same on a selected track no line runs on (its inspector's "Lines on it" heading
   carries a plus button, hover "New line, starting at the stations on this track (N)") starts the
@@ -143,8 +143,8 @@ purpose filter the purpose drawn is ringed in the bar.
   line's "Broken: track it used is gone." is one too;
   Today for a running line:
   riders by purpose,
-  one Profit row (fares, a minus sign, then the running cost over the 24 hours in red; the hover
-  gives fares, running cost and the net), the **Average load** in a percentage [T-820] (rider-seconds
+  one Profit row (fares, a minus sign, then the running cost over the 24 hours plus the line's share
+  of upkeep in red; the hover gives fares, running cost, upkeep share and the net, T-867), the **Average load** in a percentage [T-820] (rider-seconds
   aboard over the seconds each trip is under way times the riders a train holds at crush, 160 a car,
   over every trip of today's kind of day from `linePeriods`; `averageLoad` in `LineInspector.tsx`; the hover says so),
   how many trains left full as "x/y" of the trips that
@@ -180,6 +180,13 @@ purpose filter the purpose drawn is ringed in the bar.
   "Standing", "Full"), beside the typical train this hour (the mean of its line's trains in the same
   direction drawn this hour, on the same stretch). A train is never over full: whoever does not fit
   waits on the platform. A line with no figures yet says "Calculating" [T-324].
+- **Next stops** [T-868, `ui/inspector/TrainStops.tsx`]: under On board, the train's next four stops
+  (to the end of its trip; a circle's up to the stop before its first), each with the minutes until
+  it arrives ("<1 min" under one; hover "Arrives in 2m40s", from the train's own running profile)
+  and the riders getting off there: its load arriving (the boarding account's) times the line's
+  alighting share at that stop in the period it arrives in, as the account lets them off; everyone
+  at the end of the line. The row's hover: "61 of the 1,440 riders aboard get off at Grand St, and
+  40 get on". The list moves on at each stop and the minutes each game minute.
 - **A selected train is followed** [T-245, `map/trainFollow.ts`]: when its trip ends and the track
   model hands it to the next departure there (`Trip::next`), the selection moves to that trip as it
   leaves, so inspector and highlight carry on. A train leaving service stays selected where it
@@ -332,9 +339,41 @@ destinations at the end, and how the demand model's people would make one of the
   selection's end is its busiest cell under the purpose filter, the far end the clicked bubble's
   cell with most of the selection's trips: the representative trip's two ends. The inspector then
   has a Back button to that selection (alone, with no line saying where it came from).
+- **Between groups** [T-865]: a Shift+drag box over far-end bubbles (ui-demand-views.md) opens the
+  trip between the selection and every far bubble in the box. When either end has more than one
+  bubble (at the zoom on screen), the sub line names each group by its count and the station
+  nearest its trip-weighted centre within 3 km ("From homes in 29 areas around 79 St to places in
+  35 areas around 5 Av/42 St-Bryant Pk"; one bubble keeps "at the open ring"). The headline is
+  exact over both groups, as for one bubble. Below it is an average over up to 3 x 3 cell pairs
+  (`GROUP_SAMPLE_SIDE`): the busiest cell of each of the 3 near bubbles with most trip legs, to the
+  busiest cell of each of the 3 far bubbles with most trips with the selection, each pair weighted
+  by the near bubble's legs times the far bubble's trips (`averageTrips` in game/trip.ts). By train
+  is then the Effective time (the weighted mean over the pairs the train is offered for; hover
+  names the pair count) and Busiest routes: the routes merged by their lines and last station,
+  each pair's weighted by its train chance, the five biggest with their share of the train riders
+  and the rest as Other routes; no single route's legs, fare or time. By car, By walking and Train
+  by period are the weighted means. The map draws the busiest routes, each pair's walks from its
+  own cells.
 - The trip is a selection: it stays after the tool is left, until Esc or an empty click, and while
   selected panning does not change the focused zone. It is asked again at each published round,
   and when the purpose filter or the day changes.
+- **Between zones** [T-866; `ui/inspector/MarketTrip.tsx`, `IntercityApi::market_trip` in
+  `sim/src/demand/intercity/market_trip.rs`]: with a bubble selection, a click on an inter-region
+  bubble (a whole place zoomed out, a 6 km area up close; hover ends "Click to explore these
+  trips") opens the trip between the selection and it; so does a trip tool trip whose end falls
+  outside the focused zone's cells (the start's cell to the far 6 km area with trips from it
+  nearest the end, within 6 km, else the nearest such place within 60 km). It shows the regional
+  market's inter-region trips (commutes between zones left out, as the hover says): every 6 km
+  area pair between the two ends, the selection's areas weighted as the bubbles weigh them,
+  each pair's choice worked out as the solve does (every pair rail can serve, sampled or not),
+  added up by its trips. The panel: the trips a day and the distance, a Train / Plane / Car bar
+  and rows; By train (the period with most trips, "Inter-region, midday") with the main route
+  ("To Astor Pl" and "From Stratford" carry the areas' felt minutes to and from the stations,
+  muted, since the market knows no single walk), Fare, Time (station to station), Effective time
+  (the pairs' felt cost, averaged over the pairs the train serves), the main route's share and up
+  to four other routes; By car's effective time; Train by period. The routes are drawn on the map
+  as a local trip's, from the selection's busiest cell to the far end's centre. Rail is not
+  worked out when the far place's zone is not open in the game.
 - **The headline follows the view** [T-586]: under the purpose filter and the day shown, the trips
   a day between the two places (a line "124 trips per day, 2.5 km apart"; its hover the
   exact count and, under All purposes, each purpose's), then a bar and rows of their shares by
@@ -370,7 +409,13 @@ destinations at the end, and how the demand model's people would make one of the
   the train users on this trip take this route, the rest use different routes."), with up to four
   "Other routes" and their shares, then a "Smaller routes" row with what is left [T-709]; the
   sentence's and the row's hover say how many pairs of stations the users spread over and what the
-  busiest pair takes (in New York the main route has 5 to 12% and the rest is thin, notes/T-709.md). "By car" and "By walking" read the same
+  busiest pair takes (in New York the main route has 5 to 12% and the rest is thin, notes/T-709.md).
+  **A click on an other route opens it** under its row, one at a time, a second click closing it
+  [T-870, `openRoute` in `game/trip.ts`]: its legs as the main route's rows, Fare, Time, Effective
+  time (the route's own sum, its hover the equation without choice of routes) and "Against the
+  main route" (the two own sums' difference in minutes, "+6 min" or "same"; its hover gives both
+  sums and each term's difference, "Ride +5.8 min"). The opened route stays open through new rounds
+  and periods while the trip is the same. "By car" and "By walking" read the same
   way. Car: **Drive** (real minutes; its hover the straight line, the road length and the average
   speed of this drive, `DemandApi.trip`'s road km over its minutes), **Parking** (minutes, with the
   price of parking and any congestion charge counted as minutes), **Car ownership** (dollars) and
@@ -388,5 +433,6 @@ destinations at the end, and how the demand model's people would make one of the
   disc; the main route over the veil in its lines' colours along their track (straight between
   stations only when the drawn network no longer matches the solve's), with a dark casing and the
   boarding and leaving stations bigger; walks dashed and straight; other routes thinner and faint
-  under it. Hovering a ride gives line, stations, stops, minutes after the wait, crowding's effect
+  under it, except an opened one [T-870], drawn at full strength a little thinner than the main
+  route, on top of it, with its stations marked. Hovering a ride gives line, stations, stops, minutes after the wait, crowding's effect
   and the route's share; a walk its distance and minutes; a station what the route does there.

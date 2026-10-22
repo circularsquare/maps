@@ -165,7 +165,8 @@ async function run(BASE) {
     // THROTTLE=4: a slower machine's main thread, so a cost shows as dropped frames
     if (process.env.THROTTLE) await cdp.send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.THROTTLE) });
     for (const sc of SCENES) {
-      await page.evaluate(([at, zoom]) => window.tw.map.jumpTo({ center: at, zoom }), [sc.at, sc.zoom]);
+      // braces: jumpTo returns the map, which Playwright would serialise for a second or more
+      await page.evaluate(([at, zoom]) => { window.tw.map.jumpTo({ center: at, zoom }); }, [sc.at, sc.zoom]);
       await page.waitForTimeout(2500);
       if (process.env.CPUPROFILE === '1') { await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 200 }); await cdp.send('Profiler.start'); }
       if (TRACE) await cdp.send('Tracing.start', { transferMode: 'ReturnAsStream', traceConfig: { includedCategories: ['toplevel', 'disabled-by-default-gpu.service', 'gpu', 'viz', '__metadata'], recordMode: 'recordContinuously' } });

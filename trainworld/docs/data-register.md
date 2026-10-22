@@ -147,11 +147,12 @@ days of people with a workplace. Several countries have one figure for both.
 
 ## Car ownership
 
-People living in a household with no car, per cell (T-511, `pipeline/nocar.py`; the rule in
-demand-mode.md 4.3). Where only cars per household are known, households without a car come from one
-curve fitted on US tracts and English LSOAs (demand-worldwide.md "Driving alternative"). Every
-country has a figure (T-562): the rows below, then the three rule rows at the end in that order;
-`nocar.py --plan` prints each planned country's. No open world register exists: WHO's GHO counts
+Not used since T-854 (Anita, 2026-10-21): demand reads no car ownership; dense homes pay parking at
+home instead (demand-mode.md 4.3). The rows below are what `pipeline/nocar.py` wrote into the packs
+as `nocar` (people living in a household with no car, per cell, T-511), kept on disk unread, should
+the input come back. Where only cars per household are known, households without a car came from
+one curve fitted on US tracts and English LSOAs. Every country had a figure (T-562): the rows below,
+then the three rule rows at the end in that order. No open world register exists: WHO's GHO counts
 all registered vehicles with motorcycles (2016, one total), the World Bank's IRF series stopped
 about 2011, OICA's vehicles-in-use pages are gone (404) with no licence stated.
 

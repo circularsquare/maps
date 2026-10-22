@@ -87,7 +87,7 @@ const cityGroup = (city: CityId) => { const c = jobClusters.find((c) => c.cities
 /** a paused round boundary's resume (a `go` or a newer network) */
 let wake: (() => void) | null = null;
 /** the questions whose answer reads the periods' state at a round (the others read none) */
-const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip"]);
+const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip", "icTrip"]);
 type Population = DemandApi | EverydayApi | IntercityApi;
 /** T-326: the network in hand's clusters, each with its populations (cities, their everyday
  * layers, the market: the order their loads are added in), and the whole network's route nodes */
@@ -604,6 +604,28 @@ function query(msg: Query) {
         }
       }
       sendMessage({ kind: "trip", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, periods, answers: live ? answers : null }, answers.map((v) => v.buffer));
+    } else if (msg.kind === "icTrip") {
+      // T-866: each period from the market part with the most rail (each part's rail is its own
+      // network's); with no part, an answer with no rail
+      const ok = marketLive || (mcs.length === 0 && !!intercity && live);
+      const sq = !ok ? null : msg.sq ?? (a ? selectionSquares(msg.city, a, msg.end, msg.cells) : null);
+      const answers: Float64Array[] = [], periods: number[] = [];
+      if (sq) {
+        const place = MARKET_OF[msg.city];
+        for (const q of mine) {
+          let best: Float64Array | null = null;
+          for (const c of mcs) {
+            const v = c.part!.market_trip(q, day, place, sq.xy, sq.share, msg.end, msg.far, msg.farGid);
+            if (v[0] !== 1) continue;
+            if (!best || v[3] > best[3]) { marketTripNodesGlobal(v, viewOf(c, c.part!).nodeGlobal); best = v; }
+          }
+          if (!best) { best = new Float64Array(20); best[0] = 1; best[14] = 2; best[13] = 1; }
+          answers.push(best);
+          periods.push(q);
+        }
+      }
+      const mask = !sq ? 0 : mcs.length ? mcs.reduce((m, c) => m & c.part!.solved_mask(), 31) : mine.reduce((m, q) => m | (1 << q), 0);
+      sendMessage({ kind: "icTrip", id: msg.id, version: msg.version, mask, periods, answers: sq ? answers : null }, answers.map((v) => v.buffer));
     } else if (msg.kind === "bare") {
       // T-325: no network in it, so any version and round; the everyday legs per solving worker's
       // periods, as each would have sent them, so the main thread adds them up as it does those
@@ -641,6 +663,7 @@ function query(msg: Query) {
     else if (msg.kind === "purposeModes") sendMessage({ kind: "purposeModes", id: msg.id, version: msg.version, mask: 0, modes: null });
     else if (msg.kind === "transfers") sendMessage({ kind: "transfers", id: msg.id, version: msg.version, mask: 0, pairs: null });
     else if (msg.kind === "trip") sendMessage({ kind: "trip", id: msg.id, version: msg.version, mask: 0, periods: [], answers: null });
+    else if (msg.kind === "icTrip") sendMessage({ kind: "icTrip", id: msg.id, version: msg.version, mask: 0, periods: [], answers: null });
     else if (msg.kind === "bare") sendMessage({ kind: "bare", id: msg.id, commute: null, masks: [], parts: [] });
     else if (msg.kind === "bareFlows") sendMessage({ kind: "bareFlows", id: msg.id, packed: null, masks: [], work: [], everyday: [], names: [] });
     else if (msg.kind === "bareSquares") sendMessage({ kind: "bareSquares", id: msg.id, xy: null, share: null });
@@ -787,6 +810,20 @@ function tripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
   const g = (i: number) => { if (v[i] >= 0) v[i] = nodeGlobal[v[i]]; };
   const np = v[24], nr = v[25];
   for (let k = 0; k < np; k++) { g(HEAD + k * PAIR_LEN + 2); g(HEAD + k * PAIR_LEN + 3); }
+  let o = HEAD + np * PAIR_LEN;
+  for (let k = 0; k < nr; k++) {
+    const n = v[o + 2];
+    o += 3;
+    for (let i = 0; i < n; i++, o += LEG_LEN) { g(o + 1); g(o + 2); }
+  }
+}
+
+/** The same for an `IntercityApi.market_trip` answer (T-866: head 20, pairs of 7, legs of 12). */
+function marketTripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
+  const HEAD = 20, PAIR_LEN = 7, LEG_LEN = 12;
+  const g = (i: number) => { if (v[i] >= 0) v[i] = nodeGlobal[v[i]]; };
+  const np = v[11], nr = v[12];
+  for (let k = 0; k < np; k++) { g(HEAD + k * PAIR_LEN); g(HEAD + k * PAIR_LEN + 1); }
   let o = HEAD + np * PAIR_LEN;
   for (let k = 0; k < nr; k++) {
     const n = v[o + 2];
@@ -949,6 +986,7 @@ async function run() {
             for (let k = 0; k < ll.length; k += 2) [ll[k], ll[k + 1]] = worldToLonLat(m.stXY[k], m.stXY[k + 1]);
             setupMs += p.set_network_ll(ll, m.lineN, m.stops, m.times, m.tph, m.cars);
           } else {
+            if (p instanceof DemandApi) p.set_chunked(!job.exactMarket);
             const city = c.cities.find((id) => cities.get(id) === p || everyday.get(id) === p)!;
             const xy = m.stXY.slice();
             for (let k = 0; k < xy.length; k += 2) {

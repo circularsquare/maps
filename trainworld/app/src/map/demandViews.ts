@@ -177,7 +177,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     },
     click(px, py, add, under = false) {
       if (!under && onSelected(px, py)) return undefined; // the network picks the selected station
-      const picked = commuters.click(px, py, add) ?? intercity.click(px, py);
+      const picked = commuters.click(px, py, add) ?? intercity.click(px, py, commuters.nearPoint);
       if (picked !== undefined) return picked;
       // Longer-trip discs describe the current selection. They are drawn over the network, so a
       // click on them retains that selection and is consumed.

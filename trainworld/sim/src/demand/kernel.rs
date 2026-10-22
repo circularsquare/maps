@@ -28,8 +28,6 @@ pub const K: usize = 6;
 /// Dummy slots after each row of the commute pair loop, one per lane and egress step (T-036).
 const PADS: usize = 8 * K;
 const NONE: u32 = u32::MAX;
-/// `Params::other_asc`'s default, perceived minutes (T-513: notes/T-513.md; T-509's joint fit kept it).
-pub const OTHER_ASC: f32 = 10.0;
 
 #[derive(Clone, Debug)]
 pub struct Params {
@@ -73,6 +71,13 @@ pub struct Params {
     /// Cost damping (T-495, `mode_beta`): past this many perceived minutes of the car's trip the
     /// mode choice's scale falls as the square root of the car's minutes.
     pub damp_min: f32,
+    /// The choice curve's floor and ceiling (T-854, `rail_bounds`), on rail's share of the trips
+    /// not walking where rail is offered: `rail_floor` of them always take rail while it costs at
+    /// most the car's perceived minutes, fading linearly to none at `rail_floor_ratio` times the
+    /// car's; mirrored, as many never take it while the car costs at most rail's, fading to none
+    /// where rail costs 1 / `rail_floor_ratio` of the car's. 0: the plain curve.
+    pub rail_floor: f32,
+    pub rail_floor_ratio: f32,
     /// Driving door to door (T-090), the alternative for the whole trip: the road is
     /// `road_detour` x the straight line; its first and last `road_local_km` (at most half the
     /// road each) are local streets, at `road_town_kmh` in open country, and the rest is main
@@ -98,6 +103,11 @@ pub struct Params {
     pub park_paid_d0: f32,
     pub park_paid_cap_min: f32,
     pub park_free_d: f32,
+    /// Parking at the home end (T-854, `home_park_at`): every car trip of the local layers from a
+    /// home pays `home_park_f` x the paid-space rule above on its zone's residents per km² of land
+    /// (`home_dens`, per cell; None: none anywhere). The ride to a station pays it too.
+    pub home_park_f: f32,
+    pub home_dens: Option<std::sync::Arc<Vec<f32>>>,
     /// Owning a car, amortized over its trips (T-620, T-621): every car trip pays
     /// `car_own_usd_trip` dollars (`car_own_min`, in `park_parts`' fixed part) plus
     /// `car_own_usd_km` a km of its own road (`car_drive`), at `FARE_MIN_PER_USD` perceived
@@ -118,6 +128,10 @@ pub struct Params {
     pub crowd_start: f32,
     /// Zone pairs carrying fewer trips than this are skipped in mode choice.
     pub prune_trips: f32,
+    /// T-874: an origin zone's pairs carrying fewer trips than this in the period are dealt
+    /// those trips in chunks of about this size, per block of `CHUNK_BLOCK` destination zones
+    /// (`mode_choice`); 0 solves every pair.
+    pub commute_chunk: f32,
     /// Subzone pairs whose cheapest walks at the two ends together cost more than this many
     /// perceived minutes are not offered rail (T-090: a computational bound like
     /// `walk_cutoff_m`, set where little rail is left).
@@ -182,16 +196,6 @@ pub struct Params {
     pub ride_min_km: f32,
     pub ride_max_m: f32,
     pub ride_lines: usize,
-    /// Per cell, the share of its residents living in a household with no car (the pack's
-    /// `nocar` over `pop`, T-511). None: everyone can drive. In the local layers their choice is
-    /// rail, walking to stations, against walking the whole way (`walk_trip_cost`) and "other"
-    /// (bus, taxi, bike; T-513): the drive's road at `other_kmh` door to door, plus a wait of
-    /// `other_wait_min` and `other_asc`, no parking (`nocar_choice`). `other_kmh` and
-    /// `other_wait_min` are fixed; `other_asc` is the one to fit.
-    pub nocar: Option<std::sync::Arc<Vec<f32>>>,
-    pub other_kmh: f32,
-    pub other_wait_min: f32,
-    pub other_asc: f32,
     /// The everyday layer's outings per resident (per enrolled student for school and
     /// university) and destination decay lengths in metres, by `everyday::KINDS` (T-509 stage
     /// 4). Read when `EverydayApi::beside` opens; the pack's `everyday` block sets the rates.
@@ -257,6 +261,9 @@ impl Default for Params {
             asc_rail: super::api::ASC_RAIL,
             country_asc_rail: 0.0,
             damp_min: 60.0,
+            // T-854: 5%, gone where rail costs 3 times the car's (notes/T-854.md "Stage 2")
+            rail_floor: 0.05,
+            rail_floor_ratio: 3.0,
             road_detour: 1.3,
             road_local_km: 2.0,
             road_end_km: 8.0,
@@ -272,6 +279,9 @@ impl Default for Params {
             park_paid_d0: 3000.0,
             park_paid_cap_min: 50.0,
             park_free_d: 8000.0,
+            // T-854: dense cores keep about the rail share the car-free split gave them
+            home_park_f: 0.4,
+            home_dens: None,
             car_own_usd_trip: 1.5,
             car_own_usd_km: 0.1,
             cordon: None,
@@ -283,6 +293,7 @@ impl Default for Params {
             // T-710: Anita's 70% (notes/T-710.md)
             crowd_start: 0.7,
             prune_trips: 0.0,
+            commute_chunk: COMMUTE_CHUNK,
             // T-090: holds the pairs at what the 2.5 km edge had; on the real New York network
             // 0.3% of rail trips have walks of 70-80 perceived minutes together and 0.2% were
             // beyond it (a lone line in Manhattan, the worst case: 2.3%, and the bounds cost it
@@ -313,11 +324,6 @@ impl Default for Params {
             ride_min_km: 5.0,
             ride_max_m: 15_000.0,
             ride_lines: 6,
-            nocar: None,
-            // T-513: city buses' door-to-door speed and wait (DECISIONS 2026-10-16)
-            other_kmh: 12.0,
-            other_wait_min: 8.0,
-            other_asc: OTHER_ASC,
             everyday_rate: super::everyday::RATE,
             everyday_decay_m: super::everyday::DECAY,
             everyday_asc_rail: 0.0,
@@ -354,12 +360,16 @@ impl Params {
             "walk_bonus_min" => self.walk_bonus_min = v,
             "walk_samples" => self.walk_samples = v as usize,
             "damp_min" => self.damp_min = v,
+            "rail_floor" => self.rail_floor = v,
+            "rail_floor_ratio" => self.rail_floor_ratio = v,
             "walk_mps" => self.walk_mps = v,
             "walk_cutoff_m" => self.walk_cutoff_m = v,
             "w_walk" => self.w_walk = v,
             "walk_easy_min" => self.walk_easy_min = v,
             "w_walk_far" => self.w_walk_far = v,
             "pair_walk_max" => self.pair_walk_max = v,
+            "prune_trips" => self.prune_trips = v,
+            "commute_chunk" => self.commute_chunk = v,
             "road_detour" => self.road_detour = v,
             "road_routed_scale" => self.road_routed_scale = v,
             "road_local_km" => self.road_local_km = v,
@@ -379,6 +389,7 @@ impl Params {
             "park_paid_d0" => self.park_paid_d0 = v,
             "park_paid_cap_min" => self.park_paid_cap_min = v,
             "park_free_d" => self.park_free_d = v,
+            "home_park_f" => self.home_park_f = v,
             "car_own_usd_trip" => self.car_own_usd_trip = v,
             "car_own_usd_km" => self.car_own_usd_km = v,
             // scales every zone's cordon charge (0 turns them off)
@@ -387,14 +398,7 @@ impl Params {
                     self.cordon = Some(std::sync::Arc::new(c.iter().map(|x| x * v).collect()));
                 }
             }
-            "other_asc" => self.other_asc = v,
             "everyday_asc_rail" => self.everyday_asc_rail = v,
-            // scales every cell's share without a car (0: everyone drives); before `set_network`
-            "nocar" => {
-                if let Some(c) = &self.nocar {
-                    self.nocar = Some(std::sync::Arc::new(c.iter().map(|x| (x * v).min(1.0)).collect()));
-                }
-            }
             // the everyday layer's, by purpose (`rate_errands`, `decay_social` in metres); before
             // `EverydayApi::beside`
             _ if k.starts_with("rate_") || k.starts_with("decay_") => {
@@ -534,6 +538,17 @@ impl Params {
         let fixed = self.park_min + self.car_own_min() + self.cordon.as_ref().and_then(|c| c.get(j)).map_or(0.0, |&c| c);
         (fixed, paid, 1.0 / (1.0 + d / self.park_free_d))
     }
+    /// Parking at the home end of a car trip from a zone of `d` residents per km² of land, perceived
+    /// minutes (T-854).
+    #[inline]
+    pub fn home_park_at(&self, d: f32) -> f32 {
+        if d > self.park_paid_d0 { self.home_park_f * (self.park_paid_min * (d / self.park_paid_d0).ln()).min(self.park_paid_cap_min) } else { 0.0 }
+    }
+    /// The same for a home in cell `c`.
+    #[inline]
+    pub fn home_park_cell(&self, c: usize) -> f32 {
+        self.home_dens.as_ref().map_or(0.0, |d| self.home_park_at(d[c]))
+    }
     /// The mean of `park_parts` over drivers.
     pub fn park_mean(&self, z: &Zones, j: usize) -> f32 {
         let (fixed, paid, free) = self.park_parts(z, j);
@@ -585,10 +600,28 @@ impl Params {
         let r1 = 1.0 / (1.0 + fast_exp(-(util + beta * paid)) + e);
         r0 + (1.0 - free) * (r1 - r0)
     }
-    /// With a car and no rail: walking's share against the car costing `road` perceived minutes
-    /// (a driver who parks free; `paid` more for a space, `free` parking free), the walk `cw`.
+    /// The curve's floor and ceiling (`rail_floor`, T-854) on `r`, rail's share of all trips, with
+    /// walking's share `e` x `r` (`e` as `car_choice`'s), rail costing `rail` perceived minutes and
+    /// the car `car` (its mean over drivers): walking keeps its share and rail's share of the rest
+    /// R becomes lo + (1 - lo - hi) R. The same expressions as `mode_choice`'s lanes.
+    #[inline]
+    pub fn rail_bounds(&self, r: f32, e: f32, rail: f32, car: f32) -> f32 {
+        if self.rail_floor <= 0.0 {
+            return r;
+        }
+        let k = 1.0 / (self.rail_floor_ratio - 1.0);
+        let lo = self.rail_floor * ((self.rail_floor_ratio - rail / car) * k).max(0.0).min(1.0);
+        let hi = self.rail_floor * ((self.rail_floor_ratio - car / rail) * k).max(0.0).min(1.0);
+        lo + r * (1.0 - lo - hi - lo * e)
+    }
+    /// With no rail: walking's share against the car costing `road` perceived minutes (a driver
+    /// who parks free; `paid` more for a space, `free` parking free), the walk `cw` (0 past
+    /// `WALK_REACH_KM`).
     #[inline]
     pub fn walk_no_rail(&self, road: f32, paid: f32, free: f32, cw: f32) -> f32 {
+        if cw >= NO_WALK {
+            return 0.0;
+        }
         let bt = self.mode_beta(road);
         let uw = bt * (road - cw) + self.asc_walk();
         let w0 = 1.0 / (1.0 + fast_exp(-uw));
@@ -598,94 +631,54 @@ impl Params {
         let w1 = 1.0 / (1.0 + fast_exp(-(uw + bt * paid)));
         w0 + (1.0 - free) * (w1 - w0)
     }
-    /// Perceived minutes a km of "other" along the drive's road, and its fixed part (the wait),
-    /// T-513; `other_asc` apart.
-    #[inline]
-    pub fn other_min_km(&self) -> f32 {
-        60.0 / self.other_kmh
-    }
-    #[inline]
-    pub fn other_wait(&self) -> f32 {
-        self.other_wait_min
-    }
-    /// The choice of those without a car (T-511, T-513, T-558) among rail at `rail` perceived
-    /// minutes (None: not offered), walking the whole way at `cw` (+ `asc_walk`) and other at
-    /// `oth` (+ `other_asc`), on the scale `mode_beta(oth)`: rail's share, and other's share of
-    /// those not taking rail (a logit's, so the same whether rail is offered or not). The same
-    /// expressions as `mode_choice`'s lanes.
-    pub fn nocar_choice(&self, cw: f32, oth: f32, rail: Option<f32>) -> (f32, f32) {
-        let bt = self.mode_beta(oth);
-        let oa = oth + self.other_asc;
-        let uw = bt * (oa - cw) + self.asc_walk();
-        let q = 1.0 / (1.0 + fast_exp(uw));
-        let r = rail.map_or(0.0, |rail| {
-            let ur = bt * (oa - rail) + self.asc_rail;
-            1.0 / (1.0 + fast_exp(-ur) + fast_exp(uw - ur))
-        });
-        (r, q)
-    }
     /// Real minutes of the walk between two stations on a transfer, `d_m` metres straight line.
     pub fn xfer_min(&self, d_m: f32) -> f32 {
         d_m * self.walk_detour / self.xfer_mps / 60.0
     }
-    /// With no rail, the share of a trip's people walking and the share taking other (T-558):
-    /// `cu` of them without a car, the car costing `road` perceived minutes to a driver who parks
-    /// free (`paid` more for a space, a share `free` parking free), other `oth` (`other_min_km`
-    /// along `road_km` of road plus `other_wait`), the walk `cw`.
-    #[inline]
-    pub fn no_rail_split(&self, cu: f32, road: f32, paid: f32, free: f32, road_km: f32, cw: f32) -> (f32, f32) {
-        if cw >= NO_WALK {
-            return (0.0, cu);
-        }
-        let w = self.walk_no_rail(road, paid, free, cw);
-        if cu <= 0.0 {
-            return (w, 0.0);
-        }
-        let q = self.nocar_choice(cw, road_km * self.other_min_km() + self.other_wait(), None).1;
-        ((1.0 - cu) * w + cu * (1.0 - q), cu * q)
-    }
 }
 
 /// What the zone pairs' choice with no rail reads (`Gravity::no_rail_by_zone`, T-558): per zone
-/// its streets' and main roads' minutes a km, its parking (`Params::park_parts`) and its homes'
-/// share without a car.
+/// its streets' and main roads' minutes a km, its parking (`Params::park_parts`) and the home
+/// end's parking.
 pub struct NoRail {
     place: Vec<(f32, f32)>,
     park: Vec<(f32, f32, f32)>,
-    pub cz: Vec<f32>,
+    /// parking at the home end, by home zone (T-854)
+    home: Vec<f32>,
 }
 
 impl NoRail {
-    /// `cz` empty: everyone has a car.
-    pub fn new(z: &Zones, p: &Params, cz: Vec<f32>) -> NoRail {
+    pub fn new(z: &Zones, p: &Params) -> NoRail {
         let place = z.density().iter().map(|&d| p.place_min_per_km(d)).collect();
         let park = (0..z.n).map(|j| p.park_parts(z, j)).collect();
-        let cz = if cz.is_empty() { vec![0.0; z.n] } else { cz };
-        NoRail { place, park, cz }
+        let mut home = vec![0f32; z.n];
+        for (c, &zi) in z.cell_zone.iter().enumerate() {
+            home[zi as usize] = p.home_park_cell(c);
+        }
+        NoRail { place, park, home }
     }
-    /// The shares walking and taking other between zones i (home) and j at table index k
-    /// (`Params::no_rail_split`): a near pair's cell pairs' (`Gravity::set_walk_fine`), else at
-    /// the zone-centre distance.
+    /// The share walking between zones i (home) and j at table index k (`Params::walk_no_rail`):
+    /// a near pair's cell pairs' (`Gravity::set_walk_fine`), else at the zone-centre distance.
     #[inline]
-    pub fn split(&self, gr: &Gravity, p: &Params, i: usize, j: usize, k: usize) -> (f32, f32) {
+    pub fn split(&self, gr: &Gravity, p: &Params, i: usize, j: usize, k: usize) -> f32 {
         if let Some(n) = gr.fine_at(i, j, k) {
-            return (gr.wf_s[n][0], gr.wf_s[n][1]);
+            return gr.wf_s[n];
         }
         let cw = gr.walk_cost_at(i, j, k);
         if cw >= NO_WALK {
-            return (0.0, self.cz[i]);
+            return 0.0;
         }
-        let (road, paid, free, road_km) = self.road(gr, p, i, j, k);
-        p.no_rail_split(self.cz[i], road, paid, free, road_km, cw)
+        let (road, paid, free) = self.road(gr, p, i, j, k);
+        p.walk_no_rail(road, paid, free, cw)
     }
-    /// The drive between zone centres: perceived minutes to a driver parking free, a paid space's
-    /// extra and the share parking free, and the road's km.
+    /// The drive between zone centres: perceived minutes to a driver parking free (with the home
+    /// end's parking), a paid space's extra and the share parking free.
     #[inline]
-    pub fn road(&self, gr: &Gravity, p: &Params, i: usize, j: usize, k: usize) -> (f32, f32, f32, f32) {
+    pub fn road(&self, gr: &Gravity, p: &Params, i: usize, j: usize, k: usize) -> (f32, f32, f32) {
         let d_km = gr.wdtab[k];
         let f = p.drive_factor(i, j);
         let (fixed, paid, free) = self.park[j];
-        (p.car_drive(p.drive_min_f(d_km * 1000.0, f, self.place[i], self.place[j]), d_km * f) + fixed, paid, free, d_km * f)
+        (p.car_drive(p.drive_min_f(d_km * 1000.0, f, self.place[i], self.place[j]), d_km * f) + fixed + self.home[i], paid, free)
     }
 }
 
@@ -720,6 +713,16 @@ impl Zones {
     /// Homes and jobs per km² of land, per zone (the drive's local street speed).
     pub fn density(&self) -> Vec<f32> {
         (0..self.n).map(|i| ((self.pop[i] + self.jobs[i]) / (self.ncell[i].max(1) as f64 * CELL_KM2 as f64)) as f32).collect()
+    }
+    /// Per cell, its zone's residents (`pop`, people per cell) per km² of land, measured as
+    /// `Params::park_parts` measures jobs (`Params::home_dens`, T-854).
+    pub fn home_density(&self, pop: &[f32]) -> Vec<f32> {
+        let mut p = vec![0f64; self.n];
+        for (c, &zi) in self.cell_zone.iter().enumerate() {
+            p[zi as usize] += pop.get(c).copied().unwrap_or(0.0) as f64;
+        }
+        let d: Vec<f32> = (0..self.n).map(|i| (p[i] / (self.ncell[i].max(1) as f32 * CELL_KM2).min((self.zone_m / 1000.0).powi(2)) as f64) as f32).collect();
+        self.cell_zone.iter().map(|&zi| d[zi as usize]).collect()
     }
     /// The zones of each grid square, CSR by square index gx * h + gy (usually one; two or more
     /// where a region border cuts the square).
@@ -850,11 +853,11 @@ pub struct Gravity {
     pub wcost: WalkCost,
     /// Walks between cells (T-587, `set_walk_fine`), per home zone CSR over the zones within
     /// `WALK_FINE_R` squares, ascending: zone, the walk's cost for the choice with rail, and the
-    /// shares walking and taking other with no rail. Empty: zone centres only.
+    /// share walking with no rail. Empty: zone centres only.
     pub wf_off: Vec<u32>,
     pub wf_j: Vec<u32>,
     pub wf_c: Vec<f32>,
-    pub wf_s: Vec<[f32; 2]>,
+    pub wf_s: Vec<f32>,
     pub th: i32,
     pub offx: i32,
     pub offy: i32,
@@ -899,8 +902,7 @@ impl Gravity {
 
     /// `wf_*` (T-587): each near zone pair's commuters as the pairs of its zones' points
     /// (`walk_points`), each walking `cell_walk_m` times the zones' walk factor round water. The
-    /// pair's shares walking and taking other with no rail are its cell pairs' mean
-    /// (`Params::no_rail_split`); its cost for the choice with rail is the one walk whose share
+    /// pair's share walking with no rail is its cell pairs' mean (`Params::walk_no_rail`); its cost for the choice with rail is the one walk whose share
     /// against a driver parking free is that mean.
     pub fn set_walk_fine(&mut self, city: &City, z: &Zones, p: &Params, nr: &NoRail) {
         let ns = p.walk_samples;
@@ -911,7 +913,7 @@ impl Gravity {
         let (sq_off, at) = z.by_square();
         let w2 = 1.0 / (ns * ns) as f32;
         let r = WALK_FINE_R;
-        let mut row: Vec<(u32, f32, [f32; 2])> = vec![];
+        let mut row: Vec<(u32, f32, f32)> = vec![];
         let mut c = vec![0f32; ns * ns];
         for i in 0..z.n {
             self.wf_off.push(self.wf_j.len() as u32);
@@ -935,13 +937,11 @@ impl Gravity {
                                 c[n * ns + m] = self.wcost.at(cell_walk_m(city, a, b) * f);
                             }
                         }
-                        let (road, paid, free, road_km) = nr.road(self, p, i, ju, k);
+                        let (road, paid, free) = nr.road(self, p, i, ju, k);
                         let bt = p.mode_beta(road);
-                        let (mut m0, mut sw, mut so) = (0f32, 0f32, 0f32);
+                        let (mut m0, mut sw) = (0f32, 0f32);
                         for &x in &c {
-                            let (w, o) = p.no_rail_split(nr.cz[i], road, paid, free, road_km, x);
-                            sw += w;
-                            so += o;
+                            sw += p.walk_no_rail(road, paid, free, x);
                             if x < NO_WALK {
                                 m0 += 1.0 / (1.0 + fast_exp(-(bt * (road - x) + p.asc_walk())));
                             }
@@ -952,7 +952,7 @@ impl Gravity {
                         } else {
                             NO_WALK
                         };
-                        row.push((j, cw, [sw * w2, so * w2]));
+                        row.push((j, cw, sw * w2));
                     }
                 }
             }
@@ -1016,39 +1016,22 @@ impl Gravity {
         self.walk_cost_at(i, j, (self.base(z, i) + self.key(z, j)) as usize)
     }
 
-    /// T-513, T-558: all-day trips with no rail at all that walk and that take other, each by
-    /// home zone and by work zone: over zone pairs, T_IJ times `NoRail::split`. Every trip of
-    /// the homes without a car is other's first; the pairs within `WALK_REACH_KM` then move
-    /// their walkers.
-    pub fn no_rail_by_zone(&self, z: &Zones, p: &Params, nr: &NoRail) -> [Vec<f64>; 4] {
+    /// T-558: all-day trips with no rail at all that walk, by home zone and by work zone: over the
+    /// zone pairs within `WALK_REACH_KM`, T_IJ times `NoRail::split`.
+    pub fn no_rail_by_zone(&self, z: &Zones, p: &Params, nr: &NoRail) -> [Vec<f64>; 2] {
         let (mut wh, mut ww) = (vec![0.0f64; z.n], vec![0.0f64; z.n]);
-        let (mut oh, mut ow) = (vec![0.0f64; z.n], vec![0.0f64; z.n]);
         if self.wctab.is_empty() {
-            return [wh, ww, oh, ow];
+            return [wh, ww];
         }
         // the walk factor round water is at most this (`routes`' byte tables), so past this many
         // squares no walk is offered
         let r = (WALK_REACH_KM * 1000.0 / z.zone_m).ceil() as i32 + 1;
         let (off, at) = z.by_square();
-        let keys: Vec<i32> = (0..z.n).map(|j| self.key(z, j)).collect();
         for i in 0..z.n {
             if self.row[i] == 0.0 {
                 continue;
             }
             let base = self.base(z, i);
-            let cu = nr.cz[i];
-            if cu > 0.0 {
-                let ri = self.row[i] * cu as f64;
-                let reg = z.region[i];
-                let mut hi = 0.0;
-                for ((w, (&c, &key)), &rj) in ow.iter_mut().zip(self.col.iter().zip(&keys)).zip(&z.region) {
-                    let f = self.ftab[(base + key) as usize] * if rj == reg { 1.0 } else { self.border };
-                    let t = ri * c * f as f64;
-                    hi += t;
-                    *w += t;
-                }
-                oh[i] += hi;
-            }
             for gx in (z.gx[i] - r).max(0)..=(z.gx[i] + r).min(z.w - 1) {
                 for gy in (z.gy[i] - r).max(0)..=(z.gy[i] + r).min(z.h - 1) {
                     let s = (gx * z.h + gy) as usize;
@@ -1058,21 +1041,18 @@ impl Gravity {
                     }
                     for &j in &at[off[s] as usize..off[s + 1] as usize] {
                         let j = j as usize;
-                        let (w, o) = nr.split(self, p, i, j, k);
+                        let w = nr.split(self, p, i, j, k);
                         if w <= 0.0 {
                             continue;
                         }
                         let t = self.row[i] * self.col[j] * (self.ftab[k] * self.k(z, i, j)) as f64;
                         wh[i] += t * w as f64;
                         ww[j] += t * w as f64;
-                        let lost = t * (cu - o) as f64;
-                        oh[i] -= lost;
-                        ow[j] -= lost;
                     }
                 }
             }
         }
-        [wh, ww, oh, ow]
+        [wh, ww]
     }
 }
 
@@ -1518,8 +1498,9 @@ pub struct Subzones {
     pub jobs: Vec<f32>,
     pub cx: Vec<f32>,
     pub cy: Vec<f32>,
-    /// Share of its homes without a car (`Params::nocar`, home-weighted; T-511).
-    pub nocar: Vec<f32>,
+    /// Parking at the home end of its homes' car trips (`Params::home_park_cell`, home-weighted;
+    /// T-854), perceived minutes. Its ride entries include it.
+    pub home_park: Vec<f32>,
     /// CSR access list, per subzone its walk entries (`walk`) then its ride entries (`ride`,
     /// T-371): station, perceived minutes, the distance in metres and the real minutes. A walk
     /// entry's minutes are the members' `Params::access_cost` (a pop/jobs-weighted logsum) and
@@ -1817,7 +1798,7 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
         jobs: vec![0.0; ns],
         cx: vec![0.0; ns],
         cy: vec![0.0; ns],
-        nocar: vec![0.0; ns],
+        home_park: vec![0.0; ns],
         acc_off: vec![0],
         acc_mid: vec![],
         acc_st: vec![],
@@ -1849,11 +1830,10 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
             y += wt * city.y[c] as f64;
             sz.pop[s] += home_w[c];
             sz.jobs[s] += jobs;
-            if let Some(nc) = &p.nocar {
-                sz.nocar[s] += home_w[c] * nc[c];
-            }
+            sz.home_park[s] += home_w[c] * p.home_park_cell(c);
         }
-        sz.nocar[s] = if sz.pop[s] > 0.0 { (sz.nocar[s] / sz.pop[s]).min(1.0) } else { 0.0 };
+        sz.home_park[s] = if sz.pop[s] > 0.0 { sz.home_park[s] / sz.pop[s] } else { 0.0 };
+        let hp = sz.home_park[s];
         sz.cx[s] = (x / wsum) as f32;
         sz.cy[s] = (y / wsum) as f32;
         if !walks {
@@ -1862,7 +1842,7 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
             sz.acc_mid.push(sz.acc_st.len() as u32);
             for &(st, w, d, t) in place_ride(zones.n + g) {
                 sz.acc_st.push(st);
-                sz.acc_w.push(w);
+                sz.acc_w.push(w + hp);
                 sz.acc_d.push(d);
                 sz.acc_t.push(t);
             }
@@ -1928,7 +1908,7 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
         if sz.pop[s] > 0.0 {
             for &(st, w, d, t) in zone_rides() {
                 sz.acc_st.push(st);
-                sz.acc_w.push(w);
+                sz.acc_w.push(w + hp);
                 sz.acc_d.push(d);
                 sz.acc_t.push(t);
             }
@@ -2995,6 +2975,11 @@ pub const DIST_BANDS_KM: [f32; N_BANDS] = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.
 pub const N_BANDS: usize = 13;
 pub const N_WALKSUM: usize = 16;
 pub const WALKSUM_BAND_MIN: f32 = 10.0;
+/// T-874: `Params::commute_chunk`'s value in the game (notes/T-874.md).
+pub const COMMUTE_CHUNK: f32 = 0.1;
+/// T-874: the side of the blocks of destination zones (16 km for 2 km zones) within which an
+/// origin zone's small commute pairs are dealt their trips in chunks (`Params::commute_chunk`).
+const CHUNK_BLOCK: i32 = 8;
 
 /// The band of `DIST_BANDS_KM` a straight-line distance in metres falls in.
 pub fn dist_band(d_m: f32) -> usize {
@@ -3018,8 +3003,7 @@ pub struct ModeOut {
     /// All home->work trips in the period.
     pub trips_total: f64,
     /// Trips walking the whole way with no rail that rail takes (T-558): over the pairs offered
-    /// rail, rail's share times walking's share with no rail (`Params::car_choice`, and for those
-    /// without a car their rail times walking's share of their trips not by rail). Walking's
+    /// rail, rail's share times walking's share with no rail (`Params::car_choice`). Walking's
     /// trips are those with no rail (`Gravity::no_rail_by_zone`) less these.
     pub rail_walk: f64,
     pub zone_pairs: u64,
@@ -3031,11 +3015,6 @@ pub struct ModeOut {
     /// `rail_walk` by home subzone and by work subzone.
     pub walk_lost_by_sub: Vec<f32>,
     pub walk_lost_to_sub: Vec<f32>,
-    /// T-513: rail trips of those without a car times other's share of their trips not by rail
-    /// (`Params::nocar_choice`): what rail takes from other, in all and by home subzone. Other's
-    /// trips are those with no rail (`Gravity::no_rail_by_zone`) less these.
-    pub other_lost: f64,
-    pub other_lost_by_sub: Vec<f32>,
     /// Rail trips per access entry (`Subzones::acc_st`): at the home end, boarding at that
     /// station from that subzone; at the work end, leaving the train there for that subzone.
     pub acc_home: Vec<f32>,
@@ -3116,8 +3095,6 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
         rail_to_sub: vec![0.0; sz.n],
         walk_lost_by_sub: vec![0.0; sz.n],
         walk_lost_to_sub: vec![0.0; sz.n],
-        other_lost: 0.0,
-        other_lost_by_sub: vec![0.0; sz.n],
         acc_home: vec![0.0; sz.acc_st.len()],
         acc_work: vec![0.0; sz.acc_st.len()],
     };
@@ -3190,6 +3167,16 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
         let q1 = dd.len() as u32;
         dz.push(DZone { key: gr.key(z, j), reg: z.region[j], zid: j as u32, min: zmin(j), max: dd[q1 as usize - 1][1][2], dv: dvz, q0, q1, gx: z.gx[j], gy: z.gy[j], sup: p.routes.as_ref().map_or(0, |r| r.sup_of(j)) });
     }
+    // T-874: destination zones by block of `CHUNK_BLOCK` square, in zone order within one: the
+    // order an origin zone's small pairs are dealt their chunks in, so an edit re-deals only the
+    // blocks whose zones' trips it changed
+    let blk = |j: usize| (z.gx[j].div_euclid(CHUNK_BLOCK) as u32 & 0xffff) << 16 | (z.gy[j].div_euclid(CHUNK_BLOCK) as u32 & 0xffff);
+    let mut dorder: Vec<(u32, u32)> = dz.iter().enumerate().map(|(k, zj)| (blk(zj.zid as usize), k as u32)).collect();
+    dorder.sort_by_key(|&(b, k)| (b, dz[k as usize].zid));
+    // each destination's factor on its trips from the origin zone: 1, or what the chunks dealt
+    // it over its trips (0 for none)
+    let mut fm = vec![1f32; dz.len()];
+    let mut run: Vec<(usize, f64)> = vec![];
     let mut lost_q = vec![0f32; dd.len()];
     // the decay and the walk's cost by zone offset side by side: one lookup per zone pair
     let fw: Vec<[f32; 2]> = gr.ftab.iter().enumerate().map(|(k, &f)| [f, if gr.wctab.is_empty() { NO_WALK } else { gr.wctab[k] }]).collect();
@@ -3202,7 +3189,6 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     let pair_walk = gr.wroutes.is_some() || !gr.wf_off.is_empty();
     let drive = p.routes.as_deref().filter(|r| r.has_drive());
     let ride_min2 = (p.ride_min_km * 1000.0).powi(2);
-    let (ko, kow) = (p.other_min_km(), p.other_wait());
     // the origin's two rows (walks; walks and rides) one after the other, each followed by
     // `PADS` dummies (0), and their rail trips by egress station the same way; a pair per band,
     // band b's at 2 b h
@@ -3250,7 +3236,46 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             }
         }
         for (wz, (o, zj)) in fzw[..nzi].iter_mut().zip(fz.iter().zip(&dz)) {
-            *wz = if o[1] < NO_WALK { nr.split(gr, p, i, zj.zid as usize, (base + zj.key) as usize).0 } else { 0.0 };
+            *wz = if o[1] < NO_WALK { nr.split(gr, p, i, zj.zid as usize, (base + zj.key) as usize) } else { 0.0 };
+        }
+        // T-874: per block, the pairs under `commute_chunk` trips are dealt their total in chunks
+        // of about that size, as the market's (`intercity::solved_pairs`): systematic sampling by
+        // trips from a start fixed by the zone and block, so the block's trips stay exact and a
+        // network gives the same pairs every pass. Trips alone decide it, never rail's costs, so
+        // crowding rounds and timetable edits deal the same chunks.
+        fm[..nzi].fill(1.0);
+        if p.commute_chunk > 0.0 {
+            let c = p.commute_chunk as f64;
+            let mut g = 0;
+            while g < dorder.len() {
+                let b = dorder[g].0;
+                run.clear();
+                while g < dorder.len() && dorder[g].0 == b {
+                    let k = dorder[g].1 as usize;
+                    g += 1;
+                    if k < nzi {
+                        let t = (ou_zone * dz[k].dv * fz[k][0]) as f64;
+                        if t > 0.0 && t < c {
+                            run.push((k, t));
+                        }
+                    }
+                }
+                let total: f64 = run.iter().map(|e| e.1).sum();
+                let draws = (total / c).ceil();
+                if draws >= run.len() as f64 {
+                    continue;
+                }
+                let step = total / draws;
+                let at = super::intercity::unit_hash(i as u32, b);
+                // draws before trips x: those at (n + at) x step below x
+                let before = |x: f64| (x / step - at).ceil().clamp(0., draws);
+                let mut lo = 0.;
+                for &(k, t) in &run {
+                    let hi = lo + t;
+                    fm[k] = ((before(hi) - before(lo)) * step / t) as f32;
+                    lo = hi;
+                }
+            }
         }
         for (ui, &u) in us.iter().enumerate() {
             let u = u as usize;
@@ -3261,7 +3286,6 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             let c_u: Vec<f32> = bands.iter().map(|&(th, _)| if walk.is_empty() { 0.0 } else { fast_exp(-th * (m_u - m_r)) }).collect();
             let (ux8, uy8, lu08, lu18) = (F8::splat(sz.cx[u]), F8::splat(sz.cy[u]), F8::splat(local[u].0), F8::splat(local[u].1));
             let mut rail_sum = 0.0f32;
-            let mut other_sum = 0.0f32;
             let mut walk_sum = 0.0f32;
             let mut all_sum = 0.0f32;
             let mut n_pairs = 0usize;
@@ -3269,13 +3293,11 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             // by walk or ride)
             let wmax = p.pair_walk_max - m_u;
             let wmax_r = p.pair_walk_max - m_r;
-            // T-511: the share of this origin's homes without a car
-            let cu = sz.nocar[u];
-            let wmax_n = F8::splat(wmax);
+            let hp8 = F8::splat(sz.home_park[u]);
             let nz = reach(u);
             // the bands this origin's pairs fall in
             let mut used = 0u32;
-            for (((zj, &[f, cw, df, long]), &w0), &zb) in dz[..nz].iter().zip(&fz).zip(&fzw).zip(&fzb) {
+            for ((((zj, &[f, cw, df, long]), &w0), &zb), &m) in dz[..nz].iter().zip(&fz).zip(&fzw).zip(&fzb).zip(&fm) {
                 let by_ride = rides && long > 0.0;
                 let (m_o, wmax) = if by_ride { (m_r, wmax_r) } else { (m_u, wmax) };
                 if zj.min > wmax {
@@ -3285,10 +3307,13 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                     out.pruned_trips += (ou[u] * zj.dv * f) as f64;
                     continue;
                 }
+                if m == 0.0 {
+                    continue;
+                }
                 if ui == 0 {
                     out.zone_pairs += 1;
                 }
-                let tu = ou[u] * f;
+                let tu = ou[u] * f * m;
                 all_sum += tu * zj.dv;
                 // cheapest walk first: past the bound, every later one is too
                 let nv = if zj.max <= wmax { zj.q1 - zj.q0 } else { dd[zj.q0 as usize..zj.q1 as usize].partition_point(|d| d[1][2] <= wmax) as u32 };
@@ -3378,8 +3403,8 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 let main = rd - F8::splat(2.0) * e;
                 let k = (F8::splat(0.5) * main).min(F8::splat(p.road_end_km));
                 let drive = e * (lu08 + l08) + k * (lu18 + l18) + (main - F8::splat(2.0) * k) * F8::splat(60.0) / F8::splat(p.road_open_kmh);
-                // `Params::car_drive`
-                let road = drive * F8::splat(p.w_drive) + rd * F8::splat(p.car_own_km_min()) + park8;
+                // `Params::car_drive`, parking at the far end and at home (T-854)
+                let road = drive * F8::splat(p.w_drive) + rd * F8::splat(p.car_own_km_min()) + park8 + hp8;
                 let rail = mo8 + m8 + F8::splat(p.fare_min) - ssum.ln() / th8 + off8;
                 // `Params::mode_beta`
                 let bt = F8::splat(p.beta) * (F8::splat(p.damp_min) / road).min(F8::splat(1.0)).sqrt();
@@ -3397,71 +3422,27 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                     let r1 = F8::splat(1.0) / (F8::splat(1.0) + (util + bt * paid8).neg().exp() + e);
                     r0 + (F8::splat(1.0) - free8) * (r1 - r0)
                 };
-                // T-511, T-513: those without a car choose among rail, walking to stations,
-                // walking the whole way and other; a lane on the rides' row prices their rail on
-                // the walks' row
-                let ride_l: u32 = (0..8).fold(0, |m, l| m | ((rr[l] != 0) as u32) << l);
-                let split = cu > 0.0 && ride_l != 0;
-                let mut ix0 = [[0u32; 8]; K];
-                let mut rv0 = [F8::splat(0.0); K];
-                // their share choosing rail, and their logsum's sum on the walks' row
-                let mut rn = F8::splat(0.0);
-                // other's share of their trips not by rail
-                let mut qn = F8::splat(0.0);
-                let mut sn = ssum;
-                let mut okn = 0xffu32;
-                let r = if cu > 0.0 {
-                    let mut rail_n = rail;
-                    if split {
-                        sn = F8::splat(0.0);
-                        for k in 0..kn {
-                            ix0[k] = std::array::from_fn(|l| ix[k][l] - rr[l]);
-                            rv0[k] = F8::gather(&ab_row, &ix0[k]);
-                            sn = sn + rv0[k] * ev[k];
-                        }
-                        let rw = (F8::splat(m_u) + m8 + F8::splat(p.fare_min) - sn.ln() / th8 + off8).to_array();
-                        let ra = rail.to_array();
-                        rail_n = F8::new(std::array::from_fn(|l| if ride_l >> l & 1 != 0 { rw[l] } else { ra[l] }));
-                        // walks over the bound, or no station on foot: no rail for them
-                        okn = !(ride_l & (wmax_n.lt_mask(m8) | sn.lt_mask(F8::splat(1e-30)))) & 0xff;
-                    }
-                    // `Params::nocar_choice`: walking the whole way, and other along the drive's road
-                    let oth = rd * F8::splat(ko) + F8::splat(kow);
-                    let btn = F8::splat(p.beta) * (F8::splat(p.damp_min) / oth).min(F8::splat(1.0)).sqrt();
-                    let oa = oth + F8::splat(p.other_asc);
-                    let uwn = btn * (oa - cw8) + F8::splat(p.asc_walk());
-                    qn = F8::splat(1.0) / (F8::splat(1.0) + uwn.exp());
-                    let urn = btn * (oa - rail_n) + F8::splat(p.asc_rail);
-                    let pn = (F8::splat(1.0) / (F8::splat(1.0) + urn.neg().exp() + (uwn - urn).exp())).to_array();
-                    rn = F8::new(std::array::from_fn(|l| if okn >> l & 1 != 0 { pn[l] } else { 0.0 }));
-                    r + F8::splat(cu) * (rn - r)
+                // T-854: the curve's floor and ceiling (`Params::rail_bounds`)
+                let r = if p.rail_floor > 0.0 {
+                    let [free8, _, _, _] = F8::transpose(std::array::from_fn(|l| dd[q[l]][2]));
+                    let car = road + (F8::splat(1.0) - free8) * paid8;
+                    let (a, rm, k) = (F8::splat(p.rail_floor), F8::splat(p.rail_floor_ratio), F8::splat(1.0 / (p.rail_floor_ratio - 1.0)));
+                    let (zero, one) = (F8::splat(0.0), F8::splat(1.0));
+                    let lo = a * ((rm - rail / car) * k).max(zero).min(one);
+                    let hi = a * ((rm - car / rail) * k).max(zero).min(one);
+                    lo + r * (one - lo - hi - lo * e)
                 } else {
                     r
                 };
                 let x = tu8 * dv8 * r;
-                // on a rides' lane their trips go on the walks' row, the rest on the rides'
-                let (g, gn) = if split {
-                    let xn = tu8 * dv8 * (F8::splat(cu) * rn);
-                    let (xna, sna) = (xn.to_array(), sn.to_array());
-                    let gn = F8::new(std::array::from_fn(|l| if ride_l >> l & 1 != 0 && okn >> l & 1 != 0 { xna[l] / sna[l] } else { 0.0 }));
-                    let xr = F8::new(std::array::from_fn(|l| if ride_l >> l & 1 != 0 { xna[l] } else { 0.0 }));
-                    ((x - xr) / ssum, gn)
-                } else {
-                    (x / ssum, F8::splat(0.0))
-                };
+                let g = x / ssum;
                 // trips by egress station y, and y x the row: what reaches each egress entry
                 let mut ya = [[0f32; 8]; K];
-                let mut yna = [[0f32; 8]; K];
                 let mut yw = [F8::splat(0.0); 8];
                 let mut xw = F8::splat(0.0);
                 for k in 0..kn {
                     let y = g * ev[k];
                     yw[k] = y * rv[k];
-                    if split {
-                        let yn = gn * ev[k];
-                        yw[k] = yw[k] + yn * rv0[k];
-                        yna[k] = yn.to_array();
-                    }
                     xw = xw + yw[k];
                     ya[k] = y.to_array();
                 }
@@ -3469,8 +3450,6 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 let yw_lo = F8::by_lane([yw[0], yw[1], yw[2], yw[3]]);
                 let yw_hi = if kn > 4 { F8::by_lane([yw[4], yw[5], yw[6], yw[7]]) } else { yw_lo };
                 let (xa, xwa) = (x.to_array(), xw.to_array());
-                // the no-car rail trips that would otherwise go by other (`other_lost_by_sub`)
-                let la = if cu > 0.0 { (tu8 * dv8 * (F8::splat(cu) * rn) * qn).to_array() } else { [0.0; 8] };
                 // and the walkers it takes: its trips times the zone pair's walking with no rail
                 // (`rail_walk`), as the zones' sums have it
                 let wl = (x * F8::new(std::array::from_fn(|l| visit_w[(c[l][1] & 0x7fff_ffff) as usize]))).to_array();
@@ -3481,17 +3460,11 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                         continue;
                     }
                     rail_sum += xa[l];
-                    other_sum += la[l];
                     walk_sum += wl[l];
                     lost_q[q[l]] += wl[l];
                     // pads add 0 to their own dummies: the block's one count predicts well
                     for k in 0..kn {
                         ab_y[ix[k][l] as usize] += ya[k][l];
-                    }
-                    if split && ride_l >> l & 1 != 0 {
-                        for k in 0..kn {
-                            ab_y[ix0[k][l] as usize] += yna[k][l];
-                        }
                     }
                     let a = &mut acc_q[q[l]];
                     a[0] = (F4::new(a[0]) + yw_lo[l]).to_array();
@@ -3516,8 +3489,6 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             if rail_sum == 0.0 {
                 continue;
             }
-            out.other_lost += other_sum as f64;
-            out.other_lost_by_sub[u] = other_sum;
             out.rail_walk += walk_sum as f64;
             out.walk_lost_by_sub[u] = walk_sum;
             out.rail += rail_sum as f64;
@@ -4341,6 +4312,30 @@ mod tests {
         assert!((p.car_own_min() + 15.0 * p.car_own_km_min() - 9.0).abs() < 1e-4);
     }
 
+    /// T-854: home parking is 0.4 of the paid-space rule on residents; the curve's floor and ceiling
+    /// hold rail's share of the trips not walking between 5% and 95% while rail and the car cost
+    /// about the same, and fade to nothing at 3 times either way, walking keeping its share.
+    #[test]
+    fn home_parking_and_the_curves_bounds() {
+        let p = Params::default();
+        assert_eq!(p.home_park_at(3000.0), 0.0);
+        assert!((p.home_park_at(40_000.0) - 0.4 * 15.0 * (40.0f32 / 3.0).ln()).abs() < 1e-4);
+        let rest = |r: f32, e: f32| r / (1.0 - e * r);
+        // rail as costly as the car: within 5% and 95%, walking (e r) kept
+        for (r, e) in [(0.0, 0.0), (1.0, 0.0), (0.001, 2.0), (0.3, 1.0)] {
+            let b = p.rail_bounds(r, e, 30.0, 30.0);
+            let rb = b / (1.0 - e * r);
+            assert!(rb >= 0.05 - 1e-6 && rb <= 0.95 + 1e-6, "{r} {e}: {rb}");
+            assert!((rb - (0.05 + 0.9 * rest(r, e))).abs() < 1e-5);
+        }
+        // twice the car: half the floor; three times: none; and the mirror for the car
+        assert!((p.rail_bounds(0.0, 0.0, 60.0, 30.0) - 0.025).abs() < 1e-6);
+        assert_eq!(p.rail_bounds(0.0, 0.0, 90.0, 30.0), 0.0);
+        assert!((p.rail_bounds(1.0, 0.0, 10.0, 30.0) - 1.0).abs() < 1e-6);
+        let off = Params { rail_floor: 0.0, ..Params::default() };
+        assert_eq!(off.rail_bounds(0.37, 0.5, 60.0, 30.0), 0.37);
+    }
+
     /// T-636: the walking constant is `walk_bonus_min` perceived minutes whatever the scale, and a
     /// walk costs `walk_trip_w` a minute at every length.
     #[test]
@@ -4684,7 +4679,7 @@ mod tests {
         let sz = build_subzones(&city, &z, &acc, &net, &p);
         let g = build_graph(&net, &p);
         let sk = skims(&g, &p);
-        let mo = mode_choice(&z, &gr, &sz, &station_exp(&sk, &p), g.n_st, &p, &NoRail::new(&z, &p, vec![]));
+        let mo = mode_choice(&z, &gr, &sz, &station_exp(&sk, &p), g.n_st, &p, &NoRail::new(&z, &p));
         let ix = xfer_index(&g);
         let mut x = vec![0.0; ix.len];
         let l = assign_with_transfers(&g, &sk, &mo.od, &ix, &mut x);
@@ -4761,7 +4756,7 @@ mod tests {
         let g = build_graph(&net, &p);
         let sk = skims(&g, &p);
         let er = station_exp(&sk, &p);
-        let mo = mode_choice(&z, &gr, &sz, &er, g.n_st, &p, &NoRail::new(&z, &p, vec![]));
+        let mo = mode_choice(&z, &gr, &sz, &er, g.n_st, &p, &NoRail::new(&z, &p));
         assert!(mo.rail > 0.0 && mo.rail < mo.trips_access && mo.trips_access <= mo.trips_total * 1.0001);
         let l = assign(&g, &sk, &mo.od);
         let od_sum: f64 = mo.od.iter().map(|&v| v as f64).sum();
@@ -4778,11 +4773,21 @@ mod tests {
         // walk with no rail
         let (wb, wt) = (sum(&mo.walk_lost_by_sub), sum(&mo.walk_lost_to_sub));
         assert!(mo.rail_walk > 0.0 && (wb / mo.rail_walk - 1.0).abs() < 1e-3 && (wt / mo.rail_walk - 1.0).abs() < 1e-3, "{wb} {wt} {}", mo.rail_walk);
-        let nr = NoRail::new(&z, &p, vec![]);
+        let nr = NoRail::new(&z, &p);
         let walk0: f64 = gr.no_rail_by_zone(&z, &p, &nr)[0].iter().sum::<f64>() * p.period_share as f64;
         assert!(mo.rail_walk < walk0, "{} of {walk0}", mo.rail_walk);
         let boards: f64 = l.board.iter().map(|&v| v as f64).sum();
         assert!(boards >= od_sum * 0.999);
+        // T-874: small pairs dealt in chunks visit fewer pairs, keep the trips offered rail and
+        // rail itself close, and deal the same chunks every pass
+        let every = Params { commute_chunk: 0.0, ..p.clone() };
+        let big = Params { commute_chunk: 50.0, ..p.clone() };
+        let mo0 = mode_choice(&z, &gr, &sz, &er, g.n_st, &every, &nr);
+        let (mo1, mo2) = (mode_choice(&z, &gr, &sz, &er, g.n_st, &big, &nr), mode_choice(&z, &gr, &sz, &er, g.n_st, &big, &nr));
+        assert!(mo1.pairs < mo0.pairs * 9 / 10, "pairs {} of {}", mo1.pairs, mo0.pairs);
+        assert!((mo1.trips_access / mo0.trips_access - 1.0).abs() < 0.01, "offered {} vs {}", mo1.trips_access, mo0.trips_access);
+        assert!((mo1.rail / mo0.rail - 1.0).abs() < 0.02, "rail {} vs {}", mo1.rail, mo0.rail);
+        assert!(mo1.od == mo2.od && mo1.rail_by_sub == mo2.rail_by_sub);
     }
 
     /// T-162: a region border (here a north-south line at x = 300 m, through the middle of a

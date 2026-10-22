@@ -11,13 +11,13 @@ import { computed, effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { clock } from "../game/clock";
 import { lngLatToPack, packToLngLat } from "../game/coords";
-import { demandView, flows } from "../game/demand";
+import { cityCells, demandView, flows, intercitySelection } from "../game/demand";
 import { count, distance } from "../game/format";
 import { NET_INK } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { periodAt } from "../game/periods";
 import type { PurposeFilter, PurposeKey } from "../game/purposes";
-import { askTrip, busiestPeriod, kindsOf, stationName, stationPoint, tripKey, tripMix, tripOpenedFrom, tripPeriod, tripView, type Trip, type TripLeg, type TripPeriod, type TripPlaces, type TripRoute, type TripShown } from "../game/trip";
+import { askMarketTrip, askTrip, averageTrips, busiestPeriod, kindsOf, openRoute, routeLabel, stationName, stationPoint, tripKey, tripMix, tripOpenedFrom, tripPeriod, tripView, type MarketPeriod, type Trip, type TripLeg, type TripPeriod, type TripPlaces, type TripRoute, type TripShown } from "../game/trip";
 import { purposeFilter, selection, shownDay } from "../game/ui";
 import { world } from "../game/world";
 import { addFinder } from "./demandHover";
@@ -189,11 +189,11 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
     // keep the last answer for the same points drawn while the next is on its way
     const last = tripView.peek();
     const same = last?.key === key;
-    if (!same) tripPeriod.value = null;
+    if (!same) { tripPeriod.value = null; openRoute.value = null; }
     tripView.value = same ? { ...last!, asking: true } : { key, trip: null, asking: true, mix: null, purpose: "work", busiest: null };
     if (!same) { drawn = null; redraw(); }
     const opened = tripOpenedFrom.peek();
-    void explore(sel.from, sel.to, filter, opened?.trip === sel ? opened.places : null).then((shown) => {
+    void explore(sel.from, sel.to, filter, opened?.trip === sel ? opened.places : null, sel.far).then((shown) => {
       if (asked !== ask) return;
       // null: the workers moved on; the next result asks again
       if (shown) tripView.value = { key, ...shown, asking: false };
@@ -206,14 +206,17 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
   const rebuild = () => {
     const v = tripView.peek(), q = shownPeriod.peek(), w = world.peek();
     const t = v?.trip?.periods[q] ?? null;
+    // T-866: between zones, the market's routes from the selection's point to the far end's
+    const mt = v?.market?.periods[q] ?? null;
     builtOn = overlay.renderer.net ?? null;
-    drawn = t && w ? build(t, marks?.from ?? t.from, marks?.to ?? t.to, builtOn) : null;
+    drawn = t && w ? build(t, marks?.from ?? t.from, marks?.to ?? t.to, builtOn) : mt && w && marks?.to ? build(mt, marks.from, marks.to, builtOn) : null;
     redraw();
   };
   effect(() => {
     tripView.value;
     shownPeriod.value;
     world.value;
+    openRoute.value;
     rebuild();
   });
   overlay.afterMapFrame.push(() => { if (drawn && (overlay.renderer.net ?? null) !== builtOn) rebuild(); });
@@ -275,11 +278,20 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
  * most of them (or the filter's), and its trip read by the model in every period. Null while the
  * workers move on.
  */
-async function explore(from: [number, number], to: [number, number], filter: PurposeFilter, places: TripPlaces | null): Promise<Omit<TripShown, "key" | "asking"> | null> {
+async function explore(from: [number, number], to: [number, number], filter: PurposeFilter, places: TripPlaces | null, far?: { place: number; gid: number }): Promise<Omit<TripShown, "key" | "asking"> | null> {
+  // T-866: a far end in another zone, picked as one of a bubble selection's far bubbles
+  if (far && places) return exploreMarket(places.end, places.near, far);
   // the commute first: cheap, and it names the two cells
   const commute = await askTrip(from, to);
   if (!commute) return null;
-  if (commute.outside) return { trip: commute, mix: null, purpose: "work", busiest: null };
+  if (commute.outside) {
+    // T-866: the trip tool's end in another zone: the start's cell to the far 6 km zone (or place)
+    // nearest the end
+    const between = await farEnd(from, to);
+    if (between === undefined) return null;
+    if (between) return exploreMarket("home", between.near, between.far);
+    return { trip: commute, mix: null, purpose: "work", busiest: null };
+  }
   const p0 = commute.periods.find((p) => p);
   const at = places ?? (p0 ? { end: "home" as const, near: Uint32Array.of(p0.cells[0]), far: Uint32Array.of(p0.cells[1]) } : null);
   const f = at ? await flows(at.end, at.near) : null;
@@ -296,7 +308,56 @@ async function explore(from: [number, number], to: [number, number], filter: Pur
     const best = (asked as Trip[]).filter((t) => t.periods.some((p) => p)).sort((a, b) => trips(b) - trips(a))[0];
     if (best) trip = best;
   }
+  // T-865: an end of several bubbles: the same purpose over the sampled cell pairs, averaged
+  const samples = places?.group?.samples ?? [];
+  if (samples.length > 1) {
+    const asked = await Promise.all(samples.map((s) => askTrip(s.from, s.to, trip.purpose)));
+    if (asked.some((t) => !t)) return null;
+    const ok = (asked as Trip[]).map((t, i) => ({ trip: t, w: samples[i].w })).filter((x) => !x.trip.outside && x.trip.periods.some((p) => p));
+    const names = new Map((world.peek()?.save.stations ?? []).map((s) => [s.id, s.name]));
+    if (ok.length) trip = averageTrips(ok, routeLabel(names));
+  }
   return { trip, mix, purpose: trip.purpose < 0 ? "work" : purpose, busiest: f ? busiestPeriod(f, trip.purpose < 0 ? "work" : purpose) : null };
+}
+
+/** T-866: the longer trips between a selection's cells and a far place or 6 km zone, every period,
+ * as the regional market chooses them; the period shown first is the one with most of them. */
+async function exploreMarket(end: "home" | "work", near: Uint32Array, far: { place: number; gid: number }): Promise<Omit<TripShown, "key" | "asking"> | null> {
+  const periods = await askMarketTrip(end, near, far.place, far.gid);
+  if (!periods) return null;
+  let busiest: number | null = null;
+  periods.forEach((p, q) => { if (p && p.trips > 0 && (busiest === null || p.trips > periods[busiest]!.trips)) busiest = q; });
+  return { trip: null, mix: null, purpose: "longer", busiest, market: { far, periods } };
+}
+
+/** How far a trip tool's end may be from a far 6 km zone's centre and still be read as in it, m. */
+const FAR_ZONE_M = 6000;
+/** The same for a far place's mean trip end, m. */
+const FAR_PLACE_M = 60000;
+
+/**
+ * T-866: a trip tool trip whose end is outside the focused zone's cells: the start's own cell and
+ * the far 6 km zone with longer trips from it nearest the end (else the nearest such place), or
+ * null when the start is outside too or no far end has trips from it; undefined while the workers
+ * move on.
+ */
+async function farEnd(from: [number, number], to: [number, number]): Promise<{ near: Uint32Array; far: { place: number; gid: number } } | null | undefined> {
+  const cells = await cityCells();
+  if (!cells) return undefined;
+  let best = -1, bestD = 600 * 600;
+  for (let c = 0; c < cells.n; c++) {
+    const d = (cells.xy[2 * c] - from[0]) ** 2 + (cells.xy[2 * c + 1] - from[1]) ** 2;
+    if (d <= bestD) (bestD = d), (best = c);
+  }
+  if (best < 0) return null;
+  const near = Uint32Array.of(best);
+  const ic = await intercitySelection("home", near);
+  if (!ic) return undefined;
+  const dist = (p: { x: number; y: number }) => Math.hypot(p.x - to[0], p.y - to[1]);
+  const zone = ic.starts.zones.filter((z) => z.all > 0).sort((a, b) => dist(a) - dist(b))[0];
+  if (zone && dist(zone) <= FAR_ZONE_M) return { near, far: { place: zone.place, gid: zone.gid } };
+  const place = ic.starts.places.filter((p) => p.all > 0 && Number.isFinite(p.x)).sort((a, b) => dist(a) - dist(b))[0];
+  return place && dist(place) <= FAR_PLACE_M ? { near, far: { place: place.place, gid: -1 } } : null;
 }
 
 function segDist(x: number, y: number, a: [number, number], b: [number, number]): number {
@@ -372,7 +433,7 @@ function rideTrack(net: NetworkBuffers | null, segs: number[] | undefined, k0: n
 /** The shown period's routes as polylines in local units: the main route on top at full strength,
  * the others thinner and faint under it. Rides follow their line's track when the drawn network
  * has it, else run straight between the stations they call at. */
-function build(t: TripPeriod, fromPack: [number, number], toPack: [number, number], net: NetworkBuffers | null): Drawn {
+function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack: [number, number], toPack: [number, number], net: NetworkBuffers | null): Drawn {
   const w = world.peek()!;
   const st = new Map(w.save.stations.map((s) => [s.id, s]));
   const ln = new Map(w.save.lines.map((l) => [l.id, l]));
@@ -391,17 +452,30 @@ function build(t: TripPeriod, fromPack: [number, number], toPack: [number, numbe
   const track = (l: TripLeg) => rideTrack(net, segs.get(Number(l.line)), l.k0, l.k1, pos(l.from), pos(l.to), l.wrapN ?? 0);
   const out: Drawn = { parts: [], stops: [] };
   const share = (r: TripRoute) => `${Math.round(100 * r.share)}% of this trip's train riders take this route`;
-  const routes = [...t.routes].reverse(); // the main one last, on top
+  // the main one on top, then the route opened in the inspector (T-870) over it
+  const label = routeLabel(new Map(w.save.stations.map((s) => [s.id, s.name])));
+  const open = openRoute.peek();
+  const isOpen = (r: TripRoute) => open !== null && r !== t.routes[0] && label(r) === open;
+  const routes = [...t.routes].reverse().sort((a, b) => Number(isOpen(a)) - Number(isOpen(b)));
   for (const r of routes) {
-    const main = r === t.routes[0];
+    const shown = isOpen(r);
+    const main = r === t.routes[0] || shown;
     const pair = t.pairs[r.pair];
-    const alpha = main ? 1 : 0.35, width = main ? 5 : 3;
+    const alpha = main ? 1 : 0.35, width = r === t.routes[0] ? 5 : shown ? 4 : 3;
     const legs = r.legs;
     const first = legs[0], last = legs[legs.length - 1];
     const a = first ? pos(first.from) : null, b = last ? pos(last.to) : null;
-    if (a && pair) out.parts.push({ pts: [from, a], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: [`${pair.accessRide ? "Drive" : "Walk"} ${distance(pair.accessM)} to ${name(first.from)}, ${minutes(pair.accessMin)}`, pair.accessRide ? "Straight-line distance from the homes near here" : "Straight-line distance from this home"] });
+    // T-866: a market trip's ends are areas, reached on foot or by car, with felt minutes only
+    const area = pair && !Number.isFinite(pair.accessM);
+    // T-865: an averaged trip's pair walks from its own cells
+    const start = pair?.from ? packLocal(pair.from) : from, end = pair?.to ? packLocal(pair.to) : to;
+    if (a && pair) out.parts.push({ pts: [start, a], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: area
+      ? [`To ${name(first.from)}`, `On foot or by car, felt as ${minutes(pair.accessPerceived)} on average over the area`]
+      : [`${pair.accessRide ? "Drive" : "Walk"} ${distance(pair.accessM)} to ${name(first.from)}, ${minutes(pair.accessMin)}`, pair.accessRide ? "Straight-line distance from the homes near here" : "Straight-line distance from this home"] });
     for (const l of legs) out.parts.push(legPart(l, main, alpha, width, ln, pos, name, share(r), track));
-    if (b && pair) out.parts.push({ pts: [b, to], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: [`Walk ${distance(pair.egressM)} from ${name(last.to)}, ${minutes(pair.egressMin)}`, "Straight-line distance to this place"] });
+    if (b && pair) out.parts.push({ pts: [b, end], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: area
+      ? [`From ${name(last.to)}`, `On foot or dropped off, felt as ${minutes(pair.egressPerceived)} on average over the area`]
+      : [`Walk ${distance(pair.egressM)} from ${name(last.to)}, ${minutes(pair.egressMin)}`, "Straight-line distance to this place"] });
     if (main) {
       for (const l of legs) {
         if (l.kind !== "ride") continue;
