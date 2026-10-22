@@ -105,6 +105,28 @@ export function loadFailed(why: string) {
   }
 }
 
+/** T-950: when the loading card's work last moved (a demand worker's message, a pack's bytes, the
+ * clock worker's game or network); the loading gate's watchdog counts the quiet from here. */
+let aliveAt = performance.now();
+export const markAlive = () => { aliveAt = performance.now(); };
+export const lastAlive = () => aliveAt;
+
+/** T-950: the demand pool's own stop (workers/demandClient.ts), so a failure found outside it ends
+ * its work too */
+let stopDemand: ((why: string) => void) | null = null;
+export function onLoadStop(f: (why: string) => void) { stopDemand = f; }
+/** T-950: the game itself never started (the clock worker or the page's setup failed), so there is
+ * nothing to play without demand either */
+export const gameFailed = signal(false);
+/** T-950: a load can never finish (the clock worker did not start, the page's setup threw, or the
+ * watchdog found nothing moving): the failure screen goes up in place of the card. */
+export function loadCannotFinish(why: string, game = false) {
+  if (game) gameFailed.value = true;
+  if (loadFailure.peek()) return;
+  if (stopDemand) stopDemand(why);
+  else loadFailed(why);
+}
+
 /** Carry on without demand after a failed startup (the loading screen's second button). */
 export function continueWithoutDemand() {
   clock?.setHeld(false);

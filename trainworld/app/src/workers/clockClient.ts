@@ -7,7 +7,7 @@ import { effect, signal } from "@preact/signals";
 import { clock, SPEEDS } from "../game/clock";
 import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities";
 import { setGameOpened, setOpenedSink } from "../game/openedZones";
-import { fitView, holdForGameLoad } from "../game/loading";
+import { fitView, holdForGameLoad, loadCannotFinish, markAlive } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, moneyState, setMoneyState } from "../game/money";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
 import { linePoints, STAR_SHARE } from "../game/points";
@@ -300,7 +300,8 @@ export class ClockClient {
     if (this.worker) return;
     this.worker = new Worker(new URL("./clock.worker.ts", import.meta.url), { type: "module" });
     this.worker.onmessage = (e: MessageEvent<FromClock>) => this.receive(e.data);
-    this.worker.onerror = (e) => (clockWorkerStatus.value = "failed to load: " + (e.message ?? ""));
+    this.worker.onerror = (e) => this.failed(e.message || "its script did not load");
+    this.worker.onmessageerror = () => this.failed("a message could not be read");
     const q = new URLSearchParams(location.search);
     const fresh = !!choice.fresh;
     // T-320: a check or stress page never writes over a saved game
@@ -311,6 +312,13 @@ export class ClockClient {
     this.worker.postMessage({ kind: "init", city: this.cityId, pack: dataUrl(this.cityId), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
     for (const [msg, transfer] of this.waiting) this.worker.postMessage(msg, transfer);
     this.waiting = [];
+  }
+
+  /** T-950: the worker failed; before its first game no game will come, so the card gives way to the
+   * failure screen */
+  private failed(why: string) {
+    clockWorkerStatus.value = "failed to load: " + why;
+    if (!world.peek()) loadCannotFinish(`The train simulation could not start (${why}).`, true);
   }
 
   constructor(cityId = HOME_CITY) {
@@ -471,6 +479,8 @@ export class ClockClient {
     // and the demand views build once. Not when the draw anchor moves (its listeners need the network
     // at once), and never past HOLD_MS.
     if (this.held && !(msg.kind === "trips" && msg.version < this.held.state.version) && msg.kind !== "cash") this.release();
+    // T-950: the steps toward a loading card's game (not the money ticks, which come regardless)
+    if (msg.kind === "ready" || msg.kind === "loaded" || msg.kind === "state" || msg.kind === "snapshot" || msg.kind === "stationsAhead") markAlive();
     switch (msg.kind) {
       case "ready":
         clockWorkerStatus.value = `ready in ${msg.initMs.toFixed(0)} ms`;
@@ -478,6 +488,10 @@ export class ClockClient {
         break;
       case "error":
         console.warn("clock worker:", msg.message);
+        break;
+      case "failed":
+        console.error("clock worker:", msg.error);
+        this.failed(msg.error);
         break;
       case "state": {
         const st = msg.state;

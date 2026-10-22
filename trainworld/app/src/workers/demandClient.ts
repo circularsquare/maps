@@ -60,7 +60,7 @@ import {
   demandSolving,
 } from "../game/demand";
 import { makeFrame } from "../game/frame";
-import { demandIdle, gameLoadArmed, gameWait, loadComplete, loadFailed, loadProgress, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
+import { demandIdle, gameLoadArmed, gameWait, loadComplete, loadFailed, loadProgress, markAlive, onLoadStop, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
 import { PERIODS, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "../game/purposes";
 import { perfOff } from "../perfFlags";
@@ -642,6 +642,7 @@ class DemandClient {
       const w = new Worker(new URL("./demand.worker.ts", import.meta.url), { type: "module" });
       w.onmessage = (e: MessageEvent<FromDemand>) => this.receive(i, e.data);
       w.onerror = (e) => this.fail(`worker ${i}: ${e.message}`);
+      w.onmessageerror = () => this.fail(`worker ${i}: a message could not be read`);
       this.workers.push(w);
       this.periodsOf.push(i < n ? periodsOfWorker(i, n) : []);
       // the WASM starts at once; packs follow as they arrive (T-149)
@@ -1037,6 +1038,7 @@ class DemandClient {
       if (done) break;
       chunks.push(value);
       d.got += value.length;
+      markAlive();
       this.progressSoon();
     }
     // a compressed response's length is not its body's: the body is what was downloaded
@@ -1721,7 +1723,8 @@ class DemandClient {
     this.purposeP.clear();
   }
 
-  private fail(why: string) {
+  /** Stop the pool; also called for a load that cannot finish for another reason (T-950). */
+  fail(why: string) {
     this.status = "failed: " + why;
     demandUpdating.value = false;
 
@@ -1751,6 +1754,7 @@ class DemandClient {
       }
       return;
     }
+    markAlive(); // T-950: (not a query's answer, which an idle worker gives while another is stuck)
     if (msg.kind === "sums") {
       const list = this.pushed.get(`${msg.version}:${msg.round}:${msg.city}`);
       if (list) list.push({ mask: msg.mask, sums: msg.sums, everyday: msg.everyday });
@@ -3028,6 +3032,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   if (client) return client;
   NEW_GAME = newGame && !TEST && !perfOff("bareStart");
   const c = (client = new DemandClient(city));
+  onLoadStop((why) => c.fail(why));
   setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
   setMarketTripQuery((end, cells, far, farGid, near) => c.marketTrip(end, cells, far, farGid, near)); // T-866, T-885
   setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members) });

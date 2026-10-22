@@ -9,7 +9,8 @@
 // game that owns no slot, workers/clockClient.ts; with &mode=sandbox and &city=<zone id>, T-728), ?continue=1 (the game opened last, no start
 // menu; ui/StartMenu.tsx),
 // ?synth=1&lines=500&trains=10000 (draw the synthetic stress network instead of the real one),
-// ?perfOff=labels,shadow,hover,clock,overlay,markers (measurement only, perfFlags.ts).
+// ?perfOff=labels,shadow,hover,clock,overlay,markers (measurement only, perfFlags.ts),
+// ?quietMs=N (the loading card's watchdog, ui/LoadingScreen.tsx, T-950).
 
 import "./ui/style.css";
 import { effect } from "@preact/signals";
@@ -65,7 +66,7 @@ import { MapTopLeft } from "./ui/DemandSelector";
 import { BlueprintBar } from "./ui/Blueprint";
 import { startSearch } from "./ui/Search";
 import { startTips } from "./ui/tip";
-import { startLoadingGate } from "./ui/LoadingScreen";
+import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
 import { startGameWait } from "./game/loading";
 import { choiceFromUrl, showStartMenu, worldCover } from "./ui/StartMenu";
 import { viewStart } from "./ui/NewGame";
@@ -565,3 +566,4 @@ if (DEBUG) {
     },
   };
 }
+setupDone(); // T-950: an uncaught error before this line ends the loading card

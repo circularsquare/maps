@@ -467,7 +467,9 @@ export type FromClock =
   | { kind: "saved"; at: number; bytes: number; encodeMs: number; totalMs: number }
   /** `backups`: the active slot's (T-744), newest first */
   | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[] }
-  | { kind: "error"; message: string };
+  | { kind: "error"; message: string }
+  /** T-950: the worker's start (its WASM, the first game) threw; no game will come */
+  | { kind: "failed"; error: string };
 
 // ---------- the network as demand sees it (T-025 -> T-026) ----------
 

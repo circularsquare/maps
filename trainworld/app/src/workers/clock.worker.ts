@@ -1816,7 +1816,7 @@ async function processMessage(msg: ToClock) {
       sendOpened();
       sendState();
       send({ kind: "snapshot", snapshot: buildSnapshot() });
-    })();
+    })().catch((err) => send({ kind: "failed", error: String(err) }));
     setInterval(tick, 1000);
     setInterval(liveMoney, LIVE_MONEY_MS);
     return;

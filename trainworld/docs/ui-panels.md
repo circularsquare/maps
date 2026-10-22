@@ -468,7 +468,13 @@ registry centre and zoom, or over New York with none [T-310].
   ("Loading Boston, 37%. Opening city data"); in a narrow bar the thin bar goes first, then the
   text ends in an ellipsis.
 - If demand cannot load, a screen says "Demand could not load" with the reason and two buttons, Try
-  again (reload) and Play without demand, and takes every key until one is pressed.
+  again (reload) and Play without demand, and takes every key until one is pressed. If the game
+  itself never started (the clock worker failed to start, or the page's setup threw before its end),
+  it says "The game could not start" with the reason and Try again alone [T-950].
+- A card that sees nothing move (no demand worker message other than a query's answer, no pack
+  bytes, no game or network from the clock worker) for 3 minutes, or 10 with a bar up, gives way
+  to that screen ("No demand figures arrived in 3 minutes"); a hidden or frozen page counts no
+  quiet [T-950].
 - If demand stops later (a worker out of memory on a very big network, or an error) [T-757], a red
   alert under the demand buttons says "Demand ran out of memory" or "Demand stopped", its hover
   the cause and that a reload starts it again; the status tag goes, the figures shown stay.

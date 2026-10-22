@@ -171,7 +171,11 @@ Web first, so it can be shared as a link.
   with its market row) is treated the same way: the worker answers its `open` naming the pack
   in `rejected`, every worker drops it, the zone is left out and flagged, and it is tried again
   once after 10 s; a second failure is final until the page is reloaded (T-492). Only an error outside opening a pack stops the pool ("Demand could not load" at startup, the
-  "Demand stopped" alert later, the figures shown kept [T-757]).
+  "Demand stopped" alert later, the figures shown kept [T-757]). T-950: a clock worker that fails
+  before its first game (its init throws and posts `failed`, or its script errors) stops the pool
+  too, as does an uncaught error in main.ts's setup before `setupDone()`; the loading gate's
+  watchdog (ui/LoadingScreen.tsx, `markAlive` in game/loading.ts) stops a card quiet for 3 minutes,
+  10 with a bar.
   `checks/every-pack-opens.mjs --broken` serves a broken city pack and market pack.
   `game/loading.ts`; timings in notes/T-172.md, frame times in notes/T-180.md.
 - **Threads talk by snapshots**: a worker transfers a finished buffer with a version number; the

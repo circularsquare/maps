@@ -4,21 +4,25 @@
 // waits (game/loading.ts). Meanwhile a card in the middle of the map says what is loading and how
 // far it has got ("Loading data", a filling bar and the step, T-212, T-243); it takes no pointer or key, and goes when the clock
 // starts. If demand cannot load, a screen says so and offers a way on; it takes every key until then.
+// T-950: so does a load that can never finish (the game itself not starting, or nothing moving).
 
 import { h, render } from "preact";
 import { clock } from "../game/clock";
-import { choosing, continueWithoutDemand, demandIdle, loadFailure, loadProgress, startup } from "../game/loading";
+import { world } from "../game/world";
+import { choosing, continueWithoutDemand, demandIdle, gameFailed, lastAlive, loadCannotFinish, loadFailure, loadProgress, startup } from "../game/loading";
 import { BunnyTrain } from "./Spinner";
 
 function LoadingScreen() {
   if (startup.value !== "failed") return null;
-  return <div class="loading-screen" role="alertdialog" aria-label="Demand could not load">
+  const game = gameFailed.value;
+  const title = game ? "The game could not start" : "Demand could not load";
+  return <div class="loading-screen" role="alertdialog" aria-label={title}>
     <div class="loading-box">
-      <p class="big">Demand could not load</p>
+      <p class="big">{title}</p>
       <p class="muted small">{loadFailure.value}</p>
       <div class="loading-actions">
         <button class="btn" onClick={() => location.reload()}>Try again</button>
-        <button class="btn" onClick={continueWithoutDemand}>Play without demand</button>
+        {!game && <button class="btn" onClick={continueWithoutDemand}>Play without demand</button>}
       </div>
     </div>
   </div>;
@@ -57,9 +61,41 @@ function LoadingCard() {
   </div>;
 }
 
+/**
+ * T-950: how long the card may stay up with nothing moving (game/loading.ts `markAlive`) before the
+ * failure screen takes its place: with no bar, when nothing measurable is under way, and with one,
+ * since a big batch of packs opening on a slow phone sends nothing for minutes. A hidden or frozen
+ * page counts no quiet. `?quietMs=N` sets both (checks).
+ */
+const QUIET_MS = 180_000, QUIET_BAR_MS = 600_000, WATCH_MS = 5_000;
+/** T-950: main.ts's setup ran to its end; an uncaught error before then means no game will start */
+let setupFinished = false;
+export function setupDone() { setupFinished = true; }
+
+function startWatchdog() {
+  const q = Number(new URLSearchParams(location.search).get("quietMs"));
+  const quietMs = (bar: boolean) => (q > 0 ? q : bar ? QUIET_BAR_MS : QUIET_MS);
+  let from = performance.now(), lastCheck = from;
+  const timer = setInterval(() => {
+    const now = performance.now();
+    if (loadFailure.peek()) return clearInterval(timer);
+    if (!loadingCardShown() || document.visibilityState !== "visible" || now - lastCheck > 3 * WATCH_MS) from = now;
+    lastCheck = now;
+    const limit = quietMs(!!loadProgress.peek());
+    if (now - Math.max(from, lastAlive()) < limit) return;
+    const m = Math.round(limit / 60_000), mins = m >= 1 ? `${m} minute${m === 1 ? "" : "s"}` : `${Math.round(limit / 1000)} seconds`;
+    const started = !!world.peek();
+    loadCannotFinish(started ? `No demand figures arrived in ${mins}.` : `No answer came from the train simulation in ${mins}.`, !started);
+  }, WATCH_MS);
+  window.addEventListener("error", (e) => {
+    if (!setupFinished) loadCannotFinish(`The page stopped while starting (${e.error instanceof Error ? e.error.message : e.message}).`, true);
+  });
+}
+
 /** Hold the clock until the first game's demand has its first estimate; say so if it fails. */
 export function startLoadingGate() {
   clock.setHeld(true);
+  startWatchdog();
   const root = document.createElement("div");
   document.body.appendChild(root);
   render(h(LoadingScreen, null), root);
