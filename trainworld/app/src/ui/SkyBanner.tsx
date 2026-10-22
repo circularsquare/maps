@@ -1,7 +1,7 @@
-// The top bar's sky (T-861, T-882): a little scene of the next day at the place in view, 6 hours
-// back and 18 ahead, sliding left as game time passes: flat sky colours by the sun's height, stars
-// at night, the sun or moon peeking in from the top at now, grass and a track along the bottom
-// with a small train running on it, and the demand level of each hour in a 2 px band under it. Drawn into one canvas from the clock's own `now()` on animation frames, never through
+// The top bar's sky (T-861, T-882, T-896): a little scene of the day at the place in view, 12 hours
+// back and 12 ahead, sliding left as game time passes: flat sky colours by the sun's height, stars
+// at night, grass and a track along the bottom, and at now in the middle a small train on the
+// track with the sun or moon peeking in from the top above it, and the demand level of each hour in a 2 px band under it. Drawn into one canvas from the clock's own `now()` on animation frames, never through
 // Preact, and only when it has moved a fraction of a pixel, so it costs next to nothing between
 // game minutes. A holiday in a country with the player's stations (T-862, game/holidays.ts) is a
 // ribbon along the sky's top over its day, with a tick where it starts.
@@ -16,7 +16,7 @@ import { sunElevation } from "../game/sun";
 import { perfOff } from "../perfFlags";
 import type { Demand } from "../game/types";
 
-const HOURS = 24, NOW_AT = 0.25;
+const HOURS = 24, NOW_AT = 0.5;
 /** css px: the scene (sky, grass, track), gap, band (the canvas is their sum high) */
 const SKY = 18, GAP = 1, BAND = 2;
 /** Where no view centre is known yet: New York. */
@@ -61,8 +61,8 @@ const css = (c: RGB) => `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
 /** Scene rows, css px from the top: grass from GROUND_Y, the rail at RAIL_Y, tufts up to TUFT_H
  * above the grass. Scenery repeats every so many css px of time, so it slides with the sky. */
 const GROUND_Y = 13, RAIL_Y = 15.5, TUFT_EVERY = 4, SLEEPER_EVERY = 3, STAR_EVERY = 7;
-/** The train crosses the strip once every this many game seconds, left to right. */
-const TRAIN_LAP = 3 * 3600, TRAIN_LEN = 13;
+/** T-896: the train sits at now, nose to the right, the scene sliding under it: css px. */
+const TRAIN_LEN = 18, TRAIN_H = 5;
 
 interface Colours { band: Record<Demand, RGB>; dark: boolean; bg: RGB }
 function readColours(): Colours {
@@ -99,8 +99,8 @@ function startSky(cv: HTMLCanvasElement): () => void {
     const shift = viewShift.peek(), [lon, lat] = viewCentre.peek() ?? HOME, marks = holidaysNear.peek();
     const now = clock.now() + shift, secPx = HOURS * 3600 / w, nowX = Math.round(NOW_AT * w);
     const key = `${w} ${h} ${shift} ${lon} ${lat}`;
-    // a fifth of a device pixel's movement of the train (the fastest thing) is below what shows
-    if (key === lastKey && Math.abs(now - last) < Math.min(secPx, TRAIN_LAP / w) * 0.2 && marks === lastMarks) return;
+    // a fifth of a device pixel's movement is below what shows
+    if (key === lastKey && Math.abs(now - last) < secPx * 0.2 && marks === lastMarks) return;
     lastKey = key; last = now; lastMarks = marks;
     const off = CLOCK_UTC_OFFSET + shift / 3600, scale = h / (SKY + GAP + BAND);
     const skyRows = Math.round(SKY * scale), bandFrom = h - Math.max(1, Math.round(BAND * scale));
@@ -179,13 +179,13 @@ function startSky(cv: HTMLCanvasElement): () => void {
       ctx.fillStyle = css(shade(skyAt(e)));
       ctx.beginPath(); ctx.arc(nowX + 2.2 * scale, -1 * scale, 4 * scale, 0, 2 * Math.PI); ctx.fill();
     }
-    // a small train running left to right along the track, a lap every TRAIN_LAP game seconds
-    const len = TRAIN_LEN * scale, tx = ((now / TRAIN_LAP) % 1 + 1) % 1 * (w + len) - len;
-    const top = railRow - 3.5 * scale, l = daylight(elevAt(tx + len / 2));
+    // the train at now, under the sun or moon: the present-time marker
+    const len = TRAIN_LEN * scale, th = TRAIN_H * scale, tx = nowX - len / 2;
+    const top = railRow - th, l = daylight(e);
     ctx.fillStyle = css(shade(mix(hex("#9c3a33"), hex("#e2574a"), l)));
-    ctx.beginPath(); ctx.roundRect(tx, top, len, 3.5 * scale, [scale, 1.6 * scale, scale * 0.4, scale * 0.4]); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(tx, top, len, th, [scale, 2.4 * scale, scale * 0.5, scale * 0.5]); ctx.fill();
     ctx.fillStyle = l > 0.5 ? "#fff6e0" : "#ffd98a";
-    for (let i = 0; i < 3; i++) ctx.fillRect(tx + (1.5 + i * 3.4) * scale, top + 0.8 * scale, 2 * scale, 1.2 * scale);
+    for (let i = 0; i < 4; i++) ctx.fillRect(tx + (1.6 + i * 3.6) * scale, top + 1.1 * scale, 2.4 * scale, 1.6 * scale);
     ctx.restore();
   }
   const frame = () => { raf = requestAnimationFrame(frame); draw(); };

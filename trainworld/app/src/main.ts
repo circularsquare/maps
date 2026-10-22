@@ -69,6 +69,7 @@ import { startLoadingGate } from "./ui/LoadingScreen";
 import { startGameWait } from "./game/loading";
 import { choiceFromUrl, showStartMenu } from "./ui/StartMenu";
 import { viewStart } from "./ui/NewGame";
+import { startOpenFit } from "./ui/locate";
 import { ClockClient, clockWorkerStatus, onNetworkSnapshot } from "./workers/clockClient";
 import { startDemand, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
@@ -165,6 +166,7 @@ if (params.has("city") && urlChoice?.game) viewStart(urlChoice.game.start); // T
 // Panning follows the zone under the view, except while a bubble, station or trip selection holds
 // the focus; the zones beside it on screen show their bubbles too (T-276, map/zoneFocus.ts).
 startZoneFocus(map);
+startOpenFit(); // T-895
 
 // ---- the clock worker: owns the network; its states and trips go to the renderer ----
 const client = new ClockClient();
@@ -440,6 +442,7 @@ onNetworkSnapshot(submitNetwork);
 if (!urlChoice) showStartMenu((choice) => {
   // T-728: a new game opens on its start city, or the world map; a real network (T-731) has stations, so it does not open bare
   if (choice.game) viewStart(choice.game.start);
+  else if (!choice.newGame) client.fitNextGame(); // T-895: a saved game opens on its network
   startGameWait(choice.slot ?? (choice.newGame ? "new" : "last"));
   startDemand(HOME_CITY, !!choice.newGame && !choice.game?.real);
   client.start(choice);

@@ -1040,8 +1040,17 @@ function saveBytes(): Promise<Uint8Array> {
 
 /** T-241: the saves list's picture of the network and its figures. Read at once, before anything
  * awaits (call it straight after saveBytes); a failure leaves the picture out, never the save. */
-// T-251: drawn at twice the size the saves panel shows it (192 x 128), for sharp lines on high-density screens
-const THUMB_W = 384, THUMB_H = 256, THUMB_PAD = 16;
+// T-251: drawn at twice the size the saves list shows it (240 x 160, T-894), for sharp lines on high-density screens
+const THUMB_W = 480, THUMB_H = 320;
+/** T-894: one panel per city, the most stations first, at most four; fractions of the picture */
+const THUMB_LAYOUTS: [number, number, number, number][][] = [
+  [[0, 0, 1, 1]],
+  [[0, 0, 0.5, 1], [0.5, 0, 0.5, 1]],
+  [[0, 0, 0.6, 1], [0.6, 0, 0.4, 0.5], [0.6, 0.5, 0.4, 0.5]],
+  [[0, 0, 0.5, 0.5], [0.5, 0, 0.5, 0.5], [0, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5]],
+];
+/** canvas px: between panels; a panel's margin, with room at the top for the HTML name over it */
+const THUMB_GAP = 4, THUMB_PAD = 14, THUMB_TOP = 34;
 /** the theme the page is in (main.ts sends it): a thumbnail is drawn on that theme's land (T-543) */
 let thumbShade: "light" | "dark" = "light";
 async function slotSummary(): Promise<SlotSummary> {
@@ -1049,14 +1058,16 @@ async function slotSummary(): Promise<SlotSummary> {
   // stations and the cities they are in
   const ni = a.nodes_info();
   const byCity = new Map<string, number>();
-  let stations = 0;
+  const stationXY: { city: string | null; x: number; y: number }[] = [];
   for (let i = 0; i < ni.length; i += 10) {
     if (ni[i + 7] <= 0) continue;
-    stations++;
     const [lng, lat] = packLngLat(ni[i + 1], ni[i + 2]);
     const c = cityWithin(lng, lat); // T-318: a station over dead space is in no city
     if (c) byCity.set(c, (byCity.get(c) ?? 0) + 1);
+    const [x, y] = toLocal(lng, lat);
+    stationXY.push({ city: c, x, y });
   }
+  const stations = stationXY.length;
   const cities = [...byCity].sort((x, y) => y[1] - x[1]).map(([c]) => c);
   const li = a.lines_info();
   const summary: SlotSummary = { cities, lines: li.length / 22, stations, cash: a.cash(), mode };
@@ -1089,38 +1100,86 @@ async function slotSummary(): Promise<SlotSummary> {
       }
       routes.push({ colour: hex(li[i + 1]), xy: d });
     }
-    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-    for (const xy of [...track, ...routes.map((r) => r.xy)])
-      for (let k = 0; k < xy.length; k += 2) {
-        x0 = Math.min(x0, xy[k]); x1 = Math.max(x1, xy[k]);
-        y0 = Math.min(y0, xy[k + 1]); y1 = Math.max(y1, xy[k + 1]);
-      }
-    if (!(x1 >= x0)) return summary; // nothing built or drawn
-    // at least 3 km across, so a single short stretch is not blown up to fill the picture
-    const span = Math.max(x1 - x0, (y1 - y0) * THUMB_W / THUMB_H, 3000);
-    const s = (THUMB_W - 2 * THUMB_PAD) / span;
-    const ox = THUMB_W / 2 - ((x0 + x1) / 2) * s, oy = THUMB_H / 2 - ((y0 + y1) / 2) * s;
+    type Box = [number, number, number, number];
+    const boxOf = (pts: Iterable<[number, number]>): Box => {
+      const b: Box = [Infinity, Infinity, -Infinity, -Infinity];
+      for (const [x, y] of pts) { b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y); }
+      return b;
+    };
+    function* points(xy: ArrayLike<number>): Generator<[number, number]> { for (let k = 0; k < xy.length; k += 2) yield [xy[k], xy[k + 1]]; }
+    const drawn = [...track.map((xy) => ({ xy, colour: "" })), ...routes].map((p) => ({ ...p, box: boxOf(points(p.xy)) })).filter((p) => p.box[2] >= p.box[0]);
+    const all = boxOf(drawn.flatMap((p) => [[p.box[0], p.box[1]], [p.box[2], p.box[3]]] as [number, number][]));
+    if (!(all[2] >= all[0])) return summary; // nothing built or drawn
+    // T-894: the biggest cities by stations, each framed on its own stations; a city with under 8%
+    // of the biggest's stations is a fringe of its network, not a panel. A network with no station
+    // in a city is one panel over all of it, unnamed.
+    const most = cities.length ? byCity.get(cities[0])! : 0;
+    const shown = cities.filter((c) => byCity.get(c)! >= 0.08 * most).slice(0, THUMB_LAYOUTS.length);
+    const frames = shown.length
+      ? shown.map((c) => ({ city: c, stations: byCity.get(c)!, box: boxOf(stationXY.filter((p) => p.city === c).map((p) => [p.x, p.y] as [number, number])) }))
+      : [{ city: "", stations, box: all }];
+    const layout = THUMB_LAYOUTS[frames.length - 1];
+    const sh = SHADES[thumbShade];
     const canvas = new OffscreenCanvas(THUMB_W, THUMB_H);
     const ctx = canvas.getContext("2d")!;
     ctx.lineCap = ctx.lineJoin = "round";
-    ctx.fillStyle = SHADES[thumbShade].land;
+    ctx.fillStyle = sh.casing; // the rule between panels
     ctx.fillRect(0, 0, THUMB_W, THUMB_H);
-    const stroke =(xy: ArrayLike<number>) => {
+    summary.shade = thumbShade;
+    summary.panels = [];
+    frames.forEach((f, n) => {
+      const [fx, fy, fw, fh] = layout[n];
+      // panel in canvas px, the gap split between neighbours
+      const px0 = fx * THUMB_W + (fx > 0 ? THUMB_GAP / 2 : 0), py0 = fy * THUMB_H + (fy > 0 ? THUMB_GAP / 2 : 0);
+      const px1 = (fx + fw) * THUMB_W - (fx + fw < 1 ? THUMB_GAP / 2 : 0), py1 = (fy + fh) * THUMB_H - (fy + fh < 1 ? THUMB_GAP / 2 : 0);
+      const pw = px1 - px0, ph = py1 - py0;
+      summary.panels!.push({ city: f.city, stations: f.stations, x: px0 / THUMB_W, y: py0 / THUMB_H, w: pw / THUMB_W, h: ph / THUMB_H });
+      // the frame: the city's stations inside the margins, at least 3 km across so a short stretch is not blown up
+      const top = f.city ? THUMB_TOP : THUMB_PAD;
+      const iw = pw - 2 * THUMB_PAD, ih = ph - top - THUMB_PAD;
+      const [x0, y0, x1, y1] = f.box;
+      const s = iw / Math.max(x1 - x0, (y1 - y0) * iw / ih, 3000);
+      const ox = px0 + THUMB_PAD + iw / 2 - ((x0 + x1) / 2) * s, oy = py0 + top + ih / 2 - ((y0 + y1) / 2) * s;
+      // what lies inside the panel, in local units
+      const v: Box = [(px0 - ox) / s, (py0 - oy) / s, (px1 - ox) / s, (py1 - oy) / s];
+      const inside = (b: Box) => b[2] >= v[0] && b[0] <= v[2] && b[3] >= v[1] && b[1] <= v[3];
+      ctx.save();
       ctx.beginPath();
-      let lx = NaN, ly = NaN;
-      for (let k = 0; k < xy.length; k += 2) {
-        const px = ox + xy[k] * s, py = oy + xy[k + 1] * s;
-        if (k > 0 && k < xy.length - 2 && Math.hypot(px - lx, py - ly) < 0.8) continue;
-        if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-        lx = px; ly = py;
+      ctx.rect(px0, py0, pw, ph);
+      ctx.clip();
+      ctx.fillStyle = sh.land;
+      ctx.fillRect(px0, py0, pw, ph);
+      // a smaller panel draws thinner strokes
+      const k = Math.max(0.8, Math.sqrt((pw * ph) / (THUMB_W * THUMB_H)));
+      for (const p of drawn) {
+        if (!inside(p.box)) continue;
+        ctx.strokeStyle = p.colour || sh.thumbTrack;
+        ctx.lineWidth = (p.colour ? 6 : 3) * k;
+        ctx.beginPath();
+        let lx = NaN, ly = NaN;
+        for (let j = 0; j < p.xy.length; j += 2) {
+          const qx = ox + p.xy[j] * s, qy = oy + p.xy[j + 1] * s;
+          if (j > 0 && j < p.xy.length - 2 && Math.hypot(qx - lx, qy - ly) < 0.8) continue;
+          if (j === 0) ctx.moveTo(qx, qy); else ctx.lineTo(qx, qy);
+          lx = qx; ly = qy;
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
-    };
-    ctx.strokeStyle = SHADES[thumbShade].thumbTrack;
-    ctx.lineWidth = 2.5;
-    track.forEach(stroke);
-    ctx.lineWidth = 4.5;
-    for (const r of routes) { ctx.strokeStyle = r.colour; stroke(r.xy); }
+      // stations as small rings, as on a rail map, unless so many that they would hide the lines
+      const here = stationXY.filter((p) => p.x >= v[0] && p.x <= v[2] && p.y >= v[1] && p.y <= v[3]);
+      if (here.length && (pw * ph) / here.length >= 600) {
+        ctx.fillStyle = sh.land;
+        ctx.strokeStyle = sh.mapInk;
+        ctx.lineWidth = 2 * k;
+        for (const p of here) {
+          ctx.beginPath();
+          ctx.arc(ox + p.x * s, oy + p.y * s, 4 * k, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    });
     const png = new Uint8Array(await (await canvas.convertToBlob({ type: "image/png" })).arrayBuffer());
     let bin = "";
     for (let k = 0; k < png.length; k += 0x8000) bin += String.fromCharCode(...png.subarray(k, k + 0x8000));

@@ -48,9 +48,9 @@ REGISTRY = os.path.join(ROOT, "app", "src", "game", "registry.json")
 THRESHOLD = 2500.0  # trip ends a weekday per res-8 parent (DECISIONS 2026-10-16, T-453)
 CHILD = THRESHOLD / 2  # per res-9 child of a busier parent (T-466)
 REACH = 700.0  # m, a lone cell's group at most this far from its centre: about a merged parent's own (T-510)
-# trip ends a weekday under which a cell joins its zone part's nearest cell at or over it (T-850b);
-# None until every pack is remerged with it, since nocar.py and everyday_rates.py remerge by the default
-FLOOR = None
+# trip ends a weekday under which a cell joins its zone part's nearest cell at or over it (T-850b,
+# notes/T-850.md 5); nocar.py and everyday_rates.py remerge by this default too
+FLOOR = 50.0
 RES_MASK = np.uint64(0xF) << np.uint64(52)
 INT_SAME = ("zone", "region", "walk_part")  # integer per-cell arrays, equal within a merged cell
 

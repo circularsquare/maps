@@ -1,5 +1,9 @@
 ﻿# Archive
 
+- T-893 [P2] Spacing and divider in the blueprint cost breakdown. Done 2026-10-22: its rows take the 6 px padding of the zone-trips rows and no dotted divider (`.blueprint-items`, `ui/Blueprint.tsx`).
+- T-895 [P2] A saved game opens fitted to its network. Done 2026-10-22: a start-menu pick, slot open or imported file jumps to every built station in view as the first state arrives, before demand; max zoom 12; no stations: the opened zone or the world. docs/ui-panels.md.
+- T-894 [P2] Save previews readable across cities. Done 2026-10-22: one panel per city (most stations first, up to four, fringes under 8% left out), names and station counts as text over it, 240 x 160 in the saves panel and start menu. Check `checks/t894-previews.mjs`.
+- T-896 [P2] The sky banner's train as the now marker. Done 2026-10-22: now is the banner's middle (12 h each way); an 18 by 5 px train sits there on the track under the sun or moon while the scene slides under it. docs/ui-panels.md.
 - T-788 [P2] Whole-country cover for the rest of Europe. Done 2026-10-22: four waves, every non-held country whole (wave 4: DK SE NO FI EE LV LT IS MT CY, 25 zones); Russia, Belarus and Ukraine stay held. notes/T-788.md.
 - T-884 [P1] The loading bar, again. Done 2026-10-21: the bar is time so far against time still expected, remembered per slot; the stall was big games freezing the page (placing every station and edge, 99 s on Japan) after a pre-network bar ran ahead. Check `checks/t884-loadbar.mjs`. notes/T-884.md.
 - T-885 [P2] The trip explorer in every combination. Done 2026-10-21: city to city (areas weighted), city then local bubble or group, city to a box of cities, trip tool ends outside the zone; a table of every pair in notes/T-885.md.

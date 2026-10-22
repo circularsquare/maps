@@ -163,9 +163,14 @@ const STORE = "saves";
 /** What the saves list shows of a slot without opening it (T-241), made by the clock worker each
  * time it writes the slot. Absent in slots written before T-241 until they are next saved. */
 export interface SlotSummary {
-  /** a small picture of the network's track and lines in their colours: a PNG data URL, 384 x 256
-   * px (drawn at half that size); absent for an empty network */
+  /** a small picture of the network's track and lines in their colours: a PNG data URL, 480 x 320
+   * px (drawn at half that size; 384 x 256 before T-894); absent for an empty network */
   thumb?: string;
+  /** T-894: the picture's panels, one per city (the most stations first), as fractions of it; the
+   * saves list writes each city's name over its panel. Absent in pictures from before T-894. */
+  panels?: ThumbPanel[];
+  /** the theme the picture was drawn in (T-543) */
+  shade?: "light" | "dark";
   /** the cities the stations are in, most stations first (registry ids) */
   cities: string[];
   lines: number;
@@ -175,6 +180,10 @@ export interface SlotSummary {
   /** T-728; absent in slots written before it */
   mode?: GameMode;
 }
+
+/** One city's panel in a save's picture (T-894): its registry id ("" for an unnamed panel over the
+ * whole network), its stations, and where it is, as fractions of the picture's width and height. */
+export interface ThumbPanel { city: string; stations: number; x: number; y: number; w: number; h: number; }
 
 export interface StoredSave extends Partial<SlotSummary> {
   bytes: Uint8Array;
@@ -253,7 +262,7 @@ export async function listSlots(): Promise<SaveSlot[]> {
   return keys.flatMap((key, i) => {
     const s = saves[i];
     if (!s) return [];
-    return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash, mode: s.mode }];
+    return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, panels: s.panels, shade: s.shade, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash, mode: s.mode }];
   }).sort((a, b) => b.at - a.at);
 }
 

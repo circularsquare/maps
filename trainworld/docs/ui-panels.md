@@ -121,16 +121,16 @@ Below 700 px the bar takes two rows (name, cash, time and speed over the split).
   [T-309]: the time (figure style) and the date without the year (normal style, "13:24" then
   "Mon Feb 24"; hover "Monday, February 24, day 29"), over an 18 px scene and a 2 px demand band.
   The calendar is in [world.md](world.md) "Calendar". The scene
-  (`ui/SkyBanner.tsx`, one canvas) shows 24 hours, 6 back and 18 ahead, a quarter of the way in
-  being now. Its sky takes flat colours by the sun's height at the view's centre on that date
+  (`ui/SkyBanner.tsx`, one canvas) shows 24 hours, 12 back and 12 ahead, now being its middle
+  [T-896]. Its sky takes flat colours by the sun's height at the view's centre on that date
   (`game/sun.ts`): dark blue night with stars, a short pink and warm sunrise and sunset, light blue
-  day [T-882]. The sun, or a crescent moon at night, peeks in from the top edge at now. Along the
-  bottom are triangles of grass on a green strip and a track with sleepers, darker at night, and a
-  small red train with lit windows runs left to right along it, once across every 3 game hours, so
-  it stops when the clock does. Everything but the train is fixed to its time and slides left as
-  game time passes. It is redrawn on animation frames from the clock's `now()` whenever the train
-  has moved a fifth of a device pixel, never through Preact (about 0.7 ms a draw, 30 draws a
-  second at the top speed). Its hover gives today's sunrise and sunset. The band under it has each
+  day [T-882]. Along the bottom are triangles of grass on a green strip and a track with sleepers,
+  darker at night. At now sits the present-time marker: a red train (18 by 5 px, lit windows, nose
+  to the right) on the track, with the sun, or a crescent moon at night, peeking in from the top
+  edge above it. Everything but the train and the sun or moon is fixed to its time and slides left
+  under them as game time passes. It is redrawn on animation frames from the clock's `now()`
+  whenever it has moved a fifth of a device pixel, never through Preact (about 0.7 ms a draw, 7
+  draws a second at the top speed). Its hover gives today's sunrise and sunset. The band under it has each
   hour's demand level (red high, yellow medium, blue low: `--dl-*` in style.css, both themes), so
   the colour under the sun or moon is the level now; its hover names the period, when it ends and the next. A public holiday in a country
   with the player's stations [T-862] is a pink ribbon along the sky's top over its day (its
@@ -321,9 +321,20 @@ bottom so the figures above come first; there is no list until a station is buil
 
 - The floppy disk button left of the gear, or the top bar's Autosave off notice, opens a centred
   panel over a dimmed page, closed by Esc, its close button or a click outside.
-- One card per browser slot: a 192 x 128 picture of its network (track grey, each line in its
-  colour, on the land colour of the theme the slot was saved in, drawn when the slot is saved, at
-  twice that resolution) [T-543], its name, "Autosaved 2 min ago"
+- One card per browser slot: a 240 x 160 picture of its network, drawn by the clock worker when the
+  slot is saved, at twice that resolution, on the land colour of the theme it was saved in [T-543].
+  The picture is one panel per city with stations, the most stations first, at most four, leaving
+  out a city with under 8% of the biggest one's stations (a fringe of its network) [T-894]:
+  one fills it; two sit side by side; three are a large panel on the left (60%) and two stacked on
+  the right; four are a 2 x 2 grid. Panels are split by a thin rule in the casing colour. Each panel
+  frames its city's stations (at least 3 km across, room left at the top for the name) and draws
+  all track in grey and each line in its colour that falls in it, so a line to another city runs
+  off the edge; stations are small rings in the map ink when there is at least 600 px² of panel
+  per station, so a dense network shows lines alone. The city's name is text over the panel's top
+  left in that theme's ink with a land-coloured halo, and with two or more panels its station
+  count under it; the hover gives both. A network with no station in a city is one unnamed panel
+  over all of it. Pictures saved before T-894 (one frame, no names) show as they are until the
+  slot is next saved. Then its name, "Autosaved 2 min ago"
   for the game being played or "Saved ..." for the others (exact time on hover), the game day, the
   cities its stations are in, lines, stations and cash. The game being played is marked Playing;
   every other card has Open (closes the panel and loads it) and Delete (asked first); every card
@@ -370,13 +381,19 @@ registry centre and zoom, or over New York with none [T-310].
 
 - Every page load opens on a card over the bare map, in the loading card's look: "anitabuilder",
   New game, then "Saved games", one button per browser slot, the most recent first, each with the
-  saves panel's picture (144 x 96) and facts (name, when saved, day, cities, lines, stations, cash).
+  saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash).
   With no saved game it is New game alone. The dock, top bar and map controls are hidden under it,
   it takes every key outside itself, and nothing loads behind it but the map.
 - A click on a save opens that slot (a sandbox's name has the "Sandbox" mark). New game shows the
   new game sheet (above) in the card, headed "New game", with Back to the menu; its Start starts the
   game in a new slot, so no saved game is replaced. The slot is first written once the network has
   something in it (a real network at once): a new game left empty leaves no card.
+- A saved game opens with its built stations all in view (every station if none is built), as soon
+  as the game's first state arrives, before its demand: padding 70 px, no closer than zoom 12 so one
+  station is not shown at street level. A save with no stations opens on the zone it started in, else
+  the world map. The view is not saved. A pick from this menu, a slot opened in the saves panel and
+  an imported file fit; `?continue=1` and a raw `import` message (checks) keep the camera
+  [T-895; `startOpenFit` in `ui/locate.ts`, `fitNextGame` in `workers/clockClient.ts`].
 - URL switches that already say which game skip it: `?new=1` (a new game owning no slot; normal
   in New York, or `&mode=sandbox` and `&city=<zone id>`),
   `?synth=1`, `?demandTest=1`, `?paused=1` and `?continue=1` (the game opened last).

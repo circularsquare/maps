@@ -7,7 +7,7 @@ import { effect, signal } from "@preact/signals";
 import { clock, SPEEDS } from "../game/clock";
 import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities";
 import { setGameOpened, setOpenedSink } from "../game/openedZones";
-import { holdForGameLoad } from "../game/loading";
+import { fitView, holdForGameLoad } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, moneyState, setMoneyState } from "../game/money";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
 import { linePoints, STAR_SHARE } from "../game/points";
@@ -24,6 +24,7 @@ import type { NewGameSpec } from "./saveFile";
 
 export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[] }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
 export function manageSaveSlot(action: "refresh" | "create" | "open" | "rename" | "delete" | "restore", key?: string, name?: string) {
+  if (action === "open") current?.fitNextGame();
   current?.post({ kind: "saveSlot", action, key, name });
 }
 
@@ -177,6 +178,7 @@ export function exportGame() {
 /** Load a save file the player picked, into a new slot named after the file (T-743). */
 export async function importGame(file: File) {
   const bytes = await file.arrayBuffer();
+  current?.fitNextGame();
   current?.post({ kind: "import", bytes, name: file.name.replace(/\.save$/i, "") }, [bytes]);
 }
 /** Start a new game in a new slot (T-743), named after its start (T-728) unless `name` is given. */
@@ -407,6 +409,10 @@ export class ClockClient {
   /** the worker's game the clock messages are for (`loaded`'s `game`, T-715) */
   private game = 0;
   private forgetSent = () => {};
+  /** T-895: the next game loaded was opened by the player, so the camera fits its network (`fitView`) */
+  private fitNext = false;
+  private fitState = false;
+  fitNextGame() { this.fitNext = true; }
 
   post(msg: ToClock, transfer: Transferable[] = []) {
     if (this.worker) this.worker.postMessage(msg, transfer);
@@ -444,6 +450,10 @@ export class ClockClient {
       this.onAnchor(a);
     }
     this.lastStateMs = performance.now() - t0;
+    if (this.fitState) {
+      this.fitState = false;
+      fitView.value++;
+    }
   }
 
   private receive(msg: FromClock) {
@@ -487,6 +497,8 @@ export class ClockClient {
         // the game now in the worker may be in the other frame (T-125); first, before anything reads positions
         setWorldFrame(msg.frame);
         this.lastLoad = { from: msg.from, converted: !!msg.converted };
+        this.fitState = this.fitNext && msg.from !== "new" && !msg.error;
+        this.fitNext = false;
         if (msg.error) {
           say(msg.error, true);
           if (msg.from === "file") break;

@@ -9,6 +9,7 @@ import { signal } from "@preact/signals";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { CITIES, cityById } from "../game/cities";
 import { money } from "../game/format";
+import { SHADES } from "../game/shades";
 import { lastSaved } from "../game/money";
 import { exportGame, importGame, newGame, manageSaveSlot, saveSlotsState } from "../workers/clockClient";
 import type { SaveSlot, SlotBackup } from "../workers/saveFile";
@@ -39,11 +40,23 @@ function cityList(ids: string[]): string {
 
 const plural = (n: number, one: string, many: string) => `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
 
-/** A saved game's picture of its network (T-241). */
+/** A saved game's picture of its network (T-241): one panel per city it has built in, the most
+ * stations first, each named, with its stations when there is more than one (T-894). The names are
+ * text over the picture, in the colours of the theme it was drawn in. */
 export function SlotThumb({ slot }: { slot: SaveSlot }) {
-  return slot.thumb
-    ? <img class="save-thumb" src={slot.thumb} alt="" data-tip={`The network in "${slot.name}" when it was last saved`} />
-    : <div class="save-thumb empty muted small">{slot.lines !== undefined ? "Nothing built" : "No picture yet"}</div>;
+  if (!slot.thumb) return <div class="save-thumb empty muted small">{slot.lines !== undefined ? "Nothing built" : "No picture yet"}</div>;
+  const panels = (slot.panels ?? []).filter((p) => p.city && CITIES.some((c) => c.id === p.city));
+  const sh = SHADES[slot.shade ?? "light"];
+  return <div class="save-thumb" style={{ "--thumb-ink": sh.mapInk, "--thumb-land": sh.land }}>
+    <img src={slot.thumb} alt="" data-tip={`The network in "${slot.name}" when it was last saved`} />
+    {panels.map((p) => {
+      const name = cityById(p.city).name, stations = plural(p.stations, "station", "stations");
+      return <div class="thumb-label" style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, width: `${p.w * 100}%` }} data-tip={`${name}: ${stations}`}>
+        <div class="thumb-city">{name}</div>
+        {panels.length > 1 && <div class="thumb-figure num">{stations}</div>}
+      </div>;
+    })}
+  </div>;
 }
 
 /** When a saved game was saved, its day and cities, its lines, stations and cash; also the start

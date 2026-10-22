@@ -53,7 +53,7 @@ function sunTip(day: number): string {
  * or with the hour it starts where its country keeps another local time. */
 function holidayLines(minute: number, list: HolidaySpan[]): string[] {
   const now = minute * 60, today = Math.floor(now / 86400);
-  return list.filter((h) => h.t1 > now && h.t0 < now + 18 * 3600).map((h) => {
+  return list.filter((h) => h.t1 > now && h.t0 < now + 12 * 3600).map((h) => {
     const at = `${h.name}, ${countryName(h.country)}`;
     if (h.t0 <= now) return `Today: ${at}`;
     const when = Math.floor(h.t0 / 86400) === today ? "Today" : "Tomorrow";

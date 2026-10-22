@@ -114,7 +114,7 @@ export function BlueprintBreakdown() {
             return (
               <div class="blueprint-category">
                 <div class="small b">{kind}</div>
-                <ul class="rows blueprint-items">
+                <ul class="rows flat blueprint-items">
                   {rows.map((r) => (
                     <li data-cost={r.cost}>
                       <span class="what">

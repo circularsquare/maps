@@ -32,6 +32,9 @@ export const loadProgress = signal<LoadProgress | null>(null);
 export const zoneLoads = signal<ReadonlyMap<CityId, number>>(new Map());
 /** T-677: the start menu is up; the clock and demand workers have not started. */
 export const choosing = signal(false);
+/** T-895: counts the games the player opened whose first state has arrived (workers/clockClient.ts);
+ * ui/locate.ts fits the camera to the network on each. */
+export const fitView = signal(0);
 /** "loading" until the first game's demand has its first estimate, "failed" if it could not load. */
 export const startup = signal<"loading" | "ready" | "failed">("loading");
 /** T-318: nothing needs demand now: the view is over dead space and no built station reaches a
