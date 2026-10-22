@@ -93,7 +93,8 @@ Briefs carry only the task; these hold for every agent.
   later state is checked clean (Anita, 2026-10-22). `data/work/res9/` stays.
 - **A refused permission check**: make the step safer, review, retry; don't wait for Anita.
 - **Calibration of new cities** (Anita, 2026-10-16): cities added through the world plan need no
-  calibration beyond the pipeline's gate; a deep calibration comes once everything is in.
+  calibration beyond the pipeline's gate. No big calibration at the end either: it happens in
+  parts, task by task (Anita, 2026-10-22).
 - **Bash**: one simple command per call (no `&&`, pipes or loops); scripts go in a file in your
   scratchpad folder, not heredocs.
 - **Screenshots and diagnostics** go in `../artifacts/trainworld/`, never in this folder.
