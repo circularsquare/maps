@@ -83,7 +83,7 @@ fn zone_density(z: &Zones, i: usize) -> f32 {
     ((z.pop[i] + z.jobs[i]) / (z.ncell[i].max(1) as f64 * CELL_KM2 as f64)) as f32
 }
 
-/// The cost of walking the whole way between zones `i` and `j` (`Gravity::wctab`; `NO_WALK`
+/// The cost of walking the whole way between zones `i` and `j` (`Gravity::walk_c`; `NO_WALK`
 /// before it is set).
 fn walk_cost(api: &DemandApi, i: usize, j: usize) -> f32 {
     // T-275: around water with the pack's routes

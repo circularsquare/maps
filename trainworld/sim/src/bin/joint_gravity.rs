@@ -115,7 +115,7 @@ fn main() {
         let city = pack::parse(&header, &bin).unwrap_or_else(|e| panic!("{id}: {e}"));
         let pg = city.gravity.clone().unwrap_or_else(|| panic!("{id} has no gravity"));
         let z = kernel::zones_from_pack(&city, &pg);
-        let (ftab, _) = kernel::decay_tables(&z, pg.decay_km, pg.decay_pow);
+        let ftab = kernel::decay_ftab(&z, pg.decay_km, pg.decay_pow);
         let hv: Value = serde_json::from_str(&header).unwrap();
         // packs built before headers carried a country (tor, lon, par, sao) take the registry's (T-590)
         let country = hv["country"].as_str().or(c["country"].as_str()).unwrap_or("US").to_uppercase();

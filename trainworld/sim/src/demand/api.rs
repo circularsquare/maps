@@ -1511,7 +1511,7 @@ impl DemandApi {
         // the far end by zone: all commuters and those who would walk with no rail (the gravity),
         // and rail (from the far subzones)
         let (mut t_z, mut w_z, mut r_z) = (vec![0f64; nz], vec![0f64; nz], vec![0f64; nz]);
-        let wt = !self.gr.wctab.is_empty();
+        let wt = self.gr.walk_set;
         let nr = &self.nr;
         for a in 0..nz {
             if wz[a] <= 0.0 {
@@ -1523,7 +1523,7 @@ impl DemandApi {
                 let idx = (self.gr.base(&self.z, i) + self.gr.key(&self.z, j)) as usize;
                 let t = wz[a] * self.gr.row[i] * self.gr.col[j] * (self.gr.ftab[idx] * self.gr.k(&self.z, i, j)) as f64 * rate as f64;
                 t_z[b] += t;
-                if wt && self.gr.wctab[idx] < NO_WALK {
+                if wt && self.gr.walk_c(idx) < NO_WALK {
                     w_z[b] += t * nr.split(&self.gr, &self.base, i, j, idx) as f64;
                 }
             }

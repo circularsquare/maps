@@ -57,9 +57,10 @@ works on two levels:
    as its four squares would with its homes and jobs spread evenly over them; distances (the drive,
    the walk, trip length, distance bands, the ride's minimum) are between centres, a block's own
    pair 0.52 of its 4 km side apart, and its land cap is its 16 km². The everyday destinations'
-   decay takes the same mean. The pair tables hold three runs per row (two squares, a square and a
+   decay takes the same mean. The decay table holds three runs per row (two squares, a square and a
    block at their centres' half-square offset, two blocks; `kernel::table_layout`), three times a
-   2 km pack's. A station's zone is the square's or the block covering it; near pairs (the walk
+   2 km pack's; the distance and walk's cost of a pair come from its table index
+   (`Gravity::dist_km`), in every pack. A station's zone is the square's or the block covering it; near pairs (the walk
    between cells, walking with no rail) are those with squares within reach of each other; the
    routes' windows go by each zone's lower-left square. A pack without `zone_size` is all squares
    and solves exactly as before.

@@ -675,7 +675,7 @@ impl NoRail {
     /// end's parking), a paid space's extra and the share parking free.
     #[inline]
     pub fn road(&self, gr: &Gravity, p: &Params, i: usize, j: usize, k: usize) -> (f32, f32, f32) {
-        let d_km = gr.wdtab[k];
+        let d_km = gr.dist_km(k);
         let f = p.drive_factor(i, j);
         let (fixed, paid, free) = self.park[j];
         (p.car_drive(p.drive_min_f(d_km * 1000.0, f, self.place[i], self.place[j]), d_km * f) + fixed + self.home[i], paid, free)
@@ -971,12 +971,11 @@ pub struct Gravity {
     pub border: f32,
     /// f by grid offset: index (dx + offx) * th + (dy + offy).
     pub ftab: Vec<f32>,
-    /// The cost of walking the whole way by grid offset, same index as `ftab`
-    /// (`Params::walk_trip_cost` of the zone-centre distance); empty until `set_walk` fills it.
-    pub wctab: Vec<f32>,
-    /// The zone-centre distances (km) by grid offset, and (T-275) the routes whose walk factors
-    /// lengthen the walk between nearby zones around water (`walk_cost_at`); set by `set_walk`.
-    pub wdtab: Vec<f32>,
+    /// The squares' side in km, for the zone-centre distance of a table index (`dist_km`), and
+    /// whether `set_walk` has set the walk's cost (`walk_c`) and (T-275) the routes whose walk
+    /// factors lengthen the walk between nearby zones around water (`walk_cost_at`).
+    pub zk: f32,
+    pub walk_set: bool,
     pub wroutes: Option<std::sync::Arc<super::routes::Routes>>,
     pub wcost: WalkCost,
     /// Walks between cells (T-587, `set_walk_fine`), per home zone CSR over the zones within
@@ -1016,14 +1015,35 @@ impl Gravity {
         self.row[i] * self.col[j] * (self.ftab[(self.base(z, i) + self.key(z, j)) as usize] * self.k(z, i, j)) as f64
     }
 
-    /// Fill `wctab` and `wdtab` from the zone-centre distances (the same ones `decay_table` uses);
-    /// the walks between cells go (`set_walk_fine` after).
+    /// The zone-centre distance (km) of table index `k`, as `decay_table` and `decay_tables` give
+    /// it (within a zone 0.52 of its side).
+    #[inline]
+    pub fn dist_km(&self, k: usize) -> f32 {
+        let (r, y) = (k as i32 / self.th - self.offx, k as i32 % self.th);
+        let h = self.kb / 2;
+        let (dx, dy, own) = if self.kb == 0 || y < 2 * h - 1 {
+            (r as f32, (y - self.offy) as f32, 1.0)
+        } else if y < 4 * h - 1 {
+            (r as f32 + 0.5, (y - 3 * h + 1) as f32 + 0.5, 1.0)
+        } else {
+            ((r + 1) as f32, (y - 5 * h + 2) as f32, 2.0)
+        };
+        if dx == 0.0 && dy == 0.0 { 0.52 * self.zk * own } else { self.zk * (dx * dx + dy * dy).sqrt() }
+    }
+    /// The cost of walking the whole way between zone centres at table index `k`
+    /// (`Params::walk_trip_cost`; `NO_WALK` before `set_walk`).
+    #[inline]
+    pub fn walk_c(&self, k: usize) -> f32 {
+        if self.walk_set { self.wcost.at(self.dist_km(k)) } else { NO_WALK }
+    }
+
+    /// Set the walk's cost between zone centres (`walk_c`); the walks between cells go
+    /// (`set_walk_fine` after).
     pub fn set_walk(&mut self, z: &Zones, p: &Params) {
-        let (_, dtab) = decay_tables(z, 1.0, 0.0);
         self.wcost = p.walk_cost();
-        self.wctab = dtab.iter().map(|&d| self.wcost.at(d)).collect();
+        self.zk = z.zone_m / 1000.0;
+        self.walk_set = true;
         self.wroutes = p.routes.clone().filter(|r| r.walk_window() > 0);
-        self.wdtab = dtab;
         self.wf_off.clear();
         self.wf_j.clear();
         self.wf_c.clear();
@@ -1036,7 +1056,7 @@ impl Gravity {
     /// against a driver parking free is that mean.
     pub fn set_walk_fine(&mut self, city: &City, z: &Zones, p: &Params, nr: &NoRail) {
         let ns = p.walk_samples;
-        if ns == 0 || self.wctab.is_empty() || city.len() != z.cell_zone.len() {
+        if ns == 0 || !self.walk_set || city.len() != z.cell_zone.len() {
             return;
         }
         let (home, work) = walk_points(city, z, ns);
@@ -1132,7 +1152,7 @@ impl Gravity {
     }
 
     /// The cost of walking the whole way between zones i and j at table index `k` (`base(i) +
-    /// key(j)`): between cells for near pairs (`wf_*`, T-587), else `wctab`, or with the pack's
+    /// key(j)`): between cells for near pairs (`wf_*`, T-587), else `walk_c`, or with the pack's
     /// routes (T-275) the walk around water between them, the zone-centre distance times their
     /// walk factor.
     #[inline]
@@ -1143,15 +1163,15 @@ impl Gravity {
         if let Some(r) = &self.wroutes {
             let f = r.walk_factor(i, j);
             if f > 1.0 {
-                return self.wcost.at(self.wdtab[k] * f);
+                return self.wcost.at(self.dist_km(k) * f);
             }
         }
-        self.wctab[k]
+        self.walk_c(k)
     }
 
     /// The same for any zone pair (`NO_WALK` before `set_walk`).
     pub fn walk_cost_pair(&self, z: &Zones, i: usize, j: usize) -> f32 {
-        if self.wctab.is_empty() {
+        if !self.walk_set {
             return NO_WALK;
         }
         self.walk_cost_at(i, j, (self.base(z, i) + self.key(z, j)) as usize)
@@ -1161,7 +1181,7 @@ impl Gravity {
     /// zone pairs within `WALK_REACH_KM`, T_IJ times `NoRail::split`.
     pub fn no_rail_by_zone(&self, z: &Zones, p: &Params, nr: &NoRail) -> [Vec<f64>; 2] {
         let (mut wh, mut ww) = (vec![0.0f64; z.n], vec![0.0f64; z.n]);
-        if self.wctab.is_empty() {
+        if !self.walk_set {
             return [wh, ww];
         }
         // the walk factor round water is at most this (`routes`' byte tables), so past this many
@@ -1175,7 +1195,7 @@ impl Gravity {
             let base = self.base(z, i);
             z.near(&sq, i, r, |j| {
                 let k = (base + self.key(z, j)) as usize;
-                if self.wctab[k] >= NO_WALK {
+                if self.walk_c(k) >= NO_WALK {
                     return;
                 }
                 let w = nr.split(self, p, i, j, k);
@@ -1365,6 +1385,14 @@ pub fn pair_decay(z: &Zones, decay: impl Fn(f32) -> f32) -> Vec<f32> {
     out
 }
 
+/// `decay_tables`' decay alone.
+pub fn decay_ftab(z: &Zones, decay_km: f32, decay_pow: f32) -> Vec<f32> {
+    if !z.mixed() {
+        return decay_table(z.w, z.h, z.zone_m, decay_km, decay_pow).0;
+    }
+    pair_decay(z, |d| (-d / decay_km).exp() * if decay_pow != 0.0 { d.powf(-decay_pow) } else { 1.0 })
+}
+
 /// The pair tables of `decay_table` for zones `z`: decay and centre distance (km). With blocks
 /// (T-852) the decay is `pair_decay`'s and a block's own pair is 0.52 of its side apart.
 pub fn decay_tables(z: &Zones, decay_km: f32, decay_pow: f32) -> (Vec<f32>, Vec<f32>) {
@@ -1437,15 +1465,15 @@ fn res9_cells(city: &City, c: usize) -> u32 {
 }
 
 pub fn gravity_from_pack(z: &Zones, pg: &PackGravity) -> Gravity {
-    let (ftab, _) = decay_tables(z, pg.decay_km, pg.decay_pow);
+    let ftab = decay_ftab(z, pg.decay_km, pg.decay_pow);
     let (th, offx, offy, kb, _) = table_layout(z);
     Gravity {
         row: pg.row.clone(),
         col: pg.col.clone(),
         border: pg.border_factor,
         ftab,
-        wctab: vec![],
-        wdtab: vec![],
+        zk: z.zone_m / 1000.0,
+        walk_set: false,
         wroutes: None,
         wcost: WalkCost::default(),
         wf_off: vec![],
@@ -1508,7 +1536,7 @@ pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
     let creg: Vec<u8> = cols.iter().map(|&j| z.region[j]).collect();
     // the factor by "regions differ" (index 0 same, 1 different)
     let kf = [1.0f64, p.border_factor as f64];
-    let mut g = Gravity { row: vec![0.0; z.n], col: z.jobs.clone(), border: p.border_factor, ftab, wctab: vec![], wdtab: vec![], wroutes: None, wcost: WalkCost::default(), wf_off: vec![], wf_j: vec![], wf_c: vec![], wf_s: vec![], th, offx, offy, kb, iters: 0, max_err: 0.0, mean_km: 0.0, total: 0.0 };
+    let mut g = Gravity { row: vec![0.0; z.n], col: z.jobs.clone(), border: p.border_factor, ftab, zk: z.zone_m / 1000.0, walk_set: false, wroutes: None, wcost: WalkCost::default(), wf_off: vec![], wf_j: vec![], wf_c: vec![], wf_s: vec![], th, offx, offy, kb, iters: 0, max_err: 0.0, mean_km: 0.0, total: 0.0 };
     let mut colc: Vec<f64> = cols.iter().map(|&j| g.col[j]).collect();
     let mut acc = vec![0f64; cols.len()];
     for it in 0..max_iters {
@@ -3428,7 +3456,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     let mut run: Vec<(usize, f64)> = vec![];
     let mut lost_q = vec![0f32; dd.len()];
     // the decay and the walk's cost by zone offset side by side: one lookup per zone pair
-    let fw: Vec<[f32; 2]> = gr.ftab.iter().enumerate().map(|(k, &f)| [f, if gr.wctab.is_empty() { NO_WALK } else { gr.wctab[k] }]).collect();
+    let fw: Vec<[f32; 2]> = gr.ftab.iter().enumerate().map(|(k, &f)| [f, gr.walk_c(k)]).collect();
     // with a third: the road's length over the straight line between the zones (T-275); and a
     // fourth, 1 where the commute is long enough for the ride (T-371)
     let mut fz = vec![[0f32, 0.0, p.road_detour, 0.0]; dz.len()];
@@ -5159,7 +5187,7 @@ mod tests {
                 let got = g.ftab[k as usize];
                 assert!((got / mean - 1.0).abs() < 1e-5, "{i} {j}: {got} vs {mean}");
                 let d = (z.d2_m(i, j).sqrt() / 1000.0).max(if z.d2_m(i, j) == 0.0 { 1.04 * z.side(i) as f32 } else { 0.0 });
-                assert!((dtab[k as usize] - d).abs() < 1e-4, "{i} {j}: {} km vs {d}", dtab[k as usize]);
+                assert!((dtab[k as usize] - d).abs() < 1e-4 && (g.dist_km(k as usize) - d).abs() < 1e-4, "{i} {j}: {} km vs {d}", dtab[k as usize]);
             }
             // both margins
             let r: f64 = (0..z.n).map(|j| g.t(&z, i, j)).sum();
