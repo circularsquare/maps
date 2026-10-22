@@ -56,7 +56,8 @@ There is no built-in liking for the train. Rail and the car are compared on time
   for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Nobody
   changes back onto the line they just left: on a full line people wait at their station.
 - If the train is full when it arrives, the wait for one with room counts too.
-- Fare: in the US $1 counts as 3 minutes.
+- Fare: in the US $1 counts as 3 minutes. The fare is the player's curve of trip length, paid
+  once a trip; choosing between routes sees only its first stretch.
 - Which stations: riders share the pairs of stations near each end by how much slower each option
   is compared with the trip's length. Of two options 1 minute apart the faster gets 66% on a short
   trip and 58% on one of an hour; 5 minutes apart, 97% and 84%; 10 minutes apart, nearly everyone

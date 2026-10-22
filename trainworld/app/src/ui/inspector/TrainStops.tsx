@@ -15,6 +15,9 @@ import type { LineDemand } from "../../game/demand";
 import type { LineInput } from "../../game/types";
 import { world } from "../../game/world";
 import { profileS } from "../../map/network";
+import { complexes } from "../../game/complexView";
+import { membersOf } from "../../game/complexes";
+import { Chip } from "../widgets";
 import { live } from "../../map/live";
 
 /** Stops listed ahead of the train. */
@@ -84,7 +87,11 @@ export function TrainStops({ line, dm, board, trip, run, seg, stopS, profile, de
   const tripS = net ? net.meta[profile * 4 + 2] : 0;
   const now = clock.now() - dep;
   const shift = w.lineStats[line.id]?.shift ?? 0;
-  const rows: { name: string; inS: number; off: number; on: number; arriving: number; last: boolean }[] = [];
+  // T-886: the other lines calling at each stop or its complex, for changing trains
+  const cx = complexes.value, linesAt = new Map<string, LineInput[]>();
+  for (const l of w.save.lines) for (const s of new Set(l.stops)) if (l.id !== line.id) linesAt.set(s, [...(linesAt.get(s) ?? []), l]);
+  const transfers = (s: string) => [...new Map(membersOf(cx, s).flatMap((m) => linesAt.get(m) ?? []).map((l) => [l.id, l])).values()];
+  const rows: { name: string; inS: number; off: number; on: number; arriving: number; last: boolean; lines: LineInput[] }[] = [];
   for (let k = seg + 1; k <= last && rows.length < AHEAD; k++) {
     const arriving = load(k - 1);
     const at = reachAt(profile, (stopS[k] ?? 0) - 1, Math.max(0, now), tripS);
@@ -93,7 +100,7 @@ export function TrainStops({ line, dm, board, trip, run, seg, stopS, profile, de
     const end = k === n - 1;
     const off = end ? arriving : arriving * (shares[p]?.[k] ?? 0);
     const on = end ? 0 : Math.max(0, load(k) - (arriving - off));
-    rows.push({ name: names.get(stops[k]) ?? "a station", inS, off, on, arriving, last: end });
+    rows.push({ name: names.get(stops[k]) ?? "a station", inS, off, on, arriving, last: end, lines: transfers(stops[k]) });
   }
   if (!rows.length) return null;
   return (
@@ -104,7 +111,7 @@ export function TrainStops({ line, dm, board, trip, run, seg, stopS, profile, de
           <li data-tip={r.last
             ? `Everyone aboard gets off at ${r.name}, the end of the line`
             : `${count(r.off)} of the ${count(r.arriving)} riders aboard get off at ${r.name}, and ${count(r.on)} get on`}>
-            <span class="grow">{r.name}</span>
+            <span class="grow stop-name"><span class="name">{r.name}</span>{r.lines.map((l) => <Chip line={l} size="sm" />)}</span>
             {Number.isFinite(r.inS) && (
               <span class="muted small" data-tip={`Arrives in ${duration(r.inS)}`}>{r.inS < 60 ? "<1 min" : `${Math.round(r.inS / 60)} min`}</span>
             )}

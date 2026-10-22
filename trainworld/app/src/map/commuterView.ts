@@ -16,14 +16,15 @@
 
 import { computed, effect, signal } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
-import { activeCity, getWorldFrame, worldFrameEpoch, type CityId } from "../game/cities";
+import { activeCity, cityById, getWorldFrame, worldFrameEpoch, type CityId } from "../game/cities";
+import { lngLatToPack } from "../game/coords";
 import { nearbyZones } from "../game/zones";
 import { clock } from "../game/clock";
 import { cellModes, cityCells, demandUpdating, demandView, flows, type CellModes, type CityCells, type DemandView, type FarEnd, type Flows, type PurposeTrips } from "../game/demand";
 import { count, wholeDistance } from "../game/format";
 import { BUBBLE_ALPHA, bubbleSchemeKey, setBubbleColours } from "../game/palette";
-import { GROUP_SAMPLE_SIDE, tripOpenedFrom, type TripPlaces } from "../game/trip";
-import { compass, nearestStation } from "../game/places";
+import { GROUP_SAMPLE_SIDE, marketGroup, tripOpenedFrom, type TripPlaces } from "../game/trip";
+import { compass, stationNameNear } from "../game/places";
 import { purposeWords, type PurposeFilter } from "../game/purposes";
 import type { Selection } from "../game/types";
 import { display, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
@@ -31,7 +32,7 @@ import { world } from "../game/world";
 import { BUBBLE_DENSITY, DISC, RES_AREA_M2, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
 import { aggregate, discs, recolour, type Groups } from "./bubbles";
 import { CATCH_STEP, CATCH_WALL_MS, caughtUp, tripsDone } from "./catchUp";
-import { cityOverview } from "./intercityView";
+import { cityOverview, interBox, setNearPoint } from "./intercityView";
 import { anchorVersion } from "./anchorVersion";
 import { modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt, pointerLocal, type Pointer } from "./demandHover";
@@ -452,8 +453,15 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const L = shown.bubbles.levels[bubbleLevel(map.getZoom())];
     const i = discAt(L.discs, p, shown.bubbles.anchor, view.bubbleSize);
     if (i < 0) return null;
-    return bubbleTag(shown.end, L.train[i], L.walk[i], L.drive[i]);
+    return bubbleTag(shown.end, L.train[i], L.walk[i], L.drive[i], ...cityHint());
   });
+  /** T-885: with a city selected, a bubble in another place opens the trips between them. */
+  const cityHint = (): string[] => {
+    const sel = selection.peek();
+    if (sel?.kind !== "city") return [];
+    const c = cityById(sel.city);
+    return c.place === cityById(activeCity.peek()).place ? [] : [`Click to explore trips with ${c.name}`];
+  };
   /** A nearby zone's bubble under the point (T-276): drawn under the focused zone's, shown with them. */
   const nearbyAt = (p: Pointer): { id: CityId; s: ZoneShown; i: number } | null => {
     const sel = selection.peek()?.kind;
@@ -470,7 +478,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const hit = nearbyAt(p);
     if (!hit) return null;
     const L = hit.s.bubbles.levels[bubbleLevel(map.getZoom())], i = hit.i;
-    return bubbleTag(hit.s.end, L.train[i], L.walk[i], L.drive[i]);
+    return bubbleTag(hit.s.end, L.train[i], L.walk[i], L.drive[i], ...cityHint());
   });
 
   // ---- selecting bubbles ----
@@ -493,7 +501,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     }
     return out;
   };
-  const selectGroups = (groups: number[], add: boolean): Selection | null => {
+  const selectGroups = (groups: number[], add: boolean): Extract<Selection, { kind: "commuters" }> | null => {
     if (!shown || !city || !groups.length) return null;
     const g = city.levels[bubbleLevel(map.getZoom())];
     const cells = new Set<number>();
@@ -557,8 +565,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
           const w = weight(c);
           (sx += xy[c * 2] * w), (sy += xy[c * 2 + 1] * w), (sw += w);
         }
-        const s = sw > 0 ? nearestStation(sx / sw, sy / sw) : null;
-        return s && s.d <= GROUP_NAME_M ? s.name : "";
+        return sw > 0 ? stationNameNear(sx / sw, sy / sw, GROUP_NAME_M) : "";
       };
       const farN = new Map<number, number>();
       for (let k = 0; k < fe.cells.length; k++) if (qs.has(g.groupOf[fe.cells[k]])) farN.set(fe.cells[k], fe.farRail[k] + fe.farWalk[k] + fe.farDrive[k]);
@@ -586,14 +593,30 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       const i = discAt(farDiscs, p, farAnchor, view.bubbleSize);
       return i >= 0 ? farTrip(sel, [i]) ?? sel : undefined;
     }
-    const s = selectGroups(groupsAt(p), add);
-    if (s) return s;
+    const s = selectGroups(groupsAt(p), add && sel?.kind !== "city");
+    if (s) return cityTrip(s) ?? s;
     // a nearby zone's bubble (T-276): its zone takes the focus, with this worker and these bubbles
     // (the focus change above), and the bubble is selected as one of the focused zone's
     const hit = nearbyAt(p);
     if (!hit) return undefined;
     activeCity.value = hit.id;
-    return activeCity.peek() === hit.id && focusSeen === hit.id ? selectGroups(groupsAt(p), false) ?? undefined : undefined;
+    const n = activeCity.peek() === hit.id && focusSeen === hit.id ? selectGroups(groupsAt(p), false) : null;
+    return n ? cityTrip(n) ?? n : undefined;
+  };
+
+  /** T-885: with a city selected (zoomed in, under the local bubbles), bubbles picked in another
+   * place open the trip explorer between them and that city; null otherwise. */
+  const cityTrip = (s: Extract<Selection, { kind: "commuters" }>): Selection | null => {
+    const sel = selection.peek();
+    if (sel?.kind !== "city") return null;
+    const c = cityById(sel.city), own = cityById(activeCity.peek());
+    const near = nearPoint(s);
+    if (c.place === own.place || !near) return null;
+    const p = lngLatToPack(c.center[0], c.center[1]);
+    const far = { place: c.place, gid: -1 }, at: [number, number] = [p.x, p.y];
+    const trip: Selection = s.end === "home" ? { kind: "trip", from: near, to: at, far } : { kind: "trip", from: at, to: near, far };
+    tripOpenedFrom.value = { trip, from: sel, places: { end: s.end, near: Uint32Array.from(s.cells), far: new Uint32Array(0), ...marketGroup(s, near) } };
+    return trip;
   };
 
   /** T-865: the far-end discs whose centres are in a box: their indices. */
@@ -634,7 +657,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     map.dragPan.enable();
     map.getCanvas().style.cursor = "";
   };
-  const boxes = () => tool.peek() === "select" && display.peek().commuters && !!shown && !cityOverview.peek();
+  // T-885: a selected city's view (zoomed out, no local bubbles) takes a Shift box over its other cities
+  const boxes = () => tool.peek() === "select" && display.peek().commuters && ((!!shown && !cityOverview.peek()) || selection.peek()?.kind === "city");
   // MapLibre's own Shift-drag zoom (main.ts keeps it on in the select tool) is off from before its
   // handlers see the press (they listen on the canvas container too, registered first) until the
   // button is up
@@ -649,8 +673,9 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const [x, y] = rel(e);
     const sel = selection.peek();
     const at = pointerAt(map, x, y);
-    const onNear = sel?.kind === "commuters" ? discAt(nearDiscs, at, nearAnchor, view.bubbleSize) >= 0 : groupsAt(at).length > 0;
-    const farBox = e.shiftKey && sel?.kind === "commuters" && !onNear;
+    const onNear = cityOverview.peek() ? false : sel?.kind === "commuters" ? discAt(nearDiscs, at, nearAnchor, view.bubbleSize) >= 0 : groupsAt(at).length > 0;
+    const farBox = e.shiftKey && (sel?.kind === "commuters" || (sel?.kind === "city" && cityOverview.peek())) && !onNear;
+    if (cityOverview.peek() && !farBox) return;
     // Without Shift a box starts only on a visible city or selected bubble: a long press on a
     // train, station, empty map or a far disc keeps its ordinary interaction.
     if (!onNear && !e.shiftKey) return;
@@ -694,12 +719,14 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const p0 = pointerAt(map, p.x, p.y), p1 = pointerAt(map, x, y);
     const sel = selection.peek();
     if (p.far) {
-      const t = sel?.kind === "commuters" ? farTrip(sel, farIn(p0, p1)) : null;
+      // the inter-region bubbles in the box, else the local far ones (T-881; the two models' trips
+      // are not added together, and a box reaching past the zone's edge is aimed at the others)
+      const t = interBox(p.x, p.y, x, y) ?? (sel?.kind === "commuters" ? farTrip(sel, farIn(p0, p1)) : null);
       if (t) selection.value = t;
       return;
     }
     const s = selectGroups(groupsIn(p0, p1), p.add);
-    if (s) selection.value = s;
+    if (s) selection.value = cityTrip(s) ?? s;
   });
 
   // ---- the selection on the map and in the inspector ----
@@ -882,5 +909,6 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     return own < 0 ? null : [cellsWorld[own * 2], cellsWorld[own * 2 + 1]];
   };
 
+  setNearPoint(nearPoint);
   return { click, nearPoint };
 }

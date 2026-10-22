@@ -492,7 +492,7 @@ export class ClockClient {
           if (msg.from === "file") break;
         }
         // a different game: its clock waits for its demand (T-149); the snapshot follows
-        holdForGameLoad();
+        holdForGameLoad(msg.from === "new" ? "new" : saveSlotsState.peek().active || undefined);
         // Ids are renumbered by a load: nothing old may stay selected or half drawn.
         selection.value = null;
         tool.value = "select";

@@ -32,7 +32,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES } from "../game/cities";
 import { clock } from "../game/clock";
 import { lngLatToPack, packToLngLat } from "../game/coords";
-import { tripOpenedFrom } from "../game/trip";
+import { marketGroup, tripOpenedFrom } from "../game/trip";
 import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type Corridors, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
 import { selectedScope } from "../game/complexView";
 import { count } from "../game/format";
@@ -198,8 +198,11 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   /** What the city view draws: the overview, a selected city, or neither. */
   const cityMode = (): "overview" | "selected" | null => {
     const sel = selection.peek();
-    if (sel?.kind === "city") return "selected";
-    if (display.peek().commuters && map.getZoom() <= OVERVIEW_ZOOM && sel?.kind !== "commuters") return "overview";
+    const out = map.getZoom() <= OVERVIEW_ZOOM;
+    // T-885: zoomed in, a selected city stays selected under the local bubbles, so a click on one
+    // explores the trips between them
+    if (sel?.kind === "city") return out ? "selected" : null;
+    if (display.peek().commuters && out && sel?.kind !== "commuters") return "overview";
     return null;
   };
 
@@ -245,7 +248,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
         ? [localLine, localBar, interLine, interBar]
         : isOwn
           ? [interLine, interBar, `(${localLine})`]
-          : [`${count(t.all)} trips ${day} between ${own.name} and ${c.name}`, interBar];
+          : [`${count(t.all)} trips ${day} between ${own.name} and ${c.name}`, interBar, "Click to explore these trips"];
       return { ...t, city: c, isOwn, tag };
     // T-421: a zone still loading has its bar instead
     }).filter((p) => p.isOwn || (p.all > 0 && !(!own && zoneLoads.peek().has(p.city.id))));
@@ -444,13 +447,64 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       if (!f || !near) return undefined;
       const far = { place: f.place, gid: f.gid };
       const trip: Selection = sel.end === "home" ? { kind: "trip", from: near, to: f.at, far } : { kind: "trip", from: f.at, to: near, far };
-      tripOpenedFrom.value = { trip, from: sel, places: { end: sel.end, near: Uint32Array.from(sel.cells), far: new Uint32Array(0) } };
+      tripOpenedFrom.value = { trip, from: sel, places: { end: sel.end, near: Uint32Array.from(sel.cells), far: new Uint32Array(0), ...marketGroup(sel, near) } };
       return trip;
     }
     if (!marks?.cities) return undefined;
     const i = discAt(marks.discs, pointerAt(map, px, py), marks.anchor, view.bubbleSize);
     if (i < 0) return undefined;
-    return sel?.kind === "city" && sel.city === marks.cities[i] ? sel : { kind: "city", city: marks.cities[i] };
+    if (sel?.kind === "city" && sel.city === marks.cities[i]) return sel;
+    // T-885: with a city selected, another city's bubble opens the trip explorer between the two
+    if (sel?.kind === "city") return placeTrip(sel, [cityById(marks.cities[i]).place]) ?? sel;
+    return { kind: "city", city: marks.cities[i] };
+  };
+  /** T-885: the market's trips between a selected city and other places, as one far end. */
+  const placeTrip = (sel: Extract<Selection, { kind: "city" }>, places: number[]): Selection | null => {
+    const own = cityById(sel.city);
+    const fars = places.filter((p) => p !== own.place).map((place) => ({ place, gid: -1 }));
+    if (!fars.length) return null;
+    const centre = (place: number): [number, number] => {
+      const ll = CITIES.find((c) => c.place === place)?.center ?? own.center;
+      const p = lngLatToPack(ll[0], ll[1]);
+      return [p.x, p.y];
+    };
+    const trip: Selection = { kind: "trip", from: centre(own.place), to: centre(fars[0].place), far: fars[0], near: { place: own.place, gid: -1 } };
+    tripOpenedFrom.value = { trip, from: sel, places: { end: "home", near: new Uint32Array(0), far: new Uint32Array(0), ...(fars.length > 1 ? { fars } : {}) } };
+    return trip;
+  };
+  /** T-881, T-885: the inter-region bubbles whose centres are in a box (screen px): a bubble
+   * selection's far places or 6 km zones, or the city view's other cities, biggest first. */
+  const inBox = (x0: number, y0: number, x1: number, y1: number): { place: number; gid: number }[] => {
+    if (!marks) return [];
+    const out: { place: number; gid: number }[] = [];
+    for (let i = 0; i < marks.discs.length / DISC; i++) {
+      const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], marks.anchor));
+      if (p.x < Math.min(x0, x1) || p.x > Math.max(x0, x1) || p.y < Math.min(y0, y1) || p.y > Math.max(y0, y1)) continue;
+      if (marks.far) out.push({ place: marks.far[i].place, gid: marks.far[i].gid });
+      else if (marks.cities) out.push({ place: cityById(marks.cities[i]).place, gid: -1 });
+    }
+    return out;
+  };
+  interBox = (x0, y0, x1, y1) => {
+    const sel = selection.peek();
+    const ends = inBox(x0, y0, x1, y1);
+    if (!ends.length) return null;
+    if (sel?.kind === "city") return placeTrip(sel, ends.map((e) => e.place));
+    if (sel?.kind !== "commuters" || !marks?.far || !nearPointOf) return null;
+    const near = nearPointOf(sel);
+    if (!near) return null;
+    const first = marks.far.find((f) => f.place === ends[0].place && f.gid === ends[0].gid)!;
+    const far = ends[0];
+    const trip: Selection = sel.end === "home" ? { kind: "trip", from: near, to: first.at, far } : { kind: "trip", from: first.at, to: near, far };
+    tripOpenedFrom.value = { trip, from: sel, places: { end: sel.end, near: Uint32Array.from(sel.cells), far: new Uint32Array(0), ...(ends.length > 1 ? { fars: ends } : {}), ...marketGroup(sel, near) } };
+    return trip;
   };
   return { click };
 }
+
+/** T-881, T-885: a Shift box's inter-region bubbles (screen px) as a trip, from the commuter
+ * view's gesture; null when the box holds none. Set by `startIntercityView`. */
+export let interBox: (x0: number, y0: number, x1: number, y1: number) => Selection | null = () => null;
+/** The commuter view's `nearPoint`, for `interBox`. */
+let nearPointOf: ((sel: Extract<Selection, { kind: "commuters" }>) => [number, number] | null) | null = null;
+export const setNearPoint = (f: typeof nearPointOf) => (nearPointOf = f);

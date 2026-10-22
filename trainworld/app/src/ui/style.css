@@ -268,6 +268,10 @@ body.resizing, body.resizing * { user-select: none; }
 .chips-more { position: absolute; top: 50%; transform: translateY(-50%); width: 10px; font-size: 12px; line-height: 16px; text-align: center; color: var(--muted); }
 .chip.lg { min-width: 30px; height: 30px; padding: 0 7px; font-size: 18px; }
 .chip.sm { min-width: 16px; height: 16px; padding: 0 4px; font-size: 12px; }
+/* T-886: a train's next stops, each name followed by the bullets of the lines to change to */
+.train-stops .stop-name { display: flex; align-items: center; gap: 3px; }
+.train-stops .stop-name .name { flex: 0 1 auto; min-width: 24px; overflow: hidden; text-overflow: ellipsis; margin-right: 3px; }
+.train-stops .stop-name .chip { flex: none; }
 .badge-edit { display: inline-flex; padding: 0; border: 0; background: transparent; cursor: pointer; flex: none; font: inherit; }
 .badge-edit:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .line-list-actions, .line-stop-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
@@ -368,13 +372,13 @@ svg.fare-graph { width: 100%; height: auto; margin: 4px 0 6px; user-select: none
 .fg-axis { stroke: var(--rule); stroke-width: 1; }
 .fg-label { fill: var(--muted); font-size: 9px; }
 .fg-curve { fill: none; stroke: var(--accent); stroke-width: 1.8; }
-.fg-hover { fill: transparent; }
+.fg-hover { fill: transparent; cursor: copy; }
 .fg-guide { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 2; pointer-events: none; }
 .fg-dot { fill: var(--accent); pointer-events: none; }
-.fg-node { cursor: ns-resize; }
+.fg-node { cursor: move; }
 .fg-hit { fill: transparent; }
 .fg-knob { fill: var(--accent); stroke: var(--bg); stroke-width: 1.5; }
-.fg-node:hover .fg-knob { stroke: var(--text); }
+.fg-node:hover .fg-knob, .fg-knob.sel { stroke: var(--text); }
 path.hist-fares { stroke: var(--accent); }
 path.hist-costs { stroke: var(--muted); }
 circle.hist-fares { fill: var(--accent); stroke: none; }
@@ -484,11 +488,11 @@ rect.now { fill-opacity: .45; }
 .clock-box { flex: none; width: 148px; display: flex; flex-direction: column; gap: 2px; }
 .clock-text { display: flex; align-items: baseline; justify-content: space-between; line-height: 20px; }
 .clock .time.held { color: var(--muted); }
-.sky { position: relative; height: 15px; }
-.sky-canvas { display: block; width: 100%; height: 15px; }
+.sky { position: relative; height: 21px; }
+.sky-canvas { display: block; width: 100%; height: 21px; }
 .sky-hit, .band-hit { position: absolute; left: 0; right: 0; }
-.sky-hit { top: 0; height: 12px; }
-.band-hit { top: 12px; height: 6px; }
+.sky-hit { top: 0; height: 18px; }
+.band-hit { top: 18px; height: 6px; }
 /* T-862: today is a holiday in a country with the player's stations; SkyBanner.tsx HOLIDAY_COLOUR */
 .holiday-dot { display: inline-block; width: 6px; height: 6px; margin: 0 5px 2px 0; border-radius: 50%; background: #ff5fa2; vertical-align: middle; }
 .save-notice { flex: none; padding: 6px 10px; border-bottom: 1px solid var(--accent);

@@ -21,6 +21,12 @@ export function nearestStation(x: number, y: number): { name: string; d: number;
   return best;
 }
 
+/** T-865: the name of the station nearest a point within `within` metres, else "". */
+export const stationNameNear = (x: number, y: number, within = 3000): string => {
+  const s = nearestStation(x, y);
+  return s && s.d <= within ? s.name : "";
+};
+
 /** The first station along track leaving a node by edge `edge` (from its end `end`, 0 = a),
  * carrying on through plain nodes; null if the track ends or splits first. */
 export function stationTowards(edge: number, end: number): string | null {

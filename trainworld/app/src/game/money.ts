@@ -8,6 +8,8 @@
 //
 // Fare per ride = base + per km x the ride's length along the line. A ride that changes lines
 // pays the base once: boardings are scaled to trips by the city's rail trips over all boardings.
+// With a bent fare curve (T-883) a line's trips in a period are each charged the curve's fare at
+// their mean length (`faresFor`), the same as above for a straight one.
 //
 // The economy runs at 100x (T-081, `ECONOMY` in sim/src/track/params.rs, sent as
 // `MoneyState.economy`): a game day's fares and running costs are that many times a real day's,
@@ -16,6 +18,7 @@
 import { computed, signal } from "@preact/signals";
 import { DAY_KINDS } from "./days";
 import { demandByDay, type DemandView } from "./demand";
+import { faresFor, faresOf } from "./fareCurve";
 import { PERIODS } from "./periods";
 import { world } from "./world";
 import type { MoneyState, RegionNow } from "../workers/protocol";
@@ -62,7 +65,7 @@ function incomeFor(dv: DemandView | null): Income {
   const perPeriod = PERIODS.map(() => 0), ridesPeriod = PERIODS.map(() => 0);
   const lines = new Map<string, LineMoney>();
   if (!w || !m) return { perHour: perPeriod, rides: ridesPeriod, lines };
-  const { base, perKm } = m.fares;
+  const fares = faresOf(m.fares, m.fares);
   const x = m.economy;
   const boardings = w.save.lines.reduce((a, l) => a + (dv?.lines.get(l.id)?.ridersPerDay ?? 0), 0);
   const tripsPerBoarding = dv && boardings > 0 ? Math.min(1, dv.railTripsPerDay / boardings) : 1;
@@ -81,7 +84,7 @@ function incomeFor(dv: DemandView | null): Income {
       const rides = dm.ridersPerDay * tripsPerBoarding;
       pkm.forEach((pk, p) => {
         const share = total > 0 ? pk / total : 0;
-        const r = (base * rides * share + perKm * pk) * x;
+        const r = faresFor(fares, rides * share, pk) * x;
         perPeriod[p] += r;
         linePer[p] += r;
         ridesPeriod[p] += rides * share;

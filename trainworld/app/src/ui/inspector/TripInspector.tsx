@@ -15,7 +15,7 @@ import { purposeFilter, selection, shownDayPhrase, tool } from "../../game/ui";
 import { world } from "../../game/world";
 import { shownPeriod } from "../../map/tripView";
 import { Chip } from "../widgets";
-import { MarketTrip, marketFarName } from "./MarketTrip";
+import { MarketTrip, marketEndName, marketFarName } from "./MarketTrip";
 
 const min = (m: number) => `${Math.max(1, Math.round(m))} min`;
 const pct = (v: number) => (v > 0 && v < 0.005 ? "<1%" : `${Math.round(100 * v)}%`);
@@ -370,15 +370,19 @@ export function TripInspector() {
   const filter = purposeFilter.value;
   // T-866: between zones, from homes at one end to the far place (or the far place to them)
   const market = v?.market;
-  const towardsSel = sel.far && back?.trip === sel && back.places.end === "work";
+  const towardsSel = market?.end === "work";
   // T-865: a group at either end, named by its area count and the station nearest its centre
   const group = back?.trip === sel ? back.places.group : undefined;
   const homeSide = group && (back!.places.end === "home" ? [group.near, group.nearName] as const : [group.far, group.farName] as const);
   const destSide = group && (back!.places.end === "home" ? [group.far, group.farName] as const : [group.near, group.nearName] as const);
-  const sub = group && homeSide && destSide && sel.to
+  // T-885: a market trip from a bubble group: "in 12 areas around Midtown"
+  const nearArea = group && group.near > 1 ? `in ${group.near} areas${group.nearName ? ` around ${group.nearName}` : ""}` : null;
+  const sub = !market && group && homeSide && destSide && sel.to
     ? `From ${groupWords(homeSide[0], homeSide[1], "homes", "a home at the open ring")} to ${groupWords(destSide[0], destSide[1], DEST[filter] === "a destination" ? "places" : DEST[filter], `${DEST[filter]} at the filled disc`)}`
+    : market?.near && sel.to
+    ? `Between ${marketEndName(market.near)} and ${marketFarName(market)}`
     : market && sel.to
-    ? (towardsSel ? `From ${marketFarName(market)} to places ${toName ? `by ${toName}` : "around the filled disc"}` : `From homes ${fromName ? `by ${fromName}` : "around the open ring"} to ${marketFarName(market)}`)
+    ? (towardsSel ? `From ${marketFarName(market)} to places ${nearArea ?? (toName ? `by ${toName}` : "around the filled disc")}` : `From homes ${nearArea ?? (fromName ? `by ${fromName}` : "around the open ring")} to ${marketFarName(market)}`)
     : sel.to
     ? `From a home ${fromName ? `by ${fromName}` : "at the open ring"} to ${DEST[filter]} ${toName ? `by ${toName}` : fromName ? "at the filled disc" : "at the filled one"}`
     // T-253: the next click is the trip tool's hint at the map's foot, not repeated here

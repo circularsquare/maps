@@ -119,21 +119,25 @@ Below 700 px the bar takes two rows (name, cash, time and speed over the split).
   today's fares and running costs in its hover [T-728].
 - **The clock** [T-861], 148 px wide, all of it the local time where the player is looking
   [T-309]: the time (figure style) and the date without the year (normal style, "13:24" then
-  "Mon Feb 24"; hover "Monday, February 24, day 29"), over a 12 px sky and a 2 px demand band.
-  The calendar is in [world.md](world.md) "Calendar". The sky
-  (`ui/SkyBanner.tsx`, one canvas) shows 24 hours, 6 back and 18 ahead, coloured by the sun's
-  height at the view's centre on that date (`game/sun.ts`: night, twilight, a warm horizon at
-  sunrise and sunset, day), with a white line at now and the sun on it while it is up; it slides
-  left as game time passes, redrawn on animation frames from the clock's `now()` whenever it has
-  moved a fifth of a device pixel, never through Preact, so it moves smoothly at every speed. Its
-  hover gives today's sunrise and sunset. The band under it has each hour's demand level (red high,
-  yellow medium, blue low: `--dl-*` in style.css, both themes), so the colour under the line is the
-  level now; its hover names the period, when it ends and the next. A public holiday in a country
+  "Mon Feb 24"; hover "Monday, February 24, day 29"), over an 18 px scene and a 2 px demand band.
+  The calendar is in [world.md](world.md) "Calendar". The scene
+  (`ui/SkyBanner.tsx`, one canvas) shows 24 hours, 6 back and 18 ahead, a quarter of the way in
+  being now. Its sky takes flat colours by the sun's height at the view's centre on that date
+  (`game/sun.ts`): dark blue night with stars, a short pink and warm sunrise and sunset, light blue
+  day [T-882]. The sun, or a crescent moon at night, peeks in from the top edge at now. Along the
+  bottom are triangles of grass on a green strip and a track with sleepers, darker at night, and a
+  small red train with lit windows runs left to right along it, once across every 3 game hours, so
+  it stops when the clock does. Everything but the train is fixed to its time and slides left as
+  game time passes. It is redrawn on animation frames from the clock's `now()` whenever the train
+  has moved a fifth of a device pixel, never through Preact (about 0.7 ms a draw, 30 draws a
+  second at the top speed). Its hover gives today's sunrise and sunset. The band under it has each
+  hour's demand level (red high, yellow medium, blue low: `--dl-*` in style.css, both themes), so
+  the colour under the sun or moon is the level now; its hover names the period, when it ends and the next. A public holiday in a country
   with the player's stations [T-862] is a pink ribbon along the sky's top over its day (its
   country's local day), with a tick where it starts; the sky's hover lists those in view ("Tomorrow:
   Thanksgiving Day, United States", or "Tomorrow from 06:00: …" for a country on another local
   time), and on the day itself a pink dot sits before the date, whose hover names it. In the dark theme the
-  sky is mixed 22% towards the background. Pause and three
+  scene is mixed 15% towards the background. Pause and three
   speeds. **Space** pauses and resumes at the speed that was running, even with a button focused.
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
   on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
@@ -274,18 +278,20 @@ day or hour now is drawn as it fills (a dashed last segment, a paler bar) and mo
 Hovering a column gives its day or hour ("Fri 5", "Sat 6, 04:00", "so far" for now) with fares,
 costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
 charts are saved with the game and are there after a reload [T-567]. Then, for the whole
-network whatever the toggle: the fare curve, drawn as a graph of the fare against distance on a log
-axis from 1 to 1,000 km or miles, the fare on a log axis from $0.10, its top the smallest 1, 1.5, 2, 3, 4, 5, 6
-or 8 times a power of ten (at least $10) that is at least twice the fare at 100, so the base node moves
-about $0.09 a pixel at $2 [T-864, `ui/FareGraph.tsx`]. Two nodes are dragged up or down:
-the one at 1 sets the base fare (to $0.05, the curve shifts), the one at 100 the fare for each km or mile
-(to the cent, the curve pivots on its start, never below the base). A drag changes the graph and the
-figures below it as the pointer moves, and sends the fare to the game once on release (each change
-restarts demand; fares are outside the undo history). A hover anywhere on the graph names the fare at that distance, a
-node's hover its amount. Below it
-(each ride, each km, and what a 10 km ride costs; each amount steps with the buttons, or a click
-on it opens a box to type it, Enter or leaving the box applying and Escape cancelling, with
-the stepper's rounding to the cent and floor of $0 [T-626, `TypedValue` in `ui/widgets.tsx`]); cars
+network whatever the toggle: the fare curve (rule: [track-and-service.md](track-and-service.md),
+fares), drawn as a graph of the fare against trip length on a log axis from 0.5 to 1,000 km or miles,
+the fare on a log axis from $0.10, its top the smallest 1, 1.5, 2, 3, 4, 5, 6 or 8 times a power of ten
+(at least $100) that is at least 1.5 times the fare at 1,000 [T-864, T-883, `ui/FareGraph.tsx`]. Each
+node drags both ways: distance to two significant figures, fare to $0.05 under $10, $0.50 under $100,
+then $5, kept between its neighbours in both (so the curve never falls). Pressing on the graph off a
+node adds one on the curve there and drags it; a double-click on a node removes it, down to two. A
+drag changes the graph and the figures below it as the pointer moves, and sends the fare to the game
+once on release (each change restarts demand; fares are outside the undo history). A hover anywhere
+on the graph names the fare at that distance, a node's hover its distance and fare. A click or drag
+selects a node; below the graph its Distance and Fare (each steps with the buttons, or a click on it
+opens a box to type it, Enter or leaving the box applying and Escape cancelling [T-626, `TypedValue`
+in `ui/widgets.tsx`], clamped as a drag is), a bin button removing it while there are more than two,
+and what a 10 km or mile ride costs; cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
 **The Cities tab** [T-550, `ui/Cities.tsx`; its own tab since T-749, no longer last in Money],
@@ -377,7 +383,7 @@ registry centre and zoom, or over New York with none [T-310].
 
 ## Loading
 
-[T-149, T-172, T-180, T-212, T-232, T-243, T-318, T-793; `game/loading.ts`, `ui/LoadingScreen.tsx`]
+[T-149, T-172, T-180, T-212, T-232, T-243, T-318, T-793, T-884; `game/loading.ts`, `ui/LoadingScreen.tsx`]
 
 - Nothing is blocked: the map, inspectors and building work as soon as the network is drawn.
 - **A loaded game** (the page opening, a file, a slot, a new game) holds only the clock until the
@@ -402,18 +408,22 @@ registry centre and zoom, or over New York with none [T-310].
   Nothing else animates. The figures behind it are the solve's estimates, or the last
   final result kept beside the save when there is one (T-328; the split's hover ends "(from the
   last time this game was open)").
-- **The bar moves in proportion to time** [T-243, T-793, notes/T-793.md]: each step weighs as long as
-  it is expected to take (a download by its rate; opening 220 ms per MB of city pack, 450 ms and 20 ms
-  per MB for a market pack; the first estimate about 0.6 s plus 2.2 ms per line stop, scaled by this
-  browser's last load of the zone in view (a game of 1,000 stops is assumed with none), and each
-  crowding round about as long again: weights 1, 1.1, 1.05, 0.55). Inside
-  a step the fill moves with time against that expectation until the step really ends, slowing if
-  late. Once a solve's first period is in, and again as each round is published, the rounds still to
-  come are expected at the pace measured so far, so a slower machine or bigger network corrects the
-  bar within the first wave of periods. It never
-  goes back, and is never full before the work is done (a finished load shows about 95%, then the
-  card goes). A game loaded while the last one's bar is still up starts the bar over from empty
-  [T-840].
+- **The bar is the share of the wait gone** [T-243, T-793, T-884, notes/T-884.md]: the time since the
+  pick (or the load) against that time plus the time still expected, so it keeps an even pace while
+  the expectation holds and slows, never stops, when a step runs late. A game's wait is first expected
+  to last as long as its last one in this browser (by slot, the last 12; a new game's under "new"),
+  unless its network has since changed by over a fifth of its stops; once the solve has shown its
+  pace, that memory may move the step model's estimate only between 0.7 and 1.5 times, and past its
+  length a quarter of the time so far is still expected. The step model, used alone with nothing
+  remembered: downloads at their rate; opening at its rate once a quarter of it is in (each pack in
+  every worker), before that 220 ms per MB of city pack and 450 ms plus 20 ms per MB for a market
+  pack; the solve as the first estimate about 0.6 s plus 2.2 ms per line stop, scaled by this
+  browser's last solve of the zone in view (a game of 1,000 stops is assumed with none), each
+  crowding round about as long again (weights 1, 1.1, 1.05, 0.55), the rounds still to come at the
+  pace measured so far, and a round running late expected to go on a further 15% of its time so far.
+  The bar never goes back and is never full before the card goes. The pick and the game it opens are
+  one wait: what loads before the game's network is known (the view's zone) stays in the same bar. A
+  game loaded while the last one's bar is still up starts the bar over from empty [T-840].
 - A city opened later (a pan, construction) shows its estimate at once and the crowding rounds
   refine it with the clock running; the status says "Estimate, refining 2/4…" (hover: the figures
   are an early estimate) until the zone in view's cluster has its final [T-421].

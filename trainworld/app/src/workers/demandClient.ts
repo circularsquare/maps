@@ -60,7 +60,7 @@ import {
   demandSolving,
 } from "../game/demand";
 import { makeFrame } from "../game/frame";
-import { demandIdle, loadComplete, loadFailed, loadProgress, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
+import { demandIdle, gameLoadArmed, gameWait, loadComplete, loadFailed, loadProgress, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
 import { PERIODS, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "../game/purposes";
 import { perfOff } from "../perfFlags";
@@ -135,7 +135,7 @@ export function poolSize(): number {
 /** The service demand reads, with the UI's ids. */
 interface Service {
   frame: FrameSpec;
-  fare: { base: number; perKm: number };
+  fare: { base: number; perKm: number; nodes?: [number, number][] };
   /** `complex`: the station's complex (T-161); absent = a complex of its own */
   stations: { id: string; x: number; y: number; complex?: number }[];
   /** `wrapS`: a circle's stand at its first stop, riding on round (T-798) */
@@ -357,19 +357,25 @@ function timeShare(since: number | undefined, expected: number, now: number): nu
  * expectation (`timeShare`: creeping, never done until published); once its first period is in, the
  * round is expected at that time times the waves of periods a worker takes. `ms` is the stage's expected length.
  */
-function solveStage(sentAt: number, roundAt: readonly number[] | undefined, published: number, landed: number, firstLandAt: number | undefined, doneRound: number, prior: number, now: number): { ms: number; share: number } {
+function solveStage(sentAt: number, roundAt: readonly number[] | undefined, published: number, landed: number, firstLandAt: number | undefined, doneRound: number, prior: number, now: number): { ms: number; share: number; rem: number; measured: boolean } {
   let total = 0, doneW = 0;
   for (let r = 0; r <= doneRound; r++) total += roundWeight(r);
   const d = Math.min(published + 1, doneRound + 1);
   for (let r = 0; r < d; r++) doneW += roundWeight(r);
   const boundary = d > 0 ? roundAt?.[d - 1] ?? sentAt : sentAt;
   let pace = d > 0 && boundary > sentAt ? (boundary - sentAt) / doneW : prior / total;
-  if (d > doneRound) return { ms: pace * total, share: 1 };
+  if (d > doneRound) return { ms: pace * total, share: 1, rem: 0, measured: true };
   const w = roundWeight(d);
   // the first period in is one wave of the round: the round takes as many waves as a worker has periods
-  if (firstLandAt !== undefined && landed > 0 && landed < PERIODS.length) pace = Math.max(pace, ((firstLandAt - boundary) * solveWaves) / w);
+  const waved = firstLandAt !== undefined && landed > 0 && landed < PERIODS.length;
+  if (waved) pace = Math.max(pace, ((firstLandAt - boundary) * solveWaves) / w);
   const cur = Math.max(Math.min(STEP_CAP, landed / PERIODS.length), timeShare(boundary, pace * w, now));
-  return { ms: pace * total, share: (doneW + w * cur) / total };
+  // T-884: the time still to come; a round running past its expectation is expected to go on a while
+  // (never "about to end"), and the rounds after it at the pace it has shown
+  const spent = Math.max(0, now - boundary);
+  const late = Math.max(pace, spent / w);
+  const rem = Math.max(pace * w - spent, 0.15 * spent) + late * (total - doneW - w);
+  return { ms: pace * total, share: (doneW + w * cur) / total, rem, measured: d > 0 || waved };
 }
 /** `finalMs`: to the card going (T-421: the zone in view's final); `allMs`: to the solve's final */
 interface SolveRecord { ms: number; stops: number; finalMs?: number; allMs?: number }
@@ -383,6 +389,8 @@ function lastSolve(): SolveRecord | null {
   } catch { return null; }
 }
 function rememberSolve(ms: number, stops: number, finalMs?: number, allMs?: number) {
+  // (T-884: an empty game's solve, the market alone, would stand in for every zone with no record)
+  if (stops <= 0) return;
   try {
     const rec: SolveRecord = { ms, stops, ...(finalMs ? { finalMs } : {}), ...(allMs ? { allMs } : {}) };
     const city = activeCity.peek();
@@ -392,6 +400,24 @@ function rememberSolve(ms: number, stops: number, finalMs?: number, allMs?: numb
     localStorage.setItem(LAST_SOLVE, JSON.stringify({ ...rec, by }));
   } catch { /* storage unavailable */ }
 }
+/** T-884: how long each game's last loading card stayed up, by slot (the last 12), with its stops */
+const LAST_WAIT = "anitabuilder-load-wait";
+interface WaitRecord { ms: number; stops: number }
+function lastWait(key: string): WaitRecord | null {
+  try {
+    const r = JSON.parse(localStorage.getItem(LAST_WAIT) || "null")?.[key];
+    return r && r.ms > 0 ? r : null;
+  } catch { return null; }
+}
+function rememberWait(key: string, rec: WaitRecord) {
+  try {
+    const all: Record<string, WaitRecord> = JSON.parse(localStorage.getItem(LAST_WAIT) || "null") ?? {};
+    delete all[key];
+    const keep = Object.entries(all).slice(-11);
+    localStorage.setItem(LAST_WAIT, JSON.stringify(Object.fromEntries([...keep, [key, rec]])));
+  } catch { /* storage unavailable */ }
+}
+
 /** T-793: the stops a game is guessed to have until its network arrives, with no solve remembered */
 const GUESS_STOPS = 1000;
 /** Expected ms from a solve's start to its first estimate, or (`toFinal`, T-347) to the card going,
@@ -581,7 +607,9 @@ class DemandClient {
   private fetchingFootprints = new Set<CityId>();
   private onOpen: { item: string; f: (ok: boolean) => void }[] = [];
   /** the load the percentage describes: its items, the solve that completes it, its best percentage */
-  private job: { items: string[]; cities: CityId[]; startup: boolean; version?: number; best: number; anchor?: { shown: number; frac: number } } | null = null;
+  /** `since`, `wait`: T-884, when the wait the bar measures began (a game load's: its pick or load) and
+   * which game wait it is (game/loading.ts `gameWait`); null for a load without a hold */
+  private job: { items: string[]; cities: CityId[]; startup: boolean; version?: number; best: number; anchor?: { shown: number; frac: number }; since: number; wait: number | null } | null = null;
   private progressTimer = 0;
   /** T-243: while a load runs the bar also moves with time, so progress is recomputed this often */
   private progressTick = 0;
@@ -1198,6 +1226,12 @@ class DemandClient {
     return !need || job.cities.some((id) => need.has(id));
   }
 
+  private newJob(atStartup: boolean): NonNullable<DemandClient["job"]> {
+    const now = performance.now(), w = gameWait();
+    const held = !!this.hold || gameLoadArmed();
+    return { items: [], cities: [], startup: atStartup, best: 0, since: held && w.since > 0 ? Math.min(w.since, now) : now, wait: held ? w.seq : null };
+  }
+
   private progressSoon() {
     if (!this.progressTimer) this.progressTimer = setTimeout(() => { this.progressTimer = 0; this.progress(); }, 100) as unknown as number;
   }
@@ -1297,7 +1331,7 @@ class DemandClient {
         if (!atStartup) loadProgress.value = null;
         return;
       }
-      this.job = { items: [], cities: [], startup: atStartup, best: 0, version: heldSolve && !missing.length ? s!.version : undefined };
+      this.job = { ...this.newJob(atStartup), version: heldSolve && !missing.length ? s!.version : undefined };
     }
     const job = this.job;
     for (const id of missing) if (!job.items.includes(id)) { job.items.push(id); job.cities.push(id); }
@@ -1310,6 +1344,10 @@ class DemandClient {
     const ofJob = !!s && job.version !== undefined && s.version === job.version;
     const solved = !needsSolve || (ofJob && (Math.max(s.published, ahead) >= doneRound || (!!this.hold && this.viewHasFinal(s))));
     if (solved && job.items.every(loaded)) {
+      // T-884: a game load's card goes with this; its wait is remembered for the game's next load (a new
+      // game's under "new", for the next new game)
+      const w = gameWait();
+      if (job.wait === w.seq && s) rememberWait(w.key, { ms: Math.round(performance.now() - job.since), stops: s.svc.lines.reduce((n, l) => n + l.stops.length, 0) });
       // remembered for the next load's estimate (T-243): a startup's solve, so it describes the
       // game a reload opens; T-347, T-421: and the time to the card going, which its bar measures
       // (not a bare start's, T-351: its solve covers no zone and says nothing of the next game's)
@@ -1317,9 +1355,11 @@ class DemandClient {
         const stops = s.svc.lines.reduce((n, l) => n + l.stops.length, 0);
         const at = s.refinedAt ?? (s.ahead && s.clusterRes?.get(s.ahead.key)?.at);
         const finalMs = at !== undefined ? Math.round(at - s.sentAt) : undefined;
-        // T-421: a solve released at the view's final is remembered at its own final (`publish`)
+        // T-421: a solve released at the view's final is remembered again at its own final (`publish`);
+        // T-884: and now, since a later solve (a zone opened after the card) may take its place first
+        const first = s.firstAt !== undefined ? s.firstAt - s.sentAt : finalMs !== undefined ? finalMs / FINAL_FACTOR : undefined;
+        if (first !== undefined) rememberSolve(Math.round(first), stops, finalMs, s.refinedAt !== undefined ? finalMs : undefined);
         if (s.refinedAt === undefined) this.timeRest = { version: s.version, stops, finalMs };
-        else if (s.firstAt !== undefined) rememberSolve(Math.round(s.firstAt - s.sentAt), stops, finalMs, finalMs);
       }
       this.job = null;
       clearInterval(this.progressTick);
@@ -1357,8 +1397,9 @@ class DemandClient {
     // zones opened bare, T-325).
     const svc = this.latest();
     // (T-351: a solve covering no zone, the market alone, is short)
-    const prior = !needsSolve ? 0 : sn?.size === 0 ? SOLVE_MS.base : solveEstimate(svc ? svc.lines.reduce((n, l) => n + l.stops.length, 0) : null, !!this.hold);
-    let solveMs = prior, solve = 0;
+    const stops = svc ? svc.lines.reduce((n, l) => n + l.stops.length, 0) : null;
+    const prior = !needsSolve ? 0 : sn?.size === 0 ? SOLVE_MS.base : solveEstimate(stops, !!this.hold || gameLoadArmed());
+    let solveMs = prior, solve = 0, solveRem = prior, measured = false;
     if (needsSolve && s && job.version !== undefined && s.version === job.version) {
       // T-793: a game load's zone in view is final with its cluster solved ahead (T-402): that cluster's rounds
       const a = this.hold && s.ahead && [...this.viewedSet()].every((id) => s.ahead!.cities.includes(id)) ? s.clusterRes?.get(s.ahead.key) : undefined;
@@ -1366,16 +1407,34 @@ class DemandClient {
       const st = solveStage(s.sentAt, (a ?? s).roundAt, published, byRound[published + 1]?.filter(Boolean).length ?? 0, a ? undefined : s.roundFirstAt?.[published + 1], doneRound, prior, now);
       solveMs = st.ms;
       solve = st.share;
+      solveRem = st.rem;
+      measured = st.measured;
     }
-    const doneMs = dlMs * dl + openMs * open + solveMs * solve;
-    const fraction = Math.min(0.99, doneMs / (dlMs + openMs + solveMs));
+    // T-884: the bar is the share of the wait gone, the time so far against the time so far plus the
+    // time still expected, so it keeps an even pace while the expectation holds and slows when a step
+    // runs late. Still expected: downloads at their rate; the opening at its rate once a quarter of it
+    // is in (each pack in every worker), else as modelled; the solve as `solveStage` says.
+    const remDl = downloaded ? 0 : got > 0 && total > got ? dlElapsed * (total - got) / got : 300;
+    const openReal = openMs > 0 ? openDone / openMs : 1, openSpent = openStart < Infinity ? now - openStart : 0;
+    const remOpen = job.items.every(loaded) ? 0 : openReal >= 0.25 ? openSpent * (1 - openReal) / openReal : Math.max(openMs * (1 - openReal) - openSpent, 0.5 * openSpent);
+    let rem = remDl + remOpen + solveRem;
+    // A game's wait as long as its last one (this browser, this slot) is the better guess until the solve
+    // has shown its pace, and a check on it after; not when the network has since changed size much.
+    // Past that length, a quarter of the time so far is still expected, or less if the model says so.
+    const spentAll = now - job.since;
+    const rec = job.wait !== null ? lastWait(gameWait().key) : null;
+    if (rec && (stops === null || Math.abs(stops - rec.stops) <= 0.2 * Math.max(stops, rec.stops) + 50)) {
+      const left = rec.ms - spentAll;
+      rem = measured ? Math.min(1.5 * rem, Math.max(0.7 * rem, left)) : Math.max(left, Math.min(rem, 0.25 * spentAll));
+    }
+    const fraction = Math.min(0.99, spentAll / Math.max(1, spentAll + rem));
     // When an expectation grows (the network arrives bigger than guessed, a download slows), the
     // true fraction falls below what is shown: rather than stand still until it catches up, the
     // rest of the work is spread over the rest of the bar from where it stands.
     let shown = job.anchor ? job.anchor.shown + (1 - job.anchor.shown) * Math.max(0, fraction - job.anchor.frac) / Math.max(1e-6, 1 - job.anchor.frac) : fraction;
     if (shown < job.best - 1e-6) { job.anchor = { shown: job.best, frac: fraction }; shown = job.best; }
     job.best = Math.max(job.best, Math.min(0.99, shown));
-    this.barParts = { dlMs, dl, openMs, open, solveMs, solve, fraction, shown: job.best }; // ?debug=1
+    this.barParts = { dlMs, dl, openMs, open, solveMs, solve, remDl, remOpen, solveRem, rem, rec: rec?.ms ?? 0, spent: spentAll, fraction, shown: job.best }; // ?debug=1
     const step = dl < 1 ? "Downloading city data" : open < 1 ? "Opening city data" : "Calculating demand";
     loadProgress.value = { cities: job.cities.filter((id) => !isMarket(id)), fraction: job.best, step, startup: job.startup };
   }
@@ -1732,9 +1791,12 @@ class DemandClient {
     }
     this.lastKey = key;
     demandUpdating.value = true;
-    // T-840: a game loaded while the last one's bar is up starts the bar over, since its best share
-    // was measured against the last game's (smaller) solve and the bar never goes back
-    if (gameLoad && this.job) this.job = { items: [], cities: [], startup: startup.peek() === "loading", best: 0 };
+    // T-840: the game's own load replaces what loaded before its network was known; a game loaded while
+    // the last one's bar is up starts the bar over (T-884: not the pick's own wait, which goes on)
+    if (gameLoad && this.job) {
+      const same = this.job.wait === gameWait().seq;
+      this.job = { ...this.newJob(startup.peek() === "loading"), ...(same ? { best: this.job.best, anchor: this.job.anchor, since: this.job.since } : {}) };
+    }
     this.send(svc, performance.now());
     // T-328: a whole game's network: its last final result may be kept beside the save
     if (this.hold && this.cacheOn) void this.tryCache(svc);
@@ -2196,16 +2258,17 @@ class DemandClient {
 
   /** T-866: the trip explorer between zones (game/trip.ts `MarketTrip`): the longer trips of a
    * bubble selection's cells with place `far`, or its 6 km zone `farGid` (-1 the whole place). */
-  marketTrip(end: "home" | "work", cells: Uint32Array, far: number, farGid: number): Promise<(MarketPeriod | null)[] | null> {
-    if (cells.length === 0) return Promise.resolve(null);
-    return this.viaRound(`icTrip|${end}|${cells.join(",")}|${far}|${farGid}`, (t) => this.marketTripAt(t, end, cells, far, farGid));
+  marketTrip(end: "home" | "work", cells: Uint32Array, far: number, farGid: number, near?: { place: number; gid: number }): Promise<(MarketPeriod | null)[] | null> {
+    if (cells.length === 0 && !near) return Promise.resolve(null);
+    const key = near ? `${near.place}:${near.gid}` : cells.join(",");
+    return this.viaRound(`icTrip|${end}|${key}|${far}|${farGid}`, (t) => this.marketTripAt(t, end, cells, far, farGid, near));
   }
-  private async marketTripAt(t: Target, end: "home" | "work", cells: Uint32Array, far: number, farGid: number): Promise<(MarketPeriod | null)[] | null> {
+  private async marketTripAt(t: Target, end: "home" | "work", cells: Uint32Array, far: number, farGid: number, near?: { place: number; gid: number }): Promise<(MarketPeriod | null)[] | null> {
     const solve = t.solve;
     if (!solve) return null;
     const e = end === "home" ? 0 : 1;
     let sq: { xy: Float32Array; share: Float32Array } | undefined;
-    if (this.isBare(activeCity.peek())) {
+    if (!near && this.isBare(activeCity.peek())) {
       const [r] = await this.ask((id) => ({ kind: "bareSquares", id, version: t.view, end: e, cells }), [this.computeN]);
       if (r?.kind !== "bareSquares" || !r.xy || !r.share) return null;
       sq = { xy: r.xy, share: r.share };
@@ -2215,7 +2278,7 @@ class DemandClient {
       for (let k = 0; k < n; k++) at[o + k] = at[o + 2 * n - 1 - k] = { station: stops[k], line: id, k, o, n };
     const periods: (MarketPeriod | null)[] = PERIODS.map(() => null);
     let mask = 0;
-    for (const r of await this.ask((id) => ({ kind: "icTrip", id, version: t.version, end: e, cells, far, farGid, ...(sq ? { sq } : {}) }), undefined, [], undefined, t)) {
+    for (const r of await this.ask((id) => ({ kind: "icTrip", id, version: t.version, end: e, cells, far, farGid, ...(sq ? { sq } : {}), ...(near ? { near } : {}) }), undefined, [], undefined, t)) {
       if (r.kind !== "icTrip" || !r.answers) return null;
       mask |= r.mask;
       r.periods.forEach((q, i) => (periods[q] = readMarketPeriod(r.answers![i], at)));
@@ -2886,7 +2949,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   NEW_GAME = newGame && !TEST && !perfOff("bareStart");
   const c = (client = new DemandClient(city));
   setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
-  setMarketTripQuery((end, cells, far, farGid) => c.marketTrip(end, cells, far, farGid)); // T-866
+  setMarketTripQuery((end, cells, far, farGid, near) => c.marketTrip(end, cells, far, farGid, near)); // T-866, T-885
   setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
   if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose) };

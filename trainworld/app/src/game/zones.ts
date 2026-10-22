@@ -32,6 +32,12 @@ export const zonesLoadForView = signal((() => { const v = hashView(); return !v 
 export const zonesLoaded = signal(0);
 
 const asked = new Set<CityId>();
+/** T-884: boundaries arriving in many small batches (a game across Japan's prefectures) re-place
+ * everything once per quarter second, not once per batch */
+let bumpTimer = 0;
+const bumpLoaded = () => {
+  if (!bumpTimer) bumpTimer = setTimeout(() => { bumpTimer = 0; zonesLoaded.value++; }, 250) as unknown as number;
+};
 
 /** The footprints of `ids`, or null (and they are fetched) while any is not in. Failed ones are left out. */
 function footprintsOf(ids: CityId[]): Footprint[] | null {
@@ -39,7 +45,7 @@ function footprintsOf(ids: CityId[]): Footprint[] | null {
   if (missing.length) {
     const fresh = missing.filter((id) => !asked.has(id));
     for (const id of fresh) asked.add(id);
-    if (fresh.length) void loadFootprints(fresh).then(() => { zonesLoaded.value++; });
+    if (fresh.length) void loadFootprints(fresh).then(bumpLoaded);
     return null;
   }
   return ids.map((id) => footprintOf(id)).filter((f): f is Footprint => !!f);
@@ -77,13 +83,21 @@ function nearestZone(fs: Footprint[], lon: number, lat: number): { id: CityId; d
  * Until the boundaries near it are in, the nearest centre within `CENTRE_REACH_M`. The one answer
  * to "which region is the view in" (the top bar's name, what loads, T-309's local time). */
 export function placeAt(lon: number, lat: number): CityId | null {
+  const key = lon * 1e3 + lat;
+  const hit = placed.get(key);
+  if (hit !== undefined && hit.lon === lon && hit.lat === lat && (hit.at < 0 || hit.at === zonesLoaded.peek())) return hit.id;
   const ids = around(lon, lat);
-  if (!ids.length) return null;
-  const fs = footprintsOf(ids);
-  if (!fs) return cityWithin(lon, lat);
-  const z = nearestZone(fs, lon, lat);
-  return z && z.d <= ZONE_REACH_M ? z.id : null;
+  const fs = ids.length ? footprintsOf(ids) : [];
+  const id = !ids.length ? null : !fs ? cityWithin(lon, lat) : (() => { const z = nearestZone(fs, lon, lat); return z && z.d <= ZONE_REACH_M ? z.id : null; })();
+  if (placed.size >= 200_000) placed.clear();
+  placed.set(key, { lon, lat, id, at: fs ? -1 : zonesLoaded.peek() });
+  return id;
 }
+/** T-884: places asked before, for good once every nearby boundary was in (footprints are fetched
+ * once, so no later one changes the answer), else until the next boundaries arrive (`at`). Placing
+ * every station and track edge on each money update, walking Japan's prefecture coastlines, froze the
+ * page for over a minute while a game loaded. */
+const placed = new Map<number, { lon: number; lat: number; id: CityId | null; at: number }>();
 
 /** Zones other than `focus` whose boundaries touch the box, nearest to (lon, lat) first, at most
  * NEARBY; zones whose boundaries are not in yet are left out until they arrive. */

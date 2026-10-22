@@ -23,6 +23,7 @@ import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, d
 import { CITIES, cityToMarket, cityToWorld, HOME_CITY, marketWorld, setWorldFrame, worldToCity, worldToLonLat, type CityId } from "../game/cities";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
+import { curveKnots } from "../game/fareCurve";
 import type { BareFigures, DemandNetwork, FromDemand, MarketPack, MarketRows, OpenRejected, ToDemand } from "./demandProtocol";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
 
@@ -608,14 +609,17 @@ function query(msg: Query) {
       // T-866: each period from the market part with the most rail (each part's rail is its own
       // network's); with no part, an answer with no rail
       const ok = marketLive || (mcs.length === 0 && !!intercity && live);
-      const sq = !ok ? null : msg.sq ?? (a ? selectionSquares(msg.city, a, msg.end, msg.cells) : null);
+      // T-885: a near place or 6 km zone instead of cells
+      const near = ok ? msg.near : undefined;
+      const sq = !ok || near ? null : msg.sq ?? (a ? selectionSquares(msg.city, a, msg.end, msg.cells) : null);
+      const go = !!near || !!sq;
       const answers: Float64Array[] = [], periods: number[] = [];
-      if (sq) {
+      if (go) {
         const place = MARKET_OF[msg.city];
         for (const q of mine) {
           let best: Float64Array | null = null;
           for (const c of mcs) {
-            const v = c.part!.market_trip(q, day, place, sq.xy, sq.share, msg.end, msg.far, msg.farGid);
+            const v = near ? c.part!.market_trip_between(q, day, near.place, near.gid, msg.end, msg.far, msg.farGid) : c.part!.market_trip(q, day, place, sq!.xy, sq!.share, msg.end, msg.far, msg.farGid);
             if (v[0] !== 1) continue;
             if (!best || v[3] > best[3]) { marketTripNodesGlobal(v, viewOf(c, c.part!).nodeGlobal); best = v; }
           }
@@ -624,8 +628,8 @@ function query(msg: Query) {
           periods.push(q);
         }
       }
-      const mask = !sq ? 0 : mcs.length ? mcs.reduce((m, c) => m & c.part!.solved_mask(), 31) : mine.reduce((m, q) => m | (1 << q), 0);
-      sendMessage({ kind: "icTrip", id: msg.id, version: msg.version, mask, periods, answers: sq ? answers : null }, answers.map((v) => v.buffer));
+      const mask = !go ? 0 : mcs.length ? mcs.reduce((m, c) => m & c.part!.solved_mask(), 31) : mine.reduce((m, q) => m | (1 << q), 0);
+      sendMessage({ kind: "icTrip", id: msg.id, version: msg.version, mask, periods, answers: go ? answers : null }, answers.map((v) => v.buffer));
     } else if (msg.kind === "bare") {
       // T-325: no network in it, so any version and round; the everyday legs per solving worker's
       // periods, as each would have sent them, so the main thread adds them up as it does those
@@ -996,6 +1000,8 @@ async function run() {
             setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);
           }
           p.set_fares(m.fare.base, m.fare.perKm, m.hopKm);
+          // T-883: absent from WASM built before it
+          if ("set_fare_curve" in p) p.set_fare_curve(curveKnots(m.fare));
         }
         // T-124: a period is kept only if every population kept it (its inputs are unchanged: the
         // Rust side) and each holds it from a whole solve of this cluster's period (`psig`): the

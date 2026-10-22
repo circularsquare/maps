@@ -251,5 +251,7 @@ export type Selection =
   | { kind: "trip"; from: [number, number]; to: [number, number] | null; fromStation?: StationId; toStation?: StationId;
       /** T-866: the far end is another zone's: a market place, or one of its 6 km zones (`gid`, -1
        * the whole place); the trips are the regional market's */
-      far?: { place: number; gid: number } }
+      far?: { place: number; gid: number };
+      /** T-885: the near end is a market place or 6 km zone too, rather than the focused zone's cells */
+      near?: { place: number; gid: number } }
   | null;

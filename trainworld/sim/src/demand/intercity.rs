@@ -16,7 +16,7 @@
 //! data/packs/intercity.json, the joint commute gravity's input, and the tests' fixtures) opens as
 //! a closed world over its own zones with the ground curve alone.
 use super::{
-    api::{demand_groups, merge_stations, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
+    api::{check_fare_curve, demand_groups, merge_stations, put_fare_curve, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
     clock::now_ms,
     days::{load_factor, share_out, share_ret, LONGER, WEEKDAY, WORK},
     kernel::*,
@@ -1645,6 +1645,7 @@ pub struct IntercityApi {
     per: Vec<Option<Period>>,
     fare_km: Vec<f32>,
     fare_per_km: f32,
+    fare_curve: Vec<f32>,
     complex_in: Vec<u32>,
     /// `DemandApi::set_span` (T-842).
     span_in: Vec<f32>,
@@ -1875,6 +1876,7 @@ impl IntercityApi {
             per: (0..PERIODS).map(|_| None).collect(),
             fare_km: vec![],
             fare_per_km: 0.,
+            fare_curve: vec![],
             complex_in: vec![],
             span_in: vec![],
             chunk: 0.,
@@ -2447,6 +2449,14 @@ impl IntercityApi {
         }
         Ok(())
     }
+    pub fn set_fare_curve(&mut self, knots: &[f32]) -> Result<(), String> {
+        check_fare_curve(knots)?;
+        if !same_bits(knots, &self.fare_curve) {
+            self.fare_curve = knots.to_vec();
+            self.per.iter_mut().for_each(|p| *p = None);
+        }
+        Ok(())
+    }
     pub fn solve(&mut self, q: usize) -> bool {
         let Some(svc) = &self.svc else { return false };
         if q >= PERIODS {
@@ -2465,6 +2475,7 @@ impl IntercityApi {
         for (r, f) in g.rn_fare.iter_mut().enumerate() {
             *f = self.fare_km.get(r).copied().unwrap_or(0.) * self.fare_per_km;
         }
+        put_fare_curve(&mut g, &self.fare_curve, &self.fare_km, self.base.fare_min, self.fare_per_km);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);

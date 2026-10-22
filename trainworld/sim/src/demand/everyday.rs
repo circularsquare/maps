@@ -2,7 +2,7 @@
 //! Coarse destination gravity is integrated by deterministic stratified cell samples. Endpoint
 //! distances, the 150 m exclusion, walking and regional overlap use the actual sampled cells.
 use super::{
-    api::{scale_triples, DemandApi, PEAK_HOUR_FACTOR},
+    api::{put_fare_curve, scale_triples, DemandApi, PEAK_HOUR_FACTOR},
     clock::now_ms,
     days::{everyday, load_factor, share_out, share_ret, WEEKDAY},
     kernel::*,
@@ -2269,6 +2269,13 @@ impl EverydayApi {
         }
         Ok(())
     }
+    pub fn set_fare_curve(&mut self, knots: &[f32]) -> Result<(), String> {
+        self.engine.set_fare_curve(knots)?;
+        if self.engine.same == 0 {
+            self.per.iter_mut().for_each(|v| *v = None);
+        }
+        Ok(())
+    }
     pub fn solve(&mut self, q: usize) -> bool {
         if q >= PERIODS {
             return false;
@@ -2290,6 +2297,7 @@ impl EverydayApi {
         for (r, fare) in g.rn_fare.iter_mut().enumerate() {
             *fare = self.engine.fare_km.get(r).copied().unwrap_or(0.0) * self.engine.fare_per_km;
         }
+        put_fare_curve(&mut g, &self.engine.fare_curve, &self.engine.fare_km, self.engine.base.fare_min, self.engine.fare_per_km);
         let fac = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &fac);
         let xi = xfer_index(&g);

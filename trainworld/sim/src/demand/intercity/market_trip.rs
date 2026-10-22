@@ -45,10 +45,31 @@ impl IntercityApi {
         }
         w
     }
+
+    /// The zones of place `place`, or only its 6 km zone `gid` (global id; -1 the whole place).
+    fn zones_of(&self, place: u32, gid: i32) -> Vec<usize> {
+        let m = &self.m;
+        if gid >= 0 {
+            m.comp_of_gid.get(gid as usize).filter(|&&c| c != u32::MAX).map(|&c| vec![c as usize]).unwrap_or_default()
+        } else {
+            (0..m.zones.len()).filter(|&z| m.zones[z].place == place as usize).collect()
+        }
+    }
 }
 
 #[wasm_bindgen]
 impl IntercityApi {
+    /// T-885: `market_trip` between two places of the market, or 6 km zones of them (global ids;
+    /// -1 the whole place), every zone of the near end counted whole: the trips from `near` to
+    /// `far` (`dir` 0) or from `far` to `near` (1). The same answer.
+    pub fn market_trip_between(&self, q: usize, day: u32, near: u32, near_gid: i32, dir: u32, far: u32, far_gid: i32) -> Vec<f64> {
+        let mut w = vec![0f64; self.m.zones.len()];
+        for z in self.zones_of(near, near_gid) {
+            w[z] = 1.;
+        }
+        self.market_trip_w(q, day, w, dir, far, far_gid)
+    }
+
     /// The trip explorer between zones (T-866) in solved period `q` on kind of day `day`: the
     /// longer trips of a selection (`xy`, `share`: 600 m squares of place `market`, as
     /// `selection_flows`) starting there (`dir` 0) or ending there (1), with far place `far`, or
@@ -72,6 +93,14 @@ impl IntercityApi {
     /// Then per route, biggest first, as `DemandApi::trip`'s: its station pair's index, its share
     /// of the rail riders, its legs, and `trip::LEG_LEN` numbers a leg.
     pub fn market_trip(&self, q: usize, day: u32, market: u32, xy: &[f32], share: &[f32], dir: u32, far: u32, far_gid: i32) -> Vec<f64> {
+        let w = self.trip_weights(market, xy, share, dir);
+        self.market_trip_w(q, day, w, dir, far, far_gid)
+    }
+}
+
+impl IntercityApi {
+    /// `market_trip` for near zone weights `w`.
+    fn market_trip_w(&self, q: usize, day: u32, w: Vec<f64>, dir: u32, far: u32, far_gid: i32) -> Vec<f64> {
         let mut h = vec![0f64; MT_HEAD];
         let Some(per) = self.per(q) else { return h };
         h[0] = 1.;
@@ -82,18 +111,12 @@ impl IntercityApi {
         h[6] = -1.;
         h[7] = -1.;
         let m = &self.m;
-        let w = self.trip_weights(market, xy, share, dir);
         let near: Vec<usize> = (0..w.len()).filter(|&z| w[z] > 0.).collect();
         if near.is_empty() {
             h[14] = NOT_MATCHED;
             return h;
         }
-        let far = far as usize;
-        let fars: Vec<usize> = if far_gid >= 0 {
-            m.comp_of_gid.get(far_gid as usize).filter(|&&c| c != u32::MAX).map(|&c| vec![c as usize]).unwrap_or_default()
-        } else {
-            (0..m.zones.len()).filter(|&z| m.zones[z].place == far).collect()
-        };
+        let fars = self.zones_of(far, far_gid);
         if fars.is_empty() {
             h[14] = FAR_NOT_OPEN;
             return h;

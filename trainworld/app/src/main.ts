@@ -66,6 +66,7 @@ import { BlueprintBar } from "./ui/Blueprint";
 import { startSearch } from "./ui/Search";
 import { startTips } from "./ui/tip";
 import { startLoadingGate } from "./ui/LoadingScreen";
+import { startGameWait } from "./game/loading";
 import { choiceFromUrl, showStartMenu } from "./ui/StartMenu";
 import { viewStart } from "./ui/NewGame";
 import { ClockClient, clockWorkerStatus, onNetworkSnapshot } from "./workers/clockClient";
@@ -107,7 +108,10 @@ const urlChoice = choiceFromUrl();
 // they start before the map is set up (T-172). The clock worker's network snapshots go to
 // `submitNetwork` below (workers/demandClient.ts); `?demandTest=1` solves T-005's hand-made
 // network instead.
-if (urlChoice) startDemand(HOME_CITY, !!urlChoice.newGame);
+if (urlChoice) {
+  startGameWait(urlChoice.newGame ? "new" : "last");
+  startDemand(HOME_CITY, !!urlChoice.newGame);
+}
 
 // ---- map and overlay ----
 const map = createMap(document.getElementById("map")!);
@@ -436,6 +440,7 @@ onNetworkSnapshot(submitNetwork);
 if (!urlChoice) showStartMenu((choice) => {
   // T-728: a new game opens on its start city, or the world map; a real network (T-731) has stations, so it does not open bare
   if (choice.game) viewStart(choice.game.start);
+  startGameWait(choice.slot ?? (choice.newGame ? "new" : "last"));
   startDemand(HOME_CITY, !!choice.newGame && !choice.game?.real);
   client.start(choice);
 });

@@ -88,8 +88,8 @@ export type EditOp =
   /** a line's train length in cars, 0 for the most its shortest platform fits (T-733) */
   | { op: "lineCars"; line: number; cars: number }
   | { op: "lineFast"; line: number; fast: boolean }
-  /** the fare curve (T-028): US$ a ride plus US$ a km; not undoable, a setting */
-  | { op: "fares"; base: number; perKm: number }
+  /** the fare curve (T-883, game/fareCurve.ts): its nodes, or a base and rate as two nodes; not undoable, a setting */
+  | { op: "fares"; base?: number; perKm?: number; nodes?: [number, number][] }
   /** link two stations into one complex, or undo a link (T-197): node ids; not undoable, a setting */
   | { op: "link"; a: NodeId; b: NodeId; on: boolean }
   | { op: "undo" }
@@ -217,7 +217,7 @@ export interface MoneyState {
   upkeep: { track: number; stations: number; km: number; count: number };
   /** fares and running costs count this many times over in a game day (T-081, `ECONOMY`) */
   economy: number;
-  fares: { base: number; perKm: number };
+  fares: { base: number; perKm: number; nodes: [number, number][] };
   /** running cost per game hour at high, medium, low demand */
   runningPerHour: [number, number, number];
   /** recent game days, oldest first; the last is today so far (as of the last whole hour; the
@@ -487,8 +487,8 @@ export interface NetworkSnapshot {
   frame: FrameSpec;
   stations: SnapshotStation[];
   lines: SnapshotLine[];
-  /** The player's fare curve: US$ once per trip plus US$ per km ridden. */
-  fare?: { base: number; perKm: number };
+  /** The player's fare curve (game/fareCurve.ts): its first stretch as a base and rate, and its nodes. */
+  fare?: { base: number; perKm: number; nodes?: [number, number][] };
 }
 
 export interface SnapshotStation {

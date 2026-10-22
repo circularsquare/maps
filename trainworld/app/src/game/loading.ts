@@ -46,12 +46,25 @@ export const zoneFailures = signal<ReadonlyMap<CityId, string>>(new Map());
 /** The clock waits for the next game's demand: set at startup and by every whole-game load. */
 let holdArmed = true;
 
+/** T-884: one wait for a game, from the pick or the load until the card goes. The start menu's pick
+ * and the slot's arriving game are the same wait; a game loaded after the last one's network was taken
+ * starts a new one. `key` names the game for the remembered length of its wait (the slot). */
+let wait = { seq: 0, since: 0, key: "last" };
+export const gameWait = () => wait;
+/** The start menu's pick (main.ts): the startup wait begins. */
+export function startGameWait(key: string) {
+  wait = { seq: wait.seq, since: performance.now(), key };
+}
+
 /** A whole game was loaded or started (workers/clockClient.ts): hold the clock until its demand is done. */
-export function holdForGameLoad() {
+export function holdForGameLoad(key?: string) {
   if (loadFailure.peek()) return; // no demand to wait for
+  wait = holdArmed ? { ...wait, key: key ?? wait.key } : { seq: wait.seq + 1, since: performance.now(), key: key ?? "last" };
   holdArmed = true;
   clock?.setHeld(true);
 }
+/** A game load whose network has not reached the demand client yet. */
+export const gameLoadArmed = () => holdArmed;
 
 /** The demand client takes the hold for the network it is about to solve (true once per hold). */
 export function takeGameLoadHold(): boolean {

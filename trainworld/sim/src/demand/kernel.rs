@@ -2266,6 +2266,41 @@ pub struct Graph {
     pub adj_cost: Vec<f32>,
     /// For ride edges, the route node the segment starts at; NONE otherwise.
     pub adj_seg: Vec<u32>,
+    /// The fare curve's departure from `rn_fare`'s straight line (T-883), and each route node's
+    /// fare km to the next stop, which it needs; both empty while the curve is that line.
+    pub fare_curve: FareCurve,
+    pub rn_km: Vec<f32>,
+}
+
+/// The player's fare curve (T-883): knots of trip km and perceived minutes, joined by straight
+/// stretches and carried on past each end at that end's slope, never below 0. `base` and `rate` are
+/// what a trip is already charged (the base fare once and the rate on each ride edge), so a trip
+/// costs `extra(km)` more than that. Route choice sees only the straight line; the curve enters
+/// each station pair's cost on the expected km of its strategy (`DestSearch::run`).
+#[derive(Clone, Default, PartialEq, Debug)]
+pub struct FareCurve {
+    pub km: Vec<f32>,
+    pub min: Vec<f32>,
+    pub base: f32,
+    pub rate: f32,
+}
+
+impl FareCurve {
+    pub fn is_line(&self) -> bool {
+        self.km.len() < 2
+    }
+    /// The curve's fare for a trip of `km`, perceived minutes.
+    pub fn at(&self, km: f32) -> f32 {
+        let (k, m, n) = (&self.km, &self.min, self.km.len());
+        if n < 2 {
+            return self.base + self.rate * km;
+        }
+        let i = k.partition_point(|&x| x <= km).clamp(1, n - 1);
+        (m[i - 1] + (m[i] - m[i - 1]) * (km - k[i - 1]) / (k[i] - k[i - 1])).max(0.0)
+    }
+    pub fn extra(&self, km: f32) -> f32 {
+        if self.is_line() { 0.0 } else { self.at(km) - self.base - self.rate * km }
+    }
 }
 
 /// A wait is plain minutes, half the headway (Anita, T-585).
@@ -2410,6 +2445,8 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         adj_to: edges.iter().map(|e| e.1).collect(),
         adj_cost: edges.iter().map(|e| e.2).collect(),
         adj_seg: edges.iter().map(|e| e.3).collect(),
+        fare_curve: FareCurve::default(),
+        rn_km: vec![],
     }
 }
 
@@ -2646,11 +2683,14 @@ impl<'a> DestSearch<'a> {
         let (s, n) = (q.s, q.n);
         q.run(dst);
         let ids = n + q.cn.len();
+        let g = q.g;
+        let curve = &g.fare_curve;
+        let km = if r.is_none() || curve.is_line() { vec![] } else { q.trip_km() };
         let d = DestStrategy { next: NodeIds::of(&q.next, ids), board: std::mem::take(&mut q.board), order: NodeIds::of(&q.order, ids), change: q.change_nodes() };
         if let Some(r) = r {
             for src in 0..s {
                 // The first boarding is not a transfer; the trip's base fare is added later.
-                r[src * s + dst] = if src == dst { 0.0 } else { q.dist[src] - q.p.transfer_min };
+                r[src * s + dst] = if src == dst { 0.0 } else { q.dist[src] - q.p.transfer_min + km.get(src).map_or(0.0, |&k| curve.extra(k)) };
             }
         }
         d
@@ -3028,6 +3068,45 @@ impl Search<'_> {
         }
     }
 
+    /// Each node's expected fare km to the destination under its strategy (T-883), change node k
+    /// at `n + k`: a station or change node averages the lines it boards by their departures, as
+    /// the riders split. Read in settle order, so every next node is done first.
+    fn trip_km(&self) -> Vec<f32> {
+        let (g, s, n) = (self.g, self.s, self.n);
+        let mut km = vec![0f32; n + self.cn.len()];
+        let pooled = |km: &[f32], st: usize, on: &dyn Fn(usize) -> bool| {
+            let (mut f, mut w) = (0f32, 0f32);
+            let e0 = g.adj_off[st] as usize;
+            for e in e0..g.adj_off[st + 1] as usize {
+                let r = g.adj_to[e] as usize - s;
+                if on(e - e0) {
+                    f += g.rn_tph[r];
+                    w += g.rn_tph[r] * km[s + r];
+                }
+            }
+            if f > 0.0 { w / f } else { 0.0 }
+        };
+        for &id in &self.order {
+            let id = id as usize;
+            let v = if id >= n {
+                let c = &self.cn[id - n];
+                let b0 = c.bits as usize;
+                pooled(&km, c.st as usize, &|i| self.cn_bits[b0 + i / 64] >> (i % 64) & 1 == 1)
+            } else if id < s {
+                let e0 = g.adj_off[id] as usize;
+                pooled(&km, id, &|i| {
+                    let r = g.adj_to[e0 + i] as usize - s;
+                    self.board[r >> 6] >> (r & 63) & 1 == 1
+                })
+            } else {
+                let nx = self.next[id] as usize;
+                if nx == NONE as usize { 0.0 } else if nx >= s && nx < n { g.rn_km.get(id - s).copied().unwrap_or(0.0) + km[nx] } else { km[nx] }
+            };
+            km[id] = v;
+        }
+        km
+    }
+
     /// This destination's change nodes, settled or not (an unsettled one is nobody's next node).
     fn change_nodes(&self) -> ChangeNodes {
         ChangeNodes {
@@ -3117,16 +3196,20 @@ struct SkimKey {
     rn_dx: Vec<f32>,
     rn_dy: Vec<f32>,
     transfer_min: f32,
+    fare_curve: FareCurve,
+    rn_km: Vec<f32>,
 }
 
 impl SkimKey {
     fn of(g: &Graph, p: &Params) -> SkimKey {
-        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.transfer_min }
+        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.transfer_min, fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone() }
     }
     fn same(&self, g: &Graph, p: &Params) -> bool {
         self.n_st == g.n_st
             && self.n == g.n
             && self.transfer_min == p.transfer_min
+            && self.fare_curve == g.fare_curve
+            && self.rn_km == g.rn_km
             && self.rn_dx == g.rn_dx
             && self.rn_dy == g.rn_dy
             && self.adj_off == g.adj_off
@@ -4397,6 +4480,38 @@ mod tests {
 
     fn common_test_params() -> Params {
         Params { xfer_walk_m: 0.0, ..Params::default() }
+    }
+
+    /// T-883: a fare capped beyond 30 km lowers only the longer pairs' costs, by the rate on the km
+    /// past 30, with two lines pooled at the shared stations.
+    #[test]
+    fn a_fare_cap_changes_long_trips_only() {
+        let p = common_test_params();
+        let net = common_test_net(&[&[0, 1, 2, 3], &[0, 1, 2]], &[6.0, 12.0], &[2.0, 2.0]);
+        let (base, rate) = (4.5f32, 0.3f32);
+        let graph = |knots: &[(f32, f32)]| {
+            let mut g = build_graph(&net, &p);
+            g.rn_fare = vec![20.0 * rate; g.rn_ride.len()];
+            let ones = vec![1.0; g.rn_ride.len()];
+            set_crowding(&mut g, &ones);
+            if knots.len() >= 2 {
+                g.fare_curve = FareCurve { km: knots.iter().map(|k| k.0).collect(), min: knots.iter().map(|k| k.1).collect(), base, rate };
+                g.rn_km = vec![20.0; g.rn_ride.len()];
+            }
+            g
+        };
+        let line = skims(&graph(&[]), &p).r;
+        let straight = skims(&graph(&[(1.0, base + rate), (100.0, base + 100.0 * rate)]), &p).r;
+        let cap = base + 30.0 * rate;
+        let capped = skims(&graph(&[(1.0, base + rate), (30.0, cap), (100.0, cap)]), &p).r;
+        for (a, b) in line.iter().zip(&straight) {
+            assert!(a == b || (a - b).abs() < 1e-3, "{a} {b}");
+        }
+        let at = |r: &[f32], i: usize, j: usize| r[i * 4 + j];
+        assert!((at(&capped, 0, 1) - at(&line, 0, 1)).abs() < 1e-3);
+        assert!((at(&line, 0, 2) - at(&capped, 0, 2) - rate * 10.0).abs() < 1e-3);
+        assert!((at(&line, 0, 3) - at(&capped, 0, 3) - rate * 30.0).abs() < 1e-3);
+        assert!((at(&line, 3, 0) - at(&capped, 3, 0) - rate * 30.0).abs() < 1e-3);
     }
 
     /// T-798: a circle 0-1-2-3-4-5-0, 12 tph, 2 minutes a stop and half a minute standing at 0.

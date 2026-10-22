@@ -9,6 +9,7 @@
 
 import { signal } from "@preact/signals";
 import { lngLatToPack } from "./coords";
+import { stationNameNear } from "./places";
 import type { Flows } from "./demand";
 import { PERIODS } from "./periods";
 import { EVERYDAY_KEYS, FILTER_PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "./purposes";
@@ -278,15 +279,65 @@ export function readMarketPeriod(v: Float64Array, at: RouteNodes): MarketPeriod 
   };
 }
 
-let marketQuery: ((end: "home" | "work", cells: Uint32Array, far: number, farGid: number) => Promise<(MarketPeriod | null)[] | null>) | null = null;
+/** A market place, or one of its 6 km zones (`gid`, -1 the whole place). */
+export interface MarketEnd {
+  place: number;
+  gid: number;
+}
+
+let marketQuery: ((end: "home" | "work", cells: Uint32Array, far: number, farGid: number, near?: MarketEnd) => Promise<(MarketPeriod | null)[] | null>) | null = null;
 /** Set by workers/demandClient.ts when the pool starts. */
 export function setMarketTripQuery(q: typeof marketQuery) {
   marketQuery = q;
 }
 /** Ask the workers about the longer trips between a selection's cells (`end`: as the bubble
  * selection's) and far place `far`, or its 6 km zone `farGid` (-1 the whole place), per period. */
-export const askMarketTrip = (end: "home" | "work", cells: Uint32Array, far: number, farGid = -1): Promise<(MarketPeriod | null)[] | null> =>
-  marketQuery?.(end, cells, far, farGid) ?? Promise.resolve(null);
+export const askMarketTrip = (end: "home" | "work", cells: Uint32Array, far: number, farGid = -1, near?: MarketEnd): Promise<(MarketPeriod | null)[] | null> =>
+  marketQuery?.(end, cells, far, farGid, near) ?? Promise.resolve(null);
+
+/**
+ * T-885: several far ends' market answers for one period as one: the trips added up; rail's
+ * perceived cost weighted by the trips rail can serve, the car's, the reference mode's and the
+ * distance by trips; the routes merged by `label` and weighted by each answer's rail trips, the
+ * five biggest kept with their own station pairs. The rest is the answer with most trips'.
+ */
+export function mergeMarketPeriods(xs: (MarketPeriod | null)[], label: (r: TripRoute) => string): MarketPeriod | null {
+  const ps = xs.filter((p): p is MarketPeriod => !!p);
+  if (ps.length <= 1) return ps[0] ?? null;
+  const sum = (f: (p: MarketPeriod) => number) => ps.reduce((s, p) => s + f(p), 0);
+  const wmean = (f: (p: MarketPeriod) => number, w: (p: MarketPeriod) => number) => {
+    const W = sum((p) => (Number.isFinite(f(p)) ? w(p) : 0));
+    return W > 0 ? sum((p) => (Number.isFinite(f(p)) ? w(p) * f(p) : 0)) / W : NaN;
+  };
+  const trips = sum((p) => p.trips), rail = sum((p) => p.rail);
+  const top = ps.reduce((a, b) => (b.trips > a.trips ? b : a));
+  const pairs: TripPair[] = [];
+  const merged = new Map<string, TripRoute>();
+  for (const p of ps) {
+    if (p.rail <= 0) continue;
+    const off = pairs.length;
+    pairs.push(...p.pairs);
+    for (const r of p.routes) {
+      const k = label(r), m = merged.get(k);
+      if (m) m.share += p.rail * r.share;
+      else merged.set(k, { ...r, pair: r.pair + off, share: p.rail * r.share });
+    }
+  }
+  const routes = [...merged.values()].sort((a, b) => b.share - a.share).slice(0, 5);
+  for (const r of routes) r.share = rail > 0 ? r.share / rail : 0;
+  const used = [...new Set(routes.map((r) => r.pair))];
+  for (const r of routes) r.pair = used.indexOf(r.pair);
+  return {
+    ...top, trips, rail, air: sum((p) => p.air), car: sum((p) => p.car),
+    railPerceived: wmean((p) => p.railPerceived, (p) => p.trips * p.served),
+    carPerceived: wmean((p) => p.carPerceived, (p) => p.trips),
+    refPerceived: wmean((p) => p.refPerceived, (p) => p.trips),
+    km: wmean((p) => p.km, (p) => p.trips), zonePairs: sum((p) => p.zonePairs),
+    served: trips > 0 ? sum((p) => p.trips * p.served) / trips : 0,
+    why: rail > 0 ? "" : top.why,
+    pairs: used.map((i) => pairs[i]), routes, cut: Math.max(0, 1 - routes.reduce((s, r) => s + r.share, 0)),
+  };
+}
 
 /** A route's totals: real minutes driving to the station (a ride access), walking, waiting, riding
  * and walking between stations, the changes, and the fare in dollars (base fare included). */
@@ -371,7 +422,14 @@ export interface TripPlaces {
    * centre (or ""), and the cell pairs the routes and times are averaged over, `from` homes to
    * `to` destinations (world metres), each weighted by its two bubbles' trips */
   group?: { near: number; far: number; nearName: string; farName: string; samples: { from: [number, number]; to: [number, number]; w: number }[] };
+  /** T-885: a group of far places or 6 km zones (a box over inter-region bubbles), merged */
+  fars?: MarketEnd[];
 }
+
+/** T-885: a bubble selection of several areas as the near end of a market trip: its count and the
+ * station nearest its busiest cell `at`, for the panel's name (no samples: the market sums them). */
+export const marketGroup = (s: { areas: number }, at: [number, number] | null): Pick<TripPlaces, "group"> =>
+  s.areas > 1 ? { group: { near: s.areas, far: 1, nearName: at ? stationNameNear(at[0], at[1]) : "", farName: "", samples: [] } } : {};
 
 /** T-865: how many cell pairs a group's trip is averaged over at most, a side. */
 export const GROUP_SAMPLE_SIDE = 3;
@@ -500,6 +558,12 @@ export interface TripShown {
 export interface MarketShown {
   far: { place: number; gid: number };
   periods: (MarketPeriod | null)[];
+  /** T-885: every far end merged (more than one: a group), and the near end when it is a place
+   * or 6 km zone rather than cells */
+  fars?: MarketEnd[];
+  near?: MarketEnd;
+  /** the near end's cells are homes (trips from them) or destinations */
+  end?: "home" | "work";
 }
 
 /** The trip shown (asked for by map/tripView.ts when the selection, the purpose filter or the

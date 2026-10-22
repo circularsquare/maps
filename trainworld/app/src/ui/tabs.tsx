@@ -7,13 +7,14 @@ import { PERIODS, periodAt } from "../game/periods";
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { createLine } from "../game/lineActions";
 import type { JSX } from "preact";
-import { count, distUnit, length, levelLabel, money, perDistance, perKmFrom, runCostRule, shortDistance, speed, upkeepRule } from "../game/format";
+import { count, distUnit, length, levelLabel, money, perDistance, runCostRule, shortDistance, speed, unitMetres, upkeepRule } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { DEMAND_INDEX, LEVELS, type Level, type LineInput, type LineStats, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
 import { buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, display, keepPlacing, lineSort, selection, setDisplay, setTrackType, snapReal, stationSort, tool, trackType, type StationUseMode, type Tool, type TrackType } from "../game/ui";
-import { setFares, world } from "../game/world";
+import { world } from "../game/world";
+import { fareAt } from "../game/fareCurve";
 import { liveMoney, moneyState } from "../game/money";
 import { cityById, viewedZone } from "../game/cities";
 import { listScope, scopedLists, scopeEmpty, scopeZone, stationZone } from "../game/listScope";
@@ -26,7 +27,7 @@ import { Check, Chip, Icon, Row, Segmented, SortHead, Stepper } from "./widgets"
 import { Money } from "./MoneyText";
 import { START_CASH } from "../workers/saveFile";
 import { CitiesList } from "./Cities";
-import { FareGraph, farePreview } from "./FareGraph";
+import { FareGraph, FareNodeRows, farePreview } from "./FareGraph";
 import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
 import { MoneyHistory } from "./MoneyHistory";
 import { locateLine, locateStation } from "./locate";
@@ -490,7 +491,7 @@ export function MoneyTab() {
   const prev = zone === null || !prevAll ? prevAll
     : regionLedger(zone).ledger.find((d) => d.day === todayDay - 1) ?? { day: todayDay - 1, fares: 0, running: 0, trains: 0, build: 0 };
   const cell = (d: DayLedger | null, v: (d: DayLedger) => number) => <td class="num">{d ? <Money dollars={v(d) * 1e6} /> : ""}</td>;
-  const f = farePreview.value ?? m.fares;
+  const f = farePreview.value ?? m.fares.nodes;
   return (
     <>
       <ul class="rows">
@@ -538,19 +539,10 @@ export function MoneyTab() {
       </table>
       <MoneyHistory zone={zone} />
       <div class="h">Fare</div>
-      <FareGraph base={m.fares.base} perKm={m.fares.perKm} />
+      <FareGraph nodes={m.fares.nodes} />
+      <FareNodeRows nodes={f} />
       <ul class="rows">
-        <li>
-          <span class="grow">Each ride</span>
-          <Stepper value={"$" + f.base.toFixed(2)} wide label="fare a ride" onStep={(s) => setFares(f.base + s * 0.25, f.perKm)}
-            type={{ text: f.base.toFixed(2), set: (v) => setFares(v, f.perKm), tip: "The fare for boarding. Click to type an amount." }} />
-        </li>
-        <li>
-          <span class="grow">Each {distUnit()}</span>
-          <Stepper value={"$" + perDistance(f.perKm).toFixed(2)} wide label={`fare a ${distUnit()}`} onStep={(s) => setFares(f.base, perKmFrom(Math.max(0, Math.round((perDistance(f.perKm) + s * 0.01) * 100) / 100)))}
-            type={{ text: perDistance(f.perKm).toFixed(2), set: (v) => setFares(f.base, perKmFrom(Math.max(0, Math.round(v * 100) / 100))), tip: `The fare added for each ${distUnit()} ridden. Click to type an amount.` }} />
-        </li>
-        <Row label={`A 10 ${distUnit()} ride`}>{"$" + (f.base + 10 * perDistance(f.perKm)).toFixed(2)}</Row>
+        <Row label={`A 10 ${distUnit()} ride`}>{"$" + fareAt(f, 10 * unitMetres() / 1000).toFixed(2)}</Row>
       </ul>
       <div class="h">Trains</div>
       <ul class="rows">

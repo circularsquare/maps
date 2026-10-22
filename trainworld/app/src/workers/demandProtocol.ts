@@ -37,7 +37,7 @@ export interface DemandNetwork {
   tph: Float32Array;
   /** cars per train, per line */
   cars: Float32Array;
-  fare: { base: number; perKm: number };
+  fare: { base: number; perKm: number; nodes?: [number, number][] };
   /** km per route node: each line's forward stops then reverse stops, 0 at each end */
   hopKm: Float32Array;
   /** T-842 (`DemandApi.set_span`): per period and route node (`q * route nodes + r`, route nodes
@@ -145,7 +145,10 @@ export type ToDemand =
    * (`IntercityApi.market_trip`): the longer trips of a selection's cells (as `icSel`) with place
    * `far`, or its 6 km zone `farGid` (-1 the whole place) */
   | { kind: "icTrip"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array; far: number; farGid: number;
-      sq?: { xy: Float32Array; share: Float32Array } }
+      sq?: { xy: Float32Array; share: Float32Array };
+      /** T-885: the near end is place `place` (or its 6 km zone `gid`) rather than `cells`
+       * (`IntercityApi.market_trip_between`) */
+      near?: { place: number; gid: number } }
   /** T-325, the aux worker: a bare zone's legs per cell with no rail, any version. `purpose` -1:
    * commutes and every everyday purpose, -2: commutes alone, k >= 0: everyday kind k alone */
   | { kind: "bare"; id: number; city: CityId; version: number; round: number; purpose: number }

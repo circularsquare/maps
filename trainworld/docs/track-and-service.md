@@ -629,10 +629,17 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   evenly in an hour without one), its running cost drains evenly, and both are paid in full by the
   hour's end. The worker settles and sends the cash and today's
   and this hour's ledger four times a wall second while the clock runs; the top bar shows the cash to the dollar,
-  and only it and the Money tab's cash, Today column and History re-render. Fare per ride
-  = a base plus a rate per km of the ride, one curve for the network, set in the Money tab ($1.50
-  + $0.10 a km to start); a ride that changes lines pays the base once. Fare income comes from
-  demand's riders and passenger-km per period (`app/src/game/money.ts`). Changing the fare
+  and only it and the Money tab's cash, Today column and History re-render. The fare for a trip
+  follows one curve of trip length for the network, set in the Money tab [T-883,
+  `app/src/game/fareCurve.ts`]: straight between the player's nodes, carried on past the first and
+  last node at that stretch's slope (so a level last stretch is a cap), never below $0, never
+  falling. It starts as $1.50 + $0.10 a km (nodes at 1 and 100 km; a save from before T-883 loads
+  its base and rate the same way); a trip that changes lines pays it once on its whole length. In
+  demand, route search charges the first stretch as a base and a rate per km, and each station
+  pair's cost adds the rest of the curve on the expected km of its strategy (`FareCurve` in
+  `sim/src/demand/kernel.rs`); the trip explorer shows the curve's fare on the route's own length.
+  Fare income comes from demand's riders and passenger-km per period (`app/src/game/money.ts`),
+  each line's trips taken at their mean length when the curve is bent. Changing the fare
   recalculates demand: higher prices can lose riders (T-067). Running costs can take the cash below zero; edits that cost nothing still
   work then. notes/T-028.md.
 - **Money by region** (T-531, `app/src/game/regionMoney.ts`): beside the network's, the worker

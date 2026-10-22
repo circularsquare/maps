@@ -12,6 +12,7 @@ import { anchor, makeAnchor, setAnchor, toLocal } from "../map/geo";
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
+import { faresOf, type Fares } from "../game/fareCurve";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf } from "../game/days";
 import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
@@ -27,8 +28,8 @@ const SAMPLE_STEP = 50;
 const SNAPSHOT_DEBOUNCE_MS = 500;
 /** Whole trains on a new line across both directions, high/medium/low demand. */
 const NEW_LINE_TRAINS: [number, number, number] = [0, 0, 0];
-/** Default fare curve (T-028): US$ a ride plus US$ a km. */
-const START_FARES = { base: 1.5, perKm: 0.1 };
+/** Default fare curve (T-028, T-883): US$ a ride plus US$ a km, as two nodes. */
+const START_FARES: Fares = faresOf(undefined, { base: 1.5, perKm: 0.1 });
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
 const AUTOSAVE_MS = 60_000;
@@ -61,7 +62,7 @@ let timing: Record<string, number> = {};
 // Money and the clock (T-028). The main thread's clock is the game's; it tells this worker each
 // time it is set, paused or changes speed, and the worker settles fares and running costs one game
 // hour at a time from that.
-let fares = { ...START_FARES };
+let fares: Fares = { ...START_FARES };
 let ledger: DayLedger[] = [];
 let hourLedger: HourLedger[] = [];
 /** fare income per game hour in each period, US$M (from the main thread's demand results), per
@@ -1263,7 +1264,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   await masksForLoaded(net);
   api!.set_fleet(h.fleet ?? 0);
   api!.set_fleet_fast(h.fleetFast ?? 0);
-  fares = { ...START_FARES, ...h.fares };
+  fares = faresOf(h.fares, START_FARES);
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
   loadRegions(h.regions);
@@ -1621,7 +1622,7 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
     case "lineFast":
       return { r: a.set_line_fast(op.line, op.fast) };
     case "fares":
-      fares = { base: Math.max(0, op.base), perKm: Math.max(0, op.perKm) };
+      fares = op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares);
       return { r: 0 };
     case "link":
       return { r: op.on ? a.link_stations(op.a, op.b) : a.unlink_stations(op.a, op.b) };

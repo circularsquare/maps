@@ -8,7 +8,7 @@ import { count, roughDistance } from "../../game/format";
 import { MODE_COLOURS, modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { intercityPlaceName } from "../../game/demand";
-import { tripPeriod, type MarketPeriod, type MarketShown, type TripRoute } from "../../game/trip";
+import { tripPeriod, type MarketEnd, type MarketPeriod, type MarketShown, type TripRoute } from "../../game/trip";
 import { shownDayPhrase } from "../../game/ui";
 import { world } from "../../game/world";
 import { shownPeriod } from "../../map/tripView";
@@ -27,8 +27,21 @@ const NO_RAIL: Record<string, string> = {
 
 /** The far end as the panel names it. */
 export function marketFarName(m: MarketShown): string {
-  const place = intercityPlaceName(m.far.place);
-  return m.far.gid >= 0 ? `part of ${place}` : place;
+  const fars = m.fars ?? [m.far];
+  // T-885: a group: "3 parts of Philadelphia", "Philadelphia and 2 other places"
+  if (fars.length > 1) {
+    const places = [...new Set(fars.map((f) => f.place))];
+    if (places.length === 1) return `${fars.length} parts of ${intercityPlaceName(places[0])}`;
+    const whole = fars.every((f) => f.gid < 0);
+    return `${intercityPlaceName(fars[0].place)} and ${fars.length - 1} other ${whole ? (fars.length === 2 ? "place" : "places") : (fars.length === 2 ? "area" : "areas")}`;
+  }
+  return marketEndName(m.far);
+}
+
+/** A market place or one of its 6 km zones, as the panel names it. */
+export function marketEndName(e: MarketEnd): string {
+  const place = intercityPlaceName(e.place);
+  return e.gid >= 0 ? `part of ${place}` : place;
 }
 
 /** A market route's real minutes station to station: waits, rides and walks between stations. */

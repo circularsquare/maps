@@ -8,6 +8,7 @@ import { signal } from "@preact/signals";
 import type { EditOp } from "../workers/protocol";
 import type { EditAnswer } from "../workers/clockClient";
 import { describeIssues } from "./issues";
+import { tidyNodes, type FareNode } from "./fareCurve";
 import type { Demand, LineId, WorldView } from "./types";
 import { DEMAND_INDEX } from "./types";
 
@@ -216,10 +217,9 @@ export function setAutoTrains(id: LineId, on: boolean) {
   queueHeadway(id, seconds);
 }
 
-/** The fare curve for the whole network (T-028): US$ a ride plus US$ a km. */
-export function setFares(base: number, perKm: number) {
-  const r = (v: number) => Math.max(0, Math.round(v * 100) / 100);
-  return edit({ op: "fares", base: r(base), perKm: r(perKm) });
+/** The fare curve for the whole network (T-883, game/fareCurve.ts): its nodes, km and US$. */
+export function setFares(nodes: FareNode[]) {
+  return edit({ op: "fares", nodes: tidyNodes(nodes) });
 }
 
 export function renameLine(id: LineId, name: string) {

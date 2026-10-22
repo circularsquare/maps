@@ -181,7 +181,9 @@ purpose filter the purpose drawn is ringed in the bar.
   direction drawn this hour, on the same stretch). A train is never over full: whoever does not fit
   waits on the platform. A line with no figures yet says "Calculating" [T-324].
 - **Next stops** [T-868, `ui/inspector/TrainStops.tsx`]: under On board, the train's next four stops
-  (to the end of its trip; a circle's up to the stop before its first), each with the minutes until
+  (to the end of its trip; a circle's up to the stop before its first), each with the bullets of
+  the other lines calling at it or any station of its complex after its name [T-886] (each with its
+  name on hover, a click selecting it; past the row's width they are cut off), the minutes until
   it arrives ("<1 min" under one; hover "Arrives in 2m40s", from the train's own running profile)
   and the riders getting off there: its load arriving (the boarding account's) times the line's
   alighting share at that stop in the period it arrives in, as the account lets them off; everyone
@@ -360,9 +362,19 @@ destinations at the end, and how the demand model's people would make one of the
 - **Between zones** [T-866; `ui/inspector/MarketTrip.tsx`, `IntercityApi::market_trip` in
   `sim/src/demand/intercity/market_trip.rs`]: with a bubble selection, a click on an inter-region
   bubble (a whole place zoomed out, a 6 km area up close; hover ends "Click to explore these
-  trips") opens the trip between the selection and it; so does a trip tool trip whose end falls
-  outside the focused zone's cells (the start's cell to the far 6 km area with trips from it
-  nearest the end, within 6 km, else the nearest such place within 60 km). It shows the regional
+  trips") opens the trip between the selection and it; so does a trip tool trip with an end
+  outside the focused zone's cells (the cell of the end inside, as homes for the start or
+  destinations for the end, to the far 6 km area with trips with it nearest the other end, within
+  6 km, else the nearest such place within 60 km; both ends outside: the zones' places whose centres
+  are nearest each end). Every other pair of ends [T-885, T-881; the table in notes/T-885.md]: a
+  Shift box over inter-region bubbles takes them as one far end (each asked, then merged:
+  `mergeMarketPeriods`, trips added, times trip weighted, the five biggest routes kept); a zone
+  selected in the city view, then another zone's bubble (or a Shift box over several) is the
+  market between the two places, every 6 km area pair counted whole (`market_trip_between`);
+  a zone selected, then bubbles of the focused zone zoomed in, is the market between them and that
+  zone. The sub line names place ends "Between New York region and Philadelphia region", a group
+  "New Haven region and 8 other places" or "3 parts of Philadelphia region", and a bubble group
+  "homes in 49 areas around Times Sq". It shows the regional
   market's inter-region trips (commutes between zones left out, as the hover says): every 6 km
   area pair between the two ends, the selection's areas weighted as the bubbles weigh them,
   each pair's choice worked out as the solve does (every pair rail can serve, sampled or not),

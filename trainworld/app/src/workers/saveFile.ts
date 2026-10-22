@@ -69,8 +69,8 @@ export interface SaveHeader {
   fleet: number;
   /** high-speed cars owned (T-817; absent in older saves) */
   fleetFast?: number;
-  /** fare curve: US$ a ride plus US$ a km */
-  fares: { base: number; perKm: number };
+  /** fare curve (game/fareCurve.ts): its first stretch as a base and rate, and its nodes (none in a save from before T-883) */
+  fares: { base: number; perKm: number; nodes?: [number, number][] };
   /** recent days, oldest first (today last) */
   ledger: DayLedger[];
   /** recent hours, oldest first (T-447; absent in older saves) */

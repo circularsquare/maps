@@ -46,9 +46,12 @@ included. **Catchment is soft** (T-090): there
 is no circle the player sees. A farther station makes the walk, and so the whole trip, worse, and
 the station loses riders where that trip gets worse than driving. Value of time is one constant everywhere,
 $20/hour (`FARE_MIN_PER_USD`: 3 perceived minutes per dollar, a gameplay judgement), so fares
-compare across countries. The base fare is charged once per trip, including transfers; the per-km rate uses
-actual track length. Distance fare affects route choice as well as mode choice, and crowding
-multiplies ride time without multiplying fare (T-067).
+compare across countries. The fare is the player's curve of trip length (T-883,
+track-and-service.md, fares), charged once per trip including transfers on actual track length.
+Route choice sees its first stretch as a base plus a rate per km on each ride; mode choice sees
+the whole curve, each station pair's cost corrected to the curve's fare at the expected km of
+its strategy (the riders' split over lines by their departures). Crowding multiplies ride time
+without multiplying fare (T-067).
 
 **Walking** (Anita, T-558) is a third mode in the same logit, at the same scale (damped on the
 car's minutes, as rail): rail, the car and walking (drivers parking free and those paying for a

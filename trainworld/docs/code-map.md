@@ -77,6 +77,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - `realGraph.ts`: a region's real-network routing graph (`packs/realgraph/<cc>.rgr`, fetched once
   and decoded), for snapping track to the real network (T-727); read by `workers/realRoute.worker.ts`.
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
+  `fareCurve.ts` (the fare curve through the player's nodes: fare at a length, old saves' base and rate as nodes, the knots the sim takes, T-883),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
@@ -113,7 +114,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `stopMarkers.ts` (the toggle markers of stop editing, T-233), `reversalMarks.ts` (the icon over
   stations where a line reverses partway, T-797).
 - Trains and trips: `trainFollow.ts` (a selected train followed onto its next trip, T-245),
-  `tripView.ts` (the trip explorer's route, T-195; its panel is `ui/inspector/TripInspector.tsx`; between zones `MarketTrip.tsx`, T-866; between two groups of bubbles, the Shift+drag box and its samples in `commuterView.ts` `farTrip`, the average in `game/trip.ts` `averageTrips`, T-865).
+  `tripView.ts` (the trip explorer's route, T-195; its panel is `ui/inspector/TripInspector.tsx`; between zones `MarketTrip.tsx`, T-866; between two groups of bubbles, the Shift+drag box and its samples in `commuterView.ts` `farTrip`, the average in `game/trip.ts` `averageTrips`, T-865; place ends and far groups between zones: `game/trip.ts` `mergeMarketPeriods`, `map/intercityView.ts` `placeTrip` and `interBox`, `IntercityApi::market_trip_between`, T-885).
 - Demand views (T-084, T-097): `demandViews.ts` (wiring, a station's riders for its inspector), `demandLayers.ts`
   (line width, station use circles, train fill; the figures from `game/stationUse.ts`, T-482), `commuterView.ts` and `bubbles.ts` (commuter bubbles and
   bubble selections), `intercityView.ts` (longer trips of a selection or station, one bubble per
@@ -136,7 +137,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 ### src/ui/: Preact components
 
 `Dock.tsx` (the dock, its icon tabs and resizing, T-252); `tabs.tsx` (Build, Lines, Stations, Money and the Cities tab);
-`MoneyHistory.tsx` (the Money tab's history charts, T-447); `FareGraph.tsx` (the fare curve graph and its draggable nodes, T-864); `Cities.tsx` (the Cities list, T-550, T-749); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `bullet.ts` (`bulletText`, `bulletNode`: a line bullet as one SVG, its circle and its symbol placed from the canvas-measured ink box with the baseline on a whole device pixel, per font, symbol, size and scale, T-705, T-745; the sizes in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
+`MoneyHistory.tsx` (the Money tab's history charts, T-447); `FareGraph.tsx` (the fare curve graph, its nodes added, dragged both ways and removed, and the selected node's steppers, T-864, T-883); `Cities.tsx` (the Cities list, T-550, T-749); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `bullet.ts` (`bulletText`, `bulletNode`: a line bullet as one SVG, its circle and its symbol placed from the canvas-measured ink box with the baseline on a whole device pixel, per font, symbol, size and scale, T-705, T-745; the sizes in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
 checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `SkyBanner.tsx` (the clock's sky and demand band, a canvas, T-861); `StatusTag.tsx` (the demand status tag on the map's top row); `Toolbar.tsx` (tool hints and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
@@ -232,7 +233,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   each open a new slot and leave every other slot's bytes as they were, the real save and
   artifacts/trainworld/recovered-day26.save both; two backups rotate at `?backupMs=4000`; a deleted
   slot's backups go; port 6150 by default),
-  `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
+  `t883-fare-curve.mjs` (the real save: the default fare's 11,342,122 rail trips, the same through three nodes, a cap past 500 km within 0.05%, a cap past 30 km adding rail trips; Money tab screenshots), `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
   rides and running costs, with the largest hour-to-hour change beside the flat booking's),
   `t872-holidays.mjs` (the real save over the next Thanksgiving: that day's boarding account, fares
   and ledger are Saturday's, the days around it weekdays; the day is a weekday in Canada and the UK),
@@ -275,6 +276,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   frames over 50 ms; options for a throttled CPU, a trace per thread, settings, a tool),
   `t871-europe-pan.mjs` (drags across Europe in a new game: fails if a zoom at or below 7.5 opens
   a pack or fetches a water mask, or zoom 9 opens none; reports long tasks; about 2 minutes),
+  `t884-loadbar.mjs` (the loading card's bar through the start menu: a new game, the real save and
+  the world save, each slot twice: fails over 25% of a wait above 90%, a bar going back, or a fill
+  over 30 points from the share of the wait gone; about 5 minutes),
   `t724-hover.mjs` (what a pointer move costs on the real save with the select and station tools,
   timers and the station name included, then a wheel zoom's frame placers: fails over 8 ms at the
   95th percentile in any view),

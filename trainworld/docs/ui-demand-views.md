@@ -195,8 +195,9 @@ second. Inspectors, selections and the top bar are the current forecast at once.
   then dragging draws a box selecting every bubble whose centre is in it. Shift+drag draws the box
   at once [T-865] (MapLibre's own Shift-drag zoom is off while the bubbles are on): started on a
   city bubble or a selected one, or with nothing selected, it adds the bubbles in it to the
-  selection; with a selection and started anywhere else, it takes the far-end bubbles whose
-  centres are in it and opens the trip explorer between the two groups. Escape while drawing drops
+  selection; with a selection and started anywhere else, it takes the inter-region bubbles whose
+  centres are in it (T-881), else the far-end bubbles, and opens the trip explorer between the two
+  groups. Escape while drawing drops
   the box. Visible bubbles take priority over stations and trains for clicks, hover and starting a
   box, but not over dragging a blueprint point [T-474]. Escape or an empty click clears the
   selection.
@@ -286,7 +287,10 @@ York's 71M is a 34 px radius at 6.5, 55 px at 8.5 and 21 px at 4.5, a 1.6M prefe
 the buttons are otherwise off; a start on the world map turns Homes on [T-801]. Under a local purpose the focused zone's own
 bubbles stay instead. Toronto (`market: -1`) has none.
 
-A click on one selects the zone (a `city` selection, kept at any zoom): it is outlined, with one
+A click on one selects the zone (a `city` selection, kept at any zoom; zoomed in past
+`OVERVIEW_ZOOM` the local bubbles show again under it, and a click or Shift box on bubbles in
+another place opens the trip explorer between them and the selected zone [T-885]; a click on
+another zone's bubble, or a Shift box over several, opens it between the zones): it is outlined, with one
 bubble per other zone for the regional trips between the two, on a scale of its own that changes
 with the zoom the same way [T-525, T-530]: 1,400 trips a day per px² at zoom 6.5
 (`SELECTED_TRIPS_PER_PX2`), so there the selected zone's own inter-region trips (New York's 1.57M)
