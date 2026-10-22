@@ -8,6 +8,12 @@
 // makes one for any pack, T-538).
 //
 //     node trainworld/checks/city-browser.mjs <id>        (from the maps root)
+//     ROWS=list.json node trainworld/checks/city-browser.mjs
+//
+// ROWS (T-928): a JSON list of {id, row, out, json} (a row file, the screenshot prefix, the result
+// file), every zone checked in turn in one sandbox game, ZONES_PER_PAGE (20) to a page load: each
+// zone's test line is removed after its checks, so the next zone's solve does not carry it; a zone
+// that throws closes the page and the rest go on in a fresh one. Exit 0 when every zone passes.
 //
 // Needs a Vite dev server (BASE, default http://localhost:6125) and Playwright (PLAYWRIGHT_MODULE,
 // else `playwright`, else the npx cache). Screenshots artifacts/trainworld/<task>-<id>-homes.png and
@@ -226,26 +232,44 @@ async function playwright() {
   throw new Error('no Playwright: set PLAYWRIGHT_MODULE to a file URL of playwright/index.mjs');
 }
 
-const id = process.argv[2];
-// T-538: checks/pack_gate.py writes a row (OSM stations, a water pair from the mask) for any pack
-const C = process.env.ROW ? JSON.parse(await readFile(process.env.ROW, 'utf8')) : CITIES[id];
-if (!C) { console.error(`usage: city-browser.mjs <${Object.keys(CITIES).join('|')}>`); process.exit(2); }
+const ZONES_PER_PAGE = 20; // every opened zone stays in the page, so a page's memory grows with each (T-928)
+const multi = !!process.env.ROWS;
+let zones;
+if (multi) {
+  zones = [];
+  for (const z of JSON.parse(await readFile(process.env.ROWS, 'utf8'))) zones.push({ id: z.id, C: JSON.parse(await readFile(z.row, 'utf8')), out: z.out, json: z.json });
+} else {
+  const id = process.argv[2];
+  // T-538: checks/pack_gate.py writes a row (OSM stations, a water pair from the mask) for any pack
+  const C = process.env.ROW ? JSON.parse(await readFile(process.env.ROW, 'utf8')) : CITIES[id];
+  if (!C) { console.error(`usage: city-browser.mjs <${Object.keys(CITIES).join('|')}>`); process.exit(2); }
+  zones = [{ id, C, out: process.env.OUT ?? `artifacts/trainworld/${C.task}-${id}-`, json: process.env.JSON_OUT ?? `artifacts/trainworld/${C.task}-${id}-browser.json` }];
+}
 const { chromium } = await playwright();
 const BASE = process.env.BASE ?? 'http://localhost:6125';
 const WORKERS = process.env.WORKERS ?? '3';
-const profile = await mkdtemp(join(process.env.PROFILE_DIR ?? tmpdir(), `cb-${id}-`));
+const profile = await mkdtemp(join(process.env.PROFILE_DIR ?? tmpdir(), `cb-${multi ? 'rows' : zones[0].id}-`));
 const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--enable-unsafe-swiftshader'] });
-const out = process.env.OUT ?? `artifacts/trainworld/${C.task}-${id}-`;
 const IGNORE = /favicon|openfreemap|AJAXError/;
-const result = { city: id, checks: [] };
-const check = (name, ok, detail) => { result.checks.push({ name, ok: !!ok, detail }); console.log(ok ? 'ok  ' : 'FAIL', name, JSON.stringify(detail ?? '')); };
 const topBar = (page) => page.evaluate(() => ({ city: document.querySelector('.topbar .city, .city')?.textContent ?? null, split: document.querySelector('.split-row')?.getAttribute('data-tip') ?? null }));
-try {
+// a condition, waited for at most `ms` (the fixed waits these replace, T-928): whether it held
+const settle = (page, fn, arg, ms) => page.waitForFunction(fn, arg, { timeout: ms }).then(() => true, () => false);
+// the map drawn with its tiles, for a screenshot, at most `ms`
+const idle = (page, ms) => page.evaluate(ms => new Promise(r => { const m = window.tw.map, t = setTimeout(r, ms); m.once('idle', () => { clearTimeout(t); r(); }); m.triggerRepaint(); }), ms);
+
+/** A new game (a sandbox when checking several zones, so later zones' lines are not short of money). */
+async function openPage() {
   const page = await ctx.newPage(), errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error' && !IGNORE.test(m.text())) errors.push(m.text()); });
-  await page.goto(`${BASE}/?debug=1&new=1&opened=all&paused=1&demandWorkers=${WORKERS}&v=${Date.now()}`);
+  await page.goto(`${BASE}/?debug=1&new=1${multi ? '&mode=sandbox' : ''}&opened=all&paused=1&demandWorkers=${WORKERS}&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world.value && window.twDemand?.client && window.twDemand.view()?.round >= 0, undefined, { timeout: 240000 });
+  return { page, errors };
+}
+
+async function checkZone(page, errors, id, C, out, result) {
+  errors.length = 0;
+  const check = (name, ok, detail) => { result.checks.push({ name, ok: !!ok, detail }); console.log(ok ? 'ok  ' : 'FAIL', multi ? `${id}:` : '', name, JSON.stringify(detail ?? '')); };
 
   // 1. jump to the city: its pack opens, it becomes the active city, its boundary layer exists
   const t0 = await page.evaluate(ll => { window.tw.map.jumpTo({ center: ll, zoom: 11.2 }); return performance.now(); }, C.centre);
@@ -266,7 +290,8 @@ try {
   await page.evaluate(() => { const d = document.querySelector('#debug'); if (d) d.style.display = 'none'; window.tw.display.value = { ...window.tw.display.value, commuters: true, commuterEnd: 'home' }; });
   // the no-rail split: wait until the top bar has the city's own figures
   await page.waitForFunction(name => /Train .*Walking .*Driving/.test(document.querySelector('.split-row')?.getAttribute('data-tip') ?? '') && (document.querySelector('.split-row')?.getAttribute('data-tip') ?? '').includes(name) && !/–/.test(document.querySelector('.split-row .pct')?.textContent ?? '–'), C.name, { timeout: 300000 });
-  await page.waitForTimeout(6000);
+  await settle(page, () => window.twDemand.view()?.final, undefined, 6000);
+  await idle(page, 6000);
   result.noRail = { topBar: await topBar(page), cities: await page.evaluate(id => window.twDemand.cities().get(id) ?? null, id) };
   check(`the top bar names ${C.name} and gives its split`, (result.noRail.topBar.city ?? '').includes(C.name) && /Walking/.test(result.noRail.topBar.split ?? ''), result.noRail);
   await page.screenshot({ path: out + 'homes.png' });
@@ -283,6 +308,8 @@ try {
   check('ground track across the water bridged (or refused for want of room), a tunnel accepted', (water.ground === 'accepted' || /BridgeNoRoom/.test(water.ground)) && water.tunnel, water);
 
   // 3. a test line through the centre, constructed
+  // several zones in one game: each line its own name, so no lookup finds an earlier zone's
+  const lineName = multi ? `${C.lineName} ${id}` : C.lineName;
   const before = await page.evaluate(() => window.twDemand.view()?.version ?? 0);
   await page.evaluate(async ([stops, name, colour]) => {
     const t = window.tw, run = async op => { const r = await t.client.edit(op); if (!r.ok) throw Error(JSON.stringify({ op, r })); return r; };
@@ -301,35 +328,68 @@ try {
     const at = nodes.slice(1, -1);
     for (let i = 0; i < stops.length; i++) await run({ op: 'addStation', at: { kind: 'node', node: at[i] }, platform: 160, name: stops[i][0] });
     const line = (await run({ op: 'addLine', stops: at, name, colour })).line;
+    window.__cbLine = line;
     await run({ op: 'setTrainCount', line, trains: [10, 10, 5] });
     await run({ op: 'constructAll' });
-  }, [C.line, C.lineName, C.colour]);
-  await page.waitForFunction(v => window.twDemand.view()?.version > v && window.twDemand.view()?.round === 3 && window.twDemand.view()?.final, before, { timeout: 900000 });
-  const sums = await page.evaluate(name => {
+  }, [C.line, lineName, C.colour]);
+  await page.waitForFunction(([v, name]) => {
+    const dv = window.twDemand.view(), l = window.tw.world.value.save.lines.find(l => l.name === name);
+    return dv?.version > v && dv.round === 3 && dv.final && l && dv.lines.has(l.id);
+  }, [before, lineName], { timeout: 900000 });
+  const sums = await page.evaluate(([name, stops]) => {
     const dv = window.twDemand.view(), keys = [...dv.purposes.keys()], w = window.tw.world.value;
     const rel = (a, b) => Math.abs(a - b) / Math.max(1, Math.abs(b));
     const l = w.save.lines.find(l => l.name === name), d = dv.lines.get(l.id);
     const by = Object.fromEntries(keys.map(k => [k, Math.round(dv.purposes.get(k).lines.get(l.id)?.ridersPerDay ?? 0)]));
     const worst = rel(keys.reduce((s, k) => s + (dv.purposes.get(k).lines.get(l.id)?.ridersPerDay ?? 0), 0), d.ridersPerDay);
-    const stations = Object.fromEntries(w.save.stations.map(s => [s.name, Math.round((dv.stations.get(s.id)?.boardings ?? 0))]));
+    const mine = new Set(stops);
+    const stations = Object.fromEntries(w.save.stations.filter(s => mine.has(s.name)).map(s => [s.name, Math.round((dv.stations.get(s.id)?.boardings ?? 0))]));
     return { final: !!dv.final, riders: Math.round(d.ridersPerDay), by, worst, stations };
-  }, C.lineName);
+  }, [lineName, C.line.map(s => s[0])]);
   result.line = sums;
   check(`the ${C.lineName} reaches a final solve with riders`, sums.final && sums.riders > 0, { final: sums.final, riders: sums.riders });
   check(`the ${C.lineName} carries every purpose, purposes add up`, (C.purposes ?? ['work', 'shopping', 'social', 'school', 'medical']).every(k => sums.by[k] > 0) && sums.worst < 1e-4, { ...sums.by, required: C.purposes ?? 'all five' });
-  await page.waitForTimeout(4000);
+  await settle(page, id => (window.twDemand.cities().get(id)?.railTripsPerDay ?? 0) > 0, id, 4000);
   result.withLine = { topBar: await topBar(page), cities: await page.evaluate(id => window.twDemand.cities().get(id) ?? null, id) };
   check(`${C.name} has a mode split with the line`, result.withLine.cities, result.withLine);
   await page.evaluate(ll => window.tw.map.jumpTo({ center: ll, zoom: 12.6 }), C.view);
-  await page.waitForTimeout(8000);
+  await idle(page, 8000);
   await page.screenshot({ path: out + 'line.png' });
-  result.errors = errors;
-  check('no page errors', errors.length === 0, errors);
-} finally {
-  await writeFile(process.env.JSON_OUT ?? `artifacts/trainworld/${C.task}-${id}-browser.json`, JSON.stringify(result, null, 2));
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  result.errors = [...errors];
+  check('no page errors', errors.length === 0, result.errors);
+  // T-928: the line goes, so the next zone's solve does not carry it (its track and stations stay, unserved)
+  if (multi) {
+    const v = await page.evaluate(async () => { const v = window.twDemand.view()?.version ?? 0, r = await window.tw.client.edit({ op: 'removeLine', line: window.__cbLine }); if (!r.ok) throw Error('removeLine: ' + JSON.stringify(r)); return v; });
+    // the solve without it, before the next zone counts versions
+    await page.waitForFunction(([v, name]) => { const dv = window.twDemand.view(); return dv?.version > v && dv.final && !window.tw.world.value.save.lines.some(l => l.name === name); }, [v, lineName], { timeout: 300000 });
+  }
 }
-const pass = result.checks.length === 8 && result.checks.every(c => c.ok);
-console.log(pass ? `PASS city-browser ${id}` : `FAIL city-browser ${id}`);
+
+let pass = true, cur = null, onPage = 0;
+for (const z of zones) {
+  const result = { city: z.id, checks: [] };
+  const t = Date.now();
+  try {
+    if (!cur || onPage >= ZONES_PER_PAGE) {
+      if (cur) await cur.page.close().catch(() => {});
+      cur = await openPage();
+      onPage = 0;
+    }
+    onPage++;
+    await checkZone(cur.page, cur.errors, z.id, z.C, z.out, result);
+  } catch (e) {
+    // the page may be half way through an edit: the next zone gets a fresh one
+    result.error = String(e?.stack ?? e).slice(0, 2000);
+    console.log('FAIL', z.id, result.error.split('\n')[0]);
+    if (cur) await cur.page.close().catch(() => {});
+    cur = null;
+  }
+  result.seconds = Math.round((Date.now() - t) / 100) / 10;
+  await writeFile(z.json, JSON.stringify(result, null, 2));
+  const ok = result.checks.length === 8 && result.checks.every(c => c.ok);
+  pass &&= ok;
+  console.log(ok ? `PASS city-browser ${z.id}` : `FAIL city-browser ${z.id}`, `${result.seconds} s`);
+}
+await ctx.close();
+await rm(profile, { recursive: true, force: true }).catch(() => {});
 process.exit(pass ? 0 : 1);

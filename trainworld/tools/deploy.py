@@ -7,6 +7,10 @@
 
 Run from the maps root. Nothing here commits or pushes; it prints the git commands.
 
+During a batch, publish a build on a freeze (T-928) rather than one that copied data/packs mid-batch:
+`python -I trainworld/pipeline/freeze.py build` (the newest freeze, the .tw-snap tree's code) prints
+its dist, then `--dist <that dist>` here: the registry comes from the freeze (`frozen.json` names it).
+
 What goes where. The build's `packs/` folder (city packs, market packs, outlines, the intercity
 market, real saves, real-network graphs: about 1 GB in about 4,000 files) goes to
 `r2:anitamaps/trainworld/<version>/`, read by the page from https://data.anita.garden/trainworld/<version>/.
@@ -87,6 +91,16 @@ def preflight(dist, allow_dirty, app=None):
     packs = os.path.join(dist, "packs")
     if not os.path.isfile(os.path.join(dist, "index.html")) or not os.path.isdir(packs):
         return [f"no build at {dist} (index.html and packs/)"], [], {}
+    # T-928: a build on a freeze (pipeline/freeze.py build) names its freeze and the app it built
+    fz = os.path.join(dist, "frozen.json")
+    frozen = json.load(open(fz, encoding="utf-8")) if os.path.isfile(fz) else None
+    if frozen:
+        app = app or frozen["app"]
+        sys.path.insert(0, os.path.join(TW, "pipeline"))
+        import freeze  # noqa: E402
+        bad = freeze.check(frozen["freeze"]) if os.path.isdir(frozen["freeze"]) else ["the freeze folder is gone"]
+        if bad:
+            warnings.append(f"freeze {frozen['stamp']} changed since the build ({len(bad)} files: {bad[0]}); the build copied it as it was")
     app = app or os.path.dirname(dist)
     repo = git("rev-parse", "--show-toplevel", cwd=app)
     head = git("rev-parse", "--short", "HEAD", cwd=app)
@@ -102,7 +116,7 @@ def preflight(dist, allow_dirty, app=None):
                for p in (os.path.join(assets, f) for f in os.listdir(assets)) if p.endswith(".js")):
         problems.append("the build has no game/dataBase.ts (T-924): it would read packs/ beside the page and find nothing")
 
-    reg = json.load(open(os.path.join(app, "src", "game", "registry.json"), encoding="utf-8"))
+    reg = json.load(open(os.path.join(frozen["freeze"], "game", "registry.json") if frozen else os.path.join(app, "src", "game", "registry.json"), encoding="utf-8"))
     ids = [c["id"] for c in reg["cities"]]
     missing = []
     for c in ids:
@@ -145,11 +159,13 @@ def preflight(dist, allow_dirty, app=None):
     for r, s in data:
         if s > 100 * MB:
             warnings.append(f"packs/{r} is {s / MB:.0f} MB")
-    return problems, warnings, {"commit": head, "repo": repo, "zones": len(ids), "site": site, "data": data}
+    return problems, warnings, {"commit": head, "repo": repo, "zones": len(ids), "site": site, "data": data, "frozen": frozen}
 
 
 def summary(info):
-    print(f"build of {info['commit']} in {info['repo']}, {info['zones']} zones\n")
+    fz = info.get("frozen")
+    print(f"build of {info['commit']} in {info['repo']}, {info['zones']} zones"
+          + (f", data from freeze {fz['stamp']} ({fz['label'] or 'no label'})" if fz else ", data from data/packs at build time") + "\n")
     groups = {}
     for r, s in info["data"]:
         k = r.split("/")[0] + "/" if "/" in r else next((e for e in [".boundary.geojson", ".places.json", ".market.json", ".bin"] if r.endswith(e)), r if r in ("outlines.json", "intercity.json") else ".json")

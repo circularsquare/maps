@@ -21,8 +21,9 @@ its market place (id 2) keeps its name and has no sites.
                                             list the groups (with the world plan's planned metros
                                             marked +) and their solve units (T-786: a group
                                             spanning countries is solved a country at a time)
-    python pipeline/intercity.py --solve a,b [--fixed c,d] --name n
-                                            one solve unit, no market step (world_run.py's join)
+    python pipeline/intercity.py --solve a,b [--fixed c,d [--hold-report F] [--new a]] --name n
+                                            one solve unit, no market step (world_run.py's join;
+                                            the hold report, T-928: how far it moved each fixed pack)
 
 The game no longer reads this file (T-377): pipeline/market_zones.py takes the Northeast's sites
 and commutes from it into each zone's own market pack, `data/packs/<id>.market.json`.
@@ -144,16 +145,19 @@ def joint(root=ROOT, work=None, dry=False):
               "--report", str(work / "joint_report.json"), *extra)
 
 
-def solve_group(ids, name, root=ROOT, work=None, dry=False, fixed=()):
+def solve_group(ids, name, root=ROOT, work=None, dry=False, fixed=(), new=(), hold_report=None):
     """T-463, T-539: one joint commute gravity over packs outside the Northeast: each pack's
     factors, and the cross-pack commutes from their homes in <work>/<name>.joint_commutes.json for
     market_zones.py; `fixed` packs (T-786) take part at their own factors and are not written. A
-    file no pack takes its commutes from any more (joint_files) is removed."""
+    file no pack takes its commutes from any more (joint_files) is removed. `hold_report` (T-928):
+    how far the solve moved each fixed pack, the `new` ones counted absent before."""
     work = work or root / "data/work"
     out = work / f"{name}.joint_commutes.json"
     extra = ["--dry", "--dump", str(work / f"{name}.joint_dump.json")] if dry else []
     if fixed:
         extra += ["--fixed", ",".join(fixed)]
+        if hold_report:
+            extra += ["--hold-report", str(hold_report)] + (["--new", ",".join(new)] if new else [])
     # Japan's columns stall at about 8e-4 from step ~90, all in Okinawa's outlying islands (weakly
     # joined to anything; notes/T-463.md): the best step is kept, so 150 steps are as good as 500
     cargo_bin("joint_gravity", "--root", str(root), "--threads", os.environ.get("OMP_NUM_THREADS", "3"), "--max-iters", "150",
@@ -265,7 +269,7 @@ def solve_auto(only=(), root=ROOT, work=None, dry=False, gap=None):
     return solved
 
 
-def solve_unit(g, fixed, name, root=ROOT, work=None, dry=False, ne=None):
+def solve_unit(g, fixed, name, root=ROOT, work=None, dry=False, ne=None, new=(), hold_report=None):
     """One solve unit (solve_units): its members balanced, `fixed` held at their factors."""
     t0 = time.time()
     if ne is None:
@@ -285,7 +289,7 @@ def solve_unit(g, fixed, name, root=ROOT, work=None, dry=False, ne=None):
             write_sites()
         joint(root, work, dry)
     else:
-        solve_group(g, name, root, work, dry, fixed)
+        solve_group(g, name, root, work, dry, fixed, new, hold_report)
     print(f"group {name} ({len(g)} packs{f', {len(fixed)} fixed' if fixed else ''}: {' '.join(g)}) solved in "
           f"{time.time() - t0:.0f} s", flush=True)
 
@@ -400,7 +404,8 @@ if __name__ == "__main__":
     if "--solve" in sys.argv:  # one unit as world_run.py hands it: --solve a,b [--fixed c,d] --name n
         arg = lambda k: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else ""  # noqa: E731
         solve_unit([i for i in arg("--solve").split(",") if i], [i for i in arg("--fixed").split(",") if i],
-                   arg("--name"), dry="--dry" in sys.argv)
+                   arg("--name"), dry="--dry" in sys.argv, new=[i for i in arg("--new").split(",") if i],
+                   hold_report=arg("--hold-report") or None)
         sys.exit()
     if "--group" in sys.argv:
         i = sys.argv.index("--group")

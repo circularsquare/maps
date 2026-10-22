@@ -185,7 +185,9 @@ app` rebuilds only the WASM. `npm run check --prefix app` type-checks.
 Every fetch of a `packs/` file goes through `game/dataBase.ts` (`dataUrl`): `packs/` beside the page,
 or the R2 prefix a published index.html names in its `tw-data` meta. `tools/deploy.py` publishes a
 build: `packs/` to R2 `trainworld/<version>/`, the rest of dist to the website repo (T-924,
-notes/T-924.md has the commands).
+notes/T-924.md has the commands). During a batch, publish a build on the last freeze
+(`pipeline/freeze.py build`, then `deploy.py --dist` that build; T-928), never one that copied
+data/packs mid-batch.
 
 ## checks/: standing checks
 
@@ -304,7 +306,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   comparison), `t125-fingerprint.mjs` (a save's derived geometry, before and after a frame
   change), `t277-browser.mjs` (Toronto; not rerun since T-277), `city-browser.mjs <id>` (a tier 0
   city: open, boundary, the top bar's split, a water crossing refused, a test line to a final solve,
-  T-364; a row from its table, or from the file in `ROW`, which `pack_gate.py` writes for any pack).
+  T-364; a row from its table, or from the file in `ROW`, which `pack_gate.py` writes for any pack;
+  `ROWS`, a list of rows, checks them all in one sandbox game, 20 to a page load, T-928).
 - `pack_gate.py <id ...> [--all] [--browser] [--since snap] [--log id=build.log]` (Python, T-538):
   the ship-or-park gate for a finished pack, pipeline stage 6 (notes/T-535.md). Every check a
   number against `THRESHOLDS` at the top of the file: `read_pack.py`, OSM water points (polylabel on
@@ -313,7 +316,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `.stations.fgb`; older packs' cached Overpass answers in `data/raw/stations/`; no network, T-770)
   on land, `every_pack_everyday`'s rates (`TW_PACKS`),
   the browser check on a row it makes (a test line along OSM stations near the centre, a water pair
-  from the mask), other packs unchanged against a `snapshot`, and the plausibility figures (people
+  from the mask; several packs' rows in one browser session, T-928), other packs unchanged against
+  a `snapshot` (each other pack hashed once a run), and the plausibility figures (people
   against GHSL and the FUA, outline, jobs, commute, schools, hospitals, roads, T-460's OSM signal),
   plus a WARN outside the fleet's range (`pack_gate_fleet.json`, from `fleet`). JSON a pack in
   `../artifacts/trainworld/pack_gate/`; one summary line a pack. Thresholds and the 67-pack result:
@@ -405,7 +409,12 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   stops a run without parking (`check_sim`, a gate with no result); `quiet_watch` dumps a silent step's stack.
   Several runs at once (T-786): `--no-join` then `join`; row claims, extract, packs, registry and
   plan locks through `shared_lock.py` (re-entrant cross-process file locks, `write_atomic`), which
-  register.py, market_zones.py, zones.py, zone_boxes.py and world_plan.py take too.
+  register.py, market_zones.py, zones.py, zone_boxes.py and world_plan.py take too. A clean join
+  ends with `freeze.py`.
+- `freeze.py [--label L] | list | check [stamp] | build [stamp] [--tree] [--out]` (T-928): the data a
+  production build copies, frozen in `data/frozen/<stamp>/` as hard links to data/packs plus copies
+  of the four game data files, with a size and time manifest; `build` makes a publishable build of a
+  tree's code on a freeze (`TW_PACKS` in vite.config.ts), for `tools/deploy.py --dist`.
 - Real networks and calibration (T-007, T-509): `realnet.py net <city>` turns a city's sources
   (GTFS, OSM route relations from `realnet.py fetch-osm <city>`, or a CSV of timetabled trips;
   `CITIES` lists each city's) into a demand test network in `data/work/realnet/`; `realnet.py`

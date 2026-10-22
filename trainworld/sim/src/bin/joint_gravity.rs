@@ -4,6 +4,7 @@
 //!       [--tol 1e-8] [--threads 3] [--dry] [--check] [--report data/work/joint_report.json]
 //!       [--dump factors.json] [--anderson 12] [--max-iters 500] [--packs a,b,.. --out FILE]
 //!       [--admin1 F]  (F in place of borders.json's admin-1 default, for fitting it)
+//!       [--fixed c,d [--init F] [--hold-report F [--new a,b]]]
 //!
 //! `--packs` (T-463) solves the named packs instead (a group outside the Northeast, Japan's), and
 //! writes their cross-pack commutes to `--out` by 6 km squares of each pack's own frame, for
@@ -14,6 +15,11 @@
 //! the solved packs' sums across the cut but are not balanced or written. `--out` then holds every
 //! commute with an end in a solved pack (listed under `solved`), from the fixed packs' homes too;
 //! pipeline/market_zones.py takes each pair of packs from the newest file covering it.
+//!
+//! `--hold-report F [--new a,b]` (T-928, with `--fixed`): for each fixed pack, how far this solve
+//! moved its zones' row and column sums from what its old neighbours gave them (the solved packs at
+//! their old factors, the `--new` ones absent), and whether it has any pair with a solved pack: how
+//! far holding a pack fixed leaves it off its own margins (notes/T-928.md).
 //!
 //! Reads every zone pack of the registry (`app/src/game/registry.json`, cities with a market place)
 //! and the regional market's pack (`data/packs/intercity.json`, its sites written by
@@ -461,6 +467,49 @@ fn main() {
             let i = g - p.off;
             eprintln!("  worst column: {} zone {} ({}, {}): error {e:.2e}, jobs {:.1}, homes {:.1}, col {:.3e}", p.id, i, p.z.gx[i], p.z.gy[i], jobs[g], o[g], col[g]);
         }
+    }
+
+    // ---- T-928: how far the solve moved the fixed packs near it
+    if let Some(path) = get("--hold-report") {
+        let new_ids: Vec<String> = get("--new").map(|s| s.split(',').filter(|x| !x.is_empty()).map(String::from).collect()).unwrap_or_default();
+        // before: every pack's old factors, the new packs' zones taking no part
+        let (mut row0, mut col0) = (base_row.clone(), base_col.clone());
+        for p in packs.iter().filter(|p| !p.fixed && !new_ids.contains(&p.id)) {
+            let (r, c) = match init.get(&p.id) {
+                Some(rc) => rc.clone(),
+                None => {
+                    let g = p.city.gravity.as_ref().unwrap();
+                    (g.row.clone(), g.col.clone())
+                }
+            };
+            row0[p.off..p.off + p.z.n].copy_from_slice(&r);
+            col0[p.off..p.off + p.z.n].copy_from_slice(&c);
+        }
+        let solved_grids: Vec<&Grid> = packs.iter().zip(&grids).filter(|(p, _)| !p.fixed).map(|(_, g)| g).collect();
+        let near = |g: &Grid| solved_grids.iter().any(|s| g.x0 - reach <= s.x1 && s.x0 - reach <= g.x1 && g.y0 - reach <= s.y1 && s.y0 - reach <= g.y1);
+        let zf: Vec<usize> = packs.iter().zip(&grids).filter(|(p, g)| p.fixed && near(g)).flat_map(|(p, _)| p.off..p.off + p.z.n).collect();
+        let (ra, ca) = (sums(&col, true, &zf), sums(&row, false, &zf));
+        let (rb, cb) = (sums(&col0, true, &zf), sums(&row0, false, &zf));
+        let mut out = vec![];
+        for p in packs.iter().filter(|p| p.fixed) {
+            let (mut dr, mut dc, mut moved, mut base) = (0f64, 0f64, 0f64, 0f64);
+            for g in p.off..p.off + p.z.n {
+                // zones of under one commuter either end are left out: their ratios are noise
+                if o[g] >= 1.0 && rb[g] > 0.0 {
+                    dr = dr.max((ra[g] / rb[g] - 1.0).abs());
+                    moved += o[g] * (ra[g] / rb[g] - 1.0).abs();
+                    base += o[g];
+                }
+                if jobs[g] >= 1.0 && cb[g] > 0.0 {
+                    dc = dc.max((ca[g] / cb[g] - 1.0).abs());
+                }
+            }
+            let touched = (p.off..p.off + p.z.n).any(|g| ra[g] != rb[g] || ca[g] != cb[g]);
+            out.push(json!({"id": p.id, "zones": p.z.n, "row_delta": dr, "col_delta": dc, "homes_moved": moved / base.max(1e-300), "touched": touched}));
+        }
+        let rep = json!({"task": "T-928", "solved": packs.iter().filter(|p| !p.fixed).map(|p| p.id.clone()).collect::<Vec<_>>(), "new": new_ids, "error": err, "fixed": out});
+        std::fs::write(&path, serde_json::to_string_pretty(&rep).unwrap()).unwrap();
+        eprintln!("hold report: {} fixed packs, {} near the solved ones -> {path}", packs.iter().filter(|p| p.fixed).count(), out.iter().filter(|v| v["touched"].as_bool() == Some(true)).count());
     }
 
     // ---- what each zone keeps in its pack, and the cross-pack flows

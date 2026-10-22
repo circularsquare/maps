@@ -33,7 +33,8 @@ market pack against a snapshot taken before the region (status "shipped", or "pa
 failing checks, unregistered again); then the region's downloads are deleted. After the last
 region, the joint gravity groups the batch's gated packs joined, one solve a group for the whole
 batch (T-723), the group re-gated after it (a FAIL restores the group and parks its new packs);
-then market_zones and local trips. Status and a record of
+then market_zones and local trips, and a freeze of the data for publishing (pipeline/freeze.py,
+T-928). Status and a record of
 times live in each row of pipeline/world_plan.json; a report a batch goes to
 ../artifacts/trainworld/world_run/<batch>/.
 
@@ -620,6 +621,7 @@ class Run:
                 with self.held("packs", "joint solve"):
                     self.wait_gates()
                     self.join(gated, self.logs / "join")
+                    self.freeze()
                 self.report["join_seconds"] = round(time.time() - t)
             elif gated:
                 print(f"  stopped before the joint solve: {' '.join(gated)} stay registered and built; the next run gates them again",
@@ -668,6 +670,7 @@ class Run:
                     ids = [i for i in ids if i in have]
                     if ids:
                         self.join(ids, self.logs / "join")
+                        self.freeze()
             except RunFault as x:
                 self.report["fault"] = str(x)
                 print(f"\nRUN FAULT, the join stops (no row parked for it): {x}", flush=True)
@@ -1122,6 +1125,20 @@ class Run:
                 print(f"  warning: zone search aliases not rebuilt: {str(tail)[-200:]}", flush=True)
         except Exception as e:
             print(f"  warning: zone search aliases not rebuilt: {e}", flush=True)
+
+    def freeze(self):
+        """T-928: the state this join left, frozen for publishing (pipeline/freeze.py), unless its
+        market step failed or another run is live (its rows may be registered and not yet joined)."""
+        others = [p.stem for p in (self.work / "world_run/locks").glob("batch-*.lock")
+                  if p.stem != f"batch-{self.batch}" and shared().is_held(p.stem, self.root)]
+        why = ("the market step failed" if any(p.startswith("market step failed") for p in self.report.get("problems", [])) else
+               f"{' '.join(others)} live" if others else None)
+        if why:
+            print(f"  not frozen for publishing: {why}", flush=True)
+            return
+        ok, _, tail = self.step("freeze", ["--label", self.batch, "--locked"], self.logs / "freeze.log", threads=1)
+        if not ok:
+            self.report.setdefault("problems", []).append(f"freeze failed: {str(tail)[-300:]}")
 
     def solve(self, u, new, L, again=False):
         """One solve unit's joint solve (`u`: name, members, fixed): members back to res-9, solved

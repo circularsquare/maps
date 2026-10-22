@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const PACKS = resolve(here, "../data/packs");
+// TW_PACKS: a frozen copy instead (pipeline/freeze.py build, T-928)
+const PACKS = process.env.TW_PACKS ? resolve(process.env.TW_PACKS) : resolve(here, "../data/packs");
 /** The packs the game opens: the registry's cities (T-125), and its regional market. Pipeline output, gitignored. */
 const REGISTRY = JSON.parse(readFileSync(resolve(here, "src/game/registry.json"), "utf8")) as { cities: { id: string }[]; market: { pack: string } };
 const CITIES = REGISTRY.cities.map((c) => c.id);

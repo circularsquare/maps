@@ -69,7 +69,8 @@ background and wait once for the process.
   is solved on its own sites). The rest are registered with their market packs (`register.py
   --market`; the browser check needs them), a snapshot of every registered pack taken first, and
   gated with `--browser --since` on the runner's own Vite, started after the registration (it
-  reads the registry once). A pack that ships stays registered; one that parks is taken out again
+  reads the registry once): every row's figures first, then one browser session for the region's
+  rows (T-928, `city-browser.mjs` with `ROWS`, 20 zones a page load). A pack that ships stays registered; one that parks is taken out again
   with its market pack, its market place left unused (place ids are positions), and its failing
   checks are its reason. The browser check serves the main tree's app/, so whoever runs a batch
   says who may rebuild app/ (its WASM) while it runs.
@@ -93,6 +94,10 @@ background and wait once for the process.
   `app/src/game/zone-aliases.json`, the search aliases of every zone (T-836, seconds; the same
   warning-only failure, so the new zones are found by their own name only until it is rerun).
   Status `shipped`.
+- **Freeze** (T-928): a join with no market failure and no other run live ends with
+  `pipeline/freeze.py`, which hard-links every file a production build copies into
+  `data/frozen/<stamp>/` (seconds, no space; the newest three kept). A publish during a later
+  batch builds on it (`freeze.py build`, then `tools/deploy.py --dist`), so it never waits for one.
 - **Clean up**: the region's `.osm.pbf` files and the OSM caches the runner made go once the
   region is done (`--keep-downloads` keeps them); caches already on disk before, and the small
   `.admin.fgb`, stay.
@@ -441,8 +446,10 @@ outline) opens with that purpose empty and only WARNs.
 
 Browser (own Vite with HMR and watching off, `checks/dev-nowatch.mjs`; headless Chrome through
 Playwright with its own profile directory; never touch app/dist): the gate's `--browser` (section 8)
-runs `checks/city-browser.mjs` on a row it makes, about half a minute a pack; run it in the
-background with one wait (CLAUDE.md "Keep your context lean"). A new game,
+runs `checks/city-browser.mjs` on a row it makes; with several packs, every row in one session
+(`ROWS`, T-928: a sandbox game, each zone's test line removed after its checks, 20 zones a page
+load, a zone that throws ending its page), about 10 s a zone. Run it in the background with one
+wait (CLAUDE.md "Keep your context lean"). A new game,
 then for each new city:
 
 - jump to its centre: it becomes the active city, its pack opens (`twDemand.client.start.loads`),

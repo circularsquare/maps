@@ -11,8 +11,8 @@ From the maps root, with ..\\venv's Python. Each check prints PASS, WARN, FAIL o
 pack ships when nothing FAILs and parks otherwise. One summary line a pack, and the result as JSON
 in <out>/<id>.json (default ../artifacts/trainworld/pack_gate/), which the runner (T-540) reads.
 `--browser` runs checks/city-browser.mjs on a row made here (BASE: the Vite to use, default
-http://localhost:6125), about 2 to 5 minutes a pack. Thresholds are THRESHOLDS below; how they were set,
-notes/T-538.md.
+http://localhost:6125); with several ids, every pack's row in one browser session (T-928), after
+all the figures. Thresholds are THRESHOLDS below; how they were set, notes/T-538.md.
 """
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "1")
@@ -787,12 +787,14 @@ def purposes_in_reach(header, a, line):
     return required, unreached
 
 
-def browser_check(city, header, a, f, reg, out_dir):
+def browser_row(city, header, a, f, reg, out_dir):
+    """The browser check's row for one pack ({id, row, out, json} for city-browser.mjs's ROWS, and
+    what the result adds), or (None, a failed result) when it has no water pair."""
     line, how = test_line(header, a, f, reg)
     required, unreached = purposes_in_reach(header, a, line)
     pair = water_pair(header, f, reg) if f.get("mask") is not None else None
     if pair is None:
-        return {"pass": False, "error": "no water run near the centre for the water pair"}
+        return None, {"pass": False, "error": "no water run near the centre for the water pair"}
     names = os.path.join(ROOT, "app", "src", "game", "zone-names.json")  # the name the game shows (T-825)
     shown = reg["name"]
     if os.path.exists(names):
@@ -803,31 +805,50 @@ def browser_check(city, header, a, f, reg, out_dir):
     rp = os.path.join(out_dir, f"{city}.row.json")
     with open(rp, "w", encoding="utf-8") as fh:
         json.dump(row, fh, ensure_ascii=False)
-    jp = os.path.join(out_dir, f"{city}.browser.json")
-    env = dict(os.environ, ROW=rp, OUT=os.path.join(out_dir, f"{city}-"), JSON_OUT=jp,
-               WORKERS=os.environ.get("WORKERS", "1"))
+    return ({"id": city, "row": rp, "out": os.path.join(out_dir, f"{city}-"), "json": os.path.join(out_dir, f"{city}.browser.json")},
+            {"line_from": how, "stations": len(line), "unreached": unreached})
+
+
+def browser_run(rows, out_dir):
+    """city-browser.mjs on every row in one browser session (T-928): {id: its result}. Zones whose
+    only fault was a wait that timed out (the machine busy, T-788) are tried once more."""
     maps = os.path.dirname(ROOT)
+    out, todo = {}, list(rows)
     for attempt in range(2):
-        if os.path.exists(jp):
-            os.remove(jp)
-        p = subprocess.run(["node", os.path.join(HERE, "city-browser.mjs"), city], cwd=maps, env=env,
+        for r in todo:
+            if os.path.exists(r["json"]):
+                os.remove(r["json"])
+        lst = os.path.join(out_dir, f"browser-rows-{os.getpid()}.json")
+        with open(lst, "w", encoding="utf-8") as fh:
+            json.dump(todo, fh, ensure_ascii=False)
+        env = dict(os.environ, ROWS=lst, WORKERS=os.environ.get("WORKERS", "1"))
+        p = subprocess.run(["node", os.path.join(HERE, "city-browser.mjs")], cwd=maps, env=env,
                            capture_output=True, text=True, encoding="utf-8", errors="replace")
-        checks = []
-        if os.path.exists(jp):
-            with open(jp, encoding="utf-8") as fh:
-                checks = json.load(fh).get("checks", [])
-        # a wait timed out with nothing failed: the machine was busy (gates of two runs at once, T-788)
-        timed_out = p.returncode != 0 and "TimeoutError" in (p.stderr or "") and all(k["ok"] for k in checks)
-        if not timed_out:
+        os.remove(lst)
+        again = []
+        for r in todo:
+            got = {}
+            if os.path.exists(r["json"]):
+                with open(r["json"], encoding="utf-8") as fh:
+                    got = json.load(fh)
+            checks = got.get("checks", [])
+            res = {"pass": len(checks) == 8 and all(k["ok"] for k in checks), "checks": checks}
+            if attempt:
+                res["tries"] = 2
+            if not res["pass"] and all(k["ok"] for k in checks):  # died after passing checks (T-788)
+                res["error"] = (got.get("error") or p.stderr or p.stdout or "no result")[-400:]
+                if attempt == 0 and "TimeoutError" in res["error"]:
+                    again.append(r)
+            out[r["id"]] = res
+        if not again:
             break
-    res = {"pass": p.returncode == 0, "line_from": how, "stations": len(line), "unreached": unreached}
-    if attempt:
-        res["tries"] = attempt + 1
-    if os.path.exists(jp):
-        res["checks"] = checks
-    if p.returncode != 0 and not any(not k["ok"] for k in res.get("checks", [])):  # died after passing checks (T-788)
-        res["error"] = (p.stderr or p.stdout)[-400:]
-    return res
+        todo = again
+    return out
+
+
+def browser_check(city, header, a, f, reg, out_dir):
+    row, extra = browser_row(city, header, a, f, reg, out_dir)
+    return dict(extra, **browser_run([row], out_dir)[city]) if row else extra
 
 
 # ---------------------------------------------------------------- other packs unchanged
@@ -885,6 +906,19 @@ def pack_hashes(city):
     return out
 
 
+_hashes = {}
+
+
+def pack_hashes_now(city):
+    """pack_hashes, kept while the pack's files are unchanged: a gate of many packs compares every
+    other pack once, not once a pack (T-928)."""
+    key = tuple((os.stat(p).st_mtime_ns, os.stat(p).st_size) if os.path.exists(p) else None
+                for p in (os.path.join(PACKS, f"{city}{x}") for x in (".json", ".bin", ".boundary.geojson")))
+    if _hashes.get(city, (None,))[0] != key:
+        _hashes[city] = (key, pack_hashes(city))
+    return _hashes[city][1]
+
+
 def snapshot(path):
     snap = {c: pack_hashes(c) for c in registry()}
     with open(path, "w") as f:
@@ -905,9 +939,9 @@ def changed_since(city, header, path):
         if not os.path.exists(os.path.join(PACKS, f"{other}.json")):
             bad.append(f"{other} gone")
             continue
-        now = pack_hashes(other)
+        h = pack_hashes_now(other)
         allowed = GRAVITY_ONLY | {"header:gravity", "header:merged_source"} if other in group else set()
-        diff = sorted(k for k in set(before) | set(now) if before.get(k) != now.get(k) and k not in allowed)
+        diff = sorted(k for k in set(before) | set(h) if before.get(k) != h.get(k) and k not in allowed)
         if diff:
             bad.append(f"{other}: {', '.join(diff[:6])}")
     return bad
@@ -923,20 +957,59 @@ def clean(v):
     raise TypeError(type(v))
 
 
-def run(city, reg, logs, rates, opts):
+def prepare(city, reg, logs):
+    """(figures, header, arrays) of one pack, or its result when its figures cannot be read."""
     try:
-        f, header, a = figures(city, reg, logs)
+        return figures(city, reg, logs)
     except Exception as e:
         import traceback
         traceback.print_exc()
         checks = [{"name": "figures", "status": "FAIL", "value": None, "detail": f"{type(e).__name__}: {e}"}]
         return {"city": city, "verdict": "park", "checks": checks}
-    br = browser_check(city, header, a, f, reg, opts["out"]) if opts["browser"] else None
+
+
+def verdict_of(city, reg, f, header, rates, br, opts):
     changed = changed_since(city, header, opts["since"]) if opts["since"] else None
     checks = checks_of(city, f, rates, br, changed, joint_borders(city, header, opts.get("work")))
     verdict = "park" if any(c["status"] == "FAIL" for c in checks) else "ship"
     return {"city": city, "kind": reg.get("kind", "city"), "gated": datetime.datetime.now().isoformat(timespec="seconds"),
             "verdict": verdict, "checks": checks, "browser": br}
+
+
+def run(city, reg, logs, rates, opts):
+    got = prepare(city, reg, logs)
+    if isinstance(got, dict):
+        return got
+    f, header, a = got
+    br = browser_check(city, header, a, f, reg, opts["out"]) if opts["browser"] else None
+    return verdict_of(city, reg, f, header, rates, br, opts)
+
+
+def run_many(ids, reg, logs, rates, opts):
+    """T-928, --browser on several packs: every pack's figures and test row, one browser session
+    for them all (checks/city-browser.mjs ROWS), then each verdict. Yields (id, result)."""
+    ready, rows, extra = {}, [], {}
+    for city in ids:
+        got = prepare(city, reg[city], logs)
+        if isinstance(got, dict):
+            ready[city] = got
+            continue
+        f, header, a = got
+        row, extra[city] = browser_row(city, header, a, f, reg[city], opts["out"])
+        if row:
+            rows.append(row)
+        f.pop("mask", None)  # the mask and arrays only make the row; a region's worth would stay in memory
+        ready[city] = (f, header)
+    t0 = datetime.datetime.now()
+    seen = browser_run(rows, opts["out"]) if rows else {}
+    print(f"browser: {len(rows)} packs in one session, {(datetime.datetime.now() - t0).total_seconds():.0f} s", flush=True)
+    for city in ids:
+        got = ready[city]
+        if isinstance(got, dict):
+            yield city, got
+            continue
+        br = dict(extra[city], **seen[city]) if city in seen else extra[city]
+        yield city, verdict_of(city, reg[city], got[0], got[1], rates, br, opts)
 
 
 def summary(r):
@@ -996,11 +1069,11 @@ def main(argv):
     rates = None if "--no-rust" in argv else everyday_rates(ids)
     opts = {"browser": "--browser" in argv, "since": opt("--since"), "out": out, "work": opt("--work")}
     lines = []
-    for city in ids:
-        if city not in reg:
-            print(f"{city}: not in the registry", flush=True)
-            continue
-        r = run(city, reg[city], logs, rates, opts)
+    for city in [i for i in ids if i not in reg]:
+        print(f"{city}: not in the registry", flush=True)
+    ids = [i for i in ids if i in reg]
+    many = opts["browser"] and len(ids) > 1
+    for city, r in (run_many(ids, reg, logs, rates, opts) if many else ((c, run(c, reg[c], logs, rates, opts)) for c in ids)):
         for c in r["checks"]:
             v = c.get("value")
             vs = f"{v:.4g}" if isinstance(v, (int, float)) else ""
