@@ -435,8 +435,6 @@ struct CPair {
     corridor: usize,
     /// its zones' centres at least `ride_min_km` apart: the home end may ride (T-373)
     ride: bool,
-    /// the rail propensity, with the home place's country's part (`api::country_asc_rail`)
-    asc: f32,
     /// the station choice's band by the zones' distance (`Params::band`, T-718)
     band: u8,
 }
@@ -2016,9 +2014,8 @@ impl IntercityApi {
             if sum <= 0. {
                 continue;
             }
-            let bt = pc.mode_beta(cp.car);
-            let v_rail = ((-bt * (rail_c - cp.car) + cp.asc).clamp(-80., 80.) as f64).exp();
-            let frac = v_rail / (1. + v_rail);
+            // T-918: rail against the car on the cost ratio, as the local commutes
+            let frac = pc.ratio_share(rail_c, cp.car) as f64;
             c_frac[ci] = frac as f32;
             let (ro, rr_) = (out * frac, ret * frac);
             c_rail += ro + rr_;
@@ -2111,9 +2108,8 @@ impl IntercityApi {
             let car = drive_min(km) * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * pc.car_own_km_min() + m.pr(zh.place, zw.place).cross;
             let corridor = m.corridor(zh.place, zw.place);
             self.cpair_of[c] = self.cpairs.len() as u32;
-            let asc = pc.asc_rail + super::api::country_asc_rail(&m.countries[m.places[zh.place].country as usize]);
             let band = pc.band_of_d2(km * km * 1e6) as u8;
-            self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km, asc, band });
+            self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km, band });
         }
         self.cpairs.shrink_to_fit();
         self.served_at = at;

@@ -1,0 +1,144 @@
+diff --git a/src/demand/everyday.rs b/src/demand/everyday.rs
+index dd03113..f9ece2e 100644
+--- a/src/demand/everyday.rs
++++ b/src/demand/everyday.rs
+@@ -1924,7 +1924,11 @@ impl EverydayApi {
+                     let bt = p.mode_beta(road);
+                     let (util, uw) = (bt * (road - rail) + p.asc_rail, bt * (road - cw) + p.asc_walk());
+                     // T-854: within the curve's floor and ceiling
+-                    let pr = p.rail_bounds(p.car_choice(util, uw, bt, paid, free), fast_exp(uw - util), rail, road + (1.0 - free) * paid);
++                    let pr = if p.curve != 0 {
++                        p.curve_choice(road, rail, cw, bt, paid, free)
++                    } else {
++                        p.rail_bounds(p.car_choice(util, uw, bt, paid, free), fast_exp(uw - util), rail, road + (1.0 - free) * paid)
++                    };
+                     probability[i][direction] = pr;
+                     let share = if direction == 0 {
+                         OUTWARD[pair.kind() as usize][q]
+@@ -2718,4 +2722,8 @@ impl EverydayApi {
+         }
+         parts
+     }
+-}
+\ No newline at end of file
++}
++
++#[cfg(test)]
++#[path = "C:/Users/anita/AppData/Local/Temp/claude/c--Users-anita-projects-maps/8a7f07b9-e376-4102-ab13-dfd98a17993c/scratchpad/softcurve/t918_ceiling.rs"]
++pub(crate) mod t918_ceiling;
+\ No newline at end of file
+diff --git a/src/demand/kernel.rs b/src/demand/kernel.rs
+index 36d6993..671dffb 100644
+--- a/src/demand/kernel.rs
++++ b/src/demand/kernel.rs
+@@ -78,6 +78,15 @@ pub struct Params {
+     /// where rail costs 1 / `rail_floor_ratio` of the car's. 0: the plain curve.
+     pub rail_floor: f32,
+     pub rail_floor_ratio: f32,
++    /// T-918 (scratch copy only): the shape of rail's share of rail + car. 0 today's logit;
++    /// 1 logit at `cv_a` x the scale; 2 a mix, 1 - `cv_w` at `cv_a` x the scale and `cv_w` at
++    /// `cv_a` x `cv_t` x it; 3 arctan, 0.5 + atan(`cv_a` x scale x diff) / pi; 4 logistic on
++    /// `cv_g` x ln(car / rail) (no damping). Walking keeps today's three-way share.
++    pub curve: u8,
++    pub cv_a: f32,
++    pub cv_w: f32,
++    pub cv_t: f32,
++    pub cv_g: f32,
+     /// Driving door to door (T-090), the alternative for the whole trip: the road is
+     /// `road_detour` x the straight line; its first and last `road_local_km` (at most half the
+     /// road each) are local streets, at `road_town_kmh` in open country, and the rest is main
+@@ -264,6 +273,11 @@ impl Default for Params {
+             // T-854: 5%, gone where rail costs 3 times the car's (notes/T-854.md "Stage 2")
+             rail_floor: 0.05,
+             rail_floor_ratio: 3.0,
++            curve: 0,
++            cv_a: 1.0,
++            cv_w: 0.0,
++            cv_t: 0.25,
++            cv_g: 3.5,
+             road_detour: 1.3,
+             road_local_km: 2.0,
+             road_end_km: 8.0,
+@@ -362,6 +376,11 @@ impl Params {
+             "damp_min" => self.damp_min = v,
+             "rail_floor" => self.rail_floor = v,
+             "rail_floor_ratio" => self.rail_floor_ratio = v,
++            "curve" => self.curve = v as u8,
++            "cv_a" => self.cv_a = v,
++            "cv_w" => self.cv_w = v,
++            "cv_t" => self.cv_t = v,
++            "cv_g" => self.cv_g = v,
+             "walk_mps" => self.walk_mps = v,
+             "walk_cutoff_m" => self.walk_cutoff_m = v,
+             "w_walk" => self.w_walk = v,
+@@ -614,6 +633,55 @@ impl Params {
+         let hi = self.rail_floor * ((self.rail_floor_ratio - car / rail) * k).max(0.0).min(1.0);
+         lo + r * (1.0 - lo - hi - lo * e)
+     }
++    /// T-918: rail's share of rail + car for a driver whose car costs `car`, rail `rail`, at the
++    /// mode choice's scale `bt`, by `curve`.
++    pub fn curve_f(&self, car: f32, rail: f32, bt: f32) -> f64 {
++        let d = (car - rail) as f64;
++        let b = (bt * self.cv_a) as f64;
++        let sig = |x: f64| 1.0 / (1.0 + (-x.clamp(-80.0, 80.0)).exp());
++        match self.curve {
++            2 => (1.0 - self.cv_w as f64) * sig(b * d) + self.cv_w as f64 * sig(b * self.cv_t as f64 * d),
++            3 => 0.5 + (b * d).atan() / std::f64::consts::PI,
++            4 => sig(self.cv_g as f64 * ((car.max(1e-3) / rail.max(1e-3)) as f64).ln()),
++            _ => sig(b * d),
++        }
++    }
++    /// T-918: rail's share of all trips with `curve` != 0: per driver (parking free, paying
++    /// `paid`), walking takes today's three-way share and the rest splits by `curve_f`; then the
++    /// bounds (`rail_floor`) on rail of rail + car, if on.
++    pub fn curve_choice(&self, road: f32, rail: f32, cw: f32, bt: f32, paid: f32, free: f32) -> f32 {
++        self.curve_choice_rw(road, rail, cw, bt, paid, free).0 as f32
++    }
++    /// `curve_choice` as (rail, walking) shares of all trips.
++    pub fn curve_choice_rw(&self, road: f32, rail: f32, cw: f32, bt: f32, paid: f32, free: f32) -> (f64, f64) {
++        let walk = cw < NO_WALK;
++        let one = |extra: f32| -> (f64, f64) {
++            let car = road + extra;
++            let u = (bt * (car - rail) + self.asc_rail) as f64;
++            let w = if walk { (bt * (car - cw) + self.asc_walk()) as f64 } else { f64::NEG_INFINITY };
++            let m = 0f64.max(u).max(w);
++            let (e0, er, ew) = ((-m).exp(), (u - m).exp(), if walk { (w - m).exp() } else { 0.0 });
++            let wsh = ew / (e0 + er + ew);
++            (wsh, (1.0 - wsh) * self.curve_f(car, rail, bt))
++        };
++        let (w0, r0) = one(0.0);
++        let (wt, r) = if paid < 1e-30 {
++            (w0, r0)
++        } else {
++            let (w1, r1) = one(paid);
++            let f = free as f64;
++            (f * w0 + (1.0 - f) * w1, f * r0 + (1.0 - f) * r1)
++        };
++        if self.rail_floor <= 0.0 || wt >= 1.0 {
++            return (r, wt);
++        }
++        let car = road + (1.0 - free) * paid;
++        let k = 1.0 / (self.rail_floor_ratio - 1.0);
++        let lo = (self.rail_floor * ((self.rail_floor_ratio - rail / car) * k).max(0.0).min(1.0)) as f64;
++        let hi = (self.rail_floor * ((self.rail_floor_ratio - car / rail) * k).max(0.0).min(1.0)) as f64;
++        let n = 1.0 - wt;
++        ((lo + (1.0 - lo - hi) * r / n) * n, wt)
++    }
+     /// With no rail: walking's share against the car costing `road` perceived minutes (a driver
+     /// who parks free; `paid` more for a space, `free` parking free), the walk `cw` (0 past
+     /// `WALK_REACH_KM`).
+@@ -3794,6 +3862,14 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
+                 } else {
+                     r
+                 };
++                // T-918: another curve, lane by lane
++                let r = if p.curve != 0 {
++                    let [free8, _, _, _] = F8::transpose(std::array::from_fn(|l| dd[q[l]][2]));
++                    let (ra, rl, cw, b, pd, fr) = (road.to_array(), rail.to_array(), cw8.to_array(), bt.to_array(), paid8.to_array(), free8.to_array());
++                    F8::new(std::array::from_fn(|l| p.curve_choice(ra[l], rl[l], cw[l], b[l], pd[l], fr[l])))
++                } else {
++                    r
++                };
+                 let x = tu8 * dv8 * r;
+                 let g = x / ssum;
+                 // trips by egress station y, and y x the row: what reaches each egress entry

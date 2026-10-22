@@ -79,7 +79,7 @@ pub(crate) struct PairChoice {
     /// The rail cost the logsum over station pairs gives (perceived minutes).
     pub rail: f32,
     /// Utility of rail against a driver who parks free, and rail's share of all trips
-    /// (`Params::car_choice` within `Params::rail_bounds`).
+    /// (`Params::car_choice`).
     pub util: f32,
     pub r: f32,
     /// The walkers rail takes, a share of all trips (T-558, `ModeOut::rail_walk`).
@@ -163,9 +163,7 @@ pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims
     let (rail, util, r_car) = if why == RAIL_OFFERED {
         let rail = m_u + m_v + p.fare_min - fast_ln(ssum) / th + off;
         let util = bt * (road_free - rail) + p.asc_rail;
-        // T-854: within the curve's floor and ceiling
-        let r = p.car_choice(util, uw, bt, paid, free);
-        (rail, util, p.rail_bounds(r, fast_exp(uw - util), rail, road_free + (1.0 - free) * paid))
+        (rail, util, p.car_choice(util, uw, bt, paid, free, rail, road_free))
     } else {
         (f32::INFINITY, f32::NEG_INFINITY, 0.0)
     };
@@ -243,7 +241,7 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
         let bt = p.mode_beta(road_free);
         util = bt * (road_free - rail) + p.asc_rail;
         let uw = bt * (road_free - cw) + p.asc_walk();
-        r = p.rail_bounds(p.car_choice(util, uw, bt, paid, free), fast_exp(uw - util), rail, road_free + (1.0 - free) * paid);
+        r = p.car_choice(util, uw, bt, paid, free, rail, road_free);
         // each station pair's share of the trip's rail riders
         for e in pairs.iter_mut() {
             e.2 *= 1.0 / sum;

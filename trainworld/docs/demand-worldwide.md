@@ -423,9 +423,17 @@ notes/T-420.md has the tables.
 
 ## Mode choice
 
+- **The ratio curve** (T-918, docs/demand-mode.md 4.3). Rail against the car is 1 / (1 + q^3) on
+  q, rail's perceived cost over the car's, fading to nothing from 3 to 4 times either way. It has
+  no constant to fit and no unit: a ratio reads the same whatever the currency, speeds or trip
+  lengths of a country, and it spreads with the trip's length by itself. Why it may not carry over:
+  where trips are long and slow everywhere (India, Lagos), a ratio judges a 30 minute saving on a 3
+  hour trip as worth little, which may undersell a fast intercity line there; the power 3 is
+  Anita's choice for play, set against her two ceiling tests, not fitted to any survey. Check: a
+  country's rail share by trip length against its travel survey, short and long trips apart.
 - **Cost damping** (T-495, docs/demand-mode.md 4.3). The logit's 0.10 a perceived minute falls as
-  sqrt(60 / T) past T = 60, T the car's perceived minutes (even where no car can go), in every
-  layer. The form and power follow UK WebTAG's cost damping and long-distance mode choice studies;
+  sqrt(60 / T) past T = 60, T the car's perceived minutes (even where no car can go), for walking's
+  share and the regional market (rail against the car is the ratio curve's). The form and power follow UK WebTAG's cost damping and long-distance mode choice studies;
   set on European and US rail-air shares, not fitted. Why it may not carry over: the car's minutes
   are the US car's (speed, fuel, occupancy), so where long drives are slower (India, Lagos) a
   trip's scale falls further than its distance warrants; tastes for long trips (luggage, families
@@ -433,7 +441,7 @@ notes/T-420.md has the tables.
   (MLIT's Inter-Regional Travel Survey, Eurostat, NEC FUTURE) at two lengths, so the slope as well
   as the level is seen.
 - **Rail propensity** (T-636, docs/demand-mode.md 4.3). None: `asc_rail` is 0 everywhere, so rail
-  and the car are judged on time and money alone, at 0.10 a perceived minute. T-509 had fitted 0.4
+  and the car are judged on time and money alone, by the ratio curve. T-509 had fitted 0.4
   (8 perceived minutes), everyday trips 1.1 lower and Japan +0.5 to six real networks; Anita chose a
   sensible and clear model over fitting the real cities (DECISIONS 2026-10-17). A rail constant for
   the everyday layer apart from the commutes' exists as a parameter at 0 (`everyday_asc_rail`), and
@@ -445,12 +453,11 @@ notes/T-420.md has the tables.
   London) high. Check: a new country's station entries against the model's level, and its census
   rail share by area where it has one; a country constant only where a real network's counts show
   a gap the worldwide value cannot close.
-- **Driving alternative, parking at home and the curve's bounds** (T-854, docs/demand-mode.md 4.3).
+- **Driving alternative and parking at home** (T-854, docs/demand-mode.md 4.3).
   Everyone can drive; drive times and costs are the US car's, and the car stands for every way of
   getting about but rail and walking. Parking at the home end, 0.4 of the destination's paid-space
   rule on the home zone's residents per km² of land, needs only the pack's `pop`, so it is one rule
-  in every country, with no car-ownership data anywhere. The curve's floor and
-  ceiling (5% each way, fading to none at 3 times) need no data. Why it may not carry over: density
+  in every country, with no car-ownership data anywhere. Why it may not carry over: density
   cannot see income, so a dense poor district where few own cars (Lagos, Mumbai) drives as much as a
   dense rich one, and a city of minibuses, motorbike taxis or bicycles is priced as if those riders
   drove; car ownership's real spread between countries (Paris's 65% of households without a car

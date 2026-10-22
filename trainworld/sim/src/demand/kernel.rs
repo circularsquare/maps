@@ -69,15 +69,14 @@ pub struct Params {
     pub asc_rail: f32,
     pub country_asc_rail: f32,
     /// Cost damping (T-495, `mode_beta`): past this many perceived minutes of the car's trip the
-    /// mode choice's scale falls as the square root of the car's minutes.
+    /// logit's scale falls as the square root of the car's minutes (walking, and the regional
+    /// layer; rail against the car is `ratio_share`'s).
     pub damp_min: f32,
-    /// The choice curve's floor and ceiling (T-854, `rail_bounds`), on rail's share of the trips
-    /// not walking where rail is offered: `rail_floor` of them always take rail while it costs at
-    /// most the car's perceived minutes, fading linearly to none at `rail_floor_ratio` times the
-    /// car's; mirrored, as many never take it while the car costs at most rail's, fading to none
-    /// where rail costs 1 / `rail_floor_ratio` of the car's. 0: the plain curve.
-    pub rail_floor: f32,
-    pub rail_floor_ratio: f32,
+    /// Rail against the car (T-918, `ratio_share`): rail's share of the two is 1 / (1 + q^3), q
+    /// rail's cost over the car's, fading to nothing from `ratio_fade_lo` to `ratio_fade_hi` times
+    /// the car's cost, and the car's the same way where it costs that many times rail's.
+    pub ratio_fade_lo: f32,
+    pub ratio_fade_hi: f32,
     /// Driving door to door (T-090), the alternative for the whole trip: the road is
     /// `road_detour` x the straight line; its first and last `road_local_km` (at most half the
     /// road each) are local streets, at `road_town_kmh` in open country, and the rest is main
@@ -263,9 +262,9 @@ impl Default for Params {
             asc_rail: super::api::ASC_RAIL,
             country_asc_rail: 0.0,
             damp_min: 60.0,
-            // T-854: 5%, gone where rail costs 3 times the car's (notes/T-854.md "Stage 2")
-            rail_floor: 0.05,
-            rail_floor_ratio: 3.0,
+            // T-918: Anita's fade, so a detour line cannot be farmed (notes/T-918.md)
+            ratio_fade_lo: 3.0,
+            ratio_fade_hi: 4.0,
             road_detour: 1.3,
             road_local_km: 2.0,
             road_end_km: 8.0,
@@ -363,8 +362,8 @@ impl Params {
             "walk_bonus_min" => self.walk_bonus_min = v,
             "walk_samples" => self.walk_samples = v as usize,
             "damp_min" => self.damp_min = v,
-            "rail_floor" => self.rail_floor = v,
-            "rail_floor_ratio" => self.rail_floor_ratio = v,
+            "ratio_fade_lo" => self.ratio_fade_lo = v,
+            "ratio_fade_hi" => self.ratio_fade_hi = v,
             "walk_mps" => self.walk_mps = v,
             "walk_cutoff_m" => self.walk_cutoff_m = v,
             "w_walk" => self.w_walk = v,
@@ -603,16 +602,18 @@ impl Params {
     pub fn mode_beta(&self, car: f32) -> f32 {
         self.beta * (self.damp_min / car).min(1.0).sqrt()
     }
-    /// Rail's share against the car, `util` being rail's utility against a driver who parks free
-    /// at scale `beta` (`mode_beta`): drivers parking free and those paying `paid` for a space
-    /// choose apart (T-380), the same expressions as `mode_choice`'s lanes.
-    pub fn rail_share_parked(&self, util: f32, beta: f32, paid: f32, free: f32) -> f32 {
-        let r0 = 1.0 / (1.0 + fast_exp(-util));
-        if paid < 1e-30 {
-            return r0;
-        }
-        let r1 = 1.0 / (1.0 + fast_exp(-(util + beta * paid)));
-        r0 + (1.0 - free) * (r1 - r0)
+    /// Rail's share of rail + car, rail costing `rail` perceived minutes and the car `car`
+    /// (T-918): 1 / (1 + q^3) for q = rail / car, so q and 1 / q mirror each other; rail fades to
+    /// nothing from `ratio_fade_lo` to `ratio_fade_hi` times the car's cost, and the car the same
+    /// where it costs that many times rail's. The same expressions as `mode_choice`'s lanes.
+    #[inline]
+    pub fn ratio_share(&self, rail: f32, car: f32) -> f32 {
+        let q = rail.max(0.01) / car;
+        let s = 1.0 / (1.0 + q * q * q);
+        let k = 1.0 / (self.ratio_fade_hi - self.ratio_fade_lo);
+        let fr = ((self.ratio_fade_hi - q) * k).max(0.0).min(1.0);
+        let fc = ((self.ratio_fade_hi - 1.0 / q) * k).max(0.0).min(1.0);
+        1.0 - (1.0 - s * fr) * fc
     }
     /// Perceived minutes of walking the whole trip, `d_km` straight line (round water where the
     /// routes lengthen it), T-558; `NO_WALK` past `WALK_REACH_KM`.
@@ -627,34 +628,23 @@ impl Params {
     pub fn everyday(&self) -> Params {
         Params { asc_rail: self.asc_rail + self.everyday_asc_rail, ..self.clone() }
     }
-    /// With a car, the choice among rail (`util`, its utility against a driver who parks free at
-    /// scale `beta`, `mode_beta` of that driver's cost), walking (`uw`, the same against that
-    /// driver) and the car, for drivers parking free and those paying `paid` for a space, mixed
-    /// by the share `free` (T-380, T-558): rail's share. The same expressions as `mode_choice`'s
-    /// lanes.
+    /// With a car, rail's share of all trips among rail, walking and the car, for drivers parking
+    /// free (the car costing `road`) and those paying `paid` more for a space, mixed by the share
+    /// `free` (T-380): walking takes its share of the three-way logit (`util` rail's utility and
+    /// `uw` walking's against a driver who parks free, at scale `beta`, T-558), and rail and the
+    /// car split the rest by `ratio_share` on rail's cost `rail` (T-918). The same expressions as
+    /// `mode_choice`'s lanes.
     #[inline]
-    pub fn car_choice(&self, util: f32, uw: f32, beta: f32, paid: f32, free: f32) -> f32 {
+    pub fn car_choice(&self, util: f32, uw: f32, beta: f32, paid: f32, free: f32, rail: f32, road: f32) -> f32 {
         let e = fast_exp(uw - util);
-        let r0 = 1.0 / (1.0 + fast_exp(-util) + e);
+        let w0 = e / (1.0 + fast_exp(-util) + e);
+        let s0 = (1.0 - w0) * self.ratio_share(rail, road);
         if paid < 1e-30 {
-            return r0;
+            return s0;
         }
-        let r1 = 1.0 / (1.0 + fast_exp(-(util + beta * paid)) + e);
-        r0 + (1.0 - free) * (r1 - r0)
-    }
-    /// The curve's floor and ceiling (`rail_floor`, T-854) on `r`, rail's share of all trips, with
-    /// walking's share `e` x `r` (`e` as `car_choice`'s), rail costing `rail` perceived minutes and
-    /// the car `car` (its mean over drivers): walking keeps its share and rail's share of the rest
-    /// R becomes lo + (1 - lo - hi) R. The same expressions as `mode_choice`'s lanes.
-    #[inline]
-    pub fn rail_bounds(&self, r: f32, e: f32, rail: f32, car: f32) -> f32 {
-        if self.rail_floor <= 0.0 {
-            return r;
-        }
-        let k = 1.0 / (self.rail_floor_ratio - 1.0);
-        let lo = self.rail_floor * ((self.rail_floor_ratio - rail / car) * k).max(0.0).min(1.0);
-        let hi = self.rail_floor * ((self.rail_floor_ratio - car / rail) * k).max(0.0).min(1.0);
-        lo + r * (1.0 - lo - hi - lo * e)
+        let w1 = e / (1.0 + fast_exp(-(util + beta * paid)) + e);
+        let s1 = (1.0 - w1) * self.ratio_share(rail, road + paid);
+        s0 + (1.0 - free) * (s1 - s0)
     }
     /// With no rail: walking's share against the car costing `road` perceived minutes (a driver
     /// who parks free; `paid` more for a space, `free` parking free), the walk `cw` (0 past
@@ -3816,27 +3806,29 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 // T-558: and walking the whole way, against the same driver
                 let uw = bt * (road - cw8) + F8::splat(p.asc_walk());
                 // T-380: rail's share among drivers parking free, and among those paying for a
-                // space (`Params::car_choice`; where no lane pays, the second share equals the first)
-                let e = (uw - util).exp();
-                let r0 = F8::splat(1.0) / (F8::splat(1.0) + util.neg().exp() + e);
-                let r = if paid8.lt_mask(F8::splat(1e-30)) == 0xff {
-                    r0
-                } else {
-                    let [free8, _, _, _] = F8::transpose(std::array::from_fn(|l| dd[q[l]][2]));
-                    let r1 = F8::splat(1.0) / (F8::splat(1.0) + (util + bt * paid8).neg().exp() + e);
-                    r0 + (F8::splat(1.0) - free8) * (r1 - r0)
+                // space (`Params::car_choice`; where no lane pays, the second share equals the
+                // first): walking's share of the three-way logit, then rail of the rest by
+                // `Params::ratio_share` (T-918)
+                let (zero, one) = (F8::splat(0.0), F8::splat(1.0));
+                let (hi, kf) = (F8::splat(p.ratio_fade_hi), F8::splat(1.0 / (p.ratio_fade_hi - p.ratio_fade_lo)));
+                let rail_c = rail.max(F8::splat(0.01));
+                let ratio = |car: F8| {
+                    let qr = rail_c / car;
+                    let s = one / (one + qr * qr * qr);
+                    let fr = ((hi - qr) * kf).max(zero).min(one);
+                    let fc = ((hi - one / qr) * kf).max(zero).min(one);
+                    one - (one - s * fr) * fc
                 };
-                // T-854: the curve's floor and ceiling (`Params::rail_bounds`)
-                let r = if p.rail_floor > 0.0 {
-                    let [free8, _, _, _] = F8::transpose(std::array::from_fn(|l| dd[q[l]][2]));
-                    let car = road + (F8::splat(1.0) - free8) * paid8;
-                    let (a, rm, k) = (F8::splat(p.rail_floor), F8::splat(p.rail_floor_ratio), F8::splat(1.0 / (p.rail_floor_ratio - 1.0)));
-                    let (zero, one) = (F8::splat(0.0), F8::splat(1.0));
-                    let lo = a * ((rm - rail / car) * k).max(zero).min(one);
-                    let hi = a * ((rm - car / rail) * k).max(zero).min(one);
-                    lo + r * (one - lo - hi - lo * e)
+                let e = (uw - util).exp();
+                let w0 = e / (one + util.neg().exp() + e);
+                let s0 = (one - w0) * ratio(road);
+                let r = if paid8.lt_mask(F8::splat(1e-30)) == 0xff {
+                    s0
                 } else {
-                    r
+                    let [free8, _, _, _] = F8::transpose(std::array::from_fn(|l| dd[q[l]][2]));
+                    let w1 = e / (one + (util + bt * paid8).neg().exp() + e);
+                    let s1 = (one - w1) * ratio(road + paid8);
+                    s0 + (one - free8) * (s1 - s0)
                 };
                 let x = tu8 * dv8 * r;
                 let g = x / ssum;
@@ -4716,10 +4708,12 @@ mod tests {
         // Bank and Oxford Circus in, Canary Wharf out
         assert!(in_ring(ring("London"), -0.089, 51.513) && in_ring(ring("London"), -0.142, 51.515));
         assert!(!in_ring(ring("London"), -0.024, 51.505));
-        for util in [-3.0f32, 0.0, 2.5] {
-            assert_eq!(p.rail_share_parked(util, p.beta, 0.0, 0.3), 1.0 / (1.0 + fast_exp(-util)));
-            let r = p.rail_share_parked(util, p.beta, 20.0, 0.3);
-            let (r0, r1) = (1.0 / (1.0 + fast_exp(-util)), 1.0 / (1.0 + fast_exp(-(util + p.beta * 20.0))));
+        // no walk: drivers parking free and paying choose apart, mixed by the free share
+        for rail in [20.0f32, 30.0, 50.0] {
+            let util = p.beta * (30.0 - rail);
+            assert_eq!(p.car_choice(util, -1e5, p.beta, 0.0, 0.3, rail, 30.0), p.ratio_share(rail, 30.0));
+            let r = p.car_choice(util, -1e5, p.beta, 20.0, 0.3, rail, 30.0);
+            let (r0, r1) = (p.ratio_share(rail, 30.0), p.ratio_share(rail, 50.0));
             assert!(r > r0 && r < r1 && (r - (0.3 * r0 + 0.7 * r1)).abs() < 1e-6);
         }
     }
@@ -4748,28 +4742,34 @@ mod tests {
         assert!((p.car_own_min() + 15.0 * p.car_own_km_min() - 9.0).abs() < 1e-4);
     }
 
-    /// T-854: home parking is 0.4 of the paid-space rule on residents; the curve's floor and ceiling
-    /// hold rail's share of the trips not walking between 5% and 95% while rail and the car cost
-    /// about the same, and fade to nothing at 3 times either way, walking keeping its share.
+    /// T-854: home parking is 0.4 of the paid-space rule on residents. T-918: rail against the car
+    /// is 1 / (1 + q^3) on the cost ratio, the same at every trip length, mirrored for q and 1 / q,
+    /// and gone from 3 to 4 times either way; walking keeps its three-way share.
     #[test]
-    fn home_parking_and_the_curves_bounds() {
+    fn home_parking_and_the_ratio_curve() {
         let p = Params::default();
         assert_eq!(p.home_park_at(3000.0), 0.0);
         assert!((p.home_park_at(40_000.0) - 0.4 * 15.0 * (40.0f32 / 3.0).ln()).abs() < 1e-4);
-        let rest = |r: f32, e: f32| r / (1.0 - e * r);
-        // rail as costly as the car: within 5% and 95%, walking (e r) kept
-        for (r, e) in [(0.0, 0.0), (1.0, 0.0), (0.001, 2.0), (0.3, 1.0)] {
-            let b = p.rail_bounds(r, e, 30.0, 30.0);
-            let rb = b / (1.0 - e * r);
-            assert!(rb >= 0.05 - 1e-6 && rb <= 0.95 + 1e-6, "{r} {e}: {rb}");
-            assert!((rb - (0.05 + 0.9 * rest(r, e))).abs() < 1e-5);
+        let near = |a: f32, b: f32| (a - b).abs() < 1e-5;
+        // twice as dear: 1 in 9; three times: 1 in 28; equal: half; any trip length
+        for car in [10.0f32, 30.0, 200.0] {
+            assert!(near(p.ratio_share(car, car), 0.5));
+            assert!(near(p.ratio_share(2.0 * car, car), 1.0 / 9.0));
+            assert!(near(p.ratio_share(3.0 * car, car), 1.0 / 28.0));
+            assert!(near(p.ratio_share(3.5 * car, car), 0.5 / (1.0 + 3.5f32.powi(3))));
+            assert_eq!(p.ratio_share(4.0 * car, car), 0.0);
+            assert_eq!(p.ratio_share(9.0 * car, car), 0.0);
+            // the mirror: the car's share at q is rail's at 1 / q
+            for q in [0.2f32, 0.3, 0.5, 0.9, 1.7, 3.2] {
+                assert!(near(1.0 - p.ratio_share(q * car, car), p.ratio_share(car, q * car)), "{car} {q}");
+            }
         }
-        // twice the car: half the floor; three times: none; and the mirror for the car
-        assert!((p.rail_bounds(0.0, 0.0, 60.0, 30.0) - 0.025).abs() < 1e-6);
-        assert_eq!(p.rail_bounds(0.0, 0.0, 90.0, 30.0), 0.0);
-        assert!((p.rail_bounds(1.0, 0.0, 10.0, 30.0) - 1.0).abs() < 1e-6);
-        let off = Params { rail_floor: 0.0, ..Params::default() };
-        assert_eq!(off.rail_bounds(0.37, 0.5, 60.0, 30.0), 0.37);
+        // walking keeps the logit's share: rail and the car split what is left
+        let (rail, road) = (40.0f32, 30.0f32);
+        let bt = p.mode_beta(road);
+        let (util, uw) = (bt * (road - rail), bt * (road - 35.0) + p.asc_walk());
+        let w = fast_exp(uw - util) / (1.0 + fast_exp(-util) + fast_exp(uw - util));
+        assert!(near(p.car_choice(util, uw, bt, 0.0, 1.0, rail, road), (1.0 - w) * p.ratio_share(rail, road)));
     }
 
     /// T-636: the walking constant is `walk_bonus_min` perceived minutes whatever the scale, and a

@@ -1926,8 +1926,7 @@ impl EverydayApi {
                     let rail = ma + mb + p.fare_min - fast_ln(sum) / th + off;
                     let bt = p.mode_beta(road);
                     let (util, uw) = (bt * (road - rail) + p.asc_rail, bt * (road - cw) + p.asc_walk());
-                    // T-854: within the curve's floor and ceiling
-                    let pr = p.rail_bounds(p.car_choice(util, uw, bt, paid, free), fast_exp(uw - util), rail, road + (1.0 - free) * paid);
+                    let pr = p.car_choice(util, uw, bt, paid, free, rail, road);
                     probability[i][direction] = pr;
                     let share = if direction == 0 {
                         OUTWARD[pair.kind() as usize][q]

@@ -28,9 +28,15 @@ changing, T-718's route choice between cities and T-720's walking bands). The fu
 ## How each trip picks a mode
 
 Every option gets a cost in **perceived minutes**: real minutes, some counted heavier than others.
-The cheaper option wins more of the trips, smoothly. The curve is steeper than it was: an option
-10 perceived minutes cheaper takes about 73% of the trips, 20 minutes cheaper about 88%. Past
-60 minutes of driving a minute counts for less, so long trips are less clear cut.
+The cheaper option wins more of the trips, smoothly, by how many times cheaper it is. When the
+train is twice as dear as driving it gets 1 in 9 of the trips, three times as dear 1 in 28; at the
+same cost, half; half as dear, 8 in 9. The car is judged the same way, so the two sides mirror each
+other. Because it goes by times rather than minutes, 10 minutes matter a lot on a short trip and
+little on a long one. Past 3 times as dear the train's share falls away, and from 4 times nobody
+takes it, so a pointless detour line gets nobody (the same for the car the other way round).
+
+Walking the whole way takes its share first, by minutes: a walk 10 minutes cheaper than the
+alternatives takes about 73% of the trips. Rail and the car split the rest.
 
 There is no built-in liking for the train. Rail and the car are compared on time and money alone.
 
@@ -111,12 +117,6 @@ There is no built-in liking for the train. Rail and the car are compared on time
 - A commute's distance for walking is between actual homes and jobs (six of each per 2 km zone),
   not between zone centres, so a 1 km commute across a zone line walks like a 1 km one.
 
-**Some always take the train, some never do.** Where a train serves the trip, 5% of the people
-not walking take it whatever, while the train costs no more than driving; that fades to nobody
-when the train costs three times the drive, so a useless detour line gets no free riders. The same
-the other way: 5% always drive while driving costs no more than the train, fading to nobody when
-the train costs a third of the drive.
-
 ## Why rail is hard to win in the suburbs
 
 The walk to and from the station. A train that is fast still has to be reached: a kilometre at each
@@ -128,15 +128,16 @@ parking is paid, rail wins easily (Hempstead to Midtown). The trip explorer show
 Both ask what rail could carry if a straight train ran between every pair of places. Walking
 is left out of the comparison; the figure is rail out of rail plus car.
 - **A**: 140 km/h, free, a 3 minute walk at each end, a train every 5 minutes. Target at least 85%.
-  New York 86%, London 85.6%, Paris 87.7%, Tokyo 87.8%; Houston, all suburb, 75.7%.
+  New York 92%, London 92%, Paris 93%, Tokyo 93.5%; Houston, all suburb, 86%.
 - **B**: 100 km/h, a 3 minute walk at each end, a fare of $1.50 plus $0.05 a km. Target at least 50%.
-  New York 79%, London 78.5%.
+  New York 81%, London 82%.
 - The real networks, for comparison: New York's rail takes 20% of rail plus car (14% of all trips),
   London's 29% (19%); before the route choice was sharpened (T-710) and changes cost 2 minutes
   (T-717), 23% and 32%. Short trips are where
   the real systems fall short: coverage, not the choice, holds them down.
 
-Details and the settings that were tried: notes/T-636.md; the route choice, notes/T-710.md.
+Details and the settings that were tried: notes/T-636.md; the route choice, notes/T-710.md; the
+curve by times cheaper, notes/T-918.md.
 
 ## Coming next
 

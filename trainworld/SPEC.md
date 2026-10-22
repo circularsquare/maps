@@ -167,19 +167,18 @@ institutions** (prisons, nursing homes and the like, T-234).
   minutes between cities, the band's length in a city), so a long trip minds a minute less; a
   train counts as crowded only from 70% of its crush load [T-710]. Each round uses
   the combined loads of every zone, the everyday layer and the regional market. Walking the whole
-  way is a third mode in the same logit [T-558]: 1.5 perceived minutes a minute at every length,
+  way is a third mode [T-558], its share from a logit at 0.10 a perceived minute (past 60 perceived
+  car-minutes 0.10 x sqrt(60 / T) [T-495]): 1.5 perceived minutes a minute at every length,
   a bonus of 10 minutes against the car, commutes walking
   between sampled cells rather than zone centres [T-587], so a good station
-  near a short trip takes some walkers and a long walk loses to the train. The choice is
-  0.10 a perceived minute with no rail constant (time and money alone), car ownership $1.50 a trip
-  plus $0.10 a km and 7 minutes to park [T-636, T-637]. Past 60 perceived car-minutes a minute weighs less
-  (0.10 x sqrt(60 / T)), in every layer [T-495, T-502].
+  near a short trip takes some walkers and a long walk loses to the train. Rail and the car split
+  the rest on the ratio of their costs [T-918]: rail's share is 1 / (1 + (rail / car)^3), so twice
+  as dear gets 1 in 9, symmetric for the car, fading to nothing from 3 to 4 times either way; no
+  rail constant (time and money alone), car ownership $1.50 a trip plus $0.10 a km and 7 minutes to
+  park [T-636, T-637]. The regional market keeps a damped logit with the plane [T-495, T-502].
 - **No car ownership** [T-854]: everyone can drive, and the car stands for every way about but
   rail and walking. Instead, every car trip from a home pays parking at the home end, 0.4 of the
   destination's paid-space rule on the home zone's residents per km², so dense places drive less.
-  The choice curve has a floor and a ceiling where rail is offered: 5% of the trips not walking
-  always take rail and 5% never do while the two cost about the same, each fading to none where
-  one costs 3 times the other, so a useless detour line gets no free riders.
 - **Walks and drives follow real paths** [T-275] round water and over OSM roads. Riders walk
   between stations within 300 m after a ride, and between any two stations of a complex [T-161].
 - **Homes and places are grouped for the choice**: the cells of a 2 km zone that share their

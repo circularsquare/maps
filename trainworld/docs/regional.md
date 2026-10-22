@@ -106,8 +106,8 @@ against the zone pair's own car time with that split. A place's airports (`pipel
 OurAirports' large and medium airports with scheduled service within 150 km of its centre carrying
 at least 1M passengers a year, the biggest eight; a route of 50,000 passengers a year is a direct
 flight (both from the flights project's FR24 file, read offline only). Commutes between zones
-choose rail or car as local commutes do: 0.10 per perceived minute damped the same way, the drive
-weighted 1.33 plus the work end's parking; their loads are the work purpose's [T-158]. Inter-region trips' period
+choose rail or car as local commutes do, on the ratio curve of their costs (demand-mode.md 4.3,
+T-918; no walking between zones), the drive weighted 1.33 plus the work end's parking; their loads are the work purpose's [T-158]. Inter-region trips' period
 shares are 20/35/25/15/5%; their weekend factor 1.58.
 
 Not modelled yet: coach, ferries other than the two car crossings, induced travel, routed drives

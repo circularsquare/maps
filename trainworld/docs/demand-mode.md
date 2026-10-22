@@ -2,12 +2,12 @@
 
 # Demand: mode choice and catchment (4.3)
 
-The generalised cost, walking, driving, parking, access to stations and the curve's floor and
-ceiling.
+The generalised cost, the ratio curve between rail and the car, walking, driving, parking and
+access to stations.
 
 ### 4.3 Mode choice and catchment
 
-Per OD pair and period, rail, driving and walking the whole way (below) compete in one logit by
+Per OD pair and period, rail, driving and walking the whole way (below) compete by
 **generalised cost** in minutes. Buses are out of scope (Anita, 2026-10-09). Everyone can drive:
 there is no car ownership in demand (Anita, 2026-10-21, T-854), and "car" in every view stands for
 the car and every other way of getting about (bus, taxi, bike).
@@ -18,31 +18,30 @@ the car and every other way of getting about (bus, taxi, bike).
 - driving = door-to-door road time (below; a few constants, real road travel times are not a
   priority) + its cost
 
-Rail share = logistic in the difference (**`beta` 0.10 per perceived minute**: 10 minutes cheaper
-is 73% of the trips, 20 minutes 88%; T-636), with **no rail propensity**: `asc_rail` is 0 in every
-country, so rail and the car are judged on time and money alone. There is a rail constant for the
-everyday layer apart from the commutes' (`everyday_asc_rail`, default 0, settable by `--set`), kept
-at 0 as a tool for a later fit; there is no country constant (`api::COUNTRY_ASC_RAIL` is an empty
-table). T-509 had fitted 0.4 (-0.7 for everyday trips, Japan +0.5) to six real networks; T-636
-dropped the fit so that the game is sensible and building a line has a clear effect, and the real
-cities are loose checks (notes/T-636.md).
-**The curve's floor and ceiling** (Anita, 2026-10-21, T-854; `Params::rail_bounds`): where rail is
-offered, some riders always take it and some never do. Of the trips not walking, rail's share R
-becomes lo + (1 - lo - hi) R, walking keeping its share. lo is 5% (`rail_floor`) while rail costs
-at most what the car does (perceived minutes, the car's mean over drivers who park free and those
-who pay), fading linearly to none where rail costs 3 times the car's (`rail_floor_ratio`); hi is
-the mirror, 5% while the car costs at most rail's, none where rail costs a third of the car's. So
-a slow line keeps a few riders, a fast one loses a few, and a detour three times worse than driving
-gets nothing from the floor, which a player could otherwise farm. Commutes, everyday trips and the
-trip explorer alike; not the regional layer.
-**Cost damping** (T-495, `Params::mode_beta`): past 60 perceived minutes of
-the car's trip T, the scale is 0.10 x sqrt(60 / T), so a minute counts for less on a long trip
-(0.058 at 3 hours, 0.028 at 13); one rule for commutes, everyday trips and the regional layer
-(docs/regional.md 5.1), T the car's perceived minutes door to door including parking, never the
-rail's, so the scale does not change with the network. In the local layers only the choice
-between modes is damped (the walks and station pairs behind rail's cost are weighed at 0.10, since
-they are shared by every destination); the regional layer damps the whole rail trip, access
-included. **Catchment is soft** (T-090): there
+**Rail against the car is a curve on the cost ratio** (Anita, 2026-10-22, T-918;
+`Params::ratio_share`): of the trips not walking, rail's share is 1 / (1 + q^3), q being rail's
+perceived cost over the car's. Equal costs split half and half; rail twice as dear as the car gets
+1 in 9, three times 1 in 28; half as dear, 8 in 9. The curve is symmetric: the car's share at q is
+rail's at 1 / q. A ratio rather than a difference in minutes, so it spreads with the trip's length
+by itself (10 minutes slower is 30% on a 30 minute trip, 44% on a 2 hour one), with long tails
+(a slow suburban line keeps a few riders). **The fade**: from 3 to 4 times the car's cost rail's
+share falls linearly to nothing, and the car's the same where it costs 3 to 4 times rail's, so a
+useless detour line cannot be farmed. Drivers parking free and those paying for a space take the
+curve apart, each on their own car cost (below). One rule for commutes, everyday trips, the trip
+explorer and the regional layer's commutes between zones; the regional market (rail, car and air
+between regions) keeps its damped logit (docs/regional.md 5.1). It replaced the logistic in the
+difference (0.10 a perceived minute, T-636), its damping past an hour and the 5% floor and
+ceiling (T-854); the ceiling tests pass with room (notes/T-918.md). **No rail propensity**:
+`asc_rail` is 0 in every country and does not enter the ratio, so rail and the car are judged on
+time and money alone (`everyday_asc_rail` and `api::COUNTRY_ASC_RAIL` remain, at 0 and empty,
+moving only the walking share). T-509 had fitted 0.4 (-0.7 for everyday trips, Japan +0.5) to six
+real networks; T-636 dropped the fit so that the game is sensible and building a line has a clear
+effect, and the real cities are loose checks (notes/T-636.md).
+**Walking's share** (T-558, below) still comes from a logit among rail, walking and the car at
+`beta` 0.10 a perceived minute, with **cost damping** (T-495, `Params::mode_beta`): past 60
+perceived minutes of the car's trip T the scale is 0.10 x sqrt(60 / T) (0.058 at 3 hours, 0.028 at
+13), T the car's perceived minutes door to door including parking. Rail and the car split the rest
+by the ratio. The regional market damps the same way (docs/regional.md 5.1). **Catchment is soft** (T-090): there
 is no circle the player sees. A farther station makes the walk, and so the whole trip, worse, and
 the station loses riders where that trip gets worse than driving. Value of time is one constant everywhere,
 $20/hour (`FARE_MIN_PER_USD`: 3 perceived minutes per dollar, a gameplay judgement), so fares
@@ -53,9 +52,9 @@ the whole curve, each station pair's cost corrected to the curve's fare at the e
 its strategy (the riders' split over lines by their departures). Crowding multiplies ride time
 without multiplying fare (T-067).
 
-**Walking** (Anita, T-558) is a third mode in the same logit, at the same scale (damped on the
-car's minutes, as rail): rail, the car and walking (drivers parking free and those paying for a
-space choose apart, as for rail). The walk's real minutes are its distance at 6 km/h along a path 1.3 times the straight
+**Walking** (Anita, T-558) is a third mode: its share is that of a logit among rail, the car and
+walking at `beta`, damped on the car's minutes (above), drivers parking free and those paying for a
+space choosing apart; rail and the car split the rest by the ratio curve (T-918). The walk's real minutes are its distance at 6 km/h along a path 1.3 times the straight
 line (13 minutes a straight km); every minute weighs 1.5 (`walk_trip_w`, one rate), so 500 m costs
 10 perceived minutes, 1 km 19.5, 2 km 39 and 3 km 58.5. Against the car a walk gets a
 bonus of **10 perceived minutes** (`walk_bonus_min`; the logit's `asc_walk` is that times `beta`, so
@@ -102,8 +101,8 @@ perceived minutes (T-636, T-637; the base of every car trip, with the ownership 
 one-way trip, capped at 50, with `d` the jobs per km² of land in the destination's 2 km zone (none
 below 3,000: 18 at 10,000, 40 at 42,000, 50 from 85,000). A share `1 / (1 + d / 8,000)` of the
 drivers to that zone park free (80% at 2,000, 50% at 8,000, 16% at 43,000). Rail's share is the mix
-of two logit results, one against the free driver and one against the paying one, weighted by
-that share, not one result at the mean price. Congestion charges (`kernel::CORDONS`, a place's
+of two choices, one against the free driver and one against the paying one, weighted by that
+share, not one result at the mean price. Congestion charges (`kernel::CORDONS`, a place's
 charging area and its charge, half the day's charge at 3 minutes a dollar) apply to the share of a
 zone's jobs inside the area: Manhattan south of 60th Street 13.5 minutes ($9), central London 35.1
 (£18); nowhere else. A ride to a station pays the mean over drivers there. **At the home end**
@@ -120,8 +119,8 @@ household keeps a car either way); the regional layer does not. Owning a car add
 a station pays both on its own road, parked or dropped off; the longer trips (`market_params`)
 pay none. The shipped values are $1.50 a trip and $0.10 a km (T-621,
 T-636), so a typical trip pays $2.20-4.00 and a driver's day about $10. The same rule serves all
-three layers: the commutes and the everyday layer call `park_parts` (the everyday layer takes the
-mix of two logit results per pair, `rail_share_parked`); the regional layer's market pack holds each
+three layers: the commutes and the everyday layer call `park_parts` (both take the mix of the two
+drivers' choices per pair, `Params::car_choice`); the regional layer's market pack holds each
 site's mean over drivers (`site_park`), written by `pipeline/intercity.py park_by_cell`, which
 mirrors `park_parts` and `cordon_by_zone` and is used for every zone's pack (packs built before
 T-636 hold the earlier base of 3 minutes until they are next rebuilt).
