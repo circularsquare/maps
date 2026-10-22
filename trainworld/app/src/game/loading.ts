@@ -60,8 +60,12 @@ export function takeGameLoadHold(): boolean {
   return armed;
 }
 
-/** The held game's demand has its final result: the clock runs. */
+/** The held game's demand has its final result: the clock runs, unless a later game load waits for
+ * its own. */
 export function loadComplete() {
+  // T-742: the last game's hold ending after the next game loaded, before the demand client took
+  // the next one's hold, ran the clock on the last game's demand (no fares) until the next final
+  if (holdArmed) return;
   clock?.setHeld(false);
   if (startup.peek() === "loading") startup.value = "ready";
 }

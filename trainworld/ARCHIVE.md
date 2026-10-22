@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-742 [P3] Fares at $0 after importing a save (t488's empty day 2). Done 2026-10-21: a real bug; the previous game's hold ending after a load released the clock before the loaded game's demand arrived. `loadComplete` now waits while a load is armed; t488 passes twice. notes/T-742.md.
 - T-874 [P3] Commute zone pairs with tiny flows dealt in chunks. Done 2026-10-21: pairs under 0.1 trips a period per 16 km block; New York pairs -49%, native solve -23%, browser load and edit -17-19%, Paris -18%; stations at most 0.1%. notes/T-874.md.
 - T-865 [P2] Shift-drag group select for the trip explorer. Done 2026-10-21: Shift+drag boxes bubbles at once; a second box over far bubbles opens the explorer between the groups, exact mix, times and busiest routes averaged over up to 3 x 3 cell pairs. notes/T-865.md.
 - T-871 [P2] Europe pan lag. Done 2026-10-21: zones load for viewing only above zoom 7.5; outlines drawn only near the view; overview labels measured only when placed. Europe pan long tasks 15-58 s to 0.4-4 s a pass. Check `checks/t871-europe-pan.mjs`; notes/T-871.md.
