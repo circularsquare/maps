@@ -977,6 +977,10 @@ rect.now { fill-opacity: .45; }
 .trip-hbar { width: 60px; flex: none; display: flex; align-items: center; }
 /* T-220: Explore a trip at the bottom of Settings */
 .trip-start .key { margin-left: 6px; }
+/* T-924: the data sources at the foot of Settings */
+.credits > summary { cursor: pointer; display: list-item; }
+.credits p { margin: 0 0 6px; color: var(--muted, inherit); }
+.credits a { color: inherit; }
 
 /* T-247: the UI scale (Settings, --ui from game/ui.ts). Panels are zoomed whole (every size here is
    px); the map's own DOM tags keep their placement and only their text is sized, since their

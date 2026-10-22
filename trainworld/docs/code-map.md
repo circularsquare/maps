@@ -182,6 +182,11 @@ never autosave), `?backupMs=N` (wall ms between a slot's backups, T-744), `?dema
 `localhost:8800/trainworld/` (from the snapshot worktree, see CLAUDE.md). `npm run wasm --prefix
 app` rebuilds only the WASM. `npm run check --prefix app` type-checks.
 
+Every fetch of a `packs/` file goes through `game/dataBase.ts` (`dataUrl`): `packs/` beside the page,
+or the R2 prefix a published index.html names in its `tw-data` meta. `tools/deploy.py` publishes a
+build: `packs/` to R2 `trainworld/<version>/`, the rest of dist to the website repo (T-924,
+notes/T-924.md has the commands).
+
 ## checks/: standing checks
 
 Run from the maps root (`node trainworld/checks/<file>`).

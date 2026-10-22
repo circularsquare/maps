@@ -14,6 +14,7 @@ import { RES_AREA_M2 } from "../workers/commutersProtocol";
 import { makeSandbox } from "../workers/clockClient";
 import { pickTool, TRIP_KEY } from "./tabs";
 import { Check, Segmented, Stepper } from "./widgets";
+import { Credits } from "./Credits";
 
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
 const SHADE_NAME: Record<Shade, string> = { light: "Light", dark: "Dark" };
@@ -146,6 +147,7 @@ export function SettingsTab() {
       </div>
       <GameMode />
       <TripStart />
+      <Credits />
     </>
   );
 }

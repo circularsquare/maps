@@ -1,6 +1,7 @@
 // T-800: every registered zone's coarse outline, `packs/outlines.json` (pipeline/zone_outlines.py),
 // so the map has an outline everywhere before any zone's own boundary has been fetched.
 import type { MultiPolygon } from "geojson";
+import { dataUrl } from "../game/dataBase";
 
 type File = { q: number; zones: Record<string, number[][]> };
 
@@ -8,7 +9,7 @@ type File = { q: number; zones: Record<string, number[][]> };
 export async function coarseOutlines(): Promise<Map<string, MultiPolygon>> {
   const out = new Map<string, MultiPolygon>();
   try {
-    const r = await fetch(new URL("packs/outlines.json", document.baseURI));
+    const r = await fetch(dataUrl("outlines.json"));
     if (!r.ok) throw new Error(`${r.status} ${r.url}`);
     const { q, zones } = (await r.json()) as File;
     for (const id in zones) {

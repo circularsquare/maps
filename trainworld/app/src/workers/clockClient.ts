@@ -22,6 +22,7 @@ import { anchorVersion } from "../map/anchorVersion";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
 import type { NewGameSpec } from "./saveFile";
 import type { FrameSpec } from "../game/frame";
+import { dataUrl } from "../game/dataBase";
 
 export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[] }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
 export function manageSaveSlot(action: "refresh" | "create" | "open" | "rename" | "delete" | "restore", key?: string, name?: string) {
@@ -307,7 +308,7 @@ export class ClockClient {
     let slot = choice.slot ?? "autosave";
     if (!choice.slot) try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
     const backupMs = Number(q.get("backupMs")) || undefined;
-    this.worker.postMessage({ kind: "init", city: this.cityId, pack: new URL("packs/" + this.cityId, document.baseURI).href, fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
+    this.worker.postMessage({ kind: "init", city: this.cityId, pack: dataUrl(this.cityId), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
     for (const [msg, transfer] of this.waiting) this.worker.postMessage(msg, transfer);
     this.waiting = [];
   }

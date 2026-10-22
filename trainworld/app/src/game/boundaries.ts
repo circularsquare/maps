@@ -4,6 +4,7 @@
 // times each at startup. A failed fetch is forgotten, so the next caller tries again.
 
 import type { FeatureCollection, MultiPolygon, Polygon } from "geojson";
+import { dataUrl } from "./dataBase";
 
 export type Boundary = FeatureCollection<Polygon | MultiPolygon>;
 
@@ -12,7 +13,7 @@ const cache = new Map<string, Promise<Boundary>>();
 export function cityBoundary(id: string): Promise<Boundary> {
   let p = cache.get(id);
   if (!p) {
-    p = fetch(new URL(`packs/${id}.boundary.geojson`, document.baseURI)).then(async (r) => {
+    p = fetch(dataUrl(`${id}.boundary.geojson`)).then(async (r) => {
       if (!r.ok) throw new Error(`${r.status} ${r.url}`);
       return (await r.json()) as Boundary;
     });

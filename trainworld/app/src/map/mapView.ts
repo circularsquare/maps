@@ -31,7 +31,14 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     container,
     ...startView(),
     hash: true,
-    attributionControl: { compact: true },
+    // T-924: GISCO's terms want the EuroGeographics notice on the map itself (European zone units)
+    attributionControl: {
+      compact: true,
+      customAttribution: [
+        '<a href="https://openfreemap.org">OpenFreeMap</a> <a href="https://www.openmaptiles.org/">© OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        "© EuroGeographics for the administrative boundaries",
+      ],
+    },
     dragRotate: false,
     pitchWithRotate: false,
   });

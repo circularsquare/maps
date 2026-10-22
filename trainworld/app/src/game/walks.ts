@@ -12,6 +12,7 @@ import { cityById, type CityId } from "./cities";
 import { makeFrame } from "./frame";
 import type { StationInput } from "./types";
 import { zoneAt } from "./zones";
+import { dataUrl } from "./dataBase";
 
 const ORTH = 70, DIAG = 99, INF = 0x7fffffff, RING = 256;
 const OCTILE_MAX = 1.0824;
@@ -37,7 +38,7 @@ const loading = new Map<CityId, Promise<void>>();
 function loadGrid(id: CityId) {
   if (loading.has(id)) return;
   const p = (async () => {
-    const base = new URL(`packs/${id}`, document.baseURI).href;
+    const base = dataUrl(id);
     const head = await (await fetch(base + ".json")).json();
     const wb = head.routes?.walk;
     const row = head.arrays?.find((a: { name: string }) => a.name === "walk_row");

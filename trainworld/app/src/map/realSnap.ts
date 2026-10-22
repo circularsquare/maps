@@ -13,6 +13,7 @@ import type { PiInput, RouteEnd } from "../workers/protocol";
 import type { FromRouter, ToRouter } from "../workers/realRoute.worker";
 import type { Level } from "../game/types";
 import { buildLevel, trackCount } from "../game/ui";
+import { dataUrl } from "../game/dataBase";
 import type { Overlay } from "./overlay";
 import { strokesFromPreview } from "./network";
 import { realReach } from "./realNetwork";
@@ -138,7 +139,7 @@ export class RealSnap {
     if (!this.worker) {
       this.worker = new Worker(new URL("../workers/realRoute.worker.ts", import.meta.url), { type: "module" });
       this.worker.onmessage = (e: MessageEvent<FromRouter>) => this.answer(e.data);
-      this.post({ kind: "init", page: document.baseURI, graphs: new URL("packs/realgraph/", document.baseURI).href });
+      this.post({ kind: "init", page: document.baseURI, graphs: dataUrl("realgraph/") });
     }
     return this.worker;
   }

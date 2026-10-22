@@ -8,6 +8,7 @@ import { live } from "../map/live";
 import { display } from "../game/ui";
 import { cityMatch, normalise } from "../game/search";
 import type { GameMode, NewGameSpec } from "../workers/saveFile";
+import { dataUrl } from "../game/dataBase";
 
 /** The suggested starts (T-728): the cities the demand model was checked on, each with a real
  * network. A fixed list, so easy, medium and hard starts can take its place later. */
@@ -61,7 +62,7 @@ export function viewStart(start?: string) {
 
 /** The real network's save for a start city (T-731). */
 export async function realNetwork(id: string): Promise<ArrayBuffer> {
-  const r = await fetch(new URL(`packs/real/${id}.save`, document.baseURI));
+  const r = await fetch(dataUrl(`real/${id}.save`));
   if (!r.ok) throw new Error(`${r.status}`);
   return r.arrayBuffer();
 }

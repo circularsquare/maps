@@ -7,6 +7,7 @@
 import { signal } from "@preact/signals";
 import { CITIES, cityNear, zoneBox, type City, type CityId } from "./cities";
 import { normalise } from "./search";
+import { dataUrl } from "./dataBase";
 
 export interface Place {
   name: string;
@@ -31,7 +32,7 @@ export const places = signal<ReadonlyMap<CityId, Place[]>>(new Map());
 function load(id: CityId): Promise<Place[]> {
   let p = files.get(id);
   if (!p) {
-    p = fetch(new URL(`packs/${id}.places.json`, document.baseURI)).then(async (r) => {
+    p = fetch(dataUrl(`${id}.places.json`)).then(async (r) => {
       if (!r.ok) throw new Error(`${r.status} ${r.url}`);
       const f = (await r.json()) as PlaceFile;
       const list = f.places.map(([name, k, lng, lat, pop, others]): Place => ({

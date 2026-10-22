@@ -73,6 +73,7 @@ import { readMarketPeriod, readTripPeriod, setMarketTripQuery, setTripQuery, tri
 import { demandTestSnapshot } from "./demandTest";
 import { mergeEveryday } from "./selectionMerge";
 import type { NetworkSnapshot } from "./protocol";
+import { dataUrl } from "../game/dataBase";
 import { saveSlotsState } from "./clockClient";
 import { readDemandCache, writeDemandCache } from "./saveFile";
 import { BUILD, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
@@ -1020,7 +1021,7 @@ class DemandClient {
 
   /** Download one pack file once, counting its bytes as they arrive. */
   private async downloadOnce(file: string): Promise<Uint8Array> {
-    const r = await fetch(file === MARKET_ROWS ? file : new URL(`packs/${file}`, document.baseURI));
+    const r = await fetch(file === MARKET_ROWS ? file : dataUrl(file));
     if (!r.ok) throw new Error(`${r.status} ${r.url}`);
     const d: Download = { got: 0, total: Number(r.headers.get("Content-Length")) || 0, at: performance.now() };
     this.downloads.set(file, d);
