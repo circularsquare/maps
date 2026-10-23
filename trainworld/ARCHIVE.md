@@ -1,5 +1,16 @@
 ﻿# Archive
 
+- T-1098 [P2] Holidays only where built, shared ones merged. Done 2026-10-23: countries with built track or stations (blueprint not counted); one line per holiday on one local date, names like Labor Day/Workers' Day counted as one; the sky's hover names all, the date's two and "N others".
+- T-1097 [P2] High-speed lines heavier zoomed out. Done 2026-10-23: built high-speed strokes 1.4x at zoom 9, 1.25x at 11, 1x from 13; the light centre line only on strokes 3 px wide and up.
+- T-1096 [P2] The complex view's trains smooth. Done 2026-10-23: drawn on a canvas every frame (60 a second, was 3.4), pulling out too; panel's main-thread cost +27 ms a second (was +42). notes/T-1096.md.
+
+- T-1094 [P2] A new line starts at the last train length set. Done 2026-10-23: kept in the clock worker and the save header (`newCars`), 0 (the most the platforms fit) until one is set.
+- T-1095 [P2] Interface wording. Done 2026-10-23: "Lines here"; "Boardings in past 24 h" as one row (the "Past 24 h" heading is gone); the complex map's two explanation notes dropped (their facts are in the hovers).
+- T-1099 [P2] Controls and account in Settings. Done 2026-10-23: two icon buttons at the top of Settings; the Controls button left the tab bar, the account icon stays there too.
+- T-1100 [P2] Save previews show lines only. Done 2026-10-23: the station rings are no longer drawn; saves keep their old picture until next saved.
+- T-1101 [P2] Defaults. Done 2026-10-23: the track display starts on Line (was Traffic); bubbles were already off. A stored choice stays.
+- T-1102 [P2] Selected bubble minimum. Done 2026-10-23: the selected-state pad is 1 px (was 2), so no bubble is under 1 px radius.
+
 - T-1065 [P1] US wave 1, the South, built on AWS. Done 2026-10-23: 63 of 63 shipped; builds on three spot machines in 0.81 h for $0.32 (10 min a wave's builds), Linux matching Windows; gate and join at home, 8 parks relaxed with reasons. notes/T-1004.md "Wave 1", notes/T-1064.md.
 - T-1066 [P2] Overpass from AWS. Done 2026-10-23 (in T-1065): no US build queries Overpass (terminals, medical, parks, jobs, schools and places all read the extract); wave 1 ran with it blocked. notes/T-1064.md section 2.
 

@@ -43,7 +43,7 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
 ## The demand selector and purpose filter
 
 - **None / Homes / Destinations** [T-132, `ui/DemandSelector.tsx`], always at the map's upper left,
-  remembered per browser. Destinations is every activity end (work, shopping, social, school and
+  remembered per browser, None by default [T-1101] (a start on the world map turns Homes on, T-801). Destinations is every activity end (work, shopping, social, school and
   university, airport, medical).
 - **Track display** [T-703, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in the
   same style, four buttons (Line, Traffic, Elevation, Max speed; [ui-map.md](ui-map.md) "Lines and
@@ -115,9 +115,9 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   bubbles, the zone bubbles zoomed out and the zone inspector's mark; bars, swatches by mode and
   the hovers use the mode colours of the scheme (Colours, above) and state the shares. Drawn at 80% opacity times the Opacity
   setting (90% by default, T-470), biggest bubbles under smaller ones. While a bubble (local or
-  zone) is selected every bubble is drawn at the Opacity slider's 100% and 2 CSS px larger in
-  radius, with the connecting lines starting at the larger edge, so a small bubble reads over the
-  network; hover and click use the larger radius too [T-936, `DemandOverlay.setSelecting`]. Bubbles have no outline; only a selected
+  zone) is selected every bubble is drawn at the Opacity slider's 100% and 1 CSS px larger in
+  radius (so none is under 1 px), with the connecting lines starting at the larger edge, so a small bubble reads over the
+  network; hover and click use the larger radius too [T-936, T-1102, `DemandOverlay.setSelecting`]. Bubbles have no outline; only a selected
   one has its dark outline [T-549].
 - **The colour is smoothed** [T-900, `smooth` in `workers/commuters.worker.ts`]: the model gives
   every cell of a station's subzone one rail share and every cell of a zone one walk share, so

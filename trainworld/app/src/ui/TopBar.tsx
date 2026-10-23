@@ -10,7 +10,7 @@ import { clockTime, count, dayOf, money, moneyCash } from "../game/format";
 import { dateName, dateOf, MONTH_LONG, weekdayOf } from "../game/days";
 import { PERIODS, periodAt } from "../game/periods";
 import { SkyBanner } from "./SkyBanner";
-import { countryName, holidaysNear, loadHolidays, type HolidaySpan } from "../game/holidays";
+import { countryName, groupHolidays, holidaysNear, loadHolidays, type HolidaySpan } from "../game/holidays";
 import { useEffect } from "preact/hooks";
 import { shownDay } from "../game/ui";
 import { splitTip } from "../game/splitTip";
@@ -44,11 +44,15 @@ function periodTip(minute: number): string {
 }
 
 /** T-862: one line per holiday on the sky, "Today: Thanksgiving Day, United States", "Tomorrow: …",
- * or with the hour it starts where its country keeps another local time. */
-function holidayLines(minute: number, list: HolidaySpan[]): string[] {
+ * or with the hour it starts where its country keeps another local time. T-1098: one line for a
+ * holiday several countries keep that date, "Labor Day, Belgium, China and 4 others", or every
+ * country named (`full`, the sky's hover). */
+function holidayLines(minute: number, list: HolidaySpan[], full: boolean): string[] {
   const now = minute * 60, today = Math.floor(now / 86400);
-  return list.filter((h) => h.t1 > now && h.t0 < now + 12 * 3600).map((h) => {
-    const at = `${h.name}, ${countryName(h.country)}`;
+  return groupHolidays(list.filter((h) => h.t1 > now && h.t0 < now + 12 * 3600)).map((h) => {
+    const names = h.countries.map(countryName);
+    const where = full || names.length <= 3 ? names : [...names.slice(0, 2), `${names.length - 2} others`];
+    const at = `${h.name}, ${where.length > 1 ? `${where.slice(0, -1).join(", ")} and ${where[where.length - 1]}` : where[0]}`;
     if (h.t0 <= now) return `Today: ${at}`;
     const when = Math.floor(h.t0 / 86400) === today ? "Today" : "Tomorrow";
     return h.t0 % 86400 === 0 ? `${when}: ${at}` : `${when} from ${clockTime(h.t0 / 60)}: ${at}`;
@@ -64,8 +68,9 @@ function Clock() {
   const held = clock.held.value;
   const day = dayOf(minute), { month, date } = dateOf(day);
   useEffect(loadHolidays, []);
-  const hols = holidayLines(minute, holidaysNear.value);
-  const todayHols = hols.filter((l) => l.startsWith("Today: "));
+  const near = holidaysNear.value;
+  const hols = holidayLines(minute, near, true);
+  const todayHols = holidayLines(minute, near, false).filter((l) => l.startsWith("Today: "));
   const dateTip = `${WEEKDAY_LONG[weekdayOf(day)]}, ${MONTH_LONG[month]} ${date}, day ${day}`;
   return (
     <div class="clock">

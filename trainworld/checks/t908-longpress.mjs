@@ -80,22 +80,23 @@ try {
   }
   // C. the controls panel: opens, Esc closes it and keeps the selection; a press outside closes it
   const selBefore = await page.evaluate(() => window.tw.selection.value?.kind);
-  await page.click('.tab.help');
+  await page.click('.tabs .tab[aria-label="Settings"]'); // T-1099: the button is at the top of Settings
+  await page.click('.help-open');
   await page.waitForTimeout(300);
   const shown = await page.$('.help-panel');
   await page.screenshot({ path: join(SHOTS, 't908-help.png') });
   await page.keyboard.press('Escape'); await page.waitForTimeout(200);
   const afterEsc = { panel: !!(await page.$('.help-panel')), sel: await page.evaluate(() => window.tw.selection.value?.kind) };
   report('help opens, Esc closes it only', !!shown && !afterEsc.panel && afterEsc.sel === selBefore, JSON.stringify({ selBefore, afterEsc }));
-  await page.click('.tab.help'); await page.waitForTimeout(200);
+  await page.click('.help-open'); await page.waitForTimeout(200);
   await page.mouse.click(rect.x + rect.w - 60, rect.y + rect.h - 60); await page.waitForTimeout(200);
   const afterOut = !!(await page.$('.help-panel'));
-  await page.click('.tab.help'); await page.waitForTimeout(200);
-  await page.click('.tab.help'); await page.waitForTimeout(200);
+  await page.click('.help-open'); await page.waitForTimeout(200);
+  await page.click('.help-open'); await page.waitForTimeout(200);
   const afterToggle = !!(await page.$('.help-panel'));
   report('help closes on a press outside and on its button', !afterOut && !afterToggle, `${afterOut} ${afterToggle}`);
   await page.evaluate(() => { window.tw.shade.value = 'dark'; });
-  await page.click('.tab.help'); await page.waitForTimeout(400);
+  await page.click('.help-open'); await page.waitForTimeout(400);
   await page.screenshot({ path: join(SHOTS, 't908-help-dark.png') });
   if (process.argv[4] === 'shot') await page.screenshot({ path: join(SHOTS, 't908-after.png') });
   report('no console errors', errors.length === 0, errors.slice(0, 3).join(' | '));

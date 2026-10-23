@@ -23,8 +23,9 @@ import { segmentGap } from "../../game/complexes";
 import type { LineInput, StationInput } from "../../game/types";
 import { selection } from "../../game/ui";
 import { world } from "../../game/world";
-import { PULLING_IN_S, type ComplexNow } from "../../game/complexLive";
+import { PULLING_IN_S, trainPhase, type ComplexNow, type TrainNow } from "../../game/complexLive";
 import { PLATFORM_BLUE } from "../../game/palette";
+import { clock } from "../../game/clock";
 
 /** Riders on a line's trains at its `k`th stop a day, both directions: in each direction the
  * busier of the arriving and leaving train loads, every period summed. */
@@ -168,6 +169,20 @@ function bundles(st: StationInput[], at: Map<string, Stroke[]>): Bundle[] {
   });
 }
 
+/** A train along its bundle at game time `t` (T-1096), in the bundle's frame: standing over the
+ * platform, pulling in from the end it arrives by and slowing to a stop, or pulling out of the other
+ * end gathering speed, each over PULLING_IN_S and clipped to the lines' stubs. Its start and width,
+ * and whether it is moving; null out of view. */
+function trainSpan(x: TrainNow, len: number, dirB: number, t: number): { x0: number; wd: number; moving: boolean } | null {
+  const p = trainPhase(x, t);
+  if (!p) return null;
+  const L = Math.max(4, len - 2), D = len + STUB;
+  const front = len / 2 - 1 + (p.inS > 0 ? -D * (p.inS / PULLING_IN_S) ** 2 : D * (p.outS / PULLING_IN_S) ** 2);
+  const a = Math.max(front - L, -len / 2 - STUB), b = Math.min(front, len / 2 + STUB);
+  if (b - a < 0.5) return null;
+  return { x0: dirB > 0 ? a : -b, wd: b - a, moving: p.inS > 0 || p.outS > 0 };
+}
+
 /** A line colour darkened as the map's trains are (the full gauge, 48% of the line's rgb). */
 function trainShade(hex: string): string {
   const v = [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * 0.48));
@@ -205,6 +220,64 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
     return () => { on = false; };
   }, [scope, solved]);
   const transfers = xf && dv && xf.scope === scope && xf.version === dv.version ? xf : null;
+
+  // T-1096: the trains drawn on a canvas over the map on every frame the game clock has moved,
+  // never through Preact (moving SVG rects every frame repainted the panel, about 5 ms a frame);
+  // their SVG rects, clear, are only the hovers, moved a few times a second. `now` keeps its
+  // identity while the same trains are drawn, its times brought up to date in place (others.tsx
+  // useComplexNow).
+  const nowRef = useRef(now), tipRef = useRef<(x: TrainNow, t: number) => string>(() => "");
+  const cvRef = useRef<HTMLCanvasElement & { draws?: number }>(null), dirty = useRef(true);
+  nowRef.current = now;
+  dirty.current = true;
+  useEffect(() => {
+    let raf = 0, last = NaN, hitAt = 0, list: readonly TrainNow[] | null = null, byId = new Map<string, TrainNow>();
+    const set = (r: Element, name: string, v: string | null) => {
+      if (r.getAttribute(name) === v) return;
+      if (v === null) r.removeAttribute(name); else r.setAttribute(name, v);
+    };
+    const frame = (wall: number) => {
+      raf = requestAnimationFrame(frame);
+      const n = nowRef.current, el = box.current, cv = cvRef.current, t = clock.now();
+      if (!n || !el || !cv || (t === last && n.trains === list && !dirty.current)) return;
+      last = t;
+      dirty.current = false;
+      if (n.trains !== list) { list = n.trains; byId = new Map(list.map((x) => [x.id, x])); }
+      const hits = wall - hitAt > 250;
+      if (hits) hitAt = wall;
+      const ctx = cv.getContext("2d");
+      if (!ctx) return;
+      const k = cv.width / (cv.clientWidth || cv.width);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#fff";
+      for (const r of el.querySelectorAll<SVGRectElement>(".complex-map-train")) {
+        const x = byId.get(r.dataset.train ?? "");
+        if (!x) continue;
+        const d = r.dataset, at = trainSpan(x, Number(d.len), Number(d.dir), t);
+        if (hits) {
+          set(r, "display", at ? null : "none");
+          if (at) { set(r, "x", at.x0.toFixed(1)); set(r, "width", at.wd.toFixed(1)); set(r, "data-tip", tipRef.current(x, t)); }
+        }
+        if (!at) continue;
+        const y = Number(d.y), h = Number(d.h);
+        ctx.setTransform(k, 0, 0, k, 0, 0);
+        ctx.translate(Number(d.sx), Number(d.sy));
+        ctx.rotate((Number(d.deg) * Math.PI) / 180);
+        ctx.beginPath();
+        ctx.roundRect(at.x0, y, at.wd, h, Math.min(h, at.wd) / 2);
+        ctx.fillStyle = d.fill!;
+        ctx.globalAlpha = at.moving ? 0.5 : 1;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.stroke();
+      }
+      cv.draws = (cv.draws ?? 0) + 1;
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   const st = members.map((m) => stations.get(m)).filter((s): s is StationInput => !!s);
   if (st.length < 2) return null;
@@ -328,11 +401,13 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
     text += p.oneSide ? `\nRoom for ${count(p.room)} on the platform` : `\nRoom for ${count(p.room)} on each side`;
     return text;
   };
-  const trainTip = (x: ComplexNow["trains"][number]) => {
-    const l = lineById.get(x.line);
-    const at = shortName(nameOf(x.station)), to = x.to !== x.station ? `to ${nameOf(x.to)}` : x.inS > 0 ? "ending its trip here" : "at the end of its trip";
-    return x.inS > 0 ? `${l?.name ?? ""} train ${to}\nPulling in to ${at} in ${Math.max(1, Math.round(x.inS))} s` : `${l?.name ?? ""} train ${to}\nStanding at ${at}`;
+  const trainTip = (x: TrainNow, t: number) => {
+    const l = lineById.get(x.line), p = trainPhase(x, t) ?? { inS: 0, outS: 0 };
+    const at = shortName(nameOf(x.station)), to = x.to !== x.station ? `to ${nameOf(x.to)}` : p.inS > 0 ? "ending its trip here" : "at the end of its trip";
+    const what = p.inS > 0 ? `Pulling in to ${at} in ${Math.max(1, Math.round(p.inS))} s` : p.outS > 0 ? `Leaving ${at}` : `Standing at ${at}`;
+    return `${l?.name ?? ""} train ${to}\n${what}`;
   };
+  tipRef.current = trainTip;
   const tip = (t: Stroke) => {
     const name = t.s.name + (t.s.built ? "" : " (blueprint)");
     if (t.plat) return platTip(t);
@@ -404,7 +479,9 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
 
   const band = (d: (typeof drawn)[number], from: number, w: number, extra: number) => ({ x: -d.len / 2 - extra, y: from, width: d.len + 2 * extra, height: w });
   return (
-    <div class="complex-map" ref={box}>
+    <div class="complex-map" ref={box} style={{ position: "relative" }}>
+      <canvas ref={cvRef} width={Math.round(W * devicePixelRatio)} height={Math.round(H * devicePixelRatio)}
+        style={{ position: "absolute", left: 0, top: 0, width: W + "px", height: H + "px", pointerEvents: "none" }} />
       <svg width={W} height={H} style={{ width: W + "px", height: H + "px" }} viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Map of the complex's platforms">
         <rect x="0.5" y="0.5" width={W - 1} height={H - 1} fill="var(--map-land)" stroke="var(--rule)" />
         {links.map((l) => (
@@ -458,19 +535,16 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
                 <rect {...band(d, y - (t.w < 4 ? (4 - t.w) / 2 : 0), Math.max(4, t.w), t.plat ? 0 : STUB)} fill="#fff" fill-opacity="0" class="complex-map-platform"
                   onClick={() => open(t.s.id)} data-tip={tip(t)} />
               ))}
-              {/* trains standing at a platform, or pulling in from the end they arrive by (T-246) */}
+              {/* trains standing at a platform, pulling in or pulling out (T-246, T-1096): their
+                  hovers, clear; the effect above draws them on the canvas */}
               {(now?.trains ?? []).map((x) => {
                 const row = rows.find(({ t }) => t.s.id === x.station && t.line?.id === x.line);
                 if (!row) return null;
                 const l = row.t.line!, h = row.t.w + 1, y = row.y - 0.5;
                 const dirB = x.dir * (Math.cos(row.t.s.heading - d.b.heading) >= 0 ? 1 : -1);
-                // pulling in: a paler train coming in from the end it arrives by, its front further
-                // along the platform the sooner it stops
-                const L = Math.max(6, 0.35 * d.len), front = 3 + (1 - x.inS / PULLING_IN_S) * 0.45 * d.len;
-                const a0 = Math.max(-STUB, front - L), a1 = front;
-                const x0 = x.inS > 0 ? (dirB > 0 ? -d.len / 2 + a0 : d.len / 2 - a1) : -d.len / 2 + 1;
-                const wd = x.inS > 0 ? a1 - a0 : Math.max(4, d.len - 2);
-                return <rect x={x0} y={y} width={wd} height={h} rx={h / 2} fill={trainShade(l.colour)} fill-opacity={x.inS > 0 ? 0.5 : 1} stroke="#fff" stroke-width="1" class="complex-map-train" data-tip={trainTip(x)} />;
+                const t = clock.now(), at = trainSpan(x, d.len, dirB, t);
+                return <rect x={at?.x0 ?? 0} y={y} width={at?.wd ?? 0} height={h} fill="#fff" fill-opacity="0" display={at ? undefined : "none"} class="complex-map-train"
+                  data-train={x.id} data-len={d.len} data-dir={dirB} data-sx={d.sx} data-sy={d.sy} data-deg={d.deg} data-y={y} data-h={h} data-fill={trainShade(l.colour)} data-tip={trainTip(x, t)} />;
               })}
             </g>
           );
@@ -493,8 +567,6 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
           <text x={(bar * k) / 2} y="-4" text-anchor="middle" class="complex-map-scale">{barLabel}</text>
         </g>
       </svg>
-      {most > 0 && <p class="muted small">Each line is as wide as the riders on its trains at that platform a day.</p>}
-      {curves.length > 0 && <p class="muted small">Grey curves join the lines with the most riders changing between platforms, as wide as those riders per day.</p>}
       {links.length > 0 && <p class="muted small">Dashed lines join stations you linked.</p>}    </div>
   );
 }

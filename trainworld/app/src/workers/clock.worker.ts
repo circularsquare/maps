@@ -138,6 +138,8 @@ let linePoints = new Map<number, [string, number[][]][]>();
 let stars = new Map<string, number>();
 /** T-706: each line's station note and the city it was chosen in */
 let lineNotes = new Map<string, [number, string]>();
+/** T-1094: the train length last set on any line (0 for the most the platforms fit), a new line's start */
+let newLineCars = 0;
 /** T-531: paid edits' charges, held under "" until the main thread says how each divides */
 const heldCharges = new Map<number, { day: number; hour: number; build: number; trains: number }>();
 /** Wall ms on the clock both threads read (`ToClock` "clock"): Date.now() drifts from it, and the
@@ -1181,7 +1183,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened] };
+  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], newCars: newLineCars };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -1317,19 +1319,6 @@ async function slotSummary(): Promise<SlotSummary> {
         }
         ctx.stroke();
       }
-      // stations as small rings, as on a rail map, unless so many that they would hide the lines
-      const here = stationXY.filter((p) => p.x >= v[0] && p.x <= v[2] && p.y >= v[1] && p.y <= v[3]);
-      if (here.length && (pw * ph) / here.length >= 600) {
-        ctx.fillStyle = sh.land;
-        ctx.strokeStyle = sh.mapInk;
-        ctx.lineWidth = 2 * k;
-        for (const p of here) {
-          ctx.beginPath();
-          ctx.arc(ox + p.x * s, oy + p.y * s, 4 * k, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.stroke();
-        }
-      }
       ctx.restore();
     });
     const png = new Uint8Array(await (await canvas.convertToBlob({ type: "image/png" })).arrayBuffer());
@@ -1462,7 +1451,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   const decoded = await decodeSave(bytes);
   const { track } = decoded;
   const h: SaveHeader = fresh
-    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, ledger: [], hours: [], regions: undefined, stars: undefined, notes: undefined, ...newGameHeader(fresh) }
+    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, ledger: [], hours: [], regions: undefined, stars: undefined, notes: undefined, newCars: undefined, ...newGameHeader(fresh) }
     : decoded.header;
   if (!isNortheastSave(h)) throw new Error("This save is for another world.");
   let net = track, converted = false;
@@ -1483,6 +1472,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   loadRegions(h.regions);
   stars = new Map(Object.entries(h.stars ?? {}));
   lineNotes = new Map(Object.entries(h.notes ?? {}));
+  newLineCars = h.newCars ?? 0;
   api!.set_cash(h.cash + unsettleAfter(h.clock));
   setMode(h.mode === "sandbox" ? "sandbox" : "normal");
   startZone = h.start;
@@ -1539,6 +1529,7 @@ async function newGame(spec?: NewGameSpec) {
   loadRegions(undefined);
   stars = new Map();
   lineNotes = new Map();
+  newLineCars = 0;
   restart(startClock(spec), "new");
 }
 
@@ -1803,7 +1794,7 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
     case "addLine": {
       const id = a.new_line_id();
       const [h, m, l] = NEW_LINE_TRAINS;
-      return { r: a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, 30, 180, 0, colourInt(op.colour), op.name || a.next_line_name()), line: id };
+      return { r: a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, 30, 180, newLineCars, colourInt(op.colour), op.name || a.next_line_name()), line: id };
     }
     case "copyLine": {
       const id = a.new_line_id();
@@ -1832,8 +1823,12 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
         : a.set_line_badge(op.line, op.name, colourInt(op.colour), op.letter.trim()) };
     case "removeLine":
       return { r: a.remove_line(op.line) };
-    case "lineCars":
-      return { r: a.set_line_cars(op.line, Math.max(0, Math.min(255, Math.round(op.cars)))) };
+    case "lineCars": {
+      const cars = Math.max(0, Math.min(255, Math.round(op.cars)));
+      const r = a.set_line_cars(op.line, cars);
+      if (r === 0) newLineCars = cars;
+      return { r };
+    }
     case "lineFast":
       return { r: a.set_line_fast(op.line, op.fast) };
     case "fares":

@@ -52,7 +52,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Time: `clock.ts`, `localTime.ts` (each region's local time and the local time in view, T-309),
   `sun.ts` (the sun's height for the top bar's sky, T-861; the calendar is in `days.ts`),
   `holidays.ts` (public holidays by country from `holidays.json`, made by `pipeline/holidays_json.py`, T-862;
-  a line's and the view's country, T-872), `holidayCalendar.ts` (the plain lookups the clock worker shares:
+  a line's and the view's country, T-872; one entry for a holiday several countries keep, T-1098), `holidayCalendar.ts` (the plain lookups the clock worker shares:
   a holiday's name, `kindOfIn` a country's kind of each day, T-872),
   `periods.ts` (the five periods), `days.ts` (weekday and weekend, the shown day, T-260).
 - Demand and riders: `demand.ts` (results: mode split, riders), `boarding.ts` (the boarding

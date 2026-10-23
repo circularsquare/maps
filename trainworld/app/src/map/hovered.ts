@@ -20,9 +20,9 @@ export interface Hot {
 }
 
 /** T-936: CSS px added to every drawn bubble radius while a bubble is selected (the overlay's
- * `setSelecting` sets it); hit tests add it too. */
+ * `setSelecting` sets it); hit tests add it too. It is also the smallest radius then (T-1102). */
 export const bubblePad = { px: 0 };
-export const SELECTED_PAD_PX = 2;
+export const SELECTED_PAD_PX = 1;
 
 const NONE: Hot = { line: -1, edge: -1, stations: [], disc: null };
 

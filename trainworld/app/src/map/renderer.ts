@@ -45,6 +45,11 @@ const TRAIN_PX: [number, number][] = [[10, 3], [11, 5.25], [12, 6], [15, 9]];
  * thinning to 40% of T-191's 2.1 px at zoom 9 (T-205, Anita: "lower min line thickness like 40%").
  * Bare track, the casing and a selected line's extra width follow the same steps. */
 const LINE_PX: [number, number][] = [[9, 0.85], [12, 3.9], [15, 6.6]];
+/** T-1097 (Anita: "a tad more visual weight, not much"): high-speed track and its lines this many
+ * times as wide by zoom while drawn as one stroke, and their centre line only on strokes this wide
+ * (css px, coming in between the two) */
+const HSR_WIDTH: [number, number][] = [[9, 1.4], [11, 1.25], [13, 1]];
+const HSR_STRIPE_PX = [3, 5] as const;
 /** The ghost of track being placed (T-1038, Anita: "a decent minimum width ... see the track in full
  * length"), drawn as blueprint track with a thin dark outline (T-1054): never thinner than this
  * across its rails, CSS px, with this much outline either side. */
@@ -155,6 +160,8 @@ uniform int u_ghost;         // T-1038: 1 for the preview pass, whose placement 
 uniform int u_ghost_layer;   // T-1054: -1 the other strokes; 0 a ghost's outline, 1 its rails, 2 its middle
 uniform vec3 u_ghost_rgb;    // the outline
 uniform vec2 u_ghost_min;    // the ghost's least width across its rails (px), and its outline's both sides together
+uniform vec3 u_hsr;          // T-1097: high-speed strokes' width as a multiple (one stroke, built), and the
+                             // stroke widths (px) between which its centre line comes in
 in vec4 a_seg;
 in uint a_colour;
 in uint a_edge;
@@ -208,7 +215,7 @@ void main() {
     w = (ghost ? core
       : bpTrack ? u_bp.x + extra + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
       : bpLine ? u_bp.x + extra + cas
-      : u_width.x * a_wmul + extra + cas) + grow;
+      : u_width.x * a_wmul * (hsr ? u_hsr.x : 1.0) + extra + cas) + grow;
   } else {
     // the gap opens from the middle while the pair's width stays: each track is half of what is
     // left; the band under both is the pair's width, or the traffic width behind them (Anita,
@@ -287,8 +294,9 @@ void main() {
   // the dark theme), the rail colour on blueprint; once its tracks part, the stroke's own colour
   // between them
   vec3 rail = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : ghost ? u_bp_rail : placement ? u_sel : u_casing_rgb;
-  if (hsr && u_casing <= 0.0 && u_lane_mode < 2 && !full && (!ghost || u_ghost_layer == 2)) {
-    float hs = max(0.3, (u_lane_mode == 0 ? 0.18 * w : 0.08 * G));
+  // T-1097: on a narrow built stroke no centre line, which would leave little of the colour
+  float hs = u_lane_mode == 0 ? (bpShape || placement ? max(0.3, 0.18 * w) : 0.18 * w * smoothstep(u_hsr.y, u_hsr.z, w)) : max(0.3, 0.08 * G);
+  if (hsr && u_casing <= 0.0 && u_lane_mode < 2 && !full && (!ghost || u_ghost_layer == 2) && hs >= 0.1) {
     v_stripe = vec4(u_lane_mode == 0 ? rail : (bpTrack || placement ? rail : v_color), hs);
     v_stripe_only = u_lane_mode == 1 && u_kind == 0 ? 1.0 : 0.0;
   }
@@ -1318,7 +1326,7 @@ export class NetworkRenderer {
     this.marks.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min"]);
+    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr"]);
     this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
@@ -1786,6 +1794,7 @@ export class NetworkRenderer {
     gl.uniform3fv(u.u_ghost_rgb, rgb(shades.ghost).map((v) => v / 255));
     gl.uniform1i(u.u_ghost_layer, -1);
     gl.uniform2f(u.u_ghost_min, GHOST_MIN_PX * dpr, 2 * GHOST_OUTLINE_PX * dpr);
+    gl.uniform3f(u.u_hsr, interp(zoom, HSR_WIDTH), HSR_STRIPE_PX[0] * dpr, HSR_STRIPE_PX[1] * dpr);
     // blueprint track (T-322): a line-wide light blue middle between two thin dark blue rails
     const bpRail = Math.max(1, BP_NARROW * Math.max(1, BP_RAIL_SHARE * wLine / dpr)) * dpr;
     const bpMid = Math.max(0, BP_NARROW * (wLine + 2 * Math.max(1, BP_RAIL_SHARE * wLine / dpr) * dpr) - 2 * bpRail);

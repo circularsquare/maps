@@ -13,8 +13,10 @@ import { DETAIL_RANGE, finestFromZoom } from "../map/demandOverlay";
 import { RES_AREA_M2 } from "../workers/commutersProtocol";
 import { makeSandbox } from "../workers/clockClient";
 import { pickTool, TRIP_KEY } from "./tabs";
-import { Check, Segmented, Stepper } from "./widgets";
+import { Check, Icon, Segmented, Stepper } from "./widgets";
 import { Credits } from "./Credits";
+import { helpOpen } from "./HelpPanel";
+import { AccountButton } from "./AccountPanel";
 
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
 const SHADE_NAME: Record<Shade, string> = { light: "Light", dark: "Dark" };
@@ -27,6 +29,13 @@ export function SettingsTab() {
   const d = display.value;
   return (
     <>
+      {/* T-1099: the Controls panel and the account, both moved here from the dock's tab row */}
+      <div class="settings-top">
+        <button class={"btn icon help-open" + (helpOpen.value ? " on" : "")} data-tip="Controls" aria-label="Controls" aria-pressed={helpOpen.value} onClick={() => (helpOpen.value = !helpOpen.peek())}>
+          <Icon.help />
+        </button>
+        <AccountButton kind="settings" />
+      </div>
       {/* T-169: the slider is the section's only control, so the heading goes with it */}
       <div class="h">Demand bubbles</div>
       {/* T-470: the opacity applies to every bubble, so the section is always there */}

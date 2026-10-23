@@ -11,7 +11,7 @@ import { Inspector } from "./inspector/Inspector";
 import { BuildTab, CitiesTab, LinesTab, MoneyTab, StationsTab } from "./tabs";
 import { SavesPanel, savesOpen } from "./SavesPanel";
 import { SettingsTab } from "./SettingsTab";
-import { HelpPanel, helpOpen } from "./HelpPanel";
+import { HelpPanel } from "./HelpPanel";
 import { AccountButton, startAccountUi } from "./AccountPanel";
 import { Icon } from "./widgets";
 
@@ -112,9 +112,6 @@ export function Dock() {
           <Icon.save />
         </button>
         <AccountButton kind="tab" />
-        <button class={"tab gear help" + (helpOpen.value ? " on" : "")} data-tip="Controls" aria-label="Controls" aria-pressed={helpOpen.value} onClick={() => (helpOpen.value = !helpOpen.peek())}>
-          <Icon.help />
-        </button>
         <button class={"tab gear" + (t === "settings" ? " on" : "")} data-tip="Settings" aria-label="Settings" aria-pressed={t === "settings"} onClick={() => (tab.value = "settings")}>
           <Icon.gear />
         </button>

@@ -58,7 +58,7 @@ export function HelpPanel() {
     };
     const press = (e: PointerEvent) => {
       const t = e.target as Element;
-      if (!ref.current?.contains(t) && !t.closest?.(".tab.help")) helpOpen.value = false;
+      if (!ref.current?.contains(t) && !t.closest?.(".help-open")) helpOpen.value = false;
     };
     window.addEventListener("keydown", key, true);
     window.addEventListener("pointerdown", press, true);

@@ -118,23 +118,26 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
 }
 
 /** The complex now (game/complexLive.ts): worked out again every 10 game seconds or so (at most
- * every 150 ms of real time), and re-rendered only when something shown changed. */
+ * every 150 ms of real time), and re-rendered only when something shown changed. T-1096: the same
+ * trains keep the object, their times updated in place, as the complex map moves them itself; it
+ * looks ahead twice the game time between workings-out at the speed set. */
 function useComplexNow(members: string[]): ComplexNow | null {
   const [now, setNow] = useState<ComplexNow | null>(() => complexNow(members));
   const scope = members.join(",");
   useEffect(() => {
-    let key = "", t = NaN, board: unknown = null;
+    let key = "", t = NaN, board: unknown = null, shown: ComplexNow | null = null;
     const tick = () => {
       const r = live.overlay?.renderer, at = clock.now();
       if (Math.abs(at - t) < 10 && r?.board === board) return;
       t = at;
       board = r?.board ?? null;
-      const c = complexNow(members);
+      const c = complexNow(members, 2 * Math.max(10, 0.15 * SPEEDS[clock.speed.peek()]) + 10);
       const k = c?.key ?? "";
-      if (k !== key) {
+      if (k !== key || !shown || !c) {
         key = k;
+        shown = c;
         setNow(c);
-      }
+      } else shown.trains = c.trains;
     };
     tick();
     const h = setInterval(tick, 150);
@@ -194,9 +197,8 @@ function BoardingsToday({ lines, at }: { lines: LineInput[]; at: (l: LineInput) 
   const total = lines.reduce((a, l) => a + at(l).reduce((b, k) => b + (t.get(l.id)?.stops[k] ?? 0), 0), 0);
   return (
     <>
-      <div class="h">Past 24 h</div>
       <ul class="rows pick">
-        <Row label="Boardings" bold>
+        <Row label="Boardings in past 24 h" bold>
           {known ? count(total) : ""}
         </Row>
         <PurposeSplit scope={lines.map((l) => ({ line: l.id, at: at(l) }))} unit="boardings" />
@@ -354,7 +356,7 @@ function StationDetails({ s, lines, props, construct, remove }: {
           </Row>
         )}
       </ul>
-      {lines.length > 0 && <div class="h">Lines<span class="right muted small">boardings, past 24 h</span></div>}
+      {lines.length > 0 && <div class="h">Lines<span class="right muted small">boardings in past 24 h</span></div>}
       <ul class="rows pick">
         {here.map(([l, b]) => (
           <li onClick={() => (selection.value = { kind: "line", line: l.id })}>
@@ -696,17 +698,17 @@ export function TrackInspector({ edge }: { edge: number }) {
         <Row label={e.built ? "Cost to build" : "Cost to construct"}>{money(cost)}</Row>
         {!e.crossover && m && (
           <Row label="Upkeep">
-            <span data-tip={`${e.built ? "Upkeep" : "Once constructed, upkeep"} is ${upkeepRule(m)}, whether trains run or not. High-speed track costs ${m.upkeepHsr} times as much and single track ${m.upkeepSingle} times. The lines on it share it by their trains a day.`}>
+            <span data-tip={`${e.built ? "Upkeep" : "Once constructed, upkeep"} is ${upkeepRule(m)}, whether trains run or not. High-speed track costs ${m.upkeepHsr} times as much and single track ${m.upkeepSingle} times. The lines here share it by their trains a day.`}>
               {money(edgeUpkeep({ ...e, built: true }, m))} a day
             </span>
           </Row>
         )}
       </ul>
       {!e.built && !e.crossover && <Shape edge={e.id} version={w.version} />}
-      {lines.length > 0 && <div class="h">Lines on it</div>}
+      {lines.length > 0 && <div class="h">Lines here</div>}
       {lines.length === 0 && (
         <div class="h">
-          Lines on it
+          Lines here
           <span class="right">
             <button class="btn icon" data-tip="New line, starting at the stations on this track (N)" aria-label="New line" onClick={() => void createLine(e)}><Icon.plus /></button>
           </span>

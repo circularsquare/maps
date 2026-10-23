@@ -218,8 +218,8 @@ player is looking.
   year takes the holidays of the real non-leap year whose January 1 is the same weekday (Monday
   2029, Tuesday 2030, Wednesday 2031, Thursday 2026, Friday 2027, Saturday 2033, Sunday 2034;
   year 0 is 2031), so a holiday tied to a weekday keeps it and Easter moves between years. A
-  holiday is a whole day of its country's local time. The top bar marks those in countries with
-  the player's stations ([ui-panels.md](ui-panels.md)).
+  holiday is a whole day of its country's local time. The top bar marks those in countries the
+  player has built in, one entry for a holiday several keep that date ([ui-panels.md](ui-panels.md)).
 - **A holiday is a weekend day in its country** (T-872, `game/holidayCalendar.ts` `kindOfIn`). A
   line's country is its first stop's zone's, as its local time is; a line outside every zone has
   none. On a holiday the line's boarding account reads the weekend's riders (`TrackApi`

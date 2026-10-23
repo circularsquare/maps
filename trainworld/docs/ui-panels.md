@@ -62,8 +62,7 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
   equally [T-532] (each at least 34 px); at the row's right end
   the saved games button (a floppy disk) [T-251], the account button (a head and shoulders,
   [Account and leaderboards](#account-and-leaderboards); only when accounts are on, the icon tabs
-  then at least 27 px) [T-972], the **Controls** button (a question mark in a
-  circle, [Controls](#controls)) [T-908] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
+  then at least 27 px; also at the top of Settings) [T-972, T-1099] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
   area like a tab. There is no City tab [T-220]; a browser that last had it open starts on Lines.
 - Under the tab content, the **inspector** ([ui-inspectors.md](ui-inspectors.md)). The tab area has
   a fixed height and scrolls, so the inspector's top edge never moves when the tab changes.
@@ -140,10 +139,16 @@ speed buttons [T-832, T-861].
   hour's demand level (red high, yellow medium, blue low: `--dl-*` in style.css, both themes), so
   the colour under the sun or moon is the level now; its hover says "Currently low demand until 06:00", the time the level next changes
   [T-902]. A public holiday in a country
-  with the player's stations [T-862] is a pink ribbon along the sky's top over its day (its
+  the player has built track or stations in (blueprint not counted) [T-862, T-1098] is a pink ribbon along the sky's top over its day (its
   country's local day), with a tick where it starts; the sky's hover lists those in view, and is the sky's only hover ("Tomorrow:
   Thanksgiving Day, United States", or "Tomorrow from 06:00: …" for a country on another local
-  time), and on the day itself a pink dot sits before the date, whose hover names it. In the dark theme the
+  time), and on the day itself a pink dot sits before the date, whose hover names it. A holiday
+  several of those countries keep on the same local date is one line [T-1098, `groupHolidays`]:
+  the same name, or names `SAME` in `game/holidays.ts` counts as one (Labor Day, International
+  Workers' Day, May Day and the like; Christmas; Boxing Day and Saint Stephen's Day; New Year's
+  Day), shown by its one name or by `SAME`'s; the sky's hover names every country ("Today: Labor
+  Day, Belgium, China, France and Germany"), the date's names two and counts the rest past three
+  ("Labor Day, Belgium, China and 2 others"). In the dark theme the
   scene is mixed 15% towards the background. Pause and three
   speeds. **Space** pauses and resumes at the speed that was running, even with a button focused.
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
@@ -215,7 +220,7 @@ reached with Tab keeps it. Buttons show the browser's focus ring for keyboard fo
 
 ## Controls
 
-[T-908, `ui/HelpPanel.tsx`] The "?" in the dock's tab row (hover "Controls") opens a panel over the
+[T-908, `ui/HelpPanel.tsx`] The "?" at the top of Settings [T-1099] (hover "Controls") opens a panel over the
 map beside the dock, under the tab row, listing only the controls no button shows: the bubble
 gestures (Shift+drag box, hold then drag, Shift+click, Shift+drag over far bubbles), building
 modifiers (Shift+click, double click or Enter, Backspace, Caps Lock, right drag and D, E, Delete in
@@ -231,7 +236,9 @@ dismissed, and the map and tools are blocked meanwhile.
 
 ## Settings
 
-`ui/SettingsTab.tsx`, remembered per browser, in order: Demand bubbles, three sliders: Size
+`ui/SettingsTab.tsx`, remembered per browser, in order: two icon buttons at the top, Controls (the "?",
+opens the [Controls](#controls) panel) and, when accounts are on, Account or Sign in (the person icon, the account
+panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099]; Demand bubbles, three sliders: Size
 (0.5-2x, [T-099]), Opacity (20-100% of the built alpha, default 90%, [T-470]; for the
 commuter and longer-trip bubbles, not station discs; ignored while a bubble is selected, T-936) and Detail (4 steps from coarser to finer,
 the third by default; its hover names the zoom the finest bubbles start at; [T-795]), the Colours
@@ -348,8 +355,7 @@ reads "No stations yet."
   the right; four are a 2 x 2 grid. Panels are split by a thin rule in the casing colour. Each panel
   frames its city's stations (at least 3 km across, room left at the top for the name) and draws
   all track in grey and each line in its colour that falls in it, so a line to another city runs
-  off the edge; stations are small rings in the map ink when there is at least 600 px² of panel
-  per station, so a dense network shows lines alone. The city's name is text over the panel's top
+  off the edge; stations are not drawn [T-1100]. The city's name is text over the panel's top
   left in that theme's ink with a land-coloured halo, and with two or more panels its station
   count under it; the hover gives both. A network with no station in a city is one unnamed panel
   over all of it. Then its name, "Autosaved 2 min ago"
@@ -405,7 +411,7 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   once (remembered per browser, `?acct=off` forgets it). The icons show only once
   `/noritetsu/config` answers with `trainworld`; with no server, or an older one, there is no icon
   and no other request. Google's script loads when the account panel first opens.
-- **Account panel**: the account button (dock tab row, start menu) opens a centred modal like the
+- **Account panel**: the account button (dock tab row, top of Settings, start menu) opens a centred modal like the
   saves panel. Signed out: Google's button, then username and password with Log in, Create an
   account and Forgot password; Privacy and Terms (`public/privacy.html`, `terms.html`). Signed in:
   "Signed in as alice" (or with Google), for a password account the recovery email (a red line when

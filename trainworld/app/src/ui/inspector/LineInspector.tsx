@@ -632,7 +632,7 @@ export function LineInspector({ id }: { id: string }) {
   const stopsBlock = (
     <>
       <div class="h divided">
-        Stops<span class="right muted small">boardings, past 24 h</span>
+        Stops<span class="right muted small">boardings in past 24 h</span>
       </div>
       {editingStops && gaps.length > 1 && !pending && (
         <button class="btn text mini passed-all" onClick={() => setPending(gaps)}>

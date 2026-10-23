@@ -88,6 +88,8 @@ export interface SaveHeader {
   start?: string;
   /** T-728, T-729: the zones opened in this game, in the order they were opened; absent in older saves */
   opened?: string[];
+  /** T-1094: the train length last set on a line (0 for the most the platforms fit), a new line's start; absent in older saves */
+  newCars?: number;
 }
 
 /** T-728: a sandbox is the normal game with nothing refused for money and the cash not shown. */

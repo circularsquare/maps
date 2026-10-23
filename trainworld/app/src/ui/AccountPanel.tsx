@@ -166,11 +166,11 @@ export function AccountPanel() {
   </Modal>;
 }
 
-/** The person icon: a dock tab (`tab`) or the start menu's (`start`); nothing until accounts are on. */
-export function AccountButton({ kind }: { kind: "tab" | "start" }) {
+/** The person icon: a dock tab (`tab`), the start menu's (`start`) or the top of Settings (`settings`); nothing until accounts are on. */
+export function AccountButton({ kind }: { kind: "tab" | "start" | "settings" }) {
   if (accountState.value !== "on") return null;
   const label = session.value ? "Account" : "Sign in";
-  return <button class={kind === "tab" ? "tab gear acct-tab" + (accountOpen.value ? " on" : "") : "btn icon acct-start"} data-tip={label} aria-label={label}
+  return <button class={kind === "tab" ? "tab gear acct-tab" + (accountOpen.value ? " on" : "") : kind === "settings" ? "btn icon" + (accountOpen.value ? " on" : "") : "btn icon acct-start"} data-tip={label} aria-label={label}
     onClick={() => (accountOpen.value = !accountOpen.peek())}><Icon.person /></button>;
 }
 

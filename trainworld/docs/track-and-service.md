@@ -271,7 +271,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   the undo history). Riders change between any two stations of a complex on foot, however far
   apart (4.4, T-161).
 - **Train length** (T-733, `TrackApi::set_line_cars`, `build_line` in `service.rs`): each line
-  stores its cars, 0 (a new line's default) for the most its shortest platform fits; a set length
+  stores its cars, 0 for the most its shortest platform fits; a new line starts at the length last
+  set on any line in the game (0 until one is set; the save keeps it, `newCars` in its header) [T-1094]; a set length
   runs as set, at most that cap. A platform later shortened below it caps the trains while the
   setting stays, so lengthening the platform brings the set length back. Riders a train holds
   (160 a car at crush), the cars the fleet needs and the running cost (US$4 a train-km plus US$2 a car-km) follow the cars

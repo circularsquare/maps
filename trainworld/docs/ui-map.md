@@ -79,20 +79,22 @@ there is no high-speed class and no hover yet.
   track is four tracks 4 m apart; a crossover between double tracks is two double tracks in an
   X. Clicks and the hover reach half the pair's width from the centre line once it has grown.
 - **High-speed track** [T-817, `F_HSR` in `map/network.ts`, the stroke shaders in
-  `map/renderer.ts`]: double track's width and colours with a thin centre line along the stroke,
-  18% of its width (at least 0.6 px): the casing colour on built track (light, dark in the dark
-  theme), the rail colour on blueprint and on the drawing ghost; lines over it carry it too.
-  Far out, where the stroke is a pixel or two, it shows as a paler built stroke and a darker
-  blueprint one. Once the two tracks part, the line runs between them in the track's or the
-  line's own colour.
+  `map/renderer.ts`]: double track's colours with a thin centre line along the stroke, 18% of its
+  width: the casing colour on built track (light, dark in the dark theme), the rail colour on
+  blueprint and on the drawing ghost (at least 0.6 px there); lines over it carry it too. Built
+  high-speed track and its lines are wider while drawn as one stroke, 1.4 times at zoom 9 and
+  below, 1.25 at 11, as wide from 13 (`HSR_WIDTH`), and their centre line comes in only as the
+  stroke widens from 3 to 5 px (`HSR_STRIPE_PX`), so far out they are a solid stroke a little
+  heavier than ordinary track [T-1097]. Once the two tracks part, the line runs between them in the
+  track's or the line's own colour.
 - **Lines sharing track are drawn over each other** [T-190, T-533], each of the two tracks too
   close in: interlining is not represented.
   One order for all lines: a line with no trains (fleet zero) goes under every line that runs
   trains; within each group the shorter route (end to end, one direction) is on top, ties to the
   higher id. The line on top wins a click. It is rebuilt when lines or fleets change.
 - **Track display** [T-105, T-703; on the map under the demand buttons], four choices, remembered per browser:
-  - **Line**: uniform width in the line colours.
-  - **Traffic** (the default): line colours, width by riders over the day shown
+  - **Line** (the default [T-1101]): uniform width in the line colours.
+  - **Traffic**: line colours, width by riders over the day shown
     ([ui-demand-views.md](ui-demand-views.md) "Line width by riders"). A line on track at
     capacity [T-819] (an edge of a track or single-track section, or either track of a flat
     crossing, at `FULL_RHO` for the demand level in force, as the capacity tags take it;

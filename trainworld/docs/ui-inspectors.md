@@ -15,7 +15,7 @@ inter-city trips by train, car and plane) in [ui-demand-views.md](ui-demand-view
 
 [T-293, T-446] The line and station panels and the Lines and Stations tabs count the past 24
 hours, not a whole-day forecast, so nothing resets at midnight: riders, boardings, fares, running
-cost, trains that left full, riders left behind. Labels say "Past 24 h" or "24 h";
+cost, trains that left full, riders left behind. Labels say "in past 24 h" or "24 h";
 hovers say "in the past 24 hours". They are counted by the clock worker from the boarding
 account's departures (`TrackApi.past_day`: the rest of yesterday from the time of day now, on
 yesterday's kind of day, then today so far on today's; a stop's boardings in a stretch are the
@@ -79,7 +79,7 @@ purpose filter the purpose drawn is ringed in the bar.
   stops yet counts in the city being viewed), so a renamed line frees its number. The line's colour
   is a random `LINE_PALETTE` colour no line in that city uses, else a random one of the least used [T-856]
   (`nextLineName`, `nextFreeColour` in `game/lineActions.ts`). A copy is named "<name> copy". The N key does it from any tab
-  [T-670]; the same on a selected track no line runs on (its inspector's "Lines on it" heading
+  [T-670]; the same on a selected track no line runs on (its inspector's "Lines here" heading
   carries a plus button, hover "New line, starting at the stations on this track (N)") starts the
   line with the stations at the track's two ends, else empty.
 - **The line editor** [T-670, T-672]: a double click on the badge, a click on it, a double click on the
@@ -233,7 +233,7 @@ purpose filter the purpose drawn is ringed in the bar.
     `singleStation` in `game/complexView.ts`): its own inspector and outline, its
     subtitle ending with "Complex of 16 stations" as a link back. Any new selection, the same
     station included, shows the complex again.
-  - **The complex map** (below), then the complex's boardings in the past 24 hours with their purpose split.
+  - **The complex map** (below), then the complex's "Boardings in past 24 h" with their purpose split [T-1095].
   - **Closest stations** [T-312, T-323; `ui/inspector/ClosestStations.tsx`, `game/walks.ts`]: the
     three other stations with the shortest walk, built or blueprint (blueprint muted and marked),
     each with the chips of its lines (six at most, then "+n") and walking minutes ("7 min", the
@@ -296,10 +296,14 @@ purpose filter the purpose drawn is ringed in the bar.
   strip, white between two lines of the platform blue, filling like the map's platform boxes (each
   direction's half from the middle out by its riders' share of the room, grey, or red once full); its hover
   gives the riders waiting (by line name when more than one stops there) and the room. Trains on their line's band in the darker train shade: one at the
-  platform along it, one pulling in (stopping within 60 game seconds) paler, coming in from its end,
-  further along the sooner it stops; hover gives line, destination and seconds. Read from the
-  renderer's hour of the boarding account; worked out every 10 game seconds, re-rendered only when
-  something shown changed.
+  platform along it; one pulling in (stopping within 60 game seconds) paler, coming in from the end
+  it arrives by and slowing to its stop, and one pulling out (left within 60 game seconds) paler,
+  gathering speed out of the other end; a train ending its trip there turns back rather than
+  pulling out. Hover gives line, destination and seconds to its stop. Read from the renderer's hour
+  of the boarding account; worked out every 10 game seconds (at most every 150 ms), each train with
+  the times it stops and leaves, looking ahead twice the game time between workings-out; the trains
+  are moved on every animation frame from the clock's `now()`, straight on their SVG rects, and the
+  view re-renders only when the trains or riders waiting change [T-1096].
 - **Transfers** [T-176, `complexTransfers(members)`, [demand-views.md](demand-views.md) "Transfers"]: asked of the demand
   workers when the map shows and at each published round, the last answer kept meanwhile. Both
   directions of a line pair added. Changes between lines in different bundles are grey curves (ink
@@ -309,7 +313,7 @@ purpose filter the purpose drawn is ringed in the bar.
   middles at one spot get a small loop. Hover gives the riders per day and each direction. Changes
   within one bundle and walks to stations outside the complex are not drawn. Why line to line:
   notes/T-147.md.
-- Two short notes under the map say what the widths and the curves are.
+- The only note under the map is the dashed links'; the widths and the curves are in their hovers [T-1095].
 
 ## Linking stations
 

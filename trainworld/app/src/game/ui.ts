@@ -93,7 +93,8 @@ export interface DisplaySettings {
 export const UI_SCALES = [0.8, 0.85, 0.9, 0.95, 1, 1.05, 1.1, 1.15, 1.2];
 
 const DEFAULT_DISPLAY: DisplaySettings = {
-  trackColour: "traffic",
+  // T-1101: plain lines to start with; Traffic is one click away
+  trackColour: "line",
   trains: true,
   stationNames: true,
   capacity: true,
