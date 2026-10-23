@@ -45,7 +45,7 @@ import type { StopMarkers, StopTier } from "./stopMarkers";
 import { chip, elevationFact, factRow, speedFact } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
-import { RealSnap, type RealRoute } from "./realSnap";
+import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
 import { snapping } from "../game/ui";
 
 const SNAP_NODE_PX = 12;
@@ -399,19 +399,23 @@ export class Tools {
     const chain = e.originalEvent.shiftKey || keepPlacing.peek();
     this.placing = true;
     this.endRun = false;
-    // T-727d: near real track at both clicks, the real route (waited for if still being found)
-    const rc = await this.real.click(e.point.x, e.point.y);
-    if (rc?.kind === "refuse" || this.start !== from) {
+    let rc: RealClick, p: PreviewAnswer | null, a: Awaited<ReturnType<typeof edit>>;
+    // T-1001: whatever happens to this click, later clicks are not ignored
+    try {
+      // T-727d: near real track at both clicks, the real route (waited for if still being found)
+      rc = await this.real.click(e.point.x, e.point.y);
+      if (rc?.kind === "refuse" || this.start !== from) {
+        if (rc?.kind === "refuse") say("No real track joins these points.", true);
+        return;
+      }
+      const req = rc ? this.realReq(rc.route, s) : this.routeReq(this.endOf(s));
+      // T-830: the quote of this very request; an answer for an earlier pointer position (a slow
+      // preview landing late) would give another segment's length and cost
+      p = this.previewKey === JSON.stringify(req) ? this.lastPreview : null;
+      a = await edit({ op: "route", ...req });
+    } finally {
       this.placing = false;
-      if (rc?.kind === "refuse") say("No real track joins these points.", true);
-      return;
     }
-    const req = rc ? this.realReq(rc.route, s) : this.routeReq(this.endOf(s));
-    // T-830: the quote of this very request; an answer for an earlier pointer position (a slow
-    // preview landing late) would give another segment's length and cost
-    const p = this.previewKey === JSON.stringify(req) ? this.lastPreview : null;
-    const a = await edit({ op: "route", ...req });
-    this.placing = false;
     if (!a.ok || this.start !== from) return;
     say(p ?`Blueprint added: ${distance(p.lengthM)}, ${money(p.cost * 1e6)} to construct.` : "Blueprint added.");
     if (!chain || this.endRun || a.node === undefined) {
@@ -438,8 +442,7 @@ export class Tools {
       return;
     }
     this.placing = true;
-    const a = await edit({ op: "undo" }, true);
-    this.placing = false;
+    const a = await edit({ op: "undo" }, true).finally(() => (this.placing = false));
     if (!a.ok) return this.reset();
     this.start = prev;
     this.lastPreview = null;

@@ -577,7 +577,11 @@ self.onmessage = (ev: MessageEvent<ToRouter>) => {
   const m = ev.data;
   if (m.kind === "route") latest = m.seq;
   if (m.kind === "reach") latestReach = m.seq;
-  queue = queue.then(() => handle(m)).catch((err) => console.error("real route", err));
+  queue = queue.then(() => handle(m)).catch((err) => {
+    console.error("real route", err);
+    // T-1001: a route that failed is an ordinary segment, not a click waiting for ever
+    if (m.kind === "route" && m.seq === latest) post({ kind: "line", seq: m.seq, line: null, lengthM: 0, why: "off", ms: 0, states: 0 });
+  });
 };
 
 async function handle(m: ToRouter) {

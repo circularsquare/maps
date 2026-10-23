@@ -597,12 +597,16 @@ export class ClockClient {
       }
       case "preview": {
         this.previewBusy = false;
-        this.toCurrentAnchor(msg.anchor, msg.verts, msg.pts);
-        if (msg.arc) this.toCurrentAnchor(msg.anchor, msg.arc, new Float32Array(0));
-        this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts, arc: msg.arc, marks: msg.marks });
-        const n = this.previewNext;
-        this.previewNext = null;
-        if (n) this.ask(n.msg, n.cb);
+        // T-1001: a callback that throws still lets the preview waiting behind it go
+        try {
+          this.toCurrentAnchor(msg.anchor, msg.verts, msg.pts);
+          if (msg.arc) this.toCurrentAnchor(msg.anchor, msg.arc, new Float32Array(0));
+          this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts, arc: msg.arc, marks: msg.marks });
+        } finally {
+          const n = this.previewNext;
+          this.previewNext = null;
+          if (n) this.ask(n.msg, n.cb);
+        }
         break;
       }
       case "stationCheck": {

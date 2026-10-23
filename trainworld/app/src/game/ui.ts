@@ -2,7 +2,7 @@
 // none of it is in the save. Settings and theme are remembered per browser (localStorage), which
 // may be unavailable (private window), so every read and write is guarded.
 
-import { computed, effect, signal } from "@preact/signals";
+import { batch, computed, effect, signal } from "@preact/signals";
 import { AVERAGE_DAY, DEMAND_DAY_PHRASE, type DemandDay } from "./days";
 import { DEFAULT_FONT, FONT_KEYS, fontStack, loadFont, type FontKey } from "./fonts";
 import { DEFAULT_RAMP, setBubbleColours, UNBUILT_KEYS, type BubbleScheme, type UnbuiltColour } from "./palette";
@@ -233,21 +233,24 @@ let designBeforeHsr: DesignSpeed | null = null;
 export type TrackType = 2 | 4 | "hsr";
 export const trackType = computed<TrackType>(() => (highSpeed.value ? "hsr" : trackCount.value));
 /** The Build tab's Double / Quad / High speed choice. High speed sets the design speed to its top
- * (the player can step it down); leaving it puts back the speed there was before. */
+ * (the player can step it down); leaving it puts back the speed there was before. One batch, so the
+ * track tool never sees a mix of the old and new type, such as quad high-speed track (T-1001). */
 export function setTrackType(t: TrackType) {
   const was = highSpeed.peek();
-  if (t === "hsr") {
-    if (was) return;
-    designBeforeHsr = designSpeed.peek();
-    trackCount.value = 2;
-    highSpeed.value = true;
-    designSpeed.value = DESIGN_SPEEDS[DESIGN_SPEEDS.length - 1];
-  } else {
-    trackCount.value = t;
-    highSpeed.value = false;
-    if (was && designBeforeHsr !== null) designSpeed.value = designBeforeHsr;
-    designBeforeHsr = null;
-  }
+  if (t === "hsr" && was) return;
+  batch(() => {
+    if (t === "hsr") {
+      designBeforeHsr = designSpeed.peek();
+      trackCount.value = 2;
+      highSpeed.value = true;
+      designSpeed.value = DESIGN_SPEEDS[DESIGN_SPEEDS.length - 1];
+    } else {
+      trackCount.value = t;
+      highSpeed.value = false;
+      if (was && designBeforeHsr !== null) designSpeed.value = designBeforeHsr;
+      designBeforeHsr = null;
+    }
+  });
 }
 /** the real network is being snapped to: the switch on and the track tool in hand */
 export const snapping = computed(() => snapReal.value && tool.value === "track");

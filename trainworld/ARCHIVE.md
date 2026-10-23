@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-994 [P1] Local demand bubbles missing on desktop. Closed 2026-10-23: never reproduced (about 20 headless cases), and Anita sees them again on later 8800 builds; smoke now checks that Homes draws, in a bare city and in the real save. notes/T-994.md.
 - T-975 [P2] Regions, stage 1. Done 2026-10-23: country-sized regions ("realm" in code) from realms.json; regions not built in, not started in and not clicked are dark with a button, their zones neither drawn nor loaded for viewing; demand unchanged; zoomed-out world 1,029 bubbles to 45. notes/T-975.md.
 - T-966 [P1] One thread a build. Done 2026-10-23: world_run's `--workers` defaults to `--jobs`; steps outside a build take all `--jobs`. notes/T-963.md.
 - T-963 [P1] build_city's two slow reads. Done 2026-10-23: cut_packs reads only outlines whose cached box meets the row; the coastline from an indexed FlatGeobuf; byte-identical builds, about 37-53 s a row saved; the scratch redirect of PACKS fixed. notes/T-963.md.
