@@ -19,7 +19,9 @@ import { BUBBLE_ALPHA, rgb, UNBUILT_COLOURS } from "../game/palette";
 import { followStations, hiddenRealmAt, inactiveRealms, loadRealms, realmName, shownRealms, showRealm, zoneOutlines, zoneShown, type RealmSpot } from "../game/realms";
 import { SHADES } from "../game/shadeTable";
 import { display, selection, shade, tool } from "../game/ui";
+import type { ShadeIn, ShadeOut } from "../workers/shade.worker";
 import { outsideZones } from "./boundaryGeometry";
+import { takeOutlineText } from "./coarseOutlines";
 import { CITY_MARKS_MIN_ZOOM } from "./intercityView";
 import { ShadeLayer } from "./shadeLayer";
 
@@ -124,17 +126,13 @@ export function startRealmOverlay(map: MlMap): () => void {
   };
   map.on("click", onClick);
 
+  const cutter = shadeCutter((tri) => shadeLayer.setTriangles(tri));
   const disposeCut = effect(() => {
     const shown = shownRealms.value, outlines = zoneOutlines.value;
-    if (!shown || !outlines) shadeLayer.setTriangles(new Float64Array(0));
-    else {
-      const zones: MultiPolygon[] = [];
-      for (const c of CITIES) {
-        const g = outlines.get(c.id);
-        if (g && zoneShown(c.id)) zones.push(g);
-      }
-      shadeLayer.setTriangles(outsideZones(zones));
-    }
+    if (!shown || !outlines) {
+      cutter.cancel();
+      shadeLayer.setTriangles(new Float64Array(0));
+    } else cutter.cut(CITIES.filter((c) => outlines.has(c.id) && zoneShown(c.id)).map((c) => c.id), outlines);
   });
   const disposeButtons = effect(() => {
     hidden = inactiveRealms.value;
@@ -147,6 +145,7 @@ export function startRealmOverlay(map: MlMap): () => void {
   return () => {
     stopStations();
     disposeCut();
+    cutter.stop();
     disposeButtons();
     disposeShade();
     disposeBlank();
@@ -157,5 +156,55 @@ export function startRealmOverlay(map: MlMap): () => void {
     for (const b of buttons.values()) render(null, b.el);
     layer.remove();
     if (map.getLayer(FILL)) map.removeLayer(FILL);
+  };
+}
+
+/** T-1026: the shade's cut in a worker, one at a time, only the newest asked for applied; the shade
+ * keeps its triangles until then. On the main thread when the worker cannot run. */
+function shadeCutter(apply: (tri: Float64Array) => void) {
+  let worker: Worker | null | undefined;
+  let gen = 0, busy = false;
+  let queued: string[] | null = null;
+  let last: { ids: string[]; outlines: ReadonlyMap<string, MultiPolygon> } | null = null;
+  const onMain = () => {
+    worker?.terminate();
+    worker = null;
+    busy = false;
+    queued = null;
+    if (last) apply(outsideZones(last.ids.map((id) => last!.outlines.get(id)!)));
+  };
+  const send = (ids: string[]) => {
+    busy = true;
+    worker!.postMessage({ kind: "cut", gen, ids } satisfies ShadeIn);
+  };
+  const start = () => {
+    const text = takeOutlineText();
+    if (!text) return null;
+    try {
+      const w = new Worker(new URL("../workers/shade.worker.ts", import.meta.url), { type: "module" });
+      w.onmessage = (e: MessageEvent<ShadeOut>) => {
+        busy = false;
+        if (queued) { const q = queued; queued = null; send(q); }
+        else if (e.data.gen === gen) apply(e.data.tri);
+      };
+      w.onerror = (e) => { console.warn("Shade worker failed", e.message); onMain(); };
+      w.postMessage({ kind: "outlines", text } satisfies ShadeIn);
+      return w;
+    } catch (error) {
+      console.warn("Shade worker unavailable", error);
+      return null;
+    }
+  };
+  return {
+    cut(ids: string[], outlines: ReadonlyMap<string, MultiPolygon>) {
+      gen++;
+      last = { ids, outlines };
+      if (worker === undefined) worker = start();
+      if (!worker) return onMain();
+      if (busy) queued = ids;
+      else send(ids);
+    },
+    cancel() { gen++; queued = null; last = null; },
+    stop() { worker?.terminate(); worker = null; },
   };
 }

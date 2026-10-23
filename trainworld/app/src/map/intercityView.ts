@@ -193,36 +193,42 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   const labels = document.createElement("div");
   labels.className = "intercity-labels";
   map.getContainer().appendChild(labels);
+  /** each disc's label, in disc order; an element only for each label placed (T-1026: the overview
+   * has one per zone, and making them all took 10-20 ms a render) */
+  let texts: string[] = [];
   const placeLabels = () => {
     const used: { x: number; y: number; w: number; h: number; px: number; py: number }[] = [];
-    if (!marks) return;
-    // discs run biggest first, so the cap keeps the biggest on screen (T-493)
-    const order = Array.from(labels.children, (_, i) => i);
-    if (marks.first !== undefined && marks.first > 0) order.unshift(...order.splice(marks.first, 1));
-    // T-871: a label past the cap or off screen is hidden unmeasured; the overview holds one per zone,
-    // and each measure after a write lays the page out again
-    const W = map.getContainer().clientWidth, H = map.getContainer().clientHeight;
-    for (const i of order) {
-      const el = labels.children[i] as HTMLElement;
-      const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], marks.anchor));
-      const r = marks.discs[i * DISC + 2] * (512 * 2 ** map.getZoom() / EARTH_C) * view.bubbleSize;
-      if (used.length >= MAX_LABELS || used.some((a) => Math.hypot(a.px - p.x, a.py - p.y) < LABEL_SEPARATION) || p.x < -r - W || p.x > W + r + W || p.y < -r - H || p.y > H + r + H) { el.style.visibility = "hidden"; continue; }
-      const w = el.offsetWidth, h = el.offsetHeight;
-      const positions = [[p.x + r + 5, p.y - h / 2], [p.x - w - r - 5, p.y - h / 2], [p.x - w / 2, p.y + r + 5], [p.x - w / 2, p.y - h - r - 5]];
-      const at = positions.find(([x, y]) => x >= 0 && y >= 0 && x + w <= W && y + h <= H && !used.some(a => x < a.x + a.w + LABEL_GAP_X && x + w + LABEL_GAP_X > a.x && y < a.y + a.h + LABEL_GAP_Y && y + h + LABEL_GAP_Y > a.y));
-      el.style.visibility = at ? "" : "hidden";
-      if (at) {
-        el.style.transform = `translate(${Math.round(at[0])}px, ${Math.round(at[1])}px)`;
-        used.push({ x: at[0], y: at[1], w, h, px: p.x, py: p.y });
+    if (marks) {
+      // discs run biggest first, so the cap keeps the biggest on screen (T-493)
+      const order = texts.map((_, i) => i);
+      if (marks.first !== undefined && marks.first > 0) order.unshift(...order.splice(marks.first, 1));
+      // T-871: a label off screen is passed over unmeasured, since each measure after a write lays
+      // the page out again
+      const W = map.getContainer().clientWidth, H = map.getContainer().clientHeight;
+      for (const i of order) {
+        if (used.length >= MAX_LABELS) break;
+        const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], marks.anchor));
+        const r = marks.discs[i * DISC + 2] * (512 * 2 ** map.getZoom() / EARTH_C) * view.bubbleSize;
+        if (used.some((a) => Math.hypot(a.px - p.x, a.py - p.y) < LABEL_SEPARATION) || p.x < -r - W || p.x > W + r + W || p.y < -r - H || p.y > H + r + H) continue;
+        let el = labels.children[used.length] as HTMLElement | undefined;
+        if (!el) {
+          el = document.createElement("div");
+          el.className = "intercity-label";
+          labels.appendChild(el);
+        }
+        if (el.textContent !== texts[i]) el.textContent = texts[i];
+        const w = el.offsetWidth, h = el.offsetHeight;
+        const positions = [[p.x + r + 5, p.y - h / 2], [p.x - w - r - 5, p.y - h / 2], [p.x - w / 2, p.y + r + 5], [p.x - w / 2, p.y - h - r - 5]];
+        const at = positions.find(([x, y]) => x >= 0 && y >= 0 && x + w <= W && y + h <= H && !used.some(a => x < a.x + a.w + LABEL_GAP_X && x + w + LABEL_GAP_X > a.x && y < a.y + a.h + LABEL_GAP_Y && y + h + LABEL_GAP_Y > a.y));
+        if (at) {
+          el.style.transform = `translate(${Math.round(at[0])}px, ${Math.round(at[1])}px)`;
+          used.push({ x: at[0], y: at[1], w, h, px: p.x, py: p.y });
+        }
       }
     }
+    while (labels.children.length > used.length) labels.lastChild!.remove();
   };
-  const label = (text: string) => {
-    const el = document.createElement("div");
-    el.className = "intercity-label";
-    el.textContent = text;
-    labels.appendChild(el);
-  };
+  const label = (text: string) => { texts.push(text); };
 
   // ---- the market's corridors ----
   let market: MarketPairs | null = null;
@@ -258,7 +264,9 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     // layer's trips to and from it (commutes between zones and longer trips)
     const local = cityDemandViews.peek();
     const opened = openedZones.peek();
-    const points = CITIES.map((c) => {
+    const loads = zoneLoads.peek();
+    const day = shownDayPhrase.peek();
+    const points = CITIES.flatMap((c) => {
       const isOwn = c === own;
       let t = { ...(!own || isOwn ? total(c.place) : pair(own.place, c.place)), walk: 0 };
       if (!own) {
@@ -267,8 +275,10 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
         const v = local.get(c.id);
         t = { all: t.all + (v ? v.tripsPerDay : c.localTrips ?? 0), rail: t.rail + (v ? v.railTripsPerDay : 0), air: t.air, walk: localModes(v)?.walk ?? 0 };
       }
+      // T-421: a zone still loading has its bar instead
+      // T-975: the overview leaves out the realms not shown; a selection's far ends draw everywhere
+      if (!isOwn && !(t.all > 0 && (own ? true : zoneShown(c.id) && !loads.has(c.id)))) return [];
       // T-494: a zone's local and inter-region trips are two figures, each with a mode bar
-      const day = shownDayPhrase.peek();
       const v = local.get(c.id);
       const localAll = v ? v.tripsPerDay : c.localTrips ?? 0;
       const localLine = `${count(localAll)} trips ${day} within ${c.name}`;
@@ -282,10 +292,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
         : isOwn
           ? [interLine, interBar, `(${localLine})`]
           : [`${count(t.all)} trips ${day} between ${own.name} and ${c.name}`, interBar, "Click to explore these trips"];
-      return { ...t, city: c, isOwn, tag, unbuilt: !own && opened !== null && !opened.has(c.id) };
-    // T-421: a zone still loading has its bar instead
-    // T-975: the overview leaves out the realms not shown; a selection's far ends draw everywhere
-    }).filter((p) => p.isOwn || (p.all > 0 && (own ? true : zoneShown(p.city.id) && !zoneLoads.peek().has(p.city.id))));
+      return [{ ...t, city: c, isOwn, tag, unbuilt: !own && opened !== null && !opened.has(c.id) }];
+    });
     points.sort((a, b) => b.all - a.all);
     const zoom = map.getZoom();
     const pxPerUnit = 512 * 2 ** zoom / EARTH_C;
@@ -321,6 +329,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
 
   const render = () => {
     marks = null;
+    texts = [];
     labels.replaceChildren();
     view.setLines("inter", null);
     // T-1006, T-1051: a blank map behind the start menu and while a game loads; the overview's place keeps the local bubbles off too

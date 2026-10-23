@@ -133,8 +133,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `packs/outlines.json`, which `pipeline/zone_outlines.py` writes: every registered zone's coarse
   outline, read once for the outlines and the realms' shade, T-800), `zoneLoading.ts` (zones still loading drawn grey with a loading
   bar, T-343), `realmOverlay.ts` (the realms not shown: one world shade with the shown zones cut out
-  by `boundaryGeometry.ts`'s `outsideZones` as triangles, drawn by the custom layer `shadeLayer.ts`
-  (T-1025), and a button each, T-975, T-1006), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and
+  by `boundaryGeometry.ts`'s `ShadeCut` as triangles in `workers/shade.worker.ts` (T-1026), drawn by
+  the custom layer `shadeLayer.ts` (T-1025), and a button each, T-975, T-1006), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and
   `zonesLoadForView`, the zoom test of `game/zones.ts` `ZONE_LOAD_ZOOM` that decides whether zones
   load for viewing, T-276, T-318, T-871).
 
@@ -168,7 +168,7 @@ and IndexedDB, T-029; slots' backups, T-744), `clockClient.ts`, `demand.worker.t
 each a sub-network, T-326; `reachView`, a city's own network inside its cluster, T-756; `marketReaches`, which stations the market's riders use, T-396), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
 reach, T-149; the footprints fetched on demand by registry box, T-404; `distanceTo` through a grid of each outline's edges, T-889), `commuters.worker.ts` and `commutersProtocol.ts` (the commuter bubbles' sums,
 T-097), `selectionMerge.ts` (a bubble selection's everyday far end added up over the workers,
-T-285).
+T-285), `shade.worker.ts` (the realm shade's cut, T-1026).
 
 ### URL switches
 

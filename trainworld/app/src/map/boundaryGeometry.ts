@@ -27,10 +27,23 @@ export class OutlineEdges {
   /** each segment's holders: the first zone to hold it, or every zone, in the order they were added */
   private holders = new Map<string, string | string[]>();
   private zones = new Map<string, { ring: Position[]; keys: string[] }[]>();
+  /** T-1026: each zone's feature as last drawn (null: none), kept while its borders' holders and the
+   * focus stay, so a redraw rebuilds only what changed and the source gets the same objects back */
+  private drawn = new Map<string, Feature<MultiLineString> | null>();
+  private drawnFocus = "";
 
   get size() { return this.zones.size; }
 
   has(id: string) { return this.zones.has(id); }
+
+  /** the zones sharing a border with these keys redraw */
+  private touch(keys: string[]) {
+    for (const key of keys) {
+      const held = this.holders.get(key);
+      if (Array.isArray(held)) for (const h of held) this.drawn.delete(h);
+      else if (held !== undefined) this.drawn.delete(held);
+    }
+  }
 
   add(id: string, city: MultiPolygon) {
     if (this.zones.has(id)) return;
@@ -42,18 +55,25 @@ export class OutlineEdges {
         keys.push(key);
         const held = this.holders.get(key);
         if (held === undefined) this.holders.set(key, id);
-        else if (Array.isArray(held)) held.push(id);
-        else this.holders.set(key, [held, id]);
+        else if (Array.isArray(held)) {
+          for (const h of held) this.drawn.delete(h);
+          held.push(id);
+        } else {
+          this.drawn.delete(held);
+          this.holders.set(key, [held, id]);
+        }
       }
       return { ring, keys };
     });
     this.zones.set(id, rings);
+    this.drawn.delete(id);
   }
 
   /** Takes a zone's outline back out (T-800: its coarse one, when its own arrives). */
   remove(id: string) {
     const rings = this.zones.get(id);
     if (!rings) return;
+    for (const { keys } of rings) this.touch(keys);
     for (const { keys } of rings) {
       for (const key of keys) {
         const held = this.holders.get(key);
@@ -72,35 +92,46 @@ export class OutlineEdges {
   /** One feature per zone with the lines it draws (property `id`), none for `focused`; only the zones
    * in `only` when given (T-871: those near the view). */
   lines(focused: string, only?: Set<string>): FeatureCollection<MultiLineString> {
+    if (focused !== this.drawnFocus) {
+      // the borders the focus leaves out are those it holds
+      for (const id of [this.drawnFocus, focused]) for (const { keys } of this.zones.get(id) ?? []) this.touch(keys);
+      this.drawnFocus = focused;
+    }
     const features: Feature<MultiLineString>[] = [];
     for (const [id, rings] of this.zones) {
       if (id === focused || (only && !only.has(id))) continue;
-      const coordinates: Position[][] = [];
-      for (const { ring, keys } of rings) {
-        const drawn = keys.map((key) => {
-          const held = this.holders.get(key)!;
-          return typeof held === "string" ? held === id : held[0] === id && !held.includes(focused);
-        });
-        const start = drawn.indexOf(false);
-        if (start < 0) { coordinates.push(ring); continue; }
-        // begin just after a gap, so a run that crosses the ring's seam stays one line
-        const n = keys.length;
-        let line: Position[] = [];
-        for (let k = 1; k <= n; k++) {
-          const i = (start + k) % n;
-          if (drawn[i]) {
-            if (!line.length) line.push(ring[i]);
-            line.push(ring[i + 1]);
-          } else if (line.length) {
-            coordinates.push(line);
-            line = [];
-          }
-        }
-        if (line.length) coordinates.push(line);
-      }
-      if (coordinates.length) features.push({ type: "Feature", properties: { id }, geometry: { type: "MultiLineString", coordinates } });
+      let f = this.drawn.get(id);
+      if (f === undefined) this.drawn.set(id, (f = this.zoneLines(id, rings, focused)));
+      if (f) features.push(f);
     }
     return { type: "FeatureCollection", features };
+  }
+
+  private zoneLines(id: string, rings: { ring: Position[]; keys: string[] }[], focused: string): Feature<MultiLineString> | null {
+    const coordinates: Position[][] = [];
+    for (const { ring, keys } of rings) {
+      const drawn = keys.map((key) => {
+        const held = this.holders.get(key)!;
+        return typeof held === "string" ? held === id : held[0] === id && !held.includes(focused);
+      });
+      const start = drawn.indexOf(false);
+      if (start < 0) { coordinates.push(ring); continue; }
+      // begin just after a gap, so a run that crosses the ring's seam stays one line
+      const n = keys.length;
+      let line: Position[] = [];
+      for (let k = 1; k <= n; k++) {
+        const i = (start + k) % n;
+        if (drawn[i]) {
+          if (!line.length) line.push(ring[i]);
+          line.push(ring[i + 1]);
+        } else if (line.length) {
+          coordinates.push(line);
+          line = [];
+        }
+      }
+      if (line.length) coordinates.push(line);
+    }
+    return coordinates.length ? { type: "Feature", properties: { id }, geometry: { type: "MultiLineString", coordinates } } : null;
   }
 }
 
@@ -184,9 +215,41 @@ class Edges {
   }
 }
 
-/** A zone ring anticlockwise in grid units, kept between cuts (the outlines do not change). */
-type Ring = { xs: Float64Array; ys: Float64Array; box: [number, number, number, number]; flip: boolean; at?: RingIndex };
+type Box = [number, number, number, number];
+/** A zone ring anticlockwise in grid units, open; `id` names it in a cut's cache. */
+export type Ring = { id: number; xs: Float64Array; ys: Float64Array; box: Box; at?: RingIndex };
+type Hole = { xs: Float64Array; ys: Float64Array };
+let ringIds = 0;
+
+/** A zone ring from lon, lat pairs (flat, open or closed), on the grid and turned anticlockwise; null
+ * for one that encloses nothing. */
+export function gridRing(lonLat: ArrayLike<number>): Ring | null {
+  const xs: number[] = [], ys: number[] = [];
+  for (let i = 0; i < lonLat.length; i += 2) {
+    const x = Math.round((lonLat[i] + 180) * G), y = Math.round((lonLat[i + 1] + 90) * G), n = xs.length;
+    if (n && xs[n - 1] === x && ys[n - 1] === y) continue;
+    xs.push(x); ys.push(y);
+  }
+  if (xs.length > 1 && xs[0] === xs[xs.length - 1] && ys[0] === ys[ys.length - 1]) { xs.pop(); ys.pop(); }
+  const n = xs.length;
+  let area = 0;
+  for (let k = 0, j = n - 1; k < n; j = k++) area += (xs[j] - xs[0]) * (ys[k] - ys[0]) - (xs[k] - xs[0]) * (ys[j] - ys[0]);
+  if (n < 3 || !area) return null;
+  const r: Ring = { id: ringIds++, xs: new Float64Array(n), ys: new Float64Array(n), box: [Infinity, Infinity, -Infinity, -Infinity] };
+  for (let k = 0; k < n; k++) {
+    const i = area > 0 ? k : n - 1 - k, x = (r.xs[k] = xs[i]), y = (r.ys[k] = ys[i]);
+    if (x < r.box[0]) r.box[0] = x; if (x > r.box[2]) r.box[2] = x;
+    if (y < r.box[1]) r.box[1] = y; if (y > r.box[3]) r.box[3] = y;
+  }
+  return r;
+}
+
 const ringCache = new WeakMap<Position[], Ring | null>();
+function ringOf(points: Position[]): Ring | null {
+  let r = ringCache.get(points);
+  if (r === undefined) ringCache.set(points, (r = gridRing(points.flat())));
+  return r;
+}
 
 /** T-1006: the world with the zones cut out as one, its edge only the outer outline of the zones'
  * union, and gaps the zones enclose left in the cut, as triangles: Mercator x, y (0-1, y down) of
@@ -198,15 +261,130 @@ const ringCache = new WeakMap<Position[], Ring | null>();
  * this shape: each tile rounds the vertices, parts a few metres apart come out crossing, and earcut
  * then draws long stray triangles (shadeLayer.ts draws these instead). */
 export function outsideZones(zones: Iterable<MultiPolygon>): Float64Array {
-  const all = [...zones];
+  const rings: Ring[] = [];
+  for (const z of zones) for (const poly of z.coordinates) { const r = ringOf(poly[0]); if (r) rings.push(r); }
+  return sharedCut.cut(rings);
+}
+
+/** pieces a cut keeps for the next */
+const KEEP = 32;
+/** grid units round each ring inside its piece's box */
+const PAD = 0.1 * G;
+const WORLD_Y0 = (90 - 85.051129) * G, WORLD_Y1 = (90 + 85.051129) * G, WORLD_X1 = 360 * G;
+
+/** T-1026: the cut in pieces, kept between cuts. Rings whose boxes (each grown by PAD) overlap make a
+ * piece, and pieces whose boxes overlap merge, so pieces lie in boxes apart. Each piece is cut and
+ * triangulated within its box, the world around the boxes on its own; a change of the zones shown
+ * redoes only the pieces it touches. */
+export class ShadeCut {
+  private pieces = new Map<string, { holes: Hole[]; box: Box; tri?: Float64Array; edge?: number[] }>();
+
+  cut(rings: Ring[]): Float64Array {
+    const used = groupRings(rings).map((g) => {
+      const key = g.rings.map((r) => r.id).sort((a, b) => a - b).join(",");
+      const p = this.pieces.get(key) ?? { holes: unionHoles(g.rings), box: g.box };
+      this.pieces.delete(key);
+      this.pieces.set(key, p);
+      return p;
+    });
+    for (const key of this.pieces.keys()) {
+      if (this.pieces.size <= Math.max(KEEP, used.length)) break;
+      this.pieces.delete(key);
+    }
+    // a piece whose box would reach the world's edge: the whole world as one ring (zones across the
+    // antimeridian or near the poles)
+    if (!used.every(({ box }) => box[0] > 0 && box[2] < WORLD_X1 && box[1] > WORLD_Y0 && box[3] < WORLD_Y1)) {
+      return triangles(keyhole(WORLD_BOX, used.flatMap((p) => p.holes)).ring);
+    }
+    let n = 0;
+    for (const p of used) {
+      if (!p.tri) {
+        const k = keyhole(boxRing(p.box), p.holes);
+        p.tri = triangles(k.ring);
+        p.edge = k.edge;
+      }
+      n += p.tri.length;
+    }
+    // the world with each piece's box (as that piece's cut walks it) as a hole
+    const data: number[] = [], at: number[] = [];
+    const add = (x: number, y: number) => data.push(x / G / 360, mercY(y));
+    for (let k = 0; k < 4; k++) add(WORLD_BOX.xs[k], WORLD_BOX.ys[k]);
+    for (const p of used) {
+      at.push(data.length / 2);
+      for (let k = 0; k < p.edge!.length; k += 2) add(p.edge![k], p.edge![k + 1]);
+    }
+    const world = triangles(data, at);
+    const out = new Float64Array(n + world.length);
+    out.set(world);
+    n = world.length;
+    for (const p of used) { out.set(p.tri!, n); n += p.tri!.length; }
+    return out;
+  }
+}
+const sharedCut = new ShadeCut();
+
+const WORLD_BOX: Hole = { xs: Float64Array.of(0, WORLD_X1, WORLD_X1, 0), ys: Float64Array.of(WORLD_Y0, WORLD_Y0, WORLD_Y1, WORLD_Y1) };
+const boxRing = (b: Box): Hole => ({ xs: Float64Array.of(b[0], b[2], b[2], b[0]), ys: Float64Array.of(b[1], b[1], b[3], b[3]) });
+/** Mercator y (0-1, down) of a grid y */
+function mercY(y: number) {
+  const s = Math.sin(((y / G - 90) * Math.PI) / 180);
+  return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
+}
+function triangles(ring: ArrayLike<number>, holes?: number[]): Float64Array {
+  const t = earcut(ring, holes), out = new Float64Array(t.length * 2);
+  for (let i = 0; i < t.length; i++) { out[2 * i] = ring[2 * t[i]]; out[2 * i + 1] = ring[2 * t[i] + 1]; }
+  return out;
+}
+
+/** The rings by piece: those whose grown boxes overlap, then pieces whose boxes overlap merged. */
+function groupRings(rings: Ring[]): { rings: Ring[]; box: Box }[] {
+  const grown = rings.map(({ box }): Box => [box[0] - PAD, box[1] - PAD, box[2] + PAD, box[3] + PAD]);
+  const overlap = (a: Box, b: Box) => a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3];
+  const parent = rings.map((_, i) => i);
+  const find = (i: number) => { while (parent[i] !== i) i = parent[i] = parent[parent[i]]; return i; };
+  const cells = new Map<number, number[]>();
+  grown.forEach((b, i) => {
+    for (let x = Math.floor(b[0] / G); x <= b[2] / G; x++) for (let y = Math.floor(b[1] / G); y <= b[3] / G; y++) {
+      const c = x + 400 * y, list = cells.get(c);
+      if (!list) { cells.set(c, [i]); continue; }
+      for (const j of list) {
+        const a = find(i), o = find(j);
+        if (a !== o && overlap(b, grown[j])) parent[a] = o;
+      }
+      list.push(i);
+    }
+  });
+  const byRoot = new Map<number, { rings: Ring[]; box: Box }>();
+  rings.forEach((r, i) => {
+    const b = grown[i], root = find(i), g = byRoot.get(root);
+    if (!g) { byRoot.set(root, { rings: [r], box: [...b] }); return; }
+    g.rings.push(r);
+    g.box = [Math.min(g.box[0], b[0]), Math.min(g.box[1], b[1]), Math.max(g.box[2], b[2]), Math.max(g.box[3], b[3])];
+  });
+  const groups = [...byRoot.values()];
+  for (let merged = true; merged;) {
+    merged = false;
+    for (let i = 0; i < groups.length; i++) for (let j = groups.length - 1; j > i; j--) {
+      const a = groups[i], b = groups[j];
+      if (!overlap(a.box, b.box)) continue;
+      a.rings.push(...b.rings);
+      a.box = [Math.min(a.box[0], b.box[0]), Math.min(a.box[1], b.box[1]), Math.max(a.box[2], b.box[2]), Math.max(a.box[3], b.box[3])];
+      groups.splice(j, 1);
+      merged = true;
+    }
+  }
+  return groups;
+}
+
+/** The outer outlines of the rings' union (gaps it encloses left out), clockwise: the holes of the cut. */
+function unionHoles(rings: Ring[]): Hole[] {
   let total = 0;
-  for (const z of all) for (const poly of z.coordinates) total += poly[0].length;
+  for (const r of rings) total += r.xs.length;
   // vertices in grid units through an open-addressed table: the zones' on whole units (so the tests
   // below are exact), then the points where edges cross
   const size = 2 ** Math.ceil(Math.log2(total * 2 + 2)), mask = size - 1;
   const slotX = new Int32Array(size), slotY = new Int32Array(size), slotId = new Int32Array(size).fill(-1);
   const X: number[] = [], Y: number[] = [];
-  const id = (p: Position) => gridId(Math.round((p[0] + 180) * G), Math.round((p[1] + 90) * G));
   const gridId = (gx: number, gy: number) => {
     // mixed well: the file's vertices all fall on every tenth grid unit
     let s = Math.imul(gx ^ Math.imul(gy, 0x9e3779b1), 0x85ebca6b);
@@ -219,36 +397,16 @@ export function outsideZones(zones: Iterable<MultiPolygon>): Float64Array {
     }
   };
 
-  // each zone ring anticlockwise; its edges tagged with the ring
-  const rings: Ring[] = [];
+  // each zone ring's edges, tagged with the ring
   const edges = new Edges(total, total + 1024);
-  for (const z of all) for (const poly of z.coordinates) {
-    const ids: number[] = [];
-    for (const p of poly[0]) { const v = id(p); if (v !== ids[ids.length - 1]) ids.push(v); }
-    if (ids.length > 1 && ids[0] === ids[ids.length - 1]) ids.pop();
-    let r = ringCache.get(poly[0]);
-    if (r === undefined) {
-      r = null;
-      const x0 = X[ids[0]], y0 = Y[ids[0]];
-      let area = 0;
-      for (let k = 0, j = ids.length - 1; k < ids.length; j = k++) area += (X[ids[j]] - x0) * (Y[ids[k]] - y0) - (X[ids[k]] - x0) * (Y[ids[j]] - y0);
-      if (ids.length >= 3 && area) {
-        const n = ids.length, xs = new Float64Array(n), ys = new Float64Array(n);
-        const box: [number, number, number, number] = [Infinity, Infinity, -Infinity, -Infinity];
-        for (let k = 0; k < n; k++) {
-          const i = ids[area > 0 ? k : n - 1 - k], x = (xs[k] = X[i]), y = (ys[k] = Y[i]);
-          if (x < box[0]) box[0] = x; if (x > box[2]) box[2] = x;
-          if (y < box[1]) box[1] = y; if (y > box[3]) box[3] = y;
-        }
-        r = { xs, ys, box, flip: area < 0 };
-      }
-      ringCache.set(poly[0], r);
+  rings.forEach(({ xs, ys }, ri) => {
+    const n = xs.length, first = gridId(xs[0], ys[0]);
+    for (let k = 1, a = first; k <= n; k++) {
+      const b = k < n ? gridId(xs[k], ys[k]) : first;
+      edges.add(a, b, ri);
+      a = b;
     }
-    if (!r) continue;
-    if (r.flip) ids.reverse();
-    for (let k = 0, j = ids.length - 1; k < ids.length; j = k++) edges.add(ids[j], ids[k], rings.length);
-    rings.push(r);
-  }
+  });
 
   // the edges left, by cell of a grid as sorted keys (cell * F + edge)
   const { head, to, tag, link } = edges;
@@ -448,7 +606,7 @@ export function outsideZones(zones: Iterable<MultiPolygon>): Float64Array {
   }
   // an outer ring inside another (an island in such a gap) is already in the cut
   outs.sort((a, b) => b.area - a.area);
-  const holes: { xs: Float64Array; ys: Float64Array }[] = [];
+  const holes: Hole[] = [];
   // the kept rings by the whole degrees their boxes cover
   const cells = new Map<number, Out[]>();
   for (const r of outs) {
@@ -468,20 +626,17 @@ export function outsideZones(zones: Iterable<MultiPolygon>): Float64Array {
       if (list) list.push(r); else cells.set(c, [r]);
     }
   }
-  // triangles cut from the exact ring in Mercator, where the map draws straight lines
-  const ring = keyhole(holes), t = earcut(ring);
-  const out = new Float64Array(t.length * 2);
-  for (let i = 0; i < t.length; i++) { out[2 * i] = ring[2 * t[i]]; out[2 * i + 1] = ring[2 * t[i] + 1]; }
-  return out;
+  return holes;
 }
 
-/** The world ring with the holes (clockwise, grid units) joined on as one ring, each by a slit from
- * its top vertex straight up to the first ring above it: earcut joins holes itself, but takes seconds
- * over thousands of them. A slit crosses nothing: it stops at the first edge above, and a ring lower
- * down that it passed would have been hit first. Out: Mercator x, y (0-1, y down) per vertex, open. */
-function keyhole(holes: { xs: Float64Array; ys: Float64Array }[]): number[] {
-  const y0 = (90 - 85.051129) * G, y1 = (90 + 85.051129) * G, x1 = 360 * G;
-  const rings = [{ xs: Float64Array.of(0, x1, x1, 0), ys: Float64Array.of(y0, y0, y1, y1) }, ...holes];
+/** An outer ring (anticlockwise, grid units) with the holes (clockwise) joined on as one ring, each by
+ * a slit from its top vertex straight up to the first ring above it: earcut joins holes itself, but
+ * takes seconds over thousands of them. A slit crosses nothing: it stops at the first edge above, and a
+ * ring lower down that it passed would have been hit first. Out: `ring`, Mercator x, y (0-1, y down)
+ * per vertex, open, cut into triangles in Mercator, where the map draws straight lines; `edge`, the
+ * outer ring's own vertices as walked, the slits' ends on it included (grid units). */
+function keyhole(outer: Hole, holes: Hole[]): { ring: number[]; edge: number[] } {
+  const rings = [outer, ...holes];
   // the edges by column of longitude, for the upward rays: [ring, edge, ...]
   const C = 1e4;
   const cols = new Map<number, number[]>();
@@ -527,11 +682,8 @@ function keyhole(holes: { xs: Float64Array; ys: Float64Array }[]): number[] {
     if (ht === 1) { hk = hk + 1 === rings[hr].xs.length ? 0 : hk + 1; ht = 0; }
     hung[hr].push(hk, ht, h);
   }
-  const out: number[] = [];
-  const emit = (x: number, y: number) => {
-    const s = Math.sin(((y / G - 90) * Math.PI) / 180);
-    out.push(x / G / 360, 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI));
-  };
+  const out: number[] = [], edge: number[] = [];
+  const emit = (x: number, y: number) => out.push(x / G / 360, mercY(y));
   const walk = (ri: number, start: number) => {
     const { xs, ys } = rings[ri], n = xs.length, here = hung[ri];
     // the hung holes in walking order: by edge from the start, then along the edge
@@ -541,10 +693,14 @@ function keyhole(holes: { xs: Float64Array; ys: Float64Array }[]): number[] {
     for (let s = 0; s < n; s++) {
       const k = (start + s) % n;
       emit(xs[k], ys[k]);
+      if (!ri) edge.push(xs[k], ys[k]);
       for (; o < order.length && here[3 * order[o]] === k; o++) {
         const t = here[3 * order[o] + 1], h = here[3 * order[o] + 2], k2 = k + 1 === n ? 0 : k + 1;
         const fx = xs[k] + (xs[k2] - xs[k]) * t, fy = ys[k] + (ys[k2] - ys[k]) * t;
-        if (t) emit(fx, fy);
+        if (t) {
+          emit(fx, fy);
+          if (!ri && (edge[edge.length - 2] !== fx || edge[edge.length - 1] !== fy)) edge.push(fx, fy);
+        }
         walk(h, tops[h]);
         emit(rings[h].xs[tops[h]], rings[h].ys[tops[h]]);
         emit(fx, fy);
@@ -552,7 +708,7 @@ function keyhole(holes: { xs: Float64Array; ys: Float64Array }[]): number[] {
     }
   };
   walk(0, 0);
-  return out;
+  return { ring: out, edge };
 }
 
 /** A world-sized polygon with the city's outer rings cut out, plus its excluded enclaves. */

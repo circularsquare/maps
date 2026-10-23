@@ -4,7 +4,7 @@
 // view comes near them (their registry boxes say where they are); a zone's footprint and outside
 // shade are built when it is focused or near the view, never for every registered zone.
 import { effect } from "@preact/signals";
-import type { FeatureCollection, MultiPolygon } from "geojson";
+import type { Feature, FeatureCollection, MultiPolygon } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { cityBoundary } from "../game/boundaries";
 import { activeCity, zonesTouching } from "../game/cities";
@@ -27,6 +27,8 @@ const OUTLINE_MAX_ZOOM = 10.5;
 /** below this zoom a view spans so many zones that their exact outlines are not fetched for it; the
  * coarse ones stand (T-871: the zoom zones load at, game/zones.ts) */
 const OUTLINE_MIN_ZOOM = Math.max(5, ZONE_LOAD_ZOOM);
+/** zones' outlines sent to the map in one task (T-1026) */
+const OUTLINES_A_TASK = 100;
 const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
 const everywhere = outsideCity({ type: "MultiPolygon", coordinates: [] });
 /** The one shade of "not the zone in view": outside the focused zone, and (T-350) a zone still
@@ -99,9 +101,33 @@ export function startCityBoundaries(map: MlMap): () => void {
     const b = map.getBounds(), w = b.getWest(), s = b.getSouth(), e = b.getEast(), n = b.getNorth();
     return new Set(zonesTouching(w - (e - w), s - (n - s), e + (e - w), n + (n - s)).map((c) => c.id).filter(zoneShown));
   };
-  const drawn = () => edges.lines(activeCity.peek(), perfOff("zoneZoom") ? undefined : around);
+  // T-1026: only the zones whose lines changed go to the source (the lines keep a zone's feature
+  // object while it stands), a few at a time: sending every zone near the view took 50-100 ms a
+  // redraw, and a realm shown adds hundreds
+  /** the features drawn, by zone, and those the source holds */
+  let want = new Map<string, Feature>(), sent = new Map<string, Feature>();
+  let pushing = 0;
+  const drawn = () => {
+    const lines = edges.lines(activeCity.peek(), perfOff("zoneZoom") ? undefined : around);
+    want = new Map(lines.features.map((f) => [f.properties!.id as string, f]));
+    return lines;
+  };
+  const push = () => {
+    pushing = 0;
+    const source = map.getSource(OUTLINES) as GeoJSONSource | undefined;
+    if (!source) return;
+    const add: Feature[] = [], remove: string[] = [];
+    for (const id of sent.keys()) if (!want.has(id)) remove.push(id);
+    for (const [id, f] of want) if (sent.get(id) !== f && add.push(f) === OUTLINES_A_TASK) break;
+    for (const id of remove) sent.delete(id);
+    for (const f of add) sent.set(f.properties!.id as string, f);
+    if (add.length || remove.length) void source.updateData({ add, remove });
+    if (add.length === OUTLINES_A_TASK) pushing = window.setTimeout(push);
+  };
   const redraw = () => {
-    if (edges.size) (map.getSource(OUTLINES) as GeoJSONSource | undefined)?.setData(drawn());
+    if (!edges.size || !map.getSource(OUTLINES)) return;
+    drawn();
+    if (!pushing) push();
   };
   // zones arrive in a burst while panning: one redraw for the lot
   let pending = 0;
@@ -154,7 +180,10 @@ export function startCityBoundaries(map: MlMap): () => void {
       id: SHADE, type: "fill", source: SHADE,
       paint: shadePaint(),
     }, before);
-    if (!map.getSource(OUTLINES)) map.addSource(OUTLINES, { type: "geojson", data: drawn() });
+    if (!map.getSource(OUTLINES)) {
+      map.addSource(OUTLINES, { type: "geojson", data: drawn(), promoteId: "id" });
+      sent = new Map(want);
+    }
     if (!map.getLayer(OUTLINES)) map.addLayer({
       id: OUTLINES,
       type: "line",
@@ -203,6 +232,7 @@ export function startCityBoundaries(map: MlMap): () => void {
     alive = false;
     request++;
     window.clearTimeout(pending);
+    window.clearTimeout(pushing);
     dispose();
     disposeRealms();
     disposeShade();

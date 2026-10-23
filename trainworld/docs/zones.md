@@ -316,7 +316,9 @@ alike, with the shown realms' zones cut out along their coarse outlines (`packs/
 shared borders cancel and gaps the zones enclose stay in the cut), so its edge follows the zone
 outlines and two hidden realms meeting have no edge (`inactive` in `game/shadeTable.ts`: 11% of the
 outside shade's colour, 22.5% black in the dark theme, drawn over the outside shade: half way from
-the outside shade alone to the double shade it was). Each hidden
+the outside shade alone to the double shade it was). The cut is made in a worker (T-1026): when the
+shown realms change, the circles and cities change at once and the shade keeps its old shape until
+the new one arrives, swapped in one frame. Each hidden
 realm has a circle at the centre of its zone nearest the mean of its zones' centres. Its zones are
 dead space for the view: no bubbles, labels, outlines, loading greys or bars, no name in the top
 bar, and no pack, boundary or water mask fetched for viewing. Demand, the market and money never

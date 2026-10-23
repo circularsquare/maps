@@ -53,7 +53,8 @@ export function marketWorld(rowsText: string): string {
 }
 
 export const activeCity = signal<CityId>(HOME_CITY);
-export const cityById = (id: CityId) => CITIES.find(c => c.id === id)!;
+const citiesById = new Map(CITIES.map((c) => [c.id, c] as const));
+export const cityById = (id: CityId) => citiesById.get(id)!;
 const packFrames = new Map(CITIES.map(c => [c.id, makeFrame({ kind: "equirect", ...c.origin })] as const));
 const packFrame = (id: CityId): Frame => packFrames.get(id)!;
 

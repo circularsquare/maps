@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-1026 [P2] A realm shown without a long frame. Done 2026-10-23: the shade's cut in a worker, in pieces kept between cuts; `cityById` a Map; labels and outlines sent only as needed. A click 355-450 ms to no task over 50 ms; a 13-realm load's longest 1,426 to 230 ms. notes/T-1006.md "T-1026".
+
 - T-1056 [P2] Anita's walking rule, measured. Done 2026-10-23: 1-5% of rail trips walk further than the straight line (nearly all under 2 km); the rule would take rail -2.6% New York, -3.6% Tokyo, ceilings about -1 point (all pass). Build filed as T-1059. notes/T-1055.md.
 - T-1055 [P1] Rail trips that ride no train. Done 2026-10-23: a boarding is offered at the cost of riding on, and loads, fare km and the trip explorer follow that ride; real save 11,654,110 to 11,645,298 rail trips a day. notes/T-1055.md.
 - T-200 [P3] Boarding a train only to walk away. Done 2026-10-23 by T-1055: every boarding rides at least one stop. notes/T-1055.md.
