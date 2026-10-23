@@ -26,7 +26,7 @@
 // meanwhile.
 
 import { computed, effect, signal } from "@preact/signals";
-import { choosing, zoneLoads } from "../game/loading";
+import { mapBlank, zoneLoads } from "../game/loading";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES } from "../game/cities";
 import { shownRealms, zoneShown } from "../game/realms";
@@ -91,6 +91,14 @@ const edgeOf = (outline: 0 | 1 | 2, rail: number, all: number) => (SPLIT_BUBBLES
 const UNBUILT_EDGE = 1.25;
 /** Most place labels on screen at once, the biggest first (T-493). */
 const MAX_LABELS = 8;
+/** The least space kept between two labels, CSS px sideways and up and down (T-1050). */
+const LABEL_GAP_X = 28;
+const LABEL_GAP_Y = 16;
+/** No two labelled bubbles are closer than this, px: a label for one more in a cluster adds clutter. */
+const LABEL_SEPARATION = 130;
+/** Below this zoom (the world, a hemisphere at most) no city is drawn unasked, and the realms'
+ * circles stay off (T-1046): the overview's bubbles clutter a map of the whole world. */
+export const CITY_MARKS_MIN_ZOOM = 2.5;
 
 /** The city bubbles are drawn in place of the focused city's own: zoomed far out, or a city
  * selected (T-186). The commuter view hides its bubbles and leaves clicks and hover to these. */
@@ -186,7 +194,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   labels.className = "intercity-labels";
   map.getContainer().appendChild(labels);
   const placeLabels = () => {
-    const used: { x: number; y: number; w: number; h: number }[] = [];
+    const used: { x: number; y: number; w: number; h: number; px: number; py: number }[] = [];
     if (!marks) return;
     // discs run biggest first, so the cap keeps the biggest on screen (T-493)
     const order = Array.from(labels.children, (_, i) => i);
@@ -198,14 +206,14 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const el = labels.children[i] as HTMLElement;
       const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], marks.anchor));
       const r = marks.discs[i * DISC + 2] * (512 * 2 ** map.getZoom() / EARTH_C) * view.bubbleSize;
-      if (used.length >= MAX_LABELS || p.x < -r - W || p.x > W + r + W || p.y < -r - H || p.y > H + r + H) { el.style.visibility = "hidden"; continue; }
+      if (used.length >= MAX_LABELS || used.some((a) => Math.hypot(a.px - p.x, a.py - p.y) < LABEL_SEPARATION) || p.x < -r - W || p.x > W + r + W || p.y < -r - H || p.y > H + r + H) { el.style.visibility = "hidden"; continue; }
       const w = el.offsetWidth, h = el.offsetHeight;
       const positions = [[p.x + r + 5, p.y - h / 2], [p.x - w - r - 5, p.y - h / 2], [p.x - w / 2, p.y + r + 5], [p.x - w / 2, p.y - h - r - 5]];
-      const at = positions.find(([x, y]) => x >= 0 && y >= 0 && x + w <= W && y + h <= H && !used.some(a => x < a.x + a.w + 4 && x + w + 4 > a.x && y < a.y + a.h + 4 && y + h + 4 > a.y));
+      const at = positions.find(([x, y]) => x >= 0 && y >= 0 && x + w <= W && y + h <= H && !used.some(a => x < a.x + a.w + LABEL_GAP_X && x + w + LABEL_GAP_X > a.x && y < a.y + a.h + LABEL_GAP_Y && y + h + LABEL_GAP_Y > a.y));
       el.style.visibility = at ? "" : "hidden";
       if (at) {
         el.style.transform = `translate(${Math.round(at[0])}px, ${Math.round(at[1])}px)`;
-        used.push({x: at[0], y: at[1], w, h});
+        used.push({ x: at[0], y: at[1], w, h, px: p.x, py: p.y });
       }
     }
   };
@@ -315,8 +323,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     marks = null;
     labels.replaceChildren();
     view.setLines("inter", null);
-    // T-1006: a blank map behind the start menu; the overview's place keeps the local bubbles off too
-    if (choosing.peek()) {
+    // T-1006, T-1051: a blank map behind the start menu and while a game loads; the overview's place keeps the local bubbles off too
+    if (mapBlank.peek()) {
       cityOverview.value = true;
       view.setDiscs("inter", null);
       return;
@@ -330,6 +338,11 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     // a selected city always takes the place of the city's own bubbles; zoomed far out only
     // when the overview has something to draw
     cityOverview.value = mode === "selected" || (mode === "overview" && shown);
+    // the world view: nothing, and the local bubbles stay off (`cityOverview`); a selected city stays
+    if (mode === "overview" && map.getZoom() < CITY_MARKS_MIN_ZOOM) {
+      view.setDiscs("inter", null);
+      return;
+    }
     if (mode && shown) {
       const sel = selection.peek();
       renderCities(sel?.kind === "city" ? sel.city : null);
@@ -385,7 +398,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     anchorVersion.value; // the discs are measured from the draw anchor (T-317)
     loadingZones.value;
     shownRealms.value;
-    choosing.value;
+    mapBlank.value;
     render();
   });
   map.on("zoom", render);

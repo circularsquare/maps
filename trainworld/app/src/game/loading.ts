@@ -9,7 +9,7 @@
 // the player can look around and build while demand loads. Only a failed load puts up a screen
 // (ui/LoadingScreen.tsx).
 
-import { signal } from "@preact/signals";
+import { computed, signal } from "@preact/signals";
 import { clock } from "./clock";
 import { cityById, type CityId } from "./cities";
 
@@ -46,6 +46,15 @@ export const loadFailure = signal<string | null>(null);
  * again. Demand carries on without them (workers/demandClient.ts); a zone leaves once its pack opens. */
 export const zoneFailures = signal<ReadonlyMap<CityId, string>>(new Map());
 
+/** T-1051: the game in hand has been loaded and its first demand is in (the moment the clock is let go,
+ * or demand failed or was given up on). False from the start menu's pick and from every whole-game load. */
+const gameReady = signal(false);
+/** T-1051: the map shows only the basemap: behind the start menu, and while a game loads (the loading
+ * card's span, from the pick to the clock's release). Nothing is drawn over it then, so what comes at
+ * the end (hidden realms shaded, circles, cities for the shown realms) arrives in one step. Not while
+ * demand has nothing to load (demandIdle). */
+export const mapBlank = computed(() => choosing.value || (!gameReady.value && !demandIdle.value));
+
 /** The clock waits for the next game's demand: set at startup and by every whole-game load. */
 let holdArmed = true;
 
@@ -57,11 +66,13 @@ export const gameWait = () => wait;
 /** The start menu's pick (main.ts): the startup wait begins. */
 export function startGameWait(key: string) {
   wait = { seq: wait.seq, since: performance.now(), key };
+  gameReady.value = false;
 }
 
 /** A whole game was loaded or started (workers/clockClient.ts): hold the clock until its demand is done. */
 export function holdForGameLoad(key?: string) {
   if (loadFailure.peek()) return; // no demand to wait for
+  gameReady.value = false;
   wait = holdArmed ? { ...wait, key: key ?? wait.key } : { seq: wait.seq + 1, since: performance.now(), key: key ?? "last" };
   holdArmed = true;
   clock?.setHeld(true);
@@ -83,6 +94,7 @@ export function loadComplete() {
   // the next one's hold, ran the clock on the last game's demand (no fares) until the next final
   if (holdArmed) return;
   clock?.setHeld(false);
+  gameReady.value = true;
   if (startup.peek() === "loading") startup.value = "ready";
 }
 
@@ -96,6 +108,7 @@ export function loadFailed(why: string) {
   loadFailure.value = why;
   loadProgress.value = null;
   holdArmed = false;
+  gameReady.value = true;
   if (startup.peek() === "loading") startup.value = "failed";
   // after startup; at a failed startup the player's choice releases it (every worker may report)
   else if (startup.peek() === "ready") {
@@ -130,6 +143,7 @@ export function loadCannotFinish(why: string, game = false) {
 /** Carry on without demand after a failed startup (the loading screen's second button). */
 export function continueWithoutDemand() {
   clock?.setHeld(false);
+  gameReady.value = true;
   startup.value = "ready";
 }
 

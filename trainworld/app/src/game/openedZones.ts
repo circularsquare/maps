@@ -1,6 +1,6 @@
-// The zones this game has started in or a station has reached (T-729), kept in the save's header
-// (`opened`) by the clock worker. Nothing reads it for loading or drawing (T-801): every zone loads
-// for the view on pan.
+// The zones this game has started in, a station has reached (T-729) or built track crosses (T-1047),
+// kept in the save's header (`opened`) by the clock worker. Nothing reads it for loading (T-801):
+// every zone loads for the view on pan.
 
 import { signal } from "@preact/signals";
 import type { CityId } from "./cities";

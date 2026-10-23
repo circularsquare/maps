@@ -72,9 +72,11 @@ about 0.5M people, 1M in China, built as packs by the same pipeline, `kind: "zon
 space**, where no trip starts or ends. Only zones a
 built station reaches join the demand solves; a zone viewed or beside the view that no station
 reaches opens **bare** in one auxiliary worker, its figures, bubbles and clicks from a no-rail pass
-that equals a solve's to the bit, so panning never re-solves [T-325]. Every zone of a shown
+that equals a solve's to the bit, so panning never re-solves [T-325]. A zone the player's built
+track crosses is in play as a reached one is, opened bare in turn once loads are done, and in the
+game's opened list [T-1047, [docs/zones.md](docs/zones.md) "Track"]. Every zone of a shown
 **realm** loads for the view on a pan [T-801]: zones group into country-sized realms (China in
-seven), and a realm is shown while the game has a station in it, starts in it, or the player showed
+seven), and a realm is shown while the game has a station or track in it, starts in it, or the player showed
 it this session; the others are one dark fill with a button and nothing of theirs is drawn or
 loaded for viewing, while demand, the market and money are the same whatever is shown [T-975,
 [docs/zones.md](docs/zones.md) "Realms"]. Zones that share no rider

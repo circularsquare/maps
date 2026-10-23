@@ -67,7 +67,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   search or station naming, the view's zones first, T-177, T-065, T-400), `boundaries.ts` (each city's boundary file, fetched
   once, T-172), `zoneNames.ts` (zones' shown names and search aliases from the hand-edited
   `zone-names.json` and the generated `zone-aliases.json`, `pipeline/zone_aliases.py`; T-825),
-  `realms.ts` and the hand-edited `realms.json` (the country-sized realms: each zone's, which are shown, each realm's button point from the registry, T-975, T-1006), `search.ts` (the search box's matching, `cityMatch` for zones by name or alias, T-148), `walks.ts` (walking minutes to the
+  `realms.ts` and the hand-edited `realms.json` (the country-sized realms: each zone's, which are shown, each realm's circle point from the registry, and `hiddenRealmAt` for a click on its land, T-975, T-1006), `search.ts` (the search box's matching, `cityMatch` for zones by name or alias, T-148), `walks.ts` (walking minutes to the
   closest stations on the demand model's walking barrier, T-312).
 - Stations and lines: `complexes.ts` (station complexes from platform geometry and the player's
   links, T-146), `complexView.ts` (a click selecting the complex, a station opened alone, the
@@ -84,7 +84,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
-  (the track model's refusals in plain words), `openedZones.ts` (the zones the game has started in or reached, kept for the save, T-729, T-801), `loading.ts` (what is loading, the startup gate and
+  (the track model's refusals in plain words), `openedZones.ts` (the zones the game has started in, reached or crossed with track, kept for the save, T-729, T-801), `trackZones.ts` (the zones built and blueprint track crosses, by coarse outline, from each network state, T-1047), `loading.ts` (what is loading, the startup gate and
   the clock hold, T-149, T-172; whether the start menu is up, T-677), `palette.ts`, `shades.ts` over `shadeTable.ts` (the light and dark themes' map
   colours: basemap, line casing, map ink, blueprint off, outside shade, thumbnails; the table has no
   page behind it so the clock worker reads it, T-039, T-543), `format.ts`.
@@ -238,7 +238,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   6135 by default), `t715-load-money.mjs` (the real save opened from the saves panel while a later
   copy is open, twice: cash loads as saved and moves, no ledger day after the clock; a save with
   ledger days after its clock gets their running cost back; port 6165 by default),
-  `t975-realms.mjs` (realms in a fresh profile: no bubbles behind the start menu, a Tokyo start shows Japan only with the shade cut around its zones, a button shows France, a reload hides it again, stations in two realms show both; the zoomed-out frame and a pan across France and Germany measured; port 6165 by default),
+  `t975-realms.mjs` (realms in a fresh profile: no bubbles behind the start menu, a Tokyo start shows Japan only with the shade cut around its zones, a click shows France, a reload hides it again, stations in two realms show both; a click on a hidden realm shows it, a drag does not, no circles at the world view; the zoomed-out frame and a pan across France and Germany measured; port 6165 by default),
   `t1025-shade.mjs` (Node, no browser: the realm shade's triangles for each realm alone and several groups up to all; no point of a shown zone shaded, none shaded twice, open land and sea shaded once; `quick` for the groups only, about 6 s, all of it under half a minute),
   `t728-newgame.mjs` (the new game sheet in a fresh profile: the search, a sandbox in Tokyo from
   its real network, a normal London start, a map start, the real New York save turned sandbox from
@@ -297,7 +297,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   slot reopened with its demand cache; `EDITS=1` the long tasks after a track and a station edit),
   `t1020-click-latency.mjs` (laying track with the mouse: click to drawn, ghost latency per move,
   frame gaps, long tasks and the worker's steps per click, on a new game, the real save, Japan's
-  network, and Anita's London-Shanghai-London repro, whose far click must be refused at once),
+  network, Anita's London-Shanghai-London repro, whose far click must be refused at once and whose
+  requests after Esc must stay in one city, and T-1039's long pieces and snapped routes zoomed out
+  followed by short track in Belfast, with how long the clock worker takes to answer meanwhile),
   `t714-pan.mjs` (frame time while dragging and wheel-zooming the
   real save at zoom 11-16 with the clock running: fails over 12 ms of main thread a frame or 5% of
   frames over 50 ms; options for a throttled CPU, a trace per thread, settings, a tool),

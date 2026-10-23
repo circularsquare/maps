@@ -27,6 +27,7 @@ import { ACTION_KEYS, pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/tabs";
 import { constructBlueprints, newLineKey, toggleEditStopsSelected } from "./game/lineActions";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { redo, undo, world } from "./game/world";
+import { followTrack } from "./game/trackZones";
 import { lastSaved, moneyState } from "./game/money";
 import { live } from "./map/live";
 import { createMap, setBasemapLabels, setBasemapShade } from "./map/mapView";
@@ -189,7 +190,10 @@ if (SYNTH) {
   client.onState = (s) => {
     // a train count: the same buffers with the new run profiles (T-229)
     if (s.service && renderer.net) renderer.setService(s.render.phases, s.render.meta);
-    else renderer.setNetwork(s.net ?? networkFromState(s)); // built in the worker (T-063)
+    else {
+      renderer.setNetwork(s.net ?? networkFromState(s)); // built in the worker (T-063)
+      followTrack(renderer.net, world.peek()); // T-1047
+    }
     views.networkChanged();
     blueprintBox.refreshHighlight();
     overlay.invalidate();

@@ -305,25 +305,36 @@ name; the code word is "realm" because "region" already means a zone in the code
 `pipeline/realms.py` (run by the join) writes each registry row's `realm` (its country's; in a split
 country the realm whose land holds its centre) and `packs/realms.geojson`, each realm's land
 (Natural Earth admin 0 cut along geoBoundaries ADM1 or the Census states), which only that
-assignment uses: the app reads no realm shapes. A realm is **shown** while the game has a station in
-it (blueprint or built; the zone whose coarse outline holds the station, else the zone with the
-nearest centre), it holds the start zone, or the player showed it this session (its button, or a
+assignment uses: the app reads no realm shapes. A realm is **shown** while the game has a station or
+track in it (blueprint or built; a station in the zone whose coarse outline holds it, else the zone
+with the nearest centre; track in the zones it crosses, "Track" below), it holds the start zone, or the player showed it this session (its circle, a click on its land, or a
 search pick of a city or place in it); a click is not saved, so a reload hides a realm again unless
 the game has built there. What is not shown is one shade over the whole world, land and water
 alike, with the shown realms' zones cut out along their coarse outlines (`packs/outlines.json`;
 shared borders cancel and gaps the zones enclose stay in the cut), so its edge follows the zone
-outlines and two hidden realms meeting have no edge (`inactive` in `game/shadeTable.ts`: 22% of the
-outside shade's colour, 45% black in the dark theme, drawn over the outside shade). Each hidden
-realm has a button at the centre of its zone nearest the mean of its zones' centres. Its zones are
+outlines and two hidden realms meeting have no edge (`inactive` in `game/shadeTable.ts`: 11% of the
+outside shade's colour, 22.5% black in the dark theme, drawn over the outside shade: half way from
+the outside shade alone to the double shade it was). Each hidden
+realm has a circle at the centre of its zone nearest the mean of its zones' centres. Its zones are
 dead space for the view: no bubbles, labels, outlines, loading greys or bars, no name in the top
 bar, and no pack, boundary or water mask fetched for viewing. Demand, the market and money never
 read it, so every figure is the same whatever is shown; a selection's far ends still draw over a
 dark realm. Before the first game is in, and when `outlines.json` is missing, every zone shows; a
 zone with no realm always shows.
 
-**The opened list** [T-729, T-801]: each game's save header keeps `opened`, the zones it has
-started in or a station has reached, in order. Nothing reads it for loading or drawing: every zone
-loads for the view on pan as above. A save without it loads as any other.
+**Track** [T-1047, `game/trackZones.ts`]: a zone is crossed by track when a point of the track's
+drawn line, tested every 1 km, lies in its coarse outline. A zone built track crosses is in play as
+one a station reaches, for all the player sees: it joins the opened list, its realm is shown, and its
+figures are worked out. Blueprint track that is not switched off shows its realms only, as a
+blueprint station does. With no station within reach none of its people can board, so a solve would
+give it the figures it has with no rail (T-149): it joins no solve, and opens bare in the auxiliary
+worker instead, once the load in hand is done, one zone at a time, nearest the view first and after
+any zone opening for the view. It then closes as a spare zone does, its figures still shown. A
+station built within its reach makes it a reached zone like any other.
+
+**The opened list** [T-729, T-801, T-1047]: each game's save header keeps `opened`, the zones it has
+started in, a station has reached or its built track crosses, in order. Zoomed out, a zone not in it
+is a dot (T-976); nothing reads it for loading. A save without it loads as any other.
 
 **Zoomed out, nothing loads for the view** [T-871]: the viewed zone's pack and the zones' exact
 outlines load only above zoom 7.5 (`ZONE_LOAD_ZOOM`, `game/zones.ts`), one level out from where a
@@ -411,8 +422,8 @@ between them are place to place, and clusters merge only through track (T-362 de
   about 310 bytes to the bundled `registry.json` (what the map, the zoomed-out bubbles, the new game
   sheet's search and the save header need before it opens) and about 0.9 KB to the market rows,
   which the page downloads only with the first market pack; its files are fetched
-  on demand (section 6). A mask installed while a big network is loaded reworks the
-  whole network once. A zone opened only for its bubbles opens bare in the auxiliary worker
+  on demand (section 6). A mask installed under drawn track reworks the water and price of only
+  the track within its box; the others' are kept as they were (T-1039). A zone opened only for its bubbles opens bare in the auxiliary worker
   (T-325), its everyday layer once rather than in every solving worker.
 - **Closing** (T-301; demand-runtime.md "Which cities are open"). A zone nobody views, sees beside the view
   or reaches closes after 60 s, or at once beyond two such zones, so a long pan holds a few zones'

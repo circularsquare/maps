@@ -261,14 +261,15 @@ commuters and inter-city riders are in its inspector only ([ui-inspectors.md](ui
   scale (the busiest covers 0.15 of a zone's area). At 9.5 and below they become one labelled bubble
   per other zone at its registry centre (the largest 19 px radius before the size slider), names and
   daily totals as labels that avoid each other and stay on screen, at most eight at once, the biggest
-  first (T-493). Area is total travellers with no
+  first (T-493), no two labelled bubbles closer than 130 px and no two labels closer than 28 px
+  sideways or 16 px up and down (T-1050). Area is total travellers with no
   floor; each is a red dot with a blue train dot inside [T-901, below]. They lie under the local discs; hover names the place and the direction,
   with a mode bar (train blue, the rest red, plane included).
 - A selection survives a pan to another zone.
 
 ## Zoomed far out: one bubble per zone
 
-[T-186, T-276; `OVERVIEW_ZOOM` 8.5 in `map/intercityView.ts`] At zoom 8.5 and below, with Homes or
+[T-186, T-276; `OVERVIEW_ZOOM` 8.5 in `map/intercityView.ts`] At zoom 8.5 and below (below zoom 2.5, the whole world, nothing is drawn and the local bubbles stay off: `CITY_MARKS_MIN_ZOOM` [T-1046]; a selected city still draws), with Homes or
 Destinations on and no bubble selection, every zone in the regional market, the focused
 one included, is one bubble at its registry centre in place of the focused zone's own bubbles:
 all its trips a day (its local trips, from the open zone's view or the pipeline's no-rail count in
@@ -283,14 +284,14 @@ the edge. A bubble nobody travels in is a plain grey disc. With `SPLIT_BUBBLES` 
 `map/intercityView.ts` the bubble is a solid disc coloured by `modeMix` of train, walking and the
 rest [T-576: an open zone's walking is green, from its split; a zone not loaded in this session
 has no walk split, so its walking counts in the red; regional trips have no walking]. Labelled
-"Philadelphia · 187k trips" (plain text on the map with a halo, no box [T-824]; at most eight labels on screen, the biggest first [T-493]). The hover
+"Philadelphia · 187k trips" (plain text on the map with a halo, no box [T-824]; at most eight labels on screen, the biggest first [T-493], spaced as above [T-1050]). The hover
 has two lines, each with a mode bar [T-494]: "1.6m trips per day within Yamanashi" (bar from
 the zone's modelled split, none for a zone not loaded) and "120k inter-city trips per day on
 average to and from Yamanashi" (train blue, the rest red). One scale that depends on the zoom
 alone, never on what is on screen [T-525, T-530]: 60,000 trips a day per px² of bubble area at
 zoom 6.5 (`TRIPS_PER_PX2`, `SCALE_ZOOM`), before the size slider, the radius times
 2^(0.35 x (zoom - 6.5)) (`ZOOM_GROWTH`), so bubbles shrink somewhat as the map zooms out.
-A zone the game has not opened (not the start zone and not reached by a station: `openedZones`, game/openedZones.ts) is not a bubble but a dot, half the radius it would have, floored to whole CSS px and at least 2 px, filled in the Unopened cities colour (light grey by default, setting) with a 1 px dark outline (hover unchanged) [T-976]; it turns into a bubble when the zone opens. With a zone selected the bubbles are the trips to and from it as before.
+A zone the game has not opened (not the start zone, not reached by a station and not crossed by built track: `openedZones`, game/openedZones.ts, T-1047) is not a bubble but a dot, half the radius it would have, floored to whole CSS px and at least 2 px, filled in the Unopened cities colour (light grey by default, setting) with a 1 px dark outline (hover unchanged) [T-976]; it turns into a bubble when the zone opens. With a zone selected the bubbles are the trips to and from it as before.
 Homes and Destinations look the same, and both work zoomed out even over dead space, where
 the buttons are otherwise off; a start on the world map turns Homes on [T-801]. Under a local purpose the focused zone's own
 bubbles stay instead. Toronto (`market: -1`) has none.

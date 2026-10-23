@@ -2,7 +2,8 @@
 // start menu's map draws no city bubbles; a new Tokyo game shows Japan only, the shade cut around
 // Japan's zones and every other realm with a button; a click on France's button shows France; a
 // reload with a station in Japan only hides France again; a station in France as well, and a reload
-// shows both. Measures the zoomed-out world (bubbles, frame time while panning) and what a pan across
+// shows both; (T-1049, T-1046) a click on a hidden realm shows it, a drag does not, and the world view has no
+// circles or city bubbles. Measures the zoomed-out world (bubbles, frame time while panning) and what a pan across
 // France and Germany at zoom 9 fetches. Screenshots and a JSON to artifacts/trainworld/t975-<TAG>-*.
 //   BASE=http://localhost:6165/ [TAG=after] node trainworld/checks/t975-realms.mjs
 import { readdir, mkdtemp, mkdir, writeFile } from 'node:fs/promises';
@@ -137,6 +138,31 @@ try {
   await page.click('.start-menu .new-game .start-new');
   await ready(page);
   const tReady = Date.now();
+  // T-1051: while the loading card is up nothing is drawn over the basemap; when it goes, the end state is in
+  {
+    const sample = () => page.evaluate(() => {
+      const map = window.tw.map, impl = map.getLayer('tw-realms-inactive')?.implementation;
+      return {
+        card: !!document.querySelector('.loading-card'),
+        labels: [...document.querySelectorAll('.intercity-label')].filter((e) => e.style.visibility !== 'hidden').length,
+        circles: [...document.querySelectorAll('.realm-button')].filter((e) => e.offsetParent && e.style.display !== 'none').length,
+        shade: !!impl?.visible,
+        outside: map.getLayer('tw-city-outside') ? map.getLayoutProperty('tw-city-outside', 'visibility') !== 'none' : false,
+        outlines: map.getLayer('tw-city-boundaries') ? map.getLayoutProperty('tw-city-boundaries', 'visibility') !== 'none' : false,
+      };
+    });
+    let n = 0, drawn = 0, last = await sample();
+    for (const t0 = Date.now(); last.card && Date.now() - t0 < 120000; last = await sample()) {
+      n++;
+      if (last.labels || last.circles || last.shade || last.outside || last.outlines) drawn++;
+      if (n === 1 || n % 20 === 0) await page.screenshot({ path: join(SHOTS, `t975-${TAG}-loading-${n}.png`) });
+      await settle(page, 200);
+    }
+    report('nothing is drawn over the map while the game loads', n > 0 && drawn === 0, `(${n} samples with the card up, ${drawn} with something drawn)`);
+    await settle(page, 1500);
+    last = await sample();
+    report('the end state arrives when the card goes', !last.card && last.shade && last.outside, JSON.stringify(last));
+  }
   await settle(page, 8000);
   const start = fetched.filter((f) => f.t >= tPick);
   out.startup = { menuS: +((tPick - t0) / 1000).toFixed(1), toWorldS: +((tReady - tPick) / 1000).toFixed(1), files: start.length, kB: Math.round(start.reduce((a, f) => a + f.bytes, 0) / 1024) };
@@ -196,6 +222,38 @@ try {
     await settle(page, 3000);
     await page.screenshot({ path: join(SHOTS, `t975-${TAG}-two-realms.png`) });
   }
+  // 5. T-1049, T-1046: a click on a hidden realm's land shows it, a drag does not; none at the world view
+  {
+    const at = (lng, lat) => page.evaluate(([lng, lat]) => { const q = window.tw.map.project([lng, lat]), r = document.querySelector('#map').getBoundingClientRect(); return [q.x + r.left, q.y + r.top]; }, [lng, lat]);
+    const view = async (center, zoom) => { await page.evaluate(([center, zoom]) => window.tw.map.jumpTo({ center, zoom }), [center, zoom]); await settle(page, 2500); };
+    const before = await dark(page);
+    const tip = await page.evaluate(() => document.querySelector('.realm-button button[aria-label="Show Germany"]')?.getAttribute('data-tip') ?? '');
+    report('a realm circle has the game\'s own tag naming the realm', /^Germany\n/.test(tip) && await page.evaluate(() => !document.querySelector('.realm-button button[title]')), JSON.stringify(tip));
+    await view([10.5, 51], 5);
+    let [x, y] = await at(10.5, 51);
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    for (let i = 1; i <= 8; i++) await page.mouse.move(x + 15 * i, y + 5 * i);
+    await page.mouse.up();
+    await settle(page, 1500);
+    const afterDrag = await dark(page);
+    report('a drag across a hidden realm does not show it', afterDrag.includes('Germany') && afterDrag.length === before.length, `(${afterDrag.length} dark)`);
+    await view([5, 48], 1.8);
+    [x, y] = await at(10.5, 51);
+    await page.mouse.click(x, y);
+    await settle(page, 1500);
+    const world = await page.evaluate(() => ({ circles: [...document.querySelectorAll('.realm-button')].filter((e) => e.offsetParent).length, labels: document.querySelectorAll('.intercity-label').length }));
+    report('at the world view there are no circles, no city labels and a click shows nothing', world.circles === 0 && world.labels === 0 && (await dark(page)).includes('Germany'), JSON.stringify(world));
+    await view([10.5, 51], 5);
+    [x, y] = await at(10.5, 51);
+    await page.mouse.click(x, y);
+    await settle(page, 3000);
+    const afterClick = await dark(page);
+    report('a click on a hidden realm shows it', !afterClick.includes('Germany') && afterClick.length === before.length - 1, `(${afterClick.length} dark)`);
+    await page.screenshot({ path: join(SHOTS, `t975-${TAG}-germany-clicked.png`) });
+    await view([5, 48], 4.5);
+  }
+
   report('no console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {
   await ctx.close();

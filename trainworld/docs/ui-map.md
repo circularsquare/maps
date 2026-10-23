@@ -424,12 +424,20 @@ the shade over the whole map, itself included, until it comes.
 
 [T-975, T-1006; `map/realmOverlay.ts`, `game/realms.ts`; the rules in [zones.md](zones.md) "Realms"]
 Everything outside the realms shown (those the game has built in, starts in or the player has shown)
-is covered by one shade, darker than the outside shade and over it, on land and water alike, under
+is covered by one shade, a little darker than the outside shade and over it (11% of the outside shade's colour, 22.5% black in the dark theme: together about 18% and 50%), on land and water alike, under
 labels and the network, taking no clicks. Its edge is the shown zones' coarse outline, the line the
 zone outlines draw, never a coast; nothing of a hidden realm's zones is drawn. Each hidden realm has
-one floating button, the expand icon (four arrows out to the corners) in the map ink with no box
-(hover: the realm's name over "Click to show the cities there"), at its point, or inside the
-on-screen part of its box when the point is off screen. Buttons that would overlap give way to the
-realm with more zones. A click shows the realm in one step: the shade opens over its zones, the
-button goes, and its zones draw and load for the view as any other. Shade and buttons are hidden
-behind the start menu, and so are the city bubbles: the start menu's world map is blank.
+one floating circle, 16 px across, filled and outlined like an unopened zone's dot (the setting's
+colour, a 1 px map ink outline), at its point, or inside the on-screen part of its box when the point
+is off screen (hover: the realm's name over "Click the shaded area to show the cities there").
+Circles that would overlap give way to the realm with more zones. A click on the circle, or a plain
+click anywhere on the realm's land (inside one of its zone outlines, not the sea or dead space), with
+the select tool and no Shift, shows the realm in one step: the shade opens over its zones, the circle
+goes, and its zones draw and load for the view as any other. A drag does not; neither does a click
+that selected something, a click with a track or another tool on, or one while linking stations.
+Below zoom 2.5 (`CITY_MARKS_MIN_ZOOM`: the whole world) there are no circles, no click and no
+overview city bubbles [T-1046, T-1048, T-1049]. Shade and circles are hidden behind the start menu,
+and so are the city bubbles: the start menu's world map is blank. So is the map while a game loads
+(`mapBlank` in `game/loading.ts`: from the start menu's pick or a whole-game load until the loading card
+goes and the clock is released): no shade, circles, zone outlines, outside shade, loading grey, city
+bubbles or labels over the basemap; they all arrive in one step, with no fade [T-1051].

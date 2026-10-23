@@ -15,7 +15,7 @@ import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { cityBoundary } from "../game/boundaries";
 import { activeCity, cityById, type CityId } from "../game/cities";
 import { cityDemandViews } from "../game/demand";
-import { loadFailure, zoneLoads } from "../game/loading";
+import { loadFailure, mapBlank, zoneLoads } from "../game/loading";
 import { nearbyZones } from "../game/zones";
 import { zoneShown } from "../game/realms";
 import { LoadBar, loadingCardShown } from "../ui/LoadingScreen";
@@ -147,10 +147,11 @@ export function startZoneLoading(map: MlMap): () => void {
     const ids = new Set(loads.keys());
     if (!loadFailure.value) for (const id of nearbyZones.value) if (!shown.has(id) && zoneShown(id)) ids.add(id);
     loadingCardShown(); // the bars follow the card
+    const blank = mapBlank.value; // T-1051: no grey either while a game loads
     // T-350: only the zone in view takes the fill: every other zone already lies under the outside
     // shade (map/cityBoundaries.ts), which is this same grey, and stacking would darken it
     const focus = activeCity.value;
-    grey = [...ids].filter((id) => id === focus);
+    grey = blank ? [] : [...ids].filter((id) => id === focus);
     draw();
   });
 

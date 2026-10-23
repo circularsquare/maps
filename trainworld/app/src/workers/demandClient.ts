@@ -71,6 +71,8 @@ import { citiesReached, footprintOf, loadFootprints, REACH_M, zonesNearStations,
 import { nearbyZones, zoneAt, zonesLoadForView } from "../game/zones";
 import { packToLngLat } from "../game/coords";
 import { addOpened } from "../game/openedZones";
+import { trackZones } from "../game/trackZones";
+import { viewCentre } from "../game/listScope";
 import type { BareFigures, DemandNetwork, FromDemand, OpenRejected, ToDemand } from "./demandProtocol";
 import { readMarketPeriod, readTripPeriod, setMarketTripQuery, setTripQuery, tripKey, type MarketPeriod, type RouteNodes, type Trip } from "../game/trip";
 import { demandTestSnapshot } from "./demandTest";
@@ -658,6 +660,8 @@ class DemandClient {
     effect(() => { nearbyZones.value; this.ensure(); });
     // T-801: a selected zone's market opens for its partner bubbles
     effect(() => { selection.value; this.ensure(); });
+    // T-1047: zones built track crosses open bare for their figures
+    effect(() => { trackZones.value; this.ensure(); });
     // T-351: a building tool picked in a game with no station readies the viewed zone for its solve
     effect(() => { tool.value; this.prefetchViewed(); });
   }
@@ -762,6 +766,7 @@ class DemandClient {
     const held = !!this.hold || startup.peek() === "loading";
     this.hold = null;
     if (held) loadComplete();
+    if (held && trackZones.peek().built.size) this.ensure(); // T-1047
   }
 
   /** The cities a solve of `svc` needs open: the viewed one, and every one a built station reaches.
@@ -892,6 +897,7 @@ class DemandClient {
     if (reached?.size) addOpened(reached);
     for (const id of need) this.want(id, reached === null ? null : reached.has(id));
     if (this.nearbyOpen()) for (const id of nearbyZones.peek()) this.want(id, !!reached?.has(id));
+    this.openCrossed(reached);
     this.flush();
     this.progress();
     this.sweep();
@@ -988,6 +994,28 @@ class DemandClient {
     const svc = this.latest();
     if (!svc && NEW_GAME && !this.lastKey) return new Set();
     return this.reachedSet(svc);
+  }
+
+  /**
+   * T-1047: a zone built track crosses (game/trackZones.ts) that no station reaches opens bare, for
+   * the figures its bubble and city view show: no station is in reach of its people, so a solve would
+   * give it the same figures (T-149) at a pack in every worker. One at a time, nearest the view first,
+   * once nothing else is opening bare and outside a load, so the view's zones keep the aux worker
+   * first. Nothing keeps it open: it closes as a spare zone does and its figures stay (`bareKept`).
+   */
+  private openCrossed(reached: Set<CityId> | null) {
+    if (!reached || !this.nearbyOpen() || perfOff("track")) return;
+    const busy = (id: CityId) => this.fetchingUndecided.has(id) || (this.fetchingBare.has(id) && !this.bareOpen.has(id));
+    if ([...this.fetchingBare, ...this.fetchingUndecided].some(busy)) return;
+    const c = viewCentre.peek() ?? [0, 0], k = Math.cos((c[1] * Math.PI) / 180);
+    let best: CityId | null = null, bd = Infinity;
+    for (const id of trackZones.peek().built) {
+      if (reached.has(id) || this.broken.has(id) || this.isOpen(id) || this.bareKept.has(id) || this.fetching.has(id)) continue;
+      const z = cityById(id);
+      const d = z ? ((z.center[0] - c[0]) * k) ** 2 + (z.center[1] - c[1]) ** 2 : Infinity;
+      if (best === null || d < bd) { best = id; bd = d; }
+    }
+    if (best !== null) this.fetchCity(best, "bare");
   }
 
   /** Fetch `id` to open in every worker (`full`), bare in the aux worker (false), or (null: the
@@ -1259,6 +1287,7 @@ class DemandClient {
     }
     this.addBareViews();
     this.settleWaiters();
+    if (trackZones.peek().built.size) this.ensure(); // T-1047: the next zone track crosses
   }
 
   /** Resolve `whenOpen` waits for items now open (bare ones need only the aux worker). */
@@ -1710,8 +1739,8 @@ class DemandClient {
         this.zoneProgress();
       }
       loadComplete();
-      // the nearby zones' packs may load now (T-276)
-      if (nearbyZones.peek().length) this.ensure();
+      // the nearby zones' packs may load now (T-276), and those track crosses (T-1047)
+      if (nearbyZones.peek().length || trackZones.peek().built.size) this.ensure();
       this.prefetchViewed(); // a building tool picked while the card was up (T-351)
     }
   }

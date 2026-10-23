@@ -123,8 +123,8 @@ Web first, so it can be shared as a link.
   mode). Worker i owns periods i, i + n, .... Every worker opens only the packs the game needs, each
   its own copy: the viewed zone first (only above zoom 7.5, docs/zones.md, T-871), and every zone with a built station inside its footprint or
   within 4.5 km of it, since only those can put a rider on a line (`workers/cityReach.ts`); a zone
-  viewed or on screen that no station reaches opens bare in the auxiliary worker alone [T-325,
-  [demand-runtime.md](demand-runtime.md) "Bare zones"], the viewed zone of a new game from the start [T-351]. Solving
+  viewed or on screen, or crossed by built track [T-1047], that no station reaches opens bare in the
+  auxiliary worker alone [T-325, [demand-runtime.md](demand-runtime.md) "Bare zones"], the viewed zone of a new game from the start [T-351]. Solving
   workers also open the regional market once a market zone is viewed or reached or a station lies
   within its reach [T-396]. A solve waits until every pack it needs is open in
   every worker, so a published result never leaves out a constructed city. Each worker solves the
@@ -238,7 +238,8 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   and their net returned to the cash ([track-and-service.md](track-and-service.md) 6.4, T-715).
   `mode` (`normal` or `sandbox`), `start` (the start zone's id, absent for a start on the world map)
   and `opened` (the zones opened in this game, in order: the start zone at first, then each zone
-  reached by a station; T-729, kept but read by nothing, T-801, docs/zones.md 6) come from T-728; a
+  reached by a station or crossed by built track; T-729, T-1047, read only for the zoomed-out dots,
+  T-976, docs/zones.md 6) come from T-728; a
   save without them reads as normal with no start and takes the zone in view and the zones reached
   as its opened list. The slot's summary has `mode` too, for the saves cards. The clock worker sends
   the list (`opened`, before a game's snapshot) and the main thread sends it back whole when it

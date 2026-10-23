@@ -84,6 +84,10 @@ solved with no station in it.
   every worker; the solve waits for it and covers it from then on. Its bare figures serve until a
   shown solve covers it. The auxiliary worker keeps its bare copy (WASM memory never shrinks).
   Memory and timings of a pan with bare zones: notes/demand-measurements.md.
+- **Zones track crosses** (T-1047, `openCrossed`): a zone built track crosses (game/trackZones.ts)
+  that no station reaches opens bare too, outside a load's card and only while no other bare
+  opening is under way, one at a time, nearest the view's centre first. Nothing keeps it open: it
+  closes as any spare zone does, its figures still shown (`bareKept`). `?perfOff=track` turns it off.
 
 **Everyday warm-up** (T-173). Several workers opening a big everyday layer at once from the
 browser's baseline code each take several times as long as one alone. So worker 0 opens a small

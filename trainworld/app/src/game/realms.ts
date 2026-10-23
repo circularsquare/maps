@@ -2,17 +2,18 @@
 // "Realms"; players see only their names). The list is the hand-edited realms.json; a zone's realm is
 // its registry row's `realm` (pipeline/realms.py), else its country's when the country is one realm.
 //
-// A realm is shown when the game has a station in it (blueprint or built), it holds the start zone,
-// or the player showed it this session (`showRealm`; not saved). Only what is drawn and loaded for
-// viewing follows: demand, the market and money never read this. Everything is shown before the
-// first game is in, and for good when the zones' coarse outlines are missing (T-1006: the shade is cut
-// from them); a zone with no realm is always shown.
+// A realm is shown when the game has a station or track in it (blueprint or built; T-1047), it holds
+// the start zone, or the player showed it this session (`showRealm`; not saved). Only what is drawn
+// and loaded for viewing follows: demand, the market and money never read this. Everything is shown
+// before the first game is in, and for good when the zones' coarse outlines are missing (T-1006: the
+// shade is cut from them); a zone with no realm is always shown.
 
 import { computed, effect, signal } from "@preact/signals";
 import type { MultiPolygon } from "geojson";
 import realmsJson from "./realms.json";
 import { CITIES, cityById, cityNear, zoneBox, zonesTouching, type CityId } from "./cities";
 import { world } from "./world";
+import { trackZones } from "./trackZones";
 import { coarseOutlines } from "../map/coarseOutlines";
 
 export interface Realm { id: string; name: string; countries?: string[]; units?: Record<string, string[] | "*"> }
@@ -102,6 +103,18 @@ export function realmOfPlace(lon: number, lat: number): string | null {
   return zoneRealm(cityNear(lon, lat));
 }
 
+/** The realm not shown whose zone outline holds (lon, lat), for a click on its shade (T-1049); null
+ * elsewhere, in dead space and the sea too. */
+export function hiddenRealmAt(lon: number, lat: number): string | null {
+  const outlines = zoneOutlines.peek(), shown = shownRealms.peek();
+  if (!outlines || !shown) return null;
+  for (const c of zonesTouching(lon, lat, lon, lat)) {
+    const r = zoneRealm(c.id), g = outlines.get(c.id);
+    if (r && !shown.has(r) && g && inRings(g, lon, lat)) return r;
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------- which realms are shown
 
 /** The game in hand's start zone's realm; undefined before the first game is in. */
@@ -117,6 +130,8 @@ export const shownRealms = computed<ReadonlySet<string> | null>(() => {
   const out = new Set([...built.value, ...clicked.value]);
   const s = startRealm.value;
   if (s) out.add(s);
+  const t = trackZones.value; // T-1047
+  for (const z of [...t.built, ...t.planned]) { const r = zoneRealm(z); if (r) out.add(r); }
   return out;
 });
 

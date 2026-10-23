@@ -1,28 +1,34 @@
 // T-975, T-1006: the realms not shown (game/realms.ts). One shade covers the world, land and water
 // alike, with the shown realms' zones cut out along their coarse outlines (the lines every other zone
 // outline follows), drawn by its own layer (shadeLayer.ts, T-1025), under labels and the network and
-// taking no clicks; where hidden realms meet there
-// is no edge. Each hidden realm has a floating button at its point that shows it. A button whose point
-// is off screen sits inside the on-screen part of its realm's box (as the loading bars do, T-939);
-// buttons that would overlap give way to the realm with more zones.
+// taking no clicks; where hidden realms meet there is no edge. Each hidden realm has a floating
+// circle at its point (an unopened zone's dot, a little bigger, T-1046) that shows it, and a plain
+// click on the realm with the select tool shows it too (T-1049). A circle whose point is off screen
+// sits inside the on-screen part of its realm's box (as the loading bars do, T-939); circles that
+// would overlap give way to the realm with more zones. Zoomed out past the world (CITY_MARKS_MIN_ZOOM)
+// there are no circles and no click.
 
 import { effect } from "@preact/signals";
 import { h, render } from "preact";
 import type { MultiPolygon } from "geojson";
 import type { Map as MlMap } from "maplibre-gl";
 import { CITIES } from "../game/cities";
-import { choosing } from "../game/loading";
-import { followStations, inactiveRealms, loadRealms, realmName, shownRealms, showRealm, zoneOutlines, zoneShown, type RealmSpot } from "../game/realms";
+import { linking } from "../game/links";
+import { mapBlank } from "../game/loading";
+import { BUBBLE_ALPHA, rgb, UNBUILT_COLOURS } from "../game/palette";
+import { followStations, hiddenRealmAt, inactiveRealms, loadRealms, realmName, shownRealms, showRealm, zoneOutlines, zoneShown, type RealmSpot } from "../game/realms";
 import { SHADES } from "../game/shadeTable";
-import { shade } from "../game/ui";
-import { Icon } from "../ui/widgets";
+import { display, selection, shade, tool } from "../game/ui";
 import { outsideZones } from "./boundaryGeometry";
+import { CITY_MARKS_MIN_ZOOM } from "./intercityView";
 import { ShadeLayer } from "./shadeLayer";
 
 const FILL = "tw-realms-inactive";
-/** how far a button keeps from the map's edges, px */
+/** how far a circle keeps from the map's edges, px */
 const EDGE = 48;
 const GAP = 6;
+/** a circle's diameter, CSS px (style.css .realm-button button) */
+const SIZE = 16;
 
 export function startRealmOverlay(map: MlMap): () => void {
   const stopStations = followStations();
@@ -33,6 +39,7 @@ export function startRealmOverlay(map: MlMap): () => void {
   const buttons = new Map<string, { el: HTMLDivElement; w: number; h: number }>();
   let hidden: RealmSpot[] = [];
   const shadeLayer = new ShadeLayer(FILL);
+  const marksOff = () => mapBlank.peek() || map.getZoom() < CITY_MARKS_MIN_ZOOM;
 
   const button = (l: RealmSpot) => {
     let b = buttons.get(l.id);
@@ -42,17 +49,17 @@ export function startRealmOverlay(map: MlMap): () => void {
       layer.appendChild(el);
       const name = realmName(l.id);
       render(h("button", {
-        type: "button", "aria-label": `Show ${name}`, "data-tip": `${name}\nClick to show the cities there`,
+        type: "button", "aria-label": `Show ${name}`, "data-tip": `${name}\nClick the shaded area to show the cities there`,
         onClick: () => showRealm(l.id),
-      }, h(Icon.expand, null)), el);
-      buttons.set(l.id, (b = { el, w: 0, h: 0 }));
+      }), el);
+      buttons.set(l.id, (b = { el, w: SIZE, h: SIZE }));
     }
-    // measured once drawn (zero while the layer is hidden behind the start menu)
-    if (!b.w) { b.el.style.display = ""; b.w = b.el.offsetWidth; b.h = b.el.offsetHeight; }
     return b;
   };
 
   const place = () => {
+    layer.style.display = marksOff() ? "none" : "";
+    if (marksOff()) return;
     const c = map.getContainer(), W = c.clientWidth, H = c.clientHeight;
     const used: [number, number, number, number][] = [];
     // the realm with more zones first, so it keeps its place when two would overlap
@@ -82,11 +89,14 @@ export function startRealmOverlay(map: MlMap): () => void {
   const paint = () => {
     const c = SHADES[shade.peek()];
     shadeLayer.setColor(c.inactive, c.inactiveOpacity);
+    // the circle is an unopened zone's dot (intercityView.ts): its fill and 1 px ink outline
+    const dot = rgb(UNBUILT_COLOURS[shade.peek()][display.peek().unbuiltColour] ?? UNBUILT_COLOURS.light.black).join(", ");
+    layer.style.setProperty("--realm-dot", `rgba(${dot}, ${BUBBLE_ALPHA})`);
+    layer.style.setProperty("--realm-dot-hot", `rgb(${dot})`);
   };
   const visibility = () => {
-    shadeLayer.visible = !choosing.peek();
+    shadeLayer.visible = !mapBlank.peek();
     map.triggerRepaint();
-    layer.style.display = choosing.peek() ? "none" : "";
   };
   const add = () => {
     if (!map.getLayer(FILL)) {
@@ -100,6 +110,19 @@ export function startRealmOverlay(map: MlMap): () => void {
   if (map.isStyleLoaded()) add();
   map.on("move", place);
   map.on("resize", place);
+
+  // A plain click (the map fires none after a drag) with the select tool on a hidden realm's outline.
+  // It runs after the pick's own handler: a click that selected something is that action's, not ours.
+  const onClick = (e: { lngLat: { lng: number; lat: number }; originalEvent: MouseEvent }) => {
+    if (marksOff() || tool.peek() !== "select" || linking.peek() !== null || e.originalEvent.shiftKey) return;
+    const at = e.lngLat;
+    setTimeout(() => {
+      if (selection.peek()) return;
+      const id = hiddenRealmAt(at.lng, at.lat);
+      if (id) showRealm(id);
+    }, 0);
+  };
+  map.on("click", onClick);
 
   const disposeCut = effect(() => {
     const shown = shownRealms.value, outlines = zoneOutlines.value;
@@ -119,17 +142,18 @@ export function startRealmOverlay(map: MlMap): () => void {
     for (const [id, b] of buttons) if (!keep.has(id)) { render(null, b.el); b.el.remove(); buttons.delete(id); }
     place();
   });
-  const disposeShade = effect(() => { void shade.value; paint(); });
-  const disposeChoosing = effect(() => { void choosing.value; visibility(); place(); });
+  const disposeShade = effect(() => { void shade.value; void display.value.unbuiltColour; paint(); });
+  const disposeBlank = effect(() => { void mapBlank.value; visibility(); place(); });
   return () => {
     stopStations();
     disposeCut();
     disposeButtons();
     disposeShade();
-    disposeChoosing();
+    disposeBlank();
     map.off("style.load", add);
     map.off("move", place);
     map.off("resize", place);
+    map.off("click", onClick);
     for (const b of buttons.values()) render(null, b.el);
     layer.remove();
     if (map.getLayer(FILL)) map.removeLayer(FILL);
