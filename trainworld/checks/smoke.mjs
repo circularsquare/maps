@@ -8,7 +8,8 @@
 //
 // Browser: a plain load shows the start menu and its New game starts a game (T-677); a ?new=1 game
 // (no menu) loads; in another ?new=1 game a line over dead space and one in Tokyo reach a final (T-845); the real save (T-007-real-nyc.save) imported into it has 109 lines,
-// 1,756 stations and about 4,498.6 km of track; demand reaches a final result; a click on a station
+// 1,756 stations and about 4,498.6 km of track; demand reaches a final result; Homes draws local
+// bubbles in the bare new game and on the real save (T-994); a click on a station
 // and on a train picks them; no console or page error, no GL error. Node: t133, t144, t145, t146.
 import { spawn } from 'node:child_process';
 import { readFile, readdir, mkdtemp, rm } from 'node:fs/promises';
@@ -94,6 +95,29 @@ const smokeLine = (page, [lng, lat]) => page.evaluate(async ([lng, lat]) => {
   return r.line;
 }, [lng, lat]);
 
+const NYC = [-73.985, 40.758];
+/** T-994: Homes turned on at city zoom draws the local bubbles; Homes off again after. The discs
+ * drawn, or 0 when none came within 60 s. */
+async function homesDrawn(page, at) {
+  const before = await page.evaluate((c) => {
+    window.tw.selection.value = null;
+    window.tw.map.jumpTo({ center: c, zoom: 12 });
+    window.tw.display.value = { ...window.tw.display.peek(), commuters: true, commuterEnd: 'home' };
+    return window.twViews.overlay.draws;
+  }, at);
+  try {
+    await page.waitForFunction((before) => {
+      const o = window.twViews.overlay, p = window.twViews.stats.commuters.probe?.();
+      return o.draws > before && o.discsDrawn > 0 && !!p && p.levels.some((l) => l.discs.length > 0);
+    }, before, { timeout: 60000, polling: 250 });
+    return await page.evaluate(() => window.twViews.overlay.discsDrawn);
+  } catch {
+    return 0;
+  } finally {
+    await page.evaluate(() => { window.tw.display.value = { ...window.tw.display.peek(), commuters: false }; });
+  }
+}
+
 async function browserChecks(BASE) {
   const { chromium } = await playwright();
   const profile = await mkdtemp(join(tmpdir(), 'tw-smoke-'));
@@ -135,6 +159,9 @@ async function browserChecks(BASE) {
       report('new game loads', false, e.message.split('\n')[0]);
       return;
     }
+    // 1a. T-994: Homes draws the local bubbles in a city no station reaches
+    const bare = await homesDrawn(page, NYC);
+    report('homes bubbles, bare city', bare > 0, `(${bare.toLocaleString('en-US')} discs)`);
 
     // 1b. T-845: new games away from New York reach a final: a line over dead space (no zone reaches
     // it, the view there too), then one in Tokyo; on a page of their own, so the real save's solve
@@ -202,6 +229,9 @@ async function browserChecks(BASE) {
     } catch (e) {
       report('demand final', false, e.message.split('\n')[0]);
     }
+    // 3b. T-994: and in a city with lines
+    const built = await homesDrawn(page, NYC);
+    report('homes bubbles, real save', built > 0, `(${built.toLocaleString('en-US')} discs)`);
 
     // 4. a click on a station picks it: stations with no other station within 400 m, at zoom 16
     try {

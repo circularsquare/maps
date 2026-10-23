@@ -73,8 +73,7 @@ moves). Rules for every agent are in CLAUDE.md; history in ARCHIVE.md.
 
 ## Interface
 Anita's TODO.md "short term", filed 2026-10-21 (late) and 2026-10-22.
-- T-994 [P1] Local demand bubbles gone, only intercity ones draw (Anita 2026-10-23, today's 8800 build): a regression from today's commits. Taking, 2026-10-23.
-- T-995 [P2] The cursor tooltip while placing high-speed track says the max is 160 km/h; the hover over placed blueprints is right. Taking, 2026-10-23.
+- T-994 [P1] Local demand bubbles gone, only intercity ones draw (Anita 2026-10-23, 8800 at 9292979). Not reproduced in about 20 headless cases (new, saved, slot, cache, multi-zone, phone size, both themes); smoke now checks Homes draws. Waits on Anita: device, game, zoom, screenshot. notes/T-994.md.
 - T-988 [P3] Games synced between devices on the account (T-972 stage 2; a reach goal, Anita 2026-10-23). notes/T-972.md "Stage 2".
 - T-989 [P3] Share a game by a read-only link (M4). notes/T-972.md.
 - T-990 [P3] Leaderboard rows open that player's shared game read-only, after T-989. notes/T-972.md.

@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-995 [P2] The track tool's cursor tag said 160 km/h on high-speed track. Done 2026-10-23: `placementTag` (map/tools.ts) capped the preview's limits at 160; it now takes them as the sim gives them (320 on high-speed track), 160 or 320 only when the preview has none.
 - T-977 [P2] Switching the bubble colouring moved the camera. Done 2026-10-23: the opened-game fit ran the map's zoom listeners inside its effect; zoomed out, city tags read the bubble scheme, so each switch refitted. The fit now runs untracked (ui/locate.ts).
 - T-973 [P2] Leaderboards. Done 2026-10-23: points on a world board and one per city, opt-in under a filtered name, each person's best normal game, sandbox games refused for good; trophy on the All cities row; shonei-server `trainworld.go`, deploy pending (Anita). notes/T-972.md.
 - T-972 [P2] Accounts, stage 1. Done 2026-10-23: optional sign-in with the noritetsu account (one sign-in on anita.garden), person icon in the dock and start menu, scores sent per slot, hidden unless the server reports `trainworld`; stages 2-3 are T-988 to T-990. notes/T-972.md.

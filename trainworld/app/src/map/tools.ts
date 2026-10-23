@@ -1330,10 +1330,12 @@ function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
     out.push(why);
   }
   const nv = pv.verts.length / 4;
-  let top = TOP_KMH;
+  // the preview's limits already carry the track type's cap (T-995: high-speed track's is 320)
+  let top = Infinity;
   if (pv.speeds?.length) {
     for (const v of pv.speeds) if (v >= 0) top = Math.min(top, v);
   } else for (let i = 1; i < nv - 1; i++) if (pv.verts[i * 4 + 2] > 0) top = Math.min(top, pv.verts[i * 4 + 3]);
+  if (!Number.isFinite(top)) top = highSpeed.peek() ? HSR_KMH : TOP_KMH;
   if (pv.ok) {
     const dear = Math.min(1, (pv.mult - 1) / 1.5);
     out.push(div(`${distance(pv.lengthM)}, cost `, chip(`${pv.mult.toFixed(2)}x`, pv.mult > 1.005 ? COST_YELLOW : null, 0.2 + 0.6 * dear),
@@ -1365,5 +1367,7 @@ function placedLevels(pts: ArrayLike<number>, level: number): number[] {
 
 /** The M1 train's top speed, km/h: straight track's limit (track-and-service.md 6.1). */
 const TOP_KMH = 160;
+/** High-speed track's straight limit, km/h (the sim's `V_HSR`, T-817). */
+const HSR_KMH = 320;
 const COST_YELLOW = "#f2c200";
 
