@@ -124,6 +124,7 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | South Korea | tier 0 proxy; G Census on Establishments by si-gun-gu (KOSIS: no account without a Korean ID; browser download only), T-504 | G the same census by sector, T-504 | - |
 | India | tier 0 proxy (population 0.5); N 6th Economic Census 2013 by ward, T-388 | - | - |
 | Nigeria | tier 0 proxy (population 0.5, land cap) | - | - |
+| Taiwan | tier 0 proxy, its jobs per resident and share aged 0-14 from DGBAS's 2024 manpower survey and the Ministry of the Interior's end-2024 registration (`tier0.NATIONAL`: the World Bank has no Taiwan), T-897; ? jobs by township not looked for | U tier 0 | - |
 | Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland, the zones-only countries (Population above), China's Jiangsu rows | tier 0 proxy: population x jobs per resident (World Bank employment ratio, 2025), spread by GHSL built volume, OSM job places and population in the weights `plan_config.job_blend` sets from the ILO vulnerable-employment share (30/50/20 in most, Albania 21/33/46); ? national jobs by small area not looked for | U tier 0: OSM shops and services, restaurants, bars, venues and hotels, blended with the jobs at completeness c | ? not looked for |
 
 ## Commuting

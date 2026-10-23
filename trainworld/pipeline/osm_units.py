@@ -6,7 +6,8 @@ boundary=administrative relation, at any admin level, that overlaps it best, or 
 (level 8 or coarser, mostly inside it) that overlap it better together, when that overlap is
 at least MATCH of the two areas' union, both taken on land less inland water; any part of a unit
 the relations leave uncovered keeps the unit's own polygon when that is at least REST_MIN of it. Units are
-clipped to land by the OSM coastline, holes filled, cut along every existing pack, and pieces
+clipped to land by the OSM coastline, holes filled (but for other plan rows' units in them), cut
+along every existing pack, and pieces
 under MIN_PART_KM2 or with nobody in them (GHSL 100 m) dropped. OSM's names are kept per unit.
 
     python pipeline/osm_units.py <id> [plan.json]     write the units and outline, print the matches
@@ -290,8 +291,10 @@ def build(cid, row, sources):
                   f"({len(idx)} OSM relations, overlap {iou:.2f})", flush=True)
     out_units = [{"type": "Feature", "properties": props, "geometry": mapping(g)} for props, g in zip(feats, geoms)]
     whole = union_all([shape(f["geometry"]) for f in out_units]).buffer(0)
-    whole = shapely.MultiPolygon([shapely.Polygon(p.exterior) for p in shapely.get_parts(whole)
-                                  if p.geom_type == "Polygon"])  # holes are water or enclaves; cut below if packs
+    filled = shapely.MultiPolygon([shapely.Polygon(p.exterior) for p in shapely.get_parts(whole)
+                                   if p.geom_type == "Polygon"])  # holes are water or enclaves; cut below if packs
+    enc = enclaves(row, sources, make_valid(filled.difference(whole)))
+    whole = make_valid(filled.difference(enc)) if not enc.is_empty else filled
     whole = cut_packs(whole, {cid, row.get("test_of")})
     parts = sorted([p for p in shapely.get_parts(whole) if p.geom_type == "Polygon"], key=lambda p: -p.area)
     big = [km2(p, lat0) >= MIN_PART_KM2 for p in parts[1:]]
@@ -316,6 +319,33 @@ def build(cid, row, sources):
             json.dump(doc, f, ensure_ascii=False)
         os.replace(path + ".part", path)
     return stem + ".outline.geojson"
+
+
+def enclaves(row, sources, holes):
+    """Of the outline's holes, what other plan rows' units cover (a city's districts ringed by the
+    counties of a zone built before them took them in: Hengyang inside Hengnan, T-897). Lon/lat."""
+    if holes.is_empty:
+        return shapely.Polygon()
+    import plan_config
+    import world_plan as wp
+    plan = plan_config.load()[0]
+    mine = {u for ids in row["units"].values() for u in ids}
+    hm = make_valid(wp.to_moll(holes))
+    out = []
+    for iso in row["units"]:
+        if sources[iso]["kind"] != "geoBoundaries":
+            continue
+        others = {u for r in plan if r.get("id") != row["id"] for u in (r.get("units") or {}).get(iso, [])} - mine
+        meta = wp.europe_isos()[1]
+        for adm in sources[iso]["urls"]:
+            for uid, _, g in wp.gb_units(meta, iso, adm):
+                if uid in others and g.intersects(hm):
+                    out.append(wp.polygonal(wp.to_ll(make_valid(g).intersection(hm))))
+    got = union_all(out) if out else shapely.Polygon()
+    if not got.is_empty:
+        print(f"  {row['id']}: {km2(got, (row['bbox'][1] + row['bbox'][3]) / 2):,.0f} km2 of other rows' units "
+              "inside its outline left out", flush=True)
+    return got
 
 
 def cut_packs(g, skip):

@@ -8467,7 +8467,7 @@
    "order": 103,
    "id": "shn",
    "name": "Shantou",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -8515,7 +8515,32 @@
      10153
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 95.3,
+     "stations": 0.9,
+     "places": 6.5,
+     "coarse": 4.2,
+     "routes": 39.9,
+     "merge": 4.9,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:00:25",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "osm_land_share 0.8312"
+     ]
+    },
+    "gated": "2026-10-23T00:16:56",
+    "shipped": "2026-10-23T01:32:56"
+   }
   },
   {
    "order": 104,
@@ -8823,7 +8848,7 @@
    "order": 109,
    "id": "hon",
    "name": "Hong Kong",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HKG"
@@ -8864,6 +8889,25 @@
      11197,
      11209
     ]
+   },
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 98.4,
+     "stations": 1.4,
+     "places": 2.2,
+     "coarse": 0.6,
+     "routes": 6.5,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-23T00:04:50",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:17:11",
+    "shipped": "2026-10-23T01:32:56"
    }
   },
   {
@@ -9338,7 +9382,7 @@
    "order": 118,
    "id": "tai",
    "name": "Taipei",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TWN"
@@ -9430,6 +9474,28 @@
     "fua": [
      1141
     ]
+   },
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Taiwanese metro is whole townships round a GHSL urban area (FUA), as China's are, so it can hold well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261023-001859",
+    "steps": {
+     "build": 76.2,
+     "stations": 1.2,
+     "places": 4.3,
+     "coarse": 1.4,
+     "routes": 43.1,
+     "merge": 1.9,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-10-23T00:21:15",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:36:22",
+    "shipped": "2026-10-23T01:32:56"
    }
   },
   {
@@ -9843,7 +9909,7 @@
    "order": 124,
    "id": "wuh",
    "name": "Wuhan",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -9889,7 +9955,32 @@
      8989
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 128.4,
+     "stations": 0.8,
+     "places": 1.4,
+     "coarse": 2.2,
+     "routes": 30.7,
+     "merge": 2.4,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T22:58:41",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "osm_land_share 0.8138"
+     ]
+    },
+    "gated": "2026-10-23T00:31:07",
+    "shipped": "2026-10-23T01:32:56"
+   }
   },
   {
    "order": 125,
@@ -12049,7 +12140,7 @@
    "order": 158,
    "id": "qua",
    "name": "Quanzhou",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -12092,7 +12183,32 @@
      10331
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 62.0,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 1.9,
+     "routes": 21.6,
+     "merge": 2.3,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:01:57",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6052.07080078125",
+      "osm_land_share 0.8129"
+     ]
+    },
+    "gated": "2026-10-23T00:16:56",
+    "shipped": "2026-10-23T01:32:56"
+   }
   },
   {
    "order": 159,
@@ -13590,7 +13706,7 @@
    "order": 185,
    "id": "nac",
    "name": "Nanchang",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -13633,7 +13749,31 @@
      9629
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 128.2,
+     "stations": 0.8,
+     "places": 1.7,
+     "coarse": 2.1,
+     "routes": 30.5,
+     "merge": 2.2,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T22:58:40",
+    "gate": {
+     "warn": [
+      "osm_land_share 0.8316"
+     ]
+    },
+    "gated": "2026-10-23T00:31:07",
+    "shipped": "2026-10-23T01:32:56"
+   }
   },
   {
    "order": 186,
@@ -14388,7 +14528,7 @@
    "order": 199,
    "id": "fuz",
    "name": "Fuzhou",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -14431,7 +14571,31 @@
      10328
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 14.7,
+     "stations": 0.9,
+     "places": 1.5,
+     "coarse": 1.5,
+     "routes": 20.9,
+     "merge": 1.6,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:18:31",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5136.4345703125"
+     ]
+    },
+    "gated": "2026-10-23T00:16:57",
+    "shipped": "2026-10-23T01:32:57"
+   }
   },
   {
    "order": 200,
@@ -14673,7 +14837,7 @@
    "order": 204,
    "id": "chs",
    "name": "Changsha",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -14715,7 +14879,31 @@
      9100
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 58.4,
+     "stations": 0.8,
+     "places": 1.4,
+     "coarse": 1.0,
+     "routes": 23.1,
+     "merge": 1.4,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:00:10",
+    "gate": {
+     "warn": [
+      "osm_land_share 0.8441"
+     ]
+    },
+    "gated": "2026-10-23T00:31:08",
+    "shipped": "2026-10-23T01:32:57"
+   }
   },
   {
    "order": 205,
@@ -15554,7 +15742,7 @@
    "order": 217,
    "id": "tac",
    "name": "Taichung",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TWN"
@@ -15635,6 +15823,28 @@
     "fua": [
      770
     ]
+   },
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Taiwanese metro is whole townships round a GHSL urban area (FUA), as China's are, so it can hold well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261023-001859",
+    "steps": {
+     "build": 44.0,
+     "stations": 1.5,
+     "places": 4.3,
+     "coarse": 2.0,
+     "routes": 36.4,
+     "merge": 1.2,
+     "nocar": 2.2,
+     "everyday": 1.4
+    },
+    "built": "2026-10-23T00:20:37",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:36:22",
+    "shipped": "2026-10-23T01:32:57"
    }
   },
   {
@@ -16289,7 +16499,7 @@
    "order": 227,
    "id": "xim",
    "name": "Xiamen City",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -16336,7 +16546,31 @@
      10286
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 60.8,
+     "stations": 0.7,
+     "places": 1.2,
+     "coarse": 1.2,
+     "routes": 19.4,
+     "merge": 1.7,
+     "nocar": 1.3,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:03:25",
+    "gate": {
+     "warn": [
+      "osm_land_share 0.8815"
+     ]
+    },
+    "gated": "2026-10-23T00:16:57",
+    "shipped": "2026-10-23T01:32:57"
+   }
   },
   {
    "order": 228,
@@ -19205,7 +19439,7 @@
    "order": 281,
    "id": "kao",
    "name": "Kaohsiung",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TWN"
@@ -19273,6 +19507,28 @@
     "fua": [
      1897
     ]
+   },
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Taiwanese metro is whole townships round a GHSL urban area (FUA), as China's are, so it can hold well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261023-001859",
+    "steps": {
+     "build": 37.9,
+     "stations": 1.7,
+     "places": 2.6,
+     "coarse": 0.7,
+     "routes": 22.9,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-23T00:20:14",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:36:22",
+    "shipped": "2026-10-23T01:32:57"
    }
   },
   {
@@ -21220,7 +21476,7 @@
    "order": 315,
    "id": "put",
    "name": "Putian",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -21260,7 +21516,32 @@
      10353
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 56.0,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 0.8,
+     "routes": 10.3,
+     "merge": 1.1,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:04:38",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.8605389788963254",
+      "top_school_cell_pupils 6154.4287109375"
+     ]
+    },
+    "gated": "2026-10-23T00:16:57",
+    "shipped": "2026-10-23T01:32:57"
+   }
   },
   {
    "order": 316,
@@ -22811,7 +23092,7 @@
    "order": 346,
    "id": "yic",
    "name": "Yichang",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -22851,7 +23132,36 @@
      8366
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it",
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   },
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 45.2,
+     "stations": 0.8,
+     "places": 1.0,
+     "coarse": 1.1,
+     "routes": 10.8,
+     "merge": 1.3,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T22:59:44",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.8486544452285585",
+      "top_school_cell_pupils 5212.0732421875",
+      "drive_factor_median 2.0518667734879767",
+      "osm_land_share 0.928"
+     ]
+    },
+    "parked": "2026-10-23T00:30:45",
+    "gated": "2026-10-23T00:55:02",
+    "shipped": "2026-10-23T01:32:58"
+   }
   },
   {
    "order": 347,
@@ -24695,7 +25005,7 @@
    "order": 382,
    "id": "yih",
    "name": "Yichun",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -24732,7 +25042,33 @@
      9487
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 47.0,
+     "stations": 0.9,
+     "places": 1.1,
+     "coarse": 1.0,
+     "routes": 10.0,
+     "merge": 1.2,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:00:48",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 2.9027833289291647",
+      "road_snap_median_m 330.4",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-10-23T00:31:08",
+    "shipped": "2026-10-23T01:32:58"
+   }
   },
   {
    "order": 383,
@@ -26038,7 +26374,7 @@
    "order": 408,
    "id": "hui",
    "name": "Huizhou",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -26075,7 +26411,31 @@
      9947
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 52.3,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 0.6,
+     "routes": 9.5,
+     "merge": 0.8,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:04:50",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10794548181692133"
+     ]
+    },
+    "gated": "2026-10-23T00:16:58",
+    "shipped": "2026-10-23T01:32:58"
+   }
   },
   {
    "order": 409,
@@ -28756,7 +29116,7 @@
    "order": 462,
    "id": "gan",
    "name": "Ganzhou",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -28797,7 +29157,33 @@
      10995
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 48.4,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 0.7,
+     "routes": 11.1,
+     "merge": 1.0,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:01:15",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 2.129208332182287",
+      "osm_land_share 0.9198",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:08",
+    "shipped": "2026-10-23T01:32:58"
+   }
   },
   {
    "order": 463,
@@ -29629,7 +30015,7 @@
    "order": 481,
    "id": "taa",
    "name": "Tainan",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TWN"
@@ -29682,6 +30068,30 @@
     "fua": [
      1815
     ]
+   },
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Taiwanese metro is whole townships round a GHSL urban area (FUA), as China's are, so it can hold well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261023-001859",
+    "steps": {
+     "build": 35.1,
+     "stations": 1.3,
+     "places": 2.7,
+     "coarse": 0.9,
+     "routes": 13.1,
+     "merge": 1.2,
+     "nocar": 2.9,
+     "everyday": 1.8
+    },
+    "built": "2026-10-23T00:20:04",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:36:22",
+    "shipped": "2026-10-23T01:32:58"
    }
   },
   {
@@ -30082,7 +30492,7 @@
    "order": 490,
    "id": "shx",
    "name": "Shiyan",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -30120,7 +30530,32 @@
      7964
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 44.5,
+     "stations": 0.9,
+     "places": 1.1,
+     "coarse": 0.4,
+     "routes": 4.5,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:01:42",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.5207486185104961",
+      "osm_land_share 0.8075"
+     ]
+    },
+    "gated": "2026-10-23T00:31:08",
+    "shipped": "2026-10-23T01:32:58"
+   }
   },
   {
    "order": 491,
@@ -30417,7 +30852,7 @@
    "order": 497,
    "id": "zhu",
    "name": "Zhuhai",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -30460,7 +30895,32 @@
     ],
     "recut": "T-897: Zhuhai's units (Xiangzhou, and Hengqin in geoBoundaries' Macau SAR unit)"
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 81.0,
+     "stations": 0.8,
+     "places": 2.2,
+     "coarse": 0.4,
+     "routes": 7.4,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:06:13",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 0.6246945966192714",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:16:58",
+    "shipped": "2026-10-23T01:32:58"
+   }
   },
   {
    "order": 498,
@@ -30973,7 +31433,7 @@
    "order": 509,
    "id": "zhz",
    "name": "Zhuzhou",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -31012,7 +31472,33 @@
      9186
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 43.4,
+     "stations": 0.8,
+     "places": 1.1,
+     "coarse": 0.4,
+     "routes": 4.7,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:02:09",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1054366798972632",
+      "top_school_cell_pupils 6007.4521484375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:08",
+    "shipped": "2026-10-23T01:32:59"
+   }
   },
   {
    "order": 510,
@@ -70636,7 +71122,7 @@
    "order": 86,
    "id": "gua",
    "name": "Guangzhou",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -70696,13 +71182,39 @@
     ],
     "recut": "T-897: the Pearl River Delta's rows gua, pan, zen by prefecture"
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 124.0,
+     "stations": 0.9,
+     "places": 2.2,
+     "coarse": 2.8,
+     "routes": 77.7,
+     "merge": 2.9,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:01:23",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 0.4292081225675217",
+      "top_school_cell_pupils 5847.466796875",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:16:56",
+    "shipped": "2026-10-23T01:32:59"
+   }
   },
   {
    "order": 1390,
    "id": "shz",
    "name": "Shenzhen",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -70760,13 +71272,38 @@
     ],
     "recut": "T-897: the Pearl River Delta's rows gua, pan, zen by prefecture"
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 82.7,
+     "stations": 0.8,
+     "places": 1.8,
+     "coarse": 0.7,
+     "routes": 21.1,
+     "merge": 1.1,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:06:41",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 0.5717530638454625",
+      "top_school_cell_pupils 5489.7783203125"
+     ]
+    },
+    "gated": "2026-10-23T00:16:58",
+    "shipped": "2026-10-23T01:32:59"
+   }
   },
   {
    "order": 1391,
    "id": "dog",
    "name": "Dongguan",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -70817,13 +71354,40 @@
     ],
     "recut": "T-897: the Pearl River Delta's rows gua, pan, zen by prefecture"
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 73.4,
+     "stations": 0.8,
+     "places": 1.4,
+     "coarse": 0.9,
+     "routes": 32.4,
+     "merge": 1.2,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:08:05",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 0.20302405467455234",
+      "top_school_cell_pupils 6045.9873046875",
+      "osm_land_share 0.9378",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:16:58",
+    "shipped": "2026-10-23T01:32:59"
+   }
   },
   {
    "order": 1392,
    "id": "fos",
    "name": "Foshan",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -70878,13 +71442,39 @@
     ],
     "recut": "T-897: the Pearl River Delta's rows gua, pan, zen by prefecture"
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 81.8,
+     "stations": 0.8,
+     "places": 1.8,
+     "coarse": 1.9,
+     "routes": 55.1,
+     "merge": 2.1,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:09:07",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 0.2585960370668629",
+      "osm_land_share 0.9184",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-23T00:16:59",
+    "shipped": "2026-10-23T01:32:59"
+   }
   },
   {
    "order": 1393,
    "id": "zho",
    "name": "Zhongshan",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -70935,13 +71525,40 @@
     ],
     "recut": "T-897: the Pearl River Delta's rows gua, pan, zen by prefecture"
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 64.8,
+     "stations": 0.7,
+     "places": 1.3,
+     "coarse": 0.6,
+     "routes": 20.3,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:09:36",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 0.3278574255270477",
+      "top_school_cell_pupils 6000.0",
+      "osm_land_share 0.9096",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:16:59",
+    "shipped": "2026-10-23T01:32:59"
+   }
   },
   {
    "order": 1394,
    "id": "jia",
    "name": "Jiangmen",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -70995,13 +71612,40 @@
     ],
     "recut": "T-897: the Pearl River Delta's rows gua, pan, zen by prefecture"
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+   },
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 71.0,
+     "stations": 0.7,
+     "places": 1.3,
+     "coarse": 1.0,
+     "routes": 22.1,
+     "merge": 1.2,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:10:46",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 0.10942897349045942",
+      "top_school_cell_pupils 6000.0",
+      "osm_land_share 0.8502",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:16:59",
+    "shipped": "2026-10-23T01:32:59"
+   }
   },
   {
    "order": 1395,
    "id": "mcu",
    "name": "Macau",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAC"
@@ -71042,6 +71686,37 @@
      11115
     ],
     "recut": "T-897: Macau alone, its own country's unit"
+   },
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 74.4,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 0.4,
+     "routes": 2.6,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:10:58",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 0.24091235329462843",
+      "top_zone_jobs_share 0.29679293318871464",
+      "mean_commute_km 2.1306878418805093",
+      "top_school_cell_pupils 5023.97509765625",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-10-23T00:02:06",
+    "gated": "2026-10-23T00:36:24",
+    "shipped": "2026-10-23T01:33:00"
+   },
+   "gate_relax": {
+    "pop_vs_fua": "T-897: GHSL's urban area round Macau is Zhuhai's as well (2.14M); the mcu row holds Macau alone, its own country's row",
+    "top_zone_jobs_share": "T-897: Macau is 21 km2, so its central zone holds a large share of its jobs",
+    "mean_commute_km": "T-897: Macau is 21 km2: commutes of about 2 km are what it has"
    }
   },
   {
@@ -71338,7 +72013,7 @@
    "id": "jii",
    "name": "Jianli",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -71380,7 +72055,30 @@
      "Junshan District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 59.0,
+     "stations": 0.8,
+     "places": 1.1,
+     "coarse": 4.0,
+     "routes": 22.4,
+     "merge": 4.2,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:03:16",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "road_snap_median_m 405.6",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-23T00:31:09",
+    "shipped": "2026-10-23T01:33:00"
+   }
   },
   {
    "order": 1401,
@@ -71455,7 +72153,7 @@
    "id": "leh",
    "name": "Leizhou",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -71492,7 +72190,30 @@
      "Xuwen County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 55.0,
+     "stations": 0.9,
+     "places": 1.1,
+     "coarse": 3.4,
+     "routes": 17.7,
+     "merge": 3.1,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:12:10",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6308.298828125",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:16:59",
+    "shipped": "2026-10-23T01:33:00"
+   }
   },
   {
    "order": 1403,
@@ -71919,7 +72640,7 @@
    "id": "xis",
    "name": "Xiushui",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -71966,7 +72687,33 @@
      "Tonggu County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 68.0,
+     "stations": 0.7,
+     "places": 1.3,
+     "coarse": 8.1,
+     "routes": 34.7,
+     "merge": 8.2,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:04:12",
+    "gate": {
+     "warn": [
+      "mean_commute_km 28.046641375853863",
+      "top_school_cell_pupils 6093.39111328125"
+     ]
+    },
+    "parked": "2026-10-23T00:30:47",
+    "gated": "2026-10-23T00:55:02",
+    "shipped": "2026-10-23T01:33:00"
+   },
+   "gate_relax": {
+    "mean_commute_km": "T-897: a big zone (two or more counties, often mountains) on the zone curve, so its mean commute runs past 25 km; big zones are fine (Anita, 2026-10-22)"
+   }
   },
   {
    "order": 1411,
@@ -72196,7 +72943,7 @@
    "id": "xif",
    "name": "Xinfeng",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -72241,7 +72988,29 @@
      "Dingnan County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 60.4,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 8.0,
+     "routes": 33.5,
+     "merge": 7.0,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:05:10",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "road_snap_median_m 310.8"
+     ]
+    },
+    "gated": "2026-10-23T00:31:09",
+    "shipped": "2026-10-23T01:33:00"
+   }
   },
   {
    "order": 1415,
@@ -72379,7 +73148,7 @@
    "id": "fua",
    "name": "Fu'an",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -72422,7 +73191,33 @@
      "Zherong County"
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 52.2,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 3.3,
+     "routes": 17.1,
+     "merge": 2.9,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:12:19",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6024.076171875",
+      "drive_factor_median 2.184200810815618"
+     ]
+    },
+    "parked": "2026-10-23T00:02:07",
+    "gated": "2026-10-23T00:36:24",
+    "shipped": "2026-10-23T01:33:00"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: Fujian's mountains: roads wind round the ridges, so a drive runs about twice the straight line, as in the Alpine rows and southern Zhejiang (tsh)"
+   }
   },
   {
    "order": 1418,
@@ -72496,7 +73291,7 @@
    "id": "sih",
    "name": "Sihui",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -72535,14 +73330,36 @@
      "Guangning County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 52.4,
+     "stations": 0.9,
+     "places": 1.5,
+     "coarse": 2.6,
+     "routes": 26.1,
+     "merge": 3.0,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:13:39",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "osm_land_share 0.8436"
+     ]
+    },
+    "gated": "2026-10-23T00:17:00",
+    "shipped": "2026-10-23T01:33:01"
+   }
   },
   {
    "order": 1420,
    "id": "jio",
    "name": "Jian'ou",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -72597,7 +73414,37 @@
      "Zhouning County"
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 59.5,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 17.6,
+     "routes": 42.6,
+     "merge": 16.1,
+     "nocar": 1.7,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:14:40",
+    "gate": {
+     "warn": [
+      "mean_commute_km 37.79519062757856",
+      "top_school_cell_pupils 6039.693359375",
+      "drive_factor_median 2.0518667734879767",
+      "osm_land_share 0.898",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-23T00:02:07",
+    "gated": "2026-10-23T00:36:24",
+    "shipped": "2026-10-23T01:33:01"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: Fujian's mountains: roads wind round the ridges, so a drive runs about twice the straight line, as in the Alpine rows and southern Zhejiang (tsh)",
+    "mean_commute_km": "T-897: a big mountain zone (Jian'ou 25,700 km2, Lechang in the Nanling) on the zone curve, so its mean commute runs long; big zones are fine (Anita, 2026-10-22)"
+   }
   },
   {
    "order": 1421,
@@ -72734,7 +73581,7 @@
    "id": "hah",
    "name": "Hanchuan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -72771,7 +73618,29 @@
      "Xiantao City"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 52.4,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 2.0,
+     "routes": 17.7,
+     "merge": 2.0,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:05:31",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 366.5",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:09",
+    "shipped": "2026-10-23T01:33:01"
+   }
   },
   {
    "order": 1424,
@@ -72843,7 +73712,7 @@
    "id": "hec",
    "name": "Hecheng",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -72884,7 +73753,34 @@
      "Zhongfang County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 50.3,
+     "stations": 0.8,
+     "places": 1.1,
+     "coarse": 3.5,
+     "routes": 19.6,
+     "merge": 3.6,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:06:31",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6004.04736328125",
+      "drive_factor_median 2.1503379159523",
+      "road_snap_median_m 312.8"
+     ]
+    },
+    "parked": "2026-10-23T00:30:47",
+    "gated": "2026-10-23T00:55:03",
+    "shipped": "2026-10-23T01:33:01"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 1426,
@@ -73090,7 +73986,7 @@
    "id": "jis",
    "name": "Jishui",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -73135,7 +74031,30 @@
      "Xiajiang County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 58.0,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 9.0,
+     "routes": 31.4,
+     "merge": 9.0,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:07:23",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6071.08544921875",
+      "road_snap_median_m 354.4",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:09",
+    "shipped": "2026-10-23T01:33:01"
+   }
   },
   {
    "order": 1430,
@@ -73335,7 +74254,7 @@
    "id": "lea",
    "name": "Lechang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -73380,7 +74299,33 @@
      "Ruyuan Yao Autonomous County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 65.5,
+     "stations": 0.9,
+     "places": 1.6,
+     "coarse": 6.7,
+     "routes": 30.8,
+     "merge": 6.9,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:15:34",
+    "gate": {
+     "warn": [
+      "mean_commute_km 34.642568356278595",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-23T00:02:07",
+    "gated": "2026-10-23T00:36:24",
+    "shipped": "2026-10-23T01:33:01"
+   },
+   "gate_relax": {
+    "mean_commute_km": "T-897: a big mountain zone (Jian'ou 25,700 km2, Lechang in the Nanling) on the zone curve, so its mean commute runs long; big zones are fine (Anita, 2026-10-22)"
+   }
   },
   {
    "order": 1434,
@@ -73439,7 +74384,7 @@
    "id": "liy",
    "name": "Liuyang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -73474,7 +74419,31 @@
      "Liuyang City"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 48.9,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 1.6,
+     "routes": 17.0,
+     "merge": 2.1,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:07:45",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10287904659557",
+      "road_snap_median_m 337.0",
+      "osm_land_share 0.9548",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:09",
+    "shipped": "2026-10-23T01:33:01"
+   }
   },
   {
    "order": 1436,
@@ -73876,7 +74845,7 @@
    "id": "mii",
    "name": "Meixian",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -73919,7 +74888,26 @@
      "Jiaoling County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 60.8,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 3.4,
+     "routes": 30.9,
+     "merge": 3.4,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:16:23",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:17:00",
+    "shipped": "2026-10-23T01:33:02"
+   }
   },
   {
    "order": 1444,
@@ -74465,7 +75453,7 @@
    "id": "hud",
    "name": "Huidong",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -74502,14 +75490,36 @@
      "Huiyang District"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-224710-23500",
+    "steps": {
+     "build": 78.6,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 1.2,
+     "routes": 20.6,
+     "merge": 1.6,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:17:21",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5637.67578125",
+      "osm_land_share 0.8281"
+     ]
+    },
+    "gated": "2026-10-23T00:17:00",
+    "shipped": "2026-10-23T01:33:02"
+   }
   },
   {
    "order": 1454,
    "id": "yus",
    "name": "Yushan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -74552,14 +75562,33 @@
      "Hengfeng County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 54.9,
+     "stations": 0.8,
+     "places": 1.4,
+     "coarse": 3.2,
+     "routes": 21.6,
+     "merge": 3.5,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:08:51",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:31:10",
+    "shipped": "2026-10-23T01:33:02"
+   }
   },
   {
    "order": 1455,
    "id": "xiy",
    "name": "Xianyou",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -74602,14 +75631,40 @@
      "Luojiang District"
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 67.2,
+     "stations": 1.1,
+     "places": 1.9,
+     "coarse": 5.5,
+     "routes": 28.1,
+     "merge": 4.2,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:19:38",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6059.14111328125",
+      "drive_factor_median 2.117000016612675"
+     ]
+    },
+    "parked": "2026-10-23T00:02:08",
+    "gated": "2026-10-23T00:36:25",
+    "shipped": "2026-10-23T01:33:02"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: Fujian's mountains: roads wind round the ridges, so a drive runs about twice the straight line, as in the Alpine rows and southern Zhejiang (tsh)"
+   }
   },
   {
    "order": 1456,
    "id": "ens",
    "name": "Enshi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -74650,7 +75705,33 @@
      "Laifeng County"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 49.6,
+     "stations": 0.8,
+     "places": 1.1,
+     "coarse": 9.3,
+     "routes": 27.1,
+     "merge": 8.0,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:09:24",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6112.2177734375",
+      "drive_factor_median 2.3616841797309096"
+     ]
+    },
+    "parked": "2026-10-23T00:30:48",
+    "gated": "2026-10-23T00:55:03",
+    "shipped": "2026-10-23T01:33:02"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 1457,
@@ -75013,7 +76094,7 @@
    "id": "xii",
    "name": "Xiangyin",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -75054,7 +76135,29 @@
      "Ziyang District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 63.0,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 2.2,
+     "routes": 21.5,
+     "merge": 2.5,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:10:25",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5843.25244140625",
+      "osm_land_share 0.9127"
+     ]
+    },
+    "gated": "2026-10-23T00:31:10",
+    "shipped": "2026-10-23T01:33:02"
+   }
   },
   {
    "order": 1464,
@@ -75173,7 +76276,7 @@
    "id": "wua",
    "name": "Wuhua",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -75210,7 +76313,26 @@
      "Longchuan County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 61.1,
+     "stations": 1.0,
+     "places": 1.4,
+     "coarse": 3.9,
+     "routes": 30.4,
+     "merge": 4.2,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:19:32",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:17:00",
+    "shipped": "2026-10-23T01:33:02"
+   }
   },
   {
    "order": 1467,
@@ -75492,7 +76614,7 @@
    "id": "you",
    "name": "You",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -75535,7 +76657,35 @@
      "Tianyuan Qu"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 57.0,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 3.9,
+     "routes": 23.7,
+     "merge": 4.2,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:10:57",
+    "gate": {
+     "warn": [
+      "mean_commute_km 38.75694862538472",
+      "top_school_cell_pupils 6012.9775390625",
+      "road_snap_median_m 408.3",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-10-23T00:30:48",
+    "gated": "2026-10-23T00:55:03",
+    "shipped": "2026-10-23T01:33:03"
+   },
+   "gate_relax": {
+    "mean_commute_km": "T-897: a big zone (two or more counties, often mountains) on the zone curve, so its mean commute runs past 25 km; big zones are fine (Anita, 2026-10-22)"
+   }
   },
   {
    "order": 1473,
@@ -75727,7 +76877,7 @@
    "id": "yig",
    "name": "Yingde",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -75764,14 +76914,35 @@
      "Qingcheng District"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 64.9,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 3.4,
+     "routes": 27.2,
+     "merge": 3.4,
+     "nocar": 1.3,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:20:15",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-23T00:17:01",
+    "shipped": "2026-10-23T01:33:03"
+   }
   },
   {
    "order": 1477,
    "id": "lui",
    "name": "Luoding",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -75808,7 +76979,26 @@
      "Xinyi City"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 54.8,
+     "stations": 1.0,
+     "places": 1.5,
+     "coarse": 2.9,
+     "routes": 20.5,
+     "merge": 3.0,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:20:59",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:17:01",
+    "shipped": "2026-10-23T01:33:03"
+   }
   },
   {
    "order": 1478,
@@ -76611,7 +77801,7 @@
    "id": "daw",
    "name": "Dawu",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -76652,7 +77842,31 @@
      "Yunmeng County"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 61.5,
+     "stations": 0.8,
+     "places": 1.4,
+     "coarse": 3.5,
+     "routes": 24.7,
+     "merge": 3.6,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:12:03",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6078.74267578125",
+      "road_snap_median_m 344.4",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-23T00:31:10",
+    "shipped": "2026-10-23T01:33:03"
+   }
   },
   {
    "order": 1491,
@@ -76892,7 +78106,7 @@
    "id": "biu",
    "name": "Beihu",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -76931,14 +78145,35 @@
      "Suxian District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 48.1,
+     "stations": 0.9,
+     "places": 1.1,
+     "coarse": 1.6,
+     "routes": 13.3,
+     "merge": 1.8,
+     "nocar": 1.2,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:12:07",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6518.07958984375"
+     ]
+    },
+    "gated": "2026-10-23T00:31:10",
+    "shipped": "2026-10-23T01:33:03"
+   }
   },
   {
    "order": 1496,
    "id": "ani",
    "name": "Anxi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -76981,14 +78216,41 @@
      "Hua'an County"
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 68.1,
+     "stations": 1.0,
+     "places": 1.7,
+     "coarse": 5.5,
+     "routes": 35.8,
+     "merge": 5.0,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:21:38",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6006.2255859375",
+      "drive_factor_median 2.0518667734879767",
+      "osm_land_share 0.8854"
+     ]
+    },
+    "parked": "2026-10-23T00:02:09",
+    "gated": "2026-10-23T00:36:25",
+    "shipped": "2026-10-23T01:33:03"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: Fujian's mountains: roads wind round the ridges, so a drive runs about twice the straight line, as in the Alpine rows and southern Zhejiang (tsh)"
+   }
   },
   {
    "order": 1497,
    "id": "wuc",
    "name": "Wuchuan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -77025,7 +78287,28 @@
      "Maonan District"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 64.7,
+     "stations": 1.2,
+     "places": 1.3,
+     "coarse": 0.4,
+     "routes": 8.5,
+     "merge": 0.8,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:21:35",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6007.54931640625"
+     ]
+    },
+    "gated": "2026-10-23T00:17:01",
+    "shipped": "2026-10-23T01:33:03"
+   }
   },
   {
    "order": 1498,
@@ -77080,7 +78363,7 @@
    "id": "pin",
    "name": "Pingjiang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -77122,7 +78405,31 @@
      "Yunxi District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 57.5,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 4.6,
+     "routes": 26.9,
+     "merge": 4.7,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:13:41",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11849537095584928",
+      "top_school_cell_pupils 6076.47216796875",
+      "road_snap_median_m 355.7",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:11",
+    "shipped": "2026-10-23T01:33:04"
+   }
   },
   {
    "order": 1500,
@@ -77313,7 +78620,7 @@
    "id": "hen",
    "name": "Hengyang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -77350,7 +78657,29 @@
      "Hengnan County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261023-003718",
+    "steps": {
+     "build": 54.8,
+     "stations": 0.7,
+     "places": 1.0,
+     "coarse": 2.8,
+     "routes": 21.3,
+     "merge": 3.6,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T00:42:49",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 399.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:55:03",
+    "shipped": "2026-10-23T01:33:04"
+   }
   },
   {
    "order": 1504,
@@ -77468,7 +78797,7 @@
    "id": "toy",
    "name": "Taoyuan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -77507,7 +78836,36 @@
      "Cili County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 58.8,
+     "stations": 1.1,
+     "places": 1.4,
+     "coarse": 8.6,
+     "routes": 31.7,
+     "merge": 7.4,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:15:28",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.10502477894834207",
+      "drive_factor_median 2.184200810815618",
+      "road_snap_median_m 450.8",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-10-23T00:30:49",
+    "gated": "2026-10-23T00:55:03",
+    "shipped": "2026-10-23T01:33:04"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 1507,
@@ -77650,7 +79008,7 @@
    "id": "huj",
    "name": "Huaiji",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -77691,7 +79049,30 @@
      "Liannan Yao Autonomous County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 62.6,
+     "stations": 0.9,
+     "places": 2.0,
+     "coarse": 6.1,
+     "routes": 33.8,
+     "merge": 6.1,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:22:53",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6108.95703125",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:17:01",
+    "shipped": "2026-10-23T01:33:04"
+   }
   },
   {
    "order": 1510,
@@ -78209,7 +79590,7 @@
    "id": "loh",
    "name": "Longhui",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -78246,14 +79627,42 @@
      "Shaoyang County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 49.7,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 2.8,
+     "routes": 19.2,
+     "merge": 2.8,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:15:00",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "drive_factor_median 2.0841789734955687",
+      "road_snap_median_m 610.3",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-10-23T00:30:49",
+    "gated": "2026-10-23T00:55:03",
+    "shipped": "2026-10-23T01:33:04"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 1519,
    "id": "zhx",
    "name": "Zhongxiang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -78293,7 +79702,30 @@
      "Tongbai County"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 81.8,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 7.9,
+     "routes": 39.9,
+     "merge": 6.8,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:17:22",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "road_snap_median_m 496.7",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-23T00:31:11",
+    "shipped": "2026-10-23T01:33:04"
+   }
   },
   {
    "order": 1520,
@@ -79081,7 +80513,7 @@
    "id": "tie",
    "name": "Taihe, Yongxin",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -79124,14 +80556,38 @@
      "Lianhua County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-224710",
+    "steps": {
+     "build": 61.7,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 6.7,
+     "routes": 25.4,
+     "merge": 5.3,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:17:12",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6183.48876953125",
+      "road_snap_median_m 343.2",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-23T00:31:11",
+    "shipped": "2026-10-23T01:33:05"
+   }
   },
   {
    "order": 1534,
    "id": "gaa",
    "name": "Gao'an",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -79168,14 +80624,36 @@
      "Zhangshu City"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 61.0,
+     "stations": 1.1,
+     "places": 1.7,
+     "coarse": 2.3,
+     "routes": 19.4,
+     "merge": 2.1,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:19:20",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 457.6",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:11",
+    "shipped": "2026-10-23T01:33:05"
+   }
   },
   {
    "order": 1535,
    "id": "hum",
    "name": "Huangmei",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -79214,7 +80692,30 @@
      "Wuxue City"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 58.4,
+     "stations": 1.1,
+     "places": 1.2,
+     "coarse": 3.2,
+     "routes": 21.7,
+     "merge": 2.7,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:19:21",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6175.21484375",
+      "road_snap_median_m 368.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:12",
+    "shipped": "2026-10-23T01:33:05"
+   }
   },
   {
    "order": 1536,
@@ -79269,7 +80770,7 @@
    "id": "rap",
    "name": "Raoping",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -79311,14 +80812,33 @@
      "Nan'ao County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 83.6,
+     "stations": 1.1,
+     "places": 1.8,
+     "coarse": 3.7,
+     "routes": 31.6,
+     "merge": 3.4,
+     "nocar": 1.9,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:23:44",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:17:01",
+    "shipped": "2026-10-23T01:33:05"
+   }
   },
   {
    "order": 1538,
    "id": "laa",
    "name": "Lianyuan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -79355,7 +80875,30 @@
      "Louxing District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 52.8,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 1.0,
+     "routes": 11.8,
+     "merge": 1.9,
+     "nocar": 2.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:19:04",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12928309195361687",
+      "road_snap_median_m 444.5",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:12",
+    "shipped": "2026-10-23T01:33:05"
+   }
   },
   {
    "order": 1539,
@@ -81290,7 +82833,7 @@
    "id": "dia",
    "name": "Dianbai",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -81325,7 +82868,31 @@
      "Dianbai District"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 63.1,
+     "stations": 1.2,
+     "places": 3.7,
+     "coarse": 1.0,
+     "routes": 12.3,
+     "merge": 1.2,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:23:03",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.15656739865612118",
+      "top_school_cell_pupils 6000.6630859375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:17:02",
+    "shipped": "2026-10-23T01:33:05"
+   }
   },
   {
    "order": 1573,
@@ -81482,7 +83049,7 @@
    "id": "qid",
    "name": "Qidong",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -81519,7 +83086,30 @@
      "Lengshuitan District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 56.3,
+     "stations": 1.0,
+     "places": 1.4,
+     "coarse": 1.5,
+     "routes": 16.1,
+     "merge": 1.9,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:19:11",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6092.80419921875",
+      "road_snap_median_m 484.7",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:12",
+    "shipped": "2026-10-23T01:33:05"
+   }
   },
   {
    "order": 1577,
@@ -81574,7 +83164,7 @@
    "id": "yua",
    "name": "Yuanling",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -81617,7 +83207,36 @@
      "Wulingyuan District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 94.1,
+     "stations": 1.1,
+     "places": 1.7,
+     "coarse": 5.5,
+     "routes": 27.3,
+     "merge": 5.6,
+     "nocar": 1.9,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:21:22",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13244712010771803",
+      "mean_commute_km 34.62822026471873",
+      "drive_factor_median 2.218596968679145",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-23T00:30:51",
+    "gated": "2026-10-23T00:55:03",
+    "shipped": "2026-10-23T01:33:06"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows",
+    "mean_commute_km": "T-897: a big zone (two or more counties, often mountains) on the zone curve, so its mean commute runs past 25 km; big zones are fine (Anita, 2026-10-22)"
+   }
   },
   {
    "order": 1579,
@@ -81692,7 +83311,7 @@
    "id": "gau",
    "name": "Gaozhou",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -81727,7 +83346,29 @@
      "Gaozhou City"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 58.9,
+     "stations": 1.0,
+     "places": 1.5,
+     "coarse": 1.4,
+     "routes": 16.7,
+     "merge": 2.0,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-22T23:24:18",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1527411426912225",
+      "top_school_cell_pupils 6036.3681640625"
+     ]
+    },
+    "gated": "2026-10-23T00:17:02",
+    "shipped": "2026-10-23T01:33:06"
+   }
   },
   {
    "order": 1581,
@@ -81784,7 +83425,7 @@
    "id": "snr",
    "name": "Shangrao",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -81821,7 +83462,28 @@
      "Guangfeng County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 53.6,
+     "stations": 0.9,
+     "places": 1.7,
+     "coarse": 1.5,
+     "routes": 14.2,
+     "merge": 1.8,
+     "nocar": 1.3,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:20:28",
+    "gate": {
+     "warn": [
+      "osm_land_share 0.8194"
+     ]
+    },
+    "gated": "2026-10-23T00:31:12",
+    "shipped": "2026-10-23T01:33:06"
+   }
   },
   {
    "order": 1583,
@@ -81875,7 +83537,7 @@
    "id": "ley",
    "name": "Leiyang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -81910,7 +83572,31 @@
      "Leiyang City"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 51.9,
+     "stations": 1.0,
+     "places": 1.2,
+     "coarse": 1.2,
+     "routes": 12.8,
+     "merge": 1.6,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:20:33",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10567204230948522",
+      "top_school_cell_pupils 6319.30126953125",
+      "road_snap_median_m 465.8",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:12",
+    "shipped": "2026-10-23T01:33:06"
+   }
   },
   {
    "order": 1585,
@@ -82041,7 +83727,7 @@
    "id": "hoj",
    "name": "Hongjiang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -82086,7 +83772,32 @@
      "Tongdao Dong Autonomous County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 58.4,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 7.7,
+     "routes": 27.5,
+     "merge": 7.2,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:21:07",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.117000016612675"
+     ]
+    },
+    "parked": "2026-10-23T00:30:51",
+    "gated": "2026-10-23T00:55:04",
+    "shipped": "2026-10-23T01:33:06"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 1588,
@@ -82328,7 +84039,7 @@
    "id": "tnm",
    "name": "Tianmen",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -82363,7 +84074,29 @@
      "Tianmen City"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 57.1,
+     "stations": 1.0,
+     "places": 1.5,
+     "coarse": 1.5,
+     "routes": 16.9,
+     "merge": 1.5,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-22T23:21:50",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "osm_land_share 0.875"
+     ]
+    },
+    "gated": "2026-10-23T00:31:13",
+    "shipped": "2026-10-23T01:33:06"
+   }
   },
   {
    "order": 1593,
@@ -82645,7 +84378,7 @@
    "id": "lxx",
    "name": "Li",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -82685,14 +84418,42 @@
      "Shishou City"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 64.5,
+     "stations": 1.0,
+     "places": 1.3,
+     "coarse": 3.2,
+     "routes": 21.0,
+     "merge": 3.4,
+     "nocar": 1.8,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:22:10",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "drive_factor_median 2.0200555277086965",
+      "road_snap_median_m 655.5",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-10-23T00:30:52",
+    "gated": "2026-10-23T00:55:04",
+    "shipped": "2026-10-23T01:33:06"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 1599,
    "id": "yud",
    "name": "Yudu",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -82731,14 +84492,37 @@
      "Anyuan County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 57.8,
+     "stations": 1.0,
+     "places": 1.7,
+     "coarse": 5.2,
+     "routes": 25.5,
+     "merge": 5.0,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-22T23:22:46",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6144.45947265625",
+      "road_snap_median_m 322.3",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:13",
+    "shipped": "2026-10-23T01:33:07"
+   }
   },
   {
    "order": 1600,
    "id": "nid",
    "name": "Ningdu",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -82781,7 +84565,30 @@
      "Zixi County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 64.8,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 7.0,
+     "routes": 30.2,
+     "merge": 7.3,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:23:16",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6068.02685546875",
+      "road_snap_median_m 342.1",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:13",
+    "shipped": "2026-10-23T01:33:07"
+   }
   },
   {
    "order": 1601,
@@ -82898,7 +84705,7 @@
    "id": "duc",
    "name": "Duchang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -82941,7 +84748,28 @@
      "Gongqingcheng City"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 69.6,
+     "stations": 0.9,
+     "places": 1.5,
+     "coarse": 2.1,
+     "routes": 16.1,
+     "merge": 2.5,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-22T23:23:26",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.7109375"
+     ]
+    },
+    "gated": "2026-10-23T00:31:13",
+    "shipped": "2026-10-23T01:33:07"
+   }
   },
   {
    "order": 1604,
@@ -83190,7 +85018,7 @@
    "id": "sup",
    "name": "Suixi, Potou",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -83229,7 +85057,28 @@
      "Chikan District"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 61.6,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 1.3,
+     "routes": 14.0,
+     "merge": 1.6,
+     "nocar": 1.3,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:24:27",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6090.17236328125"
+     ]
+    },
+    "gated": "2026-10-23T00:17:02",
+    "shipped": "2026-10-23T01:33:07"
+   }
   },
   {
    "order": 1609,
@@ -83519,7 +85368,7 @@
    "id": "zao",
    "name": "Zaoyang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -83560,7 +85409,30 @@
      "Yuan'an County"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 77.7,
+     "stations": 1.0,
+     "places": 1.4,
+     "coarse": 6.4,
+     "routes": 35.3,
+     "merge": 6.4,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:24:22",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 399.5",
+      "osm_land_share 0.9831",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:14",
+    "shipped": "2026-10-23T01:33:07"
+   }
   },
   {
    "order": 1615,
@@ -83659,7 +85531,7 @@
    "id": "guh",
    "name": "Gucheng",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -83700,7 +85572,29 @@
      "Laohekou City"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 79.4,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 3.6,
+     "routes": 22.8,
+     "merge": 3.4,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:24:41",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "osm_land_share 0.8828"
+     ]
+    },
+    "gated": "2026-10-23T00:31:14",
+    "shipped": "2026-10-23T01:33:07"
+   }
   },
   {
    "order": 1618,
@@ -83749,7 +85643,7 @@
    "id": "yap",
    "name": "Yanping",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -83798,7 +85692,34 @@
      "Mingxi County"
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 63.3,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 7.4,
+     "routes": 31.0,
+     "merge": 6.7,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:25:37",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.5908203125",
+      "drive_factor_median 2.0841789734955687",
+      "osm_land_share 0.8863"
+     ]
+    },
+    "parked": "2026-10-23T00:02:10",
+    "gated": "2026-10-23T00:36:25",
+    "shipped": "2026-10-23T01:33:07"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: Fujian's mountains: roads wind round the ridges, so a drive runs about twice the straight line, as in the Alpine rows and southern Zhejiang (tsh)"
+   }
   },
   {
    "order": 1620,
@@ -84190,7 +86111,7 @@
    "id": "gng",
    "name": "Gong'an",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -84229,7 +86150,29 @@
      "Jingzhou District"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 65.5,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 4.1,
+     "routes": 23.7,
+     "merge": 4.5,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:24:59",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 568.3",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:14",
+    "shipped": "2026-10-23T01:33:08"
+   }
   },
   {
    "order": 1627,
@@ -84571,7 +86514,7 @@
    "id": "yug",
    "name": "Yugan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -84608,7 +86551,28 @@
      "Jinxian County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 75.0,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 1.8,
+     "routes": 17.7,
+     "merge": 2.3,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:25:08",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 312.8"
+     ]
+    },
+    "gated": "2026-10-23T00:31:14",
+    "shipped": "2026-10-23T01:33:08"
+   }
   },
   {
    "order": 1634,
@@ -84791,7 +86755,7 @@
    "id": "lnc",
    "name": "Linchuan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -84826,7 +86790,30 @@
      "Linchuan District"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 56.4,
+     "stations": 1.0,
+     "places": 1.3,
+     "coarse": 1.0,
+     "routes": 10.1,
+     "merge": 1.2,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:25:36",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6058.03759765625",
+      "road_snap_median_m 330.7",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:14",
+    "shipped": "2026-10-23T01:33:08"
+   }
   },
   {
    "order": 1638,
@@ -85135,7 +87122,7 @@
    "id": "yux",
    "name": "Yueyang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -85172,14 +87159,36 @@
      "Yueyanglou District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 60.1,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 1.0,
+     "routes": 11.6,
+     "merge": 1.4,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:26:00",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 324.8",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:15",
+    "shipped": "2026-10-23T01:33:08"
+   }
   },
   {
    "order": 1644,
    "id": "lij",
    "name": "Lianjiang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -85214,14 +87223,36 @@
      "Lianjiang City"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 60.0,
+     "stations": 1.0,
+     "places": 1.2,
+     "coarse": 1.2,
+     "routes": 14.7,
+     "merge": 1.5,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:25:41",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 401.2",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:17:02",
+    "shipped": "2026-10-23T01:33:08"
+   }
   },
   {
    "order": 1645,
    "id": "shf",
    "name": "Shuangfeng",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -85260,7 +87291,31 @@
      "Shaoshan City"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 59.8,
+     "stations": 1.1,
+     "places": 1.5,
+     "coarse": 2.2,
+     "routes": 17.9,
+     "merge": 2.2,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:26:27",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6201.38232421875",
+      "road_snap_median_m 395.7",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-23T00:31:15",
+    "shipped": "2026-10-23T01:33:08"
+   }
   },
   {
    "order": 1646,
@@ -85567,7 +87622,7 @@
    "id": "los",
    "name": "Longshan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -85610,14 +87665,39 @@
      "Guzhang County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 56.8,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 8.9,
+     "routes": 29.6,
+     "merge": 8.8,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:26:57",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.325069660277121"
+     ]
+    },
+    "parked": "2026-10-23T00:30:54",
+    "gated": "2026-10-23T00:55:04",
+    "shipped": "2026-10-23T01:33:08"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 1652,
    "id": "hup",
    "name": "Huangpi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -85654,14 +87734,35 @@
      "Xinzhou District"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 76.4,
+     "stations": 1.0,
+     "places": 2.4,
+     "coarse": 1.9,
+     "routes": 26.4,
+     "merge": 2.2,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:27:29",
+    "gate": {
+     "warn": [
+      "osm_land_share 0.9202"
+     ]
+    },
+    "gated": "2026-10-23T00:31:15",
+    "shipped": "2026-10-23T01:33:09"
+   }
   },
   {
    "order": 1653,
    "id": "zhi",
    "name": "Zhenjiang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -85704,7 +87805,26 @@
      "Renhua County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 64.1,
+     "stations": 1.0,
+     "places": 1.8,
+     "coarse": 3.1,
+     "routes": 20.2,
+     "merge": 3.2,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:26:03",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:17:03",
+    "shipped": "2026-10-23T01:33:09"
+   }
   },
   {
    "order": 1654,
@@ -85828,7 +87948,7 @@
    "id": "fuq",
    "name": "Fuqing",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -85865,7 +87985,28 @@
      "Pingtan County"
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 66.1,
+     "stations": 1.0,
+     "places": 1.3,
+     "coarse": 1.0,
+     "routes": 13.1,
+     "merge": 1.3,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:27:04",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5309.93896484375"
+     ]
+    },
+    "gated": "2026-10-23T00:17:03",
+    "shipped": "2026-10-23T01:33:09"
+   }
   },
   {
    "order": 1657,
@@ -85916,7 +88057,7 @@
    "id": "xih",
    "name": "Xishui",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -85959,7 +88100,30 @@
      "Liangzihu District"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 74.5,
+     "stations": 0.9,
+     "places": 1.7,
+     "coarse": 2.3,
+     "routes": 23.2,
+     "merge": 2.5,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:27:48",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 331.3",
+      "osm_land_share 0.9322",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:15",
+    "shipped": "2026-10-23T01:33:09"
+   }
   },
   {
    "order": 1659,
@@ -86031,7 +88195,7 @@
    "id": "gay",
    "name": "Gaoyao",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -86070,7 +88234,26 @@
      "Dinghu District"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 59.3,
+     "stations": 0.8,
+     "places": 1.4,
+     "coarse": 1.0,
+     "routes": 16.1,
+     "merge": 1.3,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:27:03",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:17:03",
+    "shipped": "2026-10-23T01:33:09"
+   }
   },
   {
    "order": 1661,
@@ -86144,7 +88327,7 @@
    "id": "lpi",
    "name": "Leping",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -86183,7 +88366,26 @@
      "Yiyang County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 61.8,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 2.6,
+     "routes": 19.0,
+     "merge": 2.9,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:27:58",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:31:16",
+    "shipped": "2026-10-23T01:33:09"
+   }
   },
   {
    "order": 1663,
@@ -86303,7 +88505,7 @@
    "id": "yny",
    "name": "Yunyang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -86344,7 +88546,38 @@
      "Zhuxi County"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 66.4,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 6.8,
+     "routes": 27.1,
+     "merge": 6.6,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:28:49",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.13641738054749017",
+      "mean_commute_km 26.42520999135876",
+      "top_school_cell_pupils 6015.49951171875",
+      "drive_factor_median 2.3616841797309096",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-23T00:30:55",
+    "gated": "2026-10-23T00:55:04",
+    "shipped": "2026-10-23T01:33:10"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows",
+    "mean_commute_km": "T-897: a big zone (two or more counties, often mountains) on the zone curve, so its mean commute runs past 25 km; big zones are fine (Anita, 2026-10-22)"
+   }
   },
   {
    "order": 1666,
@@ -86772,7 +89005,7 @@
    "id": "cgt",
    "name": "Changting",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -86819,14 +89052,37 @@
      "Taining County"
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 60.6,
+     "stations": 1.0,
+     "places": 1.3,
+     "coarse": 8.3,
+     "routes": 31.7,
+     "merge": 8.0,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:27:57",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6062.0107421875",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:17:03",
+    "shipped": "2026-10-23T01:33:10"
+   }
   },
   {
    "order": 1674,
    "id": "kag",
    "name": "Kaiping",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -86863,7 +89119,28 @@
      "Enping City"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 80.5,
+     "stations": 0.8,
+     "places": 1.4,
+     "coarse": 1.2,
+     "routes": 16.0,
+     "merge": 1.6,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:28:48",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-23T00:17:04",
+    "shipped": "2026-10-23T01:33:10"
+   }
   },
   {
    "order": 1675,
@@ -87000,7 +89277,7 @@
    "id": "ahu",
    "name": "Anhua",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -87037,14 +89314,42 @@
      "Taojiang County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 58.8,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 4.3,
+     "routes": 22.1,
+     "merge": 3.7,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:29:03",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6045.849609375",
+      "drive_factor_median 2.0841789734955687",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-23T00:30:55",
+    "gated": "2026-10-23T00:55:04",
+    "shipped": "2026-10-23T01:33:10"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 1678,
    "id": "qiy",
    "name": "Qiyang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -87081,7 +89386,30 @@
      "Changning City"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 57.5,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 2.1,
+     "routes": 18.2,
+     "merge": 2.5,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:29:14",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6029.072265625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:16",
+    "shipped": "2026-10-23T01:33:10"
+   }
   },
   {
    "order": 1679,
@@ -87246,7 +89574,7 @@
    "id": "luf",
    "name": "Lufeng",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -87281,7 +89609,26 @@
      "Lufeng City"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 59.9,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 0.6,
+     "routes": 8.2,
+     "merge": 1.0,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:28:18",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:17:04",
+    "shipped": "2026-10-23T01:33:10"
+   }
   },
   {
    "order": 1683,
@@ -87442,7 +89789,7 @@
    "id": "laj",
    "name": "Lianjiang, Gutian",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -87485,14 +89832,40 @@
      "Luoyuan County"
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 73.5,
+     "stations": 1.1,
+     "places": 1.8,
+     "coarse": 3.8,
+     "routes": 28.3,
+     "merge": 4.0,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:29:52",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.0200555277086965"
+     ]
+    },
+    "parked": "2026-10-23T00:02:12",
+    "gated": "2026-10-23T00:36:25",
+    "shipped": "2026-10-23T01:33:10"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: Fujian's mountains: roads wind round the ridges, so a drive runs about twice the straight line, as in the Alpine rows and southern Zhejiang (tsh)"
+   }
   },
   {
    "order": 1687,
    "id": "tis",
    "name": "Taishan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -87529,7 +89902,26 @@
      "Doumen District"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 103.9,
+     "stations": 1.0,
+     "places": 1.7,
+     "coarse": 1.4,
+     "routes": 18.0,
+     "merge": 1.7,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:30:29",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:17:04",
+    "shipped": "2026-10-23T01:33:11"
+   }
   },
   {
    "order": 1688,
@@ -87922,7 +90314,7 @@
    "id": "jnx",
    "name": "Ji'an",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -87963,7 +90355,30 @@
      "Fenyi County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 68.9,
+     "stations": 0.8,
+     "places": 1.4,
+     "coarse": 5.5,
+     "routes": 28.3,
+     "merge": 5.0,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:29:51",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "road_snap_median_m 433.9",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-23T00:31:16",
+    "shipped": "2026-10-23T01:33:11"
+   }
   },
   {
    "order": 1696,
@@ -88199,7 +90614,7 @@
    "id": "lli",
    "name": "Liling",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -88234,7 +90649,31 @@
      "Liling City"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 49.7,
+     "stations": 0.9,
+     "places": 1.1,
+     "coarse": 0.8,
+     "routes": 9.9,
+     "merge": 1.1,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:29:55",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.11978177080168355",
+      "road_snap_median_m 418.4",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-10-23T00:31:16",
+    "shipped": "2026-10-23T01:33:11"
+   }
   },
   {
    "order": 1701,
@@ -89093,7 +91532,7 @@
    "id": "haf",
    "name": "Haifeng",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -89130,14 +91569,35 @@
      "Chengqu District"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 58.4,
+     "stations": 1.1,
+     "places": 1.3,
+     "coarse": 0.7,
+     "routes": 8.3,
+     "merge": 1.0,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:30:01",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5285.03076171875"
+     ]
+    },
+    "gated": "2026-10-23T00:17:04",
+    "shipped": "2026-10-23T01:33:11"
+   }
   },
   {
    "order": 1718,
    "id": "yae",
    "name": "Yuancheng",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -89176,7 +91636,28 @@
      "Longmen County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 61.3,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 2.1,
+     "routes": 18.8,
+     "merge": 2.3,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:31:22",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6014.11669921875"
+     ]
+    },
+    "gated": "2026-10-23T00:17:05",
+    "shipped": "2026-10-23T01:33:11"
+   }
   },
   {
    "order": 1719,
@@ -89344,7 +91825,7 @@
    "id": "shd",
    "name": "Shaodong",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -89383,7 +91864,30 @@
      "Shuangqing District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 50.3,
+     "stations": 0.9,
+     "places": 1.1,
+     "coarse": 0.8,
+     "routes": 9.9,
+     "merge": 1.2,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:30:10",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6257.033203125",
+      "road_snap_median_m 424.9",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:17",
+    "shipped": "2026-10-23T01:33:11"
+   }
   },
   {
    "order": 1723,
@@ -89545,7 +92049,7 @@
    "id": "xio",
    "name": "Xiangzhou",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -89582,14 +92086,35 @@
      "Fancheng District"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 63.9,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 1.4,
+     "routes": 15.5,
+     "merge": 1.5,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:30:41",
+    "gate": {
+     "warn": [
+      "osm_land_share 0.9278"
+     ]
+    },
+    "gated": "2026-10-23T00:31:17",
+    "shipped": "2026-10-23T01:33:11"
+   }
   },
   {
    "order": 1727,
    "id": "hox",
    "name": "Honghu",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -89630,14 +92155,36 @@
      "Hannan District"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 58.2,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 2.8,
+     "routes": 18.9,
+     "merge": 3.2,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:31:18",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 329.6",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:17",
+    "shipped": "2026-10-23T01:33:12"
+   }
   },
   {
    "order": 1728,
    "id": "zij",
    "name": "Zhijiang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -89680,7 +92227,31 @@
      "Xiaoting District"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 62.2,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 3.5,
+     "routes": 24.2,
+     "merge": 4.1,
+     "nocar": 1.7,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:31:34",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6003.95654296875",
+      "road_snap_median_m 329.2",
+      "osm_land_share 0.9834",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:17",
+    "shipped": "2026-10-23T01:33:12"
+   }
   },
   {
    "order": 1729,
@@ -89878,7 +92449,7 @@
    "id": "yag",
    "name": "Yangchun",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -89915,7 +92486,30 @@
      "Yangxi County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 64.4,
+     "stations": 1.0,
+     "places": 1.3,
+     "coarse": 2.3,
+     "routes": 18.3,
+     "merge": 2.7,
+     "nocar": 1.6,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:31:34",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "road_snap_median_m 308.1",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:17:05",
+    "shipped": "2026-10-23T01:33:12"
+   }
   },
   {
    "order": 1733,
@@ -90334,7 +92928,7 @@
    "id": "dye",
    "name": "Daye",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -90373,7 +92967,29 @@
      "Tieshan"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 71.8,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 2.1,
+     "routes": 18.7,
+     "merge": 2.5,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:31:50",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6003.19873046875",
+      "osm_land_share 0.9327"
+     ]
+    },
+    "gated": "2026-10-23T00:31:18",
+    "shipped": "2026-10-23T01:33:12"
+   }
   },
   {
    "order": 1741,
@@ -90768,7 +93384,7 @@
    "id": "qii",
    "name": "Qianjiang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -90807,7 +93423,28 @@
      "Jiangling County"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 54.0,
+     "stations": 0.9,
+     "places": 1.1,
+     "coarse": 1.7,
+     "routes": 15.0,
+     "merge": 1.9,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:31:58",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 318.3"
+     ]
+    },
+    "gated": "2026-10-23T00:31:18",
+    "shipped": "2026-10-23T01:33:12"
+   }
   },
   {
    "order": 1749,
@@ -91237,7 +93874,7 @@
    "id": "hes",
    "name": "Hengshan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -91282,7 +93919,26 @@
      "Nanyue District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261023-003718",
+    "steps": {
+     "build": 48.2,
+     "stations": 0.7,
+     "places": 1.0,
+     "coarse": 0.6,
+     "routes": 7.4,
+     "merge": 1.0,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T00:42:24",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:55:04",
+    "shipped": "2026-10-23T01:33:12"
+   }
   },
   {
    "order": 1757,
@@ -91452,7 +94108,7 @@
    "id": "dok",
    "name": "Dongkou",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -91489,7 +94145,30 @@
      "Wugang City"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 49.2,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 1.4,
+     "routes": 14.0,
+     "merge": 1.8,
+     "nocar": 1.4,
+     "everyday": 1.2
+    },
+    "built": "2026-10-22T23:32:46",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "road_snap_median_m 480.5",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-23T00:31:18",
+    "shipped": "2026-10-23T01:33:12"
+   }
   },
   {
    "order": 1761,
@@ -91563,7 +94242,7 @@
    "id": "hns",
    "name": "Hanshou",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -91600,7 +94279,29 @@
      "Wuling District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 52.9,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 1.0,
+     "routes": 11.9,
+     "merge": 1.3,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:33:02",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 378.6",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:18",
+    "shipped": "2026-10-23T01:33:13"
+   }
   },
   {
    "order": 1763,
@@ -92268,7 +94969,7 @@
    "id": "ayu",
    "name": "Anyuan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -92307,7 +95008,29 @@
      "Xiangdong District"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 50.1,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 0.7,
+     "routes": 8.0,
+     "merge": 1.0,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:33:03",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6086.986328125",
+      "road_snap_median_m 301.6"
+     ]
+    },
+    "gated": "2026-10-23T00:31:19",
+    "shipped": "2026-10-23T01:33:13"
+   }
   },
   {
    "order": 1776,
@@ -92387,7 +95110,7 @@
    "id": "fec",
    "name": "Fengcheng",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -92422,14 +95145,37 @@
      "Fengcheng City"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 60.6,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 1.3,
+     "routes": 12.9,
+     "merge": 1.6,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:33:41",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6303.67626953125",
+      "road_snap_median_m 332.3",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:19",
+    "shipped": "2026-10-23T01:33:13"
+   }
   },
   {
    "order": 1778,
    "id": "xnn",
    "name": "Xingning",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -92464,7 +95210,26 @@
      "Xingning City"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 53.3,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 0.8,
+     "routes": 13.6,
+     "merge": 1.2,
+     "nocar": 1.2,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:31:42",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:17:06",
+    "shipped": "2026-10-23T01:33:13"
+   }
   },
   {
    "order": 1779,
@@ -92529,7 +95294,7 @@
    "id": "mch",
    "name": "Macheng",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -92568,7 +95333,30 @@
      "Yingshan County"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 71.7,
+     "stations": 1.1,
+     "places": 2.9,
+     "coarse": 5.2,
+     "routes": 30.2,
+     "merge": 4.8,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:34:44",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:19",
+    "shipped": "2026-10-23T01:33:13"
+   }
   },
   {
    "order": 1781,
@@ -93353,7 +96141,7 @@
    "id": "zhp",
    "name": "Zhangpu",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -93392,7 +96180,29 @@
      "Dongshan County"
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 64.9,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 1.6,
+     "routes": 15.8,
+     "merge": 1.9,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:32:51",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5345.283203125",
+      "osm_land_share 0.8726"
+     ]
+    },
+    "gated": "2026-10-23T00:17:07",
+    "shipped": "2026-10-23T01:33:13"
+   }
   },
   {
    "order": 1794,
@@ -93501,7 +96311,7 @@
    "id": "xug",
    "name": "Xunyang, Pengze",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -93542,7 +96352,28 @@
      "Hukou County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 52.5,
+     "stations": 0.9,
+     "places": 1.6,
+     "coarse": 1.3,
+     "routes": 10.9,
+     "merge": 1.7,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-10-22T23:34:14",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-23T00:31:19",
+    "shipped": "2026-10-23T01:33:14"
+   }
   },
   {
    "order": 1797,
@@ -94192,7 +97023,7 @@
    "id": "xag",
    "name": "Xiangtan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -94229,7 +97060,30 @@
      "Yuhu District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 55.7,
+     "stations": 1.1,
+     "places": 1.7,
+     "coarse": 1.4,
+     "routes": 18.3,
+     "merge": 1.5,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:34:25",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6008.72119140625",
+      "road_snap_median_m 351.1",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:20",
+    "shipped": "2026-10-23T01:33:14"
+   }
   },
   {
    "order": 1809,
@@ -94686,7 +97540,7 @@
    "id": "poy",
    "name": "Poyang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -94721,7 +97575,29 @@
      "Poyang County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 61.9,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 1.8,
+     "routes": 13.6,
+     "merge": 2.2,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:35:05",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:20",
+    "shipped": "2026-10-23T01:33:14"
+   }
   },
   {
    "order": 1818,
@@ -95088,7 +97964,7 @@
    "id": "hzh",
    "name": "Huazhou",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -95123,7 +97999,31 @@
      "Huazhou City"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 57.2,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 1.0,
+     "routes": 13.4,
+     "merge": 1.3,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:32:53",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.10090100062810184",
+      "top_school_cell_pupils 6424.83740234375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:17:07",
+    "shipped": "2026-10-23T01:33:14"
+   }
   },
   {
    "order": 1825,
@@ -95407,7 +98307,7 @@
    "id": "bdo",
    "name": "Badong",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -95448,7 +98348,36 @@
      "Zigui County"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 60.7,
+     "stations": 1.0,
+     "places": 1.4,
+     "coarse": 8.6,
+     "routes": 31.8,
+     "merge": 8.9,
+     "nocar": 1.9,
+     "everyday": 1.2
+    },
+    "built": "2026-10-22T23:36:11",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6011.1044921875",
+      "drive_factor_median 2.9391634498681936",
+      "road_snap_median_m 378.2",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-10-23T00:30:58",
+    "gated": "2026-10-23T00:55:05",
+    "shipped": "2026-10-23T01:33:14"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 1830,
@@ -95720,7 +98649,7 @@
    "id": "suu",
    "name": "Suichuan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -95761,7 +98690,30 @@
      "Chongyi County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 58.3,
+     "stations": 1.0,
+     "places": 1.5,
+     "coarse": 4.3,
+     "routes": 22.7,
+     "merge": 4.0,
+     "nocar": 2.3,
+     "everyday": 1.6
+    },
+    "built": "2026-10-22T23:36:01",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:20",
+    "shipped": "2026-10-23T01:33:14"
+   }
   },
   {
    "order": 1835,
@@ -95812,7 +98764,7 @@
    "id": "hed",
    "name": "Hengdong",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -95854,7 +98806,35 @@
      "Jinggangshan City"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 64.7,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 3.3,
+     "routes": 25.0,
+     "merge": 3.8,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:36:26",
+    "gate": {
+     "warn": [
+      "mean_commute_km 25.965122373413127",
+      "top_school_cell_pupils 6001.29248046875",
+      "road_snap_median_m 461.6",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-23T00:30:59",
+    "gated": "2026-10-23T00:55:05",
+    "shipped": "2026-10-23T01:33:14"
+   },
+   "gate_relax": {
+    "mean_commute_km": "T-897: a big zone (two or more counties, often mountains) on the zone curve, so its mean commute runs past 25 km; big zones are fine (Anita, 2026-10-22)"
+   }
   },
   {
    "order": 1837,
@@ -96041,7 +99021,7 @@
    "id": "xnu",
    "name": "Xingguo",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -96080,14 +99060,36 @@
      "Jizhou District"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 60.3,
+     "stations": 1.2,
+     "places": 1.7,
+     "coarse": 2.6,
+     "routes": 17.2,
+     "merge": 2.9,
+     "nocar": 1.9,
+     "everyday": 1.5
+    },
+    "built": "2026-10-22T23:36:35",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 372.5",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:20",
+    "shipped": "2026-10-23T01:33:15"
+   }
   },
   {
    "order": 1841,
    "id": "yui",
    "name": "Yushui",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -96122,7 +99124,29 @@
      "Yushui District"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 59.6,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 0.7,
+     "routes": 8.9,
+     "merge": 1.1,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:37:17",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1101164642991869",
+      "top_school_cell_pupils 6108.77490234375"
+     ]
+    },
+    "gated": "2026-10-23T00:31:20",
+    "shipped": "2026-10-23T01:33:15"
+   }
   },
   {
    "order": 1842,
@@ -96487,7 +99511,7 @@
    "id": "niy",
    "name": "Ningyuan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -96526,7 +99550,29 @@
      "Shuangpai County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 59.2,
+     "stations": 1.0,
+     "places": 1.2,
+     "coarse": 2.4,
+     "routes": 17.1,
+     "merge": 2.8,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:37:37",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 420.2",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:21",
+    "shipped": "2026-10-23T01:33:15"
+   }
   },
   {
    "order": 1850,
@@ -96875,7 +99921,7 @@
    "id": "fek",
    "name": "Fengkai",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -96914,7 +99960,26 @@
      "Deqing County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 53.4,
+     "stations": 1.0,
+     "places": 1.6,
+     "coarse": 2.6,
+     "routes": 20.6,
+     "merge": 2.9,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:33:07",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:17:07",
+    "shipped": "2026-10-23T01:33:15"
+   }
   },
   {
    "order": 1858,
@@ -97133,7 +100198,7 @@
    "id": "ech",
    "name": "Echeng",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -97174,7 +100239,29 @@
      "下陆区"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 57.6,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 0.4,
+     "routes": 5.4,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:37:35",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6014.87109375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:21",
+    "shipped": "2026-10-23T01:33:15"
+   }
   },
   {
    "order": 1863,
@@ -97335,7 +100422,7 @@
    "id": "cog",
    "name": "Conghua",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -97374,7 +100461,28 @@
      "Xinfeng County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 61.6,
+     "stations": 1.0,
+     "places": 1.3,
+     "coarse": 1.8,
+     "routes": 23.1,
+     "merge": 1.9,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:34:24",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5447.7919921875"
+     ]
+    },
+    "gated": "2026-10-23T00:17:08",
+    "shipped": "2026-10-23T01:33:15"
+   }
   },
   {
    "order": 1867,
@@ -97824,7 +100932,7 @@
    "id": "jac",
    "name": "Jiangcheng",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -97861,7 +100969,29 @@
      "Yangdong District"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 61.9,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 0.8,
+     "routes": 10.8,
+     "merge": 1.3,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-10-22T23:34:13",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10065866254241879",
+      "top_school_cell_pupils 6012.744140625"
+     ]
+    },
+    "gated": "2026-10-23T00:17:08",
+    "shipped": "2026-10-23T01:33:15"
+   }
   },
   {
    "order": 1876,
@@ -97914,7 +101044,7 @@
    "id": "hii",
    "name": "Huilai",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -97949,7 +101079,28 @@
      "Huilai County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 58.6,
+     "stations": 1.1,
+     "places": 1.4,
+     "coarse": 0.8,
+     "routes": 7.6,
+     "merge": 0.9,
+     "nocar": 1.2,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:34:20",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5225.41357421875"
+     ]
+    },
+    "gated": "2026-10-23T00:17:09",
+    "shipped": "2026-10-23T01:33:16"
+   }
   },
   {
    "order": 1878,
@@ -98048,7 +101199,7 @@
    "id": "xns",
    "name": "Xinshao",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -98087,7 +101238,29 @@
      "Beita District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 54.2,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 1.0,
+     "routes": 10.2,
+     "merge": 1.2,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:37:47",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10772880887453706",
+      "road_snap_median_m 314.1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:21",
+    "shipped": "2026-10-23T01:33:16"
+   }
   },
   {
    "order": 1881,
@@ -98254,7 +101427,7 @@
    "id": "blu",
    "name": "Boluo",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -98289,7 +101462,28 @@
      "Boluo County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 66.5,
+     "stations": 1.0,
+     "places": 1.6,
+     "coarse": 1.2,
+     "routes": 18.1,
+     "merge": 1.2,
+     "nocar": 1.3,
+     "everyday": 1.2
+    },
+    "built": "2026-10-22T23:35:46",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6021.89990234375"
+     ]
+    },
+    "gated": "2026-10-23T00:17:09",
+    "shipped": "2026-10-23T01:33:16"
+   }
   },
   {
    "order": 1885,
@@ -98702,7 +101896,7 @@
    "id": "dig",
    "name": "Dingcheng",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -98741,7 +101935,30 @@
      "Jinshi City"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 60.9,
+     "stations": 0.8,
+     "places": 1.1,
+     "coarse": 2.5,
+     "routes": 21.0,
+     "merge": 2.8,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:38:48",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6035.326171875",
+      "road_snap_median_m 350.1",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:21",
+    "shipped": "2026-10-23T01:33:16"
+   }
   },
   {
    "order": 1893,
@@ -99187,7 +102404,7 @@
    "id": "naz",
    "name": "Nanzhang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -99230,14 +102447,43 @@
      "Shennongjia Forestry District"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 67.3,
+     "stations": 1.0,
+     "places": 1.3,
+     "coarse": 14.3,
+     "routes": 27.0,
+     "merge": 5.4,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:39:34",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6027.357421875",
+      "drive_factor_median 2.0841789734955687",
+      "osm_land_share 0.8142",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-23T00:31:02",
+    "gated": "2026-10-23T00:55:05",
+    "shipped": "2026-10-23T01:33:16"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 1902,
    "id": "xil",
    "name": "Xinluo",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -99276,7 +102522,28 @@
      "Wuping County"
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 52.6,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 3.2,
+     "routes": 20.5,
+     "merge": 3.5,
+     "nocar": 1.3,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:35:45",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6054.693359375"
+     ]
+    },
+    "gated": "2026-10-23T00:17:09",
+    "shipped": "2026-10-23T01:33:16"
+   }
   },
   {
    "order": 1903,
@@ -99325,7 +102592,7 @@
    "id": "giy",
    "name": "Guiyang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -99362,14 +102629,42 @@
      "Yongxing County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 55.8,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 2.8,
+     "routes": 28.8,
+     "merge": 2.9,
+     "nocar": 1.2,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:39:12",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "drive_factor_median 2.117000016612675",
+      "road_snap_median_m 536.4",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-10-23T00:31:02",
+    "gated": "2026-10-23T00:55:05",
+    "shipped": "2026-10-23T01:33:16"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 1905,
    "id": "lnw",
    "name": "Linwu",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -99410,7 +102705,29 @@
      "Jiahe County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 50.9,
+     "stations": 1.0,
+     "places": 1.4,
+     "coarse": 14.8,
+     "routes": 15.8,
+     "merge": 2.0,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:39:15",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 388.6",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:21",
+    "shipped": "2026-10-23T01:33:17"
+   }
   },
   {
    "order": 1906,
@@ -99679,7 +102996,7 @@
    "id": "cnj",
    "name": "Changjiang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -99720,7 +103037,28 @@
      "珠山区"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 52.8,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 2.3,
+     "routes": 14.8,
+     "merge": 2.3,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:40:05",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-23T00:31:22",
+    "shipped": "2026-10-23T01:33:17"
+   }
   },
   {
    "order": 1912,
@@ -99815,7 +103153,7 @@
    "id": "gix",
    "name": "Guixi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -99854,14 +103192,35 @@
      "Jinxi County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 60.9,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 2.5,
+     "routes": 18.1,
+     "merge": 2.8,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:40:42",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 315.1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:22",
+    "shipped": "2026-10-23T01:33:17"
+   }
   },
   {
    "order": 1915,
    "id": "alu",
    "name": "Anlu",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -99898,7 +103257,31 @@
      "Yingcheng City"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 49.2,
+     "stations": 0.9,
+     "places": 1.1,
+     "coarse": 1.0,
+     "routes": 11.1,
+     "merge": 1.3,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:40:22",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.10327499161064219",
+      "road_snap_median_m 342.1",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-23T00:31:22",
+    "shipped": "2026-10-23T01:33:17"
+   }
   },
   {
    "order": 1916,
@@ -100217,7 +103600,7 @@
    "id": "xaa",
    "name": "Xiaonan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -100252,7 +103635,28 @@
      "Xiaonan District"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 45.9,
+     "stations": 1.0,
+     "places": 1.2,
+     "coarse": 0.6,
+     "routes": 6.2,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:40:32",
+    "gate": {
+     "warn": [
+      "osm_land_share 0.8428"
+     ]
+    },
+    "gated": "2026-10-23T00:31:22",
+    "shipped": "2026-10-23T01:33:17"
+   }
   },
   {
    "order": 1923,
@@ -100552,7 +103956,7 @@
    "id": "guu",
    "name": "Guangshui",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -100590,7 +103994,29 @@
      "Shihe District"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 60.9,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 1.8,
+     "routes": 15.4,
+     "merge": 2.3,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:41:31",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 540.2",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:22",
+    "shipped": "2026-10-23T01:33:17"
+   }
   },
   {
    "order": 1929,
@@ -100668,7 +104094,7 @@
    "id": "sog",
    "name": "Songzi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -100709,7 +104135,35 @@
      "Wufeng Tujia Autonomous County"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 58.6,
+     "stations": 1.0,
+     "places": 1.3,
+     "coarse": 5.7,
+     "routes": 24.2,
+     "merge": 5.0,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:42:01",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "drive_factor_median 2.0841789734955687",
+      "road_snap_median_m 329.2",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-10-23T00:31:04",
+    "gated": "2026-10-23T00:55:05",
+    "shipped": "2026-10-23T01:33:18"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 1931,
@@ -100760,7 +104214,7 @@
    "id": "rui",
    "name": "Ruijin",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -100799,7 +104253,29 @@
      "Guangchang County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 51.6,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 2.6,
+     "routes": 15.3,
+     "merge": 2.0,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:41:48",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6007.78955078125",
+      "road_snap_median_m 306.2"
+     ]
+    },
+    "gated": "2026-10-23T00:31:23",
+    "shipped": "2026-10-23T01:33:18"
+   }
   },
   {
    "order": 1933,
@@ -100904,7 +104380,7 @@
    "id": "ruc",
    "name": "Ruichang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -100943,7 +104419,28 @@
      "Yongxiu County"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 65.7,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 2.7,
+     "routes": 18.9,
+     "merge": 2.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:42:17",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6114.4609375"
+     ]
+    },
+    "gated": "2026-10-23T00:31:23",
+    "shipped": "2026-10-23T01:33:18"
+   }
   },
   {
    "order": 1936,
@@ -101465,7 +104962,7 @@
    "id": "dxx",
    "name": "Dao",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -101504,14 +105001,39 @@
      "Jiangyong County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 52.6,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 2.9,
+     "routes": 18.3,
+     "merge": 3.0,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:42:52",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.10319108476941213",
+      "top_school_cell_pupils 6023.85595703125",
+      "road_snap_median_m 362.1",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-23T00:31:23",
+    "shipped": "2026-10-23T01:33:18"
+   }
   },
   {
    "order": 1946,
    "id": "feh",
    "name": "Fenghuang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -101552,14 +105074,39 @@
      "Luxi County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 48.5,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 2.8,
+     "routes": 16.7,
+     "merge": 2.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:43:04",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.184200810815618"
+     ]
+    },
+    "parked": "2026-10-23T00:31:05",
+    "gated": "2026-10-23T00:55:06",
+    "shipped": "2026-10-23T01:33:18"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 1947,
    "id": "xas",
    "name": "Xiashan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -101596,7 +105143,28 @@
      "Mazhang District"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 58.1,
+     "stations": 1.2,
+     "places": 1.6,
+     "coarse": 0.5,
+     "routes": 6.2,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:35:36",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.15533510406524623"
+     ]
+    },
+    "gated": "2026-10-23T00:17:10",
+    "shipped": "2026-10-23T01:33:18"
+   }
   },
   {
    "order": 1948,
@@ -101731,7 +105299,7 @@
    "id": "nii",
    "name": "Ningxiang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -101766,7 +105334,30 @@
      "Ningxiang"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 54.1,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 1.2,
+     "routes": 16.2,
+     "merge": 1.8,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:43:19",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1640683133756871",
+      "top_school_cell_pupils 6013.32275390625",
+      "road_snap_median_m 318.3"
+     ]
+    },
+    "gated": "2026-10-23T00:31:23",
+    "shipped": "2026-10-23T01:33:18"
+   }
   },
   {
    "order": 1951,
@@ -101968,7 +105559,7 @@
    "id": "hsh",
    "name": "Heshan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -102003,7 +105594,28 @@
      "Heshan District"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 52.0,
+     "stations": 0.7,
+     "places": 1.1,
+     "coarse": 0.6,
+     "routes": 9.3,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-22T23:43:24",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-23T00:31:24",
+    "shipped": "2026-10-23T01:33:19"
+   }
   },
   {
    "order": 1956,
@@ -102149,7 +105761,7 @@
    "id": "xnx",
    "name": "Xinxing",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -102188,7 +105800,26 @@
      "Yun'an County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 65.6,
+     "stations": 1.0,
+     "places": 1.8,
+     "coarse": 1.5,
+     "routes": 16.6,
+     "merge": 1.6,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:37:07",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:17:10",
+    "shipped": "2026-10-23T01:33:19"
+   }
   },
   {
    "order": 1959,
@@ -102631,7 +106262,7 @@
    "id": "zin",
    "name": "Zijin",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -102668,7 +106299,28 @@
      "Luhe County"
     ]
    },
-   "solve_region": "guangdong"
+   "solve_region": "guangdong",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 64.5,
+     "stations": 1.1,
+     "places": 1.4,
+     "coarse": 1.6,
+     "routes": 16.5,
+     "merge": 1.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:37:15",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-10-23T00:17:10",
+    "shipped": "2026-10-23T01:33:19"
+   }
   },
   {
    "order": 1968,
@@ -103933,7 +107585,7 @@
    "id": "xax",
    "name": "Xian'an",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -103972,14 +107624,36 @@
      "Tongshan County"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 55.2,
+     "stations": 0.8,
+     "places": 1.1,
+     "coarse": 2.6,
+     "routes": 17.0,
+     "merge": 2.9,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:44:15",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6070.04248046875",
+      "road_snap_median_m 305.0"
+     ]
+    },
+    "gated": "2026-10-23T00:31:24",
+    "shipped": "2026-10-23T01:33:19"
+   }
   },
   {
    "order": 1992,
    "id": "mlu",
    "name": "Miluo",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -104014,7 +107688,29 @@
      "Miluo City"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 51.3,
+     "stations": 1.0,
+     "places": 1.3,
+     "coarse": 0.7,
+     "routes": 9.1,
+     "merge": 1.0,
+     "nocar": 1.4,
+     "everyday": 1.3
+    },
+    "built": "2026-10-22T23:44:11",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10811487837126059",
+      "top_school_cell_pupils 6032.9794921875"
+     ]
+    },
+    "gated": "2026-10-23T00:31:24",
+    "shipped": "2026-10-23T01:33:19"
+   }
   },
   {
    "order": 1993,
@@ -104304,7 +108000,7 @@
    "id": "dnn",
    "name": "Dong'an",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -104341,7 +108037,35 @@
      "Xinning County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 47.9,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 2.4,
+     "routes": 15.1,
+     "merge": 2.5,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:44:32",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "drive_factor_median 2.1503379159523",
+      "road_snap_median_m 628.4",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-10-23T00:31:06",
+    "gated": "2026-10-23T00:55:06",
+    "shipped": "2026-10-23T01:33:19"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 2000,
@@ -104394,7 +108118,7 @@
    "id": "zaa",
    "name": "Zhao'an",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -104431,14 +108155,38 @@
      "Pinghe County"
     ]
    },
-   "solve_region": "fujian"
+   "solve_region": "fujian",
+   "run": {
+    "run_batch": "20261022-231742-22808",
+    "steps": {
+     "build": 64.8,
+     "stations": 1.0,
+     "places": 1.4,
+     "coarse": 1.2,
+     "routes": 12.8,
+     "merge": 1.5,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-22T23:37:11",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.10691729156825039",
+      "top_school_cell_pupils 6000.83642578125",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:17:10",
+    "shipped": "2026-10-23T01:33:19"
+   }
   },
   {
    "order": 2002,
    "id": "yza",
    "name": "Yizhang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -104477,7 +108225,28 @@
      "Guidong County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 52.5,
+     "stations": 0.8,
+     "places": 1.1,
+     "coarse": 2.0,
+     "routes": 15.8,
+     "merge": 2.1,
+     "nocar": 1.2,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:44:41",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10540727803481444"
+     ]
+    },
+    "gated": "2026-10-23T00:31:24",
+    "shipped": "2026-10-23T01:33:20"
+   }
   },
   {
    "order": 2003,
@@ -105377,7 +109146,7 @@
    "id": "dnx",
    "name": "Dongxiang",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -105416,7 +109185,30 @@
      "Yuehu District"
     ]
    },
-   "solve_region": "jiangxi"
+   "solve_region": "jiangxi",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 56.1,
+     "stations": 0.8,
+     "places": 1.1,
+     "coarse": 1.0,
+     "routes": 11.2,
+     "merge": 1.2,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:45:25",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "road_snap_median_m 339.8",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-23T00:31:24",
+    "shipped": "2026-10-23T01:33:20"
+   }
   },
   {
    "order": 2019,
@@ -105825,7 +109617,7 @@
    "id": "xnh",
    "name": "Xinhua",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -105860,7 +109652,36 @@
      "Xinhua County"
     ]
    },
-   "solve_region": "hunan"
+   "solve_region": "hunan",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 52.2,
+     "stations": 0.9,
+     "places": 1.1,
+     "coarse": 1.4,
+     "routes": 13.0,
+     "merge": 1.9,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-22T23:45:28",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.11629694758635392",
+      "top_school_cell_pupils 6062.275390625",
+      "drive_factor_median 2.0200555277086965",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-23T00:31:06",
+    "gated": "2026-10-23T00:55:06",
+    "shipped": "2026-10-23T01:33:20"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
+   }
   },
   {
    "order": 2027,
@@ -106864,7 +110685,7 @@
    "id": "jns",
    "name": "Jingshan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CHN"
@@ -106901,7 +110722,29 @@
      "Zengdu District"
     ]
    },
-   "solve_region": "hubei"
+   "solve_region": "hubei",
+   "run": {
+    "run_batch": "20261022-231742",
+    "steps": {
+     "build": 59.2,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 1.9,
+     "routes": 17.8,
+     "merge": 2.0,
+     "nocar": 1.2,
+     "everyday": 1.0
+    },
+    "built": "2026-10-22T23:45:57",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 375.1",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T00:31:25",
+    "shipped": "2026-10-23T01:33:20"
+   }
   },
   {
    "order": 2047,
@@ -107371,7 +111214,7 @@
    "id": "ead",
    "name": "East District",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TWN"
@@ -107577,6 +111420,25 @@
      "Dapu",
      "Maolin"
     ]
+   },
+   "run": {
+    "run_batch": "20261023-001859",
+    "steps": {
+     "build": 74.5,
+     "stations": 1.3,
+     "places": 4.0,
+     "coarse": 8.0,
+     "routes": 109.4,
+     "merge": 7.6,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T00:22:32",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:36:23",
+    "shipped": "2026-10-23T01:33:20"
    }
   },
   {
@@ -107584,7 +111446,7 @@
    "id": "zht",
    "name": "Zhubei City",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TWN"
@@ -107778,6 +111640,32 @@
      "Wutai",
      "Haiduan"
     ]
+   },
+   "run": {
+    "run_batch": "20261023-001859",
+    "steps": {
+     "build": 276.9,
+     "stations": 2.1,
+     "places": 8.0,
+     "coarse": 9.0,
+     "routes": 97.6,
+     "merge": 6.2,
+     "nocar": 1.7,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T00:25:48",
+    "gate": {
+     "warn": [
+      "mean_commute_km 29.31511356778901",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-23T00:31:01",
+    "gated": "2026-10-23T00:55:06",
+    "shipped": "2026-10-23T01:33:20"
+   },
+   "gate_relax": {
+    "mean_commute_km": "T-897: a big zone (two or more counties, often mountains) on the zone curve, so its mean commute runs past 25 km; big zones are fine (Anita, 2026-10-22)"
    }
   },
   {
@@ -107785,7 +111673,7 @@
    "id": "xid",
    "name": "Xiangshan District",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TWN"
@@ -107869,6 +111757,25 @@
      "泰安鄉",
      "獅潭鄉"
     ]
+   },
+   "run": {
+    "run_batch": "20261023-001859",
+    "steps": {
+     "build": 98.8,
+     "stations": 1.3,
+     "places": 3.0,
+     "coarse": 1.1,
+     "routes": 28.4,
+     "merge": 2.1,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-23T00:22:21",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T00:36:23",
+    "shipped": "2026-10-23T01:33:20"
    }
   },
   {
@@ -107876,7 +111783,7 @@
    "id": "mgg",
    "name": "Magong City",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TWN"
@@ -107920,6 +111827,28 @@
      "Qimei Town",
      "Wang'an Town"
     ]
+   },
+   "run": {
+    "run_batch": "20261023-001859",
+    "steps": {
+     "build": 66.5,
+     "stations": 1.2,
+     "places": 1.4,
+     "coarse": 0.4,
+     "routes": 2.6,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 1.2
+    },
+    "built": "2026-10-23T00:21:53",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.17973806759864067",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-10-23T00:36:24",
+    "shipped": "2026-10-23T01:33:21"
    }
   },
   {
@@ -107927,7 +111856,7 @@
    "id": "jiw",
    "name": "Jincheng Township",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TWN"
@@ -107969,6 +111898,32 @@
      "Jinning Township",
      "烈嶼鄉"
     ]
+   },
+   "run": {
+    "run_batch": "20261023-001859",
+    "steps": {
+     "build": 59.0,
+     "stations": 1.1,
+     "places": 1.3,
+     "coarse": 0.4,
+     "routes": 2.4,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-23T00:21:22",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.21871013915580925",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-10-23T00:31:01",
+    "gated": "2026-10-23T00:55:06",
+    "shipped": "2026-10-23T01:33:21"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-897: Kinmen is a few small islands (0.05M), so its town's zone holds a large share of its jobs"
    }
   },
   {

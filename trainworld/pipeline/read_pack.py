@@ -362,7 +362,10 @@ def check(city, packs=PACKS):
     assert np.all(a["pop"] >= 0) and np.all(a["jobs"] >= 0)
     for k in ("pop", "jobs"):
         s = float(a[k].astype(np.float64).sum())
-        assert abs(s - header["totals"][k]) < 0.5, f"{k}: arrays sum {s} vs header {header['totals'][k]}"
+        # float32 cells: a merge's re-summed cells drift from the rounded header by a fraction of a person a
+        # million (fuz, 4.47M, was 0.50008 off, T-897)
+        tol = max(1.0, 1e-6 * abs(header["totals"][k]))
+        assert abs(s - header["totals"][k]) < tol, f"{k}: arrays sum {s} vs header {header['totals'][k]}"
     lon0, lat0 = header["origin"]["lon"], header["origin"]["lat"]
     worst = worst8 = worst9 = 0.0
     for i in sample:

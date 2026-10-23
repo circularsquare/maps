@@ -6034,6 +6034,818 @@
       {
         "name": "Yi",
         "regionName": "Yi region"
+      },
+      {
+        "name": "Guangzhou",
+        "regionName": "Guangzhou region"
+      },
+      {
+        "name": "Shantou",
+        "regionName": "Shantou region"
+      },
+      {
+        "name": "Quanzhou",
+        "regionName": "Quanzhou region"
+      },
+      {
+        "name": "Fuzhou",
+        "regionName": "Fuzhou region"
+      },
+      {
+        "name": "Xiamen City",
+        "regionName": "Xiamen City region"
+      },
+      {
+        "name": "Putian",
+        "regionName": "Putian region"
+      },
+      {
+        "name": "Huizhou",
+        "regionName": "Huizhou region"
+      },
+      {
+        "name": "Zhuhai",
+        "regionName": "Zhuhai region"
+      },
+      {
+        "name": "Shenzhen",
+        "regionName": "Shenzhen region"
+      },
+      {
+        "name": "Dongguan",
+        "regionName": "Dongguan region"
+      },
+      {
+        "name": "Foshan",
+        "regionName": "Foshan region"
+      },
+      {
+        "name": "Zhongshan",
+        "regionName": "Zhongshan region"
+      },
+      {
+        "name": "Jiangmen",
+        "regionName": "Jiangmen region"
+      },
+      {
+        "name": "Macau",
+        "regionName": "Macau region"
+      },
+      {
+        "name": "Leizhou",
+        "regionName": "Leizhou region"
+      },
+      {
+        "name": "Fu'an",
+        "regionName": "Fu'an region"
+      },
+      {
+        "name": "Sihui",
+        "regionName": "Sihui region"
+      },
+      {
+        "name": "Jian'ou",
+        "regionName": "Jian'ou region"
+      },
+      {
+        "name": "Lechang",
+        "regionName": "Lechang region"
+      },
+      {
+        "name": "Meixian",
+        "regionName": "Meixian region"
+      },
+      {
+        "name": "Huidong",
+        "regionName": "Huidong region"
+      },
+      {
+        "name": "Xianyou",
+        "regionName": "Xianyou region"
+      },
+      {
+        "name": "Wuhua",
+        "regionName": "Wuhua region"
+      },
+      {
+        "name": "Yingde",
+        "regionName": "Yingde region"
+      },
+      {
+        "name": "Luoding",
+        "regionName": "Luoding region"
+      },
+      {
+        "name": "Anxi",
+        "regionName": "Anxi region"
+      },
+      {
+        "name": "Wuchuan",
+        "regionName": "Wuchuan region"
+      },
+      {
+        "name": "Huaiji",
+        "regionName": "Huaiji region"
+      },
+      {
+        "name": "Raoping",
+        "regionName": "Raoping region"
+      },
+      {
+        "name": "Dianbai",
+        "regionName": "Dianbai region"
+      },
+      {
+        "name": "Gaozhou",
+        "regionName": "Gaozhou region"
+      },
+      {
+        "name": "Suixi, Potou",
+        "regionName": "Suixi, Potou region"
+      },
+      {
+        "name": "Yanping",
+        "regionName": "Yanping region"
+      },
+      {
+        "name": "Lianjiang",
+        "regionName": "Lianjiang region"
+      },
+      {
+        "name": "Zhenjiang",
+        "regionName": "Zhenjiang region"
+      },
+      {
+        "name": "Fuqing",
+        "regionName": "Fuqing region"
+      },
+      {
+        "name": "Gaoyao",
+        "regionName": "Gaoyao region"
+      },
+      {
+        "name": "Changting",
+        "regionName": "Changting region"
+      },
+      {
+        "name": "Kaiping",
+        "regionName": "Kaiping region"
+      },
+      {
+        "name": "Lufeng",
+        "regionName": "Lufeng region"
+      },
+      {
+        "name": "Lianjiang, Gutian",
+        "regionName": "Lianjiang, Gutian region"
+      },
+      {
+        "name": "Taishan",
+        "regionName": "Taishan region"
+      },
+      {
+        "name": "Haifeng",
+        "regionName": "Haifeng region"
+      },
+      {
+        "name": "Yuancheng",
+        "regionName": "Yuancheng region"
+      },
+      {
+        "name": "Yangchun",
+        "regionName": "Yangchun region"
+      },
+      {
+        "name": "Xingning",
+        "regionName": "Xingning region"
+      },
+      {
+        "name": "Zhangpu",
+        "regionName": "Zhangpu region"
+      },
+      {
+        "name": "Huazhou",
+        "regionName": "Huazhou region"
+      },
+      {
+        "name": "Fengkai",
+        "regionName": "Fengkai region"
+      },
+      {
+        "name": "Conghua",
+        "regionName": "Conghua region"
+      },
+      {
+        "name": "Jiangcheng",
+        "regionName": "Jiangcheng region"
+      },
+      {
+        "name": "Huilai",
+        "regionName": "Huilai region"
+      },
+      {
+        "name": "Boluo",
+        "regionName": "Boluo region"
+      },
+      {
+        "name": "Xinluo",
+        "regionName": "Xinluo region"
+      },
+      {
+        "name": "Xiashan",
+        "regionName": "Xiashan region"
+      },
+      {
+        "name": "Xinxing",
+        "regionName": "Xinxing region"
+      },
+      {
+        "name": "Zijin",
+        "regionName": "Zijin region"
+      },
+      {
+        "name": "Zhao'an",
+        "regionName": "Zhao'an region"
+      },
+      {
+        "name": "Wuhan",
+        "regionName": "Wuhan region"
+      },
+      {
+        "name": "Nanchang",
+        "regionName": "Nanchang region"
+      },
+      {
+        "name": "Changsha",
+        "regionName": "Changsha region"
+      },
+      {
+        "name": "Yichang",
+        "regionName": "Yichang region"
+      },
+      {
+        "name": "Yichun",
+        "regionName": "Yichun region"
+      },
+      {
+        "name": "Ganzhou",
+        "regionName": "Ganzhou region"
+      },
+      {
+        "name": "Shiyan",
+        "regionName": "Shiyan region"
+      },
+      {
+        "name": "Zhuzhou",
+        "regionName": "Zhuzhou region"
+      },
+      {
+        "name": "Jianli",
+        "regionName": "Jianli region"
+      },
+      {
+        "name": "Xiushui",
+        "regionName": "Xiushui region"
+      },
+      {
+        "name": "Xinfeng",
+        "regionName": "Xinfeng region"
+      },
+      {
+        "name": "Hanchuan",
+        "regionName": "Hanchuan region"
+      },
+      {
+        "name": "Hecheng",
+        "regionName": "Hecheng region"
+      },
+      {
+        "name": "Jishui",
+        "regionName": "Jishui region"
+      },
+      {
+        "name": "Liuyang",
+        "regionName": "Liuyang region"
+      },
+      {
+        "name": "Yushan",
+        "regionName": "Yushan region"
+      },
+      {
+        "name": "Enshi",
+        "regionName": "Enshi region"
+      },
+      {
+        "name": "Xiangyin",
+        "regionName": "Xiangyin region"
+      },
+      {
+        "name": "You",
+        "regionName": "You region"
+      },
+      {
+        "name": "Dawu",
+        "regionName": "Dawu region"
+      },
+      {
+        "name": "Beihu",
+        "regionName": "Beihu region"
+      },
+      {
+        "name": "Pingjiang",
+        "regionName": "Pingjiang region"
+      },
+      {
+        "name": "Hengyang",
+        "regionName": "Hengyang region"
+      },
+      {
+        "name": "Taoyuan",
+        "regionName": "Taoyuan region"
+      },
+      {
+        "name": "Longhui",
+        "regionName": "Longhui region"
+      },
+      {
+        "name": "Zhongxiang",
+        "regionName": "Zhongxiang region"
+      },
+      {
+        "name": "Taihe, Yongxin",
+        "regionName": "Taihe, Yongxin region"
+      },
+      {
+        "name": "Gao'an",
+        "regionName": "Gao'an region"
+      },
+      {
+        "name": "Huangmei",
+        "regionName": "Huangmei region"
+      },
+      {
+        "name": "Lianyuan",
+        "regionName": "Lianyuan region"
+      },
+      {
+        "name": "Qidong",
+        "regionName": "Qidong region"
+      },
+      {
+        "name": "Yuanling",
+        "regionName": "Yuanling region"
+      },
+      {
+        "name": "Shangrao",
+        "regionName": "Shangrao region"
+      },
+      {
+        "name": "Leiyang",
+        "regionName": "Leiyang region"
+      },
+      {
+        "name": "Hongjiang",
+        "regionName": "Hongjiang region"
+      },
+      {
+        "name": "Tianmen",
+        "regionName": "Tianmen region"
+      },
+      {
+        "name": "Li",
+        "regionName": "Li region"
+      },
+      {
+        "name": "Yudu",
+        "regionName": "Yudu region"
+      },
+      {
+        "name": "Ningdu",
+        "regionName": "Ningdu region"
+      },
+      {
+        "name": "Duchang",
+        "regionName": "Duchang region"
+      },
+      {
+        "name": "Zaoyang",
+        "regionName": "Zaoyang region"
+      },
+      {
+        "name": "Gucheng",
+        "regionName": "Gucheng region"
+      },
+      {
+        "name": "Gong'an",
+        "regionName": "Gong'an region"
+      },
+      {
+        "name": "Yugan",
+        "regionName": "Yugan region"
+      },
+      {
+        "name": "Linchuan",
+        "regionName": "Linchuan region"
+      },
+      {
+        "name": "Yueyang",
+        "regionName": "Yueyang region"
+      },
+      {
+        "name": "Shuangfeng",
+        "regionName": "Shuangfeng region"
+      },
+      {
+        "name": "Longshan",
+        "regionName": "Longshan region"
+      },
+      {
+        "name": "Huangpi",
+        "regionName": "Huangpi region"
+      },
+      {
+        "name": "Xishui",
+        "regionName": "Xishui region"
+      },
+      {
+        "name": "Leping",
+        "regionName": "Leping region"
+      },
+      {
+        "name": "Yunyang",
+        "regionName": "Yunyang region"
+      },
+      {
+        "name": "Anhua",
+        "regionName": "Anhua region"
+      },
+      {
+        "name": "Qiyang",
+        "regionName": "Qiyang region"
+      },
+      {
+        "name": "Ji'an",
+        "regionName": "Ji'an region"
+      },
+      {
+        "name": "Liling",
+        "regionName": "Liling region"
+      },
+      {
+        "name": "Shaodong",
+        "regionName": "Shaodong region"
+      },
+      {
+        "name": "Xiangzhou",
+        "regionName": "Xiangzhou region"
+      },
+      {
+        "name": "Honghu",
+        "regionName": "Honghu region"
+      },
+      {
+        "name": "Zhijiang",
+        "regionName": "Zhijiang region"
+      },
+      {
+        "name": "Daye",
+        "regionName": "Daye region"
+      },
+      {
+        "name": "Qianjiang",
+        "regionName": "Qianjiang region"
+      },
+      {
+        "name": "Hengshan",
+        "regionName": "Hengshan region"
+      },
+      {
+        "name": "Dongkou",
+        "regionName": "Dongkou region"
+      },
+      {
+        "name": "Hanshou",
+        "regionName": "Hanshou region"
+      },
+      {
+        "name": "Anyuan",
+        "regionName": "Anyuan region"
+      },
+      {
+        "name": "Fengcheng",
+        "regionName": "Fengcheng region"
+      },
+      {
+        "name": "Macheng",
+        "regionName": "Macheng region"
+      },
+      {
+        "name": "Xunyang, Pengze",
+        "regionName": "Xunyang, Pengze region"
+      },
+      {
+        "name": "Xiangtan",
+        "regionName": "Xiangtan region"
+      },
+      {
+        "name": "Poyang",
+        "regionName": "Poyang region"
+      },
+      {
+        "name": "Badong",
+        "regionName": "Badong region"
+      },
+      {
+        "name": "Suichuan",
+        "regionName": "Suichuan region"
+      },
+      {
+        "name": "Hengdong",
+        "regionName": "Hengdong region"
+      },
+      {
+        "name": "Xingguo",
+        "regionName": "Xingguo region"
+      },
+      {
+        "name": "Yushui",
+        "regionName": "Yushui region"
+      },
+      {
+        "name": "Ningyuan",
+        "regionName": "Ningyuan region"
+      },
+      {
+        "name": "Echeng",
+        "regionName": "Echeng region"
+      },
+      {
+        "name": "Xinshao",
+        "regionName": "Xinshao region"
+      },
+      {
+        "name": "Dingcheng",
+        "regionName": "Dingcheng region"
+      },
+      {
+        "name": "Nanzhang",
+        "regionName": "Nanzhang region"
+      },
+      {
+        "name": "Guiyang",
+        "regionName": "Guiyang region"
+      },
+      {
+        "name": "Linwu",
+        "regionName": "Linwu region"
+      },
+      {
+        "name": "Changjiang",
+        "regionName": "Changjiang region"
+      },
+      {
+        "name": "Guixi",
+        "regionName": "Guixi region"
+      },
+      {
+        "name": "Anlu",
+        "regionName": "Anlu region"
+      },
+      {
+        "name": "Xiaonan",
+        "regionName": "Xiaonan region"
+      },
+      {
+        "name": "Guangshui",
+        "regionName": "Guangshui region"
+      },
+      {
+        "name": "Songzi",
+        "regionName": "Songzi region"
+      },
+      {
+        "name": "Ruijin",
+        "regionName": "Ruijin region"
+      },
+      {
+        "name": "Ruichang",
+        "regionName": "Ruichang region"
+      },
+      {
+        "name": "Dao",
+        "regionName": "Dao region"
+      },
+      {
+        "name": "Fenghuang",
+        "regionName": "Fenghuang region"
+      },
+      {
+        "name": "Ningxiang",
+        "regionName": "Ningxiang region"
+      },
+      {
+        "name": "Heshan",
+        "regionName": "Heshan region"
+      },
+      {
+        "name": "Xian'an",
+        "regionName": "Xian'an region"
+      },
+      {
+        "name": "Miluo",
+        "regionName": "Miluo region"
+      },
+      {
+        "name": "Dong'an",
+        "regionName": "Dong'an region"
+      },
+      {
+        "name": "Yizhang",
+        "regionName": "Yizhang region"
+      },
+      {
+        "name": "Dongxiang",
+        "regionName": "Dongxiang region"
+      },
+      {
+        "name": "Xinhua",
+        "regionName": "Xinhua region"
+      },
+      {
+        "name": "Jingshan",
+        "regionName": "Jingshan region"
+      },
+      {
+        "name": "Hong Kong",
+        "regionName": "Hong Kong region"
+      },
+      {
+        "name": "Taipei",
+        "regionName": "Taipei region"
+      },
+      {
+        "name": "Taichung",
+        "regionName": "Taichung region"
+      },
+      {
+        "name": "Kaohsiung",
+        "regionName": "Kaohsiung region"
+      },
+      {
+        "name": "Tainan",
+        "regionName": "Tainan region"
+      },
+      {
+        "name": "East District",
+        "regionName": "East District region"
+      },
+      {
+        "name": "Zhubei City",
+        "regionName": "Zhubei City region"
+      },
+      {
+        "name": "Xiangshan District",
+        "regionName": "Xiangshan District region"
+      },
+      {
+        "name": "Jincheng Township",
+        "regionName": "Jincheng Township region"
+      },
+      {
+        "name": "Magong City",
+        "regionName": "Magong City region"
+      },
+      {
+        "name": "Macau",
+        "regionName": "Macau region"
+      },
+      {
+        "name": "Lechang",
+        "regionName": "Lechang region"
+      },
+      {
+        "name": "Fu'an",
+        "regionName": "Fu'an region"
+      },
+      {
+        "name": "Jian'ou",
+        "regionName": "Jian'ou region"
+      },
+      {
+        "name": "Xianyou",
+        "regionName": "Xianyou region"
+      },
+      {
+        "name": "Anxi",
+        "regionName": "Anxi region"
+      },
+      {
+        "name": "Yanping",
+        "regionName": "Yanping region"
+      },
+      {
+        "name": "Lianjiang, Gutian",
+        "regionName": "Lianjiang, Gutian region"
+      },
+      {
+        "name": "Yichang",
+        "regionName": "Yichang region"
+      },
+      {
+        "name": "Xiushui",
+        "regionName": "Xiushui region"
+      },
+      {
+        "name": "Hecheng",
+        "regionName": "Hecheng region"
+      },
+      {
+        "name": "Enshi",
+        "regionName": "Enshi region"
+      },
+      {
+        "name": "You",
+        "regionName": "You region"
+      },
+      {
+        "name": "Hengyang",
+        "regionName": "Hengyang region"
+      },
+      {
+        "name": "Taoyuan",
+        "regionName": "Taoyuan region"
+      },
+      {
+        "name": "Longhui",
+        "regionName": "Longhui region"
+      },
+      {
+        "name": "Yuanling",
+        "regionName": "Yuanling region"
+      },
+      {
+        "name": "Hongjiang",
+        "regionName": "Hongjiang region"
+      },
+      {
+        "name": "Li",
+        "regionName": "Li region"
+      },
+      {
+        "name": "Longshan",
+        "regionName": "Longshan region"
+      },
+      {
+        "name": "Yunyang",
+        "regionName": "Yunyang region"
+      },
+      {
+        "name": "Anhua",
+        "regionName": "Anhua region"
+      },
+      {
+        "name": "Hengshan",
+        "regionName": "Hengshan region"
+      },
+      {
+        "name": "Badong",
+        "regionName": "Badong region"
+      },
+      {
+        "name": "Hengdong",
+        "regionName": "Hengdong region"
+      },
+      {
+        "name": "Nanzhang",
+        "regionName": "Nanzhang region"
+      },
+      {
+        "name": "Guiyang",
+        "regionName": "Guiyang region"
+      },
+      {
+        "name": "Songzi",
+        "regionName": "Songzi region"
+      },
+      {
+        "name": "Fenghuang",
+        "regionName": "Fenghuang region"
+      },
+      {
+        "name": "Dong'an",
+        "regionName": "Dong'an region"
+      },
+      {
+        "name": "Xinhua",
+        "regionName": "Xinhua region"
+      },
+      {
+        "name": "Zhubei City",
+        "regionName": "Zhubei City region"
+      },
+      {
+        "name": "Jincheng Township",
+        "regionName": "Jincheng Township region"
       }
     ],
     "rule": {
@@ -31657,6 +32469,4229 @@
       "place": 1503,
       "country": "CN",
       "localTrips": 2854349.0
+    },
+    {
+      "id": "gua",
+      "name": "Guangzhou",
+      "origin": {
+        "lon": 113.2816,
+        "lat": 23.1426
+      },
+      "center": [
+        113.2816,
+        23.1426
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.932,
+        22.544,
+        114.017,
+        23.641
+      ],
+      "place": 1504,
+      "country": "CN",
+      "localTrips": 44592197.0
+    },
+    {
+      "id": "shn",
+      "name": "Shantou",
+      "origin": {
+        "lon": 116.6767,
+        "lat": 23.3765
+      },
+      "center": [
+        116.6767,
+        23.3765
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.582,
+        23.024,
+        116.933,
+        24.027
+      ],
+      "place": 1505,
+      "country": "CN",
+      "localTrips": 40596572.0
+    },
+    {
+      "id": "qua",
+      "name": "Quanzhou",
+      "origin": {
+        "lon": 118.6334,
+        "lat": 24.9175
+      },
+      "center": [
+        118.6334,
+        24.9175
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        118.11,
+        24.493,
+        119.048,
+        25.332
+      ],
+      "place": 1506,
+      "country": "CN",
+      "localTrips": 18777071.0
+    },
+    {
+      "id": "fuz",
+      "name": "Fuzhou",
+      "origin": {
+        "lon": 119.2879,
+        "lat": 26.0697
+      },
+      "center": [
+        119.2879,
+        26.0697
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        118.847,
+        25.668,
+        119.735,
+        26.626
+      ],
+      "place": 1507,
+      "country": "CN",
+      "localTrips": 13073348.0
+    },
+    {
+      "id": "xim",
+      "name": "Xiamen City",
+      "origin": {
+        "lon": 118.1214,
+        "lat": 24.4981
+      },
+      "center": [
+        118.1214,
+        24.4981
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        117.467,
+        24.184,
+        118.431,
+        24.926
+      ],
+      "place": 1508,
+      "country": "CN",
+      "localTrips": 15351637.0
+    },
+    {
+      "id": "put",
+      "name": "Putian",
+      "origin": {
+        "lon": 119.0281,
+        "lat": 25.43
+      },
+      "center": [
+        119.0281,
+        25.43
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        118.797,
+        25.007,
+        119.664,
+        25.782
+      ],
+      "place": 1509,
+      "country": "CN",
+      "localTrips": 8135552.0
+    },
+    {
+      "id": "hui",
+      "name": "Huizhou",
+      "origin": {
+        "lon": 114.4189,
+        "lat": 23.0674
+      },
+      "center": [
+        114.4189,
+        23.0674
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.099,
+        22.899,
+        114.809,
+        23.435
+      ],
+      "place": 1510,
+      "country": "CN",
+      "localTrips": 4793758.0
+    },
+    {
+      "id": "zhu",
+      "name": "Zhuhai",
+      "origin": {
+        "lon": 113.5579,
+        "lat": 22.2085
+      },
+      "center": [
+        113.5579,
+        22.2085
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.389,
+        21.791,
+        114.339,
+        22.464
+      ],
+      "place": 1511,
+      "country": "CN",
+      "localTrips": 3760731.0
+    },
+    {
+      "id": "shz",
+      "name": "Shenzhen",
+      "origin": {
+        "lon": 114.0957,
+        "lat": 22.5668
+      },
+      "center": [
+        114.0957,
+        22.5668
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.727,
+        22.428,
+        114.643,
+        22.883
+      ],
+      "place": 1512,
+      "country": "CN",
+      "localTrips": 34947470.0
+    },
+    {
+      "id": "dog",
+      "name": "Dongguan",
+      "origin": {
+        "lon": 113.8008,
+        "lat": 22.8087
+      },
+      "center": [
+        113.8008,
+        22.8087
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.496,
+        22.638,
+        114.276,
+        23.164
+      ],
+      "place": 1513,
+      "country": "CN",
+      "localTrips": 24886578.0
+    },
+    {
+      "id": "fos",
+      "name": "Foshan",
+      "origin": {
+        "lon": 113.0822,
+        "lat": 23.0424
+      },
+      "center": [
+        113.0822,
+        23.0424
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.365,
+        22.627,
+        113.408,
+        23.595
+      ],
+      "place": 1514,
+      "country": "CN",
+      "localTrips": 16692328.0
+    },
+    {
+      "id": "zho",
+      "name": "Zhongshan",
+      "origin": {
+        "lon": 113.458,
+        "lat": 22.5085
+      },
+      "center": [
+        113.458,
+        22.5085
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.131,
+        22.187,
+        113.646,
+        22.795
+      ],
+      "place": 1515,
+      "country": "CN",
+      "localTrips": 9833362.0
+    },
+    {
+      "id": "jia",
+      "name": "Jiangmen",
+      "origin": {
+        "lon": 113.0962,
+        "lat": 22.6419
+      },
+      "center": [
+        113.0962,
+        22.6419
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.451,
+        22.088,
+        113.277,
+        22.878
+      ],
+      "place": 1516,
+      "country": "CN",
+      "localTrips": 7522998.0
+    },
+    {
+      "id": "leh",
+      "name": "Leizhou",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.0961,
+        "lat": 20.9031
+      },
+      "center": [
+        110.0961,
+        20.9031
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        109.645,
+        20.205,
+        110.552,
+        21.2
+      ],
+      "place": 1518,
+      "country": "CN",
+      "localTrips": 6952584.0
+    },
+    {
+      "id": "sih",
+      "name": "Sihui",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.9921,
+        "lat": 23.7276
+      },
+      "center": [
+        112.9921,
+        23.7276
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.037,
+        23.184,
+        113.127,
+        24.337
+      ],
+      "place": 1520,
+      "country": "CN",
+      "localTrips": 5869902.0
+    },
+    {
+      "id": "mii",
+      "name": "Meixian",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.0949,
+        "lat": 24.3388
+      },
+      "center": [
+        116.0949,
+        24.3388
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.71,
+        23.599,
+        116.711,
+        24.959
+      ],
+      "place": 1523,
+      "country": "CN",
+      "localTrips": 5780742.0
+    },
+    {
+      "id": "hud",
+      "name": "Huidong",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.7215,
+        "lat": 22.9839
+      },
+      "center": [
+        114.7215,
+        22.9839
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.204,
+        22.413,
+        115.442,
+        23.407
+      ],
+      "place": 1524,
+      "country": "CN",
+      "localTrips": 5616276.0
+    },
+    {
+      "id": "wua",
+      "name": "Wuhua",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.2386,
+        "lat": 24.1126
+      },
+      "center": [
+        115.2386,
+        24.1126
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.033,
+        23.358,
+        116.04,
+        24.815
+      ],
+      "place": 1526,
+      "country": "CN",
+      "localTrips": 5532501.0
+    },
+    {
+      "id": "yig",
+      "name": "Yingde",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.4009,
+        "lat": 24.188
+      },
+      "center": [
+        113.4009,
+        24.188
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.735,
+        23.43,
+        113.947,
+        24.569
+      ],
+      "place": 1527,
+      "country": "CN",
+      "localTrips": 5404894.0
+    },
+    {
+      "id": "lui",
+      "name": "Luoding",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.9422,
+        "lat": 22.3584
+      },
+      "center": [
+        110.9422,
+        22.3584
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.658,
+        22.168,
+        111.912,
+        22.977
+      ],
+      "place": 1528,
+      "country": "CN",
+      "localTrips": 5763105.0
+    },
+    {
+      "id": "wuc",
+      "name": "Wuchuan",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.9198,
+        "lat": 21.7091
+      },
+      "center": [
+        110.9198,
+        21.7091
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.462,
+        21.226,
+        111.047,
+        21.844
+      ],
+      "place": 1530,
+      "country": "CN",
+      "localTrips": 5636286.0
+    },
+    {
+      "id": "huj",
+      "name": "Huaiji",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.6284,
+        "lat": 24.4729
+      },
+      "center": [
+        112.6284,
+        24.4729
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.846,
+        23.44,
+        113.037,
+        25.213
+      ],
+      "place": 1531,
+      "country": "CN",
+      "localTrips": 5092751.0
+    },
+    {
+      "id": "rap",
+      "name": "Raoping",
+      "kind": "zone",
+      "origin": {
+        "lon": 117.0002,
+        "lat": 23.6774
+      },
+      "center": [
+        117.0002,
+        23.6774
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.289,
+        23.374,
+        117.21,
+        25.108
+      ],
+      "place": 1532,
+      "country": "CN",
+      "localTrips": 4910005.0
+    },
+    {
+      "id": "dia",
+      "name": "Dianbai",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.224,
+        "lat": 21.4928
+      },
+      "center": [
+        111.224,
+        21.4928
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.843,
+        21.355,
+        111.47,
+        22.01
+      ],
+      "place": 1533,
+      "country": "CN",
+      "localTrips": 4547153.0
+    },
+    {
+      "id": "gau",
+      "name": "Gaozhou",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.8564,
+        "lat": 21.9254
+      },
+      "center": [
+        110.8564,
+        21.9254
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.593,
+        21.692,
+        111.399,
+        22.332
+      ],
+      "place": 1534,
+      "country": "CN",
+      "localTrips": 4568313.0
+    },
+    {
+      "id": "sup",
+      "name": "Suixi, Potou",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.3654,
+        "lat": 21.2851
+      },
+      "center": [
+        110.3654,
+        21.2851
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        109.656,
+        20.977,
+        110.657,
+        21.528
+      ],
+      "place": 1535,
+      "country": "CN",
+      "localTrips": 4621587.0
+    },
+    {
+      "id": "lij",
+      "name": "Lianjiang",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.9198,
+        "lat": 21.6259
+      },
+      "center": [
+        109.9198,
+        21.6259
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        109.719,
+        21.387,
+        110.529,
+        21.977
+      ],
+      "place": 1537,
+      "country": "CN",
+      "localTrips": 4566919.0
+    },
+    {
+      "id": "zhi",
+      "name": "Zhenjiang",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.5683,
+        "lat": 24.8084
+      },
+      "center": [
+        113.5683,
+        24.8084
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.101,
+        24.503,
+        114.765,
+        25.476
+      ],
+      "place": 1538,
+      "country": "CN",
+      "localTrips": 4296792.0
+    },
+    {
+      "id": "fuq",
+      "name": "Fuqing",
+      "kind": "zone",
+      "origin": {
+        "lon": 119.3802,
+        "lat": 25.7244
+      },
+      "center": [
+        119.3802,
+        25.7244
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.043,
+        25.273,
+        119.96,
+        25.871
+      ],
+      "place": 1539,
+      "country": "CN",
+      "localTrips": 4717855.0
+    },
+    {
+      "id": "gay",
+      "name": "Gaoyao",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.4439,
+        "lat": 23.0674
+      },
+      "center": [
+        112.4439,
+        23.0674
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.16,
+        22.754,
+        112.848,
+        23.456
+      ],
+      "place": 1540,
+      "country": "CN",
+      "localTrips": 4415176.0
+    },
+    {
+      "id": "cgt",
+      "name": "Changting",
+      "kind": "zone",
+      "origin": {
+        "lon": 117.3646,
+        "lat": 25.9602
+      },
+      "center": [
+        117.3646,
+        25.9602
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.98,
+        25.218,
+        117.8,
+        27.151
+      ],
+      "place": 1541,
+      "country": "CN",
+      "localTrips": 4277529.0
+    },
+    {
+      "id": "kag",
+      "name": "Kaiping",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.6909,
+        "lat": 22.3584
+      },
+      "center": [
+        112.6909,
+        22.3584
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.978,
+        21.898,
+        112.831,
+        22.687
+      ],
+      "place": 1542,
+      "country": "CN",
+      "localTrips": 4143386.0
+    },
+    {
+      "id": "luf",
+      "name": "Lufeng",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.8198,
+        "lat": 22.817
+      },
+      "center": [
+        115.8198,
+        22.817
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.446,
+        22.72,
+        116.24,
+        23.181
+      ],
+      "place": 1543,
+      "country": "CN",
+      "localTrips": 4354184.0
+    },
+    {
+      "id": "tis",
+      "name": "Taishan",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.777,
+        "lat": 22.2585
+      },
+      "center": [
+        112.777,
+        22.2585
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.278,
+        21.55,
+        113.434,
+        22.466
+      ],
+      "place": 1545,
+      "country": "CN",
+      "localTrips": 4241092.0
+    },
+    {
+      "id": "haf",
+      "name": "Haifeng",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.3616,
+        "lat": 22.7836
+      },
+      "center": [
+        115.3616,
+        22.7836
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.893,
+        22.635,
+        115.638,
+        23.259
+      ],
+      "place": 1546,
+      "country": "CN",
+      "localTrips": 4243213.0
+    },
+    {
+      "id": "yae",
+      "name": "Yuancheng",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.6855,
+        "lat": 23.7025
+      },
+      "center": [
+        114.6855,
+        23.7025
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.788,
+        23.317,
+        115.378,
+        24.279
+      ],
+      "place": 1547,
+      "country": "CN",
+      "localTrips": 3942806.0
+    },
+    {
+      "id": "yag",
+      "name": "Yangchun",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.6225,
+        "lat": 21.759
+      },
+      "center": [
+        111.6225,
+        21.759
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.258,
+        21.486,
+        112.18,
+        22.711
+      ],
+      "place": 1548,
+      "country": "CN",
+      "localTrips": 3977818.0
+    },
+    {
+      "id": "xnn",
+      "name": "Xingning",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.7325,
+        "lat": 24.1461
+      },
+      "center": [
+        115.7325,
+        24.1461
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.459,
+        23.833,
+        116.055,
+        24.665
+      ],
+      "place": 1549,
+      "country": "CN",
+      "localTrips": 3605847.0
+    },
+    {
+      "id": "zhp",
+      "name": "Zhangpu",
+      "kind": "zone",
+      "origin": {
+        "lon": 117.3339,
+        "lat": 23.9535
+      },
+      "center": [
+        117.3339,
+        23.9535
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        117.105,
+        23.542,
+        118.044,
+        24.376
+      ],
+      "place": 1550,
+      "country": "CN",
+      "localTrips": 4079285.0
+    },
+    {
+      "id": "hzh",
+      "name": "Huazhou",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.4133,
+        "lat": 22.0253
+      },
+      "center": [
+        110.4133,
+        22.0253
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.301,
+        21.431,
+        110.769,
+        22.23
+      ],
+      "place": 1551,
+      "country": "CN",
+      "localTrips": 3592391.0
+    },
+    {
+      "id": "fek",
+      "name": "Fengkai",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.5258,
+        "lat": 23.2428
+      },
+      "center": [
+        111.5258,
+        23.2428
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.331,
+        22.774,
+        112.286,
+        24.001
+      ],
+      "place": 1552,
+      "country": "CN",
+      "localTrips": 3486985.0
+    },
+    {
+      "id": "cog",
+      "name": "Conghua",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.2079,
+        "lat": 24.0624
+      },
+      "center": [
+        114.2079,
+        24.0624
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.256,
+        23.352,
+        114.617,
+        24.313
+      ],
+      "place": 1553,
+      "country": "CN",
+      "localTrips": 3481145.0
+    },
+    {
+      "id": "jac",
+      "name": "Jiangcheng",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.9576,
+        "lat": 21.8255
+      },
+      "center": [
+        111.9576,
+        21.8255
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.693,
+        21.528,
+        112.385,
+        22.284
+      ],
+      "place": 1554,
+      "country": "CN",
+      "localTrips": 3566632.0
+    },
+    {
+      "id": "hii",
+      "name": "Huilai",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.292,
+        "lat": 23.034
+      },
+      "center": [
+        116.292,
+        23.034
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.896,
+        22.87,
+        116.591,
+        23.204
+      ],
+      "place": 1555,
+      "country": "CN",
+      "localTrips": 3454877.0
+    },
+    {
+      "id": "blu",
+      "name": "Boluo",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.2766,
+        "lat": 23.176
+      },
+      "center": [
+        114.2766,
+        23.176
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.819,
+        23.032,
+        114.715,
+        23.728
+      ],
+      "place": 1556,
+      "country": "CN",
+      "localTrips": 3387897.0
+    },
+    {
+      "id": "xil",
+      "name": "Xinluo",
+      "kind": "zone",
+      "origin": {
+        "lon": 117.0254,
+        "lat": 25.1023
+      },
+      "center": [
+        117.0254,
+        25.1023
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.827,
+        24.751,
+        117.354,
+        25.599
+      ],
+      "place": 1557,
+      "country": "CN",
+      "localTrips": 3557673.0
+    },
+    {
+      "id": "xas",
+      "name": "Xiashan",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.4102,
+        "lat": 21.202
+      },
+      "center": [
+        110.4102,
+        21.202
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.097,
+        20.847,
+        110.658,
+        21.346
+      ],
+      "place": 1558,
+      "country": "CN",
+      "localTrips": 3152589.0
+    },
+    {
+      "id": "xnx",
+      "name": "Xinxing",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.039,
+        "lat": 22.9338
+      },
+      "center": [
+        112.039,
+        22.9338
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.705,
+        22.349,
+        112.537,
+        23.152
+      ],
+      "place": 1559,
+      "country": "CN",
+      "localTrips": 3173265.0
+    },
+    {
+      "id": "zin",
+      "name": "Zijin",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.1758,
+        "lat": 23.6356
+      },
+      "center": [
+        115.1758,
+        23.6356
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.606,
+        23.099,
+        115.847,
+        23.799
+      ],
+      "place": 1560,
+      "country": "CN",
+      "localTrips": 3033383.0
+    },
+    {
+      "id": "zaa",
+      "name": "Zhao'an",
+      "kind": "zone",
+      "origin": {
+        "lon": 117.3036,
+        "lat": 24.3639
+      },
+      "center": [
+        117.3036,
+        24.3639
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.871,
+        23.583,
+        117.532,
+        24.599
+      ],
+      "place": 1561,
+      "country": "CN",
+      "localTrips": 2975051.0
+    },
+    {
+      "id": "wuh",
+      "name": "Wuhan",
+      "origin": {
+        "lon": 114.2643,
+        "lat": 30.5785
+      },
+      "center": [
+        114.2643,
+        30.5785
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.675,
+        29.954,
+        114.657,
+        30.808
+      ],
+      "place": 1562,
+      "country": "CN",
+      "localTrips": 26153500.0
+    },
+    {
+      "id": "nac",
+      "name": "Nanchang",
+      "origin": {
+        "lon": 115.8895,
+        "lat": 28.6676
+      },
+      "center": [
+        115.8895,
+        28.6676
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.505,
+        28.254,
+        116.426,
+        29.156
+      ],
+      "place": 1563,
+      "country": "CN",
+      "localTrips": 13843578.0
+    },
+    {
+      "id": "chs",
+      "name": "Changsha",
+      "origin": {
+        "lon": 113.0094,
+        "lat": 28.192
+      },
+      "center": [
+        113.0094,
+        28.192
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.585,
+        27.895,
+        113.527,
+        28.683
+      ],
+      "place": 1564,
+      "country": "CN",
+      "localTrips": 12821625.0
+    },
+    {
+      "id": "yih",
+      "name": "Yichun",
+      "origin": {
+        "lon": 114.3596,
+        "lat": 27.8019
+      },
+      "center": [
+        114.3596,
+        27.8019
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.862,
+        27.528,
+        114.628,
+        28.097
+      ],
+      "place": 1566,
+      "country": "CN",
+      "localTrips": 4334444.0
+    },
+    {
+      "id": "gan",
+      "name": "Ganzhou",
+      "origin": {
+        "lon": 114.9378,
+        "lat": 25.8591
+      },
+      "center": [
+        114.9378,
+        25.8591
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.465,
+        25.447,
+        115.082,
+        26.259
+      ],
+      "place": 1567,
+      "country": "CN",
+      "localTrips": 6045224.0
+    },
+    {
+      "id": "shx",
+      "name": "Shiyan",
+      "origin": {
+        "lon": 110.7945,
+        "lat": 32.6333
+      },
+      "center": [
+        110.7945,
+        32.6333
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.421,
+        32.377,
+        110.966,
+        32.791
+      ],
+      "place": 1568,
+      "country": "CN",
+      "localTrips": 3130862.0
+    },
+    {
+      "id": "zhz",
+      "name": "Zhuzhou",
+      "origin": {
+        "lon": 113.1491,
+        "lat": 27.8443
+      },
+      "center": [
+        113.1491,
+        27.8443
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.011,
+        27.729,
+        113.378,
+        28.046
+      ],
+      "place": 1569,
+      "country": "CN",
+      "localTrips": 3049938.0
+    },
+    {
+      "id": "jii",
+      "name": "Jianli",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.4065,
+        "lat": 29.3741
+      },
+      "center": [
+        112.4065,
+        29.3741
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.159,
+        29.029,
+        113.336,
+        30.212
+      ],
+      "place": 1570,
+      "country": "CN",
+      "localTrips": 7374620.0
+    },
+    {
+      "id": "xif",
+      "name": "Xinfeng",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.0123,
+        "lat": 25.8591
+      },
+      "center": [
+        115.0123,
+        25.8591
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.143,
+        24.47,
+        115.945,
+        26.294
+      ],
+      "place": 1572,
+      "country": "CN",
+      "localTrips": 6375824.0
+    },
+    {
+      "id": "hah",
+      "name": "Hanchuan",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.8358,
+        "lat": 30.5614
+      },
+      "center": [
+        113.8358,
+        30.5614
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.913,
+        30.052,
+        113.976,
+        30.876
+      ],
+      "place": 1573,
+      "country": "CN",
+      "localTrips": 6328119.0
+    },
+    {
+      "id": "jis",
+      "name": "Jishui",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.3974,
+        "lat": 27.7595
+      },
+      "center": [
+        115.3974,
+        27.7595
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.843,
+        26.625,
+        116.296,
+        27.985
+      ],
+      "place": 1575,
+      "country": "CN",
+      "localTrips": 6212030.0
+    },
+    {
+      "id": "liy",
+      "name": "Liuyang",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.6128,
+        "lat": 28.158
+      },
+      "center": [
+        113.6128,
+        28.158
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.15,
+        27.833,
+        114.277,
+        28.587
+      ],
+      "place": 1576,
+      "country": "CN",
+      "localTrips": 5295546.0
+    },
+    {
+      "id": "yus",
+      "name": "Yushan",
+      "kind": "zone",
+      "origin": {
+        "lon": 118.2384,
+        "lat": 28.6846
+      },
+      "center": [
+        118.2384,
+        28.6846
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        117.36,
+        27.785,
+        118.45,
+        29.314
+      ],
+      "place": 1577,
+      "country": "CN",
+      "localTrips": 5519873.0
+    },
+    {
+      "id": "xii",
+      "name": "Xiangyin",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.8767,
+        "lat": 28.6761
+      },
+      "center": [
+        112.8767,
+        28.6761
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.066,
+        28.123,
+        113.062,
+        29.212
+      ],
+      "place": 1579,
+      "country": "CN",
+      "localTrips": 5797365.0
+    },
+    {
+      "id": "daw",
+      "name": "Dawu",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.9705,
+        "lat": 31.2473
+      },
+      "center": [
+        113.9705,
+        31.2473
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.606,
+        30.736,
+        114.849,
+        31.875
+      ],
+      "place": 1581,
+      "country": "CN",
+      "localTrips": 5714291.0
+    },
+    {
+      "id": "biu",
+      "name": "Beihu",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.0333,
+        "lat": 25.8086
+      },
+      "center": [
+        113.0333,
+        25.8086
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.673,
+        25.416,
+        113.754,
+        26.306
+      ],
+      "place": 1582,
+      "country": "CN",
+      "localTrips": 4841490.0
+    },
+    {
+      "id": "pin",
+      "name": "Pingjiang",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.4129,
+        "lat": 29.4934
+      },
+      "center": [
+        113.4129,
+        29.4934
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.126,
+        28.407,
+        114.173,
+        29.868
+      ],
+      "place": 1583,
+      "country": "CN",
+      "localTrips": 5461256.0
+    },
+    {
+      "id": "zhx",
+      "name": "Zhongxiang",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.9114,
+        "lat": 31.6683
+      },
+      "center": [
+        112.9114,
+        31.6683
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.101,
+        30.685,
+        113.831,
+        32.729
+      ],
+      "place": 1587,
+      "country": "CN",
+      "localTrips": 5341070.0
+    },
+    {
+      "id": "tie",
+      "name": "Taihe, Yongxin",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.7859,
+        "lat": 26.4659
+      },
+      "center": [
+        114.7859,
+        26.4659
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.747,
+        26.127,
+        115.35,
+        27.794
+      ],
+      "place": 1588,
+      "country": "CN",
+      "localTrips": 4397304.0
+    },
+    {
+      "id": "gaa",
+      "name": "Gao'an",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.3596,
+        "lat": 28.4297
+      },
+      "center": [
+        115.3596,
+        28.4297
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.983,
+        27.806,
+        115.737,
+        28.664
+      ],
+      "place": 1589,
+      "country": "CN",
+      "localTrips": 4838743.0
+    },
+    {
+      "id": "hum",
+      "name": "Huangmei",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.5605,
+        "lat": 29.8518
+      },
+      "center": [
+        115.5605,
+        29.8518
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.181,
+        29.705,
+        116.154,
+        30.691
+      ],
+      "place": 1590,
+      "country": "CN",
+      "localTrips": 4498227.0
+    },
+    {
+      "id": "laa",
+      "name": "Lianyuan",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.9588,
+        "lat": 27.751
+      },
+      "center": [
+        111.9588,
+        27.751
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.534,
+        27.432,
+        112.15,
+        28.053
+      ],
+      "place": 1591,
+      "country": "CN",
+      "localTrips": 5013335.0
+    },
+    {
+      "id": "qid",
+      "name": "Qidong",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.5702,
+        "lat": 26.4491
+      },
+      "center": [
+        111.5702,
+        26.4491
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.444,
+        26.228,
+        112.355,
+        27.094
+      ],
+      "place": 1592,
+      "country": "CN",
+      "localTrips": 4595586.0
+    },
+    {
+      "id": "snr",
+      "name": "Shangrao",
+      "kind": "zone",
+      "origin": {
+        "lon": 118.1854,
+        "lat": 28.4382
+      },
+      "center": [
+        118.1854,
+        28.4382
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        117.675,
+        27.95,
+        118.503,
+        28.859
+      ],
+      "place": 1594,
+      "country": "CN",
+      "localTrips": 4611027.0
+    },
+    {
+      "id": "ley",
+      "name": "Leiyang",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.8211,
+        "lat": 26.4153
+      },
+      "center": [
+        112.8211,
+        26.4153
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.602,
+        26.099,
+        113.247,
+        26.729
+      ],
+      "place": 1595,
+      "country": "CN",
+      "localTrips": 4469429.0
+    },
+    {
+      "id": "tnm",
+      "name": "Tianmen",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.1442,
+        "lat": 30.6642
+      },
+      "center": [
+        113.1442,
+        30.6642
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.565,
+        30.362,
+        113.482,
+        30.925
+      ],
+      "place": 1597,
+      "country": "CN",
+      "localTrips": 4641145.0
+    },
+    {
+      "id": "yud",
+      "name": "Yudu",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.4038,
+        "lat": 25.9602
+      },
+      "center": [
+        115.4038,
+        25.9602
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.132,
+        24.854,
+        116.054,
+        26.367
+      ],
+      "place": 1599,
+      "country": "CN",
+      "localTrips": 4886875.0
+    },
+    {
+      "id": "nid",
+      "name": "Ningdu",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.0093,
+        "lat": 26.4744
+      },
+      "center": [
+        116.0093,
+        26.4744
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.651,
+        26.069,
+        117.322,
+        27.933
+      ],
+      "place": 1600,
+      "country": "CN",
+      "localTrips": 4616005.0
+    },
+    {
+      "id": "duc",
+      "name": "Duchang",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.0356,
+        "lat": 29.4508
+      },
+      "center": [
+        116.0356,
+        29.4508
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.356,
+        29.036,
+        116.663,
+        29.872
+      ],
+      "place": 1601,
+      "country": "CN",
+      "localTrips": 4349469.0
+    },
+    {
+      "id": "zao",
+      "name": "Zaoyang",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.933,
+        "lat": 32.2451
+      },
+      "center": [
+        112.933,
+        32.2451
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.236,
+        30.81,
+        113.137,
+        32.446
+      ],
+      "place": 1602,
+      "country": "CN",
+      "localTrips": 5034661.0
+    },
+    {
+      "id": "guh",
+      "name": "Gucheng",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.1592,
+        "lat": 32.0297
+      },
+      "center": [
+        112.1592,
+        32.0297
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.776,
+        31.762,
+        112.25,
+        32.991
+      ],
+      "place": 1603,
+      "country": "CN",
+      "localTrips": 4963884.0
+    },
+    {
+      "id": "gng",
+      "name": "Gong'an",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.5275,
+        "lat": 30.6899
+      },
+      "center": [
+        112.5275,
+        30.6899
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.783,
+        29.601,
+        112.738,
+        30.955
+      ],
+      "place": 1604,
+      "country": "CN",
+      "localTrips": 4998745.0
+    },
+    {
+      "id": "yug",
+      "name": "Yugan",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.8099,
+        "lat": 28.4807
+      },
+      "center": [
+        116.8099,
+        28.4807
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.0,
+        28.142,
+        116.923,
+        29.075
+      ],
+      "place": 1605,
+      "country": "CN",
+      "localTrips": 4666462.0
+    },
+    {
+      "id": "lnc",
+      "name": "Linchuan",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.3895,
+        "lat": 27.9884
+      },
+      "center": [
+        116.3895,
+        27.9884
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.036,
+        27.489,
+        116.674,
+        28.276
+      ],
+      "place": 1606,
+      "country": "CN",
+      "localTrips": 4192969.0
+    },
+    {
+      "id": "yux",
+      "name": "Yueyang",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.091,
+        "lat": 29.3741
+      },
+      "center": [
+        113.091,
+        29.3741
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.745,
+        28.935,
+        113.749,
+        29.532
+      ],
+      "place": 1607,
+      "country": "CN",
+      "localTrips": 4534410.0
+    },
+    {
+      "id": "shf",
+      "name": "Shuangfeng",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.2007,
+        "lat": 27.4546
+      },
+      "center": [
+        112.2007,
+        27.4546
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.842,
+        27.188,
+        112.671,
+        28.082
+      ],
+      "place": 1608,
+      "country": "CN",
+      "localTrips": 4620605.0
+    },
+    {
+      "id": "hup",
+      "name": "Huangpi",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.3649,
+        "lat": 30.8784
+      },
+      "center": [
+        114.3649,
+        30.8784
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.13,
+        30.538,
+        115.099,
+        31.381
+      ],
+      "place": 1610,
+      "country": "CN",
+      "localTrips": 4638049.0
+    },
+    {
+      "id": "xih",
+      "name": "Xishui",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.8721,
+        "lat": 30.4673
+      },
+      "center": [
+        114.8721,
+        30.4673
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.484,
+        29.997,
+        115.652,
+        30.917
+      ],
+      "place": 1611,
+      "country": "CN",
+      "localTrips": 4674747.0
+    },
+    {
+      "id": "lpi",
+      "name": "Leping",
+      "kind": "zone",
+      "origin": {
+        "lon": 117.4273,
+        "lat": 28.4042
+      },
+      "center": [
+        117.4273,
+        28.4042
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.751,
+        28.047,
+        117.645,
+        29.235
+      ],
+      "place": 1612,
+      "country": "CN",
+      "localTrips": 4454908.0
+    },
+    {
+      "id": "qiy",
+      "name": "Qiyang",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.3943,
+        "lat": 26.3985
+      },
+      "center": [
+        112.3943,
+        26.3985
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.564,
+        26.018,
+        112.709,
+        26.871
+      ],
+      "place": 1615,
+      "country": "CN",
+      "localTrips": 4401375.0
+    },
+    {
+      "id": "jnx",
+      "name": "Ji'an",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.9159,
+        "lat": 27.0317
+      },
+      "center": [
+        114.9159,
+        27.0317
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.995,
+        26.804,
+        115.183,
+        28.45
+      ],
+      "place": 1616,
+      "country": "CN",
+      "localTrips": 4076291.0
+    },
+    {
+      "id": "lli",
+      "name": "Liling",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.5076,
+        "lat": 27.6663
+      },
+      "center": [
+        113.5076,
+        27.6663
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.144,
+        27.359,
+        113.782,
+        27.987
+      ],
+      "place": 1617,
+      "country": "CN",
+      "localTrips": 3742526.0
+    },
+    {
+      "id": "shd",
+      "name": "Shaodong",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.499,
+        "lat": 27.2431
+      },
+      "center": [
+        111.499,
+        27.2431
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.353,
+        26.908,
+        112.107,
+        27.483
+      ],
+      "place": 1618,
+      "country": "CN",
+      "localTrips": 4302513.0
+    },
+    {
+      "id": "xio",
+      "name": "Xiangzhou",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.1503,
+        "lat": 32.0469
+      },
+      "center": [
+        112.1503,
+        32.0469
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.723,
+        31.82,
+        112.576,
+        32.495
+      ],
+      "place": 1619,
+      "country": "CN",
+      "localTrips": 4432234.0
+    },
+    {
+      "id": "hox",
+      "name": "Honghu",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.908,
+        "lat": 29.9799
+      },
+      "center": [
+        113.908,
+        29.9799
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.101,
+        29.454,
+        114.254,
+        30.397
+      ],
+      "place": 1620,
+      "country": "CN",
+      "localTrips": 4351772.0
+    },
+    {
+      "id": "zij",
+      "name": "Zhijiang",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.7829,
+        "lat": 30.827
+      },
+      "center": [
+        111.7829,
+        30.827
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.078,
+        30.081,
+        112.367,
+        31.214
+      ],
+      "place": 1621,
+      "country": "CN",
+      "localTrips": 4444615.0
+    },
+    {
+      "id": "dye",
+      "name": "Daye",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.2009,
+        "lat": 29.8518
+      },
+      "center": [
+        115.2009,
+        29.8518
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.505,
+        29.49,
+        115.526,
+        30.347
+      ],
+      "place": 1622,
+      "country": "CN",
+      "localTrips": 4280658.0
+    },
+    {
+      "id": "qii",
+      "name": "Qianjiang",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.2775,
+        "lat": 30.2961
+      },
+      "center": [
+        112.2775,
+        30.2961
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.166,
+        29.893,
+        113.048,
+        30.666
+      ],
+      "place": 1623,
+      "country": "CN",
+      "localTrips": 4472771.0
+    },
+    {
+      "id": "dok",
+      "name": "Dongkou",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.6259,
+        "lat": 26.7276
+      },
+      "center": [
+        110.6259,
+        26.7276
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.123,
+        26.531,
+        111.052,
+        27.39
+      ],
+      "place": 1625,
+      "country": "CN",
+      "localTrips": 4123409.0
+    },
+    {
+      "id": "hns",
+      "name": "Hanshou",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.6981,
+        "lat": 29.0504
+      },
+      "center": [
+        111.6981,
+        29.0504
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.562,
+        28.599,
+        112.323,
+        29.181
+      ],
+      "place": 1626,
+      "country": "CN",
+      "localTrips": 4199268.0
+    },
+    {
+      "id": "ayu",
+      "name": "Anyuan",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.8405,
+        "lat": 27.6155
+      },
+      "center": [
+        113.8405,
+        27.6155
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.554,
+        27.311,
+        114.082,
+        28.027
+      ],
+      "place": 1627,
+      "country": "CN",
+      "localTrips": 3940278.0
+    },
+    {
+      "id": "fec",
+      "name": "Fengcheng",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.7505,
+        "lat": 28.209
+      },
+      "center": [
+        115.7505,
+        28.209
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.409,
+        27.71,
+        116.17,
+        28.44
+      ],
+      "place": 1628,
+      "country": "CN",
+      "localTrips": 3930974.0
+    },
+    {
+      "id": "mch",
+      "name": "Macheng",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.029,
+        "lat": 31.1786
+      },
+      "center": [
+        115.029,
+        31.1786
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.654,
+        30.503,
+        116.09,
+        31.627
+      ],
+      "place": 1629,
+      "country": "CN",
+      "localTrips": 4083100.0
+    },
+    {
+      "id": "xug",
+      "name": "Xunyang, Pengze",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.9974,
+        "lat": 29.7323
+      },
+      "center": [
+        115.9974,
+        29.7323
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.846,
+        29.474,
+        116.921,
+        30.099
+      ],
+      "place": 1630,
+      "country": "CN",
+      "localTrips": 3719242.0
+    },
+    {
+      "id": "xag",
+      "name": "Xiangtan",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.9291,
+        "lat": 27.9036
+      },
+      "center": [
+        112.9291,
+        27.9036
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.395,
+        27.323,
+        113.074,
+        28.096
+      ],
+      "place": 1631,
+      "country": "CN",
+      "localTrips": 3784314.0
+    },
+    {
+      "id": "poy",
+      "name": "Poyang",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.6662,
+        "lat": 28.9908
+      },
+      "center": [
+        116.6662,
+        28.9908
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.374,
+        28.764,
+        117.11,
+        29.72
+      ],
+      "place": 1632,
+      "country": "CN",
+      "localTrips": 3702364.0
+    },
+    {
+      "id": "suu",
+      "name": "Suichuan",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.3537,
+        "lat": 25.3964
+      },
+      "center": [
+        114.3537,
+        25.3964
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.889,
+        25.235,
+        114.788,
+        26.734
+      ],
+      "place": 1634,
+      "country": "CN",
+      "localTrips": 3274756.0
+    },
+    {
+      "id": "xnu",
+      "name": "Xingguo",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.3433,
+        "lat": 26.331
+      },
+      "center": [
+        115.3433,
+        26.331
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.774,
+        26.031,
+        115.882,
+        27.313
+      ],
+      "place": 1636,
+      "country": "CN",
+      "localTrips": 3670293.0
+    },
+    {
+      "id": "yui",
+      "name": "Yushui",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.9082,
+        "lat": 27.7849
+      },
+      "center": [
+        114.9082,
+        27.7849
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.716,
+        27.567,
+        115.423,
+        28.115
+      ],
+      "place": 1637,
+      "country": "CN",
+      "localTrips": 3382446.0
+    },
+    {
+      "id": "niy",
+      "name": "Ningyuan",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.6261,
+        "lat": 26.2214
+      },
+      "center": [
+        111.6261,
+        26.2214
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.165,
+        25.174,
+        112.274,
+        26.379
+      ],
+      "place": 1638,
+      "country": "CN",
+      "localTrips": 3707019.0
+    },
+    {
+      "id": "ech",
+      "name": "Echeng",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.872,
+        "lat": 30.4074
+      },
+      "center": [
+        114.872,
+        30.4074
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.631,
+        30.107,
+        115.288,
+        30.453
+      ],
+      "place": 1639,
+      "country": "CN",
+      "localTrips": 3574770.0
+    },
+    {
+      "id": "xns",
+      "name": "Xinshao",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.4315,
+        "lat": 27.7002
+      },
+      "center": [
+        111.4315,
+        27.7002
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.119,
+        27.178,
+        111.85,
+        27.859
+      ],
+      "place": 1640,
+      "country": "CN",
+      "localTrips": 3393268.0
+    },
+    {
+      "id": "dig",
+      "name": "Dingcheng",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.8708,
+        "lat": 29.6384
+      },
+      "center": [
+        111.8708,
+        29.6384
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.401,
+        28.565,
+        112.199,
+        29.789
+      ],
+      "place": 1641,
+      "country": "CN",
+      "localTrips": 3392189.0
+    },
+    {
+      "id": "lnw",
+      "name": "Linwu",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.1871,
+        "lat": 25.3796
+      },
+      "center": [
+        112.1871,
+        25.3796
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.889,
+        24.991,
+        112.802,
+        26.134
+      ],
+      "place": 1644,
+      "country": "CN",
+      "localTrips": 3526233.0
+    },
+    {
+      "id": "cnj",
+      "name": "Changjiang",
+      "kind": "zone",
+      "origin": {
+        "lon": 117.182,
+        "lat": 29.3059
+      },
+      "center": [
+        117.182,
+        29.3059
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.98,
+        29.0,
+        118.16,
+        29.952
+      ],
+      "place": 1645,
+      "country": "CN",
+      "localTrips": 3165571.0
+    },
+    {
+      "id": "gix",
+      "name": "Guixi",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.635,
+        "lat": 27.5647
+      },
+      "center": [
+        116.635,
+        27.5647
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.375,
+        27.266,
+        117.488,
+        28.649
+      ],
+      "place": 1646,
+      "country": "CN",
+      "localTrips": 3267797.0
+    },
+    {
+      "id": "alu",
+      "name": "Anlu",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.68,
+        "lat": 31.2558
+      },
+      "center": [
+        113.68,
+        31.2558
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.289,
+        30.697,
+        113.968,
+        31.486
+      ],
+      "place": 1647,
+      "country": "CN",
+      "localTrips": 3262707.0
+    },
+    {
+      "id": "xaa",
+      "name": "Xiaonan",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.9158,
+        "lat": 30.9384
+      },
+      "center": [
+        113.9158,
+        30.9384
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.807,
+        30.74,
+        114.208,
+        31.177
+      ],
+      "place": 1648,
+      "country": "CN",
+      "localTrips": 3098363.0
+    },
+    {
+      "id": "guu",
+      "name": "Guangshui",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.8269,
+        "lat": 31.6253
+      },
+      "center": [
+        113.8269,
+        31.6253
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.502,
+        31.366,
+        114.23,
+        32.372
+      ],
+      "place": 1649,
+      "country": "CN",
+      "localTrips": 3359788.0
+    },
+    {
+      "id": "rui",
+      "name": "Ruijin",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.0238,
+        "lat": 25.876
+      },
+      "center": [
+        116.0238,
+        25.876
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        115.665,
+        25.53,
+        116.654,
+        26.997
+      ],
+      "place": 1651,
+      "country": "CN",
+      "localTrips": 3305173.0
+    },
+    {
+      "id": "ruc",
+      "name": "Ruichang",
+      "kind": "zone",
+      "origin": {
+        "lon": 115.6782,
+        "lat": 29.7579
+      },
+      "center": [
+        115.6782,
+        29.7579
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        114.45,
+        28.858,
+        116.27,
+        29.87
+      ],
+      "place": 1652,
+      "country": "CN",
+      "localTrips": 3027718.0
+    },
+    {
+      "id": "dxx",
+      "name": "Dao",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.5727,
+        "lat": 25.1779
+      },
+      "center": [
+        111.5727,
+        25.1779
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.926,
+        24.622,
+        112.191,
+        25.87
+      ],
+      "place": 1653,
+      "country": "CN",
+      "localTrips": 3353946.0
+    },
+    {
+      "id": "nii",
+      "name": "Ningxiang",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.5579,
+        "lat": 28.2769
+      },
+      "center": [
+        112.5579,
+        28.2769
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.87,
+        27.865,
+        112.8,
+        28.508
+      ],
+      "place": 1655,
+      "country": "CN",
+      "localTrips": 3200397.0
+    },
+    {
+      "id": "hsh",
+      "name": "Heshan",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.36,
+        "lat": 28.5826
+      },
+      "center": [
+        112.36,
+        28.5826
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.17,
+        28.259,
+        112.752,
+        28.834
+      ],
+      "place": 1656,
+      "country": "CN",
+      "localTrips": 2906181.0
+    },
+    {
+      "id": "xax",
+      "name": "Xian'an",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.3327,
+        "lat": 29.8262
+      },
+      "center": [
+        114.3327,
+        29.8262
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.702,
+        29.184,
+        114.989,
+        30.054
+      ],
+      "place": 1657,
+      "country": "CN",
+      "localTrips": 3203797.0
+    },
+    {
+      "id": "mlu",
+      "name": "Miluo",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.1674,
+        "lat": 28.7867
+      },
+      "center": [
+        113.1674,
+        28.7867
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.844,
+        28.445,
+        113.464,
+        29.086
+      ],
+      "place": 1658,
+      "country": "CN",
+      "localTrips": 2713554.0
+    },
+    {
+      "id": "yza",
+      "name": "Yizhang",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.9454,
+        "lat": 26.0865
+      },
+      "center": [
+        113.9454,
+        26.0865
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.605,
+        24.875,
+        114.253,
+        26.237
+      ],
+      "place": 1660,
+      "country": "CN",
+      "localTrips": 3000268.0
+    },
+    {
+      "id": "dnx",
+      "name": "Dongxiang",
+      "kind": "zone",
+      "origin": {
+        "lon": 116.6043,
+        "lat": 28.2429
+      },
+      "center": [
+        116.6043,
+        28.2429
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.319,
+        28.013,
+        117.167,
+        28.629
+      ],
+      "place": 1661,
+      "country": "CN",
+      "localTrips": 2927935.0
+    },
+    {
+      "id": "jns",
+      "name": "Jingshan",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.1121,
+        "lat": 31.0242
+      },
+      "center": [
+        113.1121,
+        31.0242
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.697,
+        30.679,
+        113.651,
+        31.958
+      ],
+      "place": 1663,
+      "country": "CN",
+      "localTrips": 3064604.0
+    },
+    {
+      "id": "hon",
+      "name": "Hong Kong",
+      "origin": {
+        "lon": 114.2301,
+        "lat": 22.3168
+      },
+      "center": [
+        114.2301,
+        22.3168
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.819,
+        22.137,
+        114.462,
+        22.581
+      ],
+      "place": 1664,
+      "country": "HK",
+      "localTrips": 19078793.0
+    },
+    {
+      "id": "tai",
+      "name": "Taipei",
+      "origin": {
+        "lon": 121.499,
+        "lat": 24.9931
+      },
+      "center": [
+        121.499,
+        24.9931
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.965,
+        24.707,
+        122.106,
+        25.652
+      ],
+      "place": 1665,
+      "country": "TW",
+      "localTrips": 29265931.0
+    },
+    {
+      "id": "tac",
+      "name": "Taichung",
+      "origin": {
+        "lon": 120.6855,
+        "lat": 24.1294
+      },
+      "center": [
+        120.6855,
+        24.1294
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.345,
+        23.775,
+        120.858,
+        24.381
+      ],
+      "place": 1666,
+      "country": "TW",
+      "localTrips": 11504715.0
+    },
+    {
+      "id": "kao",
+      "name": "Kaohsiung",
+      "origin": {
+        "lon": 120.3113,
+        "lat": 22.6252
+      },
+      "center": [
+        120.3113,
+        22.6252
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.177,
+        22.411,
+        120.632,
+        22.923
+      ],
+      "place": 1667,
+      "country": "TW",
+      "localTrips": 8391977.0
+    },
+    {
+      "id": "taa",
+      "name": "Tainan",
+      "origin": {
+        "lon": 120.2275,
+        "lat": 23.009
+      },
+      "center": [
+        120.2275,
+        23.009
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.045,
+        22.83,
+        120.439,
+        23.195
+      ],
+      "place": 1668,
+      "country": "TW",
+      "localTrips": 3773199.0
+    },
+    {
+      "id": "ead",
+      "name": "East District",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.4622,
+        "lat": 23.4851
+      },
+      "center": [
+        120.4622,
+        23.4851
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.015,
+        22.753,
+        121.37,
+        24.264
+      ],
+      "place": 1669,
+      "country": "TW",
+      "localTrips": 6154571.0
+    },
+    {
+      "id": "xid",
+      "name": "Xiangshan District",
+      "kind": "zone",
+      "origin": {
+        "lon": 120.9732,
+        "lat": 24.8084
+      },
+      "center": [
+        120.9732,
+        24.8084
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.531,
+        24.066,
+        121.471,
+        24.872
+      ],
+      "place": 1671,
+      "country": "TW",
+      "localTrips": 3107807.0
+    },
+    {
+      "id": "mgg",
+      "name": "Magong City",
+      "kind": "zone",
+      "origin": {
+        "lon": 119.5725,
+        "lat": 23.5687
+      },
+      "center": [
+        119.5725,
+        23.5687
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.294,
+        23.168,
+        119.715,
+        23.775
+      ],
+      "place": 1673,
+      "country": "TW",
+      "localTrips": 231139.0
+    },
+    {
+      "id": "mcu",
+      "name": "Macau",
+      "origin": {
+        "lon": 113.5433,
+        "lat": 22.2001
+      },
+      "center": [
+        113.5433,
+        22.2001
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.509,
+        22.091,
+        113.618,
+        22.236
+      ],
+      "place": 1674,
+      "country": "MO",
+      "localTrips": 1531176.0
+    },
+    {
+      "id": "lea",
+      "name": "Lechang",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.3479,
+        "lat": 25.1275
+      },
+      "center": [
+        113.3479,
+        25.1275
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.826,
+        24.079,
+        115.291,
+        25.539
+      ],
+      "place": 1675,
+      "country": "CN",
+      "localTrips": 5583122.0
+    },
+    {
+      "id": "fua",
+      "name": "Fu'an",
+      "kind": "zone",
+      "origin": {
+        "lon": 119.6497,
+        "lat": 27.0909
+      },
+      "center": [
+        119.6497,
+        27.0909
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        119.108,
+        26.468,
+        120.743,
+        27.462
+      ],
+      "place": 1676,
+      "country": "CN",
+      "localTrips": 6388655.0
+    },
+    {
+      "id": "jio",
+      "name": "Jian'ou",
+      "kind": "zone",
+      "origin": {
+        "lon": 117.4625,
+        "lat": 27.3531
+      },
+      "center": [
+        117.4625,
+        27.3531
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.978,
+        26.63,
+        119.755,
+        28.339
+      ],
+      "place": 1677,
+      "country": "CN",
+      "localTrips": 6136706.0
+    },
+    {
+      "id": "xiy",
+      "name": "Xianyou",
+      "kind": "zone",
+      "origin": {
+        "lon": 118.1985,
+        "lat": 25.4636
+      },
+      "center": [
+        118.1985,
+        25.4636
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        117.665,
+        24.912,
+        118.957,
+        26.461
+      ],
+      "place": 1678,
+      "country": "CN",
+      "localTrips": 5818658.0
+    },
+    {
+      "id": "ani",
+      "name": "Anxi",
+      "kind": "zone",
+      "origin": {
+        "lon": 118.1885,
+        "lat": 25.0603
+      },
+      "center": [
+        118.1885,
+        25.0603
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.989,
+        24.419,
+        118.314,
+        25.81
+      ],
+      "place": 1679,
+      "country": "CN",
+      "localTrips": 5308536.0
+    },
+    {
+      "id": "yap",
+      "name": "Yanping",
+      "kind": "zone",
+      "origin": {
+        "lon": 118.1689,
+        "lat": 26.6432
+      },
+      "center": [
+        118.1689,
+        26.6432
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        116.766,
+        25.463,
+        118.689,
+        27.217
+      ],
+      "place": 1680,
+      "country": "CN",
+      "localTrips": 4868580.0
+    },
+    {
+      "id": "laj",
+      "name": "Lianjiang, Gutian",
+      "kind": "zone",
+      "origin": {
+        "lon": 119.5464,
+        "lat": 26.4913
+      },
+      "center": [
+        119.5464,
+        26.4913
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        118.355,
+        25.643,
+        119.978,
+        26.894
+      ],
+      "place": 1681,
+      "country": "CN",
+      "localTrips": 4508115.0
+    },
+    {
+      "id": "yic",
+      "name": "Yichang",
+      "origin": {
+        "lon": 111.2847,
+        "lat": 30.6984
+      },
+      "center": [
+        111.2847,
+        30.6984
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.828,
+        30.526,
+        111.683,
+        31.489
+      ],
+      "place": 1682,
+      "country": "CN",
+      "localTrips": 5392534.0
+    },
+    {
+      "id": "xis",
+      "name": "Xiushui",
+      "kind": "zone",
+      "origin": {
+        "lon": 114.442,
+        "lat": 28.1071
+      },
+      "center": [
+        114.442,
+        28.1071
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.916,
+        27.976,
+        115.78,
+        29.387
+      ],
+      "place": 1683,
+      "country": "CN",
+      "localTrips": 6350723.0
+    },
+    {
+      "id": "hec",
+      "name": "Hecheng",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.9646,
+        "lat": 27.5562
+      },
+      "center": [
+        109.9646,
+        27.5562
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        109.269,
+        27.051,
+        111.036,
+        28.325
+      ],
+      "place": 1684,
+      "country": "CN",
+      "localTrips": 5977991.0
+    },
+    {
+      "id": "ens",
+      "name": "Enshi",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.4672,
+        "lat": 30.2619
+      },
+      "center": [
+        109.4672,
+        30.2619
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        108.341,
+        29.098,
+        110.003,
+        30.686
+      ],
+      "place": 1685,
+      "country": "CN",
+      "localTrips": 5725630.0
+    },
+    {
+      "id": "you",
+      "name": "You",
+      "kind": "zone",
+      "origin": {
+        "lon": 113.5462,
+        "lat": 26.7951
+      },
+      "center": [
+        113.5462,
+        26.7951
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.861,
+        26.489,
+        113.942,
+        28.033
+      ],
+      "place": 1686,
+      "country": "CN",
+      "localTrips": 5331505.0
+    },
+    {
+      "id": "hen",
+      "name": "Hengyang",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.8688,
+        "lat": 26.6685
+      },
+      "center": [
+        112.8688,
+        26.6685
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.975,
+        26.529,
+        113.169,
+        27.392
+      ],
+      "place": 1687,
+      "country": "CN",
+      "localTrips": 5543538.0
+    },
+    {
+      "id": "toy",
+      "name": "Taoyuan",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.1265,
+        "lat": 29.4252
+      },
+      "center": [
+        111.1265,
+        29.4252
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.466,
+        28.39,
+        111.632,
+        30.147
+      ],
+      "place": 1688,
+      "country": "CN",
+      "localTrips": 5343049.0
+    },
+    {
+      "id": "loh",
+      "name": "Longhui",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.4621,
+        "lat": 26.8881
+      },
+      "center": [
+        111.4621,
+        26.8881
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.603,
+        26.659,
+        111.691,
+        27.684
+      ],
+      "place": 1689,
+      "country": "CN",
+      "localTrips": 5407970.0
+    },
+    {
+      "id": "yua",
+      "name": "Yuanling",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.1823,
+        "lat": 28.0053
+      },
+      "center": [
+        110.1823,
+        28.0053
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        109.393,
+        27.519,
+        111.131,
+        29.475
+      ],
+      "place": 1690,
+      "country": "CN",
+      "localTrips": 4805703.0
+    },
+    {
+      "id": "hoj",
+      "name": "Hongjiang",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.1401,
+        "lat": 27.3192
+      },
+      "center": [
+        110.1401,
+        27.3192
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        109.247,
+        25.849,
+        110.638,
+        27.498
+      ],
+      "place": 1691,
+      "country": "CN",
+      "localTrips": 4943630.0
+    },
+    {
+      "id": "lxx",
+      "name": "Li",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.757,
+        "lat": 29.647
+      },
+      "center": [
+        111.757,
+        29.647
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        111.193,
+        29.104,
+        112.824,
+        29.975
+      ],
+      "place": 1692,
+      "country": "CN",
+      "localTrips": 4993303.0
+    },
+    {
+      "id": "los",
+      "name": "Longshan",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.8534,
+        "lat": 28.9993
+      },
+      "center": [
+        109.8534,
+        28.9993
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        109.155,
+        28.379,
+        110.784,
+        29.811
+      ],
+      "place": 1693,
+      "country": "CN",
+      "localTrips": 4509734.0
+    },
+    {
+      "id": "yny",
+      "name": "Yunyang",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.7131,
+        "lat": 32.3054
+      },
+      "center": [
+        109.7131,
+        32.3054
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        109.414,
+        31.489,
+        111.29,
+        33.291
+      ],
+      "place": 1694,
+      "country": "CN",
+      "localTrips": 4424770.0
+    },
+    {
+      "id": "ahu",
+      "name": "Anhua",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.1368,
+        "lat": 28.5231
+      },
+      "center": [
+        112.1368,
+        28.5231
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.698,
+        27.961,
+        112.338,
+        28.699
+      ],
+      "place": 1695,
+      "country": "CN",
+      "localTrips": 4434277.0
+    },
+    {
+      "id": "hes",
+      "name": "Hengshan",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.6021,
+        "lat": 26.9303
+      },
+      "center": [
+        112.6021,
+        26.9303
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.435,
+        26.732,
+        112.963,
+        27.491
+      ],
+      "place": 1696,
+      "country": "CN",
+      "localTrips": 4190594.0
+    },
+    {
+      "id": "bdo",
+      "name": "Badong",
+      "kind": "zone",
+      "origin": {
+        "lon": 110.3267,
+        "lat": 30.6299
+      },
+      "center": [
+        110.3267,
+        30.6299
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        109.542,
+        30.095,
+        111.362,
+        31.417
+      ],
+      "place": 1697,
+      "country": "CN",
+      "localTrips": 3820251.0
+    },
+    {
+      "id": "hed",
+      "name": "Hengdong",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.9433,
+        "lat": 27.0824
+      },
+      "center": [
+        112.9433,
+        27.0824
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.717,
+        26.025,
+        114.369,
+        27.462
+      ],
+      "place": 1698,
+      "country": "CN",
+      "localTrips": 3557173.0
+    },
+    {
+      "id": "naz",
+      "name": "Nanzhang",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.8376,
+        "lat": 31.7801
+      },
+      "center": [
+        111.8376,
+        31.7801
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        109.914,
+        31.067,
+        112.174,
+        32.529
+      ],
+      "place": 1699,
+      "country": "CN",
+      "localTrips": 3426880.0
+    },
+    {
+      "id": "giy",
+      "name": "Guiyang",
+      "kind": "zone",
+      "origin": {
+        "lon": 112.7324,
+        "lat": 25.7497
+      },
+      "center": [
+        112.7324,
+        25.7497
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        112.203,
+        25.435,
+        113.618,
+        26.509
+      ],
+      "place": 1700,
+      "country": "CN",
+      "localTrips": 3389689.0
+    },
+    {
+      "id": "sog",
+      "name": "Songzi",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.5605,
+        "lat": 29.6982
+      },
+      "center": [
+        109.5605,
+        29.6982
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        109.17,
+        29.536,
+        112.068,
+        30.436
+      ],
+      "place": 1701,
+      "country": "CN",
+      "localTrips": 3312583.0
+    },
+    {
+      "id": "feh",
+      "name": "Fenghuang",
+      "kind": "zone",
+      "origin": {
+        "lon": 109.7408,
+        "lat": 28.3108
+      },
+      "center": [
+        109.7408,
+        28.3108
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        109.231,
+        27.704,
+        110.261,
+        28.65
+      ],
+      "place": 1702,
+      "country": "CN",
+      "localTrips": 3362088.0
+    },
+    {
+      "id": "dnn",
+      "name": "Dong'an",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.2941,
+        "lat": 26.3985
+      },
+      "center": [
+        111.2941,
+        26.3985
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.461,
+        26.102,
+        111.592,
+        26.94
+      ],
+      "place": 1703,
+      "country": "CN",
+      "localTrips": 3043748.0
+    },
+    {
+      "id": "xnh",
+      "name": "Xinhua",
+      "kind": "zone",
+      "origin": {
+        "lon": 111.297,
+        "lat": 27.7426
+      },
+      "center": [
+        111.297,
+        27.7426
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        110.744,
+        27.509,
+        111.708,
+        28.257
+      ],
+      "place": 1704,
+      "country": "CN",
+      "localTrips": 2992167.0
+    },
+    {
+      "id": "zht",
+      "name": "Zhubei City",
+      "kind": "zone",
+      "origin": {
+        "lon": 121.0207,
+        "lat": 24.8168
+      },
+      "center": [
+        121.0207,
+        24.8168
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        120.434,
+        21.878,
+        122.028,
+        25.14
+      ],
+      "place": 1705,
+      "country": "TW",
+      "localTrips": 4878438.0
+    },
+    {
+      "id": "jiw",
+      "name": "Jincheng Township",
+      "kind": "zone",
+      "origin": {
+        "lon": 118.315,
+        "lat": 24.431
+      },
+      "center": [
+        118.315,
+        24.431
+      ],
+      "zoom": 10.5,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        118.133,
+        24.36,
+        118.495,
+        24.548
+      ],
+      "place": 1706,
+      "country": "TW",
+      "localTrips": 152875.0
     }
   ]
 }

@@ -270,9 +270,19 @@ def land_function(mask):
 
 # ---------------------------------------------------------------- national figures (World Bank)
 
+# places the World Bank leaves out: (employment-to-population ratio 15+, share aged 0-14, year, source)
+NATIONAL = {
+    "TW": (0.5616, 0.1172, 2024, "DGBAS manpower survey 2024, 11.61M employed over 20.66M aged 15+; Ministry of the "
+                                 "Interior household registration end 2024, 2,742,386 aged 0-14 of 23,400,220 (T-897)"),
+}
+
+
 def worldbank(iso2):
     """(jobs per resident, share aged 0-14) from the World Bank's ILO employment-to-population
     ratio (15+) and population ages 0-14, the latest year with both."""
+    if iso2 in NATIONAL:
+        emp, kids, year, _ = NATIONAL[iso2]
+        return emp * (1 - kids), kids, year
     path = raw(f"worldbank_{iso2}.json")
     if not os.path.exists(path):
         r = requests.get(WORLDBANK.format(iso2=iso2), headers=b.UA, timeout=60)
