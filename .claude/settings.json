@@ -28,5 +28,19 @@
       "C:\\Users\\anita\\projects\\maps\\ancestrydots\\ancestrydots\\.git",
       "C:\\Users\\anita\\projects\\maps\\mapspam"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/Users/anita/projects/maps/venv/Scripts/python.exe C:/Users/anita/projects/maps/trainworld/tools/aws/guard.py --hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }

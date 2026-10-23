@@ -1,5 +1,12 @@
 # maps — notes for agents
 
+## AWS
+
+AWS here is a friend's account, shared for free, used only for long data builds. **Read
+`trainworld/docs/aws.md` before any `aws` command**; create and destroy things only through
+`trainworld/tools/aws/`. A PreToolUse hook (`trainworld/tools/aws/guard.py`, in `.claude/settings.json`)
+refuses raw AWS calls that create, change or destroy anything.
+
 ## Serving maps locally
 
 Anita views the maps through one server, `python serve.py` at the root of this tree
