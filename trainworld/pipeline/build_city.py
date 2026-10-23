@@ -698,13 +698,24 @@ def fetch(url, name=None):
     if os.path.exists(path):
         return path
     print(f"  downloading {url}", flush=True)
-    tmp = path + ".part"
+    tmp = f"{path}.{os.getpid()}.part"  # builds at once may fetch the same file (T-1065)
     with requests.get(url, headers=UA, timeout=300, stream=True) as r:
         r.raise_for_status()
         with open(tmp, "wb") as f:
             for chunk in r.iter_content(1 << 20):
                 f.write(chunk)
-    os.replace(tmp, path)
+    return settle(tmp, path)
+
+
+def settle(tmp, path):
+    """tmp in place as path; if another process got there first and Windows will not replace a file
+    it has open, theirs stays."""
+    try:
+        os.replace(tmp, path)
+    except OSError:
+        if not os.path.exists(path):
+            raise
+        os.remove(tmp)
     return path
 
 
@@ -761,7 +772,7 @@ def fetch_zip_member(url, suffix):
     if os.path.exists(path):
         return path
     print(f"  fetching {base}{suffix} out of {url}", flush=True)
-    tmp = path + ".part"
+    tmp = f"{path}.{os.getpid()}.part"
     try:
         remote = HttpRangeFile(url)
         src = io.BufferedReader(remote, buffer_size=1 << 22)
@@ -780,8 +791,7 @@ def fetch_zip_member(url, suffix):
             member = next(m for m in z.namelist() if m.endswith(suffix))
             with z.open(member) as zin, open(tmp, "wb") as out:
                 out.write(zin.read())
-    os.replace(tmp, path)
-    return path
+    return settle(tmp, path)
 
 
 # ---------------------------------------------------------------- readers

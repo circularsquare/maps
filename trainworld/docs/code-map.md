@@ -451,7 +451,10 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   friend's AWS account. `launch.py` (spot, one-time, tagged, a hard timer, presigned URLs into
   `userdata/<kind>.sh`), `bucket.py` (our bucket only), `status.py` (what of ours exists; `cost
   <run>`), `teardown.py` (terminate and sweep by our tags, then list), `guard.py` (a PreToolUse hook
-  refusing raw changing `aws` calls); `awslib.py` holds the region, tags and checks.
+  refusing raw changing `aws` calls); `awslib.py` holds the region, tags and checks. A wave (T-1065):
+  `bundle.py` (the code tar), `userdata/wave.sh` (check row, go, `world_run.py run --build-only` by
+  runner region) with `wavepack.py` (a region's result tar on the machine), `land.py` (results into
+  data/ under the plan lock, rows "built").
 - `freeze.py [--label L] | list | check [stamp] | build [stamp] [--tree] [--out]` (T-928): the data a
   production build copies, frozen in `data/frozen/<stamp>/` as hard links to data/packs plus copies
   of the four game data files, with a size and time manifest; `build` makes a publishable build of a

@@ -271,8 +271,18 @@ def units_with_nearest(lat, lon, units):
 def us_tracts():
     """{tract GEOID: (people in no-vehicle households, people in households)}."""
     path = os.path.join(RAW, "acsdt5y2023-b08201.dat")
-    if not os.path.exists(path):
-        sys.exit(f"download {ACS_URL} to {path}")
+    if not os.path.exists(path):  # 153 MB, fetched once (T-1065: a fresh tree has none)
+        import requests
+        from build_city import UA, settle
+        os.makedirs(RAW, exist_ok=True)
+        print(f"downloading {ACS_URL}", flush=True)
+        tmp = f"{path}.{os.getpid()}.part"
+        with requests.get(ACS_URL, headers=UA, timeout=600, stream=True) as r:
+            r.raise_for_status()
+            with open(tmp, "wb") as f:
+                for chunk in r.iter_content(1 << 20):
+                    f.write(chunk)
+        settle(tmp, path)
     cols = ["GEO_ID"] + [f"B08201_E{i:03d}" for i in (7, 8, 13, 14, 19, 20, 25, 26)]
     t = pd.read_csv(path, sep="|", usecols=cols, dtype={"GEO_ID": str})
     t = t[t.GEO_ID.str.startswith("1400000US")]

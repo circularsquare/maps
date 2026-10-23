@@ -152,10 +152,10 @@ def _tile_path(kind, epoch, r, c):
         open(path + ".none", "w").close()
         return None
     resp.raise_for_status()
-    with open(path + ".part", "wb") as f:
+    tmp = f"{path}.{os.getpid()}.part"  # builds at once may fetch the same tile (T-1065)
+    with open(tmp, "wb") as f:
         f.write(resp.content)
-    os.replace(path + ".part", path)
-    return path
+    return b.settle(tmp, path)
 
 
 def _read_tile_window(path, r0, r1, c0, c1, tile_x0=None, tile_y0=None):

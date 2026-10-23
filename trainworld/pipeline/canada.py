@@ -319,10 +319,19 @@ def osm_places(city, boundary, extract=OSM_EXTRACT, cache=None, land_cap_m2=None
         for r in mp.itertuples():
             c = r.geometry.representative_point()
             if r.landuse in ("industrial", "commercial", "retail") and not (r.shop or r.amenity or r.office):
-                m2 = overpass.area_m2(r.geometry)
+                g = r.geometry
+                try:
+                    m2 = overpass.area_m2(g)
+                except shapely.errors.GEOSException:
+                    # GDAL's OSM driver can return a ring of under four points (Texas, T-1065): its polygons only
+                    g = shapely.union_all([p for p in shapely.get_parts(shapely.make_valid(g))
+                                           if p.geom_type in ("Polygon", "MultiPolygon")])
+                    if g.is_empty:
+                        continue
+                    m2 = overpass.area_m2(g)
                 if land_cap_m2:
                     m2 = min(m2, land_cap_m2)
-                rows += _land_rows(r.geometry, m2 / LANDUSE_M2_PER_PLACE, land_spread_deg,
+                rows += _land_rows(g, m2 / LANDUSE_M2_PER_PLACE, land_spread_deg,
                                    _osm_ref(r), r.name if isinstance(r.name, str) else "")
                 continue
             shop, am, tour, lei = (v if isinstance(v, str) else "" for v in (r.shop, r.amenity, r.tourism, r.leisure))

@@ -1,5 +1,8 @@
 ﻿# Archive
 
+- T-1065 [P1] US wave 1, the South, built on AWS. Done 2026-10-23: 63 of 63 shipped; builds on three spot machines in 0.81 h for $0.32 (10 min a wave's builds), Linux matching Windows; gate and join at home, 8 parks relaxed with reasons. notes/T-1004.md "Wave 1", notes/T-1064.md.
+- T-1066 [P2] Overpass from AWS. Done 2026-10-23 (in T-1065): no US build queries Overpass (terminals, medical, parks, jobs, schools and places all read the extract); wave 1 ran with it blocked. notes/T-1064.md section 2.
+
 - T-1059 [P2] Anita's walking rule. Done 2026-10-23: a station pair whose walks to, between and from its stations pass the trip's own walk is no rail option; rail -2.5% New York, -3.5% Tokyo, real save 11,645,298 to 11,359,932; ceilings about -1 point, all pass; solve about +10%. notes/T-1059.md.
 - T-1071 [P2] Train count changes move no train. Done 2026-10-23: the model already handed over at the termini; the jump was the browser drawing the change late. Count and headway edits now take effect a moment ahead and the renderer swaps them in with their trips; eras saved. notes/T-1071.md.
 - T-1067 [P1] Waiting floods. Done 2026-10-23: demand overloads busy lines and the account queued everyone forever; now riders left behind 90 minutes (Anita) go another way and a platform side holds at most 5,000. Lexington test 49k to 5,000, longest wait 10.7 h to 110 min; real save boardings -0.07%. notes/T-1067.md.

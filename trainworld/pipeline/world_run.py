@@ -17,6 +17,8 @@ agent judgement (docs/adding-a-city.md "Running the pipeline"; design notes/T-53
              --no-browser     gate without the browser check
              --no-join        stop after the regions: gated rows stay registered, status "gated",
                               for one `join` once every parallel run is done (T-786)
+             --build-only     download, read and build only: rows stay "built", for a later run
+                              to gate (a rented machine's wave, T-1065; docs/aws.md)
              --keep-downloads keep the region's .osm.pbf and OSM caches
              --coarse T       4 km blocks where every 2 km zone makes under T trip ends a weekday
                               (T-852, coarse_zones.py, a step before routes); off by default
@@ -606,12 +608,15 @@ class Run:
         self.sim_vs_head()
         gated = []
         try:
-            self.everyday = self.build_everyday()
+            self.everyday = None if self.o.get("build_only") else self.build_everyday()
             for k, reg in enumerate(regs, 1):
                 if self.stop_asked():
                     break
                 gated += self.region(k, reg)
-            if self.o.get("no_join"):
+            if self.o.get("build_only"):
+                built = [i for i in self.report["rows"] if self.status(i) == "built"]
+                print(f"  built, for a run to gate: {' '.join(built) or 'none'}", flush=True)
+            elif self.o.get("no_join"):
                 # T-786: the regions of several runs at once, then one `join` for them all
                 for i in gated:
                     self.set_row(i, "gated", gated=datetime.datetime.now().isoformat(timespec="seconds"))
@@ -858,7 +863,7 @@ class Run:
             return []
         built = [r["id"] for r in reg if self.status(r["id"]) == "built"]
         shipped = []
-        if built:
+        if built and not self.o.get("build_only"):
             t = time.time()
             shipped = self.gate(built, L)
             rr["seconds"]["gate"] = round(time.time() - t)
@@ -1372,7 +1377,8 @@ def status(root):
 
 def parse(argv):
     o = {}
-    flags = {"--no-browser": "no_browser", "--keep-downloads": "keep_downloads", "--no-join": "no_join"}
+    flags = {"--no-browser": "no_browser", "--keep-downloads": "keep_downloads", "--no-join": "no_join",
+             "--build-only": "build_only"}
     valued = {"--rows": "rows", "--countries": "countries", "--limit": "limit", "--jobs": "jobs",
               "--port": "port", "--root": "root", "--workers": "workers", "--coarse": "coarse"}
     i = 0

@@ -9018,6 +9018,294 @@
       {
         "name": "Chatham County",
         "regionName": "Chatham County region"
+      },
+      {
+        "name": "Houston",
+        "regionName": "Houston region"
+      },
+      {
+        "name": "Austin",
+        "regionName": "Austin region"
+      },
+      {
+        "name": "McAllen",
+        "regionName": "McAllen region"
+      },
+      {
+        "name": "Cameron County",
+        "regionName": "Cameron County region"
+      },
+      {
+        "name": "Lubbock County",
+        "regionName": "Lubbock County region"
+      },
+      {
+        "name": "Nueces County",
+        "regionName": "Nueces County region"
+      },
+      {
+        "name": "McLennan County",
+        "regionName": "McLennan County region"
+      },
+      {
+        "name": "Jefferson County, TX",
+        "regionName": "Jefferson County, TX region"
+      },
+      {
+        "name": "Bell County",
+        "regionName": "Bell County region"
+      },
+      {
+        "name": "Midland County",
+        "regionName": "Midland County region"
+      },
+      {
+        "name": "Charlotte",
+        "regionName": "Charlotte region"
+      },
+      {
+        "name": "Raleigh",
+        "regionName": "Raleigh region"
+      },
+      {
+        "name": "Buncombe County",
+        "regionName": "Buncombe County region"
+      },
+      {
+        "name": "New Hanover County",
+        "regionName": "New Hanover County region"
+      },
+      {
+        "name": "Alamance County",
+        "regionName": "Alamance County region"
+      },
+      {
+        "name": "Horry County",
+        "regionName": "Horry County region"
+      },
+      {
+        "name": "Pitt County",
+        "regionName": "Pitt County region"
+      },
+      {
+        "name": "Charleston County",
+        "regionName": "Charleston County region"
+      },
+      {
+        "name": "Forsyth County",
+        "regionName": "Forsyth County region"
+      },
+      {
+        "name": "Davidson County",
+        "regionName": "Davidson County region"
+      },
+      {
+        "name": "Lexington County",
+        "regionName": "Lexington County region"
+      },
+      {
+        "name": "Cumberland County, NC",
+        "regionName": "Cumberland County, NC region"
+      },
+      {
+        "name": "Guilford County",
+        "regionName": "Guilford County region"
+      },
+      {
+        "name": "Beaufort County",
+        "regionName": "Beaufort County region"
+      },
+      {
+        "name": "Catawba County",
+        "regionName": "Catawba County region"
+      },
+      {
+        "name": "Anderson County",
+        "regionName": "Anderson County region"
+      },
+      {
+        "name": "Greenville County",
+        "regionName": "Greenville County region"
+      },
+      {
+        "name": "Richland County",
+        "regionName": "Richland County region"
+      },
+      {
+        "name": "Spartanburg County",
+        "regionName": "Spartanburg County region"
+      },
+      {
+        "name": "Nashville",
+        "regionName": "Nashville region"
+      },
+      {
+        "name": "Memphis",
+        "regionName": "Memphis region"
+      },
+      {
+        "name": "Montgomery County",
+        "regionName": "Montgomery County region"
+      },
+      {
+        "name": "Knox County",
+        "regionName": "Knox County region"
+      },
+      {
+        "name": "Harrison County",
+        "regionName": "Harrison County region"
+      },
+      {
+        "name": "Saline County",
+        "regionName": "Saline County region"
+      },
+      {
+        "name": "Lee County, MS",
+        "regionName": "Lee County, MS region"
+      },
+      {
+        "name": "Hamilton County",
+        "regionName": "Hamilton County region"
+      },
+      {
+        "name": "Pulaski County",
+        "regionName": "Pulaski County region"
+      },
+      {
+        "name": "Hinds County",
+        "regionName": "Hinds County region"
+      },
+      {
+        "name": "Sullivan County",
+        "regionName": "Sullivan County region"
+      },
+      {
+        "name": "Benton County",
+        "regionName": "Benton County region"
+      },
+      {
+        "name": "Rutherford County",
+        "regionName": "Rutherford County region"
+      },
+      {
+        "name": "Sebastian County",
+        "regionName": "Sebastian County region"
+      },
+      {
+        "name": "New Orleans",
+        "regionName": "New Orleans region"
+      },
+      {
+        "name": "Caddo Parish",
+        "regionName": "Caddo Parish region"
+      },
+      {
+        "name": "Lafayette Parish",
+        "regionName": "Lafayette Parish region"
+      },
+      {
+        "name": "East Baton Rouge Parish",
+        "regionName": "East Baton Rouge Parish region"
+      },
+      {
+        "name": "St. Tammany Parish",
+        "regionName": "St. Tammany Parish region"
+      },
+      {
+        "name": "Montgomery County, AL",
+        "regionName": "Montgomery County, AL region"
+      },
+      {
+        "name": "Calhoun County",
+        "regionName": "Calhoun County region"
+      },
+      {
+        "name": "Shelby County",
+        "regionName": "Shelby County region"
+      },
+      {
+        "name": "Madison County",
+        "regionName": "Madison County region"
+      },
+      {
+        "name": "Jefferson County",
+        "regionName": "Jefferson County region"
+      },
+      {
+        "name": "Mobile County",
+        "regionName": "Mobile County region"
+      },
+      {
+        "name": "Dallas",
+        "regionName": "Dallas region"
+      },
+      {
+        "name": "San Antonio",
+        "regionName": "San Antonio region"
+      },
+      {
+        "name": "Wichita County",
+        "regionName": "Wichita County region"
+      },
+      {
+        "name": "El Paso County, TX",
+        "regionName": "El Paso County, TX region"
+      },
+      {
+        "name": "Smith County",
+        "regionName": "Smith County region"
+      },
+      {
+        "name": "Caddo Parish",
+        "regionName": "Caddo Parish region"
+      },
+      {
+        "name": "Oklahoma City",
+        "regionName": "Oklahoma City region"
+      },
+      {
+        "name": "Tulsa County",
+        "regionName": "Tulsa County region"
+      },
+      {
+        "name": "Comanche County",
+        "regionName": "Comanche County region"
+      },
+      {
+        "name": "Rogers County",
+        "regionName": "Rogers County region"
+      },
+      {
+        "name": "Montgomery County",
+        "regionName": "Montgomery County region"
+      },
+      {
+        "name": "Harrison County",
+        "regionName": "Harrison County region"
+      },
+      {
+        "name": "Lee County, MS",
+        "regionName": "Lee County, MS region"
+      },
+      {
+        "name": "Saline County",
+        "regionName": "Saline County region"
+      },
+      {
+        "name": "Pulaski County",
+        "regionName": "Pulaski County region"
+      },
+      {
+        "name": "Jefferson County, TX",
+        "regionName": "Jefferson County, TX region"
+      },
+      {
+        "name": "Caddo Parish",
+        "regionName": "Caddo Parish region"
+      },
+      {
+        "name": "Smith County",
+        "regionName": "Smith County region"
       }
     ],
     "rule": {
@@ -48303,7 +48591,7 @@
       ],
       "place": 2225,
       "country": "US",
-      "localTrips": 19261408.0,
+      "localTrips": 19257456.0,
       "realm": "us-south"
     },
     {
@@ -48329,7 +48617,7 @@
       ],
       "place": 2226,
       "country": "US",
-      "localTrips": 3039174.0,
+      "localTrips": 3027077.0,
       "realm": "us-south"
     },
     {
@@ -48355,7 +48643,7 @@
       ],
       "place": 2227,
       "country": "US",
-      "localTrips": 2403743.0,
+      "localTrips": 2377888.0,
       "realm": "us-south"
     },
     {
@@ -48381,7 +48669,7 @@
       ],
       "place": 2229,
       "country": "US",
-      "localTrips": 1953315.0,
+      "localTrips": 1937963.0,
       "realm": "us-south"
     },
     {
@@ -48407,7 +48695,7 @@
       ],
       "place": 2230,
       "country": "US",
-      "localTrips": 1889701.0,
+      "localTrips": 1852469.0,
       "realm": "us-south"
     },
     {
@@ -48433,7 +48721,7 @@
       ],
       "place": 2231,
       "country": "US",
-      "localTrips": 1639099.0,
+      "localTrips": 1638805.0,
       "realm": "us-south"
     },
     {
@@ -48458,7 +48746,7 @@
       ],
       "place": 2232,
       "country": "US",
-      "localTrips": 19727639.0,
+      "localTrips": 19728174.0,
       "realm": "us-south"
     },
     {
@@ -48483,7 +48771,7 @@
       ],
       "place": 2233,
       "country": "US",
-      "localTrips": 9308950.0,
+      "localTrips": 9310407.0,
       "realm": "us-south"
     },
     {
@@ -48508,7 +48796,7 @@
       ],
       "place": 2235,
       "country": "US",
-      "localTrips": 3863505.0,
+      "localTrips": 3863321.0,
       "realm": "us-south"
     },
     {
@@ -48534,7 +48822,7 @@
       ],
       "place": 2236,
       "country": "US",
-      "localTrips": 3693860.0,
+      "localTrips": 3694377.0,
       "realm": "us-south"
     },
     {
@@ -48560,7 +48848,7 @@
       ],
       "place": 2237,
       "country": "US",
-      "localTrips": 2497903.0,
+      "localTrips": 2498639.0,
       "realm": "us-south"
     },
     {
@@ -48586,7 +48874,7 @@
       ],
       "place": 2238,
       "country": "US",
-      "localTrips": 2953267.0,
+      "localTrips": 2954155.0,
       "realm": "us-south"
     },
     {
@@ -48612,7 +48900,7 @@
       ],
       "place": 2239,
       "country": "US",
-      "localTrips": 2192315.0,
+      "localTrips": 2192624.0,
       "realm": "us-south"
     },
     {
@@ -48638,7 +48926,7 @@
       ],
       "place": 2240,
       "country": "US",
-      "localTrips": 1932867.0,
+      "localTrips": 1932366.0,
       "realm": "us-south"
     },
     {
@@ -48664,7 +48952,7 @@
       ],
       "place": 2241,
       "country": "US",
-      "localTrips": 1994424.0,
+      "localTrips": 1995299.0,
       "realm": "us-south"
     },
     {
@@ -48690,7 +48978,7 @@
       ],
       "place": 2242,
       "country": "US",
-      "localTrips": 2164234.0,
+      "localTrips": 2144858.0,
       "realm": "us-south"
     },
     {
@@ -48716,7 +49004,7 @@
       ],
       "place": 2243,
       "country": "US",
-      "localTrips": 1771415.0,
+      "localTrips": 1771832.0,
       "realm": "us-south"
     },
     {
@@ -48742,7 +49030,7 @@
       ],
       "place": 2244,
       "country": "US",
-      "localTrips": 1517946.0,
+      "localTrips": 1518276.0,
       "realm": "us-south"
     },
     {
@@ -48767,7 +49055,7 @@
       ],
       "place": 2246,
       "country": "US",
-      "localTrips": 8673362.0,
+      "localTrips": 8674751.0,
       "realm": "us-south"
     },
     {
@@ -48793,7 +49081,7 @@
       ],
       "place": 2247,
       "country": "US",
-      "localTrips": 2284514.0,
+      "localTrips": 2278134.0,
       "realm": "us-south"
     },
     {
@@ -48819,7 +49107,7 @@
       ],
       "place": 2248,
       "country": "US",
-      "localTrips": 1203289.0,
+      "localTrips": 1203623.0,
       "realm": "us-south"
     },
     {
@@ -48845,7 +49133,1634 @@
       ],
       "place": 2249,
       "country": "US",
-      "localTrips": 2205200.0,
+      "localTrips": 2198842.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "hos",
+      "name": "Houston",
+      "origin": {
+        "lon": -95.3608,
+        "lat": 29.7664
+      },
+      "center": [
+        -95.3608,
+        29.7664
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -96.643,
+        28.764,
+        -94.332,
+        30.649
+      ],
+      "place": 2250,
+      "country": "US",
+      "localTrips": 22543994.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "aus",
+      "name": "Austin",
+      "origin": {
+        "lon": -97.7492,
+        "lat": 30.2876
+      },
+      "center": [
+        -97.7492,
+        30.2876
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.319,
+        29.734,
+        -97.134,
+        30.923
+      ],
+      "place": 2251,
+      "country": "US",
+      "localTrips": 6882975.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "mcl",
+      "name": "McAllen",
+      "origin": {
+        "lon": -98.2489,
+        "lat": 26.2298
+      },
+      "center": [
+        -98.2489,
+        26.2298
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.607,
+        26.018,
+        -97.841,
+        26.802
+      ],
+      "place": 2252,
+      "country": "US",
+      "localTrips": 2555856.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "cme",
+      "name": "Cameron County",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.4648,
+        "lat": 27.4462
+      },
+      "center": [
+        -99.4648,
+        27.4462
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.688,
+        25.819,
+        -97.089,
+        29.11
+      ],
+      "place": 2253,
+      "country": "US",
+      "localTrips": 2751919.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "luk",
+      "name": "Lubbock County",
+      "kind": "zone",
+      "origin": {
+        "lon": -101.8677,
+        "lat": 33.5849
+      },
+      "center": [
+        -101.8677,
+        33.5849
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -103.088,
+        32.063,
+        -98.398,
+        36.519
+      ],
+      "place": 2254,
+      "country": "US",
+      "localTrips": 3112273.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "nue",
+      "name": "Nueces County",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.4071,
+        "lat": 27.7087
+      },
+      "center": [
+        -97.4071,
+        27.7087
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.212,
+        27.191,
+        -95.483,
+        30.576
+      ],
+      "place": 2255,
+      "country": "US",
+      "localTrips": 2811772.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "mcn",
+      "name": "McLennan County",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.1213,
+        "lat": 31.5479
+      },
+      "center": [
+        -97.1213,
+        31.5479
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.174,
+        29.533,
+        -96.215,
+        32.542
+      ],
+      "place": 2256,
+      "country": "US",
+      "localTrips": 2490303.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "blc",
+      "name": "Bell County",
+      "kind": "zone",
+      "origin": {
+        "lon": -96.3316,
+        "lat": 30.6128
+      },
+      "center": [
+        -96.3316,
+        30.6128
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -97.935,
+        30.026,
+        -95.783,
+        31.376
+      ],
+      "place": 2258,
+      "country": "US",
+      "localTrips": 2053731.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "mda",
+      "name": "Midland County",
+      "kind": "zone",
+      "origin": {
+        "lon": -102.1444,
+        "lat": 32.0125
+      },
+      "center": [
+        -102.1444,
+        32.0125
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -106.02,
+        28.953,
+        -98.942,
+        32.106
+      ],
+      "place": 2259,
+      "country": "US",
+      "localTrips": 2046327.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "crt",
+      "name": "Charlotte",
+      "origin": {
+        "lon": -80.8395,
+        "lat": 35.2294
+      },
+      "center": [
+        -80.8395,
+        35.2294
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.515,
+        34.795,
+        -80.254,
+        35.533
+      ],
+      "place": 2260,
+      "country": "US",
+      "localTrips": 6725911.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "ral",
+      "name": "Raleigh",
+      "origin": {
+        "lon": -78.6809,
+        "lat": 35.789
+      },
+      "center": [
+        -78.6809,
+        35.789
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.291,
+        35.236,
+        -78.042,
+        36.262
+      ],
+      "place": 2261,
+      "country": "US",
+      "localTrips": 5787176.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "bun",
+      "name": "Buncombe County",
+      "kind": "zone",
+      "origin": {
+        "lon": -83.1861,
+        "lat": 35.308
+      },
+      "center": [
+        -83.1861,
+        35.308
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -84.345,
+        34.968,
+        -81.299,
+        36.178
+      ],
+      "place": 2262,
+      "country": "US",
+      "localTrips": 2870433.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "nea",
+      "name": "New Hanover County",
+      "kind": "zone",
+      "origin": {
+        "lon": -77.3493,
+        "lat": 34.6624
+      },
+      "center": [
+        -77.3493,
+        34.6624
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.094,
+        33.752,
+        -77.083,
+        35.616
+      ],
+      "place": 2263,
+      "country": "US",
+      "localTrips": 2666290.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "alx",
+      "name": "Alamance County",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.5036,
+        "lat": 36.1045
+      },
+      "center": [
+        -79.5036,
+        36.1045
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.058,
+        35.173,
+        -75.709,
+        36.571
+      ],
+      "place": 2264,
+      "country": "US",
+      "localTrips": 2383726.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "hoy",
+      "name": "Horry County",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.8357,
+        "lat": 34.1665
+      },
+      "center": [
+        -79.8357,
+        34.1665
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.932,
+        33.049,
+        -78.499,
+        35.095
+      ],
+      "place": 2265,
+      "country": "US",
+      "localTrips": 2700691.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "pic",
+      "name": "Pitt County",
+      "kind": "zone",
+      "origin": {
+        "lon": -77.3653,
+        "lat": 35.6052
+      },
+      "center": [
+        -77.3653,
+        35.6052
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.569,
+        34.531,
+        -75.4,
+        36.285
+      ],
+      "place": 2266,
+      "country": "US",
+      "localTrips": 2466333.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "crs",
+      "name": "Charleston County",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.9375,
+        "lat": 32.7887
+      },
+      "center": [
+        -79.9375,
+        32.7887
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.669,
+        32.475,
+        -79.246,
+        34.387
+      ],
+      "place": 2267,
+      "country": "US",
+      "localTrips": 2437750.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "foy",
+      "name": "Forsyth County",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.3296,
+        "lat": 36.0782
+      },
+      "center": [
+        -80.3296,
+        36.0782
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.367,
+        35.47,
+        -80.004,
+        36.581
+      ],
+      "place": 2268,
+      "country": "US",
+      "localTrips": 2161224.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "dad",
+      "name": "Davidson County",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.4782,
+        "lat": 35.6665
+      },
+      "center": [
+        -80.4782,
+        35.6665
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.794,
+        34.612,
+        -79.308,
+        36.081
+      ],
+      "place": 2269,
+      "country": "US",
+      "localTrips": 1797077.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "lxn",
+      "name": "Lexington County",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.1508,
+        "lat": 32.9702
+      },
+      "center": [
+        -80.1508,
+        32.9702
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -82.032,
+        32.8,
+        -80.057,
+        34.552
+      ],
+      "place": 2270,
+      "country": "US",
+      "localTrips": 1679411.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "cue",
+      "name": "Cumberland County, NC",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.0083,
+        "lat": 35.0635
+      },
+      "center": [
+        -79.0083,
+        35.0635
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.791,
+        34.281,
+        -78.472,
+        35.537
+      ],
+      "place": 2271,
+      "country": "US",
+      "localTrips": 1710311.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "guf",
+      "name": "Guilford County",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.7717,
+        "lat": 36.0782
+      },
+      "center": [
+        -79.7717,
+        36.0782
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.07,
+        35.881,
+        -79.509,
+        36.276
+      ],
+      "place": 2272,
+      "country": "US",
+      "localTrips": 1647366.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "bef",
+      "name": "Beaufort County",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.7973,
+        "lat": 32.4607
+      },
+      "center": [
+        -80.7973,
+        32.4607
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -82.616,
+        31.995,
+        -80.223,
+        34.1
+      ],
+      "place": 2273,
+      "country": "US",
+      "localTrips": 1399605.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "caw",
+      "name": "Catawba County",
+      "kind": "zone",
+      "origin": {
+        "lon": -81.6847,
+        "lat": 36.2185
+      },
+      "center": [
+        -81.6847,
+        36.2185
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -82.104,
+        35.381,
+        -80.846,
+        36.607
+      ],
+      "place": 2274,
+      "country": "US",
+      "localTrips": 1401092.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "ane",
+      "name": "Anderson County",
+      "kind": "zone",
+      "origin": {
+        "lon": -82.8341,
+        "lat": 34.6799
+      },
+      "center": [
+        -82.8341,
+        34.6799
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -83.376,
+        33.935,
+        -81.846,
+        35.104
+      ],
+      "place": 2275,
+      "country": "US",
+      "localTrips": 1414306.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "grv",
+      "name": "Greenville County",
+      "kind": "zone",
+      "origin": {
+        "lon": -82.3508,
+        "lat": 34.8629
+      },
+      "center": [
+        -82.3508,
+        34.8629
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -82.787,
+        34.466,
+        -82.123,
+        35.234
+      ],
+      "place": 2276,
+      "country": "US",
+      "localTrips": 1631970.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "ril",
+      "name": "Richland County",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.9371,
+        "lat": 34.0188
+      },
+      "center": [
+        -80.9371,
+        34.0188
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.51,
+        33.725,
+        -80.574,
+        34.841
+      ],
+      "place": 2277,
+      "country": "US",
+      "localTrips": 1386322.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "spa",
+      "name": "Spartanburg County",
+      "kind": "zone",
+      "origin": {
+        "lon": -81.9367,
+        "lat": 34.9588
+      },
+      "center": [
+        -81.9367,
+        34.9588
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -82.337,
+        34.185,
+        -81.344,
+        35.215
+      ],
+      "place": 2278,
+      "country": "US",
+      "localTrips": 1373000.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "nal",
+      "name": "Nashville",
+      "origin": {
+        "lon": -86.7882,
+        "lat": 36.1308
+      },
+      "center": [
+        -86.7882,
+        36.1308
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -87.31,
+        35.678,
+        -85.992,
+        36.671
+      ],
+      "place": 2279,
+      "country": "US",
+      "localTrips": 4480677.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "mem",
+      "name": "Memphis",
+      "origin": {
+        "lon": -90.0495,
+        "lat": 35.1508
+      },
+      "center": [
+        -90.0495,
+        35.1508
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -90.529,
+        34.689,
+        -89.61,
+        35.46
+      ],
+      "place": 2280,
+      "country": "US",
+      "localTrips": 3770382.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "kno",
+      "name": "Knox County",
+      "kind": "zone",
+      "origin": {
+        "lon": -83.9374,
+        "lat": 35.9555
+      },
+      "center": [
+        -83.9374,
+        35.9555
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -86.308,
+        35.442,
+        -82.554,
+        36.658
+      ],
+      "place": 2282,
+      "country": "US",
+      "localTrips": 3752466.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "hmi",
+      "name": "Hamilton County",
+      "kind": "zone",
+      "origin": {
+        "lon": -85.3009,
+        "lat": 35.046
+      },
+      "center": [
+        -85.3009,
+        35.046
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -86.086,
+        34.964,
+        -83.916,
+        36.15
+      ],
+      "place": 2286,
+      "country": "US",
+      "localTrips": 2648229.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "hid",
+      "name": "Hinds County",
+      "kind": "zone",
+      "origin": {
+        "lon": -90.2069,
+        "lat": 32.2968
+      },
+      "center": [
+        -90.2069,
+        32.2968
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -91.677,
+        30.964,
+        -89.326,
+        33.116
+      ],
+      "place": 2288,
+      "country": "US",
+      "localTrips": 1812266.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "sul",
+      "name": "Sullivan County",
+      "kind": "zone",
+      "origin": {
+        "lon": -82.5495,
+        "lat": 36.5434
+      },
+      "center": [
+        -82.5495,
+        36.5434
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -84.033,
+        35.877,
+        -81.624,
+        36.635
+      ],
+      "place": 2289,
+      "country": "US",
+      "localTrips": 1849025.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "bnt",
+      "name": "Benton County",
+      "kind": "zone",
+      "origin": {
+        "lon": -94.1697,
+        "lat": 36.0694
+      },
+      "center": [
+        -94.1697,
+        36.0694
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -94.641,
+        35.7,
+        -92.127,
+        36.518
+      ],
+      "place": 2290,
+      "country": "US",
+      "localTrips": 2146165.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "rut",
+      "name": "Rutherford County",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.3631,
+        "lat": 35.8591
+      },
+      "center": [
+        -86.3631,
+        35.8591
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -86.859,
+        34.97,
+        -85.841,
+        36.119
+      ],
+      "place": 2291,
+      "country": "US",
+      "localTrips": 1518716.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "seb",
+      "name": "Sebastian County",
+      "kind": "zone",
+      "origin": {
+        "lon": -94.3809,
+        "lat": 35.3866
+      },
+      "center": [
+        -94.3809,
+        35.3866
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -94.516,
+        34.172,
+        -92.457,
+        35.793
+      ],
+      "place": 2292,
+      "country": "US",
+      "localTrips": 1466713.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "neo",
+      "name": "New Orleans",
+      "origin": {
+        "lon": -90.1752,
+        "lat": 29.997
+      },
+      "center": [
+        -90.1752,
+        29.997
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -90.71,
+        28.855,
+        -88.758,
+        30.318
+      ],
+      "place": 2293,
+      "country": "US",
+      "localTrips": 3096937.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "laf",
+      "name": "Lafayette Parish",
+      "kind": "zone",
+      "origin": {
+        "lon": -92.0162,
+        "lat": 30.2192
+      },
+      "center": [
+        -92.0162,
+        30.2192
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -92.306,
+        28.985,
+        -89.991,
+        30.517
+      ],
+      "place": 2295,
+      "country": "US",
+      "localTrips": 2390006.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "eab",
+      "name": "East Baton Rouge Parish",
+      "kind": "zone",
+      "origin": {
+        "lon": -91.1758,
+        "lat": 30.3902
+      },
+      "center": [
+        -91.1758,
+        30.3902
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -91.845,
+        30.294,
+        -90.804,
+        31.045
+      ],
+      "place": 2296,
+      "country": "US",
+      "localTrips": 1700212.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "stp",
+      "name": "St. Tammany Parish",
+      "kind": "zone",
+      "origin": {
+        "lon": -90.9341,
+        "lat": 30.5015
+      },
+      "center": [
+        -90.9341,
+        30.5015
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -91.013,
+        30.131,
+        -89.494,
+        31.023
+      ],
+      "place": 2297,
+      "country": "US",
+      "localTrips": 1632889.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "moy",
+      "name": "Montgomery County, AL",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.2418,
+        "lat": 32.3141
+      },
+      "center": [
+        -86.2418,
+        32.3141
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -86.544,
+        30.974,
+        -84.867,
+        33.128
+      ],
+      "place": 2298,
+      "country": "US",
+      "localTrips": 2861880.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "clh",
+      "name": "Calhoun County",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.0149,
+        "lat": 34.0188
+      },
+      "center": [
+        -86.0149,
+        34.0188
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -88.297,
+        33.072,
+        -85.21,
+        35.01
+      ],
+      "place": 2299,
+      "country": "US",
+      "localTrips": 2706805.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "shl",
+      "name": "Shelby County",
+      "kind": "zone",
+      "origin": {
+        "lon": -87.549,
+        "lat": 33.2038
+      },
+      "center": [
+        -87.549,
+        33.2038
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -88.495,
+        30.975,
+        -86.122,
+        33.628
+      ],
+      "place": 2300,
+      "country": "US",
+      "localTrips": 2458372.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "mdi",
+      "name": "Madison County",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.6475,
+        "lat": 34.7408
+      },
+      "center": [
+        -86.6475,
+        34.7408
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -88.226,
+        34.281,
+        -86.233,
+        35.027
+      ],
+      "place": 2301,
+      "country": "US",
+      "localTrips": 2547131.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "jef",
+      "name": "Jefferson County",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.787,
+        "lat": 33.377
+      },
+      "center": [
+        -86.787,
+        33.377
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -87.364,
+        33.227,
+        -86.494,
+        33.862
+      ],
+      "place": 2302,
+      "country": "US",
+      "localTrips": 2149202.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "moi",
+      "name": "Mobile County",
+      "kind": "zone",
+      "origin": {
+        "lon": -88.1422,
+        "lat": 30.6727
+      },
+      "center": [
+        -88.1422,
+        30.6727
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -88.454,
+        30.144,
+        -87.345,
+        31.337
+      ],
+      "place": 2303,
+      "country": "US",
+      "localTrips": 1963455.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "dll",
+      "name": "Dallas",
+      "origin": {
+        "lon": -96.7566,
+        "lat": 32.8665
+      },
+      "center": [
+        -96.7566,
+        32.8665
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.091,
+        32.033,
+        -95.837,
+        33.453
+      ],
+      "place": 2304,
+      "country": "US",
+      "localTrips": 25465953.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "snn",
+      "name": "San Antonio",
+      "origin": {
+        "lon": -98.5807,
+        "lat": 29.5275
+      },
+      "center": [
+        -98.5807,
+        29.5275
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.435,
+        28.594,
+        -97.61,
+        30.057
+      ],
+      "place": 2305,
+      "country": "US",
+      "localTrips": 7737107.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "wic",
+      "name": "Wichita County",
+      "kind": "zone",
+      "origin": {
+        "lon": -98.5044,
+        "lat": 33.9754
+      },
+      "center": [
+        -98.5044,
+        33.9754
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.169,
+        31.665,
+        -93.993,
+        34.231
+      ],
+      "place": 2306,
+      "country": "US",
+      "localTrips": 3053764.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "ela",
+      "name": "El Paso County, TX",
+      "kind": "zone",
+      "origin": {
+        "lon": -106.4786,
+        "lat": 31.7543
+      },
+      "center": [
+        -106.4786,
+        31.7543
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -106.667,
+        31.369,
+        -105.933,
+        32.021
+      ],
+      "place": 2307,
+      "country": "US",
+      "localTrips": 2694452.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "okl",
+      "name": "Oklahoma City",
+      "origin": {
+        "lon": -97.4482,
+        "lat": 35.2032
+      },
+      "center": [
+        -97.4482,
+        35.2032
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.336,
+        34.836,
+        -96.908,
+        36.183
+      ],
+      "place": 2310,
+      "country": "US",
+      "localTrips": 4233324.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "tul",
+      "name": "Tulsa County",
+      "kind": "zone",
+      "origin": {
+        "lon": -95.9754,
+        "lat": 36.0782
+      },
+      "center": [
+        -95.9754,
+        36.0782
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -97.165,
+        33.597,
+        -94.438,
+        36.442
+      ],
+      "place": 2311,
+      "country": "US",
+      "localTrips": 3281319.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "coh",
+      "name": "Comanche County",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.0796,
+        "lat": 36.122
+      },
+      "center": [
+        -97.0796,
+        36.122
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -103.025,
+        33.698,
+        -95.977,
+        37.021
+      ],
+      "place": 2312,
+      "country": "US",
+      "localTrips": 2328609.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "ror",
+      "name": "Rogers County",
+      "kind": "zone",
+      "origin": {
+        "lon": -94.9686,
+        "lat": 35.9204
+      },
+      "center": [
+        -94.9686,
+        35.9204
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -96.115,
+        34.489,
+        -94.408,
+        37.018
+      ],
+      "place": 2313,
+      "country": "US",
+      "localTrips": 1763732.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "moo",
+      "name": "Montgomery County",
+      "kind": "zone",
+      "origin": {
+        "lon": -89.4557,
+        "lat": 36.4204
+      },
+      "center": [
+        -89.4557,
+        36.4204
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -90.202,
+        34.973,
+        -86.541,
+        36.697
+      ],
+      "place": 2314,
+      "country": "US",
+      "localTrips": 3526083.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "hrr",
+      "name": "Harrison County",
+      "kind": "zone",
+      "origin": {
+        "lon": -90.1031,
+        "lat": 32.2365
+      },
+      "center": [
+        -90.1031,
+        32.2365
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -90.473,
+        30.139,
+        -88.326,
+        32.951
+      ],
+      "place": 2315,
+      "country": "US",
+      "localTrips": 3431007.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "lem",
+      "name": "Lee County, MS",
+      "kind": "zone",
+      "origin": {
+        "lon": -90.5138,
+        "lat": 33.9233
+      },
+      "center": [
+        -90.5138,
+        33.9233
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -91.258,
+        32.861,
+        -88.076,
+        35.015
+      ],
+      "place": 2316,
+      "country": "US",
+      "localTrips": 2699013.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "sli",
+      "name": "Saline County",
+      "kind": "zone",
+      "origin": {
+        "lon": -91.5816,
+        "lat": 34.0622
+      },
+      "center": [
+        -91.5816,
+        34.0622
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -94.508,
+        32.986,
+        -89.618,
+        36.02
+      ],
+      "place": 2317,
+      "country": "US",
+      "localTrips": 2688599.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "pul",
+      "name": "Pulaski County",
+      "kind": "zone",
+      "origin": {
+        "lon": -92.3795,
+        "lat": 34.767
+      },
+      "center": [
+        -92.3795,
+        34.767
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -92.873,
+        34.471,
+        -90.041,
+        36.518
+      ],
+      "place": 2318,
+      "country": "US",
+      "localTrips": 2352845.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "jes",
+      "name": "Jefferson County, TX",
+      "kind": "zone",
+      "origin": {
+        "lon": -94.9315,
+        "lat": 30.1081
+      },
+      "center": [
+        -94.9315,
+        30.1081
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -95.187,
+        29.506,
+        -93.487,
+        31.999
+      ],
+      "place": 2319,
+      "country": "US",
+      "localTrips": 2087361.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "cdd",
+      "name": "Caddo Parish",
+      "kind": "zone",
+      "origin": {
+        "lon": -93.6902,
+        "lat": 32.5124
+      },
+      "center": [
+        -93.6902,
+        32.5124
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -94.065,
+        29.481,
+        -90.853,
+        33.038
+      ],
+      "place": 2320,
+      "country": "US",
+      "localTrips": 4892548.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "smi",
+      "name": "Smith County",
+      "kind": "zone",
+      "origin": {
+        "lon": -95.8987,
+        "lat": 31.7887
+      },
+      "center": [
+        -95.8987,
+        31.7887
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -96.918,
+        30.301,
+        -94.516,
+        33.096
+      ],
+      "place": 2321,
+      "country": "US",
+      "localTrips": 2300188.0,
       "realm": "us-south"
     }
   ]

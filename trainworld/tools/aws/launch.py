@@ -10,6 +10,8 @@
 - --file name=path: uploaded to <run>/<name>; the machine gets a presigned GET URL as $GET_<name>.
 - --put name: the machine gets a presigned PUT URL for <run>/<name> as $PUT_<name> (log and
   heartbeat always). URLs last the timer plus two hours; the machine holds no AWS credentials.
+- --get name: a presigned GET URL for <run>/<name> as $GET_<name>, for an object put later from
+  home with bucket.py put (the wave's "go", T-1065); the machine polls it until it exists.
 
 Refuses: a run name used before, any instance of ours still live (one machine at a time),
 burstable types (t2/t3/t4g bill extra credits), more than MAX_HOURS, a bid over MAX_PRICE_CAP.
@@ -28,7 +30,7 @@ AMI_PARAM = "/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm
 
 
 def args(argv):
-    o = {"files": {}, "puts": ["log", "heartbeat"], "disk": 30, "max_price": None, "dry": False}
+    o = {"files": {}, "puts": ["log", "heartbeat"], "gets": [], "disk": 30, "max_price": None, "dry": False}
     if not argv or argv[0].startswith("-"):
         raise SystemExit(__doc__)
     o["run"] = argv[0]
@@ -37,7 +39,7 @@ def args(argv):
         a = argv[i]
         if a == "--dry":
             o["dry"] = True
-        elif a in ("--kind", "--type", "--hours", "--disk", "--max-price", "--file", "--put"):
+        elif a in ("--kind", "--type", "--hours", "--disk", "--max-price", "--file", "--put", "--get"):
             v = argv[i + 1]
             i += 1
             if a == "--file":
@@ -45,6 +47,8 @@ def args(argv):
                 o["files"][n] = p
             elif a == "--put":
                 o["puts"].append(v)
+            elif a == "--get":
+                o["gets"].append(v)
             else:
                 o[a[2:].replace("-", "_")] = v
         else:
@@ -57,9 +61,11 @@ def checks(o):
     run = o["run"]
     if not A.RUN_NAME.match(run):
         raise A.Refused(f"run name {run!r} must match {A.RUN_NAME.pattern}")
-    for n in list(o["files"]) + o["puts"]:
+    for n in list(o["files"]) + o["puts"] + o["gets"]:
         if not re.match(r"^[A-Za-z0-9_]+$", n):
             raise A.Refused(f"file name {n!r}: letters, digits and _ only (it becomes a shell variable)")
+    if set(o["gets"]) & (set(o["files"]) | set(o["puts"])):
+        raise A.Refused("a --get name is also a --file or --put")
     for n, p in o["files"].items():
         if not os.path.isfile(p):
             raise SystemExit(f"--file {n}: {p} not found")
@@ -178,6 +184,8 @@ def launch(o):
         import bucket
         bucket.put(p, key)
         urls[f"GET_{n}"] = A.presign("GET", key, url_h)
+    for n in o["gets"]:
+        urls[f"GET_{n}"] = A.presign("GET", f"{o['run']}/{n}", url_h)
     for n in o["puts"]:
         urls[f"PUT_{n}"] = A.presign("PUT", f"{o['run']}/{n}", url_h)
     text, redacted = render(o, urls, deadline)
@@ -210,7 +218,7 @@ def launch(o):
            "spot_price_at_launch": price, "bid": bid, "ami": ami, "disk_gb": o["disk"], "hours": o["hours"],
            "launched": A.iso(A.now()), "deadline": extra["deadline"],
            "results": [f"{o['run']}/{n}" for n in o["puts"] if n not in ("log", "heartbeat")],
-           "files": sorted(o["files"]),
+           "files": sorted(o["files"]), "gets": sorted(o["gets"]),
            "spot_request": inst.get("SpotInstanceRequestId")}
     A.save_record(o["run"], rec)
     A.say(f"launched {inst['InstanceId']} (spot request {inst.get('SpotInstanceRequestId')}); record {A.record_path(o['run'])}")

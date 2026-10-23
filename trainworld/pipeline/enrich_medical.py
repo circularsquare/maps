@@ -274,10 +274,14 @@ def main(city="nyc", dry=False):
         visits[cell] += r["size"]
         audit.append(rec | dict(cell=int(cell), snap_m=snap))
     total = sum(r["size"] for r in kept)
-    # One facility off every cell is a quirk, not a lookup fault (T-1017: Leon's Sunland Center, an
-    # institution whose residents the usa module leaves out, so no peopled cell within SNAP_M)
-    if total > 0 and visits.sum(dtype=np.float64) / total < 0.95 and len(omitted) > 1:
-        raise ValueError("medical location coverage below 95%")
+    # A few facilities off every cell are quirks, not a lookup fault, which misses most of them
+    # (T-1017: Leon's Sunland Center, an institution whose residents the usa module leaves out;
+    # T-1065: new hospitals on a town's empty edge, Fort Bliss's Beaumont Army Medical Center)
+    for r in sorted(omitted, key=lambda r: -r["size"])[:8]:
+        print(f"  off every cell: {r['kind']} {r['name'][:60]} ({r['lat']:.4f}, {r['lon']:.4f}), "
+              f"{r['size'] / total:.1%} of the visits", flush=True)
+    if total > 0 and visits.sum(dtype=np.float64) / total < 0.95 and len(omitted) > max(1, 0.05 * len(kept)):
+        raise ValueError(f"medical location coverage below 95% ({len(omitted)} of {len(kept)} facilities off every cell)")
     # T-897: a pack with no OSM facility at all (Qihe, Yi County: OSM is near empty in rural China)
     # spreads its visits by jobs, tier 0's fallback for missing places; an empty purpose would drop
     # the slots after it. The draw is relative, so only the spread matters.

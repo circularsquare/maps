@@ -120077,7 +120077,7 @@
    "order": 2078,
    "id": "cic",
    "name": "Chicago",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -120121,13 +120121,27 @@
      6654
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 162.5,
+     "stations": 1.1,
+     "places": 6.5,
+     "coarse": 11.0,
+     "routes": 409.3,
+     "merge": 9.7,
+     "nocar": 2.8,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T16:57:35"
+   }
   },
   {
    "order": 2079,
    "id": "dll",
    "name": "Dallas",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -120172,13 +120186,37 @@
      5543
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-204641",
+    "steps": {
+     "build": 42.7,
+     "stations": 0.4,
+     "places": 1.0,
+     "coarse": 3.7,
+     "routes": 187.5,
+     "merge": 3.7,
+     "nocar": 1.7,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:50:44",
+    "landed": {
+     "run": "us-w1c",
+     "name": "tx",
+     "at": "2026-10-23T16:57:53"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T17:05:44",
+    "shipped": "2026-10-23T18:44:14"
+   }
   },
   {
    "order": 2080,
    "id": "hos",
    "name": "Houston",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -120219,7 +120257,31 @@
      5511
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7013",
+    "steps": {
+     "build": 56.7,
+     "stations": 0.7,
+     "places": 1.7,
+     "coarse": 3.7,
+     "routes": 205.7,
+     "merge": 2.9,
+     "nocar": 1.7,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:21:13",
+    "landed": {
+     "run": "us-w1b",
+     "name": "tx",
+     "at": "2026-10-23T16:30:27"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:45:55",
+    "shipped": "2026-10-23T18:44:14"
+   }
   },
   {
    "order": 2081,
@@ -120494,7 +120556,7 @@
    "order": 2086,
    "id": "det",
    "name": "Detroit",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -120532,13 +120594,27 @@
      6948
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 156.9,
+     "stations": 1.1,
+     "places": 4.9,
+     "coarse": 7.4,
+     "routes": 233.2,
+     "merge": 6.2,
+     "nocar": 3.0,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T18:06:02"
+   }
   },
   {
    "order": 2087,
    "id": "mip",
    "name": "Minneapolis [Saint Paul]",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -120584,7 +120660,21 @@
      6433
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 94.6,
+     "stations": 1.1,
+     "places": 4.3,
+     "coarse": 9.9,
+     "routes": 238.2,
+     "merge": 9.9,
+     "nocar": 3.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T18:04:11"
+   }
   },
   {
    "order": 2088,
@@ -120778,7 +120868,7 @@
    "order": 2092,
    "id": "snn",
    "name": "San Antonio",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -120817,7 +120907,31 @@
      5229
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-204641",
+    "steps": {
+     "build": 31.5,
+     "stations": 0.4,
+     "places": 0.7,
+     "coarse": 1.0,
+     "routes": 42.9,
+     "merge": 1.2,
+     "nocar": 1.3,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:48:02",
+    "landed": {
+     "run": "us-w1c",
+     "name": "tx",
+     "at": "2026-10-23T16:57:53"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T17:05:44",
+    "shipped": "2026-10-23T18:44:14"
+   }
   },
   {
    "order": 2093,
@@ -120932,7 +121046,7 @@
    "order": 2095,
    "id": "sts",
    "name": "St. Louis",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -120974,7 +121088,21 @@
      6192
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 91.6,
+     "stations": 1.0,
+     "places": 2.7,
+     "coarse": 4.0,
+     "routes": 166.7,
+     "merge": 5.5,
+     "nocar": 4.2,
+     "everyday": 1.1
+    },
+    "built": "2026-10-23T16:52:09"
+   }
   },
   {
    "order": 2096,
@@ -121025,7 +121153,7 @@
    "order": 2097,
    "id": "aus",
    "name": "Austin",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -121061,7 +121189,33 @@
      5349
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7013",
+    "steps": {
+     "build": 31.5,
+     "stations": 0.7,
+     "places": 1.3,
+     "coarse": 0.8,
+     "routes": 50.5,
+     "merge": 1.1,
+     "nocar": 2.3,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:18:09",
+    "landed": {
+     "run": "us-w1b",
+     "name": "tx",
+     "at": "2026-10-23T16:30:27"
+    },
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8334727035607776"
+     ]
+    },
+    "gated": "2026-10-23T16:45:55",
+    "shipped": "2026-10-23T18:44:14"
+   }
   },
   {
    "order": 2098,
@@ -121109,7 +121263,7 @@
    "order": 2099,
    "id": "cob",
    "name": "Columbus",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -121149,13 +121303,27 @@
      6887
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 78.8,
+     "stations": 1.0,
+     "places": 3.7,
+     "coarse": 15.2,
+     "routes": 104.3,
+     "merge": 3.9,
+     "nocar": 2.9,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T16:55:40"
+   }
   },
   {
    "order": 2100,
    "id": "kac",
    "name": "Kansas City",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -121199,13 +121367,27 @@
      5961
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 76.8,
+     "stations": 2.2,
+     "places": 4.5,
+     "coarse": 4.9,
+     "routes": 137.4,
+     "merge": 4.3,
+     "nocar": 2.5,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T16:59:34"
+   }
   },
   {
    "order": 2101,
    "id": "ina",
    "name": "Indianapolis",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -121248,13 +121430,27 @@
      6720
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 31.2,
+     "stations": 0.9,
+     "places": 2.3,
+     "coarse": 3.1,
+     "routes": 117.7,
+     "merge": 4.2,
+     "nocar": 3.2,
+     "everyday": 1.1
+    },
+    "built": "2026-10-23T17:00:20"
+   }
   },
   {
    "order": 2102,
    "id": "cin",
    "name": "Cincinnati",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -121298,13 +121494,27 @@
      6790
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 130.6,
+     "stations": 0.9,
+     "places": 2.8,
+     "coarse": 3.0,
+     "routes": 114.5,
+     "merge": 3.0,
+     "nocar": 2.2,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T17:03:52"
+   }
   },
   {
    "order": 2103,
    "id": "crt",
    "name": "Charlotte",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -121343,7 +121553,31 @@
      6851
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 31.1,
+     "stations": 0.7,
+     "places": 1.1,
+     "coarse": 1.0,
+     "routes": 112.5,
+     "merge": 1.3,
+     "nocar": 2.1,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:19:08",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:24"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:46:23",
+    "shipped": "2026-10-23T18:44:14"
+   }
   },
   {
    "order": 2104,
@@ -121393,7 +121627,7 @@
    "order": 2105,
    "id": "ral",
    "name": "Raleigh",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -121430,7 +121664,33 @@
      6942
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 37.2,
+     "stations": 0.6,
+     "places": 1.4,
+     "coarse": 0.7,
+     "routes": 85.0,
+     "merge": 1.0,
+     "nocar": 2.4,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T20:18:47",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:24"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.03184710422712802"
+     ]
+    },
+    "gated": "2026-10-23T16:46:23",
+    "shipped": "2026-10-23T18:44:15"
+   }
   },
   {
    "order": 2106,
@@ -121488,7 +121748,7 @@
    "order": 2107,
    "id": "cle",
    "name": "Cleveland",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -121525,13 +121785,27 @@
      6990
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 48.2,
+     "stations": 1.1,
+     "places": 3.2,
+     "coarse": 1.6,
+     "routes": 62.5,
+     "merge": 1.9,
+     "nocar": 2.6,
+     "everyday": 1.0
+    },
+    "built": "2026-10-23T17:02:22"
+   }
   },
   {
    "order": 2108,
    "id": "mik",
    "name": "Milwaukee",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -121568,7 +121842,21 @@
      6769
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 65.2,
+     "stations": 1.0,
+     "places": 2.5,
+     "coarse": 1.5,
+     "routes": 54.4,
+     "merge": 1.9,
+     "nocar": 2.5,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T18:00:19"
+   }
   },
   {
    "order": 2109,
@@ -121616,7 +121904,7 @@
    "order": 2110,
    "id": "lou",
    "name": "Louisville",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -121661,13 +121949,27 @@
      6630
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 30.3,
+     "stations": 0.9,
+     "places": 1.8,
+     "coarse": 2.7,
+     "routes": 67.5,
+     "merge": 2.9,
+     "nocar": 2.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T17:04:12"
+   }
   },
   {
    "order": 2111,
    "id": "okl",
    "name": "Oklahoma City",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -121705,13 +122007,37 @@
      5705
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-203706",
+    "steps": {
+     "build": 107.4,
+     "stations": 0.4,
+     "places": 0.7,
+     "coarse": 0.6,
+     "routes": 42.1,
+     "merge": 0.7,
+     "nocar": 1.7,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:41:35",
+    "landed": {
+     "run": "us-w1c",
+     "name": "ok",
+     "at": "2026-10-23T16:57:50"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T17:05:45",
+    "shipped": "2026-10-23T18:44:15"
+   }
   },
   {
    "order": 2112,
    "id": "nal",
    "name": "Nashville",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -121749,13 +122075,39 @@
      6350
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 30.9,
+     "stations": 0.6,
+     "places": 1.1,
+     "coarse": 0.7,
+     "routes": 54.9,
+     "merge": 1.1,
+     "nocar": 2.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T20:18:08",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:22"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.0368746346169004"
+     ]
+    },
+    "gated": "2026-10-23T16:56:49",
+    "shipped": "2026-10-23T18:44:15"
+   }
   },
   {
    "order": 2113,
    "id": "mem",
    "name": "Memphis",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -121793,7 +122145,31 @@
      6047
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 24.0,
+     "stations": 0.6,
+     "places": 1.0,
+     "coarse": 0.4,
+     "routes": 36.0,
+     "merge": 0.8,
+     "nocar": 1.8,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:17:41",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:22"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:56:50",
+    "shipped": "2026-10-23T18:44:15"
+   }
   },
   {
    "order": 2114,
@@ -121952,7 +122328,7 @@
    "order": 2117,
    "id": "mcl",
    "name": "McAllen",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -121986,7 +122362,33 @@
      5098
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7013",
+    "steps": {
+     "build": 16.0,
+     "stations": 0.6,
+     "places": 1.0,
+     "coarse": 0.3,
+     "routes": 10.9,
+     "merge": 0.6,
+     "nocar": 1.6,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:17:12",
+    "landed": {
+     "run": "us-w1b",
+     "name": "tx",
+     "at": "2026-10-23T16:30:27"
+    },
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.7651781953162842"
+     ]
+    },
+    "gated": "2026-10-23T16:45:55",
+    "shipped": "2026-10-23T18:44:15"
+   }
   },
   {
    "order": 2118,
@@ -122075,7 +122477,7 @@
    "order": 2120,
    "id": "neo",
    "name": "New Orleans",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -122114,7 +122516,33 @@
      5865
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7061",
+    "steps": {
+     "build": 27.9,
+     "stations": 0.6,
+     "places": 0.9,
+     "coarse": 0.3,
+     "routes": 14.3,
+     "merge": 0.7,
+     "nocar": 1.6,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:17:24",
+    "landed": {
+     "run": "us-w1b",
+     "name": "la",
+     "at": "2026-10-23T16:30:26"
+    },
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.15327962576484405"
+     ]
+    },
+    "gated": "2026-10-23T16:56:55",
+    "shipped": "2026-10-23T18:44:16"
+   }
   },
   {
    "order": 2121,
@@ -122161,7 +122589,7 @@
    "id": "cdd",
    "name": "Caddo Parish",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -122270,14 +122698,46 @@
      "Tensas Parish, LA"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7061",
+    "steps": {
+     "build": 80.3,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 17.7,
+     "routes": 260.8,
+     "merge": 9.2,
+     "nocar": 2.0,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:22:49",
+    "landed": {
+     "run": "us-w1b",
+     "name": "la",
+     "at": "2026-10-23T16:30:26"
+    },
+    "gate": {
+     "warn": [
+      "area_km2 82162.94056379436",
+      "mean_commute_km 25.40852029422501",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-23T17:02:59",
+    "gated": "2026-10-23T17:26:08",
+    "shipped": "2026-10-23T18:44:16"
+   },
+   "gate_relax": {
+    "mean_commute_km": "T-1065: 38 counties; LODES OD 2023 within them averages 29.3 km zone-centre (31.9 crow-fly), at or above the gate's figure, so the long commutes are the area's own. Relaxed as T-1017's cth"
+   }
   },
   {
    "order": 2123,
    "id": "moo",
    "name": "Montgomery County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -122378,7 +122838,39 @@
      "Lake County, TN"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 67.0,
+     "stations": 0.8,
+     "places": 1.5,
+     "coarse": 7.3,
+     "routes": 161.2,
+     "merge": 6.2,
+     "nocar": 2.7,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:20:43",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:22"
+    },
+    "gate": {
+     "warn": [
+      "area_km2 44530.20585844809",
+      "mean_commute_km 25.27898966095088",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-23T16:48:55",
+    "gated": "2026-10-23T17:14:23",
+    "shipped": "2026-10-23T18:44:16"
+   },
+   "gate_relax": {
+    "mean_commute_km": "T-1065: 34 counties; LODES OD 2023 within them averages 24.9 km zone-centre (26.8 crow-fly), at or above the gate's figure, so the long commutes are the area's own. Relaxed as T-1017's cth"
+   }
   },
   {
    "order": 2124,
@@ -122450,7 +122942,7 @@
    "id": "kno",
    "name": "Knox County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -122521,7 +123013,31 @@
      "Pickett County, TN"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 47.9,
+     "stations": 0.8,
+     "places": 1.5,
+     "coarse": 2.6,
+     "routes": 94.3,
+     "merge": 2.5,
+     "nocar": 2.4,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:19:09",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:23"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:56:50",
+    "shipped": "2026-10-23T18:44:16"
+   }
   },
   {
    "order": 2126,
@@ -122584,7 +123100,7 @@
    "id": "wae",
    "name": "Warren County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -122701,14 +123217,28 @@
      "Hickman County, KY"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 93.8,
+     "stations": 1.1,
+     "places": 1.9,
+     "coarse": 20.1,
+     "routes": 152.2,
+     "merge": 17.6,
+     "nocar": 3.6,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T17:08:44"
+   }
   },
   {
    "order": 2128,
    "id": "hrr",
    "name": "Harrison County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -122785,14 +123315,44 @@
      "Kemper County, MS"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 47.5,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 5.4,
+     "routes": 123.5,
+     "merge": 4.7,
+     "nocar": 2.4,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:19:48",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:23"
+    },
+    "gate": {
+     "warn": [
+      "mean_commute_km 28.006685705959995"
+     ]
+    },
+    "parked": "2026-10-23T16:48:56",
+    "gated": "2026-10-23T17:14:23",
+    "shipped": "2026-10-23T18:44:16"
+   },
+   "gate_relax": {
+    "mean_commute_km": "T-1065: 22 counties; LODES OD 2023 within them averages 28.1 km zone-centre (30.2 crow-fly), at or above the gate's figure, so the long commutes are the area's own. Relaxed as T-1017's cth"
+   }
   },
   {
    "order": 2129,
    "id": "tul",
    "name": "Tulsa County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -122857,7 +123417,31 @@
      "Coal County, OK"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-203706",
+    "steps": {
+     "build": 119.19999999999999,
+     "stations": 0.4,
+     "places": 0.8,
+     "coarse": 2.1,
+     "routes": 94.8,
+     "merge": 2.0,
+     "nocar": 1.5,
+     "everyday": 0.3
+    },
+    "built": "2026-10-23T20:42:42",
+    "landed": {
+     "run": "us-w1c",
+     "name": "ok",
+     "at": "2026-10-23T16:57:50"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T17:05:45",
+    "shipped": "2026-10-23T18:44:17"
+   }
   },
   {
    "order": 2130,
@@ -123286,7 +123870,7 @@
    "id": "sed",
    "name": "Sedgwick County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -123429,7 +124013,21 @@
      "Greeley County, KS"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 116.0,
+     "stations": 1.0,
+     "places": 1.9,
+     "coarse": 88.4,
+     "routes": 299.0,
+     "merge": 61.8,
+     "nocar": 3.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T17:13:45"
+   }
   },
   {
    "order": 2136,
@@ -123478,7 +124076,7 @@
    "id": "bro",
    "name": "Brown County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -123572,7 +124170,21 @@
      "Keweenaw County, MI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 281.2,
+     "stations": 1.1,
+     "places": 3.7,
+     "coarse": 45.6,
+     "routes": 292.6,
+     "merge": 43.5,
+     "nocar": 4.0,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T18:09:22"
+   }
   },
   {
    "order": 2138,
@@ -123649,7 +124261,7 @@
    "id": "bun",
    "name": "Buncombe County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -123718,14 +124330,38 @@
      "Graham County, NC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 54.7,
+     "stations": 0.7,
+     "places": 1.3,
+     "coarse": 2.4,
+     "routes": 76.9,
+     "merge": 2.4,
+     "nocar": 2.1,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:18:59",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:24"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:46:23",
+    "shipped": "2026-10-23T18:44:17"
+   }
   },
   {
    "order": 2140,
    "id": "sli",
    "name": "Saline County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -123834,7 +124470,41 @@
      "Calhoun County, AR"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 75.7,
+     "stations": 0.8,
+     "places": 1.4,
+     "coarse": 12.7,
+     "routes": 233.8,
+     "merge": 6.9,
+     "nocar": 1.8,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:22:15",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:23"
+    },
+    "gate": {
+     "warn": [
+      "browser None",
+      "area_km2 71255.69109613454",
+      "mean_commute_km 25.62122906357708",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-23T16:48:56",
+    "gated": "2026-10-23T17:14:24",
+    "shipped": "2026-10-23T18:44:17"
+   },
+   "gate_relax": {
+    "mean_commute_km": "T-1065: 38 counties; LODES OD 2023 within them averages 27.5 km zone-centre (29.8 crow-fly), at or above the gate's figure, so the long commutes are the area's own. Relaxed as T-1017's cth",
+    "browser": "T-1065: the Gate test line through the zone's rural sprawl carries 4 riders (work, social); the pack opens, solves and gives a mode split. A thin line, as T-1017's heo"
+   }
   },
   {
    "order": 2141,
@@ -123883,7 +124553,7 @@
    "id": "stj",
    "name": "St. Joseph County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -123960,14 +124630,28 @@
      "Blackford County, IN"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 70.2,
+     "stations": 0.9,
+     "places": 3.3,
+     "coarse": 8.9,
+     "routes": 144.3,
+     "merge": 9.0,
+     "nocar": 3.6,
+     "everyday": 1.1
+    },
+    "built": "2026-10-23T17:12:45"
+   }
   },
   {
    "order": 2143,
    "id": "grc",
    "name": "Greene County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -124042,7 +124726,21 @@
      "Dade County, MO"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 78.2,
+     "stations": 0.8,
+     "places": 2.9,
+     "coarse": 14.1,
+     "routes": 191.8,
+     "merge": 13.6,
+     "nocar": 3.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T17:17:51"
+   }
   },
   {
    "order": 2144,
@@ -124129,7 +124827,7 @@
    "id": "moy",
    "name": "Montgomery County, AL",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -124194,14 +124892,38 @@
      "Bullock County, AL"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7055",
+    "steps": {
+     "build": 42.5,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 3.2,
+     "routes": 79.0,
+     "merge": 2.7,
+     "nocar": 2.4,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:18:52",
+    "landed": {
+     "run": "us-w1b",
+     "name": "al",
+     "at": "2026-10-23T16:30:21"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:56:58",
+    "shipped": "2026-10-23T18:44:17"
+   }
   },
   {
    "order": 2146,
    "id": "nea",
    "name": "New Hanover County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -124252,7 +124974,31 @@
      "Bladen County, NC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 40.0,
+     "stations": 0.6,
+     "places": 1.2,
+     "coarse": 1.8,
+     "routes": 84.6,
+     "merge": 2.4,
+     "nocar": 2.2,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:18:51",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:24"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:46:24",
+    "shipped": "2026-10-23T18:44:18"
+   }
   },
   {
    "order": 2147,
@@ -124384,7 +125130,7 @@
    "id": "wic",
    "name": "Wichita County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -124481,14 +125227,41 @@
      "Throckmorton County, TX"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-204641",
+    "steps": {
+     "build": 65.7,
+     "stations": 0.4,
+     "places": 1.1,
+     "coarse": 8.0,
+     "routes": 234.5,
+     "merge": 5.6,
+     "nocar": 1.8,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:52:01",
+    "landed": {
+     "run": "us-w1c",
+     "name": "tx",
+     "at": "2026-10-23T16:57:53"
+    },
+    "gate": {
+     "warn": [
+      "area_km2 67696.27946782841",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T17:05:44",
+    "shipped": "2026-10-23T18:44:18"
+   }
   },
   {
    "order": 2149,
    "id": "alx",
    "name": "Alamance County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -124559,7 +125332,31 @@
      "Camden County, NC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 58.0,
+     "stations": 0.8,
+     "places": 1.6,
+     "coarse": 4.9,
+     "routes": 149.0,
+     "merge": 2.4,
+     "nocar": 2.2,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:20:17",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:46:24",
+    "shipped": "2026-10-23T18:44:18"
+   }
   },
   {
    "order": 2150,
@@ -124633,7 +125430,7 @@
    "id": "hoy",
    "name": "Horry County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -124688,7 +125485,31 @@
      "Marlboro County, SC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 43.4,
+     "stations": 0.7,
+     "places": 1.3,
+     "coarse": 2.5,
+     "routes": 89.8,
+     "merge": 2.1,
+     "nocar": 1.9,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:19:00",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:46:24",
+    "shipped": "2026-10-23T18:44:18"
+   }
   },
   {
    "order": 2152,
@@ -124755,7 +125576,7 @@
    "id": "pic",
    "name": "Pitt County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -124824,14 +125645,41 @@
      "Tyrrell County, NC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 62.2,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 3.0,
+     "routes": 94.4,
+     "merge": 2.2,
+     "nocar": 2.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T20:19:25",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8386451245468634",
+      "top_cell_jobs_share_other 0.03005401788489968"
+     ]
+    },
+    "gated": "2026-10-23T16:46:24",
+    "shipped": "2026-10-23T18:44:19"
+   }
   },
   {
    "order": 2154,
    "id": "shw",
    "name": "Shawnee County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -124956,7 +125804,21 @@
      "Chase County, KS"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 108.5,
+     "stations": 1.0,
+     "places": 3.5,
+     "coarse": 57.0,
+     "routes": 399.0,
+     "merge": 65.3,
+     "nocar": 4.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-23T17:24:25"
+   }
   },
   {
    "order": 2155,
@@ -125019,7 +125881,7 @@
    "id": "cme",
    "name": "Cameron County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -125086,7 +125948,35 @@
      "Kenedy County, TX"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7013",
+    "steps": {
+     "build": 38.1,
+     "stations": 0.6,
+     "places": 1.2,
+     "coarse": 2.9,
+     "routes": 60.2,
+     "merge": 1.5,
+     "nocar": 1.5,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:18:27",
+    "landed": {
+     "run": "us-w1b",
+     "name": "tx",
+     "at": "2026-10-23T16:30:27"
+    },
+    "gate": {
+     "warn": [
+      "area_km2 60336.43021807561",
+      "osm_land_share 0.8449",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T16:45:56",
+    "shipped": "2026-10-23T18:44:19"
+   }
   },
   {
    "order": 2157,
@@ -125163,7 +126053,7 @@
    "id": "poc",
    "name": "Polk County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -125246,14 +126136,28 @@
      "Adams County, IA"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 82.6,
+     "stations": 0.9,
+     "places": 2.6,
+     "coarse": 11.5,
+     "routes": 130.2,
+     "merge": 11.2,
+     "nocar": 2.9,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T18:22:21"
+   }
   },
   {
    "order": 2159,
    "id": "ela",
    "name": "El Paso County, TX",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -125288,14 +126192,38 @@
      "El Paso County, TX"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-204641",
+    "steps": {
+     "build": 12.7,
+     "stations": 0.4,
+     "places": 0.6,
+     "coarse": 0.2,
+     "routes": 5.3,
+     "merge": 0.3,
+     "nocar": 1.0,
+     "everyday": 0.3
+    },
+    "built": "2026-10-23T20:47:04",
+    "landed": {
+     "run": "us-w1c",
+     "name": "tx",
+     "at": "2026-10-23T16:57:53"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T17:05:44",
+    "shipped": "2026-10-23T18:44:19"
+   }
   },
   {
    "order": 2160,
    "id": "win",
    "name": "Winnebago County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -125360,14 +126288,28 @@
      "Marquette County, WI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 93.6,
+     "stations": 1.0,
+     "places": 3.1,
+     "coarse": 18.2,
+     "routes": 189.4,
+     "merge": 15.8,
+     "nocar": 4.0,
+     "everyday": 1.0
+    },
+    "built": "2026-10-23T18:03:36"
+   }
   },
   {
    "order": 2161,
    "id": "lem",
    "name": "Lee County, MS",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -125476,14 +126418,48 @@
      "Quitman County, MS"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 44.3,
+     "stations": 0.5,
+     "places": 0.8,
+     "coarse": 6.0,
+     "routes": 120.6,
+     "merge": 6.6,
+     "nocar": 2.5,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:20:44",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:23"
+    },
+    "gate": {
+     "warn": [
+      "browser None",
+      "area_km2 54476.66137774711",
+      "mean_commute_km 25.343354580994504",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-23T16:48:56",
+    "gated": "2026-10-23T17:14:24",
+    "shipped": "2026-10-23T18:44:19"
+   },
+   "gate_relax": {
+    "mean_commute_km": "T-1065: 38 counties; LODES OD 2023 within them averages 30.7 km zone-centre (32.6 crow-fly), at or above the gate's figure, so the long commutes are the area's own. Relaxed as T-1017's cth",
+    "browser": "T-1065: the Gate test line carries 38 riders, all work, in a 38-county rural zone; the pack opens, solves and gives a mode split. A thin line, as T-1017's heo"
+   }
   },
   {
    "order": 2162,
    "id": "hmi",
    "name": "Hamilton County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -125550,14 +126526,38 @@
      "Van Buren County, TN"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 26.8,
+     "stations": 0.5,
+     "places": 0.9,
+     "coarse": 1.5,
+     "routes": 57.2,
+     "merge": 1.8,
+     "nocar": 2.1,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:19:40",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:23"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:56:51",
+    "shipped": "2026-10-23T18:44:19"
+   }
   },
   {
    "order": 2163,
    "id": "clh",
    "name": "Calhoun County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -125626,7 +126626,31 @@
      "Clay County, AL"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7055",
+    "steps": {
+     "build": 45.3,
+     "stations": 0.8,
+     "places": 1.6,
+     "coarse": 4.3,
+     "routes": 167.0,
+     "merge": 3.6,
+     "nocar": 2.3,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:20:25",
+    "landed": {
+     "run": "us-w1b",
+     "name": "al",
+     "at": "2026-10-23T16:30:21"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:56:59",
+    "shipped": "2026-10-23T18:44:20"
+   }
   },
   {
    "order": 2164,
@@ -125800,7 +126824,7 @@
    "id": "luk",
    "name": "Lubbock County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -125953,14 +126977,42 @@
      "King County, TX"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7013",
+    "steps": {
+     "build": 75.2,
+     "stations": 0.6,
+     "places": 0.9,
+     "coarse": 21.1,
+     "routes": 181.0,
+     "merge": 11.1,
+     "nocar": 1.8,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:22:04",
+    "landed": {
+     "run": "us-w1b",
+     "name": "tx",
+     "at": "2026-10-23T16:30:27"
+    },
+    "gate": {
+     "warn": [
+      "area_km2 149458.27914090367",
+      "top_cell_jobs_share_other 0.03718554710981317",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T16:45:56",
+    "shipped": "2026-10-23T18:44:20"
+   }
   },
   {
    "order": 2167,
    "id": "nue",
    "name": "Nueces County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -126035,7 +127087,34 @@
      "Refugio County, TX"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7013",
+    "steps": {
+     "build": 84.5,
+     "stations": 0.8,
+     "places": 1.6,
+     "coarse": 5.2,
+     "routes": 169.5,
+     "merge": 3.2,
+     "nocar": 1.7,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:22:33",
+    "landed": {
+     "run": "us-w1b",
+     "name": "tx",
+     "at": "2026-10-23T16:30:27"
+    },
+    "gate": {
+     "warn": [
+      "area_km2 50031.77240051248",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T16:45:56",
+    "shipped": "2026-10-23T18:44:20"
+   }
   },
   {
    "order": 2168,
@@ -126185,7 +127264,7 @@
    "id": "ges",
    "name": "Genesee County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -126232,14 +127311,28 @@
      "Huron County, MI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 88.3,
+     "stations": 1.2,
+     "places": 2.4,
+     "coarse": 6.6,
+     "routes": 88.9,
+     "merge": 6.6,
+     "nocar": 3.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-23T18:03:38"
+   }
   },
   {
    "order": 2171,
    "id": "coh",
    "name": "Comanche County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -126350,7 +127443,34 @@
      "Cimarron County, OK"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-203706",
+    "steps": {
+     "build": 198.2,
+     "stations": 0.5,
+     "places": 0.8,
+     "coarse": 11.8,
+     "routes": 292.5,
+     "merge": 9.3,
+     "nocar": 1.8,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:46:36",
+    "landed": {
+     "run": "us-w1c",
+     "name": "ok",
+     "at": "2026-10-23T16:57:50"
+    },
+    "gate": {
+     "warn": [
+      "area_km2 103482.71959071305",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T17:05:45",
+    "shipped": "2026-10-23T18:44:20"
+   }
   },
   {
    "order": 2172,
@@ -126409,7 +127529,7 @@
    "id": "mic",
    "name": "Minnehaha County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -126574,14 +127694,28 @@
      "Jones County, SD"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 110.5,
+     "stations": 1.0,
+     "places": 1.7,
+     "coarse": 138.8,
+     "routes": 310.3,
+     "merge": 115.1,
+     "nocar": 3.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T18:38:20"
+   }
   },
   {
    "order": 2174,
    "id": "vab",
    "name": "Vanderburgh County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -126664,14 +127798,28 @@
      "Ohio County, IN"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 61.9,
+     "stations": 0.9,
+     "places": 2.1,
+     "coarse": 11.5,
+     "routes": 122.3,
+     "merge": 12.0,
+     "nocar": 3.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-23T17:21:27"
+   }
   },
   {
    "order": 2175,
    "id": "bla",
    "name": "Black Hawk County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -126788,7 +127936,21 @@
      "Audubon County, IA"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 138.4,
+     "stations": 1.0,
+     "places": 3.3,
+     "coarse": 63.3,
+     "routes": 240.3,
+     "merge": 31.1,
+     "nocar": 3.5,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T18:26:20"
+   }
   },
   {
    "order": 2176,
@@ -126889,7 +128051,7 @@
    "id": "sum",
    "name": "Summit County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -126936,14 +128098,28 @@
      "Morrow County, OH"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 46.4,
+     "stations": 1.0,
+     "places": 2.7,
+     "coarse": 3.0,
+     "routes": 113.4,
+     "merge": 4.2,
+     "nocar": 3.2,
+     "everyday": 1.2
+    },
+    "built": "2026-10-23T17:24:22"
+   }
   },
   {
    "order": 2178,
    "id": "shl",
    "name": "Shelby County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -127022,7 +128198,35 @@
      "Greene County, AL"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7055",
+    "steps": {
+     "build": 47.1,
+     "stations": 0.7,
+     "places": 1.5,
+     "coarse": 6.9,
+     "routes": 181.1,
+     "merge": 5.1,
+     "nocar": 2.2,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:20:44",
+    "landed": {
+     "run": "us-w1b",
+     "name": "al",
+     "at": "2026-10-23T16:30:21"
+    },
+    "gate": {
+     "warn": [
+      "area_km2 52157.67039341956",
+      "top_cell_jobs_share_other 0.032605764070308636",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T16:57:00",
+    "shipped": "2026-10-23T18:44:21"
+   }
   },
   {
    "order": 2179,
@@ -127073,7 +128277,7 @@
    "id": "frn",
    "name": "Franklin County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -127152,7 +128356,21 @@
      "Maries County, MO"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 112.2,
+     "stations": 1.0,
+     "places": 3.1,
+     "coarse": 22.6,
+     "routes": 290.0,
+     "merge": 17.3,
+     "nocar": 3.3,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T17:31:53"
+   }
   },
   {
    "order": 2181,
@@ -127276,7 +128494,7 @@
    "id": "stx",
    "name": "St. Louis County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -127345,7 +128563,21 @@
      "Cook County, MN"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 224.8,
+     "stations": 1.0,
+     "places": 2.3,
+     "coarse": 39.1,
+     "routes": 220.5,
+     "merge": 37.9,
+     "nocar": 3.9,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T18:12:27"
+   }
   },
   {
    "order": 2183,
@@ -127458,7 +128690,7 @@
    "id": "laf",
    "name": "Lafayette Parish",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -127511,14 +128743,40 @@
      "St. James Parish, LA"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7061",
+    "steps": {
+     "build": 30.4,
+     "stations": 0.7,
+     "places": 1.1,
+     "coarse": 1.0,
+     "routes": 52.2,
+     "merge": 1.1,
+     "nocar": 2.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T20:18:06",
+    "landed": {
+     "run": "us-w1b",
+     "name": "la",
+     "at": "2026-10-23T16:30:26"
+    },
+    "gate": {
+     "warn": [
+      "osm_land_share 0.8232"
+     ]
+    },
+    "gated": "2026-10-23T16:56:56",
+    "shipped": "2026-10-23T18:44:21"
+   }
   },
   {
    "order": 2186,
    "id": "clr",
    "name": "Clark County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -127585,14 +128843,28 @@
      "Paulding County, OH"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 52.4,
+     "stations": 1.0,
+     "places": 2.4,
+     "coarse": 7.8,
+     "routes": 98.2,
+     "merge": 7.5,
+     "nocar": 2.8,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T17:27:18"
+   }
   },
   {
    "order": 2187,
    "id": "mdi",
    "name": "Madison County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -127639,7 +128911,31 @@
      "Franklin County, AL"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7055",
+    "steps": {
+     "build": 18.4,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 1.1,
+     "routes": 44.2,
+     "merge": 1.4,
+     "nocar": 1.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T20:20:02",
+    "landed": {
+     "run": "us-w1b",
+     "name": "al",
+     "at": "2026-10-23T16:30:21"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:57:00",
+    "shipped": "2026-10-23T18:44:21"
+   }
   },
   {
    "order": 2188,
@@ -127767,7 +129063,7 @@
    "id": "lut",
    "name": "Lucas County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -127816,14 +129112,28 @@
      "Wyandot County, OH"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 28.5,
+     "stations": 0.9,
+     "places": 2.0,
+     "coarse": 2.7,
+     "routes": 43.7,
+     "merge": 2.3,
+     "nocar": 2.4,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T17:28:42"
+   }
   },
   {
    "order": 2191,
    "id": "fay",
    "name": "Fayette County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -127888,14 +129198,28 @@
      "Clinton County, KY"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 28.1,
+     "stations": 1.0,
+     "places": 1.7,
+     "coarse": 4.2,
+     "routes": 55.0,
+     "merge": 4.5,
+     "nocar": 2.6,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T17:30:20"
+   }
   },
   {
    "order": 2192,
    "id": "tip",
    "name": "Tippecanoe County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -127968,14 +129292,28 @@
      "Warren County, IN"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 66.2,
+     "stations": 0.8,
+     "places": 3.0,
+     "coarse": 8.4,
+     "routes": 122.8,
+     "merge": 7.2,
+     "nocar": 2.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T17:33:53"
+   }
   },
   {
    "order": 2193,
    "id": "olm",
    "name": "Olmsted County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -128054,14 +129392,28 @@
      "Murray County, MN"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 75.8,
+     "stations": 1.0,
+     "places": 2.4,
+     "coarse": 18.5,
+     "routes": 114.5,
+     "merge": 14.9,
+     "nocar": 3.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T18:07:29"
+   }
   },
   {
    "order": 2194,
    "id": "pet",
    "name": "Peoria County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -128140,7 +129492,21 @@
      "Calhoun County, IL"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 67.6,
+     "stations": 0.9,
+     "places": 2.6,
+     "coarse": 12.8,
+     "routes": 135.7,
+     "merge": 12.7,
+     "nocar": 2.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T17:35:49"
+   }
   },
   {
    "order": 2195,
@@ -128359,7 +129725,7 @@
    "id": "crs",
    "name": "Charleston County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -128402,7 +129768,31 @@
      "Lee County, SC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 46.5,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 0.9,
+     "routes": 48.4,
+     "merge": 1.0,
+     "nocar": 1.8,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:18:20",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:46:25",
+    "shipped": "2026-10-23T18:44:21"
+   }
   },
   {
    "order": 2198,
@@ -128605,7 +129995,7 @@
    "id": "foy",
    "name": "Forsyth County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -128650,7 +130040,33 @@
      "Alexander County, NC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 21.1,
+     "stations": 0.7,
+     "places": 1.5,
+     "coarse": 0.6,
+     "routes": 55.3,
+     "merge": 1.0,
+     "nocar": 1.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T20:19:43",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.06294712645596388"
+     ]
+    },
+    "gated": "2026-10-23T16:46:25",
+    "shipped": "2026-10-23T18:44:21"
+   }
   },
   {
    "order": 2203,
@@ -128719,7 +130135,7 @@
    "id": "hlc",
    "name": "Hall County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -128918,14 +130334,29 @@
      "Blaine County, NE"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "claim": "20261023-184235",
+    "run_batch": "20261023-184235",
+    "steps": {
+     "build": 162.2,
+     "stations": 0.7,
+     "places": 2.3,
+     "coarse": 128.5,
+     "routes": 396.7,
+     "merge": 106.7,
+     "nocar": 3.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T18:57:09"
+   }
   },
   {
    "order": 2205,
    "id": "wii",
    "name": "Williamson County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -129038,7 +130469,21 @@
      "Hardin County, IL"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 86.2,
+     "stations": 0.8,
+     "places": 2.7,
+     "coarse": 24.3,
+     "routes": 189.4,
+     "merge": 23.2,
+     "nocar": 3.6,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T17:39:24"
+   }
   },
   {
    "order": 2206,
@@ -129103,7 +130548,7 @@
    "id": "pul",
    "name": "Pulaski County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -129164,14 +130609,45 @@
      "Fulton County, AR"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 30.6,
+     "stations": 1.0,
+     "places": 1.3,
+     "coarse": 2.1,
+     "routes": 72.8,
+     "merge": 1.6,
+     "nocar": 1.7,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:21:01",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:23"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.03339583205692523",
+      "mean_commute_km 25.812194196351932"
+     ]
+    },
+    "parked": "2026-10-23T16:48:57",
+    "gated": "2026-10-23T17:14:24",
+    "shipped": "2026-10-23T18:44:22"
+   },
+   "gate_relax": {
+    "mean_commute_km": "T-1065: Little Rock's 14 counties; the gate's pack-alone solve keeps every worker inside and gives 25.8 km, where LODES OD within them is 17.9 km zone-centre (19.8 crow-fly); the joint solve with Saline's ring zone brings the pack's own trips down, as T-1017's cth"
+   }
   },
   {
    "order": 2208,
    "id": "mcn",
    "name": "McLennan County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -129248,14 +130724,41 @@
      "Mills County, TX"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7013",
+    "steps": {
+     "build": 67.8,
+     "stations": 0.7,
+     "places": 1.5,
+     "coarse": 8.4,
+     "routes": 198.7,
+     "merge": 4.1,
+     "nocar": 1.7,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:22:53",
+    "landed": {
+     "run": "us-w1b",
+     "name": "tx",
+     "at": "2026-10-23T16:30:28"
+    },
+    "gate": {
+     "warn": [
+      "area_km2 51971.09104825107",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T16:45:56",
+    "shipped": "2026-10-23T18:44:22"
+   }
   },
   {
    "order": 2209,
    "id": "smi",
    "name": "Smith County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -129324,7 +130827,38 @@
      "Rains County, TX"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-204641",
+    "steps": {
+     "build": 44.4,
+     "stations": 0.6,
+     "places": 1.0,
+     "coarse": 3.6,
+     "routes": 122.7,
+     "merge": 2.6,
+     "nocar": 1.6,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:49:40",
+    "landed": {
+     "run": "us-w1c",
+     "name": "tx",
+     "at": "2026-10-23T16:57:53"
+    },
+    "gate": {
+     "warn": [
+      "browser None",
+      "top_cell_jobs_share_other 0.03906391357259127"
+     ]
+    },
+    "parked": "2026-10-23T17:02:17",
+    "gated": "2026-10-23T17:26:08",
+    "shipped": "2026-10-23T18:44:22"
+   },
+   "gate_relax": {
+    "browser": "T-1065: the Gate test line in an 18-county zone round Tyler carries 91 riders (medical 47, social 27, shopping 17) and no work trip; the pack opens, solves and gives a mode split. A thin line, as T-1017's heo"
+   }
   },
   {
    "order": 2210,
@@ -129427,7 +130961,7 @@
    "id": "ket",
    "name": "Kent County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -129466,7 +131000,21 @@
      "Ionia County, MI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 24.6,
+     "stations": 1.0,
+     "places": 1.9,
+     "coarse": 1.5,
+     "routes": 34.8,
+     "merge": 2.1,
+     "nocar": 2.7,
+     "everyday": 1.0
+    },
+    "built": "2026-10-23T18:05:21"
+   }
   },
   {
    "order": 2213,
@@ -129867,14 +131415,18 @@
      "Slope County, ND"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "claim": "20261023-184235",
+    "run_batch": "20261023-184235"
+   }
   },
   {
    "order": 2217,
    "id": "aen",
    "name": "Allen County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -129921,7 +131473,21 @@
      "Steuben County, IN"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 24.0,
+     "stations": 0.8,
+     "places": 1.6,
+     "coarse": 2.3,
+     "routes": 37.9,
+     "merge": 2.6,
+     "nocar": 2.2,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T17:37:02"
+   }
   },
   {
    "order": 2218,
@@ -130020,7 +131586,7 @@
    "id": "dad",
    "name": "Davidson County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -130071,7 +131637,31 @@
      "Anson County, NC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 32.7,
+     "stations": 0.6,
+     "places": 1.3,
+     "coarse": 1.3,
+     "routes": 89.9,
+     "merge": 1.2,
+     "nocar": 1.8,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:20:57",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:46:25",
+    "shipped": "2026-10-23T18:44:22"
+   }
   },
   {
    "order": 2221,
@@ -130169,7 +131759,7 @@
    "id": "cly",
    "name": "Clay County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -130272,14 +131862,28 @@
      "Traverse County, MN"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 181.6,
+     "stations": 1.0,
+     "places": 2.2,
+     "coarse": 68.3,
+     "routes": 307.1,
+     "merge": 52.7,
+     "nocar": 4.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T18:15:39"
+   }
   },
   {
    "order": 2223,
    "id": "byc",
    "name": "Bay County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -130364,7 +131968,21 @@
      "Oscoda County, MI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 142.1,
+     "stations": 0.9,
+     "places": 2.3,
+     "coarse": 18.4,
+     "routes": 119.5,
+     "merge": 17.5,
+     "nocar": 3.7,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T18:11:08"
+   }
   },
   {
    "order": 2224,
@@ -130531,7 +132149,7 @@
    "id": "jef",
    "name": "Jefferson County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -130566,14 +132184,40 @@
      "Jefferson County, AL"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7055",
+    "steps": {
+     "build": 13.1,
+     "stations": 0.7,
+     "places": 1.1,
+     "coarse": 0.3,
+     "routes": 26.8,
+     "merge": 0.5,
+     "nocar": 1.5,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:20:47",
+    "landed": {
+     "run": "us-w1b",
+     "name": "al",
+     "at": "2026-10-23T16:30:21"
+    },
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10824794419521559"
+     ]
+    },
+    "gated": "2026-10-23T16:57:01",
+    "shipped": "2026-10-23T18:44:23"
+   }
   },
   {
    "order": 2227,
    "id": "hid",
    "name": "Hinds County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -130648,7 +132292,31 @@
      "Issaquena County, MS"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 27.9,
+     "stations": 0.7,
+     "places": 1.2,
+     "coarse": 2.0,
+     "routes": 63.1,
+     "merge": 1.8,
+     "nocar": 1.7,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:21:19",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:23"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:56:52",
+    "shipped": "2026-10-23T18:44:23"
+   }
   },
   {
    "order": 2228,
@@ -130715,7 +132383,7 @@
    "id": "ror",
    "name": "Rogers County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -130782,14 +132450,38 @@
      "Nowata County, OK"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-203706",
+    "steps": {
+     "build": 113.1,
+     "stations": 0.4,
+     "places": 0.7,
+     "coarse": 2.3,
+     "routes": 68.8,
+     "merge": 2.1,
+     "nocar": 1.5,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:42:10",
+    "landed": {
+     "run": "us-w1c",
+     "name": "ok",
+     "at": "2026-10-23T16:57:50"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T17:05:45",
+    "shipped": "2026-10-23T18:44:23"
+   }
   },
   {
    "order": 2230,
    "id": "lke",
    "name": "Lake County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -130824,7 +132516,21 @@
      "Lake County, IL"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 17.2,
+     "stations": 0.9,
+     "places": 1.5,
+     "coarse": 0.5,
+     "routes": 23.4,
+     "merge": 0.8,
+     "nocar": 2.2,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T17:37:50"
+   }
   },
   {
    "order": 2231,
@@ -130953,7 +132659,7 @@
    "id": "sul",
    "name": "Sullivan County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -131010,14 +132716,40 @@
      "Hancock County, TN"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 19.9,
+     "stations": 0.7,
+     "places": 1.2,
+     "coarse": 0.9,
+     "routes": 35.2,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:20:49",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:23"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.0348603038961682"
+     ]
+    },
+    "gated": "2026-10-23T16:56:52",
+    "shipped": "2026-10-23T18:44:23"
+   }
   },
   {
    "order": 2234,
    "id": "inh",
    "name": "Ingham County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -131060,14 +132792,28 @@
      "Branch County, MI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 31.8,
+     "stations": 1.0,
+     "places": 2.1,
+     "coarse": 2.0,
+     "routes": 35.5,
+     "merge": 3.2,
+     "nocar": 3.2,
+     "everyday": 1.0
+    },
+    "built": "2026-10-23T18:08:50"
+   }
   },
   {
    "order": 2235,
    "id": "lxn",
    "name": "Lexington County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -131114,7 +132860,33 @@
      "Calhoun County, SC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 26.5,
+     "stations": 0.7,
+     "places": 1.2,
+     "coarse": 0.8,
+     "routes": 61.2,
+     "merge": 1.0,
+     "nocar": 1.9,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:20:26",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.03207018979602337"
+     ]
+    },
+    "gated": "2026-10-23T16:46:25",
+    "shipped": "2026-10-23T18:44:23"
+   }
   },
   {
    "order": 2236,
@@ -131325,7 +133097,7 @@
    "id": "stk",
    "name": "Stark County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -131370,14 +133142,28 @@
      "Harrison County, OH"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 28.7,
+     "stations": 0.8,
+     "places": 1.4,
+     "coarse": 1.6,
+     "routes": 43.6,
+     "merge": 2.7,
+     "nocar": 2.7,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T17:39:13"
+   }
   },
   {
    "order": 2240,
    "id": "jes",
    "name": "Jefferson County, TX",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -131434,7 +133220,37 @@
      "San Augustine County, TX"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7013",
+    "steps": {
+     "build": 27.8,
+     "stations": 0.7,
+     "places": 1.1,
+     "coarse": 2.3,
+     "routes": 65.2,
+     "merge": 1.9,
+     "nocar": 2.1,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:20:09",
+    "landed": {
+     "run": "us-w1b",
+     "name": "tx",
+     "at": "2026-10-23T16:30:28"
+    },
+    "gate": {
+     "warn": [
+      "browser None"
+     ]
+    },
+    "parked": "2026-10-23T16:44:39",
+    "gated": "2026-10-23T17:14:24",
+    "shipped": "2026-10-23T18:44:24"
+   },
+   "gate_relax": {
+    "browser": "T-1065: the Gate test line carries 252 riders (work 23, shopping 115, social 114) and no school trip; a short-trip purpose on a thin line, as T-1017's heo"
+   }
   },
   {
    "order": 2241,
@@ -131522,7 +133338,7 @@
    "id": "bnt",
    "name": "Benton County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -131573,14 +133389,40 @@
      "Searcy County, AR"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 15.8,
+     "stations": 0.6,
+     "places": 0.9,
+     "coarse": 1.0,
+     "routes": 30.4,
+     "merge": 1.2,
+     "nocar": 1.7,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:21:36",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:23"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.0582445769629694"
+     ]
+    },
+    "gated": "2026-10-23T16:56:53",
+    "shipped": "2026-10-23T18:44:24"
+   }
   },
   {
    "order": 2243,
    "id": "mho",
    "name": "Mahoning County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -131621,14 +133463,28 @@
      "Ashtabula County, OH"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 40.9,
+     "stations": 0.8,
+     "places": 1.9,
+     "coarse": 1.2,
+     "routes": 36.1,
+     "merge": 1.6,
+     "nocar": 2.1,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T17:40:38"
+   }
   },
   {
    "order": 2244,
    "id": "lno",
    "name": "Linn County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -131691,7 +133547,21 @@
      "Howard County, IA"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 99.3,
+     "stations": 1.6,
+     "places": 3.2,
+     "coarse": 11.4,
+     "routes": 87.5,
+     "merge": 6.4,
+     "nocar": 3.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T18:22:52"
+   }
   },
   {
    "order": 2245,
@@ -131830,7 +133700,7 @@
    "id": "sco",
    "name": "Scott County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -131897,7 +133767,21 @@
      "Keokuk County, IA"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 103.9,
+     "stations": 1.7,
+     "places": 3.7,
+     "coarse": 15.2,
+     "routes": 100.2,
+     "merge": 9.6,
+     "nocar": 3.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T18:23:17"
+   }
   },
   {
    "order": 2248,
@@ -131960,7 +133844,7 @@
    "id": "cue",
    "name": "Cumberland County, NC",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -132001,7 +133885,31 @@
      "Hoke County, NC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 20.9,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 0.6,
+     "routes": 36.1,
+     "merge": 1.0,
+     "nocar": 1.8,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T20:20:02",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:46:26",
+    "shipped": "2026-10-23T18:44:24"
+   }
   },
   {
    "order": 2250,
@@ -132076,7 +133984,7 @@
    "id": "dne",
    "name": "Dane County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -132113,14 +134021,28 @@
      "Jefferson County, WI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 24.9,
+     "stations": 1.2,
+     "places": 2.1,
+     "coarse": 1.3,
+     "routes": 29.0,
+     "merge": 1.7,
+     "nocar": 2.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-23T18:09:54"
+   }
   },
   {
    "order": 2252,
    "id": "mcc",
    "name": "McLean County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -132179,14 +134101,28 @@
      "Stark County, IL"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 103.1,
+     "stations": 1.0,
+     "places": 5.6,
+     "coarse": 7.4,
+     "routes": 206.8,
+     "merge": 7.4,
+     "nocar": 2.5,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T17:44:59"
+   }
   },
   {
    "order": 2253,
    "id": "rac",
    "name": "Racine County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -132227,14 +134163,28 @@
      "Walworth County, WI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 19.3,
+     "stations": 1.1,
+     "places": 1.7,
+     "coarse": 1.5,
+     "routes": 33.6,
+     "merge": 2.1,
+     "nocar": 2.9,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T18:10:26"
+   }
   },
   {
    "order": 2254,
    "id": "klm",
    "name": "Kalamazoo County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -132277,14 +134227,28 @@
      "Cass County, MI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 29.5,
+     "stations": 1.1,
+     "places": 2.0,
+     "coarse": 2.5,
+     "routes": 34.4,
+     "merge": 2.7,
+     "nocar": 2.9,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T18:11:11"
+   }
   },
   {
    "order": 2255,
    "id": "eab",
    "name": "East Baton Rouge Parish",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -132327,7 +134291,33 @@
      "West Feliciana Parish, LA"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7061",
+    "steps": {
+     "build": 13.8,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 0.5,
+     "routes": 17.0,
+     "merge": 0.7,
+     "nocar": 1.7,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:18:01",
+    "landed": {
+     "run": "us-w1b",
+     "name": "la",
+     "at": "2026-10-23T16:30:26"
+    },
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8176626455780145"
+     ]
+    },
+    "gated": "2026-10-23T16:56:57",
+    "shipped": "2026-10-23T18:44:24"
+   }
   },
   {
    "order": 2256,
@@ -132386,7 +134376,7 @@
    "id": "was",
    "name": "Washtenaw County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -132425,7 +134415,21 @@
      "Lenawee County, MI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 40.5,
+     "stations": 1.0,
+     "places": 3.0,
+     "coarse": 1.5,
+     "routes": 64.3,
+     "merge": 2.3,
+     "nocar": 2.9,
+     "everyday": 1.0
+    },
+    "built": "2026-10-23T18:12:23"
+   }
   },
   {
    "order": 2258,
@@ -132495,7 +134499,7 @@
    "id": "muk",
    "name": "Muskegon County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -132548,14 +134552,28 @@
      "Lake County, MI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 41.9,
+     "stations": 1.3,
+     "places": 2.0,
+     "coarse": 5.4,
+     "routes": 60.3,
+     "merge": 5.8,
+     "nocar": 3.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-23T18:13:09"
+   }
   },
   {
    "order": 2260,
    "id": "buh",
    "name": "Buchanan County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -132662,14 +134680,28 @@
      "Worth County, MO"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 78.3,
+     "stations": 0.8,
+     "places": 2.5,
+     "coarse": 22.7,
+     "routes": 237.2,
+     "merge": 20.4,
+     "nocar": 3.5,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T17:46:45"
+   }
   },
   {
    "order": 2261,
    "id": "blc",
    "name": "Bell County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -132716,7 +134748,33 @@
      "Robertson County, TX"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7013",
+    "steps": {
+     "build": 26.7,
+     "stations": 0.7,
+     "places": 1.3,
+     "coarse": 0.9,
+     "routes": 43.8,
+     "merge": 1.0,
+     "nocar": 2.0,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:19:52",
+    "landed": {
+     "run": "us-w1b",
+     "name": "tx",
+     "at": "2026-10-23T16:30:28"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.04383063906718305"
+     ]
+    },
+    "gated": "2026-10-23T16:45:57",
+    "shipped": "2026-10-23T18:44:25"
+   }
   },
   {
    "order": 2262,
@@ -132778,7 +134836,7 @@
    "id": "mrt",
    "name": "Marathon County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -132843,7 +134901,21 @@
      "Iron County, WI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 134.8,
+     "stations": 1.2,
+     "places": 2.7,
+     "coarse": 19.6,
+     "routes": 148.5,
+     "merge": 16.3,
+     "nocar": 3.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T18:16:38"
+   }
   },
   {
    "order": 2264,
@@ -132936,7 +135008,7 @@
    "id": "moi",
    "name": "Mobile County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -132973,7 +135045,33 @@
      "Baldwin County, AL"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7055",
+    "steps": {
+     "build": 14.3,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 0.6,
+     "routes": 21.2,
+     "merge": 0.8,
+     "nocar": 1.6,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:21:06",
+    "landed": {
+     "run": "us-w1b",
+     "name": "al",
+     "at": "2026-10-23T16:30:21"
+    },
+    "gate": {
+     "warn": [
+      "osm_land_share 0.8139"
+     ]
+    },
+    "gated": "2026-10-23T16:57:02",
+    "shipped": "2026-10-23T18:44:25"
+   }
   },
   {
    "order": 2266,
@@ -133072,7 +135170,7 @@
    "id": "dul",
    "name": "Douglas County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -133107,7 +135205,22 @@
      "Douglas County, NE"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "claim": "20261023-184235",
+    "run_batch": "20261023-184235",
+    "steps": {
+     "build": 38.9,
+     "stations": 0.7,
+     "places": 1.4,
+     "coarse": 0.4,
+     "routes": 8.6,
+     "merge": 0.7,
+     "nocar": 1.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T18:44:42"
+   }
   },
   {
    "order": 2268,
@@ -133234,7 +135347,7 @@
    "id": "lri",
    "name": "Lorain County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -133277,7 +135390,21 @@
      "Ashland County, OH"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 24.8,
+     "stations": 1.0,
+     "places": 1.8,
+     "coarse": 1.3,
+     "routes": 29.6,
+     "merge": 1.5,
+     "nocar": 2.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T17:46:02"
+   }
   },
   {
    "order": 2271,
@@ -133391,7 +135518,7 @@
    "id": "lnr",
    "name": "Lancaster County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -133442,14 +135569,29 @@
      "Pawnee County, NE"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "claim": "20261023-184235",
+    "run_batch": "20261023-184235",
+    "steps": {
+     "build": 45.9,
+     "stations": 0.8,
+     "places": 1.8,
+     "coarse": 1.5,
+     "routes": 31.8,
+     "merge": 1.9,
+     "nocar": 2.0,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T18:45:15"
+   }
   },
   {
    "order": 2274,
    "id": "mui",
    "name": "Muskingum County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -133512,14 +135654,28 @@
      "Vinton County, OH"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 39.6,
+     "stations": 1.1,
+     "places": 2.2,
+     "coarse": 6.6,
+     "routes": 68.7,
+     "merge": 4.6,
+     "nocar": 2.4,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T17:48:09"
+   }
   },
   {
    "order": 2275,
    "id": "ott",
    "name": "Ottawa County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -133560,14 +135716,28 @@
      "Barry County, MI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 32.0,
+     "stations": 1.1,
+     "places": 2.3,
+     "coarse": 2.8,
+     "routes": 53.8,
+     "merge": 2.9,
+     "nocar": 2.9,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T18:14:03"
+   }
   },
   {
    "order": 2276,
    "id": "chp",
    "name": "Champaign County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -133612,14 +135782,28 @@
      "Piatt County, IL"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 35.9,
+     "stations": 0.9,
+     "places": 2.4,
+     "coarse": 2.8,
+     "routes": 39.1,
+     "merge": 2.3,
+     "nocar": 2.1,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T17:48:12"
+   }
   },
   {
    "order": 2277,
    "id": "cpe",
    "name": "Cape Girardeau County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -133700,7 +135884,21 @@
      "Carter County, MO"
     ]
    },
-   "solve_region": "west-north-central"
+   "solve_region": "west-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 43.8,
+     "stations": 1.1,
+     "places": 1.8,
+     "coarse": 12.3,
+     "routes": 86.7,
+     "merge": 11.8,
+     "nocar": 2.5,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T17:50:50"
+   }
   },
   {
    "order": 2278,
@@ -133765,7 +135963,7 @@
    "id": "guf",
    "name": "Guilford County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -133800,7 +135998,33 @@
      "Guilford County, NC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 13.8,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 0.3,
+     "routes": 18.7,
+     "merge": 0.7,
+     "nocar": 1.7,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:19:39",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.032755767252167396"
+     ]
+    },
+    "gated": "2026-10-23T16:46:26",
+    "shipped": "2026-10-23T18:44:25"
+   }
   },
   {
    "order": 2280,
@@ -133925,7 +136149,7 @@
    "id": "moh",
    "name": "Montgomery County, OH",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -133962,14 +136186,28 @@
      "Preble County, OH"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 15.5,
+     "stations": 0.7,
+     "places": 1.3,
+     "coarse": 0.5,
+     "routes": 15.5,
+     "merge": 0.8,
+     "nocar": 1.9,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T17:48:49"
+   }
   },
   {
    "order": 2283,
    "id": "wie",
    "name": "Winnebago County, IL",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -134018,14 +136256,28 @@
      "Carroll County, IL"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 25.3,
+     "stations": 0.8,
+     "places": 1.6,
+     "coarse": 2.2,
+     "routes": 29.6,
+     "merge": 2.8,
+     "nocar": 2.4,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T17:49:55"
+   }
   },
   {
    "order": 2284,
    "id": "bef",
    "name": "Beaufort County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -134076,14 +136328,38 @@
      "Allendale County, SC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 45.5,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 1.2,
+     "routes": 48.7,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:20:49",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:46:26",
+    "shipped": "2026-10-23T18:44:25"
+   }
   },
   {
    "order": 2285,
    "id": "mda",
    "name": "Midland County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -134184,14 +136460,42 @@
      "Loving County, TX"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7013",
+    "steps": {
+     "build": 41.2,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 5.5,
+     "routes": 79.1,
+     "merge": 4.1,
+     "nocar": 1.7,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:21:26",
+    "landed": {
+     "run": "us-w1b",
+     "name": "tx",
+     "at": "2026-10-23T16:30:28"
+    },
+    "gate": {
+     "warn": [
+      "area_km2 163310.65897866566",
+      "osm_land_share 0.9394",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-23T16:45:57",
+    "shipped": "2026-10-23T18:44:26"
+   }
   },
   {
    "order": 2286,
    "id": "caw",
    "name": "Catawba County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -134240,14 +136544,38 @@
      "Alleghany County, NC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 22.4,
+     "stations": 0.8,
+     "places": 1.1,
+     "coarse": 0.8,
+     "routes": 47.5,
+     "merge": 1.5,
+     "nocar": 1.8,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T20:20:42",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:46:26",
+    "shipped": "2026-10-23T18:44:26"
+   }
   },
   {
    "order": 2287,
    "id": "ane",
    "name": "Anderson County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -134290,7 +136618,33 @@
      "Abbeville County, SC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 23.3,
+     "stations": 0.8,
+     "places": 1.4,
+     "coarse": 0.7,
+     "routes": 36.2,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:20:45",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.038502367028306776"
+     ]
+    },
+    "gated": "2026-10-23T16:46:27",
+    "shipped": "2026-10-23T18:44:26"
+   }
   },
   {
    "order": 2288,
@@ -134548,7 +136902,7 @@
    "id": "rut",
    "name": "Rutherford County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -134595,7 +136949,33 @@
      "Moore County, TN"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 15.7,
+     "stations": 0.6,
+     "places": 0.9,
+     "coarse": 0.6,
+     "routes": 25.0,
+     "merge": 0.7,
+     "nocar": 1.6,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:21:30",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:23"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.052524456661234176"
+     ]
+    },
+    "gated": "2026-10-23T16:56:54",
+    "shipped": "2026-10-23T18:44:26"
+   }
   },
   {
    "order": 2293,
@@ -134658,7 +137038,7 @@
    "id": "piu",
    "name": "Pike County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -134743,14 +137123,28 @@
      "Owsley County, KY"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 33.5,
+     "stations": 0.7,
+     "places": 1.4,
+     "coarse": 6.0,
+     "routes": 59.1,
+     "merge": 5.9,
+     "nocar": 2.3,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T17:51:45"
+   }
   },
   {
    "order": 2295,
    "id": "gru",
    "name": "Greene County, OH",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -134801,7 +137195,21 @@
      "Adams County, OH"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 28.1,
+     "stations": 0.7,
+     "places": 1.5,
+     "coarse": 2.4,
+     "routes": 48.9,
+     "merge": 2.6,
+     "nocar": 2.3,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T17:52:18"
+   }
   },
   {
    "order": 2296,
@@ -134868,7 +137276,7 @@
    "id": "stp",
    "name": "St. Tammany Parish",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -134911,14 +137319,40 @@
      "St. Helena Parish, LA"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7061",
+    "steps": {
+     "build": 16.3,
+     "stations": 0.7,
+     "places": 1.1,
+     "coarse": 0.6,
+     "routes": 28.2,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:18:51",
+    "landed": {
+     "run": "us-w1b",
+     "name": "la",
+     "at": "2026-10-23T16:30:26"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.03185947205044647"
+     ]
+    },
+    "gated": "2026-10-23T16:56:58",
+    "shipped": "2026-10-23T18:44:26"
+   }
   },
   {
    "order": 2298,
    "id": "seb",
    "name": "Sebastian County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -134977,14 +137411,38 @@
      "Montgomery County, AR"
     ]
    },
-   "solve_region": "west-south-central"
+   "solve_region": "west-south-central",
+   "run": {
+    "run_batch": "20261023-201633-7041",
+    "steps": {
+     "build": 22.3,
+     "stations": 0.6,
+     "places": 0.8,
+     "coarse": 1.3,
+     "routes": 39.1,
+     "merge": 1.2,
+     "nocar": 1.3,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:21:57",
+    "landed": {
+     "run": "us-w1b",
+     "name": "ams",
+     "at": "2026-10-23T16:30:23"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:56:55",
+    "shipped": "2026-10-23T18:44:27"
+   }
   },
   {
    "order": 2299,
    "id": "grv",
    "name": "Greenville County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -135019,14 +137477,38 @@
      "Greenville County, SC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 15.5,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 0.3,
+     "routes": 18.5,
+     "merge": 0.5,
+     "nocar": 1.6,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T20:20:23",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T16:46:27",
+    "shipped": "2026-10-23T18:44:27"
+   }
   },
   {
    "order": 2300,
    "id": "ril",
    "name": "Richland County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -135065,7 +137547,34 @@
      "Fairfield County, SC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 15.2,
+     "stations": 0.7,
+     "places": 1.1,
+     "coarse": 0.4,
+     "routes": 21.4,
+     "merge": 0.6,
+     "nocar": 1.6,
+     "everyday": 0.5
+    },
+    "built": "2026-10-23T20:20:44",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.03634688851342728",
+      "top_zone_jobs_share 0.10288781321156892"
+     ]
+    },
+    "gated": "2026-10-23T16:46:27",
+    "shipped": "2026-10-23T18:44:27"
+   }
   },
   {
    "order": 2301,
@@ -135128,7 +137637,7 @@
    "id": "sct",
    "name": "Scott County, KY",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -135211,7 +137720,21 @@
      "Robertson County, KY"
     ]
    },
-   "solve_region": "east-south-central"
+   "solve_region": "east-south-central",
+   "run": {
+    "run_batch": "20261023-162916",
+    "steps": {
+     "build": 36.4,
+     "stations": 0.7,
+     "places": 1.4,
+     "coarse": 3.6,
+     "routes": 67.8,
+     "merge": 4.2,
+     "nocar": 2.4,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T17:53:43"
+   }
   },
   {
    "order": 2303,
@@ -135311,7 +137834,7 @@
    "id": "lcr",
    "name": "La Crosse County",
    "kind": "zone",
-   "status": "planned",
+   "status": "built",
    "region": "world",
    "countries": [
     "USA"
@@ -135372,14 +137895,28 @@
      "Pepin County, WI"
     ]
    },
-   "solve_region": "east-north-central"
+   "solve_region": "east-north-central",
+   "run": {
+    "run_batch": "20261023-175452",
+    "steps": {
+     "build": 93.0,
+     "stations": 1.1,
+     "places": 2.7,
+     "coarse": 9.4,
+     "routes": 109.1,
+     "merge": 8.0,
+     "nocar": 2.9,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T18:16:15"
+   }
   },
   {
    "order": 2306,
    "id": "spa",
    "name": "Spartanburg County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -135420,7 +137957,33 @@
      "Union County, SC"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-201633",
+    "steps": {
+     "build": 16.4,
+     "stations": 0.6,
+     "places": 1.1,
+     "coarse": 0.5,
+     "routes": 28.7,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 0.4
+    },
+    "built": "2026-10-23T20:21:08",
+    "landed": {
+     "run": "us-w1b",
+     "name": "car",
+     "at": "2026-10-23T16:30:25"
+    },
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.04882965617381038"
+     ]
+    },
+    "gated": "2026-10-23T16:46:27",
+    "shipped": "2026-10-23T18:44:27"
+   }
   },
   {
    "order": 2307,

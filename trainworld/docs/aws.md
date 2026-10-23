@@ -49,20 +49,30 @@ not found, reload PATH: `$env:PATH = [Environment]::GetEnvironmentVariable('PATH
 1. `trainworld\tools\aws\status.py` first. Anything of ours already up? Find out whose run it is
    (its `run` tag, `artifacts/trainworld/aws/<run>.json`, the task notes) before anything else.
 2. `trainworld\tools\aws\bucket.py ensure` (once; it exists since 2026-10-23).
-3. Build the inputs at home: the code as `git archive HEAD` (pipeline, sim, checks), the plan and
-   registry, the run lists. Everything else the machine downloads from the original sources.
-4. `trainworld\tools\aws\launch.py <run> --kind <kind> --type <type> --hours <timer> --disk <GB>
-   --file name=path ... --put name ...` with a new run name. `--dry` first prints the zone, price,
-   bid cap and AMI. The type: `m7a.8xlarge` for a wave (32 real cores, 128 GB); `c7a.large` for a test.
+3. Build the inputs at home: `bundle.py <code.tgz> <plan.txt>` packs the working tree's pipeline,
+   sim, checks, tools/aws and app/src/game JSON (plan and registry included) with the wave plan
+   (`#states <fips> ...`, then `<name> <extracts> <ids> <jobs> <workers>` a runner region a line, the
+   first the check row). Everything else the machine downloads from the original sources.
+4. `trainworld\tools\aws\launch.py <run> --kind wave --type m7a.8xlarge --hours 3 --disk 100
+   --file code=<code.tgz> --file reqs=trainworld\tools\aws\requirements.txt --get go
+   --put results_<name> ...` (one put a plan line) with a new run name; `--dry` first prints the zone,
+   price, bid cap and AMI. `userdata/wave.sh` sets up, builds the check row while it makes the state
+   caches and reads the extracts (four reads at most at once), sends `results_<check>`, then waits up
+   to 90 minutes for `<run>/go`: compare the check row with a Windows build, then
+   `bucket.py put <a file holding "go"> <run>/go` (anything else stops it). Each region is built with
+   `world_run.py run --build-only` and sent as it ends; a spot notice sends what is built. For a
+   machine with no check to make, put the go right after the launch.
 5. Watch without waiting in the foreground: `bucket.py get <run>/log` (the machine puts its log
    every minute) or `status.py`. A run that has gone quiet past its expected time is torn down, not
    waited on.
 6. When the log says done (or the machine is gone): `bucket.py get <run>/<results>` for each result.
 7. `trainworld\tools\aws\teardown.py <run>`: terminates the machine if it is still up, sweeps our
    leftovers, prints the cost and the listing, exits 1 if anything of ours is left.
-8. Land and gate at home (T-1065's `land.py`, then `world_run.py run --rows ... --no-join` gates the
-   built rows, then the join), then `bucket.py rm <run>` once the results are checked. The bucket's
-   objects expire after 14 days anyway.
+8. Land and gate at home: back up (`notes/t1018/us/backup.py`), `land.py <run>` (rows the machine
+   left built go into data/ and turn "built" under the plan lock; parked rows are listed with their
+   causes), then `world_run.py run --rows ... --no-join` gates them (a built row with its packs skips
+   the download and build), then the join; then `bucket.py rm <run>` once the results are checked.
+   The bucket's objects expire after 14 days anyway.
 
 ## Mistakes we foresee
 
@@ -85,4 +95,5 @@ not found, reload PATH: `$env:PATH = [Environment]::GetEnvironmentVariable('PATH
 | Deleting a run's objects before the results are home | The run paid for, nothing to show | bucket.py rm refuses while a run's result keys are unfetched |
 | Publishing from AWS, or pushing packs to R2 | Unreviewed data on the site | Rule 9; nothing in tools/aws/ touches R2 or the site |
 | A machine too small, or too many extract reads at once | A read asks GDAL for a 6 GB node index a reader (26 GB for Tennessee): on 4 GB the extract does not open, and six reads at once overrun 128 GB | Builds need 1.1 GB at most, reads 26 GB: no t-class or micro, at most 4 reads at once on an m7a.8xlarge (notes/T-1064.md) |
+| A result tar written by two senders at once (the spot watcher and the region's end met in us-w1b) | A corrupt tar: the region's rows rebuilt | wave.sh lets one sender a region at a time; wavepack.py writes under a temporary name of its own; land.py checks every file against the manifest's SHA-256 |
 | Trusting a run that went quiet | Hours billed for nothing | Rule 10 and step 5: tear it down, read its log, relaunch smaller |
