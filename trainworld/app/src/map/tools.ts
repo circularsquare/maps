@@ -27,7 +27,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { speedColour } from "../game/palette";
 import { metresBetween } from "../game/walks";
-import { ask, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, selection, shownDayPhrase, trackCount, tool } from "../game/ui";
+import { ask, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, selection, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -615,7 +615,7 @@ export class Tools {
   private legs: { key: string; xy: Float32Array; legs: Float32Array } | null = null;
   private legsAsked = "";
 
-  /** "About 12k trips a day start or end within 800 m" of the spot (T-412), from the cells behind
+  /** "12k trips within 1km" of the spot (T-412, T-1058; 1 mile in US units), from the cells behind
    * the Homes and Destinations bubbles; null until they are in. A trip with both ends inside counts
    * twice, and a spot near a zone's edge counts the viewed zone's cells only. */
   private tripsNear(lng: number, lat: number): string | null {
@@ -640,7 +640,7 @@ export class Tools {
     const L = this.legs;
     if (!L) return null;
     // the radius in world metres each way, so any frame's scale is right here
-    const f = getWorldFrame(), r = unitMetres() === 1000 ? TRIPS_RADIUS_M : M_PER_HALF_MILE;
+    const f = getWorldFrame(), r = unitMetres();
     const [x, y] = f.fromLonLat(lng, lat);
     const dLat = (r / 6371008.8) * (180 / Math.PI), dLng = dLat / Math.cos((lat * Math.PI) / 180);
     const [ex] = f.fromLonLat(lng + dLng, lat), [, ny] = f.fromLonLat(lng, lat + dLat);
@@ -654,9 +654,7 @@ export class Tools {
     // two significant figures: the figure is rough by nature
     const p = 10 ** Math.max(0, Math.floor(Math.log10(Math.max(sum, 1))) - 1), r2 = Math.round(sum / p) * p;
     const n = sum < 50 ? null : r2 >= 10000 ? count(r2) : r2.toLocaleString("en-US");
-    const within = unitMetres() === 1000 ? `${TRIPS_RADIUS_M} m` : "half a mile";
-    const when = shownDayPhrase.peek();
-    return n ? `About ${n} trips ${when} start or end within ${within}` : `Under 50 trips ${when} start or end within ${within}`;
+    return `${n ?? "Under 50"} trips within 1${unitShort()}`;
   }
 
   /** The station placed last in this session (T-312), found by its position so a rename shows. */
@@ -1373,13 +1371,6 @@ export function setCurveLabel(el: HTMLElement, kmh: number) {
   el.dataset.curve = key;
   el.replaceChildren(chip(speed(kmh), speedColour(kmh)));
 }
-
-/**
- * T-412: the station tool counts trips within a 10-minute walk: 800 m straight line is about
- * 1,040 m walked at the model's 1.3 detour, 10 minutes at its 6 km/h. US units: half a mile.
- */
-const TRIPS_RADIUS_M = 800;
-const M_PER_HALF_MILE = 804.672;
 
 /**
  * The track tool's tag (T-411, T-526): length, cost multiplier and price; then the elevation being

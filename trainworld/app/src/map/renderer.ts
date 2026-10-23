@@ -43,9 +43,9 @@ const TRAIN_PX: [number, number][] = [[10, 3], [11, 5.25], [12, 6], [15, 9]];
  * Bare track, the casing and a selected line's extra width follow the same steps. */
 const LINE_PX: [number, number][] = [[9, 0.85], [12, 3.9], [15, 6.6]];
 /** The ghost of track being placed (T-1038, Anita: "a decent minimum width ... see the track in full
- * length"): never thinner than this, CSS px, with this much casing either side; a line is as wide
- * from about zoom 11. */
-const GHOST_MIN_PX = 3, GHOST_CASING_PX = 1.5;
+ * length"), drawn as blueprint track with a thin dark outline (T-1054): never thinner than this
+ * across its rails, CSS px, with this much outline either side. */
+const GHOST_MIN_PX = 4, GHOST_OUTLINE_PX = 1;
 /** Double track's two tracks (T-658): their centres 4 m apart on the ground, each a line's width
  * of LANE_SHARE of that (2.4 m) once apart. Where 4 m is LANE_GROW_PX on screen a double track's
  * stroke starts growing to the pair's width, which it reaches at LANE_PART_PX, where the two tracks
@@ -149,8 +149,9 @@ uniform int u_full_pass;     // T-819: 1 the pass drawing a red band this much (
 uniform float u_full_px;     // casing under the lines on track at capacity, nothing else
 uniform vec3 u_full_rgb;
 uniform int u_ghost;         // T-1038: 1 for the preview pass, whose placement strokes are the ghost
-uniform vec3 u_ghost_rgb;
-uniform vec2 u_ghost_min;    // the ghost's least width (px), and its casing's both sides together
+uniform int u_ghost_layer;   // T-1054: -1 the other strokes; 0 a ghost's outline, 1 its rails, 2 its middle
+uniform vec3 u_ghost_rgb;    // the outline
+uniform vec2 u_ghost_min;    // the ghost's least width across its rails (px), and its outline's both sides together
 in vec4 a_seg;
 in uint a_colour;
 in uint a_edge;
@@ -174,6 +175,9 @@ void main() {
   bool sel = (u_kind == 1 && int(a_colour) == u_sel_line) || (u_kind == 0 && int(a_edge) == u_sel_edge);
   bool blueprint = (flags & 1) != 0;
   bool placement = (flags & 32) != 0;
+  // the ghost is drawn as blueprint track in three layers, outline then rails then middle (T-1054)
+  bool ghost = u_ghost == 1 && placement;
+  if (ghost ? u_ghost_layer < 0 : u_ghost_layer >= 0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   // blueprint track is two dark blue rails either side of a light blue middle (T-322, Anita): the
   // rails are its casing pass, drawn for every segment before any middle, so the joints are clean;
   // the middle is a line wide, so a line planned along it fills it and the rails show either side
@@ -188,16 +192,18 @@ void main() {
   bool turnback = (flags & 128) != 0;
   if (turnback && (u_lane_mode != 2 || u_casing > 0.0)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float lfm = turnback ? 1.0 : max(a_lane.x, a_lane.y), G = u_lanes.x, t = u_lanes.y;
-  float lt = blueprint && !placement ? u_lanes.w : u_width.z;
-  float core = bpTrack || bpLine ? u_bp.x + 2.0 * u_bp.y : u_width.x;
-  float grow = u_lanes.z * max(0.0, lfm * (G + lt) - core * (bpTrack || bpLine ? 1.0 : a_wmul));
+  bool bpShape = bpTrack || bpLine || ghost;
+  float lt = (blueprint && !placement) || ghost ? u_lanes.w : u_width.z;
+  float core = bpShape ? u_bp.x + 2.0 * u_bp.y : u_width.x;
+  float grow = u_lanes.z * max(0.0, lfm * (G + lt) - core * (bpShape ? 1.0 : a_wmul));
   float extra = sel ? u_width.y : 0.0;
   bool full = u_full_pass == 1;
   if (full && !(u_kind == 1 && a_full > 0.5)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float cas = full ? u_casing + u_full_px : u_casing;
   float w, lane_off = 0.0;
   if (u_lane_mode == 0) {
-    w = (bpTrack ? u_bp.x + extra + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
+    w = (ghost ? core
+      : bpTrack ? u_bp.x + extra + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
       : bpLine ? u_bp.x + extra + cas
       : u_width.x * a_wmul + extra + cas) + grow;
   } else {
@@ -208,20 +214,23 @@ void main() {
     float wl = lfm > 0.0 ? 0.5 * (max(core, G + lt) - gap) : mix(core, lt, t);
     float half_ = 0.5 * (gap + wl);
     lane_off = half_;
-    float band = max(core * (bpTrack || bpLine ? 1.0 : a_wmul), lfm * 2.0 * half_ + wl);
+    float band = max(core * (bpShape ? 1.0 : a_wmul), lfm * 2.0 * half_ + wl);
     bool casing = u_casing > 0.0;
     bool keep = u_lane_mode == 1
-      ? (casing ? !bpTrack : (u_kind == 1 && !blueprint) || (hsr && u_kind == 0))
+      ? !ghost && (casing ? !bpTrack : (u_kind == 1 && !blueprint) || (hsr && u_kind == 0))
       : (casing ? bpTrack : true) && (u_lane_mode == 2 || lfm > 0.0);
     if (!keep) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
     w = u_lane_mode == 1 ? band + extra + cas
+      : ghost ? wl
       : bpTrack || bpLine ? (casing ? wl : max(0.0, wl - 2.0 * u_bp.y))
       : wl;
     if (u_cap > 0.0 && u_lane_mode > 1) w = min(w, 0.5 * u_cap);
   }
   if (u_cap > 0.0) w = min(w, u_cap);
-  bool ghost = u_ghost == 1 && placement;
-  if (ghost && u_lane_mode <= 1) w = max(w, u_ghost_min.x + (u_casing > 0.0 ? u_ghost_min.y : 0.0));
+  if (ghost) {
+    w = max(w, u_ghost_min.x);
+    w = u_ghost_layer == 0 ? w + u_ghost_min.y : u_ghost_layer == 2 ? max(0.0, w - 2.0 * u_bp.y) : w;
+  }
   // thinner than a pixel (zoomed far out, T-205): a pixel wide and fainter, rather than broken up
   float faint = clamp(w, 0.05, 1.0);
   w = max(w, 1.0);
@@ -256,13 +265,14 @@ void main() {
   v_alpha = (!placement && !bp && (flags & 2) != 0 ? 0.55 : 1.0) * faint * (u_kind == 1 && !sel ? u_dim : 1.0);
   vec3 lc = u_level_colours[clamp(3 - int(round(a_level)), 0, 6)];
   bool bpMid = false;
-  if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement && !ghost ? u_sel : full ? u_full_rgb : u_casing_rgb;
+  if (ghost && u_ghost_layer < 2) v_color = u_ghost_layer == 0 ? u_ghost_rgb : u_bp_rail;
+  else if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement && !ghost ? u_sel : full ? u_full_rgb : u_casing_rgb;
   else if ((flags & 16) != 0) v_color = u_bad;
   else if ((u_kind == 2 && !placement) || u_by_level == 1) v_color = lc;
   else if (u_by_speed == 1) {
     ${SPEED_BLEND}
   }
-  else if (placement) v_color = ghost ? u_ghost_rgb : vec3(1.0);
+  else if (placement) v_color = ghost ? u_bp_mid : vec3(1.0);
   else if (u_kind == 0 && bpTrack && !sel) { v_color = swOff ? u_bp_off_mid : u_bp_mid; bpMid = true; }
   else if (u_kind == 0) v_color = sel ? u_sel : u_track;
   else v_color = texelFetch(u_line_colours, ivec2(int(a_colour) % ${LINES_W}, int(a_colour) / ${LINES_W}), 0).rgb;
@@ -273,8 +283,8 @@ void main() {
   // high-speed track (T-817): a thin centre line along the stroke, light on built track (dark in
   // the dark theme), the rail colour on blueprint; once its tracks part, the stroke's own colour
   // between them
-  vec3 rail = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement && !ghost ? u_sel : u_casing_rgb;
-  if (hsr && u_casing <= 0.0 && u_lane_mode < 2 && !full) {
+  vec3 rail = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : ghost ? u_bp_rail : placement ? u_sel : u_casing_rgb;
+  if (hsr && u_casing <= 0.0 && u_lane_mode < 2 && !full && (!ghost || u_ghost_layer == 2)) {
     float hs = max(0.3, (u_lane_mode == 0 ? 0.18 * w : 0.08 * G));
     v_stripe = vec4(u_lane_mode == 0 ? rail : (bpTrack || placement ? rail : v_color), hs);
     v_stripe_only = u_lane_mode == 1 && u_kind == 0 ? 1.0 : 0.0;
@@ -1305,7 +1315,7 @@ export class NetworkRenderer {
     this.marks.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_rgb", "u_ghost", "u_ghost_rgb", "u_ghost_min"]);
+    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min"]);
     this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
@@ -1723,7 +1733,8 @@ export class NetworkRenderer {
     gl.uniform3fv(u.u_full_rgb, rgb(shades.fullTrack).map((v) => v / 255));
     gl.uniform1i(u.u_ghost, 0);
     gl.uniform3fv(u.u_ghost_rgb, rgb(shades.ghost).map((v) => v / 255));
-    gl.uniform2f(u.u_ghost_min, GHOST_MIN_PX * dpr, 2 * GHOST_CASING_PX * dpr);
+    gl.uniform1i(u.u_ghost_layer, -1);
+    gl.uniform2f(u.u_ghost_min, GHOST_MIN_PX * dpr, 2 * GHOST_OUTLINE_PX * dpr);
     // blueprint track (T-322): a line-wide light blue middle between two thin dark blue rails
     const bpRail = Math.max(1, BP_NARROW * Math.max(1, BP_RAIL_SHARE * wLine / dpr)) * dpr;
     const bpMid = Math.max(0, BP_NARROW * (wLine + 2 * Math.max(1, BP_RAIL_SHARE * wLine / dpr) * dpr) - 2 * bpRail);
@@ -1797,6 +1808,23 @@ export class NetworkRenderer {
     if (lanes.t > 0) stroke(this.turnback, 0, wTrack, false);
     gl.uniform1i(u.u_ghost, 1);
     stroke(this.preview, 2, wLine, false);
+    if (this.preview?.count) {
+      // the ghost: blueprint's outline, rails and middle, each over the last (T-1054)
+      gl.uniform1f(u.u_casing, 0);
+      gl.uniform1f(u.u_cap, 0);
+      gl.uniform1i(u.u_only_sel, 0);
+      gl.bindVertexArray(this.preview.vao);
+      for (let layer = 0; layer < 3; layer++) {
+        gl.uniform1i(u.u_ghost_layer, layer);
+        for (const mode of modes) {
+          if (mode === 1) continue;
+          gl.uniform1i(u.u_lane_mode, mode);
+          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.preview.count);
+        }
+      }
+      gl.uniform1i(u.u_ghost_layer, -1);
+      gl.uniform1i(u.u_lane_mode, 0);
+    }
     gl.uniform1i(u.u_ghost, 0);
     this.marks.draw(m, vp, zoom, dpr, this.levelColours, opt.flatMarks !== false);
 

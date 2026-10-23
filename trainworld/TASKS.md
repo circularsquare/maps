@@ -76,10 +76,8 @@ CLAUDE.md; history in ARCHIVE.md.
 
 ## Interface
 Anita's TODO.md "short term", filed 2026-10-23.
-- T-1054 [P2] The placement ghost looks like the normal blueprint track with a thin dark (black) outline, in place of T-1038's purplish blue; T-1038's minimum width stays (Anita 2026-10-23). Taking, 2026-10-23.
 - T-1055 [P1] A trip can walk to a transfer station, change, and get off without riding any train, paying a fare (Anita 2026-10-23): a trip with no train leg is not a rail trip. Taking, 2026-10-23.
 - T-1056 [P2] Anita's proposal (2026-10-23): a rail trip whose walking in all (to, between and from stations) is longer than walking the whole way is not a rail trip. Measure the effect, then build. Taking, 2026-10-23.
-- T-1058 [P2] A station's hover counts trips within 1 km, not 800 m, and reads "41k trips within 1km" (was "about 36k trips start or end within 800m") (Anita 2026-10-23). Taking, 2026-10-23.
 Anita's TODO.md "short term", filed 2026-10-21 (late) and 2026-10-22.
 - T-1026 [P2] (Anita 2026-10-23: opening a region is "a tiny bit sluggish", medium-low priority) The realm shade's cut (`boundaryGeometry.outsideZones`, exact union, then earcut) runs on the main thread once per change of the shown realms: about 170 ms a change for a Tokyo game showing Korea and China east (35 ms before T-1025), over a second for all realms. Move it to a worker, or keep each zone's split edges between changes. A realm button's click is one 166-334 ms task (T-1052: Germany's 319 ms is the cut 171, earcut 57, labels 55, `zoneRealm` 52). notes/T-1006.md "T-1025", notes/T-1052.md.
 - T-1027 [P3] The coarse outlines (`pipeline/zone_outlines.py`) overlap: 558 of 5,217 rings cross or touch themselves after Douglas-Peucker, and neighbours from different sources cross. The shade copes (T-1025), but a topology-preserving simplification and an overlap trim would make the outlines tidier and the cut cheaper. notes/T-1006.md "T-1025".

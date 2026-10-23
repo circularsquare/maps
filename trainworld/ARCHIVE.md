@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-1058 [P2] The station tool's trip count. Done 2026-10-23: counts trips within 1 km (1 mile in US units), reads "41k trips within 1km" (no "about", no day phrase); the 800 m was this count's own constant, no demand rule uses it. docs/ui-building.md.
+- T-1054 [P2] The placement ghost as blueprint. Done 2026-10-23: blueprint rails and middle (Elevation, Max speed and red for invalid still colour the middle) inside a 1 px outline, black, the map's ink in the dark theme; at least 4 px across the rails. Shots in artifacts/trainworld/t1054/.
 - T-1057 [P3] The loading animation's train. Done 2026-10-23: a side-on passenger car (windows, two doors, roof, two bogies) in `ui/Spinner.tsx`; only the bunny's ear tips show over the roof, edge on, bobbing. No chimney, so no steam puffs. Shots in artifacts/trainworld/t1057/.
 - T-1052 [P1] The Europe pan's long tasks. Done 2026-10-23: a check artefact (Playwright serialised the map `jumpTo` returns, 2 s a jump); 47 such lines in 25 checks fixed. Real pans 0-6 tasks, longest 118 ms; a realm show is one 166-334 ms task (T-1026). notes/T-1052.md.
 - T-1047 [P2] Track counts as stations do. Done 2026-10-23: a zone built track crosses joins the opened list (a bubble, not a dot), shows its realm and opens bare for its figures; blueprint track shows realms only. No solve covers it: same figures, half the memory. notes/T-1047.md.

@@ -51,7 +51,7 @@ export interface ShadeColours {
   realMetro: string;
   /** the outline of a line at capacity in the traffic view (T-819), the capacity tags' red */
   fullTrack: string;
-  /** the track being placed or dragged, and a real-network route's ghost (T-1038) */
+  /** the thin outline round the ghost of track being placed or dragged, and of a real-network route (T-1054) */
   ghost: string;
 }
 
@@ -64,7 +64,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
     markInk: NET_INK, markBlueprint: "#2f62b3",
     realMain: "#6f7b93", realOther: "#9ea6b5", realMetro: "#9577a6",
     fullTrack: "#c0392b",
-    ghost: "#5b4ee8",
+    ghost: "#000000",
   },
   dark: {
     land: DARK_LAND, water: DARK_WATER, park: DARK_PARK, road: DARK_ROAD, label: DARK_LABEL, basemapMix: DARK_WARM,
@@ -74,7 +74,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
     markInk: "#e6e4e0", markBlueprint: "#8db6ee",
     realMain: "#6e788c", realOther: "#4e5563", realMetro: "#82699a",
     fullTrack: "#f0584f",
-    ghost: "#9488ff",
+    ghost: "#e6e4e0",
   },
 };
 

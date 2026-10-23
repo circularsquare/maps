@@ -81,7 +81,7 @@ there is no high-speed class and no hover yet.
 - **High-speed track** [T-817, `F_HSR` in `map/network.ts`, the stroke shaders in
   `map/renderer.ts`]: double track's width and colours with a thin centre line along the stroke,
   18% of its width (at least 0.6 px): the casing colour on built track (light, dark in the dark
-  theme), the rail colour on blueprint, the ink on the drawing ghost; lines over it carry it too.
+  theme), the rail colour on blueprint and on the drawing ghost; lines over it carry it too.
   Far out, where the stroke is a pixel or two, it shows as a paler built stroke and a darker
   blueprint one. Once the two tracks part, the line runs between them in the track's or the
   line's own colour.

@@ -103,11 +103,12 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   it is on existing track.
 - **Shift**: with a tool on, MapLibre's shift-drag zoom is off so a shift-click reaches the tool.
   In the select tool with demand bubbles on, Shift+drag draws a bubble box instead [T-865].
-- **The ghost** is solid, purplish blue (`#5b4ee8`; `#9488ff` in the dark theme, `ghost` in
-  `game/shadeTable.ts`) on the map's casing (white; near black in the dark theme) in the Line and
-  traffic views, coloured by the Elevation or Max speed view from the preview's fitted geometry; red
-  when invalid. It is never thinner than 3 px with 1.5 px of casing either side, so a route hundreds
-  of km long shows in full zoomed out (a line is as wide from about zoom 11) [T-1038]. The same holds
+- **The ghost** is drawn as blueprint track (dark blue rails round a light blue middle) with a thin
+  outline outside the rails (black; the map's ink, near white, in the dark theme; `ghost` in
+  `game/shadeTable.ts`) [T-1054]. The middle is coloured
+  by the Elevation or Max speed view from the preview's fitted geometry; red when invalid. It is never
+  thinner than 4 px across its rails with 1 px of outline either side, so a route hundreds of km long
+  shows in full zoomed out [T-1038]. The same holds
   for every placement ghost: a dragged corner or node, a moved pick, a crossover, a station's own
   piece of track.
 - **Waiting** [T-1039]: when a click or the newest ghost has waited on the clock worker more than
@@ -209,10 +210,9 @@ switch on, the track tool follows the real network the layer draws.
   station) stays and says why.
 - **Placement help** [T-312, T-412]: with the pointer snapped to track the tag says how far the
   spot is, in a straight line, from the station placed last in this session ("1.2 km from W 46th
-  St"; nothing before the first), then roughly how many local trips a day start or end within 800 m
-  (half a mile in US units): "About 12k trips a day start or end within 800 m", two significant
-  figures, "Under 50" below that. 800 m is a 10-minute walk at the model's 6 km/h and 1.3 detour.
-  The count is the Homes and Destinations bubbles' legs (all purposes) over the cells whose centres
+  St"; nothing before the first), then roughly how many local trips there are within 1 km
+  (1 mile in US units): "12k trips within 1km", two significant figures, "Under 50" below that.
+  The count is the day shown. It is the Homes and Destinations bubbles' legs (all purposes) over the cells whose centres
   are inside the circle, from the zone in view only; a trip with both ends inside counts twice.
   A refused spot shows only the reason. Two thin rings at 1 km and
   2 km of ground distance, each labelled at its top, follow the spot under the ghost
