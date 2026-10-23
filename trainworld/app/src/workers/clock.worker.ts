@@ -467,14 +467,38 @@ function zonesOfPoints(xy: ArrayLike<number>, stride = 2, start = 0): string[] {
   return [...hit];
 }
 
+// T-1039: previews the main thread no longer wants (`previewStale`, sent outside the queue) are
+// answered `stale` without being worked out, or while they wait for masks
+let previewStaleSeq = 0;
+let wakeStale: (() => void) | null = null;
+const stale = (seq: number) => seq <= previewStaleSeq;
+type PreviewMsg = Extract<ToClock, { kind: "preview" | "previewEdge" | "previewNode" | "previewNodes" }>;
+const isPreview = (m: ToClock): m is PreviewMsg => m.kind === "preview" || m.kind === "previewEdge" || m.kind === "previewNode" || m.kind === "previewNodes";
+function sendStale(seq: number) {
+  send({ kind: "preview", seq, stale: true, ok: false, cost: 0, lengthM: 0, mult: 0, issues: [], verts: new Float64Array(0), pts: new Float32Array(0) });
+}
+
+/** whether the last `withMasks` ended with every mask its geometry meets in */
+let masksComplete = false;
+
 /** Work out a preview; while its geometry meets zones whose masks are not in, install them and work it
- * out again. Returns the last result. */
-async function withMasks(run: () => Float64Array, points: (out: Float64Array) => number[]): Promise<Float64Array> {
+ * out again. Returns the last result, or null once preview `seq` is no longer wanted (the masks
+ * still come in). */
+async function withMasks(run: () => Float64Array, points: (out: Float64Array) => number[], seq?: number): Promise<Float64Array | null> {
+  masksComplete = false;
   for (;;) {
     const out = run();
     const need = zonesOfPoints(points(out)).filter((id) => !masksIn.has(id));
-    if (!need.length) return out;
-    await ensureMasks(need);
+    if (!need.length) {
+      masksComplete = true;
+      return out;
+    }
+    if (seq === undefined) await ensureMasks(need);
+    else {
+      const gone = await Promise.race([ensureMasks(need).then(() => false), new Promise<boolean>((r) => (wakeStale = () => stale(seq) && r(true)))]);
+      wakeStale = null;
+      if (gone) return null;
+    }
     // a mask that could not be fetched (reported) leaves the edit as it was without it
     if (need.every((id) => !masksIn.has(id))) return run();
   }
@@ -1856,6 +1880,11 @@ onmessage = (e: MessageEvent<ToClock>) => {
     thumbShade = msg.shade;
     return;
   }
+  if (msg.kind === "previewStale") {
+    previewStaleSeq = Math.max(previewStaleSeq, msg.seq);
+    wakeStale?.();
+    return;
+  }
   messages =messages.then(() => processMessage(msg)).catch(err => send({ kind: "error", message: String(err) }));
 };
 async function processMessage(msg: ToClock) {
@@ -1939,6 +1968,7 @@ async function processMessage(msg: ToClock) {
   await ready;
   if (!api) return;
   if (modelDown) return failAnswer(msg);
+  if (isPreview(msg) && stale(msg.seq)) return sendStale(msg.seq);
   try {
     if (msg.kind === "saveSlot") return await manageSlot(msg);
     if (msg.kind === "import" || msg.kind === "export" || msg.kind === "newGame") return await whole(msg);
@@ -1947,8 +1977,17 @@ async function processMessage(msg: ToClock) {
     if (isPanic(err)) await recover(err, msg.kind, msg.kind === "edit" ? EDIT_UNDONE : MODEL_RESTORED, performance.now(), msg.kind === "edit");
     else send({ kind: "error", message: String(err) });
     failAnswer(msg);
+  } finally {
+    if (msg.kind === "edit" || msg.kind === "saveSlot" || msg.kind === "import" || msg.kind === "newGame") trackVersion++;
   }
 };
+
+/** T-1039: the network's version (any edit or load moves it on), and the route request whose
+ * preview found every mask its geometry needs in, at that version: its edit needs no second look */
+let trackVersion = 0;
+let maskedRoute = "";
+type RouteAsk = { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean };
+const routeKey = (r: RouteAsk) => `${trackVersion}|${JSON.stringify([r.from, r.to, r.pis, !!r.single, !!r.quad, !!r.through, r.design ?? 160, !!r.hsr])}`;
 
 /** An answer for a message the track model could not work out, so nothing waits on it for ever. */
 function failAnswer(msg: ToClock) {
@@ -1998,6 +2037,7 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
 /** Before an edit that makes new track: the masks its geometry needs (worked out as its preview). */
 async function masksFor(op: EditOp) {
   const a = api!;
+  if (op.op === "route" && maskedRoute === routeKey(op)) return;
   if (op.op === "route") await withMasks(() => (a.set_route_tangent(!!op.through), a.set_design_speed(op.design ?? 160), a.set_route_hsr(!!op.hsr), a.preview_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false)), routePoints);
   else if (op.op === "edgePis") await withMasks(() => a.preview_edge(op.edge, pisArr(op.pis)), routePoints);
   else if (op.op === "moveNode") await withMasks(() => a.preview_move_node(op.node, op.x, op.y), nodePoints);
@@ -2163,17 +2203,18 @@ async function handle(msg: ToClock) {
       parts.push(pts);
     }
     send({ kind: "crossoverCheck", seq: msg.seq, ok, issues: ok ? [] : issues(), cost: out[1], parts }, parts.map((p) => p.buffer));
-  } else if (msg.kind === "previewNode") {
+  } else if (msg.kind === "previewNode" || msg.kind === "previewNodes") {
     const a = api;
-    sendNodePreview(msg.seq, await withMasks(() => a.preview_move_node(msg.node, msg.x, msg.y), nodePoints));
-  } else if (msg.kind === "previewNodes") {
-    const a = api;
-    sendNodePreview(msg.seq, await withMasks(() => a.preview_move_nodes(new Uint32Array(msg.nodes), msg.dx, msg.dy), nodePoints));
+    const out = await withMasks(() => msg.kind === "previewNode" ? a.preview_move_node(msg.node, msg.x, msg.y) : a.preview_move_nodes(new Uint32Array(msg.nodes), msg.dx, msg.dy), nodePoints, msg.seq);
+    if (out) sendNodePreview(msg.seq, out);
+    else sendStale(msg.seq);
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {
     const a = api;
     const out = await withMasks(() => msg.kind === "preview"
       ? (a.set_route_tangent(!!msg.through), a.set_design_speed(msg.design ?? 160), a.set_route_hsr(!!msg.hsr), a.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false))
-      : a.preview_edge(msg.edge, pisArr(msg.pis)), routePoints);
+      : a.preview_edge(msg.edge, pisArr(msg.pis)), routePoints, msg.seq);
+    if (!out) return sendStale(msg.seq);
+    if (msg.kind === "preview") maskedRoute = masksComplete ? routeKey(msg) : "";
     let arc: Float64Array | undefined;
     const ra = msg.kind === "preview" ? a.route_arc() : null;
     if (ra?.length === 3) {

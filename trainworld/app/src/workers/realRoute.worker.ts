@@ -28,6 +28,9 @@ export type ToRouter =
   | { kind: "view"; w: number; s: number; e: number; n: number }
   /** `ra`, `rb`: the snap radius at each click, ground m */
   | { kind: "route"; seq: number; a: [number, number]; b: [number, number]; ra: number; rb: number; tracks: number; level: number; tol: number }
+  /** the route asked as `seq` is no longer wanted (the pointer left real track, the run ended): a
+   * search or fit still running for it stops at its next look (T-1039) */
+  | { kind: "drop"; seq: number }
   /** the track reachable from a first click at `a` (snap radius `ra`), in view box `box` (w, s, e,
    * n), vertices kept `step` degrees apart; null `a` drops it */
   | { kind: "reach"; seq: number; a: [number, number] | null; ra: number; box: [number, number, number, number]; step: number };
@@ -575,6 +578,10 @@ let latestReach = 0;
 
 self.onmessage = (ev: MessageEvent<ToRouter>) => {
   const m = ev.data;
+  if (m.kind === "drop") {
+    if (latest === m.seq) latest = -1;
+    return;
+  }
   if (m.kind === "route") latest = m.seq;
   if (m.kind === "reach") latestReach = m.seq;
   queue = queue.then(() => handle(m)).catch((err) => {

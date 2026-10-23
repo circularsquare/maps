@@ -12,7 +12,7 @@
 
 use super::boarding::Boarding;
 use super::bridge;
-use super::cost::{GeoMask, NoWater, RunMask, TransformedMask, UnionMask, WaterMask};
+use super::cost::{GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask};
 use super::frame::FrameKind;
 use super::geom::{self, GeomIssue, Pi};
 use super::net::{CrossKind, EdgeData, Issue, LineData, LoopKind, Network, NodeData, StationData};
@@ -88,6 +88,25 @@ struct PackWater {
     mask: Arc<RunMask>,
     lon: f64,
     lat: f64,
+    /// the raster seen from the network's frame and its bounds there, made again only when the
+    /// frame changes (T-1039)
+    seen: (Arc<dyn WaterMask>, [f64; 4]),
+}
+
+/// A pack raster seen from `frame`, and its bounds there (`[xmin, ymin, xmax, ymax]`).
+fn pack_mask_in(frame: super::frame::Frame, mask: &Arc<RunMask>, lon: f64, lat: f64) -> (Arc<dyn WaterMask>, [f64; 4]) {
+    if frame.kind == FrameKind::Equirect {
+        let rad = PI / 180.0;
+        let offset = [EARTH_R * (lon - frame.lon0) * rad * (frame.lat0 * rad).cos(), EARTH_R * (lat - frame.lat0) * rad];
+        let scale = [(frame.lat0 * rad).cos() / (lat * rad).cos(), 1.0];
+        let (x1, y1) = (mask.x0 + mask.w as f64 * mask.cell, mask.y0 + mask.h as f64 * mask.cell);
+        let b = [offset[0] + scale[0] * mask.x0, offset[1] + scale[1] * mask.y0, offset[0] + scale[0] * x1, offset[1] + scale[1] * y1];
+        (Arc::new(TransformedMask { mask: mask.clone(), offset, scale }), b)
+    } else {
+        let g = GeoMask::new(mask.clone(), frame, lon, lat);
+        let b = g.bounds;
+        (Arc::new(g), b)
+    }
 }
 
 /// Cars the running lines need: each line's busiest schedule's trains times its cars (T-028).
@@ -362,8 +381,15 @@ impl TrackApi {
     /// network's frame and is rebuilt when a save in another frame is loaded.
     pub fn add_pack_water(&mut self, cell: f64, x0: f64, y0: f64, w: u32, h: u32, row: &[u32], xs: &[u16], pack_lon: f64, pack_lat: f64) {
         let mask = Arc::new(RunMask { x0, y0, cell, w, h, row: row.to_vec(), xs: xs.to_vec() });
-        self.rasters.push(PackWater { mask, lon: pack_lon, lat: pack_lat });
-        self.rebuild_water();
+        let seen = pack_mask_in(self.w.net.frame(), &mask, pack_lon, pack_lat);
+        let b = seen.1;
+        self.rasters.push(PackWater { mask, lon: pack_lon, lat: pack_lat, seen });
+        let set = self.mask_set();
+        self.w.net.add_water(Box::new(set), b);
+    }
+
+    fn mask_set(&self) -> MaskSet {
+        MaskSet(self.rasters.iter().map(|r| r.seen.clone()).collect())
     }
 
     /// Replace the network with a saved one. False if the bytes are not a save.
@@ -4253,22 +4279,12 @@ impl TrackApi {
     /// the clock worker's, so the costs of legacy saves are unchanged); in the world frame it is
     /// a `GeoMask` through longitude and latitude.
     fn rebuild_water(&mut self) {
-        let net = &self.w.net;
-        let (frame, rad) = (net.frame(), std::f64::consts::PI / 180.0);
-        let mut mask: Box<dyn WaterMask> = Box::new(NoWater);
-        for r in &self.rasters {
-            let m: Box<dyn WaterMask> = if frame.kind == FrameKind::Equirect {
-                Box::new(TransformedMask {
-                    mask: r.mask.clone(),
-                    offset: [EARTH_R * (r.lon - frame.lon0) * rad * (frame.lat0 * rad).cos(), EARTH_R * (r.lat - frame.lat0) * rad],
-                    scale: [(frame.lat0 * rad).cos() / (r.lat * rad).cos(), 1.0],
-                })
-            } else {
-                Box::new(GeoMask::new(r.mask.clone(), frame, r.lon, r.lat))
-            };
-            mask = Box::new(UnionMask(mask, m));
+        let frame = self.w.net.frame();
+        for r in &mut self.rasters {
+            r.seen = pack_mask_in(frame, &r.mask, r.lon, r.lat);
         }
-        self.w.net.set_water_mask(mask);
+        let set = self.mask_set();
+        self.w.net.set_water_mask(Box::new(set));
         self.w.reload();
     }
 }
@@ -7462,6 +7478,33 @@ mod regional_water_tests {
         assert!(!a.set_empty_frame(1));
         assert_eq!(TrackApi::convert_save_frame(&a.save(), 1)[..4], *b"TWT5");
         assert!(TrackApi::convert_save_frame(b"junk", 1).is_empty());
+    }
+
+    /// T-1039: a mask added under drawn track reworks only the track near it, to the same water
+    /// and prices as working out the whole network again.
+    #[test]
+    fn a_mask_added_under_track_matches_a_full_rebuild() {
+        for world in [false, true] {
+            let mut a = api();
+            assert!(a.set_empty_frame(world as u8));
+            let route = |a: &mut TrackApi, x0: f64, x1: f64| assert_eq!(a.add_route(&[0.0, 0.0, x0, 0.0, 0.0, 0.0, 0.0, x1, 0.0, 0.0], &[], 2, false), 0);
+            route(&mut a, -3000.0, 3000.0);
+            route(&mut a, 100_000.0, 106_000.0);
+            let rows: Vec<u32> = (0..=20).map(|r| r * 2).collect();
+            let xs: Vec<u16> = (0..20).flat_map(|_| [8u16, 12]).collect();
+            let (lon, lat) = (a.w.net.origin_lon, a.w.net.origin_lat);
+            let state = |a: &TrackApi| (0..a.w.net.edge_count() as u32).filter(|&e| a.w.net.edge_ok(e)).map(|e| (a.w.net.edge_cost[e as usize], a.w.net.edge_water(e).to_vec())).collect::<Vec<_>>();
+            let dry = state(&a);
+            // one far away first, then one under the first route
+            a.add_pack_water(100.0, -1000.0, -1000.0, 20, 20, &rows, &xs, lon + 3.0, lat);
+            assert_eq!(state(&a), dry);
+            a.add_pack_water(100.0, -1000.0, -1000.0, 20, 20, &rows, &xs, lon, lat);
+            let added = state(&a);
+            assert!(added.iter().any(|(_, w)| !w.is_empty()), "the first route crosses water (world frame {world})");
+            assert!(added.iter().zip(&dry).any(|(p, q)| p.0 > q.0));
+            a.rebuild_water();
+            assert_eq!(state(&a), added, "world frame {world}");
+        }
     }
 
     #[test]

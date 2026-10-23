@@ -1076,6 +1076,33 @@ impl Network {
         }
     }
 
+    /// A water mask that adds water only inside `b` (`[xmin, ymin, xmax, ymax]`) to the one in
+    /// use: only the edges reaching into `b` have their water and price worked out again, as
+    /// `derive` does (T-1039: deriving the whole network for each zone's mask took 100 ms and more
+    /// a mask with long track drawn). Nothing else an edge derives depends on water.
+    pub fn add_water(&mut self, mask: Box<dyn WaterMask>, b: [f64; 4]) {
+        self.water_mask = mask;
+        for e in 0..self.edge_count() as u32 {
+            let i = e as usize;
+            if !self.edge_ok(e) {
+                continue;
+            }
+            let pieces = self.pieces.get(self.edge_pieces[i]);
+            if !pieces.iter().any(|p| { let q = p.bbox(); q[0] <= b[2] && q[2] >= b[0] && q[1] <= b[3] && q[3] >= b[1] }) {
+                continue;
+            }
+            let pieces = pieces.to_vec();
+            let mut wet = vec![];
+            cost::water_spans(self.edge_len[i], |s| { let (x, y, _) = geom::pos_at(&pieces, s); (x, y) }, self.water_mask.as_ref(), &mut wet);
+            self.edge_cost[i] = if self.edge_crossover[i] {
+                cost::junction_cost(self.node_level[self.edge_a[i] as usize], false, !wet.is_empty())
+            } else {
+                cost::track_cost(self.edge_len[i], self.verts.get(self.edge_vert[i]), &wet, self.edge_tracks[i], self.edge_hsr[i])
+            };
+            self.edge_water[i] = self.water.replace(self.edge_water[i], &wet);
+        }
+    }
+
     pub fn take_touch(&mut self) -> Touch {
         let mut t = std::mem::take(&mut self.touch);
         for v in [&mut t.nodes, &mut t.edges, &mut t.stations, &mut t.lines, &mut t.schedules] {

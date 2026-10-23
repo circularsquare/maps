@@ -118,6 +118,10 @@ export type ToClock =
   | { kind: "previewNode"; seq: number; node: NodeId; x: number; y: number }
   /** the same for several nodes moved together (T-475) */
   | { kind: "previewNodes"; seq: number; nodes: NodeId[]; dx: number; dy: number }
+  /** previews up to `seq` are no longer wanted (a newer one waits, or the run ended): one not yet
+   * started, or waiting for water masks, is answered `stale` at once (T-1039); handled outside
+   * the queue */
+  | { kind: "previewStale"; seq: number }
   /** whether `addStation` with these arguments would succeed, nothing changed (T-311, the
    * placement ghost's colour); answered with "stationCheck" */
   | { kind: "previewStation"; seq: number; at: StationAt; platform: number }
@@ -409,6 +413,8 @@ export type FromClock =
   | {
       kind: "preview";
       seq: number;
+      /** not worked out: a newer preview was wanted (T-1039); nothing else in it means anything */
+      stale?: boolean;
       ok: boolean;
       /** US$M */
       cost: number;

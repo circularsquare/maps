@@ -109,6 +109,12 @@ Web first, so it can be shared as a link.
   notes/T-051.md) and with 128-bit WASM SIMD (`+simd128`, set for the wasm target in
   `sim/.cargo/config.toml`, so both wasm-pack builds take it; Chrome 91, Firefox 89, Safari 16.4
   and later; T-036). Flat typed arrays, transferable between threads without copying.
+- **Previews** [T-1039, `ClockClient.preview`]: the clock worker works out one preview (a ghost) at
+  a time; a newer request replaces one waiting on the main thread and marks the one in flight
+  unwanted (`previewStale`, outside the worker's queue), which is answered at once if it has not
+  started or is waiting for water masks; the end of a run (Esc, another tool) and of a drag drop both.
+  The router worker's route search and fit stop at their next look (every 20,000 states, every 25 ms)
+  when a newer route is asked or the pointer leaves real track.
 - **The demand pool** [T-149, T-173, `workers/demandClient.ts`][T-381]: 3 solving workers on 12 or more
   logical threads, 2 on 6 to 11, 1 on fewer; then `navigator.deviceMemory` 4 GB or less gives 1, and
   unreported memory at most 2. The Settings "Use more cores" restores half the threads less one, 1 to 5

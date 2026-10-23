@@ -8,10 +8,15 @@
 // setup and writes OUT/<LABEL>-<setup>.json.
 // SETUPS: new (a new game with five short lines), nyc (the real save, 109 lines), japan (Japan's real
 // network, ../artifacts/trainworld/t737-japan.save; demand is not waited for, it takes ~19 min),
-// repro (Anita's report: a new game in London, 4 pieces there, then Shanghai and London again with the
-// run still open, so the first click in each is a piece from the other city; it must be refused at
-// once with no edit and no long task, then a run of its own is drawn there).
-// Exits 1 when a setup places nothing or the repro's far click is not refused at once.
+// repro (Anita's report: a new game in London, 4 pieces there, Esc, then Shanghai, where no request may
+// reach back to London (T-1039); then London again with Shanghai's run still open, so the first click
+// is a piece from the other city; it must be refused at once with no edit and no long task, then a run
+// of its own is drawn there), long (T-1039: a new game in London, LONG pieces of about 400 km zoomed
+// out over Britain and long snapped routes from London, Esc, then zoomed in a level each quarter second
+// to Belfast, among zones whose water masks were not fetched yet, and short pieces
+// there at once).
+// Exits 1 when a setup places nothing, the repro's far click is not refused at once, or a request
+// after the repro's Esc spans more than 100 km.
 // Env: SETUPS (default "repro,new,nyc"), CLICKS (default 8), MOVES (default 20), LABEL, OUT (default
 // ../artifacts/trainworld/t1020), PROFILE=1 (a CPU profile of the main thread over the clicks, its top
 // functions in the json), SHOTS=1 (nyc: screenshots after a fixed series of edits, and the same views
@@ -32,7 +37,7 @@ const NYC = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const JAPAN = process.env.JAPAN ?? fileURLToPath(new URL('../../artifacts/trainworld/t737-japan.save', import.meta.url));
 // where the track is drawn: open ground beside each network (lng, lat, zoom)
 const AT = { new: [-74.13, 40.585, 14], nyc: [-74.13, 40.585, 14], japan: [140.0, 35.9, 14],
-  london: [-0.20, 51.565, 14], shanghai: [121.40, 31.25, 14], london2: [-0.12, 51.585, 14] };
+  london: [-0.20, 51.565, 14], shanghai: [121.40, 31.25, 14], london2: [-0.12, 51.585, 14], belfast: [-5.93, 54.60, 14] };
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 async function playwright() {
@@ -107,10 +112,20 @@ for (const setup of SETUPS) {
         m.msgs = [];
         c.receive = (msg) => { const t = performance.now(); try { return recv(msg); } finally { if (m.on && msg.kind !== 'cash') m.msgs.push([t, msg.kind, performance.now() - t]); } };
         const edit = c.edit.bind(c);
-        c.edit = (op) => { if (m.on) m.msgs.push([performance.now(), 'editSent', 0]); return edit(op); };
+        c.edit = (op) => {
+          if (m.on) m.msgs.push([performance.now(), 'editSent', 0]);
+          const a = op.op === 'route' && ll(op.from), b = op.op === 'route' && ll(op.to);
+          if (m.on && a && b) m.askKm = Math.max(m.askKm ?? 0, km(a, b));
+          return edit(op);
+        };
         // each preview asked: the newest move it answers; drawn when the tool set it on the renderer
         const ask = c.preview.bind(c);
+        // how far apart each request's ends are, km (T-1039: none may span two cities)
+        const ll = (e) => { if (e.kind === 'node') { const n = tw.world.value.nodes.get(e.node); return n ? [n.lng, n.lat] : null; } return tw.packToLngLat(e.x, e.y); };
+        const km = (a, b) => { const r = Math.PI / 180, h = Math.sin((b[1] - a[1]) * r / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin((b[0] - a[0]) * r / 2) ** 2; return 12742 * Math.asin(Math.sqrt(h)); };
         c.preview = (req, cb) => {
+          const a = ll(req.from), b = ll(req.to);
+          if (m.on && a && b) m.askKm = Math.max(m.askKm ?? 0, km(a, b));
           const p = { move: m.moves.length - 1, asked: performance.now(), answered: 0, drawn: 0 };
           return ask(req, (a) => {
             p.answered = performance.now();
@@ -121,15 +136,14 @@ for (const setup of SETUPS) {
         };
       }, 5);
     });
-    page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-    page.on('console', (msg) => { if (msg.type() === 'error' && !/favicon|openfreemap|AJAXError|^\w{1,3}$/.test(msg.text()) && !/maplibre-gl/.test(msg.location()?.url ?? '')) errors.push(msg.text().slice(0, 300)); });
+    page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));    page.on('console', (msg) => { if (msg.type() === 'error' && !/favicon|openfreemap|AJAXError|^\w{1,3}$/.test(msg.text()) && !/maplibre-gl/.test(msg.location()?.url ?? '')) errors.push(msg.text().slice(0, 300)); });
     const workers = `demandWorkers=${process.env.DEMAND_WORKERS ?? 2}`;
     const solved = (timeout) => page.waitForFunction(() => { const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.(); return s && v && v.version === s.version && v.final && !d.client.waiting; }, undefined, { timeout, polling: 250 });
-    await page.goto(`${BASE}?debug=1&new=1${setup === 'repro' ? '&city=lon' : ''}&${workers}&v=${Date.now()}`);
+    await page.goto(`${BASE}?debug=1&new=1${setup === 'repro' || setup === 'long' ? '&city=lon' : ''}&${workers}&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client && window.tw.client.preview.length === 2, undefined, { timeout: 180000 });
     const t0 = Date.now();
     if (setup === 'new') {
-      await page.evaluate(() => window.tw.map.jumpTo({ center: [-73.99, 40.72], zoom: 12 }));
+      await page.evaluate(() => { window.tw.map.jumpTo({ center: [-73.99, 40.72], zoom: 12 }); });
       await page.waitForTimeout(3000);
       const build = (pts, name, colour) => page.evaluate(async ([PTS, name, colour]) => {
         const tw = window.tw, c = tw.client;
@@ -155,7 +169,7 @@ for (const setup of SETUPS) {
       ];
       out.linesBuilt = built.filter(Boolean).length;
       await solved(300000).catch(() => log('new: no final in 5 min'));
-    } else if (setup === 'repro') {
+    } else if (setup === 'repro' || setup === 'long') {
       await page.waitForTimeout(3000);
       await solved(300000).catch(() => log('repro: no final in 5 min'));
     } else {
@@ -173,11 +187,23 @@ for (const setup of SETUPS) {
 
     if (setup === 'repro') {
       // T-1020 (Anita, 2026-10-23): smooth in London, one piece in Shanghai froze, London slow after
+      // T-1039 (Anita, 2026-10-23: "i pressed escape ... that should just drop everything in the first
+      // city"): Esc after London, so nothing asked in Shanghai may reach back; then Shanghai's run left
+      // open, so London's first click is the far piece the 500 km cap refuses
       out.phases = {};
-      for (const [name, at, n] of [['london', AT.london, Math.min(4, CLICKS)], ['shanghai', AT.shanghai, 2], ['london2', AT.london2, Math.min(4, CLICKS)]]) {
-        const r = (out.phases[name] = await draw(page, ctx, at, n, `${setup}-${name}`, name !== 'london'));
+      for (const [name, at, n, opts] of [['london', AT.london, Math.min(4, CLICKS), {}], ['shanghai', AT.shanghai, 2, { esc: true }], ['london2', AT.london2, Math.min(4, CLICKS), { far: true }]]) {
+        const r = (out.phases[name] = await draw(page, ctx, at, n, `${setup}-${name}`, opts));
         if (!r.summary.clicksPlaced || (r.farClick && (r.farClick.edits || r.farClick.longTasks.some((ms) => ms > 200)))) failed = true;
+        if (opts.esc && r.askKm > 100) {
+          failed = true;
+          console.log(`${name}: a request ${Math.round(r.askKm)} km long after Esc`);
+        }
       }
+    } else if (setup === 'long') {
+      // T-1039: long pieces zoomed out, then Esc and straight back to local scale
+      out.long = await longPieces(page, ctx);
+      const r = (out.local = await draw(page, ctx, AT.belfast, Math.min(4, CLICKS), 'long-local', { settle: 0, zoomFrom: 7 }));
+      if (!r.summary.clicksPlaced) failed = true;
     } else {
       const r = await draw(page, ctx, AT[setup], CLICKS, setup);
       Object.assign(out, r);
@@ -196,18 +222,41 @@ for (const setup of SETUPS) {
 
 /** The track tool, keep placing on, at `at` (lng, lat, zoom): a start, then `clicks` segments, each
  * reached by MOVES pointer moves. Returns the timings (see the top of the file). */
-async function draw(page, ctx, at, segments, setup, far = false) {
+async function draw(page, ctx, at, segments, setup, { far = false, esc = false, settle = 4000, zoomFrom = 0 } = {}) {
   const out = {};
   const CLICKS = segments;
-  await page.evaluate(() => { const m = window.__m; m.downs = []; m.moves = []; m.previews = []; m.msgs = []; });
+  await page.evaluate(() => { const m = window.__m; m.downs = []; m.moves = []; m.previews = []; m.msgs = []; m.askKm = 0; });
+  if (esc) {
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(100);
+  }
   const [lng, lat, zoom] = at;
+  // from the zoom in for 10 s, a trivial question to the clock worker as soon as the last is answered:
+  // the longest answer is the longest a click there would wait on work left from the zoomed-out
+  // session, or on the masks the zoom asked for (T-1039)
+  const busy = settle > 0 ? Promise.resolve(null) : page.evaluate(async () => {
+    const t0 = performance.now(), rtt = [];
+    while (performance.now() - t0 < 10000) {
+      const t = performance.now();
+      await window.tw.client.query({ what: 'today' });
+      rtt.push(performance.now() - t);
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    const lt = window.__m.lt.filter(([s]) => s >= t0).map(([, d]) => d);
+    return { max: Math.round(Math.max(...rtt)), over100: Math.round(rtt.filter((v) => v > 100).reduce((a, b) => a + b, 0)), mainLongest: Math.round(Math.max(0, ...lt)) };
+  });
+  // zoomed in a step at a time, as a wheel would, each step's view asking for its water masks
+  for (let z = zoomFrom; zoomFrom && z < zoom; z++) {
+    await page.evaluate(([lng, lat, z]) => { window.tw.map.jumpTo({ center: [lng, lat], zoom: z }); }, [lng, lat, z]);
+    await page.waitForTimeout(150);
+  }
   await page.evaluate(async ([lng, lat, zoom]) => {
     const ui = await import('/src/game/ui.ts');
     ui.keepPlacing.value = true;
     ui.tool.value = 'track';
     window.tw.map.jumpTo({ center: [lng, lat], zoom });
   }, [lng, lat, zoom]);
-  await page.waitForTimeout(4000);
+  await page.waitForTimeout(settle);
   const cdp = await ctx.newCDPSession(page);
   if (process.env.PROFILE === '1') {
     await cdp.send('Profiler.enable');
@@ -258,6 +307,8 @@ async function draw(page, ctx, at, segments, setup, far = false) {
     out.profile = profileTop(prof);
   }
   out.edgesAdded = (await page.evaluate(() => window.tw.world.value.edges.length)) - startLines;
+  out.askKm = Math.round(await page.evaluate(() => window.__m.askKm ?? 0));
+  out.workerBusyMs = await busy;
   const raw = await page.evaluate(() => {
     const m = window.__m;
     return { frames: m.frames, lt: m.lt, moves: m.moves, downs: m.downs, previews: m.previews, msgs: m.msgs, editLog: window.tw.client.editLog };
@@ -299,9 +350,101 @@ async function draw(page, ctx, at, segments, setup, far = false) {
     worker: Object.fromEntries([...new Set(out.editLog.flatMap((e) => Object.keys(e.worker ?? {})))].map((k) => { const v = out.editLog.map((e) => e.worker?.[k] ?? 0); return [k, `${pct(v, 0.5)}/${pct(v, 1)}`]; })),
   };
   out.network = await page.evaluate(() => { const w = window.tw.world.value, n = window.tw.renderer.net; return { lines: w.save.lines.length, edges: w.edges.length, trackSegs: n?.track.count }; });
-  console.log(`${setup.padEnd(6)} ${JSON.stringify(out.network)} click to drawn p50 ${out.summary.clickToDrawn.p50} max ${out.summary.clickToDrawn.max} ms (${drawn.length}/${clicks.length} placed); ghost p50 ${out.summary.ghost.p50} p90 ${out.summary.ghost.p90} max ${out.summary.ghost.max} ms (${ghost.length} moves); frames over 50 ms ${out.summary.frames.over50}, longest gap ${out.summary.frames.maxGap}; long tasks a click ${out.summary.longTasksPerClick}, ${out.summary.longTaskMsPerClick} ms, longest ${out.summary.longestTask}`);
+  console.log(`${setup.padEnd(6)} ${JSON.stringify(out.network)} click to drawn p50 ${out.summary.clickToDrawn.p50} max ${out.summary.clickToDrawn.max} ms (${drawn.length}/${clicks.length} placed); ghost p50 ${out.summary.ghost.p50} p90 ${out.summary.ghost.p90} max ${out.summary.ghost.max} ms (${ghost.length} moves); frames over 50 ms ${out.summary.frames.over50}, longest gap ${out.summary.frames.maxGap}; long tasks a click ${out.summary.longTasksPerClick}, ${out.summary.longTaskMsPerClick} ms, longest ${out.summary.longestTask}; longest request ${out.askKm} km${out.workerBusyMs ? `; clock worker from the zoom in: longest answer ${out.workerBusyMs.max} ms, ${out.workerBusyMs.over100} ms in answers over 100 ms, longest main-thread task ${out.workerBusyMs.mainLongest} ms` : ""}`);
   console.log(`       steps ${JSON.stringify(out.summary.steps)} worker ${JSON.stringify(out.summary.worker)}`);
   if (out.profile) log('inclusive', JSON.stringify(out.profile.inclusive.slice(0, 25)));
+  return out;
+}
+
+/** T-1039's setup, as a player trying things out would: zoomed out over Britain, a run of free pieces
+ * of 380-470 km, each reached by MOVES pointer moves and clicked 100 ms after (not waiting for the last
+ * to be placed); Esc; then with the snap switch on, long real routes from London: the pointer resting
+ * on Edinburgh, Manchester and Bristol in turn, a click on Newcastle and on Edinburgh; Esc. Returns
+ * what was asked and answered, the last real route's timings, and what the clock client still had
+ * waiting at the last Esc. */
+async function longPieces(page) {
+  const FREE = [[-4.5, 50.6], [-1.0, 54.2], [-3.0, 50.9], [0.5, 53.5], [-1.5, 50.8], [-3.5, 54.5], [0.0, 51.5], [-2.5, 55.3], [-1.2, 52.0], [-3.6, 55.9], [-2.0, 52.6], [-4.2, 56.5]];
+  const LONDON = [-0.125, 51.532], ROUTES = [[[-3.19, 55.95], 0], [[-2.23, 53.48], 0], [[-2.58, 51.45], 0], [[-1.62, 54.97], 1], [[-3.19, 55.95], 1]];
+  await page.evaluate(async () => {
+    const ui = await import('/src/game/ui.ts');
+    ui.keepPlacing.value = true;
+    ui.snapReal.value = false;
+    ui.tool.value = 'track';
+    window.tw.map.jumpTo({ center: [-1.8, 53.0], zoom: 6.0 });
+    const m = window.__m;
+    m.downs = []; m.moves = []; m.previews = []; m.msgs = []; m.askKm = 0;
+  });
+  await page.waitForTimeout(3000);
+  const px = (p) => page.evaluate(([lng, lat]) => { const r = window.tw.map.getContainer().getBoundingClientRect(), q = window.tw.map.project([lng, lat]); return [r.left + q.x, r.top + q.y]; }, p);
+  const glide = async ([ax, ay], [bx, by]) => {
+    for (let i = 1; i <= MOVES; i++) {
+      await page.mouse.move(ax + ((bx - ax) * i) / MOVES, ay + ((by - ay) * i) / MOVES);
+      await page.waitForTimeout(16);
+    }
+  };
+  const click = async () => { await page.mouse.down(); await page.mouse.up(); };
+  await page.evaluate(() => { window.__m.on = true; });
+  const t0 = await page.evaluate(() => performance.now());
+  let at = await px(FREE[0]);
+  await page.mouse.move(...at);
+  await click();
+  await page.waitForTimeout(200);
+  for (const p of FREE.slice(1)) {
+    const to = await px(p);
+    await glide(at, to);
+    await page.waitForTimeout(100);
+    const answered = await page.evaluate(() => window.__m.msgs.filter(([, k]) => k === 'edited').length);
+    await click();
+    // each piece placed before the next, so the network grows by all of them
+    await page.waitForFunction((n) => window.__m.msgs.filter(([, k]) => k === 'edited').length > n, answered, { timeout: 5000, polling: 50 }).catch(() => log('long: a piece not placed'));
+    at = to;
+  }
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  // the snap switch: real routes, uncapped
+  await page.evaluate(async () => { (await import('/src/game/ui.ts')).snapReal.value = true; });
+  await page.waitForTimeout(3000);
+  /** a screen point near (lng, lat) where a click snaps to a drawn real line */
+  const ringNear = (p) => page.evaluate(([lng, lat]) => {
+    const tw = window.tw, r = tw.map.getContainer().getBoundingClientRect(), q = tw.map.project([lng, lat]);
+    for (let d = 0; d <= 40; d += 4) for (let a = 0; a < 8; a++) {
+      const x = q.x + d * Math.cos(a * Math.PI / 4), y = q.y + d * Math.sin(a * Math.PI / 4);
+      if (tw.tools.real.ring(x, y)) return [r.left + x, r.top + y];
+    }
+    return null;
+  }, p);
+  const real = [];
+  at = await ringNear(LONDON);
+  if (at) {
+    await page.mouse.move(...at);
+    await click();
+    await page.waitForTimeout(300);
+    for (const [p, place] of ROUTES) {
+      const to = await ringNear(p);
+      if (!to) continue;
+      await glide(at, to);
+      // a rest long enough to ask for the route, not to wait for all of it
+      await page.waitForTimeout(place ? 300 : 900);
+      if (place) {
+        await click();
+        await page.waitForTimeout(200);
+        at = to;
+      }
+      real.push(await page.evaluate(() => window.tw.tools.real.last));
+    }
+  }
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  const out = await page.evaluate((t0) => {
+    const m = window.__m, c = window.tw.client;
+    const kinds = {};
+    for (const [, k] of m.msgs) kinds[k] = (kinds[k] ?? 0) + 1;
+    return { pieces: m.downs.length - 1, seconds: Math.round(performance.now() - t0) / 1000, askKm: Math.round(m.askKm), msgs: kinds, previewsShown: m.previews.length,
+      atEsc: { previewBusy: c.previewBusy, previewWaiting: !!c.previewNext, editsWaiting: c.pending.size } };
+  }, t0);
+  out.real = real;
+  await page.evaluate(async () => { window.__m.on = false; (await import('/src/game/ui.ts')).snapReal.value = false; });
+  log('long', JSON.stringify(out));
   return out;
 }
 
@@ -334,7 +477,7 @@ async function shots(page) {
   const res = [];
   for (let i = 0; i < views.length; i++) {
     const [lng, lat, z] = views[i];
-    await page.evaluate(([lng, lat, z]) => window.tw.map.jumpTo({ center: [lng, lat], zoom: z }), [lng, lat, z]);
+    await page.evaluate(([lng, lat, z]) => { window.tw.map.jumpTo({ center: [lng, lat], zoom: z }); }, [lng, lat, z]);
     await page.waitForTimeout(3500);
     const a = await page.screenshot({ path: join(OUT, `shot-${LABEL}-${i}.png`) });
     // the same network uploaded whole, as a fresh load would

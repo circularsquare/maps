@@ -51,6 +51,8 @@ export interface ShadeColours {
   realMetro: string;
   /** the outline of a line at capacity in the traffic view (T-819), the capacity tags' red */
   fullTrack: string;
+  /** the track being placed or dragged, and a real-network route's ghost (T-1038) */
+  ghost: string;
 }
 
 export const SHADES: Record<Shade, ShadeColours> = {
@@ -58,19 +60,21 @@ export const SHADES: Record<Shade, ShadeColours> = {
     land: LIGHT_LAND, water: LIGHT_WATER, park: LIGHT_PARK, road: LIGHT_ROAD, label: LIGHT_LABEL, basemapMix: LIGHT_WARM,
     casing: "#ffffff", mapInk: NET_INK,
     offRail: "#9aa3ae", offMid: "#f2f4f7", offFade: "#ffffff",
-    outside: "#182536", outsideOpacity: 0.075, inactive: "#182536", inactiveOpacity: 0.22, thumbTrack: "#b9b4ad",
+    outside: "#182536", outsideOpacity: 0.075, inactive: "#182536", inactiveOpacity: 0.11, thumbTrack: "#b9b4ad",
     markInk: NET_INK, markBlueprint: "#2f62b3",
     realMain: "#6f7b93", realOther: "#9ea6b5", realMetro: "#9577a6",
     fullTrack: "#c0392b",
+    ghost: "#5b4ee8",
   },
   dark: {
     land: DARK_LAND, water: DARK_WATER, park: DARK_PARK, road: DARK_ROAD, label: DARK_LABEL, basemapMix: DARK_WARM,
     casing: "#141517", mapInk: "#e6e4e0",
     offRail: "#6c747e", offMid: "#383e46", offFade: "#383e46",
-    outside: "#000000", outsideOpacity: 0.35, inactive: "#000000", inactiveOpacity: 0.45, thumbTrack: "#6f6b66",
+    outside: "#000000", outsideOpacity: 0.35, inactive: "#000000", inactiveOpacity: 0.225, thumbTrack: "#6f6b66",
     markInk: "#e6e4e0", markBlueprint: "#8db6ee",
     realMain: "#6e788c", realOther: "#4e5563", realMetro: "#82699a",
     fullTrack: "#f0584f",
+    ghost: "#9488ff",
   },
 };
 

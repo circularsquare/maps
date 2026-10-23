@@ -25,7 +25,7 @@ const REST_MS = 120;
 /** a pointer this far from the spot asked about is a new spot, px */
 const SAME_PX = 4;
 /** a search or fit taking longer shows the spinner in the tag, ms */
-const SLOW_MS = 500;
+const SLOW_MS = 300;
 /** the fit's tolerance, ground m (DECISIONS 2026-10-19) */
 const TOL_M = 25;
 /** graph and tiles can differ by a few metres; the router looks this much further, m */
@@ -302,6 +302,9 @@ export class RealSnap {
     const s = this.spot;
     this.spot = null;
     if (s) {
+      // the router stops a search or fit for it; the clock worker's preview for it is dropped
+      if (s.phase === "search" || s.phase === "fit") this.post({ kind: "drop", seq: s.seq });
+      else if (s.phase === "preview") this.client.dropPreview();
       // a click waiting on it gets nothing (an ordinary segment)
       s.phase = "off";
       for (const w of s.waiters.splice(0)) w();

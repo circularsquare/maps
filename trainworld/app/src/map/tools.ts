@@ -93,6 +93,8 @@ interface Placed {
  * a piece from London to Shanghai took the clock worker 3-11 s a preview, and every pointer move
  * asked for one). */
 const MAX_PIECE_KM = 500;
+/** a click or ghost waiting this long on the worker shows the spinner in the tag, ms (T-1039) */
+const WAIT_MS = 300;
 const tooFarText = () => `Too far for one piece of track (${distance(MAX_PIECE_KM * 1000)} at most). Press Esc to start somewhere else.`;
 
 function placedAt(end: RouteEnd, lx: number, ly: number): Placed {
@@ -160,6 +162,8 @@ export class Tools {
       this.place();
     }, () => this.place());
     effect(() => this.real.setOn(snapping.value));
+    // T-1039: a run ends with the track tool however it is left (a game loaded sets the tool directly)
+    effect(() => { if (tool.value !== "track" && this.start) setTimeout(() => tool.peek() !== "track" && this.start && this.reset()); });
     effect(() => {
       const active = tool.value === "line" ? lineDraft.value.line : null;
       const w = world.value;
@@ -357,11 +361,13 @@ export class Tools {
 
   /** Drop the route being drawn (and what the delete tool points at). */
   reset() {
+    // T-1039: a ghost asked for this run and not yet worked out is not worked out
+    if (this.start) this.client.dropPreview();
     this.start = null;
     this.chain = [];
     this.delHover = null;
     this.lastPreview = null;
-    this.previewKey = "";
+    this.previewKey = this.wantKey = "";
     this.real.reset();
     this.freeAt = null;
     this.freeDrawn = "";
@@ -410,6 +416,7 @@ export class Tools {
     }
     const chain = e.originalEvent.shiftKey || keepPlacing.peek();
     this.placing = true;
+    this.waitFrom(true);
     this.endRun = false;
     let rc: RealClick, p: PreviewAnswer | null, a: Awaited<ReturnType<typeof edit>>;
     // T-1001: whatever happens to this click, later clicks are not ignored
@@ -431,6 +438,7 @@ export class Tools {
       a = await edit({ op: "route", ...req });
     } finally {
       this.placing = false;
+      this.place();
     }
     if (!a.ok || this.start !== from) return;
     say(p ?`Blueprint added: ${distance(p.lengthM)}, ${money(p.cost * 1e6)} to construct.` : "Blueprint added.");
@@ -443,7 +451,7 @@ export class Tools {
     this.start = placedAt({ kind: "node", node: a.node }, ex, ey);
     this.real.begin(rc ? rc.route.last : snapping.peek() ? this.real.ring(e.point.x, e.point.y) : null);
     this.lastPreview = null;
-    this.previewKey = "";
+    this.previewKey = this.wantKey = "";
     this.overlay.renderer.setPreview(null);
     this.overlay.invalidate();
     this.requestPreview();
@@ -462,7 +470,7 @@ export class Tools {
     if (!a.ok) return this.reset();
     this.start = prev;
     this.lastPreview = null;
-    this.previewKey = "";
+    this.previewKey = this.wantKey = "";
     this.requestPreview();
     this.place();
   }
@@ -499,10 +507,27 @@ export class Tools {
     }
     const req = this.routeReq(this.endOf(h));
     const key = JSON.stringify(req);
+    if (!this.wantKey || this.wantKey === this.previewKey) this.waitFrom(false);
     this.wantKey = key;
     this.client.preview(req, (a) => {
       if (this.start && !this.real.active && this.wantKey === key) this.showPreview(a, key);
     });
+  }
+
+  /** since when the ghost has been behind the pointer, and since when a click has waited (ms) */
+  private askedAt = 0;
+  private placingAt = 0;
+
+  private waitFrom(click: boolean) {
+    if (click) this.placingAt = performance.now();
+    else this.askedAt = performance.now();
+    setTimeout(() => this.place(), WAIT_MS + 20);
+  }
+
+  /** T-1039: a click or the ghost has waited on the worker more than WAIT_MS; the tag shows a spinner. */
+  private waiting(): boolean {
+    const now = performance.now();
+    return (this.placing && now - this.placingAt > WAIT_MS) || (!!this.wantKey && this.wantKey !== this.previewKey && now - this.askedAt > WAIT_MS);
   }
 
   /** Whether a free-drawn piece from the start to `s` would be longer than MAX_PIECE_KM. */
@@ -514,7 +539,8 @@ export class Tools {
 
   private showPreview(a: PreviewAnswer, key: string) {
     this.lastPreview = a;
-    this.previewKey = key;
+    // a real route's preview (T-727d) answers what the ghost waits for too
+    this.previewKey = this.wantKey = key;
     // single track previews as one track close in, double and quad as two each (T-658)
     this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true, a.marks, 255, highSpeed.peek() && trackCount.peek() === 2) : null);
     this.overlay.invalidate();
@@ -1262,15 +1288,18 @@ export class Tools {
       this.tag.style.display = kids.length ? "" : "none";
       this.tag.replaceChildren(...kids);
       put(this.tag, h!.lx, h!.ly, 14, 12);
-    } else if (t === "track" && this.start && h && this.tooFar(h)) {
+    } else if (t === "track" && this.start && h && !this.real.active && this.tooFar(h)) {
       this.tag.style.display = "";
       this.tag.className = "tool-tag build-tag bad";
       this.tag.textContent = tooFarText();
       put(this.tag, h.lx, h.ly, 14, 12);
-    } else if (t === "track" && this.start && h && pv) {
+    } else if (t === "track" && this.start && h && (pv || this.waiting())) {
       this.tag.style.display = "";
       this.tag.className = "tool-tag build-tag";
-      this.tag.replaceChildren(...placementTag(pv, buildLevel.peek()));
+      const rows: HTMLDivElement[] = pv ? placementTag(pv, buildLevel.peek()) : [document.createElement("div")];
+      // T-1039: still working on the newest ghost or the click
+      if (this.waiting()) rows[0].prepend(Object.assign(document.createElement("i"), { className: "spin row-dot" }));
+      this.tag.replaceChildren(...rows);
       put(this.tag, h.lx, h.ly, 14, 12);
     } else if (t === "station" && h && h.kind !== "free" && v?.ok === false) {
       // why a click here would be refused (T-311)

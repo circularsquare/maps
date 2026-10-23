@@ -604,6 +604,7 @@ export class ClockClient {
         this.previewBusy = false;
         // T-1001: a callback that throws still lets the preview waiting behind it go
         try {
+          if (msg.stale) break;
           this.toCurrentAnchor(msg.anchor, msg.verts, msg.pts);
           if (msg.arc) this.toCurrentAnchor(msg.anchor, msg.arc, new Float32Array(0));
           this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts, arc: msg.arc, marks: msg.marks });
@@ -695,19 +696,34 @@ export class ClockClient {
     this.post({ kind: "previewCrossover", seq: ++this.seq, edge, x, y });
   }
 
-  /** Drop a preview waiting to be sent (a drag was cancelled or finished). */
+  /** Drop a preview waiting to be sent, and the one in flight if it is not yet being worked out (a
+   * drag was cancelled or finished, a run ended). */
   dropPreview() {
     this.previewNext = null;
+    this.staleInFlight();
+  }
+
+  /** the preview in flight, and whether the worker was told it is no longer wanted (T-1039) */
+  private previewSeq = 0;
+  private previewStaleSent = false;
+  private staleInFlight() {
+    if (!this.previewBusy || this.previewStaleSent) return;
+    this.previewStaleSent = true;
+    this.post({ kind: "previewStale", seq: this.previewSeq });
   }
 
   private ask(msg: (seq: number) => ToClock, cb: (a: PreviewAnswer) => void) {
     if (this.previewBusy) {
       this.previewNext = { msg, cb };
+      // not yet started, or waiting for masks, it is dropped for this one (T-1039)
+      this.staleInFlight();
       return;
     }
     this.previewBusy = true;
     this.previewCb = cb;
-    this.post(msg(++this.seq));
+    this.previewSeq = ++this.seq;
+    this.previewStaleSent = false;
+    this.post(msg(this.previewSeq));
   }
 
   /** T-1007, dev server only (`?debug=1`, `tw.client.debugPanic`): make the track model panic. */

@@ -123,6 +123,19 @@ impl WaterMask for UnionMask {
     fn is_empty(&self) -> bool { self.0.is_empty() && self.1.is_empty() }
 }
 
+/// Several rasters as one union (T-1039), each with its bounds in the network frame
+/// (`[xmin, ymin, xmax, ymax]`), outside which it is land; a point is tested only against the
+/// rasters around it.
+pub struct MaskSet(pub Vec<(Arc<dyn WaterMask>, [f64; 4])>);
+impl WaterMask for MaskSet {
+    fn is_water(&self, x: f64, y: f64) -> bool {
+        self.0.iter().any(|(m, b)| x >= b[0] && y >= b[1] && x <= b[2] && y <= b[3] && m.is_water(x, y))
+    }
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+
 impl<F: Fn(f64, f64) -> bool> WaterMask for F {
     fn is_water(&self, x: f64, y: f64) -> bool {
         self(x, y)

@@ -47,8 +47,9 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 - **Undo**: Ctrl+Z; redo Ctrl+Y or Ctrl+Shift+Z. What undo covers: [track-and-service.md](track-and-service.md)
   6.4.
 - **Esc** undoes one thing at a time: a question waiting is answered Keep, a drag goes back, a
-  half-drawn route is dropped (the tool stays on), then the tool is left for selecting, then the
-  selection clears.
+  half-drawn route is dropped (the tool stays on) with any ghost or real route still being worked
+  out for it [T-1039], then the tool is left for selecting, then the selection clears. Leaving the
+  track tool any other way (another tool, a game loaded) drops the route too.
 - Tool hints and a refused edit's reason show at the map's bottom left ([ui-panels.md](ui-panels.md) "The dock").
 
 ## Drawing track
@@ -102,8 +103,15 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   it is on existing track.
 - **Shift**: with a tool on, MapLibre's shift-drag zoom is off so a shift-click reaches the tool.
   In the select tool with demand bubbles on, Shift+drag draws a bubble box instead [T-865].
-- **The ghost** is solid with a dark casing: white in the Line and traffic views, coloured by the
-  Elevation or Max speed view from the preview's fitted geometry; red when invalid.
+- **The ghost** is solid, purplish blue (`#5b4ee8`; `#9488ff` in the dark theme, `ghost` in
+  `game/shadeTable.ts`) on the map's casing (white; near black in the dark theme) in the Line and
+  traffic views, coloured by the Elevation or Max speed view from the preview's fitted geometry; red
+  when invalid. It is never thinner than 3 px with 1.5 px of casing either side, so a route hundreds
+  of km long shows in full zoomed out (a line is as wide from about zoom 11) [T-1038]. The same holds
+  for every placement ghost: a dragged corner or node, a moved pick, a crossover, a station's own
+  piece of track.
+- **Waiting** [T-1039]: when a click or the newest ghost has waited on the clock worker more than
+  300 ms, a small spinner leads the tag.
 - **Placed blueprint track** is drawn as blue rails ([ui-map.md](ui-map.md) "Lines and track").
 - A segment is one piece (each pair's on quad); the delete tool, Construct and the track
   inspector act on one piece [T-244].
@@ -135,9 +143,9 @@ switch on, the track tool follows the real network the layer draws.
   junction loads the neighbour's file, joined by OSM node id). The search stops after 2 s or 3
   million states. The real line is drawn as the ghost, then the corners fitted to it at 25 m
   (`TrackApi.trace_start`, run in the router worker's own track model in steps of a few ms, with a
-  look at its messages every 25 ms so a newer rest drops a fit still running) are previewed by the
-  clock worker and replace it with the usual tag. A search or fit over half a second shows the small
-  spinner in the tag. Changing the elevation or double and quad fits the route again.
+  look at its messages every 25 ms so a newer rest, or the pointer leaving real track, drops a search
+  or fit still running) are previewed by the clock worker and replace it with the usual tag. A search
+  or fit over 300 ms shows the small spinner in the tag. Changing the elevation or double and quad fits the route again.
 - **The second click** places the route as one segment: one edit, one undo step, Shift or keep
   placing carrying on from its end. A click before the route is ready waits for it. It ends on the
   player's own track when the pointer is on it, else at the real line's snap point.
