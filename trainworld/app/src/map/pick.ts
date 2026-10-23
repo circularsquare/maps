@@ -11,7 +11,7 @@ import { clock } from "../game/clock";
 import type { Selection } from "../game/types";
 import { F_BLUEPRINT, profileS, trainCarAt, tripAt, type NetworkBuffers } from "./network";
 import type { Overlay } from "./overlay";
-import { CellLevels, whenIdle } from "./cellIndex";
+import { CellLevels } from "./cellIndex";
 
 export const SLOP_PX = 7;
 /** projected points, reused (topSeg runs over every segment on each pointer move) */
@@ -188,21 +188,23 @@ interface LineBlocks {
 const BLOCK = 16;
 const blocksOf = new WeakMap<NetworkBuffers, LineBlocks>();
 
-const blocksAsked = new WeakSet<NetworkBuffers>();
-
-/** A network's line blocks, or null while they are built in idle time. */
-function lineBlocks(n: NetworkBuffers): LineBlocks | null {
-  const had = blocksOf.get(n);
-  if (had) return had;
-  if (!blocksAsked.has(n)) blocksAsked.add(n), whenIdle(() => buildBlocks(n));
-  return null;
+/** A network's line blocks, built when first asked for (T-1020: a scan of every trip until an idle
+ * build was the slower path on a big network). */
+function lineBlocks(n: NetworkBuffers): LineBlocks {
+  let lb = blocksOf.get(n);
+  if (!lb) blocksOf.set(n, (lb = buildBlocks(n)));
+  return lb;
 }
 
-function buildBlocks(n: NetworkBuffers) {
+function buildBlocks(n: NetworkBuffers): LineBlocks {
   const T = n.lineTable, S = n.samples, lines = T.length / 4;
-  const first = new Int32Array(lines + 1), box: number[] = [];
+  const blocks = (count: number) => Math.max(1, Math.ceil((count - 1) / BLOCK));
+  let total = 0;
+  for (let l = 0; l < lines; l++) total += blocks(Math.max(1, T[l * 4 + 1]));
+  const first = new Int32Array(lines + 1), box = new Float32Array(total * 4);
+  let at = 0;
   for (let l = 0; l < lines; l++) {
-    first[l] = box.length / 4;
+    first[l] = at;
     const s0 = T[l * 4], count = Math.max(1, T[l * 4 + 1]);
     for (let b = 0; b === 0 || b * BLOCK < count - 1; b++) {
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -213,18 +215,17 @@ function buildBlocks(n: NetworkBuffers) {
         if (y < y0) y0 = y;
         if (y > y1) y1 = y;
       }
-      box.push(x0, y0, x1, y1);
+      box[at * 4] = x0, box[at * 4 + 1] = y0, box[at * 4 + 2] = x1, box[at * 4 + 3] = y1;
+      at++;
     }
   }
-  first[lines] = box.length / 4;
-  blocksOf.set(n, { first, box: new Float32Array(box), mark: new Uint8Array(box.length / 4) });
+  first[lines] = at;
+  return { first, box, mark: new Uint8Array(at) };
 }
 
-/** Marks the blocks whose box comes within `reach` (local units) of (lx, ly); null while they are
- * not built. */
-function markNearBlocks(n: NetworkBuffers, lx: number, ly: number, reach: number): LineBlocks | null {
+/** Marks the blocks whose box comes within `reach` (local units) of (lx, ly). */
+function markNearBlocks(n: NetworkBuffers, lx: number, ly: number, reach: number): LineBlocks {
   const lb = lineBlocks(n);
-  if (!lb) return null;
   const b = lb.box, m = lb.mark;
   for (let k = 0; k < m.length; k++)
     m[k] = b[k * 4] - reach <= lx && b[k * 4 + 2] + reach >= lx && b[k * 4 + 1] - reach <= ly && b[k * 4 + 3] + reach >= ly ? 1 : 0;

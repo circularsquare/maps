@@ -17,7 +17,6 @@ import { platformRoom, pulsesBetween, readBoardHour, QUEUE_STRIDE, type BoardHou
 import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, PSI_PER_UNIT } from "./geo";
 import { GradeMarks } from "./gradeMarks";
 import { F_BLUEPRINT, lineAt, type NetworkBuffers, type Strokes } from "./network";
-import { whenIdle } from "./cellIndex";
 
 const TEX_W = 2048;
 const LINES_W = 1024;
@@ -1205,18 +1204,9 @@ export class NetworkRenderer {
   }
   private reachOf: { net: NetworkBuffers; r: Float32Array; halfWidth: number } | null = null;
   /** Per station, local units from its node to the farthest point of its platform's centre line,
-   * and the widest true half width of any (stationAt's skip, T-724). */
-  private reachAsked: NetworkBuffers | null = null;
-  /** `stationReach`'s table, or null while it is worked out in idle time. */
-  private stationReachNow(n: NetworkBuffers): { r: Float32Array; halfWidth: number } | null {
-    if (this.reachOf?.net === n) return this.reachOf;
-    if (this.reachAsked !== n) {
-      this.reachAsked = n;
-      whenIdle(() => this.net === n && this.stationReach(n));
-    }
-    return null;
-  }
-  private stationReach(n: NetworkBuffers): { r: Float32Array; halfWidth: number } {
+   * and the widest true half width of any (stationAt's skip, T-724); worked out when first asked
+   * for, a few ms where scanning every station's shape cost Japan's network 100 ms a move (T-1020). */
+  private stationReachNow(n: NetworkBuffers): { r: Float32Array; halfWidth: number } {
     if (this.reachOf?.net === n) return this.reachOf;
     const r = new Float32Array(n.stationCount), s = n.stationShape, P2 = 2 * PLATFORM_POINTS;
     let halfWidth = 0;

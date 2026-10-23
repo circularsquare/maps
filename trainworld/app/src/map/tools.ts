@@ -84,8 +84,20 @@ const lengthOf = (pts: ArrayLike<number>) => {
 
 interface Placed {
   end: RouteEnd;
-  lx: number;
-  ly: number;
+  /** where it is in degrees: local units go stale when the draw anchor moves (T-1020) */
+  lng: number;
+  lat: number;
+}
+
+/** The longest piece of free-drawn track one click lays, straight-line km between its ends (T-1020:
+ * a piece from London to Shanghai took the clock worker 3-11 s a preview, and every pointer move
+ * asked for one). */
+const MAX_PIECE_KM = 500;
+const tooFarText = () => `Too far for one piece of track (${distance(MAX_PIECE_KM * 1000)} at most). Press Esc to start somewhere else.`;
+
+function placedAt(end: RouteEnd, lx: number, ly: number): Placed {
+  const [lng, lat] = toLngLat(lx, ly);
+  return { end, lng, lat };
 }
 
 export class Tools {
@@ -375,7 +387,7 @@ export class Tools {
         const [lx, ly] = toLocal(ring[0], ring[1]);
         s = { kind: "free", lx, ly };
       }
-      this.start = { end: this.endOf(s), lx: s.lx, ly: s.ly };
+      this.start = placedAt(this.endOf(s), s.lx, s.ly);
       this.real.begin(ring);
       this.requestPreview();
       this.place();
@@ -391,7 +403,7 @@ export class Tools {
     if (!from || this.placing) return;
     // T-707: a click on the start ends the run, as a double click does, or drops a start with no
     // segment yet; a segment can never end where it starts, so a loop's end is never this point
-    const [sx, sy] = this.screen(from.lx, from.ly), se = this.endOf(s);
+    const [sx, sy] = this.screen(...toLocal(from.lng, from.lat)), se = this.endOf(s);
     if (Math.hypot(sx - e.point.x, sy - e.point.y) < 6 || (from.end.kind === "node" && se.kind === "node" && se.node === from.end.node)) {
       this.reset();
       return;
@@ -406,6 +418,10 @@ export class Tools {
       rc = await this.real.click(e.point.x, e.point.y);
       if (rc?.kind === "refuse" || this.start !== from) {
         if (rc?.kind === "refuse") say("No real track joins these points.", true);
+        return;
+      }
+      if (!rc && this.tooFar(s)) {
+        say(tooFarText(), true);
         return;
       }
       const req = rc ? this.realReq(rc.route, s) : this.routeReq(this.endOf(s));
@@ -424,7 +440,7 @@ export class Tools {
     }
     this.chain.push(from);
     const [ex, ey] = rc && s.kind === "free" ? toLocal(...rc.route.last) : [s.lx, s.ly];
-    this.start = { end: { kind: "node", node: a.node }, lx: ex, ly: ey };
+    this.start = placedAt({ kind: "node", node: a.node }, ex, ey);
     this.real.begin(rc ? rc.route.last : snapping.peek() ? this.real.ring(e.point.x, e.point.y) : null);
     this.lastPreview = null;
     this.previewKey = "";
@@ -470,14 +486,30 @@ export class Tools {
     const h = this.hover;
     if (!h) return;
     // Nothing to show while the pointer is on the start.
-    const [ax, ay] = this.screen(this.start.lx, this.start.ly), [bx, by] = this.screen(h.lx, h.ly);
+    const [ax, ay] = this.screen(...toLocal(this.start.lng, this.start.lat)), [bx, by] = this.screen(h.lx, h.ly);
     if (Math.hypot(ax - bx, ay - by) < 3) return;
+    // too far for one piece: not asked for, the tag says why (T-1020)
+    if (this.tooFar(h)) {
+      this.wantKey = "";
+      this.lastPreview = null;
+      this.previewKey = "";
+      this.overlay.renderer.setPreview(null);
+      this.overlay.invalidate();
+      return;
+    }
     const req = this.routeReq(this.endOf(h));
     const key = JSON.stringify(req);
     this.wantKey = key;
     this.client.preview(req, (a) => {
       if (this.start && !this.real.active && this.wantKey === key) this.showPreview(a, key);
     });
+  }
+
+  /** Whether a free-drawn piece from the start to `s` would be longer than MAX_PIECE_KM. */
+  private tooFar(s: Snap): boolean {
+    if (!this.start) return false;
+    const [lng, lat] = toLngLat(s.lx, s.ly);
+    return metresBetween(this.start.lng, this.start.lat, lng, lat) > MAX_PIECE_KM * 1000;
   }
 
   private showPreview(a: PreviewAnswer, key: string) {
@@ -1136,7 +1168,7 @@ export class Tools {
     };
     const t = tool.peek();
     if (t === "track" && this.start) {
-      put(this.el(k++, "pi-mark"), this.start.lx, this.start.ly);
+      put(this.el(k++, "pi-mark"), ...toLocal(this.start.lng, this.start.lat));
       const pv = this.lastPreview;
       if (pv) {
         // only those on screen: a snapped route can have thousands of curves (T-727d)
@@ -1230,6 +1262,11 @@ export class Tools {
       this.tag.style.display = kids.length ? "" : "none";
       this.tag.replaceChildren(...kids);
       put(this.tag, h!.lx, h!.ly, 14, 12);
+    } else if (t === "track" && this.start && h && this.tooFar(h)) {
+      this.tag.style.display = "";
+      this.tag.className = "tool-tag build-tag bad";
+      this.tag.textContent = tooFarText();
+      put(this.tag, h.lx, h.ly, 14, 12);
     } else if (t === "track" && this.start && h && pv) {
       this.tag.style.display = "";
       this.tag.className = "tool-tag build-tag";

@@ -293,6 +293,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   main-thread ms in the first seconds after a save loads, with the main thread's top functions,
   then the game's figures at demand's final; a save imported into a new game, or `CONTINUE=1` the
   slot reopened with its demand cache; `EDITS=1` the long tasks after a track and a station edit),
+  `t1020-click-latency.mjs` (laying track with the mouse: click to drawn, ghost latency per move,
+  frame gaps, long tasks and the worker's steps per click, on a new game, the real save, Japan's
+  network, and Anita's London-Shanghai-London repro, whose far click must be refused at once),
   `t714-pan.mjs` (frame time while dragging and wheel-zooming the
   real save at zoom 11-16 with the clock running: fails over 12 ms of main thread a frame or 5% of
   frames over 50 ms; options for a throttled CPU, a trace per thread, settings, a tool),
