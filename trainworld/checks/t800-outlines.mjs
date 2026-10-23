@@ -58,7 +58,7 @@ try {
   await page.click('.start-menu .new-game .start-new');
   await page.waitForFunction(() => window.tw?.world?.value && !document.querySelector('.start-menu'), undefined, { timeout: 180000 });
   await settle(4000);
-  await page.evaluate(() => window.tw.map.jumpTo({ center: [-74, 41], zoom: 6.5 }));
+  await page.evaluate(() => void window.tw.map.jumpTo({ center: [-74, 41], zoom: 6.5 }));
   await settle(3000);
   await page.screenshot({ path: join(SHOTS, `t800-${TAG}-1-newyork.png`) });
   const ny = await drawn();
@@ -66,7 +66,7 @@ try {
 
   // the jump to Europe: no boundary file of a European zone has been asked for yet
   const fetched0 = boundaryFetches;
-  await page.evaluate(() => window.tw.map.jumpTo({ center: [8, 49], zoom: 5.2 }));
+  await page.evaluate(() => void window.tw.map.jumpTo({ center: [8, 49], zoom: 5.2 }));
   await settle(700);
   await page.screenshot({ path: join(SHOTS, `t800-${TAG}-2-europe-at-once.png`) });
   const first = await drawn();
@@ -76,7 +76,7 @@ try {
   const later = await drawn();
   console.log(`Europe, settled: ${later.length} zones drawn, ${boundaryFetches - fetched0} boundary files fetched since`);
 
-  await page.evaluate(() => window.tw.map.jumpTo({ center: [10, 50], zoom: 3.2 }));
+  await page.evaluate(() => void window.tw.map.jumpTo({ center: [10, 50], zoom: 3.2 }));
   await settle(1500);
   await page.screenshot({ path: join(SHOTS, `t800-${TAG}-4-wide.png`) });
   const wide = await drawn();

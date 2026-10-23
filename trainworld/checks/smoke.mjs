@@ -175,7 +175,7 @@ async function browserChecks(BASE) {
       const got = [];
       for (const [name, at] of [['dead space', [-98.0, 38.5]], ['Tokyo', [139.70, 35.69]]]) {
         const t = Date.now();
-        await far.evaluate((c) => window.tw.map.jumpTo({ center: c, zoom: 12 }), at);
+        await far.evaluate((c) => void window.tw.map.jumpTo({ center: c, zoom: 12 }), at);
         if ((await smokeLine(far, at)) === null) throw new Error(`no line built in ${name}`);
         const want = got.length + 1;
         await far.waitForFunction((want) => {

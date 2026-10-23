@@ -75,7 +75,7 @@ async function checkZone(ctx, base, city) {
     const sep = base.includes('?') ? '&' : '?';
     await page.goto(`${base}${sep}debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
-    await page.evaluate(([c, z]) => window.tw.map.jumpTo({ center: c, zoom: z }), [city.center, Math.max(city.zoom, 11)]);
+    await page.evaluate(([c, z]) => void window.tw.map.jumpTo({ center: c, zoom: z }), [city.center, Math.max(city.zoom, 11)]);
     await page.waitForFunction((id) => window.twDemand.activeCity.peek() === id, city.id, { timeout: 60000, polling: 100 });
     // its pack opened for the view (bubbles): give it time to download and open
     await page.waitForTimeout(6000);
@@ -129,7 +129,7 @@ async function checkBroken(ctx, base, kind, bad, good) {
     });
   }
   const jump = async (c) => {
-    await page.evaluate(([center, z]) => window.tw.map.jumpTo({ center, zoom: z }), [c.center, Math.max(c.zoom, 11)]);
+    await page.evaluate(([center, z]) => void window.tw.map.jumpTo({ center, zoom: z }), [c.center, Math.max(c.zoom, 11)]);
     await page.waitForFunction((id) => window.twDemand.activeCity.peek() === id, c.id, { timeout: 60000, polling: 100 });
   };
   const tag = () => page.evaluate(() => { const t = document.querySelector('.status-tag'); return t ? { text: t.textContent, tip: t.getAttribute('data-tip') } : null; });

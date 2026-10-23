@@ -44,7 +44,7 @@ const runs = [];
  * kind 'real': 12 real ticks through CDP and a busy loop of `held` x 16 ms started with the first;
  * how Chrome queues them behind the loop varies, so it reproduces most runs, not all. */
 const scroll = async (kind, held) => {
-  await page.evaluate(() => window.tw.map.jumpTo({ center: [-73.96, 40.75], zoom: 11 }));
+  await page.evaluate(() => void window.tw.map.jumpTo({ center: [-73.96, 40.75], zoom: 11 }));
   await page.waitForTimeout(1500); // past MapLibre's 400 ms, so this is a new scroll
   const replay = page.evaluate(([kind, held, X, Y]) => {
     const w = (window.__t675 = { fr: [], on: true });

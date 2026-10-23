@@ -219,7 +219,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   startup, edits per cluster, memory, London's longer trips by place), `t409-worker-check` (two networks with no track between
   them solve as two clusters, each as it would alone, to the bit; about a minute), `t301-worker-check`
   (packs and the market closed and reopened, also mid-solve and bare: figures to the bit).
-- Browser and timing (Playwright, `PLAYWRIGHT_MODULE`): `startup-timing.mjs` with
+- Browser and timing (Playwright, `PLAYWRIGHT_MODULE`). A `page.evaluate` that moves the map returns
+  nothing (`() => void window.tw.map.jumpTo(...)`): MapLibre's `jumpTo` returns the map, and Playwright
+  serialising it is 1-2 s of main thread that reads as lag (T-1052). `startup-timing.mjs` with
   `static-serve.mjs` (startup marks on a scratch production build; `MENU=1` through the start
   menu, timed from the pick), `t303-measure.mjs` (demand
   loading, clicks, pans), `t326-clusters.mjs` (the real save plus a Toronto line: edits in each cluster

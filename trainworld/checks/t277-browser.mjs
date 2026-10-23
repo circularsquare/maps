@@ -102,10 +102,10 @@ try {
     return { worstRoundingM: worst, distanceFromOriginKm: far / 1000 };
   }, YONGE);
   check('renderer precision at Toronto under 5 cm (T-127)', result.precision.worstRoundingM < 0.05, result.precision);
-  await page.evaluate(() => window.tw.map.jumpTo({ center: [-79.388, 43.675], zoom: 12.3 }));
+  await page.evaluate(() => void window.tw.map.jumpTo({ center: [-79.388, 43.675], zoom: 12.3 }));
   await page.waitForTimeout(8000);
   await page.screenshot({ path: out + 'tor-yonge.png' });
-  await page.evaluate(() => window.tw.map.jumpTo({ center: [-79.3806, 43.6453], zoom: 17.5 }));
+  await page.evaluate(() => void window.tw.map.jumpTo({ center: [-79.3806, 43.6453], zoom: 17.5 }));
   await page.waitForTimeout(4000);
   await page.screenshot({ path: out + 'tor-union-zoom.png' });
   result.errors = errors;

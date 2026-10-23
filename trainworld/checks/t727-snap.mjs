@@ -128,7 +128,7 @@ try {
     await page.waitForTimeout(1500);
     await shot(`${name}-preview`);
     // back to the view the pointer rested in
-    await page.evaluate((v) => window.tw.map.jumpTo(v), view);
+    await page.evaluate((v) => void window.tw.map.jumpTo(v), view);
     await page.waitForTimeout(500);
     const t1 = await now();
     await click(...b);
@@ -137,7 +137,7 @@ try {
     const e1 = (await count()).edges, n1 = await notice();
     report[name].placed = { edges: e1 - e0, notice: n1, longestTaskMs: await longest(t0), clickToPlacedLongest: await longest(t1) };
     result(e1 - e0 > 20 && /Blueprint added/.test(n1), `${name}: placed by the second click`, `${e1 - e0} pieces; "${n1}"; longest main-thread task ${report[name].placed.longestTaskMs.toFixed(0)} ms`);
-    await page.evaluate(([a, b]) => window.tw.map.fitBounds([[Math.min(a[0], b[0]), Math.min(a[1], b[1])], [Math.max(a[0], b[0]), Math.max(a[1], b[1])]], { padding: 80, animate: false }), [a, b]);
+    await page.evaluate(([a, b]) => void window.tw.map.fitBounds([[Math.min(a[0], b[0]), Math.min(a[1], b[1])], [Math.max(a[0], b[0]), Math.max(a[1], b[1])]], { padding: 80, animate: false }), [a, b]);
     await page.waitForTimeout(1500);
     await shot(`${name}-placed`);
     const u = await undo();

@@ -161,7 +161,7 @@ try {
     await page.goto(`${BASE}?debug=1&continue=1${QS}&v=${Date.now()}`);
     await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
     await waitSolved(240000);
-    await page.evaluate(() => window.tw.map.jumpTo({ center: [-79.39, 43.67], zoom: 12 }));
+    await page.evaluate(() => void window.tw.map.jumpTo({ center: [-79.39, 43.67], zoom: 12 }));
     await page.waitForTimeout(6000);
     await traceStart();
     const t0 = await page.evaluate(async () => {

@@ -57,9 +57,9 @@ async function open(page, city) {
     await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
     await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
     await waitFinal(page);
-    await page.evaluate(() => window.tw.map.jumpTo({ center: [-73.99, 40.735], zoom: 13 }));
+    await page.evaluate(() => void window.tw.map.jumpTo({ center: [-73.99, 40.735], zoom: 13 }));
   } else {
-    await page.evaluate((ll) => window.tw.map.jumpTo({ center: ll, zoom: 11.2 }), MUMBAI.centre);
+    await page.evaluate((ll) => void window.tw.map.jumpTo({ center: ll, zoom: 11.2 }), MUMBAI.centre);
     await page.waitForFunction(() => window.twDemand.activeCity.value === 'mum', undefined, { timeout: 300000 });
     const before = await page.evaluate(() => window.twDemand.view()?.version ?? -1);
     await page.evaluate(async (stops) => {
@@ -82,7 +82,7 @@ async function open(page, city) {
       await run({ op: 'constructAll' });
     }, MUMBAI.line);
     await waitFinal(page, before);
-    await page.evaluate((m) => window.tw.map.jumpTo({ center: m.view, zoom: m.zoom }), MUMBAI);
+    await page.evaluate((m) => void window.tw.map.jumpTo({ center: m.view, zoom: m.zoom }), MUMBAI);
   }
   await page.evaluate(() => { const t = window.tw; t.display.value = { ...t.display.value, commuters: true, commuterEnd: 'home' }; });
   // the app's own modules, for the synchronous waits below

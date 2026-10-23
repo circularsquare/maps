@@ -80,7 +80,7 @@ try {
   });
   if (!pick.short) throw new Error('no overlapping pair found: ' + JSON.stringify(pick));
   console.log('pair', JSON.stringify({ ...pick, at: undefined }));
-  await page.evaluate((p) => window.tw.map.jumpTo({ center: p.at[Math.floor(p.at.length / 2)], zoom: 15 }), pick);
+  await page.evaluate((p) => void window.tw.map.jumpTo({ center: p.at[Math.floor(p.at.length / 2)], zoom: 15 }), pick);
   await page.waitForTimeout(2500);
   const box = await page.evaluate(() => window.tw.map.getContainer().getBoundingClientRect().toJSON());
 

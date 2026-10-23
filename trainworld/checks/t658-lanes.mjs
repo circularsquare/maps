@@ -55,7 +55,7 @@ async function open(url, shade) {
 // crowd's bulge out of it) moves its interpolated edge coverage by one level in a channel
 const differs = (a, b, k) => Math.abs(a[k] - b[k]) > 1 || Math.abs(a[k + 1] - b[k + 1]) > 1 || Math.abs(a[k + 2] - b[k + 2]) > 1 || Math.abs(a[k + 3] - b[k + 3]) > 1;
 const go = async (page, at, zoom) => {
-  await page.evaluate(([c, z]) => window.tw.map.jumpTo({ center: c, zoom: z }), [at, zoom]);
+  await page.evaluate(([c, z]) => void window.tw.map.jumpTo({ center: c, zoom: z }), [at, zoom]);
   await page.waitForTimeout(1800);
 };
 /** the overlay's pixels right after a draw, base64 */

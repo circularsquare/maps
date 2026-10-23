@@ -152,7 +152,7 @@ try {
       if (process.env.PAN) {
         const [lon, lat, zoom, pat] = process.env.PAN.split(',').map(Number);
         await page.waitForFunction((t) => performance.now() >= t * 1000 && window.tw?.map, pat, { timeout: 120000, polling: 50 });
-        await page.evaluate(([lon, lat, zoom]) => window.tw.map.jumpTo({ center: [lon, lat], zoom }), [lon, lat, zoom]);
+        await page.evaluate(([lon, lat, zoom]) => void window.tw.map.jumpTo({ center: [lon, lat], zoom }), [lon, lat, zoom]);
       }
       await page.waitForFunction((at) => performance.now() >= at * 1000, at, { timeout: 120000, polling: 50 });
       // the first bubble on screen at or after `at` s
@@ -218,7 +218,7 @@ try {
     log('built', JSON.stringify(built));
     const SHOTS = process.env.SHOTS;
     if (SHOTS) {
-      await page.evaluate((z) => window.tw.map.jumpTo({ center: [-79.3870, 43.6700], zoom: z }), +(process.env.SHOTZOOM ?? 14.3));
+      await page.evaluate((z) => void window.tw.map.jumpTo({ center: [-79.3870, 43.6700], zoom: z }), +(process.env.SHOTZOOM ?? 14.3));
       setTimeout(() => page.screenshot({ path: `${SHOTS}-a-pending.png` }).catch(() => {}), 2500);
       setTimeout(() => page.screenshot({ path: `${SHOTS}-b-estimate.png` }).catch(() => {}), 11000);
     }
@@ -294,7 +294,7 @@ try {
       log(name, 'focus', st.focus, 'loads', st.newLoads.map((l) => `${l.item} dl ${l.dl} open ${l.open}`).join(', '), '| solves', st.newSolves.map((s) => `v${s.v} sent ${s.sent} final ${s.refined} [${s.cities}]`).join(', '), '| mem', st.mem.solve.join('/'), 'aux', st.mem.opened.at(-1), '| bubbles at', bubblesAt);
     }
     // back to Midtown, a re-solve of the same network with every pack open, and clicks during it
-    await page.evaluate(() => window.tw.map.jumpTo({ center: [-73.975, 40.745], zoom: 12.3 }));
+    await page.evaluate(() => void window.tw.map.jumpTo({ center: [-73.975, 40.745], zoom: 12.3 }));
     await page.waitForTimeout(1500);
     await waitSolved(240000).catch(() => {});
     await page.waitForTimeout(2000);

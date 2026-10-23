@@ -96,7 +96,7 @@ try {
   const tag = await hoverTag(PHL);
   report('Philadelphia zoomed out is a city bubble', /within Philadelphia/.test(tag) && !/Click to open/.test(tag), JSON.stringify(tag));
   await page.mouse.move(10, 450);
-  await page.evaluate(() => window.tw.map.jumpTo({ center: [-73.6, 40.9], zoom: 6.6 }));
+  await page.evaluate(() => void window.tw.map.jumpTo({ center: [-73.6, 40.9], zoom: 6.6 }));
   await page.waitForTimeout(2500);
   await page.screenshot({ path: join(SHOTS, 't801-northeast-light.png') });
   await page.evaluate(() => { window.tw.shade.value = 'dark'; });
@@ -105,7 +105,7 @@ try {
   await page.evaluate(() => { window.tw.shade.value = 'light'; });
 
   // 4. a pan over Philadelphia, Homes on, loads it for the view
-  await page.evaluate((ll) => window.tw.map.jumpTo({ center: ll, zoom: 10.5 }), PHL);
+  await page.evaluate((ll) => void window.tw.map.jumpTo({ center: ll, zoom: 10.5 }), PHL);
   const loaded = await page.waitForFunction(() => window.twDemand.start.loads.some((l) => l.item === 'phl' && l.openedAt !== undefined), undefined, { timeout: 90000 }).then(() => true, () => false);
   await page.waitForTimeout(3000);
   // T-801: viewing alone opens no market pack (no station reaches Philadelphia)

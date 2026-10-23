@@ -79,7 +79,7 @@ try {
   out.stages.ny = await sig();
   log('ny', JSON.stringify(out.stages.ny));
   // to Toronto, wait for it to open, then a line up Yonge St (Union to Eglinton)
-  await page.evaluate(() => window.tw.map.jumpTo({ center: [-79.39, 43.67], zoom: 12 }));
+  await page.evaluate(() => void window.tw.map.jumpTo({ center: [-79.39, 43.67], zoom: 12 }));
   await page.waitForTimeout(2500);
   await waitSolved();
   const PTS = [[-79.3806, 43.6453], [-79.3832, 43.6560], [-79.3866, 43.6710], [-79.3904, 43.6870], [-79.3985, 43.7055]];
@@ -110,7 +110,7 @@ try {
   const torId = await page.evaluate((num) => window.tw.world.value.save.lines.find((l) => l.num === num).id, built);
   /** the view over a zone, until the client says it is the one in view */
   const go = async (zone, center, zoom) => {
-    await page.evaluate(([c, z]) => window.tw.map.jumpTo({ center: c, zoom: z }), [center, zoom]);
+    await page.evaluate(([c, z]) => void window.tw.map.jumpTo({ center: c, zoom: z }), [center, zoom]);
     await page.waitForFunction((zone) => window.twDemand.activeCity.peek() === zone, zone, { timeout: 30000, polling: 50 });
     await page.waitForTimeout(1500);
     await waitSolved();

@@ -60,7 +60,7 @@ const build = (pts, name) => page.evaluate(async ([PTS, name]) => {
   return r.line;
 }, [pts, name]);
 const go = async (zone, center, zoom = 12) => {
-  await page.evaluate(([c, z]) => window.tw.map.jumpTo({ center: c, zoom: z }), [center, zoom]);
+  await page.evaluate(([c, z]) => void window.tw.map.jumpTo({ center: c, zoom: z }), [center, zoom]);
   await page.waitForFunction((zone) => window.twDemand.activeCity.peek() === zone, zone, { timeout: 60000, polling: 50 });
   await page.waitForTimeout(2500);
   await waitSolved();

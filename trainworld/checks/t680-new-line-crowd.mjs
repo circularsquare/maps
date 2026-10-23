@@ -43,7 +43,7 @@ try {
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 240000 });
-  await page.evaluate((ll) => window.tw.map.jumpTo({ center: ll, zoom: 11.2 }), CENTRE);
+  await page.evaluate((ll) => void window.tw.map.jumpTo({ center: ll, zoom: 11.2 }), CENTRE);
   await page.waitForFunction(() => window.twDemand.activeCity.value === 'mum', undefined, { timeout: 300000 });
   const before = await page.evaluate(() => window.twDemand.view()?.version ?? -1);
   const built = await page.evaluate(async (stops) => {

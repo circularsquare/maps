@@ -107,7 +107,7 @@ try {
   } else {
     await page.goto(`${BASE}?debug=1&new=1&${workers}&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client?.__hooked, undefined, { timeout: 180000 });
-    if (process.env.AT) { const [lon, lat, z] = process.env.AT.split(',').map(Number); await page.evaluate(([lon, lat, z]) => window.tw.map.jumpTo({ center: [lon, lat], zoom: z }), [lon, lat, z]); }
+    if (process.env.AT) { const [lon, lat, z] = process.env.AT.split(',').map(Number); await page.evaluate(([lon, lat, z]) => void window.tw.map.jumpTo({ center: [lon, lat], zoom: z }), [lon, lat, z]); }
     await page.waitForTimeout(4000);
     const bytes = await readFile(SAVE);
     await cdp.send('Profiler.enable');

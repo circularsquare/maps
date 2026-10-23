@@ -58,7 +58,7 @@ try {
     return r.ok;
   }, [pts, name, colour]);
   const go = async (zone, center) => {
-    await page.evaluate((c) => window.tw.map.jumpTo({ center: c, zoom: 12 }), center);
+    await page.evaluate((c) => void window.tw.map.jumpTo({ center: c, zoom: 12 }), center);
     await page.waitForFunction((zone) => window.twDemand.activeCity.peek() === zone, zone, { timeout: 60000, polling: 100 }).catch(() => {});
     await wait(2500);
     await solved();

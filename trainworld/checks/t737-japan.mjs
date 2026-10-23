@@ -161,7 +161,7 @@ async function run(BASE) {
 
     // ---- load the save
     const bytes = await readFile(SAVE);
-    await page.evaluate(([at, zoom]) => window.tw.map.jumpTo({ center: at, zoom }), [[139.75, 35.68], 10]);
+    await page.evaluate(([at, zoom]) => void window.tw.map.jumpTo({ center: at, zoom }), [[139.75, 35.68], 10]);
     const tImport = await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; const t = performance.now(); window.tw.client.post({ kind: 'import', bytes: b }, [b]); return t; }, Array.from(bytes));
     await page.waitForFunction(() => (window.tw.world.value?.save?.lines?.length ?? 0) > 400, undefined, { timeout: 300000, polling: 100 });
     const load = await page.evaluate((t0) => {
@@ -221,7 +221,7 @@ async function run(BASE) {
     for (const speed of SPEED_IX) {
       await page.evaluate((i) => { window.tw.clock.setSpeed(i); window.tw.clock.running.value = true; }, speed);
       for (const sc of SCENES) {
-        await page.evaluate(([at, zoom]) => window.tw.map.jumpTo({ center: at, zoom }), [sc.at, sc.zoom]);
+        await page.evaluate(([at, zoom]) => void window.tw.map.jumpTo({ center: at, zoom }), [sc.at, sc.zoom]);
         await page.waitForTimeout(2500);
         await cdp.send('Tracing.start', { transferMode: 'ReturnAsStream', traceConfig: { includedCategories: ['toplevel', '__metadata'], recordMode: 'recordContinuously' } });
         if (process.env.CPUPROFILE === '1') { await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 200 }); await cdp.send('Profiler.start'); }

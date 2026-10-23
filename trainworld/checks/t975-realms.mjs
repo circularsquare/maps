@@ -105,7 +105,7 @@ async function europePan(page) {
   const t0 = Date.now();
   const long = await page.evaluate(() => { window.__long = []; new PerformanceObserver((l) => { for (const e of l.getEntries()) window.__long.push(e.duration); }).observe({ entryTypes: ['longtask'] }); });
   for (const c of [[2.35, 48.86], [3.5, 48.5], [4.8, 48.9], [6.2, 49.1], [7.6, 49.4], [8.7, 50.1], [9.9, 50.6], [11.0, 51.0]]) {
-    await page.evaluate((c) => window.tw.map.jumpTo({ center: c, zoom: 9 }), c);
+    await page.evaluate((c) => { window.tw.map.jumpTo({ center: c, zoom: 9 }); }, c);
     await settle(page, 2500);
   }
   await settle(page, 4000);
@@ -179,7 +179,7 @@ try {
 
   // 2. France's button
   {
-    await page.evaluate(() => window.tw.map.jumpTo({ center: [5, 48], zoom: 4.5 }));
+    await page.evaluate(() => { window.tw.map.jumpTo({ center: [5, 48], zoom: 4.5 }); });
     await settle(page, 5000);
     await page.screenshot({ path: join(SHOTS, `t975-${TAG}-europe-dark.png`) });
     await page.click('.realm-button button[aria-label="Show France"]');
@@ -192,7 +192,7 @@ try {
 
   {
     // 3. a station in Japan, then a reload: France is dark again
-    await page.evaluate(() => window.tw.map.jumpTo({ center: [139.70, 35.69], zoom: 12 }));
+    await page.evaluate(() => { window.tw.map.jumpTo({ center: [139.70, 35.69], zoom: 12 }); });
     await settle(page, 1500);
     await station(page, [139.70, 35.69]);
     await page.evaluate(() => window.tw.client.post({ kind: 'flush' }));
@@ -204,7 +204,7 @@ try {
     report('a reload hides France again', d2.includes('France') && !d2.includes('Japan'), `(${d2.length} dark)`);
 
     // 4. a station in France too: both shown after a reload
-    await page.evaluate(() => window.tw.map.jumpTo({ center: [4.84, 45.76], zoom: 12 }));
+    await page.evaluate(() => { window.tw.map.jumpTo({ center: [4.84, 45.76], zoom: 12 }); });
     await settle(page, 1500);
     await station(page, [4.84, 45.76]);
     await settle(page, 1500);
@@ -218,14 +218,14 @@ try {
     const d4 = await dark(page);
     const n = await page.evaluate(() => window.tw.world.value.save.stations.length);
     report('a save with stations in Japan and France shows both', !d4.includes('France') && !d4.includes('Japan') && d4.length === d0.length - 1, `(${n} stations, ${d4.length} dark)`);
-    await page.evaluate(() => window.tw.map.jumpTo({ center: [60, 35], zoom: 1.8 }));
+    await page.evaluate(() => { window.tw.map.jumpTo({ center: [60, 35], zoom: 1.8 }); });
     await settle(page, 3000);
     await page.screenshot({ path: join(SHOTS, `t975-${TAG}-two-realms.png`) });
   }
   // 5. T-1049, T-1046: a click on a hidden realm's land shows it, a drag does not; none at the world view
   {
     const at = (lng, lat) => page.evaluate(([lng, lat]) => { const q = window.tw.map.project([lng, lat]), r = document.querySelector('#map').getBoundingClientRect(); return [q.x + r.left, q.y + r.top]; }, [lng, lat]);
-    const view = async (center, zoom) => { await page.evaluate(([center, zoom]) => window.tw.map.jumpTo({ center, zoom }), [center, zoom]); await settle(page, 2500); };
+    const view = async (center, zoom) => { await page.evaluate(([center, zoom]) => { window.tw.map.jumpTo({ center, zoom }); }, [center, zoom]); await settle(page, 2500); };
     const before = await dark(page);
     const tip = await page.evaluate(() => document.querySelector('.realm-button button[aria-label="Show Germany"]')?.getAttribute('data-tip') ?? '');
     report('a realm circle has the game\'s own tag naming the realm', /^Germany\n/.test(tip) && await page.evaluate(() => !document.querySelector('.realm-button button[title]')), JSON.stringify(tip));

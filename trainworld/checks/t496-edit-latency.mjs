@@ -76,7 +76,7 @@ try {
     await page.waitForTimeout(300);
     out.trials = [];
     for (const c of cands) {
-      await page.evaluate((c) => window.tw.map.jumpTo({ center: [c.lng, c.lat], zoom: 16 }), c);
+      await page.evaluate((c) => void window.tw.map.jumpTo({ center: [c.lng, c.lat], zoom: 16 }), c);
       await page.waitForTimeout(1200);
       const box = await page.evaluate((c) => { const r = window.tw.map.getContainer().getBoundingClientRect(), p = window.tw.map.project([c.lng, c.lat]); return [r.left + p.x, r.top + p.y]; }, c);
       await page.mouse.move(box[0] - 3, box[1]);
@@ -153,7 +153,7 @@ try {
     const { readFile: rf } = await import('node:fs/promises');
     for (let i = 0; i < views.length; i++) {
       const [lng, lat, z] = views[i];
-      await page.evaluate(([lng, lat, z]) => window.tw.map.jumpTo({ center: [lng, lat], zoom: z }), [lng, lat, z]);
+      await page.evaluate(([lng, lat, z]) => void window.tw.map.jumpTo({ center: [lng, lat], zoom: z }), [lng, lat, z]);
       await page.waitForTimeout(3000);
       await page.screenshot({ path: `${OUT}/visual-${LABEL}-${i}-new.png` });
       // the same view drawn from the old full build

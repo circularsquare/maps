@@ -112,7 +112,7 @@ try {
   await waitSolved();
   const built = {};
   for (const id of LINES) {
-    await page.evaluate((c) => window.tw.map.jumpTo({ center: c, zoom: 12 }), NETS[id].centre);
+    await page.evaluate((c) => void window.tw.map.jumpTo({ center: c, zoom: 12 }), NETS[id].centre);
     await page.waitForTimeout(2500);
     await waitSolved();
     built[id] = await build(NETS[id]);
@@ -125,7 +125,7 @@ try {
   log('figures', JSON.stringify({ clusters: out.figures.clusters, cities: out.figures.cities, rail: out.figures.rail, market: out.figures.market.map((m) => m?.summary.slice(1, 3)) }));
   for (const id of LINES) {
     out.edits[id] = [];
-    await page.evaluate((c) => window.tw.map.jumpTo({ center: c, zoom: 12 }), NETS[id].centre);
+    await page.evaluate((c) => void window.tw.map.jumpTo({ center: c, zoom: 12 }), NETS[id].centre);
     await page.waitForTimeout(1500);
     await waitSolved();
     for (let i = 0; i < REPS; i++) {

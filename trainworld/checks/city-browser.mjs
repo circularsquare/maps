@@ -355,7 +355,7 @@ async function checkZone(page, errors, id, C, out, result) {
   await settle(page, id => (window.twDemand.cities().get(id)?.railTripsPerDay ?? 0) > 0, id, 4000);
   result.withLine = { topBar: await topBar(page), cities: await page.evaluate(id => window.twDemand.cities().get(id) ?? null, id) };
   check(`${C.name} has a mode split with the line`, result.withLine.cities, result.withLine);
-  await page.evaluate(ll => window.tw.map.jumpTo({ center: ll, zoom: 12.6 }), C.view);
+  await page.evaluate(ll => void window.tw.map.jumpTo({ center: ll, zoom: 12.6 }), C.view);
   await idle(page, 8000);
   await page.screenshot({ path: out + 'line.png' });
   result.errors = [...errors];

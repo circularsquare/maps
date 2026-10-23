@@ -87,7 +87,7 @@ try {
   };
   if (ONLY === 'probe') {
     for (const sc of SCENES) {
-      await page.evaluate(([at, zoom]) => window.tw.map.jumpTo({ center: at, zoom }), [sc.at, sc.zoom]);
+      await page.evaluate(([at, zoom]) => void window.tw.map.jumpTo({ center: at, zoom }), [sc.at, sc.zoom]);
       await page.waitForTimeout(3000);
       console.log(sc.name, await page.evaluate(async (x) => { try { return JSON.stringify(await (0, eval)(x)); } catch (e) { return 'probe error: ' + e.message + e.stack; } }, process.env.PROBE));
     }
@@ -96,7 +96,7 @@ try {
     if (ONLY && ONLY !== mode) continue;
     await page.evaluate(async (m) => { const { tool } = await import('/src/game/ui.ts'); tool.value = m; }, mode);
     for (const sc of SCENES) {
-      await page.evaluate(([at, zoom]) => window.tw.map.jumpTo({ center: at, zoom }), [sc.at, sc.zoom]);
+      await page.evaluate(([at, zoom]) => void window.tw.map.jumpTo({ center: at, zoom }), [sc.at, sc.zoom]);
       await page.waitForTimeout(3000);
       await page.mouse.move(300, 200);
       await page.waitForTimeout(300);
@@ -139,7 +139,7 @@ try {
   if (!ONLY || ONLY === 'wheel') {
     await page.evaluate(async () => { const { tool } = await import('/src/game/ui.ts'); tool.value = 'select'; });
     // T-689: wheel scrolls in and out from zoom 11 with a mousemove before each, as T-675 traced
-    await page.evaluate(() => window.tw.map.jumpTo({ center: [-73.98, 40.74], zoom: 11 }));
+    await page.evaluate(() => void window.tw.map.jumpTo({ center: [-73.98, 40.74], zoom: 11 }));
     await page.waitForTimeout(3000);
     await page.evaluate(() => {
       const hooks = window.tw.overlay.afterMapFrame;
