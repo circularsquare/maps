@@ -236,6 +236,8 @@ class Groups:
             ids = g["packs"]
             for k in range(len(g["trips"])):
                 h, w = ids[g["home_pack"][k]], ids[g["work_pack"][k]]
+                if h not in self.reg or w not in self.reg:
+                    continue  # a pack that parked after this solve took its commutes out of the registry (T-997)
                 pairs.setdefault((h, w), []).append((tuple(g["home_zone"][k]), w, tuple(g["work_zone"][k]), g["trips"][k]))
                 self.source[h] = g["source"]
         for (h, _w), lst in pairs.items():

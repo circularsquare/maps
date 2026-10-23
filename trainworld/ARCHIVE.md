@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-997 [P2] The join's park cascade. Done 2026-10-23: each unit's `--fixed` list is cut to the packs registered when it runs (`Run.live_unit`), and `market_zones.Groups` skips commutes naming a pack that left; a scratch join with Xinjiang forced to park ran Tibet, Ningxia, Inner Mongolia and the market step.
 - T-1015 [P1] The planner's US rules and the US replan. Done 2026-10-23: 45 US metro rows and 197 zones (6 in Puerto Rico), 297.8M, as the dry run but for Riverside, South Jersey and Alaska's belt; no other row changed; realms split in five. notes/T-1004.md "T-1015".
 - T-1020 [P1] Track placement unresponsive. Done 2026-10-23: Anita's freeze was a run left open across cities, so each move asked for a 10,000 km piece (3-11 s in the clock worker); free-drawn pieces now stop at 500 km and the repro places in 30 ms. Big-network costs are T-1028 to T-1031. notes/T-1001.md "T-1020".
 - T-1016 [P1] The `usa` country module. Done 2026-10-23: `pipeline/usa.py` (TIGER outlines, blocks less institutions, LODES, ACS work from home, US curve, state regions); Atlanta and a Georgia zone built in scratch, people and jobs exact, counties within 1.3%, borders identical to neighbours'. notes/T-1004.md "T-1016".

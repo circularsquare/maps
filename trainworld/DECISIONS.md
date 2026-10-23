@@ -4,6 +4,7 @@ Newest first. One entry per decision: what, and why. The spec states the result;
 reasoning and what it replaced.
 
 ## 2026-10-20
+- **A unit's fixed list is filtered to the registry, not rebuilt** (T-997, my call 2026-10-23): `intercity.solve_units` costs about 6 minutes on China's 1,516 outlines, and a parked pack leaving a group cannot add a neighbour within the cut, so dropping unregistered ids gives the same list.
 - **Planned US rows spread blocks from their internal points** (T-1016, my call 2026-10-23): the `usa` module reads only each state's block .dbf (8 MB by range for Georgia), so a block's people go over the cells nearer its internal point than any other block's by GHSL, and its jobs by the jobs proxy, rather than over the block polygon by land as the built packs' spread.py does; the polygons would be about 20 times the download. County totals come out within 0.5% for people and 1.3% for jobs on the test rows.
 - **Planned US rows: home end from population, one work-from-home share** (T-1016, my call 2026-10-23): tier 0's home end (population x commuters a resident) and ACS B08301 over the row's counties, where the built packs use LODES RAC and ACS by tract and industry; both would need new tier 0 hooks for a small change (RAC: T-1034).
 - **Puerto Rico rows take the `usa` module's outline, people and work from home** (T-1016, my call 2026-10-23): TIGER municipios, 2020 blocks less institutions and ACS B08301 all cover it; jobs (no LODES), the curve and one region stay tier 0's, as for any country.

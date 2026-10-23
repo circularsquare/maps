@@ -82,7 +82,7 @@ BUILD_STEPS = ["build", "stations", "places", "routes", "merge", "nocar", "every
 VITE_FILES = (".json", ".bin", ".boundary.geojson", ".places.json", ".market.json")  # vite.config.ts copies these
 CACHES = (".points.fgb", ".stations.fgb", ".areas.fgb", ".water.fgb", ".ways2.npz")  # an extract's OSM caches
 QUIET_S = 1200  # a step whose log has not grown this long dumps its stack into the log (T-764)
-MODULE_OUTLINES = {"england", "france", "germany"}  # plan_hooks giving a boundary_file (T-555)
+MODULE_OUTLINES = {"england", "france", "germany", "usa"}  # plan_hooks giving a boundary_file (T-555)
 # A step still running after this long is stopped and its row parks (four times as long for a row
 # over BIG_PEOPLE): the longest seen, a 20M pack's build, takes under an hour on 3 cores.
 STEP_LIMIT_S = {"build_city": 5400, "routes": 3600, "pack_gate": 5400, "intercity": 7200, None: 1800}
@@ -1122,13 +1122,14 @@ class Run:
                 new = [i for i in g if i in shipped]
                 if not new:
                     continue
+                u = self.live_unit(u)
                 parked, rest = self.solve(u, new, L)
                 if rest:  # only some new members failed: the group again without them, once (T-773)
                     ok, _, again = self.step("@groups", rest, f"{L}.groups-again.log", threads=1)
                     if not ok or not isinstance(again, list):
                         raise RunFault(f"joint gravity groups failed for {' '.join(rest)}: {str(again)[-300:]}")
                     for u2 in again:
-                        p2, _ = self.solve(u2, [i for i in u2["members"] if i in rest], L, again=True)
+                        p2, _ = self.solve(self.live_unit(u2), [i for i in u2["members"] if i in rest], L, again=True)
                         parked += p2
                         if not p2:
                             changed |= set(u2["members"])
@@ -1137,7 +1138,8 @@ class Run:
                     changed |= set(g) | set(u.get("fixed", []))
                 shipped = [i for i in shipped if i not in parked]
                 changed -= set(parked)
-        ids = sorted(changed, key=lambda i: [c["id"] for c in self.registry()["cities"]].index(i)) if changed else []
+        order = [c["id"] for c in self.registry()["cities"]]
+        ids = sorted((i for i in changed if i in order), key=order.index)  # a unit that parked later took its packs out
         if ids:
             ok, _, tail = self.step("register", ids + ["--market", "--trips"], f"{L}.market.log")
         else:
@@ -1186,6 +1188,17 @@ class Run:
         ok, _, tail = self.step("freeze", ["--label", self.batch, "--locked"], self.logs / "freeze.log", threads=1)
         if not ok:
             self.report.setdefault("problems", []).append(f"freeze failed: {str(tail)[-300:]}")
+
+    def live_unit(self, u):
+        """T-997: the unit with its fixed list cut to the packs registered now. The lists are made
+        before the first solve, and a unit that parked since has unregistered its packs, which
+        joint_gravity refuses as fixed."""
+        live = {c["id"] for c in self.registry()["cities"]}
+        fixed = [i for i in u.get("fixed", []) if i in live]
+        if len(fixed) != len(u.get("fixed", [])):
+            left = [i for i in u["fixed"] if i not in live]
+            print(f"  joint group {u['name']}: fixed without {' '.join(left)} (parked, no longer registered)", flush=True)
+        return {**u, "fixed": fixed}
 
     def solve(self, u, new, L, again=False):
         """One solve unit's joint solve (`u`: name, members, fixed): members back to res-9, solved
