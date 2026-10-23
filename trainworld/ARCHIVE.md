@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-1059 [P2] Anita's walking rule. Done 2026-10-23: a station pair whose walks to, between and from its stations pass the trip's own walk is no rail option; rail -2.5% New York, -3.5% Tokyo, real save 11,645,298 to 11,359,932; ceilings about -1 point, all pass; solve about +10%. notes/T-1059.md.
 - T-1071 [P2] Train count changes move no train. Done 2026-10-23: the model already handed over at the termini; the jump was the browser drawing the change late. Count and headway edits now take effect a moment ahead and the renderer swaps them in with their trips; eras saved. notes/T-1071.md.
 - T-1067 [P1] Waiting floods. Done 2026-10-23: demand overloads busy lines and the account queued everyone forever; now riders left behind 90 minutes (Anita) go another way and a platform side holds at most 5,000. Lexington test 49k to 5,000, longest wait 10.7 h to 110 min; real save boardings -0.07%. notes/T-1067.md.
 - T-1068 [P2] Track costs. Done 2026-10-23 (Anita): `LEVEL_MULT` ground 0.3 to 0.5, +1 0.8 to 1.0 (2 km double: ground $54M to $90M, +1 $144M to $180M); tests, Build tab copy and docs follow; upkeep unchanged.
