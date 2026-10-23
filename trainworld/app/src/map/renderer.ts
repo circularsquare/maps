@@ -81,7 +81,9 @@ const QV = Math.ceil(PLATFORM_POINTS / 2);
 const qVars = (dir: "in" | "out") => Array.from({ length: QV }, (_, i) => `flat ${dir} vec4 v_q${i};`).join("\n");
 const qPack = Array.from({ length: QV }, (_, i) => `v_q${i} = vec4(q[${2 * i}], ${2 * i + 1 < PLATFORM_POINTS ? `q[${2 * i + 1}]` : "vec2(0.0)"});`).join("\n  ");
 const qZero = Array.from({ length: QV }, (_, i) => `v_q${i} = vec4(0.0);`).join(" ");
-const qUnpack = (p: string) => `vec2 q[${PLATFORM_POINTS}] = vec2[${PLATFORM_POINTS}](${Array.from({ length: PLATFORM_POINTS }, (_, j) => `${p}${j >> 1}.${j & 1 ? "zw" : "xy"}`).join(", ")});`;
+// filled element by element: PowerVR's compiler (Pixel 10) rejects an array constructor in a
+// fragment shader, "no default precision defined for variable 'vec2[13]'" (T-952)
+const qUnpack = (p: string) => `vec2 q[${PLATFORM_POINTS}]; ${Array.from({ length: PLATFORM_POINTS }, (_, j) => `q[${j}] = ${p}${j >> 1}.${j & 1 ? "zw" : "xy"};`).join(" ")}`;
 /** At most this many selected shapes (stations and bridges) share one outline and glow (T-217). */
 const SEL_MAX = Math.floor(2048 / SEL_STRIDE); // texels in a row: 2048, the narrowest texture WebGL2 guarantees
 /** A selected train's ring (T-242): the train's own shape grown by this, CSS px, with a white band

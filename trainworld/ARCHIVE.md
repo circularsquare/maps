@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-952 [P1] The game could not start on a Pixel 10. Done 2026-10-22: its PowerVR compiler rejected the platform shaders' `vec2[13](...)` array constructor ("no default precision defined"); `qUnpack` in map/renderer.ts now fills the array element by element. T-950's screen named it.
 - T-950 [P1] "Calculating demand" forever on Anita's phone. Done 2026-10-22: the clock worker's start, its script error and main.ts's setup could fail silently, leaving the card up; they now show "The game could not start" with the error, and a watchdog fails a quiet card. Memory ruled out. notes/T-950.md.
 - T-942 [P2] Keep placing on by default (Anita 2026-10-22). Done 2026-10-22: the setting starts on (stored settings below version 7 take the new default once), and Caps Lock flips it on each press rather than mirroring the lock's light. docs/ui-building.md.
 - T-924 [P1] Publish the game. Done 2026-10-22: live at https://anita.garden/trainworld/ (website 465731b, build 107a329, 799 zones), data on R2 at `trainworld/2026-10-22/` (1.04 GB); `deploy.py --verify --page` passes, smoke on the live page passes but for expected 404s (T-941). notes/T-924.md.
