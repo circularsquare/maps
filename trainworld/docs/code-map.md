@@ -76,6 +76,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   anything constructed, T-096).
 - `realGraph.ts`: a region's real-network routing graph (`packs/realgraph/<cc>.rgr`, fetched once
   and decoded), for snapping track to the real network (T-727); read by `workers/realRoute.worker.ts`.
+- Account (T-972, T-973): `account.ts` (the optional anita.garden account, noritetsu's, and the
+  leaderboards: which server, the session, each slot's game id and its score sends, the boards;
+  shonei-server's `trainworld.go`); its panels `ui/AccountPanel.tsx` and `ui/Leaderboard.tsx`.
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
   `fareCurve.ts` (the fare curve through the player's nodes: fare at a length, old saves' base and rate as nodes, the knots the sim takes, T-883),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
@@ -135,7 +138,10 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 
 ### src/ui/: Preact components
 
-`Dock.tsx` (the dock, its icon tabs and resizing, T-252); `HelpPanel.tsx` (the "?" button's list of controls no button shows, T-908); `tabs.tsx` (Build, Lines, Stations, Money and the Cities tab);
+`Dock.tsx` (the dock, its icon tabs and resizing, T-252); `AccountPanel.tsx` (the account panel,
+the person icon, `Modal`, and `startAccountUi`, which mounts both account panels in a root of their
+own so the start menu opens them too; styles in `account.css`, T-972); `Leaderboard.tsx` (the
+leaderboards and the All cities row's trophy, T-973); `HelpPanel.tsx` (the "?" button's list of controls no button shows, T-908); `tabs.tsx` (Build, Lines, Stations, Money and the Cities tab);
 `MoneyHistory.tsx` (the Money tab's history charts, T-447); `FareGraph.tsx` (the fare curve graph, its nodes added, dragged both ways and removed, and the selected node's steppers, T-864, T-883); `Cities.tsx` (the Cities list, T-550, T-749); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251; `SlotThumb`, a save's picture with each panel's city named over it, T-894); `bullet.ts` (`bulletText`, `bulletNode`: a line bullet as one SVG, its circle and its symbol placed from the canvas-measured ink box with the baseline on a whole device pixel, per font, symbol, size and scale, T-705, T-745; the sizes in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
 checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `SkyBanner.tsx` (the clock's sky and demand band, a canvas, T-861); `StatusTag.tsx` (the demand status tag on the map's top row); `Toolbar.tsx` (tool hints and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
@@ -170,7 +176,8 @@ with demand timings and `client.qlog` per query; `window.twViews` with the deman
 until a copy is saved, T-320, so it is safe in a browser profile holding real games),
 `?continue=1` (the game opened last; checks that reopen a stored game use it), each of these and
 the two below skipping the start menu (T-677),
-`?synth=1&lines=500&trains=10000`, `?demandTest=1` (demand on T-005's hand-made network; both also
+`?acct=local|live|off` (which account server a localhost page uses, remembered; none by default,
+T-972), `?synth=1&lines=500&trains=10000`, `?demandTest=1` (demand on T-005's hand-made network; both also
 never autosave), `?backupMs=N` (wall ms between a slot's backups, T-744), `?demandWorkers=N`, `?perfOff=...` / `?perfTry=...` (CPU A/B switches,
 `src/perfFlags.ts`, notes/T-045.md).
 

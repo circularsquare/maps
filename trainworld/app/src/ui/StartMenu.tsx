@@ -10,6 +10,7 @@ import { choosing } from "../game/loading";
 import { listSlots, newGameName, type SaveSlot } from "../workers/saveFile";
 import type { GameChoice } from "../workers/clockClient";
 import { NewGameSheet } from "./NewGame";
+import { AccountButton, startAccountUi } from "./AccountPanel";
 import { SlotFacts, SlotThumb, SlotTitle } from "./SavesPanel";
 
 /** The game the URL chooses, or null for the menu: `?new=1` a new game that owns no slot (T-320),
@@ -48,6 +49,7 @@ function Menu({ slots, pick }: { slots: SaveSlot[]; pick: (c: GameChoice) => voi
   </div>;
   return <div class="start-menu" role="dialog" aria-modal="true" aria-labelledby="start-title">
     <div class="start-box">
+      <AccountButton kind="start" />
       <h1 id="start-title" class="big">Welcome to anitabuilder!</h1>
       <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>New game</button>
       {slots.length > 0 && <>
@@ -69,11 +71,14 @@ function Menu({ slots, pick }: { slots: SaveSlot[]; pick: (c: GameChoice) => voi
 export function showStartMenu(onPick: (c: GameChoice) => void) {
   choosing.value = true;
   document.documentElement.classList.add("choosing");
+  startAccountUi();
   const root = document.createElement("div");
   document.body.appendChild(root);
   // the map's keys and the hotkeys wait for the pick; Tab and Enter work inside the menu
   const block = (e: KeyboardEvent) => {
     if (e.target instanceof Node && root.contains(e.target)) return;
+    // the account panel (T-972) opens over the menu and takes the keys while it is open
+    if (document.querySelector("dialog.acct-panel[open]")) return;
     e.stopImmediatePropagation();
     e.preventDefault();
   };

@@ -1,0 +1,40 @@
+/* T-972, T-973: the account and leaderboard panels (AccountPanel.tsx, Leaderboard.tsx); the modal
+   itself is the saves panel's (.saves-panel). */
+.acct-panel { width: min(400px, calc(100vw - 40px)); }
+.acct-panel p { margin: 0 0 8px; }
+.acct-panel input:not([type="checkbox"]) { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--rule);
+  background: var(--bg); color: var(--text); }
+.acct-panel select { width: 100%; padding: 3px 4px; border: 1px solid var(--rule); background: var(--bg); color: var(--text); }
+.acct-form { display: flex; flex-direction: column; gap: 6px; }
+.acct-row { display: flex; gap: 6px; }
+.acct-row input { flex: 1; }
+.acct-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.acct-go { border-color: var(--accent); }
+.acct-sec { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--rule); }
+.acct-google { min-height: 32px; margin-bottom: 10px; }
+.acct-msg { margin: 8px 0 0; color: var(--muted); }
+.acct-warn { color: var(--bad); }
+.acct-legal { margin: 12px 0 0; }
+.acct-legal a { color: inherit; }
+/* the person icon's tab: the icon tabs give up a little so the row still fits the narrowest dock */
+.tabs:has(.acct-tab) .tab:not(.gear) { min-width: 27px; }
+/* the person icon on the start menu card, at its top right */
+.start-box { position: relative; }
+.acct-start { position: absolute; top: 10px; right: 10px; }
+.start-box:has(.acct-start) h1 { padding-right: 32px; }
+/* the leaderboards */
+.lb-pick { margin-bottom: 8px; }
+.lb-rows { list-style: none; margin: 0; padding: 0; }
+.lb-rows li { display: flex; gap: 10px; padding: 4px 0; border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
+.lb-rows li.me { font-weight: 700; }
+.lb-rows li.lb-gap { padding: 0; height: 6px; border-bottom-style: dashed; }
+.lb-rows li.lb-empty { border-bottom: 0; }
+.lb-rank { flex: none; width: 28px; text-align: right; color: var(--muted); }
+.lb-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-value { flex: none; }
+.lb-foot { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.lb-foot .acct-row { width: 100%; }
+.lb-foot p { margin: 0; }
+.lb-open { flex: none; color: var(--muted); }
+.lb-open svg { width: 14px; height: 14px; }
+.lb-open:hover { color: var(--text); }

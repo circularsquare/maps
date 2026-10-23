@@ -305,8 +305,12 @@ in one of seven cities can start from its real network [T-728, T-731; docs/ui-pa
 games"]. Each slot keeps two rotating backups, about 5 wall minutes apart, restorable
 as a new slot [T-744]. Beside each slot the page keeps its last final demand result, shown at once
 on reload when the network, packs and build match [T-328].
-Keeping old saves loading is a nicety: only Anita has saves. Sharing by link and accounts (on
-`shonei-server`) come later. [docs/architecture.md](docs/architecture.md) 11.
+Keeping old saves loading is a nicety: only Anita has saves. An optional account, noritetsu's on
+`shonei-server` (one sign-in for both pages), lists a signed-in player's normal games by points on
+a world leaderboard and one per city, each person once per board with their best game; a game that
+was ever a sandbox is never listed [T-972, T-973; docs/ui-panels.md "Account and leaderboards"].
+Games synced between devices and sharing by link come later (T-988 to T-990).
+[docs/architecture.md](docs/architecture.md) 11.
 
 ## 12. Open questions
 

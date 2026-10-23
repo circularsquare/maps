@@ -12,6 +12,7 @@ import { BuildTab, CitiesTab, LinesTab, MoneyTab, StationsTab } from "./tabs";
 import { SavesPanel, savesOpen } from "./SavesPanel";
 import { SettingsTab } from "./SettingsTab";
 import { HelpPanel, helpOpen } from "./HelpPanel";
+import { AccountButton, startAccountUi } from "./AccountPanel";
 import { Icon } from "./widgets";
 
 /** T-252: the tabs are icons, their names in the hover */
@@ -66,6 +67,7 @@ export function Dock() {
   const Pane = PANES[t];
   const lay = dockLayout.value;
   const ref = useRef<HTMLElement>(null);
+  useEffect(startAccountUi, []);
   // The map's canvas follows the dock's width.
   const scale = uiScale.value;
   useEffect(() => {
@@ -109,6 +111,7 @@ export function Dock() {
         <button class="tab gear save" data-tip="Saved games" aria-label="Saved games" onClick={() => (savesOpen.value = true)}>
           <Icon.save />
         </button>
+        <AccountButton kind="tab" />
         <button class={"tab gear help" + (helpOpen.value ? " on" : "")} data-tip="Controls" aria-label="Controls" aria-pressed={helpOpen.value} onClick={() => (helpOpen.value = !helpOpen.peek())}>
           <Icon.help />
         </button>

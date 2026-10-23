@@ -60,7 +60,9 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 - A row of icon tabs, names in their hovers: **Build** (a wrench), **Lines** (a route with stops),
   **Stations** (a platform under its canopy), **Money** (a bill and a coin), **Cities** (a skyline) [T-749], sharing the row's width
   equally [T-532] (each at least 34 px); at the row's right end
-  the saved games button (a floppy disk) [T-251], the **Controls** button (a question mark in a
+  the saved games button (a floppy disk) [T-251], the account button (a head and shoulders,
+  [Account and leaderboards](#account-and-leaderboards); only when accounts are on, the icon tabs
+  then at least 27 px) [T-972], the **Controls** button (a question mark in a
   circle, [Controls](#controls)) [T-908] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
   area like a tab. There is no City tab [T-220]; a browser that last had it open starts on Lines.
 - Under the tab content, the **inspector** ([ui-inspectors.md](ui-inspectors.md)). The tab area has
@@ -314,7 +316,8 @@ owned (prices in its hover), cars the lines need and spare cars [T-631]; the val
 ## Cities tab
 
 [T-550, T-749, `ui/Cities.tsx`] Whatever the Lines toggle says: a list of every region (the toggle's regions) with a built station, one row each, under a first
-row "All cities" that sums them [T-857] (its split bar weighs every region's trips, its rides, profit and points are the sums; hovers as a
+row "All cities" that sums them [T-857] (a trophy after its name opens the leaderboards when accounts
+are on, [Account and leaderboards](#account-and-leaderboards); its split bar weighs every region's trips, its rides, profit and points are the sums; hovers as a
 row's, over all cities; it is not clickable or sorted): its name
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
 same hover), its train rides per day and its profit a day (the column is headed Profit), fares less running trains and upkeep (yesterday's, today so far
@@ -390,12 +393,46 @@ registry centre and zoom, or over New York with none [T-310].
   line says so and the sheet stays.
 - The slot is named after the start ("Tokyo", "Tokyo sandbox", "World", then " 2" and on).
 
+## Account and leaderboards
+
+[T-972, T-973; `game/account.ts`, `ui/AccountPanel.tsx`, `ui/Leaderboard.tsx`; server routes in
+shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
+
+- **Optional.** Signing in is never needed to play. The account is noritetsu's (Google, or a
+  username and password with an optional recovery email), kept under noritetsu's storage key, so on
+  anita.garden one sign-in serves both pages. The server is market.anita.garden on anita.garden; on
+  localhost none unless `?acct=local` (a shonei-server on 127.0.0.1:8083) or `?acct=live` was given
+  once (remembered per browser, `?acct=off` forgets it). The icons show only once
+  `/noritetsu/config` answers with `trainworld`; with no server, or an older one, there is no icon
+  and no other request. Google's script loads when the account panel first opens.
+- **Account panel**: the account button (dock tab row, start menu) opens a centred modal like the
+  saves panel. Signed out: Google's button, then username and password with Log in, Create an
+  account and Forgot password; Privacy and Terms (`public/privacy.html`, `terms.html`). Signed in:
+  "Signed in as alice" (or with Google), for a password account the recovery email (a red line when
+  there is none) with Save email, Remove and Change password, then Sign out, Sign out everywhere
+  else and Delete account (asked first; the account's leaderboard entries and noritetsu rides go
+  too, games in this browser stay).
+- **Scores**: while signed in, each normal game in a browser slot sends its points (the past 24
+  game hours, the All cities row's figure) and its best 64 cities' points, when they change and at
+  most every 2 wall minutes (at once on the first send and when the page is hidden), joined or not.
+  A `?new=1` page or one whose slot is open elsewhere sends nothing. Each slot has a random game id
+  in localStorage (`trainworld.score-games.v1`). A game that turns sandbox sends that once and is
+  never listed again; one that was always a sandbox sends nothing. A slot deleted in this browser
+  takes its figures off (on the next signed-in load if signed out then).
+- **Leaderboards**: the trophy opens a centred modal: a picker (All cities, then the cities in this
+  game by points, then other cities with rows, by name), the top 50 (rank, name, points short, the
+  exact figure in the hover), the player's own row under them when lower, "Nobody here yet." on an
+  empty board. At the bottom: Sign in to be listed (opens the account panel), a name (at most 24
+  characters, the map games' name filter on the server) with Join, or Leave the leaderboards (the
+  name is kept); in a sandbox game also "Sandbox games are not listed". Each person shows once per
+  board, with their best game.
+
 ## Start menu
 
 [T-677; `ui/StartMenu.tsx`; the startup order in [architecture.md](architecture.md) "Loading and readiness"]
 
 - Every page load opens on a card over the bare map, in the loading card's look: "Welcome to
-  anitabuilder!", New game, then "Saved games", one button per browser slot, the most recent first, each with the
+  anitabuilder!" (the account button at its top right when accounts are on [T-972]), New game, then "Saved games", one button per browser slot, the most recent first, each with the
   saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash).
   With no saved game it is New game alone. The dock and top bar are taken out of the page and the
   map controls hidden, so the map fills the page; it shows the world from 60° S to 75° N covering
