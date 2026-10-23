@@ -446,6 +446,11 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   plan locks through `shared_lock.py` (re-entrant cross-process file locks, `write_atomic`), which
   register.py, market_zones.py, zones.py, zone_boxes.py and world_plan.py take too. A clean join
   ends with `freeze.py`.
+- `tools/aws/` (T-1064, rules and flow in docs/aws.md): long builds on a rented spot machine in a
+  friend's AWS account. `launch.py` (spot, one-time, tagged, a hard timer, presigned URLs into
+  `userdata/<kind>.sh`), `bucket.py` (our bucket only), `status.py` (what of ours exists; `cost
+  <run>`), `teardown.py` (terminate and sweep by our tags, then list), `guard.py` (a PreToolUse hook
+  refusing raw changing `aws` calls); `awslib.py` holds the region, tags and checks.
 - `freeze.py [--label L] | list | check [stamp] | build [stamp] [--tree] [--out]` (T-928): the data a
   production build copies, frozen in `data/frozen/<stamp>/` as hard links to data/packs plus copies
   of the four game data files, with a size and time manifest; `build` makes a publishable build of a

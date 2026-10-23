@@ -92,6 +92,8 @@ Briefs carry only the task; these hold for every agent.
 - **Pack rebuilds** back up to `data/work/pre-T###/` first; a backup goes, without asking, once a
   later state is checked clean (Anita, 2026-10-22). `data/work/res9/` stays.
 - **A refused permission check**: make the step safer, review, retry; don't wait for Anita.
+- **AWS** (a friend's account, shared free; long data builds only): read `docs/aws.md` before any
+  `aws` call, and create or destroy only through `tools/aws/*.py`.
 - **Calibration of new cities** (Anita, 2026-10-16): cities added through the world plan need no
   calibration beyond the pipeline's gate. No big calibration at the end either: it happens in
   parts, task by task (Anita, 2026-10-22).
