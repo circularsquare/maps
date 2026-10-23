@@ -227,7 +227,7 @@ drain evenly [T-284], each hour's share following when riders travel and trains 
 landing as rides end [T-736]; the economy runs at 100x real days [T-081]. Changing a line's trains moves no
 running train: added ones enter at a terminal, removed ones leave at one [T-206]. A new game starts
 with $6B in an empty New York [T-805]; double track costs a base of US$90M a km times a
-multiplier per elevation (US$27M at grade), priced against cheap-country metros such as Korea's
+multiplier per elevation (US$45M at grade), priced against cheap-country metros such as Korea's
 [T-805], a 20 m car costs US$2.5M, bought as a line's fleet grows and kept in the depot for any line
 when it shrinks [T-028, T-631], and running costs are US$4 a train-km plus US$2 a car-km [T-807]. Constructed
 track and stations cost upkeep whether trains run or not, US$30k a km of double track and US$50k a station a game

@@ -197,7 +197,7 @@ fn crossings_flat_separated_or_invalid() {
     let e = edge(&mut w, c, d, &[], 0).unwrap();
     assert_eq!(w.net.crossings.len(), 1);
     assert_eq!(w.net.crossings[0].kind, CrossKind::Flat(0));
-    let want = 4.0 * 27.0 + super::cost::crossing_cost(0, false);
+    let want = 4.0 * 45.0 + super::cost::crossing_cost(0, false);
     assert!((w.net.total_cost() - before - want).abs() < 1e-6);
     // Moved down a level (ramps on long legs): separated.
     let mut ed = w.net.edge_data(e).unwrap();

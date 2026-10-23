@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-1068 [P2] Track costs. Done 2026-10-23 (Anita): `LEVEL_MULT` ground 0.3 to 0.5, +1 0.8 to 1.0 (2 km double: ground $54M to $90M, +1 $144M to $180M); tests, Build tab copy and docs follow; upkeep unchanged.
 - T-1026 [P2] A realm shown without a long frame. Done 2026-10-23: the shade's cut in a worker, in pieces kept between cuts; `cityById` a Map; labels and outlines sent only as needed. A click 355-450 ms to no task over 50 ms; a 13-realm load's longest 1,426 to 230 ms. notes/T-1006.md "T-1026".
 
 - T-1056 [P2] Anita's walking rule, measured. Done 2026-10-23: 1-5% of rail trips walk further than the straight line (nearly all under 2 km); the rule would take rail -2.6% New York, -3.6% Tokyo, ceilings about -1 point (all pass). Build filed as T-1059. notes/T-1055.md.

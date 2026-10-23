@@ -79,8 +79,9 @@ pub const BRAKE: f64 = 0.9;
 /// $100-150M a tunnelled km with stations; Anita, 2026-10-21, undoing T-467's halving).
 pub const BASE_COST_PER_KM: f64 = 90.0;
 /// Multiplier per level, index `level + 3` (-3 .. +3). Anita, 2026-10-08 (+2 and +3 lowered from
-/// 1.4 and 2.0 the same day).
-pub const LEVEL_MULT: [f64; 7] = [1.2, 1.1, 1.0, 0.3, 0.8, 1.3, 1.8];
+/// 1.4 and 2.0 the same day). Ground and +1 raised from 0.3 and 0.8 for the building knockouts and
+/// road crossings the model does not compute (T-1068).
+pub const LEVEL_MULT: [f64; 7] = [1.2, 1.1, 1.0, 0.5, 1.0, 1.3, 1.8];
 pub const SINGLE_TRACK_COST: f64 = 0.6;
 /// High-speed track's price over double track at the same level (T-817, notes/T-817.md).
 pub const HSR_COST: f64 = 1.5;

@@ -520,13 +520,14 @@ Money is present, not tight, as in NIMBY Rails: construction, train purchase, op
 train-km and car-km, a player-set fare curve by distance. One price list worldwide. Track costs a **base of
 US$90M per route-km of double track** (single track 0.6x, high-speed track 1.5x, T-817; ramps at
 the dearer level) times a
-multiplier per level (Anita, 2026-10-08). The reference is a cheap-country metro such as Korea's
+multiplier per level (Anita, 2026-10-08; ground and +1 raised to 0.5 and 1.0 for the building
+knockouts and road crossings that are not computed, T-1068). The reference is a cheap-country metro such as Korea's
 or Spain's, about US$100-150M a tunnelled km with its stations (Anita, 2026-10-21, T-805):
 
 | Level | +3 | +2 | +1 | 0 | -1 | -2 | -3 |
 |---|---|---|---|---|---|---|---|
-| Multiplier | 1.8 | 1.3 | 0.8 | 0.3 | 1.0 | 1.1 | 1.2 |
-| US$M per km | 162 | 117 | 72 | 27 | 90 | 99 | 108 |
+| Multiplier | 1.8 | 1.3 | 1.0 | 0.5 | 1.0 | 1.1 | 1.2 |
+| US$M per km | 162 | 117 | 90 | 45 | 90 | 99 | 108 |
 
 In a **sandbox** game [T-728] every price, fare and cost is the same, but no edit is refused for
 money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-panels.md).

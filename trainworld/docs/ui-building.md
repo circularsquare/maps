@@ -96,7 +96,7 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   it starts, a bridge's top or a dip's bottom, where it ends, each once [T-707]),
   `map/trackTagRows.ts`; [ui-map.md](ui-map.md) "Hover tags on the network"). The multiplier sits
   on yellow above 1x, deeper up to 2.5x, plain at 1x and below. It is the level's multiplier
-  (6.4: 0.3x at ground, 0.8x at +1) and water's, averaged over the track priced, both pairs on
+  (6.4: 0.5x at ground, 1.0x at +1) and water's, averaged over the track priced, both pairs on
   quad, whose price is two double tracks' [T-711]. Where the segment could not be
   built ending at the cursor, the reason comes first, in red, and the cost line is left out. The
   build tools' tags are drawn over the bubbles' tags; the track tag shows above the pointer when
