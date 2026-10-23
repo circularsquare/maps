@@ -26,14 +26,18 @@ and 11 for it, with the gate (section 8) deciding ship or park. From the maps ro
     venv\Scripts\python.exe -I trainworld\pipeline\world_run.py join               the joint solve for gated rows
 
 `--rows a,b` or `--countries GB,PT` instead of `--limit`; `--jobs N` the cores in all (default 2,
-up to 12 on an overnight run Anita approves; one city at a time per 3 cores); `--port` its own Vite
+up to 12 on an overnight run Anita approves). A run builds `--workers` rows at once (default N),
+each step of a build on one thread, since a build step keeps about 0.9 of a core busy whatever
+threads it is given (T-966); the gate, the downloads and reads, and the join's steps, which run
+while the run's builds are idle, take all N. `--port` its own Vite
 for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR` when the tree's
 `sim/` may be mid-edit (section 4); the run prints, and reports as a problem, every file where that
 copy is not HEAD's `sim/`, saying which match the tree (a change not yet committed). Run it in the
 background and wait once for the process.
 
-- **Several countries at once** (T-786): a batch's regions use about 4 cores and its joint solve
-  all of them, so start one run per country with `--no-join` and its own `--port`, `--jobs` summed
+- **Several countries at once** (T-786): a run's builds use about 0.9 cores each (so about 0.9 x
+  `--jobs` while it builds, and 1 to 1.5 cores during its region's gate) and its joint solve all
+  of them, so start one run per country or region with `--no-join` and its own `--port`, `--jobs` summed
   within the cores allowed; each ends with its gated rows registered, status `gated`. When all
   have ended, one `join` (every gated row, or `--countries`) solves their groups on every core of
   its `--jobs`. A run claims its rows (a row another live run claimed is left out) and holds its
@@ -73,8 +77,9 @@ background and wait once for the process.
   --market`; the browser check needs them, and only the rows within reach of the new packs are
   worked out again, T-929), a snapshot of every registered pack taken first, and
   gated with `--browser --since` on the runner's own Vite, started after the registration (it
-  reads the registry once): every row's figures first, then one browser session for the region's
-  rows (T-928, `city-browser.mjs` with `ROWS`, 20 zones a page load). A pack that ships stays registered; one that parks is taken out again
+  reads the registry once): every row's figures first, then the region's rows split in plan order
+  over three browser sessions at once (T-928, T-965; `city-browser.mjs` with `ROWS`, 8 zones a page
+  load, a 180 s solve wait, a zone whose wait timed out tried once more in a fresh page). A pack that ships stays registered; one that parks is taken out again
   with its market pack, its market place left unused (place ids are positions), and its failing
   checks are its reason. The browser check serves the main tree's app/, so whoever runs a batch
   says who may rebuild app/ (its WASM) while it runs.
@@ -558,7 +563,9 @@ jobs are the proxy alone, a place's weight is capped before the cells are summed
 
 **Water outside the US (T-041).** `pipeline/osm_water.py` gives any city a water mask from
 OpenStreetMap: the sea from osmdata.openstreetmap.de's coastline polygons
-(`data/raw/osmdata/water-polygons-split-4326.zip`, downloaded once for the world and kept) and
+(`data/raw/osmdata/water-polygons-split-4326.zip`, downloaded once for the world and kept, and
+read through `water-polygons-split-4326.fgb` beside it, a copy with a spatial index made from the
+zip when missing or older than it, about 80 s, T-963; delete the .fgb to remake it) and
 inland water areas (`natural=water`, `landuse=reservoir`, `waterway=riverbank|dock|canal`; not
 intermittent, covered or dry basins) from the region's Geofabrik extract, read once per extract
 into `data/raw/osm/<extract>.water.fgb`. In a tier 0 config: `"water_source":

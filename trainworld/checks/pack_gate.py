@@ -11,8 +11,8 @@ From the maps root, with ..\\venv's Python. Each check prints PASS, WARN, FAIL o
 pack ships when nothing FAILs and parks otherwise. One summary line a pack, and the result as JSON
 in <out>/<id>.json (default ../artifacts/trainworld/pack_gate/), which the runner (T-540) reads.
 `--browser` runs checks/city-browser.mjs on a row made here (BASE: the Vite to use, default
-http://localhost:6125); with several ids, every pack's row in one browser session (T-928), after
-all the figures. Thresholds are THRESHOLDS below; how they were set, notes/T-538.md.
+http://localhost:6125); with several ids, the packs' rows split over BROWSER_SESSIONS (3) browser
+sessions at once (T-928, T-965), after all the figures. Thresholds are THRESHOLDS below; how they were set, notes/T-538.md.
 """
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "1")
@@ -813,40 +813,52 @@ def browser_row(city, header, a, f, reg, out_dir):
             {"line_from": how, "stations": len(line), "unreached": unreached})
 
 
+BROWSER_SESSIONS = int(os.environ.get("BROWSER_SESSIONS", 3))  # T-965: a zone's check slows with each zone open in its page
+
+
 def browser_run(rows, out_dir):
-    """city-browser.mjs on every row in one browser session (T-928): {id: its result}. Zones whose
-    only fault was a wait that timed out (the machine busy, T-788) are tried once more."""
+    """city-browser.mjs on the rows, split in plan order over BROWSER_SESSIONS sessions at once
+    (T-928, T-965): {id: its result}. city-browser.mjs tries a zone whose wait timed out once more
+    in a fresh page (the machine busy, T-788)."""
     maps = os.path.dirname(ROOT)
-    out, todo = {}, list(rows)
-    for attempt in range(2):
-        for r in todo:
-            if os.path.exists(r["json"]):
-                os.remove(r["json"])
-        lst = os.path.join(out_dir, f"browser-rows-{os.getpid()}.json")
+    for r in rows:
+        if os.path.exists(r["json"]):
+            os.remove(r["json"])
+    k = max(1, min(BROWSER_SESSIONS, len(rows)))
+    size = -(-len(rows) // k)
+    runs = []
+    for n in range(k):
+        part = rows[n * size:(n + 1) * size]
+        if not part:
+            continue
+        lst = os.path.join(out_dir, f"browser-rows-{os.getpid()}-{n}.json")
         with open(lst, "w", encoding="utf-8") as fh:
-            json.dump(todo, fh, ensure_ascii=False)
+            json.dump(part, fh, ensure_ascii=False)
         env = dict(os.environ, ROWS=lst, WORKERS=os.environ.get("WORKERS", "1"))
-        p = subprocess.run(["node", os.path.join(HERE, "city-browser.mjs")], cwd=maps, env=env,
-                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+        log = open(os.path.join(out_dir, f"browser-{os.getpid()}-{n}.log"), "w+", encoding="utf-8", errors="replace")
+        p = subprocess.Popen(["node", os.path.join(HERE, "city-browser.mjs")], cwd=maps, env=env,
+                             stdout=log, stderr=subprocess.STDOUT)
+        runs.append((part, lst, log, p))
+    out = {}
+    for part, lst, log, p in runs:
+        p.wait()
+        log.seek(0)
+        said = log.read()
+        log.close()
         os.remove(lst)
-        again = []
-        for r in todo:
+        os.remove(log.name)
+        for r in part:
             got = {}
             if os.path.exists(r["json"]):
                 with open(r["json"], encoding="utf-8") as fh:
                     got = json.load(fh)
             checks = got.get("checks", [])
-            res = {"pass": len(checks) == 8 and all(k["ok"] for k in checks), "checks": checks}
-            if attempt:
-                res["tries"] = 2
-            if not res["pass"] and all(k["ok"] for k in checks):  # died after passing checks (T-788)
-                res["error"] = (got.get("error") or p.stderr or p.stdout or "no result")[-400:]
-                if attempt == 0 and "TimeoutError" in res["error"]:
-                    again.append(r)
+            res = {"pass": len(checks) == 8 and all(c["ok"] for c in checks), "checks": checks}
+            if got.get("tries", 1) > 1:
+                res["tries"] = got["tries"]
+            if not res["pass"] and all(c["ok"] for c in checks):  # died after passing checks (T-788)
+                res["error"] = (got.get("error") or said or "no result")[-400:]
             out[r["id"]] = res
-        if not again:
-            break
-        todo = again
     return out
 
 
@@ -990,8 +1002,8 @@ def run(city, reg, logs, rates, opts):
 
 
 def run_many(ids, reg, logs, rates, opts):
-    """T-928, --browser on several packs: every pack's figures and test row, one browser session
-    for them all (checks/city-browser.mjs ROWS), then each verdict. Yields (id, result)."""
+    """T-928, --browser on several packs: every pack's figures and test row, then the browser
+    check for them all (browser_run), then each verdict. Yields (id, result)."""
     ready, rows, extra = {}, [], {}
     for city in ids:
         got = prepare(city, reg[city], logs)
@@ -1006,7 +1018,7 @@ def run_many(ids, reg, logs, rates, opts):
         ready[city] = (f, header)
     t0 = datetime.datetime.now()
     seen = browser_run(rows, opts["out"]) if rows else {}
-    print(f"browser: {len(rows)} packs in one session, {(datetime.datetime.now() - t0).total_seconds():.0f} s", flush=True)
+    print(f"browser: {len(rows)} packs in {min(BROWSER_SESSIONS, len(rows))} sessions, {(datetime.datetime.now() - t0).total_seconds():.0f} s", flush=True)
     for city in ids:
         got = ready[city]
         if isinstance(got, dict):

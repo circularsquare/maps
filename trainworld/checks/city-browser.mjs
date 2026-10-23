@@ -11,9 +11,10 @@
 //     ROWS=list.json node trainworld/checks/city-browser.mjs
 //
 // ROWS (T-928): a JSON list of {id, row, out, json} (a row file, the screenshot prefix, the result
-// file), every zone checked in turn in one sandbox game, ZONES_PER_PAGE (20) to a page load: each
+// file), every zone checked in turn in one sandbox game, ZONES_PER_PAGE (8) to a page load: each
 // zone's test line is removed after its checks, so the next zone's solve does not carry it; a zone
-// that throws closes the page and the rest go on in a fresh one. Exit 0 when every zone passes.
+// that throws closes the page and the rest go on in a fresh one, and a zone whose wait timed out
+// (the solve's SOLVE_WAIT_S, 180) is tried once more in it. Exit 0 when every zone passes.
 //
 // Needs a Vite dev server (BASE, default http://localhost:6125) and Playwright (PLAYWRIGHT_MODULE,
 // else `playwright`, else the npx cache). Screenshots artifacts/trainworld/<task>-<id>-homes.png and
@@ -232,7 +233,9 @@ async function playwright() {
   throw new Error('no Playwright: set PLAYWRIGHT_MODULE to a file URL of playwright/index.mjs');
 }
 
-const ZONES_PER_PAGE = 20; // every opened zone stays in the page, so a page's memory grows with each (T-928)
+// every opened zone stays in the page, so a page's memory and each solve grow with each (T-928, T-965)
+const ZONES_PER_PAGE = Number(process.env.ZONES_PER_PAGE ?? 8);
+const SOLVE_WAIT_MS = 1000 * Number(process.env.SOLVE_WAIT_S ?? 180);
 const multi = !!process.env.ROWS;
 let zones;
 if (multi) {
@@ -335,7 +338,7 @@ async function checkZone(page, errors, id, C, out, result) {
   await page.waitForFunction(([v, name]) => {
     const dv = window.twDemand.view(), l = window.tw.world.value.save.lines.find(l => l.name === name);
     return dv?.version > v && dv.round === 3 && dv.final && l && dv.lines.has(l.id);
-  }, [before, lineName], { timeout: 900000 });
+  }, [before, lineName], { timeout: SOLVE_WAIT_MS });
   const sums = await page.evaluate(([name, stops]) => {
     const dv = window.twDemand.view(), keys = [...dv.purposes.keys()], w = window.tw.world.value;
     const rel = (a, b) => Math.abs(a - b) / Math.max(1, Math.abs(b));
@@ -367,22 +370,28 @@ async function checkZone(page, errors, id, C, out, result) {
 
 let pass = true, cur = null, onPage = 0;
 for (const z of zones) {
-  const result = { city: z.id, checks: [] };
+  let result;
   const t = Date.now();
-  try {
-    if (!cur || onPage >= ZONES_PER_PAGE) {
+  // a wait that timed out (the machine busy, T-788) is tried once more in a fresh page
+  for (let tries = 1; tries <= 2; tries++) {
+    result = { city: z.id, checks: [], tries };
+    try {
+      if (!cur || onPage >= ZONES_PER_PAGE) {
+        if (cur) await cur.page.close().catch(() => {});
+        cur = await openPage();
+        onPage = 0;
+      }
+      onPage++;
+      await checkZone(cur.page, cur.errors, z.id, z.C, z.out, result);
+      break;
+    } catch (e) {
+      // the page may be half way through an edit: the next try or zone gets a fresh one
+      result.error = String(e?.stack ?? e).slice(0, 2000);
+      console.log('FAIL', z.id, result.error.split('\n')[0]);
       if (cur) await cur.page.close().catch(() => {});
-      cur = await openPage();
-      onPage = 0;
+      cur = null;
+      if (!(e?.name === 'TimeoutError' || /TimeoutError/.test(result.error))) break;
     }
-    onPage++;
-    await checkZone(cur.page, cur.errors, z.id, z.C, z.out, result);
-  } catch (e) {
-    // the page may be half way through an edit: the next zone gets a fresh one
-    result.error = String(e?.stack ?? e).slice(0, 2000);
-    console.log('FAIL', z.id, result.error.split('\n')[0]);
-    if (cur) await cur.page.close().catch(() => {});
-    cur = null;
   }
   result.seconds = Math.round((Date.now() - t) / 100) / 10;
   await writeFile(z.json, JSON.stringify(result, null, 2));

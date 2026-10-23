@@ -7,8 +7,9 @@ Two sources, both global, both (c) OpenStreetMap contributors, ODbL:
 
 - **Sea**: the coastline-derived water polygons of osmdata.openstreetmap.de
   (`water-polygons-split-4326.zip`, WGS84, split into tiles of at most 100 km). One 906 MB zip for
-  the whole world, downloaded once into data/raw/osmdata/ and kept; each city reads only the
-  polygons meeting its box (GDAL reads the shapefile inside the zip with a box filter). Inside the
+  the whole world, downloaded once into data/raw/osmdata/ and kept, and copied once (again when the
+  zip is newer) into `water-polygons-split-4326.fgb` beside it, a FlatGeobuf with a spatial index;
+  each city reads only the polygons meeting its box from that, in the zip's order. Inside the
   coastline is land; tidal rivers above the point where OSM closes the coastline are inland water.
 - **Inland water**: areas from the Geofabrik extract(s) of the city's region (the same .osm.pbf
   files routes.py and canada.py read): `natural=water` (lakes, ponds, rivers drawn as areas,
@@ -42,6 +43,8 @@ RAW = os.path.join(ROOT, "data", "raw")
 OSM = os.path.join(RAW, "osm")
 SEA_ZIP = os.path.join(RAW, "osmdata", "water-polygons-split-4326.zip")
 SEA_URL = "https://osmdata.openstreetmap.de/download/water-polygons-split-4326.zip"
+# the zip's polygons with a spatial index, each with its place in the zip (`zip_fid`); see sea_fgb
+SEA_FGB = os.path.join(RAW, "osmdata", "water-polygons-split-4326.fgb")
 OUT = os.path.join(ROOT, "data", "work", "osm_water")
 UA = {"User-Agent": "trainworld-pipeline/0.1 (rail game data build; python-requests)"}
 
@@ -80,17 +83,42 @@ def water_path(extract):
 
 # ---------------------------------------------------------------- sea
 
+def sea_fgb():
+    """SEA_FGB, made from the zip when missing or older than it (T-963): the zip's shapefile has no
+    spatial index, so a box read of it takes 6-12 s. One process makes it (the "sea" lock), in about
+    90 s and 3 GB of memory."""
+    zp = _download(SEA_URL, SEA_ZIP)
+
+    def fresh():
+        return os.path.exists(SEA_FGB) and os.path.getmtime(SEA_FGB) >= os.path.getmtime(zp)
+    if fresh():
+        return SEA_FGB
+    import pyogrio
+    import shared_lock
+    with shared_lock.held("sea", "osm_water: the coastline FlatGeobuf"):
+        if fresh():
+            return SEA_FGB
+        t0 = time.time()
+        with zipfile.ZipFile(zp) as z:
+            shp = next(n for n in z.namelist() if n.endswith(".shp"))
+        df = pyogrio.read_dataframe(f"/vsizip/{zp}/{shp}", columns=[])
+        df["zip_fid"] = np.arange(len(df), dtype=np.int64)
+        part = SEA_FGB[:-len(".fgb")] + f".{os.getpid()}.part.fgb"
+        pyogrio.write_dataframe(df, part, driver="FlatGeobuf", promote_to_multi=False, SPATIAL_INDEX="YES")
+        os.replace(part, SEA_FGB)
+        print(f"  {SEA_FGB}: {len(df):,} polygons from the zip in {time.time() - t0:.0f} s", flush=True)
+    return SEA_FGB
+
+
 def sea(bbox_ll):
-    """The coastline-derived water polygons meeting bbox_ll = (w, s, e, n), clipped to it."""
+    """The coastline-derived water polygons meeting bbox_ll = (w, s, e, n), clipped to it, in the
+    zip's order."""
     import pyogrio
     from shapely import box, make_valid
-    path = _download(SEA_URL, SEA_ZIP)
-    with zipfile.ZipFile(path) as z:
-        shp = next(n for n in z.namelist() if n.endswith(".shp"))
-    df = pyogrio.read_dataframe(f"/vsizip/{path}/{shp}", bbox=tuple(bbox_ll), columns=[])
+    df = pyogrio.read_dataframe(sea_fgb(), bbox=tuple(bbox_ll), columns=["zip_fid"])
     ext = box(*bbox_ll)
     out = []
-    for g in df.geometry.to_numpy():
+    for g in df.geometry.to_numpy()[np.argsort(df["zip_fid"].to_numpy(), kind="stable")]:
         g = make_valid(g).intersection(ext)
         if not g.is_empty:
             out.append(g)
@@ -258,7 +286,7 @@ def main(argv):
     if not argv or argv[0] not in ("read", "mask"):
         raise SystemExit(__doc__)
     if argv[0] == "read":
-        _download(SEA_URL, SEA_ZIP)
+        sea_fgb()
         for e in argv[1:]:
             read_inland(e)
         return

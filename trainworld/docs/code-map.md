@@ -314,7 +314,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   change), `t277-browser.mjs` (Toronto; not rerun since T-277), `city-browser.mjs <id>` (a tier 0
   city: open, boundary, the top bar's split, a water crossing refused, a test line to a final solve,
   T-364; a row from its table, or from the file in `ROW`, which `pack_gate.py` writes for any pack;
-  `ROWS`, a list of rows, checks them all in one sandbox game, 20 to a page load, T-928).
+  `ROWS`, a list of rows, checks them all in one sandbox game, `ZONES_PER_PAGE` (8) to a page load,
+  T-928; a zone whose wait timed out, the solve's `SOLVE_WAIT_S` 180, tried once more in a fresh page, T-965).
 - `pack_gate.py <id ...> [--all] [--browser] [--since snap] [--log id=build.log]` (Python, T-538):
   the ship-or-park gate for a finished pack, pipeline stage 6 (notes/T-535.md). Every check a
   number against `THRESHOLDS` at the top of the file: `read_pack.py`, OSM water points (polylabel on
@@ -324,7 +325,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   on land, `every_pack_everyday`'s rates (`TW_PACKS`; the runner's binary in `TW_EVERYDAY_EXE`,
   built once a run, T-931, else `cargo test`),
   the browser check on a row it makes (a test line along OSM stations near the centre, a water pair
-  from the mask; several packs' rows in one browser session, T-928), other packs unchanged against
+  from the mask; several packs' rows split over `BROWSER_SESSIONS` (3) browser sessions at once,
+  T-928, T-965), other packs unchanged against
   a `snapshot` (each other pack hashed once a run), and the plausibility figures (people
   against GHSL and the FUA, outline, jobs, commute, schools, hospitals, roads, T-460's OSM signal),
   plus a WARN outside the fleet's range (`pack_gate_fleet.json`, from `fleet`). JSON a pack in
@@ -375,7 +377,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   header. `show` prints the table.
 - `osm_water.py` is the water source for cities outside the US (OSM coastline sea plus Geofabrik
   inland water, T-041; `source(extracts)` for a config's `water_source`, `mask <id>` for a
-  water-only pack in `data/work/osm_water/`; docs/adding-a-city.md).
+  water-only pack in `data/work/osm_water/`; docs/adding-a-city.md). `sea` reads the coastline
+  polygons from `data/raw/osmdata/water-polygons-split-4326.fgb`, which `sea_fgb` makes from the zip
+  when missing or older than it (T-963).
 - `osm_features.py [extracts]` reads a Geofabrik extract's point and area features once into
   `data/raw/osm/<extract>.points.fgb`, `.stations.fgb` (the gate's, T-770) and `.areas.fgb`; `read()` gives tier0.py, canada.py and
   places.py the rows a GDAL read of the .osm.pbf would (T-363).
@@ -408,8 +412,10 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `plan_config.py`: a planned row's `CITIES` config, every field from the row or a rule, then its
   country module's `plan_hooks(row)` keys (T-555; `build_city.py` takes every planned row through
   it); `osm_units.py <id>`: its outline from the
-  OSM admin relations matching the row's units (T-537, docs/adding-a-city.md 3).
-- `world_run.py plan|run|join|status [--rows ..|--countries ..|--limit N] [--jobs N] [--no-join] [--root dir]`: the
+  OSM admin relations matching the row's units (T-537, docs/adding-a-city.md 3), cut along the
+  existing packs whose outline box meets it (`cut_packs`; the boxes cached in
+  `data/work/pack_boxes.json` by file size and time, T-963).
+- `world_run.py plan|run|join|status [--rows ..|--countries ..|--limit N] [--jobs N] [--workers W] [--no-join] [--root dir]`: the
   runner (T-540): world plan rows a region at a time through download, build, gate, registry,
   joint gravity, market and clean up, each step its own `python -I` process; status and times in
   each plan row, a report a batch in `../artifacts/trainworld/world_run/` (docs/adding-a-city.md

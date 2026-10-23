@@ -37,7 +37,12 @@ SEA_PAD = 0.25         # degrees around the plan's box over which the OSM sea is
 WET_MIN_KM2 = 0.1
 MIN_PART_KM2 = 0.05  # outline pieces smaller than this are slivers left by the coastline clip
 OSM = os.path.join(b.RAW, "osm")
-PACKS = os.path.join(b.ROOT, "data", "packs")  # the real packs, which a new outline is cut along
+# the real packs, which a new outline is cut along: from this file, not b.ROOT, which a scratch
+# tree's redirect has already moved by the time this module loads (world_run's Redirect.KEEP)
+PACKS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "packs")
+# each PACKS outline file's box, keyed by its name, size and time (T-963): cut_packs reads only the
+# outlines whose box meets the new one; in data/work, not beside the packs, so a scratch build writes its own
+BOXES = os.path.join(b.WORK, "pack_boxes.json")
 
 
 def latin(s):
@@ -348,12 +353,50 @@ def enclaves(row, sources, holes):
     return got
 
 
+def pack_boxes(paths):
+    """{path: the outline file's bounding box}, from BOXES where its size and time match the file's,
+    else read (and BOXES rewritten)."""
+    import shared_lock
+    try:
+        old = shared_lock.read_json(BOXES)
+    except (OSError, ValueError):
+        old = {}
+    out, fresh = {}, 0
+    for path in paths:
+        name, st = os.path.basename(path), os.stat(path)
+        e = old.get(name)
+        if e and e[0] == st.st_size and e[1] == st.st_mtime_ns:
+            out[path] = e[2]
+            continue
+        with open(path, encoding="utf-8") as f:
+            fc = json.load(f)
+        e = [st.st_size, st.st_mtime_ns, shapely.total_bounds([shape(ft["geometry"]) for ft in fc["features"]]).tolist()]
+        old[name], out[path], fresh = e, e[2], fresh + 1
+    gone = set(old) - {os.path.basename(p) for p in paths}
+    if fresh or gone:
+        for k in gone:
+            del old[k]
+        try:
+            os.makedirs(os.path.dirname(BOXES), exist_ok=True)
+            shared_lock.write_atomic(BOXES, json.dumps(old))
+        except OSError:
+            pass  # another build is writing it; the next build writes it again
+    return out
+
+
 def cut_packs(g, skip):
-    """g less every existing pack's outline it meets (packs never overlap)."""
+    """g less every existing pack's outline it meets (packs never overlap). Only outlines whose box
+    meets g's are read (T-963)."""
     import glob
+    gb = g.bounds
+    paths = glob.glob(os.path.join(PACKS, "*.boundary.geojson"))
+    boxes = pack_boxes(paths)
     cut = []
-    for path in glob.glob(os.path.join(PACKS, "*.boundary.geojson")):
+    for path in paths:
         if os.path.basename(path).split(".")[0] in skip:
+            continue
+        w, s, e, n = boxes[path]
+        if w > gb[2] or e < gb[0] or s > gb[3] or n < gb[1]:
             continue
         with open(path, encoding="utf-8") as f:
             fc = json.load(f)

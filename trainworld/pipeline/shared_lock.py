@@ -16,6 +16,7 @@ use, always taken in this order when nested:
     plan            world_plan.json and the plan extents
     made            data/work/world_run/made.json
     batch-<batch>   held by a run for its life: its claimed rows are live while it is held
+    sea             osm_water's coastline FlatGeobuf, while one process makes it from the zip
 """
 import contextlib
 import datetime

@@ -10,6 +10,8 @@ agent judgement (docs/adding-a-city.md "Running the pipeline"; design notes/T-53
     select   --rows a,b,c  (in plan order, any status but shipped or gated) | --countries GB,PT |
              --limit N (the next N planned or half-done rows in plan order; default 10)
     options  --jobs N         cores in all (default 2; 12 only on an overnight run Anita approves)
+             --workers W      rows built at once (default N, each step on one thread: a build
+                              step uses about 0.9 cores whatever threads it is given, T-966)
              --port P         the runner's own Vite for the gate's browser check (default 6360);
                               runners at once need a port each
              --no-browser     gate without the browser check
@@ -326,7 +328,7 @@ class Run:
         base = (self.root / "artifacts") if self.scratch else (MAPS / "artifacts/trainworld/world_run")
         self.logs = base / self.batch
         self.jobs = max(1, int(opts.get("jobs", 2)))
-        self.workers = int(opts.get("workers") or max(1, self.jobs // 3))
+        self.workers = int(opts.get("workers") or self.jobs)
         self.threads = max(1, self.jobs // self.workers)
         self.browser = not opts.get("no_browser") and not self.scratch
         self.port = int(opts.get("port", 6360))
@@ -391,8 +393,9 @@ class Run:
     # ---------------------------------------------------------------- one step
 
     def step(self, name, args, log, threads=None, env=None, quiet=False, big=False):
-        """(ok, seconds, the RESULT line's value or the log's last lines)."""
-        t = threads or self.threads
+        """(ok, seconds, the RESULT line's value or the log's last lines). A step outside a row's
+        build gets every core of --jobs: a run's regions go one at a time, so its builds are idle."""
+        t = threads or self.jobs
         e = dict(os.environ, OMP_NUM_THREADS=str(t), OPENBLAS_NUM_THREADS=str(t), MKL_NUM_THREADS=str(t),
                  RAYON_NUM_THREADS=str(t), CARGO_BUILD_JOBS=str(t), PYTHONIOENCODING="utf-8", **(env or {}))
         if self.scratch:
@@ -937,10 +940,10 @@ class Run:
         for s in order:
             mod, args = cmds[s]
             big = r["people"] > BIG_PEOPLE
-            ok, secs, tail = self.step(mod, args, f"{L}.{s}.log", big=big)
+            ok, secs, tail = self.step(mod, args, f"{L}.{s}.log", threads=self.threads, big=big)
             if not ok and not str(tail).startswith("stopped after"):
                 time.sleep(60)  # once more: most failures here are a download or a server's timeout
-                ok, secs2, tail = self.step(mod, args, f"{L}.{s}.log", big=big)
+                ok, secs2, tail = self.step(mod, args, f"{L}.{s}.log", threads=self.threads, big=big)
                 secs += secs2
             steps[s] = secs
             if not ok:
@@ -1200,9 +1203,9 @@ class Run:
                  ("merge_cells", g)]
         fail, bad = None, {}
         for mod, args in steps:
-            # nothing else runs during the join: the solve takes every core, and a big unit gets the long limit
+            # nothing else runs during the join: each step takes every core, and a big unit's solve the long limit
             solo = mod == "intercity"
-            ok, _, tail = self.step(mod, args, f"{tag}.log", threads=self.jobs if solo else None, big=solo and len(g) > 100)
+            ok, _, tail = self.step(mod, args, f"{tag}.log", big=solo and len(g) > 100)
             if not ok:
                 try:
                     self.check_sim()  # intercity builds from the sim copy
