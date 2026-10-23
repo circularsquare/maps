@@ -48,23 +48,21 @@ body {
   border: 2px solid color-mix(in srgb, var(--muted) 30%, transparent); border-top-color: var(--muted); vertical-align: 1px; animation: spin 1.2s linear infinite !important; }
 .spin.row-dot { margin-right: 6px; }
 .status-tag .spin { width: 10px; height: 10px; vertical-align: 0; }
-/* T-677: the bunny's train (ui/Spinner.tsx), the loading card's motion: wheels turn, the track runs
-   by, the train chugs, ears bob, steam puffs */
+/* T-677, T-1057: the bunny's train (ui/Spinner.tsx), the loading card's motion: wheels turn, the
+   track runs by, the car chugs, the ear tips bob */
 .bunny-train { display: block; width: 104px; height: auto; margin: 0 auto 4px; overflow: visible; }
 .bunny-train.small { display: inline-block; flex: none; width: 26px; margin: 0; vertical-align: -3px; }
 .bt-rail, .bt-ties { stroke: var(--muted); }
 .bt-body { fill: color-mix(in srgb, var(--accent) 72%, #fff); }
+.bt-roof { fill: color-mix(in srgb, var(--accent) 30%, #f4efec); }
 @keyframes bt-turn { to { transform: rotate(360deg); } }
 @keyframes bt-run { to { stroke-dashoffset: 12; } }
 @keyframes bt-chug { to { transform: translateY(-1.2px); } }
-@keyframes bt-bob { to { transform: rotate(-7deg); } }
-@keyframes bt-puff { from { transform: translate(0, 0) scale(.6); opacity: 1; } to { transform: translate(-14px, -10px) scale(1.4); opacity: 0; } }
+@keyframes bt-bob { to { transform: rotate(-6deg); } }
 .bt-wheel { transform-box: fill-box; transform-origin: center; animation: bt-turn .7s linear infinite !important; }
 .bt-ties { animation: bt-run .35s linear infinite !important; }
 .bt-train { animation: bt-chug .35s steps(2, jump-none) infinite alternate !important; }
 .bt-ears { transform-box: fill-box; transform-origin: 50% 100%; animation: bt-bob .7s ease-in-out infinite alternate !important; }
-.bt-puff { transform-box: fill-box; transform-origin: center; animation: bt-puff 1.4s ease-out infinite !important; }
-.bt-puff.late { animation-delay: -.7s !important; }
 @media (prefers-reduced-motion: reduce) { .bunny-train * { animation-play-state: paused !important; } }
 * { scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
 .muted { color: var(--muted); }

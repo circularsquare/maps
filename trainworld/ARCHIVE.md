@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-1057 [P3] The loading animation's train. Done 2026-10-23: a side-on passenger car (windows, two doors, roof, two bogies) in `ui/Spinner.tsx`; only the bunny's ear tips show over the roof, edge on, bobbing. No chimney, so no steam puffs. Shots in artifacts/trainworld/t1057/.
 - T-1052 [P1] The Europe pan's long tasks. Done 2026-10-23: a check artefact (Playwright serialised the map `jumpTo` returns, 2 s a jump); 47 such lines in 25 checks fixed. Real pans 0-6 tasks, longest 118 ms; a realm show is one 166-334 ms task (T-1026). notes/T-1052.md.
 - T-1047 [P2] Track counts as stations do. Done 2026-10-23: a zone built track crosses joins the opened list (a bubble, not a dot), shows its realm and opens bare for its figures; blueprint track shows realms only. No solve covers it: same figures, half the memory. notes/T-1047.md.
 - T-1051 [P2] Nothing over the map while a game loads. Done 2026-10-23: `mapBlank` (game/loading.ts: the start menu, or a game load until the clock is released) turns off the shade, circles, outlines, outside shade, loading grey and city bubbles; the end state arrives in one step. `checks/t975-realms.mjs`; shots in artifacts/trainworld/t1051/.
