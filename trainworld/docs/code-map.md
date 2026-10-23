@@ -314,7 +314,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   the extract's water cache) in the mask and OSM stations (`railway=station|halt`, from
   `data/work/<id>.stations.json`, which `stations <id> --extracts` writes from the extracts'
   `.stations.fgb`; older packs' cached Overpass answers in `data/raw/stations/`; no network, T-770)
-  on land, `every_pack_everyday`'s rates (`TW_PACKS`),
+  on land, `every_pack_everyday`'s rates (`TW_PACKS`; the runner's binary in `TW_EVERYDAY_EXE`,
+  built once a run, T-931, else `cargo test`),
   the browser check on a row it makes (a test line along OSM stations near the centre, a water pair
   from the mask; several packs' rows in one browser session, T-928), other packs unchanged against
   a `snapshot` (each other pack hashed once a run), and the plausibility figures (people
@@ -405,7 +406,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   runner (T-540): world plan rows a region at a time through download, build, gate, registry,
   joint gravity, market and clean up, each step its own `python -I` process; status and times in
   each plan row, a report a batch in `../artifacts/trainworld/world_run/` (docs/adding-a-city.md
-  "Running the pipeline"). `--root` points every step at a scratch tree (`Redirect`). `RunFault`
+  "Running the pipeline"). The gate's rates test is built once at a run's start (`build_everyday`,
+  T-931). `--root` points every step at a scratch tree (`Redirect`). `RunFault`
   stops a run without parking (`check_sim`, a gate with no result); `quiet_watch` dumps a silent step's stack.
   Several runs at once (T-786): `--no-join` then `join`; row claims, extract, packs, registry and
   plan locks through `shared_lock.py` (re-entrant cross-process file locks, `write_atomic`), which
@@ -449,7 +451,9 @@ the rest by `joint_gravity --packs`, T-463, T-539, a group spanning countries a 
 with `--fixed` neighbours, T-786; `--groups` lists them and their solve units),
 `market_zones.py [ids]` (each zone's market pack against the world field, then `market_pack`'s
 rows into app/src/game/market-rows.json and each zone's `country` into the registry through
-`market_rows.py`, which also drops the rows of unregistered zones, T-776; seconds a zone, T-377),
+`market_rows.py`, which also drops the rows of unregistered zones, T-776; seconds a zone, T-377;
+only the rows of zones whose market pack changed, came or went and of places within 250 km of
+them, from `data/work/market_rows.inputs.json`, `market_pack --only`; `--rows --full` for every row, T-929),
 `zones.py --trips`, `routes.py <ids>` for any pack whose zones changed (T-275), and last
 `merge_cells.py --all` (T-044; the chain runs on res-9 packs, so `merge_cells.py <ids> --undo`
 first), then `market_zones.py` for the zones outside the Northeast.

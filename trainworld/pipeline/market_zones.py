@@ -3,12 +3,15 @@
     python pipeline/market_zones.py [id ...]     every registered zone, or only those named
     python pipeline/market_zones.py --air        only every zone file's airports (T-378), then the rows
     python pipeline/market_zones.py --rows       only the rows (after a zone left the registry)
+    ... --full    (with any of these) every row worked out again, not only those a change reaches
 
-Writes `data/packs/<id>.market.json` per zone (seconds each), then runs the sim crate's `market_pack`
-over every zone's file, which adds up each zone's registry row and the trips between zones whose
-centres are under 250 km apart, and merges them into app/src/game/registry.json (`place`, `country`,
-`market.rule` / `market.places`) and the rows into app/src/game/market-rows.json (T-776,
-market_rows.py). A new zone needs only its own file and this merge.
+Writes `data/packs/<id>.market.json` per zone (seconds each), then runs the sim crate's `market_pack`,
+which adds up each zone's registry row and the trips between zones whose centres are under 250 km
+apart, and merges them into app/src/game/registry.json (`place`, `country`, `market.rule` /
+`market.places`) and the rows into app/src/game/market-rows.json (T-776, market_rows.py). A new zone
+needs only its own file and this merge. Only the rows a changed, new or gone zone file can reach are
+worked out again (T-929, `plan_rows`; data/work/market_rows.inputs.json records what each row was made
+from); a changed market_pack binary or market rule redoes them all.
 
 A zone's file holds its endpoint sites (its pack's cells in 600 m squares: the Northeast's straight
 from data/packs/intercity.json, the sites the joint commute gravity names, in the market frame; every
@@ -20,6 +23,7 @@ group's, from data/work/<group>.joint_commutes.json, T-463), and (T-378) the
 airports its people fly from with the zones each flies to directly.
 """
 import csv
+import hashlib
 import json
 import math
 import os
@@ -339,7 +343,8 @@ place_of_market = {}  # Northeast market id -> place
 groups = None         # Groups, set in main
 
 
-def cargo_bin(name, *args):
+def cargo_exe(name):
+    """The sim crate's binary `name`, built if its code changed."""
     env = dict(os.environ)
     env["PATH"] = os.path.join(os.path.expanduser("~"), ".cargo", "bin") + os.pathsep + env.get("PATH", "")
     env.setdefault("CARGO_BUILD_JOBS", "3")
@@ -348,10 +353,119 @@ def cargo_bin(name, *args):
     cargo = shutil.which("cargo", path=env["PATH"])
     if not cargo:
         sys.exit("cargo not found: install Rust (rustup) or put ~/.cargo/bin on PATH")
-    subprocess.run([cargo, "run", "--quiet", "--release", "--features", "demand", "--bin", name,
+    subprocess.run([cargo, "build", "--quiet", "--release", "--features", "demand", "--bin", name,
                     # TW_SIM_DIR: a copy of sim/ while the tree's own is mid-edit (as routes.py)
-                    "--manifest-path", os.path.join(os.environ.get("TW_SIM_DIR", str(ROOT / "sim")), "Cargo.toml"), "--", *args],
+                    "--manifest-path", os.path.join(os.environ.get("TW_SIM_DIR", str(ROOT / "sim")), "Cargo.toml")],
                    env=env, check=True)
+    return Path(env["CARGO_TARGET_DIR"]) / "release" / (name + (".exe" if os.name == "nt" else ""))
+
+
+# T-929: market_pack works out only the rows a change can reach. A row reads its own pack and the
+# packs of places whose centres are under near_km from it, so the rows redone are those of the
+# changed (or new, or gone) packs and of places near them, each from a composition of the places
+# near it. A changed pack's centre is estimated here, so both reach MARGIN_KM further.
+INPUTS = ROOT / "data/work/market_rows.inputs.json"
+MARGIN_KM = 25.0
+
+
+def _sha(b):
+    return hashlib.sha1(b).hexdigest()
+
+
+def _row_sha(row):
+    return _sha(json.dumps(row, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8"))
+
+
+def pack_centre(z):
+    """A market pack's place centre as the kernel works it out (sites weighted by people plus
+    attraction, on the sphere), to well under MARGIN_KM; None for a frame other than equirect."""
+    f = z["frame"]
+    if f.get("kind") != "equirect" or not z["sites"]:
+        return None
+    s = np.array([r[:4] for r in z["sites"]], np.float64)
+    _, to_ll = equirect(f["lon"], f["lat"])
+    lon, lat = to_ll(s[:, 0], s[:, 1])
+    u = ((2 * s[:, 2] + 2 * s[:, 3])[:, None] * W._unit(lon, lat)).sum(axis=0)
+    return float(np.degrees(np.arctan2(u[1], u[0]))), float(np.degrees(np.arctan2(u[2], math.hypot(u[0], u[1]))))
+
+
+def plan_rows(reg, have, code, full=False):
+    """(rows, compose, record): the zone ids whose rows to work out and the ids their composition
+    needs (both None: every row), and the inputs record to write once the rows are merged."""
+    rule = _sha(json.dumps([reg["market"]["rule"], reg["market"].get("frame")], sort_keys=True).encode("utf-8"))
+    old = json.loads(INPUTS.read_text(encoding="utf-8")) if INPUTS.exists() else None
+    was = old["zones"] if old else {}
+    cur = {}
+    for c in reg["cities"]:
+        p = PACKS / f"{c['id']}.market.json"
+        if "place" in c and p.exists():
+            s = p.stat()
+            st = [s.st_size, s.st_mtime_ns]
+            # a pack is only ever replaced (a new modified time), so the same size and time is the same file
+            w = was.get(c["id"], {})
+            cur[c["id"]] = (c["place"], w["pack"] if w.get("stat") == st else _sha(p.read_bytes()), st)
+    record = {"code": code, "rule": rule, "packs": cur}
+    if full or old is None or old.get("code") != code or old.get("rule") != rule:
+        return None, None, record
+    changed = [i for i, (pl, h, _) in cur.items()
+               if i not in was or was[i]["place"] != pl or was[i]["pack"] != h or i not in have or _row_sha(have[i]) != was[i]["row"]]
+    gone = [i for i in was if i not in cur]
+    at = {i: (was[i]["lon"], was[i]["lat"]) for i in cur if i not in changed}
+    to = {}
+    for i in changed:
+        z = json.loads((PACKS / f"{i}.market.json").read_text(encoding="utf-8"))
+        c = pack_centre(z)
+        if c is None:
+            print(f"market rows: {i}'s centre is not estimated here (its frame), so every row", flush=True)
+            return None, None, record
+        at[i] = c
+        to[i] = set(z.get("commute_place", []))
+    near = float(reg["market"]["rule"]["near_km"]) + MARGIN_KM
+    ids = list(cur)
+    lon, lat = np.array([at[i][0] for i in ids]), np.array([at[i][1] for i in ids])
+
+    def around(points):
+        hit = np.zeros(len(ids), bool)
+        for plon, plat in points:
+            hit |= W.km(plon, plat, lon, lat) < near
+        return {ids[k] for k in np.nonzero(hit)[0]}
+    moved = [at[i] for i in changed] + [(was[i]["lon"], was[i]["lat"]) for i in changed + gone if i in was]
+    rows = set(changed) | around(moved)
+    of_place = {pl: i for i, (pl, _, _) in cur.items()}
+    compose = around([at[i] for i in rows])
+    for i in rows:
+        places = to[i] if i in to else {int(p) for p, _ in have[i].get("commute", [])}
+        compose |= {of_place[p] for p in places if p in of_place}
+    print(f"market rows: {len(rows)} of {len(cur)} places' rows from {len(compose)} packs "
+          f"({len(changed)} changed, {len(gone)} gone)", flush=True)
+    return sorted(rows), sorted(compose | rows), record
+
+
+def unreached(want, compose, rows, record, reg):
+    """The check on plan_rows' estimate, with the rows' own centres: a wanted row missing, or a
+    registered place within near_km (and a km) of a new row left out of its composition."""
+    if any(i not in rows for i in want):
+        return [i for i in want if i not in rows]
+    ids = [i for i in record["packs"] if i in rows]
+    lon, lat = np.array([rows[i]["lon"] for i in ids]), np.array([rows[i]["lat"] for i in ids])
+    inside, near = set(compose) | set(want), float(reg["market"]["rule"]["near_km"]) + 1.0
+    out = set()
+    for i in want:
+        out |= {ids[k] for k in np.nonzero(W.km(rows[i]["lon"], rows[i]["lat"], lon, lat) < near)[0]} - inside
+    return sorted(out)
+
+
+def save_record(record, have):
+    """What the merged rows were made from (plan_rows reads it next time)."""
+    zones = {}
+    for i, (pl, h, st) in record.pop("packs").items():
+        r = have.get(i)
+        if r is not None:
+            zones[i] = {"place": pl, "pack": h, "stat": st, "row": _row_sha(r), "lon": r["lon"], "lat": r["lat"]}
+    record["zones"] = zones
+    part = INPUTS.with_suffix(".json.part")
+    part.write_text(json.dumps(record, separators=(",", ":")), encoding="utf-8")
+    os.replace(part, INPUTS)
 
 
 def assign_places(reg):
@@ -382,11 +496,16 @@ def main(ids=None):
 
 
 def _main(args):
+    global groups
     air_only = "--air" in args
     reg = shared_lock.read_json(REG)
     assign_places(reg)
     shared_lock.write_atomic(REG, json.dumps(reg, indent=2, ensure_ascii=False) + "\n")
-    air = airports_by_zone(reg)
+    if "--rows" in args:
+        ids = []  # T-540: only the market rows, after a zone left the registry
+    else:
+        ids = [a for a in args if not a.startswith("--")] or [c["id"] for c in reg["cities"]]
+    air = airports_by_zone(reg) if ids or air_only else {}
     for cid, a in air.items():
         print(f"{cid}: airports {' '.join(a['air_codes']) or 'none'}", flush=True)
     if air_only:
@@ -400,18 +519,14 @@ def _main(args):
                     out["sources"].append(AIR_SOURCE)
                 write(path, out)
         ids = []
-    elif "--rows" in args:
-        ids = []  # T-540: only the market rows, after a zone left the registry
-    else:
-        ids = [a for a in args if not a.startswith("--")] or [c["id"] for c in reg["cities"]]
-    F = Field() if ids else None
-    ne = Northeast()
-    global groups
-    groups = Groups(reg)
-    for c in reg["cities"]:
-        if c.get("market", -1) >= 0:
-            place_of_market[c["market"]] = c["place"]
-            zone_index[c["market"]] = zones_of(ne.sites[c["market"]])[1] if c["market"] in ne.sites else np.zeros(0, np.int64)
+    if ids:
+        F = Field()
+        ne = Northeast()
+        groups = Groups(reg)
+        for c in reg["cities"]:
+            if c.get("market", -1) >= 0:
+                place_of_market[c["market"]] = c["place"]
+                zone_index[c["market"]] = zones_of(ne.sites[c["market"]])[1] if c["market"] in ne.sites else np.zeros(0, np.int64)
     for cid in ids:
         out = build(cid, reg, F, ne, air)
         path = PACKS / f"{cid}.market.json"
@@ -420,14 +535,29 @@ def _main(args):
               f"{len(out['sites'])} sites, {len(out['zones'])} zones, {len(out.get('commute_trips', []))} commutes, "
               f"{path.stat().st_size / 1e6:.2f} MB", flush=True)
     rows = ROOT / "data/work/market_rows.json"
-    cargo_bin("market_pack", "--root", str(ROOT), "--out", str(rows))
-    got = json.loads(rows.read_text(encoding="utf-8"))
+    exe = cargo_exe("market_pack")
     reg = shared_lock.read_json(REG)
     have = market_rows.load(ROOT)
+    want, compose, record = plan_rows(reg, have, _sha(exe.read_bytes()), full="--full" in args)
+    if want is None:
+        subprocess.run([str(exe), "--root", str(ROOT), "--out", str(rows)], check=True)
+        got = json.loads(rows.read_text(encoding="utf-8"))
+    elif want:
+        only = ROOT / "data/work/market_rows.only.json"
+        only.write_text(json.dumps({"rows": want, "compose": compose}), encoding="utf-8")
+        subprocess.run([str(exe), "--root", str(ROOT), "--out", str(rows), "--only", str(only)], check=True)
+        got = json.loads(rows.read_text(encoding="utf-8"))
+        miss = unreached(want, compose, {**have, **got["rows"]}, record, reg)
+        if miss:
+            print(f"market rows: {miss} not in the composition, so every row", flush=True)
+            subprocess.run([str(exe), "--root", str(ROOT), "--out", str(rows)], check=True)
+            got = json.loads(rows.read_text(encoding="utf-8"))
+    else:
+        got = {"rows": {}}
     have.update(got["rows"])
     market_rows.with_countries(reg, have)
     shared_lock.write_atomic(REG, json.dumps(reg, indent=2, ensure_ascii=False) + "\n")
-    market_rows.save(reg, have, ROOT)
+    save_record(record, market_rows.save(reg, have, ROOT))
     print("registry rows:", ", ".join(sorted(got["rows"])))
 
 

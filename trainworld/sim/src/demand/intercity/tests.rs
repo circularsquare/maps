@@ -468,6 +468,23 @@ fn rows_json(packs: &[String]) -> String {
     serde_json::to_string(&world_rows(&composition(packs, None)).unwrap()).unwrap()
 }
 #[test]
+fn rows_of_some_places_are_those_of_every_place() {
+    // T-929: a place's row from its own pack and its near places' packs, to the bit
+    let packs = world_packs();
+    // (compared as written: serde_json's own parse can be a bit off in the last place)
+    let all = world_rows(&composition(&packs, None)).unwrap();
+    let only = |want: &[usize], packs: &[String]| {
+        let f: Vec<bool> = (0..5).map(|p| want.contains(&p)).collect();
+        serde_json::to_string(&world_rows_for(&composition(packs, None), Some(&f)).unwrap()).unwrap()
+    };
+    let row = |p: usize| serde_json::to_string(&vec![all.iter().find(|r| r.place == p).unwrap()]).unwrap();
+    assert_eq!(only(&[0], &[packs[0].clone(), packs[1].clone(), packs[3].clone()]), row(0));
+    assert_eq!(only(&[2], &[packs[2].clone()]), row(2));
+    assert_eq!(only(&[1], &packs), row(1));
+    // a near place left out changes the row (the composition must hold every one)
+    assert_ne!(only(&[0], &[packs[0].clone(), packs[3].clone()]), row(0));
+}
+#[test]
 fn world_rows_add_up_and_open_as_the_game_opens_them() {
     let packs = world_packs();
     let rows = rows_json(&packs);

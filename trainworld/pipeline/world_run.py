@@ -334,6 +334,7 @@ class Run:
         self.streak = (None, 0)  # T-775: the last park's reason, as compared, and how many in a row
         self.stopping = False
         self.vite = None
+        self.everyday = None  # the gate's rates test, built once a run (build_everyday)
         self.report = {"batch": self.batch, "root": str(self.root), "jobs": self.jobs, "rows": {}, "regions": []}
 
     # ---------------------------------------------------------------- files
@@ -602,6 +603,7 @@ class Run:
         self.sim_vs_head()
         gated = []
         try:
+            self.everyday = self.build_everyday()
             for k, reg in enumerate(regs, 1):
                 if self.stop_asked():
                     break
@@ -631,6 +633,9 @@ class Run:
             self.report["fault"] = str(x)
             self.stopping = True
             print(f"\nRUN FAULT, the run stops (no row parked for it): {x}", flush=True)
+        finally:
+            if self.everyday:
+                self.everyday.unlink(missing_ok=True)
         self.report["seconds"] = round(time.time() - t0)
         self.report["stopped"] = self.stop_asked()
         self.write_report()
@@ -757,6 +762,39 @@ class Run:
         if bad:
             raise RunFault("the TW_SIM_DIR copy cannot see this tree's packs: " + "; ".join(bad) +
                            " (junctions: docs/adding-a-city.md, Running the pipeline)")
+
+    def build_everyday(self):
+        """T-931: the gate's `every_pack_everyday` test binary, built once at the run's start from
+        the sim the gate reads (TW_SIM_DIR, else the tree's sim/) and copied beside the run's locks,
+        so every region's gate runs the same binary however sim/ changes meanwhile (a recompile
+        took 10-65 minutes). None if it does not build: each gate then builds the test itself."""
+        sim = Path(os.environ.get("TW_SIM_DIR") or self.root / "sim")
+        log = self.logs / "everyday-test.log"
+        e = dict(os.environ, CARGO_BUILD_JOBS=str(self.jobs))
+        e["PATH"] = os.path.join(os.path.expanduser("~"), ".cargo", "bin") + os.pathsep + e.get("PATH", "")
+        t0 = time.time()
+        cargo = shutil.which("cargo", path=e["PATH"])
+        if not cargo:
+            print("  cargo not found: each gate builds the rates test itself", flush=True)
+            return None
+        with open(log, "w", encoding="utf-8") as f:
+            p = subprocess.run([cargo, "test", "--release", "--features", "demand", "--lib", "--no-run",
+                                "--message-format", "json-render-diagnostics", "--manifest-path", str(sim / "Cargo.toml")],
+                               env=e, stdout=subprocess.PIPE, stderr=f, text=True, encoding="utf-8", errors="replace")
+        exe = None
+        for ln in p.stdout.splitlines():
+            if ln.startswith("{"):
+                m = json.loads(ln)
+                if m.get("reason") == "compiler-artifact" and m.get("executable") and m.get("profile", {}).get("test"):
+                    exe = m["executable"]
+        if p.returncode != 0 or not exe:
+            print(f"  the gate's rates test did not build ({log}); each gate builds it", flush=True)
+            return None
+        out = self.work / "world_run" / f"everyday-{self.batch}{Path(exe).suffix}"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(exe, out)
+        print(f"  the gate's rates test built from {sim} in {time.time() - t0:.0f} s", flush=True)
+        return out
 
     def on_ctrl_c(self, *_):
         if not self.stopping:
@@ -990,9 +1028,9 @@ class Run:
             for i in ids:
                 self.park(i, f"register failed: {str(tail)[-300:]}")
             return []
-        env = {}
+        env = {"TW_EVERYDAY_EXE": str(self.everyday)} if self.everyday else {}
         if self.browser:
-            env = {"BASE": self.start_vite(L), "WORKERS": "1"}
+            env.update(BASE=self.start_vite(L), WORKERS="1")
         args = ids + ["--since", str(snap), "--out", str(gd)] + (["--browser"] if self.browser else [])
         rows = {r["id"]: r for r in self.rows()}
         for i in ids:

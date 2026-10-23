@@ -653,9 +653,13 @@ def everyday_rates(ids):
 def _everyday_rates(ids):
     env = dict(os.environ, TW_PACKS=",".join(ids), CARGO_BUILD_JOBS=os.environ.get("CARGO_BUILD_JOBS", "1"))
     env["PATH"] = os.path.join(os.path.expanduser("~"), ".cargo", "bin") + os.pathsep + env["PATH"]
-    cmd = ["cargo", "test", "--release", "--features", "demand", "--lib", "--manifest-path",
-           # TW_SIM_DIR: a copy of sim/ while the tree's own is mid-edit (as routes.py)
-           os.path.join(os.environ.get("TW_SIM_DIR", os.path.join(ROOT, "sim")), "Cargo.toml"), "every_pack_everyday", "--", "--ignored", "--nocapture"]
+    exe = os.environ.get("TW_EVERYDAY_EXE")  # T-931: the runner's test binary, built once a run
+    if exe and os.path.exists(exe):
+        cmd = [exe, "every_pack_everyday", "--ignored", "--nocapture"]
+    else:
+        cmd = ["cargo", "test", "--release", "--features", "demand", "--lib", "--manifest-path",
+               # TW_SIM_DIR: a copy of sim/ while the tree's own is mid-edit (as routes.py)
+               os.path.join(os.environ.get("TW_SIM_DIR", os.path.join(ROOT, "sim")), "Cargo.toml"), "every_pack_everyday", "--", "--ignored", "--nocapture"]
     p = subprocess.run(cmd, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace")
     rates = {}
     for ln in p.stdout.splitlines():

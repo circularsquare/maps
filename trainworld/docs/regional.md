@@ -42,7 +42,8 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
 - **Market rows**: each place's row (`app/src/game/market-rows.json` by zone id, T-776: its zones' sums, centre, country, income,
   landmass, parking, its airports' drive times and direct flights, and its trips with every place
   under 250 km, every zone pair added up) gives any pair of places its trips and modes with no pack
-  open; `bin/market_pack.rs` writes them from every place's pack.
+  open; `bin/market_pack.rs` writes them from the places' packs (a row reads its own and those under
+  250 km, so only the rows near a changed pack are written again, T-929).
 - **Commutes between zones**: the cross-pack part of the joint commute gravity
   ([demand-kernel.md](demand-kernel.md) 4.4, [zones.md](zones.md) 4), solved over each group of packs whose
   outlines come within 50 km of each other (T-539), spread from 2 km gravity zones to the

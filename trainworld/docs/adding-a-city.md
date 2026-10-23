@@ -66,8 +66,12 @@ background and wait once for the process.
   every thread's stack into its log, again after each further 20 silent minutes, and the runner
   prints a line saying so. Status `built`.
 - **Gate**: a row within 50 km of a pack with a Northeast `market` id parks (T-580: the Northeast
-  is solved on its own sites). The rest are registered with their market packs (`register.py
-  --market`; the browser check needs them), a snapshot of every registered pack taken first, and
+  is solved on its own sites). The rates test the gate runs (`every_pack_everyday`) is built once at
+  the run's start from the sim the gate reads (`TW_SIM_DIR`, else the tree's sim/) and copied to
+  `data/work/world_run/everyday-<batch>.exe`, so a change to sim/ mid-run recompiles nothing
+  (T-931; if it does not build, each gate builds it as before). The rest are registered with their market packs (`register.py
+  --market`; the browser check needs them, and only the rows within reach of the new packs are
+  worked out again, T-929), a snapshot of every registered pack taken first, and
   gated with `--browser --since` on the runner's own Vite, started after the registration (it
   reads the registry once): every row's figures first, then one browser session for the region's
   rows (T-928, `city-browser.mjs` with `ROWS`, 20 zones a page load). A pack that ships stays registered; one that parks is taken out again
@@ -379,13 +383,18 @@ only if its census shows a pack line other than the default 0.4 (`pack_line_defa
 national pairs); the market takes the country from the world field. Then, in order:
 
     venv\Scripts\python.exe trainworld\pipeline\zones.py             (non-city zones: registers built ones)
-    venv\Scripts\python.exe trainworld\pipeline\market_zones.py <id> (its market pack and every row, seconds)
+    venv\Scripts\python.exe trainworld\pipeline\market_zones.py <id> (its market pack and the rows it reaches, seconds)
     venv\Scripts\python.exe trainworld\pipeline\zones.py --trips     (each zone's local trips, for the overview)
     venv\Scripts\python.exe trainworld\pipeline\routes.py <id>       (last: T-275's routes, for new packs)
 
 `market_zones.py` also gives the zone's pack its airports and direct flights (T-378, from
 OurAirports and the flights project's FR24 file, `maps/flights/routes_fr24.json`; a direct flight
 counts from either end, so other zones need no rerun; `--air` redoes only every pack's airports).
+It works out again only the rows of zones whose market pack changed, came or went and of every
+place within 250 km of one (T-929: a row reads only its own pack and those of places under
+`near_km`, so the result is the same to the bit as every row worked out again;
+`data/work/market_rows.inputs.json` records what each row was made from, and a changed
+`market_pack` binary or market rule redoes them all). `--rows --full` redoes every row.
 
 A zone in the Northeast's joint commute gravity (`market` set) runs `intercity.py` instead of
 `market_zones.py`: it rewrites every Northeast pack's gravity factors (the joint solve), so

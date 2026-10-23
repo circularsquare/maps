@@ -743,6 +743,17 @@ impl Market {
     fn n_sites(&self) -> usize {
         self.cell_zone.len()
     }
+    /// Each open place's run of zones (zones are laid out place by place): (place, first, end).
+    fn place_spans(&self) -> Vec<(usize, usize, usize)> {
+        let mut spans: Vec<(usize, usize, usize)> = vec![];
+        for (z, zz) in self.zones.iter().enumerate() {
+            match spans.last_mut() {
+                Some(s) if s.0 == zz.place => s.2 = z + 1,
+                _ => spans.push((zz.place, z, z + 1)),
+            }
+        }
+        spans
+    }
     /// Every global zone's position (x, y in the output frame) and place: open ones their own,
     /// others their place's centre.
     fn write_zone_xy(&self, out: &mut [f64]) {
@@ -859,6 +870,11 @@ fn compose(c: ComposeIn) -> Result<Built, String> {
 }
 
 fn build(b: Built) -> Result<Market, String> {
+    build_for(b, None)
+}
+/// `build`, with the near totals added up only for pairs of places with an end in `near_for`
+/// (indexed by place), and only those places' commutes (T-929: the rows of those places alone).
+fn build_for(b: Built, near_for: Option<&[bool]>) -> Result<Market, String> {
     let Built { mut zones, rule, out, places: np, rows, world, closed, legacy_commutes } = b;
     let out_frame = match &out {
         Some(f) => Some(make_frame(f)?),
@@ -1282,16 +1298,25 @@ fn build(b: Built) -> Result<Market, String> {
     }
     // ---- near totals added up from the zones (no rows: the pipeline, a closed world)
     if !from_rows {
-        let nz = m.zones.len();
-        for a in 0..nz {
-            for b in a + 1..nz {
-                let (za, zb) = (&m.zones[a], &m.zones[b]);
-                if !m.pr(za.place, zb.place).near {
+        // near places' zone pairs only (T-929): each pair of places sums its zone pairs (a, b > a)
+        // in the order a scan of every zone pair would, so the totals are the same to the bit
+        let spans = m.place_spans();
+        for (k, &(p, lo, hi)) in spans.iter().enumerate() {
+            for &(q, qlo, qhi) in &spans[k..] {
+                if !m.pr(p, q).near || near_for.is_some_and(|f| !f[p] && !f[q]) {
                     continue;
                 }
-                let t = m.eachway(za, zb);
-                if t >= m.rule.min_trips {
-                    *m.near.entry((za.place.min(zb.place) as u32, za.place.max(zb.place) as u32)).or_default() += t;
+                let mut sum = None;
+                for a in lo..hi {
+                    for b in qlo.max(a + 1)..qhi {
+                        let t = m.eachway(&m.zones[a], &m.zones[b]);
+                        if t >= m.rule.min_trips {
+                            *sum.get_or_insert(0f64) += t;
+                        }
+                    }
+                }
+                if let Some(t) = sum {
+                    m.near.insert((p as u32, q as u32), t);
                 }
             }
         }
@@ -1307,7 +1332,7 @@ fn build(b: Built) -> Result<Market, String> {
             }
         }
     } else {
-        for zin in &zones {
+        for zin in zones.iter().filter(|z| near_for.is_none_or(|f| f[z.place])) {
             let nc = zin.commute_trips.len();
             if zin.commute_home.len() != nc || zin.commute_place.len() != nc || zin.commute_work.len() != nc {
                 return Err("commute arrays disagree".into());
@@ -1447,13 +1472,19 @@ impl MarketPacks {
     }
 }
 fn parse(header: &str) -> Result<Market, String> {
+    build(parse_built(header)?)
+}
+fn parse_built(header: &str) -> Result<Built, String> {
+    // a composition as bin/market_pack.rs writes it, straight into its struct (no Value between)
+    if header.starts_with("{\"world\":") {
+        return compose(serde_json::from_str(header).map_err(|e| e.to_string())?);
+    }
     let v: serde_json::Value = serde_json::from_str(header).map_err(|e| e.to_string())?;
-    let built = if v.get("sites").is_some() {
-        single_pack(serde_json::from_value(v).map_err(|e| e.to_string())?)?
+    if v.get("sites").is_some() {
+        single_pack(serde_json::from_value(v).map_err(|e| e.to_string())?)
     } else {
-        compose(serde_json::from_value(v).map_err(|e| e.to_string())?)?
-    };
-    build(built)
+        compose(serde_json::from_value(v).map_err(|e| e.to_string())?)
+    }
 }
 /// T-276: the market's zones as the game built them from an old single pack's sites, for the
 /// joint commute gravity (`bin/joint_gravity.rs`): each site's zone, the first site of each zone,
@@ -1478,24 +1509,32 @@ pub fn market_site_zones(header: &str) -> Result<(Vec<u32>, Vec<u32>, Vec<(i32, 
 /// T-377: the registry rows of every place a composition holds (the world given without rows):
 /// what `bin/market_pack.rs` writes into the registry.
 pub fn world_rows(header: &str) -> Result<Vec<Row>, String> {
-    let m = parse(header)?;
+    world_rows_for(header, None)
+}
+/// T-929: `world_rows` of the places in `only` (by place) alone. Each is the same to the bit as in
+/// a composition of every place, given the composition holds every place under `near_km` of it and
+/// every place it commutes to (a missing commute place is an error; a missing near one is not).
+pub fn world_rows_for(header: &str, only: Option<&[bool]>) -> Result<Vec<Row>, String> {
+    let b = parse_built(header)?;
+    if only.is_some_and(|f| f.len() != b.places) {
+        return Err("rows wanted for a place list of another length".into());
+    }
+    let m = build_for(b, only)?;
     if m.from_rows {
         return Err("the composition carries rows already".into());
     }
     let np = m.places.len();
+    let mut commutes: Vec<BTreeMap<u32, f64>> = vec![BTreeMap::new(); np];
+    for &(h, w, n) in &m.commutes {
+        *commutes[m.zones[h as usize].place].entry(m.gid_place[w as usize]).or_default() += n as f64;
+    }
     let mut out = vec![];
-    for p in 0..np {
+    for (p, commute) in commutes.into_iter().enumerate() {
         let pl = &m.places[p];
-        if !pl.open {
+        if !pl.open || only.is_some_and(|f| !f[p]) {
             continue;
         }
         let near: Vec<(u32, f64)> = (0..np).filter(|&j| m.places[j].has && m.pr(p, j).near).filter_map(|j| m.near.get(&(p.min(j) as u32, p.max(j) as u32)).map(|&t| (j as u32, t))).collect();
-        let mut commute: BTreeMap<u32, f64> = BTreeMap::new();
-        for &(h, w, n) in &m.commutes {
-            if m.zones[h as usize].place == p {
-                *commute.entry(m.gid_place[w as usize]).or_default() += n as f64;
-            }
-        }
         out.push(Row {
             place: p,
             zone: pl.zone.clone(),
@@ -1523,28 +1562,41 @@ pub fn world_rows(header: &str) -> Result<Vec<Row>, String> {
 /// that pair's trips over `min_km` (zone centre to zone centre; T-299's comparison), both from
 /// the zones when both places are open.
 pub fn place_trips(header: &str, pairs: &[(usize, usize)], min_km: f64) -> Result<Vec<(f64, f64)>, String> {
-    let m = parse(header)?;
-    Ok(pairs
-        .iter()
-        .map(|&(i, j)| {
-            let all = m.place_eachway(i, j);
-            let mut over = 0.;
-            if m.places[i].open && m.places[j].open {
-                for (a, za) in m.zones.iter().enumerate().filter(|(_, z)| z.place == i) {
-                    for (b, zb) in m.zones.iter().enumerate().filter(|(_, z)| z.place == j) {
-                        if (i == j && b <= a) || m.zone_km(za, zb) < min_km {
-                            continue;
-                        }
-                        let t = m.eachway(za, zb);
-                        if t >= m.rule.min_trips {
-                            over += t;
+    Ok(parse(header)?.place_trips(pairs, min_km))
+}
+impl Market {
+    fn place_trips(&self, pairs: &[(usize, usize)], min_km: f64) -> Vec<(f64, f64)> {
+        let spans = self.place_spans();
+        let span = |p: usize| spans.iter().find(|s| s.0 == p).map_or(0..0, |s| s.1..s.2);
+        pairs
+            .iter()
+            .map(|&(i, j)| {
+                let all = self.place_eachway(i, j);
+                let mut over = 0.;
+                if self.places[i].open && self.places[j].open {
+                    for a in span(i) {
+                        for b in span(j) {
+                            let (za, zb) = (&self.zones[a], &self.zones[b]);
+                            if (i == j && b <= a) || self.zone_km(za, zb) < min_km {
+                                continue;
+                            }
+                            let t = self.eachway(za, zb);
+                            if t >= self.rule.min_trips {
+                                over += t;
+                            }
                         }
                     }
                 }
-            }
-            (all, over)
-        })
-        .collect())
+                (all, over)
+            })
+            .collect()
+    }
+}
+impl IntercityApi {
+    /// `place_trips` on this market, with no second parse (`bin/market_pack.rs`).
+    pub fn place_trips(&self, pairs: &[(usize, usize)], min_km: f64) -> Vec<(f64, f64)> {
+        self.m.place_trips(pairs, min_km)
+    }
 }
 
 /// T-373: the 2 km zones of a group's sites (`city`, whose `jobs` are attractions) with their
