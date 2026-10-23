@@ -1261,7 +1261,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         const stored = await readStored(key);
         if (!stored) throw new Error("That save slot no longer exists.");
         const decoded = await decodeSave(stored.bytes);
-        if (!isNortheastSave(decoded.header)) throw new Error("This save is for another region.");
+        if (!isNortheastSave(decoded.header)) throw new Error("This save is for another world.");
         switching = true;
         const converted = await loadGame(stored.bytes, "file").finally(() => { switching = false; });
         activeLease?.release();
@@ -1311,7 +1311,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   const h: SaveHeader = fresh
     ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, ledger: [], hours: [], regions: undefined, stars: undefined, notes: undefined, ...newGameHeader(fresh) }
     : decoded.header;
-  if (!isNortheastSave(h)) throw new Error("This save is for another region.");
+  if (!isNortheastSave(h)) throw new Error("This save is for another world.");
   let net = track, converted = false;
   if (trackFrameKind(track) !== NEW_GAME_FRAME.kind) {
     const c = TrackApi.convert_save_frame(track, frameKindNumber(NEW_GAME_FRAME.kind));
@@ -1354,7 +1354,7 @@ function newGameHeader(spec?: NewGameSpec): Pick<SaveHeader, "mode" | "start" | 
   return { mode: spec?.mode ?? "normal", start: spec?.start, opened: spec?.start ? [spec.start] : [] };
 }
 function sendOpened() {
-  send({ kind: "opened", zones: opened ? [...opened] : null });
+  send({ kind: "opened", zones: opened ? [...opened] : null, start: startZone });
 }
 function setNewGame(spec?: NewGameSpec) {
   const g = newGameHeader(spec);
@@ -1727,7 +1727,8 @@ onmessage = (e: MessageEvent<ToClock>) => {
     // outside the queue, so the fetch starts at once; a mask is installed between messages
     const midLat = (msg.s + msg.n) / 2, wide = (msg.e - msg.w) * 111_320 * Math.cos(midLat * Math.PI / 180) > VIEW_SPAN_M;
     const cx = (msg.w + msg.e) / 2;
-    viewZones = (wide ? zonesTouching(cx, midLat, cx, midLat, VIEW_MARGIN_M) : zonesTouching(msg.w, msg.s, msg.e, msg.n, VIEW_MARGIN_M)).map((c) => c.id);
+    const skip = new Set(msg.skip);
+    viewZones = (wide ? zonesTouching(cx, midLat, cx, midLat, VIEW_MARGIN_M) : zonesTouching(msg.w, msg.s, msg.e, msg.n, VIEW_MARGIN_M)).map((c) => c.id).filter((id) => !skip.has(id));
     for (const id of viewZones) if (!masksIn.has(id)) void fetchWater(id).catch(() => {});
     void viewMasks();
     return;

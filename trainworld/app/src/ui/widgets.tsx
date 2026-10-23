@@ -53,6 +53,7 @@ export const Icon = {
   // T-332: the Lines and Stations tabs' scope toggle (the viewed place, the whole world)
   pin: () => <svg viewBox="0 0 16 16"><path d="M8 14.5s4.5-4.2 4.5-7.6a4.5 4.5 0 00-9 0c0 3.4 4.5 7.6 4.5 7.6z" /><circle cx="8" cy="6.8" r="1.6" /></svg>,
   globe: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" /><path d="M2 8h12M8 2c-2.2 2-2.2 10 0 12M8 2c2.2 2 2.2 10 0 12" /></svg>,
+  eye: () => <svg viewBox="0 0 16 16"><path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z" /><circle cx="8" cy="8" r="2" /></svg>,
   // T-374: how commuters reach a station: on foot, or by a ride (car, bus, bike or lift)
   walk: () => <svg viewBox="0 0 16 16"><circle cx="9.5" cy="2.8" r="1.3" /><path d="M9.5 5.2l-1.8 3 2.3 2.3v3.7M7.7 8.2L5.3 9.4M9.6 6.4l2.4 1.8M7.7 8.2L6.2 14" /></svg>,
   ride: () => <svg viewBox="0 0 16 16"><path d="M1.8 11.2V8.4l1.6-3.4h9.2l1.6 3.4v2.8zM1.8 8.4h12.4" /><circle cx="4.8" cy="11.4" r="1.3" class="bg" /><circle cx="11.2" cy="11.4" r="1.3" class="bg" /></svg>,

@@ -8,7 +8,7 @@
 
 A freeze is `data/frozen/<stamp>/`: `packs/` holds hard links to every file a production build
 copies from data/packs (vite.config.ts: each registered zone's five files, the market pack,
-outlines.json, real/*.save, realgraph/*.rgr and its index.json), `game/` copies of the four data
+outlines.json, realms.geojson, real/*.save, realgraph/*.rgr and its index.json), `game/` copies of the four data
 files the app bundles (registry.json, market-rows.json, zone-aliases.json, zone-names.json), and
 `manifest.json` each file's size and modified time. A hard link keeps a file as it was because every
 pipeline writer replaces a file (a .part renamed over it) and none rewrites one in place; `check`
@@ -55,6 +55,8 @@ def build_files(root):
     reg = shared_lock.read_json(Path(root) / "app/src/game/registry.json")
     want = [c["id"] + x for c in reg["cities"] for x in ZONE_FILES] + [reg["market"]["pack"] + ".json", "outlines.json"]
     have = [f for f in want if (packs / f).is_file()]
+    if (packs / "realms.geojson").is_file():  # T-975: optional, as the app shows every zone without it
+        have.append("realms.geojson")
     missing = [f for f in want if f not in have]
     for sub, ok in (("real", lambda n: n.endswith(".save")), ("realgraph", lambda n: n.endswith(".rgr") or n == "index.json")):
         if (packs / sub).is_dir():

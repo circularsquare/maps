@@ -104,7 +104,7 @@ export function CityInspector({ id }: { id: string }) {
             <TripsBar
               label="To other places"
               tip="Visits, shopping and business, not commutes. Both directions are counted."
-              what={`inter-region trips to and from ${city.name}`}
+              what={`inter-city trips to and from ${city.name}`}
               parts={[
                 { name: "Train", n: interRail, cls: "seg-train" },
                 { name: "Car or plane", n: Math.max(0, interAll - interRail), cls: "seg-drive" },
@@ -122,7 +122,7 @@ export function CityInspector({ id }: { id: string }) {
               ))}
             </ul>
           )}
-          {!places.length && elsewhere <= 0 && <p class="muted small">No inter-region trips are modelled here yet.</p>}
+          {!places.length && elsewhere <= 0 && <p class="muted small">No inter-city trips are modelled here yet.</p>}
           {!drawn && <p class="muted small">Not drawn under this purpose filter.</p>}
         </>
       )}

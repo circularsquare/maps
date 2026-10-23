@@ -72,8 +72,12 @@ about 0.5M people, 1M in China, built as packs by the same pipeline, `kind: "zon
 space**, where no trip starts or ends. Only zones a
 built station reaches join the demand solves; a zone viewed or beside the view that no station
 reaches opens **bare** in one auxiliary worker, its figures, bubbles and clicks from a no-rail pass
-that equals a solve's to the bit, so panning never re-solves [T-325]. Every zone loads for the view
-on a pan [T-801]. Zones that share no rider
+that equals a solve's to the bit, so panning never re-solves [T-325]. Every zone of a shown
+**realm** loads for the view on a pan [T-801]: zones group into country-sized realms (China in
+seven), and a realm is shown while the game has a station in it, starts in it, or the player showed
+it this session; the others are one dark fill with a button and nothing of theirs is drawn or
+loaded for viewing, while demand, the market and money are the same whatever is shown [T-975,
+[docs/zones.md](docs/zones.md) "Realms"]. Zones that share no rider
 (Toronto and the Northeast, London, Paris) fall into separate **clusters**, each solved on its own
 lines; an edit re-solves only the clusters it touched, the others keep their figures [T-326,
 [docs/demand-runtime.md](docs/demand-runtime.md) "Clusters"].
@@ -161,7 +165,7 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
 [docs/regional.md](docs/regional.md).
 
 - **5.1 The market**: total all-mode trips first, then the network earns rail's share. One
-  **world market** with every zone in it [T-362, T-377]. **Inter-region trips** (visits, business
+  **world market** with every zone in it [T-362, T-377]. **Inter-city trips** (visits, business
   and leisure of 25 km and more): a ground curve fitted to NHTS 2017 and a long-haul tail (T-376),
   both scaled by GDP per head and shared over the world field (Kontur people with country,
   income and landmass), so trips to places with no zone leave the map; a border factor between
@@ -180,7 +184,7 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
   way [T-916], plus parking or a drop-off at the station; the walk is a true 6 km/h walk. Its
   constants are fitted on New York (T-372). The car pays parking by the destination's job density with a free-parking share, and
   congestion charges in Manhattan and central London (T-380, docs/demand-mode.md 4.3). The regional layer's commutes between zones ride at the home end and
-  its inter-region trips at both ends, the far end a drop-off only, through the same
+  its inter-city trips at both ends, the far end a drop-off only, through the same
   `access_options`, so a lone station in a new city draws riders from beyond walking reach. A
   station's inspector splits the commuters who live nearby into those who walked and those who
   drove, and the trip explorer shows a ride access as a drive [T-374]; the split covers
@@ -262,7 +266,7 @@ no explanatory notes [T-253]. **Everything drawn that encodes a number has a hov
 game's own tag, never a browser tooltip [T-194, T-210]. No CSS transitions; trains are the only
 motion. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
 count the past 24 hours from the boarding account, while the map's demand views (Homes and Destinations bubbles
-coloured by mode share, line widths by riders, station use circles, inter-region trips) show demand's
+coloured by mode share, line widths by riders, station use circles, inter-city trips) show demand's
 whole day: the average day by default, or a weekday or a weekend day [T-464]. On the map, lines sharing track are drawn over each other,
 stations are dots from zoom 9 and their true platforms from 14, and trains fill like a gauge with
 their riders.

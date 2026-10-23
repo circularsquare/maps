@@ -466,7 +466,7 @@ notes/T-420.md has the tables.
   Netherlands, Japan) the ride is cheaper and shorter than here. The work or activity end walks
   only; errands of 5 km or more ride like commutes, though a lift or taxi to the shops may be
   rarer than one to work. The regional layer (T-373, docs/regional.md 5.3) uses the same rides:
-  commutes between zones at the home end, inter-region trips at both ends with only a drop-off
+  commutes between zones at the home end, inter-city trips at both ends with only a drop-off
   (`d_drop`) at the far end, which stands for a taxi or a pick-up; where taxis are cheap and common
   (much of Asia and Latin America) the far end is easier than this, and where long trips end at a
   rental car or a long walk it is harder. The

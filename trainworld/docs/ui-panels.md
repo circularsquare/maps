@@ -47,7 +47,7 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   too); no `title` attribute is written anywhere, and one met under the pointer (MapLibre's
   controls) is turned into the tag first.
 - **Every drawn quantity has a tooltip** (Anita) [T-194, notes/T-194.md]: bubbles,
-  inter-region and city bubbles, line widths and track colours, trains, stations, crowds, demand
+  inter-city and city bubbles, line widths and track colours, trains, stations, crowds, demand
   circles, capacity tags, and in the panels the purpose split, pie and timing bars, the trip
   explorer's bars, the complex map's lines and transfer curves, the junction map's routes and the
   train's load bar.
@@ -379,7 +379,7 @@ registry centre and zoom, or over New York with none [T-310].
   means. A sandbox is the normal game with nothing refused for money and the cash hidden; demand,
   fares, running costs, line money, the Money tab, points and stars are worked out as in normal.
 - **Start in**: New York, London, Paris, Tokyo and Toronto (`START_CITIES`, a fixed list), one lit
-  at most, a second click unlighting it; then "Find a city or region", which lists up to eight of
+  at most, a second click unlighting it; then "Find a city", which lists up to eight of
   the registry's cities and zones whose name has a word starting with the text (case and accents
   ignored, so "hague" finds Rotterdam [The Hague]), biggest by local trips first, each with its
   country (the registry's code, named by the browser). Up and down move, Enter or a click picks;
@@ -475,7 +475,7 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   it before the status tag's text; a small ring turning (`.spin`, 1.2 s a turn, 8 px, grey) in place
   of each line's crowding dot per demand level in the line panel until the line has figures
   (while no final result is shown or a solve is updating it; not after a failure or over dead
-  space), and in a clicked bubble's panel in place of each line that waited ("Trip purposes", the far ends, "Inter-region trips") while they load.
+  space), and in a clicked bubble's panel in place of each line that waited ("Trip purposes", the far ends, "Inter-city trips") while they load.
   Nothing else animates. The figures behind it are the solve's estimates, or the last
   final result kept beside the save when there is one (T-328; the split's hover ends "(from the
   last time this game was open)").

@@ -93,7 +93,7 @@ export function SettingsTab() {
           Map labels
         </Check>
         <Check checked={d.realNetwork} onChange={(v) => setDisplay("realNetwork", v)}>
-          <span data-tip="Real railways drawn faintly under yours, for reference: main lines, other passenger lines and metros. Appears once you zoom in to a region, brighter while track snaps to it.">Real network</span>
+          <span data-tip="Real railways drawn faintly under yours, for reference: main lines, other passenger lines and metros. It appears once you zoom in, brighter while track snaps to it.">Real network</span>
         </Check>
       </div>
       {/* T-213: station demand circles and one circle per complex are in the Stations tab */}

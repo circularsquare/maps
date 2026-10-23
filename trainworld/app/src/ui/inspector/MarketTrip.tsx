@@ -1,4 +1,4 @@
-// T-866: the trip explorer between zones. The inter-region trips between a bubble selection (or the
+// T-866: the trip explorer between zones. The inter-city trips between a bubble selection (or the
 // trip tool's start) and a far place or 6 km area, as the regional market chooses them
 // (game/trip.ts `MarketPeriod`): every area pair between the two ends added up by its trips. The
 // train's routes are the market's own through the period's strategies; the walks or drives to the
@@ -24,7 +24,7 @@ const roundTo = (shares: number[], n: number | null, pooled = -1) => (n ? wholeP
 const NO_RAIL: Record<string, string> = {
   farClosed: "The far end is not open in this game, so trains to it are not worked out.",
   noRail: "No train serves both ends in this period.",
-  unmatched: "No homes of the regional model are here.",
+  unmatched: "No homes of the inter-city model are here.",
 };
 
 /** The far end as the panel names it. */
@@ -157,15 +157,15 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   // the routes too small to list take a leftover rider last
   const routeShares = roundTo([...top, Math.max(0, 1 - top.reduce((s, x) => s + x, 0))], riders, top.length);
   // a single home's share of its area's trips is a fraction of one
-  const trips = all >= 0.5 ? `${count(all)} inter-region trips` : "Under one inter-region trip";
-  const of = all >= 0.5 ? `the ${count(all)} inter-region trips ${day} between the two ends` : `the inter-region trips ${day} between the two ends`;
+  const trips = all >= 0.5 ? `${count(all)} inter-city trips` : "Under one inter-city trip";
+  const of = all >= 0.5 ? `the ${count(all)} inter-city trips ${day} between the two ends` : `the inter-city trips ${day} between the two ends`;
   const main = t.routes[0];
   const tm = main ? stationTimes(main) : null;
   const fare = main ? (t.baseFarePerceived + main.legs.reduce((s, l) => s + l.farePerceived, 0)) / t.minPerUsd : 0;
-  const repTip = `Inter-region trips in the ${period.toLowerCase()}: every pair of 6 km areas between the two ends, added up by its trips${tripPeriod.value === null ? "; the period with most of them" : ""}`;
+  const repTip = `Inter-city trips in the ${period.toLowerCase()}: every pair of 6 km areas between the two ends, added up by its trips${tripPeriod.value === null ? "; the period with most of them" : ""}`;
   return (
     <>
-      <p class="muted small" data-tip={`${all >= 0.5 ? exact(all) : num(all)} inter-region trips ${day} between the two ends, both ways: visits, business and leisure trips of 25 km and more. Commutes between the zones are left out.`}>
+      <p class="muted small" data-tip={`${all >= 0.5 ? exact(all) : num(all)} inter-city trips ${day} between the two ends, both ways: visits, business and leisure trips of 25 km and more. Commutes between the zones are left out.`}>
         {trips} {day}, {roughDistance(1000 * (t.km || 0))} apart
       </p>
       {shares.length > 0 && (
@@ -184,7 +184,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
           </ul>
         </div>
       )}
-      <div class="h">By train<span class="right muted small" data-tip={repTip}>Inter-region, {period.toLowerCase()}</span></div>
+      <div class="h">By train<span class="right muted small" data-tip={repTip}>Inter-city, {period.toLowerCase()}</span></div>
       {t.why || !main || !tm ? <p class="muted">{NO_RAIL[t.why || "noRail"]}</p> : (
         <>
           <Legs t={t} r={main} />
@@ -225,7 +225,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
           const r = roundTo([r0, 1 - r0], x ? Math.round(x.trips) || null : null)[0];
           return (
             <li class={i === q ? "on" : ""} onClick={() => (tripPeriod.value = i)}
-              data-tip={x ? `${p.name}: ${exact(x.trips)} inter-region trips, train ${pct(r)}` : p.name}>
+              data-tip={x ? `${p.name}: ${exact(x.trips)} inter-city trips, train ${pct(r)}` : p.name}>
               <span class="grow">{p.name}</span>
               <span class="trip-hbar"><i class="hbar" style={{ width: `${Math.round(60 * r)}px`, background: MODE_COLOURS.train }} /></span>
               <span class="val w-num">{x ? pct(r) : ""}</span>

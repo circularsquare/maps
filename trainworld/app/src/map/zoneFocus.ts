@@ -13,13 +13,17 @@ import { viewCentre } from "../game/listScope";
 import { nearbyZones, placeAt, ZONE_LOAD_ZOOM, zonesInBox, zonesLoaded, zonesLoadForView } from "../game/zones";
 import { OVERVIEW_ZOOM } from "./intercityView";
 import { shiftAt, viewShift } from "../game/localTime";
+import { realmAt, shownRealms, zoneShown } from "../game/realms";
 
 export function startZoneFocus(map: MlMap) {
   const place = (moved: boolean) => {
     const c = map.getCenter();
     const k = selection.peek()?.kind;
-    // T-318: over dead space the focus stays where it was and nothing is viewed (no name, no load)
-    const here = placeAt(c.lng, c.lat);
+    // T-318: over dead space the focus stays where it was and nothing is viewed (no name, no load);
+    // T-975: a realm not shown is dead space too, asked before any boundary there is fetched
+    const r = shownRealms.peek() && realmAt(c.lng, c.lat);
+    const at = r && !shownRealms.peek()!.has(r) ? null : placeAt(c.lng, c.lat);
+    const here = at && zoneShown(at) ? at : null;
     batch(() => {
       viewCentre.value = [c.lng, c.lat]; // T-332: the Lines and Stations lists sort by it
       if (here && moved && k !== "commuters" && k !== "station" && k !== "trip") activeCity.value = here;
@@ -33,7 +37,7 @@ export function startZoneFocus(map: MlMap) {
     let next: string[] = [];
     if (display.peek().commuters && map.getZoom() > OVERVIEW_ZOOM) {
       const c = map.getCenter(), b = map.getBounds();
-      next = zonesInBox(focus, c.lng, c.lat, b.getWest(), b.getSouth(), b.getEast(), b.getNorth());
+      next = zonesInBox(focus, c.lng, c.lat, b.getWest(), b.getSouth(), b.getEast(), b.getNorth(), zoneShown);
     }
     const prev = nearbyZones.peek();
     if (next.length !== prev.length || next.some((id, i) => id !== prev[i])) nearbyZones.value = next;
@@ -51,6 +55,11 @@ export function startZoneFocus(map: MlMap) {
   // set elsewhere (search, a nearby bubble's click), recompute the nearby zones
   effect(() => {
     if (zonesLoaded.value) place(true);
+  });
+  // T-975: a realm shown or hidden places the view again
+  let realms = shownRealms.peek();
+  effect(() => {
+    if (shownRealms.value !== realms) { realms = shownRealms.peek(); place(true); }
   });
   effect(() => {
     display.value.commuters;

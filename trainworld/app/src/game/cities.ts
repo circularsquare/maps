@@ -20,9 +20,10 @@ export type CityId = string;
  * (pipeline/zone_boxes.py, T-302), so where a zone is is known without fetching its files. */
 /** T-377: `place`, the zone's place in the world market (every zone has one; `market` is the
  * Northeast joint commute gravity's, -1 outside it). Its market row is not here but in
- * market-rows.json, fetched once a market pack opens (T-776, `marketWorld`). `country`: ISO 3166 alpha-2. */
+ * market-rows.json, fetched once a market pack opens (T-776, `marketWorld`). `country`: ISO 3166 alpha-2.
+ * `realm`: the realm it shows with (T-975, game/realms.ts; pipeline/realms.py). */
 /** `name` is the shown name and `aliases` every other name search finds it by (T-825, game/zoneNames.ts). */
-export interface City { id: CityId; name: string; aliases: string[]; kind?: "city" | "zone"; country?: string; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; utcOffset?: number; market: number; place: number; localTrips?: number; box?: [number, number, number, number] }
+export interface City { id: CityId; name: string; aliases: string[]; kind?: "city" | "zone"; country?: string; realm?: string; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; utcOffset?: number; market: number; place: number; localTrips?: number; box?: [number, number, number, number] }
 interface Registry {
   world: string;
   /** T-309: the UTC offset the game clock counts world time in (game/localTime.ts) */

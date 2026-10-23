@@ -168,7 +168,7 @@ def summary(info):
           + (f", data from freeze {fz['stamp']} ({fz['label'] or 'no label'})" if fz else ", data from data/packs at build time") + "\n")
     groups = {}
     for r, s in info["data"]:
-        k = r.split("/")[0] + "/" if "/" in r else next((e for e in [".boundary.geojson", ".places.json", ".market.json", ".bin"] if r.endswith(e)), r if r in ("outlines.json", "intercity.json") else ".json")
+        k = r.split("/")[0] + "/" if "/" in r else next((e for e in [".boundary.geojson", ".places.json", ".market.json", ".bin"] if r.endswith(e)), r if r in ("outlines.json", "realms.geojson", "intercity.json") else ".json")
         g = groups.setdefault(k, [0, 0, 0])
         g[0] += 1
         g[1] += s

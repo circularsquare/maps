@@ -29,6 +29,7 @@ import { computed, effect, signal } from "@preact/signals";
 import { zoneLoads } from "../game/loading";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES } from "../game/cities";
+import { shownRealms, zoneShown } from "../game/realms";
 import { lngLatToPack, packToLngLat } from "../game/coords";
 import { marketGroup, tripOpenedFrom } from "../game/trip";
 import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type Corridors, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
@@ -228,7 +229,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const lm = localModes(v);
       const localBar = lm ? modeBar(lm.train, lm.walk, lm.drive) : "";
       const inter = !own || isOwn ? total(c.place) : t;
-      const interLine = `${count(inter.all)} inter-region trips ${day} to and from ${c.name}`;
+      const interLine = `${count(inter.all)} inter-city trips ${day} to and from ${c.name}`;
       const interBar = modeBar(inter.rail, 0, Math.max(0, inter.all - inter.rail));
       const tag = !own
         ? [localLine, localBar, interLine, interBar]
@@ -237,7 +238,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
           : [`${count(t.all)} trips ${day} between ${own.name} and ${c.name}`, interBar, "Click to explore these trips"];
       return { ...t, city: c, isOwn, tag, unbuilt: !own && opened !== null && !opened.has(c.id) };
     // T-421: a zone still loading has its bar instead
-    }).filter((p) => p.isOwn || (p.all > 0 && !(!own && zoneLoads.peek().has(p.city.id))));
+    // T-975: the overview leaves out the realms not shown; a selection's far ends draw everywhere
+    }).filter((p) => p.isOwn || (p.all > 0 && (own ? true : zoneShown(p.city.id) && !zoneLoads.peek().has(p.city.id))));
     points.sort((a, b) => b.all - a.all);
     const zoom = map.getZoom();
     const pxPerUnit = 512 * 2 ** zoom / EARTH_C;
@@ -320,7 +322,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const r = unscaledRadius * INTERCITY_RADIUS_SCALE;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, edgeOf(1, z.rail, z.all)], i * DISC);
       const place = z.name || "here";
-      tags.push([`${count(z.all)} inter-region trips ${shownDayPhrase.peek()} ${verb} ${place}`, modeBar(z.rail, 0, Math.max(0, z.all - z.rail)), "Click to explore these trips"]);
+      tags.push([`${count(z.all)} inter-city trips ${shownDayPhrase.peek()} ${verb} ${place}`, modeBar(z.rail, 0, Math.max(0, z.all - z.rail)), "Click to explore these trips"]);
       if (regional) label(`${z.name} · ${count(z.all)} trips`);
     });
     const far = points.map((z) => { const p = lngLatToPack(z.ll[0], z.ll[1]); return { place: z.place, gid: z.gid, at: [p.x, p.y] as [number, number] }; });
@@ -338,6 +340,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     purposeFilter.value;
     anchorVersion.value; // the discs are measured from the draw anchor (T-317)
     loadingZones.value;
+    shownRealms.value;
     render();
   });
   map.on("zoom", render);

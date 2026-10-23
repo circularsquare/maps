@@ -2,7 +2,7 @@
 
 # 5. Demand: the regional layer
 
-The regional layer carries what crosses zones or goes far [T-117, T-276, T-377]: **inter-region
+The regional layer carries what crosses zones or goes far [T-117, T-276, T-377]: **inter-city
 trips** (visits, business, leisure, 25 km and more) within and between every zone of the world,
 and **commutes between zones**. The design and its reasons are in [zones.md](zones.md) and
 notes/T-362.md; the kernel's side (`sim/src/demand/intercity.rs`: compositions, served pairs,
@@ -18,7 +18,7 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   grouped into zones of 6 km, each zone's in its own pack, `data/packs/<id>.market.json`
   (`pipeline/market_zones.py`; the Northeast's in the market frame, every other zone's in its own
   pack frame).
-- **Inter-region trips** (T-376's rule, constants in `pipeline/longhaul.json`, copied into the
+- **Inter-city trips** (T-376's rule, constants in `pipeline/longhaul.json`, copied into the
   registry's `market.rule`): a resident makes two kinds of departures a weekday, each shared by its
   own normaliser over the **world field** (T-375: Kontur H3 cells with country, GDP per head and
   landmass), never over the zone list, so adding a zone moves only the trips that went where it now
@@ -69,7 +69,7 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
 - **Elsewhere**: a place's or a 6 km zone's departures less its trips with every place are its
   trips with places that have no zone; shown, never solved, their modes not modelled.
 
-**Mode choice.** Inter-region trips choose rail, car and plane in one logit at 3 perceived minutes
+**Mode choice.** Inter-city trips choose rail, car and plane in one logit at 3 perceived minutes
 a dollar [T-378], damped by the trip's length as the local walking share is
 ([demand-mode.md](demand-mode.md) 4.3, T-495): 0.10 x sqrt(60 / T) per perceived minute, T the
 car's perceived minutes over the zone pair's distance, even across a sea where no car goes (so
@@ -108,7 +108,7 @@ OurAirports' large and medium airports with scheduled service within 150 km of i
 at least 1M passengers a year, the biggest eight; a route of 50,000 passengers a year is a direct
 flight (both from the flights project's FR24 file, read offline only). Commutes between zones
 choose rail or car as local commutes do, on the ratio curve of their costs (demand-mode.md 4.3,
-T-918; no walking between zones), the drive weighted 1.33 plus the work end's parking; their loads are the work purpose's [T-158]. Inter-region trips' period
+T-918; no walking between zones), the drive weighted 1.33 plus the work end's parking; their loads are the work purpose's [T-158]. Inter-city trips' period
 shares are 20/35/25/15/5%; their weekend factor 1.58.
 
 Not modelled yet: coach, ferries other than the two car crossings, induced travel, routed drives
@@ -124,7 +124,7 @@ affiliation bypasses the player's local network.
 
 **Seeing them** [T-118]: the local views cannot show them (a Philadelphia bubble's trips end in New
 York, off screen), so a selected bubble set and a selected station list them by place and draw
-them by far zone ([ui-demand-views.md](ui-demand-views.md) "Inter-region trips"). A selection of
+them by far zone ([ui-demand-views.md](ui-demand-views.md) "Inter-city trips"). A selection of
 local cells is mapped to the market through its 600 m squares: the sites were built from the same
 cells, so each selected cell falls in one site's square; a square counts the selected share of its
 people (homes) or attraction (destinations), and a site's share of its zone's departures is its
@@ -145,7 +145,7 @@ station a cost that depends on the end:
 - **Commutes between zones**: at the home end, the cheaper of parking at the station and a
   drop-off (`d_drop` 10), when the two zones' centres are 5 km or more apart (`ride_min_km`); the
   work end walks.
-- **Inter-region trips**: at the home end as a commute's; at the far end a drop-off only
+- **Inter-city trips**: at the home end as a commute's; at the far end a drop-off only
   (`d_drop`), since the traveller has no car there.
 
 A site's access at each end is its walks (the mean of their weights at 0.10 a minute) nested

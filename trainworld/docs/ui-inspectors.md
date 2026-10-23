@@ -9,7 +9,7 @@ selected leaves it blank, with no text. An empty click on the map or Escape clea
 One component per kind in `ui/inspector/` (`others.tsx` holds station, train, track, junction and
 cell or zone). The track and junction inspectors are in [ui-building.md](ui-building.md) and
 [track-and-service.md](track-and-service.md) 6.2; a bubble selection's and a city's (their
-inter-region trips by train, car and plane) in [ui-demand-views.md](ui-demand-views.md).
+inter-city trips by train, car and plane) in [ui-demand-views.md](ui-demand-views.md).
 
 ## The past 24 hours, not a forecast
 
@@ -168,7 +168,7 @@ purpose filter the purpose drawn is ringed in the bar.
   the end" for a balloon; its average speed is once round over the lap (a balloon's less its
   turning); its trains steppers move by 2 and the count's hover says how many run each way; the
   stop count under the name counts the first stop once.
-- A line's riders count every line actually boarded, transfers included; inter-region trips show
+- A line's riders count every line actually boarded, transfers included; inter-city trips show
   only in its purpose split [T-182].
 
 ## Trains
@@ -246,7 +246,7 @@ purpose filter the purpose drawn is ringed in the bar.
   - **Commuters**: "Live nearby" and "Work nearby" (commuters a day who live, or work, within its
     reach and ride from it); the larger is picked first, a click picks the other; then the top
     eight far-end places ("Where they work" or "Where they live"). Not drawn on the map [T-519,
-    [ui-demand-views.md](ui-demand-views.md)]. Commuters and inter-region trips cover the whole complex, each of the demand
+    [ui-demand-views.md](ui-demand-views.md)]. Commuters and inter-city trips cover the whole complex, each of the demand
     model's stations counted once.
   - **How they arrive** [T-374; `AccessSplit` in `ui/inspector/StationRiders.tsx`]: under the two
     rows, a bar and key in the purpose split's style for the commuters who live nearby, walked
@@ -255,14 +255,14 @@ purpose filter the purpose drawn is ringed in the bar.
     at the home end (`walked` and `rode` of `StationRiders`, from `DemandApi.station_riders_day`);
     everyday trips and the regional layer are not split. Not part of the past 24 hours' purpose split, which
     counts boardings.
-  - **Inter-region trips**: rail riders starting and ending there, by place [T-118, T-120].
+  - **Inter-city trips**: rail riders starting and ending there, by place [T-118, T-120].
 - **Station view** (one station opened alone) has its elevation under the name ("Elevation +1"), then in place of the
   complex's lines and map the station's own lines, platform settings, Construct and Remove, and
   **Waiting now** [T-164, T-238]: each line and direction ("To Norwood-205 St") with the riders on the
   platform now in red; under it, in red, how many full trains left riders behind this hour and the
   longest wait, or else the riders arriving this hour and the longest wait. The counts drop the
   moment a train leaves with whoever fitted (a timer set for the station's next departure) and grow
-  with arrivals each game minute. The rest (closest stations, links, commuters, inter-region
+  with arrivals each game minute. The rest (closest stations, links, commuters, inter-city
   trips) is as in complex view, for the station alone.
 - **Renaming** [T-534, `ui/inspector/NameEdit.tsx`]: a station's and a line's name both edit in
   place from a double click on the name or the pencil beside it (hover "Rename, or double click the
@@ -366,14 +366,14 @@ destinations at the end, and how the demand model's people would make one of the
   result is asked once more after 3 s (`RETRY_MS` in map/tripView.ts), then the panel reads "The
   demand model has no answer for this trip." rather than waiting.
 - **Between zones** [T-866; `ui/inspector/MarketTrip.tsx`, `IntercityApi::market_trip` in
-  `sim/src/demand/intercity/market_trip.rs`]: with a bubble selection, a click on an inter-region
+  `sim/src/demand/intercity/market_trip.rs`]: with a bubble selection, a click on an inter-city
   bubble (a whole place zoomed out, a 6 km area up close; hover ends "Click to explore these
   trips") opens the trip between the selection and it; so does a trip tool trip with an end
   outside the focused zone's cells (the cell of the end inside, as homes for the start or
   destinations for the end, to the far 6 km area with trips with it nearest the other end, within
   6 km, else the nearest such place within 60 km; both ends outside: the zones' places whose centres
   are nearest each end). Every other pair of ends [T-885, T-881; the table in notes/T-885.md]: a
-  Shift box over inter-region bubbles takes them as one far end (each asked, then merged:
+  Shift box over inter-city bubbles takes them as one far end (each asked, then merged:
   `mergeMarketPeriods`, trips added, times trip weighted, the five biggest routes kept); a zone
   selected in the city view, then another zone's bubble (or a Shift box over several) is the
   market between the two places, every 6 km area pair counted whole (`market_trip_between`);
@@ -381,11 +381,11 @@ destinations at the end, and how the demand model's people would make one of the
   zone. The sub line names place ends "Between New York region and Philadelphia region", a group
   "New Haven region and 8 other places" or "3 parts of Philadelphia region", and a bubble group
   "homes in 49 areas around Times Sq". It shows the regional
-  market's inter-region trips (commutes between zones left out, as the hover says): every 6 km
+  market's inter-city trips (commutes between zones left out, as the hover says): every 6 km
   area pair between the two ends, the selection's areas weighted as the bubbles weigh them,
   each pair's choice worked out as the solve does (every pair rail can serve, sampled or not),
   added up by its trips. The panel: the trips a day and the distance, a Train / Plane / Car bar
-  and rows; By train (the period with most trips, "Inter-region, midday") with the main route
+  and rows; By train (the period with most trips, "Inter-city, midday") with the main route
   ("To Astor Pl" and "From Stratford" carry the areas' felt minutes to and from the stations,
   muted, since the market knows no single walk), Fare, Time (station to station), Effective time
   (the pairs' felt cost, averaged over the pairs the train serves), the main route's share and up

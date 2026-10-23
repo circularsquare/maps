@@ -99,7 +99,9 @@ background and wait once for the process.
   production build exists for each shipped pack (it copies the registry's packs, so nothing more
   needs listing). Last, `zone_outlines.py` rewrites `data/packs/outlines.json`, the coarse outline of
   every registered zone (T-800, 13 s; a failure only prints a warning and leaves the old file, so
-  the new zones have no outline until their pack loads), then `zone_aliases.py` rewrites
+  the new zones have no outline until their pack loads), then `realms.py` writes each zone's realm
+  and `data/packs/realms.geojson` (T-975, about 1.5 minutes; a failure leaves both as they were, and
+  a zone without a realm always shows), then `zone_aliases.py` rewrites
   `app/src/game/zone-aliases.json`, the search aliases of every zone (T-836, seconds; the same
   warning-only failure, so the new zones are found by their own name only until it is rerun).
   Status `shipped`.
@@ -363,7 +365,8 @@ every registered boundary, and the Node checks open every registered pack. Then 
 the clock worker fetches a zone's mask only where the view or track comes near its box (T-302).
 For a batch outside the Northeast, `python pipeline/register.py <ids> --market --trips` does this
 section and section 7's market and local-trips steps in one call, with no need to read the
-registry (T-441). A zone registered by hand also needs `python pipeline/zone_outlines.py`, which
+registry (T-441). A zone registered by hand also needs `python pipeline/realms.py` (its realm,
+T-975; a country in no realm of `app/src/game/realms.json` gets a line there first) and `python pipeline/zone_outlines.py`, which
 rewrites `data/packs/outlines.json`, the coarse outline of every registered zone the map draws
 before the zone's own boundary has loaded (T-800); `world_run.py join` runs it, then
 `pipeline/zone_aliases.py` (T-836), which a zone registered by hand needs too.

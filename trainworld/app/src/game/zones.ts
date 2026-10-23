@@ -115,9 +115,10 @@ export function placeAt(lon: number, lat: number): CityId | null {
 const placed = new Map<number, { lon: number; lat: number; id: CityId | null; at: number }>();
 
 /** Zones other than `focus` whose boundaries touch the box, nearest to (lon, lat) first, at most
- * NEARBY; zones whose boundaries are not in yet are left out until they arrive. */
-export function zonesInBox(focus: CityId, lon: number, lat: number, w: number, s: number, e: number, n: number): CityId[] {
-  const ids = zonesTouching(w, s, e, n).map((c) => c.id).filter((id) => id !== focus);
+ * NEARBY; zones whose boundaries are not in yet are left out until they arrive. Only zones `keep`
+ * passes are asked about (T-975: none of a realm not shown has its boundary fetched). */
+export function zonesInBox(focus: CityId, lon: number, lat: number, w: number, s: number, e: number, n: number, keep: (id: CityId) => boolean = () => true): CityId[] {
+  const ids = zonesTouching(w, s, e, n).map((c) => c.id).filter((id) => id !== focus && keep(id));
   footprintsOf(ids);
   return ids
     .map((id) => footprintOf(id))

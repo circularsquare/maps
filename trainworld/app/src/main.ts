@@ -33,6 +33,7 @@ import { createMap, setBasemapLabels, setBasemapShade } from "./map/mapView";
 import { startRealNetwork } from "./map/realNetwork";
 import { startCityBoundaries } from "./map/cityBoundaries";
 import { startZoneLoading } from "./map/zoneLoading";
+import { startRealmOverlay } from "./map/realmOverlay";
 import { openedZones } from "./game/openedZones";
 import { startZoneFocus } from "./map/zoneFocus";
 import { StationLabels } from "./map/stationLabels";
@@ -122,6 +123,7 @@ const map = createMap(document.getElementById("map")!);
 if (!urlChoice) map.jumpTo(worldCover(map.getContainer()));
 startCityBoundaries(map);
 startZoneLoading(map); // T-343: zones whose demand has not arrived, grey with a loading bar
+startRealmOverlay(map); // T-975: the realms not shown, dark with a button each
 const demandSelectorRoot = document.createElement("div");
 map.getContainer().appendChild(demandSelectorRoot);
 render(h(MapTopLeft, null), demandSelectorRoot); // the demand buttons and the stations full alert (T-231)

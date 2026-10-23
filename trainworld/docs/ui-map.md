@@ -397,7 +397,7 @@ parent selection. Selected editing handles stay draggable above the
 demand view.
 
 **While building** [T-526]: with a build tool on (track, station, delete, blueprint),
-the demand views (bubbles, inter-region bubbles, airport badges and their labels) are drawn
+the demand views (bubbles, inter-city bubbles, airport badges and their labels) are drawn
 beneath the network, blueprints and stations, since the tool is about track. The tools' clicks
 never pick a bubble, and a bubble's tag shows only where no network and no tool tag is under the
 pointer.
@@ -419,3 +419,14 @@ overlays, never take clicks, and survive basemap style changes. A change of focu
 in one step, never through an empty frame [T-904]: a zone near the view has its shade ready at each
 pan's end, and a zone focused before its footprint has arrived (a long pan straight onto it) has
 the shade over the whole map, itself included, until it comes.
+
+## Realms not shown
+
+[T-975; `map/realmOverlay.ts`, `game/realms.ts`; the rules in [zones.md](zones.md) "Realms"] A realm
+the game has not built in, does not start in and the player has not shown is covered by one dark
+fill, darker than the outside shade, under labels and the network, taking no clicks; nothing of its
+zones is drawn. It has one button, the eye and the realm's name ("France"; hover "Click to show its
+cities"), at its label point, or inside the on-screen part of its box when the point is off screen.
+Below zoom 3 the button is the eye alone, the name in the hover. Buttons that would overlap give way
+to the realm with more zones. A click shows the realm in one step: the fill and button go, and its
+zones draw and load for the view as any other. Fill and buttons are hidden behind the start menu.

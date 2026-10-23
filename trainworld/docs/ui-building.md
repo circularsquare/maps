@@ -349,7 +349,7 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
 
 **Stop editing mode** (Edit stops, New line, Copy line):
 
-- The map hides the demand views (bubbles, inter-region bubbles, the trip route,
+- The map hides the demand views (bubbles, inter-city bubbles, the trip route,
   capacity tags, traffic widths and station circles) and draws the other lines and their trains at
   30%; the edited line's trains stay full.
 - A round toggle marker on every station, over everything: a stop is a disc in the line's colour

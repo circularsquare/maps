@@ -243,7 +243,7 @@ trip total but taking the most populous zone's distance decay; the work or activ
 only. Car parks are automatic and unlimited. `p_ride`, `d_drop` and `w_walk` were fitted on the real
 New York network (T-372); `ride_drive_f` is Anita's call against park and ride from far out
 (T-916, notes/T-916.md).
-The regional layer's rides (commutes between zones, inter-region trips at both ends) come from the
+The regional layer's rides (commutes between zones, inter-city trips at both ends) come from the
 same function, `access_options` ([regional.md](regional.md) 5.3).
 
 Two **computational bounds** keep the work down and are set where little rail is left: stations

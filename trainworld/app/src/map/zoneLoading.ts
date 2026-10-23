@@ -17,6 +17,7 @@ import { activeCity, cityById, type CityId } from "../game/cities";
 import { cityDemandViews } from "../game/demand";
 import { loadFailure, zoneLoads } from "../game/loading";
 import { nearbyZones } from "../game/zones";
+import { zoneShown } from "../game/realms";
 import { LoadBar, loadingCardShown } from "../ui/LoadingScreen";
 import { cityGeometry } from "./boundaryGeometry";
 import { followShade, shadePaint } from "./cityBoundaries";
@@ -140,10 +141,11 @@ export function startZoneLoading(map: MlMap): () => void {
   map.on("moveend", repick);
 
   const dispose = effect(() => {
-    loads = loadFailure.value ? new Map() : zoneLoads.value;
+    // T-975: a realm not shown draws no loading grey or bar, though demand may be opening its packs
+    loads = loadFailure.value ? new Map() : new Map([...zoneLoads.value].filter(([id]) => zoneShown(id)));
     const shown = cityDemandViews.value;
     const ids = new Set(loads.keys());
-    if (!loadFailure.value) for (const id of nearbyZones.value) if (!shown.has(id)) ids.add(id);
+    if (!loadFailure.value) for (const id of nearbyZones.value) if (!shown.has(id) && zoneShown(id)) ids.add(id);
     loadingCardShown(); // the bars follow the card
     // T-350: only the zone in view takes the fill: every other zone already lies under the outside
     // shade (map/cityBoundaries.ts), which is this same grey, and stacking would darken it

@@ -67,7 +67,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   search or station naming, the view's zones first, T-177, T-065, T-400), `boundaries.ts` (each city's boundary file, fetched
   once, T-172), `zoneNames.ts` (zones' shown names and search aliases from the hand-edited
   `zone-names.json` and the generated `zone-aliases.json`, `pipeline/zone_aliases.py`; T-825),
-  `search.ts` (the search box's matching, `cityMatch` for zones by name or alias, T-148), `walks.ts` (walking minutes to the
+  `realms.ts` and the hand-edited `realms.json` (the country-sized realms: each zone's, which are shown, the land read from `packs/realms.geojson`, T-975), `search.ts` (the search box's matching, `cityMatch` for zones by name or alias, T-148), `walks.ts` (walking minutes to the
   closest stations on the demand model's walking barrier, T-312).
 - Stations and lines: `complexes.ts` (station complexes from platform geometry and the player's
   links, T-146), `complexView.ts` (a click selecting the complex, a station opened alone, the
@@ -132,7 +132,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   shade, T-131, T-139, T-400, T-871), `coarseOutlines.ts` (reads
   `packs/outlines.json`, which `pipeline/zone_outlines.py` writes: every registered zone's coarse
   outline, T-800), `zoneLoading.ts` (zones still loading drawn grey with a loading
-  bar, T-343), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and
+  bar, T-343), `realmOverlay.ts` (the realms not shown: their dark fill and a button each, T-975), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and
   `zonesLoadForView`, the zoom test of `game/zones.ts` `ZONE_LOAD_ZOOM` that decides whether zones
   load for viewing, T-276, T-318, T-871).
 
@@ -236,6 +236,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   6135 by default), `t715-load-money.mjs` (the real save opened from the saves panel while a later
   copy is open, twice: cash loads as saved and moves, no ledger day after the clock; a save with
   ledger days after its clock gets their running cost back; port 6165 by default),
+  `t975-realms.mjs` (realms in a fresh profile: a Tokyo start shows Japan only, a button shows France, a reload hides it again, stations in two realms show both; the zoomed-out frame and a pan across France and Germany measured; `REALMS=<file>` serves a scratch realms.geojson, `NOREALMS=1` blocks it; port 6165 by default),
   `t728-newgame.mjs` (the new game sheet in a fresh profile: the search, a sandbox in Tokyo from
   its real network, a normal London start, a map start, the real New York save turned sandbox from
   Settings; slots left keep their bytes; screenshots t728-*.png; port 6150 by default),
@@ -345,6 +346,7 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   City configs are in `build_city.py`. `build_city.py --boundary-only [ids]` rewrites only the
   US packs' `.boundary.geojson` from TIGER/Line counties with their water (`tiger_counties.py`,
   simplified topologically once for the whole US into `data/work/tiger_counties_simple.json`, T-352).
+- `realms.py [--registry F] [--out F] [--dry]` writes each registry row's `realm` and `data/packs/realms.geojson`, the land of the realms in `app/src/game/realms.json` (T-975, about 1.5 minutes; run by the join).
 - `regions.py nyc` adds each cell's state to a finished pack and re-solves its gravity in place
   (seconds; T-162): the way to re-solve after a decay or border factor change without a rebuild.
 - `enrich_all.py phl bos` adds the non-work inputs (everyday sectors, NCES schools, IPEDS

@@ -583,6 +583,9 @@ rect.now { fill-opacity: .45; }
 .zone-loads { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 .zone-load { position: absolute; left: 0; top: 0; }
 .zone-load .load-bar { width: 96px; height: 6px; margin: -4px 0 0 -48px; zoom: var(--ui, 1); }
+/* T-975: a realm not shown, its button over its dark fill */
+.realm-buttons { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+.realm-button { position: absolute; left: 0; top: 0; pointer-events: auto; }
 /* MapLibre sets Helvetica on its container. Map UI must use the same font as the dock. */
 #map, #map .maplibregl-ctrl { font-family: var(--font); }
 #map canvas.overlay { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 1; }

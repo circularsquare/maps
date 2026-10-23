@@ -1160,6 +1160,12 @@ class Run:
                 print(f"  warning: coarse zone outlines not rebuilt: {str(tail)[-200:]}", flush=True)
         except Exception as e:
             print(f"  warning: coarse zone outlines not rebuilt: {e}", flush=True)
+        try:  # T-975: each zone's realm and the realms' land; a failure only leaves both as they were
+            ok, _, tail = self.step("realms", [], f"{L}.realms.log")
+            if not ok:
+                print(f"  warning: realms not rebuilt: {str(tail)[-200:]}", flush=True)
+        except Exception as e:
+            print(f"  warning: realms not rebuilt: {e}", flush=True)
         try:  # T-836: search aliases for the new zones; a failure only leaves zone-aliases.json as it was
             ok, _, tail = self.step("zone_aliases", [], f"{L}.aliases.log")
             if not ok:

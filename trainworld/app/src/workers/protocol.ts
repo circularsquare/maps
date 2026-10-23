@@ -104,8 +104,9 @@ export type ToClock =
    * `backupMs`: wall ms between a slot's backups (T-744; `?backupMs=` for checks). `game`: how a
    * new game (`fresh` or `newSlot`) starts (T-728). */
   | { kind: "init"; city: string; pack: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec }
-  /** the view's bounds in degrees after a move (T-302): water masks near it are fetched ahead */
-  | { kind: "view"; w: number; s: number; e: number; n: number }
+  /** the view's bounds in degrees after a move (T-302): water masks near it are fetched ahead, but
+   * not those of `skip`, the zones of realms not shown (T-975) */
+  | { kind: "view"; w: number; s: number; e: number; n: number; skip?: string[] }
   /** the theme the player is in (T-543): a save's thumbnail is drawn in it */
   | { kind: "shade"; shade: "light" | "dark" }
   | { kind: "edit"; seq: number; op: EditOp }
@@ -452,8 +453,8 @@ export type FromClock =
   /** T-889: a save being loaded: its built stations' x, y in `frame`, before its network is worked out */
   | { kind: "stationsAhead"; frame: FrameSpec; xy: Float64Array }
   /** T-729: the opened zones of the game in hand, sent before its snapshot; null for a save from
-   * before T-729 */
-  | { kind: "opened"; zones: string[] | null }
+   * before T-729; `start`, its start zone (T-728), whose realm shows (T-975) */
+  | { kind: "opened"; zones: string[] | null; start?: string }
   /** the save file, for the player to keep */
   | { kind: "exported"; bytes: Uint8Array; day: number }
   /** a station placement's check (T-311): `issues` as an edit's; `cost` what it adds to the

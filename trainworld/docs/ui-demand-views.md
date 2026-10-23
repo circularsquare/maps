@@ -62,7 +62,7 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   station circles, the bubbles and their hovers ("12,400 school and university trips per day at
   homes here"), a selection's own and far-end bubbles, the track tag. Scales stay as they are, so
   purposes stay comparable. Work is every zone's commutes (commutes between zones included); the
-  others are each zone's everyday layer. Inter-region trips are not an option: they show only
+  others are each zone's everyday layer. Inter-city trips are not an option: they show only
   under All purposes. Train fill and crowding always count everyone.
   A selection's counts and far-end places follow the filter; its pie and timing charts keep every
   purpose. Switching purpose clears the bubbles until that purpose's are ready. Not remembered.
@@ -194,7 +194,7 @@ riders counters keep their own smoothing (Live feel).
   catching up the whole distance. Shift+drag draws the box
   at once [T-865] (MapLibre's own Shift-drag zoom is off while the bubbles are on): started on a
   city bubble or a selected one, or with nothing selected, it adds the bubbles in it to the
-  selection; with a selection and started anywhere else, it takes the inter-region bubbles whose
+  selection; with a selection and started anywhere else, it takes the inter-city bubbles whose
   centres are in it (T-881), else the far-end bubbles, and opens the trip explorer between the two
   groups. Escape while drawing drops
   the box. Visible bubbles take priority over stations and trains for clicks, hover and starting a
@@ -234,19 +234,19 @@ riders counters keep their own smoothing (Live feel).
   0-6), departures toward the destination drawn up from a baseline and departures home down, as
   departures an hour on one scale; each bar's hover gives count, hourly rate and share of that
   direction's day. Weekdays only.
-- Then the selection's **inter-region trips** (below).
+- Then the selection's **inter-city trips** (below).
 
 ## A selected station
 
 [T-519] Selecting a station leaves the demand views as they were: the bubbles, the zoomed-out
 overview and the airport badges stay, and the bubbles are cut away round the station (T-189). Its
-commuters and inter-region riders are in its inspector only ([ui-inspectors.md](ui-inspectors.md)).
+commuters and inter-city riders are in its inspector only ([ui-inspectors.md](ui-inspectors.md)).
 
-## Inter-region trips
+## Inter-city trips
 
 [T-118, T-120, T-135, T-136, T-139, T-222; the market in [regional.md](regional.md)]
 
-- A bubble selection's and a station's inspector have an "Inter-region trips" section. A selection
+- A bubble selection's and a station's inspector have an "Inter-city trips" section. A selection
   lists trips leaving its areas and trips arriving there, each by place with all modes, then by
   train, car and plane [T-378] (column heads are the modes' icons, `Icon.train`, `Icon.ride`,
   `Icon.plane` in `ui/widgets.tsx`; every number's hover gives the exact count and its share), then
@@ -285,7 +285,7 @@ rest [T-576: an open zone's walking is green, from its split; a zone not loaded 
 has no walk split, so its walking counts in the red; regional trips have no walking]. Labelled
 "Philadelphia · 187k trips" (plain text on the map with a halo, no box [T-824]; at most eight labels on screen, the biggest first [T-493]). The hover
 has two lines, each with a mode bar [T-494]: "1.6m trips per day within Yamanashi" (bar from
-the zone's modelled split, none for a zone not loaded) and "120k inter-region trips per day on
+the zone's modelled split, none for a zone not loaded) and "120k inter-city trips per day on
 average to and from Yamanashi" (train blue, the rest red). One scale that depends on the zoom
 alone, never on what is on screen [T-525, T-530]: 60,000 trips a day per px² of bubble area at
 zoom 6.5 (`TRIPS_PER_PX2`, `SCALE_ZOOM`), before the size slider, the radius times
@@ -301,15 +301,15 @@ another place opens the trip explorer between them and the selected zone [T-885]
 another zone's bubble, or a Shift box over several, opens it between the zones): it is outlined, with one
 bubble per other zone for the regional trips between the two, on a scale of its own that changes
 with the zoom the same way [T-525, T-530]: 1,400 trips a day per px² at zoom 6.5
-(`SELECTED_TRIPS_PER_PX2`), the selected zone's own bubble its inter-region trips on that scale
-(the selected zone's hover: the inter-region line and its bar first, the local figure in brackets under it; the
+(`SELECTED_TRIPS_PER_PX2`), the selected zone's own bubble its inter-city trips on that scale
+(the selected zone's hover: the inter-city line and its bar first, the local figure in brackets under it; the
 others: "N trips a day between A and B" and a bar), a fading line from each other bubble toward
 it (Lines to the selection, above), under the bubbles with no hover, so the
 selection shows from afar [T-520, T-858], and the city
 inspector (`ui/inspector/CityInspector.tsx`, T-600) has two figures, each with a thin mode bar
 under it (the game's mode colours; every segment and number has a hover with its count and share):
 "Within Philadelphia" (train, walking, car from the open zone's split; the count alone for a zone
-not loaded) and "To other places" (the inter-region trips, both directions, train blue and the rest
+not loaded) and "To other places" (the inter-city trips, both directions, train blue and the rest
 red), then the three places with the most trips, name and trips a day, and
 a "Go to Philadelphia" button that moves the camera to its centre and clears the selection
 [T-220]. No table of every place and no purpose split.

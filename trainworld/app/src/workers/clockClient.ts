@@ -7,6 +7,7 @@ import { effect, signal } from "@preact/signals";
 import { clock, SPEEDS } from "../game/clock";
 import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities";
 import { setGameOpened, setOpenedSink } from "../game/openedZones";
+import { hiddenZones, setGameStart } from "../game/realms";
 import { fitView, holdForGameLoad, loadCannotFinish, markAlive } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, moneyState, setMoneyState } from "../game/money";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
@@ -269,7 +270,7 @@ export class ClockClient {
 
   /** The view's bounds after a move (T-302): the worker fetches the water masks near it ahead. */
   followBounds(w: number, s: number, e: number, n: number) {
-    this.post({ kind: "view", w, s, e, n });
+    this.post({ kind: "view", w, s, e, n, skip: hiddenZones() });
   }
 
   /** The theme in use (T-543): the worker draws save thumbnails in it. */
@@ -513,6 +514,8 @@ export class ClockClient {
         liveMoney.value = { cash: msg.cash, today: msg.today, hour: msg.hour, regions: msg.regions };
         break;
       case "opened":
+        // T-975: a save older than its start zone shows the realm it opens in
+        setGameStart(msg.start ?? (msg.zones === null && viewedZone.peek() ? activeCity.peek() : null));
         setGameOpened(msg.zones, viewedZone.peek() ? activeCity.peek() : null);
         break;
       case "stationsAhead":

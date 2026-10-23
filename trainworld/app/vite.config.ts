@@ -58,6 +58,10 @@ function packs(): Plugin {
       const outlines = join(PACKS, "outlines.json");
       if (existsSync(outlines)) copyFileSync(outlines, join(out, "outlines.json"));
       else this.warn("coarse zone outlines missing: run pipeline/zone_outlines.py");
+      // T-975: the realms' land (pipeline/realms.py); without it every zone shows
+      const realms = join(PACKS, "realms.geojson");
+      if (existsSync(realms)) copyFileSync(realms, join(out, "realms.geojson"));
+      else this.warn("realm land missing: run pipeline/realms.py");
       // T-731: the real networks a sandbox can start from (pipeline/realnet.py ship)
       const real = join(PACKS, "real");
       if (existsSync(real)) {

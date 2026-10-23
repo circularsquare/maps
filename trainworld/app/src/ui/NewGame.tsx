@@ -119,7 +119,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
             <button class={"btn text" + (start === id ? " on" : "")} aria-pressed={start === id} data-city={id} onClick={() => pick(start === id ? null : id)}>{cityById(id).name}</button>
           ))}
         </div>
-        <input type="text" class="new-game-find" aria-label="Find a city or region" placeholder="Find a city or region" value={text} maxLength={60}
+        <input type="text" class="new-game-find" aria-label="Find a city" placeholder="Find a city" value={text} maxLength={60}
           onInput={(e) => { setText((e.target as HTMLInputElement).value); setCursor(0); if (start && !START_CITIES.includes(start)) setStart(null); }}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown" && hits.length) { e.preventDefault(); setCursor((cursor + 1) % hits.length); }

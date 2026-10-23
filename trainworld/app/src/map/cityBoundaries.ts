@@ -15,6 +15,7 @@ import { outsidePaint, SHADES, shadeColours } from "../game/shades";
 import { shade } from "../game/ui";
 import { cityGeometry, OutlineEdges, outsideCity } from "./boundaryGeometry";
 import { coarseOutlines } from "./coarseOutlines";
+import { shownRealms, zoneShown } from "../game/realms";
 
 const SHADE = "tw-city-outside";
 const FOCUS = "tw-city-focus";
@@ -96,7 +97,7 @@ export function startCityBoundaries(map: MlMap): () => void {
   let around = new Set<string>();
   const aroundView = () => {
     const b = map.getBounds(), w = b.getWest(), s = b.getSouth(), e = b.getEast(), n = b.getNorth();
-    return new Set(zonesTouching(w - (e - w), s - (n - s), e + (e - w), n + (n - s)).map((c) => c.id));
+    return new Set(zonesTouching(w - (e - w), s - (n - s), e + (e - w), n + (n - s)).map((c) => c.id).filter(zoneShown));
   };
   const drawn = () => edges.lines(activeCity.peek(), perfOff("zoneZoom") ? undefined : around);
   const redraw = () => {
@@ -122,7 +123,7 @@ export function startCityBoundaries(map: MlMap): () => void {
   });
   const near = () => {
     const b = map.getBounds();
-    return zonesTouching(b.getWest(), b.getSouth(), b.getEast(), b.getNorth()).map((c) => c.id);
+    return zonesTouching(b.getWest(), b.getSouth(), b.getEast(), b.getNorth()).map((c) => c.id).filter(zoneShown);
   };
   const follow = () => {
     const next = aroundView();
@@ -196,11 +197,14 @@ export function startCityBoundaries(map: MlMap): () => void {
     if (map.getSource(SHADE)) void focus(id);
   });
   const disposeShade = followShade(map, SHADE);
+  // T-975: a realm shown or hidden redraws the outlines near the view
+  const disposeRealms = effect(() => { void shownRealms.value; if (map.getSource(OUTLINES)) follow(); });
   return () => {
     alive = false;
     request++;
     window.clearTimeout(pending);
     dispose();
+    disposeRealms();
     disposeShade();
     disposeChoosing();
     map.off("style.load", add);

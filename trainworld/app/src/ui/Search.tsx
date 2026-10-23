@@ -11,6 +11,7 @@ import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { activeCity } from "../game/cities";
 import { zoneAt } from "../game/zones";
+import { realmOfPlace, showRealm, showZoneRealm } from "../game/realms";
 import { loadPlacesAt, places, widenPlaces } from "../game/placeList";
 import { viewCentre } from "../game/listScope";
 import { search, type SearchHit } from "../game/search";
@@ -40,11 +41,14 @@ const PLACE_KIND: Record<string, string> = {
 export function goTo(hit: SearchHit) {
   const map = live.map;
   const selecting = tool.peek() === "select";
+  // T-975: a city or place picked in a realm not shown shows it
   if (hit.kind === "city") {
+    showZoneRealm(hit.city.id);
     goToCity(hit.city);
     return;
   }
   if (hit.kind === "place") {
+    showRealm(realmOfPlace(hit.lng, hit.lat));
     map?.jumpTo({ center: [hit.lng, hit.lat], zoom: PLACE_ZOOM[hit.place.kind] ?? 14 });
     activeCity.value = zoneAt(hit.lng, hit.lat);
     // as for a city: a station or bubble selection elsewhere would hold the focus there (main.ts)
