@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-929 [P1] Market rows only where they change. Done 2026-10-22: market_zones redoes the rows of changed, new or gone market packs and of places within 250 km (a record of each row's inputs); byte-identical to a full run in five cases; a gate's register 189 s to about 33 s, a full run 120 s to 45 s. notes/T-929.md.
+- T-931 [P2] The gate's rates test built once a run. Done 2026-10-22: world_run builds `every_pack_everyday` at the run's start and every gate runs that binary (`TW_EVERYDAY_EXE`); same rates, no recompile mid-run. notes/T-929.md.
 - T-953 [P2] WebGL audit for devices and browsers. Done 2026-10-22: a lost context (a blank map until reload) now recovers on both canvases and MapLibre; STROKE_FS is highp; limits, float textures and GLSL checked on five back ends. T-955 to T-957 filed. notes/T-953.md.
 - T-952 [P1] The game could not start on a Pixel 10. Done 2026-10-22: its PowerVR compiler rejected the platform shaders' `vec2[13](...)` array constructor ("no default precision defined"); `qUnpack` in map/renderer.ts now fills the array element by element. T-950's screen named it.
 - T-950 [P1] "Calculating demand" forever on Anita's phone. Done 2026-10-22: the clock worker's start, its script error and main.ts's setup could fail silently, leaving the card up; they now show "The game could not start" with the error, and a watchdog fails a quiet card. Memory ruled out. notes/T-950.md.
