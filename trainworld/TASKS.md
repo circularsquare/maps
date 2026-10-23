@@ -73,6 +73,7 @@ moves). Rules for every agent are in CLAUDE.md; history in ARCHIVE.md.
 
 ## Interface
 Anita's TODO.md "short term", filed 2026-10-21 (late) and 2026-10-22.
+- T-971 [P3] The autosave-off reason shows twice on a test page (`?new=1`): the top bar's pink save notice and the tool-notes bar at the map's bottom left carry the same sentence (seen in T-951's screenshots, desktop too). Keep one. Open.
 - T-873 [P3] A train can empty fully mid-line in the boarding account: in the real save the D northbound in the morning period lets everyone off at 34 St-Herald Sq (load 629 to 0, then 64 after Bryant Pk), because demand's per-stop alightings for the period exceed its own running load there and the alighting share clamps to 1 (`alight_shares` in sim/src/track/boarding.rs). Look at why the period's boardings and alightings disagree. Open.
 - T-880 [P3] The trip explorer between zones shows inter-region trips only: add the commutes between zones (their own choice, `CPair` in intercity.rs) as a second purpose, so it matches the bubbles' counts. Open.
 Anita's notes, filed 2026-10-22 (fifth set).
