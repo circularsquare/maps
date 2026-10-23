@@ -188,15 +188,25 @@ if (SYNTH) {
   demandClick = views.click;
   demandHover = views.hover;
   client.onState = (s) => {
-    // a train count: the same buffers with the new run profiles (T-229)
-    if (s.service && renderer.net) renderer.setService(s.render.phases, s.render.meta);
-    else {
-      renderer.setNetwork(s.net ?? networkFromState(s)); // built in the worker (T-063)
-      followTrack(renderer.net, world.peek()); // T-1047
+    const put = () => {
+      // a train count: the same buffers with the new run profiles (T-229)
+      if (s.service && renderer.net) renderer.setService(s.render.phases, s.render.meta);
+      else {
+        renderer.setNetwork(s.net ?? networkFromState(s)); // built in the worker (T-063)
+        followTrack(renderer.net, world.peek()); // T-1047
+      }
+      views.networkChanged();
+      blueprintBox.refreshHighlight();
+      overlay.invalidate();
+    };
+    // T-1071: a train count is drawn from the moment it takes effect, with its own trips
+    if (s.effectiveAt !== undefined) {
+      renderer.stage(s.version, s.effectiveAt, put);
+      overlay.invalidate();
+    } else {
+      renderer.flushStaged();
+      put();
     }
-    views.networkChanged();
-    blueprintBox.refreshHighlight();
-    overlay.invalidate();
   };
   if (DEBUG) (window as any).twViews = { stats: viewStats, overlay: views.overlay, hover: views.hover, click: views.click };
   client.onTrips = (epoch, version, trips, board, ends, nexts) => {

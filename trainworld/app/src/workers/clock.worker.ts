@@ -750,6 +750,15 @@ function gameNow(): number {
   return clk.t + Math.max(0, (wallNow() - clk.at) / 1000) * clk.rate;
 }
 
+/** Wall ms the last train count or headway edit took here, from applying it to its trips sent. */
+let serviceEditMs = 100;
+/** T-1071: wall seconds after the clock a train count or headway edit takes effect: room for this
+ * worker's own time on it, twice over, and the main thread's frame, so its new trips are on screen
+ * before anything they change is drawn. */
+function serviceLeadS(): number {
+  return Math.min(2, 0.25 + (2 * serviceEditMs) / 1000);
+}
+
 /** Money's now: the clock, or the time settled up to if the clock has been set back behind it, so
  * a charge or the day shown never lands on a day already closed (T-488). */
 function moneyNow(): number {
@@ -1566,10 +1575,11 @@ let runningLines = "";
 
 /** `service`: only the service changed (a train count, T-229): the renderer's buffers are not built
  * again, which was about half the edit's time on New York's real network. */
-function sendState(service = false) {
+function sendState(service = false, effectiveAt?: number) {
   const t0 = performance.now();
   const s = buildState();
   const t1 = performance.now();
+  if (effectiveAt !== undefined) s.effectiveAt = effectiveAt;
   moneyLag = runLag(s.lines.filter((l) => l.ok && l.running).map((l) => ({ tph: l.tph[1], lengthM: l.lengthM, cars: l.cars, oneWayS: l.roundTrip[1] / 2 - l.turnaround })));
   // a line gaining its first train or losing its last changes the draw order (T-533)
   const running = s.lines.filter((l) => l.ok && runsTrains(l)).map((l) => l.id).join();
@@ -2082,7 +2092,14 @@ async function handle(msg: ToClock) {
     }
     await masksFor(msg.op);
     const tA = performance.now();
+    // T-1071: a train count takes effect a moment ahead, once its trips are on screen
+    const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway";
+    if (service) {
+      api.set_now(gameNow());
+      api.set_edit_lead(clk.rate * serviceLeadS());
+    }
     const { r, line, node, skipped } = apply(msg.op);
+    api.set_edit_lead(0); // a refused edit leaves it set
     if (import.meta.env.DEV && panicAfterEdit) { panicAfterEdit = false; panicNow(); }
     const tB = performance.now();
     timing = {};
@@ -2103,7 +2120,8 @@ async function handle(msg: ToClock) {
       }
       forget();
       const demand = api.dirty_demand_lines();
-      sendState(msg.op.op === "setTrainCount" || msg.op.op === "setHeadway");
+      sendState(service, service ? api.edit_time() : undefined);
+      if (service) serviceEditMs = performance.now() - tA;
       if (demand.length || msg.op.op === "undo" || msg.op.op === "redo") scheduleSnapshot();
     }
     send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });

@@ -51,3 +51,5 @@ mod frame_tests;
 mod merc_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod transition_tests;

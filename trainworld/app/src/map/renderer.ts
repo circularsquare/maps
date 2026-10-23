@@ -22,6 +22,9 @@ const TEX_W = 2048;
 const LINES_W = 1024;
 /** The render epoch moves to the start of each game hour. */
 export const EPOCH_S = 3600;
+/** The longest a staged state waits for its trips, wall ms (T-1071). */
+const STAGE_WAIT_MS = 2000;
+type TripArgs = [epoch: number, version: number, data: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array];
 const TRACK_RGB = rgb("#77746f").map((v) => v / 255);
 const BAD_RGB = rgb("#d23c3c").map((v) => v / 255);
 /** Blueprint track (T-322, Anita: "light blue", "slightly wider", "like two parallel rails"): a
@@ -1619,8 +1622,55 @@ export class NetworkRenderer {
     this.setHighlight(this.highlightSrc);
   }
 
-  /** Trips for the hour starting at `epoch` (from the worker). */
-  setTrips(epoch: number, version: number, data: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array) {
+  /** T-1071: states from the worker not drawn yet, oldest first. Each waits for its own trips (the
+   * worker sends them just after it), so a train's run profile and its departures change in the
+   * same frame; a train count's also waits for the game time it takes effect, a moment ahead of
+   * the clock, by when its trips are here. */
+  private staged: { version: number; at: number; since: number; apply: () => void; trips: TripArgs[] }[] = [];
+
+  /** Draw a state (`apply` puts it in) from game time `at`, once its trips have come. */
+  stage(version: number, at: number, apply: () => void) {
+    this.staged.push({ version, at, since: performance.now(), apply, trips: [] });
+  }
+
+  /** Put in every staged state now: a state drawn at once comes after them. */
+  flushStaged() {
+    while (this.staged.length) this.putStaged(this.staged.shift()!);
+  }
+
+  /** when the last staged state took effect (checks/t1071-train-count.mjs) */
+  stagedAt = NaN;
+
+  private putStaged(s: (typeof this.staged)[number]) {
+    this.stagedAt = s.at;
+    s.apply();
+    for (const t of s.trips) this.putTrips(...t);
+  }
+
+  /** Put in the staged states due at `time`, in order. */
+  private releaseStaged(time: number) {
+    while (this.staged.length) {
+      const s = this.staged[0];
+      // trips that never come (the worker restarted) hold a state up no longer than this
+      const late = performance.now() - s.since > STAGE_WAIT_MS;
+      if (time < s.at || !(s.trips.length || late)) break;
+      this.putStaged(this.staged.shift()!);
+    }
+  }
+
+  /** Trips for the hour starting at `epoch` (from the worker); those of a staged state wait with it. */
+  setTrips(...t: TripArgs) {
+    const version = t[1];
+    for (let i = this.staged.length - 1; i >= 0; i--) {
+      if (this.staged[i].version <= version) {
+        this.staged[i].trips.push(t);
+        return;
+      }
+    }
+    this.putTrips(...t);
+  }
+
+  private putTrips(epoch: number, version: number, data: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array) {
     const old = this.tripsBy.get(epoch);
     if (old && old.version > version) return;
     const hour = board ? readBoardHour(epoch, board) : undefined;
@@ -1678,6 +1728,7 @@ export class NetworkRenderer {
    */
   draw(mercMatrix: ArrayLike<number>, time: number, zoom: number, dpr: number, opt: DrawOptions) {
     const gl = this.gl;
+    this.releaseStaged(time);
     const n = this.net;
     if (!n) return;
     const uTime = this.sync(time);
@@ -2320,6 +2371,7 @@ export class NetworkRenderer {
       this.probeProg = compile(gl, PROBE_VS, PROBE_FS, ["v_pos"]);
       this.probeU = uniforms(gl, this.probeProg, ["u_time", "u_phases", "u_meta", "u_samples", "u_lines"]);
     }
+    this.releaseStaged(time);
     const uTime = this.sync(time);
     const n = this.tripCount;
     if (!this.probeVao) {

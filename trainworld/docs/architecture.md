@@ -208,9 +208,9 @@ Web first, so it can be shared as a link.
   published, they are on R2 under a versioned prefix that `tools/deploy.py` writes into the page as
   a `tw-data` meta, never chosen by hostname (`game/dataBase.ts`, T-924; T-060, notes/T-026.md).
   The main thread fetches each once and hands each worker a copy.
-- **Determinism**: the simulation is a pure function of (save, pack versions, game time), except
-  for the hour or two after an edit to a line's service, when the trains drawn also depend on the
-  game time the edit was made [T-206; not saved, so a reload re-spaces them once].
+- **Determinism**: the simulation is a pure function of (save, pack versions, game time). For the
+  hour or two after an edit to a line's service the trains drawn also depend on the game time the
+  edit took effect; the save carries it (the service's eras, T-206, T-1071).
 
 ## 11. Saves
 
@@ -227,7 +227,10 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   metres. After the lines come optional trailing blocks (`sim/src/track/save.rs`): `LUI1` (custom
   badge symbols and the line-name counter, T-110/T-111), then, each only when there are any, `LNK1`
   links [T-197], `LAU1` lines kept by headway [T-625] and `LHS1` lines running high-speed trains
-  [T-817]; a save without one loads with none. Every zone's track, service and money is in the one
+  [T-817]; a save without one loads with none. While a line's trains change over after a service
+  edit, the network bytes end with the service's eras and shifts, their length and the tag `ERA1`
+  (`Service::encode_eras`, T-1071), so the trains load where they were; the network decoder stops
+  before them. Every zone's track, service and money is in the one
   network [T-116]. The header's `ledger`, `hours` and `regions` (per zone id, "" for outside every
   zone) hold the history charts' data, loaded back as they were, so a reload keeps the charts; money
   is saved to the dollar and rides to a tenth. Ledger entries' `points` are whole points; the

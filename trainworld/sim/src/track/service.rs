@@ -202,6 +202,8 @@ const HANDOVER_TOL_S: f64 = 1.0;
 const MIN_GAP_SHARE: f64 = 0.5;
 /// An era's pattern is looked back over this long for its last departure.
 const ERA_LOOKBACK_S: f64 = 4.0 * 3600.0;
+/// An era may end this far after the clock: an edit takes effect a moment ahead (T-1071).
+const ERA_AHEAD_S: f64 = 3600.0;
 const DAY_S: f64 = 86400.0;
 
 /// The periods in the order of the day.
@@ -771,8 +773,8 @@ impl Service {
         }
     }
 
-    /// Forget eras whose trains can no longer be drawn at `now` (or that lie after it: the clock
-    /// went back).
+    /// Forget eras whose trains can no longer be drawn at `now`, or that lie more than an hour
+    /// after it (the clock went back; an edit takes effect a moment ahead, T-1071).
     pub fn prune_eras(&mut self, net: &Network, now: f64) {
         if !now.is_finite() {
             return;
@@ -784,12 +786,98 @@ impl Service {
             let (dur, hcap) = if l < self.lines.len() { self.reach(net, l) } else { (0.0, 0.0) };
             let keep = now - 3600.0 - dur - 2.0 * hcap - 60.0;
             if let Some(v) = self.eras.get_mut(l) {
-                v.retain(|e| e.until > keep && e.until <= now + 1.0);
+                v.retain(|e| e.until > keep && e.until <= now + ERA_AHEAD_S);
             }
             if let Some(v) = self.shifts.get_mut(l) {
-                v.retain(|x| x.1 > keep && x.1 <= now + 1.0);
+                v.retain(|x| x.1 > keep && x.1 <= now + ERA_AHEAD_S);
             }
         }
+    }
+
+    /// The eras and shifts for a save (T-1071), so a game saved while trains change over loads
+    /// with them where they were: per line that has any, its place among the live lines (as
+    /// `save::encode` numbers them), then each era and each shift, little-endian. Empty when no
+    /// line has any.
+    pub fn encode_eras(&self, net: &Network) -> Vec<u8> {
+        let mut out = vec![];
+        let mut n = 0u32;
+        let mut body = vec![];
+        for (i, l) in (0..net.line_count()).filter(|&l| net.line_ok(l as u32)).enumerate() {
+            let (eras, shifts) = (self.eras_of(l), self.shifts.get(l).map_or(&[][..], |v| &v[..]));
+            if eras.is_empty() && shifts.is_empty() {
+                continue;
+            }
+            n += 1;
+            body.extend((i as u32).to_le_bytes());
+            body.extend((eras.len() as u32).to_le_bytes());
+            for e in eras {
+                body.extend(e.until.to_le_bytes());
+                e.lat.tph.iter().for_each(|x| body.extend(x.to_le_bytes()));
+                e.lat.off.iter().for_each(|x| body.extend(x.to_le_bytes()));
+                body.extend(e.lat.lead.to_le_bytes());
+                body.extend(e.lat.shift.to_le_bytes());
+                body.extend((e.drawn.len() as u32).to_le_bytes());
+                for &(r, d) in &e.drawn {
+                    body.push(r);
+                    body.extend(d.to_le_bytes());
+                }
+            }
+            body.extend((shifts.len() as u32).to_le_bytes());
+            for &(r, d, by) in shifts {
+                body.push(r);
+                body.extend(d.to_le_bytes());
+                body.extend(by.to_le_bytes());
+            }
+        }
+        if n > 0 {
+            out.extend(n.to_le_bytes());
+            out.extend(body);
+        }
+        out
+    }
+
+    /// Eras and shifts from `encode_eras`, onto a service just built from the saved network.
+    pub fn decode_eras(&mut self, bytes: &[u8]) -> Result<(), String> {
+        let mut at = 0usize;
+        let mut take = |n: usize| -> Result<&[u8], String> {
+            let b = bytes.get(at..at + n).ok_or("truncated eras")?;
+            at += n;
+            Ok(b)
+        };
+        macro_rules! num {
+            ($t:ty) => {
+                <$t>::from_le_bytes(take(std::mem::size_of::<$t>())?.try_into().unwrap())
+            };
+        }
+        let lines = self.lines.len();
+        let mut eras = vec![vec![]; lines];
+        let mut shifts = vec![vec![]; lines];
+        for _ in 0..num!(u32) {
+            let l = num!(u32) as usize;
+            let mut v = vec![];
+            for _ in 0..num!(u32) {
+                let until = num!(f64);
+                let tph = [num!(f32), num!(f32), num!(f32)];
+                let off = [num!(f64), num!(f64), num!(f64)];
+                let (lead, shift) = (num!(f64), num!(f64));
+                let mut drawn = vec![];
+                for _ in 0..num!(u32) {
+                    drawn.push((num!(u8), num!(f64)));
+                }
+                v.push(Era { until, lat: Lattice { tph, off, lead, shift }, drawn });
+            }
+            let mut s = vec![];
+            for _ in 0..num!(u32) {
+                s.push((num!(u8), num!(f64), num!(f64)));
+            }
+            if l < lines {
+                eras[l] = v;
+                shifts[l] = s;
+            }
+        }
+        self.eras = eras;
+        self.shifts = shifts;
+        Ok(())
     }
 
     /// A line's eras (empty for most).

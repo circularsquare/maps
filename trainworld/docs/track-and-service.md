@@ -485,7 +485,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   never leave a terminal in pairs.
 - **Trains join and leave at the ends** (T-206, notes/T-206.md). An edit that changes a running
   line's departures (its train count, a whole-line fleet's headway after track or congestion
-  changes, its turnaround) takes effect at the game time it is made: departures before it keep the
+  changes, its turnaround) takes effect at one game time (the edit's, a moment later for a train
+  count, below): departures before it keep the
   old pattern (an *era*, `Service::eras`), so every train already running carries on where it was;
   departures after it follow the new one. A train running when its profile changed is drawn from
   where it was (`Service::shifts`: at the same place, or at the same stop with the dwell it had
@@ -501,15 +502,23 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   a change never comes back. In steady service with a whole-line fleet every train is ready at
   exactly its next departure and nothing stands longer. Each drawn trip names the departure its
   train takes next (`Trip::next`, the fourth number per trip of `TrackApi.trips`, NaN when it
-  leaves service), so a selected train is followed onto its next trip (T-245). Eras are not saved: they are dropped once
-  no train of theirs can be drawn (an hour plus the longest trip and two headways after the
-  change), and a loaded game starts without them. Deterministic: the drawn trips are a function
-  of the service, its eras and the hour asked for, and every window agrees.
+  leaves service), so a selected train is followed onto its next trip (T-245). Eras are dropped
+  once no train of theirs can be drawn (an hour plus the longest trip and two headways after the
+  change); until then a save carries them and the shifts (T-1071, [architecture.md](architecture.md)
+  11), so a game saved mid-change loads with its trains where they were. Deterministic: the drawn
+  trips are a function of the service, its eras and the hour asked for, and every window agrees.
 - **Changing a train count** (T-229, notes/T-229.md). The stepper shows the new count at
   once (`game/world.ts` `pendingTrains`), and clicks made while an edit is in flight are folded
   into one edit sent when it lands. The worker sends a service-only state for it: no geometry
   moved, so it skips rebuilding the renderer's buffers and the main thread swaps in only the new
-  run profiles (`renderer.setService`).
+  run profiles (`renderer.setService`). A count or headway edit takes effect a moment ahead of the
+  clock (T-1071, notes/T-1071.md): the clock worker's lead is 0.25 s plus twice what its last such
+  edit took it, at most 2 s, of wall time at the clock's rate (`serviceLeadS`, `TrackApi.
+  set_edit_lead`; nothing when paused), and the state carries that game time (`effectiveAt`). The
+  renderer stages the state (`renderer.stage`) and puts it in, with the trips of its version, at
+  the first frame at or past that time, so the old and new service draw every train at the same
+  place when they swap, however fast the clock runs. The edit's charge, fleet and panel figures change at once.
+  Any other state puts in the staged ones first.
 - **Trip times on the stops list**: each stop shows the time from the start of the line, next to
   the station (e.g. Grand Central 1m23s, Long Island City 2m59s), and the panel shows the whole
   round trip.

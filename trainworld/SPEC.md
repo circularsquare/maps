@@ -226,7 +226,8 @@ The clock worker owns edits (with undo for reversible changes), capacity, fleet,
 the boarding account. Fares are paid into the cash as trains pick up riders and running costs
 drain evenly [T-284], each hour's share following when riders travel and trains run, fares
 landing as rides end [T-736]; the economy runs at 100x real days [T-081]. Changing a line's trains moves no
-running train: added ones enter at a terminal, removed ones leave at one [T-206]. A new game starts
+running train: added ones enter at a terminal, removed ones leave at one, and the change takes
+effect a moment ahead so it is drawn in step at any clock speed [T-206, T-1071]. A new game starts
 with $6B in an empty New York [T-805]; double track costs a base of US$90M a km times a
 multiplier per elevation (US$45M at grade), priced against cheap-country metros such as Korea's
 [T-805], a 20 m car costs US$2.5M, bought as a line's fleet grows and kept in the depot for any line
@@ -254,7 +255,8 @@ versioned snapshots. The page opens on a start menu (New game, then the saved ga
 start with the pick (T-677). A loaded game holds only its clock, behind a loading card, until its
 fresh demand solve's final result lands (T-347; the last final result kept beside the save, T-328,
 is drawn behind the card meanwhile); input is never blocked. City packs come from an offline Python pipeline. The simulation is a pure
-function of (save, pack versions, game time), bar the hour or two after a service edit [T-206].
+function of (save, pack versions, game time); a save made just after a service edit carries the
+change over [T-206, T-1071].
 Detail: [docs/architecture.md](docs/architecture.md) 7; file layout in `docs/code-map.md`.
 
 ## 8. Look and UI

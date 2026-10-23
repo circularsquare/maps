@@ -401,6 +401,9 @@ export interface ClockState {
   /** only the service changed (a train count, T-229): no geometry moved, so `net` is not built and
    * the renderer keeps its buffers, taking only the new phase tables and profile meta */
   service?: boolean;
+  /** T-1071: the game time a train count or headway edit takes effect, a moment ahead of the
+   * clock; the renderer draws this state and its trips from then, not before */
+  effectiveAt?: number;
   /** the draw anchor its local units are relative to (T-307, map/geo.ts) */
   anchor?: { lng: number; lat: number; version: number };
 }
