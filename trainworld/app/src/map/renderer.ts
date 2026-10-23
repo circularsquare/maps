@@ -77,6 +77,8 @@ const TRACK_IN_BOX = 0.3;
 const SEL_STRIDE = 3 + Math.ceil(PLATFORM_POINTS / 2);
 // A platform's centre line (T-254) in the shaders: PLATFORM_POINTS points packed two to a vec4,
 // as flat varyings `v_q0...` or texels; generated so the point count is set in one place.
+// With them the station program has 12 vec4 varyings packed, 15 unpacked: WebGL2 guarantees 15
+// (some phones report no more), so no more points or varyings there without packing others (T-953).
 const QV = Math.ceil(PLATFORM_POINTS / 2);
 const qVars = (dir: "in" | "out") => Array.from({ length: QV }, (_, i) => `flat ${dir} vec4 v_q${i};`).join("\n");
 const qPack = Array.from({ length: QV }, (_, i) => `v_q${i} = vec4(q[${2 * i}], ${2 * i + 1 < PLATFORM_POINTS ? `q[${2 * i + 1}]` : "vec2(0.0)"});`).join("\n  ");
@@ -273,8 +275,10 @@ void main() {
   if (u_lane_mode == 1 && u_casing <= 0.0) v_color = mix(v_color, u_casing_rgb, 0.6 * t);
 }`;
 
+// highp: v_cap is device px along the segment, past fp16's 65504 on a long straight zoomed in on a
+// phone, where mediump is 16-bit (T-953)
 const STROKE_FS = `#version 300 es
-precision mediump float;
+precision highp float;
 in vec3 v_color;
 in float v_alpha;
 in vec4 v_cap;
@@ -1409,6 +1413,7 @@ export class NetworkRenderer {
   setLayers(l: NetworkLayers | null) {
     const n = this.net;
     if (!n || !this.lines) return;
+    this.layersSrc = l;
     const lines = this.lines;
     if (lines.count) this.rewrite(lines.wmulBuf, l ? l.lineWidth : new Float32Array(lines.count).fill(1));
     this.lineWidths = l && l.lineWidth.length === lines.count ? l.lineWidth : null;
@@ -1562,6 +1567,7 @@ export class NetworkRenderer {
 
   /** The drawing tool's alignment, or null. */
   setPreview(s: Strokes | null) {
+    this.previewSrc = s;
     for (const r of this.previewRes) r.del();
     this.previewRes = [];
     this.preview = s && s.count ? this.strokes(s, this.previewRes) : null;
@@ -1570,9 +1576,38 @@ export class NetworkRenderer {
 
   /** The blueprint track picked by a drag selection (T-333), drawn as an ink band under the track, or null. */
   setHighlight(s: Strokes | null) {
+    this.highlightSrc = s;
     for (const r of this.highlightRes) r.del();
     this.highlightRes = [];
     this.highlight = s && s.count ? this.strokes(s, this.highlightRes) : null;
+  }
+
+  /** What the setters were last given, for `restore`. */
+  private layersSrc: NetworkLayers | null = null;
+  private previewSrc: Strokes | null = null;
+  private highlightSrc: Strokes | null = null;
+
+  /** The canvas lost its context and the browser gave it a new one (T-953): every GL object went
+   * with the old, so the programs are compiled again and what was drawn is uploaded again. */
+  restore() {
+    this.res = [];
+    this.serviceRes = [];
+    this.previewRes = [];
+    this.highlightRes = [];
+    this.connRes = [];
+    this.connVao = this.connFlagBuf = null;
+    this.probeProg = this.probeVao = null;
+    this.pendingQuery = null;
+    this.tripEpoch = NaN;
+    this.tripVersion = -1;
+    this.init(this.gl);
+    const n = this.net, layers = this.layersSrc;
+    if (n) {
+      this.setNetwork(n);
+      if (layers) this.setLayers(layers);
+    }
+    this.setPreview(this.previewSrc);
+    this.setHighlight(this.highlightSrc);
   }
 
   /** Trips for the hour starting at `epoch` (from the worker). */

@@ -88,6 +88,13 @@ export class Overlay {
     if (!gl) throw new Error("no WebGL2");
     this.gl = gl;
     renderer.init(gl);
+    // Phones drop WebGL contexts (a tab in the background, memory short, a GPU reset): taking the
+    // loss lets the browser hand the canvas a new context, which the renderer rebuilds into (T-953).
+    this.canvas.addEventListener("webglcontextlost", (e) => e.preventDefault());
+    this.canvas.addEventListener("webglcontextrestored", () => {
+      renderer.restore();
+      this.invalidate();
+    });
     this.size();
     map.on("resize", () => {
       this.size();
@@ -109,6 +116,8 @@ export class Overlay {
     };
     if (map.isStyleLoaded()) addCamera();
     else map.on("load", addCamera);
+    // MapLibre restores its style after a lost context without custom layers (T-953)
+    map.on("style.load", addCamera);
 
     window.addEventListener("blur", () => {
       this.focused = false;
@@ -151,7 +160,7 @@ export class Overlay {
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     clock.tick();
-    if (!NO_DRAW) this.renderer.draw(this.camMatrix, clock.now(), this.map.getZoom(), this.map.getPixelRatio(), this.options());
+    if (!NO_DRAW && !gl.isContextLost()) this.renderer.draw(this.camMatrix, clock.now(), this.map.getZoom(), this.map.getPixelRatio(), this.options());
     this.lastDrawnMatrix = this.camMatrix;
     const now = performance.now();
     this.drawMs.push(now - a);

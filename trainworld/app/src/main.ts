@@ -533,6 +533,8 @@ if (DEBUG) {
         errs.push(Math.hypot(gpu[i * 2] - at.x, gpu[i * 2 + 1] - at.y) / kAtY(at.y, n.anchor));
       }
     }
+    // browsers keep a dozen or so contexts and drop the oldest past that, the game's own among them
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
     errs.sort((a, b) => a - b);
     return { n: errs.length, p50M: errs[errs.length >> 1], maxM: errs[errs.length - 1] };
   };

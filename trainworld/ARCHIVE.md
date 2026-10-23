@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-953 [P2] WebGL audit for devices and browsers. Done 2026-10-22: a lost context (a blank map until reload) now recovers on both canvases and MapLibre; STROKE_FS is highp; limits, float textures and GLSL checked on five back ends. T-955 to T-957 filed. notes/T-953.md.
 - T-952 [P1] The game could not start on a Pixel 10. Done 2026-10-22: its PowerVR compiler rejected the platform shaders' `vec2[13](...)` array constructor ("no default precision defined"); `qUnpack` in map/renderer.ts now fills the array element by element. T-950's screen named it.
 - T-950 [P1] "Calculating demand" forever on Anita's phone. Done 2026-10-22: the clock worker's start, its script error and main.ts's setup could fail silently, leaving the card up; they now show "The game could not start" with the error, and a watchdog fails a quiet card. Memory ruled out. notes/T-950.md.
 - T-942 [P2] Keep placing on by default (Anita 2026-10-22). Done 2026-10-22: the setting starts on (stored settings below version 7 take the new default once), and Caps Lock flips it on each press rather than mirroring the lock's light. docs/ui-building.md.

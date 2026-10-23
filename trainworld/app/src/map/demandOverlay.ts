@@ -262,14 +262,15 @@ interface DiscSet {
   count: number;
   /** the draw anchor the discs' positions are relative to (T-317): drawn with its matrix */
   anchor: Anchor;
-  /** the discs it was made from, matched against the hovered disc (T-730) */
+  /** the instances it was made from: matched against the hovered disc (T-730), uploaded again
+   * after a lost context (T-953) */
   data?: Float32Array;
 }
 
 export class DemandOverlay {
   readonly canvas: HTMLCanvasElement;
   private gl: WebGL2RenderingContext;
-  private prog: WebGLProgram;
+  private prog!: WebGLProgram;
   private u: Record<string, WebGLUniformLocation | null> = {};
   private bubbles: (DiscSet | null)[] = [];
   private sets = new Map<DiscLayer, DiscSet>();
@@ -305,9 +306,10 @@ export class DemandOverlay {
     const gl = this.canvas.getContext("webgl2", { antialias: false, premultipliedAlpha: true, alpha: true });
     if (!gl) throw new Error("no WebGL2");
     this.gl = gl;
-    this.prog = compile(gl, DISC_VS, DISC_FS);
-    for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_pad", "u_hot", "u_split_train", "u_split_rest"]) this.u[n] = gl.getUniformLocation(this.prog, n);
-    this.timerExt = gl.getExtension("EXT_disjoint_timer_query_webgl2");
+    this.programs();
+    // a lost context is taken and rebuilt when the browser gives a new one, as the network canvas's (T-953)
+    this.canvas.addEventListener("webglcontextlost", (e) => e.preventDefault());
+    this.canvas.addEventListener("webglcontextrestored", () => this.restore());
     this.size();
     map.on("resize", () => {
       this.size();
@@ -323,6 +325,27 @@ export class DemandOverlay {
     });
   }
 
+  private programs() {
+    const gl = this.gl;
+    this.prog = compile(gl, DISC_VS, DISC_FS);
+    for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_pad", "u_hot", "u_split_train", "u_split_rest"]) this.u[n] = gl.getUniformLocation(this.prog, n);
+    this.timerExt = gl.getExtension("EXT_disjoint_timer_query_webgl2");
+    this.cutProg = this.lineProg = null;
+    this.query = null;
+  }
+
+  /** A new context after a lost one: every set made again from the data it keeps. */
+  private restore() {
+    this.programs();
+    const nearby = [...this.nearby], sets = [...this.sets], lines = [...this.lines];
+    this.bubbles = this.bubbles.map((s) => s && this.makeSet(s.data!, s.anchor));
+    this.nearby = new Map(nearby.map(([z, l]) => [z, l.map((s) => s && this.makeSet(s.data!, s.anchor))]));
+    this.sets = new Map(sets.map(([k, s]) => [k, this.makeSet(s.data!, s.anchor)]));
+    this.lines = new Map(lines.map(([k, s]) => [k, this.makeLineSet(s.data!, s.anchor)]));
+    this.blank = false;
+    this.invalidate();
+  }
+
   private size() {
     const dpr = this.map.getPixelRatio();
     const c = this.map.getCanvas();
@@ -334,6 +357,8 @@ export class DemandOverlay {
 
   private makeSet(data: Float32Array, a: Anchor): DiscSet {
     const gl = this.gl;
+    // kept as data only while the context is lost; `restore` uploads it
+    if (gl.isContextLost()) return { vao: null!, buf: null!, count: data.length / DISC, anchor: a, data };
     const buf = gl.createBuffer()!;
     const vao = gl.createVertexArray()!;
     gl.bindVertexArray(vao);
@@ -444,6 +469,7 @@ export class DemandOverlay {
 
   private makeLineSet(data: Float32Array, a: Anchor): DiscSet {
     const gl = this.gl;
+    if (gl.isContextLost()) return { vao: null!, buf: null!, count: data.length / LINE, anchor: a, data };
     if (!this.lineProg) {
       this.lineProg = compile(gl, LINE_VS, LINE_FS);
       for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_rscale", "u_stub", "u_width", "u_full", "u_pad"]) this.lineU[n] = gl.getUniformLocation(this.lineProg, n);
@@ -461,7 +487,7 @@ export class DemandOverlay {
     });
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    return { vao, buf, count: data.length / LINE, anchor: a };
+    return { vao, buf, count: data.length / LINE, anchor: a, data };
   }
 
   private drawLines(m0: ArrayLike<number>,matrices: Map<number, Float32Array>, pxPerUnit: number, dpr: number) {
@@ -496,8 +522,8 @@ export class DemandOverlay {
 
   private draw() {
     const m0 = this.overlay.camMatrix;
-    if (!m0) return;
     const gl = this.gl;
+    if (!m0 || gl.isContextLost()) return;
     const zoom = this.map.getZoom(), dpr = this.map.getPixelRatio();
     const level = bubbleLevel(zoom);
     if (level !== this.lastLevel) {

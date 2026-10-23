@@ -138,7 +138,9 @@ export function startRealNetwork(map: maplibregl.Map) {
     const colours = colour(SHADES[shade.peek()]);
     for (const { cc } of hits) {
       added.add(cc);
-      map.addSource(ID + cc, { type: "vector", url: `pmtiles://${base}data/${cc}.pmtiles`, attribution: OSM_ATTRIBUTION });
+      // MapLibre's restored style after a lost context already has them (T-953)
+      if (map.getLayer(ID + cc)) continue;
+      if (!map.getSource(ID + cc)) map.addSource(ID + cc, { type: "vector", url: `pmtiles://${base}data/${cc}.pmtiles`, attribution: OSM_ATTRIBUTION });
       map.addLayer(
         {
           id: ID + cc, type: "line", source: ID + cc, "source-layer": "track", minzoom: MIN_ZOOM,

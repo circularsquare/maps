@@ -178,6 +178,8 @@ export class GradeMarks {
 
   init(gl: WebGL2RenderingContext) {
     this.gl = gl;
+    // again after a lost context (T-953): the old buffers are gone, the renderer uploads anew
+    this.built = this.drawing = null;
     this.prog = compile(gl, VS, FS);
     for (const n of ["u_matrix", "u_viewport", "u_r", "u_ink", "u_bp", "u_fill", "u_bad", "u_dpr", "u_quiet", "u_level_colours", "u_flat"]) this.u[n] = gl.getUniformLocation(this.prog, n);
   }

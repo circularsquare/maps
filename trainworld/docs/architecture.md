@@ -68,7 +68,11 @@ Web first, so it can be shared as a link.
   notes/architecture-history.md). Track buffers are built in the clock
   worker and replaced on each edit, made from per-edge, per-line and per-station pieces the worker
   keeps and rebuilds only when their inputs change (`NetCache` in map/network.ts, T-496); trains are instanced and positioned on the GPU from keyframes
-  and the clock. World coordinates and the moving draw anchor: [world.md](world.md).
+  and the clock. World coordinates and the moving draw anchor: [world.md](world.md). A lost WebGL
+  context (phones drop them) is taken on both our canvases; on restore the renderer and the demand
+  canvas compile again and upload what they last drew, and the camera layer is added back to
+  MapLibre's restored style (T-953). Shaders are written to WebGL2's guaranteed limits and highp
+  floats in every fragment shader that measures px (notes/T-953.md).
 - **A state and its trips land together** [T-648]: the clock worker posts each state, then its
   trips, before anything else. The client holds the state until those trips (at most 250 ms), so
   the world, the network and the trips are taken in one task and no frame draws old trips on new run
