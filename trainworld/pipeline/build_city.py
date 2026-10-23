@@ -60,8 +60,13 @@ BOUNDARY_URL = "https://www2.census.gov/geo/tiger/TIGER2020/COUNTY/tl_2020_us_co
 POPEST = "https://www2.census.gov/programs-surveys/popest/datasets/2020-2021/counties/totals/co-est2021-alldata.csv"
 QCEW_TOTAL = "https://data.bls.gov/cew/data/api/{year}/a/industry/10.csv"
 
-STATES = {"09": "ct", "10": "de", "11": "dc", "24": "md", "25": "ma", "33": "nh",
-          "34": "nj", "36": "ny", "42": "pa", "44": "ri", "51": "va", "54": "wv"}
+STATES = {"01": "al", "02": "ak", "04": "az", "05": "ar", "06": "ca", "08": "co", "09": "ct", "10": "de",
+          "11": "dc", "12": "fl", "13": "ga", "15": "hi", "16": "id", "17": "il", "18": "in", "19": "ia",
+          "20": "ks", "21": "ky", "22": "la", "23": "me", "24": "md", "25": "ma", "26": "mi", "27": "mn",
+          "28": "ms", "29": "mo", "30": "mt", "31": "ne", "32": "nv", "33": "nh", "34": "nj", "35": "nm",
+          "36": "ny", "37": "nc", "38": "nd", "39": "oh", "40": "ok", "41": "or", "42": "pa", "44": "ri",
+          "45": "sc", "46": "sd", "47": "tn", "48": "tx", "49": "ut", "50": "vt", "51": "va", "53": "wa",
+          "54": "wv", "55": "wi", "56": "wy", "72": "pr"}
 
 # T-162: the work gravity's decay between zones in different states is multiplied by this
 # (notes/T-162.md: fitted jointly with the decay on LODES OD for New York and Philadelphia). It is

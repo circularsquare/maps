@@ -409,13 +409,17 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   dissolved from communes, legal population by commune, INSEE jobs by commune of work; T-289);
   `japan.py`: Japan's (census meshes, N03, table 4, P29; T-420); `japan_zones.py`: Japan's 38
   non-city zones planned (`japan_zones.json`, which `build_city.py` turns into configs), fitted and
-  built as a batch (T-420 stage 3).
+  built as a batch (T-420 stage 3); `usa.py`: the US's (and Puerto Rico's) for planned rows (TIGER
+  outlines, 2020 blocks less institutions, LODES, ACS work from home, the US curve and state regions;
+  per-state caches in `data/work/usa/`; T-1016).
 - `register.py <ids> [--market] [--trips]`: a built batch's registry entries, boxes, market packs
   and local trips in one call (T-441).
 - `world_plan.py [check] [--fresh]`: the world plan (T-536), which metros get a pack, in what
   order, with which admin units, written to `pipeline/world_plan.json` (extents in
   `data/work/worldplan/`); `check` adds the eight-pack test and the next-50 picture; `row <pack>
-  <out.json>` plans one existing pack's metro as if the pack did not exist (a test build, T-537).
+  <out.json>` plans one existing pack's metro as if the pack did not exist (a test build, T-537);
+  `metros --countries US` plans a FUA country's metro rows alone, touching no other row (T-1015);
+  `zones --countries ES[,PT]` a country's zone rows (T-723).
 - `plan_config.py`: a planned row's `CITIES` config, every field from the row or a rule, then its
   country module's `plan_hooks(row)` keys (T-555; `build_city.py` takes every planned row through
   it); `osm_units.py <id>`: its outline from the

@@ -46,12 +46,17 @@ census or registers then upgrade single inputs by replacing one function. What e
   config's published figure ("curve": {"median_km" or "mean_km", "pow"}), fit_curve below; or
   both parameters fitted to a census table of commuters by distance band ("curve": {"bands",
   "road_factor"}), fit_curve_bands.
-- Regions: one region, no border factor.
+- Regions: one region, no border factor; or each cell's admin-1 region from the config's `regions`
+  hook, with its `border_factor` across them (the US states, T-1016).
 
 Config keys (a CITIES entry with "tier0": True): origin, water, boundary_file (GeoJSON, any
 polygons, dissolved; or a callable returning its path, as england.itl3_boundary), water_source, extract (Geofabrik path), iso2 (World Bank country),
-admin_totals (callable boundary -> [(name, shapely geometry, population)], optional), wfh (share
-working at home, optional; or per cell: at_home, callable (lat, lon) -> census at-home share, with
+boundary_drawn (callable -> (shapely geometry, source text), optional: the pack's drawn outline as
+given, where the footprint boundary_file is clipped to the shore), cell_points (callable boundary ->
+(lat, lon) arrays, optional: points that each get a cell, a census's small areas), regions
+(callable (lat, lon) of the pack's cells -> (u8 region per cell, the header's regions block),
+optional), admin_totals (callable boundary -> [(name, shapely geometry, population)], optional), wfh (share
+working at home, optional, or a callable returning it; or per cell: at_home, callable (lat, lon) -> census at-home share, with
 telework, the share of the rest teleworking on a day), jobs (callable (city, boundary, signals, proxy weight per cell) ->
 (jobs per signal cell, source name), optional: a country's workplace counts by small area, spread
 inside each area by the proxy; jobs_url), population (callable (city, boundary, signals) ->
@@ -354,9 +359,14 @@ def build_boundary(city, cfg):
             return [round(c[0], 6), round(c[1], 6)]
         return [rnd(x) for x in c]
 
-    geom = mapping(merged.simplify(0.0003, preserve_topology=True))
+    if cfg.get("boundary_drawn"):  # a country's own drawn outline, kept as given (T-1016: TIGER counties)
+        drawn, source = cfg["boundary_drawn"]()
+        geom = mapping(drawn)
+    else:
+        geom = mapping(merged.simplify(0.0003, preserve_topology=True))
+        source = f"tier 0: {os.path.basename(cfg['boundary_file'])}"
     out = {"type": "FeatureCollection", "features": [{
-        "type": "Feature", "properties": {"city": city, "source": f"tier 0: {os.path.basename(cfg['boundary_file'])}"},
+        "type": "Feature", "properties": {"city": city, "source": source},
         "geometry": {"type": geom["type"], "coordinates": rnd(geom["coordinates"])}}]}
     os.makedirs(b.PACKS, exist_ok=True)
     path = os.path.join(b.PACKS, f"{city}.boundary.geojson")
@@ -409,7 +419,11 @@ def signals(city, cfg, boundary, mask):
     places = canada.osm_places(city, boundary, cfg["extract"], cache=raw(f"osm_jobs_{city}.csv.gz"),
                                land_cap_m2=lc * 1e6 if lc else None, land_spread_deg=cfg.get("land_spread_deg", LAND_SPREAD_DEG))
     pids = np.fromiter((h3.str_to_int(h3.latlng_to_cell(la, lo, 9)) for la, lo in zip(places.lat, places.lon)), np.uint64, len(places))
-    cells = np.unique(np.concatenate([np.fromiter(g.keys(), np.uint64) for g in grids.values()] + [pids]))
+    extra = []
+    if cfg.get("cell_points"):  # a country's small areas, so each has a cell where GHSL has none (T-1016)
+        la, lo = cfg["cell_points"](boundary)
+        extra = [np.fromiter((h3.str_to_int(h3.latlng_to_cell(a, o, 9)) for a, o in zip(la, lo)), np.uint64, len(la))]
+    cells = np.unique(np.concatenate([np.fromiter(g.keys(), np.uint64) for g in grids.values()] + [pids] + extra))
     ok, ll = inside(cells, boundary)
     cells, ll = cells[ok], ll[ok]
     index = {int(c): i for i, c in enumerate(cells)}
@@ -877,6 +891,8 @@ def main(city):
     if cfg.get("population"):
         sig["pop"], pop_name = cfg["population"](city, boundary, sig)
     P = float(sig["pop"].sum())
+    if callable(cfg.get("wfh")):  # a share the module reads from a census table (T-1016)
+        cfg["wfh"] = cfg["wfh"]()
     wfh = cfg.get("wfh", 0.0)
     if callable(cfg.get("job_blend")):  # a planned city's rule (plan_config.job_blend, T-537)
         cfg["job_blend"] = cfg["job_blend"]()
@@ -935,12 +951,16 @@ def main(city):
     ]
     commute = {"home": "population x commuters per resident (no source of where workers live)",
                "work": work_rule(cfg, wfh), "region_share": wfh}
-    region_block = {"level": "admin-1", "ids": ["00"], "names": [cfg.get("region_name", city.upper())],
-                    "source": "tier 0: one region for the whole pack, no border factor"}
+    if cfg.get("regions"):  # each cell's admin-1 region, for the gravity's zones and border factor (T-1016)
+        region, region_block = cfg["regions"](sig["lat"][keep], sig["lon"][keep])
+    else:
+        region = np.zeros(int(keep.sum()), np.uint8)
+        region_block = {"level": "admin-1", "ids": ["00"], "names": [cfg.get("region_name", city.upper())],
+                        "source": "tier 0: one region for the whole pack, no border factor"}
     cells_json = b.write_cells(city, cfg, {"h3": cells, "x_m": x, "y_m": y, "pop": pop[keep], "jobs": jobs[keep],
                                            "errand_jobs": errand[keep], "leisure_jobs": leisure[keep],
                                            "commute_home": home_c[keep], "commute_work": work_c[keep],
-                                           "region": np.zeros(int(keep.sum()), np.uint8)},
+                                           "region": region},
                                totals, sources, mask, mask_info, commute, region_block)
     print(f"cells written in {time.time() - t0:.0f} s", flush=True)
     finish(city, kids)

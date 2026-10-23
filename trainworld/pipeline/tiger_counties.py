@@ -15,8 +15,9 @@ packs' boundaries stay disjoint. The result is cached in data/work/tiger_countie
 
 Three counties (19129, 31153, 51127) lose their face to the noding (a simplified line crosses a
 neighbour's) and are simplified on their own, so their borders may differ from a neighbour's by up
-to the tolerance; no pack holds them. Alaska, Hawaii and the territories are left out (nothing there
-is in a pack).
+to the tolerance; no pack holds them. Alaska, Hawaii and Puerto Rico, which border no other state,
+are simplified the same way one state at a time (`counties(fetch, state)`, T-1016), each cached
+beside the main file, so the contiguous US cache is left as it was.
 """
 import json
 import os
@@ -29,9 +30,14 @@ from shapely.strtree import STRtree
 URL = "https://www2.census.gov/geo/tiger/TIGER2020/COUNTY/tl_2020_us_county.zip"
 TOLERANCE_DEG = 0.0002  # about 22 m north-south: under half a pixel at zoom 11
 SKIP_STATES = {"02", "15"}  # Alaska, Hawaii; FIPS above 56 are territories
+OWN_STATES = {"02", "15", "72"}  # each simplified on its own: Alaska, Hawaii, Puerto Rico
 CACHE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "work",
                      "tiger_counties_simple.json")
-_memo = None
+_memo = {}
+
+
+def _contiguous(st):
+    return st not in SKIP_STATES and int(st) <= 56
 
 
 def _rings(geom):
@@ -41,14 +47,14 @@ def _rings(geom):
             yield LineString(hole.coords)
 
 
-def _build(fetch):
+def _build(fetch, keep=_contiguous):
     r = shapefile.Reader(fetch(URL))
     fields = [f[0] for f in r.fields[1:]]
     gi, si = fields.index("GEOID"), fields.index("STATEFP")
     ids, polys, lines = [], [], []
     for i, rec in enumerate(r.iterRecords()):
         st = rec[si]
-        if st in SKIP_STATES or int(st) > 56:
+        if not keep(st):
             continue
         g = shapely.make_valid(shape(r.shape(i).__geo_interface__))
         ids.append(rec[gi])
@@ -80,13 +86,15 @@ def _build(fetch):
     return out
 
 
-def counties(fetch):
-    """{GEOID: simplified TIGER/Line county geometry}, cached in data/work."""
-    global _memo
-    if _memo is not None:
-        return _memo
-    if not os.path.exists(CACHE):
-        out = _build(fetch)
+def counties(fetch, state=None):
+    """{GEOID: simplified TIGER/Line county geometry}, cached in data/work: the contiguous US, or
+    one of OWN_STATES (its 2-digit FIPS)."""
+    if state in _memo:
+        return _memo[state]
+    assert state is None or state in OWN_STATES, state
+    path = CACHE if state is None else CACHE.replace(".json", f"_{state}.json")
+    if not os.path.exists(path):
+        out = _build(fetch) if state is None else _build(fetch, lambda st: st == state)
 
         def rnd(c):
             if isinstance(c, (list, tuple)) and c and isinstance(c[0], (int, float)):
@@ -94,11 +102,11 @@ def counties(fetch):
             return [rnd(x) for x in c]
 
         doc = {k: {"type": mapping(g)["type"], "coordinates": rnd(mapping(g)["coordinates"])} for k, g in out.items()}
-        os.makedirs(os.path.dirname(CACHE), exist_ok=True)
-        with open(CACHE + ".part", "w") as f:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path + ".part", "w") as f:
             json.dump(doc, f, separators=(",", ":"))
-        os.replace(CACHE + ".part", CACHE)
-    with open(CACHE) as f:
+        os.replace(path + ".part", path)
+    with open(path) as f:
         doc = json.load(f)
-    _memo = {k: shape(v) for k, v in doc.items()}
-    return _memo
+    _memo[state] = {k: shape(v) for k, v in doc.items()}
+    return _memo[state]

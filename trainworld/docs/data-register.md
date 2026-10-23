@@ -28,7 +28,7 @@ loose checks only since T-636 (Anita, 2026-10-17): no country constant comes fro
 
 | Country | Packs | Archetype | Notes |
 |---|---|---|---|
-| United States | nyc phl bos wdc bal pvd nhv hfd spf; zones wor wnd nlc lit | A | docs/demand-sources.md, notes/T-142.md |
+| United States | nyc phl bos wdc bal pvd nhv hfd spf; zones wor wnd nlc lit; the rest of the country planned (T-1004: 45 metro rows and about 196 county zones on the tier 0 runner with the `usa` module, `pipeline/usa.py` (T-1016): TIGER county outlines, blocks less institutions, LODES jobs and sectors, ACS work from home by county, the US curve and state factor; Puerto Rico its own country, outline, people and work from home from the module, jobs, curve and region tier 0) | A | docs/demand-sources.md, notes/T-142.md, notes/T-1004.md |
 | Canada | tor | A | notes/T-277.md |
 | England (UK) | lon man lee bir not new she liv por; the rest of England as zones with Wales, Scotland and Northern Ireland, 56 in all in the registry (T-788: ITL3 units grown within ITL2, replanned 2026-10-22; Leicester inside Leicestershire's zone; wil's extracts by hand) | A | notes/T-288.md (T-360 part); loose checks (gathered for T-509): U TfL NUMBAT 2024 station entries and line boarders, U ORR Table 1410 station usage 2024-25, U Census 2011 QS701EW travel to work by MSOA (2021 TS061 skip: lockdown), U GB-wide GTFS (aubin.app, Transitous) for National Rail; G Network Rail and RDG timetable feeds (login); the eight plan packs (man lee bir not new she liv por, all shipped) use the sources of the other tables here, with a borrowed commute curve (T-314) and no Heathrow share; OSM extracts of 2026-10-17 (notes/T-726.md) |
 | France | par; lil mar lyo bor tou (plan rows, shipped); nic parked (T-769); the rest of metropolitan France as 80 zones (T-779; Creuse and Lozère dead space, Alpes-Maritimes out with nic, overseas départements not zoned). The zones take global sources only and the zone curve, not the France module (OSM extracts 2026-10-20); the module's sources (MOBPRO flows, Filosofi squares) are usable for them later (T-785) | A, by commune (par and the plan metros); D for the zones | notes/T-289.md; loose checks (gathered for T-509): U IDFM GTFS, U IDFM validations per ZdC per day, U INSEE RP 2022 transit share to work by commune (no rail split); G EGT 2018-20 result tables (omnil.fr 403 to scripts); the six plan packs use the other tables' sources with a borrowed commute curve and no Charles de Gaulle share; OSM extracts of 2026-10-19 (notes/T-726.md) |
@@ -72,7 +72,7 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 
 | Country | Population | Boundaries | OSM completeness c |
 |---|---|---|---|
-| United States | U 2020 census blocks, institutions off (PL 94-171 P5) | U TIGER counties | not needed (LODES sectors); OSM about half of employer shops |
+| United States | U 2020 census blocks, institutions off (PL 94-171 P5); planned rows read the block .dbf only, each block's people spread by GHSL over the cells nearest its internal point (`usa`) | U TIGER counties | not needed (LODES sectors); OSM about half of employer shops |
 | Canada | U 2021 dissemination areas (98-10-0015-01); N dissemination blocks, T-282 | U Esri Canada copies of StatCan files; G official files (www12 bot check), T-282 | 0.94 / 0.92 |
 | England | U Census 2021 by LSOA (TS001), GHSL inside; skip output areas (LSOA already changed little, T-360) | U ONS ITL3 and LAD polygons | 0.98 / 1 (BRES in use) |
 | France | U legal population by commune (geo.api.gouv.fr); N Filosofi 200 m squares, T-384 | U geo.api.gouv.fr communes | 1 / 1 |
@@ -113,7 +113,7 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 
 | Country | Jobs at work | Jobs by industry (everyday destinations) | Residents by industry |
 |---|---|---|---|
-| United States | U LODES WAC, block | U LODES WAC sectors, block | N LODES RAC sectors, block, T-500 |
+| United States | U LODES WAC, block (planned rows: the newest year from 2023 back to 2016, Michigan 2021, Alaska 2016; none for Puerto Rico, tier 0's proxy) | U LODES WAC sectors, block | N LODES RAC sectors, block, T-500 |
 | Canada | U 2021 census workers by tract of work (98-10-0498-01), lockdown at-home workers put back | U 98-10-0492-01, tract x sector (leisure; errands fail the concentration test) | ? census industry by tract of residence, T-500 |
 | England | U BRES 2024, LSOA | U BRES by LSOA x SIC division | N Census 2021 industry by LSOA of residence (TS060), T-500 |
 | France | U census flows (MOBPRO 2022) summed by commune of work | N Flores 2021, commune x A38 (trade mixed with wholesale), T-503 | ? MOBPRO detail file, T-500 |
@@ -134,7 +134,7 @@ days of people with a workplace. Several countries have one figure for both.
 
 | Country | Commute flows (the curve) | Travel survey | Work at home | Telework |
 |---|---|---|---|---|
-| United States | U LODES OD, fitted | U NHTS 2017 and 2022: weekend factors, medical rates, long trips | U ACS by tract and industry | U in ACS's figure |
+| United States | U LODES OD, fitted (planned rows take the same curve) | U NHTS 2017 and 2022: weekend factors, medical rates, long trips | U ACS by tract and industry; planned rows ACS 2019-23 B08301 over the row's counties, one share (Puerto Rico too) | U in ACS's figure |
 | Canada | U 2021 census flows between municipalities (98-10-0459-01, lockdown), fitted; N 2016 flows for a refit, T-282 | ? Toronto's TTS, not checked | U LFS May 2024, one share (24.7%) | U in the LFS share |
 | England | U 2011 census flows (WU01EW), MSOA, fitted; 2021 flows lockdown, checks only | G National Travel Survey microdata (UK Data Service licence), not checked | - (Census 2021 lockdown) | U ONS OPN 2024, one share (0.27) |
 | France | U MOBPRO 2022 commune flows, fitted | ? Ile-de-France EGT, not checked | U Eurostat LFS usually at home | U LFS sometimes (0.12 in all) |
@@ -228,7 +228,7 @@ lengths are not used; its share of trips under 2 km is the check (docs/demand-wo
 
 | Country | Schools | Universities | Medical | Airports |
 |---|---|---|---|---|
-| United States | U NCES CCD public schools; N NCES PSS private, T-142 | U IPEDS | U OSM (relations skipped, T-203) | U FAA enplanements, DB1B connecting share |
+| United States | U NCES CCD public schools (planned rows OSM until T-1019); N NCES PSS private, T-142 | U IPEDS (planned rows OSM until T-1019) | U OSM (relations skipped, T-203) | U FAA enplanements, DB1B connecting share (planned rows Wikidata until T-1019) |
 | Canada | U Ontario school file (per province) | U COU and Ontario college files (per province); N partner campuses, T-282 | U OSM | U StatCan 23-10-0253-01; connecting by judgement |
 | England | U GIAS | N HESA Table 1 by provider, T-382 | U OSM | U Wikidata; Heathrow 0.7 by judgement |
 | France | N ministry directory with pupils, T-385 | ? ministry students by site, T-505 | U OSM | U Wikidata; CDG 0.75 by judgement |

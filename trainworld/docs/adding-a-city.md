@@ -9,7 +9,8 @@ next run finds it wrong; timings and older worked-example detail are in
 
 Rules that apply: CLAUDE.md "Working here" (pragmatic metro extent, basic checks, no extent study or
 calibration for plan rows) and "General sources and methods only". A US city uses US national sources
-(LODES, Census blocks, ACS, TIGER, NCES, IPEDS, FAA). A city in another country uses tier 0 from global
+(LODES, Census blocks, ACS, TIGER, NCES, IPEDS, FAA; a planned US row the `usa` module's, section 3, with
+tier 0's schools, universities and airports until T-1019). A city in another country uses tier 0 from global
 sources, with a country module replacing inputs one at a time ("Outside the US").
 
 Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps root
@@ -148,14 +149,17 @@ background and wait once for the process.
   - **Metros.** Outside Europe and the US, GHSL urban centres (UCDB R2024A) over 1M people; a
     centre's area is the centre, every functional urban area (GHS-FUA R2019A) it holds half the
     people of, and the FUA around its population-weighted centre; centres sharing a FUA are one
-    metro. In Europe (geoBoundaries' continent: Russia in, Turkey out), FUAs over 1M instead.
+    metro. In Europe (geoBoundaries' continent: Russia in, Turkey out), FUAs over 1M instead; in
+    the US too, planned alone from US counties only (`world_plan.py metros --countries US`,
+    docs/zones.md 2).
     A smaller urban centre outside every metro's area whose edge lies within 3 km of a metro's
     own centres (in Europe, the centres inside its FUA) joins the nearest such metro's area, since
     GHS-FUA gives a town grown up to a metro a FUA of its own (Ikorodu beside Lagos; T-556).
   - **Order.** The UK, then the rest of Europe, then everywhere else, each largest first. A
     rerun keeps each earlier row's order and id: a row inherits them from the previous plan's row
     it shares the most people with; rows with none follow the last.
-  - **Units.** NUTS-3 2024 in Europe, ITL3 in the UK; elsewhere geoBoundaries gbOpen at the finest
+  - **Units.** NUTS-3 2024 in Europe, ITL3 in the UK, Census 2020 counties in the US and Puerto
+    Rico; elsewhere geoBoundaries gbOpen at the finest
     of ADM2-4 where the median person's unit holds 20,000 people or more. A first-level unit that
     level misses a tenth of the people of takes the finest level covering it (Moscow). No
     geoBoundaries at all: the territory whole (Hong Kong, Macau).
@@ -250,6 +254,7 @@ sources. Each field comes from the row or a rule:
   | england | outline (whole ITL3 units, ONS BGC), district totals, population by LSOA, BRES jobs and sectors, GIAS schools, work from home 0.27 | English rows |
   | france | outline (départements from their communes), population by commune, INSEE jobs by commune of work, work from home 0.12 | NUTS-3 units to départements by name |
   | germany | outline (Kreise, VG250), Zensus 100 m population scaled to Gemeinden, Pendlerrechnung jobs, work from home 0.10 | NUTS-3 units to Kreise by VG250's `NUTS` |
+  | usa | outline (TIGER/Line counties drawn, the cartographic ones as footprint), people by 2020 block less institutions, LODES WAC jobs and sectors (newest year back to 2016), ACS work from home over the row's counties, the US curve and state factor 0.23 with each cell's state as its region; per-state caches in `data/work/usa/` (`usa.py state <fips>` ahead of a run, `usa.py check <id>` for figures by county) | US rows (unit set USA, county GEOIDs); Puerto Rico rows (PRI) take the outline, people and work from home only |
   | brazil | population by 2022 census tract | the states of the plan's municipalities |
   | canada | everyday destinations by census tract of work | any province |
   | china, india, korea, nigeria | none | |
@@ -535,7 +540,7 @@ real pack in notes/T-287.md):
 | Work from home | ACS 2019-2023 by tract and industry | Labour Force Survey May 2024 (24.7%, Toronto CMA), at both ends | one national share from the config (default 0) |
 | Everyday destinations | LODES retail, service, food, leisure sectors | the same sectors by census tract of work (98-10-0492-01) | each 2 km zone's jobs (errands also 25% residents) blended with its OSM shops and services, or restaurants, bars, venues and hotels, as far as the pack's OSM is complete; or a country's jobs by sector by small area that pass the plausibility check (`everyday` hook: Japan's mesh, England's BRES); set after the gravity (`tier0.everyday_pack`, T-453) |
 | Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | power 1.4 with the length fitted to a published median or mean commute (`tier0.fit_curve`), or with none, `"curve": "borrowed"` (`tier0.borrowed_curve`, T-314); a country's flow table, fitted (London); both parameters fitted to commuters by distance band (`tier0.fit_curve_bands`, Mumbai; a travel survey's home-to-job distances, Sao Paulo) |
-| Regions, border | states, 0.23 | provinces, factor 1 | one region, factor 1 |
+| Regions, border | states, 0.23 | provinces, factor 1 | one region, factor 1; or a module's `regions` hook with its factor (`usa`: the states, 0.23) |
 | Drawn boundary | TIGER/Line counties, water included (T-352) | cartographic census subdivisions, clipped at the shore (hugs Lake Ontario) | the config's district polygons (a GeoJSON, or a callable that writes one: London's whole ITL3 units, `england.itl3_boundary`) |
 | Water | TIGER AREAWATER and states | StatCan lakes and rivers; land = cartographic municipalities plus US states | OSM: `osm_water.source([extracts])` as the config's `water_source` (below) |
 | Schools | NCES | Ontario school information file (provincial; other provinces need their own) | OSM `amenity=school` sites; pupils = population x share aged 0-14 (World Bank) x 0.9, by the square root of site area; or a national register with pupils (`schools` hook, England's GIAS) |

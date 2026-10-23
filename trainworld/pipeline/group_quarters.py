@@ -35,10 +35,20 @@ import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 PL_ZIP = "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/{name}/{ab}2020.pl.zip"
-PL_STATES = {"09": ("Connecticut", "ct"), "10": ("Delaware", "de"), "11": ("District_of_Columbia", "dc"),
-             "24": ("Maryland", "md"), "25": ("Massachusetts", "ma"), "33": ("New_Hampshire", "nh"),
-             "34": ("New_Jersey", "nj"), "36": ("New_York", "ny"), "42": ("Pennsylvania", "pa"),
-             "44": ("Rhode_Island", "ri"), "51": ("Virginia", "va"), "54": ("West_Virginia", "wv")}
+PL_STATES = {"01": ("Alabama", "al"), "02": ("Alaska", "ak"), "04": ("Arizona", "az"), "05": ("Arkansas", "ar"),
+             "06": ("California", "ca"), "08": ("Colorado", "co"), "09": ("Connecticut", "ct"), "10": ("Delaware", "de"),
+             "11": ("District_of_Columbia", "dc"), "12": ("Florida", "fl"), "13": ("Georgia", "ga"),
+             "15": ("Hawaii", "hi"), "16": ("Idaho", "id"), "17": ("Illinois", "il"), "18": ("Indiana", "in"),
+             "19": ("Iowa", "ia"), "20": ("Kansas", "ks"), "21": ("Kentucky", "ky"), "22": ("Louisiana", "la"),
+             "23": ("Maine", "me"), "24": ("Maryland", "md"), "25": ("Massachusetts", "ma"), "26": ("Michigan", "mi"),
+             "27": ("Minnesota", "mn"), "28": ("Mississippi", "ms"), "29": ("Missouri", "mo"), "30": ("Montana", "mt"),
+             "31": ("Nebraska", "ne"), "32": ("Nevada", "nv"), "33": ("New_Hampshire", "nh"), "34": ("New_Jersey", "nj"),
+             "35": ("New_Mexico", "nm"), "36": ("New_York", "ny"), "37": ("North_Carolina", "nc"),
+             "38": ("North_Dakota", "nd"), "39": ("Ohio", "oh"), "40": ("Oklahoma", "ok"), "41": ("Oregon", "or"),
+             "42": ("Pennsylvania", "pa"), "44": ("Rhode_Island", "ri"), "45": ("South_Carolina", "sc"),
+             "46": ("South_Dakota", "sd"), "47": ("Tennessee", "tn"), "48": ("Texas", "tx"), "49": ("Utah", "ut"),
+             "50": ("Vermont", "vt"), "51": ("Virginia", "va"), "53": ("Washington", "wa"), "54": ("West_Virginia", "wv"),
+             "55": ("Wisconsin", "wi"), "56": ("Wyoming", "wy"), "72": ("Puerto_Rico", "pr")}
 # P5 group quarters population by major type (2020 PL 94-171), and the block total for a check
 ALL = ["P1_001N", "P5_001N", "P5_002N", "P5_003N", "P5_004N", "P5_005N", "P5_006N",
        "P5_007N", "P5_008N", "P5_009N", "P5_010N"]
