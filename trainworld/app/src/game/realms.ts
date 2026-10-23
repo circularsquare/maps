@@ -43,6 +43,9 @@ export const realmLand = signal<ReadonlyMap<string, RealmLand> | null>(null);
 export const realmsOff = signal(false);
 
 export async function loadRealmLand() {
+  // the checks' pages (`opened=all`: city-browser, every-pack-opens) visit zones in every realm,
+  // including new rows the join has not given a realm yet
+  if (new URLSearchParams(location.search).get("opened") === "all") { realmsOff.value = true; return; }
   try {
     const r = await fetch(dataUrl("realms.geojson"));
     if (!r.ok) throw new Error(`${r.status} ${r.url}`);
