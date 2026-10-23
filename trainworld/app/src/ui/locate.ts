@@ -27,8 +27,8 @@ const OPEN_MAX_ZOOM = 12;
  * in view (every station, if none is built); with no stations, the zone it was started in, else the
  * world map. Runs when the game's first state arrives (`fitView`), which is before its demand. */
 export function startOpenFit() {
-  // T-977: untracked, since the camera move runs the map's listeners and viewStart writes signals;
-  // nothing read there may make the fit run again later
+  // T-977: untracked, since the camera move runs the map's listeners in this effect (zoomed out, the
+  // city view's tags read the bubble scheme), and anything they read would make the fit run again
   effect(() => { if (fitView.value) untracked(fitOpened); });
 }
 

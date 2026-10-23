@@ -73,6 +73,8 @@ moves). Rules for every agent are in CLAUDE.md; history in ARCHIVE.md.
 
 ## Interface
 Anita's TODO.md "short term", filed 2026-10-21 (late) and 2026-10-22.
+- T-994 [P1] Local demand bubbles gone, only intercity ones draw (Anita 2026-10-23, today's 8800 build): a regression from today's commits. Taking, 2026-10-23.
+- T-995 [P2] The cursor tooltip while placing high-speed track says the max is 160 km/h; the hover over placed blueprints is right. Taking, 2026-10-23.
 - T-988 [P3] Games synced between devices on the account (T-972 stage 2; a reach goal, Anita 2026-10-23). notes/T-972.md "Stage 2".
 - T-989 [P3] Share a game by a read-only link (M4). notes/T-972.md.
 - T-990 [P3] Leaderboard rows open that player's shared game read-only, after T-989. notes/T-972.md.
@@ -80,7 +82,6 @@ Anita's TODO.md "short term", filed 2026-10-21 (late) and 2026-10-22.
 - T-975 [P2] Regions (Anita's TODO.md, 2026-10-22): country-sized areas (Japan, France, US east and west, China east, north, west, south and central, Russia east and west, and so on) shown or hidden; regions not built in are inactive by default, covered by a grey overlay darker than the other-city shade, drawn as one overlay and a button to load the region, so the zoomed-out view is not a field of red dots. Design, 2026-10-22: with Anita for review, notes/T-975.md.
 - T-991 [P2] A trip between zones from a zone no station reaches to one not open (Jinan to Zibo) reads "0 km apart" and "No road joins the two ends" in the market panel: the market-trip answer, seen in T-979. Open.
 - T-992 [P3] A 3.7 km trip in bare Manhattan shows Train 0% and Drive 0% and no Walk row: walking wins, but `WALK_ROW_MIN` hides the row when walking the whole way takes 30 min or more, so the headline looks empty (seen in T-979). Open.
-- T-977 [P2] Switching between Mode mix and Train share sends the camera back out to the whole world; it should stay put (Anita's TODO.md, 2026-10-22). Not reproduced (2026-10-23): eight headless flows on the dev server and 8800 (new game on the map or in a city, saved game reopened from the start menu, imported save, lines in two continents, zoom 5 to 13.5) never moved the camera. The only code that moves it to the world on a signal is the opened-game fit's effect (ui/locate.ts), which depended on nothing else in every flow; now untracked as a guard. Needs Anita's steps if it happens again.
 - T-971 [P3] The autosave-off reason shows twice on a test page (`?new=1`): the top bar's pink save notice and the tool-notes bar at the map's bottom left carry the same sentence (seen in T-951's screenshots, desktop too). Keep one. Open.
 - T-873 [P3] A train can empty fully mid-line in the boarding account: in the real save the D northbound in the morning period lets everyone off at 34 St-Herald Sq (load 629 to 0, then 64 after Bryant Pk), because demand's per-stop alightings for the period exceed its own running load there and the alighting share clamps to 1 (`alight_shares` in sim/src/track/boarding.rs). Look at why the period's boardings and alightings disagree. Open.
 - T-880 [P3] The trip explorer between zones shows inter-region trips only: add the commutes between zones (their own choice, `CPair` in intercity.rs) as a second purpose, so it matches the bubbles' counts. Open.

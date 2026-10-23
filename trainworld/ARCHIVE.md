@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-977 [P2] Switching the bubble colouring moved the camera. Done 2026-10-23: the opened-game fit ran the map's zoom listeners inside its effect; zoomed out, city tags read the bubble scheme, so each switch refitted. The fit now runs untracked (ui/locate.ts).
 - T-973 [P2] Leaderboards. Done 2026-10-23: points on a world board and one per city, opt-in under a filtered name, each person's best normal game, sandbox games refused for good; trophy on the All cities row; shonei-server `trainworld.go`, deploy pending (Anita). notes/T-972.md.
 - T-972 [P2] Accounts, stage 1. Done 2026-10-23: optional sign-in with the noritetsu account (one sign-in on anita.garden), person icon in the dock and start menu, scores sent per slot, hidden unless the server reports `trainworld`; stages 2-3 are T-988 to T-990. notes/T-972.md.
 - T-979 [P1] Trip explorer stuck on "Asking the demand model" in Jinan. Done 2026-10-23: in any zone no station reaches (open bare; New York too) the trip went to workers that do not hold the zone; the aux worker's no-rail copy now answers, and a failed query says so.
