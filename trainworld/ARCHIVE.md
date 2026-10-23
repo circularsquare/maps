@@ -1,5 +1,9 @@
 ﻿# Archive
 
+- T-975 [P2] Regions, stage 1. Done 2026-10-23: country-sized regions ("realm" in code) from realms.json; regions not built in, not started in and not clicked are dark with a button, their zones neither drawn nor loaded for viewing; demand unchanged; zoomed-out world 1,029 bubbles to 45. notes/T-975.md.
+- T-966 [P1] One thread a build. Done 2026-10-23: world_run's `--workers` defaults to `--jobs`; steps outside a build take all `--jobs`. notes/T-963.md.
+- T-963 [P1] build_city's two slow reads. Done 2026-10-23: cut_packs reads only outlines whose cached box meets the row; the coastline from an indexed FlatGeobuf; byte-identical builds, about 37-53 s a row saved; the scratch redirect of PACKS fixed. notes/T-963.md.
+- T-965 [P1] The gate's browser check on 3 sessions. Done 2026-10-23: 8 zones a page, a 180 s solve wait with one fresh-page retry; same checks on 24 zones, browser phase 367 s to 166 s. notes/T-963.md.
 - T-995 [P2] The track tool's cursor tag said 160 km/h on high-speed track. Done 2026-10-23: `placementTag` (map/tools.ts) capped the preview's limits at 160; it now takes them as the sim gives them (320 on high-speed track), 160 or 320 only when the preview has none.
 - T-977 [P2] Switching the bubble colouring moved the camera. Done 2026-10-23: the opened-game fit ran the map's zoom listeners inside its effect; zoomed out, city tags read the bubble scheme, so each switch refitted. The fit now runs untracked (ui/locate.ts).
 - T-973 [P2] Leaderboards. Done 2026-10-23: points on a world board and one per city, opt-in under a filtered name, each person's best normal game, sandbox games refused for good; trophy on the All cities row; shonei-server `trainworld.go`, deploy pending (Anita). notes/T-972.md.
