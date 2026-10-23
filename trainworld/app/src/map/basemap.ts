@@ -49,6 +49,9 @@ const HIDDEN = new Set([
   "aeroway-runway-casing", "highway-name-path", "highway-name-minor",
 ]);
 
+/** Positron's place layers that name a settlement, each with a black dot icon. */
+const CITY_LABELS = new Set(["label_city", "label_city_capital", "label_town", "label_village"]);
+
 /** Positron's layers repainted in one theme's colours. A layer or key the light theme leaves out
  * keeps Positron's own paint there. */
 function paintFor(c: ShadeColours, dark: boolean): Paint {
@@ -106,6 +109,12 @@ function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecific
     const L = { ...light[layer.id] }, D = { ...dark[layer.id] };
     if (layer.type === "symbol") {
       basemapSymbols.push(layer.id);
+      // T-978: the black dot beside a place name reads as a gameplay dot; the name stays, centred on the place
+      if (CITY_LABELS.has(layer.id)) {
+        for (const k of ["icon-image", "icon-size", "icon-allow-overlap", "icon-optional"]) delete layout[k];
+        layout["text-anchor"] = "center";
+        layout["text-offset"] = [0, 0];
+      }
       if (layout["text-field"] !== undefined) {
         layout["text-font"] = FONT;
         layout["text-field"] = guardEnglishName(layout["text-field"]);
@@ -141,6 +150,7 @@ function guardEnglishName(e: unknown): unknown {
   return e.map(guardEnglishName);
 }
 
-export function setBasemapLabels(map: maplibregl.Map, on: boolean) {
-  for (const id of basemapSymbols) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+/** `noCities`: the names of cities, towns and villages hidden whatever `on` says (the start menu's map, T-974). */
+export function setBasemapLabels(map: maplibregl.Map, on: boolean, noCities = false) {
+  for (const id of basemapSymbols) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on && !(noCities && CITY_LABELS.has(id)) ? "visible" : "none");
 }

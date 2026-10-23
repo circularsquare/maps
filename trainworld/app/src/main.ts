@@ -67,7 +67,7 @@ import { BlueprintBar } from "./ui/Blueprint";
 import { startSearch } from "./ui/Search";
 import { startTips } from "./ui/tip";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
-import { startGameWait } from "./game/loading";
+import { choosing, startGameWait } from "./game/loading";
 import { choiceFromUrl, showStartMenu, worldCover } from "./ui/StartMenu";
 import { viewStart } from "./ui/NewGame";
 import { startOpenFit } from "./ui/locate";
@@ -289,7 +289,7 @@ if (!SYNTH) startRestList(map, overlay, (x, y) => demandClick?.(x, y, false, tru
 const stationLife = SYNTH ? null : startStationLife(map, overlay, (notes) => client.post({ kind: "lineNotes", notes }));
 if (DEBUG && stationLife) (window as any).twLife = stationLife;
 map.on("load", () => {
-  effect(() => setBasemapLabels(map, display.value.basemapLabels));
+  effect(() => setBasemapLabels(map, display.value.basemapLabels, choosing.value)); // T-974: no city names behind the start menu
   effect(() => setBasemapShade(map, shade.value));
   startRealNetwork(map); // T-682
 });

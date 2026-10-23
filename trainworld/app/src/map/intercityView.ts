@@ -34,8 +34,9 @@ import { marketGroup, tripOpenedFrom } from "../game/trip";
 import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type Corridors, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
 import { selectedScope } from "../game/complexView";
 import { count } from "../game/format";
-import { BUBBLE_ALPHA, bubbleColour, setBubbleColours } from "../game/palette";
-import { display, purposeFilter, selection, shownDayPhrase } from "../game/ui";
+import { BUBBLE_ALPHA, bubbleColour, rgb, setBubbleColours, UNBUILT_COLOURS } from "../game/palette";
+import { openedZones } from "../game/openedZones";
+import { display, purposeFilter, selection, shade, shownDayPhrase } from "../game/ui";
 import type { Selection } from "../game/types";
 import { DISC } from "../workers/commutersProtocol";
 import { anchorVersion } from "./anchorVersion";
@@ -207,6 +208,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     // view's, or with no rail the pipeline's count for a zone not opened) and the regional
     // layer's trips to and from it (commutes between zones and longer trips)
     const local = cityDemandViews.peek();
+    const opened = openedZones.peek();
     const points = CITIES.map((c) => {
       const isOwn = c === own;
       let t = { ...(!own || isOwn ? total(c.place) : pair(own.place, c.place)), walk: 0 };
@@ -231,7 +233,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
         : isOwn
           ? [interLine, interBar, `(${localLine})`]
           : [`${count(t.all)} trips ${day} between ${own.name} and ${c.name}`, interBar, "Click to explore these trips"];
-      return { ...t, city: c, isOwn, tag };
+      return { ...t, city: c, isOwn, tag, unbuilt: !own && opened !== null && !opened.has(c.id) };
     // T-421: a zone still loading has its bar instead
     }).filter((p) => p.isOwn || (p.all > 0 && !(!own && zoneLoads.peek().has(p.city.id))));
     points.sort((a, b) => b.all - a.all);
@@ -239,11 +241,15 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const pxPerUnit = 512 * 2 ** zoom / EARTH_C;
     const zoomScale = 2 ** (ZOOM_GROWTH * (zoom - SCALE_ZOOM));
     const discs = new Float32Array(points.length * DISC);
+    const dot = rgb(UNBUILT_COLOURS[shade.peek()][display.peek().unbuiltColour] ?? UNBUILT_COLOURS.light.black);
+    const size = display.peek().bubbleSize;
     points.forEach((p, i) => {
       const [x, y] = toLocal(p.city.center[0], p.city.center[1], a);
-      const c = bubbleColour(p.rail, p.walk, Math.max(0, p.all - p.rail - p.walk));
-      const r = Math.sqrt(p.all / (own ? SELECTED_TRIPS_PER_PX2 : TRIPS_PER_PX2)) * zoomScale / pxPerUnit;
-      discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, edgeOf(p.isOwn ? 2 : 1, p.rail, p.all)], i * DISC);
+      const c = p.unbuilt ? dot : bubbleColour(p.rail, p.walk, Math.max(0, p.all - p.rail - p.walk));
+      let r = Math.sqrt(p.all / (own ? SELECTED_TRIPS_PER_PX2 : TRIPS_PER_PX2)) * zoomScale / pxPerUnit;
+      // T-976: a zone not opened is a plain dot of half the radius it would have, in whole CSS px, at least 1
+      if (p.unbuilt) r = Math.max(1, Math.floor((r * pxPerUnit * size) / 2)) / (pxPerUnit * size);
+      discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, p.unbuilt ? 1 : edgeOf(p.isOwn ? 2 : 1, p.rail, p.all)], i * DISC);
       label(`${p.city.name} · ${count(p.all)} trips`);
     });
     const first = points.findIndex((p) => p.isOwn);
@@ -322,6 +328,9 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   effect(() => {
     display.value.bubbleSize;
     display.value.commuters;
+    display.value.unbuiltColour;
+    shade.value;
+    openedZones.value; // T-976: a zone opening turns its dot into a bubble
     setBubbleColours(display.value.bubbleColours, display.value.rampFrom, display.value.rampTo);
     purposeFilter.value;
     anchorVersion.value; // the discs are measured from the draw anchor (T-317)

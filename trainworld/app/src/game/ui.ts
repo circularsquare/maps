@@ -5,7 +5,7 @@
 import { computed, effect, signal } from "@preact/signals";
 import { AVERAGE_DAY, DEMAND_DAY_PHRASE, type DemandDay } from "./days";
 import { DEFAULT_FONT, FONT_KEYS, fontStack, loadFont, type FontKey } from "./fonts";
-import { DEFAULT_RAMP, setBubbleColours, type BubbleScheme } from "./palette";
+import { DEFAULT_RAMP, setBubbleColours, UNBUILT_KEYS, type BubbleScheme, type UnbuiltColour } from "./palette";
 import type { PurposeFilter } from "./purposes";
 import { LEVELS, type Level, type Selection } from "./types";
 
@@ -71,6 +71,8 @@ export interface DisplaySettings {
   bubbleColours: BubbleScheme;
   rampFrom: string;
   rampTo: string;
+  /** T-976: the dots drawn zoomed out for zones this game has not opened */
+  unbuiltColour: UnbuiltColour;
   /** T-247: the size of the page's panels and text, 0.8-1.2 (UI_SCALES); the map itself is not scaled */
   uiScale: number;
   /** T-698: the panels' font, a trial (game/fonts.ts); the map's labels stay Zen Maru Gothic */
@@ -116,6 +118,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   bubbleColours: "ramp",
   rampFrom: DEFAULT_RAMP.from,
   rampTo: DEFAULT_RAMP.to,
+  unbuiltColour: "black",
   uiScale: 0.9,
   font: DEFAULT_FONT,
   dayShown: "average",
@@ -160,6 +163,8 @@ if ((saved.v ?? 1) < 4) delete migratedDisplay.realNetwork;
 if ((saved.v ?? 1) < 5) delete migratedDisplay.rampFrom, delete migratedDisplay.rampTo;
 // T-833: Train share became the default colouring, and the old default (Mode mix) was stored
 if ((saved.v ?? 1) < 6) delete migratedDisplay.bubbleColours;
+// T-976: a new setting needs no version; an unknown stored name falls back to the default
+if (migratedDisplay.unbuiltColour !== undefined && !UNBUILT_KEYS.includes(migratedDisplay.unbuiltColour)) delete migratedDisplay.unbuiltColour;
 const trackColour = oldDisplay?.trackColour === "line" && legacyLineLoad !== undefined
   ? legacyLineLoad === false ? "line" : "traffic"
   : oldDisplay?.trackColour ?? DEFAULT_DISPLAY.trackColour;

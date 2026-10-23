@@ -9,7 +9,7 @@ Positron, repainted (`map/basemap.ts`) so the network reads first: warm paper la
 water, sage parks and woods, place names faint grey. Roads have three weights (motorways, main
 roads, everything else), one colour and no casings; the smallest classes appear only from zoom 11
 (streets) and 14 (paths); minor road names, road shields and the basemap's railways are hidden.
-Positron has no shop or food icons, so the airport symbols are the only icons left. The dark theme
+Positron has no shop or food icons, so the airport symbols are the only icons left: the black dot it draws beside a city, town or village name is removed (the name stays, centred on the place) because it reads as a gameplay dot [T-978]; the start menu's map hides those names too [T-974]. The dark theme
 is the same three hues deep and muted (dark warm brown-grey land, deep teal, dark sage), by paint
 properties only, so switching theme reloads no style or tiles [T-039, T-676]. The light and dark
 map colours (land, water, park, road, labels, the casing, the map ink, a switched-off blueprint,

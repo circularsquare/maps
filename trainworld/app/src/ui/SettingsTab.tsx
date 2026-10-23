@@ -8,7 +8,7 @@
 import { FONT_KEYS, FONTS, type FontKey } from "../game/fonts";
 import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, tool, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
 import { moneyState } from "../game/money";
-import type { BubbleScheme } from "../game/palette";
+import { UNBUILT_KEYS, type BubbleScheme, type UnbuiltColour } from "../game/palette";
 import { DETAIL_RANGE, finestFromZoom } from "../map/demandOverlay";
 import { RES_AREA_M2 } from "../workers/commutersProtocol";
 import { makeSandbox } from "../workers/clockClient";
@@ -18,7 +18,8 @@ import { Credits } from "./Credits";
 
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
 const SHADE_NAME: Record<Shade, string> = { light: "Light", dark: "Dark" };
-type DayShown = "average" | "weekday" | "weekend";
+const UNBUILT_NAME: Record<UnbuiltColour, string> = { black: "Black", maroon: "Maroon", grey: "Grey" };
+type DayShown ="average" | "weekday" | "weekend";
 const SCHEME_OPTIONS: [BubbleScheme, string][] = [["mode", "Mode mix"], ["ramp", "Train share"]];
 const DAY_OPTIONS: [DayShown, string][] = [["average", "Average"], ["weekday", "Weekday"], ["weekend", "Weekend"]];
 
@@ -63,6 +64,11 @@ export function SettingsTab() {
           </label>
         </div>
       )}
+      {/* T-976: zoomed out, a zone this game has not opened is a small dot */}
+      <div class="slider" data-tip="The small dots for cities this game has not opened, seen zoomed out. A city opens when you start in it or a station reaches it.">
+        <span>Unopened cities</span>
+        <Segmented<UnbuiltColour> options={UNBUILT_KEYS.map((k) => [k, UNBUILT_NAME[k]] as [UnbuiltColour, string])} value={d.unbuiltColour} onChange={(v) => setDisplay("unbuiltColour", v)} />
+      </div>
       {/* T-222: longer-trip bubbles are always drawn; their setting is gone */}
       {/* T-703: the day the demand views are for (T-464), here since it left the map; the track display is on the map (ui/DemandSelector.tsx) */}
       <div class="slider" data-tip="The day the demand figures are for. The average counts 5 weekdays and 2 weekend days over 7. Trains, platforms and riders over the past 24 hours follow the clock.">

@@ -1,5 +1,9 @@
 ﻿# Archive
 
+- T-974 [P2] No city names on the start menu's map. Done 2026-10-23: city, town and village names are hidden while the menu is up and return with the game (`setBasemapLabels`, map/basemap.ts).
+- T-976 [P2] Cities not opened drawn apart. Done 2026-10-23: zoomed out, a zone the game has not opened is a small dot, half the bubble's radius floored to whole px (at least 1), in a setting's colour (Black, Maroon, Grey). Reading in DECISIONS.
+- T-978 [P2] Basemap city dots hidden. Done 2026-10-23: the black dot beside city, town and village names is gone everywhere; the names stay.
+- T-962 [P2] Where batch time goes now, and speedups ranked. Done 2026-10-22: per row, outline cutting (28 s, every pack parsed) and the coastline read (12 s) are 40 s of 93; a region's serial gate (35 min a 100 rows) waits for its last build. T-963 to T-970 filed. notes/T-962.md.
 - T-951 [P2] Phone layout. Done 2026-10-22: at most 600 px wide and 560 px tall the dock sits under the map (40% of the height), so the map and top bar keep the full width and no buttons overlap; 400x860 and 360x780 checked, desktop and landscape unchanged. docs/ui-panels.md.
 - T-929 [P1] Market rows only where they change. Done 2026-10-22: market_zones redoes the rows of changed, new or gone market packs and of places within 250 km (a record of each row's inputs); byte-identical to a full run in five cases; a gate's register 189 s to about 33 s, a full run 120 s to 45 s. notes/T-929.md.
 - T-931 [P2] The gate's rates test built once a run. Done 2026-10-22: world_run builds `every_pack_everyday` at the run's start and every gate runs that binary (`TW_EVERYDAY_EXE`); same rates, no recompile mid-run. notes/T-929.md.

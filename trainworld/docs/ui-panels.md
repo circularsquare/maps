@@ -234,7 +234,7 @@ dismissed, and the map and tools are blocked meanwhile.
 commuter and longer-trip bubbles, not station discs; ignored while a bubble is selected, T-936) and Detail (4 steps from coarser to finer,
 the third by default; its hover names the zoom the finest bubbles start at; [T-795]), the Colours
 choice (Train share by default [T-833], which shows two colour pickers labelled 0% train and
-100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles") and the Day choice (Average, Weekday, Weekend;
+100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), the Unopened cities choice (Black by default, Maroon or Grey: the colour of the small dots for zones the game has not opened, [ui-demand-views.md](ui-demand-views.md) "Zoomed far out"; on the dark theme the three are lifted to read on it) [T-976] and the Day choice (Average, Weekday, Weekend;
 "Demand shown for", below) [T-703], Show (trains, station names, capacity markers, flat junctions and crossings, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
 [T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, and Explore a trip at the bottom [T-220]. Station demand
@@ -400,7 +400,7 @@ registry centre and zoom, or over New York with none [T-310].
   With no saved game it is New game alone. The dock and top bar are taken out of the page and the
   map controls hidden, so the map fills the page; it shows the world from 60° S to 75° N covering
   the page (all of it on a wide screen, its centre around 10° E, 20° N on a narrow one) [T-927;
-  `worldCover`], with the zone outlines and outside shade hidden until the pick. The menu takes every key outside itself, and nothing loads behind it but the map.
+  `worldCover`], with the zone outlines, outside shade and the basemap's city, town and village names hidden until the pick [T-974]. The menu takes every key outside itself, and nothing loads behind it but the map.
 - A click on a save opens that slot (a sandbox's name has the "Sandbox" mark). New game shows the
   new game sheet (above) in the card, headed "New game", with Back to the menu; its Start starts the
   game in a new slot, so no saved game is replaced. The slot is first written once the network has

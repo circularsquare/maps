@@ -157,6 +157,16 @@ function buildRamp(from: string, to: string): Uint8ClampedArray {
   return out;
 }
 
+/** T-976: the colour of the small dots that stand for zones the game has not opened (the zoomed-out
+ * overview, map/intercityView.ts); a setting. */
+export const UNBUILT_COLOURS = {
+  light: { black: "#000000", maroon: "#800000", grey: "#7a7a7a" },
+  // lifted so they read on the dark basemap: "black" becomes a pale ink
+  dark: { black: "#e4dfd6", maroon: "#c4585c", grey: "#9c9c9c" },
+} as const;
+export type UnbuiltColour = keyof (typeof UNBUILT_COLOURS)["light"];
+export const UNBUILT_KEYS = Object.keys(UNBUILT_COLOURS.light) as UnbuiltColour[];
+
 /** Commuter bubbles are this opaque, so the network shows through where they pile up. */
 export const BUBBLE_ALPHA = 0.8;
 
