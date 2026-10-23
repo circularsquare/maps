@@ -1,54 +1,50 @@
-// T-975: the realms not shown (game/realms.ts), drawn as one dark fill over their land, under labels
-// and the network and taking no clicks, with one button each at its label point that shows it. A
-// button whose label point is off screen sits inside the on-screen part of its realm's box (as the
-// loading bars do, T-939); buttons that would overlap give way to the realm with more zones; zoomed
-// out to the world the buttons are the eye alone, the name in the hover.
+// T-975, T-1006: the realms not shown (game/realms.ts). One shade covers the world, land and water
+// alike, with the shown realms' zones cut out along their coarse outlines (the lines every other zone
+// outline follows), under labels and the network and taking no clicks; where hidden realms meet there
+// is no edge. Each hidden realm has a floating button at its point that shows it. A button whose point
+// is off screen sits inside the on-screen part of its realm's box (as the loading bars do, T-939);
+// buttons that would overlap give way to the realm with more zones.
 
 import { effect } from "@preact/signals";
 import { h, render } from "preact";
 import type { FeatureCollection, MultiPolygon } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
+import { CITIES } from "../game/cities";
 import { choosing } from "../game/loading";
-import { followStations, inactiveRealms, loadRealmLand, realmName, showRealm, type RealmLand } from "../game/realms";
+import { followStations, inactiveRealms, loadRealms, realmName, shownRealms, showRealm, zoneOutlines, zoneShown, type RealmSpot } from "../game/realms";
 import { SHADES } from "../game/shadeTable";
 import { shade } from "../game/ui";
 import { Icon } from "../ui/widgets";
+import { outsideZones } from "./boundaryGeometry";
 
 const FILL = "tw-realms-inactive";
 /** how far a button keeps from the map's edges, px */
 const EDGE = 48;
-/** below this zoom a button is its icon alone */
-const ICON_ZOOM = 3;
 const GAP = 6;
+const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
 
 export function startRealmOverlay(map: MlMap): () => void {
   const stopStations = followStations();
-  void loadRealmLand();
+  void loadRealms();
   const layer = document.createElement("div");
   layer.className = "realm-buttons";
   map.getContainer().appendChild(layer);
-  const buttons = new Map<string, { el: HTMLDivElement; compact: boolean | null; w: number; h: number }>();
-  let shown: RealmLand[] = [];
+  const buttons = new Map<string, { el: HTMLDivElement; w: number; h: number }>();
+  let hidden: RealmSpot[] = [];
+  let cut: MultiPolygon | FeatureCollection = empty;
 
-  const data = (): FeatureCollection<MultiPolygon> => ({ type: "FeatureCollection", features: shown.map((l) => l.feature) });
-
-  const button = (l: RealmLand, compact: boolean) => {
+  const button = (l: RealmSpot) => {
     let b = buttons.get(l.id);
     if (!b) {
       const el = document.createElement("div");
       el.className = "realm-button";
       layer.appendChild(el);
-      buttons.set(l.id, (b = { el, compact: null, w: 0, h: 0 }));
-    }
-    if (b.compact !== compact) {
       const name = realmName(l.id);
       render(h("button", {
-        type: "button", class: `btn ${compact ? "icon" : "text"}`, "aria-label": `Show ${name}`,
-        "data-tip": compact ? `${name}\nClick to show its cities` : "Click to show its cities",
+        type: "button", "aria-label": `Show ${name}`, "data-tip": `${name}\nClick to show the cities there`,
         onClick: () => showRealm(l.id),
-      }, h(Icon.eye, null), compact ? null : h("span", null, name)), b.el);
-      b.compact = compact;
-      b.w = 0;
+      }, h(Icon.expand, null)), el);
+      buttons.set(l.id, (b = { el, w: 0, h: 0 }));
     }
     // measured once drawn (zero while the layer is hidden behind the start menu)
     if (!b.w) { b.el.style.display = ""; b.w = b.el.offsetWidth; b.h = b.el.offsetHeight; }
@@ -57,11 +53,10 @@ export function startRealmOverlay(map: MlMap): () => void {
 
   const place = () => {
     const c = map.getContainer(), W = c.clientWidth, H = c.clientHeight;
-    const compact = map.getZoom() < ICON_ZOOM;
     const used: [number, number, number, number][] = [];
     // the realm with more zones first, so it keeps its place when two would overlap
-    for (const l of [...shown].sort((a, b) => b.zones - a.zones)) {
-      const b = button(l, compact);
+    for (const l of [...hidden].sort((a, b) => b.zones - a.zones)) {
+      const b = button(l);
       const [x0, y0, x1, y1] = l.box;
       const corners = [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].map(([x, y]) => map.project([x, y]));
       const left = Math.max(EDGE, Math.min(...corners.map((p) => p.x)));
@@ -95,7 +90,7 @@ export function startRealmOverlay(map: MlMap): () => void {
     layer.style.display = choosing.peek() ? "none" : "";
   };
   const add = () => {
-    if (!map.getSource(FILL)) map.addSource(FILL, { type: "geojson", data: data() });
+    if (!map.getSource(FILL)) map.addSource(FILL, { type: "geojson", data: cut });
     if (!map.getLayer(FILL)) {
       const before = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
       map.addLayer({ id: FILL, type: "fill", source: FILL, paint: { "fill-antialias": false } }, before);
@@ -108,18 +103,31 @@ export function startRealmOverlay(map: MlMap): () => void {
   map.on("move", place);
   map.on("resize", place);
 
-  const disposeRealms = effect(() => {
-    shown = inactiveRealms.value;
-    (map.getSource(FILL) as GeoJSONSource | undefined)?.setData(data());
-    const keep = new Set(shown.map((l) => l.id));
+  const disposeCut = effect(() => {
+    const shown = shownRealms.value, outlines = zoneOutlines.value;
+    if (!shown || !outlines) cut = empty;
+    else {
+      const zones: MultiPolygon[] = [];
+      for (const c of CITIES) {
+        const g = outlines.get(c.id);
+        if (g && zoneShown(c.id)) zones.push(g);
+      }
+      cut = outsideZones(zones);
+    }
+    (map.getSource(FILL) as GeoJSONSource | undefined)?.setData(cut);
+  });
+  const disposeButtons = effect(() => {
+    hidden = inactiveRealms.value;
+    const keep = new Set(hidden.map((l) => l.id));
     for (const [id, b] of buttons) if (!keep.has(id)) { render(null, b.el); b.el.remove(); buttons.delete(id); }
     place();
   });
   const disposeShade = effect(() => { void shade.value; paint(); });
-  const disposeChoosing = effect(() => { void choosing.value; visibility(); });
+  const disposeChoosing = effect(() => { void choosing.value; visibility(); place(); });
   return () => {
     stopStations();
-    disposeRealms();
+    disposeCut();
+    disposeButtons();
     disposeShade();
     disposeChoosing();
     map.off("style.load", add);

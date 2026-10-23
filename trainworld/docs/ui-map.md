@@ -422,11 +422,14 @@ the shade over the whole map, itself included, until it comes.
 
 ## Realms not shown
 
-[T-975; `map/realmOverlay.ts`, `game/realms.ts`; the rules in [zones.md](zones.md) "Realms"] A realm
-the game has not built in, does not start in and the player has not shown is covered by one dark
-fill, darker than the outside shade, under labels and the network, taking no clicks; nothing of its
-zones is drawn. It has one button, the eye and the realm's name ("France"; hover "Click to show its
-cities"), at its label point, or inside the on-screen part of its box when the point is off screen.
-Below zoom 3 the button is the eye alone, the name in the hover. Buttons that would overlap give way
-to the realm with more zones. A click shows the realm in one step: the fill and button go, and its
-zones draw and load for the view as any other. Fill and buttons are hidden behind the start menu.
+[T-975, T-1006; `map/realmOverlay.ts`, `game/realms.ts`; the rules in [zones.md](zones.md) "Realms"]
+Everything outside the realms shown (those the game has built in, starts in or the player has shown)
+is covered by one shade, darker than the outside shade and over it, on land and water alike, under
+labels and the network, taking no clicks. Its edge is the shown zones' coarse outline, the line the
+zone outlines draw, never a coast; nothing of a hidden realm's zones is drawn. Each hidden realm has
+one floating button, the expand icon (four arrows out to the corners) in the map ink with no box
+(hover: the realm's name over "Click to show the cities there"), at its point, or inside the
+on-screen part of its box when the point is off screen. Buttons that would overlap give way to the
+realm with more zones. A click shows the realm in one step: the shade opens over its zones, the
+button goes, and its zones draw and load for the view as any other. Shade and buttons are hidden
+behind the start menu, and so are the city bubbles: the start menu's world map is blank.

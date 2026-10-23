@@ -54,14 +54,10 @@ function packs(): Plugin {
       const intercity = join(PACKS, REGISTRY.market.pack + ".json");
       if (existsSync(intercity)) copyFileSync(intercity, join(out, REGISTRY.market.pack + ".json"));
       else this.warn("intercity market missing: build pipeline/intercity.py");
-      // T-800: every zone's coarse outline (pipeline/zone_outlines.py)
+      // T-800: every zone's coarse outline (pipeline/zone_outlines.py); without it every zone shows (T-1006)
       const outlines = join(PACKS, "outlines.json");
       if (existsSync(outlines)) copyFileSync(outlines, join(out, "outlines.json"));
       else this.warn("coarse zone outlines missing: run pipeline/zone_outlines.py");
-      // T-975: the realms' land (pipeline/realms.py); without it every zone shows
-      const realms = join(PACKS, "realms.geojson");
-      if (existsSync(realms)) copyFileSync(realms, join(out, "realms.geojson"));
-      else this.warn("realm land missing: run pipeline/realms.py");
       // T-731: the real networks a sandbox can start from (pipeline/realnet.py ship)
       const real = join(PACKS, "real");
       if (existsSync(real)) {

@@ -7,13 +7,13 @@
 
 import { batch, effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
-import { activeCity, viewedZone } from "../game/cities";
+import { activeCity, viewedZone, ZONE_REACH_M, zonesTouching } from "../game/cities";
 import { display, selection } from "../game/ui";
 import { viewCentre } from "../game/listScope";
 import { nearbyZones, placeAt, ZONE_LOAD_ZOOM, zonesInBox, zonesLoaded, zonesLoadForView } from "../game/zones";
 import { OVERVIEW_ZOOM } from "./intercityView";
 import { shiftAt, viewShift } from "../game/localTime";
-import { realmAt, shownRealms, zoneShown } from "../game/realms";
+import { shownRealms, zoneShown } from "../game/realms";
 
 export function startZoneFocus(map: MlMap) {
   const place = (moved: boolean) => {
@@ -21,8 +21,8 @@ export function startZoneFocus(map: MlMap) {
     const k = selection.peek()?.kind;
     // T-318: over dead space the focus stays where it was and nothing is viewed (no name, no load);
     // T-975: a realm not shown is dead space too, asked before any boundary there is fetched
-    const r = shownRealms.peek() && realmAt(c.lng, c.lat);
-    const at = r && !shownRealms.peek()!.has(r) ? null : placeAt(c.lng, c.lat);
+    const hidden = shownRealms.peek() && !zonesTouching(c.lng, c.lat, c.lng, c.lat, ZONE_REACH_M).some((z) => zoneShown(z.id));
+    const at = hidden ? null : placeAt(c.lng, c.lat);
     const here = at && zoneShown(at) ? at : null;
     batch(() => {
       viewCentre.value = [c.lng, c.lat]; // T-332: the Lines and Stations lists sort by it

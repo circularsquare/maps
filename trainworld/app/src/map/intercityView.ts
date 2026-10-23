@@ -26,7 +26,7 @@
 // meanwhile.
 
 import { computed, effect, signal } from "@preact/signals";
-import { zoneLoads } from "../game/loading";
+import { choosing, zoneLoads } from "../game/loading";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES } from "../game/cities";
 import { shownRealms, zoneShown } from "../game/realms";
@@ -277,6 +277,12 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     marks = null;
     labels.replaceChildren();
     view.setLines("inter", null);
+    // T-1006: a blank map behind the start menu; the overview's place keeps the local bubbles off too
+    if (choosing.peek()) {
+      cityOverview.value = true;
+      view.setDiscs("inter", null);
+      return;
+    }
     // the regional market has no purposes: its bubbles show for all purposes only (T-158, T-305);
     // the inspector keeps the numbers
     const filter = purposeFilter.peek();
@@ -341,6 +347,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     anchorVersion.value; // the discs are measured from the draw anchor (T-317)
     loadingZones.value;
     shownRealms.value;
+    choosing.value;
     render();
   });
   map.on("zoom", render);

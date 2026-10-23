@@ -258,26 +258,29 @@ that zone. A network whose stations reach no zone is still solved, with no pack,
 show their figures, nobody on them (T-845). One helper answers it, `placeAt` in `game/zones.ts`, kept in `viewedZone`
 (`game/cities.ts`).
 
-**Realms** [T-975; `game/realms.ts`, `map/realmOverlay.ts`, `pipeline/realms.py`, notes/T-975.md]:
-zones are grouped into country-sized realms, a hand list in `app/src/game/realms.json` (each an id,
-a name and its countries, or for a country split between realms its first-level units: China in
-seven, Russia and the US in two). Players see only a realm's name; the code word is "realm" because
-"region" already means a zone in the code. `pipeline/realms.py` (run by the join) writes each
-registry row's `realm` (its country's; in a split country the realm whose land holds its centre) and
-`packs/realms.geojson`, each realm's land with a zone in it: Natural Earth admin 0 cut along
-geoBoundaries ADM1 or the Census states, parts over 2,000 km from all its zones left out, simplified
-to 2 km with shared borders kept identical, and a label point. A realm is **shown** while the game
-has a station in it (blueprint or built; the land decides, else the station's zone), it holds the
-start zone, or the player showed it this session (its button, or a search pick of a city or place
-in it); a click is not saved, so a reload hides a realm again unless the game has built there.
-A realm not shown is one dark fill (`inactive` in `game/shadeTable.ts`: 22% of the outside shade's
-colour, 45% black in the dark theme) under labels and the network, with one button at its label
-point (the eye alone below zoom 3); its zones are dead space for the view: no bubbles, labels,
-outlines, loading greys or bars, no name in the top bar, and no pack, boundary or water mask
-fetched for viewing. Demand, the market and money never read it, so every figure is the same
-whatever is shown; a selection's far ends still draw over a dark realm. Before the first game is
-in, and when `realms.geojson` is missing, every zone shows; a zone with no realm, or whose realm has
-no land in the file, always shows.
+**Realms** [T-975, T-1006; `game/realms.ts`, `map/realmOverlay.ts`, `pipeline/realms.py`,
+notes/T-975.md]: zones are grouped into country-sized realms, a hand list in
+`app/src/game/realms.json` (each an id, a name and its countries, or for a country split between
+realms its first-level units: China in seven, Russia and the US in two). Players see only a realm's
+name; the code word is "realm" because "region" already means a zone in the code.
+`pipeline/realms.py` (run by the join) writes each registry row's `realm` (its country's; in a split
+country the realm whose land holds its centre) and `packs/realms.geojson`, each realm's land
+(Natural Earth admin 0 cut along geoBoundaries ADM1 or the Census states), which only that
+assignment uses: the app reads no realm shapes. A realm is **shown** while the game has a station in
+it (blueprint or built; the zone whose coarse outline holds the station, else the zone with the
+nearest centre), it holds the start zone, or the player showed it this session (its button, or a
+search pick of a city or place in it); a click is not saved, so a reload hides a realm again unless
+the game has built there. What is not shown is one shade over the whole world, land and water
+alike, with the shown realms' zones cut out along their coarse outlines (`packs/outlines.json`;
+shared borders cancel and gaps the zones enclose stay in the cut), so its edge follows the zone
+outlines and two hidden realms meeting have no edge (`inactive` in `game/shadeTable.ts`: 22% of the
+outside shade's colour, 45% black in the dark theme, drawn over the outside shade). Each hidden
+realm has a button at the centre of its zone nearest the mean of its zones' centres. Its zones are
+dead space for the view: no bubbles, labels, outlines, loading greys or bars, no name in the top
+bar, and no pack, boundary or water mask fetched for viewing. Demand, the market and money never
+read it, so every figure is the same whatever is shown; a selection's far ends still draw over a
+dark realm. Before the first game is in, and when `outlines.json` is missing, every zone shows; a
+zone with no realm always shows.
 
 **The opened list** [T-729, T-801]: each game's save header keeps `opened`, the zones it has
 started in or a station has reached, in order. Nothing reads it for loading or drawing: every zone

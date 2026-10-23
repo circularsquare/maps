@@ -67,7 +67,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   search or station naming, the view's zones first, T-177, T-065, T-400), `boundaries.ts` (each city's boundary file, fetched
   once, T-172), `zoneNames.ts` (zones' shown names and search aliases from the hand-edited
   `zone-names.json` and the generated `zone-aliases.json`, `pipeline/zone_aliases.py`; T-825),
-  `realms.ts` and the hand-edited `realms.json` (the country-sized realms: each zone's, which are shown, the land read from `packs/realms.geojson`, T-975), `search.ts` (the search box's matching, `cityMatch` for zones by name or alias, T-148), `walks.ts` (walking minutes to the
+  `realms.ts` and the hand-edited `realms.json` (the country-sized realms: each zone's, which are shown, each realm's button point from the registry, T-975, T-1006), `search.ts` (the search box's matching, `cityMatch` for zones by name or alias, T-148), `walks.ts` (walking minutes to the
   closest stations on the demand model's walking barrier, T-312).
 - Stations and lines: `complexes.ts` (station complexes from platform geometry and the player's
   links, T-146), `complexView.ts` (a click selecting the complex, a station opened alone, the
@@ -131,8 +131,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   layer for the zones near the view, exact ones fetched only above `ZONE_LOAD_ZOOM`, and the outside
   shade, T-131, T-139, T-400, T-871), `coarseOutlines.ts` (reads
   `packs/outlines.json`, which `pipeline/zone_outlines.py` writes: every registered zone's coarse
-  outline, T-800), `zoneLoading.ts` (zones still loading drawn grey with a loading
-  bar, T-343), `realmOverlay.ts` (the realms not shown: their dark fill and a button each, T-975), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and
+  outline, read once for the outlines and the realms' shade, T-800), `zoneLoading.ts` (zones still loading drawn grey with a loading
+  bar, T-343), `realmOverlay.ts` (the realms not shown: one world shade with the shown zones cut out
+  by `boundaryGeometry.ts`'s `outsideZones`, and a button each, T-975, T-1006), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and
   `zonesLoadForView`, the zoom test of `game/zones.ts` `ZONE_LOAD_ZOOM` that decides whether zones
   load for viewing, T-276, T-318, T-871).
 
@@ -236,7 +237,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   6135 by default), `t715-load-money.mjs` (the real save opened from the saves panel while a later
   copy is open, twice: cash loads as saved and moves, no ledger day after the clock; a save with
   ledger days after its clock gets their running cost back; port 6165 by default),
-  `t975-realms.mjs` (realms in a fresh profile: a Tokyo start shows Japan only, a button shows France, a reload hides it again, stations in two realms show both; the zoomed-out frame and a pan across France and Germany measured; `REALMS=<file>` serves a scratch realms.geojson, `NOREALMS=1` blocks it; port 6165 by default),
+  `t975-realms.mjs` (realms in a fresh profile: no bubbles behind the start menu, a Tokyo start shows Japan only with the shade cut around its zones, a button shows France, a reload hides it again, stations in two realms show both; the zoomed-out frame and a pan across France and Germany measured; port 6165 by default),
   `t728-newgame.mjs` (the new game sheet in a fresh profile: the search, a sandbox in Tokyo from
   its real network, a normal London start, a map start, the real New York save turned sandbox from
   Settings; slots left keep their bytes; screenshots t728-*.png; port 6150 by default),

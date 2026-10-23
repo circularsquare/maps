@@ -76,7 +76,6 @@ moves). Rules for every agent are in CLAUDE.md; history in ARCHIVE.md.
 
 ## Interface
 Anita's TODO.md "short term", filed 2026-10-21 (late) and 2026-10-22.
-- T-1006 [P1] Regions shaded by the game's own zone outlines, not the land shapes (Anita 2026-10-23: the grey missed Shanghai's coast and islands); buttons a floating expand icon with a hover; no city bubbles behind the start menu. Taking, 2026-10-23.
 - T-988 [P3] Games synced between devices on the account (T-972 stage 2; a reach goal, Anita 2026-10-23). notes/T-972.md "Stage 2".
 - T-989 [P3] Share a game by a read-only link (M4). notes/T-972.md.
 - T-990 [P3] Leaderboard rows open that player's shared game read-only, after T-989. notes/T-972.md.
