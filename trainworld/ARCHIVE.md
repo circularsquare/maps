@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-1071 [P2] Train count changes move no train. Done 2026-10-23: the model already handed over at the termini; the jump was the browser drawing the change late. Count and headway edits now take effect a moment ahead and the renderer swaps them in with their trips; eras saved. notes/T-1071.md.
 - T-1067 [P1] Waiting floods. Done 2026-10-23: demand overloads busy lines and the account queued everyone forever; now riders left behind 90 minutes (Anita) go another way and a platform side holds at most 5,000. Lexington test 49k to 5,000, longest wait 10.7 h to 110 min; real save boardings -0.07%. notes/T-1067.md.
 - T-1068 [P2] Track costs. Done 2026-10-23 (Anita): `LEVEL_MULT` ground 0.3 to 0.5, +1 0.8 to 1.0 (2 km double: ground $54M to $90M, +1 $144M to $180M); tests, Build tab copy and docs follow; upkeep unchanged.
 - T-1026 [P2] A realm shown without a long frame. Done 2026-10-23: the shade's cut in a worker, in pieces kept between cuts; `cityById` a Map; labels and outlines sent only as needed. A click 355-450 ms to no task over 50 ms; a 13-realm load's longest 1,426 to 230 ms. notes/T-1006.md "T-1026".

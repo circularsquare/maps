@@ -78,7 +78,8 @@ CLAUDE.md; history in ARCHIVE.md.
 ## Interface
 Anita's TODO.md "short term", filed 2026-10-23.
 - T-1059 [P2] Build T-1056's rule: a station pair whose walking in all (to, between and from stations) is longer than the straight line between the trip's ends is no rail option for that trip. Measured small (rail -2.6% New York, -3.6% Tokyo, ceilings -1 point, all pass); goes in the station-pair choice (commutes' lanes, `trip::pair_choice`, everyday pass, trip explorer) plus a walking-metres table from the search; mind the commutes' speed. Approved by Anita 2026-10-23; taking, 2026-10-23 (worktree t1059); notes/T-1055.md "T-1056".
-- T-1071 [P2] Changing a line's train count makes its trains jump to new places at once (Anita 2026-10-23: immersion breaking): trains move toward the new schedule continuously, or the change takes effect as trains reach the end of the line. Taking, 2026-10-23 (worktree t1071).
+- T-1072 [P3] Changing a line's stops at an end (a stop added past the last, the first removed) moves the other direction's running trains by the length added or removed: flights are kept as offsets along the run; match them by place on the ground instead. Open; notes/T-1071.md "Limits".
+- T-1073 [P3] Undo or redo of a train count takes effect at once, without T-1071's lead, so at a fast clock its departures hop a little; tell the worker the step was a service edit. Open.
 Anita's TODO.md "short term", filed 2026-10-21 (late) and 2026-10-22.
 - T-1027 [P3] The coarse outlines (`pipeline/zone_outlines.py`) overlap: 558 of 5,217 rings cross or touch themselves after Douglas-Peucker, and neighbours from different sources cross. The shade copes (T-1025), but a topology-preserving simplification and an overlap trim would make the outlines tidier and the cut cheaper. notes/T-1006.md "T-1025".
 - T-988 [P3] Games synced between devices on the account (T-972 stage 2; a reach goal, Anita 2026-10-23). notes/T-972.md "Stage 2".
