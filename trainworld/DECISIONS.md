@@ -4,6 +4,9 @@ Newest first. One entry per decision: what, and why. The spec states the result;
 reasoning and what it replaced.
 
 ## 2026-10-20
+- **One anita.garden account shared with noritetsu** (T-972, Anita: either is fine, 2026-10-23): sharing needed only a token check and a delete hook on the server; deleting the account from either page deletes both pages' data.
+- **No account icon until the server says so** (T-972, 2026-10-23): the game shows sign-in only when `/noritetsu/config` reports `trainworld`, and a localhost page has no account server unless `?acct=local|live`, so smoke and the pre-deploy live page make no failing request.
+- **Game ids are per browser slot** (T-972, T-973, 2026-10-23): kept in localStorage, not the save header; a game that turns sandbox sends one notice and the server refuses it for good. Join stays enabled in a sandbox game with "Sandbox games are not listed" under it, since joining is per account.
 - **Unopened cities: light grey dots with a dark outline** (T-976, Anita 2026-10-23, replacing plain black): fill #d9d9d9 with a 1 px ink outline, at least 2 px radius so the outline leaves some fill; Black, Maroon and Grey stay as choices. Stored settings below version 8 take the new default once.
 - **Which market rows to redo comes from a record of their inputs** (T-929, 2026-10-22): each row's pack hash, place, row hash and centre, plus the market_pack binary and the rule, not the ids a caller passes, so parks, restores and runs of older code are caught; anything unexplained redoes every row.
 - **The gate's rates test is built before the first region** (T-931, 2026-10-22): synchronously at the run's start rather than beside the first builds, to stay inside `--jobs`; the first recompile is paid up front.
