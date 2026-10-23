@@ -2336,6 +2336,9 @@ pub struct Graph {
     pub adj_cost: Vec<f32>,
     /// For ride edges, the route node the segment starts at; NONE otherwise.
     pub adj_seg: Vec<u32>,
+    /// Each route node's ride edge's end (a node id), NONE at a line's end: a rider who boards
+    /// there rides at least to it (T-1055).
+    pub rn_next: Vec<u32>,
     /// The fare curve's departure from `rn_fare`'s straight line (T-883), and each route node's
     /// fare km to the next stop, which it needs; both empty while the curve is that line.
     pub fare_curve: FareCurve,
@@ -2515,6 +2518,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         adj_to: edges.iter().map(|e| e.1).collect(),
         adj_cost: edges.iter().map(|e| e.2).collect(),
         adj_seg: edges.iter().map(|e| e.3).collect(),
+        rn_next,
         fare_curve: FareCurve::default(),
         rn_km: vec![],
     }
@@ -2867,6 +2871,10 @@ struct Search<'a> {
     board: Box<[u64]>,
     /// What each boarding route node offered its station, infinite if it has not.
     offer: Vec<f32>,
+    /// Each route node's cost by its ride edge, infinite until its next stop is settled: what a
+    /// boarding there costs, since a rider who boards rides at least one stop (T-1055), however
+    /// cheap leaving the train there is for a rider already on it.
+    ride: Vec<f32>,
     cn: Vec<Change>,
     /// Each station's change nodes, a range of `cn`.
     cn_of: Vec<(u32, u32)>,
@@ -2923,6 +2931,7 @@ impl Search<'_> {
             order: Vec::with_capacity(n),
             board: Box::new([]),
             offer: vec![f32::INFINITY; nr],
+            ride: vec![f32::INFINITY; nr],
             cn: vec![],
             cn_of: vec![(0, 0); s],
             cn_bits: vec![],
@@ -2946,6 +2955,7 @@ impl Search<'_> {
         self.order.clear();
         self.board = vec![0u64; nr.div_ceil(64)].into_boxed_slice();
         self.offer.fill(f32::INFINITY);
+        self.ride.fill(f32::INFINITY);
         self.cn.clear();
         self.cn_of.fill((0, 0));
         self.cn_bits.clear();
@@ -2958,9 +2968,10 @@ impl Search<'_> {
                 continue;
             }
             if id >= n {
-                // a boarding onto a line that leaves riders behind, at its turn (T-552)
+                // a boarding at its turn: onto a line that leaves riders behind (T-552), or at a
+                // route node whose riders already on board do better to leave there (T-1055)
                 let r = id - n;
-                self.offer_line(r, self.dist[s + r] + g.rn_left[r]);
+                self.offer_line(r, self.ride[r] + g.rn_left[r]);
                 continue;
             }
             let v = id;
@@ -2972,6 +2983,7 @@ impl Search<'_> {
                 self.settle_station(v);
                 continue;
             }
+            let on = (self.next[v] as usize) >= s && (self.next[v] as usize) < n;
             for j in g.rev_off[v] as usize..g.rev_off[v + 1] as usize {
                 let from = g.rev_from[j] as usize;
                 if from < s {
@@ -2980,16 +2992,31 @@ impl Search<'_> {
                     // Lines join a station's strategy in order of their cost from boarding, which
                     // for a line leaving riders behind includes the extra wait (T-188): it waits
                     // its turn, or a full train would join ahead of better lines and stay (T-552).
+                    // A boarding rides on, so where leaving the train is cheaper than staying on,
+                    // it waits for the ride's cost; unknown yet, it is queued when that comes.
                     let left = g.rn_left[v - s];
-                    if left > 0.0 {
+                    if !on {
+                        if self.ride[v - s].is_finite() {
+                            self.heap.push(self.ride[v - s] + left, (n + v - s) as u32);
+                        }
+                    } else if left > 0.0 {
                         self.heap.push(d + left, (n + v - s) as u32);
                     } else {
                         self.offer_line(v - s, d);
                     }
                     continue;
                 }
-                if self.done[from] { continue; }
-                self.relax(from, d + g.adj_cost[g.rev_edge[j] as usize], v as u32);
+                // the only edge into a route node from another is the ride
+                let rd = d + g.adj_cost[g.rev_edge[j] as usize];
+                let r = from - s;
+                self.ride[r] = rd;
+                if self.done[from] {
+                    if self.edge_ix[r] != NONE && g.rn_tph[r] > 0.0 {
+                        self.heap.push(rd + g.rn_left[r], (n + r) as u32);
+                    }
+                    continue;
+                }
+                self.relax(from, rd, v as u32);
             }
         }
     }
@@ -3144,14 +3171,17 @@ impl Search<'_> {
     fn trip_km(&self) -> Vec<f32> {
         let (g, s, n) = (self.g, self.s, self.n);
         let mut km = vec![0f32; n + self.cn.len()];
+        let on_train = |v: usize| (self.next[v] as usize) >= s && (self.next[v] as usize) < n;
         let pooled = |km: &[f32], st: usize, on: &dyn Fn(usize) -> bool| {
             let (mut f, mut w) = (0f32, 0f32);
             let e0 = g.adj_off[st] as usize;
             for e in e0..g.adj_off[st + 1] as usize {
                 let r = g.adj_to[e] as usize - s;
                 if on(e - e0) {
+                    // a boarding rides at least one stop (T-1055)
+                    let k = if on_train(s + r) { km[s + r] } else { g.rn_km.get(r).copied().unwrap_or(0.0) + km[g.rn_next[r] as usize] };
                     f += g.rn_tph[r];
-                    w += g.rn_tph[r] * km[s + r];
+                    w += g.rn_tph[r] * k;
                 }
             }
             if f > 0.0 { w / f } else { 0.0 }
@@ -3170,7 +3200,7 @@ impl Search<'_> {
                 })
             } else {
                 let nx = self.next[id] as usize;
-                if nx == NONE as usize { 0.0 } else if nx >= s && nx < n { g.rn_km.get(id - s).copied().unwrap_or(0.0) + km[nx] } else { km[nx] }
+                if nx == NONE as usize { 0.0 } else if on_train(id) { g.rn_km.get(id - s).copied().unwrap_or(0.0) + km[nx] } else { km[nx] }
             };
             km[id] = v;
         }
@@ -4235,8 +4265,17 @@ impl DestWalk<'_> {
                 for &(e, a) in dep.iter() {
                     let to = g.adj_to[e as usize] as usize;
                     let share = f * a / sum;
-                    flow[to] += share;
                     l.rn_board[to - s] += share;
+                    let nx = next[to].ix();
+                    if nx >= s && nx < n {
+                        flow[to] += share;
+                    } else {
+                        // riders on board leave here, but a boarding rides a stop first (T-1055)
+                        let r = to - s;
+                        flow[g.rn_next[r] as usize] += share;
+                        l.seg[r] += share;
+                        l.pax_min += (share * g.rn_ride[r]) as f64;
+                    }
                 }
                 if head.get(hx).is_some_and(|&h| h != NONE) {
                     // the riders who arrived here leave by the departures as everyone here does
@@ -5127,6 +5166,49 @@ mod tests {
         net.st_group = vec![];
         assert_eq!(build_graph(&net, &p).adj_to.len(), a);
         assert_eq!(complex_members(&[5, 2, 5, 7, 2, 2]), vec![vec![0, 2], vec![1, 4, 5]]);
+    }
+
+    /// T-1055 and T-200: a boarding rides at least one stop. Station 1 is a walk from station 0,
+    /// within 300 m or 1 km off in its complex; line 0 runs 2-0-3 and line 1 3-1. From 0 to 1 the
+    /// rail trip rides line 0 to 3 and line 1 back: boarding line 0 only to walk off is no trip.
+    /// Riders already on line 0 from 2 still leave it at 0 and walk over.
+    #[test]
+    fn a_boarding_rides_at_least_one_stop() {
+        let p = Params { xfer_walk_m: 300.0, ..common_test_params() };
+        for (y, group) in [(200.0, vec![]), (1000.0, vec![0, 0, 2, 3])] {
+            let mut net = common_test_net(&[&[2, 0, 3], &[3, 1]], &[12.0, 12.0], &[2.0, 2.0]);
+            net.st_x = vec![0.0, 0.0, -3000.0, 3000.0];
+            net.st_y = vec![0.0, y, 0.0, 0.0];
+            net.st_group = group;
+            let g = build_graph(&net, &p);
+            let s = g.n_st;
+            let sk = skims(&g, &p);
+            let walk = p.xfer_min(y) * p.w_xfer;
+            // wait 2.5, ride 2, change (2 and a wait of 2.5), ride 2
+            assert!((sk.r[1] - 11.0).abs() < 1e-4, "y {y}: 0 to 1 costs {}", sk.r[1]);
+            // from 2, the riders on board at 0 walk or stay on (2, then the change, then 2)
+            assert!((sk.r[2 * s + 1] - (2.5 + 2.0 + walk.min(8.5))).abs() < 1e-4, "y {y}: 2 to 1 costs {}", sk.r[2 * s + 1]);
+            // route nodes: line 0 run 0 = 0, 1, 2 (stations 2, 0, 3); line 1 run 0 = 6, 7 (3, 1)
+            let mut od = vec![0.0; s * s];
+            od[1] = 100.0;
+            od[2 * s + 1] = 10.0;
+            let l = assign(&g, &sk, &od);
+            let on_foot = y < 300.0;
+            let want_seg = |r: usize| match r {
+                0 => 10.0,
+                1 | 6 => if on_foot { 100.0 } else { 110.0 },
+                _ => 0.0,
+            };
+            for r in 0..g.n - s {
+                assert!((l.seg[r] - want_seg(r)).abs() < 1e-3, "y {y}: segment {r} carries {}", l.seg[r]);
+            }
+            for a in [0, 2] {
+                for (_, route) in super::super::trip::routes(&g, &sk, &p, a, 1, 0.005) {
+                    assert!(route.iter().filter(|l| l.kind == 1).all(|l| l.stops >= 1), "y {y}: a ride of no stops from {a}");
+                    assert_eq!(route.iter().filter(|l| l.kind == 1).count(), if a == 2 && on_foot { 1 } else { 2 }, "y {y} from {a}");
+                }
+            }
+        }
     }
 
     /// T-176 on a small city with walking transfers: the loads are `assign`'s to the bit, and at

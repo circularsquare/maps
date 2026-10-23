@@ -125,7 +125,11 @@ levels:
    and back on another (another line from the stop upstream, or one parallel to the full line), as
    any change is allowed. A rider leaving
    a train may walk to another station within 300 m straight line and board there (walk at its
-   weight; walk edges start only after a ride, so walking between stations is never a rail trip).
+   weight). **A boarding rides at least one stop** (T-1055, T-200): a route node is offered to its
+   station at the cost of riding on to the next stop, even where riders already on board do
+   better to leave there, and the loading, the fare's km and the trip explorer send its boarders
+   along that ride. So boarding only to walk to another station or platform, or to alight again,
+   is never a strategy, and every rail trip rides a train.
    Snapshot stations within 100 m of each other are one demand station (side-by-side platforms of
    two lines; never two neighbours on one line). **Station complexes are transfer points** (T-161):
    the clock worker sends each constructed station's complex with the snapshot (game/complexes.ts

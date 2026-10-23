@@ -365,7 +365,8 @@ fn walk(at: &At, v: usize, came: Option<usize>, share: f32, legs: &mut Vec<Leg>,
         // there was one
         let plat = arrived.map_or(0.0, |a| platform_walk_to(p, a, g.rn_dx[r0 - s], g.rn_dy[r0 - s]));
         let (mut r, mut min, mut perc, mut fare, mut km, mut stops) = (r0, 0.0f32, 0.0f32, 0.0f32, 0.0f32, 0u32);
-        let mut nx = next[r];
+        // a boarding rides at least one stop, even where riders on board leave (T-1055)
+        let mut nx = if (next[r] as usize) >= s && (next[r] as usize) < g.n { next[r] } else { g.rn_next[r - s] };
         while nx != NONE && (nx as usize) >= s && (nx as usize) < g.n && stops as usize <= g.n {
             let ride = (g.adj_off[r] as usize..g.adj_off[r + 1] as usize).find(|&k| g.adj_seg[k] != NONE).unwrap();
             min += g.rn_ride[r - s];

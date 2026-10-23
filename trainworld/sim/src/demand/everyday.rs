@@ -1427,8 +1427,20 @@ impl LaneWalk<'_> {
                 for &(e, a) in dep.iter() {
                     let to = g.adj_to[e as usize] as usize;
                     let share: Lanes = std::array::from_fn(|k| f[k] * a / sum);
-                    add_lanes(&mut flow[to], &share);
                     add_lanes(&mut l.rn_board[to - s], &share);
+                    let nx = next[to].ix();
+                    if nx >= s && nx < n {
+                        add_lanes(&mut flow[to], &share);
+                    } else {
+                        // as the kernel's DestWalk: a boarding rides a stop first (T-1055)
+                        let r = to - s;
+                        add_lanes(&mut flow[g.rn_next[r] as usize], &share);
+                        add_lanes(&mut l.seg[r], &share);
+                        let ride = g.rn_ride[r];
+                        for k in 0..LANES {
+                            l.pax_min[k] += (share[k] * ride) as f64;
+                        }
+                    }
                 }
                 if head.get(hx).is_some_and(|&h| h != NONE) {
                     use_k.clear();

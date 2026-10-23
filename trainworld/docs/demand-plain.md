@@ -3,7 +3,8 @@
 For Anita. One page, kept current: an agent who changes a rule here updates this page too.
 Last updated 2026-10-23 (the T-636 model, with T-710's route choice and crowding, T-717's cost of
 changing, T-718's route choice between cities, T-720's walking bands, T-938's car speeds and
-ownership cost, and T-1000's cap on how far jobs pull and its set share of long commutes). The full rules are in demand.md; this is the gist.
+ownership cost, T-1000's cap on how far jobs pull and its set share of long commutes, and T-1055's
+rule that every rail trip rides a train). The full rules are in demand.md; this is the gist.
 
 ## Who travels, and where to
 
@@ -66,6 +67,8 @@ There is no built-in liking for the train. Rail and the car are compared on time
   for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Nobody
   changes back onto the line they just left: on a full line people wait at their station.
 - If the train is full when it arrives, the wait for one with room counts too.
+- Every rail trip rides at least one train: nobody boards only to walk off to another station
+  or platform of a complex, so walking between two stations is never a rail trip and pays no fare.
 - Fare: in the US $1 counts as 3 minutes. The fare is the player's curve of trip length, paid
   once a trip; choosing between routes sees only its first stretch.
 - Which stations: riders share the pairs of stations near each end by how much slower each option
@@ -146,5 +149,7 @@ curve by times cheaper, notes/T-918.md; the car's speeds and ownership cost, not
 ## Coming next
 
 - T-584: commuting between neighbouring cities damped at 0.4.
+- T-1059: no train for a trip whose walking to, between and from the stations is longer than
+  walking straight there (measured: about 3% fewer rail trips, nearly all under 2 km).
 - Deep calibration, later: whether the walk's 1.5 should be 1, and what the real cities say about
   the new numbers (the model carries about 2.4 times New York's station counts, 1.6 times London's).

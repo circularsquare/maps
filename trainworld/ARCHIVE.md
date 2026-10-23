@@ -1,5 +1,8 @@
 ﻿# Archive
 
+- T-1056 [P2] Anita's walking rule, measured. Done 2026-10-23: 1-5% of rail trips walk further than the straight line (nearly all under 2 km); the rule would take rail -2.6% New York, -3.6% Tokyo, ceilings about -1 point (all pass). Build filed as T-1059. notes/T-1055.md.
+- T-1055 [P1] Rail trips that ride no train. Done 2026-10-23: a boarding is offered at the cost of riding on, and loads, fare km and the trip explorer follow that ride; real save 11,654,110 to 11,645,298 rail trips a day. notes/T-1055.md.
+- T-200 [P3] Boarding a train only to walk away. Done 2026-10-23 by T-1055: every boarding rides at least one stop. notes/T-1055.md.
 - T-1017 [P1] The US pilot. Done 2026-10-23: Georgia and Florida's 22 rows (5 metros, 17 zones, 31.8M) all shipped, one south-atlantic join; 4 first-pass parks (one fixed in enrich_medical, three relaxed); real save unchanged. notes/T-1004.md "Pilot".
 - T-1058 [P2] The station tool's trip count. Done 2026-10-23: counts trips within 1 km (1 mile in US units), reads "41k trips within 1km" (no "about", no day phrase); the 800 m was this count's own constant, no demand rule uses it. docs/ui-building.md.
 - T-1054 [P2] The placement ghost as blueprint. Done 2026-10-23: blueprint rails and middle (Elevation, Max speed and red for invalid still colour the middle) inside a 1 px outline, black, the map's ink in the dark theme; at least 4 px across the rails. Shots in artifacts/trainworld/t1054/.
