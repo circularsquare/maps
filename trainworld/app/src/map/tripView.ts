@@ -12,7 +12,7 @@ import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { clock } from "../game/clock";
 import { CITIES } from "../game/cities";
 import { lngLatToPack, packToLngLat } from "../game/coords";
-import { cityCells, demandView, flows, intercitySelection } from "../game/demand";
+import { cityCells, demandView, flows, intercitySelection, viewFinal, viewUpdating } from "../game/demand";
 import { dealFlows } from "../game/farChunks";
 import { count, distance } from "../game/format";
 import { NET_INK } from "../game/palette";
@@ -34,6 +34,8 @@ export const shownPeriod = computed(() => tripPeriod.value ?? tripView.value?.bu
 
 /** Hit distance for the hover, px. */
 const HIT_PX = 6;
+/** T-979: how long after an empty answer on a final result the trip is asked again, ms. */
+const RETRY_MS = 3000;
 /** Opacity of the land-coloured veil over the map under a trip's routes. */
 const VEIL = 0.6;
 
@@ -192,15 +194,24 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
     const last = tripView.peek();
     const same = last?.key === key;
     if (!same) { tripPeriod.value = null; openRoute.value = null; }
-    tripView.value = same ? { ...last!, asking: true } : { key, trip: null, asking: true, mix: null, purpose: "work", busiest: null };
+    tripView.value = same ? { ...last!, asking: true, failed: false } : { key, trip: null, asking: true, mix: null, purpose: "work", busiest: null };
     if (!same) { drawn = null; redraw(); }
     const opened = tripOpenedFrom.peek();
-    void explore(sel.from, sel.to, filter, opened?.trip === sel ? opened.places : null, sel.far, sel.near).then((shown) => {
+    const to = sel.to;
+    const run = (again: boolean) => explore(sel.from, to, filter, opened?.trip === sel ? opened.places : null, sel.far, sel.near).then((shown) => {
       if (asked !== ask) return;
-      // null: the workers moved on; the next result asks again
       if (shown) tripView.value = { key, ...shown, asking: false };
-      else tripView.value = { ...tripView.peek()!, asking: true };
+      // null: the workers moved on and the next result asks again. T-979: on a final result none
+      // comes, so it is asked once more (a pack the trip needs may have been opening), then the
+      // explorer says there is no answer
+      else if (!(viewFinal.peek() && !viewUpdating.peek())) tripView.value = { ...tripView.peek()!, asking: true };
+      else if (!again) setTimeout(() => { if (asked === ask) run(true); }, RETRY_MS);
+      else tripView.value = { ...tripView.peek()!, asking: false, failed: true };
+    }, (err) => {
+      console.error("trip explorer:", err);
+      if (asked === ask) tripView.value = { ...tripView.peek()!, asking: false, failed: true };
     });
+    run(false);
   });
   // ---- drawing: the shown period's routes ----
   // the network the rides were drawn along: a new one (it can land after `world`) redraws them

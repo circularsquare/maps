@@ -66,7 +66,8 @@ import { EVERYDAY_KEYS, membersOf, PURPOSES, shownKey, type PurposeFilter, type 
 import { perfOff } from "../perfFlags";
 import { marketZonesNear } from "./demandClusters";
 import { citiesReached, footprintOf, loadFootprints, REACH_M, zonesNearStations, type Footprint } from "./cityReach";
-import { nearbyZones, zonesLoadForView } from "../game/zones";
+import { nearbyZones, zoneAt, zonesLoadForView } from "../game/zones";
+import { packToLngLat } from "../game/coords";
 import { addOpened } from "../game/openedZones";
 import type { BareFigures, DemandNetwork, FromDemand, OpenRejected, ToDemand } from "./demandProtocol";
 import { readMarketPeriod, readTripPeriod, setMarketTripQuery, setTripQuery, tripKey, type MarketPeriod, type RouteNodes, type Trip } from "../game/trip";
@@ -861,7 +862,9 @@ class DemandClient {
   private marketWanted: CityId[] = [];
   private marketZones(svc: Service | null): Set<CityId> {
     const sel = selection.peek();
-    const picked = sel?.kind === "city" ? sel.city : sel?.kind === "commuters" ? activeCity.peek() : null;
+    // T-979: a trip with an end in another zone is read from the market too
+    const leaves = sel?.kind === "trip" && !!sel.to && (!!sel.far || [sel.from, sel.to].some(([x, y]) => zoneAt(...packToLngLat(x, y)) !== activeCity.peek()));
+    const picked = sel?.kind === "city" ? sel.city : sel?.kind === "commuters" || leaves ? activeCity.peek() : null;
     return new Set<CityId>([...(this.knownReach() ?? []), ...(svc ? this.nearOf(svc).markets : []), ...(picked ? [picked] : [])]);
   }
   private wantsMarket(svc: Service | null): CityId[] {
@@ -2317,17 +2320,25 @@ class DemandClient {
    * from the worker holding it. Null while there is no solve, or the workers have moved on to a
    * newer network or round. */
   trip(from: [number, number], to: [number, number], purpose = -1): Promise<Trip | null> {
+    // T-979: a zone still opening is waited for (a bare one would otherwise be asked of workers
+    // that never hold it); a zone open bare has no rounds, and only the aux worker holds it
+    const city = activeCity.peek();
+    if (!this.isOpen(city)) return this.whenOpen(city).then((ok) => (ok && activeCity.peek() === city ? this.trip(from, to, purpose) : null));
+    if (this.isBare(city)) {
+      const dv = demandView.peek();
+      return dv ? this.tripAt({ version: dv.version, round: dv.round, view: dv.version, wait: false }, from, to, purpose, true) : Promise.resolve(null);
+    }
     return this.viaRound(`trip|${from}|${to}|${purpose}`, (t) => this.tripAt(t, from, to, purpose));
   }
-  private async tripAt(t: Target, from: [number, number], to: [number, number], purpose: number): Promise<Trip | null> {
+  private async tripAt(t: Target, from: [number, number], to: [number, number], purpose: number, bare = false): Promise<Trip | null> {
     const solve = t.solve, version = t.view, round = t.round;
-    if (!solve) return null;
+    if (!solve && !bare) return null;
     const at: RouteNodes = [];
-    for (const { id, o, n, stops } of solve.layout)
+    for (const { id, o, n, stops } of solve?.layout ?? [])
       for (let k = 0; k < n; k++) at[o + k] = at[o + 2 * n - 1 - k] = { station: stops[k], line: id, k, o, n };
     const periods: Trip["periods"] = PERIODS.map(() => null);
     let mask = 0, outside = false;
-    for (const r of await this.ask((id) => ({ kind: "trip", id, version: t.version, from, to, ...(purpose >= 0 ? { purpose } : {}) }), undefined, [], undefined, t)) {
+    for (const r of await this.ask((id) => ({ kind: "trip", id, version: t.version, from, to, ...(purpose >= 0 ? { purpose } : {}) }), bare ? [this.computeN] : undefined, [], undefined, t)) {
       if (r.kind !== "trip" || !r.answers) return null;
       mask |= r.mask;
       r.periods.forEach((q, i) => {

@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-979 [P1] Trip explorer stuck on "Asking the demand model" in Jinan. Done 2026-10-23: in any zone no station reaches (open bare; New York too) the trip went to workers that do not hold the zone; the aux worker's no-rail copy now answers, and a failed query says so.
 - T-974 [P2] No city names on the start menu's map. Done 2026-10-23: city, town and village names are hidden while the menu is up and return with the game (`setBasemapLabels`, map/basemap.ts).
 - T-976 [P2] Cities not opened drawn apart. Done 2026-10-23: zoomed out, a zone the game has not opened is a small dot, half the bubble's radius floored to whole px (at least 1), in a setting's colour (Black, Maroon, Grey). Reading in DECISIONS.
 - T-978 [P2] Basemap city dots hidden. Done 2026-10-23: the black dot beside city, town and village names is gone everywhere; the names stay.

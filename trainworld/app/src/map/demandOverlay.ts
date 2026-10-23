@@ -140,9 +140,10 @@ void main() {
   }
   vec3 col = v_col.rgb;
   float a = v_col.a;
-  if (v_edge > 1.5) {
-    // a dark outline 2 px wide, the inside left as it is
-    float t = clamp(d - (v_r - 2.0 * u_dpr) + 0.5, 0.0, 1.0);
+  if (v_edge > 1.1) {
+    // a dark outline 2 px wide (1 px from 1.1 to 1.5: an unopened zone's dot, T-976), the inside left as it is
+    float w = v_edge > 1.5 ? 2.0 : 1.0;
+    float t = clamp(d - (v_r - w * u_dpr) + 0.5, 0.0, 1.0);
     col = mix(col, u_ink, t);
     a = mix(a, 1.0, t);
   }

@@ -2,7 +2,7 @@
 // Lines tabs' double click and the inspectors' locate button. A jump, never a flight (T-182). It
 // only moves the camera; selecting is the caller's.
 
-import { effect } from "@preact/signals";
+import { effect, untracked } from "@preact/signals";
 import { activeCity } from "../game/cities";
 import { fitView } from "../game/loading";
 import { openedZones } from "../game/openedZones";
@@ -27,18 +27,21 @@ const OPEN_MAX_ZOOM = 12;
  * in view (every station, if none is built); with no stations, the zone it was started in, else the
  * world map. Runs when the game's first state arrives (`fitView`), which is before its demand. */
 export function startOpenFit() {
-  effect(() => {
-    if (!fitView.value) return;
-    const w = world.peek();
-    const map = live.map;
-    if (!w || !map) return;
-    const all = w.save.stations;
-    const built = all.filter((s) => s.built);
-    const at = built.length ? built : all;
-    if (!at.length) return viewStart([...(openedZones.peek() ?? [])][0]);
-    const lng = at.map((s) => s.lng), lat = at.map((s) => s.lat);
-    map.fitBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: 70, maxZoom: OPEN_MAX_ZOOM, duration: 0 });
-  });
+  // T-977: untracked, since the camera move runs the map's listeners and viewStart writes signals;
+  // nothing read there may make the fit run again later
+  effect(() => { if (fitView.value) untracked(fitOpened); });
+}
+
+function fitOpened() {
+  const w = world.peek();
+  const map = live.map;
+  if (!w || !map) return;
+  const all = w.save.stations;
+  const built = all.filter((s) => s.built);
+  const at = built.length ? built : all;
+  if (!at.length) return viewStart([...(openedZones.peek() ?? [])][0]);
+  const lng = at.map((s) => s.lng), lat = at.map((s) => s.lat);
+  map.fitBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: 70, maxZoom: OPEN_MAX_ZOOM, duration: 0 });
 }
 
 /** The map fitted to a line's stops. */

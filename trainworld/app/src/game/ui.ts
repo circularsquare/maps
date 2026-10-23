@@ -118,7 +118,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   bubbleColours: "ramp",
   rampFrom: DEFAULT_RAMP.from,
   rampTo: DEFAULT_RAMP.to,
-  unbuiltColour: "black",
+  unbuiltColour: "pale",
   uiScale: 0.9,
   font: DEFAULT_FONT,
   dayShown: "average",
@@ -136,9 +136,9 @@ export interface DockLayout {
 }
 
 /** The stored settings' version: 2 since complex view became the default (T-192), 3 since Nunito and
- * 90% did (T-703), 4 since the real network did (T-727), 5 since the ramp went red to blue (T-812), 6 since Train share became the bubble colouring (T-833), 7 since keep placing is on by default (T-942). Settings stored before a version had
+ * 90% did (T-703), 4 since the real network did (T-727), 5 since the ramp went red to blue (T-812), 6 since Train share became the bubble colouring (T-833), 7 since keep placing is on by default (T-942), 8 since unopened zones' dots are light grey (T-976). Settings stored before a version had
  * saved the old default with everything else, so that setting is dropped once and the new default applies. */
-const VERSION = 7;
+const VERSION = 8;
 
 function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; design: number }>; v: number }> {
   try {
@@ -163,7 +163,8 @@ if ((saved.v ?? 1) < 4) delete migratedDisplay.realNetwork;
 if ((saved.v ?? 1) < 5) delete migratedDisplay.rampFrom, delete migratedDisplay.rampTo;
 // T-833: Train share became the default colouring, and the old default (Mode mix) was stored
 if ((saved.v ?? 1) < 6) delete migratedDisplay.bubbleColours;
-// T-976: a new setting needs no version; an unknown stored name falls back to the default
+// T-976: the default went from black to light grey a day after the setting came, and black was stored
+if ((saved.v ?? 1) < 8) delete migratedDisplay.unbuiltColour;
 if (migratedDisplay.unbuiltColour !== undefined && !UNBUILT_KEYS.includes(migratedDisplay.unbuiltColour)) delete migratedDisplay.unbuiltColour;
 const trackColour = oldDisplay?.trackColour === "line" && legacyLineLoad !== undefined
   ? legacyLineLoad === false ? "line" : "traffic"

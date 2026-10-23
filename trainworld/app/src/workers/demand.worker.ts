@@ -613,23 +613,26 @@ function query(msg: Query) {
     } else if (msg.kind === "trip") {
       // T-195: the trip as a commute, or as an everyday purpose (T-586), each period this worker
       // holds; the cells back in world metres
+      // (T-979: a zone open bare is answered by the aux worker's copy, every period solved on no network)
+      const b = aux ? bare.get(msg.city) : undefined;
+      const api = b ? b.a : live ? a! : null;
       const answers: Float64Array[] = [], periods: number[] = [];
-      if (live) {
+      if (api) {
         const o = worldToCity(msg.from[0], msg.from[1], msg.city), d = worldToCity(msg.to[0], msg.to[1], msg.city);
-        const c = cl;
-        const k = msg.purpose ?? -1, layer = everyday.get(msg.city);
-        for (const q of mine) {
-          const v = k < 0 ? a!.trip(q, o.x, o.y, d.x, d.y) : layer && k < layer.purpose_count() ? layer.trip(k, q, o.x, o.y, d.x, d.y) : new Float64Array(35);
+        const c = b ? undefined : cl;
+        const k = msg.purpose ?? -1, layer = b ? b.e : everyday.get(msg.city);
+        for (const q of b ? PERIODS.map((_, i) => i) : mine) {
+          const v = k < 0 ? api.trip(q, o.x, o.y, d.x, d.y) : layer && k < layer.purpose_count() ? layer.trip(k, q, o.x, o.y, d.x, d.y) : new Float64Array(35);
           if (v[0] === 1) {
             const p0 = cityToWorld(v[27], v[28], msg.city), p1 = cityToWorld(v[29], v[30], msg.city);
             v[27] = p0.x; v[28] = p0.y; v[29] = p1.x; v[30] = p1.y;
-            if (c) tripNodesGlobal(v, viewOf(c, a!).nodeGlobal);
+            if (c) tripNodesGlobal(v, viewOf(c, api).nodeGlobal);
           }
           answers.push(v);
           periods.push(q);
         }
       }
-      sendMessage({ kind: "trip", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, periods, answers: live ? answers : null }, answers.map((v) => v.buffer));
+      sendMessage({ kind: "trip", id: msg.id, version: msg.version, mask: api ? api.solved_mask() : 0, periods, answers: api ? answers : null }, answers.map((v) => v.buffer));
     } else if (msg.kind === "icTrip") {
       // T-866: each period from the market part with the most rail (each part's rail is its own
       // network's); with no part, an answer with no rail

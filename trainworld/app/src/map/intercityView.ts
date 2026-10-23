@@ -86,6 +86,8 @@ const SPLIT_BUBBLES = true;
 /** A bubble's edge value: its outline (0 none, 1 plain, 2 the selected one's), and under
  * `SPLIT_BUBBLES` the train share; a bubble nobody travels in stays a plain grey disc. */
 const edgeOf = (outline: 0 | 1 | 2, rail: number, all: number) => (SPLIT_BUBBLES && all > 0 ? splitEdge(outline, rail / all) : outline);
+/** An unopened zone's dot: a 1 px dark outline (the disc shader's 1.1-1.5 band). */
+const UNBUILT_EDGE = 1.25;
 /** Most place labels on screen at once, the biggest first (T-493). */
 const MAX_LABELS = 8;
 
@@ -247,9 +249,10 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const [x, y] = toLocal(p.city.center[0], p.city.center[1], a);
       const c = p.unbuilt ? dot : bubbleColour(p.rail, p.walk, Math.max(0, p.all - p.rail - p.walk));
       let r = Math.sqrt(p.all / (own ? SELECTED_TRIPS_PER_PX2 : TRIPS_PER_PX2)) * zoomScale / pxPerUnit;
-      // T-976: a zone not opened is a plain dot of half the radius it would have, in whole CSS px, at least 1
-      if (p.unbuilt) r = Math.max(1, Math.floor((r * pxPerUnit * size) / 2)) / (pxPerUnit * size);
-      discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, p.unbuilt ? 1 : edgeOf(p.isOwn ? 2 : 1, p.rail, p.all)], i * DISC);
+      // T-976: a zone not opened is a dot of half the radius it would have, in whole CSS px, at least 2
+      // so its 1 px outline leaves some fill
+      if (p.unbuilt) r = Math.max(2, Math.floor((r * pxPerUnit * size) / 2)) / (pxPerUnit * size);
+      discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, p.unbuilt ? UNBUILT_EDGE : edgeOf(p.isOwn ? 2 : 1, p.rail, p.all)], i * DISC);
       label(`${p.city.name} · ${count(p.all)} trips`);
     });
     const first = points.findIndex((p) => p.isOwn);

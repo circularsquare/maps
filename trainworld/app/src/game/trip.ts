@@ -589,6 +589,8 @@ export interface TripShown {
   key: string;
   trip: Trip | null;
   asking: boolean;
+  /** T-979: the model gave no answer for a final result, so asking again would not help */
+  failed?: boolean;
   mix: TripMix | null;
   /** the purpose the routes are read as */
   purpose: PurposeKey;

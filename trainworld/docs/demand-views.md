@@ -70,7 +70,8 @@ and each change's fixed cost. Strategies are searched towards
 the destination's egress stations only (at most six searches, a few ms; each search is
 independent, so they are the solve's). It changes no state and is answered between stages, like
 the other queries: each solving worker answers for the periods it holds, only from a round that
-all its periods hold (`trip` message, the cells' positions in world metres). A trip whose end has
+all its periods hold (`trip` message, the cells' positions in world metres); a zone open bare is
+answered by the aux worker from its copy solved on no network, every period (T-979). A trip whose end has
 no subzone (no station within 4 km), or whose cheapest walks pass `pair_walk_max`, or with no
 connecting service in the period gets no rail; its drive is priced between the two cells.
 The answer also carries the subzones' own chances of walking, rail and driving and their cheapest

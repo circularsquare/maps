@@ -18,7 +18,7 @@ import { Credits } from "./Credits";
 
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
 const SHADE_NAME: Record<Shade, string> = { light: "Light", dark: "Dark" };
-const UNBUILT_NAME: Record<UnbuiltColour, string> = { black: "Black", maroon: "Maroon", grey: "Grey" };
+const UNBUILT_NAME: Record<UnbuiltColour, string> = { pale: "Light grey", black: "Black", maroon: "Maroon", grey: "Grey" };
 type DayShown ="average" | "weekday" | "weekend";
 const SCHEME_OPTIONS: [BubbleScheme, string][] = [["mode", "Mode mix"], ["ramp", "Train share"]];
 const DAY_OPTIONS: [DayShown, string][] = [["average", "Average"], ["weekday", "Weekday"], ["weekend", "Weekend"]];

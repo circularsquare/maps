@@ -360,7 +360,11 @@ destinations at the end, and how the demand model's people would make one of the
   own cells.
 - The trip is a selection: it stays after the tool is left, until Esc or an empty click, and while
   selected panning does not change the focused zone. It is asked again at each published round,
-  and when the purpose filter or the day changes.
+  and when the purpose filter or the day changes. In a zone no station reaches (open bare) the aux
+  worker's no-rail copy answers, every period at once [T-979]. A trip with an end in another zone
+  opens the focused zone's market pack, as a bubble selection does. An empty answer on a final
+  result is asked once more after 3 s (`RETRY_MS` in map/tripView.ts), then the panel reads "The
+  demand model has no answer for this trip." rather than waiting.
 - **Between zones** [T-866; `ui/inspector/MarketTrip.tsx`, `IntercityApi::market_trip` in
   `sim/src/demand/intercity/market_trip.rs`]: with a bubble selection, a click on an inter-region
   bubble (a whole place zoomed out, a 6 km area up close; hover ends "Click to explore these

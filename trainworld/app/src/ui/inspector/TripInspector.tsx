@@ -464,7 +464,7 @@ export function TripInspector() {
   if (!sel.to) return head;
   if (market) return <>{head}<MarketTrip m={market} /></>;
   const trip = v?.trip;
-  if (!trip) return <>{head}<p class="muted">{v?.asking ? "Asking the demand model." : "Calculating demand."}</p></>;
+  if (!trip) return <>{head}<p class="muted">{v?.failed ? "The demand model has no answer for this trip." : v?.asking ? "Asking the demand model." : "Calculating demand."}</p></>;
   if (trip.outside) return <>{head}<p class="muted">One of the two places is outside the city's homes and jobs.</p></>;
   const t = trip.periods[q];
   if (!t) return <>{head}<p class="muted">Calculating demand.</p></>;
