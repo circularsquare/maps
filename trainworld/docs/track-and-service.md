@@ -745,7 +745,7 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   second pass of the account). In the books they leave and board again there.
 - **Riders go another way** (T-1067, `GIVE_UP_S`, `WAITING_CAP`): demand's crowding rounds price
   riders left behind but do not hold a line to what it can carry, so an overloaded line would
-  otherwise gather a queue that only grows. A rider whom full trains have kept more than 30 minutes
+  otherwise gather a queue that only grows. A rider whom full trains have kept more than 90 minutes
   past the first train they came for leaves the platform (as a train leaves, the oldest first), and
   one platform side (a direction of a line at a stop) holds at most 5,000 waiting: whoever comes
   when it is full is turned away. Neither boards, so neither counts in the line's boardings

@@ -31,7 +31,7 @@ pub const DAY: f64 = 86400.0;
 pub const PERIODS: usize = PERIOD_HOURS.len();
 /// T-1067: a rider whom full trains have kept this long past the first train they came for goes
 /// another way (DECISIONS 2026-10-23).
-pub const GIVE_UP_S: f64 = 1800.0;
+pub const GIVE_UP_S: f64 = 5400.0;
 /// T-1067: the most riders waiting on one platform side (a direction of a line at a stop), what a
 /// 300 m platform's side 5 m deep holds at 0.3 m² a rider; whoever comes when it is full goes
 /// another way. `WAITING_CAP` in app/src/game/boarding.ts.
@@ -1634,28 +1634,29 @@ mod tests {
         assert!((v[3] - boarded).abs() < 0.01 * boarded, "{} {boarded}", v[3]);
     }
 
-    /// T-1067: riders whom full trains leave behind for GIVE_UP_S go another way, so the queue
-    /// stops growing well under WAITING_CAP and nobody waits for hours.
+    /// T-1067: riders whom full trains leave behind for GIVE_UP_S go another way, as do those
+    /// who find the platform at WAITING_CAP, so nobody waits much past GIVE_UP_S.
     #[test]
     fn riders_left_behind_too_long_go_another_way() {
-        // 2 trains an hour of 1,600 against 4,000 an hour from 06:00 to 10:00
+        // 2 trains an hour of 1,600 against 4,000 an hour from 06:00 to 10:00, then 1 an hour
+        // against 2,400 to 16:00
         let (w, l) = setup(2.0);
         let mut b = Boarding::default();
-        b.set_riders(&riders(l, [4000.0, 500.0, 500.0, 500.0, 50.0]));
+        b.set_riders(&riders(l, [4000.0, 2400.0, 500.0, 500.0, 50.0]));
         b.ensure(&w.net, &w.svc);
         let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
         let m = ra.deps.len();
+        // the queue grows 400 a train through the morning and fills the platform at 11:00
         let most = (0..m).map(|j| ra.q_after[j * 3]).fold(0.0f32, f32::max) as f64;
-        // it grows by 400 a train until riders start to go, under a headway's 2,000 more and
-        // well short of the 3,200 a peak with nobody going would leave
-        assert!(most > 2000.0 && most < 2500.0, "{most}");
-        // whoever is left waits at most GIVE_UP_S past their first train: in the peak the head of
-        // the queue waits under that plus two headways (the night's trains are 2 hours apart)
-        let longest = ra.wait_h[6..10].iter().fold(0.0f32, |a, &b| a.max(b)) as f64;
-        assert!(longest > GIVE_UP_S && longest <= GIVE_UP_S + 2.0 * 1800.0 + 1.0, "{longest}");
-        // the peak's 3,200 too many went another way, those still waiting at 10:00 at the next
-        // train an hour on (all of them left behind more than GIVE_UP_S by then)
-        assert!((ra.gave_up - 3200.0).abs() < 300.0, "{}", ra.gave_up);
+        assert!(most <= WAITING_CAP - 1600.0 + 1e-3, "{most}");
+        let gave_by_noon: f64 = (0..m).filter(|&j| ra.order_t[j] < 12.5 * 3600.0).map(|j| ra.gone[ra.order[j] as usize * 3] as f64).sum();
+        let gave_after: f64 = (0..m).filter(|&j| ra.order_t[j] > 12.5 * 3600.0).map(|j| ra.gone[ra.order[j] as usize * 3] as f64).sum();
+        assert!(gave_by_noon > 0.0 && gave_after > 0.0, "{gave_by_noon} {gave_after}");
+        // whoever is left waits at most GIVE_UP_S past their first train: by day the head of the
+        // queue waits under that plus two headways (the night's trains are 2 hours apart)
+        let longest = ra.wait_h[6..16].iter().fold(0.0f32, |a, &b| a.max(b)) as f64;
+        assert!(longest > GIVE_UP_S && longest <= GIVE_UP_S + 2.0 * 3600.0 + 1.0, "{longest}");
+        assert!(ra.gave_up > 1000.0, "{}", ra.gave_up);
         assert!((ra.arrived - ra.boarded - ra.gave_up).abs() < 1e-6 * ra.arrived);
         let gone: f64 = ra.gone.iter().map(|&g| g as f64).sum();
         assert!((gone - ra.gave_up).abs() < 1e-3 * ra.gave_up);
