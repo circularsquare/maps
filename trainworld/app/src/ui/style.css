@@ -848,6 +848,20 @@ rect.now { fill-opacity: .45; }
   .stops li { min-height: 24px; }
 }
 
+/* T-951: a phone held upright. The dock goes under the map instead of beside it, so the map keeps the
+   full width and the container queries above see a 400 px column, not a 125 px strip. Same parts, the
+   dock's tab row now spanning the screen; the tabs' own drag handle for width gives way to the divider. */
+@media (max-width: 600px) and (min-height: 560px) {
+  #game { flex-direction: column; }
+  #main { order: 1; flex: 1 1 0; min-height: 0; }
+  #dock { order: 2; width: 100%; height: calc(40dvh / var(--ui, 1)); border-right: 0; border-top: 1px solid var(--rule); }
+  .dock-resize { display: none; }
+  #tools { right: 0; }
+  #tool-notes { width: auto; max-width: none; border-right: 0; }
+  .pane { height: var(--pane-h, 48%); max-height: 60%; }
+  .help-panel { left: 0; width: 100%; max-height: calc(100% - 48px); border-left: 0; border-right: 0; }
+}
+
 /* Browser save slots (T-068). */
 .save-slot-new { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
 .save-slot-new input { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--rule); background: var(--bg); }

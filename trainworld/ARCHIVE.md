@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-951 [P2] Phone layout. Done 2026-10-22: at most 600 px wide and 560 px tall the dock sits under the map (40% of the height), so the map and top bar keep the full width and no buttons overlap; 400x860 and 360x780 checked, desktop and landscape unchanged. docs/ui-panels.md.
 - T-929 [P1] Market rows only where they change. Done 2026-10-22: market_zones redoes the rows of changed, new or gone market packs and of places within 250 km (a record of each row's inputs); byte-identical to a full run in five cases; a gate's register 189 s to about 33 s, a full run 120 s to 45 s. notes/T-929.md.
 - T-931 [P2] The gate's rates test built once a run. Done 2026-10-22: world_run builds `every_pack_everyday` at the run's start and every gate runs that binary (`TW_EVERYDAY_EXE`); same rates, no recompile mid-run. notes/T-929.md.
 - T-953 [P2] WebGL audit for devices and browsers. Done 2026-10-22: a lost context (a blank map until reload) now recovers on both canvases and MapLibre; STROKE_FS is highp; limits, float textures and GLSL checked on five back ends. T-955 to T-957 filed. notes/T-953.md.
