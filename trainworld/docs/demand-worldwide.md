@@ -608,7 +608,8 @@ notes/T-420.md has the tables.
   as for Taiwan) times the pack's population, and no site keeps more than 5% of the pack's beds or
   1,500, whichever is more, and never over 4,000 (the excess goes to the others in proportion).
   The scale sets hospitals against clinics and doctors; the shape only shares beds among
-  hospitals. Why it may not carry over: floor area is a weak guide, little better than giving
+  hospitals. A pack with no OSM facility at all (rural Chinese counties, T-897) spreads its visits
+  by jobs, so the purpose stays. Why it may not carry over: floor area is a weak guide, little better than giving
   every hospital the same size (notes/T-387.md); point hospitals are small private ones in Mumbai and Lagos but large ones in New York;
   some countries' latest World Bank year is old (Nigeria 2004, 0.5); and a national rate
   undercounts a city that holds its region's referral hospitals. Check: a national register of

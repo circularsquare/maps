@@ -274,12 +274,23 @@ def main(city="nyc", dry=False):
         visits[cell] += r["size"]
         audit.append(rec | dict(cell=int(cell), snap_m=snap))
     total = sum(r["size"] for r in kept)
-    if total <= 0 or visits.sum(dtype=np.float64) / total < 0.95:
+    if total > 0 and visits.sum(dtype=np.float64) / total < 0.95:
         raise ValueError("medical location coverage below 95%")
+    # T-897: a pack with no OSM facility at all (Qihe, Yi County: OSM is near empty in rural China)
+    # spreads its visits by jobs, tier 0's fallback for missing places; an empty purpose would drop
+    # the slots after it. The draw is relative, so only the spread matters.
+    by_jobs = total <= 0
+    if by_jobs:
+        k = "jobs" if "jobs" in arr else "pop"
+        visits = np.frombuffer(buf, dtype="<f4", count=arr[k]["count"], offset=arr[k]["offset"]).astype("<f4")
+        total = float(visits.sum(dtype=np.float64))
+        if total <= 0:
+            raise ValueError("no medical facilities and no jobs to spread visits by")
     buf = education.replace_cell_arrays(header, buf, {"medical_visits": visits})
     rate_src = "World Bank SH.MED.BEDS.ZS (hospital beds per 1,000 people)"
     header["medical"] = dict(
-        coverage="OpenStreetMap hospitals, clinics, doctors and dentists in the pack's counties; patients and visitors",
+        coverage=("no OpenStreetMap medical facility in the pack's counties: visits spread by jobs (T-897)" if by_jobs else
+                  "OpenStreetMap hospitals, clinics, doctors and dentists in the pack's counties; patients and visitors"),
         facilities=len(audit), by_kind=by_kind, size_total=float(visits.sum(dtype=np.float64)),
         located_share=float(visits.sum(dtype=np.float64) / total), omitted=len(omitted),
         sizes="hospital 1,000 x beds (tag, else a pooled k x the square root of the site's floor area, "
