@@ -98,7 +98,10 @@ def check_gravity(header, a):
                 ex, ey = dx + qi[0] - qj[0], dy + qi[1] - qj[1]
                 dq = zk * np.sqrt(ex * ex + ey * ey)
                 dq[dq == 0] = g["intrazonal_km"]
-                f = f + wq * np.exp(-dq / g["decay_km"]) * dq ** -a_pow
+                # in float32 as the kernel's decay table: far pairs underflow to 0 there, and the
+                # factors balance without them (T-897: Lhasa's zone spans 1,980 km)
+                dq32 = dq.astype(np.float32)
+                f = f + wq * (np.exp(-dq32 / np.float32(g["decay_km"])) * dq32 ** np.float32(-a_pow)).astype(np.float64)
         if len(subs) == 1:
             d = dq
         else:

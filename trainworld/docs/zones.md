@@ -182,7 +182,7 @@ over every job in reach, in its own zone or another, so moving a zone line moves
   Within a group the 150 km cut still applies. Today this gives two groups. The Northeast (the
   registry's cities with a `market` id; cross-pack commutes through `data/packs/intercity.json`) is
   solved its own way and must hold exactly those cities. Every other group runs `joint_gravity
-  --packs` (distances in a conic at the packs' mean origin; at most 150 steps, the best kept) and
+  --packs` (distances in a conic at the packs' mean origin; at most 300 steps, the best kept) and
   writes its cross-pack commutes, by 6 km square of each pack's own frame, to
   `data/work/<first member>.joint_commutes.json` (Japan's 45 packs: `tyo`), which `market_zones.py`
   writes into each zone's market pack; an older file holding any of the same packs is removed.
@@ -201,7 +201,8 @@ over every job in reach, in its own zone or another, so moving a zone line moves
   join so costs its own solve only, however long the chain of covered countries; a neighbour's
   own commutes and factors stay as its last solve left them until it is solved again. National
   borders take the 0.05 default, so under 0.02% of commuters cross one (notes/T-786.md).
-  `intercity.py` refuses one solve over 400,000 zones (about six Japans).
+  A solve region in `intercity.SOLVE_ALONE` (Xinjiang, T-998) holds no neighbours: its commutes
+  with them come from their solves. `intercity.py` refuses one solve over 400,000 zones (about six Japans).
 
 **Fitting and checking.** The curve and the factors are each pack's fitted values, so nothing new
 is fitted for commutes between zones in the US. LODES OD 2023 is the check, not an input: commuters

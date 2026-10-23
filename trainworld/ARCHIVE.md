@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-897 [P2] China whole. Done 2026-10-23: the Jiangsu pilot and four waves, 756 zones and 1,449M people (Hong Kong, Macau and Taiwan as their own countries), about 15 h of runs; left elsewhere: T-958, T-996, T-997. notes/T-897.md "China whole".
+- T-998 [P1] Xinjiang's joint balance stalls with fixed neighbours. Done 2026-10-23: Xinjiang solves with none (`intercity.SOLVE_ALONE`), 8e-9 at step 259, and a solve may take 300 steps; wave 4's join shipped all 124. notes/T-897.md wave 4.
 - T-1003 [P2] China walks a lot at baseline. Settled 2026-10-23, left as it is (Anita): 38% of China's trips walk with no rail against 30-37% in the West, from parking by density; rail is more rewarding there, not less. notes/T-1003.md.
 - T-1006 [P1] Regions shaded by the zones' outlines. Done 2026-10-23: one world shade with the shown regions' zones cut out (no land shapes, realms.geojson no longer fetched); buttons a floating expand icon; no bubbles behind the start menu; frame time unchanged. notes/T-1006.md.
 - T-994 [P1] Local demand bubbles missing on desktop. Closed 2026-10-23: never reproduced (about 20 headless cases), and Anita sees them again on later 8800 builds; smoke now checks that Homes draws, in a bare city and in the real save. notes/T-994.md.

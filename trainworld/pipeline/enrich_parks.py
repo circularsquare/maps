@@ -228,6 +228,13 @@ def main(city="nyc", dry=False):
     # the density of the ring around the place: its residents over the ring's land (the ring
     # without the place itself, inside the pack's boundary, whose county shapes stop at the shore)
     land = transform(lambda x, y: xy(x, y), boundary)
+
+    def land_near(g):
+        bx = (g.bounds[0] - 1000, g.bounds[1] - 1000, g.bounds[2] + 1000, g.bounds[3] + 1000)
+        try:
+            return shapely.clip_by_rect(land, *bx)
+        except shapely.errors.GEOSException:  # GEOS's clip can leave a 3-point ring (T-897, Baiquan)
+            return land.intersection(shapely.box(*bx))
     near_a, geoms_a = near, np.array(geoms, dtype=object)
     ring_m2 = np.empty(len(kept))
     for i in range(0, len(kept), 1000):
@@ -235,8 +242,7 @@ def main(city="nyc", dry=False):
         # T-425: only the land near the ring matters; an overlay with the whole outline costs tens of
         # ms a park on a long coastline, a rectangle clip about 4 ms. The 1 km margin keeps the clip's
         # cut edges clear of the ring, which makes the areas bit-identical to the unclipped overlay.
-        box_land = np.array([shapely.clip_by_rect(land, g.bounds[0] - 1000, g.bounds[1] - 1000, g.bounds[2] + 1000, g.bounds[3] + 1000)
-                             for g in near[s]], dtype=object)
+        box_land = np.array([land_near(g) for g in near[s]], dtype=object)
         ring_m2[s] = shapely.area(shapely.intersection(shapely.difference(near_a[s], geoms_a[s]), box_land))
     ring_km2 = np.maximum(ring_m2 / 1e6, 0.5)
     D = P / ring_km2

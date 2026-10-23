@@ -267,7 +267,7 @@ def build(cid, row, sources):
         return g.difference(clip(wet, g))
     dry = admin.copy()
     dry["geometry"] = [dried(g) for g in admin.geometry]
-    picks = match([(u[0], u[1], dried(u[2]), u[3]) for u in units], dry, lat0)
+    picks = foreign(row, sources, units, admin, match([(u[0], u[1], dried(u[2]), u[3]) for u in units], dry, lat0))
     feats, geoms, chosen = [], [], {}
 
     def take(i, uid, gname, iou):
@@ -324,6 +324,49 @@ def build(cid, row, sources):
             json.dump(doc, f, ensure_ascii=False)
         os.replace(path + ".part", path)
     return stem + ".outline.geojson"
+
+
+def foreign(row, sources, units, admin, picks):
+    """Drop from each several-relation pick the relations that hold half or more of another plan
+    row's unit: geoBoundaries draws some city districts far smaller than OSM, so OSM's district lies
+    mostly inside the neighbouring county and joined it, taking the city's centre (T-897: Yingkou's
+    Zhanqian into Dashiqiao's zone, Qitaihe's Xinxing into Bin's). A unit left uncovered keeps its own
+    polygon there (REST_MIN), as any unit does."""
+    multi = sorted({i for idx, _ in picks if len(idx) > 1 for i in idx})
+    if not multi:
+        return picks
+    import plan_config
+    import world_plan as wp
+    plan = plan_config.load()[0]
+    mine = {u for ids in row["units"].values() for u in ids}
+    rel = {i: make_valid(wp.to_moll(admin.geometry.iloc[i])) for i in multi}
+    box = union_all(list(rel.values())).envelope
+    held = {}
+    for iso in row["units"]:
+        if sources[iso]["kind"] != "geoBoundaries":
+            continue
+        others = {u for r in plan if r.get("id") != row["id"] for u in (r.get("units") or {}).get(iso, [])} - mine
+        meta = wp.europe_isos()[1]
+        for adm in sources[iso]["urls"]:
+            for uid, name, g in wp.gb_units(meta, iso, adm):
+                if uid in others and g.intersects(box):
+                    for i, rg in rel.items():
+                        if g.area > 0 and make_valid(g).intersection(rg).area >= 0.5 * g.area:
+                            held.setdefault(i, []).append(name)
+    if not held:
+        return picks
+    out = []
+    for (uid, gname, _, _), (idx, iou) in zip(units, picks):
+        keep = [i for i in idx if i not in held] if len(idx) > 1 else idx
+        if keep and len(keep) < len(idx):
+            for i in idx:
+                if i in held:
+                    print(f"  {row['id']}: {gname} leaves out OSM r{admin.osm_id.iloc[i]} {admin['name'].iloc[i]}, "
+                          f"which holds most of another row's {', '.join(held[i])}", flush=True)
+            out.append((keep, iou))
+        else:
+            out.append((idx, iou))
+    return out
 
 
 def enclaves(row, sources, holes):

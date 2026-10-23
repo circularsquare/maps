@@ -54,6 +54,10 @@ GROUP_GAP_KM = 50.0
 # joint_gravity's cut for pairs across packs: a neighbouring country's pack this near takes part in a
 # country's solve, held at its factors (T-786)
 CUT_KM = 150.0
+# solve regions balanced with no fixed neighbours (T-998): Xinjiang's columns never settle while any of
+# the huge packs around it (Golmud, Lhasa, Shigatse, Zhangye, Alxa) is held at its own factors; its few commutes with them
+# come from their regions' solves
+SOLVE_ALONE = {"CN-xinjiang"}
 # a time guard on one solve (a country's packs since T-786): about 6x Japan's 68k zones (notes/T-539.md)
 MAX_GROUP_ZONES = 400_000
 # the local layer's parking (sim kernel `Params` defaults: park_min, park_paid_min, park_paid_d0,
@@ -158,9 +162,9 @@ def solve_group(ids, name, root=ROOT, work=None, dry=False, fixed=(), new=(), ho
         extra += ["--fixed", ",".join(fixed)]
         if hold_report:
             extra += ["--hold-report", str(hold_report)] + (["--new", ",".join(new)] if new else [])
-    # Japan's columns stall at about 8e-4 from step ~90, all in Okinawa's outlying islands (weakly
-    # joined to anything; notes/T-463.md): the best step is kept, so 150 steps are as good as 500
-    cargo_bin("joint_gravity", "--root", str(root), "--threads", os.environ.get("OMP_NUM_THREADS", "3"), "--max-iters", "150",
+    # the best step is kept, so a solve that stalls (Japan's columns at about 8e-4 from step ~90, in
+    # Okinawa's outlying islands, notes/T-463.md) only spends time; Xinjiang alone settles at step 249 (T-998)
+    cargo_bin("joint_gravity", "--root", str(root), "--threads", os.environ.get("OMP_NUM_THREADS", "3"), "--max-iters", "300",
               "--packs", ",".join(ids), "--out", str(out), "--report", str(work / f"{name}.joint_report.json"), *extra)
     if not dry:
         files = joint_files(work)
@@ -235,7 +239,8 @@ def solve_units(reg, root=ROOT, only=(), gap=None):
             if shapes is None:
                 shapes = {i: outline(root / f"data/packs/{i}.boundary.geojson") for i in g}
             units.append({"name": f"{ms[0]}-{c.lower()}", "members": ms, "country": c,
-                          "fixed": [j for j in g if cc[j] != c and near_any(shapes[j], [shapes[m] for m in ms], CUT_KM)]})
+                          "fixed": [] if c in SOLVE_ALONE else
+                          [j for j in g if cc[j] != c and near_any(shapes[j], [shapes[m] for m in ms], CUT_KM)]})
     return [u for u in units if not only or set(u["members"]) & set(only)]
 
 
