@@ -6,6 +6,9 @@ and which whole admin units each one holds.
     python pipeline/world_plan.py row <pack> <out.json>
                                             one existing pack's metro planned as if the pack did not
                                             exist, as a one-row plan file (T-537's test build)
+    python pipeline/world_plan.py metros --countries US
+                                            a FUA country's metro rows planned alone (T-1015), no
+                                            other row touched
     python pipeline/world_plan.py zones --countries ES[,PT]
                                             whole-country cover (T-723): the country's zone rows,
                                             every unit no row or pack holds (docs/zones.md 2)
@@ -92,8 +95,29 @@ GOLAN = (35.6, 32.6, 36.0, 33.4)
 DE_FACTO = {"CHN": {"IND": None, "BTN": None, "TWN": None, "HKG": None, "MAC": None}, "TWN": {"CHN": None},
             "IND": {"CHN": None, "PAK": KASHMIR, "KAS": None}, "PAK": {"IND": KASHMIR, "KAS": None},
             "UKR": {"RUS": CRIMEA}, "SYR": {"ISR": GOLAN}}
+# The US and Puerto Rico (T-1004, T-1015): `module` is the country module zone rows take (elsewhere
+# zones take none); `zoned_only` limits a first-level unit to these units, the rest dead space
+# (Alaska: the road and rail belt, Anchorage to Fairbanks)
+ALASKA_BELT = ["02020", "02170", "02122", "02090", "02068", "02240", "02063", "02066"]
 ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, "contiguous": True},
-              "TWN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, "contiguous": True}}
+              "TWN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, "contiguous": True},
+              "USA": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "module": "usa",
+                      "zoned_only": {"02": ALASKA_BELT}, "task": "T-1015"},
+              "PRI": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "module": "usa",
+                      "task": "T-1015"}}
+# countries whose metros are GHS-FUAs over 1M as in Europe, planned alone by `metros --countries`
+# (T-1004: low-density US cities have urban centres under 1M); every other row stays as it is, and
+# a replan of the rest keeps these countries' rows
+FUA_COUNTRIES = {"USA"}
+# metro rows set by hand in a FUA country: (name, unit ids). Riverside: GHSL's Los Angeles area
+# holds San Bernardino but not Riverside, a county over the zone cap (T-1004)
+METRO_EDITS = {"USA": [("Riverside", ["06065", "06025"])]}
+# a FUA named after the city across the border, or after the smaller of two cores (T-1015)
+METRO_NAMES = {"USA": {"Tijuana": "San Diego", "San Jose": "San Francisco"}}
+# Census 2020 counties (Puerto Rico's municipios) as the US's units, GEOIDs, the state their parent;
+# STATEFP to country, None for the small territories, which wait for their own regions (T-1004)
+COUNTIES = ROOT / "data/raw/cb_2020_us_county_500k.zip"
+COUNTY_ISO = {"72": "PRI", "60": None, "66": None, "69": None, "78": None}
 # a zone's parts touch by land or across at most this much water (a bridge, a narrow strait): the
 # `contiguous` rule of zone_groups (Anita, 2026-10-22: no exclaves)
 WATER_GAP_KM = 10.0
@@ -105,14 +129,29 @@ ZONE_ALONE_MIN = 10_000  # with `contiguous`, a zone that joined nothing and hol
 SOLVE_REGIONS = {"CHN": {"Beijing Municipality": "jingjinji", "Tianjin Municipality": "jingjinji",
                          "Hebei Province": "jingjinji", "Shanghai Municipality": "jiangsu",
                          "Guangzhou Province": "guangdong", "Ningxia Ningxia Hui Autonomous Region": "ningxia",
-                         "Inner Mongolia Autonomous Region": "innermongolia"}}
+                         "Inner Mongolia Autonomous Region": "innermongolia"},
+                 # Census divisions, Delaware, Maryland and DC with the Northeast so the 13 built packs
+                 # solve together (T-1004)
+                 "USA": {**{s: "northeast" for s in (
+                             "Connecticut", "Maine", "Massachusetts", "New Hampshire", "Rhode Island", "Vermont",
+                             "New Jersey", "New York", "Pennsylvania", "Delaware", "Maryland", "District of Columbia")},
+                         **{s: "south-atlantic" for s in (
+                             "Virginia", "West Virginia", "North Carolina", "South Carolina", "Georgia", "Florida")},
+                         **{s: "east-south-central" for s in ("Alabama", "Kentucky", "Mississippi", "Tennessee")},
+                         **{s: "west-south-central" for s in ("Arkansas", "Louisiana", "Oklahoma", "Texas")},
+                         **{s: "east-north-central" for s in ("Illinois", "Indiana", "Michigan", "Ohio", "Wisconsin")},
+                         **{s: "west-north-central" for s in (
+                             "Iowa", "Kansas", "Minnesota", "Missouri", "Nebraska", "North Dakota", "South Dakota")},
+                         **{s: "mountain" for s in (
+                             "Arizona", "Colorado", "Idaho", "Montana", "Nevada", "New Mexico", "Utah", "Wyoming")},
+                         **{s: "pacific" for s in ("Alaska", "California", "Hawaii", "Oregon", "Washington")}}}
 
 # What a city in each country can have (docs/data-register.md "Countries and their procedure");
 # every other country is archetype D. England's module covers England's ITL3 units only.
 ARCHETYPE = {"GBR": ("A", "england"), "FRA": ("A", "france"), "DEU": ("A", "germany"),
              "CAN": ("A", "canada"), "JPN": ("A", "japan"), "BRA": ("C", "brazil"),
              "CHN": ("C", "china"), "KOR": ("C", "korea"), "IND": ("C", "india"),
-             "NGA": ("D", "nigeria")}
+             "NGA": ("D", "nigeria"), "USA": ("A", "usa"), "PRI": ("C", "usa")}
 NE_FIX = {"KOS": "XKX", "SOL": "SOM", "CYN": "CYP", "SAH": "ESH"}
 
 FWD = Transformer.from_crs("EPSG:4326", "ESRI:54009", always_xy=True)
@@ -306,35 +345,74 @@ def packs():
 
 # ---------------------------------------------------------------- metros and their areas
 
-def metros(pop, ne, europe):
-    """Candidate metros, each with the area its units are judged against: in Europe a functional
-    urban area over 1M people; elsewhere an urban centre over 1M with the FUAs it holds half of (and
-    the FUA around its population-weighted centre), centres sharing a FUA merged."""
+def load_fua():
     fpath = unzip(FUA[0], FUA[1], ".gpkg")
     fua = pyogrio.read_dataframe(fpath, columns=["eFUA_ID", "eFUA_name", "Cntry_ISO", "FUA_p_2015"])
-    fgeom = [polygonal(g) for g in fua.geometry]
-    out = []
-    for i in range(len(fua)):
-        if fua.Cntry_ISO[i] in europe and fua.FUA_p_2015[i] >= 0.5 * MIN_POP:
-            _, _, p = pop.inside(fgeom[i])
-            if p.sum() >= MIN_POP:
-                out.append({"key": f"fua{int(fua.eFUA_ID[i])}", "name": fua.eFUA_name[i], "iso": fua.Cntry_ISO[i],
-                            "region": "uk" if fua.Cntry_ISO[i] == "GBR" else "europe",
-                            "source": {"fua": [int(fua.eFUA_ID[i])]}, "alt_names": [], "area": fgeom[i]})
-    log(f"Europe: {len(out)} functional urban areas over {MIN_POP:,}")
+    return fua, [polygonal(g) for g in fua.geometry]
 
+
+def load_ucdb(ne):
+    """GHSL's urban centres, their centroids by id, and each one's country."""
     lay = "GHS_UCDB_THEME_GENERAL_CHARACTERISTICS_GLOBE_R2024A"
     uc = pyogrio.read_dataframe(UCDB, layer=lay, columns=["ID_UC_G0", "GC_UCN_MAI_2025", "GC_POP_TOT_2025"])
     cen = pyogrio.read_dataframe(UCDB, layer="UC_centroids")
     cen = dict(zip(cen.ID_UC_G0, cen.geometry))
-    uc_iso = iso_at(ne, STRtree([g for _, g in ne]), [cen[i] for i in uc.ID_UC_G0])
+    return uc, cen, iso_at(ne, STRtree([g for _, g in ne]), [cen[i] for i in uc.ID_UC_G0])
+
+
+def fua_metros(pop, fua, fgeom, isos):
+    """The functional urban areas over MIN_POP people of these countries, as metros."""
+    out = []
+    for i in range(len(fua)):
+        iso = fua.Cntry_ISO[i]
+        if iso in isos and fua.FUA_p_2015[i] >= 0.5 * MIN_POP:
+            _, _, p = pop.inside(fgeom[i])
+            if p.sum() >= MIN_POP:
+                out.append({"key": f"fua{int(fua.eFUA_ID[i])}", "name": fua.eFUA_name[i], "iso": iso,
+                            "region": "uk" if iso == "GBR" else ("world" if iso in FUA_COUNTRIES else "europe"),
+                            "source": {"fua": [int(fua.eFUA_ID[i])]}, "alt_names": [], "area": fgeom[i]})
+    return out
+
+
+def measure(pop, out):
+    for m in out:
+        x, y, p = pop.inside(m["area"])
+        m["px"] = (x, y, p)
+        m["pop_area"] = float(p.sum())
+        i = int(np.argmax(p))
+        m["peak"] = shapely.Point(x[i], y[i])
+        shapely.prepare(m["area"])
+
+
+def country_metros(pop, ne, iso):
+    """A FUA country's metros (FUA_COUNTRIES, T-1015): its FUAs over 1M, with its smaller centres
+    as satellites."""
+    fua, fgeom = load_fua()
+    out = fua_metros(pop, fua, fgeom, {iso})
+    log(f"{iso}: {len(out)} functional urban areas over {MIN_POP:,}")
+    uc, cen, uc_iso = load_ucdb(ne)
+    satellites(out, uc, cen, uc_iso, only=iso)
+    measure(pop, out)
+    return out
+
+
+def metros(pop, ne, europe):
+    """Candidate metros, each with the area its units are judged against: in Europe a functional
+    urban area over 1M people; elsewhere an urban centre over 1M with the FUAs it holds half of (and
+    the FUA around its population-weighted centre), centres sharing a FUA merged. The FUA countries
+    outside Europe are planned alone (country_metros)."""
+    fua, fgeom = load_fua()
+    out = fua_metros(pop, fua, fgeom, europe)
+    log(f"Europe: {len(out)} functional urban areas over {MIN_POP:,}")
+
+    uc, cen, uc_iso = load_ucdb(ne)
     big = uc[uc.GC_POP_TOT_2025 >= MIN_POP].reset_index(drop=True)
     pts = [cen[i] for i in big.ID_UC_G0]
     isos = [uc_iso[k] for k in np.nonzero(uc.GC_POP_TOT_2025.to_numpy() >= MIN_POP)[0]]
     ftree = STRtree(fgeom)
     world = []
     for k in range(len(big)):
-        if isos[k] in europe or isos[k] == "USA":
+        if isos[k] in europe or isos[k] in FUA_COUNTRIES:
             continue
         ug = polygonal(big.geometry[k])
         joined = []
@@ -371,22 +449,17 @@ def metros(pop, ne, europe):
                     "source": {"ucdb": [w["uc"] for w in ws], "fua": [int(fua.eFUA_ID[i]) for i in fu]},
                     "alt_names": [w["name"] for w in ws[1:]] + [fua.eFUA_name[i] for i in fu], "area": area})
     log(f"elsewhere: {len(big)} urban centres over {MIN_POP:,}, {sum(len(g) for g in groups.values())} outside "
-        f"Europe and the US, {len(groups)} metros after merging")
+        f"Europe and the FUA countries, {len(groups)} metros after merging")
     satellites(out, uc, cen, uc_iso)
-    for m in out:
-        x, y, p = pop.inside(m["area"])
-        m["px"] = (x, y, p)
-        m["pop_area"] = float(p.sum())
-        i = int(np.argmax(p))
-        m["peak"] = shapely.Point(x[i], y[i])
-        shapely.prepare(m["area"])
+    measure(pop, out)
     return out
 
 
-def satellites(out, uc, cen, uc_iso):
+def satellites(out, uc, cen, uc_iso, only=None):
     """A smaller urban centre outside every metro's area, within SAT_GAP of a metro's own centres,
     joins the nearest such metro's area: GHSL gives Ikorodu (0.86M, 2.2 km from Lagos) a FUA of
-    its own (T-556)."""
+    its own (T-556). With `only` (a FUA country's metros), that country's centres alone; otherwise
+    the FUA countries' centres are left out."""
     ids = [int(i) for i in uc.ID_UC_G0]
     geom = [polygonal(g) for g in uc.geometry]
     cpts = [cen[i] for i in uc.ID_UC_G0]
@@ -395,13 +468,13 @@ def satellites(out, uc, cen, uc_iso):
     inside = set(pi.tolist())
     own = collections.defaultdict(list)
     for a, k in zip(pi, mi):
-        if out[k]["region"] != "world" or ids[a] in out[k]["source"]["ucdb"]:
+        if "ucdb" not in out[k]["source"] or ids[a] in out[k]["source"]["ucdb"]:
             own[int(k)].append(geom[a])
     centres = [union_all(own[k]) if own[k] else shapely.Polygon() for k in range(len(out))]
     ctree = STRtree(centres)
     add = collections.defaultdict(list)
     for a in range(len(ids)):
-        if a in inside or uc.GC_POP_TOT_2025[a] >= MIN_POP or uc_iso[a] == "USA":
+        if a in inside or uc.GC_POP_TOT_2025[a] >= MIN_POP or (uc_iso[a] != only if only else uc_iso[a] in FUA_COUNTRIES):
             continue
         near = ctree.query(geom[a], predicate="dwithin", distance=SAT_GAP)
         if not len(near):
@@ -528,9 +601,32 @@ def assign_pixels(units, x, y, p):
     return lab
 
 
+def census_units(iso, pop):
+    """The US's or Puerto Rico's Census 2020 counties (COUNTIES), each with its people and pixels,
+    read part by part (Aleutians West crosses the 180th meridian)."""
+    df = pyogrio.read_dataframe(f"zip://{COUNTIES}").sort_values("GEOID")  # by state: Pop's tile cache holds
+    units = []
+    for r in df.itertuples():
+        if COUNTY_ISO.get(r.STATEFP, "USA") != iso:
+            continue
+        g = polygonal(to_moll(r.geometry))
+        u = Unit(r.GEOID, f"{r.NAMELSAD}, {r.STUSPS}", iso, g, [(r.STATEFP, r.STATE_NAME)])
+        px = [pop.inside(part) for part in shapely.get_parts(g)]
+        u.px = tuple(np.concatenate([q[k] for q in px]) for k in range(3))
+        u.pop = float(u.px[2].sum())
+        units.append(u)
+    src = {"kind": "Census counties", "file": "data/raw/cb_2020_us_county_500k.zip",
+           "release": "US Census Bureau cartographic boundary file 2020, 1:500,000", "licence": "public domain",
+           "level": "county", "count": len(units)}
+    log(f"  {iso}: {len(units)} counties, {sum(u.pop for u in units) / 1e6:.1f}M people (GHSL)")
+    return units, src
+
+
 def country_units(iso, meta, nuts, pop, need, whole=None):
     """The units a country lends to metros, at its unit level, with people and (for those touching
     `need`) their pixels. Returns (units, source description)."""
+    if iso in COUNTY_ISO.values() or iso == "USA":
+        return census_units(iso, pop)
     if iso == "GBR":
         gj = json.loads(ITL3.read_text(encoding="utf-8"))
         raw = [(f["properties"]["ITL325CD"], f["properties"]["ITL325NM"],
@@ -855,38 +951,65 @@ def geofabrik():
     return ex, kids
 
 
+_GROUPS = {}  # Geofabrik id: whether it holds another extract of its parent (extracts)
+
+
 def extracts(outline, ex, kids, tol=0.005):
     """The smallest Geofabrik extracts covering the outline (lon/lat): descend from the continents
-    while a node's children (single-country ones first) cover its part, then drop any extract that
-    lies inside another chosen one."""
+    while a node's children (single-country ones first) cover its part, a set of children that
+    group no other child against a single one covering it (states against us-midwest), then drop
+    any extract that lies inside another chosen one."""
     ref = outline.area
 
     def covers(ids, part):
         return part.difference(union_all([ex[c]["geom"] for c in ids])).area <= tol * ref
 
+    def grouping(c):
+        if c not in _GROUPS:
+            g = ex[c]["geom"]
+            _GROUPS[c] = any(d != c and g.contains(ex[d]["geom"].representative_point())
+                             and ex[d]["geom"].difference(g).area <= 0.01 * ex[d]["geom"].area
+                             for d in kids.get(ex[c]["parent"], []))
+        return _GROUPS[c]
+
+    def greedy(pool, part):  # largest share of the part first
+        pool = sorted(pool, key=lambda c: -ex[c]["geom"].intersection(part).area)
+        use = []
+        for c in pool:
+            use.append(c)
+            if covers(use, part):
+                break
+        out = []
+        for c in use:
+            out += rec(c, part.intersection(ex[c]["geom"]))
+        return out
+
     def rec(node, part):
         cs = [c for c in kids.get(node, []) if ex[c]["geom"].intersects(part)
               and ex[c]["geom"].intersection(part).area > 1e-3 * ref]
         whole = [rec(c, part) for c in cs if covers([c], part)]
+        # siblings that group no other sibling (T-1015: US states, beside the us-midwest group)
+        leaves = [c for c in cs if not ex[c]["multi"] and not grouping(c)]
+        if whole and len(leaves) > 1 and covers(leaves, part):
+            whole.append(greedy(leaves, part))
         if whole:
             return min(whole, key=lambda r: sum(ex[c]["geom"].area for c in r))
         for pool in ([c for c in cs if not ex[c]["multi"]], cs):
             if pool and covers(pool, part):
-                # greedy cover, largest share of the part first
-                pool = sorted(pool, key=lambda c: -ex[c]["geom"].intersection(part).area)
-                use = []
-                for c in pool:
-                    use.append(c)
-                    if covers(use, part):
-                        break
-                out = []
-                for c in use:
-                    out += rec(c, part.intersection(ex[c]["geom"]))
-                return out
+                return greedy(pool, part)
         return [node] if node is not None else cs
     got = sorted(set(rec(None, outline)) - {None})
     keep = [a for a in got if not any(b != a and ex[a]["geom"].difference(ex[b]["geom"]).area <= 0.01 * ex[a]["geom"].area
                                       for b in got)]
+    # one smaller extract elsewhere in the tree covering it all (T-1015: Puerto Rico lies in
+    # central-america's polygon, not north-america's, but has an extract of its own there)
+    area = sum(ex[a]["geom"].area for a in keep)
+    b = outline.bounds
+    one = [c for c, e in ex.items() if e["geom"].area < area and not e["multi"]
+           and e["geom"].bounds[0] <= b[0] and e["geom"].bounds[1] <= b[1] and e["geom"].bounds[2] >= b[2]
+           and e["geom"].bounds[3] >= b[3] and covers([c], outline)]
+    if one:
+        keep = [min(one, key=lambda c: ex[c]["geom"].area)]
     return [ex[a]["path"] for a in keep]
 
 
@@ -903,7 +1026,7 @@ def build(taken_ids=None, quiet=False):
     nuts = load_nuts(europe)
     need = collections.defaultdict(list)
     for m in ms:
-        m["countries"] = sorted(metro_countries(m, ne, netree) - {"USA"})
+        m["countries"] = sorted(metro_countries(m, ne, netree) - FUA_COUNTRIES)
         for iso in m["countries"]:
             need[iso].append(m["area"])
     for q in pk.values():
@@ -984,9 +1107,10 @@ def iso2s():
     return out
 
 
-def keep_order(rows, prev):
+def keep_order(rows, prev, start=0):
     """(order, id) for each row. A row keeps the order and id of the previous plan's row it shares
-    the most people with (each used once, the largest shares first); the others follow the last."""
+    the most people with (each used once, the largest shares first); the others follow the last,
+    or `start` when that is later."""
     old = {}
     for j, o in enumerate(prev):
         for us in o["units"].values():
@@ -1002,7 +1126,7 @@ def keep_order(rows, prev):
         if i not in got and j not in taken_j:
             got[i] = (prev[j]["order"], prev[j]["id"])
             taken_j.add(j)
-    n = max((o["order"] for o in prev), default=0)
+    n = max(max((o["order"] for o in prev), default=0), start)
     out = []
     for i in range(len(rows)):
         if i not in got:
@@ -1015,9 +1139,10 @@ def keep_order(rows, prev):
     return out
 
 
-def finish(st, rows, taken=None, prev=()):
+def finish(st, rows, taken=None, prev=(), others=()):
     """Order, ids, names, origins, time zones, extracts, archetypes; the rows as JSON. `prev`, the
-    previous plan's rows, keeps their order and ids (keep_order)."""
+    previous plan's rows, keeps their order and ids (keep_order); `others`, rows that stay beside
+    them, keep theirs (new rows follow their last order and take no id of theirs)."""
     from timezonefinder import TimezoneFinder
     tf = TimezoneFinder()
     ex, kids = geofabrik()
@@ -1025,11 +1150,11 @@ def finish(st, rows, taken=None, prev=()):
     taken = st["packs"] if taken is None else taken
     rank = {"uk": 0, "europe": 1, "world": 2}
     rows.sort(key=lambda r: (rank[r["metro"]["region"]], -r["people"]))
-    keep = keep_order(rows, prev)
+    keep = keep_order(rows, prev, max((o.get("order") or 0 for o in others), default=0))
     rows = [r for _, r in sorted(zip(keep, rows), key=lambda kr: kr[0][0])]
     keep.sort()
     used = set(st["packs"]) | {c["id"] for c in json.loads(REGISTRY.read_text(encoding="utf-8"))["cities"]}
-    used |= {o["id"] for o in prev}
+    used |= {o["id"] for o in prev} | {o["id"] for o in others}
     out, feats, before = [], [], []
     for (n, cid), r in zip(keep, rows):
         m = r["metro"]
@@ -1063,16 +1188,23 @@ def finish(st, rows, taken=None, prev=()):
     return out, feats
 
 
+def alone_row(r):
+    """A metro row of a FUA country, planned alone (plan_metros)."""
+    return r.get("kind") != "zone" and bool(r.get("units")) and set(r.get("countries", ())) <= FUA_COUNTRIES
+
+
 def write(st, out, feats, dropped):
     built = [{"id": q["id"], "name": q["name"], "status": "built"} for q in st["packs"].values()]
     old = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
-    zone_rows = [r for r in old.get("metros", []) if r.get("kind") == "zone"]  # plan_zones' rows stay as they are
+    # plan_zones' rows and the FUA countries' (plan_metros) stay as they are
+    zone_rows = [r for r in old.get("metros", []) if r.get("kind") == "zone" or alone_row(r)]
     built = [b for b in built if b["id"] not in {r["id"] for r in zone_rows}]
     doc = {"note": "T-536, pipeline stage 4: written by pipeline/world_plan.py; the rules are in docs/adding-a-city.md",
            "built": str(datetime.now().date()),
-           "unit_sources": st["sources"],
+           "unit_sources": {**old.get("unit_sources", {}), **st["sources"]},
            "metros": out + zone_rows + built,
-           "dropped": [{"name": m["name"], "source": m["source"], "reason": why} for m, why in dropped]}
+           "dropped": [{"name": m["name"], "source": m["source"], "reason": why} for m, why in dropped]
+           + [d for d in old.get("dropped", []) if d.get("country") in FUA_COUNTRIES]}
     if "zones" in old:
         doc["zones"] = old["zones"]
     OUT.write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -1181,7 +1313,7 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguou
     one zone does not take a whole region (the longest border put Sarajevo, Zenica and Mostar in one);
     the first of those neighbours whose union wraps no other zone (T-1005, `wraps`), else the first.
     With no neighbour left in its region (a small region, or Osttirol cut off from Tirol) it joins one
-    of another region, unless it already holds 80% of `floor`. An island (no land border with any unit) joins the most populous zone of its
+    of another region, unless it already holds 80% of `floor` (by land or across water). An island (no land border with any unit) joins the most populous zone of its
     region within ISLAND_KM, or within 10 km once it holds ZONE_MIN_POP (the Isle of Wight stays
     alone). One that can join nothing stays as it is (Ceuta). With `contiguous` (T-897), a zone with no
     land neighbour left joins the nearest zone within WATER_GAP_KM across water instead of the island
@@ -1243,8 +1375,10 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguou
                 how = f"smallest neighbour that wraps no zone, {ppl(into):,.0f}"
         elif contiguous:
             # T-897 (Anita, 2026-10-22): no exclaves; across water only as far as a bridge or a narrow
-            # strait reaches, to the nearest zone, its own region's first
-            for pool in (same, [o for o in zones if o != z and region[o] != region[z]]):
+            # strait reaches, to the nearest zone, its own region's first; another region's only under
+            # 80% of the floor, as by land (T-1015: South Jersey took Delaware's zone across the bay)
+            pools = [same] + ([[o for o in zones if o != z and region[o] != region[z]]] if n < 0.8 * floor else [])
+            for pool in pools:
                 near = [(d, o) for d, o in ((g.distance(geo(o)), o) for o in pool) if d <= WATER_GAP_KM * 1000]
                 if near:
                     into = min(near)[1]
@@ -1286,6 +1420,8 @@ def zone_name(s, iso=None):
     if iso == "CHN":  # T-897: "Xinhui District", "Weichang Manchu and Mongol Autonomous County"
         s = re.sub(r"\s+((\w+ )*(and \w+ )?Autonomous (County|Banner)|County|District|City|Banner|New Area|Forest Area|Special District)$", "", s)
     s = re.sub(r"^(Landkreis|Kreis|Regionalverband|Arr\.|Arrondissement|Bezirk)\s+", "", s)
+    if iso in ("USA", "PRI"):  # census_units' "Kern County, CA"
+        s = re.sub(r", [A-Z]{2}$", "", s)
     return s.strip()
 
 
@@ -1353,7 +1489,12 @@ def plan_zones(isos3):
         ptree = STRtree([q["geom"] for q in pk.values()])
         pl = list(pk.values())
         free, dead, away = [], [], []
+        only = rule.get("zoned_only", {})
         for u in units:
+            if u.parents and u.parents[0][0] in only and u.id not in only[u.parents[0][0]]:
+                if u.id not in held:
+                    dead.append({"unit": u.id, "name": u.name, "people": round(u.pop), "outside_zoned": True})
+                continue
             if iso in st["europe"]:
                 lon, lat = INV.transform(*u.geom.representative_point().coords[0])
                 if not (EUROPE_BOX[0] <= lon <= EUROPE_BOX[2] and EUROPE_BOX[1] <= lat <= EUROPE_BOX[3]):
@@ -1412,11 +1553,14 @@ def plan_zones(isos3):
             # the most populous unit with a name in Latin script (Taiwan's file has some in Chinese only)
             named = [u for u in us if latin(zone_name(u.name, iso))] or us
             name = zone_name(named[0].name, iso)
-            if name in names:  # Leipzig the city and Leipzig the Landkreis: the smaller by its two largest units
+            if name in names and iso in ("USA", "PRI"):  # Jefferson County in many states: with its state
+                name = named[0].name
+            elif name in names:  # Leipzig the city and Leipzig the Landkreis: the smaller by its two largest units
                 name = ", ".join(zone_name(u.name, iso) for u in named[:2]) if len(named) > 1 else named[0].name
             names.add(name)
             prev = was.get(tuple(sorted(ids)))
-            arch, module = "D", None  # zones: global sources and the zone curve, no country module (T-779)
+            # zones: global sources and the zone curve, no country module (T-779), but where the rule names one
+            arch, module = (ARCHETYPE[iso][0], rule["module"]) if rule.get("module") else ("D", None)
             if prev:
                 cid, n = prev["id"], prev["order"]
             else:
@@ -1448,7 +1592,7 @@ def plan_zones(isos3):
         if gone:
             log(f"  earlier zone rows with no successor, removed: {gone}")
         rows[:] = [r for r in rows if r["id"] not in old] + out
-        record[iso] = {"built": str(datetime.now().date()), "task": "T-897" if iso in ZONE_RULES else "T-788",
+        record[iso] = {"built": str(datetime.now().date()), "task": rule.get("task", "T-897" if iso in ZONE_RULES else "T-788"),
                        "rule": f"free units at or over {min_density:g} people a km2 (or holding {DEAD_KEEP * floor:,.0f}), grouped in their region until each "
                                f"zone holds {floor:,}: under {ZONE_MIN_POP:,} by the longest border, then the smallest "
                                f"neighbour keeping both within {cap:,} that makes no zone wrapping another (T-1005); "
@@ -1469,8 +1613,95 @@ def plan_zones(isos3):
     log(f"written {OUT}")
 
 
+def metro_edits(iso, units, taken, rows):
+    """METRO_EDITS' rows for plan(): each from its listed units, which no planned row may hold."""
+    by = {u.id: u for u in units}
+    held = {u.id for r in rows for u in r["units"]}
+    out = []
+    for name, ids in METRO_EDITS.get(iso, []):
+        if held & set(ids):
+            raise SystemExit(f"{iso}: the edit {name} takes units a metro holds: {sorted(held & set(ids))}")
+        us = [by[i] for i in ids]
+        m = {"key": f"edit-{name}", "name": name, "iso": iso, "region": "world", "alt_names": [],
+             "source": {"plan_edit": "T-1004"}}
+        out.append({"metro": m, "units": us, "people": people(us, taken), "core": densest(us, taken),
+                    "name": name, "split": False})
+    return out
+
+
+def plan_metros(isos3):
+    """A FUA country's metro rows planned alone (FUA_COUNTRIES, T-1015): its FUAs over 1M against
+    its own units (no other country's lent, none of its lent to others), with METRO_EDITS, written
+    beside every other row, which stay as they are. A rerun keeps each earlier row's order and id
+    (keep_order), and a row the runner moved on its status while its units are the same."""
+    import plan_config
+    pop = Pop()
+    ne = countries()
+    pk = packs()
+    doc = json.loads(OUT.read_text(encoding="utf-8"))
+    rows = doc["metros"]
+    ext_path = WORK / "extents.geojson"
+    ext = json.loads(ext_path.read_text(encoding="utf-8"))
+    for iso in isos3:
+        if iso not in FUA_COUNTRIES:
+            raise SystemExit(f"{iso} is not a FUA country (FUA_COUNTRIES)")
+        ms = country_metros(pop, ne, iso)
+        units, src = country_units(iso, None, None, pop, shapely.Polygon())
+        shares(units, ms, list(pk.values()))
+        near = collections.defaultdict(list)
+        for u in units:
+            for key in u.share:
+                near[key].append(u)
+        for m in ms:
+            m["units_near"] = near[m["key"]]
+        st = {"ms": ms, "units": units, "packs": pk}
+        planned, dropped = plan(st, pk)
+        planned += metro_edits(iso, units, pk, planned)
+        for r in planned:
+            r["name"] = METRO_NAMES.get(iso, {}).get(r["name"], r["name"])
+        mine = [r for r in rows if alone_row(r) and r["countries"] == [iso]]
+        others = [r for r in rows if r not in mine]
+        out, feats = finish(st, planned, pk, prev=[r for r in mine if plan_config.is_plan_row(r)], others=others)
+        was = {r["id"]: r for r in mine}
+        by = {u.id: u for u in units}
+        for r in out:
+            lead = max((by[i] for i in r["units"][iso]), key=lambda u: u.pop)
+            sr = solve_region(iso, lead)
+            if sr:
+                r["solve_region"] = sr
+            o = was.get(r["id"])
+            if o and o["units"] == r["units"]:
+                for k in ("status", "run", "gate_relax"):
+                    if k in o:
+                        r[k] = o[k]
+            log(f"  {r['order']:>4} {r['id']} {r['name']}: {r['people'] / 1e6:.2f}M, {len(r['units'][iso])} units, "
+                f"{r.get('solve_region')}, extracts {r['extracts']}")
+        gone = [r["id"] for r in mine if r["id"] not in {o["id"] for o in out}]
+        if gone:
+            log(f"  earlier rows with no successor, removed: {gone}")
+        for m, why in dropped:
+            log(f"  dropped {m['name']}: {why}")
+        rows[:] = others + out
+        doc["unit_sources"][iso] = src
+        doc["dropped"] = [d for d in doc.get("dropped", []) if d.get("country") != iso] + [
+            {"name": m["name"], "source": m["source"], "reason": why, "country": iso} for m, why in dropped]
+        drop = {r["id"] for r in mine} | {f["properties"]["id"] for f in feats}
+        ext["features"] = [f for f in ext["features"] if f["properties"]["id"] not in drop] + feats
+        log(f"{iso}: {len(out)} metro rows, {sum(r['people'] for r in out) / 1e6:.1f}M people; {len(dropped)} dropped")
+    tmp = ext_path.with_suffix(".geojson.part")
+    tmp.write_text(json.dumps(ext), encoding="utf-8")
+    os.replace(tmp, ext_path)
+    tmp = OUT.with_suffix(".json.part")
+    tmp.write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    os.replace(tmp, OUT)
+    log(f"written {OUT}")
+
+
 def main(argv):
     import pickle
+    if argv and argv[0] == "metros":
+        a3 = {v: k for k, v in iso2s().items() if k in FUA_COUNTRIES}
+        return plan_metros([a3.get(c, c) for c in argv[argv.index("--countries") + 1].split(",")])
     if argv and argv[0] == "zones":
         have = json.loads(OUT.read_text(encoding="utf-8"))["unit_sources"]
         # several territories share an alpha-2 in Natural Earth (FR: France and Clipperton, T-779)
@@ -1489,8 +1720,9 @@ def main(argv):
         return test_row(st, argv[1], argv[2])
     rows, dropped = plan(st, st["packs"])
     import plan_config
-    prev = [r for r in json.loads(OUT.read_text(encoding="utf-8"))["metros"] if plan_config.is_plan_row(r)] if OUT.exists() else []
-    out, feats = finish(st, rows, prev=prev)
+    have = json.loads(OUT.read_text(encoding="utf-8"))["metros"] if OUT.exists() else []
+    prev = [r for r in have if plan_config.is_plan_row(r) and not alone_row(r)]
+    out, feats = finish(st, rows, prev=prev, others=[r for r in have if r.get("kind") == "zone" or alone_row(r)])
     # T-540: a row the runner moved on keeps its status and record while its units are the same
     was = {r["id"]: r for r in prev}
     for r in out:

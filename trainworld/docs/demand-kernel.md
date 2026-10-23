@@ -55,7 +55,15 @@ levels:
    notes/T-185.md, notes/T-198.md). It does not depend on the network, so edits never rerun it.
    The pipeline solves it (Furness, the sim crate's own code run natively) and ships a zone id per
    cell and two factors per zone in the pack (notes/T-004.md); opening a city rebuilds zone trips
-   from them rather than solving. Zone trips spread to cells by commuters at each end. **Joint
+   from them rather than solving. **The pull cap** (T-1000, `kernel::PULL_CAP`): every worker
+   commutes (rows exact), and each zone's jobs are filled from homes, but a zone's pull (its column
+   factor over its jobs: how much harder its jobs draw workers than their count and distance alone)
+   is held within 20 times the pack's job-weighted geometric mean pull, either way. A zone whose jobs
+   would need more pull keeps some unfilled; one with more workers than jobs nearby takes the
+   surplus anyway. The zones inside the band share what the held ones leave or take over, all at
+   one fill of their jobs (the header's `gravity.pull`: band, fill, share of jobs held). On China's
+   countryside curve a pull of 20 is worth bringing the jobs about 50 km closer, so jobs past that
+   draw no one in from the far side of a desert; ordinary places never reach the cap. Zone trips spread to cells by commuters at each end. **Joint
    gravity** (T-276, docs/zones.md 4): the shipped factors are those of one solve over every zone
    pack (`bin/joint_gravity.rs`, run by pipeline/intercity.py), so a pack's zone trips are the part
    of each commute that stays in it; `zone_home` and `zone_work` (per zone, the trips kept) let
@@ -63,7 +71,10 @@ levels:
    over its people. Each pack's homes send as many commuters as it has jobs, scaled per pack as
    alone (scaled to the union, packs with net commuting from outside every zone would balance
    through their neighbours). The balance (T-297) runs per group of packs joined by any pair within
-   the cut, to a tolerance on every column (rows exact) with Anderson mixing.
+   the cut, to a tolerance on every column (rows exact) with Anderson mixing, the pull capped against
+   each pack's own mean and each pack's fill its own, so a pack's net exchange stays nil. The joint
+   solve also adds the long commutes (docs/zones.md 4): 1% of every zone's workers to jobs 50-150 km
+   away, which the zone trips here leave out.
 2. **Access per cell**: the 6 nearest stations by walk within the walk's 4 km bound (4.3), found by
    scattering each station over the cells near it. With routes (T-275) each station's walk is
    searched once per position, every station once per worker on opening; an edit searches only

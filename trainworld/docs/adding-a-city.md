@@ -94,7 +94,9 @@ background and wait once for the process.
   again without the browser
   or rates; a FAIL restores every member from the backup taken before. When only new packs FAIL,
   they park and the group is solved once more without them (a FAIL then parks every new pack of
-  that solve); when an older member FAILs, every new pack parks (T-773). Then `register.py
+  that solve); when an older member FAILs, every new pack parks (T-773). A unit's fixed list is
+  cut to the packs registered when that unit runs, so a unit that parked earlier takes no later
+  unit with it, and the market step leaves out commutes naming packs that left (T-997). Then `register.py
   <shipped and changed> --market --trips` (or `market_zones.py --rows`
   when only parks happened), and a check that every file `vite.config.ts` copies into a
   production build exists for each shipped pack (it copies the registry's packs, so nothing more
@@ -179,7 +181,8 @@ background and wait once for the process.
   - **Origin**: the densest 1 km of the extent. **Time zone** from the origin (timezonefinder),
     `utc_offset` its standard offset rounded down.
   - **Extracts** from Geofabrik's `index-v1.json`: from the continents down, the extract or set of
-    children covering the outline with the least total area; none inside another.
+    children covering the outline with the least total area (US states against us-midwest; one
+    smaller extract anywhere in the index, as Puerto Rico's, counts too); none inside another.
   - **Archetype**: the country's in the register (England's A only for English units), else D.
 
   The rest of this section is for packs made by hand.

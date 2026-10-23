@@ -362,9 +362,20 @@ notes/T-420.md has the tables.
   Check: for each new country, whether its regional
   borders show any measurable effect in its flow data, and whether a city-state (Berlin, Vienna,
   Mexico City) behaves like DC (a weak factor) rather than a state.
-- **Doubly constrained balancing.** Every zone's jobs are filled from homes. Holds where job
-  counts are reliable and most workers commute within the pack. Weaker where the pack's edge cuts
-  a commuter shed or where jobs data is a proxy (GHSL, T-012).
+- **Doubly constrained balancing, with a pull cap** (T-1000). Every zone's jobs are filled from
+  homes, but no zone's jobs pull more than 20 times harder (or more weakly) than its pack's mean;
+  past that they stay part unfilled, or take extra workers. Holds where job counts are reliable
+  and most workers commute within the pack. Where jobs data is a proxy (GHSL, T-012; tier 0's
+  building volume) a cluster of towns can have far more jobs than workers next to one with far
+  fewer, and without the cap the balance sent workers hundreds of km between them (Golmud, Lhasa).
+  The cap leaves those proxy jobs part empty instead: station counts at desert mines and oil
+  towns show commuters, not proxy jobs. Check, for a new country: the share of jobs held at the
+  cap (`gravity.pull.held`), high only in thin, proxy-job country and on islands.
+- **Long commutes, a set rate** (T-1000). 1% of every zone's workers commute to jobs 50-150 km
+  away, a judgement for "low" (Japan's census has 1.6% of commuters crossing a prefecture line).
+  Why it may not carry over: belts of commuter towns 50-100 km out (the Northeast Corridor,
+  London's home counties) commute more than that, and the balanced layer carries some of theirs;
+  remote country less. Check: the share of a country's commuters over 50 km against its census.
 - **Job locations from registers.** LODES places jobs at the reporting establishment; head-office
   lumps (T-043) exist in other countries' registers too, and many countries have no workplace
   data at all (the GHSL proxy would replace it).

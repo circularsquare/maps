@@ -1028,6 +1028,9 @@ pub struct Gravity {
     pub max_err: f64,
     pub mean_km: f64,
     pub total: f64,
+    /// T-1000, from `gravity`: the band `col / jobs` was held in, the column sums over jobs of the
+    /// columns inside it, and the share of jobs in columns at its edges.
+    pub pull: Option<[f64; 4]>,
 }
 
 impl Gravity {
@@ -1521,6 +1524,7 @@ pub fn gravity_from_pack(z: &Zones, pg: &PackGravity) -> Gravity {
         max_err: pg.max_err,
         mean_km: pg.mean_km,
         total: pg.trips,
+        pull: None,
     }
 }
 
@@ -1550,12 +1554,19 @@ pub fn to_pack_gravity(z: &Zones, g: &Gravity, p: &Params) -> PackGravity {
         home: vec![],
         work: vec![],
         joint: None,
+        pull: g.pull.map(|[lo, hi, fill, held]| serde_json::json!({"cap": PULL_CAP, "band": [lo, hi], "fill": fill, "held": held})),
         cells9: vec![],
         size: z.size.clone(),
     }
 }
 
-/// Doubly constrained gravity by Furness balancing. Workers = population scaled to total jobs.
+/// T-1000 (docs/demand-kernel.md 1): the balance's pull cap. A zone's jobs pull workers at most this
+/// many times harder, or more weakly, than their count and distance alone, measured against the
+/// pack's job-weighted geometric mean pull; past it they stay part unfilled, or overfill.
+pub const PULL_CAP: f64 = 20.0;
+
+/// Gravity by Furness balancing, rows exact and columns to their jobs within `PULL_CAP`. Workers =
+/// population scaled to total jobs.
 /// The decay depends on zone-centre distance only, so f is a small table by grid offset; it is
 /// multiplied by `p.border_factor` between zones of different regions (T-162).
 pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
@@ -1570,7 +1581,7 @@ pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
     let creg: Vec<u8> = cols.iter().map(|&j| z.region[j]).collect();
     // the factor by "regions differ" (index 0 same, 1 different)
     let kf = [1.0f64, p.border_factor as f64];
-    let mut g = Gravity { row: vec![0.0; z.n], col: z.jobs.clone(), border: p.border_factor, ftab, zk: z.zone_m / 1000.0, walk_set: false, wroutes: None, wcost: WalkCost::default(), wf_off: vec![], wf_j: vec![], wf_c: vec![], wf_s: vec![], th, offx, offy, kb, iters: 0, max_err: 0.0, mean_km: 0.0, total: 0.0 };
+    let mut g = Gravity { row: vec![0.0; z.n], col: z.jobs.clone(), border: p.border_factor, ftab, zk: z.zone_m / 1000.0, walk_set: false, wroutes: None, wcost: WalkCost::default(), wf_off: vec![], wf_j: vec![], wf_c: vec![], wf_s: vec![], th, offx, offy, kb, iters: 0, max_err: 0.0, mean_km: 0.0, total: 0.0, pull: None };
     let mut colc: Vec<f64> = cols.iter().map(|&j| g.col[j]).collect();
     let mut acc = vec![0f64; cols.len()];
     for it in 0..max_iters {
@@ -1603,10 +1614,36 @@ pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
                 acc[k] += r * g.ftab[(base + key) as usize] as f64 * kf[(creg[k] != ri) as usize];
             }
         }
+        // T-1000: a column's pull 1 / acc is held within PULL_CAP of the job-weighted geometric
+        // mean. The columns inside share what the held ones leave or take over (all divided by
+        // `scale`, exactly 1 when none is held), so the rows' total still meets the jobs' and the
+        // balance has a fixed point.
+        let (mut sl, mut sw) = (0.0f64, 0.0f64);
         for (k, &j) in cols.iter().enumerate() {
-            colc[k] = z.jobs[j] / acc[k];
+            if acc[k] > 0.0 {
+                sl -= z.jobs[j] * acc[k].ln();
+                sw += z.jobs[j];
+            }
+        }
+        let (lo, hi) = if sw > 0.0 { ((sl / sw).exp() / PULL_CAP, (sl / sw).exp() * PULL_CAP) } else { (0.0, f64::INFINITY) };
+        let (mut all, mut met, mut held) = (0.0f64, 0.0f64, 0.0f64);
+        for (k, &j) in cols.iter().enumerate() {
+            let b = 1.0 / acc[k];
+            all += z.jobs[j];
+            met += if b < lo || b > hi {
+                held += z.jobs[j];
+                z.jobs[j] * b.clamp(lo, hi) * acc[k]
+            } else {
+                z.jobs[j]
+            };
+        }
+        let scale = if all > 0.0 { met / all } else { 1.0 };
+        for (k, &j) in cols.iter().enumerate() {
+            let b = 1.0 / acc[k];
+            colc[k] = (if b < lo { z.jobs[j] * lo } else if b > hi { z.jobs[j] * hi } else { z.jobs[j] / acc[k] }) / scale;
             g.col[j] = colc[k];
         }
+        g.pull = Some([lo / scale, hi / scale, 1.0 / scale, held / all.max(1e-300)]);
     }
     // mean trip length
     let (mut sum, mut sumd) = (0.0f64, 0.0f64);
@@ -5231,6 +5268,49 @@ mod tests {
     /// T-162: a region border (here a north-south line at x = 300 m, through the middle of a
     /// column of zones) splits the squares it cuts, the factor cuts trips across it, both margins
     /// still balance, and the pack round trip rebuilds exactly the trips solved.
+    #[test]
+    fn pull_cap_leaves_a_far_job_island_short() {
+        // T-1000: a town 60 km out with ten times the jobs of its homes
+        let full = synth::synth_city(1);
+        let keep: Vec<usize> = (0..full.len()).filter(|&c| full.x[c].hypot(full.y[c]) < 10_000.0).collect();
+        let mut city = crate::demand::pack::City {
+            name: "t".into(),
+            h3: keep.iter().map(|&c| full.h3[c]).collect(),
+            x: keep.iter().map(|&c| full.x[c]).collect(),
+            y: keep.iter().map(|&c| full.y[c]).collect(),
+            pop: keep.iter().map(|&c| full.pop[c]).collect(),
+            jobs: keep.iter().map(|&c| full.jobs[c]).collect(),
+            region: vec![],
+            gravity: None,
+        };
+        for k in 0..20 {
+            city.h3.push(full.h3[keep[k]]);
+            city.x.push(60_000.0 + 400.0 * (k % 5) as f32);
+            city.y.push(400.0 * (k / 5) as f32);
+            city.pop.push(100.0);
+            city.jobs.push(1000.0);
+        }
+        let p = Params::default();
+        let z = build_zones(&city, p.zone_m);
+        let g = gravity(&z, &p, 1000, 1e-10);
+        assert!(g.max_err < 1e-10, "{} after {} iterations", g.max_err, g.iters);
+        let [lo, hi, fill, held] = g.pull.unwrap();
+        assert!(held > 0.0 && fill > 1.0, "held {held}, fill {fill}");
+        let island = |j: usize| z.gx[j] as f32 * z.zone_m + z.x0 > 50_000.0;
+        let o: Vec<f64> = { let (tp, tj): (f64, f64) = (z.pop.iter().sum(), z.jobs.iter().sum()); z.pop.iter().map(|&v| v * tj / tp).collect() };
+        for j in (0..z.n).filter(|&j| z.jobs[j] > 0.0) {
+            let (rs, cs): (f64, f64) = ((0..z.n).map(|k| g.t(&z, j, k)).sum(), (0..z.n).map(|i| g.t(&z, i, j)).sum());
+            assert!(o[j] == 0.0 || (rs / o[j] - 1.0).abs() < 1e-8);
+            let pull = g.col[j] / z.jobs[j];
+            assert!(pull >= lo * (1.0 - 1e-9) && pull <= hi * (1.0 + 1e-9));
+            if island(j) {
+                assert!(pull >= hi * (1.0 - 1e-9) && cs < z.jobs[j], "island zone {j}: {cs} of {}", z.jobs[j]);
+            } else if pull < hi * (1.0 - 1e-9) && pull > lo * (1.0 + 1e-9) {
+                assert!((cs / z.jobs[j] / fill - 1.0).abs() < 1e-6, "zone {j}: {} against {fill}", cs / z.jobs[j]);
+            }
+        }
+    }
+
     #[test]
     fn region_border_factor() {
         let full = synth::synth_city(1);

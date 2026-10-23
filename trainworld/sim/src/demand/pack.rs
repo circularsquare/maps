@@ -75,6 +75,9 @@ pub struct PackGravity {
     pub work: Vec<f64>,
     /// T-276: the joint solve's header block (`gravity.joint`), kept as it is
     pub joint: Option<Value>,
+    /// T-1000: the pull cap's block (`gravity.pull`: cap, band of `col / jobs`, fill of the columns
+    /// inside it, share of jobs held at its edges), kept as it is
+    pub pull: Option<Value>,
     /// Per zone, its res-9 cells before merging (`zone_cells9`, T-466): a merged cell's land is
     /// not in its index. Empty: counted from the cells (`kernel::res9_cells`).
     pub cells9: Vec<u32>,
@@ -282,6 +285,7 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
             home: zhome,
             work: zwork,
             joint: g.get("joint").cloned(),
+            pull: g.get("pull").cloned(),
             cells9: zc9,
             size: zsize,
         });
@@ -388,6 +392,9 @@ pub fn with_gravity(header: &str, bin: &[u8], g: &PackGravity) -> Result<(String
     });
     if g.size.iter().any(|&s| s == 2) && !coarse.is_null() {
         v["gravity"]["coarse"] = coarse;
+    }
+    if let Some(p) = &g.pull {
+        v["gravity"]["pull"] = p.clone();
     }
     if let Some(j) = &g.joint {
         v["gravity"]["joint"] = j.clone();
@@ -523,6 +530,7 @@ mod tests {
             home: vec![],
             work: vec![],
             joint: None,
+            pull: None,
             cells9: vec![],
             size: vec![],
         }

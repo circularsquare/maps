@@ -1,5 +1,10 @@
 ﻿# Archive
 
+- T-1015 [P1] The planner's US rules and the US replan. Done 2026-10-23: 45 US metro rows and 197 zones (6 in Puerto Rico), 297.8M, as the dry run but for Riverside, South Jersey and Alaska's belt; no other row changed; realms split in five. notes/T-1004.md "T-1015".
+- T-1020 [P1] Track placement unresponsive. Done 2026-10-23: Anita's freeze was a run left open across cities, so each move asked for a 10,000 km piece (3-11 s in the clock worker); free-drawn pieces now stop at 500 km and the repro places in 30 ms. Big-network costs are T-1028 to T-1031. notes/T-1001.md "T-1020".
+- T-1016 [P1] The `usa` country module. Done 2026-10-23: `pipeline/usa.py` (TIGER outlines, blocks less institutions, LODES, ACS work from home, US curve, state regions); Atlanta and a Georgia zone built in scratch, people and jobs exact, counties within 1.3%, borders identical to neighbours'. notes/T-1004.md "T-1016".
+- T-1008 [P1] Demand's main-thread freezes after a big save loads. Done 2026-10-23: corridors as a table sent once plus the pairs with rail per result (T-790's fix too), zone lookups by a degree grid; NYC load 11 long tasks / 629 ms max / 2.0 s to 5 / 163 / 0.5 s, figures unchanged. notes/T-1001.md "T-1008".
+- T-790 [P3] The market's corridors in every result. Done 2026-10-23 in T-1008: each result carries the corridors' key, period factors and the pairs with rail, the table once per key. notes/T-1001.md "T-1008".
 - T-1007 [P2] Rust panic in the clock worker. Done 2026-10-23: the worker rebuilds the track model from the last load or edit and the player gets a notice; a fourth panic in a minute asks for a reload. docs/architecture.md; notes/T-1001.md.
 - T-897 [P2] China whole. Done 2026-10-23: the Jiangsu pilot and four waves, 756 zones and 1,449M people (Hong Kong, Macau and Taiwan as their own countries), about 15 h of runs; left elsewhere: T-958, T-996, T-997. notes/T-897.md "China whole".
 - T-998 [P1] Xinjiang's joint balance stalls with fixed neighbours. Done 2026-10-23: Xinjiang solves with none (`intercity.SOLVE_ALONE`), 8e-9 at step 259, and a solve may take 300 steps; wave 4's join shipped all 124. notes/T-897.md wave 4.

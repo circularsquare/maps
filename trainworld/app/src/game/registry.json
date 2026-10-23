@@ -8972,7 +8972,7 @@
       ],
       "place": 0,
       "country": "US",
-      "realm": "us-east"
+      "realm": "us-northeast"
     },
     {
       "id": "phl",
@@ -8997,7 +8997,7 @@
       ],
       "place": 1,
       "country": "US",
-      "realm": "us-east"
+      "realm": "us-northeast"
     },
     {
       "id": "bos",
@@ -9022,7 +9022,7 @@
       ],
       "place": 3,
       "country": "US",
-      "realm": "us-east"
+      "realm": "us-northeast"
     },
     {
       "id": "wdc",
@@ -9047,7 +9047,7 @@
       ],
       "place": 4,
       "country": "US",
-      "realm": "us-east"
+      "realm": "us-south"
     },
     {
       "id": "bal",
@@ -9072,7 +9072,7 @@
       ],
       "place": 5,
       "country": "US",
-      "realm": "us-east"
+      "realm": "us-south"
     },
     {
       "id": "pvd",
@@ -9097,7 +9097,7 @@
       ],
       "place": 6,
       "country": "US",
-      "realm": "us-east"
+      "realm": "us-northeast"
     },
     {
       "id": "nhv",
@@ -9122,7 +9122,7 @@
       ],
       "place": 7,
       "country": "US",
-      "realm": "us-east"
+      "realm": "us-northeast"
     },
     {
       "id": "hfd",
@@ -9147,7 +9147,7 @@
       ],
       "place": 8,
       "country": "US",
-      "realm": "us-east"
+      "realm": "us-northeast"
     },
     {
       "id": "spf",
@@ -9172,7 +9172,7 @@
       ],
       "place": 9,
       "country": "US",
-      "realm": "us-east"
+      "realm": "us-northeast"
     },
     {
       "id": "tor",
@@ -9523,7 +9523,7 @@
       ],
       "place": 10,
       "country": "US",
-      "realm": "us-east"
+      "realm": "us-northeast"
     },
     {
       "id": "wnd",
@@ -9549,7 +9549,7 @@
       ],
       "place": 11,
       "country": "US",
-      "realm": "us-east"
+      "realm": "us-northeast"
     },
     {
       "id": "nlc",
@@ -9575,7 +9575,7 @@
       ],
       "place": 12,
       "country": "US",
-      "realm": "us-east"
+      "realm": "us-northeast"
     },
     {
       "id": "lit",
@@ -9601,7 +9601,7 @@
       ],
       "place": 13,
       "country": "US",
-      "realm": "us-east"
+      "realm": "us-northeast"
     },
     {
       "id": "seo",

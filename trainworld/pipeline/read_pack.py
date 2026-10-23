@@ -116,14 +116,33 @@ def check_gravity(header, a):
         dsum += (t * d).sum()
         cross += t[other].sum()
     joint = "zone_home" in a
+    # T-1000: each column's pull col / jobs held in the band `pull` gives; the columns inside it
+    # take `fill` of their jobs, one at the high edge no more, one at the low edge no less
+    pull = g.get("pull")
+    inside = low = zjobs > 0
+    if pull:
+        lo, hi = pull["band"]
+        fill = pull["fill"]
+        eps = 1e-4 + 2 * g.get("max_error", 0.0)
+        pi = np.where(zjobs > 0, col / np.maximum(zjobs, 1e-300), 0.0)
+        low, high = (zjobs > 0) & (pi <= lo * (1 + eps)), (zjobs > 0) & (pi >= hi * (1 - eps))
+        assert not ((zjobs > 0) & ((pi < lo * (1 - eps)) | (pi > hi * (1 + eps)))).any(), "a column's pull outside its band"
+        inside = (zjobs > 0) & ~low & ~high
     if joint:
         # T-276: a joint gravity over every zone pack: each zone's trips kept in the pack are its
-        # rows' and columns' sums here, and never more than its workers and jobs
+        # rows' and columns' sums here, and never more than its workers and jobs (T-1000: its fill
+        # of its jobs, any number held at the low edge)
         kept_h, kept_w = a["zone_home"].astype(np.float64), a["zone_work"].astype(np.float64)
-        assert (kept_h <= workers * 1.002 + 1e-3).all() and (kept_w <= zjobs * 1.002 + 1e-3).all(), "a zone keeps more than it has"
+        wmax = zjobs * max(1.0, pull["fill"] if pull else 1.0) * 1.002 + 1e-3
+        assert (kept_h <= workers * 1.002 + 1e-3).all() and ((kept_w <= wmax) | (pull is not None) & low).all(), "a zone keeps more than it has"
         workers, zjobs = kept_h, kept_w
+        inside = zjobs > 0
+    elif pull:
+        r = csum / np.maximum(zjobs, 1e-300)
+        assert (r[high] <= fill * 1.002).all() and (r[low] >= fill * 0.998).all(), "a column held at its pull band filled past it"
+        zjobs = np.where(inside, zjobs * fill, zjobs)
     rerr = np.max(np.abs(rsum[workers > 0] / workers[workers > 0] - 1))
-    cerr = np.max(np.abs(csum[zjobs > 0] / zjobs[zjobs > 0] - 1))
+    cerr = np.max(np.abs(csum[inside] / zjobs[inside] - 1)) if inside.any() else 0.0
     assert rerr < 2e-3 and cerr < 2e-3, f"factors do not balance: rows {rerr:.1e}, columns {cerr:.1e}"
     assert abs(tot / g["trips"] - 1) < 1e-4 and (joint or abs(dsum / tot - g["mean_trip_km"]) < 0.01)
     if joint:
@@ -136,6 +155,8 @@ def check_gravity(header, a):
           f"{cerr:.1e} off jobs; OK")
     print(f"  regions: {', '.join(names) if names else 'one'}; border factor {bf:g}; trips between regions "
           f"{cross:,.0f} ({cross / tot:.2%})")
+    if pull:
+        print(f"  pull cap {pull['cap']:g} (T-1000): {pull['held']:.2%} of the jobs held at the band, the rest filled to {pull['fill']:.4f}")
 
 
 def water_mask(header, a):

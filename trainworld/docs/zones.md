@@ -76,8 +76,8 @@ their size: Spain, Italy, France, Portugal and Greece, and T-788's first wave (G
 Ireland and the Benelux at 0.1-1.2M). A European country's units outside Europe (France's
 overseas départements) are not zoned. A zone row has `kind` "zone", is named after its most populous unit (before
 any "/"), and has its origin at its densest square km. A replan of the metros keeps zone rows as
-they are. Countryside zones use the zone curve (section 4) and global sources only: a zone row
-never takes its country's module. Which countries are covered, and with how many zones:
+they are. Countryside zones use the zone curve (section 4) and global sources only, unless their
+country's zone rule names its module (the US, below). Which countries are covered, and with how many zones:
 docs/data-register.md.
 **The wrap guard** (Anita, 2026-10-23, T-1005): a zone grown to the floor takes the first neighbour, in
 that order, whose union with it wraps no other current zone, else the first. Zone A wraps zone B when
@@ -87,12 +87,28 @@ metro is not tested, and a replan regroups only planned rows. notes/T-1005.md.
 **China and Taiwan** (Anita, 2026-10-22, T-897) have their own rules (`world_plan.ZONE_RULES`):
 zones of at least **1M** (cap 2.5M) from geoBoundaries counties merged within their province, no
 dead space by density, and **no exclaves**: a zone's parts touch by land or across at most 10 km of
-water, island zones of one region join within 50 km (Penghu, Kinmen), and a zone that can join
+water (another region's zone across water only for a zone under 80% of the floor, as by land; T-1015),
+island zones of one region join within 50 km (Penghu, Kinmen), and a zone that can join
 nothing with under 10,000 people is dead space. Hong Kong, Macau and Taiwan are countries of their
 own, never in a Chinese zone. Units follow the de facto lines (`world_plan.DE_FACTO`: Arunachal
 Pradesh is India's, Aksai Chin China's). Chinese rows solve their joint commutes by province
 (`solve_region`; Beijing, Tianjin and Hebei as one, Shanghai with Jiangsu), each held against its
 neighbours as countries are (section 7). notes/T-897.md.
+**The US and Puerto Rico** (T-1004, T-1015) take Census 2020 counties as units (Puerto Rico's
+municipios; GEOIDs, the state as region; `world_plan.census_units`). Their metro rows are planned
+alone (`world_plan.py metros --countries US`, `FUA_COUNTRIES`), by Europe's rule: a GHS-FUA over 1M
+people, from US counties only (none lent to a Mexican or Canadian metro, none of theirs taken), with
+Riverside and Imperial counties a metro row by hand (`METRO_EDITS`) and San Diego and San Francisco
+named for their cities rather than GHSL's Tijuana and San Jose (`METRO_NAMES`); a replan of the
+other metros keeps them. Zones (`zones --countries US,PR`) follow China's rules at a **0.5M** floor
+(cap 1.5M) within their state. In Alaska only the road and rail belt is zoned (Anchorage,
+Matanuska-Susitna, Kenai Peninsula, Fairbanks North Star, Denali, Southeast Fairbanks, Chugach,
+Copper River; `zoned_only`), the rest dead space; Guam, the Northern Marianas, American Samoa and
+the US Virgin Islands are not zoned. Every US and Puerto Rico row, zones included, takes the `usa`
+module (archetype A; Puerto Rico C, population only). US rows solve their joint commutes by Census
+division, Delaware, Maryland and DC with the Northeast (`SOLVE_REGIONS`); Puerto Rico is its own
+country. A zone named after a county name another zone has carries its state ("Jefferson County, KY").
+notes/T-1004.md.
 
 **Mercer County (Trenton) is part of New York's city zone**, not a non-city zone (Anita leaned
 this way). Reasons: it is in the New York combined statistical area; LODES holds 175,000 jobs
@@ -177,9 +193,21 @@ over every job in reach, in its own zone or another, so moving a zone line moves
 - The cross-pack part is spread from gravity zones to the market's 6 km zones by each gravity zone's
   homes (at the home end) and jobs (at the work end) in each, and shipped in the market pack as a
   list of home zone, work zone and commuters a day.
+- **Long commutes are set, not emergent** (T-1000, Anita 2026-10-23). 1% of every gravity zone's
+  workers (`joint_gravity` `LONG_SHARE`) commute to jobs 50-150 km from home (`LONG_KM`; 50 km is
+  about where a daily commute becomes a trip between towns, 150 km the cut), shared over the jobs
+  in that ring by jobs times the home pack's curve and border factors, in its own pack or another,
+  and not balanced, so no job-rich oasis draws more of them. They join the list above, a pair whose
+  work zone is in the home's own pack included, kept apart from the balanced pairs when pairs under
+  1 a day are dropped. The balance takes the rest: each such zone keeps 99% of its workers and each
+  pack's jobs are scaled to its homes' total, so the balanced shares by pair do not move. The
+  balance itself has the pull cap (docs/demand-kernel.md 1): a zone's jobs pull at most 20 times
+  harder or more weakly than its pack's mean, its pack's other zones filled at one ratio so the
+  pack's net exchange stays nil.
 - **The balance** (T-297) is solved per group of packs joined by any pair within the cut (groups
   share no commuter). Each group runs Furness steps with Anderson mixing of the last 12 steps, until
-  every zone's jobs are met to 1e-8 relative (its homes exactly), about 40 steps. The tolerance is
+  every column inside the pull band meets its pack's fill of its jobs to 1e-8 relative (its homes
+  exactly), about 40 steps; a group of thin packs held hard at the band takes several hundred. The tolerance is
   tight because weakly joined packs and regions leave slow modes: a looser residual leaves factors
   percents off (notes/T-297.md).
 - **Groups form themselves** (T-539, `intercity.py --group auto [ids]`): two registered packs are in
@@ -207,6 +235,9 @@ over every job in reach, in its own zone or another, so moving a zone line moves
   join so costs its own solve only, however long the chain of covered countries; a neighbour's
   own commutes and factors stay as its last solve left them until it is solved again. National
   borders take the 0.05 default, so under 0.02% of commuters cross one (notes/T-786.md).
+  A fixed neighbour's rows are not rebalanced, so one whose factors predate the pull cap (no
+  `gravity.pull` block) can pour workers into capped zones across the line that its own solve had
+  held near zero; solving that neighbour again with the cap takes the flow back (notes/T-1000.md).
   A solve region in `intercity.SOLVE_ALONE` (Xinjiang, T-998) holds no neighbours: its commutes
   with them come from their solves. `intercity.py` refuses one solve over 400,000 zones (about six Japans).
 
@@ -268,7 +299,8 @@ show their figures, nobody on them (T-845). One helper answers it, `placeAt` in 
 **Realms** [T-975, T-1006; `game/realms.ts`, `map/realmOverlay.ts`, `pipeline/realms.py`,
 notes/T-975.md]: zones are grouped into country-sized realms, a hand list in
 `app/src/game/realms.json` (each an id, a name and its countries, or for a country split between
-realms its first-level units: China in seven, Russia and the US in two). Players see only a realm's
+realms its first-level units: China in seven, Russia in two, the US in four by Census region with
+Delaware, Maryland and DC in the south, and Puerto Rico a realm of its own). Players see only a realm's
 name; the code word is "realm" because "region" already means a zone in the code.
 `pipeline/realms.py` (run by the join) writes each registry row's `realm` (its country's; in a split
 country the realm whose land holds its centre) and `packs/realms.geojson`, each realm's land
