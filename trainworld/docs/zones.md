@@ -138,7 +138,9 @@ name, which every join rewrites; the game shows its own (T-825, `app/src/game/zo
   "South-West"), Poland's adjectival subregions ("Lubelski"), "X and Y" or "X, Y" merges, and a
   unit that holds a much bigger city than its name says ("Aargau" holding Basel). Those show their
   biggest city, or a well-known name for the whole ("Dodecanese", "Cyclades", "Teesside"). English
-  exonyms where English uses one (Florence, Venice, Geneva, Corfu).
+  exonyms where English uses one (Florence, Venice, Geneva, Corfu). A US zone whose shown name another
+  zone has, or a planned row will have, carries its state ("Columbus, GA", "Rome, GA"), as US county
+  names in the plan do ("Polk County, FL").
 - **Automatically**, a zone with no hand-set name drops a bracketed part ("[The Hague]"), a
   trailing parenthesis ("Halle (Saale)") and NUTS's " CC" ("Devon CC").
 - **Hand-set names** live in `app/src/game/zone-names.json` (zone id to `name` and extra `aliases`),

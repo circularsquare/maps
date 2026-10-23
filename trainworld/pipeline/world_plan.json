@@ -120225,7 +120225,7 @@
    "order": 2081,
    "id": "atl",
    "name": "Atlanta",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -120278,13 +120278,32 @@
      6451
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 167.5,
+     "stations": 1.1,
+     "places": 4.4,
+     "coarse": 13.7,
+     "routes": 413.8,
+     "merge": 13.7,
+     "nocar": 3.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T12:23:16",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T13:07:14",
+    "shipped": "2026-10-23T13:53:19"
+   }
   },
   {
    "order": 2082,
    "id": "mim",
    "name": "Miami",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -120320,7 +120339,28 @@
      6442
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 53.8,
+     "stations": 0.9,
+     "places": 3.0,
+     "coarse": 1.8,
+     "routes": 109.2,
+     "merge": 2.6,
+     "nocar": 2.4,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T12:47:12",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5984.59765625"
+     ]
+    },
+    "gated": "2026-10-23T13:07:15",
+    "shipped": "2026-10-23T13:53:19"
+   }
   },
   {
    "order": 2083,
@@ -120638,7 +120678,7 @@
    "order": 2090,
    "id": "tap",
    "name": "Tampa",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -120674,7 +120714,26 @@
      6237
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 46.6,
+     "stations": 0.8,
+     "places": 2.5,
+     "coarse": 2.1,
+     "routes": 89.9,
+     "merge": 2.7,
+     "nocar": 2.3,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T12:46:46",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T13:07:15",
+    "shipped": "2026-10-23T13:53:19"
+   }
   },
   {
    "order": 2091,
@@ -120764,7 +120823,7 @@
    "order": 2093,
    "id": "orl",
    "name": "Orlando",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -120801,7 +120860,33 @@
      6487
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 62.6,
+     "stations": 0.8,
+     "places": 3.1,
+     "coarse": 2.8,
+     "routes": 121.6,
+     "merge": 3.0,
+     "nocar": 2.4,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T12:47:35",
+    "gate": {
+     "warn": [
+      "top_cell_jobs 64638.6484375",
+      "top_cell_jobs_share_other 0.04359946494486016"
+     ]
+    },
+    "parked": "2026-10-23T13:07:11",
+    "gated": "2026-10-23T13:26:26",
+    "shipped": "2026-10-23T13:53:19"
+   },
+   "gate_relax": {
+    "top_cell_jobs": "T-1017: LODES places Walt Disney World's workforce (about 65k jobs) at its block in Lake Buena Vista, one res-9 cell; a real employer's count, not a source fault"
+   }
   },
   {
    "order": 2094,
@@ -121714,7 +121799,7 @@
    "order": 2114,
    "id": "jas",
    "name": "Jacksonville",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -121752,7 +121837,28 @@
      7414
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 31.8,
+     "stations": 0.9,
+     "places": 1.9,
+     "coarse": 1.0,
+     "routes": 35.4,
+     "merge": 1.3,
+     "nocar": 2.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T12:45:34",
+    "gate": {
+     "warn": [
+      "osm_land_share 0.8054"
+     ]
+    },
+    "gated": "2026-10-23T13:07:16",
+    "shipped": "2026-10-23T13:53:20"
+   }
   },
   {
    "order": 2115,
@@ -122279,7 +122385,7 @@
    "id": "lco",
    "name": "Lee County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -122318,7 +122424,26 @@
      "Monroe County, FL"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 130.2,
+     "stations": 0.9,
+     "places": 4.0,
+     "coarse": 1.6,
+     "routes": 65.5,
+     "merge": 1.8,
+     "nocar": 2.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T12:49:01",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T13:07:16",
+    "shipped": "2026-10-23T13:53:20"
+   }
   },
   {
    "order": 2125,
@@ -123924,7 +124049,7 @@
    "id": "stc",
    "name": "St. Lucie County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -123975,7 +124100,29 @@
      "Glades County, FL"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 199.2,
+     "stations": 0.9,
+     "places": 2.6,
+     "coarse": 3.2,
+     "routes": 92.0,
+     "merge": 3.1,
+     "nocar": 2.4,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T12:51:51",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8326676952664565",
+      "osm_land_share 0.8353"
+     ]
+    },
+    "gated": "2026-10-23T13:07:16",
+    "shipped": "2026-10-23T13:53:20"
+   }
   },
   {
    "order": 2145,
@@ -124112,7 +124259,7 @@
    "id": "bio",
    "name": "Bibb County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -124209,7 +124356,28 @@
      "Taliaferro County, GA"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 175.9,
+     "stations": 1.0,
+     "places": 4.2,
+     "coarse": 12.3,
+     "routes": 267.3,
+     "merge": 9.5,
+     "nocar": 2.8,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T12:20:52",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.033678962634982226"
+     ]
+    },
+    "gated": "2026-10-23T13:07:14",
+    "shipped": "2026-10-23T13:53:21"
+   }
   },
   {
    "order": 2148,
@@ -124398,7 +124566,7 @@
    "id": "sra",
    "name": "Sarasota County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -124437,7 +124605,28 @@
      "Charlotte County, FL"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 28.7,
+     "stations": 0.9,
+     "places": 1.8,
+     "coarse": 1.0,
+     "routes": 36.3,
+     "merge": 1.3,
+     "nocar": 2.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T12:48:26",
+    "gate": {
+     "warn": [
+      "osm_land_share 0.8075"
+     ]
+    },
+    "gated": "2026-10-23T13:07:16",
+    "shipped": "2026-10-23T13:53:21"
+   }
   },
   {
    "order": 2151,
@@ -127457,7 +127646,7 @@
    "id": "maf",
    "name": "Marion County, FL",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -127498,7 +127687,28 @@
      "Putnam County, FL"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 44.8,
+     "stations": 0.9,
+     "places": 2.1,
+     "coarse": 2.3,
+     "routes": 71.2,
+     "merge": 2.4,
+     "nocar": 2.0,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T12:49:42",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.03139800784117706"
+     ]
+    },
+    "gated": "2026-10-23T13:07:16",
+    "shipped": "2026-10-23T13:53:21"
+   }
   },
   {
    "order": 2189,
@@ -127937,7 +128147,7 @@
    "id": "loo",
    "name": "Leon County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -127994,14 +128204,33 @@
      "Liberty County, FL"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-130830",
+    "steps": {
+     "build": 17.1,
+     "stations": 0.7,
+     "places": 1.6,
+     "coarse": 3.9,
+     "routes": 36.2,
+     "merge": 4.2,
+     "nocar": 2.3,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T13:21:15",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T13:26:27",
+    "shipped": "2026-10-23T13:53:21"
+   }
   },
   {
    "order": 2196,
    "id": "muc",
    "name": "Muscogee County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -128104,7 +128333,26 @@
      "Quitman County, GA"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 158.9,
+     "stations": 1.0,
+     "places": 1.9,
+     "coarse": 12.5,
+     "routes": 125.7,
+     "merge": 10.6,
+     "nocar": 3.4,
+     "everyday": 1.1
+    },
+    "built": "2026-10-23T12:18:13",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T13:07:14",
+    "shipped": "2026-10-23T13:53:22"
+   }
   },
   {
    "order": 2197,
@@ -129225,7 +129473,7 @@
    "id": "cth",
    "name": "Chatham County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -129310,7 +129558,32 @@
      "Treutlen County, GA"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 153.7,
+     "stations": 0.8,
+     "places": 1.8,
+     "coarse": 6.1,
+     "routes": 105.3,
+     "merge": 6.3,
+     "nocar": 2.6,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T12:17:36",
+    "gate": {
+     "warn": [
+      "mean_commute_km 27.182960707513445"
+     ]
+    },
+    "parked": "2026-10-23T12:35:54",
+    "gated": "2026-10-23T13:26:27",
+    "shipped": "2026-10-23T13:53:22"
+   },
+   "gate_relax": {
+    "mean_commute_km": "T-1017: 26 counties on 27,330 km2 of coastal Georgia; the gate's pack-alone solve keeps every worker inside and gives 27.2 km, where LODES OD within the same counties is 18.5 km zone-centre (20.2 crow-fly); after the joint solve the pack's own trips average 18.8 km. Relaxed as China's big zones were"
+   }
   },
   {
    "order": 2214,
@@ -129805,7 +130078,7 @@
    "id": "aac",
    "name": "Alachua County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -129868,7 +130141,28 @@
      "Lafayette County, FL"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 218.2,
+     "stations": 0.7,
+     "places": 2.1,
+     "coarse": 4.3,
+     "routes": 94.9,
+     "merge": 5.3,
+     "nocar": 2.5,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T12:54:30",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.06443603033063856"
+     ]
+    },
+    "gated": "2026-10-23T13:07:17",
+    "shipped": "2026-10-23T13:53:22"
+   }
   },
   {
    "order": 2222,
@@ -130077,7 +130371,7 @@
    "id": "pou",
    "name": "Polk County, FL",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -130112,7 +130406,29 @@
      "Polk County, FL"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 24.7,
+     "stations": 0.9,
+     "places": 1.9,
+     "coarse": 1.2,
+     "routes": 35.4,
+     "merge": 1.2,
+     "nocar": 1.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-23T12:50:51",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.05084323310570913",
+      "osm_land_share 0.8788"
+     ]
+    },
+    "gated": "2026-10-23T13:07:17",
+    "shipped": "2026-10-23T13:53:22"
+   }
   },
   {
    "order": 2225,
@@ -130851,7 +131167,7 @@
    "id": "esc",
    "name": "Escambia County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -130890,14 +131206,33 @@
      "Santa Rosa County, FL"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 38.2,
+     "stations": 0.8,
+     "places": 1.6,
+     "coarse": 1.2,
+     "routes": 21.4,
+     "merge": 1.5,
+     "nocar": 2.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T12:51:27",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T13:07:17",
+    "shipped": "2026-10-23T13:53:23"
+   }
   },
   {
    "order": 2238,
    "id": "rih",
    "name": "Richmond County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -130962,7 +131297,28 @@
      "Glascock County, GA"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 37.5,
+     "stations": 1.0,
+     "places": 1.9,
+     "coarse": 4.3,
+     "routes": 58.3,
+     "merge": 5.4,
+     "nocar": 3.0,
+     "everyday": 1.0
+    },
+    "built": "2026-10-23T12:19:29",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.046451716939542725"
+     ]
+    },
+    "gated": "2026-10-23T13:07:15",
+    "shipped": "2026-10-23T13:53:23"
+   }
   },
   {
    "order": 2239,
@@ -131085,7 +131441,7 @@
    "id": "crr",
    "name": "Carroll County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -131140,7 +131496,26 @@
      "Dade County, GA"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 33.7,
+     "stations": 1.0,
+     "places": 1.7,
+     "coarse": 2.9,
+     "routes": 74.9,
+     "merge": 3.7,
+     "nocar": 2.7,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T12:20:16",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T13:07:15",
+    "shipped": "2026-10-23T13:53:23"
+   }
   },
   {
    "order": 2242,
@@ -132057,7 +132432,7 @@
    "id": "brv",
    "name": "Brevard County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -132092,7 +132467,28 @@
      "Brevard County, FL"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 22.5,
+     "stations": 0.9,
+     "places": 1.6,
+     "coarse": 0.7,
+     "routes": 12.6,
+     "merge": 0.9,
+     "nocar": 2.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-23T12:51:33",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.05603718900023189"
+     ]
+    },
+    "gated": "2026-10-23T13:07:17",
+    "shipped": "2026-10-23T13:53:23"
+   }
   },
   {
    "order": 2259,
@@ -132888,7 +133284,7 @@
    "id": "vou",
    "name": "Volusia County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -132923,7 +133319,28 @@
      "Volusia County, FL"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 29.2,
+     "stations": 0.9,
+     "places": 1.7,
+     "coarse": 0.6,
+     "routes": 21.8,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 0.6
+    },
+    "built": "2026-10-23T12:52:25",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.044327811098070866"
+     ]
+    },
+    "gated": "2026-10-23T13:07:17",
+    "shipped": "2026-10-23T13:53:24"
+   }
   },
   {
    "order": 2272,
@@ -133880,7 +134297,7 @@
    "id": "low",
    "name": "Lowndes County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -133951,7 +134368,26 @@
      "Echols County, GA"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 36.1,
+     "stations": 1.1,
+     "places": 2.0,
+     "coarse": 5.9,
+     "routes": 56.6,
+     "merge": 5.3,
+     "nocar": 2.5,
+     "everyday": 0.8
+    },
+    "built": "2026-10-23T12:21:20",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-23T13:07:15",
+    "shipped": "2026-10-23T13:53:24"
+   }
   },
   {
    "order": 2289,
@@ -134991,7 +135427,7 @@
    "id": "heo",
    "name": "Hernando County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -135030,7 +135466,33 @@
      "Sumter County, FL"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261023-121254",
+    "steps": {
+     "build": 442.9,
+     "stations": 0.7,
+     "places": 1.1,
+     "coarse": 0.7,
+     "routes": 23.4,
+     "merge": 1.1,
+     "nocar": 2.2,
+     "everyday": 1.0
+    },
+    "built": "2026-10-23T12:59:27",
+    "gate": {
+     "warn": [
+      "browser None",
+      "osm_land_share 0.871"
+     ]
+    },
+    "parked": "2026-10-23T13:07:13",
+    "gated": "2026-10-23T13:26:27",
+    "shipped": "2026-10-23T13:53:24"
+   },
+   "gate_relax": {
+    "browser": "T-1017: the Gate test line through Spring Hill's sprawl carries 661 riders and no school trip (work, shopping, social carried); a short-trip purpose on a thin line, as China's smz"
+   }
   },
   {
    "order": 2308,

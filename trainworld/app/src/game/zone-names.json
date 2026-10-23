@@ -519,5 +519,19 @@
 "yuo": {"name": "Guyuan", "aliases": ["Yuanzhou"]},
 "yzh": {"name": "Baiyin", "aliases": ["Yuzhong"]},
 "zhq": {"name": "Yingkou", "aliases": ["Zhanqian"]},
-"ans": {"aliases": ["Liaoyang"]}
+"ans": {"aliases": ["Liaoyang"]},
+"bio": {"name": "Macon"},
+"muc": {"name": "Columbus, GA"},
+"cth": {"name": "Savannah"},
+"rih": {"name": "Augusta"},
+"crr": {"name": "Rome, GA"},
+"low": {"name": "Valdosta"},
+"lco": {"name": "Cape Coral"},
+"stc": {"name": "Port St. Lucie"},
+"sra": {"name": "Sarasota"},
+"maf": {"name": "Palm Coast"},
+"loo": {"name": "Tallahassee"},
+"aac": {"name": "Gainesville"},
+"esc": {"name": "Pensacola"},
+"heo": {"name": "Spring Hill"}
 }
