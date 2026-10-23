@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-1003 [P2] China walks a lot at baseline. Settled 2026-10-23, left as it is (Anita): 38% of China's trips walk with no rail against 30-37% in the West, from parking by density; rail is more rewarding there, not less. notes/T-1003.md.
 - T-1006 [P1] Regions shaded by the zones' outlines. Done 2026-10-23: one world shade with the shown regions' zones cut out (no land shapes, realms.geojson no longer fetched); buttons a floating expand icon; no bubbles behind the start menu; frame time unchanged. notes/T-1006.md.
 - T-994 [P1] Local demand bubbles missing on desktop. Closed 2026-10-23: never reproduced (about 20 headless cases), and Anita sees them again on later 8800 builds; smoke now checks that Homes draws, in a bare city and in the real save. notes/T-994.md.
 - T-975 [P2] Regions, stage 1. Done 2026-10-23: country-sized regions ("realm" in code) from realms.json; regions not built in, not started in and not clicked are dark with a button, their zones neither drawn nor loaded for viewing; demand unchanged; zoomed-out world 1,029 bubbles to 45. notes/T-975.md.
