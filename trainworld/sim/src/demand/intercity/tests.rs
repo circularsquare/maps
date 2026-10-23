@@ -61,6 +61,42 @@ fn intercity_market_is_symmetric_and_conserved() {
     }
     assert!((SHARES.iter().sum::<f32>() - 1.).abs() < 1e-6);
 }
+/// T-1008: the corridors sent once (pairs, trips a day) and per period (shares, the pairs with
+/// rail) give `corridor_summary` and `commute_corridors` back.
+#[test]
+fn corridor_parts_rebuild_the_summary() {
+    let mut a = api();
+    network(&mut a, 6., 1.);
+    for q in [0, 2] {
+        a.solve(q);
+    }
+    let (pairs, trips, base) = (a.corridor_pairs(), a.corridor_trips(), a.commute_base());
+    assert_eq!(pairs.len(), 2 * trips.len());
+    for q in 0..SHARES.len() {
+        let full = a.corridor_summary(q);
+        let rail = a.corridor_rail(q);
+        if full.is_empty() {
+            assert!(a.corridor_shares(q).is_empty() && rail.is_empty());
+            continue;
+        }
+        let s = a.corridor_shares(q);
+        let mut railed = vec![0.; trips.len()];
+        for v in rail.chunks_exact(3) {
+            railed[v[0] as usize] = v[1];
+        }
+        assert!(rail.len() >= 3, "period {q} has rail");
+        for (i, v) in full.chunks_exact(4).enumerate() {
+            assert_eq!([v[0], v[1]], [pairs[2 * i] as f64, pairs[2 * i + 1] as f64]);
+            assert_eq!(v[2], trips[i] * s[0]);
+            assert_eq!(v[3], railed[i]);
+        }
+        let k = a.commute_corridors(q);
+        assert_eq!(k.len(), 2 * base.len());
+        for (i, v) in k.chunks_exact(2).enumerate() {
+            assert_eq!(v[0], base[i] * s[1]);
+        }
+    }
+}
 #[test]
 fn intercity_uses_feeders_fares_service_and_shared_crowding() {
     let mut a = api();

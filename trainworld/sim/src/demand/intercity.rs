@@ -2649,6 +2649,40 @@ impl IntercityApi {
         let legs = 0.5 * (TO_WORK[q] + TO_HOME[q]) as f64;
         self.per(q).filter(|_| self.m.commuters > 0.).map_or(vec![], |s| self.m.c_corridor.iter().zip(&s.c_corridors).flat_map(|(&c, &r)| [c * legs, r]).collect())
     }
+    /// T-1008: the corridors' two places each, in `corridor_summary`'s order. With
+    /// `corridor_trips`, `commute_base` and `corridor_modes` the part of the corridors no network or
+    /// period changes, which the main thread is sent once.
+    pub fn corridor_pairs(&self) -> Vec<u32> {
+        self.m.corridors.iter().flat_map(|&(a, b)| [a as u32, b as u32]).collect()
+    }
+    /// T-1008: per corridor, its longer trips a day; period `q`'s are these times `corridor_shares(q)[0]`.
+    pub fn corridor_trips(&self) -> Vec<f64> {
+        self.m.corridor_trips.clone()
+    }
+    /// T-1008: per corridor, the commutes between zones that `commute_corridors` counts, before the
+    /// period's legs (`corridor_shares(q)[1]`); empty where it gives none.
+    pub fn commute_base(&self) -> Vec<f64> {
+        if self.m.commuters > 0. { self.m.c_corridor.clone() } else { vec![] }
+    }
+    /// T-1008: period `q`'s factors of `corridor_trips` and `commute_base`; empty where the period
+    /// is not solved here, as `corridor_summary` is.
+    pub fn corridor_shares(&self, q: usize) -> Vec<f64> {
+        self.per(q).map_or(vec![], |_| vec![SHARES[q] as f64, 0.5 * (TO_WORK[q] + TO_HOME[q]) as f64])
+    }
+    /// T-1008: period `q`'s corridors with rail, as (corridor, rail trips, commute rail legs): the
+    /// pairs of `corridor_summary` and `commute_corridors` with rail, without the rest.
+    pub fn corridor_rail(&self, q: usize) -> Vec<f64> {
+        let Some(s) = self.per(q) else { return vec![] };
+        let commutes = self.m.commuters > 0.;
+        let mut out = vec![];
+        for (i, &r) in s.corridors.iter().enumerate() {
+            let c = if commutes { s.c_corridors.get(i).copied().unwrap_or(0.) } else { 0. };
+            if r != 0. || c != 0. {
+                out.extend([i as f64, r, c]);
+            }
+        }
+        out
+    }
     pub fn seg(&self, q: usize) -> Vec<f32> {
         self.per(q).map_or(vec![], |s| s.avg.seg.clone())
     }

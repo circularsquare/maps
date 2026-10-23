@@ -56,7 +56,7 @@ const figures = () => page.evaluate(() => {
     const sl = s.svc.lines.find((x) => x.id === l.id);
     if (lines[l.name]) lines[l.name].input = sl ? JSON.stringify(sl, (k, x) => (ArrayBuffer.isView(x) ? Array.from(x) : x)) : null;
   }
-  const market = s.results.map((r) => r && { summary: r.intercitySummary.map((x, i) => (i === 4 ? 0 : x)), parts: r.intercityParts, corridors: r.corridors, commuteCorridors: r.commuteCorridors });
+  const market = s.results.map((r) => r && { summary: r.intercitySummary.map((x, i) => (i === 4 ? 0 : x)), parts: r.intercityParts, corridorShares: r.corridorShares, corridorRail: r.corridorRail });
   return { lines, market, clusters: s.clusters ?? null, cities: s.cities.join('+'), rail: v.railTripsPerDay };
 });
 

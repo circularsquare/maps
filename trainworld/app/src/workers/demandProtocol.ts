@@ -1,4 +1,5 @@
 import type { CityId } from "../game/cities";
+import type { CorridorTable } from "../game/demand";
 import type { FrameSpec } from "../game/frame";
 
 /** `DemandApi.trip`'s answer layout (sim/src/demand/trip.rs `HEAD`, `PAIR_LEN`, `LEG_LEN`). */
@@ -102,6 +103,8 @@ export type ToDemand =
    * waits on the slowest worker either way). `group` (T-402, 0 when absent): the solve's group of
    * clusters the round is of, as `plan.ahead` says (0 the cluster solved ahead, 1 the rest) */
   | { kind: "go"; version: number; round: number; group?: number }
+  /** T-1008: the page has lost the corridor tables sent: the next results carry theirs again */
+  | { kind: "corridorsAgain" }
   /**
    * Queries for the demand views (T-078, notes/T-078.md), answered between periods. `id` matches
    * the reply; `version` is the solve they ask about: a worker that has moved on to a newer
@@ -212,17 +215,17 @@ export type FromDemand =
       /** T-276: IntercityApi.part_summary(): longer trips and rail, then commute legs between
        * zones and rail (both in `intercitySummary`) */
       intercityParts?: number[];
-      /** per market pair with trips (from, to, longer trips, rail); T-789: pairs with no longer
-       * trips and no commutes are left out, the same pairs in every period and network */
-      corridors: Float64Array;
-      /** T-276: per pair in `corridors` order, commute legs between zones and rail legs */
-      commuteCorridors?: Float64Array;
-      /** T-789: a key of the corridors less their rail (the same whatever the network), and the
-       * pairs with rail as (index in `corridors`, rail, commute rail legs) */
+      /** T-1008: the market's corridor table this result's corridors index (`CorridorTable.key`);
+       * the table itself rides along the first time this worker sends its key */
       corridorKey?: string;
+      corridorTable?: CorridorTable;
+      /** T-1008: the period's factors of the table's longer trips and commute legs */
+      corridorShares?: [number, number];
+      /** the pairs with rail as (index in the table, rail trips, commute rail legs) */
       corridorRail?: Float64Array;
       /** T-378: per market pair, every one in `IntercityApi.corridor_summary` order (`corridorOf`),
-       * the shares of its longer trips not by rail that fly and that drive (the same every period) */
+       * the shares of its longer trips not by rail that fly and that drive (the same every period);
+       * sent with `corridorTable` */
       corridorModes?: Float32Array;
       /** T-378: per place, its longer trips in the period with places that have no zone, each way */
       elsewhere?: number[];

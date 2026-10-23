@@ -86,7 +86,10 @@ for (let q = 0; q < 5; q++) {
   for (const f of ['seg', 'board', 'alight', 'loadOfCrush']) { same(one[q][f], ref[q][f], `period ${q} ${f}`); for (let k = 0; k < ref[q][f].length; k++) maxDiff = Math.max(maxDiff, Math.abs(one[q][f][k] - ref[q][f][k])); }
   same(one[q].citySummary.nyc.filter((_, k) => k !== 4), ref[q].citySummary.nyc.filter((_, k) => k !== 4), `period ${q} New York summary`);
   same(one[q].intercitySummary.filter((_, k) => k !== 4), ref[q].intercitySummary.filter((_, k) => k !== 4), `period ${q} market summary`);
-  same(one[q].corridors, ref[q].corridors, `period ${q} corridors`);
+  // T-1008: the corridors with rail by their places (each worker's table sent once, on its first result)
+  const railByPlaces = (r, msgs) => { const t = msgs.find((m) => m.corridorTable)?.corridorTable, v = r.corridorRail ?? []; const out = []; for (let i = 0; i < v.length; i += 3) out.push(t.from[v[i]], t.to[v[i]], v[i + 1], v[i + 2]); return out; };
+  same(railByPlaces(one[q], lazy.messages), railByPlaces(ref[q], all.messages), `period ${q} corridors with rail`);
+  same(one[q].corridorShares, ref[q].corridorShares, `period ${q} corridor shares`);
   assert.deepEqual(Object.keys(one[q].citySummary), ['nyc']);
   // the other eight cities had no rail at all in the full solve
   for (const id of Object.keys(ref[q].citySummary)) if (id !== 'nyc') assert.equal(ref[q].citySummary[id][2], 0, `${id} rail in the full solve`);

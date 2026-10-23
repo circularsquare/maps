@@ -8,7 +8,7 @@
 // the pack, carries riders between zones.
 
 import type { FeatureCollection, MultiPolygon, Polygon } from "geojson";
-import { CITIES, zoneBox, type CityId } from "../game/cities";
+import { CITIES, zoneBox, zonesNearBox, type CityId } from "../game/cities";
 import { cityBoundary } from "../game/boundaries";
 
 /** The 3 km walk plus a margin: cell centres lie a little outside the boundary (blocks are spread
@@ -74,18 +74,18 @@ export function loadFootprints(ids: Iterable<CityId>): Promise<void> {
 /** The zones whose registry box, widened by `marginM`, holds some station (lon, lat pairs): the
  * only ones whose footprint the station can be within `marginM` of (the box holds the boundary). */
 export function zonesNearStations(stations: ArrayLike<number>, marginM: number): CityId[] {
-  const out: CityId[] = [];
-  for (const c of CITIES) {
-    const [w, s, e, n] = zoneBox(c);
-    const dy = marginM / M_PER_DEG;
-    for (let k = 0; k < stations.length; k += 2) {
-      const lon = stations[k], lat = stations[k + 1];
-      if (lat < s - dy || lat > n + dy) continue;
-      const dx = dy / Math.cos((lat * Math.PI) / 180);
-      if (lon >= w - dx && lon <= e + dx) { out.push(c.id); break; }
+  // T-1008: each station against the boxes near it only (thousands of stations, every network)
+  const near = new Set<number>();
+  const dy = marginM / M_PER_DEG;
+  for (let k = 0; k < stations.length; k += 2) {
+    const lon = stations[k], lat = stations[k + 1], dx = dy / Math.cos((lat * Math.PI) / 180);
+    for (const i of zonesNearBox(lon - dx, lat - dy, lon + dx, lat + dy)) {
+      if (near.has(i)) continue;
+      const [w, s, e, n] = zoneBox(CITIES[i]);
+      if (lat >= s - dy && lat <= n + dy && lon >= w - dx && lon <= e + dx) near.add(i);
     }
   }
-  return out;
+  return [...near].sort((a, b) => a - b).map((i) => CITIES[i].id);
 }
 
 /** Inside the footprint, or within REACH_M of its outline. */

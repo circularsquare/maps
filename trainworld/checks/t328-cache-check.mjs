@@ -57,7 +57,7 @@ await ctx.addInitScript(([bubbles]) => {
     const cities = [...d.cities()].sort();
     for (const [, c] of cities) put([c.split.train, c.split.walk, c.split.drive, c.tripsPerDay, c.railTripsPerDay, c.trainShareByPeriod.map((p) => p[1])]);
     const ic = d.intercity();
-    if (ic) { put([ic.tripsPerDay, ic.railTripsPerDay, ic.commuteTripsPerDay ?? 0, ic.commuteRailPerDay ?? 0]); const c = ic.corridors; for (let i = 0; i < c.n; i++) put([c.from[i], c.to[i], c.trips[i], c.rail[i], c.commutes[i], c.commuteRail[i]]); }
+    if (ic) { put([ic.tripsPerDay, ic.railTripsPerDay, ic.commuteTripsPerDay ?? 0, ic.commuteRailPerDay ?? 0]); const c = ic.corridors; nums.push(c.table.n, c.longerScale, c.commuteScale); for (const ch of c.table.key) nums.push(ch.charCodeAt(0)); put([...c.railAt, ...c.longerRail, ...c.commuteRail]); }
     const f = new Float64Array(nums), b = new Uint32Array(f.buffer);
     let h = 0x811c9dc5;
     for (let i = 0; i < b.length; i++) h = Math.imul(h ^ b[i], 0x01000193);

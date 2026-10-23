@@ -4,7 +4,7 @@
 // the city outlined and one bubble per other city (map/intercityView.ts).
 
 import { cityById, type CityId } from "../../game/cities";
-import { cityDemandViews, intercityDemand, INTERCITY_PLACES } from "../../game/demand";
+import { cityDemandViews, eachCorridor, intercityDemand, INTERCITY_PLACES } from "../../game/demand";
 import { count } from "../../game/format";
 import { zoneLoads } from "../../game/loading";
 import { BUBBLE_ALPHA, bubbleColour, setBubbleColours } from "../../game/palette";
@@ -45,15 +45,13 @@ export function CityInspector({ id }: { id: string }) {
   if (!city) return null;
   const byPlace = new Map<number, { all: number; rail: number }>();
   const c = market?.corridors;
-  for (let i = 0; c && i < c.n; i++) {
-    const from = c.from[i], to = c.to[i];
-    if (from === to || (from !== city.place && to !== city.place)) continue;
-    const other = from === city.place ? to : from;
+  if (c) eachCorridor(c, (from, to) => from !== to && (from === city.place || to === city.place), (j, v) => {
+    const other = c.table.from[j] === city.place ? c.table.to[j] : c.table.from[j];
     const p = byPlace.get(other) ?? { all: 0, rail: 0 };
-    p.all += c.trips[i];
-    p.rail += c.rail[i];
+    p.all += v.trips;
+    p.rail += v.rail;
     byPlace.set(other, p);
-  }
+  });
   const places = [...byPlace].filter(([, p]) => p.all > 0).sort((a, b) => b[1].all - a[1].all);
   const interAll = places.reduce((s, [, p]) => s + p.all, 0);
   const interRail = places.reduce((s, [, p]) => s + p.rail, 0);

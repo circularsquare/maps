@@ -141,10 +141,13 @@ keeps the composition it was made from while its key lasts, so a pack opened els
 nothing), set on the cluster's network alone: its pairs are those between zones its own stations serve, and a pair whose ends lie
 in two clusters is in neither, its trips fixed in the pack's totals like any other pair with no
 rail path. The market's figures are its parts' added up: rail from each, the trips, pairs and
-corridor trips (which need no network) once. A worker sends only the corridors (place pairs) with
-longer trips or commutes, with a key of everything in them but the rail and the list of pairs with
-rail; the client keeps a day's sums of the rest by those keys and works out only the pairs with rail
-in later results, so no publish walks every zone pair (T-789). A market zone no station reaches is in no cluster;
+corridor trips (which need no network) once. The corridors (place pairs with longer trips or
+commutes) are a table no network or period changes: each pair's places, its longer trips and
+commute legs a day, and its shares by plane and by car (game/demand.ts `CorridorTable`). A worker
+sends a table once, by its key (again after `corridorsAgain`); each period's result carries the
+key, the period's factors of the trips and legs and the pairs with rail. A kind of day's corridors
+are the table times the day's scales plus its pairs with rail, so no publish or view walks every
+zone pair (T-789, T-1008). A market zone no station reaches is in no cluster;
 with none reached the market is a cluster of its own with no lines, solved once and kept. Lines and
 stations no population reaches are in no cluster and carry nobody. `?perfOff=split` joins the
 market's zones into one node, as before T-409.

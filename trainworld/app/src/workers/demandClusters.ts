@@ -5,7 +5,7 @@
 // not changed keeps its result (docs/demand.md "Clusters"). Reach is judged generously: joining two
 // clusters that share nothing costs only time, splitting two that share riders would change figures.
 
-import { CITIES, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
+import { CITIES, worldToCity, worldToLonLat, zoneBox, zonesNearBox, type CityId } from "../game/cities";
 import { PERIODS } from "../game/periods";
 import { curveKnots } from "../game/fareCurve";
 import type { DemandNetwork } from "./demandProtocol";
@@ -28,7 +28,8 @@ const MARKET_BOXES = CITIES.map((c) => [c.id, zoneBox(c)] as const);
  * `MARKET_REACH_M` of the zone's box. What opens a zone's market pack (workers/demandClient.ts). */
 export function marketZonesNear(lon: number, lat: number): CityId[] {
   const dy = MARKET_REACH_M / 111_320, dx = dy / Math.cos((lat * Math.PI) / 180);
-  return MARKET_BOXES.filter(([, [w, s, e, n]]) => lon >= w - dx && lon <= e + dx && lat >= s - dy && lat <= n + dy).map(([id]) => id);
+  // T-1008: the boxes near the place only (every station asks, for every network)
+  return zonesNearBox(lon - dx, lat - dy, lon + dx, lat + dy).map((i) => MARKET_BOXES[i]).filter(([, [w, s, e, n]]) => lon >= w - dx && lon <= e + dx && lat >= s - dy && lat <= n + dy).map(([id]) => id);
 }
 
 export interface Cluster {

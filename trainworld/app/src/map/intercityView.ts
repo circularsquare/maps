@@ -32,7 +32,7 @@ import { activeCity, cityById, CITIES } from "../game/cities";
 import { shownRealms, zoneShown } from "../game/realms";
 import { lngLatToPack, packToLngLat } from "../game/coords";
 import { marketGroup, tripOpenedFrom } from "../game/trip";
-import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type Corridors, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
+import { cityDemandViews, demandView, eachCorridor, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type Corridors, type CorridorTable, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
 import { selectedScope } from "../game/complexView";
 import { count } from "../game/format";
 import { BUBBLE_ALPHA, bubbleColour, rgb, setBubbleColours, UNBUILT_COLOURS } from "../game/palette";
@@ -122,24 +122,59 @@ const Z = ZONE_PLACES.length;
 const zoneIndex = new Int32Array(PLACES).fill(-1);
 ZONE_PLACES.forEach((p, i) => (zoneIndex[p] = i));
 const zoneOf = (place: number) => (place >= 0 && place < PLACES ? zoneIndex[place] : -1);
-/** where each zone place's totals start in `pairs` */
-const TOTALS = Z * Z * 3;
+/** where `MarketPairs` keeps a zone place's figures: [trips, rail, air] at `zoneOf` index * 3 */
 let noPairs: Float64Array | null = null;
+/** each corridor endpoint that is a zone place (`zoneOf`), -1 for none; a corridor within one
+ * place or with a place past the list counts nowhere */
+const ends = (from: number, to: number): [number, number] =>
+  from === to || from >= PLACES || to >= PLACES ? [-1, -1] : [zoneOf(from), zoneOf(to)];
 
-/** Longer trips a day between every two zone places, both directions, all modes then by train and
- * (T-378) by plane: [trips, rail, air] at (a * Z + b) * 3 (`zoneOf` indices), the same for (b, a);
- * then each zone place's with every other place of the market at TOTALS + a * 3. */
-function pairs(c: Corridors): Float64Array {
-  const m = new Float64Array(TOTALS + Z * 3);
-  for (let i = 0; i < c.n; i++) {
-    const from = c.from[i], to = c.to[i];
-    if (from === to || from >= PLACES || to >= PLACES) continue;
-    const a = zoneOf(from), b = zoneOf(to), t = c.trips[i], r = c.rail[i], f = c.air[i];
-    if (a >= 0) { m[TOTALS + a * 3] += t; m[TOTALS + a * 3 + 1] += r; m[TOTALS + a * 3 + 2] += f; }
-    if (b >= 0) { m[TOTALS + b * 3] += t; m[TOTALS + b * 3 + 1] += r; m[TOTALS + b * 3 + 2] += f; }
-    if (a < 0 || b < 0) continue;
-    for (const o of [(a * Z + b) * 3, (b * Z + a) * 3]) { m[o] += t; m[o + 1] += r; m[o + 2] += f; }
+/** T-1008: per zone place, a corridor table's longer trips, commute legs and longer trips by
+ * plane (all as if no pair had rail) with every other place of the market, before a day's scales;
+ * worked out once per table. */
+const tableTotals = new WeakMap<CorridorTable, Float64Array>();
+function totalsOf(t: CorridorTable): Float64Array {
+  let m = tableTotals.get(t);
+  if (m) return m;
+  m = new Float64Array(Z * 3);
+  for (let j = 0; j < t.n; j++) {
+    const [a, b] = ends(t.from[j], t.to[j]);
+    const l = t.longer[j], c = t.commutes[j], f = l * t.air[j];
+    if (a >= 0) { m[3 * a] += l; m[3 * a + 1] += c; m[3 * a + 2] += f; }
+    if (b >= 0) { m[3 * b] += l; m[3 * b + 1] += c; m[3 * b + 2] += f; }
   }
+  tableTotals.set(t, m);
+  return m;
+}
+
+/** The market's trips a day for the city view: each zone place's with every other place of the
+ * market (`totals`), all modes, by train and (T-378) by plane; and a zone place's with each other
+ * zone place (`row`, worked out when a zone is selected). */
+interface MarketPairs { c: Corridors; totals: Float64Array; rows: Map<number, Float64Array> }
+function pairs(c: Corridors): MarketPairs {
+  const b = totalsOf(c.table), totals = new Float64Array(Z * 3);
+  for (let z = 0; z < Z; z++) {
+    totals[3 * z] = b[3 * z] * c.longerScale + b[3 * z + 1] * c.commuteScale;
+    totals[3 * z + 2] = b[3 * z + 2] * c.longerScale;
+  }
+  // the pairs with rail: their rail, and their longer trips by rail no longer by plane
+  const { from, to, air } = c.table;
+  for (let k = 0; k < c.railAt.length; k++) {
+    const j = c.railAt[k], r = c.longerRail[k] + c.commuteRail[k], f = c.longerRail[k] * air[j];
+    for (const z of ends(from[j], to[j])) if (z >= 0) { totals[3 * z + 1] += r; totals[3 * z + 2] -= f; }
+  }
+  return { c, totals, rows: new Map() };
+}
+function rowOf(p: MarketPairs, za: number): Float64Array {
+  let m = p.rows.get(za);
+  if (m) return m;
+  m = new Float64Array(Z * 3);
+  const row = m;
+  eachCorridor(p.c, (from, to) => { const [a, b] = ends(from, to); return a >= 0 && b >= 0 && (a === za || b === za); }, (j, v) => {
+    const [a, b] = ends(p.c.table.from[j], p.c.table.to[j]), o = 3 * (a === za ? b : a);
+    row[o] += v.trips; row[o + 1] += v.rail; row[o + 2] += v.air;
+  });
+  p.rows.set(za, m);
   return m;
 }
 
@@ -182,7 +217,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   };
 
   // ---- the market's corridors ----
-  let market: Float64Array | null = null;
+  let market: MarketPairs | null = null;
 
   /** What the city view draws: the overview, a selected city, or neither. */
   const cityMode = (): "overview" | "selected" | null => {
@@ -202,11 +237,14 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     // alone, and stays while a zone is selected, since its pairs need a solve
     const pairsIn = market;
     if (!pairsIn) selected = null;
-    const m = pairsIn ?? (noPairs ??= new Float64Array(TOTALS + Z * 3));
-    const at = (o: number) => (o < 0 ? { all: 0, rail: 0, air: 0 } : { all: m[o], rail: m[o + 1], air: m[o + 2] });
-    const pair = (a: number, b: number) => { const za = zoneOf(a), zb = zoneOf(b); return at(za < 0 || zb < 0 ? -1 : (za * Z + zb) * 3); };
-    const total = (a: number) => { const za = zoneOf(a); return at(za < 0 ? -1 : TOTALS + za * 3); };
     const own = selected ? cityById(selected) : null;
+    const totals = pairsIn?.totals ?? (noPairs ??= new Float64Array(Z * 3));
+    const ownZone = own ? zoneOf(own.place) : -1;
+    const row = pairsIn && ownZone >= 0 ? rowOf(pairsIn, ownZone) : null;
+    const at = (m: Float64Array | null, z: number) => (!m || z < 0 ? { all: 0, rail: 0, air: 0 } : { all: m[3 * z], rail: m[3 * z + 1], air: m[3 * z + 2] });
+    // (only ever the selected zone's pairs)
+    const pair = (a: number, b: number) => at(zoneOf(a) === ownZone ? row : null, zoneOf(b));
+    const total = (a: number) => at(totals, zoneOf(a));
     // T-276: zoomed out, a zone is one bubble as if it were one place: its local trips (the city
     // view's, or with no rail the pipeline's count for a zone not opened) and the regional
     // layer's trips to and from it (commutes between zones and longer trips)

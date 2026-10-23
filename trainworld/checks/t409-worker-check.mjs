@@ -107,7 +107,12 @@ for (let q = 0; q < 5; q++) {
   assert.equal(m[1], mb[1], `period ${q} market trips once`);
   assert.equal(mb[1], mp[1]);
   same(B.intercityParts, B.intercityParts.map((v, i) => (i % 2 ? b.intercityParts[i] + p.intercityParts[i] : b.intercityParts[i])), `period ${q} market parts`);
-  same(B.corridors, B.corridors.map((v, i) => (i % 4 === 3 ? b.corridors[i] + p.corridors[i] : b.corridors[i])), `period ${q} corridors`);
+  // T-1008: the corridors with rail (row, rail, commute rail), each part's added up
+  const railOf = (r) => { const m = new Map(); for (let i = 0; i < r.corridorRail.length; i += 3) m.set(r.corridorRail[i], [r.corridorRail[i + 1], r.corridorRail[i + 2]]); return m; };
+  const [rB, rb, rp] = [railOf(B), railOf(b), railOf(p)];
+  same([...rB.keys()], [...new Set([...rb.keys(), ...rp.keys()])].sort((x, y) => x - y), `period ${q} corridors with rail`);
+  for (const [j, [r, c]] of rB) same([r, c], [(rb.get(j)?.[0] ?? 0) + (rp.get(j)?.[0] ?? 0), (rb.get(j)?.[1] ?? 0) + (rp.get(j)?.[1] ?? 0)], `period ${q} corridor ${j}`);
+  same(B.corridorShares, b.corridorShares, `period ${q} corridor shares`);
 }
 out.figures = { periods: 5, lineLoadsCitySummariesMarketParts: 'identical', marketRail: both.results.map((r, q) => [r.intercitySummary[2], bos.results[q].intercitySummary[2], phl.results[q].intercitySummary[2]]) };
 // an edit to the Boston line: split, Philadelphia's cluster is kept

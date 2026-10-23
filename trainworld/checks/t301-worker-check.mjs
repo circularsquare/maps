@@ -97,7 +97,7 @@ function sameFinals(A, B, ids, what, market = true) {
     for (const f of ['seg', 'board', 'alight', 'loadOfCrush']) same(a[f], b[f], `${what}: period ${q} ${f}`);
     for (const f of ['seg', 'board', 'alight']) same(a.parts[f], b.parts[f], `${what}: period ${q} parts ${f}`);
     for (const id of ids) { same(noMs(a.citySummary[id]), noMs(b.citySummary[id]), `${what}: period ${q} ${id} summary`); same(a.cityParts[id], b.cityParts[id], `${what}: period ${q} ${id} parts`); }
-    if (market) for (const f of ['intercitySummary', 'intercityParts', 'corridors', 'commuteCorridors']) same(f === 'intercitySummary' ? noMs(a[f]) : a[f], f === 'intercitySummary' ? noMs(b[f]) : b[f], `${what}: period ${q} ${f}`);
+    if (market) for (const f of ['intercitySummary', 'intercityParts', 'corridorShares', 'corridorRail']) same(f === 'intercitySummary' ? noMs(a[f]) : a[f], f === 'intercitySummary' ? noMs(b[f]) : b[f], `${what}: period ${q} ${f}`);
   }
 }
 const MiB = (b) => Math.round(b / 1048576);

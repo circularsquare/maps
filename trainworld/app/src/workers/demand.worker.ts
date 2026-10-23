@@ -24,6 +24,7 @@ import { CITIES, cityToMarket, cityToWorld, HOME_CITY, marketWorld, setWorldFram
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
 import { curveKnots } from "../game/fareCurve";
+import type { CorridorTable } from "../game/demand";
 import { TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
 
@@ -71,7 +72,7 @@ let stageRound = -1;
 /** T-327: questions marked `wait` about a round (or version) this worker has not reached yet,
  * answered the moment it has, before it starts the next round */
 let waiting: Query[] = [];
-type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "close" }>;
+type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "close" | "corridorsAgain" }>;
 /** T-327: the round every worker may start, by version and group (a solve marked `barrier` waits
  * for it) */
 let go = { version: -1, group: 0, round: 0 };
@@ -441,6 +442,8 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     const group = msg.group ?? 0;
     if (!goAllows(msg.version, group, msg.round)) go = { version: msg.version, group, round: msg.round };
     wake?.();
+  } else if (msg.kind === "corridorsAgain") {
+    sentTables.clear();
   } else {
     query(msg);
   }
@@ -762,48 +765,73 @@ function marketStationFlows(at: Version, c: JobCluster | undefined, m: Intercity
   return station < at.stations ? m.no_station_flows() : new Float64Array(0);
 }
 
-/** `marketFigures`' sum over the parts for a long array: the first part's numbers, with column
- * `col` of every `stride` added up over the parts (the rail, which is each part's own network's). */
-function sum64(parts: IntercityApi[], read: (p: IntercityApi) => Float64Array, stride: number, col: number): Float64Array {
-  let out: Float64Array | null = null;
-  for (const p of parts) {
-    const v = read(p);
-    if (!v.length) continue;
-    if (!out) out = v;
-    else for (let i = col; i < v.length; i += stride) out[i] += v[i];
+/**
+ * T-1008: the market's corridor table (game/demand.ts `CorridorTable`): the pairs with longer trips
+ * or commutes, which depend on neither the period nor the network (most of the market's place
+ * pairs have none), with a key of all of it. `row` maps a market corridor to its row, -1 none.
+ * Made once per market part; the main thread is sent each key once (`sentTables`), since its tens
+ * of MB in every period's result cost it a frame or more each (T-790).
+ */
+interface MadeTable { table: CorridorTable; modes: Float32Array; row: Int32Array }
+const madeTables = new WeakMap<IntercityApi, MadeTable>();
+const sentTables = new Set<string>();
+function corridorTable(p: IntercityApi): MadeTable {
+  const had = madeTables.get(p);
+  if (had) return had;
+  const pairs = p.corridor_pairs(), trips = p.corridor_trips(), base = p.commute_base(), modes = p.corridor_modes();
+  const N = trips.length, hasK = base.length === N, hasM = modes.length === 2 * N;
+  const row = new Int32Array(N).fill(-1);
+  let n = 0;
+  for (let i = 0; i < N; i++) if (trips[i] > 0 || (hasK && base[i] > 0)) row[i] = n++;
+  const t: CorridorTable = { key: "", n, from: new Uint32Array(n), to: new Uint32Array(n), longer: new Float64Array(n), commutes: new Float64Array(n), air: new Float32Array(n), car: new Float32Array(n) };
+  for (let i = 0; i < N; i++) {
+    const j = row[i];
+    if (j < 0) continue;
+    t.from[j] = pairs[2 * i]; t.to[j] = pairs[2 * i + 1]; t.longer[j] = trips[i];
+    if (hasK) t.commutes[j] = base[i];
+    // T-378: before any shares are known, all by car
+    if (hasM) { t.air[j] = modes[2 * i]; t.car[j] = modes[2 * i + 1]; } else t.car[j] = 1;
   }
-  return out ?? new Float64Array(0);
+  // FNV-1a over the bits of every column
+  let h = 0x811c9dc5;
+  for (const a of [t.from, t.to, t.longer, t.commutes, t.air, t.car]) {
+    const w = new Uint32Array(a.buffer);
+    for (let i = 0; i < w.length; i++) h = Math.imul(h ^ w[i], 0x01000193);
+  }
+  t.key = `${n}:${(h >>> 0).toString(36)}`;
+  const made = { table: t, modes, row };
+  madeTables.set(p, made);
+  return made;
 }
 
-/**
- * T-789: the corridors (from, to, trips, rail) and their commutes (legs, rail legs) with only the
- * pairs that have longer trips or commutes. Which pairs those are depends on neither the period
- * nor the network, so every period's list holds the same pairs in the same order. Most of the
- * market's place pairs have none, and every pair cost the main thread its share of each publish.
- * Also a key of everything in them but the rail, which no network changes, and the pairs with rail
- * (index, rail, commute rail legs), so the main thread works out only those when the key is one it
- * has seen.
- */
-function keptCorridors(c: Float64Array, k: Float64Array): { corridors: Float64Array; commuteCorridors: Float64Array; corridorKey: string; corridorRail: Float64Array } {
-  const n = c.length / 4, hasK = k.length === 2 * n;
-  let kept = 0, railed = 0;
-  for (let i = 0; i < n; i++) if (c[4 * i + 2] > 0 || (hasK && k[2 * i] > 0)) { kept++; if (c[4 * i + 3] !== 0 || (hasK && k[2 * i + 1] !== 0)) railed++; }
-  const oc = new Float64Array(4 * kept), ok = new Float64Array(hasK ? 2 * kept : 0), rail = new Float64Array(3 * railed);
-  for (let i = 0, j = 0, r = 0; i < n; i++) {
-    if (!(c[4 * i + 2] > 0 || (hasK && k[2 * i] > 0))) continue;
-    oc.set(c.subarray(4 * i, 4 * i + 4), 4 * j);
-    if (hasK) { ok[2 * j] = k[2 * i]; ok[2 * j + 1] = k[2 * i + 1]; }
-    if (c[4 * i + 3] !== 0 || (hasK && ok[2 * j + 1] !== 0)) { rail[3 * r] = j; rail[3 * r + 1] = c[4 * i + 3]; rail[3 * r + 2] = hasK ? ok[2 * j + 1] : 0; r++; }
-    j++;
+/** T-1008: period `q`'s corridor figures over the market's parts: the table, the period's shares
+ * (the first part's that solved it; the trips are the same in every part) and the pairs with rail,
+ * each part's own network's added up, by table row, ascending. */
+function marketCorridors(parts: IntercityApi[], q: number) {
+  if (!parts.length) return null;
+  const made = corridorTable(parts[0]);
+  let shares: number[] = [];
+  const rail = new Map<number, [number, number]>();
+  for (const p of parts) {
+    const s = p.corridor_shares(q);
+    if (!s.length) continue;
+    if (!shares.length) shares = Array.from(s);
+    const v = p.corridor_rail(q);
+    for (let i = 0; i < v.length; i += 3) {
+      const j = made.row[v[i]];
+      if (j < 0) continue;
+      const r = rail.get(j);
+      if (r) { r[0] += v[i + 1]; r[1] += v[i + 2]; } else rail.set(j, [v[i + 1], v[i + 2]]);
+    }
   }
-  // FNV-1a over the bits of from, to and trips, and of the commute legs
-  const b = new Uint32Array(oc.buffer), bk = new Uint32Array(ok.buffer);
-  let h = 0x811c9dc5, g = 0x811c9dc5;
-  for (let j = 0; j < kept; j++) {
-    for (let w = 8 * j; w < 8 * j + 6; w++) h = Math.imul(h ^ b[w], 0x01000193);
-    if (hasK) g = Math.imul(Math.imul(g ^ bk[4 * j], 0x01000193) ^ bk[4 * j + 1], 0x01000193);
-  }
-  return { corridors: oc, commuteCorridors: ok, corridorKey: `${kept}:${hasK ? 1 : 0}:${(h >>> 0).toString(36)}:${(g >>> 0).toString(36)}`, corridorRail: rail };
+  const rows = [...rail.keys()].sort((a, b) => a - b);
+  const out = new Float64Array(3 * rows.length);
+  rows.forEach((j, k) => { const [r, c] = rail.get(j)!; out[3 * k] = j; out[3 * k + 1] = r; out[3 * k + 2] = c; });
+  const t = made.table, first = !sentTables.has(t.key);
+  sentTables.add(t.key);
+  // copies, transferred: the worker keeps its own for `corridorsAgain`
+  const table: CorridorTable | undefined = first ? { ...t, from: t.from.slice(), to: t.to.slice(), longer: t.longer.slice(), commutes: t.commutes.slice(), air: t.air.slice(), car: t.car.slice() } : undefined;
+  return { corridorKey: t.key, corridorTable: table, corridorModes: first ? made.modes.slice() : undefined, corridorShares: shares.length >= 2 ? [shares[0], shares[1]] as [number, number] : undefined, corridorRail: out };
 }
 
 /**
@@ -825,13 +853,11 @@ function marketFigures(parts: IntercityApi[], q: number) {
   // round, trips, rail, 0, ms, pairs, segments over seats, then the worst loads: the largest part's
   const summary = of((p) => p.summary(q), (i) => i === 2 || i === 4 || i === 6);
   if (parts.length > 1 && summary.length) for (const i of [7, 8, 9]) summary[i] = Math.max(...parts.map((p) => p.summary(q)[i] ?? 0));
-  const kept = keptCorridors(sum64(parts, (p) => p.corridor_summary(q), 4, 3), sum64(parts, (p) => p.commute_corridors(q), 2, 1));
   return {
     summary,
     parts: of((p) => p.part_summary(q), (i) => i % 2 === 1),
-    ...kept,
+    ...marketCorridors(parts, q),
     // T-378: the same in every part
-    corridorModes: parts.length ? parts[0].corridor_modes() : new Float32Array(0),
     elsewhere: parts.length ? Array.from(parts[0].elsewhere(q)) : [],
   };
 }
@@ -1125,8 +1151,9 @@ async function run() {
           if (e) for (let k = 0; k < Math.min(e.length, 3 * (local - 1)); k++) v[3 + k] = e[k];
           return [id, v];
         })) as Record<CityId, number[]>;
-        const msg = { version: job.version, period: q, summary, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridors: market ? market.corridors : new Float64Array(0), commuteCorridors: market ? market.commuteCorridors : new Float64Array(0), corridorKey: market?.corridorKey, corridorRail: market?.corridorRail, corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, loadOfCrush, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
-        const big = market ? [market.corridors.buffer, market.commuteCorridors.buffer, market.corridorRail.buffer, market.corridorModes.buffer] : [];
+        const msg = { version: job.version, period: q, summary, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, loadOfCrush, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
+        const t = market?.corridorTable;
+        const big = [market?.corridorRail?.buffer, market?.corridorModes?.buffer, ...(t ? [t.from, t.to, t.longer, t.commutes, t.air, t.car].map((a) => a.buffer) : [])].filter((b): b is ArrayBuffer => !!b);
         return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, loadOfCrush.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...big] };
       };
       for (const c of early) {

@@ -113,13 +113,88 @@ export function worldToLonLat(x: number, y: number): [number, number] {
  * not a name for the place: for that see `cityWithin` and `placeAt` in game/zones.ts). */
 export function cityNear(lon: number, lat: number): CityId {
   const cosLat = Math.cos(lat * Math.PI / 180);
-  // a scan, not a sort: it runs on every map move (localTime's shiftAt) over every registered zone
-  let best = CITIES[0], bd = Infinity;
-  for (const c of CITIES) {
-    const d = Math.hypot((lon - c.center[0]) * cosLat, lat - c.center[1]);
-    if (d < bd) { bd = d; best = c; }
+  let best = 0, bd = Infinity;
+  const at = (i: number) => {
+    const c = CITIES[i].center, d = Math.hypot((lon - c[0]) * cosLat, lat - c[1]);
+    if (d < bd || (d === bd && i < best)) { bd = d; best = i; }
+  };
+  // T-1008: the centres by whole degree, searched ring by ring out from the place (every station
+  // of a save asks, thousands at a load); a place off the grid scans them all
+  const x = Math.floor(lon) + 180, y = Math.floor(lat) + 90;
+  if (!(x >= 0 && x < GRID_W && y >= 0 && y < GRID_H)) {
+    for (let i = 0; i < CITIES.length; i++) at(i);
+    return CITIES[best].id;
   }
-  return best.id;
+  const g = centreGrid();
+  for (const i of g.off) at(i);
+  // a centre r rings out is at least r - 1 whole degrees away in latitude or longitude
+  const step = Math.min(1, cosLat) * (1 - 1e-9);
+  for (let r = 0; r < Math.max(GRID_W, GRID_H); r++) {
+    if (Math.max(0, r - 1) * step > bd) break;
+    // far from every zone (mid-ocean): more cells than zones, so the plain scan is quicker
+    if ((2 * r + 1) ** 2 > CITIES.length) { for (let i = 0; i < CITIES.length; i++) at(i); break; }
+    for (let yy = y - r; yy <= y + r; yy++) {
+      if (yy < 0 || yy >= GRID_H) continue;
+      const edge = yy === y - r || yy === y + r;
+      for (let xx = x - r; xx <= x + r; xx += edge ? 1 : 2 * r || 1) {
+        if (xx < 0 || xx >= GRID_W) continue;
+        const cell = yy * GRID_W + xx;
+        for (let q = g.start[cell]; q < g.start[cell + 1]; q++) at(g.ids[q]);
+      }
+    }
+  }
+  return CITIES[best].id;
+}
+
+const GRID_W = 360, GRID_H = 180;
+/** CITIES indices by cell (`start` offsets into `ids`, cell = (lat + 90) * 360 + lon + 180 floored) */
+interface Grid { start: Uint32Array; ids: Uint32Array }
+function makeGrid(cells: (i: number) => number[]): Grid {
+  const lists = CITIES.map((_, i) => cells(i));
+  const start = new Uint32Array(GRID_W * GRID_H + 1);
+  for (const l of lists) for (const c of l) start[c + 1]++;
+  for (let c = 0; c < GRID_W * GRID_H; c++) start[c + 1] += start[c];
+  const ids = new Uint32Array(start[GRID_W * GRID_H]), fill = start.slice(0, -1);
+  lists.forEach((l, i) => { for (const c of l) ids[fill[c]++] = i; });
+  return { start, ids };
+}
+let centres: Grid & { off: number[] } | null = null;
+const centreGrid = () => {
+  if (centres) return centres;
+  const off: number[] = [];
+  return (centres = { ...makeGrid((i) => {
+    const [lon, lat] = CITIES[i].center, x = Math.floor(lon) + 180, y = Math.floor(lat) + 90;
+    if (x >= 0 && x < GRID_W && y >= 0 && y < GRID_H) return [y * GRID_W + x];
+    off.push(i);
+    return [];
+  }), off });
+};
+
+/** The cells a box [w, s, e, n] in degrees covers; null for one the grid cannot hold (crossing the
+ * antimeridian, or not a number). */
+function boxCells(w: number, s: number, e: number, n: number): number[] | null {
+  if (!(w <= e && s <= n)) return null;
+  // clamped, not cut, so two boxes that meet off the grid still share its edge cells
+  const cx = (v: number) => Math.min(GRID_W - 1, Math.max(0, Math.floor(v) + 180)), cy = (v: number) => Math.min(GRID_H - 1, Math.max(0, Math.floor(v) + 90));
+  const x0 = cx(w), x1 = cx(e), y0 = cy(s), y1 = cy(n);
+  const out: number[] = [];
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) out.push(y * GRID_W + x);
+  return out;
+}
+let boxes: { grid: Grid; always: number[] } | null = null;
+/** T-1008: the zones whose `zoneBox` may meet the box [w, s, e, n] (a superset), ascending
+ * CITIES indices: those by the grid's cells, and every zone the grid cannot hold. */
+export function zonesNearBox(w: number, s: number, e: number, n: number): number[] {
+  if (!boxes) {
+    const always: number[] = [];
+    const grid = makeGrid((i) => { const c = boxCells(...zoneBox(CITIES[i])); if (!c) always.push(i); return c ?? []; });
+    boxes = { grid, always };
+  }
+  const cells = boxCells(w, s, e, n);
+  if (!cells) return CITIES.map((_, i) => i);
+  const out = new Set(boxes.always);
+  for (const c of cells) for (let q = boxes.grid.start[c]; q < boxes.grid.start[c + 1]; q++) out.add(boxes.grid.ids[q]);
+  return [...out].sort((a, b) => a - b);
 }
 
 /** T-318: how far from a zone's centre a place still counts as in it while its boundary is not
@@ -147,7 +222,9 @@ export function zoneBox(c: City): [number, number, number, number] {
 
 /** The zones whose boxes, widened by `marginM` metres, meet the box [w, s, e, n] in degrees. */
 export function zonesTouching(w: number, s: number, e: number, n: number, marginM = 0): City[] {
-  return CITIES.filter((c) => {
+  // the candidates by the box widened by the most any zone's margin can be (at 85 degrees)
+  const my = marginM / 111_320, mx = my / Math.cos(85 * Math.PI / 180);
+  return zonesNearBox(w - mx, s - my, e + mx, n + my).map((i) => CITIES[i]).filter((c) => {
     const [bw, bs, be, bn] = zoneBox(c);
     const dy = marginM / 111_320, dx = dy / Math.cos(Math.min(85, Math.max(Math.abs(bs), Math.abs(bn))) * Math.PI / 180);
     return w <= be + dx && e >= bw - dx && s <= bn + dy && n >= bs - dy;

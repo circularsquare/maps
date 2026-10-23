@@ -52,7 +52,7 @@ const sig = () => page.evaluate(() => {
     k = 1;
     for (const id of Object.keys(r.citySummary).sort()) summ(r.citySummary[id]);
     for (const id of Object.keys(r.cityParts ?? {}).sort()) arr(r.cityParts[id]);
-    k = 2; summ(r.intercitySummary); arr(r.intercityParts); arr(r.corridors); arr(r.commuteCorridors);
+    k = 2; summ(r.intercitySummary); arr(r.intercityParts); arr(r.corridorShares); arr(r.corridorRail);
     k = 3; arr(r.seg); arr(r.board); arr(r.alight); arr(r.loadOfCrush);
     k = 4; if (r.parts) { arr(r.parts.seg); arr(r.parts.board); arr(r.parts.alight); }
   }

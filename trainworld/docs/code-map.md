@@ -289,7 +289,11 @@ Run from the maps root (`node trainworld/checks/<file>`).
   against fresh final to the bit, a changed build, pack or network shows none), `t348-lag.mjs`
   (main-thread long tasks and frame gaps while demand loads: startup, pans, a re-solve, a zone
   joining the solve; optional Chrome trace) with `t348-analyze.mjs` (what each long task in a
-  trace spent its time on), `t714-pan.mjs` (frame time while dragging and wheel-zooming the
+  trace spent its time on), `t1008-load-lag.mjs` (long tasks, frame gaps and each demand message's
+  main-thread ms in the first seconds after a save loads, with the main thread's top functions,
+  then the game's figures at demand's final; a save imported into a new game, or `CONTINUE=1` the
+  slot reopened with its demand cache; `EDITS=1` the long tasks after a track and a station edit),
+  `t714-pan.mjs` (frame time while dragging and wheel-zooming the
   real save at zoom 11-16 with the clock running: fails over 12 ms of main thread a frame or 5% of
   frames over 50 ms; options for a throttled CPU, a trace per thread, settings, a tool),
   `t871-europe-pan.mjs` (drags across Europe in a new game: fails if a zoom at or below 7.5 opens

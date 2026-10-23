@@ -93,8 +93,54 @@ export function stationRidersFor(dv: DemandView | null, id: string, purpose: Pur
  * T-378: `air` and `car` the rest by plane and by car, `elsewhere` each place's longer trips with
  * places that have no zone, each way. */
 export interface IntercityDemand { version: number; round: number; tripsPerDay: number; railTripsPerDay: number; commuteTripsPerDay?: number; commuteRailPerDay?: number; corridors: Corridors; elsewhere?: number[] }
-/** The corridors with trips, one column an array (T-789: hundreds of thousands of place pairs). */
-export interface Corridors { n: number; from: Uint32Array; to: Uint32Array; trips: Float64Array; rail: Float64Array; commutes: Float64Array; commuteRail: Float64Array; air: Float64Array; car: Float64Array }
+/**
+ * The market's corridors with trips (T-789: hundreds of thousands of place pairs), the part no
+ * network or period changes, one column an array: each pair's two places, its longer trips and
+ * commute legs a day before a kind of day's scales, and the shares of its longer trips not by rail
+ * that fly and that drive (T-378). One table serves every result of a market (T-1008).
+ */
+export interface CorridorTable { key: string; n: number; from: Uint32Array; to: Uint32Array; longer: Float64Array; commutes: Float64Array; air: Float32Array; car: Float32Array }
+/** A kind of day's corridors: the table's longer trips and commute legs times `longerScale` and
+ * `commuteScale`, and the pairs with rail (`railAt`, ascending) their longer trips and commute legs
+ * by rail. */
+export interface Corridors { table: CorridorTable; longerScale: number; commuteScale: number; railAt: Uint32Array; longerRail: Float64Array; commuteRail: Float64Array }
+
+export const NO_CORRIDORS: Corridors = {
+  table: { key: "", n: 0, from: new Uint32Array(0), to: new Uint32Array(0), longer: new Float64Array(0), commutes: new Float64Array(0), air: new Float32Array(0), car: new Float32Array(0) },
+  longerScale: 0, commuteScale: 0, railAt: new Uint32Array(0), longerRail: new Float64Array(0), commuteRail: new Float64Array(0),
+};
+
+/** One corridor's figures a day: all trips (longer and commute legs), by rail, by plane, by car,
+ * and the commute legs alone. */
+export interface CorridorFigures { trips: number; rail: number; air: number; car: number; commutes: number; commuteRail: number }
+
+/** Corridor `j`'s figures; `k` its place in `railAt` (-1 none; looked up when left out). */
+export function corridorAt(c: Corridors, j: number, k = railIndex(c, j)): CorridorFigures {
+  const t = c.table, tl = t.longer[j] * c.longerScale, cm = t.commutes[j] * c.commuteScale;
+  const lr = k >= 0 ? c.longerRail[k] : 0, cr = k >= 0 ? c.commuteRail[k] : 0, rest = tl - lr;
+  return { trips: tl + cm, rail: lr + cr, air: rest * t.air[j], car: rest * t.car[j] + cm - cr, commutes: cm, commuteRail: cr };
+}
+
+/** Corridor `j`'s place in `railAt`, -1 when it has no rail. */
+export function railIndex(c: Corridors, j: number): number {
+  const a = c.railAt;
+  let lo = 0, hi = a.length - 1;
+  while (lo <= hi) {
+    const m = (lo + hi) >> 1;
+    if (a[m] === j) return m;
+    if (a[m] < j) lo = m + 1; else hi = m - 1;
+  }
+  return -1;
+}
+
+/** Every corridor whose places `keep` accepts, in table order, with its figures. */
+export function eachCorridor(c: Corridors, keep: (from: number, to: number) => boolean, f: (j: number, v: CorridorFigures) => void) {
+  const { from, to, n } = c.table, at = c.railAt;
+  for (let j = 0, k = 0; j < n; j++) {
+    while (k < at.length && at[k] < j) k++;
+    if (keep(from[j], to[j])) f(j, corridorAt(c, j, k < at.length && at[k] === j ? k : -1));
+  }
+}
 
 /** One kind of day's results (T-260, game/days.ts): the network's view, each city's, the market's.
  * Written together by workers/demandClient.ts. */
