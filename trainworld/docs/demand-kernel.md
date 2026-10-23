@@ -242,7 +242,7 @@ levels:
    the line's cost at that boarding in plain minutes, as any wait (T-585), in the strategy search,
    so riders spread to other lines, other stations or the car. The free-flow estimate has none.
    It runs inside the solve, never read back from the clock worker's account: the same rule on
-   the same trains, except that demand uses even headways and each period stands alone (no queue
-   carried in from the period before). Per period, not per hour; weekdays only, the weekend keeping
+   the same trains, except that demand uses even headways, each period stands alone (no queue
+   carried in from the period before) and nobody goes another way (the account's T-1067). Per period, not per hour; weekdays only, the weekend keeping
    the weekday's waits with its route and mode choices (4.2). Why, and the effect on the real New
    York save: DECISIONS 2026-10-13 (T-188), notes/T-188.md.

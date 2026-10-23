@@ -70,6 +70,10 @@ export function readBoardHour(epoch: number, b: Float32Array): BoardHour {
   return { epoch, trips: nt, offs, loads, queues, queueCount: nq, events, pulses };
 }
 
+/** The most riders waiting on one platform side (T-1067, `WAITING_CAP` in boarding.rs): the account
+ * holds its crowds to it as trains leave, and a crowd drawn between two trains stops there too. */
+export const WAITING_CAP = 5000;
+
 /** Riders who changed onto platform `q` from other lines' trains in (`t0`, `t`] (T-554). */
 export function pulsesBetween(h: BoardHour, q: number, t0: number, t: number): number {
   const base = q * QUEUE_STRIDE, P = h.pulses;
@@ -101,7 +105,7 @@ export function crowdAt(h: BoardHour, q: number, t: number): { waiting: number; 
     else hi = mid - 1;
   }
   const t0 = E[lo * 2], left = E[lo * 2 + 1];
-  const waiting = left + Math.max(0, t - t0) * Q[base + 4] + pulsesBetween(h, q, t0, t);
+  const waiting = Math.min(WAITING_CAP, left + Math.max(0, t - t0) * Q[base + 4] + pulsesBetween(h, q, t0, t));
   return { waiting, leftBehind: left >= 1, left };
 }
 

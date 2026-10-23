@@ -13,7 +13,7 @@ import { BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connec
 
 import { LEVEL_COLOURS, NET_INK, PLATFORM_BLUE, rgb, SPEED_STOPS } from "../game/palette";
 import { shadeColours } from "../game/shades";
-import { platformRoom, pulsesBetween, readBoardHour, QUEUE_STRIDE, type BoardHour } from "../game/boarding";
+import { platformRoom, pulsesBetween, readBoardHour, QUEUE_STRIDE, WAITING_CAP, type BoardHour } from "../game/boarding";
 import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, PSI_PER_UNIT } from "./geo";
 import { GradeMarks } from "./gradeMarks";
 import { F_BLUEPRINT, lineAt, type NetworkBuffers, type Strokes } from "./network";
@@ -2237,7 +2237,7 @@ export class NetworkRenderer {
         if (E[mid * 2] <= t) lo = mid;
         else hi = mid - 1;
       }
-      const left = E[lo * 2 + 1], waiting = left + Math.max(0, t - E[lo * 2]) * Q[base + 4] + pulsesBetween(b, q, E[lo * 2], t);
+      const left = E[lo * 2 + 1], waiting = Math.min(WAITING_CAP, left + Math.max(0, t - E[lo * 2]) * Q[base + 4] + pulsesBetween(b, q, E[lo * 2], t));
       const k = side[q] > 0 ? 0 : 1;
       w[s * 2 + k] += waiting;
       if (waiting >= 1) any = true;

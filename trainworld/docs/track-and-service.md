@@ -743,6 +743,14 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   staying aboard join the first stop's queue when their train arrives there, ahead of later
   arrivals, so they leave on that run's next departure, normally the same train after its hold (a
   second pass of the account). In the books they leave and board again there.
+- **Riders go another way** (T-1067, `GIVE_UP_S`, `WAITING_CAP`): demand's crowding rounds price
+  riders left behind but do not hold a line to what it can carry, so an overloaded line would
+  otherwise gather a queue that only grows. A rider whom full trains have kept more than 30 minutes
+  past the first train they came for leaves the platform (as a train leaves, the oldest first), and
+  one platform side (a direction of a line at a stop) holds at most 5,000 waiting: whoever comes
+  when it is full is turned away. Neither boards, so neither counts in the line's boardings
+  (`RunAccount::gone`); demand's riders and fares are unchanged. A drawn crowd between two trains
+  stops at 5,000 too.
 - **Local time** (T-309): a line's account runs on its own local time (`LineAccount::shift`): its
   hours, busiest hours, kind of day and "today" from its local midnight. The money settles each
   local time's lines by their own period and day (`localGroups` in the clock worker).
@@ -787,7 +795,7 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   platform for drawing. Each direction's riders wait on one side, 2.5 m of usable width (half a
   6 m island platform less the edge strip kept clear) along the platform's length, at 0.3 m² a
   rider (why: DECISIONS, T-219). A 150 m platform holds 1,250 a side. Only the drawing uses it: the
-  account still lets a crowd grow past it (nobody is turned away from a platform).
+  account lets a crowd grow past it, up to `WAITING_CAP` (above).
 - **Cost and how full trains get**: measured on the real New York save in notes/T-164.md,
   notes/T-554.md and notes/T-207.md.
 - **What the panels show** (T-230): every train-fullness figure is the account's: the gauge on

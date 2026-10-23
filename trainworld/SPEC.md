@@ -50,7 +50,8 @@ the game scale to hundreds of cities come first.
 so nothing ticks per train. Passengers are flows, not agents: trips per period between places,
 route and mode choice solved in workers when service changes. The clock worker turns the loads into
 a **boarding account** per line [T-164]: each train's load and each platform's crowd, worked out a
-day at a time. [docs/architecture.md](docs/architecture.md) 2.
+day at a time; a rider full trains leave behind for 30 minutes goes another way, and a platform side
+holds at most 5,000 [T-1067]. [docs/architecture.md](docs/architecture.md) 2.
 
 **2.1 No signals, for now.** Trains do not block each other; tangles cost delay through capacity
 computed from schedules (section 6). Trains are drawn from keyframes on a directed track graph, so

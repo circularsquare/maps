@@ -5,7 +5,8 @@
 //! period, how many board and how many alight. Here those boardings arrive at the platform over the
 //! period (a simple in-period shape, below), and each train of the line, in the order it reaches the
 //! stop, lets off the line's share alighting there and takes on whoever is waiting, up to its crush
-//! load. Whoever does not fit waits for the next train of the same line and direction. Trains do
+//! load. Whoever does not fit waits for the next train of the same line and direction, until full
+//! trains have kept them `GIVE_UP_S` or the platform holds `WAITING_CAP` (T-1067). Trains do
 //! not block each other (no signals, SPEC 2.1), so each direction of each line is one independent
 //! loop over its departures and stops.
 //!
@@ -28,6 +29,13 @@ pub const SEATS_PER_CAR: f64 = 44.0;
 pub const CRUSH_PER_CAR: f64 = 160.0;
 pub const DAY: f64 = 86400.0;
 pub const PERIODS: usize = PERIOD_HOURS.len();
+/// T-1067: a rider whom full trains have kept this long past the first train they came for goes
+/// another way (DECISIONS 2026-10-23).
+pub const GIVE_UP_S: f64 = 1800.0;
+/// T-1067: the most riders waiting on one platform side (a direction of a line at a stop), what a
+/// 300 m platform's side 5 m deep holds at 0.3 m² a rider; whoever comes when it is full goes
+/// another way. `WAITING_CAP` in app/src/game/boarding.ts.
+pub const WAITING_CAP: f64 = 5000.0;
 
 /// How each period's boardings spread over it: the peaks and midday rise to the middle and fall
 /// away (a tent), the evening falls from its start, the night is busiest at its two ends. Scaled so
@@ -205,6 +213,9 @@ pub struct RunAccount {
     /// platform as it leaves; riders on the platform as it arrived.
     pub load: Vec<f32>,
     pub q_after: Vec<f32>,
+    /// `[trip * n + stop]`: riders who went another way as the train left (T-1067: `GIVE_UP_S`,
+    /// `WAITING_CAP`), never boarding.
+    pub gone: Vec<f32>,
     /// Per stop, the trips in the order they leave it in a day (`stop * trips + k`), and the time
     /// of day each leaves it.
     pub order: Vec<u32>,
@@ -214,10 +225,11 @@ pub struct RunAccount {
     pub left_h: Vec<f32>,
     pub wait_h: Vec<f32>,
     pub arrivals: Vec<Arrivals>,
-    /// Totals over the day, for checks: riders who arrived, boarded, alighted.
+    /// Totals over the day, for checks: riders who arrived, boarded, alighted, went another way.
     pub arrived: f64,
     pub boarded: f64,
     pub alighted: f64,
+    pub gave_up: f64,
     /// Riders still waiting at a stop once the day's last train has left it.
     pub leftover: f64,
     /// When the line's trains started, in its local time, if within this account's day (T-680):
@@ -746,7 +758,7 @@ impl Boarding {
     ///
     /// A stop's boardings since midnight telescope: the riders who have arrived by its last
     /// departure, less those still waiting after it, less the same at its last departure before
-    /// midnight. Riders left behind are counted per departure as in `simulate` (who arrived since
+    /// midnight, less those who went another way (`tally`). Riders left behind are counted per departure as in `simulate` (who arrived since
     /// the train before and is still waiting).
     pub fn today(&self, svc: &Service, t: f64) -> Vec<f64> {
         self.window(svc, t, false)
@@ -917,7 +929,8 @@ impl Boarding {
     /// Add one account's departures with time of day in (`from`, `to`] to `w`; full trains' times
     /// are shifted by `off`. A stop's boardings telescope: the riders who have arrived by its last
     /// departure in the window, less those still waiting after it, less the same at the departure
-    /// before the window (the day's last, a day earlier, when `from` is before the first).
+    /// before the window (the day's last, a day earlier, when `from` is before the first), less
+    /// those who went another way in the window.
     /// `day0` is the local time of the window's midnight.
     fn tally(&self, acc: &LineAccount, ls: &LineSvc, from: f64, to: f64, off: f64, day0: f64, w: &mut Tally) {
         let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
@@ -955,6 +968,8 @@ impl Boarding {
                         a = (arr.cum(ts[j]) - arr.cum(open)).max(0.0);
                     }
                     w.left += a.min(q(j));
+                    // T-1067: those who went another way never boarded
+                    b -= ra.gone[ord[j] as usize * n + k] as f64;
                     (prev, q_prev) = (ts[j], q(j));
                 }
                 let b = b.max(0.0);
@@ -1168,6 +1183,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         stop_dep: stop_dep.clone(),
         load: vec![0.0; mk * n],
         q_after: vec![0.0; mk * n],
+        gone: vec![0.0; mk * n],
         order: vec![0; mk * n],
         order_t: vec![0.0; mk * n],
         left_h: vec![0.0; n * 24],
@@ -1176,6 +1192,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         arrived: 0.0,
         boarded: 0.0,
         alighted: 0.0,
+        gave_up: 0.0,
         leftover: 0.0,
         open,
         stop_open: vec![f64::NEG_INFINITY; n],
@@ -1208,18 +1225,29 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
             hist.push((t_prev, c_prev));
         }
         let mut head = 0usize;
+        // riders turned away by `WAITING_CAP` so far: `hist` and `c_prev` count only those who
+        // joined the queue, so it stays one run of arrivals, oldest first
+        let mut turned = 0.0f64;
         for &i in &order {
             let t = time(i, k);
             if open > t_prev && open <= t {
                 q = 0.0;
-                c_prev = arr.cum(open);
+                c_prev = arr.cum(open) - turned;
                 hist.clear();
                 hist.push((open, c_prev));
                 head = 0;
             }
-            let c_now = arr.cum(t);
+            let mut c_now = arr.cum(t) - turned;
             let a = if c_prev.is_nan() { 0.0 } else { (c_now - c_prev).max(0.0) };
-            let q_before = q + a;
+            // T-1067: whoever was waiting when a train left more than GIVE_UP_S ago has been left
+            // behind that long, and went; then the platform holds at most WAITING_CAP, the latest
+            // arrivals turned away (a second's slack: a train exactly GIVE_UP_S on is still taken)
+            let cut = hist.partition_point(|x| x.0 < t - GIVE_UP_S - 1.0);
+            let gave = if cut > 0 { (hist[cut - 1].1 - (c_now - q - a)).clamp(0.0, q) } else { 0.0 };
+            let over = (q - gave + a - WAITING_CAP).max(0.0);
+            turned += over;
+            c_now -= over;
+            let q_before = q - gave + a - over;
             // head of the queue: the first rider not yet on a train, and when they arrived
             let first_rider = c_now - q_before;
             while head + 1 < hist.len() && hist[head + 1].1 <= first_rider {
@@ -1248,8 +1276,11 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
                 let j = slot[i] as usize;
                 acc.load[j * n + k] = if k + 1 < n { load as f32 } else { 0.0 };
                 acc.q_after[j * n + k] = q_after as f32;
+                acc.gone[j * n + k] = (gave + over) as f32;
                 let h = ((t.rem_euclid(DAY) / 3600.0).floor() as usize).min(23);
-                acc.left_h[k * 24 + h] += a.min(q_after) as f32;
+                // the riders who came since the last train and did not get on this one (those
+                // waiting before them board first)
+                acc.left_h[k * 24 + h] += (a - (b - (q - gave)).max(0.0)).max(0.0) as f32;
                 if b > 0.0 || q_before > 0.0 {
                     let w = (t - since).max(0.0) as f32;
                     if w > acc.wait_h[k * 24 + h] {
@@ -1258,6 +1289,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
                 }
                 acc.arrived += a;
                 acc.boarded += b;
+                acc.gave_up += gave + over;
                 acc.alighted += off + if k + 1 < n { 0.0 } else { load };
             }
             hist.push((t, c_now));
@@ -1579,21 +1611,54 @@ mod tests {
         // the queue at A, train by train through the day
         let q: Vec<(f64, f32, f32)> = (0..m).map(|j| (ra.order_t[j], ra.q_after[ra.order[j] as usize * 3], ra.load[ra.order[j] as usize * 3])).collect();
         let at = |h: f64| q.iter().filter(|e| e.0 < h * 3600.0).last().unwrap().1;
-        assert!(at(7.0) > 0.0 && at(9.0) > at(7.0) && at(10.0) > at(9.0), "{} {} {}", at(7.0), at(9.0), at(10.0));
-        // 4 hours of 4,000 an hour too many: 16,000 left at 10:00, give or take a headway
-        assert!((at(10.0) - 16000.0).abs() < 1700.0, "{}", at(10.0));
+        assert!(at(7.0) > 0.0 && at(9.0) >= at(7.0), "{} {}", at(7.0), at(9.0));
+        // T-1067: 400 more a train than it takes, until the platform holds WAITING_CAP as a train
+        // comes (2,000 arriving a headway): 3,400 left as each leaves, from about 07:00 to 10:00
+        assert!(q.iter().filter(|e| e.0 > 7.2 * 3600.0 && e.0 < 10.0 * 3600.0).all(|e| (e.1 as f64 - (WAITING_CAP - cap)).abs() < 1e-3), "{}", at(9.0));
         // every train in the peak leaves full
         assert!(q.iter().filter(|e| e.0 > 6.5 * 3600.0 && e.0 < 10.0 * 3600.0).all(|e| (e.2 as f64 - cap).abs() < 1e-3));
-        // midday trains (5 an hour, 8,000 of room against 2,000 arriving) clear it within about
-        // 2.7 hours
-        assert!(at(12.0) > 0.0 && at(13.5) < 1.0, "{} {}", at(12.0), at(13.5));
-        // nobody is lost: in = on + still waiting at the end of the day (none)
-        assert!((ra.arrived - ra.boarded).abs() < 1e-6 * ra.arrived);
+        // midday trains (5 an hour, 8,000 of room against 2,000 arriving) clear it within the hour
+        assert!(at(10.25) > 0.0 && at(11.0) < 1.0, "{} {}", at(10.25), at(11.0));
+        // nobody is lost: in = on + turned away (the day ends with nobody waiting): the peak's
+        // 16,000 too many less the 3,400 still waiting at its end, who board at midday
+        assert!((ra.gave_up - (16000.0 - (WAITING_CAP - cap))).abs() < 1000.0, "{}", ra.gave_up);
+        assert!((ra.arrived - ra.boarded - ra.gave_up).abs() < 1e-6 * ra.arrived);
         // riders left behind and long waits are reported for the peak's hours
         assert!(ra.left_h[8] > 1000.0);
-        assert!(ra.wait_h[9] > 1800.0, "{}", ra.wait_h[9]);
+        assert!(ra.wait_h[9] > 900.0, "{}", ra.wait_h[9]);
         // once it has cleared, the longest wait is a headway (5 trains an hour at midday)
         assert!(ra.wait_h[15] < 730.0, "{}", ra.wait_h[15]);
+        // the day's boardings in `today` leave out those turned away
+        let v = b.today(&w.svc, 2.0 * DAY + 23.999 * 3600.0);
+        let boarded: f64 = b.accounts[0][l as usize].as_ref().unwrap().runs.iter().map(|r| r.boarded).sum();
+        assert!((v[3] - boarded).abs() < 0.01 * boarded, "{} {boarded}", v[3]);
+    }
+
+    /// T-1067: riders whom full trains leave behind for GIVE_UP_S go another way, so the queue
+    /// stops growing well under WAITING_CAP and nobody waits for hours.
+    #[test]
+    fn riders_left_behind_too_long_go_another_way() {
+        // 2 trains an hour of 1,600 against 4,000 an hour from 06:00 to 10:00
+        let (w, l) = setup(2.0);
+        let mut b = Boarding::default();
+        b.set_riders(&riders(l, [4000.0, 500.0, 500.0, 500.0, 50.0]));
+        b.ensure(&w.net, &w.svc);
+        let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
+        let m = ra.deps.len();
+        let most = (0..m).map(|j| ra.q_after[j * 3]).fold(0.0f32, f32::max) as f64;
+        // it grows by 400 a train until riders start to go, under a headway's 2,000 more and
+        // well short of the 3,200 a peak with nobody going would leave
+        assert!(most > 2000.0 && most < 2500.0, "{most}");
+        // whoever is left waits at most GIVE_UP_S past their first train: in the peak the head of
+        // the queue waits under that plus two headways (the night's trains are 2 hours apart)
+        let longest = ra.wait_h[6..10].iter().fold(0.0f32, |a, &b| a.max(b)) as f64;
+        assert!(longest > GIVE_UP_S && longest <= GIVE_UP_S + 2.0 * 1800.0 + 1.0, "{longest}");
+        // the peak's 3,200 too many went another way, those still waiting at 10:00 at the next
+        // train an hour on (all of them left behind more than GIVE_UP_S by then)
+        assert!((ra.gave_up - 3200.0).abs() < 300.0, "{}", ra.gave_up);
+        assert!((ra.arrived - ra.boarded - ra.gave_up).abs() < 1e-6 * ra.arrived);
+        let gone: f64 = ra.gone.iter().map(|&g| g as f64).sum();
+        assert!((gone - ra.gave_up).abs() < 1e-3 * ra.gave_up);
     }
 
     #[test]
