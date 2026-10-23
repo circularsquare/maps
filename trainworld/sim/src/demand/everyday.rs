@@ -1879,6 +1879,22 @@ impl EverydayApi {
                 }
             }
             let ride_m = p.ride_min_km * 1000.0;
+            let rule = p.walk_rule > 0.0 && sk.walk.len() == ss;
+            // T-1059: per subzone, the most its trips walk before their last station, and the most
+            // they walk from one: a pair within its distance on both counts keeps every pair
+            // (and per access entry its walk, and that plus the most its station walks on)
+            let (mut acc_walk, mut acc_from) = (vec![0f32; if rule { na } else { 0 }], vec![0f32; if rule { na } else { 0 }]);
+            let (mut rule_from, mut rule_to) = (vec![0f32; if rule { sz.n } else { 0 }], vec![0f32; if rule { sz.n } else { 0 }]);
+            if rule {
+                for u in 0..sz.n {
+                    for k in sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize {
+                        acc_walk[k] = walked(sz, u, k);
+                        acc_from[k] = acc_walk[k] + sk.walk_max[sz.acc_st[k] as usize] as f32;
+                        rule_from[u] = rule_from[u].max(acc_from[k]);
+                        rule_to[u] = rule_to[u].max(acc_walk[k]);
+                    }
+                }
+            }
             let density = self.engine.z.density();
             let park: Vec<(f32, f32, f32)> = (0..self.engine.z.n).map(|j| p.park_parts(&self.engine.z, j)).collect();
             for (i, pair) in self.pairs.iter().enumerate() {
@@ -1906,7 +1922,8 @@ impl EverydayApi {
                 let x = pair.v as usize;
                 let (xr, xm) = (sz.walk(x), min[x]);
                 // T-558: walking the whole way, over the pair's mean distance
-                let cw = p.walk_trip_cost(pair.distance * self.walk_factor_sz(sz, h, x) / 1000.0);
+                let walk_on = pair.distance * self.walk_factor_sz(sz, h, x);
+                let cw = p.walk_trip_cost(walk_on / 1000.0);
                 for direction in 0..2 {
                     let ((a, ma, wa), (b, mb, wb)) = if direction == 0 {
                         ((hr.clone(), hm, hw), (xr.clone(), xm, &acc))
@@ -1917,12 +1934,19 @@ impl EverydayApi {
                         continue;
                     }
                     let (u, v) = if direction == 0 { (h, x) } else { (x, h) };
+                    // T-1059: station pairs walking further than walking there are no option
+                    let check = rule && rule_from[u] + rule_to[v] > walk_on;
+                    let keep = |ka: usize, kb: usize| {
+                        !check || acc_from[ka] + rule_to[v] <= walk_on || walk_ok(acc_walk[ka], sk.walk[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize], acc_walk[kb], walk_on)
+                    };
                     let mut sum = 0.0;
                     for ka in a.clone() {
                         for kb in b.clone() {
-                            sum += wa[ka]
-                                * wb[kb]
-                                * er[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize];
+                            if keep(ka, kb) {
+                                sum += wa[ka]
+                                    * wb[kb]
+                                    * er[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize];
+                            }
                         }
                     }
                     if sum < 1e-30 {
@@ -1953,6 +1977,9 @@ impl EverydayApi {
                     for ka in a.clone() {
                         cols.rows[sz.acc_st[ka] as usize] = true;
                         for kb in b.clone() {
+                            if !keep(ka, kb) {
+                                continue;
+                            }
                             let ia = sz.acc_st[ka] as usize;
                             let ib = sz.acc_st[kb] as usize;
                             od[ia * s + ib] += trips * wa[ka] * wb[kb] * er[ia * s + ib];

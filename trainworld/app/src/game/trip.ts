@@ -93,8 +93,8 @@ export interface TripPair {
 }
 
 /** Why the train is not a choice for a trip. */
-export type NoRail = "" | "noStationStart" | "noStationEnd" | "walksTooLong" | "noRoute";
-const WHY: NoRail[] = ["", "noStationStart", "noStationEnd", "walksTooLong", "noRoute"];
+export type NoRail = "" | "noStationStart" | "noStationEnd" | "walksTooLong" | "noRoute" | "walkFurther";
+const WHY: NoRail[] = ["", "noStationStart", "noStationEnd", "walksTooLong", "noRoute", "walkFurther"];
 
 /** The trip in one period. Minutes are perceived where named so, else real. */
 export interface TripPeriod {

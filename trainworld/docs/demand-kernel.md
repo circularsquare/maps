@@ -163,7 +163,7 @@ levels:
    graph each. A worker keeps two tables; when a third graph comes, the table with the fewest
    searched destinations gives way, and only to one with at least as many to search (a cheaper one
    is searched for that call alone), so the order populations are solved in does not change what
-   is searched (T-405). A table is stations² costs plus, per searched destination, each node's next
+   is searched (T-405). A table is stations² costs and stations² walks (u16 metres, T-1059) plus, per searched destination, each node's next
    node and the settle order (u16 ids below 65,535 nodes, change nodes included), one bit per
    boarding route node for the departures accepted there (their trains an hour are the graph's),
    and each change node's station and a bit per boarding edge of that station for the departures
@@ -208,6 +208,25 @@ levels:
    selected cells before any is weighed) and answer only the far cells they reach; the main
    thread adds the workers' answers up over those cells (`workers/selectionMerge.ts`; T-285,
    timings in notes/demand-kernel-history.md).
+   **Anita's walking rule** (T-1059, `Params::walk_rule`): a station pair is no rail option for a
+   trip when the walk to its first station, the walks between stations and platforms on the way
+   and the walk from its last together are longer than walking between the trip's ends. All in
+   straight metres: an access entry's mean distance (none for a drive to the station), the
+   strategy's expected walks (`Skims::walk`, u16 metres station to station, worked out from each
+   destination's strategy as it is searched: a walk to another station from the platform left,
+   and at a change the walk to the first train's platform, by frequency), and for the trip the
+   distance its walk uses (commutes: between the subzones' centres; everyday: the pair's mean),
+   times the pack's walk factor round water. The refused pairs leave the logsum, so rail costs
+   more there, and a trip with none left has no rail (the trip explorer says walking is
+   shorter). The commutes keep their lanes: each origin knows the most its trips can walk before
+   their last station (an access walk and the most its station walks on to any destination,
+   `Skims::walk_max`), and a lane whose distance is past that and its destination's longest
+   egress walk is taken as before (98% of lanes on the real New York and Tokyo networks). Only the
+   rest look at their station pairs one by one, scale the lane's logsum by the share kept, load as
+   usual and take the refused pairs off again, or, where most are refused, load the kept pairs
+   alone (f32 would lose too much in the taking off). The everyday pass, the pair choice
+   (`walk_kept`) and the trip explorer skip the refused pairs in their own loops. Long trips between cities do not apply it (their
+   walks are never close to the trip's length).
 6. **Loading**: each destination's strategy is walked from farthest settled nodes towards it.
    Station flow (and a change node's) splits by accepted departure frequency, retaining each line's individual segment
    loads and boarding/alighting counts (T-069). Transfers are counted beside the loads (T-176,

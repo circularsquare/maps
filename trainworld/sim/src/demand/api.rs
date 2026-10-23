@@ -484,7 +484,7 @@ impl DemandApi {
         // the strategies are shared with the other populations on the same service (T-119)
         let (mo, l) = with_skims(g, p, &self.want, |sk| {
             let er = station_exp(sk, p);
-            let mo = mode_choice(&self.z, &self.gr, sz, &er, g.n_st, p, &self.nr);
+            let mo = mode_choice(&self.z, &self.gr, sz, &er, &sk.walk, &sk.walk_max, g.n_st, p, &self.nr);
             drop(er);
             // the trips home: the same station pairs reversed
             let s = g.n_st;
@@ -1876,7 +1876,7 @@ mod tests {
         let sz = api.sz.as_ref().unwrap();
         let sk = kernel::skims(&st.g, &st.p);
         let er = kernel::station_exp(&sk, &st.p);
-        let mo = kernel::mode_choice(&api.z, &api.gr, sz, &er, st.g.n_st, &st.p, &api.nr);
+        let mo = kernel::mode_choice(&api.z, &api.gr, sz, &er, &sk.walk, &sk.walk_max, st.g.n_st, &st.p, &api.nr);
         let s = st.g.n_st;
         let (w, h) = (TO_WORK[0], TO_HOME[0]);
         let (fw, fh) = (w / (w + h), h / (w + h));
@@ -2481,7 +2481,7 @@ mod tests {
             let er = kernel::station_exp(&sk, &st.p);
             let t_er = now_ms() - t;
             let t = now_ms();
-            let mo = kernel::mode_choice(&a.z, &a.gr, a.sz.as_ref().unwrap(), &er, g.n_st, &st.p, &a.nr);
+            let mo = kernel::mode_choice(&a.z, &a.gr, a.sz.as_ref().unwrap(), &er, &sk.walk, &sk.walk_max, g.n_st, &st.p, &a.nr);
             let t_mode = now_ms() - t;
             let t = now_ms();
             let _l = kernel::assign(&g, &sk, &mo.od);
@@ -2724,7 +2724,7 @@ mod tests {
         {
             let sk = kernel::skims_for(&st.g, &st.p, &a.want);
             let er = kernel::station_exp(&sk, &st.p);
-            let mo = kernel::mode_choice(&a.z, &a.gr, a.sz.as_ref().unwrap(), &er, st.g.n_st, &st.p, &a.nr);
+            let mo = kernel::mode_choice(&a.z, &a.gr, a.sz.as_ref().unwrap(), &er, &sk.walk, &sk.walk_max, st.g.n_st, &st.p, &a.nr);
             let (mut plain, mut counted) = (f64::INFINITY, f64::INFINITY);
             for _ in 0..7 {
                 let t = now_ms();

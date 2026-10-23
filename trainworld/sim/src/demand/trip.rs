@@ -45,6 +45,8 @@ pub const NO_STATION_AT_START: u32 = 1;
 pub const NO_STATION_AT_END: u32 = 2;
 pub const WALKS_TOO_LONG: u32 = 3;
 pub const NO_ROUTE: u32 = 4;
+/// Every station pair walks further than walking there (T-1059).
+pub const WALK_FURTHER: u32 = 5;
 
 /// Whether the home end could drive to a station (`HEAD` slot 41, T-910): the trip is shorter than
 /// `Params::ride_min_km`, the drives were among its ways to a station, or it has no station
@@ -141,6 +143,23 @@ pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims
         }
     }
     let d = ((sz.cx[u] - sz.cx[v]).powi(2) + (sz.cy[u] - sz.cy[v]).powi(2)).sqrt();
+    // T-1059: the station pairs walking further than walking there are no option
+    let routed = ssum >= 1e-30;
+    if p.walk_rule > 0.0 && sk.walk.len() == s * s {
+        let direct = d * api.gr.walk_factor(i, j);
+        let acc: Vec<(u32, f32, f32, u32)> = ru.clone().map(|k| (sz.acc_st[k], acc_e(k, m_u), walked(sz, u, k), k as u32)).collect();
+        let eg: Vec<(u32, f32, f32, u32)> = rv.clone().map(|k| (sz.acc_st[k], acc_e(k, m_v), sz.acc_d[k], k as u32)).collect();
+        let kept = walk_kept(&acc, &eg, er, &sk.walk, s, direct);
+        if kept < 1.0 {
+            ssum *= kept;
+            for e in pairs.iter_mut() {
+                let (a, t) = (sz.acc_st[e.0] as usize, sz.acc_st[e.1] as usize);
+                if !walk_ok(walked(sz, u, e.0), sk.walk[a * s + t], sz.acc_d[e.1], direct) {
+                    e.2 = 0.0;
+                }
+            }
+        }
+    }
     let drive_min = p.drive_min_f(d, p.drive_factor(i, j), p.place_min_per_km(zone_density(z, i)), p.place_min_per_km(zone_density(z, j)));
     let (fixed, paid, free) = p.park_parts(z, j);
     let rk = d * 0.001 * p.drive_factor(i, j);
@@ -153,8 +172,10 @@ pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims
     let b_u = if by_ride { sz.bound_min(p, u) } else { m_u };
     let why = if m_v > p.pair_walk_max - b_u {
         WALKS_TOO_LONG
-    } else if ssum < 1e-30 {
+    } else if !routed {
         NO_ROUTE
+    } else if ssum < 1e-30 {
+        WALK_FURTHER
     } else {
         RAIL_OFFERED
     };
@@ -204,19 +225,28 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
         let r = sk.r[a * s + t];
         if a == t || !r.is_finite() { 0.0 } else { fast_exp(-th * (r - off)) }
     };
+    // T-1059: station pairs walking further than walking there are no option, as the pass has it
+    let walk_on = distance * walk_factor;
+    let rule = p.walk_rule > 0.0 && sk.walk.len() == s * s;
+    let keep = |ka: usize, kb: usize| !rule || walk_ok(walked(sz, u, ka), sk.walk[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize], walked(sz, v, kb), walk_on);
     let logsum = |a: &std::ops::Range<usize>, ma: f32, out: &mut Vec<(usize, usize, f32)>| {
-        let mut sum = 0.0f32;
+        let (mut sum, mut all) = (0.0f32, 0.0f32);
         for ka in a.clone() {
             for kb in rv.clone() {
                 let w = acc_e(ka, ma) * acc_e(kb, m_v) * er(sz.acc_st[ka] as usize, sz.acc_st[kb] as usize);
+                all += w;
+                if !keep(ka, kb) {
+                    out.push((ka, kb, 0.0));
+                    continue;
+                }
                 sum += w;
                 out.push((ka, kb, w));
             }
         }
-        sum
+        (sum, all)
     };
     let mut pairs = Vec::with_capacity(ru.len() * rv.len());
-    let sum = logsum(&ru, m_u, &mut pairs);
+    let (sum, all) = logsum(&ru, m_u, &mut pairs);
     let density = |k: usize| p.place_min_per_km(zone_density(z, k));
     let f = p.drive_factor(i, j);
     let drive_min = p.drive_min_f(distance, f, density(i), density(j));
@@ -225,12 +255,14 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
     let road_free = car + fixed + sz.home_park[u];
     let park = fixed + (1.0 - free) * paid + sz.home_park[u];
     let road = car + park;
-    let cw = p.walk_trip_cost(distance * walk_factor / 1000.0);
+    let cw = p.walk_trip_cost(walk_on / 1000.0);
     let b_u = if by_ride { sz.bound_min(p, u) } else { m_u };
     let why = if b_u + m_v > p.pair_walk_max {
         WALKS_TOO_LONG
-    } else if sum < 1e-30 {
+    } else if all < 1e-30 {
         NO_ROUTE
+    } else if sum < 1e-30 {
+        WALK_FURTHER
     } else {
         RAIL_OFFERED
     };
@@ -909,7 +941,7 @@ mod tests {
                 let s = g.n_st;
                 let sk = kernel::skims(g, p);
                 let er = kernel::station_exp(&sk, p);
-                let mo = kernel::mode_choice(&api.z, &api.gr, sz, &er, s, p, &api.nr);
+                let mo = kernel::mode_choice(&api.z, &api.gr, sz, &er, &sk.walk, &sk.walk_max, s, p, &api.nr);
                 let (z, gr) = (&api.z, &api.gr);
                 let share = p.period_share as f64;
                 let mut od = vec![0f64; s * s];

@@ -167,6 +167,10 @@ pub struct Params {
     /// 0 turns it off. T-007: crossing lines at different levels cannot share a station node.
     /// Stations of one complex (`Network::st_group`, T-161) are walks whatever the distance.
     pub xfer_walk_m: f32,
+    /// Anita's walking rule (T-1059): a station pair is no rail option for a trip when the walks
+    /// to, between and from its stations (straight metres, `Skims::walk`) are longer than walking
+    /// the trip's ends' distance, around water where the pack routes walks. 0 turns it off.
+    pub walk_rule: f32,
     /// The transfer walk is on foot: speed and perceived weight (Subway Builder's 1.39).
     pub xfer_mps: f32,
     pub w_xfer: f32,
@@ -315,6 +319,7 @@ impl Default for Params {
             walk_bonus_min: 10.0,
             walk_samples: 6,
             xfer_walk_m: 300.0,
+            walk_rule: 1.0,
             xfer_mps: 1.2,
             w_xfer: 1.39,
             station_merge_m: 100.0,
@@ -358,6 +363,7 @@ impl Params {
             "transfer_min" => self.transfer_min = v,
             "crowd_alpha" => self.crowd_alpha = v,
             "xfer_walk_m" => self.xfer_walk_m = v,
+            "walk_rule" => self.walk_rule = v,
             "station_merge_m" => self.station_merge_m = v,
             // the gravity holds the walk's costs: `DemandApi::refresh_walk` after these
             "walk_trip_w" => self.walk_trip_w = v,
@@ -2557,6 +2563,12 @@ pub struct Skims {
     pub n: usize,
     /// Generalised minutes station to station (expected wait + ride + transfers), S x S.
     pub r: Vec<f32>,
+    /// Straight metres walked between stations and platforms on the way, station to station, as
+    /// `r` (T-1059, `walk_column`), saturating at `u16::MAX` where there is no route.
+    pub walk: Vec<u16>,
+    /// Per station, the most `walk` from it to any searched destination: what lets the walking
+    /// rule pass most trips without looking at their station pairs.
+    pub walk_max: Vec<u16>,
     /// Each destination's slot in the arrays below, `NONE` if it was not searched.
     pub slot: Vec<u32>,
     /// Per searched destination (by slot), kept apart so adding one never moves the rest:
@@ -2648,7 +2660,7 @@ fn accepted(bits: &[u64], g: &Graph, r: usize) -> f32 {
 
 impl Skims {
     pub fn empty(g: &Graph) -> Skims {
-        Skims { s: g.n_st, n: g.n, r: vec![f32::INFINITY; g.n_st * g.n_st], slot: vec![NONE; g.n_st], next: vec![], board: vec![], order: vec![], change: vec![] }
+        Skims { s: g.n_st, n: g.n, r: vec![f32::INFINITY; g.n_st * g.n_st], walk: vec![u16::MAX; g.n_st * g.n_st], walk_max: vec![0; g.n_st], slot: vec![NONE; g.n_st], next: vec![], board: vec![], order: vec![], change: vec![] }
     }
     /// The most change nodes of any searched destination.
     pub fn most_change_nodes(&self) -> usize {
@@ -2682,15 +2694,104 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
         return;
     }
     let mut q = DestSearch::new(g, p);
+    let mut wm = vec![];
+    let mut dep = vec![];
     for &dst in &todo {
         sk.slot[dst] = sk.next.len() as u32;
         let d = q.run(dst, Some(&mut sk.r));
+        walk_column(g, p, d.view(), dst, &mut wm, &mut dep);
+        let s = g.n_st;
+        for (a, &m) in wm[..s].iter().enumerate() {
+            if m.is_finite() {
+                let w = m.round().min(u16::MAX as f32 - 1.0) as u16;
+                sk.walk[a * s + dst] = w;
+                sk.walk_max[a] = sk.walk_max[a].max(w);
+            } else {
+                sk.walk[a * s + dst] = u16::MAX;
+            }
+        }
         sk.next.push(d.next);
         sk.board.push(d.board);
         sk.order.push(d.order);
         sk.change.push(d.change);
     }
 }
+
+/// The straight metres each node walks on its way to `dst` under strategy `st` (T-1059), into `wm`
+/// (node ids, change nodes from `g.n`; infinite where the strategy does not reach): a walk to
+/// another station from the platform left, and at a change the walk from where the rider stands
+/// to the platform of the first train, expected over the departures by frequency (T-717). A
+/// boarding rides a stop first (T-1055). Read in settle order, so every next node is done first.
+pub fn walk_column(g: &Graph, p: &Params, st: Strategy, dst: usize, wm: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
+    match (st.next, st.order) {
+        (NodeIds::Short(next), NodeIds::Short(order)) => walk_column_in(g, p, st, dst, next, order, wm, dep),
+        (NodeIds::Long(next), NodeIds::Long(order)) => walk_column_in(g, p, st, dst, next, order, wm, dep),
+        _ => unreachable!("a destination's ids in two widths"),
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn walk_column_in<I: Id>(g: &Graph, p: &Params, st: Strategy, dst: usize, next: &[I], order: &[I], wm: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
+    let (s, n) = (g.n_st, g.n);
+    wm.clear();
+    wm.resize(n + st.change.len(), f32::INFINITY);
+    // a walk edge's perceived minutes back to straight metres (`build_graph`: `xfer_min(d) * w_xfer`)
+    let to_m = p.xfer_mps * 60.0 / (p.w_xfer * p.walk_detour);
+    let on_train = |v: usize| (s..n).contains(&next[v].ix());
+    for &id in order {
+        let id = id.ix();
+        if id == dst {
+            wm[id] = 0.0;
+        } else if id < s || id >= n {
+            departures(g, st.board, st.change, id, dep);
+            let (mut f, mut w) = (0f32, 0f32);
+            for &(e, a) in dep.iter() {
+                let r = g.adj_to[e as usize] as usize - s;
+                let k = if on_train(s + r) { wm[s + r] } else { wm[g.rn_next[r] as usize] };
+                if k.is_finite() {
+                    f += a;
+                    w += a * k;
+                }
+            }
+            if f > 0.0 {
+                wm[id] = w / f;
+            }
+        } else {
+            let nx = next[id].ix();
+            if nx >= n + st.change.len() {
+                continue;
+            }
+            if on_train(id) {
+                wm[id] = wm[nx];
+                continue;
+            }
+            let r = id - s;
+            let here = g.rn_station[r] as usize;
+            let to = if nx < s { nx } else { st.change.st[nx - n] as usize };
+            let walk = if to != here {
+                (g.adj_off[id] as usize..g.adj_off[id + 1] as usize).find(|&e| g.adj_to[e] as usize == to).map_or(0.0, |e| g.adj_cost[e] * to_m)
+            } else {
+                0.0
+            };
+            let (ax, ay) = if to == here { (g.rn_dx[r], g.rn_dy[r]) } else { (0.0, 0.0) };
+            let mut plat = 0.0;
+            if nx != dst && g.st_spread[to] {
+                departures(g, st.board, st.change, nx, dep);
+                let (mut f, mut w) = (0f32, 0f32);
+                for &(e, a) in dep.iter() {
+                    let r2 = g.adj_to[e as usize] as usize - s;
+                    f += a;
+                    w += a * (g.rn_dx[r2] - ax).hypot(g.rn_dy[r2] - ay);
+                }
+                if f > 0.0 {
+                    plat = w / f;
+                }
+            }
+            wm[id] = walk + plat + wm[nx];
+        }
+    }
+}
+
 
 /// One destination's strategy, as a `Skims` slot holds it.
 pub struct DestStrategy {
@@ -3498,8 +3599,58 @@ pub struct ModeOut {
 /// An origin first lists its pairs within the walk bound, then takes them eight at a time in
 /// `lanes::F8` (T-036): every lane runs the scalar expressions in their order and every sum keeps
 /// its order, so the results are those of one pair at a time to the bit (`trip::pair_choice`).
-pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize, p: &Params, nr: &NoRail) -> ModeOut {
+/// Anita's walking rule (T-1059): station pair (a, t) is a rail option for a trip whose ends are
+/// `direct` metres apart on foot when the walk to a, the strategy's walks between stations
+/// (`Skims::walk`, `between`) and the walk from t together are no longer.
+#[inline]
+pub fn walk_ok(walk_a: f32, between: u16, walk_t: f32, direct: f32) -> bool {
+    between != u16::MAX && walk_a + between as f32 + walk_t <= direct
+}
+
+/// Metres subzone `u`'s access entry `k` walks: a walk entry's mean, none on a drive (T-1059).
+#[inline]
+pub fn walked(sz: &Subzones, u: usize, k: usize) -> f32 {
+    if k < sz.acc_mid[u] as usize { sz.acc_d[k] } else { 0.0 }
+}
+
+/// The share of a trip's station-pair weight on pairs `walk_ok` keeps: over access and egress
+/// entries (station, weight, metres walked, `Subzones` entry) and `er(a, t)`. `mode_choice`
+/// reaches the same share from its lanes.
+pub(crate) fn walk_kept(acc: &[(u32, f32, f32, u32)], eg: &[(u32, f32, f32, u32)], er: impl Fn(usize, usize) -> f32, walk_tab: &[u16], s: usize, direct: f32) -> f32 {
+    let (mut tot, mut kept) = (0f32, 0f32);
+    for &(a, w, wa, _) in acc {
+        for &(t, e, wt, _) in eg {
+            let (a, t) = (a as usize, t as usize);
+            let c = w * er(a, t) * e;
+            if c > 0.0 {
+                tot += c;
+                if walk_ok(wa, walk_tab[a * s + t], wt, direct) {
+                    kept += c;
+                }
+            }
+        }
+    }
+    // the kept part summed alone, so a trip that keeps a sliver keeps it exactly
+    if tot > 0.0 { (kept / tot).min(1.0) } else { 1.0 }
+}
+
+pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail) -> ModeOut {
     let share = p.period_share as f64;
+    // T-1059: Anita's walking rule, with the strategies' walks between stations (`Skims::walk`)
+    let rule = p.walk_rule > 0.0 && walk_tab.len() == s * s && walk_max.len() == s;
+    // per access entry its walk, and that and the most its station walks on (`Skims::walk_max`)
+    let (mut acc_walk, mut acc_from) = (vec![0f32; sz.acc_st.len()], vec![0f32; sz.acc_st.len()]);
+    if rule {
+        for u in 0..sz.n {
+            for k in sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize {
+                acc_walk[k] = walked(sz, u, k);
+                acc_from[k] = acc_walk[k] + walk_max[sz.acc_st[k] as usize] as f32;
+            }
+        }
+    }
+    // the refused station pairs of a block's lanes: access station, egress station, weight,
+    // access entry, egress step
+    let mut lane_bad: Vec<(u32, u32, f32, u32, u8)> = vec![];
     // T-710: the station choice's scale and offset by distance band (`er` holds a table per band)
     let nb = p.n_bands();
     let bands: Vec<(f32, f32)> = (0..nb).map(|b| p.band(b)).collect();
@@ -3602,6 +3753,8 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     // station `s` (read as a dummy past the row's end, 0) at weight 0: a pad adds exactly 0 to
     // every sum it enters, so eight destinations go through the same steps
     let (mut eg_st, mut eg_e, mut eg_k, mut eg_n): (Vec<[u32; K]>, Vec<[f32; K]>, Vec<[u32; K]>, Vec<u8>) = (vec![], vec![], vec![], vec![]);
+    // and the longest of its egress walks (T-1059)
+    let mut eg_far: Vec<f32> = vec![];
     for &j in &dzones {
         let q0 = dd.len() as u32;
         let mut dvz = 0.0f32;
@@ -3622,6 +3775,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             eg_st.push(st);
             eg_k.push(kk);
             eg_n.push(sz.walk(v).len() as u8);
+            eg_far.push(sz.walk(v).map(|k| sz.acc_d[k]).fold(0.0, f32::max));
             dvz += dv[v];
             let (fixed, paid, free) = park[j];
             dd.push([[sz.cx[v], sz.cy[v], local[v].0, local[v].1], [fixed, dv[v], acc_m[v], paid], [free, 0.0, 0.0, 0.0]]);
@@ -3747,6 +3901,11 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             let rides = !ride.is_empty();
             // the walk entries' weight at the rides' offset, per band
             let c_u: Vec<f32> = bands.iter().map(|&(th, _)| if walk.is_empty() { 0.0 } else { fast_exp(-th * (m_u - m_r)) }).collect();
+            // T-1059: the most this origin's trips walk before their last station (the walk to a
+            // station and the most its strategies walk between stations): a destination whose
+            // egress walks keep within its distance on top of that keeps every station pair, the
+            // common case, and only the rest are taken pair by pair
+            let mw = if rule { acc_from[walk.start..ride.end].iter().copied().fold(0.0, f32::max) } else { 0.0 };
             let (ux8, uy8, lu08, lu18) = (F8::splat(sz.cx[u]), F8::splat(sz.cy[u]), F8::splat(local[u].0), F8::splat(local[u].1));
             let mut rail_sum = 0.0f32;
             let mut walk_sum = 0.0f32;
@@ -3850,16 +4009,84 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                     rv[k] = F8::gather(&ab_row, &ix[k]);
                     ssum = ssum + rv[k] * ev[k];
                 }
+                let [x8, y8, l08, l18] = F8::transpose(std::array::from_fn(|l| dd[q[l]][0]));
+                let (dx, dy) = (ux8 - x8, uy8 - y8);
+                let d = (dx * dx + dy * dy).sqrt();
+                // T-1059: a lane some of whose station pairs walk further than walking there keeps
+                // only the other pairs' part of the logsum. Its station pairs are first passed by
+                // the most their stations walk on (`Skims::walk_max`), and only the rest read the
+                // tables: the refused ones are kept to take off its loads below, or where most
+                // are refused (`whole`), the kept ones to load alone.
+                let (mut slow, mut whole) = (0u32, 0u32);
+                let mut bad_at = [(0u32, 0u32); 8];
+                let near = if rule { d.lt_mask(F8::splat(mw) + F8::new(std::array::from_fn(|l| eg_far[q[l]]))) & ((1u32 << (n_cand - 8 * ci).min(8)) - 1) } else { 0 };
+                if near != 0 {
+                    lane_bad.clear();
+                    let (d_lane, s_lane) = (d.to_array(), ssum.to_array());
+                    let mut keep = [1f32; 8];
+                    for l in (0..8).filter(|&l| near >> l & 1 != 0) {
+                        let qd = q[l];
+                        let direct = d_lane[l] * gr.walk_factor(i, sz.zone[dd_sub[qd] as usize] as usize);
+                        let (b, c_b) = (bl[l], if rr[l] != 0 { c_u[bl[l]] } else { 1.0 });
+                        let er_b = &er[b * ss..(b + 1) * ss];
+                        let lo = lane_bad.len() as u32;
+                        let mut bad = 0f32;
+                        for k in walk.start..if rr[l] != 0 { ride.end } else { walk.end } {
+                            if acc_from[k] + eg_far[qd] <= direct {
+                                continue;
+                            }
+                            let (a, wa) = (sz.acc_st[k] as usize, acc_walk[k]);
+                            for kk in 0..eg_n[qd] as usize {
+                                let (t, wt) = (eg_st[qd][kk] as usize, sz.acc_d[eg_k[qd][kk] as usize]);
+                                if acc_from[k] + wt <= direct || walk_ok(wa, walk_tab[a * s + t], wt, direct) {
+                                    continue;
+                                }
+                                let w = acc_e[b * na + k] * if k < walk.end { c_b } else { 1.0 };
+                                let cw = w * er_b[a * s + t] * eg_e[qd * nb + b][kk];
+                                if cw > 0.0 {
+                                    bad += cw;
+                                    lane_bad.push((a as u32, t as u32, cw, k as u32, kk as u8));
+                                }
+                            }
+                        }
+                        if bad > 0.5 * s_lane[l] {
+                            // most of the lane refused: taking that off a spread at the kept rate
+                            // would cancel too far for f32, so its kept pairs are loaded one by one
+                            lane_bad.truncate(lo as usize);
+                            let mut kept = 0f32;
+                            for k in walk.start..if rr[l] != 0 { ride.end } else { walk.end } {
+                                let (a, wa) = (sz.acc_st[k] as usize, acc_walk[k]);
+                                let w = acc_e[b * na + k] * if k < walk.end { c_b } else { 1.0 };
+                                for kk in 0..eg_n[qd] as usize {
+                                    let (t, wt) = (eg_st[qd][kk] as usize, sz.acc_d[eg_k[qd][kk] as usize]);
+                                    let cw = w * er_b[a * s + t] * eg_e[qd * nb + b][kk];
+                                    if cw > 0.0 && (acc_from[k] + wt <= direct || walk_ok(wa, walk_tab[a * s + t], wt, direct)) {
+                                        kept += cw;
+                                        lane_bad.push((a as u32, t as u32, cw, k as u32, kk as u8));
+                                    }
+                                }
+                            }
+                            keep[l] = kept / s_lane[l];
+                            whole |= 1 << l;
+                        } else if bad > 0.0 {
+                            keep[l] = 1.0 - bad / s_lane[l];
+                        }
+                        if bad > 0.0 {
+                            bad_at[l] = (lo, lane_bad.len() as u32);
+                            slow |= 1 << l;
+                        }
+                    }
+                    if slow != 0 {
+                        ssum = ssum * F8::new(keep);
+                    }
+                }
                 // no rail route (or only the same station at both ends) where under 1e-30
                 let ok = ((1u32 << (n_cand - 8 * ci).min(8)) - 1) & !ssum.lt_mask(F8::splat(1e-30));
                 if ok == 0 {
                     continue;
                 }
-                let [x8, y8, l08, l18] = F8::transpose(std::array::from_fn(|l| dd[q[l]][0]));
                 let [park8, dv8, m8, paid8] = F8::transpose(std::array::from_fn(|l| dd[q[l]][1]));
                 let [tu8, cw8, df8, mo8] = F8::transpose(std::array::from_fn(|l| visit[(c[l][1] & 0x7fff_ffff) as usize]));
-                let (dx, dy) = (ux8 - x8, uy8 - y8);
-                let d = (dx * dx + dy * dy).sqrt();
                 // `Params::drive_min_f`
                 let rd = d * F8::splat(0.001) * df8;
                 let e = (F8::splat(0.5) * rd).min(F8::splat(p.road_local_km));
@@ -3915,6 +4142,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 let yw_lo = F8::by_lane([yw[0], yw[1], yw[2], yw[3]]);
                 let yw_hi = if kn > 4 { F8::by_lane([yw[4], yw[5], yw[6], yw[7]]) } else { yw_lo };
                 let (xa, xwa) = (x.to_array(), xw.to_array());
+                let ssum_a = ssum.to_array();
                 // and the walkers it takes: its trips times the zone pair's walking with no rail
                 // (`rail_walk`), as the zones' sums have it
                 let wl = (x * F8::new(std::array::from_fn(|l| visit_w[(c[l][1] & 0x7fff_ffff) as usize]))).to_array();
@@ -3927,22 +4155,42 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                     rail_sum += xa[l];
                     walk_sum += wl[l];
                     lost_q[q[l]] += wl[l];
-                    // pads add 0 to their own dummies: the block's one count predicts well
-                    for k in 0..kn {
-                        ab_y[ix[k][l] as usize] += ya[k][l];
+                    if whole >> l & 1 == 0 {
+                        // pads add 0 to their own dummies: the block's one count predicts well
+                        for k in 0..kn {
+                            ab_y[ix[k][l] as usize] += ya[k][l];
+                        }
+                        let a = &mut acc_q[q[l]];
+                        a[0] = (F4::new(a[0]) + yw_lo[l]).to_array();
+                        if kn > 4 {
+                            a[1] = (F4::new(a[1]) + yw_hi[l]).to_array();
+                        }
                     }
-                    let a = &mut acc_q[q[l]];
-                    a[0] = (F4::new(a[0]) + yw_lo[l]).to_array();
-                    if kn > 4 {
-                        a[1] = (F4::new(a[1]) + yw_hi[l]).to_array();
-                    }
+                    let lane_rail = if slow >> l & 1 != 0 {
+                        // T-1059: the lane's loads went onto every station pair at the kept pairs'
+                        // rate and the refused ones come off again (the station matrix is cleared
+                        // of what rounding leaves below 0 at the end), or its kept pairs go on alone
+                        let gl = xa[l] / ssum_a[l];
+                        let sign = if whole >> l & 1 != 0 { 1.0 } else { -1.0 };
+                        let (lo, hi) = bad_at[l];
+                        for &(a, t, c, k, kk) in &lane_bad[lo as usize..hi as usize] {
+                            let f = sign * gl * c;
+                            out.od[a as usize * s + t as usize] += f;
+                            acc_q[q[l]][kk as usize / 4][kk as usize % 4] += f;
+                            out.acc_home[k as usize] += f;
+                            out.rail_band[dist_band(sz.acc_d[k as usize])] += f as f64;
+                        }
+                        xa[l]
+                    } else {
+                        xwa[l]
+                    };
                     // the band's running sum held while the band stays the same: the same adds
                     let b = (bw[l] as usize).min(N_WALKSUM - 1);
                     if b != wb {
                         walksum[wb] = wacc;
                         (wb, wacc) = (b, walksum[b]);
                     }
-                    wacc += xwa[l] as f64;
+                    wacc += lane_rail as f64;
                 }
             }
             walksum[wb] = wacc;
@@ -4011,6 +4259,12 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
         out.walk_lost_to_sub[v as usize] = lost_q[q];
     }
     out.rail_walksum = walksum;
+    if rule {
+        // T-1059: a refused station pair taken off its lane's loads can be left a rounding below 0
+        for x in out.od.iter_mut().chain(out.acc_home.iter_mut()).chain(out.acc_work.iter_mut()) {
+            *x = x.max(0.0);
+        }
+    }
     out
 }
 
@@ -5211,6 +5465,90 @@ mod tests {
         }
     }
 
+    /// T-1059: the strategies' walks between stations, and the rule's test on them. Station 1 is a
+    /// walk from station 0 (200 m, then 1 km in its complex); line 0 runs 2-0-3, line 1 3-1, as in
+    /// `a_boarding_rides_at_least_one_stop`. Station 1's platform for line 1 is 50 m off.
+    #[test]
+    fn the_walking_rule_reads_the_walks_between_stations() {
+        let p = Params { xfer_walk_m: 300.0, ..common_test_params() };
+        for (y, group) in [(200.0f32, vec![]), (1000.0, vec![0, 0, 2, 3])] {
+            let mut net = common_test_net(&[&[2, 0, 3], &[3, 1]], &[12.0, 12.0], &[2.0, 2.0]);
+            net.st_x = vec![0.0, 0.0, -3000.0, 3000.0];
+            net.st_y = vec![0.0, y, 0.0, 0.0];
+            net.st_group = group;
+            let g = build_graph(&net, &p);
+            let s = g.n_st;
+            let sk = skims(&g, &p);
+            let m = |a: usize, t: usize| sk.walk[a * s + t];
+            // from 0 the trip rides both lines and walks nothing; from 2 it walks over at 0 when
+            // that is cheaper (200 m) and rides on otherwise
+            assert_eq!(m(0, 1), 0, "y {y}");
+            assert_eq!(m(2, 1), if y < 300.0 { 200 } else { 0 }, "y {y}");
+            assert_eq!(m(1, 1), 0);
+            // the rule: 150 m to station 2, its 200 m over and 100 m from 1 is 450 m
+            assert!(walk_ok(150.0, m(2, 1), 100.0, 460.0) == (y >= 300.0 || 450.0 <= 460.0));
+            assert!(!walk_ok(150.0, m(2, 1), 100.0, 440.0) || y >= 300.0);
+            assert!(!walk_ok(0.0, u16::MAX, 0.0, 1e9), "no route is no option");
+            // a trip's share kept, over two access and one egress entry: 2 of 3 parts
+            let acc = [(2u32, 1.0f32, 150.0f32, 0u32), (0, 2.0, 100.0, 1)];
+            let eg = [(1u32, 1.0f32, 100.0f32, 2u32)];
+            let kept = walk_kept(&acc, &eg, |_, _| 1.0, &sk.walk, s, 300.0);
+            assert!((kept - if y < 300.0 { 2.0 / 3.0 } else { 1.0 }).abs() < 1e-6, "y {y}: {kept}");
+        }
+        // platforms: a change at station 3 walks from line 0's platform to line 1's
+        let mut net = common_test_net(&[&[2, 0, 3], &[3, 1]], &[12.0, 12.0], &[2.0, 2.0]);
+        net.st_x = vec![0.0, 0.0, -3000.0, 3000.0];
+        net.st_y = vec![0.0, 2000.0, 0.0, 0.0];
+        net.stop_x = net.line_stops.iter().map(|&st| net.st_x[st as usize]).collect();
+        net.stop_y = vec![0.0, 0.0, -25.0, 25.0, 2000.0];
+        let g = build_graph(&net, &p);
+        let sk = skims(&g, &p);
+        assert_eq!(sk.walk[1], 50, "0 to 1 changes across 50 m at station 3");
+    }
+
+    /// T-1059 on a small city: the rule takes rail only from the trips it touches, and the slow
+    /// lanes load what they keep: the station matrix and the access entries add up to the rail
+    /// trips with the rule on as off, and the pair choice agrees (`trip.rs`).
+    #[test]
+    fn the_walking_rule_keeps_the_loads_whole() {
+        let full = synth::synth_city(1);
+        let keep: Vec<usize> = (0..full.len()).filter(|&c| full.x[c].hypot(full.y[c]) < 15_000.0).collect();
+        let city = crate::demand::pack::City {
+            name: "t".into(),
+            h3: keep.iter().map(|&c| full.h3[c]).collect(),
+            x: keep.iter().map(|&c| full.x[c]).collect(),
+            y: keep.iter().map(|&c| full.y[c]).collect(),
+            pop: keep.iter().map(|&c| full.pop[c]).collect(),
+            jobs: keep.iter().map(|&c| full.jobs[c]).collect(),
+            region: vec![], gravity: None,
+        };
+        let net = network::synth_network();
+        let on = Params::default();
+        assert!(on.walk_rule > 0.0);
+        let off = Params { walk_rule: 0.0, ..on.clone() };
+        let z = build_zones(&city, on.zone_m);
+        let mut gr = gravity(&z, &on, 100, 1e-4);
+        gr.set_walk(&z, &on);
+        let acc = build_access(&city, &net, &on);
+        let sz = build_subzones(&city, &z, &acc, &net, &on);
+        let g = build_graph(&net, &on);
+        let sk = skims(&g, &on);
+        let er = station_exp(&sk, &on);
+        let nr = NoRail::new(&z, &on);
+        let (a, b) = (mode_choice(&z, &gr, &sz, &er, &sk.walk, &sk.walk_max, g.n_st, &off, &nr), mode_choice(&z, &gr, &sz, &er, &sk.walk, &sk.walk_max, g.n_st, &on, &nr));
+        assert!(b.rail < a.rail && b.rail > 0.8 * a.rail, "rail {} with the rule, {} without", b.rail, a.rail);
+        for mo in [&a, &b] {
+            let od: f64 = mo.od.iter().map(|&x| x as f64).sum();
+            let home: f64 = mo.acc_home.iter().map(|&x| x as f64).sum();
+            let work: f64 = mo.acc_work.iter().map(|&x| x as f64).sum();
+            let bands: f64 = mo.rail_band.iter().sum();
+            let to: f64 = mo.rail_to_sub.iter().map(|&x| x as f64).sum();
+            for (what, x) in [("station pairs", od), ("access", home), ("egress", work), ("bands", bands), ("by work subzone", to)] {
+                assert!((x - mo.rail).abs() < 1e-4 * mo.rail, "{what} {x} against rail {} (rule {})", mo.rail, std::ptr::eq(mo, &b));
+            }
+        }
+    }
+
     /// T-176 on a small city with walking transfers: the loads are `assign`'s to the bit, and at
     /// every station the transfers leaving are the boardings that are not first boardings.
     #[test]
@@ -5236,7 +5574,7 @@ mod tests {
         let sz = build_subzones(&city, &z, &acc, &net, &p);
         let g = build_graph(&net, &p);
         let sk = skims(&g, &p);
-        let mo = mode_choice(&z, &gr, &sz, &station_exp(&sk, &p), g.n_st, &p, &NoRail::new(&z, &p));
+        let mo = mode_choice(&z, &gr, &sz, &station_exp(&sk, &p), &sk.walk, &sk.walk_max, g.n_st, &p, &NoRail::new(&z, &p));
         let ix = xfer_index(&g);
         let mut x = vec![0.0; ix.len];
         let l = assign_with_transfers(&g, &sk, &mo.od, &ix, &mut x);
@@ -5313,7 +5651,7 @@ mod tests {
         let g = build_graph(&net, &p);
         let sk = skims(&g, &p);
         let er = station_exp(&sk, &p);
-        let mo = mode_choice(&z, &gr, &sz, &er, g.n_st, &p, &NoRail::new(&z, &p));
+        let mo = mode_choice(&z, &gr, &sz, &er, &sk.walk, &sk.walk_max, g.n_st, &p, &NoRail::new(&z, &p));
         assert!(mo.rail > 0.0 && mo.rail < mo.trips_access && mo.trips_access <= mo.trips_total * 1.0001);
         let l = assign(&g, &sk, &mo.od);
         let od_sum: f64 = mo.od.iter().map(|&v| v as f64).sum();
@@ -5339,8 +5677,8 @@ mod tests {
         // rail itself close, and deal the same chunks every pass
         let every = Params { commute_chunk: 0.0, ..p.clone() };
         let big = Params { commute_chunk: 50.0, ..p.clone() };
-        let mo0 = mode_choice(&z, &gr, &sz, &er, g.n_st, &every, &nr);
-        let (mo1, mo2) = (mode_choice(&z, &gr, &sz, &er, g.n_st, &big, &nr), mode_choice(&z, &gr, &sz, &er, g.n_st, &big, &nr));
+        let mo0 = mode_choice(&z, &gr, &sz, &er, &sk.walk, &sk.walk_max, g.n_st, &every, &nr);
+        let (mo1, mo2) = (mode_choice(&z, &gr, &sz, &er, &sk.walk, &sk.walk_max, g.n_st, &big, &nr), mode_choice(&z, &gr, &sz, &er, &sk.walk, &sk.walk_max, g.n_st, &big, &nr));
         assert!(mo1.pairs < mo0.pairs * 9 / 10, "pairs {} of {}", mo1.pairs, mo0.pairs);
         assert!((mo1.trips_access / mo0.trips_access - 1.0).abs() < 0.01, "offered {} vs {}", mo1.trips_access, mo0.trips_access);
         assert!((mo1.rail / mo0.rail - 1.0).abs() < 0.02, "rail {} vs {}", mo1.rail, mo0.rail);
@@ -5574,7 +5912,7 @@ mod tests {
             let g = build_graph(&net, &p);
             let sk = skims(&g, &p);
             let er = station_exp(&sk, &p);
-            let mo = mode_choice(z, &gr, &sz, &er, g.n_st, &p, &nr);
+            let mo = mode_choice(z, &gr, &sz, &er, &sk.walk, &sk.walk_max, g.n_st, &p, &nr);
             let walk: f64 = gr.no_rail_by_zone(z, &p, &nr)[0].iter().sum();
             (mo.rail, mo.trips_access, walk)
         };

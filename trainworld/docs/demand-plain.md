@@ -3,8 +3,9 @@
 For Anita. One page, kept current: an agent who changes a rule here updates this page too.
 Last updated 2026-10-23 (the T-636 model, with T-710's route choice and crowding, T-717's cost of
 changing, T-718's route choice between cities, T-720's walking bands, T-938's car speeds and
-ownership cost, T-1000's cap on how far jobs pull and its set share of long commutes, and T-1055's
-rule that every rail trip rides a train). The full rules are in demand.md; this is the gist.
+ownership cost, T-1000's cap on how far jobs pull and its set share of long commutes, T-1055's
+rule that every rail trip rides a train, and T-1059's that it never walks further than walking
+there). The full rules are in demand.md; this is the gist.
 
 ## Who travels, and where to
 
@@ -69,6 +70,11 @@ There is no built-in liking for the train. Rail and the car are compared on time
 - If the train is full when it arrives, the wait for one with room counts too.
 - Every rail trip rides at least one train: nobody boards only to walk off to another station
   or platform of a complex, so walking between two stations is never a rail trip and pays no fare.
+- No train that walks further than walking there: a pair of stations is no option for a trip when
+  the walk to the first, the walks between stations and platforms on the way and the walk from the
+  last add up to more than walking between the two ends (round water where the walk must go
+  round). A trip left with no such pair has no train. It takes about 3% of rail trips away, nearly
+  all under 2 km, to walking and the car.
 - Fare: in the US $1 counts as 3 minutes. The fare is the player's curve of trip length, paid
   once a trip; choosing between routes sees only its first stretch.
 - Which stations: riders share the pairs of stations near each end by how much slower each option
@@ -135,11 +141,12 @@ parking is paid, rail wins easily (Hempstead to Midtown). The trip explorer show
 Both ask what rail could carry if a straight train ran between every pair of places. Walking
 is left out of the comparison; the figure is rail out of rail plus car.
 - **A**: 140 km/h, free, a 3 minute walk at each end, a train every 5 minutes. Target at least 85%.
-  New York 93%, London 93%, Paris 94%, Tokyo 94%; Houston, all suburb, 88%.
+  New York 92%, London 92%, Paris 93%, Tokyo 93%; Houston, all suburb, 86%. (Trips shorter than
+  the two 3 minute walks, about 460 m, get no train: T-1059.)
 - **B**: 100 km/h, a 3 minute walk at each end, a fare of $1.50 plus $0.05 a km. Target at least 50%.
-  New York 82%, London 83%.
-- The real networks, for comparison: New York's rail takes 21% of rail plus car (16% of all trips),
-  London's 29% (20%); before the route choice was sharpened (T-710) and changes cost 2 minutes
+  New York 81.5%, London 82%.
+- The real networks, for comparison: New York's rail takes 21% of rail plus car (15% of all trips),
+  London's 28% (20%); before the route choice was sharpened (T-710) and changes cost 2 minutes
   (T-717), 23% and 32%. Short trips are where
   the real systems fall short: coverage, not the choice, holds them down.
 
@@ -149,7 +156,5 @@ curve by times cheaper, notes/T-918.md; the car's speeds and ownership cost, not
 ## Coming next
 
 - T-584: commuting between neighbouring cities damped at 0.4.
-- T-1059: no train for a trip whose walking to, between and from the stations is longer than
-  walking straight there (measured: about 3% fewer rail trips, nearly all under 2 km).
 - Deep calibration, later: whether the walk's 1.5 should be 1, and what the real cities say about
   the new numbers (the model carries about 2.4 times New York's station counts, 1.6 times London's).

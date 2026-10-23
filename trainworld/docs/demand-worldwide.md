@@ -665,6 +665,15 @@ notes/T-420.md has the tables.
   perceived minutes a change). Check: published
   interchange times for a few big hubs (London's TfL interchange walk times, Tokyo station transfer
   guides) against what the rule gives for the same platforms.
+- **No train that walks further than walking there** (Anita, T-1059; docs/demand-kernel.md step
+  5). A pair of stations is no rail option for a trip when the walks to, between and from its
+  stations, in straight metres, are longer than the trip's own walking distance (round water
+  where the pack routes walks). A rule of sense rather than a fitted number, and it holds
+  anywhere: nobody takes a train to walk further than walking there. What can differ by place is
+  the comparison itself: straight lines stand for both walks, so where streets are far from
+  straight on one side only (a station across a motorway or rail yard, a gated campus, hill
+  towns with long stairs) the rule can keep or refuse a pair a real rider would not. Check: in a
+  city's trip explorer, a few short trips beside a station that the rule refuses, against a map.
 - **The service span** (T-842, docs/demand-kernel.md step 4). Riders' tolerance for the wait until
   the next train is log-uniform from 30 minutes to 6 hours (Anita's range, 2026-10-21; the shape
   and the median of 1.7 h are judgement, not fitted), and a stop where only a share `phi` of a

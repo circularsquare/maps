@@ -25,6 +25,7 @@ const NO_RAIL: Record<string, string> = {
   noStationStart: "No station is within a walk or a drive of the start.",
   noStationEnd: "No station is within a walk of the end.",
   noRoute: "No train runs between the stations near the two ends in this period.",
+  walkFurther: "Walking there is shorter than the walks to, between and from the stations.",
 };
 
 /** T-910: why the train is not offered. Too long a way to and from the trains says which end
