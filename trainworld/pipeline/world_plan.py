@@ -1178,7 +1178,8 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguou
     """Free units (ids) grouped into zones, smallest first, until each holds `floor` people. A zone
     under ZONE_MIN_POP joins the zone of its region it shares the longest border with; a bigger one
     its smallest neighbour there that keeps the two within `cap` (else its smallest neighbour), so
-    one zone does not take a whole region (the longest border put Sarajevo, Zenica and Mostar in one).
+    one zone does not take a whole region (the longest border put Sarajevo, Zenica and Mostar in one);
+    the first of those neighbours whose union wraps no other zone (T-1005, `wraps`), else the first.
     With no neighbour left in its region (a small region, or Osttirol cut off from Tirol) it joins one
     of another region, unless it already holds 80% of `floor`. An island (no land border with any unit) joins the most populous zone of its
     region within ISLAND_KM, or within 10 km once it holds ZONE_MIN_POP (the Isle of Wight stays
@@ -1190,11 +1191,32 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguou
     simple = {u.id: polygonal(u.geom.simplify(500)) for u in units}
     zones, done, lines = {i: [i] for i in free}, set(), []
     ppl = lambda z: sum(by[i].free for i in zones[z])  # noqa: E731
-    geo = lambda z: union_all([simple[i] for i in zones[z]])  # noqa: E731
+    shapes = {}
+
+    def geo(z):  # a zone only grows, so its lead and unit count name its shape
+        k = (z, len(zones[z]))
+        if k not in shapes:
+            shapes[k] = union_all([simple[i] for i in zones[z]])
+        return shapes[k]
 
     def touching(g, pool):
-        b = [(g.boundary.intersection(geo(o).buffer(1000)).length, o) for o in pool]
+        near = g.buffer(1000)
+        b = [(g.boundary.intersection(geo(o).buffer(1000)).length, o) for o in pool if near.intersects(geo(o))]
         return [x for x in b if x[0] > 0]
+
+    def wraps(z, o):
+        """T-1005: whether joining z and o makes a zone that wraps another zone: half of the other's
+        area lies in the union's convex hull, and the union holds half of its border with zones."""
+        m = union_all([geo(z), geo(o)])
+        hull, near = m.convex_hull, m.buffer(1000)
+        for q in zones:
+            gq = geo(q) if q not in (z, o) else None
+            if gq is None or not gq.intersects(near) or gq.intersection(hull).area < 0.5 * gq.area:
+                continue
+            land = sum(s for s, _ in touching(gq, [x for x in zones if x != q]))
+            if land and gq.boundary.intersection(near).length >= 0.5 * land:
+                return True
+        return False
     while True:
         small = sorted((ppl(z), z) for z in zones if z not in done and ppl(z) < floor)
         if not small:
@@ -1214,8 +1236,11 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguou
             how = f"shared border {length / 1000:.0f} km"
         elif border:
             fit = [b for b in border if n + ppl(b[1]) <= cap]
-            into = min(fit or border, key=lambda b: (ppl(b[1]), -b[0]))[1]
+            fit = sorted(fit or border, key=lambda b: (ppl(b[1]), -b[0]))
+            into = next((b[1] for b in fit if len(fit) == 1 or not wraps(z, b[1])), fit[0][1])
             how = f"smallest neighbour, {ppl(into):,.0f}"
+            if into != fit[0][1]:
+                how = f"smallest neighbour that wraps no zone, {ppl(into):,.0f}"
         elif contiguous:
             # T-897 (Anita, 2026-10-22): no exclaves; across water only as far as a bridge or a narrow
             # strait reaches, to the nearest zone, its own region's first
@@ -1426,7 +1451,8 @@ def plan_zones(isos3):
         record[iso] = {"built": str(datetime.now().date()), "task": "T-897" if iso in ZONE_RULES else "T-788",
                        "rule": f"free units at or over {min_density:g} people a km2 (or holding {DEAD_KEEP * floor:,.0f}), grouped in their region until each "
                                f"zone holds {floor:,}: under {ZONE_MIN_POP:,} by the longest border, then the smallest "
-                               f"neighbour keeping both within {cap:,}; another region's when none is left; islands "
+                               f"neighbour keeping both within {cap:,} that makes no zone wrapping another (T-1005); "
+                               f"another region's when none is left; islands "
                                f"the most populous zone within {ISLAND_KM:g} km (10 km from {ZONE_MIN_POP:,})",
                        "kept": [r["id"] for r in kept], "dead": dead, "merges": [ln.strip() for ln in lines]}
         if away:

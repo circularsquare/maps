@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-1007 [P2] Rust panic in the clock worker. Done 2026-10-23: the worker rebuilds the track model from the last load or edit and the player gets a notice; a fourth panic in a minute asks for a reload. docs/architecture.md; notes/T-1001.md.
 - T-897 [P2] China whole. Done 2026-10-23: the Jiangsu pilot and four waves, 756 zones and 1,449M people (Hong Kong, Macau and Taiwan as their own countries), about 15 h of runs; left elsewhere: T-958, T-996, T-997. notes/T-897.md "China whole".
 - T-998 [P1] Xinjiang's joint balance stalls with fixed neighbours. Done 2026-10-23: Xinjiang solves with none (`intercity.SOLVE_ALONE`), 8e-9 at step 259, and a solve may take 300 steps; wave 4's join shipped all 124. notes/T-897.md wave 4.
 - T-1003 [P2] China walks a lot at baseline. Settled 2026-10-23, left as it is (Anita): 38% of China's trips walk with no rail against 30-37% in the West, from parking by density; rail is more rewarding there, not less. notes/T-1003.md.

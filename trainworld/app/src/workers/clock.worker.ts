@@ -264,6 +264,117 @@ function anchorSpec() {
   return { lng: a.lng, lat: a.lat, version: a.version };
 }
 
+// ---------------------------------------------------------------- Rust panics (T-1007)
+//
+// A panic in the track model aborts the call and leaves wasm-bindgen's borrow on the `TrackApi`
+// held, so every later call on it throws. The worker then makes a new `TrackApi` and opens the
+// network in it as a load does, from the network as it was after the last load or edit (`kept`;
+// an edit's panic always goes back to it, any other panic to the live network when it can still be
+// read). The main thread logs the panic and tells the player ("recovered").
+
+const EDIT_UNDONE = "That edit failed and was undone.";
+const MODEL_RESTORED = "The train simulation failed and was restored to your last edit.";
+const MODEL_DOWN = "The train simulation stopped working. Reload the page to go on. Your last autosave is kept.";
+/** more panics than this in a minute, or in all, and the model is left down: it is failing for a reason a rebuild does not cure */
+const MAX_PANICS_PER_MINUTE = 3;
+const MAX_PANICS = 8;
+
+/** the network, cash and fleet after the last load or edit */
+let kept: { net: Uint8Array; cash: number; fleet: number; fleetFast: number } | null = null;
+function keep() {
+  try {
+    const a = api!;
+    kept = { net: a.save(), cash: a.cash(), fleet: a.fleet(), fleetFast: a.fleet_fast() };
+  } catch { /* the model is down; the next panic recovery says so */ }
+}
+
+const panicTimes: number[] = [];
+let panicCount = 0;
+let modelDown = false;
+/** when the last recovery ended; an error raised before it came from the model it replaced */
+let recoveredAt = 0;
+/** `?debug=1` probes (dev server only): the next edit panics after it is applied */
+let panicAfterEdit = false;
+
+function isPanic(err: unknown): boolean {
+  return err instanceof WebAssembly.RuntimeError || (err instanceof Error && /recursive use of an object|null pointer passed to rust/.test(err.message));
+}
+
+/** Panic from a call that panics: an id no model has (a `&mut self` call, so the borrow stays held). */
+function panicNow() {
+  api!.set_node(0xffffffff, 0, 0, 0, false);
+}
+
+/** A new track model over the same WASM instance, set up as the first one is (a panic leaves the
+ * old one's borrow held for ever; its memory is left where it is, since freeing a model that
+ * stopped half way through a change is not safe). */
+function newModel(): TrackApi {
+  const a = new TrackApi(NEW_GAME_FRAME.lon, NEW_GAME_FRAME.lat, true);
+  api = a;
+  // T-309: each region's local time, kept across loads
+  a.set_time_zones(timeZoneTable());
+  a.set_empty_frame(frameKindNumber(NEW_GAME_FRAME.kind));
+  syncFrame();
+  a.clear_water();
+  a.set_cash(START_CASH);
+  return a;
+}
+
+async function rebuildModel(fromKept: boolean) {
+  const old = api!;
+  let k = kept;
+  if (!fromKept) {
+    try { k = { net: old.save(), cash: old.cash(), fleet: old.fleet(), fleetFast: old.fleet_fast() }; } catch { /* held: use what was kept */ }
+  }
+  if (!k) throw new Error("no network was kept");
+  (old as unknown as { __destroy_into_raw(): number }).__destroy_into_raw();
+  newModel();
+  masksIn.clear();
+  holidaysSent = "";
+  await openNetwork(k.net);
+  api!.set_fleet(k.fleet);
+  api!.set_fleet_fast(k.fleetFast);
+  api!.set_cash(k.cash);
+  setMode(mode);
+  restart(gameNow(), "autosave");
+  dirty = true;
+}
+
+/** Rebuild the track model after a panic and tell the main thread. `at`: when the error was raised. */
+async function recover(err: unknown, what: string, notice: string, at: number, fromKept = false) {
+  if (modelDown || at <= recoveredAt) return;
+  const now = Date.now();
+  panicTimes.push(now);
+  while (panicTimes[0] < now - 60_000) panicTimes.shift();
+  panicCount++;
+  const detail = `Rust panic in ${what}: ${err instanceof Error ? err.stack || err.message : String(err)}`;
+  try {
+    if (panicTimes.length > MAX_PANICS_PER_MINUTE || panicCount > MAX_PANICS) throw new Error("too many panics");
+    await rebuildModel(fromKept);
+    send({ kind: "recovered", detail, notice });
+  } catch (e) {
+    modelDown = true;
+    send({ kind: "recovered", detail: `${detail}\nnot rebuilt: ${e}`, notice: MODEL_DOWN, down: true });
+  }
+  recoveredAt = performance.now();
+}
+
+/** A panic found outside a message (a timer, a save), rebuilt in turn with the messages. */
+function panicLater(err: unknown, what: string) {
+  const at = performance.now();
+  messages = messages.then(() => recover(err, what, MODEL_RESTORED, at));
+}
+addEventListener("error", (e) => {
+  if (!isPanic(e.error)) return;
+  e.preventDefault();
+  panicLater(e.error, "a timer");
+});
+addEventListener("unhandledrejection", (e) => {
+  if (!isPanic(e.reason)) return;
+  e.preventDefault();
+  panicLater(e.reason, "background work");
+});
+
 // ---------------------------------------------------------------- water masks on demand (T-302)
 //
 // A zone's mask is fetched only when the view comes near its box or track is drawn or loaded within
@@ -401,6 +512,13 @@ async function masksBeforeLoad(net: Uint8Array) {
   if (!missing.length) return;
   api!.load(emptyTrack!);
   await ensureMasks(missing);
+}
+
+/** Put a network (in the world frame) in the track model, with the masks of the zones it meets. */
+async function openNetwork(net: Uint8Array) {
+  await masksBeforeLoad(net);
+  if (!api!.load(net)) throw new Error("This save is damaged.");
+  await masksForLoaded(net);
 }
 
 /** After a network is loaded: the masks of every zone its track meets, then the network opened again
@@ -928,6 +1046,7 @@ function settle(): boolean {
     if (full) { ended = true; hourShape.delete(h); }
   }
   api.set_cash(cash);
+  if (kept) kept.cash = cash;
   dirty = true;
   return ended;
 }
@@ -1220,8 +1339,9 @@ function autosave(): Promise<boolean> {
       await publishSlots();
       slotChanges?.postMessage({ key });
       return true;
-    } catch {
+    } catch (err) {
       dirty = true;
+      if (isPanic(err)) { panicLater(err, "autosave"); return false; } // not the browser's fault, and rebuilt then saved
       savedAt = Date.now(); // retry on the next autosave interval, rather than every tick
       saveFailure = "The browser could not save this game. Save to a file to keep your changes.";
       await publishSlots(saveFailure);
@@ -1321,9 +1441,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   // T-889: the demand pool opens the zones the built stations reach while the network is worked out
   const st = TrackApi.save_stations(net);
   if (st.length > 3) send({ kind: "stationsAhead", frame: { kind: frameKindName(st[0]), lon: st[1], lat: st[2] }, xy: st.slice(3) });
-  await masksBeforeLoad(net);
-  if (!api!.load(net)) throw new Error("This save is damaged.");
-  await masksForLoaded(net);
+  await openNetwork(net);
   api!.set_fleet(h.fleet ?? 0);
   api!.set_fleet_fast(h.fleetFast ?? 0);
   fares = faresOf(h.fares, START_FARES);
@@ -1408,6 +1526,7 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   api!.clear_riders(); // and its riders (T-164)
   forget(true);
   syncFrame();
+  keep();
   sendOpened();
   send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined, game });
   convertedOnLoad = false;
@@ -1747,16 +1866,10 @@ async function processMessage(msg: ToClock) {
     ready = (async () => {
       const t0 = performance.now();
       await init();
-      api = new TrackApi(NEW_GAME_FRAME.lon, NEW_GAME_FRAME.lat, true);
-      // T-309: each region's local time, kept across loads
-      api.set_time_zones(timeZoneTable());
+      const model = newModel();
       loadHolidays();
-      api.set_empty_frame(frameKindNumber(NEW_GAME_FRAME.kind));
-      syncFrame();
-      api.clear_water();
-      api.set_cash(START_CASH);
-      emptyTrack = api.save();
-      moneyParams = [...api.money_params()];
+      emptyTrack = model.save();
+      moneyParams = [...model.money_params()];
       void viewMasks(); // the view sent before the track model was up
       send({ kind: "ready", initMs: performance.now() - t0, frame: frameSpec() });
       // The last game, unless the page asked for a new one (T-029).
@@ -1814,6 +1927,7 @@ async function processMessage(msg: ToClock) {
           send({ kind: "loaded", from: "new", clock: START_CLOCK, error: "The last game could not be loaded. " + (err as Error).message, frame: frameSpec(), game });
         }
       }
+      keep();
       sendOpened();
       sendState();
       send({ kind: "snapshot", snapshot: buildSnapshot() });
@@ -1824,23 +1938,30 @@ async function processMessage(msg: ToClock) {
   }
   await ready;
   if (!api) return;
+  if (modelDown) return failAnswer(msg);
   try {
     if (msg.kind === "saveSlot") return await manageSlot(msg);
     if (msg.kind === "import" || msg.kind === "export" || msg.kind === "newGame") return await whole(msg);
     await handle(msg);
   } catch (err) {
-    // A Rust panic: report it rather than leave the main thread waiting on an answer.
-    send({ kind: "error", message: String(err) });
-    if (msg.kind === "edit") send({ kind: "edited", seq: msg.seq, ok: false, issues: ["Internal"], charge: 0 });
-    if (msg.kind === "previewStation") send({ kind: "stationCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0 });
-    if (msg.kind === "previewCrossover") send({ kind: "crossoverCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0, parts: [] });
-    if (msg.kind === "preview" || msg.kind === "previewEdge" || msg.kind === "previewNode" || msg.kind === "previewNodes") send({ kind: "preview", seq: msg.seq, ok: false, cost: 0, lengthM: 0, mult: 0, issues: ["Internal"], verts: new Float64Array(0), pts: new Float32Array(0) });
+    if (isPanic(err)) await recover(err, msg.kind, msg.kind === "edit" ? EDIT_UNDONE : MODEL_RESTORED, performance.now(), msg.kind === "edit");
+    else send({ kind: "error", message: String(err) });
+    failAnswer(msg);
   }
 };
 
+/** An answer for a message the track model could not work out, so nothing waits on it for ever. */
+function failAnswer(msg: ToClock) {
+  if (msg.kind === "edit") send({ kind: "edited", seq: msg.seq, ok: false, issues: ["Internal"], charge: 0 });
+  if (msg.kind === "previewStation") send({ kind: "stationCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0 });
+  if (msg.kind === "previewCrossover") send({ kind: "crossoverCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0, parts: [] });
+  if (msg.kind === "preview" || msg.kind === "previewEdge" || msg.kind === "previewNode" || msg.kind === "previewNodes") send({ kind: "preview", seq: msg.seq, ok: false, cost: 0, lengthM: 0, mult: 0, issues: ["Internal"], verts: new Float64Array(0), pts: new Float32Array(0) });
+  if (msg.kind === "query") send({ kind: "answer", seq: msg.seq, data: new Float64Array(0) });
+}
+
 /** Once a wall second: autosave when due. */
 function tick() {
-  if (!api) return;
+  if (!api || modelDown) return;
   if (dirty && Date.now() - savedAt >= AUTOSAVE_MS) void autosave();
 }
 
@@ -1848,7 +1969,7 @@ function tick() {
  * normal speed, 4 game minutes at the fastest. */
 const LIVE_MONEY_MS = 250;
 function liveMoney() {
-  if (!api || !(clk.rate > 0)) return;
+  if (!api || modelDown || !(clk.rate > 0)) return;
   if (settle()) sendMoney();
   else sendCash();
 }
@@ -1867,6 +1988,7 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
         await intoNewSlot(name || newGameName(await listSlots().catch(() => []), spec ?? { mode: "normal" }), () => newGame(spec), !!spec?.real);
       }
     } catch (err) {
+      if (isPanic(err)) throw err;
       // "file": the main thread keeps the game it has
       send({ kind: "loaded", from: "file", clock: gameNow(), frame: frameSpec(), error: (err as Error).message, game });
     }
@@ -1913,6 +2035,7 @@ async function handle(msg: ToClock) {
         dirty = true;
         sendState();
         scheduleSnapshot();
+        keep();
       }
       send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : msg.op.on ? issues() : [], charge: 0 });
       return;
@@ -1920,6 +2043,7 @@ async function handle(msg: ToClock) {
     await masksFor(msg.op);
     const tA = performance.now();
     const { r, line, node, skipped } = apply(msg.op);
+    if (import.meta.env.DEV && panicAfterEdit) { panicAfterEdit = false; panicNow(); }
     const tB = performance.now();
     timing = {};
     const charge = r === 0 ? api.last_charge() : 0;
@@ -1943,6 +2067,7 @@ async function handle(msg: ToClock) {
       if (demand.length || msg.op.op === "undo" || msg.op.op === "redo") scheduleSnapshot();
     }
     send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });
+    if (r === 0) keep();
     // Paid for something: keep it (T-029, autosave on construct).
     if (charge > 0) void autosave();
   } else if (msg.kind === "clock") {
@@ -1997,6 +2122,10 @@ async function handle(msg: ToClock) {
     sendTrips();
   } else if (msg.kind === "flush") {
     void autosave();
+  } else if (import.meta.env.DEV && msg.kind === "debugPanic") {
+    if (msg.when === "afterEdit") panicAfterEdit = true;
+    else if (msg.when === "read") api.edge_polyline(0xffffffff, 0);
+    else panicNow();
   } else if (msg.kind === "query") {
     const q = msg.q;
     const data =

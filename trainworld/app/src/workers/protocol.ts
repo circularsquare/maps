@@ -161,6 +161,9 @@ export type ToClock =
   | { kind: "transfers"; packed: Float32Array }
   /** write the autosave now if anything changed (the page is being hidden or closed) */
   | { kind: "flush" }
+  /** T-1007, dev server only: make the track model panic, now (`now` holds its borrow, `read`
+   * does not) or on the next edit once it is applied */
+  | { kind: "debugPanic"; when: "now" | "read" | "afterEdit" }
   /** the game as a file: answered with "exported" */
   | { kind: "export" }
   /** load a save file (T-029); answered with "loaded". It and "newGame" start a slot named `name`
@@ -469,6 +472,9 @@ export type FromClock =
   /** `backups`: the active slot's (T-744), newest first */
   | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[] }
   | { kind: "error"; message: string }
+  /** T-1007: the track model panicked and was rebuilt from the game's last edit (or, `down`, could
+   * not be: the player is asked to reload). `detail` is for the console, `notice` for the player. */
+  | { kind: "recovered"; detail: string; notice: string; down?: boolean }
   /** T-950: the worker's start (its WASM, the first game) threw; no game will come */
   | { kind: "failed"; error: string };
 

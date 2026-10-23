@@ -182,6 +182,13 @@ Web first, so it can be shared as a link.
   10 with a bar.
   `checks/every-pack-opens.mjs --broken` serves a broken city pack and market pack.
   `game/loading.ts`; timings in notes/T-172.md, frame times in notes/T-180.md.
+- **A Rust panic in the track model** [T-1007] leaves its wasm-bindgen borrow held, so the clock
+  worker makes a new `TrackApi` and opens the network of the last load or edit in it as a load
+  does (an edit's panic always goes back to before the edit; any other uses the live network when it
+  can still be read), then the main thread logs the panic and says so in the notice area. Undo
+  history and the draft in hand are gone, as after a load. A fourth panic in a minute, or a ninth in all, leaves it down
+  with a notice to reload (the autosave holds the game). `?debug=1` on the dev server has
+  `tw.client.debugPanic("now" | "read" | "afterEdit")`.
 - **Threads talk by snapshots**: a worker transfers a finished buffer with a version number; the
   main thread swaps it in. Works on any host. SharedArrayBuffer is a later option; it needs
   cross-origin isolation headers, which GitHub Pages (Anita's website) cannot send and Cloudflare

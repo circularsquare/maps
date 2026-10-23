@@ -490,6 +490,11 @@ export class ClockClient {
       case "error":
         console.warn("clock worker:", msg.message);
         break;
+      case "recovered":
+        console.error("clock worker:", msg.detail);
+        if (msg.down) clockWorkerStatus.value = "track model down after a panic";
+        say(msg.notice, true);
+        break;
       case "failed":
         console.error("clock worker:", msg.error);
         this.failed(msg.error);
@@ -703,6 +708,11 @@ export class ClockClient {
     this.previewBusy = true;
     this.previewCb = cb;
     this.post(msg(++this.seq));
+  }
+
+  /** T-1007, dev server only (`?debug=1`, `tw.client.debugPanic`): make the track model panic. */
+  debugPanic(when: "now" | "read" | "afterEdit") {
+    if (import.meta.env.DEV) this.post({ kind: "debugPanic", when });
   }
 
   /** The render epoch the renderer is drawing (start of the game hour). */
