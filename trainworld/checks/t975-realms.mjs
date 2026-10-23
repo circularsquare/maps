@@ -51,8 +51,8 @@ const watch = (page) => {
 const settle = (page, ms) => page.waitForTimeout(ms);
 /** the realms with a button, by name: those not shown */
 const dark = (page) => page.evaluate(() => [...document.querySelectorAll('.realm-button button')].map((b) => b.getAttribute('aria-label').replace(/^Show /, '')));
-/** the shade's holes: the shown zones' outer outlines, cut from one world polygon */
-const holes = (page) => page.evaluate(() => { const d = window.tw.map.getStyle().sources['tw-realms-inactive']?.data; return d?.type === 'MultiPolygon' ? d.coordinates[0].length - 1 : -1; });
+/** the shade's triangles beyond the world's 2 (its own layer since T-1025): more as more zones are cut out */
+const holes = (page) => page.evaluate(() => { const l = window.tw.map.getLayer('tw-realms-inactive')?.implementation; return l ? l.count / 3 - 2 : -1; });
 /** a blueprint station on a short stretch of track at (lng, lat), by the edit API */
 const station = (page, at) => page.evaluate(async ([lng, lat]) => {
   const tw = window.tw, c = tw.client;
@@ -144,7 +144,7 @@ try {
   const d0 = await dark(page);
   report('a Tokyo start shows Japan only', d0.length > 10 && !d0.includes('Japan') && d0.includes('France'), `(${d0.length} realms dark)`);
   const h0 = await holes(page);
-  report('the shade is cut around the shown zones', h0 > 0 && !start.some((f) => f.file === 'realms.geojson'), `(${h0} holes)`);
+  report('the shade is cut around the shown zones', h0 > 0 && !start.some((f) => f.file === 'realms.geojson'), `(${h0} triangles)`);
   out.world = await worldFrame(page, 'world');
   console.log('world', JSON.stringify(out.world));
 
@@ -161,7 +161,7 @@ try {
     await page.screenshot({ path: join(SHOTS, `t975-${TAG}-france-shown.png`) });
     const d1 = await dark(page);
     const h1 = await holes(page);
-    report('a click shows France', !d1.includes('France') && d1.length === d0.length - 1 && h1 > h0, `(${d1.length} dark, ${h1} holes)`);
+    report('a click shows France', !d1.includes('France') && d1.length === d0.length - 1 && h1 > h0, `(${d1.length} dark, ${h1} triangles)`);
   }
 
   {

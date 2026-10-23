@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-1025 [P2] A long grey triangle of realm shade over Korea. Done 2026-10-23: overlapping outlines and MapLibre's tile rounding made earcut misdraw; the cut is now an exact union cut into triangles and drawn by its own layer (`map/shadeLayer.ts`), checked by `checks/t1025-shade.mjs`. notes/T-1006.md "T-1025".
 - T-997 [P2] The join's park cascade. Done 2026-10-23: each unit's `--fixed` list is cut to the packs registered when it runs (`Run.live_unit`), and `market_zones.Groups` skips commutes naming a pack that left; a scratch join with Xinjiang forced to park ran Tibet, Ningxia, Inner Mongolia and the market step.
 - T-1015 [P1] The planner's US rules and the US replan. Done 2026-10-23: 45 US metro rows and 197 zones (6 in Puerto Rico), 297.8M, as the dry run but for Riverside, South Jersey and Alaska's belt; no other row changed; realms split in five. notes/T-1004.md "T-1015".
 - T-1020 [P1] Track placement unresponsive. Done 2026-10-23: Anita's freeze was a run left open across cities, so each move asked for a 10,000 km piece (3-11 s in the clock worker); free-drawn pieces now stop at 500 km and the repro places in 30 ms. Big-network costs are T-1028 to T-1031. notes/T-1001.md "T-1020".

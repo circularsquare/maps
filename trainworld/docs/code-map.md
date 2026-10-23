@@ -133,7 +133,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `packs/outlines.json`, which `pipeline/zone_outlines.py` writes: every registered zone's coarse
   outline, read once for the outlines and the realms' shade, T-800), `zoneLoading.ts` (zones still loading drawn grey with a loading
   bar, T-343), `realmOverlay.ts` (the realms not shown: one world shade with the shown zones cut out
-  by `boundaryGeometry.ts`'s `outsideZones`, and a button each, T-975, T-1006), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and
+  by `boundaryGeometry.ts`'s `outsideZones` as triangles, drawn by the custom layer `shadeLayer.ts`
+  (T-1025), and a button each, T-975, T-1006), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and
   `zonesLoadForView`, the zoom test of `game/zones.ts` `ZONE_LOAD_ZOOM` that decides whether zones
   load for viewing, T-276, T-318, T-871).
 
@@ -238,6 +239,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   copy is open, twice: cash loads as saved and moves, no ledger day after the clock; a save with
   ledger days after its clock gets their running cost back; port 6165 by default),
   `t975-realms.mjs` (realms in a fresh profile: no bubbles behind the start menu, a Tokyo start shows Japan only with the shade cut around its zones, a button shows France, a reload hides it again, stations in two realms show both; the zoomed-out frame and a pan across France and Germany measured; port 6165 by default),
+  `t1025-shade.mjs` (Node, no browser: the realm shade's triangles for each realm alone and several groups up to all; no point of a shown zone shaded, none shaded twice, open land and sea shaded once; `quick` for the groups only, about 6 s, all of it under half a minute),
   `t728-newgame.mjs` (the new game sheet in a fresh profile: the search, a sandbox in Tokyo from
   its real network, a normal London start, a map start, the real New York save turned sandbox from
   Settings; slots left keep their bytes; screenshots t728-*.png; port 6150 by default),

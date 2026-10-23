@@ -1,14 +1,15 @@
 // T-975, T-1006: the realms not shown (game/realms.ts). One shade covers the world, land and water
 // alike, with the shown realms' zones cut out along their coarse outlines (the lines every other zone
-// outline follows), under labels and the network and taking no clicks; where hidden realms meet there
+// outline follows), drawn by its own layer (shadeLayer.ts, T-1025), under labels and the network and
+// taking no clicks; where hidden realms meet there
 // is no edge. Each hidden realm has a floating button at its point that shows it. A button whose point
 // is off screen sits inside the on-screen part of its realm's box (as the loading bars do, T-939);
 // buttons that would overlap give way to the realm with more zones.
 
 import { effect } from "@preact/signals";
 import { h, render } from "preact";
-import type { FeatureCollection, MultiPolygon } from "geojson";
-import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
+import type { MultiPolygon } from "geojson";
+import type { Map as MlMap } from "maplibre-gl";
 import { CITIES } from "../game/cities";
 import { choosing } from "../game/loading";
 import { followStations, inactiveRealms, loadRealms, realmName, shownRealms, showRealm, zoneOutlines, zoneShown, type RealmSpot } from "../game/realms";
@@ -16,12 +17,12 @@ import { SHADES } from "../game/shadeTable";
 import { shade } from "../game/ui";
 import { Icon } from "../ui/widgets";
 import { outsideZones } from "./boundaryGeometry";
+import { ShadeLayer } from "./shadeLayer";
 
 const FILL = "tw-realms-inactive";
 /** how far a button keeps from the map's edges, px */
 const EDGE = 48;
 const GAP = 6;
-const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
 
 export function startRealmOverlay(map: MlMap): () => void {
   const stopStations = followStations();
@@ -31,7 +32,7 @@ export function startRealmOverlay(map: MlMap): () => void {
   map.getContainer().appendChild(layer);
   const buttons = new Map<string, { el: HTMLDivElement; w: number; h: number }>();
   let hidden: RealmSpot[] = [];
-  let cut: MultiPolygon | FeatureCollection = empty;
+  const shadeLayer = new ShadeLayer(FILL);
 
   const button = (l: RealmSpot) => {
     let b = buttons.get(l.id);
@@ -80,20 +81,17 @@ export function startRealmOverlay(map: MlMap): () => void {
 
   const paint = () => {
     const c = SHADES[shade.peek()];
-    if (!map.getLayer(FILL)) return;
-    map.setPaintProperty(FILL, "fill-color", c.inactive);
-    map.setPaintProperty(FILL, "fill-opacity", c.inactiveOpacity);
+    shadeLayer.setColor(c.inactive, c.inactiveOpacity);
   };
   const visibility = () => {
-    const v = choosing.peek() ? "none" : "visible";
-    if (map.getLayer(FILL)) map.setLayoutProperty(FILL, "visibility", v);
+    shadeLayer.visible = !choosing.peek();
+    map.triggerRepaint();
     layer.style.display = choosing.peek() ? "none" : "";
   };
   const add = () => {
-    if (!map.getSource(FILL)) map.addSource(FILL, { type: "geojson", data: cut });
     if (!map.getLayer(FILL)) {
       const before = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
-      map.addLayer({ id: FILL, type: "fill", source: FILL, paint: { "fill-antialias": false } }, before);
+      map.addLayer(shadeLayer, before);
     }
     paint();
     visibility();
@@ -105,16 +103,15 @@ export function startRealmOverlay(map: MlMap): () => void {
 
   const disposeCut = effect(() => {
     const shown = shownRealms.value, outlines = zoneOutlines.value;
-    if (!shown || !outlines) cut = empty;
+    if (!shown || !outlines) shadeLayer.setTriangles(new Float64Array(0));
     else {
       const zones: MultiPolygon[] = [];
       for (const c of CITIES) {
         const g = outlines.get(c.id);
         if (g && zoneShown(c.id)) zones.push(g);
       }
-      cut = outsideZones(zones);
+      shadeLayer.setTriangles(outsideZones(zones));
     }
-    (map.getSource(FILL) as GeoJSONSource | undefined)?.setData(cut);
   });
   const disposeButtons = effect(() => {
     hidden = inactiveRealms.value;
@@ -136,6 +133,5 @@ export function startRealmOverlay(map: MlMap): () => void {
     for (const b of buttons.values()) render(null, b.el);
     layer.remove();
     if (map.getLayer(FILL)) map.removeLayer(FILL);
-    if (map.getSource(FILL)) map.removeSource(FILL);
   };
 }
