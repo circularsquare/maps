@@ -1,5 +1,7 @@
 # Archive
 
+- T-1070 [P3] Demand held to the trains' room. Done 2026-10-24: no crowding setting does it (the averaging keeps a quarter of free flow); after the rounds no segment carries more than crush in the busiest hour. Real save rail 12.78M to 12.27M, lines over crush 128 to 0; explorer shows crowding and the wait for room. notes/T-1070.md.
+- T-1069 [P3] Fares for riders who go another way. Done 2026-10-24 by T-1070: fares stay demand's riders, now held to the trains' room, so demand and income agree; no "gave up" figure added. notes/T-1070.md.
 - T-1151 [P2] Hidden regions: hover and load when zoomed in. Done 2026-10-24: the land's hover says the realm's name over "Click to load"; a view coming to rest after a move, at zoom 10 or closer with its centre on hidden land, shows it (no long task). checks/t975-realms.mjs covers both.
 - T-1152 [P2] Full stretches graded, with a switch. Done 2026-10-24: the account gives each stretch the share of the day's trains packed to crush (listed from 5%); edge and darkening scale with it; hover "Packed full on N% of the day's trains"; Settings "Full stretches", on by default.
 - T-1153 [P2] Station sound lengths. Done 2026-10-24: each arrival short (45%: a shorter note, one group of at most 2 pops), medium (35%) or full; T-1122's skip and pitch kept.
