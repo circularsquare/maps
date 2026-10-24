@@ -28,8 +28,8 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { speedColour } from "../game/palette";
 import { metresBetween } from "../game/walks";
-import { ask, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, selection, trackCount, tool } from "../game/ui";
-import { describeRemovable, removeThing, type Removable } from "../game/remove";
+import { ask, autoLevel, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, selection, trackCount, tool } from "../game/ui";
+import { describeRemovable, removeThing, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
 import { pointerLocal } from "./pick";
@@ -38,12 +38,13 @@ import { edit, say, world } from "../game/world";
 import type { RouteEnd, StationAt } from "../workers/protocol";
 import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import { toLngLat, toLocal } from "./geo";
+import type { Level } from "../game/types";
 import { circleOnScreen } from "./curveCircle";
 import { strokesFromParts, strokesFromPreview } from "./network";
 import { pairBeside, PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
 import type { StopMarkers, StopTier } from "./stopMarkers";
-import { chip, elevationFact, factRow, speedFact } from "./trackTagRows";
+import { chip, costTint, elevationFact, factRow, speedFact } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
@@ -99,6 +100,23 @@ const MAX_PIECE_KM = 500;
 const WAIT_MS = 300;
 const tooFarText = () => `Too far for one piece of track (${distance(MAX_PIECE_KM * 1000)} at most). Press Esc to start somewhere else.`;
 
+/** An x, y, z polyline less the shares `fromA` and `fromB` of its length at its two ends. */
+function trimPolyline(pts: Float32Array, fromA: number, fromB: number): Float32Array {
+  const n = pts.length / 3, cum = [0];
+  for (let i = 1; i < n; i++) cum.push(cum[i - 1] + Math.hypot(pts[i * 3] - pts[i * 3 - 3], pts[i * 3 + 1] - pts[i * 3 - 2]));
+  const total = cum[n - 1], s0 = fromA * total, s1 = (1 - fromB) * total;
+  const at = (s: number) => {
+    let i = 1;
+    while (i < n - 1 && cum[i] < s) i++;
+    const t = cum[i] > cum[i - 1] ? (s - cum[i - 1]) / (cum[i] - cum[i - 1]) : 0;
+    return [0, 1, 2].map((k) => pts[(i - 1) * 3 + k] + (pts[i * 3 + k] - pts[(i - 1) * 3 + k]) * t);
+  };
+  const out = [...at(s0)];
+  for (let i = 0; i < n; i++) if (cum[i] > s0 && cum[i] < s1) out.push(pts[i * 3], pts[i * 3 + 1], pts[i * 3 + 2]);
+  out.push(...at(s1));
+  return Float32Array.from(out);
+}
+
 function placedAt(end: RouteEnd, lx: number, ly: number, ring: [number, number] | null): Placed {
   const [lng, lat] = toLngLat(lx, ly);
   return { end, lng, lat, ring };
@@ -153,7 +171,7 @@ export class Tools {
     // fetched when the station tool is picked, not at startup (T-400)
     effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); warmStreetNames(this.map); } });
     map.on("idle", () => tool.peek() === "station" && warmStreetNames(map));
-    effect(() => { buildLevel.value; trackCount.value; highSpeed.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
+    effect(() => { buildLevel.value; autoLevel.value; trackCount.value; highSpeed.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
     // T-727d: the snap switch's routes along the real network
     this.real = new RealSnap(map, overlay, client, (r) => this.realReq(r), (a, req) => {
       if (a) return this.start && this.showPreview(a, req ? JSON.stringify(req) : "");
@@ -162,7 +180,7 @@ export class Tools {
       this.overlay.invalidate();
       if (!this.real.active) this.requestPreview();
       this.place();
-    }, () => this.place());
+    }, () => this.place(), () => this.freeLevel());
     effect(() => this.real.setOn(snapping.value));
     // T-1039: a run ends with the track tool however it is left (a game loaded sets the tool directly)
     effect(() => { if (tool.value !== "track" && this.start) setTimeout(() => tool.peek() !== "track" && this.start && this.reset()); });
@@ -296,7 +314,27 @@ export class Tools {
     if (s.kind === "node") return { kind: "node", node: s.node };
     const p = this.pack(s.lx, s.ly);
     if (s.kind === "edge") return { kind: "edge", edge: s.edge, x: p.x, y: p.y };
-    return { kind: "free", x: p.x, y: p.y, level: buildLevel.peek() };
+    return { kind: "free", x: p.x, y: p.y, level: this.freeLevel() };
+  }
+
+  /** The elevation of a segment's end on open ground: with Elevation on auto (T-1161), that of the
+   * track the run starts from, else the one picked. */
+  private freeLevel(): Level {
+    const se = this.start?.end;
+    if (!autoLevel.peek() || !se) return buildLevel.peek();
+    if (se.kind === "free") return se.level;
+    const w = world.peek();
+    if (se.kind === "node") return w?.nodes.get(se.node)?.level ?? buildLevel.peek();
+    // on a piece: its height at the nearest drawn point, in 8 m levels
+    const pts = this.overlay.renderer.net?.edgePts.get(se.edge);
+    if (!pts || pts.length < 3) return buildLevel.peek();
+    const [lx, ly] = toLocal(this.start!.lng, this.start!.lat);
+    let best = Infinity, z = 0;
+    for (let i = 0; i + 2 < pts.length; i += 3) {
+      const d = (pts[i] - lx) ** 2 + (pts[i + 1] - ly) ** 2;
+      if (d < best) best = d, z = pts[i + 2];
+    }
+    return Math.max(-3, Math.min(3, Math.round(z / 8))) as Level;
   }
 
   // ---------------------------------------------------------------- events
@@ -494,7 +532,7 @@ export class Tools {
   /** A real route's request (T-727d): from the start, or on open ground from the route's first
    * point; to the player's own track under the pointer, else the route's last point. */
   private realReq(r: RealRoute, at: Snap | null = this.hover) {
-    const free = ([lng, lat]: [number, number]): RouteEnd => ({ kind: "free", ...lngLatToPack(lng, lat), level: buildLevel.peek() });
+    const free = ([lng, lat]: [number, number]): RouteEnd => ({ kind: "free", ...lngLatToPack(lng, lat), level: this.freeLevel() });
     const se = this.start!.end;
     return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: false, quad: trackCount.peek() === 4, through: true, design: designSpeed.peek(), hsr: highSpeed.peek() };
   }
@@ -745,6 +783,11 @@ export class Tools {
       const parts = h?.kind === "track" && edgePts
         ? [h.edge, partner].map((id) => edgePts.get(id)).filter((p): p is Float32Array => !!p && p.length >= 6)
         : [];
+      // T-1161: past a station, only what goes
+      if (h?.kind === "track" && parts.length) {
+        const [ka, kb] = stationTrim(h.edge), len = world.peek()?.edges.find((x) => x.id === h.edge)?.lengthM ?? 0;
+        if ((ka || kb) && len > 0) parts[0] = trimPolyline(parts[0], ka / len, kb / len);
+      }
       this.overlay.renderer.setPreview(parts.length ? strokesFromParts(parts, true, false) : null);
       this.overlay.invalidate();
     }
@@ -754,10 +797,7 @@ export class Tools {
 
   private deleteClick(e: MapMouseEvent) {
     const h = this.deletePick(e.point.x, e.point.y);
-    if (!h) {
-      say("Click track, a station or a flyover to remove it.");
-      return;
-    }
+    if (!h) return;
     void removeThing(h).then(() => this.deleteHover(e.point.x, e.point.y));
   }
 
@@ -1386,8 +1426,8 @@ export function setCurveLabel(el: HTMLElement, kmh: number) {
 
 /**
  * The track tool's tag (T-411, T-526): length, cost multiplier and price; then the elevation being
- * placed and the route's lowest speed limit (trackTagRows.ts). The multiplier is on yellow growing
- * above 1x. When the segment could not be built ending here, why first.
+ * placed and the route's lowest speed limit (trackTagRows.ts). The multiplier is on `costTint`'s
+ * colour. When the segment could not be built ending here, why first.
  */
 function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
   const div = (...kids: (string | Node)[]) => {
@@ -1409,8 +1449,8 @@ function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
   } else for (let i = 1; i < nv - 1; i++) if (pv.verts[i * 4 + 2] > 0) top = Math.min(top, pv.verts[i * 4 + 3]);
   if (!Number.isFinite(top)) top = highSpeed.peek() ? HSR_KMH : TOP_KMH;
   if (pv.ok) {
-    const dear = Math.min(1, (pv.mult - 1) / 1.5);
-    out.push(div(`${distance(pv.lengthM)}, cost `, chip(`${pv.mult.toFixed(2)}x`, pv.mult > 1.005 ? COST_YELLOW : null, 0.2 + 0.6 * dear),
+    const tint = costTint(pv.mult);
+    out.push(div(`${distance(pv.lengthM)}, cost `, chip(`${pv.mult.toFixed(2)}x`, tint?.[0] ?? null, tint?.[1]),
       `, ${moneyShort(pv.cost * 1e6)}`));
   }
   const [first, ...more] = placedLevels(pv.pts, level);
@@ -1441,5 +1481,4 @@ function placedLevels(pts: ArrayLike<number>, level: number): number[] {
 const TOP_KMH = 160;
 /** High-speed track's straight limit, km/h (the sim's `V_HSR`, T-817). */
 const HSR_KMH = 320;
-const COST_YELLOW = "#f2c200";
 

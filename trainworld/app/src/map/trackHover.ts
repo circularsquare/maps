@@ -29,7 +29,9 @@ import { setPointerNet, type Hot } from "./hovered";
 import { TAG_OFFSET_PX, tagLines } from "./labelLayout";
 import { complexOf } from "../game/complexView";
 import { forecast } from "../game/format";
-import { elevationFact, factRow, lineBullets, speedFact } from "./trackTagRows";
+import { chip, elevationFact, factRow, lineBullets, speedFact } from "./trackTagRows";
+import { crowdColour } from "../game/palette";
+import { waitText } from "../game/today";
 
 /** Daily riders on run 0's stretch `k` of a line, both directions: every period's load summed;
  * null when demand has no answer for it that fits its stops. `purpose`: the map's purpose
@@ -47,7 +49,7 @@ export function dailyRiders(dv: DemandView | null, lineId: string, stops: number
 }
 
 /** The tag's lines for a line stroke segment `i`. */
-function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, traffic: boolean, i: number, fullTrains: number): TipLine[] {
+function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, traffic: boolean, i: number, full: { share: number; wait: number } | null): TipLine[] {
   const num = n.lines.colour[i];
   const l = w?.save.lines.find((x) => x.num === num);
   const name = l?.name ?? `Line ${num}`;
@@ -68,8 +70,13 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   if (display.peek().fullMarks && w?.fullTrack[lev]?.has(n.lines.edge[i])) {
     out.push(Object.assign(document.createElement("div"), { textContent: `Track at capacity at ${clock.demand.peek()} demand`, style: "color: var(--bad)" }));
   }
-  // T-1125, T-1152: the share of the day's trains packed full here (the boarding account)
-  if (fullTrains > 0) out.push(Object.assign(document.createElement("div"), { textContent: `Packed full on ${Math.max(1, Math.round(fullTrains * 100))}% of the day's trains`, style: "color: var(--bad)" }));
+  // T-1125, T-1160: the riders' wait for a train with room here, on its crowding colour as the line
+  // panel's dots, and the share of the day's trains full here (the boarding account)
+  if (full) {
+    const div = (...kids: (string | Node)[]) => { const d = document.createElement("div"); d.append(...kids); return d; };
+    if (!Number.isNaN(full.wait)) out.push(div("Riders wait ", chip(waitText(full.wait), crowdColour(full.wait)), " on average for a train with room"));
+    if (full.share > 0) out.push(div(`Full on ${Math.max(1, Math.round(full.share * 100))}% of the day's trains`));
+  }
   return out;
 }
 

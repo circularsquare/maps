@@ -43,7 +43,7 @@ export function BlueprintControls() {
       </div>
       {m && upkeep > 0 && (
         <p class="small muted blueprint-upkeep" data-tip={upkeepText(m, "Once constructed, upkeep")}>
-          then {money(upkeep)} a day upkeep
+          {money(upkeep)} / day upkeep
         </p>
       )}
       <button class="btn text blueprint-construct" data-tip="Construct every blueprint piece (C)" disabled={total <= 0} onClick={() => void constructBlueprints()}>Construct blueprints<span class="key muted">C</span></button>

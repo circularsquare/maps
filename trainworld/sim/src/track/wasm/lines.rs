@@ -41,9 +41,16 @@ impl TrackApi {
         d.cars = cars;
         self.run(Op::Line { id, data: Some(d) })
     }
+    /// A copy has the source's stops and settings but no trains until the player sets them
+    /// (T-1161): headways stay headways, at none.
     pub fn copy_line(&mut self, source: u32, id: u32, name: String) -> u32 {
         let Some(mut d) = self.w.net.line_data(source) else { return self.refuse(Issue::NoSuchLine { line: source }) };
         d.name = name;
+        d.trains = Some([0; 3]);
+        d.tph = [0.0; 3];
+        if d.auto.is_some() {
+            d.auto = Some([0; 3]);
+        }
         let r = self.run(Op::Line { id, data: Some(d) });
         if r == 0 { self.w.net.next_line_number = self.w.net.next_line_number.saturating_add(1); }
         r

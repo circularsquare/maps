@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { andList, clockTime, count, distance, duration, headway, length, money, plural, runCostRule, speed, trainKind, trainRunCost } from "../../game/format";
-import { LINE_PALETTE } from "../../game/palette";
+import { crowdColour, LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS } from "../../game/periods";
-import { crowdColour, crowdGrade, crowding, runningToday, today, useToday, waitText } from "../../game/today";
+import { crowdGrade, crowding, runningToday, today, useToday, waitText } from "../../game/today";
 import { accountVersion, CAR_M, CRUSH_PER_CAR } from "../../game/boarding";
 import { complexOf } from "../../game/complexView";
 import { DAY_KIND_NAME } from "../../game/days";
@@ -178,12 +178,10 @@ function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
     ? `${distance(km * 1000)} once round in ${duration(s)}${st.loop === "balloon" ? ", the lap less the turning at the end" : ""}. Dwell at stops and waiting at busy track are in it.`
     : `${distance(km * 1000)} there and back in ${duration(s)}, the round trip less the turning at the ends. Dwell at stops and waiting at busy track are in it, so it is the average speed of both directions together.`;
   return (
-    <ul class="rows">
-      <li data-tip={tip}>
-        <span class="grow">Average speed</span>
-        <span class="val">{speed(kmh)}</span>
-      </li>
-    </ul>
+    <li data-tip={tip}>
+      <span class="grow">Average speed</span>
+      <span class="val">{speed(kmh)}</span>
+    </li>
   );
 }
 
@@ -217,8 +215,8 @@ function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; period
           </li>
         )}
         {d.fullTrains > 0 && <Row label="Trains leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} trains left full`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
-        <li data-tip={`${count(d.leftBehind)} of the ${count(d.riders + d.leftBehind)} riders who wanted a train were left on the platform by a full one`}>
-          <span class="grow">Riders left on the platform</span>
+        <li data-tip={`${count(d.leftBehind)} of the ${count(d.riders + d.leftBehind)} riders who wanted a train were left at the platform by a full one`}>
+          <span class="grow">Riders left at platform</span>
           <span class="val">{count(d.leftBehind)}/{count(d.riders + d.leftBehind)}</span>
         </li>
       </ul>
@@ -348,7 +346,7 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
     if (to !== cars) void edit({ op: "lineCars", line: l.num, cars: to >= cap ? 0 : to });
   };
   return (
-    <ul class="rows">
+    <ul class="rows flat">
       <li>
         <span class="grow" data-tip={capText}>Train length</span>
         <Stepper value={carsText(cars)} wide label="train length" onStep={step} tipDown={cars > 1 ? tip(cars - 1) : capText} tipUp={cars < cap ? tip(cars + 1) : capText} />
@@ -357,10 +355,10 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   );
 }
 
-/** T-817: the line's kind of train, ordinary or high speed, and the top speed its trains reach. A
+/** T-817: the line's kind of train, ordinary or high speed, and its average speed (T-1159). A
  * switch buys the line's cars of the other kind beyond that kind's spares; the cars it leaves
  * stay in the depot. */
-function TrainType({ l, st }: { l: LineInput; st: LineStats }) {
+function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number }) {
   const m = moneyState.value;
   const tip = (fast: boolean) => {
     const k = m && trainKind(m, fast);
@@ -374,9 +372,8 @@ function TrainType({ l, st }: { l: LineInput; st: LineStats }) {
     }
     return t;
   };
-  const top = st.stretches.reduce((v, s) => Math.max(v, s.reached), 0);
   return (
-    <ul class="rows">
+    <ul class="rows flat">
       <li>
         <span class="grow">Trains</span>
         <Segmented<boolean>
@@ -388,12 +385,7 @@ function TrainType({ l, st }: { l: LineInput; st: LineStats }) {
           onChange={(fast) => { if (fast !== st.fast) void edit({ op: "lineFast", line: l.num, fast }); }}
         />
       </li>
-      {top > 0 && (
-        <li data-tip={`The fastest the trains run on this line.\nOver 160 km/h needs high-speed trains on high-speed track.`}>
-          <span class="grow">Top speed</span>
-          <span class="val">{speed(top)}</span>
-        </li>
-      )}
+      {l.stops.length >= 2 && <AverageSpeed st={st} lev={lev} />}
     </ul>
   );
 }
@@ -738,7 +730,7 @@ export function LineInspector({ id }: { id: string }) {
           </tr>
         ))}
       </table>
-      {st.status !== "broken" && <TrainType l={l} st={st} />}
+      {st.status !== "broken" && <TrainType l={l} st={st} lev={lev} />}
       {st.status !== "broken" && <TrainLength l={l} st={st} />}
       {st.status === "running" && held.length > 0 && (
         <ul class="alerts">
@@ -758,7 +750,6 @@ export function LineInspector({ id }: { id: string }) {
 
       {!editingStops && stopsBlock}
       {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} />}
-      {st.status !== "broken" && l.stops.length >= 2 && <AverageSpeed st={st} lev={lev} />}
     </>
   );
 }

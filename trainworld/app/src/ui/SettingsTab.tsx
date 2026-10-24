@@ -72,7 +72,7 @@ export function SettingsTab() {
           Capacity markers
         </Check>
         <Check checked={d.fullMarks} onChange={(v) => setDisplay("fullMarks", v)}>
-          <span data-tip="Red edges in the Traffic view where track is at capacity or trains run packed full. The more of the day's trains are packed, the stronger the red.">Full stretches</span>
+          <span data-tip="In the Traffic view, track at capacity has a red edge. Where riders wait for a train with room, the edge takes that wait's colour from the line panel's crowding dots, stronger as the wait grows.">Full stretches</span>
         </Check>
         <Check checked={d.flatMarks} onChange={(v) => setDisplay("flatMarks", v)}>
           <span data-tip="The round marks where track meets or crosses at one level">Flat junctions and crossings</span>

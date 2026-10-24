@@ -98,19 +98,21 @@ there is no high-speed class and no hover yet.
     ([ui-demand-views.md](ui-demand-views.md) "Line width by riders"). A line on track at
     capacity [T-819] (an edge of a track or single-track section, or either track of a flat
     crossing, at `FULL_RHO` for the demand level in force, as the capacity tags take it;
-    `TrackApi.full_track`; platforms, termini and junctions keep only their tags), and a stretch
-    between two stops where trains run packed full [T-1125, T-1152] (in either direction, at least
-    5% of the day's trains leaving it packed to crush, from the boarding account of the hour's kind
-    of day, track-and-service.md 6.6), has a red band 1.5 px each side outside its casing (#c0392b,
-    #f0584f in the dark theme; `fullTrack` in `game/shadeTable.ts`), drawn in a pass of its own
-    before the lines' casings, so a red line keeps its casing between and a neighbouring line's
-    casing covers the band where they touch, and its body darker by up to 14% (`FULL_DARKEN`).
-    Track at capacity has the mark at full strength; a stretch of packed trains has it as strong as
-    the share of the day's trains packed there: 15% of full strength plus the rest in proportion to
-    the share, all of it from 75% of the trains (`fullStrength` in `map/renderer.ts`), the band mixed from the
-    casing's colour towards the red and the darkening scaled alike. The hover adds "Track at
-    capacity at high demand" or "Packed full on 32% of the day's trains" in red. The Settings switch
-    "Full stretches" (on by default) shows or hides both marks and their hover lines.
+    `TrackApi.full_track`; platforms, termini and junctions keep only their tags) has a red band
+    1.5 px each side outside its casing (#c0392b, #f0584f in the dark theme; `fullTrack` in
+    `game/shadeTable.ts`), drawn in a pass of its own before the lines' casings, so a red line keeps
+    its casing between and a neighbouring line's casing covers the band where they touch, and its
+    body darker by 14% (`FULL_DARKEN`). A stretch between two stops where riders wait for a train
+    with room [T-1125, T-1160] (in either direction, at least 0.2 min on average over the day,
+    from the boarding account of the hour's kind of day, track-and-service.md 6.6) has the same
+    band in the crowding colour of that wait, the colours of the line panel's crowding dots
+    (`CROWD_STOPS` in `game/palette.ts`, blended in the shader by `rampGlsl`): 30% of full strength
+    at 0.2 min growing to all of it at 2.5 min (`FULL_FLOOR`, `FULL_WAIT_STRONG` in
+    `map/rendererShaders.ts`), the band mixed from the casing's colour and the darkening scaled
+    alike. The hover adds "Track at capacity at high demand" in red, or "Riders wait 2.3 min on
+    average for a train with room" with the wait on its crowding colour and "Full on 32% of the
+    day's trains". The Settings switch "Full stretches" (on by default) shows or hides both marks
+    and their hover lines.
   - **Elevation** (`height` in code): the track coloured by elevation (a level in code), blue-green to indigo above ground (open sky), green
     at ground, warm below (deep): +3 #4a2c9a, +2 #2f6fd0, +1 #16a39a, 0 #58b04a, -1 #f0b928, -2 #ee7a1a,
     -3 #c2351c (`LEVEL_COLOURS`, T-413, T-478, T-480; neighbours at least 30 apart in CIELAB). The same table colours

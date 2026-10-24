@@ -70,7 +70,8 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 - The player can drag the dock wider or narrower and move the divider between tab area and
   inspector; both are remembered per browser. Each tab keeps its own scroll position for the
   session, opening at its top the first time [T-215].
-- Tool hints and a refused edit's reason show at the map's bottom left (`ui/ToolNotes.tsx`).
+- A refused edit's reason, what an edit did, and the stop editor's and trip tool's one-line hints
+  show at the map's bottom left (`ui/ToolNotes.tsx`); the build tools have no hint there [T-1159].
 - **Narrow screens** [T-951, `style.css`]: at most 600 px wide and at least 560 px tall (a phone held
   upright) the dock goes under the map, full width and 40% of the height, so the map and top bar keep
   the whole width and the map column's container queries see the real width. The tab area is 48% of the
@@ -503,7 +504,9 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   is grey" in [ui-demand-views.md](ui-demand-views.md)) until their final lands. The time is
   greyed and its hover says "The clock starts when demand has loaded". Meanwhile a card in the
   middle of the map says "Loading data" over a filling bar and the current step (Downloading city
-  data, Opening city data, Calculating demand), naming no cities; the percentage is only the bar's
+  data, Opening city data, Calculating demand), naming no cities; while it loads more than one city,
+  the step counts the cities open of those it is loading ("Opening city data (15/120)", T-1161,
+  `LoadProgress.done`); the percentage is only the bar's
   hover ("42% loaded"). The bar counts to that final, so on the real New York save it fills
   for 20 to 60 s, by the machine. A slot whose cities are all open shows the bar for its solve alone. The card
   takes no input but the bar's hover (a press pans the map beneath) and goes when the clock starts.

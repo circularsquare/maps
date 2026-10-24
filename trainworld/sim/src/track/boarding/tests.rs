@@ -719,10 +719,12 @@ fn the_hour_lines_up_with_the_drawn_trips() {
     assert_eq!(np, 0); // no transfers set
     let tail = 5 + 2 * nt + nl + nq * QUEUE_STRIDE + ne * 2;
     let nf = out[tail + ne] as usize;
-    assert_eq!(out.len(), tail + ne + 1 + nf * 3);
+    assert_eq!(out.len(), tail + ne + 1 + nf * 4);
     assert!(nf >= 1, "riders left behind at every train: a stretch at capacity (T-1125)");
-    let shares = &out[tail + ne + 1 + nf * 2..];
-    assert!(shares.iter().all(|&s| (FULL_SHARE_MIN..=1.0).contains(&s)), "{shares:?} (T-1152)");
+    let shares = &out[tail + ne + 1 + nf * 2..tail + ne + 1 + nf * 3];
+    assert!(shares.iter().all(|&s| s > 0.0 && s <= 1.0), "{shares:?} (T-1152)");
+    let waits = &out[tail + ne + 1 + nf * 3..];
+    assert!(waits.iter().all(|&s| s >= FULL_WAIT_MIN_S), "{waits:?} (T-1160)");
     // T-1123: each train stops before it leaves, never before the train ahead left
     let (ev, arr) = (&out[tail - ne * 2..tail], &out[tail..tail + ne]);
     for e in 0..ne {

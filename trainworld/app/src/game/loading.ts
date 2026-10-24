@@ -16,6 +16,8 @@ import { cityById, type CityId } from "./cities";
 export interface LoadProgress {
   /** the cities being loaded, the viewed one first */
   cities: CityId[];
+  /** how many of `cities` are done with the step: downloaded while downloading, else open (T-1161) */
+  done: number;
   /** 0-1, the share of the load's expected time done (T-243: each step weighted by how long it is
    * expected to take, moving with time inside a step; workers/demandClient.ts) */
   fraction: number;

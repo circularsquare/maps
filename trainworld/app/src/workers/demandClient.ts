@@ -1552,7 +1552,9 @@ class DemandClient {
     job.best = Math.max(job.best, Math.min(0.99, shown));
     this.barParts = { dlMs, dl, openMs, open, solveMs, solve, remDl, remOpen, solveRem, rem, rec: rec?.ms ?? 0, spent: spentAll, fraction, shown: job.best }; // ?debug=1
     const step = dl < 1 ? "Downloading city data" : open < 1 ? "Opening city data" : "Calculating demand";
-    loadProgress.value = { cities: job.cities.filter((id) => !isMarket(id)), fraction: job.best, step, startup: job.startup };
+    const cities = job.cities.filter((id) => !isMarket(id));
+    const done = cities.filter((id) => loaded(id) || (dl < 1 && this.bytes.has(id))).length;
+    loadProgress.value = { cities, done, fraction: job.best, step, startup: job.startup };
   }
 
   // --- T-328: the demand cache (workers/demandCache.ts) -----------------------------------------

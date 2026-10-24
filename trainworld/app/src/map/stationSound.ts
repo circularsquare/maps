@@ -92,26 +92,40 @@ export class StationSound {
   private out: DynamicsCompressorNode | null = null;
   private recent: number[] = [];
 
+  /** the page has had a press or a key, so a context may start */
+  private armed = false;
+  private failed = false;
+
   constructor() {
     const arm = () => {
       window.removeEventListener("pointerdown", arm, true);
       window.removeEventListener("keydown", arm, true);
-      try {
-        const C = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-        if (!C) return;
-        this.ctx = new C();
-        const comp = this.ctx.createDynamicsCompressor();
-        comp.connect(this.ctx.destination);
-        this.out = comp;
-      } catch {
-        this.ctx = null;
-      }
+      this.armed = true;
     };
     window.addEventListener("pointerdown", arm, true);
     window.addEventListener("keydown", arm, true);
   }
 
+  /** Made at the first sound, not on the press: opening the audio device took 60-210 ms, a freeze on
+   * the page's first click (T-1162). After a gesture the page may start a context from any task. */
+  private open() {
+    if (this.ctx || this.failed || !this.armed) return;
+    try {
+      const C = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!C) { this.failed = true; return; }
+      this.ctx = new C();
+      const comp = this.ctx.createDynamicsCompressor();
+      comp.connect(this.ctx.destination);
+      this.out = comp;
+    } catch {
+      this.ctx = null;
+      this.failed = true;
+    }
+  }
+
   play(a: Arrival) {
+    if (a.speed >= 2 || a.volume <= 0) return;
+    this.open();
     const ctx = this.ctx, out = this.out;
     if (!ctx || !out || a.speed >= 2 || a.volume <= 0) return;
     if (ctx.state === "suspended") void ctx.resume();

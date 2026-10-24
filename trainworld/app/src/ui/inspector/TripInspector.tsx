@@ -212,7 +212,7 @@ function CrowdRows({ r }: { r: TripRoute }) {
         </li>
       )}
       {fullWait >= 0.05 && (
-        <li data-tip={`Riders left on the platform by full trains wait ${num1(fullWait)} min more on average for a train with room. Each minute counts as one, up to an hour at a stop`}>
+        <li data-tip={`Riders left at the platform by full trains wait ${num1(fullWait)} min more on average for a train with room. Each minute counts as one, up to an hour at a stop`}>
           <span class="grow">Waiting for a train with room</span>
           <span class="val">{minText(fullWait)}</span>
         </li>

@@ -244,6 +244,9 @@ pub struct RunAccount {
     /// Per stretch (stop k to k + 1 in this run's order), the share of the day's trains that leave
     /// it packed to crush (`full_shares`, T-1125, T-1152).
     pub full: Vec<f32>,
+    /// Per stretch, the extra wait (s) of the day's riders arriving at its first stop for a train
+    /// with room, on average (`stop_waits`, T-1160).
+    pub wait: Vec<f32>,
 }
 
 /// One line's counts over a window of the day (`Boarding::window`).
@@ -511,7 +514,8 @@ impl Boarding {
     /// QUEUE_STRIDE numbers, then per event 2, then per pulse 2, then per event its train's
     /// arrival (T-1123), then per pulse the station node its riders come from and their walk (s,
     /// T-1124), then the count of full stretches, per one its line and run 0 stretch (T-1125), then
-    /// per one the share of the day's trains packed to crush there (T-1152)]`.
+    /// per one the share of the day's trains packed to crush there (T-1152), then per one the
+    /// riders' average wait there for a train with room (s, T-1160)]`.
     ///
     /// A trip's loads are riders aboard on each stop-to-stop stretch, numbered as on run 0 (a
     /// run 1 trip's are reversed), so the renderer looks them up by the stretch it draws.
@@ -621,20 +625,21 @@ impl Boarding {
                 }
             }
         }
-        // T-1125, T-1152: the stretches where at least FULL_SHARE_MIN of the day's trains leave
-        // packed to crush, either way, in run 0's numbering, and that share (the fuller way's)
-        let (mut full, mut shares): (Vec<f32>, Vec<f32>) = (vec![], vec![]);
+        // T-1125, T-1152, T-1160: the stretches where riders wait FULL_WAIT_MIN_S or more for a
+        // train with room, either way, in run 0's numbering; the share of the day's trains packed
+        // to crush there and that wait (s), each the fuller way's
+        let (mut full, mut shares, mut waits): (Vec<f32>, Vec<f32>, Vec<f32>) = (vec![], vec![], vec![]);
         for l in 0..nl {
             let day = self.kind_at(epoch + shift(l), l);
             let Some(Some(acc)) = self.accounts[day].get(l) else { continue };
-            let f0 = &acc.runs[0].full;
-            let f1 = acc.runs.get(1).map_or(&[][..], |r| &r.full[..]);
-            for s in 0..f0.len().max(f1.len()) {
-                let back = f1.len().checked_sub(1 + s).and_then(|i| f1.get(i)).copied().unwrap_or(0.0);
-                let share = f0.get(s).copied().unwrap_or(0.0).max(back);
-                if share >= FULL_SHARE_MIN {
+            let back = |v: &[f32], s: usize| v.len().checked_sub(1 + s).and_then(|i| v.get(i)).copied().unwrap_or(0.0);
+            let (r0, r1) = (&acc.runs[0], acc.runs.get(1));
+            for s in 0..r0.full.len().max(r1.map_or(0, |r| r.full.len())) {
+                let wait = r0.wait.get(s).copied().unwrap_or(0.0).max(r1.map_or(0.0, |r| back(&r.wait, s)));
+                if wait >= FULL_WAIT_MIN_S {
                     full.extend([l as f32, s as f32]);
-                    shares.push(share);
+                    shares.push(r0.full.get(s).copied().unwrap_or(0.0).max(r1.map_or(0.0, |r| back(&r.full, s))));
+                    waits.push(wait);
                 }
             }
         }
@@ -654,6 +659,7 @@ impl Boarding {
         out.push((full.len() / 2) as f32);
         out.extend_from_slice(&full);
         out.extend_from_slice(&shares);
+        out.extend_from_slice(&waits);
         out
     }
 
@@ -1102,6 +1108,35 @@ impl RunAccount {
         }
         out
     }
+
+    /// T-1160: per stretch, the rider-seconds waited at its first stop after full trains (each
+    /// rider left behind waits the gap to the next departure, as `Boarding::crowding` counts them)
+    /// over the riders arriving there.
+    pub fn stop_waits(&self) -> Vec<f32> {
+        let (n, m) = (self.n, self.deps.len());
+        let mut out = vec![0.0f32; n.saturating_sub(1)];
+        if m == 0 {
+            return out;
+        }
+        for (k, w) in out.iter_mut().enumerate() {
+            let riders = self.arrivals.get(k).map_or(0.0, |a| a.day);
+            if !(riders > 0.0) {
+                continue;
+            }
+            let ts = &self.order_t[k * m..(k + 1) * m];
+            let ord = &self.order[k * m..(k + 1) * m];
+            let mut waited = 0.0f64;
+            for i in 0..m {
+                let q = self.q_after[ord[i] as usize * n + k] as f64;
+                if q > 0.0 {
+                    let gap = if i + 1 < m { ts[i + 1] - ts[i] } else { ts[0] + DAY - ts[i] };
+                    waited += q * gap.max(0.0);
+                }
+            }
+            *w = (waited / riders) as f32;
+        }
+        out
+    }
 }
 
 /// Alighting share per period and stop: demand's alightings over the riders it has arriving.
@@ -1166,9 +1201,10 @@ fn ride_km(alpha: &[f64], stop_s: &[f64], n: usize) -> Vec<f64> {
 /// The account's day starts at this hour, when platforms are usually empty.
 pub const START_HOUR: f64 = 3.0;
 
-/// A stretch is marked full (T-1125, T-1152) where at least this share of the day's trains leave
-/// it packed to crush.
-pub const FULL_SHARE_MIN: f32 = 0.05;
+/// A stretch is marked full (T-1125, T-1160) where the riders arriving at its first stop wait at
+/// least this long (s) on average for a train with room: 0.2 min, where the crowding colour
+/// (app/src/game/palette.ts `CROWD_STOPS`) leaves green.
+pub const FULL_WAIT_MIN_S: f32 = 12.0;
 
 /// One direction of one line for a day of departures from `START_HOUR`, from empty platforms;
 /// with `warm`, from a day earlier, keeping the second day. `leftover` says whether anyone was
@@ -1189,6 +1225,7 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
         acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, &through, &mut vec![]);
     }
     acc.full = acc.full_shares(CRUSH_PER_CAR * svc.lines[l].cars.max(1) as f64);
+    acc.wait = acc.stop_waits();
     acc
 }
 
@@ -1269,6 +1306,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         stop_open: vec![f64::NEG_INFINITY; n],
         ride_km,
         full: vec![],
+        wait: vec![],
     };
     let mut carry = vec![0.0f64; m];
     let mut order: Vec<usize> = (0..m).collect();

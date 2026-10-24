@@ -12,9 +12,17 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 - **Tools**: draw track (key 1), station (2), delete (3), select (5, [below](#the-select-tool)), in a
   2 by 2 grid [T-1128]; then the elevation (seven buttons
-  tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692) with its
-  multiplier and price per km (with High speed picked, high-speed track's: 1.5x, so 0.45x at
-  ground), Double, Quad or High speed track [T-255, T-817; no single track, T-733],
+  tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692)
+  and beside them the **auto elevation** switch (an icon of track rising onto a level stretch with an
+  arrow; hover "Draw at the elevation of the track you extend. On open ground, at the elevation
+  picked."; off by default) [T-1161]: while it is on, a segment drawn from existing track (a node, a
+  loose end or a point on a piece, `Tools.freeLevel`) ends at that track's elevation, so a run carries on at
+  the elevation it started from; a run started on open ground takes the elevation picked. Picking
+  an elevation turns it off. Then the picked elevation's price per km and multiplier, "$99M per
+  km (1.1x cost)" (with High speed picked, high-speed track's: 1.5x, so 0.75x at ground), the
+  multiplier on the track tool's tag colours: yellow growing above 1x, light green growing below
+  it, none at 1x (`costTint` in `map/trackTagRows.ts`); the line's hover names the elevation
+  [T-1159]. Then Double, Quad or High speed track [T-255, T-817; no single track, T-733],
   the target max speed (a row under the track choice: a stepper through 160, 200, 250 and 320 km/h, 160
   by default; higher lays the curves of newly drawn track wider, [track-and-service.md](track-and-service.md)
   6.1; its hover: "Long track pieces are laid out straight enough for this speed") [T-817, T-1127]; picking High
@@ -26,7 +34,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   Beside keep placing, the **snap switch** (a magnet, "Snap track to the real network") [T-727]: while
   it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
-  The elevation, the double, quad or high speed choice, the target max speed, the keep placing switch and the snap switch are remembered per
+  The elevation, the auto elevation switch, the double, quad or high speed choice, the target max speed, the keep placing switch and the snap switch are remembered per
   browser (localStorage with the other panel settings, not in the save) [T-468]; keep placing is on
   by default [T-942].
   The number keys work from any tab and open the Build tab; the key of the tool already on does
@@ -50,7 +58,12 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   half-drawn route is dropped (the tool stays on) with any ghost or real route still being worked
   out for it [T-1039], then the tool is left for selecting, then the selection clears. Leaving the
   track tool any other way (another tool, a game loaded) drops the route too.
-- Tool hints and a refused edit's reason show at the map's bottom left ([ui-panels.md](ui-panels.md) "The dock").
+- A refused edit's reason and what an edit did ("Blueprint added: ...") show at the map's bottom
+  left ([ui-panels.md](ui-panels.md) "The dock"). The build tools (track, station, delete, select)
+  show no instructions there (Anita, T-1159); stop editing and the trip tool keep their one-line hints.
+- **Spacing**: in the Build tab the Track row, Target max speed and Platform length are 6 px apart,
+  so rows of one kind are never further apart than from the controls above them; the Target max
+  speed box fits "320 km/h" [T-1159].
 
 ## Drawing track
 
@@ -249,7 +262,9 @@ selected, constructed and removed whole like other track (below). The clock work
 
 [T-096, T-244, T-338; `game/remove.ts`] Hovering shows what a click removes: a stretch of track
 drawn red (one piece of a drawn route, or "the crossover", both diagonals drawn red since it goes whole), a station or a
-flyover ringed, its name by the cursor. Blueprint is
+flyover ringed, its name by the cursor. A piece beside a through station is drawn red, and named by its
+length, only past the platform's end, which is all that goes ([track-and-service.md](track-and-service.md)
+6.1, T-1161; `stationTrim` in `game/remove.ts`). Blueprint is
 removed at once (undoable); anything constructed only after a yes in the confirmation dialog
 ("Remove 1.2 km of constructed track? Nothing is refunded." with Remove and Keep; Esc is Keep). The
 inspectors' Remove buttons and the Select tool's Remove ask the same way. A removal that changes a

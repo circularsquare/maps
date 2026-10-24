@@ -22,10 +22,20 @@ impl TrackApi {
     /// Remove an edge, and nodes left with no track and no station. Lines using it reroute or
     /// break. Constructed: final, no refund (SPEC 6.4).
     pub fn delete_edge(&mut self, id: u32) -> u32 {
-        let net = &self.w.net;
-        if !net.edge_ok(id) {
+        if !self.w.net.edge_ok(id) {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
+        // a station the removal would leave at a bare end keeps its place (T-1161); where the
+        // trimmed removal is refused, the whole edge goes as before
+        if let Some((ops, nodes, edges)) = self.station_trim_ops(id) {
+            let r = if self.w.net.edge_built[id as usize] { self.run_charged(Op::Batch(ops)) } else { self.run(Op::Batch(ops)) };
+            if r == 0 {
+                return 0;
+            }
+            nodes.into_iter().for_each(|n| self.w.net.release_node(n));
+            edges.into_iter().for_each(|e| self.w.net.release_edge(e));
+        }
+        let net = &self.w.net;
         let mut ops = vec![Op::DeleteEdge { id }];
         let (a, b) = (net.edge_a[id as usize], net.edge_b[id as usize]);
         for n in [a, b] {
@@ -424,4 +434,56 @@ impl TrackApi {
         self.construct(&edges, &stops)
     }
 
+}
+
+/// Track kept past a trimmed station's platform end (T-1161): `split_plan` may snap a split up to
+/// 2 m toward a piece boundary, and `check_station` wants 1 m clear of the platform.
+pub(super) const STATION_TRIM_MARGIN_M: f64 = 4.0;
+
+impl TrackApi {
+    /// `delete_edge` for an edge with a station at an end that has track on both sides (T-1161):
+    /// removing the edge would leave that station at a bare end, its platform running back from the
+    /// node, so it would move half a platform. The edge is split just past the platform instead and
+    /// only the rest removed. The ops with the node and edge ids they claim; None when no end is
+    /// such a station or the edge is too short to split.
+    fn station_trim_ops(&mut self, id: u32) -> Option<(Vec<Op>, Vec<u32>, Vec<u32>)> {
+        let net = &self.w.net;
+        let i = id as usize;
+        let (a, b, len) = (net.edge_a[i], net.edge_b[i], net.edge_len[i]);
+        if a == b || net.edge_crossover[i] {
+            return None;
+        }
+        let keep = |n: u32| (net.node_platform[n as usize] > 0 && net.node_ports[n as usize].n == 2).then(|| net.platform_reach(n) + STATION_TRIM_MARGIN_M);
+        let (ka, kb) = (keep(a), keep(b));
+        // split_plan keeps 5 m from either end of what it splits, plus a snap of 2 m
+        if (ka.is_none() && kb.is_none()) || ka.unwrap_or(0.0) + kb.unwrap_or(0.0) + 7.0 > len {
+            return None;
+        }
+        let lone = |n: u32| net.node_ports[n as usize].n == 1 && net.node_platform[n as usize] == 0;
+        let (lone_a, lone_b) = (lone(a), lone(b));
+        let (n1, e1) = (self.w.net.alloc_node(), self.w.net.alloc_edge());
+        Some(match (ka, kb) {
+            (Some(sa), None) => {
+                let mut ops = vec![Op::Split { edge: id, s: sa, node: n1, new_edge: e1 }, Op::DeleteEdge { id: e1 }];
+                if lone_b { ops.push(Op::Node { id: b, data: None }); }
+                (ops, vec![n1], vec![e1])
+            }
+            (None, Some(sb)) => {
+                let mut ops = vec![Op::Split { edge: id, s: len - sb, node: n1, new_edge: e1 }, Op::DeleteEdge { id }];
+                if lone_a { ops.push(Op::Node { id: a, data: None }); }
+                (ops, vec![n1], vec![e1])
+            }
+            (Some(sa), Some(sb)) => {
+                // the b end first, so the a end's chainage is the same on what is left
+                let (n2, e2) = (self.w.net.alloc_node(), self.w.net.alloc_edge());
+                let ops = vec![
+                    Op::Split { edge: id, s: len - sb, node: n2, new_edge: e2 },
+                    Op::Split { edge: id, s: sa, node: n1, new_edge: e1 },
+                    Op::DeleteEdge { id: e1 },
+                ];
+                (ops, vec![n1, n2], vec![e1, e2])
+            }
+            (None, None) => unreachable!(),
+        })
+    }
 }

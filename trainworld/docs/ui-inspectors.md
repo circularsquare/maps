@@ -91,7 +91,7 @@ purpose filter the purpose drawn is ringed in the bar.
   panel at once; the map's line follows by one colour edit every 0.2 s at most (longer on a slow
   machine: 6 times the last edit's round trip), and the final colour goes as one edit on release, a
   swatch click, an arrow key step or a typed hex.
-- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key L), Copy line (duplicates route and settings, then opens
+- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key L), Copy line (duplicates route and settings with no trains, T-1161, then opens
   naming and editing), and Delete line (asked first). While stops are being edited the Stops list (with a remove
   button on each stop) follows them there, above Schedule; otherwise it sits after the day's figures.
   Incomplete lines stay planned and run no trains.
@@ -100,7 +100,7 @@ purpose filter the purpose drawn is ringed in the bar.
   cell one line, the Demand column cut with an ellipsis when short of room [T-692]; a Trains / Headway switch in the heading
   chooses what the player sets [T-625]: with Headway the headway column holds a stepper (30 s steps
   under 5 minutes, 1 minute under 15, 5 above; none, or 1 to 120 minutes; a click on the number types
-  it in minutes) and the trains column the count it gives; each button's hover names the train
+  it in minutes) and the trains column the count it gives, 10 px clear of the stepper [T-1159]; each button's hover names the train
   count it leads to and, on a running line, the cars it buys at the car price, takes from the
   depot, or frees [T-631]; a line whose track holds it just over the headway set shows the headway
   it runs at, muted, left of the stepper, with a hover naming what limits it as the capacity alerts
@@ -116,9 +116,10 @@ purpose filter the purpose drawn is ringed in the bar.
   of the line." (the steppers have no such hover) [T-823, T-835]; on a
   running line one dot before each level's name grades the level on today's kind of day by the
   average wait for a train with room, each rider counted by the fare they pay as in Trains to add
-  (the level's periods averaged by those fares; High is its two peaks) [T-818], its colour running smoothly with that wait in minutes: green to 2, yellow at 3, orange
-  at 10, red at 15 and a deep red from 20 (`crowdColour` in `game/today.ts`, fed `avg.wait` in
-  `CrowdDots`; `Boarding::line_periods`) [T-692] [T-673] [T-477, T-491, T-515]; hover "Riders wait 4.0 min on
+  (the level's periods averaged by those fares; High is its two peaks) [T-818], its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
+  at 1, yellow at 2.5, orange at 9, red at 15 and a deep red from 20 (`crowdColour` in
+  `game/palette.ts`, fed `avg.wait` in `CrowdDots`; `Boarding::line_periods`; the Traffic view's
+  full stretches take the same colours, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160]; hover "Riders wait 4.0 min on
   average for a train with room", then "12/96 trains are full" (all the level's periods),
   a line naming the worst period and its wait when that period's grade is worse than the
   level's, and "Most of the waiting is at Gare du Nord" (the stop with the most rider-minutes
@@ -127,12 +128,13 @@ purpose filter the purpose drawn is ringed in the bar.
   option's hover giving its top speed ("High-speed trains run up to 320 km/h on high-speed track
   and 160 km/h on other track"), a car's price and the running costs, and on a running line what
   switching buys or takes from the depot and that the cars running now stay in the depot; then
-  **Top speed**, the highest speed the trains reach on the line (hover: over 160 km/h needs
-  high-speed trains on high-speed track); then a **Train length** stepper in cars [T-733], 1 up to what the line's
+  **Average speed**, both ways over the round trip less the turning at the ends, so stops and
+  waiting at busy track count (hover gives the distance and time) [T-549, T-1159]; then a **Train length** stepper in cars [T-733], 1 up to what the line's
   shortest platform fits (platform / 20 m), each button's hover giving the length it leads to,
   the riders a train then holds at crush ("7 cars, 1,120 riders a train at most"), the cars it
   buys or takes from the depot on a running line, and the cap ("The 160 m platform at East fits
-  8 cars"), which the label's hover also gives; stepping up to the cap stores the default (the most
+  8 cars"), which the label's hover also gives (the schedule's rows, Trains, Average speed and
+  Train length are one run of rows with no rules between, their controls 4 px apart [T-1159]); stepping up to the cap stores the default (the most
   that fits, `cars` 0), so the trains follow the platforms again; when full track holds trains back, an alert under the table names it ("Platform at
   Akabane is full", the station name a link that moves the camera there [T-669]) with the trains
   held per level beneath it ("Medium demand: 1 train held out of service"), one alert for each
@@ -147,7 +149,7 @@ purpose filter the purpose drawn is ringed in the bar.
   over every trip of today's kind of day from `linePeriods`; `averageLoad` in `LineInspector.tsx`; the hover says so),
   how many trains left full as "x/y" of the trips that
   reached a stop in the 24 hours (the fourth number from the end of each `past_day` block) [T-481]
-  and the riders left on the platform as "x/y", x those a full train left behind and y those who
+  and the riders left at platform as "x/y", x those a full train left behind and y those who
   wanted a train (boarded plus left behind) [T-230, T-239, T-293, T-669]; the block's heading is
   "Past 24 hours", with a rule above it and none between its rows
   (the only other rule is above Stops) [T-692]; the stops (above Schedule while being edited [T-670]) with their time from
@@ -160,9 +162,7 @@ purpose filter the purpose drawn is ringed in the bar.
   two stops they lie between, spread evenly in the gap (the diagram is not to scale): a white diamond for a
   junction with no flyover and no station, a cross for a flat crossing, each with a hover naming it and
   the lines that use or cross it ("Flat crossing near Harbour", "Crosses Cross"); the round trip split into running, dwell, turning and waiting,
-  naming where it waits most [T-031]; and last the average speed, both ways over the round trip
-  less the turning at the ends, so stops and waiting at busy track count (hover gives the
-  distance and time) [T-549]. A **loop** [T-798] shows its lap (one way round, the longer way's)
+  naming where it waits most [T-031]. A **loop** [T-798] shows its lap (one way round, the longer way's)
   in place of the round trip, split the same way, with no turning row for a circle and "Turning at
   the end" for a balloon; its average speed is once round over the lap (a balloon's less its
   turning); its trains steppers move by 2 and the count's hover says how many run each way; the

@@ -12,6 +12,21 @@ import { edit, linesByNum, say, stationsByNum, world } from "./world";
 
 export type Removable = { kind: "track"; edge: number } | { kind: "station"; node: number } | { kind: "flyover"; node: number };
 
+/** T-1161: the track a piece's removal keeps at its a and b ends, m. Past a station the removal
+ * would leave at a bare end, half its platform and 4 m stay, so the station keeps its place; the
+ * rule of the track model's `station_trim_ops` (sim/src/track/wasm/links.rs). */
+export function stationTrim(edge: number): [number, number] {
+  const w = world.peek();
+  const e = w?.edges.find((x) => x.id === edge);
+  if (!w || !e || e.crossover || e.a === e.b) return [0, 0];
+  const keep = (id: number) => {
+    const n = w.nodes.get(id);
+    return n && n.platform > 0 && n.ports === 2 ? n.platform / 2 + 4 : 0;
+  };
+  const [ka, kb] = [keep(e.a), keep(e.b)];
+  return ka + kb + 7 > e.lengthM ? [0, 0] : [ka, kb];
+}
+
 /** What would go, in words ("1.2 km of track", "W 42nd St station", "the flyover"), and whether
  * it is constructed; null if it is not there any more. */
 export function describeRemovable(r: Removable): { what: string; built: boolean } | null {
@@ -21,7 +36,8 @@ export function describeRemovable(r: Removable): { what: string; built: boolean 
     const e = w.edges.find((x) => x.id === r.edge);
     // a crossover goes as a whole, both diagonals (T-338)
     if (e?.crossover) return { what: e.built ? "the constructed crossover" : "the crossover", built: e.built };
-    return e ? { what: `${distance(e.lengthM)} of ${e.built ? "constructed " : ""}track`, built: e.built } : null;
+    const [ka, kb] = stationTrim(r.edge);
+    return e ? { what: `${distance(e.lengthM - ka - kb)} of ${e.built ? "constructed " : ""}track`, built: e.built } : null;
   }
   if (r.kind === "station") {
     const s = stationsByNum(w).get(r.node);

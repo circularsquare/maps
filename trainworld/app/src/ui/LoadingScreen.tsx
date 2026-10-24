@@ -50,12 +50,14 @@ export function LoadBar({ fraction, step, thin, tip }: { fraction: number; step:
 function LoadingCard() {
   if (!loadingCardShown()) return null;
   const load = loadProgress.value;
+  // T-1161: while several cities open, how many have
+  const n = load?.cities.length ?? 0, count = load && n > 1 && load.done < n ? ` (${load.done}/${n})` : "";
   return <div class="loading-card-wrap">
     <div class="loading-card" role="status">
       <BunnyTrain />
       <p class="big">{load ? "Loading data" : "Calculating demand"}</p>
       {load && <LoadBar fraction={load.fraction} step={load.step} />}
-      {load && <p class="muted small">{load.step}</p>}
+      {load && <p class="muted small">{load.step}{count}</p>}
     </div>
   </div>;
 }

@@ -8,15 +8,15 @@ import { live } from "../map/live";
 import { useModalDialog } from "./Modal";
 import { Chip } from "./widgets";
 
+// The build tools carry no hint (Anita, T-1159).
 const HINT: Record<Tool, string> = {
   select: "",
-  // T-253: hints say what a click does now, in as few words as will do
-  track: "Click where the track starts, then where it goes. With keep placing on, each click carries on from there; a double click ends the run, Backspace takes one back.",
-  station: "Click on track to put a station there. On open ground, click one end of the platform, then a second spot to set its direction.",
+  track: "",
+  station: "",
   line: "Click the circles to add or remove stops. Press Enter or Escape to finish editing.",
-  delete: "Click track, a station or a flyover to remove it.",
+  delete: "",
   trip: "Click where a trip starts, or a station.",
-  blueprint: "Drag a box round track and stations. Shift adds to the selection. Right drag moves the map.",
+  blueprint: "",
 };
 
 /** Native modal keeps map input blocked and traps/restores focus; Escape answers no. */

@@ -72,11 +72,6 @@ export function laneState(zoom: number) {
   const narrow = 1 - LANE_NARROW * Math.max(0, Math.min(1, (gap - LANE_APART_PX) / (LANE_NARROW_PX - LANE_APART_PX)));
   return { gap, grow, t, narrow, share: LANE_SHARE * narrow, reach: grow > 0 ? 0.5 * (1 + LANE_SHARE * narrow) * gap : 0 };
 }
-/** T-1152: a full stretch's red edge and darkening, as a share of track at capacity's: FULL_FLOOR
- * at the fewest trains packed the account lists (5% of the day's), all of it from FULL_SHARE_STRONG. */
-export const FULL_FLOOR = 0.15;
-export const FULL_SHARE_STRONG = 0.75;
-export const fullStrength = (share: number) => FULL_FLOOR + (1 - FULL_FLOOR) * Math.min(1, Math.max(0, share) / FULL_SHARE_STRONG);
 /** Platform crowds (T-164, T-219): drawn from this zoom, where platforms are (T-204), as each side's
  * half of the box filling from its middle outwards in `CROWD_RGB`, red (BAD_RGB) once that side is
  * full (T-559). */
@@ -542,10 +537,10 @@ export class NetworkRenderer {
     if (this.stationHaloBuf && n.stationCount) this.rewrite(this.stationHaloBuf, l?.stationHalo ?? new Float32Array(n.stationCount * 2));
   }
 
-  /** T-819, T-1125: in the traffic view (`traffic`), the edges whose track is at capacity, and
-   * the stretches where trains run packed to crush (the boarding account's, each hour), drawn
-   * with a red edge and a darker body on the lines over them; on the trains' stretches as strong
-   * as `fullStrength` of the share of the day's trains packed there (T-1152). */
+  /** T-819, T-1125: in the traffic view (`traffic`), the edges whose track is at capacity, drawn
+   * with a red edge and a darker body on the lines over them, and the stretches where riders wait
+   * for a train with room (the boarding account's, each hour), whose edge takes that wait's
+   * crowding colour, stronger as it grows (T-1160, rendererShaders.ts `FULL_FLOOR`). */
   setFull(edges: ReadonlySet<number> | null, traffic: boolean) {
     const was = this.fullEdges;
     const same = (!edges || !edges.size) === (!was || !was.size) && (!edges || !was || (edges.size === was.size && [...edges].every((e) => was.has(e))));
@@ -556,31 +551,36 @@ export class NetworkRenderer {
   }
   private fullEdges: ReadonlySet<number> | null = null;
   private fullTraffic = false;
-  /** the full stretches as last written, line * 4096 + stretch, and the share of the day's trains
-   * packed there (1 from a WASM build without shares) */
-  private fullKeys = new Map<number, number>();
+  /** the full stretches as last written, line * 4096 + stretch: the share of the day's trains
+   * packed there (1 from a WASM build without shares) and the riders' average wait there for a
+   * train with room, min (NaN from a WASM build without waits) */
+  private fullKeys = new Map<number, { share: number; wait: number }>();
   private fullDrawn = "";
-  /** The share of the day's trains packed to crush on line `line`'s run 0 stretch `s`, as drawn
-   * (T-1125, T-1152); 0 where none is drawn. */
-  fullStretch(line: number, s: number): number {
-    return this.fullTraffic ? this.fullKeys.get(line * 4096 + s) ?? 0 : 0;
+  /** What is drawn on line `line`'s run 0 stretch `s` (T-1125, T-1160); null where nothing is. */
+  fullStretch(line: number, s: number): { share: number; wait: number } | null {
+    return this.fullTraffic ? this.fullKeys.get(line * 4096 + s) ?? null : null;
   }
   private writeFull() {
     const l = this.lines, n = this.net;
-    const keys = new Map<number, number>();
-    const fs = this.fullTraffic ? this.board?.fullStretches : undefined, sh = this.board?.fullShares;
-    for (let k = 0; fs && k < fs.length; k += 2) keys.set(fs[k] * 4096 + fs[k + 1], sh?.length ? sh[k / 2] : 1);
-    const drawn = `${n ? 1 : 0}/${l?.count}/${[...(this.fullEdges ?? [])].join(",")}/${[...keys].join(",")}`;
+    const keys = new Map<number, { share: number; wait: number }>();
+    const b = this.board, fs = this.fullTraffic ? b?.fullStretches : undefined;
+    for (let k = 0; b && fs && k < fs.length; k += 2) {
+      const j = k / 2;
+      keys.set(fs[k] * 4096 + fs[k + 1], { share: b.fullShares.length ? b.fullShares[j] : 1, wait: b.fullWaits.length ? b.fullWaits[j] / 60 : NaN });
+    }
+    const drawn = `${n ? 1 : 0}/${l?.count}/${[...(this.fullEdges ?? [])].join(",")}/${[...keys].map(([k, v]) => `${k}:${v.share}:${v.wait}`).join(",")}`;
     this.fullKeys = keys;
     if (!l || !l.count || !n || drawn === this.fullDrawn) return;
     this.fullDrawn = drawn;
+    // the shader's a_full: -1 track at capacity, else the stretch's wait (min); a WASM build without
+    // waits gives the share of full trains as a wait, all of it at 75%
     const out = new Float32Array(l.count), f = this.fullEdges, stretch = n.lines.stretch;
     for (let i = 0; i < l.count; i++) {
-      if (f?.size && f.has(n.lines.edge[i])) out[i] = 1;
-      const share = keys.size && stretch ? keys.get(n.lines.colour[i] * 4096 + stretch[i]) : undefined;
-      if (share !== undefined) out[i] = Math.max(out[i], fullStrength(share));
+      if (f?.size && f.has(n.lines.edge[i])) { out[i] = -1; continue; }
+      const s = keys.size && stretch ? keys.get(n.lines.colour[i] * 4096 + stretch[i]) : undefined;
+      if (s) out[i] = Number.isNaN(s.wait) ? 15 * Math.min(1, s.share / 0.75) : s.wait;
     }
-    this.anyFull = out.some((v) => v > 0);
+    this.anyFull = out.some((v) => v !== 0);
     this.rewrite(l.fullBuf, out);
   }
   private anyFull = false;

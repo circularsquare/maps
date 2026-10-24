@@ -24,6 +24,22 @@ export function chip(text: string, colour: string | null, alpha = 0.5): HTMLSpan
   return s;
 }
 
+const COST_YELLOW = "#f2c200", COST_GREEN = "#8fd97a";
+/** A cost multiplier's colour and strength (T-411, T-1159): yellow growing above 1x, light green
+ * growing below it down to 0.5x, none at 1x. The track tool's tag and the Build tab's price. */
+export function costTint(mult: number): [string, number] | null {
+  if (mult > 1.005) return [COST_YELLOW, 0.2 + 0.6 * Math.min(1, (mult - 1) / 1.5)];
+  if (mult < 0.995) return [COST_GREEN, 0.3 + 0.5 * Math.min(1, (1 - mult) / 0.5)];
+  return null;
+}
+/** `costTint` as a CSS background, or undefined at 1x. */
+export function costBackground(mult: number): string | undefined {
+  const t = costTint(mult);
+  if (!t) return undefined;
+  const [r, g, b] = rgb(t[0]);
+  return `rgba(${r},${g},${b},${t[1]})`;
+}
+
 function icon(path: string, name: string): SVGSVGElement {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 16 16");

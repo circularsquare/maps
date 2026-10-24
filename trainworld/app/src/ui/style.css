@@ -316,11 +316,13 @@ body.resizing, body.resizing * { user-select: none; }
 table.sched { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 table.sched th { font-weight: 400; color: var(--muted); font-size: 12px; text-align: right; padding: 0 0 2px; }
 table.sched th:first-child, table.sched td:first-child { text-align: left; }
-table.sched td { text-align: right; padding: 3px 0; }
+/* T-1159: 2 px a side, so the demand rows' controls sit as far apart as the Trains and Train length rows' under the table */
+table.sched td { text-align: right; padding: 2px 0; }
+table.sched + .rows { margin-top: 4px; }
 table.sched tr.now td:first-child { font-weight: 700; }
 /* T-692: every cell one line; the demand column takes what the others leave and is cut with an ellipsis */
 table.sched th, table.sched td { white-space: nowrap; }
-table.sched th:not(:first-child) { padding-left: 10px; }
+table.sched th:not(:first-child), table.sched td:not(:first-child) { padding-left: 10px; }
 table.sched td:first-child { width: 100%; max-width: 0; overflow: hidden; text-overflow: ellipsis; }
 /* T-625, T-679: a count refused for cash, a headway shorter than the track allows; the headway a
    line runs at when its track holds it just over the one set; a refused edit's control shakes once */
@@ -628,7 +630,13 @@ rect.now { fill-opacity: .45; }
 .blueprint-head .num.bad { color: var(--bad); }
 .blueprint-breakdown summary { cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; }
 .blueprint-category { margin-top: 8px; }
-.build-rows > li { padding: 6px 0; }
+/* T-1159: the Track row, Target max speed and Platform length the same 6 px apart */
+.build-rows { margin-top: 6px; }
+.build-rows > li { padding: 0; min-height: 0; }
+.build-rows > li + li { margin-top: 6px; }
+.build-rows .stepper.wide .v { min-width: 72px; }
+/* T-1159: the price's cost multiplier on `costTint`'s colour (map/trackTagRows.ts), as in the track tool's tag */
+.cost-mult.tinted { padding: 0 3px; border-radius: 2px; color: var(--text); }
 .blueprint-items > li { padding: 6px 0; align-items: flex-start; }
 .blueprint-items .what { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .blueprint-items .val { flex: none; white-space: nowrap; }

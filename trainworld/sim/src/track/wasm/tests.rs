@@ -164,7 +164,16 @@ fn insert_stop_infill_ends_and_reduce_to_empty() {
     assert_eq!(a.set_train_counts(id, 2, 1, 0), 0);
     let copy = a.new_line_id();
     assert_eq!(a.copy_line(id, copy, "Copy".into()), 0);
-    assert_eq!(a.w.net.line_data(copy).unwrap().trains, Some([2, 1, 0]));
+    assert_eq!(a.w.net.line_data(copy).unwrap().trains, Some([0, 0, 0]), "a copy starts with no trains (T-1161)");
+    assert_eq!(a.w.svc.lines[copy as usize].trains, [0, 0, 0]);
+    assert_eq!(a.w.svc.lines[id as usize].trains, [2, 1, 0], "the source keeps its trains");
+    assert_eq!(a.set_auto_headway(id, 600, 900, 0), 0);
+    let copy2 = a.new_line_id();
+    assert_eq!(a.copy_line(id, copy2, "Copy 2".into()), 0);
+    assert_eq!(a.line_auto(copy2), [0.0; 3], "a headway line's copy keeps headways, at none");
+    assert_eq!(a.w.svc.lines[copy2 as usize].trains, [0, 0, 0]);
+    assert_eq!(a.remove_line(copy2), 0);
+    assert_eq!(a.clear_auto_headway(id), 0);
     assert_eq!(a.set_stops(id, &[first]), 0);
     assert_eq!(a.line_stops(copy), [first, second], "copy stops independent");
     assert!(!a.w.net.line_broken[id as usize]);
@@ -2694,4 +2703,60 @@ fn reshaping_a_piece_moves_its_joints() {
     let id = a.new_line_id();
     assert_eq!(a.set_line(id, &[w, east], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     assert_eq!(a.line_path(id).len(), 4);
+}
+
+/// T-1161: removing the piece past a station on the track's last stretch stops at the platform's
+/// far end, so the station stays where it was; between two stations both keep theirs.
+#[test]
+fn removing_past_a_station_stops_at_its_platform_end() {
+    for built in [false, true] {
+        let mut a = api();
+        a.set_cash(1e6);
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(4000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        for x in [1000.0, 3000.0] {
+            let e = (0..a.w.net.edge_count() as u32).find(|&e| {
+                let n = &a.w.net;
+                n.edge_ok(e) && n.node_x[n.edge_a[e as usize] as usize] < x && n.node_x[n.edge_b[e as usize] as usize] > x
+            }).unwrap();
+            assert_eq!(a.add_station(2, e, x, 0.0, 200, format!("S{x}")), 0, "{}", a.issues());
+        }
+        if built {
+            assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        }
+        let station = |t: &TrackApi, x: f64| (0..t.w.net.node_count() as u32).find(|&n| t.w.net.node_ok(n) && t.w.net.node_platform[n as usize] > 0 && (t.w.net.node_x[n as usize] - x).abs() < 1e-6).unwrap();
+        let edge_between = |t: &TrackApi, p: u32, q: u32| live_edges(t).into_iter().find(|&e| {
+            let (ea, eb) = (t.w.net.edge_a[e as usize], t.w.net.edge_b[e as usize]);
+            (ea == p && eb == q) || (ea == q && eb == p)
+        }).unwrap();
+        let loose = |t: &TrackApi| -> Vec<f64> {
+            let mut v: Vec<f64> = (0..t.w.net.node_count() as u32).filter(|&n| t.w.net.node_ok(n) && t.w.net.node_ports[n as usize].n == 1).map(|n| t.w.net.node_x[n as usize]).collect();
+            v.sort_by(f64::total_cmp);
+            v
+        };
+        let (s1, s3) = (station(&a, 1000.0), station(&a, 3000.0));
+        let far = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && a.w.net.node_x[n as usize] == 4000.0).unwrap();
+        // the last stretch, past the station at 3 km
+        assert_eq!(a.delete_edge(edge_between(&a, s3, far)), 0, "{}", a.issues());
+        assert_eq!(a.w.net.node_x[s3 as usize], 3000.0, "the station keeps its place");
+        assert_eq!(a.w.net.node_ports[s3 as usize].n, 2);
+        let ends = loose(&a);
+        assert_eq!(ends.len(), 2, "{ends:?}");
+        let past = ends[1] - 3000.0 - 100.0;
+        assert!(past > 1.0 && past <= super::links::STATION_TRIM_MARGIN_M + 0.01, "track ends {past} m past the platform");
+        // between the two stations: both stay, with the platform's length of track past each
+        let mid = edge_between(&a, s1, s3);
+        assert_eq!(a.delete_edge(mid), 0, "{}", a.issues());
+        assert_eq!((a.w.net.node_x[s1 as usize], a.w.net.node_x[s3 as usize]), (1000.0, 3000.0));
+        assert_eq!((a.w.net.node_ports[s1 as usize].n, a.w.net.node_ports[s3 as usize].n), (2, 2));
+        let ends = loose(&a);
+        assert_eq!(ends.len(), 4, "{ends:?}");
+        assert!(ends[1] > 1101.0 && ends[1] <= 1104.01 && ends[2] < 2899.0 && ends[2] >= 2895.99, "{ends:?}");
+        if !built {
+            // undone in two steps, back to the whole track
+            assert_eq!(a.undo(), 0);
+            assert_eq!(a.undo(), 0);
+            assert_eq!(loose(&a), [0.0, 4000.0]);
+        }
+    }
 }

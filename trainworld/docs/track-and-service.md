@@ -261,7 +261,11 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **Stations** are nodes on a route, platform length 60-400 m in 20 m steps, level and free of
   other nodes along it; curved platforms are fine. Through a station the platform is centred on
   the node; at a dead end it runs from the node along the track and trains stop at its middle
-  (`service.rs`). The map draws it there, at its true length and bent as the track is, from
+  (`service.rs`). Removing the piece on one side of a through station keeps the track to its
+  platform's end (half the platform and 4 m past the node; both stations' when the piece runs
+  between two), so the station stays where it was rather than turning into a dead end half a
+  platform back (T-1161, `station_trim_ops`; where that split is refused, on a ramp say, the piece
+  goes whole). The map draws it there, at its true length and bent as the track is, from
   zoom 14 ([ui-map.md](ui-map.md) "Stations"). Platform length caps train length (20 m cars).
   Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot,
   and platforms within 100 m of each other count as one station (4.4). Stations whose platforms
@@ -432,8 +436,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   stage L3).
   Empty and one-stop lines are valid inactive drafts with an empty path. Stop edits use the same
   turn-valid route search for every insertion position, choosing minimum total path length plus
-  the reversal penalty (append wins ties). Copying preserves stops, exact path, schedule, dwell, turnaround, cars,
-  colour and custom badge as independent inputs; edits and removal are undoable.
+  the reversal penalty (append wins ties). Copying preserves stops, exact path, dwell, turnaround, cars,
+  colour and custom badge as independent inputs, and starts with no trains (counts at 0, or a
+  headway line's headways at none) until the player sets them, so a copy never doubles a
+  service (T-1161); edits and removal are undoable.
 - **Scheduling** (T-104, Anita): every line sets a whole number of trains on the entire line,
   both directions together, for **high, medium and low demand** (the column header is "Demand").
   High is the two peaks, medium midday and evening, low night. New lines start at 0 / 0 / 0;
@@ -605,7 +611,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   edge's upkeep counts where its midpoint is and each station's in its own region
   (`upkeepShares`, game/regionMoney.ts). The ledgers keep it as `upkeep` beside `running`. Shown
   in the Money tab's Upkeep row, an Upkeep row a day in the station panel (constructed stations)
-  and the track inspector (not on crossovers), and "then $X a day upkeep" under the Build tab's
+  and the track inspector (not on crossovers), and "$X / day upkeep" under the Build tab's
   blueprint total (the pieces switched off left out); each hover states the rule.
 - Running costs, upkeep and **fares**
   are settled by the clock worker into the cash and a ledger per day (30 kept) and per hour (48
@@ -814,11 +820,15 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   account's loads, departures and riders left behind do not read the pulses, so they and
   demand's crowding feedback stay one rule. The fares' timing within the hour (T-284) counts
   the pulses with the steady arrivals.
-- **Stretches at capacity** (T-1125, T-1152, `RunAccount::full_shares`): per stretch between two
-  stops and direction, the share of the day's trains leaving it packed to crush. Worked out once
-  with each account; the account's hour lists the stretches where the fuller direction's share is
-  at least `FULL_SHARE_MIN` (5%), with that share, and the traffic view marks them as strongly as
-  the share ([ui-map.md](ui-map.md) "Track display").
+- **Stretches at capacity** (T-1125, T-1152, T-1160; `RunAccount::full_shares`, `stop_waits`): per
+  stretch between two stops and direction, the share of the day's trains leaving it packed to
+  crush, and the average extra wait for a train with room of the day's riders arriving at its first
+  stop (rider-seconds waited after full trains, each left behind waiting the gap to the next
+  departure, over riders arriving, as the line panel's crowding counts them). Worked out once with
+  each account; the account's hour lists the stretches where the longer wait of the two directions
+  is at least `FULL_WAIT_MIN_S` (12 s, where the crowding colour leaves green), with the higher
+  share and that wait, and the traffic view marks them by the wait ([ui-map.md](ui-map.md) "Track
+  display").
 - **Room on a platform** (T-219, `platformRoom` in `game/boarding.ts`): what counts as a full
   platform for drawing. Each direction's riders wait on one side, 2.5 m of usable width (half a
   6 m island platform less the edge strip kept clear) along the platform's length, at 0.3 m² a

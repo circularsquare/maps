@@ -12,7 +12,7 @@ import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import type { PiInput, RouteEnd } from "../workers/protocol";
 import type { FromRouter, ToRouter } from "../workers/realRoute.worker";
 import type { Level } from "../game/types";
-import { buildLevel, trackCount } from "../game/ui";
+import { trackCount } from "../game/ui";
 import { dataUrl } from "../game/dataBase";
 import type { Overlay } from "./overlay";
 import { strokesFromPreview } from "./network";
@@ -83,6 +83,8 @@ export class RealSnap {
     /** show a preview answer as the drawing tool's own (null: none), with the request it answers */
     private show: (a: PreviewAnswer | null, req?: object) => void,
     private redraw: () => void,
+    /** the elevation a route on open ground is laid at (tools.ts `freeLevel`) */
+    private level: () => Level,
   ) {
     map.on("moveend", () => {
       this.sendView();
@@ -292,7 +294,7 @@ export class RealSnap {
     s.phase = "search";
     s.t0 = performance.now();
     setTimeout(() => this.redraw(), SLOW_MS + 20);
-    this.post({ kind: "route", seq: s.seq, a: [f.lng, f.lat], b: [s.lng, s.lat], ra: f.r, rb: SNAP_PX * this.perPx(s.lat) + SLACK_M, tracks: trackCount.peek(), level: buildLevel.peek(), tol: TOL_M });
+    this.post({ kind: "route", seq: s.seq, a: [f.lng, f.lat], b: [s.lng, s.lat], ra: f.r, rb: SNAP_PX * this.perPx(s.lat) + SLACK_M, tracks: trackCount.peek(), level: this.level(), tol: TOL_M });
   }
 
   private finish(s: Spot, phase: "done" | "none" | "off") {

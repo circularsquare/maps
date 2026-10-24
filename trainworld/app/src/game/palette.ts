@@ -30,18 +30,28 @@ export const LEVEL_COLOURS: Record<Level, string> = {
  * track's 320 (T-843). */
 export const SPEED_STOPS: [number, string][] = [[40, "#d85b4b"], [80, "#d9a437"], [120, "#55a886"], [160, "#397bc1"], [240, "#5b4fc9"], [320, "#a03fc2"]];
 
-/** The colour the Max speed display gives `kmh`. */
-export function speedColour(kmh: number): string {
-  const s = SPEED_STOPS;
-  if (kmh <= s[0][0]) return s[0][1];
+/** The colour of `v` along `stops`, blended between the two either side. */
+function rampColour(stops: [number, string][], v: number): string {
+  const s = stops;
+  if (v <= s[0][0]) return s[0][1];
   for (let i = 1; i < s.length; i++) {
-    if (kmh > s[i][0]) continue;
-    const t = (kmh - s[i - 1][0]) / (s[i][0] - s[i - 1][0]);
+    if (v > s[i][0]) continue;
+    const t = (v - s[i - 1][0]) / (s[i][0] - s[i - 1][0]);
     const a = rgb(s[i - 1][1]), b = rgb(s[i][1]);
-    return "#" + a.map((v, k) => Math.round(v + (b[k] - v) * t).toString(16).padStart(2, "0")).join("");
+    return "#" + a.map((c, k) => Math.round(c + (b[k] - c) * t).toString(16).padStart(2, "0")).join("");
   }
   return s[s.length - 1][1];
 }
+
+/** The colour the Max speed display gives `kmh`. */
+export const speedColour = (kmh: number) => rampColour(SPEED_STOPS, kmh);
+
+/** T-673, T-692, T-1160: crowding's colour by the average wait for a train with room (min), the same
+ * in both themes: green to 0.2, yellow-green at 1 (Anita: a minute already reads as some crowding),
+ * yellow at 2.5, orange at 9, red at 15, a deep red from 20. The line panel's crowding dots and the
+ * Traffic view's full stretches (renderer.ts builds its shader's blend from these stops). */
+export const CROWD_STOPS: [number, string][] = [[0, "#4f9a4f"], [0.2, "#4f9a4f"], [1, "#98bd3a"], [2.5, "#d8b425"], [9, "#e07a1f"], [15, "#c43c3c"], [20, "#a01c2c"]];
+export const crowdColour = (waitMin: number) => rampColour(CROWD_STOPS, waitMin);
 
 /** Station rings and names on the map. */
 export const NET_INK = "#2b2b2b";
