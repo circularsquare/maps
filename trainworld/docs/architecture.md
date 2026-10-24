@@ -247,6 +247,21 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   as its opened list. The slot's summary has `mode` too, for the saves cards. The clock worker sends
   the list (`opened`, before a game's snapshot) and the main thread sends it back whole when it
   grows.
+- **Removed zones** [T-1053]: a save opens if its header names the registry's world (or none, as
+  legacy New York files do); the zones it names need not all exist. The header's `cities` lists
+  every zone registered when it was written, so a replan that merges or re-splits zones would
+  otherwise shut out every save. As it loads (`currentZones` in `workers/saveFile.ts`), each zone id
+  in `cities`, `start`, `opened`, `regions`, `stars` and the line notes' cities that the registry
+  lacks becomes its successor from `app/src/game/zone-successors.json` (`zoneNow`, followed through
+  later removals); a removed zone's ledgers add into its successor's, its star keeps the earlier
+  time, and an id with no successor is dropped (its ledgers go to "", outside every zone; a line
+  note keeps the old id, which only counts that zone's notes). Track, stations and lines are
+  positions and need nothing. The table is written by `pipeline/zone_successors.py` whenever zone
+  ids leave the registry: the successor is the zone whose outline holds the removed zone's old
+  centre, else the zone with an outline point nearest it within 30 km, else none; `--set id=succ`
+  is a hand choice. Smoke's Node check `t1053-zone-ids.mjs` fails while an id in HEAD's registry is
+  in neither the working registry nor the table; `checks/t1053-load-check.mjs` loads saves naming
+  three removed zones through a scratch registry.
 - **Sandbox** [T-728]: the track model's `set_unlimited` makes every money check pass (the edit
   still pays, so the cash can go below zero); the clock worker sets it from the header's mode and on
   the one-way `sandbox` message from Settings.

@@ -1,5 +1,10 @@
 # Archive
 
+- T-734 [P2] Node drag with the track tool. Done 2026-10-24: a press that moves 3 px on a blueprint node drags it (`NodeDrag.hit` takes the track tool; `Tools.nodeMoved` drops a route drawn from it); a click still places track. `checks/t734-track-drag.mjs`.
+- T-991 [P2] Market trip between zones with an end not open. Done 2026-10-24: `market_trip_w` takes the distance and the car from the places' rows, so Jinan to Zibo reads 86 km and a car time; the panel shows only those.
+- T-992 [P3] Walk row in the trip headline. Done 2026-10-24: shown whenever walking has a share, whatever the walk's length.
+- T-971 [P3] Autosave-off reason twice. Done 2026-10-24: only the top bar's notice says it (the clock client no longer `say`s it).
+- T-1053 [P2] Saves naming removed zones load. Done 2026-10-24: ids the registry lacks become their successor from `game/zone-successors.json` (written by `pipeline/zone_successors.py`) or are dropped; smoke's `t1053-zone-ids` fails while one is missing; `checks/t1053-load-check.mjs` loads two saves.
 - T-1125 [P2] Traffic view: stretches at capacity. Done 2026-10-24 (tree t1121): a red edge and a 14% darker body where half the busiest hour's trains are packed to crush (T-819's full track too); hover "Trains at capacity in the busiest hour". notes/T-1121.md.
 - T-1124 [P2] Transfers drawn. Done 2026-10-24 (tree t1121): riders changing stations walk as grey bubbles from the train's stop over demand's walk, joining the next platform on arrival (`map/transferBubbles.ts`); +0.3 ms GPU at Penn Station. notes/T-1121.md.
 - T-1123 [P2] Waiting riders leave as their train stops. Done 2026-10-24 (tree t1121): the account sends each train's stop time; the drawn crowd drops then, growing again once it leaves.

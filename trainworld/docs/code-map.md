@@ -73,6 +73,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   search or station naming, the view's zones first, T-177, T-065, T-400), `boundaries.ts` (each city's boundary file, fetched
   once, T-172), `zoneNames.ts` (zones' shown names and search aliases from the hand-edited
   `zone-names.json` and the generated `zone-aliases.json`, `pipeline/zone_aliases.py`; T-825),
+  `zone-successors.json` (each removed zone id's successor, for old saves, `pipeline/zone_successors.py`; T-1053),
   `realms.ts` and the hand-edited `realms.json` (the country-sized realms: each zone's, which are shown, each realm's circle point from the registry, and `hiddenRealmAt` for a click on its land, T-975, T-1006), `search.ts` (the search box's matching, `cityMatch` for zones by name or alias, T-148), `walks.ts` (walking minutes to the
   closest stations on the demand model's walking barrier, T-312).
 - Stations and lines: `complexes.ts` (station complexes from platform geometry and the player's
@@ -167,7 +168,7 @@ the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the s
 and families, then the fit in steps on a track model of its own, dropped for a newer request, T-727d, T-754; the outlines of the regions with a graph sent to the page, T-913); `protocol.ts` (edit ops, clock messages, the network snapshot for demand), `clock.worker.ts` (owns
 the network: `TrackApi`, notes/T-025.md; money and autosave too; `slotSummary`, a save's picture
 with a panel per city, T-894), `saveFile.ts` (the save format
-and IndexedDB, T-029; slots' backups, T-744), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
+and IndexedDB, T-029; slots' backups, T-744; removed zone ids taken as their successors on load, T-1053), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),
 `demandProtocol.ts`, `cacheWrite.worker.ts` (the demand cache's IndexedDB write, off the main thread, T-789), `demandClusters.ts` (the network split into clusters that share no rider,
 each a sub-network, T-326; `reachView`, a city's own network inside its cluster, T-756; `marketReaches`, which stations the market's riders use, T-396), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
@@ -214,8 +215,11 @@ Run from the maps root (`node trainworld/checks/<file>`).
 - `every-pack-opens.mjs [url] [zone ...]`: every registered zone, in a fresh new game, opens for
   the view and solves a three-station line across its centre without a demand error (T-484; about
   16 s a zone, 18 minutes for all).
+- `t1053-load-check.mjs [port]`: on its own Vite with a scratch registry lacking wnd, nlc and lit,
+  a new game's save and the real save naming them load with Hartford in their place (T-1053, about
+  a minute).
 - Node, no browser: `t133-picking-check` (picking order), `t671-station-snap-check` (the station tool's choice among overlapping tracks and the layout's guess; given a dev server URL it also runs `t671-ghost-hover`, the ghost's first frame against the worker on the real save in headless Chrome), `t144-check` (station geometry, line
-  widths), `t145-check` (the route preview contract), `t146-check` (complexes), `t125-frame-check`
+  widths), `t145-check` (the route preview contract), `t146-check` (complexes), `t1053-zone-ids` (removed zones have successors; `zoneNow` and `currentZones`; in smoke), `t125-frame-check`
   (world frames against PROJ), `t116-save-check` (save format), `t285-merge-check` (needs
   `--experimental-strip-types`), `t066-wasm-check` (demand WASM contract), `t066-worker-check` and
   `t149-worker-check` (the real demand worker in Node, a few minutes each), `t325-bare-check` (a

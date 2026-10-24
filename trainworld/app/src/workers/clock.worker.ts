@@ -20,7 +20,7 @@ import { shiftAt, timeZoneTable } from "../game/localTime";
 import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } from "../game/moneyTiming";
 import { networkFromState, newNetCache, runsTrains } from "../map/network";
 import { buildComplexes } from "../game/complexes";
-import { decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
@@ -1451,9 +1451,9 @@ let convertedOnLoad = false;
 async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fresh?: NewGameSpec): Promise<boolean> {
   const decoded = await decodeSave(bytes);
   const { track } = decoded;
-  const h: SaveHeader = fresh
+  const h: SaveHeader = currentZones(fresh
     ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, ledger: [], hours: [], regions: undefined, stars: undefined, notes: undefined, newCars: undefined, ...newGameHeader(fresh) }
-    : decoded.header;
+    : decoded.header);
   if (!isNortheastSave(h)) throw new Error("This save is for another world.");
   let net = track, converted = false;
   if (trackFrameKind(track) !== NEW_GAME_FRAME.kind) {

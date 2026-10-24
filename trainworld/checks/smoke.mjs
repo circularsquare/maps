@@ -10,7 +10,7 @@
 // (no menu) loads; in another ?new=1 game a line over dead space and one in Tokyo reach a final (T-845); the real save (T-007-real-nyc.save) imported into it has 109 lines,
 // 1,756 stations and about 4,498.6 km of track; demand reaches a final result; Homes draws local
 // bubbles in the bare new game and on the real save (T-994); a click on a station
-// and on a train picks them; no console or page error, no GL error. Node: t133, t144, t145, t146.
+// and on a train picks them; no console or page error, no GL error. Node: t133, t144, t145, t146, t1053 (every zone removed since HEAD has a successor).
 import { spawn } from 'node:child_process';
 import { readFile, readdir, mkdtemp, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -308,7 +308,7 @@ async function browserChecks(BASE) {
 const given = process.argv[2];
 let vite = null;
 try {
-  for (const f of ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs']) {
+  for (const f of ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs', 't1053-zone-ids.mjs']) {
     const r = await runNode(f);
     report(f.replace('.mjs', ''), r.code === 0, r.code === 0 ? '' : tail(r.out));
   }

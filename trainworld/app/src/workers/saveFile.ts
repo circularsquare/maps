@@ -15,6 +15,7 @@
 // beside each slot its demand cache and two backups under keys the saves list does not show).
 
 import registry from "../game/registry.json";
+import successors from "../game/zone-successors.json";
 import { zoneName } from "../game/zoneNames";
 
 export const SAVE_MAGIC = "TWG1";
@@ -101,13 +102,55 @@ export interface NewGameSpec { mode: GameMode; start?: string; real?: ArrayBuffe
 
 /**
  * Whether this build can open the save: it names the registry's world (or none, as legacy NYC
- * files do) and only cities the registry lists. Which frame the track is in is not the header's
- * business: the network bytes say (TWT5 world frame, TWT4 and older legacy, T-125).
+ * files do). Zones it names that the registry no longer has are `currentZones`' business (T-1053),
+ * and which frame the track is in is the network bytes' (TWT5 world frame, TWT4 and older legacy, T-125).
  */
 export function isNortheastSave(h: SaveHeader): boolean {
-  const ids = registry.cities.map(c => c.id);
-  return h.city === ids[0] && (h.region === undefined || h.region === registry.world)
-    && (h.cities === undefined || h.cities.every(c => ids.includes(c)));
+  return h.city === registry.cities[0].id && (h.region === undefined || h.region === registry.world);
+}
+
+const REGISTERED = new Set(registry.cities.map((c) => c.id));
+
+/** T-1053: a zone id as the registry has it now. An id a replan removed becomes its successor in
+ * game/zone-successors.json (pipeline/zone_successors.py), followed through later removals; null
+ * where there is none. */
+export function zoneNow(id: string, have: (id: string) => boolean = (z) => REGISTERED.has(z), table: Record<string, string | null> = successors): string | null {
+  for (let hops = 0; !have(id); hops++) {
+    const next = table[id];
+    if (!next || hops > 32) return null;
+    id = next;
+  }
+  return id;
+}
+
+/** T-1053: the header with every zone id it keeps (the cities, start and opened zones, the region
+ * ledgers, stars and line notes) as the registry has it now: a removed zone's ledgers add into its
+ * successor's (or "", outside every zone, where it has none), its star keeps the earlier time, and
+ * an id with no successor is dropped. Track, stations and lines are positions and need nothing. */
+export function currentZones(h: SaveHeader, now: (id: string) => string | null = (z) => zoneNow(z)): SaveHeader {
+  const list = (ids: string[]) => [...new Set(ids.map(now).filter((z): z is string => z !== null))];
+  const out: SaveHeader = { ...h };
+  if (h.cities) out.cities = list(h.cities);
+  if (h.opened) out.opened = list(h.opened);
+  if (h.start !== undefined) out.start = now(h.start) ?? undefined;
+  if (h.regions) {
+    const regions: NonNullable<SaveHeader["regions"]> = {};
+    for (const [k, r] of Object.entries(h.regions)) {
+      const to = k === "" ? "" : now(k) ?? "", e = regions[to];
+      regions[to] = e ? { ledger: [...e.ledger, ...(r.ledger ?? [])], hours: [...e.hours, ...(r.hours ?? [])] } : { ledger: [...(r.ledger ?? [])], hours: [...(r.hours ?? [])] };
+    }
+    out.regions = regions;
+  }
+  if (h.stars) {
+    const stars: Record<string, number> = {};
+    for (const [k, t] of Object.entries(h.stars)) {
+      const to = now(k);
+      if (to !== null) stars[to] = Math.min(stars[to] ?? Infinity, t);
+    }
+    out.stars = stars;
+  }
+  if (h.notes) out.notes = Object.fromEntries(Object.entries(h.notes).map(([line, [note, city]]) => [line, [note, now(city) ?? city]]));
+  return out;
 }
 
 async function pipe(bytes: Uint8Array, s: CompressionStream | DecompressionStream): Promise<Uint8Array> {

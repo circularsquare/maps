@@ -78,7 +78,7 @@ CLAUDE.md; history in ARCHIVE.md.
 
 ## Interface
 Anita's TODO.md "short term", filed 2026-10-24.
-- T-1113 [P2] Merge the Northeast's small hand-built zones, Windham (wnd, 0.12M), New London (nlc, 0.26M) and Litchfield (lit, 0.18M), into neighbouring zones (Anita 2026-10-24; T-1004 section 3 had kept them), with T-1014 before US wave 4; then lower the top bar's name cap (T-1108). Saves naming them need T-1053. Open.
+- T-1113 [P2] Merge the Northeast's small hand-built zones, Windham (wnd, 0.12M), New London (nlc, 0.26M) and Litchfield (lit, 0.18M), into neighbouring zones (Anita 2026-10-24; T-1004 section 3 had kept them), with T-1014 before US wave 4; then lower the top bar's name cap (T-1108); after the merge run `pipeline/zone_successors.py` (T-1053, done). Open.
 - T-1114 [P2] A general code cleanup (Anita 2026-10-24): read-only review agents by area (app ui, app game/map/workers, sim, pipeline, checks) list improvements, reorganisations, simplifications and slop to cut, ranked, in notes/T-1114.md; then fixed in batches by owned files. Reviews written 2026-10-24 (notes/T-1114/ui.md, app-core.md, sim.md, pipeline.md); pipeline Batch A (notes/ scripts) done; taking 2026-10-24 in worktrees: app bugs (appbugs), ui and game/ batches (appclean), renderer batches (renderclean), sim batches A-F (simclean); pipeline batches B-I wait until no data wave runs.
 Anita's TODO.md "short term", filed 2026-10-24 (second set).
 Anita's TODO.md "short term", filed 2026-10-23.
@@ -93,9 +93,6 @@ Anita's TODO.md "short term", filed 2026-10-21 (late) and 2026-10-22.
 - T-984 [P3] Regions stage 2: outlines by region (packs/outlines/<realm>.json fetched when a region shows); measure startup bytes and time. notes/T-975.md.
 - T-986 [P3] Region list upkeep: a line in realms.json for each newly built country (realms.py warns, and the zone always shows until then); split US east, Canada, India and Brazil as they grow.
 - T-987 [P3] Region buttons zoomed in: place an off-screen label's button over the region's land on screen, not its box (Nordic's button sits in the corner over Iceland).
-- T-991 [P2] A trip between zones from a zone no station reaches to one not open (Jinan to Zibo) reads "0 km apart" and "No road joins the two ends" in the market panel: the market-trip answer, seen in T-979. Taking, 2026-10-24 (small fixes agent).
-- T-992 [P3] A 3.7 km trip in bare Manhattan shows Train 0% and Drive 0% and no Walk row: walking wins, but `WALK_ROW_MIN` hides the row when walking the whole way takes 30 min or more, so the headline looks empty (seen in T-979). Taking, 2026-10-24 (small fixes agent).
-- T-971 [P3] The autosave-off reason shows twice on a test page (`?new=1`): the top bar's pink save notice and the tool-notes bar at the map's bottom left carry the same sentence (seen in T-951's screenshots, desktop too). Keep one. Taking, 2026-10-24 (small fixes agent).
 - T-873 [P3] A train can empty fully mid-line in the boarding account: in the real save the D northbound in the morning period lets everyone off at 34 St-Herald Sq (load 629 to 0, then 64 after Bryant Pk), because demand's per-stop alightings for the period exceed its own running load there and the alighting share clamps to 1 (`alight_shares` in sim/src/track/boarding.rs). Look at why the period's boardings and alightings disagree. Open.
 - T-880 [P3] The trip explorer between zones shows inter-region trips only: add the commutes between zones (their own choice, `CPair` in intercity.rs) as a second purpose, so it matches the bubbles' counts. Open.
 Anita's notes, filed 2026-10-22 (fifth set).
@@ -130,7 +127,6 @@ Anita's TODO.md "short term", filed 2026-10-19 (evening).
 - T-763 [P3] Penn Station-Emeryville is still 3.0-3.6 s from rest to preview in WASM though search (0.06 s) and fit (0.27-0.36 s) are fast now: the clock worker's preview is 1.2-1.35 s and about 1.5 s more is unaccounted for. Profile the preview round trip. Open; notes/T-727.md.
 - T-750 [P3] Add a city's real network to a sandbox game already running (merging in the Rust track model; notes/T-728.md stage 6). Anita wants it, not urgent. Open.
 - T-751 [P3] "Expand all platforms on this line" in the line panel, so a line can run longer trains (Anita 2026-10-19, after T-733). Open.
-- T-734 [P2] While placing track, a press and drag on a node moves the node (a click on track still branches and places track). Taking, 2026-10-24 (small fixes agent).
 - T-738 [P3] Flight data for long-distance intercity demand (Anita's idea); see T-712's spot check first. Idea.
 Anita's playtest of 2026-10-18 (her TODO.md "short term"), filed 2026-10-19. Plans in the notes.
 - T-676 [P2] A cuter base map (warm paper land, soft teal water, sage parks, 3 road weights, most POIs gone); the ground tinted by density as a switch, off. Anita judges the palette. Open: stage 1 done, palette waits on Anita; stage 2 (density tint) not built; notes/T-676.md.
@@ -220,7 +216,6 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-321 [P3] Local time's rest (T-309, docs/world.md "Local time"): the money ledger's days follow the game clock, and market trips across offsets need a period rule. Open; notes/T-321.md.
 
 ## Performance (open since 2026-10-15; ranked in notes/perf-survey.md)
-- T-1053 [P2] A save whose `cities` header names a zone the registry no longer has fails with "This save is for another world" (`saveFile.isNortheastSave`), so the fix batch's merges and regroups (T-1005 part 2, T-903, T-1002) would lock Anita out of saves that touched a removed zone: load such a save by mapping removed ids to their successors (or dropping them), before that batch. taking, 2026-10-24.
 - T-1028 [P2] Track edits upload only the changed strokes: the worker's networkFromState finds the changed range by identity of the reused pieces (common prefix and suffix; track speeds compared by value), the renderer patches its stroke buffers (copyBufferSubData around the changed middle) and keeps textures whose data did not change. Japan setNetwork is 62 ms a click (strokes 30, textures 22). Open; notes/T-1001.md "T-1020".
 - T-1029 [P2] The clock worker's state on a big network: Japan about 400 ms an edit (state 106, buffers 183 rebuilt for all 709 lines and 860k segments, apply 61), then 43 ms reading the message and 33 ms of effects on the main thread. Send only changed lines, edges and nodes, and cache per-line sample work (with T-759, T-499). Open; notes/T-1001.md "T-1020".
 - T-1030 [P2] Pick and snap grids are rebuilt for every new network (Japan about 100 ms each, several per edit, scanning everything until built; ghost p50 340 ms): patch them from the T-1028 stroke diff instead. Runs of chained segments only went 124 to 91 ms. Open; notes/T-1001.md "T-1020".

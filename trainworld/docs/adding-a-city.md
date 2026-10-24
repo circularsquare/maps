@@ -59,6 +59,13 @@ background and wait once for the process.
   (run through `world_run.py step world_plan zones ...`, which puts the pipeline on the path) writes
   a country's zone rows into the plan; then `run --countries ES --limit 100`. A zone row builds as
   a metro row does, with `kind` "zone" and the zone curve.
+- **Zones removed** (T-1053): a replan, merge or re-split that takes zone ids out of the registry
+  (a parked row of an earlier commit included) ends, once `zone_outlines.py` has rewritten the
+  outlines, with `venv\Scripts\python.exe -I trainworld\pipeline\zone_successors.py` (seconds): each
+  id in HEAD's registry and not the working one's gets its successor in
+  `app/src/game/zone-successors.json`, the zone now under its old centre, so saves naming it load
+  ([architecture.md](architecture.md) 11). `--set wnd=nlc` picks one by hand, `--set wnd=` none;
+  `--dry` prints only. Smoke's `t1053-zone-ids` check fails until it has run.
 - **Rows** go in plan order, a region at a time: rows sharing a Geofabrik extract, chained. The
   region's extracts are downloaded (four tries) unless their caches or `.osm.pbf` are on disk, and
   read once into the caches (`osm_features`, inland water, roads, admin relations).
