@@ -738,6 +738,8 @@ Comments to fix as touched: history at `network.ts:45-46, 192-193, 523`,
 
 ## Batch 8: game/
 
+**Done 2026-10-24 (appclean), with ui.md Batch G: items 46, 47, 49 (in game/ and the inspectors), 50, 51 (the stale comments, the orphan doc and modeScheme's type; the settings migrations stay, Anita's call) and 39; main.ts header and key comment. Item 48 is one `folded` helper in world.ts. Not done: B7 (a bug), the main.ts probes move, the hover-path lookups in map/.**
+
 Owns: `game/world.ts` (after the agent now editing it has landed), `trip.ts`, `demand.ts`,
 `regionMoney.ts`, `boarding.ts`, `complexLive.ts`, `ui.ts`, `cities.ts`, `lineActions.ts`,
 `account.ts`, `format.ts`, `palette.ts` and `main.ts` (the comments only). Fixes B7 too.

@@ -40,7 +40,7 @@ as `.spin` and the `bt-` rules already do. The reduced-motion rule at `:331` the
 Risk: none (it restores agreed behaviour). Effort: small. Mechanical: yes.
 *Fixed* (appbugs): both rules `!important`.
 
-**B2. Two bars share `.load-bar`.** The train's "On board" bar (`others.tsx:533`, styled at
+**B2. Two bars share `.load-bar`.** (Fixed in appclean, 2026-10-24: the train's bar is `.board-bar`, with the look it had in use.) The train's "On board" bar (`others.tsx:533`, styled at
 `style.css:353-355`) and the loading progress bar `LoadBar` (`LoadingScreen.tsx:40`, styled at
 `style.css:578-580`) use the same class. The later rule wins, so the train bar is 8 px tall, not
 10 px, with `margin: 8px 0 6px` (its row grows) and loses its `margin-right: 8px`. Fix: rename the
@@ -413,32 +413,39 @@ files. F after B (both touch the train bar class).
 
 - **Batch 0: bugs.** Owns style.css lines 44 and 329-331, plus `others.tsx:533` and
   `style.css:353-355` for the class rename, and `Blueprint.tsx:124`. B1, B2, B3. About 15 minutes.
-- **Batch G: shared helpers in game/** (with the game/ reviewer's batch). Owns game/format.ts
+- **Batch G: shared helpers in game/** (with the game/ reviewer's batch).
+  **Done 2026-10-24 (appclean): net -7 lines in game/, main.ts and the three map imports. exact, plural, andList, capitalise, levelName, upkeepText and sig3 in game/format.ts; stationsById, stationNames, stationsByNum, linesById, linesByNum and linesAtMap in game/world.ts, one WeakMap on the save, used in game/ and the inspectors; SEATS_PER_CAR, CRUSH_PER_CAR, CAR_M, gauge and stepPlatform in game/boarding.ts (renderer.ts, demandLayers.ts and networkTips.ts import them; the shader string is the renderer agent's); lineSeconds in game/clock.ts; the cell and zone selections gone with AreaInspector. Not done: the hover-path lookups in map/ and holidays.ts.** Owns game/format.ts
   (`exact`, `plural`, `andList`, `capitalise`, `levelName`, `upkeepText`), game/world.ts
   (`stationsById`, `stationNames`, `linesAtMap`), the car and platform constants (item 9), a line
   local-time helper, and game/types.ts `Selection` (item 2's two lines). Items 8, 9 and 10 (the game
   parts only), and the item 11 helper.
-- **Batch A: trip and demand panels.** Owns inspector/TripInspector.tsx, MarketTrip.tsx,
+- **Batch A: trip and demand panels.**
+  **Done 2026-10-24 (appclean): net -23 lines (tripText.ts and RouteParts.tsx included). pctOf, pctShare, minText, num1, roundTo in inspector/tripText.ts; routeRow, legRows and PeriodRows in RouteParts.tsx; SegBar in widgets.tsx for the five split bars; exports and comments trimmed. Not done: the Segmented swap in PurposeBreakdown and the token colours of the purpose rules (both change the look); CityInspector keeps its setBubbleColours call in render (game/ui.ts says views call it again before building).** Owns inspector/TripInspector.tsx, MarketTrip.tsx,
   LongerTrips.tsx, CityInspector.tsx, StationRiders.tsx, PurposeSplit.tsx, PurposeBreakdown.tsx,
   CommutersInspector.tsx, and the new inspector/tripText.ts and RouteParts.tsx. Items 1 and 13, the
   PurposeBreakdown parts of 14 and 17, `setBubbleColours` (16), the item 15 exports in these files,
   and item 5's comments in them.
-- **Batch B: station, train, track and junction inspectors.** Owns inspector/others.tsx (split into
+- **Batch B: station, train, track and junction inspectors.**
+  **Done 2026-10-24 (appclean): others.tsx is now StationInspector, TrainInspector, TrackInspector and JunctionInspector (net -50 lines with the four new files), Built and ConstructRemove moved to widgets.tsx, the train's On board bar has its own class .board-bar (B2, today's look copied), ComplexMap's onOpen is required, ridersAt and cv.draws gone, a chip-line class replaces two inline styles, Icon.doubleUp, and useClockQuery or useLatestAnswer in Shape, DoubleUp, JunctionInspector and ComplexMap. TrainStops uses linesAtMap.** Owns inspector/others.tsx (split into
   four), Inspector.tsx, ComplexMap.tsx, TrainStops.tsx, ClosestStations.tsx, and the new
   useClockQuery.ts. Items 2 (the UI half), 4 (its copies here), 6, the ComplexMap bits of 15 and 16,
   and item 5's comments in them.
-- **Batch C: line inspector.** Owns inspector/LineInspector.tsx (and any file split out of it).
+- **Batch C: line inspector.**
+  **Done 2026-10-24 (appclean): LineInspector.tsx -21 lines, plus ui/useClockQuery.ts (34). useClockQuery for its four queries, useLiveColour, carsBought, one setStops, one editingStops, LineToday renamed PastDay, lookups from game/world.ts. Not done: moving the four Float64Array parsers to game/ (optional).** Owns inspector/LineInspector.tsx (and any file split out of it).
   Items 4 (its 3 copies, after B lands the hook, or C writes the hook and B reuses it), 8's cars
   text, and 11.
-- **Batch D: tabs, keys and settings.** Owns tabs.tsx (split), the new toolKeys.ts and listParts.tsx,
+- **Batch D: tabs, keys and settings.**
+  **Done 2026-10-24 (appclean): tabs.tsx is BuildTab, LinesTab, StationsTab and MoneyTab, with listParts.tsx and toolKeys.ts (TOOL_KEYS derived from TOOLS); net +27 lines for the split's headers and imports. LevelButtons widget (Build and the selection bar), the Stations list sorts with the number-aware collator (item 19), Slider in SettingsTab, dead icons, Segmented's cls and Alert's level gone, Dock mounts the Cities list itself. Not done: Icon.search (the glass would change size), Shape's level buttons keep their plain look, MoneyToday's lineNet.** Owns tabs.tsx (split), the new toolKeys.ts and listParts.tsx,
   HelpPanel.tsx, SettingsTab.tsx, Blueprint.tsx, widgets.tsx, Dock.tsx, StationsFull.tsx, and the
   main.ts import lines. Items 7, 12, 19, the widgets and tabs parts of 15 and 16, the slider and
   search icon of 17, and item 5's comments in them.
-- **Batch E: dialogs, menus and startup.** Owns AccountPanel.tsx, the new Modal.tsx, SavesPanel.tsx,
+- **Batch E: dialogs, menus and startup.**
+  **Done 2026-10-24 (appclean): net -14 lines with Modal.tsx. Modal and useModalDialog in ui/Modal.tsx (AccountPanel, SavesPanel, Leaderboard, and Ask in ToolNotes.tsx); blockKeysOutside in keys.ts; isCity in game/cities.ts; viewStart moved to locate.ts (NewGame no longer imports the map); Toolbar.tsx renamed ToolNotes.tsx. Not done: DemandSelector.tsx rename (optional).** Owns AccountPanel.tsx, the new Modal.tsx, SavesPanel.tsx,
   Toolbar.tsx, StartMenu.tsx, LoadingScreen.tsx, NewGame.tsx, locate.ts, Search.tsx, tip.ts and
   keys.ts. Items 3, 17's key blocking, dates and `isCity`, 18, NewGame's exports in 15, and item 5's
   comments in them. Run it after Leaderboard.tsx's rewrite, or keep a re-export of `Modal`.
-- **Batch F: CSS.** Owns style.css (after batch 0) and account.css. Item 14, and the CSS comments of
+- **Batch F: CSS.**
+  **Done 2026-10-24 (appclean): net -10 lines. Dead rules (.w-period, .line-list-actions label and select, .complex-map p, #tool-notes.ask, .alert.warn) and the duplicates of #dock, .sort-head, .blueprint-head, .blueprint-bar, .save-info and .speed-key merged; Build's track row is .build-track-row. Left alone: .shake, .load-bar, the animation: none rule, the purpose rules' token colours, the map-DOM move to map.css.** Owns style.css (after batch 0) and account.css. Item 14, and the CSS comments of
   item 5.
 
 ## Bound to the files being rewritten (one line each, not reviewed further)

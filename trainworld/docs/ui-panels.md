@@ -70,7 +70,7 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 - The player can drag the dock wider or narrower and move the divider between tab area and
   inspector; both are remembered per browser. Each tab keeps its own scroll position for the
   session, opening at its top the first time [T-215].
-- Tool hints and a refused edit's reason show at the map's bottom left (`ui/Toolbar.tsx`).
+- Tool hints and a refused edit's reason show at the map's bottom left (`ui/ToolNotes.tsx`).
 - **Narrow screens** [T-951, `style.css`]: at most 600 px wide and at least 560 px tall (a phone held
   upright) the dock goes under the map, full width and 40% of the height, so the map and top bar keep
   the whole width and the map column's container queries see the real width. The tab area is 48% of the

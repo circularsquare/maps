@@ -10,8 +10,7 @@ import type { PurposeFilter } from "./purposes";
 import { LEVELS, type Level, type Selection } from "./types";
 
 export type Tab = "build" | "lines" | "stations" | "money" | "cities" | "settings";
-/** Tabs a remembered choice can name: the City tab is gone (T-220), so a browser that last had it
- * open starts on Lines. */
+/** Tabs a remembered choice can name. */
 const TABS: Tab[] = ["build", "lines", "stations", "money", "cities", "settings"];
 export type Theme = "pink" | "blue" | "green";
 export const THEMES: Theme[] = ["pink", "blue", "green"];
@@ -197,10 +196,10 @@ export const lineSort = signal<ListSort<"name" | "city" | "riders" | "money" | "
 export const stationSort = signal<ListSort<"name" | "riders" | "near">>({ key: "riders", dir: -1 });
 /** The Money tab's Cities section (T-550): by name, train share, train rides a day or money a day. */
 export const citySort = signal<ListSort<"name" | "train" | "rides" | "money" | "points">>({ key: "rides", dir: -1 });
-/** Platform length for new stations, m. */
 /** The map's demand drawn for one trip purpose only, or all (T-158). Not remembered: a page
  * load starts on all purposes, so nobody returns to a map that silently leaves riders out. */
 export const purposeFilter = signal<PurposeFilter>("all");
+/** Platform length for new stations, m. */
 export const buildPlatform = signal(200);
 /** T-468: the three Build tab track settings below are remembered per browser with the rest of the
  * UI state; anything unreadable falls back to the defaults. */

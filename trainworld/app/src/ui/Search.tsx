@@ -1,7 +1,7 @@
 // The search box at the map's upper right (T-148): stations, lines, cities, towns and
 // neighbourhoods by name (game/search.ts; the view's zones' place lists load on first focus, T-177,
-// T-400). Most of the
-// time it is a small magnifying glass (T-211); a click on it, "/", Ctrl+K or Ctrl+F opens the box
+// T-400). Most of the time it is a small magnifying glass (T-211); a click on it, "/", Ctrl+K or
+// Ctrl+F opens the box
 // and focuses it, the arrow keys move through the results, Enter picks, and Escape, a pick or
 // leaving the box empty closes it again. Picking moves the camera there at once (no flight, like
 // every other state change) and, with no build tool on, selects the station or line; with a tool
@@ -59,8 +59,7 @@ export function goTo(hit: SearchHit) {
   if (hit.kind === "station") {
     locateStation(hit.lng, hit.lat);
     if (!selecting) return;
-    // a name shared by several platforms of one complex selects the member with the most lines;
-    // the Station / Complex setting stays as the player had it (Anita, T-182)
+    // a name shared by several platforms of one complex selects the member with the most lines
     selection.value = { kind: "station", station: hit.target };
     return;
   }

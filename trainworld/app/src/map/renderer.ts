@@ -13,7 +13,7 @@ import { BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connec
 
 import { LEVEL_COLOURS, NET_INK, rgb, SPEED_STOPS } from "../game/palette";
 import { shadeColours } from "../game/shades";
-import { platformRoom, readBoardHour, QUEUE_STRIDE, waitingAt, type BoardHour } from "../game/boarding";
+import { CRUSH_PER_CAR, platformRoom, readBoardHour, QUEUE_STRIDE, SEATS_PER_CAR, waitingAt, type BoardHour } from "../game/boarding";
 import { TransferBubbles } from "./transferBubbles";
 import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, PSI_PER_UNIT } from "./geo";
 import { GradeMarks } from "./gradeMarks";
@@ -37,8 +37,6 @@ const BP_RAIL_SHARE = 0.16;
 /** T-331 (Anita on T-322: "maybe overshot just a little bit"): the whole blueprint track, rails
  * included, is this share of T-322's width; the rails stay at least a pixel. */
 const BP_NARROW = 0.75;
-/** Seats and crush load per 20 m car, for the gauge (map/demandLayers.ts `gauge`, T-083). */
-const SEATS_PER_CAR = 44, CRUSH_PER_CAR = 160;
 /** A train's width on screen by zoom, CSS px, pills and cars alike (T-199: 75% of T-107's 5/8/12,
  * about 1.4 lines wide from zoom 12); its true 3 m is wider only from about zoom 19. */
 const TRAIN_PX: [number, number][] = [[10, 3], [11, 5.25], [12, 6], [15, 9]];

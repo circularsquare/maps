@@ -7,13 +7,11 @@
 import type { BoardHour } from "../../game/boarding";
 import { tripLoad } from "../../game/boarding";
 import { clock } from "../../game/clock";
-import { duration } from "../../game/format";
-
-const count = (v: number) => Math.round(v).toLocaleString("en-US");
+import { duration, exact as count } from "../../game/format";
 import { periodAt, PERIODS } from "../../game/periods";
 import type { LineDemand } from "../../game/demand";
 import type { LineInput } from "../../game/types";
-import { world } from "../../game/world";
+import { linesAtMap, stationNames, world } from "../../game/world";
 import { profileS } from "../../map/network";
 import { complexes } from "../../game/complexView";
 import { membersOf } from "../../game/complexes";
@@ -79,7 +77,7 @@ export function TrainStops({ line, dm, board, trip, run, seg, stopS, profile, de
   const wrap = w.lineStats[line.id]?.loop === "circle";
   // a circle's trip ends at its first stop again and carries on round as the next trip
   const last = wrap ? n - 2 : n - 1;
-  const names = new Map(w.save.stations.map((s) => [s.id, s.name]));
+  const names = stationNames(w);
   const stops = run === 0 ? line.stops : [...line.stops].reverse();
   const shares = alightShares(dm, n, run, wrap);
   const load = (t: number) => (t < 0 || t >= n - 1 ? 0 : tripLoad(board, trip, run === 0 ? t : n - 2 - t) ?? 0);
@@ -88,9 +86,8 @@ export function TrainStops({ line, dm, board, trip, run, seg, stopS, profile, de
   const now = clock.now() - dep;
   const shift = w.lineStats[line.id]?.shift ?? 0;
   // T-886: the other lines calling at each stop or its complex, for changing trains
-  const cx = complexes.value, linesAt = new Map<string, LineInput[]>();
-  for (const l of w.save.lines) for (const s of new Set(l.stops)) if (l.id !== line.id) linesAt.set(s, [...(linesAt.get(s) ?? []), l]);
-  const transfers = (s: string) => [...new Map(membersOf(cx, s).flatMap((m) => linesAt.get(m) ?? []).map((l) => [l.id, l])).values()];
+  const cx = complexes.value, linesAt = linesAtMap(w);
+  const transfers = (s: string) => [...new Map(membersOf(cx, s).flatMap((m) => linesAt.get(m) ?? []).filter((l) => l.id !== line.id).map((l) => [l.id, l])).values()];
   const rows: { name: string; inS: number; off: number; on: number; arriving: number; last: boolean; lines: LineInput[] }[] = [];
   for (let k = seg + 1; k <= last && rows.length < AHEAD; k++) {
     const arriving = load(k - 1);

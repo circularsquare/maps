@@ -4,12 +4,13 @@
 
 import type { ComponentChildren } from "preact";
 import { demandView, intercityPlaceName, type PlaceFlows } from "../../game/demand";
-import { count } from "../../game/format";
+import { count, exact } from "../../game/format";
 import { shownDayPhrase } from "../../game/ui";
 import { modeColours } from "../../game/palette";
 import { intercityPick, intercityStationView } from "../../map/intercityView";
 import { Spinner } from "../Spinner";
 import { Icon, Row } from "../widgets";
+import { pctOf } from "./tripText";
 
 /** Read while rendering: the colours follow the bubble scheme (T-833). */
 const modes = () => {
@@ -22,14 +23,8 @@ const modes = () => {
 };
 type Split = { all: number; rail: number; car: number; air: number };
 
-const exact = (n: number) => Math.round(n).toLocaleString("en");
-const pct = (n: number, of: number) => {
-  const p = of > 0 ? (100 * n) / of : 0;
-  return n >= 0.5 && p < 0.5 ? "<1%" : Math.round(p) + "%";
-};
-
 /** The column heads: all modes, then each mode's icon with its hover. */
-export function ModeHead({ what }: { what: string }) {
+function ModeHead({ what }: { what: string }) {
   return (
     <li class="muted small">
       <span class="grow" />
@@ -44,19 +39,19 @@ export function ModeHead({ what }: { what: string }) {
 }
 
 /** A row's numbers: all modes, then by train, car and plane, each with its hover. */
-export function ModeCells({ s, what }: { s: Split; what: string }) {
+function ModeCells({ s, what }: { s: Split; what: string }) {
   return (
     <>
       <span class="val w-num" data-tip={`${exact(s.all)} ${what} ${shownDayPhrase.value}`}>{count(s.all)}</span>
       {modes().map((m) => (
-        <span class="val w-mode" data-tip={`${exact(s[m.key])} ${m.by}, ${pct(s[m.key], s.all)} of ${exact(s.all)}`}>{count(s[m.key])}</span>
+        <span class="val w-mode" data-tip={`${exact(s[m.key])} ${m.by}, ${pctOf(s[m.key], s.all)} of ${exact(s.all)}`}>{count(s[m.key])}</span>
       ))}
     </>
   );
 }
 
 /** Trips with places that have no zone: all modes alone (their modes are not modelled). */
-export function ElsewhereRow({ n, label = "Elsewhere" }: { n: number; label?: ComponentChildren }) {
+function ElsewhereRow({ n, label = "Elsewhere" }: { n: number; label?: ComponentChildren }) {
   if (!(n >= 0.5)) return null;
   return (
     <li>
@@ -68,7 +63,7 @@ export function ElsewhereRow({ n, label = "Elsewhere" }: { n: number; label?: Co
 }
 
 /** Rows biggest first (`rows` already are), with the Elsewhere row at its place among them. */
-export function bySize(rows: [number, ComponentChildren][], elsewhere: number, row: ComponentChildren): ComponentChildren[] {
+function bySize(rows: [number, ComponentChildren][], elsewhere: number, row: ComponentChildren): ComponentChildren[] {
   const at = rows.findIndex(([n]) => n < elsewhere);
   const out = rows.map(([, r]) => r);
   out.splice(at < 0 ? out.length : at, 0, row);

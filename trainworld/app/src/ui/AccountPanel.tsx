@@ -6,10 +6,11 @@
 // start menu, which hides the dock, can open them too.
 
 import { h, render } from "preact";
-import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { accountConfig, accountOpen, accountState, api, deleteAccount, session, signIn, signOut, startAccount, storeSession, type AccountView } from "../game/account";
 import { shade } from "../game/ui";
 import { Leaderboard } from "./Leaderboard";
+import { Modal } from "./Modal";
 import { Icon } from "./widgets";
 import "./account.css";
 
@@ -131,37 +132,9 @@ function SignedIn({ a }: { a: AccountView }) {
   </>;
 }
 
-/** A centred modal: a native dialog, Esc or a click outside its box closes it. */
-export function Modal({ open, onClose, title, cls, children }: { open: boolean; onClose: () => void; title: string; cls: string; children: preact.ComponentChildren }) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  useLayoutEffect(() => {
-    const el = dialog.current;
-    if (!open || !el) return;
-    const before = document.activeElement;
-    if (!el.open) el.showModal();
-    return () => {
-      if (el.open) el.close();
-      if (before instanceof HTMLElement && before.isConnected) before.focus();
-    };
-  }, [open]);
-  if (!open) return null;
-  return <dialog class={"saves-panel acct-panel " + cls} ref={dialog} aria-label={title}
-    onCancel={(e) => { e.preventDefault(); onClose(); }}
-    onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Escape") { e.preventDefault(); onClose(); } }}>
-    <div class="saves-inner">
-      <div class="saves-head">
-        <h2>{title}</h2>
-        <button class="btn icon" aria-label="Close" data-tip="Close (Esc)" onClick={onClose}><Icon.cross /></button>
-      </div>
-      {children}
-    </div>
-  </dialog>;
-}
-
 export function AccountPanel() {
   const s = session.value;
-  return <Modal open={accountOpen.value} onClose={() => (accountOpen.value = false)} title={s ? "Account" : "Sign in"} cls="acct-account">
+  return <Modal open={accountOpen.value} onClose={() => (accountOpen.value = false)} title={s ? "Account" : "Sign in"} cls="acct-panel acct-account">
     {s ? <SignedIn a={s.account} /> : <SignInForms />}
   </Modal>;
 }

@@ -4,12 +4,12 @@
 // the clock worker sends a new state (workers/clockClient.ts). Edits go to the worker as ops
 // (workers/protocol.ts); a refused edit puts its reasons, in plain words, in `notice`.
 
-import { signal } from "@preact/signals";
+import { signal, type Signal } from "@preact/signals";
 import type { EditOp } from "../workers/protocol";
 import type { EditAnswer } from "../workers/clockClient";
 import { describeIssues } from "./issues";
 import { tidyNodes, type FareNode } from "./fareCurve";
-import type { Demand, LineId, WorldView } from "./types";
+import type { Demand, LineId, LineInput, Save, WorldView } from "./types";
 import { DEMAND_INDEX } from "./types";
 
 export const world = signal<WorldView | null>(null);
@@ -44,8 +44,6 @@ const num = (id: LineId) => Number(id);
 /** Train counts asked for but not yet in `world` (T-229): the stepper shows them at once, and a
  * second click before the first edit lands counts from them, not from the old figure. */
 export const pendingTrains = signal<ReadonlyMap<LineId, [number, number, number]>>(new Map());
-/** Per line: the edit in flight, and whether a newer count waits to go when it lands. */
-const trainEdits = new Map<LineId, { busy: boolean; next: [number, number, number] | null }>();
 
 /** A line's trains on the entire line per demand level, as the player last set them. */
 export function trainsShown(id: LineId): [number, number, number] | null {
@@ -56,21 +54,19 @@ export function trainsShown(id: LineId): [number, number, number] | null {
  * edit is in flight are folded into one edit sent when it lands, so fast clicking never queues a
  * recompute per click. */
 export function stepTrainCount(id: LineId, demand: Demand, by: number) {
-  const base = trainsShown(id);
-  if (!base) return;
-  const t: [number, number, number] = [...base] as [number, number, number];
-  // a loop's trains are half each way, so its count moves by two (T-798)
-  const k = trainStep(id);
-  t[DEMAND_INDEX[demand]] = Math.max(0, Math.round(t[DEMAND_INDEX[demand]] / k + by) * k);
-  setTrainCounts(id, t);
+  changeTrains(id, demand, (now, k) => Math.max(0, Math.round(now / k + by) * k));
 }
 
 export function setTrainCount(id: LineId, demand: Demand, trains: number) {
+  changeTrains(id, demand, (_, k) => Math.max(0, Math.ceil(Math.round(trains) / k) * k));
+}
+
+function changeTrains(id: LineId, demand: Demand, to: (now: number, step: number) => number) {
   const base = trainsShown(id);
   if (!base) return;
   const t: [number, number, number] = [...base] as [number, number, number];
   const k = trainStep(id);
-  t[DEMAND_INDEX[demand]] = Math.max(0, Math.ceil(Math.round(trains) / k) * k);
+  t[DEMAND_INDEX[demand]] = to(t[DEMAND_INDEX[demand]], k);
   setTrainCounts(id, t);
 }
 
@@ -92,38 +88,47 @@ function noteAnswer(id: LineId, a: EditAnswer, sent: number[], had: readonly num
   if (m) refusedForCash.value = { id, levs: sent.map((v, i) => v !== had?.[i]), at: performance.now(), need: Number(m.split(":")[1]) };
 }
 
-function setTrainCounts(id: LineId, t: [number, number, number]) {
-  const p = new Map(pendingTrains.peek());
-  p.set(id, t);
-  pendingTrains.value = p;
-  const job = trainEdits.get(id) ?? { busy: false, next: null };
-  trainEdits.set(id, job);
-  job.next = t;
-  if (job.busy) return;
-  const send = async () => {
-    job.busy = true;
-    while (job.next) {
-      const trains = job.next;
-      job.next = null;
-      const had = world.peek()?.lineStats[id]?.trainsNeeded;
-      const a = await edit({ op: "setTrainCount", line: num(id), trains });
-      noteAnswer(id, a, trains, had);
-      if (!a.ok) job.next = null; // refused (money): the stepper goes back to the world's count
-    }
-    job.busy = false;
-    trainEdits.delete(id);
-    // the world now holds the last count sent (or, refused, the one before it)
-    const q = new Map(pendingTrains.peek());
-    q.delete(id);
-    pendingTrains.value = q;
+/** Shows a line's value in `pending` at once and sends it with `send`, one edit in flight per line:
+ * a value set meanwhile waits and goes when the edit lands, only the newest. `send` says whether
+ * the edit was accepted; a refusal (money) drops what waited and the line goes back to the
+ * world's value. */
+function folded<V>(pending: Signal<ReadonlyMap<LineId, V>>, send: (id: LineId, v: V) => Promise<boolean>): (id: LineId, v: V) => void {
+  const jobs = new Map<LineId, { busy: boolean; next: { v: V } | null }>();
+  return (id, v) => {
+    const p = new Map(pending.peek());
+    p.set(id, v);
+    pending.value = p;
+    const job = jobs.get(id) ?? { busy: false, next: null };
+    jobs.set(id, job);
+    job.next = { v };
+    if (job.busy) return;
+    void (async () => {
+      job.busy = true;
+      while (job.next) {
+        const { v } = job.next;
+        job.next = null;
+        if (!(await send(id, v))) job.next = null;
+      }
+      job.busy = false;
+      jobs.delete(id);
+      // the world now holds the last value sent (or, refused, the one before it)
+      const q = new Map(pending.peek());
+      q.delete(id);
+      pending.value = q;
+    })();
   };
-  void send();
 }
+
+const setTrainCounts = folded(pendingTrains, async (id, trains) => {
+  const had = world.peek()?.lineStats[id]?.trainsNeeded;
+  const a = await edit({ op: "setTrainCount", line: num(id), trains });
+  noteAnswer(id, a, trains, had);
+  return a.ok;
+});
 
 /** T-625: a line whose trains follow a headway. The headways asked for but not yet in `world`,
  * folded like the train counts above; null is a switch back to counts set by hand (T-747). */
 export const pendingHeadway = signal<ReadonlyMap<LineId, [number, number, number] | null>>(new Map());
-const headwayEdits = new Map<LineId, { busy: boolean; next: [number, number, number] | null | undefined }>();
 
 /** Seconds per level the line keeps, as last set, or null when its trains are counted by hand. */
 export function headwayShown(id: LineId): [number, number, number] | null {
@@ -165,33 +170,12 @@ export function setHeadway(id: LineId, demand: Demand, seconds: number) {
   queueHeadway(id, h);
 }
 
-/** Show `h` at once and send it, folded with any edit to the line's headways still in flight. */
-function queueHeadway(id: LineId, h: [number, number, number] | null) {
-  const p = new Map(pendingHeadway.peek());
-  p.set(id, h);
-  pendingHeadway.value = p;
-  const job = headwayEdits.get(id) ?? { busy: false, next: undefined };
-  headwayEdits.set(id, job);
-  job.next = h;
-  if (job.busy) return;
-  const send = async () => {
-    job.busy = true;
-    while (job.next !== undefined) {
-      const secs = job.next;
-      job.next = undefined;
-      const had = world.peek()?.lineStats[id]?.autoS;
-      const a = await edit({ op: "setHeadway", line: num(id), seconds: secs });
-      if (secs) noteAnswer(id, a, secs, had);
-      if (!a.ok) job.next = undefined; // refused (money): the line goes back to the world's headways
-    }
-    job.busy = false;
-    headwayEdits.delete(id);
-    const q = new Map(pendingHeadway.peek());
-    q.delete(id);
-    pendingHeadway.value = q;
-  };
-  void send();
-}
+const queueHeadway = folded(pendingHeadway, async (id, secs) => {
+  const had = world.peek()?.lineStats[id]?.autoS;
+  const a = await edit({ op: "setHeadway", line: num(id), seconds: secs });
+  if (secs) noteAnswer(id, a, secs, had);
+  return a.ok;
+});
 
 export function stepHeadway(id: LineId, demand: Demand, dir: number) {
   const base = headwayShown(id);
@@ -233,14 +217,29 @@ export function renameLine(id: LineId, name: string) {
   if (n && l) void edit({ op: "lineLook", line: num(id), name: n, colour: l.colour });
 }
 
-export function setLineColour(id: LineId, colour: string) {
-  const l = lineById(id);
-  if (l) void edit({ op: "lineLook", line: num(id), name: l.name, colour });
-}
-
 export const undo = () => edit({ op: "undo" }, true);
 export const redo = () => edit({ op: "redo" }, true);
 
-export const lineById = (id: LineId) => world.value?.save.lines.find((l) => l.id === id);
-export const stationById = (id: string) => world.value?.save.stations.find((s) => s.id === id);
-export const linesAt = (station: string) => world.value?.save.lines.filter((l) => l.stops.includes(station)) ?? [];
+// The lookups below are built once per save: a new snapshot makes a new `save` object and nothing
+// edits one in place, so a WeakMap keyed on it never goes stale.
+const looked = new WeakMap<Save, Map<string, unknown>>();
+function lookup<T>(w: WorldView, key: string, build: (s: Save) => T): T {
+  let m = looked.get(w.save);
+  if (!m) looked.set(w.save, (m = new Map()));
+  if (!m.has(key)) m.set(key, build(w.save));
+  return m.get(key) as T;
+}
+export const stationsById = (w: WorldView) => lookup(w, "stations", (s) => new Map(s.stations.map((x) => [x.id, x])));
+export const stationNames = (w: WorldView) => lookup(w, "names", (s) => new Map(s.stations.map((x) => [x.id, x.name])));
+export const stationsByNum = (w: WorldView) => lookup(w, "stationNums", (s) => new Map(s.stations.map((x) => [x.num, x])));
+export const linesById = (w: WorldView) => lookup(w, "lines", (s) => new Map(s.lines.map((l) => [l.id, l])));
+export const linesByNum = (w: WorldView) => lookup(w, "lineNums", (s) => new Map(s.lines.map((l) => [l.num, l])));
+/** The lines that stop at each station, in line order. */
+export const linesAtMap = (w: WorldView) => lookup(w, "linesAt", (s) => {
+  const at = new Map<string, LineInput[]>();
+  for (const l of s.lines) for (const st of new Set(l.stops)) (at.get(st) ?? at.set(st, []).get(st)!).push(l);
+  return at;
+});
+
+export const lineById = (id: LineId) => (world.value ? linesById(world.value).get(id) : undefined);
+export const linesAt = (station: string) => (world.value ? linesAtMap(world.value).get(station) : undefined) ?? [];

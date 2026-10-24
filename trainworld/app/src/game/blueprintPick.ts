@@ -8,7 +8,7 @@ import { distance, levelLabel } from "./format";
 import { lineEffects } from "./remove";
 import type { Level } from "./types";
 import { ask, tool } from "./ui";
-import { edit, say, world } from "./world";
+import { edit, say, stationsByNum, world } from "./world";
 
 export interface BpPicked {
   /** track pieces (edge ids) and stations (node ids) */
@@ -48,7 +48,7 @@ export const pickedState = computed(() => {
   const w = world.value, p = bpPicked.value;
   if (!w) return { edges: 0, stations: 0, off: 0, on: 0, built: false, lengthM: 0, level: null as Level | null };
   const edges = new Map(w.edges.map((e) => [e.id, e]));
-  const stations = new Map(w.save.stations.map((s) => [s.num, s]));
+  const stations = stationsByNum(w);
   let off = 0, on = 0, lengthM = 0;
   let level: Level | null | undefined;
   for (const id of p.edges) {

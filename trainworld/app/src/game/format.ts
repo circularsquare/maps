@@ -1,6 +1,18 @@
 // Number and time formatting for the UI. "−" (U+2212) for negatives, as in the mock.
 
+import type { Level } from "./types";
 import { display } from "./ui";
+
+/** To the whole number with thousands commas: 1234567.4 -> "1,234,567". */
+export const exact = (n: number): string => Math.round(n).toLocaleString("en-US");
+
+/** "1 car", "2 cars"; `many` is `one` and an s unless given. */
+export const plural = (n: number, one: string, many = one + "s"): string => `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
+
+/** ["a", "b", "c"] -> "a, b and c" */
+export const andList = (names: string[]): string => (names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`);
+
+export const capitalise = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** 312000 -> "312k", 1.84e6 -> "1.84M" */
 export function count(n: number): string {
@@ -31,19 +43,21 @@ export const moneyNegative = (n: number): boolean => n < 0 && Math.abs(n) >= 500
 
 /** To the dollar, for the cash (T-284: it moves as fares land): 5834215320 -> "$5,834,215,320". */
 export function moneyExact(n: number): string {
-  return (n < 0 ? "−" : "") + "$" + Math.round(Math.abs(n)).toLocaleString("en-US");
+  return (n < 0 ? "−" : "") + "$" + exact(Math.abs(n));
 }
+
+/** Three significant figures: 25.5, 133, 1.33. */
+export const sig3 = (v: number): string => {
+  const r = Number(v.toPrecision(3));
+  return r >= 100 ? String(r) : r >= 10 ? r.toFixed(1) : r.toFixed(2);
+};
 
 /** Three significant figures, for the drawing tag (T-085): "$25.5M", "$133M", "$1.33B". */
 export function moneyShort(n: number): string {
   const a = Math.abs(n), s = n < 0 ? "−" : "";
-  const sig = (v: number) => {
-    const r = Number(v.toPrecision(3));
-    return r >= 100 ? String(r) : r >= 10 ? r.toFixed(1) : r.toFixed(2);
-  };
   // a figure that rounds up to the next unit (999.6k, 999.7M) is written in that unit
-  if (a >= 999.5e6) return s + "$" + sig(a / 1e9) + "B";
-  if (a >= 999.5e3) return s + "$" + sig(a / 1e6) + "M";
+  if (a >= 999.5e6) return s + "$" + sig3(a / 1e9) + "B";
+  if (a >= 999.5e3) return s + "$" + sig3(a / 1e6) + "M";
   return s + "$" + Math.round(a / 1000) + "k";
 }
 
@@ -93,9 +107,9 @@ export function shortDistance(m: number): string {
   if (us()) {
     const ft = m * FT_PER_M, mi = m / M_PER_MILE;
     if (ft < 528) return `${Math.round(ft / 10) * 10} ft`;
-    return mi < 1 ? `${mi.toFixed(2)} mi` : mi < 10 ? `${mi.toFixed(1)} mi` : `${Math.round(mi).toLocaleString("en-US")} mi`;
+    return mi < 1 ? `${mi.toFixed(2)} mi` : mi < 10 ? `${mi.toFixed(1)} mi` : `${exact(mi)} mi`;
   }
-  return m < 1000 ? `${Math.round(m / 10) * 10} m` : m < 10_000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m / 1000).toLocaleString("en-US")} km`;
+  return m < 1000 ? `${Math.round(m / 10) * 10} m` : m < 10_000 ? `${(m / 1000).toFixed(1)} km` : `${exact(m / 1000)} km`;
 }
 
 /** 160 -> "160 km/h" or "99 mph"; `nearest` rounds in the shown unit (the speed key uses 5). */
@@ -132,6 +146,10 @@ export function runCostRule(m: { runCostTrainKm: number; runCostCarKm: number })
 export function upkeepRule(m: { upkeepTrackKm: number; upkeepStation: number; economy: number }): string {
   return `${money(perDistance(m.upkeepTrackKm * m.economy))} a ${distUnit()} of track and ${money(m.upkeepStation * m.economy)} a station a day`;
 }
+/** The upkeep rule as a sentence; `lead` is "Upkeep" or "Once constructed, upkeep". */
+export function upkeepText(m: { upkeepTrackKm: number; upkeepStation: number; economy: number; upkeepHsr: number; upkeepSingle: number }, lead: string): string {
+  return `${lead} is ${upkeepRule(m)}, whether trains run or not. High-speed track costs ${m.upkeepHsr} times as much and single track ${m.upkeepSingle} times.`;
+}
 type Fleets = { carPrice: number; runCostTrainKm: number; runCostCarKm: number; hsCarPrice: number; hsRunCostTrainKm: number; hsRunCostCarKm: number; fleet: number; carsNeeded: number; fleetFast: number; carsNeededFast: number };
 /** One kind of train's car price, running costs and spare cars (T-817: high-speed or ordinary). */
 export function trainKind(m: Fleets, fast: boolean): { carPrice: number; runCostTrainKm: number; runCostCarKm: number; spare: number } {
@@ -142,11 +160,6 @@ export function trainKind(m: Fleets, fast: boolean): { carPrice: number; runCost
 /** What a train of `cars` costs to run: "$27 a train-km". */
 export function trainRunCost(m: { runCostTrainKm: number; runCostCarKm: number }, cars: number): string {
   return `${perUnitText(m.runCostTrainKm + cars * m.runCostCarKm)} a train-${distUnit()}`;
-}
-
-/** The inverse of `perDistance`. */
-export function perKmFrom(perUnit: number): number {
-  return us() ? perUnit / (M_PER_MILE / 1000) : perUnit;
 }
 
 /** Mile, and the metres a ruler marking it stands for (the placing rings). */
@@ -185,3 +198,6 @@ export function dayOf(minute: number): number {
 export function levelLabel(l: number): string {
   return l > 0 ? "+" + l : l < 0 ? "−" + -l : "0";
 }
+
+const LEVEL_NAMES: Record<Level, string> = { 3: "High viaduct", 2: "Viaduct", 1: "Viaduct", 0: "Ground level", [-1]: "Cut and cover", [-2]: "Tunnel", [-3]: "Deep tunnel" };
+export const levelName = (l: Level): string => LEVEL_NAMES[l];

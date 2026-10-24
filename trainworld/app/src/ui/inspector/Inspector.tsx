@@ -5,7 +5,10 @@ import { CityInspector } from "./CityInspector";
 import { CommutersInspector } from "./CommutersInspector";
 import { LineInspector } from "./LineInspector";
 import { TripInspector } from "./TripInspector";
-import { AreaInspector, JunctionInspector, StationInspector, TrackInspector, TrainInspector } from "./others";
+import { JunctionInspector } from "./JunctionInspector";
+import { StationInspector } from "./StationInspector";
+import { TrackInspector } from "./TrackInspector";
+import { TrainInspector } from "./TrainInspector";
 
 export function Inspector() {
   const s = selection.value;
@@ -18,7 +21,6 @@ export function Inspector() {
   else if (s.kind === "junction") body = <JunctionInspector node={s.node} />;
   else if (s.kind === "commuters") body = <CommutersInspector />;
   else if (s.kind === "city") body = <CityInspector key={s.city} id={s.city} />;
-  else if (s.kind === "trip") body = <TripInspector />;
-  else body = <AreaInspector sel={s} />;
+  else body = <TripInspector />;
   return <section id="inspector">{body}</section>;
 }

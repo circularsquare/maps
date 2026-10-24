@@ -14,7 +14,7 @@ import { demandByDay } from "./demand";
 import { stationZone } from "./listScope";
 import { liveMoney, moneyState } from "./money";
 import { placeAt, zonesLoaded } from "./zones";
-import { world } from "./world";
+import { stationsById, world } from "./world";
 import type { WorldView } from "./types";
 import type { MoneyState } from "../workers/protocol";
 import type { DayLedger, HourLedger } from "../workers/saveFile";
@@ -37,7 +37,7 @@ export const lineShares = computed(() => {
   if (!w || !m) return out;
   void zonesLoaded.value; // boundaries arriving re-place the stations
   const dv = demandByDay.value[0]?.view ?? null;
-  const byId = new Map(w.save.stations.map((s) => [s.id, s]));
+  const byId = stationsById(w);
   const zone = (id: string) => { const s = byId.get(id); return (s && stationZone(s)) ?? ""; };
   const boardingsAll = w.save.lines.reduce((a, l) => a + (dv?.lines.get(l.id)?.ridersPerDay ?? 0), 0);
   const tripsPerBoarding = dv && boardingsAll > 0 ? Math.min(1, dv.railTripsPerDay / boardingsAll) : 1;
@@ -127,8 +127,6 @@ export function chargeShares(before: WorldView | null, after: WorldView, line?: 
   const runShares = line !== undefined ? lineShares.peek().get(line)?.run : undefined;
   return { build, trains: runShares?.length ? runShares : build };
 }
-
-export interface RegionLedger { ledger: DayLedger[]; hours: HourLedger[] }
 
 /** A region's ledger as the Money tab reads it, with today and this hour as they move; null for the
  * network's. A region with nothing in it has empty lists. */

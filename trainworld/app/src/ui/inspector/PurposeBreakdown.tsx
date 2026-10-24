@@ -1,12 +1,13 @@
 import { useState } from "preact/hooks";
 import type { PurposeTrips } from "../../game/demand";
-import { count } from "../../game/format";
+import { andList, capitalise, count } from "../../game/format";
+import { PERIODS } from "../../game/periods";
 import { shownDayPhrase } from "../../game/ui";
 import { purposeColour, shownName } from "../../game/purposes";
 import { Spinner } from "../Spinner";
 
-const LABELS = ["6–10", "10–16", "16–20", "20–24", "0–6"];
-const HOURS = [4, 6, 4, 4, 6];
+const LABELS = PERIODS.map((p) => `${p.from}–${p.to}`);
+const HOURS = PERIODS.map((p) => p.to - p.from);
 
 type Row = { name: string; outward: number[]; returning: number[]; total: number };
 
@@ -72,7 +73,7 @@ export function PurposeBreakdown({ purposes }: { purposes?: PurposeTrips[] }) {
     for (const r of rows) r.total = [...r.outward, ...r.returning].reduce((a, b) => a + b, 0);
   }
   const all = rows?.reduce((a,p) => a+p.total,0) ?? 0;
-  /** what a purpose covers (T-253: these were notes under the chart) */
+  /** what a purpose covers */
   const coverage = (name: string): string | undefined =>
     /^(school|university)/i.test(name) ? "Matched public schools and degree-granting colleges across the metro area. Private schools and exclusively online or nondegree students are not included. Homes, campus locations and typical-day attendance are estimated."
     : /^airport/i.test(name) ? "Air passengers to and from the metro area's commercial airports, not connecting passengers or airport staff. For an arriving passenger, the trip from the airport counts as the return. Homes and hotels at the other end are estimated."
@@ -84,11 +85,10 @@ export function PurposeBreakdown({ purposes }: { purposes?: PurposeTrips[] }) {
   const airport = purposes?.some(p => /^airport/i.test(p.name));
   const medical = purposes?.some(p => /^medical/i.test(p.name));
   const missing = [!school && "school attendance", !university && "university attendance", !airport && "airport passengers", !medical && "medical visits"].filter((s): s is string => !!s);
-  const missingText = missing.length ? `${missing.length > 1 ? `${missing.slice(0, -1).join(", ")} and ${missing[missing.length - 1]}` : missing[0]} ${missing.length > 1 ? "are" : "is"} not modelled here.` : "";
+  const missingText = missing.length ? `${andList(missing)} ${missing.length > 1 ? "are" : "is"} not modelled here.` : "";
   const unit = railOnly ? "train trip legs" : "trip legs";
   return <>
-    {/* T-253: what each purpose covers, and what is not modelled, are hovers rather than notes */}
-    <div class="h"><span data-tip={[missingText && missingText[0].toUpperCase() + missingText.slice(1), (rows?.length ?? 0) > 1 && "Everyday timing and travel patterns are initial estimates."].filter(Boolean).join(" ") || undefined}>Trip purposes</span></div>
+    <div class="h"><span data-tip={[missingText && capitalise(missingText), (rows?.length ?? 0) > 1 && "Everyday timing and travel patterns are initial estimates."].filter(Boolean).join(" ") || undefined}>Trip purposes</span></div>
     <div class="purpose-scope">
       <button type="button" aria-pressed={!railOnly} class={!railOnly ? "on" : ""} onClick={() => setRailOnly(false)}>All modes</button>
       <button type="button" aria-pressed={railOnly} class={railOnly ? "on" : ""} onClick={() => setRailOnly(true)}>Train only</button>

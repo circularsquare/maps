@@ -1,22 +1,21 @@
-// The saved games panel (T-251; the cards from T-241): a centred modal over the page, opened by the
-// save button at the end of the dock's tab row (or the top bar's Autosave off notice), closed with
-// Esc, its close button or a click outside it. One card per browser slot: a picture of its network,
-// name, when it was saved, day, cities, lines, stations and cash; the game being played is marked,
-// every other has an Open button; under the game being played, its backups (T-744). The files, a new
-// game and save a copy are above the list (T-1131); a copy, a loaded file and a new game each get a
-// new slot (T-743). T-253: no notes.
+// The saved games panel (T-251; the cards from T-241): a centred modal over the page. One card per
+// browser slot: a picture of its network, name, when it was saved, day, cities, lines, stations and
+// cash; the game being played is marked, every other has an Open button; under the game being
+// played, its backups (T-744). The files, a new game and save a copy are above the list (T-1131); a
+// copy, a loaded file and a new game each get a new slot (T-743).
 
 import { signal } from "@preact/signals";
-import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
-import { CITIES, cityById } from "../game/cities";
-import { money } from "../game/format";
+import { useEffect, useState } from "preact/hooks";
+import { cityById, isCity } from "../game/cities";
+import { money, plural } from "../game/format";
 import { SHADES } from "../game/shades";
 import { lastSaved } from "../game/money";
 import { exportGame, importGame, newGame, manageSaveSlot, saveSlotsState } from "../workers/clockClient";
 import type { SaveSlot, SlotBackup } from "../workers/saveFile";
-import { Icon } from "./widgets";
+import { viewStart } from "./locate";
+import { Modal } from "./Modal";
 import { Money } from "./MoneyText";
-import { NewGameSheet, viewStart } from "./NewGame";
+import { NewGameSheet } from "./NewGame";
 
 /** The saves panel is open. */
 export const savesOpen = signal(false);
@@ -33,25 +32,25 @@ function savedWhen(at: number, now: number): string {
 
 /** "New York", "New York and Newark", "New York, Philadelphia and 2 more". */
 function cityList(ids: string[]): string {
-  const names = ids.filter((id) => CITIES.some((c) => c.id === id)).map((id) => cityById(id).name);
+  const names = ids.filter(isCity).map((id) => cityById(id).name);
   if (names.length <= 2) return names.join(" and ");
   if (names.length === 3) return `${names[0]}, ${names[1]} and ${names[2]}`;
   return `${names[0]}, ${names[1]} and ${names.length - 2} more`;
 }
 
-const plural = (n: number, one: string, many: string) => `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
+const fullDate = (at: number) => new Date(at).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 /** A saved game's picture of its network (T-241): one panel per city it has built in, the most
  * stations first, each named, with its stations when there is more than one (T-894). The names are
  * text over the picture, in the colours of the theme it was drawn in. */
 export function SlotThumb({ slot }: { slot: SaveSlot }) {
   if (!slot.thumb) return <div class="save-thumb empty muted small">{slot.lines !== undefined ? "Nothing built" : "No picture yet"}</div>;
-  const panels = (slot.panels ?? []).filter((p) => p.city && CITIES.some((c) => c.id === p.city));
+  const panels = (slot.panels ?? []).filter((p) => isCity(p.city));
   const sh = SHADES[slot.shade ?? "light"];
   return <div class="save-thumb" style={{ "--thumb-ink": sh.mapInk, "--thumb-land": sh.land }}>
     <img src={slot.thumb} alt="" data-tip={`The network in "${slot.name}" when it was last saved`} />
     {panels.map((p) => {
-      const name = cityById(p.city).name, stations = plural(p.stations, "station", "stations");
+      const name = cityById(p.city).name, stations = plural(p.stations, "station");
       return <div class="thumb-label" style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, width: `${p.w * 100}%` }} data-tip={`${name}: ${stations}`}>
         <div class="thumb-city">{name}</div>
         {panels.length > 1 && <div class="thumb-figure num">{stations}</div>}
@@ -64,17 +63,16 @@ export function SlotThumb({ slot }: { slot: SaveSlot }) {
  * menu's (T-677). */
 export function SlotFacts({ slot, now, autosaved }: { slot: SaveSlot; now: number; autosaved?: boolean }) {
   const when = savedWhen(slot.at, now);
-  const exact = new Date(slot.at).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   return <>
-    <div class="small muted" data-tip={`Last saved ${exact}`}>{autosaved ? when.replace("Saved", "Autosaved") : when}</div>
+    <div class="small muted" data-tip={`Last saved ${fullDate(slot.at)}`}>{autosaved ? when.replace("Saved", "Autosaved") : when}</div>
     <div class="small muted num">
       <span data-tip={`Game day ${slot.day}`}>Day {slot.day}</span>
       {slot.cities?.length ? <> · {cityList(slot.cities)}</> : null}
     </div>
     {slot.lines !== undefined && <div class="small muted num">
-      <span data-tip={`${slot.lines} lines`}>{plural(slot.lines!, "line", "lines")}</span>
+      <span data-tip={`${slot.lines} lines`}>{plural(slot.lines!, "line")}</span>
       {" · "}
-      <span data-tip={`${slot.stations} stations`}>{plural(slot.stations!, "station", "stations")}</span>
+      <span data-tip={`${slot.stations} stations`}>{plural(slot.stations!, "station")}</span>
       {slot.mode !== "sandbox" && <>
         {" · "}
         <span data-tip={`Cash when saved: ${money(slot.cash! * 1e6)}`}><Money dollars={slot.cash! * 1e6} /></span>
@@ -110,9 +108,8 @@ function SlotCard({ slot, playing, now, writable, onRename, onDelete }: { slot: 
 function Backups({ backups, now }: { backups: SlotBackup[]; now: number }) {
   return <div class="save-backups">
     {backups.map((b) => {
-      const exact = new Date(b.at).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
       return <div class="save-backup small" data-backup={b.key}>
-        <span class="muted num" data-tip={`A backup of this game from ${exact}, game day ${b.day}`}>{savedWhen(b.at, now).replace("Saved", "Backup")} · Day {b.day}</span>
+        <span class="muted num" data-tip={`A backup of this game from ${fullDate(b.at)}, game day ${b.day}`}>{savedWhen(b.at, now).replace("Saved", "Backup")} · Day {b.day}</span>
         <button class="btn text" data-tip="Open this backup as a new saved game. The game you are playing is saved first." onClick={() => { manageSaveSlot("restore", b.key); savesOpen.value = false; }}>Restore as a copy</button>
       </div>;
     })}
@@ -170,40 +167,18 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
   );
 }
 
-/** The modal. A native dialog: focus is trapped and restored, Esc closes it; a click on the
- * backdrop (the dialog element itself, outside its box) closes it too. */
+/** The modal. */
 export function SavesPanel() {
   const open = savesOpen.value;
-  const dialog = useRef<HTMLDialogElement>(null);
   // T-728: New game shows the new game sheet in the panel's place
   const [sheet, setSheet] = useState(false);
   useEffect(() => { if (!open) setSheet(false); }, [open]);
-  useLayoutEffect(() => {
-    const el = dialog.current;
-    if (!open || !el) return;
-    const before = document.activeElement;
-    if (!el.open) el.showModal();
-    manageSaveSlot("refresh");
-    return () => {
-      if (el.open) el.close();
-      if (before instanceof HTMLElement && before.isConnected) before.focus();
-    };
-  }, [open]);
-  if (!open) return null;
+  useEffect(() => { if (open) manageSaveSlot("refresh"); }, [open]);
   return (
-    <dialog class="saves-panel" ref={dialog} aria-labelledby="saves-title"
-      onCancel={(e) => { e.preventDefault(); savesOpen.value = false; }}
-      onClick={(e) => { if (e.target === e.currentTarget) savesOpen.value = false; }}
-      onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Escape") { e.preventDefault(); savesOpen.value = false; } }}>
-      <div class="saves-inner">
-        <div class="saves-head">
-          <h2 id="saves-title">{sheet ? "New game" : "Saved games"}</h2>
-          <button class="btn icon" aria-label="Close" data-tip="Close (Esc)" onClick={() => (savesOpen.value = false)}><Icon.cross /></button>
-        </div>
-        {sheet
-          ? <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => { newGame(game); viewStart(game.start); savesOpen.value = false; }} />
-          : <Saves onNewGame={() => setSheet(true)} />}
-      </div>
-    </dialog>
+    <Modal open={open} onClose={() => (savesOpen.value = false)} title={sheet ? "New game" : "Saved games"}>
+      {sheet
+        ? <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => { newGame(game); viewStart(game.start); savesOpen.value = false; }} />
+        : <Saves onNewGame={() => setSheet(true)} />}
+    </Modal>
   );
 }

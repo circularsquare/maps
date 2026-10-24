@@ -7,6 +7,7 @@
 // Lines sharing track are drawn over each other (T-190), so a line's width moves nothing else; a
 // station's box covers the widest line through it.
 
+import { gauge } from "../game/boarding";
 import type { Complexes } from "../game/complexes";
 import { lineLoadsFor, type DemandView } from "../game/demand";
 import { loadFailure } from "../game/loading";
@@ -57,20 +58,9 @@ export function stationScale(ridersPerDay: number): number {
   return ridersPerDay > 0 ? Math.max(STATION_MIN_SCALE, Math.sqrt(ridersPerDay / STATION_FULL)) : 0;
 }
 
-/** Seats and crush load per 20 m car: as ui/inspector/others.tsx (T-083) and
- * `SEATS_PER_CAR`, `CRUSH_PER_CAR` in sim/src/demand/api.rs. */
-const SEATS_PER_CAR = 44, CRUSH_PER_CAR = 160;
 /** A train's fill when its line runs and train loads are shown but demand has no figures for it
  * yet (T-324); -1 is no gauge at all (train loads off, or the line not running). */
 export const PENDING = -2;
-
-/** The train gauge: half full when every seat is taken, full at crush; 2 = over full. */
-export function gauge(aboard: number, cars: number): number {
-  const seats = SEATS_PER_CAR * cars, crush = CRUSH_PER_CAR * cars;
-  if (aboard <= seats) return seats > 0 ? (0.5 * Math.max(0, aboard)) / seats : 0;
-  if (aboard <= crush) return 0.5 + (0.5 * (aboard - seats)) / (crush - seats);
-  return 2;
-}
 
 /** Riders a day on each stop-to-stop stretch of run 0, both directions, every period (the purpose
  * filter's purpose only); null when demand has no answer that fits the line's `n` stops. */

@@ -1,35 +1,31 @@
-// The line inspector: name and colour, whether it runs (and what constructing the rest costs), the
-// schedule by demand level with headway and trains needed (SPEC 6.3), its past 24 hours (riders,
-// fares, running cost and its trains, T-293, T-446), the stops with each stop's time from the start
-// of the line and boardings in the past 24 hours, and the round
-// trip split into running, dwell, turning and waiting, with where it waits (T-031).
+// The line inspector (SPEC 6.3, 8).
 
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
-import { queryClock } from "../../workers/clockClient";
-import { clock, demandAt } from "../../game/clock";
-import { clockTime, count, distance, duration, headway, length, money, runCostRule, speed, trainKind, trainRunCost } from "../../game/format";
+import { demandAt, lineSeconds } from "../../game/clock";
+import { andList, clockTime, count, distance, duration, headway, length, money, plural, runCostRule, speed, trainKind, trainRunCost } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
-import { levelHours, PERIODS, periodAt } from "../../game/periods";
+import { levelHours, PERIODS } from "../../game/periods";
 import { crowdColour, crowdGrade, crowding, runningToday, today, useToday, waitText } from "../../game/today";
-import { accountVersion } from "../../game/boarding";
+import { accountVersion, CAR_M, CRUSH_PER_CAR } from "../../game/boarding";
 import { complexOf } from "../../game/complexView";
 import { DAY_KIND_NAME } from "../../game/days";
 import { kindIn, lineCountry } from "../../game/holidays";
-import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
+import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats, type StationInput } from "../../game/types";
 import { ask, lineDraft, renameLinePrompt, selection, tool } from "../../game/ui";
 import { liveMoney, moneyState } from "../../game/money";
 import { fullParts, fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
 import { toggleEditStops } from "../../game/lineActions";
 import { ColourPicker } from "../ColourPicker";
-import { AUTO_SLACK, autoTrainsFor, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stepHeadway, stepTrainCount, trainsShown, world } from "../../game/world";
+import { AUTO_SLACK, autoTrainsFor, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stationNames, stationsById, stationsByNum, stepHeadway, stepTrainCount, trainsShown, world, linesById, linesByNum } from "../../game/world";
 import { live } from "../../map/live";
 import { Alert, Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
 import { NameEdit } from "./NameEdit";
 import { locateLine, locateStation } from "../locate";
 import { demandPending, Spinner } from "../Spinner";
+import { useClockQuery } from "../useClockQuery";
 
 const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
 
@@ -40,14 +36,16 @@ function levelTimes(d: Demand): string {
   return `${DEMAND_LABEL[d]} demand: ${levelHours(d).map(([a, b]) => `${t(a)} to ${t(b)}`).join(", ")}`;
 }
 
+const stationsNow = (): ReadonlyMap<number, StationInput> => (world.value ? stationsByNum(world.value) : new Map());
+
 /** Where a line waits, in words (T-031): from `TrackApi.line_delays`. */
 function spotsFrom(d: Float64Array): { text: string; s: number }[] {
   const out: { text: string; s: number }[] = [];
-  const st = new Map((world.value?.save.stations ?? []).map((s) => [s.num, s.name]));
+  const st = stationsNow();
   for (let i = 0; i + 4 < d.length; i += 5) {
     const [kind, node, x, y, s] = [d[i], d[i + 1], d[i + 2], d[i + 3], d[i + 4]];
     const near = nearestStation(x, y)?.name;
-    const at = node >= 0 ? st.get(node) : undefined;
+    const at = node >= 0 ? st.get(node)?.name : undefined;
     const text =
       (kind === 2 || kind === 3 || kind === 6 || kind === 8) && at
         ? `At ${at}`
@@ -66,7 +64,7 @@ function spotsFrom(d: Float64Array): { text: string; s: number }[] {
 /** Where full track holds a line's fleet back, per level (T-517): from `TrackApi.line_held`. */
 interface Held { d: Demand; wait: number; place: string; head: string; name: string; tail: string; at: { lng: number; lat: number } | null; tip: string }
 function heldFrom(v: Float64Array): Held[] {
-  const st = new Map((world.value?.save.stations ?? []).map((s) => [s.num, s]));
+  const st = stationsNow();
   const out: Held[] = [];
   DEMANDS.forEach((d, lev) => {
     const [wait, kind, node, x, y, , most] = v.subarray(7 * lev, 7 * lev + 7);
@@ -83,7 +81,7 @@ function heldFrom(v: Float64Array): Held[] {
  * nothing does. From the tail of `TrackApi.line_held`. */
 interface Limit { s: number; what: string }
 function limitsFrom(v: Float64Array): (Limit | null)[] {
-  const st = new Map((world.value?.save.stations ?? []).map((s) => [s.num, s]));
+  const st = stationsNow();
   return DEMANDS.map((_, lev) => {
     const [s, kind, node, x, y] = v.subarray(21 + 5 * lev, 26 + 5 * lev);
     if (!(s > 0)) return null;
@@ -99,11 +97,11 @@ const limitText = (lim: Limit) => (Number.isFinite(lim.s) ? `${lim.what} takes o
  * `gap` and drawn on the stops diagram between it and the next. */
 interface RouteMark { crossing: boolean; gap: number; near: string; others: string[] }
 function marksFrom(d: Float64Array): RouteMark[] {
-  const lines = new Map((world.value?.save.lines ?? []).map((l) => [l.num, l.name]));
+  const lines = world.value ? linesByNum(world.value) : new Map<number, LineInput>();
   const out: RouteMark[] = [];
   for (let i = 0; i + 5 < d.length; ) {
     const n = d[i + 5];
-    const others = Array.from(d.subarray(i + 6, i + 6 + n), (o) => lines.get(o) ?? `Line ${o}`);
+    const others = Array.from(d.subarray(i + 6, i + 6 + n), (o) => lines.get(o)?.name ?? `Line ${o}`);
     out.push({ crossing: d[i] === 5, gap: d[i + 1], near: nearestStation(d[i + 3], d[i + 4])?.name ?? "", others });
     i += 6 + n;
   }
@@ -192,7 +190,7 @@ function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
 /** The line's past 24 hours (T-446, game/today.ts): riders, fares less running cost, and its trains
  * from the boarding account (T-230): how many left full, and who was left on the platform. Its own
  * component: it re-renders as the counts move. */
-function LineToday({ l, st, periods, kind }: { l: LineInput; st: LineStats; periods: Float64Array | null; kind: number }) {
+function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; periods: Float64Array | null; kind: number }) {
   const d = today.value.get(l.id);
   if (!d) return null;
   const load = periods ? averageLoad(periods, st) : null;
@@ -301,9 +299,13 @@ function StopToday({ line, i }: { line: string; i: number }) {
   return <span class="n num" data-tip={d ? `${count(d.stops[i] ?? 0)} boardings in the past 24 hours` : undefined}>{d ? count(d.stops[i] ?? 0) : ""}</span>;
 }
 
-const carsText = (n: number) => `${n} ${n === 1 ? "car" : "cars"}`;
-/** riders a car holds at crush (sim boarding.rs) */
-const CRUSH_PER_CAR = 160;
+const carsText = (n: number) => plural(n, "car");
+
+/** What buying the cars a change needs costs, or that the depot's spare ones cover it. */
+const carsBought = (k: { carPrice: number; spare: number }, cars: number): string => {
+  const bought = Math.max(0, cars - k.spare);
+  return bought > 0 ? `Buys ${carsText(bought)} for ${money(bought * k.carPrice * 1e6)}` : `Uses ${carsText(cars)} from the depot`;
+};
 
 /** What a stepper's button leads to: the train count, and for a running line the cars it needs
  * beyond the line's busiest level, bought at the car price unless the depot has spare ones, or
@@ -316,9 +318,7 @@ function changeTip(counts: [number, number, number], lev: number, to: number, st
   next[lev] = to;
   const cars = (Math.max(...next) - Math.max(...counts)) * st.cars;
   if (cars > 0) {
-    const k = trainKind(m, st.fast);
-    const bought = Math.max(0, cars - k.spare);
-    return head + (bought > 0 ? `\nBuys ${carsText(bought)} for ${money(bought * k.carPrice * 1e6)}` : `\nUses ${carsText(cars)} from the depot`);
+    return head + "\n" + carsBought(trainKind(m, st.fast), cars);
   }
   return cars < 0 ? head + `\nFrees ${carsText(-cars)}, which stay in the depot` : head;
 }
@@ -326,11 +326,11 @@ function changeTip(counts: [number, number, number], lev: number, to: number, st
 /** Train length (T-733): 1 car up to what the line's shortest platform fits. At the cap the line
  * stores 0, the most that fits, so it follows the platforms as a new line does. */
 function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
-  const stations = new Map((world.value?.save.stations ?? []).map((s) => [s.id, s]));
+  const stations = world.value ? stationsById(world.value) : new Map<string, StationInput>();
   const plats = l.stops.map((s) => stations.get(s)).filter((s) => s !== undefined);
   if (!plats.length || !st.cars) return null;
   const short = plats.reduce((a, b) => (b.length < a.length ? b : a));
-  const cap = Math.max(1, Math.floor(short.length / 20));
+  const cap = Math.max(1, Math.floor(short.length / CAR_M));
   const cars = Math.min(st.cars, cap);
   const capText = `The ${length(short.length)} platform at ${short.name} fits ${carsText(cap)}`;
   const tip = (to: number) => {
@@ -339,8 +339,7 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
     const k = m && trainKind(m, st.fast);
     if (k) t += `\nRunning costs ${trainRunCost(k, to)}${to !== cars ? `, ${trainRunCost(k, cars)} now` : ""}`;
     if (k && st.status === "running" && to > cars) {
-      const more = (to - cars) * trains, bought = Math.max(0, more - k.spare);
-      t += bought > 0 ? `\nBuys ${carsText(bought)} for ${money(bought * k.carPrice * 1e6)}` : `\nUses ${carsText(more)} from the depot`;
+      t += "\n" + carsBought(k, (to - cars) * trains);
     }
     return t + "\n" + capText;
   };
@@ -370,8 +369,7 @@ function TrainType({ l, st }: { l: LineInput; st: LineStats }) {
     t += `\nA car costs ${money(k.carPrice * 1e6)}. Running costs ${runCostRule(k)}`;
     const need = Math.max(...st.trainsNeeded) * st.cars;
     if (fast !== st.fast && st.status === "running" && need > 0) {
-      const bought = Math.max(0, need - k.spare);
-      t += bought > 0 ? `\nBuys ${carsText(bought)} for ${money(bought * k.carPrice * 1e6)}` : `\nUses ${carsText(need)} from the depot`;
+      t += "\n" + carsBought(k, need);
       t += `\nThe ${carsText(need)} running now stay in the depot`;
     }
     return t;
@@ -464,6 +462,44 @@ function LevelCells({ l, st, d, auto, limit }: { l: LineInput; st: LineStats; d:
   );
 }
 
+const NO_LIMITS: (Limit | null)[] = [null, null, null];
+
+/** T-672: dragging a colour shows it at once (`setPreview`), and the line on the map follows with
+ * one edit every 0.2 s at most; letting go sends the last colour. */
+function useLiveColour(l: LineInput | undefined, setPreview: (hex: string | null) => void) {
+  const live = useRef({ hex: null as string | null, timer: 0, last: 0, busy: false, gap: 200 });
+  useEffect(() => () => clearTimeout(live.current.timer), []);
+  const sendLive = () => {
+    const s = live.current;
+    s.timer = 0;
+    if (s.hex === null || !l) return;
+    if (s.busy) { s.timer = window.setTimeout(sendLive, 50); return; }
+    const hex = s.hex;
+    s.hex = null;
+    s.busy = true;
+    s.last = performance.now();
+    void edit({ op: "lineLook", line: l.num, name: l.name, colour: hex }, true).then(() => {
+      s.busy = false;
+      s.gap = Math.max(200, 6 * (performance.now() - s.last)); // a slow machine follows less often, so edits take a fraction of its time
+    });
+  };
+  const dragColour = (hex: string) => {
+    setPreview(hex);
+    const s = live.current;
+    s.hex = hex;
+    if (!s.timer) s.timer = window.setTimeout(sendLive, Math.max(0, s.gap - (performance.now() - s.last)));
+  };
+  const commitColour = (hex: string) => {
+    if (!l) return;
+    clearTimeout(live.current.timer);
+    live.current.timer = 0;
+    live.current.hex = null;
+    setPreview(hex);
+    void edit({ op: "lineLook", line: l.num, name: l.name, colour: hex }).then((a) => { if (!a.ok) setPreview(null); });
+  };
+  return { dragColour, commitColour };
+}
+
 export function LineInspector({ id }: { id: string }) {
   const w = world.value;
   // T-670: one editor for the name, symbol and colour; T-672: the colour a drag shows before the edit is sent
@@ -473,15 +509,9 @@ export function LineInspector({ id }: { id: string }) {
   const setEditing = (open: boolean) => setEditFor(open ? id : null);
   const preview = previewOf?.id === id ? previewOf.hex : null;
   const setPreview = (hex: string | null) => setPreviewOf(hex === null ? null : { id, hex });
-  // T-672: while dragging, the line on the map follows with one edit every 0.2 s at most
-  const liveEdit = useRef({ hex: null as string | null, timer: 0, last: 0, busy: false, gap: 200 });
-  useEffect(() => () => clearTimeout(liveEdit.current.timer), []);
   const [copying, setCopying] = useState(false);
-  const [spots, setSpots] = useState<{ text: string; s: number }[]>([]);
-  const [held, setHeld] = useState<Held[]>([]);
-  const [limits, setLimits] = useState<(Limit | null)[]>([null, null, null]);
-  const [marks, setMarks] = useState<RouteMark[]>([]);
-  const l =w?.save.lines.find((l) => l.id === id);
+  const l = w ? linesById(w).get(id) : undefined;
+  const { dragColour, commitColour } = useLiveColour(l, setPreview);
   const [symbol, setSymbol] = useState("");
   useEffect(() => { setSymbol(l?.letter ?? ""); }, [l?.letter]);
   useEffect(() => { if (preview !== null && l && l.colour.toLowerCase() === preview.toLowerCase()) setPreview(null); }, [l?.colour, preview]);
@@ -503,53 +533,31 @@ export function LineInspector({ id }: { id: string }) {
     };
   }, [editing]);
   // T-309: the demand level now in the line's own local time
-  const now = demandAt(clock.hour.value * 3600 + (w?.lineStats[id]?.shift ?? 0));
+  const now = demandAt(lineSeconds(w?.lineStats[id]));
   const lev = DEMAND_INDEX[now];
   // where it loses time to busy track, asked again after every edit and when the level turns
-  useEffect(() => {
-    if (!l) return;
-    let on = true;
-    void queryClock({ what: "lineDelays", line: l.num, level: lev }).then((d) => on && d && setSpots(spotsFrom(d)));
-    return () => {
-      on = false;
-    };
-  }, [l?.num, w?.version, lev]);
-  useEffect(() => {
-    if (!l) return;
-    let on = true;
-    void queryClock({ what: "lineHeld", line: l.num }).then((d) => {
-      if (!on || !d) return;
-      setHeld(heldFrom(d));
-      setLimits(limitsFrom(d));
-    });
-    void queryClock({ what: "lineMarks", line: l.num }).then((d) => on && d && setMarks(marksFrom(d)));
-    return () => { on = false; };
-  }, [l?.num, w?.version]);
+  const spots = useClockQuery(l ? { what: "lineDelays", line: l.num, level: lev } : null, [l?.num, w?.version, lev], spotsFrom) ?? [];
+  const heldAnswer = useClockQuery(l ? { what: "lineHeld", line: l.num } : null, [l?.num, w?.version], (d) => ({ held: heldFrom(d), limits: limitsFrom(d) }));
+  const held = heldAnswer?.held ?? [], limits = heldAnswer?.limits ?? NO_LIMITS;
+  const marks = useClockQuery(l ? { what: "lineMarks", line: l.num } : null, [l?.num, w?.version], marksFrom) ?? [];
   // T-477, T-491: crowding by period on today's kind of day, asked again as the account changes
   // T-872: a holiday in the line's country is a weekend day
-  const kind = kindIn(lineCountry(l?.stops ?? []), Math.floor((clock.hour.value * 3600 + (w?.lineStats[id]?.shift ?? 0)) / 86400));
-  const [periods, setPeriods] = useState<Float64Array | null>(null);
+  const kind = kindIn(lineCountry(l?.stops ?? []), Math.floor(lineSeconds(w?.lineStats[id]) / 86400));
   const acct = accountVersion.value;
-  useEffect(() => {
-    if (!l) return;
-    let on = true;
-    void queryClock({ what: "linePeriods", line: l.num, day: kind }).then((d) => on && setPeriods(d && d.length ? d : null));
-    return () => { on = false; };
-  }, [l?.num, w?.version, acct, kind]);
+  const periods = useClockQuery(l ? { what: "linePeriods", line: l.num, day: kind } : null, [l?.num, w?.version, acct, kind], (d) => (d.length ? d : null));
   // T-646: while stops are edited, the stations the line passes between stops, and the gaps whose
   // passed stations are shown as stops to add, waiting for Add or Cancel
   // (the passed stations come with the world, so new stops never show with the old gaps, T-648;
   // the gaps picked hold for the world version they were picked in)
-  const editingThis = tool.value === "line" && !!l && lineDraft.value.line === l.num;
+  const editingStops = tool.value === "line" && !!l && lineDraft.value.line === l.num;
   const [pendingAt, setPendingAt] = useState<{ v: number; gaps: number[] } | null>(null);
-  useEffect(() => setPendingAt(null), [l?.num, editingThis]);
+  useEffect(() => setPendingAt(null), [l?.num, editingStops]);
   // its day so far (T-293), kept fresh while the panel is open
   useToday();
   if (!w || !l) return null;
   const st = w.lineStats[l.id];
-  const name = new Map(w.save.stations.map((s) => [s.id, s.name]));
+  const name = stationNames(w);
   const times = st.fromStartByLevel[lev] ?? st.fromStartS;
-  const editingStops = tool.value === "line" && lineDraft.value.line === l.num;
   const auto = headwayShown(l.id);
   const canAuto = l.stops.length >= 2 && st.status !== "broken";
 
@@ -557,51 +565,22 @@ export function LineInspector({ id }: { id: string }) {
     const a = await edit({ op: "constructLine", line: l.num });
     if (a.ok) say(`${l.name} constructed for ${money(a.charge * 1e6)}. Its trains start with the next departure.`);
   };
-  const sendLive = () => {
-    const s = liveEdit.current;
-    s.timer = 0;
-    if (s.hex === null) return;
-    if (s.busy) { s.timer = window.setTimeout(sendLive, 50); return; }
-    const hex = s.hex;
-    s.hex = null;
-    s.busy = true;
-    s.last = performance.now();
-    void edit({ op: "lineLook", line: l.num, name: l.name, colour: hex }, true).then(() => {
-      s.busy = false;
-      s.gap = Math.max(200, 6 * (performance.now() - s.last)); // a slow machine follows less often, so edits take a fraction of its time
-    });
-  };
-  const dragColour = (hex: string) => {
-    setPreview(hex);
-    const s = liveEdit.current;
-    s.hex = hex;
-    if (!s.timer) s.timer = window.setTimeout(sendLive, Math.max(0, s.gap - (performance.now() - s.last)));
-  };
-  const commitColour = (hex: string) => {
-    clearTimeout(liveEdit.current.timer);
-    liveEdit.current.timer = 0;
-    liveEdit.current.hex = null;
-    setPreview(hex);
-    void edit({ op: "lineLook", line: l.num, name: l.name, colour: hex }).then((a) => { if (!a.ok) setPreview(null); });
-  };
   const passed = editingStops ? st.passed : [];
   const pending = pendingAt && pendingAt.v === w.version ? pendingAt.gaps : null;
   const setPending = (gaps: number[] | null) => setPendingAt(gaps && { v: w.version, gaps });
   const gaps = [...new Set(passed.map((p) => p.gap))];
   const adding = pending ? passed.filter((p) => pending.includes(p.gap)) : [];
-  const addPassed = async () => {
+  const setStops = async (stops: number[]) => {
+    const a = await edit({ op: "setStops", line: l.num, stops });
+    if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
+  };
+  const addPassed = () => {
     const stops = l.stops.flatMap((s, i) => [Number(s), ...adding.filter((p) => p.gap === i).map((p) => p.node)]);
     setPending(null);
-    const a = await edit({ op: "setStops", line: l.num, stops });
-    if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
+    return setStops(stops);
   };
-  const stationsText = (n: number) => `${n} ${n === 1 ? "station" : "stations"}`;
-  const andList = (names: string[]) => (names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`);
-  const removeStop = async (i: number) => {
-    const stops = l.stops.filter((_, k) => k !== i).map(Number);
-    const a = await edit({ op: "setStops", line: l.num, stops });
-    if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
-  };
+  const stationsText = (n: number) => plural(n, "station");
+  const removeStop = (i: number) => setStops(l.stops.filter((_, k) => k !== i).map(Number));
   const remove = () => {
     ask.value = { text: `Delete ${l.name}? Track and stations stay.`, yes: "Delete line", no: "Keep line", run: () => {
       ask.value = null;
@@ -775,7 +754,7 @@ export function LineInspector({ id }: { id: string }) {
         </ul>
       )}
 
-      {st.status === "running" && <LineToday l={l} st={st} periods={periods} kind={kind} />}
+      {st.status === "running" && <PastDay l={l} st={st} periods={periods} kind={kind} />}
 
       {!editingStops && stopsBlock}
       {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} />}

@@ -1,9 +1,9 @@
-// T-908: the controls a player would not find by looking, opened by the "?" in the dock's tab row.
+// T-908: the controls a player would not find by looking, opened by the "?" at the top of Settings.
 // Only gestures, modifiers and keys that no button shows; Esc or a press outside closes it.
 
 import { signal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
-import { ACTION_KEYS, TOOL_KEYS, TRIP_KEY } from "./tabs";
+import { ACTION_KEYS, TOOL_KEYS, TRIP_KEY } from "./toolKeys";
 
 export const helpOpen = signal(false);
 

@@ -10,6 +10,7 @@ import { h, render } from "preact";
 import { clock } from "../game/clock";
 import { world } from "../game/world";
 import { choosing, continueWithoutDemand, demandIdle, gameFailed, lastAlive, loadCannotFinish, loadFailure, loadProgress, startup } from "../game/loading";
+import { blockKeysOutside } from "./keys";
 import { BunnyTrain } from "./Spinner";
 
 function LoadingScreen() {
@@ -52,10 +53,8 @@ function LoadingCard() {
   return <div class="loading-card-wrap">
     <div class="loading-card" role="status">
       <BunnyTrain />
-      {/* T-212: "Loading data", not a list of the cities being loaded */}
       <p class="big">{load ? "Loading data" : "Calculating demand"}</p>
       {load && <LoadBar fraction={load.fraction} step={load.step} />}
-      {/* T-253: no "The clock starts when demand has loaded" line under "Calculating demand" */}
       {load && <p class="muted small">{load.step}</p>}
     </div>
   </div>;
@@ -105,13 +104,6 @@ export function startLoadingGate() {
   document.getElementById("main")?.appendChild(card);
   render(h(LoadingCard, null), card);
   // While the failure screen is up, keys go nowhere but its buttons (the map's, the tools', space
-  // for the clock); captured at the window before any other listener.
-  const block = (e: KeyboardEvent) => {
-    if (startup.peek() !== "failed") return;
-    if (e.target instanceof Node && root.contains(e.target)) return;
-    e.stopImmediatePropagation();
-    e.preventDefault();
-  };
-  window.addEventListener("keydown", block, true);
-  window.addEventListener("keyup", block, true);
+  // for the clock)
+  blockKeysOutside(root, () => startup.peek() === "failed");
 }

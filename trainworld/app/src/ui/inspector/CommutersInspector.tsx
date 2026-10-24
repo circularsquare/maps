@@ -1,7 +1,7 @@
 // Commuter bubbles picked on the map (T-097, SPEC 8): how many commuters live (or work) there and
 // how they travel, and where they work (or live), the far end drawn on the map as bubbles too.
 
-import { count } from "../../game/format";
+import { capitalise, count } from "../../game/format";
 import { shownDayPhrase } from "../../game/ui";
 import { BUBBLE_ALPHA, modeMix } from "../../game/palette";
 import { purposeWords } from "../../game/purposes";
@@ -58,7 +58,7 @@ export function CommutersInspector() {
       <Modes totals={p.totals} />
       {p.at && p.sel.areas === 1 && <ClosestStations lng={p.at[0]} lat={p.at[1]} />}
       {p.purpose && p.purpose !== "all" && <p class="muted small">
-        {`${purposeWords(p.purpose)[0].toUpperCase() + purposeWords(p.purpose).slice(1)} trips only.`}
+        {`${capitalise(purposeWords(p.purpose))} trips only.`}
       </p>}
       <PurposeBreakdown purposes={p.purposes} />
       <div class="h">

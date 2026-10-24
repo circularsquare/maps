@@ -15,7 +15,7 @@ import { PERIODS } from "./periods";
 import { EVERYDAY_KEYS, FILTER_PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "./purposes";
 import type { Selection } from "./types";
 import { TRIP_LAYOUT } from "../workers/demandProtocol";
-import { world } from "./world";
+import { stationNames, stationsById, world } from "./world";
 
 /** One leg of a route: a ride on a line, or a walk after a ride, to another station or between the
  * platforms of one (T-717). */
@@ -187,12 +187,13 @@ function nextNode(at: RouteNodes, rn: number): number {
 }
 
 const { HEAD, PAIR_LEN, LEG_LEN } = TRIP_LAYOUT;
+const stationAt = (at: RouteNodes, rn: number) => (rn >= 0 && at[rn] ? at[rn].station : "");
 const RIDE: TripPeriod["rideToStation"][] = ["short", "tried", "none"];
 
 /** Read one period's packed answer (layout: `DemandApi.trip`). */
 export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | null {
   if (v.length < HEAD || v[0] !== 1) return null;
-  const st = (rn: number) => (rn >= 0 && at[rn] ? at[rn].station : "");
+  const st = (rn: number) => stationAt(at, rn);
   const np = v[24], nr = v[25];
   const pairs: TripPair[] = [];
   for (let k = 0; k < np; k++) {
@@ -214,7 +215,7 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
 
 /** `nr` routes packed from `o` (`DemandApi.trip`'s layout, and `IntercityApi.market_trip`'s). */
 function readRoutes(v: Float64Array, o: number, nr: number, at: RouteNodes): TripRoute[] {
-  const st = (rn: number) => (rn >= 0 && at[rn] ? at[rn].station : "");
+  const st = (rn: number) => stationAt(at, rn);
   const routes: TripRoute[] = [];
   for (let k = 0; k < nr; k++) {
     const pair = v[o], share = v[o + 1], n = v[o + 2];
@@ -283,7 +284,7 @@ const MT_HEAD = 20, MT_PAIR_LEN = 7;
 /** Read one period's `IntercityApi.market_trip` answer. */
 export function readMarketPeriod(v: Float64Array, at: RouteNodes): MarketPeriod | null {
   if (v.length < MT_HEAD || v[0] !== 1) return null;
-  const st = (rn: number) => (rn >= 0 && at[rn] ? at[rn].station : "");
+  const st = (rn: number) => stationAt(at, rn);
   const np = v[11], nr = v[12];
   const pairs: TripPair[] = [];
   for (let k = 0; k < np; k++) {
@@ -315,6 +316,30 @@ export function setMarketTripQuery(q: typeof marketQuery) {
 export const askMarketTrip = (end: "home" | "work", cells: Uint32Array, far: number, farGid = -1, near?: MarketEnd): Promise<(MarketPeriod | null)[] | null> =>
   marketQuery?.(end, cells, far, farGid, near) ?? Promise.resolve(null);
 
+/** Several answers' routes as one: merged by `label`, each weighted by its answer's `weight`; the
+ * five biggest kept, as shares of the weights' total, with only the pairs they use (re-indexed).
+ * `cut` is the share left out. */
+function mergeRoutes(sources: { pairs: TripPair[]; routes: TripRoute[]; weight: number }[], label: (r: TripRoute) => string): { pairs: TripPair[]; routes: TripRoute[]; cut: number } {
+  const pairs: TripPair[] = [];
+  const merged = new Map<string, TripRoute>();
+  let total = 0;
+  for (const s of sources) {
+    total += s.weight;
+    const off = pairs.length;
+    pairs.push(...s.pairs);
+    for (const r of s.routes) {
+      const k = label(r), m = merged.get(k);
+      if (m) m.share += s.weight * r.share;
+      else merged.set(k, { ...r, pair: r.pair + off, share: s.weight * r.share });
+    }
+  }
+  const routes = [...merged.values()].sort((a, b) => b.share - a.share).slice(0, 5);
+  for (const r of routes) r.share = total > 0 ? r.share / total : 0;
+  const used = [...new Set(routes.map((r) => r.pair))];
+  for (const r of routes) r.pair = used.indexOf(r.pair);
+  return { pairs: used.map((i) => pairs[i]), routes, cut: Math.max(0, 1 - routes.reduce((s, r) => s + r.share, 0)) };
+}
+
 /**
  * T-885: several far ends' market answers for one period as one: the trips added up; rail's
  * perceived cost weighted by the trips rail can serve, the car's, the reference mode's and the
@@ -331,22 +356,7 @@ export function mergeMarketPeriods(xs: (MarketPeriod | null)[], label: (r: TripR
   };
   const trips = sum((p) => p.trips), rail = sum((p) => p.rail);
   const top = ps.reduce((a, b) => (b.trips > a.trips ? b : a));
-  const pairs: TripPair[] = [];
-  const merged = new Map<string, TripRoute>();
-  for (const p of ps) {
-    if (p.rail <= 0) continue;
-    const off = pairs.length;
-    pairs.push(...p.pairs);
-    for (const r of p.routes) {
-      const k = label(r), m = merged.get(k);
-      if (m) m.share += p.rail * r.share;
-      else merged.set(k, { ...r, pair: r.pair + off, share: p.rail * r.share });
-    }
-  }
-  const routes = [...merged.values()].sort((a, b) => b.share - a.share).slice(0, 5);
-  for (const r of routes) r.share = rail > 0 ? r.share / rail : 0;
-  const used = [...new Set(routes.map((r) => r.pair))];
-  for (const r of routes) r.pair = used.indexOf(r.pair);
+  const { pairs, routes, cut } = mergeRoutes(ps.filter((p) => p.rail > 0).map((p) => ({ pairs: p.pairs, routes: p.routes, weight: p.rail })), label);
   return {
     ...top, trips, rail, air: sum((p) => p.air), car: sum((p) => p.car),
     railPerceived: wmean((p) => p.railPerceived, (p) => p.trips * p.served),
@@ -355,7 +365,7 @@ export function mergeMarketPeriods(xs: (MarketPeriod | null)[], label: (r: TripR
     km: wmean((p) => p.km, (p) => p.trips), zonePairs: sum((p) => p.zonePairs),
     served: trips > 0 ? sum((p) => p.trips * p.served) / trips : 0,
     why: rail > 0 ? "" : top.why,
-    pairs: used.map((i) => pairs[i]), routes, cut: Math.max(0, 1 - routes.reduce((s, r) => s + r.share, 0)),
+    pairs, routes, cut,
   };
 }
 
@@ -480,26 +490,7 @@ export function averageTrips(trips: { trip: Trip; w: number }[], label: (r: Trip
     const base = xs.reduce((a, b) => (b.w > a.w ? b : a)).t;
     const walkMin = mean((t) => t.walkMin), walkPerc = mean((t) => t.walkMin * t.walkWeight);
     // routes: weight of each pair's train riders on it
-    const pairs: TripPair[] = [];
-    const merged = new Map<string, TripRoute>();
-    let riders = 0;
-    for (const { t, w } of rail) {
-      const on = w * t.pTrain;
-      riders += on;
-      const off = pairs.length;
-      pairs.push(...t.pairs.map((p) => ({ ...p, from: t.from, to: t.to })));
-      for (const r of t.routes) {
-        const k = label(r), m = merged.get(k);
-        if (m) m.share += on * r.share;
-        else merged.set(k, { ...r, pair: r.pair + off, share: on * r.share });
-      }
-    }
-    const routes = [...merged.values()].sort((a, b) => b.share - a.share).slice(0, 5);
-    for (const r of routes) r.share = riders > 0 ? r.share / riders : 0;
-    // only the kept routes' pairs, re-indexed
-    const used = [...new Set(routes.map((r) => r.pair))];
-    const keptPairs = used.map((i) => pairs[i]);
-    for (const r of routes) r.pair = used.indexOf(r.pair);
+    const { pairs, routes, cut } = mergeRoutes(rail.map(({ t, w }) => ({ pairs: t.pairs.map((p) => ({ ...p, from: t.from, to: t.to })), routes: t.routes, weight: w * t.pTrain })), label);
     const p: TripPeriod = {
       ...base,
       walkMin, walkWeight: walkMin > 0 ? walkPerc / walkMin : base.walkWeight,
@@ -511,7 +502,7 @@ export function averageTrips(trips: { trip: Trip; w: number }[], label: (r: Trip
       railOfMotor: mean((t) => t.railOfMotor), utility: mean((t) => t.utility),
       pWalk: mean((t) => t.pWalk), pTrain: mean((t) => t.pTrain), pDrive: mean((t) => t.pDrive),
       groupWalk: mean((t) => t.groupWalk), groupTrain: mean((t) => t.groupTrain), groupDrive: mean((t) => t.groupDrive),
-      pairs: keptPairs, routes, cut: Math.max(0, 1 - routes.reduce((s, r) => s + r.share, 0)),
+      pairs, routes, cut,
       sampled: xs.length, railSampled: rail.length,
     };
     return p;
@@ -620,7 +611,6 @@ export const tripView = signal<TripShown | null>(null);
 export const tripOpenedFrom = signal<{ trip: Selection; from: Selection; places: TripPlaces } | null>(null);
 /** The period the explorer shows: null follows the busiest period of the purpose shown. */
 export const tripPeriod = signal<number | null>(null);
-export const PERIOD_NAMES = PERIODS.map((p) => p.name);
 
 /** Where a trip end picked as a station (T-221) is asked about: the station's own position, world
  * metres. The model reads a point as the cell nearest it, so this is the station's own cell, and
@@ -629,13 +619,17 @@ export const PERIOD_NAMES = PERIODS.map((p) => p.name);
  * most. (The busiest cell of its catchment was the other choice; it can be nearer another station,
  * and the trip would then mostly start from that one instead of the station clicked.) */
 export function stationPoint(id: string): [number, number] | null {
-  const s = world.peek()?.save.stations.find((s) => s.id === id);
+  const w = world.peek();
+  const s = w && stationsById(w).get(id);
   if (!s) return null;
   const p = lngLatToPack(s.lng, s.lat);
   return [p.x, p.y];
 }
 
 /** The name of a station picked as a trip's end, if one was. */
-export const stationName = (id: string | undefined) => (id ? world.peek()?.save.stations.find((s) => s.id === id)?.name ?? null : null);
+export function stationName(id: string | undefined): string | null {
+  const w = world.peek();
+  return (id && w ? stationNames(w).get(id) : undefined) ?? null;
+}
 
 export const tripKey = (from: [number, number], to: [number, number]) => `${Math.round(from[0])},${Math.round(from[1])}>${Math.round(to[0])},${Math.round(to[1])}`;

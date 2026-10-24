@@ -1,7 +1,7 @@
 // Words for places on the network, for the inspectors (T-031): the station a stretch of track
 // leads to, a compass direction, the station nearest a point. Pack metres, y north.
 
-import { world } from "./world";
+import { stationsByNum, world } from "./world";
 import { groundDist } from "./coords";
 
 const COMPASS = ["east", "northeast", "north", "northwest", "west", "southwest", "south", "southeast"];
@@ -34,12 +34,12 @@ export function stationTowards(edge: number, end: number): string | null {
   if (!w) return null;
   const byNode = new Map<number, number[]>();
   for (const e of w.edges) for (const n of [e.a, e.b]) byNode.set(n, [...(byNode.get(n) ?? []), e.id]);
-  const names = new Map(w.save.stations.map((s) => [s.num, s.name]));
+  const byNum = stationsByNum(w);
   let e = w.edges.find((x) => x.id === edge);
   let from = e ? (end === 0 ? e.a : e.b) : -1;
   for (let k = 0; e && k < 200; k++) {
     const next = e.a === from ? e.b : e.a;
-    const name = names.get(next);
+    const name = byNum.get(next)?.name;
     if (name) return name;
     const others = (byNode.get(next) ?? []).filter((x) => x !== e!.id);
     if (others.length !== 1) return null;

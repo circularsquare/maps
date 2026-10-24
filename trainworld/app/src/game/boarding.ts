@@ -152,6 +152,28 @@ export function platformRoom(lengthM: number): number {
   return (Math.max(20, lengthM) * PLATFORM_SIDE_WIDTH_M) / PLATFORM_M2_PER_RIDER;
 }
 
+/** Seats and riders at crush load per car: `SEATS_PER_CAR` and `CRUSH_PER_CAR` in
+ * sim/src/demand/api.rs (a New York subway car). */
+export const SEATS_PER_CAR = 44;
+export const CRUSH_PER_CAR = 160;
+/** A car's length, m. */
+export const CAR_M = 20;
+
+/** The train gauge: half full when every seat is taken, full at crush; 2 = over full. */
+export function gauge(aboard: number, cars: number): number {
+  const seats = SEATS_PER_CAR * cars, crush = CRUSH_PER_CAR * cars;
+  if (aboard <= seats) return seats > 0 ? (0.5 * Math.max(0, aboard)) / seats : 0;
+  if (aboard <= crush) return 0.5 + (0.5 * (aboard - seats)) / (crush - seats);
+  return 2;
+}
+
+/** The platform lengths a player can set, m, a car apart. */
+export const PLATFORM_MIN_M = 60;
+export const PLATFORM_MAX_M = 400;
+/** A platform length stepped `dir` cars longer (negative: shorter), kept within the limits. */
+export const stepPlatform = (lengthM: number, dir: number): number =>
+  Math.max(PLATFORM_MIN_M, Math.min(PLATFORM_MAX_M, lengthM + dir * CAR_M));
+
 /** One platform of a station in the inspector: a line and direction. */
 export interface PlatformNow {
   line: string;

@@ -1,10 +1,11 @@
 // Tool hints/messages at the map's bottom left; confirmations in a centered modal.
-// Construction controls and the blueprint quote live together in Build (T-100).
 
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { plural } from "../game/format";
 import { ask, lineDraft, selection, tool, type Tool } from "../game/ui";
-import { notice, world } from "../game/world";
+import { linesByNum, notice, world } from "../game/world";
 import { live } from "../map/live";
+import { useModalDialog } from "./Modal";
 import { Chip } from "./widgets";
 
 const HINT: Record<Tool, string> = {
@@ -23,17 +24,8 @@ function Ask() {
   const q = ask.value;
   const dialog = useRef<HTMLDialogElement>(null);
   const cancel = useRef<HTMLButtonElement>(null);
-  useLayoutEffect(() => {
-    if (!q || !dialog.current) return;
-    const el = dialog.current;
-    const before = document.activeElement;
-    if (!el.open) el.showModal();
-    cancel.current?.focus();
-    return () => {
-      if (el.open) el.close();
-      if (before instanceof HTMLElement && before.isConnected) before.focus();
-    };
-  }, [q]);
+  useModalDialog(dialog, !!q, q);
+  useLayoutEffect(() => { if (q) cancel.current?.focus(); }, [q]);
   if (!q) return null;
   return (
     <dialog class="confirmation" ref={dialog} aria-labelledby="confirmation-title" aria-describedby="confirmation-text" onCancel={() => ask.value = null} onKeyDown={e => {
@@ -49,7 +41,7 @@ function Ask() {
       {q.lines?.length ? (
         <ul class="confirmation-lines">
           {q.lines.map((r) => {
-            const l = world.value?.save.lines.find((x) => x.num === r.line);
+            const l = world.value && linesByNum(world.value).get(r.line);
             return <li key={r.line}>{l && <Chip line={l} size="sm" plain />}<span>{r.text}</span></li>;
           })}
         </ul>
@@ -85,12 +77,12 @@ function Notice() {
   const show = n && performance.now() - n.at < NOTICE_MS;
   if (!show && !hint) return null;
   // stop editing (T-233): which line, how many stops, and the way out
-  const editing = t === "line" && draft.line !== null ? world.value?.save.lines.find((l) => l.num === draft.line) : undefined;
+  const editing = t === "line" && draft.line !== null && world.value ? linesByNum(world.value).get(draft.line) : undefined;
   return (
     <div id="tool-notes">
       {editing && (
         <p class="stop-edit-head">
-          <span>Editing stops on {editing.name}: {editing.stops.length} {editing.stops.length === 1 ? "stop" : "stops"}</span>
+          <span>Editing stops on {editing.name}: {plural(editing.stops.length, "stop")}</span>
           <button class="btn text" onClick={() => live.tools?.exit()}>Done</button>
         </p>
       )}
@@ -100,7 +92,7 @@ function Notice() {
   );
 }
 
-export function Toolbar() {
+export function ToolNotes() {
   return (
     <div id="tools">
       {ask.value ? <Ask /> : <Notice />}

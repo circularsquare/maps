@@ -6,7 +6,7 @@
 import { signal } from "@preact/signals";
 import { viewedZone, type CityId } from "./cities";
 import { placeAt, zonesLoaded } from "./zones";
-import { world } from "./world";
+import { stationsById, world } from "./world";
 import type { LineInput, StationInput } from "./types";
 
 export type ListScope = "here" | "world";
@@ -33,7 +33,7 @@ function placeHasLines(zone: CityId): boolean {
   void zonesLoaded.value;
   const w = world.value;
   if (!w) return false;
-  const at = new Map(w.save.stations.map((s) => [s.id, s]));
+  const at = stationsById(w);
   return w.save.lines.some((l) => l.stops.some((id) => { const s = at.get(id); return !!s && stationZone(s) === zone; }));
 }
 

@@ -6,7 +6,7 @@
 import { clock } from "./clock";
 import { crowdAt, platformRoom, QUEUE_STRIDE } from "./boarding";
 import type { LineId, LineInput, StationId, StationInput } from "./types";
-import { world } from "./world";
+import { stationsById, world } from "./world";
 import { live } from "../map/live";
 import { tripAt } from "../map/network";
 
@@ -52,7 +52,7 @@ export function trainPhase(x: TrainNow, t: number): { inS: number; outS: number 
   return x.ends || t - x.leaveAt > PULLING_IN_S ? null : { inS: 0, outS: t - x.leaveAt };
 }
 
-export interface PlatformNow {
+export interface ComplexPlatform {
   /** riders on its + side (trains along the heading) and - side */
   side: [number, number];
   /** room to stand on a side (both sides' room when trains use one side only, as the map draws it) */
@@ -65,7 +65,7 @@ export interface PlatformNow {
 export interface ComplexNow {
   queues: QueueNow[];
   trains: TrainNow[];
-  platforms: Map<StationId, PlatformNow>;
+  platforms: Map<StationId, ComplexPlatform>;
   /** changes whenever anything drawn from it does */
   key: string;
 }
@@ -95,12 +95,12 @@ export function complexNow(members: StationId[], lookS = 30): ComplexNow | null 
   const w = world.value, r = live.overlay?.renderer, net = r?.net;
   if (!w || !r || !net) return null;
   const inside = new Set(members);
-  const byId = new Map(w.save.stations.map((s) => [s.id, s]));
+  const byId = stationsById(w);
   const byNum = new Map(members.map((m) => [byId.get(m)?.num, m]));
   const lines = new Map(w.save.lines.filter((l) => l.stops.some((st) => inside.has(st))).map((l) => [l.id, l]));
   const now = clock.now();
   const queues: QueueNow[] = [];
-  const platforms = new Map<StationId, PlatformNow>();
+  const platforms = new Map<StationId, ComplexPlatform>();
   const b = r.board;
   if (b) {
     const t = now - r.tripsEpoch;

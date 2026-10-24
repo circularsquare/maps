@@ -5,11 +5,11 @@
 
 import { activeCity, cityById, viewedZone, type City, type CityId } from "../game/cities";
 import { cityDemandViews, type DemandView } from "../game/demand";
-import { clockTime, count, dayOf, money } from "../game/format";
+import { clockTime, count, dayOf, exact, money } from "../game/format";
 import { weekdayOf } from "../game/days";
 import { shiftAt } from "../game/localTime";
 import { moneyState } from "../game/money";
-import { POINTS_PER_KM, POINTS_PER_TRIP, pointsExact, pointsPast24h, pointsPerDay, pointsShort, STAR_SHARE } from "../game/points";
+import { POINTS_PER_KM, POINTS_PER_TRIP, pointsPast24h, pointsPerDay, pointsShort, STAR_SHARE } from "../game/points";
 import { regionLedger } from "../game/regionMoney";
 import { splitTip } from "../game/splitTip";
 import { citySort, selection, shownDay, tool } from "../game/ui";
@@ -66,8 +66,8 @@ function PointsCell({ id, name }: { id: CityId; name: string }) {
   const past = pointsPast24h.value.get(id) ?? 0;
   const rate = pointsPerDay.value.get(id)?.[shownDay.value] ?? 0;
   const tip = [
-    `${pointsExact(past)} points in ${name} in the past 24 hours`,
-    `${pointsExact(rate)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`,
+    `${exact(past)} points in ${name} in the past 24 hours`,
+    `${exact(rate)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`,
     `${POINTS_PER_TRIP} for each train trip that starts here, changes included, and ${POINTS_PER_KM} for each km ridden`,
   ].join("\n");
   return <span class="val w-points c-cities" data-tip={tip}>{pointsShort(past)}</span>;
@@ -111,8 +111,8 @@ function TotalRow({ rows, day }: { rows: CityRow[]; day: string }) {
   const pastAll = rows.reduce((n, r) => n + (past.get(r.id) ?? 0), 0);
   const rateAll = rows.reduce((n, r) => n + (rate.get(r.id)?.[shownDay.value] ?? 0), 0);
   const pointsTip = [
-    `${pointsExact(pastAll)} points in the world in the past 24 hours`,
-    `${pointsExact(rateAll)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`,
+    `${exact(pastAll)} points in the world in the past 24 hours`,
+    `${exact(rateAll)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`,
   ].join("\n");
   return (
     <li class="total">

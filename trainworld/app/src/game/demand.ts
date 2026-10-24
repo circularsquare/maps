@@ -81,13 +81,6 @@ export function lineLoadsFor(dv: DemandView | null, lineId: string, purpose: Pur
   return own ?? dv.lines.get(lineId)?.loads.map((p) => new Float32Array(p.length));
 }
 
-/** A station's boardings and alightings as the map draws them: one purpose's, or all. */
-export function stationRidersFor(dv: DemandView | null, id: string, purpose: PurposeFilter = "all"): StationDemand | undefined {
-  if (!dv) return undefined;
-  if (purpose === "all") return dv.stations.get(id);
-  return dv.purposes?.get(purpose)?.stations.get(id) ?? (dv.stations.has(id) ? { boardings: 0, alightings: 0 } : undefined);
-}
-
 /** The regional layer (T-117, T-276): trips a day include the commutes between zones; each
  * corridor's trips and rail are both parts together, `commutes` and `commuteRail` the commute legs;
  * T-378: `air` and `car` the rest by plane and by car, `elsewhere` each place's longer trips with
@@ -204,9 +197,9 @@ export const stationDemand = (id: string): StationDemand | null => demandView.va
 
 /** The city's cells and zones. Static for a city: ask once. */
 export interface CityCells {
-  /** number of cells (New York 202,337) */
+  /** number of cells */
   n: number;
-  /** x, y per cell in the fixed NYC world frame (game/coords.ts turns them into lng/lat) */
+  /** x, y per cell in the loaded game's world frame (game/coords.ts turns them into lng/lat) */
   xy: Float32Array;
   /** H3 index (resolution 9) of each cell */
   h3: BigUint64Array;

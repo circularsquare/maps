@@ -70,7 +70,7 @@ export const MODE_COLOURS = {
 const SHARE_MODE_COLOURS = { train: MODE_COLOURS.train, walk: "#f0c814", drive: MODE_COLOURS.drive, other: "#f07a14" } as const;
 const MIX_MODE_COLOURS = { ...MODE_COLOURS, other: "var(--muted)" } as const;
 /** The scheme in force; a signal, so panels that read `modeColours()` follow a change. */
-export const modeScheme = signal<"mode" | "ramp">("mode");
+export const modeScheme = signal<BubbleScheme>("mode");
 /** The mode colours for bars, swatches and hover tags under the bubble scheme in force. */
 export const modeColours = (): { readonly train: string; readonly walk: string; readonly drive: string; readonly other: string } =>
   modeScheme.value === "ramp" ? SHARE_MODE_COLOURS : MIX_MODE_COLOURS;

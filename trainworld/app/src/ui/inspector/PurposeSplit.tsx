@@ -9,6 +9,8 @@
 import { demandView, type DemandView } from "../../game/demand";
 import { PURPOSES, purposeColour, type PurposeKey } from "../../game/purposes";
 import { purposeFilter } from "../../game/ui";
+import { SegBar } from "../widgets";
+import { pctOf } from "./tripText";
 
 /** What to count: a whole line (`at` left out, its riders a day), or some of its stops' boardings
  * (indices into the line's stops). */
@@ -26,15 +28,10 @@ function sum(dv: DemandView, scope: SplitScope, key?: PurposeKey): number {
 }
 
 /** Each purpose's share of `scope`'s riders (or boardings), and the total; null before demand. */
-export function purposeSplit(dv: DemandView | null, scope: SplitScope): { parts: { key: PurposeKey; n: number }[]; total: number } | null {
+function purposeSplit(dv: DemandView | null, scope: SplitScope): { parts: { key: PurposeKey; n: number }[]; total: number } | null {
   if (!dv?.purposes || !scope.some(({ line }) => dv.lines.has(line))) return null;
   return { parts: PURPOSES.map(({ key }) => ({ key, n: sum(dv, scope, key) })), total: sum(dv, scope) };
 }
-
-const pct = (n: number, of: number) => {
-  const p = of > 0 ? (100 * n) / of : 0;
-  return n >= 0.5 && p < 0.5 ? "<1%" : Math.round(p) + "%";
-};
 
 /** A list item for a `.rows` list. `unit`: "riders" for a line, "boardings" for a station. */
 export function PurposeSplit({ scope, unit }: { scope: SplitScope; unit: string }) {
@@ -45,16 +42,11 @@ export function PurposeSplit({ scope, unit }: { scope: SplitScope; unit: string 
   const shown = purposeFilter.value;
   // T-293: shares only; the panels count today's riders, not a whole day's forecast
   const words = (p: { key: PurposeKey; n: number }) =>
-    `${PURPOSES.find((q) => q.key === p.key)!.name}: ${pct(p.n, all)} of ${unit}`;
+    `${PURPOSES.find((q) => q.key === p.key)!.name}: ${pctOf(p.n, all)} of ${unit}`;
   return (
     <li class="purpose-split">
-      <div class="bar split-bar" role="img" aria-label={`By purpose: ${split.parts.map(words).join("; ")}`}>
-        {split.parts.map((p) =>
-          p.n > 0 ? (
-            <i class={"seg" + (p.key === shown ? " shown" : "")} style={{ width: (100 * p.n) / all + "%", background: purposeColour(p.key) }} data-tip={words(p)} />
-          ) : null,
-        )}
-      </div>
+      <SegBar kind="split-bar" label={`By purpose: ${split.parts.map(words).join("; ")}`}
+        parts={split.parts.map((p) => ({ share: p.n / all, cls: p.key === shown ? "shown" : undefined, colour: purposeColour(p.key), tip: words(p) }))} />
     </li>
   );
 }

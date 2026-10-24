@@ -11,18 +11,19 @@ import { makeFrame, type Frame, type FrameSpec } from "./frame";
 import { zoneAliases, zoneName } from "./zoneNames";
 
 export type CityId = string;
-/** A zone of the world (T-276, docs/zones.md): a city zone, or a non-city zone (`kind` "zone");
+/** A zone of the world (T-276, docs/zones.md): a city zone, or a non-city zone (`kind` "zone").
+ * `name` is the shown name and `aliases` every other name search finds it by (T-825, game/zoneNames.ts).
  * `localTrips`: its local trip legs a day with no rail (pipeline/zones.py), for the far-zoomed
- * bubble of a zone not opened. */
-/** `market`: the city's place in the regional market, or -1 for one outside it (Toronto, T-277).
- * `utcOffset`: its whole-hour standard time offset from UTC, no daylight saving (T-309). */
-/** `box`: [west, south, east, north] in degrees round its boundary and water mask
- * (pipeline/zone_boxes.py, T-302), so where a zone is is known without fetching its files. */
-/** T-377: `place`, the zone's place in the world market (every zone has one; `market` is the
- * Northeast joint commute gravity's, -1 outside it). Its market row is not here but in
- * market-rows.json, fetched once a market pack opens (T-776, `marketWorld`). `country`: ISO 3166 alpha-2.
- * `realm`: the realm it shows with (T-975, game/realms.ts; pipeline/realms.py). */
-/** `name` is the shown name and `aliases` every other name search finds it by (T-825, game/zoneNames.ts). */
+ * bubble of a zone not opened.
+ * `market`: the city's place in the regional market, or -1 for one outside it (Toronto, T-277).
+ * `place`: its place in the world market (every zone has one; `market` is the Northeast joint
+ * commute gravity's). Its market row is in market-rows.json, fetched once a market pack opens
+ * (T-776, `marketWorld`).
+ * `utcOffset`: its whole-hour standard time offset from UTC, no daylight saving (T-309).
+ * `box`: [west, south, east, north] in degrees round its boundary and water mask
+ * (pipeline/zone_boxes.py, T-302), so where a zone is is known without fetching its files.
+ * `country`: ISO 3166 alpha-2. `realm`: the realm it shows with (T-975, game/realms.ts;
+ * pipeline/realms.py). */
 export interface City { id: CityId; name: string; aliases: string[]; kind?: "city" | "zone"; country?: string; realm?: string; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; utcOffset?: number; market: number; place: number; localTrips?: number; box?: [number, number, number, number] }
 interface Registry {
   world: string;
@@ -55,6 +56,8 @@ export function marketWorld(rowsText: string): string {
 export const activeCity = signal<CityId>(HOME_CITY);
 const citiesById = new Map(CITIES.map((c) => [c.id, c] as const));
 export const cityById = (id: CityId) => citiesById.get(id)!;
+/** Whether the registry has a city or zone of this id. */
+export const isCity = (id: string | null | undefined): boolean => !!id && citiesById.has(id);
 const packFrames = new Map(CITIES.map(c => [c.id, makeFrame({ kind: "equirect", ...c.origin })] as const));
 const packFrame = (id: CityId): Frame => packFrames.get(id)!;
 

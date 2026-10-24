@@ -13,7 +13,7 @@
 // player joins. A game owns a random id per browser slot (`GAMES_KEY`); a sandbox sends only the
 // fact, once, which the server keeps for good. A slot deleted here takes its figures off.
 
-import { computed, effect, signal } from "@preact/signals";
+import { effect, signal } from "@preact/signals";
 import { moneyState } from "./money";
 import { pointsPast24h } from "./points";
 import { saveSlotsState } from "../workers/clockClient";
@@ -72,7 +72,6 @@ export const accountState = signal<"off" | "checking" | "on" | "unavailable">(BA
 export const accountConfig = signal<AccountConfig | null>(null);
 const readSession = (): Session | null => { const s = lsGet<Session>(AUTH_KEY); return s?.token ? s : null; };
 export const session = signal<Session | null>(readSession());
-export const signedIn = computed(() => !!session.value);
 /** The leaderboard setting, from `/trainworld/me`; null until it answers. */
 export const boardSetting = signal<BoardSetting | null>(null);
 export const accountOpen = signal(false);

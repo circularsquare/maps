@@ -6,8 +6,7 @@
 The inspector, under the dock's tabs, shows whatever is selected: a line, a station complex (or
 one station), a stretch of track, a junction, a train, bubbles, a city or zone, or a trip. Nothing
 selected leaves it blank, with no text. An empty click on the map or Escape clears the selection.
-One component per kind in `ui/inspector/` (`others.tsx` holds station, train, track, junction and
-cell or zone). The track and junction inspectors are in [ui-building.md](ui-building.md) and
+One component per kind in `ui/inspector/` (`StationInspector.tsx`, `TrainInspector.tsx`, `TrackInspector.tsx` and `JunctionInspector.tsx` hold station, train, track and junction). The track and junction inspectors are in [ui-building.md](ui-building.md) and
 [track-and-service.md](track-and-service.md) 6.2; a bubble selection's and a city's (their
 inter-city trips by train, car and plane) in [ui-demand-views.md](ui-demand-views.md).
 
@@ -57,7 +56,7 @@ purpose filter the purpose drawn is ringed in the bar.
   min on average for a train with room", then "4/12 trains running now are full on their
   trip" (trains from leaving the first stop until they could leave again from the far end,
   `Boarding::under_way`). The figures end each `past_day` block (`Boarding::crowding`).
-- **Scope and Near** [T-332; `game/listScope.ts`, `ScopeToggle` in `ui/tabs.tsx`]: beside New line
+- **Scope and Near** [T-332; `game/listScope.ts`, `ScopeToggle` in `ui/listParts.tsx`]: beside New line
   (and above the Stations list) a toggle between the viewed place (a pin and its name, hover "Only
   <name>") and the whole world (a globe); one setting for both tabs, kept while the page is open, the
   place the default. The place is `viewedZone` (T-318); a station is in it when `placeAt` says so, a

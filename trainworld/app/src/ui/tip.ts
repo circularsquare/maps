@@ -4,8 +4,8 @@
 // and kept inside the window; a "\n" in the text starts a new line. The map's canvas has its own
 // tags (demand discs, track and network, capacity), which this leaves alone.
 //
-// Panels, the top bar, the search box and the map's DOM markers write `data-tip` where they once
-// wrote `title`; SVG drawings put it on the shape instead of a <title> child. As a net for markup
+// Panels, the top bar, the search box and the map's DOM markers write `data-tip`; SVG drawings
+// put it on the shape instead of a <title> child. As a net for markup
 // the game does not write (MapLibre's attribution button), a `title` met under the pointer is moved
 // to `data-tip` at once, before the browser's own tooltip would show.
 

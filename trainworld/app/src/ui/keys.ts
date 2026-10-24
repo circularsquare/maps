@@ -19,7 +19,7 @@ const CONTROLS = new Set(["checkbox", "radio", "range", "color", "file"]);
 const CONTROL_KEYS = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown", "Enter", " "]);
 
 /** Is `t` a field the player types in? */
-export function isTextField(t: EventTarget | null): boolean {
+function isTextField(t: EventTarget | null): boolean {
   if (t instanceof HTMLTextAreaElement) return true;
   if (t instanceof HTMLInputElement) return !BUTTONS.has(t.type) && !CONTROLS.has(t.type) && t.type !== "hidden";
   return t instanceof HTMLElement && t.isContentEditable;
@@ -33,6 +33,23 @@ export function keyIsTheirs(e: KeyboardEvent): boolean {
   if (!select && !(t instanceof HTMLInputElement && CONTROLS.has(t.type))) return false;
   if (CONTROL_KEYS.has(e.key)) return true;
   return select && !e.ctrlKey && !e.metaKey && !e.altKey && /^\p{L}$/u.test(e.key);
+}
+
+/** While `blocking()`, keys go nowhere but into `root`: the map's keys and the hotkeys wait, and Tab
+ * and Enter work inside it. Captured at the window before any other listener. Returns the way to
+ * stop. */
+export function blockKeysOutside(root: Element, blocking: () => boolean): () => void {
+  const block = (e: KeyboardEvent) => {
+    if (!blocking() || (e.target instanceof Node && root.contains(e.target))) return;
+    e.stopImmediatePropagation();
+    e.preventDefault();
+  };
+  window.addEventListener("keydown", block, true);
+  window.addEventListener("keyup", block, true);
+  return () => {
+    window.removeEventListener("keydown", block, true);
+    window.removeEventListener("keyup", block, true);
+  };
 }
 
 /** Caps Lock flips the Build tab's keep-placing switch (T-445), whatever the lock's own state: keep

@@ -7,9 +7,10 @@
 import { useEffect, useState } from "preact/hooks";
 import { CITIES } from "../game/cities";
 import { accountOpen, accountState, boardSetting, boards, boardsOpen, fetchBoards, session, setBoard, type BoardRow } from "../game/account";
+import { exact } from "../game/format";
 import { moneyState } from "../game/money";
-import { pointsExact, pointsPast24h, pointsShort } from "../game/points";
-import { Modal } from "./AccountPanel";
+import { pointsPast24h, pointsShort } from "../game/points";
+import { Modal } from "./Modal";
 import { Icon } from "./widgets";
 
 const WORLD = "points";
@@ -21,7 +22,7 @@ function Row({ r, board, mine }: { r: BoardRow; board: string; mine: boolean }) 
   return <li class={mine ? "me" : ""}>
     <span class="lb-rank num">{r.rank}</span>
     <span class="lb-name">{r.name}</span>
-    <span class="lb-value num" data-tip={`${pointsExact(r.value)} points ${where} in the past 24 hours`}>{pointsShort(r.value)}</span>
+    <span class="lb-value num" data-tip={`${exact(r.value)} points ${where} in the past 24 hours`}>{pointsShort(r.value)}</span>
   </li>;
 }
 
@@ -74,7 +75,7 @@ function Boards() {
 
 export function Leaderboard() {
   const open = boardsOpen.value;
-  return <Modal open={open} onClose={() => (boardsOpen.value = false)} title="Leaderboards" cls="lb-panel">
+  return <Modal open={open} onClose={() => (boardsOpen.value = false)} title="Leaderboards" cls="acct-panel lb-panel">
     {open && <Boards />}
   </Modal>;
 }

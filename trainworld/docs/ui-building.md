@@ -8,7 +8,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 ## The Build tab
 
-[T-100; `ui/tabs.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
+[T-100; `ui/BuildTab.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
 
 - **Tools**: draw track (key 1), station (2), delete (3), select (5, [below](#the-select-tool)), in a
   2 by 2 grid [T-1128]; then the elevation (seven buttons
@@ -31,7 +31,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   by default [T-942].
   The number keys work from any tab and open the Build tab; the key of the tool already on does
   nothing. Each button shows its key. Three letter keys work from any tab [T-670, `ACTION_KEYS` in
-  `ui/tabs.tsx`]: C constructs all blueprints (the same as "Construct blueprints" below, nothing when
+  `ui/toolKeys.ts`]: C constructs all blueprints (the same as "Construct blueprints" below, nothing when
   there is nothing to build), N makes a new line and L starts or finishes editing the selected line's
   stops; none fires while a text field has focus or a question is open. There is no button for plain selecting: clicking the active tool again or
   leaving it with Esc returns to selecting. The trip tool (key T) is in
@@ -336,7 +336,7 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   straight piece with none its ends, as the selection bar does for one piece (`edgesLevel`; a
   notice says when it cannot change) [T-841]. It has Construct
   and the elevation buttons for its piece [T-244], and Remove. On double track (blueprint or
-  built) the title carries **Double up** [T-708; `DoubleUp` in `ui/inspector/others.tsx`], an
+  built) the title carries **Double up** [T-708; `DoubleUp` in `ui/inspector/TrackInspector.tsx`], an
   icon of two rails and a plus: a click adds the express pair beside its run as blueprint
   ([track-and-service.md](track-and-service.md) 6.1 "Doubling up"). Its hover gives the price, or
   why not, greyed (a pair beside already). The title names the track: Double track, Single track

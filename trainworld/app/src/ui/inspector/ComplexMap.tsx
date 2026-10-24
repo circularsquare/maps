@@ -1,7 +1,7 @@
 // A station complex from above (T-147): each member's platform at its true relative position and
 // heading, with the lines stopping there drawn through it, each as wide as the riders on that
 // line's trains at that platform a day. North is up; one scale for the whole complex. Shown in the
-// station inspector's complex view (others.tsx `ComplexSummary`).
+// station inspector's complex view (StationInspector.tsx `ComplexSummary`).
 //
 // Platforms that lie on top of each other (parallel within 15 degrees, centre lines within 12 m;
 // the real New York save gives every service its own station, so Grand Central's Metro-North
@@ -17,11 +17,11 @@
 // biggest changes, these included. Stations the player linked (T-197) are joined by a dashed line.
 
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
-import { complexTransfers, demandView, lineDemand, type ComplexTransfers, type LineDemand } from "../../game/demand";
+import { useLatestAnswer } from "../useClockQuery";
+import { complexTransfers, demandView, lineDemand, type LineDemand } from "../../game/demand";
 import { count, length, scaleBars } from "../../game/format";
 import { segmentGap } from "../../game/complexes";
 import type { LineInput, StationInput } from "../../game/types";
-import { selection } from "../../game/ui";
 import { world } from "../../game/world";
 import { PULLING_IN_S, trainPhase, type ComplexNow, type TrainNow } from "../../game/complexLive";
 import { PLATFORM_BLUE } from "../../game/palette";
@@ -29,7 +29,7 @@ import { clock } from "../../game/clock";
 
 /** Riders on a line's trains at its `k`th stop a day, both directions: in each direction the
  * busier of the arriving and leaving train loads, every period summed. */
-export function ridersAt(dm: LineDemand, n: number, k: number): number {
+function ridersAt(dm: LineDemand, n: number, k: number): number {
   let sum = 0;
   for (const seg of dm.loads) {
     if (seg.length !== 2 * (n - 1)) continue;
@@ -194,9 +194,8 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
   /** riders waiting and trains at the platforms now (T-246, game/complexLive.ts) */
   now?: ComplexNow | null;
   /** a click on a platform: open that station */
-  onOpen?: (station: string) => void;
+  onOpen: (station: string) => void;
 }) {
-  const open = onOpen ?? ((m: string) => (selection.value = { kind: "station", station: m }));
   const box = useRef<HTMLDivElement>(null);
   const [W, setW] = useState(300);
   useLayoutEffect(() => {
@@ -212,22 +211,16 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
   const dv = demandView.value;
   const scope = members.join(",");
   const solved = dv ? `${dv.version}:${dv.round}` : "";
-  const [xf, setXf] = useState<ComplexTransfers | null>(null);
-  useEffect(() => {
-    if (!solved) return;
-    let on = true;
-    void complexTransfers(members).then((r) => { if (on && r) setXf(r); });
-    return () => { on = false; };
-  }, [scope, solved]);
+  const xf = useLatestAnswer(solved ? () => complexTransfers(members) : null, [scope, solved]);
   const transfers = xf && dv && xf.scope === scope && xf.version === dv.version ? xf : null;
 
   // T-1096: the trains drawn on a canvas over the map on every frame the game clock has moved,
   // never through Preact (moving SVG rects every frame repainted the panel, about 5 ms a frame);
   // their SVG rects, clear, are only the hovers, moved a few times a second. `now` keeps its
-  // identity while the same trains are drawn, its times brought up to date in place (others.tsx
-  // useComplexNow).
+  // identity while the same trains are drawn, its times brought up to date in place
+  // (StationInspector.tsx useComplexNow).
   const nowRef = useRef(now), tipRef = useRef<(x: TrainNow, t: number) => string>(() => "");
-  const cvRef = useRef<HTMLCanvasElement & { draws?: number }>(null), dirty = useRef(true);
+  const cvRef = useRef<HTMLCanvasElement>(null), dirty = useRef(true);
   nowRef.current = now;
   dirty.current = true;
   useEffect(() => {
@@ -273,7 +266,6 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
         ctx.globalAlpha = 1;
         ctx.stroke();
       }
-      cv.draws = (cv.draws ?? 0) + 1;
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
@@ -533,7 +525,7 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
               )}
               {rows.map(({ t, y }) => (
                 <rect {...band(d, y - (t.w < 4 ? (4 - t.w) / 2 : 0), Math.max(4, t.w), t.plat ? 0 : STUB)} fill="#fff" fill-opacity="0" class="complex-map-platform"
-                  onClick={() => open(t.s.id)} data-tip={tip(t)} />
+                  onClick={() => onOpen(t.s.id)} data-tip={tip(t)} />
               ))}
               {/* trains standing at a platform, pulling in or pulling out (T-246, T-1096): their
                   hovers, clear; the effect above draws them on the canvas */}

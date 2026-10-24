@@ -2,10 +2,11 @@
 
 import type { ComponentChildren } from "preact";
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
-import { inkOn } from "../game/palette";
+import { levelLabel } from "../game/format";
+import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { PLANE_PATH } from "../map/glyphs";
 import { bulletEpoch, bulletText } from "./bullet";
-import type { LineInput } from "../game/types";
+import { LEVELS, type Level, type LineInput } from "../game/types";
 import { selection, uiScale, type ListSort } from "../game/ui";
 import type { Signal } from "@preact/signals";
 
@@ -14,9 +15,9 @@ export const Icon = {
   plus: () => <svg viewBox="0 0 16 16"><path d="M4 8h8M8 4v8" /></svg>,
   pencil: () => <svg viewBox="0 0 16 16"><path d="M10.5 3l2.5 2.5L6 12.5H3.5V10z" /></svg>,
   check: () => <svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg>,
-  // T-534: the station name's suggestions, round and round
+  // the station name's suggestions, round and round
   cycle: () => <svg viewBox="0 0 16 16"><path d="M12.8 6.5A5 5 0 004 5M3.2 9.5A5 5 0 0012 11M4 2v3h3M12 14v-3H9" /></svg>,
-  // T-569: take the map to a station or line (a sight with its cross hairs)
+  // take the map to a station or line (a sight with its cross hairs)
   locate: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3.5" /><path d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3" /></svg>,
   pause: () => <svg viewBox="0 0 16 16"><path class="stroke2" d="M5.5 3.5v9M10.5 3.5v9" /></svg>,
   play1: () => <svg viewBox="0 0 16 16"><path class="solid" d="M5 3.5l7 4.5-7 4.5z" /></svg>,
@@ -24,49 +25,47 @@ export const Icon = {
   play3: () => <svg viewBox="0 0 16 16"><path class="solid" d="M1.5 5l4 3-4 3zM6 5l4 3-4 3zM10.5 5l4 3-4 3z" /></svg>,
   track: () => <svg viewBox="0 0 16 16"><path d="M2.5 10.5l8-8M5.5 13.5l8-8M3 9l4 4M6 6l4 4M9 3l4 4" /></svg>,
   station: () => <svg viewBox="0 0 16 16"><path d="M1.5 8h3.5M11 8h3.5" /><circle cx="8" cy="8" r="3" /></svg>,
-  // T-445: a run of segments, each starting where the last ended
+  // a run of segments, each starting where the last ended
   keepPlacing: () => <svg viewBox="0 0 16 16"><path d="M2 12.5l4-6 3 3 5-6.5" /><circle class="solid" cx="6" cy="6.5" r="1.4" /><circle class="solid" cx="9" cy="9.5" r="1.4" /><circle class="solid" cx="14" cy="3" r="1.4" /></svg>,
-  // T-727: a magnet over a curving line
+  // a magnet over a curving line
   snapReal: () => <svg viewBox="0 0 16 16"><path d="M1.5 14.5c4-.5 9-3 13-8" /><path d="M5 2.5v3.5a3 3 0 006 0V2.5M5 4.5h2M9 4.5h2" /></svg>,
-  // T-338: two parallel tracks joined by an X
-  crossover: () => <svg viewBox="0 0 16 16"><path d="M1.5 3.5h13M1.5 12.5h13M4.5 3.5l7 9M11.5 3.5l-7 9" /></svg>,
-  pointer: () => <svg viewBox="0 0 16 16"><path d="M4 2.5v10l3-2.8 2 4.3 1.8-.8-2-4.2 4-.3z" /></svg>,
   undo: () => <svg viewBox="0 0 16 16"><path d="M5.5 4L2.5 7l3 3M3 7h6.5a3.5 3.5 0 010 7H7" /></svg>,
   redo: () => <svg viewBox="0 0 16 16"><path d="M10.5 4l3 3-3 3M13 7H6.5a3.5 3.5 0 000 7H9" /></svg>,
   cross: () => <svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" /></svg>,
-  // T-908: the controls panel
+  // the controls panel
   help: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" /><path d="M6.2 6.3a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.6-.8 1.1v.6" /><circle class="solid" cx="8" cy="11.6" r=".5" /></svg>,
-  // T-797: trains reverse at this stop
+  // trains reverse at this stop
   uturn: () => <svg viewBox="0 0 16 16"><path d="M5 13.5V7a3.25 3.25 0 0 1 6.5 0v4.5M8.8 9.2l2.7 2.8 2.7-2.8" /></svg>,
+  // two parallel tracks with an express pair added beside them
+  doubleUp: () => <svg viewBox="0 0 16 16"><path d="M1.5 3h13M1.5 6h13M8 9v6M5 12h6" /></svg>,
   bin: () => <svg viewBox="0 0 16 16"><path d="M2.5 4.5h11M6.5 4.5V2.5h3v2M4 4.5l.8 9h6.4l.8-9M6.8 7v4M9.2 7v4" /></svg>,
-  // T-333: the blueprint selection tool (a dashed box), and switching the selection off or on
+  // the blueprint selection tool (a dashed box), and switching the selection off or on
   marquee: () => <svg viewBox="0 0 16 16"><path d="M2.5 5.5v-3h3M10.5 2.5h3v3M13.5 10.5v3h-3M5.5 13.5h-3v-3M7 7l5 2-2 .8L9 12z" /></svg>,
   switchOff: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" /><path d="M4.1 11.9l7.8-7.8" /></svg>,
   switchOn: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" /><path d="M5.3 8.3l1.8 1.8 3.6-3.9" /></svg>,
-  // T-252: the dock's tabs, and T-251's save button
+  // the dock's tabs and the save button
   wrench: () => <svg viewBox="0 0 16 16"><path d="M13.2 4.6a3.3 3.3 0 01-4.4 3.6L3.9 13.1a1.3 1.3 0 01-1.9-1.9l4.9-4.9a3.3 3.3 0 013.6-4.4L8.6 4l.5 2.4 2.4.5z" /></svg>,
   route: () => <svg viewBox="0 0 16 16"><path d="M2.5 12.5l4-6 4 3 3-6.5" /><circle class="solid" cx="2.5" cy="12.5" r="1.5" /><circle class="solid" cx="6.5" cy="6.5" r="1.5" /><circle class="solid" cx="10.5" cy="9.5" r="1.5" /><circle class="solid" cx="13.5" cy="3" r="1.5" /></svg>,
   // a platform under its canopy, the track beside it
   building: () => <svg viewBox="0 0 16 16"><path d="M1.5 5.5h13l-2-3h-9zM4 5.5v5M12 5.5v5M1.5 10.5h13M1.5 13.5h13" /></svg>,
   money: () => <svg viewBox="0 0 16 16"><rect x="1.5" y="3.5" width="10" height="6.5" /><circle cx="6.5" cy="6.75" r="1.4" /><circle class="bg" cx="11.5" cy="11.5" r="3" /><circle cx="11.5" cy="11.5" r="1.2" /></svg>,
   save: () => <svg viewBox="0 0 16 16"><path d="M2.5 2.5h9l2 2v9h-11zM5 2.5v3.5h5v-3.5M4.5 13.5v-4.5h7v4.5" /></svg>,
-  // T-332: the Lines and Stations tabs' scope toggle (the viewed place, the whole world)
+  // the Lines and Stations tabs' scope toggle (the viewed place, the whole world)
   pin: () => <svg viewBox="0 0 16 16"><path d="M8 14.5s4.5-4.2 4.5-7.6a4.5 4.5 0 00-9 0c0 3.4 4.5 7.6 4.5 7.6z" /><circle cx="8" cy="6.8" r="1.6" /></svg>,
   globe: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" /><path d="M2 8h12M8 2c-2.2 2-2.2 10 0 12M8 2c2.2 2 2.2 10 0 12" /></svg>,
-  // T-1006: show a realm, four arrows out to the corners
-  // T-374: how commuters reach a station: on foot, or by a ride (car, bus, bike or lift)
+  // how commuters reach a station: on foot, or by a ride (car, bus, bike or lift)
   walk: () => <svg viewBox="0 0 16 16"><circle cx="9.5" cy="2.8" r="1.3" /><path d="M9.5 5.2l-1.8 3 2.3 2.3v3.7M7.7 8.2L5.3 9.4M9.6 6.4l2.4 1.8M7.7 8.2L6.2 14" /></svg>,
   ride: () => <svg viewBox="0 0 16 16"><path d="M1.8 11.2V8.4l1.6-3.4h9.2l1.6 3.4v2.8zM1.8 8.4h12.4" /><circle cx="4.8" cy="11.4" r="1.3" class="bg" /><circle cx="11.2" cy="11.4" r="1.3" class="bg" /></svg>,
-  // T-378: an inter-region trip's modes (with `ride` for the car)
+  // an inter-region trip's modes (with `ride` for the car)
   train: () => <svg viewBox="0 0 16 16"><rect x="3.8" y="1.8" width="8.4" height="9.7" rx="2" /><path d="M3.8 7h8.4M6 14.2l1-2.7M10 14.2l-1-2.7" /></svg>,
   plane: () => <svg viewBox="0 0 16 16"><path d={PLANE_PATH} /></svg>,
-  // T-748: an alert's mark, a circled exclamation point, coloured by its severity
+  // an alert's mark, a circled exclamation point, coloured by its severity
   alert: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" /><path d="M8 4.6v4" /><circle class="solid" cx="8" cy="11.1" r="0.5" /></svg>,
-  // T-749: the Cities tab, a skyline
+  // the Cities tab, a skyline
   cities: () => <svg viewBox="0 0 16 16"><path d="M1.5 14h13M3 14V7h3.5v7M6.5 14V2.5h3.5V14M10 14V8h3v6" /></svg>,
-  // T-685: a city's star in the Cities list
+  // a city's star in the Cities list
   star: () => <svg viewBox="0 0 16 16"><path class="solid" d="M8 1.5l1.9 4.1 4.5.5-3.4 3 1 4.4L8 11.3l-4 2.2 1-4.4-3.4-3 4.5-.5z" /></svg>,
-  // T-972: the account (head and shoulders); T-973: the leaderboards
+  // the account (head and shoulders) and the leaderboards
   person: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="5.2" r="2.9" /><path d="M2.4 14.2c.6-3 2.9-4.6 5.6-4.6s5 1.6 5.6 4.6" /></svg>,
   trophy: () => <svg viewBox="0 0 16 16"><path d="M4.5 2.5h7v3.5a3.5 3.5 0 01-7 0zM4.5 3.8H2.5c0 2 .8 3.2 2.3 3.4M11.5 3.8h2c0 2-.8 3.2-2.3 3.4M8 9.5v2.5M5.5 13.5h5" /></svg>,
   gear: () => (
@@ -171,11 +170,11 @@ function TypedValue(p: { label: string; type: { text: string; set: (v: number) =
 }
 
 /** Buttons sharing borders, one of them on. */
-export function Segmented<T>(p: { options: [T, ComponentChildren][]; value: T; onChange: (v: T) => void; cls?: string }) {
+export function Segmented<T>(p: { options: [T, ComponentChildren][]; value: T; onChange: (v: T) => void }) {
   return (
     <div class="group">
       {p.options.map(([v, label]) => (
-        <button class={"btn " + (p.cls ?? "") + (v === p.value ? " on" : "")} onClick={() => p.onChange(v)}>
+        <button class={"btn" + (v === p.value ? " on" : "")} onClick={() => p.onChange(v)}>
           {label}
         </button>
       ))}
@@ -214,11 +213,11 @@ export function SortHead<K extends string>({ sort, cols }: { sort: Signal<ListSo
   );
 }
 
-/** T-748: one alert in a plain list (`<ul class="alerts">`): a red (bad) or yellow (warn)
- * exclamation point, the text, and under it any detail lines. */
-export function Alert({ level = "bad", tip, children }: { level?: "bad" | "warn"; tip?: string; children: ComponentChildren }) {
+/** T-748: one alert in a plain list (`<ul class="alerts">`): a red exclamation point, the text, and
+ * under it any detail lines. */
+export function Alert({ tip, children }: { tip?: string; children: ComponentChildren }) {
   return (
-    <li class={"alert " + level}>
+    <li class="alert bad">
       <span class="alert-mark"><Icon.alert /></span>
       <div class="alert-body" data-tip={tip}>{children}</div>
     </li>
@@ -237,4 +236,47 @@ export function Row(p: { label: ComponentChildren; children?: ComponentChildren;
 /** T-1134: the buttons of an inspector, in a row right under its header, never after a list of any length. */
 export function Actions({ children }: { children: ComponentChildren }) {
   return <div class="inspector-actions">{children}</div>;
+}
+
+/** A bar of coloured segments with a hover each: `share` is a segment's part of the bar (0 to 1),
+ * `cls` its class or `colour` its fill. `kind` is the bar's look: the trip panels' or the split bars'. */
+export function SegBar({ parts, kind, label }: { parts: { share: number; cls?: string; colour?: string; tip: string }[]; kind: "trip-bar" | "split-bar"; label: string }) {
+  return (
+    <div class={"bar " + kind} role="img" aria-label={label}>
+      {parts.map((p) => p.share > 0 && (
+        <i class={"seg" + (p.cls ? " " + p.cls : "")} style={{ width: 100 * p.share + "%", ...(p.colour && { background: p.colour }) }} data-tip={p.tip} />
+      ))}
+    </div>
+  );
+}
+
+/** The elevation buttons in the level colours, `value` on; `tip` words each hover. */
+export function LevelButtons({ value, onPick, tip }: { value: Level | null; onPick: (l: Level) => void; tip: (l: Level) => string }) {
+  return (
+    <div class="group levels">
+      {LEVELS.map((l) => (
+        <button class={"btn lv" + (l === value ? " on" : "")} style={{ "--lc": LEVEL_COLOURS[l], "--lk": inkOn(LEVEL_COLOURS[l]) }}
+          data-tip={tip(l)} aria-label={`Elevation ${levelLabel(l)}`} aria-pressed={l === value} onClick={() => onPick(l)}>
+          {levelLabel(l)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** A "Blueprint" note under an inspector's header until what it shows is constructed. */
+export function Built({ built, what }: { built: boolean; what: string }) {
+  return built ? null : <p class="muted" data-tip={`${what} is built when you construct it`}>Blueprint</p>;
+}
+
+/** Construct (while a blueprint) on the left and Remove on the right of one row. */
+export function ConstructRemove({ built, construct, constructLabel, remove, removeLabel, removeTip }: {
+  built: boolean; construct: () => void; constructLabel: string; remove: () => void; removeLabel: string; removeTip: string;
+}) {
+  return (
+    <Actions>
+      {!built ? <button class="btn text" onClick={construct}>{constructLabel}</button> : <span />}
+      <button class="btn text" onClick={remove} data-tip={removeTip}>{removeLabel}</button>
+    </Actions>
+  );
 }

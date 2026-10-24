@@ -41,7 +41,7 @@ export function ClosestStations({ lng, lat, exclude, own }: { lng: number; lat: 
           const chips = chipsAt(r.station.id);
           return (
             <li onClick={() => open(r.station)}>
-              <span class={"grow" + (r.station.built ? "" : " muted")} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px" }}>
+              <span class={"grow chip-line" + (r.station.built ? "" : " muted")}>
                 <span>{r.station.name}{r.station.built ? "" : " (blueprint)"}</span>
                 {chips.slice(0, CHIPS).map((l) => <Chip line={l} size="sm" />)}
                 {chips.length > CHIPS && <span class="muted small">+{chips.length - CHIPS}</span>}

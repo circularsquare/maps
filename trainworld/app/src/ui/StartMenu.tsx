@@ -1,14 +1,15 @@
 // T-677: the start menu. Every page load opens on it, unless a URL switch already says which game
 // (`choiceFromUrl`): New game (the new game sheet, T-728), then the saved games in this browser, the
-// most recent first, each a card as in the saves panel. Nothing heavy has started under it: main.ts starts the clock and demand
-// workers with the pick. It covers the page and takes every key until then.
+// most recent first, each a card as in the saves panel. Nothing heavy has started under it: main.ts
+// starts the clock and demand workers with the pick. It covers the page and takes every key until then.
 
 import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { CITIES, HOME_CITY } from "../game/cities";
+import { HOME_CITY, isCity } from "../game/cities";
 import { choosing } from "../game/loading";
 import { listSlots, newGameName, type SaveSlot } from "../workers/saveFile";
 import type { GameChoice } from "../workers/clockClient";
+import { blockKeysOutside } from "./keys";
 import { NewGameSheet } from "./NewGame";
 import { AccountButton, startAccountUi } from "./AccountPanel";
 import { SlotFacts, SlotThumb, SlotTitle } from "./SavesPanel";
@@ -21,7 +22,7 @@ export function choiceFromUrl(): GameChoice | null {
   const on = (k: string) => q.get(k) === "1";
   if (on("new")) {
     const city = q.get("city");
-    return { fresh: true, newGame: true, game: { mode: q.get("mode") === "sandbox" ? "sandbox" : "normal", start: CITIES.some((c) => c.id === city) ? city! : HOME_CITY } };
+    return { fresh: true, newGame: true, game: { mode: q.get("mode") === "sandbox" ? "sandbox" : "normal", start: isCity(city) ? city! : HOME_CITY } };
   }
   if (on("synth") || on("demandTest") || on("paused") || on("continue")) return {};
   return null;
@@ -74,22 +75,13 @@ export function showStartMenu(onPick: (c: GameChoice) => void) {
   startAccountUi();
   const root = document.createElement("div");
   document.body.appendChild(root);
-  // the map's keys and the hotkeys wait for the pick; Tab and Enter work inside the menu
-  const block = (e: KeyboardEvent) => {
-    if (e.target instanceof Node && root.contains(e.target)) return;
-    // the account panel (T-972) opens over the menu and takes the keys while it is open
-    if (document.querySelector("dialog.acct-panel[open]")) return;
-    e.stopImmediatePropagation();
-    e.preventDefault();
-  };
-  window.addEventListener("keydown", block, true);
-  window.addEventListener("keyup", block, true);
+  // the account panel (T-972) opens over the menu and takes the keys while it is open
+  const unblock = blockKeysOutside(root, () => !document.querySelector("dialog.acct-panel[open]"));
   let done = false;
   const pick = (c: GameChoice) => {
     if (done) return;
     done = true;
-    window.removeEventListener("keydown", block, true);
-    window.removeEventListener("keyup", block, true);
+    unblock();
     render(null, root);
     root.remove();
     document.documentElement.classList.remove("choosing");

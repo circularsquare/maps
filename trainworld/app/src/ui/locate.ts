@@ -3,14 +3,14 @@
 // only moves the camera; selecting is the caller's.
 
 import { effect, untracked } from "@preact/signals";
-import { activeCity } from "../game/cities";
+import { activeCity, CITIES, viewedZone } from "../game/cities";
 import { fitView } from "../game/loading";
 import { openedZones } from "../game/openedZones";
+import { display } from "../game/ui";
 import { world } from "../game/world";
 import { zoneAt } from "../game/zones";
 import { live } from "../map/live";
 import { STATION_BOX_ZOOM } from "../map/stationGeometry";
-import { viewStart } from "./NewGame";
 
 /** The map at a station: its zoom if that is already closer than where platform boxes show. */
 export function locateStation(lng: number, lat: number) {
@@ -18,6 +18,31 @@ export function locateStation(lng: number, lat: number) {
   if (!map) return;
   map.jumpTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), STATION_BOX_ZOOM) });
   activeCity.value = zoneAt(lng, lat);
+}
+
+/** A start on the world map: the Americas, Europe and East Asia in view. */
+const WORLD_VIEW = { center: [20, 30] as [number, number], zoom: 1.8 };
+
+/** A start from the player's location (T-1132): where the camera goes, taken by the next `viewStart`. */
+let startAt: { center: [number, number]; zoom: number } | null = null;
+export function setStartAt(at: { center: [number, number]; zoom: number } | null) {
+  startAt = at;
+}
+
+/** Move the camera to a new game's start: the city's registry view, or the world map; a start from
+ * the player's location goes to that location instead. */
+export function viewStart(start?: string) {
+  const at = startAt;
+  startAt = null;
+  const c = start ? CITIES.find((x) => x.id === start) : undefined;
+  if (!at && c && viewedZone.peek() === c.id && live.map && live.map.getZoom() > 9) return; // already there
+  if (c) {
+    activeCity.value = c.id;
+    viewedZone.value = c.id;
+  }
+  live.map?.jumpTo(at ?? (c ? { center: c.center, zoom: c.zoom } : WORLD_VIEW));
+  // T-801: a start on the map is picked from the zones' zoomed-out bubbles, so Homes goes on
+  if (!c) display.value = { ...display.peek(), commuters: true, commuterEnd: "home" };
 }
 
 /** Furthest in a saved game opens: a district, so a lone station is not shown at street level (T-895). */

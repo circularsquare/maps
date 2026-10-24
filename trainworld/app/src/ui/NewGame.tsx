@@ -3,22 +3,19 @@
 // or zone found by name, or the world map. In a sandbox, a city with a real network (T-731) can start with it.
 
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { activeCity, CITIES, cityById, viewedZone, zonesTouching, ZONE_REACH_M, type City } from "../game/cities";
+import { CITIES, cityById, zonesTouching, ZONE_REACH_M, type City } from "../game/cities";
 import { zoneHolding } from "../game/realms";
-import { live } from "../map/live";
-import { display } from "../game/ui";
 import { cityMatch, normalise } from "../game/search";
 import type { GameMode, NewGameSpec } from "../workers/saveFile";
 import { dataUrl } from "../game/dataBase";
+import { setStartAt } from "./locate";
 
 /** The suggested starts (T-728): the cities the demand model was checked on, each with a real
  * network. A fixed list, so easy, medium and hard starts can take its place later. */
-export const START_CITIES = ["nyc", "lon", "par", "tyo", "tor"];
+const START_CITIES = ["nyc", "lon", "par", "tyo", "tor"];
 /** The cities with a real network a sandbox can start from (`packs/real/<id>.save`,
  * pipeline/realnet.py ship). */
-export const REAL_NETWORKS = new Set(["nyc", "lon", "par", "tyo", "seo", "tor", "sdj"]);
-/** A start on the world map: the Americas, Europe and East Asia in view. */
-const WORLD_VIEW = { center: [20, 30] as [number, number], zoom: 1.8 };
+const REAL_NETWORKS = new Set(["nyc", "lon", "par", "tyo", "seo", "tor", "sdj"]);
 const MAX_HITS = 8;
 
 let regionNames: Intl.DisplayNames | null = null;
@@ -36,7 +33,7 @@ function countryOf(c: City): string {
 /** Registry cities and zones with a word of their name or of an alias starting with the text,
  * ignoring case and accents ("hague" finds Rotterdam through The Hague, T-825): best match first
  * (search.ts cityMatch): an exact match first, then by name before by alias, then biggest. */
-export function findStart(text: string): { city: City; matched?: string }[] {
+function findStart(text: string): { city: City; matched?: string }[] {
   const q = normalise(text);
   if (!q) return [];
   return CITIES.flatMap((city) => {
@@ -48,8 +45,6 @@ export function findStart(text: string): { city: City; matched?: string }[] {
     .slice(0, MAX_HITS);
 }
 
-/** A start from the player's location (T-1132): where the camera goes, taken by the next `viewStart`. */
-let startAt: { center: [number, number]; zoom: number } | null = null;
 /** The world map centred on a location no zone is near: the continent round it in view. */
 const LOCATED_WORLD_ZOOM = 4;
 /** How long the location button waits for the browser before it says the location is unavailable. */
@@ -72,24 +67,8 @@ export function zoneForLocation(lon: number, lat: number): string | null {
   return best?.id ?? null;
 }
 
-/** Move the camera to a new game's start: the city's registry view, or the world map; a start from
- * the player's location goes to that location instead. */
-export function viewStart(start?: string) {
-  const at = startAt;
-  startAt = null;
-  const c = start ? CITIES.find((x) => x.id === start) : undefined;
-  if (!at && c && viewedZone.peek() === c.id && live.map && live.map.getZoom() > 9) return; // already there
-  if (c) {
-    activeCity.value = c.id;
-    viewedZone.value = c.id;
-  }
-  live.map?.jumpTo(at ?? (c ? { center: c.center, zoom: c.zoom } : WORLD_VIEW));
-  // T-801: a start on the map is picked from the zones' zoomed-out bubbles, so Homes goes on
-  if (!c) display.value = { ...display.peek(), commuters: true, commuterEnd: "home" };
-}
-
 /** The real network's save for a start city (T-731). */
-export async function realNetwork(id: string): Promise<ArrayBuffer> {
+async function realNetwork(id: string): Promise<ArrayBuffer> {
   const r = await fetch(dataUrl(`real/${id}.save`));
   if (!r.ok) throw new Error(`${r.status}`);
   return r.arrayBuffer();
@@ -153,7 +132,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
         return;
       }
     }
-    startAt = located ? { center: located.at, zoom: city ? city.zoom : LOCATED_WORLD_ZOOM } : null;
+    setStartAt(located ? { center: located.at, zoom: city ? city.zoom : LOCATED_WORLD_ZOOM } : null);
     onStart(spec);
   };
   const modeBtn = (m: GameMode, label: string, tip: string, ref?: typeof first) => (

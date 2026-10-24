@@ -12,7 +12,7 @@
 //   busiest station's, and says so (T-217).
 // - A use circle away from any station: the same count, for the circle's station or complex.
 
-import { crowdAt, QUEUE_STRIDE, tripLoad } from "../game/boarding";
+import { CRUSH_PER_CAR, crowdAt, QUEUE_STRIDE, SEATS_PER_CAR, tripLoad } from "../game/boarding";
 import { clock } from "../game/clock";
 import { complexes } from "../game/complexView";
 import { demandView } from "../game/demand";
@@ -28,9 +28,6 @@ import { factRow, lineBullet, lineBullets } from "./trackTagRows";
 
 /** A line of a tag: plain text, or a row built as DOM. */
 export type TipLine = string | HTMLElement;
-
-/** Seats and riders at crush load per 20 m car (sim/src/demand/api.rs; ui/inspector/others.tsx). */
-const SEATS_PER_CAR = 44, CRUSH_PER_CAR = 160;
 
 const n0 = (v: number) => Math.round(v).toLocaleString("en-US");
 /** A forecast count, rounded as the track tag rounds one (trackHover.ts `riders`). */

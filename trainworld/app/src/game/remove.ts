@@ -1,14 +1,14 @@
 // Removing track, stations and flyovers (T-096): the delete tool and the inspectors' remove
 // buttons. Blueprint goes at once (undoable); something constructed asks first in the centered
-// modal (`ask`, ui/Toolbar.tsx), because removing it is final and refunds nothing
+// modal (`ask`, ui/ToolNotes.tsx), because removing it is final and refunds nothing
 // (SPEC 6.4). Lines are removed from the Lines tab, not here. A removal that changes a line asks
 // too, built or not, naming each line and what happens to it (T-859).
 
 import { queryClock } from "../workers/clockClient";
 import type { EditOp } from "../workers/protocol";
-import { distance } from "./format";
+import { andList, distance } from "./format";
 import { ask, selection } from "./ui";
-import { edit, say, world } from "./world";
+import { edit, linesByNum, say, stationsByNum, world } from "./world";
 
 export type Removable = { kind: "track"; edge: number } | { kind: "station"; node: number } | { kind: "flyover"; node: number };
 
@@ -24,15 +24,13 @@ export function describeRemovable(r: Removable): { what: string; built: boolean 
     return e ? { what: `${distance(e.lengthM)} of ${e.built ? "constructed " : ""}track`, built: e.built } : null;
   }
   if (r.kind === "station") {
-    const s = w.save.stations.find((x) => x.num === r.node);
+    const s = stationsByNum(w).get(r.node);
     return s ? { what: `${s.built ? "the constructed station " : ""}${s.name}${s.built ? "" : " station"}`, built: s.built } : null;
   }
   const n = w.nodes.get(r.node);
   const built = (n?.builtPorts ?? 0) >= 3;
   return n?.flying ? { what: built ? "the constructed flyover" : "the flyover", built } : null;
 }
-
-const listed = (xs: string[]) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
 
 /** What removing these does to lines (T-859), from the track model's trial of it: a row per line
  * that loses a stop or stops running. */
@@ -41,13 +39,13 @@ export async function lineEffects(edges: number[], stations: number[]): Promise<
   const w = world.peek();
   if (!d || !w) return [];
   const gone = new Set(stations);
-  const names = new Map(w.save.stations.map((s) => [s.num, s.name]));
+  const byNum = stationsByNum(w), lineOf = linesByNum(w);
   const out: { line: number; text: string }[] = [];
   for (let k = 0; k + 2 < d.length; k += 3) {
-    const l = w.save.lines.find((x) => x.num === d[k]);
+    const l = lineOf.get(d[k]);
     if (!l) continue;
-    const lost = [...new Set(l.stops.map(Number).filter((s) => gone.has(s)))].map((s) => names.get(s) ?? "a station");
-    const loses = d[k + 1] && lost.length ? `lose its ${lost.length === 1 ? "stop" : "stops"} at ${listed(lost)}` : "";
+    const lost = [...new Set(l.stops.map(Number).filter((s) => gone.has(s)))].map((s) => byNum.get(s)?.name ?? "a station");
+    const loses = d[k + 1] && lost.length ? `lose its ${lost.length === 1 ? "stop" : "stops"} at ${andList(lost)}` : "";
     const stops = d[k + 2] ? "stop running until you fix its route" : "";
     out.push({ line: l.num, text: `${l.name} will ${[loses, stops].filter(Boolean).join(" and ")}.` });
   }

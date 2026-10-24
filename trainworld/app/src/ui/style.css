@@ -103,7 +103,7 @@ svg .stroke2 { stroke-width: 2; }
 #dock {
   width: var(--dock-w); flex: none; height: 100%;
   border-right: 1px solid var(--rule);
-  display: flex; flex-direction: column; min-height: 0;
+  display: flex; flex-direction: column; min-height: 0; position: relative;
 }
 /* T-252: the tabs are icons (their names on hover), on the left; the saves button (T-251) and
    the settings gear on the right */
@@ -135,7 +135,6 @@ svg .stroke2 { stroke-width: 2; }
    under 440 px, which holds the Build tab's tools, elevation, track rows and blueprint bar
    (T-1128); the inspector keeps at least 160 px. */
 .pane { flex: none; height: var(--pane-h, max(36%, 440px)); max-height: calc(100% - 196px); overflow-y: auto; padding: 10px 14px 12px; }
-#dock { position: relative; }
 .dock-resize { position: absolute; top: 0; bottom: 0; right: -4px; width: 8px; z-index: 5; cursor: col-resize; }
 .pane-resize { flex: none; height: 7px; margin: -3px 0 -4px; position: relative; z-index: 4; cursor: row-resize; }
 .dock-resize:hover, .pane-resize:hover, .dock-resize.on, .pane-resize.on { background: color-mix(in srgb, var(--accent) 35%, transparent); }
@@ -212,25 +211,23 @@ body.resizing, body.resizing * { user-select: none; }
 .group.scope .btn svg { width: 14px; height: 14px; flex: none; }
 /* T-310: the Lines and Stations lists' column headers, one button a column; the sorted one is dark
    and has an arrow (beside the label, before it on the number columns so the label keeps its place) */
-.sort-head { display: flex; align-items: center; gap: 8px; min-height: 22px; border-bottom: 1px solid var(--rule); }
+.sort-head { display: flex; align-items: center; gap: 8px; min-height: 22px; border-bottom: 1px solid var(--rule); position: relative; }
 .sort-btn { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none;
             font-size: 12px; color: var(--muted); cursor: pointer; }
 .sort-btn.grow { flex: 1; min-width: 0; }
 .sort-btn.val { flex: none; justify-content: flex-end; }
 /* T-332: the Near header with no distance column under it sits beside "Name" instead */
-.sort-head { position: relative; }
 .sort-btn.near-off { position: absolute; left: 58px; }
 .sort-btn:hover, .sort-btn.on { color: var(--text); }
 .sort-arrow { display: none; width: 0; height: 0; border-left: 3.5px solid transparent; border-right: 3.5px solid transparent; }
 .sort-arrow.up { display: block; border-bottom: 5px solid currentColor; }
 .sort-arrow.down { display: block; border-top: 5px solid currentColor; }
-.w-period { width: 96px; flex: none; }
 .hbar { display: inline-block; height: 8px; background: var(--accent); vertical-align: middle; }
 .pane-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 8px; }
 /* T-1134: an inspector's buttons, in a row under its header */
 .inspector-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin: 8px 0; gap: 6px 8px; }
 
-/* a hairline slider (the settings pane's bubble size, T-099) */
+/* a hairline slider (the settings pane's) */
 .slider { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .slider span { min-width: 3.6em; }
 .slider input { flex: 1; min-width: 0; appearance: none; height: 14px; background: transparent; margin: 0; }
@@ -286,8 +283,7 @@ body.resizing, body.resizing * { user-select: none; }
 .badge-edit { display: inline-flex; padding: 0; border: 0; background: transparent; cursor: pointer; flex: none; font: inherit; }
 .badge-edit:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .line-list-actions, .line-stop-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-.line-list-actions label { display: flex; align-items: center; gap: 5px; }
-.line-list-actions select, .line-identity input { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--rule); }
+.line-identity input { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--rule); }
 .line-stop-actions { justify-content: flex-start; margin-top: 12px; }
 .line-identity { margin-top: 8px; }
 .line-identity label { display: flex; align-items: center; gap: 8px; }
@@ -341,7 +337,6 @@ table.sched .hw-real { color: var(--muted); margin-right: 6px; }
 svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 112px; stroke-width: initial; }
 .complex-map { margin: 8px 0 4px; }
 .complex-map svg { stroke: none; stroke-width: 1; stroke-linecap: butt; }
-.complex-map p { margin: 4px 0 0; }
 .complex-map-platform { cursor: pointer; }
 .complex-map text { font-size: 12px; stroke: var(--map-land); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; }
 .complex-map-label { fill: var(--map-ink); }
@@ -354,9 +349,10 @@ svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 1
 .complex-stations .val.bad { color: var(--bad); }
 .rows.pick.complex-stations > li.cols { cursor: default; background: none; min-height: 20px; }
 .moves > li { align-items: flex-start; padding: 3px 0; }
-.load-bar { position: relative; display: block; height: 10px; border: 1px solid var(--rule); margin-right: 8px; }
-.load-bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
-.load-bar .seats { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--text); }
+.board-bar { position: relative; display: block; height: 8px; margin: 8px 0 6px; border: 1px solid var(--rule); background: var(--bg); }
+.board-bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+.board-bar .seats { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--text); }
+.rows .grow.chip-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .moves .what { display: flex; flex-direction: column; gap: 1px; }
 /* T-164: a station's waiting riders, a line and direction a row */
 .rows.waiting > li { align-items: flex-start; padding: 3px 0; }
@@ -531,7 +527,7 @@ rect.now { fill-opacity: .45; }
 /* T-703: the track display under the demand buttons, its key (height, speed) beside it */
 .track-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; max-width: 100%; }
 .track-row .track-key { margin: 0; padding: 0 8px; height: 28px; box-sizing: border-box; align-items: center; background: var(--bg); border: 1px solid var(--rule); }
-.track-row .speed-key { display: flex; gap: 10px; }
+.track-row .speed-key { display: flex; gap: 10px; font-size: 12px; }
 /* T-158: one trip purpose on the map; a swatch in its purpose colour while one is chosen */
 .demand-selector .purpose-filter { display: flex; align-items: center; gap: 5px; height: 28px; margin-left: 6px;
   padding: 0 0 0 6px; border: 1px solid var(--rule); background: var(--bg); font-size: 12px; }
@@ -546,7 +542,7 @@ rect.now { fill-opacity: .45; }
 .loading-box p + p { margin-top: 2px; }
 .loading-actions { display: flex; gap: 8px; margin-top: 12px; }
 /* T-180: while a loaded game's clock waits for demand, a card in the middle of the map. The map
-   under it keeps every pointer event; no transition or animation, the percentage is the motion. */
+   under it keeps every pointer event. */
 .loading-card-wrap { position: absolute; left: 0; right: 0; top: var(--bar-h); bottom: 0; z-index: 6;
   display: grid; place-items: center; padding: 16px; pointer-events: none; }
 .loading-card { background: var(--bg); border: 1px solid var(--rule); padding: 14px 20px;
@@ -619,8 +615,7 @@ rect.now { fill-opacity: .45; }
 .build-options { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 14px 12px; }
 .blueprint-controls { flex: none; padding: 8px 14px; border-top: 1px solid var(--rule); }
 .blueprint-panel { margin-top: 14px; }
-.blueprint-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.blueprint-head { margin-bottom: 6px; }
+.blueprint-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
 .blueprint-head .num.bad { color: var(--bad); }
 .blueprint-breakdown summary { cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; }
 .blueprint-category { margin-top: 8px; }
@@ -632,18 +627,17 @@ rect.now { fill-opacity: .45; }
 .blueprint-pick { margin-top: 14px; }
 /* T-353: the Select tool's bar at the map's top centre, level with the demand buttons. Lower on narrower
    maps, where the demand buttons with the status tag (T-349) and the search box take the row. */
-.blueprint-bar { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 10px;
+.blueprint-bar { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 6px 8px;
   padding: 6px 8px 6px 12px; background: var(--bg); border: 1px solid var(--rule); white-space: nowrap;
   /* T-841: 260 px kept clear each side (the tool panel, the debug panel); a narrower map wraps the bar's groups onto more rows */
   flex-wrap: wrap; justify-content: center; width: max-content; max-width: max(300px, calc(100% - 520px)); }
-.blueprint-bar { gap: 6px 8px; }
 .blueprint-bar .count { min-width: 58px; }
 .blueprint-bar .btn.lv { min-width: 27px; }
 @container map-column (max-width: 1350px) { .blueprint-bar { top: 46px; } }
 @container map-column (max-width: 1000px) { .blueprint-bar { top: 80px; } }
 @container map-column (max-width: 680px) { .blueprint-bar { top: 114px; } }
 .bp-box { position: absolute; z-index: 3; pointer-events: none; border: 1.5px dashed var(--map-ink); background: color-mix(in srgb, var(--map-ink) 10%, transparent); }
-.track-row { display: flex; align-items: center; gap: 8px; }
+.build-track-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 100%; }
 /* T-478: each level button carries its level's track colour (--lc, palette.ts), the chosen one in full */
 .btn.lv { min-width: 32px; padding: 0 4px; font-variant-numeric: tabular-nums;
           background: color-mix(in srgb, var(--lc) 30%, var(--bg)); border-color: color-mix(in srgb, var(--lc) 60%, var(--bg)); }
@@ -658,7 +652,6 @@ rect.now { fill-opacity: .45; }
 #tool-notes { max-width: 640px; padding: 6px 10px; background: var(--bg); width: max-content;
               border-top: 1px solid var(--rule); border-right: 1px solid var(--rule); }
 #tool-notes p + p { margin-top: 4px; }
-#tool-notes.ask { display: flex; align-items: center; gap: 10px; }
 .tool-pick > .btn { padding: 0 6px; gap: 4px; }
 .tool-pick .key { margin-left: 2px; }
 #tool-notes .bad, .tool-tag.bad { color: var(--bad); }
@@ -682,7 +675,6 @@ rect.now { fill-opacity: .45; }
 .track-modes .group { display: grid; grid-template-columns: 1fr 1fr; }
 .track-modes .btn { white-space: normal; height: auto; min-height: 40px; line-height: 1.35; padding: 4px 6px; }
 .station-use { margin-bottom: 6px; }
-.speed-key { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 8px; font-size: 12px; }
 .speed-key li { display: flex; align-items: center; gap: 6px; }
 .speed-key i { display: inline-block; width: 16px; height: 4px; }
 .cap-marks { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
@@ -756,7 +748,6 @@ rect.now { fill-opacity: .45; }
 .alert-mark { flex: none; display: inline-flex; margin-top: 1px; }
 .alert-mark svg { width: 16px; height: 16px; }
 .alert.bad .alert-mark { color: var(--bad); }
-.alert.warn .alert-mark { color: var(--yellow); }
 .alert-body { min-width: 0; flex: 1; }
 .alert-body .detail { margin-top: 2px; color: var(--muted); }
 .btn.icon.mini { width: 20px; min-width: 20px; height: 20px; border: 0; background: transparent; }
@@ -903,10 +894,9 @@ rect.now { fill-opacity: .45; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .thumb-city { font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
 .thumb-figure { color: color-mix(in srgb, var(--thumb-ink) 70%, var(--thumb-land)); }
-.save-info { display: flex; flex-direction: column; gap: 2px; }
+.save-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .save-actions { display: flex; gap: 6px; margin-top: auto; padding-top: 8px; justify-content: flex-end; }
 .save-thumb.empty { display: grid; place-items: center; text-align: center; padding: 4px; }
-.save-info { flex: 1; min-width: 0; }
 .save-slot-title { display: flex; gap: 8px; justify-content: space-between; align-items: baseline; overflow-wrap: anywhere; }
 .save-playing { flex: none; padding: 0 5px; color: var(--bg); background: var(--accent); }
 .save-slots .pane-foot { margin-top: 6px; }
@@ -929,10 +919,10 @@ rect.now { fill-opacity: .45; }
 .purpose-mirror i { display: block; width: 100%; min-height: 0; }
 .purpose-axis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; font-size: 10px; opacity: .7; margin-top: 3px; text-align: center; }
 
-/* Focused-city demand and purpose charts (T-143). */
 /* faded text, not opacity: the selector has no background of its own (T-192), so an opacity fade
    would let the map show through the buttons */
 .demand-selector .demand-pending { color: color-mix(in srgb, var(--text) 40%, var(--bg)); cursor: wait; }
+/* Focused-city demand and purpose charts (T-143). */
 .purpose-summary { display: flex; align-items: center; gap: 12px; margin: 12px 0; }
 .purpose-pie { width: 88px; height: 88px; flex: 0 0 88px; }
 .purpose-legend { list-style: none; padding: 0; margin: 0; flex: 1; min-width: 0; font-size: 12px; }

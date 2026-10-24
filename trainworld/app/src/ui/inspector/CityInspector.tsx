@@ -5,19 +5,14 @@
 
 import { cityById, type CityId } from "../../game/cities";
 import { cityDemandViews, eachCorridor, intercityDemand, INTERCITY_PLACES } from "../../game/demand";
-import { count } from "../../game/format";
+import { count, exact } from "../../game/format";
 import { zoneLoads } from "../../game/loading";
 import { BUBBLE_ALPHA, bubbleColour, setBubbleColours } from "../../game/palette";
 import { display, purposeFilter, shownDayPhrase } from "../../game/ui";
 import { localModes } from "../../map/modeBar";
 import { goTo } from "../Search";
-import { Actions } from "../widgets";
-
-const exact = (n: number) => Math.round(n).toLocaleString("en");
-const pct = (n: number, of: number) => {
-  const p = of > 0 ? (100 * n) / of : 0;
-  return n >= 0.5 && p < 0.5 ? "<1%" : Math.round(p) + "%";
-};
+import { Actions, SegBar } from "../widgets";
+import { pctOf } from "./tripText";
 
 type Part = { name: string; n: number; cls: string };
 
@@ -30,11 +25,8 @@ function TripsBar({ label, tip, what, parts }: { label: string; tip?: string; wh
         <span class="grow" data-tip={tip}>{label}</span>
         <span class="val" data-tip={`${exact(all)} ${what} ${shownDayPhrase.value}`}>{count(all)}</span>
       </div>
-      <div class="bar split-bar" role="img" aria-label={parts.map((p) => `${p.name} ${pct(p.n, all)}`).join(", ")}>
-        {parts.map((p) => p.n > 0 && (
-          <i class={"seg " + p.cls} style={{ width: (100 * p.n) / all + "%" }} data-tip={`${p.name}: ${exact(p.n)} ${what} ${shownDayPhrase.value}, ${pct(p.n, all)}`} />
-        ))}
-      </div>
+      <SegBar kind="split-bar" label={parts.map((p) => `${p.name} ${pctOf(p.n, all)}`).join(", ")}
+        parts={parts.map((p) => ({ share: p.n / all, cls: p.cls, tip: `${p.name}: ${exact(p.n)} ${what} ${shownDayPhrase.value}, ${pctOf(p.n, all)}` }))} />
     </li>
   );
 }
@@ -77,7 +69,6 @@ export function CityInspector({ id }: { id: string }) {
         <i class="mk" style={{ background: `rgba(${mix[0]}, ${mix[1]}, ${mix[2]}, ${BUBBLE_ALPHA})` }} />
         <span class="name">{city.name}</span>
       </div>
-      {/* T-220: the City tab's City centre button, here now that the tab is gone */}
       <Actions>
         <button class="btn text" onClick={() => goTo({ kind: "city", name: city.name, city })}>Go to {city.name}</button>
       </Actions>

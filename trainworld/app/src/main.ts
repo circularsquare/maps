@@ -5,12 +5,7 @@
 //   ui/       Preact components (dock, top bar, toolbar, inspector, settings)
 //   workers/  the clock worker (owns the network, T-025) and the demand pool (T-026)
 //
-// URL parameters: ?debug=1 (performance readout, window.tw probes), ?paused=1, ?new=1 (a new
-// game that owns no slot, workers/clockClient.ts; with &mode=sandbox and &city=<zone id>, T-728), ?continue=1 (the game opened last, no start
-// menu; ui/StartMenu.tsx),
-// ?synth=1&lines=500&trains=10000 (draw the synthetic stress network instead of the real one),
-// ?perfOff=labels,shadow,hover,clock,overlay,markers (measurement only, perfFlags.ts),
-// ?quietMs=N (the loading card's watchdog, ui/LoadingScreen.tsx, T-950).
+// URL parameters: docs/code-map.md, "URL switches".
 
 import "./ui/style.css";
 import { effect } from "@preact/signals";
@@ -23,7 +18,7 @@ import { ask, display, isBuildTool, selection, shade, stopEditing, tab, tool } f
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
 import { cancelLink, linkPicked, linking } from "./game/links";
-import { ACTION_KEYS, pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/tabs";
+import { ACTION_KEYS, pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/toolKeys";
 import { constructBlueprints, newLineKey, toggleEditStopsSelected } from "./game/lineActions";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { world } from "./game/world";
@@ -63,7 +58,7 @@ import { DEMAND_INDEX, type Selection } from "./game/types";
 import { anchor, kAtY, toLngLat, toLocal } from "./map/geo";
 import { Debug, perfText } from "./ui/Debug";
 import { Dock } from "./ui/Dock";
-import { Toolbar } from "./ui/Toolbar";
+import { ToolNotes } from "./ui/ToolNotes";
 import { TopBar } from "./ui/TopBar";
 import { MapTopLeft } from "./ui/DemandSelector";
 import { BlueprintBar } from "./ui/Blueprint";
@@ -72,7 +67,7 @@ import { startTips } from "./ui/tip";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
 import { choosing, startGameWait } from "./game/loading";
 import { choiceFromUrl, showStartMenu, worldCover } from "./ui/StartMenu";
-import { viewStart } from "./ui/NewGame";
+import { viewStart } from "./ui/locate";
 import { startOpenFit } from "./ui/locate";
 import { ClockClient, clockWorkerStatus, onNetworkSnapshot, onStationsAhead } from "./workers/clockClient";
 import { startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
@@ -381,7 +376,7 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     return;
   }
-  // 1, 2, 3: draw track, place stations, delete, from any tab (T-096); the Build tab opens. The
+  // 1, 2, 3, 5: draw track, place stations, delete, select (TOOL_KEYS), from any tab (T-096); the Build tab opens. The
   // key of the tool already on does nothing (Esc is the way out), so a half-drawn route survives.
   // T: the trip explorer (T-195, T-444), from any tab; the tab stays (the inspector shows the trip)
   if (e.key.toLowerCase() === TRIP_KEY &&!e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
@@ -454,7 +449,7 @@ window.addEventListener("keyup", (e) => {
 // ---- UI ----
 render(h(Dock, null), document.getElementById("dock-root")!);
 render(h(TopBar, null), document.getElementById("topbar-root")!);
-render(h(Toolbar, null), document.getElementById("tools-root")!);
+render(h(ToolNotes, null), document.getElementById("tools-root")!);
 
 // ---- demand (the pool started at the top, or with the pick) ----
 onNetworkSnapshot(submitNetwork);

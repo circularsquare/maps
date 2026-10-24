@@ -16,6 +16,9 @@ import type { Demand } from "./types";
 /** Game seconds per wall second for the three speed buttons. Provisional. */
 export const SPEEDS = [60, 240, 960] as const;
 
+/** A line's local time of day, seconds: the game hour moved by the line's time shift (T-309). */
+export const lineSeconds = (st: { shift?: number } | undefined): number => clock.hour.value * 3600 + (st?.shift ?? 0);
+
 /** The demand level scheduled at game time `t`: the period table shared with the track model and
  * demand (game/periods.ts, sim/src/track/params.rs). */
 export function demandAt(t: number): Demand {

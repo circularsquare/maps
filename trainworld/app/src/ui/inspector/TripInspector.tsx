@@ -5,20 +5,20 @@
 // every drawn quantity has a hover with it.
 
 import { Fragment } from "preact";
-import { count, distance, speed } from "../../game/format";
-import { MODE_COLOURS, modeColours } from "../../game/palette";
+import { capitalise, count, distance, exact, speed } from "../../game/format";
+import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
 import { WALK_KMH } from "../../game/walks";
 import { openRoute, peopleOf, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
-import { purposeFilter, selection, shownDayPhrase, tool } from "../../game/ui";
-import { world } from "../../game/world";
+import { purposeFilter, selection, shownDayPhrase } from "../../game/ui";
+import { linesById, stationNames, world } from "../../game/world";
 import { shownPeriod } from "../../map/tripView";
-import { Actions, Chip } from "../widgets";
+import { Actions, SegBar } from "../widgets";
 import { MarketTrip, marketEndName, marketFarName } from "./MarketTrip";
+import { legRows, PeriodRows, routeRow } from "./RouteParts";
+import { minText, num1, pctShare, roundTo } from "./tripText";
 
-const min = (m: number) => `${Math.max(1, Math.round(m))} min`;
-const pct = (v: number) => (v > 0 && v < 0.005 ? "<1%" : `${Math.round(100 * v)}%`);
 const usd = (v: number) => "$" + v.toFixed(2);
 
 const NO_RAIL: Record<string, string> = {
@@ -39,19 +39,15 @@ function NoRail({ t }: { t: TripPeriod }) {
     : t.rideToStation === "none" ? `${near}, and none is within a drive of the start.`
     : b >= a ? "The walk from the nearest station to the end is too long."
     : "The stations near the start are too far, even by car.";
-  const to = Number.isFinite(a) ? `Getting to a station counts as ${min(a)}${t.rideToStation === "tried" ? " on foot or by car" : " on foot"}` : "No station is within a walk of the start";
-  const tip = `${to}, getting from one ${min(b)} on foot. The train is offered when the two come to ${Math.round(t.pairWalkMax)} min or less.` +
-    (t.rideToStation === "short" ? `\nPeople drive to a station only when the areas of the two ends are ${num(t.rideMinKm)} km or more apart.` : "");
+  const to = Number.isFinite(a) ? `Getting to a station counts as ${minText(a)}${t.rideToStation === "tried" ? " on foot or by car" : " on foot"}` : "No station is within a walk of the start";
+  const tip = `${to}, getting from one ${minText(b)} on foot. The train is offered when the two come to ${Math.round(t.pairWalkMax)} min or less.` +
+    (t.rideToStation === "short" ? `\nPeople drive to a station only when the areas of the two ends are ${num1(t.rideMinKm)} km or more apart.` : "");
   return <p class="muted" data-tip={tip}>{text}</p>;
 }
 
-/** T-911: shares as whole people out of `n` (null or 0: the model's own shares). */
-const roundTo = (shares: number[], n: number | null, pooled = -1) => (n ? wholePeople(shares, n, pooled).map((p) => p / n) : shares);
 /** "trip" or "trips" after a count. */
 const trips = (n: number, f: PurposeFilter) => (Math.round(n) === 1 ? tripWords(f).replace(/trips$/, "trip") : tripWords(f));
 
-const num = (v: number) => String(Math.round(v * 10) / 10);
-const exact = (n: number) => Math.round(n).toLocaleString("en");
 const weight = (v: number) => String(Math.round(v * 100) / 100);
 
 /** One term of an effective time equation: "walk 8 × 1.5", "wait 3", "fare $2.90 × 3". */
@@ -68,10 +64,10 @@ interface Term {
 function equation(terms: Term[], total = terms.reduce((s, x) => s + x.perceived, 0)): string {
   const text = terms.map((x, i) => {
     const minus = x.perceived < 0;
-    const body = `${x.label}${x.real ? " " + x.real : " " + num(Math.abs(x.perceived))}${x.real && Math.abs(x.weight - 1) >= 0.005 ? ` × ${weight(x.weight)}` : ""}`;
+    const body = `${x.label}${x.real ? " " + x.real : " " + num1(Math.abs(x.perceived))}${x.real && Math.abs(x.weight - 1) >= 0.005 ? ` × ${weight(x.weight)}` : ""}`;
     return i === 0 ? body : `${minus ? "−" : "+"} ${body}`;
   }).join(" ");
-  return `${text[0].toUpperCase()}${text.slice(1)} = ${Math.round(total)} min`;
+  return `${capitalise(text)} = ${Math.round(total)} min`;
 }
 
 /** The train's effective time as an equation. The terms are the route's (the worker's perceived
@@ -80,7 +76,7 @@ function equation(terms: Term[], total = terms.reduce((s, x) => s + x.perceived,
 function trainEquation(t: TripPeriod, r: TripRoute, pooled = true): string {
   const terms: Term[] = routeTerms(t, r).filter((x) => x.perceived !== 0 || x.unit === "usd").map((x) => ({
     label: x.label,
-    real: x.unit === "usd" ? `$${x.real.toFixed(2)}` : x.real > 0 ? num(x.real) : "",
+    real: x.unit === "usd" ? `$${x.real.toFixed(2)}` : x.real > 0 ? num1(x.real) : "",
     weight: x.weight,
     perceived: x.perceived,
   }));
@@ -93,8 +89,8 @@ function trainEquation(t: TripPeriod, r: TripRoute, pooled = true): string {
 /** The real minutes of a route as an equation: "Walk 8 + wait 3 + ride 6 = 17 min". */
 function timeEquation(tot: ReturnType<typeof routeTotals>): string {
   const parts: [string, number][] = [["drive", tot.driveMin], ["walk", tot.walkMin], ["wait", tot.wait], ["ride", tot.ride], ["walk between stations", tot.xfer]];
-  const text = parts.filter(([, m]) => m > 0).map(([l, m]) => `${l} ${num(m)}`).join(" + ");
-  return `${text[0].toUpperCase()}${text.slice(1)} = ${Math.round(tot.total)} min`;
+  const text = parts.filter(([, m]) => m > 0).map(([l, m]) => `${l} ${num1(m)}`).join(" + ");
+  return `${capitalise(text)} = ${Math.round(tot.total)} min`;
 }
 
 /** Walks over this straight-line distance are not offered by the model. */
@@ -111,20 +107,19 @@ function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: strin
   // T-911: counted trips are whole people; the representative trip's chances stay as they are
   const [train, walk, drive] = roundTo(model, peopleOf(n));
   const parts: [string, number, string][] = [["Train", train, "seg-train"], ["Walk", walk, "seg-walk"], ["Drive", drive, "seg-drive"]];
-  const walkTip = `; walking the whole way takes about ${min(t.walkMin)}`;
+  const walkTip = `; walking the whole way takes about ${minText(t.walkMin)}`;
   const note = n > 0 ? "" : groupNote(t);
   const modelTip = (i: number) => (n > 0 ? `\nModel: ${(100 * model[i]).toFixed(1)}%, rounded here to whole trips` : "");
   return (
     <div class="trip-modes">
-      <div class="bar trip-bar" role="img" aria-label={parts.map(([n, v]) => `${n} ${pct(v)}`).join(", ")}>
-        {parts.map(([m, v, c]) => v > 0 && <i class={"seg " + c} style={{ width: `${100 * v}%` }} data-tip={`${m}: ${pct(v)} of ${of}${m === "Walk" ? walkTip : ""}`} />)}
-      </div>
+      <SegBar kind="trip-bar" label={parts.map(([n, v]) => `${n} ${pctShare(v)}`).join(", ")}
+        parts={parts.map(([m, v, c]) => ({ share: v, cls: c, tip: `${m}: ${pctShare(v)} of ${of}${m === "Walk" ? walkTip : ""}` }))} />
       <ul class="rows">
         {parts.map((x, i) => [x, i] as const).filter(([[m]]) => m !== "Walk" || t.walkMin < WALK_ROW_MIN).map(([[m, v], i]) => (
-          <li data-tip={`${m}: ${n > 0 ? pct(v) : `${(100 * v).toFixed(1)}%`} of ${of}${m === "Walk" ? walkTip : ""}${modelTip(i)}${note}`}>
+          <li data-tip={`${m}: ${n > 0 ? pctShare(v) : `${(100 * v).toFixed(1)}%`} of ${of}${m === "Walk" ? walkTip : ""}${modelTip(i)}${note}`}>
             <i class="mk" style={{ background: modeColours()[m === "Train" ? "train" : m === "Walk" ? "walk" : "drive"] }} />
             <span class="grow">{m}</span>
-            <span class="val w-num">{pct(v)}</span>
+            <span class="val w-num">{pctShare(v)}</span>
           </li>
         ))}
       </ul>
@@ -142,8 +137,7 @@ const tripWords = (f: PurposeFilter) => (f === "all" ? "trips" : `${purposeWords
 
 function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
   const w = world.value!;
-  const st = new Map(w.save.stations.map((s) => [s.id, s.name]));
-  const ln = new Map(w.save.lines.map((l) => [l.id, l]));
+  const st = stationNames(w), ln = linesById(w);
   const pair = t.pairs[r.pair];
   const first = r.legs[0], last = r.legs[r.legs.length - 1];
   const name = (id: string) => st.get(id) ?? "a station";
@@ -153,37 +147,21 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
         <li data-tip={pair.accessRide
           ? `Driving, a bus or a bike over ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min on the road`
           : `Walk ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min at ${WALK_KMH} km/h`
-            + (t.groupWalkStartMin >= 0 && Math.abs(t.groupWalkStartMin - pair.accessMin) >= 1 ? `\nThe map's bubbles count the homes near here at ${min(t.groupWalkStartMin)} to their nearest station` : "")}>
+            + (t.groupWalkStartMin >= 0 && Math.abs(t.groupWalkStartMin - pair.accessMin) >= 1 ? `\nThe map's bubbles count the homes near here at ${minText(t.groupWalkStartMin)} to their nearest station` : "")}>
           <span class="grow">{pair.accessRide ? "Drive" : "Walk"} to {name(first.from)}</span>
-          <span class="val">{min(pair.accessMin)}</span>
+          <span class="val">{minText(pair.accessMin)}</span>
         </li>
       )}
-      {r.legs.map((l, i) => {
-        if (l.kind === "walk") {
-          return (
-            <li data-tip={`${l.min.toFixed(1)} min on foot`}>
-              <span class="grow">Change: walk to {name(l.to)}</span>
-              <span class="val">{min(l.min)}</span>
-            </li>
-          );
-        }
-        const line = ln.get(l.line);
+      {legRows(r, name, ln, (l) => {
         // T-842: riders arriving when no train is due for hours weigh on the wait as felt
         const span = l.waitPerceived - l.waitMin;
-        const tip = `Wait ${l.waitMin.toFixed(1)} min (half the time between the useful trains), then ${l.min.toFixed(1)} min on the train over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}` +
+        return `Wait ${l.waitMin.toFixed(1)} min (half the time between the useful trains), then ${l.min.toFixed(1)} min on the train over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}` +
           (span >= 0.05 ? `. Some riders arrive when no train is due for hours, so the wait counts as ${span.toFixed(1)} min more` : "");
-        return (
-          <li data-tip={tip}>
-            {line && <Chip line={line} size="sm" />}
-            <span class="grow">{i > 0 && r.legs[i - 1].kind === "ride" ? "Change to " : ""}{line?.name ?? "A line"} to {name(l.to)}</span>
-            <span class="val">{min(l.waitMin + l.min)}</span>
-          </li>
-        );
       })}
       {pair && last && (
         <li data-tip={`Walk ${distance(pair.egressM)} in a straight line, ${pair.egressMin.toFixed(1)} min at ${WALK_KMH} km/h`}>
           <span class="grow">Walk from {name(last.to)}</span>
-          <span class="val">{min(pair.egressMin)}</span>
+          <span class="val">{minText(pair.egressMin)}</span>
         </li>
       )}
     </ul>
@@ -237,8 +215,8 @@ function RouteDetail({ t, r }: { t: TripPeriod; r: TripRoute }) {
   const parts = [...new Set([...b.keys(), ...a.keys()])]
     .map((k) => [k, (a.get(k) ?? 0) - (b.get(k) ?? 0)] as const)
     .filter(([, d]) => Math.abs(d) >= 0.05);
-  const diffTip = `This route's effective time is ${min(own)}, the main route's ${min(mainOwn)}, both before choice of routes` +
-    (parts.length ? "\n" + parts.map(([k, d]) => `${k[0].toUpperCase()}${k.slice(1)} ${d > 0 ? "+" : "−"}${num(Math.abs(d))} min`).join("\n") : "");
+  const diffTip = `This route's effective time is ${minText(own)}, the main route's ${minText(mainOwn)}, both before choice of routes` +
+    (parts.length ? "\n" + parts.map(([k, d]) => `${capitalise(k)} ${d > 0 ? "+" : "−"}${num1(Math.abs(d))} min`).join("\n") : "");
   return (
     <div class="trip-alt">
       <RouteLegs t={t} r={r} />
@@ -246,11 +224,11 @@ function RouteDetail({ t, r }: { t: TripPeriod; r: TripRoute }) {
         <FareRows t={t} r={r} />
         <li data-tip={timeEquation(tot)}>
           <span class="grow">Time</span>
-          <span class="val">{min(tot.total)}</span>
+          <span class="val">{minText(tot.total)}</span>
         </li>
         <li data-tip={trainEquation(t, r, false)}>
           <span class="grow">Effective time</span>
-          <span class="val">{min(own)}</span>
+          <span class="val">{minText(own)}</span>
         </li>
         <li data-tip={diffTip}>
           <span class="grow">Against the main route</span>
@@ -265,7 +243,7 @@ function RouteDetail({ t, r }: { t: TripPeriod; r: TripRoute }) {
  * their shares of the train riders: in whole riders when `riders` (T-911; the small ones together
  * take a leftover rider last, since each of them is smaller than any listed), else the model's. */
 function routeRows(t: TripPeriod, riders: number | null) {
-  const st = new Map(world.value!.save.stations.map((s) => [s.id, s.name]));
+  const st = stationNames(world.value!);
   // routes that read the same here (the same lines to a station of the same name, by different
   // platforms or walks) are one row
   const label = routeLabel(st);
@@ -285,8 +263,7 @@ function routeRows(t: TripPeriod, riders: number | null) {
 
 function OtherRoutes({ t, riders }: { t: TripPeriod; riders: number | null }) {
   const w = world.value!;
-  const st = new Map(w.save.stations.map((s) => [s.id, s.name]));
-  const ln = new Map(w.save.lines.map((l) => [l.id, l]));
+  const st = stationNames(w), ln = linesById(w);
   // T-911: a route no one takes at this count is not listed
   const { others, shown } = routeRows(t, riders);
   const rest = shown[shown.length - 1];
@@ -298,18 +275,15 @@ function OtherRoutes({ t, riders }: { t: TripPeriod; riders: number | null }) {
       <div class="h">Other routes<span class="right muted small">train riders</span></div>
       <ul class="rows pick">
         {kept.map(([[k, r], v]) => {
-          const rides = r.legs.filter((l) => l.kind === "ride");
-          const from = rides[0] ? st.get(rides[0].from) : "", to = r.legs.length ? st.get(r.legs[r.legs.length - 1].to) : "";
-          const names = rides.map((l) => ln.get(l.line)?.name ?? "a line").join(" then ");
+          const { names, from, to, label } = routeRow(r, st, ln);
           const tot = routeTotals(t, r);
           const on = k === open;
           return (
             <Fragment key={k}>
               <li class={on ? "on" : ""} onClick={() => (openRoute.value = on ? null : k)}
-                data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of this trip's train riders${riders ? `, ${pct(v)} of the ${count(riders)} counted here` : ""}, ${min(tot.total)} long\n${on ? "Click to close" : "Click to see its legs and effective time"}`}>
-                {rides.map((l) => { const line = ln.get(l.line); return line && <Chip line={line} size="sm" />; })}
-                <span class="grow">{names} to {to}</span>
-                <span class="val w-num">{pct(v)}</span>
+                data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of this trip's train riders${riders ? `, ${pctShare(v)} of the ${count(riders)} counted here` : ""}, ${minText(tot.total)} long\n${on ? "Click to close" : "Click to see its legs and effective time"}`}>
+                {label}
+                <span class="val w-num">{pctShare(v)}</span>
               </li>
               {on && <li class="trip-alt-row"><RouteDetail t={t} r={r} /></li>}
             </Fragment>
@@ -318,7 +292,7 @@ function OtherRoutes({ t, riders }: { t: TripPeriod; riders: number | null }) {
         {rest >= 0.005 && (
           <li class="muted rest" data-tip={spreadTip(t)}>
             <span class="grow">Smaller routes</span>
-            <span class="val w-num">{pct(rest)}</span>
+            <span class="val w-num">{pctShare(rest)}</span>
           </li>
         )}
       </ul>
@@ -330,8 +304,7 @@ function OtherRoutes({ t, riders }: { t: TripPeriod; riders: number | null }) {
  * or with other walks. */
 function mainShare(t: TripPeriod): number {
   const main = t.routes[0];
-  const st = new Map(world.value!.save.stations.map((s) => [s.id, s.name]));
-  const label = routeLabel(st), k = label(main);
+  const label = routeLabel(stationNames(world.value!)), k = label(main);
   return main.share + t.routes.slice(1).filter((r) => label(r) === k).reduce((s, r) => s + r.share, 0);
 }
 
@@ -339,29 +312,28 @@ function mainShare(t: TripPeriod): number {
  * pairs near the two ends and the useful trains at each station; routes under 0.5% are not kept. */
 function spreadTip(t: TripPeriod): string {
   const top = t.pairs.reduce((m, p) => Math.max(m, p.share), 0);
-  return `The model spreads this trip's train users over ${t.pairs.length} ${t.pairs.length === 1 ? "pair" : "pairs"} of stations near the two ends, the busiest pair taking ${pct(top)}, and over the useful trains at each station. Routes under 0.5% of them are not listed.`;
+  return `The model spreads this trip's train users over ${t.pairs.length} ${t.pairs.length === 1 ? "pair" : "pairs"} of stations near the two ends, the busiest pair taking ${pctShare(top)}, and over the useful trains at each station. Routes under 0.5% of them are not listed.`;
 }
 
 /** How much of the trip's train riders the main route carries. */
 function mainNote(t: TripPeriod, riders: number | null): string {
   const all = routeRows(t, riders).shown[0];
   if (all >= 0.995) return "Every train user on this trip takes this route.";
-  return `${pct(all)} of the train users on this trip take this route` + (1 - all >= 0.005 ? ", the rest use different routes." : ".");
+  return `${pctShare(all)} of the train users on this trip take this route` + (1 - all >= 0.005 ? ", the rest use different routes." : ".");
 }
 
 /** T-720: the trip is the two places' own; the map's bubbles count it with the homes and places
  * near each end, which can differ. Empty when they agree to the shown percent. */
 function groupNote(t: TripPeriod): string {
   if (Math.abs(t.pTrain - t.groupTrain) < 0.005 && Math.abs(t.pWalk - t.groupWalk) < 0.005) return "";
-  return `\nCounted with the homes and places near here, as the map's bubbles count it: train ${pct(t.groupTrain)}, drive ${pct(t.groupDrive)}, walk ${pct(t.groupWalk)}`;
+  return `\nCounted with the homes and places near here, as the map's bubbles count it: train ${pctShare(t.groupTrain)}, drive ${pctShare(t.groupDrive)}, walk ${pctShare(t.groupWalk)}`;
 }
 
 /** T-865: an averaged trip's routes, the busiest first, by their share of the train riders over
  * every sampled pair. */
 function BusiestRoutes({ t, riders }: { t: TripPeriod; riders: number | null }) {
   const w = world.value!;
-  const st = new Map(w.save.stations.map((s) => [s.id, s.name]));
-  const ln = new Map(w.save.lines.map((l) => [l.id, l]));
+  const st = stationNames(w), ln = linesById(w);
   // T-911: whole train riders, as the headline counts them
   const shown = roundTo([...t.routes.map((r) => r.share), t.cut], riders, t.routes.length);
   const cut = shown[shown.length - 1];
@@ -371,21 +343,18 @@ function BusiestRoutes({ t, riders }: { t: TripPeriod; riders: number | null }) 
       <ul class="rows">
         {t.routes.map((r, i) => {
           if (riders && shown[i] <= 0) return null;
-          const rides = r.legs.filter((l) => l.kind === "ride");
-          const from = rides[0] ? st.get(rides[0].from) : "", to = r.legs.length ? st.get(r.legs[r.legs.length - 1].to) : "";
-          const names = rides.map((l) => ln.get(l.line)?.name ?? "a line").join(" then ");
+          const { names, from, to, label } = routeRow(r, st, ln);
           return (
-            <li data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of the train riders between the two groups${riders ? `, ${pct(shown[i])} of the ${count(riders)} counted here` : ""}`}>
-              {rides.map((l) => { const line = ln.get(l.line); return line && <Chip line={line} size="sm" />; })}
-              <span class="grow">{names} to {to}</span>
-              <span class="val w-num">{pct(shown[i])}</span>
+            <li data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of the train riders between the two groups${riders ? `, ${pctShare(shown[i])} of the ${count(riders)} counted here` : ""}`}>
+              {label}
+              <span class="val w-num">{pctShare(shown[i])}</span>
             </li>
           );
         })}
         {cut >= 0.005 && (
           <li class="muted rest" data-tip="Routes outside the five busiest">
             <span class="grow">Other routes</span>
-            <span class="val w-num">{pct(cut)}</span>
+            <span class="val w-num">{pctShare(cut)}</span>
           </li>
         )}
       </ul>
@@ -396,28 +365,6 @@ function BusiestRoutes({ t, riders }: { t: TripPeriod; riders: number | null }) 
 /** T-865: a group end in words: "homes in 12 areas around Midtown"; one area as the map marks it. */
 function groupWords(n: number, name: string, what: string, one: string): string {
   return n > 1 ? `${what} in ${n} areas${name ? ` around ${name}` : ""}` : one;
-}
-
-function ByPeriod({ periods, words }: { periods: (TripPeriod | null)[]; words: string }) {
-  const q = shownPeriod.value;
-  return (
-    <>
-      <div class="h">Train by period<span class="right muted small">click to show</span></div>
-      <ul class="rows pick">
-        {PERIODS.map((p, i) => {
-          const t = periods[i];
-          return (
-            <li class={i === q ? "on" : ""} onClick={() => (tripPeriod.value = i)}
-              data-tip={t ? `${p.name}, one ${words} trip: train ${pct(t.pTrain)}, drive ${pct(t.pDrive)}, walk ${pct(t.pWalk)}${groupNote(t)}` : p.name}>
-              <span class="grow">{p.name}</span>
-              <span class="trip-hbar"><i class="hbar" style={{ width: `${Math.round(60 * (t?.pTrain ?? 0))}px`, background: MODE_COLOURS.train }} /></span>
-              <span class="val w-num">{t ? pct(t.pTrain) : ""}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </>
-  );
 }
 
 export function TripInspector() {
@@ -497,7 +444,7 @@ export function TripInspector() {
           <ul class="rows">
             <li data-tip={`${avgTip}${t.railSampled !== t.sampled ? `; the train is offered for ${t.railSampled} of them` : ""}`}>
               <span class="grow">Effective time</span>
-              <span class="val">{min(t.railPerceived)}</span>
+              <span class="val">{minText(t.railPerceived)}</span>
             </li>
           </ul>
           {t.routes.length > 0 && <BusiestRoutes t={t} riders={riders} />}
@@ -509,11 +456,11 @@ export function TripInspector() {
             <FareRows t={t} r={main} />
             <li data-tip={timeEquation(tot)}>
               <span class="grow">Time</span>
-              <span class="val">{min(tot.total)}</span>
+              <span class="val">{minText(tot.total)}</span>
             </li>
             <li data-tip={trainEquation(t, main)}>
               <span class="grow">Effective time</span>
-              <span class="val">{min(t.railPerceived)}</span>
+              <span class="val">{minText(t.railPerceived)}</span>
             </li>
           </ul>
           <p class="muted small" data-tip={spreadTip(t)}>{mainNote(t, riders)}</p>
@@ -524,11 +471,11 @@ export function TripInspector() {
       <ul class="rows">
         <li data-tip={`${distance(t.driveDistM)} in a straight line, ${distance(1000 * t.driveRoadKm)} by road, at an average ${speed(t.driveRoadKm / (Math.max(t.driveMin, 0.1) / 60))}${avg ? `\n${avgTip}` : ""}`}>
           <span class="grow">Drive</span>
-          <span class="val">{min(t.driveMin)}</span>
+          <span class="val">{minText(t.driveMin)}</span>
         </li>
         <li data-tip="Minutes to park, plus the price of parking and any congestion charge, counted as minutes">
           <span class="grow">Parking</span>
-          <span class="val">{min(t.parkPerceived)}</span>
+          <span class="val">{minText(t.parkPerceived)}</span>
         </li>
         {t.carOwnPerceived > 0 && (
           <li data-tip="The cost of owning the car, charged per trip and per distance driven">
@@ -537,26 +484,28 @@ export function TripInspector() {
           </li>
         )}
         <li data-tip={equation([
-          { label: "drive", real: num(t.driveMin), weight: t.driveMin > 0 ? t.drivePerceived / t.driveMin : 1, perceived: t.drivePerceived },
+          { label: "drive", real: num1(t.driveMin), weight: t.driveMin > 0 ? t.drivePerceived / t.driveMin : 1, perceived: t.drivePerceived },
           { label: "parking", real: "", weight: 1, perceived: t.parkPerceived },
           ...(t.carOwnPerceived > 0 ? [{ label: "ownership", real: usd(t.carOwnPerceived / t.minPerUsd), weight: t.minPerUsd, perceived: t.carOwnPerceived }] : []),
         ], avg ? t.roadPerceived : undefined) + (avg ? `\n${avgTip}` : "")}>
           <span class="grow">Effective time</span>
-          <span class="val">{min(t.roadPerceived)}</span>
+          <span class="val">{minText(t.roadPerceived)}</span>
         </li>
       </ul>
       {t.distM <= WALK_REACH_M && (
         <>
           <div class="h">By walking</div>
           <ul class="rows">
-            <li data-tip={equation([{ label: "walk", real: num(t.walkMin), weight: t.walkWeight, perceived: t.walkMin * t.walkWeight }])}>
+            <li data-tip={equation([{ label: "walk", real: num1(t.walkMin), weight: t.walkWeight, perceived: t.walkMin * t.walkWeight }])}>
               <span class="grow">Effective time</span>
-              <span class="val">{min(t.walkMin * t.walkWeight)}</span>
+              <span class="val">{minText(t.walkMin * t.walkWeight)}</span>
             </li>
           </ul>
         </>
       )}
-      <ByPeriod periods={trip.periods} words={words} />
+      <PeriodRows
+        train={(i) => trip.periods[i]?.pTrain ?? null}
+        tip={(i) => { const x = trip.periods[i]; return x ? `${PERIODS[i].name}, one ${words} trip: train ${pctShare(x.pTrain)}, drive ${pctShare(x.pDrive)}, walk ${pctShare(x.pWalk)}${groupNote(x)}` : PERIODS[i].name; }} />
     </>
   );
 }

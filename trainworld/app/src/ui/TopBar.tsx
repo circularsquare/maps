@@ -7,7 +7,7 @@ import { clock, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandView, modeRides, modeSplit, viewFinal, viewUpdating } from "../game/demand";
 import { worldTotals, worldView } from "../game/worldTotals";
-import { clockTime, dayOf, money, moneyCash } from "../game/format";
+import { clockTime, dayOf, exact, money, moneyCash } from "../game/format";
 import { dateName, dateOf, MONTH_LONG, weekdayOf } from "../game/days";
 import { PERIODS, periodAt } from "../game/periods";
 import { SkyBanner } from "./SkyBanner";
@@ -19,7 +19,7 @@ import { splitTip } from "../game/splitTip";
 const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 import { world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
-import { pointsExact, pointsPast24h, pointsPerDay } from "../game/points";
+import { pointsPast24h, pointsPerDay } from "../game/points";
 import { Icon } from "./widgets";
 import { perfOff } from "../perfFlags";
 import { saveSlotsState } from "../workers/clockClient";
@@ -109,7 +109,7 @@ function CityName({ id, name, tip }: { id: string | null; name: string; tip?: st
   const past = id ? pointsPast24h.value.get(id) : undefined;
   const rate = id ? pointsPerDay.value.get(id)?.[shownDay.value] : undefined;
   const lines = [name];
-  if (id && (past || rate)) lines.push(`${pointsExact(past ?? 0)} points in the past 24 hours`, `${pointsExact(rate ?? 0)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`);
+  if (id && (past || rate)) lines.push(`${exact(past ?? 0)} points in the past 24 hours`, `${exact(rate ?? 0)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`);
   return <div class="city" data-tip={tip ?? (id ? lines.join("\n") : undefined)}>{name}</div>;
 }
 

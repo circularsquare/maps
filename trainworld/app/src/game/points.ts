@@ -13,10 +13,11 @@ import { computed } from "@preact/signals";
 import { CITIES, type CityId } from "./cities";
 import { AVERAGE_DAY, DAY_KINDS, DEMAND_DAYS } from "./days";
 import { demandByDay, type DayDemand } from "./demand";
+import { sig3 } from "./format";
 import { stationZone } from "./listScope";
 import { moneyState } from "./money";
 import { PERIODS } from "./periods";
-import { world } from "./world";
+import { stationsById, world } from "./world";
 import { zonesLoaded } from "./zones";
 import type { WorldView } from "./types";
 
@@ -29,19 +30,12 @@ const PERIOD_HOURS = PERIODS.map((p) => p.to - p.from);
 
 /** Points short, three significant digits (T-831): 980, 12.3k, 512k, 4.56M, 103M, 1.25B. */
 export function pointsShort(n: number): string {
-  const sig = (v: number) => {
-    const r = Number(v.toPrecision(3));
-    return r >= 100 ? String(r) : r >= 10 ? r.toFixed(1) : r.toFixed(2);
-  };
   // a figure that rounds up to the next unit (999.6k) is written in that unit
-  if (n >= 999.5e6) return sig(n / 1e9) + "B";
-  if (n >= 999.5e3) return sig(n / 1e6) + "M";
-  if (n >= 1e3) return sig(n / 1e3) + "k";
+  if (n >= 999.5e6) return sig3(n / 1e9) + "B";
+  if (n >= 999.5e3) return sig3(n / 1e6) + "M";
+  if (n >= 1e3) return sig3(n / 1e3) + "k";
   return String(Math.round(n));
 }
-/** Points to the point: 12,345,678. */
-export const pointsExact = (n: number) => Math.round(n).toLocaleString("en-US");
-
 const add = (m: Map<string, number>, k: string, v: number) => m.set(k, (m.get(k) ?? 0) + v);
 
 /** Each region's rail trips a day: its own demand's, and the regional corridors' half at each end
@@ -70,7 +64,7 @@ function dayPoints(w: WorldView, d: DayDemand): Map<number, Map<string, number[]
   const out = new Map<number, Map<string, number[]>>();
   const dv = d.view;
   if (!dv) return out;
-  const byId = new Map(w.save.stations.map((s) => [s.id, s]));
+  const byId = stationsById(w);
   const zone = (id: string) => { const s = byId.get(id); return (s && stationZone(s)) ?? ""; };
   const running = w.save.lines.filter((l) => w.lineStats[l.id]?.status === "running" && l.stops.length >= 2 && dv.lines.has(l.id));
   // boardings a day at each region's stations, to spread its trips over

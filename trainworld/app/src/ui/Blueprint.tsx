@@ -1,23 +1,21 @@
-import { distance, levelLabel, money, moneyExact, upkeepRule } from "../game/format";
+import { distance, levelLabel, levelName, money, moneyExact, plural, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeep } from "../game/regionMoney";
 import { clearBpPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
 import { liveMoney, moneyState } from "../game/money";
-import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { tool } from "../game/ui";
-import { LEVELS, type BlueprintItem, type Level } from "../game/types";
+import type { BlueprintItem } from "../game/types";
 import { constructBlueprints } from "../game/lineActions";
-import { edit, say, world } from "../game/world";
+import { world } from "../game/world";
 import { redo, undo } from "../game/fareUndo";
-import { Icon } from "./widgets";
+import { Icon, LevelButtons } from "./widgets";
 
-const LEVEL_NAME: Record<Level, string> = { 3: "High viaduct", 2: "Viaduct", 1: "Viaduct", 0: "Ground level", [-1]: "Cut and cover", [-2]: "Tunnel", [-3]: "Deep tunnel" };
 const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "Trains"];
 /** a quote row's track count for high-speed track (sim `HSR_ROW`, T-817) */
 const HSR_ROW = 3;
 
 function description(r: BlueprintItem) {
   if (r.kind === 5) return `${r.quantity} new ${r.quantity === 1 ? "car" : "cars"}, after spare cars`;
-  const quantity = r.kind === 0 ? distance(r.quantity) : `${r.quantity} ${r.kind === 1 ? (r.quantity === 1 ? "station" : "stations") : (r.quantity === 1 ? "item" : "items")}`;
+  const quantity = r.kind === 0 ? distance(r.quantity) : plural(r.quantity, r.kind === 1 ? "station" : "item");
   return [quantity, r.ramp ? "ramp" : "", r.tracks ? (r.tracks === 1 ? "single track" : r.tracks === HSR_ROW ? "high-speed track" : "double track") : "", r.wet ? "over water" : "on land"].filter(Boolean).join(", ");
 }
 
@@ -37,14 +35,14 @@ export function BlueprintControls() {
     <div class="blueprint-controls">
       <div class="blueprint-head">
         <span class="b">Blueprint</span>
-        <b class={"num" + (m?.mode !== "sandbox" && total > liveMoney.value.cash * 1e6 ? " bad" : "")} data-total={total} data-tip="Total construction cost">{money(total)}</b>
+        <b class={"num" + (m?.mode !== "sandbox" && total > liveMoney.value.cash * 1e6 ? " bad" : "")} data-tip="Total construction cost">{money(total)}</b>
         <div class="group">
           <button class="btn icon" data-tip="Undo (Ctrl+Z)" aria-label="Undo" disabled={!w?.canUndo} onClick={() => void undo()}><Icon.undo /></button>
           <button class="btn icon" data-tip="Redo (Ctrl+Y)" aria-label="Redo" disabled={!w?.canRedo} onClick={() => void redo()}><Icon.redo /></button>
         </div>
       </div>
       {m && upkeep > 0 && (
-        <p class="small muted blueprint-upkeep" data-upkeep={upkeep} data-tip={`Once constructed, upkeep is ${upkeepRule(m)}, whether trains run or not. High-speed track costs ${m.upkeepHsr} times as much and single track ${m.upkeepSingle} times.`}>
+        <p class="small muted blueprint-upkeep" data-tip={upkeepText(m, "Once constructed, upkeep")}>
           then {money(upkeep)} a day upkeep
         </p>
       )}
@@ -53,7 +51,7 @@ export function BlueprintControls() {
   );
 }
 
-const pieces = (e: number, st: number) => [e ? `${e} track` : "", st ? `${st} ${st === 1 ? "station" : "stations"}` : ""].filter(Boolean).join(", ");
+const pieces = (e: number, st: number) => [e ? `${e} track` : "", st ? plural(st, "station") : ""].filter(Boolean).join(", ");
 
 /** How many blueprint pieces are switched off (T-333), whatever the tool, since Construct and the
  * total leave them out. Selecting, disabling and enabling are in the map's BlueprintBar (T-353). */
@@ -81,14 +79,7 @@ export function BlueprintBar() {
       <span class="count" data-tip={piece}>{n} selected</span>
       {s.edges > 0 && <span class="num" data-tip="Length of the selected track">{distance(s.lengthM)}</span>}
       {!s.built && s.edges > 0 && (
-        <div class="group levels">
-          {LEVELS.map((l) => (
-            <button class={"btn lv" + (l === s.level ? " on" : "")} style={{ "--lc": LEVEL_COLOURS[l], "--lk": inkOn(LEVEL_COLOURS[l]) }}
-              data-tip={`Put the selected track at ${LEVEL_NAME[l].toLowerCase()} (${levelLabel(l)})`} aria-label={`Elevation ${levelLabel(l)}`} onClick={() => void levelPicked(l)}>
-              {levelLabel(l)}
-            </button>
-          ))}
-        </div>
+        <LevelButtons value={s.level} tip={(l) => `Put the selected track at ${levelName(l).toLowerCase()} (${levelLabel(l)})`} onPick={(l) => void levelPicked(l)} />
       )}
       {!s.built && (
         <div class="group">
@@ -117,9 +108,9 @@ export function BlueprintBreakdown() {
                 <div class="small b">{kind}</div>
                 <ul class="rows flat blueprint-items">
                   {rows.map((r) => (
-                    <li data-cost={r.cost}>
+                    <li>
                       <span class="what">
-                        <span>{r.kind === 5 ? "New cars" : `${LEVEL_NAME[r.level]} (${levelLabel(r.level)})`}</span>
+                        <span>{r.kind === 5 ? "New cars" : `${levelName(r.level)} (${levelLabel(r.level)})`}</span>
                         <span class="small muted">{description(r)}</span>
                       </span>
                       <span class="val" data-tip={moneyExact(r.cost)}>{money(r.cost)}</span>

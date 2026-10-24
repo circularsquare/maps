@@ -1,4 +1,4 @@
-import { edit, lineById, say, world } from "./world";
+import { edit, lineById, say, stationsById, world } from "./world";
 import { lineDraft, renameLinePrompt, selection, tool } from "./ui";
 import { live } from "../map/live";
 import { money } from "./format";
@@ -12,7 +12,7 @@ import type { LineInput, TrackEdge } from "./types";
 function lineMates(city: CityId | null): LineInput[] {
   const w = world.value;
   if (!w) return [];
-  const at = new Map(w.save.stations.map((s) => [s.id, s]));
+  const at = stationsById(w);
   return w.save.lines.filter((l) => {
     const s = at.get(l.stops[0]);
     return (s ? stationZone(s) : viewedZone.peek()) === city;
@@ -59,9 +59,6 @@ export function newLineKey() {
   const e = s?.kind === "track" ? world.peek()?.edges.find((x) => x.id === s.edge) : undefined;
   return createLine(e && e.lines.length === 0 ? e : undefined);
 }
-
-/** Is the line tool adding stops to this line? */
-export const editingStopsOf = (l: Pick<LineInput, "num">) => tool.value === "line" && lineDraft.value.line === l.num;
 
 /** The Edit stops button and its key: start adding and removing the line's stops, or finish. */
 export function toggleEditStops(l: LineInput) {
