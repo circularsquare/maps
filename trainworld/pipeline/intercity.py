@@ -2,7 +2,8 @@
 
 Every group of packs is solved the same way since T-1014, the Northeast's 13 hand-built packs
 included (solve region "northeast", SOLVE_REGION_PACKS); each zone's market pack then takes its
-commutes from data/work/<group>.joint_commutes.json (pipeline/market_zones.py).
+commutes from data/work/<group>.joint_commutes.json (pipeline/market_zones.py). Each unit's everyday
+outings across zone lines follow its solve (pipeline/cross_everyday.py, T-1175).
 
     python pipeline/intercity.py --group auto [ids]
                                             every joint gravity group (T-539: packs whose outlines
@@ -218,6 +219,9 @@ def solve_unit(g, fixed, name, root=ROOT, work=None, dry=False, new=(), hold_rep
     if nz > MAX_GROUP_ZONES:
         sys.exit(f"group {name} has {nz:,} gravity zones, over {MAX_GROUP_ZONES:,}: split it (notes/T-539.md)")
     solve_group(g, name, root, work, dry, fixed, new, hold_report)
+    # T-1175: the unit's everyday outings across zone lines, over the same packs
+    import cross_everyday
+    cross_everyday.run_unit(g, fixed, name, root, work, dry)
     print(f"group {name} ({len(g)} packs{f', {len(fixed)} fixed' if fixed else ''}: {' '.join(g)}) solved in "
           f"{time.time() - t0:.0f} s", flush=True)
 

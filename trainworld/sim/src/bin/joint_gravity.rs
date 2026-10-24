@@ -223,7 +223,7 @@ fn main() {
                 kf[i] / kn[i] as f32
             } else if ca == cb {
                 // `--admin1 F` overrides the country's default, for fitting it; a country without one
-                // takes `pack_line_default` (T-584: Japan's fitted 0.4), not 1
+                // takes `pack_line_default` (T-584, T-1163: 0.5), not 1
                 get("--admin1")
                     .map(|v| v.parse().unwrap())
                     .or(borders["admin1_default"][ca.as_str()].as_f64())

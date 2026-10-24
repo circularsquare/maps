@@ -341,7 +341,7 @@ mod tests;
 fn chunks(n: usize) -> impl Iterator<Item = std::ops::Range<usize>> {
     (0..n).step_by(1 << 14).map(move |a| a..(a + (1 << 14)).min(n))
 }
-fn local_share(d: f32) -> f32 {
+pub(crate) fn local_share(d: f32) -> f32 {
     let x = ((d - 40000.0) / 40000.0).clamp(0.0, 1.0);
     1.0 - x * x * (3.0 - 2.0 * x)
 }
@@ -771,6 +771,10 @@ pub struct EverydayApi {
     at: std::cell::Cell<(usize, usize)>,
     /// `Params::everyday_rate` as at opening: the samples and totals were drawn with it.
     rate: [f32; KIND_COUNT],
+    /// T-1175: per purpose, each zone's share of its outings that stay in the pack (the pack's
+    /// `everyday_kept_<purpose>`; the rest cross a zone line in the regional layer), by the zone
+    /// of the sample's fixed end. Empty: all of them.
+    kept: Vec<Vec<f32>>,
 }
 
 impl EverydayApi {
@@ -989,7 +993,8 @@ impl EverydayApi {
             ATTRACTION => (self.attraction_origin[c] as f64 * self.attraction_scale[self.engine.z.cell_zone[c] as usize]) as f32,
             _ => self.engine.pop()[c],
         };
-        let weight = budget * self.rate[kind] / per as f32 * local_share(distance);
+        let kept = self.kept.get(kind).filter(|k| !k.is_empty()).map_or(1.0, |k| k[self.engine.z.cell_zone[if site_anchored(kind) { d } else { c }] as usize]);
+        let weight = budget * self.rate[kind] / per as f32 * local_share(distance) * kept;
         (weight, self.no_rail(c, d, distance))
     }
     fn edge(&self, k: usize) -> Option<(usize, usize, usize, f32, f32)> {
@@ -1441,6 +1446,9 @@ impl EverydayApi {
                 }
             }
         }
+        let kept = (0..kinds)
+            .map(|k| pack::zone_shares(header, bin, &format!("everyday_kept_{}", KINDS[k]), nz).map(Option::unwrap_or_default))
+            .collect::<Result<Vec<_>, _>>()?;
         let ep = engine.base.everyday();
         let wplace = engine.z.density().iter().map(|&d| ep.place_min_per_km(d)).collect();
         let wpark = (0..engine.z.n).map(|j| ep.park_parts(&engine.z, j)).collect();
@@ -1469,6 +1477,7 @@ impl EverydayApi {
             first,
             at: std::cell::Cell::new((0, 0)),
             rate,
+            kept,
         };
         for r in chunks(api.destinations.len()) {
             api.add_totals(r);

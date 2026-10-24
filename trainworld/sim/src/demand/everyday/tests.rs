@@ -699,6 +699,27 @@ fn with_array(h: &str, mut b: Vec<u8>, name: &str, values: &[f32]) -> (String, V
     (h.to_string(), b)
 }
 
+/// T-1175: a zone's kept share scales its outings of that purpose alone; a pack without the array,
+/// or with one for another zone count (a pack rebuilt since), keeps them all.
+#[test]
+fn kept_share_scales_a_zones_outings() {
+    let (h, b) = fixture(4000.0);
+    let a = EverydayApi::new(&h, &b).unwrap();
+    let nz = a.engine.z.n;
+    let per_zone = |n: usize| {
+        let (h, b) = with_array(&h, b.clone(), "everyday_kept_errands", &vec![0.25; n]);
+        let mut v: serde_json::Value = serde_json::from_str(&h).unwrap();
+        v["arrays"].as_array_mut().unwrap().last_mut().unwrap()["per"] = "zone".into();
+        (v.to_string(), b)
+    };
+    let (h2, b2) = per_zone(nz);
+    let k = EverydayApi::new(&h2, &b2).unwrap();
+    assert!(a.totals[0] > 0.0 && (k.totals[0] - 0.25 * a.totals[0]).abs() < 1e-6 * a.totals[0]);
+    assert_eq!(k.totals[1], a.totals[1]);
+    let (h3, b3) = per_zone(nz + 1);
+    assert_eq!(EverydayApi::new(&h3, &b3).unwrap().totals[0], a.totals[0]);
+}
+
 /// T-196: parks take PARK_SHARE of the social attraction and nothing else; a pack without
 /// parks (or with an empty array) is unchanged.
 #[test]

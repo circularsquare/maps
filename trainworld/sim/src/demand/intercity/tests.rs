@@ -647,6 +647,62 @@ fn world_market_serves_zones_in_every_frame_and_no_car_keeps_trips_fixed() {
     let x = s0[head + 4 * a.zone_count() + 3 * g2];
     assert!((x - 787_000.).abs() < 15_000., "{x}");
 }
+/// Place 0's pack with everyday outings from its first zone to place 1's first zone: errands
+/// (a fifth walking with no rail) and medical visits (none walking).
+fn with_everyday(pack: &str, trips: [f32; 2], lens_ok: bool) -> String {
+    let mut v: serde_json::Value = serde_json::from_str(pack).unwrap();
+    v["everyday_home"] = serde_json::json!([0, 0]);
+    v["everyday_place"] = serde_json::json!([1, 1]);
+    v["everyday_zone"] = serde_json::json!([0, 0]);
+    v["everyday_kind"] = serde_json::json!([0, 5]);
+    v["everyday_trips"] = serde_json::json!(trips);
+    v["everyday_walk"] = if lens_ok { serde_json::json!([0.2, 0.0]) } else { serde_json::json!([0.2]) };
+    v.to_string()
+}
+/// T-1175: everyday outings across a zone line are solved beside the longer trips without moving
+/// them, keep their legs whatever the network, load their own purposes and lose walkers to rail.
+#[test]
+fn everyday_pairs_across_a_zone_line() {
+    let packs = world_packs();
+    let rows = rows_json(&packs);
+    let mut e_packs = packs.clone();
+    e_packs[0] = with_everyday(&packs[0], [1000., 100.], true);
+    let mut plain = IntercityApi::new(&composition(&packs, Some(&rows))).unwrap();
+    let mut a = IntercityApi::new(&composition(&e_packs, Some(&rows))).unwrap();
+    assert_eq!(a.m.everyday.len(), 2);
+    world_lines(&mut plain, true, true);
+    world_lines(&mut a, true, true);
+    solve_all(&mut plain);
+    solve_all(&mut a);
+    assert_eq!(a.epairs.len(), 2, "both pairs are served");
+    let (mut legs, mut rail, mut walk) = (0., 0., 0.);
+    for q in 0..PERIODS {
+        let (p, s) = (plain.part_summary(q), a.part_summary(q));
+        assert_eq!((p[0], p[1]), (s[0], s[1]), "the longer trips do not move");
+        assert_eq!((p[4], p[5], p[6]), (0., 0., 0.));
+        legs += s[4];
+        rail += s[5];
+        walk += s[6];
+        assert!(s[5] > 0. && s[5] < s[4] && s[6] < s[7] && s[6] > 0.);
+        assert_eq!(a.summary(q)[3], s[6]);
+        assert!((a.summary(q)[1] - plain.summary(q)[1] - s[4]).abs() < 1e-6);
+        // their loads are the purposes' own: errands and medical boardings, nothing else
+        let l = a.everyday_loads(q);
+        let m = a.seg(q).len();
+        assert_eq!(l.len(), 3 * KIND_COUNT * m);
+        let board = |k: usize| l[(3 * k + 1) * m..(3 * k + 2) * m].iter().sum::<f32>() as f64;
+        assert!(board(0) > 0. && board(5) > 0.);
+        assert!((0..KIND_COUNT).filter(|&k| k != 0 && k != 5).all(|k| board(k) == 0.));
+        assert!((board(0) + board(5) - s[5]).abs() < 1e-3 * s[5], "{} {}", board(0) + board(5), s[5]);
+        assert!(plain.everyday_loads(q).is_empty());
+    }
+    assert!((legs - 2. * 1100.).abs() < 1e-3, "{legs}");
+    assert!(rail > 0. && walk < 2. * 1000. * 0.2);
+    // arrays that disagree do not open
+    let mut bad = packs.clone();
+    bad[0] = with_everyday(&packs[0], [1000., 100.], false);
+    assert!(IntercityApi::new(&composition(&bad, Some(&rows))).is_err());
+}
 #[test]
 fn places_not_open_answer_by_place() {
     let packs = world_packs();
@@ -1041,6 +1097,100 @@ fn t761_market_bench() {
     let t = now_ms();
     let d = a.demand(&r, s, p, 0);
     eprintln!("demand {:.0} ms; od non-zero {}, od_c non-zero {}", now_ms() - t, d.od.iter().filter(|&&v| v != 0.).count(), d.od_c.v.len());
+}
+/// T-1175: the market's solve with and without the everyday pairs across zone lines, on scratch
+/// market packs (`TW_T1175_DIR`: `<id>.market.json` and `<id>.market.everyday.json` of `TW_T1175_IDS`)
+/// and three made-up lines from Guangzhou into Foshan.
+/// `cargo test --release --features demand t1175_market_bench -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t1175_market_bench() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let dir = std::env::var("TW_T1175_DIR").unwrap();
+    let ids = std::env::var("TW_T1175_IDS").unwrap_or("gua,fos,shz,dog".into());
+    let reg: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/registry.json")).unwrap()).unwrap();
+    let by_id: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/market-rows.json")).unwrap()).unwrap();
+    let m = &reg["market"];
+    let rows: Vec<serde_json::Value> = reg["cities"].as_array().unwrap().iter().filter_map(|c| by_id.get(c["id"].as_str()?).cloned()).collect();
+    let world = serde_json::json!({"frame": m["frame"], "rule": m["rule"], "places": m["places"].as_array().unwrap().len(), "rows": rows});
+    // lines of stations about 2 km apart, (lon, lat) ends
+    let lines = [((113.27, 23.13), (113.10, 23.02), 10), ((113.24, 23.20), (113.05, 23.15), 10), ((113.30, 23.05), (113.15, 22.92), 10)];
+    let (mut ll, mut n, mut stops, mut times, mut tph, mut cars) = (vec![], vec![], vec![], vec![], vec![], vec![]);
+    for &((x0, y0), (x1, y1), k) in &lines {
+        let s0 = ll.len() as u32 / 2;
+        for i in 0..k {
+            let f = i as f64 / (k - 1) as f64;
+            ll.extend([x0 + f * (x1 - x0), y0 + f * (y1 - y0)]);
+            stops.push(s0 + i as u32);
+        }
+        n.push(k as u32);
+        for dir in 0..2 {
+            for _ in 0..3 {
+                times.extend((0..k).map(|i| if (dir == 0 && i + 1 < k) || (dir == 1 && i > 0) { 150f32 } else { 0. }));
+            }
+        }
+        tph.extend([12f32, 8., 6.]);
+        cars.push(6f32);
+    }
+    for with in [false, true] {
+        let packs: Vec<String> = ids.split(',').map(|id| std::fs::read_to_string(format!("{dir}/{id}.market{}.json", if with { ".everyday" } else { "" })).unwrap()).collect();
+        let t = now_ms();
+        let mut a = IntercityApi::new(&format!("{{\"world\":{},\"zones\":[{}]}}", world, packs.join(","))).unwrap();
+        let open = now_ms() - t;
+        let t = now_ms();
+        a.set_network_ll(&ll, &n, &stops, &times, &tph, &cars).unwrap();
+        a.set_fares(0.3, 0.02, &vec![2.; 2 * stops.len()]).unwrap();
+        let set = now_ms() - t;
+        let t = now_ms();
+        solve_all(&mut a);
+        let solve = now_ms() - t;
+        let t = now_ms();
+        for q in 0..PERIODS {
+            let total = a.seg(q);
+            assert!(a.crowd_with_external(q, &total));
+        }
+        let crowd = now_ms() - t;
+        let s: Vec<f64> = (0..8).map(|i| (0..PERIODS).map(|q| a.part_summary(q)[i]).sum()).collect();
+        eprintln!(
+            "everyday pairs {with}: {} pairs ({} served), open {open:.0} ms, set_network {set:.0} ms, five solves {solve:.0} ms, a crowding round {crowd:.0} ms; longer {:.0} (rail {:.0}), commute legs {:.0} (rail {:.0}), everyday legs {:.0} (rail {:.0}, walking {:.0} of {:.0})",
+            a.m.everyday.len(), a.epairs.len(), s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7]
+        );
+        if !with {
+            continue;
+        }
+        // Anita's ceiling tests (notes/T-636.md) on the everyday pairs, every pair open: rail's share
+        // of rail + car by the pairs' own ratio curve, with a straight train between their zones' centres,
+        // a 3-minute walk at each end (1.5 a minute), 2.5 minutes' wait; A 140 km/h and free, B 100 km/h
+        // and $1.50 + $0.05 a km
+        let pc = commute_params();
+        let pe = pc.everyday();
+        let (mut t, mut sa, mut sb) = (0f64, 0f64, 0f64);
+        let mut bands = [[0f64; 3]; 4];
+        for e in &a.m.everyday {
+            let zh = &a.m.zones[e.h as usize];
+            let Some(zi) = (0..a.m.zones.len()).find(|&k| a.m.zones[k].gid == e.a) else { continue };
+            let za = &a.m.zones[zi];
+            let km = a.m.zone_km(zh, za) as f32;
+            let car = drive_min(km) * pc.w_drive + za.park + pc.car_own_min() + km * ROAD_DETOUR * pc.car_own_km_min();
+            let base = 2. * 3. * pc.w_walk + 2.5;
+            let ra = base + km / 140. * 60.;
+            let rb = base + km / 100. * 60. + FARE_MIN_PER_USD * (1.5 + 0.05 * km);
+            let w = e.trips as f64;
+            let (x, y) = (pe.ratio_share(ra, car) as f64, pe.ratio_share(rb, car) as f64);
+            t += w;
+            sa += w * x;
+            sb += w * y;
+            let b = [2., 5., 10., f32::INFINITY].iter().position(|&e| km < e).unwrap();
+            bands[b][0] += w;
+            bands[b][1] += w * x;
+            bands[b][2] += w * y;
+        }
+        eprintln!("ceilings on the everyday pairs: A {:.1}%, B {:.1}% of rail + car over {t:.0} outings", 100. * sa / t, 100. * sb / t);
+        for (b, n) in ["0-2", "2-5", "5-10", "10+"].iter().enumerate() {
+            let v = bands[b];
+            eprintln!("  {n} km: {:.0} outings, A {:.1}%, B {:.1}%", v[0], 100. * v[1] / v[0].max(1e-9), 100. * v[2] / v[0].max(1e-9));
+        }
+    }
 }
 /// The world composition as the app opens it: the market rows of the registry's zones (T-776:
 /// market-rows.json, in registry order) and the packs of `ids` (all that exist with None).

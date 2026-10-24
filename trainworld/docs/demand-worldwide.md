@@ -797,8 +797,9 @@ notes/T-420.md has the tables.
   per country; a few routed drives between its biggest places.
 - **Commutes between zones** (T-276, docs/zones.md 4). One gravity over every zone pack, each
   pack's own curve and border factor inside it, region pairs across packs from the pack holding
-  both, else the country's admin-1 default (US 0.23, Japan 0.4), else the pack-line default 0.4
-  (`pack_line_default`, Japan's fit; T-584), national borders 0.05 (US-Canada, judgement).
+  both, else the country's admin-1 default (US 0.23, Japan 0.5), else the pack-line default 0.5
+  (`pack_line_default`; Japan's census fit was 0.4, raised by Anita in T-1163), national borders
+  0.05 (US-Canada, judgement).
   Checked, not fitted, against LODES jobs between packs (notes/T-268.md). Why it may not carry over: where
   commuting crosses national borders freely (Schengen: Basel, Geneva, Luxembourg) 0.05 is far too
   strong (the long trips' open area, T-809, does not apply to commutes; T-810); a country whose pack lines do not cut commuting as Japan's do would want a lower or
@@ -807,8 +808,19 @@ notes/T-420.md has the tables.
   chained, formed by `intercity.py --group auto` (pairs more than 50 km apart carry well under 1%
   of the commuters crossing a pack line). Why it may not carry over: two cities 50-150 km apart
   with nothing between them exchange no one, and a pack line between packs in a country with no
-  fitted factor takes Japan's 0.4 (T-584). Check: the country's census commuting flows between the packs,
+  fitted factor takes the default 0.5 (T-584, T-1163). Check: the country's census commuting flows between the packs,
   when one is fitted.
+- **Everyday outings across zone lines** (T-1163, T-1175, docs/zones.md 4a). The everyday draw
+  (errands, social, school, university, medical) runs over the neighbouring packs' zones within
+  80 km as well as the home's own, undamped inside a country and at the national factor across a
+  border; each zone keeps its own pack's share and the rest travel in the regional layer. It uses
+  only what every pack already has (its everyday attractions and rates), so it carries over as the
+  everyday layer does. Why it may not: walks across a line are straight lines (no pack's water
+  routes span two packs), so a line along a river (much of the Pearl River delta) walks more than it
+  should; where a zone line is also a hard barrier (a closed border, a sea strait between packs) the
+  draw still crosses it at the national factor or 1. Check: on a line through one built-up area,
+  about 25-30% of the arrivals at places within 3 km of the line come from the other side
+  (Guangzhou - Foshan, notes/T-1163.md).
 - **Zones** (T-276, T-719, T-788, docs/zones.md). Non-city zones are built from a country's units
   (US county, Canadian census division, NUTS-3), merged within their region to at least about 0.5M
   people (Anita, 2026-10-20); the unit differs in size by country, and where admin-2 units are tiny

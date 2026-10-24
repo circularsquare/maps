@@ -23,6 +23,9 @@ pub mod everyday;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod bench;
 pub mod clock;
+/// T-1175: everyday outings across a zone line, worked out offline (`bin/cross_everyday.rs`).
+#[cfg(not(target_arch = "wasm32"))]
+pub mod cross;
 /// T-260: kinds of day (weekday, weekend), worked out from the weekday's solve.
 pub mod days;
 pub mod kernel;

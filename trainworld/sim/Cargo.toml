@@ -60,6 +60,12 @@ name = "joint_gravity"
 path = "src/bin/joint_gravity.rs"
 required-features = ["demand"]
 
+# T-1175: everyday outings across a zone line, per solve unit (pipeline/cross_everyday.py).
+[[bin]]
+name = "cross_everyday"
+path = "src/bin/cross_everyday.rs"
+required-features = ["demand"]
+
 # T-276: each zone pack's local trips a day with no rail (pipeline/zone_summary.py).
 [[bin]]
 name = "zone_summary"

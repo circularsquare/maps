@@ -125,8 +125,12 @@ institutions** (prisons, nursing homes and the like, T-234).
 - **Commutes are one gravity over each group of zones that commute to each other** [T-276,
   T-463] (the Northeast; Japan's 45 packs), solved offline (`joint_gravity`); the cross-pack part
   travels in the regional layer. Each pack carries its own distance curve (US
-  d^-0.8 exp(-d / 30 km), T-198) and border factor (US states 0.23, Washington 0.45; Japan's packs
-  0.4; abroad, national borders only, T-181).
+  d^-0.8 exp(-d / 30 km), T-198) and border factor (US states 0.23, Washington 0.45; a line between
+  two packs of one country elsewhere 0.5, Japan's too, T-1163; abroad, national borders only, T-181).
+- **Everyday outings cross zone lines** [T-1163, T-1175]: errands, social, school, university and
+  medical are drawn offline over the neighbouring packs' zones too; each zone keeps its own pack's
+  share of them (`everyday_kept_<purpose>`, its budget times it) and the rest travel in the regional
+  layer (section 5.1). Packs built before carry none and keep everything.
 - **Mode choice** recomputes after service or fare changes: station access, destination-specific
   common-line strategies (a wait is half the combined headway, in plain minutes [T-585]; a change
   of trains costs a fixed 2 perceived minutes, its wait and the walk between the two platforms'
@@ -185,7 +189,11 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
   stay fixed. **Commutes between zones**: the joint gravity's cross-pack
   part, at commute timing and mode choice. Each zone's own pack holds its part; a registry row per
   zone gives every pair of zones its trips with nothing opened; the game builds pairs only between
-  zones a station serves on one track network [T-174, T-409].
+  zones a station serves on one track network [T-174, T-409]. **Everyday outings across a zone
+  line** [T-1175, T-1176]: a third list in each zone's market pack, by 6 km pair and purpose with its
+  walking share with no rail, built as the commutes are and chosen as the everyday layer chooses
+  (walking, then rail against the car on the ratio curve), at each purpose's timing; their loads are
+  their purposes' (docs/zones.md 4a). The data comes with the next rebuild.
 - **5.2 Access**: the same walks and rides to stations as local demand, so feeder lines and
   transfers carry real loads; nothing bypasses the player's local network.
 - **5.3 Park-and-ride** [T-295, T-371, T-389, T-373, T-372]: a commute or everyday trip of 5 km or more

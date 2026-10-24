@@ -158,6 +158,19 @@ pub(crate) fn cell_weights(header: &str, bin: &[u8], name: &str, n: usize) -> Re
     Ok(Some(v))
 }
 
+/// A per-zone array of `nz` values in 0..1 (T-1175's `everyday_kept_<purpose>`); None when the
+/// pack lacks it or holds it for another zone count (a pack rebuilt since it was written).
+pub(crate) fn zone_shares(header: &str, bin: &[u8], name: &str, nz: usize) -> Result<Option<Vec<f32>>, String> {
+    let h: Value = serde_json::from_str(header).map_err(|e| e.to_string())?;
+    let arrays = h["arrays"].as_array().ok_or("missing arrays")?;
+    let Some(a) = arrays.iter().find(|a| a["name"] == name && a["per"] == "zone") else { return Ok(None) };
+    if a["count"].as_u64() != Some(nz as u64) {
+        return Ok(None);
+    }
+    let v = read_f32s(bin, a["offset"].as_u64().ok_or("missing offset")? as usize, nz, a["dtype"].as_str().ok_or("missing dtype")?)?;
+    Ok(Some(v.into_iter().map(|x| if x.is_finite() { x.clamp(0.0, 1.0) } else { 1.0 }).collect()))
+}
+
 /// Integer arrays (ids, grid positions): any unsigned or signed integer dtype up to 32 bits.
 fn read_ints(bin: &[u8], off: usize, count: usize, dtype: &str) -> Result<Vec<i64>, String> {
     let b = slice(bin, off, count, dtype)?;

@@ -2904,9 +2904,12 @@ class DemandClient {
     const intercitySummary = r.intercitySummary.slice();
     const ip = r.intercityParts;
     // T-276: longer trips by their factor, commutes between zones by work's
+    // T-1175: everyday outings across a zone line by errands' factor, the largest of their purposes
+    const fe = this.factor(day, "errands", q);
     if (ip && ip.length >= 4) { intercitySummary[1] = ip[0] * fl + ip[2] * fw; intercitySummary[2] = ip[1] * fl + ip[3] * fw; }
     else { intercitySummary[1] *= fl; intercitySummary[2] *= fl; }
-    const intercityParts = ip?.map((v, i) => v * (i < 2 ? fl : fw));
+    if (ip && ip.length >= 7) { intercitySummary[1] += ip[4] * fe; intercitySummary[2] += ip[5] * fe; intercitySummary[3] = ip[6] * fe; }
+    const intercityParts = ip?.map((v, i) => v * (i < 2 ? fl : i < 4 ? fw : fe));
     const elsewhere = r.elsewhere?.map((v) => v * fl);
     const summary = r.summary.slice();
     summary[1] = summary[2] = summary[3] = 0;

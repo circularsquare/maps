@@ -40,7 +40,10 @@ town, T-1070's cap at the trains' room, and T-263's attractions). The full rules
   gets about 100,000 visits a day, London 195,000, Tokyo 130,000. Small next to the city's
   trips, but long trips to single spots, so a station at the Met gets riders it would not have.
 - **Between cities.** A world market of longer trips by rail, car and air, plus commuters between
-  neighbouring cities. Where two cities meet, commuting across the line will be damped (0.4).
+  neighbouring cities. Where two cities meet, commuting across the line is damped to half (0.5;
+  the US keeps its own: none inside a state, 0.23 across one). Errands, visits, school and doctor's trips cross the line
+  as if it were not there: a place right on the Guangzhou - Foshan line gets about a quarter of its
+  visitors from the other side. These come with the next rebuild of the data.
   A longer trip into another country is damped too: to half inside the EU, Schengen and the UK
   (London - Paris about 30,000 a weekday), and much more elsewhere, the more so the poorer the
   traveller's country (0.26 for the richest).
@@ -184,6 +187,7 @@ trips into town, notes/T-1092.md; the cap at the trains' room, notes/T-1070.md.
 
 ## Coming next
 
-- T-584: commuting between neighbouring cities damped at 0.4.
+- T-1163: the everyday trips across a city line and the 0.5 damping, in the data at the next
+  rebuild.
 - Deep calibration, later: whether the walk's 1.5 should be 1, and what the real cities say about
   the new numbers (the model carries about 2.4 times New York's station counts, 1.6 times London's).

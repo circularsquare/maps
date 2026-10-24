@@ -51,6 +51,15 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   dropped commuters given to its kept pairs). They travel at the local commute's timing (70/12/6/4/8%
   to work, the return 2/18/58/16/6% on the same station pair reversed) and 0.30 of a weekday's at
   the weekend.
+- **Everyday outings across a zone line** (T-1175, T-1176; [zones.md](zones.md) 4a): errands,
+  social, school, university and medical outings drawn offline over the neighbouring packs' zones,
+  by 6 km pair and purpose with each pair's walking share with no rail, kept at one a day or more.
+  Built between served zones as the commutes are; each purpose's outward and return timing; the home
+  end walks or rides from 5 km, the activity end walks. Walking takes its part of the everyday
+  layer's three-way logit (its weight from the pair's walking share), rail and the car split the
+  rest on the ratio curve with the commutes' car, and rail takes its share of the walkers. Their
+  loads are their purposes'; a weekend scales their counts by errands' factor and their loads by
+  each purpose's.
 - **What is solved**: pairs are built only between 6 km zones some station serves, whose stations
   share a track component, with a car or a plane to compete with: on one landmass (T-375's, fixed
   links joined), or far places that both have airports. Every other pair's trips are fixed: counted
@@ -146,7 +155,7 @@ station a cost that depends on the end:
 
 - **Commutes between zones**: at the home end, the cheaper of parking at the station and a
   drop-off (`d_drop` 10), when the two zones' centres are 5 km or more apart (`ride_min_km`); the
-  work end walks.
+  work end walks. Everyday outings across a zone line the same, the activity end walking.
 - **Inter-city trips**: at the home end as a commute's; at the far end a drop-off only
   (`d_drop`), since the traveller has no car there.
 

@@ -879,9 +879,18 @@ function marketFigures(parts: IntercityApi[], q: number) {
   // round, trips, rail, 0, ms, pairs, segments over seats, then the worst loads: the largest part's
   const summary = of((p) => p.summary(q), (i) => i === 2 || i === 4 || i === 6);
   if (parts.length > 1 && summary.length) for (const i of [7, 8, 9]) summary[i] = Math.max(...parts.map((p) => p.summary(q)[i] ?? 0));
+  const ps = of((p) => p.part_summary(q), (i) => i % 2 === 1 && i < 6);
+  // T-1175: the everyday pairs' walkers are every pair's with no rail (the same in every part) less
+  // those each part's rail takes
+  if (parts.length > 1 && ps.length >= 7) {
+    const each = parts.map((p) => p.part_summary(q)).filter((v) => v.length >= 7);
+    const base = each[0][7] ?? each[0][6];
+    ps[6] = Math.max(0, base - each.reduce((s, v) => s + (base - v[6]), 0));
+    if (summary.length) summary[3] = ps[6];
+  }
   return {
     summary,
-    parts: of((p) => p.part_summary(q), (i) => i % 2 === 1),
+    parts: ps,
     ...marketCorridors(parts, q),
     // T-378: the same in every part
     elsewhere: parts.length ? Array.from(parts[0].elsewhere(q)) : [],
@@ -950,14 +959,18 @@ function purposeParts(q: number, nr: number, clusters: typeof jobClusters, regio
       add(seg, at, part.seg(q)); add(board, at, part.board(q)); add(alight, at, part.alight(q));
       // T-276: the regional layer's commutes between zones are work: moved from longer trips to it
       const v = part.commute_loads(q);
-      if (v.length === 3 * m) {
+      const move = (v: Float32Array, from: number, to: number) => {
         for (let r = 0; r < m; r++) {
           const g = map[r];
-          seg[g] += v[r]; seg[at * nr + g] -= v[r];
-          board[g] += v[m + r]; board[at * nr + g] -= v[m + r];
-          alight[g] += v[2 * m + r]; alight[at * nr + g] -= v[2 * m + r];
+          seg[to * nr + g] += v[from + r]; seg[at * nr + g] -= v[from + r];
+          board[to * nr + g] += v[from + m + r]; board[at * nr + g] -= v[from + m + r];
+          alight[to * nr + g] += v[from + 2 * m + r]; alight[at * nr + g] -= v[from + 2 * m + r];
         }
-      }
+      };
+      if (v.length === 3 * m) move(v, 0, 0);
+      // T-1175: its everyday outings across a zone line are their purposes', a block each
+      const e = part.everyday_loads(q);
+      if (e.length && e.length % (3 * m) === 0) for (let k = 0; k < Math.min(kinds, e.length / (3 * m)); k++) move(e, 3 * k * m, 1 + k);
     }
   }
   return { keys, seg, board, alight };

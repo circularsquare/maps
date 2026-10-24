@@ -32,7 +32,7 @@ levels:
    whose own OD data shows an admin-1 effect can fit one, on its own commuting data when its first
    pack is built. Between packs the joint gravity takes its factors from `pipeline/borders.json`:
    the pack's own where one pack holds both regions, else the country's `admin1_default` (US 0.23,
-   Japan 0.4), else `pack_line_default` 0.4 (T-584, Japan's fit), and across a national border
+   Japan 0.5), else `pack_line_default` 0.5 (T-584, T-1163), and across a national border
    `national` for the pair or `national_default`.
 
    **4 km blocks in thin country** (T-852, `zone_size`). A pack may join an aligned 2x2 block of

@@ -144,6 +144,11 @@ per 8 of the cell's trips a day for the purpose, rounded up, 2 to 16 (T-397; non
 with no budget for that purpose),
 then choose an actual destination cell by attraction weight. This is an approximation to
 continuous demand, not sampled individual travellers. It is stable across networks and reloads.
+**The draw runs over the home's own pack**; the part of it that would land in a neighbouring pack
+(the same rule over both packs' zones, worked out offline) travels in the regional layer instead,
+and each zone's budget is multiplied by the share it keeps (`everyday_kept_<purpose>` per zone,
+T-1175, [zones.md](zones.md) 4a). Errands, social, school, university and medical cross; airports
+and attractions do not.
 **Everyday trips below 150 m cell-centre distance vanish entirely**, with no replacement or
 denominator contribution, including walking. The cutoff is limited by cell grain; real within-cell
 journeys are not separately represented. Existing commuting behavior stays unchanged.

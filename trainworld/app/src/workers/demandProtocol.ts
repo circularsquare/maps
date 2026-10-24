@@ -216,7 +216,8 @@ export type FromDemand =
       cityParts?: Record<CityId, number[]>;
       intercitySummary: number[];
       /** T-276: IntercityApi.part_summary(): longer trips and rail, then commute legs between
-       * zones and rail (both in `intercitySummary`) */
+       * zones and rail (both in `intercitySummary`), then (T-1175) everyday legs across a zone
+       * line, their rail and walking legs, and their walking legs with no rail */
       intercityParts?: number[];
       /** T-1008: the market's corridor table this result's corridors index (`CorridorTable.key`);
        * the table itself rides along the first time this worker sends its key */

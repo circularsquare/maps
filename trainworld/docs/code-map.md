@@ -39,7 +39,9 @@ tests natively.
   real pack natively. notes/T-026.md.
 - `src/bin/`: native tools behind feature `demand`, built in `data/work/target`: `calib`
   (T-509: a weekday on a city's real network with a parameter set, for `pipeline/calib.py`),
-  `realsave`, `pack_gravity`, `pack_walk`, `market_pack`, `joint_gravity`, `zone_summary`.
+  `realsave`, `pack_gravity`, `pack_walk`, `market_pack`, `joint_gravity`, `zone_summary`,
+  `cross_everyday` (T-1175: a solve unit's everyday outings across zone lines, its draw in
+  `demand::cross`, native only; docs/zones.md 4a).
   `demand::network::RealNet` reads a real network's JSON for `calib` and the real-network tests
   (`route_nodes` gives the fare km per route node, the rule of the app's `hopKm`);
   `City::subset` and `inner` cut the synthetic city down for tests.
@@ -560,7 +562,9 @@ T-276), `phl`, `bos`, `wdc`, `bal`, `pvd`, `nhv`, `spf` and the zone `wor` (docs
 which also runs alone, T-302), `intercity.py --group auto [ids]` (every group of packs within 50 km
 of each other by `joint_gravity --packs`, T-463, T-539, the Northeast's too since T-1014, a group
 spanning countries or solve regions a unit at a time with `--fixed` neighbours, T-786; `--groups`
-lists them and their solve units),
+lists them and their solve units; after each unit `cross_everyday.py` draws its everyday outings
+across zone lines, T-1175: the members' kept shares into their packs and res-9 copies,
+`data/work/<unit>.cross_everyday.json` for the market packs),
 `market_zones.py [ids]` (each zone's market pack against the world field, then `market_pack`'s
 rows into app/src/game/market-rows.json and each zone's `country` into the registry through
 `market_rows.py`, which also drops the rows of unregistered zones, T-776; seconds a zone, T-377;

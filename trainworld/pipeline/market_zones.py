@@ -17,7 +17,8 @@ A zone's file holds its endpoint sites (its pack's cells in 600 m squares of its
 each site's parking for an arriving car and the people of its H3 r5 cell (the long-haul tail's
 density, notes/T-376.md), its 6 km zones with their two normalisers against the world field (T-375:
 ground and tail, constants in pipeline/longhaul.json), the commutes from it to other zones (its joint
-gravity group's, from data/work/<group>.joint_commutes.json, T-463), and (T-378) the airports its
+gravity group's, from data/work/<group>.joint_commutes.json, T-463), the everyday outings from it
+across zone lines (T-1175, from data/work/<unit>.cross_everyday.json), and (T-378) the airports its
 people fly from with the zones each flies to directly.
 """
 import csv
@@ -220,6 +221,41 @@ class Groups:
                 self.source[h] = g["source"]
         for (h, _w), lst in pairs.items():
             self.rows.setdefault(h, []).extend(lst)
+        self.everyday_rows, self.everyday_source = {}, {}
+        self.add_everyday(ROOT / "data/work")
+
+    def add_everyday(self, work):
+        """T-1175: everyday outings across zone lines (pipeline/cross_everyday.py), each drawing pack's
+        from the newest unit file that drew from it (a school or university draws from its site, so
+        its pairs are the activity end's pack's), filed under the home end's pack."""
+        import cross_everyday
+        drawn = {}
+        for path in cross_everyday.unit_files(work):  # oldest first
+            g = json.loads(path.read_text(encoding="utf-8"))
+            ids, by = g["packs"], {}
+            for k in range(len(g["trips"])):
+                h, a, kind = ids[g["home_pack"][k]], ids[g["act_pack"][k]], g["kind"][k]
+                by.setdefault(a if kind in (2, 3) else h, []).append(
+                    (h, tuple(g["home_zone"][k]), a, tuple(g["act_zone"][k]), kind, g["trips"][k], g["walk"][k]))
+            for o in g["solved"]:
+                drawn[o] = (by.get(o, []), g["source"])
+        for lst, source in drawn.values():
+            for h, hk, a, ak, kind, t, w in lst:
+                if h in self.reg and a in self.reg:
+                    self.everyday_rows.setdefault(h, []).append((hk, a, ak, kind, t, w))
+                    self.everyday_source[h] = source
+
+    def everyday(self, cid, keys):
+        """A zone's everyday outings across zone lines by (home zone, place, activity zone, purpose):
+        [outings a day, of them walking with no rail]."""
+        at, ats, agg = {k: i for i, k in enumerate(keys)}, {}, {}
+        for hk, aid, ak, kind, t, w in self.everyday_rows.get(cid, []):
+            akeys = self.zone_keys(aid)
+            aat = ats.setdefault(aid, {k: i for i, k in enumerate(akeys)})
+            e = agg.setdefault((self.index(keys, at, hk), self.reg[aid]["place"], self.index(akeys, aat, ak), kind), [0.0, 0.0])
+            e[0] += t
+            e[1] += t * w
+        return sorted(agg.items())
 
     def zone_keys(self, cid):
         """A pack's 6 km zones' squares, in its zone file's order."""
@@ -299,6 +335,15 @@ def build(cid, reg, F, air):
         out["commute_work"] = [k[2] for k, _ in rows]
         out["commute_trips"] = [round(float(t), 3) for _, t in rows]
         out["sources"].append("commutes between zones: " + groups.source[cid])
+    if cid in groups.everyday_rows:
+        rows = groups.everyday(cid, keys)
+        out["everyday_home"] = [k[0] for k, _ in rows]
+        out["everyday_place"] = [int(k[1]) for k, _ in rows]
+        out["everyday_zone"] = [k[2] for k, _ in rows]
+        out["everyday_kind"] = [int(k[3]) for k, _ in rows]
+        out["everyday_trips"] = [round(float(v[0]), 3) for _, v in rows]
+        out["everyday_walk"] = [round(float(v[1] / max(v[0], 1e-12)), 4) for _, v in rows]
+        out["sources"].append("everyday outings across zone lines: " + groups.everyday_source[cid])
     return out
 
 

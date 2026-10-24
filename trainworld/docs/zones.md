@@ -178,7 +178,8 @@ By purpose and by zone, with no seam a commuter can see:
 |---|---|---|
 | Commutes with both ends in one zone | the zone's local layer | the joint commute gravity's within-zone part (section 4) |
 | Commutes crossing a zone line | the regional layer, purpose "commute" | the same gravity's cross-zone part, at the market's 6 km zones; commute timing, weekday-heavy |
-| Everyday outings, school, university, airport, medical | the zone's local layer, inside the zone | as now; outings crossing a zone line under the market's onset are not modelled (short trips near the line: small) |
+| Everyday outings, school, university, airport, medical | the zone's local layer, inside the zone | each zone's budget times its kept share by purpose (T-1175, section 4a) |
+| Everyday outings crossing a zone line | the regional layer, each its own purpose | errands, social, school, university and medical drawn over the neighbouring zones too (section 4a); everyday timing, walking, rail or the car |
 | Longer trips (visits, business, leisure) | the regional layer, purpose "longer trips" | the retuned market (section 5), within and between zones, a share leaving the map |
 | Anything starting or ending in dead space | none | except the market's trips that leave the map, counted as leaving and not routed |
 
@@ -201,7 +202,8 @@ over every job in reach, in its own zone or another, so moving a zone line moves
   cut at 150 km (beyond it the decay is under a thousandth of a 10 km pair's, and LODES's long
   links are mostly head-office addresses, notes/T-268.md), and a **border factor per region pair**:
   the factor of the pack that holds both regions (New Jersey and Pennsylvania take Philadelphia's,
-  Maryland and DC Washington's 0.45), else the country's default (US states 0.23). T-171 found the
+  Maryland and DC Washington's 0.45), else the country's default (US states 0.23), else the line
+  between two packs' 0.5 (Japan's too; Anita, T-1163). T-171 found the
   factor should stay as fitted per pack rather than become one global value; this keeps every
   pack's own fit for the pairs it was fitted on. National borders take a factor per country pair
   (US-Canada 0.05 for now, judgement from Windsor-Detroit's few thousand cross-border commuters
@@ -284,6 +286,42 @@ constant: `asc_rail` 0.4 plus the home zone's country's (Japan +0.5; demand-mode
 longer trips keep a constant of 0 until they are fitted on corridor counts. The weekend has 0.30 of a
 weekday's commutes with the weekend's work timing (days.rs `WORK`). Their loads join the
 work purpose's (T-158), so the purpose filter's "Work" shows them.
+
+## 4a. Everyday outings across a zone line (T-1163)
+
+Near a line through one built-up area (Guangzhou and Foshan) a place draws its errands and visits
+from both sides, so the everyday draw does not stop at the line.
+
+- **Offline, per joint solve unit** (`bin/cross_everyday.rs`, `demand::cross`; pipeline/
+  cross_everyday.py, run by `intercity.py` after each unit's commute solve). Each 2 km zone of the
+  unit's members draws its errands, social outings and medical visits (and each school's and
+  university's site its students' homes) by the everyday layer's own rule (attraction x
+  exp(-d / scale), a fifth of errands and social to dense centres at 6 km), over its own pack's zones
+  and every other loaded pack's (the unit's fixed neighbours included) whose centres are within 80 km
+  (where `local_share` reaches nothing). Social's three parts are each scaled to their pack's people,
+  so packs compare. Inside a country a line takes no factor; a national border takes the commutes'
+  national factor (`borders.json`). Airports and attractions keep each site's own total and do not
+  cross.
+- **Kept share.** The share of each zone's draw that stays in its own pack, by purpose, goes into
+  the pack (and its res-9 copy) as per-zone arrays `everyday_kept_<purpose>`; the everyday layer
+  multiplies a sample's budget by its fixed end's zone's share, so nobody makes more trips. A pack
+  without them (or with them for another zone count) keeps everything.
+- **The rest** (times `local_share`) is listed by pair of 6 km squares and purpose, each zone's
+  outings spread over its cells' squares, with each pair's share walking the whole way with no rail
+  worked out between sampled cells (six a side) as the everyday layer's `no_rail` does, on straight
+  walks. Pairs under 1 a day are dropped, their outings spread over their square's other pairs.
+  The unit's file is `data/work/<unit>.cross_everyday.json`; `market_zones.py` puts each pack's pairs
+  (from the newest file that drew from it) into the home end's market pack (`everyday_home`,
+  `_place`, `_zone`, `_kind`, `_trips`, `_walk`).
+- **At runtime** (the regional layer) the pairs are built as the commutes are, only between zones a
+  station serves on one track network. Each period carries each pair's outings x its purpose's
+  outward share home to activity and x its return share back (`everyday::OUTWARD`, `RETURN`). The
+  home end walks, or rides from 5 km (the commutes' access); the activity end walks, by attraction.
+  The choice is the everyday layer's: walking takes its part of a three-way logit whose walking
+  weight comes from the pair's walking share with no rail, rail and the car split the rest on their
+  cost ratio (the commutes' car to the activity zone), and rail takes its share of the walkers. Their
+  loads join each purpose's in the purpose filter; their legs, rail and walking join the market's
+  summary (a weekend scales them by errands' factor).
 
 ## 5. The world market (longer trips)
 
