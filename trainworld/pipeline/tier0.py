@@ -230,11 +230,16 @@ def ghsl_window(kind, bbox_ll, epoch=2020, pad_m=0.0):
     return out, X0, Y0
 
 
-def grid_to_cells(arr, X0, Y0, origin, land=None, sub=2):
+def grid_to_cells(arr, X0, Y0, origin, land=None, sub=2, near=None):
     """Each pixel's value over sub x sub points; points on water (land(x_m, y_m) false) dropped and
-    the pixel's value kept on its land points (all points if none). Returns {h3 int: value}."""
+    the pixel's value kept on its land points (all points if none). Pixels whose centre is outside
+    `near` (a prepared lon/lat shape) are skipped. Returns {h3 int: value}."""
     _, inv = _moll()
     rows, cols = np.nonzero(arr > 0)
+    if near is not None:
+        plon, plat = inv.transform(X0 + (cols + 0.5) * PIX_M, Y0 - (rows + 0.5) * PIX_M)
+        ok = shapely.contains_xy(near, np.asarray(plon), np.asarray(plat))
+        rows, cols = rows[ok], cols[ok]
     v = arr[rows, cols]
     k = sub * sub
     off = (np.arange(sub) + 0.5) / sub * PIX_M
@@ -346,7 +351,12 @@ def tertiary_share(iso2):
 
 # ---------------------------------------------------------------- boundary and water
 
+_OUTLINES = {}  # city: (cfg, outline); a build asks four times (T-1083)
+
+
 def build_boundary(city, cfg):
+    if city in _OUTLINES and _OUTLINES[city][0] is cfg:
+        return _OUTLINES[city][1]
     if callable(cfg["boundary_file"]):  # T-288: a country module writes it from admin units
         cfg["boundary_file"] = cfg["boundary_file"]()
     with open(cfg["boundary_file"]) as f:
@@ -373,6 +383,7 @@ def build_boundary(city, cfg):
     with open(path + ".part", "w") as f:
         json.dump(out, f, separators=(",", ":"))
     os.replace(path + ".part", path)
+    _OUTLINES[city] = (cfg, merged)
     return merged
 
 
@@ -398,6 +409,16 @@ def inside(cells, geom):
     return shapely.contains_xy(geom, ll[:, 1], ll[:, 0]), ll
 
 
+def near_outline(boundary, km=1.0):
+    """The outline grown by at least `km` every way, in degrees (prepared). T-1083: a pixel farther out
+    than about 0.4 km (a res-9 cell's radius plus half a pixel) reaches no cell whose centre is inside,
+    so the cells and their sums are the same without it; a ring round a metro skips the metro's pixels."""
+    lat = min(max(abs(boundary.bounds[1]), abs(boundary.bounds[3])), 85.0)
+    g = boundary.buffer(km / (111.32 * np.cos(np.radians(lat))), 4)
+    shapely.prepare(g)
+    return g
+
+
 def signals(city, cfg, boundary, mask):
     """Per cell (inside the boundary): GHSL population (scaled to admin totals), GHSL
     non-residential volume and surface, OSM job places, errand and leisure places. Cached."""
@@ -408,10 +429,11 @@ def signals(city, cfg, boundary, mask):
     t0 = time.time()
     epoch = cfg.get("epoch", 2020)
     land = land_function(mask)
+    near = near_outline(boundary)
     grids = {}
     for kind in ("pop", "nres_v", "nres_s"):
         arr, X0, Y0 = ghsl_window(kind, boundary.bounds, epoch)
-        grids[kind] = grid_to_cells(arr, X0, Y0, cfg["origin"], land if kind == "pop" else None)
+        grids[kind] = grid_to_cells(arr, X0, Y0, cfg["origin"], land if kind == "pop" else None, near=near)
         print(f"  GHSL {kind}: {arr.shape[1]} x {arr.shape[0]} pixels, {arr.sum():,.0f} in the box, {len(grids[kind]):,} cells; "
               f"{time.time() - t0:.0f} s", flush=True)
     import canada

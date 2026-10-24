@@ -153,7 +153,8 @@ them, or with them made for other zones, has every walk and drive straight x 1.3
   walk along one bank of a zone astride a river goes straight.
 - **Drives.** Per zone, the routed factor (road metres over straight metres, commuter-weighted
   over the other zone's cells) to every zone within 6 squares (`drive_near`), and between
-  supercells of 4 x 4 squares per region beyond (`drive_far`, `drive_super`). The roads are
+  supercells of 4 x 4 squares per region beyond (8 x 8 in a countryside zone, T-1084)
+  (`drive_far`, `drive_super`). The roads are
   every public road but service ways; each place joins its nearest road point whose straight
   line crosses no water, at 1.3x that line. The speeds stay the density model's above: only the
   road's length comes from the routes. The factor is multiplied by `road_routed_scale`,

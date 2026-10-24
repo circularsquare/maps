@@ -366,14 +366,18 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   (seconds; T-162): the way to re-solve after a decay or border factor change without a rebuild.
 - `enrich_all.py phl bos` adds the non-work inputs (everyday sectors, NCES schools, IPEDS
   universities, airports from FAA/BTS/OurAirports, medical and parks from OSM) to finished packs
-  in place, about 0.5-2 minutes a city plus Overpass time (T-142).
+  in place, about 0.5-2 minutes a city plus Overpass time (T-142). Wikidata's airport patronage
+  answers are kept in `data/work/wikidata_boardings.json` (T-1083; delete it to ask again).
 - `hospital_beds.py pool` writes `pipeline/hospital_beds.json`, the pooled hospital-size numbers
   and World Bank beds per 1,000 that `enrich_medical.py` reads (T-387); `check nyc` is the
   held-out check, `survey` every pack's beds under the rule. Rerun `pool` before re-enriching
   if packs with well-tagged beds change.
 - `coarse_zones.py <ids> [--under 1000]` re-solves a res-9 pack's gravity with 4 km blocks where
   every 2 km zone of a block makes under that many trip ends a weekday (T-852, `pack_gravity
-  --coarse`, `kernel::coarsen`); before routes and the merge (`world_run.py --coarse`).
+  --coarse`, `kernel::coarsen`); before routes and the merge (`world_run.py --coarse`, which also
+  passes `build_city.py --coarse-next`: the build's own 2 km solve stops after one pass, since only
+  its zones are read before this re-solve, T-1083). `read_pack.check_gravity` reads the decay from
+  a table by square offset (T-1083).
 - `routes.py <ids>` adds routed walking and driving to finished packs (OSM from Geofabrik, cached
   in `data/raw/osm/`; the sim's `pack_walk` bin; 1-8 minutes a pack; rerun after anything that
   changes a pack's zones, `--check` lists stale ones; T-275).

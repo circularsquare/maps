@@ -101,15 +101,36 @@ def od_shares():
 
 
 def wikidata_boardings(iata):
-    """Global fallback: the latest Wikidata patronage (P3872, passengers both ways) / 2."""
+    """Global fallback: the latest Wikidata patronage (P3872, passengers both ways) / 2. Answers are
+    kept in data/work/wikidata_boardings.json (T-1083: a cold query waits up to 8 s an airport);
+    delete it to ask again."""
+    path = os.path.join(b.WORK, "wikidata_boardings.json")
+
+    def cached():
+        try:
+            with open(path) as f:
+                return json.load(f)
+        except (OSError, ValueError):
+            return {}
+    have = cached()
+    if iata in have:
+        return tuple(have[iata])
     q = f"""SELECT ?v ?t WHERE {{ ?a wdt:P238 "{iata}"; p:P3872 ?s. ?s ps:P3872 ?v.
             OPTIONAL {{ ?s pq:P585 ?t }} }} ORDER BY DESC(?t) LIMIT 1"""
     r = requests.get(WIKIDATA, params={"query": q, "format": "json"}, headers=b.UA, timeout=60)
     r.raise_for_status()
     rows = r.json()["results"]["bindings"]
-    if not rows:
-        return None, None
-    return float(rows[0]["v"]["value"]) / 2.0, rows[0].get("t", {}).get("value")
+    out = (float(rows[0]["v"]["value"]) / 2.0, rows[0].get("t", {}).get("value")) if rows else (None, None)
+    try:  # builds run at once: read theirs again and write whole files; a busy file is skipped
+        have = cached() | {iata: out}
+        os.makedirs(b.WORK, exist_ok=True)
+        tmp = f"{path}.{os.getpid()}.part"
+        with open(tmp, "w") as f:
+            json.dump(have, f, indent=0, sort_keys=True)
+        os.replace(tmp, path)
+    except OSError as e:
+        print(f"  Wikidata answer for {iata} not cached: {e}", flush=True)
+    return out
 
 
 def pack_share(cfg, lat, lon):

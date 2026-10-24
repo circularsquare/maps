@@ -16,7 +16,8 @@ Adds three things to data/packs/<city>.json/.bin in place (nothing else in the p
   (u8, `ln(f) * 64`; 0 = no detour), for the walk share between cells.
 - `drive`: routed road distance over straight distance between zones (u8, `ln(f) * 64`), for
   zones within `DRIVE_WIN` squares (`drive_near`, each zone's window in canonical order) and
-  between supercells of `SUPER` x `SUPER` squares per region beyond it (`drive_far`).
+  between supercells of `SUPER` x `SUPER` squares per region beyond it (`drive_far`; `SUPER_ZONE`
+  for a countryside zone, T-1084).
 
 Roads and bridges come from Geofabrik's OpenStreetMap extracts, one per first-level region of the
 pack (`EXTRACTS`; any country's region ids can be added there, or `--extracts` names them), read
@@ -173,7 +174,8 @@ BRIDGE_EXTEND_M = 60.0 # a bridge's ends are carried this far on, onto the bank
 MIN_LAND_PX = 40       # land enclosed by water smaller than this (0.1 km², a res-9 cell) is water
 WALK_WIN = 2           # zone walk factors to zones within this many squares
 DRIVE_WIN = 6          # zone drive factors within this many squares, supercells beyond
-SUPER = 4              # supercell side, in squares
+SUPER = 4              # supercell side, in squares (a metro's)
+SUPER_ZONE = 8         # ... a countryside zone's (T-1084: 16 km, Anita 2026-10-23)
 QSCALE = 64.0          # factor = exp(q / QSCALE), q a byte
 FMAX = float(np.exp(255 / QSCALE))
 
@@ -519,8 +521,14 @@ def _far(reps):
     return [(i, (G["zconn"][i] + D[b, nj:nj + nz] + G["zconn"]).astype(np.float32)) for b, i in enumerate(reps)]
 
 
-def drive_tables(zs, graph, wm, dense, workers=2, log=print):
-    """Near (zone windows) and far (supercells) drive factors."""
+def super_of(city):
+    """The pack's supercell side: countryside zones' far trips are looked up coarser (T-1084)."""
+    import build_city as b
+    return SUPER_ZONE if b.CITIES.get(city, {}).get("kind") == "zone" else SUPER
+
+
+def drive_tables(zs, graph, wm, dense, workers=2, log=print, side=SUPER):
+    """Near (zone windows) and far (supercells of side x side squares) drive factors."""
     import multiprocessing as mp
     import tempfile
     t0 = time.time()
@@ -539,7 +547,7 @@ def drive_tables(zs, graph, wm, dense, workers=2, log=print):
     win_off[1:] = np.cumsum([len(w) for w in wins])
     win_ids = np.concatenate(wins)
     # supercells per region, numbered in order of their first zone; each one's heaviest zone
-    skey = (zs.gx // SUPER) * 100_000 + (zs.gy // SUPER) * 10 + zs.reg
+    skey = (zs.gx // side) * 100_000 + (zs.gy // side) * 10 + zs.reg
     _, first, sup = np.unique(skey, return_index=True, return_inverse=True)
     order = np.argsort(first)
     rank = np.empty_like(order)
@@ -718,7 +726,8 @@ def build(city, ex_arg=None, keep=False, workers=2, stage="all"):
     graph = RoadGraph(ways, lon0, lat0, box)
     print(f"  road graph: {graph.n:,} junctions, {graph.edges:,} roads, from {graph.points:,} points ({time.time() - t0:.0f} s)", flush=True)
     t_drive = time.time()
-    near_q, sup, far_q, stats, diag = drive_tables(zs, graph, wm, dense, workers=workers)
+    side = super_of(city)
+    near_q, sup, far_q, stats, diag = drive_tables(zs, graph, wm, dense, workers=workers, side=side)
     stats["seconds"] = round(time.time() - t_drive)
     f = diag[2]
     print(f"  drive factors: near pairs {len(f):,}, median {np.median(f):.3f}, "
@@ -736,7 +745,7 @@ def build(city, ex_arg=None, keep=False, workers=2, stage="all"):
         "zones_check": zones_check(zs),
         "osm": "Geofabrik extracts, (c) OpenStreetMap contributors, ODbL",
         "walk": walk_block,
-        "drive": {"window": DRIVE_WIN, "super": SUPER, "supercells": stats["supercells"], "regions": zs.nreg,
+        "drive": {"window": DRIVE_WIN, "super": side, "supercells": stats["supercells"], "regions": zs.nreg,
                   "q": QSCALE, "factor": "routed road metres / straight metres = exp(q / q_scale); straight x factor is the road",
                   "layout": "drive_near: per zone, its window's zones (dx -W..W outer, dy -W..W, region) that exist, one byte each; drive_far: supercells x supercells; drive_super: each zone's supercell",
                   "roads": list(DRIVE_CLASSES), "graph": {"junctions": graph.n, "roads": graph.edges}, **stats},

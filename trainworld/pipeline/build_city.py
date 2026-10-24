@@ -7,6 +7,7 @@ Downloads are cached in data/raw/; outputs go to data/packs/<city>.json, .bin an
 The zone gravity is solved by the sim crate (cargo, `pack_gravity`), so Rust must be installed.
 
     python pipeline/build_city.py --boundary-only [ids]     (T-352: only the boundary files)
+    python pipeline/build_city.py nyc --coarse-next         (T-1083: coarse_zones follows; one gravity pass)
 """
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "2")  # before numpy; Anita is using the machine
@@ -1071,6 +1072,11 @@ def write_cells(city, cfg, cells, totals, sources, mask=None, mask_info=None, co
     return stem + ".json"
 
 
+# T-1083: `--coarse-next` (world_run --coarse): coarse_zones re-solves the gravity straight after the
+# build, and nothing before it reads the factors (only the zones), so the build's solve stops at once
+GRAVITY_ONCE = False
+
+
 def add_gravity(cells_json, city, extra=None):
     """Solve the 2 km zone gravity with the sim crate's own code (sim/src/bin/pack_gravity.rs)
     and write the finished pack to data/packs/. One implementation of the gravity: the game
@@ -1094,6 +1100,8 @@ def add_gravity(cells_json, city, extra=None):
     # (TW_CARGO_TARGET_DIR: a target of its own for a TW_SIM_DIR copy, as intercity.py)
     env["CARGO_TARGET_DIR"] = os.environ.get("TW_CARGO_TARGET_DIR", os.path.join(ROOT, "data", "work", "target"))
     out_json = os.path.join(PACKS, f"{city}.json")
+    if GRAVITY_ONCE:
+        extra = list(extra or []) + ["--tol", "1e9"]
     cargo = shutil.which("cargo", path=env["PATH"])  # Windows does not search env's PATH itself
     if not cargo:
         sys.exit("cargo not found: install Rust (rustup) or put ~/.cargo/bin on PATH")
@@ -1312,7 +1320,9 @@ def boundary_only(ids):
 
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")  # place names outside English; a redirected log is cp1252 on Windows (T-289)
+    GRAVITY_ONCE = "--coarse-next" in sys.argv
+    ids = [a for a in sys.argv[1:] if not a.startswith("--")]
     if "--boundary-only" in sys.argv:
-        boundary_only([a for a in sys.argv[1:] if not a.startswith("--")])
+        boundary_only(ids)
     else:
-        main(sys.argv[1] if len(sys.argv) > 1 else "nyc")
+        main(ids[0] if ids else "nyc")

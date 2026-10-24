@@ -82,28 +82,40 @@ def check_gravity(header, a):
     rsum = np.zeros(nz)
     csum = np.zeros(nz)
     tot = dsum = cross = 0.0
-    # T-852: a pair with a block decays as the mean over their squares; distances are the centres'
-    subs = [(0, 0)] if side.max() == 1 else [(u, v) for u in (0, 1) for v in (0, 1)]
-    wsub = {q: np.where(side == 2, 0.25, 1.0 if q == (0, 0) else 0.0) for q in subs}
+    # T-852: a pair with a block decays as the mean over their squares; distances are the centres'.
+    # T-1083: the decay depends only on the squares' offset, so it is read from a table by offset, one
+    # per pair of sizes, a block's squares added in the order a loop over them would (the same sums,
+    # bit for bit, as working out every pair)
+    blocks = side.max() == 2
+    ox, oy = w + 1, h + 1  # offsets -ox..ox, -oy..oy (a block's squares reach one past the grid's)
+    ex, ey = np.meshgrid(np.arange(-ox, ox + 1), np.arange(-oy, oy + 1), indexing="ij")
+    dq = zk * np.sqrt(ex * ex + ey * ey)
+    dq[dq == 0] = g["intrazonal_km"]
+    # in float32 as the kernel's decay table: far pairs underflow to 0 there, and the factors
+    # balance without them (T-897: Lhasa's zone spans 1,980 km)
+    dq32 = dq.astype(np.float32)
+    dec = (np.exp(-dq32 / np.float32(g["decay_km"])) * dq32 ** np.float32(-a_pow)).astype(np.float64)
+    del ex, ey, dq, dq32
+    if blocks:
+        def at(u, v):  # dec shifted by (u, v), on offsets -w..w, -h..h
+            return dec[1 + u:2 * ox + u, 1 + v:2 * oy + v]
+        q4 = [(0, 0), (0, 1), (1, 0), (1, 1)]
+        tabs = np.stack([at(0, 0),                                                  # small, small
+                         sum(0.25 * at(-p, -q) for p, q in q4),                     # small, block
+                         sum(0.25 * at(u, v) for u, v in q4),                       # block, small
+                         sum(0.0625 * at(u - p, v - q) for u, v in q4 for p, q in q4)])  # block, block
+        big = (side == 2).astype(np.int64)
+        ox, oy = w, h
+    else:
+        tabs = dec[None]
     for s in range(0, nz, 400):
         e = min(nz, s + 400)
         dx = gx[s:e, None] - gx[None, :]
         dy = gy[s:e, None] - gy[None, :]
-        f = 0.0
-        for qi in subs:
-            for qj in subs:
-                wq = wsub[qi][s:e, None] * wsub[qj][None, :]
-                if not wq.any():
-                    continue
-                ex, ey = dx + qi[0] - qj[0], dy + qi[1] - qj[1]
-                dq = zk * np.sqrt(ex * ex + ey * ey)
-                dq[dq == 0] = g["intrazonal_km"]
-                # in float32 as the kernel's decay table: far pairs underflow to 0 there, and the
-                # factors balance without them (T-897: Lhasa's zone spans 1,980 km)
-                dq32 = dq.astype(np.float32)
-                f = f + wq * (np.exp(-dq32 / np.float32(g["decay_km"])) * dq32 ** np.float32(-a_pow)).astype(np.float64)
-        if len(subs) == 1:
-            d = dq
+        f = tabs[2 * big[s:e, None] + big[None, :] if blocks else 0, dx + ox, dy + oy]
+        if not blocks:
+            d = zk * np.sqrt(dx * dx + dy * dy)
+            d[d == 0] = g["intrazonal_km"]
         else:
             hx, hy = 2 * dx + side[s:e, None] - side[None, :], 2 * dy + side[s:e, None] - side[None, :]
             d = zk * 0.5 * np.sqrt(hx * hx + hy * hy)

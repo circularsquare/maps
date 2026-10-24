@@ -935,7 +935,7 @@ class Run:
         L = self.logs / cid
         steps, t0 = {}, time.time()
         ex = ",".join(r["extracts"])
-        cmds = {"build": ("build_city", [cid]), "stations": ("pack_gate", ["stations", cid, "--extracts", ex]),
+        cmds = {"build": ("build_city", [cid] + (["--coarse-next"] if self.o.get("coarse") else [])), "stations": ("pack_gate", ["stations", cid, "--extracts", ex]),
                 "places": ("places", [cid]),
                 "routes": ("routes", [cid, "--extracts", ex, "--workers", str(self.threads), "--keep-pbf"]),
                 "merge": ("merge_cells", [cid]), "nocar": ("nocar", [cid]), "everyday": ("everyday_rates", [cid]),

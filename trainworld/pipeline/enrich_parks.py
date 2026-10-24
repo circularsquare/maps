@@ -197,6 +197,15 @@ def places(city, boundary):
     return [r for r in rows if not r.get("merged_into")], len(rows), names
 
 
+def grown(g):
+    """The place in metres grown by NEAR_M. T-1083 (T-1042): a reserve of many pieces is grown piece by
+    piece and joined, the same set (a buffer distributes over a union), since GEOS nodes all of one
+    multipolygon's offset curves together (Crystal River Preserve's 963 marsh islands passed 16 GB)."""
+    if shapely.get_num_geometries(g) > 1:
+        return shapely.union_all(shapely.buffer(shapely.get_parts(g), NEAR_M, 8))
+    return g.buffer(NEAR_M, 8)
+
+
 def main(city="nyc", dry=False):
     t0 = time.time()
     cfg = b.CITIES[city]
@@ -222,7 +231,7 @@ def main(city="nyc", dry=False):
         else:
             px, py = xy(r["lon"], r["lat"])
             geoms.append(Point(float(px), float(py)).buffer(np.sqrt(NODE_HA * 1e4 / np.pi)))
-    near = np.array([g.buffer(NEAR_M, 8) for g in geoms], dtype=object)
+    near = np.array([grown(g) for g in geoms], dtype=object)
     pi, ci = ctree.query(near, predicate="contains")
     P = np.bincount(pi, weights=pop[ci], minlength=len(kept))
     # the density of the ring around the place: its residents over the ring's land (the ring
