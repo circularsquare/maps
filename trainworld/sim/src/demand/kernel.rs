@@ -209,6 +209,10 @@ pub struct Params {
     /// 4). Read when `EverydayApi::beside` opens; the pack's `everyday` block sets the rates.
     pub everyday_rate: [f32; 6],
     pub everyday_decay_m: [f32; 6],
+    /// T-1092: the share of errand and social outings drawn to central destinations, and their
+    /// decay length in metres (`everyday::CENTRAL_SHARE`; 0 turns them off).
+    pub everyday_central_share: f32,
+    pub everyday_central_m: f32,
     /// The everyday layer's rail constant is `asc_rail` plus this (`Params::everyday`); 0: the
     /// two layers share their constants (T-636), the gap kept for a later fit.
     pub everyday_asc_rail: f32,
@@ -339,6 +343,8 @@ impl Default for Params {
             ride_lines: 6,
             everyday_rate: super::everyday::RATE,
             everyday_decay_m: super::everyday::DECAY,
+            everyday_central_share: super::everyday::CENTRAL_SHARE,
+            everyday_central_m: super::everyday::CENTRAL_DECAY_M,
             everyday_asc_rail: 0.0,
         }
     }
@@ -414,6 +420,8 @@ impl Params {
                 }
             }
             "everyday_asc_rail" => self.everyday_asc_rail = v,
+            "central_share" => self.everyday_central_share = v,
+            "central_m" => self.everyday_central_m = v,
             // the everyday layer's, by purpose (`rate_errands`, `decay_social` in metres); before
             // `EverydayApi::beside`
             _ if k.starts_with("rate_") || k.starts_with("decay_") => {

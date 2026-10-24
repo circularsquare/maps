@@ -129,9 +129,16 @@ The pipeline spreads original sector locations by the same block land-area metho
 office/headquarters commute corrections do not relocate these customer weights.
 
 Destination gravity is origin-constrained: zone attraction times exp(-distance/scale), normalized
-per origin zone, with one worldwide set of scales (T-637, `everyday::DECAY`): errands 1.3 km,
-social 1.4 km, school 1.4 km, medical 2.0 km, university 3.5 km, airport 20 km, set for the share
+per origin zone, with one worldwide set of scales (T-637, `everyday::DECAY`): errands 1.0 km,
+social 1.0 km, school 1.4 km, medical 2.0 km, university 3.5 km, airport 20 km, set for the share
 of short trips rather than the mean ([T-637](../notes/T-637.md)). Same-zone distance is 1.04 km.
+**Errands and social outings mix two draws** (T-1092, `everyday::CENTRAL_SHARE`,
+[notes/T-1092.md](../notes/T-1092.md)): 80% by that rule, and 20% to central destinations, each
+zone weighed by its attraction times its attraction per km² of land (`ncell` x 0.1053 km², at most
+the square) at a 6 km scale. One scale cannot give the surveys' mix of many short trips and a long
+tail; the density weight sends the tail into dense centres, where high-order shops and venues
+cluster, instead of spreading it evenly. Within the zone the cell is drawn by attraction, as for
+the local part, and the two parts share the cell's stratified samples (the central part last).
 Deterministic stratified destination samples per cell/purpose integrate that distribution: one
 per 8 of the cell's trips a day for the purpose, rounded up, 2 to 16 (T-397; none for a cell
 with no budget for that purpose),

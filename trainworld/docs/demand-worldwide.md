@@ -573,6 +573,17 @@ notes/T-420.md has the tables.
   New York or London. Check: a new country's national survey by purpose and its share of
   everyday trips under 2 km, and its rail share by purpose against the game's everyday rail
   share.
+- **Central destinations** (T-1092, notes/T-1092.md): a fifth of errands and social outings are
+  drawn to zones by attraction times its attraction per km² of land, at a 6 km scale, the rest by
+  the local scales above. One share and one scale everywhere, from the attraction arrays every
+  pack carries, so it needs no data of its own. Why it holds up: high-order shops and venues
+  cluster in the densest places in every city measured (OSM in Paris and London; NHTS trips up
+  the density gradient run 7-9 km against 1-2). Why it may not carry over: the density weight
+  squares the attraction, so an error in the attraction proxy (tier 0's blend of jobs and OSM
+  places, an estimated jobs lump) is amplified in where long trips end; and a polycentric city
+  with weak centres gets its tail spread over many small ones. Check: a country's survey share of
+  everyday trips over 5 km, and which zones take the most central trips (`top_zone` in the T-1092
+  measure) for a lump that is not a real centre.
 - **Social destinations** are population, leisure jobs and parks (46 / 46 / 8%, T-196). ATUS 2023
   puts only 23% of US leisure outings at someone else's home against the model's 46% population
   draw (the population draw also stands for neighbourhood leisure LODES misses), worth a look

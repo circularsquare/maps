@@ -112,8 +112,10 @@ from LODES homes to jobs), **shopping and errands** and **social and leisure** o
 food and recreation jobs, population, and OSM parks for 8% of leisure, T-196; outside the US the
 same sectors' jobs by small area where published, else each 2 km zone's jobs blended with OSM's
 shops and leisure places, T-453; how many from each country's national travel survey, a worldwide
-median where it has none, T-509; how far by one worldwide set of distance scales, errands 1.3 km,
-social and school 1.4, medical 2.0, university 3.5, T-637), **school** (NCES public schools),
+median where it has none, T-509; how far by one worldwide set of distance scales, errands and
+social 1.0 km, school 1.4, medical 2.0, university 3.5, T-637, with a fifth of errands and social
+outings drawn instead to dense centres, attraction times its density at a 6 km scale, T-1092),
+**school** (NCES public schools),
 **university** (IPEDS), **airport** ground trips (FAA boardings less connecting passengers) and
 **medical** visits (OSM facilities). Private schools are not modelled yet. **Homes leave out
 institutions** (prisons, nursing homes and the like, T-234).

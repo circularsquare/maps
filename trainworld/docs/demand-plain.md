@@ -1,11 +1,12 @@
 # How demand works, in plain words
 
 For Anita. One page, kept current: an agent who changes a rule here updates this page too.
-Last updated 2026-10-23 (the T-636 model, with T-710's route choice and crowding, T-717's cost of
+Last updated 2026-10-24 (the T-636 model, with T-710's route choice and crowding, T-717's cost of
 changing, T-718's route choice between cities, T-720's walking bands, T-938's car speeds and
 ownership cost, T-1000's cap on how far jobs pull and its set share of long commutes, T-1055's
 rule that every rail trip rides a train, T-1059's that it never walks further than walking
-there, and T-1091's flat near end of the commute curve outside the US). The full rules are in demand.md; this is the gist.
+there, T-1091's flat near end of the commute curve outside the US, and T-1092's trips into
+town). The full rules are in demand.md; this is the gist.
 
 ## Who travels, and where to
 
@@ -23,10 +24,14 @@ there, and T-1091's flat near end of the commute curve outside the US). The full
   away. On top of that, a set 1% of everyone's workers commute 50-150 km to jobs in other towns.
 - **Everyday trips.** Errands, visits, school, university, medical, airports. How often people make
   them comes from each country's travel survey. How far they go is one rule for the whole world:
-  the chance of going somewhere halves about every 0.9 km for errands, 1.0 km for
-  visits and school, 1.4 km for medical, 2.4 km for university and 14 km for airports. Trips are
+  the chance of going somewhere halves about every 0.7 km for errands and visits, 1.0 km for
+  school, 1.4 km for medical, 2.4 km for university and 14 km for airports. Trips are
   kept short on purpose: real surveys have about half of everyday trips under 2 km, and short trips
-  are the ones people walk.
+  are the ones people walk. But one in five errands and visits goes into town instead: there each
+  place counts by how much there is to visit times how tightly it is packed, and the chance halves
+  only every 4 km. So the corner shop draws its street, and the dense centre, where department
+  stores, theatres and galleries are, draws people from across the city. Those are the long
+  everyday trips a train can win.
 - **Between cities.** A world market of longer trips by rail, car and air, plus commuters between
   neighbouring cities. Where two cities meet, commuting across the line will be damped (0.4).
   A longer trip into another country is damped too: to half inside the EU, Schengen and the UK
@@ -149,14 +154,14 @@ is left out of the comparison; the figure is rail out of rail plus car.
   New York 92%, London 92%, Paris 93%, Tokyo 93%; Houston, all suburb, 86%. (Trips shorter than
   the two 3 minute walks, about 460 m, get no train: T-1059.)
 - **B**: 100 km/h, a 3 minute walk at each end, a fare of $1.50 plus $0.05 a km. Target at least 50%.
-  New York 81.5%, London 82%.
-- The real networks, for comparison: New York's rail takes 21% of rail plus car (15% of all trips),
-  London's 28% (20%); before the route choice was sharpened (T-710) and changes cost 2 minutes
-  (T-717), 23% and 32%. Short trips are where
-  the real systems fall short: coverage, not the choice, holds them down.
+  New York 82.5%, London 83%.
+- The real networks, for comparison: New York's rail takes 23% of rail plus car (17.5% of all
+  trips), London's 32% (23%). Short trips are where the real systems fall short: coverage, not
+  the choice, holds them down.
 
 Details and the settings that were tried: notes/T-636.md; the route choice, notes/T-710.md; the
-curve by times cheaper, notes/T-918.md; the car's speeds and ownership cost, notes/T-938.md.
+curve by times cheaper, notes/T-918.md; the car's speeds and ownership cost, notes/T-938.md; the
+trips into town, notes/T-1092.md.
 
 ## Coming next
 

@@ -24,7 +24,15 @@ pub const MIN_DISTANCE_M: f32 = 150.0;
 /// country's survey, T-509 stage 4) overrides the rates; the decay lengths are one worldwide set
 /// (T-637), which no pack overrides.
 pub const RATE: [f32; 6] = [0.3, 0.2, 0.9, 0.6, 1.0, 0.04];
-pub const DECAY: [f32; 6] = [1300.0, 1400.0, 1400.0, 3500.0, 20000.0, 2000.0];
+pub const DECAY: [f32; 6] = [1000.0, 1000.0, 1400.0, 3500.0, 20000.0, 2000.0];
+/// T-1092: this share of errand and social outings goes to central destinations: zones weighed
+/// by the purpose's attraction times its attraction per km² of land, at this decay length, so the
+/// long trips end in dense centres. The rest are drawn at `DECAY`.
+pub const CENTRAL_SHARE: f32 = 0.2;
+pub const CENTRAL_DECAY_M: f32 = 6000.0;
+fn has_central(kind: usize) -> bool {
+    kind < 2
+}
 /// The purposes' names in `set_extra` (`rate_errands`) and the pack's `everyday` block.
 pub const KINDS: [&str; 6] = ["errands", "social", "school", "university", "airport", "medical"];
 pub const OUTWARD: [[f32; 5]; 6] = [
@@ -114,8 +122,9 @@ impl Sampler<'_> {
             let offset = unit(seed);
             for k in 0..n_k {
                 let target = (k as f64 + offset) / n_k as f64 * total;
-                let j = cdf.partition_point(|&v| v <= target).min(self.zones.len() - 1);
-                let z = self.zones[j];
+                // a cdf with central draws runs over `zones` twice, local then central
+                let j = cdf.partition_point(|&v| v <= target).min(cdf.len() - 1);
+                let z = self.zones[j % self.zones.len()];
                 let target = unit(seed.wrapping_add((k as u32 + 1).wrapping_mul(0x85ebca6b))) * self.mass[z];
                 let j = self.cell_cdf[z].partition_point(|&v| v <= target).min(self.members[z].len() - 1);
                 let d = self.members[z][j];
@@ -245,6 +254,22 @@ impl DecayTable {
         }
         total
     }
+}
+
+/// T-1092: `cdf` (the local draw, summing to `local`) becomes the mixture, a share `q` drawn
+/// from `central` (summing to `tc`) appended after it, over the same zones; returns its total. A
+/// part with nothing in reach leaves the other the whole draw.
+fn mix_central(cdf: &mut Vec<f64>, local: f64, central: &[f64], tc: f64, q: f64) -> f64 {
+    let (wl, wc) = match (local > 0.0, tc > 0.0) {
+        (true, true) => ((1.0 - q) / local, q / tc),
+        (true, false) => (1.0 / local, 0.0),
+        (false, true) => (0.0, 1.0 / tc),
+        (false, false) => return 0.0,
+    };
+    cdf.iter_mut().for_each(|v| *v *= wl);
+    let base = local * wl;
+    cdf.extend(central.iter().map(|&v| base + v * wc));
+    base + tc * wc
 }
 
 /// T-142: each airport cell's daily trips divided by its draw, the decay-weighted origin weight
@@ -1002,6 +1027,77 @@ mod tests {
                 assert_eq!((kind, home, site), (1, 0, 1));
             }
         }
+    }
+
+    /// T-1092: the mixture's two parts keep their shares, and a part with nothing in reach
+    /// leaves the other the whole draw.
+    #[test]
+    fn central_mix_shares() {
+        let mut cdf = vec![1.0, 3.0];
+        assert_eq!(mix_central(&mut cdf, 3.0, &[2.0, 4.0], 4.0, 0.2), 1.0);
+        let want = [0.8 / 3.0, 0.8, 0.9, 1.0];
+        assert!(cdf.iter().zip(want).all(|(a, b)| (a - b).abs() < 1e-12), "{cdf:?}");
+        let mut cdf = vec![1.0, 4.0];
+        assert_eq!(mix_central(&mut cdf, 4.0, &[0.0, 0.0], 0.0, 0.2), 1.0);
+        assert_eq!(cdf, [0.25, 1.0, 1.0, 1.0]);
+        let mut cdf = vec![0.0, 0.0];
+        assert_eq!(mix_central(&mut cdf, 0.0, &[0.0, 0.0], 0.0, 0.2), 0.0);
+    }
+
+    /// T-1092: a dense errand centre 12 km out draws a share of the outings that the local
+    /// draw sends to a sparse place 2 km away.
+    #[test]
+    fn central_destinations_reach_a_dense_centre() {
+        let mut x = vec![0.0f32];
+        let mut errands = vec![0.0f32];
+        // empty land in the home square, so its residents' own density does not swamp it
+        for i in 0..9 {
+            x.push(100.0 + 180.0 * i as f32);
+            errands.push(0.0);
+        }
+        for i in 0..10 {
+            x.push(2100.0 + 90.0 * i as f32);
+            errands.push(10.0);
+        }
+        x.push(12_100.0);
+        errands.push(100.0);
+        let n = x.len();
+        let city = pack::City {
+            name: "centre".into(),
+            h3: (1..=n as u64).collect(),
+            x: x.clone(),
+            y: vec![100.0; n],
+            pop: (0..n).map(|c| if c == 0 { 1000.0 } else { 0.0 }).collect(),
+            jobs: errands.clone(),
+            region: vec![],
+            gravity: None,
+        };
+        let (h, b) = pack::write(&city);
+        let (h, b) = with_array(&h, b, "errand_jobs", &errands);
+        let (h, b) = with_array(&h, b, "leisure_jobs", &errands);
+        let open = |share: f32| {
+            let mut api = DemandApi::new(&h, &b).unwrap();
+            api.params_mut().set_extra("central_share", share).unwrap();
+            EverydayApi::beside(&api, &h, &b).unwrap()
+        };
+        let far = |a: &EverydayApi, kind: usize| {
+            let (mut all, mut far) = (0.0, 0.0);
+            for k in a.start[kind]..a.start[kind + 1] {
+                if let Some((_, _, d, w, _)) = a.edge(k) {
+                    all += w as f64;
+                    far += if d == n - 1 { w as f64 } else { 0.0 };
+                }
+            }
+            (all, far / all)
+        };
+        let (off, on) = (open(0.0), open(CENTRAL_SHARE));
+        let ((t0, f0), (t1, f1)) = (far(&off, 0), far(&on, 0));
+        assert!((t0 - t1).abs() < 1e-3 * t0, "the outings are conserved: {t0} {t1}");
+        assert!(f0 < 0.01 && f1 > 0.08 && f1 < 0.2, "errands to the centre: {f0} without, {f1} with");
+        // social: half its attraction is residents, all at home (under 150 m, dropped), so
+        // its centre shows with the central draw alone
+        let ((_, f0), (_, f1)) = (far(&off, 1), far(&open(1.0), 1));
+        assert!(f0 < 0.01 && f1 > 0.3, "social to the centre: {f0} without, {f1} all central");
     }
 
     /// T-196: each city's pack before parks (`data/work/pre-T196`) against now. Every other
@@ -2170,6 +2266,13 @@ impl EverydayApi {
             let zmass: Vec<f64> = zones.iter().map(|&z| mass[z]).collect();
             let table = DecayTable::new(&engine.z, decay[kind]);
             let (zx, zy) = table.places(&engine.z, &zones);
+            let q = if has_central(kind) { engine.base.everyday_central_share.clamp(0.0, 1.0) as f64 } else { 0.0 };
+            let mut central = (q > 0.0).then(|| {
+                let z = &engine.z;
+                let land = |k: usize| (z.ncell[k].max(1) as f32 * CELL_KM2).min(z.square_km2(k)) as f64;
+                let cmass: Vec<f64> = zones.iter().map(|&k| mass[k] * mass[k] / land(k)).collect();
+                (DecayTable::new(z, engine.base.everyday_central_m), cmass, Vec::with_capacity(zones.len()))
+            });
             let budget = budget_of(kind);
             row.fill(NONE);
             for (i, &c) in live[kind].iter().enumerate() {
@@ -2195,7 +2298,11 @@ impl EverydayApi {
                 if !members[oz].iter().any(|&c| budget.get(c).copied().unwrap_or(0.0) > 0.0) {
                     continue;
                 }
-                let total = table.cdf(&engine.z, oz, &zx, &zy, &zmass, &mut cdf);
+                let mut total = table.cdf(&engine.z, oz, &zx, &zy, &zmass, &mut cdf);
+                if let Some((ctable, cmass, ccdf)) = central.as_mut() {
+                    let tc = ctable.cdf(&engine.z, oz, &zx, &zy, cmass, ccdf);
+                    total = mix_central(&mut cdf, total, ccdf, tc, q);
+                }
                 if kind == AIRPORT {
                     airport_scale[oz] = total;
                 }
