@@ -9306,6 +9306,598 @@
       {
         "name": "Smith County",
         "regionName": "Smith County region"
+      },
+      {
+        "name": "Detroit",
+        "regionName": "Detroit region"
+      },
+      {
+        "name": "Minneapolis [Saint Paul]",
+        "regionName": "Minneapolis [Saint Paul] region"
+      },
+      {
+        "name": "Milwaukee",
+        "regionName": "Milwaukee region"
+      },
+      {
+        "name": "Brown County",
+        "regionName": "Brown County region"
+      },
+      {
+        "name": "Winnebago County",
+        "regionName": "Winnebago County region"
+      },
+      {
+        "name": "Genesee County",
+        "regionName": "Genesee County region"
+      },
+      {
+        "name": "St. Louis County",
+        "regionName": "St. Louis County region"
+      },
+      {
+        "name": "Olmsted County",
+        "regionName": "Olmsted County region"
+      },
+      {
+        "name": "Kent County",
+        "regionName": "Kent County region"
+      },
+      {
+        "name": "Clay County",
+        "regionName": "Clay County region"
+      },
+      {
+        "name": "Bay County",
+        "regionName": "Bay County region"
+      },
+      {
+        "name": "Ingham County",
+        "regionName": "Ingham County region"
+      },
+      {
+        "name": "Dane County",
+        "regionName": "Dane County region"
+      },
+      {
+        "name": "Racine County",
+        "regionName": "Racine County region"
+      },
+      {
+        "name": "Kalamazoo County",
+        "regionName": "Kalamazoo County region"
+      },
+      {
+        "name": "Washtenaw County",
+        "regionName": "Washtenaw County region"
+      },
+      {
+        "name": "Muskegon County",
+        "regionName": "Muskegon County region"
+      },
+      {
+        "name": "Marathon County",
+        "regionName": "Marathon County region"
+      },
+      {
+        "name": "Ottawa County",
+        "regionName": "Ottawa County region"
+      },
+      {
+        "name": "La Crosse County",
+        "regionName": "La Crosse County region"
+      },
+      {
+        "name": "Chicago",
+        "regionName": "Chicago region"
+      },
+      {
+        "name": "St. Louis",
+        "regionName": "St. Louis region"
+      },
+      {
+        "name": "Columbus",
+        "regionName": "Columbus region"
+      },
+      {
+        "name": "Kansas City",
+        "regionName": "Kansas City region"
+      },
+      {
+        "name": "Indianapolis",
+        "regionName": "Indianapolis region"
+      },
+      {
+        "name": "Cincinnati",
+        "regionName": "Cincinnati region"
+      },
+      {
+        "name": "Cleveland",
+        "regionName": "Cleveland region"
+      },
+      {
+        "name": "Louisville",
+        "regionName": "Louisville region"
+      },
+      {
+        "name": "Warren County",
+        "regionName": "Warren County region"
+      },
+      {
+        "name": "Sedgwick County",
+        "regionName": "Sedgwick County region"
+      },
+      {
+        "name": "St. Joseph County",
+        "regionName": "St. Joseph County region"
+      },
+      {
+        "name": "Greene County",
+        "regionName": "Greene County region"
+      },
+      {
+        "name": "Shawnee County",
+        "regionName": "Shawnee County region"
+      },
+      {
+        "name": "Vanderburgh County",
+        "regionName": "Vanderburgh County region"
+      },
+      {
+        "name": "Summit County",
+        "regionName": "Summit County region"
+      },
+      {
+        "name": "Franklin County",
+        "regionName": "Franklin County region"
+      },
+      {
+        "name": "Clark County",
+        "regionName": "Clark County region"
+      },
+      {
+        "name": "Lucas County",
+        "regionName": "Lucas County region"
+      },
+      {
+        "name": "Fayette County",
+        "regionName": "Fayette County region"
+      },
+      {
+        "name": "Tippecanoe County",
+        "regionName": "Tippecanoe County region"
+      },
+      {
+        "name": "Peoria County",
+        "regionName": "Peoria County region"
+      },
+      {
+        "name": "Williamson County",
+        "regionName": "Williamson County region"
+      },
+      {
+        "name": "Allen County",
+        "regionName": "Allen County region"
+      },
+      {
+        "name": "Lake County",
+        "regionName": "Lake County region"
+      },
+      {
+        "name": "Stark County",
+        "regionName": "Stark County region"
+      },
+      {
+        "name": "Mahoning County",
+        "regionName": "Mahoning County region"
+      },
+      {
+        "name": "McLean County",
+        "regionName": "McLean County region"
+      },
+      {
+        "name": "Buchanan County",
+        "regionName": "Buchanan County region"
+      },
+      {
+        "name": "Lorain County",
+        "regionName": "Lorain County region"
+      },
+      {
+        "name": "Muskingum County",
+        "regionName": "Muskingum County region"
+      },
+      {
+        "name": "Champaign County",
+        "regionName": "Champaign County region"
+      },
+      {
+        "name": "Cape Girardeau County",
+        "regionName": "Cape Girardeau County region"
+      },
+      {
+        "name": "Montgomery County, OH",
+        "regionName": "Montgomery County, OH region"
+      },
+      {
+        "name": "Winnebago County, IL",
+        "regionName": "Winnebago County, IL region"
+      },
+      {
+        "name": "Pike County",
+        "regionName": "Pike County region"
+      },
+      {
+        "name": "Greene County, OH",
+        "regionName": "Greene County, OH region"
+      },
+      {
+        "name": "Scott County, KY",
+        "regionName": "Scott County, KY region"
+      },
+      {
+        "name": "Chicago",
+        "regionName": "Chicago region"
+      },
+      {
+        "name": "St. Louis",
+        "regionName": "St. Louis region"
+      },
+      {
+        "name": "Columbus",
+        "regionName": "Columbus region"
+      },
+      {
+        "name": "Kansas City",
+        "regionName": "Kansas City region"
+      },
+      {
+        "name": "Indianapolis",
+        "regionName": "Indianapolis region"
+      },
+      {
+        "name": "Cincinnati",
+        "regionName": "Cincinnati region"
+      },
+      {
+        "name": "Cleveland",
+        "regionName": "Cleveland region"
+      },
+      {
+        "name": "Louisville",
+        "regionName": "Louisville region"
+      },
+      {
+        "name": "Warren County",
+        "regionName": "Warren County region"
+      },
+      {
+        "name": "Sedgwick County",
+        "regionName": "Sedgwick County region"
+      },
+      {
+        "name": "St. Joseph County",
+        "regionName": "St. Joseph County region"
+      },
+      {
+        "name": "Greene County",
+        "regionName": "Greene County region"
+      },
+      {
+        "name": "Shawnee County",
+        "regionName": "Shawnee County region"
+      },
+      {
+        "name": "Vanderburgh County",
+        "regionName": "Vanderburgh County region"
+      },
+      {
+        "name": "Summit County",
+        "regionName": "Summit County region"
+      },
+      {
+        "name": "Franklin County",
+        "regionName": "Franklin County region"
+      },
+      {
+        "name": "Clark County",
+        "regionName": "Clark County region"
+      },
+      {
+        "name": "Lucas County",
+        "regionName": "Lucas County region"
+      },
+      {
+        "name": "Fayette County",
+        "regionName": "Fayette County region"
+      },
+      {
+        "name": "Tippecanoe County",
+        "regionName": "Tippecanoe County region"
+      },
+      {
+        "name": "Peoria County",
+        "regionName": "Peoria County region"
+      },
+      {
+        "name": "Williamson County",
+        "regionName": "Williamson County region"
+      },
+      {
+        "name": "Allen County",
+        "regionName": "Allen County region"
+      },
+      {
+        "name": "Lake County",
+        "regionName": "Lake County region"
+      },
+      {
+        "name": "Stark County",
+        "regionName": "Stark County region"
+      },
+      {
+        "name": "Mahoning County",
+        "regionName": "Mahoning County region"
+      },
+      {
+        "name": "McLean County",
+        "regionName": "McLean County region"
+      },
+      {
+        "name": "Buchanan County",
+        "regionName": "Buchanan County region"
+      },
+      {
+        "name": "Lorain County",
+        "regionName": "Lorain County region"
+      },
+      {
+        "name": "Muskingum County",
+        "regionName": "Muskingum County region"
+      },
+      {
+        "name": "Champaign County",
+        "regionName": "Champaign County region"
+      },
+      {
+        "name": "Cape Girardeau County",
+        "regionName": "Cape Girardeau County region"
+      },
+      {
+        "name": "Montgomery County, OH",
+        "regionName": "Montgomery County, OH region"
+      },
+      {
+        "name": "Winnebago County, IL",
+        "regionName": "Winnebago County, IL region"
+      },
+      {
+        "name": "Pike County",
+        "regionName": "Pike County region"
+      },
+      {
+        "name": "Greene County, OH",
+        "regionName": "Greene County, OH region"
+      },
+      {
+        "name": "Scott County, KY",
+        "regionName": "Scott County, KY region"
+      },
+      {
+        "name": "Detroit",
+        "regionName": "Detroit region"
+      },
+      {
+        "name": "Minneapolis [Saint Paul]",
+        "regionName": "Minneapolis [Saint Paul] region"
+      },
+      {
+        "name": "Milwaukee",
+        "regionName": "Milwaukee region"
+      },
+      {
+        "name": "Brown County",
+        "regionName": "Brown County region"
+      },
+      {
+        "name": "Winnebago County",
+        "regionName": "Winnebago County region"
+      },
+      {
+        "name": "Genesee County",
+        "regionName": "Genesee County region"
+      },
+      {
+        "name": "St. Louis County",
+        "regionName": "St. Louis County region"
+      },
+      {
+        "name": "Olmsted County",
+        "regionName": "Olmsted County region"
+      },
+      {
+        "name": "Kent County",
+        "regionName": "Kent County region"
+      },
+      {
+        "name": "Clay County",
+        "regionName": "Clay County region"
+      },
+      {
+        "name": "Bay County",
+        "regionName": "Bay County region"
+      },
+      {
+        "name": "Ingham County",
+        "regionName": "Ingham County region"
+      },
+      {
+        "name": "Dane County",
+        "regionName": "Dane County region"
+      },
+      {
+        "name": "Racine County",
+        "regionName": "Racine County region"
+      },
+      {
+        "name": "Kalamazoo County",
+        "regionName": "Kalamazoo County region"
+      },
+      {
+        "name": "Washtenaw County",
+        "regionName": "Washtenaw County region"
+      },
+      {
+        "name": "Muskegon County",
+        "regionName": "Muskegon County region"
+      },
+      {
+        "name": "Marathon County",
+        "regionName": "Marathon County region"
+      },
+      {
+        "name": "Ottawa County",
+        "regionName": "Ottawa County region"
+      },
+      {
+        "name": "La Crosse County",
+        "regionName": "La Crosse County region"
+      },
+      {
+        "name": "Detroit",
+        "regionName": "Detroit region"
+      },
+      {
+        "name": "Minneapolis [Saint Paul]",
+        "regionName": "Minneapolis [Saint Paul] region"
+      },
+      {
+        "name": "Milwaukee",
+        "regionName": "Milwaukee region"
+      },
+      {
+        "name": "Brown County",
+        "regionName": "Brown County region"
+      },
+      {
+        "name": "Winnebago County",
+        "regionName": "Winnebago County region"
+      },
+      {
+        "name": "Genesee County",
+        "regionName": "Genesee County region"
+      },
+      {
+        "name": "St. Louis County",
+        "regionName": "St. Louis County region"
+      },
+      {
+        "name": "Olmsted County",
+        "regionName": "Olmsted County region"
+      },
+      {
+        "name": "Kent County",
+        "regionName": "Kent County region"
+      },
+      {
+        "name": "Clay County",
+        "regionName": "Clay County region"
+      },
+      {
+        "name": "Bay County",
+        "regionName": "Bay County region"
+      },
+      {
+        "name": "Ingham County",
+        "regionName": "Ingham County region"
+      },
+      {
+        "name": "Dane County",
+        "regionName": "Dane County region"
+      },
+      {
+        "name": "Racine County",
+        "regionName": "Racine County region"
+      },
+      {
+        "name": "Kalamazoo County",
+        "regionName": "Kalamazoo County region"
+      },
+      {
+        "name": "Washtenaw County",
+        "regionName": "Washtenaw County region"
+      },
+      {
+        "name": "Muskegon County",
+        "regionName": "Muskegon County region"
+      },
+      {
+        "name": "Marathon County",
+        "regionName": "Marathon County region"
+      },
+      {
+        "name": "Ottawa County",
+        "regionName": "Ottawa County region"
+      },
+      {
+        "name": "La Crosse County",
+        "regionName": "La Crosse County region"
+      },
+      {
+        "name": "Polk County",
+        "regionName": "Polk County region"
+      },
+      {
+        "name": "Black Hawk County",
+        "regionName": "Black Hawk County region"
+      },
+      {
+        "name": "Linn County",
+        "regionName": "Linn County region"
+      },
+      {
+        "name": "Scott County",
+        "regionName": "Scott County region"
+      },
+      {
+        "name": "Minnehaha County",
+        "regionName": "Minnehaha County region"
+      },
+      {
+        "name": "Hall County",
+        "regionName": "Hall County region"
+      },
+      {
+        "name": "Douglas County",
+        "regionName": "Douglas County region"
+      },
+      {
+        "name": "Lancaster County",
+        "regionName": "Lancaster County region"
+      },
+      {
+        "name": "Cass County",
+        "regionName": "Cass County region"
+      },
+      {
+        "name": "Minneapolis [Saint Paul]",
+        "regionName": "Minneapolis [Saint Paul] region"
+      },
+      {
+        "name": "Marathon County",
+        "regionName": "Marathon County region"
+      },
+      {
+        "name": "Black Hawk County",
+        "regionName": "Black Hawk County region"
+      },
+      {
+        "name": "Bay County",
+        "regionName": "Bay County region"
+      },
+      {
+        "name": "Minneapolis [Saint Paul]",
+        "regionName": "Minneapolis [Saint Paul] region"
       }
     ],
     "rule": {
@@ -49881,7 +50473,7 @@
       ],
       "place": 2279,
       "country": "US",
-      "localTrips": 4480677.0,
+      "localTrips": 4475070.0,
       "realm": "us-south"
     },
     {
@@ -49906,7 +50498,7 @@
       ],
       "place": 2280,
       "country": "US",
-      "localTrips": 3770382.0,
+      "localTrips": 3770446.0,
       "realm": "us-south"
     },
     {
@@ -49932,7 +50524,7 @@
       ],
       "place": 2282,
       "country": "US",
-      "localTrips": 3752466.0,
+      "localTrips": 3744982.0,
       "realm": "us-south"
     },
     {
@@ -49958,7 +50550,7 @@
       ],
       "place": 2286,
       "country": "US",
-      "localTrips": 2648229.0,
+      "localTrips": 2649342.0,
       "realm": "us-south"
     },
     {
@@ -49984,7 +50576,7 @@
       ],
       "place": 2288,
       "country": "US",
-      "localTrips": 1812266.0,
+      "localTrips": 1812566.0,
       "realm": "us-south"
     },
     {
@@ -50010,7 +50602,7 @@
       ],
       "place": 2289,
       "country": "US",
-      "localTrips": 1849025.0,
+      "localTrips": 1844443.0,
       "realm": "us-south"
     },
     {
@@ -50062,7 +50654,7 @@
       ],
       "place": 2291,
       "country": "US",
-      "localTrips": 1518716.0,
+      "localTrips": 1518848.0,
       "realm": "us-south"
     },
     {
@@ -50217,7 +50809,7 @@
       ],
       "place": 2298,
       "country": "US",
-      "localTrips": 2861880.0,
+      "localTrips": 2862023.0,
       "realm": "us-south"
     },
     {
@@ -50243,7 +50835,7 @@
       ],
       "place": 2299,
       "country": "US",
-      "localTrips": 2706805.0,
+      "localTrips": 2706941.0,
       "realm": "us-south"
     },
     {
@@ -50269,7 +50861,7 @@
       ],
       "place": 2300,
       "country": "US",
-      "localTrips": 2458372.0,
+      "localTrips": 2458577.0,
       "realm": "us-south"
     },
     {
@@ -50295,7 +50887,7 @@
       ],
       "place": 2301,
       "country": "US",
-      "localTrips": 2547131.0,
+      "localTrips": 2547418.0,
       "realm": "us-south"
     },
     {
@@ -50321,7 +50913,7 @@
       ],
       "place": 2302,
       "country": "US",
-      "localTrips": 2149202.0,
+      "localTrips": 2149307.0,
       "realm": "us-south"
     },
     {
@@ -50347,7 +50939,7 @@
       ],
       "place": 2303,
       "country": "US",
-      "localTrips": 1963455.0,
+      "localTrips": 1963503.0,
       "realm": "us-south"
     },
     {
@@ -50578,7 +51170,7 @@
       ],
       "place": 2314,
       "country": "US",
-      "localTrips": 3526083.0,
+      "localTrips": 3511880.0,
       "realm": "us-south"
     },
     {
@@ -50604,7 +51196,7 @@
       ],
       "place": 2315,
       "country": "US",
-      "localTrips": 3431007.0,
+      "localTrips": 3431273.0,
       "realm": "us-south"
     },
     {
@@ -50630,7 +51222,7 @@
       ],
       "place": 2316,
       "country": "US",
-      "localTrips": 2699013.0,
+      "localTrips": 2699082.0,
       "realm": "us-south"
     },
     {
@@ -50762,6 +51354,1711 @@
       "country": "US",
       "localTrips": 2300188.0,
       "realm": "us-south"
+    },
+    {
+      "id": "cic",
+      "name": "Chicago",
+      "origin": {
+        "lon": -87.6313,
+        "lat": 41.8987
+      },
+      "center": [
+        -87.6313,
+        41.8987
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -88.732,
+        41.09,
+        -86.462,
+        42.515
+      ],
+      "place": 2379,
+      "country": "US",
+      "localTrips": 27733682.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "sts",
+      "name": "St. Louis",
+      "origin": {
+        "lon": -90.2362,
+        "lat": 38.6371
+      },
+      "center": [
+        -90.2362,
+        38.6371
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -90.988,
+        37.985,
+        -89.571,
+        39.281
+      ],
+      "place": 2380,
+      "country": "US",
+      "localTrips": 8115215.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "cob",
+      "name": "Columbus",
+      "origin": {
+        "lon": -83.0116,
+        "lat": 39.992
+      },
+      "center": [
+        -83.0116,
+        39.992
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -83.677,
+        39.449,
+        -82.159,
+        40.526
+      ],
+      "place": 2381,
+      "country": "US",
+      "localTrips": 6525384.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "kac",
+      "name": "Kansas City",
+      "origin": {
+        "lon": -94.5357,
+        "lat": 39.1084
+      },
+      "center": [
+        -94.5357,
+        39.1084
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -95.212,
+        38.37,
+        -93.735,
+        39.767
+      ],
+      "place": 2382,
+      "country": "US",
+      "localTrips": 6791718.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "ina",
+      "name": "Indianapolis",
+      "origin": {
+        "lon": -86.0051,
+        "lat": 39.831
+      },
+      "center": [
+        -86.0051,
+        39.831
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -86.72,
+        39.32,
+        -85.551,
+        40.426
+      ],
+      "place": 2383,
+      "country": "US",
+      "localTrips": 6713166.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "cin",
+      "name": "Cincinnati",
+      "origin": {
+        "lon": -84.5139,
+        "lat": 39.1084
+      },
+      "center": [
+        -84.5139,
+        39.1084
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -85.156,
+        38.752,
+        -83.953,
+        39.748
+      ],
+      "place": 2384,
+      "country": "US",
+      "localTrips": 6742403.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "cle",
+      "name": "Cleveland",
+      "origin": {
+        "lon": -81.7801,
+        "lat": 41.4922
+      },
+      "center": [
+        -81.7801,
+        41.4922
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -82.198,
+        40.97,
+        -80.978,
+        42.252
+      ],
+      "place": 2385,
+      "country": "US",
+      "localTrips": 5552867.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "lou",
+      "name": "Louisville",
+      "origin": {
+        "lon": -85.764,
+        "lat": 38.1758
+      },
+      "center": [
+        -85.764,
+        38.1758
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -86.514,
+        37.504,
+        -84.843,
+        38.625
+      ],
+      "place": 2386,
+      "country": "US",
+      "localTrips": 4227636.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "wae",
+      "name": "Warren County",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.4588,
+        "lat": 36.9833
+      },
+      "center": [
+        -86.4588,
+        36.9833
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -89.595,
+        36.479,
+        -85.02,
+        38.064
+      ],
+      "place": 2387,
+      "country": "US",
+      "localTrips": 3371477.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "sed",
+      "name": "Sedgwick County",
+      "kind": "zone",
+      "origin": {
+        "lon": -100.0191,
+        "lat": 37.7598
+      },
+      "center": [
+        -100.0191,
+        37.7598
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -102.075,
+        36.974,
+        -97.124,
+        40.022
+      ],
+      "place": 2388,
+      "country": "US",
+      "localTrips": 3197522.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "stj",
+      "name": "St. Joseph County",
+      "kind": "zone",
+      "origin": {
+        "lon": -85.4054,
+        "lat": 40.2068
+      },
+      "center": [
+        -85.4054,
+        40.2068
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -87.551,
+        39.986,
+        -84.778,
+        41.779
+      ],
+      "place": 2389,
+      "country": "US",
+      "localTrips": 2995288.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "grc",
+      "name": "Greene County",
+      "kind": "zone",
+      "origin": {
+        "lon": -93.2809,
+        "lat": 37.2036
+      },
+      "center": [
+        -93.2809,
+        37.2036
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -94.642,
+        37.03,
+        -91.611,
+        39.362
+      ],
+      "place": 2390,
+      "country": "US",
+      "localTrips": 3077703.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "shw",
+      "name": "Shawnee County",
+      "kind": "zone",
+      "origin": {
+        "lon": -95.2449,
+        "lat": 38.966
+      },
+      "center": [
+        -95.2449,
+        38.966
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.091,
+        36.98,
+        -94.589,
+        40.021
+      ],
+      "place": 2391,
+      "country": "US",
+      "localTrips": 2811384.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "vab",
+      "name": "Vanderburgh County",
+      "kind": "zone",
+      "origin": {
+        "lon": -87.5348,
+        "lat": 37.9722
+      },
+      "center": [
+        -87.5348,
+        37.9722
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -88.121,
+        37.753,
+        -84.761,
+        39.627
+      ],
+      "place": 2392,
+      "country": "US",
+      "localTrips": 2663054.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "sum",
+      "name": "Summit County",
+      "kind": "zone",
+      "origin": {
+        "lon": -81.5407,
+        "lat": 41.0957
+      },
+      "center": [
+        -81.5407,
+        41.0957
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -83.445,
+        40.132,
+        -81.367,
+        41.37
+      ],
+      "place": 2393,
+      "country": "US",
+      "localTrips": 2473229.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "frn",
+      "name": "Franklin County",
+      "kind": "zone",
+      "origin": {
+        "lon": -92.127,
+        "lat": 37.751
+      },
+      "center": [
+        -92.127,
+        37.751
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -94.642,
+        36.478,
+        -90.64,
+        39.246
+      ],
+      "place": 2394,
+      "country": "US",
+      "localTrips": 2195031.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "clr",
+      "name": "Clark County",
+      "kind": "zone",
+      "origin": {
+        "lon": -84.1016,
+        "lat": 40.7719
+      },
+      "center": [
+        -84.1016,
+        40.7719
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -84.837,
+        39.75,
+        -83.391,
+        41.739
+      ],
+      "place": 2395,
+      "country": "US",
+      "localTrips": 2480423.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "lut",
+      "name": "Lucas County",
+      "kind": "zone",
+      "origin": {
+        "lon": -83.6318,
+        "lat": 41.375
+      },
+      "center": [
+        -83.6318,
+        41.375
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -83.908,
+        40.668,
+        -82.616,
+        41.96
+      ],
+      "place": 2396,
+      "country": "US",
+      "localTrips": 2627682.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "fay",
+      "name": "Fayette County",
+      "kind": "zone",
+      "origin": {
+        "lon": -84.503,
+        "lat": 38.0341
+      },
+      "center": [
+        -84.503,
+        38.0341
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -85.319,
+        36.569,
+        -83.759,
+        38.23
+      ],
+      "place": 2397,
+      "country": "US",
+      "localTrips": 2435500.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "tip",
+      "name": "Tippecanoe County",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.9188,
+        "lat": 40.4308
+      },
+      "center": [
+        -86.9188,
+        40.4308
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -87.558,
+        38.972,
+        -84.787,
+        40.756
+      ],
+      "place": 2398,
+      "country": "US",
+      "localTrips": 2390011.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "pet",
+      "name": "Peoria County",
+      "kind": "zone",
+      "origin": {
+        "lon": -89.6149,
+        "lat": 40.7001
+      },
+      "center": [
+        -89.6149,
+        40.7001
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -91.537,
+        38.85,
+        -89.119,
+        41.802
+      ],
+      "place": 2399,
+      "country": "US",
+      "localTrips": 2521828.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "wii",
+      "name": "Williamson County",
+      "kind": "zone",
+      "origin": {
+        "lon": -88.1722,
+        "lat": 39.4827
+      },
+      "center": [
+        -88.1722,
+        39.4827
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -90.229,
+        36.952,
+        -87.471,
+        39.902
+      ],
+      "place": 2400,
+      "country": "US",
+      "localTrips": 2271345.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "aen",
+      "name": "Allen County",
+      "kind": "zone",
+      "origin": {
+        "lon": -85.1444,
+        "lat": 41.0507
+      },
+      "center": [
+        -85.1444,
+        41.0507
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -86.087,
+        40.898,
+        -84.778,
+        41.779
+      ],
+      "place": 2401,
+      "country": "US",
+      "localTrips": 2512948.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "lke",
+      "name": "Lake County",
+      "kind": "zone",
+      "origin": {
+        "lon": -87.8358,
+        "lat": 42.3696
+      },
+      "center": [
+        -87.8358,
+        42.3696
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -88.225,
+        42.134,
+        -87.019,
+        42.515
+      ],
+      "place": 2402,
+      "country": "US",
+      "localTrips": 1953489.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "stk",
+      "name": "Stark County",
+      "kind": "zone",
+      "origin": {
+        "lon": -81.4114,
+        "lat": 40.7899
+      },
+      "center": [
+        -81.4114,
+        40.7899
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.737,
+        40.136,
+        -80.494,
+        41.007
+      ],
+      "place": 2403,
+      "country": "US",
+      "localTrips": 1867262.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "mho",
+      "name": "Mahoning County",
+      "kind": "zone",
+      "origin": {
+        "lon": -81.3447,
+        "lat": 41.1497
+      },
+      "center": [
+        -81.3447,
+        41.1497
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.418,
+        40.881,
+        -80.494,
+        42.328
+      ],
+      "place": 2404,
+      "country": "US",
+      "localTrips": 1885564.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "mcc",
+      "name": "McLean County",
+      "kind": "zone",
+      "origin": {
+        "lon": -88.7777,
+        "lat": 41.9349
+      },
+      "center": [
+        -88.7777,
+        41.9349
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -90.01,
+        40.03,
+        -87.501,
+        42.172
+      ],
+      "place": 2405,
+      "country": "US",
+      "localTrips": 1825672.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "buh",
+      "name": "Buchanan County",
+      "kind": "zone",
+      "origin": {
+        "lon": -92.5864,
+        "lat": 40.1889
+      },
+      "center": [
+        -92.5864,
+        40.1889
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -95.799,
+        38.488,
+        -90.697,
+        40.632
+      ],
+      "place": 2406,
+      "country": "US",
+      "localTrips": 1553372.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "lri",
+      "name": "Lorain County",
+      "kind": "zone",
+      "origin": {
+        "lon": -82.5027,
+        "lat": 40.7899
+      },
+      "center": [
+        -82.5027,
+        40.7899
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -82.953,
+        40.531,
+        -81.852,
+        41.878
+      ],
+      "place": 2407,
+      "country": "US",
+      "localTrips": 1676495.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "mui",
+      "name": "Muskingum County",
+      "kind": "zone",
+      "origin": {
+        "lon": -82.1069,
+        "lat": 39.3311
+      },
+      "center": [
+        -82.1069,
+        39.3311
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -82.84,
+        38.385,
+        -80.679,
+        40.241
+      ],
+      "place": 2408,
+      "country": "US",
+      "localTrips": 1540928.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "chp",
+      "name": "Champaign County",
+      "kind": "zone",
+      "origin": {
+        "lon": -88.2392,
+        "lat": 40.1083
+      },
+      "center": [
+        -88.2392,
+        40.1083
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -90.019,
+        39.327,
+        -87.502,
+        40.51
+      ],
+      "place": 2409,
+      "country": "US",
+      "localTrips": 1863739.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "cpe",
+      "name": "Cape Girardeau County",
+      "kind": "zone",
+      "origin": {
+        "lon": -90.4436,
+        "lat": 37.7687
+      },
+      "center": [
+        -90.4436,
+        37.7687
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -92.277,
+        35.977,
+        -89.075,
+        38.23
+      ],
+      "place": 2410,
+      "country": "US",
+      "localTrips": 1436667.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "moh",
+      "name": "Montgomery County, OH",
+      "kind": "zone",
+      "origin": {
+        "lon": -84.1497,
+        "lat": 39.7416
+      },
+      "center": [
+        -84.1497,
+        39.7416
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -84.839,
+        39.548,
+        -84.027,
+        39.942
+      ],
+      "place": 2411,
+      "country": "US",
+      "localTrips": 1662196.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "wie",
+      "name": "Winnebago County, IL",
+      "kind": "zone",
+      "origin": {
+        "lon": -89.0882,
+        "lat": 42.288
+      },
+      "center": [
+        -89.0882,
+        42.288
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -90.682,
+        41.565,
+        -88.68,
+        42.527
+      ],
+      "place": 2412,
+      "country": "US",
+      "localTrips": 1596201.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "piu",
+      "name": "Pike County",
+      "kind": "zone",
+      "origin": {
+        "lon": -84.1819,
+        "lat": 37.9899
+      },
+      "center": [
+        -84.1819,
+        37.9899
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -84.372,
+        36.564,
+        -81.941,
+        38.544
+      ],
+      "place": 2413,
+      "country": "US",
+      "localTrips": 1330675.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "gru",
+      "name": "Greene County, OH",
+      "kind": "zone",
+      "origin": {
+        "lon": -83.0061,
+        "lat": 39.3757
+      },
+      "center": [
+        -83.0061,
+        39.3757
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -84.138,
+        38.552,
+        -82.626,
+        39.869
+      ],
+      "place": 2414,
+      "country": "US",
+      "localTrips": 1387186.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "sct",
+      "name": "Scott County, KY",
+      "kind": "zone",
+      "origin": {
+        "lon": -84.572,
+        "lat": 38.1936
+      },
+      "center": [
+        -84.572,
+        38.1936
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -85.545,
+        37.393,
+        -82.441,
+        38.893
+      ],
+      "place": 2415,
+      "country": "US",
+      "localTrips": 1346063.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "det",
+      "name": "Detroit",
+      "origin": {
+        "lon": -83.0525,
+        "lat": 42.3968
+      },
+      "center": [
+        -83.0525,
+        42.3968
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -84.183,
+        42.02,
+        -82.334,
+        43.188
+      ],
+      "place": 2436,
+      "country": "US",
+      "localTrips": 13161366.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "mik",
+      "name": "Milwaukee",
+      "origin": {
+        "lon": -87.9371,
+        "lat": 43.042
+      },
+      "center": [
+        -87.9371,
+        43.042
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -88.567,
+        42.823,
+        -87.069,
+        43.562
+      ],
+      "place": 2438,
+      "country": "US",
+      "localTrips": 5077401.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "bro",
+      "name": "Brown County",
+      "kind": "zone",
+      "origin": {
+        "lon": -87.4022,
+        "lat": 46.5589
+      },
+      "center": [
+        -87.4022,
+        46.5589
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -90.445,
+        44.222,
+        -83.433,
+        48.307
+      ],
+      "place": 2439,
+      "country": "US",
+      "localTrips": 3296139.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "win",
+      "name": "Winnebago County",
+      "kind": "zone",
+      "origin": {
+        "lon": -88.5502,
+        "lat": 44.0283
+      },
+      "center": [
+        -88.5502,
+        44.0283
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -91.676,
+        43.176,
+        -86.923,
+        45.052
+      ],
+      "place": 2440,
+      "country": "US",
+      "localTrips": 2784469.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "ges",
+      "name": "Genesee County",
+      "kind": "zone",
+      "origin": {
+        "lon": -83.9745,
+        "lat": 43.4248
+      },
+      "center": [
+        -83.9745,
+        43.4248
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -84.395,
+        42.757,
+        -82.122,
+        44.172
+      ],
+      "place": 2441,
+      "country": "US",
+      "localTrips": 2384151.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "stx",
+      "name": "St. Louis County",
+      "kind": "zone",
+      "origin": {
+        "lon": -94.1613,
+        "lat": 45.5472
+      },
+      "center": [
+        -94.1613,
+        45.5472
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -95.21,
+        45.264,
+        -89.467,
+        48.731
+      ],
+      "place": 2442,
+      "country": "US",
+      "localTrips": 2294875.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "olm",
+      "name": "Olmsted County",
+      "kind": "zone",
+      "origin": {
+        "lon": -91.6432,
+        "lat": 44.0466
+      },
+      "center": [
+        -91.6432,
+        44.0466
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -96.479,
+        43.481,
+        -91.192,
+        44.732
+      ],
+      "place": 2443,
+      "country": "US",
+      "localTrips": 2203142.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "ket",
+      "name": "Kent County",
+      "kind": "zone",
+      "origin": {
+        "lon": -85.6864,
+        "lat": 42.9783
+      },
+      "center": [
+        -85.6864,
+        42.9783
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -85.816,
+        42.75,
+        -84.338,
+        43.313
+      ],
+      "place": 2444,
+      "country": "US",
+      "localTrips": 2457656.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "cly",
+      "name": "Clay County",
+      "kind": "zone",
+      "origin": {
+        "lon": -96.7579,
+        "lat": 46.8666
+      },
+      "center": [
+        -96.7579,
+        46.8666
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -97.266,
+        44.089,
+        -93.737,
+        49.403
+      ],
+      "place": 2445,
+      "country": "US",
+      "localTrips": 1868752.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "inh",
+      "name": "Ingham County",
+      "kind": "zone",
+      "origin": {
+        "lon": -84.4697,
+        "lat": 42.7327
+      },
+      "center": [
+        -84.4697,
+        42.7327
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -85.325,
+        41.678,
+        -84.106,
+        42.795
+      ],
+      "place": 2447,
+      "country": "US",
+      "localTrips": 1920708.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "dne",
+      "name": "Dane County",
+      "kind": "zone",
+      "origin": {
+        "lon": -89.3931,
+        "lat": 43.0693
+      },
+      "center": [
+        -89.3931,
+        43.0693
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -89.864,
+        42.824,
+        -88.511,
+        43.313
+      ],
+      "place": 2448,
+      "country": "US",
+      "localTrips": 2073771.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "rac",
+      "name": "Racine County",
+      "kind": "zone",
+      "origin": {
+        "lon": -87.7901,
+        "lat": 42.7418
+      },
+      "center": [
+        -87.7901,
+        42.7418
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -89.394,
+        42.473,
+        -87.019,
+        42.866
+      ],
+      "place": 2449,
+      "country": "US",
+      "localTrips": 1807996.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "klm",
+      "name": "Kalamazoo County",
+      "kind": "zone",
+      "origin": {
+        "lon": -85.6265,
+        "lat": 42.2789
+      },
+      "center": [
+        -85.6265,
+        42.2789
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -87.208,
+        41.74,
+        -85.267,
+        42.44
+      ],
+      "place": 2450,
+      "country": "US",
+      "localTrips": 1722365.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "was",
+      "name": "Washtenaw County",
+      "kind": "zone",
+      "origin": {
+        "lon": -83.7417,
+        "lat": 42.2698
+      },
+      "center": [
+        -83.7417,
+        42.2698
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -84.388,
+        41.688,
+        -83.112,
+        42.454
+      ],
+      "place": 2451,
+      "country": "US",
+      "localTrips": 1693097.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "muk",
+      "name": "Muskegon County",
+      "kind": "zone",
+      "origin": {
+        "lon": -84.7767,
+        "lat": 43.5892
+      },
+      "center": [
+        -84.7767,
+        43.5892
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -87.148,
+        43.099,
+        -84.141,
+        44.197
+      ],
+      "place": 2452,
+      "country": "US",
+      "localTrips": 1558580.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "ott",
+      "name": "Ottawa County",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.1008,
+        "lat": 42.7872
+      },
+      "center": [
+        -86.1008,
+        42.7872
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -87.108,
+        42.4,
+        -84.575,
+        43.225
+      ],
+      "place": 2454,
+      "country": "US",
+      "localTrips": 1579852.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "lcr",
+      "name": "La Crosse County",
+      "kind": "zone",
+      "origin": {
+        "lon": -91.2387,
+        "lat": 43.8178
+      },
+      "center": [
+        -91.2387,
+        43.8178
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -92.834,
+        42.482,
+        -89.34,
+        45.228
+      ],
+      "place": 2455,
+      "country": "US",
+      "localTrips": 1433815.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "poc",
+      "name": "Polk County",
+      "kind": "zone",
+      "origin": {
+        "lon": -93.6524,
+        "lat": 41.6005
+      },
+      "center": [
+        -93.6524,
+        41.6005
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -96.045,
+        40.357,
+        -90.917,
+        41.882
+      ],
+      "place": 2456,
+      "country": "US",
+      "localTrips": 2827618.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "lno",
+      "name": "Linn County",
+      "kind": "zone",
+      "origin": {
+        "lon": -91.525,
+        "lat": 41.6547
+      },
+      "center": [
+        -91.525,
+        41.6547
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -93.05,
+        41.405,
+        -90.449,
+        43.519
+      ],
+      "place": 2458,
+      "country": "US",
+      "localTrips": 2083809.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "sco",
+      "name": "Scott County",
+      "kind": "zone",
+      "origin": {
+        "lon": -93.6583,
+        "lat": 42.0253
+      },
+      "center": [
+        -93.6583,
+        42.0253
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -93.724,
+        41.054,
+        -90.115,
+        42.401
+      ],
+      "place": 2459,
+      "country": "US",
+      "localTrips": 1846688.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "mic",
+      "name": "Minnehaha County",
+      "kind": "zone",
+      "origin": {
+        "lon": -96.7817,
+        "lat": 44.3125
+      },
+      "center": [
+        -96.7817,
+        44.3125
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -104.084,
+        42.461,
+        -96.41,
+        45.964
+      ],
+      "place": 2460,
+      "country": "US",
+      "localTrips": 2654925.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "hlc",
+      "name": "Hall County",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.0961,
+        "lat": 40.7001
+      },
+      "center": [
+        -99.0961,
+        40.7001
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -104.078,
+        39.982,
+        -95.895,
+        43.02
+      ],
+      "place": 2461,
+      "country": "US",
+      "localTrips": 2181866.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "dul",
+      "name": "Douglas County",
+      "kind": "zone",
+      "origin": {
+        "lon": -95.9561,
+        "lat": 41.2488
+      },
+      "center": [
+        -95.9561,
+        41.2488
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -96.495,
+        41.171,
+        -95.847,
+        41.412
+      ],
+      "place": 2462,
+      "country": "US",
+      "localTrips": 1879444.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "lnr",
+      "name": "Lancaster County",
+      "kind": "zone",
+      "origin": {
+        "lon": -96.6972,
+        "lat": 40.7989
+      },
+      "center": [
+        -96.6972,
+        40.7989
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -96.941,
+        39.981,
+        -95.284,
+        41.21
+      ],
+      "place": 2463,
+      "country": "US",
+      "localTrips": 1755750.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "css",
+      "name": "Cass County",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.0801,
+        "lat": 47.9252
+      },
+      "center": [
+        -97.0801,
+        47.9252
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -104.077,
+        45.917,
+        -96.527,
+        49.019
+      ],
+      "place": 2464,
+      "country": "US",
+      "localTrips": 2431677.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "mrt",
+      "name": "Marathon County",
+      "kind": "zone",
+      "origin": {
+        "lon": -89.571,
+        "lat": 44.533
+      },
+      "center": [
+        -89.571,
+        44.533
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -92.914,
+        44.225,
+        -89.197,
+        47.31
+      ],
+      "place": 2466,
+      "country": "US",
+      "localTrips": 1789901.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "bla",
+      "name": "Black Hawk County",
+      "kind": "zone",
+      "origin": {
+        "lon": -92.4626,
+        "lat": 42.5147
+      },
+      "center": [
+        -92.4626,
+        42.5147
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -96.664,
+        41.138,
+        -92.039,
+        43.52
+      ],
+      "place": 2467,
+      "country": "US",
+      "localTrips": 2602563.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "byc",
+      "name": "Bay County",
+      "kind": "zone",
+      "origin": {
+        "lon": -83.8822,
+        "lat": 43.5983
+      },
+      "center": [
+        -83.8822,
+        43.5983
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -86.988,
+        43.46,
+        -82.249,
+        45.884
+      ],
+      "place": 2468,
+      "country": "US",
+      "localTrips": 1950442.0,
+      "realm": "us-midwest"
+    },
+    {
+      "id": "mip",
+      "name": "Minneapolis [Saint Paul]",
+      "origin": {
+        "lon": -93.2602,
+        "lat": 44.9655
+      },
+      "center": [
+        -93.2602,
+        44.9655
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -94.288,
+        44.453,
+        -92.109,
+        45.753
+      ],
+      "place": 2469,
+      "country": "US",
+      "localTrips": 11575629.0,
+      "realm": "us-midwest"
     }
   ]
 }

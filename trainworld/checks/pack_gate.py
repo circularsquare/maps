@@ -800,7 +800,9 @@ def browser_row(city, header, a, f, reg, out_dir):
     if pair is None:
         return None, {"pass": False, "error": "no water run near the centre for the water pair"}
     names = os.path.join(ROOT, "app", "src", "game", "zone-names.json")  # the name the game shows (T-825)
-    shown = reg["name"]
+    # with no hand-set name, zoneNames.ts's cleanName: "Minneapolis [Saint Paul]" shows "Minneapolis" (T-1078)
+    shown = re.sub(r"\s+", " ", re.sub(r" CC\b", "", re.sub(r"\s*\([^)]*\)\s*$", "",
+                                                             re.sub(r"\s*\[[^\]]*\]", "", reg["name"])))).strip() or reg["name"]
     if os.path.exists(names):
         with open(names, encoding="utf-8") as fh:
             shown = (json.load(fh).get(city) or {}).get("name") or shown

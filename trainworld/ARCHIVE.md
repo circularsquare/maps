@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-1088 [P1] No ring zones in the planner. Done 2026-10-24: nearest-centre joins, a strict wrap test, ring cuts and soft commuter belts (26 counties into 9 unbuilt metros); the US West and Northeast replanned (rings 9 to 0, 67 zones), nothing else changed. notes/T-1088.md.
+- T-1078 [P1] US wave 2, the Midwest. Done 2026-10-24: 66 of 66 shipped (built at home beside wave 1, gated, joined in 72 min); four parks relaxed with reasons, pack_gate's bracketed-name fault fixed; T-1079, T-1080 filed. notes/T-1004.md "Wave 2".
 - T-1093 [P2] Commute walking against the census, with and without a flat near end. Done 2026-10-23: walks 2-3x the census (London 18.5% / 9.4%, Tokyo 23.9% / 7.5%); flat 2 km cuts 2-8 points; fit cost under a point in Europe, 2-3 in Japan. notes/T-1090.md section 7.
 - T-1106 [P2] Follow-ups to T-1099 and T-1095. Done 2026-10-23: the account icon is only in Settings (and the start menu), and the complex view has no notes under its map.
 - T-1098 [P2] Holidays only where built, shared ones merged. Done 2026-10-23: countries with built track or stations (blueprint not counted); one line per holiday on one local date, names like Labor Day/Workers' Day counted as one; the sky's hover names all, the date's two and "N others".
