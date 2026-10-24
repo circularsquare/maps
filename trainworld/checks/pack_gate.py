@@ -512,7 +512,8 @@ def joint_borders(city, header, work=None):
                     bad.append(f"{lab} but {pack} is {want[pack]} in the registry")
                 elif known and cc not in known:
                     bad.append(f"{lab}: {cc} is not a country of the group ({', '.join(sorted(known))})")
-        if known - seen:
+        # packs on islands share no border, so a report with no pairs has none to mislabel (T-1018, Hawaii)
+        if known - seen and r.get("border_pairs"):
             bad.append(f"{name}: no border pair for {', '.join(sorted(known - seen))}")
     return {"name": "joint_borders", "status": "FAIL" if bad else "PASS", "value": len(group),
             "detail": "; ".join(dict.fromkeys(bad))[:300] or "+".join(group) + ": " + ", ".join(sorted(known))}
@@ -742,14 +743,15 @@ def test_line(header, a, f, reg):
 
 def water_pair(header, f, reg):
     """Two land points either side of the water run nearest the centre, from the pack's own mask:
-    rows within 5 km, a run at least 200 m wide (else 100 m), land on both sides."""
+    rows within 5 km, a run at least 200 m wide (else 100 m), land on both sides; failing that, rows
+    within 30 km (a desert centre: Flagstaff, T-1018)."""
     m = f["mask"]
     cx, cy = to_xy(header, reg["center"][0], reg["center"][1])
     c0 = int((float(cx) - m.x0) / m.cell)
     r0 = int((float(cy) - m.y0) / m.cell)
-    for min_px in (8, 4):
+    for reach_m, min_px in ((5000, 8), (5000, 4), (30000, 8), (30000, 4)):
         best = None
-        for dr in range(0, int(5000 / m.cell)):
+        for dr in range(0, int(reach_m / m.cell)):
             for r in {r0 - dr, r0 + dr}:
                 if not 0 <= r < m.H:
                     continue

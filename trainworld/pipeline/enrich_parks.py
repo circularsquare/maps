@@ -291,8 +291,10 @@ def main(city="nyc", dry=False):
     # T-579: a pack with no OSM parks (or none with people near) keeps a zero park_draw; the
     # kernel then leaves parks out of its social attraction, and the gate judges the pack.
     # One park off every cell (an islet) is a quirk, not a lookup fault (T-897: Yongjia, 17 parks).
-    if total > 0 and draw.sum() / total < 0.95 and len(omitted) > 1:
-        raise ValueError("park location coverage below 95%")
+    # An omitted place with draw has residents 0.5-2 km off, so a thinly peopled zone loses more:
+    # Kauai's coast parks 11% of its draw (T-1018), hence 85%.
+    if total > 0 and draw.sum() / total < 0.85 and len(omitted) > 1:
+        raise ValueError("park location coverage below 85%")
     stem = os.path.join(b.PACKS, city)
     with open(stem + ".json") as f:
         header = json.load(f)

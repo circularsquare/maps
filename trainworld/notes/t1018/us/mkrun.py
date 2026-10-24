@@ -11,7 +11,6 @@ cmd = f"""@echo off
 rem {tag}, run {name.upper()}: {note} ({n} rows), no join
 cd /d C:\\Users\\anita\\projects\\maps
 set PYTHONIOENCODING=utf-8
-set TW_FAULT_S=900
 set TW_SIM_DIR={HERE}\\simroot\\sim
 set TW_CARGO_TARGET_DIR={HERE}\\simroot\\sim\\target
 set PATH=%USERPROFILE%\\.cargo\\bin;%PATH%

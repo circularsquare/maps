@@ -52,7 +52,9 @@ not found, reload PATH: `$env:PATH = [Environment]::GetEnvironmentVariable('PATH
 3. Build the inputs at home: `bundle.py <code.tgz> <plan.txt>` packs the working tree's pipeline,
    sim, checks, tools/aws and app/src/game JSON (plan and registry included) with the wave plan
    (`#states <fips> ...`, then `<name> <extracts> <ids> <jobs> <workers>` a runner region a line, the
-   first the check row). Everything else the machine downloads from the original sources.
+   first the check row). Everything else the machine downloads from the original sources. At most
+   seven plan lines: each takes a presigned URL in the 16 KB of user data; a line may hold several
+   states, built one after another.
 4. `trainworld\tools\aws\launch.py <run> --kind wave --type m7a.8xlarge --hours 3 --disk 100
    --file code=<code.tgz> --file reqs=trainworld\tools\aws\requirements.txt --get go
    --put results_<name> ...` (one put a plan line) with a new run name; `--dry` first prints the zone,
