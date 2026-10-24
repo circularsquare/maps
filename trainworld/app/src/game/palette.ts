@@ -49,7 +49,7 @@ export const speedColour = (kmh: number) => rampColour(SPEED_STOPS, kmh);
 /** T-673, T-692, T-1160: crowding's colour by the average wait for a train with room (min), the same
  * in both themes: green to 0.2, yellow-green at 1 (Anita: a minute already reads as some crowding),
  * yellow at 2.5, orange at 9, red at 15, a deep red from 20. The line panel's crowding dots and the
- * Traffic view's full stretches (renderer.ts builds its shader's blend from these stops). */
+ * wait in the Traffic view's full-stretch hover. */
 export const CROWD_STOPS: [number, string][] = [[0, "#4f9a4f"], [0.2, "#4f9a4f"], [1, "#98bd3a"], [2.5, "#d8b425"], [9, "#e07a1f"], [15, "#c43c3c"], [20, "#a01c2c"]];
 export const crowdColour = (waitMin: number) => rampColour(CROWD_STOPS, waitMin);
 

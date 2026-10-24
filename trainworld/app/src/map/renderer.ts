@@ -539,8 +539,8 @@ export class NetworkRenderer {
 
   /** T-819, T-1125: in the traffic view (`traffic`), the edges whose track is at capacity, drawn
    * with a red edge and a darker body on the lines over them, and the stretches where riders wait
-   * for a train with room (the boarding account's, each hour), whose edge takes that wait's
-   * crowding colour, stronger as it grows (T-1160, rendererShaders.ts `FULL_FLOOR`). */
+   * for a train with room (the boarding account's, each hour), whose red edge and darkening are
+   * stronger as that wait grows (T-1160, rendererShaders.ts `FULL_FLOOR`). */
   setFull(edges: ReadonlySet<number> | null, traffic: boolean) {
     const was = this.fullEdges;
     const same = (!edges || !edges.size) === (!was || !was.size) && (!edges || !was || (edges.size === was.size && [...edges].every((e) => was.has(e))));

@@ -2,7 +2,7 @@
 // outline, trains and the position probe, with the constants they and the renderer share.
 
 import { CRUSH_PER_CAR, SEATS_PER_CAR } from "../game/boarding";
-import { CROWD_STOPS, rgb, SPEED_STOPS } from "../game/palette";
+import { rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { PROJECT_GLSL } from "./gl";
 import { PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL } from "./stationGeometry";
@@ -35,19 +35,18 @@ const SEL_RING_GAP_PX = 6;
 /** Hovered (T-730): a line's or bare track's colour mixed this far toward white; a station's rim
  * likewise, `HOT_STATIONS` of a complex at most. */
 const HOT_LINE_MIX = "0.3";
-/** GLSL setting `out` to `stops` blended in order at `input`, so a key's stops cannot drift from the
- * shader's: the Max speed colour (T-843) and the full stretches' crowding colour (T-1160). */
-function rampGlsl(s: [number, string][], out: string, input: string): string {
+/** The Max speed colour as GLSL (T-843): `SPEED_STOPS` blended in order, so the stops cannot drift from the key. */
+const SPEED_BLEND = (() => {
   const v3 = (hex: string) => `vec3(${rgb(hex).map((c) => (c / 255).toFixed(4)).join(", ")})`;
-  return [`${out} = ${v3(s[0][1])};`, ...s.slice(1).map(([v, hex], i) =>
-    `${out} = mix(${out}, ${v3(hex)}, clamp((${input} - ${s[i][0].toFixed(3)}) / ${(v - s[i][0]).toFixed(3)}, 0.0, 1.0));`)].join("\n    ");
-}
-const SPEED_BLEND = rampGlsl(SPEED_STOPS, "v_color", "a_speed");
-/** T-1160: a full stretch's mark (the traffic view) in the crowding colour of its riders' average
- * wait for a train with room, as strong as FULL_FLOOR at FULL_WAIT_FROM (min, the account's
- * `FULL_WAIT_MIN_S`) growing to all of it at FULL_WAIT_STRONG; track at capacity is the full red. */
-export const FULL_FLOOR = 0.3, FULL_WAIT_FROM = 0.2, FULL_WAIT_STRONG = 2.5;
-const CROWD_BLEND = rampGlsl(CROWD_STOPS, "frgb", "a_full");
+  const s = SPEED_STOPS;
+  return [`v_color = ${v3(s[0][1])};`, ...s.slice(1).map(([kmh, hex], i) =>
+    `v_color = mix(v_color, ${v3(hex)}, clamp((a_speed - ${s[i][0].toFixed(1)}) / ${(kmh - s[i][0]).toFixed(1)}, 0.0, 1.0));`)].join("\n    ");
+})();
+/** T-1152, T-1160: a full stretch's red edge and darkening (the traffic view) as a share of track at
+ * capacity's, by its riders' average wait for a train with room: FULL_FLOOR at FULL_WAIT_FROM (min,
+ * the account's `FULL_WAIT_MIN_S`), all of it from FULL_WAIT_STRONG, so a stretch with the real
+ * save's typical 1.5 min wait is faint (Anita). */
+export const FULL_FLOOR = 0.15, FULL_WAIT_FROM = 0.2, FULL_WAIT_STRONG = 15;
 const HOT_RIM_MIX = "0.6";
 export const HOT_STATIONS = 16;
 
@@ -139,10 +138,6 @@ void main() {
   bool full = u_full_pass == 1;
   if (full && !(u_kind == 1 && a_full != 0.0)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float fs = a_full < 0.0 ? 1.0 : a_full > 0.0 ? ${FULL_FLOOR.toFixed(3)} + ${(1 - FULL_FLOOR).toFixed(3)} * clamp((a_full - ${FULL_WAIT_FROM.toFixed(3)}) / ${(FULL_WAIT_STRONG - FULL_WAIT_FROM).toFixed(3)}, 0.0, 1.0) : 0.0;
-  vec3 frgb = u_full_rgb;
-  if (a_full > 0.0) {
-    ${CROWD_BLEND}
-  }
   float cas = full ? u_casing + u_full_px : u_casing;
   float w, lane_off = 0.0;
   if (u_lane_mode == 0) {
@@ -211,7 +206,7 @@ void main() {
   bool bpMid = false;
   if (ghost && u_ghost_layer < 2) v_color = u_ghost_layer == 0 ? u_ghost_rgb : u_bp_rail;
   // T-1152: a weaker edge towards the casing's colour, not see-through, which would bead at the joints
-  else if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement && !ghost ? u_sel : full ? mix(u_casing_rgb, frgb, fs) : u_casing_rgb;
+  else if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement && !ghost ? u_sel : full ? mix(u_casing_rgb, u_full_rgb, fs) : u_casing_rgb;
   else if ((flags & 16) != 0) v_color = u_bad;
   else if ((u_kind == 2 && !placement) || u_by_level == 1) v_color = lc;
   else if (u_by_speed == 1) {

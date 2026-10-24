@@ -119,7 +119,7 @@ purpose filter the purpose drawn is ringed in the bar.
   (the level's periods averaged by those fares; High is its two peaks) [T-818], its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
   at 1, yellow at 2.5, orange at 9, red at 15 and a deep red from 20 (`crowdColour` in
   `game/palette.ts`, fed `avg.wait` in `CrowdDots`; `Boarding::line_periods`; the Traffic view's
-  full stretches take the same colours, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160]; hover "Riders wait 4.0 min on
+  full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160]; hover "Riders wait 4.0 min on
   average for a train with room", then "12/96 trains are full" (all the level's periods),
   a line naming the worst period and its wait when that period's grade is worse than the
   level's, and "Most of the waiting is at Gare du Nord" (the stop with the most rider-minutes

@@ -105,13 +105,12 @@ there is no high-speed class and no hover yet.
     body darker by 14% (`FULL_DARKEN`). A stretch between two stops where riders wait for a train
     with room [T-1125, T-1160] (in either direction, at least 0.2 min on average over the day,
     from the boarding account of the hour's kind of day, track-and-service.md 6.6) has the same
-    band in the crowding colour of that wait, the colours of the line panel's crowding dots
-    (`CROWD_STOPS` in `game/palette.ts`, blended in the shader by `rampGlsl`): 30% of full strength
-    at 0.2 min growing to all of it at 2.5 min (`FULL_FLOOR`, `FULL_WAIT_STRONG` in
-    `map/rendererShaders.ts`), the band mixed from the casing's colour and the darkening scaled
-    alike. The hover adds "Track at capacity at high demand" in red, or "Riders wait 2.3 min on
-    average for a train with room" with the wait on its crowding colour and "Full on 32% of the
-    day's trains". The Settings switch "Full stretches" (on by default) shows or hides both marks
+    mark as strong as that wait: 15% of full strength at 0.2 min plus the rest in proportion, all
+    of it from 15 min (`FULL_FLOOR`, `FULL_WAIT_STRONG` in `map/rendererShaders.ts`), the band
+    mixed from the casing's colour towards the red and the darkening scaled alike, so the real
+    save's typical stretch (1.5 min at 08:00) is faint. The hover adds "Track at capacity at high
+    demand" in red, or "Average 1.5 minute wait for a train with room" with the minutes on their
+    crowding colour, the line panel's crowding dots' (`crowdColour` in `game/palette.ts`). The Settings switch "Full stretches" (on by default) shows or hides both marks
     and their hover lines.
   - **Elevation** (`height` in code): the track coloured by elevation (a level in code), blue-green to indigo above ground (open sky), green
     at ground, warm below (deep): +3 #4a2c9a, +2 #2f6fd0, +1 #16a39a, 0 #58b04a, -1 #f0b928, -2 #ee7a1a,
