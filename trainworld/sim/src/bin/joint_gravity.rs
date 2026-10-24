@@ -4,6 +4,7 @@
 //!       [--tol 1e-8] [--threads 3] [--dry] [--check] [--report data/work/joint_report.json]
 //!       [--dump factors.json] [--anderson 12] [--max-iters 500] [--packs a,b,.. --out FILE]
 //!       [--admin1 F]  (F in place of borders.json's admin-1 default, for fitting it)
+//!       [--no-seamless]  (borders.json's `seamless` pairs take the ordinary factor, for comparing)
 //!       [--fixed c,d [--init F] [--hold-report F [--new a,b]]]
 //!
 //! `--packs` (T-463) solves the named packs instead (a group outside the Northeast, Japan's), and
@@ -32,8 +33,9 @@
 //! - A pair across packs uses the straight-line distance between the two zones' squares in the
 //!   world frame (a conformal conic, true to 0.4% within 5 degrees of latitude of New York), the home
 //!   pack's curve, cut at `--cut-km`, and a border factor per region pair (`pipeline/borders.json`):
-//!   the factor of the pack holding both regions, else the country's admin-1 default, and a national
-//!   factor across a national border.
+//!   the factor of the pack holding both regions, else a `seamless` pair's (a line through one
+//!   continuous city, T-1192), else the country's admin-1 default, and a national factor across a
+//!   national border.
 //!
 //! Writes each pack's gravity (new balancing factors, `zone_home` and `zone_work`: the trips each
 //! zone keeps in the pack, and a `joint` block), and the market pack's `commute_*` arrays: the
@@ -212,6 +214,24 @@ fn main() {
             }
         }
     }
+    // T-1192: a line through one continuous city (borders.json `seamless`, by pipeline/seams.py)
+    // takes its own factor; each listed pack is tier 0, so its one region is its own
+    let mut seamless: HashMap<(usize, usize), f32> = HashMap::new();
+    if !has("--no-seamless") {
+        let at = |id: &str| region_key.iter().position(|k| k.1 == format!("pack {id}"));
+        for s in borders["seamless"].as_array().into_iter().flatten() {
+            if let (Some(a), Some(b)) = (at(s["a"].as_str().unwrap_or("")), at(s["b"].as_str().unwrap_or(""))) {
+                if region_key[a].0 == region_key[b].0 {
+                    let f = s["factor"].as_f64().unwrap() as f32;
+                    seamless.insert((a, b), f);
+                    seamless.insert((b, a), f);
+                }
+            }
+        }
+        if !seamless.is_empty() {
+            eprintln!("{} seamless pack pairs (T-1192)", seamless.len() / 2);
+        }
+    }
     let mut table = vec![];
     for a in 0..nr {
         for b in 0..nr {
@@ -221,6 +241,8 @@ fn main() {
                 1.0
             } else if kn[i] > 0 {
                 kf[i] / kn[i] as f32
+            } else if let Some(&f) = seamless.get(&(a, b)) {
+                f
             } else if ca == cb {
                 // `--admin1 F` overrides the country's default, for fitting it; a country without one
                 // takes `pack_line_default` (T-584, T-1163: 0.5), not 1

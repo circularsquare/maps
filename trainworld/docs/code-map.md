@@ -505,6 +505,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   <out.json>` plans one existing pack's metro as if the pack did not exist (a test build, T-537);
   `metros --countries US` plans a FUA country's metro rows alone, touching no other row (T-1015);
   `zones --countries ES[,PT]` a country's zone rows (T-723).
+- `seams.py [--dry]`: zone lines through one continuous city and their commute factors, written to
+  `borders.json` `seamless` for `joint_gravity` (T-1192, docs/zones.md 4); about 3 minutes.
 - `plan_config.py`: a planned row's `CITIES` config, every field from the row or a rule, then its
   country module's `plan_hooks(row)` keys (T-555; `build_city.py` takes every planned row through
   it); `osm_units.py <id>`: its outline from the

@@ -232,7 +232,13 @@ over every job in reach, in its own zone or another, so moving a zone line moves
   links are mostly head-office addresses, notes/T-268.md), and a **border factor per region pair**:
   the factor of the pack that holds both regions (New Jersey and Pennsylvania take Philadelphia's,
   Maryland and DC Washington's 0.45), else the country's default (US states 0.23), else the line
-  between two packs' 0.5 (Japan's too; Anita, T-1163). T-171 found the
+  between two packs' 0.5 (Japan's too; Anita, T-1163). A line that runs through **one continuous
+  city** takes less damping or none (T-1192, Anita 2026-10-24, instead of merging the two zones;
+  `borders.json` `seamless`, written by `pipeline/seams.py`): two packs of one country whose line
+  has at least 10 km through one urban centre (GHS-POP 2025 1 km pixels of 1,500+ people on both
+  sides, joined edge to edge, 50,000+ people) take a factor rising linearly from the line's ordinary
+  one at 50,000 of that centre's people on the smaller side to 1 at 200,000 (Guangzhou-Foshan 1,
+  Shanghai-Suzhou partway). National lines keep theirs. notes/T-1178.md. T-171 found the
   factor should stay as fitted per pack rather than become one global value; this keeps every
   pack's own fit for the pairs it was fitted on. National borders take a factor per country pair
   (US-Canada 0.05 for now, judgement from Windsor-Detroit's few thousand cross-border commuters
