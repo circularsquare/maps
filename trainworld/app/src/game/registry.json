@@ -10142,6 +10142,150 @@
       {
         "name": "Hartford",
         "regionName": "Hartford region"
+      },
+      {
+        "name": "Hillsborough County",
+        "regionName": "Hillsborough County region"
+      },
+      {
+        "name": "Buffalo",
+        "regionName": "Buffalo region"
+      },
+      {
+        "name": "Barnstable County",
+        "regionName": "Barnstable County region"
+      },
+      {
+        "name": "Nantucket County",
+        "regionName": "Nantucket County region"
+      },
+      {
+        "name": "Albany County",
+        "regionName": "Albany County region"
+      },
+      {
+        "name": "Monroe County",
+        "regionName": "Monroe County region"
+      },
+      {
+        "name": "Onondaga County",
+        "regionName": "Onondaga County region"
+      },
+      {
+        "name": "Broome County",
+        "regionName": "Broome County region"
+      },
+      {
+        "name": "Saratoga County",
+        "regionName": "Saratoga County region"
+      },
+      {
+        "name": "Pittsburgh",
+        "regionName": "Pittsburgh region"
+      },
+      {
+        "name": "Virginia Beach",
+        "regionName": "Virginia Beach region"
+      },
+      {
+        "name": "Richmond",
+        "regionName": "Richmond region"
+      },
+      {
+        "name": "Montgomery County, VA",
+        "regionName": "Montgomery County, VA region"
+      },
+      {
+        "name": "Sussex County",
+        "regionName": "Sussex County region"
+      },
+      {
+        "name": "Franklin County, PA",
+        "regionName": "Franklin County, PA region"
+      },
+      {
+        "name": "Atlantic County",
+        "regionName": "Atlantic County region"
+      },
+      {
+        "name": "Lehigh County",
+        "regionName": "Lehigh County region"
+      },
+      {
+        "name": "Albemarle County",
+        "regionName": "Albemarle County region"
+      },
+      {
+        "name": "Lancaster County, PA",
+        "regionName": "Lancaster County, PA region"
+      },
+      {
+        "name": "York County",
+        "regionName": "York County region"
+      },
+      {
+        "name": "Kanawha County",
+        "regionName": "Kanawha County region"
+      },
+      {
+        "name": "Centre County",
+        "regionName": "Centre County region"
+      },
+      {
+        "name": "Berkeley County",
+        "regionName": "Berkeley County region"
+      },
+      {
+        "name": "Erie County",
+        "regionName": "Erie County region"
+      },
+      {
+        "name": "Schuylkill County",
+        "regionName": "Schuylkill County region"
+      },
+      {
+        "name": "Lackawanna County",
+        "regionName": "Lackawanna County region"
+      },
+      {
+        "name": "St. Mary's County",
+        "regionName": "St. Mary's County region"
+      },
+      {
+        "name": "Chittenden County",
+        "regionName": "Chittenden County region"
+      },
+      {
+        "name": "Vieques Municipio",
+        "regionName": "Vieques Municipio region"
+      },
+      {
+        "name": "Carolina Municipio",
+        "regionName": "Carolina Municipio region"
+      },
+      {
+        "name": "San Juan Municipio",
+        "regionName": "San Juan Municipio region"
+      },
+      {
+        "name": "Ponce Municipio",
+        "regionName": "Ponce Municipio region"
+      },
+      {
+        "name": "Cumberland County",
+        "regionName": "Cumberland County region"
+      },
+      {
+        "name": "Nantucket County",
+        "regionName": "Nantucket County region"
+      },
+      {
+        "name": "Vieques Municipio",
+        "regionName": "Vieques Municipio region"
+      },
+      {
+        "name": "Cumberland County",
+        "regionName": "Cumberland County region"
       }
     ],
     "rule": {
@@ -10187,7 +10331,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 68854606.0,
+      "localTrips": 68695360.0,
       "box": [
         -75.219,
         39.475,
@@ -10212,7 +10356,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 19150114.0,
+      "localTrips": 18833845.0,
       "box": [
         -76.257,
         39.272,
@@ -10237,7 +10381,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 15743728.0,
+      "localTrips": 15584952.0,
       "box": [
         -71.924,
         41.565,
@@ -10262,7 +10406,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 19603387.0,
+      "localTrips": 19266235.0,
       "box": [
         -78.418,
         37.972,
@@ -10287,7 +10431,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 8493966.0,
+      "localTrips": 8450564.0,
       "box": [
         -77.335,
         38.694,
@@ -10312,7 +10456,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 4908514.0,
+      "localTrips": 4898002.0,
       "box": [
         -71.908,
         41.095,
@@ -10337,7 +10481,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 2429732.0,
+      "localTrips": 2429365.0,
       "box": [
         -73.352,
         41.087,
@@ -10362,7 +10506,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 2085648.0,
+      "localTrips": 2068402.0,
       "box": [
         -73.1,
         41.979,
@@ -10713,7 +10857,7 @@
       "zoom": 10.5,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 2345232.0,
+      "localTrips": 2340125.0,
       "box": [
         -72.341,
         41.989,
@@ -49324,7 +49468,7 @@
       ],
       "place": 2225,
       "country": "US",
-      "localTrips": 19206275.0,
+      "localTrips": 19207183.0,
       "realm": "us-south"
     },
     {
@@ -49350,7 +49494,7 @@
       ],
       "place": 2226,
       "country": "US",
-      "localTrips": 3014903.0,
+      "localTrips": 3016072.0,
       "realm": "us-south"
     },
     {
@@ -49376,7 +49520,7 @@
       ],
       "place": 2227,
       "country": "US",
-      "localTrips": 2370707.0,
+      "localTrips": 2375916.0,
       "realm": "us-south"
     },
     {
@@ -49402,7 +49546,7 @@
       ],
       "place": 2229,
       "country": "US",
-      "localTrips": 1932315.0,
+      "localTrips": 1932606.0,
       "realm": "us-south"
     },
     {
@@ -49428,7 +49572,7 @@
       ],
       "place": 2230,
       "country": "US",
-      "localTrips": 1845918.0,
+      "localTrips": 1852000.0,
       "realm": "us-south"
     },
     {
@@ -49454,7 +49598,7 @@
       ],
       "place": 2231,
       "country": "US",
-      "localTrips": 1633748.0,
+      "localTrips": 1634212.0,
       "realm": "us-south"
     },
     {
@@ -49479,7 +49623,7 @@
       ],
       "place": 2232,
       "country": "US",
-      "localTrips": 19702788.0,
+      "localTrips": 19703522.0,
       "realm": "us-south"
     },
     {
@@ -49504,7 +49648,7 @@
       ],
       "place": 2233,
       "country": "US",
-      "localTrips": 9288563.0,
+      "localTrips": 9290769.0,
       "realm": "us-south"
     },
     {
@@ -49529,7 +49673,7 @@
       ],
       "place": 2235,
       "country": "US",
-      "localTrips": 3854405.0,
+      "localTrips": 3854946.0,
       "realm": "us-south"
     },
     {
@@ -49555,7 +49699,7 @@
       ],
       "place": 2236,
       "country": "US",
-      "localTrips": 3686400.0,
+      "localTrips": 3687095.0,
       "realm": "us-south"
     },
     {
@@ -49581,7 +49725,7 @@
       ],
       "place": 2237,
       "country": "US",
-      "localTrips": 2490170.0,
+      "localTrips": 2491218.0,
       "realm": "us-south"
     },
     {
@@ -49607,7 +49751,7 @@
       ],
       "place": 2238,
       "country": "US",
-      "localTrips": 2944408.0,
+      "localTrips": 2945661.0,
       "realm": "us-south"
     },
     {
@@ -49633,7 +49777,7 @@
       ],
       "place": 2239,
       "country": "US",
-      "localTrips": 2182211.0,
+      "localTrips": 2182987.0,
       "realm": "us-south"
     },
     {
@@ -49659,7 +49803,7 @@
       ],
       "place": 2240,
       "country": "US",
-      "localTrips": 1926212.0,
+      "localTrips": 1926799.0,
       "realm": "us-south"
     },
     {
@@ -49685,7 +49829,7 @@
       ],
       "place": 2241,
       "country": "US",
-      "localTrips": 1988411.0,
+      "localTrips": 1989771.0,
       "realm": "us-south"
     },
     {
@@ -49711,7 +49855,7 @@
       ],
       "place": 2242,
       "country": "US",
-      "localTrips": 2138056.0,
+      "localTrips": 2147114.0,
       "realm": "us-south"
     },
     {
@@ -49737,7 +49881,7 @@
       ],
       "place": 2243,
       "country": "US",
-      "localTrips": 1767478.0,
+      "localTrips": 1768143.0,
       "realm": "us-south"
     },
     {
@@ -49763,7 +49907,7 @@
       ],
       "place": 2244,
       "country": "US",
-      "localTrips": 1513462.0,
+      "localTrips": 1514076.0,
       "realm": "us-south"
     },
     {
@@ -49788,7 +49932,7 @@
       ],
       "place": 2246,
       "country": "US",
-      "localTrips": 8655764.0,
+      "localTrips": 8658050.0,
       "realm": "us-south"
     },
     {
@@ -49814,7 +49958,7 @@
       ],
       "place": 2247,
       "country": "US",
-      "localTrips": 2271087.0,
+      "localTrips": 2272559.0,
       "realm": "us-south"
     },
     {
@@ -49840,7 +49984,7 @@
       ],
       "place": 2248,
       "country": "US",
-      "localTrips": 1199161.0,
+      "localTrips": 1199729.0,
       "realm": "us-south"
     },
     {
@@ -49866,7 +50010,7 @@
       ],
       "place": 2249,
       "country": "US",
-      "localTrips": 2192466.0,
+      "localTrips": 2192737.0,
       "realm": "us-south"
     },
     {
@@ -50122,7 +50266,7 @@
       ],
       "place": 2260,
       "country": "US",
-      "localTrips": 6713039.0,
+      "localTrips": 6712473.0,
       "realm": "us-south"
     },
     {
@@ -50147,7 +50291,7 @@
       ],
       "place": 2261,
       "country": "US",
-      "localTrips": 5773027.0,
+      "localTrips": 5771242.0,
       "realm": "us-south"
     },
     {
@@ -50173,7 +50317,7 @@
       ],
       "place": 2262,
       "country": "US",
-      "localTrips": 2858744.0,
+      "localTrips": 2863357.0,
       "realm": "us-south"
     },
     {
@@ -50199,7 +50343,7 @@
       ],
       "place": 2263,
       "country": "US",
-      "localTrips": 2656601.0,
+      "localTrips": 2656300.0,
       "realm": "us-south"
     },
     {
@@ -50225,7 +50369,7 @@
       ],
       "place": 2264,
       "country": "US",
-      "localTrips": 2373372.0,
+      "localTrips": 2360763.0,
       "realm": "us-south"
     },
     {
@@ -50251,7 +50395,7 @@
       ],
       "place": 2265,
       "country": "US",
-      "localTrips": 2692739.0,
+      "localTrips": 2692620.0,
       "realm": "us-south"
     },
     {
@@ -50277,7 +50421,7 @@
       ],
       "place": 2266,
       "country": "US",
-      "localTrips": 2457026.0,
+      "localTrips": 2456129.0,
       "realm": "us-south"
     },
     {
@@ -50303,7 +50447,7 @@
       ],
       "place": 2267,
       "country": "US",
-      "localTrips": 2429782.0,
+      "localTrips": 2429816.0,
       "realm": "us-south"
     },
     {
@@ -50329,7 +50473,7 @@
       ],
       "place": 2268,
       "country": "US",
-      "localTrips": 2154052.0,
+      "localTrips": 2149159.0,
       "realm": "us-south"
     },
     {
@@ -50355,7 +50499,7 @@
       ],
       "place": 2269,
       "country": "US",
-      "localTrips": 1789835.0,
+      "localTrips": 1789385.0,
       "realm": "us-south"
     },
     {
@@ -50381,7 +50525,7 @@
       ],
       "place": 2270,
       "country": "US",
-      "localTrips": 1674127.0,
+      "localTrips": 1673817.0,
       "realm": "us-south"
     },
     {
@@ -50407,7 +50551,7 @@
       ],
       "place": 2271,
       "country": "US",
-      "localTrips": 1705392.0,
+      "localTrips": 1705153.0,
       "realm": "us-south"
     },
     {
@@ -50433,7 +50577,7 @@
       ],
       "place": 2272,
       "country": "US",
-      "localTrips": 1643086.0,
+      "localTrips": 1641459.0,
       "realm": "us-south"
     },
     {
@@ -50459,7 +50603,7 @@
       ],
       "place": 2273,
       "country": "US",
-      "localTrips": 1394600.0,
+      "localTrips": 1394286.0,
       "realm": "us-south"
     },
     {
@@ -50485,7 +50629,7 @@
       ],
       "place": 2274,
       "country": "US",
-      "localTrips": 1395411.0,
+      "localTrips": 1392587.0,
       "realm": "us-south"
     },
     {
@@ -50511,7 +50655,7 @@
       ],
       "place": 2275,
       "country": "US",
-      "localTrips": 1410982.0,
+      "localTrips": 1411239.0,
       "realm": "us-south"
     },
     {
@@ -50537,7 +50681,7 @@
       ],
       "place": 2276,
       "country": "US",
-      "localTrips": 1627824.0,
+      "localTrips": 1627723.0,
       "realm": "us-south"
     },
     {
@@ -50563,7 +50707,7 @@
       ],
       "place": 2277,
       "country": "US",
-      "localTrips": 1381688.0,
+      "localTrips": 1381543.0,
       "realm": "us-south"
     },
     {
@@ -50589,7 +50733,7 @@
       ],
       "place": 2278,
       "country": "US",
-      "localTrips": 1369602.0,
+      "localTrips": 1369325.0,
       "realm": "us-south"
     },
     {
@@ -54561,7 +54705,861 @@
       ],
       "place": 2530,
       "country": "US",
-      "localTrips": 5545544.0,
+      "localTrips": 5540487.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "his",
+      "name": "Hillsborough County",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.4534,
+        "lat": 42.9874
+      },
+      "center": [
+        -71.4534,
+        42.9874
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -72.583,
+        42.678,
+        -70.925,
+        45.324
+      ],
+      "place": 2531,
+      "country": "US",
+      "localTrips": 2761997.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "buf",
+      "name": "Buffalo",
+      "origin": {
+        "lon": -78.885,
+        "lat": 42.9146
+      },
+      "center": [
+        -78.885,
+        42.9146
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.313,
+        42.42,
+        -78.435,
+        43.635
+      ],
+      "place": 2532,
+      "country": "US",
+      "localTrips": 3667528.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "brb",
+      "name": "Barnstable County",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.2838,
+        "lat": 41.6547
+      },
+      "center": [
+        -70.2838,
+        41.6547
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -71.052,
+        41.198,
+        -69.858,
+        42.135
+      ],
+      "place": 2533,
+      "country": "US",
+      "localTrips": 694737.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "aby",
+      "name": "Albany County",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.7775,
+        "lat": 42.66
+      },
+      "center": [
+        -73.7775,
+        42.66
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.448,
+        41.403,
+        -72.924,
+        44.139
+      ],
+      "place": 2535,
+      "country": "US",
+      "localTrips": 4172691.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "mnr",
+      "name": "Monroe County",
+      "kind": "zone",
+      "origin": {
+        "lon": -77.641,
+        "lat": 43.1786
+      },
+      "center": [
+        -77.641,
+        43.1786
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.513,
+        42.441,
+        -76.561,
+        43.685
+      ],
+      "place": 2536,
+      "country": "US",
+      "localTrips": 3726220.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "onn",
+      "name": "Onondaga County",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.1399,
+        "lat": 43.0602
+      },
+      "center": [
+        -76.1399,
+        43.0602
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.765,
+        42.6,
+        -75.044,
+        44.422
+      ],
+      "place": 2537,
+      "country": "US",
+      "localTrips": 3357197.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "bry",
+      "name": "Broome County",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.4849,
+        "lat": 42.4421
+      },
+      "center": [
+        -76.4849,
+        42.4421
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.787,
+        41.979,
+        -75.268,
+        42.81
+      ],
+      "place": 2538,
+      "country": "US",
+      "localTrips": 2544890.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "srg",
+      "name": "Saratoga County",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.6522,
+        "lat": 43.3154
+      },
+      "center": [
+        -73.6522,
+        43.3154
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.886,
+        42.757,
+        -73.216,
+        45.035
+      ],
+      "place": 2539,
+      "country": "US",
+      "localTrips": 1741131.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "pib",
+      "name": "Pittsburgh",
+      "origin": {
+        "lon": -79.9456,
+        "lat": 40.4488
+      },
+      "center": [
+        -79.9456,
+        40.4488
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.544,
+        39.702,
+        -78.949,
+        41.192
+      ],
+      "place": 2540,
+      "country": "US",
+      "localTrips": 7604351.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "vig",
+      "name": "Virginia Beach",
+      "origin": {
+        "lon": -76.3047,
+        "lat": 36.8689
+      },
+      "center": [
+        -76.3047,
+        36.8689
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.525,
+        36.525,
+        -75.797,
+        37.622
+      ],
+      "place": 2541,
+      "country": "US",
+      "localTrips": 5388720.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "ric",
+      "name": "Richmond",
+      "origin": {
+        "lon": -77.4491,
+        "lat": 37.5478
+      },
+      "center": [
+        -77.4491,
+        37.5478
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.488,
+        36.689,
+        -76.622,
+        38.027
+      ],
+      "place": 2542,
+      "country": "US",
+      "localTrips": 4173329.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "mnt",
+      "name": "Montgomery County, VA",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.4223,
+        "lat": 37.2213
+      },
+      "center": [
+        -80.4223,
+        37.2213
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -83.699,
+        36.523,
+        -79.569,
+        37.557
+      ],
+      "place": 2543,
+      "country": "US",
+      "localTrips": 2649512.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "sus",
+      "name": "Sussex County",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.7076,
+        "lat": 38.1581
+      },
+      "center": [
+        -75.7076,
+        38.1581
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.464,
+        36.99,
+        -74.984,
+        39.406
+      ],
+      "place": 2544,
+      "country": "US",
+      "localTrips": 2201943.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "frk",
+      "name": "Franklin County, PA",
+      "kind": "zone",
+      "origin": {
+        "lon": -77.7136,
+        "lat": 39.6434
+      },
+      "center": [
+        -77.7136,
+        39.6434
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.512,
+        39.184,
+        -76.931,
+        40.308
+      ],
+      "place": 2545,
+      "country": "US",
+      "localTrips": 1339061.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "ata",
+      "name": "Atlantic County",
+      "kind": "zone",
+      "origin": {
+        "lon": -74.4471,
+        "lat": 39.3579
+      },
+      "center": [
+        -74.4471,
+        39.3579
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.445,
+        38.788,
+        -74.232,
+        39.748
+      ],
+      "place": 2546,
+      "country": "US",
+      "localTrips": 1494683.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "lhi",
+      "name": "Lehigh County",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.4718,
+        "lat": 40.6103
+      },
+      "center": [
+        -75.4718,
+        40.6103
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.344,
+        40.4,
+        -74.745,
+        41.446
+      ],
+      "place": 2547,
+      "country": "US",
+      "localTrips": 3904761.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "abm",
+      "name": "Albemarle County",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.1817,
+        "lat": 37.3447
+      },
+      "center": [
+        -79.1817,
+        37.3447
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.496,
+        36.522,
+        -77.274,
+        39.485
+      ],
+      "place": 2548,
+      "country": "US",
+      "localTrips": 3516500.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "lcs",
+      "name": "Lancaster County, PA",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.9142,
+        "lat": 40.3322
+      },
+      "center": [
+        -75.9142,
+        40.3322
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.746,
+        39.703,
+        -75.506,
+        40.696
+      ],
+      "place": 2549,
+      "country": "US",
+      "localTrips": 3197769.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "yok",
+      "name": "York County",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.7463,
+        "lat": 39.9562
+      },
+      "center": [
+        -76.7463,
+        39.9562
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.776,
+        39.701,
+        -76.215,
+        40.712
+      ],
+      "place": 2550,
+      "country": "US",
+      "localTrips": 3216125.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "kna",
+      "name": "Kanawha County",
+      "kind": "zone",
+      "origin": {
+        "lon": -82.4296,
+        "lat": 38.4241
+      },
+      "center": [
+        -82.4296,
+        38.4241
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -82.668,
+        37.183,
+        -79.936,
+        39.429
+      ],
+      "place": 2551,
+      "country": "US",
+      "localTrips": 2812340.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "cee",
+      "name": "Centre County",
+      "kind": "zone",
+      "origin": {
+        "lon": -77.8596,
+        "lat": 40.7989
+      },
+      "center": [
+        -77.8596,
+        40.7989
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.484,
+        39.703,
+        -77.119,
+        41.497
+      ],
+      "place": 2552,
+      "country": "US",
+      "localTrips": 2338919.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "brk",
+      "name": "Berkeley County",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.9489,
+        "lat": 39.6345
+      },
+      "center": [
+        -79.9489,
+        39.6345
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.395,
+        38.017,
+        -77.799,
+        40.657
+      ],
+      "place": 2553,
+      "country": "US",
+      "localTrips": 2225559.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "ere",
+      "name": "Erie County",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.072,
+        "lat": 42.134
+      },
+      "center": [
+        -80.072,
+        42.134
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.544,
+        40.887,
+        -77.964,
+        42.517
+      ],
+      "place": 2554,
+      "country": "US",
+      "localTrips": 2060048.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "scu",
+      "name": "Schuylkill County",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.4551,
+        "lat": 41.0057
+      },
+      "center": [
+        -76.4551,
+        41.0057
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.231,
+        40.477,
+        -75.733,
+        42.02
+      ],
+      "place": 2555,
+      "country": "US",
+      "localTrips": 1547683.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "law",
+      "name": "Lackawanna County",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.648,
+        "lat": 41.402
+      },
+      "center": [
+        -75.648,
+        41.402
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.952,
+        41.061,
+        -74.665,
+        42.02
+      ],
+      "place": 2556,
+      "country": "US",
+      "localTrips": 1248406.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "smr",
+      "name": "St. Mary's County",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.4972,
+        "lat": 38.0341
+      },
+      "center": [
+        -78.4972,
+        38.0341
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.547,
+        37.492,
+        -76.14,
+        38.532
+      ],
+      "place": 2557,
+      "country": "US",
+      "localTrips": 976164.0,
+      "realm": "us-south"
+    },
+    {
+      "id": "cie",
+      "name": "Chittenden County",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.206,
+        "lat": 44.4778
+      },
+      "center": [
+        -73.206,
+        44.4778
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.464,
+        42.708,
+        -71.439,
+        45.035
+      ],
+      "place": 2558,
+      "country": "US",
+      "localTrips": 1935266.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "cra",
+      "name": "Carolina Municipio",
+      "kind": "zone",
+      "origin": {
+        "lon": -65.9556,
+        "lat": 18.3956
+      },
+      "center": [
+        -65.9556,
+        18.3956
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -66.585,
+        17.841,
+        -65.422,
+        18.517
+      ],
+      "place": 2560,
+      "country": "PR",
+      "localTrips": 3435875.0,
+      "realm": "puerto-rico"
+    },
+    {
+      "id": "snm",
+      "name": "San Juan Municipio",
+      "kind": "zone",
+      "origin": {
+        "lon": -66.0498,
+        "lat": 18.4451
+      },
+      "center": [
+        -66.0498,
+        18.4451
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -66.857,
+        18.093,
+        -65.972,
+        18.545
+      ],
+      "place": 2561,
+      "country": "PR",
+      "localTrips": 3628889.0,
+      "realm": "puerto-rico"
+    },
+    {
+      "id": "pop",
+      "name": "Ponce Municipio",
+      "kind": "zone",
+      "origin": {
+        "lon": -66.6265,
+        "lat": 18.0079
+      },
+      "center": [
+        -66.6265,
+        18.0079
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -67.324,
+        17.831,
+        -66.499,
+        18.569
+      ],
+      "place": 2562,
+      "country": "PR",
+      "localTrips": 2391732.0,
+      "realm": "puerto-rico"
+    },
+    {
+      "id": "nak",
+      "name": "Nantucket County",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.1044,
+        "lat": 41.2668
+      },
+      "center": [
+        -70.1044,
+        41.2668
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -70.494,
+        41.187,
+        -69.892,
+        41.444
+      ],
+      "place": 2564,
+      "country": "US",
+      "localTrips": 41397.0,
+      "realm": "us-northeast"
+    },
+    {
+      "id": "viq",
+      "name": "Vieques Municipio",
+      "kind": "zone",
+      "origin": {
+        "lon": -65.4528,
+        "lat": 18.1398
+      },
+      "center": [
+        -65.4528,
+        18.1398
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -65.632,
+        18.027,
+        -65.168,
+        18.422
+      ],
+      "place": 2565,
+      "country": "PR",
+      "localTrips": 24569.0,
+      "realm": "puerto-rico"
+    },
+    {
+      "id": "cud",
+      "name": "Cumberland County",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.2622,
+        "lat": 43.6532
+      },
+      "center": [
+        -70.2622,
+        43.6532
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -71.11,
+        42.917,
+        -66.885,
+        47.479
+      ],
+      "place": 2566,
+      "country": "US",
+      "localTrips": 4121248.0,
       "realm": "us-northeast"
     }
   ]

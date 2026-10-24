@@ -121989,7 +121989,7 @@
    "order": 2104,
    "id": "pib",
    "name": "Pittsburgh",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -122039,7 +122039,26 @@
      ]
     }
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 51.3,
+     "stations": 1.4,
+     "places": 3.9,
+     "coarse": 2.4,
+     "routes": 204.0,
+     "merge": 3.0,
+     "nocar": 4.2,
+     "everyday": 1.0
+    },
+    "built": "2026-10-24T04:01:45",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:32:48",
+    "shipped": "2026-10-24T05:29:48"
+   }
   },
   {
    "order": 2105,
@@ -122114,7 +122133,7 @@
    "order": 2106,
    "id": "vig",
    "name": "Virginia Beach",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -122174,7 +122193,26 @@
      ]
     }
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 52.0,
+     "stations": 1.5,
+     "places": 4.4,
+     "coarse": 1.1,
+     "routes": 77.8,
+     "merge": 1.2,
+     "nocar": 3.1,
+     "everyday": 1.2
+    },
+    "built": "2026-10-24T03:59:36",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:32:48",
+    "shipped": "2026-10-24T05:29:48"
+   }
   },
   {
    "order": 2107,
@@ -122727,7 +122765,7 @@
    "order": 2115,
    "id": "ric",
    "name": "Richmond",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -122793,7 +122831,26 @@
      ]
     }
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 42.2,
+     "stations": 1.0,
+     "places": 2.6,
+     "coarse": 1.2,
+     "routes": 112.9,
+     "merge": 1.5,
+     "nocar": 3.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-24T03:59:59",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:32:48",
+    "shipped": "2026-10-24T05:29:48"
+   }
   },
   {
    "order": 2116,
@@ -123008,7 +123065,7 @@
    "order": 2119,
    "id": "buf",
    "name": "Buffalo",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -123043,7 +123100,26 @@
      7141
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-035729",
+    "steps": {
+     "build": 35.7,
+     "stations": 1.0,
+     "places": 2.1,
+     "coarse": 0.6,
+     "routes": 28.4,
+     "merge": 0.9,
+     "nocar": 3.0,
+     "everyday": 1.1
+    },
+    "built": "2026-10-24T04:02:38",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:12:44",
+    "shipped": "2026-10-24T05:29:48"
+   }
   },
   {
    "order": 2120,
@@ -135221,7 +135297,7 @@
    "id": "aby",
    "name": "Albany County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -135285,14 +135361,33 @@
      "Hamilton County, NY"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-035729",
+    "steps": {
+     "build": 76.2,
+     "stations": 2.4,
+     "places": 4.4,
+     "coarse": 4.9,
+     "routes": 144.9,
+     "merge": 2.6,
+     "nocar": 3.3,
+     "everyday": 0.7
+    },
+    "built": "2026-10-24T04:05:51",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:12:44",
+    "shipped": "2026-10-24T05:29:49"
+   }
   },
   {
    "order": 2320,
    "id": "lhi",
    "name": "Lehigh County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -135338,7 +135433,26 @@
      "Carbon County, PA"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 47.7,
+     "stations": 0.9,
+     "places": 2.9,
+     "coarse": 0.9,
+     "routes": 91.0,
+     "merge": 1.4,
+     "nocar": 3.7,
+     "everyday": 1.1
+    },
+    "built": "2026-10-24T04:01:49",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:32:50",
+    "shipped": "2026-10-24T05:29:49"
+   }
   },
   {
    "order": 2321,
@@ -135468,7 +135582,7 @@
    "id": "cud",
    "name": "Cumberland County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -135533,7 +135647,34 @@
      "Piscataquis County, ME"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-040129",
+    "steps": {
+     "build": 88.2,
+     "stations": 0.8,
+     "places": 2.1,
+     "coarse": 7.7,
+     "routes": 101.6,
+     "merge": 3.7,
+     "nocar": 2.9,
+     "everyday": 0.6
+    },
+    "built": "2026-10-24T04:22:58",
+    "gate": {
+     "warn": [
+      "area_km2 91627.3520972726",
+      "mean_commute_km 25.224428573529107",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-24T04:26:01",
+    "gated": "2026-10-24T04:35:02",
+    "shipped": "2026-10-24T05:29:49"
+   },
+   "gate_relax": {
+    "mean_commute_km": "Maine, 16 counties: LODES OD 2023 within them 33.1 km zone-centre, 35.8 crow-fly (lodes_mean.py), above the gate's 25.2"
+   }
   },
   {
    "order": 2323,
@@ -135608,7 +135749,7 @@
    "id": "abm",
    "name": "Albemarle County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -135719,7 +135860,28 @@
      "Highland County, VA"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 90.4,
+     "stations": 1.1,
+     "places": 4.8,
+     "coarse": 7.7,
+     "routes": 195.9,
+     "merge": 3.7,
+     "nocar": 4.0,
+     "everyday": 0.9
+    },
+    "built": "2026-10-24T04:04:45",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.03175738328681541"
+     ]
+    },
+    "gated": "2026-10-24T04:32:50",
+    "shipped": "2026-10-24T05:29:49"
+   }
   },
   {
    "order": 2325,
@@ -135806,7 +135968,7 @@
    "id": "mnr",
    "name": "Monroe County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -135857,7 +136019,28 @@
      "Yates County, NY"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-035729",
+    "steps": {
+     "build": 30.8,
+     "stations": 1.1,
+     "places": 2.3,
+     "coarse": 1.2,
+     "routes": 66.8,
+     "merge": 1.3,
+     "nocar": 3.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-24T04:04:06",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.04320843574883856"
+     ]
+    },
+    "gated": "2026-10-24T04:12:44",
+    "shipped": "2026-10-24T05:29:49"
+   }
   },
   {
    "order": 2327,
@@ -135969,7 +136152,7 @@
    "id": "lcs",
    "name": "Lancaster County, PA",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -136008,7 +136191,26 @@
      "Lebanon County, PA"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 34.1,
+     "stations": 1.1,
+     "places": 2.3,
+     "coarse": 0.7,
+     "routes": 79.8,
+     "merge": 1.5,
+     "nocar": 3.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-24T04:01:50",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:32:50",
+    "shipped": "2026-10-24T05:29:50"
+   }
   },
   {
    "order": 2134,
@@ -136194,7 +136396,7 @@
    "id": "onn",
    "name": "Onondaga County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -136241,7 +136443,28 @@
      "Lewis County, NY"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-035729",
+    "steps": {
+     "build": 38.3,
+     "stations": 1.6,
+     "places": 3.3,
+     "coarse": 2.8,
+     "routes": 64.1,
+     "merge": 1.5,
+     "nocar": 3.0,
+     "everyday": 1.0
+    },
+    "built": "2026-10-24T04:04:35",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.031207811024247113"
+     ]
+    },
+    "gated": "2026-10-24T04:12:44",
+    "shipped": "2026-10-24T05:29:50"
+   }
   },
   {
    "order": 2141,
@@ -136317,7 +136540,7 @@
    "id": "yok",
    "name": "York County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -136360,7 +136583,26 @@
      "Juniata County, PA"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 29.0,
+     "stations": 1.0,
+     "places": 2.3,
+     "coarse": 0.9,
+     "routes": 62.0,
+     "merge": 2.0,
+     "nocar": 4.0,
+     "everyday": 1.2
+    },
+    "built": "2026-10-24T04:01:42",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:32:50",
+    "shipped": "2026-10-24T05:29:50"
+   }
   },
   {
    "order": 2331,
@@ -136531,7 +136773,7 @@
    "id": "his",
    "name": "Hillsborough County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -136580,7 +136822,26 @@
      "Coos County, NH"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-040129",
+    "steps": {
+     "build": 46.9,
+     "stations": 1.3,
+     "places": 2.8,
+     "coarse": 2.6,
+     "routes": 78.8,
+     "merge": 1.8,
+     "nocar": 2.8,
+     "everyday": 0.8
+    },
+    "built": "2026-10-24T04:04:30",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:26:02",
+    "shipped": "2026-10-24T05:29:50"
+   }
   },
   {
    "order": 2332,
@@ -136795,7 +137056,7 @@
    "id": "kna",
    "name": "Kanawha County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -136882,14 +137143,33 @@
      "Wirt County, WV"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 42.2,
+     "stations": 1.0,
+     "places": 2.1,
+     "coarse": 3.3,
+     "routes": 93.1,
+     "merge": 3.1,
+     "nocar": 3.6,
+     "everyday": 0.8
+    },
+    "built": "2026-10-24T04:02:45",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:32:51",
+    "shipped": "2026-10-24T05:29:50"
+   }
   },
   {
    "order": 2169,
    "id": "mnt",
    "name": "Montgomery County, VA",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -136978,7 +137258,26 @@
      "Norton city, VA"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 39.4,
+     "stations": 1.1,
+     "places": 2.1,
+     "coarse": 2.9,
+     "routes": 69.5,
+     "merge": 3.1,
+     "nocar": 4.7,
+     "everyday": 1.7
+    },
+    "built": "2026-10-24T03:59:19",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:32:49",
+    "shipped": "2026-10-24T05:29:50"
+   }
   },
   {
    "order": 2179,
@@ -137174,7 +137473,7 @@
    "id": "bry",
    "name": "Broome County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -137229,14 +137528,33 @@
      "Schuyler County, NY"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-035729",
+    "steps": {
+     "build": 32.9,
+     "stations": 1.3,
+     "places": 2.1,
+     "coarse": 3.9,
+     "routes": 61.4,
+     "merge": 1.8,
+     "nocar": 2.9,
+     "everyday": 0.8
+    },
+    "built": "2026-10-24T04:05:54",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:12:45",
+    "shipped": "2026-10-24T05:29:51"
+   }
   },
   {
    "order": 2337,
    "id": "cee",
    "name": "Centre County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -137291,7 +137609,28 @@
      "Fulton County, PA"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 44.1,
+     "stations": 1.1,
+     "places": 2.4,
+     "coarse": 1.8,
+     "routes": 101.7,
+     "merge": 1.8,
+     "nocar": 3.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-24T04:04:20",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.030659879438254146"
+     ]
+    },
+    "gated": "2026-10-24T04:32:51",
+    "shipped": "2026-10-24T05:29:51"
+   }
   },
   {
    "order": 2184,
@@ -137364,7 +137703,7 @@
    "id": "sus",
    "name": "Sussex County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -137421,14 +137760,33 @@
      "Northampton County, VA"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 66.5,
+     "stations": 1.2,
+     "places": 2.5,
+     "coarse": 1.7,
+     "routes": 72.9,
+     "merge": 1.6,
+     "nocar": 3.6,
+     "everyday": 0.9
+    },
+    "built": "2026-10-24T03:59:45",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:32:49",
+    "shipped": "2026-10-24T05:29:51"
+   }
   },
   {
    "order": 2338,
    "id": "brk",
    "name": "Berkeley County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -137518,7 +137876,28 @@
      "Tucker County, WV"
     ]
    },
-   "solve_region": "south-atlantic"
+   "solve_region": "south-atlantic",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 70.4,
+     "stations": 1.3,
+     "places": 3.7,
+     "coarse": 3.2,
+     "routes": 144.5,
+     "merge": 2.2,
+     "nocar": 3.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-24T04:05:35",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.05227983406018157"
+     ]
+    },
+    "gated": "2026-10-24T04:32:51",
+    "shipped": "2026-10-24T05:29:51"
+   }
   },
   {
    "order": 2339,
@@ -137593,7 +137972,7 @@
    "id": "ere",
    "name": "Erie County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -137648,7 +138027,26 @@
      "Cameron County, PA"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 37.0,
+     "stations": 1.0,
+     "places": 2.4,
+     "coarse": 1.6,
+     "routes": 66.4,
+     "merge": 2.3,
+     "nocar": 3.9,
+     "everyday": 1.2
+    },
+    "built": "2026-10-24T04:03:46",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:32:51",
+    "shipped": "2026-10-24T05:29:51"
+   }
   },
   {
    "order": 2341,
@@ -138041,7 +138439,7 @@
    "id": "cie",
    "name": "Chittenden County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -138102,7 +138500,26 @@
      "Essex County, VT"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-040129",
+    "steps": {
+     "build": 33.8,
+     "stations": 0.9,
+     "places": 1.6,
+     "coarse": 1.6,
+     "routes": 43.7,
+     "merge": 1.6,
+     "nocar": 2.6,
+     "everyday": 0.7
+    },
+    "built": "2026-10-24T04:09:16",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:26:02",
+    "shipped": "2026-10-24T05:29:52"
+   }
   },
   {
    "order": 2344,
@@ -138182,7 +138599,7 @@
    "id": "srg",
    "name": "Saratoga County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -138229,7 +138646,26 @@
      "Essex County, NY"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-035729",
+    "steps": {
+     "build": 44.8,
+     "stations": 1.0,
+     "places": 2.5,
+     "coarse": 2.9,
+     "routes": 55.3,
+     "merge": 1.4,
+     "nocar": 3.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-24T04:06:27",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:12:45",
+    "shipped": "2026-10-24T05:29:52"
+   }
   },
   {
    "order": 2264,
@@ -138629,7 +139065,7 @@
    "id": "scu",
    "name": "Schuylkill County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -138680,7 +139116,28 @@
      "Potter County, PA"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 37.5,
+     "stations": 1.1,
+     "places": 2.3,
+     "coarse": 1.2,
+     "routes": 77.8,
+     "merge": 1.7,
+     "nocar": 3.0,
+     "everyday": 1.0
+    },
+    "built": "2026-10-24T04:03:56",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.041051725615890836"
+     ]
+    },
+    "gated": "2026-10-24T04:32:52",
+    "shipped": "2026-10-24T05:29:52"
+   }
   },
   {
    "order": 2272,
@@ -139239,7 +139696,7 @@
    "id": "frk",
    "name": "Franklin County, PA",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -139283,14 +139740,33 @@
      "Garrett County, MD"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 38.0,
+     "stations": 1.1,
+     "places": 2.4,
+     "coarse": 1.3,
+     "routes": 60.0,
+     "merge": 1.1,
+     "nocar": 2.9,
+     "everyday": 1.8
+    },
+    "built": "2026-10-24T03:59:03",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:32:49",
+    "shipped": "2026-10-24T05:29:52"
+   }
   },
   {
    "order": 2350,
    "id": "law",
    "name": "Lackawanna County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -139337,14 +139813,33 @@
      "Sullivan County, PA"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 29.7,
+     "stations": 1.4,
+     "places": 2.8,
+     "coarse": 2.1,
+     "routes": 50.4,
+     "merge": 1.1,
+     "nocar": 2.7,
+     "everyday": 0.8
+    },
+    "built": "2026-10-24T04:04:16",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:32:52",
+    "shipped": "2026-10-24T05:29:52"
+   }
   },
   {
    "order": 2308,
    "id": "ata",
    "name": "Atlantic County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -139383,7 +139878,26 @@
      "Cape May County, NJ"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 37.2,
+     "stations": 1.2,
+     "places": 2.2,
+     "coarse": 0.6,
+     "routes": 25.4,
+     "merge": 0.9,
+     "nocar": 2.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-24T04:00:15",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:32:49",
+    "shipped": "2026-10-24T05:29:53"
+   }
   },
   {
    "order": 2351,
@@ -139623,7 +140137,7 @@
    "id": "smr",
    "name": "St. Mary's County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -139683,7 +140197,29 @@
      "Richmond County, VA"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-033347",
+    "steps": {
+     "build": 41.8,
+     "stations": 1.0,
+     "places": 2.4,
+     "coarse": 1.0,
+     "routes": 50.1,
+     "merge": 1.2,
+     "nocar": 2.7,
+     "everyday": 0.8
+    },
+    "built": "2026-10-24T04:05:27",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.054329733158866515",
+      "top_zone_jobs_share 0.14898112753874407"
+     ]
+    },
+    "gated": "2026-10-24T04:32:52",
+    "shipped": "2026-10-24T05:29:53"
+   }
   },
   {
    "order": 2354,
@@ -139772,7 +140308,7 @@
    "id": "brb",
    "name": "Barnstable County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -139809,7 +140345,28 @@
      "Dukes County, MA"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-035729",
+    "steps": {
+     "build": 33.0,
+     "stations": 1.0,
+     "places": 2.1,
+     "coarse": 0.5,
+     "routes": 12.3,
+     "merge": 0.8,
+     "nocar": 2.4,
+     "everyday": 0.8
+    },
+    "built": "2026-10-24T04:02:18",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_share_other 0.032723076121099134"
+     ]
+    },
+    "gated": "2026-10-24T04:12:44",
+    "shipped": "2026-10-24T05:29:53"
+   }
   },
   {
    "order": 2355,
@@ -140043,7 +140600,7 @@
    "id": "nak",
    "name": "Nantucket County",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "USA"
@@ -140078,14 +140635,42 @@
      "Nantucket County, MA"
     ]
    },
-   "solve_region": "northeast"
+   "solve_region": "northeast",
+   "run": {
+    "run_batch": "20261024-035729",
+    "steps": {
+     "build": 10.3,
+     "stations": 1.5,
+     "places": 2.6,
+     "coarse": 0.7,
+     "routes": 3.7,
+     "merge": 1.1,
+     "nocar": 3.0,
+     "everyday": 1.0
+    },
+    "built": "2026-10-24T04:01:50",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_cell_jobs_share_other 0.07260273972487473",
+      "top_zone_jobs_share 0.2860827044582381",
+      "fleet_range 5"
+     ]
+    },
+    "parked": "2026-10-24T04:11:14",
+    "gated": "2026-10-24T04:35:01",
+    "shipped": "2026-10-24T05:29:53"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "Nantucket: one island of 14,000 people, its jobs in the town of Nantucket's zone (as Honolulu, wave 3)"
+   }
   },
   {
    "order": 2357,
    "id": "cra",
    "name": "Carolina Municipio",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "PRI"
@@ -140179,6 +140764,25 @@
      "Maunabo Municipio, PR",
      "Ceiba Municipio, PR"
     ]
+   },
+   "run": {
+    "run_batch": "20261024-040129",
+    "steps": {
+     "build": 21.1,
+     "stations": 0.8,
+     "places": 1.9,
+     "coarse": 0.5,
+     "routes": 36.4,
+     "merge": 0.6,
+     "nocar": 2.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-24T04:15:37",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:26:02",
+    "shipped": "2026-10-24T05:40:28"
    }
   },
   {
@@ -140186,7 +140790,7 @@
    "id": "snm",
    "name": "San Juan Municipio",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "PRI"
@@ -140260,6 +140864,25 @@
      "Jayuya Municipio, PR",
      "Florida Municipio, PR"
     ]
+   },
+   "run": {
+    "run_batch": "20261024-040129",
+    "steps": {
+     "build": 19.4,
+     "stations": 0.8,
+     "places": 1.7,
+     "coarse": 0.4,
+     "routes": 26.6,
+     "merge": 0.7,
+     "nocar": 1.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-24T04:15:26",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:26:03",
+    "shipped": "2026-10-24T05:40:28"
    }
   },
   {
@@ -140267,7 +140890,7 @@
    "id": "pop",
    "name": "Ponce Municipio",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "PRI"
@@ -140347,6 +140970,25 @@
      "Las Marías Municipio, PR",
      "Maricao Municipio, PR"
     ]
+   },
+   "run": {
+    "run_batch": "20261024-040129",
+    "steps": {
+     "build": 19.0,
+     "stations": 0.8,
+     "places": 1.5,
+     "coarse": 0.5,
+     "routes": 20.5,
+     "merge": 0.7,
+     "nocar": 1.8,
+     "everyday": 0.6
+    },
+    "built": "2026-10-24T04:15:39",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-24T04:26:03",
+    "shipped": "2026-10-24T05:40:28"
    }
   },
   {
@@ -140354,7 +140996,7 @@
    "id": "viq",
    "name": "Vieques Municipio",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "PRI"
@@ -140390,6 +141032,33 @@
      "Vieques Municipio, PR",
      "Culebra Municipio, PR"
     ]
+   },
+   "run": {
+    "run_batch": "20261024-040129",
+    "steps": {
+     "build": 13.4,
+     "stations": 0.8,
+     "places": 1.1,
+     "coarse": 0.3,
+     "routes": 2.0,
+     "merge": 0.6,
+     "nocar": 1.8,
+     "everyday": 0.7
+    },
+    "built": "2026-10-24T04:14:53",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.2998234629281648",
+      "fleet_range 5"
+     ]
+    },
+    "parked": "2026-10-24T04:18:28",
+    "gated": "2026-10-24T04:35:01",
+    "shipped": "2026-10-24T05:40:28"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "Vieques and Culebra: two islands of 9,000 people, their jobs in Isabel Segunda's zone (as Nantucket and Honolulu)"
    }
   }
  ],

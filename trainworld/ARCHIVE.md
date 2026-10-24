@@ -1,5 +1,7 @@
 # Archive
 
+- T-1018 [P1] The US waves after the pilot. Done 2026-10-24: South 63, Midwest 66, West 52 (on AWS for $0.18) and wave 4, the Northeast's neighbours and Puerto Rico, 33 of 33 built at home in 2 h 20 min; the real save 12,783,191 rail trips a day. notes/T-1004.md "Wave 1" to "Wave 4".
+- T-033 [P2] Globe as an option beside the flat map. Done 2026-10-24: Settings > Map, Flat or Globe; MapLibre's globe to zoom 12, everything of ours drawn and picked on it through one `project()` (map/gl.ts); flat screenshots identical; frame cost as flat. notes/T-033.md.
 - T-1113 [P2] Windham, New London and Litchfield merged. Done 2026-10-24: all three into Hartford (hfd, a world plan row on the usa module, 1.76M), their first commuting destination; saves map them to hfd. The top bar's cap change goes to the interface. notes/T-1004.md "T-1113".
 - T-1014 [P1] The Northeast's 13 packs on the general joint solve. Done 2026-10-24: `market` -1, own-frame market packs, solve region "northeast", T-580's park rule gone; solved alone in 21 s; the real save 12,796,392 to 12,785,772 rail trips a day. notes/T-1004.md "T-1014".
 - T-479 [P3] The Northeast's stale market sites. Done 2026-10-24 by T-1014: the market packs take their sites from the packs themselves.
