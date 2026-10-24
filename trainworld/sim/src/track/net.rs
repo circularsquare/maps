@@ -255,6 +255,9 @@ pub enum Issue {
     HighSpeed { edge: u32 },
     /// Construct with nothing left to construct (T-849).
     NothingToConstruct,
+    /// Track drawn from a station has no room past the platform for its junction (T-1155): a
+    /// junction, a station or a crossover is in the way.
+    BranchNoRoom { node: u32 },
 }
 
 /// What the raw setters touched since the last `take_touch`.

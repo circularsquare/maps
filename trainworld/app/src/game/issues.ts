@@ -42,6 +42,7 @@ const TEXT: Record<string, string | (() => string)> = {
   Alongside: "This track has a pair beside it already.",
   HighSpeed: "High-speed track cannot be doubled up to quad.",
   NothingToConstruct: "Everything here is constructed already.",
+  BranchNoRoom: "Track cannot branch off just past this platform, because a junction or another station is too close.",
   Internal: "That edit failed and was undone.",
   NoParallel: () => `A crossover needs other track alongside within ${length(15)}, with ${length(60)} of plain track each way.`,
 };

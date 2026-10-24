@@ -877,11 +877,16 @@ const JOINT_SNAP: f64 = 8.0;
 /// The point chainage `s` along edge `e`, which may be off either end: walked on through plain
 /// joints (two edge ends, no station) onto the next piece. None where the track ends, meets a
 /// junction or a station first, or the point would be within a few metres of one.
-fn locate(net: &Network, mut e: u32, mut s: f64) -> Option<Loc> {
+fn locate(net: &Network, e: u32, s: f64) -> Option<Loc> {
+    locate_or_stop(net, e, s).ok()
+}
+
+/// `locate`, or the node it stopped at (u32::MAX: it walked too far).
+fn locate_or_stop(net: &Network, mut e: u32, mut s: f64) -> Result<Loc, u32> {
     for _ in 0..16 {
         let len = net.edge_len[e as usize];
         if s >= JOINT_SNAP && s <= len - JOINT_SNAP {
-            return Some(Loc::Split(e, s));
+            return Ok(Loc::Split(e, s));
         }
         let which = if s < len / 2.0 { 0 } else { 1 };
         let over = if which == 0 { -s } else { s - len };
@@ -889,21 +894,21 @@ fn locate(net: &Network, mut e: u32, mut s: f64) -> Option<Loc> {
         let i = n as usize;
         let p = &net.node_ports[i];
         if p.n != 2 || net.node_platform[i] > 0 {
-            return None;
+            return Err(n);
         }
         if over.abs() < JOINT_SNAP {
-            return Some(Loc::Node(n));
+            return Ok(Loc::Node(n));
         }
-        let &c = p.ends().iter().find(|&&c| c != (e << 1 | which))?;
+        let &c = p.ends().iter().find(|&&c| c != (e << 1 | which)).ok_or(n)?;
         let (o, ow) = (c >> 1, c & 1);
         if net.edge_crossover[o as usize] {
-            return None;
+            return Err(n);
         }
         // `over` metres on from `n` into `o`
         s = if ow == 0 { over } else { net.edge_len[o as usize] - over };
         e = o;
     }
-    None
+    Err(u32::MAX)
 }
 
 /// The other diagonal of the crossover edge `e` is (T-338): the crossover edge crossing it.
@@ -1294,3 +1299,7 @@ mod quad_edit_tests;
 
 #[cfg(test)]
 mod t1071_tests;
+
+/// T-1155: track drawn from a station branches past its platform.
+#[cfg(test)]
+mod branch_tests;

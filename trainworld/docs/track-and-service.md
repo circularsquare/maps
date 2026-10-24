@@ -230,6 +230,22 @@ Full design, numbers and sources: `notes/T-008.md`.
   drawing. A flyover is bought from the junction inspector ([ui-building.md](ui-building.md)), which
   gives its price and the waiting it saves per train at the demand level in force: paid at once on
   a constructed junction, else added to the blueprint, where it can be removed again.
+- **Branching from a station** (T-1155, `branch_end` in `wasm/draw.rs`): a station's node takes
+  no junction (`StationPorts`) and no junction may sit in a platform, so a route starting or
+  ending on a through station's node, or on track within any station's platform, leaves the track
+  20 m (`BRANCH_CLEAR`) past the platform's end instead: a new flat junction there, on the side the
+  route's next point lies (for its end, the side its previous point lies), the branch leaving it
+  away from the station. A plain joint within 8 m of that point takes the junction; a track end
+  before it (a station's own piece of track ends 10 m past the platform) is carried on from. A
+  station at the end of its track is extended from its node, and from its platform when the route
+  heads out past that end; drawn back the other way it branches 20 m past the platform's far end.
+  Refused where a junction, another station's platform or a crossover is in the way
+  (`BranchNoRoom`: "Track cannot branch off just past this platform, because a junction or another
+  station is too close."), and on a ramp as any split is. The junction takes the track's level
+  there and the branch ramps to the level selected. On quad track only the pair clicked branches,
+  inside its crossover 50 m out; high-speed track stays high speed on both halves. It is part of
+  the route edit, so the ghost, the click, the real-network snap and the edit API agree, in one
+  undo step.
 - **No track at ground level over water** (level 0 is invalid where the water mask says water);
   bridges and tunnels over or under water cost 2x (6.4). The mask is 25 m pixels in the city
   pack; water narrower than ~50 m (creeks, ditches, small ponds) is not in it, since a railway

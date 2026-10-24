@@ -1244,8 +1244,10 @@ export class Tools {
     };
     const t = tool.peek();
     if (t === "track" && this.start) {
-      put(this.el(k++, "pi-mark"), ...toLocal(this.start.lng, this.start.lat));
       const pv = this.lastPreview;
+      // where the segment starts, which from a station is past its platform (T-1155)
+      if (pv && pv.verts.length >= 2) put(this.el(k++, "pi-mark"), pv.verts[0], pv.verts[1]);
+      else put(this.el(k++, "pi-mark"), ...toLocal(this.start.lng, this.start.lat));
       if (pv) {
         // only those on screen: a snapped route can have thousands of curves (T-727d)
         // and none over another, so zoomed out a long route keeps a few

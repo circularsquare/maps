@@ -16,10 +16,26 @@ impl TrackApi {
         let (a, b) = (end_from(&ends[0..5]), end_from(&ends[5..10]));
         let mut new_nodes = vec![];
         let mut new_edges = vec![];
+        let net = &self.w.net;
+        let b_at = match b {
+            End::Free { x, y, .. } | End::Edge { x, y, .. } => (x, y),
+            End::Node(n) if net.node_ok(n) => (net.node_x[n as usize], net.node_y[n as usize]),
+            End::Node(_) => (0.0, 0.0),
+        };
+        let (a, from_a) = branch_end(net, a, pis.first().map_or(b_at, |p| (p.x, p.y)))?;
         // Both ends on one edge: the second split must name the half it falls in.
         let first_split = if let End::Edge { e, x, y } = a { Some((e, self.w.net.project(e, x, y).0)) } else { None };
-        let ra = self.resolve(a, None, &mut new_nodes, &mut new_edges)?;
-        let rb = self.resolve(b, first_split, &mut new_nodes, &mut new_edges)?;
+        let mut ra = self.resolve(a, None, &mut new_nodes, &mut new_edges)?;
+        leave_away(&mut ra, from_a);
+        let (b, from_b) = match branch_end(&self.w.net, b, pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y))) {
+            Ok(v) => v,
+            Err(i) => {
+                self.release(&new_nodes, &new_edges);
+                return Err(i);
+            }
+        };
+        let mut rb = self.resolve(b, first_split, &mut new_nodes, &mut new_edges)?;
+        leave_away(&mut rb, from_b);
         if ra.node == rb.node {
             self.release(&new_nodes, &new_edges);
             return Err(Issue::EdgeLoop { edge: u32::MAX });
@@ -643,4 +659,71 @@ impl TrackApi {
         Some((f, sf))
     }
 
+}
+
+/// How far past a platform's end track drawn from the station branches off, m (T-1155): beyond
+/// the `JOINT_SNAP` a joint snaps within, and short of a quad station's crossover 50 m out.
+pub(super) const BRANCH_CLEAR: f64 = 20.0;
+
+/// T-1155: a route end on a station's node or on track within its platform, as the end the route
+/// takes instead, with the station's position when the route branches off (so it leaves away
+/// from the station). A station node takes no junction, so the route leaves the track
+/// `BRANCH_CLEAR` past the platform's end on the side `toward` lies (or a plain joint within
+/// `JOINT_SNAP` of that), or carries on from a track end short of it. A station at the end of its
+/// track, clicked on its node or with `toward` out past that end, is extended as it is. Any other
+/// end is unchanged.
+fn branch_end(net: &Network, end: End, toward: (f64, f64)) -> Result<(End, Option<(f64, f64)>), Issue> {
+    let station = |n: u32| net.node_ok(n) && net.node_platform[n as usize] > 0 && net.node_ports[n as usize].n > 0;
+    let n = match end {
+        End::Node(n) if station(n) && net.node_ports[n as usize].n >= 2 => n,
+        End::Edge { e, x, y } if net.edge_ok(e) => {
+            let (s, _) = net.project(e, x, y);
+            let len = net.edge_len[e as usize];
+            let within = |(w, d): &(u32, f64)| {
+                let m = net.end_node(e, *w);
+                station(m) && *d < net.platform_reach(m) + 1.0
+            };
+            match [(0, s), (1, len - s)].into_iter().filter(within).min_by(|a, b| a.1.total_cmp(&b.1)) {
+                Some((w, _)) => net.end_node(e, w),
+                None => return Ok((end, None)),
+            }
+        }
+        _ => return Ok((end, None)),
+    };
+    let i = n as usize;
+    let p = net.node_ports[i];
+    let (sx, sy, h) = (net.node_x[i], net.node_y[i], net.node_heading[i]);
+    // the port on the side `toward` lies (side 1 leaves along the heading)
+    let want = if (toward.0 - sx) * h.cos() + (toward.1 - sy) * h.sin() >= 0.0 { 1 } else { 0 };
+    let Some(k) = (0..p.n as usize).find(|&k| p.side[k] == want) else {
+        return Ok((End::Node(n), None));
+    };
+    let (e, which) = (p.end[k] >> 1, p.end[k] & 1);
+    let d = net.platform_reach(n) + BRANCH_CLEAR;
+    let s = if which == 0 { d } else { net.edge_len[e as usize] - d };
+    let room = Issue::BranchNoRoom { node: n };
+    match locate_or_stop(net, e, s) {
+        Ok(Loc::Split(e2, s2)) => {
+            // clear of another station's platform reaching in along that piece
+            let len = net.edge_len[e2 as usize];
+            for (w, dist) in [(0, s2), (1, len - s2)] {
+                let m = net.end_node(e2, w);
+                if station(m) && dist < net.platform_reach(m) + 1.0 {
+                    return Err(room);
+                }
+            }
+            let (x, y, _) = geom::pos_at(net.edge_pieces(e2), s2);
+            Ok((End::Edge { e: e2, x, y }, Some((sx, sy))))
+        }
+        Ok(Loc::Node(m)) => Ok((End::Node(m), Some((sx, sy)))),
+        Err(m) if m != u32::MAX && net.node_ports[m as usize].n == 1 && net.node_platform[m as usize] == 0 => Ok((End::Node(m), None)),
+        Err(_) => Err(room),
+    }
+}
+
+/// A branch past a platform (`branch_end`) leaves its junction away from the station at `from`.
+fn leave_away(r: &mut Resolved, from: Option<(f64, f64)>) {
+    if let Some((sx, sy)) = from {
+        r.dirs.retain(|d| d.cos() * (r.x - sx) + d.sin() * (r.y - sy) > 0.0);
+    }
 }

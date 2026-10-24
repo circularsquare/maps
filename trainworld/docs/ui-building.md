@@ -91,6 +91,11 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   placing, the circle the segment's curve lies on is drawn faint grey (red when refused)
   [`map/curveCircle.ts`]; none for a straight segment. A click beyond the 1,796 m circle gets that
   circle's curve then a straight to the click [T-471].
+- **From a station** [T-1155]: a click on a through station, its node or its platform, starts
+  the track 20 m past the platform's end on the side the pointer is, as a junction there
+  (stations take no junction; [track-and-service.md](track-and-service.md) 6.1); a segment ending
+  on a station joins the same way. Before the click the ghost starts there, with the start
+  square and its junction mark. A station at the end of its track is extended.
 - **Curve labels**: while drawing, the start shows as a square and the curve its speed limit, on
   the speed colour at half strength, no radius [T-417, T-530] (one label for a curve split
   into several corners); the same labels show while a selected blueprint stretch is reshaped or a
