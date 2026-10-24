@@ -1,5 +1,8 @@
 # Archive
 
+- T-1113 [P2] Windham, New London and Litchfield merged. Done 2026-10-24: all three into Hartford (hfd, a world plan row on the usa module, 1.76M), their first commuting destination; saves map them to hfd. The top bar's cap change goes to the interface. notes/T-1004.md "T-1113".
+- T-1014 [P1] The Northeast's 13 packs on the general joint solve. Done 2026-10-24: `market` -1, own-frame market packs, solve region "northeast", T-580's park rule gone; solved alone in 21 s; the real save 12,796,392 to 12,785,772 rail trips a day. notes/T-1004.md "T-1014".
+- T-479 [P3] The Northeast's stale market sites. Done 2026-10-24 by T-1014: the market packs take their sites from the packs themselves.
 - T-734 [P2] Node drag with the track tool. Done 2026-10-24: a press that moves 3 px on a blueprint node drags it (`NodeDrag.hit` takes the track tool; `Tools.nodeMoved` drops a route drawn from it); a click still places track. `checks/t734-track-drag.mjs`.
 - T-991 [P2] Market trip between zones with an end not open. Done 2026-10-24: `market_trip_w` takes the distance and the car from the places' rows, so Jinan to Zibo reads 86 km and a car time; the panel shows only those.
 - T-992 [P3] Walk row in the trip headline. Done 2026-10-24: shown whenever walking has a share, whatever the walk's length.

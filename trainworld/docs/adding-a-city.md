@@ -65,7 +65,10 @@ background and wait once for the process.
   id in HEAD's registry and not the working one's gets its successor in
   `app/src/game/zone-successors.json`, the zone now under its old centre, so saves naming it load
   ([architecture.md](architecture.md) 11). `--set wnd=nlc` picks one by hand, `--set wnd=` none;
-  `--dry` prints only. Smoke's `t1053-zone-ids` check fails until it has run.
+  `--dry` prints only. Smoke's `t1053-zone-ids` check fails until it has run. A zone taken out by
+  hand leaves commutes to its place in its group's other market packs, which `market_pack` refuses
+  ("invalid commute between zones"): `market_zones.py <the group's other ids>` rewrites them without
+  it (T-1113).
 - **Rows** go in plan order, a region at a time: rows sharing a Geofabrik extract, chained. The
   region's extracts are downloaded (four tries) unless their caches or `.osm.pbf` are on disk, and
   read once into the caches (`osm_features`, inland water, roads, admin relations).
@@ -77,8 +80,7 @@ background and wait once for the process.
   parks. A step whose log has not grown for 20 minutes (`QUIET_S`; `TW_QUIET_S` to change it) dumps
   every thread's stack into its log, again after each further 20 silent minutes, and the runner
   prints a line saying so. Status `built`.
-- **Gate**: a row within 50 km of a pack with a Northeast `market` id parks (T-580: the Northeast
-  is solved on its own sites). The rates test the gate runs (`every_pack_everyday`) is built once at
+- **Gate**: the rates test the gate runs (`every_pack_everyday`) is built once at
   the run's start from the sim the gate reads (`TW_SIM_DIR`, else the tree's sim/) and copied to
   `data/work/world_run/everyday-<batch>.exe`, so a change to sim/ mid-run recompiles nothing
   (T-931; if it does not build, each gate builds it as before). The rest are registered with their market packs (`register.py
@@ -218,8 +220,9 @@ background and wait once for the process.
 
 ## 2. Back up
 
-`data/work/pre-T###/`: `data/packs/intercity.json` and `app/src/game/registry.json` (the only
-existing files a city addition overwrites). Existing city packs are never rebuilt by a city
+`data/work/pre-T###/`: `app/src/game/registry.json`, `market-rows.json` and the joint commutes files
+of the group it joins (`data/work/<group>.joint_commutes.json`), the shared files a city addition
+overwrites. Existing city packs are never rebuilt by a city
 addition; take their sha256 now so you can show they did not change. If the batch edits shared
 pipeline code, rebuild one existing pack into a scratch folder (patch `build_city.PACKS` and
 `WORK`) and show its arrays are bit-identical.
@@ -390,8 +393,7 @@ before the zone's own boundary has loaded (T-800); `world_run.py join` runs it, 
   the pack's frame), `center` (usually the origin), `zoom` 11.2, `utcOffset`, `market`.
 - `utcOffset` (T-309): the city's standard time offset from UTC in whole hours, no daylight
   saving; round a half hour down (India's +5:30 is +5). Its periods, weekends and fares run on it.
-- `market` is the Northeast's joint commute gravity's place for the zone (`intercity.py` and
-  `joint_gravity` take the cities with one), **-1 for every other zone**. Every zone's place in the
+- `market` is -1 for every zone (T-1014: it was the Northeast's own joint solve's place). Every zone's place in the
   world market, `place`, and its `country` are written by `pipeline/market_zones.py` (step 7),
   which appends the zone to `market.places` and writes its market row into
   `app/src/game/market-rows.json` (T-776: not in the registry, which the app bundles). **Place ids are positions in that list:
@@ -419,11 +421,9 @@ place within 250 km of one (T-929: a row reads only its own pack and those of pl
 `data/work/market_rows.inputs.json` records what each row was made from, and a changed
 `market_pack` binary or market rule redoes them all). `--rows --full` redoes every row.
 
-A zone in the Northeast's joint commute gravity (`market` set) runs `intercity.py` instead of
-`market_zones.py`: it rewrites every Northeast pack's gravity factors (the joint solve), so
-existing packs change here too: record the commuters between packs it prints and each corridor's
-trips before and after. Any other pack whose outline comes within 50 km of another registered
-pack's is in a joint gravity group with it (T-539; `intercity.py --groups` lists them, `--plan`
+A pack whose outline comes within 50 km of another registered pack's is in a joint gravity group
+with it, so existing packs change here too: record the commuters between packs the solve prints
+and each corridor's trips before and after (T-539; `intercity.py --groups` lists them, `--plan`
 with the world plan's metros too). Once it is registered: `merge_cells.py <every member> --undo`,
 `intercity.py --group auto <id> --no-market` (it rewrites every member's factors), `merge_cells.py`
 on them again, then `register.py

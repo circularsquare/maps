@@ -10134,6 +10134,14 @@
       {
         "name": "Hawaii County",
         "regionName": "Hawaii County region"
+      },
+      {
+        "name": "Hartford",
+        "regionName": "Hartford region"
+      },
+      {
+        "name": "Hartford",
+        "regionName": "Hartford region"
       }
     ],
     "rule": {
@@ -10178,8 +10186,8 @@
       ],
       "zoom": 11.2,
       "utcOffset": -5,
-      "market": 0,
-      "localTrips": 69033226.0,
+      "market": -1,
+      "localTrips": 68854606.0,
       "box": [
         -75.219,
         39.475,
@@ -10203,8 +10211,8 @@
       ],
       "zoom": 11.2,
       "utcOffset": -5,
-      "market": 1,
-      "localTrips": 19197013.0,
+      "market": -1,
+      "localTrips": 19150114.0,
       "box": [
         -76.257,
         39.272,
@@ -10228,8 +10236,8 @@
       ],
       "zoom": 11.2,
       "utcOffset": -5,
-      "market": 3,
-      "localTrips": 15785607.0,
+      "market": -1,
+      "localTrips": 15743728.0,
       "box": [
         -71.924,
         41.565,
@@ -10253,8 +10261,8 @@
       ],
       "zoom": 11.2,
       "utcOffset": -5,
-      "market": 4,
-      "localTrips": 19648888.0,
+      "market": -1,
+      "localTrips": 19603387.0,
       "box": [
         -78.418,
         37.972,
@@ -10278,8 +10286,8 @@
       ],
       "zoom": 11.2,
       "utcOffset": -5,
-      "market": 5,
-      "localTrips": 8512476.0,
+      "market": -1,
+      "localTrips": 8493966.0,
       "box": [
         -77.335,
         38.694,
@@ -10303,8 +10311,8 @@
       ],
       "zoom": 11.2,
       "utcOffset": -5,
-      "market": 6,
-      "localTrips": 4920969.0,
+      "market": -1,
+      "localTrips": 4908514.0,
       "box": [
         -71.908,
         41.095,
@@ -10328,8 +10336,8 @@
       ],
       "zoom": 11.2,
       "utcOffset": -5,
-      "market": 7,
-      "localTrips": 2444037.0,
+      "market": -1,
+      "localTrips": 2429732.0,
       "box": [
         -73.352,
         41.087,
@@ -10337,31 +10345,6 @@
         41.663
       ],
       "place": 7,
-      "country": "US",
-      "realm": "us-northeast"
-    },
-    {
-      "id": "hfd",
-      "name": "Hartford",
-      "origin": {
-        "lon": -72.6851,
-        "lat": 41.7637
-      },
-      "center": [
-        -72.6851,
-        41.7637
-      ],
-      "zoom": 11.2,
-      "utcOffset": -5,
-      "market": 8,
-      "localTrips": 3609306.0,
-      "box": [
-        -73.054,
-        41.177,
-        -72.075,
-        42.057
-      ],
-      "place": 8,
       "country": "US",
       "realm": "us-northeast"
     },
@@ -10378,8 +10361,8 @@
       ],
       "zoom": 11.2,
       "utcOffset": -5,
-      "market": 9,
-      "localTrips": 2092313.0,
+      "market": -1,
+      "localTrips": 2085648.0,
       "box": [
         -73.1,
         41.979,
@@ -10729,8 +10712,8 @@
       ],
       "zoom": 10.5,
       "utcOffset": -5,
-      "market": 10,
-      "localTrips": 2349787.0,
+      "market": -1,
+      "localTrips": 2345232.0,
       "box": [
         -72.341,
         41.989,
@@ -10738,84 +10721,6 @@
         42.74
       ],
       "place": 10,
-      "country": "US",
-      "realm": "us-northeast"
-    },
-    {
-      "id": "wnd",
-      "name": "Windham County",
-      "kind": "zone",
-      "origin": {
-        "lon": -72.2087,
-        "lat": 41.7107
-      },
-      "center": [
-        -72.2087,
-        41.7107
-      ],
-      "zoom": 10.5,
-      "utcOffset": -5,
-      "market": 11,
-      "localTrips": 290992.0,
-      "box": [
-        -72.278,
-        41.616,
-        -71.762,
-        42.048
-      ],
-      "place": 11,
-      "country": "US",
-      "realm": "us-northeast"
-    },
-    {
-      "id": "nlc",
-      "name": "New London County",
-      "kind": "zone",
-      "origin": {
-        "lon": -72.0759,
-        "lat": 41.5243
-      },
-      "center": [
-        -72.0759,
-        41.5243
-      ],
-      "zoom": 10.5,
-      "utcOffset": -5,
-      "market": 12,
-      "localTrips": 733273.0,
-      "box": [
-        -72.491,
-        41.215,
-        -71.763,
-        41.733
-      ],
-      "place": 12,
-      "country": "US",
-      "realm": "us-northeast"
-    },
-    {
-      "id": "lit",
-      "name": "Litchfield County",
-      "kind": "zone",
-      "origin": {
-        "lon": -73.1212,
-        "lat": 41.8007
-      },
-      "center": [
-        -73.1212,
-        41.8007
-      ],
-      "zoom": 10.5,
-      "utcOffset": -5,
-      "market": 13,
-      "localTrips": 439819.0,
-      "box": [
-        -73.543,
-        41.449,
-        -72.862,
-        42.069
-      ],
-      "place": 13,
       "country": "US",
       "realm": "us-northeast"
     },
@@ -54633,6 +54538,31 @@
       "country": "US",
       "localTrips": 1115818.0,
       "realm": "us-west"
+    },
+    {
+      "id": "hfd",
+      "name": "Hartford",
+      "origin": {
+        "lon": -72.6851,
+        "lat": 41.7637
+      },
+      "center": [
+        -72.6851,
+        41.7637
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.543,
+        41.177,
+        -71.762,
+        42.069
+      ],
+      "place": 2530,
+      "country": "US",
+      "localTrips": 5545544.0,
+      "realm": "us-northeast"
     }
   ]
 }

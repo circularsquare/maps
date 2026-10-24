@@ -110,13 +110,7 @@ CITIES = {
         "boundary_notes": "notes/T-137.md",
         "counties": {'09009': 'New Haven'},
     },
-    "hfd": {
-        "origin": (-72.6851, 41.7637),
-        "lodes_years": (2023, 2022),
-        "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-137.md",
-        "counties": {'09003': 'Hartford', '09007': 'Middlesex CT', '09013': 'Tolland'},
-    },
+    # hfd (Hartford) is a world plan row since T-1113, built with the usa module
     "spf": {
         "origin": (-72.5898, 42.1015),
         "lodes_years": (2023, 2022),
@@ -599,8 +593,9 @@ CITIES = {
         "latin_names": True,
         "kana_romaji": True,
     },
-    # T-276: non-city zones (docs/zones.md 2): one county each, the counties that touch two city
-    # zones. Same sources and cells as a city; `kind` "zone" in the registry.
+    # T-276: a non-city zone (docs/zones.md 2): one county between two city zones. Same sources and
+    # cells as a city; `kind` "zone" in the registry. Windham, New London and Litchfield went into
+    # Hartford's plan row (T-1113).
     "wor": {
         "kind": "zone", "name": "Worcester County",
         "origin": (-71.8023, 42.2626),  # Worcester city hall
@@ -608,30 +603,6 @@ CITIES = {
         "water": {"cell_m": 25.0, "min_width_px": 2},
         "boundary_notes": "docs/zones.md",
         "counties": {"25027": "Worcester MA"},
-    },
-    "wnd": {
-        "kind": "zone", "name": "Windham County",
-        "origin": (-72.2087, 41.7107),  # Willimantic
-        "lodes_years": (2023, 2022),
-        "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "docs/zones.md",
-        "counties": {"09015": "Windham CT"},
-    },
-    "nlc": {
-        "kind": "zone", "name": "New London County",
-        "origin": (-72.0759, 41.5243),  # Norwich
-        "lodes_years": (2023, 2022),
-        "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "docs/zones.md",
-        "counties": {"09011": "New London CT"},
-    },
-    "lit": {
-        "kind": "zone", "name": "Litchfield County",
-        "origin": (-73.1212, 41.8007),  # Torrington
-        "lodes_years": (2023, 2022),
-        "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "docs/zones.md",
-        "counties": {"09005": "Litchfield CT"},
     },
 }
 

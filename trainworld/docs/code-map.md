@@ -504,15 +504,14 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 
 ### The Northeast's build order
 
-The runtime needs `build_city.py` outputs for all registered zones: cities `nyc` (with Mercer
-since T-276), `phl`, `bos`, `wdc`, `bal`, `pvd`, `nhv`, `hfd`, `spf`; non-city zones `wor`, `wnd`,
-`nlc`, `lit` (docs/zones.md). Then in order: `zones.py` (registers built non-city zones and
-writes every entry's `box` through `zone_boxes.py`, which also runs alone, T-302),
-`intercity.py` (the Northeast's sites, then the joint commute gravity `joint_gravity`, which
-rewrites every Northeast pack's gravity factors and the commute list, then `market_zones.py`;
-`--group auto [ids]` every group of packs within 50 km of each other, the Northeast as above and
-the rest by `joint_gravity --packs`, T-463, T-539, a group spanning countries a country at a time
-with `--fixed` neighbours, T-786; `--groups` lists them and their solve units),
+The Northeast's hand-built packs are `build_city.py` configs: cities `nyc` (with Mercer since
+T-276), `phl`, `bos`, `wdc`, `bal`, `pvd`, `nhv`, `spf` and the zone `wor` (docs/zones.md); Hartford
+(`hfd`, with Windham, New London and Litchfield since T-1113) is a world plan row. Then in order:
+`zones.py` (registers built non-city zones and writes every entry's `box` through `zone_boxes.py`,
+which also runs alone, T-302), `intercity.py --group auto [ids]` (every group of packs within 50 km
+of each other by `joint_gravity --packs`, T-463, T-539, the Northeast's too since T-1014, a group
+spanning countries or solve regions a unit at a time with `--fixed` neighbours, T-786; `--groups`
+lists them and their solve units),
 `market_zones.py [ids]` (each zone's market pack against the world field, then `market_pack`'s
 rows into app/src/game/market-rows.json and each zone's `country` into the registry through
 `market_rows.py`, which also drops the rows of unregistered zones, T-776; seconds a zone, T-377;
@@ -520,12 +519,12 @@ only the rows of zones whose market pack changed, came or went and of places wit
 them, from `data/work/market_rows.inputs.json`, `market_pack --only`; `--rows --full` for every row, T-929),
 `zones.py --trips`, `routes.py <ids>` for any pack whose zones changed (T-275), and last
 `merge_cells.py --all` (T-044; the chain runs on res-9 packs, so `merge_cells.py <ids> --undo`
-first), then `market_zones.py` for the zones outside the Northeast.
+first).
 
 Vite serves and copies all registered packs. Zone packs stay separate; demand workers share a
-regional pool. Registry market places keep NYC0/PHL1/Mercer2 (no sites since T-276)/BOS3/WDC4 and
-append Baltimore5/Providence6/NewHaven7/Hartford8/Springfield9 and the non-city zones. The regional
-builder reads this registry.
+regional pool. Registry market places keep NYC0/PHL1/Mercer2 (no zone since T-276)/BOS3/WDC4,
+Baltimore5/Providence6/NewHaven7/Springfield9/Worcester10; 8 and 11-13 (the old Hartford, Windham,
+New London, Litchfield) are unused since T-1113. Every pack's `market` is -1 since T-1014.
 
 Toronto (`tor`, T-277) is registered with `market: -1` (outside the regional market) and built by
 `canada.py` (`canada.py tor --finish` reruns gravity, purposes and checks from the cached cells).

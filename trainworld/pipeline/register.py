@@ -5,8 +5,8 @@
 For each id whose pack is built (`data/packs/<id>.json`) and that the registry lacks, appends its
 `cities` entry from `build_city.CITIES`: name (`name`, else `region_name`), `kind` "zone" for a
 non-city zone, origin and center (the config's origin), zoom (11.2 a city, 10.5 a zone),
-`utcOffset` (`utc_offset`, else the longitude's whole hour) and `market` -1 (the Northeast's joint
-gravity is the only user of a market id, docs/adding-a-city.md 6). Then each named id's `box`
+`utcOffset` (`utc_offset`, else the longitude's whole hour) and `market` -1 (no pack has a market
+id since T-1014). Then each named id's `box`
 (zone_boxes.py). `--market` then runs market_zones.py for the ids (its market pack and every row);
 `--trips` runs zones.py's local trips for every zone. Prints one line per id.
 """

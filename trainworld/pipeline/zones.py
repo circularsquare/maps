@@ -11,8 +11,7 @@
    far-zoomed bubble of a zone the game has not opened.
 
 Run after building a zone pack and after pipeline/intercity.py (the joint gravity changes what each
-pack keeps). Then pipeline/intercity.py again when Northeast zones were added, or
-pipeline/market_zones.py for any other zone (T-377).
+pack keeps), then pipeline/market_zones.py (T-377).
 """
 import json
 import os
@@ -32,7 +31,7 @@ def register(reg):
     have = {c["id"] for c in reg["cities"]}
     added = []
     for cid, cfg in CITIES.items():
-        # tier 0 zones (Japan's) stay out of the Northeast's market ids: pipeline/register.py adds them
+        # tier 0 zones (Japan's): pipeline/register.py adds them
         if cfg.get("kind") != "zone" or cfg.get("tier0") or cid in have or not (ROOT / f"data/packs/{cid}.json").exists():
             continue
         lon, lat = cfg["origin"]
@@ -41,7 +40,7 @@ def register(reg):
                               "center": [lon, lat], "zoom": 10.5,
                               # T-309: whole-hour standard offset; the longitude's if the config has none
                               "utcOffset": cfg.get("utc_offset", round(lon / 15)),
-                              "market": len(reg["market"]["places"]) - 1})
+                              "market": -1, "place": len(reg["market"]["places"]) - 1})
         added.append(cid)
     return added
 

@@ -17,8 +17,8 @@ car); a served pair's rail share is `sum / (rest + sum)` against its zones' car 
 plane's, with no car), and the split of the rest by plane and car is the pair's
 (`corridor_modes`), which the client applies to every figure it shows. Commutes between zones: in the home place's pack,
 `commute_home` (its 6 km zone), `commute_place` and `commute_work` (the work place and its zone)
-and `commute_trips`, from `bin/joint_gravity.rs` by way of `data/packs/intercity.json`
-(pipeline/market_zones.py); at opening merged by zone pair, at `set_network` kept between served
+and `commute_trips`, from `bin/joint_gravity.rs --packs` by way of its group's
+`data/work/<group>.joint_commutes.json` (pipeline/market_zones.py); at opening merged by zone pair, at `set_network` kept between served
 zones (`cpairs`), and in each period's pass chosen
 once per commuter on its home-to-work station pairs (rail against the car on the cost ratio as in
 4.3, T-918; drive x 1.33 + parking at work; access weights at the damped logit's scale; the home
@@ -53,9 +53,9 @@ app reads are in the market frame (the New York equirectangular one) whatever th
 **The market's distances are on the ground** (T-128). Each zone centre goes through its pack's
 frame to the unit sphere and zone pairs are measured by great circle (`zone_km`; the same as
 `track::frame::great_circle`); far places by their centres'. The decay and the drive time follow.
-An old single pack (`sites` with a market column: the Northeast's `data/packs/intercity.json`,
-which the joint commute gravity reads and writes, and the tests' fixtures) opens as a closed world
-over its own zones with the ground curve alone.
+An old single pack (`sites` with a market column: the Northeast's `data/packs/intercity.json`
+from before T-1014, kept for the ignored tests that open it, and the tests' fixtures) opens as a
+closed world over its own zones with the ground curve alone.
 
 The Northeast recomputes every open city population and the separate regional market on service or
 fare changes; per-city dirty filtering remains future work. At each period's crowding round, the

@@ -6,7 +6,6 @@
 "bal": ["Columbia", "Glen Burnie", "Dundalk", "Towson", "Ellicott City"],
 "pvd": ["New Bedford", "Fall River", "Warwick", "Cranston", "Pawtucket"],
 "nhv": ["Waterbury", "Meriden", "Hamden", "West Haven", "Milford"],
-"hfd": ["New Britain", "West Hartford", "Bristol", "Manchester", "East Hartford"],
 "spf": ["Chicopee", "Westfield", "Amherst", "Holyoke", "Northampton"],
 "tor": ["City of Toronto", "Mississauga", "Ont.", "Brampton"],
 "lon": ["Greenwich", "City of Westminster", "Westminster", "Croydon", "Chelmsford", "Caesaromagus", "Ilford"],
@@ -22,8 +21,6 @@
 "hij": ["広島市", "Fukuyama", "福山市", "Kure", "呉市", "Higashihiroshima", "東広島市", "Onomichi", "尾道市", "Hatsukaichi", "廿日市市"],
 "sdj": ["仙台市", "Ishinomaki", "石巻市", "石巻", "Osaki", "大崎市", "Natori", "名取市", "Tagajo", "多賀城市", "Kurihara", "栗原市"],
 "wor": ["Worcester", "Leominster", "Fitchburg", "Shrewsbury", "Milford", "Westborough"],
-"nlc": ["Norwich", "Groton", "New London"],
-"lit": ["Torrington", "Watertown"],
 "seo": ["서울특별시", "서울", "Incheon", "인천광역시", "인천", "Suwon", "수원시", "Goyang", "고양시", "Yongin", "용인시", "Seongnam", "성남시"],
 "sao": ["São Paulo de Piratininga", "Guarulhos", "São Bernardo do Campo", "Santo André", "Osasco", "Mogi das Cruzes"],
 "lag": ["Ikeja", "Ikorodu", "Victoria Island", "Epe"],
@@ -1629,5 +1626,6 @@
 "sea": ["Tacoma", "Bellevue", "Kent"],
 "cco": ["Flagstaff", "Sierra Vista", "Nogales"],
 "hoo": ["Waipahu", "East Honolulu", "Mililani", "Pearl City", "Kailua"],
-"hwa": ["Hilo", "Kahului"]
+"hwa": ["Hilo", "Kahului"],
+"hfd": ["New Britain", "West Hartford", "Bristol", "Manchester", "East Hartford"]
 }

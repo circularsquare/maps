@@ -45,10 +45,9 @@ unit belongs to a city zone (and so is not a non-city zone) when that city's pac
 Neighbouring zones share exact simplified borders, so their boundaries do not overlap.
 
 **Which units are modelled (the extent).** A unit not in any city zone is modelled when it
-**touches two different city zones**: it lies between them. Today that is Worcester MA, Windham CT,
-New London CT and Litchfield CT in New England. Modelled space stays between cities for now (Anita,
-2026-10-14, T-300): no ring of units round each city (in the Northeast that ring would be about 30
-more counties and 9 million people). Everything not modelled is dead space. **Japan is modelled
+**touches two different city zones**: it lies between them. Today that is Worcester MA (Windham,
+New London and Litchfield CT went into Hartford's pack, T-1113). Countries planned whole (below)
+leave no such gaps. Everything not modelled is dead space. **Japan is modelled
 whole** (research/japan.md decision 2): every prefecture outside the metro packs is a zone, and in
 Hokkaido each subprefecture is a unit under the 100,000 rule (Hiyama joins Oshima; Rumoi and Soya
 join Kamikawa; Hidaka joins Tokachi; Nemuro joins Okhotsk; Shiribeshi less Otaru joins Iburi), 38
@@ -134,8 +133,8 @@ between Mercer and New York's counties against 88,000 with Philadelphia's; and a
 387,000 people pinched between two big packs, most of its commuting would cross a zone line. A
 county between two city zones whose commuting runs mostly to one of them may join it this way; the
 choice is made per county when a city's extent is drawn, as extents always have been (pragmatic,
-no study). Its place in the market (id 2, "Trenton") stays in the registry with no sites, because
-market ids are never renumbered.
+no study). Its place in the market (id 2, "Trenton") stays in the registry with no zone, because
+place ids are never renumbered.
 
 **Data.** The same national sources as the country's city zones, at the same grain: in the US 2020
 census blocks less institutions (T-234), LODES WAC and RAC, NCES, IPEDS, FAA, OSM. Where a country
@@ -235,10 +234,10 @@ over every job in reach, in its own zone or another, so moving a zone line moves
 - **Groups form themselves** (T-539, `intercity.py --group auto [ids]`): two registered packs are in
   one group when their outlines (`<id>.boundary.geojson`) come within 50 km of each other, chained,
   across national borders too; a pack with no neighbour that close stands alone and is not solved.
-  Within a group the 150 km cut still applies. Today this gives two groups. The Northeast (the
-  registry's cities with a `market` id; cross-pack commutes through `data/packs/intercity.json`) is
-  solved its own way and must hold exactly those cities. Every other group runs `joint_gravity
-  --packs` (distances in a conic at the packs' mean origin; at most 300 steps, the best kept) and
+  Within a group the 150 km cut still applies. Every group runs `joint_gravity --packs`
+  (distances in a conic at the packs' mean origin; at most 300 steps, the best kept), the
+  Northeast's 13 hand-built packs too since T-1014 (solve region "northeast", their hand-made
+  rows' `intercity.SOLVE_REGION_PACKS`), and
   writes its cross-pack commutes, by 6 km square of each pack's own frame, to
   `data/work/<first member>.joint_commutes.json` (Japan's 45 packs: `tyo`), which `market_zones.py`
   writes into each zone's market pack; an older file holding any of the same packs is removed.

@@ -1,15 +1,9 @@
-"""T-117, T-276: the Northeast's sites and commutes between zones, data/packs/intercity.json.
+"""T-276, T-539: the joint commute gravity between packs (`bin/joint_gravity.rs --packs`).
 
-Endpoint sites from the Northeast's zone packs (the registry's cities with a `market`: 600 m squares
-in the New York equirectangular frame, `origin`; 6 km zones), each site's parking for an arriving
-car (the local layer's rule), then the joint commute gravity, which reads these sites and writes
-the commutes between zones into the same file. Mercer County is in New York's pack since T-276;
-its market place (id 2) keeps its name and has no sites.
+Every group of packs is solved the same way since T-1014, the Northeast's 13 hand-built packs
+included (solve region "northeast", SOLVE_REGION_PACKS); each zone's market pack then takes its
+commutes from data/work/<group>.joint_commutes.json (pipeline/market_zones.py).
 
-    python pipeline/intercity.py            the sites, the joint commute gravity (rewrites every
-                                            Northeast pack's gravity, T-276), then every zone's
-                                            market pack (pipeline/market_zones.py, T-377);
-                                            --no-joint skips the gravity
     python pipeline/intercity.py --group auto [ids]
                                             every joint gravity group (T-539: packs whose outlines
                                             lie within GROUP_GAP_KM, chained), or the groups holding
@@ -24,9 +18,6 @@ its market place (id 2) keeps its name and has no sites.
     python pipeline/intercity.py --solve a,b [--fixed c,d [--hold-report F] [--new a]] --name n
                                             one solve unit, no market step (world_run.py's join;
                                             the hold report, T-928: how far it moved each fixed pack)
-
-The game no longer reads this file (T-377): pipeline/market_zones.py takes the Northeast's sites
-and commutes from it into each zone's own market pack, `data/packs/<id>.market.json`.
 """
 import json
 import math
@@ -37,19 +28,11 @@ import sys
 import time
 from pathlib import Path
 import numpy as np
-from read_pack import load_pack
-from build_city import CITIES, R_EARTH
+from build_city import R_EARTH
 
 ROOT = Path(__file__).resolve().parents[1]
-ORIGIN = CITIES["nyc"]["origin"]
-# Stable IDs: saved city selections and registry entries use these indices.
 REGISTRY = json.loads((ROOT / "app/src/game/registry.json").read_text(encoding="utf-8"))
-# a city with market -1 is not in the Northeast market (Toronto, T-277, until T-276 places it)
-CITY_MARKETS = tuple((c["market"], c["id"]) for c in REGISTRY["cities"] if c["market"] >= 0)
-MARKETS = [p["name"] for p in REGISTRY["market"]["places"]]
 
-# T-276: the market's trips a weekday per resident (fitted with its curve, research/intercity/market_fit.py)
-TRIP_RATE = 0.107
 GROUP_GAP_KM = 50.0
 # joint_gravity's cut for pairs across packs: a neighbouring country's pack this near takes part in a
 # country's solve, held at its factors (T-786)
@@ -107,51 +90,8 @@ def park_by_cell(h, a, lon, lat):
     return (PARK_MIN + cordon + (1.0 - free) * paid)[zone]
 
 
-def lonlat_to_market(lon, lat):
-    return (R_EARTH * np.radians(lon - ORIGIN[0]) * math.cos(math.radians(ORIGIN[1])),
-            R_EARTH * np.radians(lat - ORIGIN[1]))
-
-
-def sites():
-    """Sites ([x, y, people, jobs, market]) and each one's parking for an arriving car."""
-    rows = []
-    for market, key in CITY_MARKETS:
-        h, a = load_pack(key)
-        o = h["origin"]
-        lat = o["lat"] + np.degrees(a["y_m"] / R_EARTH)
-        lon = o["lon"] + np.degrees(a["x_m"] / (R_EARTH * math.cos(math.radians(o["lat"]))))
-        park = park_by_cell(h, a, lon, lat)
-        rows.append((market, lon, lat, a["pop"], a["jobs"], park))
-    out, parks = [], []
-    for market, lon, lat, pop, jobs, park in rows:
-        x, y = lonlat_to_market(lon, lat)
-        groups = {}
-        for xx, yy, pp, jj, pk in zip(x, y, pop, jobs, park):
-            if pp + jj <= 0: continue
-            k = (int(xx // 600), int(yy // 600))
-            r = groups.setdefault(k, [0., 0., 0., 0., 0., 0.])
-            r[0] += xx * (pp + jj); r[1] += yy * (pp + jj)
-            r[2] += pp; r[3] += jj
-            r[4] += pk * (jj + 1e-6); r[5] += jj + 1e-6
-        for r in groups.values():
-            w = r[2] + r[3]
-            out.append([round(float(r[0]/w), 1), round(float(r[1]/w), 1), round(float(r[2]), 3), round(float(r[3]), 3), market])
-            parks.append(round(float(r[4] / r[5]), 2))
-    return out, parks
-
-
-def joint(root=ROOT, work=None, dry=False):
-    """T-276: one commute gravity over every zone pack (`joint_gravity`): rewrites each pack's
-    gravity factors and the market pack's commutes between zones. About a minute (T-297)."""
-    work = work or root / "data/work"
-    extra = ["--dry", "--dump", str(work / "joint_dump.json")] if dry else []
-    cargo_bin("joint_gravity", "--root", str(root), "--threads", os.environ.get("OMP_NUM_THREADS", "3"),
-              "--report", str(work / "joint_report.json"), *extra)
-
-
 def solve_group(ids, name, root=ROOT, work=None, dry=False, fixed=(), new=(), hold_report=None):
-    """T-463, T-539: one joint commute gravity over packs outside the Northeast: each pack's
-    factors, and the cross-pack commutes from their homes in <work>/<name>.joint_commutes.json for
+    """T-463, T-539: one joint commute gravity over a group of packs: each pack's factors, and the cross-pack commutes from their homes in <work>/<name>.joint_commutes.json for
     market_zones.py; `fixed` packs (T-786) take part at their own factors and are not written. A
     file no pack takes its commutes from any more (joint_files) is removed. `hold_report` (T-928):
     how far the solve moved each fixed pack, the `new` ones counted absent before."""
@@ -201,8 +141,9 @@ def country_of(reg, root=ROOT):
     return out
 
 
-# packs made by hand, which have no plan row to carry a `solve_region` (T-897)
-SOLVE_REGION_PACKS = {"sha": "jiangsu"}
+# packs made by hand, which have no plan row to carry a `solve_region` (T-897, T-1014)
+SOLVE_REGION_PACKS = {"sha": "jiangsu",
+                      **{i: "northeast" for i in ("nyc", "phl", "bos", "wdc", "bal", "pvd", "nhv", "spf", "wor")}}
 
 
 def solve_key(reg, root=ROOT):
@@ -258,43 +199,26 @@ def near_any(a, others, km):
 
 def solve_auto(only=(), root=ROOT, work=None, dry=False, gap=None):
     """T-539: every joint gravity group of the registered packs (auto_groups), or those holding a
-    pack of `only`, solved in turn. The Northeast is solved its own way (its sites in
-    intercity.json, T-276), which needs every member to have a Northeast market place. Returns the
-    ids of the packs solved."""
+    pack of `only`, solved in turn. Returns the ids of the packs solved."""
     reg = json.loads((root / "app/src/game/registry.json").read_text(encoding="utf-8"))
     work = work or root / "data/work"
-    ne = {c["id"] for c in reg["cities"] if c.get("market", -1) >= 0}
     solved = []
     for u in solve_units(reg, root, only, gap=gap):
         g = u["members"]
-        solve_unit(g, u["fixed"], u["name"], root, work, dry, ne)
+        solve_unit(g, u["fixed"], u["name"], root, work, dry)
         solved += g
     for i in set(only) - set(solved):
         print(f"{i}: no registered pack within {GROUP_GAP_KM:g} km, so no joint gravity")
     return solved
 
 
-def solve_unit(g, fixed, name, root=ROOT, work=None, dry=False, ne=None, new=(), hold_report=None):
+def solve_unit(g, fixed, name, root=ROOT, work=None, dry=False, new=(), hold_report=None):
     """One solve unit (solve_units): its members balanced, `fixed` held at their factors."""
     t0 = time.time()
-    if ne is None:
-        reg = json.loads((root / "app/src/game/registry.json").read_text(encoding="utf-8"))
-        ne = {c["id"] for c in reg["cities"] if c.get("market", -1) >= 0}
     nz = sum(json.loads((root / f"data/packs/{i}.json").read_text(encoding="utf-8"))["zones"] for i in g)
     if nz > MAX_GROUP_ZONES:
         sys.exit(f"group {name} has {nz:,} gravity zones, over {MAX_GROUP_ZONES:,}: split it (notes/T-539.md)")
-    if set(g) & ne:
-        if set(g) != ne or fixed:
-            sys.exit(f"the Northeast's group is {'+'.join(g)}: {', '.join(sorted(set(g) ^ ne))} "
-                     "would need a Northeast market place (docs/adding-a-city.md 6), or the Northeast "
-                     "solved as a --packs group")
-        if not dry:
-            # the sites come from this tree's packs (sites() reads the module's registry)
-            assert root == ROOT, "the Northeast is solved for real only in this tree"
-            write_sites()
-        joint(root, work, dry)
-    else:
-        solve_group(g, name, root, work, dry, fixed, new, hold_report)
+    solve_group(g, name, root, work, dry, fixed, new, hold_report)
     print(f"group {name} ({len(g)} packs{f', {len(fixed)} fixed' if fixed else ''}: {' '.join(g)}) solved in "
           f"{time.time() - t0:.0f} s", flush=True)
 
@@ -377,23 +301,6 @@ def cargo_bin(name, *args):
                     "--manifest-path", str(sim / "Cargo.toml"), "--", *args], env=env, check=True)
 
 
-def frame():
-    """The frame the sites are in (T-128), as the registry writes frames."""
-    return {"kind": "equirect", "lon": ORIGIN[0], "lat": ORIGIN[1]}
-
-
-def write_sites():
-    path = ROOT / "data/packs/intercity.json"
-    site_rows, site_park = sites()
-    data = {"format": 2, "origin": {"lon": ORIGIN[0], "lat": ORIGIN[1]}, "frame": frame(),
-            "markets": MARKETS, "zone_m": 6000, "trip_rate": TRIP_RATE,
-            "description": "The Northeast's endpoint sites and commutes between zones; the game reads each zone's market pack instead (T-377, pipeline/market_zones.py).",
-            "sources": ["2020 Census block population less institutional group quarters (T-234)", "LODES 2023/2022 jobs", "registered zone-pack cells"],
-            "sites": site_rows, "site_park": site_park}
-    path.write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8")
-    print(path, len(site_rows), "sites", path.stat().st_size, "bytes")
-
-
 def opt(name):
     return Path(sys.argv[sys.argv.index(name) + 1]) if name in sys.argv else None
 
@@ -424,9 +331,5 @@ if __name__ == "__main__":
             import market_zones
             market_zones.main(ids)
         sys.exit()
-    write_sites()
-    if "--no-joint" not in sys.argv[1:]:
-        joint()
-    import market_zones
-    market_zones.main([])
+    sys.exit(__doc__)
 

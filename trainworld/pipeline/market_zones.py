@@ -13,14 +13,12 @@ needs only its own file and this merge. Only the rows a changed, new or gone zon
 worked out again (T-929, `plan_rows`; data/work/market_rows.inputs.json records what each row was made
 from); a changed market_pack binary or market rule redoes them all.
 
-A zone's file holds its endpoint sites (its pack's cells in 600 m squares: the Northeast's straight
-from data/packs/intercity.json, the sites the joint commute gravity names, in the market frame; every
-other zone's in its own pack frame), each site's parking for an arriving car and the people of its
-H3 r5 cell (the long-haul tail's density, notes/T-376.md), its 6 km zones with their two normalisers
-against the world field (T-375: ground and tail, constants in pipeline/longhaul.json), and the
-commutes from it to other zones (the Northeast's, from the same intercity.json; a joint gravity
-group's, from data/work/<group>.joint_commutes.json, T-463), and (T-378) the
-airports its people fly from with the zones each flies to directly.
+A zone's file holds its endpoint sites (its pack's cells in 600 m squares of its own pack frame),
+each site's parking for an arriving car and the people of its H3 r5 cell (the long-haul tail's
+density, notes/T-376.md), its 6 km zones with their two normalisers against the world field (T-375:
+ground and tail, constants in pipeline/longhaul.json), the commutes from it to other zones (its joint
+gravity group's, from data/work/<group>.joint_commutes.json, T-463), and (T-378) the airports its
+people fly from with the zones each flies to directly.
 """
 import csv
 import hashlib
@@ -173,8 +171,8 @@ def equirect(lon0, lat0):
 
 
 def own_sites(cid, frame):
-    """A zone's sites from its own pack ([x, y, people, jobs] in `frame`) and their parking, grouped
-    as pipeline/intercity.py groups the Northeast's."""
+    """A zone's sites from its own pack ([x, y, people, jobs] in `frame`) and their parking: its
+    cells grouped by 600 m square, each at its people-and-jobs centre."""
     h, a = load_pack(cid)
     o = h["origin"]
     _, pack_ll = equirect(o["lon"], o["lat"])
@@ -198,28 +196,8 @@ def own_sites(cid, frame):
     return sites, parks
 
 
-class Northeast:
-    """The Northeast's sites and commutes between zones as data/packs/intercity.json has them (the
-    joint commute gravity names those sites), split by zone."""
-    def __init__(self):
-        p = json.loads((PACKS / "intercity.json").read_text(encoding="utf-8"))
-        self.frame = p["frame"]
-        s = p["sites"]
-        self.market = np.array([int(r[4]) for r in s])
-        self.local = np.zeros(len(s), np.int64)
-        self.sites, self.parks = {}, {}
-        for i, r in enumerate(s):
-            m = int(r[4])
-            lst = self.sites.setdefault(m, [])
-            self.local[i] = len(lst)
-            lst.append(r[:4])
-            self.parks.setdefault(m, []).append(p["site_park"][i])
-        self.commutes = (np.array(p.get("commute_home", []), np.int64), np.array(p.get("commute_work", []), np.int64),
-                         np.array(p.get("commute_trips", []), np.float64))
-
-
 class Groups:
-    """Commutes between the packs of a joint gravity group outside the Northeast (T-463: Japan's),
+    """Commutes between the packs of a joint gravity group (T-463: Japan's first),
     data/work/<group>.joint_commutes.json from bin/joint_gravity.rs --packs: by 6 km square of each
     pack's own frame, matched here to the squares of the zone files' 6 km zones."""
     def __init__(self, reg):
@@ -283,7 +261,7 @@ def zones_of(sites):
     return list(keys), zi, cx, cy
 
 
-def build(cid, reg, F, ne, air):
+def build(cid, reg, F, air):
     city = next(c for c in reg["cities"] if c["id"] == cid)
     place = city["place"]
     lon0, lat0 = city["center"]
@@ -294,12 +272,8 @@ def build(cid, reg, F, ne, air):
     country = next((k for k, c in enumerate(F.wf.countries) if own and c["iso2"] == own), country)
     cinfo = F.wf.countries[country]
     inc = min(cinfo["gdp"] / RULE["y_us"], 1.0)
-    if city.get("market", -1) >= 0:
-        frame = dict(ne.frame)
-        sites, parks = ne.sites.get(city["market"], []), ne.parks.get(city["market"], [])
-    else:
-        frame = {"kind": "equirect", "lon": city["origin"]["lon"], "lat": city["origin"]["lat"]}
-        sites, parks = own_sites(cid, frame)
+    frame = {"kind": "equirect", "lon": city["origin"]["lon"], "lat": city["origin"]["lat"]}
+    sites, parks = own_sites(cid, frame)
     keys, zi, cx, cy = zones_of(sites)
     _, to_ll = equirect(frame["lon"], frame["lat"])
     zlon, zlat = to_ll(cx, cy)
@@ -318,19 +292,7 @@ def build(cid, reg, F, ne, air):
                        "pipeline/longhaul.json (T-376)"]}
     out.update(air.get(cid, {}))
     out["sources"].append(AIR_SOURCE)
-    if city.get("market", -1) >= 0 and len(ne.commutes[0]):
-        h, w, t = ne.commutes
-        mine = ne.market[h] == city["market"]
-        h, w, t = h[mine], w[mine], t[mine]
-        wm = ne.market[w]
-        # each Northeast market's place is its market id (pipeline/intercity.py)
-        wz = np.array([zone_index[int(m)][int(ne.local[k])] for m, k in zip(wm, w)], np.int64) if len(w) else np.zeros(0, np.int64)
-        out["commute_home"] = [int(zi[int(ne.local[k])]) for k in h]
-        out["commute_place"] = [int(place_of_market[int(m)]) for m in wm]
-        out["commute_work"] = [int(v) for v in wz]
-        out["commute_trips"] = [float(v) for v in t]
-        out["sources"].append("commutes between zones: bin/joint_gravity.rs (T-276), from data/packs/intercity.json")
-    elif cid in groups.rows:
+    if cid in groups.rows:
         rows = groups.commutes(cid, keys)
         out["commute_home"] = [k[0] for k, _ in rows]
         out["commute_place"] = [int(k[1]) for k, _ in rows]
@@ -340,9 +302,7 @@ def build(cid, reg, F, ne, air):
     return out
 
 
-zone_index = {}       # Northeast market id -> each of its sites' 6 km zone (local)
-place_of_market = {}  # Northeast market id -> place
-groups = None         # Groups, set in main
+groups = None  # Groups, set in main
 
 
 def cargo_exe(name):
@@ -471,12 +431,11 @@ def save_record(record, have):
 
 
 def assign_places(reg):
-    """Every zone a market place: the Northeast's keep theirs (their market id), others append."""
+    """Every zone a market place: a new one appends, and places are never renumbered (the
+    Northeast's 13 keep their old market ids, T-1014)."""
     places = reg["market"]["places"]
     for c in reg["cities"]:
-        if c.get("market", -1) >= 0:
-            c["place"] = c["market"]
-        elif "place" not in c:
+        if "place" not in c:
             places.append({"name": c["name"], "regionName": c["name"] + " region"})
             c["place"] = len(places) - 1
     reg["market"]["rule"] = {k: v for k, v in RULE.items() if k not in ("task", "date", "form", "notes")}
@@ -523,14 +482,9 @@ def _main(args):
         ids = []
     if ids:
         F = Field()
-        ne = Northeast()
         groups = Groups(reg)
-        for c in reg["cities"]:
-            if c.get("market", -1) >= 0:
-                place_of_market[c["market"]] = c["place"]
-                zone_index[c["market"]] = zones_of(ne.sites[c["market"]])[1] if c["market"] in ne.sites else np.zeros(0, np.int64)
     for cid in ids:
-        out = build(cid, reg, F, ne, air)
+        out = build(cid, reg, F, air)
         path = PACKS / f"{cid}.market.json"
         write(path, out)
         print(f"{cid}: place {out['place']}, {out['country']}, income {out['inc']:.3f}, road {out['road']}, "

@@ -216,7 +216,7 @@ def step_main(argv):
     name, args = argv[0], argv[1:]
     if not name.startswith("@"):
         return run_main(name, args)
-    out = {"@read_extract": read_extract, "@ne_gap": ne_gap, "@groups": groups_of,
+    out = {"@read_extract": read_extract, "@groups": groups_of,
            "@preview": preview}[name](args)
     if out is not None:
         print("RESULT " + json.dumps(out))
@@ -257,26 +257,6 @@ def read_extract(args):
         osm_units.admin_areas(ex)
 
 
-def ne_gap(ids):
-    """{id: km to the nearest pack with a Northeast market id, if within GAP_KM}: such a pack would
-    stop the joint gravity (T-580)."""
-    import intercity
-    reg = json.loads((intercity.ROOT / "app/src/game/registry.json").read_text(encoding="utf-8"))
-    ne = [c["id"] for c in reg["cities"] if c.get("market", -1) >= 0]
-    shapes = {i: intercity.outline(intercity.ROOT / f"data/packs/{i}.boundary.geojson") for i in ne}
-    out = {}
-    for i in ids:
-        g = intercity.outline(intercity.ROOT / f"data/packs/{i}.boundary.geojson")
-        near = [(intercity.gap_km(g, s), j) for j, s in shapes.items()
-                if s.bounds[0] - 3 < g.bounds[2] and g.bounds[0] - 3 < s.bounds[2]
-                and s.bounds[1] - 3 < g.bounds[3] and g.bounds[1] - 3 < s.bounds[3]]
-        near = [x for x in near if x[0] <= intercity.GROUP_GAP_KM]
-        if near:
-            d, j = min(near)
-            out[i] = [round(d, 1), j]
-    return out
-
-
 def groups_of(ids):
     """The solve units (intercity.solve_units, T-786) holding any of these ids."""
     import intercity
@@ -286,7 +266,7 @@ def groups_of(ids):
 
 def preview(ids):
     """For a dry run: each id's planned extent against the registered packs and the other ids,
-    within GAP_KM (the groups it would join), and Northeast packs that near (T-580)."""
+    within GAP_KM (the groups it would join)."""
     import shapely
     from shapely.geometry import shape
     import intercity
@@ -296,7 +276,6 @@ def preview(ids):
     plan = {f["properties"]["id"]: shapely.make_valid(shape(f["geometry"])) for f in ext["features"]}
     packs = {c["id"]: intercity.outline(root / f"data/packs/{c['id']}.boundary.geojson") for c in reg["cities"]
              if (root / f"data/packs/{c['id']}.boundary.geojson").exists()}
-    ne = {c["id"] for c in reg["cities"] if c.get("market", -1) >= 0}
     out = {}
     for i in ids:
         g = plan.get(i)
@@ -310,7 +289,7 @@ def preview(ids):
                 d = intercity.gap_km(g, s)
                 if d <= intercity.GROUP_GAP_KM:
                     near[j] = round(d, 1)
-        out[i] = {"near": near, "northeast": sorted(set(near) & ne)}
+        out[i] = {"near": near}
     return out
 
 
@@ -557,8 +536,7 @@ class Run:
                 near = ", ".join(f"{j} {d:g} km" for j, d in sorted(p.get("near", {}).items(), key=lambda x: x[1]))
                 print(f"  {r['order']:>4} {r['id']} {r['name']} ({r.get('iso2')}, {r['people'] / 1e6:.2f}M, "
                       f"{sum(len(v) for v in r['units'].values())} units, {r['archetype']}{', ' + r['module'] if r.get('module') else ''})"
-                      f" status {r['status']}{'; joins ' + near if near else ''}"
-                      f"{'; PARKS (T-580): near the Northeast ' + ','.join(p['northeast']) if p.get('northeast') else ''}")
+                      f" status {r['status']}{'; joins ' + near if near else ''}")
 
     # ---------------------------------------------------------------- the run
 
@@ -1015,12 +993,6 @@ class Run:
 
     def gate_held(self, ids, L):
         gd = L.parent / "gate"
-        ok, _, near = self.step("@ne_gap", ids, f"{L}.ne_gap.log", threads=1)
-        near = near if ok and isinstance(near, dict) else {}
-        for cid, (d, j) in near.items():
-            self.park(cid, f"T-580: {d:g} km from {j}, a Northeast pack solved on its own sites; a pack this near "
-                           "would need a Northeast market place (the Northeast moved onto the --packs solve first)")
-        ids = [i for i in ids if i not in near]
         if not ids:
             return []
         self.check_sim()
