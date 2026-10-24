@@ -40,7 +40,6 @@ CLAUDE.md; history in ARCHIVE.md.
 - T-298 [P3] Inspectors and inter-region bubbles show commutes between zones merged into longer trips: split or relabel, as Anita prefers once she has seen them. Open; notes/T-276.md.
 - T-280 [P3] Ferries (found in T-275): Staten Island's commute rail share fell to 1.9% (ACS 3.7%) with walks blocked by water; a ferry as access leg or line kind. Parked (Anita 2026-10-13); notes/T-275.md.
 - T-142 [P3] Private schools (NCES PSS, New York too); the other non-work purposes are in every US pack and come from tier 0 abroad. Open; notes/T-142.md.
-- T-269 [P3] realnet's operator count is wrong (found in T-171): it counts first boardings at labelled stations; count trips using each operator from route-node boardings and transfers. Open; notes/T-171.md 2.5.
 - T-270 [P3] The drive across rivers and into dense centres is too cheap (found in T-171): no tolls or tunnel queues; start with OSM `toll=yes`. Moves calibrated numbers. Open; notes/T-171.md 1.4.
 - T-271 [P3] Commuter rail is over on commutes alone (found in T-171): LIRR 483k and Metro-North 336k against 268k and 236k real all-purpose trips. Bears on T-268. Open; notes/T-171.md 1.2.
 - T-273 [P3] Border factor fade near the line (T-171's one judgement call): the Hudson waterfront goes 0.67x to 0.92x LODES, Camden - Center City overshoots 5.8x to 8.6x. Anita decides; notes/T-171.md 2.4.
@@ -77,7 +76,7 @@ CLAUDE.md; history in ARCHIVE.md.
 
 ## Interface
 Anita's TODO.md "short term", filed 2026-10-24.
-- T-1114 [P2] A general code cleanup (Anita 2026-10-24): read-only review agents by area (app ui, app game/map/workers, sim, pipeline, checks) list improvements, reorganisations, simplifications and slop to cut, ranked, in notes/T-1114.md; then fixed in batches by owned files. Reviews written 2026-10-24 (notes/T-1114/ui.md, app-core.md, sim.md, pipeline.md); pipeline Batch A (notes/ scripts) done; taking 2026-10-24 in worktrees: app bugs (appbugs), ui and game/ batches (appclean), renderer batches (renderclean), sim batches A-F (simclean); pipeline batches B-I wait until no data wave runs.
+- T-1114 [P2] A general code cleanup (Anita 2026-10-24): read-only review agents by area (app ui, app game/map/workers, sim, pipeline, checks) list improvements, reorganisations, simplifications and slop to cut, ranked, in notes/T-1114.md; then fixed in batches by owned files. Reviews written 2026-10-24 (notes/T-1114/ui.md, app-core.md, sim.md, pipeline.md). Landed 2026-10-24: the bugs, ui batches 0 and A-G, app-core batches 0, 1, 5-8, 10, sim A-F and G's wasm.rs split, pipeline A, D, E, F (items 17-18), H; checks B and C taking (worktree checksclean). Left: app-core 2, 3, 4, 9 (perf switches, approved), 11; sim G's kernel.rs split and H; pipeline F items 19-20, G (the nocar layer, changes pack bytes, with T-878/T-926), I.
 Anita's TODO.md "short term", filed 2026-10-24 (second set).
 Anita's TODO.md "short term", filed 2026-10-23.
 - T-1072 [P3] Changing a line's stops at an end (a stop added past the last, the first removed) moves the other direction's running trains by the length added or removed: flights are kept as offsets along the run; match them by place on the ground instead. Open; notes/T-1071.md "Limits".
@@ -146,7 +145,6 @@ Anita's playtest of 2026-10-18 (her TODO.md "short term"), filed 2026-10-19. Pla
 ## World, tier 0 and countries
 Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pipeline follows T-535's design (notes/T-535.md "Stages").
 
-- T-980 [P3] `pack_gate.py` run by hand with `python -I` crashes printing a non-Latin detail on a cp1252 console (`-I` ignores PYTHONIOENCODING; world_run's steps reconfigure stdout, so runs are fine). Reconfigure stdout to utf-8 in its main. Open.
 - T-985 [P3] Wei (wix) and Linquan (lnq) have solve_region henan in the plan but lie in Hebei and Anhui: check the world plan's province for China zone rows. notes/T-975.md.
 - T-964 [P2] Gate a region in chunks as its rows finish, while its later rows build, instead of after the last build (wave 1's northern region: builds 114 min, then the gate 73 min with every build worker idle; about 25-30 min a 100 rows). Open; notes/T-962.md.
 - T-967 [P3] Downloads ahead and caches kept for a wave: a `world_run.py fetch` for a wave's extracts while the previous join runs (Geofabrik at 0.4 MB/s held wave 2's runs 5.7 and 8.2 min before any build), and the region caches kept until the wave's join so reruns skip downloads and reads (14 min of wave 1's reruns). Open; notes/T-962.md.
@@ -162,7 +160,6 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-571 [P3] National no-car figures in `nocar.COUNTRIES` for the larger countries on T-562's GDP rule (Russia, Mexico, Iraq, Iran and others; Vietnam's 65% is too low): census share first, else a register. Open; notes/T-562.md.
 - T-563 [P3] Fit an archetype A planned city's own curve from its country's flows at build time (England, France, Germany borrow now): a `curve` mode in tier0 and the key in `plan_hooks`. Open; notes/T-555.md.
 - T-564 [P3] Country hooks T-555 could not carry: Korea's registration population and Canada's DA population and jobs as tier 0 hooks. Open; notes/T-555.md.
-- T-594 [P3] `pipeline/intercity.py` runs the full Northeast solve on `--help` or any unknown flag; make it print usage instead.
 - T-592 [P3] world_run reads the next region's extract while this one gates and joins (reading is the largest phase: Portugal 5.2 of 12.9 minutes). notes/T-540.md.
 - T-617 [P3] Rebuild gla, lis and pot on T-610's unit matching when next rebuilt (gla +5.6%; lis and pot move from plan polygons to OSM municipalities). notes/T-610.md.
 - T-612 [P3] Runner: delete a parked row's pack files once its reason is recorded.

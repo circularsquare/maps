@@ -1,5 +1,8 @@
 # Archive
 
+- T-594 [P3] `intercity.py --help` ran a full solve. Done 2026-10-24 in T-1114's pipeline cleanup: it prints its usage on any unknown flag.
+- T-980 [P3] `pack_gate.py` crashed on a cp1252 console. Done 2026-10-24 in T-1114's pipeline cleanup: stdout and stderr are UTF-8 under `__main__`.
+- T-269 [P3] realnet's operator count. Dropped 2026-10-24: realnet's compare and the `realnet` bin are retired (T-1114); calib replaced them.
 - T-1018 [P1] The US waves after the pilot. Done 2026-10-24: South 63, Midwest 66, West 52 (on AWS for $0.18) and wave 4, the Northeast's neighbours and Puerto Rico, 33 of 33 built at home in 2 h 20 min; the real save 12,783,191 rail trips a day. notes/T-1004.md "Wave 1" to "Wave 4".
 - T-033 [P2] Globe as an option beside the flat map. Done 2026-10-24: Settings > Map, Flat or Globe; MapLibre's globe to zoom 12, everything of ours drawn and picked on it through one `project()` (map/gl.ts); flat screenshots identical; frame cost as flat. notes/T-033.md.
 - T-1113 [P2] Windham, New London and Litchfield merged. Done 2026-10-24: all three into Hartford (hfd, a world plan row on the usa module, 1.76M), their first commuting destination; saves map them to hfd. The top bar's cap change goes to the interface. notes/T-1004.md "T-1113".
