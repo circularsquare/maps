@@ -4,23 +4,29 @@
   districts) read from the Geofabrik extract, kept by their Chinese name, clipped to land by the
   OSM coastline polygons (OSM's district lines run far out to sea), cached as a small GeoJSON (the
   .pbf is deleted after routes.py).
-- **Population**: the 7th national census (2020-11-01) resident population by district, from
-  Shanghai's bulletin (SHANGHAI below), spread inside each district by GHSL.
+- **Population** (T-1150): the 7th national census (2020-11-01) by township, from helper1m's China
+  table (the ASPECT 100 m grid, Ju et al. 2025, built on 40,718 townships' counts, summed over each
+  2018 township outline and scaled to the census counties), spread inside each township by tier 0's
+  bounded GHSL. Shanghai's result is then held to its bulletin's district totals (SHANGHAI below);
+  every planned Chinese metro row takes the townships through plan_hooks.
 - **Jobs**: the 5th economic census (end of 2023), persons employed in legal-person units by
   district (JOBS below), spread inside each district by tier 0's proxy.
 
     python pipeline/china.py sha      (writes the districts file and prints what it holds)
+    python pipeline/china.py townships <helper1m/countries/china/adm4>   (writes TOWNSHIPS from it)
 """
 import json
 import os
 import sys
 
+import numpy as np
 import shapely
 from shapely import make_valid, union_all
 from shapely.geometry import mapping, shape
 
 import build_city as b
 import england
+import tier0
 
 # Shanghai's 16 districts: OSM name -> (pinyin, 2020 census resident population). Source: Shanghai
 # Statistics Bureau, 7th census bulletin no. 2 (https://tjj.sh.gov.cn/tjnj/2020rktjnj/fu02.pdf).
@@ -46,10 +52,94 @@ _JOBS_SH = {"浦东新区": 287.9, "黄浦区": 71.3, "徐汇区": 102.8, "长�
             "松江区": 85.2, "青浦区": 55.0, "奉贤区": 58.4, "崇明区": 16.1}
 JOBS = {"sha": {k: v * 1e4 for k, v in _JOBS_SH.items()}}
 JOBS_URL = "https://tjj.sh.gov.cn/cmsres/b3/b36d6d16841e4ac0a64a2e6664c69833/85fdf28606c6847035976a586d8d028d.pdf"
+TOWNSHIPS = os.path.join(b.RAW, "tier0", "china_townships", "townships.fgb")
+TOWNSHIPS_NAME = ("7th national census 2020 by township (ASPECT 100 m grid, Ju et al. 2025, figshare 27323106, "
+                  "summed over 2018 township outlines and scaled to the census counties)")
 
 
 def raw(name):
     return os.path.join(b.RAW, "tier0", "china", name)
+
+
+def write_townships(src):
+    """TOWNSHIPS from helper1m's per-province GeoJSONs (code, name, name_cn, populations by year):
+    the townships with a 2020 count, as one FlatGeobuf with a spatial index."""
+    import glob
+    import geopandas as gpd
+    rows = []
+    for p in sorted(glob.glob(os.path.join(src, "*.geojson"))):
+        with open(p, encoding="utf-8") as f:
+            for ft in json.load(f)["features"]:
+                pr = ft["properties"]
+                pop = (pr.get("populations") or {}).get("2020")
+                if pop and ft.get("geometry"):
+                    rows.append({"code": pr["code"], "name": pr.get("name"), "name_cn": pr.get("name_cn"),
+                                 "county": pr.get("parent_code"), "pop": float(pop), "geometry": make_valid(shape(ft["geometry"]))})
+    df = gpd.GeoDataFrame(rows, geometry="geometry", crs="EPSG:4326")
+    os.makedirs(os.path.dirname(TOWNSHIPS), exist_ok=True)
+    tmp = TOWNSHIPS.replace(".fgb", ".part.fgb")
+    df.to_file(tmp, driver="FlatGeobuf", engine="pyogrio")
+    os.replace(tmp, TOWNSHIPS)
+    print(f"{TOWNSHIPS}: {len(df):,} townships, {df['pop'].sum():,.0f} people", flush=True)
+
+
+def townships(boundary):
+    """[(code, polygon, 2020 people, share inside)] of the townships meeting the boundary. A township
+    the outline cuts has the share of its GHSL people inside (of its area where GHSL has none), so a
+    coastal township whose outline reaches out to sea stays whole."""
+    import pyogrio
+    import osm_units
+    if not os.path.exists(TOWNSHIPS):
+        raise SystemExit(f"no {TOWNSHIPS}: python pipeline/china.py townships <helper1m/countries/china/adm4>")
+    df = pyogrio.read_dataframe(TOWNSHIPS, bbox=tuple(boundary.bounds))
+    shapely.prepare(boundary)
+    g = df.geometry.values
+    ok = shapely.intersects(boundary, g)
+    g, codes, pops = g[ok], df["code"].values[ok], df["pop"].values[ok]
+    share = np.ones(len(g))
+    cut = np.flatnonzero(~shapely.contains(boundary, g))
+    if len(cut):
+        part = [union_all([p for p in shapely.get_parts(shapely.intersection(x, boundary))
+                           if p.geom_type in ("Polygon", "MultiPolygon")]) for x in g[cut]]
+        some = np.array([not p.is_empty for p in part])
+        ppl = osm_units._people_many([g[i] for i in cut[some]] + [p for p, s in zip(part, some) if s])
+        whole, inside = np.array(ppl[:some.sum()]), np.array(ppl[some.sum():])
+        by_area = shapely.area([part[k] for k in np.flatnonzero(some)]) / np.maximum(shapely.area(g[cut[some]]), 1e-12)
+        share[cut] = 0.0
+        share[cut[some]] = np.where(whole > 0, inside / np.maximum(whole, 1e-9), by_area)
+    return list(zip(codes, g, pops, share))
+
+
+def township_population(city, boundary, sig, held=None):
+    """2020 census population by township spread inside each by GHSL's residential volume
+    (sig["res_v"]; a township with none, by the bounded GHSL); a township the outline cuts brings its
+    share inside (townships), cells in no township keep the bounded GHSL's people at the townships'
+    census-to-GHSL ratio. `held` [(name, polygon, total)]: the result then held to those units'
+    totals. Tier 0's `population` hook."""
+    if "res_v" not in sig:
+        raise SystemExit("tier 0 signal cache from before T-1150 (no res_v): move it aside first "
+                         "(notes/t1150/clear_signals.py)")
+    ts = [t for t in townships(boundary) if t[3] > 0]
+    units = [(t[0], t[1]) for t in ts]
+    totals = {t[0]: t[2] * t[3] for t in ts}
+    lat, lon, w = sig["lat"], sig["lon"], sig["pop_ghsl"]
+    idx, _ = england.cell_units(lat, lon, units)
+    lone = idx < 0
+    rv = np.bincount(idx[~lone], weights=sig["res_v"][~lone], minlength=len(units))
+    novol = lone.copy()
+    novol[~lone] = rv[idx[~lone]] <= 0
+    out = england.spread_totals(lat, lon, units, totals, np.where(novol, w, sig["res_v"]))
+    ratio = sum(totals.values()) / max(float(w[~lone].sum()), 1.0)
+    out[lone] = w[lone] * ratio
+    print(f"  census 2020 by township: {len(units):,} townships ({sum(t[3] < 1 for t in ts)} cut by the outline, "
+          f"{sum(t[2] * (1 - t[3]) for t in ts):,.0f} people of theirs outside), "
+          f"{sum(totals.values()):,.0f} people, census / GHSL {ratio:.3f}; {int(lone.sum()):,} cells in no township "
+          f"with {out[lone].sum():,.0f}; {int((rv <= 0).sum())} townships without residential volume", flush=True)
+    name = (f"{TOWNSHIPS_NAME}, spread inside each by GHSL GHS-BUILT-V E2020 residential volume (total less NRES); "
+            f"outside them {tier0.ghsl_pop_name(sig)}")
+    if held:
+        out = england.spread_totals(lat, lon, [(h[0], h[1]) for h in held], {h[0]: h[2] for h in held}, out)
+    return out, name
 
 
 def districts_file(city):
@@ -122,17 +212,17 @@ def boundary_file(city):
 
 
 def census_population(city, boundary, sig):
-    """2020 census population by district, spread inside each by GHSL; tier0's `population` hook."""
+    """2020 census population by township, held to the city bulletin's district totals; tier0's
+    `population` hook."""
     wanted = DISTRICTS[city]
     ds = districts(city)
-    units = [(d[0], d[1]) for d in ds]
-    out = england.spread_totals(sig["lat"], sig["lon"], units, {d[0]: d[2] for d in ds}, sig["pop_ghsl"])
-    idx, _ = england.cell_units(sig["lat"], sig["lon"], units)
-    for i, (name, _, pop) in enumerate(ds):
+    out, name = township_population(city, boundary, sig, held=ds)
+    idx, _ = england.cell_units(sig["lat"], sig["lon"], [(d[0], d[1]) for d in ds])
+    for i, (dn, _, pop) in enumerate(ds):
         have = sig["pop_ghsl"][idx == i].sum()
-        print(f"  census 2020 {wanted[name][0]}: GHSL {have:,.0f} -> {pop:,} ({pop / max(have, 1) - 1:+.1%})", flush=True)
+        print(f"  census 2020 {wanted[dn][0]}: GHSL {have:,.0f} -> {pop:,} ({pop / max(have, 1) - 1:+.1%})", flush=True)
     print(f"  census 2020 by district: {len(ds)} districts, {out.sum():,.0f} people", flush=True)
-    return out, "7th national census 2020, resident population by district (Shanghai Statistics Bureau), spread inside each by GHSL GHS-POP E2020"
+    return out, f"{name}; held to the resident population by district (Shanghai Statistics Bureau)"
 
 
 def census_jobs(city, boundary, sig, weight):
@@ -152,13 +242,18 @@ def census_jobs(city, boundary, sig, weight):
 
 
 def plan_hooks(row):
-    """T-555: none for a planned Chinese row. Shanghai's district tables (census population, economic
-    census jobs), its OSM district names and its survey's mean commute are Shanghai's alone; another
-    city needs its own tables entered first."""
-    return {}
+    """T-555: a planned mainland row's population by township (T-1150). Shanghai's district tables
+    (economic census jobs), its OSM district names and its survey's mean commute are Shanghai's
+    alone; another city needs its own tables entered first."""
+    if row.get("iso2") != "CN":
+        return {}
+    return {"population": lambda city, boundary, sig: township_population(city, boundary, sig)}
 
 
 if __name__ == "__main__":
+    if sys.argv[1] == "townships":
+        write_townships(sys.argv[2])
+        sys.exit()
     city = sys.argv[1]
     ds = districts(city)
     g = union_all([d[1] for d in ds])

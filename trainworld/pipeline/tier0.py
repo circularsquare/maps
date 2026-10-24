@@ -5,10 +5,12 @@
 Every input comes from a source that covers the world, so any city can be built; a country's own
 census or registers then upgrade single inputs by replacing one function. What each input is:
 
-- Population: GHSL GHS-POP (R2023A, 100 m Mollweide tiles, CC BY 4.0), each pixel split over four
-  50 m points (points on water dropped, the pixel's people kept on its land points), summed into
-  the H3 cells, then scaled to admin totals where the config gives them (any census publishes
-  district totals). No institutions taken off.
+- Population: GHSL GHS-POP (R2023A, 100 m Mollweide tiles, CC BY 4.0), each pixel's people per
+  residential m3 (GHS-BUILT-V total less NRES) held within POP_BOUND of its POP_BOUND_SIGMA_M
+  neighbourhood's (bounded_population, T-1150), each pixel split over four 50 m points (points on
+  water dropped, the pixel's people kept on its land points), summed into the H3 cells and scaled
+  to GHS-POP's own total over them, then scaled to admin totals where the config gives them (any
+  census publishes district totals). No institutions taken off.
 - Jobs (the jobs proxy, T-012): a total of population x jobs per resident (World Bank: ILO's
   employment-to-population ratio 15+ x the share aged 15+), spread over cells by a blend of three
   normalised signals: GHSL non-residential built-up volume (GHS-BUILT-V NRES) times the cell's
@@ -98,6 +100,7 @@ PRODUCTS = {
     "pop": ("GHS_POP_GLOBE_R2023A", "GHS_POP_E{epoch}_GLOBE_R2023A_54009_100"),
     "nres_v": ("GHS_BUILT_V_GLOBE_R2023A", "GHS_BUILT_V_NRES_E{epoch}_GLOBE_R2023A_54009_100"),
     "nres_s": ("GHS_BUILT_S_GLOBE_R2023A", "GHS_BUILT_S_NRES_E{epoch}_GLOBE_R2023A_54009_100"),
+    "tot_v": ("GHS_BUILT_V_GLOBE_R2023A", "GHS_BUILT_V_E{epoch}_GLOBE_R2023A_54009_100"),
 }
 MOLL_X0, MOLL_Y0, TILE_M, PIX_M = -18041000.0, 9000000.0, 1_000_000.0, 100.0
 WORLDBANK = "https://api.worldbank.org/v2/country/{iso2}/indicator/SL.EMP.TOTL.SP.ZS;SP.POP.0014.TO.ZS?source=2&format=json&date=2015:2025&per_page=100"
@@ -122,6 +125,10 @@ SCHOOL_CELL_MAX = 6000.0              # ... and one pack cell's sites together (
 DEFAULT_CURVE_POW = 1.4               # between Toronto's fit (1.2) and London's (1.5-1.85); only the length is fitted (T-360)
 ZONE_M = 2000.0
 INTRAZONAL_KM = 1.04                  # the game's same-zone distance
+# GHS-POP's people per residential m3 is one figure inside each of GHSL's own census units, which in
+# China are old and coarse enough to step 10-30x between neighbours; each pixel's figure is held
+# within POP_BOUND of its neighbourhood's, a Gaussian of POP_BOUND_SIGMA_M (T-1150).
+POP_BOUND, POP_BOUND_SIGMA_M = 2.0, 2000.0
 
 
 def raw(*p):
@@ -158,7 +165,7 @@ def _tile_path(kind, epoch, r, c):
     return b.settle(tmp, path)
 
 
-def _read_tile_window(path, r0, r1, c0, c1, tile_x0=None, tile_y0=None):
+def _read_tile_window(path, r0, r1, c0, c1, tile_x0=None, tile_y0=None, dtype=np.float64):
     """Rows r0:r1, columns c0:c1 of a GHSL tile (counted from the nominal 1,000 km tile's corner
     tile_x0, tile_y0), decoding only the TIFF tiles they touch. Some tiles are cut short (T-288:
     GHS-BUILT-V NRES R3_C18 is 9,000 pixels wide); the GeoTIFF tie point says where the image
@@ -168,7 +175,7 @@ def _read_tile_window(path, r0, r1, c0, c1, tile_x0=None, tile_y0=None):
         data = z.read(next(n for n in z.namelist() if n.endswith(".tif")))
     with tifffile.TiffFile(io.BytesIO(data)) as tf:
         pg = tf.pages[0]
-        out = np.zeros((r1 - r0, c1 - c0), np.float64)
+        out = np.zeros((r1 - r0, c1 - c0), dtype)
         dr = dc = 0
         tie = pg.tags.get(33922)
         if tile_x0 is not None and tie is not None:
@@ -190,7 +197,7 @@ def _read_tile_window(path, r0, r1, c0, c1, tile_x0=None, tile_y0=None):
                 fh.seek(pg.dataoffsets[i])
                 seg = pg.decode(fh.read(pg.databytecounts[i]), i)[0]
                 seg = np.asarray(seg)
-                seg = seg.reshape(seg.shape[-3], seg.shape[-2]).astype(np.float64)  # (.., rows, cols, samples)
+                seg = seg.reshape(seg.shape[-3], seg.shape[-2]).astype(dtype)  # (.., rows, cols, samples)
                 ya, xa = ty * th, tx * tw
                 ra, rb = max(r0, ya), min(r1, ya + seg.shape[0])
                 ca, cb = max(c0, xa), min(c1, xa + seg.shape[1])
@@ -199,7 +206,7 @@ def _read_tile_window(path, r0, r1, c0, c1, tile_x0=None, tile_y0=None):
     return out
 
 
-def ghsl_window(kind, bbox_ll, epoch=2020, pad_m=0.0):
+def ghsl_window(kind, bbox_ll, epoch=2020, pad_m=0.0, dtype=np.float64):
     """A GHSL 100 m grid over a lon/lat box (plus pad_m), mosaicked from as many 1,000 km tiles as
     it touches: (array, west edge x, north edge y) in Mollweide metres, row 0 north."""
     fwd, _ = _moll()
@@ -210,7 +217,7 @@ def ghsl_window(kind, bbox_ll, epoch=2020, pad_m=0.0):
     X0 = MOLL_X0 + math.floor((xmin - MOLL_X0) / PIX_M) * PIX_M
     Y0 = MOLL_Y0 - math.floor((MOLL_Y0 - ymax) / PIX_M) * PIX_M
     W, H = math.ceil((xmax - X0) / PIX_M), math.ceil((Y0 - ymin) / PIX_M)
-    out = np.zeros((H, W), np.float64)
+    out = np.zeros((H, W), dtype)
     r_first, r_last = int((MOLL_Y0 - Y0) // TILE_M) + 1, int((MOLL_Y0 - (Y0 - H * PIX_M) - 1) // TILE_M) + 1
     c_first, c_last = int((X0 - MOLL_X0) // TILE_M) + 1, int((X0 + W * PIX_M - 1 - MOLL_X0) // TILE_M) + 1
     for r in range(r_first, r_last + 1):
@@ -224,7 +231,7 @@ def ghsl_window(kind, bbox_ll, epoch=2020, pad_m=0.0):
             path = _tile_path(kind, epoch, r, c)
             if path is None:
                 continue
-            win = _read_tile_window(path, r_a, r_b, c_a, c_b, tx0, ty0)
+            win = _read_tile_window(path, r_a, r_b, c_a, c_b, tx0, ty0, dtype)
             wr, wc = round((Y0 - ty0) / PIX_M) + r_a, round((tx0 - X0) / PIX_M) + c_a
             out[wr:wr + win.shape[0], wc:wc + win.shape[1]] = win
     return out, X0, Y0
@@ -233,14 +240,19 @@ def ghsl_window(kind, bbox_ll, epoch=2020, pad_m=0.0):
 def grid_to_cells(arr, X0, Y0, origin, land=None, sub=2, near=None):
     """Each pixel's value over sub x sub points; points on water (land(x_m, y_m) false) dropped and
     the pixel's value kept on its land points (all points if none). Pixels whose centre is outside
-    `near` (a prepared lon/lat shape) are skipped. Returns {h3 int: value}."""
+    `near` (a prepared lon/lat shape) are skipped. Returns {h3 int: value}; for a list of grids on one
+    window, a list of them from one pass."""
     _, inv = _moll()
-    rows, cols = np.nonzero(arr > 0)
+    arrs = list(arr) if isinstance(arr, (list, tuple)) else [arr]
+    support = arrs[0] > 0
+    for a in arrs[1:]:
+        support |= a > 0
+    rows, cols = np.nonzero(support)
+    del support
     if near is not None:
         plon, plat = inv.transform(X0 + (cols + 0.5) * PIX_M, Y0 - (rows + 0.5) * PIX_M)
         ok = shapely.contains_xy(near, np.asarray(plon), np.asarray(plat))
         rows, cols = rows[ok], cols[ok]
-    v = arr[rows, cols]
     k = sub * sub
     off = (np.arange(sub) + 0.5) / sub * PIX_M
     dx, dy = np.meshgrid(off, off)
@@ -248,7 +260,7 @@ def grid_to_cells(arr, X0, Y0, origin, land=None, sub=2, near=None):
     y = (Y0 - rows[:, None] * PIX_M - dy.ravel()[None, :]).ravel()
     lon, lat = inv.transform(x, y)
     lon, lat = np.asarray(lon), np.asarray(lat)
-    val = np.repeat(v / k, k)
+    w = np.full((len(rows), k), 1.0 / k)
     if land is not None:
         lon0, lat0 = origin
         xm = b.R_EARTH * np.radians(lon - lon0) * np.cos(np.radians(lat0))
@@ -256,12 +268,52 @@ def grid_to_cells(arr, X0, Y0, origin, land=None, sub=2, near=None):
         ok = land(xm, ym).reshape(-1, k)
         n_ok = ok.sum(1)
         w = np.where(n_ok[:, None] > 0, ok / np.maximum(n_ok, 1)[:, None], 1.0 / k)
-        val = (v[:, None] * w).ravel()
-        keep = val > 0
-        lon, lat, val = lon[keep], lat[keep], val[keep]
+    keep = w.ravel() > 0
+    lon, lat = lon[keep], lat[keep]
     ids = np.fromiter((h3.str_to_int(h3.latlng_to_cell(la, lo, 9)) for la, lo in zip(lat, lon)), np.uint64, len(lat))
     u, i = np.unique(ids, return_inverse=True)
-    return dict(zip(u.tolist(), np.bincount(i, weights=val).tolist()))
+    out = []
+    for a in arrs:
+        s = np.bincount(i, weights=(a[rows, cols][:, None] * w).ravel()[keep], minlength=len(u))
+        pos = s > 0
+        out.append(dict(zip(u[pos].tolist(), s[pos].tolist())))
+    return out if isinstance(arr, (list, tuple)) else out[0]
+
+
+def bounded_population(pop, resv, k=POP_BOUND, sigma_m=POP_BOUND_SIGMA_M, block=1024):
+    """GHS-POP with each pixel's people per m3 of residential volume (resv: GHS-BUILT-V total less
+    NRES) held within a factor k of its neighbourhood's (Gaussian, sigma_m), then scaled back to the
+    window's people; float32. Pixels without residential volume keep GHS-POP's figure. Done in
+    bands of rows with the filter's reach on each side, so a desert zone's window costs one more
+    array, not five."""
+    from scipy import ndimage
+    sigma = sigma_m / PIX_M
+    reach = int(4.0 * sigma + 0.5)  # gaussian_filter's default truncate
+    out = np.empty(pop.shape, np.float32)
+    H = pop.shape[0]
+    for r0 in range(0, H, block):
+        a, z = max(r0 - reach, 0), min(r0 + block + reach, H)
+        p = pop[a:z].astype(np.float32)
+        v = resv[a:z].astype(np.float32, copy=False)
+        rate = ndimage.gaussian_filter(p, sigma, mode="constant")
+        rate /= np.maximum(ndimage.gaussian_filter(v, sigma, mode="constant"), 1e-6)
+        has = v > 0
+        r = np.divide(p, v, out=np.zeros_like(p), where=has)
+        np.clip(r, rate / k, rate * k, out=r)
+        i, j = r0 - a, min(r0 + block, H) - a
+        out[r0:r0 + (j - i)] = np.where(has[i:j], v[i:j] * r[i:j], p[i:j])
+    s = out.sum(dtype=np.float64)
+    if s > 0:
+        out *= np.float32(pop.sum(dtype=np.float64) / s)
+    return out
+
+
+def ghsl_pop_name(sig, epoch=2020):
+    """The population source's words for GHS-POP as this signal cache holds it."""
+    name = f"GHSL GHS-POP E{epoch} R2023A 100 m"
+    if "pop_ghs" in sig:
+        name += f", people per residential m3 held within {POP_BOUND:g}x of the {POP_BOUND_SIGMA_M / 1000:g} km neighbourhood's (T-1150)"
+    return name
 
 
 def land_function(mask):
@@ -420,8 +472,9 @@ def near_outline(boundary, km=1.0):
 
 
 def signals(city, cfg, boundary, mask):
-    """Per cell (inside the boundary): GHSL population (scaled to admin totals), GHSL
-    non-residential volume and surface, OSM job places, errand and leisure places. Cached."""
+    """Per cell (inside the boundary): GHSL population (bounded, then scaled to admin totals; as
+    published in pop_ghs), GHSL residential volume (res_v), non-residential volume and surface, OSM job places, errand and
+    leisure places. Cached: a pack picks up a change here only once its cache is deleted."""
     cache = os.path.join(b.WORK, f"{city}.tier0_signals.npz")
     if os.path.exists(cache):
         z = np.load(cache)
@@ -431,11 +484,21 @@ def signals(city, cfg, boundary, mask):
     land = land_function(mask)
     near = near_outline(boundary)
     grids = {}
-    for kind in ("pop", "nres_v", "nres_s"):
-        arr, X0, Y0 = ghsl_window(kind, boundary.bounds, epoch)
-        grids[kind] = grid_to_cells(arr, X0, Y0, cfg["origin"], land if kind == "pop" else None, near=near)
-        print(f"  GHSL {kind}: {arr.shape[1]} x {arr.shape[0]} pixels, {arr.sum():,.0f} in the box, {len(grids[kind]):,} cells; "
-              f"{time.time() - t0:.0f} s", flush=True)
+    nres_v, X0, Y0 = ghsl_window("nres_v", boundary.bounds, epoch)
+    grids["nres_v"] = grid_to_cells(nres_v, X0, Y0, cfg["origin"], None, near=near)
+    resv = ghsl_window("tot_v", boundary.bounds, epoch, dtype=np.float32)[0]
+    resv -= nres_v
+    np.maximum(resv, 0.0, out=resv)
+    del nres_v
+    pop = ghsl_window("pop", boundary.bounds, epoch, dtype=np.float32)[0]
+    bounded = bounded_population(pop, resv)
+    grids["pop"], pop_ghs, res_v = grid_to_cells([bounded, pop, resv], X0, Y0, cfg["origin"], land, near=near)
+    del bounded, pop, resv
+    arr, X0, Y0 = ghsl_window("nres_s", boundary.bounds, epoch)
+    grids["nres_s"] = grid_to_cells(arr, X0, Y0, cfg["origin"], None, near=near)
+    print(f"  GHSL: {arr.shape[1]} x {arr.shape[0]} pixels; cells with people {len(grids['pop']):,}, "
+          f"non-residential volume {len(grids['nres_v']):,}, surface {len(grids['nres_s']):,}; {time.time() - t0:.0f} s", flush=True)
+    del arr
     import canada
     lc = cfg.get("land_cap_km2", LAND_CAP_KM2)
     places = canada.osm_places(city, boundary, cfg["extract"], cache=raw(f"osm_jobs_{city}.csv.gz"),
@@ -452,6 +515,14 @@ def signals(city, cfg, boundary, mask):
     out = {"h3": cells, "lat": ll[:, 0], "lon": ll[:, 1]}
     for kind, g in grids.items():
         out[kind] = np.array([g.get(int(c), 0.0) for c in cells])
+    # GHS-POP as published, per cell; the bounded people keep its total over the pack's cells
+    out["pop_ghs"] = np.array([pop_ghs.get(int(c), 0.0) for c in cells])
+    out["res_v"] = np.array([res_v.get(int(c), 0.0) for c in cells])  # residential m3 (China's townships)
+    have = out["pop"].sum()
+    if have > 0:
+        out["pop"] *= out["pop_ghs"].sum() / have
+    print(f"  GHSL people {out['pop_ghs'].sum():,.0f}; bounded within {POP_BOUND:g}x of the {POP_BOUND_SIGMA_M / 1000:g} km neighbourhood, "
+          f"{0.5 * np.abs(out['pop'] - out['pop_ghs']).sum() / max(out['pop_ghs'].sum(), 1.0):.1%} of them change cell", flush=True)
     pk = places.kind.to_numpy()
     place_w = places.w.to_numpy()
     blend_osm = cfg.get("job_blend", JOB_BLEND)
@@ -909,7 +980,7 @@ def main(city):
     mask, mask_info = build_water(cfg, boundary)
     sig = signals(city, cfg, boundary, mask)
     jpr, kids, wb_year = worldbank(cfg["iso2"])
-    pop_name = f"GHSL GHS-POP E{cfg.get('epoch', 2020)} R2023A 100 m" + (", scaled to admin totals" if cfg.get("admin_totals") else "")
+    pop_name = ghsl_pop_name(sig, cfg.get("epoch", 2020)) + (", scaled to admin totals" if cfg.get("admin_totals") else "")
     if cfg.get("population"):
         sig["pop"], pop_name = cfg["population"](city, boundary, sig)
     P = float(sig["pop"].sum())

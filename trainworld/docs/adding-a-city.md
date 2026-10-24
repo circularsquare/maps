@@ -58,7 +58,14 @@ background and wait once for the process.
 - **Zone rows** (whole-country cover, T-723, docs/zones.md 2): `world_plan.py zones --countries ES`
   (run through `world_run.py step world_plan zones ...`, which puts the pipeline on the path) writes
   a country's zone rows into the plan; then `run --countries ES --limit 100`. A zone row builds as
-  a metro row does, with `kind` "zone" and the zone curve.
+  a metro row does, with `kind` "zone" and the zone curve. The free units are grouped by the merge
+  rule (T-1140, docs/zones.md 2): a zone under the floor (0.5M, or 100,000 over 100,000 km²; 1M in
+  China and Taiwan) joins a neighbour that is its biggest travel partner or gets half as much
+  travel as the biggest, else one keeping the joined zone compact (75% of its convex hull), partners
+  first, never into a ring; nothing passing, it stays under the floor. Travel comes from the
+  country's commuting table, or from GHSL gravity where there is none, so a new country needs no
+  input of its own. Add `--out <scratch.json>` for a dry run, and read its merge log in the plan's
+  `zones.<ISO>.merges` before running the rows.
 - **Zones removed** (T-1053): a replan, merge or re-split that takes zone ids out of the registry
   (a parked row of an earlier commit included) ends, once `zone_outlines.py` has rewritten the
   outlines, with `venv\Scripts\python.exe -I trainworld\pipeline\zone_successors.py` (seconds): each
@@ -542,7 +549,7 @@ real pack in notes/T-287.md):
 
 | Input | US | Canada | Tier 0 (any country) |
 |---|---|---|---|
-| Population and grain | 2020 blocks, TIGER polygons | 2021 dissemination areas (StatCan 98-10-0015-01; polygons from Esri Canada's copy) | GHSL GHS-POP E2020 100 m (R2023A, CC BY), each pixel over four 50 m points off water, into cells; scaled to district totals where the config gives them |
+| Population and grain | 2020 blocks, TIGER polygons | 2021 dissemination areas (StatCan 98-10-0015-01; polygons from Esri Canada's copy) | GHSL GHS-POP E2020 100 m (R2023A, CC BY), its people per residential m³ held within 2x of the 2 km neighbourhood's (T-1150), each pixel over four 50 m points off water, into cells; scaled to district totals where the config gives them |
 | Institutions | PL 94-171 P5 off homes | none (no small-area figure) | none |
 | Jobs at work | LODES WAC by block | census usual place of work by census tract of work (98-10-0498-01), at-home workers put back by income band, no fixed workplace added; to DAs by OSM job places and population | population x jobs a resident (World Bank: ILO employment-to-population 15+ x share 15+), spread 30% by GHSL non-residential built-up volume (GHS-BUILT-V NRES) x height^2, 50% OSM job places, 20% population; or a country's workplace counts by small area spread by that blend (`jobs` hook) |
 | Home end | LODES RAC x ACS work from home | commuters by tract of residence (98-10-0480-01) plus at-home workers commuting again | population x commuters a resident |

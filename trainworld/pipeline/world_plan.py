@@ -78,6 +78,19 @@ DEAD_KEEP = 0.8          # a unit under the density floor holding this share of 
 WRAP_HULL = 0.5          # zone A wraps B when this share of B's area lies in A's convex hull (T-1005)
 WRAP_BORDER = 0.5        # and A holds this share of B's border with zones, metros and packs
 RING_ROUNDS = 3          # ring cuts, each followed by a regroup of the halves (T-1087)
+# the merge rule (Anita, 2026-10-24, T-1140): a join passes when the neighbour gets this share of the
+# zone's travel with its biggest partner, or else when the joined shape fills COMPACT_HULL of its
+# convex hull (or no less than the bigger part's own share less COMPACT_SLACK)
+PARTNER_SHARE = 0.5
+COMPACT_HULL = 0.75
+COMPACT_SLACK = 0.05
+# travel without commuting data (T-1140): GHSL people on GRAVITY_KM cells, people x people x the zone
+# curve d^-0.8 exp(-d/30 km), pairs within GRAVITY_REACH_KM
+GRAVITY_KM = 20.0
+GRAVITY_REACH_KM = 200.0
+# the floor relaxed for very big regions (Anita, 2026-10-24, T-1140): a zone covering this much holds
+# enough at ZONE_MIN_POP (splits Montana in two, Fairbanks from Anchorage; Colorado as without it)
+BIG_ZONE_KM2 = 100_000.0
 # where commuting data exists, an unbuilt metro row takes a neighbouring free unit sending at least
 # this share of its resident workers into it (T-1088; the US's own outlying-county rule)
 BELT_SHARE = 0.25
@@ -1330,14 +1343,18 @@ def unit_borders(simple):
     return adj
 
 
-def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguous=False, fixed=()):
-    """Free units (ids) grouped into zones, smallest first, until each holds `floor` people (T-1087,
-    docs/zones.md 2). A zone under ZONE_MIN_POP joins the zone of its region it shares the longest
-    border with. A bigger one joins the neighbour of its region whose people centre is nearest its
-    own among those keeping the two within `cap`, the first whose union wraps no other zone and no
-    `fixed` area (`wraps`); with none within the cap, the smallest that wraps nothing, unless it holds
-    80% of `floor`, when it stays as it is. When every join wraps, one holding 80% of `floor` stays; a
-    smaller one joins anyway and the ring cut takes it apart.
+def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguous=False, fixed=(), flows=None,
+                fixed_units=None, big_km2=0.0):
+    """Free units (ids) grouped into zones, smallest first, until each holds `floor` people, or
+    ZONE_MIN_POP over `big_km2` (T-1140, docs/zones.md 2). A zone under ZONE_MIN_POP joins the zone of
+    its region it travels with most (`flows`; the longest border breaking ties). A bigger one joins a
+    neighbour of its region keeping the two within `cap` that passes `accept`: a travel partner
+    first, by nearest people centre, and only when none is one, a compact join; the first whose union
+    wraps no other zone and no `fixed` area (`wraps`, T-1087). With none within the cap, the smallest
+    passing neighbour, unless it holds 80% of `floor`, when it stays as it is. Under 80% of `floor`
+    with no neighbour of its region passing, another region's neighbour that passes. Nothing passing,
+    it stays as it is. When every join wraps, one holding 80% of `floor` stays; a smaller one joins
+    anyway and the ring cut takes it apart.
     With no neighbour left in its region (a small region, or Osttirol cut off from Tirol) it joins one
     of another region, unless it already holds 80% of `floor` (by land or across water). An island
     (no land border with any unit) joins the most populous zone of its region within ISLAND_KM, or
@@ -1347,7 +1364,9 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguou
     touch, and islands of one region within ARCHIPELAGO_KM join as one.
     Then each zone still wrapping something is cut in two across it (`cut`) and the halves regroup,
     a half whose every join wraps staying as it is, RING_ROUNDS times at most. `fixed`: the metro rows and built packs, [{id, name, geom (Mollweide),
-    xy (people centre)}]. Returns ({lead id: [units]}, [log lines])."""
+    xy (people centre)}]. `flows`: {key: {key: n}}, travel both ways between units (or a fixed area's
+    own key); `fixed_units`: {fixed id: [units or keys]}, the fixed areas' shares of `flows`. Returns
+    ({lead id: [units]}, [log lines])."""
     by = {u.id: u for u in units}
     # simplifying can leave invalid rings, which the unions below fail on (T-897, China's counties)
     simple = {u.id: polygonal(u.geom.simplify(500)) for u in units}
@@ -1385,6 +1404,45 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguou
                 if o is not None and o != z:
                     out[o] = out.get(o, 0.0) + ln
         return out
+
+    km2 = {i: simple[i].area / 1e6 for i in free}
+
+    def full(z):
+        n = ppl(z)
+        return n >= floor or (big_km2 and n >= ZONE_MIN_POP and sum(km2[i] for i in zones[z]) >= big_km2)
+
+    farea = {k: ("f", f) for f, ks in (fixed_units or {}).items() for k in ks}
+    flows = flows or {}
+
+    def travel(z):
+        """{area: travel} between zone z and every other zone (("z", lead)) and fixed area (("f", id))."""
+        to, mine = {}, set(zones[z])
+        for i in zones[z]:
+            for j, n in flows.get(i, {}).items():
+                if j in mine:
+                    continue
+                a = ("z", owner[j]) if j in owner else farea.get(j)
+                if a is not None:
+                    to[a] = to.get(a, 0.0) + n
+        return to
+
+    def hull(g):
+        h = g.convex_hull.area
+        return g.area / h if h else 1.0
+
+    def accept(z, o):
+        """(passes, how): o gets PARTNER_SHARE of z's travel with its biggest partner, or the union of
+        the two is compact (T-1140)."""
+        to = travel(z)
+        top = max(to.values(), default=0.0)
+        r = to.get(("z", o), 0.0) / top if top else 0.0
+        if r >= PARTNER_SHARE:
+            return True, f"partner {r:.2f}"
+        bigger = max((geo(z), geo(o)), key=lambda g: g.area)
+        c = hull(union_all([geo(z), geo(o)]))
+        if c >= min(COMPACT_HULL, hull(bigger) - COMPACT_SLACK):
+            return True, f"compact {c:.2f}"
+        return False, f"partner {r:.2f}, compact {c:.2f}"
 
     # each fixed area's border with the free units and the other fixed areas (its land border), and
     # each free unit's border along it
@@ -1435,7 +1493,7 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguou
     def merge(only=None):
         done = set()
         while True:
-            small = sorted((ppl(z), z) for z in zones if z not in done and (only is None or z in only) and ppl(z) < floor)
+            small = sorted((ppl(z), z) for z in zones if z not in done and (only is None or z in only) and not full(z))
             if not small:
                 break
             n, z = small[0]
@@ -1450,8 +1508,9 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguou
             island = all(j in zones[z] for i in zones[z] for j in adj[i])
             into, how, why = None, "", "no zone beside it"
             if border and n < ZONE_MIN_POP:
-                into = max(border, key=border.get)
-                how = f"shared border {border[into] / 1000:.0f} km"
+                to = travel(z)
+                into = max(border, key=lambda o: (to.get(("z", o), 0.0), border[o]))
+                how = f"biggest partner, shared border {border[into] / 1000:.0f} km"
             elif border:
                 c = centre(z)
                 fit = sorted((o for o in border if n + ppl(o) <= cap), key=lambda o: math.dist(c, centre(o)))
@@ -1461,10 +1520,24 @@ def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguou
                 elif not fit:  # nothing fits: the smallest, so no zone grows far past the cap
                     fit = sorted(border, key=lambda o: (ppl(o), -border[o]))
                     how = "smallest neighbour, none within the cap"
+                ok = {o: accept(z, o) for o in fit}
+                good = [o for o in fit if ok[o][0]]
+                if fit and not good and n < 0.8 * floor:
+                    # T-1140: as when its region has no zone left, another region's neighbour (Kootenai
+                    # ID with Spokane)
+                    other = sorted((o for o in nb if o not in border and n + ppl(o) <= cap), key=lambda o: math.dist(c, centre(o)))
+                    ok.update({o: accept(z, o) for o in other})
+                    good = [o for o in other if ok[o][0]]
+                    if good:
+                        how += ", none of its region passing"
+                part = [o for o in good if ok[o][1].startswith("partner")]
+                if fit and not good:
+                    why = "no neighbour is a partner or makes a compact zone"
+                fit = part or good
                 if fit:
                     into = next((o for o in fit if not wraps(z, o)), None)
-                    if into is not None and into != fit[0]:
-                        how += " that wraps nothing"
+                    if into is not None:
+                        how += (" that wraps nothing" if into != fit[0] else "") + f", {ok[into][1]}"
                     elif into is None and n < 0.8 * floor and only is None:
                         into, how = fit[0], "every join wraps; left to the ring cut"
                     elif into is None:  # a cut's half joining anyway would only rebuild the ring
@@ -1646,6 +1719,52 @@ def commute_flows(iso):
     return out
 
 
+def both_ways(flows, ids):
+    """Home-to-work `flows` as travel between distinct units of `ids`, both directions summed."""
+    ids = set(ids)
+    out = collections.defaultdict(dict)
+    for h, row in flows.items():
+        if h not in ids:
+            continue
+        for w, n in row.items():
+            if w != h and w in ids and n:
+                out[h][w] = out[h].get(w, 0.0) + n
+                out[w][h] = out[w].get(h, 0.0) + n
+    return out
+
+
+def gravity_flows(points):
+    """Travel both ways between distinct keys of {key: (x, y, people)} (Mollweide m): people summed on
+    GRAVITY_KM cells, people x people x d^-0.8 exp(-d/30 km) over cell pairs within GRAVITY_REACH_KM,
+    d at least 2 km (T-1140)."""
+    from scipy.spatial import cKDTree
+    keys = [k for k, (_, _, p) in points.items() if len(p) and float(p.sum()) > 0]
+    xs, ys, ps, us = [], [], [], []
+    m = GRAVITY_KM * 1000.0
+    for n, k in enumerate(keys):
+        x, y, p = points[k]
+        _, inv = np.unique(np.floor(x / m) * 1e7 + np.floor(y / m), return_inverse=True)
+        s = np.bincount(inv, weights=p)
+        xs.append(np.bincount(inv, weights=x * p) / s)
+        ys.append(np.bincount(inv, weights=y * p) / s)
+        ps.append(s)
+        us.append(np.full(len(s), n, np.int64))
+    out = collections.defaultdict(dict)
+    if not keys:
+        return out
+    x, y, p, u = (np.concatenate(a) for a in (xs, ys, ps, us))
+    t = cKDTree(np.c_[x, y])
+    d = t.sparse_distance_matrix(t, GRAVITY_REACH_KM * 1000.0, output_type="coo_matrix")
+    a, b, dist = d.row, d.col, d.data
+    keep = u[a] != u[b]
+    a, b, dist = a[keep], b[keep], np.maximum(dist[keep] / 1000.0, 2.0)
+    w = p[a] * p[b] * dist ** -0.8 * np.exp(-dist / 30.0)
+    pair, inv = np.unique(u[a] * len(keys) + u[b], return_inverse=True)
+    for k, v in zip(pair, np.bincount(inv, weights=w)):
+        out[keys[k // len(keys)]][keys[k % len(keys)]] = float(v)
+    return out
+
+
 def belts_share(flows, h, ids):
     """The share of unit h's resident workers working in units `ids`."""
     f, ids = flows.get(h, {}), set(ids)
@@ -1791,9 +1910,9 @@ def plan_zones(isos3, out_path=None):
         # T-1088: unbuilt metro rows take the free units commuting into them
         metros = {r["id"]: r for r in rows if r.get("kind") != "zone" and iso in (r.get("units") or {})}
         grow = {k: r for k, r in metros.items() if r.get("status", "planned") == "planned"}
-        flows = commute_flows(iso) if grow else None
+        flows = commute_flows(iso)
         grown, belts = {}, {}
-        if flows:
+        if flows and grow:
             zone_ids = {r["id"] for r in rows if r.get("kind") == "zone"}
             areas = {i: k for i, k in in_pack.items() if k is not None and k not in zone_ids}
             areas.update({i: k for k, r in metros.items() for i in r["units"][iso]})
@@ -1817,13 +1936,21 @@ def plan_zones(isos3, out_path=None):
             free = [i for i in free if not any(i in add for add in belts.values())]
         # the metro rows, the zone rows kept and the country's built packs, which no zone may wrap
         fixed, cc = [], {c["id"]: c.get("country") for c in json.loads(REGISTRY.read_text(encoding="utf-8"))["cities"]}
+        # the fixed areas' shares of the travel (T-1140): their units, and a pack's own people
+        fixed_units, points = collections.defaultdict(list), {}
+        for i, k in in_pack.items():
+            if k is not None:
+                fixed_units[k].append(i)
         for r in rows:
             mine = (grown[r["id"]][0] if r["id"] in grown else r).get("units", {}).get(iso)
             if r["id"] in old or not (mine or (not r.get("units") and r["id"] in pk and cc.get(r["id"]) == a2.get(iso))):
                 continue
+            fixed_units[r["id"]] += [i for i in mine or () if i in by]
             if r["id"] in pk:
                 g = pk[r["id"]]["geom"]
                 x, y, p = pop.inside(g)
+                points[("pack", r["id"])] = (x, y, p)
+                fixed_units[r["id"]].append(("pack", r["id"]))
             else:
                 g = union_all([by[i].geom for i in mine if i in by])
                 px = [by[i].px for i in mine if i in by and by[i].px is not None] or [(np.zeros(0),) * 3]
@@ -1833,7 +1960,14 @@ def plan_zones(isos3, out_path=None):
             fixed.append({"id": r["id"], "name": r["name"], "geom": polygonal(g.simplify(500)), "xy": xy})
         nuts = src["kind"] in ("NUTS3", "ITL3")
         region = {u.id: (u.parents[-1] if nuts else u.parents[0]) if u.parents else iso for u in units}
-        groups, lines = zone_groups(units, free, region, floor, cap, rule.get("contiguous", False), fixed)
+        if flows:
+            travel = both_ways(flows, list(by))
+        else:
+            points.update({u.id: u.px for u in units if u.px is not None})
+            travel = gravity_flows(points)
+        big = rule.get("big_km2", BIG_ZONE_KM2)
+        groups, lines = zone_groups(units, free, region, floor, cap, rule.get("contiguous", False), fixed, travel,
+                                    fixed_units, big)
         if rule.get("contiguous"):  # T-897: no pack for an islet of a few hundred people that can join nothing
             for lead in [k for k, ids in groups.items() if sum(by[i].free for i in ids) < ZONE_ALONE_MIN]:
                 for i in groups.pop(lead):
@@ -1909,12 +2043,17 @@ def plan_zones(isos3, out_path=None):
             log(f"  earlier zone rows with no successor, removed: {gone}")
         rec = {"built": str(datetime.now().date()), "task": rule.get("task", "T-897" if iso in ZONE_RULES else "T-788"),
                "rule": f"free units at or over {min_density:g} people a km2 (or holding {DEAD_KEEP * floor:,.0f}), grouped in their region until each "
-                       f"zone holds {floor:,}: under {ZONE_MIN_POP:,} by the longest border, then the neighbour with the nearest "
-                       f"people centre keeping both within {cap:,} whose union wraps no zone, metro or pack (T-1087), else the smallest; "
-                       f"one holding {0.8 * floor:,.0f} with no such join stays; another region's when none is left; islands "
-                       f"the most populous zone within {ISLAND_KM:g} km (10 km from {ZONE_MIN_POP:,}); then each zone still "
-                       f"wrapping one cut across it and its halves regrouped"
-                       + (f"; unbuilt metros first take neighbouring units sending {BELT_SHARE:.0%} of their workers into them (T-1088)" if flows else ""),
+                       f"zone holds {floor:,}"
+                       + (f" (or {ZONE_MIN_POP:,} over {big:,.0f} km2)" if big else "")
+                       + f": under {ZONE_MIN_POP:,} into the zone it travels with most, then a neighbour keeping both within {cap:,} "
+                       f"that is a travel partner ({PARTNER_SHARE:.0%} of its biggest partner's travel), else one making a compact zone "
+                       f"({COMPACT_HULL:.0%} of its convex hull, or within {COMPACT_SLACK:.2f} of the bigger part's), partners first, "
+                       f"each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under "
+                       f"{0.8 * floor:,.0f} another region's passing neighbour when its own region has none; nothing passing, it stays; "
+                       f"islands the most populous zone within {ISLAND_KM:g} km (10 km from {ZONE_MIN_POP:,}); then each zone still "
+                       f"wrapping one cut across it and its halves regrouped; travel "
+                       + ("from the commuting table" if flows else f"by gravity on GHSL people ({GRAVITY_KM:g} km cells, within {GRAVITY_REACH_KM:g} km)")
+                       + (f"; unbuilt metros first take neighbouring units sending {BELT_SHARE:.0%} of their workers into them (T-1088)" if flows and grow else ""),
                "kept": [r["id"] for r in kept], "dead": dead, "merges": [ln.strip() for ln in lines]}
         if belts:
             rec["belts"] = belts

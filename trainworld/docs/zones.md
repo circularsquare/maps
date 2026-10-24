@@ -36,7 +36,7 @@ cost of fine cells in thin country is small: cells exist only where people or jo
 **Unit.** A non-city zone is one **county-sized statistical unit**: a US county, a Canadian census
 division, a NUTS-3 region in Europe; elsewhere the country's second-level unit of 100k-1M people.
 One unit per zone, so zone lines are lines that every national dataset already uses; a unit of
-under 100,000 people joins the neighbouring non-city zone it shares the longest border with. A
+under 100,000 people joins the neighbouring non-city zone it travels with most (below). A
 unit belongs to a city zone (and so is not a non-city zone) when that city's pack lists it.
 
 **Boundary file.** A zone's drawn boundary is its units dissolved. In the US the units are TIGER/Line
@@ -61,27 +61,45 @@ a candidate. A unit under **20 people a km²** stays dead space for now unless i
 zone floor (0.4M at 0.5M; `DEAD_KEEP`, T-903: Bergen, Trondheim, Oulu, Inverness); Spain's dead
 space is Soria, Teruel, Cuenca, Huesca, Zamora, Palencia, Ávila, Cáceres and Segovia. Units **under 100,000** join a
 zone of their own region (NUTS-2; elsewhere the first-level unit), smallest first: the one they
-share the longest border with, or for an island the most populous zone of the region within
-150 km (so small islands join their province's largest: La Gomera, La Palma and El Hierro
-Tenerife, Fuerteventura Gran Canaria, Menorca Mallorca). A small unit with neither stays its own
-zone (Ceuta, Melilla). **Zones hold at least about 0.5M people** (Anita, 2026-10-20, T-788):
-countries planned since then keep merging within the region until each zone has **500,000**,
-from 100,000 into the neighbour with the nearest people centre that keeps the two within **1.5M**
-and makes no zone that **wraps** another zone, a metro or a pack (T-1087; below), and into a zone of
-another region of the country when its own has none left (a small region, or Osttirol cut off from
-Tirol); a zone of 100,000 or more crosses water only within 10 km, and islands and enclaves that
-can join nothing stay as they are (the Isle of Wight, Åland). Rows built before the floor keep
-their size: Spain, Italy, France, Portugal and Greece, and T-788's first wave (Germany, the UK,
-Ireland and the Benelux at 0.1-1.2M). A European country's units outside Europe (France's
+travel with most (the longest border breaking ties), or for an island the most populous zone of
+the region within 150 km (so small islands join their province's largest: La Gomera, La Palma and
+El Hierro Tenerife, Fuerteventura Gran Canaria, Menorca Mallorca). A small unit with neither stays
+its own zone (Ceuta, Melilla). **Zones hold at least about 0.5M people** (Anita, 2026-10-20, T-788),
+or 100,000 once they cover **100,000 km²** (Anita, 2026-10-24: the floor relaxed for very big
+regions; `BIG_ZONE_KM2`, T-1140): countries planned since then keep merging within the region until
+each zone gets there, within a cap of **1.5M**, by the **merge rule** (Anita, 2026-10-24, T-1140):
+- A zone under the floor joins a neighbour only if that neighbour is its **biggest travel partner
+  or gets at least half** as much travel as the biggest one, counting every zone, metro and pack
+  around it, whatever its region.
+- Failing that, a neighbour where the joined zone stays **compact**: it fills at least **75%** of
+  its convex hull, or is no more than 0.05 less compact than the bigger part already was (a county
+  added on the edge of a coast).
+- A partner always comes before a join by shape alone; among either, the neighbour whose people
+  centre is nearest its own, so zones gather round their own towns. With none within the cap, the
+  smallest that passes, unless the zone holds 80% of the floor.
+- A zone under 80% of the floor whose own region has no neighbour that passes joins another
+  region's that does (Kootenai ID with Spokane), as when its region has no zone left (a small
+  region, or Osttirol cut off from Tirol).
+- If nothing passes, the zone stays as it is, under the floor (planned afresh, Whatcom WA would stop
+  at Skagit, Island and San Juan, 0.48M: 87% of its travel goes to Seattle's metro and almost none
+  east of the Cascades).
+
+**Travel** is commuting both ways between units: the country's commuting table where one is on disk
+(`world_plan.COMMUTE_FLOWS`: the US's ACS 2016-2020 county flows); elsewhere a gravity estimate the
+same everywhere (`world_plan.gravity_flows`): GHSL people on 20 km cells, people × people ×
+d^-0.8 e^(-d/30 km) over pairs within 200 km. A zone of 100,000 or more crosses water only within
+10 km, and islands and enclaves that can join nothing stay as they are (the Isle of Wight, Åland).
+Rows built before the floor keep their size: Spain, Italy, France, Portugal and Greece, and T-788's
+first wave (Germany, the UK, Ireland and the Benelux at 0.1-1.2M); rows built before the merge rule
+(every country zoned by 2026-10-24) keep their groups until Anita asks for their replan (T-1189).
+A European country's units outside Europe (France's
 overseas départements) are not zoned. A zone row has `kind` "zone", is named after its most populous unit (before
 any "/"), and has its origin at its densest square km. A replan of the metros keeps zone rows as
 they are. Countryside zones use the zone curve (section 4) and global sources only, unless their
 country's zone rule names its module (the US, below). Which countries are covered, and with how many zones:
 docs/data-register.md.
 **No ring zones** (Anita, 2026-10-23, T-1087: zones keep together areas that mostly commute within
-themselves, "kinda like voronoi"). A zone grown to the floor joins, of its neighbours keeping the two
-within the cap, the one whose people centre (the mean position of its people) is nearest its own, so
-zones gather round their own towns; with none within the cap, the smallest. A join that makes a zone
+themselves, "kinda like voronoi"). Of the joins the merge rule allows, one that makes a zone
 **wrap** another zone, a metro row or a built pack is refused: A wraps B when at least **0.5** of B's
 area lies inside A's convex hull and A holds at least **0.5** of B's border with zones, metros and
 packs (coast, dead space and other countries do not count). A zone with no join within the cap, or

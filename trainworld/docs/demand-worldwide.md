@@ -51,7 +51,16 @@ of its proxies where it has them. Measured by building Toronto from tier 0 again
 
 - **Population** is GHSL GHS-POP (100 m) scaled to district totals; areas built up after the GHSL
   epoch come out short (Toronto's newest municipalities 15-27%), so use the latest epoch and the
-  newest district totals for fast-growing cities.
+  newest district totals for fast-growing cities. GHS-POP spreads each of GHSL's own census units
+  over its residential volume (GHS-BUILT-V total less NRES), so people per residential m³ is flat
+  inside a unit and steps at its edge, 10-30x where those units are old and coarse (China). Each
+  100 m pixel's people per residential m³ is held within 2x of its neighbourhood's (a 2 km
+  Gaussian; `POP_BOUND`, `POP_BOUND_SIGMA_M`, T-1150), then the people are scaled back to GHS-POP's
+  total over the pack; a pixel with no residential volume keeps GHS-POP's figure. Where GHSL's
+  units are sound this moves almost nothing (notes/T-1150.md). A country's census by small area is
+  spread by this bounded figure too.
+  Packs built before T-1150 keep the unbounded GHS-POP until their `<id>.tier0_signals.npz` is
+  deleted and the pack rebuilt.
 - **Jobs** are a proxy: population x the World Bank employment rate, spread 30% by GHSL
   non-residential volume weighted by height^2, 50% by OSM job places, 20% by population (T-360,
   the best joint fit on Toronto's census and London's BRES). The height in that weight stops at 40 m (`HEIGHT_CAP_M`,
@@ -142,8 +151,17 @@ Tier 0 with district totals; notes/T-291.md has the tables.
 - **Districts**: OSM admin_level 6 relations, clipped to land by the OSM coastline (Chinese district
   lines run far out to sea). Relations that do not assemble are rebuilt from their admin_level 8
   units or as the province's remainder. geoBoundaries' China ADM2 is too coarse (1:4M, 2017).
-- **Population**: the 2020 census by district, GHSL inside each. GHSL has about a quarter too
-  many people in Shanghai: tier 0 needs district totals in China as in London.
+- **Population**: the 2020 census by township (T-1150): helper1m's China table, the ASPECT 100 m
+  grid (built on 40,718 townships' 2020 counts) summed over 2018 township outlines and scaled to
+  the census counties, copied to `data/raw/tier0/china_townships/townships.fgb`. Each township's
+  count is spread inside it by GHSL's residential volume (total less NRES; tier 0's bounded GHSL
+  where a township has none); a township the outline cuts brings the share
+  of its GHSL people inside; cells in no township keep GHSL's people at the pack's census-to-GHSL
+  ratio. Shanghai's result is then held to its bulletin's district totals. Every planned mainland
+  metro row takes the townships (`china.plan_hooks`); the countryside zones stay on GHSL alone.
+  GHSL has about a quarter too many people in Shanghai and puts them in blocks by its own older
+  units, which district totals cannot fix. Packs built before T-1150 keep the district or GHSL
+  figures until rebuilt (notes/T-1150.md "Rebuild").
 - **Jobs**: the 2023 economic census, persons employed in legal-person units by district (each
   province's bulletin no. 1 has the table), the proxy inside each. Individual businesses are left
   out of that table. The proxy alone has London's old-core shortfall and overdraws the industrial
