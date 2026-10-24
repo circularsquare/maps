@@ -9,9 +9,10 @@ and which whole admin units each one holds.
     python pipeline/world_plan.py metros --countries US
                                             a FUA country's metro rows planned alone (T-1015), no
                                             other row touched
-    python pipeline/world_plan.py zones --countries ES[,PT]
+    python pipeline/world_plan.py zones --countries ES[,PT] [--out <plan.json>]
                                             whole-country cover (T-723): the country's zone rows,
-                                            every unit no row or pack holds (docs/zones.md 2)
+                                            every unit no row or pack holds (docs/zones.md 2);
+                                            with --out, a dry run written there
 
 The rules are docs/adding-a-city.md "Which cities, and where their edges go". Downloads land in
 data/raw/worldplan/ when missing; extents as GeoJSON in data/work/worldplan/. Everything is computed
@@ -74,6 +75,13 @@ ISLAND_KM = 150.0        # an island under ZONE_MIN_POP joins the most populous 
 ZONE_FLOOR = 500_000     # zones grow to this within their region (Anita, 2026-10-20, T-788)
 ZONE_CAP = 1_500_000     # a zone of ZONE_MIN_POP or more prefers neighbours keeping it within this
 DEAD_KEEP = 0.8          # a unit under the density floor holding this share of the zone floor is a zone anyway (T-903: Bergen)
+WRAP_HULL = 0.5          # zone A wraps B when this share of B's area lies in A's convex hull (T-1005)
+WRAP_BORDER = 0.5        # and A holds this share of B's border with zones, metros and packs
+RING_ROUNDS = 3          # ring cuts, each followed by a regroup of the halves (T-1087)
+# where commuting data exists, an unbuilt metro row takes a neighbouring free unit sending at least
+# this share of its resident workers into it (T-1088; the US's own outlying-county rule)
+BELT_SHARE = 0.25
+COMMUTE_FLOWS = {"USA": ROOT / "data/raw/acsflows/table1.xlsx"}  # ACS 2016-2020 county to county
 # zone rows planned before the floor (T-723 to T-786) used ZONE_MIN_POP as theirs; a replan of those
 # countries would regroup their unbuilt rows only
 EUROPE_BOX = (-32.0, 27.0, 45.0, 72.0)  # lon/lat: a European country's units outside it (France's overseas départements) are not zoned (T-779)
@@ -1306,109 +1314,297 @@ def test_row(st, pid, out):
         f"{sum(len(v) for v in row['units'].values())} units; {out}")
 
 
-def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguous=False):
-    """Free units (ids) grouped into zones, smallest first, until each holds `floor` people. A zone
-    under ZONE_MIN_POP joins the zone of its region it shares the longest border with; a bigger one
-    its smallest neighbour there that keeps the two within `cap` (else its smallest neighbour), so
-    one zone does not take a whole region (the longest border put Sarajevo, Zenica and Mostar in one);
-    the first of those neighbours whose union wraps no other zone (T-1005, `wraps`), else the first.
+def unit_borders(simple):
+    """{unit: {neighbour: its border along it, m}} for shapes within 1 km of each other."""
+    ids = list(simple)
+    tree = STRtree([simple[i] for i in ids])
+    adj = {i: {} for i in ids}
+    for a, i in enumerate(ids):
+        near = simple[i].buffer(1000)
+        for b in tree.query(near, predicate="intersects"):
+            j = ids[b]
+            if b > a:
+                ln = simple[i].boundary.intersection(simple[j].buffer(1000)).length
+                if ln > 0:
+                    adj[i][j] = adj[j][i] = ln
+    return adj
+
+
+def zone_groups(units, free, region, floor=ZONE_MIN_POP, cap=ZONE_CAP, contiguous=False, fixed=()):
+    """Free units (ids) grouped into zones, smallest first, until each holds `floor` people (T-1087,
+    docs/zones.md 2). A zone under ZONE_MIN_POP joins the zone of its region it shares the longest
+    border with. A bigger one joins the neighbour of its region whose people centre is nearest its
+    own among those keeping the two within `cap`, the first whose union wraps no other zone and no
+    `fixed` area (`wraps`); with none within the cap, the smallest that wraps nothing, unless it holds
+    80% of `floor`, when it stays as it is. When every join wraps, one holding 80% of `floor` stays; a
+    smaller one joins anyway and the ring cut takes it apart.
     With no neighbour left in its region (a small region, or Osttirol cut off from Tirol) it joins one
-    of another region, unless it already holds 80% of `floor` (by land or across water). An island (no land border with any unit) joins the most populous zone of its
-    region within ISLAND_KM, or within 10 km once it holds ZONE_MIN_POP (the Isle of Wight stays
-    alone). One that can join nothing stays as it is (Ceuta). With `contiguous` (T-897), a zone with no
-    land neighbour left joins the nearest zone within WATER_GAP_KM across water instead of the island
-    rule, so every zone's parts touch. Returns ({lead id: [units]}, [log lines])."""
+    of another region, unless it already holds 80% of `floor` (by land or across water). An island
+    (no land border with any unit) joins the most populous zone of its region within ISLAND_KM, or
+    within 10 km once it holds ZONE_MIN_POP (the Isle of Wight stays alone). One that can join nothing
+    stays as it is (Ceuta). With `contiguous` (T-897), a zone with no land neighbour left joins the
+    nearest zone within WATER_GAP_KM across water instead of the island rule, so every zone's parts
+    touch, and islands of one region within ARCHIPELAGO_KM join as one.
+    Then each zone still wrapping something is cut in two across it (`cut`) and the halves regroup,
+    a half whose every join wraps staying as it is, RING_ROUNDS times at most. `fixed`: the metro rows and built packs, [{id, name, geom (Mollweide),
+    xy (people centre)}]. Returns ({lead id: [units]}, [log lines])."""
     by = {u.id: u for u in units}
     # simplifying can leave invalid rings, which the unions below fail on (T-897, China's counties)
     simple = {u.id: polygonal(u.geom.simplify(500)) for u in units}
-    zones, done, lines = {i: [i] for i in free}, set(), []
-    ppl = lambda z: sum(by[i].free for i in zones[z])  # noqa: E731
-    shapes = {}
+    adj = unit_borders(simple)
+    cen = {}  # each free unit's people centre
+    for i in free:
+        x, y, p = by[i].px
+        s = float(p.sum())
+        c = simple[i].representative_point() if s <= 0 else None
+        cen[i] = (c.x, c.y) if c is not None else (float((x * p).sum()) / s, float((y * p).sum()) / s)
+    zones = {i: [i] for i in free}
+    owner = {i: i for i in free}
+    lines, shapes = [], {}
 
-    def geo(z):  # a zone only grows, so its lead and unit count name its shape
+    def ppl(z):
+        return sum(by[i].free for i in zones[z])
+
+    def centre(z):
+        n = ppl(z)
+        if n <= 0:
+            return cen[zones[z][0]]
+        return (sum(cen[i][0] * by[i].free for i in zones[z]) / n, sum(cen[i][1] * by[i].free for i in zones[z]) / n)
+
+    def geo(z):  # a zone's lead and unit count name its shape (a cut's halves drop theirs)
         k = (z, len(zones[z]))
         if k not in shapes:
             shapes[k] = union_all([simple[i] for i in zones[z]])
         return shapes[k]
 
-    def touching(g, pool):
-        near = g.buffer(1000)
-        b = [(g.boundary.intersection(geo(o).buffer(1000)).length, o) for o in pool if near.intersects(geo(o))]
-        return [x for x in b if x[0] > 0]
+    def nbrs(z):
+        out = {}
+        for i in zones[z]:
+            for j, ln in adj[i].items():
+                o = owner.get(j)
+                if o is not None and o != z:
+                    out[o] = out.get(o, 0.0) + ln
+        return out
+
+    # each fixed area's border with the free units and the other fixed areas (its land border), and
+    # each free unit's border along it
+    fx = [dict(f) for f in fixed]
+    ftree = STRtree([simple[i] for i in free]) if free else None
+    for f in fx:
+        f["near"] = f["geom"].buffer(1000)
+        f["units"] = {}
+        for b in (ftree.query(f["near"], predicate="intersects") if ftree else ()):
+            i = free[b]
+            ln = simple[i].boundary.intersection(f["near"]).length
+            if ln > 0:
+                f["units"][i] = ln
+    for f in fx:
+        land = 0.0
+        if f["units"]:
+            land = f["geom"].boundary.intersection(union_all([simple[i] for i in f["units"]]).buffer(1000)).length
+        for o in fx:
+            if o is not f and o["geom"].intersects(f["near"]):
+                land += f["geom"].boundary.intersection(o["near"]).length
+        f["land"] = land
+    fx = [f for f in fx if f["land"] > 0]
+
+    def wrapped(gq, land, hull, near, b):
+        c0, c1, c2, c3 = gq.bounds
+        if c0 > b[2] or c2 < b[0] or c1 > b[3] or c3 < b[1] or not land or not gq.intersects(near):
+            return False
+        return gq.intersection(hull).area >= WRAP_HULL * gq.area and gq.boundary.intersection(near).length >= WRAP_BORDER * land
 
     def wraps(z, o):
-        """T-1005: whether joining z and o makes a zone that wraps another zone: half of the other's
-        area lies in the union's convex hull, and the union holds half of its border with zones."""
+        """T-1005, T-1087: whether the union of z and o wraps another zone or a fixed area: half of its
+        area in the union's convex hull, the union holding half of its border with zones and fixed
+        areas (coast, dead space and other countries do not count)."""
         m = union_all([geo(z), geo(o)])
         hull, near = m.convex_hull, m.buffer(1000)
+        b = near.bounds
         for q in zones:
-            gq = geo(q) if q not in (z, o) else None
-            if gq is None or not gq.intersects(near) or gq.intersection(hull).area < 0.5 * gq.area:
+            if q not in (z, o):
+                gq = geo(q)
+                c0, c1, c2, c3 = gq.bounds
+                if c0 > b[2] or c2 < b[0] or c1 > b[3] or c3 < b[1]:
+                    continue
+                land = sum(nbrs(q).values()) + sum(f["units"].get(i, 0.0) for f in fx for i in zones[q])
+                if wrapped(gq, land, hull, near, b):
+                    return True
+        return any(wrapped(f["geom"], f["land"], hull, near, b) for f in fx)
+
+    def merge(only=None):
+        done = set()
+        while True:
+            small = sorted((ppl(z), z) for z in zones if z not in done and (only is None or z in only) and ppl(z) < floor)
+            if not small:
+                break
+            n, z = small[0]
+            g = geo(z)
+            nb = nbrs(z)
+            same = [o for o in zones if o != z and region[o] == region[z]]
+            border = {o: ln for o, ln in nb.items() if region[o] == region[z]}
+            # T-788: Rijeka and Istria (0.46M) took all of Slavonia across the region line, a zone 460 km
+            # long; one near the floor stays as it is rather than join another region's
+            if not border and n < 0.8 * floor:
+                border = dict(nb)
+            island = all(j in zones[z] for i in zones[z] for j in adj[i])
+            into, how, why = None, "", "no zone beside it"
+            if border and n < ZONE_MIN_POP:
+                into = max(border, key=border.get)
+                how = f"shared border {border[into] / 1000:.0f} km"
+            elif border:
+                c = centre(z)
+                fit = sorted((o for o in border if n + ppl(o) <= cap), key=lambda o: math.dist(c, centre(o)))
+                how = "nearest centre"
+                if not fit and n >= 0.8 * floor:
+                    why = "no neighbour within the cap"
+                elif not fit:  # nothing fits: the smallest, so no zone grows far past the cap
+                    fit = sorted(border, key=lambda o: (ppl(o), -border[o]))
+                    how = "smallest neighbour, none within the cap"
+                if fit:
+                    into = next((o for o in fit if not wraps(z, o)), None)
+                    if into is not None and into != fit[0]:
+                        how += " that wraps nothing"
+                    elif into is None and n < 0.8 * floor and only is None:
+                        into, how = fit[0], "every join wraps; left to the ring cut"
+                    elif into is None:  # a cut's half joining anyway would only rebuild the ring
+                        why = "every join would wrap"
+            elif contiguous:
+                # T-897 (Anita, 2026-10-22): no exclaves; across water only as far as a bridge or a narrow
+                # strait reaches, to the nearest zone, its own region's first; another region's only under
+                # 80% of the floor, as by land (T-1015: South Jersey took Delaware's zone across the bay)
+                pools = [same] + ([[o for o in zones if o != z and region[o] != region[z]]] if n < 0.8 * floor else [])
+                for pool in pools:
+                    near = [(d, o) for d, o in ((g.distance(geo(o)), o) for o in pool) if d <= WATER_GAP_KM * 1000]
+                    if near:
+                        into = min(near)[1]
+                        how = f"across water, {min(near)[0] / 1000:.0f} km"
+                        break
+                if into is None and island:
+                    # an archipelago is one zone (Penghu, Kinmen, Matsu): an island joins the nearest
+                    # island zone of its region within ARCHIPELAGO_KM, never the mainland's
+                    def alone(o):
+                        return all(j in zones[o] for i in zones[o] for j in adj[i])
+                    near = sorted((g.distance(geo(o)), o) for o in same if g.distance(geo(o)) <= ARCHIPELAGO_KM * 1000)
+                    near = [x for x in near if alone(x[1])]
+                    if near:
+                        into = near[0][1]
+                        how = f"archipelago, {near[0][0] / 1000:.0f} km"
+            elif island:
+                reach = ISLAND_KM if n < ZONE_MIN_POP else 10.0
+                near = [(ppl(o), o) for o in same if g.distance(geo(o)) <= reach * 1000]
+                if near:
+                    into = max(near)[1]
+                    how = f"island, {g.distance(geo(into)) / 1000:.0f} km"
+            if into is None:
+                done.add(z)
+                lines.append(f"  {by[z].name} ({n:,.0f}) stays as it is: {'an island with no zone within reach' if island else why}")
                 continue
-            land = sum(s for s, _ in touching(gq, [x for x in zones if x != q]))
-            if land and gq.boundary.intersection(near).length >= 0.5 * land:
-                return True
-        return False
-    while True:
-        small = sorted((ppl(z), z) for z in zones if z not in done and ppl(z) < floor)
-        if not small:
+            if region[into] != region[z]:
+                how += ", another region"
+            lines.append(f"  {by[z].name} ({n:,.0f}) joins {by[into].name} ({how})")
+            for i in zones[z]:
+                owner[i] = into
+            zones[into] += zones.pop(z)
+
+    def rings():
+        """[(strength, zone, (kind, what))]: each zone wrapping a zone ("z", lead) or a fixed area
+        ("f", index), the strongest first."""
+        shp = [("z", k) for k in zones] + [("f", n) for n in range(len(fx))]
+        gs = [geo(k) if t == "z" else fx[k]["geom"] for t, k in shp]
+        nears = [g.buffer(1000) for g in gs]
+        tree = STRtree(gs)
+        nb = [{} for _ in shp]  # a: {b: b's border along a}
+        for a in range(len(shp)):
+            for b in tree.query(nears[a], predicate="intersects"):
+                if b != a:
+                    nb[a][int(b)] = gs[b].boundary.intersection(nears[a]).length
+        out = []
+        for a, (t, k) in enumerate(shp):
+            if t != "z":
+                continue
+            hull = gs[a].convex_hull
+            for b, ln in nb[a].items():
+                land = sum(nb[x].get(b, 0.0) for x in nb[b])
+                if not land or not gs[b].area:
+                    continue
+                ih = gs[b].intersection(hull).area / gs[b].area
+                if ih >= WRAP_HULL and ln / land >= WRAP_BORDER:
+                    out.append((ih + ln / land, k, shp[b]))
+        return sorted(out, reverse=True)
+
+    def cut(z, c):
+        """Zone z's units by direction from point c, the circle opened at the widest gap, split where the
+        two halves' people are most even with both in one piece; None when no split is."""
+        ang = sorted((math.atan2(cen[i][1] - c[1], cen[i][0] - c[0]), i) for i in zones[z])
+        gaps = [(ang[(a + 1) % len(ang)][0] - ang[a][0]) % (2 * math.pi) for a in range(len(ang))]
+        start = (max(range(len(gaps)), key=lambda a: gaps[a]) + 1) % len(ang)
+        order = [ang[(start + a) % len(ang)][1] for a in range(len(ang))]
+        links = {i: set(adj[i]) for i in order}
+        if contiguous:  # the zone's own joins across water hold it together too
+            t = STRtree([simple[i] for i in order])
+            for a, i in enumerate(order):
+                for b in t.query(simple[i], predicate="dwithin", distance=WATER_GAP_KM * 1000):
+                    links[i].add(order[b])
+        tot, run, best = sum(by[i].free for i in order), 0.0, None
+        for s in range(1, len(order)):
+            run += by[order[s - 1]].free
+            if best is None or abs(run - tot / 2) < best[0]:
+                a, b = order[:s], order[s:]
+                if one_piece(a, links) and one_piece(b, links):
+                    best = (abs(run - tot / 2), a, b)
+        return best[1:] if best else None
+
+    def one_piece(ids, links):
+        ids = set(ids)
+        start = next(iter(ids))
+        seen, front = {start}, [start]
+        while front:
+            nxt = []
+            for i in front:
+                for j in links[i]:
+                    if j in ids and j not in seen:
+                        seen.add(j)
+                        nxt.append(j)
+            front = nxt
+        return len(seen) == len(ids)
+
+    def name(t, k):
+        return by[k].name if t == "z" else fx[k]["name"]
+
+    merge()
+    for rnd in range(RING_ROUNDS):
+        rs = rings()
+        if not rs:
             break
-        n, z = small[0]
-        g = geo(z)
-        same = [o for o in zones if o != z and region[o] == region[z]]
-        border = touching(g, same)
-        # T-788: Rijeka and Istria (0.46M) took all of Slavonia across the region line, a zone 460 km
-        # long; one near the floor stays as it is rather than join another region's
-        if not border and n < 0.8 * floor:
-            border = touching(g, [o for o in zones if o != z and region[o] != region[z]])
-        island = not any(g.buffer(1000).intersects(simple[u.id]) for u in units if u.id not in zones[z])
-        into, how = None, ""
-        if border and n < ZONE_MIN_POP:
-            length, into = max(border)
-            how = f"shared border {length / 1000:.0f} km"
-        elif border:
-            fit = [b for b in border if n + ppl(b[1]) <= cap]
-            fit = sorted(fit or border, key=lambda b: (ppl(b[1]), -b[0]))
-            into = next((b[1] for b in fit if len(fit) == 1 or not wraps(z, b[1])), fit[0][1])
-            how = f"smallest neighbour, {ppl(into):,.0f}"
-            if into != fit[0][1]:
-                how = f"smallest neighbour that wraps no zone, {ppl(into):,.0f}"
-        elif contiguous:
-            # T-897 (Anita, 2026-10-22): no exclaves; across water only as far as a bridge or a narrow
-            # strait reaches, to the nearest zone, its own region's first; another region's only under
-            # 80% of the floor, as by land (T-1015: South Jersey took Delaware's zone across the bay)
-            pools = [same] + ([[o for o in zones if o != z and region[o] != region[z]]] if n < 0.8 * floor else [])
-            for pool in pools:
-                near = [(d, o) for d, o in ((g.distance(geo(o)), o) for o in pool) if d <= WATER_GAP_KM * 1000]
-                if near:
-                    into = min(near)[1]
-                    how = f"across water, {min(near)[0] / 1000:.0f} km"
-                    break
-            if into is None and island:
-                # an archipelago is one zone (Penghu, Kinmen, Matsu): an island joins the nearest
-                # island zone of its region within ARCHIPELAGO_KM, never the mainland's
-                def alone(o):
-                    go = geo(o).buffer(1000)
-                    return not any(go.intersects(simple[u.id]) for u in units if u.id not in zones[o])
-                near = sorted((g.distance(geo(o)), o) for o in same if g.distance(geo(o)) <= ARCHIPELAGO_KM * 1000)
-                near = [x for x in near if alone(x[1])]
-                if near:
-                    into = near[0][1]
-                    how = f"archipelago, {near[0][0] / 1000:.0f} km"
-        elif island:
-            reach = ISLAND_KM if n < ZONE_MIN_POP else 10.0
-            near = [(ppl(o), o) for o in same if g.distance(geo(o)) <= reach * 1000]
-            if near:
-                into = max(near)[1]
-                how = f"island, {g.distance(geo(into)) / 1000:.0f} km"
-        if into is None:
-            done.add(z)
-            lines.append(f"  {by[z].name} ({n:,.0f}) stays as it is: {'an island with no zone within reach' if island else 'no zone beside it'}")
-            continue
-        if region[into] != region[z]:
-            how += ", another region"
-        lines.append(f"  {by[z].name} ({n:,.0f}) joins {by[into].name} ({how})")
-        zones[into] += zones.pop(z)
+        touched = set()
+        for _, a, (t, b) in rs:
+            if a in touched or a not in zones or (t == "z" and (b not in zones or b in touched)):
+                continue
+            got = cut(a, fx[b]["xy"] if t == "f" else centre(b)) if len(zones[a]) > 1 else None
+            if not got and t == "z" and ppl(a) + ppl(b) <= cap:
+                # one unit round a city (Wrocławski round Wrocław) takes what it wraps
+                lines.append(f"  ring cut {rnd + 1}: {by[a].name} wraps {by[b].name}, joined")
+                for i in zones[b]:
+                    owner[i] = a
+                zones[a] += zones.pop(b)
+                touched |= {a, b}
+                continue
+            if not got:
+                lines.append(f"  ring cut {rnd + 1}: {by[a].name} wraps {name(t, b)}, no cut keeps both halves in one piece")
+                continue
+            zones.pop(a)
+            for h in got:
+                zones[h[0]] = list(h)
+                shapes.pop((h[0], len(h)), None)
+                for i in h:
+                    owner[i] = h[0]
+                touched.add(h[0])
+            lines.append(f"  ring cut {rnd + 1}: {by[a].name} wraps {name(t, b)}, cut into {by[got[0][0]].name} "
+                         f"({len(got[0])} units) and {by[got[1][0]].name} ({len(got[1])})")
+        merge(only=touched)
+    for _, a, (t, b) in rings():
+        lines.append(f"  ring left: {by[a].name} wraps {name(t, b)}")
     return zones, lines
 
 
@@ -1433,12 +1629,84 @@ def solve_region(iso, u):
     return SOLVE_REGIONS[iso].get(first) or ascii_name(first.split()[0]).lower()
 
 
-def plan_zones(isos3):
+def commute_flows(iso):
+    """{home unit: {work unit: workers}} from COMMUTE_FLOWS, or None for a country without. The ACS
+    table gives Connecticut by planning region, which matches no 2020 county."""
+    path = COMMUTE_FLOWS.get(iso)
+    if not path:
+        return None
+    import pandas as pd
+    t = pd.read_excel(path, header=None, skiprows=8, dtype=str).iloc[:, [0, 1, 4, 5, 8]]
+    t.columns = ["hs", "hc", "ws", "wc", "n"]
+    t = t.dropna(subset=["hs", "hc", "ws", "wc"])
+    out = collections.defaultdict(dict)
+    for h, w, n in zip(t.hs.str.zfill(2) + t.hc.str.zfill(3), t.ws.str[-2:] + t.wc.str.zfill(3),
+                       pd.to_numeric(t.n, errors="coerce").fillna(0)):
+        out[h][w] = out[h].get(w, 0.0) + float(n)
+    return out
+
+
+def belts_share(flows, h, ids):
+    """The share of unit h's resident workers working in units `ids`."""
+    f, ids = flows.get(h, {}), set(ids)
+    tot = sum(f.values())
+    return sum(n for w, n in f.items() if w in ids) / tot if tot else 0.0
+
+
+def metro_belts(flows, by, free, grow, areas, cap=CAP):
+    """T-1088 (Anita, 2026-10-23: "we can let metros take neighboring counties but it doesnt have to
+    be a hard rule"): a free unit sending at least BELT_SHARE of its resident workers to the metro it
+    sends most to joins that metro, when the metro is one of `grow` (unbuilt rows), the unit touches it
+    by land (or touches a unit joining it) and the metro stays within `cap`. A unit that cannot join
+    stays free for the zones. `areas`: {unit: metro row or pack id} of every metro in the country.
+    Returns {row id: [units added]}."""
+    best = {}
+    for h in free:
+        f = flows.get(h, {})
+        tot = sum(f.values())
+        to = collections.Counter()
+        for w, n in f.items():
+            if w in areas and w != h:
+                to[areas[w]] += n
+        if tot and to:
+            a, n = to.most_common(1)[0]
+            if a in grow and n >= BELT_SHARE * tot:
+                best[h] = a
+    simple = {}
+
+    def shp(i):
+        if i not in simple:
+            simple[i] = polygonal(by[i].geom.simplify(500))
+        return simple[i]
+    out = {}
+    for a, r in grow.items():
+        cand = sorted((i for i, b in best.items() if b == a), key=lambda i: -by[i].free)
+        if not cand:
+            continue
+        reach = union_all([shp(i) for us in r["units"].values() for i in us if i in by]).buffer(1000)
+        n, added = r["people"], []
+        while True:
+            nxt = [i for i in cand if i not in added and reach.intersects(shp(i))]
+            nxt = [i for i in nxt if n + by[i].free <= cap]
+            if not nxt:
+                break
+            for i in nxt:
+                if n + by[i].free <= cap:
+                    added.append(i)
+                    n += by[i].free
+            reach = union_all([reach] + [shp(i).buffer(1000) for i in nxt if i in added])
+        if added:
+            out[a] = added
+    return out
+
+
+def plan_zones(isos3, out_path=None):
     """Whole-country cover (T-723): for each country, its units held by no plan row and by no pack
-    (half their people), those under ZONE_MIN_DENSITY left as dead space, the rest grouped by
-    zone_groups into zone rows (`kind` "zone"), written into the plan beside its metro rows. A
-    country's earlier zone rows are replaced; one with the same units keeps its id, order, status
-    and run record."""
+    (half their people), those under ZONE_MIN_DENSITY left as dead space; where COMMUTE_FLOWS has
+    the country's commuting, its unbuilt metro rows take their belts (metro_belts, T-1088); the rest
+    grouped by zone_groups into zone rows (`kind` "zone"), written into the plan beside its metro
+    rows. A country's earlier planned zone rows are replaced; one with the same units keeps its id
+    and order. With `out_path`, the plan and its extents are written there instead (a dry run)."""
     import pickle
     import plan_config
     from timezonefinder import TimezoneFinder
@@ -1457,7 +1725,7 @@ def plan_zones(isos3):
     used = set(pk) | {c["id"] for c in json.loads(REGISTRY.read_text(encoding="utf-8"))["cities"]}
     used |= {r["id"] for r in rows}
     order = max(r.get("order", 0) for r in rows)
-    record = doc.setdefault("zones", {})
+    changes = []
     for iso in isos3:
         units = [u for u in st["units"] if u.iso == iso]
         # a country no metro reached, so not in the plan's state (T-788); or one with its own zone
@@ -1488,7 +1756,7 @@ def plan_zones(isos3):
         held = {uid for r in rows if r.get("units") and r["id"] not in old for uid in r["units"].get(iso, [])}
         ptree = STRtree([q["geom"] for q in pk.values()])
         pl = list(pk.values())
-        free, dead, away = [], [], []
+        free, dead, away, in_pack = [], [], [], {}
         only = rule.get("zoned_only", {})
         for u in units:
             if u.parents and u.parents[0][0] in only and u.id not in only[u.parents[0][0]]:
@@ -1502,11 +1770,16 @@ def plan_zones(isos3):
                     continue
             x, y, p = pop.inside(u.geom)
             inpk = np.zeros(len(x), bool)
+            most = (0.0, None)
             for i in ptree.query(u.geom, predicate="intersects"):
-                inpk |= contains_xy(pl[i]["geom"], x, y)
+                here = contains_xy(pl[i]["geom"], x, y)
+                inpk |= here
+                most = max(most, (float(p[here].sum()), pl[i]["id"]), key=lambda m: m[0])
             u.px = (x[~inpk], y[~inpk], p[~inpk])
             u.free = float(p[~inpk].sum())
             tot = float(p.sum())
+            if tot > 0 and u.free < UNIT_SHARE * tot:
+                in_pack[u.id] = most[1]
             if u.id in held or (tot > 0 and u.free < UNIT_SHARE * tot) or u.free <= 0:
                 continue
             dens = u.free / (u.geom.area / 1e6)
@@ -1514,10 +1787,53 @@ def plan_zones(isos3):
                 dead.append({"unit": u.id, "name": u.name, "people": round(u.free), "per_km2": round(dens, 1)})
             else:
                 free.append(u.id)
+        by = {u.id: u for u in units}
+        # T-1088: unbuilt metro rows take the free units commuting into them
+        metros = {r["id"]: r for r in rows if r.get("kind") != "zone" and iso in (r.get("units") or {})}
+        grow = {k: r for k, r in metros.items() if r.get("status", "planned") == "planned"}
+        flows = commute_flows(iso) if grow else None
+        grown, belts = {}, {}
+        if flows:
+            zone_ids = {r["id"] for r in rows if r.get("kind") == "zone"}
+            areas = {i: k for i, k in in_pack.items() if k is not None and k not in zone_ids}
+            areas.update({i: k for k, r in metros.items() for i in r["units"][iso]})
+            belts = metro_belts(flows, by, free, grow, areas)
+            for k, add in belts.items():
+                r = json.loads(json.dumps(grow[k]))
+                us = [by[i] for i in r["units"][iso]] + [by[i] for i in add]
+                g = polygonal(union_all([u.geom for u in us]))
+                cut = [q["geom"] for q in pk.values() if q["geom"].intersects(g)]
+                ll = to_ll(polygonal(g.difference(union_all(cut))) if cut else g)
+                had = r.get("source", {}).get("belt", {}).get("units", [])
+                r["units"][iso] = r["units"][iso] + add
+                r["people"] = round(r["people"] + sum(by[i].free for i in add))
+                r["bbox"] = [round(v, 3) for v in ll.bounds]
+                r["extracts"] = extracts(ll, ex, kids)
+                r.setdefault("source", {})["belt"] = {"task": "T-1088", "share": BELT_SHARE, "units": had + add}
+                grown[k] = (r, {"type": "Feature", "properties": {"order": r["order"], "id": k, "name": r["name"], "people": r["people"]},
+                                "geometry": mapping(shapely.set_precision(ll, 1e-5))})
+                log(f"  {r['name']} takes {len(add)} units commuting into it, {sum(by[i].free for i in add) / 1e6:.2f}M: "
+                    + ", ".join(f"{by[i].name} {belts_share(flows, i, grow[k]['units'][iso]):.0%}" for i in add))
+            free = [i for i in free if not any(i in add for add in belts.values())]
+        # the metro rows, the zone rows kept and the country's built packs, which no zone may wrap
+        fixed, cc = [], {c["id"]: c.get("country") for c in json.loads(REGISTRY.read_text(encoding="utf-8"))["cities"]}
+        for r in rows:
+            mine = (grown[r["id"]][0] if r["id"] in grown else r).get("units", {}).get(iso)
+            if r["id"] in old or not (mine or (not r.get("units") and r["id"] in pk and cc.get(r["id"]) == a2.get(iso))):
+                continue
+            if r["id"] in pk:
+                g = pk[r["id"]]["geom"]
+                x, y, p = pop.inside(g)
+            else:
+                g = union_all([by[i].geom for i in mine if i in by])
+                px = [by[i].px for i in mine if i in by and by[i].px is not None] or [(np.zeros(0),) * 3]
+                x, y, p = (np.concatenate([q[k] for q in px]) for k in range(3))
+            s = float(p.sum())
+            xy = (float((x * p).sum()) / s, float((y * p).sum()) / s) if s > 0 else g.representative_point().coords[0]
+            fixed.append({"id": r["id"], "name": r["name"], "geom": polygonal(g.simplify(500)), "xy": xy})
         nuts = src["kind"] in ("NUTS3", "ITL3")
         region = {u.id: (u.parents[-1] if nuts else u.parents[0]) if u.parents else iso for u in units}
-        groups, lines = zone_groups(units, free, region, floor, cap, rule.get("contiguous", False))
-        by = {u.id: u for u in units}
+        groups, lines = zone_groups(units, free, region, floor, cap, rule.get("contiguous", False), fixed)
         if rule.get("contiguous"):  # T-897: no pack for an islet of a few hundred people that can join nothing
             for lead in [k for k, ids in groups.items() if sum(by[i].free for i in ids) < ZONE_ALONE_MIN]:
                 for i in groups.pop(lead):
@@ -1591,26 +1907,65 @@ def plan_zones(isos3):
         gone = [r["id"] for r in old.values() if r["id"] not in {o["id"] for o in out}]
         if gone:
             log(f"  earlier zone rows with no successor, removed: {gone}")
-        rows[:] = [r for r in rows if r["id"] not in old] + out
-        record[iso] = {"built": str(datetime.now().date()), "task": rule.get("task", "T-897" if iso in ZONE_RULES else "T-788"),
-                       "rule": f"free units at or over {min_density:g} people a km2 (or holding {DEAD_KEEP * floor:,.0f}), grouped in their region until each "
-                               f"zone holds {floor:,}: under {ZONE_MIN_POP:,} by the longest border, then the smallest "
-                               f"neighbour keeping both within {cap:,} that makes no zone wrapping another (T-1005); "
-                               f"another region's when none is left; islands "
-                               f"the most populous zone within {ISLAND_KM:g} km (10 km from {ZONE_MIN_POP:,})",
-                       "kept": [r["id"] for r in kept], "dead": dead, "merges": [ln.strip() for ln in lines]}
+        rec = {"built": str(datetime.now().date()), "task": rule.get("task", "T-897" if iso in ZONE_RULES else "T-788"),
+               "rule": f"free units at or over {min_density:g} people a km2 (or holding {DEAD_KEEP * floor:,.0f}), grouped in their region until each "
+                       f"zone holds {floor:,}: under {ZONE_MIN_POP:,} by the longest border, then the neighbour with the nearest "
+                       f"people centre keeping both within {cap:,} whose union wraps no zone, metro or pack (T-1087), else the smallest; "
+                       f"one holding {0.8 * floor:,.0f} with no such join stays; another region's when none is left; islands "
+                       f"the most populous zone within {ISLAND_KM:g} km (10 km from {ZONE_MIN_POP:,}); then each zone still "
+                       f"wrapping one cut across it and its halves regrouped"
+                       + (f"; unbuilt metros first take neighbouring units sending {BELT_SHARE:.0%} of their workers into them (T-1088)" if flows else ""),
+               "kept": [r["id"] for r in kept], "dead": dead, "merges": [ln.strip() for ln in lines]}
+        if belts:
+            rec["belts"] = belts
         if away:
-            record[iso]["outside_europe"] = away
-        ext_path = WORK / "extents.geojson"
-        ext = json.loads(ext_path.read_text(encoding="utf-8"))
-        drop = set(old) | {f["properties"]["id"] for f in feats}
-        ext["features"] = [f for f in ext["features"] if f["properties"]["id"] not in drop] + feats
-        ext_path.write_text(json.dumps(ext), encoding="utf-8")
+            rec["outside_europe"] = away
+        changes.append({"iso": iso, "old": {k: r["units"][iso] for k, r in old.items()},
+                        "metros": {k: grow[k]["units"][iso] for k in grown}, "grown": {k: v[0] for k, v in grown.items()},
+                        "out": out, "record": rec, "src": src,
+                        "feats": feats + [v[1] for v in grown.values()],
+                        "drop": set(old) | {f["properties"]["id"] for f in feats} | set(grown)})
+        rows[:] = [grown[r["id"]][0] if r["id"] in grown else r for r in rows if r["id"] not in old] + out
     assert all(plan_config.is_plan_row(r) for r in rows if r.get("kind") == "zone")
-    tmp = OUT.with_suffix(".json.part")
-    tmp.write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-    os.replace(tmp, OUT)
+    if out_path:  # a dry run: the plan and its extents beside each other, the real ones untouched
+        doc, ext = json.loads(OUT.read_text(encoding="utf-8")), json.loads((WORK / "extents.geojson").read_text(encoding="utf-8"))
+        splice(doc, ext, changes)
+        Path(out_path).write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+        Path(out_path).with_suffix(".extents.geojson").write_text(json.dumps(ext), encoding="utf-8")
+        log(f"written {out_path} (a dry run)")
+        return
+    import shared_lock
+    # the runners set row statuses meanwhile: the plan is read again under the lock and only this
+    # country's planned rows replaced (T-1088)
+    with shared_lock.held("plan", f"world_plan.py zones {','.join(isos3)}"):
+        doc = shared_lock.read_json(OUT)
+        ext_path = WORK / "extents.geojson"
+        ext = shared_lock.read_json(ext_path)
+        splice(doc, ext, changes)
+        shared_lock.write_atomic(ext_path, json.dumps(ext))
+        shared_lock.write_atomic(OUT, json.dumps(doc, indent=1, ensure_ascii=False) + "\n")
     log(f"written {OUT}")
+
+
+def splice(doc, ext, changes):
+    """plan_zones' changes into a plan read afresh: each country's planned zone rows replaced, its grown
+    metro rows swapped in where they stand; refused when any of those rows moved on meanwhile."""
+    rows = doc["metros"]
+    for c in changes:
+        iso = c["iso"]
+        now = {r["id"]: r for r in rows}
+        for k, us in {**c["old"], **c["metros"]}.items():
+            r = now.get(k)
+            if r is None or r.get("status", "planned") != "planned" or r["units"].get(iso) != us:
+                raise SystemExit(f"{iso}: row {k} changed since the plan was read; run again")
+        taken = {r["order"] for r in rows if r["id"] not in c["old"] and r.get("order") is not None}
+        clash = [r["id"] for r in c["out"] if r["id"] not in c["old"] and (r["id"] in now or r["order"] in taken)]
+        if clash:
+            raise SystemExit(f"{iso}: new rows clash with rows added since the plan was read: {clash}")
+        rows[:] = [c["grown"].get(r["id"], r) for r in rows if r["id"] not in c["old"]] + c["out"]
+        doc["unit_sources"][iso] = c["src"]
+        doc.setdefault("zones", {})[iso] = c["record"]
+        ext["features"] = [f for f in ext["features"] if f["properties"]["id"] not in c["drop"]] + c["feats"]
 
 
 def metro_edits(iso, units, taken, rows):
@@ -1707,7 +2062,7 @@ def main(argv):
         # several territories share an alpha-2 in Natural Earth (FR: France and Clipperton, T-779)
         a3 = {v: k for k, v in sorted(iso2s().items(), key=lambda kv: kv[0] in have)}
         cs = argv[argv.index("--countries") + 1].split(",")
-        return plan_zones([a3[c] for c in cs])
+        return plan_zones([a3[c] for c in cs], argv[argv.index("--out") + 1] if "--out" in argv else None)
     cache = WORK / "state.pkl"  # the units and their shares; --fresh rebuilds it
     if cache.exists() and "--fresh" not in argv:
         st = pickle.loads(cache.read_bytes())
@@ -1744,6 +2099,8 @@ def main(argv):
 
 if __name__ == "__main__":
     import shared_lock
-    # a replan or zone rows rewrite the plan whole while runners set row statuses (T-786)
-    with shared_lock.held("plan", "world_plan.py " + " ".join(sys.argv[1:])[:200]):
+    if sys.argv[1:2] == ["zones"]:  # takes the lock only to write (T-1088): its minutes would stall the runners
         main(sys.argv[1:])
+    else:  # a replan rewrites the plan whole while runners set row statuses (T-786)
+        with shared_lock.held("plan", "world_plan.py " + " ".join(sys.argv[1:])[:200]):
+            main(sys.argv[1:])

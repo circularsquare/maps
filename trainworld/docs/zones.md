@@ -67,8 +67,8 @@ share the longest border with, or for an island the most populous zone of the re
 Tenerife, Fuerteventura Gran Canaria, Menorca Mallorca). A small unit with neither stays its own
 zone (Ceuta, Melilla). **Zones hold at least about 0.5M people** (Anita, 2026-10-20, T-788):
 countries planned since then keep merging within the region until each zone has **500,000**,
-from 100,000 into the smallest neighbour that keeps the two within **1.5M** and makes no zone that
-**wraps** another (T-1005; below), and into a zone of
+from 100,000 into the neighbour with the nearest people centre that keeps the two within **1.5M**
+and makes no zone that **wraps** another zone, a metro or a pack (T-1087; below), and into a zone of
 another region of the country when its own has none left (a small region, or Osttirol cut off from
 Tirol); a zone of 100,000 or more crosses water only within 10 km, and islands and enclaves that
 can join nothing stay as they are (the Isle of Wight, Åland). Rows built before the floor keep
@@ -79,11 +79,29 @@ any "/"), and has its origin at its densest square km. A replan of the metros ke
 they are. Countryside zones use the zone curve (section 4) and global sources only, unless their
 country's zone rule names its module (the US, below). Which countries are covered, and with how many zones:
 docs/data-register.md.
-**The wrap guard** (Anita, 2026-10-23, T-1005): a zone grown to the floor takes the first neighbour, in
-that order, whose union with it wraps no other current zone, else the first. Zone A wraps zone B when
-at least **0.5** of B's area lies inside A's convex hull and A holds at least **0.5** of B's border
-with other zones (coast and dead space do not count). Metro rows are not in the pool, so a wrap of a
-metro is not tested, and a replan regroups only planned rows. notes/T-1005.md.
+**No ring zones** (Anita, 2026-10-23, T-1087: zones keep together areas that mostly commute within
+themselves, "kinda like voronoi"). A zone grown to the floor joins, of its neighbours keeping the two
+within the cap, the one whose people centre (the mean position of its people) is nearest its own, so
+zones gather round their own towns; with none within the cap, the smallest. A join that makes a zone
+**wrap** another zone, a metro row or a built pack is refused: A wraps B when at least **0.5** of B's
+area lies inside A's convex hull and A holds at least **0.5** of B's border with zones, metros and
+packs (coast, dead space and other countries do not count). A zone with no join within the cap, or
+whose every join would wrap, stays as it is once it holds 80% of the floor; a smaller one joins
+anyway. Then each zone still wrapping something is cut in two across it (its units by direction from
+the wrapped area's people centre, split where the halves hold about the same people and each is in
+one piece, by land or across its own water joins) and the halves regroup by the same rule, except
+that a half whose every join would wrap stays as it is, under the floor if need be (rejoining would
+rebuild the ring); three rounds at most. A single unit wrapping a zone takes it when both fit under
+the cap. A replan regroups only
+planned rows. notes/T-1087.md.
+**Commuter belts** (Anita, 2026-10-23, T-1088: "we can let metros take neighboring counties but it
+doesnt have to be a hard rule"). Where a country's commuting between units is on disk
+(`world_plan.COMMUTE_FLOWS`: the US's ACS 2016-2020 county flows), a metro row not yet built takes
+each free unit sending at least **25%** of its resident workers into it, when that metro is where it
+sends most, the unit touches the metro by land (or touches a unit joining it) and the metro stays
+under its cap; a unit it cannot take is grouped into zones as usual. The zones step adds the belts
+(`zones --countries`, recorded in the plan's `belt` source and the country's `belts`), so a metro
+replan is followed by a zones replan. Built metros, and every metro elsewhere, keep their extents.
 **China and Taiwan** (Anita, 2026-10-22, T-897) have their own rules (`world_plan.ZONE_RULES`):
 zones of at least **1M** (cap 2.5M) from geoBoundaries counties merged within their province, no
 dead space by density, and **no exclaves**: a zone's parts touch by land or across at most 10 km of
