@@ -12,7 +12,7 @@ import { pickTool, TRIP_KEY } from "./toolKeys";
 import { Check, Icon, Segmented, Stepper } from "./widgets";
 import { Credits } from "./Credits";
 import { helpOpen } from "./HelpPanel";
-import { AccountButton } from "./AccountPanel";
+import { AccountButton, AccountSection } from "./AccountPanel";
 
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
 const SHADE_NAME: Record<Shade, string> = { light: "Light", dark: "Dark" };
@@ -129,6 +129,7 @@ export function SettingsTab() {
         </Check>
       </div>
       <GameMode />
+      <AccountSection />
       <TripStart />
       <Credits />
     </>

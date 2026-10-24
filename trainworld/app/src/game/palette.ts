@@ -64,10 +64,10 @@ export const MODE_COLOURS = {
 } as const;
 
 /** T-833: the colours bars and swatches show modes in under Train share bubbles. Car red and train
- * blue are the ramp's ends; walking is yellow (the ramp has no green, and walkers pull a bubble
+ * blue are the default ramp's ends, lighter than the mode colours (Anita, T-1138); walking is yellow (the ramp has no green, and walkers pull a bubble
  * towards red) and "other" (planes: the one mode that is not car, walk or train) orange, a step from
  * both the yellow and the red. Under Mode mix, planes stay the muted grey. */
-const SHARE_MODE_COLOURS = { train: MODE_COLOURS.train, walk: "#f0c814", drive: MODE_COLOURS.drive, other: "#f07a14" } as const;
+const SHARE_MODE_COLOURS = { train: "#4d4dff", walk: "#f0c814", drive: "#ff4d4d", other: "#f07a14" } as const;
 const MIX_MODE_COLOURS = { ...MODE_COLOURS, other: "var(--muted)" } as const;
 /** The scheme in force; a signal, so panels that read `modeColours()` follow a change. */
 export const modeScheme = signal<BubbleScheme>("mode");
@@ -101,7 +101,7 @@ const MIX_TOP = Math.max(...rgb(MODE_COLOURS.train), ...rgb(MODE_COLOURS.walk), 
 /** How the demand bubbles are coloured (T-804): the mode mix above, or a ramp by train share from
  * one colour at 0% to another at 100%. */
 export type BubbleScheme = "mode" | "ramp";
-export const DEFAULT_RAMP = { from: MODE_COLOURS.drive, to: MODE_COLOURS.train } as const;
+export const DEFAULT_RAMP = { from: SHARE_MODE_COLOURS.drive, to: SHARE_MODE_COLOURS.train } as const;
 /** The ramp's position is the train share to this power, so a 30% share sits halfway (Anita, T-812:
  * 30% purple, 70% clearly blue; 0.3^K = 0.5, and 70% lands at 81%). */
 const RAMP_SKEW = Math.log(0.5) / Math.log(0.3);

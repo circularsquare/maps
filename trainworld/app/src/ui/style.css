@@ -490,17 +490,17 @@ rect.now { fill-opacity: .45; }
 .seg-walk { background: var(--mode-walk); }
 .seg-drive { background: var(--mode-drive); }
 .sw { display: inline-block; width: 10px; height: 10px; flex: none; }
-/* T-305: cash updates to the dollar, so its box has a fixed width: room for "−$99,999,999,999", the
-   sign and the $ at fixed places, the digits left-aligned right after the $ (T-310) in tabular figures */
-.cash { flex: none; width: 16ch; display: flex; font-variant-numeric: tabular-nums; }
-.cash-sign, .cash-cur { flex: none; width: 1ch; }
-.cash-digits { flex: 1; min-width: 0; text-align: left; }
-/* T-832, T-861, T-1109: the clock sits right of the cash and left of the speed buttons, the mode bar
-   taking the spare room. The time and date over the sky (ui/SkyBanner.tsx), its demand band under
-   that, all 148 px wide; on a wide map column (below) the time and date stand beside the sky. */
+/* T-305, T-1136: the cash moves as fares land, so its box has a fixed width sized to "−$37.34B" (four
+   significant figures, game/format.ts moneyCash), the figure right-aligned in tabular figures so it
+   always ends the bar's usual gap before the clock; a longer figure ("−$999,949") reaches left */
+.cash { flex: none; width: 8ch; display: flex; justify-content: flex-end; font-variant-numeric: tabular-nums; }
+/* T-832, T-861, T-1136: the clock sits right of the cash and left of the speed buttons, the mode bar
+   taking the spare room. The time then the date on one line over the sky (ui/SkyBanner.tsx), its
+   demand band under that, all 148 px wide; on a wide map column (below) the line stands beside the sky,
+   the box a fixed width and the sky taking what the date leaves, so nothing else moves day to day. */
 .clock { flex: none; display: flex; font-variant-numeric: tabular-nums; }
 .clock-box { flex: none; width: 148px; display: flex; flex-direction: column; gap: 2px; }
-.clock-text { display: flex; align-items: baseline; justify-content: space-between; line-height: 20px; }
+.clock-text { display: flex; align-items: baseline; gap: 6px; line-height: 20px; }
 .clock .time.held { color: var(--muted); }
 .sky { position: relative; height: 21px; }
 .sky-canvas { display: block; width: 100%; height: 21px; }
@@ -523,7 +523,12 @@ rect.now { fill-opacity: .45; }
 .demand-stopped { font-size: 12px; padding: 4px 8px; color: var(--bad); border-color: var(--bad); background: var(--bg); }
 .demand-stopped, .demand-stopped:hover { cursor: default; background: var(--bg); }
 .demand-selector .btn { font-size: 12px; padding: 4px 8px; }
-.demand-selector .btn + .btn { margin-left: -1px; }
+.demand-selector .btn + .btn, .demand-selector .hint-cell + .btn { margin-left: -1px; }
+/* T-1137: a hint of what each row is for, an icon cell before its buttons: a selected demand bubble
+   (the default ramp's middle purple, the map ink's 2 px outline) and the track */
+.demand-selector .hint-cell { flex: none; display: grid; place-items: center; width: 28px; height: 28px;
+  border: 1px solid var(--rule); background: var(--bg); color: var(--text); }
+.hint-cell .bubble { fill: color-mix(in oklab, #ff4d4d, #4d4dff); stroke: var(--map-ink); stroke-width: 2; }
 /* T-703: the track display under the demand buttons, its key (height, speed) beside it */
 .track-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; max-width: 100%; }
 .track-row .track-key { margin: 0; padding: 0 8px; height: 28px; box-sizing: border-box; align-items: center; background: var(--bg); border: 1px solid var(--rule); }
@@ -822,11 +827,11 @@ rect.now { fill-opacity: .45; }
 @container map-column (max-width: 760px) {
   .city { max-width: 88px; }
 }
-/* T-1109: room enough, the time and date stand beside the sky rather than over it */
+/* T-1109, T-1136: room enough, the time and date stand beside the sky rather than over it */
 @container map-column (min-width: 940px) {
-  .clock-box { width: auto; flex-direction: row; align-items: center; gap: 10px; }
-  .clock-text { flex: none; width: 5.2em; flex-direction: column; align-items: flex-start; justify-content: center; line-height: 20px; }
-  .clock-box .sky { flex: none; width: 148px; }
+  .clock-box { width: 300px; flex-direction: row; align-items: center; gap: 10px; }
+  .clock-text { flex: none; }
+  .clock-box .sky { flex: 1; min-width: 0; }
 }
 /* T-349: below 700 px the bar takes two rows: name, cash, time and speed on the first, the split
    (bar, labels, status under the bar) on the second */

@@ -1,5 +1,5 @@
 // Top bar: city (or the world, zoomed far out), the mode split (the goal number: the bar and the train
-// share), cash, time and date beside or over the sky and demand band, speed and pause. The clock is
+// share), cash, the time and date on one line beside or over the sky and demand band, speed and pause. The clock is
 // its own component so a game minute re-renders only it.
 
 import type { ComponentChildren } from "preact";
@@ -60,7 +60,7 @@ function holidayLines(minute: number, list: HolidaySpan[], full: boolean): strin
   });
 }
 
-/** T-861: the time and date over the sky banner (ui/SkyBanner.tsx) and its demand band. */
+/** T-861, T-1136: the time and date on one line, beside or over the sky banner (ui/SkyBanner.tsx) and its demand band. */
 function Clock() {
   // ?perfOff=clock (T-045, measurement only): read without subscribing, so it never re-renders.
   // T-309: the local time and day where the player is looking
@@ -94,14 +94,9 @@ function Cash() {
   const tip = today ? `Today: fares ${money(today.fares * 1e6)}, running trains ${money(-today.running * 1e6)}, upkeep ${money(-(today.upkeep ?? 0) * 1e6)}` : undefined;
   // T-728: a sandbox shows no cash; the hover has the money since the start
   if (m?.mode === "sandbox") return <div class="cash sandbox" data-tip={["Sandbox: nothing is refused for money", `Since day 1: ${money((live.cash - START_CASH) * 1e6)}`, ...(tip ? [tip] : [])].join("\n")}>Sandbox</div>;
-  // T-305: a box of fixed width, the minus then the $ at fixed places and the digits left-aligned after the $
-  const exact = m ? moneyCash(live.cash * 1e6) : "";
-  const neg = exact.startsWith("−");
-  return <div class={"cash num" + (neg ? " money-neg" : "")} data-tip={m ? tip : undefined}>
-    <span class="cash-sign">{neg ? "−" : ""}</span>
-    <span class="cash-cur">{m ? "$" : ""}</span>
-    <span class="cash-digits">{exact.replace(/^−?\$/, "")}</span>
-  </div>;
+  // T-1136: right-aligned in a box of fixed width, so it ends the usual gap before the clock
+  const shown = m ? moneyCash(live.cash * 1e6) : "";
+  return <div class={"cash num" + (shown.startsWith("−") ? " money-neg" : "")} data-tip={m ? tip : undefined}>{shown}</div>;
 }
 
 /** The city's name, the whole of it and its points (T-684, T-694: the past 24 game hours') on hover. */

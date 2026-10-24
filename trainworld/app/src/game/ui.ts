@@ -133,8 +133,8 @@ export interface DockLayout {
 
 /** The stored settings' version: 2 since complex view became the default (T-192), 3 since Nunito and
  * 90% did (T-703), 4 since the real network did (T-727), 5 since the ramp went red to blue (T-812), 6 since Train share became the bubble colouring (T-833), 7 since keep placing is on by default (T-942), 8 since unopened zones' dots are light grey (T-976). Settings stored before a version had
- * saved the old default with everything else, so that setting is dropped once and the new default applies. */
-const VERSION = 8;
+ * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138). */
+const VERSION = 9;
 
 function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; design: number }>; v: number }> {
   try {
@@ -160,6 +160,11 @@ if ((saved.v ?? 1) < 4) delete migratedDisplay.realNetwork;
 if ((saved.v ?? 1) < 5) delete migratedDisplay.rampFrom, delete migratedDisplay.rampTo;
 // T-833: Train share became the default colouring, and the old default (Mode mix) was stored
 if ((saved.v ?? 1) < 6) delete migratedDisplay.bubbleColours;
+// T-1138: the ramp's ends went to lighter red and blue; an end still at the old default was stored, not chosen
+if ((saved.v ?? 1) < 9) {
+  if (migratedDisplay.rampFrom?.toLowerCase() === "#e61e1e") delete migratedDisplay.rampFrom;
+  if (migratedDisplay.rampTo?.toLowerCase() === "#1e3ce6") delete migratedDisplay.rampTo;
+}
 const trackColour = oldDisplay?.trackColour === "line" && legacyLineLoad !== undefined
   ? legacyLineLoad === false ? "line" : "traffic"
   : oldDisplay?.trackColour ?? DEFAULT_DISPLAY.trackColour;

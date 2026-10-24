@@ -5,7 +5,7 @@
 // stations are known only as felt minutes, averaged over the area.
 
 import { count, exact, roughDistance } from "../../game/format";
-import { MODE_COLOURS, modeColours } from "../../game/palette";
+import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { intercityPlaceName } from "../../game/demand";
 import { peopleOf, tripPeriod, wholePeople, type MarketEnd, type MarketPeriod, type MarketShown, type TripRoute } from "../../game/trip";
@@ -127,7 +127,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   const model = all > 0 ? [sum("rail") / all, sum("air") / all, sum("car") / all] : [];
   const whole = wholePeople(model, peopleOf(all)).map((p) => p / peopleOf(all));
   const shares: [string, number, string, number][] = all > 0
-    ? [["Train", whole[0], MODE_COLOURS.train, model[0]], ["Plane", whole[1], modeColours().other, model[1]], ["Car", whole[2], MODE_COLOURS.drive, model[2]]]
+    ? [["Train", whole[0], modeColours().train, model[0]], ["Plane", whole[1], modeColours().other, model[1]], ["Car", whole[2], modeColours().drive, model[2]]]
     : [];
   // the period's train riders in whole trips, for the route shares (none: the model's)
   const riders = Math.round(t.rail) || null;

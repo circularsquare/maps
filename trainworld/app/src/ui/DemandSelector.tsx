@@ -10,6 +10,7 @@ import { useState } from "preact/hooks";
 import { display, purposeFilter, setDisplay } from "../game/ui";
 import { DemandStopped } from "./DemandStopped";
 import { StatusTag } from "./StatusTag";
+import { Icon } from "./widgets";
 
 /** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
  * them the track display and the demand alert. */
@@ -35,6 +36,7 @@ export function DemandSelector() {
     : load?.cities.includes(activeCity.value) ? `Loading ${cityById(activeCity.value).name}, ${Math.floor(load.fraction * 100)}%` : "Calculating demand";
   const selected = d.commuters ? d.commuterEnd : "none";
   return <div class="demand-selector" role="group" aria-label="Demand on the map">
+    <span class="hint-cell" data-tip="Show demand bubbles"><Icon.bubble /></span>
     {([ ["none", "None"], ["home", "Homes"], ["work", "Destinations"] ] as const).map(([value, label]) =>
       <button type="button" class={`btn${selected === value ? " on" : ""}${!ready && value !== "none" ? " demand-pending" : ""}`} aria-pressed={selected === value}
         aria-disabled={!ready && value !== "none"} data-tip={!ready && value !== "none" ? pending : undefined}
@@ -60,6 +62,7 @@ function TrackDisplay() {
   const mode = display.value.trackColour;
   return <div class="track-row">
     <div class="demand-selector" role="group" aria-label="Track display">
+      <span class="hint-cell" data-tip="Colour the track"><Icon.track /></span>
       {TRACK_OPTIONS.map(([value, label, tip]) =>
         <button type="button" class={`btn${mode === value ? " on" : ""}`} aria-pressed={mode === value} data-tip={tip}
           onClick={() => setDisplay("trackColour", value)}>{label}</button>)}

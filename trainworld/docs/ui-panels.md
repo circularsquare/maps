@@ -82,16 +82,17 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 `ui/TopBar.tsx`, left to right, 54 px high, **every part centred on one line** [T-349]: the name,
 the split (the bar, then the train share), cash, the clock, speed buttons. **Three type
 styles only**: normal (14 px, regular, text colour: name, cash), figure (18 px, bold: the
-train share and the time) and small (12 px, regular, muted: the date, status). **The cash, clock and
-speed buttons have fixed widths** [T-341, T-1109] and sit together at the right with the usual gap, so
-nothing moves them: the name and the split fill all the room left of them [T-1108]. The name takes
+train share and the time) and small (12 px, regular, muted: status). **The cash, clock and
+speed buttons have fixed widths** [T-341, T-1136] and sit together at the right with the usual gap
+between each, so nothing moves them: the name and the split fill all the room left of them [T-1108]. The name takes
 what it needs up to 104 px (88 px under 760 px of map column), on two lines at most with an ellipsis
 (the whole name on hover, with the city's points and points a day, T-684, T-694), and the mode bar
 (at least 80 px) widens into the rest, so a short name leaves no gap. The train share is in tabular
 figures in a box of fixed width, and the split bar is centred in the bar with nothing under it: the
-status is a tag over the map (Status, below). From 940 px of map column the time and date stand
-beside the sky and band [T-1109, T-861], the time over the date; narrower, they sit over the sky,
-148 px wide.
+status is a tag over the map (Status, below). The time and date are one line ("06:50 Mon May 5")
+[T-1136]: from 940 px of map column it stands beside the sky and band in a box 300 px wide, the sky
+taking what the date leaves (so a longer date narrows the sky by a few pixels and moves nothing
+else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
@@ -119,14 +120,16 @@ beside the sky and band [T-1109, T-861], the time over the date; narrower, they 
   though other clusters still solve, and the split's hover then stops saying "an early estimate"
   [T-421]; a city loading later "Loading data" with a thin bar after it
   (Loading, below).
-- **Cash**, to the dollar, moving as fares are paid and running costs drain [T-284]. Fixed width
-  (room for "-$99,999,999,999") with the digits left-aligned after the $ in tabular figures, so a
-  changing figure never moves the rest of the bar [T-305, T-310]. In a sandbox the box says
+- **Cash**, four significant figures (to the dollar under a million), moving as fares are paid and
+  running costs drain [T-284, T-722]. A box of fixed width sized to "−$37.34B", the figure
+  right-aligned in tabular figures with the $ right before it, so it always ends the usual gap before
+  the clock and a changing figure never moves the rest of the bar [T-305, T-310, T-1136]; a longer
+  figure ("−$999,949") reaches left into the gap before it. In a sandbox the box says
   "Sandbox" in the muted colour, with the money since day 1 (the cash less the $6B start) and
   today's fares and running costs in its hover [T-728].
-- **The clock** [T-861], 148 px wide, all of it the local time where the player is looking
-  [T-309]: the time (figure style) and the date without the year (normal style, "13:24" then
-  "Mon Feb 24"; hover "Monday, February 24, day 29"), over an 18 px scene and a 2 px demand band.
+- **The clock** [T-861], all of it the local time where the player is looking [T-309]: the time
+  (figure style) and the date without the year (normal style) on one line 6 px apart, "13:24 Mon Feb
+  24" (hover "Monday, February 24, day 29"), beside or over an 18 px scene and a 2 px demand band.
   The calendar is in [world.md](world.md) "Calendar". The scene
   (`ui/SkyBanner.tsx`, one canvas) shows 24 hours, 12 back and 12 ahead, now being its middle
   [T-896]. Its sky takes flat colours by the sun's height at the view's centre on that date
@@ -237,7 +240,11 @@ choice (Train share by default [T-833], which shows two colour pickers labelled 
 100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), the Day choice (Average, Weekday, Weekend;
 "Demand shown for", below) [T-703], Show (trains, station names, capacity markers, flat junctions and crossings, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
-[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, and Explore a trip at the bottom [T-220]. Station demand
+[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, Game (normal or sandbox, T-728), then,
+when accounts are on, Account [T-1139]: who is signed in ("Signed in as alice", "Signed in with
+Google" or "Not signed in") and a button, Account settings or Sign in, that opens the same account
+panel as the icon at the top and the start menu's (sign in, recovery email, change password, sign
+out, delete; [Account and leaderboards](#account-and-leaderboards)), and Explore a trip at the bottom [T-220]. Station demand
 circles are at the top of the Stations tab instead [T-213].
 
 **Panel and text size** [T-247]: 80% to 120% in 5% steps, 90% by default (T-703), no reset button. It
@@ -429,7 +436,7 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   once (remembered per browser, `?acct=off` forgets it). The icons show only once
   `/noritetsu/config` answers with `trainworld`; with no server, or an older one, there is no icon
   and no other request. Google's script loads when the account panel first opens.
-- **Account panel**: the account button (top of Settings, start menu; not in the tab bar, T-1106) opens a centred modal like the
+- **Account panel**: the account button (top of Settings, start menu; not in the tab bar, T-1106), or Settings' Account row (T-1139), opens a centred modal like the
   saves panel. Signed out: Google's button, then username and password with Log in, Create an
   account and Forgot password; Privacy and Terms (`public/privacy.html`, `terms.html`). Signed in:
   "Signed in as alice" (or with Google), for a password account the recovery email (a red line when

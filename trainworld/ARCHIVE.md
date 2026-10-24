@@ -1,5 +1,10 @@
 # Archive
 
+- T-1136 [P1] Top bar, again. Done 2026-10-24: time and date on one line; the cash right-aligned in a box sized to "−$37.34B", so the cash-to-clock gap is the bar's usual 12-18 px at every width (was 68-106 px).
+- T-1137 [P2] Hint icons by the map's demand and track rows. Done 2026-10-24: a selected-bubble icon (hover "Show demand bubbles") and the track icon ("Colour the track"), cells joined to the front of each row.
+- T-1138 [P2] Train share colours. Done 2026-10-24: the ramp defaults to #ff4d4d and #4d4dff (bars and swatches too); settings version 9 drops a stored end only if it was the old default.
+- T-1139 [P2] Account from inside a game. Done 2026-10-24: the Settings icon was already there when accounts are on; an Account row near Settings' foot (who, Account settings or Sign in) opens the same panel.
+- T-1142 [P2] Hidden realms' circles not pinned on screen. Done 2026-10-24: each circle stays at its point on its land and leaves the screen with it.
 - T-989 [P3] Share a game by a read-only link. Dropped 2026-10-24 (Anita: not needed).
 - T-990 [P3] Leaderboard rows open a shared game. Dropped 2026-10-24 (Anita: not needed).
 - T-1004 [P1] The US as whole-country zones. Done 2026-10-24: designed 2026-10-23 and built through T-1015 to T-1018, T-1088 and T-1113; every state and Puerto Rico covered (pilot, four waves). notes/T-1004.md.

@@ -147,6 +147,21 @@ export function AccountButton({ kind }: { kind: "start" | "settings" }) {
     onClick={() => (accountOpen.value = !accountOpen.peek())}><Icon.person /></button>;
 }
 
+/** T-1139: Settings' Account row, in words beside the icon at its top: who is signed in, and the button
+ * that opens the same panel as the start menu's (sign in, change password, sign out, delete). */
+export function AccountSection() {
+  if (accountState.value !== "on") return null;
+  const a = session.value?.account;
+  const who = !a ? "Not signed in" : a.username ? `Signed in as ${a.username}` : a.logins.includes("google") ? "Signed in with Google" : "Signed in";
+  return <>
+    <div class="h">Account</div>
+    <div class="game-mode">
+      <span>{who}</span>
+      <button class={"btn text" + (accountOpen.value ? " on" : "")} onClick={() => (accountOpen.value = !accountOpen.peek())}>{a ? "Account settings" : "Sign in"}</button>
+    </div>
+  </>;
+}
+
 let mounted = false;
 /** Start the account (`startAccount`) and mount its panels. Idempotent; the start menu and the dock
  * both call it. */

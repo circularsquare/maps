@@ -3,9 +3,9 @@
 // outline follows), drawn by its own layer (shadeLayer.ts, T-1025), under labels and the network and
 // taking no clicks; where hidden realms meet there is no edge. Each hidden realm has a floating
 // circle at its point (an unopened zone's dot, a little bigger, T-1046) that shows it, and a plain
-// click on the realm with the select tool shows it too (T-1049). A circle whose point is off screen
-// sits inside the on-screen part of its realm's box (as the loading bars do, T-939); circles that
-// would overlap give way to the realm with more zones. Zoomed out past the world (CITY_MARKS_MIN_ZOOM)
+// click on the realm with the select tool shows it too (T-1049). A circle stays at its point and
+// leaves the screen with it, never pinned at the edge (T-1142); circles that would overlap give way
+// to the realm with more zones. Zoomed out past the world (CITY_MARKS_MIN_ZOOM)
 // there are no circles and no click.
 
 import { effect } from "@preact/signals";
@@ -21,15 +21,13 @@ import { selection, shade, tool } from "../game/ui";
 import type { ShadeIn, ShadeOut } from "../workers/shade.worker";
 import { outsideZones } from "./boundaryGeometry";
 import { firstSymbolId } from "./basemap";
-import { screenBounds } from "./labelLayout";
 import { takeOutlineText } from "./coarseOutlines";
 import { CITY_MARKS_MIN_ZOOM } from "./intercityView";
 import { ShadeLayer } from "./shadeLayer";
 import { hiddenOnGlobe } from "./live";
 
 const FILL = "tw-realms-inactive";
-/** how far a circle keeps from the map's edges, px */
-const EDGE = 48;
+/** the room kept round a circle when two would overlap, px */
 const GAP = 6;
 /** a circle's diameter, CSS px (style.css .realm-button button) */
 const SIZE = 16;
@@ -69,13 +67,11 @@ export function startRealmOverlay(map: MlMap): () => void {
     // the realm with more zones first, so it keeps its place when two would overlap
     for (const l of [...hidden].sort((a, b) => b.zones - a.zones)) {
       const b = button(l);
-      const { left, right, top, bottom } = screenBounds(map, l.box, W, H, EDGE);
       const p = map.project(l.label);
-      // centred on the point, the whole button kept on the map
-      const x = Math.max(GAP, Math.min(W - b.w - GAP, Math.min(right, Math.max(left, p.x)) - b.w / 2));
-      const y = Math.max(GAP, Math.min(H - b.h - GAP, Math.min(bottom, Math.max(top, p.y)) - b.h / 2));
+      // T-1142: centred on the point, moving with the map and leaving the screen with it
+      const x = p.x - b.w / 2, y = p.y - b.h / 2;
       const box: [number, number, number, number] = [x - GAP, y - GAP, x + b.w + GAP, y + b.h + GAP];
-      if (left > right || top > bottom || hiddenOnGlobe(l.label[0], l.label[1]) || used.some((u) => box[0] < u[2] && box[2] > u[0] && box[1] < u[3] && box[3] > u[1])) {
+      if (x + b.w <= 0 || y + b.h <= 0 || x >= W || y >= H || hiddenOnGlobe(l.label[0], l.label[1]) || used.some((u) => box[0] < u[2] && box[2] > u[0] && box[1] < u[3] && box[3] > u[1])) {
         b.el.style.display = "none";
         continue;
       }

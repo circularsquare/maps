@@ -446,8 +446,9 @@ Everything outside the realms shown (those the game has built in, starts in or t
 is covered by one shade, a little darker than the outside shade and over it (11% of the outside shade's colour, 22.5% black in the dark theme: together about 18% and 50%), on land and water alike, under
 labels and the network, taking no clicks. Its edge is the shown zones' coarse outline, the line the
 zone outlines draw, never a coast; nothing of a hidden realm's zones is drawn. Each hidden realm has
-one floating circle, 16 px across, filled and outlined like an unopened zone's dot (white, a 1 px map ink outline), at its point, or inside the on-screen part of its box when the point
-is off screen (hover: the realm's name over "Click the shaded area to show the cities there").
+one floating circle, 16 px across, filled and outlined like an unopened zone's dot (white, a 1 px map ink outline), at its point (the centre of the zone nearest the
+mean of its zones' centres, so on its land), moving with the map and leaving the screen with that
+point, never pinned at the edge [T-1142] (hover: the realm's name over "Click the shaded area to show the cities there").
 Circles that would overlap give way to the realm with more zones. A click on the circle, or a plain
 click anywhere on the realm's land (inside one of its zone outlines, not the sea or dead space), with
 the select tool and no Shift, shows the realm in one step: the shade opens over its zones, the circle

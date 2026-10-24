@@ -31,8 +31,8 @@ mode share rises to a third (`modeMix`; fully grey at a third each, unchanged wh
 even three-way mix is not white [T-653]. Bars and swatches by mode follow the bubble colours chosen
 (the Colours setting, "Local trip bubbles"; `modeColours()` in `game/palette.ts`, the CSS
 variables `--mode-*`): under Mode mix they are the colours above with planes muted grey, under Train share (the
-default) walking is yellow #f0c814 and planes orange #f07a14, car red and train blue unchanged
-[T-833]. Planes are the longer-trip tables' plane column icon.
+default) car is #ff4d4d and train #4d4dff (the default ramp's ends, lighter than the mode colours,
+T-1138), walking yellow #f0c814 and planes orange #f07a14 [T-833]. Planes are the longer-trip tables' plane column icon.
 The local layers' modes are train, walk and car; "car" stands for every way of getting about but
 those two (T-854, [demand-mode.md](demand-mode.md) 4.3).
 
@@ -44,10 +44,13 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
 
 - **None / Homes / Destinations** [T-132, `ui/DemandSelector.tsx`], always at the map's upper left,
   remembered per browser, None by default [T-1101] (a start on the world map turns Homes on, T-801). Destinations is every activity end (work, shopping, social, school and
-  university, airport, medical).
+  university, airport, medical). Before the buttons, joined to them, a cell with a hint icon (not a
+  button) [T-1137]: a selected demand bubble, filled with the default Train share ramp's middle
+  purple (`color-mix(in oklab, #ff4d4d, #4d4dff)`) in a 2 px map ink outline, hover "Show demand
+  bubbles".
 - **Track display** [T-703, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in the
   same style, four buttons (Line, Traffic, Elevation, Max speed; [ui-map.md](ui-map.md) "Lines and
-  track"), with the key of the last two (height colours, speed limits) beside them.
+  track") after a hint cell with the track icon (hover "Colour the track", T-1137), with the key of the last two (height colours, speed limits) beside them.
 - **Day** [T-464, T-703]: a Settings choice under the bubbles' Opacity, not on the map; see "Demand
   shown for" in [ui-panels.md](ui-panels.md).
 - **Readiness** [T-143]: while the focused zone has no published result, Homes and Destinations fade
@@ -108,7 +111,9 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   means no bubble.
 - **Colour** by the **Colours** setting: **Train share** (default since T-833; a stored Mode mix
   from before settings version 6 is reset once) colours by the train share of the bubble's legs along a ramp from a start colour
-  at 0% (default the driving red) to an end colour at 100% (the train blue), blended in OKLab and
+  at 0% (default #ff4d4d) to an end colour at 100% (default #4d4dff; Anita, T-1138, lighter than
+  the mode colours so the middling purples are not dark; a stored end still at the old default
+  #e61e1e or #1e3ce6 is dropped once, settings version 9, and any other stays), blended in OKLab and
   skewed towards the end colour (position = share^0.576, so 30% train is halfway and 70% is 81% of
   the way; Anita, T-812), with two colour pickers shown while it is chosen (`game/palette.ts` `bubbleColour`). **Mode mix**
   blends the mode colours by share. Either colours the local
