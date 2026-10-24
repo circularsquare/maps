@@ -4,10 +4,11 @@
 use super::{
     api::{fare_x_usd, put_fare_curve, scale_triples, DemandApi, PEAK_HOUR_FACTOR},
     clock::now_ms,
-    days::{everyday, load_factor, share_out, share_ret, WEEKDAY},
+    days::{day_rate, everyday, load_factor, share_out, share_ret, SATURDAY, SUNDAY, WEEKDAY},
     kernel::*,
     network::PERIODS,
     pack,
+    trip::NEAR_CELL_M,
 };
 use crate::track::params::PERIOD_HOURS;
 use wasm_bindgen::prelude::*;
@@ -16,15 +17,19 @@ const K: usize = 16;
 const NONE: u32 = u32::MAX;
 pub const MIN_DISTANCE_M: f32 = 150.0;
 /// Purpose kinds, in this order everywhere (`info`, `part_loads`, `selection`; the app's
-/// `EVERYDAY_KEYS`): errands, social, school, university, airport (T-142), medical (T-142).
+/// `EVERYDAY_KEYS`): errands, social, school, university, airport (T-142), medical (T-142),
+/// attractions (T-263).
 /// Kinds 0, 1 and 5 are outings per resident; 2 and 3 attendance per enrolled student (samples
-/// drawn from the site); 4 the airport's own daily ground trips (`airport_trips`), its homes and
-/// visitors' ends drawn from each origin cell but normalised per airport.
+/// drawn from the site); 4 the airport's own daily ground trips (`airport_trips`) and 6 each
+/// attraction's visits (`beside_with`), their homes and visitors' ends drawn from each origin cell
+/// but normalised per site.
 /// The defaults of `Params::everyday_rate` and `everyday_decay_m`. A pack's `everyday` block (its
 /// country's survey, T-509 stage 4) overrides the rates; the decay lengths are one worldwide set
-/// (T-637), which no pack overrides.
-pub const RATE: [f32; 6] = [0.3, 0.2, 0.9, 0.6, 1.0, 0.04];
-pub const DECAY: [f32; 6] = [1000.0, 1000.0, 1400.0, 3500.0, 20000.0, 2000.0];
+/// (T-637), which no pack overrides. An attraction's rate multiplies its visits.
+pub const RATE: [f32; KIND_COUNT] = [0.3, 0.2, 0.9, 0.6, 1.0, 0.04, 1.0];
+/// Attractions: the chance halves every 10 km.
+pub const DECAY: [f32; KIND_COUNT] = [1000.0, 1000.0, 1400.0, 3500.0, 20000.0, 2000.0, 14427.0];
+pub const KIND_COUNT: usize = 7;
 /// T-1092: this share of errand and social outings goes to central destinations: zones weighed
 /// by the purpose's attraction times its attraction per km² of land, at this decay length, so the
 /// long trips end in dense centres. The rest are drawn at `DECAY`.
@@ -34,8 +39,8 @@ fn has_central(kind: usize) -> bool {
     kind < 2
 }
 /// The purposes' names in `set_extra` (`rate_errands`) and the pack's `everyday` block.
-pub const KINDS: [&str; 6] = ["errands", "social", "school", "university", "airport", "medical"];
-pub const OUTWARD: [[f32; 5]; 6] = [
+pub const KINDS: [&str; KIND_COUNT] = ["errands", "social", "school", "university", "airport", "medical", "attractions"];
+pub const OUTWARD: [[f32; 5]; KIND_COUNT] = [
     [0.10, 0.55, 0.30, 0.04, 0.01],
     [0.05, 0.35, 0.42, 0.17, 0.01],
     [0.94, 0.04, 0.015, 0.004, 0.001],
@@ -44,8 +49,10 @@ pub const OUTWARD: [[f32; 5]; 6] = [
     [0.30, 0.35, 0.22, 0.06, 0.07],
     // to appointments, and visitors
     [0.30, 0.55, 0.12, 0.02, 0.01],
+    // attractions: social's timing (notes/T-263.md)
+    [0.05, 0.35, 0.42, 0.17, 0.01],
 ];
-pub const RETURN: [[f32; 5]; 6] = [
+pub const RETURN: [[f32; 5]; KIND_COUNT] = [
     [0.06, 0.49, 0.36, 0.08, 0.01],
     [0.02, 0.25, 0.43, 0.27, 0.03],
     [0.01, 0.82, 0.15, 0.018, 0.002],
@@ -53,12 +60,14 @@ pub const RETURN: [[f32; 5]; 6] = [
     // from the airport: arrivals run late into the evening
     [0.12, 0.33, 0.28, 0.24, 0.03],
     [0.08, 0.60, 0.25, 0.05, 0.02],
+    [0.02, 0.25, 0.43, 0.27, 0.03],
 ];
 const AIRPORT: usize = 4;
-/// Most destination samples a cell holds, by purpose (T-142): airports are a handful of
-/// destinations and nobody looks at one cell's medical trips alone, so two. Each sample costs the
-/// same at opening and in `set_network`.
-const SAMPLES: [usize; 6] = [K, K, K, K, 2, 2];
+pub const ATTRACTION: usize = 6;
+/// Most destination samples a cell holds, by purpose (T-142): airports and attractions are a
+/// handful of destinations and nobody looks at one cell's medical trips alone, so two. Each
+/// sample costs the same at opening and in `set_network`.
+const SAMPLES: [usize; KIND_COUNT] = [K, K, K, K, 2, 2, 2];
 
 /// A cell's destination samples for a purpose: one per 8 of its trips a day for it, 2 to the
 /// purpose's `SAMPLES` (T-397: station boardings within 5% of sixteen with 31% of the slots).
@@ -297,6 +306,31 @@ fn airport_draw(z: &Zones, members: &[Vec<usize>], origin: &[f32], trips: &[f32]
         }
     }
     mass
+}
+
+/// T-263: the attractions (x, y, visitors a year triples) that lie in the pack, each as its index,
+/// the nearest cell within `NEAR_CELL_M` and its visits a weekday: a year's visitors over 365
+/// days, set on weekdays so the weekend's factors (social's) bring the week back to them.
+fn attraction_sites(commutes: &DemandApi, a: &[f32]) -> Vec<(u32, u32, f32)> {
+    let city = &commutes.city;
+    if a.len() < 3 || city.len() == 0 {
+        return vec![];
+    }
+    let span = |v: &[f32]| v.iter().fold((f32::INFINITY, f32::NEG_INFINITY), |(lo, hi), &x| (lo.min(x), hi.max(x)));
+    let ((x0, x1), (y0, y1)) = (span(&city.x), span(&city.y));
+    let p = everyday(ATTRACTION);
+    let week = 7.0 / (365.0 * (5.0 + day_rate(SATURDAY, p) + day_rate(SUNDAY, p)));
+    let mut out = vec![];
+    for (i, t) in a.chunks_exact(3).enumerate() {
+        let (x, y, v) = (t[0], t[1], t[2]);
+        if !(v > 0.0) || x < x0 - NEAR_CELL_M || x > x1 + NEAR_CELL_M || y < y0 - NEAR_CELL_M || y > y1 + NEAR_CELL_M {
+            continue;
+        }
+        if let Some(c) = commutes.nearest_cell(x, y) {
+            out.push((i as u32, c as u32, v * week));
+        }
+    }
+    out
 }
 
 #[cfg(test)]
@@ -718,6 +752,12 @@ pub struct EverydayApi {
     /// cell's airport trips are `airport_origin[c] x airport_scale[zone]`. Empty without airports.
     airport_origin: Vec<f32>,
     airport_scale: Vec<f64>,
+    /// T-263, attractions, as the airports': visitors' home and lodging ends, and the draw.
+    attraction_origin: Vec<f32>,
+    attraction_scale: Vec<f64>,
+    /// Each attraction given to `beside_with` that lies in this pack: its index there, its cell
+    /// and its visits a weekday.
+    attractions: Vec<(u32, u32, f32)>,
     /// Where each purpose's samples start in `destinations` (one more entry than purposes),
     /// purpose by purpose.
     start: Vec<usize>,
@@ -730,7 +770,7 @@ pub struct EverydayApi {
     /// The last `owner` answer: the sample loops go in order, so the next is that one or close.
     at: std::cell::Cell<(usize, usize)>,
     /// `Params::everyday_rate` as at opening: the samples and totals were drawn with it.
-    rate: [f32; 6],
+    rate: [f32; KIND_COUNT],
 }
 
 impl EverydayApi {
@@ -946,6 +986,7 @@ impl EverydayApi {
             2 => self.school_enrollment[d],
             3 => self.university_enrollment[d],
             AIRPORT => (self.airport_origin[c] as f64 * self.airport_scale[self.engine.z.cell_zone[c] as usize]) as f32,
+            ATTRACTION => (self.attraction_origin[c] as f64 * self.attraction_scale[self.engine.z.cell_zone[c] as usize]) as f32,
             _ => self.engine.pop()[c],
         };
         let weight = budget * self.rate[kind] / per as f32 * local_share(distance);
@@ -1189,7 +1230,17 @@ impl EverydayApi {
     /// The everyday layer of the city whose commutes `commutes` holds (opened from the same
     /// pack), sharing its cells, zones, gravity and routes (T-399).
     pub fn beside(commutes: &DemandApi, header: &str, bin: &[u8]) -> Result<EverydayApi, String> {
+        Self::beside_with(commutes, header, bin, &[])
+    }
+    /// `beside` with attractions (T-263): (x, y, visitors a year) triples in the pack's frame,
+    /// each taken where a cell of the pack lies within `NEAR_CELL_M` (`attractions` lists them).
+    pub fn beside_with(commutes: &DemandApi, header: &str, bin: &[u8], attractions: &[f32]) -> Result<EverydayApi, String> {
         let n = commutes.city.len();
+        let sites = attraction_sites(commutes, attractions);
+        let mut attraction_visits = vec![0f32; n];
+        for &(_, c, v) in &sites {
+            attraction_visits[c as usize] += v;
+        }
         let pop =
             pack::cell_weights(header, bin, "pop", n)?.ok_or("missing resident population")?;
         let retail = pack::cell_weights(header, bin, "errand_jobs", n)?
@@ -1273,21 +1324,39 @@ impl EverydayApi {
             }
             None => (vec![], None),
         };
+        // T-263, attractions: visitors' other ends half residents and half leisure jobs (where
+        // they eat and stay), each normalised, every attraction keeping its own visits as an
+        // airport does. No clearance as round a terminal: an attraction's own leisure jobs are
+        // few, and with dozens of attractions in a centre it would take the centre's hotels out.
+        let (attraction_origin, attraction_mass) = if sites.is_empty() {
+            (vec![], None)
+        } else {
+            let origin: Vec<f32> = (0..n)
+                .map(|c| {
+                    let lodging = if tl > 0.0 { 0.5 * leisure[c] as f64 / tl } else { 0.0 };
+                    ((if tl > 0.0 { 0.5 } else { 1.0 }) * engine.pop()[c] as f64 / tp + lodging) as f32
+                })
+                .collect();
+            let mass = airport_draw(&engine.z, &members, &origin, &attraction_visits, decay[ATTRACTION]);
+            (origin, Some(mass))
+        };
         // Purpose indices stay stable: a missing purpose before a present one is an empty slot.
         let zeros = vec![0.0f32; n];
-        let optional = [children.as_ref(), adults.as_ref(), airport_mass.as_ref(), medical.as_ref()];
+        let optional = [children.as_ref(), adults.as_ref(), airport_mass.as_ref(), medical.as_ref(), attraction_mass.as_ref()];
         let mut weights = vec![&retail, &social];
         if let Some(last) = optional.iter().rposition(|o| o.is_some()) {
             weights.extend(optional[..=last].iter().map(|o| o.unwrap_or(&zeros)));
         }
         let kinds = weights.len();
         let mut airport_scale = vec![0.0f64; if airport_mass.is_some() { nz } else { 0 }];
+        let mut attraction_scale = vec![0.0f64; if attraction_mass.is_some() { nz } else { 0 }];
         // trips sent from each cell: residents, or a school's or university's enrollment
         let budget_of = |kind: usize| -> &[f32] {
             match kind {
                 2 => school_enrollment.as_deref().unwrap_or(&[]),
                 3 => university_enrollment.as_deref().unwrap_or(&[]),
                 AIRPORT => &airport_origin,
+                ATTRACTION => &attraction_origin,
                 _ => engine.pop(),
             }
         };
@@ -1362,8 +1431,10 @@ impl EverydayApi {
                     let tc = ctable.cdf(&engine.z, oz, &zx, &zy, cmass, ccdf);
                     total = mix_central(&mut cdf, total, ccdf, tc, q);
                 }
-                if kind == AIRPORT {
-                    airport_scale[oz] = total;
+                match kind {
+                    AIRPORT => airport_scale[oz] = total,
+                    ATTRACTION => attraction_scale[oz] = total,
+                    _ => {}
                 }
                 if total > 0.0 {
                     s.sample(&members[oz], &cdf, total, out);
@@ -1390,6 +1461,9 @@ impl EverydayApi {
             university_enrollment: university_enrollment.unwrap_or_default(),
             airport_origin,
             airport_scale,
+            attraction_origin,
+            attraction_scale,
+            attractions: sites,
             start,
             live,
             first,
@@ -1416,6 +1490,11 @@ impl EverydayApi {
     }
     pub fn purpose_count(&self) -> u32 {
         self.totals.len() as u32
+    }
+    /// The attractions `beside_with` placed in the pack (T-263): per attraction its index in the
+    /// list given, its cell and its visits a weekday.
+    pub fn attractions(&self) -> Vec<f32> {
+        self.attractions.iter().flat_map(|&(i, c, v)| [i as f32, c as f32, v]).collect()
     }
     /// The station complexes of the networks `set_network` is given from now on (T-161), as
     /// `DemandApi::set_complexes`.

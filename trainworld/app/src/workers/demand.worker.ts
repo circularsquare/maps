@@ -20,7 +20,8 @@
 // covers goes when that solve ends.
 
 import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, release_skims, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
-import { CITIES, cityToMarket, cityToWorld, HOME_CITY, marketWorld, setWorldFrame, worldToCity, worldToLonLat, type CityId } from "../game/cities";
+import { CITIES, cityById, cityToMarket, cityToWorld, HOME_CITY, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
+import { loadAttractions, type Attraction } from "../game/attractions";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
 import { curveKnots } from "../game/fareCurve";
@@ -169,7 +170,7 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
       // T-399: the everyday layer shares the commutes' cells, zones, gravity and routes
       let e: EverydayApi | null = null;
       try {
-        if (!aux && hasEveryday(pack.header)) e = EverydayApi.beside(a, pack.header, bin);
+        if (!aux && hasEveryday(pack.header)) e = EverydayApi.beside_with(a, pack.header, bin, attractionsIn(pack.id));
       } catch (err) {
         a.free();
         throw err;
@@ -235,6 +236,21 @@ function opened(packs: { id: CityId }[], isBare: boolean, rejected: OpenRejected
   })) as Record<CityId, number[]>;
 }
 
+/** T-263: the world's attractions, loaded with the WASM */
+let attractions: Attraction[] = [];
+/** The attractions in or near a zone's box, as `EverydayApi.beside_with` takes them: x, y in the
+ * pack's frame and visitors a year (the layer keeps those within reach of one of its cells). */
+function attractionsIn(id: CityId): Float32Array {
+  const [w, s, e, n] = widenBox(zoneBox(cityById(id)), 1000);
+  const out: number[] = [];
+  for (const t of attractions) {
+    if (t.lng < w || t.lng > e || t.lat < s || t.lat > n) continue;
+    const { x, y } = lonLatToCity(t.lng, t.lat, id);
+    out.push(x, y, t.visitors);
+  }
+  return Float32Array.from(out);
+}
+
 const hasEveryday = (header: string) => JSON.parse(header).arrays.some((a: {name: string}) => a.name === "errand_jobs");
 
 /**
@@ -248,7 +264,7 @@ function openBare(pack: { id: CityId; header: string; bin: ArrayBuffer }) {
   const a = new DemandApi(pack.header, bin);
   let e: EverydayApi | null = null;
   try {
-    e = hasEveryday(pack.header) ? EverydayApi.beside(a, pack.header, bin) : null;
+    e = hasEveryday(pack.header) ? EverydayApi.beside_with(a, pack.header, bin, attractionsIn(pack.id)) : null;
     return solveBare(a, e);
   } catch (err) {
     e?.free();
@@ -400,7 +416,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     opening = opening.then(async () => {
       try {
         const t0 = performance.now();
-        await init();
+        [, attractions] = await Promise.all([init(), loadAttractions()]);
         const t1 = performance.now();
         aux = !!msg.aux;
         oneByOne = !!msg.oneByOne;

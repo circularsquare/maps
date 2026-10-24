@@ -138,7 +138,7 @@ function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: strin
 /** Where the trip goes, in "to work by Grand Central" (T-586: the purpose filter's). */
 const DEST: Record<PurposeFilter, string> = {
   all: "a destination", work: "work", school: "school or university", university: "school or university", shopping: "shops and errands",
-  social: "social and leisure", medical: "medical care", airport: "the airport", longer: "a destination",
+  social: "social and leisure", medical: "medical care", airport: "the airport", attractions: "an attraction", longer: "a destination",
 };
 /** "shopping and errands trips", "trips" */
 const tripWords = (f: PurposeFilter) => (f === "all" ? "trips" : `${purposeWords(f)} trips`);

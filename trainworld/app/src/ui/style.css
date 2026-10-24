@@ -787,6 +787,9 @@ rect.now { fill-opacity: .45; }
 .airport-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 .airport-mark { position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; display: grid; place-items: center; }
 .airport-mark svg { width: 14px; height: 14px; fill: #000; stroke: rgba(255, 255, 255, 0.85); stroke-width: 0.8; paint-order: stroke; }
+.attraction-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+.attraction-mark { position: absolute; left: 0; top: 0; width: 12px; height: 12px; margin: -6px 0 0 -6px; display: grid; place-items: center; }
+.attraction-mark svg { width: 12px; height: 12px; fill: var(--map-ink); stroke: var(--map-land); stroke-width: 1.6; paint-order: stroke; }
 .demand-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap !important; }
 /* T-305: the network tag wraps at 320 px (a complex's line list is long); a short tag is as wide as its text */
 .track-tag { width: max-content; max-width: 320px; white-space: normal !important; }
@@ -794,7 +797,7 @@ rect.now { fill-opacity: .45; }
    on, the demand views are drawn beneath the network */
 .track-tag, .build-tag { z-index: 5; }
 .build-tag { position: absolute; left: 0; top: 0; pointer-events: none; }
-.building #map canvas.overlay.demand, .building .airport-marks, .building .intercity-labels { z-index: 0; }
+.building #map canvas.overlay.demand, .building .airport-marks, .building .attraction-marks, .building .intercity-labels { z-index: 0; }
 /* T-732: what else is under a resting pointer, under the hover tag; its entries take clicks */
 .rest-list { z-index: 6; pointer-events: auto; padding: 1px 0; }
 .rest-entry { display: flex; gap: 5px; align-items: center; padding: 1px 4px; cursor: pointer; }

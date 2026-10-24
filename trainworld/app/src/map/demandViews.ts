@@ -24,6 +24,7 @@ import type { Selection } from "../game/types";
 import { display, purposeFilter, selection, stopEditing } from "../game/ui";
 import { world } from "../game/world";
 import { startAirportMarks } from "./airportMarks";
+import { startAttractionMarks } from "./attractionMarks";
 import { commuterStats, startCommuterView, type Place } from "./commuterView";
 import { buildLayers } from "./demandLayers";
 import { hoverAbove, hoverAt, startHover } from "./demandHover";
@@ -118,6 +119,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
   // ---- commuter bubbles ----
   const commuters = startCommuterView(map, view);
   startAirportMarks(map, overlay);
+  startAttractionMarks(map, overlay);
   // ---- longer trips of a selection (T-118) ----
   const intercity = startIntercityView(view, map);
 

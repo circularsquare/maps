@@ -6,7 +6,7 @@ changing, T-718's route choice between cities, T-720's walking bands, T-938's ca
 ownership cost, T-1000's cap on how far jobs pull and its set share of long commutes, T-1055's
 rule that every rail trip rides a train, T-1059's that it never walks further than walking
 there, T-1091's flat near end of the commute curve outside the US, T-1092's trips into
-town, and T-1070's cap at the trains' room). The full rules are in demand.md; this is the gist.
+town, T-1070's cap at the trains' room, and T-263's attractions). The full rules are in demand.md; this is the gist.
 
 ## Who travels, and where to
 
@@ -32,6 +32,13 @@ town, and T-1070's cap at the trains' room). The full rules are in demand.md; th
   only every 4 km. So the corner shop draws its street, and the dense centre, where department
   stores, theatres and galleries are, draws people from across the city. Those are the long
   everyday trips a train can win.
+- **Attractions.** Museums, zoos, theme parks, temples, castles and the like, about 12,900 places
+  worldwide from Wikidata, each with its visitors a year: Wikidata's own figure where it has one
+  (the Met 6.5M, Tokyo Disneyland 15.1M), otherwise 10,000 for every Wikipedia language that
+  writes about the place. Each has that many visits a day, half from homes and half from where
+  visitors eat and stay, from across the city: the chance halves only every 10 km. New York
+  gets about 100,000 visits a day, London 195,000, Tokyo 130,000. Small next to the city's
+  trips, but long trips to single spots, so a station at the Met gets riders it would not have.
 - **Between cities.** A world market of longer trips by rail, car and air, plus commuters between
   neighbouring cities. Where two cities meet, commuting across the line will be damped (0.4).
   A longer trip into another country is damped too: to half inside the EU, Schengen and the UK

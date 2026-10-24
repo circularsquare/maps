@@ -57,6 +57,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   snapshot signal and the edit functions), `ui.ts` (tab, selection, display settings, theme).
 - Time: `clock.ts`, `localTime.ts` (each region's local time and the local time in view, T-309),
   `sun.ts` (the sun's height for the top bar's sky, T-861; the calendar is in `days.ts`),
+  `attractions.ts` (the world's attractions from `attractions.json`, made by `pipeline/attractions_json.py`, and their visits on a kind of day, T-263),
   `holidays.ts` (public holidays by country from `holidays.json`, made by `pipeline/holidays_json.py`, T-862;
   a line's and the view's country, T-872; one entry for a holiday several countries keep, T-1098), `holidayCalendar.ts` (the plain lookups the clock worker shares:
   a holiday's name, `kindOfIn` a country's kind of each day from its holidays and own weekend, T-872, T-262),
@@ -130,7 +131,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   bubble selections; the far end grouped into at least 10 trips a bubble in `game/farChunks.ts`, T-909), `intercityView.ts` (longer trips of a selection or station, one bubble per
   far zone, T-118, T-120; one per city zoomed far out, T-186), `demandOverlay.ts` (their canvas, over the network's),
   `demandHover.ts` (the count tag by the pointer), `modeBar.ts` (the tag's mode bar, T-494, and `localModes`, an open zone's local legs by mode, T-576), `airportMarks.ts` (the plane badge on an
-  airport and its hover, T-448, T-674; paths shared with the icons in `glyphs.ts`).
+  airport and its hover, T-448, T-674; paths shared with the icons in `glyphs.ts`), `attractionMarks.ts` (a mark on each attraction and its hover, T-263).
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
   stations, T-157, T-194), `hoverRest.ts` (the list of what else is under a resting pointer,
   T-732), `hovered.ts` (what is lit as hovered, from the tags and the list, read by both renderers, T-730), `trackTagRows.ts` (the elevation and speed rows with icons, shared with
@@ -305,6 +306,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t674-airport-modes.mjs` (a new Tokyo game and a line to Haneda: the plane's hover follows the
   worker's airport legs after the solve, and a game day later the destination bubble beside it
   reads the same selected or not; port 6144 by default, about four minutes),
+  `t263-attractions.mjs` (the real save's final with attractions, the marks and the Met's hover in Manhattan, the Attractions filter, a line at Ueno and the Tokyo National Museum's hover; screenshots to artifacts/trainworld/t263/, SHADE=dark for the dark theme; port 6123 by default, about four minutes),
   `t680-new-line-crowd.mjs` (a new game's Mumbai test line: its platforms are empty when its
   trains start and fill no faster than riders arrive; also runs on a production build; port 6145
   by default, about two minutes), `t684-points.mjs` (a new game's two Mumbai lines with a walk

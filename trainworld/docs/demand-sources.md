@@ -246,6 +246,31 @@ city's medical trips in aggregate are what the game shows). OSM's
 doctors and dentists are mapped unevenly; where they are missing, their visits go to the nearest
 mapped places instead. Per city: [T-142](../notes/T-142.md).
 
+**Attractions (T-263, every pack, no rebuild).** Visitors to museums, galleries, zoos, aquariums,
+amusement, theme and water parks, botanical gardens, planetariums, temples, shrines, churches,
+cathedrals, basilicas, mosques, synagogues, castles, palaces, fortifications, observation towers,
+monuments, statues, archaeological sites and what Wikidata calls a tourist attraction outright.
+One world file, `app/src/game/attractions.json` from `pipeline/attractions_json.py` (Wikidata
+through QLever: those classes and their subclasses, with coordinates; squares, streets, bridges,
+settlements, districts, parks and nature, stadiums and arenas, stations, airports, universities,
+libraries, hospitals, hotels, shops and offices left out; a tower or skyscraper only with a visitor
+figure). Each has its visitors a year: its latest Wikidata figure (P1174; a 2020 or 2021 figure only
+when there is no other, and none above 25M, which is an institution's or a slip), else 10,000 for
+each Wikipedia language edition writing about it (fitted on 2,102 places with both, notes/T-263.md);
+kept from 100,000. One that lies in another (location or part of, within 500 m) or within 100 m of
+a larger one is left to the larger, and a few the build names (passers-by, a resort beside its own
+parks) are left out. About 12,900 worldwide. At a pack's opening the demand worker hands its
+everyday layer the attractions in its box (`EverydayApi.beside_with`); each goes to the nearest cell
+within 600 m, so an attraction off every cell (in water, outside the zones) draws nobody. Visits a
+weekday are the year's over 365 days, set so the weekend's factors (social's, below) bring a week
+back to them; each visit is an outward and a return leg. The other end is half residents and half
+leisure jobs (where visitors eat and stay), each normalised, drawn with a 14.4 km exponential decay
+(the chance halves every 10 km) and normalised per attraction, as airports are, so each keeps its
+visits before the 150 m exclusion and the 40-80 km taper; two destination samples a home cell. No
+clearance as round a terminal: with dozens of attractions in a centre it would take the centre's
+hotels out. Visits come on top of social outings, not out of them (0.1-0.5% of a city's trips).
+The rate `rate_attractions` (1.0) is the one multiplier. Measured: notes/T-263.md "Stage 2 as built".
+
 Unmodelled purposes are labelled explicitly. Activity chains, visitor origins and cross-pack everyday outings
 remain later work. Research: [T-138](../notes/T-138.md); implementation and checks:
 [T-066](../notes/T-066.md), [T-140](../notes/T-140.md).

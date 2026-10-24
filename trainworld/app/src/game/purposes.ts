@@ -1,19 +1,19 @@
 // Trip purposes as the map's purpose filter (T-158) and the purpose pie (T-143) name and colour
 // them. Plain data: the demand workers import it too.
 //
-// Work is every city's local commutes (`DemandApi`), the six everyday purposes are each city's
+// Work is every city's local commutes (`DemandApi`), the seven everyday purposes are each city's
 // everyday layer's (`EverydayApi`, in its purpose order; every registered city since T-142), and longer trips are the regional
 // market (`IntercityApi`), which has no purposes of its own.
 
-export type PurposeKey = "work" | "school" | "university" | "shopping" | "social" | "airport" | "medical" | "longer";
+export type PurposeKey = "work" | "school" | "university" | "shopping" | "social" | "airport" | "medical" | "attractions" | "longer";
 /** The map's filter: one purpose, or every purpose together. */
 export type PurposeFilter = PurposeKey | "all";
 
 /** `EverydayApi`'s purpose kinds in its own order (sim/src/demand/everyday.rs `RATE`). */
-export const EVERYDAY_KEYS: PurposeKey[] = ["shopping", "social", "school", "university", "airport", "medical"];
+export const EVERYDAY_KEYS: PurposeKey[] = ["shopping", "social", "school", "university", "airport", "medical", "attractions"];
 /** The same as the selection inspector names them (demand.worker.ts `EVERYDAY_PURPOSES`); the
  * inspector shows school and university as one (`shownName`). */
-export const EVERYDAY_NAMES = ["Shopping and errands", "Social and leisure", "School", "University", "Airport", "Medical"];
+export const EVERYDAY_NAMES = ["Shopping and errands", "Social and leisure", "School", "University", "Airport", "Medical", "Attractions"];
 
 /** The model's purposes the player sees as another one (T-192, Anita: merge school and
  * university). The model keeps them apart, as their homes, places and timing differ; the filter,
@@ -34,6 +34,7 @@ export const PURPOSES: { key: PurposeKey; name: string }[] = [
   { key: "social", name: "Social and leisure" },
   { key: "medical", name: "Medical" },
   { key: "airport", name: "Airport" },
+  { key: "attractions", name: "Attractions" },
   { key: "longer", name: "Inter-city trips" },
 ];
 
@@ -51,7 +52,8 @@ export const purposeWords = (key: PurposeKey): string => purposeName(key).toLowe
 // Purpose colours are independent of the UI theme. Green is reserved for future events.
 // School and university share school's blue-green since T-192; with university's amber gone the
 // closest pair (CIEDE2000) is medical and social at 22, then shopping and medical 24, work and
-// social or school 24 (T-142 had airport 19 from university).
+// social or school 24 (T-142 had airport 19 from university). Attractions' orange (T-263) is 24
+// from airport and inter-city trips, 28 from shopping.
 const COLOUR: Record<PurposeKey, string> = {
   work: "#3978c6",
   school: "#168b91",
@@ -60,6 +62,7 @@ const COLOUR: Record<PurposeKey, string> = {
   shopping: "#d94a53",
   airport: "#a8a032",
   medical: "#e98abd",
+  attractions: "#d9822b",
   longer: "#8a817b",
 };
 
@@ -72,6 +75,7 @@ export function purposeColour(name: string): string {
   if (/shopping|errands/i.test(name)) return COLOUR.shopping;
   if (/airport/i.test(name)) return COLOUR.airport;
   if (/medical/i.test(name)) return COLOUR.medical;
+  if (/attraction/i.test(name)) return COLOUR.attractions;
   if (/event/i.test(name)) return "#439447";
   return "#8a817b";
 }

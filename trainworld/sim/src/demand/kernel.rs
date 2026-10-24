@@ -207,8 +207,8 @@ pub struct Params {
     /// The everyday layer's outings per resident (per enrolled student for school and
     /// university) and destination decay lengths in metres, by `everyday::KINDS` (T-509 stage
     /// 4). Read when `EverydayApi::beside` opens; the pack's `everyday` block sets the rates.
-    pub everyday_rate: [f32; 6],
-    pub everyday_decay_m: [f32; 6],
+    pub everyday_rate: [f32; super::everyday::KIND_COUNT],
+    pub everyday_decay_m: [f32; super::everyday::KIND_COUNT],
     /// T-1092: the share of errand and social outings drawn to central destinations, and their
     /// decay length in metres (`everyday::CENTRAL_SHARE`; 0 turns them off).
     pub everyday_central_share: f32,

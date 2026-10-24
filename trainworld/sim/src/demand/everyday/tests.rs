@@ -663,6 +663,33 @@ fn airport_and_medical_purposes_conserve_and_stay_optional() {
     assert!((to[1] - 30.0).abs() <= one && (to[2] - 20.0).abs() <= one, "{to:?}");
 }
 
+#[test]
+fn attractions_keep_their_visits_and_stay_optional() {
+    let x = [0.0, 4000.0, 9000.0];
+    let (h, b) = facility_fixture(&x, Some(&[0.0, 50.0, 0.0]), None);
+    let commutes = DemandApi::new(&h, &b).unwrap();
+    // one a year figure near cell 2, one 5 km off the pack (no cell within reach)
+    let year = 3_650_000.0;
+    let a = EverydayApi::beside_with(&commutes, &h, &b, &[9100.0, 50.0, year, 30000.0, 0.0, year]).unwrap();
+    assert_eq!(a.purpose_count() as usize, ATTRACTION + 1, "attractions after empty medical");
+    let p = everyday(ATTRACTION);
+    let weekday = year as f64 * 7.0 / 365.0 / (5.0 + day_rate(SATURDAY, p) + day_rate(SUNDAY, p)) as f64;
+    assert!((a.totals[ATTRACTION] / weekday - 1.0).abs() < 1e-4, "{} against {weekday}", a.totals[ATTRACTION]);
+    assert_eq!(a.attractions(), vec![0.0, 2.0, weekday as f32]);
+    for k in 0..a.destinations.len() {
+        if let Some((ATTRACTION, _, site, _, _)) = a.edge(k) {
+            assert_eq!(site, 2);
+        }
+    }
+    // without attractions the layer is as before
+    let old = EverydayApi::beside(&commutes, &h, &b).unwrap();
+    assert_eq!(old.purpose_count() as usize, AIRPORT + 1);
+    assert_eq!(&a.info()[..3 * (AIRPORT + 1)], &old.info()[..]);
+    assert_eq!(&a.destinations[..old.destinations.len()], &old.destinations[..]);
+    let none = EverydayApi::beside_with(&commutes, &h, &b, &[30000.0, 0.0, year]).unwrap();
+    assert_eq!(none.purpose_count() as usize, AIRPORT + 1);
+}
+
 /// A pack's header and bin with one more f32 cell array.
 fn with_array(h: &str, mut b: Vec<u8>, name: &str, values: &[f32]) -> (String, Vec<u8>) {
     let mut h: serde_json::Value = serde_json::from_str(h).unwrap();

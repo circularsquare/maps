@@ -7,7 +7,7 @@ comments that cite "docs/demand.md" with a section number or a paragraph name fi
 
 | File | Holds (the old section and paragraph names) |
 |---|---|
-| [demand-sources.md](demand-sources.md) | 4.1 Where trips come from: tiers, cells, res 8 where it is sparse, jobs data, people in institutions, people who work at home, everyday outings, parks, trips below 150 m, school attendance, university attendance, airport ground trips, medical visits |
+| [demand-sources.md](demand-sources.md) | 4.1 Where trips come from: tiers, cells, res 8 where it is sparse, jobs data, people in institutions, people who work at home, everyday outings, parks, trips below 150 m, school attendance, university attendance, airport ground trips, medical visits, attractions |
 | [demand-timing.md](demand-timing.md) | 4.2 Time of day: kinds of day, the average day |
 | [demand-mode.md](demand-mode.md) | 4.3 Mode choice and catchment: generalised cost, the ratio curve between rail and the car (T-918), cost damping, walking, driving, parking, routed walking and driving, the interface, lookup, access and egress, walking to a station, riding to a station |
 | [demand-kernel.md](demand-kernel.md) | 4.4 Cost of computing it: commuting does not enumerate cell pairs, and steps 1 to 7 (gravity between zones, access per cell, access subzones, station-to-station times, mode choice per subzone pair, loading, crowding) |

@@ -105,7 +105,7 @@ lines; an edit re-solves only the clusters it touched, the others keep their fig
 
 ## 4. Demand: local trips
 
-Each zone's local layer models seven purposes from the same national and global sources [T-066,
+Each zone's local layer models eight purposes from the same national and global sources [T-066,
 T-140, T-142, T-150, T-152, T-181] (the US sources are named here; elsewhere tier 0's equivalents,
 [docs/demand-worldwide.md](docs/demand-worldwide.md)): **commutes** (a doubly constrained gravity
 from LODES homes to jobs), **shopping and errands** and **social and leisure** outings (retail,
@@ -116,8 +116,10 @@ median where it has none, T-509; how far by one worldwide set of distance scales
 social 1.0 km, school 1.4, medical 2.0, university 3.5, T-637, with a fifth of errands and social
 outings drawn instead to dense centres, attraction times its density at a 6 km scale, T-1092),
 **school** (NCES public schools),
-**university** (IPEDS), **airport** ground trips (FAA boardings less connecting passengers) and
-**medical** visits (OSM facilities). Private schools are not modelled yet. **Homes leave out
+**university** (IPEDS), **airport** ground trips (FAA boardings less connecting passengers),
+**medical** visits (OSM facilities) and visits to **attractions** (museums, zoos, theme parks,
+temples, castles and the like from one Wikidata world file, sized by their visitors a year, drawn
+from homes and leisure jobs at a 10 km half-distance, T-263). Private schools are not modelled yet. **Homes leave out
 institutions** (prisons, nursing homes and the like, T-234).
 
 - **Commutes are one gravity over each group of zones that commute to each other** [T-276,

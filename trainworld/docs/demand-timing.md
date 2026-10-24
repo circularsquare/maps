@@ -36,6 +36,8 @@ load busiest-hour factors; their five-period departure shares are provisional:
 | From the airport | 12% | 33% | 28% | 24% | 3% |
 | Medical outward | 30% | 55% | 12% | 2% | 1% |
 | Medical return | 8% | 60% | 25% | 5% | 2% |
+| Attractions outward (as social) | 5% | 35% | 42% | 17% | 1% |
+| Attractions return | 2% | 25% | 43% | 27% | 3% |
 
 The inspector uses actual purpose/mode/period selection results. Bars show departures per hour,
 dividing period counts by 4/6/4/4/6 hours; outward and return rows remain separate.
@@ -71,11 +73,12 @@ longer trips are NHTS trips of 50 miles or more:
 | University | 0.30 | 0.14 |
 | Airport | 0.92 | 1.11 |
 | Medical | 0.30 | 0.18 |
+| Attractions (as social) | 1.54 | 1.67 |
 | Longer trips | 1.69 | 1.48 |
 
 A day's period shares are the weekday's above times NHTS's day/weekday ratio in each period,
 renormalised (`research/weekend/tables.py`); school, university, airport and medical keep their
-weekday timing (too few weekend trips in NHTS to shape them):
+weekday timing (too few weekend trips in NHTS to shape them), and attractions take social's:
 
 | Purpose/direction, Saturday / Sunday | 6–10 | 10–16 | 16–20 | 20–24 | 0–6 |
 | --- | ---: | ---: | ---: | ---: | ---: |

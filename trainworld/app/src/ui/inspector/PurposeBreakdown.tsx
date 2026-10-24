@@ -78,6 +78,7 @@ export function PurposeBreakdown({ purposes }: { purposes?: PurposeTrips[] }) {
     /^(school|university)/i.test(name) ? "Matched public schools and degree-granting colleges across the metro area. Private schools and exclusively online or nondegree students are not included. Homes, campus locations and typical-day attendance are estimated."
     : /^airport/i.test(name) ? "Air passengers to and from the metro area's commercial airports, not connecting passengers or airport staff. For an arriving passenger, the trip from the airport counts as the return. Homes and hotels at the other end are estimated."
     : /^medical/i.test(name) ? "Patients and visitors at hospitals, clinics, doctors and dentists mapped in OpenStreetMap. Each place's share of visits is estimated from its size."
+    : /^attraction/i.test(name) ? "Visitors to museums, zoos, theme parks, temples, castles and other attractions in Wikidata. Visitors a year are Wikidata's figure, or estimated from how many Wikipedia languages write about the place. Homes and hotels at the other end are estimated."
     : undefined;
   const school = purposes?.some(p => /^school/i.test(p.name));
   const university = purposes?.some(p => /^university/i.test(p.name));

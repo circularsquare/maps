@@ -34,23 +34,27 @@ pub const AVERAGE: usize = 3;
 /// Weekdays, Saturdays and Sundays in a week, the average's weights.
 const WEEK: [f32; 3] = [5.0 / 7.0, 1.0 / 7.0, 1.0 / 7.0];
 /// Purposes as the demand results split them (demand.worker.ts `purposeParts`): work, the
-/// everyday layer's six in its own order (shopping, social, school, university, airport,
-/// medical), then the regional market's longer trips.
-pub const PURPOSES: usize = 8;
+/// everyday layer's seven in its own order (shopping, social, school, university, airport,
+/// medical, attractions), then the regional market's longer trips.
+pub const PURPOSES: usize = 9;
 pub const WORK: usize = 0;
-pub const LONGER: usize = 7;
+pub const LONGER: usize = 8;
 /// The purpose index of an everyday kind (`everyday.rs` `RATE` order).
 pub const fn everyday(kind: usize) -> usize {
     1 + kind
 }
 
-/// A Saturday's and a Sunday's trips per weekday's, by purpose (NHTS 2017; airport TSA 2025).
+/// A Saturday's and a Sunday's trips per weekday's, by purpose (NHTS 2017; airport TSA 2025;
+/// attractions social's, T-263).
 pub const DAY_RATE: [[f32; PURPOSES]; 2] = [
-    [0.37, 1.39, 1.54, 0.11, 0.30, 0.92, 0.30, 1.69],
-    [0.24, 1.05, 1.67, 0.06, 0.14, 1.11, 0.18, 1.48],
+    [0.37, 1.39, 1.54, 0.11, 0.30, 0.92, 0.30, 1.54, 1.69],
+    [0.24, 1.05, 1.67, 0.06, 0.14, 1.11, 0.18, 1.67, 1.48],
 ];
 
 type Shares = [Option<[f32; PERIODS]>; PURPOSES];
+/// Social outings' Saturday and Sunday period shares, which attractions take too.
+const SOCIAL_OUT: [Option<[f32; PERIODS]>; 2] = [Some([0.059, 0.440, 0.335, 0.160, 0.006]), Some([0.096, 0.516, 0.276, 0.108, 0.004])];
+const SOCIAL_RET: [Option<[f32; PERIODS]>; 2] = [Some([0.016, 0.310, 0.395, 0.221, 0.058]), Some([0.014, 0.456, 0.368, 0.147, 0.015])];
 /// A Saturday's and a Sunday's period shares, outward (to work, to the activity; the market's one
 /// share), periods in `PERIOD_HOURS` order. `None`: the weekday's.
 const DAY_OUT: [Shares; 2] = [
@@ -62,6 +66,7 @@ const DAY_OUT: [Shares; 2] = [
         None,
         None,
         None,
+        SOCIAL_OUT[0],
         Some([0.166, 0.314, 0.196, 0.295, 0.029]),
     ],
     [
@@ -72,6 +77,7 @@ const DAY_OUT: [Shares; 2] = [
         None,
         None,
         None,
+        SOCIAL_OUT[1],
         Some([0.133, 0.394, 0.285, 0.166, 0.022]),
     ],
 ];
@@ -84,6 +90,7 @@ const DAY_RET: [Shares; 2] = [
         None,
         None,
         None,
+        SOCIAL_RET[0],
         None,
     ],
     [
@@ -94,6 +101,7 @@ const DAY_RET: [Shares; 2] = [
         None,
         None,
         None,
+        SOCIAL_RET[1],
         None,
     ],
 ];

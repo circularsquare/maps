@@ -415,7 +415,8 @@ trains beneath, `map/endMarkers.ts`); the selected station (cut out of the bubbl
 discs (commuter bubbles over longer-trip discs); capacity tags (under
 the discs; one that opens nothing selects what is under it); trains (the selected one first), then
 stations, lines, junctions and track; within a layer the last drawn wins; hidden layers do not
-intercept. Station names, airport badges and the stop editor's markers take no clicks: a click on
+intercept. Station names, airport badges, attraction marks (T-263, docs/ui-demand-views.md
+"Attractions") and the stop editor's markers take no clicks: a click on
 one reaches what is under it (a badge sits on its airport's destination bubble; the stop markers' station
 is picked by the stop tool). Network
 hits reach 7 px from the centre line, or half the drawn width where a line is wider [T-227].

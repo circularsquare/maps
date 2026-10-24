@@ -662,6 +662,19 @@ notes/T-420.md has the tables.
   some countries' latest World Bank year is old (Nigeria 2004, 0.5); and a national rate
   undercounts a city that holds its region's referral hospitals. Check: a national register of
   beds by hospital where one is open (Brazil's CNES, T-506).
+- **Attractions** (T-263, `pipeline/attractions_json.py`, docs/demand-sources.md 4.1). One Wikidata
+  list for the world: places of attraction classes with coordinates, sized by Wikidata's visitors a
+  year (P1174) where given, else 10,000 a year for each Wikipedia language edition (fitted on
+  2,102 places with both), kept from 100,000; visits a day drawn half from homes and half from
+  leisure jobs with the chance halving every 10 km. Of 12,900 places, 1,220 carry a figure: the
+  US 264 of 652, France 151, Italy 171, the UK 77, China 20 of 300, Japan 24 of 419, India 19 of 403,
+  Nigeria none. Why it may not carry over: language editions say what is famous abroad, not how
+  many go, and undercount Asia's big commercial draws by 10-20 times where no figure exists
+  (Tokyo Skytree and Tokyo Tower at about 700,000 a year each) and Europe's museums by 2-5 times; a figure can be a whole
+  institution's or a slip (the build sizes any above 25M by editions); a country whose places have
+  few editions (Nigeria, Brazil) gets few attractions. Hotels are not in the packs, so leisure jobs
+  stand for where visitors stay. Check: a national tourism board's visitor table for a country's top
+  places, against the file's figures.
 - **Trip timing.** Period shares and departure profiles come from US data (ACS B08302, NHTS).
   Work hours, siesta patterns, school hours and late evenings differ by country.
 - **Weekends** (T-260, T-262, docs/demand-timing.md 4.2). A Saturday's and a Sunday's trips per

@@ -37,14 +37,14 @@ The local layers' modes are train, walk and car; "car" stands for every way of g
 those two (T-854, [demand-mode.md](demand-mode.md) 4.3).
 
 **Purpose colours** [T-142, T-143, T-192]: work blue, school and university blue-green,
-social/leisure purple, shopping/errands red, airport olive, medical pink (CIEDE2000 22 apart at the
+social/leisure purple, shopping/errands red, airport olive, medical pink, attractions orange [T-263] (CIEDE2000 22 apart at the
 closest pair), the same in the pie, bars, filter swatch and purpose split.
 
 ## The demand selector and purpose filter
 
 - **None / Homes / Destinations** [T-132, `ui/DemandSelector.tsx`], always at the map's upper left,
   remembered per browser, None by default [T-1101] (a start on the world map turns Homes on, T-801). Destinations is every activity end (work, shopping, social, school and
-  university, airport, medical). Before the buttons, joined to them, a cell with a hint icon (not a
+  university, airport, medical, attractions). Before the buttons, joined to them, a cell with a hint icon (not a
   button) [T-1137]: a selected demand bubble, filled with the default Train share ramp's middle
   purple (`color-mix(in oklab, #ff4d4d, #4d4dff)`) in a 2 px map ink outline, hover "Show demand
   bubbles".
@@ -59,7 +59,7 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   modelled here" [T-318].
 - **Purpose filter** [T-158, T-192, T-305; `game/purposes.ts`]: a dropdown at the end of the bar:
   All purposes (default), Work, School and university, Shopping and errands, Social and leisure,
-  Medical, Airport. School and university are one shown purpose everywhere, though the model keeps
+  Medical, Airport, Attractions [T-263]. School and university are one shown purpose everywhere, though the model keeps
   them apart (`membersOf`). With one chosen, a swatch in its colour sits before the name, the
   control takes the accent border, and every demand drawing counts that purpose only: line widths,
   station circles, the bubbles and their hovers ("12,400 school and university trips per day at
@@ -146,6 +146,15 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   the plane (the plane itself, so the job bubbles beside a terminal keep their own hover, T-681),
   says "228k trips per day to and from this airport" with the mode split, the whole airport's
   legs, read again with each demand result.
+- **Attractions** [T-263, `map/attractionMarks.ts`]: a small classical front (12 px, map ink with
+  a land-coloured halo) on each attraction of the world file, with or without bubbles. From zoom
+  12, or 10 with the purpose filter on Attractions; the biggest first as the map zooms in (from 11
+  those of 1M visitors a year, from 12 500,000, from 13 200,000, from 14 all). Hidden in the city
+  overview. No clicks (a click reaches what is under). The hover, within 8 px: the name, "About
+  17,700 visits per weekday" (the year's visitors on the day shown, the weekend's at social's
+  factors), and with a result "34% by train" with the mode bar, from the attractions purpose's legs
+  at the attraction's cell (the nearest within 600 m, as the demand layer places it; attractions
+  sharing a cell share it), read again with each demand result.
 
 **The bubbles show a new result as soon as it lands** [T-906]: the local bubbles, nearby zones'
 and the zoomed-out overview, like the inspectors, selections and the top bar. Money and the
@@ -230,11 +239,11 @@ riders counters keep their own smoothing (Live feel).
   split; the top eight far-end places, each named by the nearest station within 3 km, else by
   distance and direction; for a single area the closest stations from its trip-weighted centre
   [T-312, [ui-inspectors.md](ui-inspectors.md)]; purpose counts and shares for Work, School and
-  university, Shopping and errands, Social and leisure, Airport and Medical [T-142, T-192], with a
+  university, Shopping and errands, Social and leisure, Airport, Medical and Attractions [T-142, T-192, T-263], with a
   purpose pie and legend following All modes / Train only (hover: "Work: 12,400 trip legs per day,
   48%"; a zero-trip scope shows an empty neutral disc); hovers state the scope (matched public
   schools and degree-granting colleges, commercial airports with connecting passengers and staff
-  left out, OSM hospitals, clinics, doctors and dentists; private schools are not modelled).
+  left out, OSM hospitals, clinics, doctors and dentists, Wikidata attractions sized by visitor figures or language editions; private schools are not modelled).
 - **Timing** [T-193]: per purpose one compact chart, a bar per period (6-10, 10-16, 16-20, 20-24,
   0-6), departures toward the destination drawn up from a baseline and departures home down, as
   departures an hour on one scale; each bar's hover gives count, hourly rate and share of that

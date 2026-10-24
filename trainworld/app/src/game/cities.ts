@@ -108,6 +108,11 @@ export function marketToWorld(x: number, y: number): { x: number; y: number } {
 export function cityToMarket(x: number, y: number, id: CityId): { x: number; y: number } {
   return cityById(id).market >= 0 ? convert(x, y, packFrame(id), MARKET_FRAME) : { x, y };
 }
+/** Longitude and latitude to a city pack's local metres. */
+export function lonLatToCity(lon: number, lat: number, id: CityId): { x: number; y: number } {
+  const [x, y] = packFrame(id).fromLonLat(lon, lat);
+  return { x, y };
+}
 /** World metres to longitude and latitude. */
 export function worldToLonLat(x: number, y: number): [number, number] {
   return world.toLonLat(x, y);

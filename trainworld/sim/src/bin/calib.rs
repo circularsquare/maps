@@ -6,7 +6,7 @@
 //!   cargo run --release --features demand --bin calib -- --net data/work/realnet/nyc_real.json
 //!       --out run.json [--pack data/packs/nyc.json] [--rounds 3] [--areas cell_area.u8]
 //!       [--params p.json] [--set name=value,..] [--fares 1.5,0.1 | --no-fares] [--no-everyday]
-//!       [--info-only] [--cells] [--exact] [--no-cap]
+//!       [--info-only] [--cells] [--exact] [--no-cap] [--attractions app/src/game/attractions.json]
 //!
 //! The pack defaults to the network's `pack` under `TW_ROOT` (default the crate's parent; a
 //! binary built from a copy of sim/ points it at the main tree). Parameters: `--params` a JSON object of
@@ -14,6 +14,7 @@
 //! game's starting fares ($1.50 plus $0.10 a km); `--no-fares` keeps the flat `fare_min`.
 //! `--areas`: one value per pack cell, the home area (u8, 255 none; or a .u16 file, 65535 none).
 //! `--no-cap`: the loads as the rounds leave them, not held to the trains' room (T-1070).
+//! `--attractions`: the attractions purpose (T-263) from the world file; without it, none.
 //!
 //! Output: per demand station the day's entries (first boardings from the street) by layer and
 //! in 6-10; per line the day's boardings and changes between two trains of the same line; per
@@ -29,6 +30,7 @@ use trainworld_sim::demand::clock::now_ms;
 use trainworld_sim::demand::everyday::EverydayApi;
 use trainworld_sim::demand::network::{RealNet, PERIODS};
 use trainworld_sim::demand::pack;
+use trainworld_sim::track::frame::Frame;
 
 fn r1(v: &[f64]) -> Vec<f64> {
     if std::env::args().any(|a| a == "--exact") {
@@ -82,7 +84,17 @@ fn main() {
         api.refresh_walk();
     }
     // the everyday layer takes the commutes' parameters and walk curve as they are now
-    let mut ev = if has("--no-everyday") { None } else { Some(EverydayApi::beside(&api, &h, &b).unwrap()) };
+    // T-263: the world's attractions (app/src/game/attractions.json) in the pack's frame
+    let attractions: Vec<f32> = get("--attractions").map_or(vec![], |p| {
+        let v: Value = serde_json::from_str(&std::fs::read_to_string(&p).unwrap()).unwrap();
+        let hv: Value = serde_json::from_str(&h).unwrap();
+        let f = Frame::equirect(hv["origin"]["lon"].as_f64().unwrap(), hv["origin"]["lat"].as_f64().unwrap());
+        v["rows"].as_array().unwrap().iter().flat_map(|r| {
+            let (x, y) = f.from_lonlat(r[2].as_f64().unwrap(), r[3].as_f64().unwrap());
+            [x as f32, y as f32, r[4].as_f64().unwrap() as f32]
+        }).collect()
+    });
+    let mut ev = if has("--no-everyday") { None } else { Some(EverydayApi::beside_with(&api, &h, &b, &attractions).unwrap()) };
     let t_open = now_ms() - t0;
     // the everyday outings and their mean km by purpose only, no network (T-509 stage 4's decay fit)
     if has("--info-only") {

@@ -107,7 +107,17 @@ fn t1056() {
             api.params_mut().set_extra(k, x.parse().unwrap()).unwrap();
         }
     }
-    let ev = EverydayApi::beside(&api, &h, &b).unwrap();
+    // T-263: T263_ATTRACTIONS=<attractions.json> adds the attractions purpose
+    let attractions: Vec<f32> = std::env::var("T263_ATTRACTIONS").map_or(vec![], |p| {
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(p).unwrap()).unwrap();
+        let hv: serde_json::Value = serde_json::from_str(&h).unwrap();
+        let f = crate::track::frame::Frame::equirect(hv["origin"]["lon"].as_f64().unwrap(), hv["origin"]["lat"].as_f64().unwrap());
+        v["rows"].as_array().unwrap().iter().flat_map(|r| {
+            let (x, y) = f.from_lonlat(r[2].as_f64().unwrap(), r[3].as_f64().unwrap());
+            [x as f32, y as f32, r[4].as_f64().unwrap() as f32]
+        }).collect()
+    });
+    let ev = EverydayApi::beside_with(&api, &h, &b, &attractions).unwrap();
     let n = api.city.len();
     let pop: Vec<f32> = pack::cell_weights(&h, &b, "pop", n).unwrap().unwrap();
     let mut acc = Acc(vec![[0.0; 4]; NS * NG]);
