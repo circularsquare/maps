@@ -67,7 +67,9 @@ export class ReversalMarks {
     map.on("movestart", () => (this.tip.style.display = "none"));
     effect(() => {
       // with a build tool on, presses on an icon reach the map underneath (as the capacity tags)
-      this.box.classList.toggle("pass", tool.value !== "select");
+      const pass = tool.value !== "select";
+      this.box.classList.toggle("pass", pass);
+      if (pass) this.tip.style.display = "none";
     });
     effect(() => {
       const w = world.value;

@@ -958,6 +958,7 @@ class DemandClient {
       this.bareKept.set(id, this.bareOpen.get(id)!);
       this.bareOpen.delete(id);
       this.fetchingBare.delete(id);
+      this.dropCells(id);
       const log = lastLoad(this.start.loads, (l) => l.item === id && !!l.bare);
       if (log) log.closedAt = performance.now();
     }
@@ -977,6 +978,7 @@ class DemandClient {
       this.fetching.delete(id);
       this.prefetched.delete(id as CityId);
       this.cityVersion.delete(id as CityId);
+      this.dropCells(id);
       const log = lastLoad(this.start.loads, (l) => l.item === id && !l.bare);
       if (log) log.closedAt = performance.now();
     }
@@ -2079,6 +2081,7 @@ class DemandClient {
       const key = `${other}:${worldFrameEpoch.peek()}`;
       let p = this.otherCells.get(key);
       if (!p) {
+        this.dropCells(other);
         this.otherCells.set(key, (p = load(other)));
         p.then((v) => { if (!v && this.otherCells.get(key) === p) this.otherCells.delete(key); });
       }
@@ -2089,6 +2092,10 @@ class DemandClient {
   }
   /** Nearby zones' cells (T-276), `zone:frame epoch`. */
   private otherCells = new Map<string, Promise<CityCells | null>>();
+  /** A zone's cells in every frame, when it closes or its frame is out of date. */
+  private dropCells(id: string) {
+    for (const k of this.otherCells.keys()) if (k.slice(0, k.lastIndexOf(":")) === id) this.otherCells.delete(k);
+  }
 
   /** One purpose's local trip legs per cell (T-158's filter): work from the commute sums alone,
    * an everyday purpose from the workers' everyday layers, longer trips none. Cached per solve,
@@ -2669,6 +2676,8 @@ class DemandClient {
     demandByDay.value = DEMAND_DAYS.map((day) => this.dayDemand(s, round, final, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day))));
     if (final) {
       s.refinedAt = performance.now();
+      // an older solve's figures are never read again (its svc and layout are); a few MB each
+      for (const o of this.log) if (o.version < s.version) (o.results = []), (o.byRound = []), (o.clusterRes = undefined);
       this.aheadP.clear();
       this.cityVersion.clear();
       if (s === this.cur) {

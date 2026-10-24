@@ -2383,7 +2383,7 @@ export class NetworkRenderer {
       this.attrib(this.probeProg, "a_end", this.endBuf!, 1, gl.FLOAT, 0);
       gl.bindVertexArray(null);
     }
-    const out = this.buffer(new Float32Array(Math.max(1, n) * 2));
+    const out = this.buffer(new Float32Array(Math.max(1, n) * 2), []);
     gl.useProgram(this.probeProg);
     gl.uniform1f(this.probeU.u_time, uTime);
     this.bindTrainTextures(this.probeU);
@@ -2400,6 +2400,7 @@ export class NetworkRenderer {
     gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, out);
     gl.getBufferSubData(gl.TRANSFORM_FEEDBACK_BUFFER, 0, res);
     gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, null);
+    gl.deleteBuffer(out);
     return res;
   }
 

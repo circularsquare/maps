@@ -87,6 +87,8 @@ interface Placed {
   /** where it is in degrees: local units go stale when the draw anchor moves (T-1020) */
   lng: number;
   lat: number;
+  /** the real network's point the snap starts from here (T-727d), or null */
+  ring: [number, number] | null;
 }
 
 /** The longest piece of free-drawn track one click lays, straight-line km between its ends (T-1020:
@@ -97,9 +99,9 @@ const MAX_PIECE_KM = 500;
 const WAIT_MS = 300;
 const tooFarText = () => `Too far for one piece of track (${distance(MAX_PIECE_KM * 1000)} at most). Press Esc to start somewhere else.`;
 
-function placedAt(end: RouteEnd, lx: number, ly: number): Placed {
+function placedAt(end: RouteEnd, lx: number, ly: number, ring: [number, number] | null): Placed {
   const [lng, lat] = toLngLat(lx, ly);
-  return { end, lng, lat };
+  return { end, lng, lat, ring };
 }
 
 export class Tools {
@@ -393,7 +395,7 @@ export class Tools {
         const [lx, ly] = toLocal(ring[0], ring[1]);
         s = { kind: "free", lx, ly };
       }
-      this.start = placedAt(this.endOf(s), s.lx, s.ly);
+      this.start = placedAt(this.endOf(s), s.lx, s.ly, ring);
       this.real.begin(ring);
       this.requestPreview();
       this.place();
@@ -448,8 +450,8 @@ export class Tools {
     }
     this.chain.push(from);
     const [ex, ey] = rc && s.kind === "free" ? toLocal(...rc.route.last) : [s.lx, s.ly];
-    this.start = placedAt({ kind: "node", node: a.node }, ex, ey);
-    this.real.begin(rc ? rc.route.last : snapping.peek() ? this.real.ring(e.point.x, e.point.y) : null);
+    this.start = placedAt({ kind: "node", node: a.node }, ex, ey, rc ? rc.route.last : snapping.peek() ? this.real.ring(e.point.x, e.point.y) : null);
+    this.real.begin(this.start.ring);
     this.lastPreview = null;
     this.previewKey = this.wantKey = "";
     this.overlay.renderer.setPreview(null);
@@ -460,8 +462,10 @@ export class Tools {
 
   /** Backspace while chaining: the last segment undone, drawing on from its start again. */
   private async takeBackSegment() {
+    // a segment still being placed is not on the undo stack yet
+    if (this.placing) return;
     const prev = this.chain.pop();
-    if (!prev || this.placing) {
+    if (!prev) {
       this.reset();
       return;
     }
@@ -469,6 +473,7 @@ export class Tools {
     const a = await edit({ op: "undo" }, true).finally(() => (this.placing = false));
     if (!a.ok) return this.reset();
     this.start = prev;
+    this.real.begin(prev.ring);
     this.lastPreview = null;
     this.previewKey = this.wantKey = "";
     this.requestPreview();

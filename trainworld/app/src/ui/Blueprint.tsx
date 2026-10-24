@@ -1,4 +1,4 @@
-import { distance, levelLabel, money, upkeepRule } from "../game/format";
+import { distance, levelLabel, money, moneyExact, upkeepRule } from "../game/format";
 import { edgeUpkeep, stationUpkeep } from "../game/regionMoney";
 import { clearBpPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
 import { liveMoney, moneyState } from "../game/money";
@@ -122,7 +122,7 @@ export function BlueprintBreakdown() {
                         <span>{r.kind === 5 ? "New cars" : `${LEVEL_NAME[r.level]} (${levelLabel(r.level)})`}</span>
                         <span class="small muted">{description(r)}</span>
                       </span>
-                      <span class="val" data-tip={`$${Math.round(r.cost).toLocaleString()}`}>{money(r.cost)}</span>
+                      <span class="val" data-tip={moneyExact(r.cost)}>{money(r.cost)}</span>
                     </li>
                   ))}
                 </ul>

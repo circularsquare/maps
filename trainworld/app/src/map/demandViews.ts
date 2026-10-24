@@ -82,10 +82,10 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     const editing = stopEditing.peek();
     const dv = demandView.peek(), mode = editing ? "none" : d.stationUse;
     const on = { lineLoad: d.trackColour === "traffic" && !editing, stationFigure: mode === "none" ? null : (id: string) => useFigure(dv, mode, id),
-      trainLoad: d.trainLoad, trainLoadBasis: d.trainLoadBasis,
+      trainLoad: d.trainLoad,
       complexes: d.complexView ? complexes.peek() : null, purpose: purposeFilter.peek(), days: demandByDay.peek().map((x) => x.view) };
     // an edit changes the network and then the world: one build for both when nothing else moved
-    const now = [n, w, dv, period.peek(), on.lineLoad, mode, mode === "origins" || mode === "transfers" ? stationUse.peek() : null, on.trainLoad, on.trainLoadBasis, on.complexes, on.purpose];
+    const now = [n, w, dv, period.peek(), on.lineLoad, mode, mode === "origins" || mode === "transfers" ? stationUse.peek() : null, on.trainLoad, on.complexes, on.purpose];
     if (now.every((v, i) => v === inputs[i])) return;
     inputs = now;
     const t0 = performance.now();
@@ -111,7 +111,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     demandView.value;
     period.value;
     const d = display.value;
-    void [d.stationUse, d.trainLoad, d.trainLoadBasis, d.trackColour, d.complexView];
+    void [d.stationUse, d.trainLoad, d.trackColour, d.complexView];
     stationUse.value;
     purposeFilter.value;
     stopEditing.value;

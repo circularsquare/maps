@@ -38,6 +38,7 @@ for the shake (DECISIONS T-625, notes/T-679.md). Fix: `animation: shake 300ms li
 as `.spin` and the `bt-` rules already do. The reduced-motion rule at `:331` then needs
 `!important` too.
 Risk: none (it restores agreed behaviour). Effort: small. Mechanical: yes.
+*Fixed* (appbugs): both rules `!important`.
 
 **B2. Two bars share `.load-bar`.** The train's "On board" bar (`others.tsx:533`, styled at
 `style.css:353-355`) and the loading progress bar `LoadBar` (`LoadingScreen.tsx:40`, styled at
@@ -45,11 +46,14 @@ Risk: none (it restores agreed behaviour). Effort: small. Mechanical: yes.
 10 px, with `margin: 8px 0 6px` (its row grows) and loses its `margin-right: 8px`. Fix: rename the
 train one to `.aboard-bar` in `others.tsx:533` and `style.css:353-355`.
 Risk: low (the train bar goes back to how it was written). Effort: small. Mechanical: yes.
+*Not fixed* (appbugs): handed to the app cleanup agent, which moves the train bar into
+TrainInspector.tsx and renames the class there.
 
 **B3. A locale-dependent figure.** `Blueprint.tsx:124`:
 ``data-tip={`$${Math.round(r.cost).toLocaleString()}`}`` has no locale, so a German browser shows
 "$1.234.567". Every other figure is `en-US`. Fix: `moneyExact(r.cost)` from game/format.ts.
 Risk: none. Effort: small. Mechanical: yes.
+*Fixed* (appbugs): `moneyExact(r.cost)`.
 
 **B4. Settled, no change.** `StartMenu.tsx:53` "Welcome to anitabuilder!" keeps its exclamation
 mark (Anita 2026-10-24).

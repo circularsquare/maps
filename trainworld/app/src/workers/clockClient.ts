@@ -607,6 +607,7 @@ export class ClockClient {
           if (msg.stale) break;
           this.toCurrentAnchor(msg.anchor, msg.verts, msg.pts);
           if (msg.arc) this.toCurrentAnchor(msg.anchor, msg.arc, new Float32Array(0));
+          if (msg.marks) this.toCurrentAnchor(msg.anchor, new Float64Array(0), msg.marks);
           this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts, arc: msg.arc, marks: msg.marks });
         } finally {
           const n = this.previewNext;
@@ -625,6 +626,7 @@ export class ClockClient {
       }
       case "crossoverCheck": {
         this.crossBusy = false;
+        for (const p of msg.parts) this.toCurrentAnchor(msg.anchor, new Float64Array(0), p);
         this.crossCb?.(msg);
         const n = this.crossNext;
         this.crossNext = null;

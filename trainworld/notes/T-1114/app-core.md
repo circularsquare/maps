@@ -70,6 +70,10 @@ Grep `checks/` for any name you rename.
 Fix: pick the high-speed parameters when `a.line_fast(id)`. This goes well with item 20, which
 names the `moneyParams` indices. Risk: low (money figures change for fast lines, toward what the
 network ledger already says). Effort: small.
+*Fixed* (appbugs): `regionLines` takes `moneyParams[6]`/`[5]` for a fast line. A new game with a
+6 km high-speed line and an ordinary one in New York (10 cars, 6/4/3 trains): the region's day
+24.31 -> 29.88 US$M, the network's 29.88 both times (no period here is followed by no service, so
+the T-835 tail did not move it).
 
 **B2. The last 50 solves keep their full results on the main thread.**
 `workers/demandClient.ts:1966-1968` pushes each solve onto `this.log` (kept at 50). Each solve keeps
@@ -79,17 +83,27 @@ solve's results. The views copy what they need, and checks t124 and t326 read on
 `log.at(-1).results`. At about 5,000 stops that is roughly 6 MB a solve. Fix: when a newer solve
 publishes its final, set `results = []` and `byRound = []` and drop `clusterRes` on older entries.
 Keep the timing fields the debug readout uses. Risk: low. Effort: small.
+*Fixed* (appbugs): `publish`'s final empties every older log entry's `results`, `byRound`, `clusterRes`.
+Real save, 20 train-count edits each solved to its final (CDP heap after GC): the log's 22 solves
+held 39.4 MB of typed arrays before, 1.9 MB after (the current solve's); array buffers 149.4 ->
+111.9 MB, JS heap 122.7 -> 120.3 MB. About 1.9 MB a solve, so up to ~95 MB at the 50 cap before.
 
 **B3. The `otherCells` cache never evicts.** `demandClient.ts:2091` caches each nearby zone's cells
 (xy, H3 as BigUint64, zone) per frame epoch. It drops an entry only on failure, so panning across
 many zones grows it without bound. Fix: drop the entry when the zone closes
 (`closeFull`/`closeBare`) or leaves `nearbyZones`. Risk: low. Effort: small.
+*Fixed* (appbugs): `dropCells` on `closeBare`, `closeFull` and on a new frame epoch's miss.
+A 16-place pan from Washington to Boston with Homes on (real save) left 4 entries, 1.6 MB, before
+and after: every one a zone still open (three the save reaches, one bare spare), so nothing closed
+to drop; the cache is now bounded by the open zones.
 
 **B4. A preview that crosses an anchor change keeps its marks at the old anchor.**
 `workers/clockClient.ts:608-610` moves the preview's `verts`, `pts` and `arc` to the current
 anchor, but not `marks` (local units, stride 3). `crossoverCheck`'s `parts` (`:626-628`) is not
 moved either. The crossing and junction marks of that one preview draw offset. Fix: pass `marks`
 (and `parts`) through `toCurrentAnchor`. Risk: none. Effort: small.
+*Fixed* (appbugs): `marks` moved; `crossoverCheck` now carries `anchor` and its `parts` are moved.
+(A preview's `parts` are indices, not positions.)
 
 **B5. Backspace in the track tool leaves the real-network snap starting from the undone point.**
 `map/tools.ts:462-476`: `takeBackSegment` puts `start` back but never calls `real.begin` again, so
@@ -98,11 +112,14 @@ also does nothing while `real.active`, so no ordinary preview shows either. Sepa
 `:463-466`: Backspace while a segment's edit is in flight pops the chain and ends the run instead
 of undoing one segment. This was found by reading the code; check it in the game. Fix: keep the
 ring point in `Placed` and call `begin` with it. Risk: low. Effort: small.
+*Fixed* (appbugs): `Placed.ring`, `begin(prev.ring)` on Backspace; Backspace while a segment is
+being placed is ignored (it is not on the undo stack yet).
 
 **B6. `probe()` leaks a GPU buffer per call.** `map/renderer.ts:2393` adds a buffer to `this.res`
 on each call, and the buffer is freed only at the next `setNetwork`. Only debug and check code calls
 it (`checkPrecision`, t-checks in a loop). Fix: delete the buffer after the readback.
 Risk: none. Effort: small.
+*Fixed* (appbugs): made outside `this.res`, deleted after the readback.
 
 **B7. A train-load setting is stuck if an old browser stored it.** `game/ui.ts:47,107`
 (`trainLoadBasis`): the comment says it is "no longer a setting (T-164)". Nothing in the UI sets it,
@@ -111,12 +128,17 @@ but the stored display settings are spread over the defaults (`:170`). A browser
 honours it. Fix: delete the field and the `basis` parameter, and always use the busiest hour
 (`demandViews.ts:85,88,114`, `demandLayers.ts:25,93,106,136`). Risk: low (for Anita, if her
 browser holds "average", line widths would change to the default). Effort: small. About 8 lines.
+*Fixed* (appbugs): field and parameter gone, dropped from storage on load. (It set the train
+gauges' busiest-hour factor, not line widths.)
 
 **B8 (minor). Line widths can keep a stale day scale.** `map/demandViews.ts:86-89`: `on.days`
 feeds the busiest-day width scale, but neither the change key `now` nor the effect follows
 `demandByDay`. When another day's view lands while the shown day's object is unchanged, the widths
 keep the old scale until something else changes. This is plausible from the code but was not seen
 in the game. Risk: low. Effort: small.
+*Not a bug* (appbugs): every writer of `demandByDay` (`publish`, `publishNewLines`,
+`publishCluster`, the cache load) replaces every day's view at once, and `addBareViews` keeps
+every view object; the shown day's view always changes with the others, so `demandView` reruns.
 
 **B9 (minor). Two tag leftovers.**
 - `map/reversalMarks.ts:68-71`: turning a tool on hides the marks but not an open tip, unlike
@@ -126,6 +148,8 @@ in the game. Risk: low. Effort: small.
   `once("idle")` listener, and new regions' layers appear only at the next idle.
 
 Risk: none. Effort: small.
+*Fixed* (appbugs): the tip hides when a tool is picked; `ensure` waits on `getStyle()` and
+`style.load`, as `showReach` does.
 
 ---
 

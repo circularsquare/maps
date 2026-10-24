@@ -817,7 +817,8 @@ function regionLines() {
   for (let i = 0; i < li.length; i += 22) {
     if (li[i + 3] !== 1) continue;
     const id = li[i], km = li[i + 9] / 1000, cars = li[i + 21] || li[i + 8];
-    const run = [0, 1, 2].map((l) => li[i + 5 + l] * 2 * km * (moneyParams[3] + moneyParams[1] * cars) * unit);
+    const [perTrainKm, perCarKm] = a.line_fast(id) ? [moneyParams[6], moneyParams[5]] : [moneyParams[3], moneyParams[1]];
+    const run = [0, 1, 2].map((l) => li[i + 5 + l] * 2 * km * (perTrainKm + perCarKm * cars) * unit);
     costs.push({ shift: a.line_shift(id), run, tail: runTail(li, i, run), shares: lineShares.get(id)?.run ?? [] });
   }
   const fares = [...lineIncome].map(([id, per]) => ({ shift: a.line_shift(id), kindOf: kindOfLine(id), per, shares: lineShares.get(id)?.fare ?? [] }));
@@ -2215,7 +2216,7 @@ async function handle(msg: ToClock) {
       }
       parts.push(pts);
     }
-    send({ kind: "crossoverCheck", seq: msg.seq, ok, issues: ok ? [] : issues(), cost: out[1], parts }, parts.map((p) => p.buffer));
+    send({ kind: "crossoverCheck", seq: msg.seq, ok, issues: ok ? [] : issues(), cost: out[1], parts, anchor: anchor().version }, parts.map((p) => p.buffer));
   } else if (msg.kind === "previewNode" || msg.kind === "previewNodes") {
     const a = api;
     const out = await withMasks(() => msg.kind === "previewNode" ? a.preview_move_node(msg.node, msg.x, msg.y) : a.preview_move_nodes(new Uint32Array(msg.nodes), msg.dx, msg.dy), nodePoints, msg.seq);

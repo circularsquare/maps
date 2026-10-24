@@ -42,9 +42,6 @@ export interface DisplaySettings {
   complexView: boolean;
   /** trains filled by how full they are: each train's own load from the boarding account (T-164) */
   trainLoad: boolean;
-  /** Period average or its busiest hour, for a line the boarding account has no riders for yet.
-   * No longer a setting (T-164): each train has its own load. */
-  trainLoadBasis: "average" | "busiest";
   /** riders waiting on platforms (T-164), drawn as each platform filling up (T-219), or not
    * ("off"). "dots" is the T-164 option T-219 dropped, kept in older browsers' settings: on. */
   platformCrowds: "patch" | "dots" | "off";
@@ -104,7 +101,6 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   // T-192 (Anita): one circle per station complex by default
   complexView: true,
   trainLoad: true,
-  trainLoadBasis: "busiest",
   platformCrowds: "patch",
   sound: true,
   soundVolume: 0.6,
@@ -147,10 +143,11 @@ function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partia
 }
 const saved = load();
 // Migrate the former Line + separate width checkbox into the four-way display choice.
-const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string }) | undefined;
+const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string; trainLoadBasis?: string }) | undefined;
 // `intercity` (hide the longer-trip bubbles) is no longer a setting (T-222), nor `stationRiders`
-// (the demand circles, T-482), nor `unbuiltColour` (T-1120): dropped from storage
-const { lineLoad: legacyLineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, ...migratedDisplay } = oldDisplay ?? {};
+// (the demand circles, T-482), nor `unbuiltColour` (T-1120), nor `trainLoadBasis` (T-164): dropped
+// from storage
+const { lineLoad: legacyLineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, trainLoadBasis: _trainLoadBasis, ...migratedDisplay } = oldDisplay ?? {};
 if ((saved.v ?? 1) < 2) delete migratedDisplay.complexView;
 // T-703: the font and size defaults changed, and settings stored before had saved the old ones with
 // everything else, so both are dropped once

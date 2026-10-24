@@ -330,9 +330,9 @@ table.sched td:first-child { width: 100%; max-width: 0; overflow: hidden; text-o
    line runs at when its track holds it just over the one set; a refused edit's control shakes once */
 table.sched .bad { color: var(--bad); }
 table.sched .hw-real { color: var(--muted); margin-right: 6px; }
-.shake { display: inline-block; animation: shake 300ms linear; }
+.shake { display: inline-block; animation: shake 300ms linear !important; }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-3px); } 40%, 80% { transform: translateX(3px); } }
-@media (prefers-reduced-motion: reduce) { .shake { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .shake { animation: none !important; } }
 /* T-472, T-477: text the player should act on, and each demand level's crowding */
 .crowd-warn { color: var(--warn); }
 .crowd-bad { color: var(--bad); }

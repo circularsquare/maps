@@ -22,7 +22,6 @@ export interface LayerSwitches {
    * absent for no circles */
   stationFigure?: ((id: string) => number | undefined) | null;
   trainLoad: boolean;
-  trainLoadBasis?: "average" | "busiest";
   /** station complexes (T-146): one use circle per complex, at its stations' mean position */
   complexes?: Complexes | null;
   /** the map's purpose filter (T-158): line widths count this purpose only; train fill and the
@@ -90,7 +89,7 @@ function stretchDay(dv: DemandView | null, lineId: string, n: number, purpose: P
 /** Per line id: per stop-to-stop stretch of run 0, riders a day (both directions; the purpose
  * filter's purpose only) and the two runs' gauges in the period in force (everyone aboard); absent
  * when demand has no answer for it that fits its stops. */
-function lineNumbers(w: WorldView, dv: DemandView | null, period: number, basis: "average" | "busiest", purpose: PurposeFilter = "all") {
+function lineNumbers(w: WorldView, dv: DemandView | null, period: number, purpose: PurposeFilter = "all") {
   const out = new Map<number, { perDay: Float32Array; g0: Float32Array; g1: Float32Array }>();
   if (!dv) return out;
   const P = PERIODS[period];
@@ -103,7 +102,7 @@ function lineNumbers(w: WorldView, dv: DemandView | null, period: number, basis:
     const perDay = stretchDay(dv, l.id, n, purpose);
     if (!st || st.status !== "running" || !loads || !perDay || n < 2 || loads.length !== 2 * (n - 1)) continue;
     const trains = l.tph[P.demand] * hours;
-    const factor = basis === "busiest" ? dv.peakHourFactor[period] ?? 1 : 1;
+    const factor = dv.peakHourFactor[period] ?? 1;
     const g0 = new Float32Array(n - 1), g1 = new Float32Array(n - 1);
     for (let k = 0; k < n - 1; k++) {
       const a = loads[k], b = loads[n - 1 + (n - 2 - k)];
@@ -133,7 +132,7 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
   const L = net.lines;
   const nSeg = L.count;
   const nSamples = net.samples.length / 2;
-  const nums = lineNumbers(w, dv, period, on.trainLoadBasis ?? "busiest", on.purpose);
+  const nums = lineNumbers(w, dv, period, on.purpose);
   const info = L.info;
 
   // The segments of one line along one edge are consecutive and share everything below: work per

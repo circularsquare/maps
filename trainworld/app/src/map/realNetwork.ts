@@ -126,7 +126,8 @@ export function startRealNetwork(map: maplibregl.Map) {
     if (!on || map.getZoom() < MIN_ZOOM) return;
     await load();
     if (!on || !regions) return;
-    if (!map.isStyleLoaded()) return void map.once("idle", ensure);
+    // not isStyleLoaded(), as in showReach
+    if (!map.getStyle()) return void map.once("style.load", ensure);
     const b = map.getBounds(), c = map.getCenter();
     const dist = (r: Region) => Math.min(...r.parts.map((p) => Math.hypot(Math.max(0, p[0] - c.lng, c.lng - p[2]), Math.max(0, p[1] - c.lat, c.lat - p[3]))));
     const hits = regions

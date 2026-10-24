@@ -437,7 +437,7 @@ export type FromClock =
       parts?: Uint32Array;
       /** a tangent route's circle (T-418): centre x, y (local units), ground radius m, 0 */
       arc?: Float64Array;
-      /** the draw anchor version `verts` and `pts` are relative to (T-307) */
+      /** the draw anchor version `verts`, `pts`, `arc` and `marks` are relative to (T-307) */
       anchor?: number;
       /** where the track makes a crossing or a flat junction (T-629): x, y (local units), kind (0
        * crossing, 1 junction), per mark */
@@ -472,8 +472,9 @@ export type FromClock =
   /** a station placement's check (T-311): `issues` as an edit's; `cost` what it adds to the
    * blueprint, US$M */
   | { kind: "stationCheck"; seq: number; ok: boolean; issues: string[]; cost: number }
-  /** a crossover preview (T-338): cost US$M, each diagonal's centre line (local x, y, height) */
-  | { kind: "crossoverCheck"; seq: number; ok: boolean; issues: string[]; cost: number; parts: Float32Array[] }
+  /** a crossover preview (T-338): cost US$M, each diagonal's centre line (local x, y, height),
+   * relative to draw anchor version `anchor` */
+  | { kind: "crossoverCheck"; seq: number; ok: boolean; issues: string[]; cost: number; parts: Float32Array[]; anchor?: number }
   /** a query's answer, in the track model's flat layout (pack metres) */
   | { kind: "answer"; seq: number; data: Float64Array }
   /** an autosave was written (Date.now()), its size, and worker ms to encode and to write */
