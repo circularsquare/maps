@@ -70,8 +70,24 @@ function bySize(rows: [number, ComponentChildren][], elsewhere: number, row: Com
   return out;
 }
 
+/** Places a direction lists; the rest share one row. A selection in China has trips with about
+ * 1,700 places, and their rows took the panel half a second to draw (T-1165). */
+const PLACE_ROWS = 15;
+
+/** The first `PLACE_ROWS` places, and the rest summed (null when there is no rest). */
+function topPlaces<P extends Split>(places: P[]): { top: P[]; rest: (Split & { n: number }) | null } {
+  if (places.length <= PLACE_ROWS + 1) return { top: places, rest: null };
+  const rest = { n: places.length - PLACE_ROWS, all: 0, rail: 0, car: 0, air: 0 };
+  for (let i = PLACE_ROWS; i < places.length; i++) {
+    const p = places[i];
+    rest.all += p.all; rest.rail += p.rail; rest.car += p.car; rest.air += p.air;
+  }
+  return { top: places.slice(0, PLACE_ROWS), rest };
+}
+
 function Direction({ title, verb, flows, own, railOnly }: { title: string; verb: string; flows: PlaceFlows; own: number; railOnly: boolean }) {
   if (railOnly) {
+    const { top, rest } = topPlaces([...flows.places].sort((a, b) => b.rail - a.rail));
     return (
       <>
         <ul class="rows">
@@ -81,17 +97,36 @@ function Direction({ title, verb, flows, own, railOnly }: { title: string; verb:
           </li>
         </ul>
         <ul class="rows sub-rows">
-          {flows.places.map((p) => (
+          {top.map((p) => (
             <li>
               <span class="grow">{verb} {intercityPlaceName(p.place, own)}</span>
               <span class="val w-num">{count(p.rail)}</span>
             </li>
           ))}
+          {rest && rest.rail >= 0.5 && (
+            <li>
+              <span class="grow" data-tip={`${exact(rest.n)} more places`}>{verb} other places</span>
+              <span class="val w-num">{count(rest.rail)}</span>
+            </li>
+          )}
         </ul>
       </>
     );
   }
   const total = { ...flows, all: flows.all + flows.elsewhere };
+  const { top, rest } = topPlaces(flows.places);
+  const rows: [number, ComponentChildren][] = top.map((p) => [p.all, (
+    <li>
+      <span class="grow" data-tip={`${verb} ${intercityPlaceName(p.place, own)}`}>{verb} {intercityPlaceName(p.place, own)}</span>
+      <ModeCells s={p} what="trips" />
+    </li>
+  )]);
+  if (rest) rows.push([0, (
+    <li>
+      <span class="grow" data-tip={`${exact(rest.n)} more places`}>{verb} other places</span>
+      <ModeCells s={rest} what="trips" />
+    </li>
+  )]);
   return (
     <>
       <ul class="rows">
@@ -101,12 +136,7 @@ function Direction({ title, verb, flows, own, railOnly }: { title: string; verb:
         </li>
       </ul>
       <ul class="rows sub-rows">
-        {bySize(flows.places.map((p) => [p.all, (
-          <li>
-            <span class="grow" data-tip={`${verb} ${intercityPlaceName(p.place, own)}`}>{verb} {intercityPlaceName(p.place, own)}</span>
-            <ModeCells s={p} what="trips" />
-          </li>
-        )]), flows.elsewhere, <ElsewhereRow n={flows.elsewhere} />)}
+        {bySize(rows, flows.elsewhere, <ElsewhereRow n={flows.elsewhere} />)}
       </ul>
     </>
   );

@@ -3,14 +3,19 @@
 import type { Level } from "./types";
 import { display } from "./ui";
 
+// one formatter each: `toLocaleString` makes a new one per call, 5-10 µs, which a panel of a few
+// thousand rows felt (T-1165)
+const WHOLE = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const UP_TO_3 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 });
+
 /** To the whole number with thousands commas: 1234567.4 -> "1,234,567". */
-export const exact = (n: number): string => Math.round(n).toLocaleString("en-US");
+export const exact = (n: number): string => WHOLE.format(Math.round(n));
 
 /** A forecast count, rounded so it does not claim more precision than a forecast has: 12,430 -> "12,400". */
 export const forecast = (n: number): string => exact(n >= 1000 ? Math.round(n / 100) * 100 : n >= 100 ? Math.round(n / 10) * 10 : n);
 
 /** "1 car", "2 cars"; `many` is `one` and an s unless given. */
-export const plural = (n: number, one: string, many = one + "s"): string => `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
+export const plural = (n: number, one: string, many = one + "s"): string => `${UP_TO_3.format(n)} ${n === 1 ? one : many}`;
 
 /** ["a", "b", "c"] -> "a, b and c" */
 export const andList = (names: string[]): string => (names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`);

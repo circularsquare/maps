@@ -106,6 +106,18 @@ const READY_ROUND = 0;
 const HOLD_ROUND = ROUNDS;
 const PERIOD_STRIDE = 6;
 
+const FLOWS_FIRST_MS = 1000;
+
+/** The first registry zone of each market place (a scan per place was 45 ms a query in China, T-1165). */
+let placeCities: Map<number, (typeof CITIES)[number]> | null = null;
+function cityOfPlace(place: number) {
+  if (!placeCities) {
+    placeCities = new Map();
+    for (const c of CITIES) if (!placeCities.has(c.place)) placeCities.set(c.place, c);
+  }
+  return placeCities.get(place);
+}
+
 /**
  * Workers in the pool (T-361, T-381). By threads: 12 or more get 3, 6 to 11 get 2, fewer 1; then
  * by memory (each worker's WASM is a few hundred MB, notes/T-361.md): 4 GB or less (`navigator.deviceMemory`, Chrome
@@ -573,6 +585,9 @@ class DemandClient {
    * took it up, how long it took, when it landed here (window.twDemand.client.qlog, ?debug=1) */
   qlog: { id: number; kind: string; sent: number; replies: { w: number; start: number; ms: number; at: number }[] }[] = [];
 
+  /** T-1165: a bubble selection's far end being worked out; its longer trips wait for it (up to
+   * FLOWS_FIRST_MS), so the market's selection sum (100-200 ms in China) does not hold it up */
+  private flowsPending: Promise<unknown> | null = null;
   private focusEpoch = 0;
   private focusCity = activeCity.peek();
   private focusFrame = worldFrameEpoch.peek();
@@ -2447,7 +2462,11 @@ class DemandClient {
       const dv = demandView.peek();
       return dv ? this.flowsAt({ version: dv.version, round: dv.round, view: dv.version, wait: false }, end, cells) : Promise.resolve(null);
     }
-    return this.viaRound(`flows|${end}|${cells.join(",")}`, (t) => this.flowsAt(t, end, cells));
+    const p = this.viaRound(`flows|${end}|${cells.join(",")}`, (t) => this.flowsAt(t, end, cells));
+    this.flowsPending = p;
+    const done = () => { if (this.flowsPending === p) this.flowsPending = null; };
+    p.then(done, done);
+    return p;
   }
   private async flowsAt(t: Target, end: "home" | "work", cells: Uint32Array): Promise<Flows | null> {
     const city = activeCity.peek(), round = demandView.peek()?.round;
@@ -2579,6 +2598,7 @@ class DemandClient {
       if (r?.kind !== "bareSquares" || !r.xy || !r.share) return null;
       sq = { xy: r.xy, share: r.share };
     }
+    if (this.flowsPending) await Promise.race([this.flowsPending, new Promise((r) => setTimeout(r, FLOWS_FIRST_MS))]);
     const v = await this.sumIntercity("icSel", t, (id) => ({ kind: "icSel", id, version: t.version, end: e, cells, ...(sq ? { sq } : {}) }));
     if (!v) return null;
     // per place, 8 numbers after the matched share: starts (all, rail, x, y) then ends; then per
@@ -2602,7 +2622,7 @@ class DemandClient {
         const c = pc + ca - cr;
         all += a; rail += r; air += pa; car += c;
         if (a > 0) {
-          const city = CITIES.find((c) => c.place === p);
+          const city = cityOfPlace(p);
           places.push({ place: p, all: a, rail: r, air: pa, car: c, ...(v[o] > 0 || !city ? marketXY(v[o + 2] / Math.max(v[o], 1e-9), v[o + 3] / Math.max(v[o], 1e-9)) : centreXY(city.center)) });
         }
       }

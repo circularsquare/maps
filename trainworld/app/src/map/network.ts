@@ -124,7 +124,9 @@ class StrokeBuilder {
   constructor(private withStretch = false) {}
   private grow(need: number) {
     if (need <= this.cap) return;
-    const cap = Math.max(need, this.cap * 2, 1024);
+    // a fresh builder takes what it is asked for: most hold one edge, and a 1,024 floor made every
+    // edge's eight arrays ~50 kB (seconds of allocation on a 2,000-edge load, T-1156)
+    const cap = this.cap ? Math.max(need, this.cap * 2) : need;
     const g = <T extends Float32Array | Uint32Array | Uint8Array>(a: T, k: number): T => {
       const b = new (a.constructor as any)(cap * k) as T;
       b.set(a);

@@ -266,7 +266,8 @@ commuters and inter-city riders are in its inspector only ([ui-inspectors.md](ui
   `Icon.plane` in `ui/widgets.tsx`; every number's hover gives the exact count and its share), then
   an "Elsewhere" row for trips with places that have no zone (all modes only; counted in the
   direction's total); its own zone's row reads "Other New York places". A station lists rail
-  riders starting and ending there by place.
+  riders starting and ending there by place. Each direction lists its 15 biggest places, the rest
+  summed in one "To other places" (or "From other places") row whose hover counts them [T-1165].
 - On the map a bubble selection's are always drawn (no setting), except under a local purpose
   filter: the far end of its own end (Homes: where the trips go; Destinations: where they come
   from). A station's are not drawn [T-519]. Only zones other than the focused one are drawn;

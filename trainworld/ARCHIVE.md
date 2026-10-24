@@ -1,5 +1,9 @@
 # Archive
 
+- T-1167 [P2] An all-China save. Done 2026-10-24: `t1156-all-china.save` at the maps root (123 lines in 24 cities plus high speed, normal game, US$1T); on 8800 drawn in 17.5 s, demand final 273 s. notes/T-1156.md.
+- T-1165 [P2] Slow bubble click in Guangzhou. Done 2026-10-24: the Inter-city trips list drew 3,498 rows; now 15 places a direction plus "other places", one number formatter, the far end asked before the longer trips. Destinations drawn 0.9-1.3 s to 42-48 ms. notes/T-1162.md.
+- T-1162 [P1] Freeze on the first placement in a new city. Not reproduced at a second in a dozen setups, 2026-10-24; the page's first press opening the audio device (60-210 ms) moved to the first sound. On a big network the anchor move is the freeze (notes/T-1156.md item 2). notes/T-1162.md.
+
 - T-1161 [P2] Small game behaviours. Done 2026-10-24: copied lines start with no trains; auto elevation switch in the Build tab; removing track past a through station stops at its platform's end (`station_trim_ops`); the loading card counts cities ("(2/5)"). checks/t1161-copy-delete.mjs; screenshots artifacts/trainworld/t1161/.
 - T-1160 [P2] Crowding colours. Done 2026-10-24: the ramp reads yellow-green at a 1 min wait (yellow 2.5, orange 9); the Traffic view's full stretches take the riders' average wait for a train with room at the stretch (new `stop_waits` in the boarding account) in those colours, stronger to 2.5 min. Screenshots artifacts/trainworld/t1159/.
 - T-1159 [P2] Build tab and line panel wording and spacing. Done 2026-10-24: no build tool instructions; "$155k / day upkeep"; "$99M per km (1.1x cost)" tinted, light green under 1x; wider speed box; even row gaps in the Build tab and schedule; Average speed replaces Top speed; "full", "left at platform".
