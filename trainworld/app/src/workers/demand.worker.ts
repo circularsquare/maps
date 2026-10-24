@@ -653,7 +653,7 @@ function query(msg: Query) {
             if (v[0] !== 1) continue;
             if (!best || v[3] > best[3]) { marketTripNodesGlobal(v, viewOf(c, c.part!).nodeGlobal); best = v; }
           }
-          if (!best) { best = new Float64Array(20); best[0] = 1; best[14] = 2; best[13] = 1; }
+          if (!best) { best = new Float64Array(20); best[0] = 1; best[14] = 2; best[13] = 1; best[6] = best[7] = -1; }
           answers.push(best);
           periods.push(q);
         }

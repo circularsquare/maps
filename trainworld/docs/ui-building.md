@@ -330,6 +330,10 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   same white square as a corner [T-416; `map/endMarkers.ts`], so draggable points can be seen.
   A drag previews the new shape with each curve's speed (or why not); letting go is one
   undoable edit, Escape puts it back.
+- **With the track tool** [T-734] the same node drag works: a press on a blueprint node that moves
+  more than 3 px drags it under the select tool's rules, and a press that does not move is the click
+  that places or branches track as always. Constructed nodes are not grabbed. A route being drawn
+  from the dragged node is dropped when the drag lets go; a route from another point carries on.
 - **The track inspector** lists the corners with each curve's speed, a radius stepper (100 to 1,500
   m, then auto), an elevation stepper and Remove; Add corner inserts one midway along the selected
   interval; "Elevation of the stretch" puts the piece on one elevation: all its corners, or for a

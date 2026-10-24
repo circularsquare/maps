@@ -569,8 +569,8 @@ export class ClockClient {
           try { localStorage.setItem("anitabuilder-save-slot", msg.active); } catch { /* storage unavailable */ }
         }
         this.sawSlots = true;
+        // the reason a slot is not written stays in the top bar (ui/TopBar.tsx SaveNotice), not here
         if (msg.error) say(msg.error, true);
-        else if (!msg.writable && before.writable) say(msg.reason || "This slot is open in another tab. Autosave is off here.", true);
         break;
       }
       case "saved":

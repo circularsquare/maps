@@ -96,7 +96,8 @@ function timeEquation(tot: ReturnType<typeof routeTotals>): string {
 /** Walks over this straight-line distance are not offered by the model. */
 const WALK_REACH_M = 10000;
 
-/** T-628: the headline gets a walk row when walking the whole way takes under this, real minutes. */
+/** T-628, T-992: the headline gets a walk row when walking the whole way takes under this, real
+ * minutes, or whatever it takes when walking has a share. */
 const WALK_ROW_MIN = 30;
 
 /** The headline: the trips between the two places by mode as the view counts them (T-586), or,
@@ -115,7 +116,7 @@ function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: strin
       <SegBar kind="trip-bar" label={parts.map(([n, v]) => `${n} ${pctShare(v)}`).join(", ")}
         parts={parts.map(([m, v, c]) => ({ share: v, cls: c, tip: `${m}: ${pctShare(v)} of ${of}${m === "Walk" ? walkTip : ""}` }))} />
       <ul class="rows">
-        {parts.map((x, i) => [x, i] as const).filter(([[m]]) => m !== "Walk" || t.walkMin < WALK_ROW_MIN).map(([[m, v], i]) => (
+        {parts.map((x, i) => [x, i] as const).filter(([[m, v]]) => m !== "Walk" || v > 0 || t.walkMin < WALK_ROW_MIN).map(([[m, v], i]) => (
           <li data-tip={`${m}: ${n > 0 ? pctShare(v) : `${(100 * v).toFixed(1)}%`} of ${of}${m === "Walk" ? walkTip : ""}${modelTip(i)}${note}`}>
             <i class="mk" style={{ background: modeColours()[m === "Train" ? "train" : m === "Walk" ? "walk" : "drive"] }} />
             <span class="grow">{m}</span>

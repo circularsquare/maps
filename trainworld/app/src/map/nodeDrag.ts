@@ -1,10 +1,11 @@
-// Dragging blueprint nodes (T-093): with the select tool, press on a track end, a junction or a
+// Dragging blueprint nodes (T-093): with the select or the track tool (T-734), press on a track end, a junction or a
 // station and drag it. Only a blueprint node moves: every edge there is blueprint and its station,
 // if any, is not constructed. The blueprint track meeting there follows (the track model's
 // `move_node`: its corners stay, a junction or station keeps its heading). While dragging, the
 // clock worker previews every edge there as a trial edit, with each curve's radius and speed or
 // why it cannot be built; letting go applies it as one undoable edit, Escape cancels. A press
-// that does not move is an ordinary click (selection, map/pick.ts).
+// that does not move is an ordinary click (selection, map/pick.ts; with the track tool, track is
+// placed or branched from the node as usual).
 //
 // The press is caught on the map container before MapLibre sees it, so the map does not pan.
 // Constructed nodes are left to the map (a drag over a station pans as usual), except the one
@@ -69,7 +70,8 @@ export class NodeDrag {
   /** The node under a screen point (px from the map's top left), if any. */
   hit(px: number, py: number): Hit | null {
     const w = world.peek();
-    if (!w || tool.peek() !== "select") return null;
+    const t = tool.peek();
+    if (!w || (t !== "select" && t !== "track")) return null;
     let best = HIT_PX * HIT_PX, hit: Hit | null = null;
     for (const n of w.nodes.values()) {
       const [x, y] = this.overlay.toScreen(...toLocal(n.lng, n.lat));
@@ -148,6 +150,7 @@ export class NodeDrag {
     const a = await edit({ op: "moveNode", node: d.node, x: d.x, y: d.y });
     if (!a.ok && !a.issues.length) say("This cannot be moved there.", true);
     this.clear();
+    if (a.ok) live.tools?.nodeMoved(d.node);
   }
 
   /** Escape: drop the drag, nothing changes. */

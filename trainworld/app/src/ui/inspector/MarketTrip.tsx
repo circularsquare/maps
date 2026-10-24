@@ -17,7 +17,7 @@ import { legRows, PeriodRows, routeRow } from "./RouteParts";
 import { minText, num1, pctShare, roundTo } from "./tripText";
 
 const NO_RAIL: Record<string, string> = {
-  farClosed: "The far end is not open in this game, so trains to it are not worked out.",
+  farClosed: "An end of this trip is not open in this game, so trains between the two are not worked out.",
   noRail: "No train serves both ends in this period.",
   unmatched: "No homes of the inter-city model are here.",
 };
@@ -141,11 +141,19 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   const tm = main ? stationTimes(main) : null;
   const fare = main ? (t.baseFarePerceived + main.legs.reduce((s, l) => s + l.farePerceived, 0)) / t.minPerUsd : 0;
   const repTip = `Inter-city trips in the ${period.toLowerCase()}: every pair of 6 km areas between the two ends, added up by its trips${tripPeriod.value === null ? "; the period with most of them" : ""}`;
+  // T-991: an end that is not open has no trips worked out, but the distance and the car are known
+  // from the places' centres; with no distance at all, neither is shown
+  const known = t.km > 0;
+  const closed = t.why === "farClosed";
   return (
     <>
-      <p class="muted small" data-tip={`${all >= 0.5 ? exact(all) : num1(all)} inter-city trips ${day} between the two ends, both ways: visits, business and leisure trips of 25 km and more. Commutes between the zones are left out.`}>
-        {trips} {day}, {roughDistance(1000 * (t.km || 0))} apart
-      </p>
+      {closed ? known && (
+        <p class="muted small" data-tip="Straight line between the two places' centres">{roughDistance(1000 * t.km)} apart</p>
+      ) : (
+        <p class="muted small" data-tip={`${all >= 0.5 ? exact(all) : num1(all)} inter-city trips ${day} between the two ends, both ways: visits, business and leisure trips of 25 km and more. Commutes between the zones are left out.`}>
+          {trips} {day}{known && `, ${roughDistance(1000 * t.km)} apart`}
+        </p>
+      )}
       {shares.length > 0 && (
         <div class="trip-modes">
           <SegBar kind="trip-bar" label={shares.map(([n, v]) => `${n} ${pctShare(v)}`).join(", ")}
@@ -185,18 +193,24 @@ export function MarketTrip({ m }: { m: MarketShown }) {
           <OtherRoutes t={t} shown={routeShares} riders={riders} />
         </>
       )}
-      <div class="h">By car</div>
-      <ul class="rows">
-        {Number.isFinite(t.carPerceived) ? (
-          <li data-tip={`Felt minutes of the drive, its costs and parking at the far end, averaged over the area pairs`}>
-            <span class="grow">Effective time</span>
-            <span class="val">{minText(t.carPerceived)}</span>
-          </li>
-        ) : <li><span class="grow muted">No road joins the two ends.</span></li>}
-      </ul>
-      <PeriodRows
-        train={(i) => (m.periods[i] ? trainShare(m.periods[i]!) : null)}
-        tip={(i) => { const x = m.periods[i]; return x ? `${PERIODS[i].name}: ${exact(x.trips)} inter-city trips, train ${pctShare(trainShare(x))}` : PERIODS[i].name; }} />
+      {known && (
+        <>
+          <div class="h">By car</div>
+          <ul class="rows">
+            {Number.isFinite(t.carPerceived) ? (
+              <li data-tip={closed ? "Felt minutes of the drive between the two places' centres, its costs and parking at the far end" : `Felt minutes of the drive, its costs and parking at the far end, averaged over the area pairs`}>
+                <span class="grow">Effective time</span>
+                <span class="val">{minText(t.carPerceived)}</span>
+              </li>
+            ) : <li><span class="grow muted">No road joins the two ends.</span></li>}
+          </ul>
+        </>
+      )}
+      {!closed && (
+        <PeriodRows
+          train={(i) => (m.periods[i] ? trainShare(m.periods[i]!) : null)}
+          tip={(i) => { const x = m.periods[i]; return x ? `${PERIODS[i].name}: ${exact(x.trips)} inter-city trips, train ${pctShare(trainShare(x))}` : PERIODS[i].name; }} />
+      )}
     </>
   );
 }

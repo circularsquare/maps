@@ -403,15 +403,18 @@ destinations at the end, and how the demand model's people would make one of the
   (the pairs' felt cost, averaged over the pairs the train serves), the main route's share and up
   to four other routes; By car's effective time; Train by period. The routes are drawn on the map
   as a local trip's, from the selection's busiest cell to the far end's centre. Rail is not
-  worked out when the far place's zone is not open in the game.
+  worked out when a place's zone at either end is not open in the game [T-991]: the panel then shows
+  only the straight-line distance between the two places' centres and By car's effective time from it
+  (the model's car rules for that pair, or "No road joins the two ends"), and no trip counts, bar or
+  Train by period. With no distance known, neither the distance nor By car is shown.
 - **The headline follows the view** [T-586]: under the purpose filter and the day shown, the trips
   a day between the two places (a line "124 trips per day, 2.5 km apart"; its hover the
   exact count and, under All purposes, each purpose's), then a bar and rows of their shares by
   train, walking and driving. Opened from a far-end bubble the places are the selection and every
   cell of that bubble, the same sums as the bubble's hover (`tripMix` over the selection's far end,
   `flows`), so the two agree; from the trip tool, the start's cell as homes and the end's cell. The
-  walk row shows when walking the whole way takes under 30 minutes [T-628], else walking is only
-  the bar's segment. When the view counts no trips between them, the headline is the representative
+  walk row shows when walking the whole way takes under 30 minutes [T-628], or whatever it takes
+  when walking has a share [T-992]. When the view counts no trips between them, the headline is the representative
   trip's chances in the period shown.
 - **Whole trips** [T-911]: counted shares are rounded to what whole trips allow: the trip count
   rounded (at least 1; under half a trip the line reads "Under 1 trip") is dealt among the modes by

@@ -378,6 +378,13 @@ export class Tools {
     this.place();
   }
 
+  /** A node was dragged (T-734): a route drawn from it starts at its old place, so it is dropped. */
+  nodeMoved(node: number) {
+    const at = (p: Placed) => p.end.kind === "node" && p.end.node === node;
+    if (this.start && (at(this.start) || this.chain.some(at))) this.reset();
+    else if (this.start) this.requestPreview();
+  }
+
   // ---------------------------------------------------------------- track
 
   private trackClick(e: MapMouseEvent) {

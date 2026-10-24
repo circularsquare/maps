@@ -360,9 +360,10 @@ export function mergeMarketPeriods(xs: (MarketPeriod | null)[], label: (r: TripR
   return {
     ...top, trips, rail, air: sum((p) => p.air), car: sum((p) => p.car),
     railPerceived: wmean((p) => p.railPerceived, (p) => p.trips * p.served),
-    carPerceived: wmean((p) => p.carPerceived, (p) => p.trips),
+    // T-991: ends with no trips worked out (not open) still carry a distance and a car, by place
+    carPerceived: trips > 0 ? wmean((p) => p.carPerceived, (p) => p.trips) : wmean((p) => p.carPerceived, () => 1),
     refPerceived: wmean((p) => p.refPerceived, (p) => p.trips),
-    km: wmean((p) => p.km, (p) => p.trips), zonePairs: sum((p) => p.zonePairs),
+    km: trips > 0 ? wmean((p) => p.km, (p) => p.trips) : wmean((p) => p.km, () => 1), zonePairs: sum((p) => p.zonePairs),
     served: trips > 0 ? sum((p) => p.trips * p.served) / trips : 0,
     why: rail > 0 ? "" : top.why,
     pairs, routes, cut,

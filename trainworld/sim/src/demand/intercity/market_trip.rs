@@ -67,7 +67,7 @@ impl IntercityApi {
         for z in self.zones_of(near, near_gid) {
             w[z] = 1.;
         }
-        self.market_trip_w(q, day, w, dir, far, far_gid)
+        self.market_trip_w(q, day, w, near, dir, far, far_gid)
     }
 
     /// The trip explorer between zones (T-866) in solved period `q` on kind of day `day`: the
@@ -94,13 +94,29 @@ impl IntercityApi {
     /// of the rail riders, its legs, and `trip::LEG_LEN` numbers a leg.
     pub fn market_trip(&self, q: usize, day: u32, market: u32, xy: &[f32], share: &[f32], dir: u32, far: u32, far_gid: i32) -> Vec<f64> {
         let w = self.trip_weights(market, xy, share, dir);
-        self.market_trip_w(q, day, w, dir, far, far_gid)
+        self.market_trip_w(q, day, w, market, dir, far, far_gid)
     }
 }
 
 impl IntercityApi {
-    /// `market_trip` for near zone weights `w`.
-    fn market_trip_w(&self, q: usize, day: u32, w: Vec<f64>, dir: u32, far: u32, far_gid: i32) -> Vec<f64> {
+    /// The head's distance (slot 8), car minutes (7) and reference minutes (17) between two places
+    /// from their rows alone, centre to centre; left as they are where either has no row.
+    fn head_from_rows(&self, h: &mut [f64], near: u32, far: u32, dir: u32) {
+        let (m, a, b) = (&self.m, near as usize, far as usize);
+        if a == b || a >= m.places.len() || b >= m.places.len() || !m.places[a].has || !m.places[b].has {
+            return;
+        }
+        let r = m.pr(a, b);
+        h[8] = r.km;
+        h[17] = r.refm as f64;
+        if r.car {
+            let to = if dir == 0 { b } else { a };
+            h[7] = (car_min(r.km as f32, m.places[to].park as f32) + r.cross) as f64;
+        }
+    }
+
+    /// `market_trip` for near zone weights `w` of place `near_place`.
+    fn market_trip_w(&self, q: usize, day: u32, w: Vec<f64>, near_place: u32, dir: u32, far: u32, far_gid: i32) -> Vec<f64> {
         let mut h = vec![0f64; MT_HEAD];
         let Some(per) = self.per(q) else { return h };
         h[0] = 1.;
@@ -112,13 +128,13 @@ impl IntercityApi {
         h[7] = -1.;
         let m = &self.m;
         let near: Vec<usize> = (0..w.len()).filter(|&z| w[z] > 0.).collect();
-        if near.is_empty() {
-            h[14] = NOT_MATCHED;
-            return h;
-        }
         let fars = self.zones_of(far, far_gid);
-        if fars.is_empty() {
-            h[14] = FAR_NOT_OPEN;
+        if near.is_empty() || fars.is_empty() {
+            // T-991: a place with no zones here still has its row: the distance and the car's
+            // minutes are known, the train's are not
+            self.head_from_rows(&mut h, near_place, far, dir);
+            let closed = |p: u32| !self.m.zones.iter().any(|z| z.place == p as usize);
+            h[14] = if fars.is_empty() || closed(near_place) { FAR_NOT_OPEN } else { NOT_MATCHED };
             return h;
         }
         // strategies towards the egress stations of the pairs' destinations

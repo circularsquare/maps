@@ -378,7 +378,8 @@ reads "No stations yet."
   in architecture.md]. New game shows the new game sheet (below) in the panel, headed "New game";
   its Start closes the panel and opens the new game the same way, its Back returns to the cards.
 - A page opened with `?new=1`, `?synth=1` or `?demandTest=1` does not autosave: the top bar says
-  "Autosave is off in this test page. Save a copy to keep the game.", a `?new=1` page marks no
+  "Autosave is off in this test page. Save a copy to keep the game." (the only place it is said,
+  [T-971]), a `?new=1` page marks no
   card Playing, and Save as a copy gives the game a slot of its own, which autosaves from then on.
 
 **A new game** starts on day 1 at 07:00 with $6B, empty or (a sandbox) from a real network, on its
