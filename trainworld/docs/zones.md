@@ -333,7 +333,10 @@ assignment uses: the app reads no realm shapes. A realm is **shown** while the g
 track in it (blueprint or built; a station in the zone whose coarse outline holds it, else the zone
 with the nearest centre; track in the zones it crosses, "Track" below), it holds the start zone, or the player showed it this session (its circle, a click on its land, or a
 search pick of a city or place in it); a click is not saved, so a reload hides a realm again unless
-the game has built there. What is not shown is one shade over the whole world, land and water
+the game has built there. A game started on the map (no start zone) shows every realm while it has
+no station or track [T-1133], so the player sees where a game can start; its first station or track
+ends that, leaving the realms the rule above shows (that "all shown" is not the player showing them).
+What is not shown is one shade over the whole world, land and water
 alike, with the shown realms' zones cut out along their coarse outlines (`packs/outlines.json`;
 shared borders cancel and gaps the zones enclose stay in the cut), so its edge follows the zone
 outlines and two hidden realms meeting have no edge (`inactive` in `game/shadeTable.ts`: 11% of the
@@ -386,7 +389,8 @@ A station built within reach downloads the pack again and opens it in every work
 waits for it and covers it from then on, and its bare figures serve until a shown solve does.
 Detail: [demand-runtime.md](demand-runtime.md), "Bare zones".
 
-**Zoomed far out** (8.5 and below) every opened zone is one bubble, as if it were one place: its trips a
+**Zoomed far out** (8.5 and below) a zone not opened is a dot, left out near a bigger zone's mark so
+dense realms are not crowded (T-1133, ui-demand-views.md "Zoomed far out"). Every opened zone is one bubble, as if it were one place: its trips a
 day at homes (Homes) or at destinations (Destinations) in every layer, local trips, commutes
 between zones and longer trips, coloured by train share, sized against the busiest zone whose
 centre is on screen (New York's local trips would otherwise dwarf every other zone). An opened zone not loaded in this session has no rail and its

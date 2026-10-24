@@ -5,7 +5,7 @@
 import { batch, computed, effect, signal } from "@preact/signals";
 import { AVERAGE_DAY, DEMAND_DAY_PHRASE, type DemandDay } from "./days";
 import { DEFAULT_FONT, FONT_KEYS, fontStack, loadFont, type FontKey } from "./fonts";
-import { DEFAULT_RAMP, setBubbleColours, UNBUILT_KEYS, type BubbleScheme, type UnbuiltColour } from "./palette";
+import { DEFAULT_RAMP, setBubbleColours, type BubbleScheme } from "./palette";
 import type { PurposeFilter } from "./purposes";
 import { LEVELS, type Level, type Selection } from "./types";
 
@@ -71,8 +71,6 @@ export interface DisplaySettings {
   bubbleColours: BubbleScheme;
   rampFrom: string;
   rampTo: string;
-  /** T-976: the dots drawn zoomed out for zones this game has not opened */
-  unbuiltColour: UnbuiltColour;
   /** T-247: the size of the page's panels and text, 0.8-1.2 (UI_SCALES); the map itself is not scaled */
   uiScale: number;
   /** T-698: the panels' font, a trial (game/fonts.ts); the map's labels stay Zen Maru Gothic */
@@ -119,7 +117,6 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   bubbleColours: "ramp",
   rampFrom: DEFAULT_RAMP.from,
   rampTo: DEFAULT_RAMP.to,
-  unbuiltColour: "pale",
   uiScale: 0.9,
   font: DEFAULT_FONT,
   dayShown: "average",
@@ -150,10 +147,10 @@ function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partia
 }
 const saved = load();
 // Migrate the former Line + separate width checkbox into the four-way display choice.
-const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean }) | undefined;
+const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string }) | undefined;
 // `intercity` (hide the longer-trip bubbles) is no longer a setting (T-222), nor `stationRiders`
-// (the demand circles, T-482): dropped from storage
-const { lineLoad: legacyLineLoad, intercity: _intercity, stationRiders: _stationRiders, ...migratedDisplay } = oldDisplay ?? {};
+// (the demand circles, T-482), nor `unbuiltColour` (T-1120): dropped from storage
+const { lineLoad: legacyLineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, ...migratedDisplay } = oldDisplay ?? {};
 if ((saved.v ?? 1) < 2) delete migratedDisplay.complexView;
 // T-703: the font and size defaults changed, and settings stored before had saved the old ones with
 // everything else, so both are dropped once
@@ -164,9 +161,6 @@ if ((saved.v ?? 1) < 4) delete migratedDisplay.realNetwork;
 if ((saved.v ?? 1) < 5) delete migratedDisplay.rampFrom, delete migratedDisplay.rampTo;
 // T-833: Train share became the default colouring, and the old default (Mode mix) was stored
 if ((saved.v ?? 1) < 6) delete migratedDisplay.bubbleColours;
-// T-976: the default went from black to light grey a day after the setting came, and black was stored
-if ((saved.v ?? 1) < 8) delete migratedDisplay.unbuiltColour;
-if (migratedDisplay.unbuiltColour !== undefined && !UNBUILT_KEYS.includes(migratedDisplay.unbuiltColour)) delete migratedDisplay.unbuiltColour;
 const trackColour = oldDisplay?.trackColour === "line" && legacyLineLoad !== undefined
   ? legacyLineLoad === false ? "line" : "traffic"
   : oldDisplay?.trackColour ?? DEFAULT_DISPLAY.trackColour;

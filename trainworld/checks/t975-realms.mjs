@@ -1,4 +1,7 @@
-// T-975, T-1006: realms (game/realms.ts, map/realmOverlay.ts). In a fresh profile with Homes on: the
+// T-975, T-1006: realms (game/realms.ts, map/realmOverlay.ts). First (T-1132, T-1133), in a profile of
+// its own: the new game sheet's location button refused, in Lyon and in Sydney (a map start centred
+// there); a map start shows every realm until its first station, in France, leaves the others dark.
+// Then in a fresh profile with Homes on: the
 // start menu's map draws no city bubbles; a new Tokyo game shows Japan only, the shade cut around
 // Japan's zones and every other realm with a button; a click on France's button shows France; a
 // reload with a station in Japan only hides France again; a station in France as well, and a reload
@@ -119,6 +122,79 @@ async function europePan(page) {
   }
   const lt = await page.evaluate(() => window.__long);
   return { files: got.length, kB: Math.round(got.reduce((a, f) => a + f.bytes, 0) / 1024), kinds, longTasks: lt.length, longMs: Math.round(lt.reduce((a, b) => a + b, 0)) };
+}
+
+// 0. T-1132, T-1133: a start on the map, and the location button, in a profile of their own
+{
+  const profile0 = await mkdtemp(join(tmpdir(), 'tw-t975-map-'));
+  const ctx0 = await chromium.launchPersistentContext(profile0, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+  try {
+    const page = await ctx0.newPage();
+    watch(page);
+    await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { dayShown: 'weekday', commuters: true }, v: 2 })); } catch {} });
+    const sheet = async () => {
+      await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
+      await page.waitForSelector('.start-menu .start-new', { timeout: 60000 });
+      await settle(page, 2000);
+      await page.click('.start-menu .start-new');
+      await page.waitForSelector('.start-menu .new-game');
+    };
+    const label = () => page.textContent('.new-game .start-new');
+    const here = '.new-game-here';
+    await sheet();
+    const ors = await page.locator('.new-game-or').count();
+    const mapLit = await page.locator('.new-game-map.on').count();
+    // a refusal: the button says so, nothing else changes
+    await ctx0.clearPermissions();
+    await page.click(here);
+    await page.waitForFunction(() => document.querySelector('.new-game-here')?.dataset.state === 'failed', undefined, { timeout: 20000 }).catch(() => {});
+    const refused = { text: await page.textContent(here), label: await label(), mapLit: await page.locator('.new-game-map.on').count() };
+    report('the sheet has its three ways joined by "or", and a refused location leaves it as it was', ors === 2 && mapLit === 1 && refused.text.trim() === 'Location unavailable' && refused.label === 'Start on the map' && refused.mapLit === 1, JSON.stringify({ ors, mapLit, refused }));
+    // a location in a zone (Lyon), and one far from every zone (Sydney)
+    await ctx0.grantPermissions(['geolocation']);
+    await ctx0.setGeolocation({ longitude: 4.84, latitude: 45.76 });
+    await page.click(here);
+    await page.waitForFunction(() => document.querySelector('.new-game-here')?.dataset.state === 'located', undefined, { timeout: 20000 }).catch(() => {});
+    const lyon = await label();
+    await page.screenshot({ path: join(SHOTS, `t975-${TAG}-located.png`) });
+    await page.click(here); // a second click unlights it
+    const off = await label();
+    await ctx0.setGeolocation({ longitude: 151.2, latitude: -33.87 });
+    await page.click(here);
+    await page.waitForFunction(() => document.querySelector('.new-game-here')?.dataset.state === 'located', undefined, { timeout: 20000 }).catch(() => {});
+    const sydney = await label();
+    await page.click('.new-game .start-new');
+    await ready(page);
+    await settle(page, 3000);
+    const view = await page.evaluate(() => { const c = window.tw.map.getCenter(); return { lng: c.lng, lat: c.lat, zoom: window.tw.map.getZoom() }; });
+    report('the location starts in its zone, or on the map centred there', /^Start in /.test(lyon) && off === 'Start on the map' && sydney === 'Start on the map' && Math.abs(view.lng - 151.2) < 1 && Math.abs(view.lat + 33.87) < 1 && view.zoom < 5,
+      JSON.stringify({ lyon, off, sydney, view }));
+
+    // a map start: every realm shown (no circles), the shade cut round every zone
+    await sheet();
+    const tPick = Date.now();
+    await page.click('.new-game .start-new');
+    await ready(page);
+    const tReady = Date.now();
+    await settle(page, 6000);
+    await page.evaluate(() => { window.tw.map.jumpTo({ center: [8, 49], zoom: 4.5 }); });
+    await settle(page, 3000);
+    await page.screenshot({ path: join(SHOTS, `t975-${TAG}-map-start.png`) });
+    const d = await dark(page), h = await holes(page);
+    out.mapStart = { toWorldS: +((tReady - tPick) / 1000).toFixed(1), triangles: h };
+    report('a map start shows every realm, the shade cut round every zone', d.length === 0 && h > 10000, `(${d.length} dark, ${h} triangles)`);
+    // a station in France: the realms follow the usual rule
+    await page.evaluate(() => { window.tw.map.jumpTo({ center: [4.84, 45.76], zoom: 12 }); });
+    await settle(page, 1500);
+    await station(page, [4.84, 45.76]);
+    await page.evaluate(() => { window.tw.map.jumpTo({ center: [8, 49], zoom: 4.5 }); });
+    await settle(page, 4000);
+    const d1 = await dark(page);
+    report('a map start\'s first station leaves its realm shown and the rest dark', d1.length > 10 && !d1.includes('France') && d1.includes('Germany'), `(${d1.length} dark)`);
+    await page.screenshot({ path: join(SHOTS, `t975-${TAG}-map-start-built.png`) });
+  } finally {
+    await ctx0.close();
+  }
 }
 
 try {

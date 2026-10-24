@@ -1,12 +1,13 @@
-// Top bar: city, the mode split (the goal number, train first, in the fixed mode colours), cash,
-// time and date over the sky and demand band, speed and pause. The clock is its own
-// component so a game minute re-renders only it.
+// Top bar: city (or the world, zoomed far out), the mode split (the goal number: the bar and the train
+// share), cash, time and date beside or over the sky and demand band, speed and pause. The clock is
+// its own component so a game minute re-renders only it.
 
 import type { ComponentChildren } from "preact";
 import { clock, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandView, modeRides, modeSplit, viewFinal, viewUpdating } from "../game/demand";
-import { clockTime, count, dayOf, money, moneyCash } from "../game/format";
+import { worldTotals, worldView } from "../game/worldTotals";
+import { clockTime, dayOf, money, moneyCash } from "../game/format";
 import { dateName, dateOf, MONTH_LONG, weekdayOf } from "../game/days";
 import { PERIODS, periodAt } from "../game/periods";
 import { SkyBanner } from "./SkyBanner";
@@ -104,12 +105,12 @@ function Cash() {
 }
 
 /** The city's name, the whole of it and its points (T-684, T-694: the past 24 game hours') on hover. */
-function CityName({ id, name }: { id: string | null; name: string }) {
+function CityName({ id, name, tip }: { id: string | null; name: string; tip?: string }) {
   const past = id ? pointsPast24h.value.get(id) : undefined;
   const rate = id ? pointsPerDay.value.get(id)?.[shownDay.value] : undefined;
   const lines = [name];
   if (id && (past || rate)) lines.push(`${pointsExact(past ?? 0)} points in the past 24 hours`, `${pointsExact(rate ?? 0)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`);
-  return <div class="city" data-tip={id ? lines.join("\n") : undefined}>{name}</div>;
+  return <div class="city" data-tip={tip ?? (id ? lines.join("\n") : undefined)}>{name}</div>;
 }
 
 function Speed() {
@@ -144,23 +145,24 @@ function SaveNotice() {
 export function TopBar() {
   const w = world.value;
   if (!w) return <header id="topbar" />;
-  const known = modeSplit.value; // T-026: from the demand workers
+  // T-1110: zoomed far out the bar names the world and sums every city, as the Cities tab's first row does
+  const far = worldView.value;
+  const total = far ? worldTotals() : null;
+  const known = total ? total.split : modeSplit.value; // T-026: from the demand workers
   const s = known ?? { train: 0, walk: 0, drive: 0 };
   // T-318: no name over dead space (the focus stays on the last zone, which is not where the view is)
-  const city = viewedZone.value ? cityById(activeCity.value) : null;
+  const city = !far && viewedZone.value ? cityById(activeCity.value) : null;
   // T-172: no figures until the city has opened (the game is playable while it loads)
   const pct = (v: number) => (known ? v.toFixed(1) + "%" : "–");
   // T-342: the shares are of rides (trip legs) a day; the train's count beside its share, all in the hover
-  const rides = modeRides.value;
-  const where = [city ? " in " + city.name : "", [" on a weekday", " on a weekend day", ""][shownDay.value]].join("");
+  const rides = total ? total.rides : modeRides.value;
+  const where = [far ? " in the world" : city ? " in " + city.name : "", [" on a weekday", " on a weekend day", ""][shownDay.value]].join("");
   const note = demandView.value && !viewFinal.value ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : viewUpdating.value ? " (before your last change)" : "";
-  // T-406: walking and driving are icons; each has its own hover with the share and its rides
-  const modeTip = (name: string, share: number, n: number | undefined) =>
-    `${name}: ${pct(share)} of rides per day${where}${rides && n !== undefined ? ` (${count(n)} of ${count(rides.all)})` : ""}${note}`;
+  const worldTip = total ? `World\n${total.cities} ${total.cities === 1 ? "city" : "cities"}, ${total.stations} ${total.stations === 1 ? "station" : "stations"}` : undefined;
   return (
     <><header id="topbar">
-      {/* T-341: every part has a fixed width; a long name is cut short, the whole name on hover */}
-      <CityName id={city?.id ?? null} name={city?.name ?? ""} />
+      {/* T-1108: the name takes what it needs up to a cap, on two lines at most, the whole name on hover */}
+      {far ? <CityName id={null} name="World" tip={worldTip} /> : <CityName id={city?.id ?? null} name={city?.name ?? ""} />}
       <div class="split">
         <div data-tip={splitTip(where, known, rides, note)} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
           <span class="bar-box">
@@ -170,18 +172,7 @@ export function TopBar() {
               <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
             </span>
           </span>
-          <span class="split-train">
-            <i class="sw sw-train" />
-            <b class="lg pct">{pct(s.train)}</b>
-          </span>
-          <span class="split-other sm" data-tip={modeTip("Walking", s.walk, rides?.walk)}>
-            <span class="mode-icon" style={{ color: "var(--mode-walk)" }}><Icon.walk /></span>
-            <span class="pct">{pct(s.walk)}</span>
-          </span>
-          <span class="split-other sm" data-tip={modeTip("Driving", s.drive, rides?.drive)}>
-            <span class="mode-icon" style={{ color: "var(--mode-drive)" }}><Icon.ride /></span>
-            <span class="pct">{pct(s.drive)}</span>
-          </span>
+          <b class="lg pct">{pct(s.train)}</b>
         </div>
       </div>
       <Cash />

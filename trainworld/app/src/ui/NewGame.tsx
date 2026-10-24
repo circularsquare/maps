@@ -1,9 +1,10 @@
 // T-728: the new game sheet, shared by the start menu and the saves panel. Normal or sandbox, then
-// where to start: one of five suggested cities, any registry city or zone found by name, or none,
-// which starts on the world map. In a sandbox, a city with a real network (T-731) can start with it.
+// where to start: one of five suggested cities or the player's location (T-1132), any registry city
+// or zone found by name, or the world map. In a sandbox, a city with a real network (T-731) can start with it.
 
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { activeCity, CITIES, cityById, viewedZone, type City } from "../game/cities";
+import { activeCity, CITIES, cityById, viewedZone, zonesTouching, ZONE_REACH_M, type City } from "../game/cities";
+import { zoneHolding } from "../game/realms";
 import { live } from "../map/live";
 import { display } from "../game/ui";
 import { cityMatch, normalise } from "../game/search";
@@ -47,15 +48,42 @@ export function findStart(text: string): { city: City; matched?: string }[] {
     .slice(0, MAX_HITS);
 }
 
-/** Move the camera to a new game's start: the city's registry view, or the world map. */
+/** A start from the player's location (T-1132): where the camera goes, taken by the next `viewStart`. */
+let startAt: { center: [number, number]; zoom: number } | null = null;
+/** The world map centred on a location no zone is near: the continent round it in view. */
+const LOCATED_WORLD_ZOOM = 4;
+/** How long the location button waits for the browser before it says the location is unavailable. */
+const LOCATE_WAIT_MS = 15_000;
+/** Only where the browser can give a location (it asks the player itself). */
+const CAN_LOCATE = typeof navigator !== "undefined" && "geolocation" in navigator && window.isSecureContext;
+
+/** T-1132: the zone a start from (lon, lat) goes to: the one whose coarse outline holds it, else the
+ * nearest by centre of those whose box comes within `ZONE_REACH_M` (the view's own reach, T-318);
+ * null farther out, which starts on the map centred there. */
+export function zoneForLocation(lon: number, lat: number): string | null {
+  const held = zoneHolding(lon, lat);
+  if (held) return held;
+  const k = Math.cos((lat * Math.PI) / 180);
+  let best: City | null = null, bd = Infinity;
+  for (const c of zonesTouching(lon, lat, lon, lat, ZONE_REACH_M)) {
+    const d = ((c.center[0] - lon) * k) ** 2 + (c.center[1] - lat) ** 2;
+    if (d < bd) { bd = d; best = c; }
+  }
+  return best?.id ?? null;
+}
+
+/** Move the camera to a new game's start: the city's registry view, or the world map; a start from
+ * the player's location goes to that location instead. */
 export function viewStart(start?: string) {
+  const at = startAt;
+  startAt = null;
   const c = start ? CITIES.find((x) => x.id === start) : undefined;
-  if (c && viewedZone.peek() === c.id && live.map && live.map.getZoom() > 9) return; // already there
+  if (!at && c && viewedZone.peek() === c.id && live.map && live.map.getZoom() > 9) return; // already there
   if (c) {
     activeCity.value = c.id;
     viewedZone.value = c.id;
   }
-  live.map?.jumpTo(c ? { center: c.center, zoom: c.zoom } : WORLD_VIEW);
+  live.map?.jumpTo(at ?? (c ? { center: c.center, zoom: c.zoom } : WORLD_VIEW));
   // T-801: a start on the map is picked from the zones' zoomed-out bubbles, so Homes goes on
   if (!c) display.value = { ...display.peek(), commuters: true, commuterEnd: "home" };
 }
@@ -76,30 +104,56 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
   const [real, setReal] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // T-1132: the start from the player's location, the browser asking for it; a refusal or no answer only marks the button
+  const [here, setHere] = useState<"idle" | "asking" | "failed">("idle");
+  const [located, setLocated] = useState<{ zone: string | null; at: [number, number] } | null>(null);
+  const asked = useRef(0);
   const first = useRef<HTMLButtonElement>(null);
   useEffect(() => first.current?.focus(), []);
+  useEffect(() => () => { asked.current++; }, []);
   const hits = useMemo(() => (start && text === cityById(start)?.name ? [] : findStart(text)), [text, start]);
-  const city = start ? cityById(start) : null;
-  const realOffered = mode === "sandbox" && !!start && REAL_NETWORKS.has(start);
+  const startId = located ? located.zone : start;
+  const city = startId ? cityById(startId) : null;
+  const realOffered = mode === "sandbox" && !!startId && REAL_NETWORKS.has(startId);
   const pick = (id: string | null) => {
+    asked.current++;
+    setHere("idle");
     setStart(id);
+    setLocated(null);
     setText(id && !START_CITIES.includes(id) ? cityById(id).name : "");
     setCursor(0);
     setError(null);
   };
+  const locate = () => {
+    if (located) return pick(null);
+    const n = ++asked.current;
+    setHere("asking");
+    // an answer after the wait still counts, unless the player asked again or left the sheet
+    const fail = () => { if (asked.current === n) setHere("failed"); };
+    const timer = window.setTimeout(fail, LOCATE_WAIT_MS);
+    navigator.geolocation.getCurrentPosition((p) => {
+      window.clearTimeout(timer);
+      if (asked.current !== n) return;
+      const at: [number, number] = [p.coords.longitude, p.coords.latitude];
+      pick(null);
+      setLocated({ zone: zoneForLocation(at[0], at[1]), at });
+      setHere("idle");
+    }, () => { window.clearTimeout(timer); fail(); }, { timeout: LOCATE_WAIT_MS });
+  };
   const go = async () => {
     if (busy) return;
-    const spec: NewGameSpec = { mode, start: start ?? undefined };
+    const spec: NewGameSpec = { mode, start: startId ?? undefined };
     if (realOffered && real) {
       setBusy(true);
       try {
-        spec.real = await realNetwork(start!);
+        spec.real = await realNetwork(startId!);
       } catch {
         setBusy(false);
         setError(`${city!.name}'s real network could not be downloaded.`);
         return;
       }
     }
+    startAt = located ? { center: located.at, zoom: city ? city.zoom : LOCATED_WORLD_ZOOM } : null;
     onStart(spec);
   };
   const modeBtn = (m: GameMode, label: string, tip: string, ref?: typeof first) => (
@@ -118,9 +172,13 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
           {START_CITIES.map((id) => (
             <button class={"btn text" + (start === id ? " on" : "")} aria-pressed={start === id} data-city={id} onClick={() => pick(start === id ? null : id)}>{cityById(id).name}</button>
           ))}
+          {CAN_LOCATE && <button class={"btn text new-game-here" + (located ? " on" : "") + (here === "failed" ? " muted" : "")} aria-pressed={!!located} data-state={located ? "located" : here} disabled={here === "asking"} onClick={locate}>
+            {here === "asking" ? "Locating" : here === "failed" ? "Location unavailable" : "Current location"}
+          </button>}
         </div>
+        <span class="new-game-or muted small">or</span>
         <input type="text" class="new-game-find" aria-label="Find a city" placeholder="Find a city" value={text} maxLength={60}
-          onInput={(e) => { setText((e.target as HTMLInputElement).value); setCursor(0); if (start && !START_CITIES.includes(start)) setStart(null); }}
+          onInput={(e) => { setText((e.target as HTMLInputElement).value); setCursor(0); if (start && !START_CITIES.includes(start)) setStart(null); setLocated(null); }}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown" && hits.length) { e.preventDefault(); setCursor((cursor + 1) % hits.length); }
             else if (e.key === "ArrowUp" && hits.length) { e.preventDefault(); setCursor((cursor + hits.length - 1) % hits.length); }
@@ -134,6 +192,8 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
             </li>
           ))}
         </ul>}
+        <span class="new-game-or muted small">or</span>
+        <button class={"btn text new-game-map" + (!startId && !located ? " on" : "")} aria-pressed={!startId && !located} onClick={() => pick(null)}>Find a city on the map</button>
       </div>
       {realOffered && <label class="check new-game-real" data-tip={`Start with ${city!.name}'s rail lines as they run today, built and running`}>
         <input type="checkbox" checked={real} onChange={(e) => setReal((e.target as HTMLInputElement).checked)} />

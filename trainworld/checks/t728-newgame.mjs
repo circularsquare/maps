@@ -84,7 +84,7 @@ try {
   await page.waitForSelector('.start-menu .start-new', { timeout: 120000 });
   await page.click('.start-menu .start-new');
   await page.waitForSelector('.start-menu .new-game');
-  const cities = await page.$$eval('.new-game-cities button', (b) => b.map((x) => x.textContent));
+  const cities = await page.$$eval('.new-game-cities button[data-city]', (b) => b.map((x) => x.textContent));
   const hague = await find('hague'), haag = await find('den haag'), sao = await find('sao'), none = await find('qqqzz'), aom = await find('AOMO');
   report('the five cities', cities.join(',') === 'New York,London,Paris,Tokyo,Toronto', `(${cities.join(', ')})`);
   // T-825: a zone is found by its aliases, shown by its own name with the alias matched
@@ -108,7 +108,7 @@ try {
   let s = await state();
   const T = s.active;
   let g = await game();
-  report('sandbox in Tokyo from its real network', near(g, [139.77, 35.68]) && g.lines > 20 && g.mode === 'sandbox' && g.bar === 'Sandbox' && /0[78]:\d\d$/.test(g.time),
+  report('sandbox in Tokyo from its real network', near(g, [139.77, 35.68]) && g.lines > 20 && g.mode === 'sandbox' && g.bar === 'Sandbox' && /^0[78]:\d\d/.test(g.time),
     `(centre ${g.lng.toFixed(2)}, ${g.lat.toFixed(2)} z${g.zoom.toFixed(1)}, ${g.lines} lines, mode ${g.mode}, top bar "${g.bar}", clock "${g.time}")`);
   await page.locator('#topbar').screenshot({ path: shot('topbar-light') });
   const order = await bigOrder();

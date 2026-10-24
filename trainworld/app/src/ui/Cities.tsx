@@ -1,4 +1,4 @@
-// The Cities tab (T-550, its own tab since T-749): one row for every region (a city pack or a zone, the
+// The Cities tab (T-550, its own tab since T-749): a World row, then one row for every region (a city pack or a zone, the
 // regions of the Lines tab's place toggle) where the player has a station, with its mode split bar
 // as the top bar draws it, its train rides a day, its profit a day (fares less running trains and upkeep), its
 // points over the past 24 game hours (T-684, T-694) and its star once earned (T-685). A click moves the camera to the region.
@@ -7,7 +7,6 @@ import { activeCity, cityById, viewedZone, type City, type CityId } from "../gam
 import { cityDemandViews, type DemandView } from "../game/demand";
 import { clockTime, count, dayOf, money } from "../game/format";
 import { weekdayOf } from "../game/days";
-import { stationZone } from "../game/listScope";
 import { shiftAt } from "../game/localTime";
 import { moneyState } from "../game/money";
 import { POINTS_PER_KM, POINTS_PER_TRIP, pointsExact, pointsPast24h, pointsPerDay, pointsShort, STAR_SHARE } from "../game/points";
@@ -16,6 +15,7 @@ import { splitTip } from "../game/splitTip";
 import { citySort, selection, shownDay, tool } from "../game/ui";
 import { world } from "../game/world";
 import { zonesLoaded } from "../game/zones";
+import { builtCities, sumModes } from "../game/worldTotals";
 import { live } from "../map/live";
 import type { DayLedger, MoneyState } from "../workers/protocol";
 import type { JSX } from "preact";
@@ -94,17 +94,10 @@ interface CityRow {
  * of all their trips. Not a region, so a click does nothing. */
 function TotalRow({ rows, day }: { rows: CityRow[]; day: string }) {
   const stations = rows.reduce((n, r) => n + r.stations, 0);
-  let all = 0, train = 0, walk = 0, drive = 0, rides = 0, seen = false;
-  for (const r of rows) {
-    if (!r.view) continue;
-    const a = r.view.tripsPerDay;
-    seen = true;
-    all += a; train += r.view.railTripsPerDay; walk += a * r.view.split.walk / 100; drive += a * r.view.split.drive / 100;
-    rides += r.view.railTripsPerDay;
-  }
-  const split = seen && all > 0 ? { train: 100 * train / all, walk: 100 * walk / all, drive: 100 * drive / all } : null;
+  const sum0 = sumModes(rows.map((r) => r.view));
+  const split = sum0?.split ?? null, seen = !!sum0, rides = sum0?.rides.train ?? 0;
   const s = split ?? { train: 0, walk: 0, drive: 0 };
-  const where = ` in all cities${day}`;
+  const where = ` in the world${day}`;
   const sum: DayLedger = { day: 0, fares: 0, running: 0, trains: 0, build: 0 };
   let yesterday = true, counted = 0;
   for (const r of rows) {
@@ -118,14 +111,14 @@ function TotalRow({ rows, day }: { rows: CityRow[]; day: string }) {
   const pastAll = rows.reduce((n, r) => n + (past.get(r.id) ?? 0), 0);
   const rateAll = rows.reduce((n, r) => n + (rate.get(r.id)?.[shownDay.value] ?? 0), 0);
   const pointsTip = [
-    `${pointsExact(pastAll)} points in all cities in the past 24 hours`,
+    `${pointsExact(pastAll)} points in the world in the past 24 hours`,
     `${pointsExact(rateAll)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`,
   ].join("\n");
   return (
     <li class="total">
-      <span class="grow" data-tip={`All cities\n${rows.length} ${rows.length === 1 ? "city" : "cities"}, ${stations} ${stations === 1 ? "station" : "stations"}`}>All cities</span>
+      <span class="grow" data-tip={`World\n${rows.length} ${rows.length === 1 ? "city" : "cities"}, ${stations} ${stations === 1 ? "station" : "stations"}`}>World</span>
       <LeaderboardButton />
-      <span class="city-bar" data-tip={splitTip(where, split, split ? { all, train, walk, drive } : null, "")}>
+      <span class="city-bar" data-tip={splitTip(where, split, sum0?.rides ?? null, "")}>
         <span class="bar">
           <i class="seg seg-train" style={{ width: s.train + "%" }} />
           <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
@@ -133,7 +126,7 @@ function TotalRow({ rows, day }: { rows: CityRow[]; day: string }) {
         </span>
       </span>
       <span class="val w-riders c-cities" data-tip={seen ? `${count(rides)} train rides per day${where}` : undefined}>{seen ? count(rides) : "–"}</span>
-      <span class={"val w-money c-cities c-money" + (counted && net(sum) * 1e6 <= -500 ? " neg" : "")} data-tip={counted ? moneyTip("all cities", { d: sum, yesterday }) : undefined}>{counted ? money(net(sum) * 1e6) : "–"}</span>
+      <span class={"val w-money c-cities c-money" + (counted && net(sum) * 1e6 <= -500 ? " neg" : "")} data-tip={counted ? moneyTip("the world", { d: sum, yesterday }) : undefined}>{counted ? money(net(sum) * 1e6) : "–"}</span>
       <span class="val w-points c-cities" data-tip={pointsTip}>{pointsShort(pastAll)}</span>
     </li>
   );
@@ -144,12 +137,7 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
   void zonesLoaded.value; // boundaries arriving re-place the stations
   if (!w) return null;
   const views = cityDemandViews.value;
-  const built = new Map<CityId, number>();
-  for (const s of w.save.stations) {
-    if (!s.built) continue;
-    const z = stationZone(s);
-    if (z) built.set(z, (built.get(z) ?? 0) + 1);
-  }
+  const built = builtCities();
   if (!built.size) return empty;
   const rows: CityRow[] = [...built].map(([id, stations]) => {
     const view = views.get(id);

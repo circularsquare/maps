@@ -45,10 +45,14 @@ export function dateOf(day: number): { month: number; date: number } {
   while (d >= MONTH_DAYS[month]) d -= MONTH_DAYS[month++];
   return { month, date: d + 1 };
 }
+/** "Feb 24" */
+export function shortDate(day: number): string {
+  const { month, date } = dateOf(day);
+  return `${MONTH_SHORT[month]} ${date}`;
+}
 /** "Mon Feb 24" */
 export function dateName(day: number): string {
-  const { month, date } = dateOf(day);
-  return `${weekdayName(day)} ${MONTH_SHORT[month]} ${date}`;
+  return `${weekdayName(day)} ${shortDate(day)}`;
 }
 
 /** The kind of day at time `t` (seconds). Callers pass local time (T-309, game/localTime.ts): a

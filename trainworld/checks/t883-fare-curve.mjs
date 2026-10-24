@@ -1,8 +1,12 @@
-// T-883: the fare curve reaches demand. On the real save (a ?new=1 game, the weekday's final):
-// the default straight fare; the same line through three nodes (no change at all); a cap beyond
-// 500 km (the curve's own path in the sim, but no New York trip is that long, so within 0.05%);
-// a cap at $4.50 beyond 30 km (only longer trips get cheaper, so more rail trips). Screenshots of
-// the Money tab's graph in light and dark go to artifacts/trainworld/fares2/.
+// T-883, T-1112: the fare curve reaches demand, and the Money tab's two-node control works. On the
+// real save (a ?new=1 game, the weekday's final): the default fare; the same line through other
+// nodes (no change at all); an older three-node curve kept as its first and last (here the default
+// again); twice the rate per km (fewer rail trips); free up to 5 km then $0.10 a km (the curve's
+// own path in the sim, clamped at $0; more rail trips). Then in the Money tab: dragging the second
+// node sends nothing until release, then the new fare; Ctrl+Z, Ctrl+Y and the undo button take it
+// back and put it back (T-1130); wheel zoom puts it past the plot as an
+// arrow, and a click on the arrow zooms back out. Screenshots of the fare graph (its default view,
+// zoomed with the arrow, mid-drag), light and dark, go to artifacts/trainworld/t1111/.
 //   node trainworld/checks/t883-fare-curve.mjs [url]   (from the maps root; default localhost:6150)
 // Prints PASS or FAIL lines and exits 1 on failure. About five minutes.
 import { mkdir, mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
@@ -13,8 +17,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const BASE = (process.argv[2] ?? 'http://localhost:6150/').replace(/\/?$/, '/');
 const SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
-const OUT = 'artifacts/trainworld/fares2/';
+const OUT = 'artifacts/trainworld/t1111/';
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const DEFAULT_RAIL = 11359932;
 
 async function playwright() {
   if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
@@ -54,35 +59,106 @@ try {
     return page.evaluate(() => { const v = window.twDemand.view(); return { version: v.version, rail: v.railTripsPerDay }; });
   };
   const setNodes = (nodes) => page.evaluate((nodes) => window.tw.client.edit({ op: 'fares', nodes }), nodes);
+  const nodesNow = () => page.evaluate(() => JSON.stringify(window.tw.moneyState.value.fares.nodes));
+  const fmt = (v) => Math.round(v).toLocaleString('en-US');
 
   const a = await final(-1);
-  report('default fare', Math.round(a.rail) === 11342122, `(${Math.round(a.rail).toLocaleString('en-US')} rail trips a day; want 11,342,122)`);
+  report('default fare', Math.round(a.rail) === DEFAULT_RAIL, `(${fmt(a.rail)} rail trips a day; want ${fmt(DEFAULT_RAIL)})`);
 
   // the same fares give the demand nothing new to solve, so no new final may come
-  await setNodes([[1, 1.6], [10, 2.5], [100, 11.5]]);
+  await setNodes([[10, 2.5], [100, 11.5]]);
   await page.waitForTimeout(15000);
   const b = await final(-1);
-  report('the same line through three nodes', Math.round(b.rail) === Math.round(a.rail), `(${Math.round(b.rail).toLocaleString('en-US')})`);
+  report('the same line through other nodes', Math.round(b.rail) === Math.round(a.rail), `(${fmt(b.rail)})`);
 
-  await setNodes([[1, 1.6], [500, 51.5], [1000, 51.5]]);
-  const c = await final(b.version);
-  const dc = (c.rail - a.rail) / a.rail;
-  report('a cap beyond 500 km', Math.abs(dc) < 5e-4, `(${Math.round(c.rail).toLocaleString('en-US')}, ${(100 * dc).toFixed(3)}%)`);
+  await setNodes([[1, 1.6], [30, 4.5], [100, 11.5]]);
+  await page.waitForTimeout(15000);
+  const c = await final(-1);
+  const cn = await nodesNow();
+  report('three nodes keep the first and last', cn === '[[1,1.6],[100,11.5]]' && Math.round(c.rail) === Math.round(a.rail), `(nodes ${cn}, ${fmt(c.rail)})`);
 
-  await setNodes([[1, 1.6], [30, 4.5], [100, 4.5]]);
+  await setNodes([[1, 1.7], [100, 21.5]]);
   const d = await final(c.version);
   const dd = (d.rail - a.rail) / a.rail;
-  report('a cap at $4.50 beyond 30 km', dd > 0, `(${Math.round(d.rail).toLocaleString('en-US')}, ${(100 * dd).toFixed(2)}% more rail trips)`);
+  report('twice the rate per km', dd < 0, `(${fmt(d.rail)}, ${(100 * dd).toFixed(2)}%)`);
 
-  // screenshots of the Money tab's graph with the cap, light then dark
+  await setNodes([[5, 0], [100, 9.5]]);
+  const e = await final(d.version);
+  const de = (e.rail - a.rail) / a.rail;
+  report('free up to 5 km, then $0.10 a km', de > 0, `(${fmt(e.rail)}, ${(100 * de).toFixed(2)}% more rail trips)`);
+
+  await setNodes([[1, 1.6], [100, 11.5]]);
+  await page.waitForFunction(() => JSON.stringify(window.tw.moneyState.value.fares.nodes) === '[[1,1.6],[100,11.5]]', undefined, { timeout: 30000 });
+
+  // the Money tab
   await page.click('button.tab[aria-label="Money"]');
-  for (const shade of ['light', 'dark']) {
-    await page.evaluate((shade) => { document.documentElement.dataset.shade = shade; window.tw.ui?.shade && (window.tw.ui.shade.value = shade); }, shade);
-    const g = await page.$('svg.fare-graph');
+  const shade = async (s) => {
+    await page.evaluate((s) => { document.documentElement.dataset.shade = s; window.tw.ui?.shade && (window.tw.ui.shade.value = s); }, s);
+    await page.waitForTimeout(300);
+  };
+  const shot = async (name, sel, extra = 0) => {
+    const g = await page.$(sel);
     await g.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(200);
     const box = await g.boundingBox();
-    await page.screenshot({ path: `${OUT}money-cap-${shade}.png`, clip: { x: box.x - 8, y: box.y - 24, width: box.width + 16, height: box.height + 130 } });
+    await page.screenshot({ path: `${OUT}${name}.png`, clip: { x: box.x - 8, y: box.y - 30, width: box.width + 16, height: box.height + 40 + extra } });
+  };
+  const graph = 'svg.fare-graph';
+  for (const s of ['light', 'dark']) { await shade(s); await shot(`fare-default-${s}`, graph, 110); }
+  await shade('light');
+
+  // drag the second node up: nothing is sent until the pointer is released
+  const knobs = await page.$$(`${graph} .fg-knob`);
+  report('two nodes on the graph', knobs.length === 2, `(${knobs.length})`);
+  const before = await nodesNow();
+  const k = await knobs[1].boundingBox();
+  const kx = k.x + k.width / 2, ky = k.y + k.height / 2;
+  await page.mouse.move(kx, ky);
+  await page.mouse.down();
+  await page.mouse.move(kx + 10, ky - 15, { steps: 4 });
+  await page.mouse.move(kx + 20, ky - 30, { steps: 4 });
+  await page.waitForTimeout(300);
+  const mid = await nodesNow();
+  for (const s of ['light', 'dark']) { await shade(s); await shot(`fare-drag-${s}`, graph, 110); }
+  await shade('light');
+  await page.mouse.up();
+  await page.waitForFunction((before) => JSON.stringify(window.tw.moneyState.value.fares.nodes) !== before, before, { timeout: 30000 });
+  const after = JSON.parse(await nodesNow());
+  report('a drag sends the fare once, on release', mid === before && after[1][1] > 11.5 && after[1][0] > 100 && after[0][1] === 1.6, `(before ${before}, mid-drag ${mid}, after ${JSON.stringify(after)})`);
+
+  // T-1130: Ctrl+Z takes the fare change back while it is the last edit, Ctrl+Y puts it back
+  const undoBtn = `button[aria-label="Undo the fare change"]`;
+  const enabled = async () => !(await page.$eval(undoBtn, (b) => b.disabled));
+  const wasOn = await enabled();
+  await page.keyboard.press('Control+z');
+  await page.waitForFunction((before) => JSON.stringify(window.tw.moneyState.value.fares.nodes) === before, before, { timeout: 30000 }).catch(() => {});
+  const undone = await nodesNow();
+  const offAfter = !(await enabled());
+  await page.keyboard.press('Control+y');
+  await page.waitForFunction((before) => JSON.stringify(window.tw.moneyState.value.fares.nodes) !== before, before, { timeout: 30000 }).catch(() => {});
+  const redone = await nodesNow();
+  report('Ctrl+Z and Ctrl+Y undo and redo a fare change', wasOn && undone === before && offAfter && redone === JSON.stringify(after), `(button on ${wasOn}, undone ${undone}, button off after ${offAfter}, redone ${redone})`);
+  await page.click(undoBtn);
+  await page.waitForFunction((before) => JSON.stringify(window.tw.moneyState.value.fares.nodes) === before, before, { timeout: 30000 }).catch(() => {});
+  report('the undo button takes it back', (await nodesNow()) === before, `(${await nodesNow()})`);
+  // redo it so the zoom below has a far node to put past the plot
+  await page.keyboard.press('Control+y');
+  await page.waitForFunction((before) => JSON.stringify(window.tw.moneyState.value.fares.nodes) !== before, before, { timeout: 30000 }).catch(() => {});
+
+  // zoom in with the wheel until the second node is past the plot: an arrow at the edge
+  const gb = await (await page.$(graph)).boundingBox();
+  await page.mouse.move(gb.x + gb.width / 2, gb.y + gb.height / 2);
+  for (let i = 0; i < 6; i++) { await page.mouse.wheel(0, -150); await page.waitForTimeout(80); }
+  await page.waitForTimeout(300);
+  const off = await page.$$(`${graph} .fg-off`);
+  report('zoomed in, the far node is an arrow', off.length === 1 && (await page.$$(`${graph} .fg-knob`)).length === 1, `(${off.length} arrows)`);
+  for (const s of ['light', 'dark']) { await shade(s); await shot(`fare-zoomed-${s}`, graph, 110); }
+  await shade('light');
+  if (off.length) {
+    const ab = await off[0].boundingBox();
+    await page.mouse.click(ab.x + ab.width / 2, ab.y + ab.height / 2);
+    await page.waitForTimeout(300);
+    report('a click on the arrow zooms out to the node', (await page.$$(`${graph} .fg-off`)).length === 0, '');
   }
   report('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
   await setNodes([[1, 1.6], [100, 11.5]]);

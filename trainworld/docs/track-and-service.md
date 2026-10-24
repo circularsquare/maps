@@ -40,7 +40,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   start, turning until it faces the click, then a straight to the click: one round curve of any
   turn, still through the click but arriving on its own heading rather than 2a. At r = the design
   radius the straight is nil, so the shape grows out of the arc without a jump. **The design
-  radius** (T-817) follows the Build tab's design speed: the smallest whole-metre radius for it at
+  radius** (T-817) follows the Build tab's target max speed: the smallest whole-metre radius for it at
   a_lat (below), 1,796 m at 160 km/h (the default and the auto cap), 2,806 at 200, 4,385 at 250,
   7,183 at 320 (`design_radius`, `TrackApi::set_design_speed`). It also sizes the lead-in curves of
   a drawn segment (`lead_in_capped`). Above 160, a corner the tool makes whose curve comes out
@@ -637,11 +637,12 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   hour's end. The worker settles and sends the cash and today's
   and this hour's ledger four times a wall second while the clock runs; the top bar shows the cash to the dollar,
   and only it and the Money tab's cash, Today column and History re-render. The fare for a trip
-  follows one curve of trip length for the network, set in the Money tab [T-883,
-  `app/src/game/fareCurve.ts`]: straight between the player's nodes, carried on past the first and
-  last node at that stretch's slope (so a level last stretch is a cap), never below $0, never
-  falling. It starts as $1.50 + $0.10 a km (nodes at 1 and 100 km; a save with a base and rate
-  instead loads them the same way); a trip that changes lines pays it once on its whole length. In
+  follows one curve of trip length for the network, set in the Money tab [T-883, T-1112,
+  `app/src/game/fareCurve.ts`]: the straight line through the player's two nodes, carried on past
+  each at its slope, never below $0; the second node is farther and never cheaper. It starts as
+  $1.50 + $0.10 a km (nodes at 1 and 100 km; a save with a base and rate instead loads them the same
+  way, and an older curve of more nodes keeps its first and last); a trip that changes lines pays it
+  once on its whole length. In
   demand, route search charges the first stretch as a base and a rate per km, and each station
   pair's cost adds the rest of the curve on the expected km of its strategy (`FareCurve` in
   `sim/src/demand/kernel.rs`); the trip explorer shows the curve's fare on the route's own length.

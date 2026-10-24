@@ -3,7 +3,8 @@
 // its registry row's `realm` (pipeline/realms.py), else its country's when the country is one realm.
 //
 // A realm is shown when the game has a station or track in it (blueprint or built; T-1047), it holds
-// the start zone, or the player showed it this session (`showRealm`; not saved). Only what is drawn
+// the start zone, or the player showed it this session (`showRealm`; not saved); a game started on the
+// map with nothing built shows them all (T-1133). Only what is drawn
 // and loaded for viewing follows: demand, the market and money never read this. Everything is shown
 // before the first game is in, and for good when the zones' coarse outlines are missing (T-1006: the
 // shade is cut from them); a zone with no realm is always shown.
@@ -95,12 +96,17 @@ function inRings(g: MultiPolygon, lon: number, lat: number): boolean {
 /** The realm a station at (lon, lat) builds in: the zone whose coarse outline holds it, else (dead
  * space, or before the outlines are in) the zone with the nearest centre. */
 export function realmOfPlace(lon: number, lat: number): string | null {
+  return zoneRealm(zoneHolding(lon, lat) ?? cityNear(lon, lat));
+}
+
+/** The zone whose coarse outline holds (lon, lat); null outside them all or before they are in. */
+export function zoneHolding(lon: number, lat: number): CityId | null {
   const outlines = zoneOutlines.peek();
   if (outlines) for (const c of zonesTouching(lon, lat, lon, lat)) {
     const g = outlines.get(c.id);
-    if (g && inRings(g, lon, lat)) return zoneRealm(c.id);
+    if (g && inRings(g, lon, lat)) return c.id;
   }
-  return zoneRealm(cityNear(lon, lat));
+  return null;
 }
 
 /** The realm not shown whose zone outline holds (lon, lat), for a click on its shade (T-1049); null
@@ -119,10 +125,14 @@ export function hiddenRealmAt(lon: number, lat: number): string | null {
 
 /** The game in hand's start zone's realm; undefined before the first game is in. */
 const startRealm = signal<string | null | undefined>(undefined);
+/** The game in hand has no start zone: it started on the world map. */
+const mapStart = signal(false);
 /** The first game's first snapshot has come: until then everything shows, as before realms. */
 const gameIn = signal(false);
 const clicked = signal<ReadonlySet<string>>(new Set());
 const built = signal<ReadonlySet<string>>(new Set());
+
+const ALL_REALMS: ReadonlySet<string> = new Set(REALM_SPOTS.keys());
 
 /** The realms shown; null when every zone is (before the first game, or with no outlines). */
 export const shownRealms = computed<ReadonlySet<string> | null>(() => {
@@ -132,6 +142,9 @@ export const shownRealms = computed<ReadonlySet<string> | null>(() => {
   if (s) out.add(s);
   const t = trackZones.value; // T-1047
   for (const z of [...t.built, ...t.planned]) { const r = zoneRealm(z); if (r) out.add(r); }
+  // T-1133: a game started on the map shows every realm until it has a station or track, so the
+  // player sees where a game can start; a set, not null, so the shade still darkens the world no zone covers
+  if (mapStart.value && !built.value.size && !t.built.size && !t.planned.size) return ALL_REALMS;
   return out;
 });
 
@@ -165,6 +178,7 @@ export const showZoneRealm = (zone: CityId) => showRealm(zoneRealm(zone));
  * by a click go with the game before. */
 export function setGameStart(start: CityId | null | undefined) {
   startRealm.value = start ? zoneRealm(start) ?? null : null;
+  mapStart.value = !start;
   clicked.value = new Set();
   waitFor = world.peek();
 }

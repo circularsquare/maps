@@ -35,7 +35,7 @@ import { marketGroup, tripOpenedFrom } from "../game/trip";
 import { cityDemandViews, demandView, eachCorridor, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type Corridors, type CorridorTable, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
 import { selectedScope } from "../game/complexView";
 import { count } from "../game/format";
-import { BUBBLE_ALPHA, bubbleColour, rgb, setBubbleColours, UNBUILT_COLOURS } from "../game/palette";
+import { BUBBLE_ALPHA, bubbleColour, rgb, setBubbleColours, UNBUILT_FILL } from "../game/palette";
 import { openedZones } from "../game/openedZones";
 import { display, purposeFilter, selection, shade, shownDayPhrase } from "../game/ui";
 import type { Selection } from "../game/types";
@@ -87,7 +87,7 @@ const SPLIT_BUBBLES = true;
 /** A bubble's edge value: its outline (0 none, 1 plain, 2 the selected one's), and under
  * `SPLIT_BUBBLES` the train share; a bubble nobody travels in stays a plain grey disc. */
 const edgeOf = (outline: 0 | 1 | 2, rail: number, all: number) => (SPLIT_BUBBLES && all > 0 ? splitEdge(outline, rail / all) : outline);
-/** An unopened zone's dot: a 1 px dark outline (the disc shader's 1.1-1.5 band). */
+/** An unopened zone's dot: a 1 px map ink outline (the disc shader's 1.1-1.5 band). */
 const UNBUILT_EDGE = 1.25;
 /** Most place labels on screen at once, the biggest first (T-493). */
 const MAX_LABELS = 8;
@@ -99,6 +99,33 @@ const LABEL_SEPARATION = 130;
 /** Below this zoom (the world, a hemisphere at most) no city is drawn unasked, and the realms'
  * circles stay off (T-1046): the overview's bubbles clutter a map of the whole world. */
 export const CITY_MARKS_MIN_ZOOM = 2.5;
+
+/** T-1133: the least distance, CSS px, between an unopened zone's dot and any bigger zone's mark. */
+const DOT_GAP = 20;
+
+/** T-1133: leave out, in place, each unopened zone's dot within `DOT_GAP` of a bigger zone's mark
+ * (`points` biggest first), so dense realms show their biggest cities zoomed out. */
+function spaceDots<P extends { city: { center: [number, number] }; unbuilt: boolean }>(points: P[], zoom: number) {
+  const W = 512 * 2 ** zoom, cell = new Map<number, [number, number][]>();
+  const key = (i: number, j: number) => i * 1e6 + j;
+  let n = 0;
+  for (const p of points) {
+    const [lon, lat] = p.city.center, s = Math.sin((Math.max(-85, Math.min(85, lat)) * Math.PI) / 180);
+    const x = ((lon + 180) / 360) * W, y = (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * W;
+    const i = Math.floor(x / DOT_GAP), j = Math.floor(y / DOT_GAP);
+    let near = false;
+    if (p.unbuilt) {
+      for (let di = -1; di <= 1 && !near; di++) for (let dj = -1; dj <= 1 && !near; dj++) {
+        near = (cell.get(key(i + di, j + dj)) ?? []).some(([u, v]) => (u - x) ** 2 + (v - y) ** 2 < DOT_GAP ** 2);
+      }
+    }
+    if (near) continue;
+    const k = key(i, j);
+    (cell.get(k) ?? cell.set(k, []).get(k)!).push([x, y]);
+    points[n++] = p;
+  }
+  points.length = n;
+}
 
 /** The city bubbles are drawn in place of the focused city's own: zoomed far out, or a city
  * selected (T-186). The commuter view hides its bubbles and leaves clicks and hover to these. */
@@ -296,10 +323,11 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     });
     points.sort((a, b) => b.all - a.all);
     const zoom = map.getZoom();
+    if (!own) spaceDots(points, zoom);
     const pxPerUnit = 512 * 2 ** zoom / EARTH_C;
     const zoomScale = 2 ** (ZOOM_GROWTH * (zoom - SCALE_ZOOM));
     const discs = new Float32Array(points.length * DISC);
-    const dot = rgb(UNBUILT_COLOURS[shade.peek()][display.peek().unbuiltColour] ?? UNBUILT_COLOURS.light.black);
+    const dot = rgb(UNBUILT_FILL);
     const size = display.peek().bubbleSize;
     points.forEach((p, i) => {
       const [x, y] = toLocal(p.city.center[0], p.city.center[1], a);
@@ -308,7 +336,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       // T-976: a zone not opened is a dot of half the radius it would have, in whole CSS px, at least 2
       // so its 1 px outline leaves some fill
       if (p.unbuilt) r = Math.max(2, Math.floor((r * pxPerUnit * size) / 2)) / (pxPerUnit * size);
-      discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, p.unbuilt ? UNBUILT_EDGE : edgeOf(p.isOwn ? 2 : 1, p.rail, p.all)], i * DISC);
+      discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, p.unbuilt ? 1 : BUBBLE_ALPHA, p.unbuilt ? UNBUILT_EDGE : edgeOf(p.isOwn ? 2 : 1, p.rail, p.all)], i * DISC);
       label(`${p.city.name} · ${count(p.all)} trips`);
     });
     const first = points.findIndex((p) => p.isOwn);
@@ -399,7 +427,6 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   effect(() => {
     display.value.bubbleSize;
     display.value.commuters;
-    display.value.unbuiltColour;
     shade.value;
     openedZones.value; // T-976: a zone opening turns its dot into a bubble
     setBubbleColours(display.value.bubbleColours, display.value.rampFrom, display.value.rampTo);

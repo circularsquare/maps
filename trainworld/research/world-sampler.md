@@ -65,7 +65,7 @@ country publishes them.
 about commute distance even with no OD: India's census by distance band, China's city commute
 reports, national travel surveys' mean commute. Keep the power at a default and fit the length so
 the model's distance distribution (or mean) matches. Where nothing exists, take the fitted curve of
-the most similar fitted city. This is one small function beside `notes/t277_fit.py`, which
+the most similar fitted city. This is one small function beside `pipeline/curves/t277_fit.py`, which
 generalises to "flows between any units plus their polygons" for the countries that have flows.
 
 **Recommendation: a tier 0 adapter** (`pipeline/tier0.py`), any city from a bounding set of admin

@@ -26,7 +26,8 @@ import { cancelLink, linkPicked, linking } from "./game/links";
 import { ACTION_KEYS, pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/tabs";
 import { constructBlueprints, newLineKey, toggleEditStopsSelected } from "./game/lineActions";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
-import { redo, undo, world } from "./game/world";
+import { world } from "./game/world";
+import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
 import { lastSaved, moneyState } from "./game/money";
 import { live } from "./map/live";
@@ -424,7 +425,7 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     return;
   }
-  // Undo and redo (blueprint edits only; constructing is final, SPEC 6.4).
+  // Undo and redo (blueprint edits, and fare changes while they are the last, T-1130; constructing is final, SPEC 6.4).
   if ((e.ctrlKey || e.metaKey) && !e.altKey) {
     const k = e.key.toLowerCase();
     if (k === "z" && !e.shiftKey) {

@@ -2,8 +2,9 @@
 // save button at the end of the dock's tab row (or the top bar's Autosave off notice), closed with
 // Esc, its close button or a click outside it. One card per browser slot: a picture of its network,
 // name, when it was saved, day, cities, lines, stations and cash; the game being played is marked,
-// every other has an Open button; under the game being played, its backups (T-744). Then save a copy,
-// the files and a new game; a copy, a loaded file and a new game each get a new slot (T-743). T-253: no notes.
+// every other has an Open button; under the game being played, its backups (T-744). The files, a new
+// game and save a copy are above the list (T-1131); a copy, a loaded file and a new game each get a
+// new slot (T-743). T-253: no notes.
 
 import { signal } from "@preact/signals";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -141,6 +142,15 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
     <>
       {!saves.writable && saves.reason && <p class="callout bad">{saves.reason}</p>}
       {saves.error && <p class="callout bad">{saves.error}</p>}
+      <div class="pane-foot save-files">
+        <button class="btn text" data-tip="Download this game as a .save file" onClick={exportGame}>Save to a file</button>
+        <button class="btn text" data-tip="Open a .save file as a new saved game. The game you are playing is saved first." onClick={pick}>Load a file</button>
+        <button class="btn text" data-tip="Start a new game as a new saved game. The game you are playing is saved first." onClick={onNewGame}>New game</button>
+      </div>
+      <form class="save-slot-new" onSubmit={(e) => { e.preventDefault(); manageSaveSlot("create", undefined, newName); setNewName(""); }}>
+        <input type="text" aria-label="New save slot name" placeholder="Name for a copy of this game" maxLength={80} value={newName} onInput={(e) => setNewName((e.target as HTMLInputElement).value)} />
+        <button class="btn text" type="submit" data-tip="Save a copy of this game under a new name and carry on playing the copy">Save as a copy</button>
+      </form>
       <ul class="save-slots">
         {saves.slots.map((slot) => <li data-slot={slot.key} class={slot.key === saves.active ? "on" : ""}>
           {rename?.key === slot.key ? <form class="save-slot-new" onSubmit={(e) => { e.preventDefault(); manageSaveSlot("rename", slot.key, rename.name); setRename(null); }}>
@@ -156,15 +166,6 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
           </div>}
         </li>)}
       </ul>
-      <form class="save-slot-new" onSubmit={(e) => { e.preventDefault(); manageSaveSlot("create", undefined, newName); setNewName(""); }}>
-        <input type="text" aria-label="New save slot name" placeholder="Name for a copy of this game" maxLength={80} value={newName} onInput={(e) => setNewName((e.target as HTMLInputElement).value)} />
-        <button class="btn text" type="submit" data-tip="Save a copy of this game under a new name and carry on playing the copy">Save as a copy</button>
-      </form>
-      <div class="pane-foot save-files">
-        <button class="btn text" data-tip="Download this game as a .save file" onClick={exportGame}>Save to a file</button>
-        <button class="btn text" data-tip="Open a .save file as a new saved game. The game you are playing is saved first." onClick={pick}>Load a file</button>
-        <button class="btn text" data-tip="Start a new game as a new saved game. The game you are playing is saved first." onClick={onNewGame}>New game</button>
-      </div>
     </>
   );
 }

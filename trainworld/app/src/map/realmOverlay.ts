@@ -15,10 +15,9 @@ import type { Map as MlMap } from "maplibre-gl";
 import { CITIES } from "../game/cities";
 import { linking } from "../game/links";
 import { mapBlank } from "../game/loading";
-import { BUBBLE_ALPHA, rgb, UNBUILT_COLOURS } from "../game/palette";
 import { followStations, hiddenRealmAt, inactiveRealms, loadRealms, realmName, shownRealms, showRealm, zoneOutlines, zoneShown, type RealmSpot } from "../game/realms";
 import { SHADES } from "../game/shadeTable";
-import { display, selection, shade, tool } from "../game/ui";
+import { selection, shade, tool } from "../game/ui";
 import type { ShadeIn, ShadeOut } from "../workers/shade.worker";
 import { outsideZones } from "./boundaryGeometry";
 import { takeOutlineText } from "./coarseOutlines";
@@ -91,10 +90,6 @@ export function startRealmOverlay(map: MlMap): () => void {
   const paint = () => {
     const c = SHADES[shade.peek()];
     shadeLayer.setColor(c.inactive, c.inactiveOpacity);
-    // the circle is an unopened zone's dot (intercityView.ts): its fill and 1 px ink outline
-    const dot = rgb(UNBUILT_COLOURS[shade.peek()][display.peek().unbuiltColour] ?? UNBUILT_COLOURS.light.black).join(", ");
-    layer.style.setProperty("--realm-dot", `rgba(${dot}, ${BUBBLE_ALPHA})`);
-    layer.style.setProperty("--realm-dot-hot", `rgb(${dot})`);
   };
   const visibility = () => {
     shadeLayer.visible = !mapBlank.peek();
@@ -140,7 +135,7 @@ export function startRealmOverlay(map: MlMap): () => void {
     for (const [id, b] of buttons) if (!keep.has(id)) { render(null, b.el); b.el.remove(); buttons.delete(id); }
     place();
   });
-  const disposeShade = effect(() => { void shade.value; void display.value.unbuiltColour; paint(); });
+  const disposeShade = effect(() => { void shade.value; paint(); });
   const disposeBlank = effect(() => { void mapBlank.value; visibility(); place(); });
   return () => {
     stopStations();

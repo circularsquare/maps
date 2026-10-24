@@ -11,6 +11,7 @@ import { BUBBLE_ALPHA, bubbleColour, setBubbleColours } from "../../game/palette
 import { display, purposeFilter, shownDayPhrase } from "../../game/ui";
 import { localModes } from "../../map/modeBar";
 import { goTo } from "../Search";
+import { Actions } from "../widgets";
 
 const exact = (n: number) => Math.round(n).toLocaleString("en");
 const pct = (n: number, of: number) => {
@@ -76,6 +77,10 @@ export function CityInspector({ id }: { id: string }) {
         <i class="mk" style={{ background: `rgba(${mix[0]}, ${mix[1]}, ${mix[2]}, ${BUBBLE_ALPHA})` }} />
         <span class="name">{city.name}</span>
       </div>
+      {/* T-220: the City tab's City centre button, here now that the tab is gone */}
+      <Actions>
+        <button class="btn text" onClick={() => goTo({ kind: "city", name: city.name, city })}>Go to {city.name}</button>
+      </Actions>
       {!market ? (
         <p class="muted">Calculating demand.</p>
       ) : (
@@ -124,10 +129,6 @@ export function CityInspector({ id }: { id: string }) {
           {!drawn && <p class="muted small">Not drawn under this purpose filter.</p>}
         </>
       )}
-      {/* T-220: the City tab's City centre button, here now that the tab is gone */}
-      <div class="pane-foot">
-        <button class="btn text" onClick={() => goTo({ kind: "city", name: city.name, city })}>Go to {city.name}</button>
-      </div>
     </>
   );
 }

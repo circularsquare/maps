@@ -131,8 +131,10 @@ svg .stroke2 { stroke-width: 2; }
 .help-panel dd { margin: 0; }
 
 /* The tab area has one fixed height whatever the tab, so the inspector never moves; only the
-   player's drag of the divider below it does (T-085). */
-.pane { flex: none; height: var(--pane-h, 36%); overflow-y: auto; padding: 10px 14px 12px; }
+   player's drag of the divider below it does (T-085). By default it is 36% of the dock but never
+   under 440 px, which holds the Build tab's tools, elevation, track rows and blueprint bar
+   (T-1128); the inspector keeps at least 160 px. */
+.pane { flex: none; height: var(--pane-h, max(36%, 440px)); max-height: calc(100% - 196px); overflow-y: auto; padding: 10px 14px 12px; }
 #dock { position: relative; }
 .dock-resize { position: absolute; top: 0; bottom: 0; right: -4px; width: 8px; z-index: 5; cursor: col-resize; }
 .pane-resize { flex: none; height: 7px; margin: -3px 0 -4px; position: relative; z-index: 4; cursor: row-resize; }
@@ -225,6 +227,8 @@ body.resizing, body.resizing * { user-select: none; }
 .w-period { width: 96px; flex: none; }
 .hbar { display: inline-block; height: 8px; background: var(--accent); vertical-align: middle; }
 .pane-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 8px; }
+/* T-1134: an inspector's buttons, in a row under its header */
+.inspector-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin: 8px 0; gap: 6px 8px; }
 
 /* a hairline slider (the settings pane's bubble size, T-099) */
 .slider { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
@@ -363,14 +367,15 @@ table.ledger th { font-weight: 400; color: var(--muted); font-size: 12px; text-a
 table.ledger td { text-align: right; padding: 3px 0; border-bottom: 1px dotted var(--rule); white-space: nowrap; }
 table.ledger td:first-child { text-align: left; }
 table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
-/* T-447: the money history charts */
+/* T-447: the money history charts; T-1111: revenue blue, expenses red, in every theme */
+:root { --revenue: #3a78c9; --expense: #c8423b; }
+:root[data-shade="dark"] { --revenue: #6aa2ea; --expense: #ec7b7b; }
 .hist-title { display: flex; align-items: baseline; margin: 8px 0 2px; }
 .hist-title .right { margin-left: auto; }
-.hist-title .hist-fares { color: var(--accent); }
-.hist-title .hist-costs { color: var(--muted); }
-.hist-title .hist-oneoff { color: color-mix(in srgb, var(--text) 45%, var(--bg)); }
-rect.hist-oneoff, path.hist-oneoff { fill: color-mix(in srgb, var(--text) 18%, var(--bg)); stroke: none; }
-path.hist-oneoff.cap { fill: var(--muted); }
+.hist-title .hist-fares { color: var(--revenue); }
+.hist-title .hist-costs { color: var(--expense); }
+rect.hist-oneoff, path.hist-oneoff { fill: color-mix(in srgb, var(--expense) 28%, var(--bg)); stroke: none; }
+path.hist-oneoff.cap { fill: var(--expense); }
 svg.hist { width: 100%; height: auto; stroke-width: 1.5; }
 .hist-axis { stroke: var(--rule); stroke-width: 1; }
 /* T-864: the fare curve and its two draggable nodes */
@@ -379,18 +384,25 @@ svg.fare-graph { width: 100%; height: auto; margin: 4px 0 6px; user-select: none
 .fg-axis { stroke: var(--rule); stroke-width: 1; }
 .fg-label { fill: var(--muted); font-size: 9px; }
 .fg-curve { fill: none; stroke: var(--accent); stroke-width: 1.8; }
-.fg-hover { fill: transparent; cursor: copy; }
+.fg-hover { fill: transparent; cursor: crosshair; }
 .fg-guide { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 2; pointer-events: none; }
 .fg-dot { fill: var(--accent); pointer-events: none; }
 .fg-node { cursor: move; }
 .fg-hit { fill: transparent; }
 .fg-knob { fill: var(--accent); stroke: var(--bg); stroke-width: 1.5; }
 .fg-node:hover .fg-knob, .fg-knob.sel { stroke: var(--text); }
-path.hist-fares { stroke: var(--accent); }
-path.hist-costs { stroke: var(--muted); }
-circle.hist-fares { fill: var(--accent); stroke: none; }
-circle.hist-costs { fill: var(--muted); stroke: none; }
-.hist-gain { fill: var(--accent); stroke: none; }
+/* T-1112: a node past the plot, an arrow at its edge; the word between a node's two steppers;
+   T-1130: the undo button beside the zoom */
+.fg-buttons { display: inline-flex; gap: 6px; }
+.fg-off { cursor: pointer; }
+.fg-arrow { fill: var(--accent); stroke: var(--bg); stroke-width: 1; }
+.fg-off:hover .fg-arrow { stroke: var(--text); }
+.fg-costs { text-align: center; color: var(--muted); }
+path.hist-fares { stroke: var(--revenue); }
+path.hist-costs { stroke: var(--expense); }
+circle.hist-fares { fill: var(--revenue); stroke: none; }
+circle.hist-costs { fill: var(--expense); stroke: none; }
+.hist-gain { fill: var(--revenue); stroke: none; }
 .hist-loss { fill: var(--bad); stroke: none; }
 .hist-rides { fill: var(--accent); stroke: none; }
 path.now { stroke-dasharray: 3 3; }
@@ -454,17 +466,17 @@ rect.now { fill-opacity: .45; }
    day, demand level, status). Every part is centred on the bar's middle. */
 #topbar .lg { font-size: 18px; font-weight: 700; }
 #topbar .sm { font-size: 12px; font-weight: 400; color: var(--muted); }
-/* T-341: every part of the bar has a fixed width, so no city or status moves the split bar: the name
-   box is cut short with an ellipsis (its whole name on hover), the percentages use tabular figures in
-   boxes of fixed width. The split is one row (bar, then its labels), centred in the bar (T-349). */
-.city { flex: none; width: 130px; overflow: hidden; text-overflow: ellipsis; }
+/* T-341, T-1108: the cash, clock and speed buttons have fixed widths, so the name and the mode bar
+   together fill the same room whatever the name. The name takes what it needs up to a cap, on two
+   lines at most with an ellipsis (its whole name on hover), and the bar widens into the rest. The split
+   is one row (bar, then the train share), centred in the bar (T-349). */
+.city { flex: none; width: max-content; max-width: 104px; white-space: normal; overflow: hidden; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 .split { flex: 1; min-width: 0; display: flex; align-items: center; font-variant-numeric: tabular-nums; }
-.split-row { flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; height: 24px; }
-.split-row.updating .bar, .split-row.updating .split-train, .split-row.updating .split-other { opacity: 0.6; }
+.split-row { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; height: 24px; }
+.split-row.updating .bar, .split-row.updating .pct { opacity: 0.6; }
 .bar-box { flex: 1; min-width: 80px; position: relative; display: block; height: 10px; }
-.split-train { flex: none; display: inline-flex; align-items: center; gap: 6px; }
 .pct { display: inline-block; width: 5ch; text-align: left; }
-.split-other .pct { width: 5.6ch; }
 /* T-349: the status is a small tag on the map's top row, right of the demand buttons (StatusTag.tsx), so
    the top bar makes no room for it. T-180: in a narrow column the text ends in an ellipsis; the whole
    text is its hover. */
@@ -474,24 +486,23 @@ rect.now { fill-opacity: .45; }
 .map-top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; max-width: 100%; }
 .demand-busy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .status-tag .load-bar.thin { height: 4px; margin-right: 0; }
-.split-other { flex: none; display: inline-flex; align-items: center; gap: 4px; }
-.split-other .mode-icon { display: inline-flex; }
 .bar { display: flex; width: 100%; height: 10px; border: 1px solid var(--rule); background: var(--bg); }
 .seg { display: block; height: 100%; }
 /* train, walking, driving: the commuter dot map's colours whatever the theme (T-084;
    --mode-* are set from game/palette.ts MODE_COLOURS in main.ts) */
-.seg-train, .sw-train { background: var(--mode-train); }
-.seg-walk, .sw-walk { background: var(--mode-walk); }
-.seg-drive, .sw-drive { background: var(--mode-drive); }
+.seg-train { background: var(--mode-train); }
+.seg-walk { background: var(--mode-walk); }
+.seg-drive { background: var(--mode-drive); }
 .sw { display: inline-block; width: 10px; height: 10px; flex: none; }
 /* T-305: cash updates to the dollar, so its box has a fixed width: room for "−$99,999,999,999", the
    sign and the $ at fixed places, the digits left-aligned right after the $ (T-310) in tabular figures */
 .cash { flex: none; width: 16ch; display: flex; font-variant-numeric: tabular-nums; }
 .cash-sign, .cash-cur { flex: none; width: 1ch; }
 .cash-digits { flex: 1; min-width: 0; text-align: left; }
-/* T-832, T-861: the clock is centred in the room between the cash and the speed buttons: the time and
-   date over the sky (ui/SkyBanner.tsx), its demand band under that, all 148 px wide */
-.clock { flex: 1; min-width: 0; display: flex; justify-content: center; font-variant-numeric: tabular-nums; }
+/* T-832, T-861, T-1109: the clock sits right of the cash and left of the speed buttons, the mode bar
+   taking the spare room. The time and date over the sky (ui/SkyBanner.tsx), its demand band under
+   that, all 148 px wide; on a wide map column (below) the time and date stand beside the sky. */
+.clock { flex: none; display: flex; font-variant-numeric: tabular-nums; }
 .clock-box { flex: none; width: 148px; display: flex; flex-direction: column; gap: 2px; }
 .clock-text { display: flex; align-items: baseline; justify-content: space-between; line-height: 20px; }
 .clock .time.held { color: var(--muted); }
@@ -508,12 +519,12 @@ rect.now { fill-opacity: .45; }
 .save-notice button { flex: none; }
 
 #map { position: relative; flex: 1; min-height: 0; background: var(--map-land); }
-/* T-231: the demand buttons and, under them, the stations full alert */
+/* T-231: the demand buttons and, under them, the demand stopped alert */
 .map-top-left { position: absolute; left: 10px; top: 10px; z-index: 4; max-width: calc(100% - 20px);
   display: flex; flex-direction: column; align-items: flex-start; gap: 6px; pointer-events: none; }
 .map-top-left > * { pointer-events: auto; }
 .demand-selector { display: flex; flex-wrap: wrap; max-width: 100%; }
-.stations-full { font-size: 12px; padding: 4px 8px; color: var(--bad); border-color: var(--bad); background: var(--bg); }
+.demand-stopped { font-size: 12px; padding: 4px 8px; color: var(--bad); border-color: var(--bad); background: var(--bg); }
 .demand-stopped, .demand-stopped:hover { cursor: default; background: var(--bg); }
 .demand-selector .btn { font-size: 12px; padding: 4px 8px; }
 .demand-selector .btn + .btn { margin-left: -1px; }
@@ -563,6 +574,7 @@ rect.now { fill-opacity: .45; }
 .new-game-mode { align-self: flex-start; }
 .new-game-where { display: flex; flex-direction: column; gap: 6px; }
 .new-game-cities { display: flex; flex-wrap: wrap; gap: 6px; }
+.new-game-map { align-self: flex-start; }
 .new-game-find { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--rule); background: var(--bg); color: var(--text); font: inherit; }
 .new-game-hits { list-style: none; margin: 0; padding: 0; border: 1px solid var(--rule); }
 .new-game-hits li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 3px 8px; cursor: pointer; }
@@ -586,8 +598,8 @@ rect.now { fill-opacity: .45; }
 .realm-buttons { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 .realm-button { position: absolute; left: 0; top: 0; pointer-events: auto; }
 .realm-button button { display: block; box-sizing: border-box; width: 16px; height: 16px; padding: 0; border-radius: 50%;
-  border: 1px solid var(--map-ink); background: var(--realm-dot); cursor: pointer; }
-.realm-button button:hover { background: var(--realm-dot-hot); }
+  border: 1px solid var(--map-ink); background: #fff; cursor: pointer; }
+.realm-button button:hover { background: #d9d9d9; }
 /* MapLibre sets Helvetica on its container. Map UI must use the same font as the dock. */
 #map, #map .maplibregl-ctrl { font-family: var(--font); }
 #map canvas.overlay { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 1; }
@@ -638,11 +650,10 @@ rect.now { fill-opacity: .45; }
 .btn.lv:hover { background: color-mix(in srgb, var(--lc) 48%, var(--bg)); }
 .btn.lv.on { background: var(--lc); color: var(--lk); border-color: var(--net-ink); box-shadow: inset 0 0 0 1px var(--net-ink); }
 :root[data-shade="dark"] .btn.lv.on { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
-/* five tools: three on the first row, two on the second (T-338) */
-.tool-pick { display: flex; flex-wrap: wrap; }
-.tool-pick > .btn { flex: 1 0 30%; }
-.tool-pick > .btn:nth-child(n+4) { margin-top: -1px; }
-.tool-pick > .btn:nth-child(4) { margin-left: 0; }
+/* the four tools, two by two (T-1128) */
+.tool-pick { display: grid; grid-template-columns: 1fr 1fr; }
+.group.tool-pick > .btn:nth-child(n+3) { margin-top: -1px; }
+.group.tool-pick > .btn:nth-child(odd) { margin-left: 0; }
 .pane .price { margin-top: 4px; }
 #tool-notes { max-width: 640px; padding: 6px 10px; background: var(--bg); width: max-content;
               border-top: 1px solid var(--rule); border-right: 1px solid var(--rule); }
@@ -817,11 +828,14 @@ rect.now { fill-opacity: .45; }
   #topbar { gap: 12px; }
   .split-row { gap: 10px; }
 }
-@container map-column (max-width: 860px) {
-  .split-other { display: none; }
-}
 @container map-column (max-width: 760px) {
-  .city { width: 96px; }
+  .city { max-width: 88px; }
+}
+/* T-1109: room enough, the time and date stand beside the sky rather than over it */
+@container map-column (min-width: 940px) {
+  .clock-box { width: auto; flex-direction: row; align-items: center; gap: 10px; }
+  .clock-text { flex: none; width: 5.2em; flex-direction: column; align-items: flex-start; justify-content: center; line-height: 20px; }
+  .clock-box .sky { flex: none; width: 148px; }
 }
 /* T-349: below 700 px the bar takes two rows: name, cash, time and speed on the first, the split
    (bar, labels, status under the bar) on the second */
@@ -829,17 +843,15 @@ rect.now { fill-opacity: .45; }
   #topbar { height: auto; min-height: 64px; padding: 6px 10px;
     display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto;
     grid-template-areas: "city cash clock speed" "split split split split"; gap: 4px 12px; }
-  #topbar .city { grid-area: city; width: auto; min-width: 0; }
+  #topbar .city { grid-area: city; width: auto; max-width: none; min-width: 0; }
   #topbar .cash { grid-area: cash; }
   #topbar .clock { grid-area: clock; justify-self: end; }
   #topbar .split { grid-area: split; max-width: none; }
   #topbar .speed { grid-area: speed; justify-self: end; }
-  .split-other { display: inline-flex; }
 }
 @container map-column (max-width: 520px) {
   #topbar { grid-template-columns: minmax(0, 1fr) auto auto;
     grid-template-areas: "city cash clock" "split split speed"; }
-  .split-other { display: none; }
 }
 @container map-column (max-width: 300px) {
   #topbar { grid-template-columns: minmax(0, 1fr) auto;
@@ -973,7 +985,7 @@ rect.now { fill-opacity: .45; }
 @container map-column (max-width: 680px) {
   .map-search { left: 10px; right: auto; top: 80px; }
   /* T-231: the alert sits beside the search glass, which is under the demand buttons here */
-  .stations-full { margin-left: 36px; }
+  .demand-stopped { margin-left: 36px; }
 }
 /* T-349: this narrow, the status tag drops to a second row under the demand buttons, a row kept
    whether or not it shows; the search glass, the alert and the Select bar sit under it */

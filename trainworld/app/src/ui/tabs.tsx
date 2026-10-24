@@ -30,7 +30,7 @@ import { Check, Chip, Icon, Row, Segmented, SortHead, Stepper } from "./widgets"
 import { Money } from "./MoneyText";
 import { START_CASH } from "../workers/saveFile";
 import { CitiesList } from "./Cities";
-import { FareGraph, FareNodeRows, farePreview } from "./FareGraph";
+import { FareButtons, FareGraph, FareNodeRows, farePreview } from "./FareGraph";
 import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
 import { MoneyHistory } from "./MoneyHistory";
 import { locateLine, locateStation } from "./locate";
@@ -119,8 +119,8 @@ export function BuildTab() {
         </div>
         <ul class="rows flat build-rows">
           <li>
-            <span class="grow" data-tip="Track you draw curves wide enough to take this speed">Design speed</span>
-            <Stepper value={speed(designSpeed.value, 5)} wide label="design speed" onStep={(s) => {
+            <span class="grow" data-tip="Long track pieces are laid out straight enough for this speed">Target max speed</span>
+            <Stepper value={speed(designSpeed.value, 5)} wide label="target max speed" onStep={(s) => {
               const i = DESIGN_SPEEDS.indexOf(designSpeed.value) + s;
               designSpeed.value = DESIGN_SPEEDS[Math.max(0, Math.min(DESIGN_SPEEDS.length - 1, i))];
             }} />
@@ -560,7 +560,7 @@ export function MoneyTab() {
         </tr>
       </table>
       <MoneyHistory zone={zone} />
-      <div class="h">Fare</div>
+      <div class="h">Fare<span class="right"><FareButtons nodes={f} /></span></div>
       <FareGraph nodes={m.fares.nodes} />
       <FareNodeRows nodes={f} />
       <ul class="rows">

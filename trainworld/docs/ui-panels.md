@@ -63,7 +63,10 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
   the saved games button (a floppy disk) [T-251] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
   area like a tab. There is no City tab [T-220]; a browser that last had it open starts on Lines.
 - Under the tab content, the **inspector** ([ui-inspectors.md](ui-inspectors.md)). The tab area has
-  a fixed height and scrolls, so the inspector's top edge never moves when the tab changes.
+  a fixed height and scrolls, so the inspector's top edge never moves when the tab changes. By
+  default it is 36% of the dock but at least 440 px (the inspector keeps 160 px), which holds the
+  Build tab's tools, elevation, track rows and blueprint bar whole; only a blueprint's cost
+  breakdown, the lists and Money and Settings scroll [T-1128].
 - The player can drag the dock wider or narrower and move the divider between tab area and
   inspector; both are remembered per browser. Each tab keeps its own scroll position for the
   session, opening at its top the first time [T-215].
@@ -76,37 +79,38 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 
 ## The top bar
 
-`ui/TopBar.tsx`, left to right, 54 px high, **every part centred on one line** [T-349]: city name,
-the split (bar, then its labels), cash, the clock, speed buttons. **Three type
-styles only**: normal (14 px, regular, text colour: name, "Train", cash), figure (18 px, bold: the
-train share and the time) and small (12 px, regular, muted: rides, walking and driving shares,
-day, status). **Every part has a fixed width** [T-341], so no city name or status moves the split
-bar: the name box is cut with an ellipsis (the whole name on hover, with the city's points and
-points a day, T-684, T-694), the percentages and counts
-are in tabular figures in boxes of fixed width, and the split bar is centred in the bar with
-nothing under it: the status is a tag over the map (Status, below). The mode bar is the one
-flexible part [T-406]: it takes the width the fixed parts leave, so its length follows the window
-(at least 80 px) and never the numbers beside it, and grows on wide windows. Walking and driving
-are the walk and car icons (the walk and drive mode colours) with the share beside them, each
-with its own hover. They drop below 860 px of map column. The clock is centred in the room between the cash and the
-speed buttons [T-832, T-861].
+`ui/TopBar.tsx`, left to right, 54 px high, **every part centred on one line** [T-349]: the name,
+the split (the bar, then the train share), cash, the clock, speed buttons. **Three type
+styles only**: normal (14 px, regular, text colour: name, cash), figure (18 px, bold: the
+train share and the time) and small (12 px, regular, muted: the date, status). **The cash, clock and
+speed buttons have fixed widths** [T-341, T-1109] and sit together at the right with the usual gap, so
+nothing moves them: the name and the split fill all the room left of them [T-1108]. The name takes
+what it needs up to 104 px (88 px under 760 px of map column), on two lines at most with an ellipsis
+(the whole name on hover, with the city's points and points a day, T-684, T-694), and the mode bar
+(at least 80 px) widens into the rest, so a short name leaves no gap. The train share is in tabular
+figures in a box of fixed width, and the split bar is centred in the bar with nothing under it: the
+status is a tag over the map (Status, below). From 940 px of map column the time and date stand
+beside the sky and band [T-1109, T-861], the time over the date; narrower, they sit over the sky,
+148 px wide.
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
   everyday outings, school and university), so the shares are of rides per day, not people [T-342].
-  The labels after it give the train share, after a blue mark ("18.5%"; no word "Train" [T-650] and
-  no rides count [T-832]: the hover has it) and the
-  walking and driving shares as icons; the hover gives all three counts and the total, and an
-  icon's own hover its share and rides. The player's job is
+  The train share follows the bar ("18.5%"; no word "Train" [T-650] and no rides count [T-832]); the
+  bar's hover gives all three shares with their counts and the total [T-1107]. The player's job is
   to make the train share grow. It shows "–" and an empty bar until the zone has figures of its own
   (a solve's, or the bare pass's for a zone no station reaches; not the no-rail split a pack gives
   before that), and over dead space [T-318]. The hover says "on a weekday", "on a weekend day" or "on average" for the
   day shown. The zone named is the focused zone ([ui-demand-views.md](ui-demand-views.md)).
+  **Zoomed out below zoom 5** (a few countries on screen) the bar names "World" instead [T-1110]:
+  the split and rides summed over every city with a built station and a demand view, as the Cities
+  tab's World row sums them (`game/worldTotals.ts`; hover: the city and station counts), whatever
+  lies under the view's centre.
 - **Status** [T-349, `ui/StatusTag.tsx`]: a small tag (small type style, background, thin border)
   on the map's top row, to the right of the demand buttons and centred with them (`ui/DemandSelector.tsx`;
   the buttons stay at the top left). It appears and goes in one step and moves nothing; the whole
   text is its hover. On a map column under 520 px the tag takes a second row under the buttons,
-  kept whether or not it shows, with the search glass, the stations full alert and the selection bar
+  kept whether or not it shows, with the search glass, the demand stopped alert and the selection bar
   under it. While a solve runs after an edit that changes the zone in view's figures, "Updating
   demand 2/4…" and the split faded, the figures held [T-232]; a zone the edit does not touch, or
   whose cluster is already done, shows neither [T-392]; and the same while a reload shows the cached
@@ -167,17 +171,6 @@ so nothing jumps when the clock enters a weekend. Hovers state the day beside ev
 "per weekday", "per weekend day": `shownDayPhrase` in `game/ui.ts`). A switch of day shows at
 once. The trains, platforms, the
 past 24 hours' riders and the panels' Today counts always follow the clock.
-
-## Stations full
-
-`ui/StationsFull.tsx` [T-231, T-284]: under the demand selector, a red-outlined button "5 stations
-full" counts the station complexes where, now, a platform side holds as many riders as fit on it
-(`platformRoom`, [track-and-service.md](track-and-service.md) 6.6) or the last train to leave a
-platform was full and left riders behind (until the next train). Its hover lists them, most left
-behind first, with riders waiting and left behind (twelve at most, then "and 3 more"). A click
-selects the next one in that order and moves the map there at zoom 14 or closer, where crowds are
-drawn. Hidden when there are none; updated each game minute. On a narrow map it sits beside the
-search glass.
 
 ## Search
 
@@ -241,7 +234,7 @@ panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099]; Demand b
 commuter and longer-trip bubbles, not station discs; ignored while a bubble is selected, T-936) and Detail (4 steps from coarser to finer,
 the third by default; its hover names the zoom the finest bubbles start at; [T-795]), the Colours
 choice (Train share by default [T-833], which shows two colour pickers labelled 0% train and
-100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), the Unopened cities choice (Light grey by default, Black, Maroon or Grey: the fill of the small dots, each with a 1 px dark outline, for zones the game has not opened, [ui-demand-views.md](ui-demand-views.md) "Zoomed far out"; on the dark theme the fills are lifted to read on it) [T-976] and the Day choice (Average, Weekday, Weekend;
+100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), the Day choice (Average, Weekday, Weekend;
 "Demand shown for", below) [T-703], Show (trains, station names, capacity markers, flat junctions and crossings, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
 [T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, and Explore a trip at the bottom [T-220]. Station demand
@@ -289,41 +282,55 @@ as "$450k"; under $500 "$0") and a negative one is in the alert red (`ui/MoneyTe
 `game/format.ts`) [T-722]; the cash (top bar and this tab) has four ("$11.36B", "$893.6M"; to the dollar under a million) and is red
 with its minus when negative; hovers may give more. History
 [T-447, `ui/MoneyHistory.tsx`]: a Days / Hours switch (Days by default, kept while the game is
-open) over three charts. The first has fares (accent) and running costs with upkeep (grey, T-867) as lines, scaled to
-the larger of the two, and one-off costs (new trains and construction) as pale bars on the same
-scale, cut at the top with a dark cap when larger, so a build day does not flatten the lines
-[T-452]; the top's figure at the right. Then net as bars up or down from zero (losses red). Then
+open) over three charts. The first, "Revenue and expenses" (revenue blue and expenses red in every
+theme, the tokens `--revenue` and `--expense`, T-1111), has fares and running costs with upkeep
+(T-867) as lines, scaled to the larger of the two, and one-off costs (new trains and construction)
+as pale red bars on the same scale, cut at the top with a red cap when larger, so a build day does
+not flatten the lines [T-452]; the top's figure at the right. Then net as bars up or down from zero
+(gains blue, losses red). Then
 train rides [T-565] as bars up from zero, the top's figure at the right (hover: it exactly), the
 region's with the place on and the network's with the globe, from the same ledger entries (rides
 are counted as in track-and-service.md 6.4). Days are the ledger's, one each in order (T-488), up to the past 30;
 hours up to the past 48; a young game's few sit at the right of at least 7 days or 12 hours. The
 day or hour now is drawn as it fills (a dashed last segment, a paler bar) and moves as fares land.
-Hovering a column gives its day or hour ("Fri 5", "Sat 6, 04:00", "so far" for now) with fares,
+Under the charts the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
+day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
 costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
 charts are saved with the game and are there after a reload [T-567]. Then, for the whole
 network whatever the toggle: the fare curve (rule: [track-and-service.md](track-and-service.md),
-fares), drawn as a graph of the fare against trip length on a log axis from 0.5 to 1,000 km or miles,
-the fare on a log axis from $0.10, its top the smallest 1, 1.5, 2, 3, 4, 5, 6 or 8 times a power of ten
-(at least $100) that is at least 1.5 times the fare at 1,000 [T-864, T-883, `ui/FareGraph.tsx`]. Each
-node drags both ways: distance to two significant figures, fare to $0.05 under $10, $0.50 under $100,
-then $5, kept between its neighbours in both (so the curve never falls). Pressing on the graph off a
-node adds one on the curve there and drags it; a double-click on a node removes it, down to two. A
-drag changes the graph and the figures below it as the pointer moves, and sends the fare to the game
-once on release (each change restarts demand; fares are outside the undo history). A hover anywhere
-on the graph names the fare at that distance, a node's hover its distance and fare. A click or drag
-selects a node; below the graph its Distance and Fare (each steps with the buttons, or a click on it
-opens a box to type it, Enter or leaving the box applying and Escape cancelling [T-626, `TypedValue`
-in `ui/widgets.tsx`], clamped as a drag is), a bin button removing it while there are more than two,
-and what a 10 km or mile ride costs; cars
+fares), drawn as a graph of the fare against trip length, both axes linear from 0 at the bottom left
+[T-864, T-883, T-1112, `ui/FareGraph.tsx`]. "Nice" below means 1, 2 or 5 times a power of ten. The
+distance shown starts as the smallest nice one holding 1.2 times the second node's (200 km for the
+default curve) and is kept while the game is open; the wheel or two fingers over the graph zoom it
+smoothly, and the minus and plus buttons beside the Fare heading step it to the next nice one, from 1
+to 5,000 km (in the display unit). The fare axis fits the curve over the distance shown: its top is
+1.25 times the fare at the right edge (at least $0.50), rounded up to a whole tick step, the smallest
+nice step of at least a quarter of that. Distance ticks fall every nice step of at least a fifth of the
+distance shown, the last labelled with the unit. The curve has exactly two nodes, each dragged both
+ways within the plot: distance to the nice step of at least 1/200 of the distance shown, fare to that
+of 1/250 of the top (at least $0.01); the second stays at least 2% of the distance shown (and 0.1 km)
+farther than the first and never cheaper. The scale holds still during a drag. A drag changes the
+graph and the figures below it as the pointer moves, and sends the fare to the game once on release
+(each change restarts demand). While fare changes are the last edits sent, Ctrl+Z takes them back one
+at a time, and Ctrl+Y or Ctrl+Shift+Z puts them back, in order with the track's own undo and redo; the
+undo button left of the zoom buttons does the same, enabled only then [T-1130, `game/fareUndo.ts`:
+the sim's edit history holds track, lines and schedules, so fare steps are kept on the main thread
+and any other edit drops them]. A node past the plot is an arrow
+on the plot's edge pointing toward it, with its hover; a click on the arrow zooms out to show it. A
+hover anywhere on the graph names the fare at that distance, a node's hover its distance and fare.
+Below the graph one row per node, as "1.0 km costs $1.60": its distance and fare, each stepping with
+the buttons (distance by 0.5 under 10, 5 under 100, then 50; fare by $0.25), or a click on it opens a
+box to type it, Enter or leaving the box applying and Escape cancelling [T-626, `TypedValue` in
+`ui/widgets.tsx`], kept in order as a drag is; then what a 10 km or mile ride costs; cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
 
 ## Cities tab
 
 [T-550, T-749, `ui/Cities.tsx`] Whatever the Lines toggle says: a list of every region (the toggle's regions) with a built station, one row each, under a first
-row "All cities" that sums them [T-857] (a trophy after its name opens the leaderboards when accounts
+row "World" that sums them [T-857, T-1110] (a trophy after its name opens the leaderboards when accounts
 are on, [Account and leaderboards](#account-and-leaderboards); its split bar weighs every region's trips, its rides, profit and points are the sums; hovers as a
-row's, over all cities; it is not clickable or sorted): its name
+row's, in the world; the top bar names the same sum when the map is zoomed far out, `game/worldTotals.ts`; it is not clickable or sorted): its name
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
 same hover), its train rides per day and its profit a day (the column is headed Profit), fares less running trains and upkeep (yesterday's, today so far
 until the game has a first full day; hover: fares, running trains and upkeep, then new trains and
@@ -363,8 +370,8 @@ reads "No stations yet."
   has Rename. A slot with no stored picture shows "No picture yet" until it is next saved.
 - Under the Playing card, its backups [T-744], newest first: "Backup 4 min ago · Day 26" (exact
   time on hover) and Restore as a copy, which closes the panel and opens the backup in a new slot.
-- Under the cards: Save as a copy (with a name), Save to a file
-  (`anitabuilder-nyc-day-12.save`), Load a file, New game. Load a file asks nothing: it closes the
+- Above the cards [T-1131]: Save to a file
+  (`anitabuilder-nyc-day-12.save`), Load a file, New game, then Save as a copy (with a name). Load a file asks nothing: it closes the
   panel and opens its game in a new slot, the game being played saved first [T-743; the slot rules
   in architecture.md]. New game shows the new game sheet (below) in the panel, headed "New game";
   its Start closes the panel and opens the new game the same way, its Back returns to the cards.
@@ -374,7 +381,8 @@ reads "No stations yet."
 
 **A new game** starts on day 1 at 07:00 with $6B, empty or (a sandbox) from a real network, on its
 start city's registry centre and zoom, or on the world map (centre 20° E 30° N, zoom 1.8: the
-Americas, Europe and East Asia) with no start city. Opening the page shows the start menu (below).
+Americas, Europe and East Asia) with no start city; a start from the player's location is centred on
+it (below). Opening the page shows the start menu (below).
 For a loaded game the URL's view says only which city or zone; the map starts at that city's
 registry centre and zoom, or over New York with none [T-310].
 
@@ -382,18 +390,27 @@ registry centre and zoom, or over New York with none [T-310].
 - **Mode**: Normal (lit to begin with) or Sandbox, two buttons, each with a hover saying what it
   means. A sandbox is the normal game with nothing refused for money and the cash hidden; demand,
   fares, running costs, line money, the Money tab, points and stars are worked out as in normal.
-- **Start in**: New York, London, Paris, Tokyo and Toronto (`START_CITIES`, a fixed list), one lit
-  at most, a second click unlighting it; then "Find a city", which lists up to eight of
+- **Start in**, three ways separated by a small muted "or" [T-1132]. First New York, London, Paris,
+  Tokyo and Toronto (`START_CITIES`, a fixed list) and Current location, one lit at most, a second
+  click unlighting it. Current location shows only where the browser can give a location (a secure
+  page with geolocation); the browser asks the player itself. While it waits the button says
+  Locating; a refusal, an error or no answer in 15 s leaves the sheet as it was with the button
+  saying "Location unavailable" (a click asks again; an answer after the 15 s still counts). A
+  location starts in the zone whose coarse outline holds it, else the zone with the nearest centre
+  among those whose box comes within 40 km (`ZONE_REACH_M`), the camera on the location at the zone's
+  registry zoom; farther from every zone it is a start on the map centred on the location at zoom 4
+  (`zoneForLocation`). Then "Find a city", which lists up to eight of
   the registry's cities and zones whose name has a word starting with the text (case and accents
   ignored, so "hague" finds Rotterdam [The Hague]), biggest by local trips first, each with its
   country (the registry's code, named by the browser). Up and down move, Enter or a click picks;
-  a pick of one of the five lights its button. Nothing picked starts on the world map with Homes on,
-  so the zones' zoomed-out bubbles show and take a click as anywhere (ui-demand-views.md "Zoomed far
-  out").
+  a pick of one of the five lights its button. Then Find a city on the map, lit while nothing else
+  is picked: the game starts on the world map with Homes on and every realm shown (zones.md
+  "Realms"), so the zones' zoomed-out bubbles show and take a click as anywhere (ui-demand-views.md
+  "Zoomed far out").
 - **Real network** (ticked to begin with): only for a sandbox in New York, London, Paris, Tokyo,
   Seoul, Toronto or Sendai, the cities with a real network (`REAL_NETWORKS`; architecture.md 11). The
   game starts from that network, built and running.
-- **Start in Tokyo** or **Start on the map**, and Back. If a real network cannot be downloaded, a
+- **Start in Tokyo** (the zone picked or located) or **Start on the map**, and Back. If a real network cannot be downloaded, a
   line says so and the sheet stays.
 - The slot is named after the start ("Tokyo", "Tokyo sandbox", "World", then " 2" and on).
 
@@ -417,13 +434,13 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   else and Delete account (asked first; the account's leaderboard entries and noritetsu rides go
   too, games in this browser stay).
 - **Scores**: while signed in, each normal game in a browser slot sends its points (the past 24
-  game hours, the All cities row's figure) and its best 64 cities' points, when they change and at
+  game hours, the World row's figure) and its best 64 cities' points, when they change and at
   most every 2 wall minutes (at once on the first send and when the page is hidden), joined or not.
   A `?new=1` page or one whose slot is open elsewhere sends nothing. Each slot has a random game id
   in localStorage (`trainworld.score-games.v1`). A game that turns sandbox sends that once and is
   never listed again; one that was always a sandbox sends nothing. A slot deleted in this browser
   takes its figures off (on the next signed-in load if signed out then).
-- **Leaderboards**: the trophy opens a centred modal: a picker (All cities, then the cities in this
+- **Leaderboards**: the trophy opens a centred modal: a picker (World, then the cities in this
   game by points, then other cities with rows, by name), the top 50 (rank, name, points short, the
   exact figure in the hover), the player's own row under them when lower, "Nobody here yet." on an
   empty board. At the bottom: Sign in to be listed (opens the account panel), a name (at most 24

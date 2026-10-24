@@ -14,7 +14,7 @@ import { openRoute, peopleOf, routeLabel, routeTerms, routeTotals, stationName, 
 import { purposeFilter, selection, shownDayPhrase, tool } from "../../game/ui";
 import { world } from "../../game/world";
 import { shownPeriod } from "../../map/tripView";
-import { Chip } from "../widgets";
+import { Actions, Chip } from "../widgets";
 import { MarketTrip, marketEndName, marketFarName } from "./MarketTrip";
 
 const min = (m: number) => `${Math.max(1, Math.round(m))} min`;
@@ -456,9 +456,9 @@ export function TripInspector() {
       <div class="title"><span class="name" data-tip={about}>Trip</span></div>
       <div class="sub muted">{sub}</div>
       {back && back.trip === sel && (
-        <div class="pane-foot">
+        <Actions>
           <button class="btn text" onClick={() => (selection.value = back.from)}>Back</button>
-        </div>
+        </Actions>
       )}
     </>
   );

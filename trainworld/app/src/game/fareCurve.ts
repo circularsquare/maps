@@ -1,7 +1,7 @@
-// The player's fare curve (T-883): the fare for a trip against its length, through nodes the
-// player places. Between two nodes the fare runs straight; before the first and past the last it
-// carries on at that end's slope (a level last stretch is a cap), never below $0. Nodes rise in
-// distance and never fall in fare, so a longer trip never costs less.
+// The player's fare curve (T-883, T-1112): the fare for a trip against its length, the straight
+// line through two nodes the player places, carried on past each at its slope, never below $0.
+// The second node is farther and never cheaper, so a longer trip never costs less. The sim and
+// `fareAt` still take any number of nodes; the Money tab keeps two (T-1114 may trim the rest).
 //
 // `base` and `perKm` are the curve's first stretch as a straight line (the fare at 0 km and its
 // slope): the demand's route search charges them on each ride, and the sim adds the rest of the
@@ -45,7 +45,8 @@ export function firstStretch(nodes: FareNode[]): { base: number; perKm: number }
   return { base: Math.max(0, f0 - perKm * k0), perKm };
 }
 
-/** Sorted by distance, apart by `NODE_GAP_KM`, within range, cents, and never falling in fare. */
+/** Sorted by distance, apart by `NODE_GAP_KM`, within range, cents, never falling in fare, and
+ * only the first and last of more than two (an older curve's). */
 export function tidyNodes(nodes: FareNode[]): FareNode[] {
   const out: FareNode[] = [];
   for (const [k, f] of [...nodes].sort((a, b) => a[0] - b[0])) {
@@ -53,6 +54,7 @@ export function tidyNodes(nodes: FareNode[]): FareNode[] {
     if (out.length && km < out[out.length - 1][0] + NODE_GAP_KM) continue;
     out.push([km, Math.max(0, Math.round(f * 100) / 100)]);
   }
+  if (out.length > 2) out.splice(1, out.length - 2);
   for (let i = 1; i < out.length; i++) out[i][1] = Math.max(out[i][1], out[i - 1][1]);
   return out;
 }

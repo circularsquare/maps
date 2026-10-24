@@ -1,11 +1,12 @@
-// The Money tab's history (T-447): fares against costs (running trains plus upkeep, T-867), then net, then train rides (T-565), per game day over the ledger's 30
+// The Money tab's history (T-447): revenue (fares) against expenses (running trains plus upkeep,
+// T-867, and one-off costs; blue and red, T-1111), then net, then train rides (T-565), per game day over the ledger's 30
 // days or per game hour over its 48 (the clock worker keeps both and saves them). Days and hours are
 // the game clock's (T-321). The day and hour now are drawn so far, moving as fares land (T-284).
 // The network's, or the region the Money tab is set to (T-531).
 
 import { signal } from "@preact/signals";
 import { clockTime, count, money } from "../game/format";
-import { weekdayName } from "../game/days";
+import { dateName, shortDate } from "../game/days";
 import { moneyState } from "../game/money";
 import { regionLedger } from "../game/regionMoney";
 import { Segmented } from "./widgets";
@@ -29,10 +30,11 @@ const usd = (v: number) => money(v * 1e6);
 const rides = (e: Entry) => e.rides ?? 0;
 const exact = (v: number) => Math.round(v).toLocaleString("en-US");
 
-function when(e: Entry, hours: boolean): string {
-  if (!hours) return `${weekdayName(e.at)} ${e.at}`;
-  const day = Math.floor(e.at / 24);
-  return `${weekdayName(day)} ${day}, ${clockTime((e.at % 24) * 60)}`;
+/** "Mon Apr 14" or "Mon Apr 14, 04:00" in hovers; without the weekday under the charts. */
+function when(e: Entry, hours: boolean, long = true): string {
+  const day = hours ? Math.floor(e.at / 24) : e.at;
+  const date = long ? dateName(day) : shortDate(day);
+  return hours ? `${date}, ${clockTime((e.at % 24) * 60)}` : date;
 }
 
 /** The ledger's entries (the network's, or a region's: T-531) with the day or hour now replaced by the live one. */
@@ -107,7 +109,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
           />
         </span>
       </div>
-      <div class="hist-title small"><span><span class="hist-fares">Fares</span>, <span class="hist-costs">running costs with upkeep</span> and <span class="hist-oneoff">one-off costs</span></span><span class="right muted" data-tip={`The chart's top is ${usd(top)}`}>{usd(top)}</span></div>
+      <div class="hist-title small"><span><span class="hist-fares">Revenue</span> and <span class="hist-costs">expenses</span></span><span class="right muted" data-tip={`The chart's top is ${usd(top)}`}>{usd(top)}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
         <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />
         {list.map((e, i) => {
@@ -145,7 +147,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
         })}
         {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={`${name(e, i)}\nTrain rides ${exact(rides(e))}`} />)}
       </svg>
-      <div class="hist-x small muted"><span>{when(first, hours)}</span><span>{when(list[last], hours)}</span></div>
+      <div class="hist-x small muted"><span>{when(first, hours, false)}</span><span>{when(list[last], hours, false)}</span></div>
     </>
   );
 }

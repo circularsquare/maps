@@ -28,7 +28,7 @@ import { nextLeavingAt, platformsAt, tripLoad } from "../../game/boarding";
 import { today, useToday, type LineToday } from "../../game/today";
 import { moneyState } from "../../game/money";
 import { edgeUpkeep, stationUpkeep } from "../../game/regionMoney";
-import { Chip, Icon, Row, Segmented, Stepper } from "../widgets";
+import { Actions, Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { nextSuggestion } from "../../map/stationNames";
 import { NameEdit } from "./NameEdit";
 import { locateStation } from "../locate";
@@ -266,10 +266,12 @@ export function StationInspector({ id }: { id: string }) {
           </>
         )}
       </div>
+      <StationTripLink id={id} members={asComplex ? members : [id]} />
+      {!asComplex && <ConstructRemove built={s.built} construct={construct} constructLabel="Construct station" remove={remove} removeLabel="Remove station" removeTip={s.built ? "Removing a constructed station refunds nothing" : ""} />}
       {asComplex ? (
         <ComplexSummary id={id} members={members} />
       ) : (
-        <StationDetails s={s} lines={lines} props={props} construct={construct} remove={remove} />
+        <StationDetails s={s} lines={lines} props={props} />
       )}
       <ClosestStations lng={s.lng} lat={s.lat} exclude={new Set(members)} own={s.name} />
       <StationLinks id={id} members={asComplex ? members : [id]} />
@@ -289,13 +291,43 @@ function tripFrom(id: string) {
   selection.value = { kind: "trip", from: at, to: null, fromStation: id };
 }
 
+/** Construct (while a blueprint) on the left and Remove on the right of one row. */
+function ConstructRemove({ built, construct, constructLabel, remove, removeLabel, removeTip }: {
+  built: boolean; construct: () => void; constructLabel: string; remove: () => void; removeLabel: string; removeTip: string;
+}) {
+  return (
+    <Actions>
+      {!built ? <button class="btn text" onClick={construct}>{constructLabel}</button> : <span />}
+      <button class="btn text" onClick={remove} data-tip={removeTip}>{removeLabel}</button>
+    </Actions>
+  );
+}
+
+/** A trip from the station, and the link to another (T-221, T-197), with what linking asks. */
+function StationTripLink({ id, members }: { id: string; members: string[] }) {
+  const picking = linking.value === id;
+  return (
+    <>
+      <Actions>
+        {/* T-221: a trip from this station to the next station or place clicked */}
+        <button class="btn text" onClick={() => tripFrom(id)} data-tip="Then click another station or a place to see how the demand model's people would travel there">
+          Trip from here
+        </button>
+        <button class="btn text" onClick={() => (picking ? cancelLink() : startLink(id))} data-tip="Linked stations are one complex, and riders change between them on foot">
+          {picking ? "Stop linking" : "Link to another station"}
+        </button>
+      </Actions>
+      {picking && <p class="muted">Click another station on the map to link it with this one. Stations up to {roughDistance(LINK_MAX_M)} apart can be linked, and riders change between them on foot. Esc stops.</p>}
+    </>
+  );
+}
+
 /** The player's links (T-197, game/links.ts): those touching the station (or, in complex view,
- * any member), each with Unlink, and the button that starts a new one. Stations the distance rule
- * groups are not listed: they cannot be split. */
+ * any member), each with Unlink. Stations the distance rule groups are not listed: they cannot be
+ * split. */
 function StationLinks({ id, members }: { id: string; members: string[] }) {
   const w = world.value;
   if (!w) return null;
-  const picking = linking.value === id;
   const pairs = linksAmong(members);
   const byId = new Map(w.save.stations.map((s) => [s.id, s]));
   const end = (x: string) => (
@@ -317,24 +349,14 @@ function StationLinks({ id, members }: { id: string; members: string[] }) {
           ))}
         </ul>
       )}
-      {picking && <p class="muted">Click another station on the map to link it with this one. Stations up to {roughDistance(LINK_MAX_M)} apart can be linked, and riders change between them on foot. Esc stops.</p>}
-      <div class="pane-foot">
-        {/* T-221: a trip from this station to the next station or place clicked */}
-        <button class="btn text" onClick={() => tripFrom(id)} data-tip="Then click another station or a place to see how the demand model's people would travel there">
-          Trip from here
-        </button>
-        <button class="btn text" onClick={() => (picking ? cancelLink() : startLink(id))} data-tip="Linked stations are one complex, and riders change between them on foot">
-          {picking ? "Stop linking" : "Link to another station"}
-        </button>
-      </div>
     </>
   );
 }
 
 /** The station view's own rows and actions. */
-function StationDetails({ s, lines, props, construct, remove }: {
+function StationDetails({ s, lines, props }: {
   s: StationInput; lines: LineInput[];
-  props: (platform: number) => void; construct: () => void; remove: () => void;
+  props: (platform: number) => void;
 }) {
   // T-446: each line's boardings here in the past 24 hours (re-rendered as they move: a small part of the panel)
   const t = today.value;
@@ -368,18 +390,6 @@ function StationDetails({ s, lines, props, construct, remove }: {
       </ul>
       {lines.length > 0 && <BoardingsToday lines={lines} at={visits} />}
       <Waiting node={s.num} lines={lines} />
-      <div class="pane-foot">
-        {!s.built ? (
-          <button class="btn text" onClick={construct}>
-            Construct station
-          </button>
-        ) : (
-          <span />
-        )}
-        <button class="btn text" onClick={remove} data-tip={s.built ? "Removing a constructed station refunds nothing" : ""}>
-          Remove station
-        </button>
-      </div>
     </>
   );
 }
@@ -685,6 +695,8 @@ export function TrackInspector({ edge }: { edge: number }) {
       <div class="sub muted">
         {distance(e.lengthM)}, {lv}
       </div>
+      <ConstructRemove built={e.built} construct={construct} constructLabel={`Construct for ${money(cost)}`} remove={remove}
+        removeLabel={`Remove ${e.crossover ? "crossover" : "track"}`} removeTip={e.built ? `Removing a constructed ${e.crossover ? "crossover" : "track"} refunds nothing` : ""} />
       <Built built={e.built} what={e.crossover ? "This crossover" : "This track"} />
       {!e.built && e.off && <p class="muted" data-tip={`Construct leaves ${e.crossover ? "this crossover" : "this track"} out until it is enabled`}>Disabled</p>}
       <ul class="rows">
@@ -722,18 +734,6 @@ export function TrackInspector({ edge }: { edge: number }) {
           </li>
         ))}
       </ul>
-      <div class="pane-foot">
-        {!e.built ? (
-          <button class="btn text" onClick={construct}>
-            Construct for {money(cost)}
-          </button>
-        ) : (
-          <span />
-        )}
-        <button class="btn text" onClick={remove} data-tip={e.built ? `Removing a constructed ${e.crossover ? "crossover" : "track"} refunds nothing` : ""}>
-          Remove {e.crossover ? "crossover" : "track"}
-        </button>
-      </div>
     </>
   );
 }
@@ -861,33 +861,31 @@ export function JunctionInspector({ node }: { node: number }) {
       <div class="sub muted">
         Elevation {levelLabel(n.level)}, {n.ports} tracks meet{n.flying ? ", with a flyover" : ""}
       </div>
+      {n.flying ? (!built && (
+        <Actions>
+          <span />
+          <button class="btn text" onClick={() => setFlying(false)}>
+            Remove the flyover
+          </button>
+        </Actions>
+      )) : !atCrossover && (
+        <Actions>
+          <span class="muted small">{built ? "Paid at once" : "Added to the blueprint"}</span>
+          <button class="btn text" data-tip="Take one track over the other, so trains never wait to cross" onClick={() => setFlying(true)}>
+            Build a flyover
+          </button>
+        </Actions>
+      )}
       <Built built={built} what="The junction" />
-      {n.flying ? (
-        <>
-          {!built && (
-            <div class="pane-foot">
-              <span />
-              <button class="btn text" onClick={() => setFlying(false)}>
-                Remove the flyover
-              </button>
-            </div>
-          )}
-        </>
-      ) : (
+      {!n.flying && (
         <>
           <p class="note muted">{crossing ? "Trains cross on the level here and wait for each other." : "No trains cross here now."}</p>
-          {!atCrossover && <>
+          {!atCrossover && (
             <ul class="rows">
               <Row label="Flyover price">{price === null ? "" : money(price * 1e6)}</Row>
               <Row label="Waiting it saves">{perTrain >= 1 ? `${duration(perTrain)} a train at ${demand} demand` : "none now"}</Row>
             </ul>
-            <div class="pane-foot">
-              <span class="muted small">{built ? "Paid at once" : "Added to the blueprint"}</span>
-              <button class="btn text" data-tip="Take one track over the other, so trains never wait to cross" onClick={() => setFlying(true)}>
-                Build a flyover
-              </button>
-            </div>
-          </>}
+          )}
         </>
       )}
       {info && moves.length > 0 && (

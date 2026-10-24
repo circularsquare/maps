@@ -241,8 +241,9 @@ purpose filter the purpose drawn is ringed in the bar.
     and stations of its own name are left out, and each name is listed once. The walk is the
     demand model's routed walk ([demand-mode.md](demand-mode.md) 4.3) x the 1.3 detour at the model's 6 km/h; a station
     water cuts off shows "no walk", only when fewer than three can be walked to within 10 km.
-  - **Linked by you**, then the buttons **Trip from here** [T-221] (the trip tool with the station
-    as the start) and **Link to another station** (below).
+  - **Linked by you**: each link touching the complex, with Unlink. The buttons **Trip from here**
+    [T-221] (the trip tool with the station as the start) and **Link to another station** (below)
+    are in the row under the subtitle, above everything else [T-1134].
   - **Commuters**: "Live nearby" and "Work nearby" (commuters a day who live, or work, within its
     reach and ride from it); the larger is picked first, a click picks the other; then the top
     eight far-end places ("Where they work" or "Where they live"). Not drawn on the map [T-519,
@@ -257,13 +258,21 @@ purpose filter the purpose drawn is ringed in the bar.
     counts boardings.
   - **Inter-city trips**: rail riders starting and ending there, by place [T-118, T-120].
 - **Station view** (one station opened alone) has its elevation under the name ("Elevation +1"), then in place of the
-  complex's lines and map the station's own lines, platform settings, Construct and Remove, and
+  complex's lines and map the station's own lines, platform settings, and
   **Waiting now** [T-164, T-238]: each line and direction ("To Norwood-205 St") with the riders on the
   platform now in red; under it, in red, how many full trains left riders behind this hour and the
   longest wait, or else the riders arriving this hour and the longest wait. The counts drop the
   moment a train leaves with whoever fitted (a timer set for the station's next departure) and grow
   with arrivals each game minute. The rest (closest stations, links, commuters, inter-city
   trips) is as in complex view, for the station alone.
+- **Buttons come first** [T-1134, Anita: never put stuff at the bottom after an arbitrarily long
+  list]: every inspector's buttons sit in one row (`Actions` in `ui/widgets.tsx`) right under its
+  header, above all rows and lists. A station has Trip from here and Link to another station in one
+  row (what linking asks, when picking, is under it) and, in station view, Construct station (a
+  blueprint only) and Remove station in a second; a track has Construct for its price (a blueprint
+  only) and Remove track; a junction has Build a flyover (with "Paid at once" or "Added to the
+  blueprint") or, for a blueprint flyover, Remove the flyover; a city has Go to its name; a trip
+  opened from a selection has Back.
 - **Renaming** [T-534, `ui/inspector/NameEdit.tsx`]: a station's and a line's name both edit in
   place from a double click on the name or the pencil beside it (hover "Rename, or double click the
   name"), its text selected; Enter or leaving the box keeps it, Escape drops it, an empty name is
@@ -317,7 +326,7 @@ purpose filter the purpose drawn is ringed in the bar.
 
 ## Linking stations
 
-[T-197, `game/links.ts`] The station inspector ends with "Link to another station". After a click
+[T-197, `game/links.ts`] The station inspector's button row has "Link to another station". After a click
 on it the next station clicked is linked with the selected one (the pointer a crosshair, a hand
 over a station); a click on anything else, Esc, "Stop linking", another selection or a tool stops
 it. Refused with a notice, still picking: the same station, one already in this complex, or one

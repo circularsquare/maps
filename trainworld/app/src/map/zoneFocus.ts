@@ -13,6 +13,7 @@ import { viewCentre } from "../game/listScope";
 import { nearbyZones, placeAt, ZONE_LOAD_ZOOM, zonesInBox, zonesLoaded, zonesLoadForView } from "../game/zones";
 import { OVERVIEW_ZOOM } from "./intercityView";
 import { shiftAt, viewShift } from "../game/localTime";
+import { WORLD_ZOOM, worldView } from "../game/worldTotals";
 import { shownRealms, zoneShown } from "../game/realms";
 
 export function startZoneFocus(map: MlMap) {
@@ -48,6 +49,8 @@ export function startZoneFocus(map: MlMap) {
   const local = () => {
     const c = map.getCenter(), s = shiftAt(c.lng, c.lat);
     if (s !== viewShift.peek()) viewShift.value = s;
+    const far = map.getZoom() < WORLD_ZOOM; // T-1110: the top bar names the world
+    if (far !== worldView.peek()) worldView.value = far;
   };
   map.on("move", local);
   local();

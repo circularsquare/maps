@@ -6,7 +6,8 @@ import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { tool } from "../game/ui";
 import { LEVELS, type BlueprintItem, type Level } from "../game/types";
 import { constructBlueprints } from "../game/lineActions";
-import { edit, redo, say, undo, world } from "../game/world";
+import { edit, say, world } from "../game/world";
+import { redo, undo } from "../game/fareUndo";
 import { Icon } from "./widgets";
 
 const LEVEL_NAME: Record<Level, string> = { 3: "High viaduct", 2: "Viaduct", 1: "Viaduct", 0: "Ground level", [-1]: "Cut and cover", [-2]: "Tunnel", [-3]: "Deep tunnel" };

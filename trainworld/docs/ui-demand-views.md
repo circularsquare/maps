@@ -291,7 +291,7 @@ average to and from Yamanashi" (train blue, the rest red). One scale that depend
 alone, never on what is on screen [T-525, T-530]: 60,000 trips a day per px² of bubble area at
 zoom 6.5 (`TRIPS_PER_PX2`, `SCALE_ZOOM`), before the size slider, the radius times
 2^(0.35 x (zoom - 6.5)) (`ZOOM_GROWTH`), so bubbles shrink somewhat as the map zooms out.
-A zone the game has not opened (not the start zone, not reached by a station and not crossed by built track: `openedZones`, game/openedZones.ts, T-1047) is not a bubble but a dot, half the radius it would have, floored to whole CSS px and at least 2 px, filled in the Unopened cities colour (light grey by default, setting) with a 1 px dark outline (hover unchanged) [T-976]; it turns into a bubble when the zone opens. With a zone selected the bubbles are the trips to and from it as before.
+A zone the game has not opened (not the start zone, not reached by a station and not crossed by built track: `openedZones`, game/openedZones.ts, T-1047) is not a bubble but a dot, half the radius it would have, floored to whole CSS px and at least 2 px, filled white, opaque, with a 1 px outline in the theme's map ink (black in the light theme, off-white in the dark one; hover unchanged) [T-976, T-1120]; it turns into a bubble when the zone opens. A dot within 20 px (centre to centre) of a bigger zone's dot or bubble is left out (`DOT_GAP`) [T-1133], so a dense realm zoomed out shows its biggest cities and more appear closer in; opened zones' bubbles are never left out. With a zone selected the bubbles are the trips to and from it as before.
 Homes and Destinations look the same, and both work zoomed out even over dead space, where
 the buttons are otherwise off; a start on the world map turns Homes on [T-801]. Under a local purpose the focused zone's own
 bubbles stay instead. Toronto (`market: -1`) has none.
@@ -307,10 +307,9 @@ with the zoom the same way [T-525, T-530]: 1,400 trips a day per px² at zoom 6.
 others: "N trips a day between A and B" and a bar), a fading line from each other bubble toward
 it (Lines to the selection, above), under the bubbles with no hover, so the
 selection shows from afar [T-520, T-858], and the city
-inspector (`ui/inspector/CityInspector.tsx`, T-600) has two figures, each with a thin mode bar
+inspector (`ui/inspector/CityInspector.tsx`, T-600) has, under its title, a "Go to Philadelphia"
+button that moves the camera to its centre and clears the selection [T-220, T-1134], then two figures, each with a thin mode bar
 under it (the game's mode colours; every segment and number has a hover with its count and share):
 "Within Philadelphia" (train, walking, car from the open zone's split; the count alone for a zone
 not loaded) and "To other places" (the inter-city trips, both directions, train blue and the rest
-red), then the three places with the most trips, name and trips a day, and
-a "Go to Philadelphia" button that moves the camera to its centre and clears the selection
-[T-220]. No table of every place and no purpose split.
+red), then the three places with the most trips, name and trips a day. No table of every place and no purpose split.

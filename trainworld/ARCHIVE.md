@@ -1,5 +1,28 @@
-﻿# Archive
+# Archive
 
+- T-1125 [P2] Traffic view: stretches at capacity. Done 2026-10-24 (tree t1121): a red edge and a 14% darker body where half the busiest hour's trains are packed to crush (T-819's full track too); hover "Trains at capacity in the busiest hour". notes/T-1121.md.
+- T-1124 [P2] Transfers drawn. Done 2026-10-24 (tree t1121): riders changing stations walk as grey bubbles from the train's stop over demand's walk, joining the next platform on arrival (`map/transferBubbles.ts`); +0.3 ms GPU at Penn Station. notes/T-1121.md.
+- T-1123 [P2] Waiting riders leave as their train stops. Done 2026-10-24 (tree t1121): the account sends each train's stop time; the drawn crowd drops then, growing again once it leaves.
+- T-1122 [P2] The getting-off pops vary. Done 2026-10-24 (tree t1121): 30% skipped, a random shift of up to 4 semitones, level by riders getting off (riders/80, 0.25-1.25).
+- T-1121 [P2] Station boxes without the purple lines. Done 2026-10-24 (tree t1121): T-236's platform edges removed; the crowd grey fills to the rim, close in from the track's edge.
+- T-1133 [P2] A map start shows every region. Done 2026-10-24: every realm shown until the first station or track; unopened dots within 20 px of a bigger zone's mark left out zoomed out. No freeze (start 0.4-0.7 s); costs in notes/T-1133.md.
+- T-1132 [P2] Start menu: three ways to start, joined by "or". Done 2026-10-24: Current location beside the five cities (hidden without geolocation), Find a city, Find a city on the map; a location starts in its zone, else a map start centred there.
+- T-1092 [P3] Central destinations for errands and social. Done 2026-10-24 (worktree t1092): 20% drawn to attraction x its density at 6 km, local scales 1.0 km; everyday trips over 5 km about 15.5% to 22%, real save rail 11.36M to 12.80M, A and B up. notes/T-1092.md.
+- T-1130 [P2] Undo for fares. Done 2026-10-24: `game/fareUndo.ts` keeps fare steps while no other edit is sent; Ctrl+Z, Ctrl+Y and the blueprint buttons go through it, handing over to the sim's undo; an undo button by the fare graph.
+- T-1112 [P2] The fare graph, easier to read. Done 2026-10-24: linear axes from 0, zoom (wheel, pinch, buttons) on distance with the fare axis fitted, exactly two draggable nodes, an arrow for one past the plot, one stepper row per node; older curves keep first and last.
+- T-1111 [P2] Money history as revenue and expenses. Done 2026-10-24: the title "Revenue and expenses", revenue blue and expenses red (one-off costs pale red, net gains blue), dates ("Apr 14") under the charts and in hovers.
+
+- T-1134 [P2] Inspector buttons above their lists. Done 2026-10-24: station (Trip from here, Link, Construct, Remove), track, junction flyover, city Go to and trip Back sit in one `Actions` row (`ui/widgets.tsx`) under the header.
+- T-1131 [P2] Saved games buttons at the top. Done 2026-10-24: Save to a file, Load a file, New game and Save as a copy sit above the list of saves (`ui/SavesPanel.tsx`).
+- T-1129 [P2] "N stations full" alert dropped. Done 2026-10-24: `StationsFull.tsx` and its mount removed; the stopped-demand alert keeps the red style under its own class `.demand-stopped`.
+- T-1128 [P2] Build tab tools 2 by 2. Done 2026-10-24: Track, Station, Delete and Select in a two-column grid (`.tool-pick`).
+- T-1127 [P2] "Target max speed". Done 2026-10-24: the Build tab's stepper and its label say Target max speed, hover "Long track pieces are laid out straight enough for this speed".
+- T-1126 [P2] Dark water #2b4762. Done 2026-10-24 (`DARK_WATER` in `game/shadeTable.ts`); coasts, bridges and the shade over it read as before.
+- T-1120 [P2] Unopened cities white with an outline. Done 2026-10-24: the dots and the realm circles are opaque white with the theme's map ink outline; the Settings choice, its stored value and `UNBUILT_COLOURS` removed (an old stored value is dropped on load).
+- T-1110 [P2] "World" zoomed far out. Done 2026-10-24: below zoom 5 the top bar names the world and sums every city with a built station and a demand view (`game/worldTotals.ts`, shared with the Cities tab's first row); "All cities" is "World" in the Cities list, leaderboard and hovers.
+- T-1109 [P2] Top bar spacing. Done 2026-10-24: cash, clock and speed buttons are fixed widths side by side at the right; from 940 px of map column the time and date stand beside the sky.
+- T-1108 [P2] Top bar city name. Done 2026-10-24: the name takes up to 104 px (88 under 760 px of map column) on two lines, the mode bar widening into the rest; T-1113 may lower the cap.
+- T-1107 [P2] Top bar mode split. Done 2026-10-24: walking and driving icons and percents and the blue swatch removed; the bar and the train percent remain, the bar's hover gives all three.
 - T-1084 [P2] Far drive supercells of 16 km for countryside zones. Done 2026-10-24 (landed d47acbe): `routes.SUPER_ZONE` 8 squares for plan rows of kind "zone", metros keep 8 km; routes 2-3 min faster a row, commute rail on test days -0.5% to +0.75%. The walk part dropped (Anita). notes/T-1082.md "T-1084 as built".
 - T-1083 [P2] Exact build speedups. Done 2026-10-24 (landed d47acbe): parks buffered piece by piece, `check_gravity` from a decay table, the first 2 km solve skipped under `--coarse`, GHSL near the outline only, Wikidata airports cached; packs byte-identical, west Kansas's build 183 s to 27. notes/T-1082.md "T-1083 as built".
 - T-1042 [P3] `enrich_parks` slow on huge reserves. Done 2026-10-24 by T-1083: a many-piece reserve buffered piece by piece (Hernando 424 s to 14), identical draws.

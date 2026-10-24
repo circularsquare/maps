@@ -10,14 +10,14 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 [T-100; `ui/tabs.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
 
-- **Tools**: draw track (key 1), station (2), delete (3), select (5, [below](#the-select-tool)), three
-  buttons on the first row and one on the second; then the elevation (seven buttons
+- **Tools**: draw track (key 1), station (2), delete (3), select (5, [below](#the-select-tool)), in a
+  2 by 2 grid [T-1128]; then the elevation (seven buttons
   tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692) with its
   multiplier and price per km (with High speed picked, high-speed track's: 1.5x, so 0.45x at
   ground), Double, Quad or High speed track [T-255, T-817; no single track, T-733],
-  the design speed (a row under the track choice: a stepper through 160, 200, 250 and 320 km/h, 160
+  the target max speed (a row under the track choice: a stepper through 160, 200, 250 and 320 km/h, 160
   by default; higher lays the curves of newly drawn track wider, [track-and-service.md](track-and-service.md)
-  6.1; its hover: "Track you draw curves wide enough to take this speed") [T-817]; picking High
+  6.1; its hover: "Long track pieces are laid out straight enough for this speed") [T-817, T-1127]; picking High
   speed sets it to 320 (it can still be stepped down) and picking Double or Quad again puts back
   the speed from before [T-817], and the platform
   length for new stations (the next row, no heading; the label's hover says it is for new stations). There is no crossover tool: the game places
@@ -26,7 +26,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   Beside keep placing, the **snap switch** (a magnet, "Snap track to the real network") [T-727]: while
   it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
-  The elevation, the double, quad or high speed choice, the design speed, the keep placing switch and the snap switch are remembered per
+  The elevation, the double, quad or high speed choice, the target max speed, the keep placing switch and the snap switch are remembered per
   browser (localStorage with the other panel settings, not in the save) [T-468]; keep placing is on
   by default [T-942].
   The number keys work from any tab and open the Build tab; the key of the tool already on does
@@ -347,7 +347,7 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   corners and elevation controls; it shows the slowest curve, the price of both diagonals, Construct
   (builds both) and Remove crossover.
 - **The junction inspector** [T-031, T-080] draws the junction as a small diagram with its moves,
-  says in plain words that it is flat, and offers "Build a flyover" with its price and the waiting
+  says in plain words that it is flat, and offers "Build a flyover" (a button under its header) with its price and the waiting
   it saves ([track-and-service.md](track-and-service.md) 6.2), except at a crossover's end, where
   the flyover offer is left out [T-391]. A junction's capacity tag opens it.
 

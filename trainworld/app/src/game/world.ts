@@ -26,9 +26,14 @@ export function say(text: string, bad = false) {
   notice.value = { text, bad, at: performance.now() };
 }
 
+/** Edits sent other than fares, undo and redo: a fare change is the last action while this holds
+ * still (T-1130, game/fareUndo.ts). */
+export const editsSent = signal(0);
+
 /** Send an edit; a refusal is explained in `notice`. Resolves with the answer either way. */
 export async function edit(op: EditOp, quiet = false): Promise<EditAnswer> {
   if (!sink) return { ok: false, issues: [], charge: 0 };
+  if (op.op !== "fares" && op.op !== "undo" && op.op !== "redo") editsSent.value++;
   const a = await sink(op);
   if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues), true);
   return a;

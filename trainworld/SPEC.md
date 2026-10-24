@@ -78,7 +78,7 @@ track crosses is in play as a reached one is, opened bare in turn once loads are
 game's opened list [T-1047, [docs/zones.md](docs/zones.md) "Track"]. Every zone of a shown
 **realm** loads for the view on a pan [T-801]: zones group into country-sized realms (China in
 seven), and a realm is shown while the game has a station or track in it, starts in it, or the player showed
-it this session; the others are one dark fill with a button and nothing of theirs is drawn or
+it this session (a game started on the map shows them all until it builds); the others are one dark fill with a button and nothing of theirs is drawn or
 loaded for viewing, while demand, the market and money are the same whatever is shown [T-975,
 [docs/zones.md](docs/zones.md) "Realms"]. Zones that share no rider
 (Toronto and the Northeast, London, Paris) fall into separate **clusters**, each solved on its own
@@ -201,9 +201,9 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
 
 The player draws curved track (straights and circular arcs, double, quad or high speed, at elevations
 -3 to +3, "levels" in the code) two clicks per segment, each segment one curve through the click leaving along the track, up
-to 350 degrees round [T-418, T-422, T-442], its curves laid out for a design speed the player picks
+to 350 degrees round [T-418, T-422, T-442], its curves laid out for a target max speed the player picks
 (160 to 320 km/h, wider curves for faster; T-817; high-speed track is double track at 1.5x the
-price, its design speed 320 by default; track caps trains at 160 km/h, high-speed track at 320),
+price, its target max speed 320 by default; track caps trains at 160 km/h, high-speed track at 320),
 places stations (on track, or on open ground with a
 straight piece of their own track, one click for one end of the platform and one for its direction [T-794, T-907, T-917,
 T-834]), and makes lines, all as
@@ -236,7 +236,7 @@ multiplier per elevation (US$45M at grade), priced against cheap-country metros 
 when it shrinks [T-028, T-631], and running costs are US$4 a train-km plus US$2 a car-km [T-807]. Constructed
 track and stations cost upkeep whether trains run or not, US$30k a km of double track and US$50k a station a game
 day, draining evenly; a line's profit takes off its share, each piece's split by the trains a day of the lines
-using it [T-867]. The fare is typed or stepped in the Money tab [T-626].
+using it [T-867]. The fare is a straight line of trip length through two points the player drags, types or steps in the Money tab [T-626, T-1112].
 **Points** measure each city's network: what it earned in the past 24 game hours, recomputed
 once a game hour, at 20 a rail trip (a rider's whole journey, changes included, counted in the
 city it starts in) and 1 a passenger-km; not a running total, and they unlock nothing yet [T-684,
@@ -267,7 +267,7 @@ A pastel style in Zen Maru Gothic, light or dark (Settings, Theme) with three co
 Panels take CSS tokens (`ui/style.css`); the map's light and dark colours (basemap, line casing, map
 ink) are one table, `game/shades.ts`, whose basemap palette is warm paper land, soft teal water and sage parks [T-676]. The network takes the line colours, the same in both themes. One dock on the left holds the icon tabs (Build, Lines, Stations, Money, Cities), the
 saved games button and the Settings gear, with the inspector under them, whose top edge never
-moves. The top bar holds the mode split (the goal number), the cash, the local time and date over
+moves. The top bar holds the mode split (the goal number) of the city in view, or of the world when zoomed far out, the cash, the local time and date beside or over
 a moving sky and a band in the demand level's colours (T-861), pause and three speeds. **Panels show what can change**: labels, numbers and states,
 no explanatory notes [T-253]. **Everything drawn that encodes a number has a hover**, always the
 game's own tag, never a browser tooltip [T-194, T-210]. No CSS transitions; trains are the only

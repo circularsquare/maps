@@ -80,7 +80,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   leaderboards: which server, the session, each slot's game id and its score sends, the boards;
   shonei-server's `trainworld.go`); its panels `ui/AccountPanel.tsx` and `ui/Leaderboard.tsx`.
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
-  `fareCurve.ts` (the fare curve through the player's nodes: fare at a length, old saves' base and rate as nodes, the knots the sim takes, T-883),
+  `fareCurve.ts` (the fare curve through the player's two nodes: fare at a length, old saves' base and rate as nodes, the knots the sim takes, T-883, T-1112), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
@@ -144,14 +144,13 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 the person icon, `Modal`, and `startAccountUi`, which mounts both account panels in a root of their
 own so the start menu opens them too; styles in `account.css`, T-972); `Leaderboard.tsx` (the
 leaderboards and the All cities row's trophy, T-973); `HelpPanel.tsx` (the "?" button's list of controls no button shows, T-908); `tabs.tsx` (Build, Lines, Stations, Money and the Cities tab);
-`MoneyHistory.tsx` (the Money tab's history charts, T-447); `FareGraph.tsx` (the fare curve graph, its nodes added, dragged both ways and removed, and the selected node's steppers, T-864, T-883); `Cities.tsx` (the Cities list, T-550, T-749); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251; `SlotThumb`, a save's picture with each panel's city named over it, T-894); `bullet.ts` (`bulletText`, `bulletNode`: a line bullet as one SVG, its circle and its symbol placed from the canvas-measured ink box with the baseline on a whole device pixel, per font, symbol, size and scale, T-705, T-745; the sizes in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
+`MoneyHistory.tsx` (the Money tab's history charts, T-447); `FareGraph.tsx` (the fare curve graph, linear and zoomable, its two nodes dragged both ways, an arrow for one past the plot, and a row of steppers per node, T-864, T-883, T-1112); `Cities.tsx` (the Cities list, T-550, T-749); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251; `SlotThumb`, a save's picture with each panel's city named over it, T-894); `bullet.ts` (`bulletText`, `bulletNode`: a line bullet as one SVG, its circle and its symbol placed from the canvas-measured ink box with the baseline on a whole device pixel, per font, symbol, size and scale, T-705, T-745; the sizes in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
 checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `SkyBanner.tsx` (the clock's sky and demand band, a canvas, T-861); `StatusTag.tsx` (the demand status tag on the map's top row); `Toolbar.tsx` (tool hints and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
 per selection kind: `others.tsx` holds station, train, track, junction and cell or zone;
 `ComplexMap.tsx` the complex map; `TrainStops.tsx` a train's next stops and who gets off, T-868; `NameEdit.tsx` a station's or line's name edited in place, T-534); `LoadingScreen.tsx` (the clock hold at startup, the loading card,
-the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the start menu and the URL switches that skip it, T-677); `NewGame.tsx` (the new game sheet: mode, start city, search, real network; `START_CITIES`, `REAL_NETWORKS`, T-728, T-731); `Spinner.tsx` (the small spinner, T-647, and the bunny's train, T-677); `Search.tsx` (T-148); `DemandStopped.tsx` (the alert when demand stops after startup, T-757), `StationsFull.tsx`
-(the "N stations full" button, T-231); `keys.ts` (which keys a focused control keeps, T-183); `locate.ts` (the camera to a station or a line: search picks, the tabs' double click, the inspectors' locate button, T-569);
+the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the start menu and the URL switches that skip it, T-677); `NewGame.tsx` (the new game sheet: mode, start city, current location, search, real network; `START_CITIES`, `REAL_NETWORKS`, `zoneForLocation`, T-728, T-731, T-1132); `Spinner.tsx` (the small spinner, T-647, and the bunny's train, T-677); `Search.tsx` (T-148); `DemandStopped.tsx` (the alert when demand stops after startup, T-757); `keys.ts` (which keys a focused control keeps, T-183); `locate.ts` (the camera to a station or a line: search picks, the tabs' double click, the inspectors' locate button, T-569);
 `tip.ts` (the hover tag for every panel and control, from `data-tip`, never `title`, T-210);
 `blurHold.ts` (every hover kept up through a window blur until the pointer moves, T-483);
 `style.css` (theme tokens).
@@ -240,7 +239,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   6135 by default), `t715-load-money.mjs` (the real save opened from the saves panel while a later
   copy is open, twice: cash loads as saved and moves, no ledger day after the clock; a save with
   ledger days after its clock gets their running cost back; port 6165 by default),
-  `t975-realms.mjs` (realms in a fresh profile: no bubbles behind the start menu, a Tokyo start shows Japan only with the shade cut around its zones, a click shows France, a reload hides it again, stations in two realms show both; a click on a hidden realm shows it, a drag does not, no circles at the world view; the zoomed-out frame and a pan across France and Germany measured; port 6165 by default),
+  `t975-realms.mjs` (first the location button refused, in Lyon and in Sydney, and a map start showing every realm until its first station; then realms in a fresh profile: no bubbles behind the start menu, a Tokyo start shows Japan only with the shade cut around its zones, a click shows France, a reload hides it again, stations in two realms show both; a click on a hidden realm shows it, a drag does not, no circles at the world view; the zoomed-out frame and a pan across France and Germany measured; port 6165 by default),
   `t1071-train-count.mjs` (the real save's busiest line, its train count raised and lowered four times with the clock running: every train of every line placed each frame from the renderer's own buffers may move no further than top speed allows and come or go only at a terminal, and where new buffers arrive the old and new draw the same trains in the same places; `SPEED` 0 to 2 or -1 paused, `OP=headway`, `KEEP_FRAMES=1`; about 2 minutes; Rust side `sim/src/track/transition_tests.rs`),
   `t1025-shade.mjs` (Node, no browser: the realm shade's triangles for each realm alone and several groups up to all; no point of a shown zone shaded, none shaded twice, open land and sea shaded once; `quick` for the groups only, about 6 s, all of it under half a minute),
   `t728-newgame.mjs` (the new game sheet in a fresh profile: the search, a sandbox in Tokyo from
@@ -256,7 +255,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   slot's backups go; port 6150 by default), `t894-previews.mjs` (save pictures: a game in New York,
   Boston and Philadelphia and the real save, their panels and size, screenshots of the saves panel
   and start menu to artifacts/trainworld/previews/; `SHADE=dark`; port 6120 by default),
-  `t883-fare-curve.mjs` (the real save: the default fare's 11,342,122 rail trips, the same through three nodes, a cap past 500 km within 0.05%, a cap past 30 km adding rail trips; Money tab screenshots), `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
+  `t883-fare-curve.mjs` (the real save: the default fare's 11,359,932 rail trips, the same line through other nodes, three nodes kept as first and last, a doubled rate losing rail trips, a curve clamped at $0 adding them; the Money tab's drag sending once on release, wheel zoom's off-plot arrow and its click; fare graph screenshots), `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
   rides and running costs, with the largest hour-to-hour change beside the flat booking's),
   `t872-holidays.mjs` (the real save over the next Thanksgiving: that day's boarding account, fares
   and ledger are Saturday's, the days around it weekdays; the day is a weekday in Canada and the UK),
@@ -350,6 +349,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   notes/T-538.md.
 - `t700_walk_banks.py [id ...] [--packs dir]` (Python, T-700): the walk factors split by bank; no
   part of a zone walking to itself at over x5, and Shanghai's Middle Henan Rd to the Bund straight.
+- `ceiling/` (T-1056): Anita's ceilings A and B on a scratch copy of the sim crate. `t1056_ceiling.rs` is
+  the test module, `run_ceil.py [cities]` runs it per pack (`T1056_WORK` names the scratch folder).
 
 ## pipeline/: city packs (Python)
 
@@ -361,6 +362,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   City configs are in `build_city.py`. `build_city.py --boundary-only [ids]` rewrites only the
   US packs' `.boundary.geojson` from TIGER/Line counties with their water (`tiger_counties.py`,
   simplified topologically once for the whole US into `data/work/tiger_counties_simple.json`, T-352).
+- `curves/`: the gravity-curve fitters, run by hand from the maps root: `t277_fit.py` (Toronto),
+  `t289_curve.py` (France), `t290_curve.py` (Germany), `t360_curve.py` (England), `t420_curve.py <id>`
+  (Japan), and `t314_loo.py` (the leave-one-out test that writes `fitted_curves.json`).
 - `realms.py [--registry F] [--out F] [--dry]` writes each registry row's `realm` and `data/packs/realms.geojson`, the land of the realms in `app/src/game/realms.json` (T-975, about 1.5 minutes; run by the join).
 - `regions.py nyc` adds each cell's state to a finished pack and re-solves its gravity in place
   (seconds; T-162): the way to re-solve after a decay or border factor change without a rebuild.
@@ -421,7 +425,7 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `frame_fixture.py` writes PROJ's values for the world frame (`app/src/game/frame.fixture.json`),
   which `checks/t125-frame-check.mjs` and the Rust frame test compare with.
 - `tier0.py`: the adapter from global sources only (T-287), its borrowed curve read from
-  `fitted_curves.json` (written by `notes/t314_loo.py table`, T-314); `canada.py`: Canada's adapters;
+  `fitted_curves.json` (written by `pipeline/curves/t314_loo.py table`, T-314); `canada.py`: Canada's adapters;
   `england.py`: England's inputs for a tier 0 city (ITL3 outline, Census 2021 district totals;
   T-288; England's census upgrades go here, T-360); `france.py`: France's (départements
   dissolved from communes, legal population by commune, INSEE jobs by commune of work; T-289);

@@ -542,7 +542,7 @@ real pack in notes/T-287.md):
 | Home end | LODES RAC x ACS work from home | commuters by tract of residence (98-10-0480-01) plus at-home workers commuting again | population x commuters a resident |
 | Work from home | ACS 2019-2023 by tract and industry | Labour Force Survey May 2024 (24.7%, Toronto CMA), at both ends | one national share from the config (default 0) |
 | Everyday destinations | LODES retail, service, food, leisure sectors | the same sectors by census tract of work (98-10-0492-01) | each 2 km zone's jobs (errands also 25% residents) blended with its OSM shops and services, or restaurants, bars, venues and hotels, as far as the pack's OSM is complete; or a country's jobs by sector by small area that pass the plausibility check (`everyday` hook: Japan's mesh, England's BRES); set after the gravity (`tier0.everyday_pack`, T-453) |
-| Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | power 1.4 with the length fitted to a published median or mean commute (`tier0.fit_curve`), or with none, `"curve": "borrowed"` (`tier0.borrowed_curve`, T-314); a country's flow table, fitted (London); both parameters fitted to commuters by distance band (`tier0.fit_curve_bands`, Mumbai; a travel survey's home-to-job distances, Sao Paulo) |
+| Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `pipeline/curves/t277_fit.py`) | power 1.4 with the length fitted to a published median or mean commute (`tier0.fit_curve`), or with none, `"curve": "borrowed"` (`tier0.borrowed_curve`, T-314); a country's flow table, fitted (London); both parameters fitted to commuters by distance band (`tier0.fit_curve_bands`, Mumbai; a travel survey's home-to-job distances, Sao Paulo) |
 | Regions, border | states, 0.23 | provinces, factor 1 | one region, factor 1; or a module's `regions` hook with its factor (`usa`: the states, 0.23) |
 | Drawn boundary | TIGER/Line counties, water included (T-352) | cartographic census subdivisions, clipped at the shore (hugs Lake Ontario) | the config's district polygons (a GeoJSON, or a callable that writes one: London's whole ITL3 units, `england.itl3_boundary`) |
 | Water | TIGER AREAWATER and states | StatCan lakes and rivers; land = cartographic municipalities plus US states | OSM: `osm_water.source([extracts])` as the config's `water_source` (below) |
@@ -602,7 +602,7 @@ input at a time (the upgrades table in research/world-sampler.md), in a module p
 (`pipeline/england.py`), through tier0's `population`, `jobs` and `schools` hooks. London (`lon`,
 T-288 and T-360, notes/T-288.md) is the worked example: the outline as whole ITL3 units (ONS),
 Census 2021 population by LSOA, BRES jobs by LSOA, GIAS schools, the curve fitted on the 2011
-WU01EW flows (`notes/t360_curve.py`), work from home one national share. The chain: read the
+WU01EW flows (`pipeline/curves/t360_curve.py`), work from home one national share. The chain: read the
 extract's features and water, `build_city.py lon` (reads every OSM input from the feature cache),
 `routes.py lon --extracts europe/united-kingdom/england`, `places.py`. Measure each upgrade
 against tier 0 before switching, at the 2 km zone the game feels; use district totals and
@@ -612,7 +612,7 @@ workplace counts wherever a country has them (London's lessons: `notes/adding-a-
 timings: `notes/adding-a-city-history.md`; the notes of each task have the sources):
 
 - **Paris** (`par`, T-289, `pipeline/france.py`): one INSEE file (the 2022 flows, every flow) gives
-  both jobs by commune of work and the curve fit (`notes/t289_curve.py`, which also makes the signals
+  both jobs by commune of work and the curve fit (`pipeline/curves/t289_curve.py`, which also makes the signals
   cache, so the build that follows reuses it). Communes and legal populations from geo.api.gouv.fr,
   one request a département. Take water test places from the water cache's own polygons, never
   from memory.
@@ -647,7 +647,7 @@ timings: `notes/adding-a-city-history.md`; the notes of each task have the sourc
 - **Tokyo and Japan** (`tyo`, T-420, `pipeline/japan.py`): a Japanese pack is a config row:
   `prefectures`, `neighbours` (the land beyond the outline, for meshes it cuts) and the region's
   telework share. `python pipeline/japan.py fetch <id>` downloads the census meshes, N03, table 4 and
-  P29 first, and `japan.py outline <id>` draws the outline. Run `notes/t420_curve.py <id>` for the
+  P29 first, and `japan.py outline <id>` draws the outline. Run `pipeline/curves/t420_curve.py <id>` for the
   curve before the build (it makes the signals cache). `routes.py tyo --extracts asia/japan/kanto`
   (Japan is not in `routes.EXTRACTS`). Place names need fugashi and unidic-lite in the venv
   (`japan.kanji_romaji`). A rebuilt pack's caches (`data/work/<id>.*`, the `osm_*_<id>` files under

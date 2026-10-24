@@ -233,3 +233,8 @@ export function Row(p: { label: ComponentChildren; children?: ComponentChildren;
     </li>
   );
 }
+
+/** T-1134: the buttons of an inspector, in a row right under its header, never after a list of any length. */
+export function Actions({ children }: { children: ComponentChildren }) {
+  return <div class="inspector-actions">{children}</div>;
+}

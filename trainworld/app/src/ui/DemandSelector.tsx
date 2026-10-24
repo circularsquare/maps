@@ -9,11 +9,10 @@ import { asFilter, FILTER_PURPOSES, purposeColour } from "../game/purposes";
 import { useState } from "preact/hooks";
 import { display, purposeFilter, setDisplay } from "../game/ui";
 import { DemandStopped } from "./DemandStopped";
-import { StationsFull } from "./StationsFull";
 import { StatusTag } from "./StatusTag";
 
 /** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
- * them the stations full alert (T-231). */
+ * them the track display and the demand alert. */
 export function MapTopLeft() {
   return <div class="map-top-left">
     <div class="map-top-row">
@@ -22,7 +21,6 @@ export function MapTopLeft() {
     </div>
     <TrackDisplay />
     <DemandStopped />
-    <StationsFull />
   </div>;
 }
 

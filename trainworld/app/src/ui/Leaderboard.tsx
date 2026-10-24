@@ -1,4 +1,4 @@
-// T-973: the leaderboards, a centred modal opened by the trophy on the Cities tab's All cities row
+// T-973: the leaderboards, a centred modal opened by the trophy on the Cities tab's World row
 // (`LeaderboardButton`). Points only (Anita, 2026-10-23): the world board, then one per city, this
 // game's cities first and then the others that have rows. The top 50, the player's own row under
 // them when lower, and at the bottom Sign in to be listed, a name with Join, or Leave the
@@ -17,7 +17,7 @@ const cityName = (id: string) => CITIES.find((c) => c.id === id)?.name ?? id;
 const collate = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 
 function Row({ r, board, mine }: { r: BoardRow; board: string; mine: boolean }) {
-  const where = board === WORLD ? "in all cities" : `in ${cityName(board.slice(WORLD.length + 1))}`;
+  const where = board === WORLD ? "in the world" : `in ${cityName(board.slice(WORLD.length + 1))}`;
   return <li class={mine ? "me" : ""}>
     <span class="lb-rank num">{r.rank}</span>
     <span class="lb-name">{r.name}</span>
@@ -57,7 +57,7 @@ function Boards() {
   const meIn = d?.me && d.rows.some((r) => r.rank === d.me!.rank && r.name === d.me!.name);
   return <>
     <select class="lb-pick" aria-label="Leaderboard" onChange={(e) => void fetchBoards((e.target as HTMLSelectElement).value)}>
-      <option value={WORLD} selected={key === WORLD}>All cities</option>
+      <option value={WORLD} selected={key === WORLD}>World</option>
       {mine.length > 0 && <optgroup label="Cities in this game">{mine.map(opt)}</optgroup>}
       {others.length > 0 && <optgroup label="Other cities">{others.map(opt)}</optgroup>}
     </select>
@@ -79,7 +79,7 @@ export function Leaderboard() {
   </Modal>;
 }
 
-/** The trophy on the All cities row; nothing until accounts are on. */
+/** The trophy on the World row; nothing until accounts are on. */
 export function LeaderboardButton() {
   if (accountState.value !== "on") return null;
   return <button class="btn icon mini lb-open" data-tip="Leaderboards" aria-label="Leaderboards"
