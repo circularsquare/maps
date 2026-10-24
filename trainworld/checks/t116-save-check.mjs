@@ -16,6 +16,8 @@ for (const [name, header] of [['legacy NYC', old], ['Northeast', { ...old, regio
   assert(api.isNortheastSave(decoded.header));
   cases.push({ name, bytes: bytes.length, trackBytes: decoded.track.length, cash: decoded.header.cash, clock: decoded.header.clock });
 }
-for (const foreign of [{ ...old, city: 'phl' }, { ...old, region: 'other' }, { ...old, cities: ['nyc', 'other'] }]) assert(!api.isNortheastSave(foreign));
+for (const foreign of [{ ...old, city: 'phl' }, { ...old, region: 'other' }]) assert(!api.isNortheastSave(foreign));
+// T-1053: a zone list naming a removed zone still loads (its successor stands in)
+assert(api.isNortheastSave({ ...old, cities: ['nyc', 'other'] }));
 await writeFile('artifacts/trainworld/notes-outputs/T-116-save-check.json', JSON.stringify({ cases, incompatibleRegionsRejected: true }, null, 2) + '\n');
 console.log(JSON.stringify(cases));

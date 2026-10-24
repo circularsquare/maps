@@ -135,7 +135,7 @@ async function europePan(page) {
     await page.click(here);
     await page.waitForFunction(() => document.querySelector('.new-game-here')?.dataset.state === 'failed', undefined, { timeout: 20000 }).catch(() => {});
     const refused = { text: await page.textContent(here), label: await label(), mapLit: await page.locator('.new-game-map.on').count() };
-    report('the sheet has its three ways joined by "or", and a refused location leaves it as it was', ors === 2 && mapLit === 1 && refused.text.trim() === 'Location unavailable' && refused.label === 'Start on the map' && refused.mapLit === 1, JSON.stringify({ ors, mapLit, refused }));
+    report('the sheet has its three ways joined by "or", and a refused location leaves it as it was', ors === 2 && mapLit === 1 && refused.text.trim() === 'Location unavailable' && refused.label === 'Start' && refused.mapLit === 1, JSON.stringify({ ors, mapLit, refused }));
     // a location in a zone (Lyon), and one far from every zone (Sydney)
     await ctx0.grantPermissions(['geolocation']);
     await ctx0.setGeolocation({ longitude: 4.84, latitude: 45.76 });
@@ -153,7 +153,7 @@ async function europePan(page) {
     await ready(page);
     await settle(page, 3000);
     const view = await page.evaluate(() => { const c = window.tw.map.getCenter(); return { lng: c.lng, lat: c.lat, zoom: window.tw.map.getZoom() }; });
-    report('the location starts in its zone, or on the map centred there', /^Start in /.test(lyon) && off === 'Start on the map' && sydney === 'Start on the map' && Math.abs(view.lng - 151.2) < 1 && Math.abs(view.lat + 33.87) < 1 && view.zoom < 5,
+    report('the location starts in its zone, or on the map centred there', /^Start in /.test(lyon) && off === 'Start' && sydney === 'Start' && Math.abs(view.lng - 151.2) < 1 && Math.abs(view.lat + 33.87) < 1 && view.zoom < 5,
       JSON.stringify({ lyon, off, sydney, view }));
 
     // a map start: every realm shown (no circles), the shade cut round every zone

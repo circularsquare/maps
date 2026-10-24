@@ -30,7 +30,8 @@ const MUMBAI = {
 const { ctx, close } = await launchChrome({ prefix: 'tw-t586-', args: ANGLE });
 const results = [], rows = [];
 const report = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
-const waitFinal = (page, after = -1) => demandFinal(page, { strict: false, after, timeout: 900000 });
+// a final with lines: the empty network's own final lands first, and can come after `after` was read
+const waitFinal = (page, after = -1) => demandFinal(page, { strict: false, after, lines: 0, timeout: 900000 });
 
 async function open(page, city) {
   await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
@@ -217,8 +218,9 @@ try {
     // under half a trip the explorer says "Under 1" (T-911)
     const counts = mine.filter((r) => !r.line.startsWith(r.hoverCount + ' ') && !(r.hoverCount === '0' && r.line.startsWith('Under 1 ')));
     report(`${city}: the explorer's trip count is the hover's`, counts.length === 0, counts.length ? JSON.stringify(counts[0]) : `(${mine.length})`);
-    const walkRows = mine.filter((r) => (r.rows.walk !== null) !== (r.walkMin < 30));
-    report(`${city}: a walk row exactly when the walk is under 30 min`, walkRows.length === 0, walkRows.length ? JSON.stringify(walkRows[0]) : `(${mine.filter((r) => r.rows.walk !== null).length} with one)`);
+    // T-992: also whenever walking takes a share
+    const walkRows = mine.filter((r) => (r.rows.walk !== null) !== (r.walkMin < 30 || r.explorer[1] > 0));
+    report(`${city}: a walk row exactly when the walk is under 30 min or walking has a share`, walkRows.length === 0, walkRows.length ? JSON.stringify(walkRows[0]) : `(${mine.filter((r) => r.rows.walk !== null).length} with one)`);
     report(`${city}: no page errors`, errors.length === 0, errors.slice(0, 3).join(' | '));
     if (process.env.SHOTS === '1' && city === CITIES[0]) await shots(page, picks[0]);
     await page.close();

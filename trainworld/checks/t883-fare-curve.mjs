@@ -14,12 +14,14 @@
 // Prints PASS or FAIL lines and exits 1 on failure. About five minutes.
 import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { launchChrome, importSave, demandFinal, REAL_SAVE, ARTIFACTS } from './lib.mjs';
+import { launchChrome, importSave, demandFinal, REAL_SAVE, ARTIFACTS, SMOKE_FIGURES } from './lib.mjs';
 
 const BASE = (process.argv[2] ?? 'http://localhost:6150/').replace(/\/?$/, '/');
 const OUT = join(ARTIFACTS, 't1143');
-/** the real save's rail trips a day at the default fare (the data of 2026-10-24) */
-const DEFAULT_RAIL = Number(process.env.T883_RAIL ?? 12783191);
+/** the real save's rail trips a day at the default fare: T883_RAIL, else smoke's last run on this
+ * url (smoke-figures.json, the same weekday final of the same game), else not compared */
+const smokeRail = await readFile(SMOKE_FIGURES, 'utf8').then((s) => JSON.parse(s)[BASE]?.realRail, () => undefined);
+const DEFAULT_RAIL = process.env.T883_RAIL ? Number(process.env.T883_RAIL) : smokeRail ?? null;
 const DEFAULT = '[[0,1.5],[20,3.5],[100,11.5]]';
 
 let failed = false;
@@ -71,7 +73,8 @@ try {
   const a = await final(-1);
   const an = await nodesNow();
   const am = await money();
-  report('default fare', Math.round(a.rail) === DEFAULT_RAIL && an === DEFAULT && am.extra === 0, `(${fmt(a.rail)} rail trips a day; want ${fmt(DEFAULT_RAIL)}; nodes ${an}; extra ${am.extra})`);
+  report('default fare', a.rail > 0 && (DEFAULT_RAIL === null || Math.round(a.rail) === DEFAULT_RAIL) && an === DEFAULT && am.extra === 0,
+    `(${fmt(a.rail)} rail trips a day; ${DEFAULT_RAIL === null ? 'no smoke figure for this url to compare' : `smoke's ${fmt(DEFAULT_RAIL)}`}; nodes ${an}; extra ${am.extra})`);
 
   // the same fares give the demand nothing new to solve, so no new final may come
   await setNodes([[0, 1.5], [50, 6.5], [200, 21.5]]);
@@ -103,6 +106,8 @@ try {
 
   await setNodes(JSON.parse(DEFAULT));
   await waitNodes(DEFAULT);
+  const back = await final(e.version);
+  report('back at the default fare, the first figure again', Math.round(back.rail) === Math.round(a.rail), `(${fmt(back.rail)} against ${fmt(a.rail)})`);
 
   // the Money tab
   await page.click('button.tab[aria-label="Money"]');

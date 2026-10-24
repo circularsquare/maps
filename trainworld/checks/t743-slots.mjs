@@ -1,5 +1,6 @@
 // T-743, T-744: New game, Load a file and a backup's restore never write over a saved game, and each
-// slot keeps two rotating backups. Through the saves panel's own buttons: the real save loaded from a
+// slot keeps two rotating backups. Through the saves panel's own buttons (each reloads the page into
+// its game, T-1196): the real save loaded from a
 // file opens in a slot of its own; fares changed there twice, the backups (every 4 s here, `?backupMs=`)
 // rotate; "Restore as a copy" opens the older backup in a new slot; New game opens an empty game in a
 // new slot; recovered-day26.save loads into another; every slot left behind keeps its bytes. Deleting a
@@ -48,11 +49,15 @@ try {
     await page.waitForSelector('.saves-panel .save-files');
     await wait(300);
   };
-  /** after a game change, the new active slot */
+  /** after a game change (T-1196: the page reloads into it), the new active slot */
   const switched = async (from) => {
-    await page.evaluate(async () => { window.__cc = await import('/src/workers/clockClient.ts'); });
-    await page.waitForFunction((from) => window.__cc.saveSlotsState.value.active !== from, from, { timeout: 120000, polling: 200 });
-    return (await state()).active;
+    for (const end = Date.now() + 180000; Date.now() < end; await wait(300)) {
+      try {
+        const a = await page.evaluate(async () => window.tw?.world?.value ? (await import('/src/workers/clockClient.ts')).saveSlotsState.value.active : null);
+        if (a && a !== from && a.startsWith('slot-')) return a;
+      } catch { /* the page is reloading */ }
+    }
+    throw new Error(`no switch from ${from}`);
   };
   const loadFile = async (path) => {
     const from = (await state()).active;

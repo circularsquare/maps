@@ -67,6 +67,7 @@ import { startSearch } from "./ui/Search";
 import { startTips } from "./ui/tip";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
 import { choosing, startGameWait } from "./game/loading";
+import { startSaveSafety } from "./game/saveSafety";
 import { choiceFromUrl, showStartMenu, worldCover } from "./ui/StartMenu";
 import { viewStart } from "./ui/locate";
 import { startOpenFit } from "./ui/locate";
@@ -110,7 +111,7 @@ const urlChoice = choiceFromUrl();
 // `submitNetwork` below (workers/demandClient.ts); `?demandTest=1` solves T-005's hand-made
 // network instead.
 if (urlChoice) {
-  startGameWait(urlChoice.newGame ? "new" : "last");
+  startGameWait(urlChoice.slot ?? (urlChoice.newGame ? "new" : "last"));
   startDemand(HOME_CITY, !!urlChoice.newGame);
 }
 
@@ -174,7 +175,10 @@ startOpenFit(); // T-895
 
 // ---- the clock worker: owns the network; its states and trips go to the renderer ----
 const client = new ClockClient();
+// T-895, T-1196: a game opened from the saves panel (the page reloaded into it) fits its network
+if (urlChoice?.slot || (urlChoice?.pending && !urlChoice.game)) client.fitNextGame();
 if (urlChoice) client.start(urlChoice);
+void startSaveSafety((dir) => client.post({ kind: "copyFolder", dir })); // T-1214: copies outside browser storage
 if (SYNTH) {
   const s = makeSynth(Math.round(num("lines", 500)), Math.round(num("trains", 10000)));
   renderer.setNetwork(s);

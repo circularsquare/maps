@@ -97,6 +97,25 @@ function Chips({ lines, name }: { lines: LineInput[]; name: string }) {
   );
 }
 
+/** T-1200: rows drawn at first, and more each time the list's end scrolls into view. New York's
+ * 1,000-odd rows at once froze the page 0.45 s on opening the tab (1.8 s on a phone-speed CPU). */
+const ROWS_FIRST = 80, ROWS_MORE = 160;
+
+/** An empty row at the list's end that calls `more` when it scrolls into view. */
+function MoreRows({ more }: { more: () => void }) {
+  const ref = useRef<HTMLLIElement>(null);
+  const call = useRef(more);
+  call.current = more;
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) call.current(); }, { rootMargin: "400px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return <li ref={ref} class="rows-more" aria-hidden="true" />;
+}
+
 /** A Stations tab row: a station complex (T-530), or a station on its own. */
 interface StationRow {
   /** the member a click selects, whose name the row takes: most lines, then constructed, then save order */
@@ -140,6 +159,7 @@ function stationRows(stations: readonly StationInput[], all: readonly StationInp
 
 export function StationsTab() {
   useToday(); // T-293
+  const [limit, setLimit] = useState(ROWS_FIRST);
   void accountVersion.value; // re-sorted each game hour, as the lines
   void todayLoaded.value;
   const w = world.value;
@@ -184,7 +204,7 @@ export function StationsTab() {
         { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
       <ul class="rows pick stations">
-        {st.map((r) => (
+        {st.slice(0, limit).map((r) => (
           <li class={sel?.kind === "station" && r.members.includes(sel.station) ? "on" : ""} onClick={() => (selection.value = { kind: "station", station: r.lead.id })} onDblClick={() => locateStation(r.lead.lng, r.lead.lat)}>
             <span class={"grow" + (r.built ? "" : " muted")}><span>{r.lead.name}</span></span>
             <Chips lines={r.lines} name={r.lead.name} />
@@ -192,6 +212,7 @@ export function StationsTab() {
             {key === "near" && <Near m={r.dist} />}
           </li>
         ))}
+        {st.length > limit && <MoreRows key={limit} more={() => setLimit((n) => n + ROWS_MORE)} />}
       </ul>
       {st.length > 0 && (
         <div class="pane-foot">

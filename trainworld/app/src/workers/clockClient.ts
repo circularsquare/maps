@@ -21,13 +21,18 @@ import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldVie
 import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd, StationAt, ToClock } from "./protocol";
 import { anchorVersion } from "../map/anchorVersion";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
-import type { NewGameSpec } from "./saveFile";
+import type { NewGameSpec, PendingLoad } from "./saveFile";
 import type { FrameSpec } from "../game/frame";
 import { dataUrl } from "../game/dataBase";
+import { saveRefusal } from "../game/memoryCheck";
+import { copied, keepStorage } from "../game/saveSafety";
+import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "../game/busy";
 
 export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[] }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
 export function manageSaveSlot(action: "refresh" | "create" | "open" | "rename" | "delete" | "restore", key?: string, name?: string) {
-  if (action === "open") current?.fitNextGame();
+  // T-1196: a game opened or restored reloads the page into it, T-1197: if it fits
+  if (action === "open" && key && key !== saveSlotsState.peek().active) return void ifItFits({ key }, () => switchGame({ slot: key }));
+  if (action === "restore" && key) return void ifItFits({ key }, () => switchGame({ load: "restore" }, { kind: "restore", key, from: saveSlotsState.peek().active }));
   current?.post({ kind: "saveSlot", action, key, name });
 }
 
@@ -89,6 +94,11 @@ function letterOf(name: string): string {
   const c = name.trim()[0] ?? "?";
   return c.toUpperCase();
 }
+
+type StateKind = "load" | "redraw" | "network" | "state";
+/** T-1200: ms a state takes on the main thread per edge and node, before this page has taken one of
+ * its kind; New York's real save unthrottled (notes/T-1200.md). Learnt from then on (game/busy.ts). */
+const STATE_MS_GUESS: Record<StateKind, number> = { load: 0.06, redraw: 0.012, network: 0.01, state: 0.006 };
 
 /** The longest a state waits for its trips (T-648, `ClockClient.receive`), ms. */
 const HOLD_MS = 250;
@@ -186,13 +196,42 @@ export function exportGame() {
 }
 /** Load a save file the player picked, into a new slot named after the file (T-743). */
 export async function importGame(file: File) {
-  const bytes = await file.arrayBuffer();
-  current?.fitNextGame();
-  current?.post({ kind: "import", bytes, name: file.name.replace(/\.save$/i, "") }, [bytes]);
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (await ifItFits({ bytes })) switchGame({ load: "file" }, { kind: "import", bytes, name: file.name.replace(/\.save$/i, ""), from: saveSlotsState.peek().active });
 }
 /** Start a new game in a new slot (T-743), named after its start (T-728) unless `name` is given. */
 export function newGame(game?: NewGameSpec, name = "") {
-  current?.post({ kind: "newGame", name, game }, game?.real ? [game.real] : []);
+  const spec = game ?? { mode: "normal" };
+  switchGame({ load: "new", mode: spec.mode, ...(spec.start ? { city: spec.start } : {}), ...(spec.real ? { real: "1" } : {}) }, { kind: "new", spec, name });
+}
+
+/** T-1196: the URL switches that say which game a page opens (ui/StartMenu.tsx `choiceFromUrl`) */
+export const CHOICE_PARAMS = ["new", "city", "mode", "synth", "demandTest", "continue", "slot", "load", "real"];
+/** This page's URL with `params` in place of its game switches; none: the start menu (`?paused=1`, a
+ * check's paused clock, stays with a game and goes with the menu). */
+export function pageWith(params: Record<string, string>): string {
+  const u = new URL(location.href);
+  for (const k of CHOICE_PARAMS) u.searchParams.delete(k);
+  if (!Object.keys(params).length) u.searchParams.delete("paused");
+  for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
+  return u.href;
+}
+/** T-1196: another game replaces this one by reloading the page into it, which frees everything the
+ * last one held (its demand workers' memory never shrinks while they live: 2.5 GB each after all of
+ * China). The game in hand is saved first; if it cannot be, the player is told and stays. `cancel`
+ * (T-1197, a load given up): the page goes whatever the save says, after LEAVE_MS at most. */
+export function switchGame(params: Record<string, string>, pending?: PendingLoad, cancel = false) {
+  const go = () => location.replace(pageWith(params));
+  if (cancel) setTimeout(go, LEAVE_MS);
+  current?.leave(pending, go, cancel);
+}
+const LEAVE_MS = 5000;
+/** T-1197: whether the save fits in this device's memory; if not the player is told why. `then` runs if it does. */
+async function ifItFits(src: { bytes: Uint8Array } | { key: string }, then?: () => void): Promise<boolean> {
+  const why = await saveRefusal(src);
+  if (why) say(why, true);
+  else then?.();
+  return !why;
 }
 /** T-728: make the game a sandbox, for good. */
 export function makeSandbox() {
@@ -215,6 +254,8 @@ export interface GameChoice {
   newGame?: boolean;
   /** how the new game starts (T-728) */
   game?: NewGameSpec;
+  /** T-1196: the game is the one the saves panel left in storage before the page reloaded */
+  pending?: boolean;
 }
 
 export class ClockClient {
@@ -300,7 +341,7 @@ export class ClockClient {
   start(choice: GameChoice) {
     if (this.worker) return;
     this.worker = new Worker(new URL("./clock.worker.ts", import.meta.url), { type: "module" });
-    this.worker.onmessage = (e: MessageEvent<FromClock>) => this.receive(e.data);
+    this.worker.onmessage = (e: MessageEvent<FromClock>) => this.arrive(e.data);
     this.worker.onerror = (e) => this.failed(e.message || "its script did not load");
     this.worker.onmessageerror = () => this.failed("a message could not be read");
     const q = new URLSearchParams(location.search);
@@ -310,7 +351,7 @@ export class ClockClient {
     let slot = choice.slot ?? "autosave";
     if (!choice.slot) try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
     const backupMs = Number(q.get("backupMs")) || undefined;
-    this.worker.postMessage({ kind: "init", city: this.cityId, pack: dataUrl(this.cityId), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
+    this.worker.postMessage({ kind: "init", city: this.cityId, pack: dataUrl(this.cityId), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
     for (const [msg, transfer] of this.waiting) this.worker.postMessage(msg, transfer);
     this.waiting = [];
   }
@@ -430,6 +471,17 @@ export class ClockClient {
   private fitNext = false;
   private fitState = false;
   fitNextGame() { this.fitNext = true; }
+  /** T-1196: what to do once the worker has saved and let go of the game in hand */
+  private onLeft: (() => void) | null = null;
+  leave(pending: PendingLoad | undefined, then: () => void, anyway = false) {
+    if (this.onLeft) return;
+    // a worker that never started has no game to keep
+    if (!this.worker) return then();
+    this.onLeft = then;
+    this.leaveAnyway = anyway;
+    this.post({ kind: "leave", pending });
+  }
+  private leaveAnyway = false;
 
   post(msg: ToClock, transfer: Transferable[] = []) {
     if (this.worker) this.worker.postMessage(msg, transfer);
@@ -450,7 +502,51 @@ export class ClockClient {
     if (m) this.takeState(m);
   }
 
+  /** T-1200: messages waiting while the busy tag paints, in order; null when none wait */
+  private deferred: FromClock[] | null = null;
+  /** the busy tag shown for a state still held for its trips, hidden once it is taken */
+  private stateBusy: { token: number; kind: StateKind; units: number } | null = null;
+
+  /** A state expected to freeze the page past BUSY_MS here (a big network, or one redrawn at a new
+   * draw anchor) waits a frame with the busy tag up; every message after it waits behind it. */
+  private arrive(msg: FromClock) {
+    if (this.deferred) { this.deferred.push(msg); return; }
+    if (msg.kind === "state" && !this.stateBusy) {
+      const st = msg.state;
+      const units = (st.sameEdges ? this.lastEdges.length : st.edges.length) + (st.sameNodes ? this.lastNodes.length : st.nodes.length) + 1;
+      const kind = this.stateKind(st);
+      if (expectedMs(kind, units, STATE_MS_GUESS[kind]) > BUSY_MS) {
+        this.deferred = [msg];
+        this.stateBusy = { token: showBusy(kind === "load" || kind === "redraw" ? "Drawing the network" : "Updating the network"), kind, units };
+        afterPaint(() => {
+          const q = this.deferred ?? [];
+          this.deferred = null;
+          for (const m of q) this.receive(m);
+          // not taken yet: held for its trips, and the tag stays until it is
+          if (this.stateBusy && !this.held) { hideBusy(this.stateBusy.token); this.stateBusy = null; }
+        });
+        return;
+      }
+    }
+    this.receive(msg);
+  }
+
+  /** a state's kind of work on this thread: a game's first, a redraw at a new draw anchor, a new network, or neither */
+  private stateKind(st: ClockState): StateKind {
+    return !world.peek() ? "load" : st.anchor && this.anchorOf(st.anchor) !== anchor() ? "redraw" : st.net ? "network" : "state";
+  }
+
   private takeState(msg: Extract<FromClock, { kind: "state" }>) {
+    const st = msg.state, sb = this.stateBusy;
+    const kind = sb?.kind ?? this.stateKind(st);
+    const t0 = performance.now();
+    try { this.takeStateNow(msg); } finally {
+      learnBusy(kind, sb?.units ?? st.edges.length + st.nodes.length + 1, performance.now() - t0);
+      if (sb) { hideBusy(sb.token); this.stateBusy = null; }
+    }
+  }
+
+  private takeStateNow(msg: Extract<FromClock, { kind: "state" }>) {
     const t0 = performance.now();
     // built at another draw anchor (T-307): switch to it first, so everything rebuilt from
     // this state converts with the anchor its positions are relative to
@@ -549,6 +645,16 @@ export class ClockClient {
         if (msg.from === "file") say(`Game loaded, day ${Math.floor(msg.clock / 86400)}.`);
         if (msg.from === "new" && !msg.error) say("New game started.");
         break;
+      case "copied":
+        copied(msg.at, msg.error);
+        break;
+      case "left": {
+        const then = this.onLeft;
+        this.onLeft = null;
+        if (msg.error && !this.leaveAnyway) say(msg.error, true);
+        else then?.();
+        break;
+      }
       case "exported": {
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([msg.bytes as BlobPart], { type: "application/octet-stream" }));
@@ -564,6 +670,7 @@ export class ClockClient {
         const before = saveSlotsState.value;
         saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: msg.reason, error: msg.error, backups: msg.backups };
         lastSaved.value = msg.at;
+        if (msg.at > 0 && !this.testPage) void keepStorage(); // T-1214: a slot is written
         // a test page does not make its slot the one the next page opens, until it changes (T-320)
         if (msg.active && ((!this.sawSlots && !this.testPage) || before.active !== msg.active)) {
           try { localStorage.setItem("anitabuilder-save-slot", msg.active); } catch { /* storage unavailable */ }

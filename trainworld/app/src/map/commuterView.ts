@@ -28,6 +28,7 @@ import { world } from "../game/world";
 import { BUBBLE_DENSITY, DISC, RES_AREA_M2, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
 import { aggregate, discs, recolour, type Groups } from "./bubbles";
 import { cityOverview, interBox, setNearPoint } from "./intercityView";
+import { loadFailure, zoneFailures } from "../game/loading";
 import { anchorVersion } from "./anchorVersion";
 import { modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt, type Pointer } from "./demandHover";
@@ -833,6 +834,13 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       lastFlowKey = null;
     }
     refreshPick();
+  });
+  // T-1216: the selected bubbles' loading mark, until their far end is drawn (the inspector's spinner
+  // covers the longer trips); none where demand or the zone failed to load, which leaves the answer never coming
+  effect(() => {
+    const sel = selection.value, pick = commuterPick.value;
+    const failed = !!loadFailure.value || zoneFailures.value.has(activeCity.value);
+    view.setLoading(sel?.kind === "commuters" && !failed && (pick?.sel !== sel || !pick.far));
   });
   // a new end in the settings drops a selection of the other end
   effect(() => {

@@ -97,38 +97,76 @@ function limits(nodes: FareNode[], i: number, gap = NODE_GAP_KM) {
   };
 }
 
-/** The nodes under the graph, one row each: the base fare's fare, the others' distance and fare,
- * stepped or typed. */
+/** A rate per display unit steps by this, US$ (T-1201). */
+const RATE_STEP = 0.005;
+const cents = (v: number) => Math.round(v * 100) / 100;
+const rateText = (r: number) => "$" + r.toFixed(3);
+
+/** The rate per km of the stretch ending at node `i` (from 1), US$. */
+const rateOf = (nodes: FareNode[], i: number) => (nodes[i][1] - nodes[i - 1][1]) / (nodes[i][0] - nodes[i - 1][0]);
+
+/** Nodes from the rows' own values: the base fare, then each stretch's end (km) and rate per km.
+ * Fares are cents, so rows left alone keep their nodes' fares. */
+function fromRows(base: number, stretches: [number, number][]): FareNode[] {
+  const out: FareNode[] = [[0, cents(Math.max(0, base))]];
+  for (const [km, rate] of stretches) {
+    const [pk, pf] = out[out.length - 1];
+    out.push([km, Math.max(pf, cents(pf + Math.max(0, rate) * (km - pk)))]);
+  }
+  return out;
+}
+
+/** The rows under the graph (T-1201): the base fare, then each stretch's distances and rate per
+ * unit, stepped or typed. A row's change keeps the other rows' values, so a rate or base change
+ * moves every later node's fare by the same amount; a drag on the graph sets fares instead. */
 export function FareNodeRows({ nodes }: { nodes: FareNode[] }) {
   const kpu = unitMetres() / 1000;
   const unit = unitShort();
+  const stretches = nodes.slice(1).map((n, j) => [n[0], rateOf(nodes, j + 1)] as [number, number]);
+  const base = nodes[0][1];
+  const put = (b: number, s: [number, number][]) => void setFares(fromRows(b, s));
+  const setBase = (v: number) => put(v, stretches);
   return (
     <ul class="rows">
-      {nodes.map(([km, fare], i) => {
+      <li>
+        <span class="grow">Base fare</span>
+        <Stepper value={usd(base)} wide label="base fare" onStep={(s) => setBase(cents(base + s * 0.25))}
+          type={{ text: base.toFixed(2), set: setBase, tip: "The fare for the shortest trip. Click to type an amount." }} />
+      </li>
+      {stretches.map(([km, rate], j) => {
+        const i = j + 1;
         const lim = limits(nodes, i);
-        const put = (n: FareNode) => setFares(nodes.map((o, j) => (j === i ? n : o)));
-        const setFare = (v: number) => void put([km, clamp(Math.round(v * 100) / 100, lim.fLo, lim.fHi)]);
-        const fareStepper = (
-          <Stepper value={usd(fare)} wide label={i === 0 ? "base fare" : `fare at node ${i + 1}`} onStep={(s) => setFare(fare + s * 0.25)}
-            type={{ text: fare.toFixed(2), set: setFare, tip: i === 0 ? "The fare for the shortest trip. Click to type an amount." : "The fare for a trip of this length. Click to type an amount." }} />
-        );
-        if (i === 0) {
-          return (
-            <li>
-              <span class="grow">Base fare</span>
-              {fareStepper}
-            </li>
-          );
-        }
-        const u = km / kpu;
-        const setU = (v: number) => { if (lim.kLo <= lim.kHi) void put([clamp(v * kpu, lim.kLo, lim.kHi), fare]); };
+        const from = nodes[i - 1][0] / kpu, u = km / kpu;
+        const fromText = from === 0 ? "0" : distText(from);
+        const rateU = rate * kpu;
+        const last = i === nodes.length - 1;
+        const setU = (v: number) => { if (lim.kLo <= lim.kHi) put(base, stretches.map((s, k) => (k === j ? [clamp(v * kpu, lim.kLo, lim.kHi), s[1]] : s))); };
         const uStep = u < 10 ? 0.5 : u < 100 ? 5 : 50;
+        const withRate = (r: number) => fromRows(base, stretches.map((s, k) => (k === j ? [s[0], Math.max(0, r) / kpu] : s)));
+        const setRate = (v: number) => void setFares(withRate(Math.round(v * 1000) / 1000));
+        const stepRate = (s: number) => {
+          const at = rateU / RATE_STEP;
+          const next = withRate((s > 0 ? Math.floor(at + 1e-6) + 1 : Math.ceil(at - 1e-6) - 1) * RATE_STEP);
+          // a stretch too short for the step to move its fare a cent moves it a cent
+          if (next[i][1] === nodes[i][1] && (s > 0 || nodes[i][1] > nodes[i - 1][1])) {
+            const dc = s > 0 ? 0.01 : -0.01;
+            for (let k = i; k < next.length; k++) next[k][1] = cents(nodes[k][1] + dc);
+          }
+          if (JSON.stringify(next) !== JSON.stringify(nodes)) void setFares(next);
+        };
+        const span = last ? `past ${fromText} ${unit}` : `from ${fromText} to ${distText(u)} ${unit}`;
         return (
           <li>
-            <Stepper value={`${distText(u)} ${unit}`} wide label={`distance of node ${i + 1}`} onStep={(s) => setU(snap(u + s * uStep, uStep))}
-              type={{ text: distText(u), set: setU, tip: `A trip length the curve passes through, ${unit}. Click to type one.` }} />
-            <span class="grow fg-costs">costs</span>
-            {fareStepper}
+            {/* the last node's distance changes no fare, since its rate holds past it: it is only dragged */}
+            {last
+              ? <span class="grow">Past {fromText} {unit}</span>
+              : <>
+                  <Stepper value={`${fromText}-${distText(u)} ${unit}`} wide label={`end of stretch ${i}`} onStep={(s) => setU(snap(u + s * uStep, uStep))}
+                    type={{ text: distText(u), set: setU, tip: `Where this rate ends and the next begins, ${unit}. Click to type a distance.` }} />
+                  <span class="grow" />
+                </>}
+            <Stepper value={`+${rateText(rateU)} per ${unit}`} wide label={`rate of stretch ${i}`} onStep={stepRate}
+              type={{ text: rateU.toFixed(3), set: setRate, tip: `The fare rises ${rateText(rateU)} for each ${unit} ${span}. Click to type a rate.` }} />
           </li>
         );
       })}

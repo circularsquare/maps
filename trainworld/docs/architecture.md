@@ -310,6 +310,16 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   none) is also written over the older backup, so backups only follow changes. The saves panel lists
   the playing slot's under its card, each with Restore as a copy. Deleting a slot deletes them.
   `?backupMs=` shortens the interval for checks.
+- **Outside the browser's storage** [T-1214]: a full disk let Chrome empty the site's IndexedDB
+  (2026-10-24). Once a slot is written the page asks `navigator.storage.persist()`; a folder the player
+  picks (File System Access; its handle kept as `copy-folder` in the same store) gets every slot from
+  the clock worker when picked and each slot at every autosave, `<name> (<4 letters of its key>).save`
+  written over each time.
+- **Switching games reloads the page** [T-1196]: Open, Load a file, Restore as a copy and New game
+  post `leave` (the game in hand saved, its lock let go; a file, backup or new game's spec kept as
+  `pending-load` in the same store), then reload with `?slot=<key>` or `?load=<kind>`; the new page's
+  clock worker takes `pending-load` as it starts. Loads posted straight to the worker still replace
+  the game in place.
 - **Named browser slots** [T-068, T-241]: save the current game as a new copy, open another, rename,
   delete an inactive slot after confirmation. The selected slot is remembered; the original autosave
   stays at its key ("Original game"). Each slot write stores a `SlotSummary` beside the bytes: a 384

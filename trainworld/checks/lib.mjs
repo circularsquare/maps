@@ -16,6 +16,8 @@ export const MAPS = fileURLToPath(new URL('../../', import.meta.url));
 export const ARTIFACTS = fileURLToPath(new URL('../../artifacts/trainworld/', import.meta.url));
 /** the real New York save, read from this tree (an agent worktree has its own) */
 export const REAL_SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
+/** smoke's figures by url (T-1135), for checks that compare against the current data */
+export const SMOKE_FIGURES = fileURLToPath(new URL('../../artifacts/trainworld/smoke-figures.json', import.meta.url));
 export const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 /** Chrome flags that give the page a real GL context (`ANGLE` alone for the checks that never added the blocklist flag) */
 export const ANGLE = ['--use-angle=d3d11'];
@@ -149,7 +151,7 @@ export async function bundleDemandWorker(name) {
   const wasm = fileURLToPath(new URL('../app/src/wasm/demand/sim_bg.wasm', import.meta.url));
   const { rolldown } = await import(pathToFileURL(join(HERE, '../app/node_modules/rolldown/dist/index.mjs')).href);
   const bundle = await rolldown({ input: fileURLToPath(new URL('../app/src/workers/demand.worker.ts', import.meta.url)), platform: 'browser' });
-  await bundle.write({ file: compiled, format: 'esm' });
+  await bundle.write({ file: compiled, format: 'esm', codeSplitting: false });
   await bundle.close();
   writeFileSync(wrapper, `import {parentPort} from 'node:worker_threads';
 import {readFileSync} from 'node:fs';

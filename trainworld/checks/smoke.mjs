@@ -12,9 +12,9 @@
 // bubbles in the bare new game and on the real save (T-994); a click on a station
 // and on a train picks them; no console or page error, no GL error. Node: t133, t144, t145, t146, t1053 (every zone removed since HEAD has a successor).
 import { spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { HERE, MAPS, REAL_SAVE, NOISE, launchChrome, collectErrors, importSave, demandFinal, acrossLine, startVite } from './lib.mjs';
+import { HERE, MAPS, REAL_SAVE, NOISE, SMOKE_FIGURES, launchChrome, collectErrors, importSave, demandFinal, acrossLine, startVite } from './lib.mjs';
 
 const EXPECT = { lines: 109, stations: 1756, trackKm: 4498.6, kmTolerance: 1 };
 // a glyph range glyphs.py leaves out on purpose: its 404 makes MapLibre draw the codepoints locally
@@ -40,6 +40,15 @@ function runNode(file) {
 
 /** the last meaningful line of a failed check's output (bundled code comes out as huge data: urls) */
 const tail = (out) => out.split('\n').filter((l) => l.trim() && !l.startsWith('data:') && l.length < 400).slice(-3).join(' | ');
+
+/** T-1135: figures of this run by url, for checks that compare against the data as it is now
+ * (t883's default-fare rail trips) */
+async function saveFigure(base, figures) {
+  let all = {};
+  try { all = JSON.parse(await readFile(SMOKE_FIGURES, 'utf8')); } catch { /* none yet */ }
+  all[base.replace(/\/?$/, '/')] = { ...figures, at: new Date().toISOString() };
+  await writeFile(SMOKE_FIGURES, JSON.stringify(all, null, 1) + '\n');
+}
 
 const NYC = [-73.985, 40.758];
 /** T-994: Homes turned on at city zoom draws the local bubbles; Homes off again after. The discs
@@ -164,6 +173,7 @@ async function browserChecks(BASE) {
         return { lines: v.lines.size, rail: v.railTripsPerDay, round: v.round, work: all > 0 ? (by.work ?? 0) / all : NaN, longer: all > 0 ? (by.longer ?? 0) / all : NaN };
       });
       report('demand final', v.rail > 0, `(round ${v.round}, ${v.lines} lines, ${Math.round(v.rail).toLocaleString('en-US')} rail trips a day, ${(100 * v.work).toFixed(0)}% of boardings commutes, ${(100 * v.longer).toFixed(2)}% regional, the rest everyday, ${secs()})`);
+      await saveFigure(BASE, { realRail: Math.round(v.rail) }).catch((e) => console.log(`  smoke-figures.json not written: ${e.message}`));
     } catch (e) {
       report('demand final', false, e.message.split('\n')[0]);
     }

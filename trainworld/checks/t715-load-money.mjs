@@ -4,7 +4,8 @@
 // costs would be charged with no fares and the money would stand still until the clock caught up).
 // Each time the cash must load as saved, move while the clock runs with fares coming in (the same
 // network's income is sent again after a load), and no ledger day may lie after the clock. Part 2: a save whose ledgers run three days past its clock (as two such loads left them, each
-// day's running cost twice) loads with those days gone and both charges back in the cash.
+// day's running cost twice, and the upkeep of every hour since T-867) loads with those days gone and
+// the charges back in the cash.
 //   node trainworld/checks/t715-load-money.mjs [url]     (from the maps root; default localhost:6165)
 // Prints PASS or FAIL lines and exits 1 on a failure. About two minutes.
 import { readFile } from 'node:fs/promises';
@@ -17,23 +18,25 @@ let failed = false;
 const report = (name, ok, detail) => { failed ||= !ok; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
 
 /** The real save with day and hour ledger entries for the three days after its clock as two such
- * loads leave them (no fares, each day's running cost twice, a build charge on the second), the last
- * hour's running 0 so they end on its hour. */
-function damagedSave(file, daily) {
+ * loads leave them (no fares, each day's running cost twice, a build charge on the second, the
+ * upkeep once an hour), the last hour's running and upkeep 0 so they end on its hour. */
+function damagedSave(file, daily, upHour) {
   const raw = gunzipSync(file);
   const n = raw.readUInt32LE(4);
   const h = JSON.parse(raw.subarray(8, 8 + n).toString('utf8'));
   const D = Math.floor(h.clock / 86400), H = Math.floor(h.clock / 3600);
-  const day = (d, extra = {}) => ({ day: d, fares: 0, running: 2 * daily, trains: 0, build: 0, rides: 0, ...extra });
+  const day = (d, extra = {}) => ({ day: d, fares: 0, running: 2 * daily, upkeep: 24 * upHour, trains: 0, build: 0, rides: 0, ...extra });
   h.ledger = [...(h.ledger ?? []).filter((d) => d.day <= D), day(D + 1), day(D + 2, { build: 50 }), day(D + 3)];
   const hours = [];
-  for (let k = H + 1; k <= H + 73; k++) hours.push({ hour: k, fares: 0, running: k === H + 73 ? 0 : 5, trains: 0, build: 0, rides: 0 });
+  for (let k = H + 1; k <= H + 73; k++) hours.push({ hour: k, fares: 0, running: k === H + 73 ? 0 : 5, upkeep: k === H + 73 ? 0 : upHour, trains: 0, build: 0, rides: 0 });
   h.hours = [...(h.hours ?? []).filter((e) => e.hour <= H), ...hours];
   const json = Buffer.from(JSON.stringify(h), 'utf8');
   const head = Buffer.alloc(8);
   head.write('TWG1', 0, 'latin1');
   head.writeUInt32LE(json.length, 4);
-  return { bytes: gzipSync(Buffer.concat([head, json, raw.subarray(8 + n)])), cash: h.cash, day: D };
+  // the upkeep charged from the clock to the last hour's start, which the load gives back
+  const upkeep = upHour * ((H + 73) * 3600 - h.clock) / 3600;
+  return { bytes: gzipSync(Buffer.concat([head, json, raw.subarray(8 + n)])), cash: h.cash, day: D, upkeep };
 }
 
 const { ctx, close } = await launchChrome({ prefix: 'tw-t715-', size: [1200, 800], args: ANGLE });
@@ -99,17 +102,17 @@ try {
     const LEVEL = { high: 0, medium: 1, low: 2 };
     let daily = 0;
     for (let h = 0; h < 24; h++) daily += m.runningPerHour[LEVEL[P.PERIODS[P.periodAt(h * 3600)].demand]];
-    return { daily, most: Math.max(...m.runningPerHour) };
+    return { daily, most: Math.max(...m.runningPerHour), upHour: (m.upkeep.track + m.upkeep.stations) / 24 };
   });
   await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
-  const bad = damagedSave(await readFile(REAL_SAVE), run.daily);
+  const bad = damagedSave(await readFile(REAL_SAVE), run.daily, run.upHour);
   await importSave(bad.bytes);
   await wait(1000);
   const r = await page.evaluate(() => { const m = window.tw.moneyState.value; return { cash: m.cash, days: m.ledger.map((d) => d.day), build: m.ledger.reduce((s, d) => s + d.build, 0) }; });
-  const back = r.cash - bad.cash, want = 2 * 3 * run.daily;
+  const back = r.cash - bad.cash, want = 2 * 3 * run.daily + bad.upkeep;
   report('a save with ledger days after its clock', Math.abs(back - want) <= 2 * run.most + 0.01 && Math.max(...r.days) <= bad.day && r.build >= 50,
-    `cash back ${back.toFixed(2)}, twice three days' running ${want.toFixed(2)} (US$M, within two hours' ${(2 * run.most).toFixed(2)}), ledger days [${r.days.join(' ')}], clock day ${bad.day}, build kept ${r.build.toFixed(0)}`);
+    `cash back ${back.toFixed(2)}, twice three days' running and the hours' upkeep ${(want - bad.upkeep).toFixed(2)} + ${bad.upkeep.toFixed(2)} (US$M, within two hours' running ${(2 * run.most).toFixed(2)}), ledger days [${r.days.join(' ')}], clock day ${bad.day}, build kept ${r.build.toFixed(0)}`);
 } finally {
   await close();
 }

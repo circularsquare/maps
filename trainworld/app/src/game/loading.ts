@@ -16,12 +16,10 @@ import { cityById, type CityId } from "./cities";
 export interface LoadProgress {
   /** the cities being loaded, the viewed one first */
   cities: CityId[];
-  /** how many of `cities` are done with the step: downloaded while downloading, else open (T-1161) */
-  done: number;
-  /** 0-1, the share of the load's expected time done (T-243: each step weighted by how long it is
-   * expected to take, moving with time inside a step; workers/demandClient.ts) */
+  /** 0-1, how far the load is: each stage's share of the bar by its expected time (T-1195,
+   * game/loadBar.ts; workers/demandClient.ts) */
   fraction: number;
-  /** what is running now, in plain words */
+  /** the stage in hand, in plain words (game/loadBar.ts `STAGE_TEXT`) */
   step: string;
   /** the startup load (the first game's) */
   startup: boolean;

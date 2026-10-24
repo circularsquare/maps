@@ -35,7 +35,12 @@ figures stand (a bare zone's city figures stay shown); the next solve leaves it 
 solving with it closes it when that solve ends. It reopens as it first opened (download, mostly
 from the browser's cache, and opening). The bare copy of a zone that a shown solve covers closes at
 once. WASM memory never shrinks, so closing bounds a worker's peak (the freed space takes the next
-pack) rather than lowering it. `?perfOff=close` keeps everything open. A new game
+pack) rather than lowering it. `?perfOff=close` keeps everything open. **A market composition is
+about 450 MB** in each solving worker whatever its packs (its tables by pair of the world's 2,567
+places), so a recomposition (a market pack opened or closed) frees the old composition before
+composing, unless a market part still holds it, and a part composed of the same packs serves again
+without composing (T-1198): a selected zone's market opened and later closed leaves a worker with at
+most two compositions, and the close costs no composition. A new game
 opens only New York; a save with construction in several cities pays
 each of their openings once, in every worker. Only the cells with a budget for a purpose hold its
 destination samples and their pair indices (T-395; about half of all cells x purposes have none),

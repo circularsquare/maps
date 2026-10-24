@@ -172,7 +172,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
           ))}
         </ul>}
         <span class="new-game-or muted small">or</span>
-        <button class={"btn text new-game-map" + (!startId && !located ? " on" : "")} aria-pressed={!startId && !located} onClick={() => pick(null)}>Find a city on the map</button>
+        <button class={"btn text new-game-map" + (!startId && !located ? " on" : "")} aria-pressed={!startId && !located} onClick={() => pick(null)}>Choose on map</button>
       </div>
       {realOffered && <label class="check new-game-real" data-tip={`Start with ${city!.name}'s rail lines as they run today, built and running`}>
         <input type="checkbox" checked={real} onChange={(e) => setReal((e.target as HTMLInputElement).checked)} />
@@ -180,7 +180,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
       </label>}
       {error && <p class="callout bad">{error}</p>}
       <div class="pane-foot new-game-foot">
-        <button class="btn text start-new" disabled={busy} onClick={() => void go()}>{city ? `Start in ${city.name}` : "Start on the map"}</button>
+        <button class="btn text start-new new-game-start" disabled={busy} onClick={() => void go()}>{city ? `Start in ${city.name}` : "Start"}</button>
         <button class="btn text" onClick={onBack}>Back</button>
       </div>
     </div>

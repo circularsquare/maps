@@ -8,7 +8,8 @@
 //     the changes, so a two-line journey scores one trip;
 //   - the rest of the points a day is the lines' loads times their stretches' lengths;
 // then the clock runs a day and more: a whole game hour's points in the ledger match the hour's
-// table, and Mumbai's points (T-694) are the sum of the past 24 whole hours' tables.
+// table (shaped and lagged as fares are, T-736), and Mumbai's points (T-694) are the sum of the past 24
+// whole hours' tables.
 // Writes artifacts/trainworld/t684-points.json.
 //   node trainworld/checks/t684-points.mjs [url]   (from the maps root; default localhost:6153)
 // Prints PASS or FAIL lines and exits 1 on failure. A few minutes.
@@ -72,7 +73,8 @@ try {
     await run({ op: 'constructAll' });
     return { lines: [a, b] };
   }, { west: WEST, east: EAST });
-  await demandFinal(page, { strict: false, after: before, timeout: 900000 });
+  // both lines in the final: the empty network's solve can land after `before` was read
+  await demandFinal(page, { strict: false, after: before, lines: 1, timeout: 900000 });
 
   // the weekday's figures: boardings, the solve's rail trips, the changes, the points a day
   const day = await page.evaluate(async () => {
@@ -109,12 +111,27 @@ try {
     c.setRunning(false);
     await new Promise((r) => setTimeout(r, 500));
     const P = await import('/src/game/points.ts'), M = await import('/src/game/money.ts'), L = await import('/src/game/localTime.ts');
-    const Pe = await import('/src/game/periods.ts'), Dy = await import('/src/game/days.ts');
-    const m = M.moneyState.value, now = m.hours.at(-1).hour;
+    const T = await import('/src/game/moneyTiming.ts'), D = await import('/src/game/demand.ts'), B = await import('/src/game/boarding.ts');
+    const Dy = await import('/src/game/days.ts'), Ho = await import('/src/game/holidays.ts'), HC = await import('/src/game/holidayCalendar.ts');
+    const hd = (await import('/src/game/holidays.json')).default;
+    const m = M.moneyState.value, now = m.hours.at(-1).hour, w = window.tw.world.value;
+    // T-736: an hour's points are shaped within their period and land a run's length later, as
+    // fares do; the clock worker's shape strengths and lag, worked out the same way here
+    const peakC = Dy.DAY_KINDS.map((k) => {
+      const v = D.demandByDay.value[k]?.view, packed = v && B.packRiders(v);
+      return packed ? T.strengths(packed.subarray(0, 5)) : [0, 0, 0, 0, 0];
+    });
+    const lag = T.runLag(w.save.lines.filter((l) => w.lineStats[l.id]?.status === 'running').map((l) => {
+      const st = w.lineStats[l.id];
+      return { tph: l.tph.medium, lengthM: st.km * 1000, cars: st.cars, oneWayS: st.roundTripByLevel[1] / 2 - st.turnaroundS };
+    }));
     const table = (h) => {
-      const tl = h * 3600 + L.shiftAt(72.8428, 19.0192), k = Dy.dayKindAt(tl), p = Pe.periodAt(tl);
       let v = 0;
-      for (const { regions } of P.linePoints.value) for (const [, per] of regions) v += (per[k] ?? per[0])[p];
+      for (const { line, regions } of P.linePoints.value) {
+        const l = w.save.lines.find((x) => x.num === line), kindOf = HC.kindOfIn(hd, Ho.lineCountry(l.stops));
+        const shift = w.lineStats[l.id]?.shift ?? L.shiftAt(72.8428, 19.0192);
+        for (const [, per] of regions) v += T.lagged(T.table(per), peakC, h * 3600 + shift, lag, 0, kindOf);
+      }
       return v;
     };
     const h = now - 1, e = m.hours.find((x) => x.hour === h);

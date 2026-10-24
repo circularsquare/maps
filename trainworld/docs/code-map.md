@@ -93,7 +93,12 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
   (the track model's refusals in plain words), `openedZones.ts` (the zones the game has started in, reached or crossed with track, kept for the save, T-729, T-801), `trackZones.ts` (the zones built and blueprint track crosses, by coarse outline, from each network state, T-1047), `loading.ts` (what is loading, the startup gate and
-  the clock hold, T-149, T-172; whether the start menu is up, T-677), `palette.ts`, `shades.ts` over `shadeTable.ts` (the light and dark themes' map
+  the clock hold, T-149, T-172; whether the start menu is up, T-677), `loadBar.ts` (the loading bar's
+  stages, their shares and texts, each slot's remembered stage times and this browser's pace, T-1195),
+  `memoryCheck.ts` (a save's memory estimate and the refusal when it will not fit, T-1197),
+  `saveSafety.ts` (persistent storage and the copies' folder, T-1214), `busy.ts` (the busy tag's
+  text, and work held a painted frame when it should take over 150 ms here, each kind's time per
+  unit learnt as it runs; the clock client's big states, T-1200), `palette.ts`, `shades.ts` over `shadeTable.ts` (the light and dark themes' map
   colours: basemap, line casing, map ink, blueprint off, outside shade, thumbnails; the table has no
   page behind it so the clock worker reads it, T-039, T-543), `format.ts`.
 - The `WorldView` is built from the clock worker's states in `workers/clockClient.ts`.
@@ -129,7 +134,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Demand views (T-084, T-097): `demandViews.ts` (wiring, a station's riders for its inspector), `demandLayers.ts`
   (line width, station use circles, train fill; the figures from `game/stationUse.ts`, T-482), `commuterView.ts` and `bubbles.ts` (commuter bubbles and
   bubble selections; the far end grouped into at least 10 trips a bubble in `game/farChunks.ts`, T-909), `intercityView.ts` (longer trips of a selection or station, one bubble per
-  far zone, T-118, T-120; one per city zoomed far out, T-186), `demandOverlay.ts` (their canvas, over the network's),
+  far zone, T-118, T-120; one per city zoomed far out, T-186), `demandOverlay.ts` (their canvas, over the network's; a selection's turning outline while its answer loads, T-1216),
   `demandHover.ts` (the count tag by the pointer), `modeBar.ts` (the tag's mode bar, T-494, and `localModes`, an open zone's local legs by mode, T-576), `airportMarks.ts` (the plane badge on an
   airport and its hover, T-448, T-674; paths shared with the icons in `glyphs.ts`), `attractionMarks.ts` (a mark on each attraction and its hover, T-263).
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
@@ -152,8 +157,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 the person icon, and `startAccountUi`, which mounts both account panels in a root of their
 own so the start menu opens them too; styles in `account.css`, T-972); `Leaderboard.tsx` (the
 leaderboards and the All cities row's trophy, T-973); `HelpPanel.tsx` (the "?" button's list of controls no button shows, T-908); `BuildTab.tsx`, `LinesTab.tsx`, `StationsTab.tsx`, `MoneyTab.tsx` (the tabs; the Cities tab is `Cities.tsx` mounted in `Dock.tsx`); `listParts.tsx` (the scope toggle, the Near column and the name order the Lines and Stations tabs share); `toolKeys.ts` (the build tools, the number and letter keys and `pickTool`); `Modal.tsx` (the native modal dialog behind the saves, account and leaderboard panels and the confirmation question, with `useModalDialog`); `useClockQuery.ts` (`useClockQuery`, a panel's question to the clock worker, and `useLatestAnswer`);
-`MoneyHistory.tsx` (the Money tab's history charts, T-447); `FareGraph.tsx` (the fare curve graph, linear and zoomable at one fixed ratio of its scales, its three nodes each dragged one way at a time with hover arrows, an arrow for one past the plot, and a row of steppers per node, T-864, T-883, T-1112, T-1143); `Cities.tsx` (the Cities list, T-550, T-749); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251; `SlotThumb`, a save's picture with each panel's city named over it, T-894); `bullet.ts` (`bulletText`, `bulletNode`: a line bullet as one SVG, its circle and its symbol placed from the canvas-measured ink box with the baseline on a whole device pixel, per font, symbol, size and scale, T-705, T-745; the sizes in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
-checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `SkyBanner.tsx` (the clock's sky and demand band, a canvas, T-861); `StatusTag.tsx` (the demand status tag on the map's top row); `ToolNotes.tsx` (tool hints, the notice and the confirmation
+`MoneyHistory.tsx` (the Money tab's history charts, T-447); `FareGraph.tsx` (the fare curve graph, linear and zoomable at one fixed ratio of its scales, its three nodes each dragged one way at a time with hover arrows, an arrow for one past the plot, and rows of steppers under it, the base fare then each stretch's end and rate per km, T-864, T-883, T-1112, T-1143, T-1201); `Cities.tsx` (the Cities list, T-550, T-749); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251; `SlotThumb`, a save's picture with each panel's city named over it, T-894); `bullet.ts` (`bulletText`, `bulletNode`: a line bullet as one SVG, its circle and its symbol placed from the canvas-measured ink box with the baseline on a whole device pixel, per font, symbol, size and scale, T-705, T-745; the sizes in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
+checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `SkyBanner.tsx` (the clock's sky and demand band, a canvas, T-861); `StatusTag.tsx` (the demand status tag on the map's top row); `BusyTag.tsx` (the busy tag after it, T-1200); `ToolNotes.tsx` (tool hints, the notice and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
 per selection kind: `StationInspector.tsx`, `TrainInspector.tsx`, `TrackInspector.tsx` and `JunctionInspector.tsx`; `LineInspector.tsx`; the trip panels share `tripText.ts` and `RouteParts.tsx`;
@@ -209,10 +214,12 @@ data/packs mid-batch.
 
 Run from the maps root (`node trainworld/checks/<file>`).
 
-- `smoke.mjs [url]`: the pre-commit smoke check (CLAUDE.md "Before a commit").
+- `smoke.mjs [url]`: the pre-commit smoke check (CLAUDE.md "Before a commit"). Writes the real
+  save's weekday rail trips per url to `artifacts/trainworld/smoke-figures.json`, which t883 compares
+  against (T-1135).
 - `lib.mjs`: what the checks share, imported by every check that drives a browser or the worker
   in Node: `playwright()` (finds Playwright), `launchChrome` (headless Chrome on a throwaway
-  profile, deleted by its `close()`), `collectErrors`, `importSave`, `REAL_SAVE`, `demandFinal` (the
+  profile, deleted by its `close()`), `collectErrors`, `importSave`, `REAL_SAVE`, `SMOKE_FIGURES`, `demandFinal` (the
   wait for a demand final), `buildLine` and `acrossLine` (a built test line), `startVite`, and for
   Node `loadApp` (an app module bundled by Vite), `bundleDemandWorker` with `startWorker` (the real
   demand worker), `workerPack`, `marketPacks` and `network` (two test lines in the New York frame).
@@ -252,7 +259,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   timed to their final, every final figure hashed against `?perfOff=clusters`), `t409-split.mjs` (a
   Boston and a Philadelphia line, in a new game or on the real save, edits timed, against
   `?perfOff=split`), `t301-pan.mjs` (a long pan, Washington to Toronto and back, bubbles on: worker
-  memory, open packs, reopening times; `SAVE=1` on the real save), `t801-no-grey.mjs` (no grey
+  memory, open packs, reopening times; `SAVE=1` on the real save), `t1198-tour.mjs` (a new game
+  viewing and selecting 16 unbuilt European cities, then 75 s out over the sea: Chrome's private
+  memory, workers' WASM, open zones; fails if anything stays open or a solving worker passes 1.3 GB
+  of WASM; about 6 minutes), `t801-no-grey.mjs` (no grey
   cities: a map start in a fresh profile turning Homes on, its zoomed-out bubbles, a click selecting
   one; a new New York game's Philadelphia an ordinary bubble zoomed out, loaded by a pan with no
   market pack; screenshots `t801-*.png`), `t800-outlines.mjs` (a game started on the map, then a jump to Europe, shows
@@ -263,7 +273,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   across midnight: money days and hours one each, in order, none empty; uses the app's Vite, port
   6135 by default), `t715-load-money.mjs` (the real save opened from the saves panel while a later
   copy is open, twice: cash loads as saved and moves, no ledger day after the clock; a save with
-  ledger days after its clock gets their running cost back; port 6165 by default),
+  ledger days after its clock gets their running cost and the hours' upkeep back; port 6165 by default),
   `t975-realms.mjs` (first the location button refused, in Lyon and in Sydney, and a map start showing every realm until its first station; then realms in a fresh profile: no bubbles behind the start menu, a Tokyo start shows Japan only with the shade cut around its zones, a click shows France, a reload hides it again, stations in two realms show both; a click on a hidden realm shows it, a drag does not, no circles at the world view; the zoomed-out frame and a pan across France and Germany measured; port 6165 by default),
   `t1071-train-count.mjs` (the real save's busiest line, its train count raised and lowered four times with the clock running: every train of every line placed each frame from the renderer's own buffers may move no further than top speed allows and come or go only at a terminal, and where new buffers arrive the old and new draw the same trains in the same places; `SPEED` 0 to 2 or -1 paused, `OP=headway`, `KEEP_FRAMES=1`; about 2 minutes; Rust side `sim/src/track/transition_tests.rs`),
   `t1148-market-rule.mjs` (Node, no browser: `game/marketRule.ts`, the main thread's copy of the market's place-pair rule, against the sim's on about 2,000 pairs of places, near, far, across the Channel, to Hokkaido and across seas: distance, car minutes, reference minutes, plane and car shares, trips; and the longer trips' period shares on every kind of day; about 20 s; run after any change to the market's car, plane, crossing or trip rule on either side),
@@ -272,17 +282,24 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t728-newgame.mjs` (the new game sheet in a fresh profile: the search, a sandbox in Tokyo from
   its real network, a normal London start, a map start, the real New York save turned sandbox from
   Settings; slots left keep their bytes; screenshots t728-*.png; port 6150 by default),
+  `t734-track-drag.mjs` (the real save with the track tool: a press and drag on a blueprint node
+  moves it, a click still places track; port 6112 by default),
+  `t1155-branch.mjs` (track drawn from a station, through the track tool's clicks, on the real save
+  and a fresh game with double, quad and high-speed track: the branch's junction 20 m past the
+  platform, the station keeping two track ends, one undo; screenshots in t1155/; port 6122 by default),
   `t727-snap.mjs` (the snap to the real network in a new game: Tokyo to Shin-Osaka and Penn
   Station to Emeryville by two clicks each, one undo each, Tokyo to London refused, a click off
   real track an ordinary segment; router, fit and preview times and the longest main-thread task;
   t727-snap.json, t727d-*.png; about 2 minutes, port 6170 by default),
-  `t743-slots.mjs` (through the saves panel: Load a file, New game and a backup's Restore as a copy
+  `t1196-switch.mjs` (two slots of the real save: Open reloads the page into the other, the card's
+  three stages in order, Cancel to the start menu, all of China refused, the copies' folder filled,
+  persistent storage asked; port 6146 by default), `t743-slots.mjs` (through the saves panel: Load a file, New game and a backup's Restore as a copy
   each open a new slot and leave every other slot's bytes as they were, the real save and
   artifacts/trainworld/recovered-day26.save both; two backups rotate at `?backupMs=4000`; a deleted
   slot's backups go; port 6150 by default), `t894-previews.mjs` (save pictures: a game in New York,
   Boston and Philadelphia and the real save, their panels and size, screenshots of the saves panel
   and start menu to artifacts/trainworld/previews/; `SHADE=dark`; port 6120 by default),
-  `t883-fare-curve.mjs` (the real save: the default fare's rail trips, the same line through other nodes and an old two-node curve changing nothing, a doubled rate and a curve steeper past 20 km losing rail trips, the weekday's income being the base, the rate and demand's extra; the Money tab's hover arrows, one-way drags sending once on release, undo, zoom keeping the slope, the off-plot arrows and their click; fare graph screenshots in t1143/), `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
+  `t883-fare-curve.mjs` (the real save: the default fare's rail trips against smoke's last run on the same url, and again after the changes below, the same line through other nodes and an old two-node curve changing nothing, a doubled rate and a curve steeper past 20 km losing rail trips, the weekday's income being the base, the rate and demand's extra; the Money tab's hover arrows, one-way drags sending once on release, undo, zoom keeping the slope, the off-plot arrows and their click; fare graph screenshots in t1143/), `t1201-fare-rows.mjs` (a new game's Money tab: the rows as rates, a rate's step or typed value moving later fares together, never below 0, the base and a stretch's end keeping the rates, a drag's fare followed by the rows; screenshots in t1201/; about a minute), `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
   rides and running costs, with the largest hour-to-hour change beside the flat booking's),
   `t872-holidays.mjs` (the real save over the next Thanksgiving: that day's boarding account, fares
   and ledger are Sunday's, the days around it weekdays; the day is a weekday in Canada and the UK;
@@ -302,7 +319,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   dark; port 6160 by default),
   `t586-trip-agrees.mjs` (New York's real save and a Mumbai test line: a far-end bubble's hover,
   the trip explorer opened from it and the worker's far-end sums agree within 1 point under every
-  purpose filter and day; port 6196 by default),
+  purpose filter and day, and a Walk row under 30 minutes' walk or with a walking share; port 6196
+  by default, about eight minutes),
   `t674-airport-modes.mjs` (a new Tokyo game and a line to Haneda: the plane's hover follows the
   worker's airport legs after the solve, and a game day later the destination bubble beside it
   reads the same selected or not; port 6144 by default, about four minutes),
@@ -311,7 +329,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   trains start and fill no faster than riders arrive; also runs on a production build; port 6145
   by default, about two minutes), `t684-points.mjs` (a new game's two Mumbai lines with a walk
   between them at Dadar: points count each journey once and the loads' passenger-km, a whole
-  hour's ledger points match the hour's table, and a city's points are its past 24 hours'; dev
+  hour's ledger points match the hour's table shaped and lagged as fares are, and a city's points
+  are its past 24 hours'; dev
   server only, port 6153 by default, about four minutes),
   `t496-edit-latency.mjs` (the real save: click to drawn
   for placing stations; `MODE=visual` hashes the renderer's buffers after a series of edits against

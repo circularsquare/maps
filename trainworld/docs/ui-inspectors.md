@@ -202,7 +202,8 @@ purpose filter the purpose drawn is ringed in the bar.
   or changing lines, a day from the demand solve shown, `game/stationUse.ts`); under None or Total it
   is boardings in the past 24 hours. Its hovers, header and footer say which. The scope
   toggle and distance column are the Lines tab's (above); the footer reads "N of M stations" when
-  only the viewed place is listed. A row is a station complex [T-530]: the name of its member with
+  only the viewed place is listed. The first 80 rows are drawn when the tab opens, and 160 more each
+  time the list's end comes within 400 px of view as it scrolls [T-1200]. A row is a station complex [T-530]: the name of its member with
   the most lines, every line stopping at any member, riders summed over the members, and a
   click selects the complex as a click on the map does and a double click also moves the map to
   that member, to zoom 14 or closer so its platform boxes show [T-569]; a station on its own is its own row, and

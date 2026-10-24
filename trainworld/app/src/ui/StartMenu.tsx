@@ -8,7 +8,8 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { HOME_CITY, isCity } from "../game/cities";
 import { choosing } from "../game/loading";
 import { listSlots, newGameName, type SaveSlot } from "../workers/saveFile";
-import type { GameChoice } from "../workers/clockClient";
+import { CHOICE_PARAMS, type GameChoice } from "../workers/clockClient";
+import { saveRefusal } from "../game/memoryCheck";
 import { blockKeysOutside } from "./keys";
 import { NewGameSheet } from "./NewGame";
 import { AccountButton, startAccountUi } from "./AccountPanel";
@@ -16,7 +17,8 @@ import { SlotFacts, SlotThumb, SlotTitle } from "./SavesPanel";
 
 /** The game the URL chooses, or null for the menu: `?new=1` a new game that owns no slot (T-320),
  * normal in New York unless `&mode=sandbox` or `&city=<zone id>` say otherwise (T-728);
- * `?synth=1`, `?demandTest=1`, `?paused=1` and `?continue=1` the game opened last. */
+ * `?synth=1`, `?demandTest=1`, `?paused=1` and `?continue=1` the game opened last; `?slot=<key>` and
+ * `?load=file|restore|new` the game the saves panel picked (T-1196). */
 export function choiceFromUrl(): GameChoice | null {
   const q = new URLSearchParams(location.search);
   const on = (k: string) => q.get(k) === "1";
@@ -24,6 +26,20 @@ export function choiceFromUrl(): GameChoice | null {
     const city = q.get("city");
     return { fresh: true, newGame: true, game: { mode: q.get("mode") === "sandbox" ? "sandbox" : "normal", start: isCity(city) ? city! : HOME_CITY } };
   }
+  // T-1196: a page reloaded into the game picked in the saves panel; the switch leaves the address
+  // bar, so a reload from there goes to the menu (or, `?paused=1`, the game opened last)
+  const slot = q.get("slot"), load = q.get("load");
+  if (slot || load) {
+    const u = new URL(location.href);
+    for (const k of CHOICE_PARAMS) u.searchParams.delete(k);
+    history.replaceState(history.state, "", u.href);
+  }
+  if (slot) return { slot };
+  if (load === "new") {
+    const city = q.get("city");
+    return { pending: true, newGame: !on("real"), game: { mode: q.get("mode") === "sandbox" ? "sandbox" : "normal", ...(isCity(city) ? { start: city! } : {}) } };
+  }
+  if (load) return { pending: true };
   if (on("synth") || on("demandTest") || on("paused") || on("continue")) return {};
   return null;
 }
@@ -40,6 +56,13 @@ function Menu({ slots, pick }: { slots: SaveSlot[]; pick: (c: GameChoice) => voi
   const first = useRef<HTMLButtonElement>(null);
   const [sheet, setSheet] = useState(false);
   useEffect(() => { if (!sheet) first.current?.focus(); }, [sheet]);
+  // T-1197: a saved game too big for this device is refused with the reason
+  const [refused, setRefused] = useState<string | null>(null);
+  const open = async (key: string) => {
+    const why = await saveRefusal({ key });
+    setRefused(why);
+    if (!why) pick({ slot: key });
+  };
   const now = Date.now();
   // T-728: the new game sheet; its game gets a slot of its own named after its start, so no saved game is replaced
   if (sheet) return <div class="start-menu" role="dialog" aria-modal="true" aria-labelledby="start-title">
@@ -55,9 +78,10 @@ function Menu({ slots, pick }: { slots: SaveSlot[]; pick: (c: GameChoice) => voi
       <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>New game</button>
       {slots.length > 0 && <>
         <h2 class="start-head">Saved games</h2>
+        {refused && <p class="muted small start-refused" role="alert">{refused}</p>}
         <ul class="start-saves">
           {slots.map((s) => <li key={s.key}>
-            <button class="start-save" data-slot={s.key} onClick={() => pick({ slot: s.key })}>
+            <button class="start-save" data-slot={s.key} onClick={() => void open(s.key)}>
               <SlotThumb slot={s} />
               <span class="save-info"><SlotTitle slot={s} /><SlotFacts slot={s} now={now} /></span>
             </button>

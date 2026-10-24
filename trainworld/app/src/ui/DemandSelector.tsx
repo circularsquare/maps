@@ -10,6 +10,7 @@ import { useState } from "preact/hooks";
 import { display, purposeFilter, setDisplay } from "../game/ui";
 import { DemandStopped } from "./DemandStopped";
 import { StatusTag } from "./StatusTag";
+import { BusyTag } from "./BusyTag";
 import { Icon } from "./widgets";
 
 /** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
@@ -19,6 +20,7 @@ export function MapTopLeft() {
     <div class="map-top-row">
       <DemandSelector />
       <StatusTag />
+      <BusyTag />
     </div>
     <TrackDisplay />
     <DemandStopped />

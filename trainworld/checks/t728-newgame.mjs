@@ -41,10 +41,15 @@ try {
     const c = window.tw.map.getCenter();
     return { lng: c.lng, lat: c.lat, zoom: window.tw.map.getZoom(), lines: window.tw.world.value?.save.lines.length ?? -1, mode: window.tw.moneyState.value?.mode, cash: window.tw.moneyState.value?.cash, bar: document.querySelector('#topbar .cash')?.textContent ?? '', time: document.querySelector('#topbar .clock')?.textContent ?? '' };
   });
+  /** after a game change (T-1196: the page reloads into it), the new active slot */
   const switched = async (from) => {
-    await page.evaluate(async () => { window.__cc = await import('/src/workers/clockClient.ts'); });
-    await page.waitForFunction((from) => window.__cc.saveSlotsState.value.active !== from, from, { timeout: 120000, polling: 200 });
-    return (await state()).active;
+    for (const end = Date.now() + 180000; Date.now() < end; await wait(300)) {
+      try {
+        const a = await page.evaluate(async () => window.tw?.world?.value ? (await import('/src/workers/clockClient.ts')).saveSlotsState.value.active : null);
+        if (a && a !== from && a.startsWith('slot-')) return a;
+      } catch { /* the page is reloading */ }
+    }
+    throw new Error(`no switch from ${from}`);
   };
   const flush = async () => { await page.evaluate(() => window.tw.client.post({ kind: 'flush' })); await wait(1500); };
   const panel = async () => {
@@ -155,7 +160,7 @@ try {
   g = await game();
   // an empty game's slot is written once something is built: none yet
   s = await state();
-  report('map start', mLabel === 'Start on the map' && g.zoom < 3 && g.mode === 'normal' && !s.slots.some((x) => x.key === W), `(button "${mLabel}", zoom ${g.zoom.toFixed(1)}, mode ${g.mode}, slot written ${s.slots.some((x) => x.key === W)})`);
+  report('map start', mLabel === 'Start' && g.zoom < 3 && g.mode === 'normal' && !s.slots.some((x) => x.key === W), `(button "${mLabel}", zoom ${g.zoom.toFixed(1)}, mode ${g.mode}, slot written ${s.slots.some((x) => x.key === W)})`);
 
   // 5. the slots left behind, and the start menu after a reload, dark
   const kept = (await stored(T)).hash === tLeft.hash && (await stored(N)).hash === nLeft.hash;

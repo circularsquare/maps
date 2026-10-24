@@ -69,8 +69,9 @@ try {
     await new Promise((r) => setTimeout(r, 500));
     [...document.querySelectorAll('.saves-panel .save-files button')].find((b) => b.textContent === 'Load a file').click();
   })]);
-  await fc.setFiles(REAL_SAVE);
-  await page.waitForFunction(() => (window.tw.world.value?.save?.lines?.length ?? 0) > 100, undefined, { timeout: 240000 });
+  // T-1196: the page reloads into the loaded game
+  await Promise.all([page.waitForNavigation({ timeout: 120000 }), fc.setFiles(REAL_SAVE)]);
+  await page.waitForFunction(() => (window.tw?.world?.value?.save?.lines?.length ?? 0) > 100, undefined, { timeout: 240000 });
   await solved();
   await flush();
   await page.waitForFunction((b) => window.tw.lastSaved.peek() > b, before, { timeout: 60000 }).catch(() => {});

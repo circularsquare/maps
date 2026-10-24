@@ -191,6 +191,9 @@ export type FromDemand =
       /** WASM linear memory, bytes */
       memBytes: number;
     }
+  /** T-1195: one pack of an `open` is in (a zone's, or with `market` its market pack): the loading
+   * bar's progress through a batch, which may take minutes */
+  | { kind: "packOpened"; id: CityId; market?: boolean }
   /** an `open` is done: its cities' info as `ready`'s, and the zones whose market packs it opened */
   | { kind: "opened"; cityInfo: Record<CityId, number[]>; markets: CityId[]; openMs: number; warmMs: number; memBytes: number;
       /** T-325: the packs were opened bare (aux worker), with each one's figures */

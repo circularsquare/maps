@@ -241,7 +241,7 @@ multiplier per elevation (US$45M at grade), priced against cheap-country metros 
 when it shrinks [T-028, T-631], and running costs are US$4 a train-km plus US$2 a car-km [T-807]. Constructed
 track and stations cost upkeep whether trains run or not, US$30k a km of double track and US$50k a station a game
 day, draining evenly; a line's profit takes off its share, each piece's split by the trains a day of the lines
-using it [T-867]. The fare is a curve of trip length through three points the player drags, types or steps in the Money tab: a base fare at 0 km and two more, never falling with distance [T-626, T-1112, T-1143].
+using it [T-867]. The fare is a curve of trip length through three points, never falling with distance: in the Money tab the player drags the points on a graph to set fares, or sets a base fare at 0 km and, for each of the two stretches after it, its end distance and its rate per km (at least $0) [T-626, T-1112, T-1143, T-1201].
 **Points** measure each city's network: what it earned in the past 24 game hours, recomputed
 once a game hour, at 20 a rail trip (a rider's whole journey, changes included, counted in the
 city it starts in) and 1 a passenger-km; not a running total, and they unlock nothing yet [T-684,
@@ -261,7 +261,8 @@ demand workers that each own a fixed set of the five periods. Threads talk by tr
 versioned snapshots. The page opens on a start menu (New game, then the saved games); the workers
 start with the pick (T-677). A loaded game holds only its clock, behind a loading card, until its
 fresh demand solve's final result lands (T-347; the last final result kept beside the save, T-328,
-is drawn behind the card meanwhile); input is never blocked. City packs come from an offline Python pipeline. The simulation is a pure
+is drawn behind the card meanwhile); input is never blocked. Another game opened from the saves
+panel reloads the page into it, which frees the last game's memory (T-1196). City packs come from an offline Python pipeline. The simulation is a pure
 function of (save, pack versions, game time); a save made just after a service edit carries the
 change over [T-206, T-1071].
 Detail: [docs/architecture.md](docs/architecture.md) 7; file layout in `docs/code-map.md`.

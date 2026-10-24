@@ -218,6 +218,11 @@ riders counters keep their own smoothing (Live feel).
   (destinations for Homes, homes for Destinations) is drawn as bubbles sized among themselves (the
   biggest about its hexagon's area) and coloured by their own mix (`flows`) [T-098]. A click on a
   far-end bubble opens the trip explorer for the pair [T-208].
+- **Loading mark** [T-1216, `DemandOverlay.setLoading`]: from the click until the selection's far
+  end is drawn, the selected bubbles' outline is the panels' spinner drawn by the overlay: a quarter
+  of it in full map ink, the rest at 30%, turning clockwise once every 1.2 s. None while demand or
+  the zone has failed to load. The longer trips, which wait seconds for the zone's market pack on
+  the first selection in a zone (notes/T-1216.md), have the inspector's own spinner.
 - **The far end is grouped** [T-909, `game/farChunks.ts`]: far cells under `FAR_CHUNK` (10) trips
   a day, as the hover counts them, are walked along a Hilbert curve over the city's cells and dealt
   their total in draws of total / floor(total / 10), systematic from a fixed start; a drawn cell
@@ -292,9 +297,10 @@ all its trips a day (its local trips, from the open zone's view or the pipeline'
 is open: reached, near a station or selected [T-801]; with no market result yet, as on a start on
 the world map, local trips alone), drawn as a red dot (all its trips; car, plane and walking all
 red) with a concentric blue dot inside whose area is the train share, so its radius is the square
-root of the share times the red one's [T-901]. Any train at all shows: the blue dot is at least
-2 px in radius, or 0.6 of the red one's if that is smaller (`SPLIT_MIN_PX`, `SPLIT_MIN_OF_R` in
-`map/demandOverlay.ts`). Both at the bubble opacity; the selected zone keeps its dark outline at
+root of the share times the red one's [T-901], with no minimum size, so the dot says what the
+hover's bars say: no train draws no blue and a share of a few in a thousand a speck (Anita
+2026-10-24, T-1217). The share is kept to 1/100,000 (`SPLIT_SHARE` in `map/demandOverlay.ts`); a
+blue dot under half a pixel tints its pixel by its size. Both at the bubble opacity; the selected zone keeps its dark outline at
 the edge. A bubble nobody travels in is a plain grey disc. With `SPLIT_BUBBLES` off in
 `map/intercityView.ts` the bubble is a solid disc coloured by `modeMix` of train, walking and the
 rest [T-576: an open zone's walking is green, from its split; a zone not loaded in this session

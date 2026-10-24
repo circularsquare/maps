@@ -20,7 +20,7 @@ import { shiftAt, timeZoneTable } from "../game/localTime";
 import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } from "../game/moneyTiming";
 import { networkFromState, newNetCache, runsTrains } from "../map/network";
 import { buildComplexes } from "../game/complexes";
-import { currentZones, decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
@@ -246,6 +246,56 @@ async function intoNewSlot(name: string, load: () => Promise<unknown> | void, wr
   if (!writeNow || !await autosave()) await publishSlots();
   slotChanges?.postMessage({ key });
 }
+/** T-1214: a folder the player picked outside browser storage, which a full disk once emptied: each
+ * slot's last save is copied there as a .save file, written over at each save */
+let copyDir: FileSystemDirectoryHandle | null = null;
+const copyName = (key: string, name: string) => `${name.replace(/[\\/:*?"<>|]/g, "-").trim() || "Saved game"}${key.startsWith("slot-") ? ` (${key.slice(5, 9)})` : ""}.save`;
+async function copyOut(key: string, bytes: Uint8Array, name?: string) {
+  const dir = copyDir;
+  if (!dir) return;
+  try {
+    const file = await dir.getFileHandle(copyName(key, name ?? slotName(key, await readStored(key))), { create: true });
+    const w = await file.createWritable();
+    await w.write(bytes as Uint8Array<ArrayBuffer>);
+    await w.close();
+    send({ kind: "copied", at: Date.now() });
+  } catch (err) {
+    send({ kind: "copied", error: (err as Error).message });
+  }
+}
+/** T-1214: the folder picked (or let go): every slot is copied into it at once */
+async function setCopyFolder(dir: FileSystemDirectoryHandle | null) {
+  copyDir = dir;
+  if (!dir) return;
+  for (const s of await listSlots().catch(() => [])) {
+    const stored = await readStored(s.key);
+    if (stored) await copyOut(s.key, stored.bytes, s.name);
+  }
+}
+
+/** T-1196: a pending file or backup's bytes and the name of the slot it goes into; null if the backup
+ * has gone */
+async function pendingGame(p: Exclude<PendingLoad, { kind: "new" }>): Promise<{ bytes: Uint8Array; name: string } | null> {
+  if (p.kind === "import") return { bytes: p.bytes, name: p.name || "Loaded game" };
+  if (!isBackupOf(p.key, p.from)) return null;
+  const backup = await readStored(p.key), slot = await readStored(p.from);
+  if (!backup) return null;
+  const time = new Date(backup.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return { bytes: backup.bytes, name: `${slotName(p.from, slot)} at ${time}` };
+}
+
+/** T-1196: the page reloads into another game, which frees all of this one's memory: the game in
+ * hand is saved and its slot let go (the reloaded page's worker takes the next) */
+async function leave(msg: Extract<ToClock, { kind: "leave" }>) {
+  try {
+    if (!testPage) await flushBeforeSwitch();
+    if (msg.pending && !await writePending(msg.pending)) throw new Error("Browser storage is unavailable. Save to a file to keep this game.");
+    activeLease?.release();
+    activeLease = null;
+    send({ kind: "left" });
+  } catch (err) { send({ kind: "left", error: (err as Error).message }); }
+}
+
 /** the empty network's save, for a new game (keeps the water mask) */
 let emptyTrack: Uint8Array | null = null;
 let moneyParams = [2.5, 2, 100, 9];
@@ -1358,6 +1408,7 @@ function autosave(): Promise<boolean> {
       if (unwritten === key) unwritten = null;
       const backups = await listBackups(key).catch(() => null);
       if (backups && !(at - (backups[0]?.at ?? -Infinity) < backupMs)) await writeBackup(key, { bytes, at, day, city, ...summary });
+      void copyOut(key, bytes); // T-1214
       savedAt = at;
       saveFailure = undefined;
       send({ kind: "saved", at, bytes: bytes.length, encodeMs, totalMs: performance.now() - t0 });
@@ -1912,6 +1963,17 @@ async function processMessage(msg: ToClock) {
       // The last game, unless the page asked for a new one (T-029).
       testPage = !!(msg.fresh || msg.testPage);
       if (msg.backupMs && msg.backupMs > 0) backupMs = msg.backupMs;
+      // T-1196: the game picked in the saves panel before the page reloaded; a file or backup goes
+      // into a slot of its own below, the slot it was picked from kept to fall back on
+      const pending = msg.pending ? await takePending() : null;
+      let incoming: { bytes: Uint8Array; name: string } | null = null;
+      if (pending?.kind === "new") {
+        msg.newSlot = pending.name || newGameName(await listSlots().catch(() => []), pending.spec);
+        msg.game = pending.spec;
+      } else if (pending) {
+        incoming = await pendingGame(pending);
+        msg.slot = pending.from;
+      }
       if (msg.fresh) {
         // T-320: a new game for a check owns no slot, so nothing it does can reach a saved game
         activeSlot = "";
@@ -1927,6 +1989,15 @@ async function processMessage(msg: ToClock) {
         activeLease = msg.testPage ? null : await leaseSlot(activeSlot);
       }
       await publishSlots();
+      if (incoming) {
+        try {
+          const g = incoming;
+          await intoNewSlot(g.name, () => loadGame(g.bytes, "file"), true);
+          return;
+        } catch (err) {
+          send({ kind: "loaded", from: "file", clock: START_CLOCK, frame: frameSpec(), error: (err as Error).message, game });
+        }
+      }
       const stored = msg.fresh || msg.newSlot ? null : await readStored(activeSlot);
       if (!stored && activeSlot) unwritten = activeSlot;
       if (msg.fresh || msg.newSlot) {
@@ -1974,6 +2045,8 @@ async function processMessage(msg: ToClock) {
     return;
   }
   await ready;
+  if (msg.kind === "leave") return await leave(msg);
+  if (msg.kind === "copyFolder") return await setCopyFolder(msg.dir);
   if (!api) return;
   if (modelDown) return failAnswer(msg);
   if (isPreview(msg) && stale(msg.seq)) return sendStale(msg.seq);

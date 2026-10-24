@@ -416,6 +416,62 @@ export async function writeDemandCache(slot: string, hash: string, v: unknown): 
   }
 }
 
+/** T-1196: the game a reloaded page opens in place of a slot: a file loaded, a backup restored or a
+ * new game, picked in the saves panel. The page reloads to free the last game's memory; the clock
+ * worker takes this from storage as it starts. */
+export type PendingLoad =
+  | { kind: "import"; bytes: Uint8Array; name: string; from: string }
+  | { kind: "restore"; key: string; from: string }
+  | { kind: "new"; spec: NewGameSpec; name?: string };
+const PENDING = "pending-load";
+export async function writePending(p: PendingLoad): Promise<boolean> {
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    await req(s.put(p, PENDING));
+    await done;
+    return true;
+  } catch {
+    return false;
+  }
+}
+/** The pending load, removed from storage (null if none) */
+export async function takePending(): Promise<PendingLoad | null> {
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    const p = (await req(s.get(PENDING))) as PendingLoad | undefined;
+    s.delete(PENDING);
+    await done;
+    return p ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** T-1214: the folder the player picked for copies of the saves outside browser storage (a
+ * FileSystemDirectoryHandle, which storage keeps across visits), or none */
+const COPY_FOLDER = "copy-folder";
+export async function readCopyFolder(): Promise<FileSystemDirectoryHandle | null> {
+  try {
+    return ((await req((await store("readonly")).get(COPY_FOLDER))) as FileSystemDirectoryHandle | undefined) ?? null;
+  } catch {
+    return null;
+  }
+}
+export async function writeCopyFolder(dir: FileSystemDirectoryHandle | null): Promise<boolean> {
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    if (dir) await req(s.put(dir, COPY_FOLDER));
+    else await req(s.delete(COPY_FOLDER));
+    await done;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export interface SlotLease { release: () => void; }
 /** A browser-managed lock lives for this worker's lifetime and releases even if the tab crashes. */
 export async function leaseSlot(key: string): Promise<SlotLease | null> {

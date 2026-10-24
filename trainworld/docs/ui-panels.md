@@ -121,6 +121,14 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   though other clusters still solve, and the split's hover then stops saying "an early estimate"
   [T-421]; a city loading later "Loading data" with a thin bar after it
   (Loading, below).
+- **Busy** [T-1200, `ui/BusyTag.tsx`, `game/busy.ts`]: when the page is about to freeze for a
+  while working something out, a tag in the status tag's style after it on the same row says what,
+  in a word or a few, with no hover: "Drawing the network" (the network redrawn whole, at a new draw
+  anchor) and "Updating the network" (a state after an edit). The tag is drawn and a frame painted
+  before the work starts, and it goes when the work ends, in one step. Only work expected to take
+  over 150 ms on this device shows it: each kind's time per unit (a state's edges and nodes) is
+  learnt from its last runs in this page, so a fast desktop rarely sees it and a phone often. Not
+  while the loading card is up.
 - **Cash**, four significant figures (to the dollar under a million), moving as fares are paid and
   running costs drain [T-284, T-722]. A box of fixed width sized to "−$37.34B", the figure
   right-aligned in tabular figures with the $ right before it, so it always ends the usual gap before
@@ -334,11 +342,17 @@ the sim's edit history holds track, lines and schedules, so fare steps are kept 
 and any other edit drops them]. A node past the plot is an arrow
 on the plot's edge pointing toward it, with its hover; a click on the arrow zooms out to show it. A
 hover anywhere on the graph names the fare at that distance, a node's hover its distance and fare
-and the ways it drags. Below the graph one row per node: "Base fare" with its fare, then the other
-two as "20 km costs $3.50", distance and fare, each stepping with the buttons (distance by 0.5 under
-10, 5 under 100, then 50; fare by $0.25), or a click on it opens a box to type it, Enter or leaving the
-box applying and Escape cancelling [T-626, `TypedValue` in `ui/widgets.tsx`], kept in order as a drag
-is; then what a 10 km or mile ride costs; cars
+and the ways it drags. Below the graph one row per node [T-1201]: "Base fare" with its fare, then
+each stretch as its distances and its rate per display unit, "0-20 km" and "+$0.100 per km", the
+second "Past 20 km" with its rate only (following the first's end; the last node's distance changes no
+fare, so it is only dragged). Each value steps with the buttons (the base fare by
+$0.25; the first stretch's end by 0.5 under 10, 5 under 100, then 50, kept in order as a drag is; a rate to
+the next multiple of $0.005, or by a cent of fare where a stretch is too short for that to move it),
+or a click on it opens a box to type it, Enter or leaving the box applying and Escape cancelling
+[T-626, `TypedValue` in `ui/widgets.tsx`]. A row's change keeps every other row's value, so a base
+fare or rate change moves that node's fare and every later one's by the same amount, and a stretch's
+end keeps both rates; a rate never goes below $0. Fares stay whole cents, rates show three decimals.
+Dragging on the graph sets fares, and the rows' rates follow. Then what a 10 km or mile ride costs; cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
 
@@ -392,6 +406,17 @@ reads "No stations yet."
   panel and opens its game in a new slot, the game being played saved first [T-743; the slot rules
   in architecture.md]. New game shows the new game sheet (below) in the panel, headed "New game";
   its Start closes the panel and opens the new game the same way, its Back returns to the cards.
+  Each of these, and Open and Restore as a copy, reloads the page into its game ("Loading" below).
+- Under those buttons, keeping the saves when browser storage goes [T-1214; `game/saveSafety.ts`]:
+  once a slot is written the browser is asked to keep the site's storage (`navigator.storage.persist`,
+  which Chrome grants or refuses without a prompt); while it is refused the panel says "These saves
+  can be lost if the disk fills up." Where the browser can write to a folder (Chrome, Edge), "Keep
+  copies in a folder" lets the player pick one; from then on the clock worker copies every slot
+  there at once and each slot again at every save, one `<name> (<4 letters of its key>).save` per
+  slot written over each time, and the panel says "Copied to <folder> at 14:05" with Stop. The folder
+  is remembered beside the saves; on a later visit the browser wants it allowed again, so the line is
+  "Allow copies to <folder>" until the player clicks it. A failed copy says "Copies to <folder>
+  failed" (the reason on hover). Elsewhere Save to a file is the copy outside the browser.
 - A page opened with `?new=1`, `?synth=1` or `?demandTest=1` does not autosave: the top bar says
   "Autosave is off in this test page. Save a copy to keep the game." (the only place it is said,
   [T-971]), a `?new=1` page marks no
@@ -421,14 +446,15 @@ registry centre and zoom, or over New York with none [T-310].
   the registry's cities and zones whose name has a word starting with the text (case and accents
   ignored, so "hague" finds Rotterdam [The Hague]), biggest by local trips first, each with its
   country (the registry's code, named by the browser). Up and down move, Enter or a click picks;
-  a pick of one of the five lights its button. Then Find a city on the map, lit while nothing else
+  a pick of one of the five lights its button. Then Choose on map, lit while nothing else
   is picked: the game starts on the world map with Homes on and every realm shown (zones.md
   "Realms"), so the zones' zoomed-out bubbles show and take a click as anywhere (ui-demand-views.md
   "Zoomed far out").
 - **Real network** (ticked to begin with): only for a sandbox in New York, London, Paris, Tokyo,
   Seoul, Toronto or Sendai, the cities with a real network (`REAL_NETWORKS`; architecture.md 11). The
   game starts from that network, built and running.
-- **Start in Tokyo** (the zone picked or located) or **Start on the map**, and Back. If a real network cannot be downloaded, a
+- **Start in Tokyo** (the zone picked or located) or **Start**, bigger than the other buttons (36 px
+  high, bold, tinted) and centred in the sheet's last row, with Back at its left [T-1215]. If a real network cannot be downloaded, a
   line says so and the sheet stays.
 - The slot is named after the start ("Tokyo", "Tokyo sandbox", "World", then " 2" and on).
 
@@ -493,7 +519,7 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
 
 ## Loading
 
-[T-149, T-172, T-180, T-212, T-232, T-243, T-318, T-793, T-884; `game/loading.ts`, `ui/LoadingScreen.tsx`]
+[T-149, T-172, T-180, T-212, T-232, T-243, T-318, T-793, T-884, T-1194 to T-1197; `game/loading.ts`, `game/loadBar.ts`, `ui/LoadingScreen.tsx`]
 
 - Nothing is blocked: the map, inspectors and building work as soon as the network is drawn.
 - **A loaded game** (the page opening, a file, a slot, a new game) holds only the clock until the
@@ -503,13 +529,14 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   arrive (T-351). Zones still solving then show their own loading bar and grey ("A zone still loading
   is grey" in [ui-demand-views.md](ui-demand-views.md)) until their final lands. The time is
   greyed and its hover says "The clock starts when demand has loaded". Meanwhile a card in the
-  middle of the map says "Loading data" over a filling bar and the current step (Downloading city
-  data, Opening city data, Calculating demand), naming no cities; while it loads more than one city,
-  the step counts the cities open of those it is loading ("Opening city data (15/120)", T-1161,
-  `LoadProgress.done`); the percentage is only the bar's
-  hover ("42% loaded"). The bar counts to that final, so on the real New York save it fills
-  for 20 to 60 s, by the machine. A slot whose cities are all open shows the bar for its solve alone. The card
-  takes no input but the bar's hover (a press pans the map beneath) and goes when the clock starts.
+  middle of the map names the stage in hand over a filling bar [T-1194]: "Loading" (the game itself,
+  until its network reaches demand), "Loading city data" (the packs downloading and opening in every
+  worker) and "Calculating demand" (the solve to the zone in view's final), naming no cities and
+  counting nothing (the packs open in one batch per worker, so no count could move). The percentage is
+  only the bar's hover ("42% loaded"). Under the bar, Cancel goes back to the start menu by reloading
+  the page, which frees everything the load took [T-1197]; the game is saved first, and if the save
+  does not answer within 5 s the page goes anyway. The card takes no input but the bar's hover and
+  Cancel (a press elsewhere pans the map beneath) and goes when the clock starts.
   Loading is the one place with motion [T-647, T-677, Anita; `ui/Spinner.tsx`]: on top of the card a
   drawn bunny rides a toy train in the theme's accent (104 px wide; wheels turn, the track's ties run
   by, the train chugs, the ears bob, steam puffs), and a 26 px copy of
@@ -520,22 +547,36 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   Nothing else animates. The figures behind it are the solve's estimates, or the last
   final result kept beside the save when there is one (T-328; the split's hover ends "(from the
   last time this game was open)").
-- **The bar is the share of the wait gone** [T-243, T-793, T-884, notes/T-884.md]: the time since the
-  pick (or the load) against that time plus the time still expected, so it keeps an even pace while
-  the expectation holds and slows, never stops, when a step runs late. A game's wait is first expected
-  to last as long as its last one in this browser (by slot, the last 12; a new game's under "new"),
-  unless its network has since changed by over a fifth of its stops; once the solve has shown its
-  pace, that memory may move the step model's estimate only between 0.7 and 1.5 times, and past its
-  length a quarter of the time so far is still expected. The step model, used alone with nothing
-  remembered: downloads at their rate; opening at its rate once a quarter of it is in (each pack in
-  every worker), before that 220 ms per MB of city pack, 20 ms per MB of market pack and 1.5 s for
-  composing the market once for the load's market packs (T-889); the solve as the first estimate about 0.6 s plus 2.2 ms per line stop, scaled by this
-  browser's last solve of the zone in view (a game of 1,000 stops is assumed with none), each
-  crowding round about as long again (weights 1, 1.1, 1.05, 0.55), the rounds still to come at the
-  pace measured so far, and a round running late expected to go on a further 15% of its time so far.
-  The bar never goes back and is never full before the card goes. The pick and the game it opens are
-  one wait: what loads before the game's network is known (the view's zone) stays in the same bar. A
-  game loaded while the last one's bar is still up starts the bar over from empty [T-840].
+- **Another game replaces this one by reloading the page into it** [T-1196]: Open, Load a file,
+  Restore as a copy and New game in the saves panel save the game in hand, let go of its slot, then
+  reload with `?slot=<key>` or `?load=file|restore|new` (a file, a backup or a new game's spec waits in
+  browser storage for the reloaded page's clock worker). Demand's workers never give memory back
+  while they live (about 2.5 GB each after all of China), so this is the one way the last game's
+  memory goes. The switch leaves the address bar, so reloading from there opens the start menu.
+- **A game too big for the device is refused** [T-1197; `game/memoryCheck.ts`]: before a saved game
+  opens (the start menu, Open, Load a file, Restore), its zones (the save's opened zones, else its
+  slot's cities) give each solving worker's memory, 0.7 GB plus 1.2 GB per billion local trips a day
+  of those zones, and the whole game's, 1.5 GB plus 15 MB a zone plus the workers'. A worker over
+  3.5 GB (a browser worker cannot pass 4) or, on a device reporting under 8 GB, a game over three
+  quarters of it is refused: the start menu shows the reason over the saved games, and in a game a
+  notice says it.
+- **The bar is three stages, each with its share** [T-1195, notes/T-1195.md; `game/loadBar.ts`]: the
+  game, the city data and the solve each get the share of the bar their expected times give them,
+  and the stage in hand moves inside its share by what has landed (bytes downloaded, packs open in
+  each worker, solve rounds and periods) or by its time against its expectation, slowing toward the
+  end of its share when late and never passing it until the stage is done. Expected times are the
+  slot's last load in this browser (each stage's time while it was the one in hand; by slot, the last
+  12, a new game's under "new"), unless the network has since changed by over a fifth of its stops.
+  With none remembered, until the network is in: 6% the game, 24% the data, 70% the solve, the game
+  expected to take 4 s; then the game stage as it took, the data as modelled (each city pack 450 ms
+  plus 220 ms per MB, market packs 20 ms per MB and 1.5 s for their composition, downloads at their
+  rate; times how this browser's last load compared with the model), the solve as the first estimate
+  about 1 s plus 3.5 ms per line stop, scaled by this browser's last solve of the zone in view, its
+  crowding rounds weighted 1, 0.28, 0.28, 0.28. The bar never goes back: when the
+  shares change (the network arrives and the guess gives way to the model) it keeps its place and the
+  rest is spread over the rest of it. It is never full before the card goes. The pick and the game it
+  opens are one wait. A game loaded in place while the last one's bar is still up (a check's direct
+  load; the player's loads reload the page) starts the bar over from empty [T-840].
 - A city opened later (a pan, construction) shows its estimate at once and the crowding rounds
   refine it with the clock running; the status says "Estimate, refining 2/4…" (hover: the figures
   are an early estimate) until the zone in view's cluster has its final [T-421].
@@ -548,7 +589,7 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   ([ui-map.md](ui-map.md)) and the train panel says "Calculating".
 - **A city loading later** (a pan, construction reaching it) holds nothing and has no card: the
   status says "Loading data" with a thin bar after it, its hover naming the cities and step
-  ("Loading Boston, 37%. Opening city data"); in a narrow bar the thin bar goes first, then the
+  ("Loading Boston, 37%. Loading city data"); in a narrow bar the thin bar goes first, then the
   text ends in an ellipsis.
 - If demand cannot load, a screen says "Demand could not load" with the reason and two buttons, Try
   again (reload) and Play without demand, and takes every key until one is pressed. If the game

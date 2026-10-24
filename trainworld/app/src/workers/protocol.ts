@@ -10,7 +10,7 @@
 
 import type { EdgeId, Level, NodeId } from "../game/types";
 import type { FrameSpec } from "../game/frame";
-import type { DayLedger, GameMode, HourLedger, NewGameSpec, SaveSlot, SlotBackup } from "./saveFile";
+import type { DayLedger, GameMode, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup } from "./saveFile";
 import type { NetworkBuffers } from "../map/network";
 
 export type { DayLedger, HourLedger };
@@ -103,7 +103,13 @@ export type ToClock =
    * saved games (T-677): an empty game in a new slot of that name, written once something changes.
    * `backupMs`: wall ms between a slot's backups (T-744; `?backupMs=` for checks). `game`: how a
    * new game (`fresh` or `newSlot`) starts (T-728). */
-  | { kind: "init"; city: string; pack: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec }
+  | { kind: "init"; city: string; pack: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean }
+  /** T-1196: the page reloads into another game: save the one in hand, keep `pending` (the game the
+   * reloaded page opens, when not a slot) and let go of the slot; answered with "left" */
+  | { kind: "leave"; pending?: PendingLoad }
+  /** T-1214: copy every save slot into this folder now and each slot again whenever it is written
+   * (null: stop); answered with "copied" */
+  | { kind: "copyFolder"; dir: FileSystemDirectoryHandle | null }
   /** the view's bounds in degrees after a move (T-302): water masks near it are fetched ahead, but
    * not those of `skip`, the zones of realms not shown (T-975) */
   | { kind: "view"; w: number; s: number; e: number; n: number; skip?: string[] }
@@ -462,6 +468,10 @@ export type FromClock =
   /** `frame`: the game now in the worker; `converted`: its save was in an older frame and was
    * converted to the world's on the way in (T-308); `game` counts the worker's loads, for "clock" */
   | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string; converted?: boolean; game: number }
+  /** T-1196: "leave" done (the page may reload), or why the game in hand could not be saved */
+  | { kind: "left"; error?: string }
+  /** T-1214: the slots' copies in the folder: written at `at` (Date.now()), or why they could not be */
+  | { kind: "copied"; at?: number; error?: string }
   /** T-889: a save being loaded: its built stations' x, y in `frame`, before its network is worked out */
   | { kind: "stationsAhead"; frame: FrameSpec; xy: Float64Array }
   /** T-729: the opened zones of the game in hand, sent before its snapshot; null for a save from

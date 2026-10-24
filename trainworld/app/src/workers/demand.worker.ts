@@ -177,6 +177,7 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
       }
       cities.set(pack.id, a);
       if (e) everyday.set(pack.id, e);
+      sendMessage({ kind: "packOpened", id: pack.id }); // T-1195
     } catch (err) {
       reject(pack.id, false, err);
     }
@@ -199,6 +200,7 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
         // T-180: the page sends the pack's bytes; decoding here keeps it off the main thread
         marketPacks.add(typeof m.pack === "string" ? m.pack : new TextDecoder().decode(m.pack));
         added.push(m.id);
+        sendMessage({ kind: "packOpened", id: m.id, market: true }); // T-1195
       } catch (err) {
         reject(m.id, true, err);
       }
@@ -299,13 +301,21 @@ function solveBare(a: DemandApi, e: EverydayApi | null) {
 const closeLater = { ids: new Set<CityId>(), markets: new Set<CityId>() };
 
 /** T-377: the market of every open market pack, in place of the last. That one is freed unless a
- * part still holds it (its zones' packs are in it; it carries on until its key goes). */
+ * part still holds it (its zones' packs are in it; it carries on until its key goes). T-1198: freed
+ * before the new one is composed, so its space (about 450 MB with the world's 2,567 places) takes the
+ * new one rather than the worker's memory growing by a second; and a part composed of the same packs
+ * (a selected zone's market opened, then closed) serves again, composing nothing. */
 function recompose() {
   const old = intercity;
-  intercity = marketPacks && marketPacks.places().length ? marketPacks.market() : null;
   marketZones = null;
-  if (old && ![...marketParts.values()].includes(old)) forget([old]);
+  const key = marketPacks?.places().join(",") ?? "";
+  if (old && ![...marketParts.values()].includes(old)) { intercity = null; forget([old]); }
+  const same = key ? [...marketParts.values()].find((p) => composedOf.get(p) === key) : undefined;
+  intercity = same ?? (key ? marketPacks!.market() : null);
+  if (intercity && !same) composedOf.set(intercity, key);
 }
+/** T-1198: the market packs (places, in order) each composition and its parts were made of */
+const composedOf = new WeakMap<IntercityApi, string>();
 
 /** T-301: take populations out of every kept network's clusters, then free them. */
 function forget(pops: Population[]) {
@@ -966,7 +976,8 @@ function assignParts(regional: IntercityApi, split: Cluster[]) {
   if (!used.has(regional)) usable.unshift(regional);
   for (const k of keys) {
     if (marketParts.has(k)) continue;
-    const p = usable.shift() ?? regional.beside();
+    let p = usable.shift();
+    if (!p) { p = regional.beside(); composedOf.set(p, composedOf.get(regional) ?? ""); }
     marketParts.set(k, p);
     used.add(p);
   }

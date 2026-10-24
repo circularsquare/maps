@@ -55,19 +55,16 @@ const HOT_MIX = "0.3";
 
 /** A disc's edge value says how it is drawn (the disc's last float): 0 or 1 plain, 2 with a dark
  * outline, and from `SPLIT_STEP` up a red dot with a blue dot inside (T-901):
- * `outline + SPLIT_STEP * (1 + steps)`, `steps` the train share in 1/`SPLIT_SHARE`, at least 1 when
- * there is any train. The blue dot's area is the train share of the red one's. */
+ * `outline + SPLIT_STEP * (1 + steps)`, `steps` the train share in 1/`SPLIT_SHARE`. The blue dot's
+ * area is the train share of the red one's, with no minimum (T-1217): no train draws no blue.
+ * 3 * 100,001 + 2 stays well inside a float's exact integers. */
 const SPLIT_STEP = 3;
-const SPLIT_SHARE = 1000;
-/** Any train at all shows: the blue dot is at least this radius, CSS px, but no more than
- * `SPLIT_MIN_OF_R` of the red one's unless its share makes it bigger. */
-const SPLIT_MIN_PX = "2.0";
-const SPLIT_MIN_OF_R = "0.6";
+const SPLIT_SHARE = 100000;
 const SPLIT_TRAIN = rgbf(MODE_COLOURS.train);
 const SPLIT_REST = rgbf(MODE_COLOURS.drive);
 export const splitEdge = (outline: 0 | 1 | 2, share: number) => {
   const s = Math.min(1, Math.max(0, share));
-  return outline + SPLIT_STEP * (1 + (s > 0 ? Math.max(1, Math.round(s * SPLIT_SHARE)) : 0));
+  return outline + SPLIT_STEP * (1 + Math.round(s * SPLIT_SHARE));
 };
 
 // A disc per instance: radius in local units, colour and alpha, and an edge (0 none, 2 a dark
@@ -110,28 +107,35 @@ uniform vec3 u_ink;
 uniform float u_dpr;
 uniform vec3 u_split_train;
 uniform vec3 u_split_rest;
+uniform float u_spin;     // T-1216: below 0 none; else the turn of a loading outline, radians clockwise from the top
 in vec2 v_p;
 in float v_r;
 in float v_edge;
 in float v_hot;
 in vec4 v_col;
 out vec4 o;
+// the panels' spinner on an outline: a quarter of it at full ink, the rest at 0.3
+float spinInk() {
+  if (u_spin < 0.0) return 1.0;
+  float a = mod(atan(v_p.x, v_p.y) - u_spin + 3.14159265, 6.28318531) - 3.14159265;
+  return mix(0.3, 1.0, clamp((0.78539816 - abs(a)) * v_r + 0.5, 0.0, 1.0));
+}
 void main() {
   float d = length(v_p);
   float cover = clamp(v_r - d + 0.5, 0.0, 1.0);
   if (cover <= 0.0) discard;
   // a red dot with a blue dot inside (${SPLIT_STEP} and over: see splitEdge)
-  float pk = floor(v_edge / ${SPLIT_STEP}.0 + 0.001);
+  float pk = floor((v_edge + 0.5) / ${SPLIT_STEP}.0);
   if (pk >= 1.0) {
     float outline = v_edge - pk * ${SPLIT_STEP}.0;
     float share = (pk - 1.0) / ${SPLIT_SHARE}.0;
     float ri = sqrt(share) * v_r;
-    if (share > 0.0) ri = max(ri, min(${SPLIT_MIN_PX} * u_dpr, ${SPLIT_MIN_OF_R} * v_r));
-    float inner = share > 0.0 ? clamp(ri - d + 0.5, 0.0, 1.0) : 0.0;
+    // a blue dot under half a pixel tints its pixel by its size, not by half
+    float inner = clamp(ri - d + 0.5, 0.0, 1.0) * clamp(2.0 * ri, 0.0, 1.0);
     vec3 c = mix(mix(u_split_rest, u_split_train, inner), vec3(1.0), v_hot * ${HOT_MIX});
     float a = v_col.a;
     if (outline > 1.5) {
-      float t = clamp(d - (v_r - 2.0 * u_dpr) + 0.5, 0.0, 1.0);
+      float t = clamp(d - (v_r - 2.0 * u_dpr) + 0.5, 0.0, 1.0) * spinInk();
       c = mix(c, u_ink, t);
       a = mix(a, 1.0, t);
     }
@@ -144,13 +148,16 @@ void main() {
   if (v_edge > 1.1) {
     // a dark outline 2 px wide (1 px from 1.1 to 1.5: an unopened zone's dot, T-976), the inside left as it is
     float w = v_edge > 1.5 ? 2.0 : 1.0;
-    float t = clamp(d - (v_r - w * u_dpr) + 0.5, 0.0, 1.0);
+    float t = clamp(d - (v_r - w * u_dpr) + 0.5, 0.0, 1.0) * spinInk();
     col = mix(col, u_ink, t);
     a = mix(a, 1.0, t);
   }
   a *= cover;
   o = vec4(col * a, a);
 }`;
+
+/** One turn of a loading outline, ms: the panels' spinner's (style.css `.spin`). */
+const SPIN_MS = 1200;
 
 /** Floats per line instance: x0, y0, r0, x1, y1, r1 (local units, radii before the bubble size),
  * a stub length factor (0 = a line), alpha, and the colour r, g, b (the first disc's own). A line
@@ -319,7 +326,7 @@ export class DemandOverlay {
   private programs() {
     const gl = this.gl;
     this.prog = compile(gl, DISC_VS, DISC_FS);
-    this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_pad", "u_hot", "u_split_train", "u_split_rest"]);
+    this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_pad", "u_hot", "u_split_train", "u_split_rest", "u_spin"]);
     this.timer = new GpuTimer(gl);
     this.cutProg = this.lineProg = null;
   }
@@ -424,6 +431,14 @@ export class DemandOverlay {
     if (on === this.selecting) return;
     this.selecting = on;
     bubblePad.px = on ? SELECTED_PAD_PX : 0;
+    this.invalidate();
+  }
+
+  /** T-1216: the selected bubbles' answer is on its way: their outline turns, as the panels' spinner. */
+  private loading = false;
+  setLoading(on: boolean) {
+    if (on === this.loading) return;
+    this.loading = on;
     this.invalidate();
   }
 
@@ -562,8 +577,12 @@ export class DemandOverlay {
     this.discsDrawn = 0;
     let uploaded = -1;
     const lit = hot().disc;
+    const near = this.sets.get("near");
+    const spinning = this.loading && !!near;
+    const spin = spinning ? ((performance.now() / SPIN_MS) % 1) * 2 * Math.PI : -1;
     for (const s of list) {
       gl.uniform1i(this.u.u_hot, lit && lit.discs === s.data ? lit.i : -1);
+      gl.uniform1f(this.u.u_spin, s === near ? spin : -1);
       if (s.anchor.version !== uploaded) {
         uploaded = s.anchor.version;
         let m = matrices.get(uploaded);
@@ -579,6 +598,7 @@ export class DemandOverlay {
     this.timer.end();
     this.drawMs = performance.now() - t0;
     this.draws++;
+    if (spinning) this.invalidate();
   }
 
   /** Clear the discs over the selected stations (T-189), after drawing them. */
