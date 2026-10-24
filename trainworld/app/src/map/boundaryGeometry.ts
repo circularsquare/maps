@@ -1,6 +1,7 @@
 // Exact metropolitan footprints, including islands and excluded enclaves, with GeoJSON winding
-// (`cityGeometry`); the zones' outlines with each shared border drawn once (`OutlineEdges`); and the
-// shade cut, the triangles outside the zones shown (`outsideZones`).
+// (`cityGeometry`); the zones' outlines with each shared border drawn once (`OutlineEdges`); the
+// shade cut, the triangles outside the zones shown (`outsideZones`); and the shade outside the focused
+// zone (`outsideCity`, `outsideCityAndSea`).
 import earcut from "earcut";
 import type { Feature, FeatureCollection, MultiLineString, MultiPolygon, Polygon, Position } from "geojson";
 
@@ -713,6 +714,43 @@ function keyhole(outer: Hole, holes: Hole[]): { ring: number[]; edge: number[] }
   };
   walk(0, 0);
   return { ring: out, edge };
+}
+
+/** T-1145: `outsideCity` with the zone's sea (the coarse file's `water`, which reaches a little into its
+ * land) cut out too, as one outline with the city's outer rings. */
+export function outsideCityAndSea(city: MultiPolygon, sea: MultiPolygon | undefined): MultiPolygon {
+  if (!sea?.coordinates.length) return outsideCity(city);
+  return outsideOutline(city, unionOutline(footprintRings(city, sea)));
+}
+
+/** The outer rings of a zone's own boundary and of its sea, as flat lon, lat pairs (what
+ * `unionOutline` takes, here or in workers/focusShade.worker.ts). */
+export function footprintRings(city: MultiPolygon, sea: MultiPolygon): Float64Array[] {
+  return [...city.coordinates, ...sea.coordinates].map((poly) => Float64Array.from(poly[0].flat()));
+}
+
+/** The outer outlines of the rings' union (flat lon, lat pairs, open), enclosed gaps left out. */
+export function unionOutline(rings: Float64Array[]): Float64Array[] {
+  const grid = rings.flatMap((r) => gridRing(r) ?? []);
+  return unionHoles(grid).map(({ xs, ys }) => {
+    const out = new Float64Array(xs.length * 2);
+    for (let i = 0; i < xs.length; i++) { out[2 * i] = xs[i] / G - 180; out[2 * i + 1] = ys[i] / G - 90; }
+    return out;
+  });
+}
+
+/** `outsideCity` with the outer rings given (`unionOutline`'s) in place of the city's own. */
+export function outsideOutline(city: MultiPolygon, outline: Float64Array[]): MultiPolygon {
+  const holes = outline.map((flat) => {
+    const r: Position[] = [];
+    for (let i = 0; i < flat.length; i += 2) r.push([flat[i], flat[i + 1]]);
+    r.push([flat[0], flat[1]]);
+    return ring(r, false);
+  });
+  return {
+    type: "MultiPolygon",
+    coordinates: [[WORLD, ...holes], ...city.coordinates.flatMap(p => p.slice(1).map(r => [ring(r, true)]))],
+  };
 }
 
 /** A world-sized polygon with the city's outer rings cut out, plus its excluded enclaves. */

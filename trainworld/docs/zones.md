@@ -44,6 +44,17 @@ unit belongs to a city zone (and so is not a non-city zone) when that city's pac
 (T-352), so an outline and the outside shade run straight offshore instead of hugging the coast.
 Neighbouring zones share exact simplified borders, so their boundaries do not overlap.
 
+**Sea off the coast** [T-1145, `pipeline/zone_water.py`]. Boundary files elsewhere stop at the
+shore, so the coarse outlines (`packs/outlines.json`) add the sea: every coastal zone's outline takes
+the sea within 5 km of its land (`REACH_M`), and sea that the zones' land and reach close in is taken
+whole up to 3,000 km² (`BAY_KM2`: Tokyo Bay inside the Uraga channel, Osaka Bay, the basins between
+the Seto islands), unless land no zone holds borders most of it. Where reaches meet, each piece of sea
+goes to the zone with the nearest land (a Voronoi split over points every 250 m along the outlines),
+national borders at sea included; land no zone holds keeps the sea nearest it. The sea is OSM's
+coastline water polygons; lakes and rivers inland are not added. In the US, where counties already
+reach 3 nautical miles out, little changes. Only the coarse outlines and the shades take the sea:
+packs, cells and water masks do not.
+
 **Which units are modelled (the extent).** A unit not in any city zone is modelled when it
 **touches two different city zones**: it lies between them. Today that is Worcester MA (Windham,
 New London and Litchfield CT went into Hartford's pack, T-1113). Countries planned whole (below)
@@ -393,8 +404,8 @@ the game has built there. A game started on the map (no start zone) shows every 
 no station or track [T-1133], so the player sees where a game can start; its first station or track
 ends that, leaving the realms the rule above shows (that "all shown" is not the player showing them).
 What is not shown is one shade over the whole world, land and water
-alike, with the shown realms' zones cut out along their coarse outlines (`packs/outlines.json`;
-shared borders cancel and gaps the zones enclose stay in the cut), so its edge follows the zone
+alike, with the shown realms' zones cut out along their coarse outlines (`packs/outlines.json`, the
+sea off each coast included, "Sea off the coast" above; shared borders cancel and gaps the zones enclose stay in the cut), so its edge follows the zone
 outlines and two hidden realms meeting have no edge (`inactive` in `game/shadeTable.ts`: 11% of the
 outside shade's colour, 22.5% black in the dark theme, drawn over the outside shade: half way from
 the outside shade alone to the double shade it was). The cut is made in a worker (T-1026): when the
@@ -409,7 +420,8 @@ dark realm. Before the first game is in, and when `outlines.json` is missing, ev
 zone with no realm always shows.
 
 **Track** [T-1047, `game/trackZones.ts`]: a zone is crossed by track when a point of the track's
-drawn line, tested every 1 km, lies in its coarse outline. A zone built track crosses is in play as
+drawn line, tested every 1 km, lies in its coarse outline (a bridge or pier over the sea is in the
+zone whose sea holds it, as a station there is). A zone built track crosses is in play as
 one a station reaches, for all the player sees: it joins the opened list, its realm is shown, and its
 figures are worked out. Blueprint track that is not switched off shows its realms only, as a
 blueprint station does. With no station within reach none of its people can board, so a solve would

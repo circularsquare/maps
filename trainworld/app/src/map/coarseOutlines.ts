@@ -4,14 +4,20 @@
 import type { MultiPolygon } from "geojson";
 import { dataUrl } from "../game/dataBase";
 
-export type OutlineFile = { q: number; zones: Record<string, number[][]> };
+/** `water` (T-1145): each coastal zone's sea, a little into its own land, for the focused zone's shade */
+export type OutlineFile = { q: number; zones: Record<string, number[][]>; water?: Record<string, number[][]> };
 
-let read: Promise<Map<string, MultiPolygon>> | null = null;
+let read: Promise<{ zones: Map<string, MultiPolygon>; water: Map<string, MultiPolygon> }> | null = null;
 let text: string | null = null;
 
 /** The coarse footprint of each zone in the file, by zone id; empty when the file is unavailable. */
 export function coarseOutlines(): Promise<Map<string, MultiPolygon>> {
-  return (read ??= load());
+  return (read ??= load()).then((r) => r.zones);
+}
+
+/** The sea each coastal zone's coarse outline takes (T-1145), by zone id. */
+export function coarseWater(): Promise<Map<string, MultiPolygon>> {
+  return (read ??= load()).then((r) => r.water);
 }
 
 /** The file as fetched, once (the shade's worker reads its own copy, T-1026); null after that, or
@@ -30,24 +36,24 @@ export function decodeRing(flat: number[], q: number): Float64Array {
   return out;
 }
 
-async function load(): Promise<Map<string, MultiPolygon>> {
-  const out = new Map<string, MultiPolygon>();
+async function load() {
+  const out = { zones: new Map<string, MultiPolygon>(), water: new Map<string, MultiPolygon>() };
   try {
     const r = await fetch(dataUrl("outlines.json"));
     if (!r.ok) throw new Error(`${r.status} ${r.url}`);
     const body = await r.text();
-    const { q, zones } = JSON.parse(body) as OutlineFile;
-    for (const id in zones) {
-      out.set(id, {
-        type: "MultiPolygon",
-        coordinates: zones[id].map((flat) => {
-          const d = decodeRing(flat, q), ring: number[][] = [];
-          for (let i = 0; i < d.length; i += 2) ring.push([d[i], d[i + 1]]);
-          ring.push([...ring[0]]);
-          return [ring];
-        }),
-      });
-    }
+    const { q, zones, water } = JSON.parse(body) as OutlineFile;
+    const polygons = (rings: number[][]): MultiPolygon => ({
+      type: "MultiPolygon",
+      coordinates: rings.map((flat) => {
+        const d = decodeRing(flat, q), ring: number[][] = [];
+        for (let i = 0; i < d.length; i += 2) ring.push([d[i], d[i + 1]]);
+        ring.push([...ring[0]]);
+        return [ring];
+      }),
+    });
+    for (const id in zones) out.zones.set(id, polygons(zones[id]));
+    for (const id in water ?? {}) out.water.set(id, polygons(water![id]));
     text = body;
   } catch (error) {
     console.warn("Coarse zone outlines unavailable", error);

@@ -5,7 +5,7 @@
 // two triangles; a point outside every zone and every gap is shaded by construction (the triangles
 // tile the cut ring). Points outside every zone left clear are gaps the zones enclose (shown by design,
 // T-1006) or loops of rings that cross themselves; counted, not failed.
-//   node trainworld/checks/t1025-shade.mjs [quick]
+//   node trainworld/checks/t1025-shade.mjs [quick]      (OUTLINES=<file> for another outlines.json)
 // Output: one line per set, PASS/FAIL, and artifacts/trainworld/t1025-shade.json.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -16,7 +16,7 @@ const quick = process.argv[2] === 'quick';
 
 const registry = JSON.parse(readFileSync(ROOT + 'app/src/game/registry.json', 'utf8'));
 const realms = JSON.parse(readFileSync(ROOT + 'app/src/game/realms.json', 'utf8')).realms;
-const { q, zones: flat } = JSON.parse(readFileSync(ROOT + 'data/packs/outlines.json', 'utf8'));
+const { q, zones: flat } = JSON.parse(readFileSync(process.env.OUTLINES ?? ROOT + 'data/packs/outlines.json', 'utf8'));
 const byId = new Map(realms.map((r) => [r.id, r]));
 const byCountry = new Map(realms.flatMap((r) => (r.countries ?? []).map((cc) => [cc, r.id])));
 const realmOf = (c) => (c.realm && byId.has(c.realm) ? c.realm : byCountry.get(c.country ?? '') ?? null);

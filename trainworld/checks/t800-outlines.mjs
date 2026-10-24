@@ -2,9 +2,10 @@
 // A new game started on the map (no start city, so every realm is shown), then a jump to Europe: the
 // outline source should hold the Europe zones at once, before any of their own boundary files have
 // been fetched, and each zone's own outline replaces its coarse one when its pack arrives. NOFILE=1
-// blocks the coarse file.
+// blocks the coarse file; OUTLINES=<file> serves that one in its place.
 // Screenshots to artifacts/trainworld/t800-<TAG>-*.png.
 //   BASE=http://localhost:6146/ [NOFILE=1 TAG=before] node trainworld/checks/t800-outlines.mjs   (from the maps root)
+import { readFileSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -27,6 +28,11 @@ collectErrors(page, errors);
 let boundaryFetches = 0;
 page.on('request', (r) => { if (r.url().includes('.boundary.geojson')) boundaryFetches++; });
 if (process.env.NOFILE) await page.route('**/packs/outlines.json*', (r) => r.abort());
+// OUTLINES=<file>: that file served as packs/outlines.json (a rebuild not yet in data/packs)
+else if (process.env.OUTLINES) {
+  const body = readFileSync(process.env.OUTLINES);
+  await page.route('**/packs/outlines.json*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body }));
+}
 // a slow connection: each zone's boundary file takes up to DELAY ms (the local server answers at once)
 const DELAY = Number(process.env.DELAY ?? 0);
 if (DELAY) await page.route('**/*.boundary.geojson*', async (r) => { await new Promise((ok) => setTimeout(ok, Math.random() * DELAY)); await r.continue(); });

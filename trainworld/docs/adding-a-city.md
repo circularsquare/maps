@@ -117,7 +117,7 @@ background and wait once for the process.
   when only parks happened), and a check that every file `vite.config.ts` copies into a
   production build exists for each shipped pack (it copies the registry's packs, so nothing more
   needs listing). Last, `zone_outlines.py` rewrites `data/packs/outlines.json`, the coarse outline of
-  every registered zone (T-800, 13 s; a failure only prints a warning and leaves the old file, so
+  every registered zone with the sea off its coast (T-800, T-1145, about 15 minutes; a failure only prints a warning and leaves the old file, so
   the new zones have no outline until their pack loads), then `realms.py` writes each zone's realm
   and `data/packs/realms.geojson` (T-975, about 1.5 minutes; a failure leaves both as they were, and
   a zone without a realm always shows), then `zone_aliases.py` rewrites

@@ -146,7 +146,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   layer for the zones near the view, exact ones fetched only above `ZONE_LOAD_ZOOM`, and the outside
   shade, T-131, T-139, T-400, T-871), `coarseOutlines.ts` (reads
   `packs/outlines.json`, which `pipeline/zone_outlines.py` writes: every registered zone's coarse
-  outline, read once for the outlines and the realms' shade, T-800; `inOutline` is the point-in-outline test over its bands of latitude, for realms and the track's zones), `zoneLoading.ts` (zones still loading drawn grey with a loading
+  outline, read once for the outlines and the realms' shade, T-800, with the sea off each coast from
+  `pipeline/zone_water.py` and that sea alone (`coarseWater`) for the focused zone's shade, T-1145; `inOutline` is the point-in-outline test over its bands of latitude, for realms and the track's zones), `zoneLoading.ts` (zones still loading drawn grey with a loading
   bar, T-343), `realmOverlay.ts` (the realms not shown: one world shade with the shown zones cut out
   by `boundaryGeometry.ts`'s `ShadeCut` as triangles in `workers/shade.worker.ts` (T-1026), drawn by
   the custom layer `shadeLayer.ts` (T-1025), and a button each, T-975, T-1006), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and
@@ -182,7 +183,8 @@ and IndexedDB, T-029; slots' backups, T-744; removed zone ids taken as their suc
 each a sub-network, T-326; `reachView`, a city's own network inside its cluster, T-756; `marketReaches`, which stations the market's riders use, T-396), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
 reach, T-149; the footprints fetched on demand by registry box, T-404; `distanceTo` through a grid of each outline's edges, T-889), `commuters.worker.ts` and `commutersProtocol.ts` (the commuter bubbles' sums,
 T-097), `selectionMerge.ts` (a bubble selection's everyday far end added up over the workers,
-T-285), `shade.worker.ts` (the realm shade's cut, T-1026).
+T-285), `shade.worker.ts` (the realm shade's cut, T-1026), `focusShade.worker.ts` (the focused
+zone's own outline joined with its sea, for the shade outside it, T-1145).
 
 ### URL switches
 

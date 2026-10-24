@@ -13,10 +13,11 @@ import { perfOff } from "../perfFlags";
 import { mapBlank } from "../game/loading";
 import { outsidePaint, SHADES, shadeColours } from "../game/shades";
 import { shade } from "../game/ui";
-import { cityGeometry, OutlineEdges, outsideCity } from "./boundaryGeometry";
-import { coarseOutlines } from "./coarseOutlines";
+import { cityGeometry, footprintRings, OutlineEdges, outsideCity, outsideOutline, unionOutline } from "./boundaryGeometry";
+import { coarseOutlines, coarseWater } from "./coarseOutlines";
 import { firstSymbolId } from "./basemap";
 import { shownRealms, zoneShown } from "../game/realms";
+import type { FocusShadeIn, FocusShadeOut } from "../workers/focusShade.worker";
 
 const SHADE = "tw-city-outside";
 const FOCUS = "tw-city-focus";
@@ -62,11 +63,48 @@ export function startCityBoundaries(map: MlMap): () => void {
   // other in a single setData, so the veil is never empty between them (T-310: the empty step drew
   // a frame without the veil each time a pan ended on another zone).
   const ready = new Map<string, { city: MultiPolygon; outside: MultiPolygon }>();
+  // T-1145: a coastal zone's sea is clear of the shade like its land, once the coarse file is in. That
+  // shade comes from a worker; the one with the sea shaded stands until it arrives.
+  let sea = new Map<string, MultiPolygon>();
+  let seaWorker: Worker | null | undefined;
+  const seaReady = (id: string, outline: Float64Array[]) => {
+    const r = ready.get(id);
+    if (!alive || !r) return;
+    r.outside = outsideOutline(r.city, outline);
+    if (activeCity.peek() === id) (map.getSource(SHADE) as GeoJSONSource | undefined)?.setData(r.outside);
+  };
+  const clearSea = (id: string, city: MultiPolygon) => {
+    const s = sea.get(id);
+    if (!s) return;
+    if (seaWorker === undefined) {
+      try {
+        seaWorker = new Worker(new URL("../workers/focusShade.worker.ts", import.meta.url), { type: "module" });
+        seaWorker.onmessage = (e: MessageEvent<FocusShadeOut>) => seaReady(e.data.id, e.data.outline);
+        seaWorker.onerror = (e) => { console.warn("Focus shade worker failed", e.message); seaWorker?.terminate(); seaWorker = null; };
+      } catch (error) {
+        console.warn("Focus shade worker unavailable", error);
+        seaWorker = null;
+      }
+    }
+    const rings = footprintRings(city, s);
+    if (seaWorker) seaWorker.postMessage({ id, rings } satisfies FocusShadeIn, rings.map((r) => r.buffer));
+    else seaReady(id, unionOutline(rings));
+  };
   const prepared = (id: string, city: MultiPolygon) => {
     let r = ready.get(id);
-    if (!r) ready.set(id, (r = { city, outside: outsideCity(city) }));
+    if (!r) {
+      ready.set(id, (r = { city, outside: outsideCity(city) }));
+      clearSea(id, city);
+    }
     return r;
   };
+  void coarseWater().then((w) => {
+    if (!alive || !w.size) return;
+    sea = w;
+    ready.clear();
+    const id = activeCity.peek();
+    void geometries.get(id)?.then((city) => { if (alive && activeCity.peek() === id) show(id, city); }, () => {});
+  });
   const show = (id: string, city: MultiPolygon) => {
     const r = prepared(id, city);
     (map.getSource(SHADE) as GeoJSONSource | undefined)?.setData(r.outside);
@@ -232,6 +270,7 @@ export function startCityBoundaries(map: MlMap): () => void {
   return () => {
     alive = false;
     request++;
+    seaWorker?.terminate();
     window.clearTimeout(pending);
     window.clearTimeout(pushing);
     dispose();

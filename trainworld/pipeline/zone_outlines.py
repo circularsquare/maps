@@ -1,18 +1,22 @@
 """T-800: the coarse outline of every registered zone, `data/packs/outlines.json`.
 
-    python pipeline/zone_outlines.py [--tol METRES] [--out FILE]
+    python pipeline/zone_outlines.py [--tol METRES] [--out FILE] [--no-water] [--box W,S,E,N]
 
 The map draws a zone's outline from its pack's `<id>.boundary.geojson` once the view comes near it
 (map/cityBoundaries.ts); this file is what it draws until then, so every zone has an outline from the
 start. It is cut from the same boundary files, for the registry's zones in registry order, and written
-whole each time (about 15 s for 600 zones), so a rerun after zones are added is all the update there
+whole each time (about 15 minutes for 1,750 zones, nearly all of it the sea; 40 s with --no-water), so a rerun after zones are added is all the update there
 is; world_run.py's join and docs/adding-a-city.md say when.
 
 Rings are simplified (Douglas-Peucker, TOL_M) without breaking the draw-once rule: a run of vertices
 that several zones hold (the same vertices on a 1e-5 degree grid, as the app compares them) is
 simplified once, in one direction, with its ends kept, so neighbours still share exactly the same
-points. Format: {"tol": metres, "q": grid units per degree, "zones": {id: [ring, ...]}}; a ring is
-[x0, y0, dx1, dy1, ...] in grid units, closed (the first point is not repeated at the end).
+points. T-1145: a coastal zone's outline then takes the sea off its coast (zone_water.py) and the
+shared runs are simplified again over the new rings; `--no-water` leaves the sea out, `--box` is a
+trial over the zones whose boxes meet it. Format: {"tol": metres, "q": grid units per degree, "zones":
+{id: [ring, ...]}, "water": {id: [ring, ...]}} (`water`: a coastal zone's sea alone, a little into its
+land, for the shade outside the focused zone); a ring is [x0, y0, dx1, dy1, ...] in grid units,
+closed (the first point is not repeated at the end).
 """
 import json
 import math
@@ -174,24 +178,39 @@ def encode(ring):
     return flat
 
 
-def build(tol=TOL_M, out=OUT, root=None):
+def build(tol=TOL_M, out=OUT, root=None, water=True, within=None):
     reg = json.loads(REG.read_text(encoding="utf-8"))
-    ids = [c["id"] for c in reg["cities"]]
+    cities = reg["cities"]
+    if within:  # a trial over the zones whose boxes meet (w, s, e, n)
+        cities = [c for c in cities if c["box"][0] < within[2] and c["box"][2] > within[0] and c["box"][1] < within[3] and c["box"][3] > within[1]]
+    ids = [c["id"] for c in cities]
     t0 = time.time()
     zones = load(ids)
     rings = outline_rings(zones, tol)
-    doc = {"tol": tol, "q": Q, "zones": {}}
+    sea = {}
+    if water:
+        # T-1145: each zone's sea, then the shared runs simplified again over the new rings
+        import zone_water
+        grown, sea = zone_water.add_water(rings, {c["id"]: c["center"][1] for c in cities})
+        if grown:
+            rings = outline_rings({cid: grown.get(cid, rs) for cid, rs in rings.items()}, tol)
+    doc = {"tol": tol, "q": Q, "zones": {}, "water": {}}
     for cid, rs in rings.items():
         enc = [e for e in map(encode, rs) if e]
         if enc:
             doc["zones"][cid] = enc
+    for cid, rs in sea.items():
+        enc = [e for e in map(encode, rs) if e]
+        if enc:
+            doc["water"][cid] = enc
     text = json.dumps(doc, separators=(",", ":"))
     tmp = Path(str(out) + ".tmp")
     tmp.write_text(text, encoding="utf-8")
     os.replace(tmp, out)
     pts = sum(len(e) // 2 for z in doc["zones"].values() for e in z)
-    print(f"{out.name}: {len(doc['zones'])} of {len(ids)} zones, {pts:,} points, {len(text) / 1e6:.2f} MB, "
-          f"{time.time() - t0:.0f} s", flush=True)
+    wpts = sum(len(e) // 2 for z in doc["water"].values() for e in z)
+    print(f"{out.name}: {len(doc['zones'])} of {len(ids)} zones, {pts:,} points, {len(doc['water'])} with sea "
+          f"({wpts:,} points), {len(text) / 1e6:.2f} MB, {time.time() - t0:.0f} s", flush=True)
     return doc
 
 
@@ -200,4 +219,5 @@ if __name__ == "__main__":
     a = sys.argv[1:]
     tol = float(a[a.index("--tol") + 1]) if "--tol" in a else TOL_M
     out = Path(a[a.index("--out") + 1]) if "--out" in a else OUT
-    build(tol, out)
+    within = [float(v) for v in a[a.index("--box") + 1].split(",")] if "--box" in a else None
+    build(tol, out, water="--no-water" not in a, within=within)
