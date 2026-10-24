@@ -324,6 +324,39 @@ fn a_line_with_too_few_trains_loses_riders_to_the_wait() {
     assert!(rail_on < rail_off, "and some drive: rail {rail_on:.0} against {rail_off:.0}");
 }
 
+/// T-1070: after the rounds, no segment carries more than its trains hold at crush in the busiest
+/// hour; the riders turned away leave the rail trips, the entries and the loads alike; a network
+/// with room everywhere is left exactly as it was.
+#[test]
+fn riders_are_held_to_the_trains_room() {
+    let run = |tph_b: f32, cars_b: f32| {
+        let (mut api, xy, n, stops, times, mut tph, mut cars) = small();
+        tph[3] = tph_b;
+        cars[1] = cars_b;
+        cars[0] = 40.0;
+        api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+        api.solve(0);
+        for _ in 0..3 {
+            assert!(api.crowd(0));
+        }
+        let before = (api.summary(0)[2], api.board(0).iter().map(|&v| v as f64).sum::<f64>(), api.entries(0).iter().map(|&v| v as f64).sum::<f64>());
+        let total = [api.seg(0), api.board(0), api.alight(0)].concat();
+        assert!(api.cap_with_external(0, &total));
+        let after = (api.summary(0)[2], api.board(0).iter().map(|&v| v as f64).sum::<f64>(), api.entries(0).iter().map(|&v| v as f64).sum::<f64>());
+        let worst = api.load_of_crush(0).iter().fold(0f32, |a, &b| a.max(b));
+        (before, after, worst)
+    };
+    let (b, a, worst) = run(12.0, 64.0);
+    assert!(worst <= 1.0, "{worst}");
+    assert_eq!(b, a);
+    let (b, a, worst) = run(6.0, 24.0);
+    println!("rail {:.0} -> {:.0}, boardings {:.0} -> {:.0}, entries {:.0} -> {:.0}; worst load {worst:.3} of crush", b.0, a.0, b.1, a.1, b.2, a.2);
+    assert!(worst <= 1.0 + 1e-4, "{worst}");
+    assert!(a.1 < b.1 && a.0 < b.0, "{b:?} {a:?}");
+    // rail trips and entries fall by the same share
+    assert!((a.0 / b.0 - a.2 / b.2).abs() < 1e-4, "{b:?} {a:?}");
+}
+
 /// T-188: `kernel::left_behind` on one line: riders within the trains' room wait nothing
 /// extra; past it, the wait grows with the overload, falls on the stops where riders board
 /// into full trains, and is capped.

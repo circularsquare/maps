@@ -878,7 +878,7 @@ function tripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
 
 /** The same for an `IntercityApi.market_trip` answer (T-866: head 20, pairs of 7, legs of 12). */
 function marketTripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
-  const HEAD = 20, PAIR_LEN = 7, LEG_LEN = 12;
+  const HEAD = 20, PAIR_LEN = 7, { LEG_LEN } = TRIP_LAYOUT;
   const g = (i: number) => { if (v[i] >= 0) v[i] = nodeGlobal[v[i]]; };
   const np = v[11], nr = v[12];
   for (let k = 0; k < np; k++) { g(HEAD + k * PAIR_LEN); g(HEAD + k * PAIR_LEN + 1); }
@@ -1104,26 +1104,33 @@ async function run() {
       const step = async (c: JobCluster, round: number, q: number): Promise<boolean> => {
         // the cluster's segment loads, boardings and alightings per route node: the crowding and
         // the waits for full trains (T-188) the round is solved with
-        let total: Float32Array<ArrayBuffer> | null = null;
         const N = jobNodes;
-        if (round > 0) {
-          total = new Float32Array(3 * N);
-          sumAll([c], a => a.seg(q), total, 0); sumAll([c], a => a.board(q), total, N); sumAll([c], a => a.alight(q), total, 2 * N);
-        }
+        const loads = () => {
+          const t = new Float32Array(3 * N);
+          sumAll([c], a => a.seg(q), t, 0); sumAll([c], a => a.board(q), t, N); sumAll([c], a => a.alight(q), t, 2 * N);
+          return t;
+        };
+        // the cluster's loads on a population's own route nodes; at a pad, the riders aboard as
+        // its boardings (`PopView.pads`)
+        const ownOf = (a: Population, total: Float32Array) => {
+          const { nodeGlobal: map, pads } = viewOf(c, a), nr = map.length, own = new Float32Array(3 * nr);
+          for (let k = 0; k < nr; k++) { const g = map[k]; own[k] = total[g]; own[nr + k] = total[N + g]; own[2 * nr + k] = total[2 * N + g]; }
+          for (const k of pads) { own[nr + k] = own[k]; own[2 * nr + k] = 0; }
+          return own;
+        };
+        const total = round > 0 ? loads() : null;
         for (const a of c.solveOrder) {
           if (total === null) a.solve(q);
-          else {
-            // the cluster's loads on this population's own route nodes; at a pad, the riders aboard
-            // as its boardings (`PopView.pads`)
-            const { nodeGlobal: map, pads } = viewOf(c, a), nr = map.length, own = new Float32Array(3 * nr);
-            for (let k = 0; k < nr; k++) { const g = map[k]; own[k] = total[g]; own[nr + k] = total[N + g]; own[2 * nr + k] = total[2 * N + g]; }
-            for (const k of pads) { own[nr + k] = own[k]; own[2 * nr + k] = 0; }
-            if (!a.crowd_with_external(q, own)) throw new Error("shared crowding layout disagrees");
-          }
+          else if (!a.crowd_with_external(q, ownOf(a, total))) throw new Error("shared crowding layout disagrees");
           // a population's pass is up to a second of one call: let a waiting query or a newer
           // network in between
           await yieldNow();
           if (pending) return false;
+        }
+        if (round === job.rounds && round > 0) {
+          // T-1070: the final loads, every population's, held to the trains' room
+          const final = loads();
+          for (const a of c.solveOrder) if (!a.cap_with_external(q, ownOf(a, final))) throw new Error("shared capacity layout disagrees");
         }
         return true;
       };

@@ -252,8 +252,8 @@ levels:
    and averaging is what stops it ringing. It is 1 + 2x(1+x)/2, x from the larger of the seats and
    **70% of crush** to crush (Anita, T-710: riders mind crowding only near full; 3 at crush,
    5.4 at 120%; `crowd_start`). **At most three rounds**
-   (T-022; one round leaves the segment that takes the overflow at its worst, notes/T-022.md). No
-   crush cap: an overloaded line is the player's signal. **Each period stops early once settled**
+   (T-022; one round leaves the segment that takes the overflow at its worst, notes/T-022.md).
+   After them the riders are held to the trains' room (below). **Each period stops early once settled**
    (T-434, `kernel::settled`): a round is skipped when the round before moved the period's summed
    segment loads (every population's, rider weighted: the sum of the changes over the sum of the
    loads) by under 1%. The first crowding round always runs (notes/T-434.md). A round in which no segment is over its seats has the
@@ -279,3 +279,23 @@ levels:
    carried in from the period before) and nobody goes another way (the account's T-1067). Per period, not per hour; weekdays only, the weekend keeping
    the weekday's waits with its route and mode choices (4.2). Why, and the effect on the real New
    York save: DECISIONS 2026-10-13 (T-188), notes/T-188.md.
+
+   **The trains' room** (Anita, T-1070, `kernel::capacity_fit`, `cap_with_external`). The
+   averaging keeps a share of the free-flow pass (a quarter after three rounds), so the rounds
+   alone leave an overloaded line far over what its trains carry, whatever the wait or the
+   crowding curve (notes/T-1070.md). So once a period's last round is in, its final loads (every
+   population's, as the rounds read them) are held to the room: no segment carries more in the
+   period than its trains hold at crush in the busiest hour (trains an hour x crush x hours /
+   the busiest-hour factor, the room `load_of_crush` measures 100% against). Each direction of
+   each line is walked from its first stop as its trains run: the riders staying on keep their
+   places, a stop's boardings get on up to the room left, and the rest go by car or on foot,
+   each as the trip's other riders do (the walk takes its share back, `walk_lost`). Each
+   population scales its own figures (`cap_loads`): the segment loads, boardings, alightings and
+   transfers by route node; a station's entries by those turned away at their first train there;
+   riders turned away at a change off every entry alike; the rail trips by place by the entries
+   kept at the end they set out from (commutes: to work from the home end, home from the work
+   end, by the period's shares; everyday trips per pair; the market's figures by its share kept
+   overall). Their rides on the trains before a refused change stay counted. The weekend reads
+   the capped weekday. A line within its room is left exactly as the rounds left it. Fares and
+   the money read these loads, so income is the riders who fit. The trip explorer's shares do not
+   apply it.

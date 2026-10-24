@@ -553,6 +553,14 @@ notes/T-420.md has the tables.
   shape within a period is US commute timing. Check: published crush capacities per car for the
   country's stock, and left-behind or platform-queue surveys where they exist (London's and Hong
   Kong's operators publish some).
+- **The trains' room** (Anita, T-1070, docs/demand-kernel.md step 7). After the rounds no
+  segment carries more riders than its trains hold at crush in the busiest hour; the riders over
+  it go by car or on foot. Room is the same 160 a car and the US busiest-hour factors. Why it may
+  not carry over: where a line runs past crush for real (Tokyo's and Mumbai's peaks, with pushers)
+  the cap holds rail lower than it is, and where riders spread their trips over the peak's
+  shoulders to find room, holding the busiest hour to crush takes off riders who would in fact
+  travel a little earlier or later. Check: peak-hour line loads against the operator's stated
+  capacity, and whether the busiest lines' daily riders come out near their published counts.
 
 ## Other purposes
 

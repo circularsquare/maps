@@ -1049,6 +1049,71 @@ impl DemandApi {
         true
     }
 
+    /// After the last crowding round (T-1070): period `q`'s riders held to their trains' room
+    /// (`kernel::capacity_fit`) from `total`, every population's final loads as
+    /// `crowd_with_external` takes them; those turned away go by car or on foot as the pair's
+    /// other riders do. False if `q` has no solve or `total` another layout.
+    pub fn cap_with_external(&mut self, q: usize, total: &[f32]) -> bool {
+        let Some(Some(st)) = self.per.get_mut(q) else { return false };
+        let Some(fit) = capacity_fit(&st.g, &st.net, &st.p, total) else { return false };
+        let Some(sz) = self.sz.as_ref() else { return true };
+        if !fit.any {
+            return true;
+        }
+        let (keep, all) = cap_loads(&st.g, &fit, &st.xi, &mut st.avg, &mut st.xfer);
+        // a period's commutes run both ways: to work entering at the home end, home at the work end
+        let (w, h) = (TO_WORK[q], TO_HOME[q]);
+        let (fw, fh) = (w / (w + h), h / (w + h));
+        let all = all as f32;
+        let sub = &mut st.sub;
+        let (mut lost0, mut lost1) = (0f64, 0f64);
+        for u in 0..sz.n {
+            let ks = sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize;
+            let (mut h0, mut h1, mut w0, mut w1) = (0f32, 0f32, 0f32, 0f32);
+            for k in ks {
+                let k_st = keep[sz.acc_st[k] as usize];
+                if let Some(v) = sub.acc_home.get_mut(k) {
+                    h0 += *v;
+                    *v *= fw * k_st + fh * all;
+                    h1 += *v;
+                }
+                if let Some(v) = sub.acc_work.get_mut(k) {
+                    w0 += *v;
+                    *v *= fw * all + fh * k_st;
+                    w1 += *v;
+                }
+            }
+            let (fh_u, fw_u) = (if h0 > 0.0 { h1 / h0 } else { all }, if w0 > 0.0 { w1 / w0 } else { all });
+            if let Some(v) = sub.rail_home.get_mut(u) {
+                *v *= fh_u;
+            }
+            if let Some(v) = sub.walk_lost_home.get_mut(u) {
+                lost0 += *v as f64;
+                *v *= fh_u;
+                lost1 += *v as f64;
+            }
+            if let Some(v) = sub.rail_work.get_mut(u) {
+                *v *= fw_u;
+            }
+            if let Some(v) = sub.walk_lost_work.get_mut(u) {
+                *v *= fw_u;
+            }
+        }
+        let m = self.od_st.len();
+        if sub.od.len() == m * m {
+            for i in 0..m {
+                let ki = keep[self.od_st[i] as usize];
+                for j in 0..m {
+                    sub.od[i * m + j] *= fw * ki + fh * keep[self.od_st[j] as usize];
+                }
+            }
+        }
+        st.rail *= all as f64;
+        let rail_walk = self.walk_all * st.p.period_share as f64 - st.walk;
+        st.walk += rail_walk * (1.0 - if lost0 > 0.0 { lost1 / lost0 } else { all as f64 });
+        true
+    }
+
     /// Period `q`: round (0 = free flow), trips, rail trips, walked trips, ms of the last stage,
     /// subzone pairs, segments over seats at the busiest hour, worst load as a share of crush,
     /// rider-weighted p50 and p90 crowding penalty. Empty if `q` has no solve.

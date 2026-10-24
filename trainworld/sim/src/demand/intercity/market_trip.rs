@@ -260,7 +260,7 @@ impl IntercityApi {
         for (pi, share, legs) in &all_routes {
             out.extend([*pi as f64, *share as f64, legs.len() as f64]);
             for l in legs {
-                out.extend([l.kind as f64, l.rn_from as f64, if l.rn_to == u32::MAX { -1.0 } else { l.rn_to as f64 }, l.st_from as f64, l.st_to as f64, l.min as f64, l.perc as f64, l.fare as f64, l.wait_min as f64, l.wait_perc as f64, l.stops as f64, l.change as f64]);
+                out.extend(l.numbers());
             }
         }
         out

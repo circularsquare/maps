@@ -1576,6 +1576,82 @@ impl EverydayApi {
         self.per[q] = Some(st);
         true
     }
+    /// `DemandApi::cap_with_external` (T-1070): each pair's rail share falls by the share of the
+    /// entries at the end it sets out from that still fit, those stations weighed as its access
+    /// costs weigh them.
+    pub fn cap_with_external(&mut self, q: usize, total: &[f32]) -> bool {
+        let Some(Some(st)) = self.per.get(q) else { return false };
+        let Some(fit) = capacity_fit(&st.g, &st.net, &st.p, total) else { return false };
+        if !fit.any || self.engine.sz.is_none() {
+            return true;
+        }
+        let mut st = self.per[q].take().unwrap();
+        let sz = self.engine.sz.as_ref().unwrap();
+        let (keep, all) = cap_loads(&st.g, &fit, &st.xi, &mut st.loads, &mut st.xfer);
+        for part in st.parts.iter_mut() {
+            cap_part(&fit, &mut part.seg, &mut part.rn_board, &mut part.rn_alight);
+        }
+        let p = &st.p;
+        let ride_m = p.ride_min_km * 1000.0;
+        let kept_at = |r: std::ops::Range<usize>, th: f32| {
+            let lo = sz.acc_w[r.clone()].iter().copied().fold(f32::INFINITY, f32::min);
+            let (mut w, mut k) = (0f32, 0f32);
+            for i in r {
+                let e = fast_exp(-th * (sz.acc_w[i] - lo));
+                w += e;
+                k += e * keep[sz.acc_st[i] as usize];
+            }
+            if w > 0.0 { k / w } else { 1.0 }
+        };
+        // per band, subzone and its walks alone or with its rides, worked out once
+        let mut memo = vec![f32::NAN; 2 * p.n_bands() * sz.n];
+        let mut kept = |u: usize, rides: bool, b: usize| {
+            let i = (2 * b + rides as usize) * sz.n + u;
+            if memo[i].is_nan() {
+                let r = if rides { sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize } else { sz.walk(u) };
+                memo[i] = kept_at(r, p.band(b).0);
+            }
+            memo[i]
+        };
+        let kinds = self.totals.len();
+        let (mut lost0, mut lost1) = (vec![0f64; kinds], vec![0f64; kinds]);
+        for (i, pair) in self.pairs.iter().enumerate() {
+            let pr = &mut st.probability[i];
+            if pr[0] == 0.0 && pr[1] == 0.0 {
+                continue;
+            }
+            let b = p.band_of_d2(pair.distance * pair.distance);
+            let h = pair.u() as usize;
+            let k = pair.kind() as usize;
+            let before = OUTWARD[k][q] * pr[0] + RETURN[k][q] * pr[1];
+            pr[0] *= kept(h, pair.distance >= ride_m && !sz.ride(h).is_empty(), b);
+            pr[1] *= kept(pair.v as usize, false, b);
+            let after = OUTWARD[k][q] * pr[0] + RETURN[k][q] * pr[1];
+            lost0[k] += (pair.trips * before * pair.walk) as f64;
+            lost1[k] += (pair.trips * after * pair.walk) as f64;
+        }
+        for k in 0..kinds {
+            if lost0[k] > 0.0 {
+                st.walk_lost[k] *= lost1[k] / lost0[k];
+            }
+        }
+        // the pairs' shares by where they set out, their sum the entries kept
+        let (_, rail, _) = self.mode_totals(q, &st.probability, &st.walk_lost);
+        if rail > 0.0 {
+            let f = (st.rail * all / rail) as f32;
+            for pr in st.probability.iter_mut() {
+                pr[0] = (pr[0] * f).min(1.0);
+                pr[1] = (pr[1] * f).min(1.0);
+            }
+            st.walk_lost.iter_mut().for_each(|v| *v *= f as f64);
+        }
+        let (trips, rail, walk) = self.mode_totals(q, &st.probability, &st.walk_lost);
+        st.trips = trips;
+        st.rail = rail;
+        st.walk = walk;
+        self.per[q] = Some(st);
+        true
+    }
     /// As `DemandApi::summary`, without the crowding figures (0).
     pub fn summary(&self, q: usize) -> Vec<f64> {
         self.per

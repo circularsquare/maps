@@ -6,13 +6,14 @@
 //!   cargo run --release --features demand --bin calib -- --net data/work/realnet/nyc_real.json
 //!       --out run.json [--pack data/packs/nyc.json] [--rounds 3] [--areas cell_area.u8]
 //!       [--params p.json] [--set name=value,..] [--fares 1.5,0.1 | --no-fares] [--no-everyday]
-//!       [--info-only] [--cells] [--exact]
+//!       [--info-only] [--cells] [--exact] [--no-cap]
 //!
 //! The pack defaults to the network's `pack` under `TW_ROOT` (default the crate's parent; a
 //! binary built from a copy of sim/ points it at the main tree). Parameters: `--params` a JSON object of
 //! `Params::set_extra` names, then `--set` on top; both layers get them. Fares default to the
 //! game's starting fares ($1.50 plus $0.10 a km); `--no-fares` keeps the flat `fare_min`.
 //! `--areas`: one value per pack cell, the home area (u8, 255 none; or a .u16 file, 65535 none).
+//! `--no-cap`: the loads as the rounds leave them, not held to the trains' room (T-1070).
 //!
 //! Output: per demand station the day's entries (first boardings from the street) by layer and
 //! in 6-10; per line the day's boardings and changes between two trains of the same line; per
@@ -142,7 +143,8 @@ fn main() {
         if let Some(e) = ev.as_mut() {
             e.solve(q);
         }
-        for _ in 0..rounds {
+        // every layer's loads together; after the last round, held to the trains' room (T-1070)
+        for round in 0..=rounds {
             let nr = api.seg(q).len();
             let mut total = vec![0f32; 3 * nr];
             let mut put = |v: Vec<f32>, at: usize| {
@@ -157,6 +159,15 @@ fn main() {
                 put(e.seg(q), 0);
                 put(e.board(q), 1);
                 put(e.alight(q), 2);
+            }
+            if round == rounds {
+                if rounds > 0 && !has("--no-cap") {
+                    assert!(api.cap_with_external(q, &total));
+                    if let Some(e) = ev.as_mut() {
+                        assert!(e.cap_with_external(q, &total));
+                    }
+                }
+                break;
             }
             assert!(api.crowd_with_external(q, &total));
             if let Some(e) = ev.as_mut() {

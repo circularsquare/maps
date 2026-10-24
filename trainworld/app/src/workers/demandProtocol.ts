@@ -3,7 +3,7 @@ import type { CorridorTable } from "../game/demand";
 import type { FrameSpec } from "../game/frame";
 
 /** `DemandApi.trip`'s answer layout (sim/src/demand/trip.rs `HEAD`, `PAIR_LEN`, `LEG_LEN`). */
-export const TRIP_LAYOUT = { HEAD: 44, PAIR_LEN: 20, LEG_LEN: 12 } as const;
+export const TRIP_LAYOUT = { HEAD: 44, PAIR_LEN: 20, LEG_LEN: 13 } as const;
 // Messages between the main thread and the demand workers (T-026, T-021; notes/T-026.md).
 //
 // Each worker owns a copy of the city (parsed from the pack it is sent once) and a fixed set of

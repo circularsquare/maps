@@ -2642,6 +2642,28 @@ impl IntercityApi {
         self.per[q] = Some(st);
         true
     }
+    /// `DemandApi::cap_with_external` (T-1070). The longer trips' figures by pair, corridor and
+    /// station fall by the share of all the market's rail trips that still fit.
+    pub fn cap_with_external(&mut self, q: usize, total: &[f32]) -> bool {
+        let Some(st) = self.per.get_mut(q).and_then(|p| p.as_mut()) else { return false };
+        let Some(fit) = capacity_fit(&st.g, &st.net, &st.p, total) else { return false };
+        if !fit.any {
+            return true;
+        }
+        let (_, all) = cap_loads(&st.g, &fit, &st.xi, &mut st.avg, &mut st.xfer);
+        let c = &mut st.c_avg;
+        cap_part(&fit, &mut c.seg, &mut c.rn_board, &mut c.rn_alight);
+        st.rail *= all;
+        st.c_rail *= all;
+        let f = all as f32;
+        for v in st.pair_rail.iter_mut().chain(st.c_frac.iter_mut()).chain(st.st.iter_mut()) {
+            *v *= f;
+        }
+        for v in st.corridors.iter_mut().chain(st.c_corridors.iter_mut()) {
+            *v *= all;
+        }
+        true
+    }
     pub fn summary(&self, q: usize) -> Vec<f64> {
         self.per(q).map_or(vec![], |s| {
             let (_, c) = crowd_factors(&s.g, &s.net, &s.avg, &s.p);

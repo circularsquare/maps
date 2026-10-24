@@ -47,6 +47,8 @@ export interface TripLeg {
   waitPerceived: number;
   /** a ride's fixed cost of the change onto it, perceived minutes (0 on the first ride; T-717) */
   changePerceived: number;
+  /** the part of `waitMin` (and of `waitPerceived`) spent waiting for a train with room (T-188) */
+  fullWaitMin: number;
 }
 
 /** A sequence of boardings the train riders take, and its share of them. */
@@ -232,10 +234,10 @@ function readRoutes(v: Float64Array, o: number, nr: number, at: RouteNodes): Tri
           if (rn === l[2]) break;
         }
         const wrapN = l[1] > l[2] ? at[l[1]]?.n ?? 0 : 0;
-        legs.push({ kind: "ride", line: at[l[1]]?.line ?? "", from: st(l[1]), to: st(l[2]), stations, k0: at[l[1]]?.k ?? -1, k1: at[l[2]]?.k ?? -1, ...(wrapN ? { wrapN } : {}), stops: l[10], min: l[5], perceived: l[6], farePerceived: l[7], waitMin: l[8], waitPerceived: l[9], changePerceived: l[11] });
+        legs.push({ kind: "ride", line: at[l[1]]?.line ?? "", from: st(l[1]), to: st(l[2]), stations, k0: at[l[1]]?.k ?? -1, k1: at[l[2]]?.k ?? -1, ...(wrapN ? { wrapN } : {}), stops: l[10], min: l[5], perceived: l[6], farePerceived: l[7], waitMin: l[8], waitPerceived: l[9], changePerceived: l[11], fullWaitMin: l[12] });
       } else {
         const from = st(l[1]), to = st(l[2]);
-        legs.push({ kind: "walk", line: "", from, to, stations: [from, to], k0: -1, k1: -1, stops: 0, min: l[5], perceived: l[6], farePerceived: 0, waitMin: 0, waitPerceived: 0, changePerceived: 0 });
+        legs.push({ kind: "walk", line: "", from, to, stations: [from, to], k0: -1, k1: -1, stops: 0, min: l[5], perceived: l[6], farePerceived: 0, waitMin: 0, waitPerceived: 0, changePerceived: 0, fullWaitMin: 0 });
       }
     }
     routes.push({ share, pair, legs });
@@ -385,6 +387,15 @@ export function routeTotals(t: TripPeriod, r: TripRoute) {
   return { driveMin, walkMin, walkM, wait, ride, xfer, changes: Math.max(0, rides - 1), fareUsd: fare / t.minPerUsd, total: driveMin + walkMin + wait + ride + xfer };
 }
 
+/** What crowded trains add to a route: the rides' perceived minutes beyond their real ones (the
+ * crowding factor past 70% of crush), and the minutes waited for a train with room after full ones
+ * (T-188), both as the sim charges them. */
+export function routeCrowding(r: TripRoute) {
+  let crowding = 0, fullWait = 0;
+  for (const l of r.legs) if (l.kind === "ride") { crowding += Math.max(0, l.perceived - l.min); fullWait += Math.max(0, l.fullWaitMin); }
+  return { crowding, fullWait };
+}
+
 /** One term of a route's perceived total: what it is, its real amount (minutes, dollars for the
  * fare, or a count of changes) with the weight it counts at, and its perceived minutes. */
 export interface CostTerm {
@@ -416,13 +427,17 @@ export function routeTerms(t: TripPeriod, r: TripRoute): CostTerm[] {
     const walkPerc = pair.egressPerceived + (pair.accessRide ? 0 : pair.accessPerceived);
     if (tot.walkMin > 0) out.push({ label: "walk", real: tot.walkMin, weight: walkPerc / tot.walkMin, perceived: walkPerc, unit: "min" });
   }
-  let waitP = 0, rideP = 0, xferP = 0, changeP = 0;
+  let waitP = 0, xferP = 0, changeP = 0;
   for (const l of r.legs) {
-    if (l.kind === "ride") { waitP += l.waitPerceived; rideP += l.perceived; changeP += l.changePerceived; }
+    if (l.kind === "ride") { waitP += l.waitPerceived; changeP += l.changePerceived; }
     else xferP += l.perceived;
   }
-  out.push({ label: "wait", real: tot.wait, weight: tot.wait > 0 ? waitP / tot.wait : 1, perceived: waitP, unit: "min" });
-  out.push({ label: "ride", real: tot.ride, weight: tot.ride > 0 ? rideP / tot.ride : 1, perceived: rideP, unit: "min" });
+  const { crowding, fullWait } = routeCrowding(r);
+  const wait = tot.wait - fullWait;
+  out.push({ label: "wait", real: wait, weight: wait > 0 ? (waitP - fullWait) / wait : 1, perceived: waitP - fullWait, unit: "min" });
+  if (fullWait >= 0.05) out.push({ label: "waiting for a train with room", real: fullWait, weight: 1, perceived: fullWait, unit: "min" });
+  out.push({ label: "ride", real: tot.ride, weight: 1, perceived: tot.ride, unit: "min" });
+  if (crowding >= 0.05) out.push({ label: "crowding", real: 0, weight: 1, perceived: crowding, unit: "min" });
   if (tot.xfer > 0) out.push({ label: "walk between stations", real: tot.xfer, weight: xferP / tot.xfer, perceived: xferP, unit: "min" });
   if (changeP > 0) out.push(tot.changes > 1
     ? { label: "changes", real: tot.changes, weight: changeP / tot.changes, perceived: changeP, unit: "count" }

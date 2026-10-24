@@ -760,14 +760,15 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   staying aboard join the first stop's queue when their train arrives there, ahead of later
   arrivals, so they leave on that run's next departure, normally the same train after its hold (a
   second pass of the account). In the books they leave and board again there.
-- **Riders go another way** (T-1067, `GIVE_UP_S`, `WAITING_CAP`): demand's crowding rounds price
-  riders left behind but do not hold a line to what it can carry, so an overloaded line would
-  otherwise gather a queue that only grows. A rider whom full trains have kept more than 90 minutes
+- **Riders go another way** (T-1067, `GIVE_UP_S`, `WAITING_CAP`): demand holds each line to its
+  trains' room at crush in the busiest hour (T-1070, docs/demand-kernel.md step 7), but riders
+  arrive faster mid-hour and at some stops than that average room, so a queue can still build.
+  A rider whom full trains have kept more than 90 minutes
   past the first train they came for leaves the platform (as a train leaves, the oldest first), and
   one platform side (a direction of a line at a stop) holds at most 5,000 waiting: whoever comes
   when it is full is turned away. Neither boards, so neither counts in the line's boardings
-  (`RunAccount::gone`); demand's riders and fares are unchanged. A drawn crowd between two trains
-  stops at 5,000 too.
+  (`RunAccount::gone`). Fares are demand's riders, already held to the room, so the few who go
+  another way here still pay (T-1069). A drawn crowd between two trains stops at 5,000 too.
 - **Local time** (T-309): a line's account runs on its own local time (`LineAccount::shift`): its
   hours, busiest hours, kind of day and "today" from its local midnight. The money settles each
   local time's lines by their own period and day (`localGroups` in the clock worker).
@@ -838,6 +839,7 @@ per person and does not change who travels: demand still decides that (SPEC 4).
 Riders left behind feed back into demand (T-188): each crowding round runs this rule on the
 period's own trains and adds the average extra wait at each line, direction and stop to that
 boarding's cost (docs/demand-kernel.md step 7), so a line that leaves people behind loses riders to
-other routes or the car. The account itself is not read back: the clock worker's day and demand's
+other routes or the car, and after the rounds no line keeps more riders than its trains hold at
+crush in the busiest hour (T-1070). The account itself is not read back: the clock worker's day and demand's
 periods give the same rule, but demand's is worked out inside the solve, so it settles with the
 crowding rounds. There are no signals (SPEC 2.1).

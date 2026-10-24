@@ -459,11 +459,14 @@ destinations at the end, and how the demand model's people would make one of the
   "Drive to" with its drive minutes; the hovers give real minutes only), the fare, and on a route
   that starts with a drive to the station a **Car** row [T-915] (dollars: the car's cost per trip
   and per km on the road to the station plus any paid parking there, its hover the two apart),
-  **Time** (real minutes; its
+  where full trains add anything a **Crowding** row (the rides' perceived minutes beyond their
+  real ones) and a **Waiting for a train with room** row (minutes waited after full trains, T-188;
+  T-1070), each with a hover saying how the sim counts it, **Time** (real minutes; its
   hover the sum, "Walk 6.3 + wait 2.1 + ride 10.1 = 19 min") and **Effective time** [T-699, T-549]
   (the minutes the model weighs against the other methods; its hover is only the equation, the
   first route's terms in the rows' order, each real amount times its weight, "Walk 6.3 × 1.47 +
-  wait 2.1 + ride 10.1 × 1.1 + change 2 + fare $1.92 × 3 − choice of routes 11.8 = 16 min", two
+  wait 2.1 + ride 10.1 + crowding 1.0 + change 2 + fare $1.92 × 3 − choice of routes 11.8 = 16
+  min", the wait for a train with room its own term after the wait, two
   changes or more as "changes 2 × 2" [T-717]; a drive to the station is its parts [T-915],
   "Starting the drive 15 + drive 9.2 × 2.66 + parking at the station 7 + parking at home 3 + car
   $2.85 × 3", or "drop-off 10" where that is cheaper than parking; the

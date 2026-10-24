@@ -10,7 +10,7 @@ import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
 import { WALK_KMH } from "../../game/walks";
-import { openRoute, peopleOf, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
+import { openRoute, peopleOf, routeCrowding, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
 import { purposeFilter, selection, shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
 import { shownPeriod } from "../../map/tripView";
@@ -162,8 +162,8 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
       )}
       {legRows(r, name, ln, (l) => {
         // T-842: riders arriving when no train is due for hours weigh on the wait as felt
-        const span = l.waitPerceived - l.waitMin;
-        return `Wait ${l.waitMin.toFixed(1)} min (half the time between the useful trains), then ${l.min.toFixed(1)} min on the train over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}` +
+        const span = l.waitPerceived - l.waitMin, full = l.fullWaitMin;
+        return `Wait ${(l.waitMin - full).toFixed(1)} min (half the time between the useful trains)${full >= 0.05 ? ` and ${full.toFixed(1)} min more for a train with room` : ""}, then ${l.min.toFixed(1)} min on the train over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}` +
           (span >= 0.05 ? `. Some riders arrive when no train is due for hours, so the wait counts as ${span.toFixed(1)} min more` : "");
       })}
       {pair && last && (
@@ -200,6 +200,27 @@ function FareRows({ t, r }: { t: TripPeriod; r: TripRoute }) {
   );
 }
 
+/** T-1070: what full trains add to a route's effective time, each row only where it adds anything. */
+function CrowdRows({ r }: { r: TripRoute }) {
+  const { crowding, fullWait } = routeCrowding(r);
+  return (
+    <>
+      {crowding >= 0.05 && (
+        <li data-tip={`Once a train is past 70% of its crush load, riders count each minute on board as more than one, 3 at crush and 5.4 at 120%. On this route that adds ${num1(crowding)} min`}>
+          <span class="grow">Crowding</span>
+          <span class="val">{minText(crowding)}</span>
+        </li>
+      )}
+      {fullWait >= 0.05 && (
+        <li data-tip={`Riders left on the platform by full trains wait ${num1(fullWait)} min more on average for a train with room. Each minute counts as one, up to an hour at a stop`}>
+          <span class="grow">Waiting for a train with room</span>
+          <span class="val">{minText(fullWait)}</span>
+        </li>
+      )}
+    </>
+  );
+}
+
 /** A route's own perceived minutes, the sum of its terms (no choice of routes). */
 const ownSum = (t: TripPeriod, r: TripRoute) => routeTerms(t, r).reduce((s, x) => s + x.perceived, 0);
 
@@ -230,6 +251,7 @@ function RouteDetail({ t, r }: { t: TripPeriod; r: TripRoute }) {
       <RouteLegs t={t} r={r} />
       <ul class="rows">
         <FareRows t={t} r={r} />
+        <CrowdRows r={r} />
         <li data-tip={timeEquation(tot)}>
           <span class="grow">Time</span>
           <span class="val">{minText(tot.total)}</span>
@@ -462,6 +484,7 @@ export function TripInspector() {
           <RouteLegs t={t} r={main} />
           <ul class="rows">
             <FareRows t={t} r={main} />
+            <CrowdRows r={main} />
             <li data-tip={timeEquation(tot)}>
               <span class="grow">Time</span>
               <span class="val">{minText(tot.total)}</span>

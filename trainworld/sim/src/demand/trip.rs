@@ -37,7 +37,7 @@ const MAX_ROUTES: usize = 8;
 /// Numbers in the answer's head, per station pair, and per leg (`DemandApi::trip`).
 pub const HEAD: usize = 44;
 pub const PAIR_LEN: usize = 20;
-pub const LEG_LEN: usize = 12;
+pub const LEG_LEN: usize = 13;
 
 /// Why rail is not offered for a trip (`HEAD` slot 26).
 pub const RAIL_OFFERED: u32 = 0;
@@ -315,10 +315,20 @@ pub(crate) struct Leg {
     /// riders have no train due, T-842)
     pub wait_min: f32,
     pub wait_perc: f32,
+    /// the part of both waits that is for a train with room (T-188's `Graph::rn_left`)
+    pub full_wait: f32,
     /// stops ridden
     pub stops: u32,
     /// a ride's fixed cost of changing onto it (`Params::transfer_min`; 0 on the first ride)
     pub change: f32,
+}
+
+impl Leg {
+    /// The leg in a trip answer (`LEG_LEN` numbers, `DemandApi::trip`).
+    pub(crate) fn numbers(&self) -> [f64; LEG_LEN] {
+        let to = if self.rn_to == NONE { -1.0 } else { self.rn_to as f64 };
+        [self.kind as f64, self.rn_from as f64, to, self.st_from as f64, self.st_to as f64, self.min as f64, self.perc as f64, self.fare as f64, self.wait_min as f64, self.wait_perc as f64, self.stops as f64, self.change as f64, self.full_wait as f64]
+    }
 }
 
 /// Every route of the strategy from station `a` to station `t` carrying at least `min_share` of
@@ -426,7 +436,7 @@ fn walk(at: &At, v: usize, came: Option<usize>, share: f32, legs: &mut Vec<Leg>,
                 }
                 _ => {
                     let c = came.unwrap();
-                    legs.push(Leg { kind: 2, rn_from: (c - s) as u32, rn_to: (r0 - s) as u32, st_from: v as u32, st_to: v as u32, min: plat / p.w_xfer, perc: plat, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, stops: 0, change: 0.0 });
+                    legs.push(Leg { kind: 2, rn_from: (c - s) as u32, rn_to: (r0 - s) as u32, st_from: v as u32, st_to: v as u32, min: plat / p.w_xfer, perc: plat, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, full_wait: 0.0, stops: 0, change: 0.0 });
                     pushed += 1;
                 }
             }
@@ -436,13 +446,13 @@ fn walk(at: &At, v: usize, came: Option<usize>, share: f32, legs: &mut Vec<Leg>,
         // due within their tolerance (T-842) weigh on the perceived wait only
         let (left, span) = (g.rn_left[r0 - s], g.rn_span[r0 - s]);
         let change = if came.is_some() { p.transfer_min } else { 0.0 };
-        legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, km, wait_min: wait_min + left - span, wait_perc: wait_min + left, stops, change });
+        legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, km, wait_min: wait_min + left - span, wait_perc: wait_min + left, full_wait: left - span, stops, change });
         pushed += 1;
         let to = if (nx as usize) < s { nx } else { cn.st[nx as usize - g.n] };
         if to != here {
             // a walking transfer from this route node to a station nearby
             let cost = (g.adj_off[r] as usize..g.adj_off[r + 1] as usize).find(|&k| g.adj_to[k] == to).map_or(0.0, |k| g.adj_cost[k]);
-            legs.push(Leg { kind: 2, rn_from: (r - s) as u32, rn_to: rep[to as usize], st_from: here, st_to: to, min: cost / p.w_xfer, perc: cost, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, stops: 0, change: 0.0 });
+            legs.push(Leg { kind: 2, rn_from: (r - s) as u32, rn_to: rep[to as usize], st_from: here, st_to: to, min: cost / p.w_xfer, perc: cost, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, full_wait: 0.0, stops: 0, change: 0.0 });
             pushed += 1;
         }
         walk(at, nx as usize, Some(r), sh, legs, out);
@@ -699,7 +709,7 @@ impl DemandApi {
         for (pi, share, legs) in &all {
             out.extend([*pi as f64, *share as f64, legs.len() as f64]);
             for l in legs {
-                out.extend([l.kind as f64, l.rn_from as f64, if l.rn_to == NONE { -1.0 } else { l.rn_to as f64 }, l.st_from as f64, l.st_to as f64, l.min as f64, l.perc as f64, l.fare as f64, l.wait_min as f64, l.wait_perc as f64, l.stops as f64, l.change as f64]);
+                out.extend(l.numbers());
             }
         }
         out
@@ -746,7 +756,7 @@ impl DemandApi {
     /// between the platforms of one, T-717), route nodes from and to, demand stations from and
     /// to, real minutes, perceived minutes, distance fare (perceived minutes), wait (real and
     /// perceived minutes), stops ridden, a ride's fixed cost of the change onto it (perceived
-    /// minutes, 0 on the first ride).
+    /// minutes, 0 on the first ride), and the part of its wait that is for a train with room.
     pub fn trip(&self, q: usize, ox: f32, oy: f32, dx: f32, dy: f32) -> Vec<f64> {
         let mut h = vec![0f64; HEAD];
         let Some(st) = self.period(q) else { return h };

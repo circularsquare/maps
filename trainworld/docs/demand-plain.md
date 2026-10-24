@@ -5,8 +5,8 @@ Last updated 2026-10-24 (the T-636 model, with T-710's route choice and crowding
 changing, T-718's route choice between cities, T-720's walking bands, T-938's car speeds and
 ownership cost, T-1000's cap on how far jobs pull and its set share of long commutes, T-1055's
 rule that every rail trip rides a train, T-1059's that it never walks further than walking
-there, T-1091's flat near end of the commute curve outside the US, and T-1092's trips into
-town). The full rules are in demand.md; this is the gist.
+there, T-1091's flat near end of the commute curve outside the US, T-1092's trips into
+town, and T-1070's cap at the trains' room). The full rules are in demand.md; this is the gist.
 
 ## Who travels, and where to
 
@@ -83,7 +83,12 @@ There is no built-in liking for the train. Rail and the car are compared on time
   leave from (centre to centre, at an easy walking pace, each minute counted 1.39), plus the wait
   for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Nobody
   changes back onto the line they just left: on a full line people wait at their station.
-- If the train is full when it arrives, the wait for one with room counts too.
+- If the train is full when it arrives, the wait for one with room counts too, minute for minute,
+  up to an hour.
+- No more riders than the trains hold: once the rest is worked out, each line carries at most
+  what its trains hold at crush load in the busiest hour. Going along the line from its first
+  stop, riders already aboard keep their places and each stop's riders get on up to the room
+  left; the rest go by car or on foot instead, and pay no fare.
 - Every rail trip rides at least one train: nobody boards only to walk off to another station
   or platform of a complex, so walking between two stations is never a rail trip and pays no fare.
 - No train that walks further than walking there: a pair of stations is no option for a trip when
@@ -168,7 +173,7 @@ is left out of the comparison; the figure is rail out of rail plus car.
 
 Details and the settings that were tried: notes/T-636.md; the route choice, notes/T-710.md; the
 curve by times cheaper, notes/T-918.md; the car's speeds and ownership cost, notes/T-938.md; the
-trips into town, notes/T-1092.md.
+trips into town, notes/T-1092.md; the cap at the trains' room, notes/T-1070.md.
 
 ## Coming next
 

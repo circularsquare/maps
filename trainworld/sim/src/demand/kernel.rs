@@ -4878,5 +4878,152 @@ pub fn settled(seen: &mut Vec<f32>, seg: &[f32]) -> bool {
     false
 }
 
+// ---------------------------------------------------------------------------------------------
+// 7c. The trains' room (T-1070)
+
+/// What each route node keeps once the period's riders are held to their trains' room
+/// (`capacity_fit`): the share of its boardings who get on, of its segment's riders, and of its
+/// alightings (those of the segment before). All ones on a line within its room.
+pub struct Fit {
+    pub board: Vec<f32>,
+    pub seg: Vec<f32>,
+    pub alight: Vec<f32>,
+    /// some route node keeps less than all
+    pub any: bool,
+}
+
+/// Anita's cap on demand (T-1070): no segment carries more riders in a period than its trains
+/// hold at crush in the busiest hour (`tph x crush x hours / peak_hour_factor`, the room
+/// `crowd_factors` measures 100% of crush against). Each direction of each line is walked from its
+/// first stop as its trains run: riders staying on take their room first, and a stop's boardings
+/// get on up to the room left, the rest of them going another way. From the final loads of every
+/// population together (`total`: segment loads, boardings, alightings per route node, as
+/// `round_costs`); None if `total` has another length.
+pub fn capacity_fit(g: &Graph, net: &Network, p: &Params, total: &[f32]) -> Option<Fit> {
+    let nr = g.rn_line.len();
+    if total.len() != 3 * nr || p.period_hours <= 0.0 {
+        return None;
+    }
+    let (seg, board) = (&total[..nr], &total[nr..2 * nr]);
+    let mut fit = Fit { board: vec![1.0; nr], seg: vec![1.0; nr], alight: vec![1.0; nr], any: false };
+    let mut r0 = 0usize;
+    for l in 0..net.n_lines() {
+        let n = (net.line_off[l + 1] - net.line_off[l]) as usize;
+        let tph = 60.0 / net.line_headway_min[l][p.period];
+        let room = tph * net.line_crush[l] * p.period_hours / p.peak_hour_factor.max(1.0);
+        for _dir in 0..2 {
+            let run = r0..r0 + n;
+            r0 += n;
+            if !(room > 0.0) || !run.clone().any(|r| seg[r] > room) {
+                continue;
+            }
+            let mut kept = 1.0f32;
+            for r in run {
+                fit.alight[r] = kept;
+                let b = board[r].max(0.0);
+                let on = (seg[r] - b).max(0.0) * kept;
+                let got = (room - on).clamp(0.0, b);
+                if b > 0.0 {
+                    fit.board[r] = got / b;
+                }
+                kept = if seg[r] > 0.0 { ((on + got) / seg[r]).min(room / seg[r]).min(1.0) } else { 1.0 };
+                fit.seg[r] = kept;
+                fit.any |= fit.board[r] < 1.0 || kept < 1.0;
+            }
+        }
+    }
+    Some(fit)
+}
+
+/// One population's loads held to the trains' room (`capacity_fit`), its transfers with them.
+/// Returns the share of each station's entries (first boardings) that still ride, and of all its
+/// rail trips. Riders turned away at a first boarding are that station's; riders turned away at a
+/// change are taken off every entry alike, their first train's riders being in no table here.
+pub fn cap_loads(g: &Graph, fit: &Fit, ix: &XferIndex, l: &mut Loads, xfer: &mut [f32]) -> (Vec<f32>, f64) {
+    let s = g.n_st;
+    let nr = g.rn_line.len();
+    let mut xin = vec![0f32; nr];
+    if xfer.len() == ix.len {
+        for v in s..g.n {
+            for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+                let slot = ix.at[e];
+                if slot == NONE {
+                    continue;
+                }
+                let to = g.adj_to[e] as usize;
+                for (k, d) in (g.adj_off[to] as usize..g.adj_off[to + 1] as usize).enumerate() {
+                    let w = g.adj_to[d] as usize - s;
+                    let x = &mut xfer[slot as usize + k];
+                    xin[w] += *x;
+                    *x *= fit.board[w];
+                }
+            }
+        }
+    }
+    let mut cut_first = vec![0f64; s];
+    let mut cut_change = 0f64;
+    let (mut ride0, mut ride1) = (0f64, 0f64);
+    for r in 0..nr {
+        let st = g.rn_station[r] as usize;
+        let (b, a) = (l.rn_board[r], l.rn_alight[r]);
+        let gone = (1.0 - fit.board[r]) * b;
+        let changing = xin[r].min(b);
+        cut_first[st] += ((1.0 - fit.board[r]) * (b - changing)) as f64;
+        cut_change += ((1.0 - fit.board[r]) * changing) as f64;
+        l.rn_board[r] = b - gone;
+        l.board[st] = (l.board[st] - gone).max(0.0);
+        if let Some(x) = l.rn_fare_x.get_mut(r) {
+            *x *= fit.board[r];
+        }
+        let left = (1.0 - fit.alight[r]) * a;
+        l.rn_alight[r] = a - left;
+        l.alight[st] = (l.alight[st] - left).max(0.0);
+        ride0 += (l.seg[r] * g.rn_ride[r]) as f64;
+        l.seg[r] *= fit.seg[r];
+        ride1 += (l.seg[r] * g.rn_ride[r]) as f64;
+    }
+    if ride0 > 0.0 {
+        l.pax_min *= ride1 / ride0;
+    }
+    let before: f64 = l.entry.iter().map(|&v| v as f64).sum();
+    let mut keep = vec![1f32; s];
+    let mut after = 0f64;
+    for st in 0..s {
+        let e = l.entry[st] as f64;
+        let e1 = (e - cut_first[st]).max(0.0);
+        if e > 0.0 {
+            keep[st] = (e1 / e) as f32;
+        }
+        after += e1;
+    }
+    let spread = if after > 0.0 { ((after - cut_change) / after).max(0.0) } else { 1.0 };
+    for st in 0..s {
+        keep[st] *= spread as f32;
+        l.entry[st] *= keep[st];
+    }
+    // the fare curve's extra is paid at first boardings (T-1143)
+    for x in l.rn_fare_x.iter_mut() {
+        *x *= spread as f32;
+    }
+    let all = if before > 0.0 { after * spread / before } else { 1.0 };
+    for v in l.exit.iter_mut() {
+        *v *= all as f32;
+    }
+    (keep, all)
+}
+
+/// `cap_loads`' route node shares on loads kept apart (the purposes, the market's commutes).
+pub fn cap_part(fit: &Fit, seg: &mut [f32], board: &mut [f32], alight: &mut [f32]) {
+    for (v, f) in seg.iter_mut().zip(&fit.seg) {
+        *v *= f;
+    }
+    for (v, f) in board.iter_mut().zip(&fit.board) {
+        *v *= f;
+    }
+    for (v, f) in alight.iter_mut().zip(&fit.alight) {
+        *v *= f;
+    }
+}
+
 #[cfg(test)]
 mod tests;
