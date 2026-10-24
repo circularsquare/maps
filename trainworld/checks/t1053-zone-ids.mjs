@@ -6,10 +6,8 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { build } from '../app/node_modules/vite/dist/node/index.js';
+import { loadApp } from './lib.mjs';
 
-const root = resolve('trainworld/app');
 const REG = 'trainworld/app/src/game/registry.json';
 const ids = (reg) => new Set(reg.cities.map((c) => c.id));
 const have = ids(JSON.parse(readFileSync(REG, 'utf8')));
@@ -19,12 +17,7 @@ const gone = [...head].filter((z) => !have.has(z) && !(z in table));
 assert.deepEqual(gone, [], `zones removed since HEAD with no successor: ${gone.join(' ')}; run python trainworld/pipeline/zone_successors.py`);
 for (const [z, to] of Object.entries(table)) assert.ok(to === null || have.has(to) || to in table, `${z}'s successor ${to} is neither registered nor in the table`);
 
-const bundle = await build({ configFile: false, logLevel: 'silent', plugins: [{
-  name: 't1053', resolveId(id) { if (id.endsWith('t1053-entry')) return '\0t1053-entry'; },
-  load(id) { if (id === '\0t1053-entry') return `export { zoneNow, currentZones, isNortheastSave } from ${JSON.stringify(root + '/src/workers/saveFile.ts')};`; },
-}], build: { write: false, minify: false, lib: { entry: 't1053-entry', formats: ['es'] } } });
-const code = (Array.isArray(bundle) ? bundle[0] : bundle).output.find((o) => o.type === 'chunk').code;
-const { zoneNow, currentZones, isNortheastSave } = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'));
+const { zoneNow, currentZones, isNortheastSave } = await loadApp('src/workers/saveFile.ts');
 
 // zoneNow: registered ids as they are, removed ones through the table (chains too), else null
 const reg = new Set(['nyc', 'hfd', 'nhv']), at = (z) => reg.has(z);

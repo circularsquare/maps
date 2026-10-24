@@ -7,20 +7,16 @@
 //   BUILT=0 (the new station left a blueprint, so the line turns planned)  RATE=paused|<speed index>
 //   node trainworld/checks/t648-stop-edit.mjs
 // Output: ../artifacts/trainworld/t648-<label>.json and t648-<label>-strip.png.
-import { readFile, writeFile, mkdtemp } from 'node:fs/promises';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-const { chromium } = await import(process.env.PLAYWRIGHT_MODULE);
+import { readFile, writeFile } from 'node:fs/promises';
+import { launchChrome, collectErrors, importSave, demandFinal, ARTIFACTS, REAL_SAVE } from './lib.mjs';
 const BASE = process.env.BASE ?? 'http://localhost:6155/';
 const LABEL = process.env.LABEL ?? 'run';
 const N = Number(process.env.N ?? 8);
 const SHOTS = process.env.SHOTS !== '0';
 const RATE = process.env.RATE ?? 'paused';
-const OUT = 'C:/Users/anita/projects/maps/artifacts/trainworld';
-const SAVE = 'C:/Users/anita/projects/maps/trainworld/T-007-real-nyc.save';
+const OUT = ARTIFACTS.replace(/[\\/]$/, '');
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
-const profile = await mkdtemp(join(tmpdir(), 'tw-t648-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t648-' });
 await ctx.addInitScript(([built, frames]) => { window.__built = built; window.__frames = frames; }, [process.env.BUILT !== '0', process.env.FRAMES === '1']);
 await ctx.addInitScript(() => {
   try { localStorage.setItem('trainworld-ui', JSON.stringify({ display: { dayShown: 'weekday' }, v: 2 })); } catch {}
@@ -62,18 +58,17 @@ await ctx.addInitScript(() => {
 });
 const page = await ctx.newPage();
 const errors = [];
-page.on('pageerror', (e) => errors.push(e.message));
-page.on('console', (m) => { if (m.type() === 'error' && !/openfreemap|AJAXError|favicon/.test(m.text())) errors.push(m.text()); });
+collectErrors(page, errors);
 const out = { label: LABEL, rate: RATE, errors, trials: [] };
 try {
   await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
   await page.waitForTimeout(1500);
-  const bytes = await readFile(SAVE);
-  await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+  const bytes = await readFile(REAL_SAVE);
+  await importSave(page, bytes);
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
   log('loaded');
-  await page.waitForFunction(() => { const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.(); return s && v && v.version === s.version && v.final && !d.client.waiting; }, undefined, { timeout: 300000, polling: 500 });
+  await demandFinal(page);
   log('demand final');
   await page.evaluate((rate) => { const tw = window.tw; tw.clock.setRunning(false); tw.clock.set(Math.floor(tw.clock.now() / 86400) * 86400 + 8.5 * 3600); if (rate !== 'paused') { tw.clock.setSpeed(Number(rate)); tw.clock.setRunning(true); } }, RATE);
   // The real save's lines stop at every station they pass, so each trial first builds a station
@@ -257,7 +252,7 @@ try {
     out.strip = { line: s.line, worst: s.flash.worst, frames: s.seq.map((f) => f.at) };
   }
 } finally {
-  await ctx.close();
+  await close();
 }
 await writeFile(`${OUT}/t648-${LABEL}.json`, JSON.stringify(out, null, 1));
 log('errors', errors.slice(0, 5));

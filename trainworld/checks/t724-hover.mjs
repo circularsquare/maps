@@ -6,33 +6,21 @@
 //   node trainworld/checks/t724-hover.mjs <url of your own Vite>     (from the maps root; ~4 min)
 // Env: LABEL, NOSOLVE=1, PROFILE=1 (a .cpuprofile per view), ONLY=select|station|wheel|probe (with
 // PROBE, a page expression run in each view). FAIL when a view's 95th percentile move is over 8 ms.
-import { readFile, readdir, mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, importSave, demandFinal, REAL_SAVE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6155/';
-const SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const OUT = fileURLToPath(new URL('../../artifacts/trainworld/t724/', import.meta.url));
 const LABEL = process.env.LABEL ?? 'run';
 const ONLY = process.env.ONLY;
 
-async function playwright() {
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
 const pct = (a, p) => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; };
 const r1 = (x) => Math.round(x * 10) / 10;
 const summ = (a) => ({ n: a.length, p50: r1(pct(a, 0.5)), p95: r1(pct(a, 0.95)), max: r1(Math.max(0, ...a)) });
 
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t724-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t724-' });
 const out = { label: LABEL, scenes: [] };
 await mkdir(OUT, { recursive: true });
 try {
@@ -56,11 +44,11 @@ try {
   const cdp = await ctx.newCDPSession(page);
   await page.goto(`${BASE}?debug=1&new=1${process.env.QS ?? ''}&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
-  const bytes = await readFile(SAVE);
-  await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+  const bytes = await readFile(REAL_SAVE);
+  await importSave(page, bytes);
   await page.waitForFunction(() => (window.tw.world.value?.save?.lines?.length ?? 0) > 100, undefined, { timeout: 120000 });
   if (process.env.NOSOLVE !== '1') {
-    await page.waitForFunction(() => { const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.(); return s && v && v.version === s.version && v.final && !d.client.waiting; }, undefined, { timeout: 300000, polling: 250 }).catch(() => console.log('no final'));
+    await demandFinal(page, { polling: 250 }).catch(() => console.log('no final'));
   }
   await page.waitForTimeout(1500);
   // time the station tool's name lookup and snap (sync part)
@@ -174,8 +162,7 @@ try {
     console.log(`wheel   frames p50 ${s.raf.p50} p95 ${s.raf.p95} max ${s.raf.max}  wheel handler max ${s.wheel.max}  move max ${s.move.max}  first frames ${JSON.stringify(s.firstFrames)}`);
   }
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 await writeFile(join(OUT, `hover-${LABEL}.json`), JSON.stringify(out, null, 1));
 const slow = out.scenes.filter((s) => s.mode !== 'wheel' && s.move.p95 > 8);

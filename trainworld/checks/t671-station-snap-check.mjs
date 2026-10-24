@@ -2,11 +2,8 @@
 // Run from maps: node trainworld/checks/t671-station-snap-check.mjs [url]
 // With a URL (a dev server) it also runs t671-ghost-hover.mjs there, about 5 minutes.
 import assert from 'node:assert/strict';
-import { build } from '../app/node_modules/vite/dist/node/index.js';
-import { resolve } from 'node:path';
-const bundle = await build({ configFile: false, logLevel: 'silent', build: { write: false, minify: false, lib: { entry: resolve('trainworld/app/src/map/stationSnap.ts'), formats: ['es'] } } });
-const output = (Array.isArray(bundle) ? bundle[0] : bundle).output;
-const { orderOverlapping, firstAccepted, stationHere, onlyEndIssues, fractionAlong, layoutIssues, layoutOf, likelyFirst } = await import('data:text/javascript;base64,' + Buffer.from(output.find(o => o.type === 'chunk').code).toString('base64'));
+import { loadApp } from './lib.mjs';
+const { orderOverlapping, firstAccepted, stationHere, onlyEndIssues, fractionAlong, layoutIssues, layoutOf, likelyFirst } = await loadApp('src/map/stationSnap.ts');
 
 // track A: 1 - 9 - 2 - 5 (junction), edges 10, 12, 11 of 100 m, 100 m, 1000 m; track B: 3 - 4, edge 20 of 1000 m
 const E = (id, a, b, lengthM, built = true) => ({ id, a, b, lengthM, built });

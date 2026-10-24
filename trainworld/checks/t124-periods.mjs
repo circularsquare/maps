@@ -3,40 +3,22 @@
 // run with ?perfOff=periods (every period re-solved) can be compared: the `sigs` lines must match.
 //   BASE=http://localhost:6124/ QS="&perfOff=periods" LABEL=off OUT=<dir> [REPS=2] [PLAYWRIGHT_MODULE=...]
 //   node trainworld/checks/t124-periods.mjs   (writes OUT/t124-LABEL.json; a fresh profile there)
-import { readFile, writeFile, rm, readdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { launchChrome, collectErrors, importSave, demandFinal, REAL_SAVE } from './lib.mjs';
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright: set PLAYWRIGHT_MODULE to a file URL of playwright/index.mjs');
-}
-const { chromium } = await playwright();
 const OUT = process.env.OUT ?? '.';
 const BASE = process.env.BASE ?? 'http://localhost:6124/';
 const QS = process.env.QS ?? '';
 const LABEL = process.env.LABEL ?? 'run';
 const REPS = Number(process.env.REPS ?? 2);
-const profile = join(OUT, `profile-${LABEL}`);
-await rm(profile, { recursive: true, force: true });
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const { ctx, close } = await launchChrome({ profile: join(OUT, `profile-${LABEL}`) });
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), LABEL, ...a);
 const page = await ctx.newPage();
 const errors = [];
-page.on('pageerror', (e) => errors.push(e.message));
-page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+collectErrors(page, errors, null);
 
-const waitSolved = (timeout = 240000) => page.waitForFunction(() => {
-  const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.();
-  return s && v && v.version === s.version && v.final && !d.client.waiting;
-}, undefined, { timeout, polling: 50 });
+const waitSolved = (timeout = 240000) => demandFinal(page, { timeout, polling: 50 });
 
 /** every final figure the workers sent (ms, setup and memory left out), hashed (t326-clusters.mjs) */
 const sig = () => page.evaluate(() => {
@@ -80,9 +62,9 @@ const out = { label: LABEL, qs: QS, stages: {}, level: [], station: [], errors }
 try {
   await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
-  const bytes = await readFile('C:/Users/anita/projects/maps/trainworld/T-007-real-nyc.save');
+  const bytes = await readFile(REAL_SAVE);
   const before = await page.evaluate(() => window.tw.lastSaved.peek());
-  await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+  await importSave(page, bytes);
   await page.waitForFunction(() => (window.tw.world.value?.save?.lines?.length ?? 0) > 100, undefined, { timeout: 240000 });
   await page.evaluate(() => window.tw.client.post({ kind: 'flush' }));
   await page.waitForFunction((b) => window.tw.lastSaved.peek() > b, before, { timeout: 60000 });
@@ -128,7 +110,7 @@ try {
   }
   log('sigs', JSON.stringify(Object.fromEntries(Object.entries(out.stages).map(([k, v]) => [k, v.hash]))));
 } finally {
-  await ctx.close();
+  await close();
 }
 await writeFile(join(OUT, `t124-${LABEL}.json`), JSON.stringify(out, null, 1));
 log('errors', JSON.stringify(errors.slice(0, 5)));

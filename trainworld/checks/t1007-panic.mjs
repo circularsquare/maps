@@ -1,26 +1,10 @@
 // T-1007: forced panics in the clock worker (dev server only), recovery and state: a panicking edit
 // is undone, an idle or read panic keeps the state, the fourth in a minute leaves the model down.
 //   BASE=http://localhost:6132/ node trainworld/checks/t1007-panic.mjs   (about 2 minutes)
-import { readFile, mkdtemp, rm } from 'node:fs/promises';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { pathToFileURL } from 'node:url';
-import { existsSync } from 'node:fs';
-import { readdir } from 'node:fs/promises';
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no playwright');
-}
-const { chromium } = await playwright();
+import { readFile } from 'node:fs/promises';
+import { launchChrome, importSave, demandFinal, REAL_SAVE } from './lib.mjs';
 const BASE = process.env.BASE ?? 'http://localhost:6132/';
-const SAVE = 'C:/Users/anita/projects/maps/trainworld/T-007-real-nyc.save';
-const profile = await mkdtemp(join(tmpdir(), 'tw-t1007-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t1007-' });
 const page = await ctx.newPage();
 const consoleErrors = [], pageErrors = [];
 page.on('pageerror', (e) => pageErrors.push(e.message));
@@ -88,8 +72,8 @@ try {
   await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
   await settle(1500);
-  const bytes = await readFile(SAVE);
-  await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+  const bytes = await readFile(REAL_SAVE);
+  await importSave(page, bytes);
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
   await settle(3000);
   const c0 = await fp();
@@ -118,7 +102,7 @@ try {
   const und = await page.evaluate(() => window.tw.client.edit({ op: 'undo' }));
   check('C5 undo after a rebuild is a refusal or fine (no crash)', typeof und.ok === 'boolean');
   // the clock runs on after a rebuild
-  await page.waitForFunction(() => { const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.(); return s && v && v.version === s.version && v.final && !d.client.waiting; }, undefined, { timeout: 240000, polling: 500 });
+  await demandFinal(page, { timeout: 240000 });
   const t0 = await page.evaluate(() => { window.tw.clock.setRunning(true); return window.tw.clock.now(); });
   await settle(4000);
   check('C6 demand final again and the game clock advances', (await page.evaluate(() => window.tw.clock.now())) > t0);
@@ -126,8 +110,7 @@ try {
   const unexpected = consoleErrors.filter((t) => !/Rust panic in/.test(t));
   check('no other console errors', unexpected.length === 0, unexpected.slice(0, 3).join(' | '));
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 console.log(fails ? `${fails} FAILED` : 'ALL PASS');
 process.exit(fails ? 1 : 0);

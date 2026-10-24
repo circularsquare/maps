@@ -5,37 +5,20 @@
 // artifacts/trainworld/t533-short-on-top.png and t533-no-trains-under.png.
 //   node trainworld/checks/t533-draw-order.mjs [url]     (from the maps root; default localhost:6130)
 // Prints PASS or FAIL lines and exits 1 on failure. About a minute.
-import { mkdtemp, rm, readdir, readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL, fileURLToPath } from 'node:url';
+import { readFile } from 'node:fs/promises';
+import { launchChrome, importSave, demandFinal, REAL_SAVE, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6130/';
-const SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t533-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1200, height: 800 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t533-', size: [1200, 800], args: ANGLE });
 const results = [];
 const report = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
 try {
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.log('pageerror', e.message));  await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twViews && window.twDemand?.client, undefined, { timeout: 180000 });
-  const bytes = await readFile(SAVE);
-  await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+  const bytes = await readFile(REAL_SAVE);
+  await importSave(page, bytes);
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
   await page.waitForTimeout(2500);
 
@@ -94,7 +77,7 @@ try {
     return out;
   }, pick);
   const settled = async () => {
-    await page.waitForFunction(() => { const d = window.twDemand, v = d?.view?.(); return v && v.final && !d.client.waiting; }, undefined, { timeout: 300000, polling: 500 });
+    await demandFinal(page, { strict: false });
     await page.waitForFunction(() => !document.querySelector('.loading-card'), undefined, { timeout: 300000, polling: 500 });
     await page.waitForTimeout(1500);
   };
@@ -148,7 +131,6 @@ try {
   const o3 = await orderOk();
   report('given trains again it is back on top', third.length > 0 && third.every((id) => id === pick.short) && o3.bad === 0, `(${o3.bad} out of order, clicks ${third.join(',')})`);
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exit(results.length && results.every(Boolean) ? 0 : 1);

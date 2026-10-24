@@ -13,18 +13,14 @@
 // with 3.2-3.4 GB a worker (T-761), the seven cities' in about 6.5 (T-756). A demand failure is reported
 // as `demandErrors`, not failing the check; DEMAND_STRICT=1 fails on it. Fails on page errors, a load
 // that never ends, and the budget below.
-import { spawn } from 'node:child_process';
-import { readFile, readdir, mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, importSave, GL, startVite } from './lib.mjs';
 
-const HERE = fileURLToPath(new URL('.', import.meta.url));
 const SAVE = process.env.SAVE ?? fileURLToPath(new URL('../../artifacts/trainworld/t737-japan.save', import.meta.url));
 const OUT = process.env.OUT ?? fileURLToPath(new URL('../../artifacts/trainworld/t737/', import.meta.url));
 const LABEL = process.env.LABEL ?? 'run';
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const [W, H] = (process.env.VIEW ?? '1400x900').split('x').map(Number);
 const SPEED_IX = (process.env.SPEEDS ?? (process.env.QUICK === '1' ? '1' : '1,2')).split(',').map(Number);
 /** main-thread ms per drawn frame over the moving scenes, and the share of frames over 50 ms */
@@ -41,31 +37,6 @@ const ALL = [
   { name: 'Nagoya zoom 6-12', at: [136.88, 35.17], zoom: 6, drag: 'wheel' },
 ];
 const SCENES = process.env.QUICK === '1' ? ALL.filter((s) => /Tokyo z12|Japan z6 pan|zoom/.test(s.name)) : ALL;
-
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright: set PLAYWRIGHT_MODULE to a file URL of playwright/index.mjs');
-}
-
-async function startVite() {
-  const port = Number(process.env.JP_PORT ?? 6165);
-  const child = spawn(process.execPath, [join(HERE, 'dev-nowatch.mjs'), String(port)], { stdio: ['ignore', 'pipe', 'pipe'] });
-  let out = '';
-  child.stdout.on('data', (d) => { out += d; });
-  child.stderr.on('data', (d) => { out += d; });
-  const deadline = Date.now() + 60000;
-  while (!/localhost:/.test(out)) {
-    if (child.exitCode !== null || Date.now() > deadline) throw new Error('Vite did not start: ' + out.slice(-500));
-    await new Promise((r) => setTimeout(r, 200));
-  }
-  return { child, url: `http://localhost:${port}/` };
-}
 
 /** stop a trace and sum the top-level tasks per thread name (ms, overlaps merged) */
 async function traceThreads(cdp) {
@@ -108,9 +79,7 @@ const mb = (b) => Math.round(b / 1048576);
 const log = (...a) => console.log(...a);
 
 async function run(BASE) {
-  const { chromium } = await playwright();
-  const profile = await mkdtemp(join(tmpdir(), 'tw-t737-'));
-  const ctx = await chromium.launchPersistentContext(profile, { executablePath: CHROME, headless: true, viewport: { width: W, height: H }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist', '--enable-precise-memory-info'] });
+  const { ctx, close } = await launchChrome({ prefix: 'tw-t737-', size: [W, H], args: [...GL, '--enable-precise-memory-info'] });
   const errors = [];
   const out = { label: LABEL, base: BASE, budget: BUDGET, view: [W, H], errors, scenes: [] };
   try {
@@ -162,7 +131,7 @@ async function run(BASE) {
     // ---- load the save
     const bytes = await readFile(SAVE);
     await page.evaluate(([at, zoom]) => void window.tw.map.jumpTo({ center: at, zoom }), [[139.75, 35.68], 10]);
-    const tImport = await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; const t = performance.now(); window.tw.client.post({ kind: 'import', bytes: b }, [b]); return t; }, Array.from(bytes));
+    const tImport = await importSave(page, bytes);
     await page.waitForFunction(() => (window.tw.world.value?.save?.lines?.length ?? 0) > 400, undefined, { timeout: 300000, polling: 100 });
     const load = await page.evaluate((t0) => {
       const m = window.__msgs.filter((x) => x.t >= t0);
@@ -274,15 +243,14 @@ async function run(BASE) {
     }
     out.end = await page.evaluate(() => ({ heapMB: Math.round((performance.memory?.usedJSHeapSize ?? 0) / 1048576), workers: (window.twDemand.start?.workers ?? []).map((w) => Math.round((w.memBytes ?? 0) / 1048576)) }));
   } finally {
-    await ctx.close();
-    await rm(profile, { recursive: true, force: true }).catch(() => {});
+    await close();
   }
   return out;
 }
 const SPEEDS_NAME = ['60x', '240x', '960x'];
 
 const given = process.argv[2];
-const vite = given ? null : await startVite();
+const vite = given ? null : await startVite(Number(process.env.JP_PORT ?? 6165));
 let out;
 try {
   out = await run(given ?? vite.url);

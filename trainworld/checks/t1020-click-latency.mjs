@@ -21,11 +21,10 @@
 // ../artifacts/trainworld/t1020), PROFILE=1 (a CPU profile of the main thread over the clicks, its top
 // functions in the json), SHOTS=1 (nyc: screenshots after a fixed series of edits, and the same views
 // after a full rebuild of the drawn network, compared pixel by pixel), DEMAND_WORKERS (default 2).
-import { readFile, readdir, mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, importSave, demandFinal, buildLine, REAL_SAVE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6135/';
 const SETUPS = (process.env.SETUPS ?? 'repro,new,nyc').split(',');
@@ -33,23 +32,11 @@ const CLICKS = Number(process.env.CLICKS ?? 8);
 const MOVES = Number(process.env.MOVES ?? 20);
 const LABEL = process.env.LABEL ?? 'run';
 const OUT = process.env.OUT ?? fileURLToPath(new URL('../../artifacts/trainworld/t1020/', import.meta.url));
-const NYC = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const JAPAN = process.env.JAPAN ?? fileURLToPath(new URL('../../artifacts/trainworld/t737-japan.save', import.meta.url));
 // where the track is drawn: open ground beside each network (lng, lat, zoom)
 const AT = { new: [-74.13, 40.585, 14], nyc: [-74.13, 40.585, 14], japan: [140.0, 35.9, 14],
   london: [-0.20, 51.565, 14], shanghai: [121.40, 31.25, 14], london2: [-0.12, 51.585, 14], belfast: [-5.93, 54.60, 14] };
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
-
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
 
 /** inclusive ms per function (name @ file:line) from a CPU profile */
 function profileTop(prof, n = 30) {
@@ -72,13 +59,11 @@ function profileTop(prof, n = 30) {
 
 const pct = (a, p) => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return Math.round(s[Math.min(s.length - 1, Math.floor(p * s.length))]); };
 
-const { chromium } = await playwright();
 await mkdir(OUT, { recursive: true });
 let failed = false;
 
 for (const setup of SETUPS) {
-  const profile = await mkdtemp(join(tmpdir(), 'tw-t1020-'));
-  const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+  const { ctx, close } = await launchChrome({ prefix: 'tw-t1020-' });
   const errors = [];
   const out = { label: LABEL, setup, base: BASE, clicks: CLICKS, moves: MOVES, errors };
   try {
@@ -138,28 +123,14 @@ for (const setup of SETUPS) {
     });
     page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));    page.on('console', (msg) => { if (msg.type() === 'error' && !/favicon|openfreemap|AJAXError|^\w{1,3}$/.test(msg.text()) && !/maplibre-gl/.test(msg.location()?.url ?? '')) errors.push(msg.text().slice(0, 300)); });
     const workers = `demandWorkers=${process.env.DEMAND_WORKERS ?? 2}`;
-    const solved = (timeout) => page.waitForFunction(() => { const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.(); return s && v && v.version === s.version && v.final && !d.client.waiting; }, undefined, { timeout, polling: 250 });
+    const solved = (timeout) => demandFinal(page, { timeout, polling: 250 });
     await page.goto(`${BASE}?debug=1&new=1${setup === 'repro' || setup === 'long' ? '&city=lon' : ''}&${workers}&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client && window.tw.client.preview.length === 2, undefined, { timeout: 180000 });
     const t0 = Date.now();
     if (setup === 'new') {
       await page.evaluate(() => { window.tw.map.jumpTo({ center: [-73.99, 40.72], zoom: 12 }); });
       await page.waitForTimeout(3000);
-      const build = (pts, name, colour) => page.evaluate(async ([PTS, name, colour]) => {
-        const tw = window.tw, c = tw.client;
-        const xy = PTS.map(([lng, lat]) => { const p = tw.lngLatToPack(lng, lat); return [p.x, p.y]; });
-        const near = (p) => { let best = null, bd = 1e12; for (const n of tw.world.value.nodes.values()) { const d = Math.hypot(n.x - p[0], n.y - p[1]); if (d < bd) { bd = d; best = n.id; } } return best; };
-        await c.edit({ op: 'route', from: { kind: 'free', x: xy[0][0], y: xy[0][1], level: -1 }, to: { kind: 'free', x: xy[1][0], y: xy[1][1], level: -1 }, pis: [], single: false });
-        for (let k = 2; k < xy.length; k++) {
-          await new Promise((d) => setTimeout(d, 200));
-          await c.edit({ op: 'route', from: { kind: 'node', node: near(xy[k - 1]) }, to: { kind: 'free', x: xy[k][0], y: xy[k][1], level: -1 }, pis: [], single: false });
-        }
-        await new Promise((d) => setTimeout(d, 300));
-        for (const p of xy) { await c.edit({ op: 'addStation', at: { kind: 'node', node: near(p) }, platform: 200, name: '' }); await new Promise((d) => setTimeout(d, 100)); }
-        await c.edit({ op: 'constructAll' });
-        await new Promise((d) => setTimeout(d, 300));
-        return (await c.edit({ op: 'addLine', stops: xy.map(near), name, colour })).ok;
-      }, [pts, name, colour]);
+      const build = async (pts, name, colour) => (await buildLine(page, pts, { name, colour, wait: { route: 200, station: 100, settle: 300 } })).ok;
       const built = [
         await build([[-74.0110, 40.7128], [-73.9969, 40.7306], [-73.9903, 40.7506], [-73.9819, 40.7681], [-73.9680, 40.7990]], 'Eighth', '#e4002b'),
         await build([[-73.9897, 40.6926], [-73.9776, 40.6840], [-73.9615, 40.6712], [-73.9442, 40.6501]], 'Flatbush', '#0060a8'),
@@ -173,8 +144,8 @@ for (const setup of SETUPS) {
       await page.waitForTimeout(3000);
       await solved(300000).catch(() => log('repro: no final in 5 min'));
     } else {
-      const bytes = await readFile(setup === 'japan' ? JAPAN : NYC);
-      await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+      const bytes = await readFile(setup === 'japan' ? JAPAN : REAL_SAVE);
+      await importSave(page, bytes);
       await page.waitForFunction((n) => (window.tw.world.value?.save?.lines?.length ?? 0) >= n, setup === 'japan' ? 500 : 100, { timeout: 600000, polling: 250 });
       if (setup === 'nyc') await solved(600000).catch(() => log('nyc: no final in 10 min'));
       else await page.waitForTimeout(Number(process.env.JAPAN_WAIT ?? 90) * 1000);
@@ -213,8 +184,7 @@ for (const setup of SETUPS) {
     failed = true;
     console.log(`${setup} FAILED ${e.message}`);
   } finally {
-    await ctx.close();
-    await rm(profile, { recursive: true, force: true }).catch(() => {});
+    await close();
   }
   if (errors.length) log(setup, 'errors', errors.slice(0, 5));
   await writeFile(join(OUT, `${LABEL}-${setup}.json`), JSON.stringify(out, null, 1));

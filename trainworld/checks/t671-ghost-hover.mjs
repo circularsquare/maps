@@ -6,39 +6,26 @@
 // frame along each pair. PASS when corrections are at most 5% of hovers, overlaps and ends apart.
 //   node trainworld/checks/t671-ghost-hover.mjs [url] [pairs] [chains]   (from the maps root)
 // Writes artifacts/trainworld/t671-ghost-hover.json. About 5 minutes with 40 pairs and 6 chains.
-import { mkdtemp, rm, readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { pathToFileURL, fileURLToPath } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, importSave, REAL_SAVE, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6130/';
 const MAXPAIRS = Number(process.argv[3] ?? 40);
 const CHAINS = Number(process.argv[4] ?? 6);
-const SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const OUT = fileURLToPath(new URL('../../artifacts/trainworld/', import.meta.url));
 
-async function playwright() {
-  try { return await import('playwright'); } catch { /* */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-const { chromium } = await playwright();
 await mkdir(OUT, { recursive: true });
-const profile = await mkdtemp(join(tmpdir(), 'tw-t671-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1200, height: 800 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t671-', size: [1200, 800], args: ANGLE });
 let failed = false;
 try {
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.log('pageerror', e.message));
   await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
-  const bytes = await readFile(SAVE);
-  await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+  const bytes = await readFile(REAL_SAVE);
+  await importSave(page, bytes);
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
   await page.waitForTimeout(3000);
   // new blueprint track to have ends to hover: a chain of 3 segments beside each of a few stations
@@ -223,7 +210,6 @@ try {
   failed = true;
   console.log('FAIL  ghost hover check  ' + e.message);
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exitCode = failed ? 1 : 0;

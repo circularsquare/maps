@@ -6,23 +6,10 @@
 // SAVE=1 imports T-007-real-nyc.save first (else a ?new=1 game). DWELL ms at each stop (5000),
 // REST ms at each end (75000, longer than the close delay), QS more URL switches. Writes
 // OUT/pan-LABEL.json.
-import { readFile, writeFile, rm, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { readdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { launchChrome, collectErrors, importSave, demandFinal, REAL_SAVE } from './lib.mjs';
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-const { chromium } = await playwright();
 const OUT = process.env.OUT ?? '.';
 const BASE = process.env.BASE ?? 'http://localhost:6101/';
 const LABEL = process.env.LABEL ?? 'run';
@@ -31,14 +18,11 @@ const DWELL = Number(process.env.DWELL ?? 5000);
 const REST = Number(process.env.REST ?? 75000);
 const QS = process.env.QS ?? '';
 await mkdir(OUT, { recursive: true });
-const profile = join(OUT, `profile-${LABEL}`);
-await rm(profile, { recursive: true, force: true });
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t301-' });
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), LABEL, ...a);
 const page = await ctx.newPage();
 const errors = [];
-page.on('pageerror', (e) => errors.push(e.message));
-page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+collectErrors(page, errors, null);
 
 // wdc to the New England counties, then up the Mohawk and along Lake Ontario to Toronto
 const OUTWARD = [
@@ -49,10 +33,7 @@ const OUTWARD = [
 ];
 const ZOOM = 10.5;
 
-const waitSolved = (timeout = 240000) => page.waitForFunction(() => {
-  const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.();
-  return s && v && v.version === s.version && v.final && !d.client.waiting;
-}, undefined, { timeout, polling: 100 });
+const waitSolved = (timeout = 240000) => demandFinal(page, { timeout, polling: 100 });
 
 const state = () => page.evaluate(() => {
   const d = window.twDemand, c = d.client;
@@ -110,9 +91,9 @@ try {
   if (SAVE) {
     await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
-    const bytes = await readFile('C:/Users/anita/projects/maps/trainworld/T-007-real-nyc.save');
+    const bytes = await readFile(REAL_SAVE);
     const before = await page.evaluate(() => window.tw.lastSaved.peek());
-    await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+    await importSave(page, bytes);
     await page.waitForFunction(() => (window.tw.world.value?.save?.lines?.length ?? 0) > 100, undefined, { timeout: 240000 });
     await page.evaluate(() => window.tw.client.post({ kind: 'flush' }));
     await page.waitForFunction((b) => window.tw.lastSaved.peek() > b, before, { timeout: 60000 });
@@ -151,7 +132,7 @@ try {
 } finally {
   sampling = false;
   await sampler;
-  await ctx.close();
+  await close();
 }
 out.peakMB = peak.map((m) => Math.round(m / 1048576));
 out.endMB = (out.end?.mem ?? []).map((m) => Math.round(m / 1048576));
@@ -162,4 +143,3 @@ log('peak MB', JSON.stringify(out.peakMB), 'end MB', JSON.stringify(out.endMB), 
 log('back openMs', JSON.stringify(out.back.map((b) => [b.id, b.focusMs, b.openMs])));
 log('reopens (item, download ms, open ms)', JSON.stringify((out.reopens ?? []).map((l) => [l.item, l.dl, l.open])));
 log('errors', JSON.stringify(errors.slice(0, 5)));
-await rm(profile, { recursive: true, force: true });

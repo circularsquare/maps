@@ -7,38 +7,24 @@
 // stood at 83% for two minutes of a Japan save's load); also prints the longest flat stretch.
 //   node trainworld/checks/t884-loadbar.mjs [url]     (from the maps root; default localhost:6150)
 // About 5 minutes. Writes ../artifacts/trainworld/t884-loadbar.json.
-import { mkdtemp, rm, readdir, readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, importSave, REAL_SAVE, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6150/';
-const REAL = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const ART = fileURLToPath(new URL('../../artifacts/trainworld/', import.meta.url));
 const WORLD = join(ART, 'world-map-day73.save');
 const LIMIT = 0.25;
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-
 let failed = false;
 const report = (name, ok, detail) => { failed ||= !ok; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
-const { chromium } = await playwright();
 const out = [];
 
 /** one profile: optionally a save put in its slot, then `loads` picks from the start menu */
 async function run(label, save, loads) {
-  const profile = await mkdtemp(join(tmpdir(), 'tw-t884-'));
-  const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1300, height: 900 }, args: ['--use-angle=d3d11'] });
+  const { ctx, close } = await launchChrome({ prefix: 'tw-t884-', size: [1300, 900], args: ANGLE });
   await ctx.addInitScript(() => {
     window.__lb = [];
     setInterval(() => {
@@ -55,7 +41,7 @@ async function run(label, save, loads) {
       await page.waitForFunction(() => window.tw?.world?.value && window.tw.lastSaved, undefined, { timeout: 180000 });
       const bytes = await readFile(save);
       const before = await page.evaluate(() => window.tw.lastSaved.peek() ?? 0);
-      await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+      await importSave(page, bytes);
       await page.waitForFunction(() => window.tw.world.value.save.lines.length > 0, undefined, { timeout: 240000 });
       await page.waitForTimeout(3000);
       await page.evaluate(() => window.tw.client.post({ kind: 'flush' }));
@@ -97,13 +83,12 @@ async function run(label, save, loads) {
     }
     report(`${label}: no page errors`, errors.length === 0, errors.slice(0, 2).join(' | '));
   } finally {
-    await ctx.close();
-    await rm(profile, { recursive: true, force: true }).catch(() => {});
+    await close();
   }
 }
 
 await run('new game in New York', null, 1);
-await run('real New York save', REAL, 2);
+await run('real New York save', REAL_SAVE, 2);
 if (existsSync(WORLD)) await run('world save', WORLD, 2);
 else console.log(`SKIP  world save  (${WORLD} not found)`);
 await writeFile(join(ART, 't884-loadbar.json'), JSON.stringify(out, null, 1));

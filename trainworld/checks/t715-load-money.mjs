@@ -1,32 +1,17 @@
-// T-715: loading a game never charges or freezes its money. Part 1: the real save in a slot, a copy of it run on three game days, then the original opened from the saves panel while the
-// later copy is open, twice (before T-715 the later game's clock reached the worker after the load,
-// so the gap's running costs were charged with no fares and the money then stood still until the
-// clock caught up). Each time the cash must load as saved, move while the clock runs with fares coming
-// in (the same network's income is sent again after a load), and no ledger day may lie after the
-// clock. Part 2: a save whose ledgers run three days past its clock (as two such loads left them, each
+// T-715: loading a game never charges or freezes its money. Part 1: the real save in a slot, a copy of
+// it run on three game days, then the original opened from the saves panel while the later copy is
+// open, twice (the later game's clock must not reach the worker after the load: the gap's running
+// costs would be charged with no fares and the money would stand still until the clock caught up).
+// Each time the cash must load as saved, move while the clock runs with fares coming in (the same
+// network's income is sent again after a load), and no ledger day may lie after the clock. Part 2: a save whose ledgers run three days past its clock (as two such loads left them, each
 // day's running cost twice) loads with those days gone and both charges back in the cash.
 //   node trainworld/checks/t715-load-money.mjs [url]     (from the maps root; default localhost:6165)
 // Prints PASS or FAIL lines and exits 1 on a failure. About two minutes.
-import { readFile, mkdtemp, rm, readdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { gunzipSync, gzipSync } from 'node:zlib';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { launchChrome, demandFinal, REAL_SAVE, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6165/';
-const SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
-
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
 
 let failed = false;
 const report = (name, ok, detail) => { failed ||= !ok; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
@@ -51,9 +36,7 @@ function damagedSave(file, daily) {
   return { bytes: gzipSync(Buffer.concat([head, json, raw.subarray(8 + n)])), cash: h.cash, day: D };
 }
 
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t715-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1200, height: 800 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t715-', size: [1200, 800], args: ANGLE });
 try {
   const page = await ctx.newPage();
   const wait = (ms) => page.waitForTimeout(ms);
@@ -65,7 +48,7 @@ try {
   });
   // the cash a slot was last written with (its saves-list summary)
   const slotCash = (key) => page.evaluate(async (key) => (await (await import('/src/workers/saveFile.ts')).listSlots()).find((s) => s.key === key)?.cash, key);
-  const settled = () => page.waitForFunction(() => { const d = window.twDemand, v = d?.view?.(); return v && v.final && !d.client.waiting && !window.tw.clock.held.peek(); }, undefined, { timeout: 300000, polling: 300 });
+  const settled = () => demandFinal(page, { strict: false, held: true, polling: 300 });
   const pause = async () => { await page.evaluate(() => window.tw.clock.setRunning(false)); await wait(500); };
   const open = async (key) => {
     await page.evaluate((key) => { window.__load = window.tw.client.lastLoad; window.tw.client.post({ kind: 'saveSlot', action: 'open', key }); }, key);
@@ -85,7 +68,7 @@ try {
   await page.click('.start-menu .new-game-cities [data-city="nyc"]'); // T-728: the new game sheet
   await page.click('.start-menu .new-game .start-new');
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
-  await importSave(await readFile(SAVE));
+  await importSave(await readFile(REAL_SAVE));
   await settled();
   const realKey = await page.evaluate(async () => (await import('/src/workers/clockClient.ts')).saveSlotsState.value.active);
   await pause();
@@ -120,7 +103,7 @@ try {
   });
   await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
-  const bad = damagedSave(await readFile(SAVE), run.daily);
+  const bad = damagedSave(await readFile(REAL_SAVE), run.daily);
   await importSave(bad.bytes);
   await wait(1000);
   const r = await page.evaluate(() => { const m = window.tw.moneyState.value; return { cash: m.cash, days: m.ledger.map((d) => d.day), build: m.ledger.reduce((s, d) => s + d.build, 0) }; });
@@ -128,7 +111,6 @@ try {
   report('a save with ledger days after its clock', Math.abs(back - want) <= 2 * run.most + 0.01 && Math.max(...r.days) <= bad.day && r.build >= 50,
     `cash back ${back.toFixed(2)}, twice three days' running ${want.toFixed(2)} (US$M, within two hours' ${(2 * run.most).toFixed(2)}), ledger days [${r.days.join(' ')}], clock day ${bad.day}, build kept ${r.build.toFixed(0)}`);
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exit(failed ? 1 : 0);

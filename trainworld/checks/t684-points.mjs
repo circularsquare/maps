@@ -12,11 +12,8 @@
 // Writes artifacts/trainworld/t684-points.json.
 //   node trainworld/checks/t684-points.mjs [url]   (from the maps root; default localhost:6153)
 // Prints PASS or FAIL lines and exits 1 on failure. A few minutes.
-import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { writeFile } from 'node:fs/promises';
+import { launchChrome, demandFinal, ANGLE } from './lib.mjs';
 
 const BASE = (process.argv[2] ?? 'http://localhost:6153/').replace(/\/?$/, '/');
 const OUT = 'artifacts/trainworld/t684-points.json';
@@ -27,20 +24,7 @@ const WEST = [['Churchgate', 72.8272, 18.9355], ['Marine Lines', 72.8237, 18.945
   ['Matunga Road', 72.8467, 19.0278], ['Mahim', 72.8466, 19.0407], ['Bandra', 72.8402, 19.0550]];
 const EAST = [['Dadar East', 72.8445, 19.0186], ['Matunga', 72.8553, 19.0274],['Sion', 72.8636, 19.0466], ['Kurla', 72.8794, 19.0656]];
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t684-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t684-', args: ANGLE });
 const results = [];
 const report = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
 const near = (a, b, tol) => Math.abs(a - b) <= tol * Math.max(1, Math.abs(b));
@@ -88,7 +72,7 @@ try {
     await run({ op: 'constructAll' });
     return { lines: [a, b] };
   }, { west: WEST, east: EAST });
-  await page.waitForFunction((v) => { const d = window.twDemand, dv = d?.view?.(); return dv && dv.final && dv.version > v && !d.client.waiting; }, before, { timeout: 900000, polling: 500 });
+  await demandFinal(page, { strict: false, after: before, timeout: 900000 });
 
   // the weekday's figures: boardings, the solve's rail trips, the changes, the points a day
   const day = await page.evaluate(async () => {
@@ -143,7 +127,6 @@ try {
   await writeFile(OUT, JSON.stringify({ built, day, hour }, null, 1));
   report('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exit(results.length && results.every(Boolean) ? 0 : 1);

@@ -8,29 +8,14 @@
 //   BASE=http://localhost:6101/ node trainworld/checks/t675-wheel-lag.mjs
 // RAW=1 takes the fix off (the page's own MapLibre handler again): it should FAIL. OUT=<dir> writes
 // t675-wheel-lag.json there.
-import { rm, mkdir, writeFile, readdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { pathToFileURL } from 'node:url';
+import { launchChrome } from './lib.mjs';
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-const { chromium } = await playwright();
 const BASE = process.env.BASE ?? 'http://localhost:6101/';
 const RAW = process.env.RAW === '1';
 const REPS = Number(process.env.REPS ?? 2);
-const profile = join(tmpdir(), `tw-t675-${process.pid}`);
-await rm(profile, { recursive: true, force: true });
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t675-' });
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
@@ -108,8 +93,7 @@ try {
 } catch (e) {
   line = `error: ${e.message}`;
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true });
+  await close();
 }
 if (process.env.OUT) {
   await mkdir(process.env.OUT, { recursive: true });

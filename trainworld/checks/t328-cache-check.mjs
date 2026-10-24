@@ -11,29 +11,17 @@
 // stale: tampers with the stored cache (its build, a pack's digest), reloads, and checks that the
 //   cache is not shown; then a changed network (one line's trains) must not show it either.
 // Outputs OUT/t328-<MODE>-<LABEL>.json. Playwright from PLAYWRIGHT_MODULE, else the npx cache.
-import { readFile, writeFile, readdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { launchChrome, collectErrors, importSave, demandFinal, REAL_SAVE } from './lib.mjs';
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-const { chromium } = await playwright();
 const OUT = process.env.OUT ?? '.';
 const BASE = process.env.BASE ?? 'http://localhost:6151/';
 const MODE = process.env.MODE ?? 'reload';
 const LABEL = process.env.LABEL ?? 'run';
 const RUNS = Number(process.env.RUNS ?? 3);
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
-const ctx = await chromium.launchPersistentContext(join(OUT, 'profile'), { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const { ctx, close } = await launchChrome({ profile: join(OUT, 'profile'), fresh: false });
 
 await ctx.addInitScript(([bubbles]) => {
   try {
@@ -95,13 +83,9 @@ await ctx.addInitScript(([bubbles]) => {
 
 const page = await ctx.newPage();
 const errors = [];
-page.on('pageerror', (e) => errors.push(e.message));
-page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+collectErrors(page, errors, null);
 
-const waitSolved = (timeout = 180000) => page.waitForFunction(() => {
-  const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.();
-  return s && v && v.version === s.version && v.final && !d.client.waiting;
-}, undefined, { timeout, polling: 100 });
+const waitSolved = (timeout = 180000) => demandFinal(page, { timeout, polling: 100 });
 
 /** one page load: events, the first final view's signature, the fresh final's */
 async function reload() {
@@ -128,9 +112,9 @@ try {
   if (MODE === 'prepare') {
     await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
-    const bytes = await readFile('C:/Users/anita/projects/maps/trainworld/T-007-real-nyc.save');
+    const bytes = await readFile(REAL_SAVE);
     const before = await page.evaluate(() => window.tw.lastSaved.peek());
-    await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+    await importSave(page, bytes);
     await page.waitForFunction(() => (window.tw.world.value?.save?.lines?.length ?? 0) > 100, undefined, { timeout: 240000 });
     await page.evaluate(() => window.tw.client.post({ kind: 'flush' }));
     await page.waitForFunction((b) => window.tw.lastSaved.peek() > b, before, { timeout: 60000 });
@@ -218,5 +202,5 @@ try {
 const errs = errors.filter((e) => !/favicon|openfreemap|AJAXError/.test(e));
 if (errs.length) { ok = false; console.log('FAIL  console errors: ' + errs.slice(0, 3).join(' | ')); }
 await writeFile(join(OUT, `t328-${MODE}-${LABEL}.json`), JSON.stringify(out, null, 1));
-await ctx.close();
+await close();
 process.exit(ok ? 0 : 1);

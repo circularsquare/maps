@@ -4,59 +4,29 @@
 // artifacts/trainworld/previews/ (SHADE=dark for the dark theme).
 //   SHADE=dark node trainworld/checks/t894-previews.mjs [url]   (from the maps root; default localhost:6120)
 // Prints PASS or FAIL lines and exits 1 on a failure. A few minutes.
-import { mkdtemp, rm, readdir, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, buildLine, demandFinal, REAL_SAVE, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6120/';
 const SHADE = process.env.SHADE ?? 'light';
-const REAL = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const ART = fileURLToPath(new URL('../../artifacts/trainworld/previews/', import.meta.url));
 await mkdir(ART, { recursive: true });
-
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
 
 let failed = false;
 const report = (name, ok, detail) => { failed ||= !ok; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
 
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t894-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1300, height: 900 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t894-', size: [1300, 900], args: ANGLE });
 try {
   await ctx.addInitScript((shade) => { try { if (!localStorage.getItem('t894')) { localStorage.setItem('trainworld-ui', JSON.stringify({ shade, display: { dayShown: 'weekday' }, v: 2 })); localStorage.setItem('t894', '1'); } } catch {} }, SHADE);
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   const wait = (ms) => page.waitForTimeout(ms);
-  const solved = () => page.waitForFunction(() => { const d = window.twDemand, v = d?.view?.(); return v && v.final && !d.client.waiting; }, undefined, { timeout: 300000, polling: 300 }).catch(() => {});
+  const solved = () => demandFinal(page, { strict: false, polling: 300 }).catch(() => {});
   const flush = async () => { await page.evaluate(() => window.tw.client.post({ kind: 'flush' })); await wait(2500); };
-  const build = (pts, name, colour) => page.evaluate(async ([PTS, name, colour]) => {
-    const tw = window.tw, c = tw.client;
-    const xy = PTS.map(([lng, lat]) => { const p = tw.lngLatToPack(lng, lat); return [p.x, p.y]; });
-    const near = (p) => { let best = null, bd = 1e12; for (const n of tw.world.value.nodes.values()) { const d = Math.hypot(n.x - p[0], n.y - p[1]); if (d < bd) { bd = d; best = n.id; } } return best; };
-    await c.edit({ op: 'route', from: { kind: 'free', x: xy[0][0], y: xy[0][1], level: -1 }, to: { kind: 'free', x: xy[1][0], y: xy[1][1], level: -1 }, pis: [], single: false });
-    for (let k = 2; k < xy.length; k++) {
-      await new Promise((d) => setTimeout(d, 300));
-      await c.edit({ op: 'route', from: { kind: 'node', node: near(xy[k - 1]) }, to: { kind: 'free', x: xy[k][0], y: xy[k][1], level: -1 }, pis: [], single: false });
-    }
-    await new Promise((d) => setTimeout(d, 500));
-    for (const p of xy) { await c.edit({ op: 'addStation', at: { kind: 'node', node: near(p) }, platform: 200, name: '' }); await new Promise((d) => setTimeout(d, 200)); }
-    await c.edit({ op: 'constructAll' });
-    await new Promise((d) => setTimeout(d, 500));
-    const r = await c.edit({ op: 'addLine', stops: xy.map(near), name, colour });
-    return r.ok;
-  }, [pts, name, colour]);
+  const build = async (pts, name, colour) => (await buildLine(page, pts, { name, colour })).ok;
   const go = async (zone, center) => {
     await page.evaluate((c) => void window.tw.map.jumpTo({ center: c, zoom: 12 }), center);
     await page.waitForFunction((zone) => window.twDemand.activeCity.peek() === zone, zone, { timeout: 60000, polling: 100 }).catch(() => {});
@@ -99,7 +69,7 @@ try {
     await new Promise((r) => setTimeout(r, 500));
     [...document.querySelectorAll('.saves-panel .save-files button')].find((b) => b.textContent === 'Load a file').click();
   })]);
-  await fc.setFiles(REAL);
+  await fc.setFiles(REAL_SAVE);
   await page.waitForFunction(() => (window.tw.world.value?.save?.lines?.length ?? 0) > 100, undefined, { timeout: 240000 });
   await solved();
   await flush();
@@ -128,7 +98,6 @@ try {
   report('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
   console.log(`screenshots in ${ART}`);
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exit(failed ? 1 : 0);

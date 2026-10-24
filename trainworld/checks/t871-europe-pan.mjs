@@ -6,14 +6,11 @@
 // main-thread ms a frame, long tasks over 50 ms, the aux worker's WASM MB. Fails when a zoom at or below
 // ZONE_LOAD_ZOOM (7.5) opens a pack or fetches a water mask, or the zoomed-in leg opens none.
 // QS adds URL switches (QS=&perfOff=zoneZoom: before T-871). Writes ../artifacts/trainworld/t871/pan-LABEL.json.
-import { spawn } from 'node:child_process';
-import { readdir, mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, collectErrors, startVite } from './lib.mjs';
 
-const HERE = fileURLToPath(new URL('.', import.meta.url));
 const OUT = process.env.OUT ?? fileURLToPath(new URL('../../artifacts/trainworld/t871/', import.meta.url));
 const LABEL = process.env.LABEL ?? 'run';
 const QS = process.env.QS ?? '';
@@ -27,37 +24,10 @@ const ROUTE = FULL
 const NEAR_ROUTE = [[2.35, 48.86], [3.06, 50.63], [4.35, 50.85]];
 const W = 1400, H = 900;
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright: set PLAYWRIGHT_MODULE to a file URL of playwright/index.mjs');
-}
-
-async function startVite() {
-  const port = Number(process.env.PAN_PORT ?? 6193);
-  const child = spawn(process.execPath, [join(HERE, 'dev-nowatch.mjs'), String(port)], { stdio: ['ignore', 'pipe', 'pipe'] });
-  let out = '';
-  child.stdout.on('data', (d) => { out += d; });
-  child.stderr.on('data', (d) => { out += d; });
-  const deadline = Date.now() + 60000;
-  while (!/localhost:/.test(out)) {
-    if (child.exitCode !== null || Date.now() > deadline) throw new Error('Vite did not start: ' + out.slice(-500));
-    await new Promise((r) => setTimeout(r, 200));
-  }
-  return { child, url: `http://localhost:${port}/` };
-}
-
 const pct = (a, p) => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; };
 
 async function run(BASE) {
-  const { chromium } = await playwright();
-  const profile = await mkdtemp(join(tmpdir(), 'tw-871-'));
-  const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: W, height: H }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+  const { ctx, close } = await launchChrome({ prefix: 'tw-871-', size: [W, H] });
   const errors = [];
   const reqs = [];
   const out = { label: LABEL, base: BASE, qs: QS, zooms: [], errors };
@@ -70,8 +40,7 @@ async function run(BASE) {
       requestAnimationFrame(tick);
       try { new PerformanceObserver((l) => { for (const e of l.getEntries()) window.__lt.push([e.startTime, e.duration]); }).observe({ type: 'longtask', buffered: true }); } catch { /* */ }
     });
-    page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-    page.on('console', (m) => { if (m.type() === 'error' && !/favicon|openfreemap|AJAXError|noritetsu/.test(m.text()) && !/maplibre-gl/.test(m.location()?.url ?? '')) errors.push(m.text()); });
+    collectErrors(page, errors, /favicon|openfreemap|AJAXError|noritetsu/, /maplibre-gl/);
     // the workers' fetches come through the page too
     page.on('request', (r) => { const m = /packs\/([^?]+)/.exec(r.url()); if (m) reqs.push(m[1]); });
     const cdp = await ctx.newCDPSession(page);
@@ -126,14 +95,13 @@ async function run(BASE) {
       console.log(`z${String(zoom).padEnd(4)} drags ${String(drags).padStart(3)}  pack loads ${String(r.packLoads).padStart(3)}  water ${String(r.waterFetches).padStart(3)}  outlines ${String(r.outlineFetches).padStart(3)}  main ${r.mainMsPerFrame} ms/frame  >50ms frames ${r.over50}  long tasks ${r.longTasks}/${r.longMs} ms (max ${r.longMax})  aux ${r.auxMB} MB`);
     }
   } finally {
-    await ctx.close();
-    await rm(profile, { recursive: true, force: true }).catch(() => {});
+    await close();
   }
   return out;
 }
 
 const given = process.argv[2];
-const vite = given ? null : await startVite();
+const vite = given ? null : await startVite(Number(process.env.PAN_PORT ?? 6193));
 let out;
 try {
   out = await run(given ?? vite.url);

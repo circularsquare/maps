@@ -1,26 +1,14 @@
-// T-801: no grey city bubbles. A start on the map in a fresh profile (demand None) turns Homes on and
-// shows the zoomed-out bubbles of every zone; a click on one selects it. In a new New York game
+// T-801: no grey city bubbles. A start on the map in a fresh profile (demand None) turns Homes on; the
+// whole-world view draws no bubbles and a click there selects nothing (T-1046). In a new New York game
 // (start menu): zoomed out over the Northeast, Philadelphia and the rest are ordinary city bubbles;
 // a pan over Philadelphia loads its pack for the view, and no market pack (no station reaches it).
 // Screenshots to artifacts/trainworld/t801-*.png.
 //   BASE=http://localhost:6141/ node trainworld/checks/t801-no-grey.mjs   (from the maps root)
-import { readdir, mkdtemp, rm, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, collectErrors } from './lib.mjs';
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-const { chromium } = await playwright();
 const BASE = process.env.BASE ?? 'http://localhost:6141/';
 const SHOTS = fileURLToPath(new URL('../../artifacts/trainworld/', import.meta.url));
 await mkdir(SHOTS, { recursive: true });
@@ -32,12 +20,10 @@ const report = (name, ok, detail = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  ' + detail : ''}`);
 };
 
-const profile = await mkdtemp(join(tmpdir(), 'tw-t801-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t801-' });
 const page = await ctx.newPage();
 const errors = [];
-page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-page.on('console', (m) => { if (m.type() === 'error' && !/favicon|openfreemap|AJAXError/.test(m.text())) errors.push(m.text()); });
+collectErrors(page, errors);
 
 const loadsOf = (id) => page.evaluate((id) => window.twDemand.start.loads.filter((l) => l.item === id && l.openedAt !== undefined).length, id);
 /** the page point of (lng, lat) */
@@ -56,8 +42,8 @@ const hoverTag = async (ll) => {
 };
 
 try {
-  // 1. a start on the map, first in the fresh profile (demand None): Homes goes on, the zones'
-  // bubbles show, and a click selects one
+  // 1. a start on the map, first in the fresh profile (demand None): Homes goes on; the world view
+  // draws no bubbles and a click selects nothing
   await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
   await page.waitForSelector('.start-menu .start-new', { timeout: 60000 });
   const homesBefore = await page.evaluate(() => window.tw?.display?.value?.commuters ?? null);
@@ -71,13 +57,12 @@ try {
   await page.screenshot({ path: join(SHOTS, 't801-world-light.png') });
   const LON = [-0.1276, 51.5072];
   const lonTag = await hoverTag(LON);
-  // zoomed this far out the bubble on top near London may be a neighbouring zone's
-  report('a map start shows city bubbles', /trips per day within /.test(lonTag), JSON.stringify(lonTag));
+  report('a map start draws no bubbles at the world view', lonTag === '', JSON.stringify(lonTag));
   const p = await at(LON);
   await page.mouse.click(p.x, p.y);
   await page.waitForTimeout(800);
   const sel = await page.evaluate(() => window.tw.selection?.peek?.() ?? null);
-  report('a click on one selects it', sel?.kind === 'city', JSON.stringify(sel));
+  report('a click there selects nothing', sel === null, JSON.stringify(sel));
   await page.screenshot({ path: join(SHOTS, 't801-world-pick-light.png') });
 
   // 2. a new New York game from the start menu
@@ -88,7 +73,6 @@ try {
   await page.click('.start-menu .new-game .start-new');
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client && !document.querySelector('.start-menu'), undefined, { timeout: 180000 });
   await page.waitForTimeout(3000);
-  report('no grey layer', await page.evaluate(() => window.tw.greyAt === undefined));
 
   // 3. zoomed out over the Northeast: Philadelphia is an ordinary city bubble
   await page.evaluate(() => { window.tw.display.value = { ...window.tw.display.value, commuters: true, commuterEnd: 'home' }; window.tw.map.jumpTo({ center: [-74.6, 40.3], zoom: 8 }); });
@@ -116,8 +100,7 @@ try {
 } catch (e) {
   report('check ran', false, e.message.split('\n')[0]);
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true });
+  await close();
 }
 console.log(results.every(Boolean) ? 'ALL PASS' : 'SOME FAILED');
 process.exit(results.every(Boolean) ? 0 : 1);

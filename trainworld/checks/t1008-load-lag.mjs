@@ -9,11 +9,10 @@
 // ("lon,lat,zoom" to look at while loading), LINES (lines the loaded save has at least, default 50),
 // CONTINUE=1 (the save stored in the slot and solved first, then the page opened again with
 // `?continue=1`: the window starts at that navigation, the demand cache shown first).
-import { readFile, readdir, mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, importSave, demandFinal } from './lib.mjs';
 
 const SAVE = process.env.SAVE ?? fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const OUT = process.env.OUT ?? fileURLToPath(new URL('../../artifacts/trainworld/t1008/', import.meta.url));
@@ -24,17 +23,6 @@ const LINES = Number(process.env.LINES ?? 50);
 const CONTINUE = process.env.CONTINUE === '1';
 const BASE = process.argv[2] ?? 'http://localhost:6131/';
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
-
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
 
 /** self and inclusive ms per function (name @ file:line) from a CPU profile */
 function profileTop(prof, n = 30) {
@@ -55,9 +43,7 @@ function profileTop(prof, n = 30) {
   return { self: top(self), inclusive: top(incl), idleMs: Math.round([...self].filter(([k]) => /^\(idle/.test(k)).reduce((a, [, v]) => a + v, 0) / 1000) };
 }
 
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t1008-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t1008-' });
 const errors = [];
 const out = { label: LABEL, base: BASE, save: SAVE, windowMs: WINDOW, errors };
 try {
@@ -83,7 +69,7 @@ try {
   page.on('console', (m) => { if (m.type() === 'error' && !/favicon|openfreemap|AJAXError|^\w{1,3}$/.test(m.text()) && !/maplibre-gl/.test(m.location()?.url ?? '')) errors.push(m.text().slice(0, 300)); });
   const cdp = await ctx.newCDPSession(page);
   const workers = `demandWorkers=${process.env.DEMAND_WORKERS ?? 2}`;
-  const solved = (timeout) => page.waitForFunction(() => { const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.(); return s && v && v.version === s.version && v.final && !d.client.waiting; }, undefined, { timeout, polling: 250 });
+  const solved = (timeout) => demandFinal(page, { timeout, polling: 250 });
   let t0;
   if (CONTINUE) {
     // the save stored in the slot and solved once, so its demand cache (T-328) is written; then the
@@ -92,7 +78,7 @@ try {
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
     const bytes = await readFile(SAVE);
     const before = await page.evaluate(() => window.tw.lastSaved.peek());
-    await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+    await importSave(page, bytes);
     await page.waitForFunction((n) => (window.tw.world.value?.save?.lines?.length ?? 0) >= n, LINES, { timeout: 300000 });
     await page.evaluate(() => window.tw.client.post({ kind: 'flush' }));
     await page.waitForFunction((b) => window.tw.lastSaved.peek() > b, before, { timeout: 60000 });
@@ -113,7 +99,7 @@ try {
     await cdp.send('Profiler.enable');
     await cdp.send('Profiler.setSamplingInterval', { interval: 500 });
     await cdp.send('Profiler.start');
-    t0 = await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; const t = performance.now(); window.tw.client.post({ kind: 'import', bytes: b }, [b]); return t; }, Array.from(bytes));
+    t0 = await importSave(page, bytes);
   }
   await page.waitForFunction((n) => (window.tw?.world?.value?.save?.lines?.length ?? 0) >= n, LINES, { timeout: 300000, polling: 100 });
   out.linesAtMs = Math.round(await page.evaluate(() => performance.now()) - t0);
@@ -199,8 +185,7 @@ try {
     log('figures', JSON.stringify(out.figures[0]));
   }
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 await mkdir(OUT, { recursive: true });
 await writeFile(join(OUT, `load-${LABEL}.json`), JSON.stringify(out, null, 1));

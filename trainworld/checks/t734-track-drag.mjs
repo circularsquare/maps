@@ -1,24 +1,10 @@
 // T-734: on the real save, with the track tool, a press and drag on a blueprint node moves it and a click still places track.
 //   node trainworld/checks/t734-track-drag.mjs [url]   (from the maps root; default localhost:6112)
-import { mkdtemp, rm, readdir, readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL, fileURLToPath } from 'node:url';
+import { readFile } from 'node:fs/promises';
+import { launchChrome, importSave, REAL_SAVE, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6112/';
-async function playwright() {
-  try { return await import('playwright'); } catch { /* */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t734-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1200, height: 800 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t734-', size: [1200, 800], args: ANGLE });
 let failed = false;
 const check = (ok, msg) => { failed ||= !ok; console.log(`${ok ? 'PASS' : 'FAIL'}  ${msg}`); };
 try {
@@ -26,8 +12,8 @@ try {
   page.on('pageerror', (e) => console.log('pageerror', e.message));
   await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
-  const bytes = await readFile(fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url)));
-  await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+  const bytes = await readFile(REAL_SAVE);
+  await importSave(page, bytes);
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
   await page.waitForTimeout(3000);
   const setup = await page.evaluate(async () => {
@@ -105,7 +91,6 @@ try {
   failed = true;
   console.log('FAIL  ' + e.message);
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exitCode = failed ? 1 : 0;

@@ -6,11 +6,8 @@
 // destination bubble beside the plane reads the same with and without a selection. About three minutes.
 //   node trainworld/checks/t674-airport-modes.mjs [url]   (from the maps root; default localhost:6144)
 // Prints PASS or FAIL lines and exits 1 on failure. Writes artifacts/trainworld/t674-airport.json.
-import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { writeFile } from 'node:fs/promises';
+import { launchChrome, demandFinal, ANGLE } from './lib.mjs';
 
 const BASE = (process.argv[2] ?? 'http://localhost:6144/').replace(/\/?$/, '/');
 const OUT = 'artifacts/trainworld/';
@@ -19,23 +16,10 @@ const STOPS = [['Hamamatsucho', 139.7570, 35.6553], ['Shinagawa', 139.7387, 35.6
 const TOL = 0.01;
 const JOIN_M = 2500; // map/airportMarks.ts
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t674-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t674-', args: ANGLE });
 const results = [], log = {};
 const report = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
-const waitFinal = (page, after = -1) => page.waitForFunction((v) => { const d = window.twDemand, dv = d?.view?.(); return dv && dv.final && dv.version > v && !d.client.waiting; }, after, { timeout: 900000, polling: 500 });
+const waitFinal = (page, after = -1) => demandFinal(page, { strict: false, after, timeout: 900000 });
 const shares = (r, w, d) => { const n = r + w + d; return n > 0 ? [r / n, w / n, d / n] : [0, 0, 0]; };
 const off = (a, b) => Math.max(...a.map((v, i) => Math.abs(v - b[i])));
 
@@ -161,7 +145,6 @@ try {
   report('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {
   await writeFile(OUT + 't674-airport.json', JSON.stringify(log, null, 1));
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exit(results.length && results.every(Boolean) ? 0 : 1);

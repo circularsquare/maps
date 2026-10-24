@@ -1,26 +1,15 @@
 // T-800: every zone has an outline from the start (packs/outlines.json, pipeline/zone_outlines.py).
-// A new New York game, then a jump to Europe: the outline source should hold the Europe zones at
-// once, before any of their own boundary files have been fetched, and each zone's own outline
-// replaces its coarse one when its pack arrives. NOFILE=1 blocks the coarse file (the old behaviour).
+// A new game started on the map (no start city, so every realm is shown), then a jump to Europe: the
+// outline source should hold the Europe zones at once, before any of their own boundary files have
+// been fetched, and each zone's own outline replaces its coarse one when its pack arrives. NOFILE=1
+// blocks the coarse file.
 // Screenshots to artifacts/trainworld/t800-<TAG>-*.png.
 //   BASE=http://localhost:6146/ [NOFILE=1 TAG=before] node trainworld/checks/t800-outlines.mjs   (from the maps root)
-import { readdir, mkdtemp, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, collectErrors } from './lib.mjs';
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-const { chromium } = await playwright();
 const BASE = process.env.BASE ?? 'http://localhost:6146/';
 const TAG = process.env.TAG ?? (process.env.NOFILE ? 'before' : 'after');
 const SHOTS = fileURLToPath(new URL('../../artifacts/trainworld/', import.meta.url));
@@ -31,12 +20,10 @@ const report = (name, ok, detail = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  ' + detail : ''}`);
 };
 
-const profile = await mkdtemp(join(tmpdir(), 'tw-t800-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t800-' });
 const page = await ctx.newPage();
 const errors = [];
-page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-page.on('console', (m) => { if (m.type() === 'error' && !/favicon|openfreemap|AJAXError/.test(m.text())) errors.push(m.text()); });
+collectErrors(page, errors);
 let boundaryFetches = 0;
 page.on('request', (r) => { if (r.url().includes('.boundary.geojson')) boundaryFetches++; });
 if (process.env.NOFILE) await page.route('**/packs/outlines.json*', (r) => r.abort());
@@ -89,6 +76,6 @@ try {
   const bad = errors.filter((e) => !(process.env.NOFILE && /ERR_FAILED/.test(e)));
   report('no console errors', bad.length === 0, bad.slice(0, 3).join(' | '));
 } finally {
-  await ctx.close();
+  await close();
 }
 process.exit(results.every(Boolean) ? 0 : 1);

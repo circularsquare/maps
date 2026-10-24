@@ -209,12 +209,19 @@ data/packs mid-batch.
 Run from the maps root (`node trainworld/checks/<file>`).
 
 - `smoke.mjs [url]`: the pre-commit smoke check (CLAUDE.md "Before a commit").
+- `lib.mjs`: what the checks share, imported by every check that drives a browser or the worker
+  in Node: `playwright()` (finds Playwright), `launchChrome` (headless Chrome on a throwaway
+  profile, deleted by its `close()`), `collectErrors`, `importSave`, `REAL_SAVE`, `demandFinal` (the
+  wait for a demand final), `buildLine` and `acrossLine` (a built test line), `startVite`, and for
+  Node `loadApp` (an app module bundled by Vite), `bundleDemandWorker` with `startWorker` (the real
+  demand worker), `workerPack`, `marketPacks` and `network` (two test lines in the New York frame).
+  A new check imports from it rather than copying a block.
 - `dev-nowatch.mjs <port>`: the app's Vite with watching and HMR off, for an agent's own loop.
 - `agent-tree.mjs new|list|land|remove`: agent worktrees in `maps/.tw-trees/<name>` on branch
   `tw/<name>` (CLAUDE.md "Agent worktrees"); `land` squashes a tree's trainworld/ changes onto master.
 - `every-pack-opens.mjs [url] [zone ...]`: every registered zone, in a fresh new game, opens for
   the view and solves a three-station line across its centre without a demand error (T-484; about
-  16 s a zone, 18 minutes for all).
+  16 s a zone, so 7 to 8 hours for all 1,700; name the zones to run).
 - `t1053-load-check.mjs [port]`: on its own Vite with a scratch registry lacking wnd, nlc and lit,
   a new game's save and the real save naming them load with Hartford in their place (T-1053, about
   a minute).
@@ -222,25 +229,32 @@ Run from the maps root (`node trainworld/checks/<file>`).
   widths), `t145-check` (the route preview contract), `t146-check` (complexes), `t1053-zone-ids` (removed zones have successors; `zoneNow` and `currentZones`; in smoke), `t125-frame-check`
   (world frames against PROJ), `t116-save-check` (save format), `t285-merge-check` (needs
   `--experimental-strip-types`), `t066-wasm-check` (demand WASM contract), `t066-worker-check` and
-  `t149-worker-check` (the real demand worker in Node, a few minutes each), `t325-bare-check` (a
+  `t149-worker-check` (the real demand worker in Node over New York, Philadelphia and Boston, a few
+  minutes each; every zone at once is more than a worker's WASM holds), `t325-bare-check` (a
   zone opened bare against the same zone solved, bubbles and bubble clicks, to the bit; `ZONE=tor`
   for another), `t377-world` (the real save, then lines in Toronto and London:
   startup, edits per cluster, memory, London's longer trips by place), `t409-worker-check` (two networks with no track between
   them solve as two clusters, each as it would alone, to the bit; about a minute), `t301-worker-check`
-  (packs and the market closed and reopened, also mid-solve and bare: figures to the bit).
+  (packs and the market closed and reopened, also mid-solve and bare: figures to the bit),
+  `t761-plain-net <label> <out.json>` (a `t756-reach.mjs capture` as plain JSON arrays for the native
+  `t761_market_bench`, sim/src/demand/intercity/tests.rs).
+- Python: `token_usage.py <transcript.jsonl> ...` (an agent's token use from its transcript,
+  CLAUDE.md "Token counts"), `world_field_check.py` (the world field's country totals and fixed
+  links, T-375; from trainworld/), and in pipeline/ `test_education_sources.py` and
+  `test_university_sources.py` (`python -m unittest test_university_sources test_education_sources`
+  from pipeline/, no network).
 - Browser and timing (Playwright, `PLAYWRIGHT_MODULE`). A `page.evaluate` that moves the map returns
   nothing (`() => void window.tw.map.jumpTo(...)`): MapLibre's `jumpTo` returns the map, and Playwright
   serialising it is 1-2 s of main thread that reads as lag (T-1052). `startup-timing.mjs` with
   `static-serve.mjs` (startup marks on a scratch production build; `MENU=1` through the start
-  menu, timed from the pick), `t303-measure.mjs` (demand
-  loading, clicks, pans), `t326-clusters.mjs` (the real save plus a Toronto line: edits in each cluster
+  menu, timed from the pick), `t326-clusters.mjs` (the real save plus a Toronto line: edits in each cluster
   timed to their final, every final figure hashed against `?perfOff=clusters`), `t409-split.mjs` (a
   Boston and a Philadelphia line, in a new game or on the real save, edits timed, against
   `?perfOff=split`), `t301-pan.mjs` (a long pan, Washington to Toronto and back, bubbles on: worker
   memory, open packs, reopening times; `SAVE=1` on the real save), `t801-no-grey.mjs` (no grey
   cities: a map start in a fresh profile turning Homes on, its zoomed-out bubbles, a click selecting
   one; a new New York game's Philadelphia an ordinary bubble zoomed out, loaded by a pan with no
-  market pack; screenshots `t801-*.png`), `t800-outlines.mjs` (a jump from New York to Europe shows
+  market pack; screenshots `t801-*.png`), `t800-outlines.mjs` (a game started on the map, then a jump to Europe, shows
   every zone's outline at once; `NOFILE=1` blocks the coarse file, `DELAY=<ms>` slows the boundary
   files; screenshots `t800-*.png`), `t124-periods.mjs`
   (the real save: a one-level train-count edit and an every-level edit timed to their final, hashed
@@ -334,9 +348,12 @@ Run from the maps root (`node trainworld/checks/<file>`).
   cluster and on its reach, and fails when a figure moves past the tolerance; `compare <label>
   chunks` the market and the commutes with every zone pair against pairs dealt in chunks (T-780, T-874); New York about 1.5
   minutes, Japan's seven cities about 15; notes/T-756.md),
-  `t161-complexes.mjs` (the real save's complexes for the native
-  comparison), `t125-fingerprint.mjs` (a save's derived geometry, before and after a frame
-  change), `t277-browser.mjs` (Toronto; not rerun since T-277), `city-browser.mjs <id>` (a tier 0
+  `t675-wheel-lag.mjs` (a mouse-wheel zoom with a main-thread stall as it starts travels as far as
+  one without; `RAW=1` takes the fix in map/mapView.ts off and must fail),
+  `t1007-panic.mjs` (forced panics in the clock worker, dev server only: an edit that panics is undone,
+  an idle or read panic keeps the state, the fourth in a minute leaves the model down; about 2
+  minutes), `t161-complexes.mjs` (the real save's complexes for the native
+  comparison), `city-browser.mjs <id>` (a tier 0
   city: open, boundary, the top bar's split, a water crossing refused, a test line to a final solve,
   T-364; a row from its table, or from the file in `ROW`, which `pack_gate.py` writes for any pack;
   `ROWS`, a list of rows, checks them all in one sandbox game, `ZONES_PER_PAGE` (8) to a page load,

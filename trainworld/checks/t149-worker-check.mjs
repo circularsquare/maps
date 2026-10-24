@@ -7,42 +7,15 @@
 // until a solve covers it, and a cells query for a city not open answers empty instead of failing.
 // Run from the maps root: node trainworld/checks/t149-worker-check.mjs
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { Worker } from 'node:worker_threads';
-import { fileURLToPath } from 'node:url';
-import { rolldown } from '../app/node_modules/rolldown/dist/index.mjs';
-const artifacts = new URL('../../artifacts/trainworld/t149/', import.meta.url);
-mkdirSync(artifacts, { recursive: true });
-const compiled = new URL('demand-worker.mjs', artifacts), wrapper = new URL('worker-adapter.mjs', artifacts);
-const wasm = new URL('../app/src/wasm/demand/sim_bg.wasm', import.meta.url);
-const bundle = await rolldown({ input: fileURLToPath(new URL('../app/src/workers/demand.worker.ts', import.meta.url)), platform: 'browser' });
-await bundle.write({ file: fileURLToPath(compiled), format: 'esm' }); await bundle.close();
-writeFileSync(wrapper, `import {parentPort} from 'node:worker_threads';
-import {readFileSync} from 'node:fs';
-globalThis.onmessage=null;
-globalThis.location={search:'',hash:'',href:'http://localhost/'};
-globalThis.postMessage=(data,options={})=>parentPort.postMessage(data,options.transfer??[]);
-globalThis.fetch=async()=>new Response(readFileSync(${JSON.stringify(fileURLToPath(wasm))}),{headers:{'Content-Type':'application/wasm'}});
-await import(${JSON.stringify(compiled.href)});
-parentPort.on('message',data=>globalThis.onmessage({data}));
-parentPort.postMessage({kind:'boot'});
-`);
-function start() {
-  const w = new Worker(wrapper), messages = [], waiters = [];
-  w.on('message', (msg) => { messages.push(msg); for (const f of [...waiters]) f(msg); });
-  w.on('error', (e) => { console.error(e); process.exit(1); });
-  const next = (predicate, from = 0) => new Promise((resolve, reject) => {
-    const existing = messages.slice(from).find(predicate); if (existing) return resolve(existing);
-    const timeout = setTimeout(() => reject(new Error('worker timed out')), 120000);
-    const f = (m) => { if (predicate(m)) { clearTimeout(timeout); waiters.splice(waiters.indexOf(f), 1); resolve(m); } }; waiters.push(f);
-  });
-  return { w, messages, next };
-}
-const registry = JSON.parse(readFileSync(new URL('../app/src/game/registry.json', import.meta.url)));
-const pack = (id) => ({ id, header: readFileSync(new URL(`../data/packs/${id}.json`, import.meta.url), 'utf8'), bin: Uint8Array.from(readFileSync(new URL(`../data/packs/${id}.bin`, import.meta.url))).buffer });
-// T-377: zones' market packs; T-776: the world market's rows, which the page sends with the first
-const ROWS = readFileSync(new URL('../app/src/game/market-rows.json', import.meta.url), 'utf8');
-const market = (ids) => ids.map((id) => ({ id, pack: readFileSync(new URL(`../data/packs/${id}.market.json`, import.meta.url), 'utf8') }));
+import { writeFileSync } from 'node:fs';
+import { bundleDemandWorker, startWorker, workerPack as pack, marketPacks as market, marketRows } from './lib.mjs';
+const wrapper = await bundleDemandWorker('t149');
+const start = () => startWorker(wrapper, { timeout: 120000 });
+// New York, Philadelphia and Boston stand for the registry: every zone at once is 2.3 GB of packs,
+// more than a worker's 4 GB of WASM holds
+const ZONES = ['nyc', 'phl', 'bos'];
+// T-776: the world market's rows, which the page sends with the first
+const ROWS = marketRows();
 // a three-station line across Midtown (world frame = the New York pack's origin, equirectangular)
 const times = new Float32Array(18); for (let lev = 0; lev < 3; lev++) { times[lev * 3] = 60; times[lev * 3 + 1] = 60; times[(lev + 3) * 3 + 1] = 60; times[(lev + 3) * 3 + 2] = 60; }
 const net = { frame: { kind: 'equirect', lon: -73.985, lat: 40.758 }, stXY: new Float32Array([0, 0, 4000, 0, 8000, 0]), lineN: new Uint32Array([3]), stops: new Uint32Array([0, 1, 2]), times, tph: new Float32Array([12, 12, 12]), cars: new Float32Array([4]), fare: { base: 1, perKm: .1 }, hopKm: new Float32Array([4, 4, 0, 0, 4, 4]) };
@@ -55,7 +28,7 @@ const t = () => performance.now();
 // before T-149: every pack at init
 const all = start(); await all.next((m) => m.kind === 'boot');
 let a0 = t();
-all.w.postMessage({ kind: 'init', packs: registry.cities.map(({ id }) => pack(id)), intercity: market(registry.cities.map(({ id }) => id)), rows: ROWS, periods: [0, 1, 2, 3, 4] });
+all.w.postMessage({ kind: 'init', packs: ZONES.map(pack), intercity: market(ZONES), rows: ROWS, periods: [0, 1, 2, 3, 4] });
 const readyAll = await all.next((m) => m.kind === 'ready' || m.kind === 'failed'); assert.equal(readyAll.kind, 'ready', readyAll.error);
 const openAllMs = t() - a0;
 all.w.postMessage({ kind: 'solve', version: 1, net, rounds: ROUNDS });
@@ -80,7 +53,7 @@ lazy.w.postMessage({ kind: 'solve', version: 1, net, rounds: ROUNDS });
 await lazy.next((m) => (m.kind === 'done' && m.version === 1) || m.kind === 'failed');
 assert(!lazy.messages.some((m) => m.kind === 'failed'), lazy.messages.find((m) => m.kind === 'failed')?.error);
 const one = results(lazy.messages, 1); assert.equal(one.length, 5);
-const same = (x, y, what) => { assert.equal(x.length, y.length, what); for (let k = 0; k < x.length; k++) assert(Math.abs(x[k] - y[k]) <= 1e-6 * Math.max(1, Math.abs(y[k])), `${what}[${k}] ${x[k]} vs ${y[k]}`); };
+const same = (x, y, what) => { assert.equal(x.length, y.length, what); for (let k = 0; k < x.length; k++) assert(Object.is(x[k], y[k]) || Math.abs(x[k] - y[k]) <= 1e-6 * Math.max(1, Math.abs(y[k])), `${what}[${k}] ${x[k]} vs ${y[k]}`); };
 let maxDiff = 0;
 for (let q = 0; q < 5; q++) {
   for (const f of ['seg', 'board', 'alight', 'loadOfCrush']) { same(one[q][f], ref[q][f], `period ${q} ${f}`); for (let k = 0; k < ref[q][f].length; k++) maxDiff = Math.max(maxDiff, Math.abs(one[q][f][k] - ref[q][f][k])); }
@@ -91,7 +64,7 @@ for (let q = 0; q < 5; q++) {
   same(railByPlaces(one[q], lazy.messages), railByPlaces(ref[q], all.messages), `period ${q} corridors with rail`);
   same(one[q].corridorShares, ref[q].corridorShares, `period ${q} corridor shares`);
   assert.deepEqual(Object.keys(one[q].citySummary), ['nyc']);
-  // the other eight cities had no rail at all in the full solve
+  // the other zones had no rail at all in the full solve
   for (const id of Object.keys(ref[q].citySummary)) if (id !== 'nyc') assert.equal(ref[q].citySummary[id][2], 0, `${id} rail in the full solve`);
 }
 // cells for a city not open: an empty answer, never a pool failure

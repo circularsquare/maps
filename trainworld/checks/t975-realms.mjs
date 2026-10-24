@@ -9,23 +9,11 @@
 // circles or city bubbles. Measures the zoomed-out world (bubbles, frame time while panning) and what a pan across
 // France and Germany at zoom 9 fetches. Screenshots and a JSON to artifacts/trainworld/t975-<TAG>-*.
 //   BASE=http://localhost:6165/ [TAG=after] node trainworld/checks/t975-realms.mjs
-import { readdir, mkdtemp, mkdir, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, collectErrors } from './lib.mjs';
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-const { chromium } = await playwright();
 const BASE = process.env.BASE ?? 'http://localhost:6165/';
 const TAG = process.env.TAG ?? 'after';
 const SHOTS = fileURLToPath(new URL('../../artifacts/trainworld/', import.meta.url));
@@ -37,13 +25,11 @@ const report = (name, ok, detail = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  ' + detail : ''}`);
 };
 
-const profile = await mkdtemp(join(tmpdir(), 'tw-t975-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t975-' });
 const errors = [];
 const fetched = [];
 const watch = (page) => {
-  page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-  page.on('console', (m) => { if (m.type() === 'error' && !/favicon|openfreemap|AJAXError|ERR_FAILED/i.test(m.text())) errors.push(m.text()); });
+  collectErrors(page, errors, /favicon|openfreemap|AJAXError|ERR_FAILED/i);
   page.on('requestfinished', async (r) => {
     const u = r.url();
     if (!u.includes('/packs/')) return;
@@ -126,8 +112,7 @@ async function europePan(page) {
 
 // 0. T-1132, T-1133: a start on the map, and the location button, in a profile of their own
 {
-  const profile0 = await mkdtemp(join(tmpdir(), 'tw-t975-map-'));
-  const ctx0 = await chromium.launchPersistentContext(profile0, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+  const { ctx: ctx0, close: close0 } = await launchChrome({ prefix: 'tw-t975-map-' });
   try {
     const page = await ctx0.newPage();
     watch(page);
@@ -193,7 +178,7 @@ async function europePan(page) {
     report('a map start\'s first station leaves its realm shown and the rest dark', d1.length > 10 && !d1.includes('France') && d1.includes('Germany'), `(${d1.length} dark)`);
     await page.screenshot({ path: join(SHOTS, `t975-${TAG}-map-start-built.png`) });
   } finally {
-    await ctx0.close();
+    await close0();
   }
 }
 
@@ -332,7 +317,7 @@ try {
 
   report('no console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {
-  await ctx.close();
+  await close();
 }
 await writeFile(join(SHOTS, `t975-${TAG}.json`), JSON.stringify(out, null, 1));
 process.exit(results.every(Boolean) ? 0 : 1);

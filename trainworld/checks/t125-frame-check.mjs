@@ -5,20 +5,13 @@
 // Writes artifacts/trainworld/notes-outputs/T-125-frame-check.json.
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
-import { build } from '../app/node_modules/vite/dist/node/index.js';
+import { loadApp } from './lib.mjs';
 
 // cities.ts reaches game/ui.ts, which reads the page at import
 globalThis.location ??= { search: '' };
 globalThis.document ??= { documentElement: { dataset: {}, style: { setProperty() {}, removeProperty() {} } }, addEventListener() {} };
-async function load(entry) {
-  const bundle = await build({ configFile: false, root: 'trainworld/app', logLevel: 'silent', build: {
-    write: false, minify: false, lib: { entry: entry.replace('trainworld/app/', ''), formats: ['es'] },
-  } });
-  const output = (Array.isArray(bundle) ? bundle[0] : bundle).output;
-  return import('data:text/javascript;base64,' + Buffer.from(output.find(o => o.type === 'chunk').code).toString('base64'));
-}
-const frames = await load('trainworld/app/src/game/frame.ts');
-const cities = await load('trainworld/app/src/game/cities.ts');
+const frames = await loadApp('src/game/frame.ts');
+const cities = await loadApp('src/game/cities.ts');
 const fx = JSON.parse(await readFile('trainworld/app/src/game/frame.fixture.json', 'utf8'));
 const out = { proj: [], cities: {} };
 

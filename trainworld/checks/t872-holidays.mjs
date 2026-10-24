@@ -6,29 +6,12 @@
 // the same day is a weekday in Canada and the UK.
 //   node trainworld/checks/t872-holidays.mjs [url]     (from the maps root; default localhost:6145)
 // Prints PASS or FAIL lines and exits 1 on failure. About two minutes, most of it demand.
-import { readFile, mkdtemp, rm, readdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { readFile } from 'node:fs/promises';
+import { launchChrome, importSave, demandFinal, REAL_SAVE, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6145/';
-const SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t872-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1200, height: 800 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t872-', size: [1200, 800], args: ANGLE });
 let ok = true;
 const check = (pass, text) => { console.log(`${pass ? 'PASS' : 'FAIL'}  ${text}`); ok &&= pass; };
 try {
@@ -37,10 +20,10 @@ try {
   await page.goto(`${BASE}?debug=1&new=1&paused=1`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
 
-  const bytes = await readFile(SAVE);
-  await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+  const bytes = await readFile(REAL_SAVE);
+  await importSave(page, bytes);
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
-  await page.waitForFunction(() => { const d = window.twDemand, v = d?.view?.(); return v && v.final && !d.client.waiting && !window.tw.clock.held.peek(); }, undefined, { timeout: 300000, polling: 500 });
+  await demandFinal(page, { strict: false, held: true });
   await page.evaluate(() => window.tw.clock.setRunning(false));
 
   // the next Thanksgiving after the save's clock, and the same day in Canada and the UK
@@ -79,7 +62,6 @@ try {
   const [lw, lt, lf, ls] = [WED, THU, THU + 1, SAT].map((d) => by.get(d));
   check(!!(lw && lt && lf && ls) && near(lt.fares, ls.fares, 0.03) && near(lw.fares, lf.fares, 0.03) && !near(lt.fares, lw.fares, 0.1), `the ledger's Thanksgiving is a weekend day, Wednesday and Friday weekdays`);
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exit(ok ? 0 : 1);

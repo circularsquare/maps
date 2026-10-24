@@ -5,47 +5,31 @@
 // at zoom 15 and 17.5; a click on either track at 17.5 picks a line.
 //   node trainworld/checks/t658-lanes.mjs [url] [baseline url]   (from the maps root)
 // Writes artifacts/trainworld/t658/*.png. Prints PASS or FAIL lines, exits 1 on failure. A few minutes.
-import { mkdtemp, rm, readdir, readFile, mkdir, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL, fileURLToPath } from 'node:url';
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, importSave, demandFinal, REAL_SAVE, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6160/';
 const REF = process.argv[3] ?? 'http://localhost:8800/trainworld/';
-const SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const OUT = fileURLToPath(new URL('../../artifacts/trainworld/t658', import.meta.url));
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-
-const { chromium } = await playwright();
 await mkdir(OUT, { recursive: true });
 const results = [];
 const report = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
-const bytes = Array.from(await readFile(SAVE));
-const profiles = [];
+const bytes = Array.from(await readFile(REAL_SAVE));
+const closers = [];
 
 async function open(url, shade) {
-  const profile = await mkdtemp(join(tmpdir(), 'tw-t658-'));
-  profiles.push(profile);
-  const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1200, height: 800 }, args: ['--use-angle=d3d11'] });
+  const { ctx, close } = await launchChrome({ prefix: 'tw-t658-', size: [1200, 800], args: ANGLE });
+  closers.push(close);
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.log('pageerror', e.message));
   await page.addInitScript((s) => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: s, display: { dayShown: 'weekday' }, v: 2 })); } catch {} }, shade);
   await page.goto(`${url}?debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twViews && window.twDemand?.client, undefined, { timeout: 180000 });
-  await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, bytes);
+  await importSave(page, bytes);
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
-  await page.waitForFunction(() => { const d = window.twDemand, v = d?.view?.(); return v && v.final && !d.client.waiting; }, undefined, { timeout: 300000, polling: 500 });
+  await demandFinal(page, { strict: false });
   await page.waitForFunction(() => !document.querySelector('.loading-card'), undefined, { timeout: 300000, polling: 500 });
   await page.waitForTimeout(1500);
   return { ctx, page };
@@ -260,6 +244,6 @@ try {
   await shoot(dark.page, 'dark');
   await dark.ctx.close();
 } finally {
-  for (const p of profiles) await rm(p, { recursive: true, force: true }).catch(() => {});
+  for (const close of closers) await close().catch(() => {});
 }
 process.exit(results.length && results.every(Boolean) ? 0 : 1);

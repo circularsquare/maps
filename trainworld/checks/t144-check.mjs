@@ -2,27 +2,17 @@
 // as the track is, dots zoomed out, no growth when selected; picking on the drawn shape.
 // Run from maps: node trainworld/checks/t144-check.mjs
 import assert from 'node:assert/strict';
-import {build} from '../app/node_modules/vite/dist/node/index.js';
-import {resolve} from 'node:path';
-const root=resolve('trainworld/app');
+import {loadApp} from './lib.mjs';
 // game/ui.ts touches the DOM when it loads; the check itself uses none
 globalThis.location={search:''};
 globalThis.document={visibilityState:'visible',documentElement:{dataset:{},style:{setProperty(){},removeProperty(){}}},addEventListener(){},fonts:{ready:Promise.resolve()}};
-const bundle=await build({configFile:false,logLevel:'silent',plugins:[{
- name:'station-check',resolveId(id){if(id.endsWith('station-check'))return '\0station-check'},
- load(id){if(id==='\0station-check')return `
- export * from ${JSON.stringify(root+'/src/map/stationGeometry.ts')};
- export { networkFromState } from ${JSON.stringify(root+'/src/map/network.ts')};
- export { NetworkRenderer } from ${JSON.stringify(root+'/src/map/renderer.ts')};
- export { buildLayers, stationScale, widthFor } from ${JSON.stringify(root+'/src/map/demandLayers.ts')};
- export { topSeg } from ${JSON.stringify(root+'/src/map/pick.ts')};`}
-}],build:{write:false,minify:false,lib:{entry:'station-check',formats:['es']}}});
-const output=(Array.isArray(bundle)?bundle[0]:bundle).output;
-// game/ui.ts (through demandLayers -> game/demand, since T-260) sets the theme on the page at import
-globalThis.location??={search:''};
-globalThis.document??={documentElement:{dataset:{},style:{setProperty(){},removeProperty(){}}},addEventListener(){}};
-const mod=await import('data:text/javascript;base64,'+Buffer.from(output.find(o=>o.type==='chunk').code).toString('base64'));
-const {stationDistance,boxHalfPxAtBoxZoom,platformShape,waysFrom,stationShape,stationCoords,insideStation,stationPath,stationRadii,stationHaloRadius,STATION_BOX_ZOOM,BOX_WIDTH_ZOOM,STATIONS_ZOOM,plainBoxHalfPx,networkFromState,NetworkRenderer,buildLayers,stationScale}=await import('data:text/javascript;base64,'+Buffer.from(output.find(o=>o.type==='chunk').code).toString('base64'));
+const mod=await loadApp(`
+ export * from '@app/src/map/stationGeometry.ts';
+ export { networkFromState } from '@app/src/map/network.ts';
+ export { NetworkRenderer } from '@app/src/map/renderer.ts';
+ export { buildLayers, stationScale, widthFor } from '@app/src/map/demandLayers.ts';
+ export { topSeg } from '@app/src/map/pick.ts';`);
+const {stationDistance,boxHalfPxAtBoxZoom,platformShape,waysFrom,stationShape,stationCoords,insideStation,stationPath,stationRadii,stationHaloRadius,STATION_BOX_ZOOM,BOX_WIDTH_ZOOM,STATIONS_ZOOM,plainBoxHalfPx,networkFromState,NetworkRenderer,buildLayers,stationScale}=mod;
 const F=a=>new Float32Array(a),near=(a,b,msg,eps=1e-4)=>assert.ok(Math.abs(a-b)<eps,`${msg??''} ${a} != ${b}`);
 
 // --- where a platform lies on its track

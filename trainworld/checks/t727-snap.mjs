@@ -7,28 +7,16 @@
 // Reports the router's and the fit's times and the page's longest task.
 //   node trainworld/checks/t727-snap.mjs [url]     (from the maps root; about 2 minutes)
 // Writes artifacts/trainworld/t727-snap.json and t727d-*.png screenshots.
-import { mkdtemp, rm, readdir, writeFile, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { pathToFileURL, fileURLToPath } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6170/';
 const OUT = fileURLToPath(new URL('../../artifacts/trainworld/', import.meta.url));
 
-async function playwright() {
-  try { return await import('playwright'); } catch { /* */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-const { chromium } = await playwright();
 await mkdir(OUT, { recursive: true });
-const profile = await mkdtemp(join(tmpdir(), 'tw-t727-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1200, height: 800 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t727-', size: [1200, 800], args: ANGLE });
 let failed = false;
 const report = {};
 const result = (ok, what, detail = '') => {
@@ -204,7 +192,6 @@ try {
   failed = true;
   console.log('FAIL  snap check  ' + e.message);
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exitCode = failed ? 1 : 0;

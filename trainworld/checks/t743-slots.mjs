@@ -6,35 +6,19 @@
 // slot deletes its backups. A panel screenshot with the backups goes to artifacts/trainworld/.
 //   node trainworld/checks/t743-slots.mjs [url]     (from the maps root; default localhost:6150)
 // Prints PASS or FAIL lines and exits 1 on a failure. A few minutes.
-import { mkdtemp, rm, readdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, demandFinal, REAL_SAVE, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6150/';
-const REAL = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const ART = fileURLToPath(new URL('../../artifacts/trainworld/', import.meta.url));
 const RECOVERED = join(ART, 'recovered-day26.save');
 const BACKUP_MS = 4000;
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-
 let failed = false;
 const report = (name, ok, detail) => { failed ||= !ok; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
 
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t743-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1300, height: 900 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t743-', size: [1300, 900], args: ANGLE });
 try {
   const page = await ctx.newPage();
   const errors = [];
@@ -58,7 +42,7 @@ try {
     const o = indexedDB.open('anitabuilder');
     o.onsuccess = () => { const q = o.result.transaction('saves').objectStore('saves').getAllKeys(); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); };
   }));
-  const settled = () => page.waitForFunction(() => { const d = window.twDemand, v = d?.view?.(); return v && v.final && !d.client.waiting && !window.tw.clock.held.peek(); }, undefined, { timeout: 300000, polling: 300 });
+  const settled = () => demandFinal(page, { strict: false, held: true, polling: 300 });
   const panel = async () => {
     await page.evaluate(async () => { (await import('/src/ui/SavesPanel.tsx')).savesOpen.value = true; });
     await page.waitForSelector('.saves-panel .save-files');
@@ -91,7 +75,7 @@ try {
   const first = (await state()).active;
 
   // 1. Load a file: the real save in a slot of its own, named after the file
-  const A = await loadFile(REAL);
+  const A = await loadFile(REAL_SAVE);
   let s = await state();
   const aSlot = s.slots.find((x) => x.key === A);
   const lines = await page.evaluate(() => window.tw.world.value.save.lines.length);
@@ -158,7 +142,6 @@ try {
 
   report('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exit(failed ? 1 : 0);

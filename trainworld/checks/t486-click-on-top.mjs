@@ -1,3 +1,4 @@
+import { launchChrome, demandFinal, ANGLE } from './lib.mjs';
 // T-486: clicks reach only what is drawn on top. In a ?new=1 game with the commuter bubbles on, a
 // blueprint track end is drawn on a bubble: a click on the end's square selects the track, and a
 // click on the same bubble away from the track still selects the bubble. A blueprint station under
@@ -5,28 +6,10 @@
 // the station. Saves artifacts/trainworld/T-486-station-under-bubble.png.
 //   node trainworld/checks/t486-click-on-top.mjs [url]     (from the maps root; default localhost:6135)
 // Prints PASS or FAIL lines and exits 1 on failure. About a minute.
-import { mkdtemp, rm, readdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 const BASE = process.argv[2] ?? 'http://localhost:6135/';
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t486-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1200, height: 800 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t486-', size: [1200, 800], args: ANGLE });
 const results = [];
 const report = (name, ok, detail) => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
 try {
@@ -88,7 +71,7 @@ try {
     const r = r1.ok && e ? await edit({ op: 'addStation', at: { kind: 'edge', edge: e.id, ...pk(P.x) }, platform: 200, name: 'T486' }) : r1;
     return { ok: r.ok, issues: r.issues, x: P.x, y };
   }, P);
-  await page.waitForFunction(() => { const d = window.twDemand, v = d?.view?.(); return v && v.final && !d.client.waiting; }, undefined, { timeout: 300000, polling: 500 }); await page.waitForTimeout(3000);
+  await demandFinal(page, { strict: false }); await page.waitForTimeout(3000);
   const sid = await page.evaluate(() => window.tw.world.value.save.stations.at(-1)?.id);
   const bubbleThere = await page.evaluate((S) => window.twViews.click(S.x, S.y, false)?.kind, S);
   await page.screenshot({ path: 'artifacts/trainworld/T-486-station-under-bubble.png', clip: { x: box.left + S.x - 200, y: box.top + S.y - 150, width: 400, height: 300 } });
@@ -103,7 +86,6 @@ try {
   const again = await page.evaluate(() => window.tw.selection.value);
   report('click on the selected station over a bubble', again?.kind === 'station' && again.station === sid, `(selected ${again?.kind ?? 'nothing'})`);
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exit(results.length && results.every(Boolean) ? 0 : 1);

@@ -10,14 +10,10 @@
 //   node trainworld/checks/t586-trip-agrees.mjs [url]   (from the maps root; default localhost:6196)
 // CITIES=nyc,mum picks the cities; SHOTS_ONLY=1 takes the screenshots alone. Prints PASS or FAIL
 // lines and exits 1 on failure. About eight minutes with both cities.
-import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { readFile, writeFile } from 'node:fs/promises';
+import { launchChrome, importSave, demandFinal, REAL_SAVE, ANGLE } from './lib.mjs';
 
 const BASE = (process.argv[2] ?? 'http://localhost:6196/').replace(/\/?$/, '/');
-const SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const CITIES = (process.env.CITIES ?? 'nyc,mum').split(',');
 const FILTERS = ['all', 'work', 'school', 'shopping', 'social', 'medical', 'airport'];
 const DAYS = ['weekday', 'weekend', 'average'];
@@ -31,30 +27,17 @@ const MUMBAI = {
     ['Matunga Road', 72.8467, 19.0278], ['Mahim', 72.8466, 19.0407], ['Bandra', 72.8402, 19.0550]],
 };
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t586-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t586-', args: ANGLE });
 const results = [], rows = [];
 const report = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
-const waitFinal = (page, after = -1) => page.waitForFunction((v) => { const d = window.twDemand, dv = d?.view?.(); return dv && dv.final && dv.version > v && !d.client.waiting; }, after, { timeout: 900000, polling: 500 });
+const waitFinal = (page, after = -1) => demandFinal(page, { strict: false, after, timeout: 900000 });
 
 async function open(page, city) {
   await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twViews && window.twDemand?.client, undefined, { timeout: 240000 });
   if (city === 'nyc') {
-    const bytes = await readFile(SAVE);
-    await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+    const bytes = await readFile(REAL_SAVE);
+    await importSave(page, bytes);
     await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
     await waitFinal(page);
     await page.evaluate(() => void window.tw.map.jumpTo({ center: [-73.99, 40.735], zoom: 13 }));
@@ -242,8 +225,7 @@ try {
   }
 } finally {
   if (process.env.SHOTS_ONLY !== '1') await writeFile(OUT + 't586-agree.json', JSON.stringify(rows, null, 1));
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 
 /** The first selection's busiest far bubble, its hover and the explorer side by side, light and dark. */

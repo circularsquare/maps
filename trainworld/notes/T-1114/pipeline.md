@@ -131,6 +131,29 @@ edit_test.rs once you have checked those two tasks. Two lean-keeps:
 
 ## Batch B: checks/ fixes and the code-map's checks section (no wave wait, except as marked)
 
+**Batch B done 2026-10-24** (agent tree `checksclean`, not committed). Item 4: t066 and t149 run on
+nyc, phl and bos (the old t066 timed out at boot with 1,719 zones, and t149 now stops at once on a
+zone the data wave merged away); `cityInfo` length and the "other eight" comment fixed. Running
+t066 past that point found three more stale spots, all fixed: the frame kind (`equirect`), New
+York's hard-coded cells 58000-58002 (the pack has 54,441; now the three cells with most rail legs)
+and a NaN sum when no market cluster is solved. t149's `same` now accepts a NaN on both sides, and
+t325 opens the market packs of nyc and its zone instead of all 1,719 (it timed out before).
+Item 5 **was not real**: t800 passes. Its New game click picks no start city, so it is a map start
+and T-1133 shows every realm then; only the comment ("a new New York game") was wrong. Item 6: the
+"no grey layer" line is gone from t801, t496 and t648 use the shared resolver, the hard-coded
+`C:/Users/anita/...` save and output paths are relative (13 checks, plus t761), temp profiles are
+removed, the history comments in smoke, t066 and t715 reworded. t801 also had two assertions that
+contradicted T-1046 (a map start's world view draws no bubbles and a click there selects nothing,
+docs/ui-map.md:456); they now assert that. t883 sets `window.tw.shade.value` (not the missing
+`tw.ui`), so its dark screenshots are dark. Item 7: code-map checks section lists lib.mjs,
+t675, t1007, t761, token_usage, world_field_check and the two pipeline unit tests, with the corrected
+timings. Item 8: t303-measure, t277-browser and t125-fingerprint deleted (509 lines; the notes that
+cite them say so).
+Found and left: t116 fails (`isNortheastSave(foreign)`), t872 (Wednesday's fares $3.6 billion), t715
+(ledger days after the clock), t684, t586, t671-ghost at 12 pairs, t871 (zoomed in, no zone opened),
+t727, t377 (zone ids `tor`, `lon`) and t326 (hangs in its station-click step) fail or hang the same
+way before and after this batch; t883's default-fare figure follows the data wave.
+
 Owned files: the named checks and docs/code-map.md lines 201-352. No pack bytes. One exception:
 `t883-fare-curve.mjs` has uncommitted edits in progress (97 lines, another agent), so leave it to
 that agent.
@@ -182,6 +205,22 @@ Effort: small. Mechanical: yes, once decided.
 ---
 
 ## Batch C: checks/lib.mjs (no wave wait for most; city-browser and dev-nowatch wait)
+
+**Batch C done 2026-10-24** (same tree). `checks/lib.mjs` (219 lines) holds `playwright`,
+`launchChrome` (a profile that `close()` deletes), `collectErrors`, `importSave`, `demandFinal`,
+`buildLine`/`acrossLine`, `startVite`, `loadApp` (Vite-bundled app code for the Node checks),
+`bundleDemandWorker`/`startWorker` and `network` (the Boston and Philadelphia test lines). 62
+checks import it: 46 launch Chrome through it (resolver and launch in all; `importSave` in 31,
+`demandFinal` in 29, `collectErrors` in 16, `buildLine` or `acrossLine` in 7, `startVite` in 6), 10
+Node checks load app code with `loadApp`, and 6 run the demand worker through it (t066, t149, t301,
+t325, t409, t756). `checks/*.mjs` went from 11,583 lines to
+10,101 with lib.mjs in the count: 509 from the three retired scripts, about 970 from the moves.
+Left as they were, on purpose: `city-browser.mjs`, `dev-nowatch.mjs`, `pack_gate.py` (wave), the
+five console filters that truncate or annotate (t714, t737, t1008, t1020 and t1007's two lists), and
+the `timed(edit)` helpers (each returns different fields). Not done: the t714/t737 merge (t737
+adds the load timing, a 35-minute demand sampler and a speed loop, so a merged file would be
+two programs behind a switch), t348 keeping only pan and zone-join (t348-analyze reads startup
+traces that t1008 does not write), and one runner for t124/t326/t409 (three different scenarios).
 
 Owned files: a new checks/lib.mjs and the checks moved onto it. No pack bytes.
 

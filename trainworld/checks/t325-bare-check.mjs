@@ -8,44 +8,13 @@
 // (T-336) a bubble selection's far end: commutes, everyday purposes, longer trips.
 // Run from the maps root: node trainworld/checks/t325-bare-check.mjs
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { Worker } from 'node:worker_threads';
-import { fileURLToPath } from 'node:url';
-import { rolldown } from '../app/node_modules/rolldown/dist/index.mjs';
-const artifacts = new URL('../../artifacts/trainworld/t325/', import.meta.url);
-mkdirSync(artifacts, { recursive: true });
-const compiled = new URL('demand-worker.mjs', artifacts), wrapper = new URL('worker-adapter.mjs', artifacts);
-const wasm = new URL('../app/src/wasm/demand/sim_bg.wasm', import.meta.url);
-const bundle = await rolldown({ input: fileURLToPath(new URL('../app/src/workers/demand.worker.ts', import.meta.url)), platform: 'browser' });
-await bundle.write({ file: fileURLToPath(compiled), format: 'esm' }); await bundle.close();
-writeFileSync(wrapper, `import {parentPort} from 'node:worker_threads';
-import {readFileSync} from 'node:fs';
-globalThis.onmessage=null;
-globalThis.location={search:'',hash:'',href:'http://localhost/'};
-globalThis.postMessage=(data,options={})=>parentPort.postMessage(data,options.transfer??[]);
-globalThis.fetch=async()=>new Response(readFileSync(${JSON.stringify(fileURLToPath(wasm))}),{headers:{'Content-Type':'application/wasm'}});
-await import(${JSON.stringify(compiled.href)});
-parentPort.on('message',data=>globalThis.onmessage({data}));
-parentPort.postMessage({kind:'boot'});
-`);
-function start() {
-  const w = new Worker(wrapper), messages = [], waiters = [];
-  w.on('message', (msg) => { messages.push(msg); for (const f of [...waiters]) f(msg); });
-  w.on('error', (e) => { console.error(e); process.exit(1); });
-  const next = (predicate, from = 0) => new Promise((resolve, reject) => {
-    const existing = messages.slice(from).find(predicate); if (existing) return resolve(existing);
-    const timeout = setTimeout(() => reject(new Error('worker timed out')), 300000);
-    const f = (m) => { if (predicate(m)) { clearTimeout(timeout); waiters.splice(waiters.indexOf(f), 1); resolve(m); } }; waiters.push(f);
-  });
-  let nextId = 1;
-  const ask = async (q) => { const id = nextId++; w.postMessage({ ...q, id }); return next((m) => m.kind === q.kind && m.id === id); };
-  return { w, messages, next, ask };
-}
-const registry = JSON.parse(readFileSync(new URL('../app/src/game/registry.json', import.meta.url)));
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { bundleDemandWorker, startWorker, workerPack as pack, marketPacks, marketRows } from './lib.mjs';
+const wrapper = await bundleDemandWorker('t325');
+const start = () => startWorker(wrapper);
 const ZONE = process.env.ZONE ?? 'phl';
-const pack = (id) => ({ id, header: readFileSync(new URL(`../data/packs/${id}.json`, import.meta.url), 'utf8'), bin: Uint8Array.from(readFileSync(new URL(`../data/packs/${id}.bin`, import.meta.url))).buffer });
-// T-377: every zone's market pack, as the page opens them for a viewed zone
-const market = registry.cities.map(({ id }) => ({ id, pack: readFileSync(new URL(`../data/packs/${id}.market.json`, import.meta.url), 'utf8') }));
+// T-377: the market packs of New York (the line) and the zone; every registered zone's is more than a worker holds
+const market = marketPacks(['nyc', ZONE]);
 // a three-station line across Midtown, as t149-worker-check.mjs
 const times = new Float32Array(18); for (let lev = 0; lev < 3; lev++) { times[lev * 3] = 60; times[lev * 3 + 1] = 60; times[(lev + 3) * 3 + 1] = 60; times[(lev + 3) * 3 + 2] = 60; }
 const net = { frame: { kind: 'equirect', lon: -73.985, lat: 40.758 }, stXY: new Float32Array([0, 0, 4000, 0, 8000, 0]), complex: new Uint32Array([0, 1, 2]), lineN: new Uint32Array([3]), stops: new Uint32Array([0, 1, 2]), times, tph: new Float32Array([12, 12, 12]), cars: new Float32Array([4]), fare: { base: 1, perKm: .1 }, hopKm: new Float32Array([4, 4, 0, 0, 4, 4]) };
@@ -62,7 +31,7 @@ const solving = GROUPS.map(() => start());
 const aux = start();
 for (const s of [...solving, aux]) await s.next((m) => m.kind === 'boot');
 const t0 = performance.now();
-solving.forEach((s, i) => { s.w.postMessage({ kind: 'init', packs: [], periods: GROUPS[i] }); s.w.postMessage({ kind: 'open', packs: [], intercity: market, rows: readFileSync(new URL('../app/src/game/market-rows.json', import.meta.url), 'utf8') }); s.w.postMessage({ kind: 'open', packs: [pack(ZONE)] }); });
+solving.forEach((s, i) => { s.w.postMessage({ kind: 'init', packs: [], periods: GROUPS[i] }); s.w.postMessage({ kind: 'open', packs: [], intercity: market, rows: marketRows() }); s.w.postMessage({ kind: 'open', packs: [pack(ZONE)] }); });
 aux.w.postMessage({ kind: 'init', packs: [], periods: [], aux: true, groups: GROUPS });
 aux.w.postMessage({ kind: 'open', packs: [], intercity: new Uint8Array(0) });
 aux.w.postMessage({ kind: 'open', packs: [pack(ZONE)] });

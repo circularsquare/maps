@@ -8,34 +8,18 @@
 // start menu marks the sandboxes. Screenshots (light and dark) go to artifacts/trainworld/t728-*.png.
 //   node trainworld/checks/t728-newgame.mjs [url]     (from the maps root; default localhost:6150)
 // Prints PASS or FAIL lines and exits 1 on a failure. A few minutes.
-import { mkdtemp, rm, readdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, REAL_SAVE, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6150/';
-const REAL = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const ART = fileURLToPath(new URL('../../artifacts/trainworld/', import.meta.url));
 const shot = (name) => join(ART, `t728-${name}.png`);
-
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
 
 let failed = false;
 const report = (name, ok, detail) => { failed ||= !ok; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
 
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t728-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1300, height: 900 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t728-', size: [1300, 900], args: ANGLE });
 try {
   const page = await ctx.newPage();
   const errors = [];
@@ -138,7 +122,7 @@ try {
 
   // 3. the real New York save from a file: normal, refuses the order; Settings makes it a sandbox once
   const [fc] = await Promise.all([page.waitForEvent('filechooser'), (async () => { await panel(); await page.click('.saves-panel .save-files button:has-text("Load a file")'); })()]);
-  await fc.setFiles(REAL);
+  await fc.setFiles(REAL_SAVE);
   const N = await switched(L);
   await page.waitForFunction(() => window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
   await wait(1500);
@@ -191,7 +175,6 @@ try {
   report('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
   console.log(`screenshots: ${['sheet-light', 'topbar-light', 'confirm-light', 'menu-dark', 'sheet-dark'].map(shot).join(', ')}`);
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exit(failed ? 1 : 0);

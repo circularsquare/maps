@@ -8,16 +8,15 @@
 // as the menu is up; `pick` is the click, and `fromPick` the marks less it. Without it the loads
 // skip the menu (`?new=1`, `?continue=1`).
 //   PLAYWRIGHT_MODULE=file:///.../playwright/index.mjs URL=http://127.0.0.1:6101/ LABEL=before RUNS=5 OUT=<scratch> node trainworld/checks/startup-timing.mjs
-import { readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright');
+import { launchChrome, collectErrors, importSave, REAL_SAVE } from './lib.mjs';
 const base = process.env.URL ?? 'http://127.0.0.1:6101/';
 const label = process.env.LABEL ?? 'run';
 const runs = Number(process.env.RUNS ?? 5);
 const OUT = process.env.OUT ?? '.';
 const MENU = process.env.MENU === '1';
-const profile = await mkdtemp(join(process.env.PROFILE_DIR ?? OUT, 'chrome-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1300, height: 900 }, args: ['--enable-unsafe-swiftshader'] });
+const { ctx, close } = await launchChrome({ prefix: join(process.env.PROFILE_DIR ?? OUT, 'chrome-'), size: [1300, 900], args: ['--enable-unsafe-swiftshader'] });
 const probe = () => {
   window.__t = {};
   const mark = (k) => { if (!(k in window.__t)) window.__t[k] = Math.round(performance.now()); };
@@ -33,8 +32,7 @@ const probe = () => {
 await ctx.addInitScript(probe);
 const errors = [];
 const page = await ctx.newPage();
-page.on('pageerror', (e) => errors.push(e.message));
-page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+collectErrors(page, errors, null);
 const waitDone = () => page.waitForFunction(() => window.__t?.final !== undefined && window.__t.clock !== undefined, undefined, { timeout: 240000 });
 /** the menu's New game (`which` = 'new') or its first saved game ('save'), clicked once it is up */
 async function pick(which) {
@@ -67,9 +65,9 @@ try {
   // the real save, imported into a game that owns the original slot
   await page.goto(`${base}?debug=1&continue=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.tw.lastSaved, undefined, { timeout: 120000 });
-  const bytes = await readFile('C:/Users/anita/projects/maps/trainworld/T-007-real-nyc.save');
+  const bytes = await readFile(REAL_SAVE);
   const before = await page.evaluate(() => window.tw.lastSaved.peek() ?? 0);
-  await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+  await importSave(page, bytes);
   await page.waitForFunction(() => (window.twDemand.view()?.lines.size ?? 0) > 100, undefined, { timeout: 240000 });
   await page.evaluate(() => window.tw.client.post({ kind: 'flush' }));
   await page.waitForFunction((b) => (window.tw.lastSaved.peek() ?? 0) > b, before, { timeout: 60000 });
@@ -80,8 +78,7 @@ try {
     result.nycSave.push(await read());
   }
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 const less = (m, k) => (m[k] === undefined ? undefined : m[k] - (m.pick ?? 0));
 const brief = (r) => r.map((x) => ({ pick: x.marks.pick, world: x.marks.world, clock: x.marks.clock, final: x.marks.final, r3: x.marks.r3,

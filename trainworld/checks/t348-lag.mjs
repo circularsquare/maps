@@ -12,7 +12,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { createWriteStream } from 'node:fs';
 import { join, resolve } from 'node:path';
-const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright');
+import { launchChrome, collectErrors, importSave, demandFinal, GL, REAL_SAVE } from './lib.mjs';
 const OUT = process.env.OUT ?? '.';
 const BASE = process.env.BASE ?? 'http://localhost:6148/';
 const MODE = process.env.MODE ?? 'startup';
@@ -21,8 +21,7 @@ const BUBBLES = process.env.BUBBLES ?? 'on';
 const TRACE = process.env.TRACE !== '0';
 // QS: more query, e.g. '&perfOff=nocache' (an unknown flag: the demand cache's key misses, T-328)
 const QS = process.env.QS ?? '';
-const profile = resolve(OUT, process.env.PROFILE ?? 'profile');
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist', ...(process.env.CHROME_ARGS ? process.env.CHROME_ARGS.split(' ') : [])] });
+const { ctx, close } = await launchChrome({ profile: resolve(OUT, process.env.PROFILE ?? 'profile'), fresh: false, args: [...GL, ...(process.env.CHROME_ARGS ? process.env.CHROME_ARGS.split(' ') : [])] });
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 await ctx.addInitScript(([bubbles]) => {
@@ -66,8 +65,7 @@ await ctx.addInitScript(([bubbles]) => {
 
 const page = await ctx.newPage();
 const errors = [];
-page.on('pageerror', (e) => errors.push(e.message));
-page.on('console', (m) => { if (m.type() === 'error' && !/openfreemap|AJAXError|favicon/.test(m.text())) errors.push(m.text()); });
+collectErrors(page, errors);
 const cdp = await ctx.newCDPSession(page);
 
 const CATS = ['devtools.timeline', 'disabled-by-default-devtools.timeline', 'v8', 'v8.execute', 'disabled-by-default-v8.cpu_profiler', 'blink.user_timing', 'toplevel', 'disabled-by-default-v8.gc', 'loading'];
@@ -92,10 +90,7 @@ async function traceStop(name) {
   log('trace', file);
 }
 
-const waitSolved = (timeout = 180000) => page.waitForFunction(() => {
-  const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.();
-  return s && v && v.version === s.version && v.final && !d.client.waiting;
-}, undefined, { timeout, polling: 200 });
+const waitSolved = (timeout = 180000) => demandFinal(page, { timeout, polling: 200 });
 
 /** frames and long tasks between two performance.now() times */
 const windowStats = (from, to) => page.evaluate(([from, to]) => {
@@ -112,9 +107,9 @@ try {
   if (MODE === 'prepare') {
     await page.goto(`${BASE}?debug=1&continue=1${QS}&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
-    const bytes = await readFile(new URL('../T-007-real-nyc.save', import.meta.url));
+    const bytes = await readFile(REAL_SAVE);
     const before = await page.evaluate(() => window.tw.lastSaved.peek());
-    await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+    await importSave(page, bytes);
     await page.waitForFunction(() => (window.tw.world.value?.save?.lines?.length ?? 0) > 100, undefined, { timeout: 240000 });
     await page.evaluate(() => window.tw.client.post({ kind: 'flush' }));
     await page.waitForFunction((b) => window.tw.lastSaved.peek() > b, before, { timeout: 60000 });
@@ -215,7 +210,7 @@ try {
     out.ev = await page.evaluate(() => window.__ev);
   }
 } finally {
-  await ctx.close();
+  await close();
 }
 await writeFile(join(OUT, `${MODE}-${LABEL}.json`), JSON.stringify(out, null, 1));
 log('written', `${MODE}-${LABEL}.json`, 'errors', errors.slice(0, 5));

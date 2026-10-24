@@ -9,29 +9,14 @@
 // t745-<TAG>-<config>-{tag,dock,lg}.png.
 //   node trainworld/checks/t745-bullets.mjs [url]     (from the maps root; default localhost:6160)
 // Env: LIMIT (device px, default 0.6), TAG (file name tag, default "after"). About two minutes.
-import { mkdtemp, rm, readdir, readFile, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL, fileURLToPath } from 'node:url';
+import { readFile, writeFile } from 'node:fs/promises';
+import { launchChrome, importSave, REAL_SAVE, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6160/';
-const SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 // half a device pixel, plus what the rasteriser itself moves a glyph at 1x (Nunito's "S" 0.55)
 const LIMIT = Number(process.env.LIMIT ?? 0.6);
 const TAG = process.env.TAG ?? 'after';
 const OUT = 'artifacts/trainworld';
-
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
 
 /** In the page: put every kind of bullet on screen, each marked `data-t745="<where>"`. */
 async function stage(page, inspector) {
@@ -151,20 +136,18 @@ function measure(b64) {
   })();
 }
 
-const { chromium } = await playwright();
 const results = [], all = {};
 const report = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
-const bytes = Array.from(await readFile(SAVE));
+const bytes = Array.from(await readFile(REAL_SAVE));
 
 for (const dpr of [1, 2]) {
-  const profile = await mkdtemp(join(tmpdir(), 'tw-t745-'));
-  const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, deviceScaleFactor: dpr, args: ['--use-angle=d3d11'] });
+  const { ctx, close } = await launchChrome({ prefix: 'tw-t745-', deviceScaleFactor: dpr, args: ANGLE });
   try {
     const page = await ctx.newPage();
     page.on('pageerror', (e) => console.log('pageerror', e.message));
     await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
-    await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, bytes);
+    await importSave(page, bytes);
     await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
     await page.waitForTimeout(2000);
     for (const shade of ['light', 'dark']) for (const scale of [1, 0.9]) {
@@ -201,8 +184,7 @@ for (const dpr of [1, 2]) {
       if (dock) await page.screenshot({ path: `${OUT}/t745-${TAG}-${name}-dock.png`, clip: { x: dock.x, y: dock.y, width: dock.width, height: Math.min(500, dock.height) } });
     }
   } finally {
-    await ctx.close();
-    await rm(profile, { recursive: true, force: true }).catch(() => {});
+    await close();
   }
 }
 await writeFile(`${OUT}/t745-bullets-${TAG}.json`, JSON.stringify(all, null, 1));

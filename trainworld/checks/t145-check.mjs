@@ -1,9 +1,7 @@
 // Run from maps: node trainworld/checks/t145-check.mjs
 import assert from 'node:assert/strict';
-import {build} from '../app/node_modules/vite/dist/node/index.js';
-const result=await build({configFile:false,logLevel:'silent',build:{write:false,minify:false,lib:{entry:'trainworld/app/src/map/network.ts',formats:['es']}}});
-const output=(Array.isArray(result)?result[0]:result).output;
-const {strokesFromPreview,F_BLUEPRINT,F_BAD,F_PLACEMENT}=await import('data:text/javascript;base64,'+Buffer.from(output.find(o=>o.type==='chunk').code).toString('base64'));
+import {loadApp} from './lib.mjs';
+const {strokesFromPreview,F_BLUEPRINT,F_BAD,F_PLACEMENT}=await loadApp('src/map/network.ts');
 const points=new Float32Array([0,0,0,50,0,8,100,50,16]);
 const speeds=new Float32Array([160,75]);
 const original=points.slice(),ghost=strokesFromPreview(points,false,speeds,true);
@@ -18,8 +16,7 @@ assert.ok(ordinary.flags.every(f=>f===F_BLUEPRINT),'ordinary blueprint preview s
 assert.throws(()=>strokesFromPreview(points,false,new Float32Array([160]),true),/length mismatch/);
 assert.deepEqual(points,original,'previews do not mutate source geometry');
 // T-418: a tangent route's circle, `arc` = centre x, y (local), ground radius m, 0
-const circ=await build({configFile:false,logLevel:'silent',build:{write:false,minify:false,lib:{entry:'trainworld/app/src/map/curveCircle.ts',formats:['es']}}});
-const {circleOnScreen}=await import('data:text/javascript;base64,'+Buffer.from((Array.isArray(circ)?circ[0]:circ).output.find(o=>o.type==='chunk').code).toString('base64'));
+const {circleOnScreen}=await loadApp('src/map/curveCircle.ts');
 // a plain frame: 1 local unit = 1 screen px, lng/lat in metres scaled about lat 0
 const perDeg=6371008.8*Math.PI/180;
 const scr=(x,y)=>[x,y],toLL=(x,y)=>[x/perDeg,y/perDeg],toLoc=(lng,lat)=>[lng*perDeg,lat*perDeg];

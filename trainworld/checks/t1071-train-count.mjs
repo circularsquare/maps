@@ -11,31 +11,18 @@
 //   SHOTS=0 (no screenshots)  OP=count|headway (how the line's service is changed)
 //   KEEP_FRAMES=1 (write frames-<op>-<speed>.json, tens of MB); FRAMES=<that file> analyses it again
 // PLAYWRIGHT_MODULE as smoke.mjs. Output: ../artifacts/trainworld/t1071/ (check-<op>-<speed>.json).
-import { readFile, writeFile, mkdir, mkdtemp, rm, readdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, importSave, demandFinal, REAL_SAVE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6148/';
-const SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const OUT = fileURLToPath(new URL('../../artifacts/trainworld/t1071/', import.meta.url));
 const SHOTS = process.env.SHOTS !== '0';
 const SPEED = Number(process.env.SPEED ?? 2);
 const OP = process.env.OP ?? 'count';
 const TAG = `${OP}-${SPEED}`;
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
-
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright: set PLAYWRIGHT_MODULE');
-}
 
 /** The trains of `a` ([line, run, offset, at a terminal]) that no matching to `b` (same line,
  * offsets within `reach`; a change of run only where both stand at a terminal) can pair when it
@@ -110,10 +97,8 @@ if (process.env.FRAMES) {
   process.exit(0);
 }
 
-const { chromium } = await playwright();
 await mkdir(OUT, { recursive: true });
-const profile = await mkdtemp(join(tmpdir(), 'tw-t1071-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1200, height: 800 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t1071-', size: [1200, 800] });
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
@@ -124,11 +109,11 @@ try {
   await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
   await page.waitForTimeout(1000);
-  const bytes = await readFile(SAVE);
-  await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+  const bytes = await readFile(REAL_SAVE);
+  await importSave(page, bytes);
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
   log('loaded');
-  await page.waitForFunction(() => { const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.(); return s && v && v.version === s.version && v.final && !d.client.waiting; }, undefined, { timeout: 300000, polling: 500 });
+  await demandFinal(page);
   log('demand final');
   const pick = await page.evaluate(() => {
     const tw = window.tw, w = tw.world.value;
@@ -247,8 +232,7 @@ try {
   out.error = String(e?.stack ?? e);
   log('error', out.error);
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 await writeFile(join(OUT, `check-${TAG}.json`), JSON.stringify(out, null, 1));
 if (errors.length) { failed = true; log('page errors', errors.slice(0, 5)); }

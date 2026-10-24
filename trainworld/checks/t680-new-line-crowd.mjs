@@ -6,11 +6,8 @@
 // artifacts/trainworld/t680-crowd.json.
 //   node trainworld/checks/t680-new-line-crowd.mjs [url]   (from the maps root; default localhost:6145)
 // Prints PASS or FAIL lines and exits 1 on failure. About two minutes.
-import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { writeFile } from 'node:fs/promises';
+import { launchChrome, demandFinal, ANGLE } from './lib.mjs';
 
 const BASE = (process.argv[2] ?? 'http://localhost:6145/').replace(/\/?$/, '/');
 const OUT = 'artifacts/trainworld/t680-crowd.json';
@@ -20,20 +17,7 @@ const STOPS = [['Churchgate', 72.8272, 18.9355], ['Marine Lines', 72.8237, 18.94
   ['Lower Parel', 72.8303, 18.9957], ['Prabhadevi', 72.8359, 19.0075], ['Dadar', 72.8428, 19.0192],
   ['Matunga Road', 72.8467, 19.0278], ['Mahim', 72.8466, 19.0407], ['Bandra', 72.8402, 19.0550]];
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright');
-}
-
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-t680-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t680-', args: ANGLE });
 const results = [];
 const report = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
 
@@ -66,7 +50,7 @@ try {
     await run({ op: 'constructAll' });
     return { line: String(line), at: t.clock.now() };
   }, STOPS);
-  await page.waitForFunction((v) => { const d = window.twDemand, dv = d?.view?.(); return dv && dv.final && dv.version > v && !d.client.waiting; }, before, { timeout: 900000, polling: 500 });
+  await demandFinal(page, { strict: false, after: before, timeout: 900000 });
   // the account's hour with the new line's platforms in it
   const ready = await page.waitForFunction((line) => {
     const b = window.tw.renderer.board;
@@ -112,7 +96,6 @@ try {
   report('the crowds grow no faster than riders arrive', rows.length > 0 && over.length === 0 && grows, over.length ? JSON.stringify(over[0]) : `(most after 20 min ${Math.max(0, ...rows.map((x) => x.steps.at(-1)?.[1] ?? 0))})`);
   report('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exit(results.length && results.every(Boolean) ? 0 : 1);

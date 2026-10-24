@@ -1,13 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
-import { build } from '../app/node_modules/vite/dist/node/index.js';
+import { loadApp } from './lib.mjs';
 
-const bundle = await build({ configFile: false, logLevel: 'silent', build: {
-  write: false, minify: false,
-  lib: { entry: 'trainworld/app/src/workers/saveFile.ts', formats: ['es'] },
-} });
-const output = (Array.isArray(bundle) ? bundle[0] : bundle).output;
-const api = await import('data:text/javascript;base64,' + Buffer.from(output.find(o => o.type === 'chunk').code).toString('base64'));
+const api = await loadApp('src/workers/saveFile.ts');
 const track = new Uint8Array(await readFile('trainworld/T-007-real-nyc.save'));
 const old = { game: 'anitabuilder', format: 1, city: 'nyc', clock: 145123,
   cash: 2534.5, fleet: 414, fares: { base: 1.5, perKm: .1 },

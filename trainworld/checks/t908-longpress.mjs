@@ -3,34 +3,18 @@
 // selects bubbles without panning; the controls panel opens, Esc closes it and keeps the selection,
 // a press outside or its button closes it. Screenshots t908-*.png in artifacts/trainworld/help/.
 //   node trainworld/checks/t908-longpress.mjs [url] [shotdir]      (about a minute)
-import { mkdtemp, rm, readdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { launchChrome, collectErrors, ARTIFACTS, GL } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6110/';
-const SHOTS = process.argv[3] ?? 'C:/Users/anita/projects/maps/artifacts/trainworld/help';
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-async function playwright() {
-  try { return await import('playwright'); } catch {}
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no playwright');
-}
-const { chromium } = await playwright();
-const profile = await mkdtemp(join(tmpdir(), 'tw-help-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: CHROME, headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist', '--renderer-process-limit=1'] });
+const SHOTS = process.argv[3] ?? join(ARTIFACTS, 'help');
+const { ctx, close } = await launchChrome({ prefix: 'tw-help-', args: [...GL, '--renderer-process-limit=1'] });
 const errors = [];
 let fails = 0;
 const report = (name, ok, d = '') => { if (!ok) fails++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${d}`); };
 try {
   const page = await ctx.newPage();
-  page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-  page.on('console', (m) => { if (m.type() === 'error' && !/favicon|openfreemap|AJAXError/.test(m.text())) errors.push(m.text()); });
+  collectErrors(page, errors);
   await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { commuters: true, commuterEnd: 'home' }, v: 2 })); } catch {} });
   await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twViews, undefined, { timeout: 180000 });
@@ -103,7 +87,6 @@ try {
 } catch (e) {
   report('ran', false, e.message.split('\n')[0]);
 } finally {
-  await ctx.close();
-  await rm(profile, { recursive: true, force: true }).catch(() => {});
+  await close();
 }
 process.exit(fails ? 1 : 0);

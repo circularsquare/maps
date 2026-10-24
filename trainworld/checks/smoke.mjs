@@ -12,19 +12,11 @@
 // bubbles in the bare new game and on the real save (T-994); a click on a station
 // and on a train picks them; no console or page error, no GL error. Node: t133, t144, t145, t146, t1053 (every zone removed since HEAD has a successor).
 import { spawn } from 'node:child_process';
-import { readFile, readdir, mkdtemp, rm } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { HERE, MAPS, REAL_SAVE, NOISE, launchChrome, collectErrors, importSave, demandFinal, acrossLine, startVite } from './lib.mjs';
 
-const HERE = fileURLToPath(new URL('.', import.meta.url));
-const MAPS = fileURLToPath(new URL('../../', import.meta.url));
-const SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const EXPECT = { lines: 109, stations: 1756, trackKm: 4498.6, kmTolerance: 1 };
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-// network noise that is not the game's: the basemap's tiles and fonts when offline, the favicon
-const IGNORE = /favicon|openfreemap|AJAXError/;
 // a glyph range glyphs.py leaves out on purpose: its 404 makes MapLibre draw the codepoints locally
 const GLYPH_404 = /\/fonts\/[^/]+\/\d+-\d+\.pbf$/;
 
@@ -35,32 +27,6 @@ const report = (name, ok, detail = '') => {
 };
 const t0 = Date.now();
 const secs = () => ((Date.now() - t0) / 1000).toFixed(0) + ' s';
-
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright: set PLAYWRIGHT_MODULE to a file URL of playwright/index.mjs');
-}
-
-/** this check's own Vite, or null when given a url */
-async function startVite() {
-  const port = Number(process.env.SMOKE_PORT ?? 6190);
-  const child = spawn(process.execPath, [join(HERE, 'dev-nowatch.mjs'), String(port)], { stdio: ['ignore', 'pipe', 'pipe'] });
-  let out = '';
-  child.stdout.on('data', (d) => { out += d; });
-  child.stderr.on('data', (d) => { out += d; });
-  const deadline = Date.now() + 60000;
-  while (!/localhost:/.test(out)) {
-    if (child.exitCode !== null || Date.now() > deadline) throw new Error('Vite did not start: ' + out.slice(-500));
-    await new Promise((r) => setTimeout(r, 200));
-  }
-  return { child, url: `http://localhost:${port}/` };
-}
 
 function runNode(file) {
   return new Promise((resolve) => {
@@ -74,26 +40,6 @@ function runNode(file) {
 
 /** the last meaningful line of a failed check's output (bundled code comes out as huge data: urls) */
 const tail = (out) => out.split('\n').filter((l) => l.trim() && !l.startsWith('data:') && l.length < 400).slice(-3).join(' | ');
-
-/** a built line of three stations 2 km apart, east to west across `[lng, lat]`, by the edit API; its number or null */
-const smokeLine = (page, [lng, lat]) => page.evaluate(async ([lng, lat]) => {
-  const tw = window.tw, c = tw.client;
-  const dLng = 2 / (111.32 * Math.cos((lat * Math.PI) / 180));
-  const xy = [-1, 0, 1].map((k) => { const p = tw.lngLatToPack(lng + k * dLng, lat); return [p.x, p.y]; });
-  const near = (p) => { let best = null, bd = 1e12; for (const n of tw.world.value.nodes.values()) { const d = Math.hypot(n.x - p[0], n.y - p[1]); if (d < bd) { bd = d; best = n.id; } } return best; };
-  const wait = (ms) => new Promise((d) => setTimeout(d, ms));
-  await c.edit({ op: 'route', from: { kind: 'free', x: xy[0][0], y: xy[0][1], level: -1 }, to: { kind: 'free', x: xy[1][0], y: xy[1][1], level: -1 }, pis: [], single: false });
-  await wait(300);
-  await c.edit({ op: 'route', from: { kind: 'node', node: near(xy[1]) }, to: { kind: 'free', x: xy[2][0], y: xy[2][1], level: -1 }, pis: [], single: false });
-  await wait(300);
-  for (const p of xy) { await c.edit({ op: 'addStation', at: { kind: 'node', node: near(p) }, platform: 200, name: '' }); await wait(150); }
-  await c.edit({ op: 'constructAll' });
-  await wait(300);
-  const r = await c.edit({ op: 'addLine', stops: xy.map(near), name: 'Check', colour: '#0a7d3b' });
-  if (r?.line === undefined) return null;
-  await c.edit({ op: 'setTrainCount', line: r.line, trains: [6, 4, 3] });
-  return r.line;
-}, [lng, lat]);
 
 const NYC = [-73.985, 40.758];
 /** T-994: Homes turned on at city zoom draws the local bubbles; Homes off again after. The discs
@@ -119,17 +65,14 @@ async function homesDrawn(page, at) {
 }
 
 async function browserChecks(BASE) {
-  const { chromium } = await playwright();
-  const profile = await mkdtemp(join(tmpdir(), 'tw-smoke-'));
-  const ctx = await chromium.launchPersistentContext(profile, { executablePath: CHROME, headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+  const { ctx, close } = await launchChrome({ prefix: 'tw-smoke-' });
   const errors = [];
   try {
     const page = await ctx.newPage();
-    // the demand final is a weekday's, comparable across runs since T-464 made the average day the default view
+    // dayShown weekday: the demand final is a weekday's, so figures compare across runs (the default view is the average day)
     // SMOKE_SHADE=dark runs it all in the dark theme (T-039)
     await page.addInitScript((shade) => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade, display: { dayShown: 'weekday' }, v: 2 })); } catch {} }, process.env.SMOKE_SHADE ?? 'light');
-    page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-    page.on('console', (m) => { if (m.type() === 'error' && !IGNORE.test(m.text()) && !GLYPH_404.test(m.location()?.url ?? '')) errors.push(m.text()); });
+    collectErrors(page, errors, NOISE, GLYPH_404);
     const sep = BASE.includes('?') ? '&' : '?';
 
     // 0. the start menu (T-677): a plain load waits on it with no worker started; New game starts one
@@ -137,7 +80,7 @@ async function browserChecks(BASE) {
       await page.goto(`${BASE}${sep}debug=1&v=${Date.now()}`);
       await page.waitForSelector('.start-menu .start-new', { timeout: 60000 });
       const before = await page.evaluate(() => performance.getEntriesByType('resource').filter((e) => /clock\.worker|demand\.worker/.test(e.name)).length);
-      // T-728: New game opens the new game sheet; a normal game in New York, as before
+      // T-728: New game opens the new game sheet; a normal game in New York
       await page.click('.start-menu .start-new');
       await page.click('.start-menu .new-game-cities [data-city="nyc"]');
       await page.click('.start-menu .new-game .start-new');
@@ -167,8 +110,7 @@ async function browserChecks(BASE) {
     // it, the view there too), then one in Tokyo; on a page of their own, so the real save's solve
     // below opens only what it did before
     const far = await ctx.newPage();
-    far.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-    far.on('console', (m) => { if (m.type() === 'error' && !IGNORE.test(m.text()) && !GLYPH_404.test(m.location()?.url ?? '')) errors.push(m.text()); });
+    collectErrors(far, errors, NOISE, GLYPH_404);
     try {
       await far.goto(`${BASE}${sep}debug=1&new=1&paused=1&v=${Date.now()}`);
       await far.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
@@ -176,7 +118,7 @@ async function browserChecks(BASE) {
       for (const [name, at] of [['dead space', [-98.0, 38.5]], ['Tokyo', [139.70, 35.69]]]) {
         const t = Date.now();
         await far.evaluate((c) => void window.tw.map.jumpTo({ center: c, zoom: 12 }), at);
-        if ((await smokeLine(far, at)) === null) throw new Error(`no line built in ${name}`);
+        if ((await acrossLine(far, at)) === null) throw new Error(`no line built in ${name}`);
         const want = got.length + 1;
         await far.waitForFunction((want) => {
           const d = window.twDemand, s = d.log.at(-1), v = d.view();
@@ -196,8 +138,7 @@ async function browserChecks(BASE) {
 
     // 2. the real save, imported into that game
     try {
-      const bytes = await readFile(SAVE);
-      await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+      await importSave(page, await readFile(REAL_SAVE));
       await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
       await page.waitForTimeout(1000);
       const m = await page.evaluate(() => {
@@ -213,10 +154,7 @@ async function browserChecks(BASE) {
 
     // 3. demand reaches a final result for that network
     try {
-      await page.waitForFunction(() => {
-        const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.();
-        return s && v && v.version === s.version && v.final && !d.client.waiting && v.lines.size > 100;
-      }, undefined, { timeout: 300000, polling: 250 });
+      await demandFinal(page, { polling: 250, lines: 100 });
       const v = await page.evaluate(() => {
         const v = window.twDemand.view();
         // boardings by purpose (T-389): the commute's share of all boardings
@@ -300,8 +238,7 @@ async function browserChecks(BASE) {
     report('no GL error', gl === 0, gl === 0 ? '' : `(getError ${gl})`);
     report('no console errors', errors.length === 0, errors.length ? `(${errors.length}: ${errors.slice(0, 3).join(' | ').slice(0, 400)})` : '');
   } finally {
-    await ctx.close();
-    await rm(profile, { recursive: true, force: true }).catch(() => {});
+    await close();
   }
 }
 
@@ -312,7 +249,7 @@ try {
     const r = await runNode(f);
     report(f.replace('.mjs', ''), r.code === 0, r.code === 0 ? '' : tail(r.out));
   }
-  if (!given) vite = await startVite();
+  if (!given) vite = await startVite(Number(process.env.SMOKE_PORT ?? 6190));
   const base = given ?? vite.url;
   console.log(`      browser checks on ${base}`);
   await browserChecks(base);

@@ -13,15 +13,12 @@
 // T-780: `chunks` instead compares the market with every zone pair solved (`exact`,
 // `?perfOff=chunks`) and sampled (`reach`, the default), into <label>.chunks.json; ROWS=<file> reads
 // the market rows from a copy.
-import { spawn } from 'node:child_process';
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
-import { mkdtemp } from 'node:fs/promises';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { Worker } from 'node:worker_threads';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { launchChrome, importSave, startVite, bundleDemandWorker, workerPack, marketPacks } from './lib.mjs';
 
-const HERE = fileURLToPath(new URL('.', import.meta.url));
 const OUT = fileURLToPath(new URL('../../artifacts/trainworld/t756/', import.meta.url));
 mkdirSync(OUT, { recursive: true });
 const [mode, a1, a2, a3] = process.argv.slice(2);
@@ -30,35 +27,14 @@ const TOL = Number(process.env.TOL ?? 0.005);
 const enc = (v) => ({ t: v.constructor.name, b: Buffer.from(v.buffer, v.byteOffset, v.byteLength).toString('base64') });
 const dec = (o) => { const b = Buffer.from(o.b, 'base64'); const ab = b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); return new globalThis[o.t](ab); };
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? readdirSync(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright: set PLAYWRIGHT_MODULE to a file URL of playwright/index.mjs');
-}
-
 async function capture(save, label) {
   const port = Number(process.env.PORT ?? 6165);
   let vite = null, base = process.env.URL;
   if (!base) {
-    vite = spawn(process.execPath, [join(HERE, 'dev-nowatch.mjs'), String(port)], { stdio: ['ignore', 'pipe', 'pipe'] });
-    let out = '';
-    vite.stdout.on('data', (d) => { out += d; });
-    vite.stderr.on('data', (d) => { out += d; });
-    const deadline = Date.now() + 60000;
-    while (!/localhost:/.test(out)) {
-      if (vite.exitCode !== null || Date.now() > deadline) throw new Error('Vite did not start: ' + out.slice(-500));
-      await new Promise((r) => setTimeout(r, 200));
-    }
-    base = `http://localhost:${port}/`;
+    vite = await startVite(port);
+    base = vite.url;
   }
-  const { chromium } = await playwright();
-  const profile = await mkdtemp(join(tmpdir(), 'tw-t756-'));
-  const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1200, height: 800 } });
+  const { ctx, close } = await launchChrome({ prefix: 'tw-t756-', size: [1200, 800], args: [] });
   try {
     const page = await ctx.newPage();
     await page.addInitScript(() => {
@@ -84,7 +60,7 @@ async function capture(save, label) {
     await page.waitForFunction(() => window.tw?.world?.value && window.tw?.client, undefined, { timeout: 180000 });
     await page.waitForTimeout(3000);
     const bytes = readFileSync(save);
-    await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+    await importSave(page, bytes);
     // the last solve once none has come for 30 s
     const deadline = Date.now() + 15 * 60000;
     for (;;) {
@@ -101,32 +77,12 @@ async function capture(save, label) {
     writeFileSync(file, JSON.stringify({ save, packs: last.packs, markets: last.markets, net }));
     console.log(`captured ${label}: ${last.net.stXY.length / 2} stations, ${last.net.lineN.length} lines, packs ${last.packs.join(',')}, markets ${last.markets.length} -> ${file}`);
   } finally {
-    await ctx.close();
-    if (vite) vite.kill();
+    await close();
+    if (vite) vite.child.kill();
   }
 }
 
-// ---- the worker in Node (as t409-worker-check.mjs)
-async function bundleWorker() {
-  const { rolldown } = await import(pathToFileURL(join(HERE, '../app/node_modules/rolldown/dist/index.mjs')).href);
-  const compiled = join(OUT, 'demand-worker.mjs'), wrapper = join(OUT, 'worker-adapter.mjs');
-  const wasm = fileURLToPath(new URL('../app/src/wasm/demand/sim_bg.wasm', import.meta.url));
-  const bundle = await rolldown({ input: fileURLToPath(new URL('../app/src/workers/demand.worker.ts', import.meta.url)), platform: 'browser' });
-  await bundle.write({ file: compiled, format: 'esm' });
-  await bundle.close();
-  writeFileSync(wrapper, `import {parentPort} from 'node:worker_threads';
-import {readFileSync} from 'node:fs';
-globalThis.onmessage=null;
-globalThis.location={search:'',hash:'',href:'http://localhost/'};
-globalThis.postMessage=(data,options={})=>parentPort.postMessage(data,options.transfer??[]);
-globalThis.fetch=async()=>new Response(readFileSync(${JSON.stringify(wasm)}),{headers:{'Content-Type':'application/wasm'}});
-await import(${JSON.stringify(pathToFileURL(compiled).href)});
-parentPort.on('message',data=>globalThis.onmessage({data}));
-parentPort.postMessage({kind:'boot'});
-`);
-  return wrapper;
-}
-
+// ---- the worker in Node (lib.mjs bundleDemandWorker; its own start: a heap limit, failures as messages)
 function start(wrapper) {
   const w = new Worker(wrapper, { resourceLimits: { maxOldGenerationSizeMb: 4096 } }), messages = [], waiters = [], at = [];
   w.on('message', (msg) => { messages.push(msg); at.push(Math.round(performance.now())); for (const f of [...waiters]) f(msg); });
@@ -139,8 +95,6 @@ function start(wrapper) {
 }
 
 const ROUNDS = 3;
-const packOf = (id) => ({ id, header: readFileSync(new URL(`../data/packs/${id}.json`, import.meta.url), 'utf8'), bin: Uint8Array.from(readFileSync(new URL(`../data/packs/${id}.bin`, import.meta.url))).buffer });
-const marketOf = (id) => ({ id, pack: readFileSync(new URL(`../data/packs/${id}.market.json`, import.meta.url), 'utf8') });
 
 async function solveIn(wrapper, cap, extra) {
   const W = Number(process.env.WORKERS ?? 3);
@@ -151,7 +105,7 @@ async function solveIn(wrapper, cap, extra) {
   const ks = await Promise.all(periods.map(async (ps) => {
     const k = start(wrapper);
     await k.next((m) => m.kind === 'boot');
-    k.w.postMessage({ kind: 'init', packs: cap.packs.map(packOf), intercity: cap.markets.map(marketOf), rows: readFileSync(process.env.ROWS ?? new URL('../app/src/game/market-rows.json', import.meta.url), 'utf8'), periods: ps });
+    k.w.postMessage({ kind: 'init', packs: cap.packs.map(workerPack), intercity: marketPacks(cap.markets), rows: readFileSync(process.env.ROWS ?? new URL('../app/src/game/market-rows.json', import.meta.url), 'utf8'), periods: ps });
     const r = await k.next((m) => m.kind === 'ready');
     if (r.kind !== 'ready') throw new Error('init failed: ' + r.error);
     return k;
@@ -221,7 +175,7 @@ function compareRuns(a, b) {
 
 async function compare(label, which = 'both') {
   const cap = JSON.parse(readFileSync(join(OUT, `${label}.net.json`), 'utf8'));
-  const wrapper = await bundleWorker();
+  const wrapper = await bundleDemandWorker('t756');
   const runs = {};
   // T-780: `chunks` compares every market pair solved (`exact`, `?perfOff=chunks`) with the default
   const [ma, mb] = which === 'chunks' ? ['exact', 'reach'] : ['wide', 'reach'];

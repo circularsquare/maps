@@ -3,15 +3,9 @@
 // largest change from one hour to the next is printed beside the old flat-period booking's.
 //   node trainworld/checks/t736-money-timing.mjs
 // Prints PASS or FAIL and exits 1 on failure. A few seconds.
-import { fileURLToPath } from 'node:url';
-import { build } from '../app/node_modules/vite/dist/node/index.js';
+import { loadApp } from './lib.mjs';
 
-const root = fileURLToPath(new URL('../app', import.meta.url));
-const bundle = await build({ configFile: false, root, logLevel: 'silent', build: {
-  write: false, minify: false, lib: { entry: 'src/game/moneyTiming.ts', formats: ['es'] },
-} });
-const out = (Array.isArray(bundle) ? bundle[0] : bundle).output;
-const m = await import('data:text/javascript;base64,' + Buffer.from(out.find((o) => o.type === 'chunk').code).toString('base64'));
+const m = await loadApp('src/game/moneyTiming.ts');
 
 const PER = [[1000, 600, 900, 500, 80], [500, 550, 520, 420, 90]]; // US$ an hour, weekday and weekend, per period
 const RUN = [300, 180, 60]; // high, medium, low

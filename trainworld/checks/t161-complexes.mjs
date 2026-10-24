@@ -7,17 +7,10 @@
 //   node trainworld/checks/t161-complexes.mjs
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
-import { resolve } from 'node:path';
-import { build } from '../app/node_modules/vite/dist/node/index.js';
 import init, { TrackApi } from '../app/src/wasm/track/sim.js';
+import { loadApp } from './lib.mjs';
 
-const root = resolve('trainworld/app');
-const bundle = await build({ configFile: false, logLevel: 'silent', plugins: [{
-  name: 'cx', resolveId(id) { if (id.endsWith('cx-entry')) return '\0cx-entry'; },
-  load(id) { if (id === '\0cx-entry') return `export * from ${JSON.stringify(root + '/src/game/complexes.ts')};`; },
-}], build: { write: false, minify: false, lib: { entry: 'cx-entry', formats: ['es'] } } });
-const out = (Array.isArray(bundle) ? bundle[0] : bundle).output;
-const { buildComplexes } = await import('data:text/javascript;base64,' + Buffer.from(out.find((o) => o.type === 'chunk').code).toString('base64'));
+const { buildComplexes } = await loadApp('src/game/complexes.ts');
 
 await init({ module_or_path: readFileSync(new URL('../app/src/wasm/track/sim_bg.wasm', import.meta.url)) });
 const raw = gunzipSync(readFileSync(new URL('../T-007-real-nyc.save', import.meta.url)));

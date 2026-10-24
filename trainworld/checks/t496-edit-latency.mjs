@@ -4,20 +4,17 @@
 //   LABEL=<name>  RATE=paused|960  N=12     node trainworld/checks/t496-edit-latency.mjs
 // visual needs the old code at app/src/map/network_t496old.ts (git show <rev>:trainworld/app/src/map/network.ts),
 // removed again afterwards. Output: ../artifacts/trainworld/t496/.
-import { readFile, writeFile, mkdtemp } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-const { chromium } = await import(process.env.PLAYWRIGHT_MODULE);
+import { launchChrome, importSave, demandFinal, ARTIFACTS, REAL_SAVE } from './lib.mjs';
 const BASE = process.env.BASE ?? 'http://localhost:6140/';
 const MODE = process.env.MODE ?? 'measure';
 const LABEL = process.env.LABEL ?? 'run';
 const RATE = process.env.RATE ?? 'paused';
 const N = Number(process.env.N ?? 12);
-const OUT = 'C:/Users/anita/projects/maps/artifacts/trainworld/t496';
-const SAVE = 'C:/Users/anita/projects/maps/trainworld/T-007-real-nyc.save';
+const OUT = join(ARTIFACTS, 't496');
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
-const profile = await mkdtemp(join(tmpdir(), 'tw-t496-'));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t496-' });
 await ctx.addInitScript(() => {
   try { localStorage.setItem('trainworld-ui', JSON.stringify({ display: { dayShown: 'weekday' }, v: 2 })); } catch {}
   window.__t = { down: 0, world: 0, frame: 0 };
@@ -49,11 +46,11 @@ try {
   await page.waitForTimeout(1500);
   await page.evaluate(() => { const c = window.tw.client, e = c.edit.bind(c); c.edit = (op) => { if (window.__t && !window.__t.sent) window.__t.sent = performance.now(); return e(op); }; });
   await page.evaluate(() => { const c = window.tw.client, o = c.onState; c.onState = (s) => { if (!s.service) window.__s = s; o(s); }; });
-  const bytes = await readFile(SAVE);
-  await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));
+  const bytes = await readFile(REAL_SAVE);
+  await importSave(page, bytes);
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
   log('loaded');
-  await page.waitForFunction(() => { const d = window.twDemand, s = d?.log?.at(-1), v = d?.view?.(); return s && v && v.version === s.version && v.final && !d.client.waiting; }, undefined, { timeout: 300000, polling: 500 });
+  await demandFinal(page);
   log('demand final');
   await page.evaluate((rate) => {
     const tw = window.tw;
@@ -174,7 +171,7 @@ try {
     log('shots', JSON.stringify(out.shots));
   }
 } finally {
-  await ctx.close();
+  await close();
 }
 await writeFile(`${OUT}/${MODE}-${LABEL}-${RATE}.json`, JSON.stringify(out, null, 1));
 log('errors', errors.slice(0, 5));

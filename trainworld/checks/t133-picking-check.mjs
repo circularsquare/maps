@@ -1,24 +1,7 @@
 // Picking follows visible instance/layer stacking, including smaller bubbles drawn over large
 // ones. Run from maps: node trainworld/checks/t133-picking-check.mjs
 import assert from 'node:assert/strict';
-import { build } from '../app/node_modules/vite/dist/node/index.js';
-import { resolve } from 'node:path';
-const root = resolve('trainworld/app');
-const bundle = await build({ configFile: false, logLevel: 'silent', plugins: [{
-  name: 'picking-check',
-  resolveId(id) { if (id.endsWith('picking-check')) return '\0picking-check'; },
-  load(id) { if (id === '\0picking-check') return `
-    export { NetworkRenderer } from ${JSON.stringify(root + '/src/map/renderer.ts')};
-    export { pick } from ${JSON.stringify(root + '/src/map/pick.ts')};
-    export { discAt } from ${JSON.stringify(root + '/src/map/demandHover.ts')};
-    export { startClock } from ${JSON.stringify(root + '/src/game/clock.ts')};
-    export { CapacityMarkers } from ${JSON.stringify(root + '/src/map/capacityMarkers.ts')};
-    export { selection, tool } from ${JSON.stringify(root + '/src/game/ui.ts')};
-    export { addFinder, startHover } from ${JSON.stringify(root + '/src/map/demandHover.ts')};
-    export { HOME_ANCHOR, toLngLat } from ${JSON.stringify(root + '/src/map/geo.ts')};
-  `; },
-}], build: { write: false, minify: false, lib: { entry: 'picking-check', formats: ['es'] } } });
-const output = (Array.isArray(bundle) ? bundle[0] : bundle).output;
+import { loadApp } from './lib.mjs';
 class Element {
   style = {}; children = []; listeners = {}; offsetWidth = 40; offsetHeight = 20;
   classList = { add() {}, remove() {}, toggle() {} };
@@ -29,7 +12,15 @@ class Element {
 }
 globalThis.location = { search: '' };
 globalThis.document = { visibilityState: 'visible', documentElement: { dataset: {}, style: { setProperty() {}, removeProperty() {} } }, addEventListener() {}, createElement: () => new Element(), fonts: { ready: Promise.resolve() } };
-const { NetworkRenderer, pick, discAt, startClock, CapacityMarkers, selection, tool, addFinder, startHover, HOME_ANCHOR, toLngLat } = await import('data:text/javascript;base64,' + Buffer.from(output.find(o => o.type === 'chunk').code).toString('base64'));
+const { NetworkRenderer, pick, discAt, startClock, CapacityMarkers, selection, tool, addFinder, startHover, HOME_ANCHOR, toLngLat } = await loadApp(`
+  export { NetworkRenderer } from '@app/src/map/renderer.ts';
+  export { pick } from '@app/src/map/pick.ts';
+  export { discAt } from '@app/src/map/demandHover.ts';
+  export { startClock } from '@app/src/game/clock.ts';
+  export { CapacityMarkers } from '@app/src/map/capacityMarkers.ts';
+  export { selection, tool } from '@app/src/game/ui.ts';
+  export { addFinder, startHover } from '@app/src/map/demandHover.ts';
+  export { HOME_ANCHOR, toLngLat } from '@app/src/map/geo.ts';`);
 startClock(0).setRunning(false);
 const F = a => new Float32Array(a);
 const strokes = (ys, colours, edges = colours) => ({ count: ys.length, seg: F(ys.flatMap(y => [-30, y, 30, y])), colour: new Uint32Array(colours), edge: new Uint32Array(edges) });
