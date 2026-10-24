@@ -1,5 +1,9 @@
 ﻿# Archive
 
+- T-1084 [P2] Far drive supercells of 16 km for countryside zones. Done 2026-10-24 (landed d47acbe): `routes.SUPER_ZONE` 8 squares for plan rows of kind "zone", metros keep 8 km; routes 2-3 min faster a row, commute rail on test days -0.5% to +0.75%. The walk part dropped (Anita). notes/T-1082.md "T-1084 as built".
+- T-1083 [P2] Exact build speedups. Done 2026-10-24 (landed d47acbe): parks buffered piece by piece, `check_gravity` from a decay table, the first 2 km solve skipped under `--coarse`, GHSL near the outline only, Wikidata airports cached; packs byte-identical, west Kansas's build 183 s to 27. notes/T-1082.md "T-1083 as built".
+- T-1042 [P3] `enrich_parks` slow on huge reserves. Done 2026-10-24 by T-1083: a many-piece reserve buffered piece by piece (Hernando 424 s to 14), identical draws.
+- T-1082 [P2] A lighter build for countryside zones. Done 2026-10-23: measured (exact fixes about 30 s an ordinary row, 5 min a sparse western one); built as T-1083 and T-1084. notes/T-1082.md.
 - T-1088 [P1] No ring zones in the planner. Done 2026-10-24: nearest-centre joins, a strict wrap test, ring cuts and soft commuter belts (26 counties into 9 unbuilt metros); the US West and Northeast replanned (rings 9 to 0, 67 zones), nothing else changed. notes/T-1088.md.
 - T-1078 [P1] US wave 2, the Midwest. Done 2026-10-24: 66 of 66 shipped (built at home beside wave 1, gated, joined in 72 min); four parks relaxed with reasons, pack_gate's bracketed-name fault fixed; T-1079, T-1080 filed. notes/T-1004.md "Wave 2".
 - T-1093 [P2] Commute walking against the census, with and without a flat near end. Done 2026-10-23: walks 2-3x the census (London 18.5% / 9.4%, Tokyo 23.9% / 7.5%); flat 2 km cuts 2-8 points; fit cost under a point in Europe, 2-3 in Japan. notes/T-1090.md section 7.
