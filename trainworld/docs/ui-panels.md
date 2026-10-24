@@ -60,9 +60,7 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 - A row of icon tabs, names in their hovers: **Build** (a wrench), **Lines** (a route with stops),
   **Stations** (a platform under its canopy), **Money** (a bill and a coin), **Cities** (a skyline) [T-749], sharing the row's width
   equally [T-532] (each at least 34 px); at the row's right end
-  the saved games button (a floppy disk) [T-251], the account button (a head and shoulders,
-  [Account and leaderboards](#account-and-leaderboards); only when accounts are on, the icon tabs
-  then at least 27 px; also at the top of Settings) [T-972, T-1099] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
+  the saved games button (a floppy disk) [T-251] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
   area like a tab. There is no City tab [T-220]; a browser that last had it open starts on Lines.
 - Under the tab content, the **inspector** ([ui-inspectors.md](ui-inspectors.md)). The tab area has
   a fixed height and scrolls, so the inspector's top edge never moves when the tab changes.
@@ -411,7 +409,7 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   once (remembered per browser, `?acct=off` forgets it). The icons show only once
   `/noritetsu/config` answers with `trainworld`; with no server, or an older one, there is no icon
   and no other request. Google's script loads when the account panel first opens.
-- **Account panel**: the account button (dock tab row, top of Settings, start menu) opens a centred modal like the
+- **Account panel**: the account button (top of Settings, start menu; not in the tab bar, T-1106) opens a centred modal like the
   saves panel. Signed out: Google's button, then username and password with Log in, Create an
   account and Forgot password; Privacy and Terms (`public/privacy.html`, `terms.html`). Signed in:
   "Signed in as alice" (or with Google), for a password account the recovery email (a red line when

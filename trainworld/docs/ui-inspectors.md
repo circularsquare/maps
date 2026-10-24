@@ -313,7 +313,7 @@ purpose filter the purpose drawn is ringed in the bar.
   middles at one spot get a small loop. Hover gives the riders per day and each direction. Changes
   within one bundle and walks to stations outside the complex are not drawn. Why line to line:
   notes/T-147.md.
-- The only note under the map is the dashed links'; the widths and the curves are in their hovers [T-1095].
+- No notes under the map: the widths, the curves and the dashed links are in their hovers [T-1095, T-1106].
 
 ## Linking stations
 

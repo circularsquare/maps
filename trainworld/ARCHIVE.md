@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-1093 [P2] Commute walking against the census, with and without a flat near end. Done 2026-10-23: walks 2-3x the census (London 18.5% / 9.4%, Tokyo 23.9% / 7.5%); flat 2 km cuts 2-8 points; fit cost under a point in Europe, 2-3 in Japan. notes/T-1090.md section 7.
+- T-1106 [P2] Follow-ups to T-1099 and T-1095. Done 2026-10-23: the account icon is only in Settings (and the start menu), and the complex view has no notes under its map.
 - T-1098 [P2] Holidays only where built, shared ones merged. Done 2026-10-23: countries with built track or stations (blueprint not counted); one line per holiday on one local date, names like Labor Day/Workers' Day counted as one; the sky's hover names all, the date's two and "N others".
 - T-1097 [P2] High-speed lines heavier zoomed out. Done 2026-10-23: built high-speed strokes 1.4x at zoom 9, 1.25x at 11, 1x from 13; the light centre line only on strokes 3 px wide and up.
 - T-1096 [P2] The complex view's trains smooth. Done 2026-10-23: drawn on a canvas every frame (60 a second, was 3.4), pulling out too; panel's main-thread cost +27 ms a second (was +42). notes/T-1096.md.

@@ -1,5 +1,5 @@
-// T-972: the account panel, a centred modal like the saves panel, opened by the person icon in the
-// dock's tab row or on the start menu (`AccountButton`). Signed out: Google's button, then a
+// T-972: the account panel, a centred modal like the saves panel, opened by the person icon at the
+// top of Settings or on the start menu (`AccountButton`). Signed out: Google's button, then a
 // username and password with Log in, Create an account and Forgot password, as noritetsu has.
 // Signed in: who, the recovery email (password accounts), Change password, Sign out everywhere else,
 // Sign out and Delete account. The panels mount in a root of their own (`startAccountUi`), so the
@@ -166,11 +166,11 @@ export function AccountPanel() {
   </Modal>;
 }
 
-/** The person icon: a dock tab (`tab`), the start menu's (`start`) or the top of Settings (`settings`); nothing until accounts are on. */
-export function AccountButton({ kind }: { kind: "tab" | "start" | "settings" }) {
+/** The person icon: the start menu's (`start`) or the top of Settings (`settings`); nothing until accounts are on. */
+export function AccountButton({ kind }: { kind: "start" | "settings" }) {
   if (accountState.value !== "on") return null;
   const label = session.value ? "Account" : "Sign in";
-  return <button class={kind === "tab" ? "tab gear acct-tab" + (accountOpen.value ? " on" : "") : kind === "settings" ? "btn icon" + (accountOpen.value ? " on" : "") : "btn icon acct-start"} data-tip={label} aria-label={label}
+  return <button class={kind === "settings" ? "btn icon" + (accountOpen.value ? " on" : "") : "btn icon acct-start"} data-tip={label} aria-label={label}
     onClick={() => (accountOpen.value = !accountOpen.peek())}><Icon.person /></button>;
 }
 

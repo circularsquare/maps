@@ -12,7 +12,7 @@ import { BuildTab, CitiesTab, LinesTab, MoneyTab, StationsTab } from "./tabs";
 import { SavesPanel, savesOpen } from "./SavesPanel";
 import { SettingsTab } from "./SettingsTab";
 import { HelpPanel } from "./HelpPanel";
-import { AccountButton, startAccountUi } from "./AccountPanel";
+import { startAccountUi } from "./AccountPanel";
 import { Icon } from "./widgets";
 
 /** T-252: the tabs are icons, their names in the hover */
@@ -111,7 +111,6 @@ export function Dock() {
         <button class="tab gear save" data-tip="Saved games" aria-label="Saved games" onClick={() => (savesOpen.value = true)}>
           <Icon.save />
         </button>
-        <AccountButton kind="tab" />
         <button class={"tab gear" + (t === "settings" ? " on" : "")} data-tip="Settings" aria-label="Settings" aria-pressed={t === "settings"} onClick={() => (tab.value = "settings")}>
           <Icon.gear />
         </button>

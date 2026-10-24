@@ -567,6 +567,6 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
           <text x={(bar * k) / 2} y="-4" text-anchor="middle" class="complex-map-scale">{barLabel}</text>
         </g>
       </svg>
-      {links.length > 0 && <p class="muted small">Dashed lines join stations you linked.</p>}    </div>
+    </div>
   );
 }

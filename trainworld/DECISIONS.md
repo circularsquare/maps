@@ -2658,6 +2658,7 @@ reasoning and what it replaced.
 - 2026-10-23 (T-1099, my call): the account icon stays in the tab bar as well as at the top of Settings (Anita asked to add it there, and to move only Controls).
 - 2026-10-23 (T-1100, my call): the save preview drops the station rings only; grey track under the lines and the station count beside a city's name stay.
 - 2026-10-23 (T-1101, my call): bubbles were already off by default, so only the track display default changed (Line); a start on the world map still turns Homes on (T-801), since it is picked from the bubbles. Stored choices stay, which includes Anita's own browser.
+- 2026-10-23 (T-1106, Anita): stored settings are kept (no `VERSION` bump for T-1101); a start on the world map keeps turning Homes on; the account icon is only in Settings (and the start menu), not the tab bar. Replaces T-1099's "both".
 - 2026-10-23 (T-1102, my call): the selected-bubble pad (T-936) went from 2 px to 1 px, which is both the "min radius" and how much bigger every bubble draws while one is selected.
 
 - 2026-10-23 (T-1097, my call): high-speed weight zoomed out is 1.4x width at zoom 9 and below, 1.25x at 11, none from 13 (HSR_WIDTH in map/renderer.ts), and the light centre line comes in only as a built stroke widens from 3 to 5 px; far out a high-speed line reads as a slightly heavier solid line rather than a paler one.

@@ -16,8 +16,6 @@
 .acct-warn { color: var(--bad); }
 .acct-legal { margin: 12px 0 0; }
 .acct-legal a { color: inherit; }
-/* the person icon's tab: the icon tabs give up a little so the row still fits the narrowest dock */
-.tabs:has(.acct-tab) .tab:not(.gear) { min-width: 27px; }
 /* the person icon on the start menu card, at its top right */
 .start-box { position: relative; }
 .acct-start { position: absolute; top: 10px; right: 10px; }
