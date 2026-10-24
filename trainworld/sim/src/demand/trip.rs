@@ -304,8 +304,11 @@ pub(crate) struct Leg {
     /// without its distance fare)
     pub min: f32,
     pub perc: f32,
-    /// a ride's distance fare, perceived minutes
+    /// a ride's distance fare, perceived minutes, with its share by km of what the fare curve
+    /// adds over the base and rate (T-883)
     pub fare: f32,
+    /// a ride's fare km, while the fare curve is not a straight line (`Graph::rn_km`)
+    pub km: f32,
     /// a ride's wait at its boarding station: real minutes (half the combined headway of the
     /// useful departures there, plus the line's average extra wait for full trains there, T-188)
     /// and perceived minutes (the same, T-585, plus `Graph::rn_span` where some of the period's
@@ -335,6 +338,16 @@ pub(crate) fn routes(g: &Graph, sk: &Skims, p: &Params, a: usize, t: usize, min_
     let mut legs = vec![];
     let at = At { g, p, next, board, cn: &sk.change[slot as usize], rep: &rep, t, min_share };
     walk(&at, a, None, 1.0, &mut legs, &mut out);
+    if !g.fare_curve.is_line() {
+        for (_, legs) in &mut out {
+            let total: f32 = legs.iter().filter(|l| l.kind == 1).map(|l| l.km).sum();
+            let extra = g.fare_curve.extra(total);
+            let rides = legs.iter().filter(|l| l.kind == 1).count() as f32;
+            for l in legs.iter_mut().filter(|l| l.kind == 1) {
+                l.fare += extra * if total > 0.0 { l.km / total } else { 1.0 / rides };
+            }
+        }
+    }
     out.sort_by(|x, y| y.0.partial_cmp(&x.0).unwrap());
     out
 }
@@ -383,13 +396,14 @@ fn walk(at: &At, v: usize, came: Option<usize>, share: f32, legs: &mut Vec<Leg>,
         // T-717: a change walks to this train's platform, as part of the walk into the station if
         // there was one
         let plat = arrived.map_or(0.0, |a| platform_walk_to(p, a, g.rn_dx[r0 - s], g.rn_dy[r0 - s]));
-        let (mut r, mut min, mut perc, mut fare, mut stops) = (r0, 0.0f32, 0.0f32, 0.0f32, 0u32);
+        let (mut r, mut min, mut perc, mut fare, mut km, mut stops) = (r0, 0.0f32, 0.0f32, 0.0f32, 0.0f32, 0u32);
         // a boarding rides at least one stop, even where riders on board leave (T-1055)
         let mut nx = if (next[r] as usize) >= s && (next[r] as usize) < g.n { next[r] } else { g.rn_next[r - s] };
         while nx != NONE && (nx as usize) >= s && (nx as usize) < g.n && stops as usize <= g.n {
             let ride = (g.adj_off[r] as usize..g.adj_off[r + 1] as usize).find(|&k| g.adj_seg[k] != NONE).unwrap();
             min += g.rn_ride[r - s];
             fare += g.rn_fare[r - s];
+            km += g.rn_km.get(r - s).copied().unwrap_or(0.0);
             perc += g.adj_cost[ride] - g.rn_fare[r - s];
             stops += 1;
             r = nx as usize;
@@ -412,7 +426,7 @@ fn walk(at: &At, v: usize, came: Option<usize>, share: f32, legs: &mut Vec<Leg>,
                 }
                 _ => {
                     let c = came.unwrap();
-                    legs.push(Leg { kind: 2, rn_from: (c - s) as u32, rn_to: (r0 - s) as u32, st_from: v as u32, st_to: v as u32, min: plat / p.w_xfer, perc: plat, fare: 0.0,wait_min: 0.0, wait_perc: 0.0, stops: 0, change: 0.0 });
+                    legs.push(Leg { kind: 2, rn_from: (c - s) as u32, rn_to: (r0 - s) as u32, st_from: v as u32, st_to: v as u32, min: plat / p.w_xfer, perc: plat, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, stops: 0, change: 0.0 });
                     pushed += 1;
                 }
             }
@@ -422,13 +436,13 @@ fn walk(at: &At, v: usize, came: Option<usize>, share: f32, legs: &mut Vec<Leg>,
         // due within their tolerance (T-842) weigh on the perceived wait only
         let (left, span) = (g.rn_left[r0 - s], g.rn_span[r0 - s]);
         let change = if came.is_some() { p.transfer_min } else { 0.0 };
-        legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, wait_min: wait_min + left - span, wait_perc: wait_min + left, stops, change });
+        legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, km, wait_min: wait_min + left - span, wait_perc: wait_min + left, stops, change });
         pushed += 1;
         let to = if (nx as usize) < s { nx } else { cn.st[nx as usize - g.n] };
         if to != here {
             // a walking transfer from this route node to a station nearby
             let cost = (g.adj_off[r] as usize..g.adj_off[r + 1] as usize).find(|&k| g.adj_to[k] == to).map_or(0.0, |k| g.adj_cost[k]);
-            legs.push(Leg { kind: 2, rn_from: (r - s) as u32, rn_to: rep[to as usize], st_from: here, st_to: to, min: cost / p.w_xfer, perc: cost, fare: 0.0,wait_min: 0.0, wait_perc: 0.0, stops: 0, change: 0.0 });
+            legs.push(Leg { kind: 2, rn_from: (r - s) as u32, rn_to: rep[to as usize], st_from: here, st_to: to, min: cost / p.w_xfer, perc: cost, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, stops: 0, change: 0.0 });
             pushed += 1;
         }
         walk(at, nx as usize, Some(r), sh, legs, out);

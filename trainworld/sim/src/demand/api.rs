@@ -48,6 +48,35 @@ pub fn country_asc_rail(country: &str) -> f32 {
 /// US value of time: $20/hour, or 3 perceived minutes per dollar (T-067).
 pub const FARE_MIN_PER_USD: f32 = 3.0;
 
+/// Checks a fare curve's knots (T-883): pairs of trip km and US$, km rising, fares never falling;
+/// fewer than two pairs is the straight line of `set_fares`.
+pub(crate) fn check_fare_curve(knots: &[f32]) -> Result<(), String> {
+    let ok = knots.len() % 2 == 0
+        && knots.iter().all(|v| v.is_finite() && *v >= 0.0)
+        && knots.chunks(2).zip(knots.chunks(2).skip(1)).all(|(a, b)| b[0] > a[0] && b[1] >= a[1]);
+    if ok { Ok(()) } else { Err("invalid fare curve".into()) }
+}
+
+/// Gives `g` the fare curve `knots` (US$, `check_fare_curve`) over the straight line the ride
+/// edges and base fare already charge (perceived minutes), with each route node's fare km.
+pub(crate) fn put_fare_curve(g: &mut Graph, knots: &[f32], hop_km: &[f32], fare_min: f32, per_km: f32) {
+    if knots.len() < 4 {
+        return;
+    }
+    g.fare_curve = FareCurve {
+        km: knots.iter().step_by(2).copied().collect(),
+        min: knots.iter().skip(1).step_by(2).map(|v| v * FARE_MIN_PER_USD).collect(),
+        base: fare_min,
+        rate: per_km,
+    };
+    g.rn_km = (0..g.rn_fare.len()).map(|r| hop_km.get(r).copied().unwrap_or(0.0)).collect();
+}
+
+/// `Loads::rn_fare_x` in US$.
+pub(crate) fn fare_x_usd(v: &[f32]) -> Vec<f32> {
+    v.iter().map(|x| x / FARE_MIN_PER_USD).collect()
+}
+
 /// `flows` leaves out the far cells holding this share of the selection's commuters, the
 /// smallest first (they go to the cut totals), to keep the answer small (T-098).
 pub const FLOW_CUT: f64 = 0.01;
@@ -349,6 +378,8 @@ pub struct DemandApi {
     pub(crate) per: Vec<Option<Period>>,
     pub(crate) fare_per_km: f32,
     pub(crate) fare_km: Vec<f32>,
+    /// The fare curve's knots, km and US$ in pairs (T-883, `set_fare_curve`); empty for the straight line.
+    pub(crate) fare_curve: Vec<f32>,
     open_ms: f64,
     /// The complex of each station of the next `set_network` (`set_complexes`, T-161).
     complex_in: Vec<u32>,
@@ -652,6 +683,7 @@ impl DemandApi {
             per: (0..PERIODS).map(|_| None).collect(),
             fare_per_km: 0.0,
             fare_km: vec![],
+            fare_curve: vec![],
             open_ms: 0.0,
             complex_in: vec![],
             span_in: vec![],
@@ -755,7 +787,7 @@ impl DemandApi {
         let (walk_home_zone, walk_work_zone) = no_rail_trips(&z, &gr, &base, &nr);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0, complex_in: vec![], span_in: vec![], same: 0, layout_same: false, reusable: false })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], span_in: vec![], same: 0, layout_same: false, reusable: false })
     }
 
     /// The station complex of each station of the networks `set_network` is given from now on
@@ -885,6 +917,18 @@ impl DemandApi {
         Ok(())
     }
 
+    /// The player's fare curve (T-883, T-1143) over `set_fares`' straight line: trip km and US$ in
+    /// pairs, km rising and fares never falling; empty when the curve is that line.
+    pub fn set_fare_curve(&mut self, knots: &[f32]) -> Result<(), String> {
+        check_fare_curve(knots)?;
+        if !same_bits(knots, &self.fare_curve) {
+            self.fare_curve = knots.to_vec();
+            self.per.iter_mut().for_each(|p| *p = None);
+            self.same = 0;
+        }
+        Ok(())
+    }
+
     /// Run one solve and one crowding round on a small cross of two lines at the pack origin,
     /// then forget it. V8 runs a wasm function's first calls in its baseline compiler and swaps
     /// in optimised code only for later calls, so the first real solve took 3x as long as the
@@ -935,6 +979,7 @@ impl DemandApi {
         for (r, fare) in g.rn_fare.iter_mut().enumerate() {
             *fare = self.fare_km.get(r).copied().unwrap_or(0.0) * self.fare_per_km;
         }
+        put_fare_curve(&mut g, &self.fare_curve, &self.fare_km, self.base.fare_min, self.fare_per_km);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);
@@ -990,6 +1035,7 @@ impl DemandApi {
             msa(&mut st.avg.rn_alight, &l.rn_alight, r);
             msa(&mut st.avg.entry, &l.entry, r);
             msa(&mut st.avg.exit, &l.exit, r);
+            msa(&mut st.avg.rn_fare_x, &l.rn_fare_x, r);
             st.sub.msa(&sub, r);
             let w = 1.0 / (r as f64 + 1.0);
             st.rail += (rail - st.rail) * w;
@@ -1034,6 +1080,11 @@ impl DemandApi {
     /// Riders in period `q` leaving the train at each route node.
     pub fn alight(&self, q: usize) -> Vec<f32> {
         self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| st.avg.rn_alight.clone())
+    }
+    /// The fare curve's extra in period `q` (T-1143), US$, at each route node where the trips paying
+    /// it first board: what the trips pay beyond the base and the first stretch's rate per km.
+    pub fn fare_extra(&self, q: usize) -> Vec<f32> {
+        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| fare_x_usd(&st.avg.rn_fare_x))
     }
     /// `transfers` on a kind of day (T-260): each period's riders times the commute's load factor.
     pub fn transfers_day(&self, sel: &[u8], day: u32) -> Vec<f32> {

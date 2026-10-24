@@ -24,7 +24,7 @@ import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/
 import { world } from "./game/world";
 import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
-import { lastSaved, moneyState } from "./game/money";
+import { incomeByDay, lastSaved, moneyState } from "./game/money";
 import { live } from "./map/live";
 import { setBasemapLabels, setBasemapShade } from "./map/basemap";
 import { createMap } from "./map/mapView";
@@ -552,7 +552,7 @@ if (DEBUG) {
   };
 
   (window as any).tw = {
-    map, overlay, renderer, clock, world, selection, display, shade, tools, client, checkPrecision, moneyState, lastSaved, pick, tripAt,
+    map, overlay, renderer, clock, world, selection, display, shade, tools, client, checkPrecision, moneyState, incomeByDay, lastSaved, pick, tripAt,
     // the current draw anchor (T-307), mercator 0..1, and conversions with it
     get originMerc() { return anchor().merc; },
     anchor, toLocal, toLngLat,

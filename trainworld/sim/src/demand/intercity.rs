@@ -16,7 +16,7 @@
 //! data/packs/intercity.json, the joint commute gravity's input, and the tests' fixtures) opens as
 //! a closed world over its own zones with the ground curve alone.
 use super::{
-    api::{demand_groups, merge_stations, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
+    api::{check_fare_curve, demand_groups, fare_x_usd, merge_stations, put_fare_curve, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
     clock::now_ms,
     days::{load_factor, share_out, share_ret, LONGER, WEEKDAY, WORK},
     kernel::*,
@@ -1753,6 +1753,8 @@ pub struct IntercityApi {
     per: Vec<Option<Period>>,
     fare_km: Vec<f32>,
     fare_per_km: f32,
+    /// `DemandApi::set_fare_curve`'s knots (T-883)
+    fare_curve: Vec<f32>,
     complex_in: Vec<u32>,
     /// `DemandApi::set_span` (T-842).
     span_in: Vec<f32>,
@@ -1983,6 +1985,7 @@ impl IntercityApi {
             per: (0..PERIODS).map(|_| None).collect(),
             fare_km: vec![],
             fare_per_km: 0.,
+            fare_curve: vec![],
             complex_in: vec![],
             span_in: vec![],
             chunk: 0.,
@@ -2014,6 +2017,7 @@ impl IntercityApi {
         let Demand { od, od_c, st, rail, cor, pair_rail, c_rail, c_frac, c_cor } = d;
         let counting = !(cfg!(test) && XFER_OFF.load(std::sync::atomic::Ordering::Relaxed));
         let (mut all, mut com) = (DestAssign::new(g, 0, counting), DestAssign::new(g, 0, false));
+        com.fares = false;
         let mut xfer = vec![0.0; ix.len];
         // a destination's commutes as a column (the riders from each station)
         let mut col = vec![0f32; s];
@@ -2532,6 +2536,14 @@ impl IntercityApi {
         }
         Ok(())
     }
+    pub fn set_fare_curve(&mut self, knots: &[f32]) -> Result<(), String> {
+        check_fare_curve(knots)?;
+        if !same_bits(knots, &self.fare_curve) {
+            self.fare_curve = knots.to_vec();
+            self.per.iter_mut().for_each(|p| *p = None);
+        }
+        Ok(())
+    }
     pub fn solve(&mut self, q: usize) -> bool {
         let Some(svc) = &self.svc else { return false };
         if q >= PERIODS {
@@ -2550,6 +2562,7 @@ impl IntercityApi {
         for (r, f) in g.rn_fare.iter_mut().enumerate() {
             *f = self.fare_km.get(r).copied().unwrap_or(0.) * self.fare_per_km;
         }
+        put_fare_curve(&mut g, &self.fare_curve, &self.fare_km, self.base.fare_min, self.fare_per_km);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);
@@ -2616,6 +2629,7 @@ impl IntercityApi {
         msa(&mut st.avg.rn_alight, &l.rn_alight, r);
         msa(&mut st.avg.entry, &l.entry, r);
         msa(&mut st.avg.exit, &l.exit, r);
+        msa(&mut st.avg.rn_fare_x, &l.rn_fare_x, r);
         let w = 1. / (r as f64 + 1.);
         st.rail += (rail - st.rail) * w;
         for (a, b) in st.corridors.iter_mut().zip(cor) {
@@ -2704,6 +2718,10 @@ impl IntercityApi {
     }
     pub fn alight(&self, q: usize) -> Vec<f32> {
         self.per(q).map_or(vec![], |s| s.avg.rn_alight.clone())
+    }
+    /// As `DemandApi::fare_extra`.
+    pub fn fare_extra(&self, q: usize) -> Vec<f32> {
+        self.per(q).map_or(vec![], |s| fare_x_usd(&s.avg.rn_fare_x))
     }
     /// `transfers` on a kind of day (T-260).
     pub fn transfers_day(&self, sel: &[u8], day: u32) -> Vec<f32> {

@@ -6,8 +6,11 @@
 // per game hour (workers/clockClient.ts). The worker pays each hour's fares into the cash as that
 // hour's trains pick up riders, and its running cost evenly.
 //
-// Fare per ride = base + per km x the ride's length along the line. A ride that changes lines
-// pays the base once: boardings are scaled to trips by the city's rail trips over all boardings.
+// Fare per ride = base + per km x the ride's length along the line, on the fare curve's first
+// stretch. A ride that changes lines pays the base once: boardings are scaled to trips by the
+// city's rail trips over all boardings. What the rest of a bent curve adds (or takes off) on each
+// trip's length is demand's own figure, at the line the trip first boards (`LineDemand.fareX`,
+// T-1143), so income is what demand charged.
 //
 // The economy runs at 100x (T-081, `ECONOMY` in sim/src/track/params.rs, sent as
 // `MoneyState.economy`): a game day's fares and running costs are that many times a real day's,
@@ -82,7 +85,7 @@ function incomeFor(dv: DemandView | null): Income {
       const rides = dm.ridersPerDay * tripsPerBoarding;
       pkm.forEach((pk, p) => {
         const share = total > 0 ? pk / total : 0;
-        const r = faresFor(fares, rides * share, pk) * x;
+        const r = (faresFor(fares, rides * share, pk) + (dm.fareX?.[p] ?? 0)) * x;
         perPeriod[p] += r;
         linePer[p] += r;
         ridesPeriod[p] += rides * share;

@@ -387,6 +387,10 @@ svg.fare-graph { width: 100%; height: auto; margin: 4px 0 6px; user-select: none
 .fg-hit { fill: transparent; }
 .fg-knob { fill: var(--accent); stroke: var(--bg); stroke-width: 1.5; }
 .fg-node:hover .fg-knob, .fg-knob.sel { stroke: var(--text); }
+/* T-1143: the base fare drags up and down only; the arrows around a node the ways it drags */
+.fg-node.ns, .fg-drag-y .fg-node, .fg-drag-y .fg-hover { cursor: ns-resize; }
+.fg-drag-x .fg-node, .fg-drag-x .fg-hover { cursor: ew-resize; }
+.fg-hint { fill: var(--muted); fill-opacity: .7; pointer-events: none; }
 /* T-1112: a node past the plot, an arrow at its edge; the word between a node's two steppers;
    T-1130: the undo button beside the zoom */
 .fg-buttons { display: inline-flex; gap: 6px; }

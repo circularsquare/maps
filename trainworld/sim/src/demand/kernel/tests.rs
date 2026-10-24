@@ -33,6 +33,55 @@ fn common_test_params() -> Params {
     Params { xfer_walk_m: 0.0, ..Params::default() }
 }
 
+/// T-883, T-1143: a fare that steepens past 30 km raises only the longer pairs' costs, by the extra
+/// rate on the km past 30, with two lines pooled at the shared stations; a curve on the straight
+/// line changes nothing. The assignment puts each pair's extra where its riders first board, split
+/// as they split, and it adds up to the trips times the extra at their km.
+#[test]
+fn a_bent_fare_curve_charges_long_trips_and_counts_its_extra() {
+    let p = common_test_params();
+    let net = common_test_net(&[&[0, 1, 2, 3], &[0, 1, 2]], &[6.0, 12.0], &[2.0, 2.0]);
+    let (base, rate, steep) = (4.5f32, 0.3f32, 0.9f32);
+    let graph = |knots: &[(f32, f32)]| {
+        let mut g = build_graph(&net, &p);
+        g.rn_fare = vec![20.0 * rate; g.rn_ride.len()];
+        let ones = vec![1.0; g.rn_ride.len()];
+        set_crowding(&mut g, &ones);
+        if knots.len() >= 2 {
+            g.fare_curve = FareCurve { km: knots.iter().map(|k| k.0).collect(), min: knots.iter().map(|k| k.1).collect(), base, rate };
+            g.rn_km = vec![20.0; g.rn_ride.len()];
+        }
+        g
+    };
+    let line = skims(&graph(&[]), &p).r;
+    let straight = skims(&graph(&[(0.0, base), (20.0, base + 20.0 * rate), (100.0, base + 100.0 * rate)]), &p).r;
+    let knee = base + 30.0 * rate;
+    let bent_g = graph(&[(0.0, base), (30.0, knee), (100.0, knee + 70.0 * steep)]);
+    let bent_sk = skims(&bent_g, &p);
+    for (a, b) in line.iter().zip(&straight) {
+        assert!(a == b || (a - b).abs() < 1e-3, "{a} {b}");
+    }
+    let at = |r: &[f32], i: usize, j: usize| r[i * 4 + j];
+    let more = steep - rate;
+    assert!((at(&bent_sk.r, 0, 1) - at(&line, 0, 1)).abs() < 1e-3);
+    assert!((at(&bent_sk.r, 0, 2) - at(&line, 0, 2) - more * 10.0).abs() < 1e-3);
+    assert!((at(&bent_sk.r, 0, 3) - at(&line, 0, 3) - more * 30.0).abs() < 1e-3);
+    assert!((at(&bent_sk.r, 3, 0) - at(&line, 3, 0) - more * 30.0).abs() < 1e-3);
+
+    let mut od = vec![0.0f32; 16];
+    od[2] = 10.0;
+    od[3] = 5.0;
+    od[4] = 7.0; // 1 -> 0, 20 km: no extra
+    let l = assign(&bent_g, &bent_sk, &od);
+    let total: f32 = l.rn_fare_x.iter().sum();
+    let want = 10.0 * more * 10.0 + 5.0 * more * 30.0;
+    assert!((total - want).abs() < 1e-3, "{total} against {want}");
+    // 0 -> 2 rides either line from 0 by its trains an hour (6 and 12); 0 -> 3 only line 0
+    assert!((l.rn_fare_x[8] - 10.0 * more * 10.0 * 2.0 / 3.0).abs() < 1e-3, "{:?}", l.rn_fare_x);
+    assert!((l.rn_fare_x[0] - (10.0 * more * 10.0 / 3.0 + 5.0 * more * 30.0)).abs() < 1e-3, "{:?}", l.rn_fare_x);
+    assert!(assign(&graph(&[]), &skims(&graph(&[]), &p), &od).rn_fare_x.iter().all(|&x| x == 0.0));
+}
+
 /// T-798: a circle 0-1-2-3-4-5-0, 12 tph, 2 minutes a stop and half a minute standing at 0.
 /// Riders take the short way round through 0 without changing; a line that is not a circle
 /// sends them the long way.

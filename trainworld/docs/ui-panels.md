@@ -305,32 +305,39 @@ day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
 costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
 charts are saved with the game and are there after a reload [T-567]. Then, for the whole
 network whatever the toggle: the fare curve (rule: [track-and-service.md](track-and-service.md),
-fares), drawn as a graph of the fare against trip length, both axes linear from 0 at the bottom left
-[T-864, T-883, T-1112, `ui/FareGraph.tsx`]. "Nice" below means 1, 2 or 5 times a power of ten. The
-distance shown starts as the smallest nice one holding 1.2 times the second node's (200 km for the
-default curve) and is kept while the game is open; the wheel or two fingers over the graph zoom it
-smoothly, and the minus and plus buttons beside the Fare heading step it to the next nice one, from 1
-to 5,000 km (in the display unit). The fare axis fits the curve over the distance shown: its top is
-1.25 times the fare at the right edge (at least $0.50), rounded up to a whole tick step, the smallest
-nice step of at least a quarter of that. Distance ticks fall every nice step of at least a fifth of the
-distance shown, the last labelled with the unit. The curve has exactly two nodes, each dragged both
-ways within the plot: distance to the nice step of at least 1/200 of the distance shown, fare to that
-of 1/250 of the top (at least $0.01); the second stays at least 2% of the distance shown (and 0.1 km)
-farther than the first and never cheaper. The line through them is never below $0 at 0 km: a drag or
-a typed value that would take it there stops where the line meets $0 (the dragged node's fare, no
-lower for the first node and no higher for the second). The scale holds still during a drag. A drag changes the
-graph and the figures below it as the pointer moves, and sends the fare to the game once on release
-(each change restarts demand). While fare changes are the last edits sent, Ctrl+Z takes them back one
+fares), drawn as a graph of the fare against trip length, both axes linear
+[T-864, T-883, T-1112, T-1143, `ui/FareGraph.tsx`]. "Nice" below means 1, 2 or 5 times a power of
+ten. The distance shown starts as the smallest nice one holding 1.2 times the last node's distance
+with every node's fare below 90% of the fare shown (200 km for the default curve) and is kept while
+the game is open; the wheel or two fingers over the graph zoom it smoothly, and the minus and plus
+buttons beside the Fare heading step it to the next nice one, from 1 to 5,000 km (in the display
+unit). The fare shown over the plot's height is always $0.15 a km of the distance shown, so the
+line's slope on screen never changes with zoom ($30 at 200 km). The fare axis starts at $0, or higher
+where the base fare would otherwise stand above a quarter of the height: then the base fare sits at a
+quarter of the height. Fare ticks fall at every multiple of the smallest nice step of at least a
+quarter of the fare shown, distance ticks every nice step of at least a fifth of the distance shown,
+the last labelled with the unit. The curve has exactly three nodes. The first, the base fare, stays
+at 0 km and drags up and down only; the other two drag either sideways (distance) or up and down
+(fare), whichever way the pointer first moves 3 graph units, and only that way for the rest of the
+drag. Hovering a node draws small grey arrows the ways it drags (two for the base fare, four for the
+others); during a drag only the chosen way's two show, and the cursor shows it too. A drag snaps
+distance to the nice step of at least 1/200 of the distance shown and fare to that of 1/250 of the
+fare shown (at least $0.01), within the plot; each node stays at least 2% of the distance shown (and
+0.1 km) beyond the one before and short of the one after, and its fare between theirs, so fares never
+fall with distance. The scale holds still during a drag. A drag changes the graph and the figures
+below it as the pointer moves, and sends the fare to the game once on release (each change restarts
+demand). While fare changes are the last edits sent, Ctrl+Z takes them back one
 at a time, and Ctrl+Y or Ctrl+Shift+Z puts them back, in order with the track's own undo and redo; the
 undo button left of the zoom buttons does the same, enabled only then [T-1130, `game/fareUndo.ts`:
 the sim's edit history holds track, lines and schedules, so fare steps are kept on the main thread
 and any other edit drops them]. A node past the plot is an arrow
 on the plot's edge pointing toward it, with its hover; a click on the arrow zooms out to show it. A
-hover anywhere on the graph names the fare at that distance, a node's hover its distance and fare.
-Below the graph one row per node, as "1.0 km costs $1.60": its distance and fare, each stepping with
-the buttons (distance by 0.5 under 10, 5 under 100, then 50; fare by $0.25), or a click on it opens a
-box to type it, Enter or leaving the box applying and Escape cancelling [T-626, `TypedValue` in
-`ui/widgets.tsx`], kept in order as a drag is; then what a 10 km or mile ride costs; cars
+hover anywhere on the graph names the fare at that distance, a node's hover its distance and fare
+and the ways it drags. Below the graph one row per node: "Base fare" with its fare, then the other
+two as "20 km costs $3.50", distance and fare, each stepping with the buttons (distance by 0.5 under
+10, 5 under 100, then 50; fare by $0.25), or a click on it opens a box to type it, Enter or leaving the
+box applying and Escape cancelling [T-626, `TypedValue` in `ui/widgets.tsx`], kept in order as a drag
+is; then what a 10 km or mile ride costs; cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
 

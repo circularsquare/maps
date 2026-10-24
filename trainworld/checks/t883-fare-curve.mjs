@@ -1,20 +1,26 @@
-// T-883, T-1112: the fare curve reaches demand, and the Money tab's two-node control works. On the
-// real save (a ?new=1 game, the weekday's final): the default fare; the same line through other
-// nodes (no change at all); an older three-node curve kept as its first and last (here the default
-// again); twice the rate per km (fewer rail trips); a line below $0 at 0 km lifted at its first node; $0 at 0 km
-// then $0.10 a km (more rail trips). Then in the Money tab: dragging the second
-// node sends nothing until release, then the new fare; Ctrl+Z, Ctrl+Y and the undo button take it
-// back and put it back (T-1130); wheel zoom puts it past the plot as an
-// arrow, and a click on the arrow zooms back out. Screenshots of the fare graph (its default view,
-// zoomed with the arrow, mid-drag), light and dark, go to artifacts/trainworld/t1111/.
+// T-883, T-1112, T-1143: the fare curve reaches demand and income, and the Money tab's three-node
+// control works. On the real save (a ?new=1 game, the weekday's final): the default fare (three
+// nodes on $1.50 + $0.10 a km); the same line through other nodes and an older save's two nodes
+// (no change at all); twice the rate per km (fewer rail trips); a curve steeper past 20 km (fewer
+// rail trips, demand's extra fare counted in income: the weekday's income is the base on each trip,
+// the first stretch's rate on the passenger-km and demand's extra, and the extra is within what the
+// steeper rate could add). Then in the Money tab: arrows on hover the ways a node drags; a drag
+// moves one way only (the base fare up and down, the others by the drag's first pixels) and sends
+// nothing until release; Ctrl+Z, Ctrl+Y and the undo button (T-1130); zoom keeps the line's slope
+// on screen; zoomed in, a node past the plot is an arrow, and a click on it zooms out to it.
+// Screenshots (default, hover, mid-drag, zoomed in and out), light and dark, go to
+// artifacts/trainworld/t1143/.
 //   node trainworld/checks/t883-fare-curve.mjs [url]   (from the maps root; default localhost:6150)
 // Prints PASS or FAIL lines and exits 1 on failure. About five minutes.
 import { mkdir, readFile } from 'node:fs/promises';
-import { launchChrome, importSave, demandFinal, REAL_SAVE } from './lib.mjs';
+import { join } from 'node:path';
+import { launchChrome, importSave, demandFinal, REAL_SAVE, ARTIFACTS } from './lib.mjs';
 
 const BASE = (process.argv[2] ?? 'http://localhost:6150/').replace(/\/?$/, '/');
-const OUT = 'artifacts/trainworld/t1111/';
-const DEFAULT_RAIL = 12796392;
+const OUT = join(ARTIFACTS, 't1143');
+/** the real save's rail trips a day at the default fare (the data of 2026-10-24) */
+const DEFAULT_RAIL = Number(process.env.T883_RAIL ?? 12783191);
+const DEFAULT = '[[0,1.5],[20,3.5],[100,11.5]]';
 
 let failed = false;
 const report = (name, ok, detail) => { if (!ok) failed = true; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
@@ -39,41 +45,64 @@ try {
   };
   const setNodes = (nodes) => page.evaluate((nodes) => window.tw.client.edit({ op: 'fares', nodes }), nodes);
   const nodesNow = () => page.evaluate(() => JSON.stringify(window.tw.moneyState.value.fares.nodes));
+  const waitNodes = (want) => page.waitForFunction((want) => JSON.stringify(window.tw.moneyState.value.fares.nodes) === want, want, { timeout: 30000 }).catch(() => {});
   const fmt = (v) => Math.round(v).toLocaleString('en-US');
+  /** the weekday's fare income a day against the base, rate and demand's extra on its riders, US$ */
+  const money = () => page.evaluate(() => {
+    const tw = window.tw, w = tw.world.value, m = tw.moneyState.value, dv = window.twDemand.view();
+    const hours = [4, 6, 4, 4, 6];
+    const income = tw.incomeByDay.value[0].perHour.reduce((a, v, p) => a + v * hours[p] * 1e6, 0);
+    const boardings = w.save.lines.reduce((a, l) => a + (dv.lines.get(l.id)?.ridersPerDay ?? 0), 0);
+    const perBoarding = boardings > 0 ? Math.min(1, dv.railTripsPerDay / boardings) : 1;
+    let trips = 0, pkm = 0, extra = 0;
+    for (const l of w.save.lines) {
+      const st = w.lineStats[l.id], dm = dv.lines.get(l.id), n = l.stops.length;
+      if (!st || st.status !== 'running' || !dm || st.stopS[0]?.length !== n || st.stopS[1]?.length !== n) continue;
+      const km = [];
+      for (const s of st.stopS) for (let k = 0; k + 1 < n; k++) km.push((s[k + 1] - s[k]) / 1000);
+      for (const seg of dm.loads) if (seg.length === km.length) pkm += seg.reduce((a, v, k) => a + v * km[k], 0);
+      trips += dm.ridersPerDay * perBoarding;
+      extra += (dm.fareX ?? []).reduce((a, b) => a + b, 0);
+    }
+    const f = m.fares;
+    return { income, expected: (f.base * trips + f.perKm * pkm + extra) * m.economy, extra: extra * m.economy, pkm, economy: m.economy };
+  });
 
   const a = await final(-1);
-  report('default fare', Math.round(a.rail) === DEFAULT_RAIL, `(${fmt(a.rail)} rail trips a day; want ${fmt(DEFAULT_RAIL)})`);
+  const an = await nodesNow();
+  const am = await money();
+  report('default fare', Math.round(a.rail) === DEFAULT_RAIL && an === DEFAULT && am.extra === 0, `(${fmt(a.rail)} rail trips a day; want ${fmt(DEFAULT_RAIL)}; nodes ${an}; extra ${am.extra})`);
 
   // the same fares give the demand nothing new to solve, so no new final may come
-  await setNodes([[10, 2.5], [100, 11.5]]);
+  await setNodes([[0, 1.5], [50, 6.5], [200, 21.5]]);
   await page.waitForTimeout(15000);
   const b = await final(-1);
   report('the same line through other nodes', Math.round(b.rail) === Math.round(a.rail), `(${fmt(b.rail)})`);
 
-  await setNodes([[1, 1.6], [30, 4.5], [100, 11.5]]);
+  await setNodes([[1, 1.6], [100, 11.5]]);
+  await waitNodes(DEFAULT);
   await page.waitForTimeout(15000);
   const c = await final(-1);
   const cn = await nodesNow();
-  report('three nodes keep the first and last', cn === '[[1,1.6],[100,11.5]]' && Math.round(c.rail) === Math.round(a.rail), `(nodes ${cn}, ${fmt(c.rail)})`);
+  report('an older two-node curve becomes three on its line', cn === DEFAULT && Math.round(c.rail) === Math.round(a.rail), `(nodes ${cn}, ${fmt(c.rail)})`);
 
-  await setNodes([[1, 1.7], [100, 21.5]]);
+  await setNodes([[0, 1.5], [20, 5.5], [100, 21.5]]);
   const d = await final(c.version);
   const dd = (d.rail - a.rail) / a.rail;
   report('twice the rate per km', dd < 0, `(${fmt(d.rail)}, ${(100 * dd).toFixed(2)}%)`);
 
-  // a line that would be below $0 at 0 km is lifted at the first node, so demand and income agree
-  await setNodes([[5, 0], [100, 9.5]]);
-  await page.waitForFunction(() => JSON.stringify(window.tw.moneyState.value.fares.nodes) === '[[5,0.48],[100,9.5]]', undefined, { timeout: 30000 });
-  report('a line below $0 at 0 km is lifted', true, '(nodes [[5,0.48],[100,9.5]])');
-  const e0 = await final(d.version);
-
-  await setNodes([[1, 0.1], [100, 10]]);
-  const e = await final(e0.version);
+  // steeper past 20 km: fewer riders, and the extra fare demand charged is in the income
+  await setNodes([[0, 1.5], [20, 3.5], [100, 27.5]]);
+  const e = await final(d.version);
   const de = (e.rail - a.rail) / a.rail;
-  report('$0 at 0 km, then $0.10 a km', Math.round(e.rail) === 14078830, `(${fmt(e.rail)}, ${(100 * de).toFixed(2)}% more rail trips)`);
+  report('steeper past 20 km', e.rail < a.rail && e.rail > d.rail, `(${fmt(e.rail)}, ${(100 * de).toFixed(2)}%)`);
+  const em = await money();
+  const gap = Math.abs(em.income - em.expected) / em.expected;
+  report('income is the base, the rate and demand\'s extra', gap < 1e-6 && em.extra > 0 && em.extra <= 0.2 * em.pkm * em.economy * 1.0001,
+    `(income $${fmt(em.income)} a day, expected $${fmt(em.expected)}, extra $${fmt(em.extra)}, ${(100 * em.extra / em.income).toFixed(1)}% of it)`);
 
-  await setNodes([[1, 1.6], [100, 11.5]]);
-  await page.waitForFunction(() => JSON.stringify(window.tw.moneyState.value.fares.nodes) === '[[1,1.6],[100,11.5]]', undefined, { timeout: 30000 });
+  await setNodes(JSON.parse(DEFAULT));
+  await waitNodes(DEFAULT);
 
   // the Money tab
   await page.click('button.tab[aria-label="Money"]');
@@ -81,72 +110,117 @@ try {
     await page.evaluate((s) => { document.documentElement.dataset.shade = s; window.tw.shade.value = s; }, s);
     await page.waitForTimeout(300);
   };
-  const shot = async (name, sel, extra = 0) => {
-    const g = await page.$(sel);
+  const graph = 'svg.fare-graph';
+  const shot = async (name, extra = 0) => {
+    const g = await page.$(graph);
     await g.scrollIntoViewIfNeeded();
     await page.waitForTimeout(200);
     const box = await g.boundingBox();
-    await page.screenshot({ path: `${OUT}${name}.png`, clip: { x: box.x - 8, y: box.y - 30, width: box.width + 16, height: box.height + 40 + extra } });
+    await page.screenshot({ path: join(OUT, `${name}.png`), clip: { x: box.x - 8, y: box.y - 30, width: box.width + 16, height: box.height + 40 + extra } });
   };
-  const graph = 'svg.fare-graph';
-  for (const s of ['light', 'dark']) { await shade(s); await shot(`fare-default-${s}`, graph, 110); }
-  await shade('light');
+  const both = async (name, extra = 0) => { for (const s of ['light', 'dark']) { await shade(s); await shot(`${name}-${s}`, extra); } await shade('light'); };
+  await both('fare-default', 150);
 
-  // drag the second node up: nothing is sent until the pointer is released
   const knobs = await page.$$(`${graph} .fg-knob`);
-  report('two nodes on the graph', knobs.length === 2, `(${knobs.length})`);
-  const before = await nodesNow();
-  const k = await knobs[1].boundingBox();
-  const kx = k.x + k.width / 2, ky = k.y + k.height / 2;
-  await page.mouse.move(kx, ky);
+  report('three nodes on the graph', knobs.length === 3, `(${knobs.length})`);
+  const centre = async (i) => { const k = (await page.$$(`${graph} .fg-knob`))[i]; const bb = await k.boundingBox(); return [bb.x + bb.width / 2, bb.y + bb.height / 2]; };
+  const hints = () => page.$$eval(`${graph} .fg-hint`, (h) => h.length);
+
+  // hovering a node shows the ways it drags: the base fare two arrows, the others four
+  const [b0x, b0y] = await centre(0);
+  await page.mouse.move(b0x, b0y);
+  await page.waitForTimeout(150);
+  const baseHints = await hints();
+  const [k1x, k1y] = await centre(1);
+  await page.mouse.move(k1x, k1y);
+  await page.waitForTimeout(150);
+  const nodeHints = await hints();
+  report('hover arrows: up and down on the base fare, all four on the others', baseHints === 2 && nodeHints === 4, `(${baseHints}, ${nodeHints})`);
+  await both('fare-hover', 150);
+
+  // drag the second node mostly sideways: it moves in distance only, and nothing is sent until release
+  await page.mouse.move(k1x, k1y);
   await page.mouse.down();
-  await page.mouse.move(kx + 10, ky - 15, { steps: 4 });
-  await page.mouse.move(kx + 20, ky - 30, { steps: 4 });
+  await page.mouse.move(k1x + 6, k1y - 2, { steps: 2 });
+  await page.mouse.move(k1x + 40, k1y - 14, { steps: 6 });
   await page.waitForTimeout(300);
   const mid = await nodesNow();
-  for (const s of ['light', 'dark']) { await shade(s); await shot(`fare-drag-${s}`, graph, 110); }
-  await shade('light');
+  const midHints = await hints();
+  await both('fare-drag', 150);
   await page.mouse.up();
-  await page.waitForFunction((before) => JSON.stringify(window.tw.moneyState.value.fares.nodes) !== before, before, { timeout: 30000 });
+  await page.waitForFunction((before) => JSON.stringify(window.tw.moneyState.value.fares.nodes) !== before, DEFAULT, { timeout: 30000 }).catch(() => {});
   const after = JSON.parse(await nodesNow());
-  report('a drag sends the fare once, on release', mid === before && after[1][1] > 11.5 && after[1][0] > 100 && after[0][1] === 1.6, `(before ${before}, mid-drag ${mid}, after ${JSON.stringify(after)})`);
+  report('a sideways drag moves the distance only, sent once on release', mid === DEFAULT && midHints === 2 && after[1][0] > 20 && after[1][1] === 3.5 && after[0][1] === 1.5 && after[2][0] === 100,
+    `(mid-drag ${mid}, ${midHints} arrows, after ${JSON.stringify(after)})`);
 
   // T-1130: Ctrl+Z takes the fare change back while it is the last edit, Ctrl+Y puts it back
   const undoBtn = `button[aria-label="Undo the fare change"]`;
   const enabled = async () => !(await page.$eval(undoBtn, (b) => b.disabled));
   const wasOn = await enabled();
   await page.keyboard.press('Control+z');
-  await page.waitForFunction((before) => JSON.stringify(window.tw.moneyState.value.fares.nodes) === before, before, { timeout: 30000 }).catch(() => {});
+  await waitNodes(DEFAULT);
   const undone = await nodesNow();
   const offAfter = !(await enabled());
   await page.keyboard.press('Control+y');
-  await page.waitForFunction((before) => JSON.stringify(window.tw.moneyState.value.fares.nodes) !== before, before, { timeout: 30000 }).catch(() => {});
+  await waitNodes(JSON.stringify(after));
   const redone = await nodesNow();
-  report('Ctrl+Z and Ctrl+Y undo and redo a fare change', wasOn && undone === before && offAfter && redone === JSON.stringify(after), `(button on ${wasOn}, undone ${undone}, button off after ${offAfter}, redone ${redone})`);
+  report('Ctrl+Z and Ctrl+Y undo and redo a fare change', wasOn && undone === DEFAULT && offAfter && redone === JSON.stringify(after), `(button on ${wasOn}, undone ${undone}, button off after ${offAfter}, redone ${redone})`);
   await page.click(undoBtn);
-  await page.waitForFunction((before) => JSON.stringify(window.tw.moneyState.value.fares.nodes) === before, before, { timeout: 30000 }).catch(() => {});
-  report('the undo button takes it back', (await nodesNow()) === before, `(${await nodesNow()})`);
-  // redo it so the zoom below has a far node to put past the plot
-  await page.keyboard.press('Control+y');
-  await page.waitForFunction((before) => JSON.stringify(window.tw.moneyState.value.fares.nodes) !== before, before, { timeout: 30000 }).catch(() => {});
+  await waitNodes(DEFAULT);
+  report('the undo button takes it back', (await nodesNow()) === DEFAULT, `(${await nodesNow()})`);
 
-  // zoom in with the wheel until the second node is past the plot: an arrow at the edge
+  // the third node mostly up: fare only; the base fare sideways and up: fare only, still at 0 km
+  const drag = async (i, dx, dy) => {
+    const [x, y] = await centre(i);
+    const before = await nodesNow();
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + dx / 8, y + dy / 8, { steps: 2 });
+    await page.mouse.move(x + dx, y + dy, { steps: 6 });
+    await page.mouse.up();
+    await page.waitForFunction((before) => JSON.stringify(window.tw.moneyState.value.fares.nodes) !== before, before, { timeout: 30000 }).catch(() => {});
+    return JSON.parse(await nodesNow());
+  };
+  const up = await drag(2, 6, -30);
+  report('an upward drag moves the fare only', up[2][0] === 100 && up[2][1] > 11.5 && up[1][0] === 20, `(${JSON.stringify(up)})`);
+  const baseMoved = await drag(0, 30, -5);
+  report('the base fare stays at 0 km', baseMoved[0][0] === 0 && baseMoved[0][1] > 1.5 && baseMoved[0][1] <= baseMoved[1][1], `(${JSON.stringify(baseMoved)})`);
+  await setNodes(JSON.parse(DEFAULT));
+  await waitNodes(DEFAULT);
+  await page.waitForTimeout(300);
+
+  // zoom keeps the slope: the first stretch's slope on screen at the default view, out and in
+  const slope = () => page.evaluate((g) => {
+    const k = [...document.querySelectorAll(`${g} .fg-knob`)].map((c) => [+c.getAttribute('cx'), +c.getAttribute('cy')]);
+    const span = (c) => (c[1][1] - c[0][1]) / (c[1][0] - c[0][0]);
+    if (k.length >= 2) return span(k);
+    const m = document.querySelector(`${g} .fg-curve`).getAttribute('d').match(/-?[\d.]+/g).map(Number);
+    return span([[m[0], m[1]], [m[2], m[3]]]);
+  }, graph);
   const gb = await (await page.$(graph)).boundingBox();
   await page.mouse.move(gb.x + gb.width / 2, gb.y + gb.height / 2);
-  for (let i = 0; i < 6; i++) { await page.mouse.wheel(0, -150); await page.waitForTimeout(80); }
+  const s0 = await slope();
+  for (let i = 0; i < 8; i++) { await page.mouse.wheel(0, 150); await page.waitForTimeout(80); }
   await page.waitForTimeout(300);
+  const sOut = await slope();
+  await both('fare-zoomed-out', 150);
+  for (let i = 0; i < 22; i++) { await page.mouse.wheel(0, -150); await page.waitForTimeout(80); }
+  await page.waitForTimeout(300);
+  const sIn = await slope();
   const off = await page.$$(`${graph} .fg-off`);
-  report('zoomed in, the far node is an arrow', off.length === 1 && (await page.$$(`${graph} .fg-knob`)).length === 1, `(${off.length} arrows)`);
-  for (const s of ['light', 'dark']) { await shade(s); await shot(`fare-zoomed-${s}`, graph, 110); }
-  await shade('light');
+  await both('fare-zoomed-in', 150);
+  const same = (v) => Math.abs(v / s0 - 1) < 0.01;
+  report('zoom keeps the slope on screen', same(sOut) && same(sIn), `(default ${s0.toFixed(4)}, out ${sOut.toFixed(4)}, in ${sIn.toFixed(4)})`);
+  report('zoomed in, the far nodes are arrows', off.length === 2 && (await page.$$(`${graph} .fg-knob`)).length === 1, `(${off.length} arrows)`);
   if (off.length) {
+    const before = off.length;
     const ab = await off[0].boundingBox();
     await page.mouse.click(ab.x + ab.width / 2, ab.y + ab.height / 2);
     await page.waitForTimeout(300);
-    report('a click on the arrow zooms out to the node', (await page.$$(`${graph} .fg-off`)).length === 0, '');
+    const left = (await page.$$(`${graph} .fg-off`)).length;
+    report('a click on an arrow zooms out to its node', left < before, `(${before} arrows, then ${left})`);
   }
   report('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
-  await setNodes([[1, 1.6], [100, 11.5]]);
 } finally {
   await close();
 }

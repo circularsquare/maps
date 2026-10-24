@@ -7,6 +7,7 @@
 
 import { CITIES, worldToCity, worldToLonLat, zoneBox, zonesNearBox, type CityId } from "../game/cities";
 import { PERIODS } from "../game/periods";
+import { curveKnots } from "../game/fareCurve";
 import { M_PER_DEG } from "../game/frame";
 import type { DemandNetwork } from "./demandProtocol";
 
@@ -352,7 +353,7 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   });
   const span = spanOf(n, nodeGlobal);
   const net: DemandNetwork = { frame: n.frame, stXY, complex, lineN, stops, times, tph, cars, fare: n.fare, hopKm, span };
-  const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}`;
+  const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}`;
   const sig = hashOf([head, stXY, complex, lineN, stops, times, tph, cars, hopKm, span]);
   const levelSig = [0, 1, 2].map((lev) => {
     const lt = new Float32Array(2 * nStops), lp = new Float32Array(lines.length);

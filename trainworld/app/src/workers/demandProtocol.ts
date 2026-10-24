@@ -235,6 +235,9 @@ export type FromDemand =
       alight: Float32Array;
       /** busiest-hour load on the segment leaving the node, share of crush capacity */
       loadOfCrush: Float32Array;
+      /** per route node, US$ in the period: the fare curve's extra on the trips first boarding there
+       * (T-1143, the sims' `fare_extra`; all 0 for a straight line) */
+      fareX?: Float32Array;
       /**
        * The same `seg`, `board` and `alight` split by trip purpose (T-158, the map's purpose
        * filter): `keys` (game/purposes.ts `PurposeKey`) and, per key in that order, one block of

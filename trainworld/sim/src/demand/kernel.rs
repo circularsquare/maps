@@ -2398,6 +2398,42 @@ pub struct Graph {
     /// Each route node's ride edge's end (a node id), NONE at a line's end: a rider who boards
     /// there rides at least to it (T-1055).
     pub rn_next: Vec<u32>,
+    /// The fare curve's departure from `rn_fare`'s straight line (T-883, T-1143), and each route
+    /// node's fare km to the next stop, which it needs; both empty while the curve is that line.
+    pub fare_curve: FareCurve,
+    pub rn_km: Vec<f32>,
+}
+
+/// The player's fare curve (T-883, T-1143): knots of trip km and perceived minutes, joined by
+/// straight stretches and carried on past the last at its slope. `base` and `rate` are what a trip
+/// is already charged (the base once and the rate on each ride edge), so a trip costs `extra(km)`
+/// more than that. Route choice sees only the straight line; the curve enters each station pair's
+/// cost on the expected km of its strategy (`DestSearch::run`), and the assignment puts each pair's
+/// extra on the route nodes its riders first board (`Loads::rn_fare_x`), so fare income can count it.
+#[derive(Clone, Default, PartialEq, Debug)]
+pub struct FareCurve {
+    pub km: Vec<f32>,
+    pub min: Vec<f32>,
+    pub base: f32,
+    pub rate: f32,
+}
+
+impl FareCurve {
+    pub fn is_line(&self) -> bool {
+        self.km.len() < 2
+    }
+    /// The curve's fare for a trip of `km`, perceived minutes.
+    pub fn at(&self, km: f32) -> f32 {
+        let (k, m, n) = (&self.km, &self.min, self.km.len());
+        if n < 2 {
+            return self.base + self.rate * km;
+        }
+        let i = k.partition_point(|&x| x <= km).clamp(1, n - 1);
+        (m[i - 1] + (m[i] - m[i - 1]) * (km - k[i - 1]) / (k[i] - k[i - 1])).max(0.0)
+    }
+    pub fn extra(&self, km: f32) -> f32 {
+        if self.is_line() { 0.0 } else { self.at(km) - self.base - self.rate * km }
+    }
 }
 
 /// A wait is plain minutes, half the headway (Anita, T-585).
@@ -2543,6 +2579,8 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         adj_cost: edges.iter().map(|e| e.2).collect(),
         adj_seg: edges.iter().map(|e| e.3).collect(),
         rn_next,
+        fare_curve: FareCurve::default(),
+        rn_km: vec![],
     }
 }
 
@@ -2808,6 +2846,77 @@ fn walk_column_in<I: Id>(g: &Graph, p: &Params, st: Strategy, dst: usize, next: 
     }
 }
 
+/// Each node's expected fare km to `dst` under strategy `st` (T-883), into `km` (node ids, change
+/// nodes from `g.n`): a station or change node averages the departures it accepts by frequency, as
+/// the riders split, and a boarding rides a stop first (T-1055). Read in settle order, so every
+/// next node is done first. Needs `g.rn_km` (a curve that is not a straight line).
+pub fn trip_km(g: &Graph, st: Strategy, dst: usize, km: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
+    match (st.next, st.order) {
+        (NodeIds::Short(next), NodeIds::Short(order)) => trip_km_in(g, st, dst, next, order, km, dep),
+        (NodeIds::Long(next), NodeIds::Long(order)) => trip_km_in(g, st, dst, next, order, km, dep),
+        _ => unreachable!("a destination's ids in two widths"),
+    }
+}
+
+fn trip_km_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &[I], order: &[I], km: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
+    let (s, n) = (g.n_st, g.n);
+    let end = n + st.change.len();
+    km.clear();
+    km.resize(end, 0.0);
+    let on_train = |v: usize| (s..n).contains(&next[v].ix());
+    let hop = |r: usize| g.rn_km.get(r).copied().unwrap_or(0.0);
+    for &id in order {
+        let id = id.ix();
+        if id == dst {
+            continue;
+        }
+        if id < s || id >= n {
+            departures(g, st.board, st.change, id, dep);
+            let (mut f, mut w) = (0f32, 0f32);
+            for &(e, a) in dep.iter() {
+                let r = g.adj_to[e as usize] as usize - s;
+                let k = if on_train(s + r) { km[s + r] } else { hop(r) + km[g.rn_next[r] as usize] };
+                f += a;
+                w += a * k;
+            }
+            if f > 0.0 {
+                km[id] = w / f;
+            }
+        } else {
+            let nx = next[id].ix();
+            if nx >= end {
+                continue;
+            }
+            km[id] = if on_train(id) { hop(id - s) + km[nx] } else { km[nx] };
+        }
+    }
+}
+
+/// The fare curve's extra on the trips towards `dst` (`col(src)` riders from each station), each
+/// trip's at its station pair's expected km (`trip_km`, already in `km`), added into `out` per route
+/// node where the riders first board, split over the departures by frequency as `assign` splits
+/// them (T-1143): the curve's part of the fare that the base and rate leave out, perceived minutes.
+pub fn board_extra(g: &Graph, st: Strategy, dst: usize, col: impl Fn(usize) -> f32, km: &[f32], dep: &mut Vec<(u32, f32)>, out: &mut [f32]) {
+    let s = g.n_st;
+    for src in 0..s {
+        let f = col(src);
+        if f == 0.0 || src == dst {
+            continue;
+        }
+        let x = f * g.fare_curve.extra(km[src]);
+        if x == 0.0 {
+            continue;
+        }
+        departures(g, st.board, st.change, src, dep);
+        let sum: f32 = dep.iter().map(|d| d.1).sum();
+        if sum > 0.0 {
+            for &(e, a) in dep.iter() {
+                out[g.adj_to[e as usize] as usize - s] += x * a / sum;
+            }
+        }
+    }
+}
+
 
 /// One destination's strategy, as a `Skims` slot holds it.
 pub struct DestStrategy {
@@ -2861,11 +2970,13 @@ pub fn strategy_bytes(g: &Graph) -> usize {
 /// destination's strategy at once (T-761).
 pub struct DestSearch<'a> {
     q: Search<'a>,
+    km: Vec<f32>,
+    dep: Vec<(u32, f32)>,
 }
 
 impl<'a> DestSearch<'a> {
     pub fn new(g: &'a Graph, p: &'a Params) -> DestSearch<'a> {
-        DestSearch { q: Search::new(g, p) }
+        DestSearch { q: Search::new(g, p), km: vec![], dep: vec![] }
     }
     /// Search towards `dst`: its strategy, and its column of route costs written into `r` (S x S,
     /// `Skims::r`'s layout) when given.
@@ -2876,9 +2987,14 @@ impl<'a> DestSearch<'a> {
         let ids = n + q.cn.len();
         let d = DestStrategy { next: NodeIds::of(&q.next, ids), board: std::mem::take(&mut q.board), order: NodeIds::of(&q.order, ids), change: q.change_nodes() };
         if let Some(r) = r {
+            let curve = &q.g.fare_curve;
+            let bent = !curve.is_line();
+            if bent {
+                trip_km(q.g, d.view(), dst, &mut self.km, &mut self.dep);
+            }
             for src in 0..s {
                 // The first boarding is not a transfer; the trip's base fare is added later.
-                r[src * s + dst] = if src == dst { 0.0 } else { q.dist[src] - q.p.transfer_min };
+                r[src * s + dst] = if src == dst { 0.0 } else { q.dist[src] - q.p.transfer_min + if bent { curve.extra(self.km[src]) } else { 0.0 } };
             }
         }
         d
@@ -3360,16 +3476,20 @@ struct SkimKey {
     rn_dx: Vec<f32>,
     rn_dy: Vec<f32>,
     transfer_min: f32,
+    fare_curve: FareCurve,
+    rn_km: Vec<f32>,
 }
 
 impl SkimKey {
     fn of(g: &Graph, p: &Params) -> SkimKey {
-        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.transfer_min }
+        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.transfer_min, fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone() }
     }
     fn same(&self, g: &Graph, p: &Params) -> bool {
         self.n_st == g.n_st
             && self.n == g.n
             && self.transfer_min == p.transfer_min
+            && self.fare_curve == g.fare_curve
+            && self.rn_km == g.rn_km
             && self.rn_dx == g.rn_dx
             && self.rn_dy == g.rn_dy
             && self.adj_off == g.adj_off
@@ -4217,11 +4337,14 @@ pub struct Loads {
     pub entry: Vec<f32>,
     pub exit: Vec<f32>,
     pub pax_min: f64,
+    /// The fare curve's extra on the trips first boarding at each route node, perceived minutes
+    /// (`board_extra`; all 0 while the curve is a straight line).
+    pub rn_fare_x: Vec<f32>,
 }
 
 impl Loads {
     pub fn zero(n_st: usize, n_rn: usize) -> Loads {
-        Loads { seg: vec![0.0; n_rn], board: vec![0.0; n_st], alight: vec![0.0; n_st], rn_board: vec![0.0; n_rn], rn_alight: vec![0.0; n_rn], entry: vec![0.0; n_st], exit: vec![0.0; n_st], pax_min: 0.0 }
+        Loads { seg: vec![0.0; n_rn], board: vec![0.0; n_st], alight: vec![0.0; n_st], rn_board: vec![0.0; n_rn], rn_alight: vec![0.0; n_rn], entry: vec![0.0; n_st], exit: vec![0.0; n_st], pax_min: 0.0, rn_fare_x: vec![0.0; n_rn] }
     }
 }
 
@@ -4326,6 +4449,9 @@ pub struct DestAssign {
     use_k: Vec<(u32, f32)>,
     dep: Vec<(u32, f32)>,
     counting: bool,
+    /// Whether the fare curve's extra is put on the loads (`Loads::rn_fare_x`); on by default.
+    pub fares: bool,
+    km: Vec<f32>,
 }
 
 impl DestAssign {
@@ -4341,6 +4467,8 @@ impl DestAssign {
             use_k: vec![],
             dep: vec![],
             counting,
+            fares: true,
+            km: vec![],
         }
     }
     /// Take destination `dst`'s column of the OD, `col(src)` riders from each station; false
@@ -4372,6 +4500,12 @@ impl DestAssign {
             }
             self.head.fill(NONE);
             self.rec.clear();
+        }
+        if self.fares && !g.fare_curve.is_line() {
+            // the column taken is still in the stations' flows: the walk below adds the changes
+            trip_km(g, st, dst, &mut self.km, &mut self.dep);
+            let flow = &self.flow;
+            board_extra(g, st, dst, |src| flow[src], &self.km, &mut self.dep, &mut self.l.rn_fare_x);
         }
         let mut w = DestWalk { g, s, n, dst, bits: st.board, cn: st.change, flow: &mut self.flow, l: &mut self.l, head: &mut self.head, rec: &mut self.rec, use_k: &mut self.use_k, dep: &mut self.dep, xf };
         match (st.next, st.order) {

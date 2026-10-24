@@ -399,6 +399,34 @@ fn fares_change_ridership_and_preserve_legacy_price() {
     println!("fare riders: legacy={legacy:.0} free={free:.0} default={default:.0} expensive={expensive:.0} distance={distance:.0}");
 }
 
+/// T-1143: a fare curve on the base and rate's own line changes nothing; one that steepens past
+/// 3 km loses riders, and its extra is counted where they board, beyond the base and rate's fare.
+#[test]
+fn a_bent_fare_curve_loses_long_riders_and_counts_its_extra() {
+    let (mut api, xy, n, stops, times, tph, cars) = small();
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    let mut km = vec![];
+    for &count in &n { for _ in 0..2 { for k in 0..count { km.push(if k + 1 == count { 0.0 } else { 1.0 }); } } }
+    api.set_fares(1.5, 0.1, &km).unwrap();
+    api.solve(0);
+    let line = api.summary(0);
+    api.set_fare_curve(&[0.0, 1.5, 20.0, 3.5, 100.0, 11.5]).unwrap();
+    api.solve(0);
+    assert_eq!(api.summary(0)[2].to_bits(), line[2].to_bits());
+    api.set_fare_curve(&[0.0, 1.5, 3.0, 1.8, 100.0, 1.8 + 97.0]).unwrap();
+    assert_eq!(api.solved_mask(), 0);
+    api.solve(0);
+    let bent = api.summary(0)[2];
+    let extra: f32 = api.fare_extra(0).iter().sum();
+    assert!(bent < line[2] && extra > 0.0, "rail {bent} against {}, extra {extra}", line[2]);
+    assert!(api.set_fare_curve(&[0.0, 2.0, 3.0, 1.0]).is_err());
+    assert!(api.set_fare_curve(&[3.0, 1.0, 1.0, 2.0]).is_err());
+    api.set_fare_curve(&[]).unwrap();
+    api.solve(0);
+    assert_eq!(api.summary(0)[2].to_bits(), line[2].to_bits());
+    assert!(api.fare_extra(0).iter().all(|&x| x == 0.0));
+}
+
 #[test]
 fn fare_distances_follow_each_runs_track_and_base_is_once() {
     let (mut api, xy, n, stops, times, tph, cars) = small();

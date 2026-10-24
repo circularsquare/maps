@@ -236,7 +236,7 @@ multiplier per elevation (US$45M at grade), priced against cheap-country metros 
 when it shrinks [T-028, T-631], and running costs are US$4 a train-km plus US$2 a car-km [T-807]. Constructed
 track and stations cost upkeep whether trains run or not, US$30k a km of double track and US$50k a station a game
 day, draining evenly; a line's profit takes off its share, each piece's split by the trains a day of the lines
-using it [T-867]. The fare is a straight line of trip length through two points the player drags, types or steps in the Money tab [T-626, T-1112].
+using it [T-867]. The fare is a curve of trip length through three points the player drags, types or steps in the Money tab: a base fare at 0 km and two more, never falling with distance [T-626, T-1112, T-1143].
 **Points** measure each city's network: what it earned in the past 24 game hours, recomputed
 once a game hour, at 20 a rail trip (a rider's whole journey, changes included, counted in the
 city it starts in) and 1 a passenger-km; not a running total, and they unlock nothing yet [T-684,

@@ -637,16 +637,23 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   hour's end. The worker settles and sends the cash and today's
   and this hour's ledger four times a wall second while the clock runs; the top bar shows the cash to the dollar,
   and only it and the Money tab's cash, Today column and History re-render. The fare for a trip
-  follows one curve of trip length for the network, set in the Money tab [T-883, T-1112,
-  `app/src/game/fareCurve.ts`]: the straight line through the player's two nodes, carried on past
-  each at its slope; the second node is farther and never cheaper, and the line is never below $0 at
-  0 km (the Money tab holds the node being set to that, and an older save's first node is raised to it). It starts as
-  $1.50 + $0.10 a km (nodes at 1 and 100 km; a save with a base and rate instead loads them the same
-  way, and an older curve of more nodes keeps its first and last); a trip that changes lines pays it
-  once on its whole length. In
-  demand, route search charges the line as a base and a rate per km (`set_fares`), and the trip
-  explorer shows that fare on each ride. Fare income is the same base and rate on demand's riders
-  and passenger-km per period (`app/src/game/money.ts`), so demand and income agree. Changing the fare
+  follows one curve of trip length for the network, set in the Money tab [T-883, T-1112, T-1143,
+  `app/src/game/fareCurve.ts`]: straight stretches through the player's three nodes, carried on
+  past the last at its slope. The first node is the base fare at 0 km; each later one is farther and
+  never cheaper, so no fare is below the base or falls with distance. It starts as $1.50 + $0.10 a
+  km (nodes at 0, 20 and 100 km); an older save's two nodes, or a base and rate, load as the three
+  nodes on their line (one below $0 at 0 km starting at $0 instead), any other curve as the line
+  through its first and last node. A trip that changes lines pays it once on its whole length. In
+  demand, route search charges the first stretch as a base and a rate per km on each ride
+  (`set_fares`), and each station pair's cost adds what the rest of the curve adds at the expected
+  km of its strategy (the riders' split over lines by their departures; `set_fare_curve`,
+  `kernel::trip_km`). The assignment puts that extra, the trips times the curve's extra at their
+  pair's km, on the route nodes where they first board, split as they split (`Loads::rn_fare_x`,
+  each population's `fare_extra`); the trip explorer shows each route's extra on its rides by km.
+  Fare income is the first stretch's base on each of demand's trips and its rate on their
+  passenger-km per period, plus demand's extra on the line it is counted at (`LineDemand.fareX`,
+  `app/src/game/money.ts`; on a weekend the extra follows each route node's boardings), so demand
+  and income charge the same trips the same fares. Changing the fare
   recalculates demand: higher prices can lose riders (T-067). Running costs can take the cash below zero; edits that cost nothing still
   work then. notes/T-028.md.
 - **Money by region** (T-531, `app/src/game/regionMoney.ts`): beside the network's, the worker

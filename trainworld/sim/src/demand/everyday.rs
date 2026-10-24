@@ -2,7 +2,7 @@
 //! Coarse destination gravity is integrated by deterministic stratified cell samples. Endpoint
 //! distances, the 150 m exclusion, walking and regional overlap use the actual sampled cells.
 use super::{
-    api::{scale_triples, DemandApi, PEAK_HOUR_FACTOR},
+    api::{fare_x_usd, put_fare_curve, scale_triples, DemandApi, PEAK_HOUR_FACTOR},
     clock::now_ms,
     days::{everyday, load_factor, share_out, share_ret, WEEKDAY},
     kernel::*,
@@ -439,15 +439,17 @@ struct LaneLoads {
     entry: Vec<Lanes>,
     exit: Vec<Lanes>,
     pax_min: [f64; LANES],
+    /// `Loads::rn_fare_x` of every purpose together
+    rn_fare_x: Vec<f32>,
 }
 
 impl LaneLoads {
     fn zero(s: usize, nr: usize) -> LaneLoads {
-        LaneLoads { seg: vec![ZERO; nr], board: vec![ZERO; s], alight: vec![ZERO; s], rn_board: vec![ZERO; nr], rn_alight: vec![ZERO; nr], entry: vec![ZERO; s], exit: vec![ZERO; s], pax_min: [0.0; LANES] }
+        LaneLoads { seg: vec![ZERO; nr], board: vec![ZERO; s], alight: vec![ZERO; s], rn_board: vec![ZERO; nr], rn_alight: vec![ZERO; nr], entry: vec![ZERO; s], exit: vec![ZERO; s], pax_min: [0.0; LANES], rn_fare_x: vec![0.0; nr] }
     }
     fn lane(&self, k: usize) -> Loads {
         let f = |v: &[Lanes]| v.iter().map(|x| x[k]).collect();
-        Loads { seg: f(&self.seg), board: f(&self.board), alight: f(&self.alight), rn_board: f(&self.rn_board), rn_alight: f(&self.rn_alight), entry: f(&self.entry), exit: f(&self.exit), pax_min: self.pax_min[k] }
+        Loads { seg: f(&self.seg), board: f(&self.board), alight: f(&self.alight), rn_board: f(&self.rn_board), rn_alight: f(&self.rn_alight), entry: f(&self.entry), exit: f(&self.exit), pax_min: self.pax_min[k], rn_fare_x: vec![0.0; self.seg.len()] }
     }
 }
 
@@ -482,6 +484,8 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
     let mut rec: Vec<(u32, f32, u32)> = vec![];
     let mut use_k: Vec<(u32, f32)> = vec![];
     let mut dep: Vec<(u32, f32)> = vec![];
+    let mut km: Vec<f32> = vec![];
+    let bent = !g.fare_curve.is_line();
     let used: Vec<(usize, &[u32])> = cols.off.iter().enumerate().filter(|(_, o)| !o.is_empty()).map(|(k, o)| (k, &o[..])).collect();
     for dst in 0..s {
         let mut total = ZERO;
@@ -501,6 +505,11 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
             if counting {
                 head.fill(NONE);
                 rec.clear();
+            }
+            if bent {
+                let st = sk.strategy(slot);
+                trip_km(g, st, dst, &mut km, &mut dep);
+                board_extra(g, st, dst, |src| flow[src].iter().sum(), &km, &mut dep, &mut l.rn_fare_x);
             }
             let mut w = LaneWalk { g, s, n, dst, bits: &sk.board[slot][..], cn: &sk.change[slot], flow: &mut flow, l: &mut l, head: &mut head, rec: &mut rec, use_k: &mut use_k, dep: &mut dep, xfer: if counting { Some((ix, &mut *xfer)) } else { None } };
             match (&sk.next[slot], &sk.order[slot]) {
@@ -1146,6 +1155,7 @@ impl EverydayApi {
             for l in &parts {
                 add_loads(&mut total, l);
             }
+            total.rn_fare_x = lanes.rn_fare_x;
             (total, parts.iter().map(Part::of).collect::<Vec<_>>())
         });
         (probability, loads, parts, xfer, walk_lost)
@@ -1466,6 +1476,13 @@ impl EverydayApi {
         }
         Ok(())
     }
+    pub fn set_fare_curve(&mut self, knots: &[f32]) -> Result<(), String> {
+        self.engine.set_fare_curve(knots)?;
+        if self.engine.same == 0 {
+            self.per.iter_mut().for_each(|v| *v = None);
+        }
+        Ok(())
+    }
     pub fn solve(&mut self, q: usize) -> bool {
         if q >= PERIODS {
             return false;
@@ -1487,6 +1504,7 @@ impl EverydayApi {
         for (r, fare) in g.rn_fare.iter_mut().enumerate() {
             *fare = self.engine.fare_km.get(r).copied().unwrap_or(0.0) * self.engine.fare_per_km;
         }
+        put_fare_curve(&mut g, &self.engine.fare_curve, &self.engine.fare_km, self.engine.base.fare_min, self.engine.fare_per_km);
         let fac = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &fac);
         let xi = xfer_index(&g);
@@ -1542,6 +1560,7 @@ impl EverydayApi {
             msa(&mut st.loads.rn_alight, &loads.rn_alight, st.round);
             msa(&mut st.loads.entry, &loads.entry, st.round);
             msa(&mut st.loads.exit, &loads.exit, st.round);
+            msa(&mut st.loads.rn_fare_x, &loads.rn_fare_x, st.round);
             // the same averaging, so the purposes still add up to the total
             for (old, new) in st.parts.iter_mut().zip(&parts) {
                 msa(&mut old.seg, &new.seg, st.round);
@@ -1594,6 +1613,10 @@ impl EverydayApi {
             .get(q)
             .and_then(|v| v.as_ref())
             .map_or(vec![], |s| s.loads.rn_alight.clone())
+    }
+    /// As `DemandApi::fare_extra`.
+    pub fn fare_extra(&self, q: usize) -> Vec<f32> {
+        self.per.get(q).and_then(|v| v.as_ref()).map_or(vec![], |s| fare_x_usd(&s.loads.rn_fare_x))
     }
     pub fn load_of_crush(&self, q: usize) -> Vec<f32> {
         let Some(Some(st)) = self.per.get(q) else {

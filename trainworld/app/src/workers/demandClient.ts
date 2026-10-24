@@ -2870,6 +2870,8 @@ class DemandClient {
       }
     });
     const loadOfCrush = r.loadOfCrush.map((v, j) => (r.seg[j] > 0 ? (v * seg[j]) / r.seg[j] : 0));
+    // the fare curve's extra follows the riders boarding where it is counted (T-1143)
+    const fareX = r.fareX?.map((v, j) => (r.board[j] > 0 ? (v * board[j]) / r.board[j] : 0));
     const citySummary: Record<CityId, number[]> = {};
     for (const [id, s0] of Object.entries(r.citySummary)) {
       const s = s0.slice(), cp = r.cityParts?.[id];
@@ -2894,7 +2896,7 @@ class DemandClient {
     summary[1] = summary[2] = summary[3] = 0;
     for (const v of [...Object.values(citySummary), intercitySummary]) for (const k of [1, 2, 3]) summary[k] += v[k] ?? 0;
     // the corridors keep the weekday's numbers and their factors, applied as `dayCorridors` adds them (T-789)
-    return { ...r, seg, board, alight, loadOfCrush, citySummary, intercitySummary, intercityParts, corridorDay: [fl, fw], elsewhere, summary, parts: { keys: p.keys, seg: ps, board: pb, alight: pa } };
+    return { ...r, seg, board, alight, loadOfCrush, fareX, citySummary, intercitySummary, intercityParts, corridorDay: [fl, fw], elsewhere, summary, parts: { keys: p.keys, seg: ps, board: pb, alight: pa } };
   }
 
   /** The views of one kind of day from its period results. */
@@ -2919,7 +2921,11 @@ class DemandClient {
       const boardings = stops.map(() => 0);
       let fullest = 0;
       const loads: Float32Array[] = [], board: Float32Array[] = [], alight: Float32Array[] = [];
+      const fareX: number[] = [];
       res.forEach((r, q) => {
+        let fx = 0;
+        if (r.fareX) for (let k = o; k < o + 2 * n; k++) fx += r.fareX[k];
+        fareX.push(fx);
         for (let k = 0; k < n; k++) {
           // stop k is route node o + k on run 0 and o + n + (n - 1 - k) on run 1
           const a = o + k, b = o + 2 * n - 1 - k;
@@ -2940,7 +2946,7 @@ class DemandClient {
         if (PERIODS[q].demand === "high")
           for (let k = 0; k < 2 * n; k++) fullest = Math.max(fullest, r.loadOfCrush[o + k]);
       });
-      lines.set(id, { ridersPerDay: boardings.reduce((x, y) => x + y, 0), fullestPct: Math.round(100 * fullest), boardings, loads, board, alight });
+      lines.set(id, { ridersPerDay: boardings.reduce((x, y) => x + y, 0), fullestPct: Math.round(100 * fullest), boardings, loads, board, alight, fareX });
     }
     const pct = (v: number) => (trips > 0 ? (100 * v) / trips : 0);
     const network: DemandView = {
