@@ -16,9 +16,9 @@ import { AccountButton, AccountSection } from "./AccountPanel";
 
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
 const SHADE_NAME: Record<Shade, string> = { light: "Light", dark: "Dark" };
-type DayShown ="average" | "weekday" | "weekend";
+type DayShown ="average" | "weekday" | "saturday" | "sunday";
 const SCHEME_OPTIONS: [BubbleScheme, string][] = [["mode", "Mode mix"], ["ramp", "Train share"]];
-const DAY_OPTIONS: [DayShown, string][] = [["average", "Average"], ["weekday", "Weekday"], ["weekend", "Weekend"]];
+const DAY_OPTIONS: [DayShown, string][] = [["average", "Average"], ["weekday", "Weekday"], ["saturday", "Sat"], ["sunday", "Sun"]];
 type Projection = "flat" | "globe";
 const PROJECTION_OPTIONS: [Projection, string][] = [["flat", "Flat"], ["globe", "Globe"]];
 
@@ -56,9 +56,9 @@ export function SettingsTab() {
         </div>
       )}
       {/* the day the demand views are for; the track display is on the map (ui/DemandSelector.tsx) */}
-      <div class="slider" data-tip="The day the demand figures are for. The average counts 5 weekdays and 2 weekend days over 7. Trains, platforms and riders over the past 24 hours follow the clock.">
+      <div class="slider" data-tip="The day the demand figures are for. The average counts 5 weekdays, a Saturday and a Sunday over 7. Trains, platforms and riders over the past 24 hours follow the clock.">
         <span>Day</span>
-        <Segmented<DayShown> options={DAY_OPTIONS} value={d.dayShown === "weekday" || d.dayShown === "weekend" ? d.dayShown : "average"} onChange={(v) => setDisplay("dayShown", v)} />
+        <Segmented<DayShown> options={DAY_OPTIONS} value={DAY_OPTIONS.some(([k]) => k === d.dayShown) ? d.dayShown : "average"} onChange={(v) => setDisplay("dayShown", v)} />
       </div>
       <div class="h">Show</div>
       <div class="checks">
@@ -70,6 +70,9 @@ export function SettingsTab() {
         </Check>
         <Check checked={d.capacity} onChange={(v) => setDisplay("capacity", v)}>
           Capacity markers
+        </Check>
+        <Check checked={d.fullMarks} onChange={(v) => setDisplay("fullMarks", v)}>
+          <span data-tip="Red edges in the Traffic view where track is at capacity or trains run packed full. The more of the day's trains are packed, the stronger the red.">Full stretches</span>
         </Check>
         <Check checked={d.flatMarks} onChange={(v) => setDisplay("flatMarks", v)}>
           <span data-tip="The round marks where track meets or crosses at one level">Flat junctions and crossings</span>

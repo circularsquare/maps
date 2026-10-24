@@ -138,7 +138,7 @@ export const pointsPast24h = computed<Map<string, number>>(() => {
   return out;
 });
 
-/** Each region's points a day at the riders now, per demand day (weekday, weekend day, average). */
+/** Each region's points a day at the riders now, per demand day (weekday, Saturday, Sunday, average). */
 export const pointsPerDay = computed<Map<string, number[]>>(() => {
   const out = new Map<string, number[]>();
   for (const { regions } of linePoints.value) {
@@ -148,6 +148,6 @@ export const pointsPerDay = computed<Map<string, number[]>>(() => {
       for (const k of DAY_KINDS) r[k] += per[k].reduce((a, v, p) => a + v * PERIOD_HOURS[p], 0);
     }
   }
-  for (const r of out.values()) r[AVERAGE_DAY] = (5 * r[0] + 2 * r[1]) / 7;
+  for (const r of out.values()) r[AVERAGE_DAY] = (5 * r[0] + r[1] + r[2]) / 7;
   return out;
 });

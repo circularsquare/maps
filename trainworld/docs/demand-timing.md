@@ -40,42 +40,56 @@ load busiest-hour factors; their five-period departure shares are provisional:
 The inspector uses actual purpose/mode/period selection results. Bars show departures per hour,
 dividing period counts by 4/6/4/4/6 hours; outward and return rows remain separate.
 
-**Kinds of day** (T-260, notes/T-170.md). Two: weekday and weekend. Game day 1, a new game's
-first, is a Monday, so days 6 and 7 of each week are the weekend (`day_kind_at` in
-`sim/src/track/params.rs`, `app/src/game/days.ts`); no holidays yet. The tables above and the
-solve are a weekday's. **A weekend is worked out from the weekday's solve, not solved**: without
-crowding a trip's mode and route depend on its period's service only, and the solve keeps each
-period's loads, boardings and alightings and each city's trips, rail and walking by purpose
-(T-158). So the weekend's riders of a purpose in period q are the weekday's times
-`rate x (weekend outward + return share) / (weekday outward + return share)`
-(`sim/src/demand/days.rs` `load_factor`); the views are built from those on the main thread and
-every query (bubbles, catchments, selections, longer trips, transfers) weighs its periods the
-same way in the workers, with the everyday purposes' per-direction weekend shares where it reads
-directions. The weekend keeps the weekday's crowded route and mode choices (fewer riders would
-crowd less), and the same trains run every day (Anita: no separate weekend schedules for now;
-T-261 would need its own solve).
+**Kinds of day** (T-260, T-262, notes/T-170.md). Three: weekday, Saturday and Sunday. Game day 1,
+a new game's first, is a Monday, so days 6 and 7 of each week are Saturday and Sunday
+(`day_kind_at` in `sim/src/track/params.rs`, `app/src/game/days.ts`) where a line's country says
+nothing else: its own weekend days and public holidays decide its kinds of day (a holiday runs as
+a Sunday; docs/world.md "Calendar"). The tables above and the solve are a weekday's. **A Saturday
+and a Sunday are worked out from the weekday's solve, not solved**: without crowding a trip's mode
+and route depend on its period's service only, and the solve keeps each period's loads, boardings
+and alightings and each city's trips, rail and walking by purpose (T-158). So a Saturday's riders
+of a purpose in period q are the weekday's times
+`rate x (Saturday outward + return share) / (weekday outward + return share)`
+(`sim/src/demand/days.rs` `load_factor`), and a Sunday's likewise; the views are built from those
+on the main thread and every query (bubbles, catchments, selections, longer trips, transfers)
+weighs its periods the same way in the workers, with the everyday purposes' per-direction shares
+where it reads directions. Both keep the weekday's crowded route and mode choices (fewer riders
+would crowd less), and the same trains run every day (Anita: no separate weekend schedules for
+now; T-261 would need its own solve).
 
-Weekend trips per weekday trip, from NHTS 2017 (person-weighted, Mon-Fri against Saturday and
-Sunday; England's NTS agrees for work, shopping and leisure) and, for airports, TSA checkpoint
-throughput 2025 by day of week: work 0.30, shopping and errands 1.22, social and leisure 1.60,
-school 0.08, university 0.22, airport 1.01, medical 0.24, the regional market's longer trips 1.58
-(NHTS trips of 50 miles or more). Weekend period shares are the weekday's above times NHTS's
-weekend/weekday ratio in each period, renormalised; school, university, airport and medical keep
-their weekday timing (too few weekend trips in NHTS to shape them):
+Trips per weekday trip, from NHTS 2017 (person-weighted, Mon-Fri against Saturday and against
+Sunday, the mean of the outward and return ratios; England's NTS agrees for the weekend as a whole
+for work, shopping and leisure) and, for airports, TSA checkpoint throughput 2025 by day of week;
+longer trips are NHTS trips of 50 miles or more:
 
-| Weekend, purpose/direction | 6–10 | 10–16 | 16–20 | 20–24 | 0–6 |
+| Purpose | Saturday | Sunday |
+| --- | ---: | ---: |
+| Work | 0.37 | 0.24 |
+| Shopping and errands | 1.39 | 1.05 |
+| Social and leisure | 1.54 | 1.67 |
+| School | 0.11 | 0.06 |
+| University | 0.30 | 0.14 |
+| Airport | 0.92 | 1.11 |
+| Medical | 0.30 | 0.18 |
+| Longer trips | 1.69 | 1.48 |
+
+A day's period shares are the weekday's above times NHTS's day/weekday ratio in each period,
+renormalised (`research/weekend/tables.py`); school, university, airport and medical keep their
+weekday timing (too few weekend trips in NHTS to shape them):
+
+| Purpose/direction, Saturday / Sunday | 6–10 | 10–16 | 16–20 | 20–24 | 0–6 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| To work | 54.6% | 16.1% | 11.6% | 8.7% | 9.0% |
-| Home from work | 4.5% | 17.5% | 36.6% | 28.9% | 12.5% |
-| Errands outward | 9.8% | 63.2% | 23.0% | 3.2% | 0.8% |
-| Errands return | 6.6% | 58.6% | 27.7% | 6.6% | 0.5% |
-| Social outward | 7.6% | 47.8% | 30.7% | 13.4% | 0.5% |
-| Social return | 1.5% | 38.8% | 38.1% | 18.2% | 3.4% |
-| Longer trips | 15.1% | 34.9% | 23.5% | 23.9% | 2.6% |
+| To work | 58.6 / 48.3% | 15.0 / 17.7% | 11.5 / 11.7% | 6.3 / 12.7% | 8.6 / 9.6% |
+| Home from work | 4.0 / 5.1% | 18.4 / 16.3% | 37.1 / 35.9% | 30.4 / 26.7% | 10.1 / 16.0% |
+| Errands outward | 11.0 / 8.2% | 62.3 / 64.3% | 22.8 / 23.2% | 3.1 / 3.5% | 0.8 / 0.8% |
+| Errands return | 7.0 / 6.0% | 57.2 / 59.9% | 28.3 / 27.1% | 6.7 / 6.5% | 0.8 / 0.5% |
+| Social outward | 5.9 / 9.6% | 44.0 / 51.6% | 33.5 / 27.6% | 16.0 / 10.8% | 0.6 / 0.4% |
+| Social return | 1.6 / 1.4% | 31.0 / 45.6% | 39.5 / 36.8% | 22.1 / 14.7% | 5.8 / 1.5% |
+| Longer trips | 16.6 / 13.3% | 31.4 / 39.4% | 19.6 / 28.5% | 29.5 / 16.6% | 2.9 / 2.2% |
 
-**The average day** (T-464) is a third day the views and queries can be asked for: 5 weekdays and
-2 weekend days over 7, taken on each purpose's rate and period shares (`days.rs` `AVERAGE`), so
-every figure linear in them is the same blend of the weekday's and the weekend's. It is the demand
-views' default; the clock, the money and the boarding account know only the two kinds. Weekend
+**The average day** (T-464) is a fourth day the views and queries can be asked for: 5 weekdays, a
+Saturday and a Sunday over 7, taken on each purpose's rate and period shares (`days.rs`
+`AVERAGE`), so every figure linear in them is the same blend. It is the demand views' default;
+the clock, the money and the boarding account know only the three kinds. Saturday and Sunday
 bubbles are asked for only while shown; New York's weekend figures and the costs are in
-notes/T-170.md.
+notes/T-170.md and notes/T-263.md.

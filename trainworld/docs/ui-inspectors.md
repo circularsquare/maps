@@ -396,17 +396,34 @@ destinations at the end, and how the demand model's people would make one of the
   market's inter-city trips (commutes between zones left out, as the hover says): every 6 km
   area pair between the two ends, the selection's areas weighted as the bubbles weigh them,
   each pair's choice worked out as the solve does (every pair rail can serve, sampled or not),
-  added up by its trips. The panel: the trips a day and the distance, a Train / Plane / Car bar
-  and rows; By train (the period with most trips, "Inter-city, midday") with the main route
-  ("To Astor Pl" and "From Stratford" carry the areas' felt minutes to and from the stations,
-  muted, since the market knows no single walk), Fare, Time (station to station), Effective time
-  (the pairs' felt cost, averaged over the pairs the train serves), the main route's share and up
-  to four other routes; By car's effective time; Train by period. The routes are drawn on the map
-  as a local trip's, from the selection's busiest cell to the far end's centre. Rail is not
-  worked out when a place's zone at either end is not open in the game [T-991]: the panel then shows
-  only the straight-line distance between the two places' centres and By car's effective time from it
-  (the model's car rules for that pair, or "No road joins the two ends"), and no trip counts, bar or
-  Train by period. With no distance known, neither the distance nor By car is shown.
+  added up by its trips. The panel: the trips a day and the distance (between two places both
+  ways, as the city view's corridors count them; from a selection one way, as its bubbles count
+  them [T-1148]), a Train / Plane / Car bar and rows (no Train when no period offers rail); from a
+  selection or a 6 km area with one far place, **Between the two places**, the whole places'
+  trips both ways as the solve split them (the corridor's, commutes left out), so a selection no
+  station reaches is not read as the corridor; By train (the period with most trips, "Inter-city,
+  midday") with the main route ("To Astor Pl" and "From Stratford" carry the areas' felt minutes
+  to and from the stations, muted, since the market knows no single walk), Fare, Time (station to
+  station), Effective time (the pairs' felt cost, averaged over the pairs the train serves), the
+  main route's share and up to four other routes; **By car** [T-1148]: Drive (15 minutes plus the
+  road at 85 km/h), Running costs (each person's dollars), Parking, any Channel crossing or Ferry
+  to Hokkaido (each person's fare and its minutes) and Effective time, whose hover is the sum; the
+  parts follow from the sim's minutes and mean distance by the rule (`carPartsOf` in
+  `game/marketRule.ts`), parking the rest; **By plane** where the pair flies (one far place): the
+  drives to and from the airports, 90 minutes at them, the flight, the fare and the effective
+  time, from the market rows; Train by period (only when rail is in play). The routes are drawn
+  on the map as a local trip's, from the selection's busiest cell to the far end's centre. Rail
+  is not worked out when a place's zone at either end is not open in the game [T-991]: the panel
+  then shows only the straight-line distance between the two places' centres and By car from it
+  (the model's car rules for that pair, or "No road joins the two ends"), and no trip counts, bar
+  or Train by period. With no distance known, neither the distance nor By car is shown.
+- **Between places with no station** [T-1148]: two whole places (the city view's path) where
+  either end, or every far place, has no station within 40 km of its zone's box (`stationNear`;
+  past the market's 15 km drive to a station) have no train in play, so the answer comes from
+  the market rows at once with no worker (`rowsAnswer` in `game/marketRule.ts`, a mirror of the
+  sim's place-pair rule held to it by `checks/t1148-market-rule.mjs`): the places' trips by the
+  corridor's split, the car and the distance centre to centre. By train then reads "There is no
+  station near Paris region." and the bar has no Train.
 - **The headline follows the view** [T-586]: under the purpose filter and the day shown, the trips
   a day between the two places (a line "124 trips per day, 2.5 km apart"; its hover the
   exact count and, under All purposes, each purpose's), then a bar and rows of their shares by

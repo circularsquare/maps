@@ -15,6 +15,7 @@ import { lngLatToPack, packToLngLat } from "../game/coords";
 import { cityCells, demandView, flows, intercitySelection, viewFinal, viewUpdating } from "../game/demand";
 import { dealFlows } from "../game/farChunks";
 import { count, distance } from "../game/format";
+import { loadMarketRows, rowsAnswer, stationNear } from "../game/marketRule";
 import { NET_INK } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { periodAt } from "../game/periods";
@@ -334,7 +335,13 @@ async function explore(from: [number, number], to: [number, number], filter: Pur
 /** T-866: the longer trips between a selection's cells and a far place or 6 km zone, every period,
  * as the regional market chooses them; the period shown first is the one with most of them. */
 async function exploreMarket(end: "home" | "work", cells: Uint32Array, fars: MarketEnd[], near?: MarketEnd): Promise<Omit<TripShown, "key" | "asking"> | null> {
-  const asked = await Promise.all(fars.map((f) => askMarketTrip(end, cells, f.place, f.gid, near)));
+  // T-1148: whole places where no train is in play (no station near one end of every pair): the
+  // market rows answer at once, with no worker
+  const stations = world.peek()?.save.stations ?? [];
+  const bare = near && near.gid < 0 && fars.every((f) => f.gid < 0) ? [near, ...fars].map((e) => e.place).filter((p) => !stationNear(p, stations)) : [];
+  const noRail = near && (bare.includes(near.place) || fars.every((f) => bare.includes(f.place)));
+  const rows = noRail && (await loadMarketRows()) ? fars.map((f) => rowsAnswer(near, f, shownDay.peek())) : null;
+  const asked = rows && rows.every((r) => r) ? rows : await Promise.all(fars.map((f) => askMarketTrip(end, cells, f.place, f.gid, near)));
   if (asked.some((a) => !a)) return null;
   const all = asked as (MarketPeriod | null)[][];
   // T-885: a group of far ends as one
@@ -342,7 +349,7 @@ async function exploreMarket(end: "home" | "work", cells: Uint32Array, fars: Mar
   const periods = all.length === 1 ? all[0] : all[0].map((_, q) => mergeMarketPeriods(all.map((a) => a[q]), routeLabel(names)));
   let busiest: number | null = null;
   periods.forEach((p, q) => { if (p && p.trips > 0 && (busiest === null || p.trips > periods[busiest]!.trips)) busiest = q; });
-  return { trip: null, mix: null, purpose: "longer", busiest, market: { far: fars[0], periods, end, ...(fars.length > 1 ? { fars } : {}), ...(near ? { near } : {}) } };
+  return { trip: null, mix: null, purpose: "longer", busiest, market: { far: fars[0], periods, end, ...(fars.length > 1 ? { fars } : {}), ...(near ? { near } : {}), ...(asked === rows ? { unbuilt: bare } : {}) } };
 }
 
 /** How far a trip tool's end may be from a far 6 km zone's centre and still be read as in it, m. */

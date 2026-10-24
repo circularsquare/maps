@@ -1,22 +1,23 @@
-//! Kinds of day (T-260, docs/demand.md 4.2): weekday and weekend.
+//! Kinds of day (T-260, T-262, docs/demand-timing.md): weekday, Saturday and Sunday.
 //!
-//! The solve is a weekday's. A weekend is worked out from it, not solved: every purpose's trips
-//! are a fixed multiple of a weekday's, departing by their own period shares, and without
-//! crowding a trip's mode and route depend on its period's service only, not on how many make
-//! it. So a weekend's riders in period q are the weekday's riders of each purpose in that period
-//! times `load_factor(WEEKEND, purpose, q)`, and the queries (bubbles, catchments, selections)
-//! weigh each period the same way. The weekend keeps the weekday's crowded route and mode
-//! choices (fewer riders at the weekend would crowd less), and the same trains run every day.
-//! The average day (T-464) is 5 weekdays and 2 weekend days over 7, taken on the shares and rates,
-//! so every figure that is linear in them is the same blend.
+//! The solve is a weekday's. A Saturday or a Sunday is worked out from it, not solved: every
+//! purpose's trips are a fixed multiple of a weekday's, departing by their own period shares, and
+//! without crowding a trip's mode and route depend on its period's service only, not on how many
+//! make it. So a Saturday's riders in period q are the weekday's riders of each purpose in that
+//! period times `load_factor(SATURDAY, purpose, q)`, and the queries (bubbles, catchments,
+//! selections) weigh each period the same way. Both keep the weekday's crowded route and mode
+//! choices (fewer riders would crowd less), and the same trains run every day. The average day
+//! (T-464) is 5 weekdays, a Saturday and a Sunday over 7, taken on the shares and rates, so every
+//! figure that is linear in them is the same blend.
 //!
 //! Sources (national, so every US city alike): NHTS 2017 person trips by purpose, weekday
-//! (Mon-Fri) against Saturday and Sunday pooled, person-weighted, linked trips; England's NTS
-//! 0504b agrees (commuting 0.28, shopping 1.26, leisure 1.57). Airport trips follow TSA checkpoint
-//! throughput by day of week, 2025 (weekend 1.01 of a weekday). Weekend period shares are the
-//! model's weekday shares times NHTS's weekend/weekday ratio in each period, renormalised; school,
-//! university, airport and medical keep their weekday timing (NHTS's weekend counts for them are a
-//! few hundred trips). notes/T-170.md.
+//! (Mon-Fri) against Saturday and against Sunday, person-weighted, linked trips, each rate the mean
+//! of the outward and return ratios; England's NTS 0504b agrees on the weekend as a whole
+//! (commuting 0.28, shopping 1.26, leisure 1.57). Airport trips follow TSA checkpoint throughput
+//! by day of week, 2025 (Saturday 0.92, Sunday 1.11 of a weekday). A day's period shares are the
+//! model's weekday shares times NHTS's day/weekday ratio in each period, renormalised
+//! (research/weekend/tables.py); school, university, airport and medical keep their weekday
+//! timing (NHTS's weekend counts for them are a few hundred trips). notes/T-170.md.
 
 use super::api::{TO_HOME, TO_WORK};
 use super::everyday::{OUTWARD, RETURN};
@@ -24,13 +25,14 @@ use super::intercity::SHARES;
 use super::network::PERIODS;
 use wasm_bindgen::prelude::*;
 
-/// The days a query can be asked for: the two kinds, then the average over a week (T-464).
-pub const DAY_KINDS: usize = 3;
+/// The days a query can be asked for: the three kinds, then the average over a week (T-464).
+pub const DAY_KINDS: usize = 4;
 pub const WEEKDAY: usize = 0;
-pub const WEEKEND: usize = 1;
-pub const AVERAGE: usize = 2;
-/// Weekdays and weekend days in a week, the average's weights.
-const WEEK: [f32; 2] = [5.0 / 7.0, 2.0 / 7.0];
+pub const SATURDAY: usize = 1;
+pub const SUNDAY: usize = 2;
+pub const AVERAGE: usize = 3;
+/// Weekdays, Saturdays and Sundays in a week, the average's weights.
+const WEEK: [f32; 3] = [5.0 / 7.0, 1.0 / 7.0, 1.0 / 7.0];
 /// Purposes as the demand results split them (demand.worker.ts `purposeParts`): work, the
 /// everyday layer's six in its own order (shopping, social, school, university, airport,
 /// medical), then the regional market's longer trips.
@@ -42,30 +44,58 @@ pub const fn everyday(kind: usize) -> usize {
     1 + kind
 }
 
-/// A weekend day's trips per weekday's, by purpose (NHTS 2017; airport TSA 2025).
-pub const WEEKEND_RATE: [f32; PURPOSES] = [0.30, 1.22, 1.60, 0.08, 0.22, 1.01, 0.24, 1.58];
-
-/// Weekend period shares, outward (to work, to the activity; the market's one share), periods in
-/// `PERIOD_HOURS` order. `None`: the weekday's.
-const WEEKEND_OUT: [Option<[f32; PERIODS]>; PURPOSES] = [
-    Some([0.546, 0.161, 0.116, 0.087, 0.090]),
-    Some([0.098, 0.632, 0.230, 0.032, 0.008]),
-    Some([0.076, 0.478, 0.307, 0.134, 0.005]),
-    None,
-    None,
-    None,
-    None,
-    Some([0.151, 0.349, 0.235, 0.239, 0.026]),
+/// A Saturday's and a Sunday's trips per weekday's, by purpose (NHTS 2017; airport TSA 2025).
+pub const DAY_RATE: [[f32; PURPOSES]; 2] = [
+    [0.37, 1.39, 1.54, 0.11, 0.30, 0.92, 0.30, 1.69],
+    [0.24, 1.05, 1.67, 0.06, 0.14, 1.11, 0.18, 1.48],
 ];
-const WEEKEND_RET: [Option<[f32; PERIODS]>; PURPOSES] = [
-    Some([0.045, 0.175, 0.366, 0.289, 0.125]),
-    Some([0.066, 0.586, 0.277, 0.066, 0.005]),
-    Some([0.015, 0.388, 0.381, 0.182, 0.034]),
-    None,
-    None,
-    None,
-    None,
-    None,
+
+type Shares = [Option<[f32; PERIODS]>; PURPOSES];
+/// A Saturday's and a Sunday's period shares, outward (to work, to the activity; the market's one
+/// share), periods in `PERIOD_HOURS` order. `None`: the weekday's.
+const DAY_OUT: [Shares; 2] = [
+    [
+        Some([0.586, 0.150, 0.115, 0.063, 0.086]),
+        Some([0.110, 0.623, 0.228, 0.031, 0.008]),
+        Some([0.059, 0.440, 0.335, 0.160, 0.006]),
+        None,
+        None,
+        None,
+        None,
+        Some([0.166, 0.314, 0.196, 0.295, 0.029]),
+    ],
+    [
+        Some([0.483, 0.177, 0.117, 0.127, 0.096]),
+        Some([0.082, 0.643, 0.232, 0.035, 0.008]),
+        Some([0.096, 0.516, 0.276, 0.108, 0.004]),
+        None,
+        None,
+        None,
+        None,
+        Some([0.133, 0.394, 0.285, 0.166, 0.022]),
+    ],
+];
+const DAY_RET: [Shares; 2] = [
+    [
+        Some([0.040, 0.184, 0.371, 0.304, 0.101]),
+        Some([0.070, 0.572, 0.283, 0.067, 0.008]),
+        Some([0.016, 0.310, 0.395, 0.221, 0.058]),
+        None,
+        None,
+        None,
+        None,
+        None,
+    ],
+    [
+        Some([0.051, 0.163, 0.359, 0.267, 0.160]),
+        Some([0.060, 0.599, 0.271, 0.065, 0.005]),
+        Some([0.014, 0.456, 0.368, 0.147, 0.015]),
+        None,
+        None,
+        None,
+        None,
+        None,
+    ],
 ];
 
 /// A weekday's period shares of purpose `p`: (outward, return). The market has one share.
@@ -81,32 +111,31 @@ fn weekday_shares(p: usize, q: usize) -> (f32, f32) {
 pub fn day_rate(day: usize, p: usize) -> f32 {
     match day {
         WEEKDAY => 1.0,
-        AVERAGE => WEEK[0] + WEEK[1] * WEEKEND_RATE[p],
-        _ => WEEKEND_RATE[p],
+        AVERAGE => WEEK[0] + WEEK[1] * DAY_RATE[0][p] + WEEK[2] * DAY_RATE[1][p],
+        d => DAY_RATE[d.min(SUNDAY) - 1][p],
+    }
+}
+
+/// Departures of purpose `p` in period `q` on `day` per weekday trip, from a weekday's share `wd`
+/// and the day tables `tables` (outward or return).
+fn share(day: usize, p: usize, q: usize, wd: f32, tables: &[Shares; 2]) -> f32 {
+    let on = |d: usize| DAY_RATE[d][p] * tables[d][p].map_or(wd, |s| s[q]);
+    match day {
+        WEEKDAY => wd,
+        AVERAGE => WEEK[0] * wd + WEEK[1] * on(0) + WEEK[2] * on(1),
+        d => on(d.min(SUNDAY) - 1),
     }
 }
 
 /// Outward trips of purpose `p` departing in period `q` on `day`, as a share of a weekday's
 /// outward trips: on a weekday exactly the model's own table.
 pub fn share_out(day: usize, p: usize, q: usize) -> f32 {
-    let wd = weekday_shares(p, q).0;
-    let we = || WEEKEND_RATE[p] * WEEKEND_OUT[p].map_or(wd, |s| s[q]);
-    match day {
-        WEEKDAY => wd,
-        AVERAGE => WEEK[0] * wd + WEEK[1] * we(),
-        _ => we(),
-    }
+    share(day, p, q, weekday_shares(p, q).0, &DAY_OUT)
 }
 
 /// As `share_out` for the trips home.
 pub fn share_ret(day: usize, p: usize, q: usize) -> f32 {
-    let wd = weekday_shares(p, q).1;
-    let we = || WEEKEND_RATE[p] * WEEKEND_RET[p].map_or(wd, |s| s[q]);
-    match day {
-        WEEKDAY => wd,
-        AVERAGE => WEEK[0] * wd + WEEK[1] * we(),
-        _ => we(),
-    }
+    share(day, p, q, weekday_shares(p, q).1, &DAY_RET)
 }
 
 /// Riders of purpose `p` in period `q` on `day` per rider on a weekday, both directions
@@ -147,38 +176,40 @@ mod tests {
     use super::*;
 
     #[test]
-    fn weekend_shares_sum_to_one_and_weekday_is_the_tables() {
-        for p in 0..PURPOSES {
-            for t in [&WEEKEND_OUT[p], &WEEKEND_RET[p]].into_iter().flatten() {
-                assert!((t.iter().sum::<f32>() - 1.0).abs() < 1e-5, "purpose {p}");
+    fn day_shares_sum_to_one_and_weekday_is_the_tables() {
+        for (k, day) in [SATURDAY, SUNDAY].into_iter().enumerate() {
+            for p in 0..PURPOSES {
+                for t in [&DAY_OUT[k][p], &DAY_RET[k][p]].into_iter().flatten() {
+                    assert!((t.iter().sum::<f32>() - 1.0).abs() < 1e-5, "day {day} purpose {p}");
+                }
+                let out: f32 = (0..PERIODS).map(|q| share_out(day, p, q)).sum();
+                let wd: f32 = (0..PERIODS).map(|q| share_out(WEEKDAY, p, q)).sum();
+                assert!((out - DAY_RATE[k][p] * wd).abs() < 1e-4, "day {day} purpose {p}");
+                // the day's riders over a weekday's are the rate, both directions together
+                let (mut wd, mut dd) = (0.0, 0.0);
+                for q in 0..PERIODS {
+                    let (o, r) = weekday_shares(p, q);
+                    wd += o + r;
+                    dd += (o + r) * load_factor(day, p, q);
+                }
+                assert!((dd / wd - DAY_RATE[k][p]).abs() < 1e-4, "day {day} purpose {p}");
             }
-            let out: f32 = (0..PERIODS).map(|q| share_out(WEEKEND, p, q)).sum();
-            let wd: f32 = (0..PERIODS).map(|q| share_out(WEEKDAY, p, q)).sum();
-            assert!((out - WEEKEND_RATE[p] * wd).abs() < 1e-4, "purpose {p}");
+        }
+        for p in 0..PURPOSES {
             for q in 0..PERIODS {
                 assert_eq!(load_factor(WEEKDAY, p, q), 1.0);
             }
         }
         assert_eq!(share_out(WEEKDAY, WORK, 0), TO_WORK[0]);
         assert_eq!(share_ret(WEEKDAY, everyday(1), 3), RETURN[1][3]);
-        // the day's riders: weekend over weekday is the rate, both directions together
-        for p in 0..PURPOSES {
-            let (mut wd, mut we) = (0.0, 0.0);
-            for q in 0..PERIODS {
-                let (o, r) = weekday_shares(p, q);
-                wd += o + r;
-                we += (o + r) * load_factor(WEEKEND, p, q);
-            }
-            assert!((we / wd - WEEKEND_RATE[p]).abs() < 1e-4, "purpose {p}");
-        }
     }
 
     #[test]
-    fn the_average_day_is_five_weekdays_and_two_weekend_days_over_seven() {
+    fn the_average_day_is_five_weekdays_a_saturday_and_a_sunday_over_seven() {
         for p in 0..PURPOSES {
-            assert!((day_rate(AVERAGE, p) - (5.0 + 2.0 * WEEKEND_RATE[p]) / 7.0).abs() < 1e-6, "purpose {p}");
+            assert!((day_rate(AVERAGE, p) - (5.0 + DAY_RATE[0][p] + DAY_RATE[1][p]) / 7.0).abs() < 1e-6, "purpose {p}");
             for q in 0..PERIODS {
-                let want = (5.0 + 2.0 * load_factor(WEEKEND, p, q)) / 7.0;
+                let want = (5.0 + load_factor(SATURDAY, p, q) + load_factor(SUNDAY, p, q)) / 7.0;
                 assert!((load_factor(AVERAGE, p, q) - want).abs() < 1e-5, "purpose {p} period {q}");
             }
         }

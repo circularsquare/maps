@@ -6,7 +6,8 @@
 // Japan's zones and every other realm with a button; a click on France's button shows France; a
 // reload with a station in Japan only hides France again; a station in France as well, and a reload
 // shows both; (T-1049, T-1046) a click on a hidden realm shows it, a drag does not, and the world view has no
-// circles or city bubbles. Measures the zoomed-out world (bubbles, frame time while panning) and what a pan across
+// circles or city bubbles; (T-1151) the hidden land's "Click to load" hover, and a view resting at zoom
+// 10.5 over a hidden realm shows it (one at 9.5 does not) without a long freeze. Measures the zoomed-out world (bubbles, frame time while panning) and what a pan across
 // France and Germany at zoom 9 fetches. Screenshots and a JSON to artifacts/trainworld/t975-<TAG>-*.
 //   BASE=http://localhost:6165/ [TAG=after] node trainworld/checks/t975-realms.mjs
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -313,6 +314,28 @@ try {
     report('a click on a hidden realm shows it', !afterClick.includes('Germany') && afterClick.length === before.length - 1, `(${afterClick.length} dark)`);
     await page.screenshot({ path: join(SHOTS, `t975-${TAG}-germany-clicked.png`) });
     await view([5, 48], 4.5);
+
+    // 6. T-1151: the hover on a hidden realm's land; a view resting at zoom 10 or closer over one shows it
+    await view([12.5, 42.5], 5.5);
+    [x, y] = await at(12.5, 42.5);
+    await page.mouse.move(x - 3, y);
+    await page.mouse.move(x, y);
+    await settle(page, 400);
+    const hover = await page.evaluate(() => { const t = document.querySelector('.track-tag'); return t && t.style.display !== 'none' ? t.innerText : ''; });
+    report('a hidden realm\'s land has a hover saying a click loads it', /Italy\s+Click to load/.test(hover), JSON.stringify(hover));
+    await page.screenshot({ path: join(SHOTS, `t975-${TAG}-hidden-hover.png`) });
+    await page.mouse.move(5, 5);
+    await view([12.5, 42.5], 9.5);
+    await settle(page, 1000);
+    report('a view at zoom 9.5 over a hidden realm leaves it dark', (await dark(page)).includes('Italy'));
+    await page.evaluate(() => { window.__long = []; new PerformanceObserver((l) => { for (const e of l.getEntries()) window.__long.push(e.duration); }).observe({ entryTypes: ['longtask'] }); });
+    await view([-3.7, 40.42], 10.5);
+    await settle(page, 4000);
+    const lt = await page.evaluate(() => window.__long);
+    out.autoShow = { longTasks: lt.length, longestMs: Math.round(Math.max(0, ...lt)), longMs: Math.round(lt.reduce((a, b) => a + b, 0)) };
+    const d6 = await dark(page);
+    report('a view resting at zoom 10.5 over a hidden realm shows it, with no long freeze', !d6.includes('Spain and Portugal') && out.autoShow.longestMs < 1000, JSON.stringify(out.autoShow));
+    await page.screenshot({ path: join(SHOTS, `t975-${TAG}-auto-shown.png`) });
   }
 
   report('no console errors', errors.length === 0, errors.slice(0, 3).join(' | '));

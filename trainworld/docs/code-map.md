@@ -25,8 +25,8 @@ tests natively.
 - `src/demand/`: the demand kernel, behind feature `demand` (on in the app's build): `api.rs`
   (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market; `intercity/market_trip.rs` its trip explorer query, T-866; on a big cluster its pass searches destinations one at a time,
   `pass_streamed` with `kernel::DestSearch` and `DestAssign`, T-761), `warm.rs` (the
-  everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (the weekend's factors per
-  purpose and period, T-260), `routes.rs` (routed walks round water and drives over OSM roads from
+  everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (Saturday's and Sunday's factors per
+  purpose and period, T-260, T-262), `routes.rs` (routed walks round water and drives over OSM roads from
   the pack, T-275), `trip.rs` (the trip explorer's query, T-195; its two cells' own trip, T-720, checked with the
   walk bands in `t720.rs`), `lanes.rs` (f32 lanes, wasm
   SIMD or SSE2, for the commute pair loop, T-036). The commute pair loop is `kernel::mode_choice`;
@@ -59,8 +59,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `sun.ts` (the sun's height for the top bar's sky, T-861; the calendar is in `days.ts`),
   `holidays.ts` (public holidays by country from `holidays.json`, made by `pipeline/holidays_json.py`, T-862;
   a line's and the view's country, T-872; one entry for a holiday several countries keep, T-1098), `holidayCalendar.ts` (the plain lookups the clock worker shares:
-  a holiday's name, `kindOfIn` a country's kind of each day, T-872),
-  `periods.ts` (the five periods), `days.ts` (weekday and weekend, the shown day, T-260).
+  a holiday's name, `kindOfIn` a country's kind of each day from its holidays and own weekend, T-872, T-262),
+  `periods.ts` (the five periods), `days.ts` (weekday, Saturday and Sunday, the shown day, T-260, T-262).
 - Demand and riders: `demand.ts` (results: mode split, riders), `boarding.ts` (the boarding
   account's hour on the main thread: riders packed for the clock worker, platform crowds, T-164),
   `complexLive.ts` (a complex's platform crowds and trains now, T-246), `purposes.ts` (the trip
@@ -124,7 +124,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `stopMarkers.ts` (the toggle markers of stop editing, T-233), `reversalMarks.ts` (the icon over
   stations where a line reverses partway, T-797).
 - Trains and trips: `trainFollow.ts` (a selected train followed onto its next trip, T-245),
-  `tripView.ts` (the trip explorer's route, T-195; its panel is `ui/inspector/TripInspector.tsx`; between zones `MarketTrip.tsx`, T-866; between two groups of bubbles, the Shift+drag box and its samples in `commuterView.ts` `farTrip`, the average in `game/trip.ts` `averageTrips`, T-865; place ends and far groups between zones: `game/trip.ts` `mergeMarketPeriods`, `map/intercityView.ts` `placeTrip` and `interBox`, `IntercityApi::market_trip_between`, T-885).
+  `tripView.ts` (the trip explorer's route, T-195; its panel is `ui/inspector/TripInspector.tsx`; between zones `MarketTrip.tsx`, T-866; between two groups of bubbles, the Shift+drag box and its samples in `commuterView.ts` `farTrip`, the average in `game/trip.ts` `averageTrips`, T-865; place ends and far groups between zones: `game/trip.ts` `mergeMarketPeriods`, `map/intercityView.ts` `placeTrip` and `interBox`, `IntercityApi::market_trip_between`, T-885; the car's and the plane's parts and the answer between places with no station from the market rows, `game/marketRule.ts`, T-1148).
 - Demand views (T-084, T-097): `demandViews.ts` (wiring, a station's riders for its inspector), `demandLayers.ts`
   (line width, station use circles, train fill; the figures from `game/stationUse.ts`, T-482), `commuterView.ts` and `bubbles.ts` (commuter bubbles and
   bubble selections; the far end grouped into at least 10 trips a bubble in `game/farChunks.ts`, T-909), `intercityView.ts` (longer trips of a selection or station, one bubble per
@@ -265,6 +265,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   ledger days after its clock gets their running cost back; port 6165 by default),
   `t975-realms.mjs` (first the location button refused, in Lyon and in Sydney, and a map start showing every realm until its first station; then realms in a fresh profile: no bubbles behind the start menu, a Tokyo start shows Japan only with the shade cut around its zones, a click shows France, a reload hides it again, stations in two realms show both; a click on a hidden realm shows it, a drag does not, no circles at the world view; the zoomed-out frame and a pan across France and Germany measured; port 6165 by default),
   `t1071-train-count.mjs` (the real save's busiest line, its train count raised and lowered four times with the clock running: every train of every line placed each frame from the renderer's own buffers may move no further than top speed allows and come or go only at a terminal, and where new buffers arrive the old and new draw the same trains in the same places; `SPEED` 0 to 2 or -1 paused, `OP=headway`, `KEEP_FRAMES=1`; about 2 minutes; Rust side `sim/src/track/transition_tests.rs`),
+  `t1148-market-rule.mjs` (Node, no browser: `game/marketRule.ts`, the main thread's copy of the market's place-pair rule, against the sim's on about 2,000 pairs of places, near, far, across the Channel, to Hokkaido and across seas: distance, car minutes, reference minutes, plane and car shares, trips; and the longer trips' period shares on every kind of day; about 20 s; run after any change to the market's car, plane, crossing or trip rule on either side),
   `t1025-shade.mjs` (Node, no browser: the realm shade's triangles for each realm alone and several groups up to all; no point of a shown zone shaded, none shaded twice, open land and sea shaded once; `quick` for the groups only, about 6 s, all of it under half a minute),
   `t728-newgame.mjs` (the new game sheet in a fresh profile: the search, a sandbox in Tokyo from
   its real network, a normal London start, a map start, the real New York save turned sandbox from
@@ -282,7 +283,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t883-fare-curve.mjs` (the real save: the default fare's rail trips, the same line through other nodes and an old two-node curve changing nothing, a doubled rate and a curve steeper past 20 km losing rail trips, the weekday's income being the base, the rate and demand's extra; the Money tab's hover arrows, one-way drags sending once on release, undo, zoom keeping the slope, the off-plot arrows and their click; fare graph screenshots in t1143/), `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
   rides and running costs, with the largest hour-to-hour change beside the flat booking's),
   `t872-holidays.mjs` (the real save over the next Thanksgiving: that day's boarding account, fares
-  and ledger are Saturday's, the days around it weekdays; the day is a weekday in Canada and the UK),
+  and ledger are Sunday's, the days around it weekdays; the day is a weekday in Canada and the UK;
+  T-262: six countries' own weeks, a substitute day, a worked Saturday and a US working holiday in
+  the calendar, and a new game's Hong Kong and Shanghai lines over their own Saturday, Sunday and a
+  substitute day),
   `t745-bullets.mjs` (the real save's line bullets in the Lines tab, the line inspector and the map
   tags, plus digits, two characters and kana, light and dark, 100% and 90% UI, pixel ratio 1 and 2:
   each symbol's ink centred in its drawn circle within 0.6 device px, measured on the screenshot;

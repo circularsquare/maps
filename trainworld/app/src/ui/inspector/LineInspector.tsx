@@ -541,7 +541,7 @@ export function LineInspector({ id }: { id: string }) {
   const held = heldAnswer?.held ?? [], limits = heldAnswer?.limits ?? NO_LIMITS;
   const marks = useClockQuery(l ? { what: "lineMarks", line: l.num } : null, [l?.num, w?.version], marksFrom) ?? [];
   // T-477, T-491: crowding by period on today's kind of day, asked again as the account changes
-  // T-872: a holiday in the line's country is a weekend day
+  // T-872, T-262: the line's country decides the kind of day
   const kind = kindIn(lineCountry(l?.stops ?? []), Math.floor(lineSeconds(w?.lineStats[id]) / 86400));
   const acct = accountVersion.value;
   const periods = useClockQuery(l ? { what: "linePeriods", line: l.num, day: kind } : null, [l?.num, w?.version, acct, kind], (d) => (d.length ? d : null));

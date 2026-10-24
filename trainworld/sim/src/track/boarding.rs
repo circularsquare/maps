@@ -241,9 +241,9 @@ pub struct RunAccount {
     pub stop_open: Vec<f64>,
     /// Per period and stop (`p * n + k`), the km a boarder there rides on this line (`ride_km`).
     pub ride_km: Vec<f64>,
-    /// Per stretch (stop k to k + 1 in this run's order), whether it usually runs at capacity
-    /// (`full_stretches`, T-1125).
-    pub full: Vec<bool>,
+    /// Per stretch (stop k to k + 1 in this run's order), the share of the day's trains that leave
+    /// it packed to crush (`full_shares`, T-1125, T-1152).
+    pub full: Vec<f32>,
 }
 
 /// One line's counts over a window of the day (`Boarding::window`).
@@ -268,7 +268,8 @@ pub struct LineAccount {
 }
 
 /// The account for the whole network, and the riders it was worked out from: one of each per
-/// kind of day (T-260, `day_kind_at`), as the same trains carry a weekday's or a weekend's riders.
+/// kind of day (T-260, `day_kind_at`), as the same trains carry a weekday's, a Saturday's or a
+/// Sunday's riders.
 /// A kind with no riders reads the weekday's.
 #[derive(Clone, Debug, Default)]
 pub struct Boarding {
@@ -283,9 +284,10 @@ pub struct Boarding {
     /// Riders a day changing onto each platform (line, run, stop in the run's order) from other
     /// platforms (T-554, `set_transfers`). Only the timing of drawn crowds reads them.
     pub xfer: HashMap<(u32, u8, u32), Vec<Feeder>>,
-    /// Per line id, the local game days its country has a public holiday, read as weekend days
-    /// (T-872, `set_holidays`). The clock worker keeps a window around now.
-    pub holidays: HashMap<u32, Vec<i64>>,
+    /// Per line id, the local game days its country runs as another kind than `day_kind_at`'s, and
+    /// that kind: holidays, and its own weekend where that is not Saturday and Sunday (T-872,
+    /// T-262, `set_holidays`). The clock worker keeps a window around now.
+    pub holidays: HashMap<u32, Vec<(i64, usize)>>,
 }
 
 /// A platform riders change from, and riders a day making that change (T-554).
@@ -388,26 +390,28 @@ impl Boarding {
         !self.riders[0].is_empty()
     }
 
-    /// Each line's holiday days (T-872): per line, its id, a count, then that many local game days.
+    /// Each line's days of another kind (T-872, T-262): per line, its id, a count `n`, then `n`
+    /// pairs of a local game day and its kind.
     pub fn set_holidays(&mut self, packed: &[f64]) {
         self.holidays.clear();
         let mut i = 0;
         while i + 2 <= packed.len() {
             let (id, n) = (packed[i] as u32, packed[i + 1] as usize);
-            let days = &packed[(i + 2).min(packed.len())..(i + 2 + n).min(packed.len())];
-            if !days.is_empty() {
-                self.holidays.insert(id, days.iter().map(|&d| d as i64).collect());
+            let days = &packed[(i + 2).min(packed.len())..(i + 2 + 2 * n).min(packed.len())];
+            if days.len() >= 2 {
+                self.holidays.insert(id, days.chunks_exact(2).map(|d| (d[0] as i64, d[1] as usize)).collect());
             }
-            i += 2 + n;
+            i += 2 + 2 * n;
         }
     }
 
-    /// The kind of day whose account line `line`'s local time `t` reads: its own (a holiday in the
-    /// line's country is a weekend day, T-872), or the weekday's while that kind has no riders.
+    /// The kind of day whose account line `line`'s local time `t` reads: its own, or the kind its
+    /// country gives that day (a holiday, its own weekend, T-872, T-262), or the weekday's while
+    /// that kind has no riders.
     pub fn kind_at(&self, t: f64, line: usize) -> usize {
         let day = (t / DAY).floor() as i64;
-        let holiday = self.holidays.get(&(line as u32)).map_or(false, |d| d.contains(&day));
-        self.kind(if holiday { 1 } else { day_kind_at(t) })
+        let given = self.holidays.get(&(line as u32)).and_then(|d| d.iter().find(|x| x.0 == day)).map(|x| x.1);
+        self.kind(given.unwrap_or_else(|| day_kind_at(t)))
     }
     fn kind(&self, day: usize) -> usize {
         let day = day.min(DAY_KINDS - 1);
@@ -506,7 +510,8 @@ impl Boarding {
     /// the seconds from its departure to its last stop, then the loads, then per queue
     /// QUEUE_STRIDE numbers, then per event 2, then per pulse 2, then per event its train's
     /// arrival (T-1123), then per pulse the station node its riders come from and their walk (s,
-    /// T-1124), then the count of full stretches and per one its line and run 0 stretch (T-1125)]`.
+    /// T-1124), then the count of full stretches, per one its line and run 0 stretch (T-1125), then
+    /// per one the share of the day's trains packed to crush there (T-1152)]`.
     ///
     /// A trip's loads are riders aboard on each stop-to-stop stretch, numbered as on run 0 (a
     /// run 1 trip's are reversed), so the renderer looks them up by the stretch it draws.
@@ -616,17 +621,20 @@ impl Boarding {
                 }
             }
         }
-        // T-1125: the stretches that usually run at capacity, either way, in run 0's numbering
-        let mut full: Vec<f32> = vec![];
+        // T-1125, T-1152: the stretches where at least FULL_SHARE_MIN of the day's trains leave
+        // packed to crush, either way, in run 0's numbering, and that share (the fuller way's)
+        let (mut full, mut shares): (Vec<f32>, Vec<f32>) = (vec![], vec![]);
         for l in 0..nl {
             let day = self.kind_at(epoch + shift(l), l);
             let Some(Some(acc)) = self.accounts[day].get(l) else { continue };
             let f0 = &acc.runs[0].full;
             let f1 = acc.runs.get(1).map_or(&[][..], |r| &r.full[..]);
             for s in 0..f0.len().max(f1.len()) {
-                let back = f1.len().checked_sub(1 + s).and_then(|i| f1.get(i)).copied().unwrap_or(false);
-                if f0.get(s).copied().unwrap_or(false) || back {
+                let back = f1.len().checked_sub(1 + s).and_then(|i| f1.get(i)).copied().unwrap_or(0.0);
+                let share = f0.get(s).copied().unwrap_or(0.0).max(back);
+                if share >= FULL_SHARE_MIN {
                     full.extend([l as f32, s as f32]);
+                    shares.push(share);
                 }
             }
         }
@@ -645,6 +653,7 @@ impl Boarding {
         }
         out.push((full.len() / 2) as f32);
         out.extend_from_slice(&full);
+        out.extend_from_slice(&shares);
         out
     }
 
@@ -1079,24 +1088,17 @@ impl RunAccount {
         best.map(|b| b.0)
     }
 
-    /// T-1125: per stretch, whether at least half the trains leaving its first stop in its
-    /// busiest clock hour (by riders carried) are packed to crush (`cap`).
-    pub fn full_stretches(&self, cap: f64) -> Vec<bool> {
+    /// T-1125, T-1152: per stretch, the share of the day's trains leaving its first stop packed to
+    /// crush (`cap`).
+    pub fn full_shares(&self, cap: f64) -> Vec<f32> {
         let (n, m) = (self.n, self.deps.len());
-        let mut out = vec![false; n.saturating_sub(1)];
+        let mut out = vec![0.0f32; n.saturating_sub(1)];
+        if m == 0 {
+            return out;
+        }
         for (k, f) in out.iter_mut().enumerate() {
-            let (mut riders, mut trains, mut full) = ([0.0f64; 24], [0u32; 24], [0u32; 24]);
-            for j in 0..m {
-                let h = ((self.order_t[k * m + j].rem_euclid(DAY) / 3600.0).floor() as usize).min(23);
-                let v = self.load[self.order[k * m + j] as usize * n + k] as f64;
-                riders[h] += v;
-                trains[h] += 1;
-                if v >= cap - 0.5 {
-                    full[h] += 1;
-                }
-            }
-            let h = (0..24).fold(0, |b, h| if riders[h] > riders[b] { h } else { b });
-            *f = riders[h] > 0.0 && full[h] * 2 >= trains[h];
+            let full = (0..m).filter(|&j| self.load[self.order[k * m + j] as usize * n + k] as f64 >= cap - 0.5).count();
+            *f = full as f32 / m as f32;
         }
         out
     }
@@ -1164,6 +1166,10 @@ fn ride_km(alpha: &[f64], stop_s: &[f64], n: usize) -> Vec<f64> {
 /// The account's day starts at this hour, when platforms are usually empty.
 pub const START_HOUR: f64 = 3.0;
 
+/// A stretch is marked full (T-1125, T-1152) where at least this share of the day's trains leave
+/// it packed to crush.
+pub const FULL_SHARE_MIN: f32 = 0.05;
+
 /// One direction of one line for a day of departures from `START_HOUR`, from empty platforms;
 /// with `warm`, from a day earlier, keeping the second day. `leftover` says whether anyone was
 /// still waiting when the day ended (then the warm run is the right one).
@@ -1182,7 +1188,7 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
         }
         acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, &through, &mut vec![]);
     }
-    acc.full = acc.full_stretches(CRUSH_PER_CAR * svc.lines[l].cars.max(1) as f64);
+    acc.full = acc.full_shares(CRUSH_PER_CAR * svc.lines[l].cars.max(1) as f64);
     acc
 }
 

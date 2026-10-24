@@ -94,7 +94,7 @@ in float a_flags;
 in float a_speed;
 in float a_wmul;           // width as a multiple of the line width (riders, T-084); 1 otherwise
 in vec2 a_lane;             // T-658: how far apart its two tracks are at its start and end, 0-1
-in float a_full;            // T-819: 1 on a line segment whose track is at capacity (traffic view)
+in float a_full;            // T-819, T-1152: in the traffic view, how strong the line segment's capacity mark is (0-1; 0 none)
 out vec3 v_color;
 out float v_alpha;
 out vec4 v_cap;             // px: along from the segment's start, along to its end, across, half the width
@@ -131,7 +131,7 @@ void main() {
   float grow = u_lanes.z * max(0.0, lfm * (G + lt) - core * (bpShape ? 1.0 : a_wmul));
   float extra = sel ? u_width.y : 0.0;
   bool full = u_full_pass == 1;
-  if (full && !(u_kind == 1 && a_full > 0.5)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  if (full && !(u_kind == 1 && a_full > 0.0)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float cas = full ? u_casing + u_full_px : u_casing;
   float w, lane_off = 0.0;
   if (u_lane_mode == 0) {
@@ -199,7 +199,8 @@ void main() {
   vec3 lc = u_level_colours[clamp(3 - int(round(a_level)), 0, 6)];
   bool bpMid = false;
   if (ghost && u_ghost_layer < 2) v_color = u_ghost_layer == 0 ? u_ghost_rgb : u_bp_rail;
-  else if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement && !ghost ? u_sel : full ? u_full_rgb : u_casing_rgb;
+  // T-1152: a weaker red edge towards the casing's colour, not see-through, which would bead at the joints
+  else if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement && !ghost ? u_sel : full ? mix(u_casing_rgb, u_full_rgb, a_full) : u_casing_rgb;
   else if ((flags & 16) != 0) v_color = u_bad;
   else if ((u_kind == 2 && !placement) || u_by_level == 1) v_color = lc;
   else if (u_by_speed == 1) {
@@ -223,8 +224,8 @@ void main() {
     v_stripe = vec4(u_lane_mode == 0 ? rail : (bpTrack || placement ? rail : v_color), hs);
     v_stripe_only = u_lane_mode == 1 && u_kind == 0 ? 1.0 : 0.0;
   }
-  // T-1125: a line at capacity a little darker under its red edge
-  if (u_kind == 1 && a_full > 0.5 && u_casing <= 0.0 && !full) v_color = mix(v_color, vec3(0.0), ${FULL_DARKEN});
+  // T-1125: a line at capacity a little darker under its red edge, as strong as the edge (T-1152)
+  if (u_kind == 1 && a_full > 0.0 && u_casing <= 0.0 && !full) v_color = mix(v_color, vec3(0.0), ${FULL_DARKEN} * a_full);
   // the band behind a line's two tracks, pale so they stand out on it
   if (u_lane_mode == 1 && u_casing <= 0.0) v_color = mix(v_color, u_casing_rgb, 0.6 * t);
 }`;

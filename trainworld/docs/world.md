@@ -211,23 +211,40 @@ player is looking.
 ### Calendar
 
 - **Dates** (T-861, T-862; `game/days.ts`): a 365-day year with no leap day. Game day 1 is Monday
-  January 27 (`DAY1_OF_YEAR`), the first Monday on which no country with registered zones has a
-  public holiday. Weekdays run on from the day number, so each game year starts a weekday later.
-- **Holidays** (T-862; `game/holidays.ts`, `holidays.json` from `pipeline/holidays_json.py` and the
-  Python `holidays` package): each country's national public holidays, no substitute days. A game
+  January 27 (`DAY1_OF_YEAR`). Weekdays run on from the day number, so each game year starts a
+  weekday later.
+- **Holidays** (T-862, T-262; `game/holidays.ts`, `holidays.json` from `pipeline/holidays_json.py`
+  and the Python `holidays` package): each country's national public holidays with the substitute
+  days its law gives (the package's observed days: China's and Korea's substitute days, Japan's
+  substitute and citizens' holidays, a US Friday for a Saturday holiday), plus Japan's New Year
+  holidays (Dec 31, Jan 2 and 3) and Korea's Workers' Day from the package's bank category. A game
   year takes the holidays of the real non-leap year whose January 1 is the same weekday (Monday
   2029, Tuesday 2030, Wednesday 2031, Thursday 2026, Friday 2027, Saturday 2033, Sunday 2034;
   year 0 is 2031), so a holiday tied to a weekday keeps it and Easter moves between years. A
   holiday is a whole day of its country's local time. The top bar marks those in countries the
   player has built in, one entry for a holiday several keep that date ([ui-panels.md](ui-panels.md)).
-- **A holiday is a weekend day in its country** (T-872, `game/holidayCalendar.ts` `kindOfIn`). A
-  line's country is its first stop's zone's, as its local time is; a line outside every zone has
-  none. On a holiday the line's boarding account reads the weekend's riders (`TrackApi`
-  `set_line_holidays`: the clock worker sends each line's holiday weekdays from yesterday to 8 days
-  ahead), and its fares, rides and points settle at the weekend's rates: money groups split by
-  local time and country. Running costs do not depend on the kind of day. The demand views' Today
-  follows the view centre's country, the line inspector its line's. The demand solve is unchanged:
-  it already has a weekend result.
+- **Weekends** (T-262): each country's weekend days from the package: Saturday and Sunday in most;
+  Friday and Saturday in 18 (Saudi Arabia, Egypt, Israel, Iraq, Jordan, Kuwait, Qatar, Oman,
+  Bahrain, Algeria, Sudan, Syria, Yemen, Afghanistan, Bangladesh, Djibouti, Mauritania, the
+  Maldives); Sunday alone in 7 (Hong Kong, Paraguay, DR Congo, Niger, Anguilla, Saint Kitts and
+  Nevis, Tokelau); Friday and Sunday in Brunei; Friday alone in Iran. A two-day weekend's day of
+  rest runs as a Sunday and the other day as a Saturday: Friday is the day of rest where the
+  weekend holds it (Brunei's Sunday then runs as its Saturday), Saturday in Israel, else Sunday. A
+  one-day weekend runs as a Sunday, the other day as a weekday (`weeks` in holidays.json). A
+  weekend day a country works in place of a day off (the package's weekend workdays, Hungary's in
+  2026; China's make-up working days are not in the package) is a weekday.
+- **A country's calendar decides each local day's kind** (T-872, T-262, `game/holidayCalendar.ts`
+  `kindOfIn`): a holiday is a Sunday, except the few most people work through (in the US and its
+  territories: Columbus Day, Veterans Day, Martin Luther King Jr. Day, Washington's Birthday,
+  Juneteenth; `working` in holidays.json), which keep their weekday; a weekend day it works is a weekday; others take the
+  country's week. A line's country is its first stop's zone's, as its local time is; a line outside
+  every zone has none and keeps Saturday and Sunday. On such days the line's boarding account reads
+  that kind's riders (`TrackApi` `set_line_holidays`: the clock worker sends each line's days whose
+  kind is not the day number's, with their kind, from yesterday to 8 days ahead), and its fares,
+  rides and points settle at that kind's rates: money groups split by local time and country.
+  Running costs do not depend on the kind of day. The demand views' Today follows the view
+  centre's country, the line inspector its line's. The demand solve is unchanged: Saturday and
+  Sunday are worked out from the weekday's ([demand-timing.md](demand-timing.md)).
 
 ### NIMBY Rails
 

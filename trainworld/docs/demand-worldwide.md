@@ -652,19 +652,21 @@ notes/T-420.md has the tables.
   beds by hospital where one is open (Brazil's CNES, T-506).
 - **Trip timing.** Period shares and departure profiles come from US data (ACS B08302, NHTS).
   Work hours, siesta patterns, school hours and late evenings differ by country.
-- **Weekends** (T-260, docs/demand-timing.md 4.2). A weekend day's trips per weekday trip by purpose come
-  from NHTS 2017 (work 0.30, shopping and errands 1.22, social and leisure 1.60, school 0.08,
-  university 0.22, medical 0.24, trips of 50 miles or more 1.58) and TSA checkpoint counts
-  (airport 1.01); weekend timing is the weekday's shifted by NHTS's weekend/weekday ratio per
-  period. England's NTS 0504b gives nearly the same, so the shape holds at least for rich
-  car-owning countries. Why it may not carry
-  over: the weekend is not Saturday and Sunday everywhere (Friday and Saturday in much of the
-  Middle East, Friday alone or Friday and Saturday elsewhere; six-day working weeks in parts of
-  Asia and Africa), so the calendar must become per country (T-262); where Saturday work and
+- **Weekends** (T-260, T-262, docs/demand-timing.md 4.2). A Saturday's and a Sunday's trips per
+  weekday trip by purpose come from NHTS 2017 (Saturday, then Sunday: work 0.37 and 0.24, shopping
+  and errands 1.39 and 1.05, social and leisure 1.54 and 1.67, school 0.11 and 0.06, university
+  0.30 and 0.14, medical 0.30 and 0.18, trips of 50 miles or more 1.69 and 1.48) and TSA
+  checkpoint counts (airport 0.92 and 1.11); each day's timing is the weekday's shifted by NHTS's
+  day/weekday ratio per period. A holiday runs as a Sunday. England's NTS 0504b gives nearly the
+  same for the weekend as a whole, so the shape holds at least for rich car-owning countries. Why
+  it may not carry over: the weekend is not Saturday and Sunday everywhere, so each country's legal
+  weekend days decide which days run on these rates, its day of rest on Sunday's (T-262,
+  docs/world.md "Calendar"), but six-day working
+  weeks in parts of Asia and Africa are not in a legal calendar; where Saturday work and
   school are common (Japan's and Korea's Saturday schools until recently, retail and informal work
   everywhere) weekend work and school run higher; where shops close on Sundays (Germany, Austria,
-  parts of Switzerland) Sunday shopping collapses while Saturday's rises, so a pooled weekend hides
-  two very different days; and where public holidays cluster (Golden Week, Chuseok, Chinese New
+  parts of Switzerland) Sunday shopping collapses further than the US Sunday's 1.05 while
+  Saturday's rises; and where public holidays cluster (Golden Week, Chuseok, Chinese New
   Year) the long-distance factor is a holiday matter, not a weekend one (T-264). The calendar's
   game day 1 being a Monday is a game choice, not a rule. The weekend also keeps the weekday's
   crowded route choices, which matters more where weekday crowding is extreme (Tokyo, Mumbai).

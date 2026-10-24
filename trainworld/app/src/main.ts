@@ -288,7 +288,7 @@ effect(() => {
 effect(() => capacity.setVisible(display.value.capacity && !SYNTH));
 // T-819, T-1125: in the traffic view, lines on track at capacity at the level in force, and those whose trains usually run full, get a red outline
 effect(() => {
-  const w = world.value, traffic = display.value.trackColour === "traffic";
+  const w = world.value, traffic = display.value.trackColour === "traffic" && display.value.fullMarks; // T-1152's switch
   const full = w?.fullTrack[DEMAND_INDEX[clock.demand.value]];
   renderer.setFull(traffic && full ? new Set(full.keys()) : null, traffic);
   overlay.invalidate();

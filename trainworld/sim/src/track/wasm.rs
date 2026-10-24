@@ -246,8 +246,8 @@ impl TrackApi {
 
     /// Demand's riders for the boarding account (T-164), as `Boarding::set_riders` reads them:
     /// 5 busiest-hour factors, then per line its id, stop count `n`, and per period boardings
-    /// then alightings at each of its `2n` route nodes. One kind of day's (T-260: 0 weekday,
-    /// 1 weekend; each hour reads its own day's, `params::day_kind_at`).
+    /// then alightings at each of its `2n` route nodes. One kind of day's (T-260, T-262: 0
+    /// weekday, 1 Saturday, 2 Sunday; each hour reads its own day's, `params::day_kind_at`).
     pub fn set_riders(&mut self, packed: Vec<f32>, day: u32) {
         self.boarding.set_riders_day(&packed, day as usize);
     }
@@ -257,8 +257,9 @@ impl TrackApi {
     pub fn set_transfers(&mut self, packed: Vec<f32>) {
         self.boarding.set_transfers(&packed);
     }
-    /// Each line's public holidays, read as weekend days (T-872, `Boarding::set_holidays`): per
-    /// line its id, a count, then that many local game days. Replaces the last list.
+    /// Each line's days that run as the other kind (T-872, T-262, `Boarding::set_holidays`): per
+    /// line its id, a count, then that many pairs of a local game day and its kind. Replaces the
+    /// last list.
     pub fn set_line_holidays(&mut self, packed: Vec<f64>) {
         self.boarding.set_holidays(&packed);
     }

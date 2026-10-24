@@ -81,7 +81,8 @@ const fareHour = (per: number[][] | undefined, tl: number, kindOf?: KindOf) => l
 const rideHour = (per: number[][] | undefined, tl: number, kindOf?: KindOf) => between(table(per), peakC, tl, tl + 3600, kindOf);
 
 /** T-872: the holiday calendar (its own chunk, fetched once), and each line's country: its first
- * stop's zone's, as its local time is ("" outside every zone). A holiday is a weekend day there. */
+ * stop's zone's, as its local time is ("" outside every zone). Its holidays and own weekend decide
+ * its kinds of day (T-262). */
 let holidayData: HolidayData | null = null;
 let lineCountries = new Map<number, string>();
 let holidaysSent = "";
@@ -92,7 +93,8 @@ function loadHolidays() {
     if (syncHolidays()) sendTrips();
   }, () => {});
 }
-/** Send the track model each line's holiday days on weekdays, from yesterday to 8 days ahead in
+/** Send the track model each line's days whose kind is not the day number's, with their kind
+ * (holidays, its country's own weekend, weekend days worked), from yesterday to 8 days ahead in
  * its local time; true if they changed. Cheap when nothing did: called before every read of the
  * boarding account by day. */
 function syncHolidays(): boolean {
@@ -102,8 +104,8 @@ function syncHolidays(): boolean {
     if (!c) continue;
     const kindOf = kindOfIn(holidayData, c), d0 = Math.floor((now + api.line_shift(id)) / 86400);
     const days: number[] = [];
-    for (let d = d0 - 1; d <= d0 + 8; d++) if (kindOf(d) !== dayKindOf(d)) days.push(d);
-    if (days.length) out.push(id, days.length, ...days);
+    for (let d = d0 - 1; d <= d0 + 8; d++) { const k = kindOf(d); if (k !== dayKindOf(d)) days.push(d, k); }
+    if (days.length) out.push(id, days.length / 2, ...days);
   }
   const key = out.join();
   if (key === holidaysSent) return false;
@@ -991,7 +993,7 @@ interface CountryPart { kindOf: KindOf; income: number[][]; rides: number[][] }
 
 /** T-309: the running lines grouped by the local time they run on, each group's running cost per
  * demand level (the same on every kind of day) and its fare income per kind of day and period,
- * split by country (T-872: each country's holidays are its weekend days). With one local time and
+ * split by country (T-872, T-262: each country's holidays and weekend decide its kinds of day). With one local time and
  * one country (every game in the Northeast) the network's totals. */
 function localGroups(): { shift: number; running: number[]; tail: number[]; parts: CountryPart[] }[] {
   const a = api!;

@@ -4,8 +4,9 @@
 // holiday tied to a weekday keeps it. A holiday is a whole day of its country's local time.
 //
 // The top bar's sky marks them for the countries the player has built in. A holiday runs as a
-// weekend day for the lines in its country (T-872): the clock worker sends the track model each
-// line's holiday days and settles money by them; here, the view's Today and the line inspector.
+// weekend day for the lines in its country (T-872), and a country's own weekend decides its other
+// days (T-262): the clock worker sends the track model each line's days that differ from the day
+// number's and settles money by them; here, the view's Today and the line inspector.
 
 import { computed, signal } from "@preact/signals";
 import { clock } from "./clock";

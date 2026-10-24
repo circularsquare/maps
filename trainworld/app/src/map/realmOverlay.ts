@@ -5,8 +5,10 @@
 // circle at its point (an unopened zone's dot, a little bigger, T-1046) that shows it, and a plain
 // click on the realm with the select tool shows it too (T-1049). A circle stays at its point and
 // leaves the screen with it, never pinned at the edge (T-1142); circles that would overlap give way
-// to the realm with more zones. Zoomed out past the world (CITY_MARKS_MIN_ZOOM)
-// there are no circles and no click.
+// to the realm with more zones. The hidden land has a hover saying a click loads it, and a view
+// resting at AUTO_SHOW_ZOOM or closer with its centre on a hidden realm's land shows that realm, as a
+// click would (T-1151). Zoomed out past the world (CITY_MARKS_MIN_ZOOM) there are no circles, no
+// hover and no click.
 
 import { effect } from "@preact/signals";
 import { h, render } from "preact";
@@ -31,6 +33,20 @@ const FILL = "tw-realms-inactive";
 const GAP = 6;
 /** a circle's diameter, CSS px (style.css .realm-button button) */
 const SIZE = 16;
+/** T-1151: a view this close, resting this long with its centre on a hidden realm's land, shows it */
+export const AUTO_SHOW_ZOOM = 10;
+const AUTO_SHOW_REST_MS = 400;
+
+const marksOffAt = (map: MlMap) => mapBlank.peek() || map.getZoom() < CITY_MARKS_MIN_ZOOM;
+
+/** The hover on a hidden realm's land with the select tool (map/trackHover.ts asks when nothing of
+ * the network is under the pointer): its name, and that a click loads it. */
+export function hiddenRealmTip(map: MlMap, px: number, py: number): string[] | null {
+  if (marksOffAt(map) || tool.peek() !== "select" || linking.peek() !== null) return null;
+  const at = map.unproject([px, py]);
+  const id = hiddenRealmAt(at.lng, at.lat);
+  return id ? [realmName(id), "Click to load"] : null;
+}
 
 export function startRealmOverlay(map: MlMap): () => void {
   const stopStations = followStations();
@@ -41,7 +57,7 @@ export function startRealmOverlay(map: MlMap): () => void {
   const buttons = new Map<string, { el: HTMLDivElement; w: number; h: number }>();
   let hidden: RealmSpot[] = [];
   const shadeLayer = new ShadeLayer(FILL);
-  const marksOff = () => mapBlank.peek() || map.getZoom() < CITY_MARKS_MIN_ZOOM;
+  const marksOff = () => marksOffAt(map);
 
   const button = (l: RealmSpot) => {
     let b = buttons.get(l.id);
@@ -114,6 +130,21 @@ export function startRealmOverlay(map: MlMap): () => void {
   };
   map.on("click", onClick);
 
+  // on a move's end only: a page opened without a view in its address starts over New York
+  // (mapView.ts), which is no reason to load the realm there
+  let restTimer = 0;
+  const autoShow = () => {
+    if (marksOff() || map.getZoom() < AUTO_SHOW_ZOOM) return;
+    const c = map.getCenter();
+    const id = hiddenRealmAt(c.lng, c.lat);
+    if (id) showRealm(id);
+  };
+  const onRest = () => {
+    clearTimeout(restTimer);
+    restTimer = window.setTimeout(autoShow, AUTO_SHOW_REST_MS);
+  };
+  map.on("moveend", onRest);
+
   const cutter = shadeCutter((tri) => shadeLayer.setTriangles(tri));
   const disposeCut = effect(() => {
     const shown = shownRealms.value, outlines = zoneOutlines.value;
@@ -141,6 +172,8 @@ export function startRealmOverlay(map: MlMap): () => void {
     map.off("move", place);
     map.off("resize", place);
     map.off("click", onClick);
+    map.off("moveend", onRest);
+    clearTimeout(restTimer);
     for (const b of buttons.values()) render(null, b.el);
     layer.remove();
     if (map.getLayer(FILL)) map.removeLayer(FILL);

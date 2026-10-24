@@ -531,7 +531,7 @@ function query(msg: Query) {
   const clusterLive = (c: JobCluster) => msg.kind !== "cells" && (atRound(c) || (isHeld(c) && msg.round === at!.rounds));
   const mcs = at?.clusters.filter((c) => c.part) ?? [];
   const marketLive = mcs.length > 0 && mcs.every(clusterLive);
-  // T-260, T-464: the day asked about (0 weekday, 1 weekend, 2 average); every answer weighs its periods by it
+  // T-260, T-464: the day asked about (0 weekday, 1 Saturday, 2 Sunday, 3 average); every answer weighs its periods by it
   const day = (msg as { day?: number }).day ?? 0;
   try {
     if (msg.kind === "cells") {

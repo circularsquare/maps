@@ -155,10 +155,13 @@ institutions** (prisons, nursing homes and the like, T-234).
   nearest station and lie in the same 15-minute band of walking to it share one walk per station
   [T-090, T-720]. The trip explorer answers for its two cells' own walks, and its hovers give the
   grouped figure the map's bubbles count where it differs [T-720].
-- **Weekdays and weekends** [T-260]: days 6 and 7 of each week are the weekend, worked out from the
+- **Weekdays, Saturdays and Sundays** [T-260, T-262]: three kinds of day. Each line's country
+  decides its weekend (Saturday and Sunday in most; Friday and Saturday in much of the Middle East,
+  the day of rest running as a Sunday; a one-day weekend a Sunday) and its public holidays run as
+  Sundays [T-872, docs/world.md "Calendar"]; Saturday and Sunday demand is worked out from the
   weekday's solve per purpose and period (NHTS 2017 rates). The demand views show the average day
-  (5 weekdays and 2 weekend days over 7) unless a weekday or a weekend day is chosen [T-464]. The same trains run every day
-  (Anita, T-261: for now; a Saturday of its own is T-262).
+  (5 weekdays, a Saturday and a Sunday over 7) unless a weekday, a Saturday or a Sunday is chosen
+  [T-464]. The same trains run every day (Anita, T-261: for now).
 - **Demand rules must hold up worldwide**: every demand rule has an entry in
   [docs/demand-worldwide.md](docs/demand-worldwide.md).
 
@@ -274,7 +277,7 @@ game's own tag, never a browser tooltip [T-194, T-210]. No CSS transitions; trai
 motion. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
 count the past 24 hours from the boarding account, while the map's demand views (Homes and Destinations bubbles
 coloured by mode share, line widths by riders, station use circles, inter-city trips) show demand's
-whole day: the average day by default, or a weekday or a weekend day [T-464]. On the map, lines sharing track are drawn over each other,
+whole day: the average day by default, or a weekday, a Saturday or a Sunday [T-464, T-262]. On the map, lines sharing track are drawn over each other,
 stations are dots from zoom 9 and their true platforms from 14, and trains fill like a gauge with
 their riders.
 

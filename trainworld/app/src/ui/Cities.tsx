@@ -67,7 +67,7 @@ function PointsCell({ id, name }: { id: CityId; name: string }) {
   const rate = pointsPerDay.value.get(id)?.[shownDay.value] ?? 0;
   const tip = [
     `${exact(past)} points in ${name} in the past 24 hours`,
-    `${exact(rate)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`,
+    `${exact(rate)} points ${["on a weekday", "on a Saturday", "on a Sunday", "a day"][shownDay.value]} with the riders now`,
     `${POINTS_PER_TRIP} for each train trip that starts here, changes included, and ${POINTS_PER_KM} for each km ridden`,
   ].join("\n");
   return <span class="val w-points c-cities" data-tip={tip}>{pointsShort(past)}</span>;
@@ -112,7 +112,7 @@ function TotalRow({ rows, day }: { rows: CityRow[]; day: string }) {
   const rateAll = rows.reduce((n, r) => n + (rate.get(r.id)?.[shownDay.value] ?? 0), 0);
   const pointsTip = [
     `${exact(pastAll)} points in the world in the past 24 hours`,
-    `${exact(rateAll)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`,
+    `${exact(rateAll)} points ${["on a weekday", "on a Saturday", "on a Sunday", "a day"][shownDay.value]} with the riders now`,
   ].join("\n");
   return (
     <li class="total">
@@ -155,7 +155,7 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
     }
     return collate(a.name, b.name) * (key === "name" ? dir : 1);
   });
-  const day = [" on a weekday", " on a weekend day", ""][shownDay.value];
+  const day = [" on a weekday", " on a Saturday", " on a Sunday", ""][shownDay.value];
   const here = viewedZone.value;
   // T-693: a container, so a narrow dock hides the star and then the money before the names go
   return (

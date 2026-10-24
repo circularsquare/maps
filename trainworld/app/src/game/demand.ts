@@ -45,7 +45,7 @@ export interface StationDemand {
 export interface DemandView {
   /** the demand client's solve number this came from */
   version: number;
-  /** the day it is for (T-260, T-464): a weekend and the average are worked out from the weekday's solve */
+  /** the day it is for (T-260, T-464): a Saturday, a Sunday and the average are worked out from the weekday's solve */
   day: DemandDay;
   /** crowding rounds every period has had: 0 = the free-flow first estimate */
   round: number;
@@ -147,7 +147,7 @@ export interface DayDemand {
   intercity: IntercityDemand | null;
 }
 const noDay = (): DayDemand => ({ view: null, cities: new Map(), intercity: null });
-/** The newest finished solve for each day, `DemandDay` order: weekday, weekend, average. */
+/** The newest finished solve for each day, `DemandDay` order: weekday, Saturday, Sunday, average. */
 export const demandByDay = signal<DayDemand[]>(DEMAND_DAYS.map(noDay));
 
 /** The newest finished solve on the day shown (`shownDay`); null until the first lands. */

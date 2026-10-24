@@ -5,7 +5,7 @@
 // every drawn quantity has a hover with it.
 
 import { Fragment } from "preact";
-import { capitalise, count, distance, exact, speed } from "../../game/format";
+import { capitalise, count, distance, distUnit, exact, speed } from "../../game/format";
 import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
@@ -100,6 +100,12 @@ const WALK_REACH_M = 10000;
  * minutes, or whatever it takes when walking has a share. */
 const WALK_ROW_MIN = 30;
 
+/** T-1148: what the model's walking and driving stand for (demand-plain.md). */
+const STANDS_FOR: Record<string, string> = {
+  Walk: "Walking here also covers cycling and short bus rides.",
+  Drive: "Driving here also covers taxis and longer bus rides.",
+};
+
 /** The headline: the trips between the two places by mode as the view counts them (T-586), or,
  * when the view counts none, the representative trip's chances in the period shown. */
 function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: string }) {
@@ -111,13 +117,14 @@ function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: strin
   const walkTip = `; walking the whole way takes about ${minText(t.walkMin)}`;
   const note = n > 0 ? "" : groupNote(t);
   const modelTip = (i: number) => (n > 0 ? `\nModel: ${(100 * model[i]).toFixed(1)}%, rounded here to whole trips` : "");
+  const stands = (m: string) => (STANDS_FOR[m] ? `\n${STANDS_FOR[m]}` : "");
   return (
     <div class="trip-modes">
       <SegBar kind="trip-bar" label={parts.map(([n, v]) => `${n} ${pctShare(v)}`).join(", ")}
-        parts={parts.map(([m, v, c]) => ({ share: v, cls: c, tip: `${m}: ${pctShare(v)} of ${of}${m === "Walk" ? walkTip : ""}` }))} />
+        parts={parts.map(([m, v, c]) => ({ share: v, cls: c, tip: `${m}: ${pctShare(v)} of ${of}${m === "Walk" ? walkTip : ""}${stands(m)}` }))} />
       <ul class="rows">
         {parts.map((x, i) => [x, i] as const).filter(([[m, v]]) => m !== "Walk" || v > 0 || t.walkMin < WALK_ROW_MIN).map(([[m, v], i]) => (
-          <li data-tip={`${m}: ${n > 0 ? pctShare(v) : `${(100 * v).toFixed(1)}%`} of ${of}${m === "Walk" ? walkTip : ""}${modelTip(i)}${note}`}>
+          <li data-tip={`${m}: ${n > 0 ? pctShare(v) : `${(100 * v).toFixed(1)}%`} of ${of}${m === "Walk" ? walkTip : ""}${modelTip(i)}${note}${stands(m)}`}>
             <i class="mk" style={{ background: modeColours()[m === "Train" ? "train" : m === "Walk" ? "walk" : "drive"] }} />
             <span class="grow">{m}</span>
             <span class="val w-num">{pctShare(v)}</span>
@@ -470,16 +477,16 @@ export function TripInspector() {
       ) : <p class="muted">No route.</p>}
       <div class="h">By car</div>
       <ul class="rows">
-        <li data-tip={`${distance(t.driveDistM)} in a straight line, ${distance(1000 * t.driveRoadKm)} by road, at an average ${speed(t.driveRoadKm / (Math.max(t.driveMin, 0.1) / 60))}${avg ? `\n${avgTip}` : ""}`}>
+        <li data-tip={`${distance(1000 * t.driveRoadKm)} by road (${distance(t.driveDistM)} in a straight line) at an average of ${speed(t.driveRoadKm / (Math.max(t.driveMin, 0.1) / 60))}${avg ? `\n${avgTip}` : ""}`}>
           <span class="grow">Drive</span>
           <span class="val">{minText(t.driveMin)}</span>
         </li>
-        <li data-tip="Minutes to park, plus the price of parking and any congestion charge, counted as minutes">
+        <li data-tip="Finding a space, plus the cost of parking and any congestion charge counted in minutes">
           <span class="grow">Parking</span>
           <span class="val">{minText(t.parkPerceived)}</span>
         </li>
         {t.carOwnPerceived > 0 && (
-          <li data-tip="The cost of owning the car, charged per trip and per distance driven">
+          <li data-tip={`What owning a car costs on this trip: a set amount for each trip and more for each ${distUnit()}`}>
             <span class="grow">Car ownership</span>
             <span class="val">{usd(t.carOwnPerceived / t.minPerUsd)}</span>
           </li>

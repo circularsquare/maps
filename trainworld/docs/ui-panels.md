@@ -101,7 +101,7 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   bar's hover gives all three shares with their counts and the total [T-1107]. The player's job is
   to make the train share grow. It shows "–" and an empty bar until the zone has figures of its own
   (a solve's, or the bare pass's for a zone no station reaches; not the no-rail split a pack gives
-  before that), and over dead space [T-318]. The hover says "on a weekday", "on a weekend day" or "on average" for the
+  before that), and over dead space [T-318]. The hover says "on a weekday", "on a Saturday", "on a Sunday" or "on average" for the
   day shown. The zone named is the focused zone ([ui-demand-views.md](ui-demand-views.md)).
   **Zoomed out below zoom 5** (a few countries on screen) the bar names "World" instead [T-1110]:
   the split and rides summed over every city with a built station and a demand view, as the Cities
@@ -168,10 +168,10 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   games.
 
 **Demand shown for** [T-260, T-266, T-464; `ui/DemandSelector.tsx`, display setting `dayShown`]: a
-"Day" choice in Settings, right under the demand bubbles' Opacity [T-703]: Average (the default), Weekday or Weekend. The average is 5 weekdays and 2 weekend days over 7 ([demand-timing.md](demand-timing.md)
+"Day" choice in Settings, right under the demand bubbles' Opacity [T-703]: Average (the default), Weekday, Sat or Sun [T-262]. The average is 5 weekdays, a Saturday and a Sunday over 7 ([demand-timing.md](demand-timing.md)
 4.2). It sets the day every demand view shows, the split included, and does not follow the clock,
 so nothing jumps when the clock enters a weekend. Hovers state the day beside every demand figure ("12,400 trip legs per day",
-"per weekday", "per weekend day": `shownDayPhrase` in `game/ui.ts`). A switch of day shows at
+"per weekday", "per Saturday", "per Sunday": `shownDayPhrase` in `game/ui.ts`). A switch of day shows at
 once. The trains, platforms, the
 past 24 hours' riders and the panels' Today counts always follow the clock.
 
@@ -237,8 +237,8 @@ panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099]; Demand b
 commuter and longer-trip bubbles, not station discs; ignored while a bubble is selected, T-936) and Detail (4 steps from coarser to finer,
 the third by default; its hover names the zoom the finest bubbles start at; [T-795]), the Colours
 choice (Train share by default [T-833], which shows two colour pickers labelled 0% train and
-100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), the Day choice (Average, Weekday, Weekend;
-"Demand shown for", below) [T-703], Show (trains, station names, capacity markers, flat junctions and crossings, map labels), Riders on trains
+100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), the Day choice (Average, Weekday, Sat, Sun;
+"Demand shown for", below) [T-703], Show (trains, station names, capacity markers, full stretches [T-1152: the Traffic view's red edges, on by default, its hover saying so; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
 [T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, Game (normal or sandbox, T-728), then,
 when accounts are on, Account [T-1139]: who is signed in ("Signed in as alice", "Signed in with

@@ -99,14 +99,18 @@ there is no high-speed class and no hover yet.
     capacity [T-819] (an edge of a track or single-track section, or either track of a flat
     crossing, at `FULL_RHO` for the demand level in force, as the capacity tags take it;
     `TrackApi.full_track`; platforms, termini and junctions keep only their tags), and a stretch
-    between two stops whose trains usually run at capacity [T-1125] (in either direction, at least
-    half the trains leaving it in its busiest clock hour packed to crush, from the boarding
-    account of the hour's kind of day, track-and-service.md 6.6), has a red band 1.5 px each side
-    outside its casing (#c0392b, #f0584f in the dark theme; `fullTrack` in `game/shadeTable.ts`),
-    drawn in a pass of its own before the lines' casings, so a red line keeps its casing between
-    and a neighbouring line's casing covers the band where they touch, and its body 14% darker
-    (`FULL_DARKEN`); the hover adds "Track at capacity at high demand" or "Trains at capacity in the
-    busiest hour" in red.
+    between two stops where trains run packed full [T-1125, T-1152] (in either direction, at least
+    5% of the day's trains leaving it packed to crush, from the boarding account of the hour's kind
+    of day, track-and-service.md 6.6), has a red band 1.5 px each side outside its casing (#c0392b,
+    #f0584f in the dark theme; `fullTrack` in `game/shadeTable.ts`), drawn in a pass of its own
+    before the lines' casings, so a red line keeps its casing between and a neighbouring line's
+    casing covers the band where they touch, and its body darker by up to 14% (`FULL_DARKEN`).
+    Track at capacity has the mark at full strength; a stretch of packed trains has it as strong as
+    the share of the day's trains packed there: 15% of full strength plus the rest in proportion to
+    the share, all of it from 75% of the trains (`fullStrength` in `map/renderer.ts`), the band mixed from the
+    casing's colour towards the red and the darkening scaled alike. The hover adds "Track at
+    capacity at high demand" or "Packed full on 32% of the day's trains" in red. The Settings switch
+    "Full stretches" (on by default) shows or hides both marks and their hover lines.
   - **Elevation** (`height` in code): the track coloured by elevation (a level in code), blue-green to indigo above ground (open sky), green
     at ground, warm below (deep): +3 #4a2c9a, +2 #2f6fd0, +1 #16a39a, 0 #58b04a, -1 #f0b928, -2 #ee7a1a,
     -3 #c2351c (`LEVEL_COLOURS`, T-413, T-478, T-480; neighbours at least 30 apart in CIELAB). The same table colours
@@ -292,7 +296,12 @@ those who got on, less the load carried on.
   or more on average (`TIRED_WAIT_S`) [T-696, T-802]. The average counts the newcomers at half the
   time since the last train left and the riders it left behind at that plus half the gap before it;
   the hour's first arrival at a platform has no figure and is happy. Sad wins over tired; no face
-  is red. Three sprites on a 2D canvas over the network; a frame loop
+  is red. A few have a rare look [T-1154], drawn at random when the face appears and kept for its
+  life (`pickLook`): expressionless (dash eyes, straight mouth) 4% and asleep (closed eyes, a small
+  round mouth, a z) 4% on happy and tired faces; crying (eyes shut, a wailing mouth, two streams of
+  tears) 8% and knocked out (cartoon X eyes, a tongue out) 3% on sad ones; a bucket hat, a
+  baseball cap or sunglasses 2.5% each on any face (no sunglasses over shut or X'd eyes, and no z
+  under a hat); and a child, drawn at 72% size, 6%. Three sprites on a 2D canvas over the network; a frame loop
   runs only while a face is alive. Not in the demand views' way: the bubbles draw over them.
 - **Sound** (WebAudio, no files): one soft sine note as the train pulls in, the line's own, one of the 12 semitones from C5
   [T-706]: a city's first five lines (a line's city is where its first stop is) take C, E, G, D, A in
@@ -305,7 +314,10 @@ those who got on, less the load carried on.
   getting-off pops [T-1122] are skipped at a 30% chance (`OFF_SKIP`); otherwise the group is
   shifted by a random up to 4 semitones either way from 640 Hz, each pop up to a semitone more,
   at a level in proportion to the riders getting off: the pops' own at 80 riders
-  (`OFF_FULL_RIDERS`), never under a quarter of it nor over 1.25 times it. Silent
+  (`OFF_FULL_RIDERS`), never under a quarter of it nor over 1.25 times it. Each arrival takes one
+  of three lengths at random [T-1153]: short at 45% (the note rings 0.6 as long, then one group of
+  pops, getting off or getting on, at most 2, straight after it), medium at 35% (both groups, at
+  most 2 each), full otherwise. Silent
   until the first click or key. Volume is the setting times a zoom gain (a quarter at 14, full from
   17), shared down by the arrivals sounding in the last second; a second one sounding together gets
   the note only, and none beyond 3; panned by where the station is on screen. At the second speed
@@ -454,7 +466,12 @@ click anywhere on the realm's land (inside one of its zone outlines, not the sea
 the select tool and no Shift, shows the realm in one step: the shade opens over its zones, the circle
 goes, and its zones draw and load for the view as any other. A drag does not; neither does a click
 that selected something, a click with a track or another tool on, or one while linking stations.
-Below zoom 2.5 (`CITY_MARKS_MIN_ZOOM`: the whole world) there are no circles, no click and no
+With the select tool the land has a hover in the track tag's place when nothing of the network is
+under the pointer: the realm's name over "Click to load" [T-1151]. A view coming to rest after a move,
+0.4 s at zoom 10 or closer (`AUTO_SHOW_ZOOM`) with its centre on a hidden realm's land, shows that
+realm as a click would; the view a page opens on does not (with no view in the address that is New
+York, whatever the game).
+Below zoom 2.5 (`CITY_MARKS_MIN_ZOOM`: the whole world) there are no circles, no hover, no click and no
 overview city bubbles [T-1046, T-1048, T-1049]. Shade and circles are hidden behind the start menu,
 and so are the city bubbles: the start menu's world map is blank. So is the map while a game loads
 (`mapBlank` in `game/loading.ts`: from the start menu's pick or a whole-game load until the loading card

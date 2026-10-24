@@ -100,11 +100,11 @@ fn riders(l: u32, per_hour: [f32; PERIODS]) -> Vec<f32> {
 
 #[test]
 fn a_weekend_hour_reads_the_weekend_account() {
-    // T-260: game day 1 is a Monday, days 6 and 7 the weekend
+    // T-260, T-262: game day 1 is a Monday, days 6 and 7 Saturday and Sunday
     assert_eq!(day_kind_at(86400.0 + 7.0 * 3600.0), 0);
     assert_eq!(day_kind_at(5.0 * 86400.0 + 23.0 * 3600.0), 0);
     assert_eq!(day_kind_at(6.0 * 86400.0), 1);
-    assert_eq!(day_kind_at(7.0 * 86400.0 + 3600.0), 1);
+    assert_eq!(day_kind_at(7.0 * 86400.0 + 3600.0), 2);
     assert_eq!(day_kind_at(8.0 * 86400.0), 0);
     let (w, l) = setup(10.0);
     let mut b = Boarding::default();
@@ -128,26 +128,36 @@ fn arriving(h: &[f32]) -> f32 {
 }
 
 #[test]
-fn a_holiday_hour_reads_the_weekend_account_on_its_line_only() {
-    // T-872: Monday, game day 8, is a holiday for line `l` only
+fn a_holiday_hour_reads_the_sunday_account_on_its_line_only() {
+    // T-872, T-262: Monday, game day 8, is a holiday for line `l` only, run as a Sunday
     let (w, l) = setup(10.0);
     let mut b = Boarding::default();
     b.set_riders_day(&riders(l, [500.0, 200.0, 500.0, 200.0, 50.0]), 0);
     b.set_riders_day(&riders(l, [100.0, 300.0, 200.0, 200.0, 50.0]), 1);
-    let (sat, mon, tue) = (6.0 * DAY + 8.0 * 3600.0, 8.0 * DAY + 8.0 * 3600.0, 9.0 * DAY + 8.0 * 3600.0);
-    let h_sat = b.hour(&w.net, &w.svc, sat);
+    b.set_riders_day(&riders(l, [50.0, 250.0, 150.0, 150.0, 40.0]), 2);
+    let (sat, sun, mon, tue) = (6.0 * DAY + 8.0 * 3600.0, 7.0 * DAY + 8.0 * 3600.0, 8.0 * DAY + 8.0 * 3600.0, 9.0 * DAY + 8.0 * 3600.0);
+    let (h_sat, h_sun) = (b.hour(&w.net, &w.svc, sat), b.hour(&w.net, &w.svc, sun));
     let (h_mon, h_tue) = (b.hour(&w.net, &w.svc, mon), b.hour(&w.net, &w.svc, tue));
     assert!((arriving(&h_mon) / arriving(&h_sat) - 5.0).abs() < 0.01);
-    b.set_holidays(&[l as f64, 2.0, 8.0, 20.0]);
-    assert_eq!(b.kind_at(mon, l as usize), 1);
+    assert!((arriving(&h_mon) / arriving(&h_sun) - 10.0).abs() < 0.01);
+    b.set_holidays(&[l as f64, 2.0, 8.0, 2.0, 20.0, 2.0]);
+    assert_eq!(b.kind_at(mon, l as usize), 2);
     assert_eq!(b.kind_at(mon, l as usize + 1), 0);
     assert_eq!(b.kind_at(tue, l as usize), 0);
-    assert_eq!(arriving(&b.hour(&w.net, &w.svc, mon)), arriving(&h_sat));
+    assert_eq!(arriving(&b.hour(&w.net, &w.svc, mon)), arriving(&h_sun));
     assert_eq!(arriving(&b.hour(&w.net, &w.svc, tue)), arriving(&h_tue));
-    // the day's account is the weekend's: today at Monday's end equals Saturday's
-    assert_eq!(b.today(&w.svc, mon + 15.0 * 3600.0), b.today(&w.svc, sat + 15.0 * 3600.0));
+    // the day's account is Sunday's: today at Monday's end equals Sunday's
+    assert_eq!(b.today(&w.svc, mon + 15.0 * 3600.0), b.today(&w.svc, sun + 15.0 * 3600.0));
     b.set_holidays(&[]);
     assert_eq!(arriving(&b.hour(&w.net, &w.svc, mon)), arriving(&h_mon));
+    // a one-day weekend: Saturday listed as a weekday reads the weekday's account; Friday and
+    // Saturday: Friday as a Sunday, Saturday as a Saturday
+    b.set_holidays(&[l as f64, 1.0, 6.0, 0.0]);
+    assert_eq!(b.kind_at(sat, l as usize), 0);
+    assert_eq!(arriving(&b.hour(&w.net, &w.svc, sat)), arriving(&h_tue));
+    let fri = 5.0 * DAY + 8.0 * 3600.0;
+    b.set_holidays(&[l as f64, 2.0, 5.0, 2.0, 7.0, 0.0]);
+    assert_eq!((b.kind_at(fri, l as usize), b.kind_at(sat, l as usize), b.kind_at(sun, l as usize)), (2, 1, 0));
 }
 
 /// T-798: on a circle 0-1-2-3-4-5-0, riders from 4 to 1 ride on through the first stop: the
@@ -709,8 +719,10 @@ fn the_hour_lines_up_with_the_drawn_trips() {
     assert_eq!(np, 0); // no transfers set
     let tail = 5 + 2 * nt + nl + nq * QUEUE_STRIDE + ne * 2;
     let nf = out[tail + ne] as usize;
-    assert_eq!(out.len(), tail + ne + 1 + nf * 2);
+    assert_eq!(out.len(), tail + ne + 1 + nf * 3);
     assert!(nf >= 1, "riders left behind at every train: a stretch at capacity (T-1125)");
+    let shares = &out[tail + ne + 1 + nf * 2..];
+    assert!(shares.iter().all(|&s| (FULL_SHARE_MIN..=1.0).contains(&s)), "{shares:?} (T-1152)");
     // T-1123: each train stops before it leaves, never before the train ahead left
     let (ev, arr) = (&out[tail - ne * 2..tail], &out[tail..tail + ne]);
     for e in 0..ne {

@@ -1,34 +1,33 @@
-// Kinds of day (T-260, docs/demand.md 4.2): weekday and weekend. The calendar is
+// Kinds of day (T-260, T-262, docs/demand-timing.md): weekday, Saturday and Sunday. The calendar is
 // `day_kind_at` in sim/src/track/params.rs (the boarding account reads it); this is its copy for
 // the main thread and the clock worker. Game day 1, a new game's first, is a Monday, so days 6 and
-// 7 of each week are the weekend. The demand result is a weekday's; a weekend is worked out from
-// it per purpose and period (sim/src/demand/days.rs, workers/demandClient.ts). Plain data and one
-// signal: the clock worker imports it too.
+// 7 of each week are Saturday and Sunday where a place's country says nothing else (its holidays
+// and own weekend, game/holidayCalendar.ts). The demand result is a weekday's; a Saturday and a
+// Sunday are worked out from it per purpose and period (sim/src/demand/days.rs,
+// workers/demandClient.ts). Plain data and one signal: the clock worker imports it too.
 
 import { signal } from "@preact/signals";
 
-/** 0 weekday, 1 weekend: an index into the per-day results. */
-export type DayKind = 0 | 1;
-export const DAY_KINDS: DayKind[] = [0, 1];
-export const DAY_KIND_NAME = ["Weekday", "Weekend"] as const;
+/** 0 weekday, 1 Saturday, 2 Sunday: an index into the per-day results. */
+export type DayKind = 0 | 1 | 2;
+export const DAY_KINDS: DayKind[] = [0, 1, 2];
+export const DAY_KIND_NAME = ["Weekday", "Saturday", "Sunday"] as const;
 
-/** The days a demand view can show (T-464): the two kinds, then the average day (5 weekdays and 2
- * weekend days over 7, sim/src/demand/days.rs). The index into `demandByDay` and the `day` of every
- * demand query. The clock and the boarding account only ever see the two kinds. */
-export type DemandDay = DayKind | 2;
-export const DEMAND_DAYS: DemandDay[] = [0, 1, 2];
-export const AVERAGE_DAY = 2;
+/** The days a demand view can show (T-464): the three kinds, then the average day (5 weekdays, a
+ * Saturday and a Sunday over 7, sim/src/demand/days.rs). The index into `demandByDay` and the `day`
+ * of every demand query. The clock and the boarding account only ever see the three kinds. */
+export type DemandDay = DayKind | 3;
+export const DEMAND_DAYS: DemandDay[] = [0, 1, 2, 3];
+export const AVERAGE_DAY = 3;
 /** How a figure for the day shown ends: "12,400 trip legs per day". The Day choice names the day. */
-export const DEMAND_DAY_PHRASE = ["per weekday", "per weekend day", "per day"] as const;
-const WEEKDAY_NAME = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+export const DEMAND_DAY_PHRASE = ["per weekday", "per Saturday", "per Sunday", "per day"] as const;const WEEKDAY_NAME = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** Day of the week of game day `day`, 0 Monday. */
 export const weekdayOf = (day: number): number => ((day - 1) % 7 + 7) % 7;
 export const weekdayName = (day: number): string => WEEKDAY_NAME[weekdayOf(day)];
-export const dayKindOf = (day: number): DayKind => (weekdayOf(day) >= 5 ? 1 : 0);
-/** T-861, T-862: the calendar is a 365-day year with no leap day. Game day 1 is Monday January 27,
- * the first Monday of the year on which no country with registered zones has a holiday and its
- * week has the fewest (pipeline/holidays_json.py). The weekday stays the day number's (above), so
+export const dayKindOf = (day: number): DayKind => { const w = weekdayOf(day); return w === 5 ? 1 : w === 6 ? 2 : 0; };
+/** T-861, T-862: the calendar is a 365-day year with no leap day. Game day 1 is Monday January 27
+ * (T-862's pick, DECISIONS.md). The weekday stays the day number's (above), so
  * each year starts a weekday later, as real non-leap years do. */
 export const DAY1_OF_YEAR = 26;
 const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];

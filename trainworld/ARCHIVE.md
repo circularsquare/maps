@@ -1,5 +1,16 @@
 # Archive
 
+- T-1151 [P2] Hidden regions: hover and load when zoomed in. Done 2026-10-24: the land's hover says the realm's name over "Click to load"; a view coming to rest after a move, at zoom 10 or closer with its centre on hidden land, shows it (no long task). checks/t975-realms.mjs covers both.
+- T-1152 [P2] Full stretches graded, with a switch. Done 2026-10-24: the account gives each stretch the share of the day's trains packed to crush (listed from 5%); edge and darkening scale with it; hover "Packed full on N% of the day's trains"; Settings "Full stretches", on by default.
+- T-1153 [P2] Station sound lengths. Done 2026-10-24: each arrival short (45%: a shorter note, one group of at most 2 pops), medium (35%) or full; T-1122's skip and pitch kept.
+- T-1154 [P2] Rare faces. Done 2026-10-24: expressionless, asleep, crying, cartoon X-eyed (sad only), bucket hat, cap, sunglasses and children, a few percent each, chosen when a face appears and kept.
+- T-1148 [P2] The trip explorer between cities. Done 2026-10-24: By car and By plane broken into parts by the sim's rule (game/marketRule.ts, checked on ~2,000 pairs); places with no station answered from the rows in under 0.1 s; place pairs counted both ways; a selection shows the two places' split beside its own.
+- T-1147 [P1] Cars a bit faster. Measured 2026-10-24, speeds kept: NHTS's US car times and London's, New York's and Tokyo's published speeds are all slower than the model's; 20% faster cuts New York's rail 5.5% and its stations x2.83 to x2.70, Tokyo (x0.66) further under. notes/T-1147.md.
+- T-1149 [P2] London - Paris 95% by plane in the trip explorer. Done 2026-10-24, no fault: that is the no-train split (Channel keeps the car off); the explorer matches the solve within a point (lone line 45% of rail + air). notes/T-1149.md.
+
+- T-1143 [P1] The fare graph with three nodes. Done 2026-10-24: base fare at 0 km (up and down only), nodes at 20 and 100 km, one-way drags with hover arrows, a fixed ratio of the scales; the sim's fare curve restored, its extra counted where trips board and added to income. notes/T-1143.md.
+- T-887 [P3] Exact fare income on a bent fare curve. Done 2026-10-24 by T-1143: demand counts each pair's curve extra at its first boarding and income adds it, replacing the mean-length income. notes/T-1143.md.
+- T-262 [P3] Holiday calendar, own weekends, Saturday apart from Sunday (T-263's stage 1). Done 2026-10-24: substitute days off; each country's weekend; Saturday and Sunday as two kinds from NHTS; holidays run as Sundays, five US ones as weekdays. notes/T-263.md.
 - T-1136 [P1] Top bar, again. Done 2026-10-24: time and date on one line; the cash right-aligned in a box sized to "−$37.34B", so the cash-to-clock gap is the bar's usual 12-18 px at every width (was 68-106 px).
 - T-1137 [P2] Hint icons by the map's demand and track rows. Done 2026-10-24: a selected-bubble icon (hover "Show demand bubbles") and the track icon ("Colour the track"), cells joined to the front of each row.
 - T-1138 [P2] Train share colours. Done 2026-10-24: the ramp defaults to #ff4d4d and #4d4dff (bars and swatches too); settings version 9 drops a stored end only if it was the old default.

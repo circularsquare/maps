@@ -37,9 +37,15 @@ town). The full rules are in demand.md; this is the gist.
   A longer trip into another country is damped too: to half inside the EU, Schengen and the UK
   (London - Paris about 30,000 a weekday), and much more elsewhere, the more so the poorer the
   traveller's country (0.26 for the richest).
-- **Weekends and holidays.** Saturdays and Sundays have their own, smaller weekend demand. A public
-  holiday counts as a weekend day for the lines in its country (a line's country is its first
-  stop's), so Thanksgiving runs a New York line on weekend demand and fares that day only.
+- **Weekends and holidays.** Saturdays and Sundays each have their own demand: on a Saturday
+  shopping is up by 40% on a weekday and commuting is down to a third; on a Sunday shopping is
+  about a weekday's, outings are up by two thirds and commuting is a quarter. A line's country
+  decides which days those are (a line's country is its first stop's): Saturday and Sunday in most
+  countries; in Saudi Arabia, Egypt and much of the Middle East Friday runs as the Sunday and
+  Saturday as the Saturday (in Israel Friday the Saturday, Saturday the Sunday); in Hong Kong only
+  Sunday is a weekend day. A public holiday, with the substitute days its country gives, runs as a
+  Sunday, so Thanksgiving runs a New York line on Sunday demand and fares that day only; a few US
+  holidays most people work through (Columbus Day, Veterans Day and the like) run as weekdays.
 
 ## How each trip picks a mode
 
@@ -114,12 +120,13 @@ There is no built-in liking for the train. Rail and the car are compared on time
   "households without a car" figure.
 - Owning the car: $2.00 a trip plus $0.13 a km, at 3 minutes a dollar. A typical trip pays $2.90
   to $5.25, and a driver's day comes to about $13. The long trips between cities pay none.
-- Everyone can drive. "Car" in the game means the car and every other way of getting about (bus,
-  taxi, bike).
+- Everyone can drive. "Walking" also stands for cycling and short bus rides (one reason its share
+  runs above the census's), and "car" for driving, taxis and longer bus rides. The trip explorer's
+  Walk and Drive rows say so in their hovers.
 
 **Between cities** (the car and the plane against the train)
-- Car: the drive at 85 km/h on a road 1.25 times the straight line, plus $0.15 a km and parking,
-  shared by two people. Across the Channel it also pays $150 a car and an hour for the shuttle or
+- Car: 15 minutes plus the drive at 85 km/h on a road 1.25 times the straight line, plus $0.15 a
+  km and parking, shared by two people. Across the Channel it also pays $150 a car and an hour for the shuttle or
   ferry; to Hokkaido $170 and 4 hours for the ferry (the Seikan Tunnel takes no cars).
 - Plane, between cities 250 km apart or more that both have airports: the drive to each airport,
   90 minutes at the airports, the flight at 750 km/h plus 30 minutes (an hour more with no direct

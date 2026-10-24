@@ -330,8 +330,9 @@ country the realm whose land holds its centre) and `packs/realms.geojson`, each 
 (Natural Earth admin 0 cut along geoBoundaries ADM1 or the Census states), which only that
 assignment uses: the app reads no realm shapes. A realm is **shown** while the game has a station or
 track in it (blueprint or built; a station in the zone whose coarse outline holds it, else the zone
-with the nearest centre; track in the zones it crosses, "Track" below), it holds the start zone, or the player showed it this session (its circle, a click on its land, or a
-search pick of a city or place in it); a click is not saved, so a reload hides a realm again unless
+with the nearest centre; track in the zones it crosses, "Track" below), it holds the start zone, or the player showed it this session (its circle, a click on its land, a
+search pick of a city or place in it, or the view resting 0.4 s at zoom 10 or closer with its centre
+on its land after a move [T-1151, `AUTO_SHOW_ZOOM`]); a click is not saved, so a reload hides a realm again unless
 the game has built there. A game started on the map (no start zone) shows every realm while it has
 no station or track [T-1133], so the player sees where a game can start; its first station or track
 ends that, leaving the realms the rule above shows (that "all shown" is not the player showing them).
@@ -343,7 +344,8 @@ outside shade's colour, 22.5% black in the dark theme, drawn over the outside sh
 the outside shade alone to the double shade it was). The cut is made in a worker (T-1026): when the
 shown realms change, the circles and cities change at once and the shade keeps its old shape until
 the new one arrives, swapped in one frame. Each hidden
-realm has a circle at the centre of its zone nearest the mean of its zones' centres. Its zones are
+realm has a circle at the centre of its zone nearest the mean of its zones' centres, and with the
+select tool its land has a hover naming it with "Click to load" [T-1151]. Its zones are
 dead space for the view: no bubbles, labels, outlines, loading greys or bars, no name in the top
 bar, and no pack, boundary or water mask fetched for viewing. Demand, the market and money never
 read it, so every figure is the same whatever is shown; a selection's far ends still draw over a

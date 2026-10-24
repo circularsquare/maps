@@ -1,7 +1,7 @@
 // T-586: a far-end bubble's hover and the trip explorer opened from it agree. In New York (the real
 // save) and Mumbai (a ?new=1 game with T-292's Western line test), for bubble pairs (a selected
 // bubble and two of its far-end bubbles, homes and destinations), under every purpose filter and on
-// the weekday, the weekend and the average day: the hover's train, walk and drive shares (its mode
+// the weekday, Saturday, Sunday and the average day: the hover's train, walk and drive shares (its mode
 // bar's widths), the explorer's headline (its rows' model shares, and its bar's widths against the
 // worker's rounded to whole trips, T-911) and the worker's own numbers
 // (the selection's far end, `flows`, summed over the far bubble's cells here) agree within 1 point,
@@ -16,7 +16,7 @@ import { launchChrome, importSave, demandFinal, REAL_SAVE, ANGLE } from './lib.m
 const BASE = (process.argv[2] ?? 'http://localhost:6196/').replace(/\/?$/, '/');
 const CITIES = (process.env.CITIES ?? 'nyc,mum').split(',');
 const FILTERS = ['all', 'work', 'school', 'shopping', 'social', 'medical', 'airport'];
-const DAYS = ['weekday', 'weekend', 'average'];
+const DAYS = ['weekday', 'saturday', 'sunday', 'average'];
 const TOL = 0.01;
 const OUT = 'artifacts/trainworld/';
 const MUMBAI = {

@@ -103,7 +103,9 @@ air by hours on the train: notes/T-712.md.
 The car's and the plane's costs are by place (the car's at the places' centres and their mean
 parking), so a pair's split of its trips not by rail between car and plane is the same whoever
 builds what, computed once, and kept (`corridor_modes`); the solve weighs every mode but rail
-against the zone pair's own car time with that split. A place's airports (`pipeline/market_zones.py`):
+against the zone pair's own car time with that split. The main thread holds a copy of the
+place-pair rule (`app/src/game/marketRule.ts`, T-1148: car, crossings, plane, split, the places'
+trips) for the trip explorer, held to the sim's by `checks/t1148-market-rule.mjs`. A place's airports (`pipeline/market_zones.py`):
 OurAirports' large and medium airports with scheduled service within 150 km of its centre carrying
 at least 1M passengers a year, the biggest eight; a route of 50,000 passengers a year is a direct
 flight (both from the flights project's FR24 file, read offline only). Commutes between zones

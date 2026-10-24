@@ -53,8 +53,8 @@ class GameClock {
     this.anchorSim = start;
     this.minute = signal(Math.floor(start / 60));
     // T-266, T-309: the demand views on "Today" follow the local day in view into and out of a
-    // weekend, as the minutes pass or the view pans into another time zone; T-872: a holiday in
-    // the view's country is a weekend day
+    // weekend, as the minutes pass or the view pans into another time zone; T-872, T-262: the view's
+    // country's holidays and weekend decide the kind
     effect(() => {
       const c = viewCentre.value;
       const k = kindIn(c ? countryAt(c[0], c[1]) : null, Math.floor(this.local.value / 1440));

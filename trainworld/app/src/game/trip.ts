@@ -602,6 +602,9 @@ export interface MarketShown {
   near?: MarketEnd;
   /** the near end's cells are homes (trips from them) or destinations */
   end?: "home" | "work";
+  /** T-1148: the ends' places with no station near them, when that leaves no train in play and the
+   * answer is the market rows' (game/marketRule.ts `rowsAnswer`) */
+  unbuilt?: number[];
 }
 
 /** The trip shown (asked for by map/tripView.ts when the selection, the purpose filter or the

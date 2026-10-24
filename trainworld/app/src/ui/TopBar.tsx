@@ -104,7 +104,7 @@ function CityName({ id, name, tip }: { id: string | null; name: string; tip?: st
   const past = id ? pointsPast24h.value.get(id) : undefined;
   const rate = id ? pointsPerDay.value.get(id)?.[shownDay.value] : undefined;
   const lines = [name];
-  if (id && (past || rate)) lines.push(`${exact(past ?? 0)} points in the past 24 hours`, `${exact(rate ?? 0)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`);
+  if (id && (past || rate)) lines.push(`${exact(past ?? 0)} points in the past 24 hours`, `${exact(rate ?? 0)} points ${["on a weekday", "on a Saturday", "on a Sunday", "a day"][shownDay.value]} with the riders now`);
   return <div class="city" data-tip={tip ?? (id ? lines.join("\n") : undefined)}>{name}</div>;
 }
 
@@ -151,7 +151,7 @@ export function TopBar() {
   const pct = (v: number) => (known ? v.toFixed(1) + "%" : "–");
   // T-342: the shares are of rides (trip legs) a day; the train's count beside its share, all in the hover
   const rides = total ? total.rides : modeRides.value;
-  const where = [far ? " in the world" : city ? " in " + city.name : "", [" on a weekday", " on a weekend day", ""][shownDay.value]].join("");
+  const where = [far ? " in the world" : city ? " in " + city.name : "", [" on a weekday", " on a Saturday", " on a Sunday", ""][shownDay.value]].join("");
   const note = demandView.value && !viewFinal.value ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : viewUpdating.value ? " (before your last change)" : "";
   const worldTip = total ? `World\n${total.cities} ${total.cities === 1 ? "city" : "cities"}, ${total.stations} ${total.stations === 1 ? "station" : "stations"}` : undefined;
   return (

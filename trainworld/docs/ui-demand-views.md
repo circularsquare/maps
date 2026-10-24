@@ -9,7 +9,7 @@
 
 **Two kinds of figure.** Line widths, station circles and bubbles are demand's whole-day forecast
 from the latest solve, for the day shown: the average day unless the Day choice in Settings says a
-weekday or a weekend day ([ui-panels.md](ui-panels.md) "Demand shown for"); every hover says which. Train
+weekday, a Saturday or a Sunday ([ui-panels.md](ui-panels.md) "Demand shown for"); every hover says which. Train
 fill and platform crowds are the boarding account ([track-and-service.md](track-and-service.md)
 6.6): made from that forecast but counted train by train as the trains run, so they follow the
 hour and the clock's own day ([ui-map.md](ui-map.md)).
@@ -92,7 +92,7 @@ its transfer pairs over every station (`complexTransfers`) counted at the statio
 origins the rest. Origins and Transfers keep the last split while a new solve's is asked for. The
 circle's hover and the station's say the figure and never the number of stations in a complex:
 "12,400 entries per day" (origins), "464,000 transfers per day", "476,400 entries and transfers per
-day" (total), "per weekday" or "per weekend day" for those days. They do not enlarge the station's click target. With "One circle per station
+day" (total), "per weekday", "per Saturday" or "per Sunday" for those days. They do not enlarge the station's click target. With "One circle per station
 complex" (on by default, shown while circles are) a complex has one circle at the mean position of
 its constructed stations, grouped exactly as the complexes are, the player's links included.
 

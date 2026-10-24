@@ -24,6 +24,7 @@ import type { NetworkBuffers } from "./network";
 import { circleTip, stationTip, trainTip, type TipLine } from "./networkTips";
 import type { Overlay } from "./overlay";
 import { pick, SLOP_PX, topSeg } from "./pick";
+import { hiddenRealmTip } from "./realmOverlay";
 import { setPointerNet, type Hot } from "./hovered";
 import { TAG_OFFSET_PX, tagLines } from "./labelLayout";
 import { complexOf } from "../game/complexView";
@@ -46,7 +47,7 @@ export function dailyRiders(dv: DemandView | null, lineId: string, stops: number
 }
 
 /** The tag's lines for a line stroke segment `i`. */
-function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, traffic: boolean, i: number, fullTrains: boolean): TipLine[] {
+function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, traffic: boolean, i: number, fullTrains: number): TipLine[] {
   const num = n.lines.colour[i];
   const l = w?.save.lines.find((x) => x.num === num);
   const name = l?.name ?? `Line ${num}`;
@@ -64,11 +65,11 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   const out: TipLine[] = purpose === "all" ? [name, count] : [name, count, `${purposeName(purpose)} trips only`];
   // T-819: the red outline drawn on track at capacity, at the level in force as the capacity tags
   const lev = DEMAND_INDEX[clock.demand.peek()];
-  if (w?.fullTrack[lev]?.has(n.lines.edge[i])) {
+  if (display.peek().fullMarks && w?.fullTrack[lev]?.has(n.lines.edge[i])) {
     out.push(Object.assign(document.createElement("div"), { textContent: `Track at capacity at ${clock.demand.peek()} demand`, style: "color: var(--bad)" }));
   }
-  // T-1125: most of the busiest hour's trains here are packed full (the boarding account)
-  if (fullTrains) out.push(Object.assign(document.createElement("div"), { textContent: "Trains at capacity in the busiest hour", style: "color: var(--bad)" }));
+  // T-1125, T-1152: the share of the day's trains packed full here (the boarding account)
+  if (fullTrains > 0) out.push(Object.assign(document.createElement("div"), { textContent: `Packed full on ${Math.max(1, Math.round(fullTrains * 100))}% of the day's trains`, style: "color: var(--bad)" }));
   return out;
 }
 
@@ -182,7 +183,7 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
     const out: { hot?: Partial<Hot> } = {};
     const lines = trackTip(ov, px, py, map.getZoom(), out);
     setPointerNet(lines && t === "select" ? out.hot ?? null : null);
-    return lines;
+    return lines ?? hiddenRealmTip(map, px, py); // T-1151
   };
   const show = (lines: TipLine[], px: number, py: number) => {
     const key = lines.map((s) => (typeof s === "string" ? s : s.outerHTML)).join("\n");

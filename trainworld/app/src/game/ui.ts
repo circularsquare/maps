@@ -28,6 +28,8 @@ export interface DisplaySettings {
   trains: boolean;
   stationNames: boolean;
   capacity: boolean;
+  /** T-1152: the traffic view's red edges where track is at capacity or trains run packed full */
+  fullMarks: boolean;
   /** T-673: the marks on flat crossings and junctions (ramps, portals and refused crossings stay) */
   flatMarks: boolean;
   basemapLabels: boolean;
@@ -71,10 +73,10 @@ export interface DisplaySettings {
   uiScale: number;
   /** T-698: the panels' font, a trial (game/fonts.ts); the map's labels stay Zen Maru Gothic */
   font: FontKey;
-  /** T-464: the day the demand views show: the average day, a weekday or a weekend day. A stored
-   * "today" (T-266's old default) reads as the average. The trains and platforms follow the clock
-   * whatever this says. */
-  dayShown: "average" | "weekday" | "weekend";
+  /** T-464, T-262: the day the demand views show: the average day, a weekday, a Saturday or a
+   * Sunday. A stored "today" (T-266's old default) or "weekend" (before T-262) reads as the average.
+   * The trains and platforms follow the clock whatever this says. */
+  dayShown: "average" | "weekday" | "saturday" | "sunday";
   /** T-381: miles, mph and feet instead of kilometres, km/h and metres (the game itself is metric) */
   usUnits: boolean;
   /** T-381: demand workers by the old rule (half the threads less one, up to 5); read at the next load */
@@ -94,6 +96,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   trains: true,
   stationNames: true,
   capacity: true,
+  fullMarks: true,
   flatMarks: true,
   basemapLabels: true,
   // T-727: faint by default, so the track to snap to is always in sight
@@ -257,9 +260,9 @@ export const snapping = computed(() => snapReal.value && tool.value === "track")
 /** The day every demand view shows (T-260, T-464): the setting, the average day by default. */
 export const shownDay = computed<DemandDay>(() => {
   const s = display.value.dayShown;
-  return s === "weekday" ? 0 : s === "weekend" ? 1 : AVERAGE_DAY;
+  return s === "weekday" ? 0 : s === "saturday" ? 1 : s === "sunday" ? 2 : AVERAGE_DAY;
 });
-/** The shown day as a hover ends a figure: "per weekday", "per weekend day", "per day". */
+/** The shown day as a hover ends a figure: "per weekday", "per Saturday", "per day". */
 export const shownDayPhrase = computed(() => DEMAND_DAY_PHRASE[shownDay.value]);
 
 export function setDisplay<K extends keyof DisplaySettings>(k: K, v: DisplaySettings[K]) {

@@ -813,10 +813,11 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   account's loads, departures and riders left behind do not read the pulses, so they and
   demand's crowding feedback stay one rule. The fares' timing within the hour (T-284) counts
   the pulses with the steady arrivals.
-- **Stretches at capacity** (T-1125, `RunAccount::full_stretches`): a stretch between two stops
-  usually runs at capacity when, in either direction, at least half the trains leaving it in its
-  busiest clock hour (by riders carried) are packed to crush. Worked out once with each account;
-  the traffic view marks them ([ui-map.md](ui-map.md) "Track display").
+- **Stretches at capacity** (T-1125, T-1152, `RunAccount::full_shares`): per stretch between two
+  stops and direction, the share of the day's trains leaving it packed to crush. Worked out once
+  with each account; the account's hour lists the stretches where the fuller direction's share is
+  at least `FULL_SHARE_MIN` (5%), with that share, and the traffic view marks them as strongly as
+  the share ([ui-map.md](ui-map.md) "Track display").
 - **Room on a platform** (T-219, `platformRoom` in `game/boarding.ts`): what counts as a full
   platform for drawing. Each direction's riders wait on one side, 2.5 m of usable width (half a
   6 m island platform less the edge strip kept clear) along the platform's length, at 0.3 m² a

@@ -61,8 +61,11 @@ export interface BoardHour {
   arrive: Float32Array;
   /** per pulse, the station node its riders walk from and the walk, s (T-1124) */
   pulseFrom: Float32Array;
-  /** the stretches that usually run at capacity (T-1125): line id and run 0 stretch, pairs */
+  /** the stretches where trains run packed to crush (T-1125): line id and run 0 stretch, pairs */
   fullStretches: Float32Array;
+  /** per full stretch, the share of the day's trains packed to crush there (T-1152); empty from a
+   * WASM build before it */
+  fullShares: Float32Array;
 }
 
 export function readBoardHour(epoch: number, b: Float32Array): BoardHour {
@@ -76,8 +79,9 @@ export function readBoardHour(epoch: number, b: Float32Array): BoardHour {
   const arrive = b.subarray(i, (i += ne));
   const pulseFrom = b.subarray(i, (i += np * 2));
   const nf = b[i++] ?? 0;
-  const fullStretches = b.subarray(i, i + nf * 2);
-  return { epoch, trips: nt, offs, loads, queues, queueCount: nq, events, pulses, arrive, pulseFrom, fullStretches };
+  const fullStretches = b.subarray(i, (i += nf * 2));
+  const fullShares = b.length >= i + nf ? b.subarray(i, i + nf) : new Float32Array(0);
+  return { epoch, trips: nt, offs, loads, queues, queueCount: nq, events, pulses, arrive, pulseFrom, fullStretches, fullShares };
 }
 
 /** The most riders waiting on one platform side (T-1067, `WAITING_CAP` in boarding.rs): the account
