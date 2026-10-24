@@ -1,7 +1,7 @@
 // T-884: the loading card's bar keeps an even pace on the paths Anita enters a game by. Through the start
 // menu, in headless Chrome with a temporary profile: a new game in New York; the real New York save
 // (T-007) in a slot, picked twice (the first load with nothing remembered, the second with this slot's
-// last wait); Anita's world save (artifacts/trainworld/world-map-day73.save, Toronto to Tokyo) the same.
+// last wait); Anita's world save (artifacts/trainworld/world-map-day73-trains.save, Toronto to Tokyo) the same.
 // The bar's fill is read every 100 ms from the card. FAIL when over 25% of a wait is spent above 90%, the
 // bar goes back, or its fill at 10/30/50/70/90% of the wait is over 30 points from that share (the old bar
 // stood at 83% for two minutes of a Japan save's load); also prints the longest flat stretch.
@@ -15,7 +15,7 @@ import { launchChrome, importSave, REAL_SAVE, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6150/';
 const ART = fileURLToPath(new URL('../../artifacts/trainworld/', import.meta.url));
-const WORLD = join(ART, 'world-map-day73.save');
+const WORLD = join(ART, 'world-map-day73-trains.save');
 const LIMIT = 0.25;
 
 let failed = false;

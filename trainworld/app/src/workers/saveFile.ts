@@ -7,8 +7,9 @@
 //   JSON header (UTF-8)    `SaveHeader`: city, clock, money, fares, the day and hour ledgers (the money
 //                          and train rides history charts), each also per region
 //   the rest               the track model's network save (`TrackApi.save()`: "TWT6" Mercator world frame since
-//                          T-306; older saves, "TWT5" conic since T-125, "TWT4" and TWT2/3 legacy frame, are
-//                          converted to Mercator when they load, T-308)
+//                          T-306; older saves, "TWT5" conic since T-125 and "TWT4" legacy frame, are
+//                          converted to Mercator when they load, T-308; TWT2 and TWT3 no longer load,
+//                          T-1146; a line saved with no trains is given them on load)
 //
 // Nothing in it depends on wall time, so saving the same game twice gives the same bytes.
 // Autosaves live in IndexedDB (database "anitabuilder", store "saves", one key per slot; the original game keeps key "autosave";
@@ -103,7 +104,7 @@ export interface NewGameSpec { mode: GameMode; start?: string; real?: ArrayBuffe
 /**
  * Whether this build can open the save: it names the registry's world (or none, as legacy NYC
  * files do). Zones it names that the registry no longer has are `currentZones`' business (T-1053),
- * and which frame the track is in is the network bytes' (TWT5 world frame, TWT4 and older legacy, T-125).
+ * and which frame the track is in is the network bytes' (TWT5 world frame, TWT4 legacy, T-125).
  */
 export function isNortheastSave(h: SaveHeader): boolean {
   return h.city === registry.cities[0].id && (h.region === undefined || h.region === registry.world);
@@ -160,12 +161,18 @@ async function pipe(bytes: Uint8Array, s: CompressionStream | DecompressionStrea
 
 /**
  * Which frame a network's bytes are in, from their magic (T-308): TWT6 is the world's Mercator,
- * TWT5 the Northeast conic, TWT4 and older the legacy equirectangular frame. A load converts
+ * TWT5 the Northeast conic, TWT4 the legacy equirectangular frame. A load converts
  * anything but the new-game frame (`convert_save_frame`) before the track model reads it.
  */
 export function trackFrameKind(track: Uint8Array): "merc" | "lcc" | "equirect" {
   const m = new TextDecoder().decode(track.subarray(0, 4));
   return m === "TWT6" ? "merc" : m === "TWT5" ? "lcc" : "equirect";
+}
+
+/** T-1146: whether the network bytes are in a format that no longer loads (TWT2, TWT3). */
+export function isRetiredTrackFormat(track: Uint8Array): boolean {
+  const m = new TextDecoder().decode(track.subarray(0, 4));
+  return m === "TWT2" || m === "TWT3";
 }
 
 /** Header and network bytes -> the compressed file. */

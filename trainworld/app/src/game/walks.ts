@@ -14,7 +14,8 @@ import type { StationInput } from "./types";
 import { zoneAt } from "./zones";
 import { dataUrl } from "./dataBase";
 
-const ORTH = 70, DIAG = 99, INF = 0x7fffffff, RING = 256;
+// A step onto water, or a diagonal past a water corner, costs WATER_COST land steps (T-1164).
+const ORTH = 70, DIAG = 99, INF = 0x7fffffff, WATER_COST = 3, RING = 512;
 const OCTILE_MAX = 1.0824;
 const SNAP_PX = 10;
 
@@ -120,13 +121,9 @@ function field(g: Grid, x: number, y: number, maxM: number): Field | null {
         const nc = c + dc, nr = r + dr;
         if (nc < 0 || nr < 0 || nc >= w || nr >= w) continue;
         const j = nr * w + nc;
-        if (bar[j] !== 0) continue;
-        let step = ORTH;
-        if (dc !== 0 && dr !== 0) {
-          if (bar[r * w + nc] !== 0 || bar[nr * w + c] !== 0) continue; // no cutting a corner
-          step = DIAG;
-        }
-        const v = cur + step;
+        const diag = dc !== 0 && dr !== 0;
+        const wet = bar[j] !== 0 || (diag && (bar[r * w + nc] !== 0 || bar[nr * w + c] !== 0));
+        const v = cur + (diag ? DIAG : ORTH) * (wet ? WATER_COST : 1);
         if (v < d[j]) { d[j] = v; buckets[v % RING].push(j); pending++; }
       }
     }
@@ -136,7 +133,7 @@ function field(g: Grid, x: number, y: number, maxM: number): Field | null {
 }
 
 /** Walking metres to (x, y), `straight` metres away: the straight line times how much longer the
- * search's path is than the free path between the same two pixels. Null: cut off by water. */
+ * search's path is than the free path between the same two pixels. Null: water too wide to cross. */
 function eff(f: Field, x: number, y: number, straight: number): number | null {
   const c = Math.floor((x - f.x0) / f.cell), r = Math.floor((y - f.y0) / f.cell);
   if (c < 1 || r < 1 || c >= f.w - 1 || r >= f.w - 1) return null;

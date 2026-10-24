@@ -472,8 +472,11 @@ notes/T-420.md has the tables.
   Milan's Area C, Durham) join the list when a pack covers them. Check: a day's parking price in
   a city's main and secondary centres against the rule, and a free-parking-at-work survey where
   one exists.
-- **Routed walks** (T-275). A walk to a station goes round water on a 50 m raster from the pack's
-  water mask, with every OSM way a person may walk on that is a bridge opened. Why it may not
+- **Routed walks** (T-275, T-1164). A walk to a station goes over water on a 50 m raster from the
+  pack's water mask, each metre of water counting 3 metres of walking (water too wide for that
+  within the bound is no walk), with every OSM way a person may walk on that is a bridge opened
+  at the plain cost. The 3 is one number for every place, standing for the bus, ferry and bike
+  that cross water in real cities. Why it may not
   carry over: the water mask is TIGER's in the US and OSM's elsewhere (T-041; within 0.6% of TIGER at New York); OSM's `foot=` tagging
   on bridges is good in Europe and patchy elsewhere, and trunk bridges are assumed to have no
   footway unless `foot=yes`, which drops real footways in countries that tag them on the road
@@ -719,8 +722,8 @@ notes/T-420.md has the tables.
   guides) against what the rule gives for the same platforms.
 - **No train that walks further than walking there** (Anita, T-1059; docs/demand-kernel.md step
   5). A pair of stations is no rail option for a trip when the walks to, between and from its
-  stations, in straight metres, are longer than the trip's own walking distance (round water
-  where the pack routes walks). A rule of sense rather than a fitted number, and it holds
+  stations, in straight metres, are longer than the trip's own walking distance (over water
+  at its cost where the pack routes walks). A rule of sense rather than a fitted number, and it holds
   anywhere: nobody takes a train to walk further than walking there. What can differ by place is
   the comparison itself: straight lines stand for both walks, so where streets are far from
   straight on one side only (a station across a motorway or rail yard, a gated campus, hill

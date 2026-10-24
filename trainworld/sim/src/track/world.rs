@@ -16,6 +16,9 @@ pub enum Op {
     Edge { id: u32, data: Option<EdgeData> },
     Station { node: u32, data: Option<StationData> },
     Line { id: u32, data: Option<LineData> },
+    /// Tests only: a line at these trains per hour, without trains; the next settle allocates the
+    /// whole trains that rate needs (T-1146).
+    #[cfg(test)]
     Schedule { id: u32, tph: [f32; 3] },
     TrainCounts { id: u32, trains: Option<[u32; 3]>, tph: [f32; 3] },
     /// T-625: set a line's headways in seconds per level (`None`: counts set by hand) with the
@@ -122,6 +125,22 @@ impl TrackWorld {
     /// Runs on edits only, with a bounded number of global capacity solves.
     /// Levels share no capacity, so each level settles on its own and a level already within
     /// tolerance is left alone to the bit: demand keeps its periods only then (T-124, T-415).
+    /// T-1146: a line a loaded save left with no train allocation (a frequency-scheduled line)
+    /// takes the whole trains its trains per hour need over the round trip the service has worked
+    /// out for it (`LineSvc::fleet`), then the counts settle as for any line. A broken line takes
+    /// none. Nothing in the game makes such a line any more; this is the one way out of one.
+    /// Returns whether any line was given trains.
+    pub fn allocate_unallocated(&mut self) -> bool {
+        let mut any = false;
+        for l in 0..self.net.line_count() {
+            if !self.net.line_ok(l as u32) || self.net.line_trains[l].is_some() { continue; }
+            self.net.line_trains[l] = Some(self.svc.lines.get(l).filter(|s| s.ok).map_or([0; 3], |s| s.trains));
+            any = true;
+        }
+        if any { self.settle_train_counts(); }
+        any
+    }
+
     fn settle_train_counts(&mut self) -> Vec<u32> {
         if !self.net.line_auto.iter().any(|a| a.is_some()) {
             return self.settle_counts();
@@ -501,14 +520,17 @@ impl TrackWorld {
             Op::Edge { id, data } => Op::Edge { id, data: n.set_edge(id, data)? },
             Op::Station { node, data } => Op::Station { node, data: n.set_station(node, data)? },
             Op::Line { id, data } => Op::Line { id, data: n.set_line(id, data)? },
+            #[cfg(test)]
             Op::Schedule { id, tph } => {
                 let old = n.line_data(id).ok_or(Issue::NoSuchLine { line: id })?;
-                n.set_schedule(id, tph)?;
+                n.set_tph(id, tph)?;
+                n.line_trains[id as usize] = None;
+                n.line_auto[id as usize] = None;
                 Op::TrainCounts { id, trains: old.trains, tph: old.tph }
             },
             Op::TrainCounts { id, trains, tph } => {
                 let old = n.line_data(id).ok_or(Issue::NoSuchLine { line: id })?;
-                n.set_schedule(id, tph)?;
+                n.set_tph(id, tph)?;
                 n.line_trains[id as usize] = trains;
                 n.line_auto[id as usize] = old.auto.filter(|_| trains.is_some());
                 Op::TrainCounts { id, trains: old.trains, tph: old.tph }

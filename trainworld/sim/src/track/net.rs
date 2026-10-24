@@ -3,7 +3,7 @@
 //! heights, water, cost, node ports, crossings, the edge-to-lines index).
 //!
 //! Inputs change only through the raw setters (`set_node`, `set_edge`, `set_station`,
-//! `set_line`, `set_schedule`), which record what they touched; `derive` then rebuilds just those
+//! `set_line`, `set_tph`), which record what they touched; `derive` then rebuilds just those
 //! parts. `world.rs` builds undoable operations on top.
 
 use super::cost::{self, NoWater, WaterMask};
@@ -170,7 +170,7 @@ pub struct LineData {
     pub path: Vec<u32>,
     /// Trains per hour for high, medium and low demand (SPEC 6.3).
     pub tph: [f32; 3],
-    /// Whole trains allocated across both directions, or legacy frequency scheduling.
+    /// Whole trains allocated across both directions; None only until the next settle, which gives a line its trains from `tph` (`TrackWorld::allocate_unallocated`, T-1146).
     pub trains: Option<[u32; 3]>,
     /// T-625: headway in seconds for high, medium and low demand (0 = no service). When set the
     /// whole-line counts follow it: the fewest trains that keep it over the round trip.
@@ -1035,7 +1035,8 @@ impl Network {
         Ok(old)
     }
 
-    pub fn set_schedule(&mut self, id: u32, tph: [f32; 3]) -> Result<[f32; 3], Issue> {
+    /// A line's trains per hour as the settle starts from them (the counts' rates follow).
+    pub fn set_tph(&mut self, id: u32, tph: [f32; 3]) -> Result<[f32; 3], Issue> {
         if !self.line_ok(id) {
             return Err(Issue::NoSuchLine { line: id });
         }
@@ -1044,8 +1045,6 @@ impl Network {
         }
         let old = self.line_tph[id as usize];
         self.line_tph[id as usize] = tph;
-        self.line_trains[id as usize] = None;
-        self.line_auto[id as usize] = None;
         self.touch.schedules.push(id);
         Ok(old)
     }

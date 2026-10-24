@@ -26,7 +26,7 @@ tests natively.
   (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market; `intercity/market_trip.rs` its trip explorer query, T-866; on a big cluster its pass searches destinations one at a time,
   `pass_streamed` with `kernel::DestSearch` and `DestAssign`, T-761), `warm.rs` (the
   everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (Saturday's and Sunday's factors per
-  purpose and period, T-260, T-262), `routes.rs` (routed walks round water and drives over OSM roads from
+  purpose and period, T-260, T-262), `routes.rs` (routed walks over water and drives over OSM roads from
   the pack, T-275), `trip.rs` (the trip explorer's query, T-195; its two cells' own trip, T-720, checked with the
   walk bands in `t720.rs`), `lanes.rs` (f32 lanes, wasm
   SIMD or SSE2, for the commute pair loop, T-036). The commute pair loop is `kernel::mode_choice`;

@@ -230,7 +230,7 @@ levels:
    destination's strategy as it is searched: a walk to another station from the platform left,
    and at a change the walk to the first train's platform, by frequency), and for the trip the
    distance its walk uses (commutes: between the subzones' centres; everyday: the pair's mean),
-   times the pack's walk factor round water. The refused pairs leave the logsum, so rail costs
+   times the pack's walk factor over water. The refused pairs leave the logsum, so rail costs
    more there, and a trip with none left has no rail (the trip explorer says walking is
    shorter). The commutes keep their lanes: each origin knows the most its trips can walk before
    their last station (an access walk and the most its station walks on to any destination,

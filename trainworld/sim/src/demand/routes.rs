@@ -26,8 +26,12 @@ pub const Q_SCALE: f32 = 64.0;
 const ORTH: u32 = 70;
 const DIAG: u32 = 99;
 const INF: u32 = u32::MAX;
-/// Buckets of the search's queue (more than the largest spread of queued costs).
-const RING: u32 = 256;
+/// A step onto water, or a diagonal past a water corner, costs this many times a land step (T-1164):
+/// it stands for the bus through the tunnel, the bridge just out of reach, the ferry, the bike.
+/// `app/src/game/walks.ts` has the same number.
+const WATER_COST: u32 = 3;
+/// Buckets of the search's queue (more than the largest spread of queued costs, WATER_COST x DIAG).
+const RING: u32 = 512;
 /// The octile metric over-measures a straight line by at most 8.24%: the search reaches that much
 /// further than the straight bound.
 const OCTILE_MAX: f32 = 1.0824;
@@ -77,9 +81,9 @@ impl WalkGrid {
         runs.partition_point(|&v| v as i32 <= c) % 2 == 1
     }
 
-    /// The walk from (x, y) out to about `max_m` straight, around barriers: a search over the
-    /// window's pixels, eight neighbours, never across a barrier's corner. None if the window
-    /// holds no barrier pixel (every walk is the straight line).
+    /// The walk from (x, y) out to about `max_m` straight, across barriers at WATER_COST: a search
+    /// over the window's pixels, eight neighbours. None if the window holds no barrier pixel (every
+    /// walk is the straight line).
     pub fn field(&self, x: f32, y: f32, max_m: f32) -> Option<Field> {
         let rad = (max_m * OCTILE_MAX / self.cell).ceil() as i32 + 3;
         let sc = ((x - self.x0) / self.cell).floor() as i32;
@@ -102,7 +106,7 @@ impl WalkGrid {
             return None;
         }
         // Dial's bucket queue: costs are small integers, and every queued cost is within RING of
-        // the one being settled (seeds span at most 2 x ORTH, a step adds at most DIAG)
+        // the one being settled (seeds span at most 2 x ORTH, a step adds at most WATER_COST x DIAG)
         let mut cur = start.iter().map(|e| e.1).min().unwrap_or(0);
         for (i, v) in start {
             if v < d[i] {
@@ -126,18 +130,9 @@ impl WalkGrid {
                         continue;
                     }
                     let j = (nr * w + nc) as usize;
-                    if bar[j] != 0 {
-                        continue;
-                    }
-                    let step = if dc != 0 && dr != 0 {
-                        // no cutting a barrier's corner
-                        if bar[(r * w + nc) as usize] != 0 || bar[(nr * w + c) as usize] != 0 {
-                            continue;
-                        }
-                        DIAG
-                    } else {
-                        ORTH
-                    };
+                    let diag = dc != 0 && dr != 0;
+                    let wet = bar[j] != 0 || (diag && (bar[(r * w + nc) as usize] != 0 || bar[(nr * w + c) as usize] != 0));
+                    let step = (if diag { DIAG } else { ORTH }) * (if wet { WATER_COST } else { 1 });
                     let v = cur + step;
                     if v < d[j] {
                         d[j] = v;
@@ -870,44 +865,49 @@ mod tests {
 
     #[test]
     fn walks_go_round_water_and_over_bridges() {
-        // a river 3 pixels wide down columns 100-102, a bridge across it at row 70
-        let g = grid(200, 200, |c, r| (100..=102).contains(&c) && r != 70);
+        // a river 12 pixels (600 m) wide down columns 100-111, a bridge across it at row 52
+        let g = grid(200, 200, |c, r| (100..=111).contains(&c) && r != 52);
         let f = g.field(at(90.0), at(50.0), 4000.0).expect("water within reach");
         // the same bank: the straight line
-        let s = 50.0 * ((5.0f32).powi(2) + 20.0f32.powi(2)).sqrt();
-        assert_eq!(f.eff(at(95.0), at(70.0), s), Some(s));
-        // the far bank, 1 km across: up to the bridge 20 rows away and back down
-        let e = f.eff(at(110.0), at(50.0), 1000.0).unwrap();
-        assert!(e > 2000.0 && e < 2600.0, "{e}");
-        // no bridge: cut off within the bound
-        let g2 = grid(200, 200, |c, _| (100..=102).contains(&c));
+        let s = 50.0 * ((5.0f32).powi(2) + 2.0f32.powi(2)).sqrt();
+        assert_eq!(f.eff(at(95.0), at(52.0), s), Some(s));
+        // the far bank, 1.6 km away: over the bridge, which beats wading at 3 x
+        let e = f.eff(at(122.0), at(50.0), 1600.0).unwrap();
+        assert!(e > 1600.0 && e < 1800.0, "{e}");
+        // no bridge: across the water at WATER_COST, 600 m of it counting 1,800 m
+        let g2 = grid(200, 200, |c, _| (100..=111).contains(&c));
         let f2 = g2.field(at(90.0), at(50.0), 4000.0).unwrap();
-        assert_eq!(f2.eff(at(110.0), at(50.0), 1000.0), None);
+        let wade = f2.eff(at(122.0), at(50.0), 1600.0).unwrap();
+        assert!(wade > 2700.0 && wade < 2900.0, "{wade}");
+        // water too wide to be worth it: cut off within the bound
+        let g3 = grid(200, 200, |c, _| (100..=139).contains(&c));
+        let f3 = g3.field(at(90.0), at(50.0), 4000.0).unwrap();
+        assert_eq!(f3.eff(at(150.0), at(50.0), 3000.0), None);
         // nothing in the way: no search at all
         assert!(grid(200, 200, |_, _| false).field(at(90.0), at(50.0), 4000.0).is_none());
         // a station on a pier (a barrier pixel) starts from the nearest bank
-        let f3 = g.field(at(101.0), at(30.0), 4000.0).unwrap();
-        let near = f3.eff(at(95.0), at(30.0), 300.0).unwrap();
-        let far = f3.eff(at(107.0), at(30.0), 300.0).unwrap();
-        assert!(near < 400.0 || far < 400.0, "one bank is near: {near} {far}");
+        let f4 = g.field(at(101.0), at(30.0), 4000.0).unwrap();
+        let near = f4.eff(at(95.0), at(30.0), 300.0).unwrap();
+        assert!(near < 400.0, "the near bank is near: {near}");
     }
 
     #[test]
-    fn a_diagonal_line_of_water_blocks() {
-        // water along the diagonal c == r: no corner cutting across it
+    fn a_diagonal_line_of_water_costs_one_crossing() {
+        // water along the diagonal c == r: crossing it once costs WATER_COST x the pixel stepped onto
         let g = grid(120, 120, |c, r| c == r);
         let f = g.field(at(40.0), at(60.0), 3000.0).unwrap();
-        assert_eq!(f.eff(at(60.0), at(40.0), 1414.0), None);
+        let e = f.eff(at(60.0), at(40.0), 1414.0).unwrap();
+        assert!(e > 1414.0 && e < 1700.0, "{e}");
     }
 
-    /// T-700: a zone astride a river nobody can walk across. Walks on one bank, in or out of it,
-    /// go straight; walks across are cut off. Before, the zone's one factor blended both banks
-    /// (Shanghai's Bund: x48 on a 300 m walk); `pmax` 1 is that blend.
+    /// T-700: a zone astride a wide river. Walks on one bank, in or out of it, go straight; walks
+    /// across take the water at its cost. A zone's one factor would blend both banks; `pmax` 1 is
+    /// that blend.
     #[test]
     fn a_zone_astride_a_river_keeps_each_bank_apart() {
-        // 10 km square, the river down columns 100-102 (x 5,000-5,150 m), no bridge; 2 km zones,
+        // 10 km square, the river down columns 90-109 (x 4,500-5,500 m), no bridge; 2 km zones,
         // so the zones of column 2 (x 4,000-6,000 m) hold both banks
-        let g = grid(200, 200, |c, _| (100..=102).contains(&c));
+        let g = grid(200, 200, |c, _| (90..=109).contains(&c));
         let (zw, zh) = (5, 5);
         let (mut x, mut y, mut w, mut cz) = (vec![], vec![], vec![], vec![]);
         for i in 0..40 {
@@ -919,7 +919,7 @@ mod tests {
                 x.push(px);
                 y.push(py);
                 // more people on the east bank: the astride zones' representatives are there
-                w.push(if px > 5000.0 { 3.0 } else { 1.0 });
+                w.push(if px > 5500.0 { 3.0 } else { 1.0 });
                 cz.push(((px / 2000.0) as i32 * zh + (py / 2000.0) as i32) as u32);
             }
         }
@@ -941,10 +941,10 @@ mod tests {
             size: vec![],
         };
         let cell = |px: f32, py: f32| x.iter().zip(&y).position(|(&a, &b)| a == px && b == py).unwrap();
-        // west bank: 4,625 in the astride zone, 4,375 too, 3,875 in the zone west of it
-        let (a, b, c) = (cell(4625.0, 5125.0), cell(4375.0, 5125.0), cell(3875.0, 5125.0));
+        // west bank: 4,375 in the astride zone, 4,125 too, 3,875 in the zone west of it
+        let (a, b, c) = (cell(4375.0, 5125.0), cell(4125.0, 5125.0), cell(3875.0, 5125.0));
         // east bank, in the same astride zone
-        let e = cell(5375.0, 5125.0);
+        let e = cell(5625.0, 5125.0);
         let routes = |pmax: usize| {
             let t = walk_tables(&g, &z, &x, &y, &w, 2, pmax);
             let mut r = Routes::bare(&z);
@@ -956,10 +956,10 @@ mod tests {
             let f = r.walk_factor_cells(&z, p, q);
             assert!(f < 1.1, "one bank, cells {p} and {q}: x{f}");
         }
-        assert!(r.walk_factor_cells(&z, a, e) > 5.0, "across the river: x{}", r.walk_factor_cells(&z, a, e));
+        assert!(r.walk_factor_cells(&z, a, e) > 2.0, "across the river: x{}", r.walk_factor_cells(&z, a, e));
         assert!(r.walk_factor_cells(&z, e, e) < 1.1);
-        // today's blend: one bank's walks counted many times over
+        // the blend: one bank's walks counted many times over
         let old = routes(1);
-        assert!(old.walk_factor_cells(&z, a, c) > 5.0, "the blend: x{}", old.walk_factor_cells(&z, a, c));
+        assert!(old.walk_factor_cells(&z, a, c) > 1.5, "the blend: x{}", old.walk_factor_cells(&z, a, c));
     }
 }

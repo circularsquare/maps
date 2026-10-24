@@ -7,7 +7,7 @@
 // gaps while moving, and long tasks (over 50 ms) in the 1.5 s after each click. Prints one line per
 // setup and writes OUT/<LABEL>-<setup>.json.
 // SETUPS: new (a new game with five short lines), nyc (the real save, 109 lines), japan (Japan's real
-// network, ../artifacts/trainworld/t737-japan.save; demand is not waited for, it takes ~19 min),
+// network, ../artifacts/trainworld/t737-japan-trains.save; demand is not waited for, it takes ~19 min),
 // repro (Anita's report: a new game in London, 4 pieces there, Esc, then Shanghai, where no request may
 // reach back to London (T-1039); then London again with Shanghai's run still open, so the first click
 // is a piece from the other city; it must be refused at once with no edit and no long task, then a run
@@ -32,7 +32,7 @@ const CLICKS = Number(process.env.CLICKS ?? 8);
 const MOVES = Number(process.env.MOVES ?? 20);
 const LABEL = process.env.LABEL ?? 'run';
 const OUT = process.env.OUT ?? fileURLToPath(new URL('../../artifacts/trainworld/t1020/', import.meta.url));
-const JAPAN = process.env.JAPAN ?? fileURLToPath(new URL('../../artifacts/trainworld/t737-japan.save', import.meta.url));
+const JAPAN = process.env.JAPAN ?? fileURLToPath(new URL('../../artifacts/trainworld/t737-japan-trains.save', import.meta.url));
 // where the track is drawn: open ground beside each network (lng, lat, zoom)
 const AT = { new: [-74.13, 40.585, 14], nyc: [-74.13, 40.585, 14], japan: [140.0, 35.9, 14],
   london: [-0.20, 51.565, 14], shanghai: [121.40, 31.25, 14], london2: [-0.12, 51.585, 14], belfast: [-5.93, 54.60, 14] };

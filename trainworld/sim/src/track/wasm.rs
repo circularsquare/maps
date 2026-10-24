@@ -395,6 +395,8 @@ impl TrackApi {
                 std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
                 net.time_zones = self.w.net.time_zones.clone();
                 self.w = TrackWorld::new(net);
+                // lines saved at a frequency, not trains, are given trains (T-1146)
+                self.w.allocate_unallocated();
                 // a save made while trains changed over loads with them where they were (T-1071)
                 if let Some(e) = eras {
                     if self.w.svc.decode_eras(e).is_err() {
@@ -1229,14 +1231,6 @@ impl TrackApi {
         }
         self.w.trial(Op::Batch(ops)).map_or(0.0, |r| r.charge)
     }
-    /// Add or replace a line; its path is the fastest route through the stops.
-    #[allow(clippy::too_many_arguments)]
-    pub fn set_line(&mut self, id: u32, stops: &[u32], high: f32, medium: f32, low: f32, dwell_s: f32, turnaround_s: f32, cars: u8, colour: u32, name: String) -> u32 {
-        let Some(path) = self.w.net.route(stops) else {
-            return self.refuse(Issue::LinePath { line: id });
-        };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false }) })
-    }
     /// The most cars `line`'s shortest platform fits, and the station with that platform (T-733).
     pub fn line_cars_cap(&self, line: u32) -> Vec<u32> {
         let net = &self.w.net;
@@ -1245,9 +1239,6 @@ impl TrackApi {
         }
         let Some(&s) = net.line_stops(line).iter().min_by_key(|&&s| net.node_platform[s as usize]) else { return vec![] };
         vec![((net.node_platform[s as usize] as f64 / CAR_LEN).floor().max(1.0)) as u32, s]
-    }
-    pub fn set_schedule(&mut self, id: u32, high: f32, medium: f32, low: f32) -> u32 {
-        self.run(Op::Schedule { id, tph: [high, medium, low] })
     }
     /// Per demand level (high, medium, low): round trip s, trains needed, delay s.
     pub fn line_summary(&self, line: u32) -> Vec<f64> {
@@ -1279,6 +1270,18 @@ impl TrackApi {
 
 #[cfg(test)]
 impl TrackApi {
+    /// Tests only: add or replace a line at trains per hour; its path is the fastest route through
+    /// the stops, and the next settle gives it whole trains (T-1146).
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn set_line(&mut self, id: u32, stops: &[u32], high: f32, medium: f32, low: f32, dwell_s: f32, turnaround_s: f32, cars: u8, colour: u32, name: String) -> u32 {
+        let Some(path) = self.w.net.route(stops) else {
+            return self.refuse(Issue::LinePath { line: id });
+        };
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false }) })
+    }
+    pub(crate) fn set_schedule(&mut self, id: u32, high: f32, medium: f32, low: f32) -> u32 {
+        self.run(Op::Schedule { id, tph: [high, medium, low] })
+    }
     /// Detailed refusal text for native test failures; absent from the production WASM API.
     fn issues(&self) -> String {
         self.issues.iter().map(|i| format!("{i:?}")).collect::<Vec<_>>().join("\n")

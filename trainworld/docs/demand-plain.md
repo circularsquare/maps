@@ -100,8 +100,8 @@ There is no built-in liking for the train. Rail and the car are compared on time
   or platform of a complex, so walking between two stations is never a rail trip and pays no fare.
 - No train that walks further than walking there: a pair of stations is no option for a trip when
   the walk to the first, the walks between stations and platforms on the way and the walk from the
-  last add up to more than walking between the two ends (round water where the walk must go
-  round). A trip left with no such pair has no train. It takes about 3% of rail trips away, nearly
+  last add up to more than walking between the two ends (over water, each metre of it counts as
+  3 metres of walking). A trip left with no such pair has no train. It takes about 3% of rail trips away, nearly
   all under 2 km, to walking and the car.
 - Fare: in the US $1 counts as 3 minutes. The fare is the player's curve of trip length, paid
   once a trip; choosing between routes sees only its first stretch.

@@ -228,6 +228,7 @@ pub fn run(km: f64, stations: usize, lines: usize, reps: usize) -> (String, Vec<
     let net = synth(km, stations, lines, 7);
     let t1 = now_ms();
     let mut w = TrackWorld::new(net);
+    w.allocate_unallocated();
     let t2 = now_ms();
     let n = &w.net;
     let route_km: f64 = (0..n.edge_count()).filter(|&e| n.edge_alive[e]).map(|e| n.edge_len[e]).sum::<f64>() / 1000.0;
@@ -348,7 +349,7 @@ pub fn run(km: f64, stations: usize, lines: usize, reps: usize) -> (String, Vec<
     };
     let l0 = (0..w.net.line_count() as u32).find(|&l| w.svc.lines[l as usize].ok).unwrap();
     out += &format!(
-        "incremental capacity pass alone (T-050): busiest edge {:.2} ms, quiet edge {:.2} ms, one line's trains per hour {:.2} ms
+        "incremental capacity pass alone (T-050): busiest edge {:.2} ms, quiet edge {:.2} ms, one line's rate {:.2} ms
 ",
         inc(&w, Some(busiest), &[]),
         inc(&w, Some(quiet), &[]),
@@ -356,9 +357,9 @@ pub fn run(km: f64, stations: usize, lines: usize, reps: usize) -> (String, Vec<
     );
     out += &report(&format!("move a PI 3 m on the busiest edge ({} lines)", w.net.lines_on_edge(busiest).len()), &mut w, &|w| nudge(busiest, w));
     out += &report(&format!("move a PI 3 m on a quiet edge ({} lines)", w.net.lines_on_edge(quiet).len()), &mut w, &|w| nudge(quiet, w));
-    out += &report("change one line's trains per hour", &mut w, &|w| {
-        let t = w.net.line_tph[l0 as usize];
-        Op::Schedule { id: l0, tph: [t[0] + 2.0, t[1], t[2]] }
+    out += &report("change one line's trains", &mut w, &|w| {
+        let t = w.net.line_trains[l0 as usize].unwrap_or([0; 3]);
+        Op::TrainCounts { id: l0, trains: Some([t[0] + 2, t[1], t[2]]), tph: w.net.line_tph[l0 as usize] }
     });
     out += &report("split the busiest edge (new node)", &mut w, &|w| {
         let s = w.net.edge_len[busiest as usize] * 0.37;
@@ -380,7 +381,8 @@ pub fn run(km: f64, stations: usize, lines: usize, reps: usize) -> (String, Vec<
     out += &format!("save: {} bytes raw for {route_km:.0} route-km ({:.1} KB per 1,000 route-km)\n", bytes.len(), bytes.len() as f64 / 1024.0 / route_km * 1000.0);
     let t = now_ms();
     let back = save::decode(&bytes).unwrap();
-    let w2 = TrackWorld::new(back);
+    let mut w2 = TrackWorld::new(back);
+    w2.allocate_unallocated();
     out += &format!(
         "load (decode + derive everything) {:.1} ms; cost {:.1} vs {:.1} US$M\n",
         now_ms() - t,

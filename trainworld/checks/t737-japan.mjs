@@ -3,8 +3,8 @@
 // while panning and zooming across Japan, main-thread long tasks, the threads' busy time.
 //   node trainworld/checks/t737-japan.mjs [url]      (from the maps root)
 // With no url it starts its own Vite (checks/dev-nowatch.mjs, port JP_PORT or 6165). About 4 minutes,
-// QUICK=1 (one speed, three scenes) about 1.5. The save is ../artifacts/trainworld/t737-japan.save (SAVE
-// to override; t737-japan-cities.save is the seven city packs only; built by `pipeline/realnet.py net jpn`,
+// QUICK=1 (one speed, three scenes) about 1.5. The save is ../artifacts/trainworld/t737-japan-trains.save (SAVE
+// to override; t737-japan-cities-trains.save is the seven city packs only; built by `pipeline/realnet.py net jpn`,
 // `geom jpn`, the realsave bin with --city jpn, `gamesave jpn`, notes/T-737.md). Env: LABEL, OUT (default
 // ../artifacts/trainworld/t737), VIEW=WxH, SPEEDS (default "1,2": indices into the clock's SPEEDS),
 // THROTTLE, CPUPROFILE=1 (the main thread's profile per scene in OUT), DEMAND_WORKERS (default 2), NOSOLVE=1 (play at once; the clock is held while demand solves,
@@ -18,7 +18,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { launchChrome, importSave, GL, startVite } from './lib.mjs';
 
-const SAVE = process.env.SAVE ?? fileURLToPath(new URL('../../artifacts/trainworld/t737-japan.save', import.meta.url));
+const SAVE = process.env.SAVE ?? fileURLToPath(new URL('../../artifacts/trainworld/t737-japan-trains.save', import.meta.url));
 const OUT = process.env.OUT ?? fileURLToPath(new URL('../../artifacts/trainworld/t737/', import.meta.url));
 const LABEL = process.env.LABEL ?? 'run';
 const [W, H] = (process.env.VIEW ?? '1400x900').split('x').map(Number);

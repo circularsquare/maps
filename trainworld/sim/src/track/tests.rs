@@ -125,6 +125,32 @@ fn a_line_runs_with_times_and_fleet() {
     assert!(x > 3000.0 && x < 4500.0 && y.abs() < 1e-6, "{x} {y}");
 }
 
+/// T-1146: a line saved at a frequency is given whole trains when the save loads, its rate follows
+/// them, and a save in a format older than TWT4 is refused.
+#[test]
+fn a_frequency_line_is_given_trains_on_load() {
+    let (w, _, _, l) = simple();
+    let i = l as usize;
+    assert!(w.net.line_trains[i].is_none());
+    let want = w.svc.lines[i].trains;
+    let bytes = super::save::encode(&w.net);
+    let mut loaded = TrackWorld::new(super::save::decode(&bytes).unwrap());
+    assert!(loaded.net.line_trains[i].is_none());
+    assert!(loaded.allocate_unallocated());
+    assert_eq!(loaded.net.line_trains[i], Some(want));
+    assert!(!loaded.allocate_unallocated(), "only once");
+    // the whole trains run at least the frequency asked, and less than one more train's worth
+    for (lev, asked) in [12.0f32, 6.0, 3.0].into_iter().enumerate() {
+        let (rate, trip) = (loaded.net.line_tph[i][lev], loaded.svc.lines[i].round_trip[lev]);
+        assert!(rate >= asked - 1e-3 && (rate as f64) < asked as f64 + 3600.0 / trip, "level {lev}: {rate} for {asked}");
+    }
+    let again = super::save::encode(&loaded.net);
+    assert!(super::save::decode(&again).unwrap().line_trains[i].is_some());
+    let mut old = again.clone();
+    old[..4].copy_from_slice(b"TWT2");
+    assert!(super::save::decode(&old).is_err());
+}
+
 #[test]
 fn split_keeps_geometry_and_times_and_undoes_exactly() {
     let (mut w, _, [_, e1], l) = simple();

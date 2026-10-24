@@ -8,18 +8,17 @@ use super::geom::Pi;
 use super::net::{EdgeData, LineData, Network, NodeData, StationData};
 use super::params::*;
 
-/// TWT4 (T-104) adds optional whole-line train allocations; derived frequencies are not saved
-/// for allocated lines. Legacy TWT2/TWT3 keep their scheduled frequencies until edited.
-/// TWT3 (T-079): an edge may carry the points it was drawn through (tracks | 8, then count and
-/// points like PIs, no radius). Only edges drawn between T-079 and T-092 have them (`EdgeData::
-/// thru`); they are kept so such an edge reshapes from its clicks, and are written back as long
-/// as it is unchanged. TWT2 (T-055: constructed flags on stations, node flag 4, and edges,
-/// tracks | 4) has none and still loads. Optional trailing blocks follow the lines: `LUI1` (line
-/// numbers and symbols) and, when the player linked stations, `LNK1` (T-197: count, then node
-/// pairs in the dense ids). A save without them loads with none. An edge's flags `| 32` mark a
-/// crossover's diagonal (T-338), `| 64` high-speed track (T-817); older saves have none. A
-/// trailing `LHS1` block (T-817) lists the lines running high-speed trains; without it all are
-/// ordinary.
+/// TWT4 (T-104) is the oldest format read (TWT2 and TWT3 stopped loading, T-1146). A line carries
+/// its whole-line train allocation; derived frequencies are not saved for allocated lines. A line
+/// saved without one (a flag of 0, then its trains per hour) is given trains from them when the
+/// network is derived (`TrackWorld::allocate_unallocated`). An edge may carry the points it was
+/// drawn through (tracks | 8, then count and points like PIs, no radius; `EdgeData::thru`): kept
+/// so such an edge reshapes from its clicks, and written back as long as it is unchanged.
+/// Optional trailing blocks follow the lines: `LUI1` (line numbers and symbols) and, when the
+/// player linked stations, `LNK1` (T-197: count, then node pairs in the dense ids). A save without
+/// them loads with none. An edge's flags `| 32` mark a crossover's diagonal (T-338), `| 64`
+/// high-speed track (T-817); older saves have none. A trailing `LHS1` block (T-817) lists the
+/// lines running high-speed trains; without it all are ordinary.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -29,8 +28,6 @@ const MAGIC_TWT5: &[u8; 4] = b"TWT5";
 /// Earth (`frame.rs`); the origin fields keep the game's home origin, which the frame does not use.
 /// Radii are ground metres, as the player set them.
 const MAGIC_TWT6: &[u8; 4] = b"TWT6";
-const MAGIC_TWT3: &[u8; 4] = b"TWT3";
-const MAGIC_TWT2: &[u8; 4] = b"TWT2";
 
 struct W(Vec<u8>);
 impl W {
@@ -282,11 +279,10 @@ pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
 
 /// Decode into a fresh network (dense ids). Derive with `TrackWorld::new`.
 pub fn decode(bytes: &[u8]) -> Result<Network, String> {
-    if bytes.len() < 20 || (&bytes[..4] != MAGIC && &bytes[..4] != MAGIC_TWT5 && &bytes[..4] != MAGIC_TWT6 && &bytes[..4] != MAGIC_TWT3 && &bytes[..4] != MAGIC_TWT2) {
+    if bytes.len() < 20 || (&bytes[..4] != MAGIC && &bytes[..4] != MAGIC_TWT5 && &bytes[..4] != MAGIC_TWT6) {
         return Err("not a trainworld track save".into());
     }
     let f = |o: usize| f64::from_le_bytes(bytes[o..o + 8].try_into().unwrap());
-    let v4 = &bytes[..4] == MAGIC || &bytes[..4] == MAGIC_TWT5 || &bytes[..4] == MAGIC_TWT6;
     let kind = match &bytes[..4] {
         b"TWT5" => FrameKind::Lcc,
         b"TWT6" => FrameKind::Merc,
@@ -346,7 +342,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
         let name = r.s()?;
         let colour = r.u()? as u32;
         let tph = [r.tenth()?, r.tenth()?, r.tenth()?];
-        let trains = if v4 && r.u()? != 0 { Some([r.u()? as u32, r.u()? as u32, r.u()? as u32]) } else { None };
+        let trains = if r.u()? != 0 { Some([r.u()? as u32, r.u()? as u32, r.u()? as u32]) } else { None };
         let (dwell_s, turnaround_s) = (r.tenth()?, r.tenth()?);
         let cars = r.u()? as u8;
         let mut stops = vec![];

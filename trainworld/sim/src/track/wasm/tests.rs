@@ -925,7 +925,7 @@ fn reshape_blueprint_track() {
     assert_eq!(a.edges_info()[5], len0);
     // the flyover's price comes from a trial, nothing changes
     assert_eq!(a.flyover_cost(a.nodes_info()[0] as u32), 0.0, "an end is no junction; nothing to fly over");
-    // a save round trip keeps the PIs, and a TWT2 save still loads
+    // a save round trip keeps the PIs, and a TWT2 save no longer loads (T-1146)
     let mut b = api();
     assert!(b.load(&a.save()));
     assert_eq!(b.edges_info(), a.edges_info());
@@ -933,7 +933,7 @@ fn reshape_blueprint_track() {
     let mut old = api();
     let mut bytes = old.save();
     bytes[..4].copy_from_slice(b"TWT2");
-    assert!(old.load(&bytes));
+    assert!(!old.load(&bytes));
     // constructed track stays as it is
     assert_eq!(a.construct_all(), 0);
     assert_ne!(a.set_edge_pis(e, &[2000.0, 800.0, 0.0, 0.0]), 0);

@@ -364,16 +364,15 @@ in proportion to the rate its fleet would give, until the first resource it uses
 (the hand-over below sends them out of service), so a fleet past capacity buys no shorter headway
 and no rider waits longer than at 100%. So the shortest headway a line can have is its fullest
 resource's `s`, 1m47s on track at 80 km/h. A count level held this way counts as settled, so
-an edit elsewhere leaves it to the bit. Legacy fixed-frequency schedules are not cut: past 100% they
-keep the delay and fluid queue above.
+an edit elsewhere leaves it to the bit.
 
 **Settled in the clock worker before demand runs.** Whole-line train allocations derive their
 frequencies from capacity-adjusted round trips with a bounded, damped solve on edits (T-104).
 Delays and derived frequencies feed back until settled, with at most 80 iterations and continuous
 delays on resources used by count schedules. Each level settles on its own (levels share no
 capacity): a level whose fleets already match their counts within 0.0001 trains is not stepped,
-so its rates and run times stay the same to the bit (T-415). Legacy fixed-frequency schedules retain one
-capacity pass: delay lengthens their round trips and raises fleet needs without changing rate.
+so its rates and run times stay the same to the bit (T-415). A line a save loads at a frequency
+rather than trains takes the whole trains that frequency needs first (architecture.md 11).
 The underlying capacity pass is incremental: an edit
 rebuilds only the resources around the edges, nodes and lines it touched and re-solves those and
 the ones a rescheduled line uses, with the same result as rebuilding everything (T-050; timings

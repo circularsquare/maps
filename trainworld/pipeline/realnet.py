@@ -1113,7 +1113,7 @@ def cmd_geom():
 
 def cmd_gamesave():
     """Wrap the track save (`realsave` bin) as a game file the app's "Load a file" reads (T-029's
-    format: gzip of "TWG1", u32 header length, JSON header, TWT2): day 1 07:00, $6B, the fleet the
+    format: gzip of "TWG1", u32 header length, JSON header, the track save): day 1 07:00, $6B, the fleet the
     lines need, the starting fares."""
     import gzip
     import struct

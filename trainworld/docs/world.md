@@ -110,7 +110,7 @@ basemap. Mercator's `k` stays between 1.0 and 2.0 from 60 S to 60 N, where nearl
 - **Old saves.** `save::convert_frame` moves a network into another frame through longitude and
   latitude, keeping every place on the ground, and takes `Merc` as a target
   (`TrackApi::convert_save_frame(bytes, 2)`). A conic (TWT5) network's edges change by the conic's
-  scale: 0.0007% near New York, -0.04% at Boston. Anita's real New York save (TWT2, legacy frame,
+  scale: 0.0007% near New York, -0.04% at Boston. Anita's real New York save (legacy frame,
   all within the five boroughs) converts with all 1,647 edges and all 109 lines intact: track
   4,500.62 km to 4,498.63 km (-0.044%), construction value -0.02%, round trips -0.02% in all, the
   most-changed line 0.3%. A legacy save with Philadelphia track changes more there (about 1.2%),
@@ -298,7 +298,7 @@ Each stage is its own task.
    TWT6 (`trackFrameKind` in `saveFile.ts`, `TrackApi.convert_save_frame`) once, as it loads from
    the autosave or a slot, or imports from a file, then writes the slot again in TWT6; the old
    bytes are kept under the hidden key `old-frame-<slot>`. Money, fleet, fares and the ledger are
-   copied. Nothing needed correcting: the real NYC save (TWT2) moves 0.3% at most on any line's
+   copied. Nothing needed correcting: the real NYC save (legacy frame) moves 0.3% at most on any line's
    run time, no line's trains needed change, and no curve is newly refused (the 586 geometry
    refusals that save already carries are the same before and after, so a set radius, which
    `fit_in` reads as ground metres, behaves as it did). The check is the ignored test

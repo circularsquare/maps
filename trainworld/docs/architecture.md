@@ -242,7 +242,11 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   [T-817]; a save without one loads with none. While a line's trains change over after a service
   edit, the network bytes end with the service's eras and shifts, their length and the tag `ERA1`
   (`Service::encode_eras`, T-1071), so the trains load where they were; the network decoder stops
-  before them. Every zone's track, service and money is in the one
+  before them. Formats older than TWT4 (TWT2, TWT3) no longer open: the load says the save is from
+  an older version (T-1146). A line saved with no train allocation (a frequency in trains per hour,
+  as every line was before T-104) is given the whole trains that rate needs over its run time when
+  the save loads (`TrackWorld::allocate_unallocated`), and its trains per hour follow from them
+  like any other line's. Every zone's track, service and money is in the one
   network [T-116]. The header's `ledger`, `hours` and `regions` (per zone id, "" for outside every
   zone) hold the history charts' data, loaded back as they were, so a reload keeps the charts; money
   is saved to the dollar and rides to a tenth. Ledger entries' `points` are whole points; the
@@ -278,7 +282,7 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   still pays, so the cash can go below zero); the clock worker sets it from the header's mode and on
   the one-way `sandbox` message from Settings.
 - **Older frames** [T-308; [world.md](world.md)]: a file or slot in TWT5 (the Northeast conic) or
-  TWT4 and older (equirectangular) is converted to Mercator as it loads (`convert_save_frame` in the
+  TWT4 (equirectangular) is converted to Mercator as it loads (`convert_save_frame` in the
   clock worker) and the slot written again at once in TWT6; the old bytes stay under a hidden key
   `old-frame-<slot>`. Cash, fleet, fares and ledger are copied as they are; track lengths follow the
   true ground.

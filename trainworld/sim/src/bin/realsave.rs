@@ -8,7 +8,8 @@
 //! its level (a station node takes one route's track, SPEC 6.1); lines meet at a station complex
 //! by the demand side's merging and walking transfers. Everything is constructed.
 //!
-//! Writes `nyc_real.twt2` (the network part of a save, format TWT2, uncompressed) and
+//! Writes `nyc_real.twt2` (the network part of a save, uncompressed; the lines get whole trains
+//! from the real trains per hour when the network is derived, T-1146) and
 //! `nyc_real_track.json`: the stations and lines with the run times the track model gives them,
 //! packed as `DemandApi::set_network` takes them (the clock worker's snapshot), for `calib`.
 
@@ -106,15 +107,16 @@ fn main() {
         }
         line_ids.push(id);
     }
-    let bytes = save::encode(&net);
+    let t0 = std::time::Instant::now();
+    let mut w = TrackWorld::new(net);
+    w.allocate_unallocated();
+    let bytes = save::encode(&w.net);
     std::fs::write(format!("{dir}/{city}_real.twt2"), &bytes).unwrap();
     // the game converts a legacy-frame save to its Mercator frame on load, and refuses it silently
     // when that fails
     if let Err(e) = save::convert_frame(&bytes, trainworld_sim::track::frame::FrameKind::Merc) {
         eprintln!("the save does not convert to the game's frame: {e}");
     }
-    let t0 = std::time::Instant::now();
-    let w = TrackWorld::new(save::decode(&bytes).unwrap());
     eprintln!("save: {} bytes, {} nodes, {} lines set ({} ok); load + derive {:.0} ms", bytes.len(), node_key.len(), lines.len(), n_lines_ok, t0.elapsed().as_secs_f64() * 1000.0);
     let issues = w.net.validate(&(0..w.net.edge_count() as u32).collect::<Vec<_>>(), &(0..w.net.node_count() as u32).collect::<Vec<_>>(), &[]);
     let mut kinds = std::collections::BTreeMap::new();

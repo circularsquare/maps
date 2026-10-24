@@ -75,7 +75,7 @@ whose cells are at least 6 km apart, use the zone-centre distance, and the drive
 stays at the zone centres. Everyday purposes walk the sampled cell-centre distance (a pair of
 subzones its samples' mean distance). Every walk's distance is times the walk factor of its ends' parts
 of their zones where water lies between them (T-275, below), so a home across a river from its job is as far as
-the walk round by a bridge. Walking with no rail is summed once (`Gravity::no_rail_by_zone` over
+the walk by a bridge or across the water at its cost. Walking with no rail is summed once (`Gravity::no_rail_by_zone` over
 zone pairs for commutes, over the samples for everyday trips); a pair offered rail takes from walking rail's share times walking's share with no
 rail, as the logit does (`ModeOut::rail_walk`, `Params::car_choice`). A good station near a short
 trip can take walkers, and a long walk loses to the train.
@@ -127,8 +127,8 @@ site's mean over drivers (`site_park`), written by `pipeline/intercity.py park_b
 mirrors `park_parts` and `cordon_by_zone` and is used for every zone's pack (packs built before
 T-636 hold the earlier base of 3 minutes until they are next rebuilt).
 
-**Routed walking and driving** (T-275, notes/T-275.md). Walks and drives go round water and
-over bridges, from data that exists for any city: OpenStreetMap roads and bridges (Geofabrik
+**Routed walking and driving** (T-275, notes/T-275.md). Drives go over bridges and tunnels,
+walks over bridges or across water at a cost, from data that exists for any city: OpenStreetMap roads and bridges (Geofabrik
 extracts) and the pack's own water mask. `pipeline/routes.py <city>` adds them to a finished
 pack, in place, and must be rerun whenever the pack's zones change (`build_city.py`, a gravity
 re-solve); `routes.py --check` lists the packs whose routes are missing or stale. A pack without
@@ -138,10 +138,13 @@ them, or with them made for other zones, has every walk and drive straight x 1.3
   crosses as a bridge (footways, paths, streets; not motorways, trunk roads only with `foot=yes`)
   is land, and islets under 0.1 km² are water. Stations are the player's, so the walk to them is
   searched in the game: from each station over the raster's pixels within its 3 km bound
-  (eight neighbours, never across a barrier's corner), and a cell's walk is its straight line
+  (eight neighbours). A step onto a barrier pixel, or a diagonal past a barrier's corner, costs
+  `WATER_COST` 3 land steps (T-1164; it stands for the bus through the tunnel, the bridge just
+  out of reach, the ferry, the bike), so a river or canal under about half a kilometre is
+  crossed and wide water stays shut. A cell's walk is its straight line
   times how much longer the search's path is than the free path between the same two pixels,
-  exactly the straight line where nothing is in the way, and none (no access) where water cuts
-  it off within the bound. The cells whose walk differs are kept per station position for the
+  exactly the straight line where nothing is in the way, and none (no access) where the water
+  is too wide to cross within the bound. The cells whose walk differs are kept per station position for the
   worker (`routes::station_walks`), shared by a city's commute and everyday populations, so an
   edit searches only the stations it moved or added. The walk to and from stations, the
   access subzones and the trip explorer all use these distances. For walking the whole way, each
@@ -215,8 +218,8 @@ regional layer takes the same rule with T the car's perceived minutes for the pa
 docs/regional.md 5.1).
 
 **Walking to a station** (Anita, 2026-10-14, T-371). A true walk at both ends: **6 km/h along a
-path 1.3x the straight line, or round water by a bridge where one is in the way (above; 13 minutes
-a straight km), each minute weighing 1.5** (`w_walk`, fitted on New York in T-372;
+path 1.3x the straight line, by a bridge or across water at 3 times the cost where water is in
+the way (above; 13 minutes a straight km), each minute weighing 1.5** (`w_walk`, fitted on New York in T-372;
 notes/T-372.md). So a station 500 m away costs 9.8
 perceived minutes, 1 km 19.5, 2 km 39. Between walks the logit above applies (a station 500 m
 further gets 0.1% of the nearer one's riders on a trip under 3 km, 4% from 12 km). The choice
