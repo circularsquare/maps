@@ -3,12 +3,17 @@
 //! zone arrays and `gravity` header block added (notes/T-004.md). pipeline/build_city.py runs it.
 //!
 //!   cargo run --release --features demand --bin pack_gravity -- IN.json OUT.json
-//!       [--zone-m 2000] [--decay-km K] [--decay-pow A] [--border-factor F] [--tol 1e-4]
-//!       [--coarse UNDER --ends FILE]
-//!       (defaults: kernel::Params; the border factor's is 1, no effect)
+//!       [--zone-m 2000] [--decay-km K] [--decay-pow A] [--decay-flat-km D] [--border-factor F]
+//!       [--tol 1e-4] [--coarse UNDER --ends FILE]
+//!       (defaults: kernel::Params; the border factor's is 1, no effect; the flat near end's is
+//!       `kernel::flat_near_km` of the curve, T-1091)
 //!
 //! `--coarse` (T-852): blocks of 2x2 squares in thin country (`kernel::coarsen`), judged on each
 //! square's trip ends a weekday, FILE holding one little-endian f32 per cell (`coarse_zones.py`).
+//!
+//! `--keep-zones` (T-1091): a finished pack's own zones (its blocks and merged cells as they are,
+//! so its routes still fit) and, unless given, its own curve and border factor, re-solved alone
+//! with today's flat near end: how a pack that joins nothing takes a rule change of the balance.
 //!
 //! IN may be a finished pack (T-162: re-solving with regions); its old gravity is replaced.
 //! Zones are split by the cells' `region` array when the pack has one, and the decay between
@@ -25,10 +30,15 @@ fn main() {
     let mut p = kernel::Params::default();
     let mut tol = 1e-4f64;
     let (mut coarse, mut ends_path) = (None::<f64>, None::<String>);
+    let mut flat = None::<f32>;
+    let mut keep_zones = false;
+    let mut given = vec![];
     let mut i = 0;
     while i < args.len() {
         let val = || args.get(i + 1).cloned().expect("missing value");
+        given.push(args[i].clone());
         match args[i].as_str() {
+            "--keep-zones" => keep_zones = true,
             "--zone-m" => {
                 p.zone_m = val().parse().unwrap();
                 i += 1;
@@ -39,6 +49,11 @@ fn main() {
             }
             "--decay-pow" => {
                 p.decay_pow = val().parse().unwrap();
+                i += 1;
+            }
+            "--decay-flat-km" => {
+                flat = Some(val().parse().unwrap());
+                assert!(flat.unwrap() >= 0.0, "--decay-flat-km must not be negative");
                 i += 1;
             }
             "--border-factor" => {
@@ -63,11 +78,29 @@ fn main() {
         }
         i += 1;
     }
-    let [inp, out] = <[String; 2]>::try_from(pos).expect("usage: pack_gravity IN.json OUT.json [--zone-m M] [--decay-km K] [--decay-pow A] [--tol T]");
+    let [inp, out] = <[String; 2]>::try_from(pos).expect("usage: pack_gravity IN.json OUT.json [--zone-m M] [--decay-km K] [--decay-pow A] [--decay-flat-km D] [--tol T]");
     let (header, bin) = pack::load_raw(&inp).unwrap_or_else(|e| panic!("{e}"));
     let city = pack::parse(&header, &bin).unwrap_or_else(|e| panic!("{e}"));
     let t0 = now_ms();
-    let mut z = kernel::build_zones(&city, p.zone_m);
+    let mut z = if keep_zones {
+        assert!(coarse.is_none(), "--keep-zones keeps the pack's blocks: no --coarse");
+        let pg = city.gravity.as_ref().expect("--keep-zones needs a pack with a gravity");
+        let has = |k: &str| given.iter().any(|g| g == k);
+        if !has("--decay-km") {
+            p.decay_km = pg.decay_km;
+        }
+        if !has("--decay-pow") {
+            p.decay_pow = pg.decay_pow;
+        }
+        if !has("--border-factor") {
+            p.border_factor = pg.border_factor;
+        }
+        p.zone_m = pg.zone_m;
+        kernel::zones_from_pack(&city, pg)
+    } else {
+        kernel::build_zones(&city, p.zone_m)
+    };
+    p.decay_flat_km = flat.unwrap_or_else(|| kernel::flat_near_km(p.decay_km, p.decay_pow));
     if let Some(under) = coarse {
         let path = ends_path.as_ref().expect("--coarse needs --ends");
         let raw = std::fs::read(path).unwrap_or_else(|e| panic!("{path}: {e}"));
@@ -89,8 +122,8 @@ fn main() {
     let nreg = z.region.iter().copied().max().map_or(0, |r| r as usize + 1);
     let squares = { let (off, _) = z.by_square(); off.windows(2).filter(|w| w[1] > w[0]).count() };
     println!(
-        "gravity: {} zones ({} squares cut by a region border add {}; {} regions) on a {} x {} grid of {} m, decay d^-{} exp(-d/{} km) x {} across regions; Furness {} iterations, max row error {:.1e}; mean trip {:.2} km; {:.0} trips; {:.0} ms",
-        z.n, squares, z.n - squares, nreg, z.w, z.h, z.zone_m, p.decay_pow, p.decay_km, p.border_factor, g.iters, g.max_err, g.mean_km, g.total, ms
+        "gravity: {} zones ({} squares cut by a region border add {}; {} regions) on a {} x {} grid of {} m, decay d^-{} exp(-d/{} km) flat inside {} km x {} across regions; Furness {} iterations, max row error {:.1e}; mean trip {:.2} km; {:.0} trips; {:.0} ms",
+        z.n, squares, z.n - squares, nreg, z.w, z.h, z.zone_m, p.decay_pow, p.decay_km, p.decay_flat_km, p.border_factor, g.iters, g.max_err, g.mean_km, g.total, ms
     );
     if nreg > 1 {
         // the share of trips that cross a region border
@@ -104,7 +137,10 @@ fn main() {
         }
         println!("  trips between regions: {:.0} ({:.2}%)", cross, 100.0 * cross / g.total);
     }
-    let pg = kernel::to_pack_gravity(&z, &g, &p);
+    let mut pg = kernel::to_pack_gravity(&z, &g, &p);
+    if keep_zones {
+        pg.cells9.clone_from(&city.gravity.as_ref().unwrap().cells9);
+    }
     let (mut h2, b2) = pack::with_gravity(&header, &bin, &pg).unwrap_or_else(|e| panic!("{e}"));
     if let (Some(under), true) = (coarse, z.mixed()) {
         let mut v: serde_json::Value = serde_json::from_str(&h2).unwrap();

@@ -73,7 +73,7 @@ class Pack:
                     ex, ey = dx + qi[0] - qj[0], dy + qi[1] - qj[1]
                     dq = zk * np.sqrt(ex * ex + ey * ey)
                     dq[dq == 0] = g["intrazonal_km"]
-                    dq32 = dq.astype(np.float32)
+                    dq32 = np.maximum(dq.astype(np.float32), np.float32(g.get("decay_flat_km", 0.0)))  # T-1091
                     f = f + wq * (np.exp(-dq32 / np.float32(g["decay_km"])) * dq32 ** np.float32(-a_pow)).astype(np.float64)
             if len(subs) == 1:
                 d = dq

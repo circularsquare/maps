@@ -66,6 +66,7 @@ def model_flows(packs=read_pack.PACKS):
         e = min(nz, s + 300)
         d = zk * np.sqrt((gx[s:e, None] - gx[None, :]) ** 2 + (gy[s:e, None] - gy[None, :]) ** 2)
         d[d == 0] = g["intrazonal_km"]
+        d = np.maximum(d, g.get("decay_flat_km", 0.0))  # T-1091
         t = row[s:e, None] * col[None, :] * np.exp(-d / g["decay_km"]) * d ** -g.get("decay_pow", 0.0)
         t *= np.where(zr[s:e, None] != zr[None, :], bf, 1.0)
         F += zh[s:e].T @ t @ zw

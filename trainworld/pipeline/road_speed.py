@@ -80,7 +80,8 @@ def county_distances():
         e = min(nz, s + 400)
         d = zk * np.sqrt((gx[s:e, None] - gx[None, :]) ** 2 + (gy[s:e, None] - gy[None, :]) ** 2)
         d[d == 0] = g["intrazonal_km"]
-        t = row[s:e, None] * col[None, :] * np.exp(-d / g["decay_km"]) * d ** -a_pow
+        df = np.maximum(d, g.get("decay_flat_km", 0.0))  # T-1091
+        t = row[s:e, None] * col[None, :] * np.exp(-df / g["decay_km"]) * df ** -a_pow
         trips[s:e] = t.sum(1)
         dsum[s:e] = (t * d).sum(1)
         b = np.searchsorted(edges, d)
@@ -127,7 +128,8 @@ def zone_sums(R_km, detour=1.3):
         e_ = min(nz, s + 300)
         d = zk * np.sqrt((gx[s:e_, None] - gx[None, :]) ** 2 + (gy[s:e_, None] - gy[None, :]) ** 2)
         d[d == 0] = g["intrazonal_km"]
-        t = row[s:e_, None] * col[None, :] * np.exp(-d / g["decay_km"]) * d ** -a_pow
+        df = np.maximum(d, g.get("decay_flat_km", 0.0))  # T-1091
+        t = row[s:e_, None] * col[None, :] * np.exp(-df / g["decay_km"]) * df ** -a_pow
         road = d * detour
         e = np.minimum(road / 2, R_km)
         Tot[s:e_] = t.sum(1)

@@ -4,15 +4,20 @@ For Anita. One page, kept current: an agent who changes a rule here updates this
 Last updated 2026-10-23 (the T-636 model, with T-710's route choice and crowding, T-717's cost of
 changing, T-718's route choice between cities, T-720's walking bands, T-938's car speeds and
 ownership cost, T-1000's cap on how far jobs pull and its set share of long commutes, T-1055's
-rule that every rail trip rides a train, and T-1059's that it never walks further than walking
-there). The full rules are in demand.md; this is the gist.
+rule that every rail trip rides a train, T-1059's that it never walks further than walking
+there, and T-1091's flat near end of the commute curve outside the US). The full rules are in demand.md; this is the gist.
 
 ## Who travels, and where to
 
 - **Commutes.** Homes to jobs, from each country's census where it has commuting flows (New York,
   Tokyo, London...), or from a curve borrowed from the fitted cities where it has none (Lagos).
   Jobs come from official counts where they exist, otherwise from buildings, OSM places and
-  population. Every job is filled from homes nearby, but no place's jobs pull workers more than 20
+  population. Outside the US a job in your own 2 km square counts the same as one in the next
+  square: those curves were fitted on whole boroughs and towns, and taken at face value they kept
+  two to three times too many people walking to work in their own square (London 18.5% walking
+  against the census's 9.4%). The US curve was fitted block by block and already gets that right.
+  Countries built before this take it at their next rebuild or join.
+  Every job is filled from homes nearby, but no place's jobs pull workers more than 20
   times harder than usual for its area: where the job estimate puts far more jobs in one desert
   town than people live near it, some stay empty rather than drawing people from hundreds of km
   away. On top of that, a set 1% of everyone's workers commute 50-150 km to jobs in other towns.

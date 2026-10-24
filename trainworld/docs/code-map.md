@@ -378,6 +378,10 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   passes `build_city.py --coarse-next`: the build's own 2 km solve stops after one pass, since only
   its zones are read before this re-solve, T-1083). `read_pack.check_gravity` reads the decay from
   a table by square offset (T-1083).
+- `pack_gravity <id>.json <id>.json --keep-zones` (the sim's bin, `cargo run --release --features
+  demand --bin pack_gravity --`) re-solves a finished pack's own gravity on its zones as they are
+  (blocks, merged cells and routes kept) with today's rules, its own curve and border factor: for
+  a pack that joins nothing when the balance's rules change (T-1091's flat near end).
 - `routes.py <ids>` adds routed walking and driving to finished packs (OSM from Geofabrik, cached
   in `data/raw/osm/`; the sim's `pack_walk` bin; 1-8 minutes a pack; rerun after anything that
   changes a pack's zones, `--check` lists stale ones; T-275).

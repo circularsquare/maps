@@ -47,6 +47,9 @@ pub struct PackGravity {
     pub zone_m: f32,
     pub decay_km: f32,
     pub decay_pow: f32,
+    /// T-1091: the decay is held at its value here inside this many km (`decay_flat_km`; 0, or
+    /// absent in the header: none, as every pack solved before it).
+    pub flat_km: f32,
     /// The decay's factor between zones of different regions; 1 (no effect) in a pack without it.
     pub border_factor: f32,
     /// Lower-left corner of the zone grid, metres from the pack origin, and its size in zones.
@@ -250,6 +253,10 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
             "pow_exp" => num("decay_pow")? as f32,
             d => return Err(format!("gravity decay {d:?}, this reader knows \"exp\" and \"pow_exp\"")),
         };
+        let flat_km = g["decay_flat_km"].as_f64().unwrap_or(0.0) as f32;
+        if !(flat_km >= 0.0 && flat_km.is_finite()) {
+            return Err(format!("gravity decay_flat_km {flat_km} is not a distance"));
+        }
         let o = g["grid_origin_m"].as_array().ok_or("gravity block lacks grid_origin_m")?;
         let s = g["grid"].as_array().ok_or("gravity block lacks grid")?;
         // T-162: a pack from before region-aware gravity has neither: one region, factor 1
@@ -267,6 +274,7 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
             zone_m: num("zone_m")? as f32,
             decay_km: num("decay_km")? as f32,
             decay_pow,
+            flat_km,
             border_factor,
             grid_x0: o[0].as_f64().unwrap_or(0.0) as f32,
             grid_y0: o[1].as_f64().unwrap_or(0.0) as f32,
@@ -361,6 +369,10 @@ pub fn with_gravity(header: &str, bin: &[u8], g: &PackGravity) -> Result<(String
     if g.size.iter().any(|&s| s == 2) {
         w.push("zone_size", "u8", "zone", nz, g.size.clone());
     }
+    // a merged pack's zones re-solved as they are keep their land (T-466)
+    if g.cells9.len() == nz {
+        w.push("zone_cells9", "u32", "zone", nz, g.cells9.iter().flat_map(|v| v.to_le_bytes()).collect());
+    }
     w.push("zone_row", "f32", "zone", nz, le_f32(g.row.iter().map(|&v| v as f32)));
     w.push("zone_col", "f32", "zone", nz, le_f32(g.col.iter().map(|&v| v as f32)));
     if !g.home.is_empty() {
@@ -390,6 +402,10 @@ pub fn with_gravity(header: &str, bin: &[u8], g: &PackGravity) -> Result<(String
         "trips": g.trips,
         "solver": "trainworld-sim kernel::gravity (sim/src/bin/pack_gravity.rs)",
     });
+    if g.flat_km > 0.0 {
+        v["gravity"]["decay_flat_km"] = json!(g.flat_km);
+        v["gravity"]["flat"] = json!("the decay at decay_flat_km for any pair closer than that (T-1091)");
+    }
     if g.size.iter().any(|&s| s == 2) && !coarse.is_null() {
         v["gravity"]["coarse"] = coarse;
     }
@@ -512,6 +528,7 @@ mod tests {
             zone_m: 2000.0,
             decay_km: 9.0,
             decay_pow: 0.5,
+            flat_km: 0.0,
             border_factor,
             grid_x0: 1.0,
             grid_y0: -3.0,
@@ -571,6 +588,13 @@ mod tests {
         assert_eq!((g.row, g.col), (g0.row, g0.col));
         assert_eq!((g.grid_w, g.grid_h, g.zone_m, g.decay_km, g.decay_pow, g.border_factor), (1, 2, 2000.0, 9.0, 0.5, 0.25));
         assert_eq!(g.trips, 10.0);
+        // T-1091: no flat near end is written as none, and one survives a write
+        assert!(g.flat_km == 0.0 && !h.contains("decay_flat_km"));
+        let g1 = PackGravity { flat_km: 2.0, cells9: vec![9, 5], ..small_gravity(vec![0, 1], 0.25) };
+        let (h1, b1) = with_gravity(&h, &b, &g1).unwrap();
+        let back = parse(&h1, &b1).unwrap().gravity.unwrap();
+        assert_eq!((back.flat_km, back.cells9), (2.0, vec![9, 5]));
+        assert!(parse(&h1.replace("\"decay_flat_km\": 2.0", "\"decay_flat_km\": -1.0"), &b1).is_err());
     }
 
     #[test]

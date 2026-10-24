@@ -113,7 +113,7 @@ fn t1056() {
     let mut acc = Acc(vec![[0.0; 4]; NS * NG]);
     {
         let (z, gr, p) = (&*api.z, &*api.gr, &api.base);
-        let (_, dtab) = decay_table(z.w, z.h, z.zone_m, 1.0, 0.0);
+        let (_, dtab) = decay_tables(z, Curve { km: 1.0, pow: 0.0, flat_km: 0.0 });
         let place: Vec<(f32, f32)> = z.density().iter().map(|&x| p.place_min_per_km(x)).collect();
         let park: Vec<(f32, f32, f32)> = (0..z.n).map(|j| p.park_parts(z, j)).collect();
         let dres = zone_dens(z, &pop);

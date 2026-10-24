@@ -53,6 +53,9 @@ pub struct Params {
     /// they match it (`city_gravity`), so they change together with `build_city.py`'s.
     pub decay_km: f32,
     pub decay_pow: f32,
+    /// The decay is held at its value here inside this many km (T-1091, `Curve`); 0 none. A
+    /// pack's own gravity carries its value (`PackGravity::flat_km`), set by `flat_near_km`.
+    pub decay_flat_km: f32,
     /// The decay's factor between home and work zones in different first-level regions (T-162:
     /// US states). Only for a gravity solved here or by `pack_gravity`: a pack's own gravity
     /// carries its factor (`PackGravity::border_factor`), so each country sets its own.
@@ -254,8 +257,9 @@ impl Default for Params {
             zone_m: 2000.0,
             // T-720: a zone's cells 1 to 30 minutes from one station are not one walk
             band_min: 15.0,
-            decay_km: 30.0,
-            decay_pow: 0.8,
+            decay_km: US_DECAY_KM,
+            decay_pow: US_DECAY_POW,
+            decay_flat_km: 0.0,
             border_factor: 1.0,
             // T-371, T-372: 1.5 rather than the usual 2.0 (notes/T-371.md, T-372.md)
             w_walk: 1.5,
@@ -1312,7 +1316,54 @@ pub fn cell_walk_m(city: &City, a: u32, b: u32) -> f32 {
     }
 }
 
-pub fn decay_table(w: i32, h: i32, zone_m: f32, decay_km: f32, decay_pow: f32) -> (Vec<f32>, Vec<f32>) {
+/// The US packs' commute curve (T-198), fitted on LODES block pairs: `Params`' default.
+pub const US_DECAY_KM: f32 = 30.0;
+pub const US_DECAY_POW: f32 = 0.8;
+/// T-1091 (docs/demand-kernel.md 1): a curve fitted on units coarser than the 2 km squares
+/// (every curve but the US one) is held flat inside this many km, so a job in the home square
+/// weighs as one in the next square.
+pub const FLAT_NEAR_KM: f32 = 2.0;
+
+/// The flat near end a pack solved now takes for its curve (T-1091): none on the US curve, which
+/// was fitted at block level, `FLAT_NEAR_KM` on any other.
+pub fn flat_near_km(decay_km: f32, decay_pow: f32) -> f32 {
+    if (decay_km - US_DECAY_KM).abs() < 1e-6 && (decay_pow - US_DECAY_POW).abs() < 1e-6 {
+        0.0
+    } else {
+        FLAT_NEAR_KM
+    }
+}
+
+/// The commute decay f(d) = d^-pow x exp(-d / km), d in km, held at f(flat_km) for d under
+/// flat_km (T-1091; 0: none).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Curve {
+    pub km: f32,
+    pub pow: f32,
+    pub flat_km: f32,
+}
+
+impl Curve {
+    #[inline]
+    pub fn at(&self, d: f32) -> f32 {
+        let d = d.max(self.flat_km);
+        (-d / self.km).exp() * if self.pow != 0.0 { d.powf(-self.pow) } else { 1.0 }
+    }
+}
+
+impl Params {
+    pub fn curve(&self) -> Curve {
+        Curve { km: self.decay_km, pow: self.decay_pow, flat_km: self.decay_flat_km }
+    }
+}
+
+impl PackGravity {
+    pub fn curve(&self) -> Curve {
+        Curve { km: self.decay_km, pow: self.decay_pow, flat_km: self.flat_km }
+    }
+}
+
+pub fn decay_table(w: i32, h: i32, zone_m: f32, c: Curve) -> (Vec<f32>, Vec<f32>) {
     let (tw, th) = (2 * w - 1, 2 * h - 1);
     let (offx, offy) = (w - 1, h - 1);
     let zk = zone_m / 1000.0;
@@ -1322,7 +1373,7 @@ pub fn decay_table(w: i32, h: i32, zone_m: f32, decay_km: f32, decay_pow: f32) -
         for dy in -offy..=offy {
             let d = if dx == 0 && dy == 0 { 0.52 * zk } else { zk * ((dx * dx + dy * dy) as f32).sqrt() };
             let i = ((dx + offx) * th + dy + offy) as usize;
-            ftab[i] = (-d / decay_km).exp() * if decay_pow != 0.0 { d.powf(-decay_pow) } else { 1.0 };
+            ftab[i] = c.at(d);
             dtab[i] = d;
         }
     }
@@ -1429,20 +1480,20 @@ pub fn pair_decay(z: &Zones, decay: impl Fn(f32) -> f32) -> Vec<f32> {
 }
 
 /// `decay_tables`' decay alone.
-pub fn decay_ftab(z: &Zones, decay_km: f32, decay_pow: f32) -> Vec<f32> {
+pub fn decay_ftab(z: &Zones, c: Curve) -> Vec<f32> {
     if !z.mixed() {
-        return decay_table(z.w, z.h, z.zone_m, decay_km, decay_pow).0;
+        return decay_table(z.w, z.h, z.zone_m, c).0;
     }
-    pair_decay(z, |d| (-d / decay_km).exp() * if decay_pow != 0.0 { d.powf(-decay_pow) } else { 1.0 })
+    pair_decay(z, |d| c.at(d))
 }
 
 /// The pair tables of `decay_table` for zones `z`: decay and centre distance (km). With blocks
 /// (T-852) the decay is `pair_decay`'s and a block's own pair is 0.52 of its side apart.
-pub fn decay_tables(z: &Zones, decay_km: f32, decay_pow: f32) -> (Vec<f32>, Vec<f32>) {
+pub fn decay_tables(z: &Zones, c: Curve) -> (Vec<f32>, Vec<f32>) {
     if !z.mixed() {
-        return decay_table(z.w, z.h, z.zone_m, decay_km, decay_pow);
+        return decay_table(z.w, z.h, z.zone_m, c);
     }
-    let ftab = pair_decay(z, |d| (-d / decay_km).exp() * if decay_pow != 0.0 { d.powf(-decay_pow) } else { 1.0 });
+    let ftab = pair_decay(z, |d| c.at(d));
     let zk = z.zone_m / 1000.0;
     let mut dtab = vec![0f32; ftab.len()];
     mixed_entries(z, |k, dx, dy, kind| {
@@ -1455,7 +1506,7 @@ pub fn decay_tables(z: &Zones, decay_km: f32, decay_pow: f32) -> (Vec<f32>, Vec<
 /// open, a few ms), otherwise solved here (seconds). Returns whether the pack's were used.
 pub fn city_gravity(city: &City, p: &Params) -> (Zones, Gravity, bool) {
     if let Some(pg) = &city.gravity {
-        if (pg.zone_m - p.zone_m).abs() < 0.5 && (pg.decay_km - p.decay_km).abs() < 1e-6 && (pg.decay_pow - p.decay_pow).abs() < 1e-6 {
+        if (pg.zone_m - p.zone_m).abs() < 0.5 && (pg.decay_km - p.decay_km).abs() < 1e-6 && (pg.decay_pow - p.decay_pow).abs() < 1e-6 && pg.flat_km == p.decay_flat_km {
             let z = zones_from_pack(city, pg);
             let mut g = gravity_from_pack(&z, pg);
             g.set_walk(&z, p);
@@ -1508,7 +1559,7 @@ fn res9_cells(city: &City, c: usize) -> u32 {
 }
 
 pub fn gravity_from_pack(z: &Zones, pg: &PackGravity) -> Gravity {
-    let ftab = decay_ftab(z, pg.decay_km, pg.decay_pow);
+    let ftab = decay_ftab(z, pg.curve());
     let (th, offx, offy, kb, _) = table_layout(z);
     Gravity {
         row: pg.row.clone(),
@@ -1540,6 +1591,7 @@ pub fn to_pack_gravity(z: &Zones, g: &Gravity, p: &Params) -> PackGravity {
         zone_m: z.zone_m,
         decay_km: p.decay_km,
         decay_pow: p.decay_pow,
+        flat_km: p.decay_flat_km,
         border_factor: g.border,
         grid_x0: z.x0,
         grid_y0: z.y0,
@@ -1577,7 +1629,7 @@ pub const PULL_CAP: f64 = 20.0;
 /// multiplied by `p.border_factor` between zones of different regions (T-162).
 pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
     let (th, offx, offy, kb, _) = table_layout(z);
-    let (ftab, dtab) = decay_tables(z, p.decay_km, p.decay_pow);
+    let (ftab, dtab) = decay_tables(z, p.curve());
     let tp: f64 = z.pop.iter().sum();
     let tj: f64 = z.jobs.iter().sum();
     let o: Vec<f64> = z.pop.iter().map(|&v| v * tj / tp).collect();
@@ -5830,7 +5882,7 @@ mod tests {
         let g = gravity(&z, &p, 300, 1e-7);
         let g0 = gravity(&z0, &p, 300, 1e-7);
         assert!((g.total / g0.total - 1.0).abs() < 1e-5 && (g.mean_km / g0.mean_km - 1.0).abs() < 0.04, "{} km against {}", g.mean_km, g0.mean_km);
-        let (_, dtab) = decay_tables(&z, 1.0, 0.0);
+        let (_, dtab) = decay_tables(&z, Curve { km: 1.0, pow: 0.0, flat_km: 0.0 });
         let f = |d: f32| (-d / p.decay_km).exp() * d.powf(-p.decay_pow);
         let sq = |i: usize| -> Vec<(i32, i32)> {
             let (s, gx, gy) = (z.side(i), z.gx[i], z.gy[i]);
@@ -5893,6 +5945,51 @@ mod tests {
         for (i, j) in [(0, 1), (3, z.n - 1), (z.n / 2, z.n / 3), (z.n - 1, z.n - 1)] {
             assert!((gb.t(&zb, i, j) / g.t(&z, i, j).max(1e-30) - 1.0).abs() < 1e-5 || g.t(&z, i, j) < 1e-12);
         }
+    }
+
+    /// T-1091: the flat near end weighs a job in the home square as one in the next square and
+    /// leaves pairs 2 km apart and more as they were; a block's pairs take the mean over its
+    /// squares of the flat curve; the US curve takes none; a pack solved with it keeps fewer
+    /// commutes at home and opens from its factors only for the same flat near end.
+    #[test]
+    fn flat_near_end() {
+        let (mut city, z0, z) = mixed_city();
+        assert_eq!(flat_near_km(US_DECAY_KM, US_DECAY_POW), 0.0);
+        assert_eq!(flat_near_km(80.0, 1.8), FLAT_NEAR_KM);
+        let c = Curve { km: 16.0, pow: 1.4, flat_km: FLAT_NEAR_KM };
+        let c0 = Curve { flat_km: 0.0, ..c };
+        let (f, d) = decay_table(z0.w, z0.h, z0.zone_m, c);
+        let (f0, _) = decay_table(z0.w, z0.h, z0.zone_m, c0);
+        for k in 0..f.len() {
+            if d[k] >= 2.0 {
+                assert_eq!(f[k], f0[k]);
+            } else {
+                assert!(f[k] == c.at(2.0) && f0[k] > 2.0 * f[k], "{} km: {} against {}", d[k], f[k], f0[k]);
+            }
+        }
+        // a block's own pair: of its 16 square pairs, 4 own and 8 side by side at 2 km, 4 diagonal
+        let fb = decay_ftab(&z, c);
+        let pk = PairKey::of(&z);
+        let b = (0..z.n).find(|&i| z.size[i] == 2).unwrap();
+        let own = fb[(pk.base(&z, b) + pk.key(&z, b)) as usize];
+        let want = (12.0 * c.at(2.0) + 4.0 * c.at(2.0 * 2f32.sqrt())) / 16.0;
+        assert!((own / want - 1.0).abs() < 1e-6, "{own} against {want}");
+        // solved: fewer commutes in their own zone, the mean a little longer
+        let p0 = Params { decay_km: c.km, decay_pow: c.pow, ..Params::default() };
+        let p = Params { decay_flat_km: c.flat_km, ..p0.clone() };
+        let (g0, g) = (gravity(&z, &p0, 300, 1e-7), gravity(&z, &p, 300, 1e-7));
+        let own_share = |g: &Gravity| (0..z.n).map(|i| g.t(&z, i, i)).sum::<f64>() / g.total;
+        assert!(own_share(&g) < 0.7 * own_share(&g0) && g.mean_km > g0.mean_km, "own {} against {}", own_share(&g), own_share(&g0));
+        // shipped with its flat near end, opened from its factors with it and re-solved without
+        city.gravity = Some(to_pack_gravity(&z, &g, &p));
+        let (h, bin) = crate::demand::pack::write(&city);
+        assert!(h.contains("\"decay_flat_km\": 2.0"));
+        let back = crate::demand::pack::parse(&h, &bin).unwrap();
+        assert_eq!(back.gravity.as_ref().unwrap().curve(), c);
+        let (zb, gb, from_pack) = city_gravity(&back, &p);
+        assert!(from_pack && gb.ftab == g.ftab);
+        assert!((own_share(&gb) / own_share(&g) - 1.0).abs() < 1e-5 && zb.n == z.n);
+        assert!(!city_gravity(&back, &p0).2);
     }
 
     /// T-852: commutes on the synthetic network with the outer zones in blocks keep their rail

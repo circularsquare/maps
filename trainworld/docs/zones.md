@@ -195,7 +195,9 @@ over every job in reach, in its own zone or another, so moving a zone line moves
 
 - **Within one pack** a pair uses the pack's own decay table and border factor, exactly as the pack
   does at runtime (with thin country's 4 km blocks too, docs/demand-kernel.md 1, T-852). Across
-  packs a block stands at the middle of its four squares.
+  packs a block stands at the middle of its four squares. Every pack the solve balances takes the
+  curve's flat near end of today's rule (T-1091: flat inside 2 km on every curve but the US one) and
+  ships it in its gravity block, so a rerun join applies it; a fixed neighbour keeps its own.
 - **Across packs** a pair uses the great-circle distance between the two gravity zones' centres,
   cut at 150 km (beyond it the decay is under a thousandth of a 10 km pair's, and LODES's long
   links are mostly head-office addresses, notes/T-268.md), and a **border factor per region pair**:
@@ -258,6 +260,8 @@ over every job in reach, in its own zone or another, so moving a zone line moves
   A fixed neighbour's rows are not rebalanced, so one whose factors predate the pull cap (no
   `gravity.pull` block) can pour workers into capped zones across the line that its own solve had
   held near zero; solving that neighbour again with the cap takes the flow back (notes/T-1000.md).
+  A fixed neighbour solved before the flat near end keeps its own curve for its homes' pairs
+  across the line; nearly all those pairs are 2 km or more apart, where the two curves agree.
   A solve region in `intercity.SOLVE_ALONE` (Xinjiang, T-998) holds no neighbours: its commutes
   with them come from their solves. `intercity.py` refuses one solve over 400,000 zones (about six Japans).
 

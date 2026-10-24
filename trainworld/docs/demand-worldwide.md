@@ -353,6 +353,20 @@ notes/T-420.md has the tables.
   Houston) may need both parameters longer; informal-job cities have no workplace register to fit
   to. Check: one commuting-flow table per new country, fit the two parameters, compare with
   T-185's relative measures (local job ratio, nearest-job rank), not absolute density.
+- **The curve flat inside 2 km** (T-1091, Anita 2026-10-23). Every curve but the US one was fitted
+  on units coarser than the 2 km squares (boroughs, municipalities, communes, distance bands with
+  everything under 4 km in one), so nothing fitted its near end; extended inward from there, the
+  steep ones kept two to three times the census's walking commutes in the home square (London
+  18.5% walking against the census's 9.4%, Tokyo 23.9% against 7.5%). So a job in the home square
+  weighs as one in the next square: f(d) = f(max(d, 2 km)), one rule for every non-US pack
+  (`kernel::flat_near_km`). The US curve, fitted on LODES block pairs, matches short commutes
+  already (3.2% in the home square against LODES's 3.5%) and keeps its near end. Why it may not
+  carry over: where the units are small enough to see the near end (Japan's municipalities, the
+  Mumbai and Sao Paulo surveys' bands), the flows want more short commutes than the flat end gives
+  (2-3 points more commuters misplaced in Japan, 4-8 in Mumbai and Sao Paulo, under 1 in Europe and
+  Toronto); the gap between those flows and the census's walking is the short-trip modes the game
+  lacks (bikes, buses: T-634). Check, for a country with fine flows: its own-unit share with and
+  without the flat end.
 - **Border factor.** Cross-state US commutes are multiplied by 0.23 (Washington 0.45), fitted to
   LODES; outside the US the policy is national borders only, weaker inside Schengen (T-181). It
   does not stop NJ to NYC commuting (Hudson to Manhattan stays near the real figure); it removes

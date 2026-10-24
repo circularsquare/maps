@@ -754,6 +754,7 @@ impl DemandApi {
             if (pg.zone_m - base.zone_m).abs() < 0.5 {
                 base.decay_km = pg.decay_km;
                 base.decay_pow = pg.decay_pow;
+                base.decay_flat_km = pg.flat_km;
             }
         }
         let (z, mut gr, gravity_from_pack) = city_gravity(&city, &base);

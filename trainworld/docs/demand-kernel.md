@@ -53,6 +53,20 @@ levels:
    pack, flatter at the near end so residents of job-rich places commute out to suburban jobs as
    LODES has them, undershooting as Anita asked (how it was fitted and its effect per pack:
    notes/T-185.md, notes/T-198.md). It does not depend on the network, so edits never rerun it.
+   **The flat near end** (T-1091, Anita 2026-10-23): every other curve (fitted on borough,
+   municipality or commune pairs, or on distance bands, or borrowed from those) is held flat inside
+   2 km, f(d) = f(max(d, 2 km)) (`kernel::Curve`, `FLAT_NEAR_KM`), so a job in the home square (its
+   own pair 1.04 km) weighs as one in the next square; pairs 2 km apart and more are as before. The
+   US curve, fitted on LODES block pairs, keeps its near end (`kernel::flat_near_km`: none on the
+   US curve, 2 km on any other). A pack carries its value in its gravity block (`decay_flat_km`;
+   absent, none), and every reader of the curve takes it from there: the runtime's table
+   (`DemandApi::new` copies it into `Params::decay_flat_km`; `kernel::gravity` with no shipped
+   factors uses the same), the joint solve and `read_pack.check_gravity`. A pack is solved with
+   today's rule when it is built (`pack_gravity`, `coarse_zones.py`) or joined (`joint_gravity`, for
+   the packs it balances) or re-solved on its own zones (`pack_gravity --keep-zones`, for a pack
+   that joins nothing), so packs solved before keep theirs until then. A 4 km block's pairs take
+   the mean over their squares of the flat curve, so a block's own pair is 3/4 at 2 km and 1/4 on
+   the diagonal. The pull cap is measured against the pack's own pulls under the same curve.
    The pipeline solves it (Furness, the sim crate's own code run natively) and ships a zone id per
    cell and two factors per zone in the pack (notes/T-004.md); opening a city rebuilds zone trips
    from them rather than solving. **The pull cap** (T-1000, `kernel::PULL_CAP`): every worker

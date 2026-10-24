@@ -51,6 +51,8 @@ def check_gravity(header, a):
         assert name in a and len(a[name]) == count, f"array {name} missing or wrong length"
     assert g["decay"] in ("exp", "pow_exp"), g["decay"]
     a_pow = g.get("decay_pow", 0.0) if g["decay"] == "pow_exp" else 0.0
+    flat = float(g.get("decay_flat_km", 0.0))  # T-1091: the decay held at its value there inside it
+    assert flat >= 0, flat
     zm, (x0, y0), (w, h) = g["zone_m"], g["grid_origin_m"], g["grid"]
     zone = a["zone"].astype(np.int64)
     gx, gy = a["zone_gx"].astype(np.int64), a["zone_gy"].astype(np.int64)
@@ -93,8 +95,8 @@ def check_gravity(header, a):
     dq[dq == 0] = g["intrazonal_km"]
     # in float32 as the kernel's decay table: far pairs underflow to 0 there, and the factors
     # balance without them (T-897: Lhasa's zone spans 1,980 km)
-    dq32 = dq.astype(np.float32)
-    dec = (np.exp(-dq32 / np.float32(g["decay_km"])) * dq32 ** np.float32(-a_pow)).astype(np.float64)
+    dq32 = np.maximum(dq.astype(np.float32), np.float32(flat))
+    dec =(np.exp(-dq32 / np.float32(g["decay_km"])) * dq32 ** np.float32(-a_pow)).astype(np.float64)
     del ex, ey, dq, dq32
     if blocks:
         def at(u, v):  # dec shifted by (u, v), on offsets -w..w, -h..h
@@ -167,6 +169,8 @@ def check_gravity(header, a):
           f"{cerr:.1e} off jobs; OK")
     print(f"  regions: {', '.join(names) if names else 'one'}; border factor {bf:g}; trips between regions "
           f"{cross:,.0f} ({cross / tot:.2%})")
+    if flat:
+        print(f"  decay flat inside {flat:g} km (T-1091)")
     if pull:
         print(f"  pull cap {pull['cap']:g} (T-1000): {pull['held']:.2%} of the jobs held at the band, the rest filled to {pull['fill']:.4f}")
 

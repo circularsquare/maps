@@ -44,6 +44,10 @@
 //! `LONG_SHARE` of every zone's workers (`--long-share`) commute to jobs `LONG_KM` away outside the
 //! balance, listed with the cross-pack commutes, their own pack's included.
 //!
+//! T-1091: every solved pack's curve is held flat inside `kernel::flat_near_km` of it (none on the
+//! US curve; `--flat-km D` for trials, 0 none), written to its gravity block; a fixed pack keeps its
+//! own. So rerunning a join applies the rule to the packs it solves.
+//!
 //! The balance (T-297) runs per group of packs joined by any pair within the cut, each to `--tol`
 //! on every column (rows exact), with Anderson mixing; `--check` re-measures both after the solve,
 //! and `--dump` writes the factors and kept trips for comparing two solves.
@@ -72,8 +76,7 @@ struct Pk {
     /// the runtime's index into `ftab` (T-852: zones of two sizes)
     pk: kernel::PairKey,
     border: f32,
-    decay_km: f32,
-    decay_pow: f32,
+    curve: kernel::Curve,
     zone_m: f32,
     /// global region id per pack region
     regions: Vec<usize>,
@@ -133,7 +136,11 @@ fn main() {
         let city = pack::parse(&header, &bin).unwrap_or_else(|e| panic!("{id}: {e}"));
         let pg = city.gravity.clone().unwrap_or_else(|| panic!("{id} has no gravity"));
         let z = kernel::zones_from_pack(&city, &pg);
-        let (ftab, dtab) = kernel::decay_tables(&z, pg.decay_km, pg.decay_pow);
+        // T-1091: a solved pack takes today's flat near end for its curve (`--flat-km` for
+        // trials); a fixed one keeps its own, which its factors were solved with
+        let flat_km = if fixed { pg.flat_km } else { get("--flat-km").map_or_else(|| kernel::flat_near_km(pg.decay_km, pg.decay_pow), |v| v.parse().unwrap()) };
+        let curve = kernel::Curve { flat_km, ..pg.curve() };
+        let (ftab, dtab) = kernel::decay_tables(&z, curve);
         let hv: Value = serde_json::from_str(&header).unwrap();
         // packs built before headers carried a country (tor, lon, par, sao) take the registry's (T-590)
         let country = hv["country"].as_str().or(c["country"].as_str()).unwrap_or("US").to_uppercase();
@@ -151,7 +158,7 @@ fn main() {
             })
             .collect();
         let n = z.n;
-        packs.push(Pk { id, header, bin, pk: kernel::PairKey::of(&z), border: pg.border_factor, decay_km: pg.decay_km, decay_pow: pg.decay_pow, zone_m: pg.zone_m, city, z, ftab, dtab, regions, off, market: market.max(0) as usize, fixed });
+        packs.push(Pk { id, header, bin, pk: kernel::PairKey::of(&z), border: pg.border_factor, curve, zone_m: pg.zone_m, city, z, ftab, dtab, regions, off, market: market.max(0) as usize, fixed });
         off += n;
     }
     let nz = off;
@@ -279,11 +286,11 @@ fn main() {
     let cross_tab: Vec<Vec<f32>> = packs
         .iter()
         .map(|p| {
-            let dmin = 0.52 * p.zone_m as f64 / 1000.0;
+            let dmin = (0.52 * p.zone_m as f64 / 1000.0).max(p.curve.flat_km as f64);
             (0..nsteps)
                 .map(|k| {
                     let d = (k as f64 * step).max(dmin);
-                    (d.powf(-p.decay_pow as f64) * (-d / p.decay_km as f64).exp()) as f32
+                    (d.powf(-p.curve.pow as f64) * (-d / p.curve.km as f64).exp()) as f32
                 })
                 .collect()
         })
@@ -836,6 +843,7 @@ fn main() {
     // ---- write the packs
     for p in packs.iter().filter(|p| !p.fixed) {
         let mut pg = p.city.gravity.clone().unwrap();
+        pg.flat_km = p.curve.flat_km;
         let r = p.off..p.off + p.z.n;
         pg.row = row[r.clone()].to_vec();
         pg.col = col[r.clone()].to_vec();
