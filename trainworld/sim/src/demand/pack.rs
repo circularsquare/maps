@@ -36,6 +36,27 @@ impl City {
         let j = self.jobs.iter().map(|&v| v as f64).sum();
         (p, j)
     }
+    /// The cells `keep` (indices), named "t", with no regions and no gravity: the caller solves
+    /// it.
+    #[cfg(test)]
+    pub fn subset(&self, keep: &[usize]) -> City {
+        City {
+            name: "t".into(),
+            h3: keep.iter().map(|&c| self.h3[c]).collect(),
+            x: keep.iter().map(|&c| self.x[c]).collect(),
+            y: keep.iter().map(|&c| self.y[c]).collect(),
+            pop: keep.iter().map(|&c| self.pop[c]).collect(),
+            jobs: keep.iter().map(|&c| self.jobs[c]).collect(),
+            region: vec![],
+            gravity: None,
+        }
+    }
+    /// `subset` of the cells within `radius_m` of the origin.
+    #[cfg(test)]
+    pub fn inner(&self, radius_m: f32) -> City {
+        let keep: Vec<usize> = (0..self.len()).filter(|&c| self.x[c].hypot(self.y[c]) < radius_m).collect();
+        self.subset(&keep)
+    }
 }
 
 /// Doubly constrained gravity between square zones, as shipped: zone trips

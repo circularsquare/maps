@@ -11,7 +11,7 @@
 //!   squares (`drive_near`) and between supercells beyond (`drive_far`, `drive_super`).
 //!
 //! A pack without them, or whose zones are not the ones they were made for, has no `Routes`:
-//! every walk and drive is the straight line x 1.3, as before.
+//! every walk and drive is the straight line x 1.3.
 
 use serde_json::Value;
 use std::cell::RefCell;
@@ -235,11 +235,6 @@ thread_local! {
     /// straight line, with their walking metres (infinite: cut off). Shared by the populations of
     /// one city on this thread (its commutes and its everyday purposes).
     static STATION_WALKS: RefCell<HashMap<(u64, u32, u32, u32), Arc<Vec<(u32, f32)>>>> = RefCell::new(HashMap::new());
-}
-
-/// Forget every station's walk search (tests).
-pub fn clear_station_walks() {
-    STATION_WALKS.with(|c| c.borrow_mut().clear());
 }
 
 /// Read one array of a pack as raw little-endian bytes.

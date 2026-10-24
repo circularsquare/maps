@@ -7,7 +7,7 @@
 
 import { signal } from "@preact/signals";
 import { useRef, useState } from "preact/hooks";
-import { fareAt, MAX_KM, MIN_KM, NODE_GAP_KM, type FareNode } from "../game/fareCurve";
+import { fareAt, fitOrigin, MAX_KM, MIN_KM, NODE_GAP_KM, type FareNode } from "../game/fareCurve";
 import { unitMetres, unitShort } from "../game/format";
 import { canUndoFares, changeFares as setFares, undo } from "../game/fareUndo";
 import { Icon, Stepper } from "./widgets";
@@ -83,7 +83,7 @@ export function FareNodeRows({ nodes }: { nodes: FareNode[] }) {
         const lo = i === 0 ? MIN_KM / kpu : (other[0] + NODE_GAP_KM) / kpu;
         const hi = i === 0 ? (other[0] - NODE_GAP_KM) / kpu : MAX_KM / kpu;
         const fLo = i === 0 ? 0 : other[1], fHi = i === 0 ? other[1] : Infinity;
-        const put = (n: FareNode) => setFares(i === 0 ? [n, other] : [other, n]);
+        const put = (n: FareNode) => setFares(fitOrigin(i === 0 ? [n, other] : [other, n], i));
         const setU = (v: number) => { if (lo <= hi) void put([Math.min(hi, Math.max(lo, v)) * kpu, fare]); };
         const setFare = (v: number) => void put([km, Math.min(fHi, Math.max(fLo, Math.round(v * 100) / 100))]);
         const uStep = u < 10 ? 0.5 : u < 100 ? 5 : 50;
@@ -151,7 +151,7 @@ export function FareGraph({ nodes }: { nodes: FareNode[] }) {
     const raw = snap(Math.max(0, Math.min(1, (B - p.y) / (B - T))) * d.top, Math.max(0.01, niceUp(d.top / 250)));
     const fare = d.i === 0 ? Math.min(raw, other[1]) : Math.max(raw, other[1]);
     ns[d.i] = [u * kpu, fare];
-    farePreview.value = ns;
+    farePreview.value = fitOrigin(ns, d.i);
   };
   const end = () => {
     const d = drag.current, f = farePreview.value;

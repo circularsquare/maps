@@ -208,7 +208,7 @@ mod tests {
 
     #[test]
     fn equirect_is_the_legacy_formula() {
-        // The formula every save before T-125 assumes (app/src/game/coords.ts, net.rs tile_of).
+        // The formula every save before T-125 assumes (app/src/game/coords.ts).
         let f = Frame::equirect(NYC.0, NYC.1);
         let (x, y) = f.from_lonlat(-75.1636, 39.9526);
         let rad = std::f64::consts::PI / 180.0;

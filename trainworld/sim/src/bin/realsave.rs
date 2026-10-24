@@ -10,7 +10,7 @@
 //!
 //! Writes `nyc_real.twt2` (the network part of a save, format TWT2, uncompressed) and
 //! `nyc_real_track.json`: the stations and lines with the run times the track model gives them,
-//! packed as `DemandApi::set_network` takes them (the clock worker's snapshot), for `realnet`.
+//! packed as `DemandApi::set_network` takes them (the clock worker's snapshot), for `calib`.
 
 use serde_json::{json, Value};
 use trainworld_sim::track::geom::Pi;

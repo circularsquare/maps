@@ -19,11 +19,12 @@
 //!   train's load and each platform's crowd, a day at a time.
 //! - `localtime`: each region's local time (T-309): the zone table and a place's shift.
 //! - `save`: the network part of a save (varints, mm deltas).
-//! - `wasm`: the wasm-bindgen API for the clock worker (a sketch).
+//! - `trace`: a real railway's line as the corners the track tool places (T-727c).
+//! - `wasm`: the wasm-bindgen API for the clock worker.
 //! - `bench`: a synthetic 2,000 km network and edit timings (`src/bin/track_bench.rs`).
 //! - `world`: edit operations with inverses, undo/redo, dirty sets; what the clock worker owns.
 
-#[cfg(any(not(target_arch = "wasm32"), feature = "track-bench"))]
+#[cfg(not(target_arch = "wasm32"))]
 pub mod bench;
 pub mod boarding;
 pub mod bridge;

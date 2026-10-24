@@ -26,15 +26,9 @@ use std::collections::BTreeMap;
 use trainworld_sim::demand::api::DemandApi;
 use trainworld_sim::demand::clock::now_ms;
 use trainworld_sim::demand::everyday::EverydayApi;
-use trainworld_sim::demand::network::PERIODS;
+use trainworld_sim::demand::network::{RealNet, PERIODS};
 use trainworld_sim::demand::pack;
 
-fn arr_f32(v: &Value, k: &str) -> Vec<f32> {
-    v[k].as_array().unwrap_or_else(|| panic!("network: no {k}")).iter().map(|x| x.as_f64().unwrap() as f32).collect()
-}
-fn arr_u32(v: &Value, k: &str) -> Vec<u32> {
-    v[k].as_array().unwrap_or_else(|| panic!("network: no {k}")).iter().map(|x| x.as_u64().unwrap() as u32).collect()
-}
 fn r1(v: &[f64]) -> Vec<f64> {
     if std::env::args().any(|a| a == "--exact") {
         return v.to_vec();
@@ -96,27 +90,9 @@ fn main() {
         return;
     }
 
-    let d = &net["demand"];
-    let (st_xy, line_n, stops, times, tph, cars) = (arr_f32(d, "st_xy"), arr_u32(d, "line_n"), arr_u32(d, "stops"), arr_f32(d, "times"), arr_f32(d, "tph"), arr_f32(d, "cars"));
-    // each route node's hop to the next stop, km (the fare's distance), kernel order
-    let mut hop_km = vec![];
-    let mut off = 0usize;
-    for &n in &line_n {
-        let n = n as usize;
-        for dir in 0..2 {
-            for i in 0..n {
-                let k = if dir == 0 { off + i } else { off + n - 1 - i };
-                hop_km.push(if i + 1 < n {
-                    let nx = if dir == 0 { k + 1 } else { k - 1 };
-                    let (s0, s1) = (stops[k] as usize, stops[nx] as usize);
-                    (st_xy[2 * s0] - st_xy[2 * s1]).hypot(st_xy[2 * s0 + 1] - st_xy[2 * s1 + 1]) / 1000.0
-                } else {
-                    0.0
-                });
-            }
-        }
-        off += n;
-    }
+    let real = RealNet::from_json(&net);
+    let hop_km = real.hop_km();
+    let RealNet { st_xy, line_n, stops, times, tph, cars } = real;
     let t1 = now_ms();
     api.set_network(&st_xy, &line_n, &stops, &times, &tph, &cars).unwrap();
     if let Some(e) = ev.as_mut() {
@@ -155,7 +131,7 @@ fn main() {
     let (mut ent_c, mut ent_e, mut ent_am) = (vec![], vec![], vec![]);
     let (mut board, mut area_rail, mut area_trips, mut area_walk) = (vec![], vec![0f64; n_area], vec![0f64; n_area], vec![0f64; n_area]);
     let mut seg_all: Vec<f64> = vec![];
-    // trips, rail, walked, and 0 where trips by other were before T-854
+    // trips, rail, walked; the fourth slot stays 0
     let (mut c_tot, mut e_tot) = ([0f64; 4], [0f64; 4]);
     let mut kinds: Vec<f64> = vec![];
     let mut walks_all: Vec<f64> = vec![];

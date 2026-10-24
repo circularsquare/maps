@@ -23,7 +23,6 @@ import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, d
 import { CITIES, cityToMarket, cityToWorld, HOME_CITY, marketWorld, setWorldFrame, worldToCity, worldToLonLat, type CityId } from "../game/cities";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
-import { curveKnots } from "../game/fareCurve";
 import type { CorridorTable } from "../game/demand";
 import { TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
@@ -1054,8 +1053,6 @@ async function run() {
             setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);
           }
           p.set_fares(m.fare.base, m.fare.perKm, m.hopKm);
-          // T-883: absent from WASM built before it
-          if ("set_fare_curve" in p) p.set_fare_curve(curveKnots(m.fare));
         }
         // T-124: a period is kept only if every population kept it (its inputs are unchanged: the
         // Rust side) and each holds it from a whole solve of this cluster's period (`psig`): the

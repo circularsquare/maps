@@ -45,11 +45,9 @@ by the ratio. The regional market damps the same way (docs/regional.md 5.1). **C
 is no circle the player sees. A farther station makes the walk, and so the whole trip, worse, and
 the station loses riders where that trip gets worse than driving. Value of time is one constant everywhere,
 $20/hour (`FARE_MIN_PER_USD`: 3 perceived minutes per dollar, a gameplay judgement), so fares
-compare across countries. The fare is the player's curve of trip length (T-883,
-track-and-service.md, fares), charged once per trip including transfers on actual track length.
-Route choice sees its first stretch as a base plus a rate per km on each ride; mode choice sees
-the whole curve, each station pair's cost corrected to the curve's fare at the expected km of
-its strategy (the riders' split over lines by their departures). Crowding multiplies ride time
+compare across countries. The fare is the player's line of trip length (T-883,
+T-1112, track-and-service.md, fares): a base once per trip, including transfers, plus a rate per
+km on each ride's actual track length, for route choice and mode choice alike. Crowding multiplies ride time
 without multiplying fare (T-067).
 
 **Walking** (Anita, T-558) is a third mode: its share is that of a logit among rail, the car and

@@ -4,7 +4,7 @@
 //!
 //! Inputs change only through the raw setters (`set_node`, `set_edge`, `set_station`,
 //! `set_line`, `set_schedule`), which record what they touched; `derive` then rebuilds just those
-//! parts. `edit.rs` builds undoable operations on top.
+//! parts. `world.rs` builds undoable operations on top.
 
 use super::cost::{self, NoWater, WaterMask};
 use super::cross::{self, Grid};
@@ -273,8 +273,6 @@ pub struct Touch {
 pub struct Derived {
     pub edges: Vec<u32>,
     pub nodes: Vec<u32>,
-    /// Render tiles (zoom 12) of the old and new extent.
-    pub tiles: Vec<(u32, u32)>,
     /// Positions of crossings removed or added.
     pub crossings: Vec<[f64; 2]>,
 }
@@ -656,11 +654,6 @@ impl Network {
     pub fn release_edge(&mut self, id: u32) {
         if !self.edge_ok(id) && (id as usize) < self.edge_count() && !self.edge_free.contains(&id) {
             self.edge_free.push(id);
-        }
-    }
-    pub fn release_line(&mut self, id: u32) {
-        if !self.line_ok(id) && (id as usize) < self.line_count() && !self.line_free.contains(&id) {
-            self.line_free.push(id);
         }
     }
 
@@ -1144,7 +1137,6 @@ impl Network {
             if old.len > 0 {
                 let p = self.pieces.get(old).to_vec();
                 self.grid.remove(e, &p);
-                self.tiles_of(&p, &mut d.tiles);
             }
             if !self.edge_alive[i] {
                 self.pieces.free(old);
@@ -1173,7 +1165,6 @@ impl Network {
             self.edge_vert[i] = self.verts.replace(self.edge_vert[i], &f.vert);
             self.edge_water[i] = self.water.replace(self.edge_water[i], &wet);
             self.grid.insert(e, &f.pieces);
-            self.tiles_of(&f.pieces, &mut d.tiles);
             fresh.push(e);
         }
         // Nodes: the touched ones and every node at a re-derived edge's ends.
@@ -1187,10 +1178,6 @@ impl Network {
         for &n in &nodes {
             if self.node_ok(n) {
                 self.derive_node(n);
-                if self.node_ports[n as usize].n == 0 {
-                    // An edgeless node still marks its tile.
-                    d.tiles.push(self.tile_of(self.node_x[n as usize], self.node_y[n as usize]));
-                }
             }
         }
         // Crossings of touched edges.
@@ -1239,8 +1226,6 @@ impl Network {
             }
         }
         self.maybe_compact();
-        d.tiles.sort_unstable();
-        d.tiles.dedup();
         d.edges = edges;
         d.nodes = nodes;
         d
@@ -1371,41 +1356,6 @@ impl Network {
         if self.paths.needs_compact() {
             self.paths.compact(&mut self.line_path);
         }
-    }
-
-    // ---------------------------------------------------------------- tiles
-
-    /// Web mercator tile (zoom 12) of a local point.
-    pub fn tile_of(&self, x: f64, y: f64) -> (u32, u32) {
-        if self.frame.scaled() {
-            // The Mercator plane is the tiles' own: arithmetic only.
-            let z = (1u32 << TILE_ZOOM) as f64;
-            let c = 2.0 * PI * EARTH_R;
-            let (tx, ty) = (((x / c + 0.5) * z).floor(), ((0.5 - y / c) * z).floor());
-            return (tx.clamp(0.0, z - 1.0) as u32, ty.clamp(0.0, z - 1.0) as u32);
-        }
-        let (lon, lat) = self.frame().to_lonlat(x, y);
-        let lat = lat.to_radians();
-        let z = (1u32 << TILE_ZOOM) as f64;
-        let tx = ((lon + 180.0) / 360.0 * z).floor();
-        let ty = ((1.0 - (lat.tan() + 1.0 / lat.cos()).ln() / PI) / 2.0 * z).floor();
-        (tx.clamp(0.0, z - 1.0) as u32, ty.clamp(0.0, z - 1.0) as u32)
-    }
-
-    fn tiles_of(&self, pieces: &[Piece], out: &mut Vec<(u32, u32)>) {
-        let mut pts = vec![];
-        geom::sample(pieces, 200.0, 10.0, 0.0, &mut pts);
-        for p in pts {
-            out.push(self.tile_of(p[0], p[1]));
-        }
-    }
-
-    pub fn edge_tiles(&self, e: u32) -> Vec<(u32, u32)> {
-        let mut t = vec![];
-        self.tiles_of(self.edge_pieces(e), &mut t);
-        t.sort_unstable();
-        t.dedup();
-        t
     }
 
     // ---------------------------------------------------------------- validity
@@ -1755,12 +1705,6 @@ impl Network {
     /// Edge ends at a node whose edge is constructed.
     pub fn built_ports(&self, n: u32) -> usize {
         self.node_ports[n as usize].ends().iter().filter(|&&c| self.edge_built[(c >> 1) as usize]).count()
-    }
-
-    /// Edge ends at a node whose edge is constructed or will be by Construct (not switched off,
-    /// T-333): the blueprint quote prices a junction once this reaches three.
-    pub fn built_after_ports(&self, n: u32) -> usize {
-        self.node_ports[n as usize].ends().iter().filter(|&&c| self.edge_built[(c >> 1) as usize] || !self.edge_off[(c >> 1) as usize]).count()
     }
 
     /// The constructed station or edge set is complete for a line: it can carry trains.

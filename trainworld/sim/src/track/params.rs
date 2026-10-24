@@ -31,8 +31,6 @@ pub const HEADING_TOL: f64 = 0.003;
 pub const FIT_TOL: f64 = 0.01;
 /// Intersections closer than this to a node both edges share are the node itself, not a crossing.
 pub const SHARED_NODE_CLEAR: f64 = 25.0;
-/// Two double-track routes' tracks are this far apart (drawing only).
-pub const TRACK_SPACING: f64 = 4.0;
 /// A crossover (T-338): its length along the track, m, the farthest apart the two tracks it joins
 /// may be (centre to centre, m; the nearest is `CROSSOVER_MIN_GAP`), and its speed limit, m/s.
 pub const CROSSOVER_LEN: f64 = 120.0;
@@ -182,9 +180,6 @@ pub fn day_kind_at(t: f64) -> usize {
     if (day - 1).rem_euclid(7) >= 5 { 1 } else { 0 }
 }
 
-// ---- render tiles (SPEC 6.5) ----
-
-pub const TILE_ZOOM: u32 = 12;
 pub const EARTH_R: f64 = 6371008.8;
 
 /// Round to the placement grid (1 mm).

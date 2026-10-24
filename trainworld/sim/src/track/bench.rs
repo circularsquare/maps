@@ -1,5 +1,4 @@
-//! A large synthetic network and timings of edits on it (T-040). Native: `src/bin/track_bench.rs`;
-//! WASM: `track_bench` in `wasm.rs` (feature `track-bench`).
+//! A large synthetic network and timings of edits on it (T-040). Run by `src/bin/track_bench.rs`.
 //!
 //! The network: corridors drawn as random walks (a PI every 0.8-1.5 km, turns up to 20 degrees),
 //! a third of them roots at random levels, the rest branching off an earlier corridor at a
@@ -14,22 +13,11 @@ use super::params::*;
 use super::save;
 use super::world::{Op, TrackWorld};
 
-#[cfg(not(target_arch = "wasm32"))]
 pub fn now_ms() -> f64 {
     use std::sync::OnceLock;
     use std::time::Instant;
     static T0: OnceLock<Instant> = OnceLock::new();
     T0.get_or_init(Instant::now).elapsed().as_secs_f64() * 1000.0
-}
-
-#[cfg(target_arch = "wasm32")]
-pub fn now_ms() -> f64 {
-    #[wasm_bindgen::prelude::wasm_bindgen]
-    extern "C" {
-        #[wasm_bindgen(js_namespace = performance)]
-        fn now() -> f64;
-    }
-    now()
 }
 
 struct Rng(u64);
@@ -328,8 +316,7 @@ pub fn run(km: f64, stations: usize, lines: usize, reps: usize) -> (String, Vec<
                     if i == 0 {
                         let d = &r.dirty;
                         info = format!(
-                            "tiles {}, edges {}, lines {} (+{} sharing), profiles recomputed {}, demand woken {}",
-                            d.tiles.len(),
+                            "edges {}, lines {} (+{} sharing), profiles recomputed {}, demand woken {}",
                             d.edges.len(),
                             d.lines.len(),
                             d.service.shared.len(),

@@ -58,8 +58,6 @@ pub fn clamp_auto(want: u32, trip_s: f64, headway_s: u32, most_tph: f64) -> u32 
 /// What an edit touched (SPEC 6.5).
 #[derive(Clone, Debug, Default)]
 pub struct Dirty {
-    /// Zoom-12 render tiles of the old and new extent.
-    pub tiles: Vec<(u32, u32)>,
     pub edges: Vec<u32>,
     pub nodes: Vec<u32>,
     /// Positions of crossings removed or added.
@@ -275,14 +273,6 @@ impl TrackWorld {
         Ok(r)
     }
 
-    /// Apply an edit that changes what is constructed (construct, remove constructed track, make
-    /// a constructed junction flying), paying `charge` out of `cash` US$M. Such an edit is final:
-    /// it is not undone, and it clears the undo history, so no undo can rebuild or unbuild
-    /// anything for free (SPEC 6.4). Refused, with nothing changed, if the cash is short.
-    pub fn apply_charged(&mut self, op: Op, cash: f64) -> Result<EditResult, ChargeError> {
-        self.apply_paid(op, cash, true, &|_| 0.0).map(|r| r.0)
-    }
-
     /// Apply an edit and pay for it: its construction charge plus `extra`, evaluated on the
     /// edited network (the trains it makes the lines need, T-028). Refused, with nothing changed,
     /// if that comes to more than `cash`; an edit costing nothing is never refused for money, so
@@ -463,7 +453,7 @@ impl TrackWorld {
         let cost_after = self.net.total_cost();
         let built_after = self.net.built_cost();
         let r = EditResult {
-            dirty: Dirty { tiles: der.tiles, edges: der.edges, nodes: der.nodes, crossings: der.crossings, resources, lines: direct, service: svc },
+            dirty: Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, resources, lines: direct, service: svc },
             cost_before,
             cost_after,
             built_before,

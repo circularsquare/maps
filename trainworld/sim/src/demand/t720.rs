@@ -9,18 +9,7 @@ use super::{pack, synth};
 /// The synthetic city's inner 12 km, one line of three stations 2 km apart along y = 0, solved
 /// in the morning peak with walk bands of `band` minutes.
 fn sparse(band: f32) -> DemandApi {
-    let full = synth::synth_city(1);
-    let keep: Vec<usize> = (0..full.len()).filter(|&c| full.x[c].hypot(full.y[c]) < 12_000.0).collect();
-    let mut city = pack::City {
-        name: "t".into(),
-        h3: keep.iter().map(|&c| full.h3[c]).collect(),
-        x: keep.iter().map(|&c| full.x[c]).collect(),
-        y: keep.iter().map(|&c| full.y[c]).collect(),
-        pop: keep.iter().map(|&c| full.pop[c]).collect(),
-        jobs: keep.iter().map(|&c| full.jobs[c]).collect(),
-        region: vec![],
-        gravity: None,
-    };
+    let mut city = synth::synth_city(1).inner(12_000.0);
     let p = Params::default();
     let z = build_zones(&city, p.zone_m);
     let g = gravity(&z, &p, 100, 1e-5);

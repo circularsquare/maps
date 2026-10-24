@@ -8,8 +8,6 @@
 //
 // Fare per ride = base + per km x the ride's length along the line. A ride that changes lines
 // pays the base once: boardings are scaled to trips by the city's rail trips over all boardings.
-// With a bent fare curve (T-883) a line's trips in a period are each charged the curve's fare at
-// their mean length (`faresFor`), the same as above for a straight one.
 //
 // The economy runs at 100x (T-081, `ECONOMY` in sim/src/track/params.rs, sent as
 // `MoneyState.economy`): a game day's fares and running costs are that many times a real day's,

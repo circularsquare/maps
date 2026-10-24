@@ -497,7 +497,7 @@ notes/T-420.md has the tables.
   rental car or a long walk it is harder. The
   weights are fitted on New York only (T-372: 53-66% of commuter rail riders ride there). Check: the share of rail riders
   reaching the station by car or bus per sampler city (UK NTS for London, Metrolinx surveys for
-  Toronto) against the model's home-end ride share (`realnet` prints it).
+  Toronto) against the model's home-end ride share (rail trips at the ride access entries, `Subzones::ride`).
 - **Walking the whole way** (T-558, T-636, docs/demand-mode.md 4.3 "Walking"). A mode in the choice
   beside rail and the car (or other), at 1.5 perceived minutes a minute at every length, with a
   bonus of 10 perceived minutes against the car (`walk_bonus_min`) for what a short drive costs beyond

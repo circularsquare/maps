@@ -1,4 +1,5 @@
 use super::*;
+use crate::demand::network::{route_nodes, RealNet};
 
 #[test]
 fn intercity_prunes_symmetric_pairs_after_averaging() {
@@ -819,11 +820,7 @@ fn intercity_real_network_outputs() {
     let t = now_ms();
     let mut a = IntercityApi::new(&real_world(root, None)).unwrap();
     eprintln!("open {:.0} ms, info {:?}", now_ms() - t, a.info());
-    let j: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/data/work/realnet/nyc_real_track.json")).unwrap()).unwrap();
-    let d = &j["demand"];
-    let f32s = |k: &str| d[k].as_array().unwrap().iter().map(|v| v.as_f64().unwrap() as f32).collect::<Vec<f32>>();
-    let u32s = |k: &str| d[k].as_array().unwrap().iter().map(|v| v.as_u64().unwrap() as u32).collect::<Vec<u32>>();
-    let (mut st_xy, mut line_n, mut stops, mut times, mut tph, mut cars) = (f32s("st_xy"), u32s("line_n"), u32s("stops"), f32s("times"), f32s("tph"), f32s("cars"));
+    let (RealNet { mut st_xy, mut line_n, mut stops, mut times, mut tph, mut cars }, _) = RealNet::load(&format!("{root}/data/work/realnet/nyc_real_track.json"));
     const R: f64 = 6371008.8;
     let rad = std::f64::consts::PI / 180.0;
     let wx = R * (-75.1636 + 73.985) * rad * (40.758 * rad).cos();
@@ -839,23 +836,7 @@ fn intercity_real_network_outputs() {
     }
     tph.extend([4.0, 4.0, 2.0]);
     cars.push(8.0);
-    let mut hop_km = vec![];
-    let mut off = 0usize;
-    for &n in &line_n {
-        for dir in 0..2 {
-            for i in 0..n as usize {
-                let k = if dir == 0 { off + i } else { off + n as usize - 1 - i };
-                let next = if dir == 0 { k + 1 } else { k.wrapping_sub(1) };
-                hop_km.push(if i + 1 < n as usize {
-                    let (p, q) = (stops[k] as usize, stops[next] as usize);
-                    (st_xy[2 * p] - st_xy[2 * q]).hypot(st_xy[2 * p + 1] - st_xy[2 * q + 1]) / 1000.0
-                } else {
-                    0.0
-                });
-            }
-        }
-        off += n as usize;
-    }
+    let hop_km = route_nodes(&st_xy, &line_n, &stops).2;
     // the network is in the New York frame: to longitude and latitude
     let ny = Frame::equirect(-73.985, 40.758);
     let ll: Vec<f64> = st_xy.chunks_exact(2).flat_map(|p| {

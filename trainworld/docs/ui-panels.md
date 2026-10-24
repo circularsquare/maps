@@ -309,7 +309,9 @@ nice step of at least a quarter of that. Distance ticks fall every nice step of 
 distance shown, the last labelled with the unit. The curve has exactly two nodes, each dragged both
 ways within the plot: distance to the nice step of at least 1/200 of the distance shown, fare to that
 of 1/250 of the top (at least $0.01); the second stays at least 2% of the distance shown (and 0.1 km)
-farther than the first and never cheaper. The scale holds still during a drag. A drag changes the
+farther than the first and never cheaper. The line through them is never below $0 at 0 km: a drag or
+a typed value that would take it there stops where the line meets $0 (the dragged node's fare, no
+lower for the first node and no higher for the second). The scale holds still during a drag. A drag changes the
 graph and the figures below it as the pointer moves, and sends the fare to the game once on release
 (each change restarts demand). While fare changes are the last edits sent, Ctrl+Z takes them back one
 at a time, and Ctrl+Y or Ctrl+Shift+Z puts them back, in order with the track's own undo and redo; the

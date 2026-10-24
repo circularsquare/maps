@@ -639,15 +639,14 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   and only it and the Money tab's cash, Today column and History re-render. The fare for a trip
   follows one curve of trip length for the network, set in the Money tab [T-883, T-1112,
   `app/src/game/fareCurve.ts`]: the straight line through the player's two nodes, carried on past
-  each at its slope, never below $0; the second node is farther and never cheaper. It starts as
+  each at its slope; the second node is farther and never cheaper, and the line is never below $0 at
+  0 km (the Money tab holds the node being set to that, and an older save's first node is raised to it). It starts as
   $1.50 + $0.10 a km (nodes at 1 and 100 km; a save with a base and rate instead loads them the same
   way, and an older curve of more nodes keeps its first and last); a trip that changes lines pays it
   once on its whole length. In
-  demand, route search charges the first stretch as a base and a rate per km, and each station
-  pair's cost adds the rest of the curve on the expected km of its strategy (`FareCurve` in
-  `sim/src/demand/kernel.rs`); the trip explorer shows the curve's fare on the route's own length.
-  Fare income comes from demand's riders and passenger-km per period (`app/src/game/money.ts`),
-  each line's trips taken at their mean length when the curve is bent. Changing the fare
+  demand, route search charges the line as a base and a rate per km (`set_fares`), and the trip
+  explorer shows that fare on each ride. Fare income is the same base and rate on demand's riders
+  and passenger-km per period (`app/src/game/money.ts`), so demand and income agree. Changing the fare
   recalculates demand: higher prices can lose riders (T-067). Running costs can take the cash below zero; edits that cost nothing still
   work then. notes/T-028.md.
 - **Money by region** (T-531, `app/src/game/regionMoney.ts`): beside the network's, the worker

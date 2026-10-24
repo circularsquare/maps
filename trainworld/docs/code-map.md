@@ -12,9 +12,13 @@ tests natively.
   T-125), the network and its edits with undo (`world.rs`; blueprint and construct, T-055),
   run-time profiles, capacity, the boarding account (`boarding.rs`: each train's load and each
   platform's crowd, T-164), each stop's service span for demand (`span.rs`, T-842), saves, local time (`localtime.rs`, T-309), and `wasm.rs` (`TrackApi`,
-  the clock worker's API, with the drawing tool's routes and the crossover tool's edit, T-338). In the default build.
-  `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network; feature
-  `track-bench` exports it to WASM. notes/T-040.md.
+  the clock worker's API, with the drawing tool's routes and the crossover tool's edit, T-338; its
+  exports are split by area into `wasm/money.rs`, `edits.rs`, `draw.rs`, `crossings.rs`, `links.rs`,
+  `lines.rs`, `snapshot.rs` and `service.rs`, the shared helpers staying in `wasm.rs`). In the default build.
+  `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network.
+  notes/T-040.md. Methods only tests and bins call (`set_line`, `set_edge`, `to_lonlat` and the
+  like) sit in plain `impl` blocks, not in the WASM exports; the same holds for `DemandApi`,
+  `EverydayApi` and `IntercityApi`. A big file's tests are in its own `<file>/tests.rs`.
 - `src/track/trace.rs`: a real railway's line as corners within a tolerance (T-727c), for
   `TrackApi::trace_route` and the real-network snap; `Tracer` runs it in steps (`RouteTrace` in
   WASM, T-754); notes/T-727.md.
@@ -33,10 +37,12 @@ tests natively.
   `calib --cells --exact` dumps every figure unrounded, for before/after checks.
   `cargo test --release --features demand nyc_day -- --ignored --nocapture` solves a day on the
   real pack natively. notes/T-026.md.
-- `src/bin/`: native tools behind feature `demand`, built in `data/work/target`: `realnet` (a day
-  of commutes on a test network, T-007), `zones_day` (every layer on New York, T-276), `calib`
+- `src/bin/`: native tools behind feature `demand`, built in `data/work/target`: `calib`
   (T-509: a weekday on a city's real network with a parameter set, for `pipeline/calib.py`),
   `realsave`, `pack_gravity`, `pack_walk`, `market_pack`, `joint_gravity`, `zone_summary`.
+  `demand::network::RealNet` reads a real network's JSON for `calib` and the real-network tests
+  (`route_nodes` gives the fare km per route node, the rule of the app's `hopKm`);
+  `City::subset` and `inner` cut the synthetic city down for tests.
 
 ## app/: the browser game
 
@@ -80,7 +86,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   leaderboards: which server, the session, each slot's game id and its score sends, the boards;
   shonei-server's `trainworld.go`); its panels `ui/AccountPanel.tsx` and `ui/Leaderboard.tsx`.
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
-  `fareCurve.ts` (the fare curve through the player's two nodes: fare at a length, old saves' base and rate as nodes, the knots the sim takes, T-883, T-1112), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
+  `fareCurve.ts` (the fare curve through the player's two nodes: fare at a length, old saves' base and rate as nodes, T-883, T-1112), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
@@ -255,7 +261,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   slot's backups go; port 6150 by default), `t894-previews.mjs` (save pictures: a game in New York,
   Boston and Philadelphia and the real save, their panels and size, screenshots of the saves panel
   and start menu to artifacts/trainworld/previews/; `SHADE=dark`; port 6120 by default),
-  `t883-fare-curve.mjs` (the real save: the default fare's 11,359,932 rail trips, the same line through other nodes, three nodes kept as first and last, a doubled rate losing rail trips, a curve clamped at $0 adding them; the Money tab's drag sending once on release, wheel zoom's off-plot arrow and its click; fare graph screenshots), `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
+  `t883-fare-curve.mjs` (the real save: the default fare's 12,796,392 rail trips, the same line through other nodes, three nodes kept as first and last, a doubled rate losing rail trips, a line lifted at its first node when it would be below $0 at 0 km, $0 at 0 km rising adding rail trips; the Money tab's drag sending once on release, wheel zoom's off-plot arrow and its click; fare graph screenshots), `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
   rides and running costs, with the largest hour-to-hour change beside the flat booking's),
   `t872-holidays.mjs` (the real save over the next Thanksgiving: that day's boarding account, fares
   and ledger are Saturday's, the days around it weekdays; the day is a weekday in Canada and the UK),

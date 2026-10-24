@@ -1,6 +1,6 @@
 //! The player's network as the demand kernel sees it: stations, lines as ordered stops, run time
 //! per hop, headway per period, seats and crush load per train. Plus a hand-made New York-ish
-//! network for the spike (25 lines, ~400 stations, radial, crosstown and orbital).
+//! network for the synthetic city (25 lines, ~400 stations, radial, crosstown and orbital).
 
 /// Morning peak, midday, evening peak, evening, night: the periods of `track::params::PERIOD_HOURS`,
 /// the one definition schedules and demand share.
@@ -245,4 +245,67 @@ impl Network {
         self.recompute_run_times();
         moved
     }
+}
+
+/// A real city's network as `pipeline/realnet.py` writes it (the file's `demand` object), in the
+/// arrays `DemandApi::set_network` takes. For the native tools and tests.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct RealNet {
+    pub st_xy: Vec<f32>,
+    pub line_n: Vec<u32>,
+    pub stops: Vec<u32>,
+    pub times: Vec<f32>,
+    pub tph: Vec<f32>,
+    pub cars: Vec<f32>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl RealNet {
+    pub fn from_json(j: &serde_json::Value) -> RealNet {
+        let d = &j["demand"];
+        let f32s = |k: &str| d[k].as_array().unwrap_or_else(|| panic!("network: no {k}")).iter().map(|v| v.as_f64().unwrap() as f32).collect::<Vec<f32>>();
+        let u32s = |k: &str| d[k].as_array().unwrap_or_else(|| panic!("network: no {k}")).iter().map(|v| v.as_u64().unwrap() as u32).collect::<Vec<u32>>();
+        RealNet { st_xy: f32s("st_xy"), line_n: u32s("line_n"), stops: u32s("stops"), times: f32s("times"), tph: f32s("tph"), cars: f32s("cars") }
+    }
+    /// The network of the JSON file at `path`, and the file's whole JSON (stations' and lines'
+    /// names are there).
+    pub fn load(path: &str) -> (RealNet, serde_json::Value) {
+        let j: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap_or_else(|e| panic!("{path}: {e}"))).unwrap();
+        (RealNet::from_json(&j), j)
+    }
+    /// `route_nodes` of this network.
+    pub fn route_nodes(&self) -> (Vec<usize>, Vec<usize>, Vec<f32>) {
+        route_nodes(&self.st_xy, &self.line_n, &self.stops)
+    }
+    pub fn hop_km(&self) -> Vec<f32> {
+        self.route_nodes().2
+    }
+}
+
+/// Per route node, in the kernel's order (each line's stops forward, then reversed): its
+/// station, its line, and the km to the next stop (the fare's distance; 0 at a line's end).
+/// The same rule as the app's `hopKm`.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn route_nodes(st_xy: &[f32], line_n: &[u32], stops: &[u32]) -> (Vec<usize>, Vec<usize>, Vec<f32>) {
+    let (mut rn_st, mut rn_line, mut hop_km) = (vec![], vec![], vec![]);
+    let mut off = 0usize;
+    for (l, &n) in line_n.iter().enumerate() {
+        let n = n as usize;
+        for dir in 0..2 {
+            for i in 0..n {
+                let k = if dir == 0 { off + i } else { off + n - 1 - i };
+                rn_st.push(stops[k] as usize);
+                rn_line.push(l);
+                hop_km.push(if i + 1 < n {
+                    let next = if dir == 0 { k + 1 } else { k - 1 };
+                    let (s0, s1) = (stops[k] as usize, stops[next] as usize);
+                    (st_xy[2 * s0] - st_xy[2 * s1]).hypot(st_xy[2 * s0 + 1] - st_xy[2 * s1 + 1]) / 1000.0
+                } else {
+                    0.0
+                });
+            }
+        }
+        off += n;
+    }
+    (rn_st, rn_line, hop_km)
 }

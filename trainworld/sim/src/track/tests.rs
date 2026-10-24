@@ -280,7 +280,6 @@ fn schedule_change_dirties_shared_lines_and_demand() {
     let r = w.apply(Op::Schedule { id: a, tph: [16.0, 6.0, 3.0] }).unwrap();
     assert!(r.dirty.service.shared.contains(&b));
     assert!(r.dirty.service.demand.contains(&a));
-    assert!(r.dirty.tiles.is_empty());
     w.undo().unwrap().unwrap();
     assert_eq!(w.net.line_tph[a as usize], [10.0, 6.0, 3.0]);
 }

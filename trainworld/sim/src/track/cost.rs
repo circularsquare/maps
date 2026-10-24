@@ -1,4 +1,4 @@
-//! Build costs (SPEC 6.4) and the water mask interface (T-030 will supply the real mask).
+//! Build costs (SPEC 6.4) and the water mask interface.
 
 use super::frame::Frame;
 use super::params::*;

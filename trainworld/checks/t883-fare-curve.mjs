@@ -1,8 +1,8 @@
 // T-883, T-1112: the fare curve reaches demand, and the Money tab's two-node control works. On the
 // real save (a ?new=1 game, the weekday's final): the default fare; the same line through other
 // nodes (no change at all); an older three-node curve kept as its first and last (here the default
-// again); twice the rate per km (fewer rail trips); free up to 5 km then $0.10 a km (the curve's
-// own path in the sim, clamped at $0; more rail trips). Then in the Money tab: dragging the second
+// again); twice the rate per km (fewer rail trips); a line below $0 at 0 km lifted at its first node; $0 at 0 km
+// then $0.10 a km (more rail trips). Then in the Money tab: dragging the second
 // node sends nothing until release, then the new fare; Ctrl+Z, Ctrl+Y and the undo button take it
 // back and put it back (T-1130); wheel zoom puts it past the plot as an
 // arrow, and a click on the arrow zooms back out. Screenshots of the fare graph (its default view,
@@ -19,7 +19,7 @@ const BASE = (process.argv[2] ?? 'http://localhost:6150/').replace(/\/?$/, '/');
 const SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 const OUT = 'artifacts/trainworld/t1111/';
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const DEFAULT_RAIL = 11359932;
+const DEFAULT_RAIL = 12796392;
 
 async function playwright() {
   if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
@@ -82,10 +82,16 @@ try {
   const dd = (d.rail - a.rail) / a.rail;
   report('twice the rate per km', dd < 0, `(${fmt(d.rail)}, ${(100 * dd).toFixed(2)}%)`);
 
+  // a line that would be below $0 at 0 km is lifted at the first node, so demand and income agree
   await setNodes([[5, 0], [100, 9.5]]);
-  const e = await final(d.version);
+  await page.waitForFunction(() => JSON.stringify(window.tw.moneyState.value.fares.nodes) === '[[5,0.48],[100,9.5]]', undefined, { timeout: 30000 });
+  report('a line below $0 at 0 km is lifted', true, '(nodes [[5,0.48],[100,9.5]])');
+  const e0 = await final(d.version);
+
+  await setNodes([[1, 0.1], [100, 10]]);
+  const e = await final(e0.version);
   const de = (e.rail - a.rail) / a.rail;
-  report('free up to 5 km, then $0.10 a km', de > 0, `(${fmt(e.rail)}, ${(100 * de).toFixed(2)}% more rail trips)`);
+  report('$0 at 0 km, then $0.10 a km', Math.round(e.rail) === 14078830, `(${fmt(e.rail)}, ${(100 * de).toFixed(2)}% more rail trips)`);
 
   await setNodes([[1, 1.6], [100, 11.5]]);
   await page.waitForFunction(() => JSON.stringify(window.tw.moneyState.value.fares.nodes) === '[[1,1.6],[100,11.5]]', undefined, { timeout: 30000 });

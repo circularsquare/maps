@@ -1,12 +1,13 @@
 // The player's fare curve (T-883, T-1112): the fare for a trip against its length, the straight
-// line through two nodes the player places, carried on past each at its slope, never below $0.
-// The second node is farther and never cheaper, so a longer trip never costs less. The sim and
-// `fareAt` still take any number of nodes; the Money tab keeps two (T-1114 may trim the rest).
+// line through two nodes the player places, carried on past each at its slope. The second node is
+// farther and never cheaper, so a longer trip never costs less, and the line is never below $0 at
+// 0 km (`fitOrigin`, `tidyNodes`), so a fare is never negative. `fareAt` and `tidyNodes` still
+// take any number of nodes; the Money tab keeps two.
 //
-// `base` and `perKm` are the curve's first stretch as a straight line (the fare at 0 km and its
-// slope): the demand's route search charges them on each ride, and the sim adds the rest of the
-// curve on each trip's length (sim/src/demand/kernel.rs `FareCurve`). The default curve, and any
-// old save's base and rate, is that line through two nodes at 1 and 100 km.
+// `base` and `perKm` are the curve as a straight line (the fare at 0 km and its slope), and all
+// the sim takes: its route search charges them on each ride (`set_fares`), so demand and income
+// (`faresFor`) give the same fare. The default curve, and any old save's base and rate, is that
+// line through two nodes at 1 and 100 km.
 
 /** [trip km, US$] */
 export type FareNode = [number, number];
@@ -56,6 +57,24 @@ export function tidyNodes(nodes: FareNode[]): FareNode[] {
   }
   if (out.length > 2) out.splice(1, out.length - 2);
   for (let i = 1; i < out.length; i++) out[i][1] = Math.max(out[i][1], out[i - 1][1]);
+  if (out.length === 2) out[0][1] = Math.max(out[0][1], originFloor(out));
+  return out;
+}
+
+const upCents = (v: number) => Math.ceil(v * 100 - 1e-9) / 100;
+const downCents = (v: number) => Math.floor(v * 100 + 1e-9) / 100;
+/** The lowest first-node fare that keeps the line through two nodes at or above $0 at 0 km. */
+function originFloor([[k0], [k1, f1]]: FareNode[]): number {
+  return upCents((k0 * f1) / k1);
+}
+
+/** Two nodes after moving node `moved` (a drag or a typed value): that node is held to where the
+ * line is not below $0 at 0 km, the first node's fare no lower, the second's no higher. */
+export function fitOrigin(nodes: FareNode[], moved: number): FareNode[] {
+  const out = nodes.map((n) => [...n] as FareNode);
+  if (out.length !== 2) return out;
+  if (moved === 0) out[0][1] = Math.max(out[0][1], originFloor(out));
+  else out[1][1] = Math.min(out[1][1], Math.max(out[0][1], downCents((out[0][1] * out[1][0]) / out[0][0])));
   return out;
 }
 
@@ -75,19 +94,11 @@ export function faresOf(f: { base?: number; perKm?: number; nodes?: FareNode[] }
 export function isStraight(f: Fares): boolean {
   const n = f.nodes;
   if (n.length < 2) return true;
-  if (n[0][1] - f.perKm * n[0][0] < -1e-9) return false; // clamped at $0 before the first node
   return n.every(([k, v]) => Math.abs(v - (f.base + f.perKm * k)) < 1e-6);
 }
 
-/** The knots the sim takes (`set_fare_curve`): km and US$ in pairs, none for a straight line. */
-export function curveKnots(f: { base: number; perKm: number; nodes?: FareNode[] }): Float32Array {
-  const full = faresOf(f, f);
-  return isStraight(full) ? new Float32Array(0) : new Float32Array(full.nodes.flat());
-}
-
-/** The fare taken from `rides` trips riding `km` in all, US$: exact for a straight line; for a
- * curve, each trip is taken at the mean length (T-883). */
+/** The fare taken from `rides` trips riding `km` in all, US$: the base on each trip and the rate on
+ * the km, as demand charges it. */
 export function faresFor(f: Fares, rides: number, km: number): number {
-  if (isStraight(f)) return f.base * rides + f.perKm * km;
-  return rides > 0 ? rides * fareAt(f.nodes, km / rides) : 0;
+  return f.base * rides + f.perKm * km;
 }

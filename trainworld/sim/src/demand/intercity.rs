@@ -16,7 +16,7 @@
 //! data/packs/intercity.json, the joint commute gravity's input, and the tests' fixtures) opens as
 //! a closed world over its own zones with the ground curve alone.
 use super::{
-    api::{check_fare_curve, demand_groups, merge_stations, put_fare_curve, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
+    api::{demand_groups, merge_stations, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
     clock::now_ms,
     days::{load_factor, share_out, share_ret, LONGER, WEEKDAY, WORK},
     kernel::*,
@@ -1597,6 +1597,64 @@ impl IntercityApi {
     pub fn place_trips(&self, pairs: &[(usize, usize)], min_km: f64) -> Vec<(f64, f64)> {
         self.m.place_trips(pairs, min_km)
     }
+    /// Number of places in selection and station flow headers.
+    pub fn market_count(&self) -> usize {
+        self.m.places.len()
+    }
+    /// T-377: the 6 km zones of the whole world (every place's, open or not): the length of the
+    /// zone blocks of every answer.
+    pub fn zone_count(&self) -> usize {
+        self.m.n_gid
+    }
+    /// The places this market holds the packs of (ascending).
+    pub fn open_places(&self) -> Vec<u32> {
+        (0..self.m.places.len()).filter(|&p| self.m.places[p].open).map(|p| p as u32).collect()
+    }
+    /// The zone pairs the network's stations serve, and the place pairs with trips.
+    pub fn pair_counts(&self) -> Vec<f64> {
+        vec![self.pairs.len() as f64, self.m.place_pairs as f64]
+    }
+    /// The network with stations in the pack's plane (an old single pack).
+    pub fn set_network(&mut self, st_xy: &[f32], line_n: &[u32], stops: &[u32], times: &[f32], tph: &[f32], cars: &[f32]) -> Result<f64, String> {
+        self.set_network_in(st_xy, line_n, stops, times, tph, cars)
+    }
+    /// T-276: per corridor, the commutes between zones in period `q`: legs and rail legs.
+    pub fn commute_corridors(&self, q: usize) -> Vec<f64> {
+        let legs = 0.5 * (TO_WORK[q] + TO_HOME[q]) as f64;
+        self.per(q).filter(|_| self.m.commuters > 0.).map_or(vec![], |s| self.m.c_corridor.iter().zip(&s.c_corridors).flat_map(|(&c, &r)| [c * legs, r]).collect())
+    }
+    /// As `DemandApi::transfers` (T-176): this market's transfers over the periods held.
+    pub fn transfers(&self, sel: &[u8]) -> Vec<f32> {
+        let mut out = vec![];
+        for st in self.per.iter().flatten() {
+            transfer_pairs(&st.g, &st.xi, &st.xfer, sel, &mut out);
+        }
+        out
+    }
+    /// Where the longer trips of a selection of local cells go and come from (T-118).
+    ///
+    /// The selection is points (`xy`: x, y per 600 m square, metres in that place's pack frame)
+    /// of one `market` (place) with the `share` (0..1) of that square's people, or jobs, that are
+    /// selected. A site's share of its zone's departures is its people over the zone's, of its
+    /// arrivals its attraction over the zone's.
+    ///
+    /// Returns, over the periods solved: the matched share of the points, then 8 numbers per
+    /// place at the far end (trips starting in the selection that end there: all modes, by rail,
+    /// all-mode trips times far x and y; then the same for trips ending in the selection), then
+    /// per global 6 km zone (`zone_count`) all and rail of starts and of ends, every zone's x, y
+    /// and place, then the commutes' tail (4 per place, 4 per zone), then (T-378) the trips with
+    /// places that have no zone, starting and ending. Places with no pack open here are counted by
+    /// place only.
+    pub fn selection_flows(&self, market: u32, xy: &[f32], share: &[f32]) -> Vec<f64> {
+        self.selection_flows_day(market, xy, share, WEEKDAY as u32)
+    }
+    /// A station's longer-trip rail riders over the periods solved (T-118): per place, riders
+    /// starting here bound for it, riders ending here from it, and those counts times the far
+    /// zone's x and y (starts x, starts y, ends x, ends y); then per global 6 km zone the riders
+    /// starting, then ending, then every zone's x, y and place. Empty with no such station.
+    pub fn station_flows(&self, station: u32) -> Vec<f64> {
+        self.station_flows_day(station, WEEKDAY as u32)
+    }
 }
 
 /// T-373: the 2 km zones of a group's sites (`city`, whose `jobs` are attractions) with their
@@ -1695,7 +1753,6 @@ pub struct IntercityApi {
     per: Vec<Option<Period>>,
     fare_km: Vec<f32>,
     fare_per_km: f32,
-    fare_curve: Vec<f32>,
     complex_in: Vec<u32>,
     /// `DemandApi::set_span` (T-842).
     span_in: Vec<f32>,
@@ -1926,7 +1983,6 @@ impl IntercityApi {
             per: (0..PERIODS).map(|_| None).collect(),
             fare_km: vec![],
             fare_per_km: 0.,
-            fare_curve: vec![],
             complex_in: vec![],
             span_in: vec![],
             chunk: 0.,
@@ -1936,7 +1992,7 @@ impl IntercityApi {
     }
     fn pass(&self, g: &Graph, p: &Params, q: usize, ix: &XferIndex) -> Pass {
         let todo = self.want.iter().filter(|&&w| w).count();
-        if todo * strategy_bytes(g) <= MARKET_STRATEGY_BYTES || legacy() || skims_cached(g, p) {
+        if todo * strategy_bytes(g) <= MARKET_STRATEGY_BYTES || skims_cached(g, p) {
             // the strategies are shared with the local populations on the same service (T-119)
             return with_skims(g, p, &self.want, |sk| self.pass_on(g, p, q, sk, ix));
         }
@@ -2413,19 +2469,6 @@ impl IntercityApi {
 }
 #[wasm_bindgen]
 impl IntercityApi {
-    /// Number of places in selection and station flow headers.
-    pub fn market_count(&self) -> usize {
-        self.m.places.len()
-    }
-    /// T-377: the 6 km zones of the whole world (every place's, open or not): the length of the
-    /// zone blocks of every answer.
-    pub fn zone_count(&self) -> usize {
-        self.m.n_gid
-    }
-    /// The places this market holds the packs of (ascending).
-    pub fn open_places(&self) -> Vec<u32> {
-        (0..self.m.places.len()).filter(|&p| self.m.places[p].open).map(|p| p as u32).collect()
-    }
     /// Sites, open zones, the day's trips between places, 1 if the places' rows came from the
     /// world (0: added up at opening, a closed world or the pipeline), the day's departures to
     /// places with no zone.
@@ -2458,14 +2501,6 @@ impl IntercityApi {
         }
         out
     }
-    /// The zone pairs the network's stations serve, and the place pairs with trips.
-    pub fn pair_counts(&self) -> Vec<f64> {
-        vec![self.pairs.len() as f64, self.m.place_pairs as f64]
-    }
-    /// The network with stations in the pack's plane (an old single pack).
-    pub fn set_network(&mut self, st_xy: &[f32], line_n: &[u32], stops: &[u32], times: &[f32], tph: &[f32], cars: &[f32]) -> Result<f64, String> {
-        self.set_network_in(st_xy, line_n, stops, times, tph, cars)
-    }
     /// T-377: the network with stations as longitude and latitude (a world composition): put in
     /// the frame of its first group of sites for the graph, and in each group's own for access.
     pub fn set_network_ll(&mut self, st_ll: &[f64], line_n: &[u32], stops: &[u32], times: &[f32], tph: &[f32], cars: &[f32]) -> Result<f64, String> {
@@ -2497,14 +2532,6 @@ impl IntercityApi {
         }
         Ok(())
     }
-    pub fn set_fare_curve(&mut self, knots: &[f32]) -> Result<(), String> {
-        check_fare_curve(knots)?;
-        if !same_bits(knots, &self.fare_curve) {
-            self.fare_curve = knots.to_vec();
-            self.per.iter_mut().for_each(|p| *p = None);
-        }
-        Ok(())
-    }
     pub fn solve(&mut self, q: usize) -> bool {
         let Some(svc) = &self.svc else { return false };
         if q >= PERIODS {
@@ -2523,7 +2550,6 @@ impl IntercityApi {
         for (r, f) in g.rn_fare.iter_mut().enumerate() {
             *f = self.fare_km.get(r).copied().unwrap_or(0.) * self.fare_per_km;
         }
-        put_fare_curve(&mut g, &self.fare_curve, &self.fare_km, self.base.fare_min, self.fare_per_km);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);
@@ -2560,7 +2586,7 @@ impl IntercityApi {
         };
         let t = now_ms();
         let mut st = self.per[q].take().unwrap();
-        if settled(&mut st.seen, &total[..st.g.rn_line.len()]) || (st.uniform && fac == st.fac && left == st.g.rn_left && !legacy()) {
+        if settled(&mut st.seen, &total[..st.g.rn_line.len()]) || (st.uniform && fac == st.fac && left == st.g.rn_left) {
             st.round += 1;
             st.ms = now_ms() - t;
             self.per[q] = Some(st);
@@ -2617,14 +2643,6 @@ impl IntercityApi {
     pub fn commute_loads(&self, q: usize) -> Vec<f32> {
         self.per(q).filter(|_| !self.m.commutes.is_empty()).map_or(vec![], |s| [&s.c_avg.seg[..], &s.c_avg.rn_board[..], &s.c_avg.rn_alight[..]].concat())
     }
-    /// T-276: commute pairs between zones some station serves, and their commuters a day.
-    pub fn served_commutes(&self) -> Vec<f64> {
-        vec![self.cpairs.len() as f64, self.cpairs.iter().map(|c| self.m.commutes[c.c as usize].2 as f64).sum()]
-    }
-    /// T-276: commuters a day between zones, all of them.
-    pub fn commuters(&self) -> f64 {
-        self.m.commuters
-    }
     /// Per corridor (place pair): its two places, longer trips in period `q` and their rail trips.
     pub fn corridor_summary(&self, q: usize) -> Vec<f64> {
         self.per(q).map_or(vec![], |s| {
@@ -2643,11 +2661,6 @@ impl IntercityApi {
     pub fn elsewhere(&self, q: usize) -> Vec<f64> {
         let s = SHARES.get(q).copied().unwrap_or(0.) as f64;
         self.m.leaving_by.iter().map(|v| v * s).collect()
-    }
-    /// T-276: per corridor, the commutes between zones in period `q`: legs and rail legs.
-    pub fn commute_corridors(&self, q: usize) -> Vec<f64> {
-        let legs = 0.5 * (TO_WORK[q] + TO_HOME[q]) as f64;
-        self.per(q).filter(|_| self.m.commuters > 0.).map_or(vec![], |s| self.m.c_corridor.iter().zip(&s.c_corridors).flat_map(|(&c, &r)| [c * legs, r]).collect())
     }
     /// T-1008: the corridors' two places each, in `corridor_summary`'s order. With
     /// `corridor_trips`, `commute_base` and `corridor_modes` the part of the corridors no network or
@@ -2692,14 +2705,6 @@ impl IntercityApi {
     pub fn alight(&self, q: usize) -> Vec<f32> {
         self.per(q).map_or(vec![], |s| s.avg.rn_alight.clone())
     }
-    /// As `DemandApi::transfers` (T-176): this market's transfers over the periods held.
-    pub fn transfers(&self, sel: &[u8]) -> Vec<f32> {
-        let mut out = vec![];
-        for st in self.per.iter().flatten() {
-            transfer_pairs(&st.g, &st.xi, &st.xfer, sel, &mut out);
-        }
-        out
-    }
     /// `transfers` on a kind of day (T-260).
     pub fn transfers_day(&self, sel: &[u8], day: u32) -> Vec<f32> {
         let mut out = vec![];
@@ -2720,23 +2725,6 @@ impl IntercityApi {
     /// Bit q set for each period solved.
     pub fn solved_mask(&self) -> u32 {
         (0..PERIODS).filter(|&q| self.per(q).is_some()).fold(0, |m, q| m | 1 << q)
-    }
-    /// Where the longer trips of a selection of local cells go and come from (T-118).
-    ///
-    /// The selection is points (`xy`: x, y per 600 m square, metres in that place's pack frame)
-    /// of one `market` (place) with the `share` (0..1) of that square's people, or jobs, that are
-    /// selected. A site's share of its zone's departures is its people over the zone's, of its
-    /// arrivals its attraction over the zone's.
-    ///
-    /// Returns, over the periods solved: the matched share of the points, then 8 numbers per
-    /// place at the far end (trips starting in the selection that end there: all modes, by rail,
-    /// all-mode trips times far x and y; then the same for trips ending in the selection), then
-    /// per global 6 km zone (`zone_count`) all and rail of starts and of ends, every zone's x, y
-    /// and place, then the commutes' tail (4 per place, 4 per zone), then (T-378) the trips with
-    /// places that have no zone, starting and ending. Places with no pack open here are counted by
-    /// place only.
-    pub fn selection_flows(&self, market: u32, xy: &[f32], share: &[f32]) -> Vec<f64> {
-        self.selection_flows_day(market, xy, share, WEEKDAY as u32)
     }
     /// `selection_flows` on a kind of day (T-260, `days.rs`): that day's trips and period shares.
     pub fn selection_flows_day(&self, market: u32, xy: &[f32], share: &[f32], day: u32) -> Vec<f64> {
@@ -2915,13 +2903,6 @@ impl IntercityApi {
             }
         }
         out
-    }
-    /// A station's longer-trip rail riders over the periods solved (T-118): per place, riders
-    /// starting here bound for it, riders ending here from it, and those counts times the far
-    /// zone's x and y (starts x, starts y, ends x, ends y); then per global 6 km zone the riders
-    /// starting, then ending, then every zone's x, y and place. Empty with no such station.
-    pub fn station_flows(&self, station: u32) -> Vec<f64> {
-        self.station_flows_day(station, WEEKDAY as u32)
     }
     /// `station_flows` on a kind of day (T-260): each period weighed by the market's load factor.
     pub fn station_flows_day(&self, station: u32, day: u32) -> Vec<f64> {

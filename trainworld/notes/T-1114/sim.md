@@ -62,6 +62,8 @@ destination-choice worktree) has landed, since both touch `kernel.rs` and `every
 
 ### Batch A: dead code
 
+**Done** (simclean, 2026-10-24): items 1-5. Also removed with them: `Dirty::tiles` and `TILE_ZOOM`. `construct_cost` is private now. `DemandApi`, `EverydayApi` and `IntercityApi` readers that only tests and bins call sit in plain `impl` blocks.
+
 **1. Delete the T-001 `Sim` skeleton.** `lib.rs:16-58`, with its test at `lib.rs:60-74`.
 - What: remove `Sim`, `new`, `train_count` and `offsets`. Rewrite the crate doc at `lib.rs:1-4`
   ("Skeleton for T-001 ... the layout the real core will use"). Fix `lib.rs:8`: it says the
@@ -125,6 +127,8 @@ They stay callable from Rust tests and bins and stop being WASM exports with JS 
 
 ### Batch B: retire superseded tools
 
+**Done** (simclean, 2026-10-24): both bins gone with the readers (also `IntercityApi::served_commutes` and `commuters`, which only `zones_day` called), the walk-sum diagnostic in `mode_choice` and the `road_kmh` key. `calib --cells --exact` on New York, Seoul (fares 2, 0.15) and Tokyo was bit-identical before and after (every figure but the timings). Left: `pipeline/realnet_groups.py` still reads the result JSON the retired `realnet` wrote (its docstring names `data/work/realnet/result.json`); nothing writes it any more.
+
 **6. Retire `bin/realnet.rs` (T-007), now covered by `bin/calib.rs` (T-509).**
 - Why: nothing runs it. `pipeline/realnet.py` only writes the networks, and every recent run
   script calls `calib.exe` (notes/T-1056/run_real.py:10, T-918, T-938). Yet sweeping commits keep
@@ -156,6 +160,8 @@ They stay callable from Rust tests and bins and stop being WASM exports with JS 
 `realsave` stays: the procedure in `checks/t737-japan.mjs:7-8` uses it.
 
 ### Batch C: shared helpers
+
+**Done** for items 8 and 9 (simclean, 2026-10-24): `demand::network::RealNet` and `route_nodes` (native only), used by `calib` and seven real-network tests; `City::subset` and `City::inner` (test only), used by nine tests. All seven real-network tests were run (`--ignored`) and pass. Items 10 and 11 not done (10 is smaller now that the curve is gone).
 
 **8. One loader for a real-network JSON, with its fare km.**
 - Copies: `arr_f32` and `arr_u32` in `bin/calib.rs:32-37`, `bin/realnet.rs:27-32` and
@@ -194,6 +200,8 @@ They stay callable from Rust tests and bins and stop being WASM exports with JS 
 
 ### Batch D: conditional on T-1112
 
+**Done** (simclean, 2026-10-24): `FareCurve`, `trip_km`, `rn_km`, the skim key fields, `put_fare_curve`, `check_fare_curve`, the three `set_fare_curve` exports, `Leg::km` and the kernel test for the cap. The app sends `set_fares` only (`demand.worker.ts`, `demandClusters.ts`, `curveKnots` removed from `fareCurve.ts`). The default and every old base and rate give the same figures: smoke 12,796,392 rail trips a day, `calib --exact` identical. A line below $0 at 0 km can no longer be set (`fitOrigin` holds the dragged or typed node, `tidyNodes` raises an older save's first node), so demand's base plus rate and `faresFor` agree and `faresFor` has no clamp.
+
 **12. The multi-node fare curve (T-883), if the fare becomes two nodes on a straight line.**
 - If the app turns T-1112's two nodes into `set_fares(base, per_km)` and stops calling
   `set_fare_curve` (`demand.worker.ts:1058`, `curveKnots`), all of this goes:
@@ -215,6 +223,8 @@ They stay callable from Rust tests and bins and stop being WASM exports with JS 
   Mechanical: yes, once T-1112 decides.
 
 ### Batch E: test switches, the allocator, wrong comments
+
+**Done** (simclean, 2026-10-24): items 13-16. `demand::alloc` and `demand::bench` are native only.
 
 **13. Remove the T-119 `LEGACY` switch.**
 - Where: `kernel.rs:3418-3424` and its uses at `kernel.rs:3494, 3528`, `api.rs:1014`,
@@ -260,6 +270,8 @@ They stay callable from Rust tests and bins and stop being WASM exports with JS 
 
 ### Batch F: move inline tests out
 
+**Done** (simclean, 2026-10-24): all seven files (`intercity.rs` was already one). `track/wasm.rs` had five test modules, each now a file under `track/wasm/`; the others are `<file>/tests.rs`. `track/boarding.rs` was done last, after the T-1121 work had landed.
+
 **17. Put each big inline test module in its own file, as `intercity/tests.rs` already is.**
 - `track/wasm.rs:4362-8078` (3,700 lines), `demand/api.rs:1699-3129` (1,430),
   `demand/kernel.rs:4868-6091` (1,220), `demand/everyday.rs:277-1170` (900, sitting in the middle
@@ -272,6 +284,8 @@ They stay callable from Rust tests and bins and stop being WASM exports with JS 
   editing it.
 
 ### Batch G: split the two biggest files
+
+**Done** for item 18's `track/wasm.rs` only (simclean, 2026-10-24): the exports are in `track/wasm/{money,edits,draw,crossings,links,lines,snapshot,service}.rs`, the shared helpers stay in `wasm.rs` (1,300 lines, was 8,077). Not moved: the drawing geometry helpers to `track/draw.rs`. Item 19 (`kernel.rs`) not done.
 
 **18. Split `track/wasm.rs` along its own section markers.**
 - `impl TrackApi` runs as one block over `211-3632`. Its sections (`// ----` at 493 money, 710

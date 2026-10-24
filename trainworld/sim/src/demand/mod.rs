@@ -1,23 +1,26 @@
-//! The local demand kernel (SPEC 4.3, 4.4): T-005 spike, gravity from the pack (T-019), access
-//! logit and the other access leg (T-020). Readable, not final.
-//!
-//! Pipeline for one city and one period, everything flat structure-of-arrays:
+//! The demand model (SPEC 4.3, 4.4), everything flat structure-of-arrays. Where each part lives
+//! is `docs/code-map.md`; the stages of one city and one period are:
 //!
 //! - `pack`: city pack format 1 loader (notes/T-004.md) and writer (synthetic packs, and the
 //!   pipeline's gravity step `bin/pack_gravity.rs`).
 //! - `synth`: a New York-sized synthetic city and a hand-made network.
 //! - `kernel`: gravity between coarse zones, per-cell station access, access subzones,
 //!   station-to-station search, mode choice over subzone pairs, assignment, crowding (MSA).
-//! - `bench`: runs the stages with timings and heap figures; shared by the native binary
-//!   (`src/bin/demand_bench.rs`) and the wasm export (`wasm.rs`).
+//! - `api`, `everyday` and `intercity`: the three populations the demand workers solve, commutes,
+//!   everyday outings and the regional market.
+//! - `bench`: runs the stages with timings and heap figures (`src/bin/demand_bench.rs`).
 //!
 //! Design and numbers: notes/T-005.md.
 
+/// The counting allocator and the benchmark that reads it: native only, so the workers' wasm does
+/// not count every allocation.
+#[cfg(not(target_arch = "wasm32"))]
 pub mod alloc;
 /// T-026: the demand workers' API (`DemandApi`), in the app's wasm build.
 pub mod api;
 pub mod intercity;
 pub mod everyday;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod bench;
 pub mod clock;
 /// T-260: kinds of day (weekday, weekend), worked out from the weekday's solve.

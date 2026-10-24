@@ -1,5 +1,5 @@
-//! A counting global allocator, so the bench can report live and peak heap the same way natively
-//! and in wasm. Only compiled with the `demand` feature.
+//! A counting global allocator, so the native bench and the ignored profile tests can report live
+//! and peak heap. Not compiled for wasm.
 
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering::Relaxed};
