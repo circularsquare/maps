@@ -25,6 +25,7 @@ import { screenBounds } from "./labelLayout";
 import { takeOutlineText } from "./coarseOutlines";
 import { CITY_MARKS_MIN_ZOOM } from "./intercityView";
 import { ShadeLayer } from "./shadeLayer";
+import { hiddenOnGlobe } from "./live";
 
 const FILL = "tw-realms-inactive";
 /** how far a circle keeps from the map's edges, px */
@@ -74,7 +75,7 @@ export function startRealmOverlay(map: MlMap): () => void {
       const x = Math.max(GAP, Math.min(W - b.w - GAP, Math.min(right, Math.max(left, p.x)) - b.w / 2));
       const y = Math.max(GAP, Math.min(H - b.h - GAP, Math.min(bottom, Math.max(top, p.y)) - b.h / 2));
       const box: [number, number, number, number] = [x - GAP, y - GAP, x + b.w + GAP, y + b.h + GAP];
-      if (left > right || top > bottom || used.some((u) => box[0] < u[2] && box[2] > u[0] && box[1] < u[3] && box[3] > u[1])) {
+      if (left > right || top > bottom || hiddenOnGlobe(l.label[0], l.label[1]) || used.some((u) => box[0] < u[2] && box[2] > u[0] && box[1] < u[3] && box[3] > u[1])) {
         b.el.style.display = "none";
         continue;
       }

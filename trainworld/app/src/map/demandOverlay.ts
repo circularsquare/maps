@@ -10,8 +10,8 @@ import type { Map as MlMap } from "maplibre-gl";
 import { MODE_COLOURS, rgbf } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { DISC } from "../workers/commutersProtocol";
-import { anchor, localToMercMatrix, mul4, pxPerUnitAt, type Anchor } from "./geo";
-import { compile, GpuTimer, sizeCanvasLike, uniforms } from "./gl";
+import { anchor, pxPerUnitAt, type Anchor } from "./geo";
+import { compile, GpuTimer, localCamera, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, sizeCanvasLike, uniforms, type Camera, type LocalCamera } from "./gl";
 import { bubblePad, hot, onHot, SELECTED_PAD_PX } from "./hovered";
 import type { Overlay } from "./overlay";
 import { PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, type StationShape } from "./stationGeometry";
@@ -74,7 +74,7 @@ export const splitEdge = (outline: 0 | 1 | 2, share: number) => {
 // outline of 2 px, a selected bubble's). No minimum size: a tiny count is a tiny disc.
 const DISC_VS = `#version 300 es
 precision highp float;
-uniform mat4 u_matrix;
+${PROJECT_GLSL}
 uniform vec2 u_viewport;
 uniform float u_px_per_unit;
 uniform float u_rscale;   // the player's bubble size (T-099)
@@ -94,7 +94,7 @@ void main() {
   v_hot = hot ? 1.0 : 0.0;
   float r = a_geo.z * u_rscale * u_px_per_unit + u_pad;
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
-  vec4 c = u_matrix * vec4(a_geo.xy, 0.0, 1.0);
+  vec4 c = project(a_geo.xy);
   vec2 off = corner * (r + 2.0);
   c.xy += off / (u_viewport * 0.5) * c.w;
   gl_Position = c;
@@ -169,7 +169,7 @@ const LINE_FULL_PX = 8;
 
 const LINE_VS = `#version 300 es
 precision highp float;
-uniform mat4 u_matrix;
+${PROJECT_GLSL}
 uniform vec2 u_viewport;  // device px
 uniform float u_px_per_unit;
 uniform float u_rscale;
@@ -186,9 +186,11 @@ out float v_alpha;
 out float v_t;            // 0 at the source disc, 1 at the far end
 out vec3 v_col;
 void main() {
-  vec4 c0 = u_matrix * vec4(a_from.xy, 0.0, 1.0);
-  vec4 c1 = u_matrix * vec4(a_to.xy, 0.0, 1.0);
-  vec2 p0 = (c0.xy / c0.w * 0.5 + 0.5) * u_viewport;
+  vec4 c0 = project(a_from.xy);
+  vec4 c1 = project(a_to.xy);
+  // an end behind the globe's horizon (T-033): the line is not drawn
+  if (u_globe_at.w > 0.0 && (c0.z > c0.w || c1.z > c1.w)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  vec2 p0 =(c0.xy / c0.w * 0.5 + 0.5) * u_viewport;
   vec2 p1 = (c1.xy / c1.w * 0.5 + 0.5) * u_viewport;
   vec2 d = p1 - p0;
   float len = length(d);
@@ -317,7 +319,7 @@ export class DemandOverlay {
   private programs() {
     const gl = this.gl;
     this.prog = compile(gl, DISC_VS, DISC_FS);
-    this.u = uniforms(gl, this.prog, ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_pad", "u_hot", "u_split_train", "u_split_rest"]);
+    this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_pad", "u_hot", "u_split_train", "u_split_rest"]);
     this.timer = new GpuTimer(gl);
     this.cutProg = this.lineProg = null;
   }
@@ -455,7 +457,7 @@ export class DemandOverlay {
     if (gl.isContextLost()) return { vao: null!, buf: null!, count: data.length / LINE, anchor: a, data };
     if (!this.lineProg) {
       this.lineProg = compile(gl, LINE_VS, LINE_FS);
-      this.lineU = uniforms(gl, this.lineProg, ["u_matrix", "u_viewport", "u_px_per_unit", "u_rscale", "u_stub", "u_width", "u_full", "u_pad"]);
+      this.lineU = uniforms(gl, this.lineProg, [...PROJECT_UNIFORMS, "u_viewport", "u_px_per_unit", "u_rscale", "u_stub", "u_width", "u_full", "u_pad"]);
     }
     const buf = gl.createBuffer()!;
     const vao = gl.createVertexArray()!;
@@ -473,7 +475,7 @@ export class DemandOverlay {
     return { vao, buf, count: data.length / LINE, anchor: a, data };
   }
 
-  private drawLines(m0: ArrayLike<number>,matrices: Map<number, Float32Array>, pxPerUnit: number, dpr: number) {
+  private drawLines(cam: Camera, matrices: Map<number, LocalCamera>, pxPerUnit: number, dpr: number) {
     if (!this.lines.size || !this.lineProg) return;
     const gl = this.gl, u = this.lineU;
     gl.useProgram(this.lineProg);
@@ -486,8 +488,8 @@ export class DemandOverlay {
     gl.uniform1f(u.u_pad, bubblePad.px * dpr);
     for (const s of this.lines.values()) {
       let m = matrices.get(s.anchor.version);
-      if (!m) matrices.set(s.anchor.version, (m = mul4(m0, localToMercMatrix(s.anchor))));
-      gl.uniformMatrix4fv(u.u_matrix, false, m);
+      if (!m) matrices.set(s.anchor.version, (m = localCamera(cam, s.anchor)));
+      setCamera(gl, u, m);
       gl.bindVertexArray(s.vao);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);
     }
@@ -504,9 +506,9 @@ export class DemandOverlay {
   }
 
   private draw() {
-    const m0 = this.overlay.camMatrix;
+    const cam = this.overlay.cam;
     const gl = this.gl;
-    if (!m0 || gl.isContextLost()) return;
+    if (!cam || gl.isContextLost()) return;
     const zoom = this.map.getZoom(), dpr = this.map.getPixelRatio();
     const level = bubbleLevel(zoom);
     if (level !== this.lastLevel) {
@@ -544,9 +546,9 @@ export class DemandOverlay {
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     // each set is drawn with the matrix of the anchor it was built at (T-317, map/geo.ts); most
     // draws have one anchor, a switch has two for a moment
-    const matrices = new Map<number, Float32Array>();
+    const matrices = new Map<number, LocalCamera>();
     const pxPerUnit = pxPerUnitAt(zoom) * dpr;
-    this.drawLines(m0, matrices, pxPerUnit, dpr);
+    this.drawLines(cam, matrices, pxPerUnit, dpr);
     gl.useProgram(this.prog);
     gl.uniform2f(this.u.u_viewport, this.canvas.width, this.canvas.height);
     gl.uniform1f(this.u.u_px_per_unit, pxPerUnit);
@@ -565,8 +567,8 @@ export class DemandOverlay {
       if (s.anchor.version !== uploaded) {
         uploaded = s.anchor.version;
         let m = matrices.get(uploaded);
-        if (!m) matrices.set(uploaded, (m = mul4(m0, localToMercMatrix(s.anchor))));
-        gl.uniformMatrix4fv(this.u.u_matrix, false, m);
+        if (!m) matrices.set(uploaded, (m = localCamera(cam, s.anchor)));
+        setCamera(gl, this.u, m);
       }
       gl.bindVertexArray(s.vao);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);

@@ -25,17 +25,25 @@ const SCRATCH = new Float64Array(6);
  */
 export function pointerLocal(ov: Overlay, px: number, py: number): [number, number, number] | null {
   const m = ov.camMatrix;
-  if (!m || m[3] !== 0 || m[7] !== 0) return null;
+  if (!m) return null;
+  // on the globe (T-033) the camera is affine only near a point: taken round the pointer's own
+  // place, close enough for the narrowing within a few slops
+  let x0 = 0, y0 = 0;
+  if (ov.globe) {
+    const at = ov.screenToLocal(px, py);
+    if (!at) return null;
+    [x0, y0] = at;
+  } else if (m[3] !== 0 || m[7] !== 0) return null;
   const L = 1000, p = SCRATCH;
-  ov.toScreenInto(0, 0, p, 0);
-  ov.toScreenInto(L, 0, p, 2);
-  ov.toScreenInto(0, L, p, 4);
+  ov.toScreenInto(x0, y0, p, 0);
+  ov.toScreenInto(x0 + L, y0, p, 2);
+  ov.toScreenInto(x0, y0 + L, p, 4);
   const a = (p[2] - p[0]) / L, d = (p[3] - p[1]) / L, b = (p[4] - p[0]) / L, e = (p[5] - p[1]) / L;
   const det = a * e - b * d;
   const pxPerUnit = Math.min(Math.hypot(a, d), Math.hypot(b, e));
   if (!det || !Number.isFinite(det) || !(pxPerUnit > 0)) return null;
   const sx = px - p[0], sy = py - p[1];
-  return [(e * sx - b * sy) / det, (a * sy - d * sx) / det, 1.25 / pxPerUnit];
+  return [x0 + (e * sx - b * sy) / det, y0 + (a * sy - d * sx) / det, 1.25 / pxPerUnit];
 }
 
 
@@ -102,6 +110,8 @@ export function topSeg(ov: Overlay, seg: Float32Array, count: number, px: number
   const slop = Math.sqrt(best);
   const p = SCRATCH;
   const at = pointerLocal(ov, px, py);
+  // off the globe nothing is under the pointer
+  if (!at && ov.globe) return [-1, best];
   const lx = at ? at[0] : 0, ly = at ? at[1] : 0, perPx = at ? at[2] : 0;
   let near: Int32Array | null = null, nearCount = 0;
   // `only`: the caller's own candidates, highest first (the blueprint's few segments, T-630)

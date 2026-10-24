@@ -81,6 +81,8 @@ export interface DisplaySettings {
   moreCores: boolean;
   /** T-826: the clock keeps running while the page is hidden (game/clock.ts) */
   runInBackground: boolean;
+  /** T-033: the map as the flat map or as a globe (MapLibre's, flat again from zoom 12) */
+  projection: "flat" | "globe";
 }
 
 /** T-247: the UI scale setting's steps */
@@ -118,6 +120,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   usUnits: false,
   moreCores: false,
   runInBackground: false,
+  projection: "flat",
 };
 
 const STORE = "trainworld-ui";

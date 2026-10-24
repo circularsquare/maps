@@ -99,14 +99,14 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 
 ### src/map/: the map and what is drawn on it
 
-- `mapView.ts` (the MapLibre map; its scroll zoom told wheel gaps by event time, T-675), `basemap.ts` (the Positron style: warm paper repaint, three road weights, light or dark,
+- `mapView.ts` (the MapLibre map; its scroll zoom told wheel gaps by event time, T-675; the flat map or globe setting, T-033), `basemap.ts` (the Positron style: warm paper repaint, three road weights, light or dark,
   labels in Zen Maru Gothic from `public/fonts/`), `realNetwork.ts` (the Real network reference layer: noritetsu's
   PMTiles per region, read from `../noritetsu/` or R2; vite.config.ts proxies `/noritetsu` to 8800 in dev, T-682),
   `overlay.ts` (the overlay canvas and frame loop,
-  notes/T-015.md), `renderer.ts` (WebGL2 track, stations, trains; its shaders and their shared constants are in `rendererShaders.ts`, the platform crowds' sums in `platformCrowds.ts`), `gl.ts` (shader compile, uniform lookup, zoom interpolation, the GPU timer, canvas sizing and the camera matrix to CSS px, shared by the renderer, `demandOverlay.ts`, `gradeMarks.ts`, `shadeLayer.ts`, `overlay.ts` and the 2D overlays), `network.ts` (the renderer's
+  notes/T-015.md), `renderer.ts` (WebGL2 track, stations, trains; its shaders and their shared constants are in `rendererShaders.ts`, the platform crowds' sums in `platformCrowds.ts`), `gl.ts` (shader compile, uniform lookup, zoom interpolation, the GPU timer, canvas sizing, and the camera: `Camera` for the flat map or the globe, `PROJECT_GLSL` and `setCamera` for the shaders, `mercToCss` and `clipToCss` to CSS px, `behindHorizon`; T-033; shared by the renderer, `demandOverlay.ts`, `gradeMarks.ts`, `transferBubbles.ts`, `shadeLayer.ts`, `overlay.ts` and the 2D overlays), `network.ts` (the renderer's
   buffers, built in the clock worker from per-edge, line and station pieces kept between edits,
   T-496), `geo.ts` (the draw anchor, T-307; `pxPerUnitAt` and `unitPerPxAt` for the zoom's scale), `anchorVersion.ts` (its version as a signal, T-317),
-  `live.ts` (the live map objects for UI code, set by main.ts), `synth.ts` (stress network),
+  `live.ts` (the live map objects for UI code, set by main.ts; `hiddenOnGlobe` for DOM marks, T-033), `synth.ts` (stress network),
   `markData.ts` and `gradeMarks.ts` (the crossing, junction, ramp and portal marks: their data, and
   their draw pass, hit test and tag; T-629, T-655), `stationLife.ts` (from zoom 14, arrivals found
   by a timer of eight samples a second, feeding `stationSound.ts`, the WebAudio chime and pops, and

@@ -23,6 +23,7 @@ import { cityGeometry } from "./boundaryGeometry";
 import { firstSymbolId } from "./basemap";
 import { screenBounds } from "./labelLayout";
 import { followShade, shadePaint } from "./cityBoundaries";
+import { hiddenOnGlobe } from "./live";
 
 const SHADE = "tw-zone-loading";
 /** how far a bar keeps from the map's edges, px */
@@ -70,7 +71,7 @@ export function startZoneLoading(map: MlMap): () => void {
       const s = shapes.get(id);
       if (!s) { el.style.display = "none"; continue; }
       const { left, right, top, bottom } = screenBounds(map, s.box, w, ht, EDGE);
-      if (left > right || top > bottom) { el.style.display = "none"; continue; }
+      if (left > right || top > bottom || hiddenOnGlobe(...cityById(id).center)) { el.style.display = "none"; continue; }
       // a little under the centre, clear of the basemap's name for the place
       const p = map.project(cityById(id).center);
       const x = Math.min(right, Math.max(left, p.x)), y = Math.min(bottom, Math.max(top, p.y + BELOW));

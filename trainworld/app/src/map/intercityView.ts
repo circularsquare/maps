@@ -45,6 +45,7 @@ import { localModes, modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt } from "./demandHover";
 import { LINE, splitEdge, type DemandOverlay } from "./demandOverlay";
 import { anchor, kAtLat, pxPerUnitAt, toLocal, toLngLat, type Anchor } from "./geo";
+import { hiddenOnGlobe } from "./live";
 
 /** A bubble selection's longer trips, for the commuters inspector; null while unknown. */
 export const intercityPick = signal<{ sel: Selection; data: IntercitySelection; own: number } | null>(null);
@@ -233,7 +234,9 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const W = map.getContainer().clientWidth, H = map.getContainer().clientHeight;
       for (const i of order) {
         if (used.length >= MAX_LABELS) break;
-        const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], marks.anchor));
+        const ll = toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], marks.anchor);
+        if (hiddenOnGlobe(ll[0], ll[1])) continue;
+        const p = map.project(ll);
         const r = marks.discs[i * DISC + 2] * pxPerUnitAt(map.getZoom()) * view.bubbleSize;
         if (used.some((a) => Math.hypot(a.px - p.x, a.py - p.y) < LABEL_SEPARATION) || p.x < -r - W || p.x > W + r + W || p.y < -r - H || p.y > H + r + H) continue;
         let el = labels.children[used.length] as HTMLElement | undefined;
@@ -549,7 +552,9 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     if (!marks) return [];
     const out: { place: number; gid: number }[] = [];
     for (let i = 0; i < marks.discs.length / DISC; i++) {
-      const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], marks.anchor));
+      const ll = toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], marks.anchor);
+      if (hiddenOnGlobe(ll[0], ll[1])) continue;
+      const p = map.project(ll);
       if (p.x < Math.min(x0, x1) || p.x > Math.max(x0, x1) || p.y < Math.min(y0, y1) || p.y > Math.max(y0, y1)) continue;
       if (marks.far) out.push({ place: marks.far[i].place, gid: marks.far[i].gid });
       else if (marks.cities) out.push({ place: cityById(marks.cities[i]).place, gid: -1 });

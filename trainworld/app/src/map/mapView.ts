@@ -7,6 +7,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { loadBasemap } from "./basemap";
 import { cityById, cityWithin, hashView } from "../game/cities";
+import { display } from "../game/ui";
+import { effect } from "@preact/signals";
 
 maplibregl.setWorkerUrl(workerUrl);
 
@@ -46,7 +48,27 @@ export function createMap(container: HTMLElement): maplibregl.Map {
   map.on("load", () => {
     document.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
   });
+  followProjection(map);
   return map;
+}
+
+/** T-033: the Settings choice of the flat map or the globe, MapLibre's "globe" (a globe out to zoom
+ * 11, blending into the flat map by 12). A new style (a lost context) takes it again. */
+function followProjection(map: maplibregl.Map) {
+  let styled = false;
+  const apply = () => {
+    if (!styled) return;
+    const want = display.peek().projection === "globe" ? "globe" : "mercator";
+    if ((map.getProjection()?.type ?? "mercator") !== want) map.setProjection({ type: want });
+  };
+  map.on("style.load", () => {
+    styled = true;
+    apply();
+  });
+  effect(() => {
+    void display.value.projection;
+    apply();
+  });
 }
 
 /** T-675: MapLibre's scroll zoom tells a mouse wheel from a trackpad by the time between wheel

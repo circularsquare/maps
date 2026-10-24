@@ -459,3 +459,21 @@ and so are the city bubbles: the start menu's world map is blank. So is the map 
 (`mapBlank` in `game/loading.ts`: from the start menu's pick or a whole-game load until the loading card
 goes and the clock is released): no shade, circles, zone outlines, outside shade, loading grey, city
 bubbles or labels over the basemap; they all arrive in one step, with no fade [T-1051].
+
+## Globe
+
+[T-033; `map/gl.ts` `Camera`, `PROJECT_GLSL`; `map/mapView.ts` `followProjection`] Settings > Map
+offers **Flat** (the default) or **Globe**, remembered per browser with the other view settings.
+Switching changes only the view: the game, demand and the save carry on untouched. Globe is
+MapLibre's own "globe" projection: a globe out to zoom 11, blending into the flat map between zoom 11
+and 12, and the flat map itself from 12 in, so building close in is exactly as on the flat map.
+
+Everything the flat map draws is on the globe in its place: track and lines, stations, trains,
+platform crowds and transfer bubbles, crossing marks, demand bubbles and their lines, the realm
+shade (cut into pieces no longer than about 5.6 degrees so it bends with the sphere, with caps over
+both poles), zone outlines, the real network, labels, airport badges, realm circles and loading bars.
+Sizes on screen are the flat map's at the same zoom (a line's width, a dot, a bubble's radius).
+What lies beyond the horizon is not drawn and takes no click or hover; a DOM mark whose place is
+there is hidden (`hiddenOnGlobe` in `map/live.ts`). Clicks, hovers and the building tools work at
+every zoom on the globe: picking projects with the globe's camera and narrows its candidates round
+the pointer's own place (`pointerLocal` in `map/pick.ts`).

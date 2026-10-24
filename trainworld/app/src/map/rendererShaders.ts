@@ -4,6 +4,7 @@
 import { CRUSH_PER_CAR, SEATS_PER_CAR } from "../game/boarding";
 import { rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
+import { PROJECT_GLSL } from "./gl";
 import { PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL } from "./stationGeometry";
 
 export const TEX_W = 2048;
@@ -47,7 +48,7 @@ export const HOT_STATIONS = 16;
 export const STROKE_VS = `#version 300 es
 precision highp float;
 precision highp int;
-uniform mat4 u_matrix;
+${PROJECT_GLSL}
 uniform vec2 u_viewport;
 uniform vec3 u_width;        // normal, extra when selected, each track's once apart (T-658)
 uniform float u_casing;      // extra px for the casing pass, 0 for the colour pass
@@ -169,8 +170,8 @@ void main() {
   int id = gl_VertexID;
   float along = float(id & 1);
   float side = id < 2 ? -1.0 : 1.0;
-  vec4 c0 = u_matrix * vec4(a_seg.xy, 0.0, 1.0);
-  vec4 c1 = u_matrix * vec4(a_seg.zw, 0.0, 1.0);
+  vec4 c0 = project(a_seg.xy);
+  vec4 c1 = project(a_seg.zw);
   vec2 half_vp = u_viewport * 0.5;
   vec2 s0 = c0.xy / c0.w * half_vp;
   vec2 s1 = c1.xy / c1.w * half_vp;
@@ -261,7 +262,7 @@ void main() {
 // the demand circles (u_halo 1).
 export const STATION_VS = `#version 300 es
 precision highp float;
-uniform mat4 u_matrix;
+${PROJECT_GLSL}
 uniform vec2 u_viewport;
 uniform vec2 u_radius;   // dot radius, ordinary and transfer (px)
 uniform float u_line;    // a line's width (px): a station covers the lines through it
@@ -310,7 +311,7 @@ void main() {
   vec2 half_vp = u_viewport * 0.5;
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
   if (u_halo == 1) {
-    vec4 h = u_matrix * vec4(a_st.xy + a_halo, 0.0, 1.0);
+    vec4 h = project(a_st.xy + a_halo);
     float r = u_halo_radius * a_sz;
     v_size = vec3(r, r, 0.0);
     v_p = corner * (r + 1.0);
@@ -326,9 +327,9 @@ void main() {
   // whether it is full
   if (!boxes) v_crowd = vec4(a_dcrowd, 0.0, 0.0);
   vec2 mid = a_st.xy + a_shape.xy;
-  vec4 c = u_matrix * vec4(mid, 0.0, 1.0);
-  vec4 e = u_matrix * vec4(mid + a_axis, 0.0, 1.0);
-  vec4 q = u_matrix * vec4(mid + vec2(-a_axis.y, a_axis.x), 0.0, 1.0);
+  vec4 c = project(mid);
+  vec4 e = project(mid + a_axis);
+  vec4 q = project(mid + vec2(-a_axis.y, a_axis.x));
   vec2 cs = c.xy / c.w * half_vp;
   vec2 axis = e.xy / e.w * half_vp - cs, nrm = q.xy / q.w * half_vp - cs;
   float len = length(axis);
@@ -363,7 +364,7 @@ void main() {
     for (int i = 0; i < ${PLATFORM_POINTS}; i++) {
       int t = gl_InstanceID * ${PLATFORM_POINTS} + i;
       vec2 P = texelFetch(u_stline, ivec2(t % ${TEX_W}, t / ${TEX_W}), 0).xy;
-      vec4 h = u_matrix * vec4(a_st.xy + P, 0.0, 1.0);
+      vec4 h = project(a_st.xy + P);
       vec2 s = h.xy / h.w * half_vp - cs;
       q[i] = vec2(dot(s, along), dot(s, across));
       if (i > 0) total += length(q[i] - q[i - 1]);
@@ -390,7 +391,7 @@ void main() {
 // joins their white shape. Zoomed out the same program draws the connectors between dots (T-313).
 export const BRIDGE_VS = `#version 300 es
 precision highp float;
-uniform mat4 u_matrix;
+${PROJECT_GLSL}
 uniform vec2 u_viewport;
 uniform float u_ring;
 uniform float u_bridge;  // the white's half width, local units
@@ -417,8 +418,8 @@ void main() {
   v_crowd = vec4(0.0);
   v_alpha = a_bflag.y > 0.5 ? 0.6 : 1.0;
   vec2 half_vp = u_viewport * 0.5;
-  vec4 c0 = u_matrix * vec4(a_ends.xy, 0.0, 1.0), c1 = u_matrix * vec4(a_ends.zw, 0.0, 1.0);
-  vec4 cx = u_matrix * vec4(a_ends.xy + vec2(u_bridge, 0.0), 0.0, 1.0);
+  vec4 c0 = project(a_ends.xy), c1 = project(a_ends.zw);
+  vec4 cx = project(a_ends.xy + vec2(u_bridge, 0.0));
   vec2 s0 = c0.xy / c0.w * half_vp, s1 = c1.xy / c1.w * half_vp;
   float len = length(s1 - s0);
   if ((u_pass == 1) != (a_bflag.x > 0.5) || len < 1e-3) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
@@ -431,7 +432,7 @@ void main() {
   ${qPack}
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
   v_p = corner * vec2(hl + 1.0, hw + 1.0);
-  vec4 c = u_matrix * vec4(0.5 * (a_ends.xy + a_ends.zw), 0.0, 1.0);
+  vec4 c = project(0.5 * (a_ends.xy + a_ends.zw));
   c.xy += (u * v_p.x + n * v_p.y) / half_vp * c.w;
   gl_Position = c;
 }`;
@@ -613,7 +614,7 @@ bool trainDist(out vec4 L, out float d, out int line) {
 export const TRAIN_VS = `#version 300 es
 precision highp float;
 precision highp int;
-uniform mat4 u_matrix;
+${PROJECT_GLSL}
 uniform vec2 u_viewport;
 uniform float u_px_per_unit;
 uniform vec2 u_min_px;      // minimum length, width in px
@@ -683,9 +684,9 @@ void main() {
   // the sample segment under its centre, which turns in steps on curves (T-047).
   float h = max(0.5 * px.x / u_px_per_unit / kM, 1.0);
   vec2 back = lineAt(L, carD - h), front = lineAt(L, carD + h);
-  vec4 c = u_matrix * vec4(p, 0.0, 1.0);
-  vec4 cb = u_matrix * vec4(back, 0.0, 1.0);
-  vec4 cf = u_matrix * vec4(front, 0.0, 1.0);
+  vec4 c = project(p);
+  vec4 cb = project(back);
+  vec4 cf = project(front);
   vec2 half_vp = u_viewport * 0.5;
   vec2 bs = cb.xy / cb.w * half_vp, fs = cf.xy / cf.w * half_vp;
   vec2 sdir = fs - bs;

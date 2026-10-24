@@ -19,6 +19,8 @@ const SHADE_NAME: Record<Shade, string> = { light: "Light", dark: "Dark" };
 type DayShown ="average" | "weekday" | "weekend";
 const SCHEME_OPTIONS: [BubbleScheme, string][] = [["mode", "Mode mix"], ["ramp", "Train share"]];
 const DAY_OPTIONS: [DayShown, string][] = [["average", "Average"], ["weekday", "Weekday"], ["weekend", "Weekend"]];
+type Projection = "flat" | "globe";
+const PROJECTION_OPTIONS: [Projection, string][] = [["flat", "Flat"], ["globe", "Globe"]];
 
 export function SettingsTab() {
   const d = display.value;
@@ -98,6 +100,10 @@ export function SettingsTab() {
         </Check>
       </div>
       {d.sound && <Slider label="Volume" min={0.1} max={1} step={0.05} value={d.soundVolume} tip={`Station sounds at ${Math.round(d.soundVolume * 100)}% volume`} set={(v) => setDisplay("soundVolume", v)} />}
+      <div class="h">Map</div>
+      <div class="stack" data-tip="Zoomed in to a city, the globe becomes the flat map">
+        <Segmented<Projection> options={PROJECTION_OPTIONS} value={d.projection === "globe" ? "globe" : "flat"} onChange={(v) => setDisplay("projection", v)} />
+      </div>
       <div class="h">Theme</div>
       <div class="stack">
         <Segmented options={SHADE_NAMES.map((s) => [s, SHADE_NAME[s]] as [Shade, string])} value={shade.value} onChange={(v) => (shade.value = v)} />

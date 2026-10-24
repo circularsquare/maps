@@ -16,8 +16,8 @@ import { shadeColours } from "../game/shades";
 import { readBoardHour, type BoardHour } from "../game/boarding";
 import { PlatformCrowds } from "./platformCrowds";
 import { TransferBubbles } from "./transferBubbles";
-import { anchor, anchorPsi, kAtY, localToMercMatrix, mul4, pxPerUnitAt, unitPerPxAt } from "./geo";
-import { clipToCss, compile, GpuTimer, interp, uniforms } from "./gl";
+import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, pxPerUnitAt, unitPerPxAt, type Anchor } from "./geo";
+import { clipToCss, compile, GpuTimer, interp, localCamera, mercToCss, PROJECT_UNIFORMS, setCamera, uniforms, type Camera, type LocalCamera } from "./gl";
 import { GradeMarks } from "./gradeMarks";
 import { F_BLUEPRINT, platformShapeAt, type NetworkBuffers, type Strokes } from "./network";
 import { BRIDGE_VS, HOT_STATIONS, LANE_SHARE, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
@@ -398,6 +398,8 @@ export class NetworkRenderer {
   /** current render epoch, game seconds; NaN until the first draw */
   epoch = NaN;
   rebases = 0;
+  /** the camera of the last draw */
+  cam: Camera | null = null;
   /** called with each new epoch the clock enters (the worker sends its trips) */
   onEpoch: (epoch: number) => void = () => {};
 
@@ -409,14 +411,14 @@ export class NetworkRenderer {
     this.bubbles.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr"]);
-    this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n"]);
+    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr"]);
+    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
-    this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
+    this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
     this.selProg = compile(gl, SEL_VS, SEL_FS);
     this.selU = uniforms(gl, this.selProg, ["u_bbox", "u_css", "u_shapes", "u_count", "u_dpr", "u_height", "u_ink", "u_outline", "u_glow"]);
     this.selTex = this.texture(this.selData, "rgba32f", SEL_MAX * SEL_STRIDE, []);
-    this.trainU = uniforms(gl, this.trainProg, ["u_matrix", "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane"]);
+    this.trainU = uniforms(gl, this.trainProg, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane"]);
     this.timer = new GpuTimer(gl);
     this.tripBuf = gl.createBuffer();
     this.endBuf = gl.createBuffer();
@@ -827,11 +829,10 @@ export class NetworkRenderer {
   }
 
   /**
-   * Draw. `mercMatrix` maps mercator 0..1 to clip space (MapLibre's
-   * `defaultProjectionData.mainMatrix`, float64); `time` is game seconds; `zoom` and `dpr` size
-   * things in px. The caller has bound and cleared the target.
+   * Draw with the camera MapLibre last drew (gl.ts `Camera`, flat or globe); `time` is game seconds;
+   * `zoom` and `dpr` size things in px. The caller has bound and cleared the target.
    */
-  draw(mercMatrix: ArrayLike<number>, time: number, zoom: number, dpr: number, opt: DrawOptions) {
+  draw(cam: Camera, time: number, zoom: number, dpr: number, opt: DrawOptions) {
     const gl = this.gl;
     this.releaseStaged(time);
     const n = this.net;
@@ -840,8 +841,9 @@ export class NetworkRenderer {
     this.bubbles.hide();
     // the network's buffers are relative to the anchor they were built at (T-307)
     const a = n.anchor ?? anchor();
-    const m = mul4(mercMatrix, localToMercMatrix(a));
-    const vp = [gl.drawingBufferWidth, gl.drawingBufferHeight] as const;
+    const lc = localCamera(cam, a);
+    this.cam = cam;
+    const vp =[gl.drawingBufferWidth, gl.drawingBufferHeight] as const;
     const pxPerUnit = pxPerUnitAt(zoom) * dpr;
 
     this.timer.begin();
@@ -858,7 +860,7 @@ export class NetworkRenderer {
     const casing = interp(zoom, [[9, 0.6], [12, 2], [15, 2.4]]) * dpr;
     gl.useProgram(this.strokeProg);
     const u = this.strokeU;
-    gl.uniformMatrix4fv(u.u_matrix, false, m);
+    setCamera(gl, u, lc);
     gl.uniform2f(u.u_viewport, vp[0], vp[1]);
     gl.uniform1i(u.u_sel_line, opt.selLine);
     gl.uniform1i(u.u_sel_edge, opt.selEdge);
@@ -976,7 +978,7 @@ export class NetworkRenderer {
       gl.uniform1i(u.u_lane_mode, 0);
     }
     gl.uniform1i(u.u_ghost, 0);
-    this.marks.draw(m, vp, zoom, dpr, this.levelColours, opt.flatMarks !== false);
+    this.marks.draw(lc, vp, zoom, dpr, this.levelColours, opt.flatMarks !== false);
 
     if (n.stationCount) {
       // Platforms along the track from STATION_BOX_ZOOM, each one shape at every zoom (T-204), dots
@@ -999,11 +1001,11 @@ export class NetworkRenderer {
       }
       this.syncSelection(n);
       if (changed) this.onSelectionDrawn();
-      const project = this.projector(m, vp[0] / dpr, vp[1] / dpr);
+      const project = this.projector(cam, a, vp[0] / dpr, vp[1] / dpr);
       const [r, rx] = this.stationStyle.radius.map((v) => v * dpr);
       const su = this.stationU;
       gl.useProgram(this.stationProg);
-      gl.uniformMatrix4fv(su.u_matrix, false, m);
+      setCamera(gl, su, lc);
       gl.uniform2f(su.u_viewport, vp[0], vp[1]);
       gl.uniform2f(su.u_radius, r, rx);
       gl.uniform1f(su.u_ring, ring * dpr);
@@ -1037,7 +1039,7 @@ export class NetworkRenderer {
       // the player's links as bridges between platforms (T-217)
       const bridges = boxes && this.bridgeProg ? (n.stationLinkIdx?.length ?? 0) / 2 : 0;
       if (bridges) {
-        this.useBridges(m, vp, ring * dpr, BRIDGE_HALF_PX * dpr * unitAtBox);
+        this.useBridges(lc, vp, ring * dpr, BRIDGE_HALF_PX * dpr * unitAtBox);
         this.hotPairs(this.bridgeU, n.stationLinkIdx!, hotSt);
       }
       // zoomed out, the connectors between a complex's dots and the player's links (T-313, Anita:
@@ -1047,7 +1049,7 @@ export class NetworkRenderer {
       if (connectors) {
         const [x0, y0] = project(n.stations[0], n.stations[1]), [x1, y1] = project(n.stations[0] + 1, n.stations[1]);
         const pxPerLoc = Math.max(1e-9, Math.hypot(x1 - x0, y1 - y0));
-        this.useBridges(m, vp, ring * dpr, (connectorHalfPx(this.stationStyle) - ring) / pxPerLoc);
+        this.useBridges(lc, vp, ring * dpr, (connectorHalfPx(this.stationStyle) - ring) / pxPerLoc);
         this.hotPairs(this.bridgeU, this.connPairs, hotSt);
       }
       const connDraw = (pass: number, layer: number) => {
@@ -1147,7 +1149,7 @@ export class NetworkRenderer {
       const placed = this.crowds.stationOfQueue;
       if (this.crowdsShown && boxes && placed) {
         this.bubbles.sync(this.board, n, placed);
-        this.bubbles.draw(m, vp, uTime, 0.5 * boxWhite * dpr, CROWD_RGB, rgbf(shadeColours().casing), dpr);
+        this.bubbles.draw(lc, vp, uTime, 0.5 * boxWhite * dpr, CROWD_RGB, rgbf(shadeColours().casing), dpr);
       }
     }
 
@@ -1157,7 +1159,7 @@ export class NetworkRenderer {
       this.detailedTrains = zoom >= STATION_BOX_ZOOM;
       const tw = interp(zoom, TRAIN_PX) * dpr;
       gl.useProgram(this.trainProg);
-      gl.uniformMatrix4fv(this.trainU.u_matrix, false, m);
+      setCamera(gl, this.trainU, lc);
       gl.uniform2f(this.trainU.u_viewport, vp[0], vp[1]);
       gl.uniform1f(this.trainU.u_time, uTime);
       gl.uniform1f(this.trainU.u_px_per_unit, pxPerUnit);
@@ -1216,10 +1218,10 @@ export class NetworkRenderer {
 
   /** Select the bridge program and set its uniforms for this frame: `ring` and `half` (a bridge's
    * half width in local units) as the caller works them out. */
-  private useBridges(m: ArrayLike<number>, vp: readonly [number, number], ring: number, half: number) {
+  private useBridges(lc: LocalCamera, vp: readonly [number, number], ring: number, half: number) {
     const gl = this.gl, bu = this.bridgeU;
     gl.useProgram(this.bridgeProg);
-    gl.uniformMatrix4fv(bu.u_matrix, false, m as Float32List);
+    setCamera(gl, bu, lc);
     gl.uniform2f(bu.u_viewport, vp[0], vp[1]);
     gl.uniform1f(bu.u_ring, ring);
     gl.uniform1f(bu.u_bridge, half);
@@ -1230,11 +1232,21 @@ export class NetworkRenderer {
     gl.uniform1f(bu.u_mask, 0);
   }
 
-  /** Local units to CSS px on the canvas (y down) through the draw's matrix `m`. */
-  private projector(m: ArrayLike<number>, w: number, h: number): Project {
+  /** Local units of anchor `a` to CSS px on the canvas (y down) through the draw's camera; NaN
+   * behind the globe's horizon. */
+  private projector(cam: Camera, a: Anchor, w: number, h: number): Project {
+    if (!cam.globe) {
+      // the flat map: one matrix, as the shaders' u_matrix
+      const m = mul4(cam.merc, localToMercMatrix(a));
+      return (x, y) => {
+        const out: [number, number] = [0, 0];
+        clipToCss(m, x, y, w, h, out);
+        return out;
+      };
+    }
     return (x, y) => {
       const out: [number, number] = [0, 0];
-      clipToCss(m, x, y, w, h, out);
+      mercToCss(cam, a.merc[0] + x / EARTH_C, a.merc[1] + y / EARTH_C, w, h, out);
       return out;
     };
   }

@@ -62,8 +62,7 @@ Web first, so it can be shared as a link.
   main thread holds UI state and read-only snapshots from the workers (the `WorldView`: the save's
   inputs plus worker results) and changes the game only by sending edit operations to the clock
   worker ([track-and-service.md](track-and-service.md) 6.5).
-- **Map**: MapLibre GL 6 for the basemap (it has a globe, which our layer does not draw on yet,
-  T-033). Track, stations and trains are drawn by our own WebGL2 renderer on a **separate canvas
+- **Map**: MapLibre GL 6 for the basemap, flat or as its globe (a Settings choice, T-033). Track, stations and trains are drawn by our own WebGL2 renderer on a **separate canvas
   over the map**, neither GeoJSON sources nor a drawing custom layer (why:
   notes/architecture-history.md). Track buffers are built in the clock
   worker and replaced on each edit, made from per-edge, per-line and per-station pieces the worker
@@ -83,6 +82,19 @@ Web first, so it can be shared as a link.
   custom layer hands over the camera matrix on every frame MapLibre draws, and the overlay is drawn
   right there with the same matrix; our own frame loop drives the overlay only for the clock and
   skips duplicate draws when MapLibre has a frame queued.
+- **Flat map or globe** [T-033; [ui-map.md](ui-map.md) "Globe"]: the camera handed over is
+  `map/gl.ts` `Camera`, from the custom layer's `defaultProjectionData`: the flat map's matrix
+  (Mercator 0..1 to clip space) and, while MapLibre draws its globe (out to zoom 12), the globe's
+  matrix (unit sphere to clip space), the horizon's plane and how far the view has blended to flat.
+  Every vertex shader of ours (the renderer's, the crossing marks', the transfer bubbles', the demand
+  canvas's and the realm shade's) places points with `project()` (`PROJECT_GLSL`): on the flat map
+  exactly `u_matrix * p`, on the globe MapLibre's own sphere, horizon depth and blend (its
+  `_projection_globe.vertex.glsl`), computed from the anchor's Mercator position plus the local
+  offset in float32, which holds to a few metres where the globe is drawn (zoom 12 and out; closer in
+  it is the flat map with its centimetre precision). The CPU twin is `mercToCss`, behind
+  `overlay.toScreen`, the one call from local units to screen px; a point behind the horizon comes out
+  NaN. Screen-space sizes and directions come from projecting two points, so they hold on the
+  sphere; sizes in px per metre (`pxPerUnitAt`, a train's length) keep the flat map's scale.
 - **Time on the GPU** [notes/T-018.md, notes/T-040.md]: keyframe times are relative to a render
   epoch at the start of the current game hour, so the float32 time stays under 3600 s and positions
   within about 2 cm. When the hour turns the clock worker lists the next hour's trips relative to

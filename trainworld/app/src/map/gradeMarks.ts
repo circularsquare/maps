@@ -13,7 +13,7 @@ import { BAD_RED, rgbf } from "../game/palette";
 import { perfOff } from "../perfFlags";
 import { shadeColours } from "../game/shades";
 import { display } from "../game/ui";
-import { compile, interp, uniforms } from "./gl";
+import { compile, interp, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 import type { Overlay } from "./overlay";
 import { M_BAD, M_CROSSING, M_JUNCTION, M_PORTAL, M_RAMP, MARK_STRIDE } from "./markData";
 import type { TipLine } from "./networkTips";
@@ -41,7 +41,7 @@ export function markRadii(zoom: number): [number, number, number] {
 
 const VS = `#version 300 es
 precision highp float;
-uniform mat4 u_matrix;
+${PROJECT_GLSL}
 uniform vec2 u_viewport;
 uniform vec3 u_r;            // radius in device px: loud badge, quiet badge, ramp mark
 uniform float u_flat;        // 0: no marks on flat crossings and junctions
@@ -59,7 +59,7 @@ void main() {
   if (r <= 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float rq = ramp ? 1.8 * r + 3.0 : r + 3.0;
   vec2 corner = vec2(float(gl_VertexID & 1), float(gl_VertexID >> 1)) * 2.0 - 1.0;
-  vec4 c = u_matrix * vec4(a_mark.xy, 0.0, 1.0);
+  vec4 c = project(a_mark.xy);
   vec2 p = corner * rq;
   c.xy += vec2(p.x, -p.y) / (u_viewport * 0.5) * c.w;
   gl_Position = c;
@@ -154,7 +154,7 @@ export class GradeMarks {
     // again after a lost context (T-953): the old buffers are gone, the renderer uploads anew
     this.built = this.drawing = null;
     this.prog = compile(gl, VS, FS);
-    this.u = uniforms(gl, this.prog, ["u_matrix", "u_viewport", "u_r", "u_ink", "u_bp", "u_fill", "u_bad", "u_dpr", "u_quiet", "u_level_colours", "u_flat"]);
+    this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_ink", "u_bp", "u_fill", "u_bad", "u_dpr", "u_quiet", "u_level_colours", "u_flat"]);
   }
 
   private upload(old: Instances | null, data: Float32Array | undefined): Instances | null {
@@ -204,13 +204,13 @@ export class GradeMarks {
     this.drawing = this.upload(this.drawing, keep);
   }
 
-  draw(m: Float32List, vp: readonly [number, number], zoom: number, dpr: number, levelColours: Float32Array, flat = true) {
+  draw(lc: LocalCamera, vp: readonly [number, number], zoom: number, dpr: number, levelColours: Float32Array, flat = true) {
     if ((!this.built && !this.drawing) || NO_MARKS) return;
     const [loud, quiet, ramp] = markRadii(zoom);
     if (!loud && !quiet && !ramp) return;
     const gl = this.gl, u = this.u, shades = shadeColours();
     gl.useProgram(this.prog);
-    gl.uniformMatrix4fv(u.u_matrix, false, m);
+    setCamera(gl, u, lc);
     gl.uniform2f(u.u_viewport, vp[0], vp[1]);
     gl.uniform3f(u.u_r, loud * dpr, quiet * dpr, ramp * dpr);
     gl.uniform3fv(u.u_ink, rgbf(shades.markInk));

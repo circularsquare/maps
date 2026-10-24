@@ -7,7 +7,7 @@
 // off the screen.
 
 import { QUEUE_STRIDE, type BoardHour } from "../game/boarding";
-import { compile, uniforms } from "./gl";
+import { compile, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 import type { NetworkBuffers } from "./network";
 
 /** Floats per bubble: from x, y, to x, y; set off, arrival (s from the hour's epoch), riders, line. */
@@ -21,7 +21,7 @@ const MIN_WALK_S = 1;
 
 const VS = `#version 300 es
 precision highp float;
-uniform mat4 u_matrix;
+${PROJECT_GLSL}
 uniform vec2 u_viewport;
 uniform float u_time;
 uniform float u_r;           // a box's white half width, device px
@@ -36,7 +36,7 @@ void main() {
   v_r = u_r * clamp(sqrt(a_when.z / ${BUBBLE_RIDERS.toFixed(1)}), ${MIN_SHARE.toFixed(2)}, ${MAX_SHARE.toFixed(2)});
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
   v_p = corner * (v_r + 1.5);
-  vec4 c = u_matrix * vec4(at, 0.0, 1.0);
+  vec4 c = project(at);
   c.xy += v_p / (u_viewport * 0.5) * c.w;
   gl_Position = c;
 }`;
@@ -74,7 +74,7 @@ export class TransferBubbles {
   init(gl: WebGL2RenderingContext) {
     this.gl = gl;
     this.prog = compile(gl, VS, FS);
-    this.u = uniforms(gl, this.prog, ["u_matrix", "u_viewport", "u_time", "u_r", "u_fill", "u_rim", "u_rim_px"]);
+    this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_r", "u_fill", "u_rim", "u_rim_px"]);
     this.vao = gl.createVertexArray();
     this.pathBuf = gl.createBuffer();
     this.whenBuf = gl.createBuffer();
@@ -143,11 +143,11 @@ export class TransferBubbles {
 
   /** Draw the bubbles walking at `t` (s from the hour's epoch); `r` a box's white half width and
    * `rim` the casing's width, device px. */
-  draw(m: ArrayLike<number>, vp: readonly [number, number], t: number, r: number, fill: Float32List, rim: Float32List, rimPx: number) {
+  draw(lc: LocalCamera, vp: readonly [number, number], t: number, r: number, fill: Float32List, rim: Float32List, rimPx: number) {
     if (!this.count || !this.prog) return;
     const gl = this.gl, u = this.u;
     gl.useProgram(this.prog);
-    gl.uniformMatrix4fv(u.u_matrix, false, m as Float32List);
+    setCamera(gl, u, lc);
     gl.uniform2f(u.u_viewport, vp[0], vp[1]);
     gl.uniform1f(u.u_time, t);
     gl.uniform1f(u.u_r, r);
@@ -157,7 +157,8 @@ export class TransferBubbles {
     gl.bindVertexArray(this.vao);
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.count);
     gl.bindVertexArray(null);
-    this.last = { m: Array.from(m), t, r, w: vp[0], h: vp[1] };
+    // the hover's flat matrix: bubbles are drawn only from zoom 14, where the globe is flat (T-033)
+    this.last = { m: Array.from(lc.m), t, r, w: vp[0], h: vp[1] };
   }
   private last: { m: number[]; t: number; r: number; w: number; h: number } | null = null;
 

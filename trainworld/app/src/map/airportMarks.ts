@@ -16,6 +16,7 @@ import { addFinder } from "./demandHover";
 import { modeBar } from "./modeBar";
 import { cityOverview } from "./intercityView";
 import { PLANE_PATH } from "./glyphs";
+import { hiddenOnGlobe } from "./live";
 import type { Overlay } from "./overlay";
 
 interface Airport {
@@ -132,7 +133,7 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
     let k = 0;
     for (const a of shown) {
       const { x, y } = map.project([a.lng, a.lat]);
-      if (x < -SIZE || y < -SIZE || x > w + SIZE || y > h + SIZE) continue;
+      if (x < -SIZE || y < -SIZE || x > w + SIZE || y > h + SIZE || hiddenOnGlobe(a.lng, a.lat)) continue;
       let m = marks[k];
       if (!m) {
         m = marks[k] = document.createElement("div");
@@ -175,7 +176,7 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
     const at = map.project([p.lng, p.lat]);
     for (const a of shown) {
       const m = map.project([a.lng, a.lat]);
-      if (Math.hypot(m.x - at.x, m.y - at.y) > HOVER_PX) continue;
+      if (Math.hypot(m.x - at.x, m.y - at.y) > HOVER_PX || hiddenOnGlobe(a.lng, a.lat)) continue;
       const all = a.train + a.walk + a.drive;
       return [
         `${count(all)} trips ${shownDayPhrase.peek()} to and from this airport`,

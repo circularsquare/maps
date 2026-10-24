@@ -14,8 +14,8 @@
 import type { Map as MlMap } from "maplibre-gl";
 import { clock, SPEEDS } from "../game/clock";
 import type { DrawOptions, NetworkRenderer } from "./renderer";
-import { anchor, EARTH_C, localToMerc } from "./geo";
-import { clipToCss, sizeCanvasLike } from "./gl";
+import { anchor, EARTH_C, toLocal } from "./geo";
+import { cameraFrom, clipToCss, mercToCss, sizeCanvasLike, type Camera } from "./gl";
 import { perfOff } from "../perfFlags";
 
 /** ?perfOff=overlay (T-045, measurement only): skip the WebGL draw. */
@@ -59,7 +59,10 @@ export class Ring {
 export class Overlay {
   readonly canvas: HTMLCanvasElement;
   readonly gl: WebGL2RenderingContext;
-  /** The camera MapLibre last drew with: mercator 0..1 to clip space, float64. */
+  /** The camera MapLibre last drew with (flat or globe, gl.ts). */
+  cam: Camera | null = null;
+  /** Its flat map's matrix, Mercator 0..1 to clip space, float64: the whole camera while `cam.globe`
+   * is null (the flat map, and the globe from zoom 12). */
   camMatrix: ArrayLike<number> | null = null;
   private focused = document.hasFocus();
   private rafId = 0;
@@ -108,7 +111,8 @@ export class Overlay {
         type: "custom",
         renderingMode: "2d",
         render: (_gl, args) => {
-          this.camMatrix = args.defaultProjectionData.mainMatrix.slice();
+          this.cam = cameraFrom(args.defaultProjectionData);
+          this.camMatrix = this.cam.merc;
           this.mapFrames++;
           this.draw();
           for (const f of this.afterMapFrame) f();
@@ -147,14 +151,14 @@ export class Overlay {
 
   /** Draw now with the camera MapLibre last drew. */
   draw() {
-    if (!this.camMatrix || !this.renderer.net) return;
+    if (!this.cam || !this.renderer.net) return;
     const a = performance.now();
     const gl = this.gl;
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     clock.tick();
-    if (!NO_DRAW && !gl.isContextLost()) this.renderer.draw(this.camMatrix, clock.now(), this.map.getZoom(), this.map.getPixelRatio(), this.options());
+    if (!NO_DRAW && !gl.isContextLost()) this.renderer.draw(this.cam, clock.now(), this.map.getZoom(), this.map.getPixelRatio(), this.options());
     this.lastDrawnMatrix = this.camMatrix;
     const now = performance.now();
     this.drawMs.push(now - a);
@@ -211,22 +215,43 @@ export class Overlay {
   }
 
   /** local units (of the current anchor, which the drawn network shares, T-307) -> CSS px in the
-   * map container, with the camera of the last frame */
+   * map container, with the camera of the last frame; NaN behind the globe's horizon */
   toScreen(x: number, y: number): [number, number] {
-    const m = this.camMatrix;
-    if (!m) return [NaN, NaN];
-    const [mx, my] = localToMerc(x, y), out: [number, number] = [0, 0];
-    clipToCss(m, mx, my, this.cssW, this.cssH, out);
+    const out: [number, number] = [NaN, NaN];
+    this.toScreenInto(x, y, out);
     return out;
   }
 
   /** `toScreen` into `out[at]`, `out[at + 1]`, allocating nothing (T-180: hovering a big network
    * projects every segment on each pointer move, and the two arrays per point were most of the
-   * cost). The same arithmetic in the same order, so the same numbers. */
-  toScreenInto(x: number, y: number, out: Float64Array, at = 0) {
-    const m = this.camMatrix;
-    if (!m) { out[at] = out[at + 1] = NaN; return; }
+   * cost). */
+  toScreenInto(x: number, y: number, out: { [i: number]: number }, at = 0) {
+    const c = this.cam;
+    if (!c) { out[at] = out[at + 1] = NaN; return; }
     const o = anchor().merc;
-    clipToCss(m, o[0] + x / EARTH_C, o[1] + y / EARTH_C, this.cssW, this.cssH, out, at);
+    if (c.globe) mercToCss(c, o[0] + x / EARTH_C, o[1] + y / EARTH_C, this.cssW, this.cssH, out, at);
+    else clipToCss(c.merc, o[0] + x / EARTH_C, o[1] + y / EARTH_C, this.cssW, this.cssH, out, at);
+  }
+
+  /** Mercator 0..1 -> CSS px in the map container, as `toScreenInto`. */
+  mercToScreen(mx: number, my: number, out: { [i: number]: number }, at = 0) {
+    const c = this.cam;
+    if (!c) { out[at] = out[at + 1] = NaN; return; }
+    if (c.globe) mercToCss(c, mx, my, this.cssW, this.cssH, out, at);
+    else clipToCss(c.merc, mx, my, this.cssW, this.cssH, out, at);
+  }
+
+  /** CSS px in the map container -> local units of the current anchor on the globe's surface, or
+   * null off it (MapLibre's own unproject, checked by projecting back). */
+  screenToLocal(px: number, py: number): [number, number] | null {
+    const ll = this.map.unproject([px, py]);
+    const [x, y] = toLocal(ll.lng, ll.lat), back: [number, number] = [NaN, NaN];
+    this.toScreenInto(x, y, back);
+    return Math.hypot(back[0] - px, back[1] - py) < 2 ? [x, y] : null;
+  }
+
+  /** The globe is drawn (MapLibre's globe, short of zoom 12 where it is flat). */
+  get globe(): boolean {
+    return !!this.cam?.globe;
   }
 }
