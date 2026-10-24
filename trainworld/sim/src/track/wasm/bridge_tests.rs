@@ -186,6 +186,69 @@ fn a_long_route_bridges_each_river_on_its_own() {
     }
 }
 
+/// A zigzag with a corner every 600 m (plane), each auto radius held by half its legs.
+fn zigzag(a: &TrackApi, n: usize) -> ([f64; 10], Vec<f64>) {
+    let (bx, by) = base(a);
+    let pis = (1..n).flat_map(|i| [bx + i as f64 * 600.0, by + if i % 2 == 0 { 60.0 } else { -60.0 }, 0.0, 0.0]).collect();
+    (ends(a, (0.0, 0.0), (n as f64 * 600.0, 0.0)), pis)
+}
+
+#[test]
+fn a_long_route_keeps_its_radii_beside_each_bridge() {
+    // T-1187: alone, a river's window let the corner next to each of its ends take the whole end
+    // leg, and the bridge set that wider radius, which did not fit in the route
+    let mut a = merc();
+    // legs 300 and 900 m (plane) in turn, so a corner's curve is held by its short leg; rivers at
+    // four phases of the pattern, so windows start and end on short legs and on long ones
+    water(&mut a, &[(15_000.0, 15_200.0), (31_000.0, 31_150.0), (47_300.0, 47_450.0), (63_900.0, 64_050.0)]);
+    let (bx, by) = base(&a);
+    let pis: Vec<f64> = (1..120).flat_map(|i| [bx + (i / 2) as f64 * 1200.0 + if i % 2 == 1 { 300.0 } else { 0.0 }, by + if i % 2 == 0 { 60.0 } else { -60.0 }, 0.0, 0.0]).collect();
+    let e = ends(&a, (0.0, 0.0), (72_000.0, 0.0));
+    let pv = a.preview_route(&e, &pis, 2, false);
+    assert_eq!(pv[0], 1.0, "{}", a.issue_kinds());
+    assert_eq!(a.add_route(&e, &pis, 2, false), 0, "{}", a.issue_kinds());
+    assert!(problems(&a).is_empty());
+}
+
+#[test]
+fn a_long_route_from_a_river_bank_says_there_is_no_room() {
+    // T-1187: a river 110 m from the first click leaves no room for the ramp up, even raising the
+    // window whole; the player is told so rather than "cannot cross water"
+    let mut a = merc();
+    water(&mut a, &[(150.0, 350.0)]);
+    let (e, pis) = zigzag(&a, 100);
+    let pv = a.preview_route(&e, &pis, 2, false);
+    assert_eq!(pv[0], 0.0);
+    assert_eq!(a.issue_kinds(), "BridgeNoRoom");
+}
+
+#[test]
+fn a_long_route_bridges_slivers_beside_a_river() {
+    // T-1187: a strip of water 4.5 m wide just past the river, which the plain sampling (every
+    // 12.5 m) can step over but the route's pieces each read at their own phase; at five phases
+    for k in 0..5 {
+        let mut a = merc();
+        let at = 15_414.4 + 7.3 * k as f64;
+        water(&mut a, &[(15_000.0, 15_200.0), (at, at + 6.0)]);
+        let (e, pis) = zigzag(&a, 100);
+        let ends: Vec<Pi> = vec![Pi::new(e[2], e[3], 0.0, 0), Pi::new(e[7], e[8], 0.0, 0)];
+        let verts: Vec<Pi> = std::iter::once(ends[0]).chain(pis.chunks(4).map(|p| Pi::new(p[0], p[1], 0.0, 0))).chain(std::iter::once(ends[1])).collect();
+        let scaled = a.w.net.frame().scaled();
+        let b = bridge::bridge_long(&verts, scaled, a.w.net.water_mask.as_ref()).unwrap().unwrap();
+        // bridged with ramps beside the water, not the window raised whole between its corners
+        assert!(b.len() > verts.len(), "phase {k}: {} vertices, {} before", b.len(), verts.len());
+        let g = geom::fit_in(&b, scaled);
+        let mut s = 0.0;
+        while s <= g.len {
+            let (x, y, _) = pos_at(&g.pieces, s);
+            if a.w.net.water_mask.is_water(x, y) {
+                assert!(height_at(&g.vert, s) > LEVEL_H - 0.01, "phase {k}, s {s}: {} m over water", height_at(&g.vert, s));
+            }
+            s += 0.5;
+        }
+    }
+}
+
 #[test]
 fn each_crossing_gets_its_own_bridge_and_close_ones_share() {
     let mut a = api();

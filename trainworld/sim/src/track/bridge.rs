@@ -61,6 +61,12 @@ struct V {
 /// Ok(None) where nothing needs doing: no water, any other level, or an alignment that is
 /// invalid anyway.
 pub fn bridge(verts: &[Pi], scaled: bool, mask: &dyn WaterMask) -> Result<Option<Vec<Pi>>, NoRoom> {
+    bridge_in(verts, scaled, mask, false)
+}
+
+/// `bridge`, reading the water as `fine_spans` does where `fine`: a window of a long route is cut
+/// into pieces later, each checked at its own phase, so it must clear the slivers they can find.
+fn bridge_in(verts: &[Pi], scaled: bool, mask: &dyn WaterMask, fine: bool) -> Result<Option<Vec<Pi>>, NoRoom> {
     if mask.is_empty() || verts.len() < 2 || verts.iter().any(|p| p.level != 0) {
         return Ok(None);
     }
@@ -68,8 +74,13 @@ pub fn bridge(verts: &[Pi], scaled: bool, mask: &dyn WaterMask) -> Result<Option
     if !f.issues.is_empty() || f.pieces.is_empty() {
         return Ok(None);
     }
-    let mut wet = vec![];
-    water_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); (x, y) }, mask, &mut wet);
+    let wet = if fine {
+        fine_spans(&f, mask)
+    } else {
+        let mut wet = vec![];
+        water_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); (x, y) }, mask, &mut wet);
+        wet
+    };
     if wet.is_empty() {
         return Ok(None);
     }
@@ -106,7 +117,8 @@ const LONG_REACH: f64 = 4000.0;
 /// water bridged on its own, between the corners LONG_REACH either side of it, the rest of the
 /// route as it is. `bridge` on the whole tries every vertex for every ramp and fits the whole
 /// alignment for each try, minutes over hundreds of corners, and one river it cannot bridge
-/// moves every ramp on the route. Never NoRoom: such a stretch is raised whole.
+/// moves every ramp on the route. Such a stretch is raised whole; NoRoom only where even that has
+/// no leg for a ramp, as with water just past an end of the route.
 pub fn bridge_long(verts: &[Pi], scaled: bool, mask: &dyn WaterMask) -> Result<Option<Vec<Pi>>, NoRoom> {
     if mask.is_empty() || verts.len() < 2 || verts.iter().any(|p| p.level != 0) {
         return Ok(None);
@@ -147,12 +159,20 @@ pub fn bridge_long(verts: &[Pi], scaled: bool, mask: &dyn WaterMask) -> Result<O
             sub.insert(1, at(s1 + LONG_REACH / 2.0));
             sub.insert(1, at(s0 - LONG_REACH / 2.0));
         }
-        let pis: Vec<Pi> = sub.iter().map(|v| v.0).collect();
-        let mut nv = match bridge(&pis, scaled, mask) {
+        // Its corners keep the radii the whole route gives them: alone, the window would let the
+        // corner next to each of its ends take all of the end leg, which the route's own corner
+        // there shares, and `bridge` sets every radius it fits (T-1187).
+        let mut pis: Vec<Pi> = sub.iter().map(|v| v.0).collect();
+        for i in a + 1..b {
+            if pis[i - a].radius == 0.0 && f.radius[i] > 0.0 {
+                pis[i - a].radius = floor_mm(f.radius[i]);
+            }
+        }
+        let mut nv = match bridge_in(&pis, scaled, mask, true) {
             Ok(Some(v)) if held(&v, scaled, mask) => v,
             // no room for ramps beside the water (Lake Hamana's islands), or the window alone does
             // not fit: the stretch goes up whole, rather than one lake refusing 500 km (T-727d)
-            _ => raised(&sub, s0, s1),
+            _ => raised(&sub, s0, s1).ok_or(NoRoom)?,
         };
         // the window's ends are the route's own corners, radius and all
         let last = nv.len() - 1;
@@ -207,19 +227,17 @@ fn held(v: &[Pi], scaled: bool, mask: &dyn WaterMask) -> bool {
 }
 
 /// A window raised whole: up on the last leg before the water long enough for a ramp, down on the
-/// first such leg after it, each ramp centred between its leg's two corners. As it was where there
-/// is no such leg.
-fn raised(sub: &[(Pi, f64)], s0: f64, s1: f64) -> Vec<Pi> {
+/// first such leg after it, each ramp centred between its leg's two corners. None where there is
+/// no such leg.
+fn raised(sub: &[(Pi, f64)], s0: f64, s1: f64) -> Option<Vec<Pi>> {
     let mut v: Vec<Pi> = sub.iter().map(|p| p.0).collect();
     let fits = |j: usize| sub[j + 1].1 - sub[j].1 >= RAMP + 2.0 * SHORE;
-    let up = (0..sub.len() - 1).rev().find(|&j| fits(j) && sub[j + 1].1 <= s0 - SHORE);
-    let down = (0..sub.len() - 1).find(|&j| fits(j) && sub[j].1 >= s1 + SHORE);
-    if let (Some(u), Some(d)) = (up, down) {
-        for p in &mut v[u + 1..=d] {
-            p.level = BRIDGE_LEVEL;
-        }
+    let u = (0..sub.len() - 1).rev().find(|&j| fits(j) && sub[j + 1].1 <= s0 - SHORE)?;
+    let d = (0..sub.len() - 1).find(|&j| fits(j) && sub[j].1 >= s1 + SHORE)?;
+    for p in &mut v[u + 1..=d] {
+        p.level = BRIDGE_LEVEL;
     }
-    v
+    Some(v)
 }
 
 /// The ramps one after another, each with the nearest vertices that hold it; then the whole.
