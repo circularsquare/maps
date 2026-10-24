@@ -452,8 +452,12 @@ notes/T-420.md has the tables.
   Why it may not carry over: 110 km/h assumes a motorway between the ends (US, Canada, western Europe); where long
   roads are two-lane or congested end to end (much of India, Indonesia, Lagos) the middle is far
   slower, and a sprawling metro whose dense core is wider than 10 km (Mexico City, Jakarta) is
-  slow for longer. Check: a few typical door-to-door drives of 50-130 km per new country against
-  the model's (notes/T-295.md has the US, Toronto and London ones).
+  slow for longer. The speeds are as fast as or faster than measured ones where checked (T-1147):
+  NHTS 2017's door-to-door car times in eight US metros at every trip length, and the published
+  average speeds of London (TomTom, the DfT), New York (TomTom) and Tokyo (the road traffic
+  census). Check: a few typical door-to-door drives of 50-130 km per new country against the
+  model's (notes/T-295.md has the US, Toronto and London ones), and the city's published average
+  driving speed against the ceiling harness's `drive` output (notes/T-1147.md).
 - **Parking** (T-380, T-372, T-440, docs/demand-mode.md 4.3). One rule for the commute, everyday and
   regional layers. In minutes, not money: 7 to park (T-636, T-637; with the car ownership of $2.00 a trip
   and $0.13 a km, T-938, local layers only), plus for a paid
@@ -762,7 +766,11 @@ notes/T-420.md has the tables.
   US cents a road km (AAA 2024 fuel and upkeep) and the local parking rule at the destination,
   both split over two occupants, at 3 perceived minutes a dollar. Fuel prices, tolls (T-270),
   motorway speeds, occupancy and car ownership all vary by country; Europe's fuel costs about twice
-  the US's per km, so cars there would cost more. Check: a fuel price and toll regime per country.
+  the US's per km, so cars there would cost more. Against routed drives on 43 pairs (T-279,
+  notes/T-279.md) the 1.25 is about the median road (1.19), but the rule runs 15-38% slow on flat
+  motorway corridors and up to twice too fast across old mountain roads and round inlets (Taipei -
+  Hualien, Athens - Thessaloniki, Denmark's straits, Shikoku). Check: a fuel price and toll regime
+  per country; a few routed drives between its biggest places.
 - **Commutes between zones** (T-276, docs/zones.md 4). One gravity over every zone pack, each
   pack's own curve and border factor inside it, region pairs across packs from the pack holding
   both, else the country's admin-1 default (US 0.23, Japan 0.4), else the pack-line default 0.4

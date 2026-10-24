@@ -381,7 +381,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
 - `t700_walk_banks.py [id ...] [--packs dir]` (Python, T-700): the walk factors split by bank; no
   part of a zone walking to itself at over x5, and Shanghai's Middle Henan Rd to the Bund straight.
 - `ceiling/` (T-1056): Anita's ceilings A and B on a scratch copy of the sim crate. `t1056_ceiling.rs` is
-  the test module, `run_ceil.py [cities]` runs it per pack (`T1056_WORK` names the scratch folder).
+  the test module (`T938_SET` sets parameters; its `drive` output is the car's trip-weighted road km
+  and minutes by home density, T-1147), `run_ceil.py [cities]` runs it per pack (`T1056_WORK` names
+  the scratch folder).
 
 ## pipeline/: city packs (Python)
 

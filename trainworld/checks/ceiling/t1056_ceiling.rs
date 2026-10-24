@@ -111,6 +111,15 @@ fn t1056() {
     let n = api.city.len();
     let pop: Vec<f32> = pack::cell_weights(&h, &b, "pop", n).unwrap().unwrap();
     let mut acc = Acc(vec![[0.0; 4]; NS * NG]);
+    // T-1147: per group, trips, trips x road km and trips x real driving minutes (the car's speed)
+    let mut drv = vec![[0f64; 3]; NG];
+    let mut dadd = |g: usize, t: f64, km: f32, min: f32| {
+        for gg in [g, NG - 1] {
+            drv[gg][0] += t;
+            drv[gg][1] += t * km as f64;
+            drv[gg][2] += t * min as f64;
+        }
+    };
     {
         let (z, gr, p) = (&*api.z, &*api.gr, &api.base);
         let (_, dtab) = decay_tables(z, Curve { km: 1.0, pow: 0.0, flat_km: 0.0 });
@@ -134,6 +143,7 @@ fn t1056() {
                 let cw = gr.walk_cost_at(i, j, k);
                 let f = p.drive_factor(i, j);
                 let drive = p.drive_min_f(d_km * 1000.0, f, place[i], place[j]);
+                dadd(g, t as f64, d_km * f, drive);
                 for (s, (_, sc)) in SCENS.iter().enumerate() {
                     acc.add(s, g, t as f64, shares(p, sc, d_km * 1000.0, cw, drive, park[j], homes[i], d_km * f));
                 }
@@ -157,6 +167,9 @@ fn t1056() {
                 for (u, v2) in [(hz, az), (az, hz)] {
                     let f = p.drive_factor(u, v2);
                     let drive = p.drive_min_f(dist, f, place[u], place[v2]);
+                    if s == 0 {
+                        dadd(g, w as f64, dist * 0.001 * f, drive);
+                    }
                     acc.add(s, g, w as f64, shares(&p, sc, dist, cw, drive, park[v2], homes[hz], dist * 0.001 * f));
                 }
             }
@@ -167,6 +180,7 @@ fn t1056() {
         "scens": SCENS.iter().map(|s| s.0).collect::<Vec<_>>(),
         "vars": ["built"],
         "acc": acc.0.iter().map(|a| a.to_vec()).collect::<Vec<_>>(),
+        "drive": drv.iter().map(|a| a.to_vec()).collect::<Vec<_>>(),
     });
     std::fs::write(&out_path, serde_json::to_string(&out).unwrap()).unwrap();
 }
