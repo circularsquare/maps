@@ -11,9 +11,10 @@ import { BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connec
 // each hour's trips (and the next hour's, ahead); when the hour turns, only that buffer is
 // re-uploaded. Phase tables change only on edits.
 
-import { LEVEL_COLOURS, NET_INK, PLATFORM_BLUE, rgb, SPEED_STOPS } from "../game/palette";
+import { LEVEL_COLOURS, NET_INK, rgb, SPEED_STOPS } from "../game/palette";
 import { shadeColours } from "../game/shades";
-import { platformRoom, pulsesBetween, readBoardHour, QUEUE_STRIDE, WAITING_CAP, type BoardHour } from "../game/boarding";
+import { platformRoom, readBoardHour, QUEUE_STRIDE, waitingAt, type BoardHour } from "../game/boarding";
+import { TransferBubbles } from "./transferBubbles";
 import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, PSI_PER_UNIT } from "./geo";
 import { GradeMarks } from "./gradeMarks";
 import { F_BLUEPRINT, lineAt, type NetworkBuffers, type Strokes } from "./network";
@@ -79,10 +80,11 @@ export function laneState(zoom: number) {
  * full (T-559). */
 export const CROWD_ZOOM = STATION_BOX_ZOOM;
 const CROWD_RGB = rgb("#77726d").map((v) => v / 255);
-const PLATFORM_RGB = rgb(PLATFORM_BLUE).map((v) => v / 255);
 /** The track drawn through a station box (T-236) is at most this share of the box's white, so the
- * crowd and the blue platform edges show beside it. */
+ * crowd shows beside it. */
 const TRACK_IN_BOX = 0.3;
+/** How much darker a line at capacity is drawn in the traffic view, towards black (T-1125). */
+const FULL_DARKEN = "0.14";
 /** RGBA texels per selected shape in the outline's texture (SEL_FS): its frame, size and dot, then
  * its centre line (T-254). */
 const SEL_STRIDE = 3 + Math.ceil(PLATFORM_POINTS / 2);
@@ -300,6 +302,8 @@ void main() {
     v_stripe = vec4(u_lane_mode == 0 ? rail : (bpTrack || placement ? rail : v_color), hs);
     v_stripe_only = u_lane_mode == 1 && u_kind == 0 ? 1.0 : 0.0;
   }
+  // T-1125: a line at capacity a little darker under its red edge
+  if (u_kind == 1 && a_full > 0.5 && u_casing <= 0.0 && !full) v_color = mix(v_color, vec3(0.0), ${FULL_DARKEN});
   // the band behind a line's two tracks, pale so they stand out on it
   if (u_lane_mode == 1 && u_casing <= 0.0) v_color = mix(v_color, u_casing_rgb, 0.6 * t);
 }`;
@@ -349,8 +353,7 @@ uniform vec2 u_fixed;    // a box's half width (T-204, T-239): px at BOX_WIDTH_Z
                          // units per px there; the width on the ground, and the least on screen (T-553)
 uniform highp int u_halo;
 uniform highp int u_pass; // stations: 0 every one but the selected, 1 the selected only
-uniform highp int u_layer; // 0 the dark shape, 1 the white inside the rim, 2 riders waiting (T-219),
-                           // 3 the blue platform edges (T-236)
+uniform highp int u_layer; // 0 the dark shape, 1 the white inside the rim, 2 riders waiting (T-219)
 uniform float u_halo_radius;
 uniform float u_pixel;
 in vec3 a_st;
@@ -400,8 +403,7 @@ void main() {
   bool boxes = u_boxes > 0.5;
   bool sel = a_sel.x > 0.5;
   bool noCrowd = !boxes || (flags & 2) != 0 || max(a_crowd.x, a_crowd.y) <= 0.0;
-  // the blue platform edges (u_layer 3, T-236) are drawn on platforms only
-  if ((u_pass == 1) != sel || (u_layer == 2 && noCrowd) || (u_layer == 3 && !boxes)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  if ((u_pass == 1) != sel || (u_layer == 2 && noCrowd)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   // zoomed out a dot's pie is its platforms' crowd (T-228, T-553): the fullest side's share, and
   // whether it is full
   if (!boxes) v_crowd = vec4(a_dcrowd, 0.0, 0.0);
@@ -525,9 +527,7 @@ uniform vec3 u_bad;
 uniform vec3 u_crowd_rgb;
 uniform highp int u_halo;
 uniform highp int u_layer;
-uniform float u_hair;    // a CSS px in device px
 uniform float u_tint;    // 1: dots show their crowds as pies (T-228, T-553)
-uniform vec3 u_plat;     // the platforms' blue (T-236)
 uniform float u_mask;    // 1: the white only marks the stencil (the track drawn through it, T-236)
 uniform vec3 u_lanes;    // T-658: 4 m in px, how far double track's two tracks have parted (0-1), their narrowing close in (T-713)
 in vec2 v_p;
@@ -541,10 +541,6 @@ flat in float v_hot;
 ${qVars("in")}
 out vec4 o;
 ${SHAPE_GLSL}
-// white between a platform's rim and its blue edge (T-236), px, from the white's half width W
-float platGap(float W) { return 0.15 * W; }
-// a blue platform edge's width, px: a share of the white, then 0.4 m once double track has parted
-float edgeW(float W, float tl) { return mix(max(u_hair, 0.14 * W), max(u_hair, 0.1 * u_lanes.x), tl); }
 void main() {
   if (u_halo == 1) {
     if (v_size.x < 0.5 || v_alpha < 0.9) discard;
@@ -584,38 +580,17 @@ void main() {
       col = mix(col, v_crowd.y > 0.5 ? u_bad : u_crowd_rgb, cover);
     }
     o = vec4(col * a, a);
-  } else if (u_layer == 3) {
-    // the platform's two long edges as thin blue lines just inside its rim (T-236, Anita: "show
-    // the actual platforms as like little blue lines"), drawn over the track and the crowd, so
-    // platforms drawn over each other each show their own; they come in as the box grows wide
-    // enough to hold them beside the track
-    vec2 p = f;
-    float W = v_size.y - u_ring;
-    // close in on double track (T-658) they move in beside its two tracks, 0.4 m wide: a platform
-    // each side
-    float tl = u_lanes.y * v_lane;
-    float gap = platGap(W), bw = edgeW(W, tl);
-    float trk = (0.5 + 0.5 * ${LANE_SHARE.toFixed(1)} * u_lanes.z) * u_lanes.x;  // the pair's outer edge
-    float off = mix(W - gap - 0.5 * bw, trk + u_hair + 0.5 * bw, tl);
-    float a = clamp(0.5 * bw + 0.5 - abs(abs(p.y) - off), 0.0, 1.0)
-      * clamp(v_size.x - u_ring - gap - abs(p.x) + 0.5, 0.0, 1.0)
-      * clamp((W / u_hair - 3.0) / 2.0, 0.0, 1.0) * v_alpha;
-    o = vec4(u_plat * a, a);
   } else {
     // riders waiting (T-219): each side's half of the platform fills from its middle outwards, as
-    // far as its share of the room to stand there, like a train's gauge; red once full (T-559)
-    // white kept between the fill and the rim (a pixel and a half, or as far as the blue platform
-    // edge, T-236), so the outline stays crisp
+    // far as its share of the room to stand there, like a train's gauge; red once full (T-559);
+    // right up to the rim (T-1121)
     vec2 p = f;
-    float keep = max(1.5, platGap(v_size.y - u_ring));
-    inner = clamp(0.5 - keep - d - u_ring, 0.0, 1.0);
-    float reach = v_size.x - u_ring - keep;
-    // close in on double track (T-658) each side's riders stand on their own platform, from beside
-    // its blue edge out to the rim: the + side's trains travel along the axis, keeping right, so
-    // their track and platform are on the + side
+    float reach = v_size.x - u_ring;
+    // close in on double track (T-658) each side's riders stand on their own platform, from its
+    // track out to the rim: the + side's trains travel along the axis, keeping right, so their
+    // track and platform are on the + side
     float tl = u_lanes.y * v_lane;
-    float yin = tl * ((0.5 + 0.5 * ${LANE_SHARE.toFixed(1)} * u_lanes.z) * u_lanes.x + 2.0 * u_hair + edgeW(v_size.y - u_ring, tl) + 1.5);
-    inner = mix(inner, clamp(0.5 - 1.5 - d - u_ring, 0.0, 1.0), tl);
+    float yin = tl * (0.5 + 0.5 * ${LANE_SHARE.toFixed(1)} * u_lanes.z) * u_lanes.x;
     float ap = inner * clamp(p.y - yin + 0.5, 0.0, 1.0) * clamp(v_crowd.x * reach - abs(p.x) + 0.5, 0.0, 1.0);
     float am = inner * clamp(0.5 - p.y - yin, 0.0, 1.0) * clamp(v_crowd.y * reach - abs(p.x) + 0.5, 0.0, 1.0);
     o = vec4((v_crowd.z > 0.5 ? u_bad : u_crowd_rgb) * ap + (v_crowd.w > 0.5 ? u_bad : u_crowd_rgb) * am, ap + am);
@@ -1311,6 +1286,8 @@ export class NetworkRenderer {
   /** per trip in `trips`, the departure - epoch its train takes next, NaN leaving service (T-245) */
   tripNexts: Float32Array | null = null;
   net: NetworkBuffers | null = null;
+  /** riders changing trains on their walk (T-1124) */
+  readonly bubbles = new TransferBubbles();
   /** last GPU time for our draws in ms, if the timer extension exists */
   gpuMs: number | null = null;
   /** current render epoch, game seconds; NaN until the first draw */
@@ -1324,10 +1301,11 @@ export class NetworkRenderer {
     this.strokeProg = compile(gl, STROKE_VS, STROKE_FS);
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.marks.init(gl);
+    this.bubbles.init(gl, (vs, fs) => compile(gl, vs, fs));
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
     this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr"]);
-    this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n"]);
+    this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
     this.selProg = compile(gl, SEL_VS, SEL_FS);
@@ -1454,23 +1432,44 @@ export class NetworkRenderer {
     if (this.stationHaloBuf && n.stationCount) this.rewrite(this.stationHaloBuf, l?.stationHalo ?? new Float32Array(n.stationCount * 2));
   }
 
-  /** T-819: the edges whose track is at capacity, outlined in red on the lines over them; null or
-   * empty for none (any view but traffic). */
-  setFull(edges: ReadonlySet<number> | null) {
+  /** T-819, T-1125: in the traffic view (`traffic`), the edges whose track is at capacity, and
+   * the stretches whose trains usually run at capacity (the boarding account's, each hour), drawn
+   * with a red edge and a darker body on the lines over them. */
+  setFull(edges: ReadonlySet<number> | null, traffic: boolean) {
     const was = this.fullEdges;
-    if ((!edges || !edges.size) && (!was || !was.size)) return;
-    if (edges && was && edges.size === was.size && [...edges].every((e) => was.has(e))) return;
+    const same = (!edges || !edges.size) === (!was || !was.size) && (!edges || !was || (edges.size === was.size && [...edges].every((e) => was.has(e))));
+    if (same && traffic === this.fullTraffic) return;
     this.fullEdges = edges;
+    this.fullTraffic = traffic;
     this.writeFull();
   }
   private fullEdges: ReadonlySet<number> | null = null;
+  private fullTraffic = false;
+  /** the full stretches as last written, line * 4096 + stretch */
+  private fullKeys = new Set<number>();
+  private fullDrawn = "";
+  /** Whether line `line`'s run 0 stretch `s` usually runs at capacity, as drawn (T-1125). */
+  fullStretch(line: number, s: number): boolean {
+    return this.fullTraffic && this.fullKeys.has(line * 4096 + s);
+  }
   private writeFull() {
     const l = this.lines, n = this.net;
-    if (!l || !l.count || !n) return;
-    const out = new Float32Array(l.count), f = this.fullEdges;
-    if (f?.size) for (let i = 0; i < l.count; i++) if (f.has(n.lines.edge[i])) out[i] = 1;
+    const keys = new Set<number>();
+    const fs = this.fullTraffic ? this.board?.fullStretches : undefined;
+    for (let k = 0; fs && k < fs.length; k += 2) keys.add(fs[k] * 4096 + fs[k + 1]);
+    const drawn = `${n ? 1 : 0}/${l?.count}/${[...(this.fullEdges ?? [])].join(",")}/${[...keys].join(",")}`;
+    this.fullKeys = keys;
+    if (!l || !l.count || !n || drawn === this.fullDrawn) return;
+    this.fullDrawn = drawn;
+    const out = new Float32Array(l.count), f = this.fullEdges, info = n.lines.info;
+    for (let i = 0; i < l.count; i++) {
+      if (f?.size && f.has(n.lines.edge[i])) out[i] = 1;
+      if (keys.size && info && keys.has(n.lines.colour[i] * 4096 + info[i * 4])) out[i] += 2;
+    }
+    this.anyFull = out.some((v) => v > 0);
     this.rewrite(l.fullBuf, out);
   }
+  private anyFull = false;
 
   /** Replace everything drawn but the trips (an edit). */
   setNetwork(n: NetworkBuffers) {
@@ -1484,6 +1483,7 @@ export class NetworkRenderer {
     this.marks.setNetwork(n.marks);
     this.track = this.strokes(n.track);
     this.lines = this.strokes(n.lines);
+    this.fullDrawn = "";
     this.writeFull();
     this.turnback = n.turnbacks?.count ? this.strokes(n.turnbacks) : null;
     // blueprint track sorts last (network.ts)
@@ -1713,6 +1713,7 @@ export class NetworkRenderer {
         this.loadTex = this.texture(t.board.loads, "r32f", TEX_W, []);
       }
       this.board = t.board ?? null;
+      if (this.fullTraffic) this.writeFull();
       this.tripEpoch = epoch;
       this.tripVersion = t.version;
       this.tripCount = t.data.length / 2;
@@ -1740,6 +1741,7 @@ export class NetworkRenderer {
     const n = this.net;
     if (!n) return;
     const uTime = this.sync(time);
+    this.bubbles.hide();
     // the network's buffers are relative to the anchor they were built at (T-307)
     const a = n.anchor ?? anchor();
     const m = mul4(mercMatrix, localToMercMatrix(a));
@@ -1786,7 +1788,7 @@ export class NetworkRenderer {
     gl.uniform3fv(u.u_sel, rgb(shades.mapInk).map((v) => v / 255));
     gl.uniform3fv(u.u_casing_rgb, rgb(shades.casing).map((v) => v / 255));
     // T-819: 1.5 px of red either side, outside the casing, of a line on full track
-    const fullPass = !!this.fullEdges?.size;
+    const fullPass = this.anyFull;
     gl.uniform1i(u.u_full_pass, 0);
     gl.uniform1f(u.u_full_px, 3 * dpr);
     gl.uniform3fv(u.u_full_rgb, rgb(shades.fullTrack).map((v) => v / 255));
@@ -1992,8 +1994,6 @@ export class NetworkRenderer {
       const fills = any && boxes;
       gl.useProgram(this.stationProg);
       gl.uniform1f(su.u_tint, any && !boxes ? 1 : 0);
-      gl.uniform1f(su.u_hair, dpr);
-      gl.uniform3fv(su.u_plat, PLATFORM_RGB);
       gl.uniform1f(su.u_mask, 0);
       // The track through the boxes (T-236, Anita: "maybe the track on top of the station"): the
       // track and line strokes drawn again, no wider than TRACK_IN_BOX of the box's white and
@@ -2022,8 +2022,7 @@ export class NetworkRenderer {
       };
       // every station, then the selected ones over them with their outline and glow; each pass the
       // dark shapes, then the white inside every rim, so stations drawn over each other are one white
-      // shape with one outline (T-217), then the crowds, the track through them and the blue
-      // platform edges (T-236)
+      // shape with one outline (T-217), then the crowds and the track through them (T-236)
       for (const pass of [0, 1]) {
         if (pass === 0 && hidden) continue;
         if (pass === 1) {
@@ -2070,7 +2069,11 @@ export class NetworkRenderer {
           gl.uniform1f(u.u_cap, 0);
           gl.disable(gl.STENCIL_TEST);
         }
-        layerDraw(pass, 3, false);
+      }
+      // riders changing trains walking between stations (T-1124), with the platform crowds
+      if (this.crowdsShown && boxes && this.crowdOf) {
+        this.bubbles.sync(this.board, n, this.crowdOf.station);
+        this.bubbles.draw(m, vp, uTime, 0.5 * boxWhite * dpr, CROWD_RGB, rgb(shadeColours().casing).map((v) => v / 255), dpr);
       }
     }
 
@@ -2283,21 +2286,11 @@ export class NetworkRenderer {
     c.fill(0);
     w.fill(0);
     const { station, side, sides } = this.crowdOf;
-    const Q = b.queues, E = b.events;
     let any = false;
     for (let q = 0; q < b.queueCount; q++) {
       const s = station[q];
       if (s < 0) continue;
-      const base = q * QUEUE_STRIDE, first = Q[base + 8], count = Q[base + 9];
-      if (count <= 0) continue;
-      // the last train to leave at or before t (events are in time order)
-      let lo = first, hi = first + count - 1;
-      while (lo < hi) {
-        const mid = (lo + hi + 1) >> 1;
-        if (E[mid * 2] <= t) lo = mid;
-        else hi = mid - 1;
-      }
-      const left = E[lo * 2 + 1], waiting = Math.min(WAITING_CAP, left + Math.max(0, t - E[lo * 2]) * Q[base + 4] + pulsesBetween(b, q, E[lo * 2], t));
+      const waiting = waitingAt(b, q, t);
       const k = side[q] > 0 ? 0 : 1;
       w[s * 2 + k] += waiting;
       if (waiting >= 1) any = true;

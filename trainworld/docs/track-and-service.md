@@ -784,24 +784,33 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   works out again only the lines it changed; new riders redo every line, a few lines at a time
   between the clock worker's other messages (3 a step).
 - **Each game hour** the worker sends, with the hour's trips, each trip's riders per stop-to-stop
-  stretch and each platform's departures with the riders each left behind, its steady arrival
-  rate, its pulses of riders changing lines (below), and the hour's riders left behind and longest
-  wait. The renderer reads the train's load for the stretch it is drawn on (empty once at its last
+  stretch and each platform's departures with the riders each left behind and when each train
+  stopped there (its stand before it leaves, the closing stand at a first stop, never before the
+  train ahead left; T-1123), its steady arrival rate, its pulses of riders changing lines (below),
+  the hour's riders left behind and longest wait, and the stretches at capacity (below). The
+  renderer reads the train's load for the stretch it is drawn on (empty once at its last
   stop; packed to crush, drawn full with a red edge, T-207, T-218), and a platform's crowd at any
-  moment is what the last train left plus who has arrived since, drawn as the platform filling up
+  moment is what the last train to stop there left plus, once it has left, who has arrived since
+  (its riders get on as it stops), drawn as the platform filling up
   wherever platforms are drawn (zoom 14 and in, T-189, T-204, T-219, T-553; [ui-map.md](ui-map.md)).
 - **Riders changing lines arrive with their train** (T-554, `Boarding::pulses`, notes/T-554.md):
   in the drawn crowd, not the account. Demand's transfers a day between platforms (the solve
   shown, every population; `platformTransfers`) give each platform the share of its boardings
   that change there from each other platform. Each clock hour, that share of the hour's arrivals
-  is split over the feeding platform's trains leaving in the hour by the riders each has aboard
-  arriving, and reaches the platform a transfer walk after the train leaves (demand's: the
-  straight line between the two stations x 1.3 at 1.2 m/s; nothing at the same station). The
+  is split over the feeding platform's trains reaching it in the hour by the riders each has aboard
+  arriving, and reaches the platform a transfer walk after the train stops (T-1124; demand's: the
+  straight line between the two stations x 1.3 at 1.2 m/s; nothing at the same station). Each
+  pulse carries the station it walks from and its walk, which the map draws as a bubble walking
+  between the two (ui-map.md "Platform crowds"). The
   rest of the hour's arrivals, and the share of a feeding platform whose trains bring none or
   under one rider each that hour, arrive steadily. Each platform's arrivals in the hour are the account's; the
   account's loads, departures and riders left behind do not read the pulses, so they and
   demand's crowding feedback stay one rule. The fares' timing within the hour (T-284) counts
   the pulses with the steady arrivals.
+- **Stretches at capacity** (T-1125, `RunAccount::full_stretches`): a stretch between two stops
+  usually runs at capacity when, in either direction, at least half the trains leaving it in its
+  busiest clock hour (by riders carried) are packed to crush. Worked out once with each account;
+  the traffic view marks them ([ui-map.md](ui-map.md) "Track display").
 - **Room on a platform** (T-219, `platformRoom` in `game/boarding.ts`): what counts as a full
   platform for drawing. Each direction's riders wait on one side, 2.5 m of usable width (half a
   6 m island platform less the edge strip kept clear) along the platform's length, at 0.3 m² a

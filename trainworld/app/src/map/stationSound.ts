@@ -14,6 +14,20 @@ const RECENT_S = 0.9;
 const MAX_RECENT = 3;
 /** Pops from one arrival, getting off and getting on, at most each. */
 export const MAX_POPS = 4;
+/** T-1122: the pops of riders getting off are skipped at this chance, and otherwise shifted as a
+ * group by up to this many semitones either way (each pop a semitone more at most), at a level in
+ * proportion to the riders getting off: full (today's) at OFF_FULL_RIDERS, never under OFF_FLOOR nor
+ * over OFF_CAP times it. */
+export const OFF_SKIP = 0.3;
+export const OFF_SHIFT_SEMITONES = 4;
+const OFF_JITTER_SEMITONES = 1;
+export const OFF_FULL_RIDERS = 80;
+export const OFF_FLOOR = 0.25;
+export const OFF_CAP = 1.25;
+/** The level of the getting-off pops for `riders` getting off, as a multiple of the pops' own. */
+export function offGain(riders: number): number {
+  return Math.max(OFF_FLOOR, Math.min(OFF_CAP, riders / OFF_FULL_RIDERS));
+}
 
 export interface Arrival {
   /** -1 (left of the view) to 1 */
@@ -24,6 +38,8 @@ export interface Arrival {
   speed: number;
   off: number;
   on: number;
+  /** riders getting off (T-1122: the getting-off pops' level) */
+  offRiders: number;
   /** the line's note, semitones above C5 (0 to 11) */
   note: number;
   /** the platform's riders waited long (the red face's test): a lower, softer note */
@@ -112,7 +128,9 @@ export class StationSound {
     this.chime(dest, now, level, a.note, a.crowded);
     const cap = together ? 0 : a.speed === 1 ? 2 : MAX_POPS;
     // pops follow the chime, getting off first, then getting on a moment later
-    for (let i = 0; i < Math.min(cap, a.off); i++) this.pop(dest, now + 0.28 + i * 0.09 + Math.random() * 0.05, level, 560 + Math.random() * 200);
+    const offPops = Math.random() < OFF_SKIP ? 0 : Math.min(cap, a.off);
+    const shift = 2 ** (((Math.random() * 2 - 1) * OFF_SHIFT_SEMITONES) / 12), offLevel = level * offGain(a.offRiders);
+    for (let i = 0; i < offPops; i++) this.pop(dest, now + 0.28 + i * 0.09 + Math.random() * 0.05, offLevel, 640 * shift * 2 ** (((Math.random() * 2 - 1) * OFF_JITTER_SEMITONES) / 12));
     for (let i = 0; i < Math.min(cap, a.on); i++) this.pop(dest, now + 0.75 + i * 0.1 + Math.random() * 0.06, level, 360 + Math.random() * 140);
     return true;
   }

@@ -241,6 +241,9 @@ pub struct RunAccount {
     pub stop_open: Vec<f64>,
     /// Per period and stop (`p * n + k`), the km a boarder there rides on this line (`ride_km`).
     pub ride_km: Vec<f64>,
+    /// Per stretch (stop k to k + 1 in this run's order), whether it usually runs at capacity
+    /// (`full_stretches`, T-1125).
+    pub full: Vec<bool>,
 }
 
 /// One line's counts over a window of the day (`Boarding::window`).
@@ -501,7 +504,9 @@ impl Boarding {
     ///
     /// `[trips, loads, queues, events, pulses, then per trip the index of its first load or -1 and
     /// the seconds from its departure to its last stop, then the loads, then per queue
-    /// QUEUE_STRIDE numbers, then per event 2, then per pulse 2]`.
+    /// QUEUE_STRIDE numbers, then per event 2, then per pulse 2, then per event its train's
+    /// arrival (T-1123), then per pulse the station node its riders come from and their walk (s,
+    /// T-1124), then the count of full stretches and per one its line and run 0 stretch (T-1125)]`.
     ///
     /// A trip's loads are riders aboard on each stop-to-stop stretch, numbered as on run 0 (a
     /// run 1 trip's are reversed), so the renderer looks them up by the stretch it draws.
@@ -516,7 +521,7 @@ impl Boarding {
     pub fn hour(&mut self, net: &Network, svc: &Service, epoch: f64) -> Vec<f32> {
         self.ensure(net, svc);
         let game = epoch;
-        let mut pulses: Vec<(f32, f32)> = vec![];
+        let mut pulses: Vec<(f32, f32, f32, f32)> = vec![];
         // the hour's kind of day (T-260) in each line's local time (T-309): every trip and
         // platform of the line reads that day's account, at its local hour
         let shift = |l: usize| svc.lines.get(l).map_or(0.0, |ls| ls.shift);
@@ -530,6 +535,7 @@ impl Boarding {
         }
         let mut queues: Vec<f32> = vec![];
         let mut events: Vec<f32> = vec![];
+        let mut arrive: Vec<f32> = vec![];
         let nl = self.accounts.iter().map(|a| a.len()).max().unwrap_or(0);
         for l in 0..nl {
             // the hour in the line's local time
@@ -561,10 +567,17 @@ impl Boarding {
                         let wrap = j.div_euclid(m as isize) as f64 * DAY;
                         (ts[jj] + wrap - h0, ord[jj] as usize)
                     };
+                    // T-1123: each train's arrival too, when its riders get off and on: its stand
+                    // there before it leaves (the closing stand at a first stop), never before
+                    // the train ahead left
+                    let close = ls.close_stand(net, l as u32);
+                    let a0 = arrive.len();
                     for j in first as isize - 1..=end as isize {
                         let (t, i) = at(j);
                         events.push(t as f32);
                         events.push(ra.q_after[i * ra.n + k]);
+                        let stand = if k == 0 { close } else { run.prof.get(ra.levels[i] as usize).and_then(|p| Some(p.dep.get(k)? - p.arr.get(k)?)).unwrap_or(0.0) };
+                        arrive.push((t - stand.max(0.0)) as f32);
                     }
                     // T-680: empty when the line's trains started, and no train before then
                     let open_k = ra.stop_open.get(k).copied().unwrap_or(ra.open);
@@ -572,6 +585,10 @@ impl Boarding {
                     if (events[start * 2] as f64) < open {
                         let after = (start..events.len() / 2).find(|&e| events[e * 2] as f64 >= open).unwrap_or(events.len() / 2);
                         events.splice(start * 2..after * 2, [open as f32, 0.0]);
+                        arrive.splice(a0..a0 + (after - start), [open as f32]);
+                    }
+                    for e in a0 + 1..arrive.len() {
+                        arrive[e] = arrive[e].max(events[(e - 1) * 2]).min(events[e * 2]);
                     }
                     let node = run.nodes[run.stop_idx[k] as usize];
                     let d0 = if r == 0 { ls.runs[0].stop_s[k] } else { ls.runs[0].stop_s[ra.n - 1 - k] };
@@ -599,15 +616,35 @@ impl Boarding {
                 }
             }
         }
-        let mut out = Vec::with_capacity(5 + offs.len() + loads.len() + queues.len() + events.len() + pulses.len() * 2);
+        // T-1125: the stretches that usually run at capacity, either way, in run 0's numbering
+        let mut full: Vec<f32> = vec![];
+        for l in 0..nl {
+            let day = self.kind_at(epoch + shift(l), l);
+            let Some(Some(acc)) = self.accounts[day].get(l) else { continue };
+            let f0 = &acc.runs[0].full;
+            let f1 = acc.runs.get(1).map_or(&[][..], |r| &r.full[..]);
+            for s in 0..f0.len().max(f1.len()) {
+                let back = f1.len().checked_sub(1 + s).and_then(|i| f1.get(i)).copied().unwrap_or(false);
+                if f0.get(s).copied().unwrap_or(false) || back {
+                    full.extend([l as f32, s as f32]);
+                }
+            }
+        }
+        let mut out = Vec::with_capacity(6 + offs.len() + loads.len() + queues.len() + events.len() + arrive.len() + pulses.len() * 4 + full.len());
         out.extend_from_slice(&[trips.len() as f32, loads.len() as f32, (queues.len() / QUEUE_STRIDE) as f32, (events.len() / 2) as f32, pulses.len() as f32]);
         out.extend_from_slice(&offs);
         out.extend_from_slice(&loads);
         out.extend_from_slice(&queues);
         out.extend_from_slice(&events);
-        for (t, v) in pulses {
-            out.extend([t, v]);
+        for p in &pulses {
+            out.extend([p.0, p.1]);
         }
+        out.extend_from_slice(&arrive);
+        for p in &pulses {
+            out.extend([p.2, p.3]);
+        }
+        out.push((full.len() / 2) as f32);
+        out.extend_from_slice(&full);
         out
     }
 
@@ -615,11 +652,12 @@ impl Boarding {
     /// in the hour before game time `epoch` and the hour from it: each hour, a feeding
     /// platform's share of `q`'s boardings (demand's transfers a day over its boardings a day) of
     /// the riders arriving at `q` that hour, split over the trains leaving the feeding platform
-    /// by the riders each brings in, reaching `q` a transfer walk after the train leaves.
-    /// Pushed onto `out` in time order as (seconds from `epoch`, riders). Returns the share of
+    /// by the riders each brings in, reaching `q` a transfer walk after the train stops (T-1124).
+    /// Pushed onto `out` in time order as (seconds from `epoch`, riders, the feeding station's
+    /// node, the walk in seconds). Returns the share of
     /// the hour's arrivals they carry; the rest arrive steadily. A feeding platform with no
     /// train bringing riders in an hour, or under one rider a train, leaves its share steady.
-    fn pulses(&self, net: &Network, svc: &Service, epoch: f64, q: (usize, usize, usize), arr: &Arrivals, node: u32, out: &mut Vec<(f32, f32)>) -> f64 {
+    fn pulses(&self, net: &Network, svc: &Service, epoch: f64, q: (usize, usize, usize), arr: &Arrivals, node: u32, out: &mut Vec<(f32, f32, f32, f32)>) -> f64 {
         let (l, r, k) = q;
         let Some(fs) = self.xfer.get(&(l as u32, r as u8, k as u32)) else { return 0.0 };
         let Some(ls) = svc.lines.get(l) else { return 0.0 };
@@ -648,17 +686,21 @@ impl Boarding {
             let ts = &ra.order_t[kf * m..(kf + 1) * m];
             let ord = &ra.order[kf * m..(kf + 1) * m];
             let h0 = fe.rem_euclid(DAY);
+            // T-1124: riders get off as the train stops, its stand before it leaves
+            let stand = |i: usize| run.prof.get(ra.levels[i] as usize).and_then(|p| Some(p.dep.get(kf)? - p.arr.get(kf)?)).unwrap_or(0.0).max(0.0);
+            let most = run.prof.iter().filter_map(|p| Some(p.dep.get(kf)? - p.arr.get(kf)?)).fold(0.0f64, f64::max);
             for a in [-3600.0, 0.0] {
                 // the trains whose riders reach `q` in [a, a + 3600), weighed by riders aboard
                 trains.clear();
                 let (lo, hi) = (h0 + a - walk, h0 + a + 3600.0 - walk);
-                for d in (lo / DAY).floor() as i64..=(hi / DAY).floor() as i64 {
+                for d in ((lo / DAY).floor() as i64)..=(((hi + most) / DAY).floor() as i64) {
                     let off = d as f64 * DAY;
-                    let (i0, i1) = (ts.partition_point(|&t| t + off < lo), ts.partition_point(|&t| t + off < hi));
+                    let (i0, i1) = (ts.partition_point(|&t| t + off < lo), ts.partition_point(|&t| t + off < hi + most));
                     for j in i0..i1 {
+                        let reach = ts[j] + off - stand(ord[j] as usize) - h0 + walk;
                         let w = ra.load[ord[j] as usize * n + kf - 1] as f64;
-                        if w > 0.0 {
-                            trains.push((ts[j] + off - h0 + walk, w));
+                        if w > 0.0 && reach >= a && reach < a + 3600.0 {
+                            trains.push((reach, w));
                         }
                     }
                 }
@@ -668,7 +710,7 @@ impl Boarding {
                 if wsum <= 0.0 || riders < trains.len() as f64 {
                     continue;
                 }
-                out.extend(trains.iter().map(|&(t, w)| (t as f32, (riders * w / wsum) as f32)));
+                out.extend(trains.iter().map(|&(t, w)| (t as f32, (riders * w / wsum) as f32, fnode as f32, walk as f32)));
                 if a == 0.0 {
                     carried += f.riders * per;
                 }
@@ -1036,6 +1078,28 @@ impl RunAccount {
         }
         best.map(|b| b.0)
     }
+
+    /// T-1125: per stretch, whether at least half the trains leaving its first stop in its
+    /// busiest clock hour (by riders carried) are packed to crush (`cap`).
+    pub fn full_stretches(&self, cap: f64) -> Vec<bool> {
+        let (n, m) = (self.n, self.deps.len());
+        let mut out = vec![false; n.saturating_sub(1)];
+        for (k, f) in out.iter_mut().enumerate() {
+            let (mut riders, mut trains, mut full) = ([0.0f64; 24], [0u32; 24], [0u32; 24]);
+            for j in 0..m {
+                let h = ((self.order_t[k * m + j].rem_euclid(DAY) / 3600.0).floor() as usize).min(23);
+                let v = self.load[self.order[k * m + j] as usize * n + k] as f64;
+                riders[h] += v;
+                trains[h] += 1;
+                if v >= cap - 0.5 {
+                    full[h] += 1;
+                }
+            }
+            let h = (0..24).fold(0, |b, h| if riders[h] > riders[b] { h } else { b });
+            *f = riders[h] > 0.0 && full[h] * 2 >= trains[h];
+        }
+        out
+    }
 }
 
 /// Alighting share per period and stop: demand's alightings over the riders it has arriving.
@@ -1108,17 +1172,18 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
     // queues them at the first stop when their train arrives there, ahead of later arrivals
     let wrap = svc.lines[l].kind == crate::track::net::LoopKind::Circle;
     let mut through = vec![];
-    let acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, &[], &mut through);
-    if !wrap || through.is_empty() {
-        return acc;
+    let mut acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, &[], &mut through);
+    if wrap && !through.is_empty() {
+        through.sort_by(|a, b| a.0.total_cmp(&b.0));
+        let mut sum = 0.0;
+        for x in &mut through {
+            sum += x.1;
+            x.1 = sum;
+        }
+        acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, &through, &mut vec![]);
     }
-    through.sort_by(|a, b| a.0.total_cmp(&b.0));
-    let mut sum = 0.0;
-    for x in &mut through {
-        sum += x.1;
-        x.1 = sum;
-    }
-    simulate_carry(net, svc, l, r, lr, peak, warm, wrap, &through, &mut vec![])
+    acc.full = acc.full_stretches(CRUSH_PER_CAR * svc.lines[l].cars.max(1) as f64);
+    acc
 }
 
 /// Riders arrived at a platform by a time.
@@ -1197,6 +1262,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         open,
         stop_open: vec![f64::NEG_INFINITY; n],
         ride_km,
+        full: vec![],
     };
     let mut carry = vec![0.0f64; m];
     let mut order: Vec<usize> = (0..m).collect();
@@ -1962,10 +2028,14 @@ mod tests {
             let (nt, nl, nq, ne) = (h[0] as usize, h[1] as usize, h[2] as usize, h[3] as usize);
             let q0 = 5 + 2 * nt + nl;
             let e0 = q0 + nq * QUEUE_STRIDE;
-            (h[..q0].to_vec(), h[q0..e0].to_vec(), h[e0..e0 + 2 * ne].to_vec(), h[e0 + 2 * ne..].to_vec())
+            (h[..q0].to_vec(), h[q0..e0].to_vec(), h[e0..e0 + 2 * ne].to_vec(), h[e0 + 2 * ne..e0 + 2 * ne + 2 * h[4] as usize].to_vec())
         };
         let (ta, qa, ea, pa) = parts(&before);
         let (tb, qb, eb, pb) = parts(&after);
+        // T-1124: every pulse comes from G, a 65 s walk
+        let (nq, ne, np) = (after[2] as usize, after[3] as usize, after[4] as usize);
+        let s0 = 5 + 2 * after[0] as usize + after[1] as usize + nq * QUEUE_STRIDE + 2 * ne + 2 * np + ne;
+        assert!(after[s0..s0 + 2 * np].chunks(2).all(|c| c[0] == g as f32 && (c[1] - 65.0).abs() < 0.01));
         // the trains' loads and every train leaving a platform are as before
         assert_eq!(ta[..4], tb[..4]);
         assert_eq!(ta[5..], tb[5..]);
@@ -2017,7 +2087,15 @@ mod tests {
         let (nt, nl, nq, ne, np) = (out[0] as usize, out[1] as usize, out[2] as usize, out[3] as usize, out[4] as usize);
         assert_eq!(nt, trips.len());
         assert_eq!(np, 0); // no transfers set
-        assert_eq!(out.len(), 5 + 2 * nt + nl + nq * QUEUE_STRIDE + ne * 2);
+        let tail = 5 + 2 * nt + nl + nq * QUEUE_STRIDE + ne * 2;
+        let nf = out[tail + ne] as usize;
+        assert_eq!(out.len(), tail + ne + 1 + nf * 2);
+        assert!(nf >= 1, "riders left behind at every train: a stretch at capacity (T-1125)");
+        // T-1123: each train stops before it leaves, never before the train ahead left
+        let (ev, arr) = (&out[tail - ne * 2..tail], &out[tail..tail + ne]);
+        for e in 0..ne {
+            assert!(arr[e] <= ev[e * 2], "{e}: {} {}", arr[e], ev[e * 2]);
+        }
         let offs: Vec<f32> = out[5..5 + 2 * nt].chunks(2).map(|c| c[0]).collect();
         assert!(offs.iter().all(|&o| o >= 0.0));
         let run_s = w.svc.lines[l as usize].runs[0].prof[HIGH].duration as f32;

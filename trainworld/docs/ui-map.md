@@ -98,11 +98,15 @@ there is no high-speed class and no hover yet.
     ([ui-demand-views.md](ui-demand-views.md) "Line width by riders"). A line on track at
     capacity [T-819] (an edge of a track or single-track section, or either track of a flat
     crossing, at `FULL_RHO` for the demand level in force, as the capacity tags take it;
-    `TrackApi.full_track`; platforms, termini and junctions keep only their tags) has a red band 1.5 px each side
+    `TrackApi.full_track`; platforms, termini and junctions keep only their tags), and a stretch
+    between two stops whose trains usually run at capacity [T-1125] (in either direction, at least
+    half the trains leaving it in its busiest clock hour packed to crush, from the boarding
+    account of the hour's kind of day, track-and-service.md 6.6), has a red band 1.5 px each side
     outside its casing (#c0392b, #f0584f in the dark theme; `fullTrack` in `game/shadeTable.ts`),
     drawn in a pass of its own before the lines' casings, so a red line keeps its casing between
-    and a neighbouring line's casing covers the band where they touch; the hover adds "Track at capacity at high
-    demand" in red.
+    and a neighbouring line's casing covers the band where they touch, and its body 14% darker
+    (`FULL_DARKEN`); the hover adds "Track at capacity at high demand" or "Trains at capacity in the
+    busiest hour" in red.
   - **Elevation** (`height` in code): the track coloured by elevation (a level in code), blue-green to indigo above ground (open sky), green
     at ground, warm below (deep): +3 #4a2c9a, +2 #2f6fd0, +1 #16a39a, 0 #58b04a, -1 #f0b928, -2 #ee7a1a,
     -3 #c2351c (`LEVEL_COLOURS`, T-413, T-478, T-480; neighbours at least 30 apart in CIELAB). The same table colours
@@ -182,20 +186,17 @@ there is no high-speed class and no hover yet.
   never shorter than it is wide. Further out, to zoom 14, it keeps that 11.25 px on screen (white 7.25 px
   across) while its length keeps shrinking with the ground, about 40-55 px at zoom 14. The same
   width in every mode: a wide traffic line can be wider than its stations. Everything that draws or
-  tests a platform (box, edges, crowd fill, track stencil, picking, placement ghost, selection
+  tests a platform (box, crowd fill, track stencil, picking, placement ghost, selection
   outline, the cut-out in the bubbles) uses that one line (`polyFrame` in the shaders,
   `stationShape`, `stationPath`). Blueprint stations are faded.
 - **Overlapping platforms are one shape** [T-217]: every dark shape first, then every white inside
   its rim, so one outline runs round the whole (a faded blueprint draws only its rim).
 - **Inside the white** [T-236], over the crowd fill: the track and line strokes run through the
-  box (drawn where a stencil marks the white, no wider than 30% of it, without casing), then each
-  platform's two long edges as thin lines in the platform blue (`PLATFORM_BLUE` #8085f0), 14% of the
-  white's half width thick (at least 1 px), 15% of it in from the rim, coming in between zoom 15
-  and 15.5.
+  box (drawn where a stencil marks the white, no wider than 30% of it, without casing). No platform
+  edges are drawn [T-1121].
 - **A platform each side, close in** [T-658c]: on a double-track station (flag 16 in the station
-  buffer), as the two tracks part ("Lines and track") the blue edges move in beside them, 0.4 m
-  wide and 1 px outside each track, and each direction's riders stand on their own platform,
-  from just outside its blue edge out to 1.5 px inside the rim, instead of filling half the box:
+  buffer), as the two tracks part ("Lines and track") each direction's riders stand on their own
+  platform, from the outer edge of its track out to the rim [T-1121], instead of filling half the box:
   the + side's trains travel along the platform axis and keep right, so their track and their
   platform are on the + side. A single-track station is unchanged.
 - **A player link's bridge** [T-197]: a straight white band 3 px wide at zoom 15 (fixed on the
@@ -251,15 +252,27 @@ change; only links are saved. Riders change between any two stations of a comple
 ## Platform crowds
 
 [T-164, T-219, T-236, T-553] From zoom 14 the white of each platform box fills with a dark warm grey
-(#77726d, kept 1.5 px clear of the rim or the blue edge) as riders wait. Each direction of travel
+(#77726d, right up to the rim, T-1121) as riders wait. Each direction of travel
 has its half of the box along its length (close in on double track, its own platform beside its
 track, "Stations", T-658c); a platform whose trains all use one side (a terminal)
 fills as one. A side fills from the middle outwards by its riders' share of the room
 (`platformRoom`, [track-and-service.md](track-and-service.md) 6.6: 1,250 a side on 150 m), full to
 both ends at that or more. A side is red instead of grey once it is full [T-559]; the red stays inside the box like the grey (T-713). A standing train covers the box's middle; from zoom 16 the sides show beside it. The crowd
-grows between trains at the steady arrival rate, jumps a transfer walk after another line's train
-leaves with riders changing to it [T-554], and drops when one of its own leaves, worked out on the
-main thread at most once a game second, only while drawn.
+grows between trains at the steady arrival rate, jumps as riders changing from another line's train
+reach it [T-554], and drops when one of its own trains stops [T-1123] to the riders that train
+will leave behind, growing again once it has left; worked out on the main thread at most once a
+game second, only while drawn.
+
+**Riders changing trains** [T-1124; `map/transferBubbles.ts`]: with the crowds, from zoom 14, the
+riders who change from a train at one station to a line at another station of its complex leave as
+it stops, as one bubble per train and platform they go to: a disc of the crowd grey with a rim in
+the casing's colour, moving in a straight line from the middle of the platform left to the middle
+of the one they go to over demand's walk between the two stations (the boarding account's,
+track-and-service.md 6.6), and joining that platform's crowd at once on arrival. Its radius is the
+platform box's white half width times the square root of its riders over 250 (`BUBBLE_RIDERS`),
+held between 0.35 and 1.3 times it. A change at the same station walks nothing and joins at once,
+with no bubble. Built once a game hour from the account's slice; each frame only sets the time.
+The hover says "40 riders changing to subway A".
 
 ## Life at stations
 
@@ -288,7 +301,11 @@ those who got on, less the load carried on.
   kept after the line is deleted), so deleting a line changes nobody else's; a line's rank is how
   many lines were given a note in its city before it. Older saves get theirs on load, in line
   number order. A line with no stops or in no city is not stored. A platform with sad or tired faces sounds a minor third lower, softer, sagging [T-696]; then pops (a short
-  falling blip) as riders get off (higher) and on (lower), 1 to 4 each by the rider count. Silent
+  falling blip) as riders get off (higher) and on (lower), 1 to 4 each by the rider count. The
+  getting-off pops [T-1122] are skipped at a 30% chance (`OFF_SKIP`); otherwise the group is
+  shifted by a random up to 4 semitones either way from 640 Hz, each pop up to a semitone more,
+  at a level in proportion to the riders getting off: the pops' own at 80 riders
+  (`OFF_FULL_RIDERS`), never under a quarter of it nor over 1.25 times it. Silent
   until the first click or key. Volume is the setting times a zoom gain (a quarter at 14, full from
   17), shared down by the arrivals sounding in the last second; a second one sounding together gets
   the note only, and none beyond 3; panned by where the station is on screen. At the second speed

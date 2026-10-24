@@ -103,7 +103,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `markData.ts` and `gradeMarks.ts` (the crossing, junction, ramp and portal marks: their data, and
   their draw pass, hit test and tag; T-629, T-655), `stationLife.ts` (from zoom 14, arrivals found
   by a timer of eight samples a second, feeding `stationSound.ts`, the WebAudio chime and pops, and
-  `faces.ts`, the rising faces on a 2D canvas of its own; T-686).
+  `faces.ts`, the rising faces on a 2D canvas of its own; T-686), `transferBubbles.ts` (riders changing trains walking between stations as bubbles, drawn by the renderer after the stations, T-1124).
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the
   ghost, T-189, T-254), `stationNames.ts` (a station's name suggestions: cross street,
   neighbourhood, city or town, T-534), `stationLabels.ts` (names

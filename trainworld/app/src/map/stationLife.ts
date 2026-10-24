@@ -15,7 +15,7 @@
 
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
-import { crowdAt, QUEUE_STRIDE, tripLoad, type BoardHour } from "../game/boarding";
+import { pulsesBetween, QUEUE_STRIDE, stoppedAt, tripLoad, waitingAt, type BoardHour } from "../game/boarding";
 import { clock } from "../game/clock";
 import { display } from "../game/ui";
 import type { LineInput, StationInput } from "../game/types";
@@ -74,11 +74,13 @@ export function boardedAt(b: BoardHour, q: number, t: number): { boarded: number
   let e = first;
   // events are departures; the one a train arriving at `t` makes comes a little after it
   while (e < end && E[e * 2] < t - 8) e++;
-  const waiting = crowdAt(b, q, t).waiting;
-  const boarded = e < end ? Math.max(0, waiting + Q[o + 4] * Math.max(0, E[e * 2] - t) - E[e * 2 + 1]) : 0;
+  // the crowd just before it stopped (T-1123: it boards as the train stops)
+  const stop = e < end ? Math.min(t, stoppedAt(b, e)) : t;
+  const waiting = waitingAt(b, q, stop - 1e-3);
+  const boarded = e < end ? Math.max(0, waiting + Q[o + 4] * Math.max(0, E[e * 2] - stop) + pulsesBetween(b, q, stop, E[e * 2]) - E[e * 2 + 1]) : 0;
   const p = e - 1;
   if (p < first) return { boarded, waited: 0, left: 0 };
-  const gap = Math.max(0, t - E[p * 2]), left = E[p * 2 + 1];
+  const gap = Math.max(0, stop - E[p * 2]), left = E[p * 2 + 1];
   const before = p - 1 >= first ? E[p * 2] - E[(p - 1) * 2] : gap;
   const fresh = Math.max(0, waiting - left), riders = left + fresh;
   const waited = riders > 0 ? (left * (gap + before / 2) + (fresh * gap) / 2) / riders : 0;
@@ -211,7 +213,7 @@ export function startStationLife(map: MlMap, overlay: Overlay, post: (notes: Rec
     }
     if (d.sound) {
       const p = map.project([s.lng, s.lat]);
-      sound.play({ pan: (p.x / Math.max(1, overlay.cssW)) * 2 - 1, zoom: map.getZoom(), volume: d.soundVolume, speed, off: popsFor(off), on: popsFor(on), note: lineNotes(world.peek()!.save).get(vl.line.id) ?? 0, crowded: mood !== "happy" });
+      sound.play({ pan: (p.x / Math.max(1, overlay.cssW)) * 2 - 1, zoom: map.getZoom(), volume: d.soundVolume, speed, off: popsFor(off), on: popsFor(on), offRiders: off, note: lineNotes(world.peek()!.save).get(vl.line.id) ?? 0, crowded: mood !== "happy" });
     }
     if (d.faces && off >= 1) {
       const count = Math.min(MAX_FACES_PER_TRAIN, Math.floor(off / RIDERS_PER_FACE + Math.random()));

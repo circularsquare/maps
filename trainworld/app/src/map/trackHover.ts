@@ -50,7 +50,7 @@ export function dailyRiders(dv: DemandView | null, lineId: string, stops: number
 }
 
 /** The tag's lines for a line stroke segment `i`. */
-function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, traffic: boolean, i: number): TipLine[] {
+function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, traffic: boolean, i: number, fullTrains: boolean): TipLine[] {
   const num = n.lines.colour[i];
   const l = w?.save.lines.find((x) => x.num === num);
   const name = l?.name ?? `Line ${num}`;
@@ -71,6 +71,8 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   if (w?.fullTrack[lev]?.has(n.lines.edge[i])) {
     out.push(Object.assign(document.createElement("div"), { textContent: `Track at capacity at ${clock.demand.peek()} demand`, style: "color: var(--bad)" }));
   }
+  // T-1125: most of the busiest hour's trains here are packed full (the boarding account)
+  if (fullTrains) out.push(Object.assign(document.createElement("div"), { textContent: "Trains at capacity in the busiest hour", style: "color: var(--bad)" }));
   return out;
 }
 
@@ -83,8 +85,14 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
   const n = ov.renderer.net;
   if (!n || !ov.camMatrix) return null;
   const d = display.peek();
-  const hit = pick(ov, px, py, d.trains);
   const w = world.peek();
+  // T-1124: riders changing trains on their walk
+  const bub = ov.cssW > 0 && ov.cssH > 0 ? ov.renderer.bubbles.at(px / ov.cssW, py / ov.cssH) : null;
+  if (bub) {
+    const to = w?.save.lines.find((x) => x.num === bub.line)?.name ?? `Line ${bub.line}`;
+    return [`${riders(bub.riders)} riders changing to ${to}`];
+  }
+  const hit = pick(ov, px, py, d.trains);
   if (w && hit?.kind === "train") return trainTip(ov, w, hit.line, hit.profile, hit.dep);
   if (w && hit?.kind === "station") {
     const i = n.stationIds.indexOf(hit.station);
@@ -112,7 +120,7 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
     if (out) out.hot = { line: L.colour[i] };
     // T-473: the track under the line says its elevation and speed too; T-559: and every line on it
     const on = linesOn(w, L.edge[i]);
-    return [...lineTip(n, w, demandView.peek(), d.trackColour === "traffic", i), ...trackFacts(ov, L.edge[i], px, py, slop), ...(on.length ? [lineBullets(on)] : [])];
+    return [...lineTip(n, w, demandView.peek(), d.trackColour === "traffic", i, ov.renderer.fullStretch(L.colour[i], L.info ? L.info[i * 4] : -1)), ...trackFacts(ov, L.edge[i], px, py, slop), ...(on.length ? [lineBullets(on)] : [])];
   }
   if (hit.kind !== "track") return null;
   const facts = trackFacts(ov, hit.edge, px, py, slop);

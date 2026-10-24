@@ -57,6 +57,12 @@ export interface BoardHour {
   /** per platform in time order, riders changing onto it from another line's train (T-554):
    * seconds from `epoch` they reach it, riders */
   pulses: Float32Array;
+  /** per event, when its train stopped there (T-1123): its crowd boards then */
+  arrive: Float32Array;
+  /** per pulse, the station node its riders walk from and the walk, s (T-1124) */
+  pulseFrom: Float32Array;
+  /** the stretches that usually run at capacity (T-1125): line id and run 0 stretch, pairs */
+  fullStretches: Float32Array;
 }
 
 export function readBoardHour(epoch: number, b: Float32Array): BoardHour {
@@ -66,8 +72,12 @@ export function readBoardHour(epoch: number, b: Float32Array): BoardHour {
   const loads = b.subarray(i, (i += nl));
   const queues = b.subarray(i, (i += nq * QUEUE_STRIDE));
   const events = b.subarray(i, (i += ne * 2));
-  const pulses = b.subarray(i, i + np * 2);
-  return { epoch, trips: nt, offs, loads, queues, queueCount: nq, events, pulses };
+  const pulses = b.subarray(i, (i += np * 2));
+  const arrive = b.subarray(i, (i += ne));
+  const pulseFrom = b.subarray(i, (i += np * 2));
+  const nf = b[i++] ?? 0;
+  const fullStretches = b.subarray(i, i + nf * 2);
+  return { epoch, trips: nt, offs, loads, queues, queueCount: nq, events, pulses, arrive, pulseFrom, fullStretches };
 }
 
 /** The most riders waiting on one platform side (T-1067, `WAITING_CAP` in boarding.rs): the account
@@ -90,23 +100,44 @@ export function pulsesBetween(h: BoardHour, q: number, t0: number, t: number): n
   return sum;
 }
 
-/** Riders waiting at platform `q` at `t` seconds from the hour's epoch, whether the last train
- * to leave it left anyone behind, and how many it left (T-284). */
-export function crowdAt(h: BoardHour, q: number, t: number): { waiting: number; leftBehind: boolean; left: number } {
-  const Q = h.queues, E = h.events;
+/** When event `e`'s train stopped (T-1123), or when it left without an arrival. */
+export function stoppedAt(h: BoardHour, e: number): number {
+  const a = h.arrive[e];
+  return a === undefined ? h.events[e * 2] : a;
+}
+
+/** The last train at platform `q` to have stopped by `t` (its event index), or -1 without events. */
+export function lastStopped(h: BoardHour, q: number, t: number): number {
   const base = q * QUEUE_STRIDE;
-  const first = Q[base + 8], count = Q[base + 9];
+  const first = h.queues[base + 8], count = h.queues[base + 9];
+  if (count <= 0) return -1;
   let lo = first, hi = first + count - 1;
-  if (count <= 0) return { waiting: 0, leftBehind: false, left: 0 };
-  // the last train to leave at or before t
   while (lo < hi) {
     const mid = (lo + hi + 1) >> 1;
-    if (E[mid * 2] <= t) lo = mid;
+    if (stoppedAt(h, mid) <= t) lo = mid;
     else hi = mid - 1;
   }
-  const t0 = E[lo * 2], left = E[lo * 2 + 1];
-  const waiting = Math.min(WAITING_CAP, left + Math.max(0, t - t0) * Q[base + 4] + pulsesBetween(h, q, t0, t));
-  return { waiting, leftBehind: left >= 1, left };
+  return lo;
+}
+
+/** Riders waiting at platform `q` at `t` seconds from the hour's epoch: those the last train to
+ * stop there left, plus, once it has gone, who has arrived since (T-164, T-1123: a train's riders
+ * get on as it stops). 0 without events. */
+export function waitingAt(h: BoardHour, q: number, t: number): number {
+  const e = lastStopped(h, q, t);
+  if (e < 0) return 0;
+  const t0 = h.events[e * 2], left = h.events[e * 2 + 1];
+  if (t < t0) return left;
+  return Math.min(WAITING_CAP, left + (t - t0) * h.queues[q * QUEUE_STRIDE + 4] + pulsesBetween(h, q, t0, t));
+}
+
+/** Riders waiting at platform `q` at `t` seconds from the hour's epoch, whether the last train
+ * to stop there left anyone behind, and how many it left (T-284). */
+export function crowdAt(h: BoardHour, q: number, t: number): { waiting: number; leftBehind: boolean; left: number } {
+  const e = lastStopped(h, q, t);
+  if (e < 0) return { waiting: 0, leftBehind: false, left: 0 };
+  const left = h.events[e * 2 + 1];
+  return { waiting: waitingAt(h, q, t), leftBehind: left >= 1, left };
 }
 
 /** Usable width one direction's riders wait on, m: half of a 6 m island platform less the edge
@@ -149,17 +180,18 @@ export function platformsAt(h: BoardHour, node: number, t: number): PlatformNow[
   return out;
 }
 
-/** When the next train leaves any platform of station `node` after `t` (seconds from the hour's
- * epoch), or Infinity: the moment its crowd drops (T-238). */
+/** When the next train stops at any platform of station `node` after `t` (seconds from the hour's
+ * epoch), or Infinity: the moment its crowd drops (T-238, T-1123). */
 export function nextLeavingAt(h: BoardHour, node: number, t: number): number {
   let best = Infinity;
-  const Q = h.queues, E = h.events;
+  const Q = h.queues;
   for (let q = 0; q < h.queueCount; q++) {
     const b = q * QUEUE_STRIDE;
     if (Q[b] !== node) continue;
     const first = Q[b + 8], end = first + Q[b + 9];
     for (let e = first; e < end; e++) {
-      if (E[e * 2] > t) { best = Math.min(best, E[e * 2]); break; }
+      const s = stoppedAt(h, e);
+      if (s > t) { best = Math.min(best, s); break; }
     }
   }
   return best;
