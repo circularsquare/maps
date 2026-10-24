@@ -155,7 +155,9 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
 ## Working here (Anita's decisions)
 
 - **The goal is the whole world; sensible demand is core** (2026-10-13; "sensible" over
-  "realistic" since 2026-10-17, below). After China, the US is next (Anita, 2026-10-23). The global build (tier 0) is the
+  "realistic" since 2026-10-17, below). New countries come when compute is spare, after rebuilds of built
+  ones (Anita, 2026-10-24): Korea, Canada (its cities and the corridors between, not the sparse
+  north), Mexico, Turkey, Vietnam, in an order data difficulty may change. The global build (tier 0) is the
   baseline everywhere, each place a low-fidelity first pass: missing data (medical, say) left out,
   extents pragmatic, basic checks, no deep calibration. The reach goal is tailoring country by
   country, first for likely-popular countries (China, Japan, the UK, Germany and the like)

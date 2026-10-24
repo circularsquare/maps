@@ -1,5 +1,7 @@
 # Archive
 
+- T-989 [P3] Share a game by a read-only link. Dropped 2026-10-24 (Anita: not needed).
+- T-990 [P3] Leaderboard rows open a shared game. Dropped 2026-10-24 (Anita: not needed).
 - T-1004 [P1] The US as whole-country zones. Done 2026-10-24: designed 2026-10-23 and built through T-1015 to T-1018, T-1088 and T-1113; every state and Puerto Rico covered (pilot, four waves). notes/T-1004.md.
 - T-1087 [P1] No ring zones, the design. Done 2026-10-23: built as T-1088; the built rings' repair is T-1089. notes/T-1087.md.
 - T-1064 [P1] Long data builds on AWS. Done 2026-10-24: `tools/aws/` and docs/aws.md, used for US waves 1 and 3 ($0.32, $0.18), nothing left running. notes/T-1064.md.
