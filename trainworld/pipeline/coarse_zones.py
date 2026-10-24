@@ -12,14 +12,13 @@ is refused: `merge_cells.py --undo` first.
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "2")
 
-import shutil
-import subprocess
 import sys
 
 import numpy as np
 
 import merge_cells
 import read_pack
+import simbin
 from read_pack import load_pack
 
 UNDER = 1000.0  # Anita, 2026-10-21 (notes/T-852.md)
@@ -39,21 +38,12 @@ def coarsen(city, under=UNDER, packs=None):
     os.makedirs(work, exist_ok=True)
     ends_path = os.path.join(work, f"{city}.ends.f32")
     ends.tofile(ends_path)
-    env = dict(os.environ)
-    env["PATH"] = os.path.join(os.path.expanduser("~"), ".cargo", "bin") + os.pathsep + env.get("PATH", "")
-    env.setdefault("CARGO_BUILD_JOBS", "2")
-    env["CARGO_TARGET_DIR"] = os.environ.get("TW_CARGO_TARGET_DIR", os.path.join(read_pack.ROOT, "data", "work", "target"))
-    cargo = shutil.which("cargo", path=env["PATH"])
-    if not cargo:
-        sys.exit("cargo not found: install Rust (rustup) or put ~/.cargo/bin on PATH")
     pack_json = os.path.join(packs, f"{city}.json")
     decay_pow = g.get("decay_pow", 0.0) if g["decay"] == "pow_exp" else 0.0
-    cmd = [cargo, "run", "--quiet", "--release", "--features", "demand", "--bin", "pack_gravity",
-           "--manifest-path", os.path.join(os.environ.get("TW_SIM_DIR", os.path.join(read_pack.ROOT, "sim")), "Cargo.toml"), "--",
-           pack_json, pack_json, "--zone-m", str(g["zone_m"]), "--decay-km", str(g["decay_km"]), "--decay-pow", str(decay_pow),
-           "--border-factor", str(g.get("border_factor", 1.0)), "--coarse", str(under), "--ends", ends_path]
     try:
-        subprocess.run(cmd, env=env, check=True)
+        simbin.run(read_pack.ROOT, "pack_gravity", [
+            pack_json, pack_json, "--zone-m", str(g["zone_m"]), "--decay-km", str(g["decay_km"]), "--decay-pow", str(decay_pow),
+            "--border-factor", str(g.get("border_factor", 1.0)), "--coarse", str(under), "--ends", ends_path])
     finally:
         os.remove(ends_path)
     h2, a2 = load_pack(city, packs)

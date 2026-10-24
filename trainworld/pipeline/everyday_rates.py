@@ -26,17 +26,16 @@ Per resident of all ages: a survey of people 5 and over (or 6+) is scaled by tha
 """
 import json
 import os
-import shutil
 import statistics
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import packio  # noqa: E402
 from read_pack import PACKS, ROOT  # noqa: E402
 
 PURPOSES = ("errands", "social", "medical")
 RES9 = os.path.join(ROOT, "data", "work", "res9")
-BACKUP = os.path.join(ROOT, "data", "work", "pre-T509s4")
 
 # outings a resident a weekday by country, from its own travel survey
 SURVEYS = {
@@ -95,9 +94,7 @@ def write_header(path, b):
     with open(path, encoding="utf-8") as f:
         h = json.load(f)
     h["everyday"] = b
-    with open(path + ".part", "w") as f:
-        json.dump(h, f, indent=2)
-    os.replace(path + ".part", path)
+    packio.write_header(path, h)
 
 
 def patch(cid, dry=False):
@@ -111,14 +108,10 @@ def patch(cid, dry=False):
     print(f"{cid}: {b['country']}, errands {r['errands']}, social {r['social']}, medical {r['medical']}", flush=True)
     if dry:
         return
-    os.makedirs(BACKUP, exist_ok=True)
     stamped = mc.written(cid) == mc.stamp(PACKS, cid)
-    for d, tag in ((PACKS, ""), (RES9, ".res9")):
+    for d in (PACKS, RES9):
         p = os.path.join(d, f"{cid}.json")
         if os.path.exists(p):
-            keep = os.path.join(BACKUP, f"{cid}{tag}.json")
-            if not os.path.exists(keep):
-                shutil.copy2(p, keep)
             write_header(p, b)
     if stamped:
         with open(os.path.join(RES9, f"{cid}.merged.json"), "w") as f:

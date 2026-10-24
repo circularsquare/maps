@@ -374,10 +374,14 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   simplified topologically once for the whole US into `data/work/tiger_counties_simple.json`, T-352).
 - `curves/`: the gravity-curve fitters, run by hand from the maps root: `t277_fit.py` (Toronto),
   `t289_curve.py` (France), `t290_curve.py` (Germany), `t360_curve.py` (England), `t420_curve.py <id>`
-  (Japan), and `t314_loo.py` (the leave-one-out test that writes `fitted_curves.json`).
+  (Japan), and `t314_loo.py` (the leave-one-out test that writes `fitted_curves.json`; its US
+  setup reads LODES OD onto a pack's zones with `t162_fit.py`).
+- `simbin.py` runs or builds the sim crate's binaries for every pipeline step (cargo on PATH, the
+  `data/work/target` dir, `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`); `packio.py` writes packs (the
+  .bin and .json through .part files, `replace_cell_arrays`).
 - `realms.py [--registry F] [--out F] [--dry]` writes each registry row's `realm` and `data/packs/realms.geojson`, the land of the realms in `app/src/game/realms.json` (T-975, about 1.5 minutes; run by the join).
-- `regions.py nyc` adds each cell's state to a finished pack and re-solves its gravity in place
-  (seconds; T-162): the way to re-solve after a decay or border factor change without a rebuild.
+- `regions.py`: each cell's state, as the build writes it (T-162). To re-solve a finished pack's
+  gravity after a decay or border factor change without a rebuild, use `pack_gravity --keep-zones`.
 - `enrich_all.py phl bos` adds the non-work inputs (everyday sectors, NCES schools, IPEDS
   universities, airports from FAA/BTS/OurAirports, medical and parks from OSM) to finished packs
   in place, about 0.5-2 minutes a city plus Overpass time (T-142). Wikidata's airport patronage
@@ -484,7 +488,7 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - Real networks and calibration (T-007, T-509): `realnet.py net <city>` turns a city's sources
   (GTFS, OSM route relations from `realnet.py fetch-osm <city>`, or a CSV of timetabled trips;
   `CITIES` lists each city's) into a demand test network in `data/work/realnet/`; `realnet.py`
-  also has New York's older targets, `compare`, and the save (`geom`, `gamesave`; `ship` copies the
+  also has New York's older targets and the save (`geom`, `gamesave`; `ship` copies the
   seven game files a sandbox starts from to `data/packs/real/<id>.save`, T-731); `realnet_n02.py` is
   its N02 adapter, all of Japan's lines (cities `jpn`, `jpn7`: T-737's stress saves). `calib.py
   targets <city>` writes the city's targets (`data/work/calib/<city>/`), `calib.py run <city>

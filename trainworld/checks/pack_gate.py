@@ -902,13 +902,14 @@ def _round(v):
 def pack_hashes(city):
     """{item: sha} for one pack: each array of its .bin, its header without the arrays' offsets
     and the gravity block, the gravity block, and its outline."""
+    import packio
     out = {}
     with open(os.path.join(PACKS, f"{city}.json"), encoding="utf-8") as f:
         h = json.load(f)
     with open(os.path.join(PACKS, f"{city}.bin"), "rb") as f:
         buf = f.read()
     for arr in h["arrays"]:
-        size = {"u64": 8, "f64": 8, "f32": 4, "u32": 4, "i32": 4, "u16": 2, "u8": 1}.get(arr["dtype"], 1)
+        size = packio.SIZES.get(arr["dtype"], 1)
         out[arr["name"]] = hashlib.sha1(buf[arr["offset"]:arr["offset"] + arr["count"] * size]).hexdigest()
     rest = {k: v for k, v in h.items() if k not in ("arrays", "gravity")}
     # the merge's stamp of the res-9 pack it came from changes with the res-9 pack's gravity (T-540)
@@ -1107,4 +1108,7 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    # T-980: a hand run on a cp1252 console (`-I` ignores PYTHONIOENCODING) met non-Latin details
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
     main(sys.argv[1:])

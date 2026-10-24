@@ -25,7 +25,6 @@ import hashlib
 import json
 import math
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -41,6 +40,7 @@ from build_city import R_EARTH
 from intercity import park_by_cell
 import market_rows
 import shared_lock
+import simbin
 
 ROOT = Path(__file__).resolve().parents[1]
 REG = ROOT / "app/src/game/registry.json"
@@ -305,23 +305,6 @@ def build(cid, reg, F, air):
 groups = None  # Groups, set in main
 
 
-def cargo_exe(name):
-    """The sim crate's binary `name`, built if its code changed."""
-    env = dict(os.environ)
-    env["PATH"] = os.path.join(os.path.expanduser("~"), ".cargo", "bin") + os.pathsep + env.get("PATH", "")
-    env.setdefault("CARGO_BUILD_JOBS", "3")
-    # build_city.py's target dir: the pipeline never waits on (or blocks) the app's wasm builds
-    env["CARGO_TARGET_DIR"] = os.environ.get("TW_CARGO_TARGET_DIR", str(ROOT / "data/work/target"))
-    cargo = shutil.which("cargo", path=env["PATH"])
-    if not cargo:
-        sys.exit("cargo not found: install Rust (rustup) or put ~/.cargo/bin on PATH")
-    subprocess.run([cargo, "build", "--quiet", "--release", "--features", "demand", "--bin", name,
-                    # TW_SIM_DIR: a copy of sim/ while the tree's own is mid-edit (as routes.py)
-                    "--manifest-path", os.path.join(os.environ.get("TW_SIM_DIR", str(ROOT / "sim")), "Cargo.toml")],
-                   env=env, check=True)
-    return Path(env["CARGO_TARGET_DIR"]) / "release" / (name + (".exe" if os.name == "nt" else ""))
-
-
 # T-929: market_pack works out only the rows a change can reach. A row reads its own pack and the
 # packs of places whose centres are under near_km from it, so the rows redone are those of the
 # changed (or new, or gone) packs and of places near them, each from a composition of the places
@@ -491,7 +474,7 @@ def _main(args):
               f"{len(out['sites'])} sites, {len(out['zones'])} zones, {len(out.get('commute_trips', []))} commutes, "
               f"{path.stat().st_size / 1e6:.2f} MB", flush=True)
     rows = ROOT / "data/work/market_rows.json"
-    exe = cargo_exe("market_pack")
+    exe = simbin.exe(ROOT, "market_pack")
     reg = shared_lock.read_json(REG)
     have = market_rows.load(ROOT)
     want, compose, record = plan_rows(reg, have, _sha(exe.read_bytes()), full="--full" in args)

@@ -16,7 +16,7 @@ and everything below is national.
 - **Work at home**: per cell, the census's "working at home" share of workers by place of work in
   the cell's municipality (T-465), plus the pack's telework share of the rest on a given day
   (config `telework`).
-- **Curve**: the same census table, municipality to municipality (notes/t420_curve.py).
+- **Curve**: the same census table, municipality to municipality (curves/t420_curve.py).
 - **Schools**: KSJ P29 (2023) elementary, junior high, compulsory and secondary schools as points;
   each mesh's children 0-14 x tier0.SCHOOL_ENROL go to the nearest such school.
 - **Names**: `kana_romaji`, Hepburn romaji from a kana reading, and `kanji_romaji`, the kana

@@ -14,13 +14,11 @@ Run after building a zone pack and after pipeline/intercity.py (the joint gravit
 pack keeps), then pipeline/market_zones.py (T-377).
 """
 import json
-import os
-import shutil
-import subprocess
 import sys
 from pathlib import Path
 
 from build_city import CITIES
+import simbin
 import zone_boxes
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,16 +44,10 @@ def register(reg):
 
 
 def local_trips(reg):
-    env = dict(os.environ)
-    env["PATH"] = os.path.join(os.path.expanduser("~"), ".cargo", "bin") + os.pathsep + env.get("PATH", "")
-    env.setdefault("CARGO_BUILD_JOBS", "2")
-    env["CARGO_TARGET_DIR"] = os.environ.get("TW_CARGO_TARGET_DIR", str(ROOT / "data/work/target"))
     ids = [c["id"] for c in reg["cities"] if (ROOT / f"data/packs/{c['id']}.json").exists()]
-    out = subprocess.run([shutil.which("cargo", path=env["PATH"]), "run", "--quiet", "--release", "--features", "demand",
-                          "--bin", "zone_summary", "--manifest-path", os.path.join(os.environ.get("TW_SIM_DIR", str(ROOT / "sim")), "Cargo.toml"), "--",
-                          # names relative to data/packs: 590 absolute paths passed Windows' 32k command line (T-788)
-                          *[f"{i}.json" for i in ids]], env=env, check=True, capture_output=True, text=True,
-                         cwd=str(ROOT / "data/packs"))
+    # names relative to data/packs: 590 absolute paths passed Windows' 32k command line (T-788)
+    out = simbin.run(ROOT, "zone_summary", [f"{i}.json" for i in ids], capture_output=True, text=True,
+                     cwd=str(ROOT / "data/packs"))
     trips = json.loads(out.stdout)
     for c in reg["cities"]:
         if c["id"] in trips:

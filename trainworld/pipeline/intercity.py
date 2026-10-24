@@ -22,13 +22,12 @@ commutes from data/work/<group>.joint_commutes.json (pipeline/market_zones.py).
 import json
 import math
 import os
-import shutil
-import subprocess
 import sys
 import time
 from pathlib import Path
 import numpy as np
 from build_city import R_EARTH
+import simbin
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = json.loads((ROOT / "app/src/game/registry.json").read_text(encoding="utf-8"))
@@ -104,8 +103,8 @@ def solve_group(ids, name, root=ROOT, work=None, dry=False, fixed=(), new=(), ho
             extra += ["--hold-report", str(hold_report)] + (["--new", ",".join(new)] if new else [])
     # the best step is kept, so a solve that stalls (Japan's columns at about 8e-4 from step ~90, in
     # Okinawa's outlying islands, notes/T-463.md) only spends time; Xinjiang alone settles at step 249 (T-998)
-    cargo_bin("joint_gravity", "--root", str(root), "--threads", os.environ.get("OMP_NUM_THREADS", "3"), "--max-iters", "300",
-              "--packs", ",".join(ids), "--out", str(out), "--report", str(work / f"{name}.joint_report.json"), *extra)
+    simbin.run(ROOT, "joint_gravity", ["--root", str(root), "--threads", os.environ.get("OMP_NUM_THREADS", "3"), "--max-iters", "300",
+               "--packs", ",".join(ids), "--out", str(out), "--report", str(work / f"{name}.joint_report.json"), *extra])
     if not dry:
         files = joint_files(work)
         for p, f in files.items():
@@ -286,26 +285,17 @@ def auto_groups(reg, root=ROOT, plan=False, gap=None):
     return sorted(groups, key=lambda g: (order.get(g[0], len(order)), g[0]))
 
 
-def cargo_bin(name, *args):
-    env = dict(os.environ)
-    env["PATH"] = os.path.join(os.path.expanduser("~"), ".cargo", "bin") + os.pathsep + env.get("PATH", "")
-    env.setdefault("CARGO_BUILD_JOBS", "2")
-    # TW_SIM_DIR: a copy of sim/ to build from while the tree's own is mid-edit (as build_city.py),
-    # with its own TW_CARGO_TARGET_DIR so the shared binaries are not overwritten
-    env["CARGO_TARGET_DIR"] = os.environ.get("TW_CARGO_TARGET_DIR", str(ROOT / "data/work/target"))
-    cargo = shutil.which("cargo", path=env["PATH"])
-    if not cargo:
-        sys.exit("cargo not found: install Rust (rustup) or put ~/.cargo/bin on PATH")
-    sim = Path(os.environ.get("TW_SIM_DIR", ROOT / "sim"))
-    subprocess.run([cargo, "run", "--quiet", "--release", "--features", "demand", "--bin", name,
-                    "--manifest-path", str(sim / "Cargo.toml"), "--", *args], env=env, check=True)
-
-
 def opt(name):
     return Path(sys.argv[sys.argv.index(name) + 1]) if name in sys.argv else None
 
 
+FLAGS = {"--groups", "--plan", "--solve", "--fixed", "--name", "--new", "--hold-report", "--dry",
+         "--group", "--root", "--work", "--no-market"}
+
+
 if __name__ == "__main__":
+    if any(a.startswith("--") and a not in FLAGS for a in sys.argv[1:]):  # T-594: --help or a typo
+        sys.exit(__doc__)
     if "--groups" in sys.argv:
         for g in auto_groups(REGISTRY, plan="--plan" in sys.argv):
             print(f"{len(g)} packs: {' '.join(g)}")

@@ -217,6 +217,16 @@ not cover one another.
 
 ## Batch D: pipeline dead code (wave wait)
 
+**Batch D done 2026-10-24** (tree `tw/pipeclean`): item 9: county_flows, road_speed and
+realnet_groups `git rm`-ed (grep found no caller). Item 10: realnet's comparison section,
+`cmd_compare`, `cmd_single` and `SINGLE_LINE` gone, with their docstring lines and the dead `realnet`
+bin's mention; T-269 (compare's operator count) closes with it. Item 11: group_quarters' `apply`,
+`REBUILT`, `drop_cells`, `read_dtype`, `main` and regions' `add_to_pack`, `main` gone; code-map's
+re-solve line now points at `pack_gravity --keep-zones` (B5), adding-a-city's clean-up line no longer
+names `regions.py`. `boundary_only`'s header regex kept (optional, low value). Item 12: all done.
+The fitter cites now say `curves/...`; `_japan_zone`'s cite of the missing `t420s3_curve.py` names
+`japan_zones.fit`. calib.py's `t509_nhts` cite stays (the script is still in notes/).
+
 Owned files: the named pipeline files and the code-map lines. No pack bytes: none of these is on
 any build path.
 
@@ -273,6 +283,13 @@ Risk: low. Effort: small. Mechanical: yes.
 
 ## Batch E: runner-path fixes (wave wait)
 
+**Batch E done 2026-10-24** (tree `tw/pipeclean`): item 13: T-1014 had already made a bare call
+print the usage; intercity now also exits with its usage on any flag outside `FLAGS` (checked:
+`--help` and `--group auto --tyop` print it). Item 14: pack_gate reconfigures stdout and stderr
+under `__main__`. Item 15: `BACKUP` and the copy gone; `data/work/pre-T509s4/` (main tree) is for the
+orchestrator to delete after landing, since wave 4's old code still writes it. Item 16: no ids
+prints the usage; the docstring names the merge's `--undo`.
+
 Owned files: intercity.py, checks/pack_gate.py, everyday_rates.py, enrich_all.py. No pack bytes.
 
 **13. T-594: `intercity.py` usage on unknown flags.** Lines 401-431. Any argument that is not
@@ -307,6 +324,23 @@ docstring would do. Risk: none. Effort: tiny. Mechanical: yes.
 ---
 
 ## Batch F: shared pipeline helpers (wave wait; byte-identical, review closely)
+
+**Items 17 and 18 done 2026-10-24** (tree `tw/pipeclean`; 19 and 20 not started). `simbin.py`
+(`env`, `run`, `exe`, root at call time) replaces the copies in build_city, coarse_zones,
+intercity, market_zones, routes and zones. `world_run.build_everyday` keeps its own: it is a `cargo
+test --no-run` with `--jobs` forced, cargo's default target (the gate's own test build shares it)
+and a missing cargo that is not fatal. `packio.py` (`write`, `write_header`,
+`replace_cell_arrays`, `SIZES`) replaces the writer in build_city, canada, merge_cells, nocar,
+routes, everyday_rates and the six enrich_*; tier0 and canada call its `replace_cell_arrays`;
+pack_gate's inline size table is `packio.SIZES`; deploy.py's (a superset) stays.
+Proofs, all in scratch: every sim launch caught at `subprocess.run` (build_city, coarse_zones on a
+copy of mea's res-9 pack, intercity, zones, routes, market_zones; no TW_* variables, a TW_SIM_DIR
+copy, CARGO_BUILD_JOBS set): 23 of 24 identical in command, environment and keywords; the 24th,
+intercity with a forward-slash TW_SIM_DIR, spells the same manifest `D:/x/sim\Cargo.toml` where it
+wrote `D:\x\sim\Cargo.toml`. The writers: two scratch trees (HEAD's pipeline, this one) on copies of
+mea, ceu, mcu and let, each `merge_cells --undo`, routes.write_arrays and an enrichment's
+replace-and-write, `merge_cells`, `everyday_rates`: all 77 files under data/ byte-identical (packs,
+res-9 copies, stamps), HEAD's pre-T509s4 backups the only extra files.
 
 Owned files: a new `pipeline/simbin.py` and `pipeline/packio.py`, plus the call sites named
 below. Do not put the pack writer in read_pack.py: its docstring keeps it apart from the writer
@@ -417,6 +451,13 @@ table stays, since nocar's `country_of` test and enrich_everyday use it) and the
 
 ## Batch H: build_city's Japanese metro configs (wave wait; byte-neutral)
 
+**Batch H done 2026-10-24** (tree `tw/pipeclean`): `_japan_metro` builds the seven configs; its
+lambdas still read `CITIES[cid]["prefectures"]` and `["neighbours"]` when they run, as before.
+The water default was not done. Proof: every one of the 2,096 `CITIES` configs dumped from HEAD and
+from this tree (keys in order; plain values by repr; callables by bytecode, constants, names and
+closures, and those reaching modules through `__import__` by the calls they make on stand-in
+modules): 33,096 values identical, the metros' 49 lambdas identical by their calls, none differing.
+
 **23. One helper for the seven Japanese metros.** `build_city.py:418-601` (tyo, osa, ngo, fuk,
 spk, sdj, hij) are about 25 lines each. They repeat the same nine lambdas over
 `CITIES[cid]["prefectures"]` and `["neighbours"]`, the same `jobs_url`, `iso2`, `latin_names`
@@ -494,6 +535,8 @@ garbage collector. That is harmless in a one-shot script; leave it.
 - **B6. `notes/t314_loo.py`, the producer of `fitted_curves.json`, imports the deleted
   `t162_fit`** (line 174, deleted in T-940's commit 464f70f), so its US `setup` stage fails.
   t162_tables, t171_gravity and t572_measure are broken the same way (they get deleted in item 1).
+  Fixed 2026-10-24: `pipeline/curves/t162_fit.py` holds T-162's `City` (zones, LODES OD), all
+  `setup_us` reads; the grid fit and `main` stay in git history. Not run (needs US blocks and OD).
 - **B7. `enrich_all.py` with no ids** runs every config, tier 0 and planned rows included (item 16).
 - **B8. `t800-outlines.mjs` should fail since T-975**, and **`t801-no-grey.mjs:91` always passes**
   (items 5-6).

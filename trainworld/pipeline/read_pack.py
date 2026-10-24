@@ -96,7 +96,7 @@ def check_gravity(header, a):
     # in float32 as the kernel's decay table: far pairs underflow to 0 there, and the factors
     # balance without them (T-897: Lhasa's zone spans 1,980 km)
     dq32 = np.maximum(dq.astype(np.float32), np.float32(flat))
-    dec =(np.exp(-dq32 / np.float32(g["decay_km"])) * dq32 ** np.float32(-a_pow)).astype(np.float64)
+    dec = (np.exp(-dq32 / np.float32(g["decay_km"])) * dq32 ** np.float32(-a_pow)).astype(np.float64)
     del ex, ey, dq, dq32
     if blocks:
         def at(u, v):  # dec shifted by (u, v), on offsets -w..w, -h..h

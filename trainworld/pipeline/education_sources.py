@@ -91,24 +91,3 @@ def child_weights(blocks):
     if not np.isfinite(shares).all() or ((shares < 0) | (shares > 1)).any():
         raise ValueError("invalid child population shares")
     return blocks["pop"].to_numpy() * shares, int(absent.sum())
-
-
-def replace_cell_arrays(header, buf, replacements):
-    """Compact the directory's live arrays, preserving all unrelated bytes exactly."""
-    sizes = {"f32": 4, "f64": 8, "u8": 1, "u16": 2, "u32": 4, "u64": 8, "i32": 4}
-    out, arrays = bytearray(), []
-    for a in header["arrays"]:
-        if a["name"] in replacements:
-            continue
-        out += b"\0" * (-len(out) % 8)
-        data = buf[a["offset"]:a["offset"] + a["count"] * sizes[a["dtype"]]]
-        if len(data) != a["count"] * sizes[a["dtype"]]:
-            raise ValueError(f"truncated array {a['name']}")
-        arrays.append(dict(a, offset=len(out)))
-        out += data
-    for name, weights in replacements.items():
-        out += b"\0" * (-len(out) % 8)
-        arrays.append(dict(name=name, dtype="f32", per="cell", offset=len(out), count=len(weights)))
-        out += np.asarray(weights, dtype="<f4").tobytes()
-    header["arrays"] = arrays
-    return out

@@ -91,7 +91,7 @@ from shapely import make_valid, union_all
 from shapely.geometry import Point, mapping, shape
 
 import build_city as b
-import education_sources as education
+import packio
 
 GHSL = "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/{group}/{product}/V1-0/tiles/{product}_V1_0_R{r}_C{c}.zip"
 PRODUCTS = {
@@ -1187,7 +1187,7 @@ def education_osm(city, boundary, kids):
         site_students = site_students * (pop.sum() * ter / raw_total)
     uenr, n_u = place(rows, site_students)
     adults = pop * (1 - kids)
-    buf = education.replace_cell_arrays(header, buf, {"school_children": children.astype("<f4"), "school_enrollment": enr,
+    buf = packio.replace_cell_arrays(header, buf, {"school_children": children.astype("<f4"), "school_enrollment": enr,
                                                       "university_adults": adults.astype("<f4"), "university_enrollment": uenr})
     header["school"] = {
         "coverage": coverage,
@@ -1255,7 +1255,7 @@ def airports(city, boundary):
         audit.append(ap | dict(boardings=boardings, when=when, od_share=od, pack_share=share, daily_outings=daily))
         print(f"  {ap['ident']} {ap['name']}: {boardings:,.0f} boardings ({'config' if given else 'Wikidata'} {when}), O&D {od:.2f}, pack {share:.2f}, "
               f"{daily:,.0f} outings a day", flush=True)
-    buf = education.replace_cell_arrays(header, buf, {"airport_trips": trips})
+    buf = packio.replace_cell_arrays(header, buf, {"airport_trips": trips})
     header["airport"] = dict(
         coverage="tier 0: OurAirports scheduled-service airports in the boundary", year=None,
         airports=sum(1 for r in audit if "daily_outings" in r), outings=float(trips.sum(dtype=np.float64)), decay_m=air.DECAY_M,

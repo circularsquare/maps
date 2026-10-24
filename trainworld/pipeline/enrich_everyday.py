@@ -10,7 +10,7 @@ import sys
 import numpy as np
 import pandas as pd
 import build_city as b
-import education_sources as education
+import packio
 import spread
 
 
@@ -42,16 +42,11 @@ def main(city="nyc"):
         out[name] = weights
         print(name, float(weights.sum(dtype=np.float64)), flush=True)
     # Compacts the directory: a re-run leaves no orphaned bytes, other arrays copied bit for bit.
-    buf = education.replace_cell_arrays(header, buf, out)
+    buf = packio.replace_cell_arrays(header, buf, out)
     header["everyday"] = {"enabled": True, "source": "LODES CNS07+CNS19 errands; CNS17+CNS18 leisure, original block locations, spread by land area",
                           "errand_jobs": float(out["errand_jobs"].sum(dtype=np.float64)),
                           "leisure_jobs": float(out["leisure_jobs"].sum(dtype=np.float64))}
-    with open(stem + ".bin.part", "wb") as f:
-        f.write(buf)
-    with open(stem + ".json.part", "w") as f:
-        json.dump(header, f, indent=2)
-    os.replace(stem + ".bin.part", stem + ".bin")
-    os.replace(stem + ".json.part", stem + ".json")
+    packio.write(stem, header, buf)
     print(stats, flush=True)
 
 

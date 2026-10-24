@@ -46,6 +46,7 @@ import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import packio  # noqa: E402
 from read_pack import PACKS, ROOT, load_pack  # noqa: E402
 
 RAW = os.path.join(ROOT, "data", "raw", "t511")
@@ -478,12 +479,7 @@ def append_array(stem, header, name, values, block):
         header["arrays"].append({"name": name, "dtype": "f32", "per": "cell", "offset": len(buf), "count": len(values)})
         buf += v
     header[name] = block
-    with open(stem + ".bin.part", "wb") as f:
-        f.write(buf)
-    with open(stem + ".json.part", "w") as f:
-        json.dump(header, f, indent=2)
-    os.replace(stem + ".bin.part", stem + ".bin")
-    os.replace(stem + ".json.part", stem + ".json")
+    packio.write(stem, header, buf)
     return header
 
 

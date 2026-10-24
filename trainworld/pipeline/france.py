@@ -7,7 +7,7 @@
 - **Jobs**: INSEE Mobilités professionnelles 2022 (census, base flux domicile-lieu de travail,
   every flow), employed people 15+ summed by commune of work: jobs held by residents of France,
   whatever their place of residence. Teleworkers count at their usual workplace.
-- **Curve**: the same flows, commune to commune (notes/t289_curve.py).
+- **Curve**: the same flows, commune to commune (curves/t289_curve.py).
 
 All open (Licence Ouverte / Etalab). Cached in data/raw/tier0/france/.
 """

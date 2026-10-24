@@ -38,7 +38,7 @@ from shapely import STRtree
 from shapely.geometry import Point
 
 import build_city as b
-import education_sources as education
+import packio
 import enrich_airports as air
 import overpass
 
@@ -292,7 +292,7 @@ def main(city="nyc", dry=False):
         total = float(visits.sum(dtype=np.float64))
         if total <= 0:
             raise ValueError("no medical facilities and no jobs to spread visits by")
-    buf = education.replace_cell_arrays(header, buf, {"medical_visits": visits})
+    buf = packio.replace_cell_arrays(header, buf, {"medical_visits": visits})
     rate_src = "World Bank SH.MED.BEDS.ZS (hospital beds per 1,000 people)"
     header["medical"] = dict(
         coverage=("no OpenStreetMap medical facility in the pack's counties: visits spread by jobs (T-897)" if by_jobs else
@@ -307,12 +307,7 @@ def main(city="nyc", dry=False):
         sources=["OpenStreetMap amenity=hospital|clinic|doctors|dentist, healthcare=* (ODbL), Overpass " +
                  hashlib.sha256(open(os.path.join(b.RAW, f"{SUB}osm_medical_{city}.json"), "rb").read()).hexdigest()[:16],
                  f"{rate_src}, {stats.get('rate_from')} {stats.get('year')} (CC BY 4.0)"])
-    with open(stem + ".bin.part", "wb") as f:
-        f.write(buf)
-    with open(stem + ".json.part", "w") as f:
-        json.dump(header, f, indent=2)
-    os.replace(stem + ".bin.part", stem + ".bin")
-    os.replace(stem + ".json.part", stem + ".json")
+    packio.write(stem, header, buf)
     with open(os.path.join(b.WORK, city + ".medical.audit.json"), "w") as f:
         json.dump(dict(metadata=header["medical"], facilities=audit, omitted=omitted), f, indent=1)
     print(f"{city}: {len(audit)} facilities, {len(omitted)} omitted", flush=True)

@@ -16,9 +16,7 @@ import datetime
 import gzip
 import io
 import json
-import shutil
 import struct
-import subprocess
 import sys
 import time
 import zipfile
@@ -32,7 +30,9 @@ from shapely.geometry import mapping, shape
 from shapely import make_valid, union_all
 
 import group_quarters
+import packio
 import regions
+import simbin
 import spread
 import water
 import wfh
@@ -87,6 +87,41 @@ DECAY_KM_US = 30.0
 # Japan's telework share of the workers not at home, outside the three big metros: MLIT 2024, 16.8%
 # of employed, at 2 days in 5 (research/japan.md)
 TELEWORK_JP = 0.168 * 0.4
+
+
+def _japan_metro(cid, origin, prefectures, neighbours, water_extracts, extract, boundary_notes, region_name,
+                 telework, decay, **extra):
+    """A Japanese metro's config (T-420, T-431, T-432): Japan's census inputs (pipeline/japan.py)
+    over CITIES[cid]'s prefectures, read when each input runs."""
+    def units():
+        return CITIES[cid]["prefectures"]
+
+    def nb():
+        return CITIES[cid]["neighbours"]
+    return {
+        "tier0": True,
+        "origin": origin,
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": boundary_notes,
+        "prefectures": prefectures,
+        "neighbours": neighbours,  # land beyond the outline, for meshes it cuts
+        "boundary_file": lambda: __import__("japan").boundary_file(cid, units()),
+        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, units(), nb()),
+        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, units(), nb()),
+        "everyday": lambda city, lat, lon, jobs: __import__("japan").mesh_sectors(city, lat, lon, jobs, units()),
+        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
+        "schools": lambda boundary: __import__("japan").p29_schools(boundary, units(), nb()),
+        "water_source": lambda bbox: __import__("osm_water").source(water_extracts)(bbox),
+        "extract": extract,
+        "iso2": "JP",
+        "telework": telework,
+        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, units()),
+        "decay_pow": decay[0], "decay_km": decay[1],
+        **extra,
+        "region_name": region_name,
+        "latin_names": True,
+        "kana_romaji": True,  # places.py: romaji from the kana reading, else the kanji's dictionary reading, where OSM has no Latin name
+    }
 
 CITIES = {
     "bal": {
@@ -215,7 +250,7 @@ CITIES = {
         "water": {"cell_m": 25.0, "min_width_px": 2},
         "boundary_notes": "notes/T-277.md",
         "border_factor": 1.0,
-        # fitted on the 2021 census commuting flows between its 28 municipalities (notes/t277_fit.py:
+        # fitted on the 2021 census commuting flows between its 28 municipalities (curves/t277_fit.py:
         # 5.6% of commutes misplaced between municipality pairs, against 15.1% at the US curve)
         "decay_pow": 1.2, "decay_km": 20.0,
         "counties": {"3518": "Durham", "3519": "York", "3520": "Toronto", "3521": "Peel",
@@ -272,7 +307,7 @@ CITIES = {
         # sometimes; judged at about 0.6 and 0.2 of their days (T-289)
         "wfh": 0.12,
         "od_share": {"LFPG": 0.75},  # Charles de Gaulle's transfer passengers, judgement as Pearson's
-        # fitted on INSEE's 2022 commune flows with this pack's own homes and jobs (notes/t289_curve.py)
+        # fitted on INSEE's 2022 commune flows with this pack's own homes and jobs (curves/t289_curve.py)
         "decay_pow": 1.3, "decay_km": 20.0,
         "region_name": "Ile-de-France",
     },
@@ -403,196 +438,91 @@ CITIES = {
         # sometimes; judged at about 0.6 and 0.2 of their days, as Paris's (T-290)
         "wfh": 0.10,
         # fitted on the Pendlerrechnung's 2024 published flows between Gemeinden with this pack's own
-        # homes and jobs (notes/t290_curve.py); Paris's d^-1.3 exp(-d/20) scores the same
+        # homes and jobs (curves/t290_curve.py); Paris's d^-1.3 exp(-d/20) scores the same
         "decay_pow": 1.4, "decay_km": 28.0,
         "region_name": "Berlin-Brandenburg",
     },
     # T-420 stage 1 and T-426: Greater Tokyo, five prefectures whole, Tokyo's Izu and Ogasawara islands
     # left out (research/japan.md); Japan's census inputs from pipeline/japan.py
-    "tyo": {
-        "tier0": True,
-        "origin": (139.7671, 35.6812),  # Tokyo Station
-        "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-420.md",
-        "prefectures": ["08", "11", "12", "13", "14"],  # Ibaraki, Saitama, Chiba, Tokyo, Kanagawa
-        "neighbours": ["07", "09", "10", "19", "22"],  # land beyond the outline, for meshes it cuts
-        "boundary_file": lambda: __import__("japan").boundary_file("tyo", CITIES["tyo"]["prefectures"]),
-        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["tyo"]["prefectures"], CITIES["tyo"]["neighbours"]),
-        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["tyo"]["prefectures"], CITIES["tyo"]["neighbours"]),
-        "everyday": lambda city, lat, lon, jobs: __import__("japan").mesh_sectors(city, lat, lon, jobs, CITIES["tyo"]["prefectures"]),
-        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
-        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["tyo"]["prefectures"], CITIES["tyo"]["neighbours"]),
-        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/kanto"])(bbox),
-        "extract": "asia/japan/kanto",
-        "iso2": "JP",
+    "tyo": _japan_metro(
+        "tyo", (139.7671, 35.6812),  # Tokyo Station
+        ["08", "11", "12", "13", "14"],  # Ibaraki, Saitama, Chiba, Tokyo, Kanagawa
+        ["07", "09", "10", "19", "22"],
+        ["asia/japan/kanto"], "asia/japan/kanto", "notes/T-420.md", "Greater Tokyo",
         # at home by municipality of work (2020 census table 4, T-465); of the rest, MLIT's 2024
         # telework survey has 37.5% of Greater Tokyo's employed teleworking, judged at 2 days in 5
         # (research/japan.md)
-        "telework": 0.15,
-        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["tyo"]["prefectures"]),
+        telework=0.15,
         # fitted on the 2020 census municipality flows with this pack's own homes and jobs
-        # (notes/t420_curve.py); flat from power 1.85 (London's) to 2.3, and only the steep end keeps
+        # (curves/t420_curve.py); flat from power 1.85 (London's) to 2.3, and only the steep end keeps
         # the census's 33.5% working in their own municipality
-        "decay_pow": 2.2, "decay_km": 80.0,
-        "od_share": {"RJAA": 0.8},  # Narita's transfer passengers, judgement
-        "region_name": "Greater Tokyo",
-        "latin_names": True,
-        "kana_romaji": True,  # places.py: romaji from the kana reading, else the kanji's dictionary reading, where OSM has no Latin name
-    },
+        decay=(2.2, 80.0),
+        od_share={"RJAA": 0.8},  # Narita's transfer passengers, judgement
+    ),
     # T-431: Keihanshin, four prefectures whole (notes/T-431.md)
-    "osa": {
-        "tier0": True,
-        "origin": (135.4959, 34.7025),  # Osaka Station, Umeda
-        "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-431.md",
-        "prefectures": ["26", "27", "28", "29"],  # Kyoto, Osaka, Hyogo, Nara
-        "neighbours": ["18", "24", "25", "30", "31", "33", "36"],  # land beyond the outline, for meshes it cuts
-        "boundary_file": lambda: __import__("japan").boundary_file("osa", CITIES["osa"]["prefectures"]),
-        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["osa"]["prefectures"], CITIES["osa"]["neighbours"]),
-        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["osa"]["prefectures"], CITIES["osa"]["neighbours"]),
-        "everyday": lambda city, lat, lon, jobs: __import__("japan").mesh_sectors(city, lat, lon, jobs, CITIES["osa"]["prefectures"]),
-        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
-        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["osa"]["prefectures"], CITIES["osa"]["neighbours"]),
-        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/kansai", "asia/japan/chubu"])(bbox),
-        "extract": "asia/japan/kansai",
-        "iso2": "JP",
+    "osa": _japan_metro(
+        "osa", (135.4959, 34.7025),  # Osaka Station, Umeda
+        ["26", "27", "28", "29"],  # Kyoto, Osaka, Hyogo, Nara
+        ["18", "24", "25", "30", "31", "33", "36"],
+        ["asia/japan/kansai", "asia/japan/chubu"], "asia/japan/kansai", "notes/T-431.md", "Keihanshin",
         # at home by municipality of work (table 4, T-465); MLIT 2024 telework, Kinki 24.4% of
         # employed, 2 days in 5 as Tokyo
-        "telework": 0.098,
-        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["osa"]["prefectures"]),
+        telework=0.098,
         # Tokyo's curve: ties the best fit on the 2020 census flows with this pack's margins (17.7%
-        # misplaced, notes/t420_curve.py) and keeps the census's 41% in their own municipality
-        "decay_pow": 2.2, "decay_km": 80.0,
-        "region_name": "Keihanshin",
-        "latin_names": True,
-        "kana_romaji": True,
-    },
+        # misplaced, curves/t420_curve.py) and keeps the census's 41% in their own municipality
+        decay=(2.2, 80.0),
+    ),
     # T-431: Chukyo, three prefectures whole; Mie is in Geofabrik's Kansai, so features from both
     # extracts (osm_features.read keeps an object in both once)
-    "ngo": {
-        "tier0": True,
-        "origin": (136.8815, 35.1709),  # Nagoya Station
-        "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-431.md",
-        "prefectures": ["21", "23", "24"],  # Gifu, Aichi, Mie
-        "neighbours": ["16", "17", "18", "20", "22", "25", "26", "29", "30"],  # land beyond the outline, for meshes it cuts
-        "boundary_file": lambda: __import__("japan").boundary_file("ngo", CITIES["ngo"]["prefectures"]),
-        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["ngo"]["prefectures"], CITIES["ngo"]["neighbours"]),
-        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["ngo"]["prefectures"], CITIES["ngo"]["neighbours"]),
-        "everyday": lambda city, lat, lon, jobs: __import__("japan").mesh_sectors(city, lat, lon, jobs, CITIES["ngo"]["prefectures"]),
-        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
-        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["ngo"]["prefectures"], CITIES["ngo"]["neighbours"]),
-        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/chubu", "asia/japan/kansai"])(bbox),
-        "extract": ["asia/japan/chubu", "asia/japan/kansai"],
-        "iso2": "JP",
+    "ngo": _japan_metro(
+        "ngo", (136.8815, 35.1709),  # Nagoya Station
+        ["21", "23", "24"],  # Gifu, Aichi, Mie
+        ["16", "17", "18", "20", "22", "25", "26", "29", "30"],
+        ["asia/japan/chubu", "asia/japan/kansai"], ["asia/japan/chubu", "asia/japan/kansai"], "notes/T-431.md", "Chukyo",
         # at home by municipality of work (table 4, T-465); MLIT 2024 telework, Chukyo 19.6% of
         # employed, 2 days in 5 as Tokyo
-        "telework": 0.078,
-        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["ngo"]["prefectures"]),
+        telework=0.078,
         # Tokyo's curve: ties the best fit on the 2020 census flows with this pack's margins (12.6%
-        # misplaced, notes/t420_curve.py) and keeps the census's 51% in their own municipality
-        "decay_pow": 2.2, "decay_km": 80.0,
-        "region_name": "Chukyo",
-        "latin_names": True,
-        "kana_romaji": True,
-    },
+        # misplaced, curves/t420_curve.py) and keeps the census's 51% in their own municipality
+        decay=(2.2, 80.0),
+    ),
     # T-432: Japan's regional metros, whole prefectures (Sapporo: Ishikari subprefecture), Tokyo's
     # inputs; telework is MLIT's 2024 share outside the three big metros (TELEWORK_JP); curves in
     # notes/T-432.md
-    "fuk": {
-        "tier0": True,
-        "origin": (130.4207, 33.5897),  # Hakata Station
-        "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-432.md",
-        "prefectures": ["40"],  # Fukuoka
-        "neighbours": ["35", "41", "43", "44"],  # Yamaguchi over the Kanmon strait, Saga, Kumamoto, Oita
-        "boundary_file": lambda: __import__("japan").boundary_file("fuk", CITIES["fuk"]["prefectures"]),
-        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["fuk"]["prefectures"], CITIES["fuk"]["neighbours"]),
-        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["fuk"]["prefectures"], CITIES["fuk"]["neighbours"]),
-        "everyday": lambda city, lat, lon, jobs: __import__("japan").mesh_sectors(city, lat, lon, jobs, CITIES["fuk"]["prefectures"]),
-        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
-        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["fuk"]["prefectures"], CITIES["fuk"]["neighbours"]),
-        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/kyushu", "asia/japan/chugoku"])(bbox),
-        "extract": "asia/japan/kyushu",
-        "iso2": "JP",
-        "telework": TELEWORK_JP,  # census at home 8.6%
-        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["fuk"]["prefectures"]),
-        "decay_pow": 2.0, "decay_km": 32.0,  # fitted, notes/t420_curve.py
-        "region_name": "Fukuoka",
-        "latin_names": True,
-        "kana_romaji": True,
-    },
-    "spk": {
-        "tier0": True,
-        "origin": (141.3508, 43.0687),  # Sapporo Station
-        "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-432.md",
+    "fuk": _japan_metro(
+        "fuk", (130.4207, 33.5897),  # Hakata Station
+        ["40"],  # Fukuoka
+        ["35", "41", "43", "44"],  # Yamaguchi over the Kanmon strait, Saga, Kumamoto, Oita
+        ["asia/japan/kyushu", "asia/japan/chugoku"], "asia/japan/kyushu", "notes/T-432.md", "Fukuoka",
+        telework=TELEWORK_JP,  # census at home 8.6%
+        decay=(2.0, 32.0),  # fitted, curves/t420_curve.py
+    ),
+    "spk": _japan_metro(
+        "spk", (141.3508, 43.0687),  # Sapporo Station
         # japan.SUBPREFECTURES; Otaru (01203) sends 15.2% of its resident workers into Ishikari (2020
         # census table 4), so it joins
-        "prefectures": ["01-ishikari", "01-01203"],
-        "neighbours": ["01-shiribeshi", "01-sorachi", "01-iburi", "01-rumoi"],
-        "boundary_file": lambda: __import__("japan").boundary_file("spk", CITIES["spk"]["prefectures"]),
-        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["spk"]["prefectures"], CITIES["spk"]["neighbours"]),
-        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["spk"]["prefectures"], CITIES["spk"]["neighbours"]),
-        "everyday": lambda city, lat, lon, jobs: __import__("japan").mesh_sectors(city, lat, lon, jobs, CITIES["spk"]["prefectures"]),
-        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
-        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["spk"]["prefectures"], CITIES["spk"]["neighbours"]),
-        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/hokkaido"])(bbox),
-        "extract": "asia/japan/hokkaido",
-        "iso2": "JP",
-        "telework": TELEWORK_JP,  # census at home 6.8%
-        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["spk"]["prefectures"]),
-        "decay_pow": 2.2, "decay_km": 80.0,  # Tokyo's: ties the best fit (notes/t420_curve.py) and keeps the own-municipality share
-        "region_name": "Sapporo",
-        "latin_names": True,
-        "kana_romaji": True,
-    },
-    "sdj": {
-        "tier0": True,
-        "origin": (140.8824, 38.2601),  # Sendai Station
-        "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-432.md",
-        "prefectures": ["04"],  # Miyagi
-        "neighbours": ["03", "05", "06", "07"],  # Iwate, Akita, Yamagata, Fukushima
-        "boundary_file": lambda: __import__("japan").boundary_file("sdj", CITIES["sdj"]["prefectures"]),
-        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["sdj"]["prefectures"], CITIES["sdj"]["neighbours"]),
-        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["sdj"]["prefectures"], CITIES["sdj"]["neighbours"]),
-        "everyday": lambda city, lat, lon, jobs: __import__("japan").mesh_sectors(city, lat, lon, jobs, CITIES["sdj"]["prefectures"]),
-        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
-        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["sdj"]["prefectures"], CITIES["sdj"]["neighbours"]),
-        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/tohoku"])(bbox),
-        "extract": "asia/japan/tohoku",
-        "iso2": "JP",
-        "telework": TELEWORK_JP,  # census at home 9.5%
-        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["sdj"]["prefectures"]),
-        "decay_pow": 1.8, "decay_km": 50.0,  # fitted, notes/t420_curve.py
-        "region_name": "Sendai",
-        "latin_names": True,
-        "kana_romaji": True,
-    },
-    "hij": {
-        "tier0": True,
-        "origin": (132.4757, 34.3975),  # Hiroshima Station
-        "water": {"cell_m": 25.0, "min_width_px": 2},
-        "boundary_notes": "notes/T-432.md",
-        "prefectures": ["34"],  # Hiroshima
-        "neighbours": ["31", "32", "33", "35", "38"],  # Tottori, Shimane, Okayama, Yamaguchi, Ehime over the straits
-        "boundary_file": lambda: __import__("japan").boundary_file("hij", CITIES["hij"]["prefectures"]),
-        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["hij"]["prefectures"], CITIES["hij"]["neighbours"]),
-        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["hij"]["prefectures"], CITIES["hij"]["neighbours"]),
-        "everyday": lambda city, lat, lon, jobs: __import__("japan").mesh_sectors(city, lat, lon, jobs, CITIES["hij"]["prefectures"]),
-        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
-        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["hij"]["prefectures"], CITIES["hij"]["neighbours"]),
-        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/chugoku", "asia/japan/shikoku"])(bbox),
-        "extract": "asia/japan/chugoku",
-        "iso2": "JP",
-        "telework": TELEWORK_JP,  # census at home 8.2%
-        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["hij"]["prefectures"]),
-        "decay_pow": 1.9, "decay_km": 32.0,  # fitted, notes/t420_curve.py
-        "region_name": "Hiroshima",
-        "latin_names": True,
-        "kana_romaji": True,
-    },
+        ["01-ishikari", "01-01203"],
+        ["01-shiribeshi", "01-sorachi", "01-iburi", "01-rumoi"],
+        ["asia/japan/hokkaido"], "asia/japan/hokkaido", "notes/T-432.md", "Sapporo",
+        telework=TELEWORK_JP,  # census at home 6.8%
+        decay=(2.2, 80.0),  # Tokyo's: ties the best fit (curves/t420_curve.py) and keeps the own-municipality share
+    ),
+    "sdj": _japan_metro(
+        "sdj", (140.8824, 38.2601),  # Sendai Station
+        ["04"],  # Miyagi
+        ["03", "05", "06", "07"],  # Iwate, Akita, Yamagata, Fukushima
+        ["asia/japan/tohoku"], "asia/japan/tohoku", "notes/T-432.md", "Sendai",
+        telework=TELEWORK_JP,  # census at home 9.5%
+        decay=(1.8, 50.0),  # fitted, curves/t420_curve.py
+    ),
+    "hij": _japan_metro(
+        "hij", (132.4757, 34.3975),  # Hiroshima Station
+        ["34"],  # Hiroshima
+        ["31", "32", "33", "35", "38"],  # Tottori, Shimane, Okayama, Yamaguchi, Ehime over the straits
+        ["asia/japan/chugoku", "asia/japan/shikoku"], "asia/japan/chugoku", "notes/T-432.md", "Hiroshima",
+        telework=TELEWORK_JP,  # census at home 8.2%
+        decay=(1.9, 32.0),  # fitted, curves/t420_curve.py
+    ),
     # T-276: a non-city zone (docs/zones.md 2): one county between two city zones. Same sources and
     # cells as a city; `kind` "zone" in the registry. Windham, New London and Litchfield went into
     # Hartford's plan row (T-1113).
@@ -610,7 +540,7 @@ CITIES = {
 def _japan_zone(zid, z):
     """T-420 stage 3: a Japanese prefecture zone (or merged Hokkaido subprefectures) from
     pipeline/japan_zones.json, Japan's inputs as the metro packs'; the curve is the zone's own fit
-    (notes/t420s3_curve.py) on the census flows."""
+    (japan_zones.fit) on the census flows."""
     units, nb = z["units"], z["neighbours"]
     return {
         "tier0": True, "kind": "zone", "name": z["name"],
@@ -1034,12 +964,7 @@ def write_cells(city, cfg, cells, totals, sources, mask=None, mask_info=None, co
     if cfg.get("iso2"):  # a tier 0 pack's country, for the joint commute gravity's border factors
         header["country"] = cfg["iso2"]
     stem = os.path.join(WORK, f"{city}.cells")
-    with open(stem + ".bin.part", "wb") as f:
-        f.write(buf)
-    os.replace(stem + ".bin.part", stem + ".bin")
-    with open(stem + ".json.part", "w") as f:
-        json.dump(header, f, indent=2)
-    os.replace(stem + ".json.part", stem + ".json")
+    packio.write(stem, header, buf)
     return stem + ".json"
 
 
@@ -1062,25 +987,11 @@ def add_gravity(cells_json, city, extra=None):
             zones=CITIES[city]["curve"] == "borrowed_zone")
     decay_pow = CITIES[city].get("decay_pow", DECAY_POW_US)
     decay_km = CITIES[city].get("decay_km", DECAY_KM_US)
-    env = dict(os.environ)
-    cargo_bin = os.path.join(os.path.expanduser("~"), ".cargo", "bin")
-    env["PATH"] = cargo_bin + os.pathsep + env.get("PATH", "")
-    env.setdefault("CARGO_BUILD_JOBS", "2")
-    # its own target dir, so the pipeline never waits on (or blocks) the app's wasm builds
-    # (from ROOT, not WORK: a scratch build that points WORK elsewhere still shares the compiled crate)
-    # (TW_CARGO_TARGET_DIR: a target of its own for a TW_SIM_DIR copy, as intercity.py)
-    env["CARGO_TARGET_DIR"] = os.environ.get("TW_CARGO_TARGET_DIR", os.path.join(ROOT, "data", "work", "target"))
     out_json = os.path.join(PACKS, f"{city}.json")
     if GRAVITY_ONCE:
         extra = list(extra or []) + ["--tol", "1e9"]
-    cargo = shutil.which("cargo", path=env["PATH"])  # Windows does not search env's PATH itself
-    if not cargo:
-        sys.exit("cargo not found: install Rust (rustup) or put ~/.cargo/bin on PATH")
-    cmd = [cargo, "run", "--quiet", "--release", "--features", "demand", "--bin", "pack_gravity",
-           # TW_SIM_DIR: a copy of sim/ to build from while the tree's own is mid-edit (as routes.py)
-           "--manifest-path", os.path.join(os.environ.get("TW_SIM_DIR", os.path.join(ROOT, "sim")), "Cargo.toml"), "--", cells_json, out_json,
-           "--border-factor", str(factor), "--decay-pow", str(decay_pow), "--decay-km", str(decay_km)] + list(extra or [])
-    subprocess.run(cmd, env=env, check=True)
+    simbin.run(ROOT, "pack_gravity", [cells_json, out_json, "--border-factor", str(factor), "--decay-pow", str(decay_pow),
+                                      "--decay-km", str(decay_km)] + list(extra or []))
     with open(os.path.join(PACKS, f"{city}.bin"), "rb") as f:
         buf = f.read()
     gz = len(gzip.compress(buf, 6))
@@ -1172,14 +1083,6 @@ def main(city):
     df = df.reset_index(drop=True)
     df.to_csv(os.path.join(WORK, f"{city}.blocks.csv.gz"), index=False)  # for T-014/T-006 analysis
     lon0, lat0 = cfg["origin"]
-    # before T-013: each block whole in the cell of its internal point (kept for the comparison)
-    cell_str = [h3.latlng_to_cell(la, lo, 9) for la, lo in zip(df["lat"].to_numpy(), df["lon"].to_numpy())]
-    ids = np.array([h3.str_to_int(c) for c in cell_str], dtype=np.uint64)
-    pt_uniq, inv = np.unique(ids, return_inverse=True)
-    pt_pop = np.bincount(inv, weights=df["pop"].to_numpy(), minlength=len(pt_uniq))
-    pt_job = np.bincount(inv, weights=df["jobs"].to_numpy(), minlength=len(pt_uniq))
-    print(f"internal points: {len(pt_uniq):,} cells, {int((pt_pop > 0).sum()):,} with people, "
-          f"{int((pt_job > 0).sum()):,} with jobs")
     # T-013: spread over the block polygon's land
     # T-042: commuters only (work from home makes no commute), ACS 2019-2023
     home_c, work_c, rates, wstats = wfh.commuters(df, RAW, fetch)

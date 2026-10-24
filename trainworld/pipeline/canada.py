@@ -58,7 +58,7 @@ from shapely.geometry import Point, box, mapping, shape
 
 import arcgis
 import build_city as b
-import education_sources as education
+import packio
 import overpass
 import regions
 import spread
@@ -632,12 +632,7 @@ def checks(cfg, df):
 
 
 def rewrite(stem, header, buf):
-    with open(stem + ".bin.part", "wb") as f:
-        f.write(buf)
-    with open(stem + ".json.part", "w") as f:
-        json.dump(header, f, indent=2)
-    os.replace(stem + ".bin.part", stem + ".bin")
-    os.replace(stem + ".json.part", stem + ".json")
+    packio.write(stem, header, buf)
 
 
 def pack_cells(city):
@@ -767,7 +762,7 @@ def schools(city):
     if share < 0.95:
         raise ValueError(f"school location match {share:.1%} below 95%")
     children = origin_array(city, cells, "school_children")
-    buf = education.replace_cell_arrays(header, buf, {"school_children": children, "school_enrollment": enr})
+    buf = packio.replace_cell_arrays(header, buf, {"school_children": children, "school_enrollment": enr})
     header["school"] = {
         "coverage": "Ontario publicly funded schools (public and Catholic, English and French) in the pack's boundary; no private schools",
         "school_year": "2023-2024 (preliminary)", "enrolled": float(enr.sum(dtype=np.float64)), "matched_buildings": len(matched),
@@ -816,7 +811,7 @@ def universities(city):
     if share < 0.95:
         raise ValueError(f"campus location match {share:.1%} below 95%")
     adults = origin_array(city, cells, "university_adults")
-    buf = education.replace_cell_arrays(header, buf, {"university_adults": adults, "university_enrollment": enr})
+    buf = packio.replace_cell_arrays(header, buf, {"university_adults": adults, "university_enrollment": enr})
     header["university"] = dict(
         coverage="Ontario universities (Council of Ontario Universities Table 3, fall 2022-23 headcount, full and part time) and colleges "
                  f"(Ontario college enrolment, fall {year} full-time headcount by campus) at campus points in pipeline/ca_campuses.csv",

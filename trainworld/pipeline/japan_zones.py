@@ -196,7 +196,7 @@ def miss(a, c):
 
 def fit(zid, cfg, boundary, sig):
     """The zone's curve on the census's municipality flows with the pack's own margins (as
-    notes/t420_curve.py, pack margins only, GRID): (pow, km, record)."""
+    curves/t420_curve.py, pack margins only, GRID): (pow, km, record)."""
     import england
     import tier0
     units, nb = cfg["prefectures"], cfg["neighbours"]

@@ -32,7 +32,6 @@ order; zones themselves are the pack's (`zone`, `zone_gx`, `zone_gy`).
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "2")  # before numpy; Anita is using the machine
 
-import json
 import sys
 import time
 
@@ -656,6 +655,7 @@ def write_arrays(city, arrays, block_key, block, drop=()):
     """Replace or add `arrays` {name: (np array, dtype name, per)} and header[block_key] = block
     in data/packs/<city>, reading the pack fresh first (other steps may have written it). Arrays
     named in `drop` go (their bytes stay until the next rewrite of the .bin)."""
+    import packio
     from read_pack import load_pack
     header, _ = load_pack(city, PACKS)
     stem = os.path.join(PACKS, city)
@@ -673,31 +673,8 @@ def write_arrays(city, arrays, block_key, block, drop=()):
         header["arrays"].append({"name": name, "dtype": dt, "per": per, "offset": len(buf), "count": int(len(v))})
         buf += np.ascontiguousarray(v).tobytes()
     header[block_key] = block
-    with open(stem + ".bin.part", "wb") as f:
-        f.write(buf)
-    with open(stem + ".json.part", "w") as f:
-        json.dump(header, f, indent=2)
-    os.replace(stem + ".bin.part", stem + ".bin")
-    os.replace(stem + ".json.part", stem + ".json")
+    packio.write(stem, header, buf)
     return len(buf)
-
-
-def cargo_run(bin_name, args):
-    import shutil
-    import subprocess
-    env = dict(os.environ)
-    cargo_bin = os.path.join(os.path.expanduser("~"), ".cargo", "bin")
-    env["PATH"] = cargo_bin + os.pathsep + env.get("PATH", "")
-    env.setdefault("CARGO_BUILD_JOBS", "2")
-    env["CARGO_TARGET_DIR"] = os.environ.get("TW_CARGO_TARGET_DIR", os.path.join(ROOT, "data", "work", "target"))
-    cargo = shutil.which("cargo", path=env["PATH"])
-    if not cargo:
-        sys.exit("cargo not found: install Rust (rustup) or put ~/.cargo/bin on PATH")
-    # TW_SIM_DIR: a copy of sim/ to build from while the tree's own is mid-edit by another task
-    sim = os.environ.get("TW_SIM_DIR", os.path.join(ROOT, "sim"))
-    cmd = [cargo, "run", "--quiet", "--release", "--features", "demand", "--bin", bin_name,
-           "--manifest-path", os.path.join(sim, "Cargo.toml"), "--"] + args
-    subprocess.run(cmd, env=env, check=True)
 
 
 def build(city, ex_arg=None, keep=False, workers=2, stage="all"):
@@ -761,10 +738,11 @@ def build(city, ex_arg=None, keep=False, workers=2, stage="all"):
 
 def walk_stage(city, t_all):
     """The walk factors between zones, by the sim's own walk search (the one the game runs)."""
+    import simbin
     from read_pack import load_pack
     out = os.path.join(ROOT, "data", "work", f"{city}.walk_zone.u8")
     t0 = time.time()
-    cargo_run("pack_walk", [os.path.join(PACKS, f"{city}.json"), out, "--window", str(WALK_WIN)])
+    simbin.run(ROOT, "pack_walk", [os.path.join(PACKS, f"{city}.json"), out, "--window", str(WALK_WIN)])
     wz = np.fromfile(out, np.uint8)
     part = np.fromfile(out + ".part", np.uint8)
     header, _ = load_pack(city, PACKS)

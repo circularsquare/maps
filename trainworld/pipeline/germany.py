@@ -10,7 +10,7 @@
   BA), employed people by Gemeinde of work: in-commuters plus those working in their home
   Gemeinde (EIP + IOP). All employed people, not only those insured.
 - **Curve**: the Pendlerrechnung's flows between Gemeinden, each Gemeinde's ten largest in and out
-  (notes/t290_curve.py).
+  (curves/t290_curve.py).
 
 All open. Cached in data/raw/tier0/germany/.
 """

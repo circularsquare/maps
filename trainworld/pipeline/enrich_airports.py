@@ -36,7 +36,7 @@ import shapely
 from shapely.geometry import Point
 
 import build_city as b
-import education_sources as education
+import packio
 import overpass
 
 YEAR = 2024
@@ -258,7 +258,7 @@ def main(city="nyc"):
                                od_share=od_share, pack_share=share, daily_outings=daily, terminals=placed))
         print(f"  {code} {ap['name']}: {boardings:,.0f} boardings, O&D {od_share:.2f}, pack {share:.2f}, "
               f"{daily:,.0f} outings a day at {sum('cell' in p for p in placed)} terminal(s)", flush=True)
-    buf = education.replace_cell_arrays(header, buf, {"airport_trips": trips})
+    buf = packio.replace_cell_arrays(header, buf, {"airport_trips": trips})
     header["airport"] = dict(
         coverage="Commercial airports in the pack's counties (OurAirports scheduled service); air passengers' ground trips to and from them, the share starting or ending in the pack",
         year=YEAR, airports=sum(1 for r in audit if "daily_outings" in r),
@@ -279,12 +279,7 @@ def main(city="nyc"):
                      "OpenStreetMap aeroway=terminal (ODbL)", WIKIDATA + " (fallback only)"],
             source_sha256={n: hashlib.sha256(open(os.path.join(b.RAW, SUB + n), "rb").read()).hexdigest()
                            for n in ["ourairports-airports.csv", "CenPop2020_Mean_CO.txt"]})
-    with open(stem + ".bin.part", "wb") as f:
-        f.write(buf)
-    with open(stem + ".json.part", "w") as f:
-        json.dump(header, f, indent=2)
-    os.replace(stem + ".bin.part", stem + ".bin")
-    os.replace(stem + ".json.part", stem + ".json")
+    packio.write(stem, header, buf)
     with open(os.path.join(b.WORK, city + ".airports.audit.json"), "w") as f:
         json.dump(dict(metadata=header["airport"], airports=audit), f, indent=2)
     print(f"{city}: {header['airport']['airports']} airports, {header['airport']['outings']:,.0f} outings a day", flush=True)

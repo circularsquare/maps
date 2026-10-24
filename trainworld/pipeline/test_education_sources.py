@@ -11,6 +11,7 @@ import pandas as pd
 from shapely.geometry import box
 
 import education_sources as e
+import packio
 
 
 class EducationSources(unittest.TestCase):
@@ -59,9 +60,9 @@ class EducationSources(unittest.TestCase):
         cells = np.array([42, 43], dtype="<u8").tobytes()
         b = cells + b"oldbytes" + np.array([1, 2], dtype="<f4").tobytes() + b"orphaned"
         values = {"school_children": np.array([3, 4], dtype="<f4")}
-        first = e.replace_cell_arrays(h, b, values)
+        first = packio.replace_cell_arrays(h, b, values)
         saved = copy.deepcopy(h)
-        second = e.replace_cell_arrays(h, first, values)
+        second = packio.replace_cell_arrays(h, first, values)
         self.assertEqual(first, second)
         self.assertEqual(saved, h)
         self.assertEqual(first[:16], cells)

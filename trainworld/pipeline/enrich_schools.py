@@ -14,6 +14,7 @@ import pandas as pd
 import build_city as b
 import spread
 import education_sources as education
+import packio
 
 
 def snap_to_cell(r, cell_index):
@@ -70,7 +71,7 @@ def main(city="nyc"):
         raise ValueError("child population outside existing cell pack")
     children = np.zeros(len(cells), dtype="<f4")
     children[index[hit]] = vals["school_children"][hit]
-    buf = education.replace_cell_arrays(header, buf, {"school_children": children, "school_enrollment": school_enrollment})
+    buf = packio.replace_cell_arrays(header, buf, {"school_children": children, "school_enrollment": school_enrollment})
     header["school"] = {
         "coverage": "NCES public schools in the city pack's counties; no private schools or universities",
         "nces_school_year": "2023-2024",
@@ -81,12 +82,7 @@ def main(city="nyc"):
         "child_origin": "2020 block population x ACS 2023 tract ages 5-17 plus 2/5 of under-5; missing tracts use full-FIPS county share, or the pack's share for Connecticut",
         "fallback_blocks": fallback_blocks, "attendance_factor": 0.9,
         "sources": [education.NCES, "https://api.census.gov/data/2023/acs/acs5/groups/B01001.html"]}
-    with open(stem + ".bin.part", "wb") as f:
-        f.write(buf)
-    with open(stem + ".json.part", "w") as f:
-        json.dump(header, f, indent=2)
-    os.replace(stem + ".bin.part", stem + ".bin")
-    os.replace(stem + ".json.part", stem + ".json")
+    packio.write(stem, header, buf)
     with open(os.path.join(b.WORK, city + ".schools.audit.json"), "w") as f:
         json.dump({"metadata": header["school"], "snaps": snaps, "schools": matched, "spread": stats, "nces_excluded": excluded, "nces_omitted": omitted}, f, indent=2)
     print(header["school"], flush=True)

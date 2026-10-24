@@ -17,7 +17,7 @@ import shapely
 from shapely.geometry import Point
 
 import build_city as b
-import education_sources as education
+import packio
 import spread
 import wfh
 
@@ -183,7 +183,7 @@ def main(city="nyc"):
         raise ValueError("adult origins outside existing pack")
     adults = np.zeros(len(cells), dtype="<f4")
     adults[positions[hit]] = values["university_adults"][hit]
-    buf = education.replace_cell_arrays(header, buf, {"university_adults": adults, "university_enrollment": enrollment})
+    buf = packio.replace_cell_arrays(header, buf, {"university_adults": adults, "university_enrollment": enrollment})
     header["university"] = dict(
         coverage="Matched active degree-granting IPEDS reporting institutions in the city pack's counties; undergraduate degree/certificate-seeking and graduate students, excluding exclusively online enrollment",
         year=YEAR, enrolled=float(enrollment.sum(dtype=np.float64)), institutions=len({r["unitid"] for r in matched}),
@@ -195,12 +195,7 @@ def main(city="nyc"):
         limitations=f"One directory point per reporting UNITID, not campus-specific allocation, except institutions that absorbed others in {YEAR} (split over the absorbed campuses by their {YEAR - 1} enrollment); adult homes and attendance/timing estimated; no nondegree undergraduates, staff or global coverage",
         sources=[BASE+f"hd{YEAR}.zip", BASE+f"ef{YEAR}a_dist.zip", BASE+f"ef{YEAR - 1}a_dist.zip", "https://api.census.gov/data/2023/acs/acs5/groups/B01001.html"],
         source_sha256={name: hashlib.sha256(open(os.path.join(b.RAW, name), "rb").read()).hexdigest() for name in [f"hd{YEAR}.zip", f"ef{YEAR}a_dist.zip", f"ef{YEAR - 1}a_dist.zip"]})
-    with open(stem + ".bin.part", "wb") as f:
-        f.write(buf)
-    with open(stem + ".json.part", "w") as f:
-        json.dump(header, f, indent=2)
-    os.replace(stem + ".bin.part", stem + ".bin")
-    os.replace(stem + ".json.part", stem + ".json")
+    packio.write(stem, header, buf)
     with open(os.path.join(b.WORK, city + ".universities.audit.json"), "w") as f:
         json.dump(dict(metadata=header["university"], institutions=matched, excluded=excluded,
                        omitted=omitted, snaps=snaps, spread=stats,

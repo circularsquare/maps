@@ -51,7 +51,7 @@ from shapely.geometry import Point
 from shapely.ops import transform
 
 import build_city as b
-import education_sources as education
+import packio
 import enrich_airports as air
 import overpass
 from read_pack import load_pack
@@ -300,7 +300,7 @@ def main(city="nyc", dry=False):
         header = json.load(f)
     with open(stem + ".bin", "rb") as f:
         buf = f.read()
-    buf = education.replace_cell_arrays(header, buf, {"park_draw": draw.astype("<f4")})
+    buf = packio.replace_cell_arrays(header, buf, {"park_draw": draw.astype("<f4")})
     header["parks"] = dict(
         coverage="OpenStreetMap parks, commons, recreation grounds, botanical gardens, named beaches, reserves named as parks, and (at a quarter) other named nature reserves in the pack's boundary",
         places=len(audit), omitted=len(omitted), by_kind=by_kind, draw_total=float(draw.sum()),
@@ -308,12 +308,7 @@ def main(city="nyc", dry=False):
         limitations="relative draw, not visitor counts; no season, opening hours or amenities",
         sources=["OpenStreetMap leisure=park|common|recreation_ground|beach_resort|nature_reserve, botanical gardens, named beaches (ODbL), Overpass " +
                  hashlib.sha256(b"".join(open(os.path.join(b.RAW, nm + ".json"), "rb").read() for nm in names)).hexdigest()[:16]])
-    with open(stem + ".bin.part", "wb") as f:
-        f.write(buf)
-    with open(stem + ".json.part", "w") as f:
-        json.dump(header, f, indent=2)
-    os.replace(stem + ".bin.part", stem + ".bin")
-    os.replace(stem + ".json.part", stem + ".json")
+    packio.write(stem, header, buf)
     with open(os.path.join(b.WORK, city + ".parks.audit.json"), "w") as f:
         json.dump(dict(metadata=header["parks"], places=audit, omitted=omitted), f, indent=1)
     print(f"{city}: {len(audit)} places, {len(omitted)} omitted -> park_draw", flush=True)

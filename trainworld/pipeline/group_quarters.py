@@ -3,8 +3,6 @@ homes, other institutions) are not homes: the census counts them where they are 
 but they do not commute, shop or take children to school. Their number is taken off each block's
 population before anything is built on it.
 
-    python pipeline/group_quarters.py <city> [...]     apply to finished packs in place
-
 Source: the 2020 Census redistricting file (PL 94-171) table P5, group quarters population by
 major type, per block, from each state's summary file on www2.census.gov (no login or key; the
 Census API refused keyless requests on 2026-10-13). Every US state has it; a small per-state table
@@ -13,19 +11,12 @@ P5_004N juvenile facilities, P5_005N nursing facilities/skilled-nursing faciliti
 institutional facilities. Kept: the non-institutional types (P5_008N college/university student
 housing, P5_009N military quarters, P5_010N other non-institutional), whose residents travel.
 
-`build_city.py` does this as it reads the blocks (`blocks_for_state`). For a finished pack this
-script does the same in place: the block table's `pop` becomes the census population less the
-institutional group quarters (`pop_census` and `gq_inst` kept beside it), the pack's `pop` array is
-re-spread from it exactly as build_city.py spreads it, and every other array is copied bit for bit.
-A cell left with no people and no jobs is dropped, as build_city.py drops it. The inputs built on
-`pop` are then rebuilt (school children, university adults; the park draw is T-235) and the gravity
-re-solved, so the pack is what a fresh build would give.
+`build_city.py` does this as it reads the blocks (`blocks_for_state`).
 """
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "2")
 
 import io
-import json
 import sys
 import zipfile
 
@@ -153,164 +144,3 @@ POP_SOURCE = ("2020 Census, TIGER/Line TABBLOCK20 POP20 less institutional group
               "T-234), spread over each block polygon (TIGER2020PL) by land area")
 HOME_RULE = ("LODES RAC jobs by home block, capped on blocks with institutional group quarters at the "
              "block's remaining residents (T-234), x (1 - tract work-from-home share)")
-
-
-def apply(city):
-    """Take the institutional group quarters off a finished pack in place: `pop`, and
-    `commute_home` where job holders are capped. Every other array is kept byte for byte."""
-    import build_city as bc
-    import regions
-    import spread
-    import water
-    import wfh
-    from read_pack import load_pack
-
-    cfg = bc.CITIES[city]
-    counties = set(cfg["counties"])
-    path = os.path.join(bc.WORK, f"{city}.blocks.csv.gz")
-    df = pd.read_csv(path, dtype={"geoid": str})
-    if "pop_census" in df:
-        print(f"{city}: block table already has the group quarters taken off; restore the pack and "
-              f"data/work/pre-T234/blocks/ to apply again", flush=True)
-        return False
-    new = cap_job_holders(remove(df, counties, bc.fetch))
-    share, _ = wfh.tract_shares(df, bc.RAW, bc.fetch)
-    # old and new side by side on the old rows, spread together (the commuter home end exactly as
-    # build_city.py computes it: wfh.commuters)
-    o = df.assign(pop_new=new["pop"].to_numpy(),
-                  home_c=df["rac"].to_numpy(np.float64) * (1.0 - share),
-                  home_new=new["rac"].to_numpy(np.float64) * (1.0 - share))
-    # build_city keeps a block only if it has people, jobs or resident job holders
-    df = new[(new["pop"] > 0) | (new["jobs"] > 0) | (new["rac"] > 0)].reset_index(drop=True)
-
-    header, a = load_pack(city)
-    wb = header["water"]
-    (x0, y0), (W, H) = wb["origin_m"], wb["size"]
-    mask = water.WaterMask(x0, y0, wb["cell_m"], W, H, np.array(a["water_row"]), np.array(a["water_x"]))
-    lon0, lat0 = header["origin"]["lon"], header["origin"]["lat"]
-    ids, vals, stats = spread.spread(o, counties, bc.fetch, mask, lon0, lat0, cols=("pop", "pop_new", "home_c", "home_new"))
-    cells = a["h3"]
-    i = np.searchsorted(ids, cells)
-    ok = (i < len(ids)) & (ids[np.minimum(i, len(ids) - 1)] == cells)
-    assert ok.all(), f"{int((~ok).sum())} pack cells got no block; rebuild the pack"
-    for col, arr in (("pop", "pop"), ("home_c", "commute_home")):
-        mine = vals[col][i].astype("<f4")
-        if not np.array_equal(mine, a[arr]):
-            raise SystemExit(f"{city}: the block table no longer spreads to the pack's {arr} "
-                             f"({int((mine != a[arr]).sum())} cells differ); rebuild the pack")
-    pop0, pop1 = a["pop"].copy(), vals["pop_new"][i].astype("<f4")
-    home0, home1 = a["commute_home"].copy(), vals["home_new"][i].astype("<f4")
-    # a cell left with no people and no jobs goes, as build_city.py drops it
-    empty = (pop1 <= 0) & (a["jobs"] <= 0)
-
-    # a cell's region is chosen by its blocks' people, jobs and job holders: check it holds
-    rdf, codes, cols = regions.add_columns(df)
-    rids, rvals, _ = spread.spread(rdf, counties, bc.fetch, mask, lon0, lat0, cols=tuple(cols))
-    reg = regions.of_cells(rvals, cols)[np.searchsorted(rids, cells)]
-    moved = int((reg[~empty] != a["region"][~empty]).sum()) if "region" in a else 0
-
-    stem = os.path.join(bc.PACKS, city)
-    with open(stem + ".bin", "rb") as f:
-        buf = bytearray(f.read())
-    new_arrays = {"pop": pop1, "commute_home": home1}
-    if moved:
-        new_arrays["region"] = reg.astype(np.uint8)
-    if empty.any():
-        buf = drop_cells(header, buf, a, ~empty, new_arrays)
-        dropped = [f"{int(c):x}" for c in cells[empty]]
-    else:
-        dropped = []
-        for name, v in new_arrays.items():
-            e = next(e for e in header["arrays"] if e["name"] == name)
-            assert e["count"] == len(cells)
-            raw = v.tobytes()
-            buf[e["offset"]:e["offset"] + len(raw)] = raw
-    keep = ~empty
-    header["totals"]["pop"] = int(round(float(pop1[keep].sum(dtype=np.float64))))
-    header["totals"]["commute_home"] = int(round(float(home1[keep].sum(dtype=np.float64))))
-    for s in header["sources"]:
-        if s["what"] == "population":
-            s["name"] = POP_SOURCE
-    header["sources"] = [s for s in header["sources"] if s["what"] != "group quarters"]
-    header["sources"].append({"what": "group quarters", "name": SOURCE, "url": SOURCE_URL})
-    header["commute"]["home"] = HOME_RULE
-    with open(stem + ".bin.part", "wb") as f:
-        f.write(buf)
-    with open(stem + ".json.part", "w") as f:
-        json.dump(header, f, indent=2)
-    os.replace(stem + ".bin.part", stem + ".bin")
-    os.replace(stem + ".json.part", stem + ".json")
-    df.to_csv(path + ".part", index=False, compression="gzip")
-    os.replace(path + ".part", path)
-    f64 = lambda v: float(v.sum(dtype=np.float64))
-    print(f"{city}: {int(new['gq_inst'].sum()):,} people in institutions off; pop {f64(pop0):,.0f} -> {f64(pop1):,.0f} "
-          f"({int((pop1 != pop0).sum()):,} cells); job holders {int(new['rac_lodes'].sum()):,} -> {int(new['rac'].sum()):,}, "
-          f"commute home end {f64(home0):,.0f} -> {f64(home1):,.0f} ({int((home1 != home0).sum()):,} cells); "
-          f"cells whose region moved {moved}; cells dropped (no people or jobs left) {dropped}; spread {stats['seconds']} s", flush=True)
-    return True
-
-
-# arrays rebuilt after apply() by the steps that follow it (main), so they may differ at a dropped cell
-REBUILT = {"pop", "commute_home", "school_children", "university_adults", "school_enrollment", "university_enrollment"}
-
-
-def drop_cells(header, buf, a, keep, new_arrays):
-    """The pack without the cells where `keep` is False: every per-cell array cut, other arrays
-    copied, `new_arrays` (full length) in place of the pack's. The zone gravity is removed (the
-    caller re-solves it; its zones are over the cells). A dropped cell must carry nothing but what
-    is rebuilt: its jobs, sectors, medical, airport and park weights must all be zero."""
-    sizes = {"f32": 4, "f64": 8, "u8": 1, "u16": 2, "u32": 4, "u64": 8, "i32": 4}
-    n = int(keep.sum())
-    out, arrays = bytearray(), []
-    for e in header["arrays"]:
-        name = e["name"]
-        if name.startswith("zone"):
-            continue
-        data = bytes(buf[e["offset"]:e["offset"] + e["count"] * sizes[e["dtype"]]])
-        if e["per"] == "cell":
-            v = new_arrays[name] if name in new_arrays else np.frombuffer(data, dtype=read_dtype(e["dtype"]))
-            gone = v[~keep].astype(np.float64)
-            if name == "park_draw" and gone.sum() > 0:
-                # relative draw of a park over an institution's grounds: it goes with the cell (a
-                # fresh park fetch would put it on the park's other cells)
-                print(f"  dropped cells carried park draw {gone.sum():.4f} of {v.astype(np.float64).sum():,.1f}", flush=True)
-            elif name not in REBUILT and name not in ("h3", "x_m", "y_m", "region"):
-                assert np.all(np.abs(gone) < 1e-3), f"dropped cell carries {name} {gone}"
-            data = np.ascontiguousarray(v[keep]).tobytes()
-            e = dict(e, count=n)
-        out += b"\0" * (-len(out) % 8)
-        arrays.append(dict(e, offset=len(out)))
-        out += data
-    header["arrays"] = arrays
-    header["cells"] = n
-    header.pop("gravity", None)
-    header.pop("zones", None)
-    for k in ("jobs", "commute_work"):
-        if k in header["totals"] and k in a:
-            header["totals"][k] = int(round(float(a[k][keep].astype(np.float64).sum())))
-    return out
-
-
-def read_dtype(d):
-    return {"f32": "<f4", "f64": "<f8", "u8": "u1", "u16": "<u2", "u32": "<u4", "u64": "<u8", "i32": "<i4"}[d]
-
-
-def main(cities):
-    import build_city as bc
-    import enrich_schools
-    import enrich_universities
-    for city in cities:
-        if not apply(city):
-            continue
-        # the inputs built on population, then the gravity (the commute home end changed). The
-        # park draw's nearby-residents term (enrich_parks.py) also reads `pop`, but it needs the
-        # Overpass tiles again (an hour for nine packs); it is left to T-235, `enrich_parks.py`
-        # on each pack, which reads the new `pop`.
-        enrich_schools.main(city)
-        enrich_universities.main(city)
-        bc.add_gravity(os.path.join(bc.PACKS, f"{city}.json"), city)
-
-
-if __name__ == "__main__":
-    main(sys.argv[1:])
-

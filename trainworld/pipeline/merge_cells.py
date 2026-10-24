@@ -4,7 +4,7 @@
     python pipeline/merge_cells.py --all             every registered pack in data/packs
     python pipeline/merge_cells.py <id> --stats      counts only, nothing written
     python pipeline/merge_cells.py <id> --stats --child 500   the same with another sparse-child threshold
-    python pipeline/merge_cells.py <id> --floor 100  the floor rule at 100 trip ends (FLOOR the default; 0 off)
+    python pipeline/merge_cells.py <id> --stats --floor 100   counts with the floor rule at 100 trip ends (0 off)
     python pipeline/merge_cells.py <id> --undo       put the res-9 pack back in data/packs
 
 A res-8 parent whose present children make under THRESHOLD trip ends a weekday merges; only the
@@ -40,6 +40,7 @@ import sys
 
 import numpy as np
 
+import packio
 import read_pack
 from read_pack import PACKS, ROOT, load_pack
 
@@ -49,7 +50,7 @@ THRESHOLD = 2500.0  # trip ends a weekday per res-8 parent (DECISIONS 2026-10-16
 CHILD = THRESHOLD / 2  # per res-9 child of a busier parent (T-466)
 REACH = 700.0  # m, a lone cell's group at most this far from its centre: about a merged parent's own (T-510)
 # trip ends a weekday under which a cell joins its zone part's nearest cell at or over it (T-850b,
-# notes/T-850.md 5); nocar.py and everyday_rates.py remerge by this default too
+# notes/T-850.md 5); nocar.py remerges by this default too
 FLOOR = 50.0
 RES_MASK = np.uint64(0xF) << np.uint64(52)
 INT_SAME = ("zone", "region", "walk_part")  # integer per-cell arrays, equal within a merged cell
@@ -443,12 +444,7 @@ def write_pack(stem, header, a, cells, block):
         buf += b"\0" * (-len(buf) % 8)
         spec["offset"], spec["count"] = len(buf), int(len(v))
         buf += np.ascontiguousarray(v).tobytes()
-    with open(stem + ".bin.part", "wb") as f:
-        f.write(buf)
-    with open(stem + ".json.part", "w", encoding="utf-8") as f:
-        json.dump(h, f, indent=2)
-    os.replace(stem + ".bin.part", stem + ".bin")
-    os.replace(stem + ".json.part", stem + ".json")
+    packio.write(stem, h, buf)
     return len(buf)
 
 
@@ -571,7 +567,7 @@ if __name__ == "__main__":
     if child is not None and "--stats" not in args:
         sys.exit("--child is for --stats")
     if floor is not None and "--stats" not in args and floor != (FLOOR or 0):
-        sys.exit("--floor other than FLOOR is for --stats: nocar.py and everyday_rates.py remerge by FLOOR")
+        sys.exit("--floor other than FLOOR is for --stats: nocar.py remerges by FLOOR")
     for cid in ids:
         if "--undo" in args:
             undo(cid)

@@ -511,8 +511,7 @@ city, so a new city should add only its boundary and water-mask fetches.
 ## 11. Clean up
 
 Once the packs are verified: delete big raw downloads no longer needed (Anita's preference; note
-what in the task notes). Per-county TIGER block zips are needed again only by `regions.py` or a
-rebuild. A state's `<st>2020.pl.zip` can go once `pl2020_p5_<fips>.csv.gz` exists. Geofabrik
+what in the task notes). Per-county TIGER block zips are needed again only by a rebuild. A state's `<st>2020.pl.zip` can go once `pl2020_p5_<fips>.csv.gz` exists. Geofabrik
 extracts go once `routes.py` and any OSM reads have cached their results, and the extract's OSM
 caches (`<extract>.points.fgb`, `.areas.fgb`, `.water.fgb`, `.ways2.npz`) go too once the city is
 verified (Anita, 2026-10-15: disk is the limit at hundreds of cities; a full rebuild downloads the
