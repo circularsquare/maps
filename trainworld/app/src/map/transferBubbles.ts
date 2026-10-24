@@ -7,6 +7,7 @@
 // off the screen.
 
 import { QUEUE_STRIDE, type BoardHour } from "../game/boarding";
+import { compile, uniforms } from "./gl";
 import type { NetworkBuffers } from "./network";
 
 /** Floats per bubble: from x, y, to x, y; set off, arrival (s from the hour's epoch), riders, line. */
@@ -70,10 +71,10 @@ export class TransferBubbles {
   /** ms the last build took (`?debug=1`) */
   buildMs = 0;
 
-  init(gl: WebGL2RenderingContext, compile: (vs: string, fs: string) => WebGLProgram) {
+  init(gl: WebGL2RenderingContext) {
     this.gl = gl;
-    this.prog = compile(VS, FS);
-    for (const n of ["u_matrix", "u_viewport", "u_time", "u_r", "u_fill", "u_rim", "u_rim_px"]) this.u[n] = gl.getUniformLocation(this.prog, n);
+    this.prog = compile(gl, VS, FS);
+    this.u = uniforms(gl, this.prog, ["u_matrix", "u_viewport", "u_time", "u_r", "u_fill", "u_rim", "u_rim_px"]);
     this.vao = gl.createVertexArray();
     this.pathBuf = gl.createBuffer();
     this.whenBuf = gl.createBuffer();
@@ -142,7 +143,7 @@ export class TransferBubbles {
 
   /** Draw the bubbles walking at `t` (s from the hour's epoch); `r` a box's white half width and
    * `rim` the casing's width, device px. */
-  draw(m: ArrayLike<number>, vp: readonly [number, number], t: number, r: number, fill: number[], rim: number[], rimPx: number) {
+  draw(m: ArrayLike<number>, vp: readonly [number, number], t: number, r: number, fill: Float32List, rim: Float32List, rimPx: number) {
     if (!this.count || !this.prog) return;
     const gl = this.gl, u = this.u;
     gl.useProgram(this.prog);

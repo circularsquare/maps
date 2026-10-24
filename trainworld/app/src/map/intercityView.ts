@@ -20,8 +20,8 @@
 // zooms aggregate a selection's trips to one labeled circle per other market (T-135, T-136). Area
 // represents total travellers, without a minimum radius or additive size offset. All use the same
 // opacity and size slider, coloured by `bubbleColour(rail, 0, everything else)`: by default blue
-// train, red the rest. They are always drawn (the setting that hid them went with T-222), except under a local
-// purpose filter; the numbers stay in the inspectors.
+// train, red the rest. They are drawn except under a local purpose filter; the numbers stay in the
+// inspectors.
 // Asked for, not pushed, and asked again whenever `demandView` changes, keeping the last answer
 // meanwhile.
 
@@ -31,7 +31,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES } from "../game/cities";
 import { shownRealms, zoneShown } from "../game/realms";
 import { lngLatToPack, packToLngLat } from "../game/coords";
-import { marketGroup, tripOpenedFrom } from "../game/trip";
+import { openFarTrip, tripOpenedFrom } from "../game/trip";
 import { cityDemandViews, demandView, eachCorridor, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type Corridors, type CorridorTable, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
 import { selectedScope } from "../game/complexView";
 import { count } from "../game/format";
@@ -44,7 +44,7 @@ import { anchorVersion } from "./anchorVersion";
 import { localModes, modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt } from "./demandHover";
 import { LINE, splitEdge, type DemandOverlay } from "./demandOverlay";
-import { anchor, EARTH_C, kAtLat, toLocal, toLngLat, type Anchor } from "./geo";
+import { anchor, kAtLat, pxPerUnitAt, toLocal, toLngLat, type Anchor } from "./geo";
 
 /** A bubble selection's longer trips, for the commuters inspector; null while unknown. */
 export const intercityPick = signal<{ sel: Selection; data: IntercitySelection; own: number } | null>(null);
@@ -67,14 +67,13 @@ const INTERCITY_RADIUS_SCALE = 0.5;
 export const OVERVIEW_ZOOM = 8.5;
 /** The overview's scale (T-525, T-530): trips a day per pixel of bubble area at `SCALE_ZOOM`, before
  * the size slider; it depends on the zoom only, never on what is on screen. New York's 71M is a 34 px
- * radius there (the Northeast on screen; before T-525 the busiest zone on screen was 28 px), a 1.6M
- * prefecture 5 px. */
+ * radius there (the Northeast on screen), a 1.6M prefecture 5 px. */
 const TRIPS_PER_PX2 = 60000;
 /** The same for a selected zone's inter-region trips only, which are far fewer: New York's own 1.6M
  * is a 33 px radius at `SCALE_ZOOM`, Philadelphia's 796k 24 px, a 15k partner 3 px. */
 const SELECTED_TRIPS_PER_PX2 = 1400;
-/** Bubbles' screen radius doubles every 1 / ZOOM_GROWTH zoom levels in (T-530, by eye: smaller
- * zoomed out, about as before T-525 at zooms 4-7, but far less than the map itself). */
+/** Bubbles' screen radius doubles every 1 / ZOOM_GROWTH zoom levels in (T-530): far less than the
+ * map itself grows. */
 const SCALE_ZOOM = 6.5;
 const ZOOM_GROWTH = 0.35;
 /** The lines from a selected zone to the others (T-520). */
@@ -235,7 +234,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       for (const i of order) {
         if (used.length >= MAX_LABELS) break;
         const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], marks.anchor));
-        const r = marks.discs[i * DISC + 2] * (512 * 2 ** map.getZoom() / EARTH_C) * view.bubbleSize;
+        const r = marks.discs[i * DISC + 2] * pxPerUnitAt(map.getZoom()) * view.bubbleSize;
         if (used.some((a) => Math.hypot(a.px - p.x, a.py - p.y) < LABEL_SEPARATION) || p.x < -r - W || p.x > W + r + W || p.y < -r - H || p.y > H + r + H) continue;
         let el = labels.children[used.length] as HTMLElement | undefined;
         if (!el) {
@@ -324,7 +323,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     points.sort((a, b) => b.all - a.all);
     const zoom = map.getZoom();
     if (!own) spaceDots(points, zoom);
-    const pxPerUnit = 512 * 2 ** zoom / EARTH_C;
+    const pxPerUnit = pxPerUnitAt(zoom);
     const zoomScale = 2 ** (ZOOM_GROWTH * (zoom - SCALE_ZOOM));
     const discs = new Float32Array(points.length * DISC);
     const dot = rgb(UNBUILT_FILL);
@@ -352,13 +351,16 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       }
       view.setLines("inter", lines, a);
     }
-    placeLabels();
   };
 
+  /** The marks and labels of what is on show; the labels follow the marks (`placeLabels`). */
   const render = () => {
+    build();
+    placeLabels();
+  };
+  const build = () => {
     marks = null;
     texts = [];
-    labels.replaceChildren();
     view.setLines("inter", null);
     // T-1006, T-1051: a blank map behind the start menu and while a game loads; the overview's place keeps the local bubbles off too
     if (mapBlank.peek()) {
@@ -399,7 +401,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     points.sort((a, b) => b.all - a.all);
     const { verb } = current;
     const max = points[0]?.all || 1;
-    const pxPerUnit = 512 * 2 ** map.getZoom() / EARTH_C;
+    const pxPerUnit = pxPerUnitAt(map.getZoom());
     // biggest first, so the small ones draw on top of the big ones
     const n = points.length;
     const discs = new Float32Array(n * DISC);
@@ -422,7 +424,6 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const far = points.map((z) => { const p = lngLatToPack(z.ll[0], z.ll[1]); return { place: z.place, gid: z.gid, at: [p.x, p.y] as [number, number] }; });
     marks = { discs, anchor: a, tags, far };
     view.setDiscs("inter", discs, a);
-    placeLabels();
   };
   effect(() => {
     display.value.bubbleSize;
@@ -510,18 +511,15 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
 
   /** A click with the select tool on a city bubble: that city selected (the selected one's own
    * bubble keeps the selection); undefined when no city bubble is there. */
-  const click = (px: number, py: number, nearPoint?: (sel: Extract<Selection, { kind: "commuters" }>) => [number, number] | null): Selection | undefined => {
+  const click = (px: number, py: number): Selection | undefined => {
     const sel = selection.peek();
     // T-866: with a bubble selection, a far place or 6 km zone opens the trip explorer between them
-    if (marks?.far && sel?.kind === "commuters" && nearPoint) {
+    if (marks?.far && sel?.kind === "commuters" && nearPointOf) {
       const i = discAt(marks.discs, pointerAt(map, px, py), marks.anchor, view.bubbleSize);
       const f = i >= 0 ? marks.far[i] : undefined;
-      const near = f ? nearPoint(sel) : null;
+      const near = f ? nearPointOf(sel) : null;
       if (!f || !near) return undefined;
-      const far = { place: f.place, gid: f.gid };
-      const trip: Selection = sel.end === "home" ? { kind: "trip", from: near, to: f.at, far } : { kind: "trip", from: f.at, to: near, far };
-      tripOpenedFrom.value = { trip, from: sel, places: { end: sel.end, near: Uint32Array.from(sel.cells), far: new Uint32Array(0), ...marketGroup(sel, near) } };
-      return trip;
+      return openFarTrip(sel, sel, near, f.at, { place: f.place, gid: f.gid });
     }
     if (!marks?.cities) return undefined;
     const i = discAt(marks.discs, pointerAt(map, px, py), marks.anchor, view.bubbleSize);
@@ -567,10 +565,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const near = nearPointOf(sel);
     if (!near) return null;
     const first = marks.far.find((f) => f.place === ends[0].place && f.gid === ends[0].gid)!;
-    const far = ends[0];
-    const trip: Selection = sel.end === "home" ? { kind: "trip", from: near, to: first.at, far } : { kind: "trip", from: first.at, to: near, far };
-    tripOpenedFrom.value = { trip, from: sel, places: { end: sel.end, near: Uint32Array.from(sel.cells), far: new Uint32Array(0), ...(ends.length > 1 ? { fars: ends } : {}), ...marketGroup(sel, near) } };
-    return trip;
+    return openFarTrip(sel, sel, near, first.at, ends[0], ends);
   };
   return { click };
 }

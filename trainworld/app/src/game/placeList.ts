@@ -8,6 +8,7 @@ import { signal } from "@preact/signals";
 import { CITIES, cityNear, zoneBox, type City, type CityId } from "./cities";
 import { normalise } from "./search";
 import { dataUrl } from "./dataBase";
+import { M_PER_DEG, M_PER_DEG_LAT } from "./frame";
 
 export interface Place {
   name: string;
@@ -52,8 +53,8 @@ const loadAll = (ids: CityId[]) => Promise.all(ids.map((id) => load(id).catch(()
 
 /** Metres from (lng, lat) to a zone's box (0 inside it). */
 function boxDistance(c: City, lng: number, lat: number): number {
-  const [w, s, e, n] = zoneBox(c), kx = 111_320 * Math.cos((lat * Math.PI) / 180);
-  return Math.hypot(Math.max(0, w - lng, lng - e) * kx, Math.max(0, s - lat, lat - n) * 111_320);
+  const [w, s, e, n] = zoneBox(c), kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180);
+  return Math.hypot(Math.max(0, w - lng, lng - e) * kx, Math.max(0, s - lat, lat - n) * M_PER_DEG);
 }
 
 /** T-400: the lists of the zones whose boxes hold (lng, lat) or lie within VIEW_M of it, else the
@@ -83,7 +84,7 @@ export interface NearPlace { place: Place; d: number; dx: number; dy: number }
 
 /** Every listed place within `maxM` (each way) of a point, with its distance, unsorted. */
 function around(lng: number, lat: number, maxM: number): NearPlace[] {
-  const kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 110540;
+  const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180), ky = M_PER_DEG_LAT;
   const out: NearPlace[] = [];
   for (const list of places.peek().values())
     for (const p of list) {
@@ -127,7 +128,7 @@ function gridOf(list: Place[]): Map<string, Place[]> {
     g = new Map();
     for (const p of list) {
       if (!HOOD_KINDS.has(p.kind)) continue;
-      const k = `${p.kind}:${Math.floor((p.lng * 111320 * Math.cos((p.lat * Math.PI) / 180)) / GRID_M)}:${Math.floor((p.lat * 110540) / GRID_M)}`;
+      const k = `${p.kind}:${Math.floor((p.lng * M_PER_DEG * Math.cos((p.lat * Math.PI) / 180)) / GRID_M)}:${Math.floor((p.lat * M_PER_DEG_LAT) / GRID_M)}`;
       (g.get(k) ?? g.set(k, []).get(k)!).push(p);
     }
     grids.set(list, g);
@@ -143,15 +144,15 @@ function peerSpacing(p: Place): number {
   const list = places.peek().get(p.city);
   let best = Infinity;
   if (list) {
-    const g = gridOf(list), kx = 111320 * Math.cos((p.lat * Math.PI) / 180);
+    const g = gridOf(list), kx = M_PER_DEG * Math.cos((p.lat * Math.PI) / 180);
     // cells keyed by each place's own latitude scale: near enough at a few km
-    const cx = Math.floor((p.lng * kx) / GRID_M), cy = Math.floor((p.lat * 110540) / GRID_M);
+    const cx = Math.floor((p.lng * kx) / GRID_M), cy = Math.floor((p.lat * M_PER_DEG_LAT) / GRID_M);
     const rings = Math.ceil(HOOD_PEER_MAX_M / GRID_M) + 1;
     for (let i = -rings; i <= rings; i++)
       for (let j = -rings; j <= rings; j++)
         for (const o of g.get(`${p.kind}:${cx + i}:${cy + j}`) ?? []) {
           if (o === p) continue;
-          const d = Math.hypot((o.lng - p.lng) * kx, (o.lat - p.lat) * 110540);
+          const d = Math.hypot((o.lng - p.lng) * kx, (o.lat - p.lat) * M_PER_DEG_LAT);
           if (d < best) best = d;
         }
   }

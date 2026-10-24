@@ -10,7 +10,7 @@
 import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { anchor, makeAnchor, setAnchor, toLocal } from "../map/geo";
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
-import { frameKindName, frameKindNumber, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
+import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
 import { faresOf, type Fares } from "../game/fareCurve";
 import { SHADES } from "../game/shadeTable";
@@ -458,7 +458,7 @@ function zonesOfPoints(xy: ArrayLike<number>, stride = 2, start = 0): string[] {
   if (near.length <= 1) return near.map((c) => c.id);
   const boxes = near.map((c) => {
     const [bw, bs, be, bn] = zoneBox(c);
-    const dy = TRACK_MARGIN_M / 111_320, dx = dy / Math.cos(Math.min(85, Math.max(Math.abs(bs), Math.abs(bn))) * Math.PI / 180);
+    const dy = TRACK_MARGIN_M / M_PER_DEG, dx = dy / Math.cos(Math.min(85, Math.max(Math.abs(bs), Math.abs(bn))) * Math.PI / 180);
     return { id: c.id, w: bw - dx, s: bs - dy, e: be + dx, n: bn + dy };
   });
   const hit = new Set<string>();
@@ -1874,7 +1874,7 @@ onmessage = (e: MessageEvent<ToClock>) => {
   const msg = e.data;
   if (msg.kind === "view") {
     // outside the queue, so the fetch starts at once; a mask is installed between messages
-    const midLat = (msg.s + msg.n) / 2, wide = (msg.e - msg.w) * 111_320 * Math.cos(midLat * Math.PI / 180) > VIEW_SPAN_M;
+    const midLat = (msg.s + msg.n) / 2, wide = (msg.e - msg.w) * M_PER_DEG * Math.cos(midLat * Math.PI / 180) > VIEW_SPAN_M;
     const cx = (msg.w + msg.e) / 2;
     const skip = new Set(msg.skip);
     viewZones = (wide ? zonesTouching(cx, midLat, cx, midLat, VIEW_MARGIN_M) : zonesTouching(msg.w, msg.s, msg.e, msg.n, VIEW_MARGIN_M)).map((c) => c.id).filter((id) => !skip.has(id));

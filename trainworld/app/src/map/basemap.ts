@@ -84,6 +84,9 @@ let themed: { id: string; key: string; light: unknown; dark: unknown }[] = [];
 let basemapSymbols: string[] = [];
 
 /** Loads Positron into the map, restyled. Call once, right after creating the map. */
+/** The first symbol layer's id: layers added before it draw under the basemap's labels. */
+export const firstSymbolId = (map: maplibregl.Map) => map.getStyle().layers.find((l) => l.type === "symbol")?.id;
+
 export function loadBasemap(map: maplibregl.Map) {
   // Arabic and Hebrew names (world view) are drawn unjoined and reversed without it. Lazy: fetched
   // only once such a label is on screen (memory reference_maplibre_rtl_and_name_en).

@@ -17,8 +17,13 @@
 // into each set's local units), and is rebuilt when `anchor().version` changes (the signal
 // `anchorVersion`, map/anchorVersion.ts). Disc sizes use k at the disc (`kAtY`, `kAtLat`).
 
+import { EARTH_R } from "../game/frame";
+
 export const EARTH_C = 40075016.686;
-const EARTH_R = 6371008.8;
+/** CSS px a local unit spans at `zoom` (512 px tiles). */
+export const pxPerUnitAt = (zoom: number) => (512 * 2 ** zoom) / EARTH_C;
+/** Local units a CSS px spans at `zoom`. */
+export const unitPerPxAt = (zoom: number) => EARTH_C / (512 * 2 ** zoom);
 const RAD = Math.PI / 180;
 
 /** A draw anchor: where local units are measured from. `version` 0 is HOME_ANCHOR; each move of
@@ -40,7 +45,7 @@ export function makeAnchor(lng: number, lat: number, version: number): Anchor {
   return { lng, lat, merc: [(lng + 180) / 360, mercY(lat)], version };
 }
 
-/** New York: the single origin every view used before T-307, and still the anchor there. */
+/** New York's anchor, for the first view and the stress network. */
 export const HOME_ANCHOR = makeAnchor(-73.98, 40.73, 0);
 /** real metre -> local unit at HOME_ANCHOR's latitude: only for the stress network (synth.ts),
  * which lives at New York. Everything else uses k where it is (`kAtY`, `kAtLat`). */

@@ -155,6 +155,8 @@ Risk: none. Effort: small.
 
 ## Batch 1: WebGL helpers and dead GPU inputs
 
+**Done 2026-10-24 (renderclean tree):** items 1 to 4 and the cheap fixes of 5 (shade layer matrix, trip view slice, `stationIndexOf` for main.ts's options). 15 files, 376 lines out and 203 in, plus the new `map/gl.ts` (89 lines); about 85 net. Screenshots at 22 scenes in both themes identical. Left out: `inkOn` (UI text, a float32 change could flip its threshold), `shadeLayer`'s colour parse (a float32 product would change the last bit), and `renderer.draw`'s own `selStations`/`hotStations` filters (small arrays). `a_shape.z` is no longer read by any shader and still in the buffer (the CPU uses it for the fallback arc).
+
 Owns: `map/renderer.ts`, `map/demandOverlay.ts`, `map/gradeMarks.ts`, `map/shadeLayer.ts`,
 `map/stationGeometry.ts`, `map/overlay.ts`, `map/tripView.ts`, a new `map/gl.ts`,
 `game/palette.ts` (adding `rgbf` only), and `checks/t144-check.mjs` (index change only).
@@ -554,6 +556,8 @@ Comments to fix in these files as they are touched:
 
 ## Batch 5: geometry constants and shared shape tests
 
+**Done 2026-10-24 (renderclean tree), except as noted:** 33 (`EARTH_R`, `M_PER_DEG` and `M_PER_DEG_LAT` in game/frame.ts; `pxPerUnitAt` and `unitPerPxAt` in map/geo.ts; `distFromCentre` now calls `metresBetween`, so its figures change by about 0.1% and only order the list; `faces.ts` keeps its 110574), 34 (game/rings.ts holds `ringBox`, `inRing` and `nearRing` for realSnap and the router; the banded test is in map/coarseOutlines.ts as `inOutline`; left alone: the metre-form tests in cityReach.ts, which share a loop with the distance, and hoverRest's four-point hull), 35 (realms.ts uses `inOutline`, trackZones.ts's copy is gone) and 36 (`widenBox` in game/cities.ts). About 60 lines net. t975-realms, t1025-shade quick and t800-outlines pass.
+
 Owns: `game/frame.ts`, `map/geo.ts`, `map/coarseOutlines.ts`, `game/realms.ts`,
 `game/trackZones.ts`, `game/listScope.ts`, `game/walks.ts`, `game/zones.ts`, `game/cities.ts`,
 `game/placeList.ts`, `map/hoverRest.ts`, `map/stationNames.ts`, `map/airportMarks.ts`,
@@ -606,6 +610,8 @@ margin math of `cities.ts:228-231` (`zonesTouching`), as its own comment says. M
 `widenBox(box, marginM)` in `cities.ts`. Risk: none. Effort: small. About 5 lines.
 
 ## Batch 6: tags, labels and small map files
+
+**Done 2026-10-24 (renderclean tree), except as noted:** 37 (the trip click on capacity tags), 38 (`BoxGrid`, `tagLines`, `tipBeside`, `TAG_OFFSET_PX`, `screenBounds` in labelLayout.ts, `firstSymbolId` in basemap.ts; not the two `tools.ts` fills, which belong to batch 4), 40 (`forecast` in game/format.ts), 41 (but not dropping `export`s), and B9's reversal tip. Items 39 and the `sig3` half of 40 landed with the interface cleanup. Net lines about zero (the shared pieces cost what the copies saved). Screenshots in 26 scenes in both themes, hover tags included, identical.
 
 Owns: `map/capacityMarkers.ts`, `reversalMarks.ts`, `stationLabels.ts`, `labelLayout.ts`,
 `networkTips.ts`, `trackHover.ts`, `demandHover.ts`, `hoverRest.ts`, `airportMarks.ts`,
@@ -686,6 +692,8 @@ Comments to fix in these files as they are touched:
   file
 
 ## Batch 7: render-side map views
+
+**Done 2026-10-24 (renderclean tree):** items 42 (`Strokes.info` is now `Strokes.stretch`, one float a segment), 43 (`openFarTrip` in game/trip.ts; `nearPoint` only through `setNearPoint`), 44 (all but `LINES_TO_SELECTION`'s and `SPLIT_BUBBLES`' doc lines; the labels are no longer cleared on every zoom), 45 and B8 (the layers also follow `demandByDay`). About 70 lines net. Screenshots identical but for the light z5.5 commuters scene, whose basemap labels differ between any two runs of the unchanged code too.
 
 Owns: `map/network.ts`, `commuterView.ts`, `intercityView.ts`, `demandViews.ts`, `bubbles.ts`,
 `boundaryGeometry.ts`, `coarseOutlines.ts` (decode only), and `game/trip.ts` (the far-end helper
@@ -853,6 +861,8 @@ A/B those old paths, which notes/T-045.md records. Effort: small. Mechanical: no
 read to keep the live side). About 40 lines.
 
 ## Batch 10: split `renderer.ts` (after batches 1 and 7)
+
+**Done 2026-10-24 (renderclean tree):** `renderer.ts` is 1,417 lines (2,336 before the batch), with `rendererShaders.ts` (840: the shaders and the constants they share with the renderer) and `platformCrowds.ts` (the crowd sums, `PlatformCrowds`). Pixels and the frame cost are as before; smoke passes in both themes.
 
 **53. Move the shaders.** Move the shader strings (`renderer.ts:89-948`) and the module constants
 they read into `map/rendererShaders.ts`. The constants are `TEX_W`, `LINES_W`, `QV`/`qVars`/

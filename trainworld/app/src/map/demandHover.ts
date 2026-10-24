@@ -3,13 +3,14 @@
 
 import type { Map as MlMap } from "maplibre-gl";
 import { DISC } from "../workers/commutersProtocol";
-import { EARTH_C, toLocal, type Anchor } from "./geo";
+import { toLocal, unitPerPxAt, type Anchor } from "./geo";
 import { hoverHeld } from "../ui/blurHold";
 import { restHolds } from "./hoverRest";
 import { bubblePad, setPointerDisc, type DiscHit } from "./hovered";
+import { TAG_OFFSET_PX } from "./labelLayout";
 
 /** Where the pointer is on the ground. Each disc set is in the local units of its own draw anchor
- * (T-317, map/geo.ts), so a finder turns the pointer into those (`discAt`, `pointerLocal`). */
+ * (T-317, map/geo.ts), so a finder turns the pointer into those (`discAt`). */
 export interface Pointer {
   lng: number;
   lat: number;
@@ -74,12 +75,7 @@ function discIn(discs: Float32Array | null, p: Pointer, a: Anchor, scale: number
 /** Pointer (CSS px in the map) to a place on the ground. */
 export function pointerAt(map: MlMap, px: number, py: number): Pointer {
   const ll = map.unproject([px, py]);
-  return { lng: ll.lng, lat: ll.lat, lpx: EARTH_C / (512 * 2 ** map.getZoom()) };
-}
-
-/** The pointer in local units of anchor `a`. */
-export function pointerLocal(p: Pointer, a: Anchor): [number, number] {
-  return toLocal(p.lng, p.lat, a);
+  return { lng: ll.lng, lat: ll.lat, lpx: unitPerPxAt(map.getZoom()) };
 }
 
 /** Points where something drawn above the discs is (the selected station, T-189): no disc there. */
@@ -130,7 +126,7 @@ export function startHover(map: MlMap) {
       last = html;
     }
     tag.style.display = "";
-    tag.style.transform = `translate(${Math.round(px + 14)}px, ${Math.round(py + 14)}px)`;
+    tag.style.transform = `translate(${Math.round(px + TAG_OFFSET_PX)}px, ${Math.round(py + TAG_OFFSET_PX)}px)`;
   };
   // after the move's other handlers, so a build tool's tag is up to date (main.ts, T-526)
   map.on("mousemove", (e) => queueMicrotask(() => show(e.originalEvent, e.point.x, e.point.y)));

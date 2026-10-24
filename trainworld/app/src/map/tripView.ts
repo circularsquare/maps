@@ -23,7 +23,8 @@ import { askMarketTrip, askTrip, averageTrips, busiestPeriod, mergeMarketPeriods
 import { purposeFilter, selection, shownDay } from "../game/ui";
 import { world } from "../game/world";
 import { addFinder } from "./demandHover";
-import { toLngLat, toLocal } from "./geo";
+import { toLngLat, toLocal, unitPerPxAt } from "./geo";
+import { sizeCanvasLike } from "./gl";
 import type { NetworkBuffers } from "./network";
 import type { Overlay } from "./overlay";
 import { pick } from "./pick";
@@ -63,15 +64,8 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
   let drawn: Drawn | null = null;
   let marks: { from: [number, number]; to: [number, number] | null; fromStation?: string; toStation?: string } | null = null;
 
-  const size = () => {
-    const dpr = map.getPixelRatio(), c = map.getCanvas();
-    canvas.width = Math.round(c.clientWidth * dpr);
-    canvas.height = Math.round(c.clientHeight * dpr);
-    canvas.style.width = c.clientWidth + "px";
-    canvas.style.height = c.clientHeight + "px";
-  };
-  size();
-  map.on("resize", () => { size(); draw(); });
+  sizeCanvasLike(canvas, map);
+  map.on("resize", () => { sizeCanvasLike(canvas, map); draw(); });
 
   /** pack metres (the two ends) to screen */
   const screen = (p: [number, number]) => {
@@ -109,7 +103,7 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
       const path = () => {
         ctx.beginPath();
         ctx.moveTo(pts[0][0], pts[0][1]);
-        for (const q of pts.slice(1)) ctx.lineTo(q[0], q[1]);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
       };
       if (p.dash) {
         ctx.setLineDash([4, 4]);
@@ -241,7 +235,7 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
     if (!drawn || !marks) return null;
     const [lx, ly] = toLocal(p.lng, p.lat);
     const z = map.getZoom();
-    const tol = (HIT_PX * 40075016.686) / (512 * Math.pow(2, z));
+    const tol = HIT_PX * unitPerPxAt(z);
     const loc = (p: [number, number]) => { const [lng, lat] = packToLngLat(p[0], p[1]); return toLocal(lng, lat); };
     for (const [p, tip, at, st] of [[marks.to, "Where the trip ends", "The trip ends at", marks.toStation], [marks.from, "Where the trip starts", "The trip starts at", marks.fromStation]] as const) {
       if (!p) continue;
@@ -418,11 +412,11 @@ const TRACK_TOL = 60;
 
 /**
  * Each line's stroke segments (network.ts `lines`), in path order, by line id: what a ride is
- * drawn along. A segment's `info[0]` is the stop-to-stop stretch of run 0 it is on.
+ * drawn along. A segment's `stretch` is the stop-to-stop stretch of run 0 it is on.
  */
 function strokesByLine(net: NetworkBuffers | null): Map<number, number[]> {
   const by = new Map<number, number[]>();
-  if (!net?.lines.info) return by;
+  if (!net?.lines.stretch) return by;
   const s = net.lines;
   for (let c = 0; c < s.count; c++) {
     const v = by.get(s.colour[c]);
@@ -439,12 +433,12 @@ function strokesByLine(net: NetworkBuffers | null): Map<number, number[]> {
  * as the solve saw it (the line not drawn, or the ends not at the stations' dots).
  */
 function rideTrack(net: NetworkBuffers | null, segs: number[] | undefined, k0: number, k1: number, a: [number, number] | null, b: [number, number] | null, wrapN = 0): [number, number][] | null {
-  if (!net?.lines.info || !segs || k0 < 0 || k1 < 0 || k0 === k1) return null;
-  const s = net.lines, info = net.lines.info;
+  if (!net?.lines.stretch || !segs || k0 < 0 || k1 < 0 || k0 === k1) return null;
+  const s = net.lines, stretch = s.stretch!;
   const span = (lo: number, hi: number) => {
     const pts: [number, number][] = [];
     for (const c of segs) {
-      const k = info[c * 4];
+      const k = stretch[c];
       if (k < lo || k >= hi) continue;
       if (!pts.length) pts.push([s.seg[c * 4], s.seg[c * 4 + 1]]);
       pts.push([s.seg[c * 4 + 2], s.seg[c * 4 + 3]]);

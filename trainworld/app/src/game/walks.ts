@@ -9,7 +9,7 @@
 
 import { signal } from "@preact/signals";
 import { cityById, type CityId } from "./cities";
-import { makeFrame } from "./frame";
+import { EARTH_R, makeFrame } from "./frame";
 import type { StationInput } from "./types";
 import { zoneAt } from "./zones";
 import { dataUrl } from "./dataBase";
@@ -155,10 +155,10 @@ function eff(f: Field, x: number, y: number, straight: number): number | null {
 
 // ---------------------------------------------------------------- what the interface asks
 
-/** Great-circle metres. */
+/** Ground metres, flat approximation (equirectangular at the mid latitude). */
 export function metresBetween(lng0: number, lat0: number, lng1: number, lat1: number): number {
   const R = Math.PI / 180, dy = (lat1 - lat0) * R, dx = (lng1 - lng0) * R * Math.cos((lat0 + lat1) * R / 2);
-  return 6371008.8 * Math.hypot(dx, dy);
+  return EARTH_R * Math.hypot(dx, dy);
 }
 
 /** Walking minutes for a walk of `metres` along the routed path. */

@@ -41,9 +41,8 @@ async function load(): Promise<Map<string, MultiPolygon>> {
       out.set(id, {
         type: "MultiPolygon",
         coordinates: zones[id].map((flat) => {
-          let x = flat[0], y = flat[1];
-          const ring = [[x / q, y / q]];
-          for (let i = 2; i < flat.length; i += 2) ring.push([(x += flat[i]) / q, (y += flat[i + 1]) / q]);
+          const d = decodeRing(flat, q), ring: number[][] = [];
+          for (let i = 0; i < d.length; i += 2) ring.push([d[i], d[i + 1]]);
           ring.push([...ring[0]]);
           return [ring];
         }),
@@ -54,4 +53,45 @@ async function load(): Promise<Map<string, MultiPolygon>> {
     console.warn("Coarse zone outlines unavailable", error);
   }
   return out;
+}
+
+/** An outline's edges by band of latitude (x0, y0, x1, y1 each), so the crossing test reads only the
+ * edges of the point's band: a whole network's points against prefecture outlines took 0.6 s. */
+interface Bands { s: number; h: number; start: Uint32Array; seg: Float64Array }
+const BANDS = 64;
+const bands = new Map<string, Bands>();
+
+function bandsOf(id: string, g: MultiPolygon): Bands {
+  let b = bands.get(id);
+  if (b) return b;
+  let s = Infinity, n = -Infinity;
+  for (const poly of g.coordinates) for (const r of poly) for (const [, y] of r) { s = Math.min(s, y); n = Math.max(n, y); }
+  const h = (n - s) / BANDS || 1;
+  const band = (y: number) => Math.min(BANDS - 1, Math.max(0, Math.floor((y - s) / h)));
+  const lists: number[][] = Array.from({ length: BANDS }, () => []);
+  for (const poly of g.coordinates) for (const r of poly) {
+    for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+      const [xi, yi] = r[i], [xj, yj] = r[j];
+      for (let q = band(Math.min(yi, yj)); q <= band(Math.max(yi, yj)); q++) lists[q].push(xi, yi, xj, yj);
+    }
+  }
+  const start = new Uint32Array(BANDS + 1);
+  lists.forEach((l, q) => { start[q + 1] = start[q] + l.length; });
+  const seg = new Float64Array(start[BANDS]);
+  lists.forEach((l, q) => seg.set(l, start[q]));
+  bands.set(id, (b = { s, h, start, seg }));
+  return b;
+}
+
+/** Whether (lon, lat) is inside zone `id`'s coarse outline `g` (even-odd), reading only the edges of
+ * its band of latitude. */
+export function inOutline(id: string, g: MultiPolygon, lon: number, lat: number): boolean {
+  const b = bandsOf(id, g), q = Math.floor((lat - b.s) / b.h);
+  if (q < 0 || q >= BANDS) return false;
+  let inside = false;
+  for (let k = b.start[q], end = b.start[q + 1]; k < end; k += 4) {
+    const xi = b.seg[k], yi = b.seg[k + 1], xj = b.seg[k + 2], yj = b.seg[k + 3];
+    if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
 }

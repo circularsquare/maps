@@ -18,6 +18,7 @@ import { effect, signal } from "@preact/signals";
 import { Protocol } from "pmtiles";
 import { SHADES, type ShadeColours } from "../game/shadeTable";
 import { display, shade, snapping } from "../game/ui";
+import { firstSymbolId } from "./basemap";
 
 const LOCAL_BASE = new URL("../noritetsu/", document.baseURI).href;
 const R2_BASE = "https://data.anita.garden/noritetsu/";
@@ -135,7 +136,7 @@ export function startRealNetwork(map: maplibregl.Map) {
       .sort((x, y) => dist(x) - dist(y))
       .slice(0, PER_PASS);
     if (!hits.length) return;
-    const before = map.getLayer(REACH) ? REACH : map.getStyle().layers.find((l) => l.type === "symbol")?.id;
+    const before = map.getLayer(REACH) ? REACH : firstSymbolId(map);
     const colours = colour(SHADES[shade.peek()]);
     for (const { cc } of hits) {
       added.add(cc);
@@ -170,7 +171,7 @@ export function startRealNetwork(map: maplibregl.Map) {
           layout: { "line-cap": "round", "line-join": "round" },
           paint: { "line-color": reachColour(SHADES[shade.peek()]) as never, "line-width": REACH_WIDTH as never, "line-opacity": REACH_OPACITY },
         },
-        map.getStyle().layers.find((l) => l.type === "symbol")?.id,
+        firstSymbolId(map),
       );
       return;
     }

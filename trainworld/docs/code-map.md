@@ -65,8 +65,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   account's hour on the main thread: riders packed for the clock worker, platform crowds, T-164),
   `complexLive.ts` (a complex's platform crowds and trains now, T-246), `purposes.ts` (the trip
   purposes as shown, T-192), `trip.ts` (the trip explorer's state).
-- Places and frames: `coords.ts` (world metres to lng/lat), `frame.ts` and `registry.json` (the
-  world frames and the one city registry, read by `cities.ts`, T-125; since T-776 the bundled index
+- Places and frames: `coords.ts` (world metres to lng/lat), `rings.ts` (ring box, point-in-ring and near-ring tests for the real-network snap and its router), `frame.ts` (the world frames, and the earth's radius and metres per degree) and `registry.json` (the
+  one city registry, read by `cities.ts`, T-125; since T-776 the bundled index
   only), `market-rows.json` (each zone's world market row, fetched by `workers/demandClient.ts` beside
   the first market pack and sent with it to the solving workers, `cities.ts` `marketWorld`), `places.ts` (station and
   compass names for the inspectors), `placeList.ts` (each city's OSM place list, fetched per zone by
@@ -103,9 +103,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   labels in Zen Maru Gothic from `public/fonts/`), `realNetwork.ts` (the Real network reference layer: noritetsu's
   PMTiles per region, read from `../noritetsu/` or R2; vite.config.ts proxies `/noritetsu` to 8800 in dev, T-682),
   `overlay.ts` (the overlay canvas and frame loop,
-  notes/T-015.md), `renderer.ts` (WebGL2 track, stations, trains), `network.ts` (the renderer's
+  notes/T-015.md), `renderer.ts` (WebGL2 track, stations, trains; its shaders and their shared constants are in `rendererShaders.ts`, the platform crowds' sums in `platformCrowds.ts`), `gl.ts` (shader compile, uniform lookup, zoom interpolation, the GPU timer, canvas sizing and the camera matrix to CSS px, shared by the renderer, `demandOverlay.ts`, `gradeMarks.ts`, `shadeLayer.ts`, `overlay.ts` and the 2D overlays), `network.ts` (the renderer's
   buffers, built in the clock worker from per-edge, line and station pieces kept between edits,
-  T-496), `geo.ts` (the draw anchor, T-307), `anchorVersion.ts` (its version as a signal, T-317),
+  T-496), `geo.ts` (the draw anchor, T-307; `pxPerUnitAt` and `unitPerPxAt` for the zoom's scale), `anchorVersion.ts` (its version as a signal, T-317),
   `live.ts` (the live map objects for UI code, set by main.ts), `synth.ts` (stress network),
   `markData.ts` and `gradeMarks.ts` (the crossing, junction, ramp and portal marks: their data, and
   their draw pass, hit test and tag; T-629, T-655), `stationLife.ts` (from zoom 14, arrivals found
@@ -115,7 +115,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   ghost, T-189, T-254), `stationNames.ts` (a station's name suggestions: cross street,
   neighbourhood, city or town, T-534), `stationLabels.ts` (names
   keep their elements across edits unless their text changes, T-496), `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
-  for names and tags).
+  for names and tags: `BoxGrid`, `tagLines`, `tipBeside`, `TAG_OFFSET_PX`, `screenBounds`).
 - Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
   second click's route, T-727d; only where a graph covers the click, `covers`, T-913), `pick.ts`, `cellIndex.ts` and `snapIndex.ts` (grids built in idle time that narrow a pick
   and the build tools' snap to what is near the pointer, T-724), `tools.ts` (drawing track, placing stations, the line tool), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
@@ -138,7 +138,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   layer for the zones near the view, exact ones fetched only above `ZONE_LOAD_ZOOM`, and the outside
   shade, T-131, T-139, T-400, T-871), `coarseOutlines.ts` (reads
   `packs/outlines.json`, which `pipeline/zone_outlines.py` writes: every registered zone's coarse
-  outline, read once for the outlines and the realms' shade, T-800), `zoneLoading.ts` (zones still loading drawn grey with a loading
+  outline, read once for the outlines and the realms' shade, T-800; `inOutline` is the point-in-outline test over its bands of latitude, for realms and the track's zones), `zoneLoading.ts` (zones still loading drawn grey with a loading
   bar, T-343), `realmOverlay.ts` (the realms not shown: one world shade with the shown zones cut out
   by `boundaryGeometry.ts`'s `ShadeCut` as triangles in `workers/shade.worker.ts` (T-1026), drawn by
   the custom layer `shadeLayer.ts` (T-1025), and a button each, T-975, T-1006), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and

@@ -25,14 +25,10 @@ import { circleTip, stationTip, trainTip, type TipLine } from "./networkTips";
 import type { Overlay } from "./overlay";
 import { pick, SLOP_PX, topSeg } from "./pick";
 import { setPointerNet, type Hot } from "./hovered";
+import { TAG_OFFSET_PX, tagLines } from "./labelLayout";
 import { complexOf } from "../game/complexView";
+import { forecast } from "../game/format";
 import { elevationFact, factRow, lineBullets, speedFact } from "./trackTagRows";
-
-/** A forecast count, rounded so it does not claim more precision than a forecast has. */
-export function riders(n: number): string {
-  const r = n >= 1000 ? Math.round(n / 100) * 100 : n >= 100 ? Math.round(n / 10) * 10 : Math.round(n);
-  return r.toLocaleString("en-US");
-}
 
 /** Daily riders on run 0's stretch `k` of a line, both directions: every period's load summed;
  * null when demand has no answer for it that fits its stops. `purpose`: the map's purpose
@@ -59,11 +55,11 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   if (status === "broken") return [name, "Not running"];
   if (!l || !traffic) return [name];
   if (!dv) return [name, "Calculating demand"];
-  const k = n.lines.info ? n.lines.info[i * 4] : -1;
+  const k = n.lines.stretch ? n.lines.stretch[i] : -1;
   const purpose = purposeFilter.peek();
   const day = dailyRiders(dv, l.id, l.stops.length, k, purpose);
   if (day === null) return [name, "Calculating demand"];
-  const count = `${day < 0.5 ? "0" : riders(day)} riders ${shownDayPhrase.peek()}`;
+  const count = `${day < 0.5 ? "0" : forecast(day)} riders ${shownDayPhrase.peek()}`;
   // the purpose filter (T-158) says what it counted
   const out: TipLine[] = purpose === "all" ? [name, count] : [name, count, `${purposeName(purpose)} trips only`];
   // T-819: the red outline drawn on track at capacity, at the level in force as the capacity tags
@@ -90,7 +86,7 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
   const bub = ov.cssW > 0 && ov.cssH > 0 ? ov.renderer.bubbles.at(px / ov.cssW, py / ov.cssH) : null;
   if (bub) {
     const to = w?.save.lines.find((x) => x.num === bub.line)?.name ?? `Line ${bub.line}`;
-    return [`${riders(bub.riders)} riders changing to ${to}`];
+    return [`${forecast(bub.riders)} riders changing to ${to}`];
   }
   const hit = pick(ov, px, py, d.trains);
   if (w && hit?.kind === "train") return trainTip(ov, w, hit.line, hit.profile, hit.dep);
@@ -120,7 +116,7 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
     if (out) out.hot = { line: L.colour[i] };
     // T-473: the track under the line says its elevation and speed too; T-559: and every line on it
     const on = linesOn(w, L.edge[i]);
-    return [...lineTip(n, w, demandView.peek(), d.trackColour === "traffic", i, ov.renderer.fullStretch(L.colour[i], L.info ? L.info[i * 4] : -1)), ...trackFacts(ov, L.edge[i], px, py, slop), ...(on.length ? [lineBullets(on)] : [])];
+    return [...lineTip(n, w, demandView.peek(), d.trackColour === "traffic", i, ov.renderer.fullStretch(L.colour[i], L.stretch ? L.stretch[i] : -1)), ...trackFacts(ov, L.edge[i], px, py, slop), ...(on.length ? [lineBullets(on)] : [])];
   }
   if (hit.kind !== "track") return null;
   const facts = trackFacts(ov, hit.edge, px, py, slop);
@@ -191,14 +187,14 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
   const show = (lines: TipLine[], px: number, py: number) => {
     const key = lines.map((s) => (typeof s === "string" ? s : s.outerHTML)).join("\n");
     if (key !== last) {
-      tag.replaceChildren(...lines.map((s) => (typeof s === "string" ? Object.assign(document.createElement("div"), { textContent: s }) : s)));
+      tagLines(tag, lines);
       last = key;
     }
     tag.style.display = "";
     // a build tool's own tag is below right of the pointer, so this one goes above
     tag.style.transform = isBuildTool(tool.peek())
-      ? `translate(${Math.round(px + 14)}px, ${Math.round(py - 10)}px) translateY(-100%)`
-      : `translate(${Math.round(px + 14)}px, ${Math.round(py + 14)}px)`;
+      ? `translate(${Math.round(px + TAG_OFFSET_PX)}px, ${Math.round(py - 10)}px) translateY(-100%)`
+      : `translate(${Math.round(px + TAG_OFFSET_PX)}px, ${Math.round(py + TAG_OFFSET_PX)}px)`;
     shown = true;
   };
   const update = () => {

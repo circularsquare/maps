@@ -19,7 +19,7 @@ import type { StationInput, WorldView } from "../game/types";
 import { anchor, toLocal } from "./geo";
 import type { Overlay } from "./overlay";
 import { perfOff, perfTry } from "../perfFlags";
-import { MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
+import { BoxGrid, MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
 import { plainBoxHalfPx } from "./stationGeometry";
 
 /** ?perfOff=labels (T-045, measurement only): DOM labels never placed. */
@@ -42,7 +42,6 @@ interface Label {
 
 const GAP = 10; // px from the station centre
 /** side of the screen grid the collision pass files placed names in, CSS px */
-const BIN = 64;
 const SHADOW = "tw-station-shadow";
 // Keep names beyond the viewport ready to enter during a pan. Rebase before this runs out.
 const PAN_MARGIN = 256;
@@ -236,14 +235,7 @@ export class StationLabels {
     const margin = PAN ? PAN_MARGIN : 0;
     // Reserve breathing room around each name, especially at neighbourhood scale.
     const [padX, padY] = labelPadding(zoom);
-    // placed names' collision boxes, filed by the grid cells they touch (T-689: testing each name
-    // against every placed one took most of a zoom frame on the real save)
-    const bins = new Map<number, [number, number, number, number][]>();
-    const binsOf = (r: [number, number, number, number], each: (k: number) => boolean | void) => {
-      for (let bx = Math.floor(r[0] / BIN); bx <= Math.floor(r[2] / BIN); bx++)
-        for (let by = Math.floor(r[1] / BIN); by <= Math.floor(r[3] / BIN); by++) if (each(bx * 4096 + by)) return true;
-      return false;
-    };
+    const placedBoxes = new BoxGrid();
     const hide = (l: Label) => {
       if (l.hidden !== true) l.el.style.visibility = "hidden";
       l.hidden = true;
@@ -265,15 +257,11 @@ export class StationLabels {
       const r: [number, number, number, number] = [x, y, x + l.w, y + l.h];
       const collision: [number, number, number, number] = [r[0] - padX, r[1] - padY, r[2] + padX, r[3] + padY];
       const off = r[2] < -margin || r[0] > W + margin || r[3] < -margin || r[1] > H + margin;
-      if (off || binsOf(collision, (k) => bins.get(k)?.some((t) => collision[0] < t[2] && collision[2] > t[0] && collision[1] < t[3] && collision[3] > t[1]))) {
+      if (off || placedBoxes.hits(collision)) {
         hide(l);
         continue;
       }
-      binsOf(collision, (k) => {
-        const b = bins.get(k);
-        if (b) b.push(collision);
-        else bins.set(k, [collision]);
-      });
+      placedBoxes.add(collision);
       if (l.hidden !== false) l.el.style.visibility = "";
       l.hidden = false;
       const rx = Math.round(x), ry = Math.round(y);

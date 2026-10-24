@@ -123,7 +123,7 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
   const nSeg = L.count;
   const nSamples = net.samples.length / 2;
   const nums = lineNumbers(w, dv, period, on.purpose);
-  const info = L.info;
+  const stretchOf = L.stretch;
 
   // The segments of one line along one edge are consecutive and share everything below: work per
   // run of them (a few thousand on New York's real network, against 118k segments).
@@ -137,12 +137,12 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
 
   // widths per stroke segment, the day's riders against the busiest stretch-day (T-227, T-274)
   const lineWidth = new Float32Array(nSeg).fill(1);
-  if (on.lineLoad && info) {
+  if (on.lineLoad && stretchOf) {
     const busiest = Math.max(busiestDay(w, dv, on.purpose), ...(on.days ?? []).map((d) => busiestDay(w, d, on.purpose)));
     for (let r = 0; r < runs.length; r += 2) {
       const i = runs[r];
       const v = nums.get(L.colour[i]);
-      if (v) lineWidth.fill(widthFor(v.perDay[info[i * 4]] ?? 0, busiest), i, runs[r + 1]);
+      if (v) lineWidth.fill(widthFor(v.perDay[stretchOf[i]] ?? 0, busiest), i, runs[r + 1]);
     }
   }
 
@@ -154,7 +154,7 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
   if (on.trainLoad && !loadFailure.peek()) for (const l of w.save.lines) if (w.lineStats[l.id]?.status === "running" && l.stops.length >= 2 && !nums.has(l.num)) pending.add(l.num);
   let lastLine = -1;
   let v: ReturnType<typeof nums.get>;
-  if (strokeOf && on.trainLoad && info)
+  if (strokeOf && on.trainLoad && stretchOf)
     for (let k = 0; k < nSamples; k++) {
       const i = strokeOf[k];
       if (i < 0) continue;
@@ -166,15 +166,15 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
         if (pending.has(lastLine)) fill[k * 2] = fill[k * 2 + 1] = PENDING;
         continue;
       }
-      const s = info[i * 4];
+      const s = stretchOf[i];
       fill[k * 2] = v.g0[s] ?? -1;
       fill[k * 2 + 1] = v.g1[s] ?? -1;
     }
 
-  // stations: riders (a box no longer grows to cover a wide traffic line, T-239)
-  const stationSize = new Float32Array(net.stationCount * 2);
+  // stations: riders
+  const stationSize = new Float32Array(net.stationCount);
   const fig = on.stationFigure;
-  if (fig) for (let i = 0; i < net.stationCount; i++) stationSize[i * 2 + 1] = stationScale(fig(net.stationIds[i]) ?? 0);
+  if (fig) for (let i = 0; i < net.stationCount; i++) stationSize[i] = stationScale(fig(net.stationIds[i]) ?? 0);
   const stationHalo = fig && on.complexes ? complexCircles(net, fig, on.complexes, stationSize) : undefined;
 
   return { lineWidth, fill, stationSize, stationHalo };
@@ -205,10 +205,10 @@ export function complexCircles(net: Pick<NetworkBuffers, "stationCount" | "stati
       riders += fig(net.stationIds[i]) ?? 0;
       x += net.stations[i * 3];
       y += net.stations[i * 3 + 1];
-      stationSize[i * 2 + 1] = 0;
+      stationSize[i] = 0;
     }
     const a = g[0];
-    stationSize[a * 2 + 1] = riders > 0 ? stationScale(riders) : 0;
+    stationSize[a] = riders > 0 ? stationScale(riders) : 0;
     halo[a * 2] = x / g.length - net.stations[a * 3];
     halo[a * 2 + 1] = y / g.length - net.stations[a * 3 + 1];
   }

@@ -224,8 +224,8 @@ const demand={lines:new Map(),stations:new Map()};
 const use=new Map([['under',140000],['over',35000]]);
 const switches={lineLoad:false,stationFigure:(id)=>use.get(id),trainLoad:false};
 const layers=buildLayers(net,world,demand,0,switches);
-near(layers.stationSize[1],1);near(layers.stationSize[3],.5);
-near(layers.stationSize[1]**2,4*layers.stationSize[3]**2,'circle area proportional to riders a day');
+near(layers.stationSize[0],1);near(layers.stationSize[1],.5);
+near(layers.stationSize[0]**2,4*layers.stationSize[1]**2,'circle area proportional to riders a day');
 assert.ok(buildLayers(net,world,demand,0,{...switches,stationFigure:null}).stationSize.every(v=>v===0));
 near(stationScale(0),0);
 // T-722: no cap (4 x the full riders is twice the radius), and a floor of a tenth of the radius for any riders

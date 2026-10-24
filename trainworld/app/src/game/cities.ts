@@ -7,7 +7,7 @@
 // the world frame can be either of the two frames (game/frame.ts).
 import { signal } from "@preact/signals";
 import registryJson from "./registry.json";
-import { makeFrame, type Frame, type FrameSpec } from "./frame";
+import { M_PER_DEG, makeFrame, type Frame, type FrameSpec } from "./frame";
 import { zoneAliases, zoneName } from "./zoneNames";
 
 export type CityId = string;
@@ -213,25 +213,31 @@ export const ZONE_REACH_M = 40_000;
 /** The nearest zone whose centre is within `CENTRE_REACH_M`, else null (dead space). */
 export function cityWithin(lon: number, lat: number): CityId | null {
   const id = cityNear(lon, lat), c = cityById(id);
-  const kx = 111_320 * Math.cos(lat * Math.PI / 180);
-  return Math.hypot((lon - c.center[0]) * kx, (lat - c.center[1]) * 111_320) <= CENTRE_REACH_M ? id : null;
+  const kx = M_PER_DEG * Math.cos(lat * Math.PI / 180);
+  return Math.hypot((lon - c.center[0]) * kx, (lat - c.center[1]) * M_PER_DEG) <= CENTRE_REACH_M ? id : null;
 }
 
 /** A zone's `box`, or for one without it a square `CENTRE_REACH_M` round its centre. */
 export function zoneBox(c: City): [number, number, number, number] {
   if (c.box) return c.box;
-  const dy = CENTRE_REACH_M / 111_320, dx = dy / Math.cos(c.center[1] * Math.PI / 180);
+  const dy = CENTRE_REACH_M / M_PER_DEG, dx = dy / Math.cos(c.center[1] * Math.PI / 180);
   return [c.center[0] - dx, c.center[1] - dy, c.center[0] + dx, c.center[1] + dy];
+}
+
+/** A zone's box [w, s, e, n] widened by `marginM` metres: the margin in degrees of longitude is as
+ * at the box's highest latitude, at most 85. */
+export function widenBox([w, s, e, n]: readonly number[], marginM: number): [number, number, number, number] {
+  const dy = marginM / M_PER_DEG, dx = dy / Math.cos(Math.min(85, Math.max(Math.abs(s), Math.abs(n))) * Math.PI / 180);
+  return [w - dx, s - dy, e + dx, n + dy];
 }
 
 /** The zones whose boxes, widened by `marginM` metres, meet the box [w, s, e, n] in degrees. */
 export function zonesTouching(w: number, s: number, e: number, n: number, marginM = 0): City[] {
   // the candidates by the box widened by the most any zone's margin can be (at 85 degrees)
-  const my = marginM / 111_320, mx = my / Math.cos(85 * Math.PI / 180);
+  const my = marginM / M_PER_DEG, mx = my / Math.cos(85 * Math.PI / 180);
   return zonesNearBox(w - mx, s - my, e + mx, n + my).map((i) => CITIES[i]).filter((c) => {
-    const [bw, bs, be, bn] = zoneBox(c);
-    const dy = marginM / 111_320, dx = dy / Math.cos(Math.min(85, Math.max(Math.abs(bs), Math.abs(bn))) * Math.PI / 180);
-    return w <= be + dx && e >= bw - dx && s <= bn + dy && n >= bs - dy;
+    const [bw, bs, be, bn] = widenBox(zoneBox(c), marginM);
+    return w <= be && e >= bw && s <= bn && n >= bs;
   });
 }
 

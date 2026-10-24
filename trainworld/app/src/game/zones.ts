@@ -7,12 +7,10 @@
 // answer falls back to the nearest centre, so it never flips as boundaries arrive one by one.
 
 import { signal } from "@preact/signals";
-import { CITIES, cityNear, cityWithin, hashView, zoneBox, zonesTouching, ZONE_REACH_M, type CityId } from "./cities";
+import { CITIES, cityNear, cityWithin, hashView, widenBox, zoneBox, zonesTouching, ZONE_REACH_M, type CityId } from "./cities";
 import { perfOff } from "../perfFlags";
+import { M_PER_DEG } from "./frame";
 import { distanceTo, footprintOf, loadFootprints, touchesBox, type Footprint } from "../workers/cityReach";
-
-/** Metres per degree, as workers/cityReach.ts measures. */
-const M_PER_DEG = 111_320;
 
 /** Zones beside the focused one that show their bubbles, at most this many. */
 export const NEARBY = 3;
@@ -64,9 +62,7 @@ let reachBoxes: Float64Array | null = null;
 function reachBoxesOf(): Float64Array {
   const b = new Float64Array(4 * CITIES.length);
   CITIES.forEach((c, i) => {
-    const [bw, bs, be, bn] = zoneBox(c);
-    const dy = ZONE_REACH_M / 111_320, dx = dy / Math.cos(Math.min(85, Math.max(Math.abs(bs), Math.abs(bn))) * Math.PI / 180);
-    b.set([bw - dx, bs - dy, be + dx, bn + dy], 4 * i);
+    b.set(widenBox(zoneBox(c), ZONE_REACH_M), 4 * i);
   });
   return b;
 }

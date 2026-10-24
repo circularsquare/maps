@@ -2,7 +2,7 @@
 // picking, the placement ghost and the cut-out above the demand bubbles (demandOverlay.ts).
 //
 // A platform is drawn where it is on the ground: a band along its track, as long as the platform,
-// bending as the track bends (a circular arc through its middle and both ends), with flat ends.
+// following the track's own line (`PlatformShape.pts`), with flat ends.
 // Through a station the platform is centred on the node; at a dead end it runs from the node along
 // the track, as the trains stop at its middle there (sim service.rs). Its width is fixed on the
 // ground too (T-204), so the box keeps one shape at every zoom. Zoomed out (below
@@ -12,23 +12,22 @@
 // player's links are drawn as thin bridges between two platforms (T-217, `bridgeEnds`,
 // `bridgeShape`).
 
-import { EARTH_C } from "./geo";
+import { unitPerPxAt } from "./geo";
+import { interp } from "./gl";
 
 export type Project = (x: number, y: number) => [number, number];
 
-/** From this zoom stations are drawn as platforms along the track, further out as dots (T-189;
- * T-204 moved it from 13 to 15, T-553 to 14, Anita: "2x more zoomed out, would like to see more
- * station boxes"). At 14 a pixel is about 3.6 m at New York's latitude, so a 150-200 m platform is
- * 40-55 px long. */
+/** From this zoom stations are drawn as platforms along the track, further out as dots (T-189,
+ * T-553). At 14 a pixel is about 3.6 m at New York's latitude, so a 150-200 m platform is 40-55 px
+ * long. */
 export const STATION_BOX_ZOOM = 14;
 /** The zoom a box's width is set at: its width on screen there is its width on the ground, and from
  * there out to STATION_BOX_ZOOM it keeps that width on screen instead of thinning (T-553). */
 export const BOX_WIDTH_ZOOM = 15;
-/** Below this zoom no station dot is drawn or picked, only the lines (T-205; T-542 moved it from 11
- * to 9, Anita: dots 4x further out). A selected station is still drawn. */
+/** Below this zoom no station dot is drawn or picked, only the lines (T-205, T-542). A selected
+ * station is still drawn. */
 export const STATIONS_ZOOM = 9;
-/** Below this zoom no train is drawn or picked (T-205; T-542 moved it from 11 to 10, Anita: trains
- * 2x further out). */
+/** Below this zoom no train is drawn or picked (T-205, T-542). */
 export const TRAINS_ZOOM = 10;
 /** Half a platform's true width, m: two tracks either side of an island platform, about 12 m in
  * all. The drawn box is wider (T-204): as wide on the ground as a plain line and its rim are at
@@ -36,7 +35,7 @@ export const TRAINS_ZOOM = 10;
 export const PLATFORM_HALF_M = 6;
 /** Local units per CSS px at BOX_WIDTH_ZOOM: a box's fixed width, set on screen there, in units
  * on the ground (T-204). */
-const BOX_UNIT = EARTH_C / (512 * 2 ** BOX_WIDTH_ZOOM);
+const BOX_UNIT = unitPerPxAt(BOX_WIDTH_ZOOM);
 
 /** Where a platform lies, from the station node, in local units (renderer's buffers). */
 export interface PlatformShape {
@@ -192,12 +191,11 @@ export function pairBeside(tracks: Iterable<[number, ArrayLike<number>]>, x: num
   return best;
 }
 
-/** Dots are this much wider in radius than T-189's: T-313's 1.65 (Anita: "make station small dots
- * bigger, maybe 65% bigger radius"), less a fifth (T-322). */
+/** Dots are this much wider in radius than T-189's (T-313, T-322). */
 const DOT_GROW = 1.65 * 0.8;
 /** Dot radius in CSS px, ordinary and transfer stations; a dot also covers the lines through it. */
 export function stationRadii(zoom: number): [number, number] {
-  return [DOT_GROW * interpolate(zoom, [[9, 1.3], [11, 3.2667], [12, 3.8], [15, 5.6]]), DOT_GROW * interpolate(zoom, [[9, 1.8], [11, 4.2667], [12, 5], [15, 7.2]])];
+  return [DOT_GROW * interp(zoom, [[9, 1.3], [11, 3.2667], [12, 3.8], [15, 5.6]]), DOT_GROW * interp(zoom, [[9, 1.8], [11, 4.2667], [12, 5], [15, 7.2]])];
 }
 /** Zoomed out, a connector between two dots (T-313): its white is this share of an ordinary dot's
  * white radius, either side of its middle, with the dots' own rim along both sides (0.35 in T-313,
@@ -207,9 +205,9 @@ const CONNECTOR_WHITE = 0.3;
 export function connectorHalfPx(st: Pick<StationStyle, "radius" | "ringPx">): number {
   return CONNECTOR_WHITE * Math.max(0, st.radius[0] - st.ringPx) + st.ringPx;
 }
-export function stationHaloRadius(zoom: number) { return interpolate(zoom, [[9, 18], [12, 40], [15, 56]]); }
+export function stationHaloRadius(zoom: number) { return interp(zoom, [[9, 18], [12, 40], [15, 56]]); }
 /** The dark rim of a station, CSS px. */
-export function stationRing(zoom: number) { return interpolate(zoom, [[9, 1.2], [13, 2]]); }
+export function stationRing(zoom: number) { return interp(zoom, [[9, 1.2], [13, 2]]); }
 /** A dot's dark rim (and its connectors'), CSS px: a quarter thinner than a box's (T-322, Anita: "a
  * little thinner"). */
 export function dotRing(zoom: number) { return 0.75 * stationRing(zoom); }
@@ -217,21 +215,13 @@ export function dotRing(zoom: number) { return 0.75 * stationRing(zoom); }
 export const SEL_OUTLINE_PX = 2;
 export const SEL_GLOW_PX = 6;
 
-function interpolate(zoom: number, stops: [number, number][]) {
-  for (let i = 1; i < stops.length; i++) if (zoom < stops[i][0]) {
-    const [z0, a] = stops[i - 1], [z1, b] = stops[i];
-    return a + (b - a) * Math.max(0, (zoom - z0) / (z1 - z0));
-  }
-  return stops[stops.length - 1][1];
-}
-
 /** What sizes a station on screen, CSS px (renderer.ts keeps the last draw's). */
 export interface StationStyle {
   /** platforms (true) or dots (zoomed out) */
   boxes: boolean;
   /** dot radius: ordinary, transfer */
   radius: [number, number];
-  /** a line's width; 0 when lines are not drawn (Height and Max speed show the track at it) */
+  /** a line's width (Height and Max speed show the track at it) */
   linePx: number;
   ringPx: number;
   /** a line's width and the rim at BOX_WIDTH_ZOOM: they fix every box's width on the ground (T-204) */
@@ -281,25 +271,19 @@ export interface StationShape {
   ny: number;
   halfLength: number;
   halfWidth: number;
-  /** curvature of the centre line, 1/px, bending towards +n (0 when `pts` gives the line) */
-  k: number;
   /** > 0: drawn as a dot of this radius at (x, y) */
   dot: number;
   /** the centre line (T-254): PLATFORM_POINTS points in the shape's own frame (along u, across n,
-   * from (x, y)), CSS px; the band is `halfWidth` either side of it, with flat ends. Absent: the arc
-   * of `k` (bridges) */
+   * from (x, y)), CSS px; the band is `halfWidth` either side of it, with flat ends. Absent: a
+   * straight box (bridges) */
   pts?: Float32Array;
 }
 
-/** A shape's centre line in its own frame, PLATFORM_POINTS points: `pts`, or its arc sampled. */
+/** A shape's centre line in its own frame, PLATFORM_POINTS points: `pts`, or a straight line along it. */
 export function shapePoints(s: StationShape): Float32Array {
   if (s.pts) return s.pts;
-  const out = new Float32Array(2 * PLATFORM_POINTS), hl = s.halfLength, k = s.k;
-  for (let i = 0; i < PLATFORM_POINTS; i++) {
-    const t = -hl + (2 * hl * i) / (PLATFORM_POINTS - 1);
-    out[i * 2] = Math.abs(k) < 1e-9 ? t : Math.sin(k * t) / k;
-    out[i * 2 + 1] = Math.abs(k) < 1e-9 ? 0 : (1 - Math.cos(k * t)) / k;
-  }
+  const out = new Float32Array(2 * PLATFORM_POINTS), hl = s.halfLength;
+  for (let i = 0; i < PLATFORM_POINTS; i++) out[i * 2] = -hl + (2 * hl * i) / (PLATFORM_POINTS - 1);
   return out;
 }
 
@@ -362,7 +346,6 @@ export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth:
     x: cx, y: cy, ux, uy, nx, ny,
     halfLength: Math.max(total / 2, hw),
     halfWidth: hw,
-    k: 0,
     dot: st.boxes ? 0 : Math.max(st.radius[transfer ? 1 : 0], cover),
     ...(st.boxes ? { pts } : {}),
   };
@@ -377,18 +360,14 @@ export function stationReachPx(st: StationStyle, halfWidth: number, perLoc: numb
 }
 
 /** A point in a station's frame, CSS px: along its centre line from its middle, and across it
- * (towards +n). As SHAPE_GLSL's `polyFrame` (a platform, T-254) or `arc` (a bridge). */
+ * (towards +n). As SHAPE_GLSL's `polyFrame` (a platform, T-254); a bridge is straight. */
 export function stationCoords(s: StationShape, px: number, py: number): [number, number] {
   const dx = px - s.x, dy = py - s.y;
   const a = dx * s.ux + dy * s.uy, b = dx * s.nx + dy * s.ny;
-  if (s.pts) return polyFrame(s.pts, a, b);
-  if (Math.abs(s.k) < 1e-7) return [a, b];
-  const R = 1 / s.k, sg = Math.sign(s.k);
-  const qx = a, qy = b - R, r = Math.hypot(qx, qy);
-  return [Math.atan2(qx, -sg * qy) * Math.abs(R), R - sg * r];
+  return s.pts ? polyFrame(s.pts, a, b) : [a, b];
 }
 
-/** Signed distance from a station's edge, CSS px (negative inside): as SHAPE_GLSL's `stationSdf`. */
+/** Signed distance from a station's edge, CSS px (negative inside). */
 export function stationDistance(s: StationShape, px: number, py: number): number {
   if (s.dot > 0) return Math.hypot(px - s.x, py - s.y) - s.dot;
   const [a, b] = stationCoords(s, px, py);
@@ -502,7 +481,7 @@ export function bridgeShape(px: number, py: number, qx: number, qy: number, proj
   if (len < 1e-3) return null;
   const ux = (bx - ax) / len, uy = (by - ay) / len;
   const perLoc = Math.hypot(ox - ax, oy - ay);
-  return { x: (ax + bx) / 2, y: (ay + by) / 2, ux, uy, nx: -uy, ny: ux, halfLength: len / 2, halfWidth: BRIDGE_HALF_PX * BOX_UNIT * perLoc + st.ringPx, k: 0, dot: 0 };
+  return { x: (ax + bx) / 2, y: (ay + by) / 2, ux, uy, nx: -uy, ny: ux, halfLength: len / 2, halfWidth: BRIDGE_HALF_PX * BOX_UNIT * perLoc + st.ringPx, dot: 0 };
 }
 
 /** An SVG path of a station's outline grown by `grow` px, relative to its middle (the placement
@@ -512,7 +491,7 @@ export function stationPath(s: StationShape, grow = 0): string {
     const r = s.dot + grow;
     return `M${-r},0a${r},${r} 0 1,0 ${2 * r},0a${r},${r} 0 1,0 ${-2 * r},0Z`;
   }
-  const N = 16, hl = s.halfLength + grow, hw = s.halfWidth + grow, pts: string[] = [];
+  const hl = s.halfLength + grow, hw = s.halfWidth + grow;
   const xy = (a: number, b: number) => `${(a * s.ux + b * s.nx).toFixed(2)},${(a * s.uy + b * s.ny).toFixed(2)}`;
   if (s.pts) {
     // the track's own line (T-254): each point offset along the mitred normal, the end points
@@ -541,17 +520,7 @@ export function stationPath(s: StationShape, grow = 0): string {
     }
     return `M${left.concat(right).join("L")}Z`;
   }
-  const at = (t: number, side: number) => {
-    // the centre line point at arc length t, and the normal there
-    const th = s.k * t;
-    const ca = Math.abs(s.k) < 1e-7 ? t : Math.sin(th) / s.k, cb = Math.abs(s.k) < 1e-7 ? 0 : (1 - Math.cos(th)) / s.k;
-    const na = -Math.sin(th), nb = Math.cos(th);
-    const a = ca + na * side, b = cb + nb * side;
-    return `${(a * s.ux + b * s.nx).toFixed(2)},${(a * s.uy + b * s.ny).toFixed(2)}`;
-  };
-  for (let i = 0; i <= N; i++) pts.push(at(-hl + (2 * hl * i) / N, hw));
-  for (let i = N; i >= 0; i--) pts.push(at(-hl + (2 * hl * i) / N, -hw));
-  return `M${pts.join("L")}Z`;
+  return `M${[xy(-hl, hw), xy(hl, hw), xy(hl, -hw), xy(-hl, -hw)].join("L")}Z`;
 }
 
 /** The station shape's distance in GLSL, shared by STATION_VS/FS and the demand cut-out. */
@@ -593,8 +562,4 @@ vec2 polyFrame(vec2 p, vec2 q[${PLATFORM_POINTS}]) {
     acc += l;
   }
   return vec2(along - 0.5 * total, across);
-}
-// Signed distance from a station: a dot of radius dotR, or the band along its centre line.
-float stationSdf(vec2 p, vec3 size, float dotR) {
-  return dotR > 0.0 ? length(p) - dotR : boxSdf(arc(p, size.z), size.xy);
 }`;

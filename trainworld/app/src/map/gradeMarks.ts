@@ -9,10 +9,11 @@
 // The data is `NetworkBuffers.marks` (map/markData.ts); the hover tag names a mark (`markTip`).
 
 import { levelLabel } from "../game/format";
-import { rgb } from "../game/palette";
+import { BAD_RED, rgbf } from "../game/palette";
 import { perfOff } from "../perfFlags";
 import { shadeColours } from "../game/shades";
 import { display } from "../game/ui";
+import { compile, interp, uniforms } from "./gl";
 import type { Overlay } from "./overlay";
 import { M_BAD, M_CROSSING, M_JUNCTION, M_PORTAL, M_RAMP, MARK_STRIDE } from "./markData";
 import type { TipLine } from "./networkTips";
@@ -32,18 +33,6 @@ const LOUD_ZOOM = 9, QUIET_ZOOM = 11, RAMP_ZOOM = 11;
 const QUIET_ALPHA = 0.85;
 /** A preview's crossing or junction this close (local units) to one already marked is not drawn. */
 const SAME_PLACE = 6;
-
-function interp(z: number, stops: [number, number][]): number {
-  if (z <= stops[0][0]) return stops[0][1];
-  for (let i = 1; i < stops.length; i++) {
-    const [z1, v1] = stops[i];
-    if (z <= z1) {
-      const [z0, v0] = stops[i - 1];
-      return v0 + ((v1 - v0) * (z - z0)) / (z1 - z0);
-    }
-  }
-  return stops[stops.length - 1][1];
-}
 
 /** The radii (CSS px) of the loud badge, the quiet badge and the ramp mark at a zoom; 0 = not drawn. */
 export function markRadii(zoom: number): [number, number, number] {
@@ -145,27 +134,11 @@ void main() {
   o = vec4(col * a, a);
 }`;
 
-function compile(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgram {
-  const prog = gl.createProgram()!;
-  for (const [type, src] of [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]] as const) {
-    const sh = gl.createShader(type)!;
-    gl.shaderSource(sh, src);
-    gl.compileShader(sh);
-    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error("marks shader: " + gl.getShaderInfoLog(sh));
-    gl.attachShader(prog, sh);
-  }
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error("marks link: " + gl.getProgramInfoLog(prog));
-  return prog;
-}
-
 interface Instances {
   vao: WebGLVertexArrayObject;
   buf: WebGLBuffer;
   count: number;
 }
-
-const rgbf = (hex: string) => rgb(hex).map((v) => v / 255);
 
 export class GradeMarks {
   private gl!: WebGL2RenderingContext;
@@ -181,7 +154,7 @@ export class GradeMarks {
     // again after a lost context (T-953): the old buffers are gone, the renderer uploads anew
     this.built = this.drawing = null;
     this.prog = compile(gl, VS, FS);
-    for (const n of ["u_matrix", "u_viewport", "u_r", "u_ink", "u_bp", "u_fill", "u_bad", "u_dpr", "u_quiet", "u_level_colours", "u_flat"]) this.u[n] = gl.getUniformLocation(this.prog, n);
+    this.u = uniforms(gl, this.prog, ["u_matrix", "u_viewport", "u_r", "u_ink", "u_bp", "u_fill", "u_bad", "u_dpr", "u_quiet", "u_level_colours", "u_flat"]);
   }
 
   private upload(old: Instances | null, data: Float32Array | undefined): Instances | null {
@@ -243,7 +216,7 @@ export class GradeMarks {
     gl.uniform3fv(u.u_ink, rgbf(shades.markInk));
     gl.uniform3fv(u.u_bp, rgbf(shades.markBlueprint));
     gl.uniform3fv(u.u_fill, rgbf(shades.casing));
-    gl.uniform3fv(u.u_bad, rgbf("#d23c3c"));
+    gl.uniform3fv(u.u_bad, rgbf(BAD_RED));
     gl.uniform1f(u.u_dpr, dpr);
     gl.uniform1f(u.u_quiet, QUIET_ALPHA);
     gl.uniform3fv(u.u_level_colours, levelColours);

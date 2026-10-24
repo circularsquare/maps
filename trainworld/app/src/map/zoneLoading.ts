@@ -20,6 +20,8 @@ import { nearbyZones } from "../game/zones";
 import { zoneShown } from "../game/realms";
 import { LoadBar, loadingCardShown } from "../ui/LoadingScreen";
 import { cityGeometry } from "./boundaryGeometry";
+import { firstSymbolId } from "./basemap";
+import { screenBounds } from "./labelLayout";
 import { followShade, shadePaint } from "./cityBoundaries";
 
 const SHADE = "tw-zone-loading";
@@ -67,12 +69,7 @@ export function startZoneLoading(map: MlMap): () => void {
     for (const [id, el] of bars) {
       const s = shapes.get(id);
       if (!s) { el.style.display = "none"; continue; }
-      const [x0, y0, x1, y1] = s.box;
-      const corners = [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].map(([x, y]) => map.project([x, y]));
-      const left = Math.max(EDGE, Math.min(...corners.map((p) => p.x)));
-      const right = Math.min(w - EDGE, Math.max(...corners.map((p) => p.x)));
-      const top = Math.max(EDGE, Math.min(...corners.map((p) => p.y)));
-      const bottom = Math.min(ht - EDGE, Math.max(...corners.map((p) => p.y)));
+      const { left, right, top, bottom } = screenBounds(map, s.box, w, ht, EDGE);
       if (left > right || top > bottom) { el.style.display = "none"; continue; }
       // a little under the centre, clear of the basemap's name for the place
       const p = map.project(cityById(id).center);
@@ -125,7 +122,7 @@ export function startZoneLoading(map: MlMap): () => void {
     if (!map.getSource(SHADE)) map.addSource(SHADE, { type: "geojson", data: { type: "FeatureCollection", features: [] } });
     if (!map.getLayer(SHADE)) {
       // over the basemap and the outside shade, under its labels and the network
-      const before = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
+      const before = firstSymbolId(map);
       map.addLayer({
         id: SHADE, type: "fill", source: SHADE,
         paint: shadePaint(),

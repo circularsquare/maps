@@ -1,14 +1,12 @@
 // The network tag's text for trains, stations, platform crowds and the station use circles
-// (T-194, Anita: "we probably shouldn't have much that is drawn but does not have a tooltip
-// explaining quantitatively what is drawn"). trackHover.ts shows it, after the same rest as the
-// track's: each says in words the number the drawing stands for.
+// (T-194). trackHover.ts shows it, at once like the track's: each says in words the number the
+// drawing stands for.
 //
 // - A train: its line, and the riders aboard against seats and packed full (the gauge its core is
 //   filled with), from the boarding account as the train inspector counts them.
 // - A station: its name; with use circles on, the riders a day its circle stands for (its
 //   complex's in complex view); where platform crowds are drawn, the riders
-//   waiting per line and direction, red where that platform side is full (T-219: the crowd is
-//   inside the box now, so the station's own hover covers it). Zoomed out, a complex's one dot is its
+//   waiting per line and direction, red where that platform side is full (T-219). Zoomed out, a complex's one dot is its
 //   busiest station's, and says so (T-217).
 // - A use circle away from any station: the same count, for the circle's station or complex.
 
@@ -16,6 +14,7 @@ import { CRUSH_PER_CAR, crowdAt, QUEUE_STRIDE, SEATS_PER_CAR, tripLoad } from ".
 import { clock } from "../game/clock";
 import { complexes } from "../game/complexView";
 import { demandView } from "../game/demand";
+import { exact, forecast } from "../game/format";
 import { PERIODS, periodAt } from "../game/periods";
 import { stationUse, useFigure } from "../game/stationUse";
 import type { WorldView } from "../game/types";
@@ -28,10 +27,6 @@ import { factRow, lineBullet, lineBullets } from "./trackTagRows";
 
 /** A line of a tag: plain text, or a row built as DOM. */
 export type TipLine = string | HTMLElement;
-
-const n0 = (v: number) => Math.round(v).toLocaleString("en-US");
-/** A forecast count, rounded as the track tag rounds one (trackHover.ts `riders`). */
-const forecast = (n: number) => (n >= 1000 ? Math.round(n / 100) * 100 : n >= 100 ? Math.round(n / 10) * 10 : Math.round(n)).toLocaleString("en-US");
 
 /** "12,400 entries per day" (T-482, T-722), as the station use selector counts, whatever the number
  * of stations in a complex. The circles count every purpose, whatever the purpose filter says. */
@@ -48,12 +43,14 @@ function circleLines(riders: number): string[] {
 function circleOf(w: WorldView, id: string): { members: string[]; riders: number } | null {
   const dv = demandView.peek(), mode = display.peek().stationUse;
   if (!dv) return null;
-  const built = new Set(w.save.stations.filter((s) => s.built).map((s) => s.id));
   let members = [id];
   if (display.peek().complexView) {
     const cx = complexes.peek();
     const k = cx.of.get(id);
-    if (k !== undefined) members = cx.members[k].filter((m) => built.has(m));
+    if (k !== undefined) {
+      const built = new Set(w.save.stations.filter((s) => s.built).map((s) => s.id));
+      members = cx.members[k].filter((m) => built.has(m));
+    }
   }
   let riders = 0, known = false;
   for (const m of members) {
@@ -84,11 +81,11 @@ export function trainTip(ov: Overlay, w: WorldView, line: string, profile: numbe
   const atEnd = at.s >= (stopS[n - 1] ?? Infinity) - 1;
   const own = r.board && i >= 0 ? tripLoad(r.board, i, run === 0 ? seg : n - 2 - seg) : null;
   const seats = SEATS_PER_CAR * st.cars, crush = CRUSH_PER_CAR * st.cars;
-  const cap = `${n0(seats)} seats, ${n0(crush)} full`;
+  const cap = `${exact(seats)} seats, ${exact(crush)} full`;
   // full: drawn with a red edge (T-207)
   // T-324: a new or changed line's first figures, from an estimate the solve is still refining
   const est = dv.lines.get(l.id)?.estimate ? " (estimate)" : "";
-  if (own !== null) return [name, `${n0(atEnd ? 0 : own)} riders aboard${!atEnd && own >= crush - 0.5 ? ", full" : ""}${est}`, cap];
+  if (own !== null) return [name, `${exact(atEnd ? 0 : own)} riders aboard${!atEnd && own >= crush - 0.5 ? ", full" : ""}${est}`, cap];
   // no account for this train yet (its line's stops just changed): no gauge either, and no
   // forecast average in its place (T-230, Anita)
   return [name, "Calculating demand"];
@@ -118,7 +115,7 @@ function crowdLines(ov: Overlay, w: WorldView, id: string, i: number): TipLine[]
   if (dot) {
     if (dot.waiting < 1) return ["Nobody waiting on the platforms"];
     const fullest = dot.share >= 1 ? "full" : `${Math.round(dot.share * 100)}% full`;
-    return [waitRow(null, "", `${n0(dot.waiting)} waiting`, dot.share >= 1), `Fullest platform ${fullest}`];
+    return [waitRow(null, "", `${exact(dot.waiting)} waiting`, dot.share >= 1), `Fullest platform ${fullest}`];
   }
   const node = Number(id), t = clock.now() - r.tripsEpoch;
   const names = new Map(w.save.stations.map((s) => [s.id, s.name]));
@@ -131,7 +128,7 @@ function crowdLines(ov: Overlay, w: WorldView, id: string, i: number): TipLine[]
     const l = w.save.lines.find((x) => x.id === String(b.queues[base + 1]));
     if (!l) continue;
     const to = names.get(b.queues[base + 2] === 0 ? l.stops[l.stops.length - 1] : l.stops[0]) ?? "the end";
-    out.push(waitRow(lineBullet(l, true), `to ${to}`, `${n0(waiting)} waiting`,(r.queueShare(q) ?? 0) >= 1));
+    out.push(waitRow(lineBullet(l, true), `to ${to}`, `${exact(waiting)} waiting`,(r.queueShare(q) ?? 0) >= 1));
   }
   return out.length ? out : ["Nobody waiting on the platforms"];
 }

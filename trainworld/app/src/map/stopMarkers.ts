@@ -20,6 +20,7 @@ import type { LineInput, WorldView } from "../game/types";
 import { lineDraft, stopEditing } from "../game/ui";
 import { world } from "../game/world";
 import { queryClock } from "../workers/clockClient";
+import { tagLines } from "./labelLayout";
 import type { Overlay } from "./overlay";
 
 /** How a station stands to the line being edited. */
@@ -326,7 +327,7 @@ export class StopMarkers {
 
   private showTag(lines: string[], px: number, py: number, bad = false) {
     this.tag.className = "tool-tag stop-tag" + (bad ? " bad" : "");
-    this.tag.replaceChildren(...lines.map((t) => Object.assign(document.createElement("div"), { textContent: t })));
+    tagLines(this.tag, lines);
     this.tag.style.display = "";
     this.tag.style.transform = `translate(${Math.round(px + 14)}px, ${Math.round(py + 12)}px)`;
   }

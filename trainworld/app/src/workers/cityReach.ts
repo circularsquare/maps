@@ -10,12 +10,12 @@
 import type { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { CITIES, zoneBox, zonesNearBox, type CityId } from "../game/cities";
 import { cityBoundary } from "../game/boundaries";
+import { M_PER_DEG } from "../game/frame";
 
 /** The 3 km walk plus a margin: cell centres lie a little outside the boundary (blocks are spread
  * over the H3 cells they touch) and the packs' equirectangular frames differ slightly from this
  * test's. */
 export const REACH_M = 4500;
-const M_PER_DEG = 111_320;
 
 export interface Footprint {
   id: CityId;

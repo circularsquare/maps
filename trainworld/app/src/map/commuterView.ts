@@ -19,7 +19,7 @@ import { cellModes, cityCells, demandUpdating, demandView, flows, type CellModes
 import { count, wholeDistance } from "../game/format";
 import { BUBBLE_ALPHA, bubbleSchemeKey, setBubbleColours } from "../game/palette";
 import { dealFlows } from "../game/farChunks";
-import { GROUP_SAMPLE_SIDE, marketGroup, tripOpenedFrom, type TripPlaces } from "../game/trip";
+import { GROUP_SAMPLE_SIDE, openFarTrip, tripOpenedFrom, type TripPlaces } from "../game/trip";
 import { compass, stationNameNear } from "../game/places";
 import { purposeWords, type PurposeFilter } from "../game/purposes";
 import type { Selection } from "../game/types";
@@ -30,7 +30,7 @@ import { aggregate, discs, recolour, type Groups } from "./bubbles";
 import { cityOverview, interBox, setNearPoint } from "./intercityView";
 import { anchorVersion } from "./anchorVersion";
 import { modeBar } from "./modeBar";
-import { addFinder, discAt, pointerAt, pointerLocal, type Pointer } from "./demandHover";
+import { addFinder, discAt, pointerAt, type Pointer } from "./demandHover";
 import { bubbleLevel, LINE, type DemandOverlay } from "./demandOverlay";
 import { anchor, anchorShift, kAtY, toLocal, type Anchor } from "./geo";
 
@@ -39,8 +39,7 @@ export interface Place {
   name: string;
   riders: number;
 }
-/** A bubble selection as the inspector shows it. `far` is null while its far end is being asked
- * for,. */
+/** A bubble selection as the inspector shows it. `far` is null while its far end is being asked for. */
 export const commuterPick = signal<{ sel: Selection; totals: [number, number, number]; purposes?: PurposeTrips[]; far: { totals: [number, number, number]; places: Place[] } | null;
   /** the map's purpose filter the totals and far end count (T-158) */
   purpose?: PurposeFilter;
@@ -53,10 +52,19 @@ const tripWords = () => {
   return p === "all" ? "trips" : `${purposeWords(p)} trips`;
 };
 
-/** With a bubble selection, a short faint line from each far-end bubble toward the selection
- * (T-520, Anita: to try and maybe undo; false turns them off). */
-const LINES_TO_SELECTION = true;
 const STUB_ALPHA = 0.8;
+/** One end's trip legs per cell: rail, walking, driving. */
+const endModes = (m: CellModes, end: "home" | "work") => (end === "home" ? [m.homeRail, m.homeWalk, m.homeDrive] : [m.workRail, m.workWalk, m.workDrive]);
+/** The discs (`DISC` floats each) whose centres are in the box between two pointers: their indices. */
+const discsIn = (discs: Float32Array, a: Anchor, p0: Pointer, p1: Pointer): number[] => {
+  const [x0, y0] = toLocal(p0.lng, p0.lat, a), [x1, y1] = toLocal(p1.lng, p1.lat, a);
+  const out: number[] = [];
+  for (let i = 0; i < discs.length / DISC; i++) {
+    const x = discs[i * DISC], y = discs[i * DISC + 1];
+    if (x >= Math.min(x0, x1) && x <= Math.max(x0, x1) && y >= Math.min(y0, y1) && y <= Math.max(y0, y1)) out.push(i);
+  }
+  return out;
+};
 /** T-865: a group of bubbles is named by the station nearest its centre within this, m. */
 const GROUP_NAME_M = 3000;
 
@@ -169,7 +177,11 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     })());
 
   // ---- the city's bubbles ----
-  let shown: { dv: DemandView; end: "home" | "work"; purpose: PurposeFilter; bubbles: Bubbles; modes: CellModes } | null = null;
+  type ZoneShown = { dv: DemandView; end: "home" | "work"; purpose: PurposeFilter; bubbles: Bubbles; modes: CellModes };
+  /** whether bubbles already shown are the ones the current result, end and purpose would build */
+  const isCurrent = (s: ZoneShown, dv: DemandView, end: "home" | "work", purpose: PurposeFilter, updating: boolean) =>
+    s.dv.version === dv.version && s.dv.day === dv.day && s.end === end && s.purpose === purpose && (s.dv === dv || updating) && s.bubbles.anchor.version === anchor().version;
+  let shown: ZoneShown | null = null;
   let built: { dv: DemandView; purpose: PurposeFilter; modes: CellModes; ends: Map<string, Bubbles> } | null = null;
   commuterStats.probe = () => (shown ? { anchor: shown.bubbles.anchor, levels: shown.bubbles.levels.map((l) => ({ discs: l.discs, group: l.group })) } : null);
   let wanted = 0;
@@ -189,7 +201,6 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     }
     return b;
   };
-  type ZoneShown = { dv: DemandView; end: "home" | "work"; purpose: PurposeFilter; bubbles: Bubbles; modes: CellModes };
   const zones = new Map<CityId, { worker: Worker | null; city: Ready | null; cellsWorld: Float32Array | null; start?: Promise<boolean> | null; ask: number; shown: ZoneShown | null }>();
   const dropZone = (id: CityId) => {
     zones.get(id)?.worker?.terminate();
@@ -251,7 +262,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     if (!d.commuters || !dv) return;
     const end = d.commuterEnd;
     // a solve's first estimate, and its refined result once the crowding rounds are done
-    if (shown && shown.dv.version === dv.version && shown.dv.day === dv.day && shown.end === end && shown.purpose === purpose && (shown.dv === dv || updating) && shown.bubbles.anchor.version === anchor().version) return;
+    if (shown && isCurrent(shown, dv, end, purpose, updating)) return;
     const ask = ++wanted;
     void (async () => {
       const same = built?.dv === dv && built.purpose === purpose;
@@ -280,12 +291,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     })();
   });
 
-  const MODE_KEYS = ["homeRail", "homeWalk", "homeDrive", "workRail", "workWalk", "workDrive"] as const;
   /** One end's legs per cell (rail, walking, driving), copies to transfer to a worker. */
-  const endCells = (m: CellModes, end: "home" | "work") => {
-    const o = end === "home" ? 0 : 3;
-    return MODE_KEYS.slice(o, o + 3).map((k) => m[k].slice());
-  };
+  const endCells = (m: CellModes, end: "home" | "work") => endModes(m, end).map((a) => a.slice());
   /** Bubbles of one end from legs per cell (rail, walking, driving; transferred), in worker `w`. */
   const buildOn = (w: Worker, end: "home" | "work", cells: Float32Array[]) => {
     const id = nextId++;
@@ -315,7 +322,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       let z = zones.get(id);
       if (!z) zones.set(id, (z = { worker: null, city: null, cellsWorld: null, ask: 0, shown: null }));
       const s = z.shown;
-      if (s && s.dv.version === dv.version && s.dv.day === dv.day && s.end === end && s.purpose === purpose && (s.dv === dv || updating) && s.bubbles.anchor.version === anchor().version) continue;
+      if (s && isCurrent(s, dv, end, purpose, updating)) continue;
       // another purpose's or end's bubbles would mislead: none meanwhile (a new result keeps the last)
       if (s && (s.purpose !== purpose || s.end !== end)) {
         z.shown = null;
@@ -436,13 +443,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   const groupsIn = (p0: Pointer, p1: Pointer): number[] => {
     if (!shown) return [];
     const L = shown.bubbles.levels[bubbleLevel(map.getZoom())];
-    const [x0, y0] = pointerLocal(p0, shown.bubbles.anchor), [x1, y1] = pointerLocal(p1, shown.bubbles.anchor);
-    const out: number[] = [];
-    for (let i = 0; i < L.group.length; i++) {
-      const x = L.discs[i * 8], y = L.discs[i * 8 + 1];
-      if (x >= Math.min(x0, x1) && x <= Math.max(x0, x1) && y >= Math.min(y0, y1) && y <= Math.max(y0, y1)) out.push(L.group[i]);
-    }
-    return out;
+    return discsIn(L.discs, shown.bubbles.anchor, p0, p1).map((i) => L.group[i]);
   };
   const selectGroups = (groups: number[], add: boolean): Extract<Selection, { kind: "commuters" }> | null => {
     if (!shown || !city || !groups.length) return null;
@@ -482,7 +483,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       if (qs.has(q)) tally(farSide, q, c, fe.farRail[k] + fe.farWalk[k] + fe.farDrive[k]);
     }
     const m = shown.modes;
-    const [mt, mw, md] = sel.end === "home" ? [m.homeRail, m.homeWalk, m.homeDrive] : [m.workRail, m.workWalk, m.workDrive];
+    const [mt, mw, md] = endModes(m, sel.end);
     for (const c of sel.cells) tally(nearSide, g.groupOf[c], c, mt[c] + mw[c] + md[c]);
     const busiest = (side: Side) => [...side.values()].filter((s) => s.best >= 0).sort((a, b) => b.n - a.n);
     const farB = busiest(farSide), nearB = busiest(nearSide);
@@ -556,22 +557,12 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const near = nearPoint(s);
     if (c.place === own.place || !near) return null;
     const p = lngLatToPack(c.center[0], c.center[1]);
-    const far = { place: c.place, gid: -1 }, at: [number, number] = [p.x, p.y];
-    const trip: Selection = s.end === "home" ? { kind: "trip", from: near, to: at, far } : { kind: "trip", from: at, to: near, far };
-    tripOpenedFrom.value = { trip, from: sel, places: { end: s.end, near: Uint32Array.from(s.cells), far: new Uint32Array(0), ...marketGroup(s, near) } };
-    return trip;
+    return openFarTrip(s, sel, near, [p.x, p.y], { place: c.place, gid: -1 });
   };
 
   /** T-865: the far-end discs whose centres are in a box: their indices. */
   const farIn = (p0: Pointer, p1: Pointer): number[] => {
-    if (!farDiscs) return [];
-    const [x0, y0] = pointerLocal(p0, farAnchor), [x1, y1] = pointerLocal(p1, farAnchor);
-    const out: number[] = [];
-    for (let i = 0; i < farDiscs.length / DISC; i++) {
-      const x = farDiscs[i * DISC], y = farDiscs[i * DISC + 1];
-      if (x >= Math.min(x0, x1) && x <= Math.max(x0, x1) && y >= Math.min(y0, y1) && y <= Math.max(y0, y1)) out.push(i);
-    }
-    return out;
+    return farDiscs ? discsIn(farDiscs, farAnchor, p0, p1) : [];
   };
 
   // A box: after a long press on a bubble, or at once with Shift held (T-865). On a city bubble or
@@ -708,7 +699,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const level = bubbleLevel(map.getZoom());
     const g = city.levels[level];
     const m = shown.modes;
-    const [mt, mw, md] = sel.end === "home" ? [m.homeRail, m.homeWalk, m.homeDrive] : [m.workRail, m.workWalk, m.workDrive];
+    const [mt, mw, md] = endModes(m, sel.end);
     const t = Float32Array.from(sel.cells, (c) => mt[c]), w = Float32Array.from(sel.cells, (c) => mw[c]), d = Float32Array.from(sel.cells, (c) => md[c]);
     near = aggregate(g, city.cellX, city.cellY, sel.cells, t, w, d);
     nearAnchor = city.anchor;
@@ -725,7 +716,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       far = farDiscs = null;
       view.setDiscs("far", null);
     }
-    view.setLines("far", LINES_TO_SELECTION && farDiscs ? linesToward(nearDiscs, nearAnchor, farDiscs, farAnchor) : null, farAnchor);
+    view.setLines("far", farDiscs ? linesToward(nearDiscs, nearAnchor, farDiscs, farAnchor) : null, farAnchor);
   };
   view.onLevel = () => drawPick();
   // ?debug=1 (T-586's check): the selection's far-end bubbles as drawn, with the anchor
@@ -764,7 +755,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     if (sel?.kind !== "commuters" || !shown) return;
     const t0 = performance.now();
     const m = shown.modes;
-    const [mt, mw, md] = sel.end === "home" ? [m.homeRail, m.homeWalk, m.homeDrive] : [m.workRail, m.workWalk, m.workDrive];
+    const [mt, mw, md] = endModes(m, sel.end);
     const totals: [number, number, number] = [0, 0, 0];
     for (const c of sel.cells) (totals[0] += mt[c]), (totals[1] += mw[c]), (totals[2] += md[c]);
     // T-323: the selection's centre (longitude, latitude), its cells weighted by their trip legs, for
@@ -854,7 +845,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   const nearPoint = (sel: Extract<Selection, { kind: "commuters" }>): [number, number] | null => {
     if (!shown || !cellsWorld) return null;
     const m = shown.modes;
-    const [mt, mw, md] = sel.end === "home" ? [m.homeRail, m.homeWalk, m.homeDrive] : [m.workRail, m.workWalk, m.workDrive];
+    const [mt, mw, md] = endModes(m, sel.end);
     let own = -1, ownN = -1;
     for (const c of sel.cells) {
       const n = mt[c] + mw[c] + md[c];
@@ -864,5 +855,5 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   };
 
   setNearPoint(nearPoint);
-  return { click, nearPoint };
+  return { click };
 }

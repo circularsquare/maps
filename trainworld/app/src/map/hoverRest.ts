@@ -17,6 +17,7 @@ import { complexOf } from "../game/complexView";
 import { hoverAt, hoverDisc } from "./demandHover";
 import { setListHot, type Hot } from "./hovered";
 import { markAt } from "./gradeMarks";
+import { TAG_OFFSET_PX } from "./labelLayout";
 import { live } from "./live";
 import type { Overlay } from "./overlay";
 import { linesAt, pick, SLOP_PX } from "./pick";
@@ -118,18 +119,18 @@ export function startRestList(map: MlMap, ov: Overlay, bubbleSelect: (x: number,
       return e.row;
     }));
     // under whichever hover tag is up, flush with it
-    let top = py + 14;
-    let right = px + 14;
+    let top = py + TAG_OFFSET_PX;
+    let right = px + TAG_OFFSET_PX;
     for (const t of container.querySelectorAll<HTMLElement>(".demand-tag:not(.rest-list)")) {
       if (t.style.display === "none" || !t.offsetHeight) continue;
-      top = Math.max(top, py + 14 + t.offsetHeight - 1);
-      right = Math.max(right, px + 14 + t.offsetWidth);
+      top = Math.max(top, py + TAG_OFFSET_PX + t.offsetHeight - 1);
+      right = Math.max(right, px + TAG_OFFSET_PX + t.offsetWidth);
     }
     el.style.display = "";
-    el.style.transform = `translate(${Math.round(px + 14)}px, ${Math.round(top)}px)`;
+    el.style.transform = `translate(${Math.round(px + TAG_OFFSET_PX)}px, ${Math.round(top)}px)`;
     restAt = [px, py];
     restKey = networkKey(world.peek()!);
-    box = { l: px + 14, t: py + 14, r: Math.max(right, px + 14 + el.offsetWidth), b: top + el.offsetHeight };
+    box = { l: px + TAG_OFFSET_PX, t: py + TAG_OFFSET_PX, r: Math.max(right, px + TAG_OFFSET_PX + el.offsetWidth), b: top + el.offsetHeight };
   };
 
   container.addEventListener("mousemove", (e) => {

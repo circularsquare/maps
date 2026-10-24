@@ -6,6 +6,7 @@
 import type { Geometry } from "geojson";
 import type { Map as MlMap } from "maplibre-gl";
 import { compass } from "../game/places";
+import { M_PER_DEG, M_PER_DEG_LAT } from "../game/frame";
 import { hoodsNear, placesNear, townsNear, type NearPlace } from "../game/placeList";
 import { toLngLat, toLocal } from "./geo";
 import type { NetworkBuffers } from "./network";
@@ -77,7 +78,7 @@ function boxOf(g: Geometry): [number, number, number, number] {
 const feat = (f: { geometry: Geometry; properties: Record<string, any> }): Feat => ({ geometry: f.geometry, properties: f.properties, box: boxOf(f.geometry) });
 
 /** Degrees of longitude and latitude in `m` metres at `lat`. */
-const degrees = (m: number, lat: number): [number, number] => [m / (111320 * Math.max(0.01, Math.cos((lat * Math.PI) / 180))), m / 110540];
+const degrees = (m: number, lat: number): [number, number] => [m / (M_PER_DEG * Math.max(0.01, Math.cos((lat * Math.PI) / 180))), m / M_PER_DEG_LAT];
 
 /** The basemap source holding a source layer, and MapLibre's tile manager for it: a private part
  * (T-724), null when a MapLibre upgrade has moved it. */
@@ -177,7 +178,7 @@ export const endsInStation = (n: string, kind?: string) => /\b(station|sta|stn)\
 /** Metres from (lng, lat) to a geometry, and the direction of the line there (unit, east and
  * north; null for a point). */
 function nearestOn(g: Geometry, lng: number, lat: number): { d: number; dir: [number, number] | null } {
-  const kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 110540;
+  const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180), ky = M_PER_DEG_LAT;
   const lines: number[][][] = g.type === "LineString" ? [g.coordinates] : g.type === "MultiLineString" ? g.coordinates : g.type === "Point" ? [[g.coordinates]] : [];
   let best = Infinity, dir: [number, number] | null = null;
   for (const l of lines) {

@@ -26,7 +26,8 @@ import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
 import { lastSaved, moneyState } from "./game/money";
 import { live } from "./map/live";
-import { createMap, setBasemapLabels, setBasemapShade } from "./map/mapView";
+import { setBasemapLabels, setBasemapShade } from "./map/basemap";
+import { createMap } from "./map/mapView";
 import { startRealNetwork } from "./map/realNetwork";
 import { startCityBoundaries } from "./map/cityBoundaries";
 import { startZoneLoading } from "./map/zoneLoading";
@@ -34,7 +35,7 @@ import { startRealmOverlay } from "./map/realmOverlay";
 import { openedZones } from "./game/openedZones";
 import { startZoneFocus } from "./map/zoneFocus";
 import { StationLabels } from "./map/stationLabels";
-import { networkFromState, tripAt } from "./map/network";
+import { networkFromState, stationIndexOf, tripAt } from "./map/network";
 import { Overlay } from "./map/overlay";
 import { pick } from "./map/pick";
 import { NetworkRenderer } from "./map/renderer";
@@ -147,19 +148,19 @@ const overlay = new Overlay(map, renderer, () => {
     selTrain: sel?.kind === "train" ? sel : null, // T-242: drawn over the others with a halo
     dimOthers: stopEditing.peek() ? STOP_EDIT_DIM : 1, // T-233: the other lines recede while stops are edited
     selEdge: sel?.kind === "track" ? sel.edge : -1,
-    selStation: sel?.kind === "station" && n ? n.stationIds.indexOf(sel.station) : -1,
+    selStation: sel?.kind === "station" && n ? stationIndexOf(n, sel.station) : -1,
     // complex view: every member's box drawn selected (T-163)
     selStations: [
-      ...(sel?.kind === "station" && n && inComplexView(sel.station) ? complexOf(sel.station).map((id) => n.stationIds.indexOf(id)) : []),
+      ...(sel?.kind === "station" && n && inComplexView(sel.station) ? complexOf(sel.station).map((id) => stationIndexOf(n, id)) : []),
       // the blueprint stations picked with the blueprint tool's box (T-333)
-      ...(n ? bpPicked.value.stations.map((id) => n.stationIds.indexOf(String(id))) : []),
+      ...(n ? bpPicked.value.stations.map((id) => stationIndexOf(n, String(id))) : []),
     ],
     crowds: d.platformCrowds !== "off", // T-164, T-219
     flatMarks: d.flatMarks,
     groups: dotGroups.peek(), // zoomed out, the stations the distance rule groups are one dot (T-217, T-225)
     hotLine: hot().line,
     hotEdge: hot().edge,
-    hotStations: n ? hot().stations.map((id) => n.stationIds.indexOf(id)) : [],
+    hotStations: n ? hot().stations.map((id) => stationIndexOf(n, id)) : [],
   };
 });
 onHot(() => overlay.invalidate()); // T-730: what the pointer is on lightens
@@ -279,7 +280,6 @@ effect(() => {
 effect(() => labels.setVisible(display.value.stationNames && !SYNTH));
 const capacity = new CapacityMarkers(map.getContainer(), overlay, map, labels); // tags keep off names (T-184)
 capacity.demandClick = demandOnTop;
-capacity.tripClick = (x, y) => tripTool.clickAt(x, y); // T-221
 effect(() => {
   const w = world.value;
   const level = DEMAND_INDEX[clock.demand.value];

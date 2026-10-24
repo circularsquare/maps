@@ -10,7 +10,7 @@ import { rgb } from "../game/palette";
 import type { ClockState } from "../workers/protocol";
 import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { M_BAD, M_CROSSING, M_JUNCTION, rampMarks } from "./markData";
-import { bridgeEnds, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed } from "./stationGeometry";
+import { bridgeEnds, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, type PlatformShape } from "./stationGeometry";
 
 /** Colour index of bare track (not a line). */
 export const TRACK = 0xffffff;
@@ -39,12 +39,11 @@ export interface Strokes {
   flags: Float32Array;
   /** Geometry speed limit km/h, per stroke segment (bare track). */
   speed?: Float32Array;
-  /** per segment: distance along its edge or line at its start, local units (dashes) */
+  /** per segment: distance along its edge or line at its start, local units (read on the CPU only) */
   dist: Float32Array;
-  /** line strokes only, 4 per segment (T-084, demand views): the stop-to-stop stretch of run 0 it
-   * is on (stop k to k + 1), then 0, 1, 1 (T-062's slot on the edge, slots and side, unused since
-   * T-190 drew lines sharing track on top of each other). */
-  info?: Float32Array;
+  /** line strokes only, per segment (T-084, demand views): the stop-to-stop stretch of run 0 it is
+   * on (stop k to k + 1) */
+  stretch?: Float32Array;
   /** a preview only (T-629): its marks, `MARK_STRIDE` numbers each (map/markData.ts) */
   marks?: Float32Array;
   /** 2 per segment (T-658): how far apart its two tracks are drawn at its start and end, 0 (single
@@ -119,10 +118,10 @@ class StrokeBuilder {
   level = new Float32Array(0);
   flags = new Float32Array(0);
   dist = new Float32Array(0);
-  /** 4 per segment (`Strokes.info`), only when built with `withInfo` */
-  info = new Float32Array(0);
+  /** `Strokes.stretch`, only when built with `withStretch` */
+  stretch = new Float32Array(0);
   lane = new Uint8Array(0);
-  constructor(private withInfo = false) {}
+  constructor(private withStretch = false) {}
   private grow(need: number) {
     if (need <= this.cap) return;
     const cap = Math.max(need, this.cap * 2, 1024);
@@ -138,16 +137,16 @@ class StrokeBuilder {
     this.flags = g(this.flags, 1);
     this.dist = g(this.dist, 1);
     this.lane = g(this.lane, 2);
-    if (this.withInfo) this.info = g(this.info, 4);
+    if (this.withStretch) this.stretch = g(this.stretch, 1);
     this.cap = cap;
   }
-  /** pts: x, y, z triples; `info` as `Strokes.info`, for every segment added; `lane`: per point of
+  /** pts: x, y, z triples; `stretch` as `Strokes.stretch`, for every segment added; `lane`: per point of
    * `pts`, 0 single track to 255 double (`Strokes.lane`), or one value for all */
-  add(pts: ArrayLike<number>, colour: number, edge: number, flags: number, reverse = false, dist0 = 0, info?: [number, number, number, number], lane: number | ArrayLike<number> = 255): number {
+  add(pts: ArrayLike<number>, colour: number, edge: number, flags: number, reverse = false, dist0 = 0, stretch?: number, lane: number | ArrayLike<number> = 255): number {
     const n = pts.length / 3;
     let d = dist0;
     this.grow(this.count + Math.max(0, n - 1));
-    if (info && this.withInfo) for (let c = this.count; c < this.count + Math.max(0, n - 1); c++) this.info.set(info, c * 4);
+    if (stretch !== undefined && this.withStretch) this.stretch.fill(stretch, this.count, this.count + Math.max(0, n - 1));
     for (let k = 0; k < n - 1; k++) {
       const i = reverse ? n - 1 - k : k, j = reverse ? i - 1 : i + 1;
       const x0 = pts[i * 3], y0 = pts[i * 3 + 1], x1 = pts[j * 3], y1 = pts[j * 3 + 1];
@@ -177,7 +176,7 @@ class StrokeBuilder {
       flags: this.flags.slice(0, n),
       dist: this.dist.slice(0, n),
       lane: this.lane.slice(0, n * 2),
-      ...(this.withInfo ? { info: this.info.slice(0, n * 4) } : {}),
+      ...(this.withStretch ? { stretch: this.stretch.slice(0, n) } : {}),
       count: n,
     };
   }
@@ -189,8 +188,7 @@ export const runsTrains = (l: { trains: ArrayLike<number> }) => l.trains[0] + l.
 /**
  * The order lines sharing track are drawn in, bottom first (T-533; picking follows the same order).
  * Lines with no trains go under all that run trains; within each group the shorter route is on
- * top, ties to the higher id. T-062 drew them side by side, which T-190 dropped (Anita: "for now
- * lets not try to represent interlining. its a hard problem").
+ * top, ties to the higher id (T-190).
  */
 export function lineDrawOrder<L extends { id: number; lengthM: number; trains: ArrayLike<number> }>(lines: readonly L[]): L[] {
   return [...lines].sort((a, b) => Number(runsTrains(a)) - Number(runsTrains(b)) || b.lengthM - a.lengthM || a.id - b.id);
@@ -260,12 +258,12 @@ export function previewMarks(pts: ArrayLike<number>, sim?: ArrayLike<number>): F
 }
 
 /** Stroke sets laid end to end, into arrays of exactly their total size. */
-function concatStrokes(parts: Strokes[], withInfo: boolean): Strokes {
+function concatStrokes(parts: Strokes[], withStretch: boolean): Strokes {
   let n = 0;
   for (const p of parts) n += p.count;
   const out: Strokes = {
     seg: new Float32Array(n * 4), colour: new Uint32Array(n), edge: new Uint32Array(n), level: new Float32Array(n),
-    flags: new Float32Array(n), dist: new Float32Array(n), lane: new Uint8Array(n * 2), ...(withInfo ? { info: new Float32Array(n * 4) } : {}), count: n,
+    flags: new Float32Array(n), dist: new Float32Array(n), lane: new Uint8Array(n * 2), ...(withStretch ? { stretch: new Float32Array(n) } : {}), count: n,
   };
   let at = 0;
   for (const p of parts) {
@@ -277,7 +275,7 @@ function concatStrokes(parts: Strokes[], withInfo: boolean): Strokes {
     out.level.set(p.level, at);
     out.flags.set(p.flags, at);
     out.dist.set(p.dist, at);
-    if (withInfo) out.info!.set(p.info!, at * 4);
+    if (withStretch) out.stretch!.set(p.stretch!, at);
     at += p.count;
   }
   return out;
@@ -520,10 +518,9 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
         const ends = edgeEnds.get(e);
         if (dr) {
           const flags = (l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (hsrEdge.has(e) ? F_HSR : 0);
-          // one slot per edge since T-190: no line sits beside another
-          const info: [number, number, number, number] = [Math.min(stretch, Math.max(0, l.stops.length - 2)), 0, 1, 1];
+          const stretchOf = Math.min(stretch, Math.max(0, l.stops.length - 2));
           if (dr.lpts.length >= 6) firstStroke[k] = lines.count;
-          d = lines.add(dr.lpts, l.id, e, flags, (p & 1) === 1, d, info, dr.lane);
+          d = lines.add(dr.lpts, l.id, e, flags, (p & 1) === 1, d, stretchOf, dr.lane);
         }
         // a path entry runs a -> b, or b -> a when its low bit is set
         const to = ends ? ((p & 1) === 1 ? ends.a : ends.b) : -1;
@@ -577,10 +574,9 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
       v.push(e.id);
       waysAt.set(node, v);
     }
-  const edgeOf = new Map(s.edges.map((e) => [e.id, e]));
   /** the track leaving `node` along edge `id`, starting at the node */
   const way = (node: number, id: number) => {
-    const p = edgePts.get(id), e = edgeOf.get(id);
+    const p = edgePts.get(id), e = edgeEnds.get(id);
     return !p || !e ? new Float32Array(0) : e.a === node ? p : reversed(p);
   };
   // The station dot sits on the track: its node position, from the local polyline of an edge
@@ -593,7 +589,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   });
   const stationsSeen: NetCache["stations"] = new Map();
   st.forEach((n, i) => {
-    const p = nodeLocal.get(n.id) ?? lngLatLocal(n.lng, n.lat);
+    const p = nodeLocal.get(n.id) ?? toLocal(n.lng, n.lat);
     const ids = waysAt.get(n.id) ?? [];
     const first = Math.max(0, ids.indexOf(platformEdge.get(n.id) ?? -1));
     let c = cache.stations.get(n.id);
@@ -609,12 +605,12 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     stationAxis.set([c.ax, c.ay], i * 2);
     stationShape.set(c.shape, i * 4);
     stationLine.set(c.line, i * 2 * PLATFORM_POINTS);
-    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeOf.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 ? 16 : 0)], i * 3);
+    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 ? 16 : 0)], i * 3);
   });
   cache.stations = stationsSeen;
   // the player's links as bridges between the two platforms' nearest points (T-217)
   const stationIndex = new Map(st.map((n, i) => [n.id, i]));
-  const shapeAt = (i: number) => ({ mx: stationShape[i * 4], my: stationShape[i * 4 + 1], ax: stationAxis[i * 2], ay: stationAxis[i * 2 + 1], phi: stationShape[i * 4 + 2], pts: stationLine.subarray(i * 2 * PLATFORM_POINTS, (i + 1) * 2 * PLATFORM_POINTS) });
+  const shapeAt = (i: number) => platformShapeAt({ stationShape, stationAxis, stationLine }, i);
   const linkIdx: number[] = [], linkEnds: number[] = [];
   for (let k = 0; k + 1 < (s.links?.length ?? 0); k += 2) {
     const i = stationIndex.get(s.links[k]), j = stationIndex.get(s.links[k + 1]);
@@ -624,7 +620,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   }
   const jn = s.nodes.filter((n) => n.ports >= 3 && n.platform === 0);
   const junctions = new Float32Array(jn.length * 2);
-  jn.forEach((n, i) => junctions.set(nodeLocal.get(n.id) ?? lngLatLocal(n.lng, n.lat), i * 2));
+  jn.forEach((n, i) => junctions.set(nodeLocal.get(n.id) ?? toLocal(n.lng, n.lat), i * 2));
   // the marks (T-629): a junction at ground level (a flyover is not one) is built once three of its
   // tracks are; a crossing once both of its are
   jn.forEach((n, i) => {
@@ -662,10 +658,6 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   };
 }
 
-function lngLatLocal(lng: number, lat: number): [number, number] {
-  return toLocal(lng, lat);
-}
-
 // ---------------------------------------------------------------- trains on the CPU
 
 /** Offset along a profile's run at trip time `tau`: the shader's arithmetic in float64. */
@@ -684,27 +676,46 @@ export function profileS(n: NetworkBuffers, profile: number, tau: number): numbe
   return s + v * tt + 0.5 * a * tt * tt;
 }
 
-/** Position (local units) at offset `d` along run 0 of a line. */
-export function lineAt(n: NetworkBuffers, line: number, d: number): [number, number] {
+const stationIndexes = new WeakMap<NetworkBuffers, Map<string, number>>();
+/** A station id's place in the network's station buffers (`stationIds`), -1 for none. */
+export function stationIndexOf(n: NetworkBuffers, id: string): number {
+  let m = stationIndexes.get(n);
+  if (!m) stationIndexes.set(n, (m = new Map(n.stationIds.map((s, i) => [s, i]))));
+  return m.get(id) ?? -1;
+}
+
+/** Station `i`'s platform from the buffers: its middle, axis and bend, with its track's own line
+ * (`line`) where the buffers have one. */
+export function platformShapeAt(n: Pick<NetworkBuffers, "stationShape" | "stationAxis" | "stationLine">, i: number, line = true): PlatformShape {
+  const s = n.stationShape, P2 = 2 * PLATFORM_POINTS, L = n.stationLine;
+  return { mx: s?.[i * 4] ?? 0, my: s?.[i * 4 + 1] ?? 0, ax: n.stationAxis?.[i * 2] ?? 0, ay: n.stationAxis?.[i * 2 + 1] ?? 0, phi: s?.[i * 4 + 2] ?? 0, pts: line && L && L.length >= (i + 1) * P2 ? L.subarray(i * P2, (i + 1) * P2) : undefined };
+}
+
+/** The sample segment of a line (two or more samples) that offset `d` along run 0 is on: its first
+ * sample's index, and how far along the segment `d` is, 0-1. */
+function sampleSegment(n: NetworkBuffers, line: number, d: number): [number, number] {
   const first = n.lineTable[line * 4], count = n.lineTable[line * 4 + 1], len = n.lineTable[line * 4 + 2], step = n.lineTable[line * 4 + 3];
-  if (count < 2) return [n.samples[first * 2], n.samples[first * 2 + 1]];
   const dd = Math.max(0, Math.min(len, d));
   const i0 = Math.min(Math.floor(dd / step), count - 2);
   const segLen = Math.max(1e-3, Math.min(step, len - i0 * step));
-  const f = Math.max(0, Math.min(1, (dd - i0 * step) / segLen));
-  const si = first + i0;
+  return [first + i0, Math.max(0, Math.min(1, (dd - i0 * step) / segLen))];
+}
+
+/** Position (local units) at offset `d` along run 0 of a line. */
+export function lineAt(n: NetworkBuffers, line: number, d: number): [number, number] {
+  const first = n.lineTable[line * 4];
+  if (n.lineTable[line * 4 + 1] < 2) return [n.samples[first * 2], n.samples[first * 2 + 1]];
+  const [si, f] = sampleSegment(n, line, d);
   return [n.samples[si * 2] + (n.samples[si * 2 + 2] - n.samples[si * 2]) * f, n.samples[si * 2 + 1] + (n.samples[si * 2 + 3] - n.samples[si * 2 + 1]) * f];
 }
 
 /** How far apart the two tracks are at offset `d` along run 0 of a line, 0-1 (`sampleLane`). */
 function laneAt(n: NetworkBuffers, line: number, d: number): number {
   if (!n.sampleLane) return 1;
-  const first = n.lineTable[line * 4], count = n.lineTable[line * 4 + 1], len = n.lineTable[line * 4 + 2], step = n.lineTable[line * 4 + 3];
-  if (count < 2) return n.sampleLane[first] ?? 1;
-  const dd = Math.max(0, Math.min(len, d));
-  const i0 = Math.min(Math.floor(dd / step), count - 2);
-  const f = Math.max(0, Math.min(1, (dd - i0 * step) / Math.max(1e-3, Math.min(step, len - i0 * step))));
-  return n.sampleLane[first + i0] + (n.sampleLane[first + i0 + 1] - n.sampleLane[first + i0]) * f;
+  const first = n.lineTable[line * 4];
+  if (n.lineTable[line * 4 + 1] < 2) return n.sampleLane[first] ?? 1;
+  const [si, f] = sampleSegment(n, line, d);
+  return n.sampleLane[si] + (n.sampleLane[si + 1] - n.sampleLane[si]) * f;
 }
 
 /** A trip's state at game time `t` (`dep` absolute): null if it is not on the track. `dx, dy`:
@@ -727,12 +738,12 @@ function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0
   const [x, y] = lineAt(n, line, d);
   const [bx, by] = lineAt(n, line, d - 5), [fx, fy] = lineAt(n, line, d + 5);
   const dx = fx - bx, dy = fy - by;
-  const [ox, oy] = rightOf(n, line, d, x, y, dx, dy, run, shiftM);
+  const [ox, oy] = rightOf(n, line, d, y, dx, dy, run, shiftM);
   return { x: x + ox, y: y + oy, dx, dy };
 }
 
 /** The shift to the right of travel (local y points south, so right of (dx, dy) is (-dy, dx)). */
-function rightOf(n: NetworkBuffers, line: number, d: number, x: number, y: number, dx: number, dy: number, run: number, shiftM: number): [number, number] {
+function rightOf(n: NetworkBuffers, line: number, d: number, y: number, dx: number, dy: number, run: number, shiftM: number): [number, number] {
   const len = Math.hypot(dx, dy);
   if (!shiftM || len < 1e-9) return [0, 0];
   const k = shiftM * laneAt(n, line, d) * kAtY(y, n.anchor ?? anchor()) * (run === 0 ? 1 : -1) / len;

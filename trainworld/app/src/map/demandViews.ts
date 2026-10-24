@@ -24,7 +24,7 @@ import type { Selection } from "../game/types";
 import { display, purposeFilter, selection, stopEditing } from "../game/ui";
 import { world } from "../game/world";
 import { startAirportMarks } from "./airportMarks";
-import { commuterStats, startCommuterView } from "./commuterView";
+import { commuterStats, startCommuterView, type Place } from "./commuterView";
 import { buildLayers } from "./demandLayers";
 import { hoverAbove, hoverAt, startHover } from "./demandHover";
 import { DemandOverlay } from "./demandOverlay";
@@ -33,10 +33,6 @@ import type { Overlay } from "./overlay";
 
 /** Which end of a selected station's riders the inspector lists. */
 export const stationSide = signal<"home" | "work">("home");
-export interface Place {
-  name: string;
-  riders: number;
-}
 /** The selected station's riders, as the inspector lists them; null while unknown. `scope`: the
  * stations counted, `StationRiders.scope` (its complex's in complex view, T-146). */
 export interface StationView { stationId: string; scope: string; home: number; work: number; walked: number; rode: number; places: Place[] }
@@ -85,7 +81,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
       trainLoad: d.trainLoad,
       complexes: d.complexView ? complexes.peek() : null, purpose: purposeFilter.peek(), days: demandByDay.peek().map((x) => x.view) };
     // an edit changes the network and then the world: one build for both when nothing else moved
-    const now = [n, w, dv, period.peek(), on.lineLoad, mode, mode === "origins" || mode === "transfers" ? stationUse.peek() : null, on.trainLoad, on.complexes, on.purpose];
+    const now = [n, w, dv, period.peek(), on.lineLoad, mode, mode === "origins" || mode === "transfers" ? stationUse.peek() : null, on.trainLoad, on.complexes, on.purpose, demandByDay.peek()];
     if (now.every((v, i) => v === inputs[i])) return;
     inputs = now;
     const t0 = performance.now();
@@ -109,6 +105,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
   effect(() => {
     world.value;
     demandView.value;
+    demandByDay.value;
     period.value;
     const d = display.value;
     void [d.stationUse, d.trainLoad, d.trackColour, d.complexView];
@@ -176,7 +173,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     },
     click(px, py, add, under = false) {
       if (!under && onSelected(px, py)) return undefined; // the network picks the selected station
-      const picked = commuters.click(px, py, add) ?? intercity.click(px, py, commuters.nearPoint);
+      const picked = commuters.click(px, py, add) ?? intercity.click(px, py);
       if (picked !== undefined) return picked;
       // Longer-trip discs describe the current selection. They are drawn over the network, so a
       // click on them retains that selection and is consumed.

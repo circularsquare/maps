@@ -42,7 +42,7 @@ export interface Arrival {
   offRiders: number;
   /** the line's note, semitones above C5 (0 to 11) */
   note: number;
-  /** the platform's riders waited long (the red face's test): a lower, softer note */
+  /** the platform's riders waited long (the tired face's test): a lower, softer note */
   crowded: boolean;
 }
 
@@ -101,21 +101,16 @@ export class StationSound {
     window.addEventListener("keydown", arm, true);
   }
 
-  /** True once a click or key has made the context. */
-  get ready() {
-    return !!this.ctx;
-  }
-
-  play(a: Arrival): boolean {
+  play(a: Arrival) {
     const ctx = this.ctx, out = this.out;
-    if (!ctx || !out || a.speed >= 2 || a.volume <= 0) return false;
+    if (!ctx || !out || a.speed >= 2 || a.volume <= 0) return;
     if (ctx.state === "suspended") void ctx.resume();
-    if (ctx.state !== "running") return false;
+    if (ctx.state !== "running") return;
     const now = ctx.currentTime;
     this.recent = this.recent.filter((t) => now - t < RECENT_S);
-    if (this.recent.length >= MAX_RECENT) return false;
+    if (this.recent.length >= MAX_RECENT) return;
     const level = (MASTER * a.volume * zoomGain(a.zoom)) / Math.sqrt(1 + this.recent.length);
-    if (level <= 0.002) return false;
+    if (level <= 0.002) return;
     // a second arrival sounding together gets the note only
     const together = this.recent.length >= 1;
     this.recent.push(now);
@@ -132,7 +127,6 @@ export class StationSound {
     const shift = 2 ** (((Math.random() * 2 - 1) * OFF_SHIFT_SEMITONES) / 12), offLevel = level * offGain(a.offRiders);
     for (let i = 0; i < offPops; i++) this.pop(dest, now + 0.28 + i * 0.09 + Math.random() * 0.05, offLevel, 640 * shift * 2 ** (((Math.random() * 2 - 1) * OFF_JITTER_SEMITONES) / 12));
     for (let i = 0; i < Math.min(cap, a.on); i++) this.pop(dest, now + 0.75 + i * 0.1 + Math.random() * 0.06, level, 360 + Math.random() * 140);
-    return true;
   }
 
   /** One soft sine note, the line's own. At a crowded platform it is a minor third lower, softer,

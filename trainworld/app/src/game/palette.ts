@@ -168,6 +168,17 @@ export function rgb(hex: string): [number, number, number] {
   return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
 }
 
+/** The over-full red: a platform at capacity, a mark on bad track (map/renderer.ts, gradeMarks.ts). */
+export const BAD_RED = "#d23c3c";
+
+const RGBF = new Map<string, Float32Array>();
+/** A hex colour as three floats 0-1 for a uniform, parsed once. The array is shared: do not change it. */
+export function rgbf(hex: string): Float32Array {
+  let c = RGBF.get(hex);
+  if (!c) RGBF.set(hex, (c = Float32Array.from(rgb(hex), (v) => v / 255)));
+  return c;
+}
+
 /** Letter colour on a line chip: dark on light lines (yellow), white on the rest. */
 export function inkOn(hex: string): string {
   const [r, g, b] = rgb(hex).map((v) => v / 255);

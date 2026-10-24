@@ -7,6 +7,7 @@
 
 import { CITIES, worldToCity, worldToLonLat, zoneBox, zonesNearBox, type CityId } from "../game/cities";
 import { PERIODS } from "../game/periods";
+import { M_PER_DEG } from "../game/frame";
 import type { DemandNetwork } from "./demandProtocol";
 
 const LEVEL = { high: 0, medium: 1, low: 2 } as const;
@@ -26,7 +27,7 @@ const MARKET_BOXES = CITIES.map((c) => [c.id, zoneBox(c)] as const);
 /** T-396, T-377: the zones whose market riders can use a station at (lon, lat): within
  * `MARKET_REACH_M` of the zone's box. What opens a zone's market pack (workers/demandClient.ts). */
 export function marketZonesNear(lon: number, lat: number): CityId[] {
-  const dy = MARKET_REACH_M / 111_320, dx = dy / Math.cos((lat * Math.PI) / 180);
+  const dy = MARKET_REACH_M / M_PER_DEG, dx = dy / Math.cos((lat * Math.PI) / 180);
   // T-1008: the boxes near the place only (every station asks, for every network)
   return zonesNearBox(lon - dx, lat - dy, lon + dx, lat + dy).map((i) => MARKET_BOXES[i]).filter(([, [w, s, e, n]]) => lon >= w - dx && lon <= e + dx && lat >= s - dy && lat <= n + dy).map(([id]) => id);
 }
@@ -148,7 +149,7 @@ export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }
     });
     if (marketZones && S) {
       // a grid of `GD` degrees; each zone's box widened by the reach at its own latitude
-      const GD = 0.5, dyR = MARKET_REACH_M / 111_320, cells = new Map<string, number[]>();
+      const GD = 0.5, dyR = MARKET_REACH_M / M_PER_DEG, cells = new Map<string, number[]>();
       const pad = (z: number) => {
         const lat = Math.min(85, Math.max(Math.abs(marketZones[5 * z + 2]), Math.abs(marketZones[5 * z + 4])));
         return [dyR / Math.cos((lat * Math.PI) / 180), dyR];

@@ -1,6 +1,6 @@
 // The circle a segment being drawn curves along (T-418), from a route preview's `arc`.
 
-const EARTH_R = 6371008.8;
+import { EARTH_R } from "../game/frame";
 
 /**
  * Where to draw a preview's circle: `arc` is centre x, y (local units), ground radius m, 0 (the

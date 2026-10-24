@@ -15,7 +15,7 @@ import realmsJson from "./realms.json";
 import { CITIES, cityById, cityNear, zoneBox, zonesTouching, type CityId } from "./cities";
 import { world } from "./world";
 import { trackZones } from "./trackZones";
-import { coarseOutlines } from "../map/coarseOutlines";
+import { coarseOutlines, inOutline } from "../map/coarseOutlines";
 
 export interface Realm { id: string; name: string; countries?: string[]; units?: Record<string, string[] | "*"> }
 export const REALMS = (realmsJson as { realms: Realm[] }).realms;
@@ -82,17 +82,6 @@ export async function loadRealms() {
   else realmsOff.value = true;
 }
 
-function inRings(g: MultiPolygon, lon: number, lat: number): boolean {
-  let inside = false;
-  for (const poly of g.coordinates) for (const r of poly) {
-    for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
-      const [xi, yi] = r[i], [xj, yj] = r[j];
-      if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
-    }
-  }
-  return inside;
-}
-
 /** The realm a station at (lon, lat) builds in: the zone whose coarse outline holds it, else (dead
  * space, or before the outlines are in) the zone with the nearest centre. */
 export function realmOfPlace(lon: number, lat: number): string | null {
@@ -104,7 +93,7 @@ export function zoneHolding(lon: number, lat: number): CityId | null {
   const outlines = zoneOutlines.peek();
   if (outlines) for (const c of zonesTouching(lon, lat, lon, lat)) {
     const g = outlines.get(c.id);
-    if (g && inRings(g, lon, lat)) return c.id;
+    if (g && inOutline(c.id, g, lon, lat)) return c.id;
   }
   return null;
 }
@@ -116,7 +105,7 @@ export function hiddenRealmAt(lon: number, lat: number): string | null {
   if (!outlines || !shown) return null;
   for (const c of zonesTouching(lon, lat, lon, lat)) {
     const r = zoneRealm(c.id), g = outlines.get(c.id);
-    if (r && !shown.has(r) && g && inRings(g, lon, lat)) return r;
+    if (r && !shown.has(r) && g && inOutline(c.id, g, lon, lat)) return r;
   }
   return null;
 }

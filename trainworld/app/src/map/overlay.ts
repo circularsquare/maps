@@ -15,6 +15,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { clock, SPEEDS } from "../game/clock";
 import type { DrawOptions, NetworkRenderer } from "./renderer";
 import { anchor, EARTH_C, localToMerc } from "./geo";
+import { clipToCss, sizeCanvasLike } from "./gl";
 import { perfOff } from "../perfFlags";
 
 /** ?perfOff=overlay (T-045, measurement only): skip the WebGL draw. */
@@ -136,14 +137,7 @@ export class Overlay {
   }
 
   private size() {
-    const dpr = this.map.getPixelRatio();
-    const c = this.map.getCanvas();
-    this.canvas.width = Math.round(c.clientWidth * dpr);
-    this.canvas.height = Math.round(c.clientHeight * dpr);
-    this.canvas.style.width = c.clientWidth + "px";
-    this.canvas.style.height = c.clientHeight + "px";
-    this.cssW = c.clientWidth;
-    this.cssH = c.clientHeight;
+    [this.cssW, this.cssH] = sizeCanvasLike(this.canvas, this.map);
   }
 
   /** The canvas size in CSS px, kept from the last resize: reading clientWidth in `toScreen` forced
@@ -221,9 +215,9 @@ export class Overlay {
   toScreen(x: number, y: number): [number, number] {
     const m = this.camMatrix;
     if (!m) return [NaN, NaN];
-    const [mx, my] = localToMerc(x, y);
-    const cx = m[0] * mx + m[4] * my + m[12], cy = m[1] * mx + m[5] * my + m[13], cw = m[3] * mx + m[7] * my + m[15];
-    return [((cx / cw + 1) / 2) * this.cssW, ((1 - cy / cw) / 2) * this.cssH];
+    const [mx, my] = localToMerc(x, y), out: [number, number] = [0, 0];
+    clipToCss(m, mx, my, this.cssW, this.cssH, out);
+    return out;
   }
 
   /** `toScreen` into `out[at]`, `out[at + 1]`, allocating nothing (T-180: hovering a big network
@@ -233,9 +227,6 @@ export class Overlay {
     const m = this.camMatrix;
     if (!m) { out[at] = out[at + 1] = NaN; return; }
     const o = anchor().merc;
-    const mx = o[0] + x / EARTH_C, my = o[1] + y / EARTH_C;
-    const cx = m[0] * mx + m[4] * my + m[12], cy = m[1] * mx + m[5] * my + m[13], cw = m[3] * mx + m[7] * my + m[15];
-    out[at] = ((cx / cw + 1) / 2) * this.cssW;
-    out[at + 1] = ((1 - cy / cw) / 2) * this.cssH;
+    clipToCss(m, o[0] + x / EARTH_C, o[1] + y / EARTH_C, this.cssW, this.cssH, out, at);
   }
 }

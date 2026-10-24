@@ -21,6 +21,7 @@
 import { effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
+import { EARTH_R } from "../game/frame";
 import { describeIssues } from "../game/issues";
 import { count, distance, length, money, moneyShort, speed, unitMetres, unitShort } from "../game/format";
 import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
@@ -74,7 +75,6 @@ const LAYOUT_ISSUES = new Set(["PlatformTooLong", "PlatformJoint", "PlatformCros
 const FREE_MARGIN_M = 10;
 /** the express pair's spacing (sim `QUAD_SPACING`) */
 const QUAD_SPACING_M = 8;
-const EARTH_R = 6371008.8;
 
 const lengthOf = (pts: ArrayLike<number>) => {
   let l = 0;
@@ -654,7 +654,7 @@ export class Tools {
     // the radius in world metres each way, so any frame's scale is right here
     const f = getWorldFrame(), r = unitMetres();
     const [x, y] = f.fromLonLat(lng, lat);
-    const dLat = (r / 6371008.8) * (180 / Math.PI), dLng = dLat / Math.cos((lat * Math.PI) / 180);
+    const dLat = (r / EARTH_R) * (180 / Math.PI), dLng = dLat / Math.cos((lat * Math.PI) / 180);
     const [ex] = f.fromLonLat(lng + dLng, lat), [, ny] = f.fromLonLat(lng, lat + dLat);
     const rx = Math.abs(ex - x), ry = Math.abs(ny - y);
     let sum = 0, cells = 0;
@@ -1028,7 +1028,7 @@ export class Tools {
     }
     const [lng,lat]=toLngLat(h.lx,h.ly);
     const [cx,cy]=this.screen(h.lx,h.ly);
-    const [ex,ey]=this.screen(...toLocal(lng+unitMetres()/(6371008.8*Math.cos(lat*Math.PI/180))*180/Math.PI,lat));
+    const [ex,ey]=this.screen(...toLocal(lng+unitMetres()/(EARTH_R*Math.cos(lat*Math.PI/180))*180/Math.PI,lat));
     const km1=Math.hypot(ex-cx,ey-cy);
     this.rings.style.display="";
     this.rings.style.transform=`translate(${cx}px,${cy}px)`;

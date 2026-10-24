@@ -20,6 +20,8 @@ import { SHADES } from "../game/shadeTable";
 import { selection, shade, tool } from "../game/ui";
 import type { ShadeIn, ShadeOut } from "../workers/shade.worker";
 import { outsideZones } from "./boundaryGeometry";
+import { firstSymbolId } from "./basemap";
+import { screenBounds } from "./labelLayout";
 import { takeOutlineText } from "./coarseOutlines";
 import { CITY_MARKS_MIN_ZOOM } from "./intercityView";
 import { ShadeLayer } from "./shadeLayer";
@@ -66,12 +68,7 @@ export function startRealmOverlay(map: MlMap): () => void {
     // the realm with more zones first, so it keeps its place when two would overlap
     for (const l of [...hidden].sort((a, b) => b.zones - a.zones)) {
       const b = button(l);
-      const [x0, y0, x1, y1] = l.box;
-      const corners = [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].map(([x, y]) => map.project([x, y]));
-      const left = Math.max(EDGE, Math.min(...corners.map((p) => p.x)));
-      const right = Math.min(W - EDGE, Math.max(...corners.map((p) => p.x)));
-      const top = Math.max(EDGE, Math.min(...corners.map((p) => p.y)));
-      const bottom = Math.min(H - EDGE, Math.max(...corners.map((p) => p.y)));
+      const { left, right, top, bottom } = screenBounds(map, l.box, W, H, EDGE);
       const p = map.project(l.label);
       // centred on the point, the whole button kept on the map
       const x = Math.max(GAP, Math.min(W - b.w - GAP, Math.min(right, Math.max(left, p.x)) - b.w / 2));
@@ -97,8 +94,7 @@ export function startRealmOverlay(map: MlMap): () => void {
   };
   const add = () => {
     if (!map.getLayer(FILL)) {
-      const before = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
-      map.addLayer(shadeLayer, before);
+      map.addLayer(shadeLayer, firstSymbolId(map));
     }
     paint();
     visibility();

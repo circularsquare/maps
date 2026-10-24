@@ -15,6 +15,7 @@ import { outsidePaint, SHADES, shadeColours } from "../game/shades";
 import { shade } from "../game/ui";
 import { cityGeometry, OutlineEdges, outsideCity } from "./boundaryGeometry";
 import { coarseOutlines } from "./coarseOutlines";
+import { firstSymbolId } from "./basemap";
 import { shownRealms, zoneShown } from "../game/realms";
 
 const SHADE = "tw-city-outside";
@@ -174,7 +175,7 @@ export function startCityBoundaries(map: MlMap): () => void {
   };
 
   const add = () => {
-    const before = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
+    const before = firstSymbolId(map);
     if (!map.getSource(SHADE)) map.addSource(SHADE, { type: "geojson", data: everywhere });
     if (!map.getLayer(SHADE)) map.addLayer({
       id: SHADE, type: "fill", source: SHADE,

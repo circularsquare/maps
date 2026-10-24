@@ -12,7 +12,7 @@ import { aggregate, biggestFirst, discs, recolour, reorder } from "../map/bubble
 import { toLocal, type Anchor } from "../map/geo";
 import { BUBBLE_DENSITY, BUBBLE_RES, type BubbleLevel, type FromCommuters, type Grouping, type ToCommuters } from "./commutersProtocol";
 
-import { makeFrame, type FrameSpec } from "../game/frame";
+import { M_PER_DEG, M_PER_DEG_LAT, makeFrame, type FrameSpec } from "../game/frame";
 
 let cellX = new Float32Array(0), cellY = new Float32Array(0);
 /** each cell's longitude and latitude, for placing it from any draw anchor (T-317) */
@@ -92,7 +92,7 @@ function bucketCells() {
   let lat0 = 0;
   for (let i = 0; i < n; i++) lat0 += cellLat[i];
   lat0 = n ? lat0 / n : 0;
-  const kx = 111320 * Math.cos((lat0 * Math.PI) / 180), ky = 110540;
+  const kx = M_PER_DEG * Math.cos((lat0 * Math.PI) / 180), ky = M_PER_DEG_LAT;
   mx = new Float32Array(n);
   my = new Float32Array(n);
   let x0 = Infinity, y0 = Infinity;

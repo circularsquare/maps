@@ -6,6 +6,9 @@ import { display } from "./ui";
 /** To the whole number with thousands commas: 1234567.4 -> "1,234,567". */
 export const exact = (n: number): string => Math.round(n).toLocaleString("en-US");
 
+/** A forecast count, rounded so it does not claim more precision than a forecast has: 12,430 -> "12,400". */
+export const forecast = (n: number): string => exact(n >= 1000 ? Math.round(n / 100) * 100 : n >= 100 ? Math.round(n / 10) * 10 : n);
+
 /** "1 car", "2 cars"; `many` is `one` and an s unless given. */
 export const plural = (n: number, one: string, many = one + "s"): string => `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
 

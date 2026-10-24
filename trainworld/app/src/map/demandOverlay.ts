@@ -7,10 +7,11 @@
 // changes. While the game plays with the camera still it is never touched.
 
 import type { Map as MlMap } from "maplibre-gl";
-import { MODE_COLOURS, rgb } from "../game/palette";
+import { MODE_COLOURS, rgbf } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { DISC } from "../workers/commutersProtocol";
-import { anchor, EARTH_C, localToMercMatrix, mul4, type Anchor } from "./geo";
+import { anchor, localToMercMatrix, mul4, pxPerUnitAt, type Anchor } from "./geo";
+import { compile, GpuTimer, sizeCanvasLike, uniforms } from "./gl";
 import { bubblePad, hot, onHot, SELECTED_PAD_PX } from "./hovered";
 import type { Overlay } from "./overlay";
 import { PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, type StationShape } from "./stationGeometry";
@@ -36,7 +37,7 @@ void main() {
 
 const CUT_FS = `#version 300 es
 precision highp float;
-uniform vec3 u_size;     // half length, half width, (unused)
+uniform vec2 u_size;     // half length, half width
 uniform float u_dot;
 uniform vec2 u_q[${PLATFORM_POINTS}]; // the centre line in the frame, CSS px (T-254)
 uniform float u_outline;
@@ -45,7 +46,7 @@ in vec2 v_p;
 out vec4 o;
 ${SHAPE_GLSL}
 void main() {
-  float d = u_dot > 0.0 ? length(v_p) - u_dot : boxSdf(polyFrame(v_p, u_q), u_size.xy);
+  float d = u_dot > 0.0 ? length(v_p) - u_dot : boxSdf(polyFrame(v_p, u_q), u_size);
   o = vec4(0.0, 0.0, 0.0, 1.0 - clamp((d - u_outline) / u_glow, 0.0, 1.0));
 }`;
 
@@ -62,8 +63,8 @@ const SPLIT_SHARE = 1000;
  * `SPLIT_MIN_OF_R` of the red one's unless its share makes it bigger. */
 const SPLIT_MIN_PX = "2.0";
 const SPLIT_MIN_OF_R = "0.6";
-const SPLIT_TRAIN = Float32Array.from(rgb(MODE_COLOURS.train), (v) => v / 255);
-const SPLIT_REST = Float32Array.from(rgb(MODE_COLOURS.drive), (v) => v / 255);
+const SPLIT_TRAIN = rgbf(MODE_COLOURS.train);
+const SPLIT_REST = rgbf(MODE_COLOURS.drive);
 export const splitEdge = (outline: 0 | 1 | 2, share: number) => {
   const s = Math.min(1, Math.max(0, share));
   return outline + SPLIT_STEP * (1 + (s > 0 ? Math.max(1, Math.round(s * SPLIT_SHARE)) : 0));
@@ -220,20 +221,6 @@ void main() {
   o = vec4(v_col * a, a);
 }`;
 
-function compile(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgram {
-  const prog = gl.createProgram()!;
-  for (const [type, src] of [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]] as const) {
-    const sh = gl.createShader(type)!;
-    gl.shaderSource(sh, src);
-    gl.compileShader(sh);
-    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error("shader: " + gl.getShaderInfoLog(sh));
-    gl.attachShader(prog, sh);
-  }
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error("link: " + gl.getProgramInfoLog(prog));
-  return prog;
-}
-
 /** Where aggregation levels 0, 1 and 2 (resolutions 9, 8, 7) start, as zoom, at detail 0. Each step
  * is a 7 times larger area, `LEVEL_ZOOM_STEP` zoom levels, so the bubbles keep about the same
  * spacing on screen: 40-60 px between neighbours. */
@@ -278,10 +265,11 @@ export class DemandOverlay {
   private showBubbles = false;
   private rafId = 0;
   private blank = true;
-  private timerExt: any;
-  private query: WebGLQuery | null = null;
+  private timer!: GpuTimer;
   /** last GPU time of a draw, ms (the timer extension, when there is one) */
-  gpuMs: number | null = null;
+  get gpuMs() {
+    return this.timer.ms;
+  }
   /** CPU time of the last draw, ms; upload time of the last bubble set, ms */
   drawMs = 0;
   uploadMs = 0;
@@ -329,10 +317,9 @@ export class DemandOverlay {
   private programs() {
     const gl = this.gl;
     this.prog = compile(gl, DISC_VS, DISC_FS);
-    for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_pad", "u_hot", "u_split_train", "u_split_rest"]) this.u[n] = gl.getUniformLocation(this.prog, n);
-    this.timerExt = gl.getExtension("EXT_disjoint_timer_query_webgl2");
+    this.u = uniforms(gl, this.prog, ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_pad", "u_hot", "u_split_train", "u_split_rest"]);
+    this.timer = new GpuTimer(gl);
     this.cutProg = this.lineProg = null;
-    this.query = null;
   }
 
   /** A new context after a lost one: every set made again from the data it keeps. */
@@ -348,12 +335,7 @@ export class DemandOverlay {
   }
 
   private size() {
-    const dpr = this.map.getPixelRatio();
-    const c = this.map.getCanvas();
-    this.canvas.width = Math.round(c.clientWidth * dpr);
-    this.canvas.height = Math.round(c.clientHeight * dpr);
-    this.canvas.style.width = c.clientWidth + "px";
-    this.canvas.style.height = c.clientHeight + "px";
+    sizeCanvasLike(this.canvas, this.map);
   }
 
   private makeSet(data: Float32Array, a: Anchor): DiscSet {
@@ -473,7 +455,7 @@ export class DemandOverlay {
     if (gl.isContextLost()) return { vao: null!, buf: null!, count: data.length / LINE, anchor: a, data };
     if (!this.lineProg) {
       this.lineProg = compile(gl, LINE_VS, LINE_FS);
-      for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_rscale", "u_stub", "u_width", "u_full", "u_pad"]) this.lineU[n] = gl.getUniformLocation(this.lineProg, n);
+      this.lineU = uniforms(gl, this.lineProg, ["u_matrix", "u_viewport", "u_px_per_unit", "u_rscale", "u_stub", "u_width", "u_full", "u_pad"]);
     }
     const buf = gl.createBuffer()!;
     const vao = gl.createVertexArray()!;
@@ -554,12 +536,7 @@ export class DemandOverlay {
     }
     const t0 = performance.now();
     this.blank = false;
-    this.pollTimer();
-    const timing = this.timerExt && !this.query;
-    if (timing) {
-      this.query = gl.createQuery();
-      gl.beginQuery(this.timerExt.TIME_ELAPSED_EXT, this.query!);
-    }
+    this.timer.begin();
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -568,12 +545,12 @@ export class DemandOverlay {
     // each set is drawn with the matrix of the anchor it was built at (T-317, map/geo.ts); most
     // draws have one anchor, a switch has two for a moment
     const matrices = new Map<number, Float32Array>();
-    const pxPerUnit = ((512 * Math.pow(2, zoom)) / EARTH_C) * dpr;
+    const pxPerUnit = pxPerUnitAt(zoom) * dpr;
     this.drawLines(m0, matrices, pxPerUnit, dpr);
     gl.useProgram(this.prog);
     gl.uniform2f(this.u.u_viewport, this.canvas.width, this.canvas.height);
     gl.uniform1f(this.u.u_px_per_unit, pxPerUnit);
-    gl.uniform3fv(this.u.u_ink, rgb(shadeColours().mapInk).map((v) => v / 255));
+    gl.uniform3fv(this.u.u_ink, rgbf(shadeColours().mapInk));
     gl.uniform1f(this.u.u_dpr, dpr);
     gl.uniform3fv(this.u.u_split_train, SPLIT_TRAIN);
     gl.uniform3fv(this.u.u_split_rest, SPLIT_REST);
@@ -597,7 +574,7 @@ export class DemandOverlay {
     }
     gl.bindVertexArray(null);
     this.cut(dpr);
-    if (timing) gl.endQuery(this.timerExt.TIME_ELAPSED_EXT);
+    this.timer.end();
     this.drawMs = performance.now() - t0;
     this.draws++;
   }
@@ -609,7 +586,7 @@ export class DemandOverlay {
     const gl = this.gl;
     if (!this.cutProg) {
       this.cutProg = compile(gl, CUT_VS, CUT_FS);
-      for (const n of ["u_css", "u_c", "u_u", "u_n", "u_box", "u_size", "u_dot", "u_q", "u_outline", "u_glow"]) this.cutU[n] = gl.getUniformLocation(this.cutProg, n);
+      this.cutU = uniforms(gl, this.cutProg, ["u_css", "u_c", "u_u", "u_n", "u_box", "u_size", "u_dot", "u_q", "u_outline", "u_glow"]);
     }
     const u = this.cutU;
     gl.useProgram(this.cutProg);
@@ -636,18 +613,10 @@ export class DemandOverlay {
       gl.uniform2f(u.u_u, s.ux, s.uy);
       gl.uniform2f(u.u_n, s.nx, s.ny);
       gl.uniform3f(u.u_box, ...box);
-      gl.uniform3f(u.u_size, s.halfLength, s.halfWidth, s.k);
+      gl.uniform2f(u.u_size, s.halfLength, s.halfWidth);
       gl.uniform1f(u.u_dot, s.dot);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  }
-
-  private pollTimer() {
-    const gl = this.gl, q = this.query;
-    if (!q || !gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE)) return;
-    if (!gl.getParameter(this.timerExt.GPU_DISJOINT_EXT)) this.gpuMs = gl.getQueryParameter(q, gl.QUERY_RESULT) / 1e6;
-    gl.deleteQuery(q);
-    this.query = null;
   }
 }

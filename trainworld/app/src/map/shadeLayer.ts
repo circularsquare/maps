@@ -5,6 +5,7 @@
 // drawn as cut. Positions are doubles split into two floats and taken relative to the view's centre in
 // the shader, so the edges hold still at street zooms.
 import type { CustomLayerInterface, Map as MlMap } from "maplibre-gl";
+import { compile, uniforms } from "./gl";
 
 const VERTEX = `#version 300 es
 in vec2 a_hi;
@@ -32,6 +33,7 @@ export class ShadeLayer implements CustomLayerInterface {
   private vao: WebGLVertexArrayObject | null = null;
   private buffer: WebGLBuffer | null = null;
   private loc: Record<string, WebGLUniformLocation | null> = {};
+  private matrix = new Float32Array(16);
   /** hi, lo, hi, lo (x then y) per vertex, waiting for the next upload */
   private data = new Float32Array(0);
   /** vertices: three a triangle (the checks read it) */
@@ -66,20 +68,8 @@ export class ShadeLayer implements CustomLayerInterface {
   onAdd(map: MlMap, gl: WebGL2RenderingContext) {
     this.map = map;
     this.gl = gl;
-    const shader = (type: number, src: string) => {
-      const s = gl.createShader(type)!;
-      gl.shaderSource(s, src);
-      gl.compileShader(s);
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error("shade shader: " + gl.getShaderInfoLog(s));
-      return s;
-    };
-    const p = gl.createProgram()!;
-    gl.attachShader(p, shader(gl.VERTEX_SHADER, VERTEX));
-    gl.attachShader(p, shader(gl.FRAGMENT_SHADER, FRAGMENT));
-    gl.linkProgram(p);
-    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error("shade program: " + gl.getProgramInfoLog(p));
-    this.program = p;
-    for (const u of ["u_matrix", "u_center_hi", "u_center_lo", "u_wrap", "u_color"]) this.loc[u] = gl.getUniformLocation(p, u);
+    const p = (this.program = compile(gl, VERTEX, FRAGMENT));
+    this.loc = uniforms(gl, p, ["u_matrix", "u_center_hi", "u_center_lo", "u_wrap", "u_color"]);
     this.buffer = gl.createBuffer();
     this.vao = gl.createVertexArray();
     gl.bindVertexArray(this.vao);
@@ -114,7 +104,7 @@ export class ShadeLayer implements CustomLayerInterface {
       const c = this.map.getCenter(), s = Math.sin((Math.max(-85.051129, Math.min(85.051129, c.lat)) * Math.PI) / 180);
       const cx = (c.lng + 180) / 360, cy = 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
       // the camera's matrix with the centre moved to the origin, in doubles, then sent as floats
-      const t = new Float32Array(16);
+      const t = this.matrix;
       for (let i = 0; i < 16; i++) t[i] = m[i];
       for (let r = 0; r < 4; r++) t[12 + r] = m[r] * cx + m[4 + r] * cy + m[12 + r];
       gl.useProgram(this.program);

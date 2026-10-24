@@ -19,7 +19,8 @@
 
 import init, { TrackApi } from "../wasm/track/sim";
 import { NEW_GAME_FRAME } from "../game/cities";
-import { frameKindNumber } from "../game/frame";
+import { EARTH_R, frameKindNumber } from "../game/frame";
+import { inRing, ringBox } from "../game/rings";
 import { realGraph, type RealGraph } from "../game/realGraph";
 
 export type ToRouter =
@@ -49,7 +50,7 @@ export type FromRouter =
    * `all` when the graphs' index is missing, so every region is tried */
   | { kind: "cover"; rings: Float64Array[]; all: boolean };
 
-const M_PER_DEG = 6371008.8 * Math.PI / 180;
+const M_PER_DEG = EARTH_R * Math.PI / 180;
 const TURN_MAX = 60 * Math.PI / 180;
 const OTHER_FAMILY = 3;
 const SEARCH_MS = 2000;
@@ -84,11 +85,7 @@ function regionOutlines(): Promise<Outline[]> {
         if (!j?.regions) continue;
         return Object.entries(j.regions as Record<string, { parts: [number, number][][] }>).map(([cc, r]) => {
           const rings = r.parts.map((ring) => Float64Array.from(ring.flat()));
-          const boxes = rings.map((ring) => {
-            let w = 180, s = 90, e = -180, n = -90;
-            for (let k = 0; k < ring.length; k += 2) (w = Math.min(w, ring[k])), (e = Math.max(e, ring[k])), (s = Math.min(s, ring[k + 1])), (n = Math.max(n, ring[k + 1]));
-            return [w, s, e, n] as [number, number, number, number];
-          });
+          const boxes = rings.map(ringBox);
           return { cc, rings, boxes };
         });
       } catch {
@@ -97,15 +94,6 @@ function regionOutlines(): Promise<Outline[]> {
     }
     return [];
   })());
-}
-
-function inRing(r: Float64Array, x: number, y: number) {
-  let inside = false;
-  for (let i = 0, j = r.length - 2; i < r.length; j = i, i += 2) {
-    const yi = r[i + 1], yj = r[j + 1];
-    if (yi > y !== yj > y && x < ((r[j] - r[i]) * (y - yi)) / (yj - yi) + r[i]) inside = !inside;
-  }
-  return inside;
 }
 
 /** The regions whose outline holds the point, else those whose box comes within `pad` degrees. */

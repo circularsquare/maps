@@ -1,4 +1,6 @@
-// Exact metropolitan footprints, including islands and excluded enclaves, with GeoJSON winding.
+// Exact metropolitan footprints, including islands and excluded enclaves, with GeoJSON winding
+// (`cityGeometry`); the zones' outlines with each shared border drawn once (`OutlineEdges`); and the
+// shade cut, the triangles outside the zones shown (`outsideZones`).
 import earcut from "earcut";
 import type { Feature, FeatureCollection, MultiLineString, MultiPolygon, Polygon, Position } from "geojson";
 
@@ -216,6 +218,12 @@ class Edges {
 }
 
 type Box = [number, number, number, number];
+/** `fn` with the key of every whole-degree cell a box covers (a degree is `G` grid units; 400 columns a row). */
+const eachCell = (b: Box, fn: (cell: number) => void) => {
+  for (let x = Math.floor(b[0] / G); x <= b[2] / G; x++) for (let y = Math.floor(b[1] / G); y <= b[3] / G; y++) fn(x + 400 * y);
+};
+/** The box round two boxes. */
+const unionBox = (a: Box, b: Box): Box => [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])];
 /** A zone ring anticlockwise in grid units, open; `id` names it in a cut's cache. */
 export type Ring = { id: number; xs: Float64Array; ys: Float64Array; box: Box; at?: RingIndex };
 type Hole = { xs: Float64Array; ys: Float64Array };
@@ -343,23 +351,21 @@ function groupRings(rings: Ring[]): { rings: Ring[]; box: Box }[] {
   const parent = rings.map((_, i) => i);
   const find = (i: number) => { while (parent[i] !== i) i = parent[i] = parent[parent[i]]; return i; };
   const cells = new Map<number, number[]>();
-  grown.forEach((b, i) => {
-    for (let x = Math.floor(b[0] / G); x <= b[2] / G; x++) for (let y = Math.floor(b[1] / G); y <= b[3] / G; y++) {
-      const c = x + 400 * y, list = cells.get(c);
-      if (!list) { cells.set(c, [i]); continue; }
-      for (const j of list) {
-        const a = find(i), o = find(j);
-        if (a !== o && overlap(b, grown[j])) parent[a] = o;
-      }
-      list.push(i);
+  grown.forEach((b, i) => eachCell(b, (c) => {
+    const list = cells.get(c);
+    if (!list) { cells.set(c, [i]); return; }
+    for (const j of list) {
+      const a = find(i), o = find(j);
+      if (a !== o && overlap(b, grown[j])) parent[a] = o;
     }
-  });
+    list.push(i);
+  }));
   const byRoot = new Map<number, { rings: Ring[]; box: Box }>();
   rings.forEach((r, i) => {
     const b = grown[i], root = find(i), g = byRoot.get(root);
     if (!g) { byRoot.set(root, { rings: [r], box: [...b] }); return; }
     g.rings.push(r);
-    g.box = [Math.min(g.box[0], b[0]), Math.min(g.box[1], b[1]), Math.max(g.box[2], b[2]), Math.max(g.box[3], b[3])];
+    g.box = unionBox(g.box, b);
   });
   const groups = [...byRoot.values()];
   for (let merged = true; merged;) {
@@ -368,7 +374,7 @@ function groupRings(rings: Ring[]): { rings: Ring[]; box: Box }[] {
       const a = groups[i], b = groups[j];
       if (!overlap(a.box, b.box)) continue;
       a.rings.push(...b.rings);
-      a.box = [Math.min(a.box[0], b.box[0]), Math.min(a.box[1], b.box[1]), Math.max(a.box[2], b.box[2]), Math.max(a.box[3], b.box[3])];
+      a.box = unionBox(a.box, b.box);
       groups.splice(j, 1);
       merged = true;
     }
@@ -510,22 +516,20 @@ function unionHoles(rings: Ring[]): Hole[] {
 
   // the rings by the whole degrees their boxes cover, for the winding tests
   const ringCells = new Map<number, number[]>();
-  rings.forEach((z, zi) => {
-    for (let x = Math.floor(z.box[0] / G); x <= z.box[2] / G; x++) for (let y = Math.floor(z.box[1] / G); y <= z.box[3] / G; y++) {
-      const c = x + 400 * y, list = ringCells.get(c);
-      if (list) list.push(zi); else ringCells.set(c, [zi]);
-    }
-  });
+  rings.forEach((z, zi) => eachCell(z.box, (c) => {
+    const list = ringCells.get(c);
+    if (list) list.push(zi); else ringCells.set(c, [zi]);
+  }));
   /** per ring, the others whose boxes overlap its own */
   const near: number[][] = [];
   const nearOf = (zi: number) => {
     const z = rings[zi], out = new Set<number>();
-    for (let x = Math.floor(z.box[0] / G); x <= z.box[2] / G; x++) for (let y = Math.floor(z.box[1] / G); y <= z.box[3] / G; y++) {
-      for (const oi of ringCells.get(x + 400 * y)!) {
+    eachCell(z.box, (c) => {
+      for (const oi of ringCells.get(c)!) {
         const o = rings[oi];
         if (oi !== zi && o.box[0] <= z.box[2] && o.box[2] >= z.box[0] && o.box[1] <= z.box[3] && o.box[3] >= z.box[1]) out.add(oi);
       }
-    }
+    });
     return (near[zi] = [...out]);
   };
   const at = (z: Ring) => (z.at ??= new RingIndex(z.xs, z.ys, z.box[1], z.box[3]));
@@ -621,10 +625,10 @@ function unionHoles(rings: Ring[]): Hole[] {
     const n = r.ids.length, xs = new Float64Array(n), ys = new Float64Array(n);
     for (let k = 0; k < n; k++) { xs[k] = X[r.ids[n - 1 - k]]; ys[k] = Y[r.ids[n - 1 - k]]; }
     holes.push({ xs, ys });
-    for (let x = Math.floor(r.box[0] / G); x <= r.box[2] / G; x++) for (let y = Math.floor(r.box[1] / G); y <= r.box[3] / G; y++) {
-      const c = x + 400 * y, list = cells.get(c);
+    eachCell(r.box, (c) => {
+      const list = cells.get(c);
       if (list) list.push(r); else cells.set(c, [r]);
-    }
+    });
   }
   return holes;
 }

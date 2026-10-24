@@ -19,7 +19,7 @@ import { toLocal } from "./geo";
 import type { Overlay } from "./overlay";
 import { perfOff, perfTry } from "../perfFlags";
 import type { Map as MlMap } from "maplibre-gl";
-import { MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
+import { BoxGrid, MIN_LABEL_ZOOM, labelPadding, tipBeside } from "./labelLayout";
 import type { StationLabels } from "./stationLabels";
 
 /** ?perfOff=markers (T-045, measurement only). */
@@ -32,8 +32,6 @@ const DEMAND = ["high", "medium", "low"];
 export class CapacityMarkers {
   /** Demand discs draw above these DOM tags; wired to the same select handler as the map. */
   demandClick: ((px: number, py: number, add: boolean) => Selection | undefined) | null = null;
-  /** The trip tool's click at a map point (px), for a click on a tag while it is on (T-221). */
-  tripClick: ((px: number, py: number) => void) | null = null;
   /** The select tool's click at a map point (px), for a click on a tag that opens nothing of its
    * own: the station, train or track under the tag is selected as if the tag were not there (T-256). */
   selectClick: ((px: number, py: number, add: boolean) => void) | null = null;
@@ -76,14 +74,6 @@ export class CapacityMarkers {
     map.on("movestart", () => (this.tip.style.display = "none"));
   }
 
-  /** The tooltip by a tag, in the map's top layer (over the demand views too). */
-  private showTip(el: HTMLElement, lines: string[]) {
-    this.tip.replaceChildren(...lines.map((s) => Object.assign(document.createElement("div"), { textContent: s })));
-    const r = el.getBoundingClientRect(), c = this.container.getBoundingClientRect();
-    this.tip.style.transform = `translate(${Math.round(r.left - c.left)}px, ${Math.round(r.bottom - c.top + 4)}px)`;
-    this.tip.style.display = "";
-  }
-
   set(w: WorldView, level: number) {
     // Keep the worst bottlenecks when several compete for the same screen space.
     const sorted = [...(w.capacity[level] ?? [])].sort((a, b) => b.delayS - a.delayS || b.rho - a.rho || a.kind - b.kind || a.x - b.x || a.y - b.y);
@@ -124,14 +114,6 @@ export class CapacityMarkers {
         return [e.clientX - r.left, e.clientY - r.top] as const;
       };
       el.onclick = (e) => {
-        // the trip tool's clicks go through to the map (T-221: a tag can sit on a station); since
-        // T-224 the tags take no pointer events while any tool is on, so this is only a fallback
-        if (tool.peek() === "trip") {
-          const [x, y] = point(e);
-          this.tripClick?.(x, y);
-          e.stopPropagation();
-          return;
-        }
         if (tool.peek() !== "select") return;
         const [x, y] = point(e);
         const above = this.demandClick?.(x, y, e.shiftKey);
@@ -150,7 +132,7 @@ export class CapacityMarkers {
       const hover = (e: MouseEvent) => {
         const [x, y] = point(e);
         if (hoverAt(this.map, x, y)) this.tip.style.display = "none";
-        else this.showTip(el, tip);
+        else tipBeside(this.tip, el, this.container, tip, "below");
       };
       el.onmouseenter = hover;
       el.onmousemove = hover;
@@ -190,14 +172,8 @@ export class CapacityMarkers {
     const names = (this.labels?.rects() ?? [])
       .filter((n) => n[2] > -64 && n[0] < W + 64 && n[3] > -64 && n[1] < H + 64)
       .map((n) => [n[0] - NAME_CLEAR, n[1] - NAME_CLEAR, n[2] + NAME_CLEAR, n[3] + NAME_CLEAR]);
-    // boxes filed by the 64 px grid cells they touch, so a spot is tested only against its neighbours (T-689)
-    const binned = (boxes: number[][]) => {
-      const m = new Map<number, number[][]>();
-      for (const t of boxes) addBox(m, t);
-      return m;
-    };
-    const hits = (r: number[], m: Map<number, number[][]>) => cellsOf(r, (k) => m.get(k)?.some((t) => r[0] < t[2] && r[2] > t[0] && r[1] < t[3] && r[3] > t[1]));
-    const nameBins = binned(names), takenBins = new Map<number, number[][]>();
+    const nameGrid = new BoxGrid(), takenGrid = new BoxGrid();
+    for (const n of names) nameGrid.add(n);
     // Batch measurements before writes, and repeat only when tags or fonts change.
     for (const it of this.items) if (!it.w) {
       it.w = it.el.offsetWidth;
@@ -215,10 +191,10 @@ export class CapacityMarkers {
       let at: [number, number] | null = null;
       for (const [tx, ty] of spots) {
         if (tx + w < 0 || tx > W || ty + h < 0 || ty > H) continue;
-        if (hits([tx, ty, tx + w, ty + h], nameBins)) continue;
+        if (nameGrid.hits([tx, ty, tx + w, ty + h])) continue;
         const r = [tx - padX, ty - padY, tx + w + padX, ty + h + padY];
-        if (hits(r, takenBins)) continue;
-        addBox(takenBins, r);
+        if (takenGrid.hits(r)) continue;
+        takenGrid.add(r);
         at = [tx, ty];
         break;
       }
@@ -229,21 +205,6 @@ export class CapacityMarkers {
       if (transform !== it.transform) it.el.style.transform = it.transform = transform!;
     }
   }
-}
-
-const BIN = 64;
-function cellsOf(r: number[], each: (k: number) => boolean | undefined): boolean {
-  for (let bx = Math.floor(r[0] / BIN); bx <= Math.floor(r[2] / BIN); bx++)
-    for (let by = Math.floor(r[1] / BIN); by <= Math.floor(r[3] / BIN); by++) if (each(bx * 4096 + by)) return true;
-  return false;
-}
-function addBox(m: Map<number, number[][]>, r: number[]) {
-  cellsOf(r, (k) => {
-    const b = m.get(k);
-    if (b) b.push(r);
-    else m.set(k, [r]);
-    return undefined;
-  });
 }
 
 /** The junction a marker at (x, y) (local units) belongs to: the nearest node where three or

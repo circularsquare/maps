@@ -8,6 +8,7 @@ import { viewedZone, type CityId } from "./cities";
 import { placeAt, zonesLoaded } from "./zones";
 import { stationsById, world } from "./world";
 import type { LineInput, StationInput } from "./types";
+import { metresBetween } from "./walks";
 
 export type ListScope = "here" | "world";
 /** Which stations and lines the tabs list; kept while the page is open, like the sorts. */
@@ -51,8 +52,7 @@ export function stationZone(s: Pick<StationInput, "id" | "lng" | "lat">): CityId
 
 /** Ground metres from the centre to a point (flat approximation; the list only needs the order). */
 export function distFromCentre(lng: number, lat: number, c: [number, number]): number {
-  const k = 111_320;
-  return Math.hypot((lng - c[0]) * k * Math.cos(((lat + c[1]) / 2) * Math.PI / 180), (lat - c[1]) * k);
+  return metresBetween(lng, lat, c[0], c[1]);
 }
 
 /** What a tab shows: the stations in the scope, each line with any stop in it, and each station's and

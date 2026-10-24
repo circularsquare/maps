@@ -5,6 +5,7 @@
 // with the last, so with none there is no work at all. Motion by design, like the trains.
 
 import type { Map as MlMap } from "maplibre-gl";
+import { sizeCanvasLike } from "./gl";
 import type { Overlay } from "./overlay";
 
 /** Faces alive at once, all platforms together. */
@@ -157,11 +158,7 @@ export class Faces {
   }
 
   private size() {
-    const c = this.canvas!, dpr = this.map.getPixelRatio(), m = this.map.getCanvas();
-    c.width = Math.round(m.clientWidth * dpr);
-    c.height = Math.round(m.clientHeight * dpr);
-    c.style.width = m.clientWidth + "px";
-    c.style.height = m.clientHeight + "px";
+    sizeCanvasLike(this.canvas!, this.map);
   }
 
   private wipe() {

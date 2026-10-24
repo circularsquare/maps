@@ -9,6 +9,7 @@ import type { WorldView } from "../game/types";
 import { selection, stopEditing, tool } from "../game/ui";
 import { world } from "../game/world";
 import { toLocal } from "./geo";
+import { tipBeside } from "./labelLayout";
 import type { Overlay } from "./overlay";
 
 /** the most trains an hour reversing at one side of a station (sim `REVERSAL_LIMIT_S`) */
@@ -93,7 +94,7 @@ export class ReversalMarks {
         ...r.lines.map((l) => `${l.name} reverses here`),
         r.station.startsWith("end:") ? `${REVERSALS_AN_HOUR} trains an hour at most reverse here` : `${REVERSALS_AN_HOUR} trains an hour at most reverse here from each side`,
       ];
-      el.onmouseenter = el.onmousemove = () => this.showTip(el, words);
+      el.onmouseenter = el.onmousemove = () => tipBeside(this.tip, el, this.map.getContainer(), words, "right");
       el.onmouseleave = () => (this.tip.style.display = "none");
       el.onclick = (e) => {
         e.stopPropagation();
@@ -105,13 +106,6 @@ export class ReversalMarks {
       return { el, lx, ly, shown: true, transform: "" };
     });
     this.place();
-  }
-
-  private showTip(el: HTMLElement, lines: string[]) {
-    this.tip.replaceChildren(...lines.map((s) => Object.assign(document.createElement("div"), { textContent: s })));
-    const r = el.getBoundingClientRect(), c = this.map.getContainer().getBoundingClientRect();
-    this.tip.style.transform = `translate(${Math.round(r.right - c.left + 4)}px, ${Math.round(r.top - c.top)}px)`;
-    this.tip.style.display = "";
   }
 
   place() {

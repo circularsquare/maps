@@ -27,6 +27,10 @@ export interface Frame extends FrameSpec {
 }
 
 export const EARTH_R = 6371008.8;
+/** Metres a degree of longitude spans at the equator (times cos(lat) elsewhere), and a degree of
+ * latitude near mid latitudes: the flat approximation over a few km, where a haversine is too dear. */
+export const M_PER_DEG = 111_320;
+export const M_PER_DEG_LAT = 110_540;
 const RAD = Math.PI / 180;
 
 const cache = new Map<string, Frame>();

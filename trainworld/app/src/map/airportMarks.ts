@@ -1,15 +1,14 @@
 // A plane on each airport, with a hover of its trips (T-448; no bubble of its own since T-674). Destination
 // bubbles have no kind of their own, so the airports are found from the airport purpose's legs: the
 // cells that receive any are the terminals. Nearby zones' airports get their badge with their
-// bubbles. Other POI kinds could be marked the same way: any purpose
-// whose destinations are a few fixed sites (the medical purpose, universities under school) would
-// need only its own cluster size and glyph.
+// bubbles.
 
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, getWorldFrame, worldFrameEpoch, type CityId } from "../game/cities";
 import { cellModes, cityCells, demandView, type DemandView } from "../game/demand";
 import { count } from "../game/format";
+import { M_PER_DEG, M_PER_DEG_LAT } from "../game/frame";
 import type { DemandDay } from "../game/days";
 import { nearbyZones } from "../game/zones";
 import { display, purposeFilter, selection, shownDay, shownDayPhrase } from "../game/ui";
@@ -55,10 +54,10 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
     const out: Airport[] = [];
     for (const i of order) {
       if (used[i]) continue;
-      const kx = 111320 * Math.cos((lats[i] * Math.PI) / 180);
+      const kx = M_PER_DEG * Math.cos((lats[i] * Math.PI) / 180);
       let sw = 0, tt = 0, ww = 0, dd = 0;
       for (const j of order) {
-        if (used[j] || Math.hypot((lngs[j] - lngs[i]) * kx, (lats[j] - lats[i]) * 110540) > JOIN_M) continue;
+        if (used[j] || Math.hypot((lngs[j] - lngs[i]) * kx, (lats[j] - lats[i]) * M_PER_DEG_LAT) > JOIN_M) continue;
         used[j] = 1;
         const all = t[j] + w[j] + d[j];
         sw += all;
@@ -124,8 +123,12 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
     place();
   };
 
+  /** how many marks are showing, and the transform each was last given */
+  let drawn = 0;
+  const placed: string[] = [];
   const place = () => {
-    const w = map.getContainer().clientWidth, h = map.getContainer().clientHeight;
+    if (!shown.length && !drawn) return;
+    const w = overlay.cssW, h = overlay.cssH;
     let k = 0;
     for (const a of shown) {
       const { x, y } = map.project([a.lng, a.lat]);
@@ -137,11 +140,13 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
         m.innerHTML = `<svg viewBox="0 0 16 16"><path d="${PLANE_PATH}" /></svg>`;
         box.appendChild(m);
       }
-      m.style.display = "";
-      m.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      if (k >= drawn) m.style.display = "";
+      const t = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      if (placed[k] !== t) m.style.transform = placed[k] = t;
       k++;
     }
-    for (let i = k; i < marks.length; i++) marks[i].style.display = "none";
+    for (let i = k; i < drawn; i++) marks[i].style.display = "none";
+    drawn = k;
   };
   overlay.afterMapFrame.push(place);
 
