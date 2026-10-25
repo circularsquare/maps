@@ -10886,6 +10886,178 @@
       {
         "name": "Kaifeng",
         "regionName": "Kaifeng region"
+      },
+      {
+        "name": "Busan",
+        "regionName": "Busan region"
+      },
+      {
+        "name": "Daejeon",
+        "regionName": "Daejeon region"
+      },
+      {
+        "name": "Gwangju",
+        "regionName": "Gwangju region"
+      },
+      {
+        "name": "Changwon",
+        "regionName": "Changwon region"
+      },
+      {
+        "name": "Ulsan",
+        "regionName": "Ulsan region"
+      },
+      {
+        "name": "Gumi",
+        "regionName": "Gumi region"
+      },
+      {
+        "name": "Jeonju",
+        "regionName": "Jeonju region"
+      },
+      {
+        "name": "Cheongju",
+        "regionName": "Cheongju region"
+      },
+      {
+        "name": "Wonju",
+        "regionName": "Wonju region"
+      },
+      {
+        "name": "Asan",
+        "regionName": "Asan region"
+      },
+      {
+        "name": "Pohang",
+        "regionName": "Pohang region"
+      },
+      {
+        "name": "Cheonan",
+        "regionName": "Cheonan region"
+      },
+      {
+        "name": "Chuncheon",
+        "regionName": "Chuncheon region"
+      },
+      {
+        "name": "Suncheon",
+        "regionName": "Suncheon region"
+      },
+      {
+        "name": "Chungju",
+        "regionName": "Chungju region"
+      },
+      {
+        "name": "Jinju",
+        "regionName": "Jinju region"
+      },
+      {
+        "name": "Iksan",
+        "regionName": "Iksan region"
+      },
+      {
+        "name": "Jeju",
+        "regionName": "Jeju region"
+      },
+      {
+        "name": "Mokpo",
+        "regionName": "Mokpo region"
+      },
+      {
+        "name": "Dangjin",
+        "regionName": "Dangjin region"
+      },
+      {
+        "name": "Geoje",
+        "regionName": "Geoje region"
+      },
+      {
+        "name": "Tongyeong",
+        "regionName": "Tongyeong region"
+      },
+      {
+        "name": "Busan",
+        "regionName": "Busan region"
+      },
+      {
+        "name": "Daejeon",
+        "regionName": "Daejeon region"
+      },
+      {
+        "name": "Gwangju",
+        "regionName": "Gwangju region"
+      },
+      {
+        "name": "Changwon",
+        "regionName": "Changwon region"
+      },
+      {
+        "name": "Ulsan",
+        "regionName": "Ulsan region"
+      },
+      {
+        "name": "Gumi",
+        "regionName": "Gumi region"
+      },
+      {
+        "name": "Jeonju",
+        "regionName": "Jeonju region"
+      },
+      {
+        "name": "Cheongju",
+        "regionName": "Cheongju region"
+      },
+      {
+        "name": "Wonju",
+        "regionName": "Wonju region"
+      },
+      {
+        "name": "Asan",
+        "regionName": "Asan region"
+      },
+      {
+        "name": "Pohang",
+        "regionName": "Pohang region"
+      },
+      {
+        "name": "Cheonan",
+        "regionName": "Cheonan region"
+      },
+      {
+        "name": "Chuncheon",
+        "regionName": "Chuncheon region"
+      },
+      {
+        "name": "Suncheon",
+        "regionName": "Suncheon region"
+      },
+      {
+        "name": "Chungju",
+        "regionName": "Chungju region"
+      },
+      {
+        "name": "Jinju",
+        "regionName": "Jinju region"
+      },
+      {
+        "name": "Iksan",
+        "regionName": "Iksan region"
+      },
+      {
+        "name": "Jeju",
+        "regionName": "Jeju region"
+      },
+      {
+        "name": "Mokpo",
+        "regionName": "Mokpo region"
+      },
+      {
+        "name": "Dangjin",
+        "regionName": "Dangjin region"
+      },
+      {
+        "name": "Geoje",
+        "regionName": "Geoje region"
       }
     ],
     "rule": {
@@ -11489,7 +11661,7 @@
         38.3
       ],
       "place": 27,
-      "localTrips": 53292589.0,
+      "localTrips": 52571097.0,
       "country": "KR",
       "realm": "korea"
     },
@@ -56161,6 +56333,549 @@
       "country": "CN",
       "realm": "cn-central",
       "localTrips": 2804216.0
+    },
+    {
+      "id": "bus",
+      "name": "Busan",
+      "origin": {
+        "lon": 129.1706,
+        "lat": 35.1682
+      },
+      "center": [
+        129.1706,
+        35.1682
+      ],
+      "zoom": 11.2,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        128.585,
+        34.96,
+        129.286,
+        35.533
+      ],
+      "place": 2739,
+      "country": "KR",
+      "localTrips": 7911604.0,
+      "realm": "korea"
+    },
+    {
+      "id": "daj",
+      "name": "Daejeon",
+      "origin": {
+        "lon": 127.3835,
+        "lat": 36.3502
+      },
+      "center": [
+        127.3835,
+        36.3502
+      ],
+      "zoom": 11.2,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        127.147,
+        35.96,
+        127.929,
+        36.632
+      ],
+      "place": 2740,
+      "country": "KR",
+      "localTrips": 3512284.0,
+      "realm": "korea"
+    },
+    {
+      "id": "gwn",
+      "name": "Gwangju",
+      "origin": {
+        "lon": 126.8471,
+        "lat": 35.1508
+      },
+      "center": [
+        126.8471,
+        35.1508
+      ],
+      "zoom": 11.2,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.276,
+        34.805,
+        127.435,
+        35.593
+      ],
+      "place": 2741,
+      "country": "KR",
+      "localTrips": 3797459.0,
+      "realm": "korea"
+    },
+    {
+      "id": "cno",
+      "name": "Changwon",
+      "kind": "zone",
+      "origin": {
+        "lon": 128.5752,
+        "lat": 35.2294
+      },
+      "center": [
+        128.5752,
+        35.2294
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        127.785,
+        34.663,
+        129.047,
+        35.702
+      ],
+      "place": 2742,
+      "country": "KR",
+      "localTrips": 2355754.0,
+      "realm": "korea"
+    },
+    {
+      "id": "uls",
+      "name": "Ulsan",
+      "kind": "zone",
+      "origin": {
+        "lon": 129.3255,
+        "lat": 35.5615
+      },
+      "center": [
+        129.3255,
+        35.5615
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        128.85,
+        35.286,
+        129.487,
+        35.743
+      ],
+      "place": 2743,
+      "country": "KR",
+      "localTrips": 2442065.0,
+      "realm": "korea"
+    },
+    {
+      "id": "gum",
+      "name": "Gumi",
+      "kind": "zone",
+      "origin": {
+        "lon": 128.4226,
+        "lat": 36.1396
+      },
+      "center": [
+        128.4226,
+        36.1396
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        127.567,
+        35.811,
+        129.337,
+        37.119
+      ],
+      "place": 2744,
+      "country": "KR",
+      "localTrips": 2461264.0,
+      "realm": "korea"
+    },
+    {
+      "id": "jeo",
+      "name": "Jeonju",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.1306,
+        "lat": 35.8066
+      },
+      "center": [
+        127.1306,
+        35.8066
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.435,
+        35.284,
+        127.934,
+        36.149
+      ],
+      "place": 2745,
+      "country": "KR",
+      "localTrips": 2187303.0,
+      "realm": "korea"
+    },
+    {
+      "id": "ceo",
+      "name": "Cheongju",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.446,
+        "lat": 36.6226
+      },
+      "center": [
+        127.446,
+        36.6226
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.861,
+        36.259,
+        127.792,
+        36.799
+      ],
+      "place": 2746,
+      "country": "KR",
+      "localTrips": 1927155.0,
+      "realm": "korea"
+    },
+    {
+      "id": "won",
+      "name": "Wonju",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.9505,
+        "lat": 37.3447
+      },
+      "center": [
+        127.9505,
+        37.3447
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        127.721,
+        36.625,
+        129.502,
+        37.936
+      ],
+      "place": 2747,
+      "country": "KR",
+      "localTrips": 1855111.0,
+      "realm": "korea"
+    },
+    {
+      "id": "asn",
+      "name": "Asan",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.0145,
+        "lat": 36.7809
+      },
+      "center": [
+        127.0145,
+        36.7809
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.935,
+        35.972,
+        127.325,
+        36.959
+      ],
+      "place": 2748,
+      "country": "KR",
+      "localTrips": 1449677.0,
+      "realm": "korea"
+    },
+    {
+      "id": "pog",
+      "name": "Pohang",
+      "kind": "zone",
+      "origin": {
+        "lon": 129.3561,
+        "lat": 36.0168
+      },
+      "center": [
+        129.3561,
+        36.0168
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        128.947,
+        35.622,
+        129.608,
+        36.692
+      ],
+      "place": 2749,
+      "country": "KR",
+      "localTrips": 1588246.0,
+      "realm": "korea"
+    },
+    {
+      "id": "cna",
+      "name": "Cheonan",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.1243,
+        "lat": 36.7985
+      },
+      "center": [
+        127.1243,
+        36.7985
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.985,
+        36.601,
+        127.443,
+        36.992
+      ],
+      "place": 2750,
+      "country": "KR",
+      "localTrips": 1132558.0,
+      "realm": "korea"
+    },
+    {
+      "id": "cuc",
+      "name": "Chuncheon",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.7356,
+        "lat": 37.8748
+      },
+      "center": [
+        127.7356,
+        37.8748
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        127.073,
+        37.534,
+        128.833,
+        38.64
+      ],
+      "place": 2751,
+      "country": "KR",
+      "localTrips": 1199564.0,
+      "realm": "korea"
+    },
+    {
+      "id": "sne",
+      "name": "Suncheon",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.522,
+        "lat": 34.9501
+      },
+      "center": [
+        127.522,
+        34.9501
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.949,
+        34.362,
+        127.849,
+        35.384
+      ],
+      "place": 2752,
+      "country": "KR",
+      "localTrips": 1286357.0,
+      "realm": "korea"
+    },
+    {
+      "id": "cug",
+      "name": "Chungju",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.9246,
+        "lat": 36.9833
+      },
+      "center": [
+        127.9246,
+        36.9833
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        127.266,
+        36.583,
+        128.675,
+        37.277
+      ],
+      "place": 2753,
+      "country": "KR",
+      "localTrips": 1069395.0,
+      "realm": "korea"
+    },
+    {
+      "id": "jij",
+      "name": "Jinju",
+      "kind": "zone",
+      "origin": {
+        "lon": 128.1051,
+        "lat": 35.177
+      },
+      "center": [
+        128.1051,
+        35.177
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        127.553,
+        34.904,
+        128.46,
+        35.928
+      ],
+      "place": 2754,
+      "country": "KR",
+      "localTrips": 1026990.0,
+      "realm": "korea"
+    },
+    {
+      "id": "iks",
+      "name": "Iksan",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.984,
+        "lat": 35.9555
+      },
+      "center": [
+        126.984,
+        35.9555
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.56,
+        35.851,
+        127.163,
+        36.175
+      ],
+      "place": 2755,
+      "country": "KR",
+      "localTrips": 826161.0,
+      "realm": "korea"
+    },
+    {
+      "id": "jej",
+      "name": "Jeju",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.5246,
+        "lat": 33.5069
+      },
+      "center": [
+        126.5246,
+        33.5069
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.139,
+        33.094,
+        126.969,
+        33.584
+      ],
+      "place": 2756,
+      "country": "KR",
+      "localTrips": 1073929.0,
+      "realm": "korea"
+    },
+    {
+      "id": "mop",
+      "name": "Mokpo",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.3866,
+        "lat": 34.8019
+      },
+      "center": [
+        126.3866,
+        34.8019
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.063,
+        33.951,
+        127.223,
+        35.178
+      ],
+      "place": 2757,
+      "country": "KR",
+      "localTrips": 842413.0,
+      "realm": "korea"
+    },
+    {
+      "id": "dnj",
+      "name": "Dangjin",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.6973,
+        "lat": 36.9833
+      },
+      "center": [
+        126.6973,
+        36.9833
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.535,
+        36.381,
+        126.882,
+        37.083
+      ],
+      "place": 2758,
+      "country": "KR",
+      "localTrips": 674681.0,
+      "realm": "korea"
+    },
+    {
+      "id": "geo",
+      "name": "Geoje",
+      "kind": "zone",
+      "origin": {
+        "lon": 128.625,
+        "lat": 34.889
+      },
+      "center": [
+        128.625,
+        34.889
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        128.433,
+        34.733,
+        128.778,
+        35.059
+      ],
+      "place": 2759,
+      "country": "KR",
+      "localTrips": 501796.0,
+      "realm": "korea"
     }
   ]
 }

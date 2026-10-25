@@ -1,5 +1,9 @@
 # Archive
 
+- T-1238 [P2] Build Korea. Done 2026-10-25: 21 of 23 rows shipped (bus daj gwn and 18 zones), seo re-solved and passing; dae parked (GEOS error in osm_units), too parked (top zone 25.0% of jobs). Real save unchanged. notes/T-1191.md 4a.
+- T-1260 [P1] Touch building controls. Done 2026-10-25 (tree t1259): a tap previews, a second tap or the control bar's confirm places (track, stations, delete); 44 px bar by the point, clear of the finger; pans never place; Select pans and boxes on a hold. Check t1260-touch; docs/ui-building.md.
+- T-1259 [P2] Mobile dock panels side by side. Done 2026-10-25 (tree t1259): on a phone the inspector stands beside the Build, Lines or Stations tab (40/60, divider drags) while something is selected; the tab area takes the dock's whole height otherwise. docs/ui-panels.md.
+
 - T-1182 [P3] Walk tables rerun for T-1164's water cost. Done 2026-10-25: 992 non-Chinese packs rerun, 0 failed, 54 min on 3 workers; walk pairs cut off 1.80% to 0.13%. The 741 Chinese packs (CN, HK, MO, TW) get it from the China rebuild (T-1184). notes/T-1164.md.
 - T-1257 [P1] A save across China never reached a final. Done 2026-10-25 (tree t1257): a zone keeping no medical outings made everyday pairs of zero trips whose averages were 0/0, NaN loads; such samples now make no pair. All-China save 42,256,934; real save unchanged. notes/T-1150.md "Finish".
 - T-958 [P2] Chinese zones that swallowed another row's units. Done 2026-10-25 with T-1184: zog, hex, yut and tag rebuilt and joined; zog and hex unchanged (zog never held Tongguan), tag now holds yut's 110 km² (4,645 people) by a hand-extended outline (T-1232). notes/T-1150.md "Run".
