@@ -33,8 +33,9 @@ cost of fine cells in thin country is small: cells exist only where people or jo
 
 ## 2. How non-city zones are built
 
-**Unit.** A non-city zone is one **county-sized statistical unit**: a US county, a Canadian census
-division, a NUTS-3 region in Europe; elsewhere the country's second-level unit of 100k-1M people.
+**Unit.** A non-city zone is one **county-sized statistical unit**: a US county, a NUTS-3 region in
+Europe, a Korean si, gun or gu; elsewhere the country's second-level unit of 100k-1M people, or the
+plan's own units where those are municipalities (Canada's census subdivisions).
 One unit per zone, so zone lines are lines that every national dataset already uses; a unit of
 under 100,000 people joins the neighbouring non-city zone it travels with most (below). A
 unit belongs to a city zone (and so is not a non-city zone) when that city's pack lists it.
@@ -72,7 +73,8 @@ a candidate. A unit under **20 people a km²** stays dead space for now unless i
 zone floor (0.4M at 0.5M; `DEAD_KEEP`, T-903: Bergen, Trondheim, Oulu, Inverness); Spain's dead
 space is Soria, Teruel, Cuenca, Huesca, Zamora, Palencia, Ávila, Cáceres and Segovia. Units **under 100,000** join a
 zone of their own region (NUTS-2; elsewhere the first-level unit), smallest first: the one they
-travel with most (the longest border breaking ties), or for an island the most populous zone of
+travel with most (the longest border breaking ties) among those it would not make a ring with
+(T-1191; any, when all would), or for an island the most populous zone of
 the region within 150 km (so small islands join their province's largest: La Gomera, La Palma and
 El Hierro Tenerife, Fuerteventura Gran Canaria, Menorca Mallorca). A small unit with neither stays
 its own zone (Ceuta, Melilla). **Zones hold at least about 0.5M people** (Anita, 2026-10-20, T-788),
@@ -81,10 +83,14 @@ regions; `BIG_ZONE_KM2`, T-1140): countries planned since then keep merging with
 each zone gets there, within a cap of **1.5M**, by the **merge rule** (Anita, 2026-10-24, T-1140):
 - A zone under the floor joins a neighbour only if that neighbour is its **biggest travel partner
   or gets at least half** as much travel as the biggest one, counting every zone, metro and pack
-  around it, whatever its region.
+  around it, whatever its region, and dead space as one more area (T-1191: else a zone ringed by
+  dead space has its one far neighbour as its biggest partner).
 - Failing that, a neighbour where the joined zone stays **compact**: it fills at least **75%** of
   its convex hull, or is no more than 0.05 less compact than the bigger part already was (a county
-  added on the edge of a coast).
+  added on the edge of a coast). **Two cities never join by shape alone** (T-1191): when both zones
+  hold the centroid of a GHSL urban centre of **100,000** or more (`CITY_POP`), only the partner
+  test can join them, so a city's zone just under the floor stays a zone (Saskatoon's, which would
+  otherwise take Regina's 240 km away).
 - A partner always comes before a join by shape alone; among either, the neighbour whose people
   centre is nearest its own, so zones gather round their own towns. With none within the cap, the
   smallest that passes, unless the zone holds 80% of the floor.
@@ -109,6 +115,20 @@ any "/"), and has its origin at its densest square km. A replan of the metros ke
 they are. Countryside zones use the zone curve (section 4) and global sources only, unless their
 country's zone rule names its module (the US, below). Which countries are covered, and with how many zones:
 docs/data-register.md.
+**Korea and Canada** (T-1191, `ZONE_RULES`) take the US's floor, cap and no-exclaves rule with no
+density floor, and one rule each. Korea's plan units are eup, myeon and dong (its metro rows' grain),
+so its zones take them **by si, gun and gu** (`group_level`, geoBoundaries ADM2): the free units of
+one parent that touch or lie within 10 km across water are one unit for the merge rule, so a zone is
+whole si, gun and gu less what a metro or Seoul's pack holds. Ulleung and Ongjin's islands, under
+10,000 people with no zone within 10 km, are dead space. **Canada zones its cities and the corridors
+between**: a census subdivision whose own centre has fewer than **100,000** people within **150 km**
+(GHS-POP, the US's included) is dead space (`reach`), which leaves out the north, Labrador, the
+territories and the empty land between distant cities; and two zones whose people centres lie more
+than **150 km** apart never join (`join_km`: across dead space, any two zones' facing edges make
+them travel partners, Regina and Saskatoon's); a unit under 100,000 still joins its biggest partner
+however far, or small towns would stand as zones of 10,000-50,000. Canada's units are the plan's census subdivisions
+(`plan_units`; read afresh, Natural Earth's land would give the Great Lakes to the shore units).
+notes/T-1191.md.
 **No ring zones** (Anita, 2026-10-23, T-1087: zones keep together areas that mostly commute within
 themselves, "kinda like voronoi"). Of the joins the merge rule allows, one that makes a zone
 **wrap** another zone, a metro row or a built pack is refused: A wraps B when at least **0.5** of B's
@@ -129,7 +149,17 @@ each free unit sending at least **25%** of its resident workers into it, when th
 sends most, the unit touches the metro by land (or touches a unit joining it) and the metro stays
 under its cap; a unit it cannot take is grouped into zones as usual. The zones step adds the belts
 (`zones --countries`, recorded in the plan's `belt` source and the country's `belts`), so a metro
-replan is followed by a zones replan. Built metros, and every metro elsewhere, keep their extents.
+replan is followed by a zones replan. Built metros keep their extents.
+**Remnants** (orchestrator, 2026-10-24, T-1191, under "built cities are not fixed"). Where there is no
+commuting table, an unbuilt metro row takes the remnants round it before zoning, in two steps:
+first the rest of any city it mostly holds (with `group_level`, a si, gun or gu of which the row has
+at least half the people: Gwangsan-gu's rest with Gwangju), repeated so a piece beyond can follow;
+then each free unit under **100,000** whose biggest gravity travel partner is the row as it then
+stands (every other unit, metro, pack and dead space as one area counted), judged once so the row
+does not reach on from unit to unit. Each joins only when it touches the row by land (an island:
+within 10 km across water) and the grown row wraps nothing it did not wrap before (the wrap test
+below). Built metros and packs never grow this way; the log notes each unit that would join one.
+Recorded in the row's `remnants` source and the country's `remnants`. notes/T-1191.md.
 **China and Taiwan** (Anita, 2026-10-22, T-897) have their own rules (`world_plan.ZONE_RULES`):
 zones of at least **1M** (cap 2.5M) from geoBoundaries counties merged within their province, no
 dead space by density, and **no exclaves**: a zone's parts touch by land or across at most 10 km of
@@ -173,7 +203,9 @@ from the GHSL non-residential built-up layer (T-012). A country's non-city zones
 country's city adapter (Toronto's for Canada, T-277) with `kind: "zone"`.
 
 **Names.** A non-city zone is named after its unit ("Worcester County" in the US, the census
-division's name in Canada); a merged zone after its most populous unit. That is the registry's
+subdivision's name in Canada); a merged zone after its most populous unit. A zone of grouped units
+(Korea) is named after the group holding its densest square km, without "-si" or "-gun"; a group
+that is a gu takes its metropolitan city's name ("Ulsan"). That is the registry's
 name, which every join rewrites; the game shows its own (T-825, `app/src/game/zoneNames.ts`):
 
 - **One short name.** A city zone shows its biggest city ("Rotterdam", not GHSL's "Rotterdam [The

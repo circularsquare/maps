@@ -62,10 +62,18 @@ background and wait once for the process.
   rule (T-1140, docs/zones.md 2): a zone under the floor (0.5M, or 100,000 over 100,000 km²; 1M in
   China and Taiwan) joins a neighbour that is its biggest travel partner or gets half as much
   travel as the biggest, else one keeping the joined zone compact (75% of its convex hull), partners
-  first, never into a ring; nothing passing, it stays under the floor. Travel comes from the
+  first, never into a ring, and two zones each holding a GHSL urban centre of 100,000 never by
+  shape alone; nothing passing, it stays under the floor. Travel comes from the
   country's commuting table, or from GHSL gravity where there is none, so a new country needs no
-  input of its own. Add `--out <scratch.json>` for a dry run, and read its merge log in the plan's
-  `zones.<ISO>.merges` before running the rows.
+  input of its own. A country's own rule (`world_plan.ZONE_RULES`, T-1191) may take its units by
+  their parent (`group_level`: Korea's eup, myeon and dong by si, gun and gu) or leave land far
+  from people dead space (`reach`: Canada, under 100,000 people within 150 km of a unit's centre,
+  with `join_km` 150 so cities across it stay apart); give a new country one when its plan units
+  are not county-sized or its land is mostly empty. A
+  pack built by hand in the country (Seoul, Toronto) stays as it is: the units with half their
+  people in it are its, no zone may wrap it, and the join solves it with the new rows as one of the
+  country's members (the registry's `country`). Add `--out <scratch.json>` for a dry run, and read
+  its merge log in the plan's `zones.<ISO>.merges` before running the rows.
 - **Zones removed** (T-1053): a replan, merge or re-split that takes zone ids out of the registry
   (a parked row of an earlier commit included) ends, once `zone_outlines.py` has rewritten the
   outlines, with `venv\Scripts\python.exe -I trainworld\pipeline\zone_successors.py` (seconds): each
