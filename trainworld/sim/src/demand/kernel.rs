@@ -4882,7 +4882,7 @@ pub fn settled(seen: &mut Vec<f32>, seg: &[f32]) -> bool {
 }
 
 // ---------------------------------------------------------------------------------------------
-// 7c. The trains' room (T-1070)
+// 7c. The trains' room (T-1070), as a queue (T-1255)
 
 /// What each route node keeps once the period's riders are held to their trains' room
 /// (`capacity_fit`): the share of its boardings who get on, of its segment's riders, and of its
@@ -4895,43 +4895,96 @@ pub struct Fit {
     pub any: bool,
 }
 
-/// Anita's cap on demand (T-1070): no segment carries more riders in a period than its trains
-/// hold at crush in the busiest hour (`tph x crush x hours / peak_hour_factor`, the room
-/// `crowd_factors` measures 100% of crush against). Each direction of each line is walked from its
-/// first stop as its trains run: riders staying on take their room first, and a stop's boardings
-/// get on up to the room left, the rest of them going another way. From the final loads of every
-/// population together (`total`: segment loads, boardings, alightings per route node, as
-/// `round_costs`); None if `total` has another length.
+/// Anita's cap on demand (T-1070), as a queue (T-1255): riders come to the platform and wait when
+/// the riders ahead of them all get on within `WAIT_FOR_ROOM_S`, else go another way. Each
+/// direction of each line runs its period's trains at an even headway, riders arriving at each
+/// stop by the boarding account's shape (as `left_behind`); a train lets off the stop's share and
+/// takes whoever waits up to its crush load, riders already aboard keeping their places. A rider
+/// joins only while the queue is within this train's room and that of the trains due in the next
+/// `WAIT_FOR_ROOM_S`, each with the same room. `total` is the final loads of every population
+/// together (segment loads, boardings, alightings per route node, as `round_costs`), optionally
+/// followed by the riders coming to each platform (`4 x` route nodes; at least the boardings: the
+/// free-flow pass's, who would ride if the trains had room). A stop keeps its boardings up to those
+/// the queue takes, so riders the rounds put there stay while the platform has room for them. None
+/// if `total` has another length.
 pub fn capacity_fit(g: &Graph, net: &Network, p: &Params, total: &[f32]) -> Option<Fit> {
+    use crate::track::boarding::{shape_cum, shape_g, shape_strength, SHAPE, WAIT_FOR_ROOM_S};
     let nr = g.rn_line.len();
-    if total.len() != 3 * nr || p.period_hours <= 0.0 {
+    if (total.len() != 3 * nr && total.len() != 4 * nr) || p.period_hours <= 0.0 {
         return None;
     }
-    let (seg, board) = (&total[..nr], &total[nr..2 * nr]);
+    let (seg, board, alight) = (&total[..nr], &total[nr..2 * nr], &total[2 * nr..3 * nr]);
+    let come = total.get(3 * nr..).filter(|c| c.len() == nr);
     let mut fit = Fit { board: vec![1.0; nr], seg: vec![1.0; nr], alight: vec![1.0; nr], any: false };
+    let shape = SHAPE[p.period.min(SHAPE.len() - 1)];
+    let hours = p.period_hours as f64;
+    let c = shape_strength(shape, hours, p.peak_hour_factor as f64);
+    let len = hours * 3600.0;
+    let rate0 = 1.0 + c * shape_g(shape, 0.0);
+    let (mut alpha, mut off, mut carry): (Vec<f64>, Vec<f64>, Vec<f64>) = (vec![], vec![], vec![]);
     let mut r0 = 0usize;
     for l in 0..net.n_lines() {
         let n = (net.line_off[l + 1] - net.line_off[l]) as usize;
-        let tph = 60.0 / net.line_headway_min[l][p.period];
-        let room = tph * net.line_crush[l] * p.period_hours / p.peak_hour_factor.max(1.0);
         for _dir in 0..2 {
             let run = r0..r0 + n;
             r0 += n;
-            if !(room > 0.0) || !run.clone().any(|r| seg[r] > room) {
+            let tph = g.rn_tph[run.clone()].iter().fold(0.0f32, |a, &b| a.max(b)) as f64;
+            let cap = net.line_crush[l] as f64;
+            let b = &board[run.clone()];
+            if n < 2 || tph <= 0.0 || cap <= 0.0 || b.iter().map(|&v| v as f64).sum::<f64>() < 1.0 {
                 continue;
             }
+            let a = &alight[run.clone()];
+            // the share of the riders aboard leaving at each stop, from the rounds' riders
+            alpha.clear();
+            let mut on = 0.0f64;
+            for k in 0..n {
+                let off_k = a[k] as f64;
+                alpha.push(if k + 1 == n { 1.0 } else if on > 1e-6 { (off_k / on).clamp(0.0, 1.0) } else { 0.0 });
+                on = (on + b[k] as f64 - off_k).max(0.0);
+            }
+            off.clear();
+            let mut t = 0.0f64;
+            for k in 0..n {
+                off.push(t);
+                t += g.rn_ride[run.start + k] as f64 * 60.0;
+            }
+            let h = 3600.0 / tph;
+            // trains leaving the first stop from a run and a headway before the period to its end
+            let i0 = -((off[n - 1] + h) / h).ceil() as i64;
+            let i1 = (len / h).ceil() as i64;
+            carry.clear();
+            carry.resize((i1 - i0).max(0) as usize, 0.0);
+            // this train and every one due within the wait
+            let ahead = 1.0 + (WAIT_FOR_ROOM_S / h + 1e-9).floor();
             let mut kept = 1.0f32;
-            for r in run {
-                fit.alight[r] = kept;
-                let b = board[r].max(0.0);
-                let on = (seg[r] - b).max(0.0) * kept;
-                let got = (room - on).clamp(0.0, b);
-                if b > 0.0 {
-                    fit.board[r] = got / b;
+            for k in 0..n {
+                let r = run.start + k;
+                let bk = b[k].max(0.0) as f64;
+                let ck = come.map_or(bk, |v| (v[r] as f64).max(bk));
+                let cum = |t: f64| if t <= 0.0 { ck / len * rate0 * t } else if t >= len { ck } else { ck * shape_cum(shape, c, t / len) };
+                let (mut q, mut came, mut joined) = (0.0f64, 0.0f64, 0.0f64);
+                for (j, i) in (i0..i1).enumerate() {
+                    let t = (i as f64 + 0.5) * h + off[k];
+                    let arrived = (cum(t) - cum(t - h)).max(0.0);
+                    let on = carry[j] * (1.0 - alpha[k]);
+                    let room = (cap - on).max(0.0);
+                    let join = arrived.min((room * ahead - q).max(0.0));
+                    let got = (q + join).min(room);
+                    q += join - got;
+                    carry[j] = if k + 1 < n { on + got } else { 0.0 };
+                    if (0.0..len).contains(&t) {
+                        came += arrived;
+                        joined += join;
+                    }
                 }
-                kept = if seg[r] > 0.0 { ((on + got) / seg[r]).min(room / seg[r]).min(1.0) } else { 1.0 };
+                let share = if came > 1e-9 && bk > 0.0 { (joined / came * ck / bk).min(1.0) as f32 } else { 1.0 };
+                fit.alight[r] = kept;
+                fit.board[r] = share;
+                let stay = (seg[r] - b[k]).max(0.0) * kept;
+                kept = if seg[r] > 0.0 { ((stay + b[k].max(0.0) * share) / seg[r]).min(1.0) } else { 1.0 };
                 fit.seg[r] = kept;
-                fit.any |= fit.board[r] < 1.0 || kept < 1.0;
+                fit.any |= share < 1.0 || kept < 1.0;
             }
         }
     }

@@ -43,8 +43,10 @@ function TrainsNow({ line, n, period }: { line: string; n: number; period: strin
   const d = today.value.get(line);
   const c = d ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide, d.crowdWaitKm, d.crowdRidersKm) : null;
   const cls = c ? crowdClass(c.score) : "";
-  const tip = d && c && d.crowdRiders > 0
-    ? `${period}: riders wait ${waitText(c.wait)} on average for a train with room` + (d.trainsNow > 0 ? `\n${count(d.fullNow)}/${count(d.trainsNow)} trains running now are full on their trip` : "")
+  // T-1255: the wait at the platforms where trains come full
+  const tip = d && c
+    ? (d.crowdRiders > 0 ? `${period}: where trains come full, riders face a wait of ${waitText(c.wait)} on average for a train with room` : `${period}: riders get on the first train with room`)
+      + (d.trainsNow > 0 ? `\n${count(d.fullNow)}/${count(d.trainsNow)} trains running now are full on their trip` : "")
     : undefined;
   return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n}</span>;
 }

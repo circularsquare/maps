@@ -237,6 +237,10 @@ export type FromDemand =
       seg: Float32Array;
       board: Float32Array;
       alight: Float32Array;
+      /** T-1255: per route node, the riders coming to the platform in the period: at least `board`,
+       * those beyond it riders who would ride if the trains had room (the free-flow pass's), whom
+       * the boarding account turns away from a full platform */
+      arrive?: Float32Array;
       /** busiest-hour load on the segment leaving the node, share of crush capacity */
       loadOfCrush: Float32Array;
       /** per route node, US$ in the period: the fare curve's extra on the trips first boarding there

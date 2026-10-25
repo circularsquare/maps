@@ -764,7 +764,11 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   make two accounts of the same trains, and each game hour's trains and platforms read their own
   day's (`day_kind_at`; a kind with no riders yet reads the weekday's). A line's panel shows the
   day chosen in the top bar.
-- **Arrivals**: a stop's boardings in a period arrive spread over it by a fixed shape, scaled so the
+- **Arrivals**: the riders coming to a stop in a period (T-1255: demand's `arrive`, sent with
+  `TrackApi.set_arrivals` after `set_riders`: where demand's queue turned riders away there,
+  everyone who would ride if the trains had room, the free-flow pass's boardings; elsewhere, and
+  without it, the boardings, so the account boards about demand's riders) arrive spread over it by
+  a fixed shape, scaled so the
   busiest clock hour is the busiest-hour factor times the mean hour: a tent (rising to the middle,
   falling away) for the two peaks and midday, falling from its start for the evening, highest at
   both ends for the night. The period's total is kept exactly. Riders arrive only as demand's
@@ -783,15 +787,19 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   staying aboard join the first stop's queue when their train arrives there, ahead of later
   arrivals, so they leave on that run's next departure, normally the same train after its hold (a
   second pass of the account). In the books they leave and board again there.
-- **Riders go another way** (T-1067, `GIVE_UP_S`, `WAITING_CAP`): demand holds each line to its
-  trains' room at crush in the busiest hour (T-1070, docs/demand-kernel.md step 7), but riders
-  arrive faster mid-hour and at some stops than that average room, so a queue can still build.
-  A rider whom full trains have kept more than 90 minutes
-  past the first train they came for leaves the platform (as a train leaves, the oldest first), and
-  one platform side (a direction of a line at a stop) holds at most 5,000 waiting: whoever comes
-  when it is full is turned away. Neither boards, so neither counts in the line's boardings
-  (`RunAccount::gone`). Fares are demand's riders, already held to the room, so the few who go
-  another way here still pay (T-1069). A drawn crowd between two trains stops at 5,000 too.
+- **Riders go another way** (T-1067, T-1255; `WAIT_FOR_ROOM_S`, `GIVE_UP_S`, `WAITING_CAP`): a
+  rider comes and waits only for a train with room within 30 minutes. As each train leaves, one
+  platform side (a direction of a line at a stop) holds whoever this train and every train due in
+  the next 30 minutes would take (this train's room each; the gap since the last train stands for
+  the headway), at most 5,000: whoever comes when it is full is turned away, the latest arrivals
+  first. Demand holds its riders to the same queue (docs/demand-kernel.md step 7), so on a line
+  short of trains the platforms fill and every peak train leaves full, and the riders beyond those
+  who ride (the free-flow pass's, at the stops where demand turned riders away) are the ones
+  turned away. A rider whom full trains have still kept more
+  than 90 minutes past the first train they came for leaves too (as a train leaves, the oldest
+  first). None of these boards, so none counts in the line's boardings (`RunAccount::gone`).
+  Fares are demand's riders, already held to the queue; the account's boardings differ from them
+  a little and do not change the money (T-1069). A drawn crowd between two trains stops at 5,000 too.
 - **Local time** (T-309): a line's account runs on its own local time (`LineAccount::shift`): its
   hours, busiest hours, kind of day and "today" from its local midnight. The money settles each
   local time's lines by their own period and day (`localGroups` in the clock worker).
@@ -841,7 +849,8 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   stretch between two stops and direction, the share of the day's trains leaving it packed to
   crush, and the average extra wait for a train with room of the day's riders arriving at its first
   stop (rider-seconds waited after full trains, each left behind waiting the gap to the next
-  departure, over riders arriving, as the line panel's crowding counts them). Worked out once with
+  departure, over riders arriving; the line panel's crowding also counts the riders turned away,
+  T-1255, and this does not). Worked out once with
   each account; the account's hour lists the stretches where the longer wait of the two directions
   is at least `FULL_WAIT_MIN_S` (12 s, where the crowding colour leaves green), with the higher
   share and that wait, and the traffic view marks them by the wait ([ui-map.md](ui-map.md) "Track

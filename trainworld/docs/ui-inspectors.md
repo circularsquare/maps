@@ -42,18 +42,18 @@ purpose filter the purpose drawn is ringed in the bar.
   A double click on a row fits the map to the line's stops (a jump, as search does) after the
   single click selected it [T-569, `ui/locate.ts`]; the line inspector's locate button (cross
   hairs, hover "Show on the map", beside the pencil) does the same.
-- **Trains to add** [T-472, T-491, T-818]: a row's train count (the trains its level needs now, the bare
+- **Trains to add** [T-472, T-491, T-818, T-1255]: a row's train count (the trains its level needs now, the bare
   number under the "Trains" header [T-532]) is coloured by the crowding score of the line's period now, otherwise muted. The score is the
-  riders' average extra wait for a train with room (rider-minutes spent on the platform after a
-  full train left them, each waiting the gap to the next departure, over riders arriving in the
-  period), each rider counted by the fare they pay on the line: the fare's base plus its per-km
-  rate times the km a rider boarding at that stop rides on average (`ride_km` in
-  `sim/src/track/boarding.rs`: each stop lets off its share of whoever is aboard, as the account
-  does) [T-818]; divided by the square root of their average ride on the line (rider-minutes aboard over
-  riders, at least 5 min): `crowding` in `game/today.ts`. With free fares every rider counts the same. Grades (`CROWD_GRADES`): yellow from
-  0.1, orange from 0.3, red from 0.6, so 2 min on a 10 min ride is red and so is 4 min on a 40
-  min ride; orange and red colour the count (`crowdClass`). Hover "Morning peak: riders wait 1.8
-  min on average for a train with room", then "4/12 trains running now are full on their
+  average extra wait for a train with room of the riders at the platforms where trains come full
+  [T-1255]: rider-minutes spent on the platform after a full train left them, each waiting the
+  gap to the next departure, and 30 minutes for each rider a full platform turned away, over the
+  riders arriving, counting only the platforms (a direction of the line at a stop) whose riders
+  wait a minute or more on average in the period (`BUSY_PLATFORM_S` in
+  `sim/src/track/boarding.rs`); every rider counts alike (T-818's fare weighting was dropped with
+  T-1255): `crowding` in `game/today.ts`. Grades (`CROWD_GRADES`, the
+  colour scale's steps): yellow from 6 min, orange from 9, red from 15; orange and red colour the
+  count (`crowdClass`). Hover "Morning peak: where trains come full, riders face a wait of 9.4 min
+  on average for a train with room" (or "riders get on the first train with room"), then "4/12 trains running now are full on their
   trip" (trains from leaving the first stop until they could leave again from the far end,
   `Boarding::under_way`). The figures end each `past_day` block (`Boarding::crowding`).
 - **Scope and Near** [T-332; `game/listScope.ts`, `ScopeToggle` in `ui/listParts.tsx`]: beside New line
@@ -115,12 +115,14 @@ purpose filter the purpose drawn is ringed in the bar.
   middle changes on time. Trains keep running after it ends and are taken out of service at the end
   of the line." (the steppers have no such hover) [T-823, T-835]; on a
   running line one dot before each level's name grades the level on today's kind of day by the
-  average wait for a train with room, each rider counted by the fare they pay as in Trains to add
-  (the level's periods averaged by those fares; High is its two peaks) [T-818], its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
-  at 1, yellow at 2.5, orange at 9, red at 15 and a deep red from 20 (`crowdColour` in
+  average wait for a train with room at the platforms where trains come full, as in Trains to add
+  [T-1255] (the level's periods averaged by those platforms' riders; High is its two peaks), its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
+  at 3, yellow at 6, orange at 9, red at 15 and a deep red from 25 (`crowdColour` in
   `game/palette.ts`, fed `avg.wait` in `CrowdDots`; `Boarding::line_periods`; the Traffic view's
-  full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160]; hover "Riders wait 4.0 min on
-  average for a train with room", then "12/96 trains are full" (all the level's periods),
+  full-stretch hover colours its wait the same way, [ui-map.md](ui-map.md)) [T-692] [T-673] [T-477, T-491, T-515, T-1160, T-1255]; hover "Where trains come full,
+  riders face a wait of 11 min on average for a train with room" (or "Riders get on the first train
+  with room"), then "12/96 trains are full" (all the level's periods),
+  then "3,100 riders found the platform too full and went another way" when any did,
   a line naming the worst period and its wait when that period's grade is worse than the
   level's, and "Most of the waiting is at Gare du Nord" (the stop with the most rider-minutes
   waited over the level's periods, from the tail of `line_periods`) when anyone waits [T-818]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)

@@ -225,7 +225,7 @@ function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; period
 }
 
 /** Numbers per period in `TrackApi.line_periods` (`PERIOD_STRIDE` in boarding.rs). */
-const PERIOD_STRIDE = 8;
+const PERIOD_STRIDE = 11;
 
 /** T-820: the day's rider-seconds aboard over what the trips could hold at crush, each trip taken
  * as its level's time from the first stop to the last; null with no trips. */
@@ -241,20 +241,21 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
   return room > 0 ? Math.min(1, aboard / room) : null;
 }
 
-/** T-477, T-515, T-818: one dot per demand level, graded by `crowding` (the riders' wait for a
- * train with room, each by the fare they pay, against their ride) from the boarding account: the
- * level's periods averaged by those fares. The hover names the stop with the most rider-minutes
- * waited (`line_periods`' tail, per period and stop). */
+/** T-477, T-515, T-1255: one dot per demand level, graded by `crowding` of the riders at the
+ * platforms where trains come full (`BUSY_PLATFORM_S` in boarding.rs: their wait for a train with
+ * room, a rider turned away counted at 30 minutes) from the boarding account: the level's periods
+ * averaged by those riders. The hover names the stop with the most rider-minutes waited
+ * (`line_periods`' tail, per period and stop). */
 function CrowdDots({ v, d, stops }: { v: Float64Array; d: Demand; stops: string[] }) {
-  let trains = 0, full = 0, weight = 0, wait = 0, score = 0;
+  let trains = 0, full = 0, weight = 0, wait = 0, score = 0, gone = 0;
   let worst: { name: string; wait: number; score: number } | null = null;
   const n = stops.length, tail = PERIODS.length * PERIOD_STRIDE, at = new Array<number>(n).fill(0);
   for (let i = 0; i < PERIODS.length; i++) {
     if (PERIODS[i].demand !== d) continue;
     const o = i * PERIOD_STRIDE;
     if (!(v[o] > 0)) continue;
-    const c = crowding(v[o + 4], v[o + 2], v[o + 5], v[o + 6], v[o + 7]);
-    trains += v[o]; full += v[o + 1]; weight += c.weight;
+    const c = crowding(v[o + 9] ?? 0, v[o + 10] ?? 0, v[o + 5]);
+    trains += v[o]; full += v[o + 1]; weight += c.weight; gone += v[o + 8] ?? 0;
     wait += c.wait * c.weight; score += c.score * c.weight;
     if (!worst || c.score > worst.score) worst = { name: PERIODS[i].name, wait: c.wait, score: c.score };
     if (v.length >= tail + PERIODS.length * n) for (let k = 0; k < n; k++) at[k] += v[tail + i * n + k];
@@ -263,7 +264,9 @@ function CrowdDots({ v, d, stops }: { v: Float64Array; d: Demand; stops: string[
   const avg = weight > 0 ? { wait: wait / weight, score: score / weight } : { wait: 0, score: 0 };
   const grade = crowdGrade(avg.score);
   const most = at.reduce((b, x, k) => (x > at[b] ? k : b), 0);
-  const tip = `Riders wait ${waitText(avg.wait)} on average for a train with room\n${count(full)}/${count(trains)} trains are full`
+  const tip = (avg.wait >= 0.05 ? `Where trains come full, riders face a wait of ${waitText(avg.wait)} on average for a train with room` : "Riders get on the first train with room")
+    + `\n${count(full)}/${count(trains)} trains are full`
+    + (gone >= 1 ? `\n${count(gone)} riders found the platform too full and went another way` : "")
     + (worst && crowdGrade(worst.score) > grade ? `\n${worst.name}: ${waitText(worst.wait)}` : "")
     + (avg.wait >= 0.05 && at[most] > 0 && stops[most] ? `\nMost of the waiting is at ${stops[most]}` : "");
   return <i class="crowd-dot" style={{ background: crowdColour(avg.wait) }} data-tip={tip} />;

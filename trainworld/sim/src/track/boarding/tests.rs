@@ -330,8 +330,9 @@ fn an_overloaded_line_leaves_people_behind_and_the_queue_clears() {
     assert!((v[3] - boarded).abs() < 0.01 * boarded, "{} {boarded}", v[3]);
 }
 
-/// T-1067: riders whom full trains leave behind for GIVE_UP_S go another way, as do those
-/// who find the platform at WAITING_CAP, so nobody waits much past GIVE_UP_S.
+/// T-1067, T-1255: riders whom full trains leave behind for GIVE_UP_S go another way, as do those
+/// who find the platform holding as many as the trains of the next WAIT_FOR_ROOM_S take (at most
+/// WAITING_CAP), so nobody waits past GIVE_UP_S.
 #[test]
 fn riders_left_behind_too_long_go_another_way() {
     // 2 trains an hour of 1,600 against 4,000 an hour from 06:00 to 10:00, then 1 an hour
@@ -348,14 +349,53 @@ fn riders_left_behind_too_long_go_another_way() {
     let gave_by_noon: f64 = (0..m).filter(|&j| ra.order_t[j] < 12.5 * 3600.0).map(|j| ra.gone[ra.order[j] as usize * 3] as f64).sum();
     let gave_after: f64 = (0..m).filter(|&j| ra.order_t[j] > 12.5 * 3600.0).map(|j| ra.gone[ra.order[j] as usize * 3] as f64).sum();
     assert!(gave_by_noon > 0.0 && gave_after > 0.0, "{gave_by_noon} {gave_after}");
-    // whoever is left waits at most GIVE_UP_S past their first train: by day the head of the
-    // queue waits under that plus two headways (the night's trains are 2 hours apart)
+    // whoever is left waits at most GIVE_UP_S past their first train (T-1255: on a train every 30
+    // minutes or rarer, a rider joins only for a train with room)
     let longest = ra.wait_h[6..16].iter().fold(0.0f32, |a, &b| a.max(b)) as f64;
-    assert!(longest > GIVE_UP_S && longest <= GIVE_UP_S + 2.0 * 3600.0 + 1.0, "{longest}");
+    assert!(longest > 1800.0 && longest <= GIVE_UP_S + 1.0, "{longest}");
     assert!(ra.gave_up > 1000.0, "{}", ra.gave_up);
     assert!((ra.arrived - ra.boarded - ra.gave_up).abs() < 1e-6 * ra.arrived);
     let gone: f64 = ra.gone.iter().map(|&g| g as f64).sum();
     assert!((gone - ra.gave_up).abs() < 1e-3 * ra.gave_up);
+}
+
+/// T-1255: riders come to the platform (`set_arrivals_day`, here three times the boardings) and
+/// wait only while the riders ahead get on within WAIT_FOR_ROOM_S; the rest go another way and count
+/// that wait in the line's crowding.
+#[test]
+fn riders_come_and_wait_only_for_a_train_with_room_soon() {
+    // 10 trains an hour of 1,600: 16,000 an hour against 8,000 boarding and 24,000 coming
+    let (w, l) = setup(10.0);
+    let mut b = Boarding::default();
+    let per_hour = [8000.0, 1000.0, 1000.0, 1000.0, 50.0];
+    b.set_riders(&riders(l, per_hour));
+    b.ensure(&w.net, &w.svc);
+    let calm = b.line_periods(&w.svc, l as usize, 0);
+    let mut come = vec![l as f32, 3.0];
+    for p in 0..PERIODS {
+        let (h0, h1) = PERIOD_HOURS[p];
+        let x = per_hour[p] * (h1 - h0) as f32 * if p == 0 { 3.0 } else { 1.0 };
+        come.extend([x, 0.0, 0.0, x, 0.0, 0.0]);
+    }
+    b.set_arrivals_day(&come, 0);
+    b.ensure(&w.net, &w.svc);
+    let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
+    let m = ra.deps.len();
+    // every peak train leaves full and the platform holds at most the next 30 minutes' trains
+    let peak: Vec<usize> = (0..m).filter(|&j| ra.order_t[j] > 7.0 * 3600.0 && ra.order_t[j] < 9.5 * 3600.0).map(|j| ra.order[j] as usize).collect();
+    assert!(peak.iter().all(|&i| (ra.load[i * 3] as f64 - 1600.0).abs() < 1e-3));
+    let most = (0..m).map(|i| ra.q_after[i * 3]).fold(0.0f32, f32::max) as f64;
+    assert!(most <= 5.0 * 1600.0 + 1e-3, "{most}");
+    // so nobody waits much beyond 30 minutes for a train with room (the head of the queue: a
+    // headway more)
+    let longest = ra.wait_h[6..11].iter().fold(0.0f32, |a, &b| a.max(b)) as f64;
+    assert!(longest > 1200.0 && longest <= WAIT_FOR_ROOM_S + 2.0 * 360.0 + 1.0, "{longest}");
+    assert!(ra.gave_up > 10000.0 && (ra.arrived - ra.boarded - ra.gave_up).abs() < 1e-6 * ra.arrived, "{}", ra.gave_up);
+    // the riders turned away count the wait in the period's crowding, and are counted
+    let v = b.line_periods(&w.svc, l as usize, 0);
+    let p = |v: &[f64], p: usize, i: usize| v[p * PERIOD_STRIDE + i];
+    assert!(p(&v, 0, 8) > 10000.0 && p(&calm, 0, 8) == 0.0, "{} {}", p(&v, 0, 8), p(&calm, 0, 8));
+    assert!(p(&v, 0, 4) / p(&v, 0, 2) > 10.0 * 60.0 && p(&calm, 0, 4) / p(&calm, 0, 2) < 60.0, "{} {}", p(&v, 0, 4) / p(&v, 0, 2), p(&calm, 0, 4) / p(&calm, 0, 2));
 }
 
 #[test]
@@ -397,12 +437,13 @@ fn the_line_summary_names_the_full_trains_and_when() {
     assert!(p(0, 6) > 0.0 && p(0, 6) <= p(0, 4) * len_km + 1e-6 && p(0, 7) > 0.0 && p(0, 7) <= p(0, 2) * len_km + 1e-6, "{v:?}");
     let n = w.svc.lines[l as usize].stops.len();
     let at: f64 = v[PERIODS * PERIOD_STRIDE..PERIODS * PERIOD_STRIDE + n].iter().sum();
-    assert!(v.len() == PERIODS * (PERIOD_STRIDE + n) && (at - p(0, 4)).abs() < 1e-6 * p(0, 4).max(1.0), "{at} {}", p(0, 4));
+    assert!(v.len() == PERIODS * (PERIOD_STRIDE + 2 * n) && (at - p(0, 4)).abs() < 1e-6 * p(0, 4).max(1.0), "{at} {}", p(0, 4));
     // T-472: at 08:00 the trains in service are about the line's peak trains, every one full
     let v = b.past_day(&w.svc, 2.0 * DAY + 8.0 * 3600.0);
-    // T-491: the period now's wait, arrivals and ride end the block, then T-818's two
+    // T-491: the period now's wait, arrivals and ride end the block, then T-818's two (T-1255: the
+    // wait and arrivals at the platforms where trains come full, here every one)
     let (wait, arrived) = (v[v.len() - 5], v[v.len() - 4]);
-    assert!((wait - p(0, 4)).abs() < 1e-6 && (arrived - p(0, 2)).abs() < 1e-6);
+    assert!((wait - p(0, 9)).abs() < 1e-6 && (arrived - p(0, 10)).abs() < 1e-6 && wait > 0.0);
     let (on, packed, trains) = (v[v.len() - 8], v[v.len() - 7], v[v.len() - 6]);
     assert!(on > 0.0 && (on - w.svc.lines[l as usize].trains[HIGH] as f64).abs() <= 2.0 && packed == on, "{on} {packed}");
     // T-481: the full trains are counted out of every trip in the 24 hours
@@ -423,7 +464,8 @@ fn a_queue_that_lasts_the_night_carries_round_the_day() {
     let i = ra.deps.iter().position(|&d| d >= START_HOUR * 3600.0).unwrap();
     assert!(ra.q_after[i * 3] > 1000.0, "{}", ra.q_after[i * 3]);
     let j = quick.deps.iter().position(|&d| d >= START_HOUR * 3600.0).unwrap();
-    assert!(ra.q_after[i * 3] > quick.q_after[j * 3] + 1000.0);
+    // (T-1255: a train's worth more, the platform holding only the next 30 minutes' trains)
+    assert!(ra.q_after[i * 3] > quick.q_after[j * 3] + 500.0, "{} {}", ra.q_after[i * 3], quick.q_after[j * 3]);
     // and every departure of the day is in it once, in time order
     assert_eq!(ra.deps.len(), quick.deps.len());
     assert!(ra.deps.windows(2).all(|p| p[0] < p[1]));

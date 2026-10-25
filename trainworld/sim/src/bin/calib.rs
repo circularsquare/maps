@@ -155,7 +155,9 @@ fn main() {
         if let Some(e) = ev.as_mut() {
             e.solve(q);
         }
-        // every layer's loads together; after the last round, held to the trains' room (T-1070)
+        // every layer's loads together; after the last round, held to the trains' room (T-1070) as
+        // a queue fed by the free-flow pass's boardings (T-1255)
+        let mut free: Vec<f32> = vec![];
         for round in 0..=rounds {
             let nr = api.seg(q).len();
             let mut total = vec![0f32; 3 * nr];
@@ -172,8 +174,13 @@ fn main() {
                 put(e.board(q), 1);
                 put(e.alight(q), 2);
             }
+            if round == 0 {
+                free = total[nr..2 * nr].to_vec();
+            }
             if round == rounds {
                 if rounds > 0 && !has("--no-cap") {
+                    let come: Vec<f32> = free.iter().zip(&total[nr..2 * nr]).map(|(a, b)| a.max(*b)).collect();
+                    total.extend(come);
                     assert!(api.cap_with_external(q, &total));
                     if let Some(e) = ev.as_mut() {
                         assert!(e.cap_with_external(q, &total));

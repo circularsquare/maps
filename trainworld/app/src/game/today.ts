@@ -31,8 +31,9 @@ export interface LineToday {
   /** T-472: trains in service now, and how many of them are packed full somewhere on their trip */
   trainsNow: number;
   fullNow: number;
-  /** T-491: the period now: rider-seconds waited after full trains, riders arriving, rider-seconds
-   * aboard; T-818: the first two times the km those riders ride */
+  /** T-491: the period now: rider-seconds waited after full trains and riders arriving, at the
+   * platforms where trains come full (T-1255), rider-seconds aboard; T-818: the first two times
+   * the km those riders ride (0 since T-1255: every rider counts alike) */
   crowdWait: number;
   crowdRiders: number;
   crowdRide: number;
@@ -43,20 +44,21 @@ export interface LineToday {
 /** T-491, T-818: how much crowding costs a line's riders: their average extra wait for a train
  * with room (min), each rider counted by the fare they pay on the line (the base plus the per-km
  * rate times the km they ride; `waitKmS` and `ridersKm` are the waits and riders times those km),
- * so a long ride weighs more than a short hop; and that wait against the square root of the
- * average ride (min, at least 5), so ten minutes weigh more on a short ride than on a long one.
- * `weight` is the fares the wait was averaged over, for averaging periods. */
+ * so a long ride weighs more than a short hop. A rider a full platform turned away counts the
+ * 30 minutes they would not wait (T-1255, the account's). The score is that wait (T-1255: no
+ * longer against the ride, so the Trains to add count reads as the schedule's dots do). `weight` is
+ * the fares the wait was averaged over, for averaging periods. */
 export function crowding(waitS: number, riders: number, rideS: number, waitKmS = 0, ridersKm = 0): { wait: number; ride: number; score: number; weight: number } {
   if (!(riders > 0)) return { wait: 0, ride: 0, score: 0, weight: 0 };
   const f = moneyState.peek()?.fares;
   const paid = f ? f.base * riders + f.perKm * ridersKm : 0;
   const wait = (paid > 0 ? (f!.base * waitS + f!.perKm * waitKmS) / paid : waitS / riders) / 60, ride = rideS / riders / 60;
-  return { wait, ride, score: wait / Math.sqrt(Math.max(5, ride)), weight: paid > 0 ? paid : riders };
+  return { wait, ride, score: wait, weight: paid > 0 ? paid : riders };
 }
 
-/** T-491 grades of `crowding`'s score (DECISIONS 2026-10-16): 0 none to speak of, 1 some, 2 orange,
- * 3 red. */
-export const CROWD_GRADES = [0.1, 0.3, 0.6];
+/** Grades of `crowding`'s score, minutes (T-1255, the colour scale's yellow, orange and red;
+ * `CROWD_STOPS`): 0 none to speak of, 1 some, 2 orange, 3 red. */
+export const CROWD_GRADES = [6, 9, 15];
 export function crowdGrade(score: number): 0 | 1 | 2 | 3 {
   return score >= CROWD_GRADES[2] ? 3 : score >= CROWD_GRADES[1] ? 2 : score >= CROWD_GRADES[0] ? 1 : 0;
 }

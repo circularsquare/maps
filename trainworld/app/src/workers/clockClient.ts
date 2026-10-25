@@ -14,7 +14,7 @@ import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
 import { linePoints, STAR_SHARE } from "../game/points";
 import { AVERAGE_DAY, DAY_KINDS } from "../game/days";
 import { demandByDay, demandView, platformTransfers } from "../game/demand";
-import { accountVersion, packRiders } from "../game/boarding";
+import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { lineDraft, selection, tool } from "../game/ui";
 import { say, setEditSink, world } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
@@ -430,7 +430,9 @@ export class ClockClient {
     effect(() => {
       demandByDay.value.slice(0, DAY_KINDS.length).forEach((d, day) => {
         const packed = d.view ? packRiders(d.view) : null;
-        if (packed) this.post({ kind: "riders", packed, day }, [packed.buffer]);
+        // T-1255: with the riders who come to the platforms
+        const arrive = packed && d.view ? packArrivals(d.view) : null;
+        if (packed) this.post({ kind: "riders", packed, day, ...(arrive ? { arrive } : {}) }, arrive ? [packed.buffer, arrive.buffer] : [packed.buffer]);
       });
     });
     // T-554: the changes between platforms of the solve shown, for when changing riders reach

@@ -102,6 +102,14 @@ type Population = DemandApi | EverydayApi | IntercityApi;
  * market's the cluster's) and its maps to the whole network's stations and route nodes */
 type JobCluster = Cluster & { pops: Population[]; solveOrder: Population[]; reuse: number; part: IntercityApi | null; views: Map<Population, PopView> };
 const viewOf = (c: JobCluster, p: Population) => c.views.get(p)!;
+/** T-1255: a population's boardings per period, on its own route nodes, from its last solve: the
+ * free-flow pass's, and the last crowding round's before the cap. */
+const boards = new WeakMap<Population, { free: (Float32Array | undefined)[]; rounds: (Float32Array | undefined)[] }>();
+const boardsOf = (p: Population) => {
+  let b = boards.get(p);
+  if (!b) boards.set(p, (b = { free: [], rounds: [] }));
+  return b;
+};
 /** T-756: whole network route node -> a view's, or -1 (made when first asked) */
 const nodeLocals = new WeakMap<PopView, Int32Array>();
 function nodeLocal(v: PopView, nodes: number): Int32Array {
@@ -1173,12 +1181,31 @@ async function run() {
           await yieldNow();
           if (pending) return false;
         }
+        // T-1255: the free-flow pass's boardings, the riders who would come if the trains had room
+        if (total === null) for (const a of c.pops) { const b = boardsOf(a); b.free[q] = a.board(q); b.rounds[q] = undefined; }
         if (round === job.rounds && round > 0) {
-          // T-1070: the final loads, every population's, held to the trains' room
+          // T-1070, T-1255: the final loads, every population's, held to the riders the trains take
+          // within the wait for a train with room, with everyone who comes to the platforms
           const final = loads();
-          for (const a of c.solveOrder) if (!a.cap_with_external(q, ownOf(a, final))) throw new Error("shared capacity layout disagrees");
+          for (const a of c.pops) boardsOf(a).rounds[q] = a.board(q);
+          const come = comeOf([c], q);
+          for (const a of c.solveOrder) {
+            const own = ownOf(a, final), { nodeGlobal: map, pads } = viewOf(c, a), nr = map.length, four = new Float32Array(4 * nr);
+            four.set(own);
+            for (let k = 0; k < nr; k++) four[3 * nr + k] = Math.max(come[map[k]], own[nr + k]);
+            for (const k of pads) four[3 * nr + k] = own[nr + k];
+            if (!a.cap_with_external(q, four)) throw new Error("shared capacity layout disagrees");
+          }
         }
         return true;
+      };
+      // T-1255: per route node of the whole network, the riders coming to the platforms of clusters
+      // `cs` in period q: the free-flow pass's boardings, at least the rounds' (before the cap)
+      const comeOf = (cs: JobCluster[], q: number): Float32Array => {
+        const free = sumAll(cs, (a) => boardsOf(a).free[q] ?? a.board(q));
+        const rounds = sumAll(cs, (a) => boardsOf(a).rounds[q] ?? a.board(q));
+        for (let k = 0; k < free.length; k++) free[k] = Math.max(free[k], rounds[k]);
+        return free;
       };
       // period q's figures over the clusters `cs` (all of them for a result), as the state stands
       const figures = (q: number, round: number, ms: number, cs: JobCluster[]) => {
@@ -1187,6 +1214,11 @@ async function run() {
         // the market's figures are all its parts' as they stand, whichever clusters are asked for
         const market = regional && cs.some((c) => c.market) ? marketFigures(jobClusters.flatMap((c) => c.part ? [c.part] : []), q) : null;
         const seg = sumAll(cs, a => a.seg(q)), board = sumAll(cs, a => a.board(q)), alight = sumAll(cs, a => a.alight(q)), loadOfCrush = sumAll(cs, a => a.load_of_crush(q)), fareX = sumAll(cs, a => a.fare_extra(q));
+        // the account's riders coming: everyone who would ride where the queue turned riders away
+        // (their trains carry no more), the riders who ride elsewhere, so the account's boardings
+        // stay demand's
+        const arrive = comeOf(cs, q), rounds = sumAll(cs, (a) => boardsOf(a).rounds[q] ?? a.board(q));
+        for (let k = 0; k < arrive.length; k++) arrive[k] = board[k] < 0.999 * rounds[k] ? Math.max(arrive[k], board[k]) : board[k];
         const citySummary = Object.fromEntries(ids.map((id) => [id, Array.from(cities.get(id)!.summary(q))])) as Record<CityId, number[]>;
         for (const [id, a] of jobEveryday) if (citySummary[id]) { const v = a.summary(q); for (const k of [1, 2, 3, 5, 10]) citySummary[id][k] += v[k] ?? 0; }
         const intercitySummary = market ? market.summary : [];
@@ -1203,10 +1235,10 @@ async function run() {
           if (e) for (let k = 0; k < Math.min(e.length, 3 * (local - 1)); k++) v[3 + k] = e[k];
           return [id, v];
         })) as Record<CityId, number[]>;
-        const msg = { version: job.version, period: q, summary, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, loadOfCrush, fareX, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
+        const msg = { version: job.version, period: q, summary, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
         const t = market?.corridorTable;
         const big = [market?.corridorRail?.buffer, market?.corridorModes?.buffer, ...(t ? [t.from, t.to, t.longer, t.commutes, t.air, t.car].map((a) => a.buffer) : [])].filter((b): b is ArrayBuffer => !!b);
-        return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, loadOfCrush.buffer, fareX.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...big] };
+        return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, arrive.buffer, loadOfCrush.buffer, fareX.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...big] };
       };
       for (const c of early) {
         setUp(c);
@@ -1248,8 +1280,8 @@ async function run() {
           const { msg } = figures(q, job.rounds, 0, jobClusters);
           msg.ms = msg.summary[4] = performance.now() - t0;
           for (let r = 0; r <= job.rounds; r++) {
-            const m = { ...msg, summary: [r, ...msg.summary.slice(1)], seg: msg.seg.slice(), board: msg.board.slice(), alight: msg.alight.slice(), loadOfCrush: msg.loadOfCrush.slice(), parts: { keys: msg.parts.keys, seg: msg.parts.seg.slice(), board: msg.parts.board.slice(), alight: msg.parts.alight.slice() }, setupMs: r === 0 ? setupMs : 0 };
-            sendMessage({ kind: "result", ...m }, [m.seg.buffer, m.board.buffer, m.alight.buffer, m.loadOfCrush.buffer, m.parts.seg.buffer, m.parts.board.buffer, m.parts.alight.buffer]);
+            const m = { ...msg, summary: [r, ...msg.summary.slice(1)], seg: msg.seg.slice(), board: msg.board.slice(), alight: msg.alight.slice(), arrive: msg.arrive.slice(), loadOfCrush: msg.loadOfCrush.slice(), parts: { keys: msg.parts.keys, seg: msg.parts.seg.slice(), board: msg.parts.board.slice(), alight: msg.parts.alight.slice() }, setupMs: r === 0 ? setupMs : 0 };
+            sendMessage({ kind: "result", ...m }, [m.seg.buffer, m.board.buffer, m.alight.buffer, m.arrive.buffer, m.loadOfCrush.buffer, m.parts.seg.buffer, m.parts.board.buffer, m.parts.alight.buffer]);
           }
         }
         setupMs = 0;

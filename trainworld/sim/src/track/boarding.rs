@@ -36,6 +36,9 @@ pub const GIVE_UP_S: f64 = 5400.0;
 /// 300 m platform's side 5 m deep holds at 0.3 m² a rider; whoever comes when it is full goes
 /// another way. `WAITING_CAP` in app/src/game/boarding.ts.
 pub const WAITING_CAP: f64 = 5000.0;
+/// T-1255: a rider comes and waits for a train with room only when the riders ahead all get on
+/// within this long (DECISIONS 2026-10-25); demand's cap (`kernel::capacity_fit`) is the same queue.
+pub const WAIT_FOR_ROOM_S: f64 = 1800.0;
 
 /// How each period's boardings spread over it: the peaks and midday rise to the middle and fall
 /// away (a tent), the evening falls from its start, the night is busiest at its two ends. Scaled so
@@ -198,6 +201,9 @@ pub struct LineRiders {
     /// `[(period * 2 + run) * n + stop]`
     pub board: Vec<f64>,
     pub alight: Vec<f64>,
+    /// T-1255: riders coming to each platform, laid out as `board` (at least its boardings: those
+    /// who would ride if the trains had room); empty when demand sent none, and then the boardings
+    pub come: Vec<f64>,
 }
 
 /// One direction of one line over the day.
@@ -350,7 +356,7 @@ impl Boarding {
             if i + 2 * len > packed.len() {
                 break;
             }
-            let mut lr = LineRiders { n, board: vec![0.0; len], alight: vec![0.0; len] };
+            let mut lr = LineRiders { n, board: vec![0.0; len], alight: vec![0.0; len], come: vec![] };
             for p in 0..PERIODS {
                 for k in 0..2 * n {
                     lr.board[p * 2 * n + k] = packed[i + p * 4 * n + k].max(0.0) as f64;
@@ -363,6 +369,30 @@ impl Boarding {
                 riders.resize(id + 1, None);
             }
             riders[id] = Some(lr);
+        }
+    }
+
+    /// The riders coming to each platform on a kind of day (T-1255), after `set_riders_day`: per
+    /// line its id, stop count `n`, then for each period the riders at each route node (run 0's
+    /// stops, then run 1's, in travel order: `2n`). Those beyond the boardings are riders who would
+    /// ride if the trains had room; the account turns away whoever finds the queue too long.
+    pub fn set_arrivals_day(&mut self, packed: &[f32], day: usize) {
+        let day = day.min(DAY_KINDS - 1);
+        self.generation[day] += 1;
+        let mut i = 0;
+        while i + 2 <= packed.len() {
+            let (id, n) = (packed[i] as usize, packed[i + 1] as usize);
+            i += 2;
+            let len = PERIODS * 2 * n;
+            if i + len > packed.len() {
+                break;
+            }
+            if let Some(Some(lr)) = self.riders[day].get_mut(id) {
+                if lr.n == n {
+                    lr.come = packed[i..i + len].iter().map(|&v| v.max(0.0) as f64).collect();
+                }
+            }
+            i += len;
         }
     }
 
@@ -851,15 +881,26 @@ impl Boarding {
 
     /// A line's day by period (T-477, T-491), on a kind of day: per period `PERIOD_STRIDE`
     /// numbers (`crowding`), then per period the rider-seconds waited after full trains at each
-    /// stop, both directions, in the line's stop order (T-818: where they wait). Empty without an
-    /// account.
+    /// stop, both directions, in the line's stop order (T-818: where they wait; T-1255: with each
+    /// rider turned away at `WAIT_FOR_ROOM_S`), then per period the riders arriving at each stop
+    /// likewise (T-1255). Empty without an account.
     pub fn line_periods(&self, svc: &Service, l: usize, day: usize) -> Vec<f64> {
         let Some(Some(acc)) = self.accounts[self.kind(day)].get(l) else { return vec![] };
         let Some(ls) = svc.lines.get(l) else { return vec![] };
         let mut out = Self::crowding(acc, ls).concat();
         let n = acc.runs[0].n;
         let mut at = vec![0.0f64; PERIODS * n];
+        // T-1255: per period and stop, the riders arriving there, both directions
+        let mut came = vec![0.0f64; PERIODS * n];
         for (r, ra) in acc.runs.iter().enumerate() {
+            if ra.n == n {
+                for k in 0..n {
+                    let s = if r == 0 { k } else { n - 1 - k };
+                    for p in 0..PERIODS {
+                        came[p * n + s] += ra.arrivals[k].per[p];
+                    }
+                }
+            }
             let m = ra.deps.len();
             if ra.n != n {
                 continue;
@@ -870,23 +911,26 @@ impl Boarding {
                 let s = if r == 0 { k } else { n - 1 - k };
                 for i in 0..m {
                     let q = ra.q_after[ord[i] as usize * n + k] as f64;
-                    if q > 0.0 {
-                        let gap = if i + 1 < m { ts[i + 1] - ts[i] } else { ts[0] + DAY - ts[i] };
-                        at[period_at(ts[i]) * n + s] += q * gap.max(0.0);
-                    }
+                    let gone = ra.gone[ord[i] as usize * n + k] as f64;
+                    let gap = if i + 1 < m { ts[i + 1] - ts[i] } else { ts[0] + DAY - ts[i] };
+                    at[period_at(ts[i]) * n + s] += q * gap.max(0.0) + gone * WAIT_FOR_ROOM_S;
                 }
             }
         }
         out.extend(at);
+        out.extend(came);
         out
     }
 
     /// Per period: trains leaving in it, those packed full somewhere on their trip, riders
     /// arriving at the line's platforms, riders a full train left behind, rider-seconds spent
     /// waiting for a later train after a full one (each left behind waits the gap to the next
-    /// departure), and rider-seconds aboard (T-491: the ride the wait is weighed against); then the
-    /// waiting rider-seconds and the riders arriving each times the km they ride (`ride_km`), so the
-    /// app can weigh riders by the fare they pay (T-818).
+    /// departure; T-1255: each rider who went another way counts `WAIT_FOR_ROOM_S`), and
+    /// rider-seconds aboard (T-491: the ride the wait is weighed against); then the waiting
+    /// rider-seconds and the riders arriving each times the km they ride (`ride_km`), so the app
+    /// can weigh riders by the fare they pay (T-818); then the riders who went another way; then
+    /// the waiting rider-seconds and the riders arriving at the platforms where trains come full
+    /// (`BUSY_PLATFORM_S`, T-1255: the line panel's crowding).
     fn crowding(acc: &LineAccount, ls: &LineSvc) -> [[f64; PERIOD_STRIDE]; PERIODS] {
         let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
         let mut out = [[0.0f64; PERIOD_STRIDE]; PERIODS];
@@ -918,13 +962,26 @@ impl Boarding {
                 }
                 let ts = &ra.order_t[k * m..(k + 1) * m];
                 let ord = &ra.order[k * m..(k + 1) * m];
+                let mut here = [0.0f64; PERIODS];
                 for i in 0..m {
                     let q = ra.q_after[ord[i] as usize * n + k] as f64;
-                    if q > 0.0 {
-                        let gap = if i + 1 < m { ts[i + 1] - ts[i] } else { ts[0] + DAY - ts[i] };
-                        let p = period_at(ts[i]);
-                        out[p][4] += q * gap.max(0.0);
-                        out[p][6] += q * gap.max(0.0) * km(p, k);
+                    let gone = ra.gone[ord[i] as usize * n + k] as f64;
+                    let gap = if i + 1 < m { ts[i + 1] - ts[i] } else { ts[0] + DAY - ts[i] };
+                    let p = period_at(ts[i]);
+                    // T-1255: a rider who went another way counts the wait they would not take
+                    let w = q * gap.max(0.0) + gone * WAIT_FOR_ROOM_S;
+                    out[p][4] += w;
+                    out[p][6] += w * km(p, k);
+                    out[p][8] += gone;
+                    here[p] += w;
+                }
+                // T-1255: the platforms where trains come full, those whose riders wait
+                // `BUSY_PLATFORM_S` or more on average
+                for (p, o) in out.iter_mut().enumerate() {
+                    let came = ra.arrivals[k].per[p];
+                    if came > 0.0 && here[p] >= BUSY_PLATFORM_S * came {
+                        o[9] += here[p];
+                        o[10] += came;
                     }
                 }
             }
@@ -976,7 +1033,9 @@ impl Boarding {
             let (on, packed) = Self::under_way(acc, ls, tod);
             out.extend([on, packed, trains]);
             let c = Self::crowding(acc, ls)[period_at(tod)];
-            out.extend([c[4], c[2], c[5], c[6], c[7]]);
+            // T-1255: the crowding at the platforms where trains come full, every rider alike (the
+            // km-weighted pair stays for the layout)
+            out.extend([c[9], c[10], c[5], 0.0, 0.0]);
             count += 1;
         }
         out[0] = count as f64;
@@ -1075,7 +1134,7 @@ impl Boarding {
 
 pub const QUEUE_STRIDE: usize = 12;
 /// Numbers per period in `Boarding::line_periods` (T-491).
-pub const PERIOD_STRIDE: usize = 8;
+pub const PERIOD_STRIDE: usize = 11;
 
 impl RunAccount {
     /// The account's index of a trip leaving its first stop at game time `dep` (any day).
@@ -1206,6 +1265,11 @@ pub const START_HOUR: f64 = 3.0;
 /// (app/src/game/palette.ts `CROWD_STOPS`) leaves green.
 pub const FULL_WAIT_MIN_S: f32 = 12.0;
 
+/// T-1255: a platform where trains come full, for the line panel's crowding: its riders wait at
+/// least this long (s) on average for a train with room in the period, those turned away counting
+/// `WAIT_FOR_ROOM_S` (DECISIONS 2026-10-25).
+pub const BUSY_PLATFORM_S: f64 = 60.0;
+
 /// One direction of one line for a day of departures from `START_HOUR`, from empty platforms;
 /// with `warm`, from a day earlier, keeping the second day. `leftover` says whether anyone was
 /// still waiting when the day ended (then the warm run is the right one).
@@ -1265,7 +1329,10 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
     let deps = svc.lattice(net, l).map(|lat| span::stop_deps(ls, &lat, r)).filter(|d| d.len() == n);
     let arrivals: Vec<Arrivals> = (0..n)
         .map(|k| {
-            let per = std::array::from_fn(|p| lr.board[(p * 2 + r) * n + k]);
+            let per = std::array::from_fn(|p| {
+                let i = (p * 2 + r) * n + k;
+                lr.board[i].max(lr.come.get(i).copied().unwrap_or(0.0))
+            });
             match &deps {
                 Some(d) => Arrivals::with_mask(per, peak, span::stop_mask(&d[k])),
                 None => Arrivals::new(per, peak),
@@ -1335,7 +1402,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
             hist.push((t_prev, c_prev));
         }
         let mut head = 0usize;
-        // riders turned away by `WAITING_CAP` so far: `hist` and `c_prev` count only those who
+        // riders turned away by a full platform so far: `hist` and `c_prev` count only those who
         // joined the queue, so it stays one run of arrivals, oldest first
         let mut turned = 0.0f64;
         for &i in &order {
@@ -1349,12 +1416,21 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
             }
             let mut c_now = arr.cum(t) - turned;
             let a = if c_prev.is_nan() { 0.0 } else { (c_now - c_prev).max(0.0) };
+            let p = period_at(t);
+            let on = carry[i];
+            let off = on * alpha[p * n + k];
+            let on = on - off;
+            let room = (cap - on).max(0.0);
             // T-1067: whoever was waiting when a train left more than GIVE_UP_S ago has been left
-            // behind that long, and went; then the platform holds at most WAITING_CAP, the latest
-            // arrivals turned away (a second's slack: a train exactly GIVE_UP_S on is still taken)
+            // behind that long, and went (a second's slack: a train exactly GIVE_UP_S on is still
+            // taken); then the platform holds whoever this train and the trains due in the next
+            // WAIT_FOR_ROOM_S take, each with this one's room (T-1255), at most WAITING_CAP: the
+            // latest arrivals are turned away
             let cut = hist.partition_point(|x| x.0 < t - GIVE_UP_S - 1.0);
             let gave = if cut > 0 { (hist[cut - 1].1 - (c_now - q - a)).clamp(0.0, q) } else { 0.0 };
-            let over = (q - gave + a - WAITING_CAP).max(0.0);
+            let gap = if t_prev.is_finite() { t - t_prev } else { trips[i].hw };
+            let hold = (room * (1.0 + (WAIT_FOR_ROOM_S / gap.max(1.0) + 1e-9).floor())).min(WAITING_CAP);
+            let over = (q - gave + a - hold).clamp(0.0, a);
             turned += over;
             c_now -= over;
             let q_before = q - gave + a - over;
@@ -1370,11 +1446,6 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
                 }
                 None => t,
             };
-            let p = period_at(t);
-            let on = carry[i];
-            let off = on * alpha[p * n + k];
-            let on = on - off;
-            let room = (cap - on).max(0.0);
             let b = q_before.min(room);
             let load = on + b;
             let q_after = q_before - b;

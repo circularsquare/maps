@@ -39,6 +39,26 @@ export function packRiders(dv: DemandView): Float32Array | null {
   return out;
 }
 
+/** The riders coming to each platform (T-1255) as `TrackApi.set_arrivals` reads them: per line its
+ * id, stop count and, per period, the riders at each route node. Null while a result has none. */
+export function packArrivals(dv: DemandView): Float32Array | null {
+  let size = 0;
+  for (const [, l] of dv.lines) if (l.board && l.alight && l.arrive) size += 2 + l.arrive.reduce((a, b) => a + b.length, 0);
+  if (size === 0) return null;
+  const out = new Float32Array(size);
+  let i = 0;
+  for (const [id, l] of dv.lines) {
+    if (!l.board || !l.alight || !l.arrive) continue;
+    out[i++] = Number(id);
+    out[i++] = (l.arrive[0]?.length ?? 0) / 2;
+    for (const v of l.arrive) {
+      out.set(v, i);
+      i += v.length;
+    }
+  }
+  return out;
+}
+
 /** One game hour of the account, as views into the worker's array. */
 export interface BoardHour {
   epoch: number;

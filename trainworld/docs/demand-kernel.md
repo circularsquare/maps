@@ -280,16 +280,23 @@ levels:
    the weekday's waits with its route and mode choices (4.2). Why, and the effect on the real New
    York save: DECISIONS 2026-10-13 (T-188), notes/T-188.md.
 
-   **The trains' room** (Anita, T-1070, `kernel::capacity_fit`, `cap_with_external`). The
-   averaging keeps a share of the free-flow pass (a quarter after three rounds), so the rounds
-   alone leave an overloaded line far over what its trains carry, whatever the wait or the
-   crowding curve (notes/T-1070.md). So once a period's last round is in, its final loads (every
-   population's, as the rounds read them) are held to the room: no segment carries more in the
-   period than its trains hold at crush in the busiest hour (trains an hour x crush x hours /
-   the busiest-hour factor, the room `load_of_crush` measures 100% against). Each direction of
-   each line is walked from its first stop as its trains run: the riders staying on keep their
-   places, a stop's boardings get on up to the room left, and the rest go by car or on foot,
-   each as the trip's other riders do (the walk takes its share back, `walk_lost`). Each
+   **The trains' room, as a queue** (Anita, T-1070, T-1255; `kernel::capacity_fit`,
+   `cap_with_external`). The averaging keeps a share of the free-flow pass (a quarter after three
+   rounds), so the rounds alone leave an overloaded line far over what its trains carry, whatever
+   the wait or the crowding curve (notes/T-1070.md). So once a period's last round is in, its
+   final loads (every population's, as the rounds read them) are held to the riders who would wait
+   for a train with room no longer than 30 minutes (`WAIT_FOR_ROOM_S`, track/boarding.rs).
+   Riders come to each platform by the boarding account's shape over the period: the free-flow
+   pass's boardings there (those who would ride if the trains had room), at least the rounds'
+   (the worker keeps each population's free-flow boardings and sends both, `come`, as a fourth
+   block of `total`). Each direction of each line runs its period's trains at an even headway (as
+   `left_behind`); a train lets off the stop's share and takes whoever waits up to its crush
+   load, the riders aboard keeping their places. A rider joins the platform only while the queue
+   is within this train's room and that of every train due in the next 30 minutes, each with the
+   same room; the rest go another way. A stop keeps its rounds' boardings up to those the queue
+   took; the rest go by car or on foot, each as the trip's other riders do (the walk takes its
+   share back, `walk_lost`). Every train can so leave full all period, the busiest hour up to the
+   busiest-hour factor times crush in the mean (`load_of_crush` above 100%). Each
    population scales its own figures (`cap_loads`): the segment loads, boardings, alightings and
    transfers by route node; a station's entries by those turned away at their first train there;
    riders turned away at a change off every entry alike; the rail trips by place by the entries

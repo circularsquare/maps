@@ -1067,9 +1067,10 @@ impl DemandApi {
         true
     }
 
-    /// After the last crowding round (T-1070): period `q`'s riders held to their trains' room
-    /// (`kernel::capacity_fit`) from `total`, every population's final loads as
-    /// `crowd_with_external` takes them; those turned away go by car or on foot as the pair's
+    /// After the last crowding round (T-1070, T-1255): period `q`'s riders held to those who wait
+    /// for a train with room no longer than `WAIT_FOR_ROOM_S` (`kernel::capacity_fit`) from
+    /// `total`, every population's final loads as `crowd_with_external` takes them, then optionally
+    /// the riders coming to each platform; those turned away go by car or on foot as the pair's
     /// other riders do. False if `q` has no solve or `total` another layout.
     pub fn cap_with_external(&mut self, q: usize, total: &[f32]) -> bool {
         let Some(Some(st)) = self.per.get_mut(q) else { return false };

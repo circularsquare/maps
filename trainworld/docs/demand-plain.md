@@ -6,7 +6,7 @@ changing, T-718's route choice between cities, T-720's walking bands, T-938's ca
 ownership cost, T-1000's cap on how far jobs pull and its set share of long commutes, T-1055's
 rule that every rail trip rides a train, T-1059's that it never walks further than walking
 there, T-1091's flat near end of the commute curve outside the US, T-1092's trips into
-town, T-1070's cap at the trains' room, and T-263's attractions). The full rules are in demand.md; this is the gist.
+town, T-1070's cap at the trains' room as T-1255's 30-minute queue, and T-263's attractions). The full rules are in demand.md; this is the gist.
 
 ## Who travels, and where to
 
@@ -95,10 +95,11 @@ There is no built-in liking for the train. Rail and the car are compared on time
   changes back onto the line they just left: on a full line people wait at their station.
 - If the train is full when it arrives, the wait for one with room counts too, minute for minute,
   up to an hour.
-- No more riders than the trains hold: once the rest is worked out, each line carries at most
-  what its trains hold at crush load in the busiest hour. Going along the line from its first
-  stop, riders already aboard keep their places and each stop's riders get on up to the room
-  left; the rest go by car or on foot instead, and pay no fare.
+- No more riders than the trains take: once the rest is worked out, everyone who would ride if
+  the trains had room comes to the platform, and stays only if the trains due in the next 30
+  minutes have room for them; going along the line, riders already aboard keep their places. The
+  rest go by car or on foot instead, and pay no fare. A line short of trains so has full
+  platforms and full trains all through the peak.
 - Every rail trip rides at least one train: nobody boards only to walk off to another station
   or platform of a complex, so walking between two stations is never a rail trip and pays no fare.
 - No train that walks further than walking there: a pair of stations is no option for a trip when

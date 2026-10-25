@@ -165,7 +165,7 @@ export type ToClock =
   | { kind: "chargeShares"; seq: number; build: [string, number][]; trains: [string, number][] }
   /** demand's riders for the boarding account (T-164): `TrackApi.set_riders`'s packing, built by
    * game/boarding.ts `packRiders` from the demand result, for one kind of day (T-260) */
-  | { kind: "riders"; packed: Float32Array; day: number }
+  | { kind: "riders"; packed: Float32Array; day: number; /** T-1255: `TrackApi.set_arrivals`'s packing, `packArrivals` */ arrive?: Float32Array }
   /** demand's transfers between platforms (T-554): `TrackApi.set_transfers`'s packing, from
    * `platformTransfers` for the solve shown */
   | { kind: "transfers"; packed: Float32Array }

@@ -251,6 +251,12 @@ impl TrackApi {
     pub fn set_riders(&mut self, packed: Vec<f32>, day: u32) {
         self.boarding.set_riders_day(&packed, day as usize);
     }
+    /// The riders coming to each platform (T-1255, `Boarding::set_arrivals_day`), after
+    /// `set_riders` for the same kind of day: per line its id, stop count `n`, and per period the
+    /// riders at each of its `2n` route nodes.
+    pub fn set_arrivals(&mut self, packed: Vec<f32>, day: u32) {
+        self.boarding.set_arrivals_day(&packed, day as usize);
+    }
     /// Demand's transfers between platforms (T-554, `Boarding::set_transfers`): per pair the
     /// line, run and stop riders leave, the line, run and stop they board, and riders a day. Only
     /// the timing of drawn platform crowds reads them.

@@ -574,14 +574,17 @@ notes/T-420.md has the tables.
   shape within a period is US commute timing. Check: published crush capacities per car for the
   country's stock, and left-behind or platform-queue surveys where they exist (London's and Hong
   Kong's operators publish some).
-- **The trains' room** (Anita, T-1070, docs/demand-kernel.md step 7). After the rounds no
-  segment carries more riders than its trains hold at crush in the busiest hour; the riders over
-  it go by car or on foot. Room is the same 160 a car and the US busiest-hour factors. Why it may
-  not carry over: where a line runs past crush for real (Tokyo's and Mumbai's peaks, with pushers)
-  the cap holds rail lower than it is, and where riders spread their trips over the peak's
-  shoulders to find room, holding the busiest hour to crush takes off riders who would in fact
-  travel a little earlier or later. Check: peak-hour line loads against the operator's stated
-  capacity, and whether the busiest lines' daily riders come out near their published counts.
+- **The trains' room, as a queue** (Anita, T-1070, T-1255, docs/demand-kernel.md step 7). After
+  the rounds riders keep their trip only if, arriving at the platform with everyone who would ride
+  if the trains had room, they would wait no longer than 30 minutes for a train with room; the rest
+  go by car or on foot. Room is the same 160 a car, the arrivals the US busiest-hour shapes, and
+  the 30 minutes one figure everywhere. Why it may not carry over: where a line runs past crush
+  for real (Tokyo's and Mumbai's peaks, with pushers) the cap holds rail lower than it is; where
+  riders shift their trips to the peak's shoulders rather than queue, the shape overstates the
+  queue; and patience on a platform differs by place (Indian and Chinese metros queue long at
+  security and gates already). Check: peak-hour line loads against the operator's stated
+  capacity, platform-queue or left-behind surveys (London's and Hong Kong's operators publish
+  some), and whether the busiest lines' daily riders come out near their published counts.
 
 ## Other purposes
 

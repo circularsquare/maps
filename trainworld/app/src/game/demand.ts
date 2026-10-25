@@ -28,6 +28,9 @@ export interface LineDemand {
    * stops, then run 1's, each in its travel order (2 x stops); the boarding account's input (T-164) */
   board?: Float32Array[];
   alight?: Float32Array[];
+  /** T-1255: the riders coming to each platform, laid out as `board` and at least it; those beyond
+   * it would ride if the trains had room, and a full platform turns them away */
+  arrive?: Float32Array[];
   /** per period, US$: what the fare curve adds beyond its first stretch's base and rate on the
    * trips that first board this line (T-1143, the sim's `fare_extra`); absent or 0 while the
    * curve is a straight line */

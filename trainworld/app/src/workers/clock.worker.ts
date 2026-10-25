@@ -2245,6 +2245,7 @@ async function handle(msg: ToClock) {
     // kind of day's riders a message (T-260)
     if (peakC[msg.day ?? 0]) peakC[msg.day ?? 0] = strengths(msg.packed.subarray(0, PERIODS.length));
     api.set_riders(msg.packed, msg.day ?? 0);
+    if (msg.arrive) api.set_arrivals(msg.arrive, msg.day ?? 0);
     stepBoarding();
   } else if (msg.kind === "transfers") {
     // T-554: when riders changing lines reach their next platform; the account is unchanged
