@@ -678,9 +678,9 @@ function query(msg: Query) {
           for (const c of mcs) {
             const v = near ? c.part!.market_trip_between(q, day, near.place, near.gid, msg.end, msg.far, msg.farGid) : c.part!.market_trip(q, day, place, sq!.xy, sq!.share, msg.end, msg.far, msg.farGid);
             if (v[0] !== 1) continue;
-            if (!best || v[3] > best[3]) { marketTripNodesGlobal(v, viewOf(c, c.part!).nodeGlobal); best = v; }
+            if (!best || v[3] + v[20] > best[3] + best[20]) { marketTripNodesGlobal(v, viewOf(c, c.part!).nodeGlobal); best = v; }
           }
-          if (!best) { best = new Float64Array(20); best[0] = 1; best[14] = 2; best[13] = 1; best[6] = best[7] = -1; }
+          if (!best) { best = new Float64Array(22); best[0] = 1; best[14] = 2; best[13] = 1; best[6] = best[7] = -1; }
           answers.push(best);
           periods.push(q);
         }
@@ -881,13 +881,17 @@ function marketFigures(parts: IntercityApi[], q: number) {
   // round, trips, rail, 0, ms, pairs, segments over seats, then the worst loads: the largest part's
   const summary = of((p) => p.summary(q), (i) => i === 2 || i === 4 || i === 6);
   if (parts.length > 1 && summary.length) for (const i of [7, 8, 9]) summary[i] = Math.max(...parts.map((p) => p.summary(q)[i] ?? 0));
-  const ps = of((p) => p.part_summary(q), (i) => i % 2 === 1 && i < 6);
+  // the longer trips, the commutes, the everyday pairs (T-1175), then (T-1229) the pairs by purpose,
+  // four each: only the rail is a part's own
+  const ps = of((p) => p.part_summary(q), (i) => (i < 6 ? i % 2 === 1 : i >= 8 && (i - 8) % 4 === 1));
   // T-1175: the everyday pairs' walkers are every pair's with no rail (the same in every part) less
-  // those each part's rail takes
+  // those each part's rail takes, in all and for each purpose
   if (parts.length > 1 && ps.length >= 7) {
     const each = parts.map((p) => p.part_summary(q)).filter((v) => v.length >= 7);
-    const base = each[0][7] ?? each[0][6];
-    ps[6] = Math.max(0, base - each.reduce((s, v) => s + (base - v[6]), 0));
+    for (const [at, base] of [[6, 7], ...Array.from({ length: Math.max(0, (ps.length - 8) >> 2) }, (_, k) => [8 + 4 * k + 2, 8 + 4 * k + 3])]) {
+      const b = each[0][base] ?? each[0][at];
+      ps[at] = Math.max(0, b - each.reduce((s, v) => s + (b - v[at]), 0));
+    }
     if (summary.length) summary[3] = ps[6];
   }
   return {
@@ -913,9 +917,9 @@ function tripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
   }
 }
 
-/** The same for an `IntercityApi.market_trip` answer (T-866: head 20, pairs of 7, legs of 12). */
+/** The same for an `IntercityApi.market_trip` answer (T-866: head 22 since T-1229, pairs of 7, legs of 12). */
 function marketTripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
-  const HEAD = 20, PAIR_LEN = 7, { LEG_LEN } = TRIP_LAYOUT;
+  const HEAD = 22, PAIR_LEN = 7, { LEG_LEN } = TRIP_LAYOUT;
   const g = (i: number) => { if (v[i] >= 0) v[i] = nodeGlobal[v[i]]; };
   const np = v[11], nr = v[12];
   for (let k = 0; k < np; k++) { g(HEAD + k * PAIR_LEN); g(HEAD + k * PAIR_LEN + 1); }

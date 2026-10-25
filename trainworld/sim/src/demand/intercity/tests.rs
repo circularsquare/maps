@@ -249,7 +249,7 @@ fn intercity_selection_places_conserve_and_rail_is_within_all() {
     let nz = a.zone_count();
     assert_eq!(nz, a.m.zones.len());
     assert!(none[1..head + 4 * nz].iter().all(|v| *v == 0.));
-    assert_eq!(all.len(), head + 7 * nz + 4 * MARKETS + 4 * nz + 2);
+    assert_eq!(all.len(), head + 7 * nz + 4 * MARKETS + 4 * nz + 6 * E_CROSS.len() * nz + 2);
     for d in 0..2 {
         let (mut tot, mut rail, mut sx) = (0., 0., 0.);
         for z in 0..nz {
@@ -347,7 +347,7 @@ fn expanded_markets_route_boston_and_washington_and_keep_flow_layouts() {
     solve_all(&mut a);
     let nz = a.zone_count();
     let selected = a.selection_flows(3, &[180000., 0.], &[1.]);
-    assert_eq!(selected.len(), 41 + 7 * nz + 20 + 4 * nz + 2);
+    assert_eq!(selected.len(), 41 + 7 * nz + 20 + 4 * nz + 30 * nz + 2);
     assert_eq!(selected[0], 1.);
     assert!(selected[1 + 8 * 4 + 1] > 0., "Boston to Washington is served");
     let washington = a.selection_flows(4, &[240000., 0.], &[1.]);
@@ -702,6 +702,94 @@ fn everyday_pairs_across_a_zone_line() {
     let mut bad = packs.clone();
     bad[0] = with_everyday(&packs[0], [1000., 100.], false);
     assert!(IntercityApi::new(&composition(&bad, Some(&rows))).is_err());
+}
+/// T-1229: the everyday pairs by purpose: in `part_summary` by kind and `everyday_by_place`, in a
+/// selection's blocks (all modes from the market alone, rail and the walkers rail takes from the
+/// network), and in the trip explorer between the two places.
+#[test]
+fn everyday_pairs_by_purpose_in_selections_and_the_explorer() {
+    let packs = world_packs();
+    let rows = rows_json(&packs);
+    let mut e_packs = packs.clone();
+    e_packs[0] = with_everyday(&packs[0], [1000., 100.], true);
+    let mut a = IntercityApi::new(&composition(&e_packs, Some(&rows))).unwrap();
+    world_lines(&mut a, true, true);
+    solve_all(&mut a);
+    let (np, ng) = (a.m.places.len(), a.m.n_gid);
+    let (mut rail, mut walk) = ([0f64; KIND_COUNT], [0f64; KIND_COUNT]);
+    for q in 0..PERIODS {
+        let s = a.part_summary(q);
+        assert_eq!(s.len(), 8 + 4 * KIND_COUNT);
+        for i in 0..4 {
+            let sum: f64 = (0..KIND_COUNT).map(|k| s[8 + 4 * k + i]).sum();
+            assert!((sum - s[4 + i]).abs() <= 1e-4 * s[4 + i].max(1.), "figure {i}: {sum} {}", s[4 + i]);
+        }
+        for k in (0..KIND_COUNT).filter(|&k| k != 0 && k != 5) {
+            assert!((0..4).all(|i| s[8 + 4 * k + i] == 0.), "kind {k} has no pairs");
+        }
+        let by = a.everyday_by_place(q);
+        assert_eq!(by.len(), 3 * np * KIND_COUNT);
+        for k in 0..KIND_COUNT {
+            for i in 0..3 {
+                assert_eq!(by[3 * k + i], s[8 + 4 * k + i], "place 0, kind {k}, figure {i}");
+            }
+            assert!((1..np).all(|p| by[3 * (p * KIND_COUNT + k)..][..3].iter().all(|&v| v == 0.)), "only place 0 has homes with pairs");
+            rail[k] += s[8 + 4 * k + 1];
+            walk[k] += s[8 + 4 * k + 2];
+        }
+    }
+    assert!(rail[0] > 0. && rail[5] > 0. && walk[0] > 0.);
+    // a selection of every site of place 0 (homes), and of place 1 (the first zone, activities)
+    let sites = |place: usize| {
+        let g = a.m.groups.iter().find(|g| a.m.zones[a.m.cell_zone[g.lo]].place == place).unwrap();
+        let xy: Vec<f32> = (0..g.city.len()).flat_map(|i| [g.city.x[i], g.city.y[i]]).collect();
+        (xy, vec![1f32; g.city.len()])
+    };
+    let etail = 1 + 8 * np + 11 * ng + 4 * np;
+    let all_q = (1u32 << PERIODS) - 1;
+    let far1 = a.m.places[1].off as usize;
+    let far0 = a.m.places[0].off as usize;
+    for (market, end, far) in [(0usize, 0usize, far1), (1, 1, far0)] {
+        let (xy, share) = sites(market);
+        let base = a.selection_all_day(market as u32, &xy, &share, WEEKDAY as u32, all_q);
+        let with = a.selection_rail_day(market as u32, &xy, &share, WEEKDAY as u32);
+        assert_eq!(base.len(), etail + E_CROSS.len() * 6 * ng + 2);
+        for (ki, &k) in E_CROSS.iter().enumerate() {
+            let o = etail + ki * 6 * ng + 6 * far + 3 * end;
+            let want = if k == 0 { 2000. } else if k == 5 { 200. } else { 0. };
+            assert!((base[o] - want).abs() < 1e-3 * want.max(1.), "kind {k} end {end}: legs {} not {want}", base[o]);
+            assert_eq!(base[o + 1], 0., "no rail without a network");
+            assert!((base[o + 2] - base[o] * if k == 0 { 0.2 } else { 0. }).abs() < 1e-3, "walkers with no rail");
+            assert_eq!(with[o], 0., "legs are the market's alone");
+            assert!((with[o + 1] - rail[k]).abs() < 1e-3 * rail[k].max(1.), "kind {k} end {end}: rail {} not {}", with[o + 1], rail[k]);
+            // what is left walking is the explorer's and the summary's
+            assert!((base[o + 2] + with[o + 2] - walk[k]).abs() < 1e-3 * walk[k].max(1.), "kind {k} end {end}: walking {} not {}", base[o + 2] + with[o + 2], walk[k]);
+        }
+        // the longer trips' and the commutes' blocks do not hold them
+        assert!(base[etail..etail + E_CROSS.len() * 6 * ng].iter().sum::<f64>() > 0.);
+    }
+    // the explorer between the places, either way, one period
+    for q in 0..PERIODS {
+        let s = a.part_summary(q);
+        for (near, far, dir) in [(0u32, 1u32, 0u32), (1, 0, 1)] {
+            let h = a.market_trip_between(q, WEEKDAY as u32, near, -1, dir, far, -1);
+            assert!(h.len() >= super::market_trip::MT_HEAD);
+            assert!((h[19] - s[4]).abs() < 1e-3 * s[4].max(1.), "q {q} dir {dir}: legs {} not {}", h[19], s[4]);
+            assert!((h[20] - s[5]).abs() < 1e-3 * s[5].max(1.), "rail {} not {}", h[20], s[5]);
+            assert!((h[21] - s[6]).abs() < 1e-3 * s[6].max(1.), "walking {} not {}", h[21], s[6]);
+            if h[20] > 0. {
+                assert!(h[11] > 0. && h[14] == 0., "pairs {} why {}", h[11], h[14]);
+            }
+        }
+    }
+    // a selection of place 1 asks one way: nobody living there goes out to place 0, and the
+    // activities there are place 0's residents'
+    let (xy, share) = sites(1);
+    let out = a.market_trip(0, WEEKDAY as u32, 1, &xy, &share, 0, 0, -1);
+    assert_eq!((out[19], out[20], out[21]), (0., 0., 0.));
+    let back = a.market_trip(0, WEEKDAY as u32, 1, &xy, &share, 1, 0, -1);
+    let both = a.market_trip_between(0, WEEKDAY as u32, 1, -1, 1, 0, -1);
+    assert!(back[19] > 0. && (back[19] - both[19]).abs() < 1e-6 * both[19]);
 }
 #[test]
 fn places_not_open_answer_by_place() {

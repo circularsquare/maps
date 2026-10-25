@@ -156,6 +156,34 @@ function PairModes({ pair, near, far, day }: { pair: { trips: number; rail: numb
   );
 }
 
+/** T-1229: the everyday outings across a zone line between the two ends, by train, on foot and by
+ * car, over the day as the solve split them. */
+function EverydayModes({ legs, rail, walk, day }: { legs: number; rail: number; walk: number; day: string }) {
+  const model = [rail / legs, walk / legs, Math.max(0, legs - rail - walk) / legs];
+  const n = peopleOf(legs);
+  const whole = wholePeople(model, n).map((p) => p / n);
+  const of = `the ${count(legs)} trip legs ${day} of errands, visits, school and medical trips between the two ends`;
+  const c = modeColours();
+  const parts = ([["Train", whole[0], c.train], ["Walking", whole[1], c.walk], ["Car", whole[2], c.drive]] as [string, number, string][]).filter(([, v]) => v > 0);
+  return (
+    <>
+      <div class="h">Everyday trips<span class="right muted small" data-tip={`${exact(legs)} trip legs ${day}, to the other end and back: errands, visits, school and medical trips between neighbouring areas on either side of a zone line. Inter-city trips are above.`}>{count(legs)} legs</span></div>
+      <div class="trip-modes">
+        <SegBar kind="trip-bar" label={parts.map(([nm, v]) => `${nm} ${pctShare(v)}`).join(", ")} parts={parts.map(([nm, v, col]) => ({ share: v, colour: col, tip: `${nm}: ${pctShare(v)} of ${of}` }))} />
+        <ul class="rows">
+          {parts.map(([nm, v, col]) => (
+            <li data-tip={`${nm}: ${pctShare(v)} of ${of}`}>
+              <i class="mk" style={{ background: col }} />
+              <span class="grow">{nm}</span>
+              <span class="val w-num">{pctShare(v)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
+  );
+}
+
 /** The crossings between the near place and every far one, or null when they differ (or a row is
  * missing). */
 function crossingSet({ near, fars }: { near: number; fars: number[] }): Crossing[] | null {
@@ -286,6 +314,9 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   const ways = m.near ? 2 : 1;
   const sum = (k: "trips" | "rail" | "air" | "car") => ways * m.periods.reduce((s, p) => s + (p?.[k] ?? 0), 0);
   const all = sum("trips");
+  // T-1229: the everyday outings across a zone line are legs a day both ways already
+  const sumE = (k: "legs" | "rail" | "walk") => m.periods.reduce((s, p) => s + (p?.everyday[k] ?? 0), 0);
+  const [eLegs, eRail, eWalk] = [sumE("legs"), sumE("rail"), sumE("walk")];
   // T-1148: the rows give the car's parts and the plane
   marketRowsReady.value;
   void loadMarketRows();
@@ -351,6 +382,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
         </div>
       )}
       {pair && <PairModes pair={pair} near={ends.near} far={one} day={day} />}
+      {!closed && eLegs >= 0.5 && <EverydayModes legs={eLegs} rail={eRail} walk={eWalk} day={day} />}
       <div class="h">By train<span class="right muted small" data-tip={repTip}>Inter-city, {period.toLowerCase()}</span></div>
       {t.why || !main || !tm ? <p class="muted">{noStation || NO_RAIL[t.why || "noRail"]}</p> : (
         <>

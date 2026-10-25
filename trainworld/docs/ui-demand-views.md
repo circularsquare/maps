@@ -65,8 +65,10 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   station circles, the bubbles and their hovers ("12,400 school and university trips per day at
   homes here"), a selection's own and far-end bubbles, the track tag. Scales stay as they are, so
   purposes stay comparable. Work is every zone's commutes (commutes between zones included); the
-  others are each zone's everyday layer. Inter-city trips are not an option: they show only
-  under All purposes. Train fill and crowding always count everyone.
+  others are each zone's everyday layer, with their outings across a zone line [T-1229]: under
+  Shopping and errands the far end holds those errands' places in the next zone too. Inter-city
+  trips are not an option: they show only under All purposes. Train fill and crowding always
+  count everyone.
   A selection's counts and far-end places follow the filter; its pie and timing charts keep every
   purpose. Switching purpose clears the bubbles until that purpose's are ready. Not remembered.
 
@@ -273,9 +275,13 @@ commuters and inter-city riders are in its inspector only ([ui-inspectors.md](ui
   direction's total); its own zone's row reads "Other New York places". A station lists rail
   riders starting and ending there by place. Each direction lists its 15 biggest places, the rest
   summed in one "To other places" (or "From other places") row whose hover counts them [T-1165].
+  A selection's lists also hold its errands, visits, school and medical trips across a zone line
+  [T-1229], which add a walking column (the walking icon, hover "on foot") where some walk; a
+  station's count their rail riders, as its commutes between zones are.
 - On the map a bubble selection's are always drawn (no setting), except under a local purpose
-  filter: the far end of its own end (Homes: where the trips go; Destinations: where they come
-  from). A station's are not drawn [T-519]. Only zones other than the focused one are drawn;
+  filter, which draws only that purpose's outings across a zone line [T-1229] (none under Work,
+  Airport and Attractions): the far end of its own end (Homes: where the trips go; Destinations:
+  where they come from). A station's are not drawn [T-519]. Only zones other than the focused one are drawn;
   same-zone counts stay in the inspector [T-139].
 - Above zoom 9.5 every far 6 km zone with trips is a disc at its position, on its own relative
   scale (the busiest covers 0.15 of a zone's area). At 9.5 and below they become one labelled bubble

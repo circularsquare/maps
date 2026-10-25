@@ -356,7 +356,16 @@ from both sides, so the everyday draw does not stop at the line.
   weight comes from the pair's walking share with no rail, rail and the car split the rest on their
   cost ratio (the commutes' car to the activity zone), and rail takes its share of the walkers. Their
   loads join each purpose's in the purpose filter; their legs, rail and walking join the market's
-  summary (a weekend scales them by errands' factor).
+  summary, by purpose (`part_summary` after its first eight numbers: four a purpose), so a weekend
+  scales each purpose's by its own factor (T-1229).
+- **In selections and the trip explorer** (T-1229). A bubble selection's blocks (`selection`, after
+  the commutes') hold them by purpose (errands, social, school, university, medical) and far zone:
+  legs a day, rail legs and walking legs, a residents' end by people and an activity end by
+  attraction; the all-mode legs come from the market alone, the rail and the walkers rail takes
+  from each network. `market_trip` adds them to its answer (head slots 19 to 21: legs, rail, walking)
+  and their rail riders to its station pairs and routes. A station's far-end lists already counted
+  their rail riders with the other regional trips. The city's own counts by purpose stay its local
+  legs, shrunk by the kept share; the pairs are counted in the market's.
 
 ## 5. The world market (longer trips)
 

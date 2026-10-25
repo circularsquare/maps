@@ -75,6 +75,7 @@ import { addOpened } from "../game/openedZones";
 import { trackZones } from "../game/trackZones";
 import { viewCentre } from "../game/listScope";
 import type { BareFigures, DemandNetwork, FromDemand, OpenRejected, ToDemand } from "./demandProtocol";
+import { marketPartsOn } from "./marketParts";
 import { readMarketPeriod, readTripPeriod, setMarketTripQuery, setTripQuery, tripKey, type MarketPeriod, type RouteNodes, type Trip } from "../game/trip";
 import { demandTestSnapshot } from "./demandTest";
 import { mergeEveryday } from "./selectionMerge";
@@ -181,12 +182,17 @@ const marketXY = (x: number, y: number): { x: number; y: number } => marketToWor
 const centreXY = ([lon, lat]: [number, number]): { x: number; y: number } => { const [x, y] = getWorldFrame().fromLonLat(lon, lat); return { x, y }; };
 /** The zone count of a longer-trip answer of `len` numbers. For M markets a selection has 1+8*M
  * header numbers, 4 per zone of flows, 3 per zone of x, y, market, then (T-276) the commutes
- * between zones: 4 per market and 4 per zone, then (T-378) the trips with places that have no
- * zone, starting and ending; a station has 6*M header numbers then 5 per zone. */
+ * between zones: 4 per market and 4 per zone, then (T-1229) 6 per zone for each of the everyday
+ * kinds that cross zone lines (`CROSS_KINDS`: legs, rail and walking, starting and ending), then
+ * (T-378) the trips with places that have no zone, starting and ending; a station has 6*M header
+ * numbers then 5 per zone. */
 function intercityZones(kind: "icSel" | "icStation", len: number): number {
   const m = INTERCITY_PLACES.length;
-  return kind === "icSel" ? (len - 3 - 12 * m) / 11 : (len - 6 * m) / 5;
+  return kind === "icSel" ? (len - 3 - 12 * m) / (11 + 6 * CROSS_KINDS.length) : (len - 6 * m) / 5;
 }
+/** The everyday kinds (`EVERYDAY_KEYS` order) whose outings cross zone lines, in the order of
+ * `IntercityApi.selection`'s blocks (sim `E_CROSS`). */
+const CROSS_KINDS = [0, 1, 2, 3, 5];
 /** Where the zones' own x, y, market start: the same on every worker, so never added up. */
 function intercityZoneXY(kind: "icSel" | "icStation", len: number): number {
   const nz = intercityZones(kind, len);
@@ -2603,32 +2609,64 @@ class DemandClient {
     // commuters living in the selection (by where they work) and of those working there (by where
     // they live), all and rail. Starts take the first, ends the second.
     const tail = xy + 3 * nz;
+    // T-1229: then the everyday outings across a zone line: per kind of `CROSS_KINDS`, per far zone,
+    // (legs, rail legs, walking legs) of the residents' outings and of those arriving, as the
+    // commutes' blocks are
+    const etail = tail + 4 * P + 4 * nz;
     const own = CITIES.find((c) => c.id === activeCity.peek())?.place ?? -1;
-    const flows = (dir: number): PlaceFlows => {
+    const flows = (dir: number, longer: boolean, kinds: number[]): PlaceFlows => {
       const places: PlaceTrips[] = [];
-      let all = 0, rail = 0, air = 0, car = 0;
-      for (let p = 0; p < P; p++) {
-        const o = 1 + 8 * p + 4 * dir;
-        const ca = v[tail + 4 * p + 2 * dir] ?? 0, cr = v[tail + 4 * p + 2 * dir + 1] ?? 0;
-        const a = v[o] + ca, r = v[o + 1] + cr;
-        // T-378: the longer trips not by rail by the corridor's shares; commuters drive
-        const [pa, pc] = own >= 0 ? corridorSplit(this.corridorModes, corridorOf(own, p), v[o] - v[o + 1]) : [0, v[o] - v[o + 1]];
-        const c = pc + ca - cr;
-        all += a; rail += r; air += pa; car += c;
-        if (a > 0) {
-          const city = cityOfPlace(p);
-          places.push({ place: p, all: a, rail: r, air: pa, car: c, ...(v[o] > 0 || !city ? marketXY(v[o + 2] / Math.max(v[o], 1e-9), v[o + 3] / Math.max(v[o], 1e-9)) : centreXY(city.center)) });
+      const zones: ZoneTrips[] = [];
+      // the everyday outings of `kinds` by far zone, then by place
+      const cz = new Map<number, [number, number, number]>();
+      for (const ki of kinds) {
+        for (let z = 0; z < nz; z++) {
+          const o = etail + ki * 6 * nz + 6 * z + 3 * dir;
+          if (!(v[o] > 0)) continue;
+          const e = cz.get(z) ?? cz.set(z, [0, 0, 0]).get(z)!;
+          e[0] += v[o]; e[1] += v[o + 1]; e[2] += Math.max(0, v[o + 2]);
         }
       }
-      const zones: ZoneTrips[] = [];
+      const cp = new Map<number, [number, number, number, number, number]>();
+      for (const [z, e] of cz) {
+        const pl = v[xy + 3 * z + 2];
+        const x = cp.get(pl) ?? cp.set(pl, [0, 0, 0, 0, 0]).get(pl)!;
+        x[0] += e[0]; x[1] += e[1]; x[2] += e[2]; x[3] += e[0] * v[xy + 3 * z]; x[4] += e[0] * v[xy + 3 * z + 1];
+      }
+      let all = 0, rail = 0, air = 0, car = 0, walk = 0;
+      for (let p = 0; p < P; p++) {
+        const o = 1 + 8 * p + 4 * dir;
+        const ca = longer ? v[tail + 4 * p + 2 * dir] ?? 0 : 0, cr = longer ? v[tail + 4 * p + 2 * dir + 1] ?? 0 : 0;
+        const lo = longer ? v[o] : 0, lr = longer ? v[o + 1] : 0;
+        const x = cp.get(p);
+        const a = lo + ca + (x?.[0] ?? 0), r = lr + cr + (x?.[1] ?? 0), w = x?.[2] ?? 0;
+        // T-378: the longer trips not by rail by the corridor's shares; commuters drive
+        const [pa, pc] = own >= 0 ? corridorSplit(this.corridorModes, corridorOf(own, p), lo - lr) : [0, lo - lr];
+        const c = pc + ca - cr + Math.max(0, (x?.[0] ?? 0) - (x?.[1] ?? 0) - w);
+        all += a; rail += r; air += pa; car += c; walk += w;
+        if (a > 0) {
+          const city = cityOfPlace(p);
+          const at = lo > 0 ? marketXY(v[o + 2] / lo, v[o + 3] / lo) : x ? marketXY(x[3] / x[0], x[4] / x[0]) : city ? centreXY(city.center) : marketXY(0, 0);
+          places.push({ place: p, all: a, rail: r, air: pa, car: c, ...(w > 0 ? { walk: w } : {}), ...at });
+        }
+      }
       for (let z = 0; z < nz; z++) {
         const c = tail + 4 * P + 4 * z + 2 * dir;
-        const a = v[head + 4 * z + 2 * dir] + (v[c] ?? 0);
-        if (a > 0) zones.push({ ...marketXY(v[xy + 3 * z], v[xy + 3 * z + 1]), place: v[xy + 3 * z + 2], gid: z, all: a, rail: v[head + 4 * z + 2 * dir + 1] + (v[c + 1] ?? 0) });
+        const e = cz.get(z);
+        const a = (longer ? v[head + 4 * z + 2 * dir] + (v[c] ?? 0) : 0) + (e?.[0] ?? 0);
+        if (a > 0) zones.push({ ...marketXY(v[xy + 3 * z], v[xy + 3 * z + 1]), place: v[xy + 3 * z + 2], gid: z, all: a, rail: (longer ? v[head + 4 * z + 2 * dir + 1] + (v[c + 1] ?? 0) : 0) + (e?.[1] ?? 0), ...(e && e[2] > 0 ? { walk: e[2] } : {}) });
       }
-      return { all, rail, air, car, elsewhere: v[v.length - 2 + dir] ?? 0, places: places.sort((a, b) => b.all - a.all), zones: zones.sort((a, b) => b.all - a.all) };
+      return { all, rail, air, car, ...(walk > 0 ? { walk } : {}), elsewhere: longer ? v[v.length - 2 + dir] ?? 0 : 0, places: places.sort((a, b) => b.all - a.all), zones: zones.sort((a, b) => b.all - a.all) };
     };
-    return { version, starts: flows(0), ends: flows(1), matched: v[0] };
+    const every = CROSS_KINDS.map((_, i) => i);
+    // the filter's far end for each shown purpose: its kinds' outings alone (school counts university)
+    const byPurpose = new Map<PurposeKey, { starts: PlaceFlows; ends: PlaceFlows }>();
+    for (const key of new Set(CROSS_KINDS.map((k) => shownKey(EVERYDAY_KEYS[k])))) {
+      const ks = every.filter((i) => shownKey(EVERYDAY_KEYS[CROSS_KINDS[i]]) === key);
+      const starts = flows(0, false, ks), ends = flows(1, false, ks);
+      if (starts.all > 0 || ends.all > 0) byPurpose.set(key, { starts, ends });
+    }
+    return { version, starts: flows(0, true, every), ends: flows(1, true, every), matched: v[0], byPurpose };
   }
 
   /** A station's longer-trip rail riders (game/demand.ts `IntercityStation`, T-118), or a station
@@ -2904,12 +2942,11 @@ class DemandClient {
     const intercitySummary = r.intercitySummary.slice();
     const ip = r.intercityParts;
     // T-276: longer trips by their factor, commutes between zones by work's
-    // T-1175: everyday outings across a zone line by errands' factor, the largest of their purposes
-    const fe = this.factor(day, "errands", q);
     if (ip && ip.length >= 4) { intercitySummary[1] = ip[0] * fl + ip[2] * fw; intercitySummary[2] = ip[1] * fl + ip[3] * fw; }
     else { intercitySummary[1] *= fl; intercitySummary[2] *= fl; }
-    if (ip && ip.length >= 7) { intercitySummary[1] += ip[4] * fe; intercitySummary[2] += ip[5] * fe; intercitySummary[3] = ip[6] * fe; }
-    const intercityParts = ip?.map((v, i) => v * (i < 2 ? fl : i < 4 ? fw : fe));
+    // T-1175, T-1229: everyday outings across a zone line, each purpose's by its own factor
+    const intercityParts = ip && marketPartsOn(ip, fl, fw, (key) => this.factor(day, key, q));
+    if (intercityParts && intercityParts.length >= 7) { intercitySummary[1] += intercityParts[4]; intercitySummary[2] += intercityParts[5]; intercitySummary[3] = intercityParts[6]; }
     const elsewhere = r.elsewhere?.map((v) => v * fl);
     const summary = r.summary.slice();
     summary[1] = summary[2] = summary[3] = 0;

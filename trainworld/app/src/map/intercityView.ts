@@ -20,8 +20,8 @@
 // zooms aggregate a selection's trips to one labeled circle per other market (T-135, T-136). Area
 // represents total travellers, without a minimum radius or additive size offset. All use the same
 // opacity and size slider, coloured by `bubbleColour(rail, 0, everything else)`: by default blue
-// train, red the rest. They are drawn except under a local purpose filter; the numbers stay in the
-// inspectors.
+// train, red the rest. Under a local purpose filter only that purpose's everyday outings across a
+// zone line are drawn (T-1229, `IntercitySelection.byPurpose`); the numbers stay in the inspectors.
 // Asked for, not pushed, and asked again whenever `demandView` changes, keeping the last answer
 // meanwhile.
 
@@ -37,6 +37,7 @@ import { selectedScope } from "../game/complexView";
 import { count } from "../game/format";
 import { BUBBLE_ALPHA, bubbleColour, rgb, setBubbleColours, UNBUILT_FILL } from "../game/palette";
 import { openedZones } from "../game/openedZones";
+import { purposeWords, type PurposeKey } from "../game/purposes";
 import { display, purposeFilter, selection, shade, shownDayPhrase } from "../game/ui";
 import type { Selection } from "../game/types";
 import { DISC } from "../workers/commutersProtocol";
@@ -216,7 +217,7 @@ function rowOf(p: MarketPairs, za: number): Float64Array {
 export function startIntercityView(view: DemandOverlay, map: MlMap) {
   let marks: Marks | null = null;
   /** what is on show, redrawn when the setting changes */
-  let current: { flows: PlaceFlows; verb: string; own: number } | null = null;
+  let current: { flows: PlaceFlows; verb: string; own: number; by?: IntercitySelection["byPurpose"]; end?: "home" | "work" } | null = null;
   const labels = document.createElement("div");
   labels.className = "intercity-labels";
   map.getContainer().appendChild(labels);
@@ -390,19 +391,23 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       renderCities(sel?.kind === "city" ? sel.city : null);
       return;
     }
-    if (!current || !shown || mode) {
+    // T-1229: a local purpose filter draws that purpose's own everyday outings across a zone line
+    // as the far end (the longer trips stay under all purposes)
+    const flows = !current ? undefined : shown ? current.flows : current.by?.get(filter as PurposeKey)?.[current.end === "work" ? "ends" : "starts"];
+    if (!current || !flows || mode) {
       view.setDiscs("inter", null);
       return;
     }
     const regional = map.getZoom() <= CITY_BUBBLE_ZOOM;
     const a = anchor();
-    const points = regional ? current.flows.places.filter(p => p.all > 0 && p.place !== current!.own).map(p => {
+    const points = regional ? flows.places.filter(p => p.all > 0 && p.place !== current!.own).map(p => {
       const city = CITIES.find(c => c.place === p.place);
       const ll = city?.center ?? packToLngLat(p.x, p.y);
       return { ...p, ll, name: INTERCITY_PLACES[p.place], gid: -1 };
-    }) : current.flows.zones.filter(z => z.all > 0 && z.place !== current!.own).map(z => ({...z, ll: packToLngLat(z.x, z.y), name: ""}));
+    }) : flows.zones.filter(z => z.all > 0 && z.place !== current!.own).map(z => ({...z, ll: packToLngLat(z.x, z.y), name: ""}));
     points.sort((a, b) => b.all - a.all);
     const { verb } = current;
+    const trips = shown ? "inter-city trips" : `${purposeWords(filter as PurposeKey)} trips`;
     const max = points[0]?.all || 1;
     const pxPerUnit = pxPerUnitAt(map.getZoom());
     // biggest first, so the small ones draw on top of the big ones
@@ -412,7 +417,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     points.forEach((z, i) => {
       const [lng, lat] = z.ll;
       const [x, y] = toLocal(lng, lat, a);
-      const c = bubbleColour(z.rail, 0, Math.max(0, z.all - z.rail));
+      const walk = z.walk ?? 0, rest = Math.max(0, z.all - z.rail - walk);
+      const c = bubbleColour(z.rail, walk, rest);
       // Area, not radius, represents total travellers. Before the common radius scale, the
       // biggest regional circle is 38px and detailed zones scale against their busiest zone.
       // No minimum distorts smaller counts.
@@ -421,7 +427,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const r = unscaledRadius * INTERCITY_RADIUS_SCALE;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, edgeOf(1, z.rail, z.all)], i * DISC);
       const place = z.name || "here";
-      tags.push([`${count(z.all)} inter-city trips ${shownDayPhrase.peek()} ${verb} ${place}`, modeBar(z.rail, 0, Math.max(0, z.all - z.rail)), "Click to explore these trips"]);
+      tags.push([`${count(z.all)} ${trips} ${shownDayPhrase.peek()} ${verb} ${place}`, modeBar(z.rail, walk, rest), "Click to explore these trips"]);
       if (regional) label(`${z.name} · ${count(z.all)} trips`);
     });
     const far = points.map((z) => { const p = lngLatToPack(z.ll[0], z.ll[1]); return { place: z.place, gid: z.gid, at: [p.x, p.y] as [number, number] }; });
@@ -466,8 +472,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   let seen: Selection = null;
   let seenScope = "";
   let ask = 0;
-  const show = (flows: PlaceFlows, verb: string, own: number) => {
-    current = { flows, verb, own };
+  const show = (flows: PlaceFlows, verb: string, own: number, by?: IntercitySelection["byPurpose"], end?: "home" | "work") => {
+    current = { flows, verb, own, by, end };
     render();
   };
   const clear = () => {
@@ -503,7 +509,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
         if (mine !== ask || !r || selection.peek() !== sel) return;
         intercityPick.value = { sel, data: r, own };
         // homes: where their trips go; jobs: where the trips to them come from
-        show(sel.end === "home" ? r.starts : r.ends, sel.end === "home" ? "to" : "from", own);
+        show(sel.end === "home" ? r.starts : r.ends, sel.end === "home" ? "to" : "from", own, r.byPurpose, sel.end);
       } else {
         const r = await intercityStation(sel.station, (scope || sel.station).split(","));
         if (mine !== ask || !r || selection.peek() !== sel) return;

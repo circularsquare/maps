@@ -399,7 +399,12 @@ destinations at the end, and how the demand model's people would make one of the
   each pair's choice worked out as the solve does (every pair rail can serve, sampled or not),
   added up by its trips. The panel: the trips a day and the distance (between two places both
   ways, as the city view's corridors count them; from a selection one way, as its bubbles count
-  them [T-1148]), a Train / Plane / Car bar and rows (no Train when no period offers rail); from a
+  them [T-1148]), a Train / Plane / Car bar and rows (no Train when no period offers rail); then,
+  where the two ends have everyday outings across a zone line [T-1229], **Everyday trips** with
+  its legs a day and a Train / Walking / Car bar and rows (errands, visits, school and medical
+  trips as the market chooses them, the walkers rail takes out; between two places both ways, from
+  a selection the outings of its homes, or arriving at its activities), their train riders in the
+  routes below with the inter-city ones, the block absent while no network reaches the market; from a
   selection or a 6 km area with one far place, **Between the two places**, the whole places'
   trips both ways as the solve split them (the corridor's, commutes left out), so a selection no
   station reaches is not read as the corridor; By train (the period with most trips, "Inter-city,

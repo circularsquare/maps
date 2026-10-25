@@ -324,6 +324,8 @@ export interface PlaceTrips {
   rail: number;
   air: number;
   car: number;
+  /** T-1229: walked the whole way, the everyday outings across a zone line only (absent: none) */
+  walk?: number;
   /** where the trips' far ends are, mean position in the world frame (NaN with no trips) */
   x: number;
   y: number;
@@ -338,17 +340,20 @@ export interface ZoneTrips {
   /** the zone's own position, pack metres (as `PlaceTrips.x`) */
   x: number;
   y: number;
-  /** all modes, and by rail (a station's: both the riders) */
+  /** all modes, and by rail (a station's: both the riders); T-1229: and walking */
   all: number;
   rail: number;
+  walk?: number;
 }
 
-/** One direction of a selection's or a station's longer trips, by place at the far end. */
+/** One direction of a selection's or a station's longer trips, by place at the far end. Since
+ * T-1229 a selection's also hold its everyday outings across a zone line (`walk` only theirs). */
 export interface PlaceFlows {
   all: number;
   rail: number;
   air: number;
   car: number;
+  walk?: number;
   /** T-378: longer trips with places that have no zone (not in `all`) */
   elsewhere: number;
   /** the places with trips, biggest (all modes) first */
@@ -371,6 +376,9 @@ export interface IntercitySelection {
   ends: PlaceFlows;
   /** share of the selected squares that the market has sites for (1 = all) */
   matched: number;
+  /** T-1229: each shown purpose's everyday outings across a zone line alone, which the purpose
+   * filter draws as the far end (the longer trips and the commutes have no entry) */
+  byPurpose?: Map<PurposeKey, { starts: PlaceFlows; ends: PlaceFlows }>;
 }
 
 /** A station's longer-trip rail riders (`intercityStation(id)`): starting here, ending here, by place. */

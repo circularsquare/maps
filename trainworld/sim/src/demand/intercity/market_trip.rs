@@ -11,7 +11,7 @@ use crate::demand::trip::{routes, Leg};
 
 /// Numbers in the answer's head and per station pair (`IntercityApi::market_trip`); a leg is
 /// `trip::LEG_LEN` numbers.
-pub const MT_HEAD: usize = 20;
+pub const MT_HEAD: usize = 22;
 pub const MT_PAIR_LEN: usize = 7;
 /// Station pairs under this share of the rail riders are not walked for routes, and routes under
 /// it are left out (as `trip.rs`).
@@ -61,13 +61,14 @@ impl IntercityApi {
 impl IntercityApi {
     /// T-885: `market_trip` between two places of the market, or 6 km zones of them (global ids;
     /// -1 the whole place), every zone of the near end counted whole: the trips from `near` to
-    /// `far` (`dir` 0) or from `far` to `near` (1). The same answer.
+    /// `far` (`dir` 0) or from `far` to `near` (1). The same answer, but the everyday outings
+    /// are those between the two in both directions.
     pub fn market_trip_between(&self, q: usize, day: u32, near: u32, near_gid: i32, dir: u32, far: u32, far_gid: i32) -> Vec<f64> {
         let mut w = vec![0f64; self.m.zones.len()];
         for z in self.zones_of(near, near_gid) {
             w[z] = 1.;
         }
-        self.market_trip_w(q, day, w, near, dir, far, far_gid)
+        self.market_trip_w(q, day, w, near, dir, far, far_gid, true)
     }
 
     /// The trip explorer between zones (T-866) in solved period `q` on kind of day `day`: the
@@ -83,7 +84,10 @@ impl IntercityApi {
     /// routes not listed; why rail is not offered (0 offered, 1 the far place is not open here, 2
     /// no zone pair rail can serve, 3 no square matched a site); the share of the trips on pairs
     /// rail can serve; the reference mode's perceived minutes (the car's, or the plane's where no
-    /// car goes), trip weighted; zone pairs counted; 0.
+    /// car goes), trip weighted; zone pairs counted; then (T-1229) the everyday outings across a
+    /// zone line between the two ends, as the pairs choose them: legs a day, rail legs and walking
+    /// legs (the rest go by car). The trips, rail, plane and car above are the longer trips alone;
+    /// the station pairs and routes carry both kinds of rail riders.
     ///
     /// Then per station pair, most rail riders first, `MT_PAIR_LEN` numbers: a route node at the
     /// access station and at the egress one (-1 none), the perceived minutes to the first and from
@@ -94,7 +98,7 @@ impl IntercityApi {
     /// of the rail riders, its legs, and `trip::LEG_LEN` numbers a leg.
     pub fn market_trip(&self, q: usize, day: u32, market: u32, xy: &[f32], share: &[f32], dir: u32, far: u32, far_gid: i32) -> Vec<f64> {
         let w = self.trip_weights(market, xy, share, dir);
-        self.market_trip_w(q, day, w, market, dir, far, far_gid)
+        self.market_trip_w(q, day, w, market, dir, far, far_gid, false)
     }
 }
 
@@ -115,8 +119,10 @@ impl IntercityApi {
         }
     }
 
-    /// `market_trip` for near zone weights `w` of place `near_place`.
-    fn market_trip_w(&self, q: usize, day: u32, w: Vec<f64>, near_place: u32, dir: u32, far: u32, far_gid: i32) -> Vec<f64> {
+    /// `market_trip` for near zone weights `w` of place `near_place`. The longer trips are the
+    /// same each way; the everyday outings are those of `dir` (homes at the near end for 0,
+    /// activities there for 1), or with `both` of both.
+    fn market_trip_w(&self, q: usize, day: u32, w: Vec<f64>, near_place: u32, dir: u32, far: u32, far_gid: i32, both: bool) -> Vec<f64> {
         let mut h = vec![0f64; MT_HEAD];
         let Some(per) = self.per(q) else { return h };
         h[0] = 1.;
@@ -137,12 +143,39 @@ impl IntercityApi {
             h[14] = if fars.is_empty() || closed(near_place) { FAR_NOT_OPEN } else { NOT_MATCHED };
             return h;
         }
+        // T-1229: the everyday outings across a zone line between the two ends: the pairs whose
+        // home zone (`dir` 0) or activity zone (1) is a near zone and the other end a far zone
+        let mut is_far = vec![false; m.zones.len()];
+        for &b in &fars {
+            is_far[b] = true;
+        }
+        let mut e_hits: Vec<(usize, f64)> = vec![];
+        for end in if both { 0..2 } else { dir..dir + 1 } {
+            let (off, items) = if end == 0 { &m.e_home } else { &m.e_act };
+            for &z in &near {
+                for &i in &items[off[z] as usize..off[z + 1] as usize] {
+                    let pair = &m.everyday[i as usize];
+                    let other = if end == 0 { m.comp_of_gid[pair.a as usize] as usize } else { pair.h as usize };
+                    if other < is_far.len() && is_far[other] {
+                        e_hits.push((i as usize, w[z]));
+                    }
+                }
+            }
+        }
         // strategies towards the egress stations of the pairs' destinations
         let s = g.n_st;
         let mut want = vec![false; s];
         for &z in if dir == 0 { &fars } else { &near } {
             for &(st, _) in &self.access_work[z] {
                 want[st] = true;
+            }
+        }
+        for &(i, _) in &e_hits {
+            let ei = self.epair_of.get(i).copied().unwrap_or(u32::MAX);
+            if ei != u32::MAX && per.e_frac.get(ei as usize).is_some_and(|&f| f > 0.) {
+                for &(st, _) in &self.access_ew[self.epair_zones(&self.epairs[ei as usize]).1] {
+                    want[st] = true;
+                }
             }
         }
         let sk = skims_for(g, p, &want);
@@ -206,6 +239,44 @@ impl IntercityApi {
                 car += rest * if r.car { 1. - r.air as f64 } else { 0. };
             }
         }
+        // T-1229: each everyday pair's legs this period, its rail legs from the solve's share and the
+        // walkers rail leaves; its riders join the station pairs
+        let pe = commute_params().everyday();
+        let (mut e_all, mut e_rail, mut e_walk) = (0f64, 0f64, 0f64);
+        let weigh = |list: &[(usize, f32)], st: u32| list.iter().find(|e| e.0 == st as usize).map_or(0., |e| -(e.1.max(1e-30) as f64).ln() / pe.beta as f64);
+        for &(i, wz) in &e_hits {
+            let pair = &m.everyday[i];
+            let k = pair.kind as usize;
+            let purpose = everyday_purpose(k);
+            let n = wz * pair.trips as f64;
+            let legs = n * (share_out(day as usize, purpose, q) + share_ret(day as usize, purpose, q)) as f64;
+            let ei = self.epair_of.get(i).copied().unwrap_or(u32::MAX);
+            let frac = if ei == u32::MAX { 0. } else { per.e_frac.get(ei as usize).copied().unwrap_or(0.) as f64 };
+            let rail_legs = n * (OUTWARD[k][q] + RETURN[k][q]) as f64 * load_factor(day as usize, purpose, q) as f64 * frac;
+            e_all += legs;
+            e_rail += rail_legs;
+            e_walk += pair.walk as f64 * (legs - rail_legs).max(0.);
+            if rail_legs <= 0. {
+                continue;
+            }
+            let ep = &self.epairs[ei as usize];
+            let (hz, az) = self.epair_zones(ep);
+            let home = if ep.ride { &self.access_c[hz] } else { &self.access_c_walk[hz] };
+            let (_, sum) = rail_logsum(&sk.r, s, p.fare_min, home, &self.access_ew[az], pe.beta, p.soften(pe.band_unsoftened(ep.band as usize), ep.car), &mut terms);
+            if sum > 0. {
+                for &(sa, sb, v) in &terms {
+                    let x = rail_legs * v / sum;
+                    let e = by.entry((sa, sb)).or_default();
+                    e.0 += x;
+                    e.1 += x * weigh(home, sa);
+                    e.2 += x * weigh(&self.access_ew[az], sb);
+                }
+            }
+        }
+        h[19] = e_all;
+        h[20] = e_rail;
+        h[21] = e_walk;
+        let rail_all = rail + e_rail;
         h[2] = all;
         h[3] = rail;
         h[4] = air;
@@ -222,7 +293,7 @@ impl IntercityApi {
             h[17] = ref_c / all;
         }
         h[18] = n;
-        if rail <= 0. {
+        if rail_all <= 0. {
             h[14] = NO_RAIL;
             h[13] = 1.;
             return h;
@@ -236,11 +307,11 @@ impl IntercityApi {
         }
         let mut body = vec![];
         for &((sa, sb), (x, xa, xb)) in &pairs {
-            body.extend([rep[sa as usize], rep[sb as usize], xa / x, xb / x, sk.r[sa as usize * s + sb as usize] as f64, x / rail, 0.]);
+            body.extend([rep[sa as usize], rep[sb as usize], xa / x, xb / x, sk.r[sa as usize * s + sb as usize] as f64, x / rail_all, 0.]);
         }
         let mut all_routes: Vec<(usize, f32, Vec<Leg>)> = vec![];
         for (pi, &((sa, sb), (x, _, _))) in pairs.iter().enumerate() {
-            let share = (x / rail) as f32;
+            let share = (x / rail_all) as f32;
             if (share as f64) < PAIR_MIN {
                 break;
             }

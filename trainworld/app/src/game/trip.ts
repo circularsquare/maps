@@ -279,9 +279,13 @@ export interface MarketPeriod {
   pairs: TripPair[];
   routes: TripRoute[];
   cut: number;
+  /** T-1229: the everyday outings across a zone line between the two ends, legs a day both ways
+   * (the home's and the return), by train and walked the whole way; the rest go by car. Their
+   * train riders are in `pairs` and `routes` with the longer trips'. */
+  everyday: { legs: number; rail: number; walk: number };
 }
 
-const MT_HEAD = 20, MT_PAIR_LEN = 7;
+const MT_HEAD = 22, MT_PAIR_LEN = 7;
 
 /** Read one period's `IntercityApi.market_trip` answer. */
 export function readMarketPeriod(v: Float64Array, at: RouteNodes): MarketPeriod | null {
@@ -299,6 +303,7 @@ export function readMarketPeriod(v: Float64Array, at: RouteNodes): MarketPeriod 
     round: v[1], trips: v[2], rail: v[3], air: v[4], car: v[5], railPerceived: nan(v[6]), carPerceived: nan(v[7]), refPerceived: v[17],
     km: v[8], zonePairs: v[18], served: v[15], baseFarePerceived: v[9], minPerUsd: v[10], why: MARKET_WHY[v[14]] ?? "noRail",
     pairs, routes: readRoutes(v, MT_HEAD + np * MT_PAIR_LEN, nr, at), cut: v[13],
+    everyday: { legs: v[19], rail: v[20], walk: v[21] },
   };
 }
 
@@ -357,17 +362,18 @@ export function mergeMarketPeriods(xs: (MarketPeriod | null)[], label: (r: TripR
     return W > 0 ? sum((p) => (Number.isFinite(f(p)) ? w(p) * f(p) : 0)) / W : NaN;
   };
   const trips = sum((p) => p.trips), rail = sum((p) => p.rail);
+  const everyday = { legs: sum((p) => p.everyday.legs), rail: sum((p) => p.everyday.rail), walk: sum((p) => p.everyday.walk) };
   const top = ps.reduce((a, b) => (b.trips > a.trips ? b : a));
-  const { pairs, routes, cut } = mergeRoutes(ps.filter((p) => p.rail > 0).map((p) => ({ pairs: p.pairs, routes: p.routes, weight: p.rail })), label);
+  const { pairs, routes, cut } = mergeRoutes(ps.filter((p) => p.rail + p.everyday.rail > 0).map((p) => ({ pairs: p.pairs, routes: p.routes, weight: p.rail + p.everyday.rail })), label);
   return {
-    ...top, trips, rail, air: sum((p) => p.air), car: sum((p) => p.car),
+    ...top, trips, rail, everyday, air: sum((p) => p.air), car: sum((p) => p.car),
     railPerceived: wmean((p) => p.railPerceived, (p) => p.trips * p.served),
     // T-991: ends with no trips worked out (not open) still carry a distance and a car, by place
     carPerceived: trips > 0 ? wmean((p) => p.carPerceived, (p) => p.trips) : wmean((p) => p.carPerceived, () => 1),
     refPerceived: wmean((p) => p.refPerceived, (p) => p.trips),
     km: trips > 0 ? wmean((p) => p.km, (p) => p.trips) : wmean((p) => p.km, () => 1), zonePairs: sum((p) => p.zonePairs),
     served: trips > 0 ? sum((p) => p.trips * p.served) / trips : 0,
-    why: rail > 0 ? "" : top.why,
+    why: rail + everyday.rail > 0 ? "" : top.why,
     pairs, routes, cut,
   };
 }
