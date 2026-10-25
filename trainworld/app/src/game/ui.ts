@@ -143,8 +143,8 @@ export interface DockLayout {
 
 /** The stored settings' version: 2 since complex view became the default (T-192), 3 since Nunito and
  * 90% did (T-703), 4 since the real network did (T-727), 5 since the ramp went red to blue (T-812), 6 since Train share became the bubble colouring (T-833), 7 since keep placing is on by default (T-942), 8 since unopened zones' dots are light grey (T-976). Settings stored before a version had
- * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138). */
-const VERSION = 9;
+ * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244). */
+const VERSION = 10;
 
 function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; auto: boolean; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; design: number }>; v: number }> {
   try {
@@ -154,12 +154,11 @@ function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partia
   }
 }
 const saved = load();
-// Migrate the former Line + separate width checkbox into the four-way display choice.
 const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string; trainLoadBasis?: string }) | undefined;
-// `intercity` (hide the longer-trip bubbles) is no longer a setting (T-222), nor `stationRiders`
+// `lineLoad` (the old width checkbox) and `intercity` (hide the longer-trip bubbles) are no longer settings (T-222), nor `stationRiders`
 // (the demand circles, T-482), nor `unbuiltColour` (T-1120), nor `trainLoadBasis` (T-164): dropped
 // from storage
-const { lineLoad: legacyLineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, trainLoadBasis: _trainLoadBasis, ...migratedDisplay } = oldDisplay ?? {};
+const { lineLoad: _lineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, trainLoadBasis: _trainLoadBasis, ...migratedDisplay } = oldDisplay ?? {};
 if ((saved.v ?? 1) < 2) delete migratedDisplay.complexView;
 // T-703: the font and size defaults changed, and settings stored before had saved the old ones with
 // everything else, so both are dropped once
@@ -175,8 +174,9 @@ if ((saved.v ?? 1) < 9) {
   if (migratedDisplay.rampFrom?.toLowerCase() === "#e61e1e") delete migratedDisplay.rampFrom;
   if (migratedDisplay.rampTo?.toLowerCase() === "#1e3ce6") delete migratedDisplay.rampTo;
 }
-const trackColour = oldDisplay?.trackColour === "line" && legacyLineLoad !== undefined
-  ? legacyLineLoad === false ? "line" : "traffic"
+// T-1244: Traffic, the default until T-1101, was stored with everything else; Elevation and Max speed stay
+const trackColour = (saved.v ?? 1) < 10
+  ? oldDisplay?.trackColour === "height" || oldDisplay?.trackColour === "speed" ? oldDisplay.trackColour : DEFAULT_DISPLAY.trackColour
   : oldDisplay?.trackColour ?? DEFAULT_DISPLAY.trackColour;
 
 export const tab = signal<Tab>(saved.tab && TABS.includes(saved.tab) ? saved.tab : "lines");

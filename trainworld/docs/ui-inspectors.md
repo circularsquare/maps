@@ -379,6 +379,10 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   result is asked once more after 3 s (`RETRY_MS` in map/tripView.ts), then the panel reads "This trip
   could not be worked out." rather than waiting; while one trip is asked it reads "Working out this
   trip", while the solve runs "Calculating demand" [T-1242].
+- **No train route** [T-1252]: once answered, when the period shown has no train route (or there is
+  no answer), a dotted straight line in map ink on a casing joins the two ends, so the pair still
+  shows. Hover: "No train route between these two points" (or "No train route at this time of
+  day" when another period has one) and "4.2 km in a straight line".
 - **Between zones** [T-866; `ui/inspector/MarketTrip.tsx`, `IntercityApi::market_trip` in
   `sim/src/demand/intercity/market_trip.rs`]: with a bubble selection, a click on an inter-city
   bubble (a whole place zoomed out, a 6 km area up close; hover ends "Click to explore these

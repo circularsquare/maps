@@ -27,7 +27,7 @@ import { display, purposeFilter, selection, shownDayPhrase, tool } from "../game
 import { world } from "../game/world";
 import { BUBBLE_DENSITY, DISC, RES_AREA_M2, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
 import { aggregate, discs, recolour, type Groups } from "./bubbles";
-import { cityOverview, interBox, setNearPoint } from "./intercityView";
+import { cityOverview, farAreaPerTrip, interBox, setNearPoint } from "./intercityView";
 import { loadFailure, zoneFailures } from "../game/loading";
 import { anchorVersion } from "./anchorVersion";
 import { modeBar } from "./modeBar";
@@ -691,6 +691,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   const drawPick = () => {
     const sel = selection.peek();
     if (!city || !shown || sel?.kind !== "commuters") {
+      farAreaPerTrip.value = 0;
       near = far = nearDiscs = farDiscs = null;
       view.setDiscs("near", null);
       view.setDiscs("far", null);
@@ -711,9 +712,12 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       // sized among themselves: the biggest about the area of a bubble's hexagon
       let max = 0;
       for (let i = 0; i < far.group.length; i++) max = Math.max(max, far.train[i] + far.walk[i] + far.drive[i]);
-      farDiscs = discs(far, max > 0 ? (0.6 * RES_AREA_M2[level]) / max : 0, BUBBLE_ALPHA, 0, farAnchor);
+      const perTrip = max > 0 ? (0.6 * RES_AREA_M2[level]) / max : 0;
+      farDiscs = discs(far, perTrip, BUBBLE_ALPHA, 0, farAnchor);
       view.setDiscs("far", farDiscs, farAnchor);
+      farAreaPerTrip.value = perTrip;
     } else {
+      farAreaPerTrip.value = 0;
       far = farDiscs = null;
       view.setDiscs("far", null);
     }

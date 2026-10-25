@@ -15,13 +15,13 @@
 //   selection): it is drawn outlined, with one bubble per other city for the trips between them.
 //   These come from the market's corridors (`intercityDemand`), each new result shown as it lands.
 //
-// Up close every positive far 6 km zone outside the focused market is shown on its own relative
-// trip scale. Same-city longer trips of a selection remain in the inspector only (T-139). Regional
-// zooms aggregate a selection's trips to one labeled circle per other market (T-135, T-136). Area
-// represents total travellers, without a minimum radius or additive size offset. All use the same
-// opacity and size slider, coloured by `bubbleColour(rail, 0, everything else)`: by default blue
-// train, red the rest. Under a local purpose filter only that purpose's everyday outings across a
-// zone line are drawn (T-1229, `IntercitySelection.byPurpose`); the numbers stay in the inspectors.
+// Up close every far 6 km zone outside the focused market with a trip or more is shown. Same-city
+// longer trips of a selection remain in the inspector only (T-139). Regional zooms aggregate a
+// selection's trips to one labeled circle per other market (T-135, T-136). Both are drawn as the
+// selection's in-city far end is (T-1246): its area per trip, no outline, one colour by
+// `bubbleColour(rail, walk, everything else)`. Under a local purpose filter only that purpose's
+// everyday outings across a zone line are drawn (T-1229, `IntercitySelection.byPurpose`); the
+// numbers stay in the inspectors.
 // Asked for, not pushed, and asked again whenever `demandView` changes, keeping the last answer
 // meanwhile.
 
@@ -40,11 +40,11 @@ import { openedZones } from "../game/openedZones";
 import { purposeWords, type PurposeKey } from "../game/purposes";
 import { display, purposeFilter, selection, shade, shownDayPhrase } from "../game/ui";
 import type { Selection } from "../game/types";
-import { DISC } from "../workers/commutersProtocol";
+import { DISC, RES_AREA_M2 } from "../workers/commutersProtocol";
 import { anchorVersion } from "./anchorVersion";
 import { localModes, modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt } from "./demandHover";
-import { LINE, splitEdge, type DemandOverlay } from "./demandOverlay";
+import { bubbleLevel, LINE, splitEdge, type DemandOverlay } from "./demandOverlay";
 import { anchor, kAtLat, pxPerUnitAt, toLocal, toLngLat, type Anchor } from "./geo";
 import { hiddenOnGlobe } from "./live";
 
@@ -59,8 +59,15 @@ const loadingZones = computed(() => [...zoneLoads.value.keys()].sort().join(",")
 
 /** Regional views show the complete place totals, rather than scattered endpoint specks. */
 export const CITY_BUBBLE_ZOOM = 9.5;
-/** Keep longer-trip bubbles subordinate to the local demand view at every zoom. */
-const INTERCITY_RADIUS_SCALE = 0.5;
+/** T-1246: a selection's far end in another zone is drawn on its in-city far end's area scale,
+ * this many times the radius (Anita's figure): at 1 a far zone's few hundred trips beside a
+ * selection's own tens of thousands are a pixel. */
+const FAR_RADIUS = 2;
+/** T-1246: the selection's in-city far end as drawn (map/commuterView.ts): square metres of bubble
+ * per trip at the level on screen; 0 while none is drawn. */
+export const farAreaPerTrip = signal(0);
+/** T-1246: no bubble for a count its label would round to 0 (`count`). */
+const shownCount = (n: number) => n >= 0.5;
 /**
  * At this zoom and below every city is one longer-trips bubble (T-186): the zoom at which the
  * metropolitan outlines are fully drawn, a New York region about half a 1,400 px map wide with
@@ -307,7 +314,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       }
       // T-421: a zone still loading has its bar instead
       // T-975: the overview leaves out the realms not shown; a selection's far ends draw everywhere
-      if (!isOwn && !(t.all > 0 && (own ? true : zoneShown(c.id) && !loads.has(c.id)))) return [];
+      if (!isOwn && !((own ? shownCount(t.all) : t.all > 0) && (own ? true : zoneShown(c.id) && !loads.has(c.id)))) return [];
       // T-494: a zone's local and inter-region trips are two figures, each with a mode bar
       const v = local.get(c.id);
       const localAll = v ? v.tripsPerDay : c.localTrips ?? 0;
@@ -400,16 +407,17 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     }
     const regional = map.getZoom() <= CITY_BUBBLE_ZOOM;
     const a = anchor();
-    const points = regional ? flows.places.filter(p => p.all > 0 && p.place !== current!.own).map(p => {
+    const points = regional ? flows.places.filter(p => shownCount(p.all) && p.place !== current!.own).map(p => {
       const city = CITIES.find(c => c.place === p.place);
       const ll = city?.center ?? packToLngLat(p.x, p.y);
       return { ...p, ll, name: INTERCITY_PLACES[p.place], gid: -1 };
-    }) : flows.zones.filter(z => z.all > 0 && z.place !== current!.own).map(z => ({...z, ll: packToLngLat(z.x, z.y), name: ""}));
+    }) : flows.zones.filter(z => shownCount(z.all) && z.place !== current!.own).map(z => ({...z, ll: packToLngLat(z.x, z.y), name: ""}));
     points.sort((a, b) => b.all - a.all);
     const { verb } = current;
     const trips = shown ? "inter-city trips" : `${purposeWords(filter as PurposeKey)} trips`;
-    const max = points[0]?.all || 1;
-    const pxPerUnit = pxPerUnitAt(map.getZoom());
+    // T-1246: the in-city far end's scale (its busiest bubble about its hexagon's area), so a far
+    // zone's bubble reads against them; with none drawn yet, the busiest of these takes that size
+    const perTrip = farAreaPerTrip.peek() || (0.6 * RES_AREA_M2[bubbleLevel(map.getZoom())]) / (points[0]?.all || 1);
     // biggest first, so the small ones draw on top of the big ones
     const n = points.length;
     const discs = new Float32Array(n * DISC);
@@ -419,13 +427,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const [x, y] = toLocal(lng, lat, a);
       const walk = z.walk ?? 0, rest = Math.max(0, z.all - z.rail - walk);
       const c = bubbleColour(z.rail, walk, rest);
-      // Area, not radius, represents total travellers. Before the common radius scale, the
-      // biggest regional circle is 38px and detailed zones scale against their busiest zone.
-      // No minimum distorts smaller counts.
-      const unscaledRadius = regional ? 38 * Math.sqrt(z.all / max) / pxPerUnit
-        : Math.sqrt(0.6 * 6000 ** 2 / Math.PI * z.all / max) * kAtLat(lat);
-      const r = unscaledRadius * INTERCITY_RADIUS_SCALE;
-      discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, edgeOf(1, z.rail, z.all)], i * DISC);
+      const r = FAR_RADIUS * Math.sqrt((perTrip * z.all) / Math.PI) * kAtLat(lat);
+      discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, 0], i * DISC);
       const place = z.name || "here";
       tags.push([`${count(z.all)} ${trips} ${shownDayPhrase.peek()} ${verb} ${place}`, modeBar(z.rail, walk, rest), "Click to explore these trips"]);
       if (regional) label(`${z.name} · ${count(z.all)} trips`);
@@ -445,6 +448,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     loadingZones.value;
     shownRealms.value;
     mapBlank.value;
+    farAreaPerTrip.value;
     render();
   });
   map.on("zoom", render);

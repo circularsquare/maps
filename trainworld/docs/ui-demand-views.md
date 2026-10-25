@@ -283,14 +283,19 @@ commuters and inter-city riders are in its inspector only ([ui-inspectors.md](ui
   Airport and Attractions): the far end of its own end (Homes: where the trips go; Destinations:
   where they come from). A station's are not drawn [T-519]. Only zones other than the focused one are drawn;
   same-zone counts stay in the inspector [T-139].
-- Above zoom 9.5 every far 6 km zone with trips is a disc at its position, on its own relative
-  scale (the busiest covers 0.15 of a zone's area). At 9.5 and below they become one labelled bubble
-  per other zone at its registry centre (the largest 19 px radius before the size slider), names and
+- Above zoom 9.5 every far 6 km zone with trips is a disc at its position. At 9.5 and below they
+  become one labelled bubble per other zone at its registry centre, names and
   daily totals as labels that avoid each other and stay on screen, at most eight at once, the biggest
   first (T-493), no two labelled bubbles closer than 130 px and no two labels closer than 28 px
-  sideways or 16 px up and down (T-1050). Area is total travellers with no
-  floor; each is a red dot with a blue train dot inside [T-901, below]. They lie under the local discs; hover names the place and the direction,
-  with a mode bar (train blue, the rest red, plane included).
+  sideways or 16 px up and down (T-1050). Both are drawn as the selection's far end in its own
+  zone is [T-1246, `farAreaPerTrip` in `map/intercityView.ts`]: on its area per trip at twice the
+  radius (`FAR_RADIUS`; Anita: at the same size a far zone's few hundred trips are a pixel beside
+  the selection's own tens of thousands), with no floor; before that far end is
+  drawn, or when it has none, the busiest far zone takes the size of its hexagon at the level on
+  screen. One colour by the bubble colouring (train against the rest), no outline. A count under
+  half a trip, which its label would show as 0, has no bubble. They lie under the local discs;
+  hover names the place and the direction, with a mode bar (train blue, the rest red, plane
+  included).
 - A selection survives a pan to another zone.
 
 ## Zoomed far out: one bubble per zone
@@ -318,7 +323,7 @@ average to and from Yamanashi" (train blue, the rest red). One scale that depend
 alone, never on what is on screen [T-525, T-530]: 60,000 trips a day per px² of bubble area at
 zoom 6.5 (`TRIPS_PER_PX2`, `SCALE_ZOOM`), before the size slider, the radius times
 2^(0.35 x (zoom - 6.5)) (`ZOOM_GROWTH`), so bubbles shrink somewhat as the map zooms out.
-A zone the game has not opened (not the start zone, not reached by a station and not crossed by built track: `openedZones`, game/openedZones.ts, T-1047) is not a bubble but a dot, half the radius it would have, floored to whole CSS px and at least 2 px, filled white, opaque, with a 1 px outline in the theme's map ink (black in the light theme, off-white in the dark one; hover unchanged) [T-976, T-1120]; it turns into a bubble when the zone opens. A dot within 20 px (centre to centre) of a bigger zone's dot or bubble is left out (`DOT_GAP`) [T-1133], so a dense realm zoomed out shows its biggest cities and more appear closer in; opened zones' bubbles are never left out. With a zone selected the bubbles are the trips to and from it as before.
+A zone the game has not opened (not the start zone, not reached by a station and not crossed by built track: `openedZones`, game/openedZones.ts, T-1047) is not a bubble but a dot, half the radius it would have, floored to whole CSS px and at least 2 px, filled white, opaque, with a 1 px outline in the theme's map ink (black in the light theme, off-white in the dark one; hover unchanged) [T-976, T-1120]; it turns into a bubble when the zone opens. A dot within 20 px (centre to centre) of a bigger zone's dot or bubble is left out (`DOT_GAP`) [T-1133], so a dense realm zoomed out shows its biggest cities and more appear closer in; opened zones' bubbles are never left out. With a zone selected the bubbles are the trips to and from it as before, none for a zone of under half a trip with it [T-1246].
 Homes and Destinations look the same, and both work zoomed out even over dead space, where
 the buttons are otherwise off; a start on the world map turns Homes on [T-801]. Under a local purpose the focused zone's own
 bubbles stay instead. Toronto (`market: -1`) has none.

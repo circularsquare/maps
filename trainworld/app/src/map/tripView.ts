@@ -22,6 +22,7 @@ import { periodAt } from "../game/periods";
 import type { PurposeFilter, PurposeKey } from "../game/purposes";
 import { askMarketTrip, askTrip, averageTrips, busiestPeriod, mergeMarketPeriods, type MarketEnd, kindsOf, openRoute, routeLabel, stationName, stationPoint, tripKey, tripMix, tripOpenedFrom, tripPeriod, tripView, type MarketPeriod, type Trip, type TripLeg, type TripPeriod, type TripPlaces, type TripRoute, type TripShown } from "../game/trip";
 import { purposeFilter, selection, shownDay } from "../game/ui";
+import { metresBetween } from "../game/walks";
 import { world } from "../game/world";
 import { addFinder } from "./demandHover";
 import { toLngLat, toLocal, unitPerPxAt } from "./geo";
@@ -63,6 +64,8 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
   (map.getContainer().querySelector("canvas.overlay.demand") ?? overlay.canvas).after(canvas);
   const ctx = canvas.getContext("2d")!;
   let drawn: Drawn | null = null;
+  /** the straight line's hover, while one is drawn (T-1252) */
+  let straight: string[] | null = null;
   let marks: { from: [number, number]; to: [number, number] | null; fromStation?: string; toStation?: string } | null = null;
 
   sizeCanvasLike(canvas, map);
@@ -129,6 +132,19 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
       }
     }
     ctx.globalAlpha = 1;
+    if (straight && marks.to) {
+      const [ax, ay] = screen(marks.from), [bx, by] = screen(marks.to);
+      ctx.setLineDash([0.1, 7]);
+      for (const [colour, width] of [[shades.casing, 6], [shades.mapInk, 3.5]] as const) {
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.strokeStyle = colour;
+        ctx.lineWidth = width;
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+    }
     for (const s of drawn?.stops ?? []) {
       const [x, y] = screenLocal(s.at);
       ctx.beginPath();
@@ -168,7 +184,7 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
     const dv = demandView.value;
     const filter = purposeFilter.value;
     if (sel?.kind !== "trip") {
-      if (marks) { marks = null; drawn = null; redraw(); }
+      if (marks) { marks = null; drawn = null; straight = null; redraw(); }
       tripView.value = null;
       asked = "";
       return;
@@ -176,6 +192,7 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
     marks = { from: sel.from, to: sel.to, fromStation: sel.fromStation, toStation: sel.toStation };
     if (!sel.to) {
       drawn = null;
+      straight = null;
       tripView.value = null;
       asked = "";
       redraw();
@@ -190,7 +207,7 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
     const same = last?.key === key;
     if (!same) { tripPeriod.value = null; openRoute.value = null; }
     tripView.value = same ? { ...last!, asking: true, failed: false } : { key, trip: null, asking: true, mix: null, purpose: "work", busiest: null };
-    if (!same) { drawn = null; redraw(); }
+    if (!same) { drawn = null; straight = null; redraw(); }
     const opened = tripOpenedFrom.peek();
     const to = sel.to;
     const run = (again: boolean) => explore(sel.from, to, filter, opened?.trip === sel ? opened.places : null, sel.far, sel.near).then((shown) => {
@@ -218,6 +235,13 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
     const mt = v?.market?.periods[q] ?? null;
     builtOn = overlay.renderer.net ?? null;
     drawn = t && w ? build(t, marks?.from ?? t.from, marks?.to ?? t.to, builtOn) : mt && w && marks?.to ? build(mt, marks.from, marks.to, builtOn) : null;
+    // T-1252: answered with no train route in the period shown, a straight line joins the two ends
+    const answered = !!v && (!!v.trip || !!v.market || !!v.failed);
+    if (answered && marks?.to && !drawn?.parts.length) {
+      const anyRoute = (v.trip?.periods ?? v.market?.periods ?? []).some((p) => p?.routes.length);
+      const d = metresBetween(...packToLngLat(marks.from[0], marks.from[1]), ...packToLngLat(marks.to[0], marks.to[1]));
+      straight = [anyRoute ? "No train route at this time of day" : "No train route between these two points", `${distance(d)} in a straight line`];
+    } else straight = null;
     redraw();
   };
   effect(() => {
@@ -233,7 +257,7 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
 
   addFinder(30, (p) => {
     // the routes are on the drawn network's anchor, which is the current one (T-307)
-    if (!drawn || !marks) return null;
+    if ((!drawn && !straight) || !marks) return null;
     const [lx, ly] = toLocal(p.lng, p.lat);
     const z = map.getZoom();
     const tol = HIT_PX * unitPerPxAt(z);
@@ -244,15 +268,17 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
       const name = stationName(st);
       if (Math.hypot(x - lx, y - ly) <= tol * 1.5) return [name ? `${at} ${name}` : tip];
     }
-    for (const s of drawn.stops) {
+    const parts = drawn?.parts ?? [];
+    for (const s of drawn?.stops ?? []) {
       const [x, y] = s.at;
       if (Math.hypot(x - lx, y - ly) <= tol) return s.tip;
     }
     // the topmost part first (drawn last)
-    for (let i = drawn.parts.length - 1; i >= 0; i--) {
-      const pts = drawn.parts[i].pts;
-      for (let k = 1; k < pts.length; k++) if (segDist(lx, ly, pts[k - 1], pts[k]) <= tol) return drawn.parts[i].tip;
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const pts = parts[i].pts;
+      for (let k = 1; k < pts.length; k++) if (segDist(lx, ly, pts[k - 1], pts[k]) <= tol) return parts[i].tip;
     }
+    if (straight && marks.to && segDist(lx, ly, loc(marks.from), loc(marks.to)) <= tol) return straight;
     return null;
   });
 

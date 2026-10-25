@@ -93,7 +93,8 @@ there is no high-speed class and no hover yet.
   trains; within each group the shorter route (end to end, one direction) is on top, ties to the
   higher id. The line on top wins a click. It is rebuilt when lines or fleets change.
 - **Track display** [T-105, T-703; on the map under the demand buttons], four choices, remembered per browser:
-  - **Line** (the default [T-1101]): uniform width in the line colours.
+  - **Line** (the default [T-1101]; a stored Traffic from before settings version 10 is dropped
+    once, T-1244): uniform width in the line colours.
   - **Traffic**: line colours, width by riders over the day shown
     ([ui-demand-views.md](ui-demand-views.md) "Line width by riders"). A line on track at
     capacity [T-819] (an edge of a track or single-track section, or either track of a flat
