@@ -4,8 +4,8 @@
 // area and the inspector up or down (T-085), both remembered per browser (game/ui.ts).
 
 import type { JSX } from "preact";
-import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
-import { dockLayout, tab, uiScale, type Tab } from "../game/ui";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { dockLayout, selection, tab, uiScale, type Tab } from "../game/ui";
 import { live } from "../map/live";
 import { Inspector } from "./inspector/Inspector";
 import { BuildTab } from "./BuildTab";
@@ -45,6 +45,12 @@ const PANE_MIN = 110, INSPECTOR_MIN = 160, TABS_H = 36;
 // The dock is zoomed by the UI scale (T-247): its sizes are in its own px, the window's in screen px.
 const dockWidth = (w: number) => Math.round(Math.max(DOCK_MIN, Math.min(DOCK_MAX, w, innerWidth * 0.45 / uiScale.peek())));
 const paneHeight = (h: number) => Math.round(Math.max(PANE_MIN, Math.min(h, innerHeight / uiScale.peek() - TABS_H - INSPECTOR_MIN)));
+/** the tab area's share of a phone's width beside the inspector (T-1259) */
+const paneShare = (f: number) => Math.max(0.3, Math.min(0.7, f));
+/** the tabs the inspector stands beside on a phone (T-1259) */
+const BESIDE = new Set<Tab>(["build", "lines", "stations"]);
+/** a phone held upright: the dock under the map (T-951), the same query as style.css */
+const PHONE = matchMedia("(max-width: 600px) and (min-height: 560px)");
 
 /** Drag with the pointer captured on the handle; `f` gets the pointer position. */
 function startDrag(e: PointerEvent, f: (x: number, y: number) => void) {
@@ -71,6 +77,12 @@ export function Dock() {
   const Pane = PANES[t];
   const lay = dockLayout.value;
   const ref = useRef<HTMLElement>(null);
+  const [phone, setPhone] = useState(PHONE.matches);
+  useEffect(() => {
+    const f = () => setPhone(PHONE.matches);
+    PHONE.addEventListener("change", f);
+    return () => PHONE.removeEventListener("change", f);
+  }, []);
   useEffect(startAccountUi, []);
   // The map's canvas follows the dock's width.
   const scale = uiScale.value;
@@ -99,12 +111,20 @@ export function Dock() {
     const left = ref.current!.getBoundingClientRect().left;
     startDrag(e, (x) => (dockLayout.value = { ...dockLayout.value, dockW: dockWidth((x - left) / uiScale.peek()) }));
   };
+  if (lay.paneW) style["--pane-w"] = Math.round(paneShare(lay.paneW) * 1000) / 10 + "%";
   const dragDivider = (e: PointerEvent) => {
-    const top = ref.current!.querySelector(".pane")!.getBoundingClientRect().top;
-    startDrag(e, (_, y) => (dockLayout.value = { ...dockLayout.value, paneH: paneHeight((y - top) / uiScale.peek()) }));
+    const r = ref.current!.getBoundingClientRect();
+    if (phone) startDrag(e, (x) => (dockLayout.value = { ...dockLayout.value, paneW: paneShare((x - r.left) / r.width) }));
+    else {
+      const top = ref.current!.querySelector(".pane")!.getBoundingClientRect().top;
+      startDrag(e, (_, y) => (dockLayout.value = { ...dockLayout.value, paneH: paneHeight((y - top) / uiScale.peek()) }));
+    }
   };
+  // T-1259: on a phone held upright the inspector sits beside the tab area while something is
+  // selected, with the tabs that hold up at that width; the others keep the whole width
+  const inspecting = selection.value !== null && BESIDE.has(t);
   return (
-    <aside id="dock" ref={ref} style={style}>
+    <aside id="dock" class={inspecting ? "inspecting" : undefined} ref={ref} style={style}>
       <nav class="tabs">
         {TABS.map(([id, label, Glyph]) => (
           <button class={"tab" + (t === id ? " on" : "")} data-tip={label} aria-label={label} aria-pressed={t === id} onClick={() => (tab.value = id)}>

@@ -704,6 +704,25 @@ rect.now { fill-opacity: .45; }
 .grabbing, .grabbing * { cursor: grabbing !important; }
 .pi-mark.drag:hover { background: var(--tint); }
 .snap-ring { width: 16px; height: 16px; margin: -8px 0 0 -8px; border: 2px solid var(--accent); border-radius: 50%; }
+/* T-1260: a held finger shows a control's tag (ui/tip.ts), never the browser's callout or a text selection */
+@media (pointer: coarse) { button, [data-tip] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; } }
+/* T-1259: a phone has no keys to hint at */
+@media (hover: none) and (pointer: coarse) { .btn .key { display: none; } }
+/* T-1260: every finger gesture on the map is the game's (a pan where the map pans), so the Select
+   tool's held press and the touch handle keep their pointer events */
+#map .maplibregl-canvas-container { touch-action: none; }
+/* T-1260: the touch control bar by the point being placed, 44 px buttons; the handle that drags that point */
+.touch-bar-host { position: fixed; left: 0; top: 0; z-index: 30; width: max-content; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.touch-bar { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.touch-row, .touch-levels { display: flex; gap: 6px; padding: 4px; background: var(--bg); border: 1px solid var(--rule); box-shadow: 0 1px 6px rgb(0 0 0 / 22%); }
+.btn.icon.tb { width: 44px; height: 44px; min-width: 44px; }
+.btn.icon.tb svg { width: 22px; height: 22px; }
+.btn.icon.tb.lv { font-size: 15px; }
+.btn.icon.tb.ok:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+.touch-levels .btn.lv { min-width: 34px; height: 44px; }
+.touch-handle { position: absolute; left: 0; top: 0; z-index: 5; width: 44px; height: 44px; margin: -22px 0 0 -22px; touch-action: none; }
+.touch-handle::after { content: ""; position: absolute; left: 15px; top: 15px; width: 10px; height: 10px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--net-ink); }
 .stn-label.plan { opacity: 0.6; }
 .track-modes .group { display: grid; grid-template-columns: 1fr 1fr; }
 .track-modes .btn { white-space: normal; height: auto; min-height: 40px; line-height: 1.35; padding: 4px 6px; }
@@ -902,8 +921,30 @@ rect.now { fill-opacity: .45; }
   .dock-resize { display: none; }
   #tools { right: 0; }
   #tool-notes { width: auto; max-width: none; border-right: 0; }
-  .pane { height: var(--pane-h, 48%); max-height: 60%; }
   .help-panel { left: 0; width: 100%; max-height: calc(100% - 48px); border-left: 0; border-right: 0; }
+  /* T-1259: under the tab row the tab area takes the dock's whole height, and while something is
+     selected the inspector stands beside it (40% and 60% until the divider is dragged) */
+  #dock { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  #dock.inspecting { grid-template-columns: minmax(0, var(--pane-w, 40%)) 0 minmax(0, 1fr); }
+  #dock > .tabs { grid-column: 1 / -1; }
+  .pane { height: auto; max-height: none; min-height: 0; padding: 10px 10px 12px; }
+  #dock:not(.inspecting) > .pane-resize, #dock:not(.inspecting) > #inspector { display: none; }
+  .pane-resize { width: 13px; height: auto; margin: 0 -6px; cursor: col-resize; touch-action: none; }
+  #inspector { min-width: 0; padding: 10px 8px 16px; border-top: 0; border-left: 1px solid var(--rule); }
+  #inspector table.sched th:not(:first-child), #inspector table.sched td:not(:first-child) { padding-left: 4px; }
+  #dock.inspecting .pane { container: pane / inline-size; }
+  #dock.inspecting .blueprint-construct { white-space: normal; height: auto; min-height: 28px; }
+  /* the Build tab at part of the width: its rows of buttons share the width */
+  #dock.inspecting .build-track-row > .group { display: flex; flex: 1 1 100%; min-width: 0; }
+  #dock.inspecting .build-track-row > .group > .btn { flex: 1 1 0; min-width: 0; padding: 0 2px; height: auto; min-height: 28px; line-height: 1.1; }
+}
+
+/* T-1259: the tab area beside the inspector on a phone: the tools by their icons (names in the
+   hovers), and no Near column in the lines list */
+@container pane (max-width: 200px) {
+  .tool-pick .tool-label { display: none; }
+  .lines-box .w-near, .lines-box .sort-btn.near-off { display: none; }
+  .pane .group { flex-wrap: wrap; }
 }
 
 /* Browser save slots (T-068). */

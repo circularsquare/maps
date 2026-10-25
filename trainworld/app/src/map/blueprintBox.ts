@@ -4,7 +4,8 @@
 //
 // Why a tool: a plain drag on the map is the map's pan and shift+drag is MapLibre's zoom box, so a
 // box needs a mode of its own. While the tool is on the left button draws the box; the right or
-// middle button drags the map instead (the wheel and the arrow keys work as always).
+// middle button drags the map instead (the wheel and the arrow keys work as always). A finger pans
+// as always; a tap adds or takes out a piece, a hold then drag adds a box (T-1260).
 // Construct and the quote leave out switched-off pieces; they are drawn grey (renderer.ts).
 
 import type { Map as MlMap } from "maplibre-gl";
@@ -12,6 +13,7 @@ import { bpPicked, onlyOneKind, removePicked, switchPicked, unionPicked, type Bp
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
 import { tool } from "../game/ui";
+import { touchInput } from "./touch";
 import { edit, say, world } from "../game/world";
 import type { ClockClient } from "../workers/clockClient";
 import { effect } from "@preact/signals";
@@ -26,6 +28,9 @@ import { STATIONS_ZOOM } from "./stationGeometry";
 const CLICK_PX = 4;
 /** how near a picked node a press grabs the pick (px), as for one node (map/nodeDrag.ts) */
 const NODE_PX = 9;
+/** T-1260: a finger held this long without moving more than HOLD_SLOP_PX draws a box (ms) */
+const HOLD_MS = 450;
+const HOLD_SLOP_PX = 8;
 
 type Rect = [number, number, number, number];
 
@@ -64,15 +69,18 @@ export class BlueprintBox {
     host.addEventListener("pointerdown", (e) => this.onDown(e as PointerEvent));
     host.addEventListener("contextmenu", (e) => { if (tool.peek() === "blueprint") e.preventDefault(); });
     addEventListener("pointermove", (e) => this.onMove(e));
-    addEventListener("pointerup", (e) => this.onUp(e));
-    // the left button is the box's while the tool is on; the map's own drag would pan under it
+    // a finger's box or pick drag over, the map pans again (T-1260)
+    addEventListener("pointerup", (e) => void this.onUp(e).finally(() => {
+      if (e.pointerType === "touch" && touchInput.peek() && !this.drag && !this.move) this.map.dragPan.enable();
+    }));
+    // the left button is the box's while the tool is on; the map's own drag would pan under it. A
+    // finger pans as everywhere, and draws a box after a hold (T-1260)
     effect(() => {
-      if (tool.value === "blueprint") map.dragPan.disable();
-      else {
-        map.dragPan.enable();
-        this.cancel();
-      }
+      if (tool.value === "blueprint" && !touchInput.value) map.dragPan.disable();
+      else map.dragPan.enable();
+      if (tool.value !== "blueprint") this.cancel();
     });
+    host.addEventListener("pointercancel", (e) => this.endTouch(e));
     // the highlight follows the pick and the world (a new network has new buffers)
     effect(() => {
       bpPicked.value;
@@ -159,8 +167,59 @@ export class BlueprintBox {
     return [e.clientX - r.left, e.clientY - r.top];
   }
 
+  /** T-1260, a finger: the press waiting to become a box (held still HOLD_MS) or a tap, and the fingers down */
+  private hold: { x0: number; y0: number; timer: number } | null = null;
+  private fingers = new Set<number>();
+
+  /** A finger on the map with the tool on: a tap adds or takes out the piece under it, a hold then
+   * drag adds what a box touches, a press on the pick drags it, anything else pans or zooms. */
+  private touchDown(e: PointerEvent) {
+    this.fingers.add(e.pointerId);
+    if (this.fingers.size > 1) return void this.dropHold(); // a pinch
+    if (this.drag || this.move) return;
+    const [x, y] = this.point(e);
+    const grab = this.grabAt(x, y);
+    if (grab) {
+      this.map.dragPan.disable();
+      const ll = this.map.unproject([x, y]);
+      this.move = { x0: x, y0: y, nodes: grab, at: lngLatToPack(ll.lng, ll.lat), dx: 0, dy: 0, moved: false, ok: true, issues: [] };
+      return;
+    }
+    this.hold = { x0: x, y0: y, timer: setTimeout(() => {
+      const h = this.hold;
+      if (!h) return;
+      this.hold = null;
+      this.map.dragPan.disable();
+      this.drag = { x0: h.x0, y0: h.y0, x: h.x0, y: h.y0, add: true, base: bpPicked.peek(), pan: false, moved: false };
+    }, HOLD_MS) as unknown as number };
+  }
+
+  private dropHold() {
+    if (this.hold) clearTimeout(this.hold.timer);
+    this.hold = null;
+  }
+
+  /** A finger lifted or lost: a tap if it was still waiting, and the map pans again. */
+  private endTouch(e: PointerEvent): boolean {
+    if (e.pointerType !== "touch") return false;
+    this.fingers.delete(e.pointerId);
+    const h = this.hold;
+    if (h && e.type === "pointerup") {
+      this.dropHold();
+      const [x, y] = this.point(e);
+      const hit = this.under(x, y);
+      if (hit.edges.length || hit.stations.length) this.toggle(hit);
+      return true;
+    }
+    this.dropHold();
+    if (e.type === "pointercancel") this.cancel();
+    return false;
+  }
+
   private onDown(e: PointerEvent) {
-    if (tool.peek() !== "blueprint" || this.drag || this.move) return;
+    if (tool.peek() !== "blueprint") return;
+    if (e.pointerType === "touch") return this.touchDown(e);
+    if (this.drag || this.move) return;
     const [x, y] = this.point(e);
     const grab = e.button === 0 && !e.shiftKey ? this.grabAt(x, y) : null;
     if (grab) {
@@ -177,6 +236,12 @@ export class BlueprintBox {
   }
 
   private onMove(e: PointerEvent) {
+    const h = this.hold;
+    if (h && e.pointerType === "touch") {
+      const [x, y] = this.point(e);
+      if (Math.hypot(x - h.x0, y - h.y0) > HOLD_SLOP_PX) this.dropHold(); // a pan
+      return;
+    }
     const m = this.move;
     if (m) return this.moveTo(m, ...this.point(e));
     const d = this.drag;
@@ -227,12 +292,14 @@ export class BlueprintBox {
   }
 
   private async onUp(e: PointerEvent) {
+    if (this.endTouch(e)) return;
     const m = this.move;
     if (m) {
       this.move = null;
       if (!m.moved) {
-        // a press without a drag is a click, as without the pick under it
-        this.drag = { x0: m.x0, y0: m.y0, x: m.x0, y: m.y0, add: false, base: { edges: [], stations: [] }, pan: false, moved: false };
+        // a press without a drag is a click, as without the pick under it (a finger's adds or takes out)
+        const add = e.pointerType === "touch";
+        this.drag = { x0: m.x0, y0: m.y0, x: m.x0, y: m.y0, add, base: add ? bpPicked.peek() : { edges: [], stations: [] }, pan: false, moved: false };
       } else {
         this.client.dropPreview();
         const a = await edit({ op: "moveNodes", nodes: m.nodes, dx: m.dx, dy: m.dy });
@@ -255,7 +322,6 @@ export class BlueprintBox {
     }
     // a click: the piece under the pointer
     const hit = this.under(x, y);
-    const cur = bpPicked.peek();
     if (!hit.edges.length && !hit.stations.length) {
       if (!d.add) bpPicked.value = { edges: [], stations: [] };
       return;
@@ -264,6 +330,12 @@ export class BlueprintBox {
       bpPicked.value = hit;
       return;
     }
+    this.toggle(hit);
+  }
+
+  /** The piece hit added to the pick, or taken out if it is in it. */
+  private toggle(hit: BpPicked) {
+    const cur = bpPicked.peek();
     const has = hit.edges.length ? cur.edges.includes(hit.edges[0]) : cur.stations.includes(hit.stations[0]);
     bpPicked.value = has
       ? { edges: cur.edges.filter((v) => !hit.edges.includes(v)), stations: cur.stations.filter((v) => !hit.stations.includes(v)), built: cur.built }

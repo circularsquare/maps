@@ -65,6 +65,41 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   so rows of one kind are never further apart than from the controls above them; the Target max
   speed box fits "320 km/h" [T-1159].
 
+## Building by touch
+
+[T-1260; `map/touch.ts`, `Tools.tap` in `map/tools.ts`, `ui/TouchBar.tsx`; design notes in
+DECISIONS.md] A finger has no hover, so on a touch screen a tap with a build tool shows what a click
+there would do, and a second tap on the same spot (within 24 px) or the control bar's confirm does it.
+The mouse keeps the click flow below unchanged; whichever was pressed last on the page decides (a
+mouse moving again takes it back).
+
+- **Track**: the first tap is the start, set at once as a click sets it. The next tap is the end:
+  the ghost, its curve labels and the tag show, nothing is placed. Another tap elsewhere moves the
+  end there, and the end can be dragged by its handle (a 44 px ring round the point); a tap on the
+  end or the handle, or confirm, places the segment, and with keep placing the next starts at its
+  end. A tap on the start with no end waiting ends the run, as a click on it does.
+- **Stations**: on track, a tap shows the platform ghost and its tag, a second tap or confirm
+  places it. On open ground the first tap is one end of the platform (as a click), the next taps
+  set its direction (the ghost and tag show), and confirm or a tap on that point places it.
+- **Delete**: a tap shows what would go (drawn red, its name in the tag); confirm or a second tap
+  removes it (built things still ask), cancel drops it.
+- **Line stops** are toggled by a tap at once, as clicks are; the hints say "tap" and leave out Enter.
+- **The control bar** sits beside the point being placed, 44 px from it so the finger does not
+  cover it, kept 8 px inside the map: past a waiting end on the side away from the start (the
+  ghost lies between), and at a run's new start behind it, where the last segment came from, since
+  the next tap is usually ahead. The tag sits beyond the bar. Its buttons, 44 px square with hovers:
+  confirm (a tick, greyed while the ghost is refused), take back the last point (the waiting end,
+  else the last segment as Backspace does), stop (the run ends and its track stays, or the placement
+  is dropped; the tool stays on), and for track and open-ground stations the elevation (its number
+  on its colour; a tap opens the seven elevations above the bar) and the track type (a tap steps
+  Double, Quad, High speed).
+- **Pinch and pan** work as always; a pan or pinch never places or moves a point. A tap that stops
+  a fling is no tap (MapLibre's own rule).
+- **Select tool**: a one-finger drag pans; a tap adds the piece under it to the pick or takes it
+  out (Shift+click's rule, since a finger has no Shift); a press held 450 ms without moving more than
+  8 px then dragged draws a box that adds to the pick; a press on the pick drags it, as with the
+  mouse. Clear in the selection bar empties the pick.
+
 ## Drawing track
 
 [T-023, T-085, T-092, T-244, T-311, T-322, T-418, T-422, T-442]

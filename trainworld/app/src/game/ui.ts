@@ -139,6 +139,8 @@ const STORE = "trainworld-ui";
 export interface DockLayout {
   dockW: number | null;
   paneH: number | null;
+  /** on a phone held upright, the tab area's share of the width beside the inspector (T-1259) */
+  paneW?: number | null;
 }
 
 /** The stored settings' version: 2 since complex view became the default (T-192), 3 since Nunito and
@@ -185,7 +187,7 @@ export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migrated
 // bubble colours are module state in palette.ts (the bubble worker has its own); views that colour
 // bubbles read the setting and call this again before building, so the order of effects is moot
 effect(() => setBubbleColours(display.value.bubbleColours, display.value.rampFrom, display.value.rampTo));
-export const dockLayout = signal<DockLayout>({ dockW: saved.dock?.dockW ?? null, paneH: saved.dock?.paneH ?? null });
+export const dockLayout = signal<DockLayout>({ dockW: saved.dock?.dockW ?? null, paneH: saved.dock?.paneH ?? null, paneW: saved.dock?.paneW ?? null });
 const savedTheme = OLD_THEME[saved.theme as string] ?? saved.theme;
 export const theme = signal<Theme>(THEMES.includes(savedTheme as Theme) ? (savedTheme as Theme) : "pink");
 export const shade = signal<Shade>(saved.shade === "dark" ? "dark" : "light");

@@ -5,6 +5,7 @@ import { plural } from "../game/format";
 import { ask, lineDraft, selection, tool, type Tool } from "../game/ui";
 import { linesByNum, notice, world } from "../game/world";
 import { live } from "../map/live";
+import { touchInput } from "../map/touch";
 import { useModalDialog } from "./Modal";
 import { Chip } from "./widgets";
 
@@ -71,9 +72,11 @@ function Notice() {
   const t = tool.value;
   const draft = lineDraft.value;
   const sel = selection.value;
-  const hint = t === "line" && draft.stops.length === 1 ? "Now click the next station."
+  const raw = t === "line" && draft.stops.length === 1 ? "Now click the next station."
     : t === "trip" && sel?.kind === "trip" && !sel.to ? "Now click where the trip ends, or a station."
     : HINT[t];
+  // T-1260: a finger taps, and has no Enter key
+  const hint = touchInput.value ? raw.replace(" Press Enter when done.", "").replace(/\b([Cc])lick\b/, (_, c) => (c === "C" ? "Tap" : "tap")) : raw;
   const show = n && performance.now() - n.at < NOTICE_MS;
   if (!show && !hint) return null;
   // stop editing (T-233): which line, how many stops, and the way out

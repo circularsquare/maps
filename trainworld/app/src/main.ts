@@ -42,6 +42,8 @@ import { NetworkRenderer } from "./map/renderer";
 import { followTrain } from "./map/trainFollow";
 import { makeSynth } from "./map/synth";
 import { Tools } from "./map/tools";
+import { touchInput, watchInput } from "./map/touch";
+import { TouchBar } from "./ui/TouchBar";
 import { StopMarkers } from "./map/stopMarkers";
 import { EdgeEditor } from "./map/edgeEdit";
 import { BlueprintBox } from "./map/blueprintBox";
@@ -233,6 +235,9 @@ if (SYNTH) {
   };
 }
 const tools = new Tools(map, overlay, client);
+// T-1260: on a touch screen a build tool's tap previews, and a control bar by it confirms
+watchInput();
+render(h(TouchBar, null), tools.touchHost);
 // The blueprint tool: a drag box picks blueprint track and stations to switch off or on (T-333).
 const blueprintBox = new BlueprintBox(map, overlay, client);
 live.tools = tools;
@@ -332,7 +337,7 @@ effect(() => {
 map.on("click", (e) => {
   if (tool.peek() === "trip") tripTool.click(e); // T-195
   else if (tool.peek() === "blueprint") return; // its pointer handlers pick (map/blueprintBox.ts)
-  else if (tool.peek() !== "select") tools.click(e);
+  else if (tool.peek() !== "select") touchInput.peek() ? tools.tap(e) : tools.click(e);
   else selectAt(e.point.x, e.point.y, e.originalEvent.shiftKey);
 });
 /** The select tool's click at a map point (px): from the map, or from a capacity tag over it (T-256). */
@@ -351,6 +356,7 @@ effect(() => {
 if (!SYNTH && !perfOff("hover")) // ?perfOff=hover: T-045 measurement only
   map.on("mousemove", (e) => {
     if (e.originalEvent.buttons) return; // dragging the map: no hover
+    if (touchInput.peek()) return; // the mouse events a browser makes of a tap (T-1260)
     if (tool.peek() === "trip") {
       // a station under the pointer is picked as the trip's end (T-221)
       const c = tripTool.stationAt(e.point.x, e.point.y) ? "pointer" : "crosshair";

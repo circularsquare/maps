@@ -29,7 +29,7 @@ export function BuildTab() {
           {TOOLS.map(([id, label, I, key, title]) => (
             <button class={"btn text" + (t === id ? " on" : "")} data-tip={`${title} (${key})`} onClick={() => pickTool(id)}>
               <I />
-              {label}
+              <span class="tool-label">{label}</span>
               <span class="key muted">{key}</span>
             </button>
           ))}

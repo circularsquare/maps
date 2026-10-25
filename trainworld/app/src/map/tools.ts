@@ -16,6 +16,9 @@
 // track drawn red, its name by the cursor); a click removes blueprint at once and asks first for
 // anything constructed (game/remove.ts).
 //
+// On a touch screen (T-1260) a tap previews and a second tap on it, or the control bar's confirm,
+// is the click; the bar and its handle are placed here, drawn by ui/TouchBar.tsx.
+//
 // Everything drawn is blueprint until constructed (SPEC 6.4).
 
 import { effect } from "@preact/signals";
@@ -49,6 +52,11 @@ import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, near
 import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
 import { snapping } from "../game/ui";
+import { SAME_TAP_PX, touchActions, touchCtl, touchInput, type TouchCtl } from "./touch";
+
+/** the touch control bar's gap from the point it serves, so the finger does not cover it (px) */
+const TOUCH_GAP_PX = 44;
+type LngLatish = { lng: number; lat: number };
 
 const SNAP_NODE_PX = 12;
 const SNAP_EDGE_PX = 10;
@@ -117,6 +125,11 @@ function trimPolyline(pts: Float32Array, fromA: number, fromB: number): Float32A
   return Float32Array.from(out);
 }
 
+function toLngLatObj(s: { lx: number; ly: number }): LngLatish {
+  const [lng, lat] = toLngLat(s.lx, s.ly);
+  return { lng, lat };
+}
+
 function placedAt(end: RouteEnd, lx: number, ly: number, ring: [number, number] | null): Placed {
   const [lng, lat] = toLngLat(lx, ly);
   return { end, lng, lat, ring };
@@ -152,6 +165,15 @@ export class Tools {
   /** the toggle markers on every station while a line's stops are edited (T-233); set by main.ts */
   stops: StopMarkers | null = null;
   private stopClicks: Promise<void> = Promise.resolve();
+  /** T-1260, on touch: the tap whose preview waits to be confirmed (the track's end, a station's
+   * spot or an open-ground station's direction, what the delete tool would remove) */
+  private touchAt: LngLatish | null = null;
+  /** the touch control bar's host (ui/TouchBar.tsx draws into it), and the drag handle on `touchAt` */
+  readonly touchHost: HTMLDivElement;
+  private handle: HTMLDivElement;
+  private touchKey = "";
+  /** whether the open-ground station's ghost would be placed (null: not known yet) */
+  private freeOk: boolean | null = null;
 
   constructor(private map: MlMap, private overlay: Overlay, private client: ClockClient) {
     this.box = document.createElement("div");
@@ -182,6 +204,27 @@ export class Tools {
       this.place();
     }, () => this.place(), () => this.freeLevel());
     effect(() => this.real.setOn(snapping.value));
+    // T-1260: the touch control bar and the handle that drags the point being previewed
+    this.touchHost = document.createElement("div");
+    this.touchHost.className = "touch-bar-host";
+    this.touchHost.style.display = "none";
+    this.handle = document.createElement("div");
+    this.handle.className = "touch-handle";
+    this.handle.style.display = "none";
+    for (const el of [this.touchHost, this.handle]) {
+      for (const k of ["pointerdown", "mousedown", "touchstart", "click", "dblclick", "contextmenu"]) el.addEventListener(k, (e) => e.stopPropagation());
+    }
+    // the bar over everything on the map column (the demand buttons, the search glass)
+    document.body.appendChild(this.touchHost);
+    map.getContainer().appendChild(this.handle);
+    this.handle.addEventListener("pointerdown", (e) => this.dragHandle(e));
+    Object.assign(touchActions, { confirm: () => void this.touchConfirm(), back: () => this.touchBack(), stop: () => this.touchStop(), drawn: () => this.placeTouch() });
+    effect(() => {
+      tool.value;
+      touchInput.value;
+      this.touchAt = null;
+      this.place();
+    });
     // T-1039: a run ends with the track tool however it is left (a game loaded sets the tool directly)
     effect(() => { if (tool.value !== "track" && this.start) setTimeout(() => tool.peek() !== "track" && this.start && this.reset()); });
     effect(() => {
@@ -360,6 +403,207 @@ export class Tools {
     else if (t === "delete") this.deleteClick(e);
   }
 
+  // ---------------------------------------------------------------- touch (T-1260)
+
+  /** A tap with a tool on a touch screen: a preview where a click would act, which a second tap
+   * on the same spot or the bar's confirm carries out. The first point of a run of track, and the
+   * first end of a station on open ground, are set at once, as clicks set them. */
+  tap(e: MapMouseEvent) {
+    const t = tool.peek();
+    if (t === "line") return this.click(e);
+    if (this.touchAt && this.nearTouch(e.point.x, e.point.y)) return void this.touchConfirm();
+    const ll = { lng: e.lngLat.lng, lat: e.lngLat.lat };
+    if (t === "track") {
+      if (this.placing) return;
+      if (!this.start) {
+        this.move(e);
+        this.trackClick(e);
+        return;
+      }
+      // the start tapped with nothing waiting ends the run, as a click on it does (T-707)
+      const [sx, sy] = this.screen(...toLocal(this.start.lng, this.start.lat));
+      if (!this.touchAt && Math.hypot(sx - e.point.x, sy - e.point.y) < SAME_TAP_PX) return this.reset();
+      this.touchAt = ll;
+      this.move(e);
+    } else if (t === "station") {
+      if (!this.freeAt && this.snap(e.point.x, e.point.y, e.lngLat).kind === "free") {
+        this.touchAt = null;
+        this.move(e);
+        void this.stationClick(e);
+        return;
+      }
+      this.touchAt = ll;
+      this.move(e);
+    } else if (t === "delete") {
+      this.touchAt = ll;
+      this.move(e);
+    }
+  }
+
+  private nearTouch(x: number, y: number) {
+    const p = this.touchAt && this.map.project([this.touchAt.lng, this.touchAt.lat]);
+    return !!p && Math.hypot(p.x - x, p.y - y) < SAME_TAP_PX;
+  }
+
+  /** a click's event at a map point, for the touch bar's confirm */
+  private evAt(ll: LngLatish): MapMouseEvent {
+    const p = this.map.project([ll.lng, ll.lat]);
+    return { point: p, lngLat: this.map.unproject(p), originalEvent: { detail: 1, shiftKey: false } } as unknown as MapMouseEvent;
+  }
+
+  /** The bar's confirm, or a second tap on the point: what a click there does. */
+  private async touchConfirm() {
+    const t = tool.peek(), at = this.touchAt;
+    if (t === "track") {
+      const from = this.start;
+      if (!from || !at || this.placing) return;
+      this.touchAt = null;
+      const ev = this.evAt(at);
+      await this.segmentClick(ev, this.hover ?? this.snap(ev.point.x, ev.point.y, ev.lngLat));
+      // refused: the end stays, to be moved or confirmed again
+      if (this.start === from && !this.touchAt) {
+        this.touchAt = at;
+        this.place();
+      }
+    } else if (t === "station") {
+      if (this.freeAt) {
+        const p = this.pointer;
+        this.touchAt = null;
+        await this.freeStationClick(this.evAt(p ?? toLngLatObj(this.freeAt)));
+      } else if (at) {
+        this.touchAt = null;
+        this.place();
+        await this.stationClick(this.evAt(at));
+      }
+    } else if (t === "delete" && at) {
+      this.touchAt = null;
+      this.deleteClick(this.evAt(at));
+    }
+  }
+
+  /** The bar's back button: the end waiting is dropped, else the last segment is taken back
+   * (Backspace), else the start goes. */
+  private touchBack() {
+    if (tool.peek() !== "track") return this.touchStop();
+    if (this.touchAt && this.start) {
+      this.touchAt = null;
+      this.hover = null;
+      this.client.dropPreview();
+      this.lastPreview = null;
+      this.previewKey = this.wantKey = "";
+      this.real.reset();
+      this.real.begin(this.start.ring);
+      this.overlay.renderer.setPreview(null);
+      this.overlay.invalidate();
+      this.place();
+    } else if (this.chain.length) void this.takeBackSegment();
+    else this.reset();
+  }
+
+  /** The bar's stop button: the run ends (its placed track stays) or the placement is dropped; the tool stays on. */
+  private touchStop() {
+    const t = tool.peek();
+    if (t === "track") return this.reset();
+    this.touchAt = null;
+    this.hover = null;
+    if (t === "station") {
+      this.freeAt = null;
+      this.clearFree();
+    } else if (t === "delete") {
+      this.delHover = null;
+      this.overlay.renderer.setPreview(null);
+      this.overlay.invalidate();
+    }
+    this.place();
+  }
+
+  /** Dragging the handle moves the point being previewed; a tap on it confirms. */
+  private dragHandle(e: PointerEvent) {
+    e.preventDefault();
+    const el = this.handle;
+    el.setPointerCapture(e.pointerId);
+    let moved = false;
+    const move = (m: PointerEvent) => {
+      const r = this.map.getContainer().getBoundingClientRect();
+      const x = m.clientX - r.left, y = m.clientY - r.top;
+      if (!moved && Math.hypot(m.clientX - e.clientX, m.clientY - e.clientY) < 6) return;
+      moved = true;
+      const ll = this.map.unproject([x, y]);
+      this.touchAt = { lng: ll.lng, lat: ll.lat };
+      this.move({ point: { x, y }, lngLat: ll, originalEvent: m } as unknown as MapMouseEvent);
+    };
+    const up = (u: PointerEvent) => {
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
+      // a tap on the handle is a second tap on the point
+      if (!moved && u.type === "pointerup") void this.touchConfirm();
+    };
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+  }
+
+  /** What the touch bar offers now; null hides it. */
+  private touchState(): TouchCtl | null {
+    if (!touchInput.peek()) return null;
+    const t = tool.peek();
+    if (t === "track" && this.start) {
+      const pv = this.lastPreview;
+      const bad = !!pv && !pv.ok && this.previewKey === this.wantKey && !this.real.active;
+      return { confirm: this.touchAt ? !bad && !this.placing : null, confirmTip: "Place this track", back: !!this.touchAt || this.chain.length > 0, stopTip: "Stop drawing", level: true, track: true };
+    }
+    if (t === "station" && this.freeAt) return { confirm: this.freeOk !== false, confirmTip: "Place the station", back: false, stopTip: "Cancel", level: true, track: true };
+    if (t === "station" && this.touchAt && this.hover && this.hover.kind !== "free") return { confirm: this.shown?.ok !== false, confirmTip: "Place the station", back: false, stopTip: "Cancel", level: false, track: false };
+    if (t === "delete" && this.touchAt && this.delHover) return { confirm: true, confirmTip: "Remove", back: false, stopTip: "Cancel", level: false, track: false };
+    return null;
+  }
+
+  /** The touch bar beside the point it serves, clear of the finger and the map's edges, and the
+   * tool's tag beyond it; the drag handle on the point being previewed. */
+  private placeTouch() {
+    if (!this.touchHost) return; // during construction
+    const ctl = this.touchState();
+    const key = JSON.stringify(ctl);
+    if (key !== this.touchKey) {
+      this.touchKey = key;
+      touchCtl.value = ctl;
+    }
+    const host = this.touchHost, t = tool.peek();
+    const at = this.touchAt ?? (t === "track" && this.start ? this.start : t === "station" && this.freeAt ? toLngLatObj(this.freeAt) : null);
+    if (!ctl || !at) {
+      host.style.display = "none";
+      this.handle.style.display = "none";
+      return;
+    }
+    const { clientWidth: W, clientHeight: H } = this.map.getContainer();
+    const p = this.map.project([at.lng, at.lat]);
+    host.style.display = "";
+    const bw = host.offsetWidth, bh = host.offsetHeight;
+    const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+    // off the side the track comes from: past a waiting end, away from the start (the ghost lies
+    // between); at a run's new start, behind it, where the last segment came from (the next
+    // segment usually goes on ahead, where the next tap will be)
+    const from = this.touchAt ? (t === "track" ? this.start : this.freeAt ? toLngLatObj(this.freeAt) : null) : t === "track" ? this.chain[this.chain.length - 1] ?? null : null;
+    const q = from && this.map.project([from.lng, from.lat]);
+    const wantAbove = !q ? true : this.touchAt ? q.y > p.y : q.y < p.y;
+    const fitsAbove = p.y - TOUCH_GAP_PX - bh >= 8, fitsBelow = p.y + TOUCH_GAP_PX + bh <= H - 8;
+    const above = wantAbove ? fitsAbove || !fitsBelow : !fitsBelow && fitsAbove;
+    const y = clamp(above ? p.y - TOUCH_GAP_PX - bh : p.y + TOUCH_GAP_PX, 8, H - bh - 8);
+    const x = clamp(p.x - bw / 2, 8, W - bw - 8);
+    const box = this.map.getContainer().getBoundingClientRect();
+    host.style.transform = `translate(${Math.round(box.left + x)}px, ${Math.round(box.top + y)}px)`;
+    if (this.tag.style.display !== "none") {
+      const tw = this.tag.offsetWidth, th = this.tag.offsetHeight;
+      let ty = above ? y - 6 - th : y + bh + 6;
+      if (ty < 8 || ty + th > H - 8) ty = above ? p.y + 24 : p.y - 24 - th;
+      this.tag.style.transform = `translate(${Math.round(clamp(p.x - tw / 2, 8, W - tw - 8))}px, ${Math.round(ty)}px)`;
+    }
+    const drag = this.touchAt && (t === "track" || (t === "station" && this.freeAt));
+    this.handle.style.display = drag ? "" : "none";
+    if (drag) this.handle.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px)`;
+  }
+
   /** Keys while a tool is on; true if used. */
   key(e: KeyboardEvent): boolean {
     const t = tool.peek();
@@ -411,6 +655,7 @@ export class Tools {
     this.real.reset();
     this.freeAt = null;
     this.freeDrawn = "";
+    this.touchAt = null;
     this.overlay.renderer.setPreview(null);
     this.overlay.invalidate();
     this.place();
@@ -798,7 +1043,8 @@ export class Tools {
   private deleteClick(e: MapMouseEvent) {
     const h = this.deletePick(e.point.x, e.point.y);
     if (!h) return;
-    void removeThing(h).then(() => this.deleteHover(e.point.x, e.point.y));
+    // on touch nothing is shown until the next tap (T-1260)
+    void removeThing(h).then(() => touchInput.peek() ? this.touchStop() : this.deleteHover(e.point.x, e.point.y));
   }
 
   // ---------------------------------------------------------------- lines
@@ -1008,6 +1254,7 @@ export class Tools {
     }
     const ans = this.freeAns?.key === p.key ? this.freeAns : null;
     const bad = ans?.ok === false;
+    this.freeOk = ans ? ans.ok : null;
     const drawn = `${p.key}:${bad}`;
     if (this.freeDrawn !== drawn) {
       this.freeDrawn = drawn;
@@ -1237,6 +1484,19 @@ export class Tools {
 
   /** Move the DOM markers to the camera (after each MapLibre frame and each change). */
   place() {
+    // on touch the pointer is a tap, a place on the map: its screen point follows the camera
+    const p = this.pointer;
+    if (p && touchInput.peek()) {
+      const s = this.map.project([p.lng, p.lat]);
+      p.px = s.x;
+      p.py = s.y;
+      if (this.touchAt && tool.peek() === "delete") this.delAt = [s.x, s.y];
+    }
+    this.placeMarks();
+    this.placeTouch();
+  }
+
+  private placeMarks() {
     let k = 0;
     const put = (m: HTMLDivElement, lx: number, ly: number, dx = 0, dy = 0) => {
       const [x, y] = this.screen(lx, ly);

@@ -128,7 +128,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   for names and tags: `BoxGrid`, `tagLines`, `tipBeside`, `TAG_OFFSET_PX`, `screenBounds`).
 - Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
   second click's route, T-727d; only where a graph covers the click, `covers`, T-913), `pick.ts`, `cellIndex.ts` and `snapIndex.ts` (grids built in idle time that narrow a pick
-  and the build tools' snap to what is near the pointer, T-724), `tools.ts` (drawing track, placing stations, the line tool), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
+  and the build tools' snap to what is near the pointer, T-724), `tools.ts` (drawing track, placing stations, the line tool; on touch the tap, preview and confirm and the control bar's place, T-1260), `touch.ts` (whether the last press was a finger, and what the touch control bar offers), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
   (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `curveCircle.ts` (the circle of the segment being drawn, T-418),
   `blueprintBox.ts` (the Select tool's drag box, T-333, and dragging its pick, T-475; its state is `game/blueprintPick.ts`),
   `stopMarkers.ts` (the toggle markers of stop editing, T-233), `reversalMarks.ts` (the icon over
@@ -163,7 +163,7 @@ the person icon, and `startAccountUi`, which mounts both account panels in a roo
 own so the start menu opens them too; styles in `account.css`, T-972); `Leaderboard.tsx` (the
 leaderboards and the All cities row's trophy, T-973); `HelpPanel.tsx` (the "?" button's list of controls no button shows, T-908); `BuildTab.tsx`, `LinesTab.tsx`, `StationsTab.tsx`, `MoneyTab.tsx` (the tabs; the Cities tab is `Cities.tsx` mounted in `Dock.tsx`); `listParts.tsx` (the scope toggle, the Near column and the name order the Lines and Stations tabs share); `toolKeys.ts` (the build tools, the number and letter keys and `pickTool`); `Modal.tsx` (the native modal dialog behind the saves, account and leaderboard panels and the confirmation question, with `useModalDialog`); `useClockQuery.ts` (`useClockQuery`, a panel's question to the clock worker, and `useLatestAnswer`);
 `MoneyHistory.tsx` (the Money tab's history charts, T-447); `FareGraph.tsx` (the fare curve graph, linear and zoomable at one fixed ratio of its scales, its three nodes each dragged one way at a time with hover arrows, an arrow for one past the plot, and rows of steppers under it, the base fare then each stretch's end and rate per km, T-864, T-883, T-1112, T-1143, T-1201); `Cities.tsx` (the Cities list, T-550, T-749); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251; `SlotThumb`, a save's picture with each panel's city named over it, T-894); `bullet.ts` (`bulletText`, `bulletNode`: a line bullet as one SVG, its circle and its symbol placed from the canvas-measured ink box with the baseline on a whole device pixel, per font, symbol, size and scale, T-705, T-745; the sizes in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
-checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `SkyBanner.tsx` (the clock's sky and demand band, a canvas, T-861); `StatusTag.tsx` (the demand status tag on the map's top row); `BusyTag.tsx` (the busy tag after it, T-1200); `ToolNotes.tsx` (tool hints, the notice and the confirmation
+checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `SkyBanner.tsx` (the clock's sky and demand band, a canvas, T-861); `StatusTag.tsx` (the demand status tag on the map's top row); `BusyTag.tsx` (the busy tag after it, T-1200); `TouchBar.tsx` (the touch control bar's buttons, T-1260); `ToolNotes.tsx` (tool hints, the notice and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
 per selection kind: `StationInspector.tsx`, `TrainInspector.tsx`, `TrackInspector.tsx` and `JunctionInspector.tsx`; `LineInspector.tsx`; the trip panels share `tripText.ts` and `RouteParts.tsx`;
@@ -294,6 +294,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t1155-branch.mjs` (track drawn from a station, through the track tool's clicks, on the real save
   and a fresh game with double, quad and high-speed track: the branch's junction 20 m past the
   platform, the station keeping two track ends, one undo; screenshots in t1155/; port 6122 by default),
+  `t1260-touch.mjs` (building by touch on a 390 px phone page: track by tap, preview and confirm, a
+  pan placing nothing, stations on track and open ground, a line by taps, delete's cancel, the
+  Select tool's taps and held box, then two mouse clicks on a desktop page; screenshots in t1260/;
+  port 6165 by default),
   `t727-snap.mjs` (the snap to the real network in a new game: Tokyo to Shin-Osaka and Penn
   Station to Emeryville by two clicks each, one undo each, Tokyo to London refused, a click off
   real track an ordinary segment; router, fit and preview times and the longest main-thread task;

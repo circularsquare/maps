@@ -76,11 +76,19 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
   session, opening at its top the first time [T-215].
 - A refused edit's reason, what an edit did, and the stop editor's and trip tool's one-line hints
   show at the map's bottom left (`ui/ToolNotes.tsx`); the build tools have no hint there [T-1159].
-- **Narrow screens** [T-951, `style.css`]: at most 600 px wide and at least 560 px tall (a phone held
-  upright) the dock goes under the map, full width and 40% of the height, so the map and top bar keep
-  the whole width and the map column's container queries see the real width. The tab area is 48% of the
-  dock (at most 60%) until the divider is dragged; the width handle is gone and the controls panel
-  covers the dock's width. Nothing changes above 600 px wide or on a short (landscape) screen.
+- **Narrow screens** [T-951, T-1259, `style.css`]: at most 600 px wide and at least 560 px tall (a
+  phone held upright) the dock goes under the map, full width and 40% of the height, so the map and
+  top bar keep the whole width and the map column's container queries see the real width. Under the
+  tab row the tab area takes the dock's whole height. While something is selected and the Build,
+  Lines or Stations tab is open, the inspector stands beside the tab area instead of under it, the tab
+  area 40% of the width and the inspector the rest until the divider between them is dragged (30% to
+  70%, remembered per browser); on Money, Cities and Settings the tab keeps the whole width and the
+  inspector shows again on the other three. At that width the Build tab's tools show their icons only,
+  its button rows share the width, and the Lines list drops its Near column. The width handle is gone
+  and the controls panel covers the dock's width. Nothing changes above 600 px wide or on a short
+  (landscape) screen. On a touch screen the buttons show no key hints, and a press held on a control
+  for half a second shows its hover tag above the finger, the tap it ends in doing nothing [T-1260,
+  `ui/tip.ts`].
 
 ## The top bar
 

@@ -27,8 +27,15 @@ export function startTips() {
     text = "";
     tag.style.display = "none";
   };
+  /** shown by a finger's hold: above the finger, which covers what is below it */
+  let lifted = false;
   const place = () => {
     const w = tag.offsetWidth, h = tag.offsetHeight;
+    if (lifted) {
+      const x = Math.max(4, Math.min(innerWidth - 4 - w, px - w / 2)), y = Math.max(4, py - 36 - h);
+      tag.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      return;
+    }
     // below right of the pointer; flipped where it would leave the window
     let x = px + 14, y = py + 16;
     if (x + w > innerWidth - 4) x = Math.max(4, px - 10 - w);
@@ -54,6 +61,7 @@ export function startTips() {
 
   const move = (e: PointerEvent) => {
     if (e.pointerType === "touch") return;
+    lifted = false;
     if (e.buttons) return hide();
     px = e.clientX;
     py = e.clientY;
@@ -81,4 +89,47 @@ export function startTips() {
   document.addEventListener("scroll", hide, true);
   document.addEventListener("keydown", (e) => isModifierKey(e) || hide(), true);
   document.documentElement.addEventListener("pointerleave", () => hoverHeld() || hide());
+
+  // T-1260: a finger has no hover. A press held still on a control for HOLD_MS shows its tag above
+  // the finger, and the tap it ends in does nothing; the tag stays a moment after the finger lifts.
+  const HOLD_MS = 500, SLOP_PX = 10, LINGER_MS = 1500;
+  let hold: { timer: number; x: number; y: number } | null = null;
+  let swallow = false, linger = 0;
+  const drop = () => { if (hold) clearTimeout(hold.timer); hold = null; };
+  document.addEventListener("pointerdown", (e) => {
+    drop();
+    clearTimeout(linger);
+    swallow = false; // a hold that ended without a click (a long press can end in none)
+    if (e.pointerType !== "touch") return;
+    const found = e.target instanceof Element ? e.target.closest("[data-tip]") : null;
+    if (!found) return;
+    const x = e.clientX, y = e.clientY;
+    hold = { x, y, timer: setTimeout(() => {
+      hold = null;
+      if (!found.isConnected) return;
+      el = found;
+      text = "";
+      px = x;
+      py = y;
+      lifted = true;
+      swallow = true;
+      fill();
+    }, HOLD_MS) as unknown as number };
+  }, true);
+  document.addEventListener("pointermove", (e) => {
+    if (hold && e.pointerType === "touch" && Math.hypot(e.clientX - hold.x, e.clientY - hold.y) > SLOP_PX) drop();
+  }, { capture: true, passive: true });
+  const lift = () => {
+    drop();
+    if (lifted && el) linger = setTimeout(hide, LINGER_MS) as unknown as number;
+  };
+  document.addEventListener("pointerup", lift, true);
+  document.addEventListener("pointercancel", lift, true);
+  document.addEventListener("click", (e) => {
+    if (!swallow) return;
+    swallow = false;
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
+  document.addEventListener("contextmenu", (e) => { if (swallow) e.preventDefault(); }, true);
 }
