@@ -32,7 +32,7 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
   if (!d) return <span class="val w-linemoney" />;
   const run = runningToday(l, st), net = d.fares - run - st.upkeep;
   return (
-    <span class="val w-linemoney" data-tip={`Fares ${money(d.fares)} less running cost ${money(run)} and upkeep of its track and stations ${money(st.upkeep)} in the past 24 hours: ${money(net)} net`}>
+    <span class="val w-linemoney" data-tip={[`${money(net)} net in the past 24 hours`, `Fares ${money(d.fares)}`, `Running trains ${money(-run)}`, `Upkeep ${money(-st.upkeep)}`].join("\n")}>
       <Money dollars={net} />
     </span>
   );
@@ -109,7 +109,7 @@ export function LinesTab() {
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         ...(showCity ? [{ key: "city" as const, label: "City", tip: "Sort by the city of the first stop", first: 1 as const, cls: "w-city", left: true }] : []),
         { key: "riders", label: "Riders", tip: "Sort by riders in the past 24 hours", first: -1, cls: "w-riders" },
-        { key: "money", label: "Money", tip: "Sort by money in the past 24 hours, fares less running cost and upkeep", first: -1, cls: "w-linemoney" },
+        { key: "money", label: "Money", tip: "Sort by money in the past 24 hours, fares minus running costs and upkeep", first: -1, cls: "w-linemoney" },
         { key: "trains", label: "Trains", tip: "Sort by trains needed", first: -1, cls: "w-trains" },
         { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen, by the nearest stop", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}

@@ -31,7 +31,7 @@ const NO_CLOCK = perfOff("clock");
 
 const hourTime = (h: number) => clockTime(Math.round(h * 60) % 1440);
 
-/** The demand band's hover (T-902, Anita): "Currently low demand until 06:00", the end being where
+/** The demand band's hover (T-902, Anita; T-1242): "Low demand until 06:00", the end being where
  * the level next changes. */
 function periodTip(minute: number): string {
   let p = PERIODS[periodAt(minute * 60)];
@@ -41,7 +41,7 @@ function periodTip(minute: number): string {
     if (next.demand !== level) break;
     p = next;
   }
-  return `Currently ${level} demand until ${hourTime(p.to)}`;
+  return `${level[0].toUpperCase()}${level.slice(1)} demand until ${hourTime(p.to)}`;
 }
 
 /** T-862: one line per holiday on the sky, "Today: Thanksgiving Day, United States", "Tomorrow: …",
@@ -93,7 +93,7 @@ function Cash() {
   const today = live.today;
   const tip = today ? `Today: fares ${money(today.fares * 1e6)}, running trains ${money(-today.running * 1e6)}, upkeep ${money(-(today.upkeep ?? 0) * 1e6)}` : undefined;
   // T-728: a sandbox shows no cash; the hover has the money since the start
-  if (m?.mode === "sandbox") return <div class="cash sandbox" data-tip={["Sandbox: nothing is refused for money", `Since day 1: ${money((live.cash - START_CASH) * 1e6)}`, ...(tip ? [tip] : [])].join("\n")}>Sandbox</div>;
+  if (m?.mode === "sandbox") return <div class="cash sandbox" data-tip={["Infinite money", `Since day 1: ${money((live.cash - START_CASH) * 1e6)}`, ...(tip ? [tip] : [])].join("\n")}>Sandbox</div>;
   // T-1136: right-aligned in a box of fixed width, so it ends the usual gap before the clock
   const shown = m ? moneyCash(live.cash * 1e6) : "";
   return <div class={"cash num" + (shown.startsWith("−") ? " money-neg" : "")} data-tip={m ? tip : undefined}>{shown}</div>;

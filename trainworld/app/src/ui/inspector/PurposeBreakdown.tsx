@@ -59,7 +59,7 @@ function Timing({ row, colour, unit }: { row: Row; colour: string; unit: string 
 export function PurposeBreakdown({ purposes }: { purposes?: PurposeTrips[] }) {
   const [railOnly, setRailOnly] = useState(false);
   const periodCounts = (v: number[][]) => LABELS.map((_, q) => v[0][q] + (railOnly ? 0 : v[1][q] + v[2][q]));
-  // T-192: the model's school and university are one row, "School and university"
+  // T-192: the model's school and university are one row, "School"
   let rows: Row[] | undefined;
   if (purposes) {
     const byName = new Map<string, Row>();
@@ -89,7 +89,7 @@ export function PurposeBreakdown({ purposes }: { purposes?: PurposeTrips[] }) {
   const missingText = missing.length ? `${andList(missing)} ${missing.length > 1 ? "are" : "is"} not modelled here.` : "";
   const unit = railOnly ? "train trip legs" : "trip legs";
   return <>
-    <div class="h"><span data-tip={[missingText && capitalise(missingText), (rows?.length ?? 0) > 1 && "Everyday timing and travel patterns are initial estimates."].filter(Boolean).join(" ") || undefined}>Trip purposes</span></div>
+    <div class="h"><span data-tip={missingText ? capitalise(missingText) : undefined}>Trip purposes</span></div>
     <div class="purpose-scope">
       <button type="button" aria-pressed={!railOnly} class={!railOnly ? "on" : ""} onClick={() => setRailOnly(false)}>All modes</button>
       <button type="button" aria-pressed={railOnly} class={railOnly ? "on" : ""} onClick={() => setRailOnly(true)}>Train only</button>

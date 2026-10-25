@@ -96,7 +96,7 @@ export class CapacityMarkers {
       const tip = [`${text.name} at ${Math.round(m.rho * 100)}% of capacity`];
       // T-517: its trains an hour against the most it takes
       if (m.rho > 0) tip.push(`${Math.round(m.tph)} trains an hour${text.ways} against a limit of ${Math.round(m.tph / m.rho)}`);
-      tip.push(text.cause, `Helps: ${text.help.charAt(0).toLowerCase()}${text.help.slice(1)}`);
+      tip.push(text.cause, text.help);
       if (m.held) tip.push("The line's extra trains are held out of service at its ends");
       if (d >= 2) tip.push(`Each train waits ${duration(d)} here at ${DEMAND[level] ?? "this"} demand`);
       else if (!m.held) tip.push("Trains do not wait here yet");

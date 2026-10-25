@@ -320,7 +320,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   // T-1148: the rows give the car's parts and the plane
   marketRowsReady.value;
   void loadMarketRows();
-  if (!t) return <p class="muted">Calculating demand.</p>;
+  if (!t) return <p class="muted">Calculating demand</p>;
   // T-1148: a train in play in some period; with none the bar and rows leave the train out
   const inPlay = !m.unbuilt && m.periods.some((p) => p && !p.why);
   // T-911: in whole trips; the hovers keep the model's shares

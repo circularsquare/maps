@@ -15,7 +15,7 @@ import { purposeFilter, selection, shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
 import { shownPeriod } from "../../map/tripView";
 import { Actions, SegBar } from "../widgets";
-import { MarketTrip, marketEndName, marketFarName } from "./MarketTrip";
+import { MarketTrip } from "./MarketTrip";
 import { legRows, PeriodRows, routeRow } from "./RouteParts";
 import { minText, num1, pctShare, roundTo } from "./tripText";
 
@@ -135,12 +135,7 @@ function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: strin
   );
 }
 
-/** Where the trip goes, in "to work by Grand Central" (T-586: the purpose filter's). */
-const DEST: Record<PurposeFilter, string> = {
-  all: "a destination", work: "work", school: "school or university", university: "school or university", shopping: "shops and errands",
-  social: "social and leisure", medical: "medical care", airport: "the airport", attractions: "an attraction", longer: "a destination",
-};
-/** "shopping and errands trips", "trips" */
+/** "errands trips", "trips" */
 const tripWords = (f: PurposeFilter) => (f === "all" ? "trips" : `${purposeWords(f)} trips`);
 
 function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
@@ -392,11 +387,6 @@ function BusiestRoutes({ t, riders }: { t: TripPeriod; riders: number | null }) 
   );
 }
 
-/** T-865: a group end in words: "homes in 12 areas around Midtown"; one area as the map marks it. */
-function groupWords(n: number, name: string, what: string, one: string): string {
-  return n > 1 ? `${what} in ${n} areas${name ? ` around ${name}` : ""}` : one;
-}
-
 export function TripInspector() {
   const sel = selection.value;
   if (sel?.kind !== "trip") return null;
@@ -409,29 +399,11 @@ export function TripInspector() {
   const filter = purposeFilter.value;
   // T-866: between zones, from homes at one end to the far place (or the far place to them)
   const market = v?.market;
-  const towardsSel = market?.end === "work";
-  // T-865: a group at either end, named by its area count and the station nearest its centre
-  const group = back?.trip === sel ? back.places.group : undefined;
-  const homeSide = group && (back!.places.end === "home" ? [group.near, group.nearName] as const : [group.far, group.farName] as const);
-  const destSide = group && (back!.places.end === "home" ? [group.far, group.farName] as const : [group.near, group.nearName] as const);
-  // T-885: a market trip from a bubble group: "in 12 areas around Midtown"
-  const nearArea = group && group.near > 1 ? `in ${group.near} areas${group.nearName ? ` around ${group.nearName}` : ""}` : null;
-  const sub = !market && group && homeSide && destSide && sel.to
-    ? `From ${groupWords(homeSide[0], homeSide[1], "homes", "a home at the open ring")} to ${groupWords(destSide[0], destSide[1], DEST[filter] === "a destination" ? "places" : DEST[filter], `${DEST[filter]} at the filled disc`)}`
-    : market?.near && sel.to
-    ? `Between ${marketEndName(market.near)} and ${marketFarName(market)}`
-    : market && sel.to
-    ? (towardsSel ? `From ${marketFarName(market)} to places ${nearArea ?? (toName ? `by ${toName}` : "around the filled disc")}` : `From homes ${nearArea ?? (fromName ? `by ${fromName}` : "around the open ring")} to ${marketFarName(market)}`)
-    : sel.to
-    ? `From a home ${fromName ? `by ${fromName}` : "at the open ring"} to ${DEST[filter]} ${toName ? `by ${toName}` : fromName ? "at the filled disc" : "at the filled one"}`
-    // T-253: the next click is the trip tool's hint at the map's foot, not repeated here
-    : fromName ? `From ${fromName}` : "Start picked";
   const tr = v?.trip;
-  const about = tr && !tr.outside ? `The demand model's figures${tr.round > 0 ? ` after ${count(tr.round)} crowding ${tr.round === 1 ? "round" : "rounds"}` : ", before crowding"}. The model decides trips area by area, so nearby places give the same answer.${fromName || toName ? " A station picked as an end stands for the homes or places right around it." : ""}` : undefined;
+  const about = tr && !tr.outside ? `Figures from the demand model${tr.round > 0 ? ` after ${count(tr.round)} crowding ${tr.round === 1 ? "round" : "rounds"}` : ", before crowding"}. Trips are worked out area by area, so nearby places give the same answer.${fromName || toName ? " A station picked as an end stands for the homes or places right around it." : ""}` : undefined;
   const head = (
     <>
       <div class="title"><span class="name" data-tip={about}>Trip</span></div>
-      <div class="sub muted">{sub}</div>
       {back && back.trip === sel && (
         <Actions>
           <button class="btn text" onClick={() => (selection.value = back.from)}>Back</button>
@@ -442,10 +414,10 @@ export function TripInspector() {
   if (!sel.to) return head;
   if (market) return <>{head}<MarketTrip m={market} /></>;
   const trip = v?.trip;
-  if (!trip) return <>{head}<p class="muted">{v?.failed ? "The demand model has no answer for this trip." : v?.asking ? "Asking the demand model." : "Calculating demand."}</p></>;
+  if (!trip) return <>{head}<p class="muted">{v?.failed ? "This trip could not be worked out." : v?.asking ? "Working out this trip" : "Calculating demand"}</p></>;
   if (trip.outside) return <>{head}<p class="muted">One of the two places is outside the city's homes and jobs.</p></>;
   const t = trip.periods[q];
-  if (!t) return <>{head}<p class="muted">Calculating demand.</p></>;
+  if (!t) return <>{head}<p class="muted">Calculating demand</p></>;
   const main = t.routes[0];
   const tot = main ? routeTotals(t, main) : null;
   const pair = main ? t.pairs[main.pair] : null;  // T-586: the trips the view counts between the two places, and the trip the routes are read for

@@ -359,7 +359,7 @@ those who got on, less the load carried on.
   a line or track shows a tag at once saying what the track display draws there. Line: the name. Traffic:
   the name and "41,200 riders per day" (or "0 riders per day") on that stop-to-stop stretch, both
   directions together, for the day shown (counts to the nearest 100 above 1,000), with a third line under the purpose filter
-  ("Shopping and errands trips only"), and on track at capacity "Track at capacity at high demand" in red [T-819]. Whatever the display [T-473], the tag also carries a row
+  ("Errands trips only"), and on track at capacity "Track at capacity at high demand" in red [T-819]. Whatever the display [T-473], the tag also carries a row
   for the elevation at that point (an up and down arrow, then "+1" on its Elevation colour) and one
   for the speed limit (two right chevrons, then "120 km/h" on its Max speed colour), each colour at
   half strength behind dark text (`map/trackTagRows.ts`), and last every line using the track as

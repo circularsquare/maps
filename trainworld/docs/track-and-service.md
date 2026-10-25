@@ -426,7 +426,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   or marks the line broken. Removing a station a line stops at takes it out of the line's stops
   and routes the line through the rest the same way, else leaves it broken (T-859); one undo
   restores both. A line may pass a station without stopping, and may stop at a station
-  twice, never twice in a row.
+  twice, never twice in a row: stops that would repeat in a row count once (`distinct_stops` in
+  `sim/src/track/wasm/lines.rs`), so taking out a loop's only middle stop leaves a one-stop line.
+  A line with one stop or none is inactive: no route, no trains, nothing refused (T-1242).
   **Reversing partway** (T-797, notes/T-797.md): a line's path may turn back at a stop or at a
   bare track end (a node with one edge end and no station, such as a headshunt), nowhere else.
   Nothing stores it: a reversal is two path entries arriving at and leaving a node on the same

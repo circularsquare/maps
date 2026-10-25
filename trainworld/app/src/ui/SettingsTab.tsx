@@ -81,7 +81,7 @@ export function SettingsTab() {
           Map labels
         </Check>
         <Check checked={d.realNetwork} onChange={(v) => setDisplay("realNetwork", v)}>
-          <span data-tip="Real railways drawn faintly under yours, for reference: main lines, other passenger lines and metros. It appears once you zoom in, brighter while track snaps to it.">Real network</span>
+          <span data-tip="Draw real-world railways on the base map">Real network</span>
         </Check>
       </div>
       <div class="h">Riders on trains and platforms</div>
@@ -128,7 +128,7 @@ export function SettingsTab() {
           <span data-tip="Miles, mph and feet. Off shows kilometres, km/h and metres.">US units</span>
         </Check>
         <Check checked={d.moreCores} onChange={(v) => setDisplay("moreCores", v)}>
-          <span data-tip="Up to 5 demand workers, using more of the processor and about 400 MB of memory each. Counts from the next time the page loads.">Use more cores</span>
+          <span data-tip="Up to 5 demand workers, using more of the processor and about 400 MB of memory each. Takes effect after a reload.">Use more cores</span>
         </Check>
         <Check checked={d.runInBackground} onChange={(v) => setDisplay("runInBackground", v)}>
           <span data-tip="The clock, fares and running costs carry on at the chosen speed while this tab is hidden. Off, the game pauses until the tab is shown again.">Run in background</span>
@@ -161,9 +161,9 @@ function GameMode() {
     <>
       <div class="h">Game</div>
       <div class="game-mode">
-        <span data-tip={sandbox ? "Nothing is refused for money and the cash is hidden" : "Building costs money, and an edit is refused when the cash runs short"}>{sandbox ? "Sandbox" : "Normal"}</span>
+        <span data-tip={sandbox ? "Infinite money, and the cash is hidden" : "Construction costs money, and an edit is refused when the cash runs short"}>{sandbox ? "Sandbox" : "Normal"}</span>
         {!sandbox && <button class="btn text" data-mode-switch onClick={() => (ask.value = {
-          text: "Entering sandbox mode will disable money permanently and irreversibly.",
+          text: "Money cannot be turned back on in this game.",
           yes: "Switch to sandbox mode", no: "Stay in normal mode", run: makeSandbox,
         })}>Switch to sandbox mode</button>}
       </div>

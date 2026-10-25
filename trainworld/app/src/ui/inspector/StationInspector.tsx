@@ -248,7 +248,7 @@ export function StationInspector({ id }: { id: string }) {
         )}
       </div>
       <StationTripLink id={id} members={asComplex ? members : [id]} />
-      {!asComplex && <ConstructRemove built={s.built} construct={construct} constructLabel="Construct station" remove={remove} removeLabel="Remove station" removeTip={s.built ? "Removing a constructed station refunds nothing" : ""} />}
+      {!asComplex && <ConstructRemove built={s.built} construct={construct} constructLabel="Construct station" remove={remove} removeLabel="Remove station" removeTip={s.built ? "Nothing is refunded" : ""} />}
       {asComplex ? (
         <ComplexSummary id={id} members={members} />
       ) : (
@@ -335,7 +335,7 @@ function StationDetails({ s, lines, props }: {
   const m = moneyState.value;
   return (
     <>
-      <Built built={s.built} what="The station" />
+      <Built built={s.built} />
       <ul class="rows">
         <li>
           <span class="grow">Platforms</span>
@@ -343,7 +343,7 @@ function StationDetails({ s, lines, props }: {
         </li>
         {s.built && m && (
           <Row label="Upkeep">
-            <span data-tip={`Each constructed station costs ${money(stationUpkeep(m))} a day to keep up, at any elevation, whether trains stop or not. The lines stopping here share it by their trains a day.`}>{money(stationUpkeep(m))} a day</span>
+            <span data-tip={`Each built station costs ${money(stationUpkeep(m))} a day to keep up, at any elevation, whether trains stop or not. The lines stopping here share it by their trains a day.`}>{money(stationUpkeep(m))} a day</span>
           </Row>
         )}
       </ul>

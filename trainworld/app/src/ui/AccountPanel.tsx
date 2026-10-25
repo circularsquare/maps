@@ -1,8 +1,8 @@
 // T-972: the account panel, a centred modal like the saves panel, opened by the person icon at the
 // top of Settings or on the start menu (`AccountButton`). Signed out: Google's button, then a
-// username and password with Log in, Create an account and Forgot password, as noritetsu has.
-// Signed in: who, the recovery email (password accounts), Change password, Sign out everywhere else,
-// Sign out and Delete account. The panels mount in a root of their own (`startAccountUi`), so the
+// username and password with Sign in, Create account and Forgot password, as noritetsu has.
+// Signed in: who, the recovery email (password accounts), Change password, Sign out and Delete
+// account. The panels mount in a root of their own (`startAccountUi`), so the
 // start menu, which hides the dock, can open them too.
 
 import { h, render } from "preact";
@@ -81,8 +81,8 @@ function SignInForms() {
         {form === "register" && <input name="email" type="email" placeholder="Recovery email (optional)" aria-label="Recovery email" autocomplete="email" />}
         <div class="acct-btns">
           {form === "register"
-            ? <><button class="btn text acct-go" type="submit">Create account</button><button class="btn text" type="button" onClick={() => { setForm("login"); setMsg(""); }}>Log in instead</button></>
-            : <><button class="btn text acct-go" type="submit">Log in</button><button class="btn text" type="button" onClick={() => { setForm("register"); setMsg(""); }}>Create an account</button><button class="btn text" type="button" onClick={() => { setForm("forgot"); setMsg(""); }}>Forgot password</button></>}
+            ? <><button class="btn text acct-go" type="submit">Create account</button><button class="btn text" type="button" onClick={() => { setForm("login"); setMsg(""); }}>Sign in instead</button></>
+            : <><button class="btn text acct-go" type="submit">Sign in</button><button class="btn text" type="button" onClick={() => { setForm("register"); setMsg(""); }}>Create account</button><button class="btn text" type="button" onClick={() => { setForm("forgot"); setMsg(""); }}>Forgot password</button></>}
         </div>
       </form>)}
     {msg && <p class="acct-msg">{msg}</p>}
@@ -112,7 +112,7 @@ function SignedIn({ a }: { a: AccountView }) {
     {password && <form class="acct-form acct-sec" onSubmit={(e) => { e.preventDefault(); const email = val(e.currentTarget, "email").trim(); run(async () => setAccount((await api<{ account: AccountView }>("PUT", "noritetsu/email", { email })).account)); }}>
       <input name="email" type="email" placeholder="Recovery email" aria-label="Recovery email" autocomplete="email" value={a.pendingEmail || a.email || ""} key={a.pendingEmail || a.email} />
       {a.pendingEmail ? <p class="small muted">Confirm your email at {a.pendingEmail}.</p>
-        : !a.email && <p class="small acct-warn">Add a recovery email. Without one, a forgotten password means a lost account.</p>}
+        : !a.email && <p class="small acct-warn">No recovery email</p>}
       <div class="acct-btns">
         <button class="btn text" type="submit">Save email</button>
         {(a.email || a.pendingEmail) && <button class="btn text" type="button" onClick={() => run(async () => setAccount((await api<{ account: AccountView }>("PUT", "noritetsu/email", { email: "" })).account))}>Remove</button>}
@@ -120,9 +120,7 @@ function SignedIn({ a }: { a: AccountView }) {
       </div>
     </form>}
     <div class="acct-btns acct-sec">
-      <button class="btn text" data-tip="Signs out of anitabuilder and noritetsu in this browser" onClick={() => { signOut(); accountOpen.value = false; }}>Sign out</button>
-      <button class="btn text" data-tip="Every other browser signed in to this account signs out" onClick={() => run(async () => { storeSession(await api("POST", "noritetsu/signout-all")); setMsg("Signed out everywhere else."); })}>Sign out everywhere else</button>
-      <button class="btn text danger" onClick={() => setPanel("delete")}>Delete account</button>
+      <button class="btn text" data-tip="Signs out of anitabuilder and noritetsu in this browser" onClick={() => { signOut(); accountOpen.value = false; }}>Sign out</button>      <button class="btn text danger" onClick={() => setPanel("delete")}>Delete account</button>
     </div>
     {panel === "delete" && <div class="callout bad">
       <p>Delete your account? Its leaderboard entries and its noritetsu rides go too. Games in this browser stay.</p>

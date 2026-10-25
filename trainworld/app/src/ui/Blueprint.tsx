@@ -61,7 +61,7 @@ export function BlueprintPick() {
   if (!offN) return null;
   return (
     <div class="blueprint-pick">
-      <p class="small muted" data-tip={`Disabled: ${pieces(off.edges, off.stations)}. Construct and the total leave these out`}>{offN} disabled</p>
+      <p class="small muted" data-tip={`${pieces(off.edges, off.stations)} will not be constructed`}>{offN} disabled</p>
     </div>
   );
 }
@@ -73,7 +73,7 @@ export function BlueprintBar() {
   const s = pickedState.value;
   const n = s.edges + s.stations;
   if (tool.value !== "blueprint" || n === 0) return null;
-  const piece = (s.built ? "Constructed: " : "Blueprint: ") + pieces(s.edges, s.stations);
+  const piece = (s.built ? "Built: " : "Blueprint: ") + pieces(s.edges, s.stations);
   return (
     <div class="blueprint-bar" role="group" aria-label="Selection">
       <span class="count" data-tip={piece}>{n} selected</span>
@@ -83,7 +83,7 @@ export function BlueprintBar() {
       )}
       {!s.built && (
         <div class="group">
-          <button class="btn text" data-tip="Disable the selection (D): Construct and the total leave it out" disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff />Disable</button>
+          <button class="btn text" data-tip="Disable the selection so it will not be constructed (D)" disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff />Disable</button>
           <button class="btn text" data-tip="Enable the selection (E)" disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn />Enable</button>
         </div>
       )}

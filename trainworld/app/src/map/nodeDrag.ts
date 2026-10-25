@@ -117,7 +117,7 @@ export class NodeDrag {
       if (p.told || Math.hypot(px - p.px, py - p.py) < DRAG_PX) return;
       if (!p.movable) {
         // the press stays ours until let go (no pan), said once
-        say("Constructed track and stations cannot be moved.", true);
+        say("Built track and stations cannot be moved.", true);
         p.told = true;
         return;
       }
@@ -184,7 +184,7 @@ export class NodeDrag {
       this.ring.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
       if (pv && !pv.ok) {
         this.tag.style.display = "";
-        this.tag.textContent = describeIssues(pv.issues) || "Cannot be built like this.";
+        this.tag.textContent = describeIssues(pv.issues) || "Cannot be moved there.";
         this.tag.style.transform = `translate(${Math.round(x + 14)}px, ${Math.round(y - 30)}px)`;
       } else this.tag.style.display = "none";
     } else {

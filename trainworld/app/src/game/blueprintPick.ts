@@ -97,7 +97,7 @@ export async function levelPicked(level: Level) {
 export async function removePicked() {
   const p = bpPicked.peek(), s = pickedState.peek();
   if (!p.edges.length && !p.stations.length) return;
-  const what = [s.edges ? `${distance(s.lengthM)} of ${p.built ? "constructed " : ""}track` : "", s.stations ? count(s.stations, p.built ? "constructed station" : "station", p.built ? "constructed stations" : "stations") : ""].filter(Boolean).join(" and ");
+  const what = [s.edges ? `${distance(s.lengthM)} of ${p.built ? "built " : ""}track` : "", s.stations ? count(s.stations, p.built ? "built station" : "station", p.built ? "built stations" : "stations") : ""].filter(Boolean).join(" and ");
   const go = async () => {
     ask.value = null;
     const a = await edit({ op: "removePieces", edges: p.edges, stations: p.stations });

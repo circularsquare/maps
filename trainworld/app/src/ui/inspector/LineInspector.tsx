@@ -204,7 +204,7 @@ function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; period
       <ul class="rows">
         <Row label="Riders">{count(d.riders)}</Row>
         <PurposeSplit scope={[{ line: l.id }]} unit="riders" />
-        <li data-tip={`Fares ${money(d.fares)} less running cost ${money(run)} for the trains and upkeep of its track and stations ${money(st.upkeep)}: ${money(d.fares - run - st.upkeep)} net${rule}\nUpkeep of track and stations several lines use is shared by their trains a day.`}>
+        <li data-tip={`Fares ${money(d.fares)} minus running cost ${money(run)} for the trains and upkeep of its track and stations ${money(st.upkeep)}: ${money(d.fares - run - st.upkeep)} net${rule}\nUpkeep of track and stations several lines use is shared by their trains a day.`}>
           <span class="grow">Profit</span>
           <span class="val">{money(d.fares)} −<span class="crowd-bad">{money(run + st.upkeep)}</span></span>
         </li>
@@ -427,7 +427,7 @@ function LevelCells({ l, st, d, auto, limit }: { l: LineInput; st: LineStats; d:
     return (
       <>
         <td>
-          {wrap(<Stepper value={n} label="trains on the entire line" jump onStep={(s) => stepTrainCount(l.id, d, s)}
+          {wrap(<Stepper value={n} label="trains on the line" jump onStep={(s) => stepTrainCount(l.id, d, s)}
             tipDown={changeTip(counts, lev, Math.max(0, counts[lev] - k), st)} tipUp={changeTip(counts, lev, counts[lev] + k, st)} />)}
         </td>
         <td>{over ? <span class="bad" data-tip={`${limitText(limit)}, so the trains past that wait at the ends`}>{headway(l.tph[d])}</span> : headway(l.tph[d])}</td>
@@ -443,8 +443,8 @@ function LevelCells({ l, st, d, auto, limit }: { l: LineInput; st: LineStats; d:
     <>
       <td>
         <span class={"num" + (broke ? " bad" : "")} data-tip={loop
-          ? `${counts[lev]} trains on the entire line, ${counts[lev] / 2} each way, keep the headway over its lap of ${duration(trip / 2)}`
-          : `${counts[lev]} ${counts[lev] === 1 ? "train" : "trains"} on the entire line keep the headway over its round trip of ${duration(trip)}`}>{counts[lev]}</span>
+          ? `${counts[lev]} trains on the line, ${counts[lev] / 2} each way, keep the headway over its lap of ${duration(trip / 2)}`
+          : `${counts[lev]} ${counts[lev] === 1 ? "train" : "trains"} on the line keep the headway over its round trip of ${duration(trip)}`}>{counts[lev]}</span>
       </td>
       <td>
         {clamped && <span class="hw-real" data-tip={`${limitText(limit)}, so ${counts[lev]} ${counts[lev] === 1 ? "train runs" : "trains run"} every ${duration(real)}`}>{headwayText(real)}</span>}
@@ -683,9 +683,8 @@ export function LineInspector({ id }: { id: string }) {
         </div>
       )}
       <div class="sub muted">
-        {l.stops.length - (st.loop ? 1 : 0)} stops, {distance(st.km * 1000)}
+        {plural(l.stops.length - (st.loop ? 1 : 0), "stop")}, {distance(st.km * 1000)}
       </div>
-      {l.stops.length < 2 && <p class="muted small">No route: fewer than two stops.</p>}
       {st.status === "planned" && l.stops.length >= 2 && (
         <div class="callout">
           <p>Planned</p>
@@ -695,7 +694,7 @@ export function LineInspector({ id }: { id: string }) {
         </div>
       )}
       {st.status === "broken" && (
-        <ul class="alerts"><Alert>Broken: track it used is gone.</Alert></ul>
+        <ul class="alerts"><Alert>Track this line ran on is gone</Alert></ul>
       )}
 
       <div class="line-stop-actions">
@@ -711,7 +710,7 @@ export function LineInspector({ id }: { id: string }) {
           <span class="right">
             <Segmented<boolean>
               options={[
-                [false, <span data-tip="Set the number of trains on the entire line for each demand level">Trains</span>],
+                [false, <span data-tip="Set the number of trains on the line for each demand level">Trains</span>],
                 [true, <span data-tip="Set the headway for each demand level. The line runs the fewest trains that keep it over the round trip, and works them out again when the line or its track changes.">Headway</span>],
               ]}
               value={auto !== null}
@@ -728,7 +727,7 @@ export function LineInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && (periods ? <CrowdDots v={periods} d={d} stops={l.stops.map((s) => name.get(s) ?? "")} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d) + "\nSets how many trains run in this interval. On a long line, trains leave the ends early so the middle changes on time. Trains keep running after it ends and are taken out of service at the end of the line."}>{DEMAND_LABEL[d]}</span></td>
+            <td>{st.status === "running" && (periods ? <CrowdDots v={periods} d={d} stops={l.stops.map((s) => name.get(s) ?? "")} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d) + "\nHow many trains run in this time interval. (Which time interval a scheduled train falls into is determined by when the train reaches the midpoint of its route.)"}>{DEMAND_LABEL[d]}</span></td>
             <LevelCells l={l} st={st} d={d} auto={auto} limit={limits[DEMAND_INDEX[d]]} />
           </tr>
         ))}

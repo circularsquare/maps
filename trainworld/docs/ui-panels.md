@@ -155,8 +155,8 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   under them as game time passes. It is redrawn on animation frames from the clock's `now()`
   whenever it has moved a fifth of a device pixel, never through Preact. The band under it has each
   hour's demand level (red high, yellow medium, blue low: `--dl-*` in style.css, both themes), so
-  the colour under the sun or moon is the level now; its hover says "Currently low demand until 06:00", the time the level next changes
-  [T-902]. A public holiday in a country
+  the colour under the sun or moon is the level now; its hover says "Low demand until 06:00", the time the level next changes
+  [T-902, T-1242]. A public holiday in a country
   the player has built track or stations in (blueprint not counted) [T-862, T-1098] is a pink ribbon along the sky's top over its day (its
   country's local day), with a tick where it starts; the sky's hover lists those in view, and is the sky's only hover ("Tomorrow:
   Thanksgiving Day, United States", or "Tomorrow from 06:00: …" for a country on another local
@@ -237,7 +237,7 @@ a fare node, a name, a list row; Shift or Ctrl on the train stepper). Esc (befor
 Esc, so the selection stays), a press outside or the button again closes it. A control added or
 changed that a button does not show gets its row here.
 
-**Confirmations** [T-113]: a centred "Are you sure?" dialog with operation-specific text, cancel
+**Confirmations** [T-113]: a centred dialog headed "Confirm?" [T-1242] with operation-specific text, cancel
 and action buttons. Cancel has initial focus, Tab stays inside, Escape cancels, focus returns when
 dismissed, and the map and tools are blocked meanwhile.
 
@@ -278,13 +278,13 @@ speed in miles, mph and feet instead of kilometres, km/h and metres: panels, ins
 track, station and line tools' readouts, the placing rings, the scale bar of a station complex, and
 prices per mile. All go through the distance functions in `game/format.ts`; the game itself stays
 metric. "Use more cores" (off by default) allows up to 5 demand workers instead of 3 at most; its
-hover says it counts from the next load ([architecture.md](architecture.md) 7). "Run in background"
+hover says it takes effect after a reload ([architecture.md](architecture.md) 7). "Run in background"
 (off by default) keeps the clock running while the tab is hidden (the top bar's clock, above;
 [architecture.md](architecture.md) "A hidden page") [T-826].
 
 **Game** [T-728], last before Explore a trip: the game's mode, "Normal" or "Sandbox" (hover: what
-it means). A normal game has "Switch to sandbox mode", which asks first ("Are you sure?", then
-"Entering sandbox mode will disable money permanently and irreversibly.", with Stay in normal mode
+it means). A normal game has "Switch to sandbox mode", which asks first ("Confirm?", then
+"Money cannot be turned back on in this game.", with Stay in normal mode
 and Switch to sandbox mode) [T-822]; a sandbox has no way back, so a later campaign's
 or a hard start's achievements cannot be had for free. The mode is the game's, kept in its save,
 not the browser's.
@@ -490,11 +490,11 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   `/noritetsu/config` answers with `trainworld`; with no server, or an older one, there is no icon
   and no other request. Google's script loads when the account panel first opens.
 - **Account panel**: the account button (top of Settings, start menu; not in the tab bar, T-1106), or Settings' Account row (T-1139), opens a centred modal like the
-  saves panel. Signed out: Google's button, then username and password with Log in, Create an
+  saves panel. Signed out: Google's button, then username and password with Sign in, Create
   account and Forgot password; Privacy and Terms (`public/privacy.html`, `terms.html`). Signed in:
-  "Signed in as alice" (or with Google), for a password account the recovery email (a red line when
-  there is none) with Save email, Remove and Change password, then Sign out, Sign out everywhere
-  else and Delete account (asked first; the account's leaderboard entries and noritetsu rides go
+  "Signed in as alice" (or with Google), for a password account the recovery email ("No recovery
+  email" in red when there is none) with Save email, Remove and Change password, then Sign out and
+  Delete account (asked first; the account's leaderboard entries and noritetsu rides go
   too, games in this browser stay).
 - **Scores**: while signed in, each normal game in a browser slot sends its points (the past 24
   game hours, the World row's figure) and its best 64 cities' points, when they change and at
@@ -516,7 +516,8 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
 [T-677; `ui/StartMenu.tsx`; the startup order in [architecture.md](architecture.md) "Loading and readiness"]
 
 - Every page load opens on a card over the bare map, in the loading card's look: "Welcome to
-  anitabuilder!" (the account button at its top right when accounts are on [T-972]), New game, then "Saved games", one button per browser slot, the most recent first, each with the
+  anitabuilder!" with "Build trains around the world!" under it [T-1242] (the account button at
+  its top right when accounts are on [T-972]), New game, then "Saved games", one button per browser slot, the most recent first, each with the
   saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash).
   With no saved game it is New game alone. The dock and top bar are taken out of the page and the
   map controls hidden, so the map fills the page; it shows the world from 60° S to 75° N covering

@@ -75,6 +75,7 @@ function Menu({ slots, pick }: { slots: SaveSlot[]; pick: (c: GameChoice) => voi
     <div class="start-box">
       <AccountButton kind="start" />
       <h1 id="start-title" class="big">Welcome to anitabuilder!</h1>
+      <p class="start-tag">Build trains around the world!</p>
       <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>New game</button>
       {slots.length > 0 && <>
         <h2 class="start-head">Saved games</h2>

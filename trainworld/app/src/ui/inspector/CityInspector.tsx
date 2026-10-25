@@ -73,7 +73,7 @@ export function CityInspector({ id }: { id: string }) {
         <button class="btn text" onClick={() => goTo({ kind: "city", name: city.name, city })}>Go to {city.name}</button>
       </Actions>
       {!market ? (
-        <p class="muted">Calculating demand.</p>
+        <p class="muted">Calculating demand</p>
       ) : (
         <>
           <ul class="rows">

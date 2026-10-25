@@ -269,8 +269,8 @@ export function LevelButtons({ value, onPick, tip }: { value: Level | null; onPi
 }
 
 /** A "Blueprint" note under an inspector's header until what it shows is constructed. */
-export function Built({ built, what }: { built: boolean; what: string }) {
-  return built ? null : <p class="muted" data-tip={`${what} is built when you construct it`}>Blueprint</p>;
+export function Built({ built }: { built: boolean }) {
+  return built ? null : <p class="muted">Blueprint</p>;
 }
 
 /** Construct (while a blueprint) on the left and Remove on the right of one row. */

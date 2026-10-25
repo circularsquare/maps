@@ -13,7 +13,7 @@ export type PurposeFilter = PurposeKey | "all";
 export const EVERYDAY_KEYS: PurposeKey[] = ["shopping", "social", "school", "university", "airport", "medical", "attractions"];
 /** The same as the selection inspector names them (demand.worker.ts `EVERYDAY_PURPOSES`); the
  * inspector shows school and university as one (`shownName`). */
-export const EVERYDAY_NAMES = ["Shopping and errands", "Social and leisure", "School", "University", "Airport", "Medical", "Attractions"];
+export const EVERYDAY_NAMES = ["Errands", "Leisure", "School", "University", "Airports", "Medical", "Attractions"];
 
 /** The model's purposes the player sees as another one (T-192, Anita: merge school and
  * university). The model keeps them apart, as their homes, places and timing differ; the filter,
@@ -23,17 +23,17 @@ const SHOWN_AS: Partial<Record<PurposeKey, PurposeKey>> = { university: "school"
 export const shownKey = (key: PurposeKey): PurposeKey => SHOWN_AS[key] ?? key;
 /** The model purposes a shown purpose counts: itself and any shown as it. */
 export const membersOf = (key: PurposeKey): PurposeKey[] => [key, ...(Object.keys(SHOWN_AS) as PurposeKey[]).filter((k) => SHOWN_AS[k] === key)];
-/** The inspector's name for a model purpose's row ("University" is shown as "School and university"). */
-export const shownName = (name: string): string => (/^(school|university)/i.test(name) ? "School and university" : name);
+/** The inspector's name for a model purpose's row ("University" is shown as "School"). */
+export const shownName = (name: string): string => (/^(school|university)/i.test(name) ? "School" : name);
 
 /** Shown purposes, in the filter's order. */
 export const PURPOSES: { key: PurposeKey; name: string }[] = [
   { key: "work", name: "Work" },
-  { key: "school", name: "School and university" },
-  { key: "shopping", name: "Shopping and errands" },
-  { key: "social", name: "Social and leisure" },
+  { key: "school", name: "School" },
+  { key: "shopping", name: "Errands" },
+  { key: "social", name: "Leisure" },
   { key: "medical", name: "Medical" },
-  { key: "airport", name: "Airport" },
+  { key: "airport", name: "Airports" },
   { key: "attractions", name: "Attractions" },
   { key: "longer", name: "Inter-city trips" },
 ];
@@ -46,11 +46,11 @@ export const asFilter = (v: string): PurposeFilter => (FILTER_PURPOSES.some((p) 
 
 export const purposeName = (key: PurposeFilter): string => (key === "all" ? "All purposes" : PURPOSES.find((p) => p.key === key)?.name ?? key);
 
-/** "work", "shopping and errands": the purpose inside a sentence. */
-export const purposeWords = (key: PurposeKey): string => purposeName(key).toLowerCase();
+/** "work", "errands", "airport": the purpose inside a sentence, before "trips". */
+export const purposeWords = (key: PurposeKey): string => (key === "airport" ? "airport" : purposeName(key).toLowerCase());
 
 // Purpose colours are independent of the UI theme. Green is reserved for future events.
-// School and university share school's blue-green since T-192; with university's amber gone the
+// School and university (shown as "School") share school's blue-green since T-192; with university's amber gone the
 // closest pair (CIEDE2000) is medical and social at 22, then shopping and medical 24, work and
 // social or school 24 (T-142 had airport 19 from university). Attractions' orange (T-263) is 24
 // from airport and inter-city trips, 28 from shopping.
@@ -66,7 +66,7 @@ const COLOUR: Record<PurposeKey, string> = {
   longer: "#8a817b",
 };
 
-/** A purpose's colour by its key or by a name the inspector shows ("School and university"). */
+/** A purpose's colour by its key or by a name the inspector shows ("School"). */
 export function purposeColour(name: string): string {
   if (name in COLOUR) return COLOUR[name as PurposeKey];
   if (/^work/i.test(name)) return COLOUR.work;

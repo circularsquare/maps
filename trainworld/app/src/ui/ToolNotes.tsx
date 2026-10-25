@@ -13,7 +13,7 @@ const HINT: Record<Tool, string> = {
   select: "",
   track: "",
   station: "",
-  line: "Click the circles to add or remove stops. Press Enter or Escape to finish editing.",
+  line: "Click a circle to add or remove a stop. Press Enter when done.",
   delete: "",
   trip: "Click where a trip starts, or a station.",
   blueprint: "",
@@ -36,7 +36,7 @@ function Ask() {
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
     }}>
-      <h2 id="confirmation-title">Are you sure?</h2>
+      <h2 id="confirmation-title">Confirm?</h2>
       <p id="confirmation-text">{q.text}</p>
       {q.lines?.length ? (
         <ul class="confirmation-lines">

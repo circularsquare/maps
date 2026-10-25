@@ -271,7 +271,7 @@ flyover ringed, its name by the cursor. A piece beside a through station is draw
 length, only past the platform's end, which is all that goes ([track-and-service.md](track-and-service.md)
 6.1, T-1161; `stationTrim` in `game/remove.ts`). Blueprint is
 removed at once (undoable); anything constructed only after a yes in the confirmation dialog
-("Remove 1.2 km of constructed track? Nothing is refunded." with Remove and Keep; Esc is Keep). The
+("Remove 1.2 km of built track? Nothing is refunded." with Remove and Keep; Esc is Keep). The
 inspectors' Remove buttons and the Select tool's Remove ask the same way. A removal that changes a
 line asks too, built or not [T-859]: a row per line under the question, its bullet then what
 happens ("subway 4 will lose its stop at Nevins St and stop running until you fix its route."),
@@ -327,11 +327,11 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   change."), or that none could.
 - **Remove** [T-829; `TrackApi.delete_pieces`]: everything picked goes in one edit, with the nodes
   left bare and a crossover whole. Blueprint goes at once (one undo); constructed asks first, as
-  for one piece ("Remove 3.1 km of constructed track and 2 constructed stations? Nothing is
+  for one piece ("Remove 3.1 km of built track and 2 built stations? Nothing is
   refunded."), and is final.
 - Disabled is a state on the piece, saved with the game ([track-and-service.md](track-and-service.md)
   6.4). A selected disabled blueprint track says "Disabled" under "Blueprint" in its inspector
-  (hover: Construct leaves it out until it is enabled) [T-821]. The piece's own Construct button (track and station inspectors) and a line's Construct build
+  (hover: "Will not be constructed unless enabled") [T-821, T-1242]. The Build tab's "N disabled" hovers which pieces will not be constructed. The piece's own Construct button (track and station inspectors) and a line's Construct build
   it anyway, which clears the state.
 
 ## Reshaping blueprint
@@ -371,7 +371,7 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   corners and elevation controls; it shows the slowest curve, the price of both diagonals, Construct
   (builds both) and Remove crossover.
 - **The junction inspector** [T-031, T-080] draws the junction as a small diagram with its moves,
-  says in plain words that it is flat, and offers "Build a flyover" (a button under its header) with its price and the waiting
+  says in plain words that it is flat, and offers "Construct a flyover" (built junction) or "Add a flyover" (blueprint), a button under its header, with its price and the waiting
   it saves ([track-and-service.md](track-and-service.md) 6.2), except at a crossover's end, where
   the flyover offer is left out [T-391]. A junction's capacity tag opens it.
 

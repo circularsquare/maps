@@ -84,7 +84,7 @@ export function SlotFacts({ slot, now, autosaved }: { slot: SaveSlot; now: numbe
 
 /** A saved game's name, with a mark when it is a sandbox (T-728); also the start menu's. */
 export function SlotTitle({ slot }: { slot: SaveSlot }) {
-  return <strong>{slot.name}{slot.mode === "sandbox" && <span class="save-sandbox small" data-tip="A sandbox game: nothing is refused for money">Sandbox</span>}</strong>;
+  return <strong>{slot.name}{slot.mode === "sandbox" && <span class="save-sandbox small" data-tip="Infinite money">Sandbox</span>}</strong>;
 }
 
 /** T-1247: a save's name typed over in place; Enter or leaving the box renames, Escape cancels. */

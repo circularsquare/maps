@@ -35,17 +35,17 @@ export function describeRemovable(r: Removable): { what: string; built: boolean 
   if (r.kind === "track") {
     const e = w.edges.find((x) => x.id === r.edge);
     // a crossover goes as a whole, both diagonals (T-338)
-    if (e?.crossover) return { what: e.built ? "the constructed crossover" : "the crossover", built: e.built };
+    if (e?.crossover) return { what: e.built ? "the built crossover" : "the crossover", built: e.built };
     const [ka, kb] = stationTrim(r.edge);
-    return e ? { what: `${distance(e.lengthM - ka - kb)} of ${e.built ? "constructed " : ""}track`, built: e.built } : null;
+    return e ? { what: `${distance(e.lengthM - ka - kb)} of ${e.built ? "built " : ""}track`, built: e.built } : null;
   }
   if (r.kind === "station") {
     const s = stationsByNum(w).get(r.node);
-    return s ? { what: `${s.built ? "the constructed station " : ""}${s.name}${s.built ? "" : " station"}`, built: s.built } : null;
+    return s ? { what: `${s.built ? "the built station " : ""}${s.name}${s.built ? "" : " station"}`, built: s.built } : null;
   }
   const n = w.nodes.get(r.node);
   const built = (n?.builtPorts ?? 0) >= 3;
-  return n?.flying ? { what: built ? "the constructed flyover" : "the flyover", built } : null;
+  return n?.flying ? { what: built ? "the built flyover" : "the flyover", built } : null;
 }
 
 /** What removing these does to lines (T-859), from the track model's trial of it: a row per line

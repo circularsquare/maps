@@ -13,7 +13,7 @@ export interface CapacityKindText {
   ways: string;
   /** what limits it, one sentence */
   cause: string;
-  /** what helps, one sentence */
+  /** what to do about it, one sentence of advice */
   help: string;
 }
 
@@ -23,12 +23,12 @@ const EACH_WAY = " each way";
  * 6 a line turning on a through station's platform, 7 track shared by several lines, 8 a line
  * turning across the other track at a through station, 9 lines reversing partway at a station (T-797). */
 export const CAPACITY_KINDS: CapacityKindText[] = [
-  { name: "Track", title: "Track", prep: "near", ways: EACH_WAY, cause: "Each train needs a gap behind it for braking and signals, longer on faster track.", help: "Fewer trains, or slower track, which needs a shorter gap." },
-  { name: "Single track", title: "Single track", prep: "near", ways: " both ways together", cause: "Trains from both directions share one track, and each holds it from one passing point to the next.", help: "Another track, or a station along it to pass at." },
-  { name: "Platform", title: "Platform", prep: "at", ways: "", cause: "Each stopping train holds the platform for its dwell and a minute more.", help: "Another platform track, or fewer stopping trains." },
-  { name: "Terminus", title: "Terminus", prep: "at", ways: "", cause: "Each train turning here holds a platform for its turnaround and a minute more.", help: "More platform tracks at the terminus." },
-  { name: "Junction", title: "Junction", prep: "near", ways: "", cause: "Trains cross each other's path here and take turns.", help: "A flyover lets them pass without crossing." },
-  { name: "Flat crossing", title: "Flat crossing", prep: "near", ways: "", cause: "Trains on one route wait for the other route to clear.", help: "Building one track over or under the other removes the crossing." },
+  { name: "Track", title: "Track", prep: "near", ways: EACH_WAY, cause: "Each train needs a gap behind it for braking and signals, longer on faster track.", help: "Run fewer trains, or make the track slower so each train needs a shorter gap." },
+  { name: "Single track", title: "Single track", prep: "near", ways: " both ways together", cause: "Trains from both directions share one track, and each holds it from one passing point to the next.", help: "Add another track, or a station along it where trains can pass." },
+  { name: "Platform", title: "Platform", prep: "at", ways: "", cause: "Each stopping train holds the platform for its dwell and a minute more.", help: "Add another platform track, or stop fewer trains here." },
+  { name: "Terminus", title: "Terminus", prep: "at", ways: "", cause: "Each train turning here holds a platform for its turnaround and a minute more.", help: "Add more platform tracks at the terminus." },
+  { name: "Junction", title: "Junction", prep: "near", ways: "", cause: "Trains cross each other's path here and take turns.", help: "Add a flyover so trains pass without crossing." },
+  { name: "Flat crossing", title: "Flat crossing", prep: "near", ways: "", cause: "Trains on one route wait for the other route to clear.", help: "Take one track over or under the other." },
   { name: "Turning on a platform", title: "Turning on the platform", prep: "at", ways: "", cause: "A line ends at this through station and turns on its platform, which each train holds for the turnaround and a minute more.", help: "End the line at a dead-end terminus, whose platform tracks share the turns." },
   { name: "Shared track", title: "Track shared with other lines", prep: "near", ways: EACH_WAY, cause: "Trains of several lines use this track, and each needs a gap behind it for braking and signals.", help: "Give some of the lines their own track beside it." },
   { name: "Turning across the track", title: "Turning across the track", prep: "at", ways: "", cause: "A train turning at this through station crosses the other track and waits for trains on it.", help: "End the line at a dead-end terminus." },

@@ -58,7 +58,7 @@ for(const city of ZONES){
   const purpose=await next(m=>m.kind==='purposes'&&m.id===id);id++;
   assert.equal(purpose.mask,31);
   // six, airports and medical visits included (a city with no airport has that purpose at zero)
-  assert.deepEqual(purpose.names,['Shopping and errands','Social and leisure','School','University','Airport','Medical'],city);
+  assert.deepEqual(purpose.names,['Errands','Leisure','School','University','Airports','Medical','Attractions'],city);
   assert.equal(purpose.work.length,30);
   // T-285: packed, per kind 30 timing values, m, m far cells, their rail, walk and drive legs
   const at=[];let p=0;

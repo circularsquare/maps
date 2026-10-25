@@ -142,8 +142,8 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
     <div class="new-game">
       {heading && <h2 class="new-game-title">New game</h2>}
       <div class="group new-game-mode">
-        {modeBtn("normal", "Normal", "Building costs money, and an edit is refused when the cash runs short", first)}
-        {modeBtn("sandbox", "Sandbox", "Nothing is refused for money and the cash is hidden. Fares and running costs are still counted.")}
+        {modeBtn("normal", "Normal", "Construction costs money, and an edit is refused when the cash runs short", first)}
+        {modeBtn("sandbox", "Sandbox", "Infinite money, and the cash is hidden. Fares and running costs are still counted.")}
       </div>
       <div class="new-game-where">
         <span class="start-head">Start in</span>

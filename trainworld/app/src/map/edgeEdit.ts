@@ -199,7 +199,7 @@ export class EdgeEditor {
       const [x, y] = this.overlay.toScreen(...this.local(pis[i]));
       const m = this.el(this.marks, i, "pi-mark drag");
       // the game's own tag (ui/tip.ts, T-210), set only when it changes as this runs every frame
-      const tip = `Corner ${i + 1}: drag to move`;
+      const tip = `Drag to move corner ${i + 1}`;
       if (m.dataset.tip !== tip) m.dataset.tip = tip;
       m.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
     }
@@ -226,7 +226,7 @@ export class EdgeEditor {
     if (pv && !pv.ok && this.drag) {
       const [x, y] = this.overlay.toScreen(...this.local(pis[this.drag.i]));
       this.tag.className = "tool-tag bad";
-      this.tag.textContent = describeIssues(pv.issues) || "Cannot be built like this.";
+      this.tag.textContent = describeIssues(pv.issues) || "Cannot be moved there.";
       this.tag.style.display = "";
       this.tag.style.transform = `translate(${Math.round(x + 14)}px, ${Math.round(y - 30)}px)`;
     } else this.tag.style.display = "none";

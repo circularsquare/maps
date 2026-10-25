@@ -54,7 +54,7 @@ export function MoneyTab() {
       <ul class="rows">
         {m.mode === "sandbox"
           // T-728: a sandbox's cash is not shown; its money since the start is
-          ? <Row label={<span data-tip="Sandbox: fares less running costs, upkeep, trains and construction since day 1">Since day 1</span>} bold><Money dollars={(liveMoney.value.cash - START_CASH) * 1e6} /></Row>
+          ? <Row label={<span data-tip="Fares minus running costs, upkeep, trains and construction">Since day 1</span>} bold><Money dollars={(liveMoney.value.cash - START_CASH) * 1e6} /></Row>
           : <Row label="Cash" bold><LiveCash /></Row>}
       </ul>
       <table class="ledger">

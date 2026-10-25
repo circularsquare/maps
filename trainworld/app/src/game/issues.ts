@@ -30,18 +30,18 @@ const TEXT: Record<string, string | (() => string)> = {
   InsertStop: "No track joins these stations with that stop inserted. Check the track connections.",
   LineSchedule: "Trains an hour cannot be negative.",
   SplitPoint: "Too close to the end of the track, or on a ramp.",
-  NodeInUse: "Constructed track cannot be moved. Remove it and draw it again.",
+  NodeInUse: "Built track cannot be moved. Remove it and draw it again.",
   NoSuchEdge: "That track is not there any more.",
   NoSuchNode: "That is not there any more.",
   NoSuchLine: "That line is not there any more.",
   EdgeLoop: "Track cannot start and end at the same place.",
   NodeLevel: "Elevation goes from −3 to +3.",
-  Tracks: "Track is single or double.",
-  OutsideWorld: "Track cannot be built within 5 degrees of a pole or across the 180th meridian.",
-  Crossover: "A crossover keeps its shape.",
+  Tracks: "Track can only be single or double.",
+  OutsideWorld: "Track cannot go within 5 degrees of a pole or across the 180th meridian.",
+  Crossover: "A crossover cannot be reshaped.",
   Alongside: "This track has a pair beside it already.",
   HighSpeed: "High-speed track cannot be doubled up to quad.",
-  NothingToConstruct: "Everything here is constructed already.",
+  NothingToConstruct: "Everything here is built already.",
   BranchNoRoom: "Track cannot branch off just past this platform, because a junction or another station is too close.",
   Internal: "That edit failed and was undone.",
   NoParallel: () => `A crossover needs other track alongside within ${length(15)}, with ${length(60)} of plain track each way.`,
@@ -53,7 +53,7 @@ export function describeIssue(kind: string): string {
     return `Not enough money. This costs ${money(need * 1e6)} and there is ${money(have * 1e6)}.`;
   }
   const t = TEXT[kind];
-  return typeof t === "function" ? t() : t ?? "That cannot be built here.";
+  return typeof t === "function" ? t() : t ?? "That cannot be placed here.";
 }
 
 export function describeIssues(kinds: string[]): string {

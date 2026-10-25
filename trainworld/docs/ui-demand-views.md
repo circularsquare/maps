@@ -58,11 +58,11 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   is still loading the hover says "Loading Boston, 37%" [T-149]. Over dead space they say "Nothing
   modelled here" [T-318].
 - **Purpose filter** [T-158, T-192, T-305; `game/purposes.ts`]: a dropdown at the end of the bar:
-  All purposes (default), Work, School and university, Shopping and errands, Social and leisure,
-  Medical, Airport, Attractions [T-263]. School and university are one shown purpose everywhere, though the model keeps
+  All purposes (default), Work, School, Errands, Leisure, Medical, Airports, Attractions [T-263,
+  T-1253]. School and university are one shown purpose everywhere, "School", though the model keeps
   them apart (`membersOf`). With one chosen, a swatch in its colour sits before the name, the
   control takes the accent border, and every demand drawing counts that purpose only: line widths,
-  station circles, the bubbles and their hovers ("12,400 school and university trips per day at
+  station circles, the bubbles and their hovers ("12,400 school trips per day at
   homes here"), a selection's own and far-end bubbles, the track tag. Scales stay as they are, so
   purposes stay comparable. Work is every zone's commutes (commutes between zones included); the
   others are each zone's everyday layer, with their outings across a zone line [T-1229]: under
@@ -245,8 +245,8 @@ riders counters keep their own smoothing (Live feel).
 - **The inspector** (`ui/inspector/CommutersInspector.tsx`): the selection's local trip legs and
   split; the top eight far-end places, each named by the nearest station within 3 km, else by
   distance and direction; for a single area the closest stations from its trip-weighted centre
-  [T-312, [ui-inspectors.md](ui-inspectors.md)]; purpose counts and shares for Work, School and
-  university, Shopping and errands, Social and leisure, Airport, Medical and Attractions [T-142, T-192, T-263], with a
+  [T-312, [ui-inspectors.md](ui-inspectors.md)]; purpose counts and shares for Work, School,
+  Errands, Leisure, Airports, Medical and Attractions [T-142, T-192, T-263, T-1253], with a
   purpose pie and legend following All modes / Train only (hover: "Work: 12,400 trip legs per day,
   48%"; a zero-trip scope shows an empty neutral disc); hovers state the scope (matched public
   schools and degree-granting colleges, commercial airports with connecting passengers and staff

@@ -111,9 +111,9 @@ purpose filter the purpose drawn is ringed in the bar.
   line goes through (`refusedForCash` in `game/world.ts`) [T-625]; hovering High, Medium or Low gives that
   level's times of day in the line's local time, from the period table in `game/periods.ts`:
   "High demand: 06:00 to 10:00, 16:00 to 20:00"; weekends use the same hours) [T-406], then
-  "Sets how many trains run in this interval. On a long line, trains leave the ends early so the
-  middle changes on time. Trains keep running after it ends and are taken out of service at the end
-  of the line." (the steppers have no such hover) [T-823, T-835]; on a
+  "How many trains run in this time interval. (Which time interval a scheduled train falls into is
+  determined by when the train reaches the midpoint of its route.)" (the steppers have no such
+  hover) [T-823, T-835, T-1242]; on a
   running line one dot before each level's name grades the level on today's kind of day by the
   average wait for a train with room at the platforms where trains come full, as in Trains to add
   [T-1255] (the level's periods averaged by those platforms' riders; High is its two peaks), its colour running smoothly with that wait in minutes: green to 0.2, yellow-green
@@ -142,7 +142,7 @@ purpose filter the purpose drawn is ringed in the bar.
   held per level beneath it ("Medium demand: 1 train held out of service"), one alert for each
   full place. Alerts are a plain list, each with a red (bad) or yellow (warning) circled
   exclamation point (`Alert` in `ui/widgets.tsx`, `--bad`, `--yellow`), no box [T-748]; a broken
-  line's "Broken: track it used is gone." is one too;
+  line's "Track this line ran on is gone" is one too;
   Today for a running line:
   riders by purpose,
   one Profit row (fares, a minus sign, then the running cost over the 24 hours plus the line's share
@@ -272,8 +272,8 @@ purpose filter the purpose drawn is ringed in the bar.
   header, above all rows and lists. A station has Trip from here and Link to another station in one
   row (what linking asks, when picking, is under it) and, in station view, Construct station (a
   blueprint only) and Remove station in a second; a track has Construct for its price (a blueprint
-  only) and Remove track; a junction has Build a flyover (with "Paid at once" or "Added to the
-  blueprint") or, for a blueprint flyover, Remove the flyover; a city has Go to its name; a trip
+  only) and Remove track; a junction has Construct a flyover (built) or Add a flyover (blueprint), with "Paid at once"
+  or "Added to the blueprint" beside it, or, for a blueprint flyover, Remove the flyover; a city has Go to its name; a trip
   opened from a selection has Back.
 - **Renaming** [T-534, `ui/inspector/NameEdit.tsx`]: a station's and a line's name both edit in
   place from a double click on the name or the pencil beside it (hover "Rename, or double click the
@@ -344,14 +344,15 @@ demand counts a link once both are constructed.
 `game/trip.ts`; the model's side in [demand-views.md](demand-views.md) "The trip explorer"]
 
 The trips between two places as the view it was opened from counts them, homes at the start to
-destinations at the end, and how the demand model's people would make one of them.
+destinations at the end, and how the demand model's people would make one of them. The panel's
+title is "Trip" with no line under it naming the ends: the map marks them [T-1253].
 
 - **Starting it**: the T key from any tab [T-444], or Explore a trip at the bottom of Settings, turns on the trip
   tool (a crosshair; a second press or Esc leaves it). Clicks alternate between start and end, a
   third starting a new trip; the hint at the bottom left says which is next.
 - **Stations as ends** [T-221]: a click on a station (a hand cursor over one) takes the station's
-  own cell as that end, and the inspector names it ("From a home by Bergen St to work by Grand
-  Central-42 St"). Its own cell, because the model's subzones group cells by nearest station, so
+  own cell as that end (the title's hover then says a station end stands for the homes or places
+  right around it). Its own cell, because the model's subzones group cells by nearest station, so
   the trip mostly boards there. A station's **Trip from here** starts it from that station.
 - **From a selection** [T-208]: with a bubble selection, a click on a far-end bubble opens the
   trip for that pair (hovers end "Click to explore this trip"), homes to destinations. The
@@ -359,10 +360,7 @@ destinations at the end, and how the demand model's people would make one of the
   cell with most of the selection's trips: the representative trip's two ends. The inspector then
   has a Back button to that selection (alone, with no line saying where it came from).
 - **Between groups** [T-865]: a Shift+drag box over far-end bubbles (ui-demand-views.md) opens the
-  trip between the selection and every far bubble in the box. When either end has more than one
-  bubble (at the zoom on screen), the sub line names each group by its count and the station
-  nearest its trip-weighted centre within 3 km ("From homes in 29 areas around 79 St to places in
-  35 areas around 5 Av/42 St-Bryant Pk"; one bubble keeps "at the open ring"). The headline is
+  trip between the selection and every far bubble in the box. The headline is
   exact over both groups, as for one bubble. Below it is an average over up to 3 x 3 cell pairs
   (`GROUP_SAMPLE_SIDE`): the busiest cell of each of the 3 near bubbles with most trip legs, to the
   busiest cell of each of the 3 far bubbles with most trips with the selection, each pair weighted
@@ -378,8 +376,9 @@ destinations at the end, and how the demand model's people would make one of the
   and when the purpose filter or the day changes. In a zone no station reaches (open bare) the aux
   worker's no-rail copy answers, every period at once [T-979]. A trip with an end in another zone
   opens the focused zone's market pack, as a bubble selection does. An empty answer on a final
-  result is asked once more after 3 s (`RETRY_MS` in map/tripView.ts), then the panel reads "The
-  demand model has no answer for this trip." rather than waiting.
+  result is asked once more after 3 s (`RETRY_MS` in map/tripView.ts), then the panel reads "This trip
+  could not be worked out." rather than waiting; while one trip is asked it reads "Working out this
+  trip", while the solve runs "Calculating demand" [T-1242].
 - **Between zones** [T-866; `ui/inspector/MarketTrip.tsx`, `IntercityApi::market_trip` in
   `sim/src/demand/intercity/market_trip.rs`]: with a bubble selection, a click on an inter-city
   bubble (a whole place zoomed out, a 6 km area up close; hover ends "Click to explore these
@@ -393,9 +392,7 @@ destinations at the end, and how the demand model's people would make one of the
   selected in the city view, then another zone's bubble (or a Shift box over several) is the
   market between the two places, every 6 km area pair counted whole (`market_trip_between`);
   a zone selected, then bubbles of the focused zone zoomed in, is the market between them and that
-  zone. The sub line names place ends "Between New York region and Philadelphia region", a group
-  "New Haven region and 8 other places" or "3 parts of Philadelphia region", and a bubble group
-  "homes in 49 areas around Times Sq". It shows the regional
+  zone. It shows the regional
   market's inter-city trips (commutes between zones left out, as the hover says): every 6 km
   area pair between the two ends, the selection's areas weighted as the bubbles weigh them,
   each pair's choice worked out as the solve does (every pair rail can serve, sampled or not),
@@ -459,8 +456,7 @@ destinations at the end, and how the demand model's people would make one of the
   through `DemandApi.trip`, an everyday purpose through `EverydayApi.trip`. Its period is the one
   with most of that purpose's trips, until a "Train by period" row is clicked; a new pair of places
   starts from the busiest again. "By train" names the purpose and period at its right, its hover
-  saying why those. The sub line names the filter's destination ("to shops and errands by Union
-  Sq").
+  saying why those.
 - **The inspector**: under "By train" the main route as rows (walk to the first
   station, each line ridden with its chip and the station it goes to, each change and walk, the
   walk from the last station; each row's minutes its wait and ride; a ride access [T-374] reads

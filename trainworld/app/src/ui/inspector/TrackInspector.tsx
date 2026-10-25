@@ -60,7 +60,7 @@ function Shape({ edge, version }: { edge: number; version: number }) {
   return (
     <>
       <div class="h">
-        <span data-tip={"Add a corner between points, then drag its square on the map." + (shape.legacy ? " This stretch runs through its squares; once you change it, they become corners like on any other track." : "")}>Corners</span>
+        <span data-tip="Add a corner between points, then drag its square on the map.">Corners</span>
       </div>
       <div class="blueprint-corners">
         {Array.from({ length: pis.length + 1 }, (_, i) => <>
@@ -138,9 +138,9 @@ export function TrackInspector({ edge }: { edge: number }) {
         {distance(e.lengthM)}, {lv}
       </div>
       <ConstructRemove built={e.built} construct={construct} constructLabel={`Construct for ${money(cost)}`} remove={remove}
-        removeLabel={`Remove ${e.crossover ? "crossover" : "track"}`} removeTip={e.built ? `Removing a constructed ${e.crossover ? "crossover" : "track"} refunds nothing` : ""} />
-      <Built built={e.built} what={e.crossover ? "This crossover" : "This track"} />
-      {!e.built && e.off && <p class="muted" data-tip={`Construct leaves ${e.crossover ? "this crossover" : "this track"} out until it is enabled`}>Disabled</p>}
+        removeLabel={`Remove ${e.crossover ? "crossover" : "track"}`} removeTip={e.built ? "Nothing is refunded" : ""} />
+      <Built built={e.built} />
+      {!e.built && e.off && <p class="muted" data-tip="Will not be constructed unless enabled">Disabled</p>}
       <ul class="rows">
         {!e.crossover && (
           <li data-tip={e.hsr ? "High-speed trains run up to 320 km/h here and ordinary trains up to 160 km/h" : "Trains run up to 160 km/h here. Over 160 needs high-speed track."}>
@@ -149,7 +149,7 @@ export function TrackInspector({ edge }: { edge: number }) {
           </li>
         )}
         <Row label="Slowest curve">{speed(e.vminKmh)}</Row>
-        <Row label={e.built ? "Cost to build" : "Cost to construct"}>{money(cost)}</Row>
+        <Row label="Cost to construct">{money(cost)}</Row>
         {!e.crossover && m && (
           <Row label="Upkeep">
             <span data-tip={`${upkeepText(m, e.built ? "Upkeep" : "Once constructed, upkeep")} The lines here share it by their trains a day.`}>

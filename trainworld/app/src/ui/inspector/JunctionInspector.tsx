@@ -102,7 +102,7 @@ export function JunctionInspector({ node }: { node: number }) {
   const atCrossover = w.edges.some((e) => e.crossover && (e.a === node || e.b === node));
   const setFlying = async (flying: boolean) => {
     const a = await edit({ op: "flying", node, flying });
-    if (a.ok && flying) say(a.charge > 0 ? `Flyover built for ${money(a.charge * 1e6)}.` : "Flyover added to the blueprint.");
+    if (a.ok && flying) say(a.charge > 0 ? `Flyover constructed for ${money(a.charge * 1e6)}.` : "Flyover added to the blueprint.");
   };
   const lineOf = linesByNum(w);
   const colourOf = (id: number) => lineOf.get(id)?.colour ?? "#888888";
@@ -134,14 +134,14 @@ export function JunctionInspector({ node }: { node: number }) {
         <Actions>
           <span class="muted small">{built ? "Paid at once" : "Added to the blueprint"}</span>
           <button class="btn text" data-tip="Take one track over the other, so trains never wait to cross" onClick={() => setFlying(true)}>
-            Build a flyover
+            {built ? "Construct a flyover" : "Add a flyover"}
           </button>
         </Actions>
       )}
-      <Built built={built} what="The junction" />
+      <Built built={built} />
       {!n.flying && (
         <>
-          <p class="note muted">{crossing ? "Trains cross on the level here and wait for each other." : "No trains cross here now."}</p>
+          <p class="note muted">{crossing ? "Trains wait to cross each other here" : "No trains cross here now."}</p>
           {!atCrossover && (
             <ul class="rows">
               <Row label="Flyover price">{price === null ? "" : money(price * 1e6)}</Row>

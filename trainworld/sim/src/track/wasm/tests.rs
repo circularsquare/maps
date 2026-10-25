@@ -189,6 +189,38 @@ fn insert_stop_infill_ends_and_reduce_to_empty() {
     assert!(loaded.net.line_stops(0).is_empty());
 }
 
+/// T-1242: stops left at one station (a loop's middle stop taken out, say) make a one-stop line,
+/// inactive like a line with none, never a refusal.
+#[test]
+fn stops_at_one_station_make_a_one_stop_line() {
+    let mut a = api();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(6000.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0);
+    for x in [1000.0, 5000.0] {
+        let edge = (0..a.w.net.edge_count() as u32).find(|&e| {
+            let n = &a.w.net;
+            n.edge_ok(e) && n.node_x[n.edge_a[e as usize] as usize] < x && n.node_x[n.edge_b[e as usize] as usize] > x
+        }).unwrap();
+        assert_eq!(a.add_station(2, edge, x, 0.0, 200, format!("S{x}")), 0, "{}", a.issues());
+    }
+    let station = |a: &TrackApi, x: f64| (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_platform[n as usize] > 0 && a.w.net.node_x[n as usize] == x).unwrap();
+    let (first, last) = (station(&a, 1000.0), station(&a, 5000.0));
+    let id = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(id, &[first, last], 2, 1, 0, 30.0, 180.0, 0, 0, "Test".into()), 0, "{}", a.issues());
+    assert_eq!(a.construct_all(), 0);
+    assert!(a.w.svc.lines[id as usize].running);
+    assert_eq!(a.set_stops(id, &[first, first]), 0, "{}", a.issues());
+    assert_eq!(a.line_stops(id), [first]);
+    assert!(!a.w.net.line_broken[id as usize]);
+    assert!(!a.w.svc.lines[id as usize].running);
+    assert_eq!(a.set_stops(id, &[first, last, last]), 0, "{}", a.issues());
+    assert_eq!(a.line_stops(id), [first, last]);
+    let lone = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(lone, &[last, last], 2, 1, 0, 30.0, 180.0, 0, 0, "Lone".into()), 0, "{}", a.issues());
+    assert_eq!(a.line_stops(lone), [last]);
+    assert!(!a.w.svc.lines[lone as usize].running);
+}
+
 #[test]
 fn crossing_and_junction_marks() {
     let mut a = api();

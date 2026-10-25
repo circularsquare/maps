@@ -815,7 +815,7 @@ export class Tools {
     const station=this.overlay.renderer.stationAt(e.point.x,e.point.y,(x,y)=>this.screen(x,y),7);
     const hit=station>=0?Number(n.stationIds[station]):-1;
     if (hit < 0) {
-      say("Click a circle to add or remove a stop. Press Enter when the line is done.");
+      say("Click a circle to add or remove a stop. Press Enter when done.");
       return;
     }
     this.toggleStop(hit);
@@ -1002,7 +1002,7 @@ export class Tools {
     if (this.freeAsked !== p.key) {
       this.freeAsked = p.key;
       this.client.checkStation(p.stationAt, plat, (ok, issues, cost) => {
-        this.freeAns = { key: p.key, ok, why: ok ? "" : describeIssues(issues) || "Cannot be built here.", cost };
+        this.freeAns = { key: p.key, ok, why: ok ? "" : describeIssues(issues) || "Cannot be placed here.", cost };
         if (tool.peek() === "station") this.place();
       });
     }
@@ -1114,7 +1114,7 @@ export class Tools {
     const cand=(s:Spot):Candidate=>s.kind==="node"?{kind:"node",node:s.node}:{kind:"edge",edge:s.edge,frac:fractionAlong(n.edgePts.get(s.edge)??[],s.lx,s.ly)};
     const endOf=(s:Spot)=>s.kind==="edge"?this.endSnap(s):null;
     const g=likelyFirst(spots,(s)=>known(s)||layoutIssues(cand(s),platform,lay),endOf);
-    let guess:Verdict={key,spot:g.spot??spots[0],ok:!!g.spot,why:g.spot?"":describeIssues(g.issues)||"Cannot be built here."};
+    let guess:Verdict={key,spot:g.spot??spots[0],ok:!!g.spot,why:g.spot?"":describeIssues(g.issues)||"Cannot be placed here."};
     if (spots.length>=HOLD_AT && !(g.spot?known(g.spot)===null:spots.every((s)=>known(s)))) {
       // a bundle of tracks where the worker has not yet confirmed the guess: there it is often
       // refused for what the page cannot see, so the ghost stays as it was until the answer (if it
@@ -1142,7 +1142,7 @@ export class Tools {
     };
     void firstAccepted(spots,trial,endOf,()=>key!==this.guess?.key).then(({spot,issues})=>{
       if (key!==this.guess?.key) return; // a newer spot is already asked
-      const why=spot?"":describeIssues(issues)||"Cannot be built here.";
+      const why=spot?"":describeIssues(issues)||"Cannot be placed here.";
       this.answer={key,spot:spot??(guess.held?spots[0]:guess.spot),ok:!!spot,why};
       if (tool.peek()==="station" && (this.answer.ok!==guess.ok || this.answer.why!==guess.why || this.answer.spot!==guess.spot)) this.place();
     });
@@ -1439,7 +1439,7 @@ function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
   };
   const out: HTMLDivElement[] = [];
   if (!pv.ok) {
-    const why = div(describeIssues(pv.issues) || "Cannot be built here.");
+    const why = div(describeIssues(pv.issues) || "Cannot be placed here.");
     why.style.color = "var(--bad)"; // style.css's `.tool-tag.bad`, for this line only
     out.push(why);
   }

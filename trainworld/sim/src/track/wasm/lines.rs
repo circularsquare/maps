@@ -8,6 +8,7 @@ impl TrackApi {
     /// Add a line with a whole-line fleet at each demand level.
     #[allow(clippy::too_many_arguments)]
     pub fn set_line_with_trains(&mut self, id: u32, stops: &[u32], high: u32, medium: u32, low: u32, dwell_s: f32, turnaround_s: f32, cars: u8, colour: u32, name: String) -> u32 {
+        let stops = &distinct_stops(stops);
         let Some(path) = self.w.net.route(stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
@@ -16,8 +17,9 @@ impl TrackApi {
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
-        let Some(path) = self.w.net.route(stops) else { return self.refuse(Issue::LinePath { line: id }) };
-        d.stops = stops.to_vec();
+        let stops = distinct_stops(stops);
+        let Some(path) = self.w.net.route(&stops) else { return self.refuse(Issue::LinePath { line: id }) };
+        d.stops = stops;
         d.path = path;
         self.run(Op::Line { id, data: Some(d) })
     }
@@ -241,4 +243,12 @@ impl TrackApi {
         v.join("\n")
     }
 
+}
+
+/// A stop repeated straight after itself counts once (T-1242): a loop's middle stop taken out
+/// leaves a one-stop line, not a refusal.
+fn distinct_stops(stops: &[u32]) -> Vec<u32> {
+    let mut s = stops.to_vec();
+    s.dedup();
+    s
 }
