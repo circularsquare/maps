@@ -91,7 +91,7 @@ LINE_KM = 24.0                # ... and the line no longer than this (a new game
 LINE_MIN = 5                 # fewer: a made-up line of 9 stops 1.2 km apart on the most populous heading
 REACH_M = 1500.0              # a purpose is required of the test line when the pack has sites this near a station (T-615)
 REACH_ARRAYS = {"shopping": "errand_jobs", "school": "school_enrollment", "medical": "medical_visits"}
-GRAVITY_ONLY = {"zone_row", "zone_col", "zone_home", "zone_work"}  # what a group re-solve may change
+GRAVITY_ONLY = {"zone_row", "zone_col", "zone_home", "zone_work"} | {f"everyday_kept_{p}" for p in ("errands", "medical", "school", "social", "university")}  # what a group re-solve may change (T-1175's cross_everyday writes the kept shares)
 
 
 # ---------------------------------------------------------------- reading a pack

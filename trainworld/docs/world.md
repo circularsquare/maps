@@ -215,7 +215,7 @@ player is looking.
   weekday later.
 - **Holidays** (T-862, T-262; `game/holidays.ts`, `holidays.json` from `pipeline/holidays_json.py`
   and the Python `holidays` package): each country's national public holidays with the substitute
-  days its law gives (the package's observed days: China's and Korea's substitute days, Japan's
+  days its law gives (the package's observed days: Korea's substitute days, Japan's
   substitute and citizens' holidays, a US Friday for a Saturday holiday), plus Japan's New Year
   holidays (Dec 31, Jan 2 and 3) and Korea's Workers' Day from the package's bank category. A game
   year takes the holidays of the real non-leap year whose January 1 is the same weekday (Monday
@@ -223,6 +223,17 @@ player is looking.
   year 0 is 2031), so a holiday tied to a weekday keeps it and Easter moves between years. A
   holiday is a whole day of its country's local time. The top bar marks those in countries the
   player has built in, one entry for a holiday several keep that date ([ui-panels.md](ui-panels.md)).
+  **China's** days off and worked weekend days come from `pipeline/china_holidays.json` instead of
+  the package (T-1157): the State Council's notice for 2026 (国务院办公厅关于2026年部分节假日安排的通知,
+  2025-11-04: Spring Festival Feb 15-23, National Day Oct 1-7, worked Saturdays and Sundays), and for
+  the other real years the usual pattern, marked `"source": "pattern"` in the file until that year's
+  notice is out (2027's comes in November 2026: replace the entry by hand). The pattern
+  (`china_holidays_pattern.py`): Spring Festival from the eve for 4 days, Labor Day 2, National Day 3,
+  the others 1; a statutory day on a weekend gives the next weekday off; a Tuesday festival bridges
+  the Monday before (Saturday worked), a Thursday one the Friday after (Sunday worked); the long
+  breaks add up to two swapped weekdays, the first for the nearest worked weekend day before, the
+  second after (Spring Festival to 9 days at most, National Day 8, Labor Day to 5). Hong Kong, Macau
+  and Taiwan keep the package's.
 - **Weekends** (T-262): each country's weekend days from the package: Saturday and Sunday in most;
   Friday and Saturday in 18 (Saudi Arabia, Egypt, Israel, Iraq, Jordan, Kuwait, Qatar, Oman,
   Bahrain, Algeria, Sudan, Syria, Yemen, Afghanistan, Bangladesh, Djibouti, Mauritania, the
@@ -232,7 +243,7 @@ player is looking.
   weekend holds it (Brunei's Sunday then runs as its Saturday), Saturday in Israel, else Sunday. A
   one-day weekend runs as a Sunday, the other day as a weekday (`weeks` in holidays.json). A
   weekend day a country works in place of a day off (the package's weekend workdays, Hungary's in
-  2026; China's make-up working days are not in the package) is a weekday.
+  2026; China's make-up working days from its own table) is a weekday.
 - **A country's calendar decides each local day's kind** (T-872, T-262, `game/holidayCalendar.ts`
   `kindOfIn`): a holiday is a Sunday, except the few most people work through (in the US and its
   territories: Columbus Day, Veterans Day, Martin Luther King Jr. Day, Washington's Birthday,

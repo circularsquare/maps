@@ -7,7 +7,7 @@ import sys
 
 TW = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 work = os.path.join(TW, "data", "work")
-dest = os.path.join(work, "pre-T1150", "signals")
+dest = os.path.join(work, "pre-T1184", "signals")
 os.makedirs(dest, exist_ok=True)
 n = 0
 for i in sys.argv[1].split(","):

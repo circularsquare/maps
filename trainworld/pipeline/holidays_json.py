@@ -18,7 +18,9 @@ Output: {"years": {"0": 2029, ...} (January 1's weekday, 0 Monday, to the real y
 A country's days off: its public holidays with the substitute days its law gives (the package's
 "observed" days), plus `EXTRA` categories where those are days most people have off. A weekend's
 day of rest runs as a Sunday, the other day as a Saturday, a one-day weekend as a Sunday (T-262).
-English names where the package has them. Run from the maps root:
+China's days off and make-up working days (T-1157) come from china_holidays.json instead of the
+package: the State Council's notice where there is one, else the usual pattern
+(china_holidays_pattern.py). English names where the package has them. Run from the maps root:
     venv/Scripts/python.exe trainworld/pipeline/holidays_json.py
 """
 
@@ -30,6 +32,7 @@ import re
 import holidays
 
 OUT = pathlib.Path(__file__).resolve().parents[1] / "app" / "src" / "game" / "holidays.json"
+CHINA = pathlib.Path(__file__).resolve().parent / "china_holidays.json"
 
 # non-leap years by January 1's weekday (0 Monday)
 YEARS = {0: 2029, 1: 2030, 2: 2031, 3: 2026, 4: 2027, 5: 2033, 6: 2034}
@@ -54,6 +57,29 @@ def week_kinds(code, weekend):
     return [0 if d not in weekend else 2 if (d == rest or len(weekend) == 1) else 1 for d in range(7)]
 
 
+def china_table():
+    """China's days off and worked weekend days per real year from china_holidays.json (T-1157): the State
+    Council's notice where there is one, the usual pattern otherwise. The package has neither the make-up
+    working days nor the longer breaks."""
+    data = json.loads(CHINA.read_text(encoding="utf-8"))["years"]
+    out = {}
+    for y in YEARS.values():
+        entries, work = {}, []
+        for h in data[str(y)]["holidays"]:
+            lo, hi = (dt.date.fromisoformat(s) for s in h["off"])
+            for i in range((hi - lo).days + 1):
+                d = lo + dt.timedelta(days=i)
+                if d.year == y:
+                    entries[d] = f"{entries[d]}; {h['name']}" if d in entries and h["name"] not in entries[d] else h["name"]
+            for s in h["work"]:
+                d = dt.date.fromisoformat(s)
+                if d.year == y:
+                    work.append(d)
+        assert all(d.weekday() >= 5 and d not in entries for d in work), y
+        out[y] = (entries, sorted(work))
+    return out
+
+
 def english(cls):
     langs = getattr(cls, "supported_languages", ()) or ()
     for lang in ("en_US", "en_GB", "en_IN", "en_CA", "en_NZ", "en_AU"):
@@ -67,6 +93,7 @@ def main():
         assert dt.date(y, 1, 1).weekday() == wd and y % 4 != 0, y
     names, index = [], {}
     countries, weeks, workdays = {}, {}, {}
+    china = china_table()
     for code in sorted(holidays.list_supported_countries()):
         if len(code) != 2:
             continue
@@ -84,6 +111,8 @@ def main():
             entries = {d: n for d, n in cal.items() if d.year == y}
             plain = holidays.country_holidays(code, **{**kw, "observed": False})
             added += sum(1 for d in entries if d not in plain)
+            if code == "CN":
+                entries = china[y][0]
             if code in EXTRA:
                 cat, label = EXTRA[code]
                 for d, n in holidays.country_holidays(code, **{**kw, "categories": (cat,)}).items():
@@ -104,6 +133,8 @@ def main():
             by_year[str(wd)] = rows
             ww = sorted((d - dt.date(y, 1, 1)).days for d in getattr(cal, "weekend_workdays", ())
                         if d.year == y and d.weekday() in cal.weekend and d not in entries)
+            if code == "CN":
+                ww = [(d - dt.date(y, 1, 1)).days for d in china[y][1]]
             if ww:
                 worked[str(wd)] = ww
         countries[code] = by_year

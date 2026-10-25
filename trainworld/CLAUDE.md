@@ -89,6 +89,9 @@ Briefs carry only the task; these hold for every agent.
   too. Shells started before Rust was installed lack it on PATH: prepend `%USERPROFILE%\.cargo\bin`.
 - **CPU**: at most 10 of 16 cores in all, every agent together, while Anita is using the machine;
   12-15 overnight or while she is away (Anita, 2026-10-22).
+- **While a join runs, nothing else writes `data/packs`**, any country's packs included: each unit's
+  re-gate compares every registered pack against its snapshot and parks the unit on any change (a walk
+  rerun parked China's Henan, 2026-10-24).
 - **Pack rebuilds** back up to `data/work/pre-T###/` first; a backup goes, without asking, once a
   later state is checked clean (Anita, 2026-10-22). `data/work/res9/` stays.
 - **A refused permission check**: make the step safer, review, retry; don't wait for Anita.
@@ -100,9 +103,7 @@ Briefs carry only the task; these hold for every agent.
 - **Bash**: one simple command per call (no `&&`, pipes or loops); scripts go in a file in your
   scratchpad folder, not heredocs.
 - **Screenshots and diagnostics** go in `../artifacts/trainworld/`, never in this folder.
-- **Player-facing text** follows Anita's rules (her global CLAUDE.md "User-facing text"): no dashes
-  between phrases, people act rather than interface nouns, facts not sales or vibes, no
-  exclamation marks or softeners, sentence case, no all-caps labels.
+- **Player-facing text** follows the "User-facing text" section of Anita's global CLAUDE.md.
 - **Stop at a clean point** if the work outgrows one context: finish the stage you are on, write
   the rest as tasks, hand back. Compacting means the task was sized too big.
 - **Keep your context lean** (T-288's retrospective): each step re-reads your whole conversation,
@@ -184,6 +185,9 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   and do the high-impact ones and those that let the game scale to hundreds of cities first.
 - **Live feel** (2026-10-13): a figure that would change often if every train and passenger were
   simulated (money, riders, waiting counts) moves smoothly, not once an hour.
+- **No dividers within a section** (Anita, 2026-10-24): rows of one section (the fare rows, a list's
+  items) are set apart by spacing alone; a divider line goes only between sections about different
+  things.
 - **Every drawn quantity has a tooltip** (2026-10-12): anything encoding a number on the map or in
   a panel gets a hover stating it, always the game's own tag, never a browser `title`.
 - **Panels show what can change** (2026-10-13): labels, numbers and states; no explanatory or

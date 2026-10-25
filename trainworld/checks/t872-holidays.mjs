@@ -76,16 +76,18 @@ try {
     while (days.weekdayOf(mon) !== 0 || CCS.some((cc) => Array.from({ length: 7 }, (_, k) => c.holidayName(d, cc, mon + k)).some(Boolean))) mon++;
     const week = (cc) => Array.from({ length: 7 }, (_, k) => c.kindOfIn(d, cc)(mon + k)).join('');
     const first = (cc, test) => { for (let x = 1; x < 3000; x++) if (test(x)) return x; return null; };
-    const cnSub = first('CN', (x) => /Spring Festival.*observed/.test(c.holidayName(d, 'CN', x) ?? '') && days.weekdayOf(x) < 5);
+    const cnSub = first('CN', (x) => /Spring Festival/.test(c.holidayName(d, 'CN', x) ?? '') && days.weekdayOf(x) < 5);
+    const cnWork = first('CN', (x) => days.weekdayOf(x) >= 5 && c.kindOfIn(d, 'CN')(x) === 0);
     const huSat = first('HU', (x) => days.weekdayOf(x) === 5 && c.kindOfIn(d, 'HU')(x) === 0);
     const usCol = first('US', (x) => /^Columbus Day/.test(c.holidayName(d, 'US', x) ?? ''));
     const name = (cc, x) => (x === null ? null : `${days.dateName(x)} ${c.holidayName(d, cc, x) ?? ''}`.trim());
-    return { weeks: Object.fromEntries(CCS.map((cc) => [cc, week(cc)])), cn: name('CN', cnSub), cnKind: cnSub && c.kindOfIn(d, 'CN')(cnSub), hu: name('HU', huSat), huKind: huSat && c.kindOfIn(d, 'HU')(huSat), us: name('US', usCol), usKind: usCol && c.kindOfIn(d, 'US')(usCol) };
+    return { weeks: Object.fromEntries(CCS.map((cc) => [cc, week(cc)])), cn: name('CN', cnSub), cnKind: cnSub && c.kindOfIn(d, 'CN')(cnSub), cnWork: name('CN', cnWork), cnWorkKind: cnWork && c.kindOfIn(d, 'CN')(cnWork), hu: name('HU', huSat), huKind: huSat && c.kindOfIn(d, 'HU')(huSat), us: name('US', usCol), usKind: usCol && c.kindOfIn(d, 'US')(usCol) };
   });
   // a week with no holidays in these six, Monday to Sunday (0 a weekday, 1 a Saturday, 2 a Sunday)
   const WANT = { US: '0000012', SA: '0000210', IL: '0000120', IR: '0000200', HK: '0000002', BN: '0000201' };
   for (const [cc, w] of Object.entries(WANT)) check(own.weeks[cc] === w, `${cc}'s week runs ${own.weeks[cc]} (want ${w})`);
-  check(own.cnKind === 2, `China's substitute day off is a Sunday: ${own.cn}`);
+  check(own.cnKind === 2, `a weekday of China's Spring Festival break is a Sunday: ${own.cn}`);
+  check(own.cnWorkKind === 0, `a weekend day China works (a make-up day) is a weekday: ${own.cnWork}`);
   check(own.huKind === 0, `Hungary's worked Saturday is a weekday: ${own.hu}`);
   check(own.usKind === 0, `a US working holiday is a weekday: ${own.us}`);
 
@@ -95,7 +97,8 @@ try {
   const far = await ctx.newPage();
   await far.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
   await far.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
-  for (const at of [[114.17, 22.32], [121.47, 31.23]]) {
+  // Zhangjiang, not People's Square: there shopping and social's Saturday rise cancels work's drop (Sat/Wed 1.0005).
+  for (const at of [[114.17, 22.32], [121.59, 31.205]]) {
     await far.evaluate((c) => void window.tw.map.jumpTo({ center: c, zoom: 12 }), at);
     if ((await acrossLine(far, at)) === null) throw new Error(`no line built at ${at}`);
   }
@@ -114,9 +117,9 @@ try {
     for (const l of w.lines) {
       const cc = h.lineCountry(l.stops), s = w.stations.find((x) => x.id === l.stops[0]), shift = shiftAt(s.lng, s.lat);
       let wed = now;
-      while (days.weekdayOf(wed) !== 2 || [0, 3, 4].some((k) => c.holidayName(d, cc, wed + k))) wed++;
+      while (days.weekdayOf(wed) !== 2 || [0, 3, 4].some((k) => c.holidayName(d, cc, wed + k)) || (cc === 'CN' && [3, 4].some((k) => c.kindOfIn(d, cc)(wed + k) === 0))) wed++;
       const pick = { wed, sat: wed + 3, sun: wed + 4 };
-      if (cc === 'CN') { let x = now; while (!(/observed/.test(c.holidayName(d, cc, x) ?? '') && days.weekdayOf(x) < 5)) x++; pick.sub = x; }
+      if (cc === 'CN') { let x = now; while (!(/Spring Festival/.test(c.holidayName(d, cc, x) ?? '') && days.weekdayOf(x) < 5)) x++; pick.sub = x; }
       const riders = {};
       for (const [k, day] of Object.entries(pick)) {
         window.tw.clock.set(day * 86400 + 23 * 3600 + 3000 - shift);

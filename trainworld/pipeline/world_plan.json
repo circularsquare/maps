@@ -7327,25 +7327,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-183519",
     "steps": {
-     "build": 90.8,
-     "stations": 0.9,
-     "places": 2.4,
-     "coarse": 8.4,
-     "routes": 125.4,
-     "merge": 9.4,
-     "nocar": 1.8,
+     "build": 169.1,
+     "stations": 1.2,
+     "places": 3.4,
+     "coarse": 1.7,
+     "routes": 247.3,
+     "merge": 2.0,
+     "nocar": 1.9,
      "everyday": 1.1
     },
-    "built": "2026-10-22T17:55:20",
+    "built": "2026-10-24T18:44:35",
+    "parked": "2026-10-24T21:18:13",
+    "gated": "2026-10-25T01:33:06",
     "gate": {
      "warn": [
       "top_school_cell_pupils 6000.0"
      ]
     },
-    "gated": "2026-10-22T20:58:53",
-    "shipped": "2026-10-22T22:23:32"
+    "shipped": "2026-10-25T02:20:34"
    }
   },
   {
@@ -8536,26 +8537,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710-23500",
+    "run_batch": "20261024-183518",
     "steps": {
-     "build": 95.3,
-     "stations": 0.9,
-     "places": 6.5,
-     "coarse": 4.2,
-     "routes": 39.9,
-     "merge": 4.9,
-     "nocar": 1.4,
-     "everyday": 0.9
+     "build": 122.2,
+     "stations": 1.1,
+     "places": 8.0,
+     "coarse": 1.0,
+     "routes": 79.7,
+     "merge": 1.4,
+     "nocar": 1.9,
+     "everyday": 1.1
     },
-    "built": "2026-10-22T23:00:25",
+    "built": "2026-10-24T18:41:43",
+    "parked": "2026-10-24T18:58:15",
     "gate": {
      "warn": [
+      "pop_vs_plan 0.8146263348195316",
       "top_school_cell_pupils 6000.0",
       "osm_land_share 0.8312"
      ]
     },
-    "gated": "2026-10-23T00:16:56",
-    "shipped": "2026-10-23T01:32:56"
+    "gated": "2026-10-24T19:54:39",
+    "shipped": "2026-10-25T00:57:54"
    }
   },
   {
@@ -8652,27 +8655,28 @@
    },
    "solve_region": "jiangsu",
    "run": {
-    "run_batch": "20261022-093304",
+    "run_batch": "20261024-183518-21896",
     "steps": {
-     "build": 154.5,
-     "stations": 1.0,
-     "places": 1.8,
-     "coarse": 1.9,
-     "routes": 46.2,
-     "merge": 2.1,
-     "nocar": 1.4,
-     "everyday": 0.9
+     "build": 83.0,
+     "stations": 1.1,
+     "places": 2.3,
+     "coarse": 0.7,
+     "routes": 105.7,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.1
     },
-    "built": "2026-10-22T09:40:04",
+    "built": "2026-10-24T18:42:05",
+    "parked": "2026-10-24T21:06:18",
+    "gated": "2026-10-25T01:33:07",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 5933.5654296875",
+      "top_school_cell_pupils 5758.013671875",
       "osm_land_share 0.884",
       "fleet_range 1"
      ]
     },
-    "gated": "2026-10-22T10:29:34",
-    "shipped": "2026-10-22T10:50:43"
+    "shipped": "2026-10-25T02:20:35"
    }
   },
   {
@@ -9094,28 +9098,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-020047",
+    "run_batch": "20261024-191220",
     "steps": {
-     "build": 93.7,
+     "build": 12.6,
      "stations": 0.9,
-     "places": 1.8,
-     "coarse": 6.1,
-     "routes": 91.7,
-     "merge": 5.4,
-     "nocar": 2.0,
-     "everyday": 1.2
+     "places": 1.4,
+     "coarse": 0.7,
+     "routes": 70.2,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.0
     },
-    "built": "2026-10-23T02:06:39",
+    "built": "2026-10-24T19:17:47",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.6679788300224132",
+      "pop_vs_fua 1.714893178823063",
       "top_school_cell_pupils 6000.0",
       "osm_land_share 0.8865"
      ]
     },
-    "parked": "2026-10-23T03:27:53",
-    "gated": "2026-10-23T03:59:00",
-    "shipped": "2026-10-23T05:24:26"
+    "gated": "2026-10-24T19:54:41",
+    "shipped": "2026-10-25T00:57:54"
    }
   },
   {
@@ -9926,26 +9929,27 @@
    },
    "solve_region": "jiangsu",
    "run": {
-    "run_batch": "20261022-093304",
+    "run_batch": "20261024-183518-21896",
     "steps": {
-     "build": 151.6,
-     "stations": 0.8,
-     "places": 1.4,
-     "coarse": 2.5,
-     "routes": 37.2,
-     "merge": 2.7,
-     "nocar": 1.3,
-     "everyday": 1.0
+     "build": 82.2,
+     "stations": 1.1,
+     "places": 1.9,
+     "coarse": 0.7,
+     "routes": 61.9,
+     "merge": 1.7,
+     "nocar": 2.4,
+     "everyday": 1.5
     },
-    "built": "2026-10-22T09:39:53",
+    "built": "2026-10-24T18:41:22",
+    "parked": "2026-10-24T21:06:18",
+    "gated": "2026-10-25T01:33:07",
     "gate": {
      "warn": [
       "top_school_cell_pupils 6000.0",
       "osm_land_share 0.8109"
      ]
     },
-    "gated": "2026-10-22T10:29:34",
-    "shipped": "2026-10-22T10:50:43"
+    "shipped": "2026-10-25T02:20:35"
    }
   },
   {
@@ -10003,26 +10007,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 128.4,
-     "stations": 0.8,
-     "places": 1.4,
-     "coarse": 2.2,
-     "routes": 30.7,
-     "merge": 2.4,
-     "nocar": 1.3,
-     "everyday": 1.0
+     "build": 17.0,
+     "stations": 1.1,
+     "places": 1.8,
+     "coarse": 0.7,
+     "routes": 47.0,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.1
     },
-    "built": "2026-10-22T22:58:41",
+    "built": "2026-10-24T19:20:39",
     "gate": {
      "warn": [
       "top_school_cell_pupils 6000.0",
       "osm_land_share 0.8138"
      ]
     },
-    "gated": "2026-10-23T00:31:07",
-    "shipped": "2026-10-23T01:32:56"
+    "gated": "2026-10-24T19:51:39",
+    "shipped": "2026-10-25T00:57:54"
    }
   },
   {
@@ -10213,29 +10217,32 @@
    },
    "solve_region": "sichuan",
    "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it",
+    "pop_vs_plan": "T-1150: the pack holds the 2020 census by township, which GHSL's older counts miss in China (the boom cities short, the shrinking ones long); the townships agree with the county census within 1%"
    },
    "run": {
-    "run_batch": "20261023-020047",
+    "run_batch": "20261024-191220",
     "steps": {
-     "build": 91.6,
-     "stations": 1.0,
-     "places": 2.0,
-     "coarse": 5.4,
-     "routes": 153.4,
-     "merge": 4.8,
-     "nocar": 1.8,
-     "everyday": 1.2
+     "build": 17.0,
+     "stations": 0.9,
+     "places": 1.8,
+     "coarse": 0.6,
+     "routes": 102.3,
+     "merge": 0.9,
+     "nocar": 1.3,
+     "everyday": 0.8
     },
-    "built": "2026-10-23T02:07:38",
+    "built": "2026-10-24T19:25:43",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 5451.5869140625"
+      "pop_vs_plan 1.8038667920703477",
+      "pop_vs_fua 1.3988846619789084",
+      "pop_vs_ghsl_other 1.806425960191976",
+      "top_school_cell_pupils 6000.0"
      ]
     },
-    "parked": "2026-10-23T03:27:54",
-    "gated": "2026-10-23T03:59:00",
-    "shipped": "2026-10-23T05:24:27"
+    "gated": "2026-10-24T19:54:41",
+    "shipped": "2026-10-25T00:57:54"
    }
   },
   {
@@ -10498,26 +10505,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555",
+    "run_batch": "20261024-191221",
     "steps": {
-     "build": 146.5,
-     "stations": 0.8,
-     "places": 1.3,
-     "coarse": 0.7,
-     "routes": 26.1,
-     "merge": 1.2,
-     "nocar": 1.9,
-     "everyday": 1.5
+     "build": 11.7,
+     "stations": 0.9,
+     "places": 1.6,
+     "coarse": 0.4,
+     "routes": 37.2,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T17:48:58",
+    "built": "2026-10-24T19:21:11",
+    "gated": "2026-10-25T01:33:09",
+    "parked": "2026-10-24T21:18:14",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6000.0",
+      "top_school_cell_pupils 5965.7451171875",
       "osm_land_share 0.8722"
      ]
     },
-    "gated": "2026-10-22T18:54:49",
-    "shipped": "2026-10-22T22:23:32"
+    "shipped": "2026-10-25T02:20:35"
    }
   },
   {
@@ -10716,25 +10724,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 108.1,
+     "build": 18.2,
      "stations": 0.8,
-     "places": 1.9,
-     "coarse": 2.3,
-     "routes": 52.2,
-     "merge": 3.1,
-     "nocar": 1.5,
+     "places": 2.0,
+     "coarse": 0.6,
+     "routes": 100.4,
+     "merge": 1.1,
+     "nocar": 1.4,
      "everyday": 0.9
     },
-    "built": "2026-10-22T18:03:24",
+    "built": "2026-10-24T19:30:15",
     "gate": {
      "warn": [
+      "pop_vs_plan 1.439302867986353",
+      "pop_vs_ghsl_other 1.4390107211730485",
+      "top_school_cell_pupils 5431.5712890625",
       "osm_land_share 0.8623"
      ]
     },
-    "gated": "2026-10-22T18:54:50",
-    "shipped": "2026-10-22T22:23:33"
+    "gated": "2026-10-24T19:51:40",
+    "shipped": "2026-10-25T00:57:54"
    }
   },
   {
@@ -11128,26 +11139,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-054511",
+    "run_batch": "20261024-191221",
     "steps": {
-     "build": 147.9,
-     "stations": 1.0,
-     "places": 1.4,
-     "coarse": 3.5,
-     "routes": 29.8,
-     "merge": 2.0,
+     "build": 11.5,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 0.5,
+     "routes": 25.6,
+     "merge": 0.8,
      "nocar": 1.4,
      "everyday": 1.0
     },
-    "built": "2026-10-23T05:48:55",
+    "built": "2026-10-24T19:25:19",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6000.0",
+      "top_school_cell_pupils 6014.27587890625",
       "osm_land_share 0.9517"
      ]
     },
-    "gated": "2026-10-23T06:15:14",
-    "shipped": "2026-10-23T09:24:29"
+    "gated": "2026-10-24T19:55:09",
+    "shipped": "2026-10-25T00:57:55"
    }
   },
   {
@@ -12101,26 +12112,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-020047-30300",
+    "run_batch": "20261024-191221",
     "steps": {
-     "build": 130.1,
-     "stations": 1.0,
-     "places": 1.8,
-     "coarse": 2.1,
-     "routes": 55.5,
-     "merge": 2.6,
-     "nocar": 2.5,
-     "everyday": 1.7
+     "build": 66.1,
+     "stations": 0.8,
+     "places": 1.6,
+     "coarse": 0.4,
+     "routes": 37.2,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-10-23T02:05:55",
+    "built": "2026-10-24T19:31:50",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 5207.05126953125"
+      "pop_vs_plan 1.4929294797910693",
+      "pop_vs_fua 1.6588254050788562",
+      "pop_vs_ghsl_other 1.4925079337287301",
+      "top_school_cell_pupils 6000.0"
      ]
     },
-    "parked": "2026-10-23T03:25:19",
-    "gated": "2026-10-23T04:14:10",
-    "shipped": "2026-10-23T05:24:27"
+    "gated": "2026-10-24T19:55:10",
+    "shipped": "2026-10-25T00:57:55"
    }
   },
   {
@@ -12306,26 +12319,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710-23500",
+    "run_batch": "20261024-191220",
     "steps": {
-     "build": 62.0,
+     "build": 11.6,
      "stations": 0.9,
-     "places": 1.3,
-     "coarse": 1.9,
-     "routes": 21.6,
-     "merge": 2.3,
+     "places": 1.5,
+     "coarse": 0.6,
+     "routes": 32.3,
+     "merge": 0.8,
      "nocar": 1.3,
      "everyday": 0.9
     },
-    "built": "2026-10-22T23:01:57",
+    "built": "2026-10-24T19:32:03",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6052.07080078125",
+      "top_school_cell_pupils 6108.23779296875",
       "osm_land_share 0.8129"
      ]
     },
-    "gated": "2026-10-23T00:16:56",
-    "shipped": "2026-10-23T01:32:56"
+    "gated": "2026-10-24T19:54:41",
+    "shipped": "2026-10-25T00:57:55"
    }
   },
   {
@@ -12378,25 +12391,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 62.8,
-     "stations": 0.8,
-     "places": 1.3,
-     "coarse": 1.2,
-     "routes": 18.8,
-     "merge": 1.6,
-     "nocar": 1.2,
-     "everyday": 0.8
+     "build": 13.5,
+     "stations": 0.9,
+     "places": 1.6,
+     "coarse": 0.5,
+     "routes": 28.3,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-10-22T17:52:49",
+    "built": "2026-10-24T19:36:31",
+    "gated": "2026-10-25T01:33:09",
+    "parked": "2026-10-24T21:46:41",
     "gate": {
      "warn": [
       "osm_land_share 0.9251"
      ]
     },
-    "gated": "2026-10-22T20:58:53",
-    "shipped": "2026-10-22T22:23:33"
+    "shipped": "2026-10-25T02:20:35"
    }
   },
   {
@@ -12543,25 +12557,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 51.0,
-     "stations": 1.0,
+     "build": 10.1,
+     "stations": 0.9,
      "places": 1.5,
-     "coarse": 1.0,
-     "routes": 17.9,
-     "merge": 1.3,
+     "coarse": 0.5,
+     "routes": 30.9,
+     "merge": 1.0,
      "nocar": 1.4,
      "everyday": 1.1
     },
-    "built": "2026-10-22T17:54:05",
+    "built": "2026-10-24T19:44:49",
+    "gated": "2026-10-25T01:33:11",
+    "parked": "2026-10-24T21:36:31",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6000.0"
+      "pop_vs_plan 1.3913114171468508",
+      "pop_vs_fua 1.4270195576547953",
+      "top_school_cell_pupils 6053.6416015625"
      ]
     },
-    "gated": "2026-10-22T20:58:53",
-    "shipped": "2026-10-22T22:23:33"
+    "shipped": "2026-10-25T02:20:35"
    }
   },
   {
@@ -13258,26 +13275,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-054511-8604",
+    "run_batch": "20261024-191221",
     "steps": {
-     "build": 94.2,
-     "stations": 0.9,
+     "build": 7.7,
+     "stations": 0.8,
      "places": 1.4,
-     "coarse": 1.0,
-     "routes": 17.7,
-     "merge": 1.7,
-     "nocar": 1.4,
-     "everyday": 1.1
+     "coarse": 0.5,
+     "routes": 17.4,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 1.0
     },
-    "built": "2026-10-23T05:48:32",
+    "built": "2026-10-24T19:36:19",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 5994.97314453125",
+      "top_school_cell_pupils 5955.01953125",
       "osm_land_share 0.9222"
      ]
     },
-    "gated": "2026-10-23T06:31:27",
-    "shipped": "2026-10-23T09:24:29"
+    "gated": "2026-10-24T19:55:10",
+    "shipped": "2026-10-25T00:57:55"
    }
   },
   {
@@ -13733,25 +13750,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-183518-21896",
     "steps": {
-     "build": 54.5,
-     "stations": 0.9,
-     "places": 1.6,
-     "coarse": 1.4,
-     "routes": 23.3,
-     "merge": 1.7,
-     "nocar": 1.4,
-     "everyday": 0.9
+     "build": 13.2,
+     "stations": 1.1,
+     "places": 1.8,
+     "coarse": 0.7,
+     "routes": 35.7,
+     "merge": 1.0,
+     "nocar": 2.2,
+     "everyday": 1.2
     },
-    "built": "2026-10-22T17:55:31",
+    "built": "2026-10-24T18:42:19",
+    "parked": "2026-10-24T18:58:18",
     "gate": {
      "warn": [
       "osm_land_share 0.8302"
      ]
     },
-    "gated": "2026-10-22T20:58:53",
-    "shipped": "2026-10-22T22:23:33"
+    "gated": "2026-10-24T19:51:37",
+    "shipped": "2026-10-25T00:57:55"
    }
   },
   {
@@ -13804,28 +13822,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-020047-3360",
+    "run_batch": "20261024-191220",
     "steps": {
-     "build": 30.8,
-     "stations": 1.3,
-     "places": 2.0,
-     "coarse": 3.6,
-     "routes": 33.4,
-     "merge": 3.4,
-     "nocar": 1.8,
-     "everyday": 1.2
+     "build": 9.1,
+     "stations": 0.8,
+     "places": 1.4,
+     "coarse": 0.6,
+     "routes": 26.1,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 0.9
     },
-    "built": "2026-10-23T02:06:12",
+    "built": "2026-10-24T19:39:27",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.5415942379752647",
-      "top_school_cell_pupils 5537.73046875",
+      "pop_vs_fua 1.7710143240116334",
+      "top_school_cell_pupils 6000.0",
       "osm_land_share 0.818"
      ]
     },
-    "parked": "2026-10-23T03:27:42",
-    "gated": "2026-10-23T04:04:14",
-    "shipped": "2026-10-23T05:24:27"
+    "gated": "2026-10-24T19:54:42",
+    "shipped": "2026-10-25T00:57:56"
    }
   },
   {
@@ -13924,25 +13941,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710",
+    "run_batch": "20261024-191220",
     "steps": {
-     "build": 128.2,
-     "stations": 0.8,
-     "places": 1.7,
-     "coarse": 2.1,
-     "routes": 30.5,
-     "merge": 2.2,
-     "nocar": 1.4,
-     "everyday": 0.9
+     "build": 15.6,
+     "stations": 0.9,
+     "places": 2.1,
+     "coarse": 0.8,
+     "routes": 44.4,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T22:58:40",
+    "built": "2026-10-24T19:49:22",
     "gate": {
      "warn": [
+      "pop_vs_fua 1.3882701250182354",
       "osm_land_share 0.8316"
      ]
     },
-    "gated": "2026-10-23T00:31:07",
-    "shipped": "2026-10-23T01:32:56"
+    "parked": "2026-10-24T19:53:21",
+    "gated": "2026-10-24T20:15:12",
+    "shipped": "2026-10-25T00:57:56"
    }
   },
   {
@@ -14224,25 +14243,25 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-033733-25268",
+    "run_batch": "20261024-191221",
     "steps": {
-     "build": 13.3,
-     "stations": 1.4,
-     "places": 2.2,
-     "coarse": 1.0,
-     "routes": 15.2,
-     "merge": 1.9,
-     "nocar": 2.0,
-     "everyday": 1.4
+     "build": 6.1,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 0.4,
+     "routes": 11.5,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
     },
-    "built": "2026-10-23T03:46:58",
+    "built": "2026-10-24T19:40:26",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6182.98681640625"
+      "top_school_cell_pupils 6098.64013671875"
      ]
     },
-    "gated": "2026-10-23T04:14:14",
-    "shipped": "2026-10-23T05:24:27"
+    "gated": "2026-10-24T19:55:10",
+    "shipped": "2026-10-25T00:57:56"
    }
   },
   {
@@ -14455,26 +14474,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-183518-21896",
     "steps": {
-     "build": 53.6,
-     "stations": 0.9,
-     "places": 1.3,
-     "coarse": 108.0,
-     "routes": 24.3,
-     "merge": 2.5,
-     "nocar": 1.4,
-     "everyday": 0.9
+     "build": 14.8,
+     "stations": 1.2,
+     "places": 1.8,
+     "coarse": 0.7,
+     "routes": 40.5,
+     "merge": 2.2,
+     "nocar": 2.2,
+     "everyday": 1.1
     },
-    "built": "2026-10-22T17:58:33",
+    "built": "2026-10-24T18:43:10",
+    "parked": "2026-10-24T18:58:18",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6047.01806640625",
+      "top_school_cell_pupils 6077.0810546875",
       "osm_land_share 0.9658"
      ]
     },
-    "gated": "2026-10-22T20:58:54",
-    "shipped": "2026-10-22T22:23:33"
+    "gated": "2026-10-24T19:51:37",
+    "shipped": "2026-10-25T00:57:56"
    }
   },
   {
@@ -14770,25 +14790,25 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-231742-22808",
+    "run_batch": "20261024-191220",
     "steps": {
-     "build": 14.7,
-     "stations": 0.9,
-     "places": 1.5,
-     "coarse": 1.5,
-     "routes": 20.9,
-     "merge": 1.6,
-     "nocar": 1.6,
-     "everyday": 1.1
+     "build": 8.7,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 0.5,
+     "routes": 27.4,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-10-22T23:18:31",
+    "built": "2026-10-24T19:31:55",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 5136.4345703125"
+      "top_school_cell_pupils 5905.4814453125"
      ]
     },
-    "gated": "2026-10-23T00:16:57",
-    "shipped": "2026-10-23T01:32:57"
+    "gated": "2026-10-24T19:54:42",
+    "shipped": "2026-10-25T00:57:56"
    }
   },
   {
@@ -14840,25 +14860,25 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 64.7,
+     "build": 7.0,
      "stations": 0.9,
      "places": 1.2,
-     "coarse": 0.8,
-     "routes": 14.0,
-     "merge": 0.9,
+     "coarse": 0.4,
+     "routes": 20.6,
+     "merge": 0.7,
      "nocar": 1.2,
-     "everyday": 0.8
+     "everyday": 0.9
     },
-    "built": "2026-10-22T18:04:48",
+    "built": "2026-10-24T19:28:43",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6075.75146484375"
+      "top_school_cell_pupils 6031.8642578125"
      ]
     },
-    "gated": "2026-10-22T18:54:50",
-    "shipped": "2026-10-22T22:23:34"
+    "gated": "2026-10-24T19:51:40",
+    "shipped": "2026-10-25T00:57:57"
    }
   },
   {
@@ -14911,25 +14931,25 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 60.9,
-     "stations": 0.8,
-     "places": 1.2,
-     "coarse": 0.9,
-     "routes": 14.9,
-     "merge": 1.1,
-     "nocar": 1.1,
-     "everyday": 0.8
+     "build": 10.1,
+     "stations": 1.3,
+     "places": 2.4,
+     "coarse": 0.6,
+     "routes": 27.2,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T18:06:10",
+    "built": "2026-10-24T19:29:28",
     "gate": {
      "warn": [
       "osm_land_share 0.8914"
      ]
     },
-    "gated": "2026-10-22T18:54:50",
-    "shipped": "2026-10-22T22:23:34"
+    "gated": "2026-10-24T19:51:40",
+    "shipped": "2026-10-25T00:57:57"
    }
   },
   {
@@ -15075,28 +15095,33 @@
    },
    "solve_region": "hunan",
    "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it",
+    "pop_vs_plan": "T-1150: the pack holds the 2020 census by township, which GHSL's older counts miss in China (the boom cities short, the shrinking ones long); the townships agree with the county census within 1%"
    },
    "run": {
-    "run_batch": "20261022-224710",
+    "run_batch": "20261024-195614",
     "steps": {
-     "build": 58.4,
+     "build": 11.4,
      "stations": 0.8,
      "places": 1.4,
-     "coarse": 1.0,
-     "routes": 23.1,
-     "merge": 1.4,
-     "nocar": 1.3,
-     "everyday": 0.9
+     "coarse": 0.5,
+     "routes": 30.9,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
     },
-    "built": "2026-10-22T23:00:10",
+    "built": "2026-10-24T20:00:24",
     "gate": {
      "warn": [
+      "pop_vs_plan 1.5243102670101878",
+      "pop_vs_fua 1.6684116317051068",
+      "pop_vs_ghsl_other 1.5326449703548541",
+      "top_school_cell_pupils 6000.0",
       "osm_land_share 0.8441"
      ]
     },
-    "gated": "2026-10-23T00:31:08",
-    "shipped": "2026-10-23T01:32:57"
+    "gated": "2026-10-24T20:15:12",
+    "shipped": "2026-10-25T00:57:57"
    }
   },
   {
@@ -15149,26 +15174,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-054511-6072",
+    "run_batch": "20261024-191221",
     "steps": {
-     "build": 85.8,
+     "build": 9.6,
      "stations": 0.9,
-     "places": 1.3,
-     "coarse": 0.7,
-     "routes": 16.9,
-     "merge": 1.3,
-     "nocar": 1.8,
-     "everyday": 1.2
+     "places": 1.5,
+     "coarse": 0.4,
+     "routes": 15.1,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 1.3
     },
-    "built": "2026-10-23T05:48:30",
+    "built": "2026-10-24T19:45:42",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6282.01318359375",
+      "pop_vs_plan 0.8329818472122449",
+      "top_school_cell_pupils 6126.7919921875",
       "osm_land_share 0.8994"
      ]
     },
-    "gated": "2026-10-23T06:34:38",
-    "shipped": "2026-10-23T09:24:29"
+    "gated": "2026-10-24T19:55:11",
+    "shipped": "2026-10-25T00:57:57"
    }
   },
   {
@@ -15643,26 +15669,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-054511",
+    "run_batch": "20261024-191221",
     "steps": {
-     "build": 145.0,
-     "stations": 1.0,
-     "places": 1.4,
-     "coarse": 4.9,
-     "routes": 21.4,
-     "merge": 3.1,
-     "nocar": 2.2,
-     "everyday": 1.5
+     "build": 12.4,
+     "stations": 0.9,
+     "places": 1.3,
+     "coarse": 0.5,
+     "routes": 19.8,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 0.9
     },
-    "built": "2026-10-23T05:48:49",
+    "built": "2026-10-24T19:25:15",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6078.62890625",
+      "pop_vs_fua 1.3498905123367573",
+      "top_school_cell_pupils 6049.4140625",
       "osm_land_share 0.8629"
      ]
     },
-    "gated": "2026-10-23T06:15:15",
-    "shipped": "2026-10-23T09:24:29"
+    "gated": "2026-10-24T19:55:10",
+    "shipped": "2026-10-25T00:57:57"
    }
   },
   {
@@ -15715,26 +15742,29 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-054511-8604",
+    "run_batch": "20261024-191221",
     "steps": {
-     "build": 15.9,
-     "stations": 0.8,
-     "places": 1.2,
-     "coarse": 1.2,
-     "routes": 20.6,
-     "merge": 1.8,
-     "nocar": 1.6,
-     "everyday": 1.1
+     "build": 8.7,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 0.5,
+     "routes": 23.5,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 0.9
     },
-    "built": "2026-10-23T06:17:29",
+    "built": "2026-10-24T19:49:33",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6009.08203125",
+      "pop_vs_plan 1.2212202942629449",
+      "pop_vs_fua 1.3045770180124032",
+      "top_school_cell_pupils 6102.3115234375",
       "osm_land_share 0.9042"
      ]
     },
-    "gated": "2026-10-23T06:31:31",
-    "shipped": "2026-10-23T09:24:29"
+    "parked": "2026-10-24T19:55:07",
+    "gated": "2026-10-24T20:17:10",
+    "shipped": "2026-10-25T00:57:57"
    }
   },
   {
@@ -15832,26 +15862,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-183519",
     "steps": {
-     "build": 44.9,
-     "stations": 0.9,
-     "places": 1.2,
-     "coarse": 103.8,
-     "routes": 13.7,
-     "merge": 0.9,
-     "nocar": 1.2,
-     "everyday": 1.2
+     "build": 161.5,
+     "stations": 1.0,
+     "places": 1.5,
+     "coarse": 0.5,
+     "routes": 39.0,
+     "merge": 2.3,
+     "nocar": 5.2,
+     "everyday": 4.9
     },
-    "built": "2026-10-22T17:58:20",
+    "built": "2026-10-24T18:41:03",
+    "parked": "2026-10-24T21:18:13",
+    "gated": "2026-10-25T01:33:07",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6000.0",
+      "pop_vs_plan 1.3447060211524187",
+      "top_school_cell_pupils 6050.07861328125",
       "osm_land_share 0.8265"
      ]
     },
-    "gated": "2026-10-22T20:58:54",
-    "shipped": "2026-10-22T22:23:34"
+    "shipped": "2026-10-25T02:20:35"
    }
   },
   {
@@ -16700,26 +16732,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 70.2,
-     "stations": 0.9,
-     "places": 1.6,
-     "coarse": 1.5,
-     "routes": 25.1,
-     "merge": 1.5,
-     "nocar": 1.3,
-     "everyday": 1.0
+     "build": 10.4,
+     "stations": 0.8,
+     "places": 1.4,
+     "coarse": 0.4,
+     "routes": 36.0,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "built": "2026-10-22T18:07:54",
+    "built": "2026-10-24T19:30:21",
     "gate": {
      "warn": [
       "top_school_cell_pupils 6000.0",
       "osm_land_share 0.8006"
      ]
     },
-    "gated": "2026-10-22T18:54:50",
-    "shipped": "2026-10-22T22:23:34"
+    "gated": "2026-10-24T19:51:41",
+    "shipped": "2026-10-25T00:57:58"
    }
   },
   {
@@ -16820,25 +16852,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710-23500",
+    "run_batch": "20261024-191220",
     "steps": {
-     "build": 60.8,
-     "stations": 0.7,
-     "places": 1.2,
-     "coarse": 1.2,
-     "routes": 19.4,
-     "merge": 1.7,
-     "nocar": 1.3,
-     "everyday": 1.1
+     "build": 9.6,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 0.5,
+     "routes": 30.6,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "built": "2026-10-22T23:03:25",
+    "built": "2026-10-24T19:32:41",
     "gate": {
      "warn": [
+      "pop_vs_plan 1.3815198463107077",
+      "top_school_cell_pupils 6000.0",
       "osm_land_share 0.8815"
      ]
     },
-    "gated": "2026-10-23T00:16:57",
-    "shipped": "2026-10-23T01:32:57"
+    "gated": "2026-10-24T19:54:42",
+    "shipped": "2026-10-25T00:57:58"
    }
   },
   {
@@ -16979,25 +17013,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-020047-3360",
+    "run_batch": "20261024-195614",
     "steps": {
-     "build": 19.5,
-     "stations": 0.8,
-     "places": 1.4,
-     "coarse": 0.9,
-     "routes": 21.2,
-     "merge": 1.3,
-     "nocar": 1.2,
-     "everyday": 0.9
+     "build": 7.9,
+     "stations": 0.7,
+     "places": 1.2,
+     "coarse": 0.4,
+     "routes": 16.7,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
     },
-    "built": "2026-10-23T03:29:31",
+    "built": "2026-10-24T20:05:07",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 5485.185546875"
+      "pop_vs_plan 1.3929390355917848",
+      "pop_vs_fua 1.509912509905022",
+      "top_school_cell_pupils 6000.0"
      ]
     },
-    "gated": "2026-10-23T04:04:19",
-    "shipped": "2026-10-23T05:24:27"
+    "gated": "2026-10-24T20:15:13",
+    "shipped": "2026-10-25T00:57:58"
    }
   },
   {
@@ -17272,25 +17308,26 @@
    },
    "solve_region": "jiangsu",
    "run": {
-    "run_batch": "20261022-093304",
+    "run_batch": "20261024-183518-21896",
     "steps": {
-     "build": 66.4,
-     "stations": 0.9,
-     "places": 1.5,
-     "coarse": 0.7,
-     "routes": 20.8,
-     "merge": 0.9,
-     "nocar": 1.3,
-     "everyday": 0.9
+     "build": 14.5,
+     "stations": 1.0,
+     "places": 1.6,
+     "coarse": 0.5,
+     "routes": 39.0,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
     },
-    "built": "2026-10-22T09:41:27",
+    "built": "2026-10-24T18:43:20",
+    "parked": "2026-10-24T21:06:18",
+    "gated": "2026-10-25T01:33:08",
     "gate": {
      "warn": [
       "osm_land_share 0.9516"
      ]
     },
-    "gated": "2026-10-22T10:29:34",
-    "shipped": "2026-10-22T10:50:43"
+    "shipped": "2026-10-25T02:20:36"
    }
   },
   {
@@ -17455,23 +17492,24 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-183518-21896",
     "steps": {
-     "build": 68.8,
-     "stations": 0.8,
-     "places": 1.4,
-     "coarse": 2.7,
-     "routes": 38.2,
-     "merge": 3.1,
-     "nocar": 1.4,
-     "everyday": 1.0
+     "build": 15.6,
+     "stations": 1.0,
+     "places": 1.8,
+     "coarse": 0.7,
+     "routes": 69.2,
+     "merge": 1.5,
+     "nocar": 1.8,
+     "everyday": 1.1
     },
-    "built": "2026-10-22T18:00:17",
+    "built": "2026-10-24T18:44:43",
+    "parked": "2026-10-24T18:58:19",
     "gate": {
      "warn": []
     },
-    "gated": "2026-10-22T20:58:54",
-    "shipped": "2026-10-22T22:23:34"
+    "gated": "2026-10-24T19:51:37",
+    "shipped": "2026-10-25T00:57:58"
    }
   },
   {
@@ -17812,26 +17850,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-033733-25268",
+    "run_batch": "20261024-195614",
     "steps": {
-     "build": 10.3,
+     "build": 7.8,
      "stations": 0.9,
      "places": 1.2,
-     "coarse": 0.9,
-     "routes": 16.7,
-     "merge": 1.3,
-     "nocar": 1.4,
-     "everyday": 1.0
+     "coarse": 0.4,
+     "routes": 14.6,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.9
     },
-    "built": "2026-10-23T03:58:57",
+    "built": "2026-10-24T20:08:23",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6324.68017578125",
+      "pop_vs_plan 1.3205894006514594",
+      "pop_vs_fua 1.4073412179771156",
+      "top_school_cell_pupils 6390.12744140625",
       "osm_land_share 0.815"
      ]
     },
-    "gated": "2026-10-23T04:14:17",
-    "shipped": "2026-10-23T05:24:27"
+    "gated": "2026-10-24T20:15:13",
+    "shipped": "2026-10-25T00:57:58"
    }
   },
   {
@@ -18161,26 +18201,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 60.1,
+     "build": 10.5,
      "stations": 0.8,
-     "places": 1.1,
-     "coarse": 0.9,
-     "routes": 13.8,
-     "merge": 1.2,
+     "places": 1.2,
+     "coarse": 0.4,
+     "routes": 16.9,
+     "merge": 0.7,
      "nocar": 1.1,
-     "everyday": 0.8
+     "everyday": 0.9
     },
-    "built": "2026-10-22T18:09:14",
+    "built": "2026-10-24T19:30:48",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6141.3486328125",
+      "top_school_cell_pupils 6031.14013671875",
       "osm_land_share 0.9163"
      ]
     },
-    "gated": "2026-10-22T18:54:50",
-    "shipped": "2026-10-22T22:23:34"
+    "gated": "2026-10-24T19:51:41",
+    "shipped": "2026-10-25T00:57:59"
    }
   },
   {
@@ -18419,25 +18459,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-204324",
     "steps": {
-     "build": 66.7,
-     "stations": 0.9,
-     "places": 1.5,
-     "coarse": 1.0,
-     "routes": 19.8,
-     "merge": 1.1,
-     "nocar": 1.2,
-     "everyday": 0.9
+     "build": 12.9,
+     "stations": 0.7,
+     "places": 1.2,
+     "coarse": 0.4,
+     "routes": 21.4,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
     },
-    "built": "2026-10-22T18:00:07",
+    "built": "2026-10-24T20:45:44",
+    "gated": "2026-10-25T01:33:07",
+    "parked": "2026-10-24T21:18:14",
     "gate": {
      "warn": [
-      "osm_land_share 0.8956"
+      "pop_vs_plan 0.7492181735552195",
+      "osm_land_share 0.8965"
      ]
     },
-    "gated": "2026-10-22T20:58:54",
-    "shipped": "2026-10-22T22:23:35"
+    "shipped": "2026-10-25T02:20:36"
    }
   },
   {
@@ -19616,26 +19658,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555",
+    "run_batch": "20261024-191221",
     "steps": {
-     "build": 66.3,
-     "stations": 1.0,
-     "places": 1.5,
-     "coarse": 0.9,
-     "routes": 16.5,
-     "merge": 1.1,
-     "nocar": 1.4,
-     "everyday": 0.8
+     "build": 10.9,
+     "stations": 0.9,
+     "places": 1.6,
+     "coarse": 0.5,
+     "routes": 28.4,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T17:50:28",
+    "built": "2026-10-24T19:21:02",
+    "gated": "2026-10-25T01:33:09",
+    "parked": "2026-10-24T21:18:14",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.457646586750716",
+      "pop_vs_plan 0.7109099093626559",
       "osm_land_share 0.951"
      ]
     },
-    "gated": "2026-10-22T18:54:49",
-    "shipped": "2026-10-22T22:23:35"
+    "shipped": "2026-10-25T02:20:36"
    }
   },
   {
@@ -19687,25 +19730,25 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-054511-26208",
+    "run_batch": "20261024-195614-22072",
     "steps": {
-     "build": 12.4,
-     "stations": 1.0,
-     "places": 1.5,
-     "coarse": 0.6,
-     "routes": 6.9,
-     "merge": 0.8,
-     "nocar": 1.3,
-     "everyday": 1.0
+     "build": 5.5,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 0.4,
+     "routes": 6.3,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.9
     },
-    "built": "2026-10-23T05:49:58",
+    "built": "2026-10-24T20:02:11",
     "gate": {
      "warn": [
       "top_school_cell_pupils 6000.0"
      ]
     },
-    "gated": "2026-10-23T06:30:30",
-    "shipped": "2026-10-23T09:24:29"
+    "gated": "2026-10-24T20:17:10",
+    "shipped": "2026-10-25T00:57:59"
    }
   },
   {
@@ -19753,28 +19796,31 @@
    },
    "solve_region": "jingjinji",
    "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it",
+    "pop_vs_plan": "T-1150: the pack holds the 2020 census by township, which GHSL's older counts miss in China (the boom cities short, the shrinking ones long); the townships agree with the county census within 1%"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-183519",
     "steps": {
-     "build": 45.1,
-     "stations": 0.9,
-     "places": 1.2,
+     "build": 8.1,
+     "stations": 1.0,
+     "places": 1.4,
      "coarse": 0.5,
-     "routes": 7.8,
+     "routes": 12.8,
      "merge": 0.7,
-     "nocar": 1.2,
-     "everyday": 0.9
+     "nocar": 1.3,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T18:01:06",
+    "built": "2026-10-24T18:42:48",
+    "parked": "2026-10-24T21:18:13",
+    "gated": "2026-10-25T01:33:07",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.489439609019771"
+      "pop_vs_plan 0.6752473297437139",
+      "pop_vs_ghsl_other 0.6712325571565286"
      ]
     },
-    "gated": "2026-10-22T20:58:54",
-    "shipped": "2026-10-22T22:23:35"
+    "shipped": "2026-10-25T02:20:36"
    }
   },
   {
@@ -19967,31 +20013,34 @@
    },
    "solve_region": "henan",
    "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it",
+    "pop_vs_plan": "T-1150: the pack holds the 2020 census by township, which GHSL's older counts miss in China (the boom cities short, the shrinking ones long); the townships agree with the county census within 1%"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 45.7,
+     "build": 8.9,
      "stations": 0.9,
-     "places": 1.1,
-     "coarse": 0.7,
-     "routes": 9.3,
-     "merge": 1.0,
-     "nocar": 1.2,
-     "everyday": 0.8
+     "places": 1.2,
+     "coarse": 0.5,
+     "routes": 12.6,
+     "merge": 0.8,
+     "nocar": 1.7,
+     "everyday": 1.9
     },
-    "built": "2026-10-22T18:01:18",
+    "built": "2026-10-24T19:44:30",
+    "gated": "2026-10-25T01:33:11",
+    "parked": "2026-10-24T21:36:31",
     "gate": {
      "warn": [
-      "pop_vs_plan 0.8483194932232697",
-      "pop_vs_fua 5.722915532791074",
+      "pop_vs_plan 0.436762288031857",
+      "pop_vs_fua 2.946476772350939",
+      "pop_vs_ghsl_other 0.4394112622630983",
       "road_snap_median_m 420.6",
-      "fleet_range 2"
+      "fleet_range 3"
      ]
     },
-    "gated": "2026-10-22T20:58:54",
-    "shipped": "2026-10-22T22:23:35"
+    "shipped": "2026-10-25T02:20:36"
    }
   },
   {
@@ -20086,26 +20135,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 41.4,
-     "stations": 0.7,
-     "places": 1.0,
-     "coarse": 0.6,
-     "routes": 9.1,
-     "merge": 0.9,
-     "nocar": 1.1,
-     "everyday": 0.8
+     "build": 10.3,
+     "stations": 1.0,
+     "places": 1.4,
+     "coarse": 0.4,
+     "routes": 14.8,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.3
     },
-    "built": "2026-10-22T18:02:01",
+    "built": "2026-10-24T19:45:02",
+    "gated": "2026-10-25T01:33:11",
+    "parked": "2026-10-24T21:36:31",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.6711362049886267",
-      "top_school_cell_pupils 6115.1298828125"
+      "pop_vs_plan 0.8138812691772873",
+      "pop_vs_fua 1.4750332581956365",
+      "top_school_cell_pupils 6061.1474609375"
      ]
     },
-    "gated": "2026-10-22T20:58:54",
-    "shipped": "2026-10-22T22:23:35"
+    "shipped": "2026-10-25T02:20:37"
    }
   },
   {
@@ -20322,26 +20373,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 40.7,
+     "build": 7.6,
      "stations": 0.8,
-     "places": 1.2,
-     "coarse": 0.4,
-     "routes": 6.4,
-     "merge": 0.6,
-     "nocar": 1.1,
-     "everyday": 0.8
+     "places": 1.6,
+     "coarse": 0.6,
+     "routes": 15.8,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T18:02:11",
+    "built": "2026-10-24T19:45:19",
+    "gated": "2026-10-25T01:33:11",
+    "parked": "2026-10-24T21:36:32",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.7709596258285416",
-      "top_school_cell_pupils 6553.1416015625"
+      "pop_vs_plan 0.7335133377384916",
+      "pop_vs_fua 1.4419143356146908",
+      "top_school_cell_pupils 6139.41259765625"
      ]
     },
-    "gated": "2026-10-22T20:58:55",
-    "shipped": "2026-10-22T22:23:35"
+    "shipped": "2026-10-25T02:20:37"
    }
   },
   {
@@ -21324,30 +21377,33 @@
    },
    "solve_region": "anhui",
    "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it",
+    "pop_vs_plan": "T-1150: the pack holds the 2020 census by township, which GHSL's older counts miss in China (the boom cities short, the shrinking ones long); the townships agree with the county census within 1%"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 44.2,
+     "build": 6.7,
      "stations": 0.8,
-     "places": 1.1,
-     "coarse": 0.5,
-     "routes": 5.5,
-     "merge": 0.8,
-     "nocar": 1.1,
+     "places": 1.3,
+     "coarse": 0.4,
+     "routes": 8.2,
+     "merge": 0.7,
+     "nocar": 1.3,
      "everyday": 0.9
     },
-    "built": "2026-10-22T18:02:57",
+    "built": "2026-10-24T19:36:04",
+    "gated": "2026-10-25T01:33:09",
+    "parked": "2026-10-24T21:46:42",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.6832631768498545",
-      "top_school_cell_pupils 6049.935546875",
+      "pop_vs_plan 0.5181971664048887",
+      "pop_vs_ghsl_other 0.518211610024262",
+      "top_school_cell_pupils 6000.0",
       "osm_land_share 0.931"
      ]
     },
-    "gated": "2026-10-22T20:58:55",
-    "shipped": "2026-10-22T22:23:36"
+    "shipped": "2026-10-25T02:20:37"
    }
   },
   {
@@ -21447,26 +21503,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-054511-14684",
+    "run_batch": "20261024-195614-22072",
     "steps": {
-     "build": 69.0,
-     "stations": 0.9,
-     "places": 1.2,
-     "coarse": 0.6,
-     "routes": 16.3,
-     "merge": 1.3,
-     "nocar": 1.6,
-     "everyday": 1.4
+     "build": 6.1,
+     "stations": 0.8,
+     "places": 1.1,
+     "coarse": 0.4,
+     "routes": 8.7,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
     },
-    "built": "2026-10-23T05:48:28",
+    "built": "2026-10-24T20:05:59",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 5483.4208984375",
+      "top_school_cell_pupils 5095.7158203125",
       "osm_land_share 0.9187"
      ]
     },
-    "gated": "2026-10-23T06:53:52",
-    "shipped": "2026-10-23T09:24:30"
+    "gated": "2026-10-24T20:17:10",
+    "shipped": "2026-10-25T00:57:59"
    }
   },
   {
@@ -21689,26 +21745,27 @@
    },
    "solve_region": "jiangsu",
    "run": {
-    "run_batch": "20261022-093304",
+    "run_batch": "20261024-183518-21896",
     "steps": {
-     "build": 42.6,
-     "stations": 0.8,
-     "places": 1.2,
-     "coarse": 0.7,
-     "routes": 10.0,
-     "merge": 1.0,
+     "build": 10.1,
+     "stations": 1.1,
+     "places": 1.6,
+     "coarse": 0.5,
+     "routes": 15.0,
+     "merge": 0.8,
      "nocar": 1.4,
-     "everyday": 1.0
+     "everyday": 1.1
     },
-    "built": "2026-10-22T09:41:03",
+    "built": "2026-10-24T18:43:52",
+    "parked": "2026-10-24T21:06:19",
+    "gated": "2026-10-25T01:33:08",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.4381738357225127",
-      "top_school_cell_pupils 6022.57470703125"
+      "pop_vs_plan 0.7130790600606906",
+      "top_school_cell_pupils 6010.0341796875"
      ]
     },
-    "gated": "2026-10-22T10:29:34",
-    "shipped": "2026-10-22T10:50:43"
+    "shipped": "2026-10-25T02:20:37"
    }
   },
   {
@@ -21888,26 +21945,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710-23500",
+    "run_batch": "20261024-191220",
     "steps": {
-     "build": 56.0,
+     "build": 9.1,
      "stations": 0.9,
      "places": 1.2,
-     "coarse": 0.8,
-     "routes": 10.3,
-     "merge": 1.1,
-     "nocar": 1.3,
+     "coarse": 0.4,
+     "routes": 13.7,
+     "merge": 0.8,
+     "nocar": 1.1,
      "everyday": 0.9
     },
-    "built": "2026-10-22T23:04:38",
+    "built": "2026-10-24T19:32:31",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.8605389788963254",
-      "top_school_cell_pupils 6154.4287109375"
+      "pop_vs_plan 0.7232186280139691",
+      "pop_vs_fua 1.5222015111476774",
+      "top_school_cell_pupils 6188.95703125"
      ]
     },
-    "gated": "2026-10-23T00:16:57",
-    "shipped": "2026-10-23T01:32:57"
+    "gated": "2026-10-24T19:54:42",
+    "shipped": "2026-10-25T00:57:59"
    }
   },
   {
@@ -22156,28 +22214,33 @@
    },
    "solve_region": "shandong",
    "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it",
+    "pop_vs_plan": "T-1150: the pack holds the 2020 census by township, which GHSL's older counts miss in China (the boom cities short, the shrinking ones long); the townships agree with the county census within 1%"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-183518-21896",
     "steps": {
-     "build": 47.7,
-     "stations": 0.8,
-     "places": 1.1,
-     "coarse": 0.8,
-     "routes": 16.8,
-     "merge": 1.3,
-     "nocar": 1.6,
-     "everyday": 0.9
+     "build": 10.8,
+     "stations": 0.9,
+     "places": 1.4,
+     "coarse": 0.5,
+     "routes": 23.6,
+     "merge": 1.1,
+     "nocar": 1.5,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T18:03:22",
+    "built": "2026-10-24T18:44:33",
+    "parked": "2026-10-24T18:58:19",
     "gate": {
      "warn": [
+      "pop_vs_plan 1.5539510840234378",
+      "pop_vs_fua 1.5186657717688978",
+      "pop_vs_ghsl_other 1.553182362410885",
       "osm_land_share 0.976"
      ]
     },
-    "gated": "2026-10-22T20:58:55",
-    "shipped": "2026-10-22T22:23:36"
+    "gated": "2026-10-24T19:51:38",
+    "shipped": "2026-10-25T00:57:59"
    }
   },
   {
@@ -22460,23 +22523,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-054511-14684",
+    "run_batch": "20261024-195614-22072",
     "steps": {
-     "build": 11.6,
-     "stations": 1.8,
-     "places": 2.8,
-     "coarse": 1.3,
-     "routes": 12.8,
-     "merge": 1.2,
-     "nocar": 1.3,
+     "build": 5.7,
+     "stations": 0.7,
+     "places": 1.1,
+     "coarse": 0.4,
+     "routes": 11.7,
+     "merge": 0.7,
+     "nocar": 1.2,
      "everyday": 0.9
     },
-    "built": "2026-10-23T05:49:02",
+    "built": "2026-10-24T20:09:59",
     "gate": {
-     "warn": []
+     "warn": [
+      "pop_vs_fua 1.3159058893554407",
+      "top_school_cell_pupils 5392.564453125"
+     ]
     },
-    "gated": "2026-10-23T06:53:53",
-    "shipped": "2026-10-23T09:24:30"
+    "gated": "2026-10-24T20:17:11",
+    "shipped": "2026-10-25T00:58:00"
    }
   },
   {
@@ -22526,30 +22592,33 @@
    },
    "solve_region": "shandong",
    "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it",
+    "pop_vs_plan": "T-1150: the pack holds the 2020 census by township, which GHSL's older counts miss in China (the boom cities short, the shrinking ones long); the townships agree with the county census within 1%"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-183518-21896",
     "steps": {
-     "build": 45.4,
-     "stations": 0.9,
-     "places": 1.3,
-     "coarse": 0.4,
-     "routes": 6.3,
-     "merge": 0.7,
+     "build": 8.6,
+     "stations": 1.0,
+     "places": 1.9,
+     "coarse": 0.6,
+     "routes": 11.2,
+     "merge": 0.8,
      "nocar": 1.4,
-     "everyday": 0.9
+     "everyday": 1.1
     },
-    "built": "2026-10-22T18:03:54",
+    "built": "2026-10-24T18:45:01",
+    "parked": "2026-10-24T18:58:19",
     "gate": {
      "warn": [
-      "pop_vs_fua 2.3165139418659244",
-      "osm_land_share 0.889",
-      "fleet_range 1"
+      "pop_vs_plan 0.6948817246908158",
+      "pop_vs_fua 1.7421894731623102",
+      "pop_vs_ghsl_other 0.697940386170753",
+      "osm_land_share 0.889"
      ]
     },
-    "gated": "2026-10-22T20:58:55",
-    "shipped": "2026-10-22T22:23:36"
+    "gated": "2026-10-24T19:51:38",
+    "shipped": "2026-10-25T00:58:00"
    }
   },
   {
@@ -22644,26 +22713,28 @@
    },
    "solve_region": "jiangsu",
    "run": {
-    "run_batch": "20261022-093304",
+    "run_batch": "20261024-183518-21896",
     "steps": {
-     "build": 48.1,
-     "stations": 0.8,
-     "places": 1.1,
-     "coarse": 1.0,
-     "routes": 11.9,
+     "build": 13.1,
+     "stations": 1.0,
+     "places": 1.5,
+     "coarse": 0.5,
+     "routes": 22.5,
      "merge": 1.2,
-     "nocar": 1.2,
-     "everyday": 0.8
+     "nocar": 1.6,
+     "everyday": 1.1
     },
-    "built": "2026-10-22T09:42:10",
+    "built": "2026-10-24T18:45:26",
+    "parked": "2026-10-24T21:06:19",
+    "gated": "2026-10-25T01:33:08",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6000.0",
+      "pop_vs_plan 1.3915345420580985",
+      "top_school_cell_pupils 6051.3564453125",
       "osm_land_share 0.8392"
      ]
     },
-    "gated": "2026-10-22T10:29:34",
-    "shipped": "2026-10-22T10:50:43"
+    "shipped": "2026-10-25T02:20:37"
    }
   },
   {
@@ -22712,25 +22783,25 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-054511-14684",
+    "run_batch": "20261024-195614-22072",
     "steps": {
-     "build": 11.3,
-     "stations": 0.9,
+     "build": 20.3,
+     "stations": 0.8,
      "places": 1.1,
-     "coarse": 0.6,
-     "routes": 8.6,
-     "merge": 1.0,
-     "nocar": 1.4,
-     "everyday": 1.1
+     "coarse": 0.4,
+     "routes": 7.8,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.9
     },
-    "built": "2026-10-23T05:49:29",
+    "built": "2026-10-24T20:06:13",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6039.7626953125"
+      "top_school_cell_pupils 6050.673828125"
      ]
     },
-    "gated": "2026-10-23T06:53:53",
-    "shipped": "2026-10-23T09:24:30"
+    "gated": "2026-10-24T20:17:11",
+    "shipped": "2026-10-25T00:58:00"
    }
   },
   {
@@ -22818,31 +22889,32 @@
     ]
    },
    "solve_region": "jiangsu",
-   "run": {
-    "run_batch": "20261022-093304",
-    "steps": {
-     "build": 54.2,
-     "stations": 0.8,
-     "places": 1.0,
-     "coarse": 0.7,
-     "routes": 11.3,
-     "merge": 0.9,
-     "nocar": 1.3,
-     "everyday": 1.0
-    },
-    "built": "2026-10-22T09:42:39",
-    "gate": {
-     "warn": [
-      "pop_vs_fua 1.7409199470130676",
-      "top_school_cell_pupils 6033.63525390625"
-     ]
-    },
-    "parked": "2026-10-22T10:29:29",
-    "gated": "2026-10-22T10:38:35",
-    "shipped": "2026-10-22T10:50:43"
-   },
    "gate_relax": {
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds 1.7-2.1 times the FUA's people"
+   },
+   "run": {
+    "run_batch": "20261024-183518-21896",
+    "steps": {
+     "build": 13.4,
+     "stations": 1.2,
+     "places": 1.7,
+     "coarse": 0.6,
+     "routes": 19.8,
+     "merge": 0.8,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-10-24T18:45:42",
+    "parked": "2026-10-24T21:06:19",
+    "gated": "2026-10-25T01:33:08",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.7778312718790914",
+      "pop_vs_fua 1.4758206225023147",
+      "top_school_cell_pupils 6057.69140625"
+     ]
+    },
+    "shipped": "2026-10-25T02:20:38"
    }
   },
   {
@@ -23551,29 +23623,27 @@
     "drive_factor_median": "T-897: the Wuling, Xuefeng and Three Gorges mountains of western Hunan and Hubei: roads wind round ridges and gorges, so a drive runs two to three times the straight line, as in the Alpine rows"
    },
    "run": {
-    "run_batch": "20261022-224710",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 45.2,
-     "stations": 0.8,
-     "places": 1.0,
-     "coarse": 1.1,
-     "routes": 10.8,
-     "merge": 1.3,
-     "nocar": 1.2,
-     "everyday": 0.9
+     "build": 11.0,
+     "stations": 1.4,
+     "places": 1.9,
+     "coarse": 0.6,
+     "routes": 15.4,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T22:59:44",
+    "built": "2026-10-24T19:20:02",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.8486544452285585",
-      "top_school_cell_pupils 5212.0732421875",
-      "drive_factor_median 2.0518667734879767",
+      "pop_vs_plan 0.7289846129062613",
+      "pop_vs_fua 1.5094931769498425",
       "osm_land_share 0.928"
      ]
     },
-    "parked": "2026-10-23T00:30:45",
-    "gated": "2026-10-23T00:55:02",
-    "shipped": "2026-10-23T01:32:58"
+    "gated": "2026-10-24T19:51:39",
+    "shipped": "2026-10-25T00:58:00"
    }
   },
   {
@@ -23713,26 +23783,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-033733",
+    "run_batch": "20261024-195614",
     "steps": {
-     "build": 13.5,
-     "stations": 0.9,
-     "places": 1.0,
-     "coarse": 0.8,
-     "routes": 11.8,
-     "merge": 1.4,
-     "nocar": 1.6,
+     "build": 6.3,
+     "stations": 0.8,
+     "places": 1.2,
+     "coarse": 0.4,
+     "routes": 14.4,
+     "merge": 0.8,
+     "nocar": 1.3,
      "everyday": 0.9
     },
-    "built": "2026-10-23T03:53:37",
+    "built": "2026-10-24T20:12:05",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 5899.349609375",
+      "pop_vs_plan 1.3915024795386695",
+      "pop_vs_fua 1.5135071925553136",
+      "top_school_cell_pupils 6047.19921875",
       "osm_land_share 0.8128"
      ]
     },
-    "gated": "2026-10-23T03:59:14",
-    "shipped": "2026-10-23T05:24:27"
+    "gated": "2026-10-24T20:15:14",
+    "shipped": "2026-10-25T00:58:00"
    }
   },
   {
@@ -23783,26 +23855,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 64.5,
+     "build": 10.3,
      "stations": 0.8,
-     "places": 1.1,
-     "coarse": 0.7,
-     "routes": 11.1,
-     "merge": 1.0,
+     "places": 1.3,
+     "coarse": 0.4,
+     "routes": 15.1,
+     "merge": 0.7,
      "nocar": 1.2,
-     "everyday": 0.8
+     "everyday": 0.9
     },
-    "built": "2026-10-22T18:04:44",
+    "built": "2026-10-24T19:36:35",
+    "gated": "2026-10-25T01:33:10",
+    "parked": "2026-10-24T21:46:42",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.8880918473356247",
-      "top_school_cell_pupils 6007.42626953125"
+      "pop_vs_fua 1.943564733520821",
+      "top_school_cell_pupils 6029.34814453125"
      ]
     },
-    "gated": "2026-10-22T20:58:55",
-    "shipped": "2026-10-22T22:23:36"
+    "shipped": "2026-10-25T02:20:38"
    }
   },
   {
@@ -23896,29 +23969,32 @@
    },
    "solve_region": "henan",
    "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it",
+    "pop_vs_plan": "T-1150: the pack holds the 2020 census by township, which GHSL's older counts miss in China (the boom cities short, the shrinking ones long); the townships agree with the county census within 1%"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 41.9,
-     "stations": 0.8,
-     "places": 1.2,
+     "build": 7.7,
+     "stations": 1.0,
+     "places": 1.4,
      "coarse": 0.4,
-     "routes": 5.7,
-     "merge": 0.6,
-     "nocar": 1.1,
-     "everyday": 0.9
+     "routes": 12.8,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.1
     },
-    "built": "2026-10-22T18:04:48",
+    "built": "2026-10-24T19:45:29",
+    "gated": "2026-10-25T01:33:11",
+    "parked": "2026-10-24T21:36:32",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.535104626031506",
+      "pop_vs_plan 0.6546562788855744",
+      "pop_vs_ghsl_other 0.651743177581278",
       "osm_land_share 0.897"
      ]
     },
-    "gated": "2026-10-22T20:58:55",
-    "shipped": "2026-10-22T22:23:36"
+    "shipped": "2026-10-25T02:20:38"
    }
   },
   {
@@ -24393,25 +24469,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 46.6,
-     "stations": 0.7,
-     "places": 1.2,
-     "coarse": 0.5,
-     "routes": 6.7,
+     "build": 8.8,
+     "stations": 1.0,
+     "places": 1.4,
+     "coarse": 0.4,
+     "routes": 10.9,
      "merge": 0.8,
-     "nocar": 1.1,
-     "everyday": 0.8
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "built": "2026-10-22T18:05:43",
+    "built": "2026-10-24T19:45:45",
+    "gated": "2026-10-25T01:33:12",
+    "parked": "2026-10-24T21:36:32",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 5320.328125"
+      "pop_vs_plan 1.2846459391956695",
+      "top_school_cell_pupils 5879.234375"
      ]
     },
-    "gated": "2026-10-22T20:58:55",
-    "shipped": "2026-10-22T22:23:36"
+    "shipped": "2026-10-25T02:20:38"
    }
   },
   {
@@ -24506,26 +24584,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-020047-3360",
+    "run_batch": "20261024-191220",
     "steps": {
-     "build": 17.8,
-     "stations": 1.1,
-     "places": 1.7,
-     "coarse": 2.0,
-     "routes": 23.5,
-     "merge": 2.1,
-     "nocar": 2.1,
-     "everyday": 2.0
+     "build": 8.4,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 0.5,
+     "routes": 18.2,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 0.9
     },
-    "built": "2026-10-23T02:05:47",
+    "built": "2026-10-24T19:39:19",
     "gate": {
      "warn": [
+      "pop_vs_plan 1.2942533368006857",
+      "pop_vs_fua 1.4579731146321844",
+      "top_school_cell_pupils 5919.7021484375",
       "osm_land_share 0.9211"
      ]
     },
-    "parked": "2026-10-23T03:27:42",
-    "gated": "2026-10-23T04:04:14",
-    "shipped": "2026-10-23T05:24:28"
+    "gated": "2026-10-24T19:54:42",
+    "shipped": "2026-10-25T00:58:01"
    }
   },
   {
@@ -24762,32 +24842,33 @@
     ]
    },
    "solve_region": "jiangsu",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds 1.7-2.1 times the FUA's people"
+   },
    "run": {
-    "run_batch": "20261022-093304",
+    "run_batch": "20261024-183518-21896",
     "steps": {
-     "build": 55.3,
-     "stations": 0.8,
-     "places": 1.6,
-     "coarse": 1.2,
-     "routes": 20.0,
-     "merge": 1.6,
-     "nocar": 1.4,
-     "everyday": 1.0
+     "build": 14.4,
+     "stations": 1.0,
+     "places": 1.5,
+     "coarse": 0.5,
+     "routes": 33.8,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.1
     },
-    "built": "2026-10-22T09:43:33",
+    "built": "2026-10-24T18:46:22",
+    "parked": "2026-10-24T21:06:19",
+    "gated": "2026-10-25T01:33:08",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.8968437211904503",
-      "top_school_cell_pupils 6075.3388671875",
+      "pop_vs_plan 0.8442496562477526",
+      "pop_vs_fua 1.7445497452377594",
+      "top_school_cell_pupils 6000.0",
       "osm_land_share 0.9346"
      ]
     },
-    "parked": "2026-10-22T10:29:29",
-    "gated": "2026-10-22T10:38:35",
-    "shipped": "2026-10-22T10:50:44"
-   },
-   "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds 1.7-2.1 times the FUA's people"
+    "shipped": "2026-10-25T02:20:38"
    }
   },
   {
@@ -24839,27 +24920,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-054511-8604",
+    "run_batch": "20261024-191221",
     "steps": {
-     "build": 10.3,
-     "stations": 0.8,
+     "build": 7.3,
+     "stations": 0.9,
      "places": 1.3,
-     "coarse": 1.2,
-     "routes": 15.0,
-     "merge": 1.6,
-     "nocar": 1.4,
-     "everyday": 0.9
+     "coarse": 0.5,
+     "routes": 17.5,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.2
     },
-    "built": "2026-10-23T06:17:18",
+    "built": "2026-10-24T19:49:26",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6023.67138671875",
+      "top_school_cell_pupils 6080.18115234375",
       "road_snap_median_m 322.3",
       "fleet_range 1"
      ]
     },
-    "gated": "2026-10-23T06:31:31",
-    "shipped": "2026-10-23T09:24:30"
+    "parked": "2026-10-24T19:55:07",
+    "gated": "2026-10-24T20:17:10",
+    "shipped": "2026-10-25T00:58:01"
    }
   },
   {
@@ -25378,27 +25460,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 46.7,
-     "stations": 0.8,
-     "places": 1.0,
-     "coarse": 0.5,
-     "routes": 9.2,
-     "merge": 0.8,
-     "nocar": 1.1,
-     "everyday": 0.9
+     "build": 7.7,
+     "stations": 0.7,
+     "places": 1.1,
+     "coarse": 0.4,
+     "routes": 11.4,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
     },
-    "built": "2026-10-22T18:10:15",
+    "built": "2026-10-24T19:30:45",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.8897650928342635",
-      "top_school_cell_pupils 5939.11669921875",
+      "pop_vs_plan 0.8100090816061019",
+      "pop_vs_fua 1.7323436981692815",
+      "top_school_cell_pupils 5460.111328125",
       "osm_land_share 0.8663"
      ]
     },
-    "gated": "2026-10-22T18:54:50",
-    "shipped": "2026-10-22T22:23:37"
+    "gated": "2026-10-24T19:51:41",
+    "shipped": "2026-10-25T00:58:01"
    }
   },
   {
@@ -25533,30 +25616,34 @@
    },
    "solve_region": "jiangxi",
    "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it",
+    "pop_vs_plan": "T-1150: the pack holds the 2020 census by township, which GHSL's older counts miss in China (the boom cities short, the shrinking ones long); the townships agree with the county census within 1%"
    },
    "run": {
-    "run_batch": "20261022-224710",
+    "run_batch": "20261024-191220",
     "steps": {
-     "build": 47.0,
-     "stations": 0.9,
-     "places": 1.1,
-     "coarse": 1.0,
-     "routes": 10.0,
-     "merge": 1.2,
-     "nocar": 1.2,
-     "everyday": 0.9
+     "build": 8.7,
+     "stations": 1.0,
+     "places": 1.3,
+     "coarse": 0.5,
+     "routes": 14.0,
+     "merge": 0.8,
+     "nocar": 1.7,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T23:00:48",
+    "built": "2026-10-24T19:48:44",
     "gate": {
      "warn": [
-      "pop_vs_fua 2.9027833289291647",
+      "pop_vs_plan 0.6304838338962003",
+      "pop_vs_fua 2.1014312179329315",
+      "pop_vs_ghsl_other 0.6323172752499217",
       "road_snap_median_m 330.4",
       "fleet_range 3"
      ]
     },
-    "gated": "2026-10-23T00:31:08",
-    "shipped": "2026-10-23T01:32:58"
+    "parked": "2026-10-24T19:53:21",
+    "gated": "2026-10-24T20:15:12",
+    "shipped": "2026-10-25T00:58:01"
    }
   },
   {
@@ -25726,26 +25813,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-033733-25268",
+    "run_batch": "20261024-191221",
     "steps": {
-     "build": 8.9,
-     "stations": 1.6,
-     "places": 2.3,
-     "coarse": 0.6,
-     "routes": 7.7,
-     "merge": 1.1,
-     "nocar": 1.9,
-     "everyday": 1.3
+     "build": 4.9,
+     "stations": 0.8,
+     "places": 1.3,
+     "coarse": 0.4,
+     "routes": 6.7,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
     },
-    "built": "2026-10-23T03:46:45",
+    "built": "2026-10-24T19:40:20",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.14583311342974892",
+      "top_zone_jobs_share 0.12442975617265642",
       "osm_land_share 0.8197"
      ]
     },
-    "gated": "2026-10-23T04:14:14",
-    "shipped": "2026-10-23T05:24:28"
+    "gated": "2026-10-24T19:55:11",
+    "shipped": "2026-10-25T00:58:01"
    }
   },
   {
@@ -26442,25 +26529,25 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-054511",
+    "run_batch": "20261024-191221",
     "steps": {
-     "build": 8.3,
-     "stations": 1.1,
-     "places": 1.4,
-     "coarse": 0.5,
-     "routes": 6.6,
-     "merge": 0.8,
-     "nocar": 1.2,
-     "everyday": 1.3
+     "build": 7.7,
+     "stations": 0.9,
+     "places": 1.1,
+     "coarse": 0.4,
+     "routes": 6.7,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
     },
-    "built": "2026-10-23T05:49:10",
+    "built": "2026-10-24T19:25:35",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 5085.0908203125"
+      "top_zone_jobs_share 0.1076923893654298"
      ]
     },
-    "gated": "2026-10-23T06:15:15",
-    "shipped": "2026-10-23T09:24:30"
+    "gated": "2026-10-24T19:55:10",
+    "shipped": "2026-10-25T00:58:02"
    }
   },
   {
@@ -26954,25 +27041,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710-23500",
+    "run_batch": "20261024-183518",
     "steps": {
-     "build": 52.3,
+     "build": 7.9,
      "stations": 0.9,
-     "places": 1.4,
-     "coarse": 0.6,
-     "routes": 9.5,
-     "merge": 0.8,
-     "nocar": 1.0,
-     "everyday": 0.8
+     "places": 1.5,
+     "coarse": 0.5,
+     "routes": 18.9,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.5
     },
-    "built": "2026-10-22T23:04:50",
+    "built": "2026-10-24T18:42:18",
+    "parked": "2026-10-24T18:58:15",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10794548181692133"
+      "pop_vs_plan 1.261791000510927",
+      "top_zone_jobs_share 0.10775752493245133"
      ]
     },
-    "gated": "2026-10-23T00:16:58",
-    "shipped": "2026-10-23T01:32:58"
+    "gated": "2026-10-24T19:54:39",
+    "shipped": "2026-10-25T00:58:02"
    }
   },
   {
@@ -28037,26 +28126,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 51.2,
-     "stations": 0.9,
-     "places": 1.2,
-     "coarse": 0.5,
-     "routes": 8.0,
-     "merge": 0.8,
-     "nocar": 1.2,
-     "everyday": 0.9
+     "build": 6.2,
+     "stations": 0.8,
+     "places": 1.1,
+     "coarse": 0.4,
+     "routes": 10.7,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.8
     },
-    "built": "2026-10-22T18:11:20",
+    "built": "2026-10-24T19:31:07",
     "gate": {
      "warn": [
       "university_rate 0.0",
       "fleet_range 1"
      ]
     },
-    "gated": "2026-10-22T18:54:51",
-    "shipped": "2026-10-22T22:23:37"
+    "gated": "2026-10-24T19:51:41",
+    "shipped": "2026-10-25T00:58:02"
    }
   },
   {
@@ -28623,26 +28712,29 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 43.8,
+     "build": 6.5,
      "stations": 0.8,
-     "places": 1.1,
-     "coarse": 0.5,
-     "routes": 4.4,
+     "places": 1.3,
+     "coarse": 0.4,
+     "routes": 6.4,
      "merge": 0.7,
-     "nocar": 1.1,
-     "everyday": 0.9
+     "nocar": 1.2,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T18:05:41",
+    "built": "2026-10-24T19:36:50",
+    "gated": "2026-10-25T01:33:10",
+    "parked": "2026-10-24T21:46:42",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10924380258912529",
-      "top_school_cell_pupils 6332.82666015625"
+      "pop_vs_plan 0.8339017607908995",
+      "pop_vs_fua 0.7808104057917528",
+      "top_zone_jobs_share 0.10638928527526674",
+      "top_school_cell_pupils 6037.4677734375"
      ]
     },
-    "gated": "2026-10-22T20:58:56",
-    "shipped": "2026-10-22T22:23:37"
+    "shipped": "2026-10-25T02:20:38"
    }
   },
   {
@@ -28736,26 +28828,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-054511-26208",
+    "run_batch": "20261024-195614-22072",
     "steps": {
-     "build": 6.0,
+     "build": 3.8,
      "stations": 0.9,
-     "places": 1.3,
+     "places": 1.2,
      "coarse": 0.5,
-     "routes": 3.2,
-     "merge": 0.7,
+     "routes": 3.8,
+     "merge": 0.6,
      "nocar": 1.3,
-     "everyday": 1.1
+     "everyday": 1.0
     },
-    "built": "2026-10-23T05:49:48",
+    "built": "2026-10-24T20:14:20",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6029.556640625",
+      "top_school_cell_pupils 6083.6103515625",
       "fleet_range 1"
      ]
     },
-    "gated": "2026-10-23T06:30:30",
-    "shipped": "2026-10-23T09:24:30"
+    "gated": "2026-10-24T20:17:11",
+    "shipped": "2026-10-25T00:58:02"
    }
   },
   {
@@ -28807,28 +28899,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 40.6,
+     "build": 6.4,
      "stations": 0.9,
-     "places": 1.2,
-     "coarse": 0.4,
-     "routes": 5.3,
+     "places": 1.4,
+     "coarse": 0.6,
+     "routes": 7.6,
      "merge": 0.7,
-     "nocar": 1.1,
-     "everyday": 0.8
+     "nocar": 1.4,
+     "everyday": 1.6
     },
-    "built": "2026-10-22T18:06:33",
+    "built": "2026-10-24T19:45:51",
+    "gated": "2026-10-25T01:33:12",
+    "parked": "2026-10-24T21:36:33",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.365391995605044",
+      "pop_vs_plan 0.7171674019365121",
       "osm_land_share 0.8029",
       "fleet_range 1"
      ]
     },
-    "parked": "2026-10-22T20:58:28",
-    "gated": "2026-10-22T21:17:57",
-    "shipped": "2026-10-22T22:23:37"
+    "shipped": "2026-10-25T02:20:39"
    }
   },
   {
@@ -29195,27 +29287,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261023-033733-25268",
+    "run_batch": "20261024-195614",
     "steps": {
-     "build": 6.7,
-     "stations": 0.9,
+     "build": 6.2,
+     "stations": 0.8,
      "places": 1.2,
-     "coarse": 0.6,
-     "routes": 7.5,
-     "merge": 1.0,
-     "nocar": 1.5,
-     "everyday": 1.1
+     "coarse": 0.4,
+     "routes": 7.7,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.9
     },
-    "built": "2026-10-23T03:58:44",
+    "built": "2026-10-24T20:08:15",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.3265425128165842",
-      "top_zone_jobs_share 0.11869489490511544",
+      "top_zone_jobs_share 0.12193061669730475",
       "top_school_cell_pupils 6000.0"
      ]
     },
-    "gated": "2026-10-23T04:14:17",
-    "shipped": "2026-10-23T05:24:28"
+    "gated": "2026-10-24T20:15:13",
+    "shipped": "2026-10-25T00:58:02"
    }
   },
   {
@@ -29566,29 +29657,31 @@
    },
    "solve_region": "shanxi",
    "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it",
+    "pop_vs_plan": "T-1150: the pack holds the 2020 census by township, which GHSL's older counts miss in China (the boom cities short, the shrinking ones long); the townships agree with the county census within 1%"
    },
    "run": {
-    "run_batch": "20261023-033733-25268",
+    "run_batch": "20261024-191221",
     "steps": {
-     "build": 8.8,
-     "stations": 1.6,
-     "places": 2.1,
-     "coarse": 0.7,
-     "routes": 7.5,
-     "merge": 1.2,
-     "nocar": 2.1,
-     "everyday": 1.5
+     "build": 4.9,
+     "stations": 0.9,
+     "places": 1.2,
+     "coarse": 0.5,
+     "routes": 5.8,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.8
     },
-    "built": "2026-10-23T03:46:46",
+    "built": "2026-10-24T19:40:37",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.5451751531864077",
-      "top_school_cell_pupils 6196.8046875"
+      "pop_vs_plan 0.6827649981892863",
+      "pop_vs_ghsl_other 0.6807815330638599",
+      "top_school_cell_pupils 6164.99462890625"
      ]
     },
-    "gated": "2026-10-23T04:14:14",
-    "shipped": "2026-10-23T05:24:28"
+    "gated": "2026-10-24T19:55:11",
+    "shipped": "2026-10-25T00:58:02"
    }
   },
   {
@@ -29776,27 +29869,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710",
+    "run_batch": "20261024-191220",
     "steps": {
-     "build": 48.4,
-     "stations": 0.8,
-     "places": 1.2,
-     "coarse": 0.7,
-     "routes": 11.1,
-     "merge": 1.0,
-     "nocar": 1.1,
-     "everyday": 0.9
+     "build": 8.8,
+     "stations": 1.1,
+     "places": 1.7,
+     "coarse": 0.4,
+     "routes": 16.0,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T23:01:15",
+    "built": "2026-10-24T19:49:15",
     "gate": {
      "warn": [
-      "pop_vs_fua 2.129208332182287",
-      "osm_land_share 0.9198",
-      "fleet_range 1"
+      "pop_vs_plan 0.824639203059663",
+      "pop_vs_fua 2.004773021492643",
+      "osm_land_share 0.9198"
      ]
     },
-    "gated": "2026-10-23T00:31:08",
-    "shipped": "2026-10-23T01:32:58"
+    "parked": "2026-10-24T19:53:21",
+    "gated": "2026-10-24T20:15:12",
+    "shipped": "2026-10-25T00:58:03"
    }
   },
   {
@@ -30883,33 +30977,33 @@
     ]
    },
    "solve_region": "jiangsu",
+   "gate_relax": {
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds 1.7-2.1 times the FUA's people"
+   },
    "run": {
-    "run_batch": "20261022-093304",
+    "run_batch": "20261024-183518-21896",
     "steps": {
-     "build": 60.6,
-     "stations": 0.9,
-     "places": 1.3,
-     "coarse": 0.7,
-     "routes": 20.0,
+     "build": 13.3,
+     "stations": 1.0,
+     "places": 1.5,
+     "coarse": 0.5,
+     "routes": 39.0,
      "merge": 1.0,
-     "nocar": 1.3,
-     "everyday": 0.9
+     "nocar": 1.6,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T09:44:06",
+    "built": "2026-10-24T18:46:41",
+    "parked": "2026-10-24T21:06:19",
+    "gated": "2026-10-25T01:33:09",
     "gate": {
      "warn": [
-      "pop_vs_fua 2.053368126654397",
-      "top_school_cell_pupils 6000.0",
+      "pop_vs_fua 2.125786255531362",
+      "top_school_cell_pupils 6003.04248046875",
       "osm_land_share 0.8549",
       "fleet_range 1"
      ]
     },
-    "parked": "2026-10-22T10:29:29",
-    "gated": "2026-10-22T10:38:36",
-    "shipped": "2026-10-22T10:50:44"
-   },
-   "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds 1.7-2.1 times the FUA's people"
+    "shipped": "2026-10-25T02:20:39"
    }
   },
   {
@@ -31149,26 +31243,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 44.5,
+     "build": 8.5,
      "stations": 0.9,
-     "places": 1.1,
+     "places": 1.3,
      "coarse": 0.4,
-     "routes": 4.5,
+     "routes": 5.6,
      "merge": 0.7,
      "nocar": 1.2,
-     "everyday": 0.9
+     "everyday": 1.0
     },
-    "built": "2026-10-22T23:01:42",
+    "built": "2026-10-24T19:20:22",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.5207486185104961",
+      "pop_vs_plan 0.8333844669344288",
+      "pop_vs_fua 1.4229661245326946",
       "osm_land_share 0.8075"
      ]
     },
-    "gated": "2026-10-23T00:31:08",
-    "shipped": "2026-10-23T01:32:58"
+    "gated": "2026-10-24T19:51:40",
+    "shipped": "2026-10-25T00:58:03"
    }
   },
   {
@@ -31307,29 +31402,33 @@
    },
    "solve_region": "anhui",
    "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it",
+    "pop_vs_plan": "T-1150: the pack holds the 2020 census by township, which GHSL's older counts miss in China (the boom cities short, the shrinking ones long); the townships agree with the county census within 1%"
    },
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 40.4,
+     "build": 5.5,
      "stations": 0.9,
-     "places": 1.2,
-     "coarse": 0.5,
-     "routes": 2.4,
-     "merge": 0.7,
-     "nocar": 1.1,
-     "everyday": 0.9
+     "places": 1.1,
+     "coarse": 0.4,
+     "routes": 3.1,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T18:06:31",
+    "built": "2026-10-24T19:36:49",
+    "gated": "2026-10-25T01:33:10",
+    "parked": "2026-10-24T21:46:43",
     "gate": {
      "warn": [
+      "pop_vs_plan 0.6729248208361666",
+      "pop_vs_ghsl_other 0.6748911259977836",
       "osm_land_share 0.8991",
       "fleet_range 1"
      ]
     },
-    "gated": "2026-10-22T20:58:56",
-    "shipped": "2026-10-22T22:23:37"
+    "shipped": "2026-10-25T02:20:39"
    }
   },
   {
@@ -31514,26 +31613,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710-23500",
+    "run_batch": "20261024-183518",
     "steps": {
-     "build": 81.0,
-     "stations": 0.8,
-     "places": 2.2,
+     "build": 13.9,
+     "stations": 1.2,
+     "places": 2.7,
      "coarse": 0.4,
-     "routes": 7.4,
+     "routes": 12.1,
      "merge": 0.7,
-     "nocar": 1.0,
-     "everyday": 0.8
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-10-22T23:06:13",
+    "built": "2026-10-24T18:42:52",
+    "parked": "2026-10-24T18:58:15",
     "gate": {
      "warn": [
-      "pop_vs_fua 0.6246945966192714",
+      "pop_vs_fua 0.7196989690195511",
       "fleet_range 1"
      ]
     },
-    "gated": "2026-10-23T00:16:58",
-    "shipped": "2026-10-23T01:32:58"
+    "gated": "2026-10-24T19:54:39",
+    "shipped": "2026-10-25T00:58:03"
    }
   },
   {
@@ -31671,28 +31771,28 @@
     "top_cell_jobs_vs_size": "T-897: shu is Nanchong's one central district (1.17M), so its old centre holds a large part of the proxy jobs (16,212 in one cell, 2.9); GHSL there is dense but smooth (100 m pixels up to 5,000)"
    },
    "run": {
-    "run_batch": "20261023-020047",
+    "run_batch": "20261024-191220",
     "steps": {
-     "build": 80.6,
-     "stations": 0.9,
-     "places": 1.3,
+     "build": 4.7,
+     "stations": 1.2,
+     "places": 1.6,
      "coarse": 0.4,
-     "routes": 14.3,
-     "merge": 1.8,
-     "nocar": 2.5,
-     "everyday": 1.7
+     "routes": 5.8,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.0
     },
-    "built": "2026-10-23T02:05:00",
+    "built": "2026-10-24T19:23:54",
     "gate": {
      "warn": [
-      "top_cell_jobs_vs_size 686.6621160633371",
-      "top_zone_jobs_share 0.1849120294749747",
+      "pop_vs_plan 0.7274209498618182",
+      "pop_vs_ghsl_other 0.696476503138745",
+      "top_zone_jobs_share 0.14076095661775967",
       "fleet_range 1"
      ]
     },
-    "parked": "2026-10-23T03:27:54",
-    "gated": "2026-10-23T03:59:00",
-    "shipped": "2026-10-23T05:24:28"
+    "gated": "2026-10-24T19:54:41",
+    "shipped": "2026-10-25T00:58:03"
    }
   },
   {
@@ -32119,27 +32219,26 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710",
+    "run_batch": "20261024-195614",
     "steps": {
-     "build": 43.4,
+     "build": 5.6,
      "stations": 0.8,
      "places": 1.1,
      "coarse": 0.4,
-     "routes": 4.7,
-     "merge": 0.6,
-     "nocar": 1.0,
-     "everyday": 0.8
+     "routes": 6.9,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T23:02:09",
+    "built": "2026-10-24T19:59:53",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.1054366798972632",
-      "top_school_cell_pupils 6007.4521484375",
+      "top_school_cell_pupils 6005.42138671875",
       "fleet_range 1"
      ]
     },
-    "gated": "2026-10-23T00:31:08",
-    "shipped": "2026-10-23T01:32:59"
+    "gated": "2026-10-24T20:15:13",
+    "shipped": "2026-10-25T00:58:03"
    }
   },
   {
@@ -71877,27 +71976,28 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710-23500",
+    "run_batch": "20261024-183518",
     "steps": {
-     "build": 124.0,
-     "stations": 0.9,
-     "places": 2.2,
-     "coarse": 2.8,
-     "routes": 77.7,
-     "merge": 2.9,
-     "nocar": 1.3,
-     "everyday": 0.8
+     "build": 125.3,
+     "stations": 1.3,
+     "places": 2.8,
+     "coarse": 0.8,
+     "routes": 178.6,
+     "merge": 1.1,
+     "nocar": 1.5,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T23:01:23",
+    "built": "2026-10-24T18:43:19",
+    "parked": "2026-10-24T18:58:15",
     "gate": {
      "warn": [
-      "pop_vs_fua 0.4292081225675217",
-      "top_school_cell_pupils 5847.466796875",
+      "pop_vs_fua 0.49981988168604957",
+      "top_school_cell_pupils 6000.0",
       "fleet_range 1"
      ]
     },
-    "gated": "2026-10-23T00:16:56",
-    "shipped": "2026-10-23T01:32:59"
+    "gated": "2026-10-24T19:54:39",
+    "shipped": "2026-10-25T00:58:04"
    }
   },
   {
@@ -71967,26 +72067,27 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710-23500",
+    "run_batch": "20261024-183518",
     "steps": {
-     "build": 82.7,
-     "stations": 0.8,
-     "places": 1.8,
-     "coarse": 0.7,
-     "routes": 21.1,
-     "merge": 1.1,
-     "nocar": 1.3,
-     "everyday": 0.8
+     "build": 16.0,
+     "stations": 1.1,
+     "places": 2.3,
+     "coarse": 0.6,
+     "routes": 42.3,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T23:06:41",
+    "built": "2026-10-24T18:43:57",
+    "parked": "2026-10-24T18:58:16",
     "gate": {
      "warn": [
-      "pop_vs_fua 0.5717530638454625",
-      "top_school_cell_pupils 5489.7783203125"
+      "pop_vs_plan 1.3781165696537754",
+      "top_school_cell_pupils 6000.0"
      ]
     },
-    "gated": "2026-10-23T00:16:58",
-    "shipped": "2026-10-23T01:32:59"
+    "gated": "2026-10-24T19:54:39",
+    "shipped": "2026-10-25T00:58:04"
    }
   },
   {
@@ -72049,28 +72150,29 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710-23500",
+    "run_batch": "20261024-183518",
     "steps": {
-     "build": 73.4,
-     "stations": 0.8,
-     "places": 1.4,
-     "coarse": 0.9,
-     "routes": 32.4,
-     "merge": 1.2,
-     "nocar": 1.1,
-     "everyday": 0.8
+     "build": 11.9,
+     "stations": 1.0,
+     "places": 1.9,
+     "coarse": 0.6,
+     "routes": 65.5,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.3
     },
-    "built": "2026-10-22T23:08:05",
+    "built": "2026-10-24T18:44:44",
+    "parked": "2026-10-24T18:58:16",
     "gate": {
      "warn": [
-      "pop_vs_fua 0.20302405467455234",
-      "top_school_cell_pupils 6045.9873046875",
+      "pop_vs_fua 0.24044840079050578",
+      "top_school_cell_pupils 6099.08251953125",
       "osm_land_share 0.9378",
       "fleet_range 1"
      ]
     },
-    "gated": "2026-10-23T00:16:58",
-    "shipped": "2026-10-23T01:32:59"
+    "gated": "2026-10-24T19:54:40",
+    "shipped": "2026-10-25T00:58:04"
    }
   },
   {
@@ -72134,30 +72236,35 @@
    },
    "solve_region": "guangdong",
    "gate_relax": {
-    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
+    "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it",
+    "pop_vs_plan": "T-1150: the pack holds the 2020 census by township, which GHSL's older counts miss in China (the boom cities short, the shrinking ones long); the townships agree with the county census within 1%"
    },
    "run": {
-    "run_batch": "20261022-224710-23500",
+    "run_batch": "20261024-183518",
     "steps": {
-     "build": 81.8,
-     "stations": 0.8,
-     "places": 1.8,
-     "coarse": 1.9,
-     "routes": 55.1,
-     "merge": 2.1,
-     "nocar": 1.2,
-     "everyday": 0.8
+     "build": 18.8,
+     "stations": 1.0,
+     "places": 2.2,
+     "coarse": 0.5,
+     "routes": 121.5,
+     "merge": 1.2,
+     "nocar": 1.5,
+     "everyday": 1.1
     },
-    "built": "2026-10-22T23:09:07",
+    "built": "2026-10-24T18:46:26",
+    "parked": "2026-10-24T18:58:16",
     "gate": {
      "warn": [
-      "pop_vs_fua 0.2585960370668629",
+      "pop_vs_plan 1.739941850038404",
+      "pop_vs_fua 0.41122981163614253",
+      "pop_vs_ghsl_other 1.7429387395542386",
+      "top_school_cell_pupils 6000.0",
       "osm_land_share 0.9184",
       "fleet_range 2"
      ]
     },
-    "gated": "2026-10-23T00:16:59",
-    "shipped": "2026-10-23T01:32:59"
+    "gated": "2026-10-24T19:54:40",
+    "shipped": "2026-10-25T00:58:04"
    }
   },
   {
@@ -72220,28 +72327,30 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710-23500",
+    "run_batch": "20261024-183518",
     "steps": {
-     "build": 64.8,
-     "stations": 0.7,
-     "places": 1.3,
-     "coarse": 0.6,
-     "routes": 20.3,
+     "build": 11.9,
+     "stations": 1.0,
+     "places": 1.7,
+     "coarse": 0.5,
+     "routes": 43.8,
      "merge": 0.8,
-     "nocar": 1.1,
-     "everyday": 0.8
+     "nocar": 1.9,
+     "everyday": 1.1
     },
-    "built": "2026-10-22T23:09:36",
+    "built": "2026-10-24T18:45:48",
+    "parked": "2026-10-24T18:58:16",
     "gate": {
      "warn": [
-      "pop_vs_fua 0.3278574255270477",
-      "top_school_cell_pupils 6000.0",
+      "pop_vs_plan 1.2062259546554104",
+      "pop_vs_fua 0.4107223566755413",
+      "top_school_cell_pupils 6032.4091796875",
       "osm_land_share 0.9096",
       "fleet_range 1"
      ]
     },
-    "gated": "2026-10-23T00:16:59",
-    "shipped": "2026-10-23T01:32:59"
+    "gated": "2026-10-24T19:54:40",
+    "shipped": "2026-10-25T00:58:05"
    }
   },
   {
@@ -72307,28 +72416,29 @@
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261022-224710-23500",
+    "run_batch": "20261024-183518",
     "steps": {
-     "build": 71.0,
-     "stations": 0.7,
-     "places": 1.3,
-     "coarse": 1.0,
-     "routes": 22.1,
+     "build": 11.7,
+     "stations": 1.1,
+     "places": 2.0,
+     "coarse": 0.6,
+     "routes": 43.9,
      "merge": 1.2,
-     "nocar": 1.2,
-     "everyday": 0.8
+     "nocar": 2.2,
+     "everyday": 2.2
     },
-    "built": "2026-10-22T23:10:46",
+    "built": "2026-10-24T18:46:53",
+    "parked": "2026-10-24T18:58:17",
     "gate": {
      "warn": [
-      "pop_vs_fua 0.10942897349045942",
+      "pop_vs_fua 0.10860240496370636",
       "top_school_cell_pupils 6000.0",
       "osm_land_share 0.8502",
       "fleet_range 1"
      ]
     },
-    "gated": "2026-10-23T00:16:59",
-    "shipped": "2026-10-23T01:32:59"
+    "gated": "2026-10-24T19:54:40",
+    "shipped": "2026-10-25T00:58:05"
    }
   },
   {
@@ -79507,25 +79617,26 @@
    },
    "solve_region": "anhui",
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 69.9,
-     "stations": 0.8,
+     "build": 27.4,
+     "stations": 0.9,
      "places": 1.4,
-     "coarse": 2.9,
-     "routes": 20.3,
-     "merge": 2.5,
-     "nocar": 1.2,
-     "everyday": 0.7
+     "coarse": 0.9,
+     "routes": 28.7,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 0.8
     },
-    "built": "2026-10-22T18:24:03",
+    "built": "2026-10-24T19:37:52",
+    "gated": "2026-10-25T01:33:10",
+    "parked": "2026-10-24T21:46:43",
     "gate": {
      "warn": [
-      "osm_land_share 0.9594"
+      "osm_land_share 0.9592"
      ]
     },
-    "gated": "2026-10-22T20:58:59",
-    "shipped": "2026-10-22T22:23:42"
+    "shipped": "2026-10-25T02:20:39"
    }
   },
   {
@@ -97540,25 +97651,26 @@
    },
    "solve_region": "anhui",
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-191220-30572",
     "steps": {
-     "build": 52.6,
+     "build": 19.1,
      "stations": 0.8,
      "places": 1.2,
-     "coarse": 1.7,
-     "routes": 13.7,
-     "merge": 1.8,
-     "nocar": 1.1,
-     "everyday": 0.8
+     "coarse": 0.5,
+     "routes": 19.7,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.0
     },
-    "built": "2026-10-22T19:01:29",
+    "built": "2026-10-24T19:37:35",
+    "gated": "2026-10-25T01:33:10",
+    "parked": "2026-10-24T21:46:43",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 5421.0146484375"
+      "top_school_cell_pupils 5323.89892578125"
      ]
     },
-    "gated": "2026-10-22T20:59:08",
-    "shipped": "2026-10-22T22:23:54"
+    "shipped": "2026-10-25T02:20:39"
    }
   },
   {
@@ -103325,26 +103437,27 @@
    },
    "solve_region": "jingjinji",
    "run": {
-    "run_batch": "20261022-174555-8672",
+    "run_batch": "20261024-183519",
     "steps": {
-     "build": 55.7,
-     "stations": 0.7,
-     "places": 1.3,
-     "coarse": 0.9,
-     "routes": 19.8,
-     "merge": 1.1,
-     "nocar": 1.1,
-     "everyday": 0.8
+     "build": 20.0,
+     "stations": 1.0,
+     "places": 1.6,
+     "coarse": 0.6,
+     "routes": 35.8,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
     },
-    "built": "2026-10-22T19:16:18",
+    "built": "2026-10-24T18:43:51",
+    "parked": "2026-10-24T21:18:14",
+    "gated": "2026-10-25T01:33:07",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.1077002234382361",
-      "osm_land_share 0.9048"
+      "top_zone_jobs_share 0.10815433737888087",
+      "osm_land_share 0.8991"
      ]
     },
-    "gated": "2026-10-22T20:59:12",
-    "shipped": "2026-10-22T22:23:59"
+    "shipped": "2026-10-25T02:20:40"
    }
   },
   {
