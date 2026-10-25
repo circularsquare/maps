@@ -8,7 +8,8 @@
   table (the ASPECT 100 m grid, Ju et al. 2025, built on 40,718 townships' counts, summed over each
   2018 township outline and scaled to the census counties), spread inside each township by tier 0's
   bounded GHSL. Shanghai's result is then held to its bulletin's district totals (SHANGHAI below);
-  every planned Chinese metro row takes the townships through plan_hooks.
+  every planned mainland metro and zone row (T-1185: the zone rule's module) takes the townships
+  through plan_hooks.
 - **Jobs**: the 5th economic census (end of 2023), persons employed in legal-person units by
   district (JOBS below), spread inside each district by tier 0's proxy.
 
@@ -242,7 +243,7 @@ def census_jobs(city, boundary, sig, weight):
 
 
 def plan_hooks(row):
-    """T-555: a planned mainland row's population by township (T-1150). Shanghai's district tables
+    """T-555: a planned mainland row's population by township (T-1150; zone rows too, T-1185). Shanghai's district tables
     (economic census jobs), its OSM district names and its survey's mean commute are Shanghai's
     alone; another city needs its own tables entered first."""
     if row.get("iso2") != "CN":

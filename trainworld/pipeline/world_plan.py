@@ -9,10 +9,11 @@ and which whole admin units each one holds.
     python pipeline/world_plan.py metros --countries US
                                             a FUA country's metro rows planned alone (T-1015), no
                                             other row touched
-    python pipeline/world_plan.py zones --countries ES[,PT] [--out <plan.json>]
+    python pipeline/world_plan.py zones --countries ES[,PT] [--out <plan.json>] [--replan]
                                             whole-country cover (T-723): the country's zone rows,
                                             every unit no row or pack holds (docs/zones.md 2);
-                                            with --out, a dry run written there
+                                            with --out, a dry run written there; with --replan,
+                                            its built zone rows regrouped too (T-1189)
 
 The rules are docs/adding-a-city.md "Which cities, and where their edges go". Downloads land in
 data/raw/worldplan/ when missing; extents as GeoJSON in data/work/worldplan/. Everything is computed
@@ -123,11 +124,14 @@ GOLAN = (35.6, 32.6, 36.0, 33.4)
 DE_FACTO = {"CHN": {"IND": None, "BTN": None, "TWN": None, "HKG": None, "MAC": None}, "TWN": {"CHN": None},
             "IND": {"CHN": None, "PAK": KASHMIR, "KAS": None}, "PAK": {"IND": KASHMIR, "KAS": None},
             "UKR": {"RUS": CRIMEA}, "SYR": {"ISR": GOLAN}}
-# The US and Puerto Rico (T-1004, T-1015): `module` is the country module zone rows take (elsewhere
-# zones take none); `zoned_only` limits a first-level unit to these units, the rest dead space
-# (Alaska: the road and rail belt, Anchorage to Fairbanks)
+# The US, Puerto Rico and China (T-1004, T-1015; T-1185: China's census by township): `module` is the
+# country module zone rows take (elsewhere zones take none); `zoned_only` limits a first-level unit to
+# these units, the rest dead space (Alaska: the road and rail belt, Anchorage to Fairbanks)
 ALASKA_BELT = ["02020", "02170", "02122", "02090", "02068", "02240", "02063", "02066"]
-ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, "contiguous": True},
+ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, "contiguous": True, "module": "china",
+                      # a fifth of the floor, as CITY_POP is of 0.5M: at 100,000, 821 Chinese counties hold a
+                      # city and their shape joins stop (140 zones under the floor against 82; T-1189)
+                      "city_pop": 200_000, "task": "T-1189"},
               "TWN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, "contiguous": True},
               "USA": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "module": "usa",
                       "zoned_only": {"02": ALASKA_BELT}, "task": "T-1015"},
@@ -1829,12 +1833,12 @@ def reach_people(pop, pts, km):
     return np.array([s[n].sum() for n in t.query_ball_point(pts, m)])
 
 
-def city_units(units, ids):
-    """The units of `ids` holding the centroid of a GHSL urban centre (UCDB R2024A) of CITY_POP or more
-    people (T-1191)."""
+def city_units(units, ids, city_pop=None):
+    """The units of `ids` holding the centroid of a GHSL urban centre (UCDB R2024A) of `city_pop`
+    (CITY_POP) or more people (T-1191)."""
     lay = "GHS_UCDB_THEME_GENERAL_CHARACTERISTICS_GLOBE_R2024A"
     uc = pyogrio.read_dataframe(UCDB, layer=lay, columns=["ID_UC_G0", "GC_POP_TOT_2025"], read_geometry=False)
-    big = set(uc.ID_UC_G0[uc.GC_POP_TOT_2025 >= CITY_POP])
+    big = set(uc.ID_UC_G0[uc.GC_POP_TOT_2025 >= (city_pop or CITY_POP)])
     cen = pyogrio.read_dataframe(UCDB, layer="UC_centroids")
     pts = [g for i, g in zip(cen.ID_UC_G0, cen.geometry) if i in big]
     if not ids or not pts:
@@ -2076,14 +2080,16 @@ def metro_remnants(zby, free, members, by, grow, fixed, fixed_units, travel, lev
     return dict(out), lines + list(notes.values())
 
 
-def plan_zones(isos3, out_path=None):
+def plan_zones(isos3, out_path=None, replan=False):
     """Whole-country cover (T-723): for each country, its units held by no plan row and by no pack
     (half their people), those under ZONE_MIN_DENSITY (or out of the rule's `reach`) left as dead
     space; where COMMUTE_FLOWS has the country's commuting, its unbuilt metro rows take their belts
     (metro_belts, T-1088); the rest, taken by their parent where the rule has a `group_level`
     (group_units), grouped by zone_groups into zone rows (`kind` "zone"), written into the plan beside its metro
     rows. A country's earlier planned zone rows are replaced; one with the same units keeps its id
-    and order. With `out_path`, the plan and its extents are written there instead (a dry run)."""
+    and order. With `replan` (T-1189), its built zone rows too, their packs no longer counted as
+    packs; a row with the same units also keeps its status. With `out_path`, the plan and its extents
+    are written there instead (a dry run)."""
     import pickle
     import plan_config
     from timezonefinder import TimezoneFinder
@@ -2128,11 +2134,12 @@ def plan_zones(isos3, out_path=None):
         floor, cap = rule.get("floor", ZONE_FLOOR), rule.get("cap", ZONE_CAP)
         min_density = rule.get("min_density", ZONE_MIN_DENSITY)
         # a zone row the runner has moved on (built, gated, shipped, parked) keeps its units; only
-        # planned ones are regrouped (T-788: Anita's 0.5M floor came mid-wave)
+        # planned ones are regrouped (T-788: Anita's 0.5M floor came mid-wave), all with `replan`
         old = {r["id"]: r for r in rows if r.get("kind") == "zone" and iso in r.get("units", {})
-               and r.get("status", "planned") == "planned"}
+               and (replan or r.get("status", "planned") == "planned")}
         kept = [r for r in rows if r.get("kind") == "zone" and iso in r.get("units", {}) and r["id"] not in old]
         held = {uid for r in rows if r.get("units") and r["id"] not in old for uid in r["units"].get(iso, [])}
+        pk = {k: v for k, v in pk.items() if k not in old}
         ptree = STRtree([q["geom"] for q in pk.values()])
         pl = list(pk.values())
         free, dead, away, in_pack = [], [], [], {}
@@ -2266,7 +2273,8 @@ def plan_zones(isos3, out_path=None):
                     log(f"  {grown[k][0]['name']} takes {len(add)} remnants, {sum(zby[g].free for g in add) / 1e6:.2f}M")
                 zfree = [g for g in zfree if not any(g in add for add in remnants.values())]
         big = rule.get("big_km2", BIG_ZONE_KM2)
-        cities = city_units(zunits, zfree)
+        city_pop = rule.get("city_pop", CITY_POP)
+        cities = city_units(zunits, zfree, city_pop)
         groups, lines = zone_groups(zunits, zfree, region, floor, cap, rule.get("contiguous", False), fixed, travel,
                                     fixed_units, big, cities, rule.get("join_km", 0.0))
         if rule.get("contiguous"):  # T-897: no pack for an islet of a few hundred people that can join nothing
@@ -2277,7 +2285,7 @@ def plan_zones(isos3, out_path=None):
         groups = {lead: [m for g in ids for m in members[g]] for lead, ids in groups.items()}
         log(f"{iso}: {len(units)} units, {len(held)} in plan rows ({len(kept)} zone rows kept), {len(free)} free, {len(dead)} dead space "
             f"(under {min_density:g} a km2{f' or under {reach[1]:,} within {reach[0]:g} km' if reach else ''}: "
-            f"{', '.join(d['name'] for d in dead)}); {len(groups)} zones; {len(cities)} units with a city of {CITY_POP:,}"
+            f"{', '.join(d['name'] for d in dead)}); {len(groups)} zones; {len(cities)} units with a city of {city_pop:,}"
             + (f"; outside Europe, left out: {', '.join(away)}" if away else ""))
         for ln in lines:
             log(ln)
@@ -2366,7 +2374,7 @@ def plan_zones(isos3, out_path=None):
                        + f": under {ZONE_MIN_POP:,} into the zone it travels with most, then a neighbour keeping both within {cap:,} "
                        f"that is a travel partner ({PARTNER_SHARE:.0%} of its biggest partner's travel), else one making a compact zone "
                        f"({COMPACT_HULL:.0%} of its convex hull, or within {COMPACT_SLACK:.2f} of the bigger part's) unless both hold "
-                       f"an urban centre of {CITY_POP:,} (T-1191)"
+                       f"an urban centre of {city_pop:,} (T-1191)"
                        + (f", never between people centres over {rule['join_km']:g} km apart" if rule.get("join_km") else "")
                        + ", partners first, "
                        f"each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under "
@@ -2385,7 +2393,7 @@ def plan_zones(isos3, out_path=None):
             rec["remnants"] = {k: [m for g in add for m in members[g]] for k, add in remnants.items()}
         if away:
             rec["outside_europe"] = away
-        changes.append({"iso": iso, "old": {k: r["units"][iso] for k, r in old.items()},
+        changes.append({"iso": iso, "replan": replan, "old": {k: r["units"][iso] for k, r in old.items()},
                         "metros": {k: grow[k]["units"][iso] for k in grown}, "grown": {k: v[0] for k, v in grown.items()},
                         "out": out, "record": rec, "src": src,
                         "feats": feats + [v[1] for v in grown.values()],
@@ -2413,15 +2421,17 @@ def plan_zones(isos3, out_path=None):
 
 
 def splice(doc, ext, changes):
-    """plan_zones' changes into a plan read afresh: each country's planned zone rows replaced, its grown
-    metro rows swapped in where they stand; refused when any of those rows moved on meanwhile."""
+    """plan_zones' changes into a plan read afresh: each country's planned zone rows (with `replan`,
+    all its zone rows) replaced, its grown metro rows swapped in where they stand; refused when any of
+    those rows moved on meanwhile."""
     rows = doc["metros"]
     for c in changes:
         iso = c["iso"]
         now = {r["id"]: r for r in rows}
         for k, us in {**c["old"], **c["metros"]}.items():
             r = now.get(k)
-            if r is None or r.get("status", "planned") != "planned" or r["units"].get(iso) != us:
+            moved = r is not None and r.get("status", "planned") != "planned" and not (c.get("replan") and k in c["old"])
+            if r is None or moved or r["units"].get(iso) != us:
                 raise SystemExit(f"{iso}: row {k} changed since the plan was read; run again")
         taken = {r["order"] for r in rows if r["id"] not in c["old"] and r.get("order") is not None}
         clash = [r["id"] for r in c["out"] if r["id"] not in c["old"] and (r["id"] in now or r["order"] in taken)]
@@ -2527,7 +2537,8 @@ def main(argv):
         # several territories share an alpha-2 in Natural Earth (FR: France and Clipperton, T-779)
         a3 = {v: k for k, v in sorted(iso2s().items(), key=lambda kv: kv[0] in have)}
         cs = argv[argv.index("--countries") + 1].split(",")
-        return plan_zones([a3[c] for c in cs], argv[argv.index("--out") + 1] if "--out" in argv else None)
+        return plan_zones([a3[c] for c in cs], argv[argv.index("--out") + 1] if "--out" in argv else None,
+                          "--replan" in argv)
     cache = WORK / "state.pkl"  # the units and their shares; --fresh rebuilds it
     if cache.exists() and "--fresh" not in argv:
         st = pickle.loads(cache.read_bytes())

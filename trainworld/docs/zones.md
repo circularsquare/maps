@@ -88,9 +88,10 @@ each zone gets there, within a cap of **1.5M**, by the **merge rule** (Anita, 20
 - Failing that, a neighbour where the joined zone stays **compact**: it fills at least **75%** of
   its convex hull, or is no more than 0.05 less compact than the bigger part already was (a county
   added on the edge of a coast). **Two cities never join by shape alone** (T-1191): when both zones
-  hold the centroid of a GHSL urban centre of **100,000** or more (`CITY_POP`), only the partner
-  test can join them, so a city's zone just under the floor stays a zone (Saskatoon's, which would
-  otherwise take Regina's 240 km away).
+  hold the centroid of a GHSL urban centre of **100,000** or more (`CITY_POP`; **200,000** in China,
+  a fifth of its floor as 100,000 is of 0.5M, T-1189), only the partner test can join them, so a
+  city's zone just under the floor stays a zone (Saskatoon's, which would otherwise take Regina's
+  240 km away).
 - A partner always comes before a join by shape alone; among either, the neighbour whose people
   centre is nearest its own, so zones gather round their own towns. With none within the cap, the
   smallest that passes, unless the zone holds 80% of the floor.
@@ -108,12 +109,15 @@ d^-0.8 e^(-d/30 km) over pairs within 200 km. A zone of 100,000 or more crosses 
 10 km, and islands and enclaves that can join nothing stay as they are (the Isle of Wight, Åland).
 Rows built before the floor keep their size: Spain, Italy, France, Portugal and Greece, and T-788's
 first wave (Germany, the UK, Ireland and the Benelux at 0.1-1.2M); rows built before the merge rule
-(every country zoned by 2026-10-24) keep their groups until Anita asks for their replan (T-1189).
+(every country zoned by 2026-10-24) keep their groups until Anita asks for their replan (T-1189):
+`zones --countries CN --replan` regroups a country's built zone rows too, their packs then counted
+as free land; a new zone with an old row's exact units keeps its id, order and status.
 A European country's units outside Europe (France's
 overseas départements) are not zoned. A zone row has `kind` "zone", is named after its most populous unit (before
 any "/"), and has its origin at its densest square km. A replan of the metros keeps zone rows as
 they are. Countryside zones use the zone curve (section 4) and global sources only, unless their
-country's zone rule names its module (the US, below). Which countries are covered, and with how many zones:
+country's zone rule names its module (the US, below; China's zones take the `china` module, so their
+people are the 2020 census by township as its metros', T-1185). Which countries are covered, and with how many zones:
 docs/data-register.md.
 **Korea and Canada** (T-1191, `ZONE_RULES`) take the US's floor, cap and no-exclaves rule with no
 density floor, and one rule each. Korea's plan units are eup, myeon and dong (its metro rows' grain),
@@ -141,7 +145,7 @@ one piece, by land or across its own water joins) and the halves regroup by the 
 that a half whose every join would wrap stays as it is, under the floor if need be (rejoining would
 rebuild the ring); three rounds at most. A single unit wrapping a zone takes it when both fit under
 the cap. A replan regroups only
-planned rows. notes/T-1087.md.
+planned rows (with `--replan`, every zone row of the country). notes/T-1087.md.
 **Commuter belts** (Anita, 2026-10-23, T-1088: "we can let metros take neighboring counties but it
 doesnt have to be a hard rule"). Where a country's commuting between units is on disk
 (`world_plan.COMMUTE_FLOWS`: the US's ACS 2016-2020 county flows), a metro row not yet built takes
