@@ -8,7 +8,7 @@
 // URL parameters: docs/code-map.md, "URL switches".
 
 import "./ui/style.css";
-import { effect } from "@preact/signals";
+import { computed, effect } from "@preact/signals";
 import { h, render } from "preact";
 import { clock, SPEEDS, startClock } from "./game/clock";
 import { getWorldFrame, HOME_CITY } from "./game/cities";
@@ -71,7 +71,7 @@ import { startSaveSafety } from "./game/saveSafety";
 import { choiceFromUrl, showStartMenu, worldCover } from "./ui/StartMenu";
 import { viewStart } from "./ui/locate";
 import { startOpenFit } from "./ui/locate";
-import { ClockClient, clockWorkerStatus, onNetworkSnapshot, onStationsAhead } from "./workers/clockClient";
+import { ClockClient, clockWorkerStatus, manageSaveSlot, onNetworkSnapshot, onStationsAhead } from "./workers/clockClient";
 import { startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
 import { startTripView } from "./map/tripView";
@@ -162,6 +162,7 @@ const overlay = new Overlay(map, renderer, () => {
     hotLine: hot().line,
     hotEdge: hot().edge,
     hotStations: n ? hot().stations.map((id) => stationIndexOf(n, id)) : [],
+    lineScale: d.lineWidth, // T-1248
   };
 });
 onHot(() => overlay.invalidate()); // T-730: what the pointer is on lightens
@@ -306,7 +307,8 @@ const stationLife = SYNTH ? null : startStationLife(map, overlay, (notes) => cli
 if (DEBUG && stationLife) (window as any).twLife = stationLife;
 map.on("load", () => {
   effect(() => setBasemapLabels(map, display.value.basemapLabels, choosing.value)); // T-974: no city names behind the start menu
-  effect(() => setBasemapShade(map, shade.value));
+  const contrast = computed(() => display.value.basemapContrast);
+  effect(() => setBasemapShade(map, shade.value, contrast.value));
   startRealNetwork(map); // T-682
 });
 effect(() => client.setShade(shade.value)); // save thumbnails are drawn in it (T-543)
@@ -366,6 +368,13 @@ if (!SYNTH && !perfOff("hover")) // ?perfOff=hover: T-045 measurement only
 // Space in a select (ui/keys.ts, T-183, the same rule as the search box's "/").
 releaseSelectsAfterMousePick();
 followCapsLock();
+// Ctrl+S saves the game now (T-1251), in any panel or field, instead of the browser saving the page
+window.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "s") {
+    e.preventDefault();
+    if (!e.repeat) manageSaveSlot("save");
+  }
+}, true);
 window.addEventListener("keydown", (e) => {
   if (keyIsTheirs(e)) return;
   // Esc, one thing at a time (T-096): a question waiting above the bottom bar is answered no; a

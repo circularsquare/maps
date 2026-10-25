@@ -570,8 +570,9 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   pack (T-030).
 - The Build tab shows only the multiplier and price of the level currently selected, not the
   whole table.
-- Stations (200 m, two platform tracks), US$M: 10 at grade, 30/40/50 at +1/+2/+3, 60/100/140 at
-  -1/-2/-3; scaled by `0.4 + 0.6 x length / 200`.
+- Stations (200 m, two platform tracks), US$M: 30 at grade, 60/80/110 at +1/+2/+3, 120/150/180 at
+  -1/-2/-3, about 1.5 km of track at their level underground and 0.7 km above (T-1245); scaled by
+  `0.4 + 0.6 x length / 200`.
 - Junction: 0.25 km of track at its level; a flyover adds 0.6 km one level away; flat
   crossing 0.1 km (cheap to build, dear in delay). A crossover: two junctions, all told (6.1,
   T-338); the blueprint breakdown counts it as two junction switches.

@@ -479,14 +479,20 @@ export async function writeCopyFolder(dir: FileSystemDirectoryHandle | null): Pr
   }
 }
 
-export interface SlotLease { release: () => void; }
-/** A browser-managed lock lives for this worker's lifetime and releases even if the tab crashes. */
-export async function leaseSlot(key: string): Promise<SlotLease | null> {
+/** `lost` settles when another tab takes the lock with `steal` (T-1251). */
+export interface SlotLease { release: () => void; lost: Promise<void>; }
+/** A browser-managed lock lives for this worker's lifetime and releases even if the tab crashes.
+ * With `steal` it is taken from the tab holding it, whose request then rejects (its `lost`). */
+export async function leaseSlot(key: string, steal = false): Promise<SlotLease | null> {
   if (!navigator.locks) return null;
+  let lose = () => {};
+  const lost = new Promise<void>((r) => { lose = r; });
+  let granted = false;
   return new Promise((resolve, reject) => {
-    void navigator.locks.request("anitabuilder-save-" + key, { ifAvailable: true }, (lock) => {
+    void navigator.locks.request("anitabuilder-save-" + key, steal ? { steal: true } : { ifAvailable: true }, (lock) => {
       if (!lock) { resolve(null); return; }
-      return new Promise<void>((release) => resolve({ release }));
-    }).catch(reject);
+      granted = true;
+      return new Promise<void>((release) => resolve({ release, lost }));
+    }).catch((err) => { if (granted) lose(); else reject(err); });
   });
 }

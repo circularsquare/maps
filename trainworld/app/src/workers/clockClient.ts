@@ -29,7 +29,9 @@ import { copied, keepStorage } from "../game/saveSafety";
 import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "../game/busy";
 
 export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[] }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
-export function manageSaveSlot(action: "refresh" | "create" | "open" | "rename" | "delete" | "restore", key?: string, name?: string) {
+/** When the game was last saved by hand in this page (T-1251). */
+export const savedByHand = signal<number | null>(null);
+export function manageSaveSlot(action: "refresh" | "save" | "create" | "open" | "rename" | "delete" | "restore", key?: string, name?: string) {
   // T-1196: a game opened or restored reloads the page into it, T-1197: if it fits
   if (action === "open" && key && key !== saveSlotsState.peek().active) return void ifItFits({ key }, () => switchGame({ slot: key }));
   if (action === "restore" && key) return void ifItFits({ key }, () => switchGame({ load: "restore" }, { kind: "restore", key, from: saveSlotsState.peek().active }));
@@ -684,6 +686,13 @@ export class ClockClient {
       }
       case "saved":
         lastSaved.value = msg.at;
+        break;
+      case "savedByHand":
+        // a refusal is said with the saveSlots message that follows it
+        if (msg.at) {
+          savedByHand.value = msg.at;
+          say(`Saved ${new Date(msg.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`);
+        }
         break;
       case "answer": {
         const f = this.queries.get(msg.seq);

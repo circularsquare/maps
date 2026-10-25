@@ -300,7 +300,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   t727-snap.json, t727d-*.png; about 2 minutes, port 6170 by default),
   `t1196-switch.mjs` (two slots of the real save: Open reloads the page into the other, the card's
   three stages in order, Cancel to the start menu, all of China refused, the copies' folder filled,
-  persistent storage asked; port 6146 by default), `t743-slots.mjs` (through the saves panel: Load a file, New game and a backup's Restore as a copy
+  persistent storage asked; port 6146 by default), `t1251-save-by-hand.mjs` (two tabs on one slot:
+  Save with autosave on, Save in the tab without the lock takes it and the other stops autosaving,
+  Ctrl+S takes it back, a double click renames in place and Escape cancels; port 6161 by default),
+  `t743-slots.mjs` (through the saves panel: Load a file, New game and a backup's Restore as a copy
   each open a new slot and leave every other slot's bytes as they were, the real save and
   artifacts/trainworld/recovered-day26.save both; two backups rotate at `?backupMs=4000`; a deleted
   slot's backups go; port 6150 by default), `t894-previews.mjs` (save pictures: a game in New York,

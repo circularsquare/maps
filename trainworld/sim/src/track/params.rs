@@ -86,8 +86,9 @@ pub const HSR_COST: f64 = 1.5;
 /// The track count a blueprint quote row gives high-speed track (`blueprint_cost_items`).
 pub const HSR_ROW: u8 = 3;
 pub const WATER_COST: f64 = 2.0;
-/// 200 m station with two platform tracks, per level, index `level + 3`.
-pub const STATION_COST_200: [f64; 7] = [140.0, 100.0, 60.0, 10.0, 30.0, 40.0, 50.0];
+/// 200 m station with two platform tracks, per level, index `level + 3`: about 1.5 km of track at
+/// its level underground and 0.7 km above (T-1245).
+pub const STATION_COST_200: [f64; 7] = [180.0, 150.0, 120.0, 30.0, 60.0, 80.0, 110.0];
 pub const SINGLE_TRACK_STATION: f64 = 0.7;
 pub const JUNCTION_KM: f64 = 0.25;
 pub const FLYOVER_KM: f64 = 0.6;

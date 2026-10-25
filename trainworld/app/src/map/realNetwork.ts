@@ -184,7 +184,8 @@ export function startRealNetwork(map: maplibregl.Map) {
     const snap = snapping.value;
     const reach = snap && !!realReach.value;
     on = display.value.realNetwork || snap;
-    opacity = snap ? (reach ? OPACITY_DIM : OPACITY_SNAP) : OPACITY;
+    // T-1249: the base map's contrast mutes it too, but never while track snaps to it
+    opacity = snap ? (reach ? OPACITY_DIM : OPACITY_SNAP) : OPACITY * display.value.basemapContrast;
     shade.value;
     if (on) setShade(), void ensure();
     for (const id of layerIds()) {

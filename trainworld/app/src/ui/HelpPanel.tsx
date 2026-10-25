@@ -33,6 +33,7 @@ const SECTIONS: [string, [string, string][]][] = [
     [keyOf("construct"), "Construct blueprints"],
     ["Space", "Pause or carry on"],
     ["Ctrl Z, Ctrl Y", "Undo or redo blueprint edits"],
+    ["Ctrl S", "Save the game now"],
     ["/, Ctrl K", "Search"],
     ["Esc", "Back out one step, then clear the selection"],
   ]],

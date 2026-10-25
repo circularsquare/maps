@@ -171,6 +171,18 @@ let savedAt = Date.now();
 let saveInFlight: Promise<boolean> | null = null;
 let activeSlot = ORIGINAL_SLOT;
 let activeLease: SlotLease | null = null;
+/** another tab saved this slot by hand and took its lease (T-1251): autosave stays off here */
+let leaseTaken = false;
+function hold(lease: SlotLease | null) {
+  activeLease = lease;
+  leaseTaken = false;
+  void lease?.lost.then(() => {
+    if (activeLease !== lease) return;
+    activeLease = null;
+    leaseTaken = true;
+    void publishSlots();
+  });
+}
 /** the start menu's new game (T-677): its slot's name, given at its first write */
 let newSlotName: { key: string; name: string } | null = null;
 /** the active slot while nothing is stored under it (a new game's, T-677) */
@@ -204,6 +216,7 @@ async function publishSlots(error?: string) {
   const writable = !!activeLease && storageReady && !saveFailure;
   const reason = saveFailure || (!storageReady ? "Browser storage is unavailable. Save to a file to keep this game."
     : !activeLease ? testPage ? "Autosave is off in this test page. Save a copy to keep the game."
+      : leaseTaken ? "Autosave is off here because this game was saved in another tab."
       : navigator.locks ? "Autosave is off here because this slot was opened in another tab. Save to a new slot, or close the other tab and reload."
       : "This browser cannot protect save slots. Save to a file to keep this game." : undefined);
   send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups });
@@ -237,7 +250,7 @@ async function intoNewSlot(name: string, load: () => Promise<unknown> | void, wr
   } catch (err) { lease?.release(); throw err; } finally { switching = false; }
   activeLease?.release();
   activeSlot = key;
-  activeLease = lease;
+  hold(lease);
   unwritten = key;
   newSlotName = { key, name };
   saveFailure = undefined;
@@ -1427,9 +1440,31 @@ function autosave(): Promise<boolean> {
   return saveInFlight;
 }
 
+/** T-1251: the slot written now, autosave on or off. A tab without the slot's lease takes it from
+ * the tab holding it, whose autosave then stops; an empty new game is written too. */
+async function saveByHand() {
+  try {
+    if (testPage || !activeSlot) throw new Error("This test page keeps no saved game. Save a copy to keep it.");
+    if (!activeLease) {
+      const lease = await leaseSlot(activeSlot, true);
+      if (!lease) throw new Error("This browser cannot protect save slots. Save to a file instead.");
+      hold(lease);
+    }
+    if (unwritten === activeSlot) unwritten = null;
+    saveFailure = undefined;
+    dirty = true;
+    if (!await autosave()) throw new Error(saveFailure ?? "This game could not be saved. Save to a file to keep it.");
+    send({ kind: "savedByHand", at: savedAt });
+  } catch (err) {
+    send({ kind: "savedByHand", error: (err as Error).message });
+    await publishSlots((err as Error).message);
+  }
+}
+
 async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
   try {
     if (msg.action === "refresh") { await publishSlots(); return; }
+    if (msg.action === "save") { await saveByHand(); return; }
     if (msg.action === "create") {
       const key = "slot-" + crypto.randomUUID();
       const lease = await leaseSlot(key);
@@ -1442,7 +1477,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         if (activeLease) await autosave();
         activeLease?.release();
         activeSlot = key;
-        activeLease = lease;
+        hold(lease);
         saveFailure = undefined;
         dirty = true;
         savedAt = Date.now();
@@ -1462,7 +1497,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         const converted = await loadGame(stored.bytes, "file").finally(() => { switching = false; });
         activeLease?.release();
         activeSlot = key;
-        activeLease = lease;
+        hold(lease);
         saveFailure = undefined;
         dirty = false;
         savedAt = stored.at;
@@ -1982,12 +2017,12 @@ async function processMessage(msg: ToClock) {
       } else if (msg.newSlot) {
         activeSlot = "slot-" + crypto.randomUUID();
         newSlotName = { key: activeSlot, name: msg.newSlot };
-        activeLease = await leaseSlot(activeSlot);
+        hold(await leaseSlot(activeSlot));
       } else {
         activeSlot = msg.slot?.startsWith("slot-") ? msg.slot : ORIGINAL_SLOT;
         if (activeSlot !== ORIGINAL_SLOT && !await readStored(activeSlot)) activeSlot = ORIGINAL_SLOT;
         // a stress page reads the slot but does not take it, so it never writes it
-        activeLease = msg.testPage ? null : await leaseSlot(activeSlot);
+        hold(msg.testPage ? null : await leaseSlot(activeSlot));
       }
       await publishSlots();
       if (incoming) {
@@ -2030,7 +2065,7 @@ async function processMessage(msg: ToClock) {
             activeSlot = "slot-" + crypto.randomUUID();
             newSlotName = { key: activeSlot, name: nextGameName(await listSlots().catch(() => [])) };
             unwritten = activeSlot;
-            activeLease = await leaseSlot(activeSlot);
+            hold(await leaseSlot(activeSlot));
             await publishSlots();
           }
           send({ kind: "loaded", from: "new", clock: START_CLOCK, error: "The last game could not be loaded. " + (err as Error).message, frame: frameSpec(), game });
@@ -2060,7 +2095,7 @@ async function processMessage(msg: ToClock) {
     else send({ kind: "error", message: String(err) });
     failAnswer(msg);
   } finally {
-    if (msg.kind === "edit" || msg.kind === "saveSlot" || msg.kind === "import" || msg.kind === "newGame") trackVersion++;
+    if (msg.kind === "edit" || (msg.kind === "saveSlot" && msg.action !== "save") || msg.kind === "import" || msg.kind === "newGame") trackVersion++;
   }
 };
 

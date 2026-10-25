@@ -926,6 +926,9 @@ rect.now { fill-opacity: .45; }
 .save-playing { flex: none; padding: 0 5px; color: var(--bg); background: var(--accent); }
 .save-slots .pane-foot { margin-top: 6px; }
 .save-actions .save-open { border-color: var(--accent); }
+.save-by-hand { align-self: center; }
+.save-name { cursor: text; }
+.save-name-field { flex: 1; min-width: 0; padding: 1px 5px; font: inherit; font-weight: bold; border: 1px solid var(--rule); background: var(--bg); color: inherit; }
 .save-files { flex-wrap: wrap; justify-content: flex-start; }
 .save-safety { margin-top: 4px; }
 .save-safety p { margin: 2px 0; }

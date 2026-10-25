@@ -186,7 +186,7 @@ export type ToClock =
   /** T-729: the zones this game has opened, the whole list in order (game/openedZones.ts) */
   | { kind: "opened"; zones: string[] }
   /** `restore`: `key` is a backup's (T-744) */
-  | { kind: "saveSlot"; action: "refresh" | "create" | "open" | "rename" | "delete" | "restore"; key?: string; name?: string }
+  | { kind: "saveSlot"; action: "refresh" | "save" | "create" | "open" | "rename" | "delete" | "restore"; key?: string; name?: string }
   /** inspector queries (T-031), answered with "answer": a junction's moves
    * (`TrackApi.junction_info`), where a line waits at a demand level (`line_delays`), a blueprint
    * stretch's PIs with their curves (`edge_pis`, T-064), a flyover's price (`[US$M]`, T-080), or
@@ -489,6 +489,8 @@ export type FromClock =
   | { kind: "answer"; seq: number; data: Float64Array }
   /** an autosave was written (Date.now()), its size, and worker ms to encode and to write */
   | { kind: "saved"; at: number; bytes: number; encodeMs: number; totalMs: number }
+  /** the answer to a save by hand (T-1251): when it was written, or why not */
+  | { kind: "savedByHand"; at?: number; error?: string }
   /** `backups`: the active slot's (T-744), newest first */
   | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[] }
   | { kind: "error"; message: string }

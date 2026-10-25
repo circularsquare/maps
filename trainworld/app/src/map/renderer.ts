@@ -115,6 +115,8 @@ export interface DrawOptions {
   hotLine?: number;
   hotEdge?: number;
   hotStations?: number[];
+  /** T-1248: lines, track and trains drawn this many times their width; absent: 1 */
+  lineScale?: number;
 }
 
 interface StrokeVao {
@@ -863,10 +865,11 @@ export class NetworkRenderer {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
-    const wLine = interp(zoom, LINE_PX) * dpr;
-    const wTrack = interp(zoom, [[9, 0.4], [12, 1.8], [15, 3]]) * dpr;
-    const wSel = interp(zoom, [[9, 0.5], [12, 2.1], [15, 3]]) * dpr;
-    const casing = interp(zoom, [[9, 0.6], [12, 2], [15, 2.4]]) * dpr;
+    const k = opt.lineScale ?? 1;
+    const wLine = interp(zoom, LINE_PX) * dpr * k;
+    const wTrack = interp(zoom, [[9, 0.4], [12, 1.8], [15, 3]]) * dpr * k;
+    const wSel = interp(zoom, [[9, 0.5], [12, 2.1], [15, 3]]) * dpr * k;
+    const casing = interp(zoom, [[9, 0.6], [12, 2], [15, 2.4]]) * dpr * k;
     gl.useProgram(this.strokeProg);
     const u = this.strokeU;
     setCamera(gl, u, lc);
@@ -1166,7 +1169,7 @@ export class NetworkRenderer {
     this.trainsHidden = zoom < TRAINS_ZOOM;
     if (opt.showTrains && this.tripCount && !this.trainsHidden) {
       this.detailedTrains = zoom >= STATION_BOX_ZOOM;
-      const tw = interp(zoom, TRAIN_PX) * dpr;
+      const tw = interp(zoom, TRAIN_PX) * dpr * k;
       gl.useProgram(this.trainProg);
       setCamera(gl, this.trainU, lc);
       gl.uniform2f(this.trainU.u_viewport, vp[0], vp[1]);

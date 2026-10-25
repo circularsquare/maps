@@ -332,7 +332,11 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   commit. The panel: [ui-panels.md](ui-panels.md) "Saved games".
 - **One writer per slot**: a worker-held browser lock lets one tab autosave each slot. Another tab
   can play, read and export that game but shows a persistent Autosave off notice; different slots
-  save concurrently. Unsaved changes in a blocked tab must go to a new slot before switching (or be
+  save concurrently. **Saving by hand** [T-1251, `saveByHand`]: the saves panel's Save or Ctrl+S
+  writes the slot at once (an empty new game too). In a tab without the lock it takes it
+  (`navigator.locks` `steal`): that tab then autosaves, and the tab it was taken from sees its lock's
+  request reject (`SlotLease.lost`), stops autosaving and says "Autosave is off here because this
+  game was saved in another tab."; a save by hand there takes it back. Unsaved changes in a blocked tab must go to a new slot before switching (or be
   exported). Rename and delete refuse slots owned by another tab. Storage failures keep the dirty
   state and a persistent notice, with file export still available; browsers without locks disable
   browser writes. notes/T-029.md, notes/T-068.md.

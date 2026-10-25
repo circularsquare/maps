@@ -309,14 +309,14 @@ mod tests {
 
     #[test]
     fn spec_worked_example_20km_at_minus2_with_18_stations() {
-        // SPEC 6.4: a 20 km line at -2 with 18 stations is about 3.8B.
+        // a 20 km line at -2 with 18 stations is about 4.7B (T-1245)
         let vert = [[0.0, -16.0], [20000.0, -16.0]];
         let track = track_cost(20000.0, &vert, &[], 2, false);
         assert!((track - 1980.0).abs() < 1e-9);
         let stations = 18.0 * station_cost(-2, 200, 2, false);
-        assert!((stations - 1800.0).abs() < 1e-9);
+        assert!((stations - 2700.0).abs() < 1e-9);
         let total = track + stations;
-        assert!((total - 3780.0).abs() < 1e-9, "{total}");
+        assert!((total - 4680.0).abs() < 1e-9, "{total}");
     }
 
     #[test]
@@ -349,9 +349,9 @@ mod tests {
 
     #[test]
     fn stations_junctions_crossings() {
-        assert!((station_cost(0, 200, 2, false) - 10.0).abs() < 1e-12);
-        assert!((station_cost(-2, 100, 2, false) - 70.0).abs() < 1e-9);
-        assert!((station_cost(-2, 400, 2, false) - 160.0).abs() < 1e-9);
+        assert!((station_cost(0, 200, 2, false) - 30.0).abs() < 1e-12);
+        assert!((station_cost(-2, 100, 2, false) - 105.0).abs() < 1e-9);
+        assert!((station_cost(-2, 400, 2, false) - 240.0).abs() < 1e-9);
         assert!((junction_cost(0, false, false) - 0.25 * 45.0).abs() < 1e-9);
         assert!((junction_cost(0, true, false) - (11.25 + 0.6 * 90.0)).abs() < 1e-9);
         assert!((junction_cost(-2, true, false) - (0.25 * 99.0 + 0.6 * 108.0)).abs() < 1e-9);

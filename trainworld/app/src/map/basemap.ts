@@ -12,7 +12,7 @@
 
 import * as maplibregl from "maplibre-gl";
 import { SHADES, type ShadeColours } from "../game/shades";
-import { shade, type Shade } from "../game/ui";
+import { display, shade, type Shade } from "../game/ui";
 
 const POSITRON = "https://tiles.openfreemap.org/styles/positron";
 /** The one font stack every basemap label uses: Regular only, Zen Maru has no italic. */
@@ -78,8 +78,14 @@ function paintFor(c: ShadeColours, dark: boolean): Paint {
   return p;
 }
 
-/** Each restyled layer's paint values in either theme, the keys that differ only. */
-let themed: { id: string; key: string; light: unknown; dark: unknown }[] = [];
+/** Each restyled layer's paint values in either theme: the keys that differ, and every plain colour
+ * the contrast setting mutes (`mute`, T-1249). */
+let themed: { id: string; key: string; light: unknown; dark: unknown; mute: boolean }[] = [];
+/** Water is never muted (Anita, T-1249). */
+const UNMUTED = new Set(["water", "waterway", "background"]);
+const HEX = /^#[0-9a-f]{6}$/i;
+/** A paint value at a contrast: a plain colour mixed toward the land by what the contrast lacks. */
+const muted = (v: unknown, land: string, contrast: number) => contrast < 1 && typeof v === "string" && HEX.test(v) ? mix(v, land, 1 - contrast) : v;
 /** Basemap symbol layers (not ours), whose visibility the "map labels" setting controls. */
 let basemapSymbols: string[] = [];
 
@@ -126,19 +132,27 @@ function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecific
         D["text-color"] = SHADES.dark.label, D["text-halo-color"] = SHADES.dark.land;
       }
     }
-    for (const key of new Set([...Object.keys(L), ...Object.keys(D)])) {
+    const s = shade.peek(), land = SHADES[s].land, contrast = display.peek().basemapContrast;
+    for (const key of new Set([...Object.keys(L), ...Object.keys(D), ...Object.keys(paint)])) {
       const l = key in L ? L[key] : paint[key], d = key in D ? D[key] : paint[key];
-      if (l !== d) themed.push({ id: layer.id, key, light: l, dark: d });
-      const v = shade.peek() === "dark" ? d : l;
-      if (v !== undefined) paint[key] = v;
+      const mute = !UNMUTED.has(layer.id) && key.endsWith("color");
+      if (l !== d || mute) themed.push({ id: layer.id, key, light: l, dark: d, mute });
+      const v = s === "dark" ? d : l;
+      if (v !== undefined) paint[key] = mute ? muted(v, land, contrast) : v;
     }
   }
   return style;
 }
 
-/** Repaints the basemap in the light or dark theme, without reloading the style or its tiles. */
-export function setBasemapShade(map: maplibregl.Map, s: Shade) {
-  for (const t of themed) if (map.getLayer(t.id)) map.setPaintProperty(t.id, t.key as any, s ==="dark" ? t.dark : t.light);
+/** Repaints the basemap in the light or dark theme and at a contrast (T-1249), without reloading
+ * the style or its tiles. */
+export function setBasemapShade(map: maplibregl.Map, s: Shade, contrast: number) {
+  const land = SHADES[s].land;
+  for (const t of themed) {
+    if (!map.getLayer(t.id)) continue;
+    const v = s === "dark" ? t.dark : t.light;
+    map.setPaintProperty(t.id, t.key as any, t.mute ? muted(v, land, contrast) : v);
+  }
 }
 
 /**

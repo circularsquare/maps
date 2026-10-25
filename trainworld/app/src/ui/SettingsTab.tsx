@@ -107,6 +107,9 @@ export function SettingsTab() {
       <div class="stack" data-tip="Zoomed in to a city, the globe becomes the flat map">
         <Segmented<Projection> options={PROJECTION_OPTIONS} value={d.projection === "globe" ? "globe" : "flat"} onChange={(v) => setDisplay("projection", v)} />
       </div>
+      <Slider label="Line width" min={0.5} max={2} step={0.05} value={d.lineWidth} tip={`Lines, track and trains at ${Math.round(d.lineWidth * 100)}% of their usual width`} set={(v) => setDisplay("lineWidth", v)} />
+      <Slider label="Base map" min={0} max={1} step={0.05} value={d.basemapContrast}
+        tip={`Roads, place names, parks and the real network at ${Math.round(d.basemapContrast * 100)}% contrast against the land. Water keeps its colour.`} set={(v) => setDisplay("basemapContrast", v)} />
       <div class="h">Theme</div>
       <div class="stack">
         <Segmented options={SHADE_NAMES.map((s) => [s, SHADE_NAME[s]] as [Shade, string])} value={shade.value} onChange={(v) => (shade.value = v)} />

@@ -5,13 +5,13 @@
 // copy, a loaded file and a new game each get a new slot (T-743).
 
 import { signal } from "@preact/signals";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { cityById, isCity } from "../game/cities";
 import { money, plural } from "../game/format";
 import { SHADES } from "../game/shades";
 import { lastSaved } from "../game/money";
 import { allowCopyFolder, canCopyToFolder, copyFolder, pickCopyFolder, stopCopies, storageKept } from "../game/saveSafety";
-import { exportGame, importGame, newGame, manageSaveSlot, saveSlotsState } from "../workers/clockClient";
+import { exportGame, importGame, newGame, manageSaveSlot, savedByHand, saveSlotsState } from "../workers/clockClient";
 import type { SaveSlot, SlotBackup } from "../workers/saveFile";
 import { viewStart } from "./locate";
 import { Modal } from "./Modal";
@@ -87,17 +87,52 @@ export function SlotTitle({ slot }: { slot: SaveSlot }) {
   return <strong>{slot.name}{slot.mode === "sandbox" && <span class="save-sandbox small" data-tip="A sandbox game: nothing is refused for money">Sandbox</span>}</strong>;
 }
 
+/** T-1247: a save's name typed over in place; Enter or leaving the box renames, Escape cancels. */
+function NameField({ slot, onDone }: { slot: SaveSlot; onDone: () => void }) {
+  const field = useRef<HTMLInputElement>(null);
+  const done = useRef(false);
+  // the name is put in once, not as `value`, so a render while typing keeps what is typed
+  useLayoutEffect(() => {
+    const f = field.current;
+    if (!f) return;
+    f.value = slot.name;
+    f.focus();
+    f.select();
+  }, []);
+  const finish = (keep: boolean) => {
+    if (done.current) return;
+    done.current = true;
+    const name = field.current?.value.trim() ?? "";
+    if (keep && name && name !== slot.name) manageSaveSlot("rename", slot.key, name);
+    onDone();
+  };
+  return <input ref={field} type="text" class="save-name-field" aria-label="Save slot name" maxLength={80}
+    onKeyDown={(e) => {
+      if (e.key === "Enter") { e.preventDefault(); finish(true); }
+      else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); finish(false); }
+    }}
+    onBlur={() => finish(true)} />;
+}
+
+const clockTime = (at: number) => new Date(at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
 /** One saved game. */
-function SlotCard({ slot, playing, now, writable, onRename, onDelete }: { slot: SaveSlot; playing: boolean; now: number; writable: boolean; onRename: () => void; onDelete: () => void }) {
+function SlotCard({ slot, playing, now, writable, renaming, onRename, onRenamed, onDelete }: { slot: SaveSlot; playing: boolean; now: number; writable: boolean; renaming: boolean; onRename: () => void; onRenamed: () => void; onDelete: () => void }) {
+  const byHand = savedByHand.value;
   return (
     <div class="save-card">
       <SlotThumb slot={slot} />
       <div class="save-info">
-        <div class="save-slot-title"><SlotTitle slot={slot} />{playing && <span class="save-playing small">Playing</span>}</div>
+        <div class="save-slot-title">
+          {renaming ? <NameField slot={slot} onDone={onRenamed} /> : <span class="save-name" onDblClick={onRename}><SlotTitle slot={slot} /></span>}
+          {playing && <span class="save-playing small">Playing</span>}
+        </div>
         <SlotFacts slot={slot} now={now} autosaved={playing && writable} />
         <div class="save-actions">
+          {playing && byHand && <span class="small muted save-by-hand num" data-tip={`Saved by hand ${fullDate(byHand)}`}>Saved {clockTime(byHand)}</span>}
+          {playing && <button class="btn text save-now" data-tip={writable ? "Save this game now (Ctrl+S)" : "Save this game now (Ctrl+S). Autosave stops in the other tab that has it open."} onClick={() => manageSaveSlot("save")}>Save</button>}
           {!playing && <button class="btn text save-open" data-tip="Play this game. The game you are playing is saved first." onClick={() => { manageSaveSlot("open", slot.key); savesOpen.value = false; }}>Open</button>}
-          <button class="btn text" onClick={onRename}>Rename</button>
+          <button class="btn text" data-tip="Double click the name to rename it too"onClick={onRename}>Rename</button>
           {!playing && <button class="btn text" onClick={onDelete}>Delete</button>}
         </div>
       </div>
@@ -119,7 +154,7 @@ function Backups({ backups, now }: { backups: SlotBackup[]; now: number }) {
 
 function Saves({ onNewGame }: { onNewGame: () => void }) {
   const [newName, setNewName] = useState("");
-  const [rename, setRename] = useState<{ key: string; name: string } | null>(null);
+  const [rename, setRename] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   // "2 min ago" moves on while the panel is open
   const [now, setNow] = useState(Date.now());
@@ -152,12 +187,8 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
       </form>
       <ul class="save-slots">
         {saves.slots.map((slot) => <li data-slot={slot.key} class={slot.key === saves.active ? "on" : ""}>
-          {rename?.key === slot.key ? <form class="save-slot-new" onSubmit={(e) => { e.preventDefault(); manageSaveSlot("rename", slot.key, rename.name); setRename(null); }}>
-            <input type="text" aria-label="Save slot name" maxLength={80} value={rename.name} onInput={(e) => setRename({ key: slot.key, name: (e.target as HTMLInputElement).value })} />
-            <button class="btn text" type="submit">Rename</button>
-            <button class="btn text" type="button" onClick={() => setRename(null)}>Cancel</button>
-          </form> : <SlotCard slot={slot} playing={slot.key === saves.active} now={Math.max(now, at)} writable={saves.writable}
-            onRename={() => setRename({ key: slot.key, name: slot.name })} onDelete={() => setRemoving(slot.key)} />}
+          <SlotCard slot={slot} playing={slot.key === saves.active} now={Math.max(now, at)} writable={saves.writable} renaming={rename === slot.key}
+            onRename={() => setRename(slot.key)} onRenamed={() => setRename(null)} onDelete={() => setRemoving(slot.key)} />
           {slot.key === saves.active && saves.backups.length > 0 && <Backups backups={saves.backups} now={Math.max(now, at)} />}
           {removing === slot.key && <div class="callout bad">
             <p>Delete "{slot.name}" from this browser?</p>

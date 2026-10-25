@@ -249,7 +249,7 @@ choice (Train share by default [T-833], which shows two colour pickers labelled 
 100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), the Day choice (Average, Weekday, Sat, Sun;
 "Demand shown for", below) [T-703], Show (trains, station names, capacity markers, full stretches [T-1152: the Traffic view's red edges, on by default, its hover saying so; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
-[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, Game (normal or sandbox, T-728), then,
+[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, place names, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, and the real network's faint opacity scales with it, though not while track snaps to it; `map/basemap.ts`) [T-1249], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, Game (normal or sandbox, T-728), then,
 when accounts are on, Account [T-1139]: who is signed in ("Signed in as alice", "Signed in with
 Google" or "Not signed in") and a button, Account settings or Sign in, that opens the same account
 panel as the icon at the top and the start menu's (sign in, recovery email, change password, sign
@@ -399,6 +399,14 @@ reads "No stations yet."
   cities its stations are in, lines, stations and cash. The game being played is marked Playing;
   every other card has Open (closes the panel and loads it) and Delete (asked first); every card
   has Rename. A slot with no stored picture shows "No picture yet" until it is next saved.
+- **Rename** [T-1247]: the Rename button or a double click on a card's name puts a box in its
+  place with the name selected; Enter or leaving the box renames, Escape puts the name back.
+- **Save** [T-1251]: the Playing card's Save, or Ctrl+S anywhere in the game, writes the slot now,
+  autosave on or off; then "Saved 9:41 PM" stands left of the card's buttons (the full date on
+  hover) and the tool notes say the same. In a tab whose autosave is off because the slot is open
+  in another, Save takes the slot over: this tab autosaves from then on, and the other says
+  "Autosave is off here because this game was saved in another tab." until a save by hand there
+  takes it back (architecture.md "One writer per slot").
 - Under the Playing card, its backups [T-744], newest first: "Backup 4 min ago · Day 26" (exact
   time on hover) and Restore as a copy, which closes the panel and opens the backup in a new slot.
 - Above the cards [T-1131]: Save to a file

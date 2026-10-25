@@ -85,6 +85,11 @@ export interface DisplaySettings {
   runInBackground: boolean;
   /** T-033: the map as the flat map or as a globe (MapLibre's, flat again from zoom 12) */
   projection: "flat" | "globe";
+  /** T-1248: the drawn width of lines and track as a multiple of their own, 0.5-2 */
+  lineWidth: number;
+  /** T-1249: the basemap's contrast, 0-1: below 1 everything but water and the land is mixed that
+   * much less toward the land colour (map/basemap.ts, map/realNetwork.ts) */
+  basemapContrast: number;
 }
 
 /** T-247: the UI scale setting's steps */
@@ -124,6 +129,8 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   moreCores: false,
   runInBackground: false,
   projection: "flat",
+  lineWidth: 1,
+  basemapContrast: 1,
 };
 
 const STORE = "trainworld-ui";
