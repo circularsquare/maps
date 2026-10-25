@@ -64,7 +64,7 @@ function Boards() {
     </select>
     {!d ? <p class="small muted">{st.error || "Loading…"}</p>
       : <ol class="lb-rows">
-        {d.rows.length === 0 && <li class="lb-empty muted">Nobody here yet.</li>}
+        {d.rows.length === 0 && <li class="muted">Nobody here yet.</li>}
         {d.rows.map((r) => <Row r={r} board={key} mine={!!meIn && r.rank === d.me!.rank && r.name === d.me!.name} />)}
         {d.me && !meIn && <><li class="lb-gap" /><Row r={d.me} board={key} mine /></>}
       </ol>}

@@ -12,7 +12,7 @@ import { useRef, useState } from "preact/hooks";
 import { fareAt, MAX_KM, NODE_GAP_KM, type FareNode } from "../game/fareCurve";
 import { unitMetres, unitShort } from "../game/format";
 import { canUndoFares, changeFares as setFares, undo } from "../game/fareUndo";
-import { Icon, Stepper } from "./widgets";
+import { Icon, Stepper, TypedValue } from "./widgets";
 
 /** The nodes as shown during a drag (km, US$): null when nothing is dragged. */
 export const farePreview = signal<FareNode[] | null>(null);
@@ -97,10 +97,11 @@ function limits(nodes: FareNode[], i: number, gap = NODE_GAP_KM) {
   };
 }
 
-/** A rate per display unit steps by this, US$ (T-1201). */
-const RATE_STEP = 0.005;
 const cents = (v: number) => Math.round(v * 100) / 100;
-const rateText = (r: number) => "$" + r.toFixed(3);
+const wholeCents = (r: number) => Math.abs(r * 100 - Math.round(r * 100)) < 1e-6;
+/** a rate in whole cents reads as cents, a typed or dragged one to a tenth of a cent */
+const rateNum = (r: number) => r.toFixed(wholeCents(r) ? 2 : 3);
+const rateText = (r: number) => "$" + rateNum(r);
 
 /** The rate per km of the stretch ending at node `i` (from 1), US$. */
 const rateOf = (nodes: FareNode[], i: number) => (nodes[i][1] - nodes[i - 1][1]) / (nodes[i][0] - nodes[i - 1][0]);
@@ -116,9 +117,10 @@ function fromRows(base: number, stretches: [number, number][]): FareNode[] {
   return out;
 }
 
-/** The rows under the graph (T-1201): the base fare, then each stretch's distances and rate per
- * unit, stepped or typed. A row's change keeps the other rows' values, so a rate or base change
- * moves every later node's fare by the same amount; a drag on the graph sets fares instead. */
+/** The rows under the graph (T-1201, T-1234): the base fare, then each stretch's end (typed) and
+ * rate per unit (stepped by whole cents, or typed). A row's change keeps the other rows' values, so a
+ * rate or base change moves every later node's fare by the same amount; a drag on the graph sets
+ * fares instead. One grid across the rows, so the steppers line up. */
 export function FareNodeRows({ nodes }: { nodes: FareNode[] }) {
   const kpu = unitMetres() / 1000;
   const unit = unitShort();
@@ -127,11 +129,12 @@ export function FareNodeRows({ nodes }: { nodes: FareNode[] }) {
   const put = (b: number, s: [number, number][]) => void setFares(fromRows(b, s));
   const setBase = (v: number) => put(v, stretches);
   return (
-    <ul class="rows">
+    <ul class="rows fare-rows">
       <li>
-        <span class="grow">Base fare</span>
+        <span class="fr-what">Base fare</span>
         <Stepper value={usd(base)} wide label="base fare" onStep={(s) => setBase(cents(base + s * 0.25))}
           type={{ text: base.toFixed(2), set: setBase, tip: "The fare for the shortest trip. Click to type an amount." }} />
+        <span />
       </li>
       {stretches.map(([km, rate], j) => {
         const i = j + 1;
@@ -141,12 +144,12 @@ export function FareNodeRows({ nodes }: { nodes: FareNode[] }) {
         const rateU = rate * kpu;
         const last = i === nodes.length - 1;
         const setU = (v: number) => { if (lim.kLo <= lim.kHi) put(base, stretches.map((s, k) => (k === j ? [clamp(v * kpu, lim.kLo, lim.kHi), s[1]] : s))); };
-        const uStep = u < 10 ? 0.5 : u < 100 ? 5 : 50;
         const withRate = (r: number) => fromRows(base, stretches.map((s, k) => (k === j ? [s[0], Math.max(0, r) / kpu] : s)));
         const setRate = (v: number) => void setFares(withRate(Math.round(v * 1000) / 1000));
+        // a step goes to the next whole cent above or below
         const stepRate = (s: number) => {
-          const at = rateU / RATE_STEP;
-          const next = withRate((s > 0 ? Math.floor(at + 1e-6) + 1 : Math.ceil(at - 1e-6) - 1) * RATE_STEP);
+          const at = rateU * 100;
+          const next = withRate((s > 0 ? Math.floor(at + 1e-6) + 1 : Math.ceil(at - 1e-6) - 1) / 100);
           // a stretch too short for the step to move its fare a cent moves it a cent
           if (next[i][1] === nodes[i][1] && (s > 0 || nodes[i][1] > nodes[i - 1][1])) {
             const dc = s > 0 ? 0.01 : -0.01;
@@ -159,14 +162,12 @@ export function FareNodeRows({ nodes }: { nodes: FareNode[] }) {
           <li>
             {/* the last node's distance changes no fare, since its rate holds past it: it is only dragged */}
             {last
-              ? <span class="grow">Past {fromText} {unit}</span>
-              : <>
-                  <Stepper value={`${fromText}-${distText(u)} ${unit}`} wide label={`end of stretch ${i}`} onStep={(s) => setU(snap(u + s * uStep, uStep))}
-                    type={{ text: distText(u), set: setU, tip: `Where this rate ends and the next begins, ${unit}. Click to type a distance.` }} />
-                  <span class="grow" />
-                </>}
-            <Stepper value={`+${rateText(rateU)} per ${unit}`} wide label={`rate of stretch ${i}`} onStep={stepRate}
-              type={{ text: rateU.toFixed(3), set: setRate, tip: `The fare rises ${rateText(rateU)} for each ${unit} ${span}. Click to type a rate.` }} />
+              ? <span class="fr-what">Past {fromText} {unit}</span>
+              : <span class="fr-what">{fromText}-<TypedValue label={`end of stretch ${i}`}
+                  type={{ text: distText(u), set: setU, tip: `Where this rate ends and the next begins, ${unit}. Click to type a distance.` }}>{distText(u)}</TypedValue>{unit}</span>}
+            <Stepper value={`+${rateText(rateU)}`} wide label={`rate of stretch ${i}`} onStep={stepRate}
+              type={{ text: rateNum(rateU), set: setRate, tip: `The fare rises ${rateText(rateU)} for each ${unit} ${span}. Click to type a rate.` }} />
+            <span>per {unit}</span>
           </li>
         );
       })}
@@ -316,7 +317,7 @@ export function FareGraph({ nodes }: { nodes: FareNode[] }) {
         <text class="fg-label" x={x(t)} y={B + 12} text-anchor={i === lastX && x(t) > R - 30 ? "end" : "middle"}>{tickText(t) + (i === lastX ? ` ${unit}` : "")}</text>
       ))}
       {/* a label the base fare's node would cover is left out */}
-      {yTicks.filter((v) => Math.abs(y(v) - y(shown[0][1])) > 10).map((v) => <text class="fg-label" x={L + 3} y={y(v) - 2}>{fareText(v)}</text>)}
+      {yTicks.filter((v) => Math.abs(y(v) - y(shown[0][1])) > 12).map((v) => <text class="fg-label" x={L + 3} y={y(v) - 2}>{fareText(v)}</text>)}
       <path class="fg-curve" d={curve} clip-path="url(#fare-clip)" />
       <rect class="fg-hover" x={L} y={T} width={R - L} height={B - T} data-tip={hoverTip}
         onPointerDown={plotDown} onPointerMove={(e) => { if (drag.current) move(e); else plotMove(e); }}

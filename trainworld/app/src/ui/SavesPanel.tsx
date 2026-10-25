@@ -10,7 +10,7 @@ import { cityById, isCity } from "../game/cities";
 import { money, plural } from "../game/format";
 import { SHADES } from "../game/shades";
 import { lastSaved } from "../game/money";
-import { allowCopyFolder, canCopyToFolder, copyFolder, pickCopyFolder, stopCopies, storageKept } from "../game/saveSafety";
+import { allowCopyFolder, canCopyToFolder, copyFolder, pickCopyFolder, stopCopies, storageKept, SUBFOLDER } from "../game/saveSafety";
 import { exportGame, importGame, newGame, manageSaveSlot, savedByHand, saveSlotsState } from "../workers/clockClient";
 import type { SaveSlot, SlotBackup } from "../workers/saveFile";
 import { viewStart } from "./locate";
@@ -205,16 +205,16 @@ function SaveSafety() {
   const kept = storageKept.value, c = copyFolder.value;
   const time = c?.at ? new Date(c.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
   return <div class="save-safety">
-    {kept === false && <p class="muted small" data-tip="The browser has not agreed to keep this site's storage, so a full disk can empty it. Copies in a folder are kept.">These saves can be lost if the disk fills up.</p>}
+    {kept === false && <p class="muted small" data-tip="The browser has not agreed to keep this site's storage, so a full disk can empty it. Games saved on this computer are kept.">These saves can be lost if the disk fills up.</p>}
     {canCopyToFolder && (!c
-      ? <button class="btn text" data-tip="Pick a folder outside the browser. Each saved game is copied there as a .save file every time it is saved." onClick={() => void pickCopyFolder()}>Keep copies in a folder</button>
+      ? <button class="btn text" data-tip={`Pick a folder on this computer. Each game is written as a .save file to a ${SUBFOLDER} folder inside it every time it is saved.`} onClick={() => void pickCopyFolder()}>Save on this computer</button>
       : c.state === "allow"
-        ? <button class="btn text" data-tip="The browser asks again for the folder on each visit" onClick={() => void allowCopyFolder()}>Allow copies to {c.name}</button>
+        ? <button class="btn text" data-tip={`The browser asks again for the folder on each visit. Games are saved in ${c.path}.`} onClick={() => void allowCopyFolder()}>Save to {c.name} again</button>
         : <p class="small">
-          <span class={c.state === "failed" ? "bad" : "muted"} data-tip={c.state === "failed" ? c.error : "Each saved game is copied there as a .save file every time it is saved"}>
-            {c.state === "failed" ? `Copies to ${c.name} failed` : `Copied to ${c.name}${time ? ` at ${time}` : ""}`}
+          <span class={c.state === "failed" ? "bad" : "muted"} data-tip={c.state === "failed" ? c.error : "Each game is written there as a .save file every time it is saved"}>
+            {c.state === "failed" ? `Saving to ${c.path} failed` : `Saved to ${c.path}${time ? ` at ${time}` : ""}`}
           </span>{" "}
-          <button class="btn text" data-tip="Stop copying to this folder. The copies there stay." onClick={() => void stopCopies()}>Stop</button>
+          <button class="btn text" data-tip="Stop saving to this folder. The files there stay." onClick={() => void stopCopies()}>Stop</button>
         </p>)}
   </div>;
 }

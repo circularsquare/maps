@@ -141,8 +141,8 @@ export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => vo
   );
 }
 
-/** A stepper's value that opens a box on a click (T-626). */
-function TypedValue(p: { label: string; type: { text: string; set: (v: number) => void; tip?: string }; children: ComponentChildren }) {
+/** A stepper's value that opens a box on a click (T-626); also alone, a typed value with no steps. */
+export function TypedValue(p: { label: string; type: { text: string; set: (v: number) => void; tip?: string }; children: ComponentChildren }) {
   const [draft, setDraft] = useState<string | null>(null);
   const done = useRef(false);
   const fresh = useRef(false);

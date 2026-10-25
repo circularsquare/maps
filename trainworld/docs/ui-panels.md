@@ -28,6 +28,10 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   Switching is instant and redraws only: no demand solve, no pack or style reload.
 - **Square buttons**, 1 px borders, small line icons as inline SVG (`ui/widgets.tsx`). No
   decoration that does nothing: section headings are plain text.
+- **No rules within a section** (Anita) [T-1237]: rows in a list, the ledger, the Cities total,
+  purpose blocks, leaderboard rows and a slot's backups are spaced (rows at least 28 px), never ruled.
+  A rule only separates sections about different things (the line panel's `.h.divided`, the
+  inspector's top edge); a list's column headers keep their thin rule over the rows.
 - **No motion but trains.** Instant state changes, no CSS transitions. Camera moves the game makes
   (search, Go to) jump with no flight [T-182]; the map's own gestures keep MapLibre's easing.
 - **Panels show what can change** (Anita) [T-253]: labels, numbers and states. No explanatory
@@ -342,17 +346,20 @@ the sim's edit history holds track, lines and schedules, so fare steps are kept 
 and any other edit drops them]. A node past the plot is an arrow
 on the plot's edge pointing toward it, with its hover; a click on the arrow zooms out to show it. A
 hover anywhere on the graph names the fare at that distance, a node's hover its distance and fare
-and the ways it drags. Below the graph one row per node [T-1201]: "Base fare" with its fare, then
-each stretch as its distances and its rate per display unit, "0-20 km" and "+$0.100 per km", the
-second "Past 20 km" with its rate only (following the first's end; the last node's distance changes no
-fare, so it is only dragged). Each value steps with the buttons (the base fare by
-$0.25; the first stretch's end by 0.5 under 10, 5 under 100, then 50, kept in order as a drag is; a rate to
-the next multiple of $0.005, or by a cent of fare where a stretch is too short for that to move it),
-or a click on it opens a box to type it, Enter or leaving the box applying and Escape cancelling
-[T-626, `TypedValue` in `ui/widgets.tsx`]. A row's change keeps every other row's value, so a base
-fare or rate change moves that node's fare and every later one's by the same amount, and a stretch's
-end keeps both rates; a rate never goes below $0. Fares stay whole cents, rates show three decimals.
-Dragging on the graph sets fares, and the rows' rates follow. Then what a 10 km or mile ride costs; cars
+and the ways it drags. The axis labels are 11 px in the graph's own units. Below the graph one row
+per node [T-1201, T-1234], no rules between them and none wrapping at the dock's narrowest width,
+their steppers lined up in one column: "Base fare" with its fare in a stepper, then each stretch as
+`0-` [20] `km`, only its end distance in a box (typed, no steps), and its rate in a stepper,
+[+$0.07] `per km`, the unit outside the box; the second "Past 20 km" with its rate only (following
+the first's end; the last node's distance changes no fare, so it is only dragged). The base fare
+steps by $0.25; a rate to the next whole cent above or below ($0.138 to $0.14 or $0.13), or by a
+cent of fare where a stretch is too short for that to move it. A click on any value opens a box to
+type it, Enter or leaving the box applying and Escape cancelling [T-626, `TypedValue` in
+`ui/widgets.tsx`]; a stretch's end is kept in order as a drag is. A row's change keeps every other
+row's value, so a base fare or rate change moves that node's fare and every later one's by the same
+amount, and a stretch's end keeps both rates; a rate never goes below $0. Fares stay whole cents; a
+rate shows two decimals when it is whole cents and three otherwise (typed or dragged). Dragging on
+the graph sets fares, and the rows' rates follow. Then cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
 
@@ -418,13 +425,17 @@ reads "No stations yet."
 - Under those buttons, keeping the saves when browser storage goes [T-1214; `game/saveSafety.ts`]:
   once a slot is written the browser is asked to keep the site's storage (`navigator.storage.persist`,
   which Chrome grants or refuses without a prompt); while it is refused the panel says "These saves
-  can be lost if the disk fills up." Where the browser can write to a folder (Chrome, Edge), "Keep
-  copies in a folder" lets the player pick one; from then on the clock worker copies every slot
-  there at once and each slot again at every save, one `<name> (<4 letters of its key>).save` per
-  slot written over each time, and the panel says "Copied to <folder> at 14:05" with Stop. The folder
-  is remembered beside the saves; on a later visit the browser wants it allowed again, so the line is
-  "Allow copies to <folder>" until the player clicks it. A failed copy says "Copies to <folder>
-  failed" (the reason on hover). Elsewhere Save to a file is the copy outside the browser.
+  can be lost if the disk fills up." Where the browser can write to a folder (Chrome, Edge), "Save
+  on this computer" opens the browser's folder picker, in Documents the first time and where the
+  last pick was after that (`startIn: "documents"`, `id: "anitabuilder-saves"`) [T-1235]. The copies
+  go in a `trainworld` folder inside the one picked, made if missing (the picked folder itself when
+  it is named `trainworld`). From then on the clock worker copies every slot there at once and each
+  slot again at every save, one `<name> (<4 letters of its key>).save` per slot written over each
+  time, and the panel says "Saved to <folder>/trainworld at 14:05" with Stop. The picked folder is
+  remembered beside the saves; on a later visit the browser wants it allowed again, so the line is
+  "Save to <folder> again" until the player clicks it. A failure says "Saving to
+  <folder>/trainworld failed" (the reason on hover). Elsewhere Save to a file is the copy outside
+  the browser.
 - A page opened with `?new=1`, `?synth=1` or `?demandTest=1` does not autosave: the top bar says
   "Autosave is off in this test page. Save a copy to keep the game." (the only place it is said,
   [T-971]), a `?new=1` page marks no
@@ -541,10 +552,9 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   until its network reaches demand), "Loading city data" (the packs downloading and opening in every
   worker) and "Calculating demand" (the solve to the zone in view's final), naming no cities and
   counting nothing (the packs open in one batch per worker, so no count could move). The percentage is
-  only the bar's hover ("42% loaded"). Under the bar, Cancel goes back to the start menu by reloading
-  the page, which frees everything the load took [T-1197]; the game is saved first, and if the save
-  does not answer within 5 s the page goes anyway. The card takes no input but the bar's hover and
-  Cancel (a press elsewhere pans the map beneath) and goes when the clock starts.
+  only the bar's hover ("42% loaded"). The card has no Cancel (T-1236: a reload does the same). It
+  takes no input but the bar's hover (a press elsewhere pans the map beneath) and goes when the
+  clock starts.
   Loading is the one place with motion [T-647, T-677, Anita; `ui/Spinner.tsx`]: on top of the card a
   drawn bunny rides a toy train in the theme's accent (104 px wide; wheels turn, the track's ties run
   by, the train chugs, the ears bob, steam puffs), and a 26 px copy of

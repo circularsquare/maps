@@ -220,14 +220,10 @@ export function pageWith(params: Record<string, string>): string {
 }
 /** T-1196: another game replaces this one by reloading the page into it, which frees everything the
  * last one held (its demand workers' memory never shrinks while they live: 2.5 GB each after all of
- * China). The game in hand is saved first; if it cannot be, the player is told and stays. `cancel`
- * (T-1197, a load given up): the page goes whatever the save says, after LEAVE_MS at most. */
-export function switchGame(params: Record<string, string>, pending?: PendingLoad, cancel = false) {
-  const go = () => location.replace(pageWith(params));
-  if (cancel) setTimeout(go, LEAVE_MS);
-  current?.leave(pending, go, cancel);
+ * China). The game in hand is saved first; if it cannot be, the player is told and stays. */
+export function switchGame(params: Record<string, string>, pending?: PendingLoad) {
+  current?.leave(pending, () => location.replace(pageWith(params)));
 }
-const LEAVE_MS = 5000;
 /** T-1197: whether the save fits in this device's memory; if not the player is told why. `then` runs if it does. */
 async function ifItFits(src: { bytes: Uint8Array } | { key: string }, then?: () => void): Promise<boolean> {
   const why = await saveRefusal(src);
@@ -477,15 +473,13 @@ export class ClockClient {
   fitNextGame() { this.fitNext = true; }
   /** T-1196: what to do once the worker has saved and let go of the game in hand */
   private onLeft: (() => void) | null = null;
-  leave(pending: PendingLoad | undefined, then: () => void, anyway = false) {
+  leave(pending: PendingLoad | undefined, then: () => void) {
     if (this.onLeft) return;
     // a worker that never started has no game to keep
     if (!this.worker) return then();
     this.onLeft = then;
-    this.leaveAnyway = anyway;
     this.post({ kind: "leave", pending });
   }
-  private leaveAnyway = false;
 
   post(msg: ToClock, transfer: Transferable[] = []) {
     if (this.worker) this.worker.postMessage(msg, transfer);
@@ -655,7 +649,7 @@ export class ClockClient {
       case "left": {
         const then = this.onLeft;
         this.onLeft = null;
-        if (msg.error && !this.leaveAnyway) say(msg.error, true);
+        if (msg.error) say(msg.error, true);
         else then?.();
         break;
       }

@@ -2,7 +2,7 @@
 // The game is playable from the moment the map and network
 // are drawn: the player can look around, inspect and build while demand loads. Only the clock
 // waits (game/loading.ts). Meanwhile a card in the middle of the map says what is loading and how
-// far it has got (the stage and a filling bar, T-243, T-1194); it takes no key and no pointer but its bar and Cancel, and goes when the clock
+// far it has got (the stage and a filling bar, T-243, T-1194); it takes no key and no pointer but its bar's, and goes when the clock
 // starts. If demand cannot load, a screen says so and offers a way on; it takes every key until then.
 // T-950: so does a load that can never finish (the game itself not starting, or nothing moving).
 
@@ -11,7 +11,6 @@ import { clock } from "../game/clock";
 import { world } from "../game/world";
 import { choosing, continueWithoutDemand, demandIdle, gameFailed, lastAlive, loadCannotFinish, loadFailure, loadProgress, startup } from "../game/loading";
 import { STAGE_TEXT } from "../game/loadBar";
-import { switchGame } from "../workers/clockClient";
 import { blockKeysOutside } from "./keys";
 import { BunnyTrain } from "./Spinner";
 
@@ -47,7 +46,7 @@ export function LoadBar({ fraction, step, thin, tip }: { fraction: number; step:
 }
 
 /** T-180: while a loaded game's clock waits for its first demand estimate, a card in the middle of
- * the map. Pointer events pass through it to the map, except on the bar (its hover) and Cancel.
+ * the map. Pointer events pass through it to the map, except on the bar (its hover).
  * T-677: the bunny's train on top. T-1194: it names the stage in hand (game/loadBar.ts), "Loading"
  * until the demand pool has a load to describe. */
 function LoadingCard() {
@@ -59,8 +58,6 @@ function LoadingCard() {
       <BunnyTrain />
       <p class="big">{step}</p>
       <LoadBar fraction={load?.fraction ?? 0} step={step} />
-      {/* T-1197: back to the start menu; the reload frees what the load took */}
-      <button class="btn text load-cancel" onClick={() => switchGame({}, undefined, true)}>Cancel</button>
     </div>
   </div>;
 }

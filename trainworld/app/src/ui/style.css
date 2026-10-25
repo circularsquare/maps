@@ -147,13 +147,11 @@ body.resizing, body.resizing * { user-select: none; }
 .h .right { margin-left: auto; font-weight: 400; }
 /* T-692: the line panel's rule between sections */
 .h.divided { border-top: 1px solid var(--rule); padding-top: 10px; margin-top: 12px; }
-.rows.flat > li { border-bottom: 0; }
 .note { margin-top: 10px; }
 
+/* T-1237: no rules between rows within a section (trainworld/CLAUDE.md); the row height spaces them */
 .rows { list-style: none; margin: 0; padding: 0; }
-.rows > li { display: flex; align-items: center; gap: 8px; min-height: 28px;
-             border-bottom: 1px dotted var(--rule); }
-.rows > li:last-child { border-bottom: 0; }
+.rows > li { display: flex; align-items: center; gap: 8px; min-height: 28px; }
 .rows .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rows .val { font-variant-numeric: tabular-nums; text-align: right; }
 .rows.pick > li { cursor: pointer; padding: 0 6px; margin: 0 -6px; user-select: none; }
@@ -204,7 +202,7 @@ body.resizing, body.resizing * { user-select: none; }
 @container cities (max-width: 298px) { .cities-box .rows.cities .city-star { display: none; } }
 @container cities (max-width: 277px) { .cities-box .c-money { display: none; } }
 .rows.cities .bar { height: 10px; }
-.rows.pick.cities > li.total { cursor: default; border-bottom: 1px solid var(--rule); }
+.rows.pick.cities > li.total { cursor: default; margin-bottom: 10px; }
 .rows.pick.cities > li.total:hover { background: none; }
 .rows.cities .val.neg, .money-neg { color: var(--bad); }
 .group.scope .btn { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -364,9 +362,9 @@ svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 1
 .rows.waiting .bad, .rows.waiting .val { color: var(--bad); }
 table.ledger { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 6px; }
 table.ledger th { font-weight: 400; color: var(--muted); font-size: 12px; text-align: right; padding: 0 0 2px; }
-table.ledger td { text-align: right; padding: 3px 0; border-bottom: 1px dotted var(--rule); white-space: nowrap; }
+table.ledger td { text-align: right; padding: 4px 0; white-space: nowrap; }
 table.ledger td:first-child { text-align: left; }
-table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
+table.ledger tr.b td { font-weight: 700; }
 /* T-447: the money history charts; T-1111: revenue blue, expenses red, in every theme */
 :root { --revenue: #3a78c9; --expense: #c8423b; }
 :root[data-shade="dark"] { --revenue: #6aa2ea; --expense: #ec7b7b; }
@@ -382,7 +380,7 @@ svg.hist { width: 100%; height: auto; stroke-width: 1.5; }
 svg.fare-graph { width: 100%; height: auto; margin: 4px 0 6px; user-select: none; touch-action: none; stroke: none; }
 .fg-grid { stroke: var(--rule); stroke-width: 1; stroke-opacity: .5; }
 .fg-axis { stroke: var(--rule); stroke-width: 1; }
-.fg-label { fill: var(--muted); font-size: 9px; }
+.fg-label { fill: var(--muted); font-size: 11px; }
 .fg-curve { fill: none; stroke: var(--accent); stroke-width: 1.8; }
 .fg-hover { fill: transparent; cursor: crosshair; }
 .fg-guide { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 2; pointer-events: none; }
@@ -424,6 +422,19 @@ rect.now { fill-opacity: .45; }
 .stepper button.v { cursor: text; }
 .stepper button.v:hover { background: var(--shade); }
 .stepper input.v { width: 52px; min-width: 0; text-align: center; border-top-color: var(--accent); border-bottom-color: var(--accent); outline: 0; }
+/* T-1234: the fare rows, one grid so the steppers line up; no rules between them, no row wraps.
+   A stretch's end is a typed box alone, between its "0-" and its unit. */
+.rows.fare-rows { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-auto-rows: minmax(28px, auto);
+  align-items: center; column-gap: 6px; white-space: nowrap; }
+.rows.fare-rows > li { display: contents; }
+.fare-rows .fr-what { display: flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; }
+.fare-rows .stepper.wide .v { min-width: 56px; }
+.fare-rows .fr-what .v { height: 24px; min-width: 36px; padding: 0 4px; box-sizing: border-box; margin: 0;
+  display: grid; place-items: center; font: inherit; font-variant-numeric: tabular-nums; color: var(--text);
+  background: var(--bg); border: 1px solid var(--rule); border-radius: 0; }
+.fare-rows .fr-what button.v { cursor: text; }
+.fare-rows .fr-what button.v:hover { background: var(--shade); }
+.fare-rows .fr-what input.v { width: 44px; text-align: center; border-color: var(--accent); outline: 0; }
 
 /* stops strip, drawn in the line's colour */
 .stops { list-style: none; margin: 0; padding: 0; }
@@ -560,7 +571,6 @@ rect.now { fill-opacity: .45; }
 .loading-card { background: var(--bg); border: 1px solid var(--rule); padding: 14px 20px;
   min-width: min(260px, 100%); max-width: 100%; text-align: center; }
 .loading-card p + p { margin-top: 2px; }
-.loading-card .load-cancel { pointer-events: auto; }
 /* T-677: the start menu, over the bare map until the player picks a game; the game's own chrome
    waits under it */
 .start-menu { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px;
@@ -933,12 +943,12 @@ rect.now { fill-opacity: .45; }
 .save-safety { margin-top: 4px; }
 .save-safety p { margin: 2px 0; }
 /* T-744: the playing slot's backups, under its card */
-.save-backups { margin-top: 6px; padding-top: 4px; border-top: 1px solid var(--rule); }
+.save-backups { margin-top: 10px; }
 .save-backup { display: flex; gap: 8px; justify-content: space-between; align-items: baseline; }
 .purpose-scope { display: flex; gap: 6px; margin: 8px 0; }
 .purpose-scope button { background: transparent; border: 1px solid currentColor; border-radius: 4px; padding: 4px 8px; color: inherit; opacity: .65; cursor: pointer; }
 .purpose-scope button.on { opacity: 1; background: #8882; }
-.purpose-item { padding: 6px 0; border-bottom: 1px solid #8883; }
+.purpose-item { padding: 8px 0; }
 .purpose-heading { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; margin-bottom: 4px; }
 /* T-193: one chart a purpose, departures toward the destination up from the baseline and home down */
 .purpose-mirror { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0 5px; }

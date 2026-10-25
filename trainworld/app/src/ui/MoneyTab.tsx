@@ -1,8 +1,7 @@
 // The Money tab: cash, the ledger, the fare curve and the fleet.
 
-import { distUnit, money, runCostRule, shortDistance, unitMetres, upkeepText } from "../game/format";
+import { money, runCostRule, shortDistance, upkeepText } from "../game/format";
 import { world } from "../game/world";
-import { fareAt } from "../game/fareCurve";
 import { liveMoney, moneyState } from "../game/money";
 import { scopeZone } from "../game/listScope";
 import { regionLedger } from "../game/regionMoney";
@@ -99,9 +98,6 @@ export function MoneyTab() {
       <div class="h">Fare<span class="right"><FareButtons nodes={f} /></span></div>
       <FareGraph nodes={m.fares.nodes} />
       <FareNodeRows nodes={f} />
-      <ul class="rows">
-        <Row label={`A 10 ${distUnit()} ride`}>{"$" + fareAt(f, 10 * unitMetres() / 1000).toFixed(2)}</Row>
-      </ul>
       <div class="h">Trains</div>
       <ul class="rows">
         <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)}. Running costs ${runCostRule(m)}. Cars are bought when a line needs more than the spare ones.`}>Cars owned</span>}>

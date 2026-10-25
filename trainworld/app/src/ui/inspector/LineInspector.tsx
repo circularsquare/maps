@@ -201,7 +201,7 @@ function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; period
       <div class="h divided">
         <span data-tip="The past 24 hours, counted train by train. Whoever does not fit on a full train waits for the next one.">Past 24 hours</span>
       </div>
-      <ul class="rows flat">
+      <ul class="rows">
         <Row label="Riders">{count(d.riders)}</Row>
         <PurposeSplit scope={[{ line: l.id }]} unit="riders" />
         <li data-tip={`Fares ${money(d.fares)} less running cost ${money(run)} for the trains and upkeep of its track and stations ${money(st.upkeep)}: ${money(d.fares - run - st.upkeep)} net${rule}\nUpkeep of track and stations several lines use is shared by their trains a day.`}>
@@ -349,7 +349,7 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
     if (to !== cars) void edit({ op: "lineCars", line: l.num, cars: to >= cap ? 0 : to });
   };
   return (
-    <ul class="rows flat">
+    <ul class="rows">
       <li>
         <span class="grow" data-tip={capText}>Train length</span>
         <Stepper value={carsText(cars)} wide label="train length" onStep={step} tipDown={cars > 1 ? tip(cars - 1) : capText} tipUp={cars < cap ? tip(cars + 1) : capText} />
@@ -376,7 +376,7 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
     return t;
   };
   return (
-    <ul class="rows flat">
+    <ul class="rows">
       <li>
         <span class="grow">Trains</span>
         <Segmented<boolean>

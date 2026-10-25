@@ -1,7 +1,7 @@
 // T-1196, T-1197, T-1214: switching games and keeping saves. In headless Chrome with a temporary
 // profile: the real New York save loaded into a slot; another slot opened from the saves panel's Open
 // reloads the page into it (a navigation, the new slot active, its network drawn); the loading card
-// names its stage and Cancel goes back to the start menu; a game too big for a demand worker is refused
+// names its stages in order; a game too big for a demand worker is refused
 // with a reason (the memory estimate for every Chinese zone); a copy folder (the page's private file
 // system standing in for a folder the player picks) gets every slot as a .save file and the slot again
 // after a save; the browser was asked to keep its storage.
@@ -56,7 +56,7 @@ try {
   // the panel's line for it (the folder set as a pick would set it)
   await page.evaluate(async () => {
     const S = await import('/src/game/saveSafety.ts');
-    S.copyFolder.value = { name: 'anitabuilder saves', state: 'on', at: Date.now() };
+    S.copyFolder.value = { name: 'Games', path: 'Games/trainworld', state: 'on', at: Date.now() };
     (await import('/src/ui/SavesPanel.tsx')).savesOpen.value = true;
   });
   await page.waitForSelector('.saves-panel .save-safety');
@@ -81,7 +81,7 @@ try {
   const after = { active: await active(), url: page.url(), lines: await page.evaluate(() => window.tw.world.value.save.lines.length) };
   report('open reloads into the slot', nav && after.active === first && after.lines === 109 && !/slot=/.test(after.url), `(navigated ${nav}, active ${after.active}, ${after.lines} lines, address ${after.url})`);
 
-  // the card through its stages, then Cancel back to the start menu
+  // the card through its stages
   await page.evaluate(async () => { (await import('/src/ui/SavesPanel.tsx')).savesOpen.value = true; });
   await page.waitForSelector(`.save-slots li[data-slot="${real}"] .save-open`);
   await Promise.all([page.waitForNavigation({ timeout: 60000 }), page.click(`.save-slots li[data-slot="${real}"] .save-open`)]);
@@ -92,10 +92,6 @@ try {
     await wait(100);
   }
   report('card stages in order', steps.join(' > ') === 'Loading > Loading city data > Calculating demand', `(${steps.join(' > ')})`);
-  await Promise.all([page.waitForNavigation({ timeout: 30000 }).catch(() => null), page.click('.loading-card .load-cancel')]);
-  await page.waitForSelector('.start-menu .start-save', { timeout: 60000 }).catch(() => null);
-  const menu = await page.locator('.start-menu').count();
-  report('cancel goes to the start menu', menu === 1, `(${page.url()})`);
 
   report('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {

@@ -23,10 +23,10 @@
 /* the leaderboards */
 .lb-pick { margin-bottom: 8px; }
 .lb-rows { list-style: none; margin: 0; padding: 0; }
-.lb-rows li { display: flex; gap: 10px; padding: 4px 0; border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
+/* T-1237: no rules between rows; the gap before the player's own row is space */
+.lb-rows li { display: flex; gap: 10px; padding: 5px 0; font-variant-numeric: tabular-nums; }
 .lb-rows li.me { font-weight: 700; }
-.lb-rows li.lb-gap { padding: 0; height: 6px; border-bottom-style: dashed; }
-.lb-rows li.lb-empty { border-bottom: 0; }
+.lb-rows li.lb-gap { padding: 0; height: 12px; }
 .lb-rank { flex: none; width: 28px; text-align: right; color: var(--muted); }
 .lb-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-value { flex: none; }
