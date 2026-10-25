@@ -22,8 +22,9 @@ solving workers once the zone is reached, a built station lies within 30 km of i
 rule, per zone), or the zone is selected (a zone selection, or a bubble selection in it); never for
 viewing alone (T-801: tens of MB in every solving worker); before that no solve waits for it or covers it,
 and a solve sent without a market pack open since is sent again. The workers compose the market
-from the packs they hold (`MarketPacks.market`) whenever packs open or close: a composition costs
-about as much for one pack as for forty, so the page sends the
+from the packs they hold (`MarketPacks.market`) whenever packs open or close: since T-1204 a
+composition is 15-90 ms natively for one to seven packs (the first a worker composes 0.3 s more),
+and the page still sends the
 market packs downloaded together in one `open` once none is still downloading, and a worker opens
 the `open`s waiting for it together, one composition for them all (T-889). **Packs close when
 nobody needs them** (T-301): a zone that is
@@ -35,16 +36,19 @@ figures stand (a bare zone's city figures stay shown); the next solve leaves it 
 solving with it closes it when that solve ends. It reopens as it first opened (download, mostly
 from the browser's cache, and opening). The bare copy of a zone that a shown solve covers closes at
 once. WASM memory never shrinks, so closing bounds a worker's peak (the freed space takes the next
-pack) rather than lowering it. `?perfOff=close` keeps everything open. **A market composition is
-about 450 MB** in each solving worker whatever its packs (its tables by pair of the world's 2,567
-places), so a recomposition (a market pack opened or closed) frees the old composition before
-composing, unless a market part still holds it, and a part composed of the same packs serves again
-without composing (T-1198): a selected zone's market opened and later closed leaves a worker with at
-most two compositions, and the close costs no composition. A new game
+pack) rather than lowering it. `?perfOff=close` keeps everything open. A recomposition (a market
+pack opened or closed) frees the old composition before composing, unless a market part still
+holds it, and a part composed of the same packs serves again without composing (T-1198). A
+composition holds its open places' pair rules and zones, 12-25 MB for a few places, and shares the
+world's corridor figures (34 MB, worked out at the worker's first composition and kept, T-1204,
+[demand-market.md](demand-market.md)); before T-1204 each was about 450 MB and 3-13 s a worker. A new game
 opens only New York; a save with construction in several cities pays
 each of their openings once, in every worker. Only the cells with a budget for a purpose hold its
 destination samples and their pair indices (T-395; about half of all cells x purposes have none),
-and a cell holds one sample per 8 of its trips (T-397). A sample's
+and a cell holds one sample per 8 of its trips (T-397). A zone opened coarse (`DemandApi::at_level`,
+T-1222, notes/T-1206.md) holds one per 64, 1 to 8 (airports, medical and attractions 1), and deals
+its commute pairs under 1 trip a period in chunks; the same model at a lower sample density, its
+rail on average its fine figure's. The game opens every zone fine until T-1223. A sample's
 pair index is held only once a network gives its layer a pair, written in place on the next
 network, and the pairs are found through a 4-byte-a-slot table sized from the last network's count
 (T-398). A city's everyday layer is opened beside its commutes (`EverydayApi::beside`, T-399) and

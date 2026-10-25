@@ -165,7 +165,7 @@ impl IntercityApi {
                     continue;
                 }
                 let t = w[z] * trips * sh;
-                let r = *m.pr(za.place, zb.place);
+                let r = m.pr(za.place, zb.place);
                 let d = m.zone_km(za, zb) as f32;
                 let car_c = car_min(d, zb.park) + r.cross;
                 let drive = if r.car { car_c } else { r.refm };

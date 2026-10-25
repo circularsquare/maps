@@ -134,6 +134,8 @@ pub struct Params {
     /// those trips in chunks of about this size, per block of `CHUNK_BLOCK` destination zones
     /// (`mode_choice`); 0 solves every pair.
     pub commute_chunk: f32,
+    /// Mixed into where the chunks start (0 in the game; the level test's other draws, T-1222).
+    pub chunk_salt: u32,
     /// Subzone pairs whose cheapest walks at the two ends together cost more than this many
     /// perceived minutes are not offered rail (T-090: a computational bound like
     /// `walk_cutoff_m`, set where little rail is left).
@@ -309,6 +311,7 @@ impl Default for Params {
             crowd_start: 0.7,
             prune_trips: 0.0,
             commute_chunk: COMMUTE_CHUNK,
+            chunk_salt: 0,
             // T-090: holds the pairs at what the 2.5 km edge had; on the real New York network
             // 0.3% of rail trips have walks of 70-80 perceived minutes together and 0.2% were
             // beyond it (a lone line in Manhattan, the worst case: 2.3%, and the bounds cost it
@@ -3951,7 +3954,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
                     continue;
                 }
                 let step = total / draws;
-                let at = super::intercity::unit_hash(i as u32, b);
+                let at = super::intercity::unit_hash(i as u32 ^ p.chunk_salt.wrapping_mul(0x27d4eb2f), b);
                 // draws before trips x: those at (n + at) x step below x
                 let before = |x: f64| (x / step - at).ceil().clamp(0., draws);
                 let mut lo = 0.;

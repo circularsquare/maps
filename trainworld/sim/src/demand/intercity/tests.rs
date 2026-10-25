@@ -9,12 +9,12 @@ fn intercity_prunes_symmetric_pairs_after_averaging() {
     assert_eq!(pairs.len(), 2);
     assert_eq!(pairs[0].trips, pairs[1].trips);
     assert!((pairs[0].trips - 0.01575).abs() < 1e-12);
-    assert!((keep.m.daily - 2. * 0.01575).abs() < 1e-12);
+    assert!((keep.m.cw.daily - 2. * 0.01575).abs() < 1e-12);
     assert_eq!((pairs[0].a, pairs[0].b), (pairs[1].b, pairs[1].a));
     // .015 and .0015 average below .01: both directions must disappear.
     let drop = IntercityApi::new(r#"{"sites":[[0,0,1,100,0],[120000,0,0.1,0,1]]}"#).unwrap();
     assert!(drop.all_pairs().is_empty());
-    assert_eq!(drop.m.daily, 0.);
+    assert_eq!(drop.m.cw.daily, 0.);
 }
 #[test]
 fn pair_at_finds_every_pair() {
@@ -53,9 +53,9 @@ fn network(api: &mut IntercityApi, freq: f32, slow: f32) {
 #[test]
 fn intercity_market_is_symmetric_and_conserved() {
     let a = api();
-    assert!((a.m.daily - 3600.).abs() < 1e-5);
+    assert!((a.m.cw.daily - 3600.).abs() < 1e-5);
     let pairs = a.all_pairs();
-    assert!((a.m.daily - pairs.iter().map(|p| p.trips).sum::<f64>()).abs() < 1e-9 * a.m.daily);
+    assert!((a.m.cw.daily - pairs.iter().map(|p| p.trips).sum::<f64>()).abs() < 1e-9 * a.m.cw.daily);
     for p in &pairs {
         let reverse = pairs.iter().find(|q| q.a == p.b && q.b == p.a).unwrap();
         assert_eq!(p.trips, reverse.trips);
@@ -335,7 +335,7 @@ fn intercity_no_stations_and_invalid_input_are_safe() {
 fn expanded_markets_route_boston_and_washington_and_keep_flow_layouts() {
     let mut a = IntercityApi::new(r#"{"markets":["New York","Philadelphia","Mercer","Boston","Washington DC"],"sites":[[0,0,100000,50000,0],[60000,0,100000,50000,1],[120000,0,100000,50000,2],[180000,0,100000,50000,3],[240000,0,100000,50000,4]]}"#).unwrap();
     assert_eq!(a.market_count(), 5);
-    assert_eq!(a.m.corridors.len(), 15);
+    assert_eq!(a.m.n_corridors(), 15);
     let mut times = vec![0.; 30];
     for lev in 0..3 {
         for k in 0..4 {
@@ -529,12 +529,12 @@ fn world_rows_add_up_and_open_as_the_game_opens_them() {
     let no = IntercityApi::new(&composition(&packs, None)).unwrap();
     assert_eq!((w.info()[3], no.info()[3]), (1., 0.));
     // the same market from the rows as from the zones
-    assert!((w.m.daily - no.m.daily).abs() < 1e-9 * no.m.daily, "{} {}", w.m.daily, no.m.daily);
-    assert_eq!(w.m.corridor_trips.len(), 15);
-    for (a, b) in w.m.corridor_trips.iter().zip(&no.m.corridor_trips) {
+    assert!((w.m.cw.daily - no.m.cw.daily).abs() < 1e-9 * no.m.cw.daily, "{} {}", w.m.cw.daily, no.m.cw.daily);
+    assert_eq!(w.m.cw.trips.len(), 15);
+    for (a, b) in w.m.cw.trips.iter().zip(&no.m.cw.trips) {
         assert!((a - b).abs() <= 1e-9 * b.max(1.));
     }
-    assert!(w.m.daily > 0. && w.m.leaving > 0.);
+    assert!(w.m.cw.daily > 0. && w.m.cw.leaving > 0.);
     // far places' zone pairs add up to the places' trips; near places' rows are their zones'
     let m = &w.m;
     for (i, j) in [(0, 2), (1, 2), (0, 1), (0, 0), (0, 3)] {
@@ -712,7 +712,7 @@ fn places_not_open_answer_by_place() {
     let mut some = IntercityApi::new(&composition(&[packs[0].clone(), packs[3].clone()], Some(&rows))).unwrap();
     assert_eq!(some.open_places(), vec![0, 3]);
     assert_eq!(some.zone_count(), full.zone_count());
-    assert_eq!(some.m.daily, full.m.daily);
+    assert_eq!(some.m.cw.daily, full.m.cw.daily);
     for a in [&mut full, &mut some] {
         a.set_network_ll(&[], &[], &[], &[], &[], &[]).unwrap();
         solve_all(a);
@@ -777,7 +777,7 @@ fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
     let mut a = IntercityApi::new(&composition(&packs, Some(&rows))).unwrap();
     let m = a.m.clone();
     // far with airports at both ends: some fly, the rest drive; near or with no airport: none fly
-    let r02 = *m.pr(0, 2);
+    let r02 = m.pr(0, 2);
     assert!(r02.car && r02.air > 0.5 && r02.air < 1., "{}", r02.air);
     assert!((r02.rest - 1. / (1. - r02.air)).abs() < 1e-3 * r02.rest);
     assert_eq!((m.pr(0, 1).air, m.pr(1, 2).air, m.pr(0, 3).air), (0., 0., 0.));
@@ -810,7 +810,7 @@ fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
     let packs = air_packs(true);
     let rows = rows_json(&packs);
     let mut s = IntercityApi::new(&composition(&packs, Some(&rows))).unwrap();
-    let r = *s.m.pr(0, 2);
+    let r = s.m.pr(0, 2);
     assert!(!r.car && r.air == 1. && r.rest == 1. && r.has_alt());
     // rail against air does not depend on the car (one logit: the plane's weight against the
     // car's cancels), up to the car's zone against place distance
@@ -825,13 +825,13 @@ fn trips_with_places_that_have_no_zone_add_up() {
     a.set_network_ll(&[], &[], &[], &[], &[], &[]).unwrap();
     solve_all(&mut a);
     let by_q: f64 = (0..PERIODS).map(|q| a.elsewhere(q)[2]).sum();
-    assert!(by_q > 0. && (by_q - a.m.leaving_by[2]).abs() < 1e-6 * by_q, "{by_q} {}", a.m.leaving_by[2]);
+    assert!(by_q > 0. && (by_q - a.m.cw.leaving_by[2]).abs() < 1e-6 * by_q, "{by_q} {}", a.m.cw.leaving_by[2]);
     // every site of place 2 selected: its trips with nowhere in the market are its row's
     let g = &a.m.groups.iter().find(|g| a.m.zones[a.m.cell_zone[g.lo]].place == 2).unwrap();
     let xy: Vec<f32> = (0..g.city.len()).flat_map(|i| [g.city.x[i], g.city.y[i]]).collect();
     let v = a.selection_flows(2, &xy, &vec![1.; g.city.len()]);
     let away = v[v.len() - 2];
-    assert!((away - a.m.leaving_by[2]).abs() < 1e-6 * away, "{away} {}", a.m.leaving_by[2]);
+    assert!((away - a.m.cw.leaving_by[2]).abs() < 1e-6 * away, "{away} {}", a.m.cw.leaving_by[2]);
     assert!(v[v.len() - 1] > 0.);
 }
 /// T-377: the worker's way: packs held once, composed; all modes from the composition with no
@@ -973,7 +973,7 @@ fn legacy_northeast_pack_opens() {
     let (zones, first, keys) = market_site_zones(&text).unwrap();
     eprintln!("{:.0} ms, info {:?}, {} sites, {} zones", now_ms() - t, a.info(), zones.len(), first.len());
     assert_eq!(keys.len() as f64, a.info()[0]);
-    assert!(a.info()[2] > 0. && a.m.commuters > 0.);
+    assert!(a.info()[2] > 0. && a.m.cw.commuters > 0.);
 }
 /// T-378: rail against the plane on real far pairs, one fast line between two stations (no feeders:
 /// walks and rides only), fares $1.50 + 10 cents a rail km, free flow in the busiest period.
@@ -1474,4 +1474,129 @@ fn sampled_selection_rail_stays_within_trips() {
         }
     }
     assert!(any > 0., "the lines carry some of the selections");
+}
+/// T-1204: a signature of every market figure on the world composition with `TW_T1204_IDS`'s packs
+/// (default Paris, Lille, Brussels, London, Amsterdam) and three made-up lines, with the composing
+/// time and heap. Run before and after a change to the composition: the hashes must agree.
+/// `cargo test --release --features demand t1204_signature -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t1204_signature() {
+    use crate::demand::alloc;
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let ids = std::env::var("TW_T1204_IDS").unwrap_or("par,lil,bru,lon,ams".into());
+    let ids: Vec<&str> = ids.split(',').filter(|s| !s.is_empty()).collect();
+    let reg: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/registry.json")).unwrap()).unwrap();
+    let by_id: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/market-rows.json")).unwrap()).unwrap();
+    let m = &reg["market"];
+    let rows: Vec<serde_json::Value> = reg["cities"].as_array().unwrap().iter().filter_map(|c| by_id.get(c["id"].as_str()?).cloned()).collect();
+    let world = serde_json::json!({"frame": m["frame"], "rule": m["rule"], "places": m["places"].as_array().unwrap().len(), "rows": rows}).to_string();
+    let packs: Vec<String> = ids.iter().map(|id| std::fs::read_to_string(format!("{root}/data/packs/{id}.market.json")).unwrap()).collect();
+    let mut h = MarketPacks::new(&world).unwrap();
+    let heap0 = alloc::current();
+    alloc::reset_peak();
+    let t = now_ms();
+    let empty = h.market().unwrap();
+    eprintln!("empty composition {:.0} ms, heap +{:.1} MB (peak +{:.1})", now_ms() - t, alloc::mb(alloc::current() - heap0), alloc::mb(alloc::peak() - heap0));
+    drop(empty);
+    for p in &packs {
+        h.add(p).unwrap();
+    }
+    let heap1 = alloc::current();
+    alloc::reset_peak();
+    let t = now_ms();
+    let mut a = h.market().unwrap();
+    eprintln!("composition of {} packs {:.0} ms, heap +{:.1} MB (peak +{:.1})", ids.len(), now_ms() - t, alloc::mb(alloc::current() - heap1), alloc::mb(alloc::peak() - heap1));
+    let t = now_ms();
+    let again = h.market().unwrap();
+    eprintln!("the same composition again {:.0} ms, heap +{:.1} MB with both held", now_ms() - t, alloc::mb(alloc::current() - heap1));
+    drop(again);
+    // lines of stations, (lon, lat) ends: Paris across, Paris to Brussels by Lille, London across
+    let lines = [((2.25, 48.84), (2.45, 48.88), 10), ((2.36, 48.88), (4.35, 50.84), 12), ((-0.20, 51.50), (0.02, 51.53), 10)];
+    let (mut ll, mut n, mut stops, mut times, mut tph, mut cars) = (vec![], vec![], vec![], vec![], vec![], vec![]);
+    for &((x0, y0), (x1, y1), k) in &lines {
+        let s0 = ll.len() as u32 / 2;
+        for i in 0..k {
+            let f = i as f64 / (k - 1) as f64;
+            ll.extend([x0 + f * (x1 - x0), y0 + f * (y1 - y0)]);
+            stops.push(s0 + i as u32);
+        }
+        n.push(k as u32);
+        let sec = if k == 12 { 900f32 } else { 150. };
+        for dir in 0..2 {
+            for _ in 0..3 {
+                times.extend((0..k).map(|i| if (dir == 0 && i + 1 < k) || (dir == 1 && i > 0) { sec } else { 0. }));
+            }
+        }
+        tph.extend([12f32, 8., 6.]);
+        cars.push(8f32);
+    }
+    let heap2 = alloc::current();
+    let t = now_ms();
+    a.set_network_ll(&ll, &n, &stops, &times, &tph, &cars).unwrap();
+    a.set_fares(0.3, 0.02, &vec![2.; 2 * stops.len()]).unwrap();
+    solve_all(&mut a);
+    for q in 0..PERIODS {
+        let total = a.seg(q);
+        assert!(a.crowd_with_external(q, &total));
+    }
+    eprintln!("network, five solves and a round {:.0} ms, heap +{:.1} MB", now_ms() - t, alloc::mb(alloc::current() - heap2));
+    let t = now_ms();
+    let modes = a.corridor_modes();
+    eprintln!("corridor_modes {:.0} ms; corridors with longer trips {} of {}, with commutes {}", now_ms() - t, a.corridor_trips().iter().filter(|&&t| t > 0.).count(), a.corridor_trips().len(), a.commute_base().iter().filter(|&&t| t > 0.).count());
+    drop(modes);
+    let mut sig: Vec<(String, u64)> = vec![];
+    let fnv = |v: &mut dyn Iterator<Item = u64>| v.fold(0xcbf29ce484222325u64, |h, x| (h ^ x).wrapping_mul(0x100000001b3));
+    let f64s = |v: &[f64]| fnv(&mut v.iter().map(|x| x.to_bits()));
+    let f32s = |v: &[f32]| fnv(&mut v.iter().map(|x| x.to_bits() as u64));
+    sig.push(("corridor_pairs".into(), fnv(&mut a.corridor_pairs().iter().map(|&x| x as u64))));
+    sig.push(("corridor_trips".into(), f64s(&a.corridor_trips())));
+    sig.push(("commute_base".into(), f64s(&a.commute_base())));
+    sig.push(("corridor_modes".into(), f32s(&a.corridor_modes())));
+    sig.push(("info".into(), f64s(&a.info())));
+    sig.push(("pair_counts".into(), f64s(&a.pair_counts())));
+    sig.push(("zone_boxes".into(), f64s(&a.zone_boxes())));
+    sig.push(("open_places".into(), fnv(&mut a.open_places().iter().map(|&x| x as u64))));
+    for q in 0..PERIODS {
+        // (the summary's fifth figure is the solve's time)
+        let mut sm = a.summary(q);
+        if sm.len() > 4 {
+            sm[4] = 0.;
+        }
+        for (k, v) in [("summary", sm), ("part_summary", a.part_summary(q)), ("corridor_summary", a.corridor_summary(q)), ("corridor_rail", a.corridor_rail(q)), ("commute_corridors", a.commute_corridors(q)), ("elsewhere", a.elsewhere(q)), ("corridor_shares", a.corridor_shares(q))] {
+            sig.push((format!("{k} {q}"), f64s(&v)));
+        }
+        for (k, v) in [("seg", a.seg(q)), ("board", a.board(q)), ("alight", a.alight(q)), ("entries", a.entries(q)), ("exits", a.exits(q)), ("fare_extra", a.fare_extra(q)), ("commute_loads", a.commute_loads(q)), ("everyday_loads", a.everyday_loads(q))] {
+            sig.push((format!("{k} {q}"), f32s(&v)));
+        }
+    }
+    for day in 0..3u32 {
+        for s in [0u32, 5, 12, 20, 25, 31] {
+            sig.push((format!("station_flows_day {s} {day}"), f64s(&a.station_flows_day(s, day))));
+        }
+        // a selection: the sites of a few zones of each open place, in their place's plane
+        for z in [0usize, 3, 10, 40, 80] {
+            let Some(zz) = a.m.zones.get(z) else { continue };
+            let (mut xy, mut share) = (vec![], vec![]);
+            for s in 0..a.m.n_sites() {
+                if a.m.cell_zone[s] == z {
+                    let (g, i) = a.m.site(s);
+                    xy.extend([g.city.x[i], g.city.y[i]]);
+                    share.push(1f32);
+                }
+            }
+            let p = zz.place as u32;
+            sig.push((format!("selection_flows_day z{z} {day}"), f64s(&a.selection_flows_day(p, &xy, &share, day))));
+            sig.push((format!("selection_all_day z{z} {day}"), f64s(&a.selection_all_day(p, &xy, &share, day, 31))));
+            sig.push((format!("selection_rail_day z{z} {day}"), f64s(&a.selection_rail_day(p, &xy, &share, day))));
+        }
+    }
+    let pt = a.place_trips(&[(0, 1), (100, 200), (5, 5)], 30.);
+    sig.push(("place_trips".into(), f64s(&pt.iter().flat_map(|&(x, y)| [x, y]).collect::<Vec<_>>())));
+    let all = fnv(&mut sig.iter().map(|s| s.1));
+    for (k, v) in &sig {
+        println!("SIG {k} {v:016x}");
+    }
+    println!("SIG all {all:016x}");
+    eprintln!("signature over {} parts: {all:016x}", sig.len());
 }

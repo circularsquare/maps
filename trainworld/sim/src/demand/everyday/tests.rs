@@ -1,4 +1,5 @@
 use super::*;
+use crate::demand::lod::Sampling;
 use crate::demand::network::{route_nodes, RealNet};
 fn fixture(distance: f32) -> (String, Vec<u8>) {
     let city = pack::City {
@@ -659,7 +660,7 @@ fn airport_and_medical_purposes_conserve_and_stay_optional() {
             to[site] += w as f64;
         }
     }
-    let one = 50.0 / SAMPLES[AIRPORT] as f64 + 1e-3;
+    let one = 50.0 / Sampling::FINE.max_few as f64 + 1e-3;
     assert!((to[1] - 30.0).abs() <= one && (to[2] - 20.0).abs() <= one, "{to:?}");
 }
 
@@ -900,7 +901,7 @@ fn airport_medical_before_after() {
             if let Some((_, c, d, _, _)) = new.edge(k) {
                 // before the 40-80 km taper, as the input is (samples under 150 m or past
                 // 80 km are gone already)
-                got[d] += new.airport_origin[c] as f64 * new.airport_scale[new.engine.z.cell_zone[c] as usize] / SAMPLES[AIRPORT] as f64;
+                got[d] += new.airport_origin[c] as f64 * new.airport_scale[new.engine.z.cell_zone[c] as usize] / Sampling::FINE.max_few as f64;
             }
         }
         // terminals of one airport (within 5 km of each other) together

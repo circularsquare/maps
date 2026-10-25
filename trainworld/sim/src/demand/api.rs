@@ -18,6 +18,7 @@
 use super::clock::now_ms;
 use super::days::{day_rate, load_factor, share_out, share_ret, WEEKDAY, WORK};
 use super::kernel::*;
+use super::lod::{self, Lod};
 use super::network::{Network, PERIODS};
 use super::pack::{self, City};
 use crate::track::params::{LEVELS, PERIOD_HOURS, PERIOD_LEVEL};
@@ -391,6 +392,8 @@ pub struct DemandApi {
     pub(crate) layout_same: bool,
     /// Whether `svc` and the periods were built with the parameters as they stand.
     reusable: bool,
+    /// The level the zone was opened at (`at_level`), which its everyday layer samples by.
+    pub(crate) lod: Lod,
 }
 
 /// Per period: start hour, end hour, demand level (0 high, 1 medium, 2 low), share of trips to
@@ -690,6 +693,7 @@ impl DemandApi {
             same: 0,
             layout_same: false,
             reusable: false,
+            lod: self.lod,
         }
     }
     /// The home weights access and subzones are built on (`with_weights`).
@@ -787,7 +791,21 @@ impl DemandApi {
         let (walk_home_zone, walk_work_zone) = no_rail_trips(&z, &gr, &base, &nr);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], span_in: vec![], same: 0, layout_same: false, reusable: false })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], span_in: vec![], same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)? })
+    }
+
+    /// `new` at a level of detail (T-1222, `lod::FINE` or `lod::COARSE`): the commute chunks
+    /// here, the everyday samples of the layer opened beside it (`EverydayApi::beside_with`).
+    /// A level is kept for good; another level is a new opening.
+    pub fn at_level(header: &str, bin: &[u8], level: u32) -> Result<DemandApi, String> {
+        let mut a = DemandApi::new(header, bin)?;
+        a.lod = Lod::of(level)?;
+        a.base.commute_chunk = a.lod.chunk;
+        Ok(a)
+    }
+
+    pub fn level(&self) -> u32 {
+        self.lod.level
     }
 
     /// The station complex of each station of the networks `set_network` is given from now on
@@ -807,10 +825,10 @@ impl DemandApi {
         self.span_in = span.to_vec();
     }
 
-    /// T-874: commute zone pairs under `COMMUTE_CHUNK` trips a period dealt in chunks
-    /// (`Params::commute_chunk`), or every pair solved (`?perfOff=chunks`).
+    /// T-874: commute zone pairs under the level's chunk (`Lod::chunk`) trips a period dealt in
+    /// chunks (`Params::commute_chunk`), or every pair solved (`?perfOff=chunks`).
     pub fn set_chunked(&mut self, on: bool) {
-        let c = if on { COMMUTE_CHUNK } else { 0.0 };
+        let c = if on { self.lod.chunk } else { 0.0 };
         if c != self.base.commute_chunk {
             self.params_mut().commute_chunk = c;
         }

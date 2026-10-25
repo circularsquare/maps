@@ -796,14 +796,16 @@ function marketStationFlows(at: Version, c: JobCluster | undefined, m: Intercity
  * or commutes, which depend on neither the period nor the network (most of the market's place
  * pairs have none), with a key of all of it. `row` maps a market corridor to its row, -1 none.
  * Made once per market part; the main thread is sent each key once (`sentTables`), since its tens
- * of MB in every period's result cost it a frame or more each (T-790).
+ * of MB in every period's result cost it a frame or more each (T-790). T-1204: the parts and
+ * compositions of one world share their corridors (`corridors_id`), so the table is made once for
+ * them all (it was tens of MB a part, and as many again to make).
  */
 interface MadeTable { table: CorridorTable; modes: Float32Array; row: Int32Array }
-const madeTables = new WeakMap<IntercityApi, MadeTable>();
+let madeTable: { id: number; made: MadeTable } | null = null;
 const sentTables = new Set<string>();
 function corridorTable(p: IntercityApi): MadeTable {
-  const had = madeTables.get(p);
-  if (had) return had;
+  const id = p.corridors_id();
+  if (madeTable?.id === id) return madeTable.made;
   const pairs = p.corridor_pairs(), trips = p.corridor_trips(), base = p.commute_base(), modes = p.corridor_modes();
   const N = trips.length, hasK = base.length === N, hasM = modes.length === 2 * N;
   const row = new Int32Array(N).fill(-1);
@@ -826,7 +828,7 @@ function corridorTable(p: IntercityApi): MadeTable {
   }
   t.key = `${n}:${(h >>> 0).toString(36)}`;
   const made = { table: t, modes, row };
-  madeTables.set(p, made);
+  madeTable = { id, made };
   return made;
 }
 

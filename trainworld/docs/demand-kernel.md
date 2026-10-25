@@ -192,7 +192,7 @@ levels:
    two walks together pass `pair_walk_max` (80 perceived minutes, 4.3) are skipped without being
    visited: each zone's destinations are kept cheapest walk first, and the destination zones by
    their cheapest walk, so an origin stops at the first that is too far. Zone pairs carrying under
-   0.1 trips in the period (`COMMUTE_CHUNK`; effect in notes/T-874.md) are dealt their trips in chunks (T-874, as the market's, T-780): per origin zone and block of
+   0.1 trips in the period (`COMMUTE_CHUNK`; effect in notes/T-874.md; 1 trip in a zone opened coarse, T-1222) are dealt their trips in chunks (T-874, as the market's, T-780): per origin zone and block of
    8 x 8 destination zones, the block's small pairs in zone order are sampled by trips from a
    start fixed by the zone and block, each pair drawn carrying its draws' trips and the rest
    skipped. Each block's trips stay exact and the deal depends on trips alone, never on rail's

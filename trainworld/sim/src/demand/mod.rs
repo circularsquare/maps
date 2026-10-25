@@ -31,6 +31,8 @@ pub mod days;
 pub mod kernel;
 /// T-036: four f32 lanes (wasm simd128, SSE2) for the commute pair loop.
 pub mod lanes;
+/// T-1222: a zone's level of detail.
+pub mod lod;
 pub mod network;
 pub mod pack;
 /// T-275: routed walks (around water, over bridges) and drives (OSM roads) from the pack.

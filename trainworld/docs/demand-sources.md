@@ -140,7 +140,8 @@ tail; the density weight sends the tail into dense centres, where high-order sho
 cluster, instead of spreading it evenly. Within the zone the cell is drawn by attraction, as for
 the local part, and the two parts share the cell's stratified samples (the central part last).
 Deterministic stratified destination samples per cell/purpose integrate that distribution: one
-per 8 of the cell's trips a day for the purpose, rounded up, 2 to 16 (T-397; none for a cell
+per 8 of the cell's trips a day for the purpose, rounded up, 2 to 16 (T-397; in a zone opened
+coarse one per 64, 1 to 8, T-1222; none for a cell
 with no budget for that purpose),
 then choose an actual destination cell by attraction weight. This is an approximation to
 continuous demand, not sampled individual travellers. It is stable across networks and reloads.

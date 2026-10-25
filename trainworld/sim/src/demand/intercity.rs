@@ -30,6 +30,7 @@ use crate::track::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
+use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
@@ -361,6 +362,63 @@ impl PairRule {
         self.car || self.air > 0.
     }
 }
+/// The ordered pair (i, j)'s border factor, the tail's income factor, near or not, and the
+/// distance between their centres (`pair_rule`'s first part).
+#[inline]
+fn pair_trip_rule(places: &[Place], countries: &[String], rule: &Rule, ground: bool, i: usize, j: usize) -> (f64, f64, bool, f64) {
+    let (p, q) = (&places[i], &places[j]);
+    let km = if i == j {
+        0.
+    } else if ground {
+        chord_km(&p.u, &q.u)
+    } else {
+        ((p.x - q.x).hypot(p.y - q.y) / 1000.) as f64
+    };
+    let b = border_factor(rule, &countries[p.country as usize], p.inc, &countries[q.country as usize]);
+    let rel = if p.inc > 0. { (q.inc / p.inc).min(1.).powf(rule.eps_t) } else { 1. };
+    (b, rel, km < rule.near_km, km)
+}
+/// The ordered pair (i, j)'s rule (`PairRule`).
+fn pair_rule(places: &[Place], countries: &[String], rule: &Rule, ground: bool, mp: &Params, i: usize, j: usize) -> PairRule {
+    let (b, rel, near, km) = pair_trip_rule(places, countries, rule, ground, i, j);
+    let (car, air, rest, refm, cross) = pair_mode_rule(places, countries, mp, i, j, near, km);
+    PairRule { b, rel, near, km, car, air, rest, refm, cross }
+}
+/// `pair_rule`'s modes for the ordered pair (i, j), near or not, `km` apart: whether a car can go,
+/// the share of the trips not by rail that fly, the weight of every mode but rail, the reference
+/// minutes and the crossings' minutes.
+#[inline]
+fn pair_mode_rule(places: &[Place], countries: &[String], mp: &Params, i: usize, j: usize, near: bool, km: f64) -> (bool, f32, f32, f32, f32) {
+    let (p, q) = (&places[i], &places[j]);
+    // T-378: a car within a landmass; a plane between far places each with an airport;
+    // both by place, the same whoever builds what (very far pairs coarse, T-362)
+    let car = p.road == q.road;
+    // the best pair of airports: the drives to them, and a direct flight or a change
+    let flight = if i == j || near {
+        None
+    } else {
+        let mut best: Option<f64> = None;
+        for (x, xd) in &p.air {
+            for (y, yd) in &q.air {
+                let direct = xd.contains(&(j as u32)) || yd.contains(&(i as u32));
+                let v = air_min(km, x + y, direct);
+                best = Some(best.map_or(v, |b| b.min(v)));
+            }
+        }
+        best.map(|v| v as f32)
+    };
+    let cross = if car && i != j { crossing_min((&countries[p.country as usize], p.lat), (&countries[q.country as usize], q.lat)) } else { 0. };
+    let car_m = car_min(km as f32, (0.5 * (p.park + q.park)) as f32) + cross;
+    let (air, rest, refm) = match (car, flight) {
+        (true, Some(f)) => {
+            let w = (-mp.mode_beta(car_m) * (f - car_m)).clamp(-80., 80.).exp();
+            (w / (1. + w), 1. + w, car_m)
+        }
+        (false, Some(f)) => (1., 1., f),
+        _ => (0., 1., car_m),
+    };
+    (car, air, rest, refm, cross)
+}
 struct Zone {
     /// centre in the output frame, and on the unit sphere (zeros in a plane pack)
     x: f32,
@@ -403,7 +461,10 @@ struct Market {
     anchor: Option<Frame>,
     places: Vec<Place>,
     countries: Vec<String>,
-    pp: Vec<PairRule>,
+    /// T-1204: the pair rules of the open places (every pair of places was 300 MB a worker)
+    rules: Rules,
+    /// `market_params()`, for the pair rules worked out when asked
+    mp: Params,
     near: HashMap<(u32, u32), f64>,
     zones: Vec<Zone>,
     n_gid: usize,
@@ -417,18 +478,39 @@ struct Market {
     commutes: Vec<(u32, u32, f32)>,
     c_home: (Vec<u32>, Vec<u32>),
     c_work: (Vec<u32>, Vec<u32>),
-    commuters: f64,
     /// T-1175: everyday outings across a zone line, by home zone (here), activity zone (global
     /// id) and purpose
     everyday: Vec<EPair>,
-    c_corridor: Vec<f64>,
-    corridors: Vec<(usize, usize)>,
-    corridor_of: Vec<usize>,
-    corridor_trips: Vec<f64>,
+    /// T-1204: the place pairs' figures no network changes, shared by every composition of a
+    /// world with rows (`MarketPacks`)
+    cw: Rc<Corridors>,
+}
+/// T-1204: the pair rules with an open place at one end: each open place's row (its pairs with
+/// every place, `out`) and column (`inn`). Any other pair's rule is worked out when asked, which
+/// only `corridor_modes` and the trip explorer between two places that are not open do (the
+/// corridors' trips, `Market::corridors_of`, work out their factors themselves).
+#[derive(Default)]
+struct Rules {
+    /// per place, its index among the open places, or `u32::MAX`
+    slot: Vec<u32>,
+    /// the open places, ascending
+    open: Vec<usize>,
+    out: Vec<PairRule>,
+    inn: Vec<PairRule>,
+}
+/// T-1204: the market's corridors (unordered place pairs a <= b, numbered as a loop over a then
+/// b: `Market::corridor`) and their figures that depend on the places alone: their longer trips a
+/// day, both ways; the commutes between zones on each, both ways (corridor ascending, those with
+/// any); each place's departures to places with no zone; the totals.
+struct Corridors {
+    /// distinct for each set worked out (`IntercityApi::corridors_id`)
+    id: u32,
+    trips: Vec<f64>,
+    commute: Vec<(u32, f64)>,
+    commuters: f64,
+    leaving_by: Vec<f64>,
     daily: f64,
     leaving: f64,
-    /// each place's departures a day to places with no zone
-    leaving_by: Vec<f64>,
     place_pairs: usize,
 }
 
@@ -663,6 +745,20 @@ struct Pass {
     e_frac: Vec<f32>,
 }
 
+thread_local! {
+    static CORRIDORS_SEEN: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
+}
+fn next_corridors_id() -> u32 {
+    CORRIDORS_SEEN.with(|c| {
+        c.set(c.get() + 1);
+        c.get()
+    })
+}
+/// The index of pair (a, b), a <= b < n, among all such pairs numbered a then b.
+#[inline(always)]
+fn tri(n: usize, a: usize, b: usize) -> usize {
+    a * (2 * n - a + 1) / 2 + (b - a)
+}
 #[inline(always)]
 fn chord_km(ua: &[f64; 3], ub: &[f64; 3]) -> f64 {
     let c = ((ua[0] - ub[0]).powi(2) + (ua[1] - ub[1]).powi(2) + (ua[2] - ub[2]).powi(2)).sqrt();
@@ -734,17 +830,32 @@ impl Market {
             ((a.x - b.x).hypot(a.y - b.y) / 1000.) as f64
         }
     }
+    /// The ordered pair (i, j)'s rule: an open place's row or column, else worked out (T-1204).
     #[inline(always)]
-    fn pr(&self, i: usize, j: usize) -> &PairRule {
-        &self.pp[i * self.places.len() + j]
+    fn pr(&self, i: usize, j: usize) -> PairRule {
+        let np = self.places.len();
+        let r = &self.rules;
+        let (si, sj) = (r.slot[i], r.slot[j]);
+        if si != u32::MAX {
+            r.out[si as usize * np + j]
+        } else if sj != u32::MAX {
+            r.inn[sj as usize * np + i]
+        } else {
+            pair_rule(&self.places, &self.countries, &self.rule, self.ground, &self.mp, i, j)
+        }
     }
     /// Trips a day from zone-like sums `(g, t)` at place `i` to `(a, ta)` at place `j`, `d` km.
     #[inline(always)]
     fn directed(&self, i: usize, j: usize, g: f64, t: f64, a: f64, ta: f64, d: f64) -> f64 {
         let r = self.pr(i, j);
+        self.directed_by(r.b, r.rel, g, t, a, ta, d)
+    }
+    /// `directed` with the pair's border and income factors given.
+    #[inline(always)]
+    fn directed_by(&self, b: f64, rel: f64, g: f64, t: f64, a: f64, ta: f64, d: f64) -> f64 {
         let ground = if g > 0. { g * self.rule.ground(d) * a } else { 0. };
-        let tail = if t > 0. { t * self.rule.tail(d) * ta * r.rel } else { 0. };
-        r.b * (ground + tail)
+        let tail = if t > 0. { t * self.rule.tail(d) * ta * rel } else { 0. };
+        b * (ground + tail)
     }
     /// A 6 km zone pair's trips a day each way: the mean of the two directions. Near places' zones
     /// at their own distance, far places' at their centres' (so their pairs add up to the places').
@@ -758,7 +869,7 @@ impl Market {
     /// them out once (T-780): the same figure to the bit.
     #[inline(always)]
     fn eachway_with(&self, a: &Zone, b: &Zone, (gc, tc): (f64, f64)) -> f64 {
-        let one = |r: &PairRule, g: f64, t: f64, at: f64, ta: f64| r.b * ((if g > 0. { g * gc * at } else { 0. }) + if t > 0. { t * tc * ta * r.rel } else { 0. });
+        let one = |r: PairRule, g: f64, t: f64, at: f64, ta: f64| r.b * ((if g > 0. { g * gc * at } else { 0. }) + if t > 0. { t * tc * ta * r.rel } else { 0. });
         (one(self.pr(a.place, b.place), a.g, a.t, b.a, b.ta) + one(self.pr(b.place, a.place), b.g, b.t, a.a, a.ta)) * 0.5
     }
     /// The ground and tail curves of zones a and b (`eachway_with`).
@@ -791,8 +902,34 @@ impl Market {
         let q = &self.places[j];
         (self.directed(z.place, j, z.g, z.t, q.a, q.ta, r.km) + self.directed(j, z.place, q.g, q.t, z.a, z.ta, r.km)) * 0.5
     }
+    /// The corridor of places i and j (either order): pairs a <= b numbered a then b.
     fn corridor(&self, i: usize, j: usize) -> usize {
-        self.corridor_of[i.min(j) * self.places.len() + i.max(j)]
+        tri(self.places.len(), i.min(j), i.max(j))
+    }
+    fn n_corridors(&self) -> usize {
+        let np = self.places.len();
+        np * (np + 1) / 2
+    }
+    /// T-1204: the corridor of two open places among the open places' corridors (the periods'
+    /// rail figures are kept for those alone), in the same order as `corridor`.
+    #[inline]
+    fn open_corridor(&self, i: usize, j: usize) -> usize {
+        let (a, b) = (self.rules.slot[i] as usize, self.rules.slot[j] as usize);
+        tri(self.rules.open.len(), a.min(b), a.max(b))
+    }
+    fn n_open_corridors(&self) -> usize {
+        let k = self.rules.open.len();
+        k * (k + 1) / 2
+    }
+    /// The open places' corridors: (index among them, corridor), in corridor order.
+    fn open_corridors(&self) -> impl Iterator<Item = (usize, usize)> + '_ {
+        let (np, open) = (self.places.len(), &self.rules.open);
+        (0..open.len()).flat_map(move |a| (a..open.len()).map(move |b| tri(np, open[a], open[b]))).enumerate()
+    }
+    /// Every corridor's two places, in corridor order.
+    fn each_corridor(&self) -> impl Iterator<Item = (usize, usize)> {
+        let np = self.places.len();
+        (0..np).flat_map(move |a| (a..np).map(move |b| (a, b)))
     }
     /// Site `s` (global): its group's city and its index there.
     #[inline(always)]
@@ -805,6 +942,93 @@ impl Market {
     }
     fn n_sites(&self) -> usize {
         self.cell_zone.len()
+    }
+    /// T-1204: the corridors' figures (`Corridors`): each corridor's longer trips a day (as
+    /// `place_eachway` gives them, its pair factors worked out here rather than kept), the
+    /// commutes on it from the rows (`commute_rows`, by place) or else from the composition's.
+    fn corridors_of(&self, commute_rows: Option<&[Vec<(u32, f64)>]>) -> Corridors {
+        let np = self.places.len();
+        let mut commute: BTreeMap<u32, f64> = BTreeMap::new();
+        let mut commuters = 0.;
+        match commute_rows {
+            Some(rows) => {
+                for (p, list) in rows.iter().enumerate() {
+                    for &(j, n) in list {
+                        if (j as usize) < np && n.is_finite() && n >= 0. {
+                            *commute.entry(self.corridor(p, j as usize) as u32).or_insert(0.) += 2. * n;
+                            commuters += n;
+                        }
+                    }
+                }
+            }
+            None => {
+                for &(h, w, n) in &self.commutes {
+                    let c = self.corridor(self.zones[h as usize].place, self.gid_place[w as usize] as usize);
+                    *commute.entry(c as u32).or_insert(0.) += 2. * n as f64;
+                    commuters += n as f64;
+                }
+            }
+        }
+        // what `pair_trip_rule` reads of each place, once a place: the border factor's general
+        // part, and whether its country is in the open area (country ids name one country each)
+        let rule = &self.rule;
+        let general: Vec<f64> = self.places.iter().map(|p| rule.border * p.inc.powf(rule.border_eps)).collect();
+        let open_area: Vec<bool> = self.countries.iter().map(|c| OPEN_AREA.contains(&c.as_str())).collect();
+        let factors = |i: usize, j: usize| {
+            let (p, q) = (&self.places[i], &self.places[j]);
+            let b = if p.country == q.country {
+                1.
+            } else if open_area[p.country as usize] && open_area[q.country as usize] {
+                OPEN_AREA_BORDER.max(general[i])
+            } else {
+                general[i]
+            };
+            // a ratio of 1 or more is held at 1, and 1 to any power is 1
+            let rel = if p.inc > 0. {
+                let x = (q.inc / p.inc).min(1.);
+                if x == 1. { 1. } else { x.powf(rule.eps_t) }
+            } else {
+                1.
+            };
+            (b, rel)
+        };
+        let mut ct = vec![0f64; self.n_corridors()];
+        let mut to_places = vec![0f64; np];
+        let mut pairs = 0usize;
+        for i in 0..np {
+            let p = &self.places[i];
+            if !p.has {
+                continue;
+            }
+            for j in i..np {
+                let q = &self.places[j];
+                if !q.has {
+                    continue;
+                }
+                let km = if i == j {
+                    0.
+                } else if self.ground {
+                    chord_km(&p.u, &q.u)
+                } else {
+                    ((p.x - q.x).hypot(p.y - q.y) / 1000.) as f64
+                };
+                let t = if km < rule.near_km {
+                    self.near.get(&(i as u32, j as u32)).copied().unwrap_or(0.)
+                } else {
+                    let ((bi, ri), (bj, rj)) = (factors(i, j), factors(j, i));
+                    (self.directed_by(bi, ri, p.g, p.t, q.a, q.ta, km) + self.directed_by(bj, rj, q.g, q.t, p.a, p.ta, km)) * 0.5
+                };
+                if t > 0. {
+                    ct[tri(np, i, j)] += 2. * t;
+                    // a place's own pairs both start there
+                    to_places[i] += t;
+                    to_places[j] += t;
+                    pairs += if i == j { 1 } else { 2 };
+                }
+            }
+        }
+        let leaving_by: Vec<f64> = (0..np).map(|p| if self.places[p].has { (self.places[p].dep - to_places[p]).max(0.) } else { 0. }).collect();
+        Corridors { id: next_corridors_id(), daily: ct.iter().sum(), leaving: leaving_by.iter().sum(), trips: ct, commute: commute.into_iter().collect(), commuters, leaving_by, place_pairs: pairs }
     }
     /// Each open place's run of zones (zones are laid out place by place): (place, first, end).
     fn place_spans(&self) -> Vec<(usize, usize, usize)> {
@@ -933,11 +1157,12 @@ fn compose(c: ComposeIn) -> Result<Built, String> {
 }
 
 fn build(b: Built) -> Result<Market, String> {
-    build_for(b, None)
+    build_for(b, None, None)
 }
 /// `build`, with the near totals added up only for pairs of places with an end in `near_for`
 /// (indexed by place), and only those places' commutes (T-929: the rows of those places alone).
-fn build_for(b: Built, near_for: Option<&[bool]>) -> Result<Market, String> {
+/// `reuse`: the corridors' figures of an earlier composition of the same world with rows.
+fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) -> Result<Market, String> {
     let Built { mut zones, rule, out, places: np, rows, world, closed, legacy_commutes } = b;
     let out_frame = match &out {
         Some(f) => Some(make_frame(f)?),
@@ -1168,7 +1393,6 @@ fn build_for(b: Built, near_for: Option<&[bool]>) -> Result<Market, String> {
     }
     groups.sort_by_key(|g| g.lo);
     // ---- a closed world: each zone's normaliser over the others (the old pack's market)
-    let near_km = rule.near_km;
     let ground_km = |a: &Zone, b: &Zone| if ground { chord_km(&a.u, &b.u) } else { ((a.x - b.x).hypot(a.y - b.y) / 1000.) as f64 };
     if closed {
         let mut n = vec![0f64; mz.len()];
@@ -1275,56 +1499,20 @@ fn build_for(b: Built, near_for: Option<&[bool]>) -> Result<Market, String> {
             }
         }
     }
-    // ---- per pair of places
-    let mut pp = vec![PairRule::default(); np * np];
+    // ---- per pair of places with an open one (T-1204: every pair was 300 MB a worker)
     let mp = market_params();
-    for i in 0..np {
-        for j in 0..np {
-            let (p, q) = (&places[i], &places[j]);
-            let km = if i == j {
-                0.
-            } else if ground {
-                chord_km(&p.u, &q.u)
-            } else {
-                ((p.x - q.x).hypot(p.y - q.y) / 1000.) as f64
-            };
-            let b = border_factor(&rule, &countries[p.country as usize], p.inc, &countries[q.country as usize]);
-            let rel = if p.inc > 0. { (q.inc / p.inc).min(1.).powf(rule.eps_t) } else { 1. };
-            let near = km < near_km;
-            // T-378: a car within a landmass; a plane between far places each with an airport;
-            // both by place, the same whoever builds what (very far pairs coarse, T-362)
-            let car = p.road == q.road;
-            // the best pair of airports: the drives to them, and a direct flight or a change
-            let flight = if i == j || near {
-                None
-            } else {
-                let mut best: Option<f64> = None;
-                for (x, xd) in &p.air {
-                    for (y, yd) in &q.air {
-                        let direct = xd.contains(&(j as u32)) || yd.contains(&(i as u32));
-                        let v = air_min(km, x + y, direct);
-                        best = Some(best.map_or(v, |b| b.min(v)));
-                    }
-                }
-                best.map(|v| v as f32)
-            };
-            let cross = if car && i != j { crossing_min((&countries[p.country as usize], p.lat), (&countries[q.country as usize], q.lat)) } else { 0. };
-            let car_m = car_min(km as f32, (0.5 * (p.park + q.park)) as f32) + cross;
-            let (air, rest, refm) = match (car, flight) {
-                (true, Some(f)) => {
-                    let w = (-mp.mode_beta(car_m) * (f - car_m)).clamp(-80., 80.).exp();
-                    (w / (1. + w), 1. + w, car_m)
-                }
-                (false, Some(f)) => (1., 1., f),
-                _ => (0., 1., car_m),
-            };
-            pp[i * np + j] = PairRule { b, rel, near, km, car, air, rest, refm, cross };
+    let mut rules = Rules { slot: vec![u32::MAX; np], ..Rules::default() };
+    for (p, pl) in places.iter().enumerate() {
+        if pl.open {
+            rules.slot[p] = rules.open.len() as u32;
+            rules.open.push(p);
         }
     }
-    let corridors: Vec<(usize, usize)> = (0..np).flat_map(|a| (a..np).map(move |b| (a, b))).collect();
-    let mut corridor_of = vec![0; np * np];
-    for (i, &(a, b)) in corridors.iter().enumerate() {
-        corridor_of[a * np + b] = i;
+    rules.out.reserve_exact(rules.open.len() * np);
+    rules.inn.reserve_exact(rules.open.len() * np);
+    for &i in &rules.open {
+        rules.out.extend((0..np).map(|j| pair_rule(&places, &countries, &rule, ground, &mp, i, j)));
+        rules.inn.extend((0..np).map(|j| pair_rule(&places, &countries, &rule, ground, &mp, j, i)));
     }
     let mut m = Market {
         rule,
@@ -1334,7 +1522,8 @@ fn build_for(b: Built, near_for: Option<&[bool]>) -> Result<Market, String> {
         anchor: groups.first().and_then(|g| g.frame),
         places,
         countries,
-        pp,
+        rules,
+        mp,
         near,
         zones: mz,
         n_gid,
@@ -1346,16 +1535,8 @@ fn build_for(b: Built, near_for: Option<&[bool]>) -> Result<Market, String> {
         commutes: vec![],
         c_home: (vec![], vec![]),
         c_work: (vec![], vec![]),
-        commuters: 0.,
         everyday: vec![],
-        c_corridor: vec![0.; corridors.len()],
-        corridors,
-        corridor_of,
-        corridor_trips: vec![],
-        daily: 0.,
-        leaving: 0.,
-        leaving_by: vec![],
-        place_pairs: 0,
+        cw: Rc::new(Corridors { id: 0, trips: vec![], commute: vec![], commuters: 0., leaving_by: vec![], daily: 0., leaving: 0., place_pairs: 0 }),
     };
     for (c, z) in m.zones.iter().enumerate() {
         m.comp_of_gid[z.gid as usize] = c as u32;
@@ -1437,23 +1618,6 @@ fn build_for(b: Built, near_for: Option<&[bool]>) -> Result<Market, String> {
         }
     }
     m.everyday = by_kind.into_iter().map(|((h, a, kind), (n, w))| EPair { h, a, kind, trips: n as f32, walk: (w / n.max(1e-12)) as f32 }).collect();
-    if from_rows {
-        for (p, list) in commute_rows.iter().enumerate() {
-            for &(j, n) in list {
-                if (j as usize) < np && n.is_finite() && n >= 0. {
-                    let c = m.corridor(p, j as usize);
-                    m.c_corridor[c] += 2. * n;
-                    m.commuters += n;
-                }
-            }
-        }
-    } else {
-        for &(h, w, n) in &m.commutes {
-            let c = m.corridor(m.zones[h as usize].place, m.gid_place[w as usize] as usize);
-            m.c_corridor[c] += 2. * n as f64;
-            m.commuters += n as f64;
-        }
-    }
     let csr = |key: &dyn Fn(&(u32, u32, f32)) -> Option<u32>, n: usize, list: &[(u32, u32, f32)]| {
         let mut off = vec![0u32; n + 1];
         for c in list {
@@ -1478,33 +1642,11 @@ fn build_for(b: Built, near_for: Option<&[bool]>) -> Result<Market, String> {
     m.c_home = csr(&|c| Some(c.0), nz, &m.commutes);
     let cog = m.comp_of_gid.clone();
     m.c_work = csr(&|c| Some(cog[c.1 as usize]).filter(|&w| w != u32::MAX), nz, &m.commutes);
-    // ---- the day's trips by corridor, both directions, and those leaving for elsewhere
-    let mut ct = vec![0f64; m.corridors.len()];
-    let mut to_places = vec![0f64; np];
-    let mut pairs = 0usize;
-    for i in 0..np {
-        if !m.places[i].has {
-            continue;
-        }
-        for j in i..np {
-            if !m.places[j].has {
-                continue;
-            }
-            let t = m.place_eachway(i, j);
-            if t > 0. {
-                ct[m.corridor(i, j)] += 2. * t;
-                // a place's own pairs both start there
-                to_places[i] += t;
-                to_places[j] += t;
-                pairs += if i == j { 1 } else { 2 };
-            }
-        }
-    }
-    m.daily = ct.iter().sum();
-    m.leaving_by = (0..np).map(|p| if m.places[p].has { (m.places[p].dep - to_places[p]).max(0.) } else { 0. }).collect();
-    m.leaving = m.leaving_by.iter().sum();
-    m.corridor_trips = ct;
-    m.place_pairs = pairs;
+    // ---- the corridors' figures: with rows the same for every composition, so kept (T-1204)
+    m.cw = match reuse {
+        Some(c) if from_rows => c,
+        _ => Rc::new(m.corridors_of(from_rows.then_some(&commute_rows[..]))),
+    };
     // ---- each 600 m square's site
     let mut site_key = HashMap::new();
     for s in 0..m.n_sites() {
@@ -1521,6 +1663,9 @@ fn build_for(b: Built, near_for: Option<&[bool]>) -> Result<Market, String> {
 pub struct MarketPacks {
     world: WorldIn,
     zones: BTreeMap<usize, Rc<ZoneIn>>,
+    /// T-1204, T-1220: the corridors' figures, worked out at the first composition and kept for
+    /// the others (with rows they depend on the places alone)
+    corridors: RefCell<Option<Rc<Corridors>>>,
 }
 #[wasm_bindgen]
 impl MarketPacks {
@@ -1532,7 +1677,7 @@ impl MarketPacks {
             return Err("invalid market rule".into());
         }
         make_frame(&world.frame)?;
-        Ok(MarketPacks { world, zones: BTreeMap::new() })
+        Ok(MarketPacks { world, zones: BTreeMap::new(), corridors: RefCell::new(None) })
     }
     /// Add (or replace) a place's pack; its place.
     pub fn add(&mut self, pack: &str) -> Result<u32, String> {
@@ -1553,8 +1698,13 @@ impl MarketPacks {
     /// The market of every pack held, with no network yet.
     pub fn market(&self) -> Result<IntercityApi, String> {
         let w = self.world.clone();
+        let rows = w.rows.is_some();
         let b = Built { zones: self.zones.values().cloned().collect(), rule: w.rule, out: Some(w.frame), places: w.places, rows: w.rows, world: true, closed: false, legacy_commutes: vec![] };
-        Ok(IntercityApi::on(Rc::new(build(b)?)))
+        let m = build_for(b, None, self.corridors.borrow().clone())?;
+        if rows {
+            *self.corridors.borrow_mut() = Some(m.cw.clone());
+        }
+        Ok(IntercityApi::on(Rc::new(m)))
     }
 }
 fn parse(header: &str) -> Result<Market, String> {
@@ -1605,7 +1755,7 @@ pub fn world_rows_for(header: &str, only: Option<&[bool]>) -> Result<Vec<Row>, S
     if only.is_some_and(|f| f.len() != b.places) {
         return Err("rows wanted for a place list of another length".into());
     }
-    let m = build_for(b, only)?;
+    let m = build_for(b, only, None)?;
     if m.from_rows {
         return Err("the composition carries rows already".into());
     }
@@ -1698,7 +1848,7 @@ impl IntercityApi {
     }
     /// The zone pairs the network's stations serve, and the place pairs with trips.
     pub fn pair_counts(&self) -> Vec<f64> {
-        vec![self.pairs.len() as f64, self.m.place_pairs as f64]
+        vec![self.pairs.len() as f64, self.m.cw.place_pairs as f64]
     }
     /// The network with stations in the pack's plane (an old single pack).
     pub fn set_network(&mut self, st_xy: &[f32], line_n: &[u32], stops: &[u32], times: &[f32], tph: &[f32], cars: &[f32]) -> Result<f64, String> {
@@ -1707,7 +1857,17 @@ impl IntercityApi {
     /// T-276: per corridor, the commutes between zones in period `q`: legs and rail legs.
     pub fn commute_corridors(&self, q: usize) -> Vec<f64> {
         let legs = 0.5 * (TO_WORK[q] + TO_HOME[q]) as f64;
-        self.per(q).filter(|_| self.m.commuters > 0.).map_or(vec![], |s| self.m.c_corridor.iter().zip(&s.c_corridors).flat_map(|(&c, &r)| [c * legs, r]).collect())
+        let m = &self.m;
+        self.per(q).filter(|_| m.cw.commuters > 0.).map_or(vec![], |s| {
+            let mut out = vec![0f64; 2 * m.n_corridors()];
+            for &(c, n) in &m.cw.commute {
+                out[2 * c as usize] = n * legs;
+            }
+            for (k, c) in m.open_corridors() {
+                out[2 * c + 1] = s.c_corridors[k];
+            }
+            out
+        })
     }
     /// As `DemandApi::transfers` (T-176): this market's transfers over the periods held.
     pub fn transfers(&self, sel: &[u8]) -> Vec<f32> {
@@ -2212,7 +2372,7 @@ impl IntercityApi {
     fn demand(&self, r: &[f32], s: usize, p: &Params, q: usize) -> Demand {
         let mut od = vec![0.; s * s];
         let mut rail = 0.;
-        let mut cor = vec![0.; self.m.corridors.len()];
+        let mut cor = vec![0.; self.m.n_open_corridors()];
         let mut pair_rail = vec![0f32; self.pairs.len()];
         let nz = self.served.len();
         let col = &self.served_at;
@@ -2250,7 +2410,7 @@ impl IntercityApi {
         // (destination, origin, riders) as they come
         let mut od_c: Vec<(u32, u32, f32)> = vec![];
         let (mut c_rail, mut c_frac) = (0f64, vec![0f32; self.cpairs.len()]);
-        let mut c_cor = vec![0f64; self.m.corridors.len()];
+        let mut c_cor = vec![0f64; self.m.n_open_corridors()];
         for (ci, cp) in self.cpairs.iter().enumerate() {
             let (h, wg, n) = self.m.commutes[cp.c as usize];
             let (h, wz) = (h as usize, self.m.comp_of_gid[wg as usize] as usize);
@@ -2362,10 +2522,10 @@ impl IntercityApi {
                 if any[(bit - 1) / 64] >> ((bit - 1) % 64) & 1 == 0 {
                     continue;
                 }
-                let r = *m.pr(za.place, zb.place);
+                let r = m.pr(za.place, zb.place);
                 let trips = next.next().unwrap();
                 let d = m.zone_km(za, zb) as f32;
-                let corridor = m.corridor(za.place, zb.place) as u32;
+                let corridor = m.open_corridor(za.place, zb.place) as u32;
                 let car = |park: f32| car_min(d, park) + r.cross;
                 let drive = |park: f32| if r.car { car(park) } else { r.refm };
                 let (a, b) = (a as u32, b as u32);
@@ -2394,7 +2554,7 @@ impl IntercityApi {
             let (zh, zw) = (&m.zones[h], &m.zones[w]);
             let km = m.zone_km(zh, zw) as f32;
             let car = drive_min(km) * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * pc.car_own_km_min() + m.pr(zh.place, zw.place).cross;
-            let corridor = m.corridor(zh.place, zw.place);
+            let corridor = m.open_corridor(zh.place, zw.place);
             self.cpair_of[c] = self.cpairs.len() as u32;
             let band = pc.band_of_d2(km * km * 1e6) as u8;
             self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km, band });
@@ -2691,7 +2851,7 @@ impl IntercityApi {
     /// world (0: added up at opening, a closed world or the pipeline), the day's departures to
     /// places with no zone.
     pub fn info(&self) -> Vec<f64> {
-        vec![self.m.n_sites() as f64, self.m.zones.len() as f64, self.m.daily, self.m.from_rows as u8 as f64, self.m.leaving]
+        vec![self.m.n_sites() as f64, self.m.zones.len() as f64, self.m.cw.daily, self.m.from_rows as u8 as f64, self.m.cw.leaving]
     }
     /// Per open 6 km zone: its global id, then the box its sites lie in (west, south, east, north;
     /// degrees in a world composition, else metres in the pack's plane). A station far from a
@@ -2798,9 +2958,9 @@ impl IntercityApi {
             avg: pass.loads,
             c_avg: pass.c_loads,
             rail: pass.rail,
-            trips: self.m.daily * SHARES[q] as f64,
+            trips: self.m.cw.daily * SHARES[q] as f64,
             c_rail: pass.c_rail,
-            c_trips: self.m.commuters * (TO_WORK[q] + TO_HOME[q]) as f64,
+            c_trips: self.m.cw.commuters * (TO_WORK[q] + TO_HOME[q]) as f64,
             c_frac: pass.c_frac,
             corridors: pass.cor,
             c_corridors: pass.c_cor,
@@ -2906,7 +3066,7 @@ impl IntercityApi {
     pub fn summary(&self, q: usize) -> Vec<f64> {
         self.per(q).map_or(vec![], |s| {
             let (_, c) = crowd_factors(&s.g, &s.net, &s.avg, &s.p);
-            vec![s.round as f64, s.trips + s.c_trips + s.e_trips, s.rail + s.c_rail + s.e_rail, s.e_walk, s.ms, self.m.place_pairs as f64, c.segs_over_seats as f64, c.max_load_of_crush as f64, c.p50 as f64, c.p90 as f64]
+            vec![s.round as f64, s.trips + s.c_trips + s.e_trips, s.rail + s.c_rail + s.e_rail, s.e_walk, s.ms, self.m.cw.place_pairs as f64, c.segs_over_seats as f64, c.max_load_of_crush as f64, c.p50 as f64, c.p90 as f64]
         })
     }
     /// The regional layer's parts in period `q` (T-276): trips and rail trips of the longer trips,
@@ -2939,36 +3099,67 @@ impl IntercityApi {
     /// Per corridor (place pair): its two places, longer trips in period `q` and their rail trips.
     pub fn corridor_summary(&self, q: usize) -> Vec<f64> {
         self.per(q).map_or(vec![], |s| {
-            self.m.corridors.iter().enumerate().flat_map(|(i, &(a, b))| [a as f64, b as f64, self.m.corridor_trips[i] * SHARES[q] as f64, s.corridors[i]]).collect()
+            let m = &self.m;
+            let mut out: Vec<f64> = m.each_corridor().enumerate().flat_map(|(i, (a, b))| [a as f64, b as f64, m.cw.trips[i] * SHARES[q] as f64, 0.]).collect();
+            for (k, c) in m.open_corridors() {
+                out[4 * c + 3] = s.corridors[k];
+            }
+            out
         })
     }
     /// T-378: per corridor, the shares of its longer trips not by rail that fly and that drive
     /// (neither: near places on two landmasses). The same whatever the network.
     pub fn corridor_modes(&self) -> Vec<f32> {
-        self.m.corridors.iter().flat_map(|&(a, b)| {
-            let r = self.m.pr(a, b);
-            [r.air, if r.car { 1. - r.air } else { 0. }]
-        }).collect()
+        // (an open place's pairs from its row; the others' modes alone worked out, T-1204)
+        let m = &self.m;
+        let mut out = Vec::with_capacity(2 * m.n_corridors());
+        for (a, b) in m.each_corridor() {
+            let (car, air) = if m.rules.slot[a] != u32::MAX || m.rules.slot[b] != u32::MAX {
+                let r = m.pr(a, b);
+                (r.car, r.air)
+            } else {
+                let (p, q) = (&m.places[a], &m.places[b]);
+                let km = if a == b {
+                    0.
+                } else if m.ground {
+                    chord_km(&p.u, &q.u)
+                } else {
+                    ((p.x - q.x).hypot(p.y - q.y) / 1000.) as f64
+                };
+                let (car, air, ..) = pair_mode_rule(&m.places, &m.countries, &m.mp, a, b, km < m.rule.near_km, km);
+                (car, air)
+            };
+            out.extend([air, if car { 1. - air } else { 0. }]);
+        }
+        out
     }
     /// T-378: per place, its longer trips in period `q` with places that have no zone, each way.
     pub fn elsewhere(&self, q: usize) -> Vec<f64> {
         let s = SHARES.get(q).copied().unwrap_or(0.) as f64;
-        self.m.leaving_by.iter().map(|v| v * s).collect()
+        self.m.cw.leaving_by.iter().map(|v| v * s).collect()
     }
     /// T-1008: the corridors' two places each, in `corridor_summary`'s order. With
     /// `corridor_trips`, `commute_base` and `corridor_modes` the part of the corridors no network or
     /// period changes, which the main thread is sent once.
     pub fn corridor_pairs(&self) -> Vec<u32> {
-        self.m.corridors.iter().flat_map(|&(a, b)| [a as u32, b as u32]).collect()
+        self.m.each_corridor().flat_map(|(a, b)| [a as u32, b as u32]).collect()
     }
     /// T-1008: per corridor, its longer trips a day; period `q`'s are these times `corridor_shares(q)[0]`.
     pub fn corridor_trips(&self) -> Vec<f64> {
-        self.m.corridor_trips.clone()
+        self.m.cw.trips.clone()
     }
     /// T-1008: per corridor, the commutes between zones that `commute_corridors` counts, before the
     /// period's legs (`corridor_shares(q)[1]`); empty where it gives none.
     pub fn commute_base(&self) -> Vec<f64> {
-        if self.m.commuters > 0. { self.m.c_corridor.clone() } else { vec![] }
+        let m = &self.m;
+        if m.cw.commuters <= 0. {
+            return vec![];
+        }
+        let mut out = vec![0f64; m.n_corridors()];
+        for &(c, n) in &m.cw.commute {
+            out[c as usize] = n;
+        }
+        out
     }
     /// T-1008: period `q`'s factors of `corridor_trips` and `commute_base`; empty where the period
     /// is not solved here, as `corridor_summary` is.
@@ -2979,10 +3170,12 @@ impl IntercityApi {
     /// pairs of `corridor_summary` and `commute_corridors` with rail, without the rest.
     pub fn corridor_rail(&self, q: usize) -> Vec<f64> {
         let Some(s) = self.per(q) else { return vec![] };
-        let commutes = self.m.commuters > 0.;
+        let commutes = self.m.cw.commuters > 0.;
         let mut out = vec![];
-        for (i, &r) in s.corridors.iter().enumerate() {
-            let c = if commutes { s.c_corridors.get(i).copied().unwrap_or(0.) } else { 0. };
+        // (the open places' corridors come in corridor order)
+        for (k, i) in self.m.open_corridors() {
+            let r = s.corridors[k];
+            let c = if commutes { s.c_corridors.get(k).copied().unwrap_or(0.) } else { 0. };
             if r != 0. || c != 0. {
                 out.extend([i as f64, r, c]);
             }
@@ -3032,6 +3225,12 @@ impl IntercityApi {
     /// their rail (`selection_rail_day`).
     pub fn selection_all_day(&self, market: u32, xy: &[f32], share: &[f32], day: u32, mask: u32) -> Vec<f64> {
         self.selection(market, xy, share, day, mask, false)
+    }
+    /// T-1204: which corridors' figures this market reads; compositions of one world with rows
+    /// (and their parts) share them, so `corridor_pairs`, `corridor_trips`, `commute_base` and
+    /// `corridor_modes` are the same for every market with the same id.
+    pub fn corridors_id(&self) -> u32 {
+        self.m.cw.id
     }
     /// T-377: whether `other` is this market's composition (a part beside it, or itself).
     pub fn same_market(&self, other: &IntercityApi) -> bool {

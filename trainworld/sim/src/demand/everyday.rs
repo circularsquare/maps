@@ -13,7 +13,6 @@ use super::{
 use crate::track::params::PERIOD_HOURS;
 use wasm_bindgen::prelude::*;
 
-const K: usize = 16;
 const NONE: u32 = u32::MAX;
 pub const MIN_DISTANCE_M: f32 = 150.0;
 /// Purpose kinds, in this order everywhere (`info`, `part_loads`, `selection`; the app's
@@ -64,15 +63,16 @@ pub const RETURN: [[f32; 5]; KIND_COUNT] = [
 ];
 const AIRPORT: usize = 4;
 pub const ATTRACTION: usize = 6;
-/// Most destination samples a cell holds, by purpose (T-142): airports and attractions are a
-/// handful of destinations and nobody looks at one cell's medical trips alone, so two. Each
+/// The purposes with few samples a cell (T-142): airports and attractions are a handful of
+/// destinations and nobody looks at one cell's medical trips alone (`Sampling::max_few`). Each
 /// sample costs the same at opening and in `set_network`.
-const SAMPLES: [usize; KIND_COUNT] = [K, K, K, K, 2, 2, 2];
+const FEW: [bool; KIND_COUNT] = [false, false, false, false, true, true, true];
 
-/// A cell's destination samples for a purpose: one per 8 of its trips a day for it, 2 to the
-/// purpose's `SAMPLES` (T-397: station boardings within 5% of sixteen with 31% of the slots).
+/// A cell's destination samples for a purpose at the fine level (T-397: station boardings within
+/// 5% of sixteen with 31% of the slots).
+#[cfg(test)]
 fn sample_count(kind: usize, trips: f32) -> usize {
-    ((trips as f64 / 8.0).ceil() as usize).clamp(2, SAMPLES[kind])
+    super::lod::Sampling::FINE.count(FEW[kind], trips)
 }
 /// No airport trip ends this close to a terminal (its own jobs are not its passengers' ends).
 const AIRPORT_CLEAR_M: f32 = 1500.0;
@@ -100,6 +100,8 @@ fn unit(mut x: u32) -> f64 {
 /// line, so the browser optimises them; see `DecayTable::cdf`).
 struct Sampler<'a> {
     kind: usize,
+    /// `Sampling::salt`
+    salt: u32,
     /// each cell's index in this purpose's `live` and `first`, NONE for a cell with no budget
     row: &'a [u32],
     /// this purpose's `first`, less `base` (where its slice starts in `destinations`)
@@ -127,7 +129,7 @@ impl Sampler<'_> {
             }
             let at = self.first[row as usize] as usize - self.base;
             let n_k = self.first[row as usize + 1] as usize - self.base - at;
-            let seed = (self.h3[c] ^ (self.h3[c] >> 32)) as u32 ^ (self.kind as u32).wrapping_mul(0x9e3779b9);
+            let seed = (self.h3[c] ^ (self.h3[c] >> 32)) as u32 ^ (self.kind as u32).wrapping_mul(0x9e3779b9) ^ self.salt.wrapping_mul(0x27d4eb2f);
             let offset = unit(seed);
             for k in 0..n_k {
                 let target = (k as f64 + offset) / n_k as f64 * total;
@@ -335,6 +337,9 @@ fn attraction_sites(commutes: &DemandApi, a: &[f32]) -> Vec<(u32, u32, f32)> {
 
 #[cfg(test)]
 mod tests;
+/// T-1222: the levels of detail against each other.
+#[cfg(test)]
+mod lod_tests;
 /// 0..n in pieces of 16k, for loops over every destination sample (3.2M on New York): each piece
 /// is one call of an out-of-line function, so the browser optimises it after the first few
 /// pieces (T-172; WebAssembly has no on-stack replacement).
@@ -765,7 +770,7 @@ pub struct EverydayApi {
     /// (T-395: about half of all cells x purposes have none).
     live: Vec<Vec<u32>>,
     /// Per purpose, where each `live` cell's samples start in `destinations`, and one more entry
-    /// (T-397: `sample_count` of them).
+    /// (`Sampling::count` of them, T-397).
     first: Vec<Vec<u32>>,
     /// The last `owner` answer: the sample loops go in order, so the next is that one or close.
     at: std::cell::Cell<(usize, usize)>,
@@ -1298,6 +1303,7 @@ impl EverydayApi {
         // Access centroids and road density use real residents/employment, not commuter weights.
         let jobs = pack::cell_weights(header, bin, "jobs", n)?.ok_or("missing jobs")?;
         let engine = commutes.with_weights(pop, jobs);
+        let sampling = engine.lod.sampling;
         let (rate, decay) = (engine.base.everyday_rate, engine.base.everyday_decay_m);
         let nz = engine.z.n;
         let mut members = vec![vec![]; nz];
@@ -1375,7 +1381,7 @@ impl EverydayApi {
             let mut at = start[kind];
             f.push(at as u32);
             for &c in &live[kind] {
-                at += sample_count(kind, budget[c as usize] * rate[kind]);
+                at += sampling.count(FEW[kind], budget[c as usize] * rate[kind]);
                 f.push(at as u32);
             }
             first.push(f);
@@ -1412,6 +1418,7 @@ impl EverydayApi {
                 row[c as usize] = i as u32;
             }
             let s = Sampler {
+                salt: sampling.salt,
                 kind,
                 row: &row,
                 first: &first[kind],
@@ -1499,6 +1506,10 @@ impl EverydayApi {
     }
     pub fn purpose_count(&self) -> u32 {
         self.totals.len() as u32
+    }
+    /// The level its samples were drawn at: its commutes' (`DemandApi::at_level`, T-1222).
+    pub fn level(&self) -> u32 {
+        self.engine.lod.level
     }
     /// The attractions `beside_with` placed in the pack (T-263): per attraction its index in the
     /// list given, its cell and its visits a weekday.

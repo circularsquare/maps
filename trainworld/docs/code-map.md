@@ -31,6 +31,8 @@ tests natively.
   walk bands in `t720.rs`), `lanes.rs` (f32 lanes, wasm
   SIMD or SSE2, for the commute pair loop, T-036). The commute pair loop is `kernel::mode_choice`;
   its small zone pairs are dealt in chunks there (`COMMUTE_CHUNK`, T-874; `DemandApi::set_chunked`).
+  `lod.rs`: a zone's level of detail (T-1222), the everyday sampling and commute chunk a zone opens
+  at (`DemandApi::at_level`); its checks in `everyday/lod_tests.rs` (`t1222_probe` measures memory, times and bias).
   Zones of two sizes (T-852: `kernel::coarsen`, `Zones::size`): every zone-pair table goes through
   `kernel::table_layout` and `Gravity::base`/`key` (`PairKey` elsewhere), near pairs through
   `Zones::near`, a square's zone through `Zones::zone_at`, centre distances through `Zones::d2_m`.
