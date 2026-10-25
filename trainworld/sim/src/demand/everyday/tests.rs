@@ -721,6 +721,28 @@ fn kept_share_scales_a_zones_outings() {
     assert_eq!(EverydayApi::new(&h3, &b3).unwrap().totals[0], a.totals[0]);
 }
 
+/// T-1257: a zone that keeps none of a purpose's outings (every one crosses a zone line) gives
+/// that purpose no subzone pairs, so its loads stay numbers and a crowding round takes them.
+#[test]
+fn zero_kept_share_leaves_finite_loads() {
+    let (h, b) = fixture(4000.0);
+    let nz = EverydayApi::new(&h, &b).unwrap().engine.z.n;
+    let (h, b) = with_array(&h, b, "everyday_kept_errands", &vec![0.0; nz]);
+    let mut v: serde_json::Value = serde_json::from_str(&h).unwrap();
+    v["arrays"].as_array_mut().unwrap().last_mut().unwrap()["per"] = "zone".into();
+    let mut a = EverydayApi::new(&v.to_string(), &b).unwrap();
+    assert_eq!(a.totals[0], 0.0);
+    network(&mut a, 4000.0, [12.0; 3]);
+    for q in 0..5 {
+        assert!(a.solve(q));
+        let total = [a.seg(q), a.board(q), a.alight(q)].concat();
+        assert!(total.iter().all(|v| v.is_finite()), "period {q}: {total:?}");
+        assert!(a.summary(q).iter().all(|v| v.is_finite()));
+        assert!(a.crowd_with_external(q, &total), "period {q}");
+    }
+    assert!(a.cell_modes().iter().all(|v| v.is_finite()));
+}
+
 /// T-196: parks take PARK_SHARE of the social attraction and nothing else; a pack without
 /// parks (or with an empty array) is unchanged.
 #[test]

@@ -942,6 +942,11 @@ impl EverydayApi {
             }
             let distance = self.distance(c, d);
             let (w, pw) = self.weight(kind, per, c, d, distance);
+            // a pair of weightless samples (a zone keeping none of a purpose, T-1257) would average
+            // its distance and walking share as 0/0, NaN in every load it touches
+            if !(w > 0.0) {
+                continue;
+            }
             let i = index.find_or_push(&mut self.pairs, kind as u32, u, v);
             if self.edge_pair.is_empty() {
                 self.edge_pair.resize(self.destinations.len(), NONE);
