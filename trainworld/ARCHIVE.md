@@ -1,5 +1,7 @@
 # Archive
 
+- T-1182 [P3] Walk tables rerun for T-1164's water cost. Done 2026-10-25: 992 non-Chinese packs rerun, 0 failed, 54 min on 3 workers; walk pairs cut off 1.80% to 0.13%. The 741 Chinese packs (CN, HK, MO, TW) get it from the China rebuild (T-1184). notes/T-1164.md.
+- T-1257 [P1] A save across China never reached a final. Done 2026-10-25 (tree t1257): a zone keeping no medical outings made everyday pairs of zero trips whose averages were 0/0, NaN loads; such samples now make no pair. All-China save 42,256,934; real save unchanged. notes/T-1150.md "Finish".
 - T-958 [P2] Chinese zones that swallowed another row's units. Done 2026-10-25 with T-1184: zog, hex, yut and tag rebuilt and joined; zog and hex unchanged (zog never held Tongguan), tag now holds yut's 110 km² (4,645 people) by a hand-extended outline (T-1232). notes/T-1150.md "Run".
 - T-1246 [P1] A selection's bubbles in neighbouring cities. Done 2026-10-24 (tree t1244): they were sized against their own busiest zone, so one always hit the maximum; now the in-city far end's area per trip at twice the radius, one colour, no outline, none under half a trip.
 - T-1252 [P2] No train trip in the explorer. Done 2026-10-24 (tree t1244): a dotted straight line joins the two ends, hover "No train route between these two points" and the distance.
