@@ -1,3 +1,6 @@
+import { useEffect, useState } from "preact/hooks";
+import { inkOn, LEVEL_COLOURS } from "../game/palette";
+import type { Level } from "../game/types";
 import { distance, levelLabel, levelName, money, moneyExact, plural, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeep } from "../game/regionMoney";
 import { clearBpPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
@@ -72,24 +75,38 @@ export function BlueprintPick() {
 export function BlueprintBar() {
   const s = pickedState.value;
   const n = s.edges + s.stations;
+  const [levels, setLevels] = useState(false);
+  useEffect(() => { if (n === 0) setLevels(false); }, [n]);
   if (tool.value !== "blueprint" || n === 0) return null;
   const piece = (s.built ? "Built: " : "Blueprint: ") + pieces(s.edges, s.stations);
+  const levelTip = (l: Level) => `Put the selected track at ${levelName(l).toLowerCase()} (${levelLabel(l)})`;
+  const canLevel = !s.built && s.edges > 0;
   return (
-    <div class="blueprint-bar" role="group" aria-label="Selection">
-      <span class="count" data-tip={piece}>{n} selected</span>
-      {s.edges > 0 && <span class="num" data-tip="Length of the selected track">{distance(s.lengthM)}</span>}
-      {!s.built && s.edges > 0 && (
-        <LevelButtons value={s.level} tip={(l) => `Put the selected track at ${levelName(l).toLowerCase()} (${levelLabel(l)})`} onPick={(l) => void levelPicked(l)} />
-      )}
+    <>
+      <div class="blueprint-bar" role="group" aria-label="Selection">
+        <span class="count" data-tip={`Selected: ${piece}`}><span class="bp-ico"><Icon.marquee /></span>{n}<span class="bp-label"> selected</span></span>
+        {s.edges > 0 && <span class="num" data-tip="Length of the selected track">{distance(s.lengthM)}</span>}
+        {canLevel && <div class="bp-levels"><LevelButtons value={s.level} tip={levelTip} onPick={(l) => void levelPicked(l)} /></div>}
+        {canLevel && (
+          <button class={"btn bp-level" + (s.level === null ? "" : " lv on")} style={s.level === null ? undefined : { "--lc": LEVEL_COLOURS[s.level], "--lk": inkOn(LEVEL_COLOURS[s.level]) }}
+            data-tip={s.level === null ? "Elevation of the selected track: mixed" : `Elevation ${levelName(s.level)}`} aria-label="Elevation" aria-expanded={levels}
+            onClick={() => setLevels(!levels)}>{s.level === null ? <Icon.autoLevel /> : levelLabel(s.level)}</button>
+        )}
       {!s.built && (
         <div class="group">
-          <button class="btn text" data-tip="Disable the selection so it will not be constructed (D)" disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff />Disable</button>
-          <button class="btn text" data-tip="Enable the selection (E)" disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn />Enable</button>
+          <button class="btn text" data-tip="Disable the selection so it will not be constructed (D)" disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff /><span class="bp-label">Disable</span></button>
+          <button class="btn text" data-tip="Enable the selection (E)" disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn /><span class="bp-label">Enable</span></button>
         </div>
       )}
-      <button class="btn text" data-tip={s.built ? "Remove the selection (Delete). Nothing is refunded" : "Remove the selection (Delete)"} onClick={() => void removePicked()}><Icon.bin />Remove</button>
-      <button class="btn text" data-tip="Clear the selection (Esc)" onClick={() => clearBpPicked()}><Icon.cross />Clear</button>
-    </div>
+      <button class="btn text" data-tip={s.built ? "Remove the selection (Delete). Nothing is refunded" : "Remove the selection (Delete)"} onClick={() => void removePicked()}><Icon.bin /><span class="bp-label">Remove</span></button>
+      <button class="btn text" data-tip="Clear the selection (Esc)" onClick={() => clearBpPicked()}><Icon.cross /><span class="bp-label">Clear</span></button>
+      </div>
+      {canLevel && levels && (
+        <div class="blueprint-levels touch-levels">
+          <LevelButtons value={s.level} tip={levelTip} onPick={(l) => { void levelPicked(l); setLevels(false); }} />
+        </div>
+      )}
+    </>
   );
 }
 

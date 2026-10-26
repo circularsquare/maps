@@ -3,8 +3,8 @@
 // Vite of its own, and the demand worker run in Node. Import it from a check next to it:
 //   import { playwright, launchChrome, collectErrors } from './lib.mjs';
 import { spawn } from 'node:child_process';
-import { readdir, mkdtemp, mkdir, rm } from 'node:fs/promises';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { readdir, mkdtemp, mkdir, rm, stat } from 'node:fs/promises';
+import { existsSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 import { Worker } from 'node:worker_threads';
@@ -37,20 +37,64 @@ export async function playwright() {
   throw new Error('no Playwright: set PLAYWRIGHT_MODULE to a file URL of playwright/index.mjs');
 }
 
+const TEMP_PROFILES = new Set();
+let EXIT_HOOKED = false;
+/** removes every live temp profile, synchronously (a profile Chrome still holds is retried; T-1213) */
+function removeTempProfiles() {
+  for (const dir of TEMP_PROFILES) {
+    try { rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); TEMP_PROFILES.delete(dir); } catch { /* left for the next run's smoke warning */ }
+  }
+}
+
 /**
- * Headless Chrome with a persistent context. `prefix` names a throwaway profile in the temp folder
- * (a full path prefix goes where it says), deleted by `close()`. `profile` names a folder to use
- * instead: kept afterwards, and emptied first unless `fresh` is false (a profile that holds the last
- * run's save). `size` is [width, height]; `args` default to GL; any other option goes to Playwright.
- * @returns {Promise<{ ctx: import('playwright').BrowserContext, close: () => Promise<void> }>}
+ * A new throwaway --user-data-dir for headless Chrome (T-1213): a folder named `prefix` plus random
+ * characters in the temp folder (a full path prefix goes where it says), removed by `remove()` and
+ * otherwise when the process exits: normally, on an uncaught error, process.exit() or Ctrl-C.
+ * @returns {Promise<{ dir: string, remove: () => Promise<void> }>}
+ */
+export async function tempProfile(prefix = 'tw-check-') {
+  const dir = await mkdtemp(isAbsolute(prefix) ? prefix : join(tmpdir(), prefix));
+  TEMP_PROFILES.add(dir);
+  if (!EXIT_HOOKED) {
+    EXIT_HOOKED = true;
+    process.on('exit', removeTempProfiles);
+    for (const [sig, code] of [['SIGINT', 130], ['SIGTERM', 143], ['SIGHUP', 129], ['SIGBREAK', 149]]) process.on(sig, () => process.exit(code));
+  }
+  return { dir, remove: async () => { await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); TEMP_PROFILES.delete(dir); } };
+}
+
+/** how many `tw-*` folders in the temp folder are over a day old: profiles an older check left behind */
+export async function staleTempProfiles(days = 1) {
+  const cutoff = Date.now() - days * 86400000;
+  const names = await readdir(tmpdir(), { withFileTypes: true }).catch(() => []);
+  let n = 0;
+  for (const d of names) {
+    if (!d.isDirectory() || !d.name.startsWith('tw-')) continue;
+    const s = await stat(join(tmpdir(), d.name)).catch(() => null);
+    if (s && s.mtimeMs < cutoff) n++;
+  }
+  return n;
+}
+
+/**
+ * Headless Chrome with a persistent context. `prefix` names a throwaway profile (see `tempProfile`),
+ * deleted by `close()` or at exit. `profile` names a folder to use instead: kept afterwards, and
+ * emptied first unless `fresh` is false (a profile that holds the last run's save). `size` is
+ * [width, height]; `args` default to GL; any other option goes to Playwright.
+ * @returns {Promise<{ ctx: import('playwright').BrowserContext, close: () => Promise<void>, profile: string }>}
  */
 export async function launchChrome({ prefix = 'tw-check-', profile, fresh = true, size = [1400, 900], args = GL, ...options } = {}) {
   const { chromium } = await playwright();
-  const own = !profile;
-  if (own) profile = await mkdtemp(isAbsolute(prefix) ? prefix : join(tmpdir(), prefix));
+  const temp = profile ? null : await tempProfile(prefix);
+  if (temp) profile = temp.dir;
   else if (fresh) await rm(profile, { recursive: true, force: true });
-  const ctx = await chromium.launchPersistentContext(profile, { executablePath: CHROME, headless: true, viewport: { width: size[0], height: size[1] }, args, ...options });
-  return { ctx, close: async () => { await ctx.close(); if (own) await rm(profile, { recursive: true, force: true }).catch(() => {}); } };
+  try {
+    const ctx = await chromium.launchPersistentContext(profile, { executablePath: CHROME, headless: true, viewport: { width: size[0], height: size[1] }, args, ...options });
+    return { ctx, profile, close: async () => { try { await ctx.close(); } finally { await temp?.remove().catch(() => {}); } } };
+  } catch (e) {
+    await temp?.remove().catch(() => {});
+    throw e;
+  }
 }
 
 /** push a page's page errors and console errors onto `errors`, except console errors whose text matches `ignore` (null: none) or whose source url matches `ignoreUrl` */

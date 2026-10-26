@@ -1069,6 +1069,24 @@ rect.now { fill-opacity: .45; }
 @container map-column (max-width: 360px) {
   .map-search { top: 142px; }
 }
+/* T-1263: on a phone the Select tool's bar sits on the map's bottom edge in one row that fits a 390 px
+   screen and scrolls sideways only below about 360 px; the count has the tool's icon, the elevation is
+   one button that opens the seven above the bar (as the touch bar's does), the actions are icons
+   (names in the hovers); under the tool notes (z-index 3), which share that corner */
+.blueprint-bar .bp-level, .blueprint-bar .bp-ico, .blueprint-levels { display: none; }
+@media (max-width: 600px) and (min-height: 560px) {
+  .blueprint-bar { top: auto; bottom: 0; left: 0; right: 0; transform: none; z-index: 2; width: auto; max-width: none;
+    flex-wrap: nowrap; justify-content: flex-start; gap: 4px; overflow-x: auto; scrollbar-width: none; border-width: 1px 0 0; padding: 4px 6px; }
+  .blueprint-bar > * { flex: none; }
+  .blueprint-bar .bp-label { display: none; }
+  .blueprint-bar .count { min-width: 0; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; }
+  .blueprint-bar .bp-ico { display: inline-flex; }
+  .blueprint-bar .bp-levels { display: none; }
+  .blueprint-bar .btn, .blueprint-bar .btn.bp-level { height: calc(36px / var(--ui, 1)); min-width: calc(36px / var(--ui, 1)); padding: 0; }
+  .blueprint-bar .btn.bp-level { display: inline-grid; }
+  .blueprint-levels .btn.lv { min-width: calc(40px / var(--ui, 1)); }
+  .blueprint-levels { display: block; position: absolute; left: 50%; bottom: calc(46px / var(--ui, 1)); transform: translateX(-50%); z-index: 4; }
+}
 
 /* T-195: the trip explorer's inspector and its canvas over the demand views' */
 #map canvas.overlay.trip { z-index: 2; }
@@ -1089,6 +1107,6 @@ rect.now { fill-opacity: .45; }
 /* T-247: the UI scale (Settings, --ui from game/ui.ts). Panels are zoomed whole (every size here is
    px); the map's own DOM tags keep their placement and only their text is sized, since their
    positions come from the map. The WebGL map is never scaled. Dock.tsx divides its drags by it. */
-#dock, #topbar, .save-notice, #tools, .map-top-left, .map-search, .blueprint-bar, .loading-card, .loading-box, #debug { zoom: var(--ui, 1); }
+#dock, #topbar, .save-notice, #tools, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .loading-card, .loading-box, #debug { zoom: var(--ui, 1); }
 .loading-card-wrap { top: calc(var(--bar-h) * var(--ui, 1)); }
 .stn-label, .pi-label, .tool-tag, .cap-mark, .intercity-label { font-size: calc(12px * var(--ui, 1)); }

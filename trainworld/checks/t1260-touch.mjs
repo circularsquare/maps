@@ -277,7 +277,31 @@ try {
     await page.waitForTimeout(400);
     s = await st(page);
     check(s.picked >= 3, `select: a held press then a drag picks what its box holds (${s.picked})`);
+    // T-1263: the selection bar on the map's bottom edge, one row of the screen's width, its actions icon-only
+    const sb = await page.evaluate(() => {
+      const b = document.querySelector('.blueprint-bar'), m = window.tw.map.getContainer().getBoundingClientRect();
+      if (!b) return null;
+      const r = b.getBoundingClientRect();
+      const bs = [...b.querySelectorAll('button')].map((x) => x.getBoundingClientRect()).filter((x) => x.width > 0);
+      const tops = new Set(bs.map((x) => Math.round(x.top)));
+      return { atBottom: Math.abs(r.bottom - m.bottom) < 2, width: r.width, rows: tops.size, labels: [...b.querySelectorAll('.bp-label')].filter((x) => x.getBoundingClientRect().width > 0).length, mapW: m.width,
+        fits: b.scrollWidth <= b.clientWidth && bs.every((x) => x.left >= 0 && x.right <= m.width), minH: Math.min(...bs.map((x) => x.height)), minW: Math.min(...bs.map((x) => x.width)) };
+    });
+    check(!!sb && sb.atBottom && sb.rows === 1 && sb.labels === 0 && sb.fits && sb.minH >= 36 && sb.minW >= 36 && Math.abs(sb.width - sb.mapW) < 2, `select: the bar fits one row of icons on the map's bottom edge at ${sb?.mapW} px, every button at least 36 px, nothing past the edge (${JSON.stringify(sb)})`);
     await page.screenshot({ path: join(OUT, '7-select-box.png') });
+    // the one elevation button opens the seven above the bar; a pick closes them and levels the track
+    await page.locator('.blueprint-bar .bp-level').tap();
+    const opened = await page.evaluate(() => {
+      const row = document.querySelector('.blueprint-levels'), bar = document.querySelector('.blueprint-bar')?.getBoundingClientRect();
+      const r = row?.getBoundingClientRect(), bs = [...(row?.querySelectorAll('.btn.lv') ?? [])].map((x) => x.getBoundingClientRect());
+      return { n: bs.length, above: !!r && !!bar && r.bottom <= bar.top + 1, inside: !!r && r.left >= 0 && r.right <= window.innerWidth, minW: Math.min(...bs.map((x) => x.width)), minH: Math.min(...bs.map((x) => x.height)) };
+    });
+    check(opened.n === 7 && opened.above && opened.inside && opened.minW >= 36 && opened.minH >= 36, `select: the elevation button opens seven buttons above the bar (${JSON.stringify(opened)})`);
+    await page.screenshot({ path: join(OUT, '8-select-levels.png') });
+    await page.locator('.blueprint-levels .btn.lv', { hasText: '+1' }).first().tap();
+    await page.waitForTimeout(500);
+    const after = await page.evaluate(() => ({ open: !!document.querySelector('.blueprint-levels'), label: document.querySelector('.blueprint-bar .bp-level')?.textContent }));
+    check(!after.open && after.label === '+1', `select: a pick closes the seven and the button shows it (${JSON.stringify(after)})`);
   }
   await page.close();
 } catch (e) {

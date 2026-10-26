@@ -348,7 +348,12 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   Clear. The Build tab shows only "N disabled" while any blueprint is disabled, whatever the tool.
   Disabling and enabling are one undoable edit each (Ctrl+Z). Esc clears the pick, then leaves the
   tool; leaving also clears it. The bar is about 580 px wide with the elevation buttons and keeps
-  260 px clear each side of the map, wrapping onto more rows where the map is narrower [T-841].
+  260 px clear each side of the map, wrapping onto more rows where the map is narrower [T-841]. On
+  a phone ([ui-panels.md](ui-panels.md) "Narrow screens") it sits on the map's bottom edge instead,
+  the map's whole width in one row that fits 390 px (it scrolls sideways only below about 360 px),
+  every button 36 px at least: the tool's icon before the count, one elevation button showing the
+  pick's level that opens the seven above the bar, and the four actions as icons with their hovers.
+  It sits under the tool notes that share the corner [T-1263].
 - **Elevation** [T-815; `TrackApi.set_edges_level`]: a button puts every picked blueprint stretch
   on that elevation, one undoable edit: each piece's corners as the track inspector's "Elevation of
   the stretch" does for one, and every node all of whose track is picked (a joint, a loose end, a

@@ -3,7 +3,8 @@
 //   node trainworld/checks/smoke.mjs [url]       (from the maps root; SMOKE_SHADE=dark for the dark theme)
 // With no url it starts its own Vite (checks/dev-nowatch.mjs, port SMOKE_PORT or 6190) and stops it
 // at the end; or pass a running one, e.g. http://localhost:8800/trainworld/ for the served build.
-// Headless Chrome with a throwaway profile (deleted afterwards); Playwright from PLAYWRIGHT_MODULE,
+// Headless Chrome with a throwaway profile (deleted afterwards; a WARN line when over 20 tw-* folders
+// older than a day sit in the temp folder); Playwright from PLAYWRIGHT_MODULE,
 // else `playwright`, else the npx cache.
 //
 // Browser: a plain load shows the start menu and its New game starts a game (T-677); a ?new=1 game
@@ -14,7 +15,8 @@
 import { spawn } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { HERE, MAPS, REAL_SAVE, NOISE, SMOKE_FIGURES, launchChrome, collectErrors, importSave, demandFinal, acrossLine, startVite } from './lib.mjs';
+import { tmpdir } from 'node:os';
+import { HERE, MAPS, REAL_SAVE, NOISE, SMOKE_FIGURES, staleTempProfiles, launchChrome, collectErrors, importSave, demandFinal, acrossLine, startVite } from './lib.mjs';
 
 const EXPECT = { lines: 109, stations: 1756, trackKm: 4498.6, kmTolerance: 1 };
 // a glyph range glyphs.py leaves out on purpose: its 404 makes MapLibre draw the codepoints locally
@@ -255,6 +257,9 @@ async function browserChecks(BASE) {
 const given = process.argv[2];
 let vite = null;
 try {
+  // T-1213: Chrome profiles an older check left in the temp folder (23.9 GB once filled the disk)
+  const stale = await staleTempProfiles();
+  if (stale > 20) console.log(`WARN  ${stale} tw-* folders over a day old in ${tmpdir()}: old check profiles, safe to delete`);
   for (const f of ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs', 't1053-zone-ids.mjs']) {
     const r = await runNode(f);
     report(f.replace('.mjs', ''), r.code === 0, r.code === 0 ? '' : tail(r.out));

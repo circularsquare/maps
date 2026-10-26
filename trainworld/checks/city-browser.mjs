@@ -19,11 +19,10 @@
 // Needs a Vite dev server (BASE, default http://localhost:6125) and Playwright (PLAYWRIGHT_MODULE,
 // else `playwright`, else the npx cache). Screenshots artifacts/trainworld/<task>-<id>-homes.png and
 // -line.png; results <task>-<id>-browser.json (OUT and JSON_OUT override).
-import { writeFile, readFile, mkdtemp, readdir, rm } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { launchChrome } from './lib.mjs';
 
 // name: as the top bar shows it; water: two points either side of a river or bay; line: [station, lon, lat]
 const CITIES = {
@@ -222,17 +221,6 @@ const CITIES = {
   },
 };
 
-async function playwright() {
-  if (process.env.PLAYWRIGHT_MODULE) return import(process.env.PLAYWRIGHT_MODULE);
-  try { return await import('playwright'); } catch { /* not installed here */ }
-  const npx = join(process.env.LOCALAPPDATA ?? '', 'npm-cache', '_npx');
-  for (const d of existsSync(npx) ? await readdir(npx) : []) {
-    const p = join(npx, d, 'node_modules', 'playwright', 'index.mjs');
-    if (existsSync(p)) return import(pathToFileURL(p).href);
-  }
-  throw new Error('no Playwright: set PLAYWRIGHT_MODULE to a file URL of playwright/index.mjs');
-}
-
 // every opened zone stays in the page, so a page's memory and each solve grow with each (T-928, T-965)
 const ZONES_PER_PAGE = Number(process.env.ZONES_PER_PAGE ?? 8);
 const SOLVE_WAIT_MS = 1000 * Number(process.env.SOLVE_WAIT_S ?? 180);
@@ -248,11 +236,9 @@ if (multi) {
   if (!C) { console.error(`usage: city-browser.mjs <${Object.keys(CITIES).join('|')}>`); process.exit(2); }
   zones = [{ id, C, out: process.env.OUT ?? `artifacts/trainworld/${C.task}-${id}-`, json: process.env.JSON_OUT ?? `artifacts/trainworld/${C.task}-${id}-browser.json` }];
 }
-const { chromium } = await playwright();
 const BASE = process.env.BASE ?? 'http://localhost:6125';
 const WORKERS = process.env.WORKERS ?? '3';
-const profile = await mkdtemp(join(process.env.PROFILE_DIR ?? tmpdir(), `cb-${multi ? 'rows' : zones[0].id}-`));
-const ctx = await chromium.launchPersistentContext(profile, { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1400, height: 900 }, args: ['--enable-unsafe-swiftshader'] });
+const { ctx, close } = await launchChrome({ prefix: join(process.env.PROFILE_DIR ?? tmpdir(), `tw-cb-${multi ? 'rows' : zones[0].id}-`), args: ['--enable-unsafe-swiftshader'] });
 const IGNORE = /favicon|openfreemap|AJAXError/;
 const topBar = (page) => page.evaluate(() => ({ city: document.querySelector('.topbar .city, .city')?.textContent ?? null, split: document.querySelector('.split-row')?.getAttribute('data-tip') ?? null }));
 // a condition, waited for at most `ms` (the fixed waits these replace, T-928): whether it held
@@ -399,6 +385,5 @@ for (const z of zones) {
   pass &&= ok;
   console.log(ok ? `PASS city-browser ${z.id}` : `FAIL city-browser ${z.id}`, `${result.seconds} s`);
 }
-await ctx.close();
-await rm(profile, { recursive: true, force: true }).catch(() => {});
+await close();
 process.exit(pass ? 0 : 1);

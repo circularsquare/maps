@@ -10,9 +10,8 @@
 // two market compositions of about 450 MB and room; before T-1198 it passed 1,400 by the sixth city
 // and kept growing).
 // QS adds URL switches (QS=&perfOff=close: nothing closes). Writes ../artifacts/trainworld/t1198/tour-LABEL.json.
-import { writeFile, mkdir, rm } from 'node:fs/promises';
+import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { launchChrome, collectErrors, startVite } from './lib.mjs';
@@ -43,9 +42,7 @@ function chromeMemory(profile) {
 }
 
 async function run(BASE) {
-  const profile = join(tmpdir(), `tw-1198-${process.pid}-${Date.now()}`);
-  const { ctx, close: closeCtx } = await launchChrome({ profile, size: [1400, 900] });
-  const close = async () => { await closeCtx(); await rm(profile, { recursive: true, force: true }).catch(() => {}); };
+  const { ctx, close, profile } = await launchChrome({ prefix: 'tw-t1198-', size: [1400, 900] });
   const errors = [];
   const out = { label: LABEL, base: BASE, qs: QS, stops: [], errors };
   try {

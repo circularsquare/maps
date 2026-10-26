@@ -88,7 +88,8 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
   and the controls panel covers the dock's width. Nothing changes above 600 px wide or on a short
   (landscape) screen. On a touch screen the buttons show no key hints, and a press held on a control
   for half a second shows its hover tag above the finger, the tap it ends in doing nothing [T-1260,
-  `ui/tip.ts`].
+  `ui/tip.ts`]. The Select tool's selection bar leaves the top of the map for its bottom edge
+  [T-1263, [ui-building.md](ui-building.md) "The Select tool"].
 
 ## The top bar
 

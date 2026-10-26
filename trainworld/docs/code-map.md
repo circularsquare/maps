@@ -222,10 +222,13 @@ Run from the maps root (`node trainworld/checks/<file>`).
 
 - `smoke.mjs [url]`: the pre-commit smoke check (CLAUDE.md "Before a commit"). Writes the real
   save's weekday rail trips per url to `artifacts/trainworld/smoke-figures.json`, which t883 compares
-  against (T-1135).
+  against (T-1135). It prints a WARN line when over 20 `tw-*` folders older than a day sit in the
+  temp folder (profiles an old check left; T-1213).
 - `lib.mjs`: what the checks share, imported by every check that drives a browser or the worker
   in Node: `playwright()` (finds Playwright), `launchChrome` (headless Chrome on a throwaway
-  profile, deleted by its `close()`), `collectErrors`, `importSave`, `REAL_SAVE`, `SMOKE_FIGURES`, `demandFinal` (the
+  profile from `tempProfile`, deleted by its `close()` and, if the check never gets there, at process
+  exit, on an error, `process.exit` or Ctrl-C; a check never makes its own `--user-data-dir`, T-1213),
+  `staleTempProfiles` (smoke's count), `collectErrors`, `importSave`, `REAL_SAVE`, `SMOKE_FIGURES`, `demandFinal` (the
   wait for a demand final), `buildLine` and `acrossLine` (a built test line), `startVite`, and for
   Node `loadApp` (an app module bundled by Vite), `bundleDemandWorker` with `startWorker` (the real
   demand worker), `workerPack`, `marketPacks` and `network` (two test lines in the New York frame).
