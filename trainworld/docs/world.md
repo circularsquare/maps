@@ -245,8 +245,19 @@ player is looking.
   one-day weekend runs as a Sunday, the other day as a weekday (`weeks` in holidays.json). A
   weekend day a country works in place of a day off (the package's weekend workdays, Hungary's in
   2026; China's make-up working days from its own table) is a weekday.
+- **Superholidays** (T-264, notes/T-264.md; `supers` in holidays.json): a run of days off
+  (holidays, weekend days not worked, and an ordinary working day between two days off) of at
+  least 3 days that holds a holiday named in `SUPER` in `holidays_json.py`: Spring Festival, Lunar
+  New Year and Tet, Seollal, Chuseok, Thanksgiving (not Japan's Labor Thanksgiving Day),
+  Christmas, Eid al-Fitr and Eid al-Adha, Diwali, Nowruz, Songkran, China's National Day and
+  Japan's Constitution Memorial Day (both shown as Golden Week), and Obon, which the package lacks
+  and `ADDED` makes Japan's days off on August 13-16. The run is named by that holiday. It has
+  three parts in whole local days: **going out** the day before (the two days before a run of 5
+  days or more), **away** the run less its last day (last two), **coming back** its last day
+  (last two). The days either side of the game year come from the real years either side, so a
+  run over New Year is found.
 - **A country's calendar decides each local day's kind** (T-872, T-262, `game/holidayCalendar.ts`
-  `kindOfIn`): a holiday is a Sunday, except the few most people work through (in the US and its
+  `kindOfIn`): a superholiday's day away is the away kind (T-264); a holiday is a Sunday, except the few most people work through (in the US and its
   territories: Columbus Day, Veterans Day, Martin Luther King Jr. Day, Washington's Birthday,
   Juneteenth; `working` in holidays.json), which keep their weekday; a weekend day it works is a weekday; others take the
   country's week. A line's country is its first stop's zone's (by the coarse outlines, so a Yuen Long line keeps Hong
@@ -256,8 +267,11 @@ player is looking.
   kind is not the day number's, with their kind, from yesterday to 8 days ahead), and its fares,
   rides and points settle at that kind's rates: money groups split by local time and country.
   Running costs do not depend on the kind of day. The demand views' Today follows the view
-  centre's country, the line inspector its line's. The demand solve is unchanged: Saturday and
-  Sunday are worked out from the weekday's ([demand-timing.md](demand-timing.md)).
+  centre's country, the line inspector its line's. The demand solve is unchanged: Saturday, Sunday
+  and the away day are worked out from the weekday's ([demand-timing.md](demand-timing.md)). The
+  away day's own boarding account is made only while one is within 8 days in a country the player
+  has built in, and its fares and points only within 21; until then the account reads Sunday's
+  (`awaySoon`, `awayNear` in `game/days.ts`).
 
 ### NIMBY Rails
 

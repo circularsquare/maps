@@ -170,7 +170,11 @@ institutions** (prisons, nursing homes and the like, T-234).
   Sundays [T-872, docs/world.md "Calendar"]; Saturday and Sunday demand is worked out from the
   weekday's solve per purpose and period (NHTS 2017 rates). The demand views show the average day
   (5 weekdays, a Saturday and a Sunday over 7) unless a weekday, a Saturday or a Sunday is chosen
-  [T-464]. The same trains run every day (Anita, T-261: for now).
+  [T-464]. The same trains run every day (Anita, T-261: for now). **Superholidays** [T-264,
+  notes/T-264.md]: a run of days off around Spring Festival, Golden Week, Obon, Chuseok,
+  Thanksgiving, Christmas, Eid and the like; its days away are a fourth kind, a Sunday with local
+  outings at 0.7 and attractions at 1.5. A calendar icon by the clock lists the runs coming within
+  21 days. Going-out and coming-back rushes are T-1373.
 - **Demand rules must hold up worldwide**: every demand rule has an entry in
   [docs/demand-worldwide.md](docs/demand-worldwide.md).
 

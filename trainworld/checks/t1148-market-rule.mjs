@@ -75,15 +75,15 @@ for (const [a, b] of pairs) {
 console.log(`${fails ? 'FAIL' : 'PASS'} t1148 place pairs: ${pairs.length} (${Object.entries(kinds).map(([k, v]) => `${v.length} ${k}`).join(', ')}), worst car ${worst.car.toFixed(4)} min, reference ${worst.ref.toFixed(4)} min, plane share ${worst.air.toExponential(1)}, trips ${worst.trips.toExponential(1)} of theirs`);
 
 // the longer trips' period shares (days.rs share_out = SHARES x load factor for them)
-// day_factors is [4 days][purposes][5 periods] then [4 days][purposes] rates; the longer trips are the last purpose
+// day_factors is [5 days][purposes][5 periods] then [5 days][purposes] rates (weekday, Saturday, Sunday, away, average: T-264); the longer trips are the last purpose
 const lf = day_factors(), SH = [0.2, 0.35, 0.25, 0.15, 0.05];
-const PURPOSES = lf.length / (4 * 6), LONGER = PURPOSES - 1;
+const DAYS = 5, PURPOSES = lf.length / (DAYS * 6), LONGER = PURPOSES - 1;
 let dayFails = 0;
-for (let d = 0; d < 4; d++) for (let q = 0; q < 5; q++) {
+for (let d = 0; d < DAYS; d++) for (let q = 0; q < 5; q++) {
   const sim = SH[q] * lf[(d * PURPOSES + LONGER) * 5 + q];
   if (!near(rule.longerShare(d, q), sim, 1e-5)) { dayFails++; console.log(`  day ${d} period ${q}: ${rule.longerShare(d, q)} against the sim's ${sim}`); }
 }
-console.log(`${dayFails ? 'FAIL' : 'PASS'} t1148 longer trips' period shares on 4 kinds of day`);
+console.log(`${dayFails ? 'FAIL' : 'PASS'} t1148 longer trips' period shares on ${DAYS} kinds of day`);
 // London - Paris for the eye
 const [L, P] = fixed[0] ?? [];
 if (L >= 0) {

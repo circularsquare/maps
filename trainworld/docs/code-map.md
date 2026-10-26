@@ -28,7 +28,7 @@ tests natively.
 - `src/demand/`: the demand kernel, behind feature `demand` (on in the app's build): `api.rs`
   (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market; `intercity/market_trip.rs` its trip explorer query, T-866; on a big cluster its pass searches destinations one at a time,
   `pass_streamed` with `kernel::DestSearch` and `DestAssign`, T-761), `warm.rs` (the
-  everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (Saturday's and Sunday's factors per
+  everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (Saturday's, Sunday's and the away day's factors per
   purpose and period, T-260, T-262), `routes.rs` (routed walks over water and drives over OSM roads from
   the pack, T-275), `trip.rs` (the trip explorer's query, T-195; its two cells' own trip, T-720, checked with the
   walk bands in `t720.rs`), `lanes.rs` (f32 lanes, wasm
@@ -66,9 +66,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `sun.ts` (the sun's height for the top bar's sky, T-861; the calendar is in `days.ts`),
   `attractions.ts` (the world's attractions from `attractions.json`, made by `pipeline/attractions_json.py`, and their visits on a kind of day, T-263),
   `holidays.ts` (public holidays by country from `holidays.json`, made by `pipeline/holidays_json.py`, T-862;
-  a line's and the view's country, T-872; one entry for a holiday several countries keep, T-1098), `holidayCalendar.ts` (the plain lookups the clock worker shares:
-  a holiday's name, `kindOfIn` a country's kind of each day from its holidays and own weekend, T-872, T-262),
-  `periods.ts` (the five periods), `days.ts` (weekday, Saturday and Sunday, the shown day, T-260, T-262).
+  a line's and the view's country, T-872; one entry for a holiday several countries keep, T-1098; superholidays near, the sky's rush days and the Money ticks, T-264), `holidayCalendar.ts` (the plain lookups the clock worker shares:
+  a holiday's name, `kindOfIn` a country's kind of each day from its holidays and own weekend, T-872, T-262; `superRuns`, `superPart`, T-264),
+  `periods.ts` (the five periods), `days.ts` (weekday, Saturday, Sunday and the away day, the shown day, T-260, T-262, T-264).
 - Demand and riders: `demand.ts` (results: mode split, riders), `boarding.ts` (the boarding
   account's hour on the main thread: riders packed for the clock worker, platform crowds, T-164),
   `complexLive.ts` (a complex's platform crowds and trains now, T-246), `purposes.ts` (the trip
@@ -345,6 +345,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   and start menu to artifacts/trainworld/previews/; `SHADE=dark`; port 6120 by default),
   `t1265-hk-preview.mjs` (a line in Hong Kong's northwest, nearer Shenzhen's centre, saved: the slot
   names Hong Kong only and the line keeps Hong Kong's holidays; port 6167 by default),
+  `t1372-superholidays.mjs` (the calendar against the last commit's: only days away and Obon change kind; China's and Japan's runs; the real save's ordinary days equal 8800's to the bit, the away day a Sunday times `AWAY_RATE` by purpose, the day views timed; PORT 6172 by default, about three minutes; T-1372),
   `t1281-upgrades.mjs` (the real save's rail trips as saved, with a waiting room at every station and with a park and ride too, in one edit each; screenshots of the station panel's upgrade row and a terminal's sidings, `SHOTS_ONLY=1` for those alone; T-1281),
   `t883-fare-curve.mjs` (the real save: the default fare's rail trips against smoke's last run on the same url, and again after the changes below, the same line through other nodes and an old two-node curve changing nothing, a doubled rate and a curve steeper past 20 km losing rail trips, the weekday's income being the base, the rate and demand's extra; the Money tab's hover arrows, one-way drags sending once on release, undo, zoom keeping the slope, the off-plot arrows and their click; fare graph screenshots in t1143/), `t1201-fare-rows.mjs` (a new game's Money tab at the dock's narrowest: the rows as rates, none wrapping, a rate's whole-cent step or typed value moving later fares together, never below 0, the base and a stretch's end keeping the rates, a drag's fare followed by the rows; screenshots in t1201/; about a minute), `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
   rides and running costs, with the largest hour-to-hour change beside the flat booking's),

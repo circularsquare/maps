@@ -2647,7 +2647,8 @@ async function handle(msg: ToClock) {
   } else if (msg.kind === "riders") {
     // a new demand result: the boarding account follows it (T-164), a few lines at a time, one
     // kind of day's riders a message (T-260)
-    if (peakC[msg.day ?? 0]) peakC[msg.day ?? 0] = strengths(msg.packed.subarray(0, PERIODS.length));
+    // an empty one clears the kind (an away day's once none is near, T-264)
+    if (peakC[msg.day ?? 0] && msg.packed.length >= PERIODS.length) peakC[msg.day ?? 0] = strengths(msg.packed.subarray(0, PERIODS.length));
     api.set_riders(msg.packed, msg.day ?? 0);
     if (msg.arrive) api.set_arrivals(msg.arrive, msg.day ?? 0);
     stepBoarding();

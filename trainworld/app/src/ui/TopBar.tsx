@@ -8,12 +8,12 @@ import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandView, modeRides, modeSplit, viewFinal, viewUpdating } from "../game/demand";
 import { RIDES_PER_PERSON, smallPct, WORLD_PEOPLE, WORLD_RIDES, worldTotals, worldView } from "../game/worldTotals";
 import { clockTime, count, dayOf, exact, money, moneyCash } from "../game/format";
-import { dateName, dateOf, MONTH_LONG, weekdayOf } from "../game/days";
+import { AVERAGE_DAY, awayNear, dateName, dateOf, MONTH_LONG, weekdayOf } from "../game/days";
 import { PERIODS, periodAt } from "../game/periods";
 import { SkyBanner } from "./SkyBanner";
-import { countryName, groupHolidays, holidaysNear, loadHolidays, type HolidaySpan } from "../game/holidays";
+import { countryName, groupHolidays, holidaysNear, loadHolidays, rushNear, runToday, supersNear, type HolidaySpan, type RushSpan } from "../game/holidays";
 import { useEffect } from "preact/hooks";
-import { shownDay } from "../game/ui";
+import { display, setDisplay, shownDay, shownDayOn } from "../game/ui";
 import { splitTip } from "../game/splitTip";
 
 const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -60,6 +60,70 @@ function holidayLines(minute: number, list: HolidaySpan[], full: boolean): strin
   });
 }
 
+/** T-264: one line per superholiday day on the sky that no holiday line names: "Tomorrow: going out
+ * for Golden Week, China", "Today: coming back from Golden Week, China", a day away that is no holiday
+ * "Today: Golden Week, China". Several countries on one date share a line, as `holidayLines`. */
+function rushLines(minute: number, list: RushSpan[], hols: HolidaySpan[], full: boolean): string[] {
+  const now = minute * 60, today = Math.floor(now / 86400);
+  const by = new Map<string, { r: RushSpan; countries: string[] }>();
+  for (const r of list) {
+    if (r.t1 <= now || r.t0 >= now + 12 * 3600) continue;
+    if (r.part === 2 && hols.some((h) => h.country === r.country && h.day === r.day)) continue;
+    const key = `${r.day} ${r.part} ${r.name}`, e = by.get(key);
+    if (e) { if (!e.countries.includes(r.country)) e.countries.push(r.country); } else by.set(key, { r, countries: [r.country] });
+  }
+  return [...by.values()].map(({ r, countries }) => {
+    const names = countries.map(countryName).sort();
+    const where = full || names.length <= 3 ? names : [...names.slice(0, 2), `${names.length - 2} others`];
+    const place = where.length > 1 ? `${where.slice(0, -1).join(", ")} and ${where[where.length - 1]}` : where[0];
+    const what = r.part === 1 ? `going out for ${r.name}` : r.part === 3 ? `coming back from ${r.name}` : r.name;
+    if (r.t0 <= now) return `Today: ${what}, ${place}`;
+    const when = Math.floor(r.t0 / 86400) === today ? "Today" : "Tomorrow";
+    return r.t0 % 86400 === 0 ? `${when}: ${what}, ${place}` : `${when} from ${clockTime(r.t0 / 60)}: ${what}, ${place}`;
+  });
+}
+
+const DAY_SHOWN_ON: Record<string, string> = { average: "the average day", weekday: "a weekday", saturday: "a Saturday", sunday: "a Sunday" };
+/** the Day choice before the calendar icon set it to a day away, to go back to */
+let dayBefore = "average";
+
+/** "Out Fri Feb 13 and Sat Feb 14", "Away Sun Feb 15 to Sat Feb 21" */
+function daysLine(label: string, from: number, to: number): string | null {
+  if (to <= from) return null;
+  return `${label} ${dateName(from)}${to - from === 2 ? ` and ${dateName(from + 1)}` : to - from > 2 ? ` to ${dateName(to - 1)}` : ""}`;
+}
+
+/** T-264: the calendar icon by the clock. A dot while a superholiday goes out within 21 days where the
+ * player has built, pink while one is under way; its hover has each run's days, and a click shows
+ * demand on a day away (the Day choice's own option) or back to the day shown before. */
+function Calendar() {
+  const runs = supersNear.value;
+  const away = awayNear.value;
+  const d = display.value;
+  const showing = d.dayShown === "away" && away !== null;
+  const under = runs.some((r) => runToday(r) >= r.out);
+  const lines: string[] = [];
+  for (const r of runs) {
+    const n = r.out - runToday(r);
+    if (lines.length) lines.push("");
+    lines.push(`${r.name} in ${countryName(r.country)}, ${n > 1 ? `in ${n} days` : n === 1 ? "tomorrow" : "now"}`);
+    for (const l of [daysLine("Out", r.out, r.away), daysLine("Away", r.away, r.back), daysLine("Back", r.back, r.end)]) if (l) lines.push(l);
+  }
+  if (!runs.length) lines.push("No long holidays in the next 3 weeks");
+  if (away) lines.push("", showing ? `Click to show demand on ${DAY_SHOWN_ON[dayBefore] ?? DAY_SHOWN_ON.average} again` : `Click to show demand on a day of ${away}`);
+  const click = () => {
+    if (!away) return;
+    if (showing) setDisplay("dayShown", (DAY_SHOWN_ON[dayBefore] ? dayBefore : "average") as typeof d.dayShown);
+    else { dayBefore = d.dayShown; setDisplay("dayShown", "away"); }
+  };
+  return (
+    <button class={"btn icon cal" + (showing ? " on" : "") + (under ? " under" : "")} data-tip={lines.join("\n")} aria-label="Long holidays" onClick={click}>
+      <Icon.calendar />
+      {runs.length > 0 && <i class="cal-dot" />}
+    </button>
+  );
+}
+
 /** T-861, T-1136: the time and date on one line, beside or over the sky banner (ui/SkyBanner.tsx) and its demand band. */
 function Clock() {
   // ?perfOff=clock (T-045, measurement only): read without subscribing, so it never re-renders.
@@ -69,12 +133,13 @@ function Clock() {
   const held = clock.held.value;
   const day = dayOf(minute), { month, date } = dateOf(day);
   useEffect(loadHolidays, []);
-  const near = holidaysNear.value;
-  const hols = holidayLines(minute, near, true);
+  const near = holidaysNear.value, rush = rushNear.value;
+  const hols = [...holidayLines(minute, near, true), ...rushLines(minute, rush, near, true)];
   const todayHols = holidayLines(minute, near, false).filter((l) => l.startsWith("Today: "));
   const dateTip = `${WEEKDAY_LONG[weekdayOf(day)]}, ${MONTH_LONG[month]} ${date}, day ${day}`;
   return (
     <div class="clock">
+      <Calendar />
       <div class="clock-box">
         <div class="clock-text" data-tip={held ? "The clock starts when demand has loaded" : [dateTip, ...todayHols].join("\n")}>
           <b class={"time lg" + (held ? " held" : "")}>{clockTime(minute)}</b>
@@ -104,7 +169,7 @@ function CityName({ id, name, tip }: { id: string | null; name: string; tip?: st
   const past = id ? pointsPast24h.value.get(id) : undefined;
   const rate = id ? pointsPerDay.value.get(id)?.[shownDay.value] : undefined;
   const lines = [name];
-  if (id && (past || rate)) lines.push(`${exact(past ?? 0)} points in the past 24 hours`, `${exact(rate ?? 0)} points ${["on a weekday", "on a Saturday", "on a Sunday", "a day"][shownDay.value]} with the riders now`);
+  if (id && (past || rate)) lines.push(`${exact(past ?? 0)} points in the past 24 hours`, `${exact(rate ?? 0)} points ${shownDayOn.value} with the riders now`);
   return <div class="city" data-tip={tip ?? (id ? lines.join("\n") : undefined)}>{name}</div>;
 }
 
@@ -165,7 +230,7 @@ export function TopBar() {
   const pct = (v: number) => (!known ? "–" : far ? smallPct(v) : v.toFixed(1) + "%");
   // T-342: the shares are of rides (trip legs) a day; the train's count beside its share, all in the hover
   const rides = total ? total.rides : modeRides.value;
-  const where = [far ? " in the world" : city ? " in " + city.name : "", [" on a weekday", " on a Saturday", " on a Sunday", ""][shownDay.value]].join("");
+  const where = [far ? " in the world" : city ? " in " + city.name : "", (shownDay.value === AVERAGE_DAY ? "" : " " + shownDayOn.value)].join("");
   const note = demandView.value && !viewFinal.value ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : viewUpdating.value ? " (before your last change)" : "";
   const worldTip = total ? `World\n${total.cities} ${total.cities === 1 ? "city" : "cities"}, ${total.stations} ${total.stations === 1 ? "station" : "stations"}` : undefined;
   return (

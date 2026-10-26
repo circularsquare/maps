@@ -8,6 +8,8 @@ import { signal } from "@preact/signals";
 import { clockTime, count, money } from "../game/format";
 import { dateName, shortDate } from "../game/days";
 import { moneyState } from "../game/money";
+import { cityById, isCity } from "../game/cities";
+import { calendarAt } from "../game/holidays";
 import { regionLedger } from "../game/regionMoney";
 import { Segmented } from "./widgets";
 import { Money } from "./MoneyText";
@@ -93,6 +95,10 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   const rideTop = Math.max(...list.map(rides), 1e-9);
   const y3 = (v: number) => H - PAD - (v / rideTop) * (H - 2 * PAD);
 
+  // T-264: a tick under each day or hour a holiday or a long holiday's day where the player has built
+  const only = zone && isCity(zone) ? cityById(zone).country ?? null : null;
+  const marks = list.map((e) => calendarAt(hours ? e.at * 3600 + 1800 : e.at * 86400 + 43200, only));
+
   const first = list[0];
   return (
     <>
@@ -147,6 +153,12 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
         })}
         {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={`${name(e, i)}\nTrain rides ${exact(rides(e))}`} />)}
       </svg>
+      {marks.some((m) => m.lines.length) && (
+        <svg class="hist-hols" viewBox={`0 0 ${W} 4`} preserveAspectRatio="none">
+          {list.map((e, i) => marks[i].lines.length ? <rect class={"hist-hol" + (marks[i].off ? "" : " rush")} x={cx(i) - bw / 2} y={0} width={bw} height={4} /> : null)}
+          {list.map((e, i) => marks[i].lines.length ? <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={4} data-tip={[name(e, i), ...marks[i].lines].join("\n")} /> : null)}
+        </svg>
+      )}
       <div class="hist-x small muted"><span>{when(first, hours, false)}</span><span>{when(list[last], hours, false)}</span></div>
     </>
   );

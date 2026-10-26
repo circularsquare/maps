@@ -180,7 +180,17 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   Workers' Day, May Day and the like; Christmas; Boxing Day and Saint Stephen's Day; New Year's
   Day), shown by its one name or by `SAME`'s; the sky's hover names every country ("Today: Labor
   Day, Belgium, China, France and Germany"), the date's names two and counts the rest past three
-  ("Labor Day, Belgium, China and 2 others"). In the dark theme the
+  ("Labor Day, Belgium, China and 2 others"). A superholiday's going-out and coming-back days
+  (T-264, docs/world.md "Calendar") are a paler pink ribbon with a small arrow at the start of
+  each, right for out, left for back; its days away a pink ribbon. The sky's hover adds
+  "Tomorrow: going out for Golden Week, China", "Today: coming back from Golden Week, China",
+  and the run's name on a day away that is no holiday. **The calendar icon** left of the time
+  [T-264]: a pink dot while a superholiday where the player has built goes out within 21 days, the
+  icon pink while one is under way. Its hover gives each run ("Golden Week in China, in 5 days",
+  then "Out Wed Sep 30", "Away Thu Oct 1 to Tue Oct 6", "Back Wed Oct 7 and Thu Oct 8"), or "No
+  long holidays in the next 3 weeks". A click sets the Day choice (Settings) to the run's days
+  away (its calendar option there while one is within 21 days), and a second click back to the day
+  shown before. In the dark theme the
   scene is mixed 15% towards the background. Pause and three
   speeds. **Space** pauses and resumes at the speed that was running, even with a button focused.
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
@@ -195,7 +205,7 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   games.
 
 **Demand shown for** [T-260, T-266, T-464; `ui/DemandSelector.tsx`, display setting `dayShown`]: a
-"Day" choice in Settings, right under the demand bubbles' Opacity [T-703]: Average (the default), Weekday, Sat or Sun [T-262]. The average is 5 weekdays, a Saturday and a Sunday over 7 ([demand-timing.md](demand-timing.md)
+"Day" choice in Settings, right under the demand bubbles' Opacity [T-703]: Average (the default), Weekday, Sat or Sun [T-262], and while a superholiday's days away are within 21 days a calendar option whose hover names it ("A day of Golden Week", T-264), which reads as the average once it has passed. The average is 5 weekdays, a Saturday and a Sunday over 7 ([demand-timing.md](demand-timing.md)
 4.2). It sets the day every demand view shows, the split included, and does not follow the clock,
 so nothing jumps when the clock enters a weekend. Hovers state the day beside every demand figure ("12,400 trip legs per day",
 "per weekday", "per Saturday", "per Sunday": `shownDayPhrase` in `game/ui.ts`). A switch of day shows at
@@ -330,7 +340,7 @@ region's with the place on and the network's with the globe, from the same ledge
 are counted as in track-and-service.md 6.4). Days are the ledger's, one each in order (T-488), up to the past 30;
 hours up to the past 48; a young game's few sit at the right of at least 7 days or 12 hours. The
 day or hour now is drawn as it fills (a dashed last segment, a paler bar) and moves as fares land.
-Under the charts the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
+Under the charts a tick under each day or hour that was a holiday or a superholiday's day where the player has built (the region's country with the place on), pink for a day off and a day away, paler for going out and coming back, its hover the day and one line each ("Thanksgiving Day, United States", "Going out for Golden Week, China") [T-264]; then the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
 day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
 costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
 charts are saved with the game and are there after a reload [T-567]. Then, whatever the toggle,

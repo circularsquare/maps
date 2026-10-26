@@ -12,7 +12,7 @@ import { fitView, holdForGameLoad, loadCannotFinish, markAlive } from "../game/l
 import { incomeByDay, lastSaved, liveMoney, moneyState, setMoneyState } from "../game/money";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
 import { linePoints, STAR_SHARE } from "../game/points";
-import { AVERAGE_DAY, DAY_KINDS } from "../game/days";
+import { AVERAGE_DAY, AWAY_DAY, awaySoon, DAY_KINDS } from "../game/days";
 import { demandByDay, demandView, platformTransfers } from "../game/demand";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { lineDraft, selection, tool } from "../game/ui";
@@ -449,7 +449,16 @@ export class ClockClient {
     // Demand's riders for the boarding account (T-164): each new result, every kind of day's
     // (T-260); the trains and platforms of each hour read their own day's.
     effect(() => {
-      demandByDay.value.slice(0, DAY_KINDS.length).forEach((d, day) => {
+      // T-264: the away day's only while one is soon; an empty message clears them, so the account
+      // reads Sunday's
+      const soon = awaySoon.value;
+      demandByDay.value.slice(0, DAY_KINDS.length).forEach((d0, day) => {
+        const d = day === AWAY_DAY && !soon ? { view: null } : d0;
+        if (day === AWAY_DAY && !d.view) {
+          if (ridersSent[day]) this.post({ kind: "riders", packed: new Float32Array(0), day });
+          ridersSent[day] = null;
+          return;
+        }
         if (d.view && d.view === ridersSent[day]) return;
         ridersSent[day] = d.view;
         const packed = d.view ? packRiders(d.view) : null;

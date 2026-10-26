@@ -8,18 +8,20 @@
 // days (T-262): the clock worker sends the track model each line's days that differ from the day
 // number's and settles money by them; here, the view's Today and the line inspector.
 
-import { computed, signal } from "@preact/signals";
+import { computed, effect, signal } from "@preact/signals";
 import { clock } from "./clock";
 import { cityById, cityWithin, outlinesIn } from "./cities";
-import { holidayName, kindOfIn, type HolidayData } from "./holidayCalendar";
+import { awayNear, awaySoon } from "./days";
+import { holidayName, kindOfIn, superPart, superRuns, type HolidayData, type SuperRun } from "./holidayCalendar";
 import { shiftAt, viewShift } from "./localTime";
 import { world } from "./world";
 
 export const data = signal<HolidayData | null>(null);
-let asked = false;
+let asked = false, watching = false;
 /** Fetch the calendar once (about 240 kB, its own chunk). */
 export function loadHolidays() {
   if (asked) return;
+  if (!watching) { watching = true; watchAway(); }
   asked = true;
   void import("./holidays.json").then((m) => { data.value = m.default as unknown as HolidayData; }, () => { asked = false; });
 }
@@ -110,6 +112,113 @@ export const holidaysNear = computed<HolidaySpan[]>(() => {
   if (key !== lastKey) { lastKey = key; last = out; }
   return last;
 });
+
+/** A superholiday run where the player has built (T-264), in its country's local game days
+ * (`SuperRun`), and its country's local time ahead of the game clock, seconds. */
+export interface NearRun extends SuperRun { country: string; shift: number }
+
+/** How far ahead the calendar icon looks, days (T-264). */
+export const SUPER_AHEAD = 21;
+
+let lastRunsKey = "", lastRuns: NearRun[] = [];
+/** Superholiday runs in rail countries under way or going out within `SUPER_AHEAD` local days, in
+ * order of their going-out day. Changes at most once a game day, keeping its identity otherwise. */
+export const supersNear = computed<NearRun[]>(() => {
+  const now = clock.local.value * 60 - viewShift.value;
+  if (!data.value) return lastRuns;
+  const out: NearRun[] = [];
+  const seen = new Set<string>();
+  for (const k of railCountries.value) {
+    const [country, s] = k.split(" "), shift = Number(s);
+    const d0 = Math.floor((now + shift) / 86400);
+    for (const r of superRuns(data.value, country, d0, d0 + SUPER_AHEAD + 1)) {
+      const id = `${country} ${r.out}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      out.push({ ...r, country, shift });
+    }
+  }
+  out.sort((a, b) => a.out - b.out || a.country.localeCompare(b.country));
+  const key = out.map((r) => `${r.country}${r.out}`).join();
+  if (key !== lastRunsKey) { lastRunsKey = key; lastRuns = out; }
+  return lastRuns;
+});
+
+/** The local game day now in a run's country. */
+export const runToday = (r: NearRun) => Math.floor((clock.local.peek() * 60 - viewShift.peek() + r.shift) / 86400);
+
+// T-264: which superholiday's away days the Day choice offers (within SUPER_AHEAD days), and whether
+// the boarding account needs the away day's riders (one within 8 days, the window the clock worker
+// sends the lines' days for). Started by `loadHolidays`: game/clock.ts imports this module.
+const watchAway = () => effect(() => {
+  const runs = supersNear.value;
+  const now = clock.local.value * 60 - viewShift.value;
+  let near: string | null = null, soon = false;
+  for (const r of runs) {
+    const today = Math.floor((now + r.shift) / 86400);
+    if (r.back <= today || r.away >= r.back) continue;
+    near ??= r.name;
+    if (r.away <= today + 8) soon = true;
+  }
+  if (awayNear.peek() !== near) awayNear.value = near;
+  if (awaySoon.peek() !== soon) awaySoon.value = soon;
+});
+
+export interface RushSpan {
+  country: string;
+  name: string;
+  /** 1 going out, 2 away, 3 coming back */
+  part: 1 | 2 | 3;
+  /** the country's local game day */
+  day: number;
+  /** the day in the local time in view, seconds: [t0, t1) */
+  t0: number;
+  t1: number;
+}
+
+let lastRushKey = "", lastRush: RushSpan[] = [];
+/** The days of superholiday runs that meet the local day in view or the next one, as
+ * `holidaysNear` (the sky's marks and hover). */
+export const rushNear = computed<RushSpan[]>(() => {
+  const now = clock.local.value * 60, vs = viewShift.value;
+  const out: RushSpan[] = [];
+  for (const r of supersNear.value) {
+    const here = now - vs + r.shift, d0 = Math.floor(here / 86400);
+    for (let d = Math.max(r.out, d0 - 1); d < Math.min(r.end, d0 + 3); d++) {
+      const t0 = d * 86400 - r.shift + vs, t1 = t0 + 86400;
+      if (t1 <= now - 6 * 3600 || t0 >= now + 30 * 3600) continue;
+      out.push({ country: r.country, name: r.name, part: d < r.away ? 1 : d < r.back ? 2 : 3, day: d, t0, t1 });
+    }
+  }
+  out.sort((a, b) => a.t0 - b.t0 || a.country.localeCompare(b.country));
+  const key = out.map((h) => `${h.country}${h.t0}${h.part}`).join();
+  if (key !== lastRushKey) { lastRushKey = key; lastRush = out; }
+  return lastRush;
+});
+
+/** What the calendar held at game-clock second `t` where the player has built (in `only`'s country
+ * alone when given), for the Money history's ticks (T-264): a line per holiday or superholiday day,
+ * "Thanksgiving Day, United States", "Going out for Golden Week, China"; `off` when one was a
+ * holiday or a day away, else only going out or coming back. */
+export function calendarAt(t: number, only: string | null): { lines: string[]; off: boolean } {
+  const lines: string[] = [];
+  let off = false;
+  const seen = new Set<string>();
+  for (const k of railCountries.value) {
+    const [country, s] = k.split(" ");
+    if (only && country !== only) continue;
+    const day = Math.floor((t + Number(s)) / 86400);
+    const add = (line: string) => { if (!seen.has(line)) { seen.add(line); lines.push(line); } };
+    const names = holidayOn(country, day);
+    for (const n of names?.split("; ") ?? []) add(`${n}, ${countryName(country)}`);
+    const [part, run] = superPart(data.value, country, day);
+    if (names || part === 2) off = true;
+    if (part === 1) add(`Going out for ${run!.name}, ${countryName(country)}`);
+    else if (part === 3) add(`Coming back from ${run!.name}, ${countryName(country)}`);
+    else if (part === 2 && !names) add(`${run!.name}, ${countryName(country)}`);
+  }
+  return { lines, off };
+}
 
 /** Names the calendar gives one holiday in different countries (T-1098), and the name it is shown by
  * when several countries keep it on one date. */

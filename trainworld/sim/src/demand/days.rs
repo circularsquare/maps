@@ -1,4 +1,5 @@
-//! Kinds of day (T-260, T-262, docs/demand-timing.md): weekday, Saturday and Sunday.
+//! Kinds of day (T-260, T-262, docs/demand-timing.md): weekday, Saturday, Sunday and a
+//! superholiday's away day (T-264).
 //!
 //! The solve is a weekday's. A Saturday or a Sunday is worked out from it, not solved: every
 //! purpose's trips are a fixed multiple of a weekday's, departing by their own period shares, and
@@ -25,12 +26,14 @@ use super::intercity::SHARES;
 use super::network::PERIODS;
 use wasm_bindgen::prelude::*;
 
-/// The days a query can be asked for: the three kinds, then the average over a week (T-464).
-pub const DAY_KINDS: usize = 4;
+/// The days a query can be asked for: the four kinds, then the average over a week (T-464).
+pub const DAY_KINDS: usize = 5;
 pub const WEEKDAY: usize = 0;
 pub const SATURDAY: usize = 1;
 pub const SUNDAY: usize = 2;
-pub const AVERAGE: usize = 3;
+/// A superholiday's days away (T-264): a Sunday with people gone home and visitors in town.
+pub const AWAY: usize = 3;
+pub const AVERAGE: usize = 4;
 /// Weekdays, Saturdays and Sundays in a week, the average's weights.
 const WEEK: [f32; 3] = [5.0 / 7.0, 1.0 / 7.0, 1.0 / 7.0];
 /// Purposes as the demand results split them (demand.worker.ts `purposeParts`): work, the
@@ -51,7 +54,12 @@ pub const DAY_RATE: [[f32; PURPOSES]; 2] = [
     [0.24, 1.05, 1.67, 0.06, 0.14, 1.11, 0.18, 1.67, 1.48],
 ];
 
-type Shares = [Option<[f32; PERIODS]>; PURPOSES];
+/// An away day's trips per Sunday's, by purpose (T-264, notes/T-264.md): local outings 0.7 with
+/// people gone home, attractions 1.5 with visitors in town; work, airport and the longer trips keep
+/// a Sunday's. Not in the average day.
+pub const AWAY_RATE: [f32; PURPOSES] = [1.0, 0.7, 0.7, 0.7, 0.7, 1.0, 0.7, 1.5, 1.0];
+
+type Shares =[Option<[f32; PERIODS]>; PURPOSES];
 /// Social outings' Saturday and Sunday period shares, which attractions take too.
 const SOCIAL_OUT: [Option<[f32; PERIODS]>; 2] = [Some([0.059, 0.440, 0.335, 0.160, 0.006]), Some([0.096, 0.516, 0.276, 0.108, 0.004])];
 const SOCIAL_RET: [Option<[f32; PERIODS]>; 2] = [Some([0.016, 0.310, 0.395, 0.221, 0.058]), Some([0.014, 0.456, 0.368, 0.147, 0.015])];
@@ -120,6 +128,7 @@ pub fn day_rate(day: usize, p: usize) -> f32 {
     match day {
         WEEKDAY => 1.0,
         AVERAGE => WEEK[0] + WEEK[1] * DAY_RATE[0][p] + WEEK[2] * DAY_RATE[1][p],
+        AWAY => AWAY_RATE[p] * DAY_RATE[1][p],
         d => DAY_RATE[d.min(SUNDAY) - 1][p],
     }
 }
@@ -131,6 +140,7 @@ fn share(day: usize, p: usize, q: usize, wd: f32, tables: &[Shares; 2]) -> f32 {
     match day {
         WEEKDAY => wd,
         AVERAGE => WEEK[0] * wd + WEEK[1] * on(0) + WEEK[2] * on(1),
+        AWAY => AWAY_RATE[p] * on(1),
         d => on(d.min(SUNDAY) - 1),
     }
 }
@@ -210,6 +220,20 @@ mod tests {
         }
         assert_eq!(share_out(WEEKDAY, WORK, 0), TO_WORK[0]);
         assert_eq!(share_ret(WEEKDAY, everyday(1), 3), RETURN[1][3]);
+    }
+
+    #[test]
+    fn an_away_day_is_a_scaled_sunday() {
+        for p in 0..PURPOSES {
+            assert!((day_rate(AWAY, p) - AWAY_RATE[p] * day_rate(SUNDAY, p)).abs() < 1e-6, "purpose {p}");
+            for q in 0..PERIODS {
+                assert!((load_factor(AWAY, p, q) - AWAY_RATE[p] * load_factor(SUNDAY, p, q)).abs() < 1e-5, "purpose {p} period {q}");
+            }
+        }
+        assert_eq!(AWAY_RATE[everyday(1)], 0.7);
+        assert_eq!(AWAY_RATE[everyday(6)], 1.5);
+        assert_eq!(AWAY_RATE[WORK], 1.0);
+        assert_eq!(AWAY_RATE[LONGER], 1.0);
     }
 
     #[test]

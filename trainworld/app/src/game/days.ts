@@ -8,19 +8,24 @@
 
 import { signal } from "@preact/signals";
 
-/** 0 weekday, 1 Saturday, 2 Sunday: an index into the per-day results. */
-export type DayKind = 0 | 1 | 2;
-export const DAY_KINDS: DayKind[] = [0, 1, 2];
-export const DAY_KIND_NAME = ["Weekday", "Saturday", "Sunday"] as const;
+/** 0 weekday, 1 Saturday, 2 Sunday, 3 a superholiday's away day (T-264, a scaled Sunday): an index
+ * into the per-day results. */
+export type DayKind = 0 | 1 | 2 | 3;
+export const DAY_KINDS: DayKind[] = [0, 1, 2, 3];
+export const AWAY_DAY = 3;
+export const DAY_KIND_NAME = ["Weekday", "Saturday", "Sunday", "Holiday day"] as const;
 
-/** The days a demand view can show (T-464): the three kinds, then the average day (5 weekdays, a
+/** The days a demand view can show (T-464): the four kinds, then the average day (5 weekdays, a
  * Saturday and a Sunday over 7, sim/src/demand/days.rs). The index into `demandByDay` and the `day`
- * of every demand query. The clock and the boarding account only ever see the three kinds. */
-export type DemandDay = DayKind | 3;
-export const DEMAND_DAYS: DemandDay[] = [0, 1, 2, 3];
-export const AVERAGE_DAY = 3;
+ * of every demand query. The clock and the boarding account only ever see the four kinds. */
+export type DemandDay = DayKind | 4;
+export const DEMAND_DAYS: DemandDay[] = [0, 1, 2, 3, 4];
+export const AVERAGE_DAY = 4;
 /** How a figure for the day shown ends: "12,400 trip legs per day". The Day choice names the day. */
-export const DEMAND_DAY_PHRASE = ["per weekday", "per Saturday", "per Sunday", "per day"] as const;const WEEKDAY_NAME = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+export const DEMAND_DAY_PHRASE = ["per weekday", "per Saturday", "per Sunday", "per holiday day", "per day"] as const;
+/** "points on a weekday": the same, as the points hovers end */
+export const DEMAND_DAY_ON = ["on a weekday", "on a Saturday", "on a Sunday", "on a holiday day", "a day"] as const;
+const WEEKDAY_NAME = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** Day of the week of game day `day`, 0 Monday. */
 export const weekdayOf = (day: number): number => ((day - 1) % 7 + 7) % 7;
@@ -61,3 +66,11 @@ export const dayKindAt = (t: number): DayKind => dayKindOf(Math.floor(t / 86400)
 /** The kind of day it is in the local time in view (T-309), kept by game/clock.ts as the minutes
  * pass and the view pans (main thread only). */
 export const currentDay = signal<DayKind>(0);
+
+/** T-264, kept by game/holidays.ts where the player has built: the superholiday whose away days are
+ * within the next 21 days (its name, the first if several; null for none), and whether one is within
+ * the next 8. The away day's fares and points are worked out apart from Sunday's only while one is
+ * near, and its boarding account only while one is soon; otherwise they are Sunday's, which no line
+ * reads meanwhile. */
+export const awayNear = signal<string | null>(null);
+export const awaySoon = signal(false);

@@ -11,7 +11,7 @@
 
 import { computed } from "@preact/signals";
 import { CITIES, type CityId } from "./cities";
-import { AVERAGE_DAY, DAY_KINDS, DEMAND_DAYS } from "./days";
+import { AVERAGE_DAY, AWAY_DAY, awayNear, DAY_KINDS, DEMAND_DAYS } from "./days";
 import { demandByDay, type DayDemand } from "./demand";
 import { sig3 } from "./format";
 import { lineGeo, moneyState, moneyWorld } from "./money";
@@ -122,10 +122,12 @@ export const linePoints = computed<LinePoints>(() => {
   const w = moneyWorld.value;
   if (!w) return [];
   const zl = zonesLoaded.value; // boundaries arriving re-place the stations
-  const days = DAY_KINDS.map((k) => demandByDay.value[k]);
+  // T-264: the away day's own points only while one is near, else Sunday's
+  const days = DAY_KINDS.map((k) => demandByDay.value[k === AWAY_DAY && awayNear.value === null ? 2 : k]);
   const was = pointsMemo, same = !!was && was.w === w && was.zl === zl;
   if (same && days.every((d, k) => sameDay(d, was.days[k]))) return was.out;
-  const per = days.map((d, k) => (same && sameDay(d, was.days[k]) ? was.per[k] : dayPoints(w, d)));
+  const own = days.map((d, k) => (k === AWAY_DAY && d === days[2] ? null : same && sameDay(d, was.days[k]) ? was.per[k] : dayPoints(w, d)));
+  const per = own.map((x) => x ?? own[2]!);
   const base = days.findIndex((d) => d.view);
   const out = base < 0 ? [] : assemble(days, per, base);
   pointsMemo = { w, zl, days, per, out };
