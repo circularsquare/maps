@@ -260,7 +260,7 @@ try {
   // T-1213: Chrome profiles an older check left in the temp folder (23.9 GB once filled the disk)
   const stale = await staleTempProfiles();
   if (stale > 20) console.log(`WARN  ${stale} tw-* folders over a day old in ${tmpdir()}: old check profiles, safe to delete`);
-  for (const f of ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs', 't1053-zone-ids.mjs']) {
+  for (const f of ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs', 't1053-zone-ids.mjs', 't1380-complexes.mjs', 't1380-labels.mjs']) {
     const r = await runNode(f);
     report(f.replace('.mjs', ''), r.code === 0, r.code === 0 ? '' : tail(r.out));
   }
