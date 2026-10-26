@@ -33,7 +33,7 @@ try {
   await demandFinal(page, { polling: 250, lines: 0 });
   const bus = (from, to, build) => page.evaluate(async ([from, to, build]) => {
     const tw = window.tw, c = tw.client;
-    const route = [from, to].flatMap(([a, b]) => { const p = tw.lngLatToPack(a, b); return [p.x, p.y]; });
+    const route = [from, to].flatMap(([a, b]) => { const p = tw.lngLatToPack(a, b); return [p.x, p.y, 1]; });
     const add = await c.edit({ op: 'addBusLine', route, name: '', colour: '#d7263d' });
     if (build) await c.edit({ op: 'construct', edges: [], stations: [], buses: [add.line] });
     return add.line;
@@ -52,7 +52,7 @@ try {
   // the copy lies on its line's route: move it east so the hover finds the line itself
   await page.evaluate(async ([line, lng, lat]) => {
     const tw = window.tw;
-    const route = [[lng + 0.035, lat + 0.04], [lng + 0.035, lat + 0.005]].flatMap(([x, y]) => { const p = tw.lngLatToPack(x, y); return [p.x, p.y]; });
+    const route = [[lng + 0.035, lat + 0.04], [lng + 0.035, lat + 0.005]].flatMap(([x, y]) => { const p = tw.lngLatToPack(x, y); return [p.x, p.y, 1]; });
     await tw.client.edit({ op: 'busRoute', line, route });
   }, [busCopy, lng, lat]);
   await page.waitForTimeout(1500);

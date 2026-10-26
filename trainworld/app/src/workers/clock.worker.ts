@@ -2297,10 +2297,21 @@ function busRow(a: TrackApi, id: number, nodes: ClockNode[]): ClockBus {
       nodes.push({ id: s.id, x: s.x, y: s.y, lng, lat, level: 0, ports: 0, builtPorts: 0, flying: false, platform: 0, stationBuilt: r[0] === 1, stationOff: false, upgrades: 0, name: "", heading: 0, bus: true });
     }
   }
-  const route = Array.from(r.subarray(1)), street = Array.from(a.bus_street(id));
+  // the route is x, y, kind per point (T-1465); a long road-following one is worth converting once
+  const route: number[] = [], kinds: number[] = [], street = Array.from(a.bus_street(id));
+  for (let k = 1; k + 2 < r.length; k += 3) {
+    route.push(r[k], r[k + 1]);
+    kinds.push(r[k + 2]);
+  }
   const ll = (xy: number[]) => { const out: number[] = []; for (let k = 0; k + 1 < xy.length; k += 2) out.push(...packLngLat(xy[k], xy[k + 1])); return out; };
-  return { built: r[0] === 1, route, roadM: a.bus_road_m(id), stops, street, routeLL: ll(route), streetLL: ll(street) };
+  const had = busRouteLL.get(id);
+  const same = had && had.route.length === route.length && had.route.every((v, i) => v === route[i]);
+  const routeLL = same ? had.ll : ll(route);
+  if (!same) busRouteLL.set(id, { route, ll: routeLL });
+  return { built: r[0] === 1, route, kinds, roadM: a.bus_road_m(id), stops, street, routeLL, streetLL: ll(street) };
 }
+/** a bus route's longitude, latitude pairs by line, until the route changes */
+const busRouteLL = new Map<number, { route: number[]; ll: number[] }>();
 
 /** T-1475: a new bus line's name, "Bus n" with n the sim's next free line number. */
 function nextBusName(a: TrackApi): string {

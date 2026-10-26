@@ -176,13 +176,19 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 ## Drawing a bus line
 
 The Lines tab's bus button beside New line, or B, starts the bus tool (T-1464). Each click adds a
-point; the route runs straight between them, never snapped to track or stations. While drawing,
+point. A click within 100 m of a road lands on the nearest one. Between two points the route takes the
+shortest path over the basemap's zoom 14 roads (`busRoads.ts`; trunk, primary, secondary, tertiary,
+minor and bus-only roads, any direction, length as it is, no turn rules; motorways, service ways,
+tracks and paths are left out). It stays straight where that path is over 3 times the straight line,
+where no road is within 100 m of a point, or while the roads are still loading. The roads come from
+the basemap's own tile server at zoom 14, whatever the map's zoom. While drawing,
 the route shows in the line's colour with the stops the sim would place (ends as small rounded
 squares, a ring round each train station it meets, small rings between and the street stops), and
 the tag by the pointer gives the road length and the price. Double click or Enter makes the line,
 selects it and asks its name; Backspace or a right click takes back a point; Escape drops the
 points, a second Escape leaves the tool. By touch: a tap previews, a second tap or the check places
-it. The bus panel's Edit route reopens the tool on the line's route; finishing redraws it (final
+it. The bus panel's Edit route reopens the tool on the line's route with its clicked points and the
+stretches between them as they were; finishing redraws it (final
 for a constructed route, which pays any longer road). A new bus line is planned until Construct.
 ## Snapping to the real network
 
