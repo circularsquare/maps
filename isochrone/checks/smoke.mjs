@@ -115,7 +115,7 @@ try {
       await page.mouse.move(xy[0] - 5, xy[1]);
       await page.mouse.move(xy[0], xy[1], { steps: 3 });
       await page.waitForFunction(() => document.getElementById('tip').style.display === 'block', undefined, { timeout: 10000, polling: 100 });
-      const text = await page.evaluate(() => document.getElementById('tip').textContent);
+      const text = await page.evaluate(() => document.getElementById('tip').firstChild.textContent);
       const finest = await page.evaluate(() => [1, 3, 10].find((k) => layers[k].shown));
       report('hover shows a time', TIP.test(text) && finest === 1, `("${text}" from L${finest})`);
     } catch (e) {
@@ -152,10 +152,20 @@ try {
       report(NAMES[1], sea.alpha > 0 && sea.h > 0 && sea.h <= 1024, `(alpha ${sea.alpha}, ${sea.h.toFixed(1)} h)`);
       const p = await page.evaluate((c) => { const q = map.project(c); return [q.x, q.y]; }, OFFSHORE);
       await page.mouse.move(p[0] - 5, p[1]);
+      await page.evaluate(() => { window.lastRoute = null; });
       await page.mouse.move(p[0], p[1], { steps: 3 });
       await page.waitForFunction(() => document.getElementById('tip').style.display === 'block', undefined, { timeout: 10000, polling: 100 });
       const text = await page.evaluate(() => document.getElementById('tip').textContent);
       report(NAMES[2], /\d/.test(text), `("${text}")`);
+      // the route to that point comes back from the worker with its split
+      try {
+        await page.waitForFunction(() => window.lastRoute, undefined, { timeout: 10000, polling: 100 });
+        const r = await page.evaluate(() => window.lastRoute);
+        report('canoe hover gives a route and a split', r.mode === 'canoe' && r.points >= 2 && /paddled \d/.test(r.split),
+          `(${r.points} points, "${r.split}")`);
+      } catch (e) {
+        report('canoe hover gives a route and a split', false, first(e));
+      }
       const n1 = await logLen();
       await page.evaluate((c) => map.jumpTo({ center: c, zoom: 8 }), [CONSTANTA[0] + 0.3, CONSTANTA[1]]);
       const e1 = await entry(1, n1, 60000);
@@ -164,6 +174,20 @@ try {
         return m.dist[Math.floor((m.north - c[1]) / m.cellDeg) * m.W + Math.floor((c[0] - m.west) / m.cellDeg)];
       }, [CONSTANTA[0] + 0.4, CONSTANTA[1]]);
       report(NAMES[3], h1 > 0 && h1 <= 1024, `(${e1.cols} x ${e1.rows}, fetch ${e1.fetchMs} ms, solve ${e1.solveMs} ms; sea ${h1.toFixed(1)} h)`);
+      // the mode buttons re-solve the same start and keep the URL
+      try {
+        const got = [];
+        for (const m of ['walk', 'canoe']) {
+          const n2 = await logLen();
+          await page.click(`#controls [data-mode=${m}]`);
+          const e2 = await entry(10, n2, 60000);
+          const st = await page.evaluate(() => ({ url: location.search, title: document.getElementById('title').textContent }));
+          got.push(e2.mode === m && /mode=canoe/.test(st.url) === (m === 'canoe') ? m : `${m}: ${e2.mode} ${st.url} "${st.title}"`);
+        }
+        report('mode buttons switch walking and canoe', got.join() === 'walk,canoe', `(${got.join(', ')})`);
+      } catch (e) {
+        report('mode buttons switch walking and canoe', false, first(e));
+      }
     } catch (e) {
       report('canoe checks', false, first(e));
     }

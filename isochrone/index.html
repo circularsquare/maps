@@ -31,6 +31,12 @@ html, body { margin: 0; height: 100%; background: #0a0a0a; color: #ccc;
     background: none; border: 1px solid #555; color: #ccc; border-radius: 4px; cursor: pointer;
     font: italic 700 15px 'Times New Roman', Times, serif; padding: 0; }
 #infobtn.active { border-color: #6889a8; color: #6889a8; }
+#controls { position: absolute; z-index: 3; left: 42px; bottom: 24px; display: flex; gap: 4px; }
+#controls button { width: 26px; height: 26px; padding: 0; background: rgba(10,10,10,.85);
+    border: 1px solid #555; color: #999; border-radius: 4px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; }
+@media (hover: hover) { #controls button:hover { border-color: #6889a8; color: #eee; } }
+#controls button.active { border-color: #6889a8; color: #6889a8; }
 #info { left: 10px; bottom: 56px; width: 290px; max-width: calc(100vw - 40px); display: none; }
 #info.open { display: block; }
 #info p { margin: 0 0 6px; color: #ccc; }
@@ -40,6 +46,7 @@ html, body { margin: 0; height: 100%; background: #0a0a0a; color: #ccc;
 #tip { position: absolute; z-index: 4; pointer-events: none; display: none; background: rgba(10,10,10,.9);
     border: 1px solid #333; border-radius: 4px; padding: 2px 6px; color: #ddd; white-space: nowrap;
     font-variant-numeric: tabular-nums; }
+#tip .split { color: #999; }
 
 #origin { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #000;
     box-sizing: border-box; }
@@ -57,6 +64,10 @@ body.busy, body.busy .maplibregl-canvas { cursor: progress !important; }
 </div>
 
 <button id="infobtn" title="About this map">i</button>
+<div id="controls">
+    <button data-mode="walk" title="Walking"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="4" r="2" fill="currentColor" stroke="none"/><path d="M12.5 8.5 11 14.5 8 21M11 14.5l3.5 3 1 3.5M12.5 8.5 9 11.5 8.5 14M12.5 8.5l3 3 3 1"/></svg></button>
+    <button data-mode="canoe" title="Canoe"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12.5c2 6.5 18 6.5 20 0-6 2-14 2-20 0z" fill="currentColor"/><path d="M16.5 3 10 17"/><path d="M10.6 15.7 9 19.2" stroke-width="3.2"/></svg></button>
+</div>
 <div id="info" class="panel">
     <p>Click anywhere to set the start. <span class="walk-only">Each colour is how long it takes to walk there. A day is 8 hours of walking.</span><span class="canoe-only" hidden>Each colour is how long it takes to get there with a canoe. A day is 8 hours of paddling or carrying.</span></p>
     <p>Speeds come from the Malaria Atlas Project walking-only friction surface (Weiss et al., Nature Medicine 2020, CC BY 4.0), which sets a pace for every square kilometre from roads, land cover and slope. It was made to measure how far people live from health care. The whole world is worked out on cells of about 10 km, and the area in view on cells of 3 km and then 1 km as you zoom in.</p>
@@ -83,19 +94,37 @@ const BANDS = [
 const MAX_HOURS = BANDS[BANDS.length - 1].h;
 const OVERLAY_ALPHA = 190;
 
-// Start mode until the mode panel (T-008): ?mode=canoe. ?canoedata=<folder> reads the canoe data
-// from data/canoe/<folder>/ (a test set) instead of data/canoe/.
+// Start mode: the mode buttons, kept in the URL as ?mode=canoe. ?canoedata=<folder> reads the
+// canoe data from data/canoe/<folder>/ (a test set) instead of data/canoe/.
 const params = new URLSearchParams(location.search);
-const MODE = params.get('mode') === 'canoe' ? 'canoe' : 'walk';
+let mode = params.get('mode') === 'canoe' ? 'canoe' : 'walk';   // of the next start
 const CANOE_SUB = (params.get('canoedata') || '').replace(/[^a-z0-9_-]/gi, '');
 const CANOE_BASE = 'data/canoe/' + (CANOE_SUB ? CANOE_SUB + '/' : '');
-if (MODE === 'canoe') {
-    document.title = document.getElementById('title').textContent = 'Canoe time';
-    document.querySelector('#legend h2').textContent = 'Time by canoe';
-    document.getElementById('canoeCredits').hidden = false;
-    for (const el of document.querySelectorAll('.walk-only')) el.hidden = true;
-    for (const el of document.querySelectorAll('.canoe-only')) el.hidden = false;
+
+// Title, legend and info wording follow the mode of the start shown.
+function showMode(m) {
+    const canoe = m === 'canoe';
+    document.title = document.getElementById('title').textContent = canoe ? 'Canoe time' : 'Walking time';
+    document.querySelector('#legend h2').textContent = canoe ? 'Time by canoe' : 'Time on foot';
+    document.getElementById('canoeCredits').hidden = !canoe;
+    for (const el of document.querySelectorAll('.walk-only')) el.hidden = canoe;
+    for (const el of document.querySelectorAll('.canoe-only')) el.hidden = !canoe;
 }
+function markMode() {
+    for (const b of document.querySelectorAll('#controls [data-mode]')) b.classList.toggle('active', b.dataset.mode === mode);
+}
+showMode(mode);
+markMode();
+for (const b of document.querySelectorAll('#controls [data-mode]')) b.onclick = () => {
+    if (b.dataset.mode === mode) return;
+    mode = b.dataset.mode;
+    markMode();
+    const p = new URLSearchParams(location.search);
+    if (mode === 'canoe') p.set('mode', 'canoe'); else p.delete('mode');
+    const q = p.toString();
+    history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+    if (lastStart) setOrigin(lastStart.lng, lastStart.lat);
+};
 
 document.getElementById('legendRows').innerHTML = BANDS.map(b =>
     `<div class="row"><span class="sw" style="background:rgb(${b.color.join(',')})"></span>${b.label}</div>`).join('');
@@ -199,7 +228,18 @@ function addLayers() {
             paint: { 'raster-opacity': 1, 'raster-fade-duration': 0, 'raster-resampling': 'nearest' } },
             firstSymbol && firstSymbol.id);
     }
+    // the route to the pointer: paddled solid, carried dashed, walked solid
+    map.addSource('route', { type: 'geojson', data: EMPTY });
+    map.addLayer({ id: 'route-halo', type: 'line', source: 'route',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: { 'line-color': '#000', 'line-width': 3.5, 'line-opacity': 0.45 } });
+    map.addLayer({ id: 'route', type: 'line', source: 'route', filter: ['!=', ['get', 'kind'], 1],
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: { 'line-color': '#fff', 'line-width': 1.4 } });
+    map.addLayer({ id: 'route-carry', type: 'line', source: 'route', filter: ['==', ['get', 'kind'], 1],
+        paint: { 'line-color': '#fff', 'line-width': 1.4, 'line-dasharray': [2, 1.5] } });
 }
+const EMPTY = { type: 'FeatureCollection', features: [] };
 
 // Send the canvas to the GPU once. MapLibre only re-reads a canvas source while it "plays";
 // play until a frame has drawn it, then stop (4.7.1 internals: tiles, _playing).
@@ -274,6 +314,7 @@ worker.addEventListener('message', (e) => {
     if (m.type === 'coarse') {
         document.body.classList.remove('busy');
         originId = m.originId;
+        showMode(m.mode);
         hide(3); hide(1);
         show(10, m);
         refresh([10]);
@@ -284,10 +325,14 @@ worker.addEventListener('message', (e) => {
         } else originMarker.setLngLat([lng, lat]);
         solveLog.push({ level: 10, mode: m.mode, solveMs: m.ms, loadMs: m.loadMs, paintMs: m.paintMs, cells: m.W * m.H });
         console.log('L10 solve', m.ms, 'ms, paint', m.paintMs, 'ms');
+        hover();
+    } else if (m.type === 'route') {
+        gotRoute(m);
     } else if (m.type === 'win') {
         if (m.originId !== originId) return;
         show(m.level, m);
         refresh([m.level]);
+        hover();
         solveLog.push({ level: m.level, fetchMs: m.fetchMs, solveMs: m.solveMs, paintMs: m.paintMs,
                         cells: m.cells, cols: m.W, rows: m.H });
         console.log('L' + m.level, m.W + 'x' + m.H, 'fetch', m.fetchMs, 'solve', m.solveMs, 'paint', m.paintMs, 'ms');
@@ -295,14 +340,17 @@ worker.addEventListener('message', (e) => {
         if (m.originId !== originId) return;
         for (const k of m.levels) hide(k);
         refresh([]);
+        hover();
     }
 });
 
+let lastStart = null;   // the last start asked for, re-solved when the mode changes
 function setOrigin(lng, lat) {
     if (!meta || lat > meta.north || lat < meta.south) return;
     lng = ((lng + 540) % 360) - 180;
+    lastStart = { lng, lat };
     document.body.classList.add('busy');
-    worker.postMessage({ type: 'run', lng, lat, mode: MODE });
+    worker.postMessage({ type: 'run', lng, lat, mode });
 }
 
 let viewTimer = 0;
@@ -319,7 +367,7 @@ function fmt(h) {
         const m = Math.round((h - Math.floor(h)) * 60);
         return Math.floor(h) + ' h' + (m ? ' ' + m + ' min' : '');
     }
-    const days = Math.floor(h / 8), rem = Math.round(h - days * 8);
+    const hr = Math.round(h), days = Math.floor(hr / 8), rem = hr - days * 8;
     return days + (days === 1 ? ' day' : ' days') + (rem ? ' ' + rem + ' h' : '');
 }
 
@@ -339,15 +387,76 @@ function timeAt(lng, lat) {
 
 map.on('click', e => setOrigin(e.lngLat.lng, e.lngLat.lat));
 
-map.on('mousemove', e => {
-    const h = timeAt(e.lngLat.lng, e.lngLat.lat);
+// ---- hover: the time at once, then the route and its split from the worker ----
+// One route request in flight at a time; the pointer's latest point goes when it comes back.
+let pointer = null;           // { lng, lat, x, y } while over the map
+let routeSeq = 0, routeBusy = false, routeWanted = false;
+let split = '';               // the split line of the last route, while it is for this pointer
+window.lastRoute = null;      // for checks
+
+function askRoute() {
+    if (routeBusy || !pointer) { routeWanted = !!pointer; return; }
+    routeBusy = true; routeWanted = false;
+    worker.postMessage({ type: 'route', lng: pointer.lng, lat: pointer.lat, seq: ++routeSeq });
+}
+
+function setRoute(fc) { const s = map.getSource('route'); if (s) s.setData(fc); }
+
+function gotRoute(m) {
+    routeBusy = false;
+    if (routeWanted) askRoute();
+    if (!pointer || m.originId !== originId || !m.lng) { setRoute(EMPTY); split = ''; drawTip(); return; }
+    // runs of one kind as lines
+    const features = [];
+    let run = null;
+    for (let i = 1; i < m.lng.length; i++) {
+        if (!run || run.kind !== m.kind[i]) {
+            run = { kind: m.kind[i], coords: [[m.lng[i - 1], m.lat[i - 1]]] };
+            features.push(run);
+        }
+        run.coords.push([m.lng[i], m.lat[i]]);
+    }
+    setRoute({ type: 'FeatureCollection', features: features.map(r => ({ type: 'Feature',
+        properties: { kind: r.kind }, geometry: { type: 'LineString', coordinates: r.coords } })) });
+    const [walk, carry, paddle] = m.parts;
+    const bits = [];
+    if (m.mode === 'canoe') {
+        if (paddle >= 1 / 60) bits.push('paddled ' + fmt(paddle));
+        if (carry >= 1 / 60) bits.push('carried ' + fmt(carry));
+    }
+    if (m.survival != null) bits.push('survival ' + Math.floor(m.survival * 100) + '%');
+    split = bits.join(', ');
+    window.lastRoute = { t: m.t, parts: m.parts, points: m.lng.length, mode: m.mode, split };
+    drawTip();
+}
+
+function drawTip() {
+    if (!pointer) { tip.style.display = 'none'; return; }
+    const h = timeAt(pointer.lng, pointer.lat);
     if (!(h <= MAX_HOURS)) { tip.style.display = 'none'; return; }
     tip.textContent = fmt(h);
+    if (split) {
+        const d = document.createElement('div');
+        d.className = 'split'; d.textContent = split;
+        tip.appendChild(d);
+    }
     tip.style.display = 'block';
-    tip.style.left = (e.point.x + 14) + 'px';
-    tip.style.top = (e.point.y + 14) + 'px';
+    tip.style.left = (pointer.x + 14) + 'px';
+    tip.style.top = (pointer.y + 14) + 'px';
+}
+
+function hover() { if (pointer) { drawTip(); askRoute(); } }
+
+map.on('mousemove', e => {
+    pointer = { lng: e.lngLat.lng, lat: e.lngLat.lat, x: e.point.x, y: e.point.y };
+    drawTip();
+    askRoute();
 });
-map.getCanvas().addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+map.getCanvas().addEventListener('mouseleave', () => {
+    pointer = null; split = '';
+    tip.style.display = 'none';
+    setRoute(EMPTY);
+});
 
 Promise.all([loadGrid(), new Promise(res => map.once('load', res))]).then(() => {
     addLayers();

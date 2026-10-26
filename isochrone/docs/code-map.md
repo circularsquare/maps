@@ -6,9 +6,10 @@ Where things live. Update the line for a file you add, move or change the job of
 
 | File | What |
 |---|---|
-| `index.html` | Map, legend, info panel, hover, click. Holds `BANDS` (time bands and colours) and `quietBasemap()` (roads and labels of the OpenFreeMap style, numbers in `ROAD` and `LABEL`). One MapLibre canvas source per level (`walk`, `walk3`, `walk1`), holes cut where a finer window shows. |
-| `worker.js` | Entry of the module worker (`new Worker('worker.js', { type: 'module' })`): routes `init`, `run`, `view` to `js/session.js`. The worker owns the grids and does all searching and painting. Kept at the root so data URLs stay relative to it. |
-| `js/session.js` | State of one session (solved start and its mode, last windows, generations) and the flows: `runClick` (L10 world solve; loads the canoe world data once on the first canoe start), `refine` (L3 and L1 view windows, reuse, cancelling), `post` (paint and send). |
+| `index.html` | Map, legend, info panel, the mode buttons (`#controls`, room for later toggles; `showMode` sets the wording), hover with the route line (GeoJSON source `route`, one request in flight), click. Holds `BANDS` (time bands and colours) and `quietBasemap()` (roads and labels of the OpenFreeMap style, numbers in `ROAD` and `LABEL`). One MapLibre canvas source per level (`walk`, `walk3`, `walk1`), holes cut where a finer window shows. |
+| `worker.js` | Entry of the module worker (`new Worker('worker.js', { type: 'module' })`): routes `init`, `run`, `view`, `route` to `js/session.js`. The worker owns the grids and does all searching and painting. Kept at the root so data URLs stay relative to it. |
+| `js/session.js` | State of one session (solved start and its mode, last windows, generations) and the flows: `runClick` (L10 world solve; loads the canoe world data once on the first canoe start), `refine` (L3 and L1 view windows, reuse, cancelling), `post` (paint and send), `route` (a hover's route over the solved levels). |
+| `js/route.js` | `trace`: the route to a point back along the predecessor codes, finest level first and on through coarser ones at window seeds; time split into walked, carried, paddled (docs/canoe.md 6). |
 | `js/levels.js` | `makeLevel` (a block of cells with its geometry), `snap`, `sampleNode` (weight, time, hazard of one layer at a point, for window seeds). |
 | `js/search.js` | `solve`: Dijkstra over land and canoe nodes (docs/canoe.md 5), weight = time + K x hazard, predecessor codes `P_*`, yields every ~30 ms; `solveWalk`, the small walking loop; `cellTimes` (least time of each cell's nodes, what is painted). |
 | `js/canoe.js` | `buildCanoe`: a level's canoe layer from its data (`canoeOf`, the per-cell word, current, river edges); `shoreAt`. |
@@ -19,10 +20,11 @@ Where things live. Update the line for a file you add, move or change the job of
 | `js/config.js` | What `init` sends (bands, alpha, time limit, the speed to hours table, canoe data folder) and the canoe model constants (K, paddling speed, transfer, carry factor, ice limit, `sea8`, `hazard`). |
 
 Messages, page to worker: `init {..., canoeBase}`, `run {lng, lat, mode}` (mode `walk` or
-`canoe`, from `?mode=canoe` until T-008), `view {west, east, north, south, zoom}`.
+`canoe`), `view {west, east, north, south, zoom}`, `route {lng, lat, seq}`.
 Worker to page: `ready`, `none`, `error {message}`, `coarse {mode}`, `win {level}`,
-`clear {levels}`, each with the `originId` of its click. `window.solveLog` on the page holds every
-solve's timings.
+`clear {levels}`, `route {seq, mode, t, hz, survival, parts, lng, lat, kind}` (no `lng` when the
+point is not reached), each with the `originId` of its click. `window.solveLog` on the page holds
+every solve's timings, `window.lastRoute` the last route's figures.
 
 ## Data build
 
@@ -73,4 +75,4 @@ is `data/raw/unzipped/2020_walking_only_friction_surface.geotiff` (726 MB), LC10
 
 | File | What |
 |---|---|
-| `checks/smoke.mjs` | Headless Chrome on the served page (`node isochrone/checks/smoke.mjs [url] [--canoe=<folder>]`, ~30 s): default solve, a click, L3 and L1 windows, hover; when canoe data is served, a canoe start from Constanta, the sea painted, a hover at sea, an L1 window with sea; no console errors. One PASS or FAIL line each; exit 1 on a fail. |
+| `checks/smoke.mjs` | Headless Chrome on the served page (`node isochrone/checks/smoke.mjs [url] [--canoe=<folder>]`, ~30 s): default solve, a click, L3 and L1 windows, hover; when canoe data is served, a canoe start from Constanta, the sea painted, a hover at sea with its route and split, an L1 window with sea, the mode buttons; no console errors. One PASS or FAIL line each; exit 1 on a fail. |

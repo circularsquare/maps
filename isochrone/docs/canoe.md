@@ -234,14 +234,24 @@ Water hazard can land first: its inputs exist once T-020 and T-021 do.
 - **Painting** a cell takes the least time of its nodes. On a canoe start sea and lakes are
   painted too, since where the canoe gets at sea is the answer; walking keeps water unpainted.
   River water no river step crosses has no node and stays unpainted.
-- **Start mode** until the mode panel (T-008): the page's URL, `?mode=canoe`.
+- **Start mode**: the mode buttons (walking, canoe) beside the `i` button; switching re-solves
+  from the same start. The URL keeps it as `?mode=canoe`.
 
 ## 6. Hover and legend
 
-- **Hover** on a canoe start: the time as now, then how it was spent, traced along the path:
-  "3 days 5 h", "paddled 19 h, carried 6 h"; survival once hazard exists. The route shows as a
-  thin line from the start to the pointer (traced through the finest window, then on through the
-  coarser level from the seed it came in by).
+- **Hover**: the time at once (the page's own cell times), then from the worker a second line
+  with how it was spent, "paddled 19 h, carried 6 h" on a canoe start (a part under a minute is
+  left out; getting in and out counts as carried), and "survival 97%" (rounded down) when `cfg.hazard`
+  is on and the path's hazard is above 0. A walking start shows the route and survival, no split.
+- **Route**: a thin white line with a dark halo from the start to the pointer, solid where
+  paddled or walked, dashed where carried. `js/route.js` traces it in the worker on request: from
+  the hovered cell's node with the least time (as painted) in the finest solved level holding the
+  point, back along the predecessor codes (section 5) to the start. At a window seed (`P_SEED`) it
+  goes on in the next coarser solved level holding the point, from the reached node of the same
+  layer in that cell (else the least weight in the 3 x 3 round it). Points inside straight runs
+  of one kind are dropped. The page keeps one request in flight and sends the pointer's latest
+  point when it returns; the worker answers between a solve's 30 ms slices, and none while a
+  click's L10 solve is pending. The route is asked again when a window or a new start lands.
 - **Legend**: the same bands, nothing new.
 
 ## 7. Speed and memory
@@ -281,6 +291,6 @@ currents, waves and ice are reused.
 | T-020 | Rivers data: RiverATLAS to river steps at L1, L3, L10 (Q >= 1, v from Q, gradient classes), OSM falls, dams and weirs, HydroLAKES reservoirs | this review |
 | T-021 | Lakes and sea data: water tiles (`kind`, `shore`, `links`) at all levels, `sea.bin.gz` from drifters and ERA5 summer | this review |
 | T-022 | Search with layers: node ids, transfers, directed river and sea edges, weight = time + K x hazard (hazard 0 until T-006), seeding by layer, painting the sea; measure speed | T-019; T-020 and T-021 data (synthetic files meanwhile) |
-| T-024 | Canoe hover: time by kind and the route line, traced across levels | T-022 |
-| T-008 | Mode panel: walking or canoe start; later K, the other toggles and the era switch | T-022 |
+| T-024 | Canoe hover: time by kind and the route line, traced across levels (done) | T-022 |
+| T-008 | Mode panel: walking or canoe start (done); later K, the other toggles and the era switch | T-022 |
 | T-006 | Hazard rates: the water table first, then the land hazard band; then tune K on the check trips | T-022 |

@@ -1,5 +1,8 @@
 # Archive
 
+- T-024 [P1] Canoe hover and route. Done 2026-10-26: hover adds "paddled 19 h, carried 6 h" and survival; a thin route line (dashed where carried) traced in the worker across L1, L3, L10 by `js/route.js`; walking starts get the line too. docs/canoe.md 6.
+- T-008 [P1] Mode panel, stage 1. Done 2026-10-26: walking and canoe icon buttons beside `i`, re-solve from the same start, `?mode=canoe` kept in the URL; K, roads and era toggles later.
+
 - T-022 [P1] Search with layers. Done 2026-10-26: canoe starts (`?mode=canoe`) search carrying plus canoe on real T-020/T-021 data, sea painted, ~0.8 s a click with 8 moves past 20 km from shore; walking identical cell for cell; smoke has canoe checks. notes/T-022.md.
 - T-020 [P1] Canoe data, rivers. Done 2026-10-26: river steps from RiverATLAS (Q >= 1, 9.0 M km) at L10/L3/L1, 4.2 + 15.4 + 39.2 MB; OSM falls, dams, weirs, rapids via QLever; GMTED gradient north of 60N; Yukon, Danube, Niagara, Congo checked. notes/T-020.md.
 - T-033 [P2] Summer sea ice from the least-ice month. Done 2026-10-26: ice in sea.bin.gz is now the August (north) / February (south) ERA5 mean; Hudson Bay 2%, Kara 15%, Siberian coast open, matching NSIDC's August edge. notes/T-021.md.

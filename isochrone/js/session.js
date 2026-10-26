@@ -7,6 +7,7 @@ import { solve, cellTimes } from './search.js';
 import { loadWorld } from './canoedata.js';
 import { buildCanoe } from './canoe.js';
 import { paint } from './paint.js';
+import { trace } from './route.js';
 import { Z3, Z1, MARGIN, MARGIN_L3_UNDER_L1, windowFor, contains, solveWindow } from './windows.js';
 
 let coarse = null;               // the L10 level: grid, sizes, res and dist once solved
@@ -90,6 +91,21 @@ async function runClick(g, lng, lat, m) {
         : { lng: L.west + (c + 0.5) * L.cellDeg, lat: L.north - (r + 0.5) * L.cellDeg };
     post('coarse', L, { origin, ms: Math.round(performance.now() - t0), loadMs: buildMs });
     refine();
+}
+
+// ---- hover: the route to a point and its time by kind (docs/canoe.md 6) ----
+export function route(msg) {
+    const out = { type: 'route', originId, seq: msg.seq, mode };
+    if (coarse && coarse.res && origin && !clickPending) {
+        const levels = [last[1], last[3], coarse].filter(L => L && L.res);
+        const r = trace(levels, mode === 'canoe', msg.lng, msg.lat, origin);
+        if (r) {
+            Object.assign(out, r, { survival: cfg.hazard && r.hz > 0 ? Math.exp(-r.hz) : null });
+            self.postMessage(out, [r.lng.buffer, r.lat.buffer, r.kind.buffer]);
+            return;
+        }
+    }
+    self.postMessage(out);
 }
 
 // ---- view: windows at L3 and L1 ----
