@@ -16,7 +16,7 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 - T-020 [P1] Canoe data, rivers: RiverATLAS to river step records at L1, L3 and L10 (Q >= 1 m³/s, v from Q, gradient classes), OSM falls, dams and weirs, HydroLAKES reservoirs (docs/canoe.md 4). Taking, 2026-10-26 (agent).
 - T-021 [P1] Canoe data, lakes and sea: water tiles (kind, shore, links) at all levels and the 0.25° sea grid from drifter currents and ERA5 summer waves, ice and sea temperature (docs/canoe.md 4). Taking, 2026-10-26 (agent).
 - T-022 [P1] Search with layers: canoe + carrying nodes, transfers, directed river and sea edges, weight = time + K x hazard (hazard 0 until T-006), seeding by layer, the sea painted; measure speed (docs/canoe.md 5, 7). Synthetic data until T-020/T-021. Taking, 2026-10-26 (agent).
-- T-030 [P1] Finer than 1 km when zoomed in: design a 100 m level (LC100 land cover, roads, GLO-90 terrain) for windows from zoom ~10, with sizes, times and what it means for publishing; for Anita's review. Taking, 2026-10-26 (agent).
+- T-030 [P1] Finer than 1 km when zoomed in: design a 100 m level (LC100 land cover, roads, GLO-90 terrain) for windows from zoom ~10, with sizes, times and what it means for publishing; for Anita's review. Design ready for Anita's review, docs/fine.md (notes/T-030.md).
 - T-037 [P3] Window edge strip: with nearest resampling, the coarser canvas shows as a brighter strip (up to one coarser cell, ~5 px at zoom 9) along a finer window's north and south edges, since the hole is rounded inwards to whole canvas rows. Off screen once the view settles; fix by aligning hole rows to the finer window or painting the coarse edge row clear.
 
 ## M1: canoe, today
@@ -37,6 +37,8 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 
 ## Later
 
+- T-038 [P2] Fine level stage 1: 100 m tiles for New York (40-42 N, 75-73 W) and Cluj (46-48 N, 23-25 E) from LC100 classes, OSM roads and bridges (Geofabrik extracts) and the L1 terrain factor; the L0.1 window in the worker, seeded from L1, painted; smoke passes (docs/fine.md). After Anita's review of T-030.
+- T-039 [P3] Fine level stage 2: GLO-90 elevation in the 100 m tiles, directed slope per move with the street grade cap, a bucket queue in the search for every level, times in a real browser (docs/fine.md). After T-038.
 - T-011 [P3] 90 m terrain: stream Copernicus GLO-90 tile by tile, directed crossing costs per cell (research/friction.md 7, stage C); makes walking directed. 100-130 GB streamed, run detached overnight. After T-009.
 - T-007 [P3] Coarse solve with portals (docs/resolution.md, thin barriers). After T-011.
 - T-014 [P3] Window edges: fade the finer window into the coarser one over a few cells instead of a hard hole edge, to remove the faint 1-3 px line (docs/resolution.md).
