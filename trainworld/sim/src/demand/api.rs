@@ -16,6 +16,7 @@
 //! so a period's rail matrix is `to_work x OD + to_home x OD^T`, scaled from one solve.
 
 use super::clock::now_ms;
+use super::network::Catch;
 use super::days::{day_rate, load_factor, share_out, share_ret, WEEKDAY, WORK};
 use super::kernel::*;
 use super::lod::{self, Lod};
@@ -216,6 +217,33 @@ pub(crate) fn demand_passages(st_map: &[u32], pairs: &[u32]) -> Vec<[u32; 2]> {
     out
 }
 
+/// The bus corridors (T-1464): `catch_n` points per stop (parallel to `stops`, 0 for a stop with no
+/// stretch of route), `catch_xy` their x, y after one another, the stretches carried over to the
+/// demand stations the stops were merged into; and per demand station whether every stop there has
+/// a stretch (a bus stop only). Both empty when `catch_n` does not match or has none.
+pub(crate) fn demand_catches(st_map: &[u32], n: usize, stops: &[u32], catch_n: &[u32], catch_xy: &[f32]) -> (Vec<Catch>, Vec<bool>) {
+    let total: usize = catch_n.iter().map(|&c| c as usize).sum();
+    if catch_n.len() != stops.len() || total == 0 || catch_xy.len() != 2 * total {
+        return (vec![], vec![]);
+    }
+    let mut out = vec![];
+    let (mut bus, mut rail) = (vec![false; n], vec![false; n]);
+    let mut at = 0;
+    for (k, &c) in catch_n.iter().enumerate() {
+        let s = st_map[stops[k] as usize];
+        let c = c as usize;
+        if c >= 2 {
+            out.push(Catch { st: s, pts: catch_xy[2 * at..2 * (at + c)].chunks_exact(2).map(|p| [p[0], p[1]]).collect() });
+            bus[s as usize] = true;
+        } else {
+            rail[s as usize] = true;
+        }
+        at += c;
+    }
+    let only: Vec<bool> = (0..n).map(|s| bus[s] && !rail[s]).collect();
+    (out, only)
+}
+
 /// The network as the snapshot packs it (`set_network`).
 pub(crate) struct Service {
     /// Demand stations: the snapshot's stations, those within `Params::station_merge_m` of each
@@ -242,6 +270,9 @@ pub(crate) struct Service {
     pub(crate) ups: Vec<u8>,
     /// `Network::st_passage` (`demand_passages`, T-1281).
     pub(crate) passages: Vec<[u32; 2]>,
+    /// `Network::catches` and `Network::st_bus` (`demand_catches`, T-1464).
+    pub(crate) catches: Vec<Catch>,
+    pub(crate) st_bus: Vec<bool>,
 }
 
 /// `span` if it is one per period and route node of `stops` stops, else empty (T-842).
@@ -268,6 +299,8 @@ impl Service {
             && self.group == o.group
             && self.ups == o.ups
             && self.passages == o.passages
+            && self.catches == o.catches
+            && self.st_bus == o.st_bus
     }
     /// T-124: the periods (bit q) whose inputs are the same in `o`: the same layout, and the run
     /// times and trains an hour of the period's level. A period reads no other level's.
@@ -427,6 +460,8 @@ pub struct DemandApi {
     passages_in: Vec<u32>,
     /// The service span of the next `set_network` (`set_span`, T-842).
     span_in: Vec<f32>,
+    /// set_bus (T-1464)
+    bus_in: (Vec<u32>, Vec<f32>),
     /// T-124: the periods (bit q) whose inputs the last `set_network` and `set_fares` left as they
     /// were, so their results were kept; and whether the layout was, so access was kept.
     pub(crate) same: u32,
@@ -504,6 +539,8 @@ impl DemandApi {
             span: svc.span.clone(),
             st_ups: svc.ups.clone(),
             st_passage: svc.passages.clone(),
+            catches: svc.catches.clone(),
+            st_bus: svc.st_bus.clone(),
         };
         for l in 0..nl {
             let (a, b) = (svc.line_off[l] as usize, svc.line_off[l + 1] as usize);
@@ -735,6 +772,7 @@ impl DemandApi {
             ups_in: vec![],
             passages_in: vec![],
             span_in: vec![],
+            bus_in: (vec![], vec![]),
             same: 0,
             layout_same: false,
             reusable: false,
@@ -836,7 +874,7 @@ impl DemandApi {
         let (walk_home_zone, walk_work_zone) = no_rail_trips(&z, &gr, &base, &nr);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)? })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)? })
     }
 
     /// `new` at a level of detail (T-1222, `lod::FINE` or `lod::COARSE`): the commute chunks
@@ -883,6 +921,13 @@ impl DemandApi {
         self.span_in = span.to_vec();
     }
 
+    /// The bus corridors of the networks `set_network` is given from now on (T-1464): per stop
+    /// (parallel to `stops`) the points of its stretch of route, 0 for a stop with none, and the
+    /// points' x, y in the pack's frame after one another (`demand_catches`). Empty: no buses.
+    pub fn set_bus(&mut self, catch_n: &[u32], catch_xy: &[f32]) {
+        self.bus_in = (catch_n.to_vec(), catch_xy.to_vec());
+    }
+
     /// T-874: commute zone pairs under the level's chunk (`Lod::chunk`) trips a period dealt in
     /// chunks (`Params::commute_chunk`), or every pair solved (`?perfOff=chunks`).
     pub fn set_chunked(&mut self, on: bool) {
@@ -923,7 +968,10 @@ impl DemandApi {
         let (st_x, st_y, st_map) = merge_stations(st_xy, &line_off, stops, self.base.station_merge_m);
         let group = demand_groups(&st_map, st_x.len(), &self.complex_in);
         let ups = demand_ups(&st_map, st_x.len(), &self.ups_in);
+        let (catches, st_bus) = demand_catches(&st_map, st_x.len(), stops, &self.bus_in.0, &self.bus_in.1);
         let svc = Service {
+            catches,
+            st_bus,
             st_x,
             st_y,
             st_map: st_map.clone(),
@@ -1831,3 +1879,5 @@ impl DemandApi {
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod bus_tests;

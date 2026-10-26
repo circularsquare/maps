@@ -48,6 +48,13 @@ export function describeRemovable(r: Removable): { what: string; built: boolean 
   return n?.flying ? { what: built ? "the built flyover" : "the flyover", built } : null;
 }
 
+/** T-1464: the question before a line is deleted. A bus route goes with its line, and a constructed
+ * one is not refunded (it has no track or stations to leave). */
+export function deleteLineText(name: string, bus?: { built: boolean }): string {
+  if (!bus) return `Delete ${name}? Track and stations stay.`;
+  return `Delete ${name}?${bus.built ? " Nothing is refunded." : ""}`;
+}
+
 /** What removing these does to lines (T-859), from the track model's trial of it: a row per line
  * that loses a stop or stops running. */
 export async function lineEffects(edges: number[], stations: number[]): Promise<{ line: number; text: string }[]> {

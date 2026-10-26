@@ -1,6 +1,7 @@
 import { edit, lineById, say, stationsById, world } from "./world";
 import { lineDraft, renameLinePrompt, selection, tool } from "./ui";
 import { live } from "../map/live";
+import { busDraft } from "../map/busDraw";
 import { money } from "./format";
 import { viewedZone, type CityId } from "./cities";
 import { stationZone } from "./listScope";
@@ -82,6 +83,28 @@ export function newLineKey() {
   const s = selection.peek();
   const e = s?.kind === "track" ? world.peek()?.edges.find((x) => x.id === s.edge) : undefined;
   return createLine(e && e.lines.length === 0 ? e : undefined);
+}
+
+/** T-1464: draw a new bus line (the B key, the Lines tab's bus button): click points, double click
+ * or Enter to finish (map/busDraw.ts). */
+export function newBusLine() {
+  const t = live.tools;
+  if (!t || !world.peek()) return;
+  t.exit();
+  t.bus.begin(null);
+}
+
+/** T-1464: the bus line's Edit route button: the tool opens with the line's route to redraw, and
+ * finishing (Enter, double click) sends `busRoute`; pressed again, or Esc, it leaves the route as
+ * it was. Nothing for a line that is no bus line. */
+export function editBusRoute(l: Pick<LineInput, "id" | "num" | "colour">) {
+  const t = live.tools, route = world.peek()?.lineStats[l.id]?.bus?.routeLL;
+  if (!t || !route) return;
+  const open = tool.peek() === "bus" && busDraft.peek()?.line === l.num;
+  t.exit();
+  if (open) return;
+  selection.value = { kind: "line", line: l.id };
+  t.bus.begin(l.num, route, l.colour);
 }
 
 /** The Edit stops button and its key: start adding and removing the line's stops, or finish. */

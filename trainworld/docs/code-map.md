@@ -20,6 +20,7 @@ tests natively.
   notes/T-040.md. Methods only tests and bins call (`set_line`, `set_edge`, `to_lonlat` and the
   like) sit in plain `impl` blocks, not in the WASM exports; the same holds for `DemandApi`,
   `EverydayApi` and `IntercityApi`. A big file's tests are in its own `<file>/tests.rs`.
+- `src/track/bus.rs`: bus lines (T-1464): the drawn route (`BusRoute`), its stops (`plan`: stations met, ends, crossings, about one every 2 km on the 400 m street grid, each with its stretch of route), the flat-speed trip (`profile`); `wasm/bus.rs` its exports, tests in `wasm/bus_tests.rs`; notes/T-1464.md.
 - `src/track/cost.rs`: prices (SPEC 6.4), the water mask types and the terrain classes
   (`ClassGrid`, `Terrain`, `terrain_spans`, T-1270), installed with `TrackApi::add_terrain`.
 - `src/track/trace.rs`: a real railway's line as corners within a tolerance (T-727c), for
@@ -140,6 +141,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   neighbourhood, city or town, T-534), `stationLabels.ts` (names
   keep their elements across edits unless their text changes, T-496), `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
   for names and tags: `BoxGrid`, `tagLines`, `tipBeside`, `TAG_OFFSET_PX`, `screenBounds`).
+- Bus lines (T-1464): `busLayer.ts` (a bus line on the map: its route, stops, corridor shade on
+  hover, tags and pick, drawn by the renderer under rail), `busDraw.ts` (the bus tool: clicked
+  points, the worker's `busQuote` preview and price tag, `busDraft`).
 - Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
   second click's route, T-727d; only where a graph covers the click, `covers`, T-913), `pick.ts`, `cellIndex.ts` and `snapIndex.ts` (grids built in idle time that narrow a pick
   and the build tools' snap to what is near the pointer, T-724, and carried over an edit, T-1030), `tools.ts` (drawing track, placing stations, the line tool; on touch the tap, preview and confirm and the control bar's place, T-1260), `touch.ts` (whether the last press was a finger, and what the touch control bar offers), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
@@ -180,7 +184,7 @@ leaderboards and the All cities row's trophy, T-973); `HelpPanel.tsx` (the "?" b
 checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `SkyBanner.tsx` (the clock's sky and demand band, a canvas, T-861); `StatusTag.tsx` (the demand status tag on the map's top row); `BusyTag.tsx` (the busy tag after it, T-1200); `TouchBar.tsx` (the touch control bar's buttons, T-1260); `ToolNotes.tsx` (tool hints, the notice and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
-per selection kind: `StationInspector.tsx` (its upgrade row `StationUpgrades.tsx`, T-1281), `TrainInspector.tsx`, `TrackInspector.tsx` and `JunctionInspector.tsx`; `LineInspector.tsx`; the trip panels share `tripText.ts` and `RouteParts.tsx`;
+per selection kind: `StationInspector.tsx` (its upgrade row `StationUpgrades.tsx`, T-1281), `TrainInspector.tsx`, `TrackInspector.tsx` and `JunctionInspector.tsx`; `LineInspector.tsx`, handing a bus line to `BusInspector.tsx` (T-1464); the trip panels share `tripText.ts` and `RouteParts.tsx`;
 `ComplexMap.tsx` the complex map; `TrainStops.tsx` a train's next stops and who gets off, T-868; `NameEdit.tsx` a station's or line's name edited in place, T-534); `LoadingScreen.tsx` (the clock hold at startup, the loading card,
 the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the start menu and the URL switches that skip it, T-677); `NewGame.tsx` (the new game sheet: mode, start city, current location, search, real network; `START_CITIES`, `REAL_NETWORKS`, `zoneForLocation`, T-728, T-731, T-1132); `Spinner.tsx` (the small spinner, T-647, and the bunny's train, T-677); `Search.tsx` (T-148); `DemandStopped.tsx` (the alert when demand stops after startup, T-757); `keys.ts` (which keys a focused control keeps, T-183); `locate.ts` (the camera to a station or a line: search picks, the tabs' double click, the inspectors' locate button, T-569; `viewStart`, the camera at a new game's start);
 `tip.ts` (the hover tag for every panel and control, from `data-tip`, never `title`, T-210);
@@ -440,6 +444,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   the Node figures), `t1168-layout.mjs` (the diagram's layout of the real save's 2, 4 and 6X against
   the mockups), `t1168-shots.mjs <port>` (the line panel's related-lines view, light and dark,
   desktop and 390 px, into artifacts/trainworld/t1168s1/, with its hover, click and toggle),
+  `t1464-bus.mjs [url]` (a feeder bus to a rail line in a new game and two on the real save: riders, the rail line's gain, Construct's price, demand's corridor, the save's route; about 6 minutes, port 6164 by default; T-1464),
   `t1414-ui.mjs [url]` (the real save in headless Chrome: a station with a train on it picks the station, the "Station upgrades" heading, the stop list without "Add all" and the A key, the disabled blueprint total's double click; screenshots in `artifacts/trainworld/t1414/`; T-1414, T-1415, T-1417, T-1420),
   `t1391-related.mjs <port> [prefix] [desktop|phone]` (the related-lines view on a new game built
   for the edge cases: a line beside another ending at a shared station, a two-stop interline, a

@@ -57,7 +57,7 @@ export class EndMarkers {
     this.pts = [];
     if (!w) return;
     for (const n of w.nodes.values()) {
-      if (n.platform > 0) continue;
+      if (n.platform > 0 || n.bus) continue;
       if (kind === "loose" ? n.ports !== 1 : n.builtPorts !== 0) continue;
       const [lx, ly] = toLocal(n.lng, n.lat);
       this.pts.push({ lx, ly });

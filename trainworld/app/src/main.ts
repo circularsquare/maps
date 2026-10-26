@@ -283,6 +283,11 @@ effect(() => {
 });
 const demandOnTop = (x: number, y: number, add: boolean) => (onMark(x, y) ? undefined : demandClick?.(x, y, add));
 
+// Bus lines are drawn from the world's routes (T-1464, map/busLayer.ts)
+effect(() => {
+  if (renderer.buses.set(world.value)) overlay.invalidate();
+});
+
 // Selection and display settings change what the overlay draws.
 effect(() => {
   selection.value;

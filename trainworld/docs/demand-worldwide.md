@@ -796,6 +796,16 @@ notes/T-420.md has the tables.
   longer than a turn-up-and-go rider's; on long trips the cost ratio (4.3) already makes the
   extra minutes weigh less. Check: night and late-evening rail shares on a real network with
   service ending early (a commuter line without evening trains) against the model's.
+- **Bus corridors** (T-1464, Anita's yes to the design, 2026-10-26; docs/demand-kernel.md step 2).
+  A home within 400 m of a bus route walks its distance to the route plus 100 m and rides a flat
+  18 km/h on the network's fare curve, bus kilometres included; a bus is just another line in
+  route and mode choice, with no liking or dislike of its own. Judgement figures, not fitted. Why
+  they may not carry over: bus speeds run from about 10 km/h in dense Asian and African centres to
+  25-30 in North American suburbs; where buses are informal or fares flat and separate (minibus
+  taxis, many Latin American cities), the one fare curve and the free change to rail overstate the
+  feeder; a 400 m corridor is short where blocks are huge or long where people walk further to a
+  bus (low car ownership). Check: a city's bus ridership per route-km against the model's on a
+  similar drawn network.
 
 ## Intercity
 

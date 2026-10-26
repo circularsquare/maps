@@ -201,6 +201,7 @@ export function linesAt(ov: Overlay, px: number, py: number, current: Selection,
       out.push(String(L.colour[i]));
     }
   }
+  if (ov.renderer.buses.any && out.length < max) for (const id of ov.renderer.buses.linesAt(ov, px, py, max - out.length, (id) => out.includes(String(id)))) out.push(String(id));
   return out;
 }
 
@@ -387,5 +388,10 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
 
   const [ti] = topSeg(ov, n.track.seg, n.track.count, px, py, slop);
   if (ti >= 0) return { kind: "track", edge: n.track.edge[ti] };
+  // a bus line has no strokes in the buffers (map/busLayer.ts); drawn under the track, so picked after it
+  if (ov.renderer.slotPx && ov.renderer.buses.any) {
+    const bus = ov.renderer.buses.lineAt(ov, px, py);
+    if (bus >= 0) return { kind: "line", line: String(bus) };
+  }
   return lineHit ? { kind: "line", line: lineHit } : null;
 }

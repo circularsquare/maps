@@ -9,7 +9,7 @@ import type { LineInput } from "../../game/types";
 import { linesById, stationNames, world } from "../../game/world";
 import { live } from "../../map/live";
 import { tripAt } from "../../map/network";
-import { CRUSH_PER_CAR, SEATS_PER_CAR, tripLoad } from "../../game/boarding";
+import { BUS_CARS, CRUSH_PER_CAR, SEATS_PER_CAR, tripLoad } from "../../game/boarding";
 import { Chip, Row } from "../widgets";
 import { TrainStops } from "./TrainStops";
 
@@ -33,7 +33,7 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
     <>
       <div class="title">
         <Chip line={l} size="lg" />
-        <span class="name">{l.name} train</span>
+        <span class="name">{l.name} {st.bus ? "bus" : "train"}</span>
       </div>
       <div class="sub muted">Towards {name.get(stops[stops.length - 1])}</div>
       {at ? (
@@ -44,9 +44,9 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
           </Row>
         </ul>
       ) : (
-        <p class="muted">This train finished its trip and left service.</p>
+        <p class="muted">This {st.bus ? "bus" : "train"} finished its trip and left service.</p>
       )}
-      {at && <OnBoard line={l} run={run} s={at.s} stopS={stopS} cars={st.cars} profile={profile} dep={dep} />}
+      {at && <OnBoard line={l} run={run} s={at.s} stopS={stopS} cars={st.bus ? BUS_CARS : st.cars} bus={!!st.bus} profile={profile} dep={dep} />}
     </>
   );
 }
@@ -56,7 +56,7 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
  * from the boarding account (game/boarding.ts), against seats and crush load; and the typical
  * train of the period, demand's riders on the stretch shared among the trains then.
  */
-function OnBoard({ line, run, s, stopS, cars, profile, dep }: { line: LineInput; run: number; s: number; stopS: number[]; cars: number; profile: number; dep: number }) {
+function OnBoard({ line, run, s, stopS, cars, bus, profile, dep }: { line: LineInput; run: number; s: number; stopS: number[]; cars: number; bus: boolean; profile: number; dep: number }) {
   const dm = lineDemand(line.id);
   const n = line.stops.length;
   // T-309: the period in the line's own local time
@@ -96,7 +96,7 @@ function OnBoard({ line, run, s, stopS, cars, profile, dep }: { line: LineInput;
   return (
     <>
       <div class="h">
-        <span data-tip="Counted train by train from the demand forecast: riders board at the forecast's rate until the train is full">On board</span><span class="right muted small">{PERIODS[p].name.toLowerCase()}{dm?.estimate && <span data-tip="First estimate for this new or changed line, refined when demand finishes updating">, estimate</span>}</span>
+        <span data-tip={`Counted ${bus ? "bus" : "train"} by ${bus ? "bus" : "train"} from the demand forecast: riders board at the forecast's rate until the ${bus ? "bus" : "train"} is full`}>On board</span><span class="right muted small">{PERIODS[p].name.toLowerCase()}{dm?.estimate && <span data-tip="First estimate for this new or changed line, refined when demand finishes updating">, estimate</span>}</span>
       </div>
       <ul class="rows">
         <Row label="Riders aboard" bold>{exact(aboard)}</Row>

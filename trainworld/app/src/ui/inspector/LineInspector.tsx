@@ -27,17 +27,18 @@ import { Alert, Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
 import { RelatedStops, useTightTimes } from "./RelatedStops";
 import { NameEdit } from "./NameEdit";
+import { BusInspector } from "./BusInspector";
 import { locateLine, locateStation } from "../locate";
 import { demandPending, Spinner } from "../Spinner";
 import { demandView, lineFiguresIn } from "../../game/demand";
 import { useClockQuery } from "../useClockQuery";
 import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText } from "../../game/scheduleCopy";
 
-const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
+export const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
 
 /** When a demand level runs, in the line's local time (the hour spans of game/periods.ts): "High
  * demand: 06:00 to 10:00, 16:00 to 20:00". */
-function levelTimes(d: Demand): string {
+export function levelTimes(d: Demand): string {
   const t = (h: number) => clockTime((h * 60) % 1440);
   return `${DEMAND_LABEL[d]} demand: ${levelHours(d).map(([a, b]) => `${t(a)} to ${t(b)}`).join(", ")}`;
 }
@@ -252,7 +253,7 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
  * room, a rider turned away counted at 30 minutes) from the boarding account: the level's periods
  * averaged by those riders. The hover names the stop with the most rider-minutes waited
  * (`line_periods`' tail, per period and stop). */
-function CrowdDots({ v, d, stops }: { v: Float64Array; d: Demand; stops: string[] }) {
+export function CrowdDots({ v, d, stops }: { v: Float64Array; d: Demand; stops: string[] }) {
   let trains = 0, full = 0, weight = 0, wait = 0, score = 0, gone = 0;
   let worst: { name: string; wait: number; score: number } | null = null;
   const n = stops.length, tail = PERIODS.length * PERIOD_STRIDE, at = new Array<number>(n).fill(0);
@@ -304,7 +305,7 @@ function transferLines(l: LineInput, i: number, drawn?: ReadonlySet<number>): Li
 
 /** The busiest two as bullets, then `extra` (lines drawn beside it whose bullet shows at this row,
  * T-1391), the rest behind a "+" whose hover names them. */
-function StopTransfers({ l, i, drawn, extra = [] }: { l: LineInput; i: number; drawn?: ReadonlySet<number>; extra?: LineInput[] }) {
+export function StopTransfers({ l, i, drawn, extra = [] }: { l: LineInput; i: number; drawn?: ReadonlySet<number>; extra?: LineInput[] }) {
   const others = [...transferLines(l, i, drawn), ...extra];
   if (!others.length) return null;
   const rest = others.slice(STOP_CHIPS);
@@ -579,7 +580,7 @@ function ScheduleCopyButtons({ l, st }: { l: LineInput; st: LineStats }) {
 
 /** T-672: dragging a colour shows it at once (`setPreview`), and the line on the map follows with
  * one edit every 0.2 s at most; letting go sends the last colour. */
-function useLiveColour(l: LineInput | undefined, setPreview: (hex: string | null) => void) {
+export function useLiveColour(l: LineInput | undefined, setPreview: (hex: string | null) => void) {
   const live = useRef({ hex: null as string | null, timer: 0, last: 0, busy: false, gap: 200 });
   useEffect(() => () => clearTimeout(live.current.timer), []);
   const sendLive = () => {
@@ -613,7 +614,7 @@ function useLiveColour(l: LineInput | undefined, setPreview: (hex: string | null
   return { dragColour, commitColour };
 }
 
-export function LineInspector({ id }: { id: string }) {
+function RailLineInspector({ id }: { id: string }) {
   const w = world.value;
   // T-670: one editor for the name, symbol and colour; T-672: the colour a drag shows before the edit is sent
   const [editFor, setEditFor] = useState<string | null>(null);
@@ -902,4 +903,9 @@ export function LineInspector({ id }: { id: string }) {
       {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} />}
     </>
   );
+}
+
+/** A bus line (T-1464) has its own, shorter panel; a rail line's is above. */
+export function LineInspector({ id }: { id: string }) {
+  return world.value?.lineStats[id]?.bus ? <BusInspector id={id} /> : <RailLineInspector id={id} />;
 }

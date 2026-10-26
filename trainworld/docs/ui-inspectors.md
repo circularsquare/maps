@@ -231,6 +231,17 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
 - A line's riders count every line actually boarded, transfers included; inter-city trips show
   only in its purpose split [T-182].
 
+## The bus line panel
+
+A bus line's panel (T-1464, ui/inspector/BusInspector.tsx) is the line panel cut down: Edit route
+in place of Edit stops, Copy line (a planned copy) and Delete line (a constructed route refunds
+nothing); while planned, its Construct price with the route and the buses in the hover. Schedule:
+buses or a headway per demand level, as for trains, and the average speed. Stops: the ends and the
+train stations met, the street stops between folded into one row each, minutes from the start.
+The past 24 hours: riders, Changing to trains (riders a day changing between this bus and any rail
+line at the stations it meets), profit, average load and buses leaving full. No train kind, length,
+stop editor or related lines. The Money tab shows buses owned, needed and spare once there are any;
+the Build tab's quote has rows for bus routes and new buses.
 ## Trains
 
 - **The train inspector's "On board"** [T-083, T-164, T-230]: this train's own riders on the stretch

@@ -13,7 +13,7 @@ import { fareAt, type FareNode } from "./fareCurve";
 import { incomeByDay, moneyState, stopScales } from "./money";
 import { DAY_KINDS } from "./days";
 import { PERIODS } from "./periods";
-import { stationsById, world } from "./world";
+import { stopsById, world } from "./world";
 
 export interface FareEstimate {
   /** rail trips a day: as demand has them now, and at the new curve */
@@ -46,7 +46,7 @@ function curveChange(dv: DemandView, lines: Map<string, { ridersPerDay: number; 
   const w = world.value, m = moneyState.value;
   let trips = 0, dCurve = 0, dCharged = 0;
   if (!w || !m || !lines) return { trips, dCurve, dCharged };
-  const byId = stationsById(w);
+  const byId = stopsById(w);
   const boardings = w.save.lines.reduce((a, l) => a + (dv.lines.get(l.id)?.ridersPerDay ?? 0), 0);
   const perBoarding = boardings > 0 ? Math.min(1, dv.railTripsPerDay / boardings) : 1;
   for (const l of w.save.lines) {

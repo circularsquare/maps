@@ -201,12 +201,12 @@ export const shade = signal<Shade>(saved.shade === "dark" ? "dark" : "light");
 
 /** What a click on the map does: select (pick), draw track, place a station, add stops to a line,
  * remove what is clicked (T-096), pick a trip's two ends (T-195). */
-export type Tool = "select" | "track" | "station" | "line" | "delete" | "trip" | "blueprint";
+export type Tool = "select" | "track" | "station" | "line" | "delete" | "trip" | "blueprint" | "bus";
 export const tool = signal<Tool>("select");
 /** T-1207: the map's camera is moving (set by map/overlay.ts); live counts in panels wait for it. */
 export const cameraMoving = { now: false };
 /** The Build tab's tools: while one is on, the demand views draw beneath the network (T-526). */
-export const isBuildTool = (t: Tool) => t === "track" || t === "station" || t === "delete" || t === "blueprint";
+export const isBuildTool = (t: Tool) => t === "track" || t === "station" || t === "delete" || t === "blueprint" || t === "bus";
 /** A question waiting in a centered modal (T-096/T-113: removing something
  * constructed): `run` on the yes button, nothing on the no button or Esc. `lines`: a row each
  * under the text, after the line's bullet (T-859: what a removal does to lines). */

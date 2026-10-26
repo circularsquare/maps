@@ -92,8 +92,14 @@ levels:
 2. **Access per cell**: the 6 nearest stations by walk within the walk's 4 km bound (4.3), found by
    scattering each station over the cells near it. With routes (T-275) each station's walk is
    searched once per position, every station once per worker on opening; an edit searches only
-   its new or moved stations (timings: notes/T-275.md).
-3. **Access subzones**: the cells of one zone that share their nearest station and whose walk to it
+   its new or moved stations (timings: notes/T-275.md). **Bus corridors** (T-1464): a bus stop
+   that is no station is never walked to straight; each of them serves a stretch of its route (the
+   route's points nearer it than any other such stop of the line), and a cell within 400 m of a
+   stretch reaches that stop with a walk of its distance to the route plus 100 m (the mean walk
+   along it to a street stop). A cell keeps its 6 stations and adds at most 2 such bus stops, the
+   nearest, so a bus never hides a station.
+3. **Access subzones**: the cells of one zone that share their nearest station, their nearest bus
+   stop if any, and whose walk to it
    falls in the same 15-minute band (`band_min`, Anita, T-720; why: notes/T-720.md). Each carries
    its perceived walk to each of its stations, averaged over its cells as the mode choice weighs
    them (a logsum at its 0.10 scale: the walk's cost grows faster than its length, and the near

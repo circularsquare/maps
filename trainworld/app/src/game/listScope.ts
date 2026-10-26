@@ -6,7 +6,7 @@
 import { signal } from "@preact/signals";
 import { viewedZone, type CityId } from "./cities";
 import { placeAt, zonesLoaded } from "./zones";
-import { stationsById, world } from "./world";
+import { busStopsById, stopsById, world } from "./world";
 import type { LineInput, StationInput } from "./types";
 import { metresBetween } from "./walks";
 
@@ -34,7 +34,7 @@ function placeHasLines(zone: CityId): boolean {
   void zonesLoaded.value;
   const w = world.value;
   if (!w) return false;
-  const at = stationsById(w);
+  const at = stopsById(w);
   return w.save.lines.some((l) => l.stops.some((id) => { const s = at.get(id); return !!s && stationZone(s) === zone; }));
 }
 
@@ -66,6 +66,9 @@ export function scopedLists(stations: readonly StationInput[], lines: readonly L
   const byId = new Map(stations.map((s) => [s.id, s]));
   const dist = new Map<string, number>();
   for (const s of stations) if (c) dist.set(s.id, distFromCentre(s.lng, s.lat, c));
+  // T-1464: a bus line's other stops count for its place and distance, though they are no row
+  const w = world.peek();
+  if (w) for (const [id, s] of busStopsById(w)) { byId.set(id, s); if (c) dist.set(id, distFromCentre(s.lng, s.lat, c)); }
   const inZone = (s: StationInput | undefined) => !!s && stationZone(s) === zone;
   const outStations = zone ? stations.filter((s) => inZone(s) || keep("station", s.id)) : [...stations];
   const lineDist = new Map<string, number>();

@@ -74,6 +74,7 @@ export class NodeDrag {
     if (!w || (t !== "select" && t !== "track")) return null;
     let best = HIT_PX * HIT_PX, hit: Hit | null = null;
     for (const n of w.nodes.values()) {
+      if (n.bus) continue; // a bus stop is no node of the track (T-1464)
       const [x, y] = this.overlay.toScreen(...toLocal(n.lng, n.lat));
       const d = (x - px) ** 2 + (y - py) ** 2;
       if (d < best) {

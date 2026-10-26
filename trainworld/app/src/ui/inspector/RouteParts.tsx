@@ -6,6 +6,7 @@ import { MODE_COLOURS } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { tripPeriod, type TripLeg, type TripRoute } from "../../game/trip";
 import type { LineInput } from "../../game/types";
+import { world } from "../../game/world";
 import { shownPeriod } from "../../map/tripView";
 import { Chip } from "../widgets";
 import { minText, pctShare } from "./tripText";
@@ -38,10 +39,11 @@ export function legRows(r: TripRoute, name: (station: string) => string, ln: Rea
       );
     }
     const line = ln.get(l.line);
+    const bus = !!world.peek()?.lineStats[l.line]?.bus;
     return (
       <li data-tip={rideTip(l)}>
         {line && <Chip line={line} size="sm" />}
-        <span class="grow">{i > 0 && r.legs[i - 1].kind === "ride" ? "Change to " : ""}{line?.name ?? "A line"} to {name(l.to)}</span>
+        <span class="grow">{i > 0 && r.legs[i - 1].kind === "ride" ? "Change to " : ""}{line?.name ?? "A line"}{bus ? " bus" : ""} to {name(l.to)}</span>
         <span class="val">{minText(l.waitMin + l.min)}</span>
       </li>
     );

@@ -24,9 +24,9 @@ import { faresFor, faresOf } from "./fareCurve";
 import { fareScale } from "./income";
 import { stationZone } from "./listScope";
 import { PERIODS } from "./periods";
-import { stationsById, world } from "./world";
+import { stopsById, world } from "./world";
 import { zonesLoaded } from "./zones";
-import type { LineInput, StationInput, WorldView } from "./types";
+import type { LineInput, LineStats, StationInput, WorldView } from "./types";
 import type { MoneyState, RegionNow } from "../workers/protocol";
 import type { DayLedger, HourLedger } from "../workers/saveFile";
 
@@ -64,12 +64,12 @@ export interface Income {
 
 /** What the money, points and region figures read of `moneyState`: the same object while these are
  * the same, so a state or an hour's money that leaves them alone redoes no sums (T-1209). */
-export type MoneyTerms = Pick<MoneyState, "fares" | "economy" | "upkeepTrackKm" | "upkeepStation" | "upkeepSingle" | "upkeepHsr">;
+export type MoneyTerms = Pick<MoneyState, "fares" | "economy" | "upkeepTrackKm" | "upkeepStation" | "upkeepSingle" | "upkeepHsr" | "upkeepBusKm">;
 let termsKey = "", terms: MoneyTerms | null = null;
 export const moneyTerms = computed<MoneyTerms | null>(() => {
   const m = moneyState.value;
   if (!m) return (termsKey = "", terms = null);
-  const t: MoneyTerms = { fares: m.fares, economy: m.economy, upkeepTrackKm: m.upkeepTrackKm, upkeepStation: m.upkeepStation, upkeepSingle: m.upkeepSingle, upkeepHsr: m.upkeepHsr };
+  const t: MoneyTerms = { fares: m.fares, economy: m.economy, upkeepTrackKm: m.upkeepTrackKm, upkeepStation: m.upkeepStation, upkeepSingle: m.upkeepSingle, upkeepHsr: m.upkeepHsr, upkeepBusKm: m.upkeepBusKm };
   const key = JSON.stringify(t);
   if (key !== termsKey || !terms) { termsKey = key; terms = t; }
   return terms;
@@ -96,8 +96,15 @@ function sameShape(a: WorldView, b: WorldView): boolean {
     const p = a.lineStats[x.id], q = b.lineStats[y.id];
     if (!p || !q) { if (p !== q) return false; continue; }
     if (p.status !== q.status || !sameList(p.stopS[0], q.stopS[0]) || !sameList(p.stopS[1], q.stopS[1])) return false;
+    if (p.bus !== q.bus && !sameBus(p.bus, q.bus)) return false;
   }
   return true;
+}
+/** T-1464: a bus line's stops in the same places, built or not, the same road length. */
+function sameBus(a: LineStats["bus"], b: LineStats["bus"]): boolean {
+  if (!a || !b) return a === b;
+  if (a.built !== b.built || a.roadM !== b.roadM || a.stops.length !== b.stops.length) return false;
+  return a.stops.every((s, i) => s.id === b.stops[i].id && s.lng === b.stops[i].lng && s.lat === b.stops[i].lat);
 }
 let shaped: WorldView | null = null;
 /** `world` for the money, points and region figures: the last world while its network is the same
@@ -131,7 +138,7 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
   if (!w || !m) return { perHour: perPeriod, rides: ridesPeriod, lines };
   const fares = faresOf(m.fares, m.fares);
   const x = m.economy;
-  const byId = stationsById(w);
+  const byId = stopsById(w);
   const boardings = w.save.lines.reduce((a, l) => a + (dv?.lines.get(l.id)?.ridersPerDay ?? 0), 0);
   const tripsPerBoarding = dv && boardings > 0 ? Math.min(1, dv.railTripsPerDay / boardings) : 1;
   for (const l of w.save.lines) {

@@ -3,7 +3,7 @@
 
 import { signal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
-import { ACTION_KEYS, TOOL_KEYS, TRIP_KEY } from "./toolKeys";
+import { ACTION_KEYS, BUS_KEY, TOOL_KEYS, TRIP_KEY } from "./toolKeys";
 
 export const helpOpen = signal(false);
 
@@ -19,8 +19,8 @@ const SECTIONS: [string, [string, string][]][] = [
   ]],
   ["Building", [
     ["Shift click", "Place track and keep drawing"],
-    ["Double click, Enter", "Stop drawing track"],
-    ["Backspace", "Take back the last piece of track"],
+    ["Double click, Enter", "Stop drawing track, or finish a bus line"],
+    ["Backspace, right click", "Take back the last piece of track or bus point"],
     ["Caps Lock", "Turn keep placing on or off"],
     ["Right drag", "Move the map in the blueprint tool"],
     ["D, E, Delete", "Disable, enable or remove the picked blueprints"],
@@ -29,6 +29,7 @@ const SECTIONS: [string, [string, string][]][] = [
     [toolKeys, "Track, stations, delete and blueprint tools"],
     [TRIP_KEY.toUpperCase(), "Explore a trip"],
     [keyOf("newLine"), "Make a new line"],
+    [BUS_KEY.toUpperCase(), "Draw a new bus line"],
     [keyOf("editStops"), "Edit the selected line's stops"],
     [keyOf("addPassed"), "Add every station the selected line passes as a stop"],
     [keyOf("construct"), "Construct blueprints"],

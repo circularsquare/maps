@@ -105,6 +105,8 @@ export interface TrackNode {
   flying: boolean;
   /** station platform, 0 = none */
   platform: number;
+  /** T-1464: a bus stop that is no station: no track, never picked or snapped to */
+  bus?: true;
 }
 
 export interface Save {
@@ -176,6 +178,9 @@ export interface LineStats {
   /** a loop (T-798): its last stop is its first; a circle carries on round there, a balloon turns
    * back. Each way has its own trains, half the line's. */
   loop: "circle" | "balloon" | null;
+  /** T-1464: a bus line's route and stops (its stops that are no station are in `nodes` only,
+   * never in the save's stations); absent for a rail line */
+  bus?: import("../workers/protocol").ClockBus;
 }
 
 export interface ModeSplit {

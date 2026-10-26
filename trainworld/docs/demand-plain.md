@@ -189,6 +189,12 @@ The walk to and from the station. A train that is fast still has to be reached: 
 end is 39 perceived minutes before the train has moved, more than most short drives cost. Where
 parking is paid, rail wins easily (Hempstead to Midtown). The trip explorer shows any trip's real minutes and its effective time (the perceived minutes above) by train, car and walking, each with its sum in a hover.
 
+The player's answer is a bus (since T-1464). Anyone within 400 m of a bus route walks to it (their
+distance to the route plus 100 m), waits and rides at 18 km/h to a station, and the change to the
+train is free: one fare for the whole trip on the same curve. A home 1.5 km from a station walks 29
+perceived minutes to it, or about 18 by bus. A bus is just another line, so trips by bus alone
+count as rail.
+
 ## Anita's two tests
 
 Both ask what rail could carry if a straight train ran between every pair of places. Walking

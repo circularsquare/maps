@@ -107,25 +107,40 @@ impl TrackApi {
     /// Construct blueprint edges and stations: pay and build (final). Already constructed ones
     /// are skipped. Refused if there is nothing to build or not enough cash.
     pub fn construct(&mut self, edges: &[u32], stations: &[u32]) -> u32 {
-        let ops = self.construct_ops(edges, stations);
+        self.construct_with_buses(edges, stations, &[])
+    }
+
+    /// `construct`, with bus routes too (T-1464).
+    pub fn construct_with_buses(&mut self, edges: &[u32], stations: &[u32], buses: &[u32]) -> u32 {
+        let ops = self.construct_ops(edges, stations, buses);
         if ops.is_empty() {
             return self.refuse(Issue::NothingToConstruct);
         }
         self.run_charged(Op::Batch(ops))
     }
 
-
     /// What a line still needs constructed costs, US$M.
     pub fn line_build_cost(&mut self, line: u32) -> f64 {
-        if !self.w.net.line_ok(line) {
-            return 0.0;
-        }
-        let edges: Vec<u32> = self.w.net.line_path(line).iter().map(|&p| p >> 1).collect();
-        let stops = self.w.net.line_stops(line).to_vec();
-        self.construct_cost(&edges, &stops)
+        let Some((edges, stops, buses)) = self.line_parts(line) else { return 0.0 };
+        self.construct_cost(&edges, &stops, &buses)
     }
 
-    pub(super) fn construct_ops(&self, edges: &[u32], stations: &[u32]) -> Vec<Op> {
+    /// What a line needs constructed to run: its path's edges, its stations, and itself when it is a
+    /// bus line (its route; its stations are those its planned route stops at).
+    fn line_parts(&self, line: u32) -> Option<(Vec<u32>, Vec<u32>, Vec<u32>)> {
+        let net = &self.w.net;
+        if !net.line_ok(line) {
+            return None;
+        }
+        if net.is_bus(line) {
+            let pts = &net.line_bus[line as usize].as_ref().unwrap().points;
+            let stops = crate::track::bus::plan(net, line, pts, false).stops.iter().filter_map(|s| s.station).collect();
+            return Some((vec![], stops, vec![line]));
+        }
+        Some((net.line_path(line).iter().map(|&p| p >> 1).collect(), net.line_stops(line).to_vec(), vec![]))
+    }
+
+    pub(super) fn construct_ops(&self, edges: &[u32], stations: &[u32], buses: &[u32]) -> Vec<Op> {
         let net = &self.w.net;
         let mut ops = vec![];
         // a crossover is built as a whole: both diagonals (T-391)
@@ -153,6 +168,14 @@ impl TrackApi {
                 }
             }
         }
+        for &l in buses {
+            if let Some(mut d) = net.line_data(l) {
+                if let Some(r) = d.bus.as_mut().filter(|r| !r.built) {
+                    r.built = true;
+                    ops.push(Op::Line { id: l, data: Some(d) });
+                }
+            }
+        }
         ops
     }
 
@@ -171,7 +194,8 @@ impl TrackApi {
         let net = &self.w.net;
         let edges: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && !net.edge_built[e as usize] && !net.edge_off[e as usize]).collect();
         let stations: Vec<u32> = (0..net.node_count() as u32).filter(|&n| net.node_ok(n) && net.node_platform[n as usize] > 0 && !net.node_built[n as usize] && !net.node_off[n as usize]).collect();
-        self.construct(&edges, &stations)
+        let buses = net.bus_lines();
+        self.construct_with_buses(&edges, &stations, &buses)
     }
 
     /// Switch blueprint edges and stations off or on (T-333): Construct and the blueprint quote
@@ -488,12 +512,8 @@ impl TrackApi {
 
     /// Construct what a line needs to run: its path's edges and its stops.
     pub fn construct_line(&mut self, line: u32) -> u32 {
-        if !self.w.net.line_ok(line) {
-            return self.refuse(Issue::NoSuchLine { line });
-        }
-        let edges: Vec<u32> = self.w.net.line_path(line).iter().map(|&p| p >> 1).collect();
-        let stops = self.w.net.line_stops(line).to_vec();
-        self.construct(&edges, &stops)
+        let Some((edges, stops, buses)) = self.line_parts(line) else { return self.refuse(Issue::NoSuchLine { line }) };
+        self.construct_with_buses(&edges, &stops, &buses)
     }
 
 }

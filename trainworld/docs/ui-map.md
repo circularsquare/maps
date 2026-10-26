@@ -200,6 +200,16 @@ the class under the pointer: "Hills, track costs 1.6x".
   saved with the display settings) hides the crossings and junctions and their hover; ramps,
   portals and refused crossings stay [T-673].
 
+## Bus lines
+
+A bus line (T-1464) is drawn by its own pass under rail track: half a rail line's width in its
+colour on a casing (white in light, dark in the dark theme), a planned one as rail blueprints are.
+Street stops are small rings from zoom 14, ends small rounded squares from zoom 12; where it meets
+a train station the station's own circle stands for the stop. Hovering or selecting the line shades
+its 400 m corridor lightly. Its tags: the line's badge and name ("Not running yet" while planned),
+"Bus stop" or "End of the line" on a stop. A click selects the line; rail wins where both are
+under the pointer. A bus is one short narrow car. A bus line's badge is a rounded square
+everywhere, a rail line's a circle.
 ## Stations
 
 - **Dots, zoom 9 to 14** [T-189, T-313, T-322, T-542; `map/stationGeometry.ts`]: white with a dark rim (in both themes, T-039) at

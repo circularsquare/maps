@@ -31,7 +31,7 @@ pub fn station(w: &mut TrackWorld, n: u32, platform: u16) {
 pub fn line(w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]) -> u32 {
     let path = w.net.route(stops).expect("no route");
     let id = w.net.alloc_line();
-    let d = LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false };
+    let d = LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None };
     w.apply(Op::Line { id, data: Some(d) }).unwrap();
     id
 }

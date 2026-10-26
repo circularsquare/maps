@@ -42,6 +42,7 @@ export const scheduleOf = (l: LineInput, st: LineStats): ScheduleCopy => ({
 });
 
 export function copySchedule(l: LineInput, st: LineStats) {
+  if (st.bus) return; // a bus has no cars or train kind to carry over
   const c = scheduleOf(l, st);
   scheduleCopy.value = c;
   try { localStorage.setItem(STORE, JSON.stringify(c)); } catch { /* storage unavailable: the copy lasts this visit */ }
@@ -71,7 +72,7 @@ export function scheduleText(c: ScheduleCopy): string {
  * trains or headways, each its own edit; a refused edit (cash) stops the rest. */
 export async function pasteSchedule(l: LineInput, st: LineStats) {
   const c = scheduleCopy.peek();
-  if (!c) return;
+  if (!c || st.bus) return;
   if (c.fast !== st.fast && !(await edit({ op: "lineFast", line: l.num, fast: c.fast })).ok) return;
   const fit = carsCap(l);
   const cap = fit?.cap ?? c.cars;

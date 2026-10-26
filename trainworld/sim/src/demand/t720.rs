@@ -43,7 +43,7 @@ fn mixed_subzones(api: &DemandApi, band: f32) -> usize {
     (0..sz.n)
         .filter(|&u| {
             let m = &sz.mem[sz.mem_off[u] as usize..sz.mem_off[u + 1] as usize];
-            let b: Vec<u32> = m.iter().filter(|&&c| acc.n[c as usize] > 0).map(|&c| (acc.walk[c as usize * K] / band) as u32).collect();
+            let b: Vec<u32> = m.iter().filter(|&&c| acc.n[c as usize] > 0).map(|&c| (acc.walk[c as usize * acc.w] / band) as u32).collect();
             b.iter().any(|&x| x != b[0])
         })
         .count()

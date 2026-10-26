@@ -127,6 +127,19 @@ pub const UPKEEP_STATION: f64 = 500.0;
 /// app/src/game/money.ts (which reads it through `TrackApi.money_params`).
 pub const ECONOMY: f64 = 100.0;
 
+// ---- buses (T-1464, notes/T-1445.md) ----
+
+/// Per road-km of bus route (stops, shelters, signs), US$M, paid on Construct.
+pub const BUS_ROUTE_COST_PER_KM: f64 = 1.0;
+/// Price of one bus, US$M; buses are a fleet of their own, spares shared between bus lines.
+pub const BUS_PRICE: f64 = 0.6;
+/// Running cost per bus-km, real US$ (a 4-car train is 12 a train-km for eight times the room).
+pub const RUN_COST_BUS_KM: f64 = 3.0;
+/// Upkeep a day per road-km of constructed route, real US$ (US$3k a game day at `ECONOMY`).
+pub const UPKEEP_BUS_KM: f64 = 30.0;
+/// A bus's riders at crush.
+pub const BUS_CRUSH: f64 = 80.0;
+
 pub fn level_mult(level: i8) -> f64 {
     LEVEL_MULT[(level.clamp(MIN_LEVEL, MAX_LEVEL) + 3) as usize]
 }

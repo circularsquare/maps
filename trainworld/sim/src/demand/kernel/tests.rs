@@ -19,7 +19,7 @@ fn common_test_net(lines: &[&[u32]], tph: &[f32], ride: &[f32]) -> Network {
         hop_min: vec![], hop_back: vec![], line_speed_kmh: vec![0.0; lines.len()],
         line_headway_min: tph.iter().map(|t| [if *t > 0.0 { 60.0 / t } else { f32::INFINITY }; network::PERIODS]).collect(),
         line_seats: vec![100.0; lines.len()], line_crush: vec![200.0; lines.len()],
-        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![], span: vec![], st_ups: vec![], st_passage: vec![],
+        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![],
     };
     for (l, stops) in lines.iter().enumerate() {
         net.line_stops.extend_from_slice(stops);
@@ -98,7 +98,7 @@ fn a_circle_rides_the_short_way_through_its_first_stop() {
             line_name: vec![String::new()], line_off: vec![0, 7], line_stops: stops.to_vec(),
             hop_min: ride, hop_back: back, line_speed_kmh: vec![0.0],
             line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_crush: vec![200.0],
-            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], st_ups: vec![], st_passage: vec![],
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![],
         }
     };
     let g = build_graph(&ring(true), &p);
@@ -499,7 +499,7 @@ fn a_lollipop_line_changes_onto_itself_at_its_junction() {
             line_name: vec![String::new()], line_off: vec![0, n as u32], line_stops: stops,
             hop_min: (0..n).map(|k| if k + 1 < n { 2.0 } else { 0.0 }).collect(), hop_back: vec![], line_speed_kmh: vec![0.0],
             line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_crush: vec![200.0],
-            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![],
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![],
         }
     };
     let g = build_graph(&lolly(true), &p);

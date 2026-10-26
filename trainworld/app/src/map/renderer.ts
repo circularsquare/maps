@@ -17,6 +17,7 @@ import { readBoardHour, type BoardHour } from "../game/boarding";
 import { UPGRADE } from "../game/upgrades";
 import { PlatformCrowds } from "./platformCrowds";
 import { TransferBubbles } from "./transferBubbles";
+import { BusLayer } from "./busLayer";
 import { MOVING_PLACE_MS } from "./moving";
 import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, pxPerUnitAt, unitPerPxAt, type Anchor } from "./geo";
 import { clipToCss, compile, GpuTimer, interp, localCamera, mercToCss, PROJECT_UNIFORMS, setCamera, uniforms, type Camera, type LocalCamera } from "./gl";
@@ -440,6 +441,8 @@ export class NetworkRenderer {
   net: NetworkBuffers | null = null;
   /** riders changing trains on their walk (T-1124) */
   readonly bubbles = new TransferBubbles();
+  /** bus lines (T-1464): drawn from the world's routes, not the network buffers */
+  readonly buses = new BusLayer();
   /** last GPU time for our draws in ms, if the timer extension exists */
   get gpuMs() {
     return this.timer?.ms ?? null;
@@ -458,6 +461,7 @@ export class NetworkRenderer {
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.marks.init(gl);
     this.bubbles.init(gl);
+    this.buses.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
     this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr"]);
@@ -1007,6 +1011,11 @@ export class NetworkRenderer {
     const wTrack = interp(zoom, [[9, 0.4], [12, 1.8], [15, 3]]) * dpr * k;
     const wSel = interp(zoom, [[9, 0.5], [12, 2.1], [15, 3]]) * dpr * k;
     const casing = interp(zoom, [[9, 0.6], [12, 2], [15, 2.4]]) * dpr * k;
+    // bus lines have no strokes: their own pass, under the track (T-1464, busLayer.ts)
+    if (!view && this.buses.any && !opt.byLevel && !opt.bySpeed) {
+      const sh = shadeColours();
+      this.buses.draw(lc, a, vp, zoom, dpr, { wLine, casing, wSel, rail: BP_RAIL_RGB, railShare: BP_RAIL_SHARE, sel: opt.selLine, hot: opt.hotLine ?? -1, dim: opt.dimOthers ?? 1, shades: sh, fill: rgbf(sh.casing), casingRgb: rgbf(sh.casing) });
+    }
     gl.useProgram(this.strokeProg);
     const u = this.strokeU;
     setCamera(gl, u, lc);

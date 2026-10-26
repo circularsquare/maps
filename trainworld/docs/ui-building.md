@@ -172,6 +172,17 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 - A segment is one piece (each pair's on quad); the delete tool, Construct and the track
   inspector act on one piece [T-244].
 
+## Drawing a bus line
+
+The Lines tab's bus button beside New line, or B, starts the bus tool (T-1464). Each click adds a
+point; the route runs straight between them, never snapped to track or stations. While drawing,
+the route shows in the line's colour with the stops the sim would place (ends as small rounded
+squares, a ring round each train station it meets, small rings between and the street stops), and
+the tag by the pointer gives the road length and the price. Double click or Enter makes the line,
+selects it and asks its name; Backspace or a right click takes back a point; Escape drops the
+points, a second Escape leaves the tool. By touch: a tap previews, a second tap or the check places
+it. The bus panel's Edit route reopens the tool on the line's route; finishing redraws it (final
+for a constructed route, which pays any longer road). A new bus line is planned until Construct.
 ## Snapping to the real network
 
 [T-727d; `map/realSnap.ts`, `workers/realRoute.worker.ts`; design notes/T-727.md] With the snap

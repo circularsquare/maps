@@ -972,3 +972,29 @@ other routes or the car, and after the rounds no line keeps more riders than its
 crush in the busiest hour (T-1070). The account itself is not read back: the clock worker's day and demand's
 periods give the same rule, but demand's is worked out inside the solve, so it settles with the
 crowding rounds. There are no signals (SPEC 2.1).
+
+### 6.7 Bus lines
+
+A bus line (T-1464; design notes/T-1445.md) is a line with no track: the player clicks points and
+the route runs straight between them. It shares lines' ids, schedules (buses or a headway per
+demand level), trips, the boarding account and the fare curve; a bus is one 12 m vehicle.
+
+- **Road length**: the drawn ground length times 1.2. It sets the run time, the price and the
+  running cost; the bus is drawn along the drawn route.
+- **Stops place themselves** (`bus::plan`), never saved: every train station within 200 m of the
+  route (two within 100 m of each other along it: the nearer to the route), both ends (an end within
+  200 m of a station is that station), a stop where it crosses another bus route, and about one
+  every 2 km of road between (`k = ceil(gap / 2 km) - 1`, at least one between two stations 800 m
+  or more apart), each on the grid of street stops every 400 m, which are drawn only. A constructed
+  route stops at constructed stations and crosses constructed routes; a planned one previews all.
+  Any edit to a station or a line places every bus line's stops again.
+- **Run**: a flat 18 km/h door to door (street stops and traffic included), the line's dwell
+  standing only at train stations, the line's turnaround at the ends (120 s for a new bus line). No
+  accelerating, no capacity, no holds.
+- **Riders**: 80 at crush (demand: 0.5 of a 160-rider car, 22 seats); the boarding account keeps no
+  platform crowd at its stops that are no station.
+- **Money**: US$1M a road-km, paid on Construct with US$0.6M a bus, a fleet of its own with spares
+  shared between bus lines; running US$3 a bus-km and upkeep US$30 a road-km a day (real figures,
+  `ECONOMY` times in the game). Removing or redrawing a constructed route is final and refunds
+  nothing. A new bus line starts at a bus every 8, 10 and 20 minutes by level. A copy is planned.
+- **Saves**: a trailing `LBS1` block holds each bus line's route and whether it is constructed.

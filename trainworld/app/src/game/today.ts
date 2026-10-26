@@ -84,7 +84,9 @@ export function runningToday(l: LineInput, st: LineStats): number {
   let cost = 0;
   for (let h = Math.floor(t0); h < t; h++) {
     const lev = PERIODS[periodAt(h * 3600)].demand;
-    cost += tph[lev] * 2 * st.km * (k.runCostTrainKm + st.cars * k.runCostCarKm) * m.economy *(Math.min(h + 1, t) - Math.max(h, t0));
+    // T-1464: a bus line's buses cost a bus-km each
+    const perKm = st.bus ? m.runCostBusKm : k.runCostTrainKm + st.cars * k.runCostCarKm;
+    cost += tph[lev] * 2 * st.km * perKm * m.economy *(Math.min(h + 1, t) - Math.max(h, t0));
   }
   return cost;
 }

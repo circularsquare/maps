@@ -71,7 +71,13 @@ export type EditOp =
   | { op: "doubleUp"; edge: EdgeId }
   | { op: "stationProps"; node: NodeId; platform: number; name: string }
   | { op: "removeStation"; node: NodeId }
-  | { op: "construct"; edges: EdgeId[]; stations: NodeId[] }
+  /** `buses` (T-1464): bus lines whose routes to construct */
+  | { op: "construct"; edges: EdgeId[]; stations: NodeId[]; buses?: number[] }
+  /** T-1464: a planned bus line over a route (world metres, x, y flat), its stops placed by the
+   * sim; answered with its `line` */
+  | { op: "addBusLine"; route: number[]; name: string; colour: string }
+  /** T-1464: a bus line's route drawn again (final and charged when it is constructed) */
+  | { op: "busRoute"; line: number; route: number[] }
   | { op: "constructAll" }
   /** switch blueprint track and stations off or on (T-333): Construct and the quote skip what is off; one undoable edit */
   | { op: "blueprintOff"; edges: EdgeId[]; stations: NodeId[]; off: boolean }
@@ -203,7 +209,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineRelated"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "removal"; edges: number[]; stations: number[] };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineRelated"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -234,8 +240,17 @@ export interface MoneyState {
   upkeepStation: number;
   upkeepSingle: number;
   upkeepHsr: number;
-  /** T-867: the network's upkeep a game day, US$M (track and stations), the route-km and stations behind it */
-  upkeep: { track: number; stations: number; km: number; count: number };
+  /** T-867: the network's upkeep a game day, US$M (track and stations), the route-km and stations
+   * behind it; T-1464: bus routes' upkeep, US$M, and their road-km */
+  upkeep: { track: number; stations: number; km: number; count: number; buses: number; busKm: number };
+  /** T-1464: buses owned and needed; a bus's price US$M, its running cost a bus-km and a route's
+   * upkeep a road-km a day (real US$), a route's price a road-km US$M */
+  fleetBus: number;
+  busesNeeded: number;
+  busPrice: number;
+  runCostBusKm: number;
+  upkeepBusKm: number;
+  busRouteKm: number;
   /** fares and running costs count this many times over in a game day (T-081, `ECONOMY`) */
   economy: number;
   fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string };
@@ -295,6 +310,9 @@ export interface ClockNode {
   name: string;
   /** track heading through it, rad, counter-clockwise from east */
   heading: number;
+  /** T-1464: a bus stop that is no station (`ClockBus.stops`), listed so a line's stops all have a
+   * row; no track, no platform, never picked or snapped to */
+  bus?: true;
 }
 
 export interface ClockLine {
@@ -344,6 +362,27 @@ export interface ClockLine {
   endTurns: number[];
   /** a loop (`TrackApi::line_loop`, T-798): 0 none, 1 a circle, 2 a balloon */
   loopKind: number;
+  /** T-1464: a bus line's route and stops; absent for a rail line, whose `path` this replaces
+   * (a bus line's `path` is empty, its `stops` its `bus.stops`' ids) */
+  bus?: ClockBus;
+}
+
+/** T-1464: a bus line (sim/src/track/bus.rs). Positions in world metres, as `ClockNode.x, y`. */
+export interface ClockBus {
+  /** constructed: paid for and running */
+  built: boolean;
+  /** the route as drawn, x, y flat */
+  route: number[];
+  /** road length, m: the drawn length times `BUS_ROAD_FACTOR` */
+  roadM: number;
+  /** the stops demand sees, in run 0's order: kind 0 an end, 1 a train station (`station` its
+   * node), 2 a stop between, 3 where it crosses another bus route; `station` -1 for no station */
+  stops: { id: number; x: number; y: number; lng: number; lat: number; kind: number; station: number }[];
+  /** the street stops between, drawn only, x, y flat */
+  street: number[];
+  /** `route` and `street` as longitude, latitude pairs, flat */
+  routeLL: number[];
+  streetLL: number[];
 }
 
 /** Everything drawn, in local units (map/geo.ts). */
@@ -567,6 +606,9 @@ export interface SnapshotStation {
   complex?: number;
   /** its upgrades, `UPGRADE` bits (T-1281), only where it has any */
   upgrades?: number;
+  /** T-1464: a bus stop that is no station (id from `bus::STOP_ID_BASE` up, platform 0), reached
+   * only through its line's corridor (`SnapshotLine.catches`) */
+  bus?: true;
 }
 
 export interface SnapshotLine {
@@ -592,8 +634,11 @@ export interface SnapshotLine {
   /** a circle line (T-798): its last stop is its first and trains ride on round, standing this
    * long there, s; absent otherwise */
   wrapS?: number;
-  /** cars per train (20 m each) */
+  /** cars per train (20 m each); a bus line's 0.5, its 80 riders at crush */
   cars: number;
+  /** T-1464, a bus line: per stop, the stretch of route whose homes walk to the route and ride
+   * from that stop, x, y flat in the snapshot's frame (empty at a station) */
+  catches?: number[][];
   /** T-842: per period, run and stop (`[(period * 2 + run) * n + k]`, each run's stops in its
    * travel order), the share of the period's riders there with a train due within their tolerance
    * (`TrackApi.line_span`); absent when it is 1 everywhere */

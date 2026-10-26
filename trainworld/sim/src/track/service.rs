@@ -68,6 +68,19 @@ pub struct LineSvc {
     /// Seconds the line's local time runs ahead of the game clock (T-309, `Network::line_shift`):
     /// its periods and its boarding account's hours are its own region's.
     pub shift: f64,
+    /// A bus line (T-1464): its runs have no path (empty `segs`, `nodes`, `stop_idx`), `stops`
+    /// holds its stops' ids (`bus::BusStop::id`), and `bus` its plan in run 0's order.
+    pub bus: Option<super::bus::Plan>,
+}
+
+impl LineSvc {
+    pub fn is_bus(&self) -> bool {
+        self.bus.is_some()
+    }
+    /// Riders a train or bus takes at crush.
+    pub fn crush(&self) -> f64 {
+        if self.is_bus() { BUS_CRUSH } else { super::boarding::CRUSH_PER_CAR * self.cars.max(1) as f64 }
+    }
 }
 
 impl LineSvc {
@@ -492,6 +505,9 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
     if !net.line_ok(l) || net.line_broken[l as usize] {
         return ls;
     }
+    if let Some(r) = net.line_bus[l as usize].as_ref() {
+        return build_bus(net, l, r);
+    }
     ls.stops = net.line_stops(l).to_vec();
     if ls.stops.len() < 2 { return ls; }
     ls.kind = net.line_loop(l);
@@ -513,7 +529,51 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
     ls
 }
 
+/// A bus line's service (T-1464): its stops from `bus::plan`, each run at a flat speed, standing the
+/// line's dwell at the train stations, with no capacity holds.
+fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
+    let mut ls = LineSvc::default();
+    let plan = super::bus::plan(net, l, &r.points, r.built);
+    if plan.stops.len() < 2 {
+        return ls;
+    }
+    let dwell = net.line_dwell[l as usize] as f64;
+    let n = plan.stops.len();
+    let fwd_s: Vec<f64> = plan.stops.iter().map(|s| s.s).collect();
+    let fwd_dw: Vec<f64> = plan.stops.iter().map(|s| if s.station.is_some() { dwell } else { 0.0 }).collect();
+    let len = plan.len;
+    let rev_s: Vec<f64> = fwd_s.iter().rev().map(|s| len - s).collect();
+    let rev_dw: Vec<f64> = fwd_dw.iter().rev().copied().collect();
+    let make = |s: Vec<f64>, dw: &[f64]| {
+        let p = super::bus::profile(&s, dw);
+        Run {
+            len,
+            turn: vec![false; n],
+            jump: vec![0.0; n],
+            limits: vec![[0.0, super::bus::BUS_V]],
+            free: p.clone(),
+            holds: Default::default(),
+            stop_holds: std::array::from_fn(|_| vec![0.0; n]),
+            prof: std::array::from_fn(|_| p.clone()),
+            stop_s: s,
+            ..Default::default()
+        }
+    };
+    ls.stops = plan.stops.iter().map(|s| s.id).collect();
+    ls.runs = [make(fwd_s, &fwd_dw), make(rev_s, &rev_dw)];
+    ls.cars = 1;
+    ls.train_len = super::bus::BUS_LEN_M;
+    ls.ok = true;
+    ls.running = r.built;
+    ls.shift = net.line_shift(l);
+    ls.bus = Some(plan);
+    ls
+}
+
 fn profile_for(net: &Network, l: u32, run: &Run, level: usize) -> Profile {
+    if net.line_bus[l as usize].is_some() {
+        return run.free.clone();
+    }
     let turn = net.line_turn[l as usize] as f64;
     let mut dw = stand_times(run, net.line_dwell[l as usize] as f64, turn);
     for (d, h) in dw.iter_mut().zip(&run.stop_holds[level]) {
@@ -1069,6 +1129,10 @@ impl Service {
 
     /// World position of a run's offset.
     pub fn position(&self, net: &Network, line: u32, run: usize, s: f64) -> (f64, f64) {
+        if let (Some(r), Some(plan)) = (net.line_bus.get(line as usize).and_then(|b| b.as_ref()), self.lines[line as usize].bus.as_ref()) {
+            let road = if run == 0 { s } else { plan.len - s };
+            return super::bus::Poly::new(net, &r.points).at(road / super::bus::ROAD_FACTOR);
+        }
         let (e, _, d) = self.segment_at(net, line, run, s);
         let (x, y, _) = geom::pos_at(net.edge_pieces(e), d);
         (x, y)

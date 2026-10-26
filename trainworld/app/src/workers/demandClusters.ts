@@ -304,7 +304,7 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
     cars[i] = n.cars[l];
     o += p;
   });
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, span: spanOf(n, nodeGlobal) };
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, span: spanOf(n, nodeGlobal), ...catchesOf(n, spans.flatMap(([l, a, b]) => Array.from({ length: b - a + 1 }, (_, k) => lineOff[l] + a + k))) };
   return { net, stLocal, nodeGlobal, pads: Uint32Array.from(pads) };
 }
 
@@ -320,6 +320,19 @@ function upsOf(n: DemandNetwork, stations: number[], stLocal: Int32Array): { ups
   }
   if (pairs.length) out.passages = Uint32Array.from(pairs);
   return out;
+}
+
+/** T-1464: the bus corridors' stretches of the whole network's stops t, in that order; nothing
+ * where none of them has one. */
+function catchesOf(n: DemandNetwork, at: number[]): { catchN?: Uint32Array; catchXY?: Float32Array } {
+  if (!n.catchN || !n.catchXY) return {};
+  const off = new Uint32Array(n.catchN.length + 1);
+  for (let k = 0; k < n.catchN.length; k++) off[k + 1] = off[k] + n.catchN[k];
+  const catchN = Uint32Array.from(at, (k) => n.catchN![k]);
+  if (!catchN.some((c) => c > 0)) return {};
+  const xy: number[] = [];
+  for (const k of at) for (let i = 2 * off[k]; i < 2 * off[k + 1]; i++) xy.push(n.catchXY[i]);
+  return { catchN, catchXY: Float32Array.from(xy) };
 }
 
 /** T-842: the whole network's span for the route nodes `nodeGlobal` names, period by period. */
@@ -366,10 +379,10 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
     o += m;
   });
   const span = spanOf(n, nodeGlobal);
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, span };
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, span, ...catchesOf(n, lines.flatMap((l) => Array.from({ length: n.lineN[l] }, (_, k) => lineOff[l] + k))) };
   const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}`;
   // station upgrades and passages (T-1281) only where there are any, so other networks keep their signatures
-  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : [])];
+  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : [])];
   const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);
   const levelSig = [0, 1, 2].map((lev) => {
     const lt = new Float32Array(2 * nStops), lp = new Float32Array(lines.length);

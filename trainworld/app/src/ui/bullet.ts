@@ -13,6 +13,7 @@
 // by map/trackTagRows.ts's lineBullet.
 
 import { signal } from "@preact/signals";
+import { world } from "../game/world";
 
 export type BulletSize = "" | "sm" | "lg";
 /** The chip's font size, height and side padding by size, as style.css sets them. */
@@ -95,10 +96,18 @@ export function bulletText(text: string, size: BulletSize, zoom = 1): BulletText
   return ok ? v : null;
 }
 
+/** T-1464: a bus line's bullet is a rounded square, a rail line's a circle (or pill): the corner
+ * radius of a bullet of height `h`. */
+export const bulletRadius = (h: number, square: boolean) => (square ? h * 0.25 : h / 2);
+
+/** Whether line `id` is a bus line, read as the world stands now. */
+export const isBusLine = (id: string): boolean => !!world.peek()?.lineStats[id]?.bus;
+
 const SVG = "http://www.w3.org/2000/svg";
 
-/** The bullet as a DOM node (for the map's tags, which are not Preact and not zoomed). */
-export function bulletNode(text: string, size: BulletSize): Node {
+/** The bullet as a DOM node (for the map's tags, which are not Preact and not zoomed); `square` for
+ * a bus line's (`isBusLine`). */
+export function bulletNode(text: string, size: BulletSize, square = false): Node {
   const b = bulletText(text, size);
   if (!b) {
     const s = document.createElement("span");
@@ -109,7 +118,7 @@ export function bulletNode(text: string, size: BulletSize): Node {
   svg.style.width = b.w + "px";
   svg.style.height = b.h + "px";
   const r = document.createElementNS(SVG, "rect");
-  for (const [a, v] of [["y", b.top], ["width", b.w], ["height", b.h], ["rx", b.h / 2]] as const) r.setAttribute(a, String(v));
+  for (const [a, v] of [["y", b.top], ["width", b.w], ["height", b.h], ["rx", bulletRadius(b.h, square)]] as const) r.setAttribute(a, String(v));
   const t = document.createElementNS(SVG, "text");
   t.setAttribute("x", String(b.x));
   t.setAttribute("y", String(b.y));

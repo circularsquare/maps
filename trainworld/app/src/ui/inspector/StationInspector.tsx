@@ -85,7 +85,8 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
       return !!p && Math.max(p.side[0], p.side[1]) >= p.room;
     });
     const names = [...new Set(stations.map((m) => byId.get(m)?.name ?? ""))];
-    const ends = [...new Set(ls.flatMap((l) => [l.stops[0], l.stops[l.stops.length - 1]]).filter((s) => !inside.has(s)).map((s) => byId.get(s)?.name ?? ""))];
+    const w = world.peek(), stopNames = w ? stationNames(w) : null; // a bus line may end at a bus stop (T-1464)
+    const ends = [...new Set(ls.flatMap((l) => [l.stops[0], l.stops[l.stops.length - 1]]).filter((s) => !inside.has(s)).map((s) => stopNames?.get(s) ?? byId.get(s)?.name ?? ""))];
     rows.push({
       name, line: ls[0], stations, open, built: stations.some((m) => byId.get(m)?.built), waiting, full, boardings, today: todayB,
       tip: `${name} at ${names.join(" and ")}` + (ends.length ? `\nTo ${ends.join(", ")}` : ""),

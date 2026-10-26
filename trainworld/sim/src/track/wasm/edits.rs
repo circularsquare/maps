@@ -83,7 +83,7 @@ impl TrackApi {
             Ok((r, trains)) => {
                 self.cash -= r.charge + trains;
                 let need = cars_needed(&self.w);
-                self.fleet = [self.fleet[0].max(need[0]), self.fleet[1].max(need[1])];
+                self.fleet = std::array::from_fn(|k| self.fleet[k].max(need[k]));
                 let out = self.done(Ok(r));
                 self.last_trains = trains;
                 out

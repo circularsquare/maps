@@ -24,7 +24,7 @@ import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes } from "../game/complexes";
 import { UPGRADE_BITS } from "../game/upgrades";
 import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
-import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
+import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 import { changedHere, claim, fetchGame, forgetSlot, forkName, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, sendDeletes, settle as settleCloud, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
@@ -32,6 +32,8 @@ const SAMPLE_STEP = 50;
 const SNAPSHOT_DEBOUNCE_MS = 500;
 /** Whole trains on a new line across both directions, high/medium/low demand. */
 const NEW_LINE_TRAINS: [number, number, number] = [0, 0, 0];
+/** T-1464: a new bus line's headways, s, high/medium/low demand: a bus every 8, 10 and 20 minutes. */
+const NEW_BUS_HEADWAYS: [number, number, number] = [480, 600, 1200];
 /** Default fare curve: `START_FARE` as three nodes. */
 const START_FARES: Fares = { ...faresOf(undefined, START_FARE), scales: {}, baseline: FARE_BASELINE };
 /** A save's fares (T-1277): one from before the baseline was New York's fares, so its curve is
@@ -504,11 +506,11 @@ const MAX_PANICS_PER_MINUTE = 3;
 const MAX_PANICS = 8;
 
 /** the network, cash and fleet after the last load or edit */
-let kept: { net: Uint8Array; cash: number; fleet: number; fleetFast: number } | null = null;
+let kept: { net: Uint8Array; cash: number; fleet: number; fleetFast: number; fleetBus: number } | null = null;
 function keep() {
   try {
     const a = api!;
-    kept = { net: a.save(), cash: a.cash(), fleet: a.fleet(), fleetFast: a.fleet_fast() };
+    kept = { net: a.save(), cash: a.cash(), fleet: a.fleet(), fleetFast: a.fleet_fast(), fleetBus: a.fleet_bus() };
   } catch { /* the model is down; the next panic recovery says so */ }
 }
 
@@ -549,7 +551,7 @@ async function rebuildModel(fromKept: boolean) {
   const old = api!;
   let k = kept;
   if (!fromKept) {
-    try { k = { net: old.save(), cash: old.cash(), fleet: old.fleet(), fleetFast: old.fleet_fast() }; } catch { /* held: use what was kept */ }
+    try { k = { net: old.save(), cash: old.cash(), fleet: old.fleet(), fleetFast: old.fleet_fast(), fleetBus: old.fleet_bus() }; } catch { /* held: use what was kept */ }
   }
   if (!k) throw new Error("no network was kept");
   (old as unknown as { __destroy_into_raw(): number }).__destroy_into_raw();
@@ -559,6 +561,7 @@ async function rebuildModel(fromKept: boolean) {
   await openNetwork(k.net);
   api!.set_fleet(k.fleet);
   api!.set_fleet_fast(k.fleetFast);
+  api!.set_fleet_bus(k.fleetBus);
   api!.set_cash(k.cash);
   setMode(mode);
   restart(gameNow(), "autosave");
@@ -1001,6 +1004,7 @@ function buildState(): ClockState {
       reversals: [...a.line_reversals(id)],
       endTurns: [...a.line_end_turns(id)],
       loopKind: a.line_loop(id),
+      ...(a.is_bus(id) ? { bus: busRow(a, id, nodes) } : {}),
     });
   }
   const tq3 = performance.now(); timing.sLines = tq3 - tq2;
@@ -1259,7 +1263,7 @@ function upkeepPerHour(): number {
 }
 function upkeepNow(): MoneyState["upkeep"] {
   const u = api!.upkeep();
-  return { track: u[1], stations: u[2], km: u[3], count: u[4] };
+  return { track: u[1], stations: u[2], km: u[3], count: u[4], buses: u[5] ?? 0, busKm: u[6] ?? 0 };
 }
 
 function moneyState(): MoneyState {
@@ -1273,6 +1277,12 @@ function moneyState(): MoneyState {
     carsNeeded: a.cars_needed(),
     fleetFast: a.fleet_fast(),
     carsNeededFast: a.cars_needed_fast(),
+    fleetBus: a.fleet_bus(),
+    busesNeeded: a.buses_needed(),
+    busPrice: moneyParams[11],
+    runCostBusKm: moneyParams[12],
+    upkeepBusKm: moneyParams[13],
+    busRouteKm: moneyParams[14],
     hsCarPrice: moneyParams[4],
     hsRunCostCarKm: moneyParams[5],
     hsRunCostTrainKm: moneyParams[6],
@@ -1509,7 +1519,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], newCars: newLineCars };
+  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], newCars: newLineCars };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -1830,6 +1840,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   await openNetwork(net);
   api!.set_fleet(h.fleet ?? 0);
   api!.set_fleet_fast(h.fleetFast ?? 0);
+  api!.set_fleet_bus(h.fleetBus ?? 0);
   fares = loadFares(h.fares);
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
@@ -1887,6 +1898,7 @@ async function newGame(spec?: NewGameSpec) {
   api!.set_cash(START_CASH);
   api!.set_fleet(0);
   api!.set_fleet_fast(0);
+  api!.set_fleet_bus(0);
   fares = { ...START_FARES };
   ledger = [];
   hourLedger = [];
@@ -2222,6 +2234,7 @@ function buildSnapshot(): NetworkSnapshot {
   for (let i = 0; i < li.length; i += 22) {
     if (li[i + 3] !== 1) continue; // running lines only
     const id = li[i];
+    const bus = a.is_bus(id) ? busSnapshot(a, id, stations) : null;
     const hopS: number[][][] = [], dwellS: number[][][] = [];
     const span = a.line_span(id);
     for (let run = 0; run < 2; run++) {
@@ -2236,7 +2249,8 @@ function buildSnapshot(): NetworkSnapshot {
     lines.push({
       id, name: a.line_name(id), stops: [...a.line_stops(id)], tph: [li[i + 5], li[i + 6], li[i + 7]], hopS, dwellS,
       hopKm: [0, 1].map((run) => { const s = a.line_stop_s(id, run); return Array.from({ length: s.length - 1 }, (_, k) => (s[k + 1] - s[k]) / 1000); }),
-      turnaroundS: li[i + 20], cars: li[i + 21],
+      turnaroundS: li[i + 20], cars: bus ? BUS_DEMAND_CARS : li[i + 21],
+      ...(bus ? { catches: bus } : {}),
       // T-798: a circle's riders ride on round through its first stop, standing the dwell there
       ...(a.line_loop(id) === 1 ? { wrapS: Math.max(1, li[i + 19]) } : {}),
       ...(span.some((v) => v !== 1) ? { span: Array.from(span) } : {}),
@@ -2244,6 +2258,59 @@ function buildSnapshot(): NetworkSnapshot {
   }
   snapStations = stationsKey(ni);
   return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: { ...fares }, ...(passages.length ? { passages } : {}) };
+}
+
+/** T-1464: a bus line's row (`ClockBus`); its stops that are no station join `nodes` once each,
+ * flagged `bus`, so every stop of every line has a node row. */
+function busRow(a: TrackApi, id: number, nodes: ClockNode[]): ClockBus {
+  const r = a.bus_route(id), st = a.bus_stops(id);
+  const stops: ClockBus["stops"] = [];
+  for (let k = 0; k + 7 < st.length; k += 8) {
+    const [lng, lat] = packLngLat(st[k + 1], st[k + 2]);
+    const s = { id: st[k], x: st[k + 1], y: st[k + 2], lng, lat, kind: st[k + 4], station: st[k + 5] };
+    stops.push(s);
+    if (s.station < 0 && !nodes.some((n) => n.id === s.id)) {
+      nodes.push({ id: s.id, x: s.x, y: s.y, lng, lat, level: 0, ports: 0, builtPorts: 0, flying: false, platform: 0, stationBuilt: r[0] === 1, stationOff: false, upgrades: 0, name: "", heading: 0, bus: true });
+    }
+  }
+  const route = Array.from(r.subarray(1)), street = Array.from(a.bus_street(id));
+  const ll = (xy: number[]) => { const out: number[] = []; for (let k = 0; k + 1 < xy.length; k += 2) out.push(...packLngLat(xy[k], xy[k + 1])); return out; };
+  return { built: r[0] === 1, route, roadM: a.bus_road_m(id), stops, street, routeLL: ll(route), streetLL: ll(street) };
+}
+
+/** T-1464: `TrackApi.bus_quote` with each stop's and street stop's longitude and latitude after
+ * its x, y: [road m, US$M, 1 if it makes a line, n, then x, y, kind, lng, lat per stop, then m and
+ * x, y, lng, lat per street stop]. */
+function busQuoteLL(a: TrackApi, line: number, route: number[]): Float64Array {
+  const q = a.bus_quote(line, Float64Array.from(route)), out = [q[0], q[1], q[2], q[3]];
+  let k = 4;
+  for (let i = 0; i < q[3]; i++, k += 3) out.push(q[k], q[k + 1], q[k + 2], ...packLngLat(q[k], q[k + 1]));
+  const m = q[k++];
+  out.push(m);
+  for (let i = 0; i < m; i++, k += 2) out.push(q[k], q[k + 1], ...packLngLat(q[k], q[k + 1]));
+  return Float64Array.from(out);
+}
+
+/** T-1464: a bus as demand's cars: 0.5 of a 160-rider car, its 80 at crush. */
+const BUS_DEMAND_CARS = 0.5;
+
+/** T-1464: a running bus line's stops that are no station, added to the snapshot's stations once
+ * (two lines' stops at one crossing are two stations, merged by demand), and each stop's stretch of
+ * route for demand's corridor. */
+function busSnapshot(a: TrackApi, id: number, stations: NetworkSnapshot["stations"]): number[][] {
+  const st = a.bus_stops(id), have = new Set(stations.map((s) => s.id));
+  for (let k = 0; k + 7 < st.length; k += 8) {
+    if (st[k + 5] >= 0 || have.has(st[k])) continue;
+    stations.push({ id: st[k], name: "", x: st[k + 1], y: st[k + 2], level: 0, platform: 0, bus: true });
+    have.add(st[k]);
+  }
+  const c = a.bus_catches(id), out: number[][] = [];
+  for (let k = 0; k < c.length; ) {
+    const n = c[k];
+    out.push(Array.from(c.subarray(k + 1, k + 1 + 2 * n)));
+    k += 1 + 2 * n;
+  }
+  return out;
 }
 
 /** T-1368: the built stations as the last snapshot had them. An edit that changes only them (a
@@ -2345,13 +2412,20 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
     case "removeStation":
       return { r: a.remove_station(op.node) };
     case "construct":
-      return { r: a.construct(new Uint32Array(op.edges), new Uint32Array(op.stations)) };
+      return { r: a.construct_with_buses(new Uint32Array(op.edges), new Uint32Array(op.stations), new Uint32Array(op.buses ?? [])) };
     case "constructAll":
       return { r: a.construct_all() };
     case "blueprintOff":
       return { r: a.set_blueprint_off(new Uint32Array(op.edges), new Uint32Array(op.stations), op.off) };
     case "constructLine":
       return { r: a.construct_line(op.line) };
+    case "addBusLine": {
+      const id = a.new_line_id();
+      const [h, m, l] = NEW_BUS_HEADWAYS;
+      return { r: a.set_bus_line(id, Float64Array.from(op.route), h, m, l, 30, 120, colourInt(op.colour), op.name || a.next_line_name()), line: id };
+    }
+    case "busRoute":
+      return { r: a.set_bus_route(op.line, Float64Array.from(op.route)) };
     case "addLine": {
       const id = a.new_line_id();
       const [h, m, l] = NEW_LINE_TRAINS;
@@ -2799,6 +2873,7 @@ async function handle(msg: ToClock) {
       : q.what === "lineMarks" ? api.line_marks(q.line)
       : q.what === "lineRelated" ? api.line_related(q.line, complexOfNodes())
       : q.what === "removal" ? new Float64Array(api.removal_lines(new Uint32Array(q.edges), new Uint32Array(q.stations)))
+      : q.what === "busQuote" ? busQuoteLL(api, q.line, q.route)
       : api.line_delays(q.line, q.level);
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
   } else if (msg.kind === "previewStation") {

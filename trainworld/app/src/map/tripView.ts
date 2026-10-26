@@ -23,7 +23,7 @@ import type { PurposeFilter, PurposeKey } from "../game/purposes";
 import { askMarketTrip, askTrip, averageTrips, busiestPeriod, mergeMarketPeriods, type MarketEnd, kindsOf, openRoute, routeLabel, stationName, stationPoint, tripKey, tripMix, tripOpenedFrom, tripPeriod, tripView, type MarketPeriod, type Trip, type TripLeg, type TripPeriod, type TripPlaces, type TripRoute, type TripShown } from "../game/trip";
 import { purposeFilter, selection, shownDay } from "../game/ui";
 import { metresBetween } from "../game/walks";
-import { world } from "../game/world";
+import { stationNames, stopsById, world } from "../game/world";
 import { addFinder } from "./demandHover";
 import { toLngLat, toLocal, unitPerPxAt } from "./geo";
 import { sizeCanvasLike } from "./gl";
@@ -501,7 +501,7 @@ function rideTrack(net: NetworkBuffers | null, segs: number[] | undefined, k0: n
  * has it, else run straight between the stations they call at. */
 function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack: [number, number], toPack: [number, number], net: NetworkBuffers | null): Drawn {
   const w = world.peek()!;
-  const st = new Map(w.save.stations.map((s) => [s.id, s]));
+  const st = stopsById(w), names = stationNames(w);
   const ln = new Map(w.save.lines.map((l) => [l.id, l]));
   // a station's dot on the track (network.ts), else its position
   const dot = new Map<string, [number, number]>();
@@ -512,14 +512,14 @@ function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack:
     const s = st.get(id);
     return s ? toLocal(s.lng, s.lat) : null;
   };
-  const name = (id: string) => st.get(id)?.name ?? "a station";
+  const name = (id: string) => names.get(id) ?? "a station";
   const from = packLocal(fromPack), to = packLocal(toPack);
   const segs = strokesByLine(net);
   const track = (l: TripLeg) => rideTrack(net, segs.get(Number(l.line)), l.k0, l.k1, pos(l.from), pos(l.to), l.wrapN ?? 0);
   const out: Drawn = { parts: [], stops: [] };
   const share = (r: TripRoute) => `${Math.round(100 * r.share)}% of this trip's train riders take this route`;
   // the main one on top, then the route opened in the inspector (T-870) over it
-  const label = routeLabel(new Map(w.save.stations.map((s) => [s.id, s.name])));
+  const label = routeLabel(names);
   const open = openRoute.peek();
   const isOpen = (r: TripRoute) => open !== null && r !== t.routes[0] && label(r) === open;
   const routes = [...t.routes].reverse().sort((a, b) => Number(isOpen(a)) - Number(isOpen(b)));
@@ -538,7 +538,7 @@ function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack:
     if (a && pair) out.parts.push({ pts: [start, a], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: area
       ? [`To ${name(first.from)}`, `On foot or by car, felt as ${minutes(pair.accessPerceived)} on average over the area`]
       : [`${pair.accessRide ? "Drive" : "Walk"} ${distance(pair.accessM)} to ${name(first.from)}, ${minutes(pair.accessMin)}`, pair.accessRide ? "Straight-line distance from the homes near here" : "Straight-line distance from this home"] });
-    for (const l of legs) out.parts.push(legPart(l, main, alpha, width, ln, pos, name, share(r), track));
+    for (const l of legs) out.parts.push(legPart(l, main, alpha, width, ln, pos, name, share(r), track, !!w.lineStats[l.line]?.bus));
     if (b && pair) out.parts.push({ pts: [b, end], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: area
       ? [`From ${name(last.to)}`, `On foot or dropped off, felt as ${minutes(pair.egressPerceived)} on average over the area`]
       : [`Walk ${distance(pair.egressM)} from ${name(last.to)}, ${minutes(pair.egressMin)}`, "Straight-line distance to this place"] });
@@ -557,7 +557,7 @@ function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack:
   return out;
 }
 
-function legPart(l: TripLeg, main: boolean, alpha: number, width: number, ln: Map<string, { name: string; colour: string }>, pos: (id: string) => [number, number] | null, name: (id: string) => string, share: string, track: (l: TripLeg) => [number, number][] | null) {
+function legPart(l: TripLeg, main: boolean, alpha: number, width: number, ln: Map<string, { name: string; colour: string }>, pos: (id: string) => [number, number] | null, name: (id: string) => string, share: string, track: (l: TripLeg) => [number, number][] | null, bus = false) {
   if (l.kind === "walk") {
     const pts = [pos(l.from), pos(l.to)].filter((p): p is [number, number] => !!p);
     return { pts, colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: [`Walk from ${name(l.from)} to ${name(l.to)}, ${minutes(l.min)}`, share] };
@@ -569,7 +569,7 @@ function legPart(l: TripLeg, main: boolean, alpha: number, width: number, ln: Ma
     pts, colour: line?.colour ?? NET_INK, width, dash: false, alpha,
     tip: [
       `${line?.name ?? "A line"} from ${name(l.from)} to ${name(l.to)}`,
-      `${count(l.stops)} ${l.stops === 1 ? "stop" : "stops"}, ${minutes(l.min)} on the train after a ${minutes(l.waitMin)} wait${crowd >= 0.5 ? `; crowding makes it feel ${minutes(l.perceived)}` : ""}`,
+      `${count(l.stops)} ${l.stops === 1 ? "stop" : "stops"}, ${minutes(l.min)} on the ${bus ? "bus" : "train"} after a ${minutes(l.waitMin)} wait${crowd >= 0.5 ? `; crowding makes it feel ${minutes(l.perceived)}` : ""}`,
       share,
     ],
   };

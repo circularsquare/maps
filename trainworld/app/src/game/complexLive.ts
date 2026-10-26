@@ -97,7 +97,7 @@ export function complexNow(members: StationId[], lookS = 30): ComplexNow | null 
   const inside = new Set(members);
   const byId = stationsById(w);
   const byNum = new Map(members.map((m) => [byId.get(m)?.num, m]));
-  const lines = new Map(w.save.lines.filter((l) => l.stops.some((st) => inside.has(st))).map((l) => [l.id, l]));
+  const lines = new Map(w.save.lines.filter((l) => !w.lineStats[l.id]?.bus && l.stops.some((st) => inside.has(st))).map((l) => [l.id, l]));
   const now = clock.now();
   const queues: QueueNow[] = [];
   const platforms = new Map<StationId, ComplexPlatform>();

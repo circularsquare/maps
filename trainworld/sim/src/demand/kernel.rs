@@ -27,7 +27,9 @@ use std::collections::HashMap;
 /// Stations kept per cell and per subzone.
 pub const K: usize = 6;
 /// Dummy slots after each row of the commute pair loop, one per lane and egress step (T-036).
-const PADS: usize = 8 * K;
+/// A subzone's walk entries at most: K train stations and BUS_SLOTS bus stops (T-1464).
+pub const KE: usize = K + BUS_SLOTS;
+const PADS: usize = 8 * KE;
 const NONE: u32 = u32::MAX;
 
 #[derive(Clone, Debug)]
@@ -1736,10 +1738,13 @@ pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
 
 pub struct Access {
     pub n: Vec<u8>,
-    /// K per cell, nearest first.
+    /// `w` per cell: up to K train stations nearest first, then up to `BUS_SLOTS` bus stops nearest
+    /// first (T-1464); `n` of them used.
     pub st: Vec<u32>,
-    /// Real walk minutes, K per cell.
+    /// Real walk minutes, `w` per cell.
     pub walk: Vec<f32>,
+    /// Entries per cell: K, or K + `BUS_SLOTS` with bus corridors.
+    pub w: usize,
     pub cells_with_access: usize,
     /// Per station, the cells whose walk to it goes around water (T-275,
     /// `routes::Routes::station_walks`), with their walking metres; None without routes.
@@ -1797,8 +1802,64 @@ impl StationGrid {
     }
 }
 
+impl Access {
+    /// Cell `c`'s entries (indices into `st` and `walk`).
+    #[inline]
+    pub fn of(&self, c: usize) -> std::ops::Range<usize> {
+        c * self.w..c * self.w + self.n[c] as usize
+    }
+}
+
 /// Bucket size of the cell grid the access search scatters stations over.
 const ACCESS_BUCKET_M: f32 = 1000.0;
+/// T-1464: a home this near a bus route (ground m) may walk to it and ride.
+pub const BUS_REACH_M: f32 = 400.0;
+/// The walk along the route to the nearest street stop, on average (street stops every 400 m).
+pub const BUS_WALK_EXTRA_M: f32 = 100.0;
+/// The bus stops a cell keeps beside its K train stations.
+pub const BUS_SLOTS: usize = 2;
+
+/// Distance from (x, y) to a polyline, m.
+pub fn polyline_dist(pts: &[[f32; 2]], x: f32, y: f32) -> f32 {
+    let mut best = f32::INFINITY;
+    for w in pts.windows(2) {
+        let ([ax, ay], [bx, by]) = (w[0], w[1]);
+        let (dx, dy) = (bx - ax, by - ay);
+        let l2 = dx * dx + dy * dy;
+        let t = if l2 > 0.0 { (((x - ax) * dx + (y - ay) * dy) / l2).clamp(0.0, 1.0) } else { 0.0 };
+        best = best.min((x - ax - t * dx).hypot(y - ay - t * dy));
+    }
+    best
+}
+
+/// T-1464: the bus stops whose stretch of route passes within `BUS_REACH_M` of (x, y), each with
+/// the walk to it (the distance to the route plus `BUS_WALK_EXTRA_M`), nearest first, at most
+/// `BUS_SLOTS`.
+pub fn bus_walks(catches: &[super::network::Catch], x: f32, y: f32) -> Vec<(u32, f32)> {
+    let mut out: Vec<(u32, f32)> = vec![];
+    for c in catches {
+        let d = polyline_dist(&c.pts, x, y);
+        if d <= BUS_REACH_M {
+            bus_insert(&mut out, c.st, d + BUS_WALK_EXTRA_M);
+        }
+    }
+    out
+}
+
+/// Put a bus stop into a list of at most `BUS_SLOTS`, nearest first, each stop once.
+fn bus_insert(list: &mut Vec<(u32, f32)>, st: u32, m: f32) {
+    if let Some(i) = list.iter().position(|e| e.0 == st) {
+        if list[i].1 <= m {
+            return;
+        }
+        list.remove(i);
+    }
+    let i = list.partition_point(|e| e.1 <= m);
+    if i < BUS_SLOTS {
+        list.insert(i, (st, m));
+        list.truncate(BUS_SLOTS);
+    }
+}
 
 /// K nearest stations per cell within `walk_cutoff_m`, by scattering each station over the
 /// cells near it (a station touches the few hundred cells within the bound, so a far bound
@@ -1806,7 +1867,7 @@ const ACCESS_BUCKET_M: f32 = 1000.0;
 /// sparse).
 pub fn build_access(city: &City, net: &Network, p: &Params) -> Access {
     let n = city.len();
-    let mut a = Access { n: vec![0; n], st: vec![NONE; n * K], walk: vec![f32::INFINITY; n * K], cells_with_access: 0, ex: vec![None; net.n_stations()] };
+    let mut a = Access { n: vec![0; n], st: vec![NONE; n * K], walk: vec![f32::INFINITY; n * K], w: K, cells_with_access: 0, ex: vec![None; net.n_stations()] };
     if net.n_stations() == 0 || n == 0 {
         return a;
     }
@@ -1838,6 +1899,10 @@ pub fn build_access(city: &City, net: &Network, p: &Params) -> Access {
     let cut = p.walk_cutoff_m;
     let cut2 = cut * cut;
     for s in 0..net.n_stations() {
+        // a bus stop is reached through its corridor only (T-1464)
+        if net.bus_only(s) {
+            continue;
+        }
         let (sx, sy) = (net.st_x[s], net.st_y[s]);
         let gx0 = (((sx - cut - minx) / size).floor() as i32).max(0);
         let gx1 = (((sx + cut - minx) / size).floor() as i32).min(w - 1);
@@ -1895,9 +1960,13 @@ pub fn build_access(city: &City, net: &Network, p: &Params) -> Access {
             }
         }
     }
+    if !net.catches.is_empty() {
+        add_bus_access(&mut a, city, net, &cells, &off, (minx, miny, w, h));
+    }
+    let wd = a.w;
     for c in 0..n {
         let cnt = a.n[c] as usize;
-        for wv in a.walk[c * K..c * K + cnt].iter_mut() {
+        for wv in a.walk[c * wd..c * wd + cnt].iter_mut() {
             *wv = p.walk_min(wv.sqrt());
         }
         if cnt > 0 {
@@ -1905,6 +1974,50 @@ pub fn build_access(city: &City, net: &Network, p: &Params) -> Access {
         }
     }
     a
+}
+
+/// T-1464: each cell's bus stops (`bus_walks`, squared metres for now) after its train stations,
+/// the entries laid out `K + BUS_SLOTS` a cell. `grid` is `build_access`'s cell buckets.
+fn add_bus_access(a: &mut Access, city: &City, net: &Network, cells: &[u32], off: &[u32], grid: (f32, f32, i32, i32)) {
+    let (minx, miny, w, h) = grid;
+    let size = ACCESS_BUCKET_M;
+    let n = city.len();
+    let mut bus: Vec<Vec<(u32, f32)>> = vec![vec![]; n];
+    for c in &net.catches {
+        let (mut x0, mut y0, mut x1, mut y1) = (f32::INFINITY, f32::INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY);
+        for p in &c.pts {
+            (x0, y0, x1, y1) = (x0.min(p[0]), y0.min(p[1]), x1.max(p[0]), y1.max(p[1]));
+        }
+        let gx0 = (((x0 - BUS_REACH_M - minx) / size).floor() as i32).max(0);
+        let gx1 = (((x1 + BUS_REACH_M - minx) / size).floor() as i32).min(w - 1);
+        let gy0 = (((y0 - BUS_REACH_M - miny) / size).floor() as i32).max(0);
+        let gy1 = (((y1 + BUS_REACH_M - miny) / size).floor() as i32).min(h - 1);
+        for gx in gx0..=gx1 {
+            for gy in gy0..=gy1 {
+                let k = (gx * h + gy) as usize;
+                for &cell in &cells[off[k] as usize..off[k + 1] as usize] {
+                    let cell = cell as usize;
+                    let d = polyline_dist(&c.pts, city.x[cell], city.y[cell]);
+                    if d <= BUS_REACH_M {
+                        bus_insert(&mut bus[cell], c.st, d + BUS_WALK_EXTRA_M);
+                    }
+                }
+            }
+        }
+    }
+    let wd = K + BUS_SLOTS;
+    let (mut st, mut walk) = (vec![NONE; n * wd], vec![f32::INFINITY; n * wd]);
+    for c in 0..n {
+        let t = a.n[c] as usize;
+        st[c * wd..c * wd + t].copy_from_slice(&a.st[c * K..c * K + t]);
+        walk[c * wd..c * wd + t].copy_from_slice(&a.walk[c * K..c * K + t]);
+        for (j, &(s, m)) in bus[c].iter().enumerate() {
+            st[c * wd + t + j] = s;
+            walk[c * wd + t + j] = m * m;
+        }
+        a.n[c] += bus[c].len() as u8;
+    }
+    (a.st, a.walk, a.w) = (st, walk, wd);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -2102,8 +2215,10 @@ pub fn build_subzones(city: &City, zones: &Zones, acc: &Access, net: &Network, p
 /// `build_subzones` on home and work weights other than the city's own (`zones` summing them).
 pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zones, acc: &Access, net: &Network, p: &Params) -> Subzones {
     let n = city.len();
+    let aw = acc.w;
     let mut cell_sub = vec![NONE; n];
-    let mut map: HashMap<u64, u32> = HashMap::new();
+    // (zone, nearest station and band; its nearest bus stop if any, T-1464)
+    let mut map: HashMap<(u64, u32), u32> = HashMap::new();
     let mut nsub = 0u32;
     // homes beyond every walk, by group square and region (T-371): per group its homes, their
     // centre, and its homes by zone
@@ -2137,10 +2252,11 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
             continue; // nobody commutes from or to here
         }
         let key = if p.band_min < 0.0 {
-            c as u64
+            (c as u64, NONE)
         } else {
-            let band = if p.band_min > 0.0 { (acc.walk[c * K] / p.band_min) as u64 } else { 0 };
-            ((zones.cell_zone[c] as u64) << 32) | ((acc.st[c * K] as u64) << 8) | band.min(255)
+            let band = if p.band_min > 0.0 { (acc.walk[c * aw] / p.band_min) as u64 } else { 0 };
+            let bus = acc.of(c).map(|i| acc.st[i]).find(|&s| net.bus_only(s as usize)).unwrap_or(NONE);
+            (((zones.cell_zone[c] as u64) << 32) | ((acc.st[c * aw] as u64) << 8) | band.min(255), bus)
         };
         let id = *map.entry(key).or_insert_with(|| {
             nsub += 1;
@@ -2283,9 +2399,8 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
         // candidates: union of the members' lists; distance = weighted mean over members
         cand.clear();
         for &c in m {
-            let c = c as usize;
-            for k in 0..acc.n[c] as usize {
-                let st = acc.st[c * K + k];
+            for i in acc.of(c as usize) {
+                let st = acc.st[i];
                 if !cand.iter().any(|&(_, t, _)| t == st) {
                     cand.push((0.0, st, 0.0));
                 }
@@ -2294,10 +2409,16 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
         for e in cand.iter_mut() {
             let (sx, sy) = (net.st_x[e.1 as usize], net.st_y[e.1 as usize]);
             let ex = acc.ex.get(e.1 as usize).and_then(|v| v.as_ref());
+            let bus = net.bus_only(e.1 as usize);
             let (mut wd, mut wc) = (0.0f64, 0.0f64);
             for &c in m {
                 let wt = (home_w[c as usize] + work_w[c as usize]).max(1e-6) as f64;
-                let d = ((city.x[c as usize] - sx).powi(2) + (city.y[c as usize] - sy).powi(2)).sqrt();
+                // T-1464: a bus stop is the member's walk to its route, beyond it cut off
+                let d = if bus {
+                    acc.of(c as usize).find(|&i| acc.st[i] == e.1).map_or(f32::INFINITY, |i| acc.walk[i] * p.walk_mps * 60.0 / p.walk_detour)
+                } else {
+                    ((city.x[c as usize] - sx).powi(2) + (city.y[c as usize] - sy).powi(2)).sqrt()
+                };
                 // T-275: around water where the walk must go round (cut off: no weight)
                 let d = super::routes::walk_m(ex, c, d);
                 if !d.is_finite() {
@@ -2319,11 +2440,24 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
             // every member is within reach of its own nearest station, so the mean distance to
             // that station is too; this only guards against rounding
             let c = m[0] as usize;
-            let d = acc.walk[c * K] * p.walk_mps * 60.0 / p.walk_detour;
-            cand.push((p.access_cost(d), acc.st[c * K], d));
+            let d = acc.walk[c * aw] * p.walk_mps * 60.0 / p.walk_detour;
+            cand.push((p.access_cost(d), acc.st[c * aw], d));
         }
         cand.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-        for &(wm, st, d) in cand.iter().take(K) {
+        // K train stations and at most `BUS_SLOTS` bus stops: a bus never hides a station (T-1464)
+        let (mut trains, mut buses) = (0, 0);
+        for &(wm, st, d) in cand.iter() {
+            if net.bus_only(st as usize) {
+                if buses == BUS_SLOTS {
+                    continue;
+                }
+                buses += 1;
+            } else {
+                if trains == K {
+                    continue;
+                }
+                trains += 1;
+            }
             sz.acc_st.push(st);
             sz.acc_w.push(wm);
             sz.acc_d.push(d);
@@ -3955,7 +4089,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
     // and its egress stations, their weights and `Subzones::acc_st` entries, padded to K with
     // station `s` (read as a dummy past the row's end, 0) at weight 0: a pad adds exactly 0 to
     // every sum it enters, so eight destinations go through the same steps
-    let (mut eg_st, mut eg_e, mut eg_k, mut eg_n): (Vec<[u32; K]>, Vec<[f32; K]>, Vec<[u32; K]>, Vec<u8>) = (vec![], vec![], vec![], vec![]);
+    let (mut eg_st, mut eg_e, mut eg_k, mut eg_n): (Vec<[u32; KE]>, Vec<[f32; KE]>, Vec<[u32; KE]>, Vec<u8>) = (vec![], vec![], vec![], vec![]);
     // and the longest of its egress walks (T-1059)
     let mut eg_far: Vec<f32> = vec![];
     for &j in &dzones {
@@ -3963,13 +4097,13 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
         let mut dvz = 0.0f32;
         for &v in &sz.zd[sz.zd_off[j] as usize..sz.zd_off[j + 1] as usize] {
             let v = v as usize;
-            let (mut st, mut kk) = ([s as u32; K], [0u32; K]);
+            let (mut st, mut kk) = ([s as u32; KE], [0u32; KE]);
             for (n, k) in sz.walk(v).enumerate() {
                 (st[n], kk[n]) = (sz.acc_st[k], k as u32);
             }
             // its weights per band: destination q's band b at `eg_e[q * nb + b]`
             for b in 0..nb {
-                let mut e = [0f32; K];
+                let mut e = [0f32; KE];
                 for (n, k) in sz.walk(v).enumerate() {
                     e[n] = acc_e[b * na + k];
                 }
@@ -4197,15 +4331,15 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
                 let th8 = F8::new(std::array::from_fn(|l| bands[bl[l]].0));
                 let off8 = F8::new(std::array::from_fn(|l| bands[bl[l]].1));
                 let kn = q.iter().map(|&q| eg_n[q]).max().unwrap() as usize;
-                let mut ix = [[0u32; 8]; K];
-                let mut ev = [F8::splat(0.0); K];
-                let mut rv = [F8::splat(0.0); K];
+                let mut ix = [[0u32; 8]; KE];
+                let mut ev = [F8::splat(0.0); KE];
+                let mut rv = [F8::splat(0.0); KE];
                 let mut ssum = F8::splat(0.0);
                 for k in 0..kn {
                     // a pad goes to its own dummy (lane and step), so pads chain nothing
                     ix[k] = std::array::from_fn(|l| {
                         let t = eg_st[q[l]][k] as usize;
-                        (if t == s { s + l * K + k } else { t }) as u32 + ro[l]
+                        (if t == s { s + l * KE + k } else { t }) as u32 + ro[l]
                     });
                     ev[k] = F8::new(std::array::from_fn(|l| eg_e[q[l] * nb + bl[l]][k]));
                     rv[k] = F8::gather(&ab_row, &ix[k]);
@@ -4337,7 +4471,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
                 let dk = (d * F8::splat(0.001)).to_array();
                 let g = x / ssum;
                 // trips by egress station y, and y x the row: what reaches each egress entry
-                let mut ya = [[0f32; 8]; K];
+                let mut ya = [[0f32; 8]; KE];
                 let mut yw = [F8::splat(0.0); 8];
                 for k in 0..kn {
                     let y = g * ev[k];

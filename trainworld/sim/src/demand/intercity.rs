@@ -16,7 +16,7 @@
 //! data/packs/intercity.json, the joint commute gravity's input, and the tests' fixtures) opens as
 //! a closed world over its own zones with the ground curve alone.
 use super::{
-    api::{check_fare_curve, demand_groups, demand_passages, demand_ups, fare_x_usd, merge_stations, put_fare_curve, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
+    api::{check_fare_curve, demand_catches, demand_groups, demand_passages, demand_ups, fare_x_usd, merge_stations, put_fare_curve, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
     clock::now_ms,
     days::{everyday as everyday_purpose, load_factor, share_out, share_ret, LONGER, WEEKDAY, WORK},
     everyday::{KIND_COUNT, OUTWARD, RETURN},
@@ -2139,6 +2139,8 @@ pub struct IntercityApi {
     passages_in: Vec<u32>,
     /// `DemandApi::set_span` (T-842).
     span_in: Vec<f32>,
+    /// set_bus (T-1464)
+    bus_in: (Vec<u32>, Vec<f32>),
     /// T-409: per served zone, the track components its stations lie in.
     served_comp: Vec<Vec<u32>>,
     st_pat: StPattern,
@@ -2375,6 +2377,7 @@ impl IntercityApi {
             ups_in: vec![],
             passages_in: vec![],
             span_in: vec![],
+            bus_in: (vec![], vec![]),
             chunk: 0.,
             served_comp: vec![],
             st_pat: StPattern::default(),
@@ -2829,6 +2832,13 @@ impl IntercityApi {
                         net.st_x[s] = x as f32;
                         net.st_y[s] = y as f32;
                     }
+                    for c in &mut net.catches {
+                        for p in &mut c.pts {
+                            let (lon, lat) = a.to_lonlat(p[0] as f64, p[1] as f64);
+                            let (x, y) = f.from_lonlat(lon, lat);
+                            *p = [x as f32, y as f32];
+                        }
+                    }
                 }
             }
             let acc = build_access(&g.city, &net, &self.base);
@@ -2845,7 +2855,7 @@ impl IntercityApi {
                 let home = &h_rides[h_off[kz] as usize..h_off[kz + 1] as usize];
                 let far = &f_rides[f_off[kz] as usize..f_off[kz + 1] as usize];
                 walks.clear();
-                for i in c * K..c * K + acc.n[c] as usize {
+                for i in acc.of(c) {
                     let walk = acc.walk[i];
                     let cost = walk.min(self.base.walk_easy_min) * self.base.w_walk + (walk - self.base.walk_easy_min).max(0.) * self.base.w_walk_far;
                     walks.push((acc.st[i] as usize, cost));
@@ -2989,7 +2999,10 @@ impl IntercityApi {
         let (st_x, st_y, st_map) = merge_stations(st_xy, &off, stops, self.base.station_merge_m);
         let group = demand_groups(&st_map, st_x.len(), &self.complex_in);
         let ups = demand_ups(&st_map, st_x.len(), &self.ups_in);
+        let (catches, st_bus) = demand_catches(&st_map, st_x.len(), stops, &self.bus_in.0, &self.bus_in.1);
         let svc = Service {
+            catches,
+            st_bus,
             st_x,
             st_y,
             st_map: st_map.clone(),
@@ -3049,6 +3062,18 @@ impl IntercityApi {
     /// `DemandApi::set_span` (T-842): riders between cities read the same service span.
     pub fn set_span(&mut self, span: &[f32]) {
         self.span_in = span.to_vec();
+    }
+    /// `DemandApi::set_bus` (T-1464), the points as longitude and latitude, as `set_network_ll`
+    /// takes the stations.
+    pub fn set_bus_ll(&mut self, catch_n: &[u32], catch_ll: &[f64]) {
+        let xy: Vec<f32> = match &self.m.anchor {
+            Some(a) => catch_ll.chunks_exact(2).flat_map(|p| {
+                let (x, y) = a.from_lonlat(p[0], p[1]);
+                [x as f32, y as f32]
+            }).collect(),
+            None => catch_ll.iter().map(|&v| v as f32).collect(),
+        };
+        self.bus_in = (catch_n.to_vec(), xy);
     }
     /// T-780: zone pairs sampled in chunks of `MARKET_CHUNK` trips (`solved_pairs`), or every pair
     /// solved; the next network sets its pairs up again.

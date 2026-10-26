@@ -38,6 +38,7 @@ export function reversalsOf(w: WorldView): Reversal[] {
     out.set(key, at);
   };
   for (const l of w.save.lines) {
+    if (w.lineStats[l.id]?.bus) continue; // a bus turns at its ends, no reversal to mark
     for (const k of w.lineStats[l.id]?.reversals ?? []) {
       const s = stations.get(l.stops[k]);
       if (s) add(s.id, s.name, s.lng, s.lat, l);

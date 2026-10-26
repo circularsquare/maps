@@ -334,7 +334,7 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
     let mut occ: Vec<(u32, u32, u8, u32)> = vec![];
     for &l in cand {
         let ls = &lines[l as usize];
-        if !ls.running {
+        if !ls.running || ls.is_bus() {
             continue;
         }
         for r in 0..2 {
@@ -373,7 +373,7 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
     let mut uf = Uf((0..keys.len() as u32).collect());
     for &l in cand {
         let ls = &lines[l as usize];
-        if !ls.running {
+        if !ls.running || ls.is_bus() {
             continue;
         }
         // a circle's runs carry on through their first stop (T-798)
@@ -496,7 +496,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
     let mut limiter: Vec<(u32, u8, u32, u8, f64)> = vec![]; // node, arrival side, line, run, approach
     for &l in cand {
         let ls = &lines[l as usize];
-        if !ls.running {
+        if !ls.running || ls.is_bus() {
             continue;
         }
         let l = l as usize;
@@ -677,7 +677,7 @@ fn build_crossings(net: &Network, lines: &[LineSvc], cand: &[u32], sel: &dyn Fn(
     let mut on_edge: Vec<(u32, u32, u32, u8, u32)> = vec![]; // edge, dir, line, run, seg index
     for &l in cand {
         let ls = &lines[l as usize];
-        if !ls.running {
+        if !ls.running || ls.is_bus() {
             continue;
         }
         for (r, run) in ls.runs.iter().enumerate() {

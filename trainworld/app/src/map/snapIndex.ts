@@ -30,7 +30,8 @@ const nodeGrids = new WeakMap<Map<number, Node>, { anchor: number; nodes: Node[]
 export function nodesNear(w: WorldView, lx: number, ly: number, reach: number): Node[] | null {
   let g = nodeGrids.get(w.nodes);
   if (!g || g.anchor !== anchor().version) {
-    const nodes = [...w.nodes.values()], a = anchor();
+    // T-1464: a bus stop that is no station is no place to snap to
+    const nodes = [...w.nodes.values()].filter((n) => !n.bus), a = anchor();
     const box = () => {
       const b = new Float64Array(nodes.length * 4);
       nodes.forEach((n, i) => {

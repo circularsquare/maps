@@ -184,6 +184,9 @@ export function platformRoom(lengthM: number): number {
  * sim/src/demand/api.rs (a New York subway car). */
 export const SEATS_PER_CAR = 44;
 export const CRUSH_PER_CAR = 160;
+/** T-1464: a bus holds half a car's riders, 22 seated and 80 at crush (`BUS_CRUSH` in
+ * sim/src/track/params.rs). */
+export const BUS_CARS = 0.5;
 /** A car's length, m. */
 export const CAR_M = 20;
 

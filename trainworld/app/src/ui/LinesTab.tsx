@@ -3,8 +3,8 @@
 import { demandAt, lineSeconds } from "../game/clock";
 import { PERIODS, periodAt } from "../game/periods";
 import { useState } from "preact/hooks";
-import { createLine } from "../game/lineActions";
-import { count, money } from "../game/format";
+import { createLine, newBusLine } from "../game/lineActions";
+import { busesText, count, money } from "../game/format";
 import { DEMAND_INDEX, type LineInput, type LineStats } from "../game/types";
 import { lineSort, selection } from "../game/ui";
 import { stationsById, world } from "../game/world";
@@ -19,6 +19,9 @@ import { byNear, natural, Near, ScopeToggle } from "./listParts";
 
 const STATUS: Record<string, string> = { running: "", planned: "Planned", broken: "Broken" };
 
+/** T-1464: the New line control's bus button */
+const BUS_ICON = <svg viewBox="0 0 16 16"><rect x="3" y="2.5" width="10" height="9" rx="2" /><path d="M3 7h10M5.5 11.5v2M10.5 11.5v2" /><circle class="solid" cx="5.5" cy="9.3" r=".7" /><circle class="solid" cx="10.5" cy="9.3" r=".7" /></svg>;
+
 /** T-446: one line's riders in the past 24 hours, its own component so only it re-renders as the count moves. */
 function RidersToday({ line }: { line: string }) {
   const d = today.value.get(line);
@@ -32,19 +35,19 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
   if (!d) return <span class="val w-linemoney" />;
   const run = runningToday(l, st), net = d.fares - run - st.upkeep;
   return (
-    <span class="val w-linemoney" data-tip={[`${money(net)} net in the past 24 hours`, `Fares ${money(d.fares)}`, `Running trains ${money(-run)}`, `Upkeep ${money(-st.upkeep)}`].join("\n")}>
+    <span class="val w-linemoney" data-tip={[`${money(net)} net in the past 24 hours`, `Fares ${money(d.fares)}`, `Running ${st.bus ? "buses" : "trains"} ${money(-run)}`, `Upkeep ${money(-st.upkeep)}`].join("\n")}>
       <Money dollars={net} />
     </span>
   );
 }
 
 /** T-472, T-491: a line's trains now, coloured by its riders' wait for a train with room in the period now. */
-function TrainsNow({ line, n, period }: { line: string; n: number; period: string }) {
+function TrainsNow({ line, n, period, bus }: { line: string; n: number; period: string; bus?: boolean }) {
   const d = today.value.get(line);
   const c = d ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide, d.crowdWaitKm, d.crowdRidersKm) : null;
   const cls = c ? crowdClass(c.score) : "";
   // T-1255: the wait at the platforms where trains come full
-  const tip = d && c
+  const tip = bus ? `${period}: ${busesText(n)} on the line` : d && c
     ? (d.crowdRiders > 0 ? `${period}: where trains come full, riders face a wait of ${waitText(c.wait)} on average for a train with room` : `${period}: riders get on the first train with room`)
       + (d.trainsNow > 0 ? `\n${count(d.fullNow)}/${count(d.trainsNow)} trains running now are full on their trip` : "")
     : undefined;
@@ -100,7 +103,10 @@ export function LinesTab() {
   return (
     <>
       <div class="line-list-actions">
-        <button class="btn text" data-tip="Make a new line (N)" onClick={newLine} disabled={creating}><Icon.plus />New line<span class="key muted">N</span></button>
+        <span style={{ display: "flex", gap: "6px" }}>
+          <button class="btn text" data-tip="Make a new train line (N)" onClick={newLine} disabled={creating}><Icon.plus />New line<span class="key muted">N</span></button>
+          <button class="btn icon" data-tip="Draw a new bus line (B)" aria-label="New bus line" onClick={() => newBusLine()}>{BUS_ICON}</button>
+        </span>
         <ScopeToggle />
       </div>
       {lines.length === 0 && <p class="muted">{w.save.lines.length === 0 ? "No lines yet." : "No lines here."}</p>}
@@ -128,7 +134,7 @@ export function LinesTab() {
                 <>
                   <RidersToday line={l.id} />
                   <MoneyToday l={l} st={st} />
-                  <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={PERIODS[periodAt(lineSeconds(st))]?.name ?? ""} />
+                  <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={PERIODS[periodAt(lineSeconds(st))]?.name ?? ""} bus={!!st.bus} />
                 </>
               )}
               {key === "near" && <Near m={sc.lineDist.get(l.id)} />}

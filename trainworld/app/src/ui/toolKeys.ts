@@ -18,6 +18,8 @@ export const TOOL_KEYS: Record<string, Tool> = Object.fromEntries(TOOLS.map(([id
 /** The trip explorer's key (T-195, a letter since T-444: the numbers are for building); unlike the
  * build tools it leaves the tab as it is. Compared lowercase, so Caps Lock does not matter. */
 export const TRIP_KEY = "t";
+/** T-1464: a new bus line, from any tab (handled by map/busDraw.ts, before main.ts's keys). */
+export const BUS_KEY = "b";
 /** T-670: letter keys for new line, edit stops (the selected line's) and construct blueprints, from any tab;
  * A (T-1417) adds every station the selected line passes. */
 export const ACTION_KEYS: Record<string, "newLine" | "editStops" | "construct" | "addPassed"> = { n: "newLine", l: "editStops", c: "construct", a: "addPassed" };

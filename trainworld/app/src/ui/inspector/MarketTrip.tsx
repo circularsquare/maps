@@ -287,7 +287,7 @@ function Legs({ t, r }: { t: MarketPeriod; r: TripRoute }) {
           <span class="val muted">{minText(pair.accessPerceived)}</span>
         </li>
       )}
-      {legRows(r, name, ln, (l) => `Wait ${l.waitMin.toFixed(1)} min (half the time between the useful trains), then ${l.min.toFixed(1)} min on the train over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}`)}
+      {legRows(r, name, ln, (l) => { const v = w.lineStats[l.line]?.bus ? "bus" : "train"; return `Wait ${l.waitMin.toFixed(1)} min (half the time between the useful ${v}s), then ${l.min.toFixed(1)} min on the ${v} over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}`; })}
       {pair && last && (
         <li data-tip={`On foot or dropped off, felt as ${num1(pair.egressPerceived)} min on average over the places at this end`}>
           <span class="grow">From {name(last.to)}</span>

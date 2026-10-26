@@ -140,7 +140,12 @@ impl TrackApi {
     pub fn line_symbol(&self, id: u32) -> String {
         self.w.net.line_symbol.get(id as usize).cloned().unwrap_or_default()
     }
+    /// A line's stops; a bus line's as its service places them (T-1464, `bus::plan`), empty while
+    /// it has none.
     pub fn line_stops(&self, id: u32) -> Vec<u32> {
+        if self.w.net.is_bus(id) {
+            return self.w.svc.lines.get(id as usize).map_or(vec![], |l| l.stops.clone());
+        }
         if self.w.net.line_ok(id) {
             self.w.net.line_stops(id).to_vec()
         } else {

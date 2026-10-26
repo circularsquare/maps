@@ -3,7 +3,7 @@
 // checks/t671-station-snap-check.mjs runs it without a browser.
 
 export interface SnapEdge { id: number; a: number; b: number; built: boolean; lengthM: number; off?: boolean; tracks?: number; crossover?: boolean }
-export interface SnapNode { platform: number; ports: number }
+export interface SnapNode { platform: number; ports: number; bus?: true }
 /** a spot on a track: the edge, and how far along it from node `a` to node `b`, 0 to 1 */
 export interface Spot { edge: number; frac: number }
 
@@ -121,7 +121,7 @@ export function layoutIssues(c: Candidate, platform: number, lay: Layout): strin
   const crossed = (edge: number, from: number, to: number) => (lay.crossingsOn?.(edge) ?? []).some((s) => s >= from - 1 && s <= to + 1);
   if (c.kind === "node") {
     const n = nodes.get(c.node);
-    if (!n || n.platform > 0 || n.ports > 2) return ["StationPorts"];
+    if (!n || n.bus || n.platform > 0 || n.ports > 2) return ["StationPorts"];
     const reach = n.ports <= 1 ? platform : platform / 2;
     for (const id of byNode.get(c.node) ?? []) {
       const e = byId.get(id)!;

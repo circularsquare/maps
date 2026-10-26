@@ -591,6 +591,10 @@ impl Boarding {
             let h0 = epoch.rem_euclid(DAY);
             let hour = ((h0 / 3600.0).floor() as usize).min(23);
             let ls = &svc.lines[l];
+            // a bus stop has no platform (T-1464)
+            if ls.is_bus() {
+                continue;
+            }
             for (r, ra) in acc.runs.iter().enumerate() {
                 let m = ra.deps.len();
                 if m == 0 {
@@ -722,7 +726,7 @@ impl Boarding {
         let mut trains: Vec<(f64, f64)> = vec![];
         for f in fs {
             let fl = f.line as usize;
-            let Some(fls) = svc.lines.get(fl) else { continue };
+            let Some(fls) = svc.lines.get(fl).filter(|x| !x.is_bus()) else { continue };
             let fe = epoch + fls.shift;
             let Some(Some(acc)) = self.accounts[self.kind_at(fe, fl)].get(fl) else { continue };
             let ra = &acc.runs[(f.run as usize).min(1)];
@@ -800,7 +804,7 @@ impl Boarding {
     pub fn line_summary_day(&self, svc: &Service, l: usize, day: usize) -> Vec<f64> {
         let Some(Some(acc)) = self.accounts[self.kind(day)].get(l) else { return vec![] };
         let Some(ls) = svc.lines.get(l) else { return vec![] };
-        let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
+        let cap = ls.crush();
         let (mut fullest, mut left, mut wait) = (0.0f64, 0.0f64, 0.0f64);
         let mut full: Vec<f64> = vec![];
         for ra in &acc.runs {
@@ -862,7 +866,7 @@ impl Boarding {
     /// are packed full somewhere on their trip (T-472). A trip counts from its departure until the
     /// next one could leave the far end, so the count is about the line's trains in service.
     fn under_way(acc: &LineAccount, ls: &LineSvc, tod: f64) -> (f64, f64) {
-        let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
+        let cap = ls.crush();
         let (mut on, mut packed) = (0.0, 0.0);
         for (r, ra) in acc.runs.iter().enumerate() {
             let n = ra.n;
@@ -939,7 +943,7 @@ impl Boarding {
     /// the waiting rider-seconds and the riders arriving at the platforms where trains come full
     /// (`BUSY_PLATFORM_S`, T-1255: the line panel's crowding).
     fn crowding(acc: &LineAccount, ls: &LineSvc) -> [[f64; PERIOD_STRIDE]; PERIODS] {
-        let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
+        let cap = ls.crush();
         let mut out = [[0.0f64; PERIOD_STRIDE]; PERIODS];
         for ra in &acc.runs {
             let (n, m) = (ra.n, ra.deps.len());
@@ -1056,7 +1060,7 @@ impl Boarding {
     /// those who went another way in the window.
     /// `day0` is the local time of the window's midnight.
     fn tally(&self, acc: &LineAccount, ls: &LineSvc, from: f64, to: f64, off: f64, day0: f64, w: &mut Tally) {
-        let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
+        let cap = ls.crush();
         let n = w.stops.len();
         for (r, ra) in acc.runs.iter().enumerate() {
             let m = ra.deps.len();
@@ -1295,7 +1299,7 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
         }
         acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, &through, &mut vec![]);
     }
-    acc.full = acc.full_shares(CRUSH_PER_CAR * svc.lines[l].cars.max(1) as f64);
+    acc.full = acc.full_shares(svc.lines[l].crush());
     acc.wait = acc.stop_waits();
     acc
 }
@@ -1314,7 +1318,7 @@ impl Cum<'_> {
 fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool, wrap: bool, carry_in: &[(f64, f64)], carry_out: &mut Vec<(f64, f64)>) -> RunAccount {
     let ls = &svc.lines[l];
     let n = lr.n;
-    let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
+    let cap = ls.crush();
     let t0 = svc.account_start(l, START_HOUR);
     let from = if warm { t0 - DAY } else { t0 };
     let mut trips: Vec<Trip> = vec![];

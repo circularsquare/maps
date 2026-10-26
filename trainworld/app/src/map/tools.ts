@@ -53,6 +53,7 @@ import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
 import { snapping } from "../game/ui";
 import { SAME_TAP_PX, touchActions, touchCtl, touchInput, type TouchCtl } from "./touch";
+import { BusDraw } from "./busDraw";
 
 /** the touch control bar's gap from the point it serves, so the finger does not cover it (px) */
 const TOUCH_GAP_PX = 44;
@@ -150,6 +151,8 @@ export class Tools {
   private lastPreview: PreviewAnswer | null = null;
   /** snapping to the real network (T-727d) */
   readonly real: RealSnap;
+  /** the bus line tool (T-1464) */
+  readonly bus: BusDraw;
   /** the request `lastPreview` answers, as JSON */
   private previewKey = "";
   /** the newest request asked for; an older one's answer landing late is dropped (T-830) */
@@ -187,6 +190,9 @@ export class Tools {
     this.box.append(this.ring);
     // outside the marks' layer, so no demand tag covers it (T-526)
     map.getContainer().appendChild(this.tag);
+    // T-1464: drawing a bus line (map/busDraw.ts); it uses this tag, and the touch bar below
+    this.bus = new BusDraw(map, this.box, this.tag, client, overlay, { exit: () => this.exit() });
+    effect(() => { if (tool.value !== "bus") this.bus.clear(); });
     overlay.afterMapFrame.push(() => this.place());
     effect(() => { buildPlatform.value; buildLevel.value; trackCount.value; highSpeed.value; if (tool.value === "station") this.place(); else { this.freeAt = null; this.clearFree(); } });
     // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
@@ -275,6 +281,7 @@ export class Tools {
     const nearNodes = at && nodes ? nodesNear(w, at[0], at[1], SNAP_NODE_PX * at[2]) : null;
     const nearEdges = at ? edgesNear(n, at[0], at[1], SNAP_EDGE_PX * at[2]) : null;
     for (const node of nodes ? nearNodes ?? w.nodes.values() : []) {
+      if (node.bus) continue; // a bus stop is no track to build on (T-1464)
       const [lx, ly] = toLocal(node.lng, node.lat);
       const [x, y] = this.screen(lx, ly);
       const d = (x - px) ** 2 + (y - py) ** 2;
@@ -386,6 +393,7 @@ export class Tools {
     const t = tool.peek();
     if (t === "select") return;
     if (t === "delete") return this.deleteHover(e.point.x, e.point.y);
+    if (t === "bus") return this.bus.move(e);
     if (t === "line") this.stops?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
     this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
     this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat);
@@ -401,6 +409,7 @@ export class Tools {
     else if (t === "station") void this.stationClick(e);
     else if (t === "line") this.lineClick(e);
     else if (t === "delete") this.deleteClick(e);
+    else if (t === "bus") this.bus.click(e);
   }
 
   // ---------------------------------------------------------------- touch (T-1260)
@@ -411,6 +420,7 @@ export class Tools {
   tap(e: MapMouseEvent) {
     const t = tool.peek();
     if (t === "line") return this.click(e);
+    if (t === "bus") return this.bus.tap(e);
     if (this.touchAt && this.nearTouch(e.point.x, e.point.y)) return void this.touchConfirm();
     const ll = { lng: e.lngLat.lng, lat: e.lngLat.lat };
     if (t === "track") {
@@ -454,6 +464,7 @@ export class Tools {
   /** The bar's confirm, or a second tap on the point: what a click there does. */
   private async touchConfirm() {
     const t = tool.peek(), at = this.touchAt;
+    if (t === "bus") return this.bus.confirm();
     if (t === "track") {
       const from = this.start;
       if (!from || !at || this.placing) return;
@@ -484,6 +495,7 @@ export class Tools {
   /** The bar's back button: the end waiting is dropped, else the last segment is taken back
    * (Backspace), else the start goes. */
   private touchBack() {
+    if (tool.peek() === "bus") return this.bus.touchBack();
     if (tool.peek() !== "track") return this.touchStop();
     if (this.touchAt && this.start) {
       this.touchAt = null;
@@ -503,6 +515,7 @@ export class Tools {
   /** The bar's stop button: the run ends (its placed track stays) or the placement is dropped; the tool stays on. */
   private touchStop() {
     const t = tool.peek();
+    if (t === "bus") return this.exit();
     if (t === "track") return this.reset();
     this.touchAt = null;
     this.hover = null;
@@ -548,6 +561,7 @@ export class Tools {
   private touchState(): TouchCtl | null {
     if (!touchInput.peek()) return null;
     const t = tool.peek();
+    if (t === "bus") return this.bus.touchState();
     if (t === "track" && this.start) {
       const pv = this.lastPreview;
       const bad = !!pv && !pv.ok && this.previewKey === this.wantKey && !this.real.active;
@@ -570,7 +584,7 @@ export class Tools {
       touchCtl.value = ctl;
     }
     const host = this.touchHost, t = tool.peek();
-    const at = this.touchAt ?? (t === "track" && this.start ? this.start : t === "station" && this.freeAt ? toLngLatObj(this.freeAt) : null);
+    const at = t === "bus" ? this.bus.touchPoint() : this.touchAt ?? (t === "track" && this.start ? this.start : t === "station" && this.freeAt ? toLngLatObj(this.freeAt) : null);
     if (!ctl || !at) {
       host.style.display = "none";
       this.handle.style.display = "none";
@@ -608,6 +622,7 @@ export class Tools {
   key(e: KeyboardEvent): boolean {
     const t = tool.peek();
     if (t === "select") return false;
+    if (t === "bus") return this.bus.key(e);
     if (e.key === "Escape") {
       if (t === "track" && this.start) this.reset();
       else if (t === "station" && this.freeAt) {
@@ -1531,6 +1546,11 @@ export class Tools {
     // the platform ghost shows only while the station tool snaps (below)
     if (this.ghost) this.ghost.style.display = "none";
     if (this.rings) this.rings.style.display = "none";
+    if (t === "bus") {
+      this.ring.style.display = "none";
+      this.bus.place();
+      return;
+    }
     // the delete tool: a ring on the station or flyover, and what a click removes by the cursor
     if (t === "delete") {
       const d = this.delHover, what = d && describeRemovable(d);

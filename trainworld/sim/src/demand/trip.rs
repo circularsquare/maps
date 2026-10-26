@@ -487,6 +487,9 @@ impl DemandApi {
             let (x, y) = (city.x[c], city.y[c]);
             let mut w: Vec<(f32, u32, f32)> = vec![];
             for s in 0..svc.st_x.len() {
+                if svc.st_bus.get(s).copied().unwrap_or(false) {
+                    continue;
+                }
                 let (sx, sy) = (svc.st_x[s], svc.st_y[s]);
                 let straight = ((sx - x).powi(2) + (sy - y).powi(2)).sqrt();
                 if straight > cut {
@@ -499,6 +502,10 @@ impl DemandApi {
             }
             w.sort_by(|a, b| a.2.total_cmp(&b.2));
             w.truncate(K);
+            // T-1464: and the bus stops whose route passes near
+            for (s, m) in super::kernel::bus_walks(&svc.catches, x, y) {
+                w.push((p.access_cost(m), s, m));
+            }
             w
         };
         let home = self.pop()[o];

@@ -14,7 +14,8 @@ import { demandByDay, type DemandView } from "./demand";
 import { stationZone } from "./listScope";
 import { lineGeo, liveMoney, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
 import { placeAt, zonesLoaded } from "./zones";
-import { stationsById, world } from "./world";
+import { groundDist } from "./coords";
+import { stopsById, world } from "./world";
 import type { WorldView } from "./types";
 import type { MoneyState } from "../workers/protocol";
 import type { DayLedger, HourLedger } from "../workers/saveFile";
@@ -43,7 +44,7 @@ export const lineShares = computed(() => {
   const was = sharesMemo;
   if (was && was.w === w && was.m === m && was.zl === zl && was.dv === dv) return was.out;
   sharesMemo = { w, m, zl, dv, out };
-  const byId = stationsById(w);
+  const byId = stopsById(w);
   const boardingsAll = w.save.lines.reduce((a, l) => a + (dv?.lines.get(l.id)?.ridersPerDay ?? 0), 0);
   const tripsPerBoarding = dv && boardingsAll > 0 ? Math.min(1, dv.railTripsPerDay / boardingsAll) : 1;
   for (const l of w.save.lines) {
@@ -100,6 +101,23 @@ export function edgeUpkeep(e: { built: boolean; crossover?: boolean; tracks: num
   if (!e.built || e.crossover) return 0;
   return (e.lengthM / 1000) * m.upkeepTrackKm * (e.tracks === 1 ? m.upkeepSingle : e.hsr ? m.upkeepHsr : 1) * m.economy;
 }
+/** T-1464: a bus route's road km by region, each stretch between two stops half to each stop's
+ * region (the drawn stops' ground distances, scaled to the road length). */
+function busKmByRegion(w: WorldView, line: string): Map<string, number> {
+  const bus = w.lineStats[line]?.bus, out = new Map<string, number>();
+  if (!bus) return out;
+  const byId = stopsById(w), p = bus.stops;
+  const zone = (id: number) => { const s = byId.get(String(id)); return (s && stationZone(s)) ?? ""; };
+  const d: number[] = [];
+  let ground = 0;
+  for (let k = 0; k + 1 < p.length; k++) ground += d[k] = groundDist(p[k].x, p[k].y, p[k + 1].x, p[k + 1].y);
+  const scale = ground > 0 ? bus.roadM / 1000 / ground : 0;
+  for (let k = 0; k + 1 < p.length; k++) {
+    add(out, zone(p[k].id), d[k] * scale / 2);
+    add(out, zone(p[k + 1].id), d[k] * scale / 2);
+  }
+  return out;
+}
 /** T-867: a constructed station's upkeep a game day, US$. */
 export const stationUpkeep = (m: Pick<MoneyState, "upkeepStation" | "economy">) => m.upkeepStation * m.economy;
 
@@ -130,6 +148,10 @@ export const upkeepShares = computed<Shares>(() => {
     if (a && b) add(out, midZone(e.id, (a.lng + b.lng) / 2, (a.lat + b.lat) / 2, zl), u);
   }
   for (const s of w.save.stations) if (s.built) add(out, stationZone(s) ?? "", stationUpkeep(m));
+  for (const l of w.save.lines) {
+    if (!w.lineStats[l.id]?.bus?.built) continue;
+    for (const [z, km] of busKmByRegion(w, l.id)) add(out, z, km * (m.upkeepBusKm ?? 0) * m.economy);
+  }
   const next = norm(out);
   if (!sameShares(next, lastUpkeep)) lastUpkeep = next;
   return lastUpkeep;
@@ -145,6 +167,11 @@ export function chargeShares(before: WorldView | null, after: WorldView, line?: 
     const a = after.nodes.get(e.a), b = after.nodes.get(e.b);
     if (!a || !b) continue;
     add(cost, placeAt((a.lng + b.lng) / 2, (a.lat + b.lat) / 2) ?? "", e.cost);
+  }
+  const perKm = (moneyState.peek()?.busRouteKm ?? 0) * 1e6;
+  for (const l of after.save.lines) {
+    if (!after.lineStats[l.id]?.bus?.built || before?.lineStats[l.id]?.bus?.built) continue;
+    for (const [z, km] of busKmByRegion(after, l.id)) add(cost, z, km * perKm);
   }
   if (!cost.size) {
     const built = new Set(before?.save.stations.filter((s) => s.built).map((s) => s.id) ?? []);

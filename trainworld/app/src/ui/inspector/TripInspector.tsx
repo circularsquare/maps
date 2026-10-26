@@ -158,8 +158,9 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
       {legRows(r, name, ln, (l) => {
         // T-842: riders arriving when no train is due for hours weigh on the wait as felt
         const span = l.waitPerceived - l.waitMin, full = l.fullWaitMin;
-        return `Wait ${(l.waitMin - full).toFixed(1)} min (half the time between the useful trains)${full >= 0.05 ? ` and ${full.toFixed(1)} min more for a train with room` : ""}, then ${l.min.toFixed(1)} min on the train over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}` +
-          (span >= 0.05 ? `. Some riders arrive when no train is due for hours, so the wait counts as ${span.toFixed(1)} min more` : "");
+        const v = w.lineStats[l.line]?.bus ? "bus" : "train";
+        return `Wait ${(l.waitMin - full).toFixed(1)} min (half the time between the useful ${v}s)${full >= 0.05 ? ` and ${full.toFixed(1)} min more for a ${v} with room` : ""}, then ${l.min.toFixed(1)} min on the ${v} over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}` +
+          (span >= 0.05 ? `. Some riders arrive when no ${v} is due for hours, so the wait counts as ${span.toFixed(1)} min more` : "");
       })}
       {pair && last && (
         <li data-tip={`Walk ${distance(pair.egressM)} in a straight line, ${pair.egressMin.toFixed(1)} min at ${WALK_KMH} km/h`}>

@@ -266,8 +266,13 @@ city it starts in) and 1 a passenger-km; not a running total, and they unlock no
 T-694]. A city whose train share reaches 10% earns a star in the Cities list,
 kept once earned [T-685].
 
+Bus lines (T-1464) need no track: the player clicks a route, stops place themselves at the train
+stations it passes and about every 2 km, buses run a flat 18 km/h, and homes within 400 m of the
+route ride from it; US$1M a road-km and US$0.6M a bus. Trips by bus count as rail.
+
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2
-capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boarding account).
+capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boarding account, 6.7
+bus lines).
 
 ## 7. Technology
 

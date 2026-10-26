@@ -5,6 +5,7 @@ import { plural } from "../game/format";
 import { ask, lineDraft, selection, tool, type Tool } from "../game/ui";
 import { linesByNum, notice, world } from "../game/world";
 import { live } from "../map/live";
+import { busDraft } from "../map/busDraw";
 import { touchInput } from "../map/touch";
 import { useModalDialog } from "./Modal";
 import { Chip } from "./widgets";
@@ -18,6 +19,7 @@ const HINT: Record<Tool, string> = {
   delete: "",
   trip: "Click where a trip starts, or a station.",
   blueprint: "",
+  bus: "",
 };
 
 /** Native modal keeps map input blocked and traps/restores focus; Escape answers no. */
@@ -78,11 +80,20 @@ function Notice() {
   // T-1260: a finger taps, and has no Enter key
   const hint = touchInput.value ? raw.replace(" Press Enter when done.", "").replace(/\b([Cc])lick\b/, (_, c) => (c === "C" ? "Tap" : "tap")) : raw;
   const show = n && performance.now() - n.at < NOTICE_MS;
-  if (!show && !hint) return null;
+  // T-1464: the bus line tool: which line, how many points, and the way to finish (also on touch)
+  const bus = t === "bus" ? busDraft.value : null;
+  const busLine = bus && bus.line !== null && world.value ? linesByNum(world.value).get(bus.line) : undefined;
+  if (!show && !hint && !bus) return null;
   // stop editing (T-233): which line, how many stops, and the way out
   const editing = t === "line" && draft.line !== null && world.value ? linesByNum(world.value).get(draft.line) : undefined;
   return (
     <div id="tool-notes">
+      {bus && (
+        <p class="stop-edit-head">
+          <span>{busLine ? `Route of ${busLine.name}` : "New bus line"}: {plural(bus.points, "point")}</span>
+          <button class="btn text" disabled={bus.points < 2} onClick={() => void live.tools?.bus.finish()}>Done</button>
+        </p>
+      )}
       {editing && (
         <p class="stop-edit-head">
           <span>Editing stops on {editing.name}: {plural(editing.stops.length, "stop")}</span>

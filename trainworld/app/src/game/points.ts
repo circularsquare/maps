@@ -16,7 +16,7 @@ import { demandByDay, type DayDemand } from "./demand";
 import { sig3 } from "./format";
 import { lineGeo, moneyState, moneyWorld } from "./money";
 import { PERIODS } from "./periods";
-import { stationsById } from "./world";
+import { stopsById } from "./world";
 import { zonesLoaded } from "./zones";
 import type { WorldView } from "./types";
 
@@ -63,7 +63,7 @@ function dayPoints(w: WorldView, d: DayDemand): Map<number, Map<string, number[]
   const out = new Map<number, Map<string, number[]>>();
   const dv = d.view;
   if (!dv) return out;
-  const byId = stationsById(w);
+  const byId = stopsById(w);
   const running = w.save.lines.filter((l) => w.lineStats[l.id]?.status === "running" && l.stops.length >= 2 && dv.lines.has(l.id));
   // boardings a day at each region's stations, to spread its trips over
   const board = new Map<string, number>();

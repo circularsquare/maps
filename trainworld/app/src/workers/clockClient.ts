@@ -171,6 +171,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       reversals: l.reversals ?? [],
       endTurns: l.endTurns ?? [],
       loop: l.loopKind === 1 ? "circle" : l.loopKind === 2 ? "balloon" : null,
+      ...(l.bus ? { bus: l.bus } : {}),
     };
   }
   const edges: TrackEdge[] = s.edges.map((e) => ({
@@ -178,7 +179,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
     levelMin: e.levelMin as any, levelMax: e.levelMax as any, lines: edgeLines.get(e.id) ?? [],
   }));
   const nodes = new Map<number, TrackNode>(
-    s.nodes.map((n) => [n.id, { id: n.id, x: n.x, y: n.y, lng: n.lng, lat: n.lat, level: n.level as any, ports: n.ports, builtPorts: n.builtPorts, flying: n.flying, platform: n.platform }]),
+    s.nodes.map((n) => [n.id, { id: n.id, x: n.x, y: n.y, lng: n.lng, lat: n.lat, level: n.level as any, ports: n.ports, builtPorts: n.builtPorts, flying: n.flying, platform: n.platform, ...(n.bus ? { bus: true as const } : {}) }]),
   );
   return {
     version: s.version,

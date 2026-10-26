@@ -47,6 +47,20 @@ pub struct Network {
     /// Station pairs joined by a passage (T-1281), smaller first, sorted: a change between them
     /// walks the straight line at `PASSAGE_MPS` (`build_graph`). Empty: none.
     pub st_passage: Vec<[u32; 2]>,
+    /// Bus corridors (T-1464): per bus stop that is no train station, the stretch of its route whose
+    /// homes walk to the route and ride from it (`Catch`). Empty: no buses.
+    pub catches: Vec<Catch>,
+    /// Per station, whether it is a bus stop only (reached through `catches`, never by a plain walk).
+    /// Empty: none is.
+    pub st_bus: Vec<bool>,
+}
+
+/// A bus stop's stretch of route (T-1464): its demand station and the stretch as points in the
+/// network's frame.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Catch {
+    pub st: u32,
+    pub pts: Vec<[f32; 2]>,
 }
 
 impl Network {
@@ -54,6 +68,11 @@ impl Network {
     #[inline]
     pub fn ups(&self, s: usize) -> u8 {
         self.st_ups.get(s).copied().unwrap_or(0)
+    }
+    /// Whether station `s` is a bus stop only (T-1464).
+    #[inline]
+    pub fn bus_only(&self, s: usize) -> bool {
+        self.st_bus.get(s).copied().unwrap_or(false)
     }
 }
 
@@ -161,6 +180,8 @@ pub fn synth_network() -> Network {
         span: vec![],
         st_ups: vec![],
         st_passage: vec![],
+        catches: vec![],
+        st_bus: vec![],
     };
     for &(name, kind, pts) in LINES {
         let mut stops: Vec<u32> = vec![];

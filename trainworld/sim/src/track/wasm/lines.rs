@@ -11,7 +11,7 @@ impl TrackApi {
         let Some((stops, path)) = edited_stops(&self.w.net, stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
@@ -46,6 +46,10 @@ impl TrackApi {
     pub fn copy_line(&mut self, source: u32, id: u32, name: String) -> u32 {
         let Some(mut d) = self.w.net.line_data(source) else { return self.refuse(Issue::NoSuchLine { line: source }) };
         d.name = name;
+        // a bus line's copy is a planned route, paid for on Construct (T-1464)
+        if let Some(r) = d.bus.as_mut() {
+            r.built = false;
+        }
         d.trains = Some([0; 3]);
         d.tph = [0.0; 3];
         if d.auto.is_some() {
@@ -160,7 +164,11 @@ impl TrackApi {
         let run = &ls.runs[0];
         run.ends.iter().map(|x| run.nodes[x.0 as usize] as f64).collect()
     }
+    /// Remove a line. A constructed bus route goes for good, like constructed track (T-1464).
     pub fn remove_line(&mut self, id: u32) -> u32 {
+        if self.w.net.line_bus.get(id as usize).and_then(|b| b.as_ref()).is_some_and(|r| r.built) {
+            return self.run_charged(Op::Line { id, data: None });
+        }
         self.run(Op::Line { id, data: None })
     }
 

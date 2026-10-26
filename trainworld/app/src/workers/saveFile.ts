@@ -71,6 +71,8 @@ export interface SaveHeader {
   fleet: number;
   /** high-speed cars owned (T-817; absent in older saves) */
   fleetFast?: number;
+  /** T-1464: buses owned; absent for none */
+  fleetBus?: number;
   /** fare curve (game/fareCurve.ts): its first stretch as a base and rate, and its nodes (none in a save from before T-883) */
   fares: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; baseline?: string };
   /** recent days, oldest first (today last) */

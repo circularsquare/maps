@@ -6,6 +6,7 @@
 //! `set_line`, `set_tph`), which record what they touched; `derive` then rebuilds just those
 //! parts. `world.rs` builds undoable operations on top.
 
+pub use super::bus::BusRoute;
 use super::cost::{self, NoWater, Terrain, WaterMask};
 use super::cross::{self, Grid};
 use super::frame::{Frame, FrameKind};
@@ -183,6 +184,8 @@ pub struct LineData {
     pub cars: u8,
     /// High-speed trains (T-817): top speed 320 km/h on high-speed track, dearer cars and running.
     pub fast: bool,
+    /// A bus line (T-1464): its route; its stops and path stay empty (`bus::plan` places the stops).
+    pub bus: Option<BusRoute>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -354,6 +357,8 @@ pub struct Network {
     pub line_turn: Vec<f32>,
     pub line_cars: Vec<u8>,
     pub line_fast: Vec<bool>,
+    /// Per line: its bus route (T-1464), None for a rail line.
+    pub line_bus: Vec<Option<BusRoute>>,
     /// Derived: the path uses a deleted edge or no longer fits the stops.
     pub line_broken: Vec<bool>,
     line_free: Vec<u32>,
@@ -485,8 +490,18 @@ impl Network {
         if !self.time_zones.set || !self.line_ok(l) {
             return 0.0;
         }
+        if let Some(r) = self.line_bus[l as usize].as_ref() {
+            return r.points.first().map_or(0.0, |p| self.line_shift_at(p[0], p[1]));
+        }
         let Some(&s) = self.line_stops(l).first() else { return 0.0 };
-        let (lon, lat) = self.frame.to_lonlat(self.node_x[s as usize], self.node_y[s as usize]);
+        self.line_shift_at(self.node_x[s as usize], self.node_y[s as usize])
+    }
+    /// Seconds local time runs ahead of the game clock at a plane point (T-309).
+    pub fn line_shift_at(&self, x: f64, y: f64) -> f64 {
+        if !self.time_zones.set {
+            return 0.0;
+        }
+        let (lon, lat) = self.frame.to_lonlat(x, y);
         self.time_zones.shift_at(lon, lat)
     }
 
@@ -578,6 +593,7 @@ impl Network {
             line_turn: vec![],
             line_cars: vec![],
             line_fast: vec![],
+            line_bus: vec![],
             line_broken: vec![],
             line_free: vec![],
             stops: Pool::default(),
@@ -722,6 +738,7 @@ impl Network {
         self.line_turn.push(DEFAULT_TURNAROUND_S);
         self.line_cars.push(0);
         self.line_fast.push(false);
+        self.line_bus.push(None);
         self.line_broken.push(false);
     }
     fn claim_node(&mut self, id: u32) {
@@ -789,8 +806,31 @@ impl Network {
                 turnaround_s: self.line_turn[i],
                 cars: self.line_cars[i],
                 fast: self.line_fast[i],
+                bus: self.line_bus[i].clone(),
             }
         })
+    }
+    /// A live bus line (T-1464).
+    pub fn is_bus(&self, l: u32) -> bool {
+        self.line_ok(l) && self.line_bus[l as usize].is_some()
+    }
+    /// The live bus lines.
+    pub fn bus_lines(&self) -> Vec<u32> {
+        (0..self.line_count() as u32).filter(|&l| self.is_bus(l)).collect()
+    }
+    /// A bus route's road length, m (`bus::ROAD_FACTOR` times the drawn ground length).
+    pub fn bus_road_m(&self, l: u32) -> f64 {
+        match self.line_bus.get(l as usize).and_then(|b| b.as_ref()) {
+            Some(r) if self.line_ok(l) => super::bus::Poly::new(self, &r.points).len() * super::bus::ROAD_FACTOR,
+            _ => 0.0,
+        }
+    }
+    /// Build cost of every bus route, US$M: all of them, or the constructed ones.
+    fn bus_cost(&self, built: bool) -> f64 {
+        (0..self.line_count() as u32)
+            .filter(|&l| self.line_bus.get(l as usize).and_then(|b| b.as_ref()).is_some_and(|r| self.line_ok(l) && (!built || r.built)))
+            .map(|l| self.bus_road_m(l) / 1000.0 * BUS_ROUTE_COST_PER_KM)
+            .sum()
     }
     pub fn edge_pieces(&self, e: u32) -> &[Piece] {
         self.pieces.get(self.edge_pieces[e as usize])
@@ -1037,6 +1077,7 @@ impl Network {
                 self.line_turn[i] = d.turnaround_s;
                 self.line_cars[i] = d.cars;
                 self.line_fast[i] = d.fast;
+                self.line_bus[i] = d.bus;
             }
             None => {
                 if old.is_none() {
@@ -1044,6 +1085,7 @@ impl Network {
                 }
                 let i = id as usize;
                 self.line_alive[i] = false;
+                self.line_bus[i] = None;
                 self.stops.free(self.line_stops[i]);
                 self.paths.free(self.line_path[i]);
                 self.line_stops[i] = Span::default();
@@ -1550,6 +1592,9 @@ impl Network {
 
     /// The node sequence of a line's path, or the first problem with it.
     pub fn check_line(&self, l: u32) -> Result<Vec<u32>, Issue> {
+        if let Some(r) = self.line_bus.get(l as usize).and_then(|b| b.as_ref()) {
+            return if super::bus::route_ok(self, &r.points) { Ok(vec![]) } else { Err(Issue::LinePath { line: l }) };
+        }
         let path = self.line_path(l);
         let stops = self.line_stops(l);
         if stops.len() < 2 && path.is_empty() {
@@ -1708,6 +1753,13 @@ impl Network {
                 add(9, 0, 0, false, false, 1.0, price);
             }
         }
+        // bus routes still to be constructed (T-1464): road metres
+        for l in self.bus_lines() {
+            if self.line_bus[l as usize].as_ref().is_some_and(|r| !r.built) {
+                let m = self.bus_road_m(l);
+                add(10, 0, 0, false, false, m, m / 1000.0 * BUS_ROUTE_COST_PER_KM);
+            }
+        }
         rows.into_iter().flat_map(|((kind, level, tracks, wet, ramp), (qty, cost))|
             [kind as f64, level as f64, tracks as f64, wet as u8 as f64, ramp as u8 as f64, qty, cost]).collect()
     }
@@ -1740,7 +1792,7 @@ impl Network {
                 }
             }
         }
-        c + self.passages_cost(false)
+        c + self.passages_cost(false) + self.bus_cost(false)
     }
 
     /// Build cost of what is constructed, US$M (SPEC 6.4): constructed edges and stations, a
@@ -1774,7 +1826,7 @@ impl Network {
                 }
             }
         }
-        c + self.passages_cost(true)
+        c + self.passages_cost(true) + self.bus_cost(true)
     }
 
     /// Ground metres between two nodes in a straight line: a passage's length (T-1281).
@@ -1810,6 +1862,9 @@ impl Network {
 
     /// The constructed station or edge set is complete for a line: it can carry trains.
     pub fn line_constructed(&self, l: u32) -> bool {
+        if let Some(r) = self.line_bus.get(l as usize).and_then(|b| b.as_ref()) {
+            return r.built;
+        }
         self.line_path(l).iter().all(|&p| self.edge_ok(path_edge(p)) && self.edge_built[path_edge(p) as usize])
             && self.line_stops(l).iter().all(|&s| self.node_ok(s) && self.node_built[s as usize])
     }

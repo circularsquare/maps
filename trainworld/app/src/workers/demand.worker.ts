@@ -1191,6 +1191,10 @@ async function run() {
             // T-377: the market takes stations as longitude and latitude, each zone in its own frame
             const ll = new Float64Array(m.stXY.length);
             for (let k = 0; k < ll.length; k += 2) [ll[k], ll[k + 1]] = worldToLonLat(m.stXY[k], m.stXY[k + 1]);
+            // T-1464: the bus corridors' stretches, as the stations
+            const cxy = m.catchXY ?? new Float32Array(0), cll = new Float64Array(cxy.length);
+            for (let k = 0; k < cll.length; k += 2) [cll[k], cll[k + 1]] = worldToLonLat(cxy[k], cxy[k + 1]);
+            p.set_bus_ll(m.catchN ?? new Uint32Array(0), cll);
             setupMs += p.set_network_ll(ll, m.lineN, m.stops, m.times, m.tph, m.cars);
           } else {
             if (p instanceof DemandApi) p.set_chunked(!job.exactMarket);
@@ -1203,6 +1207,12 @@ async function run() {
               const w = worldToCity(xy[k], xy[k + 1], city);
               xy[k] = w.x; xy[k + 1] = w.y;
             }
+            const cxy = m.catchXY ? m.catchXY.slice() : new Float32Array(0);
+            for (let k = 0; k < cxy.length; k += 2) {
+              const w = worldToCity(cxy[k], cxy[k + 1], city);
+              cxy[k] = w.x; cxy[k + 1] = w.y;
+            }
+            p.set_bus(m.catchN ?? new Uint32Array(0), cxy);
             setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);
           }
           p.set_fares(m.fare.base * scale, m.fare.perKm * scale, m.hopKm);

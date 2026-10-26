@@ -1548,6 +1548,10 @@ impl EverydayApi {
     pub fn set_span(&mut self, span: &[f32]) {
         self.engine.set_span(span);
     }
+    /// `DemandApi::set_bus` (T-1464).
+    pub fn set_bus(&mut self, catch_n: &[u32], catch_xy: &[f32]) {
+        self.engine.set_bus(catch_n, catch_xy);
+    }
     pub fn set_network(
         &mut self,
         xy: &[f32],

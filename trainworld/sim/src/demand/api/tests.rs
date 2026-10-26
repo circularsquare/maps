@@ -4,7 +4,7 @@ use crate::demand::{kernel, pack, synth};
 
 /// A small pack (the synthetic city's inner 12 km, gravity solved and shipped) and two
 /// crossing lines.
-fn small() -> (DemandApi, Vec<f32>, Vec<u32>, Vec<u32>, Vec<f32>, Vec<f32>, Vec<f32>) {
+pub(super) fn small() -> (DemandApi, Vec<f32>, Vec<u32>, Vec<u32>, Vec<f32>, Vec<f32>, Vec<f32>) {
     let mut city = synth::synth_city(1).inner(12_000.0);
     let p = Params::default();
     let z = kernel::build_zones(&city, p.zone_m);

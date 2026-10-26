@@ -270,6 +270,9 @@ body.resizing, body.resizing * { user-select: none; }
 .chip:has(> svg), .chip.sm:has(> svg), .chip.lg:has(> svg) { background: none; padding: 0; }
 .chip > svg { display: block; overflow: visible; stroke: none; }
 .chip > svg rect { fill: var(--c); }
+/* T-1464: a bus line's bullet is a rounded square */
+.chip.bus { border-radius: 4px; }
+.chip.lg.bus { border-radius: 7px; }
 .chip > svg text { fill: currentColor; }
 .chip.link { cursor: pointer; }
 .place-link { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
@@ -460,6 +463,16 @@ rect.now { fill-opacity: .45; }
 .stops li.passed::after { display: none; }
 .stops li.adding { color: var(--muted); }
 .stops li.adding::after { opacity: 0.45; }
+/* T-1464: a bus line's stops: a square at each end, a ring at a station, small rings for the street stops */
+.bus-stops { list-style: none; margin: 0; padding: 0; }
+.bus-stops li { display: flex; align-items: center; gap: 8px; min-height: 25px; }
+.bus-stops li.street { min-height: 22px; font-size: 12px; }
+.bus-stops .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bus-stops .n { width: 40px; text-align: right; flex: none; }
+.bus-stops .bs-mk { flex: none; box-sizing: border-box; width: 12px; height: 12px; margin: 0; border: 2px solid var(--net-ink); border-radius: 50%; background: #fff; }
+.bus-stops .bs-mk.end { border: 2px solid var(--c); border-radius: 2px; }
+.bus-stops li.street .bs-mk { width: 7px; height: 7px; margin: 0 2.5px; border-width: 1.5px; border-color: var(--c); }
+.bus-stops .stop-more { flex: none; width: 10px; font-size: 12px; text-align: center; color: var(--muted); }
 /* T-1293: the schedule's copy and paste, small and muted beside the heading */
 .h .sched-copy { display: inline-flex; align-self: center; margin-left: 6px; font-weight: 400; }
 .sched-copy .btn { color: var(--muted); }

@@ -153,7 +153,7 @@ interface Service {
   /** `complex`: the station's complex (T-161); absent = a complex of its own */
   stations: { id: string; x: number; y: number; complex?: number; upgrades?: number }[];
   /** `wrapS`: a circle's stand at its first stop, riding on round (T-798) */
-  lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[] }[];
+  lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[]; catches?: number[][] }[];
   /** station pairs joined by a passage (T-1281) */
   passages?: [string, string][];
 }
@@ -427,7 +427,7 @@ function serviceFromSnapshot(s: NetworkSnapshot): Service {
     frame: s.frame ?? LEGACY_FRAME,
     fare: s.fare ?? { base: 2, perKm: 0 }, // legacy fixed 6 perceived minutes
     stations: s.stations.map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex, ...(st.upgrades ? { upgrades: st.upgrades } : {}) })),
-    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span && !perfOff("span") ? { span: l.span } : {}) })),
+    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span && !perfOff("span") ? { span: l.span } : {}), ...(l.catches ? { catches: l.catches } : {}) })),
     ...(s.passages?.length ? { passages: s.passages.map(([a, b]) => [String(a), String(b)] as [string, string]) } : {}),
   };
 }
@@ -480,6 +480,20 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
       for (let q = 0; q < PERIODS.length; q++) for (let r = 0; r < 2 * n; r++) span[q * 2 * nStops + 2 * a + r] = l.span[q * 2 * n + r];
     }
     a += n;
+  }
+  // T-1464: each stop's stretch of bus route, parallel to the stops
+  if (lines.some((l) => l.catches)) {
+    const pts: number[] = [];
+    net.catchN = new Uint32Array(nStops);
+    let k = 0;
+    for (const l of lines) {
+      for (let j = 0; j < l.stops.length; j++, k++) {
+        const c = l.catches?.[j] ?? [];
+        net.catchN[k] = c.length / 2;
+        for (const v of c) pts.push(v);
+      }
+    }
+    net.catchXY = new Float32Array(pts);
   }
   return { net, layout };
 }

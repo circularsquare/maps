@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import type { Level } from "../game/types";
-import { distance, levelLabel, levelName, money, moneyExact, plural, upkeepText } from "../game/format";
+import { busesText, distance, levelLabel, levelName, money, moneyExact, plural, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeep } from "../game/regionMoney";
 import { clearBpPicked, enableAll, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
 import { liveMoney, moneyState } from "../game/money";
@@ -13,13 +13,16 @@ import { redo, undo } from "../game/fareUndo";
 import { Icon, LevelButtons } from "./widgets";
 import { TERRAIN_FACTORS, TERRAIN_NAMES } from "../game/terrain";
 
-// 6 T-1270's terrain, 7 left for another row, 8 and 9 T-1281's
-const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "Trains", "Terrain", "", "Station upgrades", "Passages"];
+// 6 T-1270's terrain, 7 left for another row, 8 and 9 T-1281's, 10 and 11 T-1464's bus routes and buses
+const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "Trains", "Terrain", "", "Station upgrades", "Passages", "Bus routes", "Buses"];
 /** a quote row's track count for high-speed track (sim `HSR_ROW`, T-817) */
 const HSR_ROW = 3;
 
 function description(r: BlueprintItem) {
   if (r.kind === 5) return `${r.quantity} new ${r.quantity === 1 ? "car" : "cars"}, after spare cars`;
+  // T-1464: a bus route's quantity is its road metres, buses' the buses bought
+  if (r.kind === 10) return `${distance(r.quantity)} of road`;
+  if (r.kind === 11) return `${busesText(r.quantity)}, after spare buses`;
   // T-1270: what the ground adds to track, its class in the level field
   if (r.kind === 6) return `${distance(r.quantity)} of track, ${TERRAIN_FACTORS[r.level as number] ?? 1}x the price`;
   const quantity = r.kind === 0 ? distance(r.quantity) : plural(r.quantity, r.kind === 1 ? "station" : r.kind === 8 ? "upgrade" : r.kind === 9 ? "passage" : "item");
@@ -37,6 +40,7 @@ export function BlueprintControls() {
   if (w && m && total > 0) {
     for (const e of w.edges) if (!e.built && !e.off) upkeep += edgeUpkeep({ ...e, built: true }, m);
     for (const s of w.save.stations) if (!s.built && !s.off) upkeep += stationUpkeep(m);
+    for (const st of Object.values(w.lineStats)) if (st.bus && !st.bus.built) upkeep += (st.bus.roadM / 1000) * m.upkeepBusKm * m.economy;
   }
   return (
     <div class="blueprint-controls">
@@ -68,7 +72,7 @@ const pieces = (e: number, st: number) => [e ? `${e} track` : "", st ? plural(st
 function OffCost() {
   const w = world.value, off = offTotals.value;
   if (!w || !(off.edges + off.stations)) return null;
-  const on = w.money.blueprintItems.reduce((sum, r) => sum + (r.kind === 5 ? 0 : r.cost), 0);
+  const on = w.money.blueprintItems.reduce((sum, r) => sum + (r.kind === 5 || r.kind === 11 ? 0 : r.cost), 0);
   const cost = w.money.blueprintCost - on;
   if (!(cost >= 0.5e6)) return null;
   return <span class="small muted num off-cost" onDblClick={() => void enableAll()} data-tip={`Disabled blueprint: ${pieces(off.edges, off.stations)}, ${moneyExact(cost)}, left out of the total\nDouble click to enable them all`}>{money(cost)} disabled</span>;
@@ -145,7 +149,7 @@ export function BlueprintBreakdown() {
                   {rows.map((r) => (
                     <li>
                       <span class="what">
-                        <span>{r.kind === 5 ? "New cars" : r.kind === 6 ? TERRAIN_NAMES[r.level as number] ?? "Rough ground" : r.kind === 9 ? "Between stations" : `${levelName(r.level)} (${levelLabel(r.level)})`}</span>
+                        <span>{r.kind === 5 ? "New cars" : r.kind === 10 ? "Route" : r.kind === 11 ? "New buses" : r.kind === 6 ? TERRAIN_NAMES[r.level as number] ?? "Rough ground" : r.kind === 9 ? "Between stations" : `${levelName(r.level)} (${levelLabel(r.level)})`}</span>
                         <span class="small muted">{description(r)}</span>
                       </span>
                       <span class="val" data-tip={moneyExact(r.cost)}>{money(r.cost)}</span>

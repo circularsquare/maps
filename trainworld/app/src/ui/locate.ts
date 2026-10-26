@@ -7,7 +7,7 @@ import { activeCity, CITIES, viewedZone } from "../game/cities";
 import { fitView } from "../game/loading";
 import { openedZones } from "../game/openedZones";
 import { display } from "../game/ui";
-import { world } from "../game/world";
+import { stopsById, world } from "../game/world";
 import { zoneAt } from "../game/zones";
 import { live } from "../map/live";
 import { STATION_BOX_ZOOM } from "../map/stationGeometry";
@@ -72,7 +72,8 @@ function fitOpened() {
 /** The map fitted to a line's stops. */
 export function locateLine(stopIds: readonly string[]) {
   const map = live.map;
-  const stops = (world.peek()?.save.stations ?? []).filter((s) => stopIds.includes(s.id));
+  const w = world.peek(), at = w ? stopsById(w) : null;
+  const stops = stopIds.flatMap((id) => at?.get(id) ?? []);
   if (!map || !stops.length) return;
   if (stops.length === 1) return locateStation(stops[0].lng, stops[0].lat);
   const lng = stops.map((s) => s.lng), lat = stops.map((s) => s.lat);

@@ -9,7 +9,8 @@ import type { EditOp } from "../workers/protocol";
 import type { EditAnswer } from "../workers/clockClient";
 import { describeIssues } from "./issues";
 import { tidyNodes, type FareNode } from "./fareCurve";
-import type { Demand, LineId, LineInput, Save, WorldView } from "./types";
+import { groundDist } from "./coords";
+import type { Demand, LineId, LineInput, Save, StationInput, WorldView } from "./types";
 import { DEMAND_INDEX } from "./types";
 
 export const world = signal<WorldView | null>(null);
@@ -242,7 +243,39 @@ function lookup<T>(w: WorldView, key: string, build: (s: Save) => T): T {
   return m.get(key) as T;
 }
 export const stationsById = (w: WorldView) => lookup(w, "stations", (s) => new Map(s.stations.map((x) => [x.id, x])));
-export const stationNames = (w: WorldView) => lookup(w, "names", (s) => new Map(s.stations.map((x) => [x.id, x.name])));
+const stopMemo = new WeakMap<WorldView, { byId: Map<string, StationInput>; names: Map<string, string>; bus: Map<string, StationInput> }>();
+/** T-1464: the stations and a bus line's other stops (no station, no name of their own) by id: a stop's
+ * place for the figures, its words for the panels. A bus stop is named for the station within 1 km
+ * (the nearest), else "Bus stop". `stationsById` stays stations only. */
+function stopsOf(w: WorldView) {
+  let m = stopMemo.get(w);
+  if (m) return m;
+  const byId = new Map<string, StationInput>(w.save.stations.map((x) => [x.id, x]));
+  const names = new Map<string, string>(w.save.stations.map((x) => [x.id, x.name]));
+  const bus = new Map<string, StationInput>();
+  for (const st of Object.values(w.lineStats)) {
+    for (const p of st.bus?.stops ?? []) {
+      const id = String(p.id);
+      if (p.station >= 0 || byId.has(id)) continue;
+      const stop: StationInput = { id, num: p.id, name: "", lng: p.lng, lat: p.lat, x: p.x, y: p.y, level: 0, length: 0, built: st.bus!.built, heading: 0 };
+      byId.set(id, stop);
+      bus.set(id, stop);
+      let near = "", best = 1000;
+      for (const s of w.save.stations) {
+        const d = groundDist(s.x, s.y, p.x, p.y);
+        if (s.name && d < best) { best = d; near = s.name; }
+      }
+      names.set(id, near ? `Bus stop near ${near}` : "Bus stop");
+    }
+  }
+  stopMemo.set(w, (m = { byId, names, bus }));
+  return m;
+}
+export const stopsById = (w: WorldView) => stopsOf(w).byId;
+/** Only the bus stops that are no station. */
+export const busStopsById = (w: WorldView) => stopsOf(w).bus;
+/** Every stop's name by id, a bus stop's included. */
+export const stationNames = (w: WorldView) => stopsOf(w).names;
 export const stationsByNum = (w: WorldView) => lookup(w, "stationNums", (s) => new Map(s.stations.map((x) => [x.num, x])));
 export const linesById = (w: WorldView) => lookup(w, "lines", (s) => new Map(s.lines.map((l) => [l.id, l])));
 export const linesByNum = (w: WorldView) => lookup(w, "lineNums", (s) => new Map(s.lines.map((l) => [l.num, l])));

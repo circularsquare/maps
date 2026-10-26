@@ -747,10 +747,14 @@ void main() {
   // the selected train is drawn last, over the others, with its halo under it (T-242)
   bool chosen = u_sel_trip.x >= 0.0 && abs(a_trip.x - u_sel_trip.x) < 0.5 && abs(a_trip.y - u_sel_trip.y) < 0.01;
   if ((u_pass == 0) == chosen || !trainDist(L, d, line)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  float cars = max(1.0, texelFetch(u_cars, tc(line, ${LINES_W}), 0).x);
+  float rawCars = texelFetch(u_cars, tc(line, ${LINES_W}), 0).x;
+  // a bus (T-1464): one car under a full car's length, which is its value here; narrower than a train
+  bool bus = rawCars < 0.99;
+  float cars = max(1.0, rawCars);
+  float carM = bus ? rawCars * 20.0 : 20.0;
   int car = u_detail ? gl_VertexID / 6 : 0;
   if (float(car) >= cars) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  float totalM = min(cars * 20.0, L.z);
+  float totalM = min(cars * carM, L.z);
   float pitchM = totalM / cars;
   float centre = clamp(d, totalM * 0.5, max(totalM * 0.5, L.z - totalM * 0.5));
   float offsetM = u_detail ? (float(car) + 0.5) * pitchM - totalM * 0.5 : 0.0;
@@ -759,7 +763,7 @@ void main() {
   // local units per metre of ground where the train is (T-307: mercator's scale, 1 / cos(lat))
   float kM = cosh(u_psi0 - p.y * ${PSI_PER_UNIT.toExponential(9)});
   // Both representations share the same width: splitting into cars must not shrink the train.
-  vec2 px = max(u_min_px, vec2(cars * 20.0, 3.0) * kM * u_px_per_unit);
+  vec2 px = max(bus ? u_min_px * 0.55 : u_min_px, vec2(cars * carM, bus ? 2.5 : 3.0) * kM * u_px_per_unit);
   if (u_detail) px.x = max(2.0 * u_dpr, pitchM * kM * u_px_per_unit - max(1.5 * u_dpr, kM * u_px_per_unit));
   // on its own track as double track parts (T-658): narrowing to its true 3 m, so two trains
   // passing never touch, and keeping right of its direction of travel (T-319)

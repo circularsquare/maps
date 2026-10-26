@@ -32,6 +32,17 @@ impl TrackApi {
     pub fn set_fleet_fast(&mut self, cars: u32) {
         self.fleet[1] = cars;
     }
+    /// Buses owned (T-1464).
+    pub fn fleet_bus(&self) -> u32 {
+        self.fleet[2]
+    }
+    pub fn set_fleet_bus(&mut self, buses: u32) {
+        self.fleet[2] = buses;
+    }
+    /// Buses the running bus lines need now (T-1464).
+    pub fn buses_needed(&self) -> u32 {
+        cars_needed(&self.w)[2]
+    }
     /// Ordinary cars the running lines need now.
     pub fn cars_needed(&self) -> u32 {
         cars_needed(&self.w)[0]
@@ -49,6 +60,9 @@ impl TrackApi {
         vec![
             CAR_PRICE, RUN_COST_CAR_KM, ECONOMY, RUN_COST_TRAIN_KM, HS_CAR_PRICE, HS_RUN_COST_CAR_KM, HS_RUN_COST_TRAIN_KM,
             UPKEEP_TRACK_KM, UPKEEP_STATION, crate::track::cost::track_factor(1, false), crate::track::cost::track_factor(2, true),
+            // T-1464: a bus's price US$M, running cost per bus-km and a route's upkeep a day per
+            // road-km US$, a route's price per road-km US$M
+            BUS_PRICE, RUN_COST_BUS_KM, UPKEEP_BUS_KM, BUS_ROUTE_COST_PER_KM,
         ]
     }
     /// Running cost of the running lines per hour at a demand level, US$M: trains an hour in each
@@ -59,21 +73,22 @@ impl TrackApi {
     /// `running_cost` of the lines on one local time (`running_shifts`, T-309); NaN: every line.
     pub fn running_cost_in(&self, level: usize, shift: f64) -> f64 {
         let n = &self.w.net;
-        let (mut train_km, mut car_km) = ([0.0; 2], [0.0; 2]);
+        let (mut train_km, mut car_km) = ([0.0; 3], [0.0; 3]);
         for (l, s) in self.w.svc.lines.iter().enumerate() {
             if s.running && (shift.is_nan() || s.shift == shift) {
                 let tk = n.line_tph[l][level.min(LEVELS - 1)] as f64 * 2.0 * s.runs[0].len / 1000.0;
-                let k = n.line_fast[l] as usize;
+                let k = fleet_kind(n, l);
                 train_km[k] += tk;
                 car_km[k] += tk * s.cars as f64;
             }
         }
         let ordinary = train_km[0] * RUN_COST_TRAIN_KM + car_km[0] * RUN_COST_CAR_KM;
         let fast = train_km[1] * HS_RUN_COST_TRAIN_KM + car_km[1] * HS_RUN_COST_CAR_KM;
-        (ordinary + fast) * ECONOMY / 1e6
+        let bus = train_km[2] * RUN_COST_BUS_KM;
+        (ordinary + fast + bus) * ECONOMY / 1e6
     }
     /// Upkeep a game day (T-867): [total US$M, track US$M, stations US$M, route-km of constructed
-    /// track, constructed stations].
+    /// track, constructed stations, bus routes US$M, road-km of constructed bus route (T-1464)].
     pub fn upkeep(&self) -> Vec<f64> {
         let n = &self.w.net;
         let (mut km, mut track) = (0.0, 0.0);
@@ -85,7 +100,9 @@ impl TrackApi {
         }
         let count = (0..n.node_alive.len()).filter(|&i| upkept_station(n, i)).count() as f64;
         let stations = count * station_upkeep();
-        vec![track + stations, track, stations, km, count]
+        let bus_km: f64 = n.bus_lines().into_iter().filter_map(|l| bus_upkeep(n, l).map(|_| n.bus_road_m(l) / 1000.0)).sum();
+        let buses = bus_km * UPKEEP_BUS_KM * ECONOMY / 1e6;
+        vec![track + stations + buses, track, stations, km, count, buses, bus_km]
     }
     /// Each running line's share of the upkeep a game day, US$M, as `[line, share]` pairs, then
     /// `[-1, rest]` for the track and stations no running line uses (T-867). Each edge's upkeep is
@@ -130,6 +147,11 @@ impl TrackApi {
                 None => rest += u,
             }
         }
+        // a bus route's upkeep is its own line's (T-1464)
+        for l in n.bus_lines() {
+            let Some(u) = bus_upkeep(n, l) else { continue };
+            if weight(l) > 0.0 { share[l as usize] += u } else { rest += u }
+        }
         let mut out: Vec<f64> = share.iter().enumerate().filter(|(_, &s)| s > 0.0).flat_map(|(l, &s)| [l as f64, s]).collect();
         out.extend([-1.0, rest]);
         out
@@ -139,7 +161,7 @@ impl TrackApi {
     pub fn line_train_cost(&self, line: u32) -> f64 {
         let Some(s) = self.w.svc.lines.get(line as usize).filter(|s| s.ok && !s.running) else { return 0.0 };
         let want = s.trains.iter().copied().max().unwrap_or(0) * s.cars;
-        let k = self.w.net.line_fast[line as usize] as usize;
+        let k = fleet_kind(&self.w.net, line as usize);
         let spare = self.fleet[k].saturating_sub(cars_needed(&self.w)[k]);
         want.saturating_sub(spare) as f64 * CAR_PRICES[k]
     }
@@ -209,13 +231,20 @@ impl TrackApi {
             let net = &self.w.net;
             let edges: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && !net.edge_built[e as usize] && !net.edge_off[e as usize]).collect();
             let stations: Vec<u32> = (0..net.node_count() as u32).filter(|&n| net.node_ok(n) && net.node_platform[n as usize] > 0 && !net.node_built[n as usize] && !net.node_off[n as usize]).collect();
-            let ops = self.construct_ops(&edges, &stations);
+            let buses = net.bus_lines();
+            let ops = self.construct_ops(&edges, &stations, &buses);
             let fleet = self.fleet;
             // Starting several lines together can change junction delays and their fleet needs.
             // Quote the derived constructed service, not a sum of the planned lines' estimates.
-            let (cost, cars) = self.w.trial_with(Op::Batch(ops), |w| (trains_to_buy(w, fleet), cars_to_buy(w, fleet))).map_or((0.0, 0), |(_, c)| c);
+            let need = self.w.trial_with(Op::Batch(ops), cars_needed).map_or([0; 3], |(_, c)| c);
+            let buy: [u32; 3] = std::array::from_fn(|k| need[k].saturating_sub(fleet[k]));
+            let cost = buy[0] as f64 * CAR_PRICES[0] + buy[1] as f64 * CAR_PRICES[1];
             if cost > 0.0 {
-                rows.extend([5.0, 0.0, 0.0, 0.0, 0.0, cars as f64, cost]);
+                rows.extend([5.0, 0.0, 0.0, 0.0, 0.0, (buy[0] + buy[1]) as f64, cost]);
+            }
+            // T-1464: buses, kind 11
+            if buy[2] > 0 {
+                rows.extend([11.0, 0.0, 0.0, 0.0, 0.0, buy[2] as f64, buy[2] as f64 * CAR_PRICES[2]]);
             }
         }
         rows

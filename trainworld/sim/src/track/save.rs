@@ -18,7 +18,8 @@ use super::params::*;
 /// player linked stations, `LNK1` (T-197: count, then node pairs in the dense ids). A save without
 /// them loads with none. An edge's flags `| 32` mark a crossover's diagonal (T-338), `| 64`
 /// high-speed track (T-817); older saves have none. A trailing `LHS1` block (T-817) lists the
-/// lines running high-speed trains; without it all are ordinary.
+/// lines running high-speed trains; without it all are ordinary. A trailing `LBS1` block (T-1464)
+/// gives the bus lines their routes; without it there are none.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -222,6 +223,24 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.u(fast.len() as u64);
         for i in fast { w.u(i as u64); }
     }
+    // T-1464: the bus lines' routes, after LHS1 and only when there are any: count, then per line
+    // its index, constructed (1/0), point count and points as mm deltas from the origin
+    let buses: Vec<(usize, &super::bus::BusRoute)> = lines.iter().enumerate().filter_map(|(i, &l)| net.line_bus[l as usize].as_ref().map(|r| (i, r))).collect();
+    if !buses.is_empty() {
+        w.0.extend_from_slice(b"LBS1");
+        w.u(buses.len() as u64);
+        for (i, r) in buses {
+            w.u(i as u64);
+            w.u(r.built as u64);
+            w.u(r.points.len() as u64);
+            let (mut px, mut py) = (0.0, 0.0);
+            for p in &r.points {
+                w.mm(p[0] - px);
+                w.mm(p[1] - py);
+                (px, py) = (p[0], p[1]);
+            }
+        }
+    }
     w.0
 }
 
@@ -269,7 +288,10 @@ pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
     }
     for l in 0..net.line_count() as u32 {
         let id = out.alloc_line();
-        if let Some(d) = net.line_data(l) {
+        if let Some(mut d) = net.line_data(l) {
+            if let Some(r) = d.bus.as_mut() {
+                r.points = r.points.iter().map(|p| { let (x, y) = at(p[0], p[1]); [x, y] }).collect();
+            }
             out.set_line(id, Some(d)).map_err(|e| format!("{e:?}"))?;
             out.line_symbol[id as usize] = net.line_symbol[l as usize].clone();
         }
@@ -360,7 +382,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
             prev += v >> 1;
             path.push((prev as u32) << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None })).map_err(|e| format!("{e:?}"))?;
     }
     net.next_line_number = n_lines as u32 + 1;
     if r.0.get(r.1..r.1 + 4) == Some(b"LUI1") {
@@ -390,6 +412,21 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
         for _ in 0..r.u()? {
             let i = r.u()? as usize;
             if i < n_lines { net.line_fast[i] = true; }
+        }
+    }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LBS1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            let built = r.u()? != 0;
+            let (mut px, mut py) = (0.0, 0.0);
+            let mut points = vec![];
+            for _ in 0..r.u()? {
+                let (x, y) = (quant(px + r.mm()?), quant(py + r.mm()?));
+                (px, py) = (x, y);
+                points.push([x, y]);
+            }
+            if i < n_lines { net.line_bus[i] = Some(super::bus::BusRoute { points, built }); }
         }
     }
     net.take_touch();

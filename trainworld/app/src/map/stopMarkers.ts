@@ -189,6 +189,7 @@ export class StopMarkers {
       this.seenWorld = w;
       this.seenLine = id;
       this.line = w.save.lines.find((l) => l.num === id) ?? null;
+      if (this.line && w.lineStats[this.line.id]?.bus) this.line = null; // a bus line's stops are worked out, not picked (T-1464)
       if (!this.line) return;
       this.colour = this.line.colour;
       this.box.style.setProperty("--c", this.colour);

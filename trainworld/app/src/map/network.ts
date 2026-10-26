@@ -14,6 +14,10 @@ import { M_BAD, M_CROSSING, M_JUNCTION, rampMarks } from "./markData";
 import { annexSides } from "./annexSide";
 import { bridgeEnds, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_PARK, ST_ROOM, ST_TERMINAL, type PlatformShape } from "./stationGeometry";
 
+/** A bus line's `lineCars` (T-1464): one car of this share of a train car's 20 m (a bus is 12 m),
+ * narrower than a train's (rendererShaders.ts); below 1, so it tells a bus from a train. */
+export const BUS_CAR = 0.6;
+
 /** Colour index of bare track (not a line). */
 export const TRACK = 0xffffff;
 /** Segment flags. */
@@ -734,7 +738,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   const maxLine = s.lines.reduce((m, l) => Math.max(m, l.id), -1);
   const lineColours = new Uint8Array(Math.max(1, maxLine + 1) * 4);
   const lineCars = new Float32Array(r.lineTable.length / 4).fill(8);
-  for (const l of s.lines) lineCars[l.id] = Math.max(1, l.cars);
+  for (const l of s.lines) lineCars[l.id] = l.bus ? BUS_CAR : Math.max(1, l.cars);
   const lineParts: LineEntry[] = [];
   let lineCount = 0;
   const linesSeen: NetCache["lines"] = new Map();
@@ -788,7 +792,8 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     let sm = cache.samples.get(l.id);
     if (!sm || sm.c !== c || sm.count !== count || sm.step !== step || !sameArray(sm.lens, lens)) {
       const firstStroke = c.firstStroke;
-      const rel = new Int32Array(count), lane = new Float32Array(count).fill(1);
+      // a bus has one centre line, not two tracks (T-1464)
+      const rel = new Int32Array(count), lane = new Float32Array(count).fill(l.bus ? 0 : 1);
       let j = 0, end = lens[0] ?? 0;
       for (let k = 0; k < count; k++) {
         const at = k * step;
@@ -1060,8 +1065,8 @@ function rightOf(n: NetworkBuffers, line: number, d: number, y: number, dx: numb
 
 /** A close-up car's centre and bogies, matching the GPU's terminal clamp and 20 m pitch. */
 export function trainCarAt(n: NetworkBuffers, at: NonNullable<ReturnType<typeof tripAt>>, car: number) {
-  const cars = Math.max(1, n.lineCars?.[at.line] ?? 8);
-  const len = n.lineTable[at.line * 4 + 2], total = Math.min(cars * 20, len);
+  const raw = n.lineCars?.[at.line] ?? 8, cars = Math.max(1, raw);
+  const len = n.lineTable[at.line * 4 + 2], total = Math.min(cars * (raw < 1 ? raw * 20 : 20), len);
   const d = at.run === 0 ? at.s : len - at.s;
   const centre = Math.max(total / 2, Math.min(len - total / 2, d));
   const carD = centre + (car + 0.5) * total / cars - total / 2;

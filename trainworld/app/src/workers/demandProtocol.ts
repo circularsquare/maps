@@ -52,6 +52,10 @@ export interface DemandNetwork {
    * as `hopKm`), the share of riders with a train due within their tolerance; empty or absent:
    * 1 everywhere */
   span?: Float32Array;
+  /** T-1464 (`DemandApi.set_bus`): per stop (parallel to `stops`) the points of its stretch of
+   * bus route, 0 for none, and their x, y after one another in `frame`; absent with no buses */
+  catchN?: Uint32Array;
+  catchXY?: Float32Array;
 }
 
 /** T-377: a zone's part of the world market (`data/packs/<id>.market.json`). */

@@ -1,6 +1,6 @@
 // The Money tab: cash, the ledger, the fare curve and the fleet.
 
-import { money, runCostRule, shortDistance, upkeepText } from "../game/format";
+import { busesText, busRouteRule, busRunRule, busUpkeepRule, money, runCostRule, shortDistance, upkeepText } from "../game/format";
 import { setFareScale, stationsById, world } from "../game/world";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
@@ -24,7 +24,9 @@ const ledgerNet = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0) - d.tr
 function upkeepTip(m: MoneyState): string {
   const u = m.upkeep;
   return `${upkeepText(m, "Upkeep")}\n`
-    + `The network has ${shortDistance(u.km * 1000)} of track and ${u.count.toLocaleString("en-US")} stations: ${money((u.track + u.stations) * 1e6)} a day.`;
+    + `The network has ${shortDistance(u.km * 1000)} of track and ${u.count.toLocaleString("en-US")} stations: ${money((u.track + u.stations) * 1e6)} a day.`
+    // T-1464
+    + (u.busKm > 0 ? `\nBus routes cost ${busUpkeepRule(m)}. The network has ${shortDistance(u.busKm * 1000)} of them: ${money(u.buses * 1e6)} a day.` : "");
 }
 
 /** T-284: the cash as fares land, to the dollar, as in the top bar. */
@@ -142,7 +144,7 @@ export function MoneyTab() {
           <TodayCell zone={zone} v={(d) => d.fares} />
         </tr>
         <tr>
-          <td data-tip={`Running costs ${runCostRule(m)}`}>Running trains</td>
+          <td data-tip={`Running costs ${runCostRule(m)}` + (m.fleetBus > 0 || m.busesNeeded > 0 ? `. Buses cost ${busRunRule(m)}` : "")}>Running trains</td>
           {cell(prev, (d) => -d.running)}
           <TodayCell zone={zone} v={(d) => -d.running} />
         </tr>
@@ -152,7 +154,7 @@ export function MoneyTab() {
           <TodayCell zone={zone} v={(d) => -(d.upkeep ?? 0)} />
         </tr>
         <tr>
-          <td>New trains</td>
+          <td data-tip={m.fleetBus > 0 || m.busesNeeded > 0 ? "Cars and buses bought" : undefined}>New trains</td>
           {cell(prev, (d) => -d.trains)}
           <TodayCell zone={zone} v={(d) => -d.trains} />
         </tr>
@@ -190,6 +192,19 @@ export function MoneyTab() {
             </Row>
             <Row label="Spare high-speed cars">
               <span data-tip="High-speed cars kept in the depot. A line with high-speed trains uses them before any are bought.">{Math.max(0, m.fleetFast - m.carsNeededFast)}</span>
+            </Row>
+          </>
+        )}
+        {(m.fleetBus > 0 || m.busesNeeded > 0) && (
+          <>
+            <Row label={<span data-tip={`A bus costs ${money(m.busPrice * 1e6)}. Running costs ${busRunRule(m)}. A route costs ${busRouteRule(m)} to construct. Buses are bought when a line needs more than the spare ones.`}>Buses owned</span>}>
+              <span data-tip={`${busesText(m.fleetBus)} bought at ${money(m.busPrice * 1e6)} each, ${money(m.fleetBus * m.busPrice * 1e6)} in all`}>{m.fleetBus}</span>
+            </Row>
+            <Row label="Buses the lines need">
+              <span data-tip="Buses on the running lines at the demand level that needs most">{m.busesNeeded}</span>
+            </Row>
+            <Row label="Spare buses">
+              <span data-tip="Buses kept in the depot after a line shrank. A line that grows uses them before any are bought.">{Math.max(0, m.fleetBus - m.busesNeeded)}</span>
             </Row>
           </>
         )}
