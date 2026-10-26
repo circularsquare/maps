@@ -7,7 +7,14 @@ Where things live. Update the line for a file you add, move or change the job of
 | File | What |
 |---|---|
 | `index.html` | Map, legend, info panel, hover, click. Holds `BANDS` (time bands and colours). One MapLibre canvas source per level (`walk`, `walk3`, `walk1`), holes cut where a finer window shows. |
-| `worker.js` | Owns the grids and does all searching and painting. `solve` (Dijkstra, 16 moves, yields every ~30 ms), `runClick` (L10 world solve), `refine` / `windowFor` / `loadWindow` / `solveWindow` (L3 and L1 view windows, seeded from the coarser level), `paint` (RGBA in Web Mercator y), `snap` / `sample`. |
+| `worker.js` | Entry of the module worker (`new Worker('worker.js', { type: 'module' })`): routes `init`, `run`, `view` to `js/session.js`. The worker owns the grids and does all searching and painting. Kept at the root so data URLs stay relative to it. |
+| `js/session.js` | State of one session (solved start, last windows, generations) and the flows: `runClick` (L10 world solve), `refine` (L3 and L1 view windows, reuse, cancelling), `post` (paint and send). |
+| `js/levels.js` | `makeLevel` (a block of cells with its geometry), `snap`, `sample`. |
+| `js/search.js` | `solve`: Dijkstra with an indexed heap, 16 moves, yields every ~30 ms. |
+| `js/windows.js` | `windowFor` (window bounds and caps), `contains`, `solveWindow` with the border-ring seeding from the coarser levels. |
+| `js/tiles.js` | L3 and L1 tile fetch, the 200 MB cache, `loadWindow` (tiles cut into a window grid). |
+| `js/paint.js` | `paint`: a solved level to RGBA in Web Mercator y. |
+| `js/config.js` | What `init` sends (bands, alpha, time limit, the speed to hours table). |
 
 Messages, page to worker: `init`, `run {lng, lat}`, `view {west, east, north, south, zoom}`.
 Worker to page: `ready`, `none`, `coarse`, `win {level}`, `clear {levels}`, each with the

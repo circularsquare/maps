@@ -1,5 +1,6 @@
 # Archive
 
+- T-019 [P2] Split worker.js into ES modules. Done 2026-10-26: `worker.js` is a thin module-worker entry over `js/` (session, levels, search, windows, tiles, paint, config); screenshots at default and zoom 8 pixel-identical, smoke passes, timings unchanged.
 - T-013 [P2] Small water walkable. Done 2026-10-26: water patches under 5 km² (543k of 602k, 8-connected, merged across strip edges) are land at 1 km/h in grid and tiles; Balaton and Geneva stay water; L10 times rise 3-8%. notes/T-013.md.
 - T-017 [P1] Smoke check. Done 2026-10-26: `checks/smoke.mjs`, headless Chrome on 8800, six PASS/FAIL lines (load, click, L3, L1, hover, no errors), ~20 s.
 

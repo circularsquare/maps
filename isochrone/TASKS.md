@@ -18,7 +18,6 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 
 ## M1: canoe, today
 
-- T-019 [P2] Split worker.js into ES modules (levels and grids, search, windows, paint) ahead of a graph with several layers; no behaviour change, smoke passes. After T-017.
 - T-020 [P2] Canoe data, rivers: RiverATLAS to river step records at L1, L3 and L10 (Q >= 1 m³/s, v from Q, gradient classes), OSM falls, dams and weirs, HydroLAKES reservoirs (docs/canoe.md 4). After T-005's review.
 - T-021 [P2] Canoe data, lakes and sea: water tiles (kind, shore, links) at all levels and the 0.25° sea grid from drifter currents and ERA5 summer waves, ice and sea temperature (docs/canoe.md 4). After T-005's review.
 - T-022 [P2] Search with layers: canoe + carrying nodes, transfers, directed river and sea edges, weight = time + K x hazard (hazard 0 until T-006), seeding by layer, the sea painted; measure speed (docs/canoe.md 5, 7). After T-005's review, T-019; synthetic data until T-020/T-021.

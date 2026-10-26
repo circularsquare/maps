@@ -23,7 +23,7 @@ rebuilt from the tif.
 
 ## The view refine
 
-All of this runs in `worker.js`; the page only shows what it sends.
+All of this runs in the worker (`worker.js`, `js/`); the page only shows what it sends.
 
 1. A click solves L10 for the whole world and paints it. A newer click cancels an older solve.
 2. The page sends the view (bounds and zoom) 200 ms after each camera move ends.

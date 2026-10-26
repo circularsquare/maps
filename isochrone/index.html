@@ -103,7 +103,7 @@ let originId = 0;           // which click the shown overlays belong to
 const tip = document.getElementById('tip');
 window.solveLog = [];       // timings, for checking from the console
 
-const worker = new Worker('worker.js');
+const worker = new Worker('worker.js', { type: 'module' });
 const workerReady = new Promise(res => {
     worker.addEventListener('message', function once(e) {
         if (e.data.type === 'ready') { worker.removeEventListener('message', once); res(); }
