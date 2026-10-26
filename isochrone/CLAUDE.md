@@ -73,8 +73,8 @@ Briefs carry only the task; these hold for every agent.
   browsers or node broadly.
 - **Python**: plain `python` (C:\Python39 has rasterio, numpy, scipy; the maps venv does not have
   rasterio). Set `OMP_NUM_THREADS` before importing numpy.
-- **CPU**: at most 6 of 16 cores in all, every agent together, while Anita is using the machine;
-  12 overnight.
+- **CPU**: at most 4 of 16 cores in all, every isochrone agent together, day and night (Anita,
+  2026-10-26: other projects run at the same time).
 - **Downloads** go under `data/raw/<source>/` (gitignored). Big raw files go once the layer built
   from them is checked, without asking. A download behind bot protection or a login: stop and give
   the orchestrator the URL for Anita. Never register accounts; never put her name or email in a
