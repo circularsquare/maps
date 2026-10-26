@@ -9,7 +9,7 @@ const PACKS = process.env.TW_PACKS ? resolve(process.env.TW_PACKS) : resolve(her
 /** The packs the game opens: the registry's cities (T-125), and its regional market. Pipeline output, gitignored. */
 const REGISTRY = JSON.parse(readFileSync(resolve(here, "src/game/registry.json"), "utf8")) as { cities: { id: string }[]; market: { pack: string } };
 const CITIES = REGISTRY.cities.map((c) => c.id);
-/** T-1270: each zone's terrain classes (pipeline/zone_terrain.py), served at `terrain/<id>.terrain` beside `packs/`. */
+/** T-1270: each zone's terrain classes (pipeline/zone_terrain.py), served at `packs/terrain/<id>.terrain`, so they publish with the packs. */
 const TERRAIN = resolve(here, "../data/terrain");
 
 /**
@@ -41,7 +41,7 @@ function packs(): Plugin {
           createReadStream(file).pipe(res);
         }
       });
-      server.middlewares.use("/terrain", (req, res) => {
+      server.middlewares.use("/packs/terrain", (req, res) => {
         const file = join(TERRAIN, (req.url ?? "").split("?")[0].replace(/^\/+/, ""));
         // a zone without a file is a 404, never the page (the clock worker reads it as no terrain)
         if (!file.startsWith(TERRAIN) || !existsSync(file)) {
@@ -69,7 +69,7 @@ function packs(): Plugin {
       if (existsSync(intercity)) copyFileSync(intercity, join(out, REGISTRY.market.pack + ".json"));
       else this.warn("intercity market missing: build pipeline/intercity.py");
       // T-1270: the zones' terrain classes; a zone without one prices its track on flat ground
-      const terrain = join(opts.dir ?? resolve(here, "dist"), "terrain");
+      const terrain = join(out, "terrain");
       mkdirSync(terrain, { recursive: true });
       let noTerrain = 0;
       for (const c of CITIES) {

@@ -533,7 +533,7 @@ is known without its files (T-302, T-400):
   its geometry comes within 2 km of a zone whose mask is not in, it waits for the mask and is worked
   out again, so ground over water is never accepted because a mask was late. A mask that cannot be
   fetched is reported, and the edit is worked out without it.
-- **Terrain classes** (clock worker, T-1270): a zone's `terrain/<id>.terrain` (beside `packs/`, a
+- **Terrain classes** (clock worker, T-1270): a zone's `packs/terrain/<id>.terrain` (published with the packs, a
   median of 13 KB, at most 1.9 MB) is asked for whenever its mask is, by the same rules, but nothing waits for it except
   Construct: track priced before it lands is priced again when it does (track-and-service.md 6.4).
   A zone without a file (a 404) prices its track on flat ground.

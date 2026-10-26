@@ -697,7 +697,7 @@ async function ensureMasks(ids: Iterable<string>): Promise<void> {
 
 // ---------------------------------------------------------------- terrain classes (T-1270)
 //
-// A zone's terrain grid (`<id>.terrain` in the folder beside the packs, pipeline/zone_terrain.py) is
+// A zone's terrain grid (`terrain/<id>.terrain` among the packs, pipeline/zone_terrain.py) is
 // fetched with its water mask. It only prices track, so no preview or edit waits for it: track drawn
 // before it lands is priced on flat ground and priced again when it does. Construct waits for the
 // grids under what it builds, so nothing is paid on a guess.
@@ -710,7 +710,7 @@ function fetchTerrain(id: string): Promise<ArrayBuffer | null> {
   let p = terrainFetches.get(id);
   if (!p) {
     p = (async () => {
-      const res = await fetch(new URL(`../terrain/${id}.terrain`, packBase).href);
+      const res = await fetch(new URL(`terrain/${id}.terrain`, packBase).href);
       if (res.status === 404) return null;
       if (!res.ok) throw new Error(`${res.status}`);
       return await res.arrayBuffer();
