@@ -14,7 +14,7 @@ const say = (ok, what, detail = '') => { if (!ok) failed++; console.log(`${ok ? 
 /** Draw a feeder from `from` [lng, lat] to `to`, construct it; the edits' answers and the line's state. */
 const feeder = (page, from, to) => page.evaluate(async ([from, to]) => {
   const tw = window.tw, c = tw.client;
-  const route = [from, to].flatMap(([a, b]) => { const p = tw.lngLatToPack(a, b); return [p.x, p.y]; });
+  const route = [from, to].flatMap(([a, b]) => { const p = tw.lngLatToPack(a, b); return [p.x, p.y, 1]; });
   const cash0 = tw.world.value.save.cash;
   const add = await c.edit({ op: 'addBusLine', route, name: '', colour: '#d7263d' });
   const con = await c.edit({ op: 'construct', edges: [], stations: [], buses: [add.line] });

@@ -18,8 +18,9 @@ use super::params::*;
 /// player linked stations, `LNK1` (T-197: count, then node pairs in the dense ids). A save without
 /// them loads with none. An edge's flags `| 32` mark a crossover's diagonal (T-338), `| 64`
 /// high-speed track (T-817); older saves have none. A trailing `LHS1` block (T-817) lists the
-/// lines running high-speed trains; without it all are ordinary. A trailing `LBS1` block (T-1464)
-/// gives the bus lines their routes; without it there are none.
+/// lines running high-speed trains; without it all are ordinary. A trailing `LBS2` block (T-1465;
+/// `LBS1`, T-1464, is the same without a kind per point) gives the bus lines their routes; without
+/// it there are none.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -223,20 +224,22 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.u(fast.len() as u64);
         for i in fast { w.u(i as u64); }
     }
-    // T-1464: the bus lines' routes, after LHS1 and only when there are any: count, then per line
-    // its index, constructed (1/0), point count and points as mm deltas from the origin
+    // T-1464, T-1465: the bus lines' routes, after LHS1 and only when there are any: count, then per
+    // line its index, constructed (1/0), point count and per point its mm deltas from the previous
+    // and its `bus::K_*` bits
     let buses: Vec<(usize, &super::bus::BusRoute)> = lines.iter().enumerate().filter_map(|(i, &l)| net.line_bus[l as usize].as_ref().map(|r| (i, r))).collect();
     if !buses.is_empty() {
-        w.0.extend_from_slice(b"LBS1");
+        w.0.extend_from_slice(b"LBS2");
         w.u(buses.len() as u64);
         for (i, r) in buses {
             w.u(i as u64);
             w.u(r.built as u64);
             w.u(r.points.len() as u64);
             let (mut px, mut py) = (0.0, 0.0);
-            for p in &r.points {
+            for (p, &k) in r.points.iter().zip(&r.kinds) {
                 w.mm(p[0] - px);
                 w.mm(p[1] - py);
+                w.u(k as u64);
                 (px, py) = (p[0], p[1]);
             }
         }
@@ -414,19 +417,26 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
             if i < n_lines { net.line_fast[i] = true; }
         }
     }
-    if r.0.get(r.1..r.1 + 4) == Some(b"LBS1") {
+    // LBS1 (T-1464) has no kinds: every point a plain corner, so every stretch straight
+    let bus_block = match r.0.get(r.1..r.1 + 4) {
+        Some(b"LBS1") => Some(false),
+        Some(b"LBS2") => Some(true),
+        _ => None,
+    };
+    if let Some(with_kinds) = bus_block {
         r.1 += 4;
         for _ in 0..r.u()? {
             let i = r.u()? as usize;
             let built = r.u()? != 0;
             let (mut px, mut py) = (0.0, 0.0);
-            let mut points = vec![];
+            let (mut points, mut kinds) = (vec![], vec![]);
             for _ in 0..r.u()? {
                 let (x, y) = (quant(px + r.mm()?), quant(py + r.mm()?));
                 (px, py) = (x, y);
                 points.push([x, y]);
+                kinds.push(if with_kinds { r.u()? as u8 } else { super::bus::K_CORNER });
             }
-            if i < n_lines { net.line_bus[i] = Some(super::bus::BusRoute { points, built }); }
+            if i < n_lines { net.line_bus[i] = Some(super::bus::BusRoute::new(points, kinds, built)); }
         }
     }
     net.take_touch();

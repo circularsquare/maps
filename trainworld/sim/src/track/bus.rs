@@ -1,6 +1,8 @@
-//! Bus lines (T-1464, notes/T-1445.md): a line with no track, over a route the player draws. The
-//! route runs straight between the clicked points; its road length is the drawn length times
-//! `ROAD_FACTOR`, which sets the run time, the price and the running cost. A bus runs a flat
+//! Bus lines (T-1464, T-1465, notes/T-1445.md): a line with no track, over a route the player
+//! draws. Between two clicked points (its corners) the route follows the roads where the app found
+//! a road path (`K_ROAD`: the road length is the drawn length) and runs straight elsewhere, where
+//! the road length is the drawn length times `ROAD_FACTOR`. The road length sets the run time, the
+//! price and the running cost. A bus runs a flat
 //! `BUS_V` door to door, standing the line's dwell only at the train stations it meets.
 //!
 //! Demand sees a few stops of each route (`plan`): the train stations it passes within
@@ -14,9 +16,14 @@ use super::profile::{Phase, Profile};
 
 /// A bus's speed, street stops and traffic included, m/s.
 pub const BUS_V: f64 = 18.0 / 3.6;
-/// Road metres per drawn metre: a route clicked along the streets runs about 1.0, a diagonal across
-/// a grid 1.27-1.41.
+/// Road metres per drawn metre on a straight stretch of route: a diagonal across a grid runs
+/// 1.27-1.41, a stretch drawn along the streets 1.0. A stretch the app laid along the roads
+/// (`K_ROAD`) counts at 1.0.
 pub const ROAD_FACTOR: f64 = 1.2;
+/// A route point the player clicked (the app keeps these to draw the route again).
+pub const K_CORNER: u8 = 1;
+/// The route up to this point follows roads: its road length is its drawn length.
+pub const K_ROAD: u8 = 2;
 /// A train station this near the route (ground m) is a stop.
 pub const STATION_REACH_M: f64 = 200.0;
 /// Street stops along the road, m.
@@ -31,8 +38,8 @@ const STATION_PAIR_GAP_M: f64 = 800.0;
 pub const BUS_LEN_M: f64 = 12.0;
 /// The shortest route, ground m.
 pub const MIN_ROUTE_M: f64 = 100.0;
-/// The most points a route may have.
-pub const MAX_ROUTE_POINTS: usize = 400;
+/// The most points a route may have (a road-following route has many).
+pub const MAX_ROUTE_POINTS: usize = 8000;
 /// Ids of the stops that are no station: `STOP_ID_BASE | line << 10 | index`, never a node id.
 pub const STOP_ID_BASE: u32 = 1 << 30;
 
@@ -43,12 +50,21 @@ pub fn is_stop_id(id: u32) -> bool {
     id >= STOP_ID_BASE
 }
 
-/// A bus line's route as the player drew it: plane points in the network's frame, and whether it
-/// is constructed (paid for; it runs).
+/// A bus line's route: plane points in the network's frame, each with its `K_*` bits (`kinds`, as
+/// long as `points`), and whether it is constructed (paid for; it runs).
 #[derive(Clone, Debug, PartialEq)]
 pub struct BusRoute {
     pub points: Vec<[f64; 2]>,
+    pub kinds: Vec<u8>,
     pub built: bool,
+}
+
+impl BusRoute {
+    /// A route with `kinds` cut or padded (with plain corners) to its points.
+    pub fn new(points: Vec<[f64; 2]>, mut kinds: Vec<u8>, built: bool) -> BusRoute {
+        kinds.resize(points.len(), K_CORNER);
+        BusRoute { points, kinds, built }
+    }
 }
 
 pub const KIND_END: u8 = 0;
@@ -67,7 +83,7 @@ pub struct BusStop {
     pub y: f64,
     pub kind: u8,
     pub station: Option<u32>,
-    /// The stretch of the route (ground metres from its start) whose homes walk to the route and
+    /// The stretch of the route (road metres from its start) whose homes walk to the route and
     /// ride from this stop; None at a station, which riders reach on foot.
     pub cover: Option<[f64; 2]>,
 }
@@ -79,47 +95,67 @@ pub struct Plan {
     pub stops: Vec<BusStop>,
     pub street: Vec<f64>,
     pub len: f64,
-}
-
-/// A route's points with their ground metres from the start.
-pub struct Poly<'a> {
-    pub pts: &'a [[f64; 2]],
+    /// Road metres from the start at each of the route's points.
     pub cum: Vec<f64>,
 }
 
+/// A route's points with their ground and road metres from the start.
+pub struct Poly<'a> {
+    pub pts: &'a [[f64; 2]],
+    /// ground metres
+    pub cum: Vec<f64>,
+    /// road metres: each stretch's ground length times 1.0 on road, `ROAD_FACTOR` otherwise
+    pub road: Vec<f64>,
+}
+
+/// The point `s` road metres along a route whose points have road metres `cum`.
+pub fn at_road(pts: &[[f64; 2]], cum: &[f64], s: f64) -> (f64, f64) {
+    let n = pts.len().min(cum.len());
+    if n == 0 {
+        return (0.0, 0.0);
+    }
+    if n == 1 || s <= 0.0 {
+        return (pts[0][0], pts[0][1]);
+    }
+    let i = cum[..n].partition_point(|&c| c <= s).clamp(1, n - 1);
+    let (a, b) = (pts[i - 1], pts[i]);
+    let seg = cum[i] - cum[i - 1];
+    let t = if seg > 0.0 { ((s - cum[i - 1]) / seg).clamp(0.0, 1.0) } else { 0.0 };
+    (a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]))
+}
+
 impl<'a> Poly<'a> {
-    pub fn new(net: &Network, pts: &'a [[f64; 2]]) -> Poly<'a> {
+    /// `kinds[i]` has `K_ROAD` when the stretch ending at point i follows roads; a missing entry is
+    /// a straight stretch.
+    pub fn new(net: &Network, pts: &'a [[f64; 2]], kinds: &[u8]) -> Poly<'a> {
         let mut cum = Vec::with_capacity(pts.len());
-        let mut g = 0.0;
+        let mut road = Vec::with_capacity(pts.len());
+        let (mut g, mut r) = (0.0, 0.0);
         for (i, p) in pts.iter().enumerate() {
             if i > 0 {
                 let q = pts[i - 1];
-                g += (p[0] - q[0]).hypot(p[1] - q[1]) / net.k_at(0.5 * (p[1] + q[1]));
+                let d = (p[0] - q[0]).hypot(p[1] - q[1]) / net.k_at(0.5 * (p[1] + q[1]));
+                g += d;
+                r += d * if kinds.get(i).is_some_and(|k| k & K_ROAD != 0) { 1.0 } else { ROAD_FACTOR };
             }
             cum.push(g);
+            road.push(r);
         }
-        Poly { pts, cum }
+        Poly { pts, cum, road }
     }
     /// Ground metres.
     pub fn len(&self) -> f64 {
         self.cum.last().copied().unwrap_or(0.0)
     }
-    /// The point `g` ground metres from the start.
-    pub fn at(&self, g: f64) -> (f64, f64) {
-        let n = self.pts.len();
-        if n == 0 {
-            return (0.0, 0.0);
-        }
-        if n == 1 || g <= 0.0 {
-            return (self.pts[0][0], self.pts[0][1]);
-        }
-        let i = self.cum.partition_point(|&c| c <= g).clamp(1, n - 1);
-        let (a, b) = (self.pts[i - 1], self.pts[i]);
-        let seg = self.cum[i] - self.cum[i - 1];
-        let t = if seg > 0.0 { ((g - self.cum[i - 1]) / seg).clamp(0.0, 1.0) } else { 0.0 };
-        (a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]))
+    /// Road metres.
+    pub fn road_len(&self) -> f64 {
+        self.road.last().copied().unwrap_or(0.0)
     }
-    /// The route's nearest point to (x, y): ground metres from the start and ground distance.
+    /// The point `s` road metres from the start.
+    pub fn at_road(&self, s: f64) -> (f64, f64) {
+        at_road(self.pts, &self.road, s)
+    }
+    /// The route's nearest point to (x, y): road metres from the start and ground distance.
     pub fn project(&self, net: &Network, x: f64, y: f64) -> (f64, f64) {
         let mut best = (0.0, f64::INFINITY);
         for i in 1..self.pts.len() {
@@ -130,7 +166,7 @@ impl<'a> Poly<'a> {
             let (px, py) = (a[0] + t * dx, a[1] + t * dy);
             let d = (x - px).hypot(y - py) / net.k_at(py);
             if d < best.1 {
-                best = (self.cum[i - 1] + t * (self.cum[i] - self.cum[i - 1]), d);
+                best = (self.road[i - 1] + t * (self.road[i] - self.road[i - 1]), d);
             }
         }
         best
@@ -141,46 +177,105 @@ impl<'a> Poly<'a> {
     }
 }
 
-/// Where two routes cross: ground metres along `a` of each crossing.
+/// Segments per box in `crossings`.
+const CHUNK: usize = 16;
+
+/// Boxes of runs of `CHUNK` segments: `[xmin, ymin, xmax, ymax]`.
+fn chunk_boxes(pts: &[[f64; 2]]) -> Vec<[f64; 4]> {
+    (1..pts.len())
+        .step_by(CHUNK)
+        .map(|i| {
+            let hi = (i + CHUNK).min(pts.len());
+            pts[i - 1..hi].iter().fold([f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY], |b, p| [b[0].min(p[0]), b[1].min(p[1]), b[2].max(p[0]), b[3].max(p[1])])
+        })
+        .collect()
+}
+
+fn boxes_meet(a: &[f64; 4], b: &[f64; 4]) -> bool {
+    a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3]
+}
+
+/// Where two routes cross: road metres along `a` of each crossing. Runs of segments are compared by
+/// their boxes first, so two long road-following routes cost little.
 fn crossings(a: &Poly, b: &Poly) -> Vec<f64> {
     let mut out = vec![];
-    for i in 1..a.pts.len() {
-        let (p, q) = (a.pts[i - 1], a.pts[i]);
-        for j in 1..b.pts.len() {
-            let (r, s) = (b.pts[j - 1], b.pts[j]);
-            let (d1x, d1y, d2x, d2y) = (q[0] - p[0], q[1] - p[1], s[0] - r[0], s[1] - r[1]);
-            let den = d1x * d2y - d1y * d2x;
-            if den.abs() < 1e-12 {
+    let (ca, cb) = (chunk_boxes(a.pts), chunk_boxes(b.pts));
+    for (ia, ba) in ca.iter().enumerate() {
+        for (ib, bb) in cb.iter().enumerate() {
+            if !boxes_meet(ba, bb) {
                 continue;
             }
-            let t = ((r[0] - p[0]) * d2y - (r[1] - p[1]) * d2x) / den;
-            let u = ((r[0] - p[0]) * d1y - (r[1] - p[1]) * d1x) / den;
-            if (0.0..=1.0).contains(&t) && (0.0..=1.0).contains(&u) {
-                out.push(a.cum[i - 1] + t * (a.cum[i] - a.cum[i - 1]));
+            for i in 1 + ia * CHUNK..(1 + (ia + 1) * CHUNK).min(a.pts.len()) {
+                let (p, q) = (a.pts[i - 1], a.pts[i]);
+                for j in 1 + ib * CHUNK..(1 + (ib + 1) * CHUNK).min(b.pts.len()) {
+                    let (r, s) = (b.pts[j - 1], b.pts[j]);
+                    let (d1x, d1y, d2x, d2y) = (q[0] - p[0], q[1] - p[1], s[0] - r[0], s[1] - r[1]);
+                    let den = d1x * d2y - d1y * d2x;
+                    if den.abs() < 1e-12 {
+                        continue;
+                    }
+                    let t = ((r[0] - p[0]) * d2y - (r[1] - p[1]) * d2x) / den;
+                    let u = ((r[0] - p[0]) * d1y - (r[1] - p[1]) * d1x) / den;
+                    if (0.0..=1.0).contains(&t) && (0.0..=1.0).contains(&u) {
+                        out.push(a.road[i - 1] + t * (a.road[i] - a.road[i - 1]));
+                    }
+                }
             }
         }
     }
+    out.sort_by(f64::total_cmp);
     out
+}
+
+/// A line of points thinned to within `tol` (plane units) of the original.
+pub fn simplify(pts: &[(f64, f64)], tol: f64) -> Vec<(f64, f64)> {
+    let n = pts.len();
+    if n <= 2 {
+        return pts.to_vec();
+    }
+    let mut keep = vec![false; n];
+    keep[0] = true;
+    keep[n - 1] = true;
+    let mut stack = vec![(0, n - 1)];
+    while let Some((a, b)) = stack.pop() {
+        let (ax, ay, bx, by) = (pts[a].0, pts[a].1, pts[b].0, pts[b].1);
+        let (dx, dy) = (bx - ax, by - ay);
+        let l2 = dx * dx + dy * dy;
+        let (mut worst, mut at) = (0.0, 0);
+        for (i, p) in pts.iter().enumerate().take(b).skip(a + 1) {
+            let (px, py) = (p.0 - ax, p.1 - ay);
+            let t = if l2 > 0.0 { ((px * dx + py * dy) / l2).clamp(0.0, 1.0) } else { 0.0 };
+            let d = (px - t * dx).hypot(py - t * dy);
+            if d > worst {
+                (worst, at) = (d, i);
+            }
+        }
+        if worst > tol {
+            keep[at] = true;
+            stack.push((a, at));
+            stack.push((at, b));
+        }
+    }
+    pts.iter().zip(keep).filter(|(_, k)| *k).map(|(p, _)| *p).collect()
 }
 
 /// Whether a route's points make a route at all: two or more, finite, inside the world, not too
 /// many, and at least `MIN_ROUTE_M` long.
-pub fn route_ok(net: &Network, pts: &[[f64; 2]]) -> bool {
+pub fn route_ok(net: &Network, pts: &[[f64; 2]], kinds: &[u8]) -> bool {
     pts.len() >= 2
         && pts.len() <= MAX_ROUTE_POINTS
         && pts.iter().all(|p| p[0].is_finite() && p[1].is_finite() && net.inside_world(p[0], p[1]))
-        && Poly::new(net, pts).len() >= MIN_ROUTE_M
+        && Poly::new(net, pts, kinds).len() >= MIN_ROUTE_M
 }
 
 /// Line `l`'s stops over route `pts`. `built_only`: a constructed route stops only at constructed
 /// stations and crosses only constructed routes; a planned one previews them all.
-pub fn plan(net: &Network, l: u32, pts: &[[f64; 2]], built_only: bool) -> Plan {
-    if !route_ok(net, pts) {
+pub fn plan(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only: bool) -> Plan {
+    if !route_ok(net, pts, kinds) {
         return Plan::default();
     }
-    let poly = Poly::new(net, pts);
-    let g_len = poly.len();
-    let len = g_len * ROAD_FACTOR;
+    let poly = Poly::new(net, pts, kinds);
+    let len = poly.road_len();
     let bb = poly.bbox();
     let pad = STATION_REACH_M * net.k_at(0.5 * (bb[1] + bb[3])) * 1.1 + 1.0;
     // stations within reach: (road s, node, distance)
@@ -196,7 +291,7 @@ pub fn plan(net: &Network, l: u32, pts: &[[f64; 2]], built_only: bool) -> Plan {
         }
         let (g, d) = poly.project(net, x, y);
         if d <= STATION_REACH_M {
-            st.push((g * ROAD_FACTOR, n, d));
+            st.push((g, n, d));
         }
     }
     st.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
@@ -232,7 +327,7 @@ pub fn plan(net: &Network, l: u32, pts: &[[f64; 2]], built_only: bool) -> Plan {
         if built_only && !r.built {
             continue;
         }
-        cross.extend(crossings(&poly, &Poly::new(net, &r.points)).into_iter().map(|g| g * ROAD_FACTOR));
+        cross.extend(crossings(&poly, &Poly::new(net, &r.points, &r.kinds)));
     }
     cross.sort_by(f64::total_cmp);
     for s in cross {
@@ -282,19 +377,19 @@ pub fn plan(net: &Network, l: u32, pts: &[[f64; 2]], built_only: bool) -> Plan {
         .map(|(k, &(s, kind, station))| {
             let (x, y) = match station {
                 Some(n) => (net.node_x[n as usize], net.node_y[n as usize]),
-                None => poly.at(s / ROAD_FACTOR),
+                None => poly.at_road(s),
             };
             BusStop { id: station.unwrap_or_else(|| stop_id(l, k)), s, x, y, kind, station, cover: None }
         })
         .collect();
     let open: Vec<usize> = (0..stops.len()).filter(|&k| stops[k].station.is_none()).collect();
     for (j, &k) in open.iter().enumerate() {
-        let g = stops[k].s / ROAD_FACTOR;
-        let a = if j == 0 { 0.0 } else { 0.5 * (g + stops[open[j - 1]].s / ROAD_FACTOR) };
-        let b = if j + 1 == open.len() { g_len } else { 0.5 * (g + stops[open[j + 1]].s / ROAD_FACTOR) };
+        let g = stops[k].s;
+        let a = if j == 0 { 0.0 } else { 0.5 * (g + stops[open[j - 1]].s) };
+        let b = if j + 1 == open.len() { len } else { 0.5 * (g + stops[open[j + 1]].s) };
         stops[k].cover = Some([a, b]);
     }
-    Plan { stops, street, len }
+    Plan { stops, street, len, cum: poly.road.clone() }
 }
 
 /// A bus's trip over stops at road offsets `stop_s` (ascending), standing `dwell[i]` at each

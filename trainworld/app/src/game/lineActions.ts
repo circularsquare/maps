@@ -98,13 +98,13 @@ export function newBusLine() {
  * finishing (Enter, double click) sends `busRoute`; pressed again, or Esc, it leaves the route as
  * it was. Nothing for a line that is no bus line. */
 export function editBusRoute(l: Pick<LineInput, "id" | "num" | "colour">) {
-  const t = live.tools, route = world.peek()?.lineStats[l.id]?.bus?.routeLL;
+  const t = live.tools, bus = world.peek()?.lineStats[l.id]?.bus, route = bus?.routeLL;
   if (!t || !route) return;
   const open = tool.peek() === "bus" && busDraft.peek()?.line === l.num;
   t.exit();
   if (open) return;
   selection.value = { kind: "line", line: l.id };
-  t.bus.begin(l.num, route, l.colour);
+  t.bus.begin(l.num, route, l.colour, bus.kinds);
 }
 
 /** The Edit stops button and its key: start adding and removing the line's stops, or finish. */
