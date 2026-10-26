@@ -12,6 +12,7 @@ import type { EdgeId, Level, NodeId } from "../game/types";
 import type { FrameSpec } from "../game/frame";
 import type { DayLedger, GameMode, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup } from "./saveFile";
 import type { NetworkBuffers } from "../map/network";
+import type { CloudContext } from "./cloud";
 
 export type { DayLedger, HourLedger };
 
@@ -174,6 +175,9 @@ export type ToClock =
   | { kind: "transfers"; packed: Float32Array }
   /** write the autosave now if anything changed (the page is being hidden or closed) */
   | { kind: "flush" }
+  /** T-988: the account the slots sync with (null: signed out, or no server); `settle` asks the
+   * worker to settle every slot again (after the sign-in question's Add) */
+  | { kind: "account"; ctx: CloudContext | null; settle?: boolean }
   /** T-1007, dev server only: make the track model panic, now (`now` holds its borrow, `read`
    * does not) or on the next edit once it is applied */
   | { kind: "debugPanic"; when: "now" | "read" | "afterEdit" }
@@ -502,6 +506,8 @@ export type FromClock =
   /** `backups`: the active slot's (T-744), newest first */
   | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[] }
   | { kind: "error"; message: string }
+  /** T-988: the server refused the session's token (the main thread signs out) */
+  | { kind: "accountGone" }
   /** T-1007: the track model panicked and was rebuilt from the game's last edit (or, `down`, could
    * not be: the player is asked to reload). `detail` is for the console, `notice` for the player. */
   | { kind: "recovered"; detail: string; notice: string; down?: boolean }

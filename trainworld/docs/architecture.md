@@ -359,5 +359,43 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   market's corridor table (shared by the days) copied once and transferred to it.
 - **Old saves are a nicety** (Anita, 2026-10-12): only Anita has saves, so no real effort goes into
   migrations.
-- **Later**: sharing by link (upload a save, get a link, M4); accounts only for sync and sharing,
-  on `shonei-server` (`~/projects/shonei-server`).
+- **Games on the account** [T-988; `workers/cloud.ts`, `game/accountGames.ts`; the server's routes
+  in shonei-server's `docs/trainworld-api.md`; notes/T-988.md]: while signed in (and only where the
+  server's `/noritetsu/config` says `trainworldGames`), each slot is also kept on the account, the
+  browser staying the working copy. A slot's tie is its record `sync:<slot>` in the same store
+  (deleted with the slot): the game id (the leaderboards' id too, folded in from
+  `trainworld.score-games.v1`), the account, the rev it last uploaded or downloaded and the slot's
+  `at` then (the slot has changed here when its `at` differs), the last upload's time, and the
+  given-way and kept-here-only marks. A slot first written while signed in is tied to that
+  account; one made signed out is tied to none until the sign-in question (ui-panels.md "Account
+  and leaderboards"). The device is one browser profile, a random id in localStorage
+  (`trainworld.device.v1`). The main thread posts `{kind: "account", ctx}` to the clock worker on
+  every session change; a 401 there posts `accountGone` back and the page signs out.
+  - **Uploads** (the clock worker, after `writeSlot`, beside T-1214's copy): the save bytes as Save
+    to a file writes them, the name, the card's facts and picture. A save by hand goes at once
+    with `force`; an autosave at most every 2 wall minutes (`GAP_MS`), a timer sending what the
+    gap held back; the page hiding sends at once (best effort); a rename at once. A save over
+    4 MB is never sent (the server closes the connection past 4.6 MB).
+  - **On load**: the start menu settles every slot it can lock before the worker starts
+    (`settleOnStart`), and the worker again on start and on `online`: a slot changed here goes
+    up; an unchanged one takes a newer account copy (slot record from the server's facts and
+    picture, nothing decoded); one the account deleted (a tombstone) is deleted if unchanged, else
+    kept as a new account game; deletions made here while offline are sent. The game opened is
+    claimed (`claim`); an unchanged slot behind the account is replaced in place (`loadGame`
+    through the game's message queue).
+  - **Two devices** work as two tabs do: the last device to open a game is its writer; another
+    device's upload hears 409 "elsewhere", stops autosaving the game, locally too, and says
+    "Autosave is off here because this game was opened on another device."; its save by hand
+    claims it back with `force`. Its slot is marked given way, so its next load takes the account
+    copy without a fork. **A fork** (changed here, and the account moved on from the same rev, say
+    a game opened offline): this browser's version goes into a new slot "Tokyo at 9:41 PM", a new
+    account game, and the old slot takes the account's copy; a game being played carries on in the
+    fork's slot.
+  - **Deleting** a tied slot deletes its account game (queued as `cloud-deletes` while offline);
+    a game the account deleted, under a tombstone, never comes back under its id (410): a kept
+    copy gets a new id. A game opened unchanged after another device deleted it is kept in this
+    browser only.
+  - `?new=1`, `?synth=1`, `?demandTest=1` sync nothing; localhost syncs only with `?acct=local` or
+    `?acct=live` given once. `checks/t988-cloud.mjs` runs it against a local server.
+- **Later**: sharing a game by link (T-989); the account's backups listed and restored, the
+  sign-out question (T-988 stage 3).

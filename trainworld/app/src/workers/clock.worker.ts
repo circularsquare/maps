@@ -23,8 +23,9 @@ import { networkFromState, newNetCache, runsTrains } from "../map/network";
 import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes } from "../game/complexes";
 import { UPGRADE_BITS } from "../game/upgrades";
-import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
+import { changedHere, claim, fetchGame, forgetSlot, forkName, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, sendDeletes, settle as settleCloud, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
 const SAMPLE_STEP = 50;
@@ -193,6 +194,8 @@ let sentCash = NaN, sentFares = NaN;
 let dirty = false;
 let savedAt = Date.now();
 let saveInFlight: Promise<boolean> | null = null;
+/** the next autosave is a save by hand: it goes to the account at once, with `force` (T-988) */
+let byHandNext = false;
 let activeSlot = ORIGINAL_SLOT;
 let activeLease: SlotLease | null = null;
 /** another tab saved this slot by hand and took its lease (T-1251): autosave stays off here */
@@ -237,8 +240,10 @@ async function publishSlots(error?: string) {
     slots = await listSlots(); storageReady = true;
     if (activeSlot) backups = await listBackups(activeSlot);
   } catch { storageReady = false; }
-  const writable = !!activeLease && storageReady && !saveFailure;
+  const taken = !!activeSlot && cloudTaken === activeSlot;
+  const writable = !!activeLease && storageReady && !saveFailure && !taken;
   const reason = saveFailure || (!storageReady ? "Browser storage is unavailable. Save to a file to keep this game."
+    : taken ? "Autosave is off here because this game was opened on another device."
     : !activeLease ? testPage ? "Autosave is off in this test page. Save a copy to keep the game."
       : leaseTaken ? "Autosave is off here because this game was saved in another tab."
       : navigator.locks ? "Autosave is off here because this slot was opened in another tab. Save to a new slot, or close the other tab and reload."
@@ -247,7 +252,7 @@ async function publishSlots(error?: string) {
 }
 
 async function flushBeforeSwitch() {
-  if (dirty && !activeLease) throw new Error("Save this game to a new slot before leaving it. You can also download a file and reload this page.");
+  if (dirty && (!activeLease || cloudTaken === activeSlot)) throw new Error("Save this game to a new slot before leaving it. You can also download a file and reload this page.");
   if (!await autosave()) throw new Error("This game could not be saved. Save to a file before leaving it.");
 }
 
@@ -307,6 +312,161 @@ async function setCopyFolder(dir: FileSystemDirectoryHandle | null) {
   for (const s of await listSlots().catch(() => [])) {
     const stored = await readStored(s.key);
     if (stored) await copyOut(s.key, stored.bytes, s.name);
+  }
+}
+
+// T-988: games on the account (workers/cloud.ts, notes/T-988.md). The main thread posts the account;
+// each slot write goes up after it (a save by hand at once, autosaves at most every GAP_MS), and the
+// game opened is claimed on the account. All of it runs in one queue of its own, so the game's
+// messages never wait on the network; only the swap of the game in hand goes through theirs.
+let cloudCtx: CloudContext | null = null;
+/** the slot whose game this page has claimed (or uploaded) on the account */
+let cloudClaimed = "";
+/** the slot another device opened: autosave is off here until a save by hand takes it back */
+let cloudTaken = "";
+let cloudQueue: Promise<unknown> = Promise.resolve();
+const cloudTimers = new Map<string, ReturnType<typeof setTimeout>>();
+/** the game's first load is done: the claim can follow */
+let initDone = false;
+function cloudRun(f: () => Promise<unknown>): Promise<unknown> {
+  cloudQueue = cloudQueue.then(f).catch(() => {});
+  return cloudQueue;
+}
+onTokenGone(() => send({ kind: "accountGone" }));
+
+/** After slot `key` was written: up now (`force`, a save by hand), or once the gap since its last
+ * upload has passed. `fresh`: the slot's first write, which ties it to the account signed in. */
+async function cloudAfterWrite(key: string, force: boolean, fresh: boolean) {
+  const ctx = cloudCtx;
+  if (!ctx || testPage) return;
+  let rec = await readSync(key);
+  if (!rec && fresh) rec = await tieNew(ctx, key);
+  if (!tiedTo(rec, ctx) || !ctx.on) return;
+  const wait = force ? 0 : (rec.upAt ?? 0) + GAP_MS - Date.now();
+  if (wait > 0) {
+    if (!cloudTimers.has(key)) cloudTimers.set(key, setTimeout(() => { cloudTimers.delete(key); void cloudUp(key); }, wait));
+    return;
+  }
+  clearTimeout(cloudTimers.get(key));
+  cloudTimers.delete(key);
+  await cloudUp(key, force);
+}
+
+/** Slot `key` up as stored. The game in hand is claimed first; a 409 "elsewhere" on it means another
+ * device opened it, and this page gives way (a save by hand sends `force` and takes it back). */
+function cloudUp(key: string, force = false): Promise<unknown> {
+  return cloudRun(() => upNow(key, force));
+}
+async function upNow(key: string, force: boolean) {
+  const ctx = cloudCtx;
+  if (!ctx?.on || testPage) return;
+  if (key === activeSlot && !force && cloudClaimed !== key) { await openOnAccount(ctx); await publishSlots(); return; }
+  if (!force) {
+    const [s, r] = await Promise.all([readStored(key), readSync(key)]);
+    if (!s || !r || !changedHere(s, r)) return; // went up already
+  }
+  const r = await upload(ctx, key, force);
+  if (key === activeSlot && r === "ok") { cloudClaimed = key; if (cloudTaken === key) cloudTaken = ""; }
+  if (key === activeSlot && r === "elsewhere") await giveWay(key);
+  await publishSlots();
+}
+
+async function giveWay(key: string) {
+  cloudTaken = key;
+  cloudClaimed = "";
+  const rec = await readSync(key);
+  if (rec) await writeSync(key, { ...rec, gaveWay: true });
+}
+
+/** The page hides: anything waiting for the gap goes now (best effort, a closing page can cut it). */
+function cloudFlush() {
+  for (const [key, t] of cloudTimers) { clearTimeout(t); cloudTimers.delete(key); void cloudUp(key); }
+  if (activeSlot && cloudTaken !== activeSlot) void cloudUp(activeSlot);
+}
+
+/** Settle every other slot this page can lock, then claim the game in hand. */
+function cloudKick(): Promise<unknown> {
+  return cloudRun(async () => {
+    const ctx = cloudCtx;
+    if (!ctx?.on || testPage || !initDone) return;
+    await settleCloud(ctx, activeSlot);
+    await openOnAccount(ctx);
+    await publishSlots();
+  });
+}
+
+/** The game in hand claimed on the account. A newer account copy replaces it if nothing changed here
+ * (the page loads it in place), else this browser's version carries on as a fork in a new slot and
+ * the old slot takes the account's. Offline it plays on and claims when back. */
+async function openOnAccount(ctx: CloudContext) {
+  const key = activeSlot;
+  if (!key || !activeLease || cloudClaimed === key || cloudTaken === key) return;
+  let [stored, rec] = await Promise.all([readStored(key), readSync(key)]);
+  if (!stored || !tiedTo(rec, ctx)) return; // a new game not written yet, or not on this account
+  const list = await listGames(ctx);
+  const changed = () => (changedHere(stored!, rec!) || dirty) && !rec!.gaveWay;
+  if (!list) {
+    // unreachable: the game plays on, "Not on your account yet" while it has changed here
+    if (activeSlot === key && changedHere(stored, rec)) { await writeSync(key, { ...rec, error: lastListFailure() }); await publishSlots(); }
+    return;
+  }
+  if (activeSlot !== key) return;
+  const g = list.games.find((x) => x.id === rec!.id);
+  if (!g) {
+    if (list.tombstones.some((t) => t.id === rec!.id)) {
+      // deleted on another device: a game changed here is kept as a new account game; one not
+      // changed stays in this browser only, so playing it brings back nothing the player deleted
+      if (!changed()) { await writeSync(key, { ...rec, acct: undefined, local: true }); return; }
+      rec = { ...rec, id: newGameId(), rev: 0, syncedAt: 0 };
+      await writeSync(key, rec);
+    }
+    if (await upload(ctx, key) === "ok") cloudClaimed = key;
+    return;
+  }
+  if (g.rev < rec.rev) { rec = { ...rec, rev: g.rev }; await writeSync(key, rec); }
+  if (g.rev === rec.rev) {
+    const c = await claim(ctx, rec);
+    if (c !== "ok") return; // tried again at the next save
+    cloudClaimed = key;
+    rec = (await readSync(key)) ?? rec;
+    if (rec.gaveWay) await writeSync(key, rec = { ...rec, gaveWay: undefined });
+    if (changedHere((await readStored(key)) ?? stored, rec)) await upload(ctx, key);
+    return;
+  }
+  const got = await fetchGame(ctx, g);
+  if (!got) return;
+  let fork = "";
+  // through the game's own queue: nothing edits the game while it is swapped
+  messages = messages.then(async () => {
+    if (activeSlot !== key || !activeLease) return;
+    stored = (await readStored(key)) ?? stored;
+    if (!changed()) {
+      await writeFetched(ctx, key, got);
+      switching = true;
+      try { await loadGame(got.stored.bytes, "autosave"); } finally { switching = false; }
+      dirty = false;
+      savedAt = got.stored.at;
+      return;
+    }
+    // changed on both sides: the game in hand moves to a fork's slot, the account copy into this one
+    fork = "slot-" + crypto.randomUUID();
+    const lease = await leaseSlot(fork);
+    if (!lease) { fork = ""; return; }
+    await writeSlot(fork, { ...stored!, name: forkName(stored!.name || "Saved game", stored!.at) });
+    await writeSync(fork, { id: newGameId(), acct: ctx.acct, rev: 0, syncedAt: 0 });
+    await writeFetched(ctx, key, got);
+    activeLease.release();
+    activeSlot = fork;
+    hold(lease);
+    dirty = true; // what changed since the last write goes to the fork's slot
+    slotChanges?.postMessage({ key: fork });
+  }).catch((err) => send({ kind: "error", message: String(err) }));
+  await messages;
+  if (fork) {
+    if (activeSlot === fork && await upload(ctx, fork) === "ok") cloudClaimed = fork;
+  } else if (activeSlot === key) {
+    const now = await readSync(key);
+    if (now && await claim(ctx, now) === "ok") cloudClaimed = key;
   }
 }
 
@@ -1491,13 +1651,15 @@ async function slotSummary(): Promise<SlotSummary> {
 function autosave(): Promise<boolean> {
   if (saveInFlight) return saveInFlight.then(ok => dirty && ok ? autosave() : ok);
   if (!api || !dirty) return Promise.resolve(true);
-  if (!activeLease || switching) return Promise.resolve(false);
+  if (!activeLease || switching || cloudTaken === activeSlot) return Promise.resolve(false);
   // T-677: a new game whose slot was never written is not kept while its network is empty
   if (unwritten === activeSlot && !api.nodes_info().length && !api.lines_info().length) {
     dirty = false;
     return Promise.resolve(true);
   }
   const key = activeSlot; // an in-flight write must never move to the next slot
+  const force = byHandNext;
+  byHandNext = false;
   dirty = false;
   saveInFlight = (async () => {
     try {
@@ -1509,12 +1671,13 @@ function autosave(): Promise<boolean> {
       const summary = await summaryP;
       const at = Date.now();
       const name = newSlotName?.key === key ? newSlotName.name : undefined;
-      await writeSlot(key, { bytes, at, day, city, ...summary, name });
+      const fresh = await writeSlot(key, { bytes, at, day, city, ...summary, name });
       if (name) newSlotName = null;
       if (unwritten === key) unwritten = null;
       const backups = await listBackups(key).catch(() => null);
       if (backups && !(at - (backups[0]?.at ?? -Infinity) < backupMs)) await writeBackup(key, { bytes, at, day, city, ...summary });
       void copyOut(key, bytes); // T-1214
+      void cloudAfterWrite(key, force, fresh); // T-988
       savedAt = at;
       saveFailure = undefined;
       send({ kind: "saved", at, bytes: bytes.length, encodeMs, totalMs: performance.now() - t0 });
@@ -1543,9 +1706,12 @@ async function saveByHand() {
       if (!lease) throw new Error("This browser cannot protect save slots. Save to a file instead.");
       hold(lease);
     }
+    // T-988: a game another device opened is taken back, the account's copy kept there as a backup
+    if (cloudTaken === activeSlot) cloudTaken = "";
     if (unwritten === activeSlot) unwritten = null;
     saveFailure = undefined;
     dirty = true;
+    byHandNext = true;
     if (!await autosave()) throw new Error(saveFailure ?? "This game could not be saved. Save to a file to keep it.");
     send({ kind: "savedByHand", at: savedAt });
   } catch (err) {
@@ -1566,6 +1732,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         const bytesP = saveBytes(), summaryP = slotSummary();
         const bytes = await bytesP;
         await writeSlot(key, { bytes, at: Date.now(), day: Math.floor(gameNow() / 86400), city, name: msg.name?.trim() || "Saved game", ...await summaryP });
+        void cloudAfterWrite(key, false, true); // T-988: a new game on the account
         // Finish earlier writes before releasing the old slot's guard. The new copy is already safe.
         if (activeLease) await autosave();
         activeLease?.release();
@@ -1612,8 +1779,15 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
       if (key === activeSlot ? !activeLease : !temporary) throw new Error("That slot is open in another tab. Close it before changing this save.");
       try {
         if (msg.action === "rename") await renameSlot(key, msg.name ?? "");
-        else await deleteSlot(key);
+        else {
+          await forgetSlot(key); // T-988: from the account too
+          await deleteSlot(key);
+        }
       } finally { temporary?.release(); }
+      // T-988: a rename goes up at once; a deletion now, or at the next chance
+      const ctx = cloudCtx;
+      if (ctx && msg.action === "rename") void cloudRun(async () => { if (await upload(ctx, key) === "ok" && key === activeSlot) cloudClaimed = key; await publishSlots(); });
+      else if (ctx) void cloudRun(() => sendDeletes(ctx));
     }
     await publishSlots();
     slotChanges?.postMessage({ key: activeSlot });
@@ -2101,6 +2275,12 @@ onmessage = (e: MessageEvent<ToClock>) => {
     thumbShade = msg.shade;
     return;
   }
+  if (msg.kind === "account") {
+    const before = cloudCtx;
+    cloudCtx = msg.ctx;
+    if (msg.ctx?.on && (msg.settle || !before?.on || before.acct !== msg.ctx.acct)) void cloudKick();
+    return;
+  }
   if (msg.kind === "previewStale") {
     previewStaleSeq = Math.max(previewStaleSeq, msg.seq);
     wakeStale?.();
@@ -2207,6 +2387,9 @@ async function processMessage(msg: ToClock) {
       sendState();
       send({ kind: "snapshot", snapshot: buildSnapshot() });
     })().catch((err) => send({ kind: "failed", error: String(err) }));
+    // T-988: the game in hand claimed on the account, the other slots settled
+    void ready.then(() => { initDone = true; void cloudKick(); });
+    addEventListener("online", () => void cloudKick());
     setInterval(tick, 1000);
     setInterval(liveMoney, LIVE_MONEY_MS);
     return;
@@ -2412,7 +2595,7 @@ async function handle(msg: ToClock) {
     api.set_transfers(msg.packed);
     sendTrips();
   } else if (msg.kind === "flush") {
-    void autosave();
+    void autosave().then(cloudFlush);
   } else if (import.meta.env.DEV && msg.kind === "debugPanic") {
     if (msg.when === "afterEdit") panicAfterEdit = true;
     else if (msg.when === "read") api.edge_polyline(0xffffffff, 0);

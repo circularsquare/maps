@@ -10,13 +10,19 @@
 //
 // While signed in, each normal game's points (the past 24 game hours, the Cities tab's) are sent at
 // most every two wall minutes when they change, joined or not, so a board is current the moment its
-// player joins. A game owns a random id per browser slot (`GAMES_KEY`); a sandbox sends only the
-// fact, once, which the server keeps for good. A slot deleted here takes its figures off.
+// player joins. A game owns a random id per browser slot (`GAMES_KEY`), or its account game's id
+// (T-988); a sandbox sends only the fact, once, which the server keeps for good. A slot deleted here
+// takes its figures off.
+//
+// T-988: the games themselves go on the account too (workers/cloud.ts, game/accountGames.ts); this
+// file gives the clock worker the account (`cloudContext`) on every change.
 
 import { effect, signal } from "@preact/signals";
 import { moneyState } from "./money";
 import { pointsPast24h } from "./points";
-import { saveSlotsState } from "../workers/clockClient";
+import { onAccountGone, postAccount, saveSlotsState } from "../workers/clockClient";
+import { newGameId, onTokenGone, type CloudContext } from "../workers/cloud";
+import { listSlots, writeSync } from "../workers/saveFile";
 
 export interface AccountView {
   id: string;
@@ -26,7 +32,7 @@ export interface AccountView {
   pendingEmail: string;
 }
 interface Session { token: string; account: AccountView }
-export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean }
+export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean }
 export interface BoardSetting { on: boolean; name: string }
 export interface BoardRow { rank: number; name: string; value: number }
 export interface Board { board: string; count: number; rows: BoardRow[]; me?: BoardRow }
@@ -37,6 +43,10 @@ const MAX_CITIES = 64;
 const SEND_GAP_MS = 120_000;
 const API_KEY = "trainworld.acct-api";
 const GAMES_KEY = "trainworld.score-games.v1";
+/** T-988: this browser profile's random device id, nothing about the machine */
+const DEVICE_KEY = "trainworld.device.v1";
+/** T-988: whether the server last said it keeps games */
+const GAMES_ON_KEY = "trainworld.games-on.v1";
 
 const LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 
@@ -119,10 +129,36 @@ export async function signIn(path: "signin" | "login" | "register", body: unknow
 }
 
 export async function deleteAccount() {
+  const acct = session.peek()?.account.id;
   await api("DELETE", "noritetsu/account");
   tokenGone();
   lsSet(GAMES_KEY, null);
+  // T-988: the games stay in this browser, tied to no account
+  for (const s of await listSlots().catch(() => [])) if (acct && s.cloud?.acct === acct) await writeSync(s.key, null);
 }
+
+// ---------------------------------------------------------------- games on the account (T-988)
+
+const DEVICE = (() => {
+  let d = lsGet<string>(DEVICE_KEY);
+  if (!d) { d = newGameId() + newGameId(); lsSet(DEVICE_KEY, d); }
+  return d;
+})();
+
+/** What the account's games need, while signed in (workers/cloud.ts); `on` once the server says it
+ * keeps games. */
+export function cloudContext(): CloudContext | null {
+  const s = session.peek();
+  if (!BASE || !s) return null;
+  const ids = Object.fromEntries(Object.entries(games()).map(([slot, e]) => [slot, e.id]));
+  // a page opened while the server cannot be reached keeps the account's games as last known, so the
+  // game plays with "Not on your account yet" and goes up once the server answers again
+  const cfg = accountConfig.peek(), st = accountState.peek();
+  const on = cfg ? st === "on" && !!cfg.trainworldGames : st === "unavailable" && lsGet<boolean>(GAMES_ON_KEY) === true;
+  return { base: BASE, token: s.token, acct: s.account.id, device: DEVICE, on, ids };
+}
+/** The device id, for "Open on another device". */
+export const deviceId = () => DEVICE;
 
 async function loadBoardSetting() {
   if (!session.peek() || accountState.peek() !== "on") return;
@@ -163,11 +199,6 @@ export async function fetchBoards(key = boards.peek().key) {
 interface GameEntry { id: string; acct?: string; sent?: string; at?: number; sandbox?: boolean }
 const games = (): Record<string, GameEntry> => lsGet<Record<string, GameEntry>>(GAMES_KEY) ?? {};
 
-function newGameId(): string {
-  const a = "abcdefghijkmnpqrstuvwxyz23456789", b = crypto.getRandomValues(new Uint8Array(12));
-  return Array.from(b, (v) => a[v % a.length]).join("");
-}
-
 /** The playing game's slot, when it is a stored one this tab writes (not a `?new=1` page). */
 function playingSlot(): string | null {
   const s = saveSlotsState.peek();
@@ -191,8 +222,11 @@ let sending = false;
 export async function sendScores(now = false) {
   const s = session.peek(), slot = playingSlot(), m = moneyState.peek();
   if (sending || !s || accountState.peek() !== "on" || !slot || !m) return;
-  const all = games(), e = all[slot] ?? { id: newGameId() };
-  const acct = s.account.id;
+  const all = games(), acct = s.account.id;
+  // T-988: the slot's game id on the account names its figures too (a fork or a kept copy has a new one)
+  const cid = saveSlotsState.peek().slots.find((x) => x.key === slot)?.cloud?.id;
+  let e = all[slot] ?? { id: cid ?? newGameId() };
+  if (cid && e.id !== cid) e = { id: cid };
   let body: unknown;
   if (m.mode === "sandbox") {
     // only a game that may have figures on this account needs the notice
@@ -248,9 +282,21 @@ let started = false;
 export function startAccount() {
   if (started || !BASE) return;
   started = true;
+  // T-988: the clock worker gets the account on every change; a dead token found there signs out
+  onTokenGone(tokenGone);
+  onAccountGone(tokenGone);
+  let posted = "";
+  effect(() => {
+    void session.value; void accountState.value; void accountConfig.value;
+    const c = cloudContext(), k = JSON.stringify(c ? [c.token, c.acct, c.on] : null);
+    if (k === posted) return;
+    posted = k;
+    postAccount(c);
+  });
   void (async () => {
     try {
       const cfg = await api<AccountConfig>("GET", "noritetsu/config", undefined, { auth: false });
+      lsSet(GAMES_ON_KEY, !!cfg.trainworldGames);
       accountConfig.value = cfg;
       accountState.value = cfg.signIn && cfg.trainworld ? "on" : "unavailable";
     } catch {

@@ -73,6 +73,9 @@ export const Icon = {
   // a city's star in the Cities list
   star: () => <svg viewBox="0 0 16 16"><path class="solid" d="M8 1.5l1.9 4.1 4.5.5-3.4 3 1 4.4L8 11.3l-4 2.2 1-4.4-3.4-3 4.5-.5z" /></svg>,
   // the account (head and shoulders) and the leaderboards
+  // T-988: a game on the account, and one only in this browser
+  cloud: () => <svg viewBox="0 0 16 16"><path d="M4.6 12.5h7a2.6 2.6 0 00.3-5.2 3.9 3.9 0 00-7.5-.9 2.9 2.9 0 00.2 6.1z" /></svg>,
+  cloudOff: () => <svg viewBox="0 0 16 16"><path d="M4.6 12.5h7a2.6 2.6 0 00.3-5.2 3.9 3.9 0 00-7.5-.9 2.9 2.9 0 00.2 6.1zM2.5 2.5l11 11" /></svg>,
   person: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="5.2" r="2.9" /><path d="M2.4 14.2c.6-3 2.9-4.6 5.6-4.6s5 1.6 5.6 4.6" /></svg>,
   trophy: () => <svg viewBox="0 0 16 16"><path d="M4.5 2.5h7v3.5a3.5 3.5 0 01-7 0zM4.5 3.8H2.5c0 2 .8 3.2 2.3 3.4M11.5 3.8h2c0 2-.8 3.2-2.3 3.4M8 9.5v2.5M5.5 13.5h5" /></svg>,
   gear: () => (

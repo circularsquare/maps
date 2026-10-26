@@ -436,6 +436,21 @@ reads "No stations yet."
   in another, Save takes the slot over: this tab autosaves from then on, and the other says
   "Autosave is off here because this game was saved in another tab." until a save by hand there
   takes it back (architecture.md "One writer per slot").
+- **Games on the account** [T-988; architecture.md 11 "Games on the account"], only while signed
+  in to a server that keeps games: under the Playing card's facts "Saved to your account 9:41 PM"
+  (the time the account's copy was saved; "Oct 24" form after a day; the full date on hover) or
+  "Not on your account yet" (the reason on hover: "Offline", "The server could not be reached",
+  "Your account is full. Delete a game to make room.", "This game is too big to keep on your
+  account."); nothing while another device has the game (the panel's callout and the top bar say
+  "Autosave is off here because this game was opened on another device.", and Save takes it
+  back, its hover saying autosave stops on the other device). Another card whose game another
+  device opened or saved in the last 10 minutes says "Open on another device" (the time on
+  hover). A game not tied to the account (kept here only, made signed out, or another account's)
+  has a crossed cloud after its name (hover "Only in this browser"). After the browser's cards,
+  the account's games not in this browser: the server's picture and facts, a cloud after the name
+  (hover "On your account"), Open (downloads it into a new slot and opens it as Open does) and
+  Delete, asked first: "Delete "Tokyo" from your account?". Deleting a tied slot asks "Delete
+  "Tokyo" from this browser and your account?".
 - Under the Playing card, its backups [T-744], newest first: "Backup 4 min ago · Day 26" (exact
   time on hover) and Restore as a copy, which closes the panel and opens the backup in a new slot.
 - Above the cards [T-1131]: Save to a file
@@ -503,8 +518,9 @@ registry centre and zoom, or over New York with none [T-310].
 
 ## Account and leaderboards
 
-[T-972, T-973; `game/account.ts`, `ui/AccountPanel.tsx`, `ui/Leaderboard.tsx`; server routes in
-shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
+[T-972, T-973, T-988; `game/account.ts`, `game/accountGames.ts`, `ui/AccountPanel.tsx`,
+`ui/Leaderboard.tsx`; server routes in shonei-server's `trainworld.go`, `trainworld_games.go` and
+`docs/trainworld-api.md`; notes/T-972.md, notes/T-988.md]
 
 - **Optional.** Signing in is never needed to play. The account is noritetsu's (Google, or a
   username and password with an optional recovery email), kept under noritetsu's storage key, so on
@@ -518,13 +534,21 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   account and Forgot password; Privacy and Terms (`public/privacy.html`, `terms.html`). Signed in:
   "Signed in as alice" (or with Google), for a password account the recovery email ("No recovery
   email" in red when there is none) with Save email, Remove and Change password, then Sign out and
-  Delete account (asked first; the account's leaderboard entries and noritetsu rides go
-  too, games in this browser stay).
+  Delete account (asked first: "Delete your account? Its games, its leaderboard entries and its
+  noritetsu rides go too. Games in this browser stay."; the browser's slots are then tied to no
+  account).
+- **The sign-in question** [T-988]: signing in, or a load already signed in, with slots tied to no
+  account (made signed out, never answered) opens the account panel on "Add the 3 games in this
+  browser to your account?" ("Add Tokyo to your account?" for one) with Add (lit) and Don't add;
+  Don't add asks "Are you sure? Games kept only in this browser are lost if its storage is
+  cleared." with Keep them here only and Add them ("Keep it here only", "Add it" for one). Added
+  games go up at once; kept ones are never asked about again and carry the crossed cloud.
 - **Scores**: while signed in, each normal game in a browser slot sends its points (the past 24
   game hours, the World row's figure) and its best 64 cities' points, when they change and at
   most every 2 wall minutes (at once on the first send and when the page is hidden), joined or not.
   A `?new=1` page or one whose slot is open elsewhere sends nothing. Each slot has a random game id
-  in localStorage (`trainworld.score-games.v1`). A game that turns sandbox sends that once and is
+  in localStorage (`trainworld.score-games.v1`), or the id of its game on the account when it has
+  one (T-988), so one id names a game's save and its figures. A game that turns sandbox sends that once and is
   never listed again; one that was always a sandbox sends nothing. A slot deleted in this browser
   takes its figures off (on the next signed-in load if signed out then).
 - **Leaderboards**: the trophy opens a centred modal: a picker (World, then the cities in this
@@ -543,6 +567,9 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   anitabuilder!" with "Build trains around the world!" under it [T-1242] (the account button at
   its top right when accounts are on [T-972]), New game, then "Saved games", one button per browser slot, the most recent first, each with the
   saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash).
+  Signed in (T-988), the slots are first settled against the account (a click on a card waits for
+  that, 10 s at most), and the account's games not in this browser follow the browser's as cards
+  with a cloud (hover "On your account"); a click downloads one into a new slot and opens it.
   With no saved game it is New game alone. The dock and top bar are taken out of the page and the
   map controls hidden, so the map fills the page; it shows the world from 60° S to 75° N covering
   the page (all of it on a wide screen, its centre around 10° E, 20° N on a narrow one) [T-927;

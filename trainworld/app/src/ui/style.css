@@ -632,6 +632,9 @@ rect.now { fill-opacity: .45; }
 .new-game-foot > :not(.new-game-start) { grid-column: 1; grid-row: 1; justify-self: start; }
 .new-game-start { grid-column: 2; grid-row: 1; height: 36px; padding: 0 28px; font-weight: 700; background: var(--tint); }
 .save-sandbox { margin-left: 6px; padding: 0 5px; border: 1px solid var(--rule); font-weight: 400; color: var(--muted); }
+/* T-988: a game only on the account (cloud) or only in this browser (crossed cloud), after its name */
+.save-cloud { display: inline-flex; vertical-align: -2px; margin-left: 6px; color: var(--muted); }
+.save-cloud svg { width: 15px; height: 15px; }
 .cash.sandbox { color: var(--muted); }
 .game-mode { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 /* T-927: the dock and top bar take no room either, so the world map fills the page behind the menu */

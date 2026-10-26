@@ -94,6 +94,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Account (T-972, T-973): `account.ts` (the optional anita.garden account, noritetsu's, and the
   leaderboards: which server, the session, each slot's game id and its score sends, the boards;
   shonei-server's `trainworld.go`); its panels `ui/AccountPanel.tsx` and `ui/Leaderboard.tsx`.
+  T-988, games on the account: `accountGames.ts` (the main thread's side: the account's list and
+  pictures, the start menu's settling, downloads and deletions, the sign-in question) over
+  `workers/cloud.ts`.
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
   `fareCurve.ts` (the fare curve through the player's three nodes, the first the base fare at 0 km: fare at a length, the first stretch's base and rate, the knots the sim takes, old saves' lines as three nodes, T-883, T-1112, T-1143), `income.ts` and `countryIncome.json` (fares by national income, T-1277: a fare dollar's perceived minutes by country, each country's fare scale by income or the player's, GDP per head at PPP from notes/T-1277/income_table.py), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
@@ -184,7 +187,7 @@ the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the s
 and families, then the fit in steps on a track model of its own, dropped for a newer request, T-727d, T-754; the outlines of the regions with a graph sent to the page, T-913); `protocol.ts` (edit ops, clock messages, the network snapshot for demand), `clock.worker.ts` (owns
 the network: `TrackApi`, notes/T-025.md; money and autosave too; `slotSummary`, a save's picture
 with a panel per city, T-894), `saveFile.ts` (the save format
-and IndexedDB, T-029; slots' backups, T-744; removed zone ids taken as their successors on load, T-1053), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
+and IndexedDB, T-029; slots' backups, T-744; removed zone ids taken as their successors on load, T-1053; each slot's tie to the account, T-988), `cloud.ts` (games on the account, T-988: uploads, claims, settling, forks; used by the clock worker and the main thread), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),
 `demandProtocol.ts`, `cacheWrite.worker.ts` (the demand cache's IndexedDB write, off the main thread, T-789), `demandClusters.ts` (the network split into clusters that share no rider,
 each a sub-network, T-326; `reachView`, a city's own network inside its cluster, T-756; `marketReaches`, which stations the market's riders use, T-396), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
@@ -318,6 +321,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   persistent storage asked; port 6146 by default), `t1251-save-by-hand.mjs` (two tabs on one slot:
   Save with autosave on, Save in the tab without the lock takes it and the other stops autosaving,
   Ctrl+S takes it back, a double click renames in place and Escape cancels; port 6161 by default),
+  `t988-cloud.mjs` (games on the account against a local shonei-server it builds and runs, two
+  profiles as two devices: the sign-in question, saved on A and opened on B, A stops, a save by
+  hand takes it back, offline play, a fork, a delete crossing over, a game kept here only;
+  t988-question-*.png, t988-saves-*.png; about 5 minutes, port 6169 by default),
   `t743-slots.mjs` (through the saves panel: Load a file, New game and a backup's Restore as a copy
   each open a new slot and leave every other slot's bytes as they were, the real save and
   artifacts/trainworld/recovered-day26.save both; two backups rotate at `?backupMs=4000`; a deleted

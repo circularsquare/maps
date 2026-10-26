@@ -22,6 +22,7 @@ import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd,
 import { anchorVersion } from "../map/anchorVersion";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
 import type { NewGameSpec, PendingLoad } from "./saveFile";
+import type { CloudContext } from "./cloud";
 import type { FrameSpec } from "../game/frame";
 import { dataUrl } from "../game/dataBase";
 import { saveRefusal } from "../game/memoryCheck";
@@ -37,6 +38,16 @@ export function manageSaveSlot(action: "refresh" | "save" | "create" | "open" | 
   if (action === "restore" && key) return void ifItFits({ key }, () => switchGame({ load: "restore" }, { kind: "restore", key, from: saveSlotsState.peek().active }));
   current?.post({ kind: "saveSlot", action, key, name });
 }
+
+/** T-988: the account the clock worker syncs the slots with; `settle` settles them all again. */
+export function postAccount(ctx: CloudContext | null, settle = false) {
+  current?.post({ kind: "account", ctx, settle });
+}
+let accountGone = () => {};
+/** T-988: what to do when the worker's upload finds the session's token dead */
+export function onAccountGone(f: () => void) { accountGone = f; }
+/** Whether the clock worker has started (not on the start menu). */
+export const clockRunning = () => !!current?.running;
 
 export const clockWorkerStatus = signal("loading");
 /** The newest network snapshot (what demand runs on); null until the worker has started. */
@@ -483,6 +494,8 @@ export class ClockClient {
     this.post({ kind: "leave", pending });
   }
 
+  get running() { return !!this.worker; }
+
   post(msg: ToClock, transfer: Transferable[] = []) {
     if (this.worker) this.worker.postMessage(msg, transfer);
     else this.waiting.push([msg, transfer]);
@@ -682,6 +695,9 @@ export class ClockClient {
       }
       case "saved":
         lastSaved.value = msg.at;
+        break;
+      case "accountGone":
+        accountGone();
         break;
       case "savedByHand":
         // a refusal is said with the saveSlots message that follows it

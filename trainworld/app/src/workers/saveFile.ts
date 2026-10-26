@@ -246,7 +246,31 @@ export interface StoredSave extends Partial<SlotSummary> {
   city?: string;
 }
 
-export interface SaveSlot extends Partial<SlotSummary> { key: string; name: string; at: number; day: number; }
+export interface SaveSlot extends Partial<SlotSummary> { key: string; name: string; at: number; day: number; /** T-988 */ cloud?: SyncRecord; }
+
+/** T-988: a slot's tie to a game on the account (`sync:<slot>`, deleted with the slot). Absent, or
+ * without `acct`, for a slot tied to no account (a game made while signed out). The slot has changed
+ * here since its last sync when its `at` is not `syncedAt`. */
+export interface SyncRecord {
+  /** the game id, also the leaderboards' */
+  id: string;
+  acct?: string;
+  /** the account's rev this slot last uploaded or downloaded; 0 before its first upload */
+  rev: number;
+  /** the slot's `at` at that moment */
+  syncedAt: number;
+  /** Date.now() of the last upload that went through */
+  upAt?: number;
+  /** when the account's copy was saved (ms), for "Saved to your account" */
+  okAt?: number;
+  /** another device opened the game: this one stopped saving it, and its next load takes the
+   * account's copy without a fork */
+  gaveWay?: boolean;
+  /** kept in this browser only (the sign-in question's answer) */
+  local?: boolean;
+  /** why the last upload failed */
+  error?: string;
+}
 export const ORIGINAL_SLOT = "autosave";
 export const ORIGINAL_NAME = "Original game";
 export function slotName(key: string, save?: StoredSave | null): string { return save?.name || (key === ORIGINAL_SLOT ? ORIGINAL_NAME : "Saved game"); }
@@ -311,20 +335,67 @@ export async function listSlots(): Promise<SaveSlot[]> {
   const s = await store("readonly");
   const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string" && (k === ORIGINAL_SLOT || k.startsWith("slot-")));
   const saves = await Promise.all(keys.map((k) => req(s.get(k)) as Promise<StoredSave>));
+  const syncs = await Promise.all(keys.map((k) => req(s.get(SYNC_PREFIX + k)) as Promise<SyncRecord | undefined>));
   return keys.flatMap((key, i) => {
     const s = saves[i];
     if (!s) return [];
-    return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, panels: s.panels, shade: s.shade, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash, mode: s.mode }];
+    return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, panels: s.panels, shade: s.shade, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash, mode: s.mode, cloud: syncs[i] }];
   }).sort((a, b) => b.at - a.at);
 }
 
-/** Save while preserving a slot's latest name (it may have been renamed elsewhere). */
-export async function writeSlot(key: string, v: StoredSave): Promise<void> {
+/** Save while preserving a slot's latest name (it may have been renamed elsewhere); true if the slot
+ * was not there before. */
+export async function writeSlot(key: string, v: StoredSave): Promise<boolean> {
   const s = await store("readwrite");
   const done = committed(s.transaction);
   const old = await req<StoredSave | undefined>(s.get(key));
   await req(s.put({ ...v, name: v.name ?? old?.name ?? slotName(key) }, key));
   await done;
+  return !old;
+}
+
+const SYNC_PREFIX = "sync:";
+export async function readSync(key: string): Promise<SyncRecord | null> {
+  try {
+    return ((await req((await store("readonly")).get(SYNC_PREFIX + key))) as SyncRecord | undefined) ?? null;
+  } catch {
+    return null;
+  }
+}
+export async function writeSync(key: string, v: SyncRecord | null): Promise<boolean> {
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    if (v) await req(s.put(v, SYNC_PREFIX + key));
+    else await req(s.delete(SYNC_PREFIX + key));
+    await done;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** T-988: games deleted here whose deletion has not reached the account yet */
+const CLOUD_DELETES = "cloud-deletes";
+export interface CloudDelete { id: string; acct: string }
+export async function readCloudDeletes(): Promise<CloudDelete[]> {
+  try {
+    return ((await req((await store("readonly")).get(CLOUD_DELETES))) as CloudDelete[] | undefined) ?? [];
+  } catch {
+    return [];
+  }
+}
+export async function writeCloudDeletes(v: CloudDelete[]): Promise<boolean> {
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    if (v.length) await req(s.put(v, CLOUD_DELETES));
+    else await req(s.delete(CLOUD_DELETES));
+    await done;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function renameSlot(key: string, name: string): Promise<void> {
@@ -340,6 +411,7 @@ export async function deleteSlot(key: string): Promise<void> {
   const s = await store("readwrite");
   const done = committed(s.transaction);
   await req(s.delete(key));
+  await req(s.delete(SYNC_PREFIX + key));
   // and its demand cache (T-328) and backups (T-744)
   for (const k of await req(s.getAllKeys())) if (typeof k === "string" && (k.startsWith(`${DEMAND_PREFIX}${key}:`) || k.startsWith(`${BACKUP_PREFIX}${key}:`))) s.delete(k);
   await done;
