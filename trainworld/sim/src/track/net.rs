@@ -818,10 +818,10 @@ impl Network {
     pub fn bus_lines(&self) -> Vec<u32> {
         (0..self.line_count() as u32).filter(|&l| self.is_bus(l)).collect()
     }
-    /// A bus route's road length, m (`bus::ROAD_FACTOR` times the drawn ground length).
+    /// A bus route's road length, m (its drawn length, times `bus::ROAD_FACTOR` where it is straight).
     pub fn bus_road_m(&self, l: u32) -> f64 {
         match self.line_bus.get(l as usize).and_then(|b| b.as_ref()) {
-            Some(r) if self.line_ok(l) => super::bus::Poly::new(self, &r.points).len() * super::bus::ROAD_FACTOR,
+            Some(r) if self.line_ok(l) => super::bus::Poly::new(self, &r.points, &r.kinds).road_len(),
             _ => 0.0,
         }
     }
@@ -1593,7 +1593,7 @@ impl Network {
     /// The node sequence of a line's path, or the first problem with it.
     pub fn check_line(&self, l: u32) -> Result<Vec<u32>, Issue> {
         if let Some(r) = self.line_bus.get(l as usize).and_then(|b| b.as_ref()) {
-            return if super::bus::route_ok(self, &r.points) { Ok(vec![]) } else { Err(Issue::LinePath { line: l }) };
+            return if super::bus::route_ok(self, &r.points, &r.kinds) { Ok(vec![]) } else { Err(Issue::LinePath { line: l }) };
         }
         let path = self.line_path(l);
         let stops = self.line_stops(l);

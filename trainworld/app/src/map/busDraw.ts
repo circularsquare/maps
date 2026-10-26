@@ -1,8 +1,10 @@
-// Drawing a bus line (T-1464, design T-1445): click points, straight between them, no track and no
-// snapping. The clock worker quotes the route as it is drawn (`busQuote`): road length, price and
-// where the stops would go; the stops and the tag by the pointer show that answer. Double click or
-// Enter makes the line (`addBusLine`), or, with an existing line's route loaded (`begin(line, ...)`),
-// redraws it (`busRoute`). Backspace and right click take back the last point, Escape drops the lot.
+// Drawing a bus line (T-1464, design T-1445): click points, no track. Between two clicks the route
+// follows the basemap's roads where a short enough road path exists, else it is straight (T-1465,
+// `busRoads.ts`); a click within 100 m of a road lands on it. The clock worker quotes the route as it
+// is drawn (`busQuote`): road length, price and where the stops would go; the stops and the tag by the
+// pointer show that answer. Double click or Enter makes the line (`addBusLine`), or, with an existing
+// line's route loaded (`begin(line, ...)`), redraws it (`busRoute`). Backspace and right click take
+// back the last point, Escape drops the lot.
 //
 // The tool owns no map layer: the route and stops are an SVG over the map in screen pixels, like
 // the station ghost (map/tools.ts, which holds the tool's pointer events and the shared tag).
@@ -20,6 +22,7 @@ import type { ClockClient } from "../workers/clockClient";
 import { metresBetween } from "../game/walks";
 import { SAME_TAP_PX, touchInput, type TouchCtl } from "./touch";
 import type { Overlay } from "./overlay";
+import { BusRoads, type Leg } from "./busRoads";
 
 /** the sim's `bus::MIN_ROUTE_M` */
 const MIN_ROUTE_M = 100;
@@ -48,10 +51,33 @@ function parseQuote(d: Float64Array): Quote {
   return { road: d[0], cost: d[1], ok: d[2] === 1, stops, street };
 }
 
-const routeOf = (pts: Pt[]): number[] => pts.flatMap((p) => { const q = lngLatToPack(p.lng, p.lat); return [q.x, q.y]; });
+/** the sim's `bus::K_CORNER` and `K_ROAD` */
+const K_CORNER = 1, K_ROAD = 2;
+/** a route point this close (px) to the last drawn one is left out of the drawing */
+const DRAW_PX = 1.2;
+
+/** The route as the sim has it: x, y and kind per point (longitude, latitude pairs in `ll`). */
+const routeOf = (b: Built): number[] => {
+  const out: number[] = [];
+  for (let i = 0; i < b.kinds.length; i++) {
+    const q = lngLatToPack(b.ll[2 * i], b.ll[2 * i + 1]);
+    out.push(q.x, q.y, b.kinds[i]);
+  }
+  return out;
+};
+
+/** The route so far: every point with its kind, the corners (where the player clicked), whether every
+ * leg has its roads, and where the leg to the pointer starts (a point index; -1 with no pointer leg). */
+interface Built { ll: number[]; kinds: number[]; corners: Pt[]; ready: boolean; hoverAt: number; sig: string }
 
 export class BusDraw {
+  /** the corners as clicked, and the leg after each but the last */
   private pts: Pt[] = [];
+  private legs: Leg[] = [];
+  readonly roads: BusRoads;
+  /** changes whenever the corners or their legs do */
+  private rev = 0;
+  private builds = new Map<string, Built>();
   /** the pointer (mouse), and the point a tap previews */
   private at: Pt | null = null;
   private touchAt: Pt | null = null;
@@ -68,6 +94,7 @@ export class BusDraw {
   private svg: SVGSVGElement;
 
   constructor(private map: MlMap, box: HTMLElement, private tag: HTMLElement, private client: ClockClient, private overlay: Overlay, private host: { exit(): void }) {
+    this.roads = new BusRoads(map, () => this.loaded());
     this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     this.svg.setAttribute("class", "bus-draw");
     this.svg.style.cssText = "position:absolute;left:0;top:0;overflow:visible;display:none";
@@ -92,10 +119,20 @@ export class BusDraw {
   }
 
   /** Start the tool: a new line (`line` null) or the route of line number `line` as `routeLL`
-   * (longitude, latitude pairs, flat) to redraw. The caller has left the tool before. */
-  begin(line: number | null, routeLL: number[] = [], colour?: string) {
+   * (longitude, latitude pairs, flat) and its point `kinds` to redraw: its corners stay, and the
+   * stretches between them as they are. The caller has left the tool before. */
+  begin(line: number | null, routeLL: number[] = [], colour?: string, kinds: number[] = []) {
     this.pts = [];
-    for (let k = 0; k + 1 < routeLL.length; k += 2) this.pts.push({ lng: routeLL[k], lat: routeLL[k + 1] });
+    this.legs = [];
+    const n = routeLL.length >> 1;
+    let from = -1;
+    for (let i = 0; i < n; i++) {
+      if (i > 0 && i < n - 1 && !((kinds[i] ?? K_CORNER) & K_CORNER)) continue;
+      this.pts.push({ lng: routeLL[2 * i], lat: routeLL[2 * i + 1] });
+      if (from >= 0) this.legs.push({ pts: routeLL.slice(2 * from, 2 * i + 2), road: !!((kinds[i] ?? 0) & K_ROAD), ready: true, m: 0 });
+      from = i;
+    }
+    this.rev++;
     this.line = line;
     this.at = this.touchAt = null;
     this.quote = null;
@@ -111,6 +148,8 @@ export class BusDraw {
   /** the tool was left (the tool signal is on something else) */
   clear() {
     this.pts = [];
+    this.legs = [];
+    this.rev++;
     this.at = this.touchAt = null;
     this.quote = null;
     this.wantKey = "";
@@ -131,17 +170,78 @@ export class BusDraw {
     return touchInput.peek() ? this.touchAt : this.at;
   }
 
+  /** The route so far as points, built from the legs and, with the pointer out, the leg to it. */
+  private build(withHover: boolean): Built {
+    const hover = withHover ? this.hoverPt() : null;
+    const key = `${this.rev}|${hover ? hover.lng + "," + hover.lat : ""}`;
+    const hit = this.builds.get(key);
+    if (hit) return hit;
+    const legs = [...this.legs];
+    let hoverLeg: Leg | null = null;
+    if (hover && this.pts.length) legs.push((hoverLeg = this.roads.leg(this.pts[this.pts.length - 1], hover)));
+    const ll: number[] = [], kinds: number[] = [], corners: Pt[] = [];
+    let ready = true, hoverAt = -1;
+    if (!legs.length) {
+      // one corner, or the pointer alone: where it would land
+      const p = this.pts[0] ?? hover;
+      if (p) {
+        const c = this.roads.corner(p);
+        ready = !!c;
+        const q = c ?? p;
+        ll.push(q.lng, q.lat);
+        kinds.push(K_CORNER);
+        corners.push(q);
+      }
+    }
+    legs.forEach((leg, i) => {
+      if (!leg.ready) ready = false;
+      const n = leg.pts.length;
+      if (i === 0) {
+        ll.push(leg.pts[0], leg.pts[1]);
+        kinds.push(K_CORNER);
+        corners.push({ lng: leg.pts[0], lat: leg.pts[1] });
+      }
+      if (leg === hoverLeg) hoverAt = kinds.length - 1;
+      for (let k = 2; k < n; k += 2) {
+        ll.push(leg.pts[k], leg.pts[k + 1]);
+        kinds.push((leg.road ? K_ROAD : 0) | (k + 2 >= n ? K_CORNER : 0));
+      }
+      if (leg !== hoverLeg) corners.push({ lng: leg.pts[n - 2], lat: leg.pts[n - 1] });
+    });
+    const b: Built = { ll, kinds, corners, ready, hoverAt, sig: `${key}|${ll.length}|${ready}|${hoverLeg ? hoverLeg.road : ""}` };
+    if (this.builds.size > 40) this.builds.clear();
+    this.builds.set(key, b);
+    return b;
+  }
+
+  /** Tiles arrived: legs that waited for them are made again. */
+  private loaded() {
+    let changed = false;
+    this.legs.forEach((leg, i) => {
+      if (leg.ready) return;
+      const now = this.roads.leg(this.pts[i], this.pts[i + 1]);
+      if (now.ready) {
+        this.legs[i] = now;
+        changed = true;
+      }
+    });
+    if (changed) this.rev++;
+    this.builds.clear();
+    if (tool.peek() !== "bus") return;
+    this.ask();
+    this.place();
+  }
+
   private ask() {
-    const all = [...this.pts, ...(this.hoverPt() ? [this.hoverPt()!] : [])];
-    if (all.length < 2) {
+    const b = this.build(true);
+    if (b.kinds.length < 2) {
       this.quote = null;
       this.wantKey = "";
       return;
     }
-    const route = routeOf(all), key = route.join(",");
-    if (key === this.wantKey) return;
-    this.wantKey = key;
-    this.wantRoute = route;
+    if (b.sig === this.wantKey) return;
+    this.wantKey = b.sig;
+    this.wantRoute = routeOf(b);
     if (!this.inflight) this.fire();
   }
 
@@ -162,6 +262,7 @@ export class BusDraw {
 
   move(e: MapMouseEvent) {
     this.at = { lng: e.lngLat.lng, lat: e.lngLat.lat };
+    this.roads.look(this.at);
     this.ask();
     this.place();
   }
@@ -183,6 +284,8 @@ export class BusDraw {
       if (Math.hypot(a.x - b.x, a.y - b.y) < SAME_PX) return;
     }
     this.pts.push(p);
+    if (last) this.legs.push(this.roads.leg(last, p));
+    this.rev++;
     this.changed();
   }
 
@@ -191,6 +294,8 @@ export class BusDraw {
     if (this.busy) return;
     if (this.pts.length === 0) return this.host.exit();
     this.pts.pop();
+    this.legs.pop();
+    this.rev++;
     this.changed();
   }
 
@@ -201,6 +306,8 @@ export class BusDraw {
       if (this.line !== null || this.pts.length === 0) this.host.exit();
       else {
         this.pts = [];
+        this.legs = [];
+        this.rev++;
         this.touchAt = null;
         this.changed();
       }
@@ -263,6 +370,14 @@ export class BusDraw {
 
   // ---------------------------------------------------------------- finishing
 
+  /** Wait (a few seconds at most) for the roads under legs still waiting for their tiles. */
+  private async settle() {
+    for (let i = 0; i < 40 && this.legs.some((l) => !l.ready); i++) {
+      await new Promise((r) => setTimeout(r, 100));
+      this.loaded();
+    }
+  }
+
   /** Make the line, or redraw the route, from the points placed; a route that makes no line is
    * refused with the reason. */
   async finish() {
@@ -273,7 +388,9 @@ export class BusDraw {
     }
     this.busy = true;
     try {
-      const route = routeOf(this.pts), line = this.line;
+      await this.settle();
+      if (tool.peek() !== "bus") return;
+      const route = routeOf(this.build(false)), line = this.line;
       const q = parseQuote(await this.client.query({ what: "busQuote", line: line ?? NEW_LINE, route }));
       if (tool.peek() !== "bus") return;
       if (!q.ok) {
@@ -315,23 +432,37 @@ export class BusDraw {
       return;
     }
     const hover = this.hoverPt();
-    const all = hover ? [...this.pts, hover] : this.pts;
-    const q = this.quote && all.length >= 2 ? this.quote : null;
+    const b = this.build(true);
+    const n = b.kinds.length;
+    const q = this.quote && n >= 2 ? this.quote : null;
     const xy = (p: Pt) => { const s = this.map.project([p.lng, p.lat]); return `${s.x.toFixed(1)} ${s.y.toFixed(1)}`; };
     const col = this.colour;
     const parts: string[] = [];
-    if (all.length >= 2) {
-      const d = "M" + all.map(xy).join("L");
-      const dim = hover && this.pts.length >= 1 ? "M" + [this.pts[this.pts.length - 1], hover].map(xy).join("L") : "";
+    // the route's points on the screen, leaving out those within a pixel of the last one kept
+    const line = (from: number, to: number) => {
+      let d = "", lx = NaN, ly = NaN;
+      for (let i = from; i < to; i++) {
+        const s = this.map.project([b.ll[2 * i], b.ll[2 * i + 1]]);
+        if (i > from && i < to - 1 && Math.abs(s.x - lx) < DRAW_PX && Math.abs(s.y - ly) < DRAW_PX) continue;
+        d += `${i === from ? "M" : "L"}${s.x.toFixed(1)} ${s.y.toFixed(1)}`;
+        lx = s.x;
+        ly = s.y;
+      }
+      return d;
+    };
+    if (n >= 2) {
+      const d = line(0, n);
+      const dim = b.hoverAt >= 0 ? line(b.hoverAt, n) : "";
       parts.push(`<path d="${d}" fill="none" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--map-land);stroke-width:7px;stroke-opacity:.9"/>`);
       parts.push(`<path d="${d}" fill="none" stroke-linejoin="round" stroke-linecap="round" style="stroke:${col};stroke-width:3.5px"/>`);
       if (dim) parts.push(`<path d="${dim}" fill="none" stroke-linecap="round" style="stroke:var(--map-land);stroke-width:2px;stroke-opacity:.45"/>`);
     }
-    // the corners the player clicked
-    for (const p of this.pts) {
+    // the corners the player clicked, where they landed
+    for (const p of b.corners) {
       const [x, y] = xy(p).split(" ");
       parts.push(`<circle cx="${x}" cy="${y}" r="2.6" style="fill:${col};stroke:var(--map-land);stroke-width:1px"/>`);
     }
+    const end: Pt | null = n ? { lng: b.ll[2 * n - 2], lat: b.ll[2 * n - 1] } : null;
     const ring = (p: Pt, r: number, w: number) => {
       const [x, y] = xy(p).split(" ");
       return `<circle cx="${x}" cy="${y}" r="${r}" style="fill:var(--map-land);stroke:${col};stroke-width:${w}px"/>`;
@@ -344,15 +475,15 @@ export class BusDraw {
         else if (s.kind === 1) parts.push(`<circle cx="${x}" cy="${y}" r="9" style="fill:none;stroke:${col};stroke-width:2.5px"/>`);
         else parts.push(ring(s, 3.6, 1.8));
       }
-    } else if (hover && this.pts.length === 0) {
-      const [x, y] = xy(hover).split(" ");
+    } else if (hover && end && this.pts.length === 0) {
+      const [x, y] = xy(end).split(" ");
       parts.push(`<rect x="${+x - 4.5}" y="${+y - 4.5}" width="9" height="9" rx="2.5" style="fill:var(--map-land);stroke:${col};stroke-width:2.2px"/>`);
     }
     this.svg.style.display = "";
     this.svg.setAttribute("width", String(this.overlay.cssW));
     this.svg.setAttribute("height", String(this.overlay.cssH));
     this.svg.innerHTML = parts.join("");
-    this.placeTag(q, hover, all.length);
+    this.placeTag(q, hover && end, n);
   }
 
   private placeTag(q: Quote | null, hover: Pt | null, n: number) {

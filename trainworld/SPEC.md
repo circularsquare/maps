@@ -267,7 +267,8 @@ T-694]. A city's goals are train shares of 10%, 20%, 30% and 40%, each kept once
 one is a star in the Cities list [T-685], and all are ticks on the top bar's split and listed as
 goals reached in the city view [T-1437, T-1438].
 
-Bus lines (T-1464) need no track: the player clicks a route, stops place themselves at the train
+Bus lines (T-1464, T-1465) need no track: the player clicks a route that follows the roads between
+clicks (straight where they do not serve), stops place themselves at the train
 stations it passes and about every 2 km, buses run a flat 18 km/h, and homes within 400 m of the
 route ride from it; US$1M a road-km and US$0.6M a bus. Trips by bus count as rail.
 

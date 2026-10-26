@@ -533,7 +533,7 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
 /// line's dwell at the train stations, with no capacity holds.
 fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     let mut ls = LineSvc::default();
-    let plan = super::bus::plan(net, l, &r.points, r.built);
+    let plan = super::bus::plan(net, l, &r.points, &r.kinds, r.built);
     if plan.stops.len() < 2 {
         return ls;
     }
@@ -1131,7 +1131,7 @@ impl Service {
     pub fn position(&self, net: &Network, line: u32, run: usize, s: f64) -> (f64, f64) {
         if let (Some(r), Some(plan)) = (net.line_bus.get(line as usize).and_then(|b| b.as_ref()), self.lines[line as usize].bus.as_ref()) {
             let road = if run == 0 { s } else { plan.len - s };
-            return super::bus::Poly::new(net, &r.points).at(road / super::bus::ROAD_FACTOR);
+            return super::bus::at_road(&r.points, &plan.cum, road);
         }
         let (e, _, d) = self.segment_at(net, line, run, s);
         let (x, y, _) = geom::pos_at(net.edge_pieces(e), d);

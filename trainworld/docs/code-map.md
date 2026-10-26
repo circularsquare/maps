@@ -20,7 +20,7 @@ tests natively.
   notes/T-040.md. Methods only tests and bins call (`set_line`, `set_edge`, `to_lonlat` and the
   like) sit in plain `impl` blocks, not in the WASM exports; the same holds for `DemandApi`,
   `EverydayApi` and `IntercityApi`. A big file's tests are in its own `<file>/tests.rs`.
-- `src/track/bus.rs`: bus lines (T-1464): the drawn route (`BusRoute`), its stops (`plan`: stations met, ends, crossings, about one every 2 km on the 400 m street grid, each with its stretch of route), the flat-speed trip (`profile`); `wasm/bus.rs` its exports, tests in `wasm/bus_tests.rs`; notes/T-1464.md.
+- `src/track/bus.rs`: bus lines (T-1464, T-1465): the route (`BusRoute`: points with corner and road bits; `Poly` in road metres), its stops (`plan`: stations met, ends, crossings, about one every 2 km on the 400 m street grid, each with its stretch of route), the flat-speed trip (`profile`); `wasm/bus.rs` its exports, tests in `wasm/bus_tests.rs`; notes/T-1464.md.
 - `src/track/cost.rs`: prices (SPEC 6.4), the water mask types and the terrain classes
   (`ClassGrid`, `Terrain`, `terrain_spans`, T-1270), installed with `TrackApi::add_terrain`.
 - `src/track/trace.rs`: a real railway's line as corners within a tolerance (T-727c), for
@@ -145,7 +145,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   for names and tags: `BoxGrid`, `tagLines`, `tipBeside`, `TAG_OFFSET_PX`, `screenBounds`).
 - Bus lines (T-1464): `busLayer.ts` (a bus line on the map: its route, stops, corridor shade on
   selection, tags and pick, drawn by the renderer under rail), `busDraw.ts` (the bus tool: clicked
-  points, the worker's `busQuote` preview and price tag, `busDraft`).
+  points, the worker's `busQuote` preview and price tag, `busDraft`), and the roads they follow (T-1465):
+  `busRoads.ts` (zoom 14 tiles fetched from the basemap's tile server, snapping and `leg`),
+  `roadGraph.ts` (the road graph from those tiles and its A* search), `roadTiles.ts` (the vector tile reader).
 - Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
   second click's route, T-727d; only where a graph covers the click, `covers`, T-913), `pick.ts`, `cellIndex.ts` and `snapIndex.ts` (grids built in idle time that narrow a pick
   and the build tools' snap to what is near the pointer, T-724, and carried over an edit, T-1030), `tools.ts` (drawing track, placing stations, the line tool; on touch the tap, preview and confirm and the control bar's place, T-1260), `touch.ts` (whether the last press was a finger, and what the touch control bar offers), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
@@ -450,6 +452,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   desktop and 390 px, into artifacts/trainworld/t1168s1/, with its hover, click and toggle),
   `t1485-end-marks.mjs [url]` (the track tool's loose-end rings: only near the pointer, on drawn track ends, none with the pointer off the map; about a minute, port 6152 by default; T-1485),
   `t1500-change-trip.mjs [url]` (Shanghai - Wuhan and Wuhan - Beijing sharing a station, metro lines at both ends: the trip explorer between Shanghai and Beijing finds the change at Wuhan in every period, new game and after a save and load; about 4 minutes; T-1500),
+  `t1465-bus-roads.mjs [port]` (a bus drawn with the mouse in Manhattan, San Francisco and Lisbon: it follows drawn roads, plausible road length, cheap pointer moves, Edit route keeps the corners, far from roads stays straight; screenshots to artifacts/trainworld/t1465/; about 2 minutes, port 6365 by default; T-1465),
   `t1464-bus.mjs [url]` (a feeder bus to a rail line in a new game and two on the real save: riders, the rail line's gain, Construct's price, demand's corridor, the save's route; about 6 minutes, port 6164 by default; T-1464),
   `t1414-ui.mjs [url]` (the real save in headless Chrome: a station with a train on it picks the station, the "Station upgrades" heading, the stop list without "Add all" and the A key, the disabled blueprint total's double click; screenshots in `artifacts/trainworld/t1414/`; T-1414, T-1415, T-1417, T-1420),
   `t1491-hide-ui.mjs [url]` (F2 and Esc hide and bring back the interface, the map taking the room, the Controls panel's F2 row, light and dark; screenshots in `artifacts/trainworld/t1491/`; T-1491), `t1494-hsr-line.mjs <label> [url]` (a high-speed route with a line of high-speed then ordinary trains, and bare high-speed track, shot at 3x; T-1494), `t1495-tags.mjs <label> [url]` (a station tag and the track tool's tag on the real save, light and dark, `BEFORE=1` for the old style; T-1495),

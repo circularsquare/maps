@@ -28,7 +28,7 @@ try {
   const pts = [[lng - 0.03, lat + 0.02], [lng - 0.01, lat + 0.012], [lng + 0.005, lat + 0.03], [lng + 0.02, lat + 0.015], [lng + 0.035, lat + 0.022]];
   const id = await page.evaluate(async (pts) => {
     const tw = window.tw, c = tw.client;
-    const route = pts.flatMap(([a, b]) => { const p = tw.lngLatToPack(a, b); return [p.x, p.y]; });
+    const route = pts.flatMap(([a, b]) => { const p = tw.lngLatToPack(a, b); return [p.x, p.y, 1]; });
     const add = await c.edit({ op: 'addBusLine', route, name: '', colour: '#d7263d' });
     await c.edit({ op: 'construct', edges: [], stations: [], buses: [add.line] });
     return add.line;
