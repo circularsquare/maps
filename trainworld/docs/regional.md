@@ -78,8 +78,10 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
 - **Elsewhere**: a place's or a 6 km zone's departures less its trips with every place are its
   trips with places that have no zone; shown, never solved, their modes not modelled.
 
-**Mode choice.** Inter-city trips choose rail, car and plane in one logit at 3 perceived minutes
-a dollar [T-378], damped by the trip's length as the local walking share is
+**Mode choice.** Inter-city trips choose rail, car and plane in one logit [T-378]: the car's money
+at 3 perceived minutes a dollar, the plane's fare at the departing country's minutes a dollar, rail's
+the player's curve as set at India's (12.2, so it weighs as every country's fares do at their
+default scales; a trip pays the curve times its starting country's scale) [T-1277], damped by the trip's length as the local walking share is
 ([demand-mode.md](demand-mode.md) 4.3, T-495): 0.10 x sqrt(60 / T) per perceived minute, T the
 car's perceived minutes over the zone pair's distance, even across a sea where no car goes (so
 rail against air never depends on it). The scale covers the whole
@@ -105,7 +107,7 @@ air by hours on the train: notes/T-712.md.
   have airports. Door to door: the drive to an airport at each end (the car's drive time,
   people-weighted over the place's zones), 90 minutes at the airports, the flight at 750 km/h on
   the great circle between the places' centres plus 30 minutes, 60 more with no direct flight, and
-  a fare of $100 plus 5 cents a km (T-712); the best pair of the two places' airports. Not built by
+  a fare of $100 plus 5 cents a km (T-712) at the departing place's country's minutes a dollar (T-1277; the corridor's split is the mean of its two ways); the best pair of the two places' airports. Not built by
   the player, no capacity, not drawn.
 - *Rail*: the player's network. Fares, service, transfers and shared crowding affect it.
 

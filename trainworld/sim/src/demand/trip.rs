@@ -17,7 +17,7 @@
 //! An everyday purpose's trip (T-586, `EverydayApi::trip`) is answered the same way, as the
 //! everyday pass chooses: its own period graph, the subzone pair's mean distance, the cells' walk.
 
-use super::api::{DemandApi, FARE_MIN_PER_USD};
+use super::api::DemandApi;
 use super::everyday::{EverydayApi, TripInputs};
 use super::kernel::*;
 use super::network::PERIODS;
@@ -562,7 +562,7 @@ impl DemandApi {
             h[34] = ev.pair.map_or(0.0, |x| x.1 as f64);
         }
         h[22] = p.fare_min as f64;
-        h[23] = FARE_MIN_PER_USD as f64;
+        h[23] = p.fare_w as f64;
         h[27] = city.x[o] as f64;
         h[28] = city.y[o] as f64;
         h[29] = city.x[d] as f64;

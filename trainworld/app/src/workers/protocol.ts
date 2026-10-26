@@ -91,6 +91,8 @@ export type EditOp =
   | { op: "lineFast"; line: number; fast: boolean }
   /** the fare curve (T-883, game/fareCurve.ts): its nodes, or a base and rate as two nodes; not undoable, a setting */
   | { op: "fares"; base?: number; perKm?: number; nodes?: [number, number][] }
+  /** T-1277: a country's fare scale (ISO alpha-2), null for its income's again; not undoable, a setting */
+  | { op: "fareScale"; country: string; scale: number | null }
   /** link two stations into one complex, or undo a link (T-197): node ids; not undoable, a setting */
   | { op: "link"; a: NodeId; b: NodeId; on: boolean }
   | { op: "undo" }
@@ -232,7 +234,7 @@ export interface MoneyState {
   upkeep: { track: number; stations: number; km: number; count: number };
   /** fares and running costs count this many times over in a game day (T-081, `ECONOMY`) */
   economy: number;
-  fares: { base: number; perKm: number; nodes: [number, number][] };
+  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string };
   /** running cost per game hour at high, medium, low demand */
   runningPerHour: [number, number, number];
   /** recent game days, oldest first; the last is today so far (as of the last whole hour; the
@@ -527,7 +529,7 @@ export interface NetworkSnapshot {
   stations: SnapshotStation[];
   lines: SnapshotLine[];
   /** The player's fare curve (game/fareCurve.ts): its first stretch as a base and rate, and its nodes. */
-  fare?: { base: number; perKm: number; nodes?: [number, number][] };
+  fare?: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number> };
   /** station pairs joined by a passage (T-1281), node ids; absent when there are none */
   passages?: [number, number][];
 }

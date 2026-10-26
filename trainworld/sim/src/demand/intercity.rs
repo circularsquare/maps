@@ -297,6 +297,14 @@ pub struct Row {
     air: Vec<(f64, Vec<u32>)>,
     #[serde(default)]
     park: f64,
+    /// T-1277: perceived minutes a fare dollar costs people leaving here (the app adds it to the
+    /// row from its country's income, game/income.ts); 0 or absent: `FARE_MIN_PER_USD`. Never
+    /// written to market-rows.json
+    #[serde(default, skip_serializing_if = "is_zero")]
+    fw: f64,
+}
+fn is_zero(v: &f64) -> bool {
+    *v == 0.
 }
 /// The world: the output frame (positions the app reads), the rule, the place count and the rows.
 #[derive(Deserialize, Clone)]
@@ -338,6 +346,8 @@ struct Place {
     zone: String,
     air: Vec<(f64, Vec<u32>)>,
     park: f64,
+    /// its row's `fw` (0: `FARE_MIN_PER_USD`)
+    fw: f64,
 }
 /// Per ordered pair of places: the border factor, the tail's income factor, near or not, and
 /// the distance between their centres; T-378: whether a car can make the trip, the share of the
@@ -401,7 +411,7 @@ fn pair_mode_rule(places: &[Place], countries: &[String], mp: &Params, i: usize,
         for (x, xd) in &p.air {
             for (y, yd) in &q.air {
                 let direct = xd.contains(&(j as u32)) || yd.contains(&(i as u32));
-                let v = air_min(km, x + y, direct);
+                let v = air_min(km, x + y, direct, p.fw);
                 best = Some(best.map_or(v, |b| b.min(v)));
             }
         }
@@ -824,9 +834,11 @@ const AIR_FIXED_MIN: f64 = 30.;
 const AIR_NO_DIRECT_MIN: f64 = 60.;
 const AIR_FARE_USD: f64 = 100.;
 const AIR_USD_PER_KM: f64 = 0.05;
-/// A flight's perceived minutes over `km` with `access` minutes of driving at the two ends.
-fn air_min(km: f64, access: f64, direct: bool) -> f64 {
-    access + AIR_TERMINAL_MIN + km / AIR_KMH * 60. + AIR_FIXED_MIN + if direct { 0. } else { AIR_NO_DIRECT_MIN } + (AIR_FARE_USD + AIR_USD_PER_KM * km) * FARE_MIN_PER_USD as f64
+/// A flight's perceived minutes over `km` with `access` minutes of driving at the two ends, its
+/// fare at `fw` perceived minutes a dollar, the departing place's (T-1277; 0: `FARE_MIN_PER_USD`).
+fn air_min(km: f64, access: f64, direct: bool, fw: f64) -> f64 {
+    let fw = if fw > 0. { fw } else { FARE_MIN_PER_USD as f64 };
+    access + AIR_TERMINAL_MIN + km / AIR_KMH * 60. + AIR_FIXED_MIN + if direct { 0. } else { AIR_NO_DIRECT_MIN } + (AIR_FARE_USD + AIR_USD_PER_KM * km) * fw
 }
 
 impl Market {
@@ -1447,6 +1459,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
                 pl.zone = r.zone.clone();
                 pl.air = r.air.iter().filter(|a| a.0.is_finite() && a.0 >= 0.).cloned().collect();
                 pl.park = if r.park.is_finite() { r.park.max(0.) } else { 0. };
+                pl.fw = if r.fw.is_finite() && r.fw > 0. { r.fw } else { 0. };
                 for &(j, t) in &r.near {
                     if (j as usize) < np && t.is_finite() && t >= 0. {
                         near.insert((r.place.min(j as usize) as u32, r.place.max(j as usize) as u32), t);
@@ -1831,6 +1844,7 @@ pub fn world_rows_for(header: &str, only: Option<&[bool]>) -> Result<Vec<Row>, S
             commute: commute.into_iter().collect(),
             air: pl.air.clone(),
             park: pl.park,
+            fw: 0.,
         });
     }
     Ok(out)
@@ -2974,11 +2988,25 @@ impl IntercityApi {
         if !base.is_finite() || base < 0. || !per_km.is_finite() || per_km < 0. || km.iter().any(|x| !x.is_finite() || *x < 0.) || km.len() != self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()) {
             return Err("invalid intercity fare".into());
         }
-        let (fare_min, per_km) = (base * FARE_MIN_PER_USD, per_km * FARE_MIN_PER_USD);
+        let w = self.base.fare_w;
+        let (fare_min, per_km) = (base * w, per_km * w);
         if fare_min.to_bits() != self.base.fare_min.to_bits() || per_km.to_bits() != self.fare_per_km.to_bits() || !same_bits(km, &self.fare_km) {
             self.base.fare_min = fare_min;
             self.fare_per_km = per_km;
             self.fare_km = km.to_vec();
+            self.per.iter_mut().for_each(|p| *p = None);
+        }
+        Ok(())
+    }
+    /// T-1277: perceived minutes a dollar of the fares the market is given (`DemandApi::
+    /// set_fare_weight`); before `set_fares`. The plane's fare weighs each departing country's
+    /// own (`WorldIn::fare_w`).
+    pub fn set_fare_weight(&mut self, w: f32) -> Result<(), String> {
+        if !(w.is_finite() && w > 0.) {
+            return Err("invalid fare weight".into());
+        }
+        if w.to_bits() != self.base.fare_w.to_bits() {
+            self.base.fare_w = w;
             self.per.iter_mut().for_each(|p| *p = None);
         }
         Ok(())
@@ -3009,7 +3037,7 @@ impl IntercityApi {
         for (r, f) in g.rn_fare.iter_mut().enumerate() {
             *f = self.fare_km.get(r).copied().unwrap_or(0.) * self.fare_per_km;
         }
-        put_fare_curve(&mut g, &self.fare_curve, &self.fare_km, self.base.fare_min, self.fare_per_km);
+        put_fare_curve(&mut g, &self.fare_curve, &self.fare_km, self.base.fare_min, self.fare_per_km, self.base.fare_w);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);
@@ -3227,8 +3255,10 @@ impl IntercityApi {
         // (an open place's pairs from its row; the others' modes alone worked out, T-1204)
         let m = &self.m;
         let mut out = Vec::with_capacity(2 * m.n_corridors());
-        for (a, b) in m.each_corridor() {
-            let (car, air) = if m.rules.slot[a] != u32::MAX || m.rules.slot[b] != u32::MAX {
+        // T-1277: a plane's fare weighs the departing country's, so the two ways can differ; a
+        // corridor's split is their mean
+        let way = |a: usize, b: usize| -> (bool, f32) {
+            if m.rules.slot[a] != u32::MAX || m.rules.slot[b] != u32::MAX {
                 let r = m.pr(a, b);
                 (r.car, r.air)
             } else {
@@ -3242,7 +3272,11 @@ impl IntercityApi {
                 };
                 let (car, air, ..) = pair_mode_rule(&m.places, &m.countries, &m.mp, a, b, km < m.rule.near_km, km);
                 (car, air)
-            };
+            }
+        };
+        for (a, b) in m.each_corridor() {
+            let ((car, x), (_, y)) = (way(a, b), way(b, a));
+            let air = 0.5 * (x + y);
             out.extend([air, if car { 1. - air } else { 0. }]);
         }
         out
@@ -3307,7 +3341,7 @@ impl IntercityApi {
     }
     /// As `DemandApi::fare_extra`.
     pub fn fare_extra(&self, q: usize) -> Vec<f32> {
-        self.per(q).map_or(vec![], |s| fare_x_usd(&s.avg.rn_fare_x))
+        self.per(q).map_or(vec![], |s| fare_x_usd(&s.avg.rn_fare_x, self.base.fare_w))
     }
     /// `transfers` on a kind of day (T-260).
     pub fn transfers_day(&self, sel: &[u8], day: u32) -> Vec<f32> {

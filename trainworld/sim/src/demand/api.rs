@@ -59,23 +59,24 @@ pub(crate) fn check_fare_curve(knots: &[f32]) -> Result<(), String> {
 }
 
 /// Gives `g` the fare curve `knots` (US$, `check_fare_curve`) over the straight line the ride
-/// edges and base fare already charge (perceived minutes), with each route node's fare km.
-pub(crate) fn put_fare_curve(g: &mut Graph, knots: &[f32], hop_km: &[f32], fare_min: f32, per_km: f32) {
+/// edges and base fare already charge (perceived minutes, `fare_w` a dollar), with each route
+/// node's fare km.
+pub(crate) fn put_fare_curve(g: &mut Graph, knots: &[f32], hop_km: &[f32], fare_min: f32, per_km: f32, fare_w: f32) {
     if knots.len() < 4 {
         return;
     }
     g.fare_curve = FareCurve {
         km: knots.iter().step_by(2).copied().collect(),
-        min: knots.iter().skip(1).step_by(2).map(|v| v * FARE_MIN_PER_USD).collect(),
+        min: knots.iter().skip(1).step_by(2).map(|v| v * fare_w).collect(),
         base: fare_min,
         rate: per_km,
     };
     g.rn_km = (0..g.rn_fare.len()).map(|r| hop_km.get(r).copied().unwrap_or(0.0)).collect();
 }
 
-/// `Loads::rn_fare_x` in US$.
-pub(crate) fn fare_x_usd(v: &[f32]) -> Vec<f32> {
-    v.iter().map(|x| x / FARE_MIN_PER_USD).collect()
+/// `Loads::rn_fare_x` in US$, at `fare_w` perceived minutes a dollar.
+pub(crate) fn fare_x_usd(v: &[f32], fare_w: f32) -> Vec<f32> {
+    v.iter().map(|x| x / fare_w).collect()
 }
 
 /// `flows` leaves out the far cells holding this share of the selection's commuters, the
@@ -982,11 +983,26 @@ impl DemandApi {
             || hop_km.len() != count || hop_km.iter().any(|v| !v.is_finite() || *v < 0.0) {
             return Err("invalid fare or segment distances".into());
         }
-        let (fare_min, per_km) = (base_usd * FARE_MIN_PER_USD, per_km_usd * FARE_MIN_PER_USD);
+        let w = self.base.fare_w;
+        let (fare_min, per_km) = (base_usd * w, per_km_usd * w);
         if fare_min.to_bits() != self.base.fare_min.to_bits() || per_km.to_bits() != self.fare_per_km.to_bits() || !same_bits(hop_km, &self.fare_km) {
             self.base.fare_min = fare_min;
             self.fare_per_km = per_km;
             self.fare_km = hop_km.to_vec();
+            self.per.iter_mut().for_each(|p| *p = None);
+            self.same = 0;
+        }
+        Ok(())
+    }
+
+    /// T-1277: perceived minutes a fare dollar costs this population's riders (their country's,
+    /// `Params::fare_w`); before `set_fares`, which reads it.
+    pub fn set_fare_weight(&mut self, w: f32) -> Result<(), String> {
+        if !(w.is_finite() && w > 0.0) {
+            return Err("invalid fare weight".into());
+        }
+        if w.to_bits() != self.base.fare_w.to_bits() {
+            self.base.fare_w = w;
             self.per.iter_mut().for_each(|p| *p = None);
             self.same = 0;
         }
@@ -1055,7 +1071,7 @@ impl DemandApi {
         for (r, fare) in g.rn_fare.iter_mut().enumerate() {
             *fare = self.fare_km.get(r).copied().unwrap_or(0.0) * self.fare_per_km;
         }
-        put_fare_curve(&mut g, &self.fare_curve, &self.fare_km, self.base.fare_min, self.fare_per_km);
+        put_fare_curve(&mut g, &self.fare_curve, &self.fare_km, self.base.fare_min, self.fare_per_km, self.base.fare_w);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);
@@ -1226,7 +1242,7 @@ impl DemandApi {
     /// The fare curve's extra in period `q` (T-1143), US$, at each route node where the trips paying
     /// it first board: what the trips pay beyond the base and the first stretch's rate per km.
     pub fn fare_extra(&self, q: usize) -> Vec<f32> {
-        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| fare_x_usd(&st.avg.rn_fare_x))
+        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| fare_x_usd(&st.avg.rn_fare_x, self.base.fare_w))
     }
     /// `transfers` on a kind of day (T-260): each period's riders times the commute's load factor.
     pub fn transfers_day(&self, sel: &[u8], day: u32) -> Vec<f32> {

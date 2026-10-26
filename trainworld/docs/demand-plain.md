@@ -113,8 +113,11 @@ There is no built-in liking for the train. Rail and the car are compared on time
   last add up to more than walking between the two ends (over water, each metre of it counts as
   3 metres of walking). A trip left with no such pair has no train. It takes about 3% of rail trips away, nearly
   all under 2 km, to walking and the car.
-- Fare: in the US $1 counts as 3 minutes. The fare is the player's curve of trip length, paid
-  once a trip; choosing between routes sees only its first stretch.
+- Fare: a dollar of fare counts more minutes where people earn less: 4.4 in the US, 5.3 in the UK,
+  12.2 in India (by GDP per head, to the power -0.5). The fare is the player's curve of trip length
+  times the country's fare scale (2.8 in the US, 1.0 in India, where the curve is set, or the
+  player's own), paid once a trip; choosing between routes sees only its first stretch. At the
+  default scales a fare weighs the same everywhere; poorer countries just pay less per ride.
 - Which stations: riders share the pairs of stations near each end by how much slower each option
   is compared with the trip's length. Of two options 1 minute apart the faster gets 66% on a short
   trip and 58% on one of an hour; 5 minutes apart, 97% and 84%; 10 minutes apart, nearly everyone
@@ -153,7 +156,8 @@ There is no built-in liking for the train. Rail and the car are compared on time
   ferry; to Hokkaido $170 and 4 hours for the ferry (the Seikan Tunnel takes no cars).
 - Plane, between cities 250 km apart or more that both have airports: the drive to each airport,
   90 minutes at the airports, the flight at 750 km/h plus 30 minutes (an hour more with no direct
-  flight), and a fare of $100 plus 5 cents a km, so $125 at 500 km and $150 at 1,000 km.
+  flight), and a fare of $100 plus 5 cents a km, so $125 at 500 km and $150 at 1,000 km, its
+  dollars counted at the starting country's minutes a dollar (the fare line above).
 
 **Walking the whole way**
 - 13 real minutes a km, every minute counted 1.5. So 1 km costs 19.5 minutes, 2 km 39, 3 km 58.5.

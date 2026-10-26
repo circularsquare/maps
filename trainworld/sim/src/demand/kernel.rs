@@ -66,6 +66,9 @@ pub struct Params {
     /// wait and the walk between the two platforms.
     pub transfer_min: f32,
     pub fare_min: f32,
+    /// Perceived minutes a fare dollar costs the riders of this population (T-1277: by their
+    /// country's income, set by the app; the car's money stays at `api::FARE_MIN_PER_USD`).
+    pub fare_w: f32,
     /// Logit scale per perceived minute, and the rail propensity: the worldwide value plus
     /// `country_asc_rail`, which `set_extra` keeps in step (setting `asc_rail` by name sets the
     /// worldwide part).
@@ -272,6 +275,7 @@ impl Default for Params {
             w_walk: 1.5,
             transfer_min: 2.0,
             fare_min: 6.0,
+            fare_w: super::api::FARE_MIN_PER_USD,
             // T-636: Anita's set (notes/T-636.md)
             beta: 0.10,
             asc_rail: super::api::ASC_RAIL,
@@ -374,6 +378,8 @@ impl Params {
             "w_drive" => self.w_drive = v,
             "park_min" => self.park_min = v,
             "fare_min" => self.fare_min = v,
+            // before `set_fares`, which reads it
+            "fare_w" => self.fare_w = v,
             "transfer_min" => self.transfer_min = v,
             "crowd_alpha" => self.crowd_alpha = v,
             "xfer_walk_m" => self.xfer_walk_m = v,

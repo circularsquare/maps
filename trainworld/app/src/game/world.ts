@@ -218,6 +218,10 @@ export function setAutoTrains(id: LineId, on: boolean) {
 export function setFares(nodes: FareNode[]) {
   return edit({ op: "fares", nodes: tidyNodes(nodes) });
 }
+/** T-1277: a country's fare scale, null for its income's. */
+export function setFareScale(country: string, scale: number | null) {
+  return edit({ op: "fareScale", country, scale });
+}
 
 export function renameLine(id: LineId, name: string) {
   const n = name.trim();

@@ -19,9 +19,13 @@
 import { computed, signal } from "@preact/signals";
 import { DAY_KINDS } from "./days";
 import { demandByDay, type DemandView } from "./demand";
+import { cityById, isCity } from "./cities";
 import { faresFor, faresOf } from "./fareCurve";
+import { fareScale } from "./income";
+import { stationZone } from "./listScope";
 import { PERIODS } from "./periods";
-import { world } from "./world";
+import { stationsById, world } from "./world";
+import type { StationInput } from "./types";
 import type { MoneyState, RegionNow } from "../workers/protocol";
 import type { DayLedger, HourLedger } from "../workers/saveFile";
 
@@ -68,6 +72,7 @@ function incomeFor(dv: DemandView | null): Income {
   if (!w || !m) return { perHour: perPeriod, rides: ridesPeriod, lines };
   const fares = faresOf(m.fares, m.fares);
   const x = m.economy;
+  const byId = stationsById(w);
   const boardings = w.save.lines.reduce((a, l) => a + (dv?.lines.get(l.id)?.ridersPerDay ?? 0), 0);
   const tripsPerBoarding = dv && boardings > 0 ? Math.min(1, dv.railTripsPerDay / boardings) : 1;
   for (const l of w.save.lines) {
@@ -80,12 +85,18 @@ function incomeFor(dv: DemandView | null): Income {
       // segment lengths, km: run 0's segments, then run 1's in its own order (as `loads`)
       const km: number[] = [];
       for (const s of st.stopS) for (let k = 0; k + 1 < n; k++) km.push((s[k + 1] - s[k]) / 1000);
+      // T-1277: each stop's fare scale; a stretch pays its starting stop's, the base its boarding stop's
+      const sc = stopScales(l.stops, byId, m.fares.scales);
+      const from = [...sc.slice(0, n - 1), ...[...sc].reverse().slice(0, n - 1)];
       const pkm = dm.loads.map((seg) => (seg.length === km.length ? seg.reduce((a, v, k) => a + v * km[k], 0) : 0));
+      const pkmPaid = dm.loads.map((seg) => (seg.length === km.length ? seg.reduce((a, v, k) => a + v * km[k] * from[k], 0) : 0));
       const total = pkm.reduce((a, b) => a + b, 0);
       const rides = dm.ridersPerDay * tripsPerBoarding;
+      const boarded = dm.boardings.reduce((a, b) => a + b, 0);
+      const baseScale = boarded > 0 ? dm.boardings.reduce((a, b, k) => a + b * (sc[k] ?? 1), 0) / boarded : (sc[0] ?? 1);
       pkm.forEach((pk, p) => {
         const share = total > 0 ? pk / total : 0;
-        const r = (faresFor(fares, rides * share, pk) + (dm.fareX?.[p] ?? 0)) * x;
+        const r = (faresFor(fares, rides * share * baseScale, pkmPaid[p]) + (dm.fareX?.[p] ?? 0)) * x;
         perPeriod[p] += r;
         linePer[p] += r;
         ridesPeriod[p] += rides * share;
@@ -95,4 +106,18 @@ function incomeFor(dv: DemandView | null): Income {
     lines.set(l.id, { perHour: linePer.map((v, p) => v / PERIOD_HOURS[p] / 1e6), rides: lineRides.map((v, p) => v / PERIOD_HOURS[p]) });
   }
   return { perHour: perPeriod.map((v, p) => v / PERIOD_HOURS[p] / 1e6), rides: ridesPeriod.map((v, p) => v / PERIOD_HOURS[p]), lines };
+}
+
+/** T-1277: the country of the zone a station is in (null outside every zone). */
+export function stationCountry(s: Pick<StationInput, "id" | "lng" | "lat">): string | null {
+  const z = stationZone(s);
+  return z && isCity(z) ? cityById(z).country ?? null : null;
+}
+/** T-1277: each stop's fare scale, by the country it is in; a stop outside every zone takes the
+ * baseline's. */
+export function stopScales(stops: string[], byId: Map<string, StationInput>, scales: Record<string, number> | undefined): number[] {
+  return stops.map((id) => {
+    const s = byId.get(id);
+    return fareScale((s && stationCountry(s)) ?? undefined, scales);
+  });
 }

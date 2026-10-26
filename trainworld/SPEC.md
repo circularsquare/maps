@@ -152,7 +152,9 @@ institutions** (prisons, nursing homes and the like, T-234).
   the rest on the ratio of their costs [T-918]: rail's share is 1 / (1 + (rail / car)^3), so twice
   as dear gets 1 in 9, symmetric for the car, fading to nothing from 3 to 4 times either way; no
   rail constant (time and money alone), car ownership $2.00 a trip plus $0.13 a km and 7 minutes to
-  park [T-636, T-637, T-938]. The regional market keeps a damped logit with the plane [T-495, T-502].
+  park [T-636, T-637, T-938]. A fare dollar costs 5 x (GDP per head at PPP / $60,000)^-0.5
+  perceived minutes in the trip's country (the US 4.4, India 12.2), the car's money 3 everywhere
+  [T-1277, T-1166]. The regional market keeps a damped logit with the plane [T-495, T-502].
 - **No car ownership** [T-854]: everyone can drive, and the car stands for every way about but
   rail and walking. Instead, every car trip from a home pays parking at the home end, 0.4 of the
   destination's paid-space rule on the home zone's residents per km², so dense places drive less.
@@ -253,7 +255,7 @@ US$150M at -2) [T-1267], a 20 m car costs US$2.5M, bought as a line's fleet grow
 when it shrinks [T-028, T-631], and running costs are US$4 a train-km plus US$2 a car-km [T-807]. Constructed
 track and stations cost upkeep whether trains run or not, US$30k a km of double track and US$50k a station a game
 day, draining evenly; a line's profit takes off its share, each piece's split by the trains a day of the lines
-using it [T-867]. The fare is a curve of trip length through three points, never falling with distance: in the Money tab the player drags the points on a graph to set fares, or sets a base fare at 0 km and, for each of the two stretches after it, its end distance and its rate per km (at least $0) [T-626, T-1112, T-1143, T-1201].
+using it [T-867]. The fare is a curve of trip length through three points, never falling with distance: in the Money tab the player drags the points on a graph to set fares, or sets a base fare at 0 km and, for each of the two stretches after it, its end distance and its rate per km (at least $0) [T-626, T-1112, T-1143, T-1201]. The curve is set for India (a lower-middle-income baseline) and each country charges it times its fare scale, by default its GDP per head over India's to the power 0.5 in tenths (the US 2.8), or the player's own, set in the Money tab for the country of the selected station or city, else the one in view; a trip pays its starting country's [T-1277].
 **Points** measure each city's network: what it earned in the past 24 game hours, recomputed
 once a game hour, at 20 a rail trip (a rider's whole journey, changes included, counted in the
 city it starts in) and 1 a passenger-km; not a running total, and they unlock nothing yet [T-684,

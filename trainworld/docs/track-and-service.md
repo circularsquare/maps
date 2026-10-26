@@ -731,10 +731,21 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   follows one curve of trip length for the network, set in the Money tab [T-883, T-1112, T-1143,
   `app/src/game/fareCurve.ts`]: straight stretches through the player's three nodes, carried on
   past the last at its slope. The first node is the base fare at 0 km; each later one is farther and
-  never cheaper, so no fare is below the base or falls with distance. It starts as $1.50 + $0.10 a
-  km (nodes at 0, 20 and 100 km); an older save's two nodes, or a base and rate, load as the three
-  nodes on their line (one below $0 at 0 km starting at $0 instead), any other curve as the line
-  through its first and last node. A trip that changes lines pays it once on its whole length. In
+  never cheaper, so no fare is below the base or falls with distance. **Fares by country**
+  (T-1277, `app/src/game/income.ts`): the curve is set for India, the baseline, and each country
+  charges it times its fare scale: by default (its GDP per head at PPP over India's)^0.5 in tenths
+  (the US 2.8, the UK 2.3, China 1.6), or the player's own, 0.1 to 9.9 (`Fares.scales`, saved
+  with the fares; only the player's are kept). The curve starts as $0.5357 + $0.03571 a km (nodes at 0,
+  20 and 100 km), so New York starts at $1.50 + $0.10. A save from before carries no
+  `baseline` and its curve, New York's fares, is divided by the home country's scale as it loads.
+  An older save's two nodes, or a base and rate, load as the three nodes on their line (one below
+  $0 at 0 km starting at $0 instead), any other curve as the line through its first and last node.
+  The curve's fares are kept to a hundredth of a cent, so a fare typed where the scale is not 1
+  reads back as typed. A trip that changes lines pays it once on its whole length, at the scale of
+  the country it starts in: each zone's populations get the curve times their country's scale, and
+  the regional market the curve itself. Fare income takes each stretch at its starting stop's
+  country's scale and the base at the boarding stop's (`stopScales`, game/money.ts), and so does
+  the split between regions. In
   demand, route search charges the first stretch as a base and a rate per km on each ride
   (`set_fares`), and each station pair's cost adds what the rest of the curve adds at the expected
   km of its strategy (the riders' split over lines by their departures; `set_fare_curve`,

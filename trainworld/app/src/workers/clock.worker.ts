@@ -12,7 +12,8 @@ import { anchor, makeAnchor, setAnchor, toLocal } from "../map/geo";
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
-import { faresOf, type Fares } from "../game/fareCurve";
+import { faresOf, START_FARE, type Fares } from "../game/fareCurve";
+import { FARE_BASELINE, incomeScale, tidyScale } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf } from "../game/days";
 import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
@@ -30,8 +31,18 @@ const SAMPLE_STEP = 50;
 const SNAPSHOT_DEBOUNCE_MS = 500;
 /** Whole trains on a new line across both directions, high/medium/low demand. */
 const NEW_LINE_TRAINS: [number, number, number] = [0, 0, 0];
-/** Default fare curve (T-028, T-883): US$ a ride plus US$ a km, as two nodes. */
-const START_FARES: Fares = faresOf(undefined, { base: 1.5, perKm: 0.1 });
+/** Default fare curve: `START_FARE` as three nodes. */
+const START_FARES: Fares = { ...faresOf(undefined, START_FARE), scales: {}, baseline: FARE_BASELINE };
+/** A save's fares (T-1277): one from before the baseline was New York's fares, so its curve is
+ * divided by the home country's scale; the player's scales kept. */
+function loadFares(f: SaveHeader["fares"] | undefined): Fares {
+  if (!f) return { ...START_FARES };
+  const s = f.baseline ? 1 : incomeScale(cityById(HOME_CITY).country);
+  const g = s === 1 ? f : { base: f.base / s, perKm: f.perKm / s, nodes: f.nodes?.map(([k, v]) => [k, v / s] as [number, number]) };
+  const scales: Record<string, number> = {};
+  for (const [c, v] of Object.entries(f.scales ?? {})) if (Number.isFinite(v)) scales[c] = tidyScale(v);
+  return { ...faresOf(g, START_FARES), scales, baseline: FARE_BASELINE };
+}
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
 const AUTOSAVE_MS = 60_000;
@@ -1638,7 +1649,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   await openNetwork(net);
   api!.set_fleet(h.fleet ?? 0);
   api!.set_fleet_fast(h.fleetFast ?? 0);
-  fares = faresOf(h.fares, START_FARES);
+  fares = loadFares(h.fares);
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
   loadRegions(h.regions);
@@ -2030,8 +2041,15 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
     case "lineFast":
       return { r: a.set_line_fast(op.line, op.fast) };
     case "fares":
-      fares = op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares);
+      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE };
       return { r: 0 };
+    case "fareScale": {
+      const scales = { ...fares.scales };
+      if (op.scale === null || !Number.isFinite(op.scale)) delete scales[op.country];
+      else scales[op.country] = tidyScale(op.scale);
+      fares = { ...fares, scales };
+      return { r: 0 };
+    }
     case "link":
       return { r: op.on ? a.link_stations(op.a, op.b) : a.unlink_stations(op.a, op.b) };
     case "undo":
@@ -2289,7 +2307,7 @@ async function handle(msg: ToClock) {
     sendMoney();
     void autosave(); // the slot's card shows the mark at once
   } else if (msg.kind === "edit") {
-    if (msg.op.op === "fares") {
+    if (msg.op.op === "fares" || msg.op.op === "fareScale") {
       apply(msg.op);
       dirty = true;
       sendMoney();

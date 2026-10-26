@@ -12,12 +12,13 @@ import init, { MarketPacks, day_factors } from '../app/src/wasm/demand/sim.js';
 await init({ module_or_path: readFileSync(new URL('../app/src/wasm/demand/sim_bg.wasm', import.meta.url)) });
 // game/cities.ts reads the view from the URL as it loads
 globalThis.location ??= { search: '', hash: '', href: 'http://localhost/' };
-const rule = await loadApp("export * from '@app/src/game/marketRule.ts';");
+const rule = await loadApp("export * from '@app/src/game/marketRule.ts'; export { marketWorld } from '@app/src/game/cities.ts';");
 const reg = registry();
 const rowsText = marketRows();
 const rows = JSON.parse(rowsText);
 rule.setMarketRows(rows);
-const world = JSON.stringify({ frame: reg.market.frame, rule: reg.market.rule, places: reg.market.places.length, rows: reg.cities.flatMap((c) => (rows[c.id] ? [rows[c.id]] : [])) });
+// T-1277: the world as the game gives it the sim, its rows carrying each country's fare weight
+const world = rule.marketWorld(rowsText);
 const api = new MarketPacks(world).market();
 // a market with no network, so `market_trip_between` answers from the rows
 api.set_network_ll(new Float64Array(0), new Uint32Array(0), new Uint32Array(0), new Float32Array(0), new Float32Array(0), new Float32Array(0));
@@ -61,12 +62,14 @@ for (const [a, b] of pairs) {
   const ref = c.refMin;
   if (!near(ref, h[17], 0.02, 1e-5)) fail(`${label}: reference ${ref} min against the sim's ${h[17]}`);
   const k = corridor(a, b);
-  if (!near(c.air, modes[2 * k], 1e-4) || !near(c.carShare, modes[2 * k + 1], 1e-4)) fail(`${label}: plane ${c.air} car ${c.carShare} against the sim's ${modes[2 * k]} ${modes[2 * k + 1]}`);
+  // T-1277: a corridor splits by the mean of its two ways, a plane weighing the departing country's fare
+  const back = rule.corridorOf(b, a), air = 0.5 * (c.air + back.air), carShare = c.road ? 1 - air : 0;
+  if (!near(air, modes[2 * k], 1e-4) || !near(carShare, modes[2 * k + 1], 1e-4)) fail(`${label}: plane ${air} car ${carShare} against the sim's ${modes[2 * k]} ${modes[2 * k + 1]}`);
   const t = rule.placeTrips(a, b);
   if (!near(2 * t, trips[k], 1e-6, 1e-5)) fail(`${label}: ${t} trips each way against the sim's ${trips[k] / 2}`);
   if (car) worst.car = Math.max(worst.car, Math.abs(car.total - simCar));
   if (Number.isFinite(ref)) worst.ref = Math.max(worst.ref, Math.abs(ref - h[17]));
-  worst.air = Math.max(worst.air, Math.abs(c.air - modes[2 * k]));
+  worst.air = Math.max(worst.air, Math.abs(air - modes[2 * k]));
   worst.trips = Math.max(worst.trips, trips[k] > 0 ? Math.abs(2 * t - trips[k]) / trips[k] : 0);
 }
 console.log(`${fails ? 'FAIL' : 'PASS'} t1148 place pairs: ${pairs.length} (${Object.entries(kinds).map(([k, v]) => `${v.length} ${k}`).join(', ')}), worst car ${worst.car.toFixed(4)} min, reference ${worst.ref.toFixed(4)} min, plane share ${worst.air.toExponential(1)}, trips ${worst.trips.toExponential(1)} of theirs`);

@@ -8,6 +8,7 @@
 
 import { signal } from "@preact/signals";
 import { CITIES, REGISTRY, widenBox, zoneBox, ZONE_REACH_M } from "./cities";
+import { fareWeight } from "./income";
 import { PERIODS } from "./periods";
 import type { MarketEnd, MarketPeriod } from "./trip";
 
@@ -165,6 +166,8 @@ export interface FlightCost {
   /** minutes in the air, the flight's fixed minutes and any change included */
   flightMin: number;
   fareUsd: number;
+  /** perceived minutes a dollar of it, the departing country's (T-1277) */
+  fw: number;
   total: number;
 }
 function flightOf(a: MarketRow, b: MarketRow, km: number): FlightCost | null {
@@ -177,8 +180,10 @@ function flightOf(a: MarketRow, b: MarketRow, km: number): FlightCost | null {
       const direct = x[1].includes(b.place) || y[1].includes(a.place);
       const flightMin = (km / AIR_KMH) * 60 + AIR_FIXED_MIN + (direct ? 0 : AIR_NO_DIRECT_MIN);
       const fareUsd = AIR_FARE_USD + AIR_USD_PER_KM * km;
-      const total = x[0] + y[0] + AIR_TERMINAL_MIN + flightMin + fareUsd * MIN_PER_USD;
-      if (!best || total < best.total) best = { accessFrom: x[0], accessTo: y[0], direct, flightMin, fareUsd, total };
+      // T-1277: at the departing country's minutes a dollar
+      const fw = fareWeight(a.country);
+      const total = x[0] + y[0] + AIR_TERMINAL_MIN + flightMin + fareUsd * fw;
+      if (!best || total < best.total) best = { accessFrom: x[0], accessTo: y[0], direct, flightMin, fareUsd, fw, total };
     }
   }
   return best;

@@ -330,9 +330,12 @@ day or hour now is drawn as it fills (a dashed last segment, a paler bar) and mo
 Under the charts the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
 day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
 costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
-charts are saved with the game and are there after a reload [T-567]. Then, for the whole
-network whatever the toggle: the fare curve (rule: [track-and-service.md](track-and-service.md),
-fares), drawn as a graph of the fare against trip length, both axes linear
+charts are saved with the game and are there after a reload [T-567]. Then, whatever the toggle,
+the fares of one country [T-1277]: the selected station's or city's, else the zone in view's, else
+the home city's. The graph and rows show the network's curve times that country's fare scale, and
+an edit there sets the curve (divided back by the scale), so every country's fares move with it.
+The fare curve (rule: [track-and-service.md](track-and-service.md), fares) is drawn as a graph of
+the fare against trip length, both axes linear
 [T-864, T-883, T-1112, T-1143, `ui/FareGraph.tsx`]. "Nice" below means 1, 2 or 5 times a power of
 ten. The distance shown starts as the smallest nice one holding 1.2 times the last node's distance
 with every node's fare below 90% of the fare shown (200 km for the default curve) and is kept while
@@ -360,7 +363,11 @@ the sim's edit history holds track, lines and schedules, so fare steps are kept 
 and any other edit drops them]. A node past the plot is an arrow
 on the plot's edge pointing toward it, with its hover; a click on the arrow zooms out to show it. A
 hover anywhere on the graph names the fare at that distance, a node's hover its distance and fare
-and the ways it drags. The axis labels are 11 px in the graph's own units. Below the graph one row
+and the ways it drags. The axis labels are 11 px in the graph's own units. Below the graph, first
+"Fares here" with the country's scale in a stepper, "2.8x", stepping by 0.1 from 0.1 to 9.9 (a
+click types one), its hover naming the country, the multiple of India's and the scale by income;
+once the player has set one, an undo icon beside it ("Back to 2.8x, the scale by income")
+returns to the income's [T-1277]. Then one row
 per node [T-1201, T-1234], no rules between them and none wrapping at the dock's narrowest width,
 their steppers lined up in one column: "Base fare" with its fare in a stepper, then each stretch as
 `0 -` [20] `km` [T-1264], only its end distance in a box (typed, no steps), and its rate in a stepper,
@@ -371,7 +378,7 @@ cent of fare where a stretch is too short for that to move it. A click on any va
 type it, Enter or leaving the box applying and Escape cancelling [T-626, `TypedValue` in
 `ui/widgets.tsx`]; a stretch's end is kept in order as a drag is. A row's change keeps every other
 row's value, so a base fare or rate change moves that node's fare and every later one's by the same
-amount, and a stretch's end keeps both rates; a rate never goes below $0. Fares stay whole cents; a
+amount, and a stretch's end keeps both rates; a rate never goes below $0. Fares show whole cents; a
 rate shows two decimals when it is whole cents and three otherwise (typed or dragged). Dragging on
 the graph sets fares, and the rows' rates follow. Then cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)

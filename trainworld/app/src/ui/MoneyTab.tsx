@@ -1,12 +1,16 @@
 // The Money tab: cash, the ledger, the fare curve and the fleet.
 
 import { money, runCostRule, shortDistance, upkeepText } from "../game/format";
-import { world } from "../game/world";
-import { liveMoney, moneyState } from "../game/money";
+import { setFareScale, stationsById, world } from "../game/world";
+import { liveMoney, moneyState, stationCountry } from "../game/money";
+import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
+import { scaleNodes } from "../game/fareCurve";
+import { FARE_BASELINE, fareScale, incomeScale, SCALE_STEP, tidyScale } from "../game/income";
+import { selection } from "../game/ui";
 import { scopeZone } from "../game/listScope";
 import { regionLedger } from "../game/regionMoney";
 import type { DayLedger, MoneyState } from "../workers/protocol";
-import { Row } from "./widgets";
+import { Icon, Row, Stepper } from "./widgets";
 import { Money } from "./MoneyText";
 import { START_CASH } from "../workers/saveFile";
 import { FareButtons, FareGraph, FareNodeRows, farePreview } from "./FareGraph";
@@ -36,6 +40,50 @@ function TodayCell({ v, zone }: { v: (d: DayLedger) => number; zone: string | nu
 /** T-531: how a region's money is counted, in the scope toggle's hover. */
 const REGION_SPLIT = "A line's fares count where its riders board and travel, its running costs where its trains run. Construction and upkeep count where the track and stations are.";
 
+/** T-1277: the country whose fares the panel shows: the selected station's or city's, else the
+ * zone in view's, else the home city's. */
+function fareCountry(): string {
+  const s = selection.value, w = world.value;
+  let c: string | null | undefined = null;
+  if (s?.kind === "station" && w) {
+    const st = stationsById(w).get(s.station);
+    c = st && stationCountry(st);
+  } else if (s?.kind === "city" && isCity(s.city)) c = cityById(s.city).country;
+  if (!c) {
+    const z = viewedZone.value;
+    c = z && isCity(z) ? cityById(z).country : null;
+  }
+  return c ?? cityById(HOME_CITY).country ?? FARE_BASELINE;
+}
+
+let regionNames: Intl.DisplayNames | null = null;
+function countryName(iso: string): string {
+  try {
+    regionNames ??= new Intl.DisplayNames(["en"], { type: "region" });
+    return regionNames.of(iso) ?? iso;
+  } catch {
+    return iso;
+  }
+}
+
+/** T-1277: the fare scale where the panel looks: a stepper by tenths, typed on a click, and a button
+ * back to the income's scale once the player has set one. */
+function FareScaleRow({ country, scale, own }: { country: string; scale: number; own: boolean }) {
+  const set = (v: number) => void setFareScale(country, tidyScale(v));
+  const income = incomeScale(country);
+  const name = countryName(country);
+  return (
+    <li>
+      <span class="fr-what" data-tip={`Fares shown for ${name}: ${scale.toFixed(1)} times those in ${countryName(FARE_BASELINE)}, where the curve is set. By income it would be ${income.toFixed(1)}.`}>Fares here</span>
+      <Stepper value={`${scale.toFixed(1)}x`} wide label="fares here" onStep={(d) => set(scale + d * SCALE_STEP)}
+        type={{ text: scale.toFixed(1), set, tip: `Fares in ${name} as a multiple of those in ${countryName(FARE_BASELINE)}. Click to type one.` }} />
+      {own
+        ? <button class="btn icon" aria-label="Back to the income's scale" data-tip={`Back to ${income.toFixed(1)}x, the scale by income`} onClick={() => void setFareScale(country, null)}><Icon.undo /></button>
+        : <span />}
+    </li>
+  );
+}
+
 export function MoneyTab() {
   const w = world.value;
   const m = moneyState.value;
@@ -48,7 +96,11 @@ export function MoneyTab() {
   const prev = zone === null || !prevAll ? prevAll
     : regionLedger(zone).ledger.find((d) => d.day === todayDay - 1) ?? { day: todayDay - 1, fares: 0, running: 0, trains: 0, build: 0 };
   const cell = (d: DayLedger | null, v: (d: DayLedger) => number) => <td class="num">{d ? <Money dollars={v(d) * 1e6} /> : ""}</td>;
-  const f = farePreview.value ?? m.fares.nodes;
+  // T-1277: the curve as charged in the country of the selected station or city, else the one in view
+  const country = fareCountry();
+  const scale = fareScale(country, m.fares.scales);
+  const shown = scaleNodes(m.fares.nodes, scale);
+  const f = farePreview.value ?? shown;
   return (
     <>
       <ul class="rows">
@@ -96,8 +148,8 @@ export function MoneyTab() {
       </table>
       <MoneyHistory zone={zone} />
       <div class="h">Fare<span class="right"><FareButtons nodes={f} /></span></div>
-      <FareGraph nodes={m.fares.nodes} />
-      <FareNodeRows nodes={f} />
+      <FareGraph nodes={shown} scale={scale} />
+      <FareNodeRows nodes={f} scale={scale} first={<FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} />} />
       <div class="h">Trains</div>
       <ul class="rows">
         <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)}. Running costs ${runCostRule(m)}. Cars are bought when a line needs more than the spare ones.`}>Cars owned</span>}>

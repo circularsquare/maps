@@ -24,7 +24,8 @@ import { CITIES, cityById, cityToMarket, cityToWorld, HOME_CITY, lonLatToCity, m
 import { loadAttractions, type Attraction } from "../game/attractions";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
-import { curveKnots } from "../game/fareCurve";
+import { scaledKnots } from "../game/fareCurve";
+import { FARE_BASELINE, fareScale, fareWeight } from "../game/income";
 import type { CorridorTable } from "../game/demand";
 import { TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
@@ -1093,7 +1094,11 @@ async function run() {
           p.set_upgrades(m.ups ?? new Uint8Array(0));
           p.set_passages(m.passages ?? new Uint32Array(0));
           p.set_span(m.span ?? new Float32Array(0));
+          // T-1277: riders weigh fares by their country's income and pay the curve times its scale;
+          // the market takes the curve as set, at the baseline country's weight
+          let scale = 1;
           if (p instanceof IntercityApi) {
+            p.set_fare_weight(fareWeight(FARE_BASELINE));
             p.set_sampled(!job.exactMarket);
             // T-377: the market takes stations as longitude and latitude, each zone in its own frame
             const ll = new Float64Array(m.stXY.length);
@@ -1102,6 +1107,9 @@ async function run() {
           } else {
             if (p instanceof DemandApi) p.set_chunked(!job.exactMarket);
             const city = c.cities.find((id) => cities.get(id) === p || everyday.get(id) === p)!;
+            const country = cityById(city).country;
+            p.set_fare_weight(fareWeight(country));
+            scale = fareScale(country, m.fare.scales);
             const xy = m.stXY.slice();
             for (let k = 0; k < xy.length; k += 2) {
               const w = worldToCity(xy[k], xy[k + 1], city);
@@ -1109,8 +1117,8 @@ async function run() {
             }
             setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);
           }
-          p.set_fares(m.fare.base, m.fare.perKm, m.hopKm);
-          p.set_fare_curve(curveKnots(m.fare));
+          p.set_fares(m.fare.base * scale, m.fare.perKm * scale, m.hopKm);
+          p.set_fare_curve(scaledKnots(m.fare, scale));
         }
         // T-124: a period is kept only if every population kept it (its inputs are unchanged: the
         // Rust side) and each holds it from a whole solve of this cluster's period (`psig`): the

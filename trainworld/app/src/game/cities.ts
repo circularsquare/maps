@@ -9,6 +9,7 @@ import { signal } from "@preact/signals";
 import registryJson from "./registry.json";
 import { M_PER_DEG, makeFrame, type Frame, type FrameSpec } from "./frame";
 import { zoneAliases, zoneName } from "./zoneNames";
+import { fareWeight } from "./income";
 
 export type CityId = string;
 /** A zone of the world (T-276, docs/zones.md): a city zone, or a non-city zone (`kind` "zone").
@@ -49,8 +50,10 @@ export const MARKET_FRAME = makeFrame({ ...REGISTRY.market.frame, kind: "equirec
 /** T-377: the world market's frame, rule, places and every registered zone's row in registry order,
  * as `MarketPacks` reads it; `rowsText` is market-rows.json ({zone id: row}, T-776). */
 export function marketWorld(rowsText: string): string {
-  const rows = JSON.parse(rowsText) as Record<CityId, unknown>;
-  return JSON.stringify({ frame: REGISTRY.market.frame, rule: REGISTRY.market.rule, places: REGISTRY.market.places.length, rows: CITIES.flatMap((c) => (rows[c.id] ? [rows[c.id]] : [])) });
+  const rows = JSON.parse(rowsText) as Record<CityId, { country?: string } | undefined>;
+  // T-1277: a plane's fare weighs the departing country's minutes a dollar
+  const withFw = (r: { country?: string }) => ({ ...r, fw: fareWeight(r.country) });
+  return JSON.stringify({ frame: REGISTRY.market.frame, rule: REGISTRY.market.rule, places: REGISTRY.market.places.length, rows: CITIES.flatMap((c) => { const r = rows[c.id]; return r ? [withFw(r)] : []; }) });
 }
 
 export const activeCity = signal<CityId>(HOME_CITY);

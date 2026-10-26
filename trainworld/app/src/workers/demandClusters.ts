@@ -367,7 +367,7 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   });
   const span = spanOf(n, nodeGlobal);
   const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, span };
-  const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}`;
+  const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}`;
   // station upgrades and passages (T-1281) only where there are any, so other networks keep their signatures
   const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : [])];
   const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);

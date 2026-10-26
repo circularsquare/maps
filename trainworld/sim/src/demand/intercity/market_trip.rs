@@ -129,7 +129,7 @@ impl IntercityApi {
         h[1] = per.round as f64;
         let (g, p) = (&per.g, &per.p);
         h[9] = p.fare_min as f64;
-        h[10] = FARE_MIN_PER_USD as f64;
+        h[10] = p.fare_w as f64;
         h[6] = -1.;
         h[7] = -1.;
         let m = &self.m;
