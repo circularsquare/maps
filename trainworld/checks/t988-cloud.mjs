@@ -231,6 +231,8 @@ try {
   await accountPanel(a);
   await a.click('dialog.acct-panel button:has-text("Sign out")');
   await panel(a);
+  // the copy's name is asked only once Save a copy is clicked (T-1295)
+  await a.click('button:text-is("Save a copy")');
   await a.fill('.save-slot-new input', 'Kept here');
   await a.click('.save-slot-new button[type="submit"]');
   await until(async () => (await state(a)).slots.some((s) => s.name === 'Kept here'), 20000);
