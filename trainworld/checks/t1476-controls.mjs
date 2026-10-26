@@ -83,12 +83,12 @@ try {
     await page.mouse.move(2, 2);
     await page.screenshot({ path: join(OUT, `calendar-${shade}.png`), clip: { x: box.x - 16, y: Math.max(0, box.y - 6), width: box.width + 40, height: box.height + 14 } });
   });
-  // the click and hover are T-1372's: click toggles the away day when one is offered
+  // the click and hover are T-1372's and T-1373's: before the days away, click toggles the going-out day
   await setDay(r0.away - 1);
   const had = await page.evaluate(() => window.tw.display.value.dayShown);
   await page.locator('.clock .cal').click();
   const after = await page.evaluate(() => window.tw.display.value.dayShown);
-  check('click shows demand on the day away', after === 'away', `${had} -> ${after}`);
+  check('click shows demand on the going-out day', after === 'out', `${had} -> ${after}`);
   await page.locator('.clock .cal').click();
   check('click again goes back', (await page.evaluate(() => window.tw.display.value.dayShown)) === had);
   await page.locator('.clock .cal').hover();

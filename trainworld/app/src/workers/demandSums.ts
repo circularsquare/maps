@@ -8,7 +8,7 @@ import { makeFrame, type FrameSpec } from "../game/frame";
 import { EVERYDAY_KEYS, membersOf, PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "../game/purposes";
 import { PERIODS } from "../game/periods";
 import type { CityId } from "../game/cities";
-import type { DemandDay } from "../game/days";
+import { BACK_DAY, OUT_DAY, type DemandDay } from "../game/days";
 import type { Corridors, DemandView, FarEnd, Flows, IntercityDemand, IntercitySelection, IntercityStation, LineDemand, PlaceFlows, PlaceTrips, PurposeDemand, StationDemand, ZoneTrips } from "../game/demand";
 import type { DealtCells } from "../game/farChunks";
 import type { FromDemand } from "./demandProtocol";
@@ -367,10 +367,18 @@ function dayResult(dayTable: ArrayLike<number>, r: DayResult, q: number, day: De
   const nr = r.seg.length;
   const seg = new Float32Array(nr), board = new Float32Array(nr), alight = new Float32Array(nr);
   const ps = new Float32Array(p.seg.length), pb = new Float32Array(p.board.length), pa = new Float32Array(p.alight.length);
+  // T-1373: a rush day's longer trips lean out of big places going out and back coming back
+  const sign = day === OUT_DAY ? 1 : day === BACK_DAY ? -1 : 0;
+  const lean = sign && p.lean?.length === 3 * nr ? p.lean : null;
   p.keys.forEach((key, i) => {
     const f = factor(key);
+    const l = key === "longer" ? lean : null;
     for (let j = 0, o = i * nr; j < nr; j++, o++) {
-      ps[o] = p.seg[o] * f; pb[o] = p.board[o] * f; pa[o] = p.alight[o] * f;
+      if (l) {
+        ps[o] = Math.max(0, p.seg[o] + sign * l[j]) * f; pb[o] = Math.max(0, p.board[o] + sign * l[nr + j]) * f; pa[o] = Math.max(0, p.alight[o] + sign * l[2 * nr + j]) * f;
+      } else {
+        ps[o] = p.seg[o] * f; pb[o] = p.board[o] * f; pa[o] = p.alight[o] * f;
+      }
       seg[j] += ps[o]; board[j] += pb[o]; alight[j] += pa[o];
     }
   });

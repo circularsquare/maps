@@ -742,6 +742,19 @@ notes/T-420.md has the tables.
   Vietnam's migrant cities empty far more than New York at Thanksgiving), and where a holiday's
   name is not in the list (a national day off that people travel on) nothing happens. Check: a
   country's rail ridership over its long holiday, and whether its big holiday is in the list.
+- **Superholidays' going-out and coming-back days** (T-1373, docs/demand-market.md "A superholiday's
+  lean"): a weekday and a Sunday with the longer trips twice a weekday's, leaning towards the
+  smaller place going out and back coming back, up to 70/30, a place's size its people times the
+  square root of its people per 6 km zone. Population and density alone, from any country's
+  zones; no birthplace table (Anita, 2026-10-26: home trips by population with a boost towards
+  rural areas, small towns and smaller cities). Anchors for the x 2, from memory: China's rail over
+  the 40 days of Spring Festival travel about 1.2 times normal with peaks near 2, JR's Obon and
+  New Year peaks 1.3-1.6 on the Shinkansen, US air on the Sunday after Thanksgiving about 1.25.
+  Why it may not carry over: where people go home is a country's migration history, not its
+  sizes (Shenzhen's go to Hunan and Guangxi, not its neighbours; a country whose cities grew from
+  their own countryside has its home trips short), and one strength everywhere overstates a
+  Thanksgiving next to a Spring Festival. Check: a census table of birthplace against residence
+  by province or state, where a country's flows look wrong in play.
 
 ## Network and stations
 

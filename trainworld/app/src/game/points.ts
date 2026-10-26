@@ -11,7 +11,7 @@
 
 import { computed } from "@preact/signals";
 import { CITIES, type CityId } from "./cities";
-import { AVERAGE_DAY, AWAY_DAY, awayNear, DAY_KINDS, DEMAND_DAYS } from "./days";
+import { AVERAGE_DAY, awayNear, DAY_KINDS, DEMAND_DAYS, kindMade, PLAIN_KIND, rushRun } from "./days";
 import { demandByDay, type DayDemand } from "./demand";
 import { sig3 } from "./format";
 import { lineGeo, moneyState, moneyWorld } from "./money";
@@ -130,12 +130,14 @@ export const linePoints = computed<LinePoints>(() => {
   const w = moneyWorld.value;
   if (!w) return [];
   const zl = zonesLoaded.value; // boundaries arriving re-place the stations
-  // T-264: the away day's own points only while one is near, else Sunday's
-  const days = DAY_KINDS.map((k) => demandByDay.value[k === AWAY_DAY && awayNear.value === null ? 2 : k]);
+  // T-264, T-1373: a superholiday's days have their own points only while one is near, else the
+  // ordinary day's they stand in for
+  const near = awayNear.value, rush = rushRun.value;
+  const days = DAY_KINDS.map((k) => demandByDay.value[kindMade(k, near, rush) ? k : PLAIN_KIND[k]]);
   const was = pointsMemo, same = !!was && was.w === w && was.zl === zl;
   if (same && days.every((d, k) => sameDay(d, was.days[k]))) return was.out;
-  const own = days.map((d, k) => (k === AWAY_DAY && d === days[2] ? null : same && sameDay(d, was.days[k]) ? was.per[k] : dayPoints(w, d)));
-  const per = own.map((x) => x ?? own[2]!);
+  const own = days.map((d, k) => (!kindMade(k, near, rush) ? null : same && sameDay(d, was.days[k]) ? was.per[k] : dayPoints(w, d)));
+  const per = own.map((x, k) => x ?? own[PLAIN_KIND[k]]!);
   const base = days.findIndex((d) => d.view);
   const out = base < 0 ? [] : assemble(days, per, base);
   pointsMemo = { w, zl, days, per, out };
@@ -168,7 +170,7 @@ export const pointsPast24h = computed<Map<string, number>>(() => {
   return out;
 });
 
-/** Each region's points a day at the riders now, per demand day (weekday, Saturday, Sunday, average). */
+/** Each region's points a day at the riders now, per demand day (`DEMAND_DAYS`). */
 export const pointsPerDay = computed<Map<string, number[]>>(() => {
   const out = new Map<string, number[]>();
   for (const { regions } of linePoints.value) {

@@ -440,8 +440,8 @@ impl Boarding {
 
     /// The kind of day whose account line `line`'s local time `t` reads: its own, or the kind its
     /// country gives that day (a holiday, its own weekend, T-872, T-262), or the weekday's while
-    /// that kind has no riders (an away day the Sunday's first: the clock worker sends its riders
-    /// only while one is near, T-264).
+    /// that kind has no riders (an away or coming-back day the Sunday's first: the clock worker sends
+    /// a superholiday's riders only while one is near, T-264, T-1373).
     pub fn kind_at(&self, t: f64, line: usize) -> usize {
         let day = (t / DAY).floor() as i64;
         let given = self.holidays.get(&(line as u32)).and_then(|d| d.iter().find(|x| x.0 == day)).map(|x| x.1);
@@ -451,7 +451,7 @@ impl Boarding {
         let day = day.min(DAY_KINDS - 1);
         if !self.riders[day].is_empty() {
             day
-        } else if day == AWAY && !self.riders[2].is_empty() {
+        } else if (day == AWAY || day == BACK) && !self.riders[2].is_empty() {
             2
         } else {
             0

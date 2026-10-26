@@ -257,7 +257,8 @@ player is looking.
   (last two). The days either side of the game year come from the real years either side, so a
   run over New Year is found.
 - **A country's calendar decides each local day's kind** (T-872, T-262, `game/holidayCalendar.ts`
-  `kindOfIn`): a superholiday's day away is the away kind (T-264); a holiday is a Sunday, except the few most people work through (in the US and its
+  `kindOfIn`): a superholiday's day away is the away kind (T-264), its going-out and coming-back
+  days their own kinds (T-1373); a holiday is a Sunday, except the few most people work through (in the US and its
   territories: Columbus Day, Veterans Day, Martin Luther King Jr. Day, Washington's Birthday,
   Juneteenth; `working` in holidays.json), which keep their weekday; a weekend day it works is a weekday; others take the
   country's week. A line's country is its first stop's zone's (by the coarse outlines, so a Yuen Long line keeps Hong
@@ -267,11 +268,15 @@ player is looking.
   kind is not the day number's, with their kind, from yesterday to 8 days ahead), and its fares,
   rides and points settle at that kind's rates: money groups split by local time and country.
   Running costs do not depend on the kind of day. The demand views' Today follows the view
-  centre's country, the line inspector its line's. The demand solve is unchanged: Saturday, Sunday
-  and the away day are worked out from the weekday's ([demand-timing.md](demand-timing.md)). The
-  away day's own boarding account is made only while one is within 8 days in a country the player
-  has built in, and its fares and points only within 21; until then the account reads Sunday's
-  (`awaySoon`, `awayNear` in `game/days.ts`).
+  centre's country, the line inspector its line's. Saturday, Sunday and a superholiday's days are
+  worked out from the weekday's solve ([demand-timing.md](demand-timing.md)); the going-out and
+  coming-back days need the market's one more column, the longer trips' lean. A superholiday's
+  days have their own boarding account only while one is within 8 days in a country the player
+  has built in, and their fares and points only within 21; until then the account, fares and points
+  read the ordinary day's (a day away and a coming-back day Sunday's, a going-out day the weekday's:
+  `awaySoon`, `awayNear`, `rushSoon`, `rushRun` and `PLAIN_KIND` in `game/days.ts`). The going-out and
+  coming-back days' demand views are made only within those 21 days too (the shown result's views
+  made again as they come and go); the away day's always.
 
 ### NIMBY Rails
 

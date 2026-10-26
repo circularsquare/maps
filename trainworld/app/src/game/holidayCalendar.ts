@@ -65,9 +65,10 @@ export function holidayName(d: HolidayData | null, country: string | null | unde
 }
 
 const kinds = new WeakMap<HolidayData, Map<string, (day: number) => DayKind>>();
-/** The kind of each local game day in `country`: a superholiday's away day on its days away (T-264),
- * a Sunday on its holidays (working ones aside), a weekday on the weekend days it works, else its
- * own week's kind for the weekday. Without data or a country, `dayKindOf`. */
+/** The kind of each local game day in `country`: a superholiday's away, going-out or coming-back day
+ * on its days (T-264, T-1373), a Sunday on its holidays (working ones aside), a weekday on the
+ * weekend days it works, else its own week's kind for the weekday. Without data or a country,
+ * `dayKindOf`. */
 export function kindOfIn(d: HolidayData | null, country: string | null | undefined): (day: number) => DayKind {
   if (!d || !country || !d.countries[country]) return dayKindOf;
   let m = kinds.get(d);
@@ -81,12 +82,13 @@ export function kindOfIn(d: HolidayData | null, country: string | null | undefin
     for (const [wd, days] of Object.entries(d.workdays?.[country] ?? {})) for (const doy of days) worked.add(key(wd, doy));
     // a run's days before January 1 or after December 31 belong to the year before or after,
     // whose January 1 is a weekday earlier or later
-    const away = new Set<number>();
+    const rush = new Map<number, DayKind>();
     for (const [wd, runs] of Object.entries(d.supers?.[country] ?? {})) {
-      for (const [s, a, b] of runs) {
-        for (let doy = s + a; doy < s + a + b; doy++) {
-          const w = Number(wd);
-          away.add(doy < 0 ? key(String((w + 6) % 7), doy + 365) : doy >= 365 ? key(String((w + 1) % 7), doy - 365) : key(wd, doy));
+      const w = Number(wd);
+      for (const [s, a, b, c] of runs) {
+        for (let doy = s; doy < s + a + b + c; doy++) {
+          const at = doy < 0 ? key(String((w + 6) % 7), doy + 365) : doy >= 365 ? key(String((w + 1) % 7), doy - 365) : key(wd, doy);
+          rush.set(at, doy < s + a ? 4 : doy < s + a + b ? 3 : 5);
         }
       }
     }
@@ -94,7 +96,7 @@ export function kindOfIn(d: HolidayData | null, country: string | null | undefin
     const own = week ? (day: number): DayKind => week[weekdayOf(day)] ?? 0 : dayKindOf;
     f = (day) => {
       const k = newYearWeekday(day) * 1000 + dayOfYear(day);
-      return away.has(k) ? 3 : off.has(k) ? 2 : worked.has(k) ? 0 : own(day);
+      return rush.get(k) ?? (off.has(k) ? 2 : worked.has(k) ? 0 : own(day));
     };
     m.set(country, f);
   }

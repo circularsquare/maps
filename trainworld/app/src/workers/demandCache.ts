@@ -20,7 +20,7 @@ import type { ModeSplit } from "../game/types";
 declare const __TW_BUILD__: string | undefined;
 /** The app build: set by vite.config.ts at each build and each dev-server start. */
 export const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "unknown";
-export const CACHE_FORMAT = 5; // 3: the corridors as a shared table and the pairs with rail (T-1008); 4: Saturday and Sunday apart (T-262); 5: the away day, the average last (T-264)
+export const CACHE_FORMAT = 6; // 3: the corridors as a shared table and the pairs with rail (T-1008); 4: Saturday and Sunday apart (T-262); 5: the away day, the average last (T-264); 6: the going-out and coming-back days (T-1373)
 /** The view version a cached result is shown under: no solve has it, so the workers answer no
  * question about it (a click waits for the fresh solve, as before T-328). */
 export const CACHE_VERSION = 0;

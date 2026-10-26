@@ -274,6 +274,36 @@ fn intercity_selection_places_conserve_and_rail_is_within_all() {
     let (sx, tot) = (all[1 + 8 + 2], all[1 + 8]);
     assert!(tot > 0. && sx / tot > 100_000., "Philadelphia sits 120 km east: {}", sx / tot);
 }
+/// T-1373: a rush day's longer trips lean from the larger place to the smaller, each pair's trips
+/// in all kept: the loads by the lean's column, a selection's far ends by its places' lean.
+#[test]
+fn rush_days_lean_towards_smaller_places() {
+    use crate::demand::days::{BACK, OUT, RUSH_LONGER};
+    let mut a = api();
+    network(&mut a, 6., 1.);
+    solve_all(&mut a);
+    let m = a.m.clone();
+    assert_eq!(m.lean(0, 1), 0.);
+    assert!(m.lean(0, 2) > 0. && m.lean(0, 2) <= LEAN && m.lean(2, 0) == -m.lean(0, 2));
+    let (mut up, mut down) = (false, false);
+    for q in 0..PERIODS {
+        let (seg, lean) = (a.seg(q), a.lean_loads(q));
+        assert_eq!(lean.len(), 3 * seg.len());
+        for (r, &s) in seg.iter().enumerate() {
+            assert!(lean[r].abs() <= LEAN * s + 1e-3, "period {q} node {r}: {} against {s}", lean[r]);
+            up |= lean[r] > 1e-3;
+            down |= lean[r] < -1e-3;
+        }
+    }
+    assert!(up && down, "the line carries more one way going out");
+    // the small place's residents' trips to place 0: out times 1 - lean, back times 1 + lean
+    let at = |day: u32| a.selection_flows_day(2, &[60000., 0.], &[1.], day)[1];
+    let (wd, out, back) = (at(0), at(OUT as u32), at(BACK as u32));
+    let l = m.lean(2, 0) as f64;
+    assert!(wd > 0. && (out - wd * RUSH_LONGER as f64 * (1. + l)).abs() < 1e-6 * wd);
+    let sun = at(2) / crate::demand::days::day_rate(2, LONGER) as f64;
+    assert!((back - sun * RUSH_LONGER as f64 * (1. - l)).abs() < 1e-6 * wd, "{back} vs {}", sun * 2. * (1. - l));
+}
 #[test]
 fn intercity_station_places_equal_entries_and_exits() {
     let mut a = api();

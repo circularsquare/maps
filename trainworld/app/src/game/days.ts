@@ -8,23 +8,29 @@
 
 import { signal } from "@preact/signals";
 
-/** 0 weekday, 1 Saturday, 2 Sunday, 3 a superholiday's away day (T-264, a scaled Sunday): an index
- * into the per-day results. */
-export type DayKind = 0 | 1 | 2 | 3;
-export const DAY_KINDS: DayKind[] = [0, 1, 2, 3];
+/** 0 weekday, 1 Saturday, 2 Sunday, 3 a superholiday's away day (T-264, a scaled Sunday), 4 its
+ * going-out day and 5 its coming-back day (T-1373: a weekday and a Sunday with twice a weekday's
+ * longer trips, leaning out of big places and back): an index into the per-day results. */
+export type DayKind = 0 | 1 | 2 | 3 | 4 | 5;
+export const DAY_KINDS: DayKind[] = [0, 1, 2, 3, 4, 5];
 export const AWAY_DAY = 3;
-export const DAY_KIND_NAME = ["Weekday", "Saturday", "Sunday", "Holiday day"] as const;
+export const OUT_DAY = 4;
+export const BACK_DAY = 5;
+export const DAY_KIND_NAME = ["Weekday", "Saturday", "Sunday", "Holiday day", "Going-out day", "Coming-back day"] as const;
 
-/** The days a demand view can show (T-464): the four kinds, then the average day (5 weekdays, a
+/** The days a demand view can show (T-464): the six kinds, then the average day (5 weekdays, a
  * Saturday and a Sunday over 7, sim/src/demand/days.rs). The index into `demandByDay` and the `day`
- * of every demand query. The clock and the boarding account only ever see the four kinds. */
-export type DemandDay = DayKind | 4;
-export const DEMAND_DAYS: DemandDay[] = [0, 1, 2, 3, 4];
-export const AVERAGE_DAY = 4;
+ * of every demand query. The clock and the boarding account only ever see the six kinds. */
+export type DemandDay = DayKind | 6;
+export const DEMAND_DAYS: DemandDay[] = [0, 1, 2, 3, 4, 5, 6];
+export const AVERAGE_DAY = 6;
 /** How a figure for the day shown ends: "12,400 trip legs per day". The Day choice names the day. */
-export const DEMAND_DAY_PHRASE = ["per weekday", "per Saturday", "per Sunday", "per holiday day", "per day"] as const;
+export const DEMAND_DAY_PHRASE = ["per weekday", "per Saturday", "per Sunday", "per holiday day", "per going-out day", "per coming-back day", "per day"] as const;
 /** "points on a weekday": the same, as the points hovers end */
-export const DEMAND_DAY_ON = ["on a weekday", "on a Saturday", "on a Sunday", "on a holiday day", "a day"] as const;
+export const DEMAND_DAY_ON = ["on a weekday", "on a Saturday", "on a Sunday", "on a holiday day", "on a going-out day", "on a coming-back day", "a day"] as const;
+/** The ordinary kind a superholiday's day stands in for while none is near (T-1373): a day away and a
+ * coming-back day a Sunday, a going-out day a weekday. */
+export const PLAIN_KIND: DayKind[] = [0, 1, 2, 2, 0, 2];
 const WEEKDAY_NAME = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** Day of the week of game day `day`, 0 Monday. */
@@ -74,3 +80,11 @@ export const currentDay = signal<DayKind>(0);
  * reads meanwhile. */
 export const awayNear = signal<string | null>(null);
 export const awaySoon = signal(false);
+/** T-1373: the same for the going-out and coming-back days ("rush days"): the superholiday whose rush days are
+ * within the next 21 days (null for none), and whether one is within the next 8. While none is near
+ * those days' views are the weekday's and Sunday's (`PLAIN_KIND`), and no line reads them. */
+export const rushRun = signal<string | null>(null);
+export const rushSoon = signal(false);
+/** Whether kind `k`'s own figures are made now (T-264, T-1373): the ordinary kinds always, a
+ * superholiday's only while one is near. */
+export const kindMade = (k: number, near = awayNear.value, rush = rushRun.value): boolean => (k === AWAY_DAY ? near !== null : k === OUT_DAY || k === BACK_DAY ? rush !== null : true);

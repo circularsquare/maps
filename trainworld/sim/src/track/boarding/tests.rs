@@ -179,6 +179,22 @@ fn an_away_day_reads_its_own_account_or_the_sundays() {
     assert_eq!(b.kind_at(mon, l as usize), 2);
 }
 
+#[test]
+fn rush_days_read_their_own_account_or_a_weekdays_and_a_sundays() {
+    // T-1373: a going-out day is kind 4 and reads the weekday's without its riders, a coming-back
+    // day kind 5 and reads Sunday's
+    let (_, l) = setup(10.0);
+    let mut b = Boarding::default();
+    b.set_riders_day(&riders(l, [500.0, 200.0, 500.0, 200.0, 50.0]), 0);
+    b.set_riders_day(&riders(l, [50.0, 250.0, 150.0, 150.0, 40.0]), 2);
+    let (tue, wed) = (9.0 * DAY + 8.0 * 3600.0, 10.0 * DAY + 8.0 * 3600.0);
+    b.set_holidays(&[l as f64, 2.0, 9.0, 4.0, 10.0, BACK as f64]);
+    assert_eq!((b.kind_at(tue, l as usize), b.kind_at(wed, l as usize)), (0, 2));
+    b.set_riders_day(&riders(l, [600.0, 300.0, 500.0, 300.0, 50.0]), 4);
+    b.set_riders_day(&riders(l, [100.0, 400.0, 300.0, 300.0, 60.0]), BACK);
+    assert_eq!((b.kind_at(tue, l as usize), b.kind_at(wed, l as usize)), (4, BACK));
+}
+
 /// T-798: on a circle 0-1-2-3-4-5-0, riders from 4 to 1 ride on through the first stop: the
 /// train leaves it with them aboard, and they count as boarding there again.
 #[test]

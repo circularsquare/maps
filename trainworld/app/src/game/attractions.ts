@@ -4,7 +4,7 @@
 // (`EverydayApi.beside_with`); the map marks them (map/attractionMarks.ts). Plain data: the demand
 // workers import it too.
 
-import { AVERAGE_DAY, AWAY_DAY, type DemandDay } from "./days";
+import { AVERAGE_DAY, AWAY_DAY, BACK_DAY, OUT_DAY, type DemandDay } from "./days";
 
 export interface Attraction {
   /** the Wikidata item's number (Q-id without the Q) */
@@ -38,5 +38,6 @@ const AWAY = 1.5;
  * weekdays so the weekend's factors bring a week back to them (as the sim's `attraction_sites`). */
 export function visitsOn(visitors: number, day: DemandDay): number {
   const weekday = (visitors * 7) / 365 / (5 + WEEKEND[0] + WEEKEND[1]);
-  return day === 0 ? weekday : day === AVERAGE_DAY ? visitors / 365 : day === AWAY_DAY ? weekday * WEEKEND[1] * AWAY : weekday * WEEKEND[day - 1];
+  // a going-out day is a weekday's, a coming-back day a Sunday's (T-1373)
+  return day === 0 || day === OUT_DAY ? weekday : day === AVERAGE_DAY ? visitors / 365 : day === AWAY_DAY ? weekday * WEEKEND[1] * AWAY : day === BACK_DAY ? weekday * WEEKEND[1] : weekday * WEEKEND[day - 1];
 }

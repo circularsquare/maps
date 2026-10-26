@@ -284,8 +284,10 @@ export type FromDemand =
        * The same `seg`, `board` and `alight` split by trip purpose (T-158, the map's purpose
        * filter): `keys` (game/purposes.ts `PurposeKey`) and, per key in that order, one block of
        * one value per route node. The purposes add up to the totals. Crowding is never split.
+       * `lean` (T-1373): the longer trips times their pair's lean, a block each of seg, board and
+       * alight; a going-out day's longer trips are theirs plus it, a coming-back day's less it.
        */
-      parts?: { keys: string[]; seg: Float32Array; board: Float32Array; alight: Float32Array };
+      parts?: { keys: string[]; seg: Float32Array; board: Float32Array; alight: Float32Array; lean?: Float32Array };
       /** this stage in the worker, ms, and set_network's ms when this was the version's first stage */
       ms: number;
       setupMs: number;

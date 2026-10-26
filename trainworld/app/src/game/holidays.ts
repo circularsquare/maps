@@ -8,10 +8,10 @@
 // days (T-262): the clock worker sends the track model each line's days that differ from the day
 // number's and settles money by them; here, the view's Today and the line inspector.
 
-import { computed, effect, signal } from "@preact/signals";
+import { batch, computed, effect, signal } from "@preact/signals";
 import { clock } from "./clock";
 import { cityById, cityWithin, outlinesIn } from "./cities";
-import { awayNear, awaySoon } from "./days";
+import { awayNear, awaySoon, rushRun, rushSoon } from "./days";
 import { holidayName, kindOfIn, superPart, superRuns, type HolidayData, type SuperRun } from "./holidayCalendar";
 import { shiftAt, viewShift } from "./localTime";
 import { world } from "./world";
@@ -154,21 +154,33 @@ export const superDays = computed(() => {
 /** The local game day now in a run's country. */
 export const runToday = (r: NearRun) => Math.floor((clock.local.peek() * 60 - viewShift.peek() + r.shift) / 86400);
 
-// T-264: which superholiday's away days the Day choice offers (within SUPER_AHEAD days), and whether
-// the boarding account needs the away day's riders (one within 8 days, the window the clock worker
-// sends the lines' days for). Started by `loadHolidays`: game/clock.ts imports this module.
+// T-264, T-1373: which superholiday's away days, and which one's going-out and coming-back days, the
+// Day choice offers (within SUPER_AHEAD days), and whether the boarding account needs their riders
+// (within 8 days, the window the clock worker sends the lines' days for). Started by
+// `loadHolidays`: game/clock.ts imports this module.
 const watchAway = () => effect(() => {
   const runs = supersNear.value;
   const now = clock.local.value * 60 - viewShift.value;
-  let near: string | null = null, soon = false;
+  let near: string | null = null, soon = false, rush: string | null = null, rushing = false;
   for (const r of runs) {
     const today = Math.floor((now + r.shift) / 86400);
+    if (r.end <= today) continue;
+    // the next of its rush days still to come or under way
+    const next = r.out < r.away && today < r.away ? Math.max(today, r.out) : r.back < r.end ? Math.max(today, r.back) : null;
+    if (next !== null) {
+      rush ??= r.name;
+      if (next <= today + 8) rushing = true;
+    }
     if (r.back <= today || r.away >= r.back) continue;
     near ??= r.name;
     if (r.away <= today + 8) soon = true;
   }
-  if (awayNear.peek() !== near) awayNear.value = near;
-  if (awaySoon.peek() !== soon) awaySoon.value = soon;
+  batch(() => {
+    if (awayNear.peek() !== near) awayNear.value = near;
+    if (awaySoon.peek() !== soon) awaySoon.value = soon;
+    if (rushRun.peek() !== rush) rushRun.value = rush;
+    if (rushSoon.peek() !== rushing) rushSoon.value = rushing;
+  });
 });
 
 export interface RushSpan {

@@ -42,6 +42,21 @@ working there by home zone). A station's far-zone rows hold both parts and take 
 weekend factor (a known approximation: commuters are counted 1.58x rather than 0.30x on a weekend
 there, T-296). Measurements on the real New York network: notes/T-276.md.
 
+**A superholiday's lean** (T-1373, [demand-timing.md](demand-timing.md) "Kinds of day"). On a
+going-out day a pair of places' longer trips lean towards the smaller: those from place i to j are
+times `1 + lean(i, j)`, `lean(i, j) = 0.4 (s_i - s_j) / (s_i + s_j)` (`LEAN`, `Market::lean`), and
+j to i's times `1 - lean(i, j)`; a coming-back day takes the opposite sign. A place's size `s` is
+its people times the square root of its people per 6 km zone (`Place::lean_size`), so a sparse
+countryside zone or a small town counts smaller than its people alone (Anita: home trips by
+population, with a boost towards rural areas, small towns and smaller cities; no birthplace
+tables). A big city against a small town runs about 70/30 outward, two like places 50/50; a pair's
+trips in all are kept. Each pass fills the longer trips' station to station trips times their
+pair's lean beside their own (`od_r`, S x S floats, left out past 256 MB: `LEAN_OD_BYTES`) and
+walks it on the same strategies as a fourth assignment (`r_avg`, averaged over rounds and cut by
+capacity like the commutes'); `lean_loads(q)` gives it. Selections, a station's far zones
+(the station's place: the zone that reaches it most) and the trip explorer weigh each pair by its
+places' lean on those days.
+
 **A composition opens without its zone pairs** (T-174, T-377). A market is the world (the
 registry's frame, rule and every place's row) plus the packs of the places a worker holds
 (`MarketPacks`, each parsed once). The figures that need all pairs (the day's trips, each

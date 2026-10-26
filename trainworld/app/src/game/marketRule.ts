@@ -10,6 +10,7 @@ import { signal } from "@preact/signals";
 import { CITIES, REGISTRY, widenBox, zoneBox, ZONE_REACH_M } from "./cities";
 import { dataUrl } from "./dataBase";
 import { fareWeight } from "./income";
+import { AVERAGE_DAY, BACK_DAY, OUT_DAY } from "./days";
 import { PERIODS } from "./periods";
 import type { MarketEnd, MarketPeriod } from "./trip";
 
@@ -25,6 +26,9 @@ export interface MarketRow {
   t: number;
   a: number;
   ta: number;
+  /** people and 6 km zones (T-1373's lean) */
+  pop: number;
+  zones: number;
   /** trips a day each way with each place under `near_km` */
   near: [number, number][];
   /** each airport: the drive to it (minutes, people weighted) and the places it flies to direct */
@@ -124,11 +128,25 @@ export const driveOf = (a: number, b: number): Drive => (a === b ? undefined : d
 const SHARES = [0.2, 0.35, 0.25, 0.15, 0.05];
 const WEEKEND: [number, number[]][] = [[1.69, [0.166, 0.314, 0.196, 0.295, 0.029]], [1.48, [0.133, 0.394, 0.285, 0.166, 0.022]]];
 
-/** Longer trips departing in period `q` on demand day `day` (0 weekday, 1 Saturday, 2 Sunday, 3 a
- * superholiday's away day, a Sunday's, T-264; 4 the average), per weekday trip. */
+/** Longer trips departing in period `q` on demand day `day` (game/days.ts `DemandDay`: a
+ * superholiday's away day a Sunday's, T-264; its going-out day twice a weekday's at a weekday's
+ * timing, its coming-back day twice a weekday's at a Sunday's, T-1373, before their lean), per
+ * weekday trip. */
 export function longerShare(day: number, q: number): number {
   const on = (d: number) => WEEKEND[d][0] * WEEKEND[d][1][q];
-  return day === 0 ? SHARES[q] : day === 4 ? (5 * SHARES[q] + on(0) + on(1)) / 7 : on(Math.min(day, 2) - 1);
+  if (day === OUT_DAY) return RUSH_LONGER * SHARES[q];
+  if (day === BACK_DAY) return RUSH_LONGER * WEEKEND[1][1][q];
+  return day === 0 ? SHARES[q] : day === AVERAGE_DAY ? (5 * SHARES[q] + on(0) + on(1)) / 7 : on(Math.min(day, 2) - 1);
+}
+/** days.rs `RUSH_LONGER` */
+const RUSH_LONGER = 2;
+/** days.rs `lean_sign` */
+const leanSign = (day: number) => (day === OUT_DAY ? 1 : day === BACK_DAY ? -1 : 0);
+/** intercity.rs `LEAN` and `Market::lean`: a going-out day's lean of trips from place `a` to `b`. */
+export function placeLean(a: number, b: number): number {
+  const size = (r: MarketRow | undefined) => (r && r.pop > 0 ? r.pop * Math.sqrt(r.pop / Math.max(1, r.zones)) : 0);
+  const x = size(marketRow(a)), y = size(marketRow(b));
+  return x + y > 0 ? (0.4 * (x - y)) / (x + y) : 0;
 }
 
 // ---------------------------------------------------------------- the rows
@@ -354,7 +372,7 @@ export function stationNear(place: number, stations: readonly { lng: number; lat
 export function rowsAnswer(from: MarketEnd, to: MarketEnd, day: number): (MarketPeriod | null)[] | null {
   const c = corridorOf(from.place, to.place);
   if (!c) return null;
-  const trips = placeTrips(from.place, to.place);
+  const trips = placeTrips(from.place, to.place) * (1 + leanSign(day) * placeLean(from.place, to.place));
   const car = carBetween(from.place, to.place);
   return PERIODS.map((_, q) => {
     const n = trips * longerShare(day, q);

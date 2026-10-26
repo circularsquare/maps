@@ -3,7 +3,7 @@
 
 import { FONT_KEYS, FONTS, type FontKey } from "../game/fonts";
 import type { ComponentChildren } from "preact";
-import { awayNear } from "../game/days";
+import { awayNear, rushRun } from "../game/days";
 import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, tool, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
 import { moneyState } from "../game/money";
 import type { BubbleScheme } from "../game/palette";
@@ -19,7 +19,7 @@ import { AccountButton, AccountSection } from "./AccountPanel";
 
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
 const SHADE_NAME: Record<Shade, string> = { light: "Light", dark: "Dark" };
-type DayShown = "average" | "weekday" | "saturday" | "sunday" | "away";
+type DayShown = "average" | "weekday" | "saturday" | "sunday" | "away" | "out" | "back";
 const SCHEME_OPTIONS: [BubbleScheme, string][] = [["mode", "Mode mix"], ["ramp", "Train share"]];
 const DAY_OPTIONS: [DayShown, string][] = [["average", "Average"], ["weekday", "Weekday"], ["saturday", "Sat"], ["sunday", "Sun"]];
 type Projection = "flat" | "globe";
@@ -29,9 +29,13 @@ const LIGHTER_OPTIONS: [LighterMap, string][] = [["auto", "Auto"], ["on", "On"],
 
 export function SettingsTab() {
   const d = display.value;
-  // T-264: a superholiday's days away while one is within 21 days, a calendar named on hover
-  const away = awayNear.value;
-  const days: [DayShown, ComponentChildren][] = away ? [...DAY_OPTIONS, ["away", <span class="day-away" data-tip={`A day of ${away}`} aria-label={away}><Icon.calendar /></span>]] : DAY_OPTIONS;
+  // T-264, T-1373: a superholiday's days while one is within 21 days, each an icon named on hover
+  const away = awayNear.value, rush = rushRun.value;
+  // on a row of their own under the four, which leave no room beside them in the dock
+  const days: [DayShown, ComponentChildren][] = [];
+  if (rush) days.push(["out", <span class="day-away" data-tip={`A day going out for ${rush}`} aria-label={`Going out for ${rush}`}><Icon.goOut /></span>]);
+  if (away) days.push(["away", <span class="day-away" data-tip={`A day of ${away}`} aria-label={away}><Icon.calendar /></span>]);
+  if (rush) days.push(["back", <span class="day-away" data-tip={`A day coming back from ${rush}`} aria-label={`Coming back from ${rush}`}><Icon.goBack /></span>]);
   return (
     <>
       <div class="settings-top">
@@ -66,8 +70,14 @@ export function SettingsTab() {
       {/* the day the demand views are for; the track display is on the map (ui/DemandSelector.tsx) */}
       <div class="slider" data-tip="The day the demand figures are for. The average counts 5 weekdays, a Saturday and a Sunday over 7. Trains, platforms and riders over the past 24 hours follow the clock.">
         <span>Day</span>
-        <Segmented<DayShown> options={days} value={days.some(([k]) => k === d.dayShown) ? d.dayShown : "average"} onChange={(v) => setDisplay("dayShown", v)} />
+        <Segmented<DayShown> options={DAY_OPTIONS} value={days.some(([k]) => k === d.dayShown) ? d.dayShown : DAY_OPTIONS.some(([k]) => k === d.dayShown) ? d.dayShown : "average"} onChange={(v) => setDisplay("dayShown", v)} />
       </div>
+      {days.length > 0 && (
+        <div class="slider day-super">
+          <span />
+          <Segmented<DayShown> options={days} value={d.dayShown} onChange={(v) => setDisplay("dayShown", v)} />
+        </div>
+      )}
       <div class="h">Show</div>
       <div class="checks">
         <Check checked={d.trains} onChange={(v) => setDisplay("trains", v)}>

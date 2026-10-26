@@ -1042,6 +1042,9 @@ function purposeParts(q: number, nr: number, clusters: typeof jobClusters, regio
   const keys: string[] = ["work", ...EVERYDAY_KEYS.slice(0, kinds)];
   if (regional) keys.push("longer");
   const seg = new Float32Array(keys.length * nr), board = new Float32Array(keys.length * nr), alight = new Float32Array(keys.length * nr);
+  // T-1373: the market's longer trips times their lean (`IntercityApi.lean_loads`), seg, board and
+  // alight one after another
+  let lean: Float32Array | undefined;
   for (const c of clusters) {
     // T-756: each population's route nodes go through its own view
     let map = c.nodeGlobal, m = map.length;
@@ -1076,9 +1079,14 @@ function purposeParts(q: number, nr: number, clusters: typeof jobClusters, regio
       // T-1175: its everyday outings across a zone line are their purposes', a block each
       const e = part.everyday_loads(q);
       if (e.length && e.length % (3 * m) === 0) for (let k = 0; k < Math.min(kinds, e.length / (3 * m)); k++) move(e, 3 * k * m, 1 + k);
+      const l = part.lean_loads(q);
+      if (l.length === 3 * m) {
+        lean ??= new Float32Array(3 * nr);
+        for (let k = 0; k < 3; k++) for (let r = 0; r < m; r++) lean[k * nr + map[r]] += l[k * m + r];
+      }
     }
   }
-  return { keys, seg, board, alight };
+  return { keys, seg, board, alight, ...(lean ? { lean } : {}) };
 }
 
 /**
@@ -1378,7 +1386,7 @@ async function run() {
         const msg = { version: job.version, period: q, summary, fareSense, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
         const t = market?.corridorTable;
         const big = [market?.corridorRail?.buffer, market?.corridorModes?.buffer, ...(t ? [t.from, t.to, t.longer, t.commutes, t.air, t.car].map((a) => a.buffer) : [])].filter((b): b is ArrayBuffer => !!b);
-        return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, arrive.buffer, loadOfCrush.buffer, fareX.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...big] };
+        return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, arrive.buffer, loadOfCrush.buffer, fareX.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...(parts.lean ? [parts.lean.buffer] : []), ...big] };
       };
       for (const c of early) {
         setUp(c);
@@ -1420,8 +1428,9 @@ async function run() {
           const { msg } = figures(q, job.rounds, 0, jobClusters);
           msg.ms = msg.summary[4] = performance.now() - t0;
           for (let r = 0; r <= job.rounds; r++) {
-            const m = { ...msg, summary: [r, ...msg.summary.slice(1)], seg: msg.seg.slice(), board: msg.board.slice(), alight: msg.alight.slice(), arrive: msg.arrive.slice(), loadOfCrush: msg.loadOfCrush.slice(), parts: { keys: msg.parts.keys, seg: msg.parts.seg.slice(), board: msg.parts.board.slice(), alight: msg.parts.alight.slice() }, setupMs: r === 0 ? setupMs : 0 };
-            sendMessage({ kind: "result", ...m }, [m.seg.buffer, m.board.buffer, m.alight.buffer, m.arrive.buffer, m.loadOfCrush.buffer, m.parts.seg.buffer, m.parts.board.buffer, m.parts.alight.buffer]);
+            const lean = msg.parts.lean?.slice();
+            const m = { ...msg, summary: [r, ...msg.summary.slice(1)], seg: msg.seg.slice(), board: msg.board.slice(), alight: msg.alight.slice(), arrive: msg.arrive.slice(), loadOfCrush: msg.loadOfCrush.slice(), parts: { keys: msg.parts.keys, seg: msg.parts.seg.slice(), board: msg.parts.board.slice(), alight: msg.parts.alight.slice(), ...(lean ? { lean } : {}) }, setupMs: r === 0 ? setupMs : 0 };
+            sendMessage({ kind: "result", ...m }, [m.seg.buffer, m.board.buffer, m.alight.buffer, m.arrive.buffer, m.loadOfCrush.buffer, m.parts.seg.buffer, m.parts.board.buffer, m.parts.alight.buffer, ...(lean ? [lean.buffer] : [])]);
           }
         }
         setupMs = 0;

@@ -12,7 +12,7 @@ import { fitView, holdForGameLoad, loadCannotFinish, markAlive } from "../game/l
 import { incomeByDay, lastSaved, liveMoney, moneyState, setMoneyState } from "../game/money";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
 import { GOAL_SHARES, linePoints, STAR_SHARE } from "../game/points";
-import { AVERAGE_DAY, AWAY_DAY, awaySoon, DAY_KINDS } from "../game/days";
+import { AVERAGE_DAY, AWAY_DAY, awaySoon, BACK_DAY, DAY_KINDS, OUT_DAY, rushSoon } from "../game/days";
 import { demandByDay, demandView, platformTransfers } from "../game/demand";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { lineDraft, selection, tool } from "../game/ui";
@@ -467,12 +467,13 @@ export class ClockClient {
     // Demand's riders for the boarding account (T-164): each new result, every kind of day's
     // (T-260); the trains and platforms of each hour read their own day's.
     effect(() => {
-      // T-264: the away day's only while one is soon; an empty message clears them, so the account
-      // reads Sunday's
-      const soon = awaySoon.value;
+      // T-264, T-1373: a superholiday's days only while one is soon; an empty message clears them,
+      // so the account reads the ordinary day's (track/boarding.rs `kind`)
+      const soon = awaySoon.value, rush = rushSoon.value;
       demandByDay.value.slice(0, DAY_KINDS.length).forEach((d0, day) => {
-        const d = day === AWAY_DAY && !soon ? { view: null } : d0;
-        if (day === AWAY_DAY && !d.view) {
+        const own = day === AWAY_DAY ? soon : day === OUT_DAY || day === BACK_DAY ? rush : null;
+        const d = own === false ? { view: null } : d0;
+        if (own !== null && !d.view) {
           if (ridersSent[day]) this.post({ kind: "riders", packed: new Float32Array(0), day });
           ridersSent[day] = null;
           return;

@@ -18,7 +18,7 @@
 use super::{
     api::{check_fare_curve, demand_catches, demand_groups, demand_passages, demand_ups, fare_x_usd, merge_stations, put_fare_curve, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
     clock::now_ms,
-    days::{everyday as everyday_purpose, load_factor, share_out, share_ret, LONGER, WEEKDAY, WORK},
+    days::{everyday as everyday_purpose, lean_sign, load_factor, share_out, share_ret, LONGER, WEEKDAY, WORK},
     everyday::{KIND_COUNT, OUTWARD, RETURN},
     kernel::*,
     network::PERIODS,
@@ -682,6 +682,9 @@ struct Period {
     c_frac: Vec<f32>,
     corridors: Vec<f64>,
     c_corridors: Vec<f64>,
+    /// T-1373: the longer trips' loads each times its pair's lean (`Market::lean`), averaged like
+    /// the commutes'; none where the lean's table would be too large (`LEAN_OD_BYTES`)
+    r_avg: Option<Loads>,
     /// Rail trips of each directed pair in this period (T-118), averaged over rounds like the loads.
     pair_rail: Vec<f32>,
     /// Per station, rail trips starting here by destination zone and ending here by origin zone
@@ -766,6 +769,8 @@ impl SparseOd {
 }
 struct Demand {
     od: Vec<f32>,
+    /// T-1373: `od` with each pair's trips times its lean; empty without the lean
+    od_r: Vec<f32>,
     od_c: SparseOd,
     st: Vec<f32>,
     rail: f64,
@@ -790,6 +795,7 @@ struct EDemand {
 struct Pass {
     loads: Loads,
     c_loads: Loads,
+    r_loads: Option<Loads>,
     rail: f64,
     c_rail: f64,
     c_frac: Vec<f32>,
@@ -892,7 +898,32 @@ fn air_min(km: f64, access: f64, direct: bool, fw: f64) -> f64 {
     access + AIR_TERMINAL_MIN + AIR_WAIT_MIN + km / AIR_KMH * 60. + AIR_FIXED_MIN + if direct { 0. } else { AIR_NO_DIRECT_MIN } + (AIR_FARE_USD + AIR_USD_PER_KM * km) * fw
 }
 
+/// T-1373: how far a superholiday's rush leans a pair's longer trips: going out, those from the
+/// larger place to the smaller up to `1 + LEAN` times, the other way down to `1 - LEAN` (70/30).
+pub const LEAN: f32 = 0.4;
+/// T-1373: the most memory the lean's station to station table may take (S x S floats beside the
+/// longer trips' own); a larger network's rush days take the longer trips unleaned.
+const LEAN_OD_BYTES: usize = 256 << 20;
+
+impl Place {
+    /// T-1373: a place's size as the rush's lean weighs it: its people times the square root of
+    /// its people per 6 km zone, so a sparse countryside zone or a small town counts smaller than
+    /// its people alone (Anita: home trips by population, with a boost towards rural areas, small
+    /// towns and smaller cities).
+    fn lean_size(&self) -> f64 {
+        if self.pop > 0. { self.pop * (self.pop / (self.zones.max(1) as f64)).sqrt() } else { 0. }
+    }
+}
+
 impl Market {
+    /// T-1373: the lean of trips from place `i` to place `j` on a going-out day: positive from the
+    /// larger to the smaller (`Place::lean_size`), the opposite of `j` to `i`'s; their trips are
+    /// times `1 + lean` going out and `1 - lean` coming back, so a pair's trips in all are kept.
+    #[inline]
+    fn lean(&self, i: usize, j: usize) -> f32 {
+        let (a, b) = (self.places[i].lean_size(), self.places[j].lean_size());
+        if a + b > 0. { LEAN * ((a - b) / (a + b)) as f32 } else { 0. }
+    }
     #[inline(always)]
     fn zone_km(&self, a: &Zone, b: &Zone) -> f64 {
         if self.ground {
@@ -2408,10 +2439,16 @@ impl IntercityApi {
     /// commutes together (`assign_with_transfers`'s), and of the commutes alone, assigned in station
     /// order along the destination's strategy (`strategy`; `None`: nobody can ride there).
     fn assigned<'a>(&self, g: &Graph, ix: &XferIndex, d: Demand, mut strategy: impl FnMut(usize) -> Option<Held<'a>>, s: usize) -> Pass {
-        let Demand { od, od_c, st, rail, cor, pair_rail, c_rail, c_frac, c_cor, e, rail_d } = d;
+        let Demand { od, od_r, od_c, st, rail, cor, pair_rail, c_rail, c_frac, c_cor, e, rail_d } = d;
         let counting = !(cfg!(test) && XFER_OFF.load(std::sync::atomic::Ordering::Relaxed));
         let (mut all, mut com) = (DestAssign::new(g, 0, counting), DestAssign::new(g, 0, false));
         com.fares = false;
+        // T-1373: the lean's column, walked on the same strategies (the walk is linear in it)
+        let mut lean = (!od_r.is_empty()).then(|| {
+            let mut a = DestAssign::new(g, 0, false);
+            a.fares = false;
+            a
+        });
         // T-1175: the everyday pairs' loads, a purpose at a time
         let mut ev: Vec<Option<DestAssign>> = e
             .od
@@ -2442,6 +2479,7 @@ impl IntercityApi {
             }
             let c = com.take(dst, |src| col[src]);
             let a = all.take(dst, |src| od[src * s + dst] + col[src] + ecol[src]);
+            let r = lean.as_mut().is_some_and(|l| l.take(dst, |src| od_r[src * s + dst]));
             for k in ks {
                 col[od_c.src[k] as usize] = 0.;
             }
@@ -2461,13 +2499,16 @@ impl IntercityApi {
                     ecol[o.src[k] as usize] = 0.;
                 }
             }
-            if !(a || c || took.contains(&true)) {
+            if !(a || c || r || took.contains(&true)) {
                 continue;
             }
             let Some(h) = strategy(dst) else { continue };
             let st = h.view();
             if c {
                 com.walk(g, dst, st, None);
+            }
+            if let (true, Some(l)) = (r, lean.as_mut()) {
+                l.walk(g, dst, st, None);
             }
             for (i, ea) in ev.iter_mut().enumerate() {
                 if let (true, Some(ea)) = (took[i], ea.as_mut()) {
@@ -2479,7 +2520,7 @@ impl IntercityApi {
             }
         }
         let e_loads = ev.into_iter().map(|a| a.map(|a| a.l)).collect();
-        Pass { loads: all.l, c_loads: com.l, rail, c_rail, c_frac, cor, c_cor, pair_rail, st, xfer, e_loads, e_rail: e.rail, e_walk_lost: e.walk_lost, e_frac: e.frac, rail_d }
+        Pass { loads: all.l, c_loads: com.l, r_loads: lean.map(|l| l.l), rail, c_rail, c_frac, cor, c_cor, pair_rail, st, xfer, e_loads, e_rail: e.rail, e_walk_lost: e.walk_lost, e_frac: e.frac, rail_d }
     }
     /// `pass_on` with the destinations searched one at a time (T-761), so no table of every
     /// destination's strategy is held: a first sweep keeps each one's route costs (the logsums need
@@ -2577,6 +2618,7 @@ impl IntercityApi {
         };
         let step = |zone: usize| FARE_D_MIN * (1. + self.zone_fx.get(zone).copied().unwrap_or(0.));
         let mut od = vec![0.; s * s];
+        let mut od_r = if s * s * 4 <= LEAN_OD_BYTES { vec![0f32; s * s] } else { vec![] };
         let mut rail = 0.;
         let mut cor = vec![0.; self.m.n_open_corridors()];
         let mut pair_rail = vec![0f32; self.pairs.len()];
@@ -2605,10 +2647,14 @@ impl IntercityApi {
             pair_rail[pi] = r as f32;
             if sum > 0. {
                 let (ca, cb) = (nz + col[pair.a as usize] as usize, col[pair.b as usize] as usize);
+                let lean = if od_r.is_empty() { 0. } else { self.m.lean(self.m.zones[pair.a as usize].place, self.m.zones[pair.b as usize].place) };
                 for &(sa, sb, v) in &terms {
                     let (sa, sb) = (sa as usize, sb as usize);
                     let rr = (r * v / sum) as f32;
                     od[sa * s + sb] += rr;
+                    if lean != 0. {
+                        od_r[sa * s + sb] += rr * lean;
+                    }
                     put(&mut st, sa, cb, rr);
                     put(&mut st, sb, ca, rr);
                 }
@@ -2689,7 +2735,7 @@ impl IntercityApi {
             }
         }
         e.od = od_e.into_iter().map(|v| SparseOd::of(s, v)).collect();
-        Demand { od, od_c: SparseOd::of(s, od_c), st, rail, cor, pair_rail, c_rail, c_frac, c_cor, e, rail_d }
+        Demand { od, od_r, od_c: SparseOd::of(s, od_c), st, rail, cor, pair_rail, c_rail, c_frac, c_cor, e, rail_d }
     }
     /// T-1229: each served everyday pair's kind, home place, rail legs in period `q` and the
     /// walking legs those riders were taken from (the period's average over crowding rounds).
@@ -2708,6 +2754,18 @@ impl IntercityApi {
     }
     fn per(&self, q: usize) -> Option<&Period> {
         self.per.get(q).and_then(|v| v.as_ref())
+    }
+    /// T-1373: the place of the zone whose people reach (merged) station `s` with the most weight.
+    fn station_place(&self, s: usize) -> Option<usize> {
+        let mut best: Option<(f32, usize)> = None;
+        for (z, list) in self.access.iter().enumerate() {
+            for &(st, w) in list {
+                if st == s && best.map_or(true, |b| w > b.0) {
+                    best = Some((w, self.m.zones[z].place));
+                }
+            }
+        }
+        best.map(|b| b.1)
     }
     /// The index in `pairs` of the pair from zone a to zone b, `u32::MAX` if none.
     fn pair_at(&self, a: usize, b: usize) -> u32 {
@@ -3253,6 +3311,7 @@ impl IntercityApi {
             g,
             avg: pass.loads,
             c_avg: pass.c_loads,
+            r_avg: pass.r_loads,
             rail: pass.rail,
             rail_d: pass.rail_d,
             trips: self.m.cw.daily * SHARES[q] as f64,
@@ -3290,9 +3349,14 @@ impl IntercityApi {
         st.g.rn_left = left;
         st.uniform = false;
         st.fac = fac;
-        let Pass { loads: l, c_loads, rail, c_rail, c_frac, cor, c_cor, pair_rail, st: st_new, xfer, e_loads, e_rail, e_walk_lost, e_frac, rail_d } = self.pass(&st.g, &st.p, q, &st.xi);
+        let Pass { loads: l, c_loads, r_loads, rail, c_rail, c_frac, cor, c_cor, pair_rail, st: st_new, xfer, e_loads, e_rail, e_walk_lost, e_frac, rail_d } = self.pass(&st.g, &st.p, q, &st.xi);
         st.round += 1;
         let r = st.round;
+        if let (Some(a), Some(b)) = (st.r_avg.as_mut(), r_loads) {
+            msa(&mut a.seg, &b.seg, r);
+            msa(&mut a.rn_board, &b.rn_board, r);
+            msa(&mut a.rn_alight, &b.rn_alight, r);
+        }
         msa(&mut st.xfer, &xfer, r);
         msa(&mut st.pair_rail, &pair_rail, r);
         msa(&mut st.c_frac, &c_frac, r);
@@ -3346,6 +3410,9 @@ impl IntercityApi {
         let (_, all) = cap_loads(&st.g, &fit, &st.xi, &mut st.avg, &mut st.xfer);
         let c = &mut st.c_avg;
         cap_part(&fit, &mut c.seg, &mut c.rn_board, &mut c.rn_alight);
+        if let Some(c) = st.r_avg.as_mut() {
+            cap_part(&fit, &mut c.seg, &mut c.rn_board, &mut c.rn_alight);
+        }
         for e in st.e_avg.iter_mut().flatten() {
             cap_part(&fit, &mut e.seg, &mut e.rn_board, &mut e.rn_alight);
         }
@@ -3419,6 +3486,12 @@ impl IntercityApi {
     /// T-276: the commutes' segment loads, boardings and alightings per route node in period `q`.
     pub fn commute_loads(&self, q: usize) -> Vec<f32> {
         self.per(q).filter(|_| !self.m.commutes.is_empty()).map_or(vec![], |s| [&s.c_avg.seg[..], &s.c_avg.rn_board[..], &s.c_avg.rn_alight[..]].concat())
+    }
+    /// T-1373: the longer trips' segment loads, boardings and alightings per route node in period
+    /// `q`, each times its pair's lean (`Market::lean`): a going-out day's longer trips are theirs
+    /// plus these, a coming-back day's theirs less these, before the day's factor. Empty without.
+    pub fn lean_loads(&self, q: usize) -> Vec<f32> {
+        self.per(q).and_then(|s| s.r_avg.as_ref()).map_or(vec![], |l| [&l.seg[..], &l.rn_board[..], &l.rn_alight[..]].concat())
     }
     /// T-1175: the everyday outings across a zone line, as `commute_loads` per everyday purpose
     /// in `everyday` kind order (`KIND_COUNT` blocks of three, zeros for a purpose with none);
@@ -3640,6 +3713,15 @@ impl IntercityApi {
         // T-780: with sampled pairs a zone's rail with a place is its sampled pairs', spread over the
         // place's zones it could ride to by their trips, so no far zone shows more rail than trips
         let mut spread = vec![(0f64, 0f64); if self.chunk > 0. { np } else { 0 }];
+        // T-1373: a rush day's trips lean by their places, from here (dir 0) or to here (dir 1)
+        let sign = lean_sign(day);
+        let lean = |dir: usize, here: usize, there: usize| -> f64 {
+            if sign == 0. {
+                1.
+            } else {
+                1. + (sign * if dir == 0 { m.lean(here, there) } else { m.lean(there, here) }) as f64
+            }
+        };
         for q in 0..PERIODS {
             let Some(per) = per_of(q) else { continue };
             let sh = share_out(day, LONGER, q) as f64;
@@ -3647,6 +3729,7 @@ impl IntercityApi {
             for (dir, weights) in [(0usize, &pop_w), (1usize, &attr_w)] {
                 for (z, &w) in weights.iter().enumerate().filter(|(_, w)| **w > 0.) {
                     let (row, far) = &rows[&z];
+                    let zp = m.zones[z].place;
                     out[away + dir] += w * away_z[&z] * sh;
                     if !spread.is_empty() {
                         spread.fill((0., 0.));
@@ -3658,13 +3741,14 @@ impl IntercityApi {
                     }
                     for &(b, out_i, in_i, trips) in row {
                         let zb = &m.zones[b as usize];
-                        let all = w * trips * sh;
+                        let k = lean(dir, zp, zb.place);
+                        let all = w * trips * sh * k;
                         let pair_r = match spread.get(zb.place) {
                             Some(&(r, t)) if t > 0. && self.solvable(z, b as usize) => (r * trips / t) as f32,
                             Some(_) => 0.,
                             None => rail(per, if dir == 0 { out_i } else { in_i }),
                         };
-                        let r = w * pair_r as f64 * f;
+                        let r = w * pair_r as f64 * f * k;
                         let o = 1 + 8 * zb.place + 4 * dir;
                         out[o] += all;
                         out[o + 1] += r;
@@ -3674,7 +3758,7 @@ impl IntercityApi {
                         out[head + 4 * zb.gid as usize + 2 * dir + 1] += r;
                     }
                     for &(p, trips) in far {
-                        let all = w * trips * sh;
+                        let all = w * trips * sh * lean(dir, zp, p);
                         let o = 1 + 8 * p + 4 * dir;
                         out[o] += all;
                         out[o + 2] += all * m.places[p].x as f64;
@@ -3795,6 +3879,9 @@ impl IntercityApi {
         let head = 6 * np;
         let mut out = vec![0.; head + 5 * ng];
         let ns = self.served.len();
+        // T-1373: a rush day's riders lean by their places, the station's its zones' that reach it most
+        let sign = lean_sign(day as usize);
+        let here = if sign == 0. { None } else { self.station_place(s as usize) };
         for q in 0..PERIODS {
             let Some(per) = self.per(q) else { continue };
             let f = load_factor(day as usize, LONGER, q) as f64;
@@ -3803,7 +3890,9 @@ impl IntercityApi {
                 for i in pat.row(s as usize) {
                     let k = pat.col.get(i);
                     let (end, k) = if k < ns { (0, k) } else { (ng, k - ns) };
-                    out[head + end + m.zones[self.served[k]].gid as usize] += per.st[i] as f64 * f;
+                    let zone = &m.zones[self.served[k]];
+                    let lean = here.map_or(0., |h| sign * if end == 0 { m.lean(h, zone.place) } else { m.lean(zone.place, h) });
+                    out[head + end + zone.gid as usize] += per.st[i] as f64 * f * (1. + lean as f64);
                 }
             }
         }

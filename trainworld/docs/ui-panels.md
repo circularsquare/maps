@@ -195,9 +195,9 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   [T-264, T-1476]: a bare calendar (no button box) with a pink dot in its body, there only while a
   superholiday where the player has built is under way or goes out within 2 game days, and not
   there otherwise. Its hover gives each run within 21 days ("Golden Week in China, in 5 days",
-  then "Out Wed Sep 30", "Away Thu Oct 1 to Tue Oct 6", "Back Wed Oct 7 and Thu Oct 8"). A click sets the Day choice (Settings) to the run's days
-  away (its calendar option there while one is within 21 days), and a second click back to the day
-  shown before. In the dark theme the
+  then "Out Wed Sep 30", "Away Thu Oct 1 to Tue Oct 6", "Back Wed Oct 7 and Thu Oct 8"). A click sets the Day choice (Settings) to the run's
+  going-out day [T-1373] (once those are past its coming-back day, then a day away), and a second
+  click back to the day shown before. In the dark theme the
   scene is mixed 15% towards the background. Pause and three
   speeds. **Space** pauses and resumes at the speed that was running, even with a button focused.
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
@@ -212,7 +212,7 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   games.
 
 **Demand shown for** [T-260, T-266, T-464; `ui/DemandSelector.tsx`, display setting `dayShown`]: a
-"Day" choice in Settings, right under the demand bubbles' Opacity [T-703]: Average (the default), Weekday, Sat or Sun [T-262], and while a superholiday's days away are within 21 days a calendar option whose hover names it ("A day of Golden Week", T-264), which reads as the average once it has passed. The average is 5 weekdays, a Saturday and a Sunday over 7 ([demand-timing.md](demand-timing.md)
+"Day" choice in Settings, right under the demand bubbles' Opacity [T-703]: Average (the default), Weekday, Sat or Sun [T-262], and while a superholiday is within 21 days its days as icons named on hover: a right arrow for a going-out day ("A day going out for Golden Week", T-1373), the calendar for a day away ("A day of Golden Week", T-264) and a left arrow for a coming-back day; each reads as the average once it has passed. The average is 5 weekdays, a Saturday and a Sunday over 7 ([demand-timing.md](demand-timing.md)
 4.2). It sets the day every demand view shows, the split included, and does not follow the clock,
 so nothing jumps when the clock enters a weekend. Hovers state the day beside every demand figure ("12,400 trip legs per day",
 "per weekday", "per Saturday", "per Sunday": `shownDayPhrase` in `game/ui.ts`). A switch of day shows at

@@ -28,7 +28,7 @@
 import { effect } from "@preact/signals";
 import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, LEGACY_FRAME, MARKET_FRAME, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
-import { DEMAND_DAYS, type DemandDay } from "../game/days";
+import { BACK_DAY, DEMAND_DAYS, OUT_DAY, PLAIN_KIND, rushRun, type DayKind, type DemandDay } from "../game/days";
 import { display, selection, shownDay, tool } from "../game/ui";
 import {
   cityDemandViews, demandByDay, intercityDemand,
@@ -653,6 +653,8 @@ class DemandClient {
     effect(() => { trackZones.value; this.ensure(); });
     // T-351: a building tool picked in a game with no station readies the viewed zone for its solve
     effect(() => { tool.value; this.prefetchViewed(); });
+    // T-1373: a superholiday's rush days near or gone redo the shown views with them or without
+    effect(() => { rushRun.value; this.refreshDays(); });
   }
 
   /** Worker `i`, its WASM started at once; packs follow as they arrive (T-149). Messages from a
@@ -3015,18 +3017,26 @@ class DemandClient {
   /** T-1208: a solve's views of every kind of day for the lines of `layout`, worked out in the sums
    * worker (here where it fails), with the zones open bare among the cities and the corridors' table. */
   private async daysOf(s: Solve, layout: Solve["layout"], round: number, final: boolean, res: Result[], noCorridors = false): Promise<DayDemand[]> {
+    // T-1373: the going-out and coming-back days only while one is near; meanwhile each is the
+    // ordinary day's it stands in for (`PLAIN_KIND`). The away day is always made (T-1372).
+    const made = madeDays();
+    this.madeKey = made.join();
     const input: DayInput = {
       version: s.version, round, final, layout, res: res.map(dayResultOf), dayTable: this.dayTable,
       peakHourFactor: PERIODS.map((_, q) => this.periodTable[q * PERIOD_STRIDE + 5] ?? 1),
       // only the cities this solve covered (T-149: a city not loaded has no view, and its controls wait)
       solved: CITIES.filter(({ id }) => res.every((r) => r.citySummary[id])).map(({ id }) => id),
-      places: INTERCITY_PLACES.length, days: DEMAND_DAYS, noCorridors,
+      places: INTERCITY_PLACES.length, days: made, noCorridors,
     };
     // packed in the worker (`packDays`), worked out whole here where it fails
     const got = (await this.inSums<PackedDays | DayViews[]>({ kind: "days", input }, [], () => dayViews(input)))!;
-    const views = Array.isArray(got) ? got : unpackDays(got, layout, res.length);
+    const madeViews = Array.isArray(got) ? got : unpackDays(got, layout, res.length);
+    const views = DEMAND_DAYS.map((k) => madeViews[made.indexOf(made.includes(k) ? k : PLAIN_KIND[k as DayKind])]);
     const service = new Map(s.svc.lines.map((l) => [l.id, l]));
+    const done = new Map<DayViews, DayDemand>();
     return views.map((v, day) => {
+      const was = done.get(v);
+      if (was) return was;
       // T-1419: the stops each line's figures are for, to carry them onto an edited line; T-1492: and
       // its service, so a panel's running cost moves with the fares these figures give
       for (const l of layout) {
@@ -3035,7 +3045,28 @@ class DemandClient {
       }
       // T-325: and the zones open bare, from their own figures
       for (const id of this.bareIds()) if (!v.cities.has(id)) v.cities.set(id, this.bareView(id, day as DemandDay, v.view));
-      return { view: v.view, cities: v.cities, intercity: { ...v.intercity, corridors: this.corridorsOf(v.intercity.corridors) } };
+      const out: DayDemand = { view: v.view, cities: v.cities, intercity: { ...v.intercity, corridors: this.corridorsOf(v.intercity.corridors) } };
+      done.set(v, out);
+      return out;
+    });
+  }
+
+  /** The kinds of day the shown views were made for (`daysOf`), joined. */
+  private madeKey = "";
+  /** T-1373: when a superholiday's rush days come near or go, the shown final result's views again
+   * with them or without (the results are kept until a newer solve's final). */
+  private refreshDays() {
+    const key = madeDays().join();
+    if (!this.madeKey || key === this.madeKey) return;
+    const shown = demandByDay.peek()[0].view;
+    const s = shown?.final ? this.log.find((x) => x.version === shown.version) : undefined;
+    const res = s?.results;
+    if (!s || !shown || !res?.length || res.some((r) => !r)) return;
+    this.madeKey = key;
+    const round = shown.round;
+    this.inOrder(async () => {
+      if (demandByDay.peek()[0].view !== shown) return;
+      demandByDay.value = await this.daysOf(s, s.layout, round, true, res as Result[]);
     });
   }
 
@@ -3252,6 +3283,12 @@ class DemandClient {
   }
 
 
+}
+
+/** The days the demand views are made for (T-1373): every day, the going-out and coming-back days
+ * only while one is near. */
+function madeDays(): DemandDay[] {
+  return DEMAND_DAYS.filter((k) => (k !== OUT_DAY && k !== BACK_DAY) || rushRun.peek() !== null);
 }
 
 let client: DemandClient | null = null;

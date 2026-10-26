@@ -1,5 +1,5 @@
 //! Kinds of day (T-260, T-262, docs/demand-timing.md): weekday, Saturday, Sunday and a
-//! superholiday's away day (T-264).
+//! superholiday's away, going-out and coming-back days (T-264).
 //!
 //! The solve is a weekday's. A Saturday or a Sunday is worked out from it, not solved: every
 //! purpose's trips are a fixed multiple of a weekday's, departing by their own period shares, and
@@ -26,14 +26,31 @@ use super::intercity::SHARES;
 use super::network::PERIODS;
 use wasm_bindgen::prelude::*;
 
-/// The days a query can be asked for: the four kinds, then the average over a week (T-464).
-pub const DAY_KINDS: usize = 5;
+/// The days a query can be asked for: the six kinds, then the average over a week (T-464).
+pub const DAY_KINDS: usize = 7;
 pub const WEEKDAY: usize = 0;
 pub const SATURDAY: usize = 1;
 pub const SUNDAY: usize = 2;
 /// A superholiday's days away (T-264): a Sunday with people gone home and visitors in town.
 pub const AWAY: usize = 3;
-pub const AVERAGE: usize = 4;
+/// A superholiday's going-out day (T-1373): a weekday with the longer trips `RUSH_LONGER` times a
+/// weekday's, leaning towards smaller places (`intercity::Market::lean`); its coming-back day, a
+/// Sunday with the same longer trips leaning back.
+pub const OUT: usize = 4;
+pub const BACK: usize = 5;
+pub const AVERAGE: usize = 6;
+/// Longer trips on a going-out or coming-back day per weekday's (T-1373; both against a weekday, so
+/// the two rush days carry the same).
+pub const RUSH_LONGER: f32 = 2.0;
+/// Which way a day's longer trips lean (T-1373): towards smaller places going out (+1), back from
+/// them (-1), else neither (0).
+pub fn lean_sign(day: usize) -> f32 {
+    match day {
+        OUT => 1.,
+        BACK => -1.,
+        _ => 0.,
+    }
+}
 /// Weekdays, Saturdays and Sundays in a week, the average's weights.
 const WEEK: [f32; 3] = [5.0 / 7.0, 1.0 / 7.0, 1.0 / 7.0];
 /// Purposes as the demand results split them (demand.worker.ts `purposeParts`): work, the
@@ -129,6 +146,10 @@ pub fn day_rate(day: usize, p: usize) -> f32 {
         WEEKDAY => 1.0,
         AVERAGE => WEEK[0] + WEEK[1] * DAY_RATE[0][p] + WEEK[2] * DAY_RATE[1][p],
         AWAY => AWAY_RATE[p] * DAY_RATE[1][p],
+        OUT if p == LONGER => RUSH_LONGER,
+        OUT => 1.0,
+        BACK if p == LONGER => RUSH_LONGER,
+        BACK => DAY_RATE[1][p],
         d => DAY_RATE[d.min(SUNDAY) - 1][p],
     }
 }
@@ -141,6 +162,11 @@ fn share(day: usize, p: usize, q: usize, wd: f32, tables: &[Shares; 2]) -> f32 {
         WEEKDAY => wd,
         AVERAGE => WEEK[0] * wd + WEEK[1] * on(0) + WEEK[2] * on(1),
         AWAY => AWAY_RATE[p] * on(1),
+        OUT if p == LONGER => RUSH_LONGER * wd,
+        OUT => wd,
+        // a Sunday's timing
+        BACK if p == LONGER => RUSH_LONGER / DAY_RATE[1][p] * on(1),
+        BACK => on(1),
         d => on(d.min(SUNDAY) - 1),
     }
 }
@@ -234,6 +260,33 @@ mod tests {
         assert_eq!(AWAY_RATE[everyday(6)], 1.5);
         assert_eq!(AWAY_RATE[WORK], 1.0);
         assert_eq!(AWAY_RATE[LONGER], 1.0);
+    }
+
+    #[test]
+    fn rush_days_are_a_weekday_and_a_sunday_with_twice_a_weekdays_longer_trips() {
+        for p in 0..PURPOSES {
+            let (out, back) = if p == LONGER { (RUSH_LONGER, RUSH_LONGER) } else { (1.0, day_rate(SUNDAY, p)) };
+            assert!((day_rate(OUT, p) - out).abs() < 1e-6, "purpose {p}");
+            assert!((day_rate(BACK, p) - back).abs() < 1e-6, "purpose {p}");
+            let (mut wd, mut o, mut b) = (0.0, 0.0, 0.0);
+            for q in 0..PERIODS {
+                let (x, y) = weekday_shares(p, q);
+                wd += x + y;
+                o += (x + y) * load_factor(OUT, p, q);
+                b += (x + y) * load_factor(BACK, p, q);
+                if p != LONGER {
+                    assert_eq!(load_factor(OUT, p, q), 1.0);
+                    assert!((load_factor(BACK, p, q) - load_factor(SUNDAY, p, q)).abs() < 1e-6);
+                }
+            }
+            assert!((o / wd - out).abs() < 1e-4 && (b / wd - back).abs() < 1e-4, "purpose {p}");
+        }
+        // the coming-back day's longer trips keep a Sunday's timing
+        for q in 0..PERIODS {
+            let want = RUSH_LONGER / day_rate(SUNDAY, LONGER) * share_out(SUNDAY, LONGER, q);
+            assert!((share_out(BACK, LONGER, q) - want).abs() < 1e-6);
+        }
+        assert_eq!((lean_sign(OUT), lean_sign(BACK), lean_sign(WEEKDAY), lean_sign(AVERAGE)), (1., -1., 0., 0.));
     }
 
     #[test]

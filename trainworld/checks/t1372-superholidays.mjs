@@ -28,7 +28,7 @@ for (const c of Object.keys(NEW.countries)) {
   for (let d = 1; d <= YEARS; d++) {
     const a = k1(d), b = k0(d);
     if (a === b) continue;
-    if (a === 3) away++;
+    if (a >= 3) away++; // T-1373: going out (4) and coming back (5) too
     else if (c === 'JP' && cal.holidayName(NEW, c, d)?.includes('Obon')) obon++;
     else if (other.length < 10) other.push(`${c} day ${d}: ${b} -> ${a}`);
   }
@@ -105,7 +105,7 @@ const solveMs = (page) => page.evaluate(() => { const s = window.twDemand.log.at
 
 try {
   const page = await realSave(base, true);
-  const mine = await figures(page, [0, 1, 2, 4, 3]);
+  const mine = await figures(page, [0, 1, 2, 6, 3]); // T-1373: the average is 6
   const mineMs = await solveMs(page);
   // the away day against Sunday, purpose by purpose
   const sun = mine[2].by, aw = mine[4].by, bad = [];
@@ -121,12 +121,12 @@ try {
     if (!input) return null;
     const run = async (days) => { const a = performance.now(); await c.inSums({ kind: 'days', input: { ...input, days } }, [], () => null); return performance.now() - a; };
     const med = async (days) => { const xs = []; for (let i = 0; i < 5; i++) xs.push(await run(days)); return xs.sort((a, b) => a - b)[2]; };
-    return { five: await med([0, 1, 2, 3, 4]), four: await med([0, 1, 2, 4]) };
+    return { five: await med([0, 1, 2, 3, 6]), four: await med([0, 1, 2, 6]) };
   });
   report('day views timed', !!t, t ? `(${t.four.toFixed(0)} ms without the away day, ${t.five.toFixed(0)} ms with it, in the sums worker)` : '(no input caught)');
   if (BASELINE !== 'none') {
     const bpage = await realSave(BASELINE, false);
-    const was = await figures(bpage, [0, 1, 2, 3]);
+    const was = await figures(bpage, [0, 1, 2, Number(process.env.BASELINE_AVERAGE ?? 4)]); // the average's index on the baseline
     const wasMs = await solveMs(bpage);
     const names = ['weekday', 'Saturday', 'Sunday', 'average'];
     const diff = names.filter((_, i) => was[i].all !== mine[i].all);
