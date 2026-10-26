@@ -528,27 +528,15 @@ export async function takePending(): Promise<PendingLoad | null> {
   }
 }
 
-/** T-1214: the folder the player picked for copies of the saves outside browser storage (a
- * FileSystemDirectoryHandle, which storage keeps across visits), or none */
-const COPY_FOLDER = "copy-folder";
-export async function readCopyFolder(): Promise<FileSystemDirectoryHandle | null> {
-  try {
-    return ((await req((await store("readonly")).get(COPY_FOLDER))) as FileSystemDirectoryHandle | undefined) ?? null;
-  } catch {
-    return null;
-  }
-}
-export async function writeCopyFolder(dir: FileSystemDirectoryHandle | null): Promise<boolean> {
+/** T-1395: the folder handle T-1214's folder copies kept here; the copies are gone, the handle is
+ * forgotten */
+export async function forgetCopyFolder(): Promise<void> {
   try {
     const s = await store("readwrite");
     const done = committed(s.transaction);
-    if (dir) await req(s.put(dir, COPY_FOLDER));
-    else await req(s.delete(COPY_FOLDER));
+    await req(s.delete("copy-folder"));
     await done;
-    return true;
-  } catch {
-    return false;
-  }
+  } catch { /* storage unavailable */ }
 }
 
 /** `lost` settles when another tab takes the lock with `steal` (T-1251). */

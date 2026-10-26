@@ -134,7 +134,16 @@ interface StrokeVao {
   wmulBuf: WebGLBuffer;
   /** per segment 1 where its track is at capacity, rewritten by `setFull` (T-819) */
   fullBuf: WebGLBuffer;
+  /** the network's strokes (T-1028): each attribute's buffer and bytes a segment, in `STROKE_ATTRIBS`
+   * order, for the next network to copy its unchanged runs from; and what to free with them */
+  attribs?: { buf: WebGLBuffer; bytes: number }[];
+  res?: { del: () => void }[];
 }
+
+type TexName = "phases" | "meta" | "samples" | "lines" | "colours" | "fill" | "cars" | "stretch" | "stationLine" | "lane";
+
+/** The stroke attributes a network's strokes keep on the GPU between edits (T-1028), in order. */
+const STROKE_ATTRIBS = ["seg", "colour", "edge", "level", "flags", "speed", "lane"] as const;
 
 /**
  * The demand views drawn by the network renderer (T-084, map/demandLayers.ts), one value per
@@ -185,7 +194,7 @@ export class NetworkRenderer {
   private loadBuf: WebGLBuffer | null = null;
   /** the hour's loads (T-164), replaced with the trips; kept apart from `res`, like the trips */
   private loadTex: WebGLTexture | null = null;
-  private tex: Record<"phases" | "meta" | "samples" | "lines" | "colours" | "fill" | "cars" | "stretch" | "stationLine" | "lane", WebGLTexture | null> = { phases: null, meta: null, samples: null, lines: null, colours: null, fill: null, cars: null, stretch: null, stationLine: null, lane: null };
+  private tex: Record<TexName, WebGLTexture | null> = { phases: null, meta: null, samples: null, lines: null, colours: null, fill: null, cars: null, stretch: null, stationLine: null, lane: null };
   /** The boarding account's hour the trip buffer holds (T-164), or null before demand has riders. */
   board: BoardHour | null = null;
   private crowds = new PlatformCrowds(0);
@@ -492,33 +501,95 @@ export class NetworkRenderer {
     gl.vertexAttribDivisor(loc, divisor);
   }
 
-  private strokes(s: Strokes, list = this.res): StrokeVao {
+  /** A stroke set's VAO. `from` (a network's strokes, T-1028): the strokes drawn before and the runs
+   * (start, count, old start or -1, `NetPatch`) that make these from them: unchanged runs are copied
+   * on the GPU from the old buffers, only the new segments uploaded. */
+  private strokes(s: Strokes, list = this.res, from?: { old: StrokeVao; runs: Int32Array } | null): StrokeVao {
     const gl = this.gl;
     const vao = gl.createVertexArray()!;
     list.push({ del: () => gl.deleteVertexArray(vao) });
     gl.bindVertexArray(vao);
     const p = this.strokeProg;
-    const one = (a: ArrayBufferView, n: number) => (s.count ? a : new Float32Array(n));
-    this.attrib(p, "a_seg", this.buffer(one(s.seg, 4), list), 4, gl.FLOAT, 1);
-    this.attrib(p, "a_colour", this.buffer(s.count ? s.colour : new Uint32Array(1), list), 1, gl.UNSIGNED_INT, 1, true);
-    this.attrib(p, "a_edge", this.buffer(s.count ? s.edge : new Uint32Array(1), list), 1, gl.UNSIGNED_INT, 1, true);
-    this.attrib(p, "a_level", this.buffer(one(s.level, 1), list), 1, gl.FLOAT, 1);
-    this.attrib(p, "a_flags", this.buffer(one(s.flags, 1), list), 1, gl.FLOAT, 1);
-    this.attrib(p, "a_speed", this.buffer(s.count && s.speed ? shownSpeed(s.speed, s.trainSpeed) : new Float32Array(Math.max(1, s.count)).fill(160), list), 1, gl.FLOAT, 1);
-    const wmulBuf = this.buffer(new Float32Array(Math.max(1, s.count)).fill(1), list);
+    const n = s.count;
+    const attribs: { buf: WebGLBuffer; bytes: number }[] = [];
+    const patch = from && n && from.old.attribs?.length === STROKE_ATTRIBS.length ? from : null;
+    /** an attribute's buffer: `get(start, count)` its values for those segments, `per` a segment */
+    const make = (get: (start: number, count: number) => ArrayBufferView, per: number, bpe: number, empty: ArrayBufferView): WebGLBuffer => {
+      const bytes = per * bpe;
+      let buf: WebGLBuffer;
+      if (!n) buf = this.buffer(empty, list);
+      else if (!patch) buf = this.buffer(get(0, n), list);
+      else {
+        buf = gl.createBuffer()!;
+        list.push({ del: () => gl.deleteBuffer(buf) });
+        gl.bindBuffer(gl.COPY_WRITE_BUFFER, buf);
+        gl.bufferData(gl.COPY_WRITE_BUFFER, n * bytes, gl.STATIC_DRAW);
+        gl.bindBuffer(gl.COPY_READ_BUFFER, patch.old.attribs![attribs.length].buf);
+        const r = patch.runs;
+        for (let k = 0; k < r.length; k += 3) {
+          if (r[k + 2] >= 0) gl.copyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER, r[k + 2] * bytes, r[k] * bytes, r[k + 1] * bytes);
+          else gl.bufferSubData(gl.COPY_WRITE_BUFFER, r[k] * bytes, get(r[k], r[k + 1]));
+        }
+        gl.bindBuffer(gl.COPY_READ_BUFFER, null);
+        gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
+      }
+      attribs.push({ buf, bytes });
+      return buf;
+    };
+    const sub = <T extends Float32Array | Uint32Array | Uint8Array>(a: T, per: number) => (start: number, count: number) => a.subarray(start * per, (start + count) * per);
+    const speed = s.speed;
+    const speedOf = speed ? (start: number, count: number) => shownSpeed(speed.subarray(start, start + count), s.trainSpeed?.length === speed.length ? s.trainSpeed.subarray(start, start + count) : undefined) : (_: number, count: number) => new Float32Array(count).fill(160);
+    this.attrib(p, "a_seg", make(sub(s.seg, 4), 4, 4, new Float32Array(4)), 4, gl.FLOAT, 1);
+    this.attrib(p, "a_colour", make(sub(s.colour, 1), 1, 4, new Uint32Array(1)), 1, gl.UNSIGNED_INT, 1, true);
+    this.attrib(p, "a_edge", make(sub(s.edge, 1), 1, 4, new Uint32Array(1)), 1, gl.UNSIGNED_INT, 1, true);
+    this.attrib(p, "a_level", make(sub(s.level, 1), 1, 4, new Float32Array(1)), 1, gl.FLOAT, 1);
+    this.attrib(p, "a_flags", make(sub(s.flags, 1), 1, 4, new Float32Array(1)), 1, gl.FLOAT, 1);
+    this.attrib(p, "a_speed", make(speedOf, 1, 4, new Float32Array(1).fill(160)), 1, gl.FLOAT, 1);
+    const wmulBuf = this.buffer(new Float32Array(Math.max(1, n)).fill(1), list);
     this.attrib(p, "a_wmul", wmulBuf, 1, gl.FLOAT, 1);
-    const fullBuf = this.buffer(new Float32Array(Math.max(1, s.count)), list);
+    const fullBuf = this.buffer(new Float32Array(Math.max(1, n)), list);
     this.attrib(p, "a_full", fullBuf, 1, gl.FLOAT, 1);
-    const lane = s.count && s.lane ? s.lane : new Uint8Array(Math.max(1, s.count) * 2).fill(255);
+    const lane = s.lane;
+    const laneBuf = make(lane ? sub(lane, 2) : (_, count) => new Uint8Array(count * 2).fill(255), 2, 1, new Uint8Array(2).fill(255));
     const loc = gl.getAttribLocation(p, "a_lane");
     if (loc >= 0) {
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer(lane, list));
+      gl.bindBuffer(gl.ARRAY_BUFFER, laneBuf);
       gl.enableVertexAttribArray(loc);
       gl.vertexAttribPointer(loc, 2, gl.UNSIGNED_BYTE, true, 0, 0);
       gl.vertexAttribDivisor(loc, 1);
     }
     gl.bindVertexArray(null);
-    return { vao, count: s.count, wmulBuf, fullBuf };
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    return { vao, count: n, wmulBuf, fullBuf, attribs, res: list };
+  }
+
+  /** `?patch=check` (T-1029): each network's strokes read back from the GPU after an edit and
+   * compared with the arrays they were made from. */
+  checkPatch = false;
+  /** networks taken as changes to the one drawn (checks read it) */
+  patched = 0;
+  private checkStrokes(name: string, v: StrokeVao | null, s: Strokes) {
+    if (!v?.attribs || !s.count) return;
+    const gl = this.gl, n = s.count;
+    const want: ArrayBufferView[] = [s.seg, s.colour, s.edge, s.level, s.flags, s.speed ? shownSpeed(s.speed, s.trainSpeed) : new Float32Array(n).fill(160), s.lane ?? new Uint8Array(n * 2).fill(255)];
+    const bad: string[] = [];
+    v.attribs.forEach(({ buf, bytes }, i) => {
+      const got = new Uint8Array(n * bytes), w = want[i];
+      gl.bindBuffer(gl.COPY_READ_BUFFER, buf);
+      gl.getBufferSubData(gl.COPY_READ_BUFFER, 0, got);
+      const x = new Uint8Array(w.buffer, w.byteOffset, w.byteLength);
+      if (x.length !== got.length || x.some((b, k) => b !== got[k])) bad.push(STROKE_ATTRIBS[i]);
+    });
+    gl.bindBuffer(gl.COPY_READ_BUFFER, null);
+    if (bad.length) console.error(`T-1028 check: the ${name} strokes patched on the GPU differ from the network's in ${bad.join(", ")}`);
+  }
+
+  /** the network's stroke buffers on the GPU and their sizes (checks read them back) */
+  gpuDump(): Record<string, [WebGLBuffer, number]> {
+    const out: Record<string, [WebGLBuffer, number]> = {};
+    for (const [name, v] of [["track", this.track], ["lines", this.lines]] as const)
+      v?.attribs?.forEach(({ buf, bytes }, i) => (out[`${name}.${STROKE_ATTRIBS[i]}`] = [buf, Math.max(1, v.count) * bytes]));
+    return out;
   }
 
   /** Rewrite a dynamic buffer in place (sizes never change between `setNetwork`s). */
@@ -605,15 +676,24 @@ export class NetworkRenderer {
   /** Replace everything drawn but the trips (an edit). */
   setNetwork(n: NetworkBuffers) {
     const gl = this.gl;
+    // T-1028: an edit's network posted as changes to the one drawn keeps the strokes' unchanged runs
+    // on the GPU and the textures whose data is the same; anything else is uploaded whole
+    const was = this.net, p = n.patch;
+    const patch = p && was && was !== n && was.serial === p.base && this.track?.count === p.oldTrack && this.lines?.count === p.oldLines ? p : null;
+    if (patch) this.patched++;
     for (const r of this.res) r.del();
     this.res = [];
-    for (const r of this.serviceRes) r.del();
-    this.serviceRes = [];
     this.probeVao = null;
     this.net = n;
     this.marks.setNetwork(n.marks);
-    this.track = this.strokes(n.track);
-    this.lines = this.strokes(n.lines);
+    const oldTrack = this.track, oldLines = this.lines;
+    this.track = this.strokes(n.track, [], patch && oldTrack ? { old: oldTrack, runs: patch.track } : null);
+    this.lines = this.strokes(n.lines, [], patch && oldLines ? { old: oldLines, runs: patch.lines } : null);
+    for (const r of [...(oldTrack?.res ?? []), ...(oldLines?.res ?? [])]) r.del();
+    if (patch && this.checkPatch) {
+      this.checkStrokes("track", this.track, n.track);
+      this.checkStrokes("lines", this.lines, n.lines);
+    }
     this.fullDrawn = "";
     this.writeFull();
     this.turnback = n.turnbacks?.count ? this.strokes(n.turnbacks) : null;
@@ -622,26 +702,34 @@ export class NetworkRenderer {
     this.rooms = false;
     for (let i = 0; i < n.stationCount && !this.rooms; i++) this.rooms = (n.stations[i * 3 + 2] & 32) !== 0;
     this.lineWidths = null;
-    this.tex.phases = this.texture(n.phases.length ? n.phases : new Float32Array(4), "rgba32f", TEX_W);
-    this.tex.meta = this.texture(n.meta.length ? n.meta : new Float32Array(4), "rgba32f", TEX_W);
-    this.tex.samples = this.texture(n.samples.length ? n.samples : new Float32Array(2), "rg32f", TEX_W);
-    this.tex.lane = this.texture(n.sampleLane?.length ? n.sampleLane : new Float32Array(Math.max(1, n.samples.length / 2)).fill(1), "r32f", TEX_W);
-    this.tex.lines = this.texture(n.lineTable.length ? n.lineTable : new Float32Array(4), "rgba32f", LINES_W);
-    this.tex.colours = this.texture(n.lineColours, "rgba8", LINES_W);
-    this.tex.fill = this.texture(new Float32Array(Math.max(1, n.samples.length / 2) * 2).fill(-1), "rg32f", TEX_W);
+    const same = new Set(patch?.same ?? []);
+    const put = (name: keyof typeof this.tex, field: string | null, make: () => [ArrayBufferView, "r32f" | "rg32f" | "rgba32f" | "rgba8", number]) => {
+      if (field && same.has(field) && this.tex[name]) return;
+      this.putTexture(name, ...make());
+    };
+    put("phases", "phases", () => [n.phases.length ? n.phases : new Float32Array(4), "rgba32f", TEX_W]);
+    put("meta", "meta", () => [n.meta.length ? n.meta : new Float32Array(4), "rgba32f", TEX_W]);
+    put("samples", "samples", () => [n.samples.length ? n.samples : new Float32Array(2), "rg32f", TEX_W]);
+    put("lane", "sampleLane", () => [n.sampleLane?.length ? n.sampleLane : new Float32Array(Math.max(1, n.samples.length / 2)).fill(1), "r32f", TEX_W]);
+    put("lines", "lineTable", () => [n.lineTable.length ? n.lineTable : new Float32Array(4), "rgba32f", LINES_W]);
+    put("colours", "lineColours", () => [n.lineColours, "rgba8", LINES_W]);
+    put("fill", null, () => [new Float32Array(Math.max(1, n.samples.length / 2) * 2).fill(-1), "rg32f", TEX_W]);
     const cars = n.lineCars ?? new Float32Array(Math.max(1, n.lineTable.length / 4)).fill(8);
     this.maxCars = Math.max(1, ...cars);
-    this.tex.cars = this.texture(cars, "r32f", LINES_W);
+    put("cars", "lineCars", () => [cars, "r32f", LINES_W]);
     // each train sample's stop-to-stop stretch (run 0's numbering), where a trip's loads are
     // looked up (T-164)
-    const nSamples = Math.max(1, n.samples.length / 2);
-    const stretch = new Float32Array(nSamples).fill(-1);
-    if (n.sampleStroke && n.lines.stretch)
-      for (let k = 0; k < nSamples; k++) {
-        const i = n.sampleStroke[k];
-        if (i >= 0) stretch[k] = n.lines.stretch[i];
-      }
-    this.tex.stretch = this.texture(stretch, "r32f", TEX_W);
+    put("stretch", "sampleStretch", () => {
+      if (n.sampleStretch) return [n.sampleStretch, "r32f", TEX_W];
+      const nSamples = Math.max(1, n.samples.length / 2);
+      const stretch = new Float32Array(nSamples).fill(-1);
+      if (n.sampleStroke && n.lines.stretch)
+        for (let k = 0; k < nSamples; k++) {
+          const i = n.sampleStroke[k];
+          if (i >= 0) stretch[k] = n.lines.stretch[i];
+        }
+      return [stretch, "r32f", TEX_W];
+    });
     this.crowds = new PlatformCrowds(n.stationCount);
 
     this.stationVao = gl.createVertexArray()!;
@@ -659,7 +747,7 @@ export class NetworkRenderer {
         line.set(platformPoints(platformShapeAt(n, i, false)), i * P2);
       n.stationLine = line;
     }
-    this.tex.stationLine = this.texture(n.stationLine.length ? n.stationLine : new Float32Array(2), "rg32f", TEX_W);
+    put("stationLine", "stationLine", () => [n.stationLine!.length ? n.stationLine! : new Float32Array(2), "rg32f", TEX_W]);
     this.attrib(this.stationProg, "a_shape", this.stationShapeBuf, 4, gl.FLOAT, 1);
     this.stationSizeBuf = this.buffer(new Float32Array(Math.max(1, n.stationCount)));
     this.attrib(this.stationProg, "a_sz", this.stationSizeBuf, 1, gl.FLOAT, 1);
@@ -704,13 +792,19 @@ export class NetworkRenderer {
     if (!n) return;
     n.phases = phases;
     n.meta = meta;
-    for (const r of this.serviceRes) r.del();
-    this.serviceRes = [];
-    // the textures `setNetwork` made stay in `res` until the next one; these are freed here
-    this.tex.phases = this.texture(phases.length ? phases : new Float32Array(4), "rgba32f", TEX_W, this.serviceRes);
-    this.tex.meta = this.texture(meta.length ? meta : new Float32Array(4), "rgba32f", TEX_W, this.serviceRes);
+    this.putTexture("phases", phases.length ? phases : new Float32Array(4), "rgba32f", TEX_W);
+    this.putTexture("meta", meta.length ? meta : new Float32Array(4), "rgba32f", TEX_W);
   }
-  private serviceRes: { del: () => void }[] = [];
+
+  /** each network texture's GL object, freed when it is replaced (T-1028: kept across edits while its
+   * data is the same) */
+  private texRes: Partial<Record<TexName, { del: () => void }[]>> = {};
+  private putTexture(name: TexName, data: ArrayBufferView, kind: "r32f" | "rg32f" | "rgba32f" | "rgba8", width: number) {
+    for (const r of this.texRes[name] ?? []) r.del();
+    const list: { del: () => void }[] = [];
+    this.tex[name] = this.texture(data, kind, width, list);
+    this.texRes[name] = list;
+  }
 
   /** The drawing tool's alignment, or null. */
   setPreview(s: Strokes | null) {
@@ -738,7 +832,9 @@ export class NetworkRenderer {
    * with the old, so the programs are compiled again and what was drawn is uploaded again. */
   restore() {
     this.res = [];
-    this.serviceRes = [];
+    this.texRes = {};
+    for (const k of Object.keys(this.tex) as TexName[]) this.tex[k] = null;
+    this.track = this.lines = null;
     this.previewRes = [];
     this.highlightRes = [];
     this.connRes = [];

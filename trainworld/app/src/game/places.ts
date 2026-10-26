@@ -12,11 +12,11 @@ export function compass(dx: number, dy: number): string {
 }
 
 /** The station nearest a point, or null. */
-export function nearestStation(x: number, y: number): { name: string; d: number; lng: number; lat: number } | null {
-  let best: { name: string; d: number; lng: number; lat: number } | null = null;
+export function nearestStation(x: number, y: number): { id: string; name: string; d: number; lng: number; lat: number } | null {
+  let best: { id: string; name: string; d: number; lng: number; lat: number } | null = null;
   for (const s of world.value?.save.stations ?? []) {
     const d = groundDist(s.x, s.y, x, y);
-    if (!best || d < best.d) best = { name: s.name, d, lng: s.lng, lat: s.lat };
+    if (!best || d < best.d) best = { id: s.id, name: s.name, d, lng: s.lng, lat: s.lat };
   }
   return best;
 }

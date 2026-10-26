@@ -4,7 +4,7 @@
 // (`EverydayApi.beside_with`); the map marks them (map/attractionMarks.ts). Plain data: the demand
 // workers import it too.
 
-import type { DemandDay } from "./days";
+import { AVERAGE_DAY, AWAY_DAY, type DemandDay } from "./days";
 
 export interface Attraction {
   /** the Wikidata item's number (Q-id without the Q) */
@@ -31,10 +31,12 @@ export function loadAttractions(): Promise<Attraction[]> {
 /** Social outings' Saturday and Sunday per weekday (sim/src/demand/days.rs `DAY_RATE`), which
  * attractions take. */
 const WEEKEND = [1.54, 1.67];
+/** A superholiday's away day per Sunday (days.rs `AWAY_RATE`, T-264). */
+const AWAY = 1.5;
 
 /** Visits a day to an attraction of `visitors` a year on `day`: the year's over 365 days, set on
  * weekdays so the weekend's factors bring a week back to them (as the sim's `attraction_sites`). */
 export function visitsOn(visitors: number, day: DemandDay): number {
   const weekday = (visitors * 7) / 365 / (5 + WEEKEND[0] + WEEKEND[1]);
-  return day === 0 ? weekday : day === 3 ? visitors / 365 : weekday * WEEKEND[day - 1];
+  return day === 0 ? weekday : day === AVERAGE_DAY ? visitors / 365 : day === AWAY_DAY ? weekday * WEEKEND[1] * AWAY : weekday * WEEKEND[day - 1];
 }

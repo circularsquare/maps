@@ -160,6 +160,25 @@ fn a_holiday_hour_reads_the_sunday_account_on_its_line_only() {
     assert_eq!((b.kind_at(fri, l as usize), b.kind_at(sat, l as usize), b.kind_at(sun, l as usize)), (2, 1, 0));
 }
 
+#[test]
+fn an_away_day_reads_its_own_account_or_the_sundays() {
+    // T-264: a superholiday's away day is kind 3; without its riders it reads Sunday's
+    let (w, l) = setup(10.0);
+    let mut b = Boarding::default();
+    b.set_riders_day(&riders(l, [500.0, 200.0, 500.0, 200.0, 50.0]), 0);
+    b.set_riders_day(&riders(l, [50.0, 250.0, 150.0, 150.0, 40.0]), 2);
+    let (sun, mon) = (7.0 * DAY + 8.0 * 3600.0, 8.0 * DAY + 8.0 * 3600.0);
+    let h_sun = b.hour(&w.net, &w.svc, sun);
+    b.set_holidays(&[l as f64, 1.0, 8.0, AWAY as f64]);
+    assert_eq!(b.kind_at(mon, l as usize), 2);
+    assert_eq!(arriving(&b.hour(&w.net, &w.svc, mon)), arriving(&h_sun));
+    b.set_riders_day(&riders(l, [25.0, 300.0, 100.0, 100.0, 20.0]), AWAY);
+    assert_eq!(b.kind_at(mon, l as usize), AWAY);
+    assert!((arriving(&h_sun) / arriving(&b.hour(&w.net, &w.svc, mon)) - 2.0).abs() < 0.01);
+    b.set_riders_day(&[], AWAY);
+    assert_eq!(b.kind_at(mon, l as usize), 2);
+}
+
 /// T-798: on a circle 0-1-2-3-4-5-0, riders from 4 to 1 ride on through the first stop: the
 /// train leaves it with them aboard, and they count as boarding there again.
 #[test]

@@ -2,9 +2,7 @@
 // profile: the real New York save loaded into a slot; another slot opened from the saves panel's Open
 // reloads the page into it (a navigation, the new slot active, its network drawn); the loading card
 // names its stages in order; a game too big for a demand worker is refused
-// with a reason (the memory estimate for every Chinese zone); a copy folder (the page's private file
-// system standing in for a folder the player picks) gets every slot as a .save file and the slot again
-// after a save; the browser was asked to keep its storage.
+// with a reason (the memory estimate for every Chinese zone); the browser was asked to keep its storage.
 //   node trainworld/checks/t1196-switch.mjs [url]     (from the maps root; default localhost:6146)
 // Prints PASS or FAIL lines and exits 1 on a failure. About two minutes.
 import { readFile } from 'node:fs/promises';
@@ -41,28 +39,6 @@ try {
   const real = await load(first);
   const kept = await page.evaluate(async () => (await import('/src/game/saveSafety.ts')).storageKept.value);
   report('storage asked to be kept', kept !== null, `(persisted: ${kept})`);
-
-  // T-1214: a folder (the private file system here) gets every slot, and the slot again at a save
-  const copies = await page.evaluate(async () => {
-    const root = await navigator.storage.getDirectory();
-    const dir = await root.getDirectoryHandle('copies', { create: true });
-    window.tw.client.post({ kind: 'copyFolder', dir });
-    await new Promise((r) => setTimeout(r, 3000));
-    const names = [];
-    for await (const [name, h] of dir.entries()) names.push(`${name}:${(await h.getFile()).size}`);
-    return names;
-  });
-  report('copies in the folder', copies.filter((n) => / \(\w{4}\)\.save:\d{4,}$/.test(n)).length === 2, `(${copies.join(', ')})`);
-  // the panel's line for it (the folder set as a pick would set it)
-  await page.evaluate(async () => {
-    const S = await import('/src/game/saveSafety.ts');
-    S.copyFolder.value = { name: 'Games', path: 'Games/trainworld', state: 'on', at: Date.now() };
-    (await import('/src/ui/SavesPanel.tsx')).savesOpen.value = true;
-  });
-  await page.waitForSelector('.saves-panel .save-safety');
-  await wait(500);
-  await page.locator('.saves-panel').screenshot({ path: `${ART}/t1214-saves-panel.png` });
-  await page.evaluate(async () => { (await import('/src/ui/SavesPanel.tsx')).savesOpen.value = false; });
 
   // T-1197: an estimate for every Chinese zone is refused, New York's is not
   const refusal = await page.evaluate(async () => {

@@ -83,16 +83,15 @@ export function trainSpeedFact(kmh: number): HTMLSpanElement {
 /** A mountain: the ground's terrain class (T-1270). */
 const TERRAIN_PATH = "M1.5 13.5L6 6l2.4 3.4L10.6 6.5l3.9 7z";
 
-/** The icon and a chip per terrain class a route crosses where it is charged, from the preview's
- * metres per class (flat, rolling, hilly, mountain); null on flat ground only. */
+/** The icon and a chip for the roughest terrain class a route crosses where it is charged (T-1394),
+ * from the preview's metres per class (flat to mountains); null on flat ground only. */
 export function terrainFact(ground: ArrayLike<number> | undefined): HTMLSpanElement | null {
   if (!ground) return null;
-  const classes = [1, 2, 3].filter((k) => (ground[k] ?? 0) >= 1);
-  if (!classes.length) return null;
+  const k = [3, 2, 1].find((c) => (ground[c] ?? 0) >= 1);
+  if (k === undefined) return null;
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(icon(TERRAIN_PATH, "Terrain"));
-  for (const k of classes) s.append(chip(`${TERRAIN_NAMES[k]} ${TERRAIN_FACTORS[k]}x`, TERRAIN_COLOURS[k], 0.6));
+  s.append(icon(TERRAIN_PATH, "Terrain"), chip(`${TERRAIN_NAMES[k]} ${TERRAIN_FACTORS[k]}x`, TERRAIN_COLOURS[k], 0.6));
   return s;
 }
 

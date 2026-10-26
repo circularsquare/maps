@@ -42,7 +42,8 @@ load busiest-hour factors; their five-period departure shares are provisional:
 The inspector uses actual purpose/mode/period selection results. Bars show departures per hour,
 dividing period counts by 4/6/4/4/6 hours; outward and return rows remain separate.
 
-**Kinds of day** (T-260, T-262, notes/T-170.md). Three: weekday, Saturday and Sunday. Game day 1,
+**Kinds of day** (T-260, T-262, T-264, notes/T-170.md). Weekday, Saturday, Sunday, and a
+superholiday's day away (below). Game day 1,
 a new game's first, is a Monday, so days 6 and 7 of each week are Saturday and Sunday
 (`day_kind_at` in `sim/src/track/params.rs`, `app/src/game/days.ts`) where a line's country says
 nothing else: its own weekend days and public holidays decide its kinds of day (a holiday runs as
@@ -57,7 +58,10 @@ on the main thread and every query (bubbles, catchments, selections, longer trip
 weighs its periods the same way in the workers, with the everyday purposes' per-direction shares
 where it reads directions. Both keep the weekday's crowded route and mode choices (fewer riders
 would crowd less), and the same trains run every day (Anita: no separate weekend schedules for
-now; T-261 would need its own solve).
+now; T-261 would need its own solve). **A superholiday's day away** (T-264) is a fourth kind,
+worked out the same way: a Sunday's load factor times `AWAY_RATE` (local outings 0.7, attractions
+1.5, the rest 1), not in the average day. Demand days are weekday 0, Saturday 1, Sunday 2, away 3
+and the average 4.
 
 Trips per weekday trip, from NHTS 2017 (person-weighted, Mon-Fri against Saturday and against
 Sunday, the mean of the outward and return ratios; England's NTS agrees for the weekend as a whole

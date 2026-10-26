@@ -146,7 +146,7 @@ try {
   await page.mouse.move(x1 + 1, y1, { steps: 1 });
   await page.waitForTimeout(1200);
   const tag = await page.evaluate(() => [...document.querySelectorAll('.tool-tag')].map((t) => t.textContent).join(' | '));
-  check(/Mountain 2\.5x|Hilly 1\.6x|Rolling 1\.25x/.test(tag), `the track tool's tag names the ground (${tag})`);
+  check(/Mountains 2\.5x|Hills 1\.6x|Gentle slope 1\.25x/.test(tag), `the track tool's tag names the ground (${tag})`);
   await page.screenshot({ path: join(OUT, 'mountain-tag.png') });
   await page.keyboard.press('Escape');
 

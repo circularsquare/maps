@@ -721,6 +721,8 @@ struct Period {
     seen: Vec<f32>,
     trips: f64,
     rail: f64,
+    /// T-1300: `ModeOut::sense`, averaged like the shares
+    rail_d: FareSense,
     walk: f64,
     /// And from walking the whole way, by purpose (T-509's walk shares).
     walk_lost: Vec<f64>,
@@ -1013,15 +1015,18 @@ impl EverydayApi {
         Some((kind, c, d, w, pw))
     }
     /// Also returns the transfers, every purpose together, laid out by `ix` (T-176).
-    fn pass(&self, g: &Graph, p: &Params, q: usize, ix: &XferIndex) -> (Vec<[f32; 2]>, Loads, Vec<Part>, Vec<f32>, Vec<f64>) {
+    /// Each pair's rail share both ways, the loads, the purposes' loads, the transfers, the walkers
+    /// rail takes by purpose and (T-1300) the rail trips' fare sensitivity (`ModeOut::sense`).
+    fn pass(&self, g: &Graph, p: &Params, q: usize, ix: &XferIndex) -> (Vec<[f32; 2]>, Loads, Vec<Part>, Vec<f32>, Vec<f64>, FareSense) {
         let mut probability = vec![[0.0; 2]; self.pairs.len()];
         let s = g.n_st;
         let kinds = self.totals.len();
         let mut xfer = vec![0.0; ix.len];
         let mut walk_lost = vec![0.0f64; kinds];
+        let mut rail_d = FareSense::default();
         let Some(sz) = &self.engine.sz else {
             let zero = Loads::zero(s, g.n - s);
-            return (probability, zero.clone(), vec![Part::of(&zero); kinds], xfer, walk_lost);
+            return (probability, zero.clone(), vec![Part::of(&zero); kinds], xfer, walk_lost, rail_d);
         };
         // Outward AND homeward destinations: every station either end of a pair can reach (T-142:
         // not every station, so a city with no pairs near the network, open in a worker beside
@@ -1042,7 +1047,7 @@ impl EverydayApi {
         }
         if !want.contains(&true) {
             let zero = Loads::zero(s, g.n - s);
-            return (probability, zero.clone(), vec![Part::of(&zero); kinds], xfer, walk_lost);
+            return (probability, zero.clone(), vec![Part::of(&zero); kinds], xfer, walk_lost, rail_d);
         }
         let (loads, parts) = with_skims(g, p, &want, |sk| {
             // a table per distance band (T-710)
@@ -1179,6 +1184,11 @@ impl EverydayApi {
                     } else {
                         RETURN[pair.kind() as usize][q]
                     };
+                    let prd = p.car_choice(util - bt * FARE_D_MIN, uw, bt, paid, free, rail + FARE_D_MIN, road);
+                    let (dd, km) = ((pair.trips * share * (prd - pr)) as f64 / FARE_D_MIN as f64, pair.distance as f64 / 1000.0);
+                    rail_d.d += dd;
+                    rail_d.d_km += dd * km;
+                    rail_d.km += (pair.trips * share * pr) as f64 * km;
                     // T-558: rail takes its share of the pair's walking with no rail, as the
                     // samples' sums and views have it
                     walk_lost[pair.kind() as usize] += (pair.trips * share * pr * pair.walk) as f64;
@@ -1214,7 +1224,7 @@ impl EverydayApi {
             total.rn_fare_x = lanes.rn_fare_x;
             (total, parts.iter().map(Part::of).collect::<Vec<_>>())
         });
-        (probability, loads, parts, xfer, walk_lost)
+        (probability, loads, parts, xfer, walk_lost, rail_d)
     }
     /// Trips, rail trips and walking trips (less `walk_lost`, the walkers rail takes) in period `q`.
     fn mode_totals(&self, q: usize, probability: &[[f32; 2]], walk_lost: &[f64]) -> (f64, f64, f64) {
@@ -1628,9 +1638,10 @@ impl EverydayApi {
         let fac = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &fac);
         let xi = xfer_index(&g);
-        let (probability, loads, parts, xfer, walk_lost) = self.pass(&g, &p, q, &xi);
+        let (probability, loads, parts, xfer, walk_lost, rail_d) = self.pass(&g, &p, q, &xi);
         let (trips, rail, walk) = self.mode_totals(q, &probability, &walk_lost);
         self.per[q] = Some(Period {
+            rail_d,
             walk_lost,
             net,
             p,
@@ -1667,10 +1678,11 @@ impl EverydayApi {
             st.fac = fac;
             set_crowding(&mut st.g, &st.fac);
             st.g.rn_left = left;
-            let (probability, loads, parts, xfer, walk_lost) = self.pass(&st.g, &st.p, q, &st.xi);
+            let (probability, loads, parts, xfer, walk_lost, rail_d) = self.pass(&st.g, &st.p, q, &st.xi);
             for (old, new) in st.walk_lost.iter_mut().zip(&walk_lost) {
                 *old += (new - *old) / (st.round as f64 + 1.0);
             }
+            st.rail_d.toward(rail_d, 1.0 / (st.round as f64 + 1.0));
             for (old, new) in st.probability.iter_mut().zip(&probability) {
                 msa(old, new, st.round);
             }
@@ -1766,6 +1778,9 @@ impl EverydayApi {
             st.walk_lost.iter_mut().for_each(|v| *v *= f as f64);
         }
         let (trips, rail, walk) = self.mode_totals(q, &st.probability, &st.walk_lost);
+        if st.rail > 0.0 {
+            st.rail_d.scale(rail / st.rail);
+        }
         st.trips = trips;
         st.rail = rail;
         st.walk = walk;
@@ -1789,6 +1804,9 @@ impl EverydayApi {
                     0.0,
                     0.0,
                     0.0,
+                    s.rail_d.d,
+                    s.rail_d.d_km,
+                    s.rail_d.km,
                 ]
             })
     }

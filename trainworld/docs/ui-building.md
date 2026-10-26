@@ -18,7 +18,9 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   picked."; off by default) [T-1161]: while it is on, a segment drawn from existing track (a node, a
   loose end or a point on a piece, `Tools.freeLevel`) ends at that track's elevation, so a run carries on at
   the elevation it started from; a run started on open ground takes the elevation picked. Picking
-  an elevation turns it off. Then the picked elevation's price per km and multiplier, "$99M per
+  an elevation turns it off. At the end of the price row below, the **Terrain** switch (a mountain;
+  hover "Show terrain. Track costs more on slopes, hills and mountains."), the same switch as
+  Settings > Show > Terrain ([ui-map.md](ui-map.md)) [T-1394]. Then the picked elevation's price per km and multiplier, "$99M per
   km (1.1x cost)" (with High speed picked, high-speed track's: 1.5x, so 0.75x at ground), the
   multiplier on the track tool's tag colours: yellow growing above 1x, light green growing below
   it, none at 1x (`costTint` in `map/trackTagRows.ts`); the line's hover names the elevation

@@ -604,7 +604,30 @@ fn market_params() -> Params {
 /// scale `th`, each pair's weight into `terms`. Returns rail's perceived cost, their logsum (the
 /// first boarding's, access and egress included, as the mode choice then damps it, T-495), and the
 /// sum of the weights (0: no route).
+#[cfg(test)]
 fn rail_logsum(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize, f32)], beta: f32, th: f32, terms: &mut Vec<(u32, u32, f64)>) -> (f32, f64) {
+    rail_logsum_x(r, s, fare, a, b, beta, th, None, terms)
+}
+/// T-1286: the fares of trips from one country weighed at a factor of the market's (the player's
+/// fare scale there over its income's), on each station pair's strategy as searched: its expected
+/// fare km (`trip_km_on`, S x S as `Skims::r`) back to the fare's perceived minutes.
+struct FareX<'a> {
+    km: &'a [f32],
+    base: f32,
+    per_km: f32,
+    curve: &'a FareCurve,
+}
+impl FareX<'_> {
+    /// The perceived minutes of the fare from station `a` to `b` in the market's weight.
+    #[inline]
+    fn fare(&self, a: usize, b: usize, s: usize) -> f32 {
+        let k = self.km[a * s + b];
+        self.base + self.per_km * k + self.curve.extra(k)
+    }
+}
+/// `rail_logsum` with the fares weighed at `1 + x.1` (`FareX`).
+#[allow(clippy::too_many_arguments)]
+fn rail_logsum_x(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize, f32)], beta: f32, th: f32, x: Option<(&FareX, f32)>, terms: &mut Vec<(u32, u32, f64)>) -> (f32, f64) {
     terms.clear();
     let k = (th / beta) as f64;
     let mut top = f64::NEG_INFINITY;
@@ -621,7 +644,10 @@ fn rail_logsum(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize, 
         let row = &r[sa * s..(sa + 1) * s];
         for (j, &(sb, wb)) in b.iter().enumerate() {
             // a rail journey must actually board a train
-            let cost = row[sb] + fare;
+            let cost = match x {
+                None => row[sb] + fare,
+                Some((fx, d)) => row[sb] + fare + d * fx.fare(sa, sb, s),
+            };
             if sa == sb || wb <= 0. || !cost.is_finite() {
                 continue;
             }
@@ -648,6 +674,8 @@ struct Period {
     avg: Loads,
     c_avg: Loads,
     rail: f64,
+    /// T-1300: `Demand::rail_d`, averaged like the rail trips
+    rail_d: FareSense,
     trips: f64,
     c_rail: f64,
     c_trips: f64,
@@ -747,6 +775,8 @@ struct Demand {
     c_frac: Vec<f32>,
     c_cor: Vec<f64>,
     e: EDemand,
+    /// T-1300: every part's rail trips per perceived minute of the market's fare dearer (negative)
+    rail_d: FareSense,
 }
 /// T-1175: the everyday pairs' part of a pass: station to station trips by purpose (empty for a
 /// purpose with none), rail trips, the walkers rail takes, and each served pair's rail share.
@@ -773,6 +803,7 @@ struct Pass {
     e_rail: f64,
     e_walk_lost: f64,
     e_frac: Vec<f32>,
+    rail_d: FareSense,
 }
 
 thread_local! {
@@ -2098,6 +2129,9 @@ pub struct IntercityApi {
     fare_per_km: f32,
     /// `DemandApi::set_fare_curve`'s knots (T-883)
     fare_curve: Vec<f32>,
+    /// T-1286: per zone, its country's fare factor less 1 (`set_fare_factors`); empty while every
+    /// factor is 1.
+    zone_fx: Vec<f32>,
     complex_in: Vec<u32>,
     /// `DemandApi::set_upgrades` (T-1281).
     ups_in: Vec<u8>,
@@ -2336,6 +2370,7 @@ impl IntercityApi {
             fare_km: vec![],
             fare_per_km: 0.,
             fare_curve: vec![],
+            zone_fx: vec![],
             complex_in: vec![],
             ups_in: vec![],
             passages_in: vec![],
@@ -2354,8 +2389,9 @@ impl IntercityApi {
         self.pass_streamed(g, p, q, ix, MARKET_STRATEGY_BYTES)
     }
     fn pass_on(&self, g: &Graph, p: &Params, q: usize, sk: &Skims, ix: &XferIndex) -> Pass {
-        let d = self.demand(&sk.r, g.n_st, p, q);
         let s = g.n_st;
+        let km = self.pair_km(g, &self.want, |dst| (sk.slot[dst] != u32::MAX).then(|| sk.strategy(sk.slot[dst] as usize)));
+        let d = self.demand(g, &sk.r, p, q, &km);
         self.assigned(g, ix, d, |dst| {
             let slot = sk.slot[dst];
             debug_assert!(slot != u32::MAX, "flow towards station {dst}, which was not searched");
@@ -2366,7 +2402,7 @@ impl IntercityApi {
     /// commutes together (`assign_with_transfers`'s), and of the commutes alone, assigned in station
     /// order along the destination's strategy (`strategy`; `None`: nobody can ride there).
     fn assigned<'a>(&self, g: &Graph, ix: &XferIndex, d: Demand, mut strategy: impl FnMut(usize) -> Option<Held<'a>>, s: usize) -> Pass {
-        let Demand { od, od_c, st, rail, cor, pair_rail, c_rail, c_frac, c_cor, e } = d;
+        let Demand { od, od_c, st, rail, cor, pair_rail, c_rail, c_frac, c_cor, e, rail_d } = d;
         let counting = !(cfg!(test) && XFER_OFF.load(std::sync::atomic::Ordering::Relaxed));
         let (mut all, mut com) = (DestAssign::new(g, 0, counting), DestAssign::new(g, 0, false));
         com.fares = false;
@@ -2437,7 +2473,7 @@ impl IntercityApi {
             }
         }
         let e_loads = ev.into_iter().map(|a| a.map(|a| a.l)).collect();
-        Pass { loads: all.l, c_loads: com.l, rail, c_rail, c_frac, cor, c_cor, pair_rail, st, xfer, e_loads, e_rail: e.rail, e_walk_lost: e.walk_lost, e_frac: e.frac }
+        Pass { loads: all.l, c_loads: com.l, rail, c_rail, c_frac, cor, c_cor, pair_rail, st, xfer, e_loads, e_rail: e.rail, e_walk_lost: e.walk_lost, e_frac: e.frac, rail_d }
     }
     /// `pass_on` with the destinations searched one at a time (T-761), so no table of every
     /// destination's strategy is held: a first sweep keeps each one's route costs (the logsums need
@@ -2452,24 +2488,75 @@ impl IntercityApi {
         let mut search = DestSearch::new(g, p);
         let mut kept: Vec<Option<DestStrategy>> = (0..s).map(|_| None).collect();
         let mut held = 0;
+        let mut km = if self.zone_fx.is_empty() { vec![] } else { vec![0f32; s * s] };
+        let (mut col, mut dep) = (vec![], vec![]);
         for dst in (0..s).filter(|&d| self.want[d]) {
             let d = search.run(dst, Some(&mut r));
+            if !km.is_empty() {
+                self.put_km(g, d.view(), dst, &mut col, &mut dep, &mut km);
+            }
             if held + d.bytes() <= keep_bytes {
                 held += d.bytes();
                 kept[dst] = Some(d);
             }
         }
-        let d = self.demand(&r, s, p, q);
+        let d = self.demand(g, &r, p, q, &km);
         drop(r);
+        drop(km);
         self.assigned(g, ix, d, |dst| {
             debug_assert!(self.want[dst], "flow towards station {dst}, which was not searched");
             self.want[dst].then(|| Held::Own(kept[dst].take().unwrap_or_else(|| search.run(dst, None))))
         }, s)
     }
+    /// T-1286: each station pair's expected fare km (`FareX::km`) on the strategies towards the
+    /// stations `want`ed that `strategy` has; empty while every fare factor is 1.
+    fn pair_km<'s>(&self, g: &Graph, want: &[bool], strategy: impl Fn(usize) -> Option<Strategy<'s>>) -> Vec<f32> {
+        if self.zone_fx.is_empty() {
+            return vec![];
+        }
+        let s = g.n_st;
+        let mut km = vec![0f32; s * s];
+        let (mut col, mut dep) = (vec![], vec![]);
+        for dst in (0..s).filter(|&d| want[d]) {
+            if let Some(st) = strategy(dst) {
+                self.put_km(g, st, dst, &mut col, &mut dep, &mut km);
+            }
+        }
+        km
+    }
+    /// The fares' weighing (`FareX`) on `km` (`pair_km` on `g`), none while it is empty.
+    fn fare_x<'x>(&self, g: &'x Graph, p: &Params, km: &'x [f32]) -> Option<FareX<'x>> {
+        (!km.is_empty()).then(|| FareX { km, base: p.fare_min, per_km: self.fare_per_km, curve: &g.fare_curve })
+    }
+    /// What `rail_logsum_x` takes for trips from `zone`: none where its factor is 1.
+    fn fx_of<'x>(&self, fx: &'x Option<FareX<'x>>, zone: usize) -> Option<(&'x FareX<'x>, f32)> {
+        fx.as_ref().and_then(|x| self.zone_fx.get(zone).filter(|&&d| d != 0.).map(|&d| (x, d)))
+    }
+    /// `pair_km`'s column towards `dst`.
+    fn put_km(&self, g: &Graph, st: Strategy, dst: usize, col: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>, km: &mut [f32]) {
+        let s = g.n_st;
+        trip_km_on(g, st, dst, &self.fare_km, col, dep);
+        for src in 0..s {
+            km[src * s + dst] = col[src];
+        }
+    }
     /// The market's rail trips in period `q` from the route costs `r` (S x S, `Skims::r`): the
     /// station to station trips of the longer trips and of the commutes, and the pair, corridor and
-    /// station figures.
-    fn demand(&self, r: &[f32], s: usize, p: &Params, q: usize) -> Demand {
+    /// station figures. `km`: `pair_km` on `g`.
+    fn demand(&self, g: &Graph, r: &[f32], p: &Params, q: usize, km: &[f32]) -> Demand {
+        let s = g.n_st;
+        let fx = self.fare_x(g, p, km);
+        let fx_of = |zone: usize| self.fx_of(&fx, zone);
+        // T-1300: the riders' fare sensitivity: each trip's rail share with its fare dearer by
+        // `FARE_D_MIN` perceived minutes of the market's (times its fare factor), less its share
+        let mut rail_d = FareSense::default();
+        let zkm = |a: usize, b: usize| self.m.zone_km(&self.m.zones[a], &self.m.zones[b]);
+        let add = |s: &mut FareSense, dd: f64, rail: f64, km: f64| {
+            s.d += dd / FARE_D_MIN as f64;
+            s.d_km += dd / FARE_D_MIN as f64 * km;
+            s.km += rail * km;
+        };
+        let step = |zone: usize| FARE_D_MIN * (1. + self.zone_fx.get(zone).copied().unwrap_or(0.));
         let mut od = vec![0.; s * s];
         let mut rail = 0.;
         let mut cor = vec![0.; self.m.n_open_corridors()];
@@ -2485,12 +2572,16 @@ impl IntercityApi {
         for (pi, pair) in self.pairs.iter().enumerate() {
             let trips = pair.trips * SHARES[q] as f64;
             let (a, b) = (&self.access[pair.a as usize], &self.access_work[pair.b as usize]);
-            let (rail_c, sum) = rail_logsum(r, s, p.fare_min, a, b, p.beta, p.soften(p.band_unsoftened(pair.band as usize), pair.car), &mut terms);
+            let (rail_c, sum) = rail_logsum_x(r, s, p.fare_min, a, b, p.beta, p.soften(p.band_unsoftened(pair.band as usize), pair.car), fx_of(pair.a as usize), &mut terms);
             let bt = p.mode_beta(pair.car);
             let v_rail = if sum > 0. { ((-bt * (rail_c - pair.drive)).clamp(-80., 80.) as f64).exp() } else { 0. };
             let fraction = v_rail / (pair.rest as f64 + v_rail);
             let r = trips * fraction;
             rail += r;
+            if sum > 0. {
+                let v = ((-bt * (rail_c + step(pair.a as usize) - pair.drive)).clamp(-80., 80.) as f64).exp();
+                add(&mut rail_d, trips * (v / (pair.rest as f64 + v) - fraction), r, zkm(pair.a as usize, pair.b as usize));
+            }
             cor[pair.corridor as usize] += r;
             pair_rail[pi] = r as f32;
             if sum > 0. {
@@ -2516,13 +2607,14 @@ impl IntercityApi {
             let (h, wz) = (h as usize, self.m.comp_of_gid[wg as usize] as usize);
             let (out, ret) = (n as f64 * TO_WORK[q] as f64, n as f64 * TO_HOME[q] as f64);
             let home = if cp.ride { &self.access_c[h] } else { &self.access_c_walk[h] };
-            let (rail_c, sum) = rail_logsum(r, s, p.fare_min, home, &self.access_cw[wz], pc.beta, p.soften(pc.band_unsoftened(cp.band as usize), cp.car), &mut terms);
+            let (rail_c, sum) = rail_logsum_x(r, s, p.fare_min, home, &self.access_cw[wz], pc.beta, p.soften(pc.band_unsoftened(cp.band as usize), cp.car), fx_of(h), &mut terms);
             if sum <= 0. {
                 continue;
             }
             // T-918: rail against the car on the cost ratio, as the local commutes
             let frac = pc.ratio_share(rail_c, cp.car) as f64;
             c_frac[ci] = frac as f32;
+            add(&mut rail_d, (out + ret) * (pc.ratio_share(rail_c + step(h), cp.car) as f64 - frac), (out + ret) * frac, zkm(h, wz));
             let (ro, rr_) = (out * frac, ret * frac);
             c_rail += ro + rr_;
             c_cor[cp.corridor] += ro + rr_;
@@ -2551,7 +2643,7 @@ impl IntercityApi {
             let (h, az) = self.epair_zones(ep);
             let (out, ret) = (pair.trips as f64 * OUTWARD[k][q] as f64, pair.trips as f64 * RETURN[k][q] as f64);
             let home = if ep.ride { &self.access_c[h] } else { &self.access_c_walk[h] };
-            let (rail_c, sum) = rail_logsum(r, s, p.fare_min, home, &self.access_ew[az], pe.beta, p.soften(pe.band_unsoftened(ep.band as usize), ep.car), &mut terms);
+            let (rail_c, sum) = rail_logsum_x(r, s, p.fare_min, home, &self.access_ew[az], pe.beta, p.soften(pe.band_unsoftened(ep.band as usize), ep.car), fx_of(h), &mut terms);
             if sum <= 0. {
                 continue;
             }
@@ -2559,6 +2651,9 @@ impl IntercityApi {
             let w0 = ep.walk_e as f64 / (util.exp() + 1. + ep.walk_e as f64);
             let frac = (1. - w0) * pe.ratio_share(rail_c, ep.car) as f64;
             e.frac[ei] = frac as f32;
+            let rd = rail_c + step(h);
+            let ud = (pe.mode_beta(ep.car) * (ep.car - rd) + pe.asc_rail).clamp(-80., 80.) as f64;
+            add(&mut rail_d, (out + ret) * ((1. - ep.walk_e as f64 / (ud.exp() + 1. + ep.walk_e as f64)) * pe.ratio_share(rd, ep.car) as f64 - frac), (out + ret) * frac, zkm(h, az));
             let (ro, rr_) = (out * frac, ret * frac);
             e.rail += ro + rr_;
             e.walk_lost += (ro + rr_) * pair.walk as f64;
@@ -2575,7 +2670,7 @@ impl IntercityApi {
             }
         }
         e.od = od_e.into_iter().map(|v| SparseOd::of(s, v)).collect();
-        Demand { od, od_c: SparseOd::of(s, od_c), st, rail, cor, pair_rail, c_rail, c_frac, c_cor, e }
+        Demand { od, od_c: SparseOd::of(s, od_c), st, rail, cor, pair_rail, c_rail, c_frac, c_cor, e, rail_d }
     }
     /// T-1229: each served everyday pair's kind, home place, rail legs in period `q` and the
     /// walking legs those riders were taken from (the period's average over crowding rounds).
@@ -3057,6 +3152,27 @@ impl IntercityApi {
         }
         Ok(())
     }
+    /// T-1286: the factor each country's riders weigh the market's fares at, as JSON
+    /// `{"US": 1.25, ...}` (countries left out: 1): the player's fare scale there over its income's.
+    /// Each trip takes its origin's (a commute or outing its home's).
+    pub fn set_fare_factors(&mut self, json: &str) -> Result<(), String> {
+        let by: HashMap<String, f32> = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        if by.values().any(|f| !(f.is_finite() && *f > 0.)) {
+            return Err("invalid fare factor".into());
+        }
+        let m = &self.m;
+        let of_country: Vec<f32> = m.countries.iter().map(|c| by.get(c).copied().unwrap_or(1.) - 1.).collect();
+        let fx: Vec<f32> = if of_country.iter().all(|&d| d == 0.) {
+            vec![]
+        } else {
+            m.zones.iter().map(|z| of_country[m.places[z.place].country as usize]).collect()
+        };
+        if !same_bits(&fx, &self.zone_fx) {
+            self.zone_fx = fx;
+            self.per.iter_mut().for_each(|p| *p = None);
+        }
+        Ok(())
+    }
     pub fn solve(&mut self, q: usize) -> bool {
         let Some(svc) = &self.svc else { return false };
         if q >= PERIODS {
@@ -3097,6 +3213,7 @@ impl IntercityApi {
             avg: pass.loads,
             c_avg: pass.c_loads,
             rail: pass.rail,
+            rail_d: pass.rail_d,
             trips: self.m.cw.daily * SHARES[q] as f64,
             c_rail: pass.c_rail,
             c_trips: self.m.cw.commuters * (TO_WORK[q] + TO_HOME[q]) as f64,
@@ -3132,7 +3249,7 @@ impl IntercityApi {
         st.g.rn_left = left;
         st.uniform = false;
         st.fac = fac;
-        let Pass { loads: l, c_loads, rail, c_rail, c_frac, cor, c_cor, pair_rail, st: st_new, xfer, e_loads, e_rail, e_walk_lost, e_frac } = self.pass(&st.g, &st.p, q, &st.xi);
+        let Pass { loads: l, c_loads, rail, c_rail, c_frac, cor, c_cor, pair_rail, st: st_new, xfer, e_loads, e_rail, e_walk_lost, e_frac, rail_d } = self.pass(&st.g, &st.p, q, &st.xi);
         st.round += 1;
         let r = st.round;
         msa(&mut st.xfer, &xfer, r);
@@ -3166,6 +3283,7 @@ impl IntercityApi {
         msa(&mut st.avg.rn_fare_x, &l.rn_fare_x, r);
         let w = 1. / (r as f64 + 1.);
         st.rail += (rail - st.rail) * w;
+        st.rail_d.toward(rail_d, w);
         for (a, b) in st.corridors.iter_mut().zip(cor) {
             *a += (b - *a) * w;
         }
@@ -3193,6 +3311,7 @@ impl IntercityApi {
         st.rail *= all;
         st.c_rail *= all;
         st.e_rail *= all;
+        st.rail_d.scale(all);
         let f = all as f32;
         for v in st.pair_rail.iter_mut().chain(st.c_frac.iter_mut()).chain(st.e_frac.iter_mut()).chain(st.st.iter_mut()) {
             *v *= f;
@@ -3205,7 +3324,7 @@ impl IntercityApi {
     pub fn summary(&self, q: usize) -> Vec<f64> {
         self.per(q).map_or(vec![], |s| {
             let (_, c) = crowd_factors(&s.g, &s.net, &s.avg, &s.p);
-            vec![s.round as f64, s.trips + s.c_trips + s.e_trips, s.rail + s.c_rail + s.e_rail, s.e_walk, s.ms, self.m.cw.place_pairs as f64, c.segs_over_seats as f64, c.max_load_of_crush as f64, c.p50 as f64, c.p90 as f64]
+            vec![s.round as f64, s.trips + s.c_trips + s.e_trips, s.rail + s.c_rail + s.e_rail, s.e_walk, s.ms, self.m.cw.place_pairs as f64, c.segs_over_seats as f64, c.max_load_of_crush as f64, c.p50 as f64, c.p90 as f64, s.rail_d.d, s.rail_d.d_km, s.rail_d.km]
         })
     }
     /// The regional layer's parts in period `q` (T-276): trips and rail trips of the longer trips,

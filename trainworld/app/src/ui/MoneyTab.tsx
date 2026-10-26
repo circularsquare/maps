@@ -4,7 +4,8 @@ import { money, runCostRule, shortDistance, upkeepText } from "../game/format";
 import { setFareScale, stationsById, world } from "../game/world";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
-import { scaleNodes } from "../game/fareCurve";
+import { scaleNodes, type FareNode } from "../game/fareCurve";
+import { shownEstimate } from "../game/fareEstimate";
 import { FARE_BASELINE, fareScale, incomeScale, SCALE_STEP, tidyScale } from "../game/income";
 import { selection } from "../game/ui";
 import { scopeZone } from "../game/listScope";
@@ -84,6 +85,26 @@ function FareScaleRow({ country, scale, own }: { country: string; scale: number;
   );
 }
 
+/** T-1300: what the fare being dragged, or one demand has yet to solve, would do to rail trips and
+ * fare income a day; nothing otherwise. */
+function FareEffect({ preview, scale }: { preview: FareNode[] | null; scale: number }) {
+  const e = shownEstimate(preview && scaleNodes(preview, 1 / scale));
+  if (!e) return null;
+  const dr = e.riders / e.ridersNow - 1, df = e.fares - e.faresNow;
+  const pct = Math.round(100 * dr);
+  const count = (v: number) => (Math.round(v / 1e4) * 1e4).toLocaleString("en-US");
+  return (
+    <ul class="rows">
+      <Row label="Riders a day">
+        <span data-tip={`About ${count(e.riders)} at these fares, ${count(e.ridersNow)} now. A guess until demand catches up.`}>{pct > 0 ? "+" : pct < 0 ? "−" : ""}{Math.abs(pct)}%</span>
+      </Row>
+      <Row label="Fares a day">
+        <span data-tip={`About ${money(e.fares)} at these fares, ${money(e.faresNow)} now. A guess until demand catches up.`}>{df > 0 ? "+" : ""}<Money dollars={df} /></span>
+      </Row>
+    </ul>
+  );
+}
+
 export function MoneyTab() {
   const w = world.value;
   const m = moneyState.value;
@@ -150,6 +171,7 @@ export function MoneyTab() {
       <div class="h">Fare<span class="right"><FareButtons nodes={f} /></span></div>
       <FareGraph nodes={shown} scale={scale} />
       <FareNodeRows nodes={f} scale={scale} first={<FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} />} />
+      <FareEffect preview={farePreview.value} scale={scale} />
       <div class="h">Trains</div>
       <ul class="rows">
         <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)}. Running costs ${runCostRule(m)}. Cars are bought when a line needs more than the spare ones.`}>Cars owned</span>}>

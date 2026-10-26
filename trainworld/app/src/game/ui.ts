@@ -3,7 +3,7 @@
 // may be unavailable (private window), so every read and write is guarded.
 
 import { batch, computed, effect, signal } from "@preact/signals";
-import { AVERAGE_DAY, DEMAND_DAY_PHRASE, type DemandDay } from "./days";
+import { AVERAGE_DAY, AWAY_DAY, awayNear, DEMAND_DAY_ON, DEMAND_DAY_PHRASE, type DemandDay } from "./days";
 import { DEFAULT_FONT, FONT_KEYS, fontStack, loadFont, type FontKey } from "./fonts";
 import { DEFAULT_RAMP, setBubbleColours, type BubbleScheme } from "./palette";
 import type { PurposeFilter } from "./purposes";
@@ -76,7 +76,7 @@ export interface DisplaySettings {
   /** T-464, T-262: the day the demand views show: the average day, a weekday, a Saturday or a
    * Sunday. A stored "today" (T-266's old default) or "weekend" (before T-262) reads as the average.
    * The trains and platforms follow the clock whatever this says. */
-  dayShown: "average" | "weekday" | "saturday" | "sunday";
+  dayShown: "average" | "weekday" | "saturday" | "sunday" | "away";
   /** T-381: miles, mph and feet instead of kilometres, km/h and metres (the game itself is metric) */
   usUnits: boolean;
   /** T-381: demand workers by the old rule (half the threads less one, up to 5); read at the next load */
@@ -281,13 +281,16 @@ export function setTrackType(t: TrackType) {
 /** the real network is being snapped to: the switch on and the track tool in hand */
 export const snapping = computed(() => snapReal.value && tool.value === "track");
 
-/** The day every demand view shows (T-260, T-464): the setting, the average day by default. */
+/** The day every demand view shows (T-260, T-464): the setting, the average day by default. Away
+ * reads as the average while no superholiday is near (T-264). */
 export const shownDay = computed<DemandDay>(() => {
   const s = display.value.dayShown;
-  return s === "weekday" ? 0 : s === "saturday" ? 1 : s === "sunday" ? 2 : AVERAGE_DAY;
+  return s === "weekday" ? 0 : s === "saturday" ? 1 : s === "sunday" ? 2 : s === "away" && awayNear.value ? AWAY_DAY : AVERAGE_DAY;
 });
-/** The shown day as a hover ends a figure: "per weekday", "per Saturday", "per day". */
-export const shownDayPhrase = computed(() => DEMAND_DAY_PHRASE[shownDay.value]);
+/** The shown day as a hover ends a figure: "per weekday", "per Saturday", "per day of Golden Week", "per day". */
+export const shownDayPhrase = computed(() => (shownDay.value === AWAY_DAY ? `per day of ${awayNear.value}` : DEMAND_DAY_PHRASE[shownDay.value]));
+/** "on a weekday", "on a day of Golden Week", "a day": the points hovers' ending. */
+export const shownDayOn = computed(() => (shownDay.value === AWAY_DAY ? `on a day of ${awayNear.value}` : DEMAND_DAY_ON[shownDay.value]));
 
 export function setDisplay<K extends keyof DisplaySettings>(k: K, v: DisplaySettings[K]) {
   display.value = { ...display.value, [k]: v };

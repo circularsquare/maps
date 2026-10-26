@@ -540,7 +540,8 @@ notes/T-420.md has the tables.
   value-of-time literature (0.5-1 between countries: UK meta-analysis 0.9, HEATCO 0.7). Fares are
   charged in local terms, the player's curve times each country's scale (its income over India's to
   the same power, or the player's own), so at the default scales a fare weighs the same everywhere
-  and a poorer country brings in less per rider. The car's money (ownership, parking, running) stays
+  and a poorer country brings in less per rider; a scale the player sets moves inter-city riders
+  from that country too (T-1286). The car's money (ownership, parking, running) stays
   at 3 minutes a dollar everywhere. Why it may not carry over: incomes differ within a country as
   much as between (a Mumbai suburb against Bandra), and the car's money should scale too. Check: a
   country's transit fares against its income, and its fare elasticity where a survey publishes one.
@@ -727,12 +728,20 @@ notes/T-420.md has the tables.
   everywhere) weekend work and school run higher; where shops close on Sundays (Germany, Austria,
   parts of Switzerland) Sunday shopping collapses further than the US Sunday's 1.05 while
   Saturday's rises; and where public holidays cluster (Golden Week, Chuseok, Chinese New
-  Year) the long-distance factor is a holiday matter, not a weekend one (T-264). The calendar's
+  Year) the long-distance factor is a holiday matter, not a weekend one (T-264, below). The calendar's
   game day 1 being a Monday is a game choice, not a rule. The weekend also keeps the weekday's
   crowded route choices, which matters more where weekday crowding is extreme (Tokyo, Mumbai).
   Check: each new country's national travel survey by day of week and purpose (most publish it:
   MiD Germany, ENTD France, the Japanese person trip surveys, the Korean household travel survey),
   and its legal weekend days.
+- **Superholidays' days away** (T-264, docs/world.md "Calendar"): a Sunday with local outings
+  (errands, leisure, school, university, medical) at 0.7 and attractions at 1.5; work, airport and
+  longer trips a Sunday's. Found from any country's calendar by a name list, so every country the
+  `holidays` package covers has them. One strength everywhere, a game choice (Anita, 2026-10-26),
+  not a measurement. Why it may not carry over: how many leave town differs (China's and
+  Vietnam's migrant cities empty far more than New York at Thanksgiving), and where a holiday's
+  name is not in the list (a national day off that people travel on) nothing happens. Check: a
+  country's rail ridership over its long holiday, and whether its big holiday is in the list.
 
 ## Network and stations
 

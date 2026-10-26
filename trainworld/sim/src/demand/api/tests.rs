@@ -163,7 +163,7 @@ fn searching_only_the_egress_stations_changes_nothing() {
     api.crowd(0);
     let st = api.per[0].as_ref().unwrap();
     clear_skim_cache();
-    let (rail, rail_walk, l, pairs, sub) = api.pass(&st.g, &st.p, 0, None);
+    let (rail, rail_walk, l, pairs, sub, _) = api.pass(&st.g, &st.p, 0, None);
     // the reference: every station searched, nothing cached
     let sz = api.sz.as_ref().unwrap();
     let sk = kernel::skims(&st.g, &st.p);
@@ -440,6 +440,24 @@ fn fares_change_ridership_and_preserve_legacy_price() {
     assert!(api.set_fares(0.0, -1.0, &km).is_err());
     assert!(api.set_fares(0.0, 0.0, &[]).is_err());
     println!("fare riders: legacy={legacy:.0} free={free:.0} default={default:.0} expensive={expensive:.0} distance={distance:.0}");
+}
+
+/// T-1300: the rail trips' fare sensitivity (`summary`'s last figure) is what a dearer base fare
+/// does: the base fare moves no route, only the mode choice.
+#[test]
+fn the_fare_sensitivity_matches_a_dearer_base_fare() {
+    let (mut api, xy, n, stops, times, tph, cars) = small();
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    let mut km = vec![];
+    for &count in &n { for _ in 0..2 { for k in 0..count { km.push(if k + 1 == count { 0.0 } else { 1.0 }); } } }
+    api.set_fares(1.5, 0.1, &km).unwrap();
+    api.solve(0);
+    let (r0, d) = (api.summary(0)[2], api.summary(0)[10]);
+    api.set_fares(1.7, 0.1, &km).unwrap();
+    api.solve(0);
+    let r1 = api.summary(0)[2];
+    let want = (r1 - r0) / (0.2 * api.base.fare_w as f64);
+    assert!(d < 0. && (d - want).abs() < 0.03 * want.abs(), "sensitivity {d}, a dearer base fare gives {want}");
 }
 
 /// T-1143: a fare curve on the base and rate's own line changes nothing; one that steepens past

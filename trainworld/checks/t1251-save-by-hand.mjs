@@ -1,6 +1,6 @@
 // T-1251, T-1247: saving by hand and renaming in place, in two tabs of one browser. The real save
 // is loaded into a slot of its own in tab A, then tab B opens on the same slot with autosave off.
-// The Save button in A writes the slot at once and shows "Saved <time>". The Save button in B takes
+// The Save button in A writes the slot at once and the card reads "Saved just now". The Save button in B takes
 // the slot's lease: B writes it and autosaves from then on, and A says autosave is off and writes
 // nothing more. Ctrl+S in A takes it back. Then in A a double click on a save's name renames it on
 // Enter and leaves it on Escape. Screenshots of the panel renaming and after the save go to artifacts/trainworld/.
@@ -49,7 +49,7 @@ try {
   const a = await open();
   const first = (await state(a)).active;
   await panel(a);
-  const [fc] = await Promise.all([a.waitForEvent('filechooser'), a.click('.saves-panel .save-files button:has-text("Load a file")')]);
+  const [fc] = await Promise.all([a.waitForEvent('filechooser'), a.click('.saves-panel .save-files button:has-text("Open a file")')]);
   await fc.setFiles(REAL_SAVE);
   let slot = null;
   for (const end = Date.now() + 180000; !slot && Date.now() < end; await a.waitForTimeout(300)) {
@@ -66,11 +66,13 @@ try {
   await panel(a);
   const before = await stored(a, slot);
   await a.waitForTimeout(1100);
+  const autoLabel = await a.locator('.save-slots li.on .save-when > span').first().textContent();
   await a.click('.save-slots li.on .save-now');
-  await a.waitForSelector('.save-slots li.on .save-by-hand', { timeout: 30000 });
-  const label = await a.locator('.save-slots li.on .save-by-hand').textContent();
+  // T-1395: the facts line says "Saved", not "Autosaved", after a save by hand
+  await a.waitForFunction(() => /^Saved /.test(document.querySelector('.save-slots li.on .save-when > span')?.textContent ?? ''), undefined, { timeout: 30000 });
+  const label = await a.locator('.save-slots li.on .save-when > span').first().textContent();
   const after = await stored(a, slot);
-  report('save with autosave on', (after?.at ?? 0) > (before?.at ?? 0) && /^Saved \d/.test(label ?? ''), `(slot written ${before?.at} -> ${after?.at}; "${label}")`);
+  report('save with autosave on', (after?.at ?? 0) > (before?.at ?? 0) && /^Autosaved/.test(autoLabel ?? '') && label === 'Saved just now', `(slot written ${before?.at} -> ${after?.at}; "${autoLabel}" -> "${label}")`);
   await a.screenshot({ path: join(ARTIFACTS, 't1251-saved.png') });
   await closePanel(a);
 
@@ -83,8 +85,7 @@ try {
   await panel(b);
   const atBefore = (await stored(b, slot)).at;
   await b.click('.save-slots li.on .save-now');
-  await b.waitForSelector('.save-slots li.on .save-by-hand', { timeout: 30000 });
-  await b.waitForTimeout(1000);
+  await b.waitForTimeout(3000);
   sb = await state(b);
   let sa = await state(a);
   const atB = (await stored(b, slot)).at;
@@ -125,6 +126,11 @@ try {
   const shown = await a.locator('.save-slots li.on .save-name').textContent();
   report('double click renames, Escape cancels', r1 === 'Renamed by hand' && r2 === 'Renamed by hand' && panelOpen === 1 && stillOpen === 1 && /Renamed by hand/.test(shown ?? ''),
     `(after Enter "${r1}", after Escape "${r2}", card "${shown}", panel open ${stillOpen})`);
+  // T-1395: the pencil opens the same box
+  await a.click('.save-slots li.on .save-pen');
+  const penField = await a.locator('.save-slots li.on .save-name-field').count();
+  await a.press('.save-slots li.on .save-name-field', 'Escape');
+  report('the pencil renames', penField === 1, `(${penField} name box)`);
 
   report('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {

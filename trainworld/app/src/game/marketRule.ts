@@ -121,11 +121,11 @@ export const driveOf = (a: number, b: number): Drive => (a === b ? undefined : d
 const SHARES = [0.2, 0.35, 0.25, 0.15, 0.05];
 const WEEKEND: [number, number[]][] = [[1.69, [0.166, 0.314, 0.196, 0.295, 0.029]], [1.48, [0.133, 0.394, 0.285, 0.166, 0.022]]];
 
-/** Longer trips departing in period `q` on demand day `day` (0 weekday, 1 Saturday, 2 Sunday, 3
- * the average), per weekday trip. */
+/** Longer trips departing in period `q` on demand day `day` (0 weekday, 1 Saturday, 2 Sunday, 3 a
+ * superholiday's away day, a Sunday's, T-264; 4 the average), per weekday trip. */
 export function longerShare(day: number, q: number): number {
   const on = (d: number) => WEEKEND[d][0] * WEEKEND[d][1][q];
-  return day === 0 ? SHARES[q] : day === 3 ? (5 * SHARES[q] + on(0) + on(1)) / 7 : on(Math.min(day, 2) - 1);
+  return day === 0 ? SHARES[q] : day === 4 ? (5 * SHARES[q] + on(0) + on(1)) / 7 : on(Math.min(day, 2) - 1);
 }
 
 // ---------------------------------------------------------------- the rows
@@ -358,7 +358,7 @@ export function rowsAnswer(from: MarketEnd, to: MarketEnd, day: number): (Market
     return {
       round: 0, trips: n, rail: 0, air: n * c.air, car: n * c.carShare,
       railPerceived: NaN, carPerceived: car ? car.total : NaN, refPerceived: c.refMin,
-      km: c.km, zonePairs: 0, served: 0, baseFarePerceived: 0, minPerUsd: MIN_PER_USD, why: "noRail", pairs: [], routes: [], cut: 0, everyday: { legs: 0, rail: 0, walk: 0 },
+      km: c.km, zonePairs: 0, served: 0, baseFarePerceived: 0, minPerUsd: MIN_PER_USD, why: "noRail", pairs: [], routes: [], cut: 0, everyday: { legs: 0, rail: 0, walk: 0 }, commute: { legs: 0, rail: 0 },
     };
   });
 }

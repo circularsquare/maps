@@ -189,6 +189,33 @@ function EverydayModes({ legs, rail, walk, day }: { legs: number; rail: number; 
   );
 }
 
+/** T-880: the commutes between zones between the two ends, by train and by car, over the day. */
+function CommuteModes({ legs, rail, day, who }: { legs: number; rail: number; day: string; who: string }) {
+  const model = [rail / legs, Math.max(0, legs - rail) / legs];
+  const n = peopleOf(legs);
+  const whole = wholePeople(model, n).map((p) => p / n);
+  const of = `the ${count(legs)} commute legs ${day} ${who}`;
+  const c = modeColours();
+  const parts = ([["Train", whole[0], c.train], ["Car", whole[1], c.drive]] as [string, number, string][]).filter(([nm, v]) => nm === "Train" || v > 0);
+  return (
+    <>
+      <div class="h">Commutes<span class="right muted small" data-tip={`${exact(legs)} legs ${day} ${who}, to work and back`}>{count(legs)} legs</span></div>
+      <div class="trip-modes">
+        <SegBar kind="trip-bar" label={parts.map(([nm, v]) => `${nm} ${pctShare(v)}`).join(", ")} parts={parts.map(([nm, v, col]) => ({ share: v, colour: col, tip: `${nm}: ${pctShare(v)} of ${of}` }))} />
+        <ul class="rows">
+          {parts.map(([nm, v, col]) => (
+            <li data-tip={`${nm}: ${pctShare(v)} of ${of}`}>
+              <i class="mk" style={{ background: col }} />
+              <span class="grow">{nm}</span>
+              <span class="val w-num">{pctShare(v)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
+  );
+}
+
 /** The crossings and the drive between the near place and every far one, or null when they differ
  * (or a row is missing). */
 function crossingSet({ near, fars }: { near: number; fars: number[] }): { crossings: Crossing[]; drive: Drive } | null {
@@ -323,6 +350,10 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   // T-1229: the everyday outings across a zone line are legs a day both ways already
   const sumE = (k: "legs" | "rail" | "walk") => m.periods.reduce((s, p) => s + (p?.everyday[k] ?? 0), 0);
   const [eLegs, eRail, eWalk] = [sumE("legs"), sumE("rail"), sumE("walk")];
+  // T-880: the commutes between the zones too, legs a day both ways, so the total is the bubble's
+  const cLegs = m.periods.reduce((s, p) => s + (p?.commute.legs ?? 0), 0), cRail = m.periods.reduce((s, p) => s + (p?.commute.rail ?? 0), 0);
+  const total = all + eLegs + cLegs;
+  const others = eLegs >= 0.5 || cLegs >= 0.5;
   // T-1148: the rows give the car's parts and the plane
   marketRowsReady.value;
   void loadMarketRows();
@@ -353,7 +384,11 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   // the routes too small to list take a leftover rider last
   const routeShares = roundTo([...top, Math.max(0, 1 - top.reduce((s, x) => s + x, 0))], riders, top.length);
   // a single home's share of its area's trips is a fraction of one
-  const trips = all >= 0.5 ? `${count(all)} inter-city trips` : "Under one inter-city trip";
+  const trips = others ? `${count(total)} trips` : all >= 0.5 ? `${count(all)} inter-city trips` : "Under one inter-city trip";
+  const where = m.near ? "between the two ends, both ways" : m.end === "work" ? `from ${marketFarName(m)} to these places` : `from these homes to ${marketFarName(m)}`;
+  const longerTip = `${all >= 0.5 ? exact(all) : num1(all)} inter-city trips ${day} ${where}: visits, business and leisure trips of 25 km and more`;
+  const totalTip = `${exact(total)} trips ${day} ${where}: ${[[all, "inter-city trips"], [cLegs, "commute legs"], [eLegs, "everyday trip legs"]].filter(([v]) => (v as number) >= 0.5).map(([v, w]) => `${count(v as number)} ${w}`).join(", ")}`;
+  const commuters = m.near ? "between the two ends, both ways" : m.end === "work" ? `of people working here who live in ${marketFarName(m)}` : `of people living here who work in ${marketFarName(m)}`;
   const of = all >= 0.5 ? `the ${count(all)} inter-city trips ${day} between the two ends` : `the inter-city trips ${day} between the two ends`;
   const main = t.routes[0];
   const tm = main ? stationTimes(main) : null;
@@ -371,9 +406,12 @@ export function MarketTrip({ m }: { m: MarketShown }) {
       {closed ? known && (
         <p class="muted small" data-tip="Straight line between the two places' centres">{roughDistance(1000 * t.km)} apart</p>
       ) : (
-        <p class="muted small" data-tip={`${all >= 0.5 ? exact(all) : num1(all)} inter-city trips ${day} ${m.near ? "between the two ends, both ways" : m.end === "work" ? `from ${marketFarName(m)} to these places` : `from these homes to ${marketFarName(m)}`}: visits, business and leisure trips of 25 km and more. Commutes between the zones are left out.`}>
+        <p class="muted small" data-tip={others ? totalTip : longerTip}>
           {trips} {day}{known && `, ${roughDistance(1000 * t.km)} apart`}
         </p>
+      )}
+      {!closed && others && all >= 0.5 && (
+        <div class="h">Inter-city trips<span class="right muted small" data-tip={longerTip}>{count(all)} trips</span></div>
       )}
       {shares.length > 0 && (
         <div class="trip-modes">
@@ -391,8 +429,9 @@ export function MarketTrip({ m }: { m: MarketShown }) {
         </div>
       )}
       {pair && <PairModes pair={pair} near={ends.near} far={one} day={day} />}
+      {!closed && cLegs >= 0.5 && <CommuteModes legs={cLegs} rail={cRail} day={day} who={commuters} />}
       {!closed && eLegs >= 0.5 && <EverydayModes legs={eLegs} rail={eRail} walk={eWalk} day={day} />}
-      <div class="h">By train<span class="right muted small" data-tip={repTip}>Inter-city, {period.toLowerCase()}</span></div>
+      <div class="h">By train<span class="right muted small" data-tip={others ? `Train riders in the ${period.toLowerCase()} on every kind of trip between the two ends${tripPeriod.value === null ? "; the period with most trips" : ""}` : repTip}>{others ? period : `Inter-city, ${period.toLowerCase()}`}</span></div>
       {t.why || !main || !tm ? <p class="muted">{noStation || NO_RAIL[t.why || "noRail"]}</p> : (
         <>
           <Legs t={t} r={main} />
@@ -405,10 +444,12 @@ export function MarketTrip({ m }: { m: MarketShown }) {
               <span class="grow">Time</span>
               <span class="val">{minText(tm.total)}</span>
             </li>
-            <li data-tip={`The minutes the model weighs against the car and the plane, door to door, averaged over the area pairs the train serves (${pctShare(t.served)} of the trips)`}>
-              <span class="grow">Effective time</span>
-              <span class="val">{minText(t.railPerceived)}</span>
-            </li>
+            {Number.isFinite(t.railPerceived) && (
+              <li data-tip={`The minutes the model weighs against the car and the plane, door to door, averaged over the area pairs the train serves (${pctShare(t.served)} of the trips)`}>
+                <span class="grow">Effective time</span>
+                <span class="val">{minText(t.railPerceived)}</span>
+              </li>
+            )}
           </ul>
           <p class="muted small" data-tip={`The train riders spread over ${t.pairs.length} pairs of stations near the two ends`}>
             {routeShares[0] >= 0.995 ? "Every train user on these trips takes this route." : `${pctShare(routeShares[0])} of the train users on these trips take this route.`}
@@ -430,7 +471,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
           <PlaneRows f={corridor.flight} km={corridor.km} />
         </>
       )}
-      {!closed && inPlay && (
+      {!closed && inPlay && all >= 0.5 && (
         <PeriodRows
           train={(i) => (m.periods[i] ? trainShare(m.periods[i]!, ways) : null)}
           tip={(i) => { const x = m.periods[i]; return x ? `${PERIODS[i].name}: ${exact(ways * x.trips)} inter-city trips, train ${pctShare(trainShare(x, ways))}` : PERIODS[i].name; }} />

@@ -5,11 +5,12 @@
 // hour in a 2 px band under it. Drawn into one canvas from the clock's own `now()` on animation frames, never through
 // Preact, and only when it has moved a fraction of a pixel, so it costs next to nothing between
 // game minutes. A holiday in a country with the player's stations (T-862, game/holidays.ts) is a
-// ribbon along the sky's top over its day, with a tick where it starts.
+// ribbon along the sky's top over its day, with a tick where it starts; a long holiday's going-out
+// and coming-back days a paler one with a small arrow (T-264).
 
 import { useEffect, useRef } from "preact/hooks";
 import { clock } from "../game/clock";
-import { holidaysNear, type HolidaySpan } from "../game/holidays";
+import { holidaysNear, rushNear, type HolidaySpan, type RushSpan } from "../game/holidays";
 import { CLOCK_UTC_OFFSET, viewShift } from "../game/localTime";
 import { viewCentre } from "../game/listScope";
 import { PERIODS, periodAt } from "../game/periods";
@@ -25,6 +26,8 @@ const HOME: [number, number] = [-74.0, 40.7];
 
 /** the holiday ribbon's colour, both themes: apart from every sky and band colour */
 export const HOLIDAY_COLOUR = "#ff5fa2";
+/** T-264: a long holiday's going-out and coming-back days, paler */
+const RUSH_COLOUR = "#ffafd0";
 
 type RGB = [number, number, number];
 const hex = (s: string): RGB => {
@@ -77,7 +80,7 @@ function readColours(): Colours {
 function startSky(cv: HTMLCanvasElement): () => void {
   const ctx = cv.getContext("2d")!;
   let img: ImageData | null = null, colours = readColours(), last = NaN, lastKey = "", raf = 0;
-  let lastMarks: readonly HolidaySpan[] = holidaysNear.peek();
+  let lastMarks: readonly HolidaySpan[] = holidaysNear.peek(), lastRush: readonly RushSpan[] = rushNear.peek();
   const resize = (w: number, h: number) => {
     if (w < 1 || h < 1 || (img && w === cv.width && h === cv.height)) return;
     cv.width = w; cv.height = h;
@@ -96,12 +99,12 @@ function startSky(cv: HTMLCanvasElement): () => void {
   function draw() {
     if (!img) return;
     const w = img.width, h = img.height, d = img.data;
-    const shift = viewShift.peek(), [lon, lat] = viewCentre.peek() ?? HOME, marks = holidaysNear.peek();
+    const shift = viewShift.peek(), [lon, lat] = viewCentre.peek() ?? HOME, marks = holidaysNear.peek(), rush = rushNear.peek();
     const now = clock.now() + shift, secPx = HOURS * 3600 / w, nowX = Math.round(NOW_AT * w);
     const key = `${w} ${h} ${shift} ${lon} ${lat}`;
     // a fifth of a device pixel's movement is below what shows
-    if (key === lastKey && Math.abs(now - last) < secPx * 0.2 && marks === lastMarks) return;
-    lastKey = key; last = now; lastMarks = marks;
+    if (key === lastKey && Math.abs(now - last) < secPx * 0.2 && marks === lastMarks && rush === lastRush) return;
+    lastKey = key; last = now; lastMarks = marks; lastRush = rush;
     const off = CLOCK_UTC_OFFSET + shift / 3600, scale = h / (SKY + GAP + BAND);
     const skyRows = Math.round(SKY * scale), bandFrom = h - Math.max(1, Math.round(BAND * scale));
     const railRow = Math.floor(RAIL_Y * scale), railRows = Math.max(1, Math.round(scale));
@@ -170,6 +173,20 @@ function startSky(cv: HTMLCanvasElement): () => void {
       ctx.fillStyle = css(lit(RAIL, daylight(elevAt(x))));
       ctx.fillRect(x, railRow + railRows, scale * 0.8, scale);
     });
+    // T-264: a long holiday's days: going out and coming back paler, with a small arrow at the start
+    // of each (out to the right, back to the left); its days away as a holiday's ribbon
+    for (const r of rush) {
+      const x0 = nowX + (r.t0 - now) / secPx, x1 = nowX + (r.t1 - now) / secPx;
+      if (x1 <= 0 || x0 >= w) continue;
+      ctx.fillStyle = r.part === 2 ? HOLIDAY_COLOUR : RUSH_COLOUR;
+      ctx.fillRect(x0, 0, x1 - x0, 2 * scale);
+      if (r.part === 2) continue;
+      const a = 3 * scale, ax = x0 + scale, ay = 2 * scale;
+      ctx.beginPath();
+      if (r.part === 1) { ctx.moveTo(ax, ay); ctx.lineTo(ax + a, ay + a / 2); ctx.lineTo(ax, ay + a); }
+      else { ctx.moveTo(ax + a, ay); ctx.lineTo(ax, ay + a / 2); ctx.lineTo(ax + a, ay + a); }
+      ctx.closePath(); ctx.fill();
+    }
     ctx.fillStyle = HOLIDAY_COLOUR;
     for (const m of marks) {
       const x0 = nowX + (m.t0 - now) / secPx, x1 = nowX + (m.t1 - now) / secPx;

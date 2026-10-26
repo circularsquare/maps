@@ -170,7 +170,11 @@ institutions** (prisons, nursing homes and the like, T-234).
   Sundays [T-872, docs/world.md "Calendar"]; Saturday and Sunday demand is worked out from the
   weekday's solve per purpose and period (NHTS 2017 rates). The demand views show the average day
   (5 weekdays, a Saturday and a Sunday over 7) unless a weekday, a Saturday or a Sunday is chosen
-  [T-464]. The same trains run every day (Anita, T-261: for now).
+  [T-464]. The same trains run every day (Anita, T-261: for now). **Superholidays** [T-264,
+  notes/T-264.md]: a run of days off around Spring Festival, Golden Week, Obon, Chuseok,
+  Thanksgiving, Christmas, Eid and the like; its days away are a fourth kind, a Sunday with local
+  outings at 0.7 and attractions at 1.5. A calendar icon by the clock lists the runs coming within
+  21 days. Going-out and coming-back rushes are T-1373.
 - **Demand rules must hold up worldwide**: every demand rule has an entry in
   [docs/demand-worldwide.md](docs/demand-worldwide.md).
 
@@ -248,7 +252,7 @@ running train: added ones enter at a terminal, removed ones leave at one, and th
 effect a moment ahead so it is drawn in step at any clock speed [T-206, T-1071]. A new game starts
 with $6B in an empty New York [T-805]; double track costs a base of US$90M a km times a
 multiplier per elevation (US$45M at grade), priced against cheap-country metros such as Korea's
-[T-805], times the ground's terrain class (flat 1x, rolling 1.25x, hilly 1.6x, mountain 2.5x) at
+[T-805], times the ground's terrain class (flat 1x, gentle slope 1.25x, hills 1.6x, mountains 2.5x) at
 every elevation but the bored -2 and -3, so in mountains a tunnel is the cheaper way; Settings can
 shade the hills on the map [T-1270], a 200 m station a fixed US$50M plus a part by level (US$75M at grade, US$90M at +1,
 US$150M at -2) [T-1267], a 20 m car costs US$2.5M, bought as a line's fleet grows and kept in the depot for any line
@@ -329,7 +333,7 @@ Rough on purpose: the bar is the right order (section 1).
 
 A save is the player's inputs only; everything else is recomputed from versioned packs. The clock
 worker writes it to IndexedDB in named browser slots (one writing tab per slot) and to files. New
-game, Load a file and restoring a backup each start a new slot; no slot is ever written over with
+game, Open a file and opening a backup as a copy each start a new slot; no slot is ever written over with
 another game [T-743]. A game is normal or a sandbox (nothing refused for money, the cash hidden;
 a normal game can become one once, never back), starts in a city or on the world map, and a sandbox
 in one of seven cities can start from its real network [T-728, T-731; docs/ui-panels.md "Saved

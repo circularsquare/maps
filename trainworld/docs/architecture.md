@@ -65,8 +65,15 @@ Web first, so it can be shared as a link.
 - **Map**: MapLibre GL 6 for the basemap, flat or as its globe (a Settings choice, T-033). Track, stations and trains are drawn by our own WebGL2 renderer on a **separate canvas
   over the map**, neither GeoJSON sources nor a drawing custom layer (why:
   notes/architecture-history.md). Track buffers are built in the clock
-  worker and replaced on each edit, made from per-edge, per-line and per-station pieces the worker
-  keeps and rebuilds only when their inputs change (`NetCache` in map/network.ts, T-496); trains are instanced and positioned on the GPU from keyframes
+  worker on each edit, made from per-edge, per-line and per-station pieces (with each line's train
+  speeds and samples) the worker keeps and rebuilds only when their inputs change (`NetCache` in
+  map/network.ts, T-496, T-1029). An edit's network is posted as changes to the last (`NetPatch`:
+  stroke runs found by identity of the reused pieces, arrays as last posted left out); the renderer
+  copies the unchanged runs on the GPU and keeps textures whose data is the same (T-1028), and the
+  pick and snap grids are carried over through the same runs instead of built again (T-1030).
+  Anything that cannot be taken as changes (a load, a new draw anchor, a mismatch) goes whole;
+  `?patch=0` posts everything whole, `?patch=check` compares the changes with whole builds
+  (notes/T-1029.md). Trains are instanced and positioned on the GPU from keyframes
   and the clock. World coordinates and the moving draw anchor: [world.md](world.md). A lost WebGL
   context (phones drop them) is taken on both our canvases; on restore the renderer and the demand
   canvas compile again and upload what they last drew, and the camera layer is added back to
@@ -75,9 +82,9 @@ Web first, so it can be shared as a link.
 - **A state and its trips land together** [T-648]: the clock worker posts each state, then its
   trips, before anything else. The client holds the state until those trips (at most 250 ms), so
   the world, the network and the trips are taken in one task and no frame draws old trips on new run
-  profiles; a state built at another draw anchor is taken at once. A state leaves out its edges and
-  nodes when they are as in the last one posted (`sameEdges`, `sameNodes`); the client puts back its
-  last ones.
+  profiles; a state built at another draw anchor is taken at once. A state carries only the edges,
+  nodes and lines that differ from the last one posted, with the ids in order when they changed
+  (`delta`, T-1029); the client rebuilds the full lists from its last ones before anything reads it.
 - **Staying in step with the basemap** [T-075; notes/T-015.md, notes/T-075.md]: an empty MapLibre
   custom layer hands over the camera matrix on every frame MapLibre draws, and the overlay is drawn
   right there with the same matrix; our own frame loop drives the overlay only for the clock and
@@ -155,7 +162,7 @@ Web first, so it can be shared as a link.
   cluster [T-756, "Each population on its reach"]. Worker 0 first opens a
   small synthetic everyday layer (`warm.rs`) and the others get packs only once it is ready, so
   every worker opens on optimised code [T-173]. The clock worker's network snapshot after each
-  service change goes to every worker; a worker takes a newer one between populations. Messages:
+  service change or change to the built stations (one on no line included) [T-1368] goes to every worker; a worker takes a newer one between populations. Messages:
   `workers/demandProtocol.ts`; results land in `game/demand.ts`. A sums worker with no WASM
   (`workers/demandSums.worker.ts`) adds up what the main thread used to [T-1208, T-1210]: each
   published round's views of the four kinds of day, applied on the main thread in the order published,
@@ -327,17 +334,17 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   after anything paid for, else once a wall minute if something changed, and when the page is
   hidden; a game running in the background keeps saving once a wall minute [T-826]. On start the player picks a slot or New game on the start menu [T-677]; `?continue=1`
   opens the slot opened last. `?new=1` starts a game that reads no slot and owns none, and
-  does not autosave until "Save a copy" gives it one [T-320]; `?synth=1` and `?demandTest=1`
+  does not autosave until Make a copy gives it one [T-320]; `?synth=1` and `?demandTest=1`
   load the last game but never autosave it.
 - **No slot is written over with another game** [T-743]: New game (the start menu's beside saved
-  games, and the saves panel's), Load a file and a backup's Restore as a copy each put the game in a
+  games, and the saves panel's), Open a file and a backup's Open as a copy each put the game in a
   new slot, after saving the game being played, which keeps its slot. A new game's slot is named
   after its start (`newGameName`: "Tokyo", "Tokyo sandbox", "World" for a map start, then " 2" and
   on if taken; T-728) and written once something changes, or at once when it starts from a real
   network; a loaded file's is
   named after the file without `.save` and written at once; a restored backup's is the slot's name
   and the backup's time, "<name> at 3:28 AM", any such time already on the name dropped first
-  (`forkName` in workers/cloud.ts, also for account restores and forks; T-1363). A tab without its slot's lock must save a copy before leaving a changed
+  (`forkName` in workers/cloud.ts, also for account restores and forks; T-1363). A tab without its slot's lock must make a copy before leaving a changed
   game. On a test page the game is replaced in the page and owns no slot. A slot that cannot be
   read on start stays as it is (its bytes also under `unreadable-<time>`) and the new game gets a
   slot of its own ("Game N"). The start menu's New game always takes a new slot, even with nothing
@@ -355,14 +362,13 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
 - **Backups** [T-744]: two per slot in the same store, `backup:<slot>:0` and `:1`, the slot's record
   without its picture. An autosave at least 5 wall minutes after the slot's newest backup (or with
   none) is also written over the older backup, so backups only follow changes. The saves panel lists
-  the playing slot's under its card, each with Restore as a copy. Deleting a slot deletes them.
+  the playing slot's under its card's Earlier versions, each with Open as a copy, unless the account
+  keeps the game, when it lists the account's instead [T-1395]. Deleting a slot deletes them.
   `?backupMs=` shortens the interval for checks.
 - **Outside the browser's storage** [T-1214]: a full disk let Chrome empty the site's IndexedDB
-  (2026-10-24). Once a slot is written the page asks `navigator.storage.persist()`; a folder the player
-  picks (File System Access; its handle kept as `copy-folder` in the same store) gets every slot from
-  the clock worker when picked and each slot at every autosave, `<name> (<4 letters of its key>).save`
-  written over each time.
-- **Switching games reloads the page** [T-1196]: Open, Load a file, Restore as a copy and New game
+  (2026-10-24). Once a slot is written the page asks `navigator.storage.persist()`. A `copy-folder`
+  handle left in the store by T-1214's folder copies (dropped in T-1395) is deleted at start.
+- **Switching games reloads the page** [T-1196]: Open, Open a file, Open as a copy and New game
   post `leave` (the game in hand saved, its lock let go; a file, backup or new game's spec kept as
   `pending-load` in the same store), then reload with `?slot=<key>` or `?load=<kind>`; the new page's
   clock worker takes `pending-load` as it starts. Loads posted straight to the worker still replace
@@ -414,8 +420,8 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   and leaderboards"). The device is one browser profile, a random id in localStorage
   (`trainworld.device.v1`). The main thread posts `{kind: "account", ctx}` to the clock worker on
   every session change; a 401 there posts `accountGone` back and the page signs out.
-  - **Uploads** (the clock worker, after `writeSlot`, beside T-1214's copy): the save bytes as Save
-    to a file writes them, the name, the card's facts and picture. A save by hand goes at once
+  - **Uploads** (the clock worker, after `writeSlot`): the save bytes as Download
+    as a file writes them, the name, the card's facts and picture. A save by hand goes at once
     with `force`; an autosave at most every 2 wall minutes (`GAP_MS`), a timer sending what the
     gap held back; the page hiding sends at once (best effort); a rename at once. A save over
     4 MB is never sent (the server closes the connection past 4.6 MB).
@@ -439,7 +445,7 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
     copy gets a new id. A game opened unchanged after another device deleted it is kept in this
     browser only.
   - **The account's backups** (two a game, made by the server) are listed under the playing game
-    and restored as copies through Load a file's path (`restoreAccountBackup`); the route names a
+    and restored as copies through Open a file's path (`restoreAccountBackup`); the route names a
     backup by place, so the page checks its `X-Rev`.
   - **Signing out with Remove** marks the account in sessionStorage (`trainworld.signout-remove`),
     goes to the start menu if a game is open, and there settles, deletes every slot of the account

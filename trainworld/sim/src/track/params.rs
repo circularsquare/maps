@@ -181,10 +181,12 @@ pub const PERIOD_LEVEL: [usize; 5] = [HIGH, MEDIUM, HIGH, MEDIUM, LOW];
 /// Each period's busiest hour against its mean hour (T-087): how riders arrive over it (the
 /// boarding account's shape, demand's crowding).
 pub const PEAK_HOUR_FACTOR: [f32; 5] = [1.4, 1.15, 1.4, 1.3, 1.5];
-/// Kinds of day (T-260, T-262): weekday 0, Saturday 1, Sunday 2. Game day 1, a new game's first,
-/// is a Monday, so days 6 and 7 of each week are Saturday and Sunday where a line's country says
-/// nothing else (`Boarding::set_holidays`). The main thread's copy is app/src/game/days.ts.
-pub const DAY_KINDS: usize = 3;
+/// Kinds of day (T-260, T-262, T-264): weekday 0, Saturday 1, Sunday 2, a superholiday's away day
+/// 3. Game day 1, a new game's first, is a Monday, so days 6 and 7 of each week are Saturday and
+/// Sunday where a line's country says nothing else (`Boarding::set_holidays`). The main thread's
+/// copy is app/src/game/days.ts.
+pub const DAY_KINDS: usize = 4;
+pub const AWAY: usize = 3;
 pub fn day_kind_at(t: f64) -> usize {
     let day = (t / 86400.0).floor() as i64;
     match (day - 1).rem_euclid(7) {

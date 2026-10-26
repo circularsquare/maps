@@ -28,7 +28,7 @@ tests natively.
 - `src/demand/`: the demand kernel, behind feature `demand` (on in the app's build): `api.rs`
   (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market; `intercity/market_trip.rs` its trip explorer query, T-866; `intercity/drives.rs` the routed drives between places and the ferry, T-279; on a big cluster its pass searches destinations one at a time,
   `pass_streamed` with `kernel::DestSearch` and `DestAssign`, T-761), `warm.rs` (the
-  everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (Saturday's and Sunday's factors per
+  everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (Saturday's, Sunday's and the away day's factors per
   purpose and period, T-260, T-262), `routes.rs` (routed walks over water and drives over OSM roads from
   the pack, T-275), `trip.rs` (the trip explorer's query, T-195; its two cells' own trip, T-720, checked with the
   walk bands in `t720.rs`), `lanes.rs` (f32 lanes, wasm
@@ -66,9 +66,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `sun.ts` (the sun's height for the top bar's sky, T-861; the calendar is in `days.ts`),
   `attractions.ts` (the world's attractions from `attractions.json`, made by `pipeline/attractions_json.py`, and their visits on a kind of day, T-263),
   `holidays.ts` (public holidays by country from `holidays.json`, made by `pipeline/holidays_json.py`, T-862;
-  a line's and the view's country, T-872; one entry for a holiday several countries keep, T-1098), `holidayCalendar.ts` (the plain lookups the clock worker shares:
-  a holiday's name, `kindOfIn` a country's kind of each day from its holidays and own weekend, T-872, T-262),
-  `periods.ts` (the five periods), `days.ts` (weekday, Saturday and Sunday, the shown day, T-260, T-262).
+  a line's and the view's country, T-872; one entry for a holiday several countries keep, T-1098; superholidays near, the sky's rush days and the Money ticks, T-264), `holidayCalendar.ts` (the plain lookups the clock worker shares:
+  a holiday's name, `kindOfIn` a country's kind of each day from its holidays and own weekend, T-872, T-262; `superRuns`, `superPart`, T-264),
+  `periods.ts` (the five periods), `days.ts` (weekday, Saturday, Sunday and the away day, the shown day, T-260, T-262, T-264).
 - Demand and riders: `demand.ts` (results: mode split, riders), `boarding.ts` (the boarding
   account's hour on the main thread: riders packed for the clock worker, platform crowds, T-164),
   `complexLive.ts` (a complex's platform crowds and trains now, T-246), `purposes.ts` (the trip
@@ -101,7 +101,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   pictures, the start menu's settling, downloads and deletions, the sign-in question) over
   `workers/cloud.ts`.
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028; `moneyTerms`, `moneyWorld` and `lineGeo`, what income, points and region shares read, kept while unchanged so a state redoes only what it changed, T-1209),
-  `fareCurve.ts` (the fare curve through the player's three nodes, the first the base fare at 0 km: fare at a length, the first stretch's base and rate, the knots the sim takes, old saves' lines as three nodes, T-883, T-1112, T-1143), `income.ts` and `countryIncome.json` (fares by national income, T-1277: a fare dollar's perceived minutes by country, each country's fare scale by income or the player's, GDP per head at PPP from notes/T-1277/income_table.py), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
+  `fareCurve.ts` (the fare curve through the player's three nodes, the first the base fare at 0 km: fare at a length, the first stretch's base and rate, the knots the sim takes, old saves' lines as three nodes, T-883, T-1112, T-1143), `income.ts` and `countryIncome.json` (fares by national income, T-1277: a fare dollar's perceived minutes by country, each country's fare scale by income or the player's, GDP per head at PPP from notes/T-1277/income_table.py; T-1286: the market's fare factor per country), `fareEstimate.ts` (the Money tab's estimate of rail trips and fare income a day for a dragged or unsolved fare curve, from demand's fare sensitivity, T-1300), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
@@ -109,7 +109,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   the clock hold, T-149, T-172; whether the start menu is up, T-677), `loadBar.ts` (the loading bar's
   stages, their shares and texts, each slot's remembered stage times and this browser's pace, T-1195),
   `memoryCheck.ts` (a save's memory estimate and the refusal when it will not fit, T-1197),
-  `saveSafety.ts` (persistent storage and the copies' folder, T-1214), `busy.ts` (the busy tag's
+  `saveSafety.ts` (persistent storage, T-1214), `busy.ts` (the busy tag's
   text, and work held a painted frame when it should take over 150 ms here, each kind's time per
   unit learnt as it runs; the clock client's big states, T-1200), `palette.ts`, `shades.ts` over `shadeTable.ts` (the light and dark themes' map
   colours: basemap, line casing, map ink, blueprint off, outside shade, thumbnails; the table has no
@@ -126,7 +126,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `overlay.ts` (the overlay canvas and frame loop,
   notes/T-015.md), `renderer.ts` (WebGL2 track, stations, trains; its shaders and their shared constants are in `rendererShaders.ts`, the platform crowds' sums in `platformCrowds.ts`), `gl.ts` (shader compile, uniform lookup, zoom interpolation, the GPU timer, canvas sizing, and the camera: `Camera` for the flat map or the globe, `PROJECT_GLSL` and `setCamera` for the shaders, `mercToCss` and `clipToCss` to CSS px, `behindHorizon`; T-033; shared by the renderer, `demandOverlay.ts`, `gradeMarks.ts`, `transferBubbles.ts`, `shadeLayer.ts`, `overlay.ts` and the 2D overlays), `network.ts` (the renderer's
   buffers, built in the clock worker from per-edge, line and station pieces kept between edits,
-  T-496), `geo.ts` (the draw anchor, T-307; `pxPerUnitAt` and `unitPerPxAt` for the zoom's scale), `anchorVersion.ts` (its version as a signal, T-317),
+  T-496, and posted as changes to the last, `NetPatch` and `mergeNet`, T-1029), `geo.ts` (the draw anchor, T-307; `pxPerUnitAt` and `unitPerPxAt` for the zoom's scale), `anchorVersion.ts` (its version as a signal, T-317),
   `live.ts` (the live map objects for UI code, set by main.ts; `hiddenOnGlobe` for DOM marks, T-033), `synth.ts` (stress network),
   `markData.ts` and `gradeMarks.ts` (the crossing, junction, ramp and portal marks: their data, and
   their draw pass, hit test and tag; T-629, T-655), `stationLife.ts` (from zoom 14, arrivals found
@@ -141,7 +141,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   for names and tags: `BoxGrid`, `tagLines`, `tipBeside`, `TAG_OFFSET_PX`, `screenBounds`).
 - Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
   second click's route, T-727d; only where a graph covers the click, `covers`, T-913), `pick.ts`, `cellIndex.ts` and `snapIndex.ts` (grids built in idle time that narrow a pick
-  and the build tools' snap to what is near the pointer, T-724), `tools.ts` (drawing track, placing stations, the line tool; on touch the tap, preview and confirm and the control bar's place, T-1260), `touch.ts` (whether the last press was a finger, and what the touch control bar offers), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
+  and the build tools' snap to what is near the pointer, T-724, and carried over an edit, T-1030), `tools.ts` (drawing track, placing stations, the line tool; on touch the tap, preview and confirm and the control bar's place, T-1260), `touch.ts` (whether the last press was a finger, and what the touch control bar offers), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
   (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `curveCircle.ts` (the circle of the segment being drawn, T-418),
   `blueprintBox.ts` (the Select tool's drag box, T-333, and dragging its pick, T-475; its state is `game/blueprintPick.ts`),
   `stopMarkers.ts` (the toggle markers of stop editing, T-233), `reversalMarks.ts` (the icon over
@@ -290,7 +290,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   a station is answered; dev server only; about 4 minutes), `t1205-memory.mjs` (a save, default
   all-China: lines built in three far zones and removed; once the zones close the workers well above
   their need restart, WASM falls, figures equal; `QS=&memFree=64` for New York; about 20 minutes on
-  all-China), `t801-no-grey.mjs` (no grey
+  all-China), `t1368-station-snapshot.mjs` (a new game: a line's stations removed one by one after
+  the line, then a station built on no line; demand's network has the save's stations after each;
+  about a minute), `t801-no-grey.mjs` (no grey
   cities: a map start in a fresh profile turning Homes on, its zoomed-out bubbles, a click selecting
   one; a new New York game's Philadelphia an ordinary bubble zoomed out, loaded by a pan with no
   market pack; screenshots `t801-*.png`), `t800-outlines.mjs` (a game started on the map, then a jump to Europe, shows
@@ -304,8 +306,11 @@ Run from the maps root (`node trainworld/checks/<file>`).
   ledger days after its clock gets their running cost and the hours' upkeep back; port 6165 by default),
   `t975-realms.mjs` (first the location button refused, in Lyon and in Sydney, and a map start showing every realm until its first station; then realms in a fresh profile: no bubbles behind the start menu, a Tokyo start shows Japan only with the shade cut around its zones, a click shows France, a reload hides it again, stations in two realms show both; a click on a hidden realm shows it, a drag does not, no circles at the world view; the zoomed-out frame and a pan across France and Germany measured; port 6165 by default),
   `t1071-train-count.mjs` (the real save's busiest line, its train count raised and lowered four times with the clock running: every train of every line placed each frame from the renderer's own buffers may move no further than top speed allows and come or go only at a terminal, and where new buffers arrive the old and new draw the same trains in the same places; `SPEED` 0 to 2 or -1 paused, `OP=headway`, `KEEP_FRAMES=1`; about 2 minutes; Rust side `sim/src/track/transition_tests.rs`),
+  `t1029-edit.mjs` (a series of track, station, service and undo edits on the real save or Japan's network at 6x throttling: the worker's and main thread's ms per edit under a CPU profile; `DUMP=1` hashes of the world, the drawn network and the GPU stroke buffers to compare across code or `?patch=` settings; 4-5 minutes for Japan),
   `t1283-edit-time.mjs` (the real save's busiest line switched to headways, stepped and set by hand: the clock worker's apply and total per edit, failing past 1 s; about a minute),
   `t1276-headway-steady.mjs` (the real save's busiest line on headways, its Medium headway stepped fast and slow both ways and typed with the clock running: every inspector change sampled, the schedule's three rows keep their order and never blank, and one headway shows one train count throughout, give or take the one train the landed edit may settle by; about 2 minutes),
+  `t1286-market-scale.mjs <url> [country] [factor]` (the real save's weekday at the income's scales and with one country's scale at `factor` times its income's: each zone's local rail trips and the market's, by corridors touching that country; run on a build without the change too and compare the JSON in `artifacts/trainworld/t1286/`; about 3 minutes),
+  `t1300-fare-estimate.mjs <url>` (the real save: from each solved fare curve, the Money tab's estimate for the next, set and solved; PASS when every step's riders and fare income land within 10% of demand's; about 10 minutes), `t1300-shots.mjs <url>` (the estimate rows during a drag, light and dark, to `artifacts/trainworld/t1300/`),
   `t1277-fare-scale.mjs` (Node, no browser: a rider in New York and one in Mumbai on a small fixture line, set up as the demand worker sets up each zone, pay the starting curve times their own scale, a player's scale replaces the income's, and a fare weighs about the same at the default scales; seconds; run after any change to fare weights or scales),
   `t1148-market-rule.mjs` (Node, no browser: `game/marketRule.ts`, the main thread's copy of the market's place-pair rule, against the sim's on about 2,000 pairs of places, near, far, across the Channel, to Hokkaido and across seas: distance, car minutes, reference minutes, plane and car shares, trips; and the longer trips' period shares on every kind of day; about 20 s; run after any change to the market's car, plane, crossing or trip rule on either side),
   `t1177-cross-everyday.mjs` (Node, the real demand worker: Boston and Providence with made-up everyday pairs across their zone line written into Boston's market pack in memory (`t1177-data.mjs`), and a line joining the zones; the per-purpose parts, nothing counted twice, loads under their own purposes, a selection's blocks by purpose and far zone with a Saturday's own factors, the trip explorer's legs, rail and walking, and the weekend scaling (`workers/marketParts.ts`); `IDS=gua,fos` runs the market-pack checks on registered neighbours whose packs carry the pairs; about 40 s) and `t1177-cross-everyday-page.mjs` (the same pairs in a new game on `BASE` through a Playwright route: the page's selection, explorer figures and panel with its walking row, the walking column, the far-end labels under each purpose filter, and the days; about 3 minutes; screenshots in `artifacts/trainworld/t1177/`),
@@ -329,15 +334,16 @@ Run from the maps root (`node trainworld/checks/<file>`).
   real track an ordinary segment; router, fit and preview times and the longest main-thread task;
   t727-snap.json, t727d-*.png; about 2 minutes, port 6170 by default),
   `t1196-switch.mjs` (two slots of the real save: Open reloads the page into the other, the card's
-  three stages in order, all of China refused, the copies' folder filled,
+  three stages in order, all of China refused,
   persistent storage asked; port 6146 by default), `t1251-save-by-hand.mjs` (two tabs on one slot:
   Save with autosave on, Save in the tab without the lock takes it and the other stops autosaving,
-  Ctrl+S takes it back, a double click renames in place and Escape cancels; port 6161 by default),
+  Ctrl+S takes it back, a double click or the pencil renames in place and Escape cancels; port 6161 by default),
   `t988-cloud.mjs` (games on the account against a local shonei-server it builds and runs, two
   profiles as two devices: the sign-in question, saved on A and opened on B, A stops, a save by
-  hand takes it back, offline play, a fork, a delete crossing over, a game kept here only;
-  t988-question-*.png, t988-saves-*.png; about 5 minutes, port 6169 by default),
-  `t743-slots.mjs` (through the saves panel: Load a file, New game and a backup's Restore as a copy
+  hand takes it back, offline play, a fork, a delete crossing over, a game kept here only, Make a
+  copy naming the copy in place, earlier versions as the account's list only;
+  t988-question-*.png, t988-saves-*.png, t1395/built-*.png; about 5 minutes, port 6169 by default),
+  `t743-slots.mjs` (through the saves panel: Open a file, New game and a backup's Open as a copy
   each open a new slot and leave every other slot's bytes as they were, the real save and
   artifacts/trainworld/recovered-day26.save both; two backups rotate at `?backupMs=4000`; a deleted
   slot's backups go; port 6150 by default), `t894-previews.mjs` (save pictures: a game in New York,
@@ -345,6 +351,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   and start menu to artifacts/trainworld/previews/; `SHADE=dark`; port 6120 by default),
   `t1265-hk-preview.mjs` (a line in Hong Kong's northwest, nearer Shenzhen's centre, saved: the slot
   names Hong Kong only and the line keeps Hong Kong's holidays; port 6167 by default),
+  `t1372-superholidays.mjs` (the calendar against the last commit's: only days away and Obon change kind; China's and Japan's runs; the real save's ordinary days equal 8800's to the bit, the away day a Sunday times `AWAY_RATE` by purpose, the day views timed; PORT 6172 by default, about three minutes; T-1372),
   `t1281-upgrades.mjs` (the real save's rail trips as saved, with a waiting room at every station and with a park and ride too, in one edit each; screenshots of the station panel's upgrade row and a terminal's sidings, `SHOTS_ONLY=1` for those alone; T-1281),
   `t883-fare-curve.mjs` (the real save: the default fare's rail trips against smoke's last run on the same url, and again after the changes below, the same line through other nodes and an old two-node curve changing nothing, a doubled rate and a curve steeper past 20 km losing rail trips, the weekday's income being the base, the rate and demand's extra; the Money tab's hover arrows, one-way drags sending once on release, undo, zoom keeping the slope, the off-plot arrows and their click; fare graph screenshots in t1143/), `t1201-fare-rows.mjs` (a new game's Money tab at the dock's narrowest: the rows as rates, none wrapping, a rate's whole-cent step or typed value moving later fares together, never below 0, the base and a stretch's end keeping the rates, a drag's fare followed by the rows; screenshots in t1201/; about a minute), `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
   rides and running costs, with the largest hour-to-hour change beside the flat booking's),
@@ -432,6 +439,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   the Node figures), `t1168-layout.mjs` (the diagram's layout of the real save's 2, 4 and 6X against
   the mockups), `t1168-shots.mjs <port>` (the line panel's related-lines view, light and dark,
   desktop and 390 px, into artifacts/trainworld/t1168s1/, with its hover, click and toggle),
+  `t1391-related.mjs <port> [prefix] [desktop|phone]` (the related-lines view on a new game built
+  for the edge cases: a line beside another ending at a shared station, a two-stop interline, a
+  line going on past the other's end, a line through one station twice, a loop with a line beside
+  it across its seam, an express, editing stops; screenshots into artifacts/trainworld/t1391/),
   `city-browser.mjs <id>` (a tier 0
   city: open, boundary, the top bar's split, a water crossing refused, a test line to a final solve,
   T-364; a row from its table, or from the file in `ROW`, which `pack_gate.py` writes for any pack;

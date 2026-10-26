@@ -17,7 +17,7 @@
 // so a line pays back in about a game week. The fare the player sets stays a real fare.
 
 import { computed, signal } from "@preact/signals";
-import { DAY_KINDS } from "./days";
+import { AWAY_DAY, awayNear, DAY_KINDS } from "./days";
 import { demandByDay, type DemandView } from "./demand";
 import { cityById, isCity } from "./cities";
 import { faresFor, faresOf } from "./fareCurve";
@@ -114,10 +114,13 @@ let incomeMemo: { w: WorldView | null; t: MoneyTerms | null; zl: number; views: 
  * before keeps its figures. */
 export const incomeByDay = computed<Income[]>(() => {
   const w = moneyWorld.value, t = moneyTerms.value, zl = zonesLoaded.value;
-  const views = demandByDay.value.slice(0, DAY_KINDS.length).map((d) => d.view);
+  // T-264: the away day's own figures only while one is near, else Sunday's
+  const soon = awayNear.value !== null;
+  const views = demandByDay.value.slice(0, DAY_KINDS.length).map((d, k) => (k === AWAY_DAY && !soon ? null : d.view));
   const was = incomeMemo, same = !!was && was.w === w && was.t === t && was.zl === zl;
   if (same && sameList(views, was.views)) return was.out;
-  const out = views.map((v, k) => (same && v === was.views[k] ? was.out[k] : incomeFor(w, t, v)));
+  const own = views.map((v, k) => (k === AWAY_DAY && !soon ? null : same && v === was.views[k] ? was.out[k] : incomeFor(w, t, v)));
+  const out = own.map((x) => x ?? own[2]!);
   incomeMemo = { w, t, zl, views, out };
   return out;
 });

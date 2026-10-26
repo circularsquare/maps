@@ -280,7 +280,8 @@ fn day_of(a: &mut DemandApi, e: &mut EverydayApi, net: &RealNet) -> (Vec<f64>, V
     e.set_fares(2.9, 0.1, &hop_km).unwrap();
     let (mut sums, mut loads) = (vec![], vec![]);
     solve_day(a, e, 2, |q, a, e| {
-        sums.extend(a.summary(q).into_iter().chain(e.summary(q)).enumerate().filter(|&(i, _)| i % 10 != 4).map(|(_, v)| v));
+        let no_ms = |s: Vec<f64>| s.into_iter().enumerate().filter(|&(i, _)| i != 4).map(|(_, v)| v);
+        sums.extend(no_ms(a.summary(q)).chain(no_ms(e.summary(q))));
         loads.extend(a.seg(q).iter().chain(&a.board(q)).chain(&e.seg(q)).chain(&e.board(q)).map(|&v| v as f64));
     });
     (sums, loads)
@@ -305,12 +306,13 @@ fn levels_fine_is_today_coarse_keeps_rail() {
     let bits = |v: &[f64]| v.iter().map(|x| x.to_bits()).collect::<Vec<_>>();
     assert!(bits(&fine.0) == bits(&today.1 .0) && bits(&fine.1) == bits(&today.1 .1), "fine figures to the bit");
     let rail = |s: &[f64]| -> [f64; 3] {
-        // per period: the commutes' summary then the everyday one, 9 numbers each (ms left out)
+        // per period: the commutes' summary then the everyday one, 12 numbers each (ms left out)
+        let n = 12;
         let (mut c, mut d, mut t) = (0.0, 0.0, 0.0);
-        for p in s.chunks(18) {
+        for p in s.chunks(2 * n) {
             c += p[2];
-            d += p[11];
-            t += p[1] + p[10];
+            d += p[n + 2];
+            t += p[1] + p[n + 1];
         }
         [c, d, t]
     };
