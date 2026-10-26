@@ -60,6 +60,7 @@ import { startTerrainTint } from "./map/terrainTint";
 import { startRestList } from "./map/hoverRest";
 import { startStationLife } from "./map/stationLife";
 import { startBuildSounds } from "./map/buildSound";
+import { openings, startOpeningDay } from "./game/openingDay";
 import { perfOff, perfTry } from "./perfFlags";
 import { DEMAND_INDEX, type Selection } from "./game/types";
 import { anchor, kAtY, toLngLat, toLocal } from "./map/geo";
@@ -298,6 +299,12 @@ effect(() => {
   if (w && !SYNTH) labels.set(w);
 });
 effect(() => labels.setVisible(display.value.stationNames && !SYNTH));
+startOpeningDay(); // T-1434
+effect(() => {
+  openings.value;
+  const w = world.peek();
+  if (w && !SYNTH) labels.set(w);
+});
 const capacity = new CapacityMarkers(map.getContainer(), overlay, map, labels); // tags keep off names (T-184)
 capacity.demandClick = demandOnTop;
 effect(() => {

@@ -178,7 +178,13 @@ export type ToDemand =
   | { kind: "bareFlows"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array }
   /** T-336, the aux worker: a bare zone's selection as the regional market's squares, for the
    * solving workers' `icSel` */
-  | { kind: "bareSquares"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array };
+  | { kind: "bareSquares"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array }
+  /** T-1435: the car legs rail takes over this worker's periods, by pair of the zone's squares
+   * (`DemandApi.drive_rail_day`, `EverydayApi.drive_rail_day`) */
+  | { kind: "driveRail"; id: number; city: CityId; version: number; round: number }
+  /** T-1435: the zone's squares and one table with no rail, any version: `part` 0 the commutes'
+   * (`DemandApi.drive_base_day`), 1 the everyday layer's */
+  | { kind: "driveBase"; id: number; city: CityId; version: number; round: number; part: 0 | 1 };
 
 /** T-1205: the WASM heap in use and the most it has been since the worker's last solve began
  * (`wasm_heap_bytes`, `wasm_heap_peak`), bytes */
@@ -335,4 +341,10 @@ export type FromDemand =
   | { kind: "bareFlows"; id: number; city: CityId; packed: Float32Array | null; masks: number[]; work: Float32Array[]; everyday: Float32Array[]; names: string[] }
   /** T-336: the squares' centres in the market frame and the share of each selected; null: not
    * open bare here, or outside the regional market */
-  | { kind: "bareSquares"; id: number; city: CityId; xy: Float32Array | null; share: Float32Array | null };
+  | { kind: "bareSquares"; id: number; city: CityId; xy: Float32Array | null; share: Float32Array | null }
+  /** T-1435: each table sparse (`[m, pair.., legs..]`); null: no network, or not `version` and
+   * `round`; `everyday` null for a zone without the layer */
+  | { kind: "driveRail"; id: number; city: CityId; version: number; mask: number; commute: Float32Array | null; everyday: Float32Array | null }
+  /** T-1435: `squares` as `DriveSquares::packed` with x and y as longitude and latitude; `base` the part's
+   * table; both null when the zone (or, for part 1, its everyday layer) is not held here */
+  | { kind: "driveBase"; id: number; city: CityId; squares: Float64Array | null; base: Float32Array | null };

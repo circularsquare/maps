@@ -25,6 +25,7 @@ import { styleUp } from "./styleReady";
 import { plainBoxHalfPx } from "./stationGeometry";
 import { hasUpgrade, UPGRADE } from "../game/upgrades";
 import { afterPaint } from "../game/busy";
+import { ribbonColours } from "../game/openingDay";
 
 /** ?perfOff=labels (T-045, measurement only): DOM labels never placed. */
 const NO_LABELS = perfOff("labels");
@@ -42,6 +43,8 @@ interface Label {
   /** what was last written to its style, so a placement writes only what changed (T-689) */
   hidden?: boolean;
   transform?: string;
+  /** the opening-day bunting's background (T-1434), "" for none */
+  rib: string;
 }
 
 const GAP = 10; // px from the station centre
@@ -60,7 +63,7 @@ export class StationLabels {
   private shown = false;
   private shadow: FeatureCollection = { type: "FeatureCollection", features: [] };
   private deferred: WorldView | null = null;
-  private key: { av: number; links: (readonly [string, string])[]; stations: { id: string; name: string; built: boolean; lng: number; lat: number; heading: number; length: number; upgrades: number; lines: string[] }[] } | null = null;
+  private key: { av: number; links: (readonly [string, string])[]; stations: { id: string; name: string; built: boolean; lng: number; lat: number; heading: number; length: number; upgrades: number; lines: string[]; rib: string }[] } | null = null;
   private shadowKey = "";
   private placedMatrix: number[] | null = null;
   private placedSize: [number, number] = [0, 0];
@@ -146,7 +149,8 @@ export class StationLabels {
     // Length and the player's links are in the key because they decide complexes (T-209).
     const links = w.save.links ?? [];
     // and the draw anchor: the names' positions are in its local units (T-307)
-    if (!this.changed(anchor().version, stations, lines, links)) return;
+    const rib = ribbonColours(w);
+    if (!this.changed(anchor().version, stations, lines, links, rib)) return;
     // T-1357: many names not drawn before (a game's first network) are built once the network has
     // been painted
     let fresh = 0;
@@ -161,30 +165,31 @@ export class StationLabels {
       return;
     }
     // the world's complexes (game/complexView.ts), built once for every user of this world
-    const names = labelGroups(stations, lines, complexes.peek());
+    const names = labelGroups(stations, lines, complexes.peek(), rib);
     this.needsPlacement = true;
     // A label whose text and look are unchanged keeps its element and measured size (T-496): a new
     // station then costs one new element, not a rebuild and a layout of every name. Shown labels
     // never overlap, so their order in the DOM draws nothing differently.
     const spare = new Map<string, Label[]>();
     for (const l of this.labels) {
-      const k = l.el.className + "\u0000" + l.el.textContent;
+      const k = l.el.className + "\u0000" + l.el.textContent + "\u0000" + l.rib;
       const v = spare.get(k);
       if (v) v.push(l);
       else spare.set(k, [l]);
     }
     this.labels = names.map((g) => {
-      const cls = "stn-label" + (g.built ? "" : " plan") + (g.park ? " park" : "");
+      const cls = "stn-label" + (g.built ? "" : " plan") + (g.park ? " park" : "") + (g.rib ? " opening" : "");
       const [x, y] = toLocal(g.lng, g.lat);
       const below = Math.abs(Math.cos(g.heading)) > Math.abs(Math.sin(g.heading));
-      const old = spare.get(cls + "\u0000" + g.name)?.pop();
+      const old = spare.get(cls + "\u0000" + g.name + "\u0000" + g.rib)?.pop();
       if (old) return { ...old, x, y, below };
       const el = document.createElement("div");
       el.className = cls;
       if (LAYERED) el.style.willChange = "transform"; // ?perfTry=labelLayers (T-045)
+      if (g.rib) el.style.setProperty("--rib", g.rib);
       el.textContent = g.name;
       this.plane.appendChild(el);
-      return { el, x, y, below, w: 0, h: 0 };
+      return { el, x, y, below, w: 0, h: 0, rib: g.rib };
     });
     for (const v of spare.values()) for (const l of v) l.el.remove();
     // A stop edit changes a station's lines and so the key, mostly not the shadow: MapLibre then
@@ -207,12 +212,12 @@ export class StationLabels {
 
   /** Whether anything the labels are built from differs from the last call's, which it then keeps
    * (field by field: the joined string key was 15 ms an edit at 6x throttling, T-1348). */
-  private changed(av: number, stations: readonly StationInput[], lines: ReadonlyMap<string, ReadonlySet<string>>, links: readonly (readonly [string, string])[]): boolean {
+  private changed(av: number, stations: readonly StationInput[], lines: ReadonlyMap<string, ReadonlySet<string>>, links: readonly (readonly [string, string])[], rib: ReadonlyMap<string, string> | null): boolean {
     const k = this.key;
     let same = !!k && k.av === av && k.stations.length === stations.length && k.links.length === links.length && links.every((l, i) => l[0] === k.links[i][0] && l[1] === k.links[i][1]);
     for (let i = 0; same && i < stations.length; i++) {
       const s = stations[i], p = k!.stations[i];
-      if (s.id !== p.id || s.name !== p.name || s.built !== p.built || s.lng !== p.lng || s.lat !== p.lat || s.heading !== p.heading || s.length !== p.length || (s.upgrades ?? 0) !== p.upgrades) same = false;
+      if (s.id !== p.id || s.name !== p.name || s.built !== p.built || s.lng !== p.lng || s.lat !== p.lat || s.heading !== p.heading || s.length !== p.length || (s.upgrades ?? 0) !== p.upgrades || (rib?.get(s.id) ?? "") !== p.rib) same = false;
       else {
         const ls = lines.get(s.id), pl = p.lines;
         if ((ls?.size ?? 0) !== pl.length) same = false;
@@ -223,7 +228,7 @@ export class StationLabels {
     this.key = {
       av,
       links: links.map(([a, b]) => [a, b] as const),
-      stations: stations.map((s) => ({ id: s.id, name: s.name, built: s.built, lng: s.lng, lat: s.lat, heading: s.heading, length: s.length, upgrades: s.upgrades ?? 0, lines: [...(lines.get(s.id) ?? [])] })),
+      stations: stations.map((s) => ({ id: s.id, name: s.name, built: s.built, lng: s.lng, lat: s.lat, heading: s.heading, length: s.length, upgrades: s.upgrades ?? 0, lines: [...(lines.get(s.id) ?? [])], rib: rib?.get(s.id) ?? "" })),
     };
     return true;
   }
@@ -334,6 +339,8 @@ interface NameGroup {
   built: boolean;
   /** a member has a park and ride (T-1281): a P beside the name */
   park: boolean;
+  /** the opening-day bunting's background (T-1434), "" for none */
+  rib: string;
   /** distinct lines stopping at any of its stations */
   lines: number;
 }
@@ -343,7 +350,7 @@ interface NameGroup {
  * with the most lines; differently named members keep their own. Most important first: most
  * lines, then constructed, then save order. The player's links count, as everywhere a complex is
  * used (T-197, T-209). */
-function labelGroups(stations: readonly StationInput[], lines: ReadonlyMap<string, ReadonlySet<string>>, cx: Complexes): NameGroup[] {
+function labelGroups(stations: readonly StationInput[], lines: ReadonlyMap<string, ReadonlySet<string>>, cx: Complexes, rib: ReadonlyMap<string, string> | null): NameGroup[] {
   const groups = new Map<string, StationInput[]>();
   for (const s of stations) {
     const k = `${cx.of.get(s.id)}\u0000${s.name}`;
@@ -361,7 +368,7 @@ function labelGroups(stations: readonly StationInput[], lines: ReadonlyMap<strin
       for (const l of lines.get(s.id) ?? []) ids.add(l);
       if ((lines.get(s.id)?.size ?? 0) > (lines.get(lead.id)?.size ?? 0)) lead = s;
     }
-    out.push({ name: lead.name, lng: lng / members.length, lat: lat / members.length, heading: lead.heading, built: members.some((s) => s.built), park: members.some((s) => hasUpgrade(s.upgrades, UPGRADE.parkRide)), lines: ids.size });
+    out.push({ name: lead.name, lng: lng / members.length, lat: lat / members.length, heading: lead.heading, built: members.some((s) => s.built), park: members.some((s) => hasUpgrade(s.upgrades, UPGRADE.parkRide)), rib: rib ? members.map((s) => rib.get(s.id)).find(Boolean) ?? "" : "", lines: ids.size });
   }
   return out.sort((a, b) => b.lines - a.lines || Number(b.built) - Number(a.built));
 }

@@ -386,6 +386,15 @@ those who got on, less the load carried on.
   layer; placement and the greedy overlap pass run on other camera changes, edits, font loading,
   showing labels again and after movement ends. A 256 px margin prepares names entering the
   screen, and a pan re-places them after 128 px of travel (notes/T-074.md).
+- **Opening day** [T-1434; `game/openingDay.ts`]: a line opens when it first runs with trains in
+  this page's session (running, and some level's trains above 0), having been in the world before.
+  For one game day (86,400 s of the clock, from the moment it opens) its stations' names carry a
+  string of tiny pennants under them, 7 px each up to 63 px, in the line's colour (the lines' colours
+  in turn where two or three opening lines share a station; `.stn-label.opening`). It also
+  plays "bung" 250 ms after the construct's own sound, and the line's Riders cell in the Lines tab
+  counts up from 0 to its figure over 2.4 s, eased out, starting when the figure first reads above 0
+  with the tab open ([ui-inspectors.md](ui-inspectors.md) Lines tab). Not saved: a loaded game
+  shows no opening days, and one in progress ends with the page.
 - **Capacity tags** [T-184, T-224, T-256; `map/capacityMarkers.ts`; what they mean in
   [track-and-service.md](track-and-service.md) 6.2]: placed after names, which never move for a
   tag. Each takes the first of six spots round its resource clear of names (3 px) and earlier tags

@@ -21,7 +21,7 @@ export const SHADE_NAMES: Shade[] = ["light", "dark"];
 const OLD_THEME: Record<string, Theme> = { cream: "pink", sky: "blue", matcha: "green" };
 
 export type StationUseMode = "none" | "origins" | "transfers" | "total";
-export type MapRow = "bubbles" | "stations" | "track";
+export type MapRow = "bubbles" | "stations" | "drives" | "track";
 
 export interface DisplaySettings {
   /** Track display: plain lines, traffic-weighted lines, height, or geometry speed limit. */
@@ -39,6 +39,8 @@ export interface DisplaySettings {
   /** station use circles (T-482): translucent circles behind platforms, area by the riders a day
    * starting a rail trip there, changing lines there, or both (all boardings); or none */
   stationUse: StationUseMode;
+  /** T-1435: the biggest car flows drawn as arcs, ranked by what a train would win (map/driveArcs.ts) */
+  drives: boolean;
   /** T-1448: the map's upper left rows folded down to their icon ("bubbles", "stations", "track") */
   foldedRows: MapRow[];
   /** trains filled by how full they are: each train's own load from the boarding account (T-164) */
@@ -112,6 +114,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   // T-727: faint by default, so the track to snap to is always in sight
   realNetwork: true,
   stationUse: "none",
+  drives: false,
   foldedRows: [],
   trainLoad: true,
   platformCrowds: "patch",

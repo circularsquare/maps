@@ -1,10 +1,12 @@
 // The building sounds (T-1282, T-1413), made with WebAudio as the station sounds are and under the same
 // Sound switch and volume: "ke-cha" when blueprint is constructed, "bung" when a station is placed or
 // an upgrade added, "tsh" when track is placed (voices in buildVoices.ts). Not tied to the zoom: the
-// player made them happen. One sound per edit, however many pieces it places.
+// player made them happen. One sound per edit, however many pieces it places. A line opening (T-1434)
+// plays "bung" once more.
 
 import { display } from "../game/ui";
 import { setAfterEdit } from "../game/world";
+import { onLinesOpened } from "../game/openingDay";
 import { audioOut } from "./audioOut";
 import { bung, keCha, tsh } from "./buildVoices";
 
@@ -16,7 +18,11 @@ export function startBuildSounds() {
     else if (op.op === "addStation" || (op.op === "stationUpgrade" && op.on) || (op.op === "link" && op.on)) playBuild("bung");
     else if (op.op === "construct" || op.op === "constructAll" || op.op === "constructLine") playBuild("construct");
   });
+  // T-1434: a line opening, a beat after the construct's own sound
+  onLinesOpened(() => setTimeout(() => playBuild("bung"), OPENING_DELAY_MS));
 }
+
+const OPENING_DELAY_MS = 250;
 
 /** The level at volume 1, as the station sounds' master (stationSound.ts `MASTER`). */
 const MASTER = 0.5;

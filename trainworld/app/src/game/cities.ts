@@ -116,6 +116,10 @@ export function lonLatToCity(lon: number, lat: number, id: CityId): { x: number;
   const [x, y] = packFrame(id).fromLonLat(lon, lat);
   return { x, y };
 }
+/** A city pack's local metres to longitude and latitude. */
+export function cityToLonLat(x: number, y: number, id: CityId): [number, number] {
+  return packFrame(id).toLonLat(x, y);
+}
 /** World metres to longitude and latitude. */
 export function worldToLonLat(x: number, y: number): [number, number] {
   return world.toLonLat(x, y);

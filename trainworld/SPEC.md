@@ -298,7 +298,8 @@ no explanatory notes [T-253]. **Everything drawn that encodes a number has a hov
 game's own tag, never a browser tooltip [T-194, T-210]. No CSS transitions; trains are the only
 motion. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
 count the past 24 hours from the boarding account, while the map's demand views (Homes and Destinations bubbles
-coloured by mode share, line widths by riders, station ridership circles, inter-city trips) show demand's
+coloured by mode share, line widths by riders, station ridership circles, inter-city trips, the
+biggest car flows as arcs [T-1435]) show demand's
 whole day: the average day by default, or a weekday, a Saturday or a Sunday [T-464, T-262]. On the map, lines sharing track are drawn over each other,
 stations are dots from zoom 9 and their true platforms from 14, and trains fill like a gauge with
 their riders.

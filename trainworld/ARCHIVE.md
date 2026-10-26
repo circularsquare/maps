@@ -1,5 +1,7 @@
 # Archive
 
+- T-1435 [P3] Where people drive. Done 2026-10-26: a Drives row on the map draws the biggest car flows as amber arcs, width car trips, opacity minutes a straight-line train would save; zone squares zoomed in, corridors zoomed out. DECISIONS.md; docs/ui-demand-views.md; artifacts/trainworld/t1435/.
+- T-1434 [P3] Opening day. Done 2026-10-26: a line's first game day puts a string of tiny pennants in its colour under its stations' names, counts its Lines tab riders up from 0 (eased out) and plays "bung"; not saved. DECISIONS.md; docs/ui-map.md; `checks/t1434-opening.mjs`; artifacts/trainworld/t1434/.
 - T-1448 [P2] Station traffic visuals. Done 2026-10-26: ridership circles drawn over the bubbles, blue entries with a green inner disc for transfers, both in the hover; the ridership row on the map; each row's icon folds it. DECISIONS.md; artifacts/trainworld/t1448/.
 - T-1449 [P3] One circle per station complex, always. Done 2026-10-26: the setting is gone; stored values are dropped.
 - T-1436 [P3] One rider's trip. Done 2026-10-26: the train inspector's "One rider" block draws a rider from the train's boardings and alighting shares, with from, to, purpose and effective minutes by train and car; buttons pick another and open the explorer for the pair. DECISIONS.md; docs/ui-inspectors.md; artifacts/trainworld/t1436/.

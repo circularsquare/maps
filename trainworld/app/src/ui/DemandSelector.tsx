@@ -24,6 +24,7 @@ export function MapTopLeft() {
       <BusyTag />
     </div>
     <StationRidership />
+    <Drives />
     <TrackDisplay />
     <DemandStopped />
   </div>;
@@ -65,6 +66,7 @@ const TRACK_OPTIONS = [
 const FOLDS: Record<MapRow, { icon: () => JSX.Element; what: string }> = {
   bubbles: { icon: Icon.bubble, what: "demand bubble" },
   stations: { icon: Icon.interchange, what: "station ridership" },
+  drives: { icon: Icon.ride, what: "drive" },
   track: { icon: Icon.track, what: "track colour" },
 };
 const folded = (row: MapRow) => display.value.foldedRows.includes(row);
@@ -93,6 +95,18 @@ function StationRidership() {
     {!folded("stations") && STATION_OPTIONS.map(([value, label, tip]) =>
       <button type="button" class={`btn${mode === value ? " on" : ""}`} aria-pressed={mode === value} data-tip={tip}
         onClick={() => setDisplay("stationUse", value)}>{label}</button>)}
+  </div>;
+}
+
+/** Where people drive (T-1435): the biggest car flows as arcs, ranked by what a train would win
+ * (map/driveArcs.ts). */
+function Drives() {
+  const on = display.value.drives;
+  return <div class="demand-selector" role="group" aria-label="Where people drive">
+    <FoldCell row="drives" />
+    {!folded("drives") && ([[false, "None", undefined], [true, "Drives", "Car trips a train would speed up most"]] as const).map(([value, label, tip]) =>
+      <button type="button" class={`btn${on === value ? " on" : ""}`} aria-pressed={on === value} data-tip={tip}
+        onClick={() => setDisplay("drives", value)}>{label}</button>)}
   </div>;
 }
 

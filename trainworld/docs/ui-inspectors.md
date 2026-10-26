@@ -60,7 +60,10 @@ purpose filter the purpose drawn is ringed in the bar.
   dock is too narrow, then the City column beside Near [T-746]. Lines default to by riders, most first [T-905]. The sort is kept while the page is open and re-runs each game hour.
   A double click on a row fits the map to the line's stops (a jump, as search does) after the
   single click selected it [T-569, `ui/locate.ts`]; the line inspector's locate button (cross
-  hairs, hover "Show on the map", beside the pencil) does the same.
+  hairs, hover "Show on the map", beside the pencil) does the same. On a line's opening day
+  [T-1434, [ui-map.md](ui-map.md) "Opening day"] its Riders cell reads 0 until its figure first
+  shows, then counts up to it over 2.4 s, fast at first and slowing to the end; the hover always
+  gives the real figure.
 - **Trains to add** [T-472, T-491, T-818, T-1255]: a row's train count (the trains its level needs now, the bare
   number under the "Trains" header [T-532]) is coloured by the crowding score of the line's period now, otherwise muted. The score is the
   average extra wait for a train with room of the riders at the platforms where trains come full

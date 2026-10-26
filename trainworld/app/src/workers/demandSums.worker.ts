@@ -1,5 +1,6 @@
 // T-1208, T-1210: demand's sums off the main thread (workers/demandSums.ts); no WASM. Answers in
 // the order asked.
+import { driveLevels } from "../game/drives";
 import { curveRank, dealtCells, type DealtCells } from "../game/farChunks";
 import type { PurposeFilter } from "../game/purposes";
 import { dayViews, flowsBody, packDays, selectionFlows, stationFlows, sumParts, type FlowsAnswer, type FromSums, type ToSums } from "./demandSums";
@@ -11,6 +12,7 @@ const cells = new Map<string, Uint32Array>();
 function answer(msg: ToSums): [unknown, Transferable[]] {
   if (msg.kind === "icSel") return [selectionFlows(sumParts("icSel", msg.parts, msg.ctx.places), msg.ctx), []];
   if (msg.kind === "icStation") return [stationFlows(msg.members.map((parts) => sumParts("icStation", parts, msg.ctx.places)), msg.ctx), []];
+  if (msg.kind === "drives") return [driveLevels(msg.input), []];
   if (msg.kind === "days") {
     const p = packDays(dayViews(msg.input), msg.input.layout, msg.input.res.length);
     return [p, [p.f32.buffer, p.f64.buffer, p.idx.buffer]];
