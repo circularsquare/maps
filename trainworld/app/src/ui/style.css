@@ -78,6 +78,8 @@ p { margin: 0; }
 /* ---------- buttons ---------- */
 
 button, input, select, textarea { font: inherit; color: inherit; }
+/* T-1292: a dropdown's list is drawn on the option's own background, white unless set */
+select, option, optgroup { background-color: var(--bg); color: var(--text); }
 .btn {
   height: 28px; min-width: 28px; padding: 0 8px;
   border: 1px solid var(--rule); border-radius: 0;
@@ -637,6 +639,9 @@ rect.now { fill-opacity: .45; }
 .realm-button button { display: block; box-sizing: border-box; width: 16px; height: 16px; padding: 0; border-radius: 50%;
   border: 1px solid var(--map-ink); background: #fff; cursor: pointer; }
 .realm-button button:hover { background: #d9d9d9; }
+/* T-1298: toned down in dark, a mid grey with a dark rim */
+:root[data-shade="dark"] .realm-button button { background: #8a857f; border-color: #141517; }
+:root[data-shade="dark"] .realm-button button:hover { background: #a39e98; }
 /* MapLibre sets Helvetica on its container. Map UI must use the same font as the dock. */
 #map, #map .maplibregl-ctrl { font-family: var(--font); }
 #map canvas.overlay { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 1; }

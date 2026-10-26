@@ -1,6 +1,7 @@
 // The real-network reference layer (T-682 stage 1): where railways run in the real world, faint, under
-// the game's own network and above the basemap's roads. View only; on by default at 0.15 opacity
-// (Settings > Real network), at 0.4 while the track tool snaps to it (T-727).
+// the game's own network and above the basemap's roads. View only; on by default, faint (Settings >
+// Real network; `realOpacity` in game/shadeTable.ts), at 0.4 while the track tool snaps to it (T-727).
+// The base map slider leaves it alone (T-1291).
 //
 // The lines come from noritetsu's per-region vector tiles (`noritetsu/dist/data/<region>.pmtiles`, one
 // `track` layer: k kind, r rank 0 main or 1 other, p confirmed by a passenger route, n no line runs over
@@ -37,8 +38,7 @@ const SHOWN = ["all", ["!=", ["get", "n"], 1], ["any", METRO, ["all", kind("rail
 /** line width (px) by zoom; main and metro the same, other rail thinner */
 const width = (...stops: number[]) => ["interpolate", ["exponential", 1.4], ["zoom"], ...stops.flatMap((v, i) => [MIN_ZOOM + [0, 4, 7, 10, 13, 16][i], ["case", ["any", METRO, MAIN], v, v * 0.7]])];
 const WIDTH = width(0.6, 1, 1.5, 2.4, 4, 8);
-/** T-727: faint for reference, full while the track tool snaps to it */
-const OPACITY = 0.15;
+/** T-727: stronger while the track tool snaps to it */
 const OPACITY_SNAP = 0.4;
 
 const colour = (c: ShadeColours) => ["case", METRO, c.realMetro, MAIN, c.realMain, c.realOther];
@@ -87,7 +87,7 @@ export function startRealNetwork(map: maplibregl.Map) {
   let index: Promise<void> | null = null;
   let on = false;
   let painted: "light" | "dark" | null = null;
-  let opacity = OPACITY;
+  let opacity = SHADES[shade.peek()].realOpacity;
 
   /** regions.json (about 1.5 MB, outlines in it): which regions exist and where, and which base serves them */
   const load = () =>
@@ -184,9 +184,7 @@ export function startRealNetwork(map: maplibregl.Map) {
     const snap = snapping.value;
     const reach = snap && !!realReach.value;
     on = display.value.realNetwork || snap;
-    // T-1249: the base map's contrast mutes it too, but never while track snaps to it
-    opacity = snap ? (reach ? OPACITY_DIM : OPACITY_SNAP) : OPACITY * display.value.basemapContrast;
-    shade.value;
+    opacity = snap ? (reach ? OPACITY_DIM : OPACITY_SNAP) : SHADES[shade.value].realOpacity;
     if (on) setShade(), void ensure();
     for (const id of layerIds()) {
       map.setLayoutProperty(id, "visibility", on ? "visible" : "none");

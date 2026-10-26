@@ -302,43 +302,27 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
 
 ## The complex map
 
-[T-147, `ui/inspector/ComplexMap.tsx`; T-176, T-246, T-250]
+[T-147, T-1289, `ui/inspector/ComplexMap.tsx`; T-176, T-246]
 
-- The inspector's width, 120-240 px tall, north up, positions and headings true at one scale (at
-  most 1.2 px a metre; a round scale bar in a corner).
-- Each platform is drawn with its lines through it in their colours, each as wide as the riders on
-  its trains there a day (each direction the busier of arriving and leaving loads, every period
-  summed), 1.5 to 6 px by square root against the complex's busiest. Platforms on top of each other
-  (parallel within 15 degrees, centre lines within 12 m) are one bundle, lines side by side in the
-  order the platforms lie. Bundles have a thin dark outline, dashed for blueprint; the selected
-  station's a heavier one. A line's hover gives station, line, boardings, riders on its trains
-  there, and how many change to or from other lines there with its three biggest partners; a click
-  opens that station alone.
+- **Drawn by the map's own renderer** [T-1289, Anita: "could we just copy the view in the world"]:
+  the complex as the map draws it close in, whatever the map is looking at: platform boxes, the
+  lines and track through them, trains, platform crowds, riders walking between platforms, the
+  player's links as bridges, the selection's outline, on the map's land colour (no roads, water or
+  names of the base map). The network renderer draws it with a flat camera of its own into a corner
+  of the map's overlay canvas before each map frame, and the panel's canvas copies it before that
+  frame clears it (`Overlay.setSnapshot`, map/overlay.ts), so it moves whenever the map's trains do.
+- The inspector's width, 120-240 px tall, north up, every platform's ends inside a 24 px margin, at
+  zoom 14 (where the map's platform boxes begin) to 17.5; a round scale bar in a corner.
+- **Hover** on a platform: the station, then each line stopping there with its boardings and riders
+  on its trains there a day (each direction the busier of arriving and leaving loads, every period
+  summed) and how many change to or from other lines with its three biggest partners (T-176,
+  `complexTransfers(members)` asked at each published round, [demand-views.md](demand-views.md)
+  "Transfers"), then the riders waiting now and the room (T-246, `game/complexLive.ts`). Platforms on
+  top of each other (parallel within 15 degrees, centre lines within 12 m) share one hover listing
+  them all. A click opens that station alone. The player's links have a hover giving the distance.
 - When the complex has more than one name, each name (the part before a slash) has one label beside
   its platforms wherever it is clear, else none.
-- The player's links are dashed lines between the two stations, their hover giving the distance.
-- **Now** [T-246, `game/complexLive.ts`]: after each station's lines its bundle has a 5 px platform
-  strip, white between two lines of the platform blue, filling like the map's platform boxes (each
-  direction's half from the middle out by its riders' share of the room, grey, or red once full); its hover
-  gives the riders waiting (by line name when more than one stops there) and the room. Trains on their line's band in the darker train shade: one at the
-  platform along it; one pulling in (stopping within 60 game seconds) paler, coming in from the end
-  it arrives by and slowing to its stop, and one pulling out (left within 60 game seconds) paler,
-  gathering speed out of the other end; a train ending its trip there turns back rather than
-  pulling out. Hover gives line, destination and seconds to its stop. Read from the renderer's hour
-  of the boarding account; worked out every 10 game seconds (at most every 150 ms), each train with
-  the times it stops and leaves, looking ahead twice the game time between workings-out; the trains
-  are moved on every animation frame from the clock's `now()`, straight on their SVG rects, and the
-  view re-renders only when the trains or riders waiting change [T-1096].
-- **Transfers** [T-176, `complexTransfers(members)`, [demand-views.md](demand-views.md) "Transfers"]: asked of the demand
-  workers when the map shows and at each published round, the last answer kept meanwhile. Both
-  directions of a line pair added. Changes between lines in different bundles are grey curves (ink
-  at 55% over a thin halo of the land colour), across the gap where the two lines' bands come
-  nearest, or middle to middle when they cross or come within 16 px: the busiest 8, none under 2%
-  of the complex's changes, 1.5 to 8 px by square root. Each curve bows gently to one side; two
-  middles at one spot get a small loop. Hover gives the riders per day and each direction. Changes
-  within one bundle and walks to stations outside the complex are not drawn. Why line to line:
-  notes/T-147.md.
-- No notes under the map: the widths, the curves and the dashed links are in their hovers [T-1095, T-1106].
+- No notes under the map [T-1095, T-1106].
 
 ## Linking stations
 

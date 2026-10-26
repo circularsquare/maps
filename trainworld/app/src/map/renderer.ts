@@ -848,9 +848,10 @@ export class NetworkRenderer {
 
   /**
    * Draw with the camera MapLibre last drew (gl.ts `Camera`, flat or globe); `time` is game seconds;
-   * `zoom` and `dpr` size things in px. The caller has bound and cleared the target.
+   * `zoom` and `dpr` size things in px. The caller has bound and cleared the target; `view`, device
+   * px, when it is not the whole drawing buffer (the complex map's snapshot, overlay.ts).
    */
-  draw(cam: Camera, time: number, zoom: number, dpr: number, opt: DrawOptions) {
+  draw(cam: Camera, time: number, zoom: number, dpr: number, opt: DrawOptions, view?: readonly [number, number]) {
     const gl = this.gl;
     this.releaseStaged(time);
     const n = this.net;
@@ -861,7 +862,7 @@ export class NetworkRenderer {
     const a = n.anchor ?? anchor();
     const lc = localCamera(cam, a);
     this.cam = cam;
-    const vp =[gl.drawingBufferWidth, gl.drawingBufferHeight] as const;
+    const vp = view ?? ([gl.drawingBufferWidth, gl.drawingBufferHeight] as const);
     const pxPerUnit = pxPerUnitAt(zoom) * dpr;
 
     this.timer.begin();
@@ -1171,7 +1172,7 @@ export class NetworkRenderer {
       const placed = this.crowds.stationOfQueue;
       if (this.crowdsShown && boxes && placed) {
         this.bubbles.sync(this.board, n, placed);
-        this.bubbles.draw(lc, vp, uTime, 0.5 * boxWhite * dpr, CROWD_RGB, rgbf(shadeColours().casing), dpr);
+        this.bubbles.draw(lc, vp, uTime, 0.5 * boxWhite * dpr, rgbf(shades.walkers), rgbf(shades.casing), dpr);
       }
     }
 

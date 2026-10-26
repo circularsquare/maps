@@ -108,8 +108,10 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   15.4, 13.6, 11.8 (default) or 10, and each coarser level (8, 7, 6) 1.8 zoom levels further out
   (`bubbleLevel`). Resolution 9 is the finest at any step. All levels are built at
   once, so the setting costs no rebuild.
-- **Area is trip legs**, outward and return, at a fixed density: 50,000 legs/km² for homes and
-  160,000 for destinations, times the Bubble size setting (0.5-2x width). No minimum size; nobody
+- **Area is trip legs**, outward and return, at a fixed density: 88,900 legs/km² for homes
+  (50,000 with the radius then cut by a quarter, T-1294) and 160,000 for destinations, so a home
+  bubble is 1.34 times the radius of a destination bubble of the same legs; times the Bubble size
+  setting (0.5-2x width). No minimum size; nobody
   means no bubble.
 - **Colour** by the **Colours** setting: **Train share** (default since T-833; a stored Mode mix
   from before settings version 6 is reset once) colours by the train share of the bubble's legs along a ramp from a start colour

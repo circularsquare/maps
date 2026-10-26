@@ -100,9 +100,8 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
 }
 
 /** The complex now (game/complexLive.ts): worked out again every 10 game seconds or so (at most
- * every 150 ms of real time), and re-rendered only when something shown changed. T-1096: the same
- * trains keep the object, their times updated in place, as the complex map moves them itself; it
- * looks ahead twice the game time between workings-out at the speed set. */
+ * every 150 ms of real time), and re-rendered only when something shown changed; it looks ahead
+ * twice the game time between workings-out at the speed set. */
 function useComplexNow(members: string[]): ComplexNow | null {
   const [now, setNow] = useState<ComplexNow | null>(() => complexNow(members));
   const scope = members.join(",");

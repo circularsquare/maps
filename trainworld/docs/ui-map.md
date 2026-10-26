@@ -19,8 +19,9 @@ through `game/shades.ts`) [T-543].
 
 ## Real network (reference layer)
 
-Settings > Show > **Real network**, on by default: faint lines (15% opaque, T-727) where railways run
-in the real world, for reference, view only; 40% (T-697) while the track tool snaps to them (the
+Settings > Show > **Real network**, on by default: faint lines (15% opaque in the light theme, T-727;
+30% in the dark one, in lighter colours, T-1291) where railways run in the real world, for
+reference, view only, whatever the Base map slider says [T-1291]; 40% (T-697) while the track tool snaps to them (the
 Build tab's snap switch, [ui-building.md](ui-building.md)), which also shows them with the setting off (`map/realNetwork.ts`, T-682). They sit above the basemap's
 roads and under its labels, so under our own network (which is drawn on the overlay canvas above
 everything). Three classes by colour and width, in both themes (`realMain`, `realOther`, `realMetro`
@@ -281,8 +282,8 @@ game second, only while drawn.
 
 **Riders changing trains** [T-1124; `map/transferBubbles.ts`]: with the crowds, from zoom 14, the
 riders who change from a train at one station to a line at another station of its complex leave as
-it stops, as one bubble per train and platform they go to: a disc of the crowd grey with a rim in
-the casing's colour, moving in a straight line from the middle of the platform left to the middle
+it stops, as one bubble per train and platform they go to: a disc of the crowd grey (a lighter
+#b8b3ac in the dark theme, `walkers` in game/shadeTable.ts, T-1288) with a rim in the casing's colour, moving in a straight line from the middle of the platform left to the middle
 of the one they go to over demand's walk between the two stations (the boarding account's,
 track-and-service.md 6.6), and joining that platform's crowd at once on arrival. Its radius is the
 platform box's white half width times the square root of its riders over 250 (`BUBBLE_RIDERS`),
@@ -483,7 +484,7 @@ Everything outside the realms shown (those the game has built in, starts in or t
 is covered by one shade, a little darker than the outside shade and over it (11% of the outside shade's colour, 22.5% black in the dark theme: together about 18% and 50%), on land and water alike, under
 labels and the network, taking no clicks. Its edge is the shown zones' coarse outline, the line the
 zone outlines draw, never a coast; nothing of a hidden realm's zones is drawn. Each hidden realm has
-one floating circle, 16 px across, filled and outlined like an unopened zone's dot (white, a 1 px map ink outline), at its point (the centre of the zone nearest the
+one floating circle, 16 px across, filled and outlined like an unopened zone's dot (white, a 1 px map ink outline; in the dark theme toned down to a mid grey #8a857f with a near-black rim, T-1298), at its point (the centre of the zone nearest the
 mean of its zones' centres, so on its land), moving with the map and leaving the screen with that
 point, never pinned at the edge [T-1142] (hover: the realm's name over "Click the shaded area to show the cities there").
 Circles that would overlap give way to the realm with more zones. A click on the circle, or a plain

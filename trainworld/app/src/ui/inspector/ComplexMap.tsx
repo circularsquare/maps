@@ -1,20 +1,15 @@
-// A station complex from above (T-147): each member's platform at its true relative position and
-// heading, with the lines stopping there drawn through it, each as wide as the riders on that
-// line's trains at that platform a day. North is up; one scale for the whole complex. Shown in the
-// station inspector's complex view (StationInspector.tsx `ComplexSummary`).
+// A station complex from above (T-147), drawn by the map's own network renderer (T-1289, Anita: "could
+// we just copy the view in the world"): platforms, lines, trains, crowds and riders walking between
+// platforms exactly as the map draws them close in, north up, whatever the map is looking at. The
+// renderer draws it with its own camera along with each map frame (map/overlay.ts `setSnapshot`);
+// this component picks the camera and lays the hovers, name labels and scale bar over it. Shown in
+// the station inspector's complex view (StationInspector.tsx `ComplexSummary`).
 //
-// Platforms that lie on top of each other (parallel within 15 degrees, centre lines within 12 m;
-// the real New York save gives every service its own station, so Grand Central's Metro-North
-// lines are eight platforms in one place) are drawn as one bundle with their lines side by side,
-// in the order they lie across, the way the main map draws lines sharing track.
-//
-// Transfers (T-176): the demand solve counts riders changing from each line at each platform to
-// each other (`complexTransfers`, notes/T-147.md). The busiest changes between lines in different
-// bundles, both directions together, are drawn as grey curves over the platforms, across the gap
-// between the two lines' bands (middle to middle where they cross), as wide as the riders
-// changing a day; at most 8, and none under 2% of the complex's changes.
-// Changes within one bundle (across a platform) are not drawn; each line's hover lists its
-// biggest changes, these included. Stations the player linked (T-197) are joined by a dashed line.
+// Hovers: each platform's names its lines with their boardings and riders, the riders waiting there
+// now, and the biggest changes to other lines (T-176, `complexTransfers`). Platforms on top of each
+// other (parallel within 15 degrees, centre lines within 12 m; the real New York save gives every
+// service its own station) share one hover listing them all. Stations the player linked (T-197) are
+// the renderer's bridges; their hover gives the distance.
 
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { useLatestAnswer } from "../useClockQuery";
@@ -23,9 +18,11 @@ import { count, length, scaleBars } from "../../game/format";
 import { segmentGap } from "../../game/complexes";
 import type { LineInput, StationInput } from "../../game/types";
 import { world } from "../../game/world";
-import { PULLING_IN_S, trainPhase, type ComplexNow, type TrainNow } from "../../game/complexLive";
-import { PLATFORM_BLUE } from "../../game/palette";
-import { clock } from "../../game/clock";
+import type { ComplexNow } from "../../game/complexLive";
+import { live } from "../../map/live";
+import { anchor, EARTH_C } from "../../map/geo";
+import { stationIndexOf } from "../../map/network";
+import { STATION_BOX_ZOOM } from "../../map/stationGeometry";
 
 /** Riders on a line's trains at its `k`th stop a day, both directions: in each direction the
  * busier of the arriving and leaving train loads, every period summed. */
@@ -42,79 +39,15 @@ function ridersAt(dm: LineDemand, n: number, k: number): number {
   return sum;
 }
 
-/** One line's stop at one platform (line null: a platform no line stops at). */
-interface Stroke {
-  s: StationInput;
-  line: LineInput | null;
-  boardings: number;
-  riders: number;
-  known: boolean;
-  w: number;
-  /** the platform itself (T-246): a strip after the station's lines, filling with its riders */
-  plat?: boolean;
-}
-
-/** Platforms drawn as one: world centre, heading, length; strokes across, in order. */
-interface Bundle {
-  x: number;
-  y: number;
-  heading: number;
-  length: number;
-  strokes: Stroke[];
-  across: number;
-}
-
-const PAD = 16; // px kept clear round the platforms
-const STUB = 7; // px the lines run past each platform end
-const MIN_W = 1.5, MAX_W = 6; // px, a line's width at the least and the most riders
-const MAX_PX_PER_M = 1.2;
-const BUNDLE_M = 12; // centre lines this close, and parallel, are drawn as one bundle
+const PAD = 24; // px kept clear round the platforms
+/** the closest the view comes: a small complex is not blown up past the map's own close-up */
+const MAX_ZOOM = 17.5;
+const BUNDLE_M = 12; // centre lines this close, and parallel, share a hover
 const PARALLEL = Math.sin((15 * Math.PI) / 180);
-const TOP_CHANGES = 8; // transfer curves drawn at most
-const MIN_CHANGE_SHARE = 0.02; // and none carrying less than this share of the complex's changes
-const XMIN_W = 1.5, XMAX_W = 8; // px, a transfer curve's width at the least and the most riders
-const MIN_GAP = 16; // px: bands nearer than this are joined middle to middle
-const PLAT_W = 5; // px, a platform's strip beside its lines (T-246)
-const CROWD = "#77726d", FULL = "#d23c3c"; // the map's platform fill and its over-full red (renderer.ts)
-
-type Pt = [number, number];
-/** The nearest points of segments p0-p1 and q0-q1 (the midpoints of their overlap if parallel). */
-function nearest(p0: Pt, p1: Pt, q0: Pt, q1: Pt): [Pt, Pt] {
-  const ux = p1[0] - p0[0], uy = p1[1] - p0[1], vx = q1[0] - q0[0], vy = q1[1] - q0[1];
-  const wx = p0[0] - q0[0], wy = p0[1] - q0[1];
-  const a = ux * ux + uy * uy, b = ux * vx + uy * vy, c = vx * vx + vy * vy, d = ux * wx + uy * wy, e = vx * wx + vy * wy;
-  const clamp = (t: number) => Math.max(0, Math.min(1, t));
-  const at = (p: Pt, x: number, y: number, t: number): Pt => [p[0] + x * t, p[1] + y * t];
-  const den = a * c - b * b;
-  let s: number, t: number;
-  if (a < 1e-9 && c < 1e-9) return [p0, q0];
-  if (a < 1e-9) return [p0, at(q0, vx, vy, clamp(e / c))];
-  if (c < 1e-9) return [at(p0, ux, uy, clamp(-d / a)), q0];
-  if (den > 1e-9 * a * c) {
-    s = clamp((b * e - c * d) / den);
-  } else {
-    // parallel: the middle of the stretch of p that lies alongside q
-    const t0 = clamp(-d / a), t1 = clamp((b - d) / a);
-    s = (t0 + t1) / 2;
-  }
-  t = (b * s + e) / c;
-  if (t < 0 || t > 1) {
-    t = clamp(t);
-    s = clamp((b * t - d) / a);
-  }
-  return [at(p0, ux, uy, s), at(q0, vx, vy, t)];
-}
+const MIN_HIT = 10; // px, a platform's hover at the least across
 
 /** One line at one platform as transfers name it. */
 const strokeKey = (station: string, line: string) => `${station}|${line}`;
-
-/** The changes between two strokes, both directions. */
-interface Change {
-  a: Stroke;
-  b: Stroke;
-  ab: number;
-  ba: number;
-}
 
 let measureCtx: CanvasRenderingContext2D | null | undefined;
 function textWidth(t: string): number {
@@ -130,7 +63,8 @@ function textWidth(t: string): number {
  * Sq-42 St/42 St-Port Authority Bus Terminal"), the whole name on hover and in the list. */
 const shortName = (n: string) => n.split("/")[0].trim() || n;
 
-function bundles(st: StationInput[], at: Map<string, Stroke[]>): Bundle[] {
+/** Stations whose platforms lie on top of each other, as groups of ids. */
+function overlaps(st: StationInput[]): Map<string, StationInput[]> {
   const n = st.length, parent = st.map((_, i) => i);
   const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
   const ends = st.map((s) => {
@@ -145,58 +79,38 @@ function bundles(st: StationInput[], at: Map<string, Stroke[]>): Bundle[] {
     }
   const groups = new Map<number, StationInput[]>();
   st.forEach((s, i) => groups.set(find(i), [...(groups.get(find(i)) ?? []), s]));
-  return [...groups.values()].map((ss) => {
-    const lead = ss.reduce((a, b) => (b.length > a.length ? b : a));
-    const h = lead.heading, ux = Math.cos(h), uy = Math.sin(h), nx = -uy, ny = ux;
-    let lo = Infinity, hi = -Infinity;
-    const side = new Map<string, number>();
-    for (const s of ss) {
-      const along = (s.x - lead.x) * ux + (s.y - lead.y) * uy;
-      const half = (s.length / 2) * Math.abs(Math.cos(s.heading - h));
-      lo = Math.min(lo, along - half);
-      hi = Math.max(hi, along + half);
-      side.set(s.id, (s.x - lead.x) * nx + (s.y - lead.y) * ny);
-    }
-    // across the bundle in the order the platforms lie (left of the heading first)
-    const order = [...ss].sort((a, b) => side.get(b.id)! - side.get(a.id)!);
-    const perp = ss.reduce((a, s) => a + side.get(s.id)!, 0) / ss.length;
-    const mid = (lo + hi) / 2;
-    const strokes = order.flatMap((s) => at.get(s.id)!);
-    return {
-      x: lead.x + ux * mid + nx * perp, y: lead.y + uy * mid + ny * perp, heading: h, length: hi - lo,
-      strokes, across: strokes.reduce((a, t) => a + t.w, 0),
-    };
-  });
+  const out = new Map<string, StationInput[]>();
+  for (const g of groups.values()) for (const s of g) out.set(s.id, g);
+  return out;
 }
 
-/** A train along its bundle at game time `t` (T-1096), in the bundle's frame: standing over the
- * platform, pulling in from the end it arrives by and slowing to a stop, or pulling out of the other
- * end gathering speed, each over PULLING_IN_S and clipped to the lines' stubs. Its start and width,
- * and whether it is moving; null out of view. */
-function trainSpan(x: TrainNow, len: number, dirB: number, t: number): { x0: number; wd: number; moving: boolean } | null {
-  const p = trainPhase(x, t);
-  if (!p) return null;
-  const L = Math.max(4, len - 2), D = len + STUB;
-  const front = len / 2 - 1 + (p.inS > 0 ? -D * (p.inS / PULLING_IN_S) ** 2 : D * (p.outS / PULLING_IN_S) ** 2);
-  const a = Math.max(front - L, -len / 2 - STUB), b = Math.min(front, len / 2 + STUB);
-  if (b - a < 0.5) return null;
-  return { x0: dirB > 0 ? a : -b, wd: b - a, moving: p.inS > 0 || p.outS > 0 };
-}
-
-/** A line colour darkened as the map's trains are (the full gauge, 48% of the line's rgb). */
-function trainShade(hex: string): string {
-  const v = [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * 0.48));
-  return `rgb(${v[0]},${v[1]},${v[2]})`;
+/** Each member's platform on the map: its two ends in Mercator 0..1 and half its width, from the
+ * renderer's station buffers; absent for a station the drawn network does not have yet. */
+function platforms(members: string[]): Map<string, { a: [number, number]; b: [number, number]; half: number }> {
+  const out = new Map<string, { a: [number, number]; b: [number, number]; half: number }>();
+  const n = live.overlay?.renderer.net;
+  if (!n) return out;
+  const o = (n.anchor ?? anchor()).merc, S = n.stations, sh = n.stationShape, ax = n.stationAxis;
+  for (const m of members) {
+    const i = stationIndexOf(n, m);
+    if (i < 0) continue;
+    const cx = S[i * 3] + (sh?.[i * 4] ?? 0), cy = S[i * 3 + 1] + (sh?.[i * 4 + 1] ?? 0);
+    const dx = ax?.[i * 2] ?? 0, dy = ax?.[i * 2 + 1] ?? 0;
+    const at = (x: number, y: number): [number, number] => [o[0] + x / EARTH_C, o[1] + y / EARTH_C];
+    out.set(m, { a: at(cx - dx, cy - dy), b: at(cx + dx, cy + dy), half: (sh?.[i * 4 + 3] ?? 0) / EARTH_C });
+  }
+  return out;
 }
 
 export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
   id: string; members: string[]; stations: Map<string, StationInput>; lines: LineInput[];
-  /** riders waiting and trains at the platforms now (T-246, game/complexLive.ts) */
+  /** riders waiting at the platforms now (T-246, game/complexLive.ts) */
   now?: ComplexNow | null;
   /** a click on a platform: open that station */
   onOpen: (station: string) => void;
 }) {
   const box = useRef<HTMLDivElement>(null);
+  const cv = useRef<HTMLCanvasElement>(null);
   const [W, setW] = useState(300);
   useLayoutEffect(() => {
     const el = box.current;
@@ -214,217 +128,91 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
   const xf = useLatestAnswer(solved ? () => complexTransfers(members) : null, [scope, solved]);
   const transfers = xf && dv && xf.scope === scope && xf.version === dv.version ? xf : null;
 
-  // T-1096: the trains drawn on a canvas over the map on every frame the game clock has moved,
-  // never through Preact (moving SVG rects every frame repainted the panel, about 5 ms a frame);
-  // their SVG rects, clear, are only the hovers, moved a few times a second. `now` keeps its
-  // identity while the same trains are drawn, its times brought up to date in place
-  // (StationInspector.tsx useComplexNow).
-  const nowRef = useRef(now), tipRef = useRef<(x: TrainNow, t: number) => string>(() => "");
-  const cvRef = useRef<HTMLCanvasElement>(null), dirty = useRef(true);
-  nowRef.current = now;
-  dirty.current = true;
-  useEffect(() => {
-    let raf = 0, last = NaN, hitAt = 0, list: readonly TrainNow[] | null = null, byId = new Map<string, TrainNow>();
-    const set = (r: Element, name: string, v: string | null) => {
-      if (r.getAttribute(name) === v) return;
-      if (v === null) r.removeAttribute(name); else r.setAttribute(name, v);
-    };
-    const frame = (wall: number) => {
-      raf = requestAnimationFrame(frame);
-      const n = nowRef.current, el = box.current, cv = cvRef.current, t = clock.now();
-      if (!n || !el || !cv || (t === last && n.trains === list && !dirty.current)) return;
-      last = t;
-      dirty.current = false;
-      if (n.trains !== list) { list = n.trains; byId = new Map(list.map((x) => [x.id, x])); }
-      const hits = wall - hitAt > 250;
-      if (hits) hitAt = wall;
-      const ctx = cv.getContext("2d");
-      if (!ctx) return;
-      const k = cv.width / (cv.clientWidth || cv.width);
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, cv.width, cv.height);
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "#fff";
-      for (const r of el.querySelectorAll<SVGRectElement>(".complex-map-train")) {
-        const x = byId.get(r.dataset.train ?? "");
-        if (!x) continue;
-        const d = r.dataset, at = trainSpan(x, Number(d.len), Number(d.dir), t);
-        if (hits) {
-          set(r, "display", at ? null : "none");
-          if (at) { set(r, "x", at.x0.toFixed(1)); set(r, "width", at.wd.toFixed(1)); set(r, "data-tip", tipRef.current(x, t)); }
-        }
-        if (!at) continue;
-        const y = Number(d.y), h = Number(d.h);
-        ctx.setTransform(k, 0, 0, k, 0, 0);
-        ctx.translate(Number(d.sx), Number(d.sy));
-        ctx.rotate((Number(d.deg) * Math.PI) / 180);
-        ctx.beginPath();
-        ctx.roundRect(at.x0, y, at.wd, h, Math.min(h, at.wd) / 2);
-        ctx.fillStyle = d.fill!;
-        ctx.globalAlpha = at.moving ? 0.5 : 1;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.stroke();
-      }
-    };
-    raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
   const st = members.map((m) => stations.get(m)).filter((s): s is StationInput => !!s);
+  const plat = platforms(members);
+
+  // the view: every platform's ends in, north up, at most MAX_ZOOM and never further out than the
+  // map's platform boxes
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const p of plat.values())
+    for (const [x, y] of [p.a, p.b]) {
+      x0 = Math.min(x0, x); x1 = Math.max(x1, x);
+      y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+    }
+  const dx = Math.max(1e-9, x1 - x0), dy = Math.max(1e-9, y1 - y0);
+  const H = Math.round(Math.max(120, Math.min(240, ((W - 2 * PAD) * dy) / dx + 2 * PAD)));
+  const zoom = Math.max(STATION_BOX_ZOOM, Math.min(MAX_ZOOM, Math.log2(Math.min((W - 2 * PAD) / dx, (H - 2 * PAD) / dy) / 512)));
+  const S = 512 * 2 ** zoom, mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+  const ok = plat.size > 0 && Number.isFinite(mx);
+  const px = (p: [number, number]): [number, number] => [W / 2 + (p[0] - mx) * S, H / 2 + (p[1] - my) * S];
+
+  useEffect(() => {
+    const o = live.overlay, c = cv.current;
+    if (!o || !c || !ok) return;
+    o.setSnapshot({ canvas: c, w: W, h: H, mx, my, zoom });
+    return () => o.setSnapshot(null);
+  }, [ok, W, H, mx, my, zoom]);
+
   if (st.length < 2) return null;
+
   // what stops at each platform
-  const at = new Map<string, Stroke[]>(st.map((s) => [s.id, []]));
+  const at = new Map<string, { line: LineInput; boardings: number; riders: number; known: boolean }[]>(st.map((s) => [s.id, []]));
   for (const l of lines) {
     const dm = lineDemand(l.id);
-    l.stops.forEach((sid, k) => {
-      const here = at.get(sid);
-      if (here) here.push({ s: stations.get(sid)!, line: l, boardings: dm?.boardings[k] ?? 0, riders: dm ? ridersAt(dm, l.stops.length, k) : 0, known: !!dm, w: 0 });
-    });
+    l.stops.forEach((sid, k) => at.get(sid)?.push({ line: l, boardings: dm?.boardings[k] ?? 0, riders: dm ? ridersAt(dm, l.stops.length, k) : 0, known: !!dm }));
   }
-  for (const s of st) if (!at.get(s.id)!.length) at.get(s.id)!.push({ s, line: null, boardings: 0, riders: 0, known: false, w: 0 });
-  const all = [...at.values()].flat();
-  const most = Math.max(0, ...all.map((t) => t.riders));
-  for (const t of all) t.w = !t.line ? 4 : t.known && most > 0 ? MIN_W + (MAX_W - MIN_W) * Math.sqrt(t.riders / most) : 3;
-  // each platform's strip after its lines (T-246), where its riders waiting are drawn
-  for (const s of st) if (at.get(s.id)![0].line) at.get(s.id)!.push({ s, line: null, boardings: 0, riders: 0, known: false, w: PLAT_W, plat: true });
-  const bs = bundles(st, at);
 
-  // fit every bundle's ends, north up
-  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-  for (const b of bs) {
-    const h = b.length / 2, dx = Math.abs(Math.cos(b.heading) * h), dy = Math.abs(Math.sin(b.heading) * h);
-    x0 = Math.min(x0, b.x - dx); x1 = Math.max(x1, b.x + dx);
-    y0 = Math.min(y0, b.y - dy); y1 = Math.max(y1, b.y + dy);
-  }
-  const edge = PAD + STUB;
-  const bw = Math.max(1, x1 - x0), bh = Math.max(1, y1 - y0);
-  const H = Math.round(Math.max(120, Math.min(240, ((W - 2 * edge) * bh) / bw + 2 * edge)));
-  const k = Math.min(MAX_PX_PER_M, (W - 2 * edge) / bw, (H - 2 * edge) / bh);
-  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-  const px = (x: number) => W / 2 + (x - cx) * k;
-  const py = (y: number) => H / 2 - (y - cy) * k;
-  const drawn = bs.map((b) => ({ b, len: Math.max(6, b.length * k), deg: (-b.heading * 180) / Math.PI, sx: px(b.x), sy: py(b.y) }));
-
-  // Transfers: each stroke's band as a segment on screen (its centre line, platform length), then
-  // the changes between strokes, both directions together, inside the complex only (a walk to a
-  // station outside it is left out).
-  const place = new Map<Stroke, { d: (typeof drawn)[number]; a: [number, number]; b: [number, number] }>();
-  const byKey = new Map<string, Stroke>();
-  for (const d of drawn) {
-    let off = -d.b.across / 2;
-    const sin = Math.sin(d.b.heading), cos = Math.cos(d.b.heading), half = d.len / 2;
-    for (const t of d.b.strokes) {
-      const c = off + t.w / 2;
-      off += t.w;
-      // local (x, c) under translate(sx, sy) rotate(-heading) is (sx + x cos + c sin, sy - x sin + c cos)
-      const x = d.sx + c * sin, y = d.sy + c * cos;
-      place.set(t, { d, a: [x - half * cos, y + half * sin], b: [x + half * cos, y - half * sin] });
-      if (t.line && !byKey.has(strokeKey(t.s.id, t.line.id))) byKey.set(strokeKey(t.s.id, t.line.id), t);
-    }
-  }
-  const changes = new Map<string, Change>();
-  const partners = new Map<Stroke, Map<string, number>>();
-  let changesInside = 0;
-  for (const p of transfers?.pairs ?? []) {
-    const a = byKey.get(strokeKey(p.fromStation, p.fromLine)), b = byKey.get(strokeKey(p.toStation, p.toLine));
-    if (!a || !b) continue;
-    changesInside += p.riders;
-    if (a === b) continue; // back the way they came on the same line
-    const [x, y] = strokeKey(a.s.id, a.line!.id) < strokeKey(b.s.id, b.line!.id) ? [a, b] : [b, a];
-    const key = `${strokeKey(x.s.id, x.line!.id)}#${strokeKey(y.s.id, y.line!.id)}`;
-    const c = changes.get(key) ?? { a: x, b: y, ab: 0, ba: 0 };
-    if (x === a) c.ab += p.riders; else c.ba += p.riders;
-    changes.set(key, c);
-    for (const [s, o] of [[a, b], [b, a]] as const) {
-      const m = partners.get(s) ?? new Map<string, number>();
-      const name = o.line!.name + (o.s.id === s.s.id ? "" : ` at ${shortName(o.s.name)}`);
-      m.set(name, (m.get(name) ?? 0) + p.riders);
-      partners.set(s, m);
-    }
-  }
-  const between = [...changes.values()]
-    .filter((c) => place.get(c.a)!.d !== place.get(c.b)!.d && c.ab + c.ba >= MIN_CHANGE_SHARE * changesInside)
-    .sort((x, y) => y.ab + y.ba - (x.ab + x.ba))
-    .slice(0, TOP_CHANGES);
-  const busiest = Math.max(0, ...between.map((c) => c.ab + c.ba));
-  const curves = between.map((c) => {
-    // across the gap between two platforms, from where their bands come nearest; bands that cross
-    // or nearly touch would make a knot of loops there, so those join their middles instead
-    const pa = place.get(c.a)!, pb = place.get(c.b)!;
-    let [A, B] = nearest(pa.a, pa.b, pb.a, pb.b);
-    if (Math.hypot(B[0] - A[0], B[1] - A[1]) < MIN_GAP) {
-      A = [(pa.a[0] + pa.b[0]) / 2, (pa.a[1] + pa.b[1]) / 2];
-      B = [(pb.a[0] + pb.b[0]) / 2, (pb.a[1] + pb.b[1]) / 2];
-    }
-    const dx = B[0] - A[0], dy = B[1] - A[1], len = Math.hypot(dx, dy);
-    // a gentle bow to the left of a to b, so changes along one line of sight stay apart; two
-    // middles at one spot get a small loop
-    const bow = Math.max(10, Math.min(30, 0.2 * len));
-    const path = len < 4
-      ? `M${A[0]},${A[1]} C${A[0] - 0.8 * bow},${A[1] - 1.6 * bow} ${B[0] + 0.8 * bow},${B[1] - 1.6 * bow} ${B[0]},${B[1]}`
-      : (() => {
-        const nx = -dy / len, ny = dx / len;
-        return `M${A[0]},${A[1]} C${A[0] + dx / 3 + nx * bow},${A[1] + dy / 3 + ny * bow} ${A[0] + (2 * dx) / 3 + nx * bow},${A[1] + (2 * dy) / 3 + ny * bow} ${B[0]},${B[1]}`;
-      })();
-    const w = XMIN_W + (XMAX_W - XMIN_W) * Math.sqrt((c.ab + c.ba) / busiest);
-    const name = (t: Stroke) => `${t.line!.name} at ${shortName(t.s.name)}`;
-    const title = `${count(c.ab + c.ba)} riders per day change between ${name(c.a)} and ${name(c.b)}\n` +
-      `${count(c.ab)} from ${c.a.line!.name} to ${c.b.line!.name}, ${count(c.ba)} the other way`;
-    return { path, w, title };
-  });
-
+  // each line's biggest changes at each platform, both directions, inside the complex only
+  const partners = new Map<string, Map<string, number>>();
   const lineById = new Map(lines.map((l) => [l.id, l]));
-  const nameOf = (sid: string) => stations.get(sid)?.name ?? "";
-  // the platform's riders now (T-246): each line and direction, as the station view's Waiting now
-  const platTip = (t: Stroke) => {
-    const name = t.s.name + (t.s.built ? "" : " (blueprint)");
-    const p = now?.platforms.get(t.s.id);
-    if (!now || !p) return `${name}\nNobody waiting: no train calls here this hour`;
-    // one figure a line name, its directions and branches summed (T-250)
-    const byName = new Map<string, number>();
-    for (const q of now.queues) {
-      const l = q.station === t.s.id ? lineById.get(q.line) : undefined;
-      if (l) byName.set(l.name, (byName.get(l.name) ?? 0) + q.waiting);
+  for (const p of transfers?.pairs ?? []) {
+    const a = stations.get(p.fromStation), b = stations.get(p.toStation), la = lineById.get(p.fromLine), lb = lineById.get(p.toLine);
+    if (!a || !b || !la || !lb || !at.has(a.id) || !at.has(b.id)) continue;
+    if (a.id === b.id && la.id === lb.id) continue; // back the way they came on the same line
+    for (const [s, l, os, ol] of [[a, la, b, lb], [b, lb, a, la]] as const) {
+      const k = strokeKey(s.id, l.id), m = partners.get(k) ?? new Map<string, number>();
+      const name = ol.name + (os.id === s.id ? "" : ` at ${shortName(os.name)}`);
+      m.set(name, (m.get(name) ?? 0) + p.riders);
+      partners.set(k, m);
     }
-    const total = p.side[0] + p.side[1];
-    let text = `${name}\n${count(total)} waiting on the platform now`;
-    if (byName.size > 1) for (const [n, v] of [...byName].sort((a, b) => b[1] - a[1])) text += `\n${count(v)} for ${n}`;
-    text += p.oneSide ? `\nRoom for ${count(p.room)} on the platform` : `\nRoom for ${count(p.room)} on each side`;
-    return text;
-  };
-  const trainTip = (x: TrainNow, t: number) => {
-    const l = lineById.get(x.line), p = trainPhase(x, t) ?? { inS: 0, outS: 0 };
-    const at = shortName(nameOf(x.station)), to = x.to !== x.station ? `to ${nameOf(x.to)}` : p.inS > 0 ? "ending its trip here" : "at the end of its trip";
-    const what = p.inS > 0 ? `Pulling in to ${at} in ${Math.max(1, Math.round(p.inS))} s` : p.outS > 0 ? `Leaving ${at}` : `Standing at ${at}`;
-    return `${l?.name ?? ""} train ${to}\n${what}`;
-  };
-  tipRef.current = trainTip;
-  const tip = (t: Stroke) => {
-    const name = t.s.name + (t.s.built ? "" : " (blueprint)");
-    if (t.plat) return platTip(t);
-    if (!t.line) return `${name}\nNo line stops here`;
-    let text = `${name}\n${t.line.name}` + (t.known ? `: ${count(t.boardings)} boardings, ${count(t.riders)} riders on its trains here per day` : "");
-    const m = partners.get(t);
-    if (m) {
-      const top = [...m].sort((x, y) => y[1] - x[1]);
-      const all = top.reduce((a, [, v]) => a + v, 0);
-      text += `\n${count(all)} change to or from other lines here a day, most with ` +
-        top.slice(0, 3).map(([n, v]) => `${n} (${count(v)})`).join(", ");
+  }
+
+  // one platform's part of a hover: its lines, the riders waiting now (T-246) and the changes
+  const platTip = (s: StationInput) => {
+    let text = s.name + (s.built ? "" : " (blueprint)");
+    const rows = at.get(s.id) ?? [];
+    if (!rows.length) return `${text}\nNo line stops here`;
+    for (const r of rows) {
+      text += `\n${r.line.name}` + (r.known ? `: ${count(r.boardings)} boardings, ${count(r.riders)} riders on its trains here per day` : "");
+      const m = partners.get(strokeKey(s.id, r.line.id));
+      if (m) {
+        const top = [...m].sort((x, y) => y[1] - x[1]);
+        text += `, ${count(top.reduce((a, [, v]) => a + v, 0))} change to or from other lines, most with ` +
+          top.slice(0, 3).map(([n, v]) => `${n} (${count(v)})`).join(", ");
+      }
+    }
+    const p = now?.platforms.get(s.id);
+    if (now && p) {
+      text += `\n${count(p.side[0] + p.side[1])} waiting on the platform now`;
+      text += p.oneSide ? `, room for ${count(p.room)}` : `, room for ${count(p.room)} on each side`;
     }
     return text;
   };
+  const together = overlaps(st);
+  const tip = (s: StationInput) => (together.get(s.id) ?? [s]).map(platTip).join("\n\n");
 
   // Name labels, when the complex has more than one name: one per name (T-169), busiest first,
   // beside its platforms, clear of every platform, other label and the scale bar.
+  const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * my)));
+  const k = S / EARTH_C / Math.cos(lat); // px per metre on the ground
   const bars = scaleBars();
   const [bar, barLabel] = bars.find(([m]) => m * k >= 40) ?? bars[bars.length - 1];
   const barRect: [number, number, number, number] = [W - 14 - bar * k, H - 24, W, H];
   const taken: [number, number, number, number][] = [barRect];
-  const samples: [number, number, number][] = []; // points along each bundle: x, y, radius
-  for (const d of drawn) {
-    const ux = Math.cos(d.b.heading), uy = -Math.sin(d.b.heading), half = d.len / 2 + STUB;
-    for (let a = -half; a <= half; a += 3) samples.push([d.sx + ux * a, d.sy + uy * a, d.b.across / 2 + 2]);
+  const samples: [number, number, number][] = []; // points along each platform: x, y, radius
+  for (const p of plat.values()) {
+    const [ax, ay] = px(p.a), [bx, by] = px(p.b), len = Math.hypot(bx - ax, by - ay), r = Math.max(MIN_HIT / 2, p.half * S) + 2;
+    for (let d = 0; d <= len; d += 3) samples.push([ax + ((bx - ax) * d) / Math.max(1, len), ay + ((by - ay) * d) / Math.max(1, len), r]);
   }
   const clear = (r: [number, number, number, number]) =>
     r[0] >= 2 && r[2] <= W - 2 && r[1] >= 2 && r[3] <= H - 2 &&
@@ -433,24 +221,26 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
   const byName = new Map<string, StationInput[]>();
   for (const s of st) byName.set(s.name, [...(byName.get(s.name) ?? []), s]);
   const labels: { text: string; x: number; y: number; anchor: string }[] = [];
-  if (byName.size > 1) {
-    const weight = (ss: StationInput[]) => ss.reduce((a, s) => a + at.get(s.id)!.length, 0);
+  if (ok && byName.size > 1) {
+    const weight = (ss: StationInput[]) => ss.reduce((a, s) => a + (at.get(s.id)?.length ?? 0), 0);
     for (const [name, all] of [...byName].sort((a, b) => weight(b[1]) - weight(a[1]))) {
-      // beside the bundle holding most of the name's lines: a name can be on two platforms
+      // beside the platform group holding most of the name's lines: a name can be on two platforms
       // apart (Penn's 34 St-Penn Station is the 1/2/3 and the A/C/E), and their midpoint is
       // somewhere else
-      const home = bs.reduce((a, b) => (b.strokes.filter((t) => t.s.name === name).length > a.strokes.filter((t) => t.s.name === name).length ? b : a));
-      const ss = all.filter((s) => home.strokes.some((t) => t.s.id === s.id));
+      const lead = all.reduce((a, b) => ((at.get(b.id)?.length ?? 0) > (at.get(a.id)?.length ?? 0) ? b : a));
+      const ss = (together.get(lead.id) ?? [lead]).filter((s) => s.name === name);
       let l = Infinity, r = -Infinity, t = Infinity, b = -Infinity;
       for (const s of ss) {
-        const h = s.length / 2, dx = Math.cos(s.heading) * h, dy = Math.sin(s.heading) * h;
-        for (const [x, y] of [[s.x - dx, s.y - dy], [s.x + dx, s.y + dy]]) {
-          l = Math.min(l, px(x)); r = Math.max(r, px(x)); t = Math.min(t, py(y)); b = Math.max(b, py(y));
+        const p = plat.get(s.id);
+        if (!p) continue;
+        for (const q of [px(p.a), px(p.b)]) {
+          l = Math.min(l, q[0]); r = Math.max(r, q[0]); t = Math.min(t, q[1]); b = Math.max(b, q[1]);
         }
       }
-      const text = shortName(name), w = textWidth(text), mx = (l + r) / 2, my = (t + b) / 2;
+      if (!Number.isFinite(l)) continue;
+      const text = shortName(name), w = textWidth(text), cx = (l + r) / 2, cy = (t + b) / 2;
       // baseline positions: above, below, right, left of the name's platforms
-      const tries: [number, number, string][] = [[mx, t - 8, "middle"], [mx, b + 18, "middle"], [r + 8, my + 4, "start"], [l - 8, my + 4, "end"]];
+      const tries: [number, number, string][] = [[cx, t - 12, "middle"], [cx, b + 22, "middle"], [r + 12, cy + 4, "start"], [l - 12, cy + 4, "end"]];
       for (const [x, y, anchor] of tries) {
         const x0 = anchor === "middle" ? x - w / 2 : anchor === "start" ? x : x - w;
         const rect: [number, number, number, number] = [x0 - 1, y - 12, x0 + w + 1, y + 3];
@@ -462,102 +252,40 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
     }
   }
 
-  // the player's links inside the complex (T-197): a dashed line between the two stations
+  // the player's links inside the complex (T-197): drawn by the renderer as bridges, hovered here
   const inside = new Set(members);
-  const links = (world.value?.save.links ?? []).filter(([a, b]) => inside.has(a) && inside.has(b) && stations.has(a) && stations.has(b)).map(([a, b]) => {
-    const sa = stations.get(a)!, sb = stations.get(b)!;
-    return { x1: px(sa.x), y1: py(sa.y), x2: px(sb.x), y2: py(sb.y), title: `You linked ${sa.name} with ${sb.name} ${length(Math.hypot(sa.x - sb.x, sa.y - sb.y))} away` };
+  const links = (world.value?.save.links ?? []).filter(([a, b]) => inside.has(a) && inside.has(b) && plat.has(a) && plat.has(b)).map(([a, b]) => {
+    const sa = stations.get(a)!, sb = stations.get(b)!, pa = plat.get(a)!, pb = plat.get(b)!;
+    const [x1, y1] = px([(pa.a[0] + pa.b[0]) / 2, (pa.a[1] + pa.b[1]) / 2]), [x2, y2] = px([(pb.a[0] + pb.b[0]) / 2, (pb.a[1] + pb.b[1]) / 2]);
+    return { x1, y1, x2, y2, title: `You linked ${sa.name} with ${sb.name} ${length(Math.hypot(sa.x - sb.x, sa.y - sb.y))} away` };
   });
 
-  const band = (d: (typeof drawn)[number], from: number, w: number, extra: number) => ({ x: -d.len / 2 - extra, y: from, width: d.len + 2 * extra, height: w });
+  // the selected station's platform last, so its hover wins where platforms cross
+  const order = [...st].sort((a, b) => (a.id === id ? 1 : 0) - (b.id === id ? 1 : 0));
   return (
     <div class="complex-map" ref={box} style={{ position: "relative" }}>
-      <canvas ref={cvRef} width={Math.round(W * devicePixelRatio)} height={Math.round(H * devicePixelRatio)}
-        style={{ position: "absolute", left: 0, top: 0, width: W + "px", height: H + "px", pointerEvents: "none" }} />
-      <svg width={W} height={H} style={{ width: W + "px", height: H + "px" }} viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Map of the complex's platforms">
-        <rect x="0.5" y="0.5" width={W - 1} height={H - 1} fill="var(--map-land)" stroke="var(--rule)" />
-        {links.map((l) => (
-          <g>
-            <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="var(--net-ink)" stroke-opacity="0.6" stroke-width="1.5" stroke-dasharray="4 3" />
-            <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="#fff" stroke-opacity="0" stroke-width="8" class="complex-map-link" data-tip={l.title} />
-          </g>
+      <canvas ref={cv} style={{ position: "absolute", left: 0, top: 0, width: W + "px", height: H + "px", pointerEvents: "none", background: "var(--map-land)" }} />
+      <svg width={W} height={H} style={{ width: W + "px", height: H + "px", position: "relative" }} viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Map of the complex's platforms">
+        <rect x="0.5" y="0.5" width={W - 1} height={H - 1} fill="none" stroke="var(--rule)" />
+        {ok && links.map((l) => (
+          <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="#fff" stroke-opacity="0" stroke-width="8" class="complex-map-link" data-tip={l.title} />
         ))}
-        {drawn.map((d) => {
-          let off = -d.b.across / 2;
-          const built = d.b.strokes.some((t) => t.s.built);
-          const mine = d.b.strokes.filter((t) => t.s.id === id);
-          let mineFrom = NaN;
-          const rows = d.b.strokes.map((t) => {
-            const y = off;
-            off += t.w;
-            if (t.s.id === id && Number.isNaN(mineFrom)) mineFrom = y;
-            return { t, y };
-          });
-          return (
-            <g transform={`translate(${d.sx} ${d.sy}) rotate(${d.deg})`}>
-              {rows.map(({ t, y }) => (
-                <rect {...band(d, y, t.w, t.line ? STUB : 0)} fill={t.line ? t.line.colour : "#fff"} opacity={t.s.built ? 1 : 0.6} />
-              ))}
-              {/* each platform's riders waiting now (T-246), as the map fills its boxes: each
-                  direction's half from the middle out by its share of the room, red once full
-                  (T-559); then the platform's blue edges (T-236) */}
-              {rows.filter(({ t }) => t.plat).map(({ t, y }) => {
-                const p = now?.platforms.get(t.s.id);
-                const half = d.len / 2 - 0.5, sg = Math.cos(t.s.heading - d.b.heading) >= 0 ? 0 : 1;
-                const fills = !p ? [] : p.oneSide
-                  ? [{ share: (p.side[0] + p.side[1]) / p.room, y0: y + 0.5, h: PLAT_W - 1 }]
-                  : [0, 1].map((k) => ({ share: p.side[k ^ sg] / p.room, y0: y + 0.5 + k * (PLAT_W - 1) / 2, h: (PLAT_W - 1) / 2 }));
-                return (
-                  <g>
-                    {fills.map((f) => {
-                      const fl = Math.min(1, f.share) * half;
-                      return fl > 0.05 ? <rect x={-fl} y={f.y0} width={2 * fl} height={f.h} fill={f.share >= 1 ? FULL : CROWD} /> : null;
-                    })}
-                    <line x1={-half} x2={half} y1={y + 0.5} y2={y + 0.5} stroke={PLATFORM_BLUE} stroke-width="1" />
-                    <line x1={-half} x2={half} y1={y + PLAT_W - 0.5} y2={y + PLAT_W - 0.5} stroke={PLATFORM_BLUE} stroke-width="1" />
-                  </g>
-                );
-              })}
-              <rect {...band(d, -d.b.across / 2 - 1, d.b.across + 2, 0)} rx="1" fill="none" stroke="var(--net-ink)" stroke-width="1" stroke-opacity="0.7"
-                stroke-dasharray={built ? undefined : "3 2"} />
-              {mine.length > 0 && (
-                <rect {...band(d, mineFrom - 1.5, mine.reduce((a, t) => a + t.w, 0) + 3, 1.5)} rx="1.5" fill="none" stroke="var(--net-ink)" stroke-width="2" />
-              )}
-              {rows.map(({ t, y }) => (
-                <rect {...band(d, y - (t.w < 4 ? (4 - t.w) / 2 : 0), Math.max(4, t.w), t.plat ? 0 : STUB)} fill="#fff" fill-opacity="0" class="complex-map-platform"
-                  onClick={() => onOpen(t.s.id)} data-tip={tip(t)} />
-              ))}
-              {/* trains standing at a platform, pulling in or pulling out (T-246, T-1096): their
-                  hovers, clear; the effect above draws them on the canvas */}
-              {(now?.trains ?? []).map((x) => {
-                const row = rows.find(({ t }) => t.s.id === x.station && t.line?.id === x.line);
-                if (!row) return null;
-                const l = row.t.line!, h = row.t.w + 1, y = row.y - 0.5;
-                const dirB = x.dir * (Math.cos(row.t.s.heading - d.b.heading) >= 0 ? 1 : -1);
-                const t = clock.now(), at = trainSpan(x, d.len, dirB, t);
-                return <rect x={at?.x0 ?? 0} y={y} width={at?.wd ?? 0} height={h} fill="#fff" fill-opacity="0" display={at ? undefined : "none"} class="complex-map-train"
-                  data-train={x.id} data-len={d.len} data-dir={dirB} data-sx={d.sx} data-sy={d.sy} data-deg={d.deg} data-y={y} data-h={h} data-fill={trainShade(l.colour)} data-tip={trainTip(x, t)} />;
-              })}
-            </g>
-          );
+        {ok && order.map((s) => {
+          const p = plat.get(s.id);
+          if (!p) return null;
+          const [ax, ay] = px(p.a), [bx, by] = px(p.b);
+          return <line x1={ax} y1={ay} x2={bx} y2={by} stroke="#fff" stroke-opacity="0" stroke-width={Math.max(MIN_HIT, 2 * p.half * S + 4)} stroke-linecap="round"
+            class="complex-map-platform" onClick={() => onOpen(s.id)} data-tip={tip(s)} />;
         })}
-        {/* over the platforms, each with a thin halo of the land so it reads across their colours */}
-        {curves.map((c) => (
-          <path d={c.path} fill="none" stroke="var(--map-land)" stroke-opacity="0.8" stroke-width={c.w + 2} stroke-linecap="round" />
-        ))}
-        {curves.map((c) => (
-          <g>
-            <path d={c.path} fill="none" stroke="var(--net-ink)" stroke-opacity="0.55" stroke-width={c.w} stroke-linecap="round" />
-            <path d={c.path} fill="none" stroke="#fff" stroke-opacity="0" stroke-width={Math.max(6, c.w + 2)} class="complex-map-change" data-tip={c.title} />
-          </g>
-        ))}
         {labels.map((l) => (
           <text x={l.x} y={l.y} text-anchor={l.anchor} class="complex-map-label">{l.text}</text>
         ))}
-        <g transform={`translate(${W - 8 - bar * k} ${H - 8})`}>
-          <line x1="0" x2={bar * k} y1="0" y2="0" stroke="var(--muted)" stroke-width="1.5" />
-          <text x={(bar * k) / 2} y="-4" text-anchor="middle" class="complex-map-scale">{barLabel}</text>
-        </g>
+        {ok && (
+          <g transform={`translate(${W - 8 - bar * k} ${H - 8})`}>
+            <line x1="0" x2={bar * k} y1="0" y2="0" stroke="var(--muted)" stroke-width="1.5" />
+            <text x={(bar * k) / 2} y="-4" text-anchor="middle" class="complex-map-scale">{barLabel}</text>
+          </g>
+        )}
       </svg>
     </div>
   );

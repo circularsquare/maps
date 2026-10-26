@@ -49,6 +49,11 @@ export interface ShadeColours {
   realMain: string;
   realOther: string;
   realMetro: string;
+  /** how opaque that layer is when not snapped to (T-1291: stronger in dark, where it was hard to see) */
+  realOpacity: number;
+  /** riders changing trains walking between stations (T-1124, `map/transferBubbles.ts`); a lighter
+   * grey in dark (T-1288) */
+  walkers: string;
   /** the outline of a line at capacity in the traffic view (T-819), the capacity tags' red */
   fullTrack: string;
   /** the thin outline round the ghost of track being placed or dragged, and of a real-network route (T-1054) */
@@ -62,7 +67,8 @@ export const SHADES: Record<Shade, ShadeColours> = {
     offRail: "#9aa3ae", offMid: "#f2f4f7", offFade: "#ffffff",
     outside: "#182536", outsideOpacity: 0.075, inactive: "#182536", inactiveOpacity: 0.11, thumbTrack: "#b9b4ad",
     markInk: NET_INK, markBlueprint: "#2f62b3",
-    realMain: "#6f7b93", realOther: "#9ea6b5", realMetro: "#9577a6",
+    realMain: "#6f7b93", realOther: "#9ea6b5", realMetro: "#9577a6", realOpacity: 0.15,
+    walkers: "#77726d",
     fullTrack: "#c0392b",
     ghost: "#000000",
   },
@@ -72,7 +78,8 @@ export const SHADES: Record<Shade, ShadeColours> = {
     offRail: "#6c747e", offMid: "#383e46", offFade: "#383e46",
     outside: "#000000", outsideOpacity: 0.35, inactive: "#000000", inactiveOpacity: 0.225, thumbTrack: "#6f6b66",
     markInk: "#e6e4e0", markBlueprint: "#8db6ee",
-    realMain: "#6e788c", realOther: "#4e5563", realMetro: "#82699a",
+    realMain: "#97a2b8", realOther: "#7a8291", realMetro: "#a98ec2", realOpacity: 0.3,
+    walkers: "#b8b3ac",
     fullTrack: "#f0584f",
     ghost: "#e6e4e0",
   },
