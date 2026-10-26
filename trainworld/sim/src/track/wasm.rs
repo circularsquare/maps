@@ -1312,3 +1312,7 @@ mod t1071_tests;
 /// T-1155: track drawn from a station branches past its platform.
 #[cfg(test)]
 mod branch_tests;
+
+/// T-1273: stop edits leave a line's ends as termini.
+#[cfg(test)]
+mod stop_edit_tests;

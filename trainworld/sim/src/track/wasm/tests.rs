@@ -1251,11 +1251,12 @@ fn branch_leaves_along_the_heading() {
     assert_eq!(a.edges_info().len() / 10, 1);
     assert_eq!(a.redo(), 0);
     assert_eq!(a.edges_info().len() / 10, 3);
-    // A segment that ends in water has no land for a bridge (T-656): refused with a kind the UI can word.
+    // A segment that ends 100 m short of water has no land for a bridge (T-656): refused with a kind
+    // the UI can word.
     let mut w = api();
     w.w.net.set_water_mask(Box::new(|x: f64, _y: f64| x > 1000.0 && x < 1500.0));
     w.w.reload();
-    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1200.0, 0.0).iter()).copied().collect();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1600.0, 0.0).iter()).copied().collect();
     assert_ne!(w.add_route(&ends, &[], 2, false), 0);
     assert!(w.issue_kinds().contains("BridgeNoRoom"), "{}", w.issue_kinds());
 }

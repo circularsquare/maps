@@ -14,6 +14,7 @@ impl TrackApi {
         let pis = pis_from(pis);
         let scaled = self.w.net.frame().scaled();
         let (a, b) = (end_from(&ends[0..5]), end_from(&ends[5..10]));
+        let lift = [matches!(a, End::Free { .. }), matches!(b, End::Free { .. })];
         let mut new_nodes = vec![];
         let mut new_edges = vec![];
         let net = &self.w.net;
@@ -93,8 +94,12 @@ impl TrackApi {
         // T-656: ground level over water is a bridge, raised over the water with ramps on land.
         // Clicked corners at ground level too (T-667, the real-network snap's routes, T-727): the
         // corners the bridge adds are cut into pieces like the clicked ones.
-        let bridged = self.bridged(&verts);
-        let cut = |b: &Option<Vec<Pi>>, n: usize, clicks: usize| match b {
+        let bridged = self.bridged(&verts, lift);
+        if let Some(b) = &bridged {
+            lift_end(&mut ops, &mut ra, b[0].level);
+            lift_end(&mut ops, &mut rb, b[b.len() - 1].level);
+        }
+        let cut =|b: &Option<Vec<Pi>>, n: usize, clicks: usize| match b {
             Some(b) if clicks > 0 => (clicks + b.len()).saturating_sub(n),
             _ => clicks,
         };
@@ -127,8 +132,22 @@ impl TrackApi {
                     return Err(Issue::Geom { edge: u32::MAX, issue: GeomIssue::ZeroLeg(0) });
                 }
             };
-            // the express pair crosses the water on its own bridge, in one piece
-            let ex_bridged = self.bridged(&ex);
+            // the express pair crosses the water on its own bridge, in one piece; an end it shares
+            // with the drawn pair stays up only where that one does
+            let ex_lift = [lift[0] && beside_a.is_none(), lift[1] && beside_b.is_none()];
+            let ex_bridged = self.bridged(&ex, ex_lift);
+            let got = ex_bridged.as_deref().unwrap_or(&ex);
+            let ex_ends = [got[0].level, got[got.len() - 1].level];
+            for (k, own, r) in [(0, own_a, &ra), (1, own_b, &rb)] {
+                match own {
+                    Some((m, _)) if ex_lift[k] => set_node_level(&mut ops, m, ex_ends[k]),
+                    None if ex_ends[k] != r.level => {
+                        self.release(&new_nodes, &new_edges);
+                        return Err(Issue::BridgeNoRoom);
+                    }
+                    _ => {}
+                }
+            }
             let pieces = match &ex_bridged {
                 Some(b) if pis.is_empty() => stroke_pieces(b, first, 0, scaled),
                 Some(b) => stroke_pieces(b, first, cut(&ex_bridged, ex.len(), clicks), scaled),
@@ -208,11 +227,13 @@ impl TrackApi {
 
     /// T-656: `shape` as a bridge over any water it crosses at ground level, or None where it needs
     /// none. With no room on land for the ramps it is left as drawn and `bridge_refused` set, so the
-    /// edit fails and says why (`bridge_refusal`).
-    pub(super) fn bridged(&mut self, shape: &[Pi]) -> Option<Vec<Pi>> {
+    /// edit fails and says why (`bridge_refusal`). `lift`: which ends are new nodes, free to stay
+    /// up on the bridge where they are over water (T-1269).
+    pub(super) fn bridged(&mut self, shape: &[Pi], lift: [bool; 2]) -> Option<Vec<Pi>> {
         let scaled = self.w.net.frame().scaled();
+        let mask = self.w.net.water_mask.as_ref();
         // a snapped real route (T-727d) bridges each river on its own
-        let b = if shape.len() > LONG_ROUTE_VERTS { bridge::bridge_long(shape, scaled, self.w.net.water_mask.as_ref()) } else { bridge::bridge(shape, scaled, self.w.net.water_mask.as_ref()) };
+        let b = if shape.len() > LONG_ROUTE_VERTS { bridge::bridge_long(shape, scaled, mask, lift) } else { bridge::bridge(shape, scaled, mask, lift) };
         match b {
             Ok(b) => b,
             Err(bridge::NoRoom) => {
@@ -659,6 +680,25 @@ impl TrackApi {
         Some((f, sf))
     }
 
+}
+
+/// T-1269: a new node the bridge leaves up, at the level its track reaches.
+fn lift_end(ops: &mut [Op], r: &mut Resolved, level: i8) {
+    if r.level != level {
+        r.level = level;
+        set_node_level(ops, r.node, level);
+    }
+}
+
+/// The level of the node `node` that `ops` create.
+fn set_node_level(ops: &mut [Op], node: u32, level: i8) {
+    for op in ops {
+        if let Op::Node { id, data: Some(d) } = op {
+            if *id == node {
+                d.level = level;
+            }
+        }
+    }
 }
 
 /// How far past a platform's end track drawn from the station branches off, m (T-1155): beyond

@@ -273,8 +273,13 @@ Full design, numbers and sources: `notes/T-008.md`.
   ramping on the last leg before the water and the first after it that are long enough for a
   ramp, and with no such leg (water just past an end) the route is refused as below
   [T-727d, T-1187; `bridge::bridge_long`].
-  With no room on land (water within 200 m of the segment's start or end, so of a station or
-  junction it leaves, or one a curve leaves no vertex room for) the edit is refused as
+  A new end over water (a free click, not track already there) stays up at level 1, with no ramp
+  on its side, so a segment may end or start mid-river with one ramp, on the land side; quad
+  track's express pair, sharing that end, must stay up there too. A segment drawn at ground level
+  from or to an end already at level 1 is bridged the same way: it stays up to the water, or comes
+  down at once where there is room (400 m) to go up again before it [T-1269].
+  With no room on land otherwise (water within 200 m of the segment's start or end, so of a
+  station or junction it leaves, or one a curve leaves no vertex room for) the edit is refused as
   `BridgeNoRoom`: "There is not enough land for the bridge ramps, which are 200 m long."
 - **Stations** are nodes on a route, platform length 60-400 m in 20 m steps, level and free of
   other nodes along it; curved platforms are fine. Through a station the platform is centred on
@@ -452,7 +457,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   a deletion never turns a circle into a balloon (the closing turn counts as a reversal). Run 0 goes
   round one way and run 1 the other, each from A to A with its own trains; a circle stands the dwell
   at A between laps, a balloon the turnaround. Every loop runs both ways (one-way loops are T-798's
-  stage L3).
+  stage L3). Stops closed into a loop whose path only runs out and back the same way (a
+  lollipop's loop stops taken out, leaving A, M, A) make no loop: a stop edit keeps the stops up
+  to where the path turns, which becomes the line's end, a terminus rather than a reversal
+  partway (T-1273, `edited_stops` in `sim/src/track/wasm/lines.rs`).
   Empty and one-stop lines are valid inactive drafts with an empty path. Stop edits use the same
   turn-valid route search for every insertion position, choosing minimum total path length plus
   the reversal penalty (append wins ties). Copying preserves stops, exact path, dwell, turnaround, cars,
