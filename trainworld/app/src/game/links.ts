@@ -9,7 +9,7 @@ import { signal } from "@preact/signals";
 import { LINK_MAX_M } from "./complexes";
 import { groundDist } from "./coords";
 import { complexOf } from "./complexView";
-import { distance, roughDistance } from "./format";
+import { distance, money, roughDistance } from "./format";
 import type { Selection, StationId } from "./types";
 import { edit, say, world } from "./world";
 
@@ -31,11 +31,11 @@ export function cancelLink(): boolean {
 export function linkRefusal(a: StationId, b: StationId): string | null {
   const st = world.peek()?.save.stations ?? [];
   const sa = st.find((s) => s.id === a), sb = st.find((s) => s.id === b);
-  if (!sa || !sb) return "Pick a station to link with.";
-  if (a === b) return "Pick another station to link with.";
+  if (!sa || !sb) return "Pick a station for the passage.";
+  if (a === b) return "Pick another station for the passage.";
   if (complexOf(a).includes(b)) return `${sb.name} is already in this complex.`;
   const d = groundDist(sa.x, sa.y, sb.x, sb.y);
-  if (d > LINK_MAX_M) return `${sb.name} is ${distance(d)} away. Stations can be linked up to ${roughDistance(LINK_MAX_M)} apart.`;
+  if (d > LINK_MAX_M) return `${sb.name} is ${distance(d)} away. A passage reaches ${roughDistance(LINK_MAX_M)}.`;
   return null;
 }
 
@@ -58,7 +58,7 @@ export async function linkPicked(picked: Selection): Promise<void> {
   const st = world.peek()?.save.stations ?? [];
   const sa = st.find((s) => s.id === from)!, sb = st.find((s) => s.id === picked.station)!;
   const a = await edit({ op: "link", a: sa.num, b: sb.num, on: true });
-  if (a.ok) say(`${sa.name} and ${sb.name} are one complex now. Riders change between them on foot.`);
+  if (a.ok) say(a.charge > 0 ? `Passage between ${sa.name} and ${sb.name} built for ${money(a.charge * 1e6)}.` : `Passage between ${sa.name} and ${sb.name} added. It is built with the stations.`);
 }
 
 /** Undo the player's link between two stations. */
@@ -67,7 +67,7 @@ export async function unlink(a: StationId, b: StationId) {
   const sa = st.find((s) => s.id === a), sb = st.find((s) => s.id === b);
   if (!sa || !sb) return;
   const r = await edit({ op: "link", a: sa.num, b: sb.num, on: false });
-  if (r.ok) say(`${sa.name} and ${sb.name} are no longer linked.`);
+  if (r.ok) say(`Passage between ${sa.name} and ${sb.name} removed.`);
 }
 
 /** The player's links with an end in `members` (a station or a complex). */

@@ -13,7 +13,8 @@ import { redo, undo } from "../game/fareUndo";
 import { Icon, LevelButtons } from "./widgets";
 import { TERRAIN_FACTORS, TERRAIN_NAMES } from "../game/terrain";
 
-const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "Trains", "Terrain"];
+// 6 T-1270's terrain, 7 left for another row, 8 and 9 T-1281's
+const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "Trains", "Terrain", "", "Station upgrades", "Passages"];
 /** a quote row's track count for high-speed track (sim `HSR_ROW`, T-817) */
 const HSR_ROW = 3;
 
@@ -21,7 +22,7 @@ function description(r: BlueprintItem) {
   if (r.kind === 5) return `${r.quantity} new ${r.quantity === 1 ? "car" : "cars"}, after spare cars`;
   // T-1270: what the ground adds to track, its class in the level field
   if (r.kind === 6) return `${distance(r.quantity)} of track, ${TERRAIN_FACTORS[r.level as number] ?? 1}x the price`;
-  const quantity = r.kind === 0 ? distance(r.quantity) : plural(r.quantity, r.kind === 1 ? "station" : "item");
+  const quantity = r.kind === 0 ? distance(r.quantity) : plural(r.quantity, r.kind === 1 ? "station" : r.kind === 8 ? "upgrade" : r.kind === 9 ? "passage" : "item");
   return [quantity, r.ramp ? "ramp" : "", r.tracks ? (r.tracks === 1 ? "single track" : r.tracks === HSR_ROW ? "high-speed track" : "double track") : "", r.wet ? "over water" : "on land"].filter(Boolean).join(", ");
 }
 
@@ -144,7 +145,7 @@ export function BlueprintBreakdown() {
                   {rows.map((r) => (
                     <li>
                       <span class="what">
-                        <span>{r.kind === 5 ? "New cars" : r.kind === 6 ? `${TERRAIN_NAMES[r.level as number] ?? "Rough"} ground` : `${levelName(r.level)} (${levelLabel(r.level)})`}</span>
+                        <span>{r.kind === 5 ? "New cars" : r.kind === 6 ? `${TERRAIN_NAMES[r.level as number] ?? "Rough"} ground` : r.kind === 9 ? "Between stations" : `${levelName(r.level)} (${levelLabel(r.level)})`}</span>
                         <span class="small muted">{description(r)}</span>
                       </span>
                       <span class="val" data-tip={moneyExact(r.cost)}>{money(r.cost)}</span>

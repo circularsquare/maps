@@ -19,6 +19,7 @@ fn spec_delay_table() {
 use super::super::bench::synth;
 use super::super::net::StationData;
 use super::super::service::Service;
+use super::super::upgrades;
 use super::super::world::{Op, TrackWorld};
 
 fn turnback_fixture(single: bool, pass: bool) -> (TrackWorld, u32, u32, u32) {
@@ -295,7 +296,7 @@ fn random_op(w: &mut TrackWorld, rng: &mut Rng) -> Option<Op> {
             let st: Vec<u32> = nodes.iter().copied().filter(|&x| n.node_platform[x as usize] > 0).collect();
             let x = *st.get(rng.below(st.len()))?;
             let d = n.station_data(x)?;
-            Op::Station { node: x, data: Some(StationData { platform: if d.platform > 120 { d.platform - 40 } else { d.platform + 40 }, ..d }) }
+            Op::Station { node: x, data: Some(StationData { platform: if d.platform > 120 { d.platform - 40 } else { d.platform + 40 }, upgrades: d.upgrades ^ upgrades::TERMINAL, ..d }) }
         }
         _ => {
             let l = *lines.get(rng.below(lines.len()))?;
@@ -410,6 +411,69 @@ fn reversing_partway_is_capped_at_twelve_an_hour_a_side() {
     let r = (0..cap.res.len()).find(|&r| cap.wire_kind(r) == 9).unwrap();
     assert_eq!(cap.users_of(r).len(), 4);
     assert!((cap.line_limits(&w.net)[other as usize][HIGH].0 - 3.0).abs() < 1e-9);
+}
+
+/// Give station `n` a terminal (T-1281), or take it away.
+fn set_terminal(w: &mut TrackWorld, n: u32, on: bool) {
+    let mut d = w.net.station_data(n).unwrap();
+    d.upgrades = if on { d.upgrades | upgrades::TERMINAL } else { d.upgrades & !upgrades::TERMINAL };
+    w.apply(Op::Station { node: n, data: Some(d) }).unwrap();
+}
+
+/// T-1281: a line ending at a through station with a terminal holds its two platforms for the
+/// dwell and turns in the sidings, pooled over two: 30 an hour at a 3-minute turnaround.
+#[test]
+fn a_terminal_turns_in_sidings_and_frees_the_platform() {
+    let (mut w, b, through, short) = turnback_fixture(false, false);
+    set_terminal(&mut w, b, true);
+    same_as_global(&w, "terminal");
+    let cap = &w.svc.cap;
+    assert!(!(0..cap.res.len()).any(|r| cap.res[r].node == b && cap.wire_kind(r) == 6), "no platform held for the turnaround");
+    let sidings: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.res[r].node == b && cap.wire_kind(r) == 10).collect();
+    assert_eq!(sidings.len(), 1);
+    let u = cap.users_of(sidings[0]);
+    assert_eq!(u.len(), 1);
+    assert_eq!((u[0].line, u[0].occ), (short, (180.0 + TERMINUS_MARGIN_S) / 2.0));
+    assert!((cap.rho[sidings[0]][HIGH] - 8.0 / 30.0).abs() < 1e-12, "30 an hour fill them");
+    let platforms: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.res[r].node == b && cap.res[r].kind == ResKind::Platform).collect();
+    assert_eq!(platforms.len(), 2);
+    for &p in &platforms {
+        assert_eq!(cap.wire_kind(p), 2);
+        assert!(cap.users_of(p).iter().any(|u| u.line == short), "arrival and departure platforms");
+        assert!((cap.rho[p][HIGH] - (12.0 + 8.0) * (30.0 + PLATFORM_MARGIN_S) / 3600.0).abs() < 1e-12);
+    }
+    assert!((0..cap.res.len()).any(|r| cap.res[r].node == b && cap.wire_kind(r) == 8), "the turn still crosses the other track");
+    let _ = through;
+    set_terminal(&mut w, b, false);
+    same_as_global(&w, "terminal removed");
+    assert!((0..w.svc.cap.res.len()).any(|r| w.svc.cap.res[r].node == b && w.svc.cap.wire_kind(r) == 6));
+    w.undo().unwrap().unwrap();
+    same_as_global(&w, "terminal undo");
+}
+
+/// T-1281: a short turnaround at a dead end turns no more than a real terminus does (36 an hour
+/// on two platform tracks), and reversing partway at a terminal is held to 30 an hour a side.
+#[test]
+fn pooled_turns_have_a_floor_and_a_terminal_lifts_the_reversing_limit() {
+    let (w, b, _, _) = turnback_fixture(false, false);
+    let mut w = w;
+    let short = (0..w.net.line_count() as u32).filter(|&l| w.net.line_ok(l)).last().unwrap();
+    let mut d = w.net.line_data(short).unwrap();
+    d.turnaround_s = 20.0;
+    w.apply(Op::Line { id: short, data: Some(d) }).unwrap();
+    let cap = &w.svc.cap;
+    let dead = (0..cap.res.len()).find(|&r| cap.res[r].node != b && cap.res[r].kind == ResKind::Terminus && cap.users_of(r).iter().any(|u| u.line == short)).unwrap();
+    assert_eq!(cap.users_of(dead).iter().find(|u| u.line == short).unwrap().occ, upgrades::POOLED_TURN_MIN_S / 2.0);
+
+    use super::super::tests::{line, reversal_fixture};
+    let (mut w, [_, t, _, m, br]) = reversal_fixture();
+    line(&mut w, &[br, t, m], [3.0, 6.0, 8.0]);
+    set_terminal(&mut w, t, true);
+    same_as_global(&w, "reversing at a terminal");
+    let cap = &w.svc.cap;
+    let r = (0..cap.res.len()).find(|&r| cap.wire_kind(r) == 9).unwrap();
+    assert!((cap.rho[r][HIGH] - 6.0 * upgrades::TERMINAL_REVERSAL_S / 3600.0).abs() < 1e-12);
+    assert!((0..cap.res.len()).any(|r| cap.res[r].node == t && cap.wire_kind(r) == 10), "it turns in the sidings");
 }
 
 /// T-798: a circle's sections join across its first stop, and the incremental pass agrees

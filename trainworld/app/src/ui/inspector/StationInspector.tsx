@@ -3,12 +3,14 @@
 import { useEffect, useState } from "preact/hooks";
 import { clock, SPEEDS } from "../../game/clock";
 import { lineDemand } from "../../game/demand";
-import { count, duration, length, levelLabel, money, roughDistance } from "../../game/format";
+import { count, distance, duration, length, levelLabel, money, roughDistance } from "../../game/format";
+import { groundDist } from "../../game/coords";
+import { passagePrice } from "../../game/upgrades";
 import type { LineInput, StationInput } from "../../game/types";
 import { complexOf, inComplexView, openAlone } from "../../game/complexView";
 import { complexNow, type ComplexNow } from "../../game/complexLive";
 import { LINK_MAX_M } from "../../game/complexes";
-import { cancelLink, linking, linksAmong, startLink, unlink } from "../../game/links";
+import { cancelLink, linking, linksAmong, unlink } from "../../game/links";
 import { selection, tool } from "../../game/ui";
 import { stationPoint } from "../../game/trip";
 import { pickTool } from "../toolKeys";
@@ -28,6 +30,7 @@ import { StationLongerTrips } from "./LongerTrips";
 import { ComplexMap } from "./ComplexMap";
 import { ClosestStations } from "./ClosestStations";
 import { PurposeSplit } from "./PurposeSplit";
+import { StationUpgrades } from "./StationUpgrades";
 
 /** Open station `m` on its own, in station view, from its complex (T-246, T-249). */
 function openStation(m: string) {
@@ -248,6 +251,7 @@ export function StationInspector({ id }: { id: string }) {
       </div>
       <StationTripLink id={id} members={asComplex ? members : [id]} />
       {!asComplex && <ConstructRemove built={s.built} construct={construct} constructLabel="Construct station" remove={remove} removeLabel="Remove station" removeTip={s.built ? "Nothing is refunded" : ""} />}
+      <StationUpgrades s={s} passageOnly={asComplex} />
       {asComplex ? (
         <ComplexSummary id={id} members={members} />
       ) : (
@@ -271,8 +275,9 @@ function tripFrom(id: string) {
   selection.value = { kind: "trip", from: at, to: null, fromStation: id };
 }
 
-/** A trip from the station, and the link to another (T-221, T-197), with what linking asks. */
-function StationTripLink({ id, members }: { id: string; members: string[] }) {
+/** A trip from the station (T-221), and while a passage is being placed (T-197, T-1281), what to
+ * click. */
+function StationTripLink({ id }: { id: string; members: string[] }) {
   const picking = linking.value === id;
   return (
     <>
@@ -281,18 +286,15 @@ function StationTripLink({ id, members }: { id: string; members: string[] }) {
         <button class="btn text" onClick={() => tripFrom(id)} data-tip="Then click another station or a place to see how the demand model's people would travel there">
           Trip from here
         </button>
-        <button class="btn text" onClick={() => (picking ? cancelLink() : startLink(id))} data-tip="Linked stations are one complex, and riders change between them on foot">
-          {picking ? "Stop linking" : "Link to another station"}
-        </button>
       </Actions>
-      {picking && <p class="muted">Click another station on the map to link it with this one. Stations up to {roughDistance(LINK_MAX_M)} apart can be linked, and riders change between them on foot. Esc stops.</p>}
+      {picking && <p class="muted">Click another station up to {roughDistance(LINK_MAX_M)} away for the passage. Esc stops.</p>}
     </>
   );
 }
 
-/** The player's links (T-197, game/links.ts): those touching the station (or, in complex view,
- * any member), each with Unlink. Stations the distance rule groups are not listed: they cannot be
- * split. */
+/** The passages (the player's links, T-197, T-1281; game/links.ts) touching the station (or, in
+ * complex view, any member): length and price, each with Remove. Stations the distance rule
+ * groups are not listed: they cannot be split. */
 function StationLinks({ id, members }: { id: string; members: string[] }) {
   const w = world.value;
   if (!w) return null;
@@ -304,17 +306,25 @@ function StationLinks({ id, members }: { id: string; members: string[] }) {
       {linesAt(x).map((l) => <Chip line={l} size="sm" />)}
     </>
   );
+  const length = (a: string, b: string) => {
+    const sa = byId.get(a), sb = byId.get(b);
+    return sa && sb ? groundDist(sa.x, sa.y, sb.x, sb.y) : 0;
+  };
   return (
     <>
-      {pairs.length > 0 && <div class="h">Linked by you</div>}
+      {pairs.length > 0 && <div class="h">Passages</div>}
       {pairs.length > 0 && (
         <ul class="rows">
-          {pairs.map(([a, b]) => (
-            <li>
-              <span class="grow chip-line">{members.length > 1 ? <>{end(a)}<span>and</span>{end(b)}</> : end(a === id ? b : a)}</span>
-              <button class="btn text" onClick={() => void unlink(a, b)}>Unlink</button>
-            </li>
-          ))}
+          {pairs.map(([a, b]) => {
+            const m = length(a, b), built = byId.get(a)?.built && byId.get(b)?.built;
+            return (
+              <li>
+                <span class="grow chip-line">{members.length > 1 ? <>{end(a)}<span>and</span>{end(b)}</> : end(a === id ? b : a)}</span>
+                <span class="val muted" data-tip={`${distance(m)} in a straight line, ${money(passagePrice(m) * 1e6)}${built ? "" : " once both stations are built"}`}>{distance(m)}</span>
+                <button class="btn text" data-tip={built ? "Nothing is refunded" : undefined} onClick={() => void unlink(a, b)}>Remove</button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </>

@@ -119,7 +119,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
   const stations: StationInput[] = s.nodes
     .filter((n) => n.platform > 0)
     .map((n) => ({
-      id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, heading: n.heading,
+      id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading,
     }));
   const lines: LineInput[] = s.lines.map((l) => ({
     id: String(l.id), num: l.id, letter: l.letter || letterOf(l.name), symbol: l.letter, name: l.name, colour: l.colour, stops: l.stops.map(String),

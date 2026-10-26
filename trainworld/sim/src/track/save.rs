@@ -124,7 +124,9 @@ pub fn encode(net: &Network) -> Vec<u8> {
         (px, py) = (net.node_x[i], net.node_y[i]);
         w.i(net.node_level[i] as i64);
         let plat = net.node_platform[i];
-        w.u(net.node_flying[i] as u64 | ((plat > 0) as u64) << 1 | ((plat > 0 && net.node_built[i]) as u64) << 2 | ((plat > 0 && net.node_off[i] && !net.node_built[i]) as u64) << 3);
+        // T-1281: a station's upgrades in bits 4 to 6, which older readers ignore
+        let ups = if plat > 0 { net.node_upgrades[i] as u64 } else { 0 };
+        w.u(net.node_flying[i] as u64 | ((plat > 0) as u64) << 1 | ((plat > 0 && net.node_built[i]) as u64) << 2 | ((plat > 0 && net.node_off[i] && !net.node_built[i]) as u64) << 3 | ups << 4);
         if plat > 0 {
             w.u(plat as u64);
             w.s(&net.node_name[i]);
@@ -251,7 +253,7 @@ pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
         let (x, y) = at(net.node_x[i], net.node_y[i]);
         out.set_node(id, Some(NodeData { x, y, level: net.node_level[i], flying: net.node_flying[i] })).map_err(|e| format!("{e:?}"))?;
         if net.node_platform[i] > 0 {
-            out.set_station(id, Some(StationData { platform: net.node_platform[i], name: net.node_name[i].clone(), built: net.node_built[i], off: net.node_off[i] })).map_err(|e| format!("{e:?}"))?;
+            out.set_station(id, net.station_data(n)).map_err(|e| format!("{e:?}"))?;
         }
     }
     let moved = |p: &Pi| {
@@ -303,7 +305,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
         if flags & 2 != 0 {
             let platform = r.u()? as u16;
             let name = r.s()?;
-            net.set_station(id, Some(StationData { platform, name, built: flags & 4 != 0, off: flags & 8 != 0 })).map_err(|e| format!("{e:?}"))?;
+            net.set_station(id, Some(StationData { platform, name, built: flags & 4 != 0, off: flags & 8 != 0, upgrades: (flags >> 4) as u8 })).map_err(|e| format!("{e:?}"))?;
         }
     }
     let n_edges = r.u()? as usize;

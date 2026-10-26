@@ -157,6 +157,8 @@ pub struct StationData {
     pub built: bool,
     /// Switched off while a blueprint (T-333, see `EdgeData::off`).
     pub off: bool,
+    /// Station upgrades, `upgrades::TERMINAL` and the like (T-1281); built when the station is.
+    pub upgrades: u8,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -302,6 +304,8 @@ pub struct Network {
     pub node_built: Vec<bool>,
     /// The blueprint station is switched off (T-333).
     pub node_off: Vec<bool>,
+    /// The station's upgrades (`StationData::upgrades`).
+    pub node_upgrades: Vec<u8>,
     pub node_ports: Vec<Ports>,
     /// Derived: the track heading through the node.
     pub node_heading: Vec<f64>,
@@ -533,6 +537,7 @@ impl Network {
             node_name: vec![],
             node_built: vec![],
             node_off: vec![],
+            node_upgrades: vec![],
             node_ports: vec![],
             node_heading: vec![],
             node_free: vec![],
@@ -679,6 +684,7 @@ impl Network {
         self.node_name.push(String::new());
         self.node_built.push(false);
         self.node_off.push(false);
+        self.node_upgrades.push(0);
         self.node_ports.push(Ports::default());
         self.node_heading.push(0.0);
     }
@@ -765,7 +771,7 @@ impl Network {
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
         (self.node_ok(n) && self.node_platform[n as usize] > 0)
-            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), built: self.node_built[n as usize], off: self.node_off[n as usize] })
+            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), built: self.node_built[n as usize], off: self.node_off[n as usize], upgrades: self.node_upgrades[n as usize] })
     }
     pub fn line_data(&self, l: u32) -> Option<LineData> {
         self.line_ok(l).then(|| {
@@ -994,12 +1000,14 @@ impl Network {
                 self.node_name[i].clear();
                 self.node_built[i] = false;
                 self.node_off[i] = false;
+                self.node_upgrades[i] = 0;
             }
             Some(d) => {
                 self.node_platform[i] = d.platform;
                 self.node_name[i] = d.name;
                 self.node_built[i] = d.built;
                 self.node_off[i] = d.off && !d.built;
+                self.node_upgrades[i] = d.upgrades & super::upgrades::ALL;
             }
         }
         self.touch.stations.push(node);
@@ -1666,6 +1674,10 @@ impl Network {
             if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] {
                 let tracks = self.node_tracks(n as u32);
                 add(1, level, tracks, wet, false, 1.0, cost::station_cost(level, self.node_platform[n], tracks, wet));
+                let ups = self.node_upgrades[n];
+                if ups != 0 {
+                    add(8, level, 0, wet, false, ups.count_ones() as f64, super::upgrades::cost(ups, level, wet));
+                }
             }
             let nn = n as u32;
             if self.priced_ends(nn, |_| true) >= 3
@@ -1688,6 +1700,14 @@ impl Network {
                 }
             }
         }
+        // passages to stations still to be constructed (T-1281), built with them
+        for ([a, b], price) in self.passages() {
+            let (a, b) = (a as usize, b as usize);
+            let ready = |n: usize| self.node_built[n] || !self.node_off[n];
+            if !(self.node_built[a] && self.node_built[b]) && ready(a) && ready(b) {
+                add(9, 0, 0, false, false, 1.0, price);
+            }
+        }
         rows.into_iter().flat_map(|((kind, level, tracks, wet, ramp), (qty, cost))|
             [kind as f64, level as f64, tracks as f64, wet as u8 as f64, ramp as u8 as f64, qty, cost]).collect()
     }
@@ -1707,6 +1727,7 @@ impl Network {
             let wet = || self.water_mask.is_water(self.node_x[n], self.node_y[n]);
             if self.node_platform[n] > 0 {
                 c += cost::station_cost(self.node_level[n], self.node_platform[n], self.node_tracks(n as u32), wet());
+                c += self.upgrades_cost(n);
             }
             if self.priced_ends(n as u32, |_| true) >= 3 {
                 c += cost::junction_cost(self.node_level[n], self.node_flying[n], wet());
@@ -1719,12 +1740,13 @@ impl Network {
                 }
             }
         }
-        c
+        c + self.passages_cost(false)
     }
 
     /// Build cost of what is constructed, US$M (SPEC 6.4): constructed edges and stations, a
     /// junction once three of its edge ends are constructed, a flat crossing once both its edges
-    /// are. `total_cost() - built_cost()` is what the blueprint would cost to construct.
+    /// are, a passage once both its stations are. `total_cost() - built_cost()` is what the
+    /// blueprint would cost to construct.
     pub fn built_cost(&self) -> f64 {
         let mut c = 0.0;
         for e in 0..self.edge_count() {
@@ -1739,6 +1761,7 @@ impl Network {
             let wet = || self.water_mask.is_water(self.node_x[n], self.node_y[n]);
             if self.node_platform[n] > 0 && self.node_built[n] {
                 c += cost::station_cost(self.node_level[n], self.node_platform[n], self.node_tracks(n as u32), wet());
+                c += self.upgrades_cost(n);
             }
             if self.priced_ends(n as u32, |e| self.edge_built[e]) >= 3 {
                 c += cost::junction_cost(self.node_level[n], self.node_flying[n], wet());
@@ -1751,7 +1774,33 @@ impl Network {
                 }
             }
         }
-        c
+        c + self.passages_cost(true)
+    }
+
+    /// Ground metres between two nodes in a straight line: a passage's length (T-1281).
+    pub fn passage_m(&self, a: u32, b: u32) -> f64 {
+        let (a, b) = (a as usize, b as usize);
+        let d = (self.node_x[a] - self.node_x[b]).hypot(self.node_y[a] - self.node_y[b]);
+        if self.frame().scaled() { d / super::frame::merc_k(0.5 * (self.node_y[a] + self.node_y[b])) } else { d }
+    }
+
+    /// The passages (the player's links) and their prices, US$M (T-1281): a passage is constructed
+    /// once both its stations are.
+    pub fn passages(&self) -> impl Iterator<Item = ([u32; 2], f64)> + '_ {
+        self.links_live().map(|p| (p, super::upgrades::passage_price(self.passage_m(p[0], p[1]))))
+    }
+
+    fn passages_cost(&self, built: bool) -> f64 {
+        self.passages().filter(|(p, _)| !built || p.iter().all(|&n| self.node_built[n as usize])).map(|x| x.1).sum()
+    }
+
+    /// A station's upgrades, US$M (T-1281).
+    pub fn upgrades_cost(&self, n: usize) -> f64 {
+        let ups = self.node_upgrades[n];
+        if ups == 0 {
+            return 0.0;
+        }
+        super::upgrades::cost(ups, self.node_level[n], self.water_mask.is_water(self.node_x[n], self.node_y[n]))
     }
 
     /// Edge ends at a node whose edge is constructed.

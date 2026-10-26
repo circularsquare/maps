@@ -422,7 +422,7 @@ impl TrackApi {
 
     #[allow(clippy::too_many_arguments)]
     pub(super) fn station_at(&mut self, kind: u32, id: u32, x: f64, y: f64, platform: u16, name: String, dry: bool) -> u32 {
-        let st = StationData { platform, name, built: false, off: false };
+        let st = StationData { platform, name, built: false, off: false, upgrades: 0 };
         if kind == 1 {
             if !self.w.net.node_ok(id) {
                 return self.refuse(Issue::NoSuchNode { node: id });
@@ -513,7 +513,7 @@ impl TrackApi {
             self.release(&nn, &ne);
             return self.refuse(Issue::Geom { edge: u32::MAX, issue: GeomIssue::ZeroLeg(0) });
         };
-        let st = StationData { platform, name, built: false, off: false };
+        let st = StationData { platform, name, built: false, off: false, upgrades: 0 };
         let mut r = 1;
         if let Some((tw, ts)) = twin {
             r = self.station_ops(Some(&route), &[(e, s), (tw, ts)], &st, dry);

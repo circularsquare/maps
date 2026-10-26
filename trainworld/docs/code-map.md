@@ -11,10 +11,10 @@ tests natively.
 - `src/track/`: the track model (T-040): geometry, costs, crossings, world frames (`frame.rs`,
   T-125), the network and its edits with undo (`world.rs`; blueprint and construct, T-055),
   run-time profiles, capacity, the boarding account (`boarding.rs`: each train's load and each
-  platform's crowd, T-164), each stop's service span for demand (`span.rs`, T-842), saves, local time (`localtime.rs`, T-309), and `wasm.rs` (`TrackApi`,
+  platform's crowd, T-164), each stop's service span for demand (`span.rs`, T-842), station upgrades (`upgrades.rs`, T-1281), saves, local time (`localtime.rs`, T-309), and `wasm.rs` (`TrackApi`,
   the clock worker's API, with the drawing tool's routes and the crossover tool's edit, T-338; its
   exports are split by area into `wasm/money.rs`, `edits.rs`, `draw.rs`, `crossings.rs`, `links.rs`,
-  `lines.rs`, `snapshot.rs` and `service.rs`, the shared helpers staying in `wasm.rs`). In the default build.
+  `lines.rs`, `snapshot.rs`, `service.rs` and `upgrades.rs`, the shared helpers staying in `wasm.rs`). In the default build.
   `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network.
   notes/T-040.md. Methods only tests and bins call (`set_line`, `set_edge`, `to_lonlat` and the
   like) sit in plain `impl` blocks, not in the WASM exports; the same holds for `DemandApi`,
@@ -171,7 +171,7 @@ leaderboards and the All cities row's trophy, T-973); `HelpPanel.tsx` (the "?" b
 checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `SkyBanner.tsx` (the clock's sky and demand band, a canvas, T-861); `StatusTag.tsx` (the demand status tag on the map's top row); `BusyTag.tsx` (the busy tag after it, T-1200); `TouchBar.tsx` (the touch control bar's buttons, T-1260); `ToolNotes.tsx` (tool hints, the notice and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
-per selection kind: `StationInspector.tsx`, `TrainInspector.tsx`, `TrackInspector.tsx` and `JunctionInspector.tsx`; `LineInspector.tsx`; the trip panels share `tripText.ts` and `RouteParts.tsx`;
+per selection kind: `StationInspector.tsx` (its upgrade row `StationUpgrades.tsx`, T-1281), `TrainInspector.tsx`, `TrackInspector.tsx` and `JunctionInspector.tsx`; `LineInspector.tsx`; the trip panels share `tripText.ts` and `RouteParts.tsx`;
 `ComplexMap.tsx` the complex map; `TrainStops.tsx` a train's next stops and who gets off, T-868; `NameEdit.tsx` a station's or line's name edited in place, T-534); `LoadingScreen.tsx` (the clock hold at startup, the loading card,
 the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the start menu and the URL switches that skip it, T-677); `NewGame.tsx` (the new game sheet: mode, start city, current location, search, real network; `START_CITIES`, `REAL_NETWORKS`, `zoneForLocation`, T-728, T-731, T-1132); `Spinner.tsx` (the small spinner, T-647, and the bunny's train, T-677); `Search.tsx` (T-148); `DemandStopped.tsx` (the alert when demand stops after startup, T-757); `keys.ts` (which keys a focused control keeps, T-183); `locate.ts` (the camera to a station or a line: search picks, the tabs' double click, the inspectors' locate button, T-569; `viewStart`, the camera at a new game's start);
 `tip.ts` (the hover tag for every panel and control, from `data-tip`, never `title`, T-210);
@@ -325,6 +325,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   and start menu to artifacts/trainworld/previews/; `SHADE=dark`; port 6120 by default),
   `t1265-hk-preview.mjs` (a line in Hong Kong's northwest, nearer Shenzhen's centre, saved: the slot
   names Hong Kong only and the line keeps Hong Kong's holidays; port 6167 by default),
+  `t1281-upgrades.mjs` (the real save's rail trips as saved, with a waiting room at every station and with a park and ride too, in one edit each; screenshots of the station panel's upgrade row and a terminal's sidings, `SHOTS_ONLY=1` for those alone; T-1281),
   `t883-fare-curve.mjs` (the real save: the default fare's rail trips against smoke's last run on the same url, and again after the changes below, the same line through other nodes and an old two-node curve changing nothing, a doubled rate and a curve steeper past 20 km losing rail trips, the weekday's income being the base, the rate and demand's extra; the Money tab's hover arrows, one-way drags sending once on release, undo, zoom keeping the slope, the off-plot arrows and their click; fare graph screenshots in t1143/), `t1201-fare-rows.mjs` (a new game's Money tab at the dock's narrowest: the rows as rates, none wrapping, a rate's whole-cent step or typed value moving later fares together, never below 0, the base and a stretch's end keeping the rates, a drag's fare followed by the rows; screenshots in t1201/; about a minute), `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
   rides and running costs, with the largest hour-to-hour change beside the flat booking's),
   `t872-holidays.mjs` (the real save over the next Thanksgiving: that day's boarding account, fares

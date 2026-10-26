@@ -21,6 +21,7 @@
 use super::lanes::{F4, F8};
 use super::network::Network;
 use super::pack::{City, PackGravity};
+use crate::track::upgrades;
 use std::collections::HashMap;
 
 /// Stations kept per cell and per subzone.
@@ -1991,6 +1992,18 @@ pub enum End {
     Far,
 }
 
+/// A ride's fixed cost to or from station `s` (`p_ride`), less `PARK_RIDE_MIN` where it has a park
+/// and ride (T-1281).
+pub fn ride_fixed(p: &Params, net: &Network, s: usize) -> f32 {
+    if net.ups(s) & upgrades::PARK_RIDE != 0 { (p.p_ride - upgrades::PARK_RIDE_MIN).max(0.0) } else { p.p_ride }
+}
+
+/// How much of its minutes a wait at station `s` counts in mode choice (T-1281): less in a
+/// waiting room.
+pub fn wait_factor(net: &Network, s: usize) -> f32 {
+    if net.ups(s) & upgrades::WAITING_ROOM != 0 { upgrades::WAITING_ROOM_WAIT } else { 1.0 }
+}
+
 /// The ride options from each place (its zone, x, y), CSR, for every layer (local commutes and
 /// everyday trips, the regional market, T-362's long trips): walks come from `build_access` per
 /// cell, rides from here. For each line, its station with the cheapest ride within `ride_max_m`;
@@ -2042,7 +2055,7 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
                 let j = st_zone[s];
                 let f = j.map_or(p.road_detour, |j| p.drive_factor(i, j));
                 let t = p.drive_min_f(d, f, a, place(j));
-                let cost = p.p_ride + p.ride_w() * t + own(d * 0.001 * f) + station_end(j);
+                let cost = ride_fixed(p, net, s) + p.ride_w() * t + own(d * 0.001 * f) + station_end(j);
                 for &l in &st_lines[s] {
                     let b = &mut best[l as usize];
                     if b.1 == NONE {
@@ -2389,6 +2402,8 @@ pub struct Graph {
     pub rn_dy: Vec<f32>,
     /// Stations with a platform away from their position, where a change can walk.
     pub st_spread: Vec<bool>,
+    /// Per station, how much of its minutes a wait there counts (`wait_factor`, T-1281).
+    pub st_wait: Vec<f32>,
     /// Incoming edges, CSR, for destination-based strategy search.
     pub rev_off: Vec<u32>,
     pub rev_from: Vec<u32>,
@@ -2439,9 +2454,9 @@ impl FareCurve {
     }
 }
 
-/// A wait is plain minutes, half the headway (Anita, T-585).
-pub fn board_cost(headway_min: f32, p: &Params) -> f32 {
-    headway_min / 2.0 + p.transfer_min
+/// A wait is plain minutes, half the headway (Anita, T-585), times the station's `wait_factor`.
+pub fn board_cost(headway_min: f32, wait_f: f32, p: &Params) -> f32 {
+    wait_f * headway_min / 2.0 + p.transfer_min
 }
 
 pub fn build_graph(net: &Network, p: &Params) -> Graph {
@@ -2452,6 +2467,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     let mut rn_next = vec![];
     let (mut rn_dx, mut rn_dy) = (vec![], vec![]);
     let mut st_spread = vec![false; s];
+    let st_wait: Vec<f32> = (0..s).map(|v| wait_factor(net, v)).collect();
     let platforms = net.stop_x.len() == net.line_stops.len() && net.stop_y.len() == net.line_stops.len();
     // route nodes where a circle's train rides on round to the first stop (T-798): nobody boards
     // there, since the first stop's own route node has the same trains
@@ -2499,7 +2515,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         let l = rn_line[r] as usize;
         if rn_next[r] != NONE {
             if !rn_wrap[r] {
-                edges.push((st, node, board_cost(net.line_headway_min[l][p.period], p), NONE));
+                edges.push((st, node, board_cost(net.line_headway_min[l][p.period], st_wait[st as usize], p), NONE));
             }
             edges.push((node, rn_next[r], rn_ride[r], node));
         }
@@ -2533,11 +2549,14 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
             }
         }
     }
+    // a passage (T-1281) walks the straight line, on moving walkways
+    let passage = |a: u32, b: u32| !net.st_passage.is_empty() && net.st_passage.binary_search(&[a.min(b), a.max(b)]).is_ok();
     for (r, &st) in rn_station.iter().enumerate() {
         let (x, y) = (net.st_x[st as usize] + rn_dx[r], net.st_y[st as usize] + rn_dy[r]);
         for &b in &near[st as usize] {
             let d = ((net.st_x[b as usize] - x).powi(2) + (net.st_y[b as usize] - y).powi(2)).sqrt();
-            edges.push(((s + r) as u32, b, p.xfer_min(d) * p.w_xfer, NONE));
+            let walk = if passage(st, b) { d / upgrades::PASSAGE_MPS / 60.0 } else { p.xfer_min(d) };
+            edges.push(((s + r) as u32, b, walk * p.w_xfer, NONE));
         }
     }
     edges.sort_by_key(|e| e.0);
@@ -2567,6 +2586,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         rn_dx,
         rn_dy,
         st_spread,
+        st_wait,
         rn_tph,
         rev_off,
         rev_from: incoming.iter().map(|x| x.1).collect(),
@@ -3305,7 +3325,7 @@ impl Search<'_> {
         let (from, f) = (g.rn_station[r] as usize, g.rn_tph[r]);
         self.offer[r] = d;
         if !self.done[from] {
-            if let Some(cost) = join_line(&mut self.frequency[from], &mut self.weighted[from], self.dist[from], f, d, self.p) {
+            if let Some(cost) = join_line(&mut self.frequency[from], &mut self.weighted[from], self.dist[from], f, d, g.st_wait[from], self.p) {
                 self.board[r >> 6] |= 1 << (r & 63);
                 self.dist[from] = cost;
                 self.next[from] = (self.s + r) as u32;
@@ -3319,7 +3339,7 @@ impl Search<'_> {
             let c = &mut self.cn[k];
             // a line costing more from boarding than the pool does already never joins it
             if c.done || d >= c.dist || barred(g, &self.nst, r, c.line, c.ban) { continue; }
-            if let Some(cost) = join_line(&mut c.frequency, &mut c.weighted, c.dist, f, d, self.p) {
+            if let Some(cost) = join_line(&mut c.frequency, &mut c.weighted, c.dist, f, d, g.st_wait[from], self.p) {
                 c.dist = cost;
                 self.cn_bits[c.bits as usize + i / 64] |= 1 << (i % 64);
                 self.heap.push(cost, (self.n + self.nr + k) as u32);
@@ -3422,7 +3442,7 @@ impl Search<'_> {
                 self.cn_bits.resize(b0 + (e1 - e0).div_ceil(64), 0);
                 let mut c = Change { st: v as u32, line, ban, frequency: 0.0, weighted: 0.0, dist: f32::INFINITY, done: false, feed: (f0 as u32, self.cn_feed.len() as u32), bits: b0 as u32 };
                 for &(od, r) in &self.cand {
-                    if let Some(cost) = join_line(&mut c.frequency, &mut c.weighted, c.dist, g.rn_tph[r as usize], od, self.p) {
+                    if let Some(cost) = join_line(&mut c.frequency, &mut c.weighted, c.dist, g.rn_tph[r as usize], od, g.st_wait[v], self.p) {
                         c.dist = cost;
                         let i = self.edge_ix[r as usize] as usize;
                         self.cn_bits[b0 + i / 64] |= 1 << (i % 64);
@@ -3480,9 +3500,9 @@ impl Search<'_> {
 /// lowers the expected cost there below `cur`: the new cost, with the station's pooled frequency
 /// and frequency-weighted cost updated.
 #[inline(always)]
-fn join_line(frequency: &mut f32, weighted: &mut f32, cur: f32, f: f32, d: f32, p: &Params) -> Option<f32> {
+fn join_line(frequency: &mut f32, weighted: &mut f32, cur: f32, f: f32, d: f32, wait_f: f32, p: &Params) -> Option<f32> {
     let sum = *frequency + f;
-    let cost = (*weighted + f * d) / sum + board_cost(60.0 / sum, p);
+    let cost = (*weighted + f * d) / sum + board_cost(60.0 / sum, wait_f, p);
     if cost >= cur {
         return None;
     }
@@ -3547,18 +3567,20 @@ struct SkimKey {
     rn_dx: Vec<f32>,
     rn_dy: Vec<f32>,
     transfer_min: f32,
+    st_wait: Vec<f32>,
     fare_curve: FareCurve,
     rn_km: Vec<f32>,
 }
 
 impl SkimKey {
     fn of(g: &Graph, p: &Params) -> SkimKey {
-        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.transfer_min, fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone() }
+        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.transfer_min, st_wait: g.st_wait.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone() }
     }
     fn same(&self, g: &Graph, p: &Params) -> bool {
         self.n_st == g.n_st
             && self.n == g.n
             && self.transfer_min == p.transfer_min
+            && self.st_wait == g.st_wait
             && self.fare_curve == g.fare_curve
             && self.rn_km == g.rn_km
             && self.rn_dx == g.rn_dx

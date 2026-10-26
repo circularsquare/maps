@@ -1526,6 +1526,14 @@ impl EverydayApi {
     pub fn set_complexes(&mut self, complex: &[u32]) {
         self.engine.set_complexes(complex);
     }
+    /// `DemandApi::set_upgrades` (T-1281).
+    pub fn set_upgrades(&mut self, ups: &[u8]) {
+        self.engine.set_upgrades(ups);
+    }
+    /// `DemandApi::set_passages` (T-1281).
+    pub fn set_passages(&mut self, pairs: &[u32]) {
+        self.engine.set_passages(pairs);
+    }
     /// `DemandApi::set_span` (T-842).
     pub fn set_span(&mut self, span: &[f32]) {
         self.engine.set_span(span);

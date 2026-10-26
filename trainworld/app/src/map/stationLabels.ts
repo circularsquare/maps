@@ -21,6 +21,7 @@ import type { Overlay } from "./overlay";
 import { perfOff, perfTry } from "../perfFlags";
 import { BoxGrid, MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
 import { plainBoxHalfPx } from "./stationGeometry";
+import { hasUpgrade, UPGRADE } from "../game/upgrades";
 
 /** ?perfOff=labels (T-045, measurement only): DOM labels never placed. */
 const NO_LABELS = perfOff("labels");
@@ -133,7 +134,7 @@ export class StationLabels {
     // Length and the player's links are in the key because they decide complexes (T-209).
     const links = w.save.links ?? [];
     // and the draw anchor: the names' positions are in its local units (T-307)
-    const key = `${anchor().version}\n` + stations.map((s) => `${s.id}|${s.name}|${s.built}|${s.lng}|${s.lat}|${s.heading}|${s.length}|${[...(lines.get(s.id) ?? [])].join(",")}`).join("\n") + "\n" + links.join("|");
+    const key = `${anchor().version}\n` + stations.map((s) => `${s.id}|${s.name}|${s.built}|${s.lng}|${s.lat}|${s.heading}|${s.length}|${s.upgrades ?? 0}|${[...(lines.get(s.id) ?? [])].join(",")}`).join("\n") + "\n" + links.join("|");
     if (key === this.key) return;
     this.key = key;
     // the world's complexes (game/complexView.ts), built once for every user of this world
@@ -150,7 +151,7 @@ export class StationLabels {
       else spare.set(k, [l]);
     }
     this.labels = names.map((g) => {
-      const cls = "stn-label" + (g.built ? "" : " plan");
+      const cls = "stn-label" + (g.built ? "" : " plan") + (g.park ? " park" : "");
       const [x, y] = toLocal(g.lng, g.lat);
       const below = Math.abs(Math.cos(g.heading)) > Math.abs(Math.sin(g.heading));
       const old = spare.get(cls + "\u0000" + g.name)?.pop();
@@ -280,6 +281,8 @@ interface NameGroup {
   lat: number;
   heading: number;
   built: boolean;
+  /** a member has a park and ride (T-1281): a P beside the name */
+  park: boolean;
   /** distinct lines stopping at any of its stations */
   lines: number;
 }
@@ -307,7 +310,7 @@ function labelGroups(stations: readonly StationInput[], lines: ReadonlyMap<strin
       for (const l of lines.get(s.id) ?? []) ids.add(l);
       if ((lines.get(s.id)?.size ?? 0) > (lines.get(lead.id)?.size ?? 0)) lead = s;
     }
-    out.push({ name: lead.name, lng: lng / members.length, lat: lat / members.length, heading: lead.heading, built: members.some((s) => s.built), lines: ids.size });
+    out.push({ name: lead.name, lng: lng / members.length, lat: lat / members.length, heading: lead.heading, built: members.some((s) => s.built), park: members.some((s) => hasUpgrade(s.upgrades, UPGRADE.parkRide)), lines: ids.size });
   }
   return out.sort((a, b) => b.lines - a.lines || Number(b.built) - Number(a.built));
 }

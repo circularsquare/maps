@@ -382,7 +382,7 @@ impl TrackApi {
     /// paid for at once (final).
     pub fn set_station_props(&mut self, node: u32, platform: u16, name: String) -> u32 {
         let Some(old) = self.w.net.station_data(node) else { return self.refuse(Issue::NoSuchNode { node }) };
-        let op = Op::Station { node, data: Some(StationData { platform, name, built: old.built, off: old.off }) };
+        let op = Op::Station { node, data: Some(StationData { platform, name, ..old.clone() }) };
         if old.built && old.platform != platform {
             self.run_charged(op)
         } else {

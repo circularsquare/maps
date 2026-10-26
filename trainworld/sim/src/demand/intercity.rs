@@ -16,7 +16,7 @@
 //! data/packs/intercity.json, the joint commute gravity's input, and the tests' fixtures) opens as
 //! a closed world over its own zones with the ground curve alone.
 use super::{
-    api::{check_fare_curve, demand_groups, fare_x_usd, merge_stations, put_fare_curve, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
+    api::{check_fare_curve, demand_groups, demand_passages, demand_ups, fare_x_usd, merge_stations, put_fare_curve, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
     clock::now_ms,
     days::{everyday as everyday_purpose, load_factor, share_out, share_ret, LONGER, WEEKDAY, WORK},
     everyday::{KIND_COUNT, OUTWARD, RETURN},
@@ -2049,6 +2049,10 @@ pub struct IntercityApi {
     /// `DemandApi::set_fare_curve`'s knots (T-883)
     fare_curve: Vec<f32>,
     complex_in: Vec<u32>,
+    /// `DemandApi::set_upgrades` (T-1281).
+    ups_in: Vec<u8>,
+    /// The passages of the next `set_network` (`set_passages`, T-1281).
+    passages_in: Vec<u32>,
     /// `DemandApi::set_span` (T-842).
     span_in: Vec<f32>,
     /// T-409: per served zone, the track components its stations lie in.
@@ -2283,6 +2287,8 @@ impl IntercityApi {
             fare_per_km: 0.,
             fare_curve: vec![],
             complex_in: vec![],
+            ups_in: vec![],
+            passages_in: vec![],
             span_in: vec![],
             chunk: 0.,
             served_comp: vec![],
@@ -2835,6 +2841,7 @@ impl IntercityApi {
         }
         let (st_x, st_y, st_map) = merge_stations(st_xy, &off, stops, self.base.station_merge_m);
         let group = demand_groups(&st_map, st_x.len(), &self.complex_in);
+        let ups = demand_ups(&st_map, st_x.len(), &self.ups_in);
         let svc = Service {
             st_x,
             st_y,
@@ -2847,6 +2854,8 @@ impl IntercityApi {
             cars: cars.to_vec(),
             group,
             span: span_for(&self.span_in, stops.len()),
+            ups,
+            passages: demand_passages(&st_map, &self.passages_in),
         };
         // T-124: as `DemandApi::set_network`, access is kept with the layout and a period with
         // its level's inputs
@@ -2881,6 +2890,14 @@ impl IntercityApi {
     }
     pub fn set_complexes(&mut self, complex: &[u32]) {
         self.complex_in = complex.to_vec();
+    }
+    /// `DemandApi::set_upgrades` (T-1281).
+    pub fn set_upgrades(&mut self, ups: &[u8]) {
+        self.ups_in = ups.to_vec();
+    }
+    /// `DemandApi::set_passages` (T-1281).
+    pub fn set_passages(&mut self, pairs: &[u32]) {
+        self.passages_in = pairs.to_vec();
     }
     /// `DemandApi::set_span` (T-842): riders between cities read the same service span.
     pub fn set_span(&mut self, span: &[f32]) {

@@ -7,6 +7,7 @@
 // each line is resampled every 50 m into `samples`; run 1's offset s is `length - s` on run 0.
 
 import { rgb } from "../game/palette";
+import { hasUpgrade, UPGRADE } from "../game/upgrades";
 import type { ClockState } from "../workers/protocol";
 import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { M_BAD, M_CROSSING, M_JUNCTION, rampMarks } from "./markData";
@@ -348,8 +349,9 @@ const TURNBACK_M = 50;
  * to the departure track. Drawn along the line's own strokes with `Strokes.lane` signed (`F_TURNBACK`:
  * 0 the left track of run 0's direction, 255 the right).
  */
-function turnbackStrokes(s: ClockState, lines: NetCache["lines"], endCount: Map<number, number>): Strokes {
+function turnbackStrokes(s: ClockState, lines: NetCache["lines"], endCount: Map<number, number>, more: (b: StrokeBuilder) => void): Strokes {
   const b = new StrokeBuilder();
+  more(b);
   const nodes = new Map(s.nodes.map((n) => [n.id, n]));
   for (const l of s.lines) {
     const st = lines.get(l.id)?.strokes;
@@ -456,6 +458,44 @@ function trainSpeeds(s: ClockState, edgeBase: Map<number, [number, Strokes]>, co
     }
   }
   return out;
+}
+
+/** A terminal's sidings (T-1281), m: how far they run past the platform's end, and over how much of
+ * that each leaves its running track. */
+const SIDING_M = 160, SIDING_LEAD_M = 40;
+/** Where the two sidings lie between the running tracks (`F_TURNBACK` lanes, -1 and 1 the tracks). */
+const SIDING_LANE = 0.5;
+
+/**
+ * A terminal's two sidings past each end of its platform where track runs on (T-1281), between the
+ * running tracks and drawn like the turn-back crossovers. `ways`: the track leaving each station
+ * along each of its edges, from the node at the platform's middle.
+ */
+function terminalSidings(b: StrokeBuilder, s: ClockState, ways: (node: number) => [number, Float32Array][]) {
+  for (const n of s.nodes) {
+    if (!n.platform || !hasUpgrade(n.upgrades, UPGRADE.terminal)) continue;
+    const ws = ways(n.id);
+    if (ws.length < 2) continue;
+    const perM = 1 / Math.cos(n.lat * Math.PI / 180);
+    const flags = n.stationBuilt ? 0 : F_FADED;
+    const d0 = n.platform / 2 * perM, d1 = d0 + SIDING_LEAD_M * perM, d2 = d0 + SIDING_M * perM;
+    for (const [edge, p] of ws) {
+      const pts: number[] = [], at: number[] = [];
+      let d = 0;
+      const cut = (k: number, t: number) => { for (let j = 0; j < 3; j++) pts.push(p[k * 3 + j] + (p[k * 3 + 3 + j] - p[k * 3 + j]) * t); };
+      for (let k = 0; k + 1 < p.length / 3 && d < d2; k++) {
+        const len = Math.hypot(p[k * 3 + 3] - p[k * 3], p[k * 3 + 4] - p[k * 3 + 1]);
+        for (const c of [d0, d1, d2]) if (len > 0 && c >= d && c < d + len) { cut(k, (c - d) / len); at.push(c); }
+        d += len;
+        if (d > d0 && d < d2) { cut(k, 1); at.push(d); }
+      }
+      if (at.length < 2) continue;
+      for (const side of [-1, 1]) {
+        const lane = at.map((x) => Math.round(127.5 * (1 + side * (x >= d1 ? SIDING_LANE : 1 - (1 - SIDING_LANE) * (x - d0) / (d1 - d0)))));
+        b.add(pts, TRACK, edge, flags | F_TURNBACK, false, 0, undefined, lane);
+      }
+    }
+  }
 }
 
 /** The lane value (0-1) a fraction `f` of the way along an edge's drawn points. */
@@ -614,7 +654,6 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     }
   }
   cache.lines = linesSeen;
-  const turnbacks = turnbackStrokes(s, linesSeen, endCount);
   const served = new Map<number, number>();
   for (const l of s.lines) for (const st of new Set(l.stops)) served.set(st, (served.get(st) ?? 0) + 1);
   // whether a line runs through each node, so a station's box covers it (one line width since T-190)
@@ -640,6 +679,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     const p = edgePts.get(id), e = edgeEnds.get(id);
     return !p || !e ? new Float32Array(0) : e.a === node ? p : reversed(p);
   };
+  const turnbacks = turnbackStrokes(s, linesSeen, endCount, (b) => terminalSidings(b, s, (n) => (waysAt.get(n) ?? []).map((id) => [id, way(n, id)])));
   // The station dot sits on the track: its node position, from the local polyline of an edge
   // that ends there (exact), else converted from lng/lat by the label code.
   const nodeLocal = new Map<number, [number, number]>();

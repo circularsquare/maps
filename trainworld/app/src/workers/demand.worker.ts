@@ -1090,6 +1090,8 @@ async function run() {
           const m = viewOf(c, p).net;
           held.delete(p);
           p.set_complexes(m.complex);
+          p.set_upgrades(m.ups ?? new Uint8Array(0));
+          p.set_passages(m.passages ?? new Uint32Array(0));
           p.set_span(m.span ?? new Float32Array(0));
           if (p instanceof IntercityApi) {
             p.set_sampled(!job.exactMarket);

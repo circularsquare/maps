@@ -743,6 +743,21 @@ notes/T-420.md has the tables.
   perceived minutes a change). Check: published
   interchange times for a few big hubs (London's TfL interchange walk times, Tokyo station transfer
   guides) against what the rule gives for the same platforms.
+- **Passages** (T-1281). A change between two stations the player joined by a passage walks the
+  straight line between the platforms' centres at 2 m/s (moving walkways, no detour), weighted
+  1.39 like any transfer walk, with the boarding's wait and the fixed 2 perceived minutes. Set by
+  judgement (Anita's yes, 2026-10-25), not fitted. Why it may not carry over: real long passages
+  (Paris's Chatelet, Tokyo's Otemachi, Hong Kong's Central-Hong Kong walkway) have stairs, gates
+  and crowds that slow them below 2 m/s, and riders dislike them more than their minutes say.
+  Check: a few published passage times against the rule.
+- **Station upgrades in demand** (T-1281, Anita's yes, 2026-10-25). A park and ride takes 10
+  perceived minutes off a ride's fixed 15 to or from that station; a waiting room counts the
+  half-headway wait there at 0.8 of its minutes, in route choice as in mode choice. Both are flat
+  judgement figures, the player's to buy, and read nothing local. Why they may not carry over: the
+  value of a car park depends on car ownership and parking elsewhere (in a city where few drive
+  it does little, which the ride's other costs already show); the shelter discount stands for
+  seats, heat and cover, worth more in harsh climates. Check: rail shares at a city's park and
+  ride stations against nearby ones without.
 - **No train that walks further than walking there** (Anita, T-1059; docs/demand-kernel.md step
   5). A pair of stations is no rail option for a trip when the walks to, between and from its
   stations, in straight metres, are longer than the trip's own walking distance (over water

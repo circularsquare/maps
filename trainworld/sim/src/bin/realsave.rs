@@ -72,7 +72,7 @@ fn main() {
             net.set_node(id, Some(NodeData { x: quant(x), y: quant(y), level, flying: false })).unwrap();
             let s = &stations[stops[k]];
             let name = s["name"].as_str().unwrap().to_string();
-            net.set_station(id, Some(StationData { platform, name: name.clone(), built: true, off: false })).unwrap();
+            net.set_station(id, Some(StationData { platform, name: name.clone(), built: true, off: false, upgrades: 0 })).unwrap();
             node_key.push(s["key"].as_str().unwrap().to_string());
             node_names.push(name);
             nodes.push(id);

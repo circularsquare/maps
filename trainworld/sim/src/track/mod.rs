@@ -20,6 +20,7 @@
 //! - `localtime`: each region's local time (T-309): the zone table and a place's shift.
 //! - `save`: the network part of a save (varints, mm deltas).
 //! - `trace`: a real railway's line as the corners the track tool places (T-727c).
+//! - `upgrades`: station upgrades (T-1281): their bits, prices and turning rules.
 //! - `wasm`: the wasm-bindgen API for the clock worker.
 //! - `bench`: a synthetic 2,000 km network and edit timings (`src/bin/track_bench.rs`).
 //! - `world`: edit operations with inverses, undo/redo, dirty sets; what the clock worker owns.
@@ -41,6 +42,7 @@ pub mod save;
 pub mod service;
 pub mod span;
 pub mod trace;
+pub mod upgrades;
 /// The clock worker's API; left out of the demand workers' module (feature `track-api`, T-051).
 #[cfg(feature = "track-api")]
 pub mod wasm;

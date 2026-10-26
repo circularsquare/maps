@@ -187,6 +187,34 @@ pub(crate) fn demand_groups(st_map: &[u32], n: usize, complex: &[u32]) -> Vec<u3
     (0..n).map(|d| find(&mut parent, d) as u32).collect()
 }
 
+/// Each demand station's upgrades (T-1281): those of the snapshot stations merged into it
+/// (`ups`, one per snapshot station), together. Empty when `ups` does not match or has none.
+pub(crate) fn demand_ups(st_map: &[u32], n: usize, ups: &[u8]) -> Vec<u8> {
+    if ups.len() != st_map.len() || ups.iter().all(|&u| u == 0) {
+        return vec![];
+    }
+    let mut out = vec![0u8; n];
+    for (i, &u) in ups.iter().enumerate() {
+        out[st_map[i] as usize] |= u;
+    }
+    out
+}
+
+/// The passages between demand stations (T-1281): `pairs` of snapshot stations, flat, carried
+/// over to the demand stations they were merged into; a pair merged into one station is dropped.
+pub(crate) fn demand_passages(st_map: &[u32], pairs: &[u32]) -> Vec<[u32; 2]> {
+    let mut out: Vec<[u32; 2]> = pairs
+        .chunks_exact(2)
+        .filter(|p| (p[0] as usize) < st_map.len() && (p[1] as usize) < st_map.len())
+        .map(|p| (st_map[p[0] as usize], st_map[p[1] as usize]))
+        .filter(|(a, b)| a != b)
+        .map(|(a, b)| [a.min(b), a.max(b)])
+        .collect();
+    out.sort_unstable();
+    out.dedup();
+    out
+}
+
 /// The network as the snapshot packs it (`set_network`).
 pub(crate) struct Service {
     /// Demand stations: the snapshot's stations, those within `Params::station_merge_m` of each
@@ -209,6 +237,10 @@ pub(crate) struct Service {
     pub(crate) group: Vec<u32>,
     /// `Network::span` (T-842), empty for 1 everywhere.
     pub(crate) span: Vec<f32>,
+    /// `Network::st_ups` (`demand_ups`, T-1281).
+    pub(crate) ups: Vec<u8>,
+    /// `Network::st_passage` (`demand_passages`, T-1281).
+    pub(crate) passages: Vec<[u32; 2]>,
 }
 
 /// `span` if it is one per period and route node of `stops` stops, else empty (T-842).
@@ -233,6 +265,8 @@ impl Service {
             && same_bits(&self.stop_xy, &o.stop_xy)
             && same_bits(&self.cars, &o.cars)
             && self.group == o.group
+            && self.ups == o.ups
+            && self.passages == o.passages
     }
     /// T-124: the periods (bit q) whose inputs are the same in `o`: the same layout, and the run
     /// times and trains an hour of the period's level. A period reads no other level's.
@@ -384,6 +418,10 @@ pub struct DemandApi {
     open_ms: f64,
     /// The complex of each station of the next `set_network` (`set_complexes`, T-161).
     complex_in: Vec<u32>,
+    /// The upgrades of each station of the next `set_network` (`set_upgrades`, T-1281).
+    ups_in: Vec<u8>,
+    /// The passages of the next `set_network` (`set_passages`, T-1281).
+    passages_in: Vec<u32>,
     /// The service span of the next `set_network` (`set_span`, T-842).
     span_in: Vec<f32>,
     /// T-124: the periods (bit q) whose inputs the last `set_network` and `set_fares` left as they
@@ -461,6 +499,8 @@ impl DemandApi {
             stop_y: svc.stop_xy.iter().skip(1).step_by(2).copied().collect(),
             line_wrap: vec![false; nl],
             span: svc.span.clone(),
+            st_ups: svc.ups.clone(),
+            st_passage: svc.passages.clone(),
         };
         for l in 0..nl {
             let (a, b) = (svc.line_off[l] as usize, svc.line_off[l + 1] as usize);
@@ -689,6 +729,8 @@ impl DemandApi {
             fare_curve: vec![],
             open_ms: 0.0,
             complex_in: vec![],
+            ups_in: vec![],
+            passages_in: vec![],
             span_in: vec![],
             same: 0,
             layout_same: false,
@@ -791,7 +833,7 @@ impl DemandApi {
         let (walk_home_zone, walk_work_zone) = no_rail_trips(&z, &gr, &base, &nr);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], span_in: vec![], same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)? })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)? })
     }
 
     /// `new` at a level of detail (T-1222, `lod::FINE` or `lod::COARSE`): the commute chunks
@@ -815,6 +857,19 @@ impl DemandApi {
     /// length: no complexes, only the walks within `xfer_walk_m`.
     pub fn set_complexes(&mut self, complex: &[u32]) {
         self.complex_in = complex.to_vec();
+    }
+
+    /// The station upgrades of the networks `set_network` is given from now on (T-1281): one
+    /// `track::upgrades` bit set per station. Empty (the default) or another length: none.
+    pub fn set_upgrades(&mut self, ups: &[u8]) {
+        self.ups_in = ups.to_vec();
+    }
+
+    /// The passages of the networks `set_network` is given from now on (T-1281): station pairs,
+    /// flat. A change between the two stations of a pair walks the straight line at
+    /// `PASSAGE_MPS`. Empty (the default): none.
+    pub fn set_passages(&mut self, pairs: &[u32]) {
+        self.passages_in = pairs.to_vec();
     }
 
     /// The service span of the networks `set_network` is given from now on (T-842): per period
@@ -864,6 +919,7 @@ impl DemandApi {
         }
         let (st_x, st_y, st_map) = merge_stations(st_xy, &line_off, stops, self.base.station_merge_m);
         let group = demand_groups(&st_map, st_x.len(), &self.complex_in);
+        let ups = demand_ups(&st_map, st_x.len(), &self.ups_in);
         let svc = Service {
             st_x,
             st_y,
@@ -876,6 +932,8 @@ impl DemandApi {
             cars: cars.to_vec(),
             group,
             span: span_for(&self.span_in, nstops),
+            ups,
+            passages: demand_passages(&st_map, &self.passages_in),
         };
         let old = self.svc.as_ref().filter(|_| self.reusable);
         self.reusable = true;

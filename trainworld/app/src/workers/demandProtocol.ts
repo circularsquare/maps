@@ -26,6 +26,10 @@ export interface DemandNetwork {
   stXY: Float32Array;
   /** each station's complex (T-161, `DemandApi.set_complexes`): equal numbers are one complex */
   complex: Uint32Array;
+  /** each station's upgrades (T-1281, `DemandApi.set_upgrades`), absent where none has any */
+  ups?: Uint8Array;
+  /** station pairs joined by a passage, flat (T-1281, `DemandApi.set_passages`), absent where none */
+  passages?: Uint32Array;
   /** stops per line */
   lineN: Uint32Array;
   /** station index of every stop, line after line */

@@ -87,6 +87,8 @@ pub struct TrackApi {
     edit_at: f64,
     /// Pieces the last batch level change left out (T-815).
     skipped: u32,
+    /// What the last `link_stations` paid, US$M (T-1281).
+    link_charge: f64,
 }
 
 /// T-1071: the end of a track save that carries the service's eras (`Service::encode_eras`):
@@ -244,6 +246,7 @@ impl TrackApi {
             lead: 0.0,
             edit_at: f64::NAN,
             skipped: 0,
+            link_charge: 0.0,
         }
     }
 
@@ -513,6 +516,7 @@ mod links;
 mod lines;
 mod snapshot;
 mod service;
+mod upgrades;
 
 /// What buying the cars the running lines need beyond `fleet` costs, US$M.
 fn trains_to_buy(w: &TrackWorld, fleet: [u32; 2]) -> f64 {
@@ -1232,7 +1236,7 @@ impl TrackApi {
         self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, hsr: false }) })
     }
     pub fn set_station(&mut self, node: u32, platform: u16, name: String) -> u32 {
-        self.run(Op::Station { node, data: Some(StationData { platform, name, built: false, off: false }) })
+        self.run(Op::Station { node, data: Some(StationData { platform, name, built: false, off: false, upgrades: 0 }) })
     }
     /// What constructing these would cost now, US$M (junctions and crossings they complete
     /// included).
@@ -1322,3 +1326,7 @@ mod branch_tests;
 /// T-1273: stop edits leave a line's ends as termini.
 #[cfg(test)]
 mod stop_edit_tests;
+
+/// T-1281: station upgrades.
+#[cfg(test)]
+mod upgrade_tests;

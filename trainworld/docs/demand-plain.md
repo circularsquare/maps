@@ -78,7 +78,9 @@ There is no built-in liking for the train. Rail and the car are compared on time
   band of walking to it (0-15, 15-30, over 30) share one walk, an average leaning to the nearer
   homes. Without the bands a short line's group could mix 2 and 28 minute walks, and rail came out
   7-21% too high. The trip explorer works out its own two places exactly.
-- Wait on the platform: half the time between trains, in plain minutes.
+- Wait on the platform: half the time between trains, in plain minutes; at a station with a
+  waiting room (a station upgrade the player buys) each of those minutes counts 0.8, so a few
+  more people take the train there.
 - No train for hours: people differ in how long they would wait for the next train rather than go
   another way, from half an hour to 6 hours (half of them up to about 1 hour 45). At each stop and
   time of day the game works out what share of that period's riders have a train coming within
@@ -91,10 +93,12 @@ There is no built-in liking for the train. Rail and the car are compared on time
   it counts 5.4. Below 70% nobody minds the crowd.
 - Changing trains: a fixed 2 minutes, plus the walk from the platform you arrive at to the one you
   leave from (centre to centre, at an easy walking pace, each minute counted 1.39), plus the wait
-  for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Nobody
-  changes back onto the line they just left to go back the way they came: on a full line people
-  wait at their station. Where a line comes back through a station (a loop on a stalk), people may
-  change there onto the same line heading somewhere else, like any change.
+  for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Between
+  two stations the player joined by a passage the walk is the straight line at 2 m/s, moving
+  walkways: 300 m takes 2.5 minutes rather than 5.4. Nobody changes back onto the line they just
+  left to go back the way they came: on a full line people wait at their station. Where a line
+  comes back through a station (a loop on a stalk), people may change there onto the same line
+  heading somewhere else, like any change.
 - If the train is full when it arrives, the wait for one with room counts too, minute for minute,
   up to an hour.
 - No more riders than the trains take: once the rest is worked out, everyone who would ride if
@@ -118,7 +122,8 @@ There is no built-in liking for the train. Rail and the car are compared on time
   length: on a 4 hour trip 5 minutes apart is 70%. The trips between cities choose their stations
   the same way, their length being the drive's. At a station, riders take the first
   train that helps.
-- Or drive to the station: 15 minutes to start, the drive (counted 2.66 a minute, twice a minute of
+- Or drive to the station: 15 minutes to start (5 at a station with a park and ride, a station
+  upgrade the player buys), the drive (counted 2.66 a minute, twice a minute of
   driving the whole way, so a short drive to the station is common and a long one rare), the car's
   cost per trip (below), the cheaper of parking there or a 10 minute drop-off, and the parking at
   home (below). Only for trips of 5 km or more. A drive of 10 km to a station counts about

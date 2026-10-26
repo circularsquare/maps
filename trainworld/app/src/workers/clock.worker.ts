@@ -21,6 +21,7 @@ import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } 
 import { networkFromState, newNetCache, runsTrains } from "../map/network";
 import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes } from "../game/complexes";
+import { UPGRADE_BITS } from "../game/upgrades";
 import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 
@@ -788,11 +789,12 @@ function buildState(): ClockState {
   drawn.reduce((o, d) => (pts.set(d, o), o + d.length), 0);
   const ni = a.nodes_info();
   const nodes: ClockNode[] = [];
+  const ups = upgradesOf(a);
   for (let i = 0; i < ni.length; i += 10) {
     const [lng, lat] = packLngLat(ni[i + 1], ni[i + 2]);
     nodes.push({
       id: ni[i], x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying: ni[i + 6] === 1,
-      platform: ni[i + 7], stationBuilt: ni[i + 8] === 1, stationOff: offStations.has(ni[i]), name: ni[i + 7] > 0 ? a.node_name(ni[i]) : "", heading: ni[i + 9],
+      platform: ni[i + 7], stationBuilt: ni[i + 8] === 1, stationOff: offStations.has(ni[i]), upgrades: ups.get(ni[i]) ?? 0, name: ni[i + 7] > 0 ? a.node_name(ni[i]) : "", heading: ni[i + 9],
     });
   }
   const li = a.lines_info();
@@ -1842,6 +1844,25 @@ function sendTrips() {
   }
 }
 
+/** An edit's charge (US$M, `trains` of it for trains) into the money record of the hour and day. */
+function bookCharge(seq: number, charge: number, trains: number) {
+  const d = dayEntry(Math.floor(moneyNow() / 86400));
+  const e = hourEntry(Math.floor(moneyNow() / 3600));
+  d.trains += trains;
+  d.build += charge - trains;
+  e.trains += trains;
+  e.build += charge - trains;
+  for (const x of regionEntries("", d.day, e.hour)) { x.trains += trains; x.build += charge - trains; }
+  heldCharges.set(seq, { day: d.day, hour: e.hour, build: charge - trains, trains });
+}
+
+/** Each station's upgrade bits (T-1281), by node; stations without any are left out. */
+function upgradesOf(a: TrackApi): Map<number, number> {
+  const u = a.station_upgrades(), out = new Map<number, number>();
+  for (let k = 0; k + 1 < u.length; k += 2) out.set(u[k], u[k + 1]);
+  return out;
+}
+
 // ---------------------------------------------------------------- the snapshot demand runs on
 
 function buildSnapshot(): NetworkSnapshot {
@@ -1849,9 +1870,11 @@ function buildSnapshot(): NetworkSnapshot {
   const ni = a.nodes_info();
   const stations: NetworkSnapshot["stations"] = [];
   const geo: { id: string; x: number; y: number; heading: number; length: number }[] = [];
+  const ups = upgradesOf(a);
   for (let i = 0; i < ni.length; i += 10) {
     if (ni[i + 7] > 0 && ni[i + 8] === 1) {
-      stations.push({ id: ni[i], name: a.node_name(ni[i]), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7] });
+      const u = ups.get(ni[i]);
+      stations.push({ id: ni[i], name: a.node_name(ni[i]), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7], ...(u ? { upgrades: u } : {}) });
       geo.push({ id: String(ni[i]), x: ni[i + 1], y: ni[i + 2], heading: ni[i + 9], length: ni[i + 7] });
     }
   }
@@ -1861,6 +1884,9 @@ function buildSnapshot(): NetworkSnapshot {
   for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
   const cx = buildComplexes(geo, links, (y) => (frame.kind === "merc" ? mercK(y) : 1));
   stations.forEach((s) => (s.complex = cx.of.get(String(s.id))));
+  // T-1281: the links are passages, walked faster; between constructed stations only
+  const built = new Set(geo.map((g) => g.id));
+  const passages = links.filter(([p, q]) => built.has(p) && built.has(q)).map(([p, q]) => [Number(p), Number(q)] as [number, number]);
   const li = a.lines_info();
   const lines: NetworkSnapshot["lines"] = [];
   for (let i = 0; i < li.length; i += 22) {
@@ -1886,7 +1912,7 @@ function buildSnapshot(): NetworkSnapshot {
       ...(span.some((v) => v !== 1) ? { span: Array.from(span) } : {}),
     });
   }
-  return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: { ...fares } };
+  return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: { ...fares }, ...(passages.length ? { passages } : {}) };
 }
 
 function scheduleSnapshot() {
@@ -1939,6 +1965,8 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
       return { r: a.delete_pieces(new Uint32Array(op.edges), new Uint32Array(op.stations)) };
     case "flying":
       return { r: a.set_flying(op.node, op.flying) };
+    case "stationUpgrade":
+      return { r: a.set_station_upgrade(new Uint32Array(op.nodes), op.bit, op.on) };
     case "addStation":
       return op.at.kind === "node"
         ? { r: a.add_station(1, op.at.node, 0, 0, op.platform, op.name) }
@@ -2273,13 +2301,16 @@ async function handle(msg: ToClock) {
       // T-197: a setting outside the undo history, like fares; the complexes change, so the
       // drawing (links in the state) and demand (the snapshot's complexes) both follow
       const { r } = apply(msg.op);
+      // T-1281: a passage between constructed stations is paid at once
+      const charge = r === 0 && msg.op.on ? api.link_charge() : 0;
       if (r === 0) {
         dirty = true;
+        if (charge > 0) bookCharge(msg.seq, charge, 0);
         sendState();
         scheduleSnapshot();
         keep();
       }
-      send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : msg.op.on ? issues() : [], charge: 0 });
+      send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : msg.op.on ? issues() : [], charge });
       return;
     }
     await masksFor(msg.op);
@@ -2300,17 +2331,7 @@ async function handle(msg: ToClock) {
     // The new state first, so the world is up to date when the edit's answer arrives.
     if (r === 0) {
       dirty = true;
-      if (charge > 0) {
-        const d = dayEntry(Math.floor(moneyNow() / 86400));
-        const e = hourEntry(Math.floor(moneyNow() / 3600));
-        const trains = api.last_train_charge();
-        d.trains += trains;
-        d.build += charge - trains;
-        e.trains += trains;
-        e.build += charge - trains;
-        for (const x of regionEntries("", d.day, e.hour)) { x.trains += trains; x.build += charge - trains; }
-        heldCharges.set(msg.seq, { day: d.day, hour: e.hour, build: charge - trains, trains });
-      }
+      if (charge > 0) bookCharge(msg.seq, charge, api.last_train_charge());
       forget();
       const demand = api.dirty_demand_lines();
       sendState(service, service ? api.edit_time() : undefined);
@@ -2387,6 +2408,7 @@ async function handle(msg: ToClock) {
       : q.what === "junction" ? api.junction_info(q.node)
       : q.what === "edgePis" ? api.edge_pis(q.edge)
       : q.what === "flyover" ? new Float64Array([api.flyover_cost(q.node)])
+      : q.what === "upgradeCost" ? new Float64Array(UPGRADE_BITS.map((b) => api!.station_upgrade_cost(q.node, b)))
       : q.what === "doubleUp" ? doubleUpAnswer(q.edge)
       : q.what === "lineAccount" ? api.line_account(q.line, q.day ?? 0)
       : q.what === "linePeriods" ? api.line_periods(q.line, q.day)

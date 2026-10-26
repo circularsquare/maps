@@ -19,7 +19,7 @@ fn common_test_net(lines: &[&[u32]], tph: &[f32], ride: &[f32]) -> Network {
         hop_min: vec![], hop_back: vec![], line_speed_kmh: vec![0.0; lines.len()],
         line_headway_min: tph.iter().map(|t| [if *t > 0.0 { 60.0 / t } else { f32::INFINITY }; network::PERIODS]).collect(),
         line_seats: vec![100.0; lines.len()], line_crush: vec![200.0; lines.len()],
-        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![], span: vec![],
+        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![], span: vec![], st_ups: vec![], st_passage: vec![],
     };
     for (l, stops) in lines.iter().enumerate() {
         net.line_stops.extend_from_slice(stops);
@@ -98,7 +98,7 @@ fn a_circle_rides_the_short_way_through_its_first_stop() {
             line_name: vec![String::new()], line_off: vec![0, 7], line_stops: stops.to_vec(),
             hop_min: ride, hop_back: back, line_speed_kmh: vec![0.0],
             line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_crush: vec![200.0],
-            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![],
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], st_ups: vec![], st_passage: vec![],
         }
     };
     let g = build_graph(&ring(true), &p);
@@ -345,6 +345,41 @@ fn common_lines_pool_wait_and_split_by_frequency() {
     assert_eq!(one.r, two.r);
 }
 
+/// T-1281: a wait in a waiting room counts at 0.8 of its minutes, and changing there too; a park
+/// and ride takes 10 minutes off a ride's fixed cost.
+#[test]
+fn a_waiting_room_shortens_perceived_waits_and_a_park_and_ride_rides() {
+    let p = common_test_params();
+    let mut net = common_test_net(&[&[0, 1, 2], &[1, 3]], &[6.0, 6.0], &[2.0, 2.0]);
+    let plain = skims(&build_graph(&net, &p), &p);
+    assert!((plain.r[1] - 7.0).abs() < 1e-5);
+    net.st_ups = vec![upgrades::WAITING_ROOM, upgrades::WAITING_ROOM, 0, 0];
+    let room = skims(&build_graph(&net, &p), &p);
+    assert!((room.r[1] - 6.0).abs() < 1e-5, "{}", room.r[1]);
+    assert!((plain.r[3] - room.r[3] - 2.0).abs() < 1e-4, "both 5-minute waits a minute shorter: {} {}", plain.r[3], room.r[3]);
+    assert_eq!(room.r[2 * 4], plain.r[2 * 4], "a wait elsewhere is as it was");
+    assert_eq!(ride_fixed(&p, &net, 0), p.p_ride);
+    net.st_ups[2] = upgrades::PARK_RIDE;
+    assert_eq!(ride_fixed(&p, &net, 2), p.p_ride - 10.0);
+}
+
+/// T-1281: a change through a passage walks the straight line at 2 m/s; between other stations
+/// of a complex, the line x 1.3 at the transfer pace.
+#[test]
+fn a_passage_walks_the_straight_line_faster() {
+    let p = common_test_params();
+    let mut net = common_test_net(&[&[0, 2]], &[6.0], &[2.0]);
+    net.st_group = vec![0, 0, 2, 3];
+    let walk = |net: &Network| {
+        let g = build_graph(net, &p);
+        let rn = g.rn_station.iter().position(|&s| s == 0).unwrap() + g.n_st;
+        (g.adj_off[rn] as usize..g.adj_off[rn + 1] as usize).find(|&e| g.adj_to[e] == 1).map(|e| g.adj_cost[e]).unwrap()
+    };
+    assert!((walk(&net) - p.xfer_min(2000.0) * p.w_xfer).abs() < 1e-4);
+    net.st_passage = vec![[0, 1]];
+    assert!((walk(&net) - 2000.0 / 2.0 / 60.0 * p.w_xfer).abs() < 1e-4, "{}", walk(&net));
+}
+
 #[test]
 fn common_lines_are_destination_specific_and_ignore_unhelpful_service() {
     let p = common_test_params();
@@ -464,7 +499,7 @@ fn a_lollipop_line_changes_onto_itself_at_its_junction() {
             line_name: vec![String::new()], line_off: vec![0, n as u32], line_stops: stops,
             hop_min: (0..n).map(|k| if k + 1 < n { 2.0 } else { 0.0 }).collect(), hop_back: vec![], line_speed_kmh: vec![0.0],
             line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_crush: vec![200.0],
-            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![],
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![],
         }
     };
     let g = build_graph(&lolly(true), &p);

@@ -296,10 +296,27 @@ Full design, numbers and sources: `notes/T-008.md`.
   Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot,
   and platforms within 100 m of each other count as one station (4.4). Stations whose platforms
   come within 50 m form a station complex, which a click on a station selects as one (T-249) and
-  the demand circles can show as one (8, T-146); the player can link any two stations up to 1 km
-  apart into one complex and unlink them (T-197, saved with the network as `Network::links`, not in
-  the undo history). Riders change between any two stations of a complex on foot, however far
-  apart (4.4, T-161).
+  the demand circles can show as one (8, T-146); the player can join any two stations up to 1 km
+  apart into one complex by a **passage** and remove it (T-197, T-1281; saved with the network as
+  `Network::links`, not in the undo history; links from older saves are passages, never charged).
+  Riders change between any two stations of a complex on foot, however far apart (4.4, T-161),
+  through a passage along the straight line at 2 m/s.
+- **Station upgrades** (T-1281, `track/upgrades.rs`, notes/T-1281.md), bought from the station
+  panel's row of icons like a flyover: into the blueprint with a blueprint station (built with
+  it, in the quote as "Station upgrades"), paid at once on a constructed one; removing one is
+  final and refunds nothing. Saved as bits 4 to 6 of the station's node flags (old readers ignore
+  them), on `StationData::upgrades`, so undo, renames and platform changes keep them. No upkeep.
+  - **Terminal** (turnback sidings): a line turning there holds its platforms only for the dwell
+    and turns in two sidings past the platform (6.2): 30 an hour at the default turnaround. The
+    map draws the two sidings between the running tracks past each platform end with track
+    beyond, from where the tracks part (zoom 14).
+  - **Park and ride**: a ride to or from the station costs 10 perceived minutes less ([demand-mode.md](demand-mode.md),
+    `kernel::ride_fixed`); a P after the station's name.
+  - **Waiting room**: a wait for a train there counts at 0.8 of its minutes in route and mode
+    choice (`kernel::wait_factor`, [demand-mode.md](demand-mode.md)).
+  - **Passage**: the link above, priced US$10M plus US$90M a km of the straight line between the
+    two stations (`upgrades::passage_price`); paid at once between constructed stations, else
+    built and paid with the second of them (`Network::passages`, quote row "Passages").
 - **Train length** (T-733, `TrackApi::set_line_cars`, `build_line` in `service.rs`): each line
   stores its cars, 0 for the most its shortest platform fits; a new line starts at the length last
   set on any line in the game (0 until one is set; the save keeps it, `newCars` in its header) [T-1094]; a set length
@@ -332,9 +349,16 @@ route conflict with every move on the other.
   160, 16 at 320 (T-517)
 - single-track section between passing points: run time + 60 s, counting both directions
 - platform track: dwell + 60 s per stopping train, 40 s per passing one, turnaround + 60 s
-  for a short-turn ending at a through station. A single-track platform shares both directions.
-- dead-end terminus: (layover + 60 s) / constructed platform tracks (a two-track terminus
-  with 3 min turnaround: 30/h). Unused blueprint extensions add no active platform capacity.
+  for a short-turn ending at a through station (15 an hour at the default 3 minutes). A
+  single-track platform shares both directions.
+- dead-end terminus: max(layover + 60 s, 200 s) / constructed platform tracks (a two-track
+  terminus with 3 min turnaround: 30/h; never more than 18 an hour on one track or 36 on two,
+  the Victoria line's best, however short the turnaround; `upgrades::pooled_turn_s`). Unused
+  blueprint extensions add no active platform capacity.
+- a station with a **terminal** (T-1281): a line turning there (ending, or reversing partway)
+  holds its arrival and departure platforms for dwell + 60 s each, and the terminal's sidings
+  for max(turnaround + 60 s, 200 s) / 2, pooled: 30 an hour at 3 minutes, 36 at 2. It still
+  crosses the other track (the 90 s move below). A dead end keeps its pooled rule.
 - double-track station reversal: 90 s per crossing move. Reversals share their arrival
   platform with same-direction traffic and cross opposite-direction through trains or reversals.
   Each move receives only the extra queue from crossing traffic, subtracting its own-move
@@ -345,7 +369,8 @@ route conflict with every move on the other.
   pooled terminus, and at a bare track end the same pooled terminus over the stub's tracks, with one
   side for the limiter below. It is no junction move and no through train there, and no track section joins
   across it. On top, a stopgap limiter per station and arrival side (`REVERSAL_LIMIT_S`): 300 s per
-  reversing train, so at most 12 reversals an hour a side. Both directions of a line reversing at a
+  reversing train, so at most 12 reversals an hour a side; 120 s (30 a side) at a station with a
+  terminal (`TERMINAL_REVERSAL_S`). Both directions of a line reversing at a
   station usually arrive on the same side, so one such line runs every 10 minutes each way at best;
   in its queueing delay a line's two directions count as one stream (one timetable), so a line
   alone there waits only once it is over the limit.
@@ -401,9 +426,9 @@ of service at its ends", "Each train waits 1m03s here at high demand", and for a
 see the junction and its flyover"). Each resource has a kind the app words by (`Capacity::wire_kind`,
 `game/capacityKinds.ts`): track, single track, platform, terminus, junction, flat crossing, a line
 turning on a through station's platform (the line ends there and holds the platform for its
-turnaround plus 60 s; helped by ending the line at a dead-end terminus), track several lines run
-over, a turn across the other track at a through station, and the limiter on reversing partway
-("Reversing at Nerul Village is full"). A line whose fleet is cut shows an
+turnaround plus 60 s; helped by building a terminal there), track several lines run
+over, a turn across the other track at a through station, the limiter on reversing partway
+("Reversing at Nerul Village is full"), and a terminal's sidings (T-1281). A line whose fleet is cut shows an
 alert under its schedule naming the full resource ("Turning on the platform at Nerul Village is
 full") and, per demand level, how many of its trains are held out of service (they wait at the
 ends of the line instead of running), with the resource's limit in trains an hour and what helps on
@@ -614,7 +639,9 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   station costs half a -2 one, where ground track costs 0.45 of -2 track. Scaled by
   `0.4 + 0.6 x length / 200`.
 - Junction: 0.25 km of track at its level; a flyover adds 0.6 km one level away; flat
-  crossing 0.1 km (cheap to build, dear in delay). A crossover: two junctions, all told (6.1,
+  crossing 0.1 km (cheap to build, dear in delay). Station upgrades (6.1, T-1281): a terminal
+  1 km of track at the station's level (US$45M at grade, US$99M at -2, 2x over water), park and
+  ride US$20M, waiting room US$5M, a passage US$10M plus US$90M a km. A crossover: two junctions, all told (6.1,
   T-338); the blueprint breakdown counts it as two junction switches.
 - **Blueprint, then construct** (Anita, 2026-10-09). New track, stations and junctions are drawn
   as a **blueprint**: free, freely edited and undone, drawn faded, shown with its total cost. The

@@ -89,6 +89,11 @@ select, option, optgroup { background-color: var(--bg); color: var(--text); }
 .btn:hover { background: var(--shade); }
 .btn.on { background: var(--tint); border-color: var(--accent); position: relative; z-index: 1; }
 .btn.icon { width: 28px; padding: 0; }
+/* station upgrades (T-1281): outlined, dashed in the blueprint, filled when built */
+.upgrades { display: flex; gap: 6px; margin: 6px 0; }
+.btn.upgrade { color: var(--muted); }
+.btn.upgrade.planned { color: var(--text); border-style: dashed; border-color: var(--accent); }
+.btn.upgrade.on { color: var(--text); }
 .btn:disabled { color: var(--rule); cursor: default; background: var(--bg); }
 .btn.text { gap: 6px; grid-auto-flow: column; white-space: nowrap; }
 .btn.text svg { width: 14px; height: 14px; }
@@ -751,6 +756,9 @@ rect.now { fill-opacity: .45; }
 .touch-handle::after { content: ""; position: absolute; left: 15px; top: 15px; width: 10px; height: 10px; border-radius: 50%;
   background: #fff; border: 2px solid var(--net-ink); }
 .stn-label.plan { opacity: 0.6; }
+/* T-1281: a park and ride's P after the name */
+.stn-label.park::after { content: "P"; display: inline-block; margin-left: 4px; padding: 0 3px; border-radius: 2px;
+  background: var(--map-ink); color: var(--bg); font-weight: 700; font-size: 0.85em; line-height: 1.25; vertical-align: 1px; }
 .track-modes .group { display: grid; grid-template-columns: 1fr 1fr; }
 .track-modes .btn { white-space: normal; height: auto; min-height: 40px; line-height: 1.35; padding: 4px 6px; }
 .station-use { margin-bottom: 6px; }

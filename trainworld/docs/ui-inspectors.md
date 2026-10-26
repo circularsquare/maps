@@ -265,9 +265,9 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
     and stations of its own name are left out, and each name is listed once. The walk is the
     demand model's routed walk ([demand-mode.md](demand-mode.md) 4.3) x the 1.3 detour at the model's 6 km/h; a station
     water cuts off shows "no walk", only when fewer than three can be walked to within 10 km.
-  - **Linked by you**: each link touching the complex, with Unlink. The buttons **Trip from here**
-    [T-221] (the trip tool with the station as the start) and **Link to another station** (below)
-    are in the row under the subtitle, above everything else [T-1134].
+  - **Passages**: each passage touching the complex, its length (price on hover) and Remove. The
+    button **Trip from here** [T-221] (the trip tool with the station as the start) is in the row
+    under the subtitle, above everything else [T-1134], and under it the upgrade row (below).
   - **Commuters**: "Live nearby" and "Work nearby" (commuters a day who live, or work, within its
     reach and ride from it); the larger is picked first, a click picks the other; then the top
     eight far-end places ("Where they work" or "Where they live"). Not drawn on the map [T-519,
@@ -291,9 +291,15 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   trips) is as in complex view, for the station alone.
 - **Buttons come first** [T-1134, Anita: never put stuff at the bottom after an arbitrarily long
   list]: every inspector's buttons sit in one row (`Actions` in `ui/widgets.tsx`) right under its
-  header, above all rows and lists. A station has Trip from here and Link to another station in one
-  row (what linking asks, when picking, is under it) and, in station view, Construct station (a
-  blueprint only) and Remove station in a second; a track has Construct for its price (a blueprint
+  header, above all rows and lists. A station has Trip from here in one row (what placing a passage
+  asks, when picking, is under it) and, in station view, Construct station (a blueprint only) and
+  Remove station in a second, then the **upgrade row** [T-1281, `ui/inspector/StationUpgrades.tsx`]:
+  icons for the terminal (two sidings), park and ride (P), waiting room (a bench under a roof) and
+  passage (two platforms and a walkway); in complex view only the passage. Each is outlined when
+  not built, dashed in the blueprint, filled when built; its hover gives its name, what it does
+  in a sentence, its price and what a click does. A click adds it to the blueprint, or on a built
+  station builds it at once for its price (a notice says so), or takes it away again (nothing
+  refunded once built); the passage's click starts picking the other station (below). A track has Construct for its price (a blueprint
   only) and Remove track; a junction has Construct a flyover (built) or Add a flyover (blueprint), with "Paid at once"
   or "Added to the blueprint" beside it, or, for a blueprint flyover, Remove the flyover; a city has Go to its name; a trip
   opened from a selection has Back.
@@ -332,17 +338,19 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   its platforms wherever it is clear, else none.
 - No notes under the map [T-1095, T-1106].
 
-## Linking stations
+## Passages: linking stations
 
-[T-197, `game/links.ts`] The station inspector's button row has "Link to another station". After a click
-on it the next station clicked is linked with the selected one (the pointer a crosshair, a hand
-over a station); a click on anything else, Esc, "Stop linking", another selection or a tool stops
-it. Refused with a notice, still picking: the same station, one already in this complex, or one
-more than 1 km away centre to centre. "Linked by you", above the commuters, lists each link
-touching the complex with its two stations, their chips and Unlink. Only the player's links can be
-undone: stations the distance rule groups cannot be split. Linking is not in the Ctrl+Z history
-(a setting, like fares); removing a station drops its links. Blueprint stations can be linked;
-demand counts a link once both are constructed.
+[T-197, T-1281, `game/links.ts`] The passage icon in the station panel's upgrade row starts a
+passage. After a click on it the next station clicked is joined to the selected one (the pointer a
+crosshair, a hand over a station); a click on anything else, Esc, the icon again, another
+selection or a tool stops it. Refused with a notice, still picking: the same station, one already
+in this complex, or one more than 1 km away centre to centre. Between two constructed stations it
+is paid at once (US$10M plus US$90M a km, a notice), else it is built with the second of them.
+"Passages", above the commuters, lists each passage touching the complex with its two stations,
+their chips, its length and Remove (nothing refunded once built). Only the player's passages can be
+removed: stations the distance rule groups cannot be split. Passages are not in the Ctrl+Z history
+(a setting, like fares); removing a station drops its passages. Demand counts a passage once both
+stations are constructed.
 
 ## The trip explorer
 

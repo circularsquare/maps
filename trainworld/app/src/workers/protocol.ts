@@ -62,6 +62,7 @@ export type EditOp =
   /** remove several pieces at once (T-829): undoable when all blueprint, else final */
   | { op: "removePieces"; edges: EdgeId[]; stations: NodeId[] }
   | { op: "flying"; node: NodeId; flying: boolean }
+  | { op: "stationUpgrade"; nodes: NodeId[]; bit: number; on: boolean }
   | { op: "addStation"; at: StationAt; platform: number; name: string }
   /** a crossover on track `edge` near x, y and the track running beside it (T-338) */
   | { op: "crossover"; edge: EdgeId; x: number; y: number }
@@ -196,7 +197,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "removal"; edges: number[]; stations: number[] };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "removal"; edges: number[]; stations: number[] };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -283,6 +284,8 @@ export interface ClockNode {
   stationBuilt: boolean;
   /** a blueprint station switched off (T-333) */
   stationOff: boolean;
+  /** the station's upgrades, `UPGRADE` bits (T-1281) */
+  upgrades: number;
   name: string;
   /** track heading through it, rad, counter-clockwise from east */
   heading: number;
@@ -525,6 +528,8 @@ export interface NetworkSnapshot {
   lines: SnapshotLine[];
   /** The player's fare curve (game/fareCurve.ts): its first stretch as a base and rate, and its nodes. */
   fare?: { base: number; perKm: number; nodes?: [number, number][] };
+  /** station pairs joined by a passage (T-1281), node ids; absent when there are none */
+  passages?: [number, number][];
 }
 
 export interface SnapshotStation {
@@ -541,6 +546,8 @@ export interface SnapshotStation {
    * player's links): stations with the same number are one complex, and demand lets riders change
    * between any two of them on foot. Absent in snapshots made before T-161: no complexes. */
   complex?: number;
+  /** its upgrades, `UPGRADE` bits (T-1281), only where it has any */
+  upgrades?: number;
 }
 
 export interface SnapshotLine {
