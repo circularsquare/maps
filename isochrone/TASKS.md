@@ -13,7 +13,6 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 
 ## In progress
 
-- T-022 [P1] Search with layers: canoe + carrying nodes, transfers, directed river and sea edges, weight = time + K x hazard (hazard 0 until T-006), seeding by layer, the sea painted; measure speed (docs/canoe.md 5, 7). Synthetic data until T-020/T-021. Taking, 2026-10-26 (agent).
 - T-030 [P1] Finer than 1 km when zoomed in: design a 100 m level (LC100 land cover, roads, GLO-90 terrain) for windows from zoom ~10, with sizes, times and what it means for publishing; for Anita's review. Design ready for Anita's review, docs/fine.md (notes/T-030.md).
 - T-037 [P3] Window edge strip: with nearest resampling, the coarser canvas shows as a brighter strip (up to one coarser cell, ~5 px at zoom 9) along a finer window's north and south edges, since the hole is rounded inwards to whole canvas rows. Off screen once the view settles; fix by aligning hole rows to the finer window or painting the coarse edge row clear.
 
@@ -22,6 +21,7 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 - T-024 [P2] Canoe hover: time paddled and carried, the route line traced across levels (docs/canoe.md 6). After T-022.
 - T-008 [P2] Mode panel: walking or canoe start, later K, the other toggles and the era switch. After T-022.
 - T-031 [P2] River gradient south of 60N: `sgr_dk_rav` closes 24% of paddleable length (mostly Q < 10 streams over 5 m/km) and reads lowland Amazon streams as rapids (Manaus to the sea sums to 140 m, real ~20). Once canoe routes show on the page (T-022), compare a few basins with the GMTED drop-over-10 km used north of 60N (`rivers.py north_gradient`) and pick per region by eye; the Livingstone Falls stretch between OSM rapids points still runs (notes/T-020.md).
+- T-036 [P3] Canoe: L1 river water no river step crosses (ponds and side channels HydroLAKES lacks, e.g. round the Danube mouth) has no canoe node, so it stays unreached and unpainted on a canoe start. Decide: still water when no step touches the patch, or leave (notes/T-022.md).
 - T-023 [P2] M1 doc tidy: spec against code, prune TASKS, fold notes. Last in M1.
 
 ## M2: survival
@@ -38,6 +38,7 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 
 - T-038 [P2] Fine level stage 1: 100 m tiles for New York (40-42 N, 75-73 W) and Cluj (46-48 N, 23-25 E) from LC100 classes, OSM roads and bridges (Geofabrik extracts) and the L1 terrain factor; the L0.1 window in the worker, seeded from L1, painted; smoke passes (docs/fine.md). After Anita's review of T-030.
 - T-039 [P3] Fine level stage 2: GLO-90 elevation in the 100 m tiles, directed slope per move with the street grade cap, a bucket queue in the search for every level, times in a real browser (docs/fine.md). After T-038.
+- T-035 [P3] Canoe search speed: a canoe click at L10 is ~0.8 s with 8 moves past 20 km from shore (16 everywhere was 1.0-1.1 s), and canoe L3 windows are capped at 1.5 M cells. Try the bucket queue of T-039 and fewer tables read per sea edge, then go back to 16 moves at sea if it gets under 1 s (notes/T-022.md).
 - T-011 [P3] 90 m terrain: stream Copernicus GLO-90 tile by tile, directed crossing costs per cell (research/friction.md 7, stage C); makes walking directed. 100-130 GB streamed, run detached overnight. After T-009.
 - T-007 [P3] Coarse solve with portals (docs/resolution.md, thin barriers). After T-011.
 - T-014 [P3] Window edges: fade the finer window into the coarser one over a few cells instead of a hard hole edge, to remove the faint 1-3 px line (docs/resolution.md).

@@ -5,6 +5,14 @@ reasoning and what it replaced.
 
 ## 2026-10-26
 
+- **8 moves at sea past 20 km from shore is on** (T-022): with 16 everywhere a canoe click at L10
+  took 1.0-1.1 s on real data, over the design's 1 s limit; 8 gives ~0.8 s, with open-sea bands
+  up to 8% long on diagonals. Back to 16 if the search gets faster (T-035).
+- **Canoe L3 windows are capped at 1.5 M cells** (T-022): at the walking cap of 3 M a canoe L3
+  window took ~2 s, since its water is solved too. The L1 cap stays 2 M (~1.2-1.3 s).
+- **Time shares the weight array while hazard is off** (T-022): with every hazard 0 they are
+  equal; keeping them apart cost ~15% speed for nothing until T-006 sets `cfg.hazard`.
+
 - **River gradient north of 60N comes from GMTED, not RiverATLAS** (T-020): `sgr_dk_rav` there
   (HYDRO1k-based) sums to a 13 km drop down the lower Yukon and closed most Alaskan main stems;
   GMTED's drop over 10 km gives the Yukon 109 m from Fort Yukon (about 130 real). South of 60N

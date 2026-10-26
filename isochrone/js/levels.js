@@ -35,10 +35,13 @@ export function snap(L, lng, lat, R) {
     return best;
 }
 
-// Time at a point from a solved level, blending the reached cells round it.
-// undefined when the point is outside the level, Infinity when nothing near is reached.
-export function sample(L, lng, lat) {
-    const { W, H, cellDeg, wrap, dist } = L;
+// Weight, time and hazard at a point from one layer of a solved level (L.res), blending the
+// reached nodes of the four cells round it into out[0..2]. undefined when the point is outside
+// the level, false when nothing near is reached, else true.
+export function sampleNode(L, lng, lat, canoe, out) {
+    const { W, H, cellDeg, wrap, grid } = L;
+    const { w: nw, t: nt, hz: nh } = L.res;
+    const canoeOf = canoe ? L.cn.canoeOf : null;
     let x = (lng - L.west) / cellDeg;
     if (wrap) x = ((x % W) + W) % W;
     else {
@@ -49,18 +52,21 @@ export function sample(L, lng, lat) {
     if (y < 0.5 || y > H - 0.5) { if (!wrap) return undefined; }
     x -= 0.5; y -= 0.5;
     const c0 = Math.floor(x), r0 = Math.floor(y), fx = x - c0, fy = y - r0;
-    let sum = 0, wsum = 0;
+    let sw = 0, st = 0, sh = 0, wsum = 0;
     for (let j = 0; j < 2; j++) {
         const r = Math.min(H - 1, Math.max(0, r0 + j));
         const wy = j ? fy : 1 - fy;
         for (let i = 0; i < 2; i++) {
             let c = c0 + i;
             if (wrap) c = (c + W) % W; else c = Math.min(W - 1, Math.max(0, c));
-            const d = dist[r * W + c];
-            if (d === Infinity) continue;
+            const cell = r * W + c;
+            const n = canoe ? canoeOf[cell] : (grid[cell] ? cell : -1);
+            if (n < 0 || nt[n] === Infinity) continue;
             const w = wy * (i ? fx : 1 - fx) + 1e-6;
-            sum += d * w; wsum += w;
+            sw += nw[n] * w; st += nt[n] * w; sh += nh[n] * w; wsum += w;
         }
     }
-    return wsum ? sum / wsum : Infinity;
+    if (!wsum) return false;
+    out[0] = sw / wsum; out[1] = st / wsum; out[2] = sh / wsum;
+    return true;
 }

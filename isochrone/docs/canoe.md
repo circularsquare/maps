@@ -23,8 +23,8 @@ along the chosen path.
   one land node whose speed factor is 1 or 2 by start mode.
 - **Node ids.** Ids 0..N-1 are the cells: a land cell's id is its land node, a sea or lake cell's
   its canoe node. Canoe nodes on land cells (river cells, and at L3 and L10 coastal and strait
-  cells) get ids from N on, found through a per-cell table `canoeOf` (-1 where none): ~1 M extra
-  at L10 (section 7).
+  cells) get ids from N on, found through a per-cell table `canoeOf` (-1 where none): 0.73 M extra
+  at L10.
 - **Water** is as now: MAP's water value; a coarse cell is water when under a quarter of its L1
   pixels are land. Water is **sea** inside the ocean (Natural Earth 10 m ocean polygon for
   today, and water joined to it within 8 L1 pixels where NE's coast and MAP's differ), **lake**

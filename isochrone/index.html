@@ -58,9 +58,10 @@ body.busy, body.busy .maplibregl-canvas { cursor: progress !important; }
 
 <button id="infobtn" title="About this map">i</button>
 <div id="info" class="panel">
-    <p>Click anywhere to set the start. Each colour is how long it takes to walk there. A day is 8 hours of walking.</p>
+    <p>Click anywhere to set the start. <span class="walk-only">Each colour is how long it takes to walk there. A day is 8 hours of walking.</span><span class="canoe-only" hidden>Each colour is how long it takes to get there with a canoe. A day is 8 hours of paddling or carrying.</span></p>
     <p>Speeds come from the Malaria Atlas Project walking-only friction surface (Weiss et al., Nature Medicine 2020, CC BY 4.0), which sets a pace for every square kilometre from roads, land cover and slope. It was made to measure how far people live from health care. The whole world is worked out on cells of about 10 km, and the area in view on cells of 3 km and then 1 km as you zoom in.</p>
-    <p>Seas and lakes cannot be crossed. Ponds under 5 km² are waded at 1 km/h. Danger, weather, borders and rest are not counted. Basemap from <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> and <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>, drawn with <a href="https://maplibre.org" target="_blank">MapLibre GL</a>.</p>
+    <p id="canoeCredits" hidden>The canoe goes 5 km/h on still water and is carried overland at half walking speed. Rivers come from RiverATLAS and lakes from HydroLAKES (HydroSHEDS, CC BY 4.0). Falls, dams and weirs are from OpenStreetMap (ODbL), the coast from Natural Earth. Sea currents are from the NOAA Global Drifter Program, and summer waves and sea ice from ERA5 (Copernicus Climate Change Service, CC BY 4.0).</p>
+    <p><span class="walk-only">Seas and lakes cannot be crossed.</span> Ponds under 5 km² are waded at 1 km/h. Danger, weather, borders and rest are not counted. Basemap from <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> and <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>, drawn with <a href="https://maplibre.org" target="_blank">MapLibre GL</a>.</p>
 </div>
 
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
@@ -81,6 +82,20 @@ const BANDS = [
 ];
 const MAX_HOURS = BANDS[BANDS.length - 1].h;
 const OVERLAY_ALPHA = 190;
+
+// Start mode until the mode panel (T-008): ?mode=canoe. ?canoedata=<folder> reads the canoe data
+// from data/canoe/<folder>/ (a test set) instead of data/canoe/.
+const params = new URLSearchParams(location.search);
+const MODE = params.get('mode') === 'canoe' ? 'canoe' : 'walk';
+const CANOE_SUB = (params.get('canoedata') || '').replace(/[^a-z0-9_-]/gi, '');
+const CANOE_BASE = 'data/canoe/' + (CANOE_SUB ? CANOE_SUB + '/' : '');
+if (MODE === 'canoe') {
+    document.title = document.getElementById('title').textContent = 'Canoe time';
+    document.querySelector('#legend h2').textContent = 'Time by canoe';
+    document.getElementById('canoeCredits').hidden = false;
+    for (const el of document.querySelectorAll('.walk-only')) el.hidden = true;
+    for (const el of document.querySelectorAll('.canoe-only')) el.hidden = false;
+}
 
 document.getElementById('legendRows').innerHTML = BANDS.map(b =>
     `<div class="row"><span class="sw" style="background:rgb(${b.color.join(',')})"></span>${b.label}</div>`).join('');
@@ -119,7 +134,7 @@ async function loadGrid() {
     const stream = resp.body.pipeThrough(new DecompressionStream('gzip'));
     const bytes = await new Response(stream).arrayBuffer();
     worker.postMessage({ type: 'init', meta, tiles, bytes, bands: BANDS, alpha: OVERLAY_ALPHA,
-                         maxHours: MAX_HOURS }, [bytes]);
+                         maxHours: MAX_HOURS, canoeBase: CANOE_BASE }, [bytes]);
     await workerReady;
 }
 
@@ -255,6 +270,7 @@ function refresh(changed) {
 worker.addEventListener('message', (e) => {
     const m = e.data;
     if (m.type === 'none') { document.body.classList.remove('busy'); return; }
+    if (m.type === 'error') { document.body.classList.remove('busy'); console.error('search failed:', m.message); return; }
     if (m.type === 'coarse') {
         document.body.classList.remove('busy');
         originId = m.originId;
@@ -266,7 +282,7 @@ worker.addEventListener('message', (e) => {
             const el = document.createElement('div'); el.id = 'origin';
             originMarker = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
         } else originMarker.setLngLat([lng, lat]);
-        solveLog.push({ level: 10, solveMs: m.ms, paintMs: m.paintMs, cells: m.W * m.H });
+        solveLog.push({ level: 10, mode: m.mode, solveMs: m.ms, loadMs: m.loadMs, paintMs: m.paintMs, cells: m.W * m.H });
         console.log('L10 solve', m.ms, 'ms, paint', m.paintMs, 'ms');
     } else if (m.type === 'win') {
         if (m.originId !== originId) return;
@@ -286,7 +302,7 @@ function setOrigin(lng, lat) {
     if (!meta || lat > meta.north || lat < meta.south) return;
     lng = ((lng + 540) % 360) - 180;
     document.body.classList.add('busy');
-    worker.postMessage({ type: 'run', lng, lat });
+    worker.postMessage({ type: 'run', lng, lat, mode: MODE });
 }
 
 let viewTimer = 0;

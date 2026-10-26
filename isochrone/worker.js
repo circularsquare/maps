@@ -10,6 +10,6 @@ import { init, click, setView } from './js/session.js';
 self.onmessage = (e) => {
     const msg = e.data;
     if (msg.type === 'init') init(msg);
-    else if (msg.type === 'run') click(msg.lng, msg.lat);
+    else if (msg.type === 'run') click(msg.lng, msg.lat, msg.mode);
     else if (msg.type === 'view') setView(msg);
 };

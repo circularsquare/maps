@@ -24,6 +24,11 @@ land cover and slope; Weiss et al. 2020, CC BY 4.0), averaged onto a global grid
 to 128 days, a day being 8 hours of walking. Water cannot be crossed. The default start is
 Cluj-Napoca.
 
+A canoe start (`?mode=canoe` until the mode panel, T-008) searches carrying on land and the
+canoe on sea, lakes and rivers with currents (`docs/canoe.md`), and paints the sea; ~0.8 s a
+click at 10 km. The search minimises time + K x hazard with every hazard 0 until T-006, and
+keeps each node's move for tracing the route (T-024).
+
 Our own off-road walking surface, MAP's recipe rebuilt at 1 km from Copernicus LC100 2019 land
 cover and GMTED2010 elevation with each layer kept apart, is built but not yet read by the page
 (`docs/surface.md`; T-028).

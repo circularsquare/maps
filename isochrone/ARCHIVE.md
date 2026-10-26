@@ -1,5 +1,6 @@
 # Archive
 
+- T-022 [P1] Search with layers. Done 2026-10-26: canoe starts (`?mode=canoe`) search carrying plus canoe on real T-020/T-021 data, sea painted, ~0.8 s a click with 8 moves past 20 km from shore; walking identical cell for cell; smoke has canoe checks. notes/T-022.md.
 - T-020 [P1] Canoe data, rivers. Done 2026-10-26: river steps from RiverATLAS (Q >= 1, 9.0 M km) at L10/L3/L1, 4.2 + 15.4 + 39.2 MB; OSM falls, dams, weirs, rapids via QLever; GMTED gradient north of 60N; Yukon, Danube, Niagara, Congo checked. notes/T-020.md.
 - T-033 [P2] Summer sea ice from the least-ice month. Done 2026-10-26: ice in sea.bin.gz is now the August (north) / February (south) ERA5 mean; Hudson Bay 2%, Kara 15%, Siberian coast open, matching NSIDC's August edge. notes/T-021.md.
 - T-021 [P1] Canoe data, lakes and sea. Done 2026-10-26: `data/canoe/` water tiles at L10/L3/L1 (20 MB) and the 0.25° summer sea grid (0.6 MB); Bosporus, Dardanelles, Messina, Øresund open via NE-ocean canoe nodes on MAP land; Gulf Stream 1.33 m/s. notes/T-021.md.
