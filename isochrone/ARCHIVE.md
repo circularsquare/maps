@@ -1,5 +1,6 @@
 # Archive
 
+- T-038 [P2] Fine level stage 1. Done 2026-10-26: 100 m tiles for New York and Cluj (3 MB, `tools/fine/build.py`); walking L0.1 windows from zoom ~9.4, seeded from L1, painted, hovered; 0.1-1.5 s; smoke checks it. notes/T-038.md.
 - T-045 [P1] Topography and rivers. Done 2026-10-26: AWS Terrain Tiles hill shading under the basemap water and time colours; the canoe's own river steps as blue lines by discharge (L10/L3/L1 by zoom, faint where unrunnable); two buttons, kept per session. SPEC 5.
 - T-044 [P1] Speeds panel. Done 2026-10-26: top-left collapsible panel, km/h with a hover per row; walking by ground always, canoe rows (rivers 1/100/10,000 m³/s, 1 m/s sea current, carry, transfer) on canoe starts; sent by the worker (`js/speeds.js`).
 - T-024 [P1] Canoe hover and route. Done 2026-10-26: hover adds "paddled 19 h, carried 6 h" and survival; a thin route line (dashed where carried) traced in the worker across L1, L3, L10 by `js/route.js`; walking starts get the line too. docs/canoe.md 6.

@@ -5,6 +5,10 @@ reasoning and what it replaced.
 
 ## 2026-10-26
 
+- **L0.1 windows sit on 0.05 degree steps**, not the 0.25 of L3 and L1: at zoom 12 the 0.25 steps
+  made windows 2-4 times the needed size (0.54 M cells and 0.6 s in Cluj, now 0.12 M and 0.1 s).
+  **Ways tagged `foot=no` count as not walkable**, like motorways, so parkways and fenced
+  expressways are not walked. A canoe start stops at L1 until T-050 (T-038).
 - **River lines are the canoe's own river steps**, not the basemap's waterways (T-045): the
   basemap draws only some rivers when zoomed out and has no size, and ours show exactly what the
   canoe can use. Cost: 4.2 MB for the world view and 100-300 ms per rebuild on the page (T-048).

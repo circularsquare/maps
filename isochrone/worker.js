@@ -5,7 +5,7 @@
 // L10: the coarse world grid (data/grid.bin.gz), solved whole on each click.
 // L3, L1: tiles (data/tiles/), solved for a window round the view, seeded at the window
 // border from the next coarser solved level. See docs/resolution.md.
-import { init, click, setView, route } from './js/session.js';
+import { init, click, setView, route, setCorridors } from './js/session.js';
 
 self.onmessage = (e) => {
     const msg = e.data;
@@ -13,4 +13,5 @@ self.onmessage = (e) => {
     else if (msg.type === 'run') click(msg.lng, msg.lat, msg.mode);
     else if (msg.type === 'view') setView(msg);
     else if (msg.type === 'route') route(msg);
+    else if (msg.type === 'corridors') setCorridors(msg.on);
 };

@@ -76,6 +76,23 @@ try {
     report('page loads, default solve', false, first(e));
   }
 
+  // 1b. corridors of the default solve arrive with lines, drawn, and the switch hides them
+  if (up) {
+    try {
+      await page.waitForFunction(() => window.corrLog?.some((e) => e.level === 10), undefined, { timeout: 30000, polling: 100 });
+      const c = await page.evaluate(() => window.corrLog.find((e) => e.level === 10));
+      const drawn = await page.evaluate(() => map.getSource('corridors')._data.features.length);
+      await page.click('#corrbtn');
+      const off = await page.evaluate(() => map.getLayoutProperty('corridors', 'visibility'));
+      await page.click('#corrbtn');
+      const on = await page.evaluate(() => map.getLayoutProperty('corridors', 'visibility'));
+      report('corridors arrive with lines', c.lines > 20 && drawn > 20 && off === 'none' && on === 'visible',
+        `(${c.lines} lines, ${drawn} drawn, ${c.ms} ms; switch ${off}/${on})`);
+    } catch (e) {
+      report('corridors arrive with lines', false, first(e));
+    }
+  }
+
   if (!up) {
     for (const n of ['click gives a new L10 solve', 'zoom 6 gives an L3 window', 'zoom 8 gives an L1 window', 'hover shows a time']) report(n, false, '(page did not load)');
   } else {
@@ -120,6 +137,38 @@ try {
       report('hover shows a time', TIP.test(text) && finest === 1, `("${text}" from L${finest})`);
     } catch (e) {
       report('hover shows a time', false, first(e));
+    }
+  }
+
+  // 4b. L0.1: a walking start in Midtown Manhattan at zoom 12 gives a 100 m window, Brooklyn is
+  // reached over the East River bridges in hours, and hover reads L0.1 (when data/fine/ has the tile)
+  let fineOn = false;
+  if (up) {
+    try { fineOn = await page.evaluate(async () => { const r = await fetch('data/fine/index.json'); return r.ok && (await r.json()).tiles.includes('n40w074'); }); } catch { /* no fine tiles */ }
+  }
+  if (fineOn) {
+    const MIDTOWN = [-73.985, 40.758], BROOKLYN = [-73.99, 40.695];
+    try {
+      await page.evaluate((c) => map.jumpTo({ center: c, zoom: 12 }), [-73.98, 40.73]);
+      const n = await logLen();
+      const xy = await page.evaluate((c) => { const p = map.project(c); return [p.x, p.y]; }, MIDTOWN);
+      await page.mouse.click(xy[0], xy[1]);
+      const e = await entry(0.1, n, 60000);
+      const h = await page.evaluate((c) => {
+        const m = layers[0.1].m;
+        return m.dist[Math.floor((m.north - c[1]) / m.cellDeg) * m.W + Math.floor((c[0] - m.west) / m.cellDeg)];
+      }, BROOKLYN);
+      report('zoom 12 in Manhattan gives an L0.1 window, Brooklyn reached', h > 0.5 && h < 4,
+        `(${e.cols} x ${e.rows}, fetch ${e.fetchMs} ms, solve ${e.solveMs} ms; Brooklyn ${h.toFixed(2)} h)`);
+      const p = await page.evaluate((c) => { const q = map.project(c); return [q.x, q.y]; }, BROOKLYN);
+      await page.mouse.move(p[0] - 5, p[1]);
+      await page.mouse.move(p[0], p[1], { steps: 3 });
+      await page.waitForFunction(() => document.getElementById('tip').style.display === 'block', undefined, { timeout: 10000, polling: 100 });
+      const text = await page.evaluate(() => document.getElementById('tip').firstChild.textContent);
+      const finest = await page.evaluate(() => [0.1, 1, 3, 10].find((k) => layers[k].shown));
+      report('hover reads L0.1', TIP.test(text) && finest === 0.1, `("${text}" from L${finest})`);
+    } catch (e) {
+      report('L0.1 checks', false, first(e));
     }
   }
 

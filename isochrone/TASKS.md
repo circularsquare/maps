@@ -37,9 +37,10 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 
 ## Later
 
-- T-038 [P2] Fine level stage 1: 100 m tiles for New York (40-42 N, 75-73 W) and Cluj (46-48 N, 23-25 E) from LC100 classes, OSM roads and bridges (Geofabrik extracts) and the L1 terrain factor; the L0.1 window in the worker, seeded from L1, painted; smoke passes (docs/fine.md). Taking, 2026-10-26 (agent).
-- T-047 [P1] Fine level only where it matters: design which 1-degree tiles get 100 m (cities, road-dense land, rugged terrain, straits and bridges) and which stay 1 km (flat farmland, desert, ice), with the world total under a few GB; for Anita's review. With T-038 (same agent).
-- T-039 [P3] Fine level stage 2: GLO-90 elevation in the 100 m tiles, directed slope per move with the street grade cap, a bucket queue in the search for every level, times in a real browser (docs/fine.md). After T-038.
+- T-047 [P1] Fine level only where it matters: design which 1-degree tiles get 100 m (cities, road-dense land, rugged terrain, straits and bridges) and which stay 1 km (flat farmland, desert, ice), with the world total under a few GB; for Anita's review. Design ready for Anita's review, docs/fine.md "Where the fine level goes" (notes/T-047.md).
+- T-039 [P3] Fine level stage 2: GLO-90 elevation in the 100 m tiles, directed slope per move with the street grade cap, a bucket queue in the search for every level, times in a real browser (docs/fine.md).
+- T-050 [P3] Fine level stage 3: the canoe at L0.1 (LC100 water kinds, bridge cells as both land and canoe nodes, RiverATLAS steps at 1/1200 degree); until then a canoe start stops at L1 (docs/fine.md).
+- T-051 [P2] Rural seams at L0.1 window edges: MAP's L1 walks a whole 1 km pixel at road speed when a road crosses it, so outside towns 100 m times are 18-52% longer than L1 (notes/T-047.md) and an L0.1 window's ring is seeded early. Check how it looks round Cluj at zoom 10-11; the real fix is L1 from our own surface with roads as a share of each cell (T-010, T-028).
 - T-035 [P3] Canoe search speed: a canoe click at L10 is ~0.8 s with 8 moves past 20 km from shore (16 everywhere was 1.0-1.1 s), and canoe L3 windows are capped at 1.5 M cells. Try the bucket queue of T-039 and fewer tables read per sea edge, then go back to 16 moves at sea if it gets under 1 s (notes/T-022.md).
 - T-011 [P3] 90 m terrain: stream Copernicus GLO-90 tile by tile, directed crossing costs per cell (research/friction.md 7, stage C); makes walking directed. 100-130 GB streamed, run detached overnight. After T-009.
 - T-007 [P3] Coarse solve with portals (docs/resolution.md, thin barriers). After T-011.

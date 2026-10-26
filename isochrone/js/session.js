@@ -48,9 +48,10 @@ function postCorridors(L, level) {
     if (level !== 10 && !(coarse.corr && coarse.corrSent === originId)) postCorridors(coarse, 10);
     const t0 = performance.now();
     const canoe = mode === 'canoe';
-    corridors.count(L, canoe, level === 10 ? null : [last[3], coarse].filter(C => C && C !== L && C.corr));
+    const coarser = level === 10 ? null : [last[3], coarse].filter(C => C && C !== L && C.corr);
+    corridors.count(L, canoe, coarser);
     const t1 = performance.now();
-    const { xy, off, s } = corridors.lines(L, canoe, level, coarse.corr.total);
+    const { xy, off, s } = corridors.lines(L, canoe, coarse.corr.total, coarser);
     L.corrSent = originId;
     self.postMessage({ type: 'corridors', originId, level, xy, off, s, ms: Math.round(performance.now() - t0),
         countMs: Math.round(t1 - t0) }, [xy.buffer, off.buffer, s.buffer]);

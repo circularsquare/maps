@@ -9,6 +9,10 @@ How the map looks sharp up close without solving the whole world at full detail.
 | L10 | ~10 km (1/12 degree) | 4320 x 1740, whole world | every click | `data/grid.bin.gz` (`tools/build_grid.py`) |
 | L3 | ~3 km (1/40 degree) | 14400 x 5800, in tiles | a window round the view, from zoom 5 | `data/tiles/l3/` |
 | L1 | ~1 km (1/120 degree) | 43200 x 17400, in tiles | a window round the view, from zoom 7 | `data/tiles/l1/` |
+| L0.1 | ~100 m (1/1200 degree) | 1 degree tiles, where built | a window round the view once the view fits in 1.5 M cells (zoom ~9.4 on 1400 x 900), walking starts | `data/fine/` (`docs/fine.md`) |
+
+L0.1's sources, tiles and when it is solved are in `docs/fine.md`; it is seeded (from L1, then
+L3, L10), painted (canvas source `walk01`), holed and hovered as the windows below.
 
 L1 is the MAP surface itself. L3 and L10 are made from it the same way: a cell's speed is the mean
 of its pixels' time per metre, and a cell is land when a quarter of its pixels are. All levels are

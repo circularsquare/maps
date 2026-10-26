@@ -1,21 +1,24 @@
-// View windows at L3 and L1: which cells they cover, and the solve seeded from the next
+// View windows at L3, L1 and L0.1: which cells they cover, and the solve seeded from the next
 // coarser level, layer by layer. See docs/resolution.md and docs/canoe.md 5.
 import { cfg } from './config.js';
 import { makeLevel, snap, sampleNode } from './levels.js';
-import { loadWindow } from './tiles.js';
+import { loadWindow, fineIndex, fineCovers } from './tiles.js';
 import { loadWindowWater } from './canoedata.js';
 import { buildCanoe, shoreAt } from './canoe.js';
 import { solve, cellTimes, P_SEED } from './search.js';
 
 export const Z3 = 5, Z1 = 7;            // zoom from which L3, L1 windows are solved
-const CAP = { 3: 3e6, 1: 2e6 };         // most cells in a window (L1 cells cost more: rougher speeds)
+// most cells in a window (L1 cells cost more: rougher speeds); L0.1 is solved once the view
+// alone fits in its cap (docs/fine.md)
+const CAP = { 3: 3e6, 1: 2e6, 0.1: 1.5e6 };
 const CAP_CANOE = { 3: 1.5e6, 1: 2e6 }; // on a canoe start: water is solved too (~1.1-1.3 s at these)
 export const MARGIN = 0.25;             // window = view plus this share of its size on each side
 export const MARGIN_L3_UNDER_L1 = 1.0;  // the L3 window under an L1 one is wider, to seed it well
-const ALIGN = 0.25;                     // window edges sit on multiples of this many degrees
+// window edges sit on multiples of this many degrees: whole cells at every coarser level
+const ALIGN_OF = { 3: 0.25, 1: 0.25, 0.1: 0.05 };
 
 export function windowFor(f, v, margin, canoe) {
-    const cell = f / 120, cap = (canoe ? CAP_CANOE : CAP)[f];
+    const cell = f / 120, cap = (canoe ? CAP_CANOE : CAP)[f], ALIGN = ALIGN_OF[f];
     const cx = (v.west + v.east) / 2, cy = (v.north + v.south) / 2;
     let hw = (v.east - v.west) / 2 * (1 + 2 * margin), hh = (v.north - v.south) / 2 * (1 + 2 * margin);
     const cells = (2 * hw / cell) * (2 * hh / cell);
@@ -30,7 +33,33 @@ export function windowFor(f, v, margin, canoe) {
              row0: Math.round((85 - north) / cell), rows: Math.round((north - south) / cell) };
 }
 
-export const contains = (a, b) => a && a.west <= b.west && a.east >= b.east && a.north >= b.north && a.south <= b.south;
+// The L0.1 window for a view, or null: walking starts only, the view within the cap, and every
+// tile of the window there. A window reaching past the tiles is first cut back to the whole
+// degrees round the view.
+export async function fineWindowFor(v) {
+    const cell = 1 / 1200;
+    if ((v.east - v.west) / cell * ((v.north - v.south) / cell) > CAP[0.1]) return null;
+    const ix = await fineIndex();
+    if (!ix) return null;
+    let w = windowFor(0.1, v, MARGIN, false);
+    if (w && !fineCovers(ix, w)) {
+        w = clip(w, Math.floor(v.west), Math.ceil(v.east), Math.ceil(v.north), Math.floor(v.south));
+        if (w && !fineCovers(ix, w)) w = null;
+    }
+    return w;
+}
+
+function clip(w, west, east, north, south) {
+    west = Math.max(w.west, west); east = Math.min(w.east, east);
+    north = Math.min(w.north, north); south = Math.max(w.south, south);
+    if (east <= west || north <= south) return null;
+    const cell = w.cell;
+    return Object.assign({}, w, { west, east, north, south,
+        col0: Math.round((west + 180) / cell), cols: Math.round((east - west) / cell),
+        row0: Math.round((85 - north) / cell), rows: Math.round((north - south) / cell) });
+}
+
+export const contains =(a, b) => a && a.west <= b.west && a.east >= b.east && a.north >= b.north && a.south <= b.south;
 
 // Seeds for a window: every node on its border ring at the coarser level's weight, time and
 // hazard there, from the same layer (the first of `coarser` that covers the point), and the
