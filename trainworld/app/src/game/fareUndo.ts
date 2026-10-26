@@ -5,6 +5,7 @@
 import { computed, signal } from "@preact/signals";
 import { tidyNodes, type FareNode } from "./fareCurve";
 import { moneyState } from "./money";
+import { noteFareEdit } from "./fareEstimate";
 import { edit, editsSent, setFares } from "./world";
 
 interface Step { from: FareNode[]; to: FareNode[] }
@@ -24,6 +25,7 @@ const same = (a: FareNode[] | undefined, b: FareNode[]) => !!a && JSON.stringify
 const isNow = (nodes: FareNode[]) => same(moneyState.peek()?.fares.nodes, nodes) || (!!sent && performance.now() - sent.t < 3000 && same(sent.nodes, nodes));
 const send = (nodes: FareNode[]) => {
   sent = { nodes, t: performance.now() };
+  noteFareEdit();
   return setFares(nodes);
 };
 const fresh = () => {

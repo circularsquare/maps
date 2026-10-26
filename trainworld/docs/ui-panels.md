@@ -380,7 +380,12 @@ type it, Enter or leaving the box applying and Escape cancelling [T-626, `TypedV
 row's value, so a base fare or rate change moves that node's fare and every later one's by the same
 amount, and a stretch's end keeps both rates; a rate never goes below $0. Fares show whole cents; a
 rate shows two decimals when it is whole cents and three otherwise (typed or dragged). Dragging on
-the graph sets fares, and the rows' rates follow. Then cars
+the graph sets fares, and the rows' rates follow. While a drag is under way, or from a fare edit until
+demand has solved it, two more rows follow: "Riders a day" with the estimated change in rail trips
+("-6%") and "Fares a day" with the estimated change in fare income ("+$1.2M"), each hover giving
+the estimate and today's figure; otherwise neither shows [T-1300, `game/fareEstimate.ts`: each
+layer's rail trips times exp(its fare sensitivity over its rail trips x the curve's change at its
+riders' mean trip length, line by line), fare income as the riders kept pay the new fares]. Then cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
 

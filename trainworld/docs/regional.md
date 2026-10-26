@@ -81,7 +81,10 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
 **Mode choice.** Inter-city trips choose rail, car and plane in one logit [T-378]: the car's money
 at 3 perceived minutes a dollar, the plane's fare at the departing country's minutes a dollar, rail's
 the player's curve as set at India's (12.2, so it weighs as every country's fares do at their
-default scales; a trip pays the curve times its starting country's scale) [T-1277], damped by the trip's length as the local walking share is
+default scales; a trip pays the curve times its starting country's scale) [T-1277], each trip's
+fare weighed again by its origin's fare scale over that country's income scale where the player set
+one (a commute or outing by its home's; on the expected fare km of each station pair's strategy as
+searched, so routes stay as the curve gives them) [T-1286], damped by the trip's length as the local walking share is
 ([demand-mode.md](demand-mode.md) 4.3, T-495): 0.10 x sqrt(60 / T) per perceived minute, T the
 car's perceived minutes over the zone pair's distance, even across a sea where no car goes (so
 rail against air never depends on it). The scale covers the whole

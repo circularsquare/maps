@@ -1145,6 +1145,64 @@ fn a_streamed_pass_is_the_pass_to_the_bit() {
         assert_eq!((s.cor, s.c_cor), (whole.cor.clone(), whole.c_cor.clone()));
     }
 }
+/// T-1286: fare factors of 1, or for a country outside the market, leave the pass alone to the bit;
+/// a factor of 2 where the trips start costs rail riders, the same streamed or not.
+#[test]
+fn fare_factors_weigh_trips_by_their_origin() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let mut api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
+    let ll = [139.7671, 35.6812, 139.7387, 35.6285, 139.6970, 35.5313, 139.6222, 35.4660, 139.7006, 35.6896, 139.7774, 35.7138, 139.6239, 35.9064, 139.0124, 36.3221];
+    let mut times = vec![];
+    for len in [4, 5] {
+        let mut t = vec![0f32; 6 * len];
+        for lev in 0..3 {
+            for k in 0..len - 1 {
+                t[lev * len + k] = 600.;
+                t[(3 + lev) * len + k + 1] = 600.;
+            }
+        }
+        times.extend(t);
+    }
+    api.set_network_ll(&ll, &[4, 5], &[0, 1, 2, 3, 4, 0, 5, 6, 7], &times, &[12., 12., 12., 8., 8., 8.], &[10., 10.]).unwrap();
+    api.set_fares(1.5, 0.1, &[8.; 18]).unwrap();
+    api.set_fare_curve(&[0., 1.5, 10., 2.5, 100., 8.]).unwrap();
+    let figures = |api: &mut IntercityApi| {
+        assert!(api.solve(0));
+        let per = api.per(0).unwrap();
+        let p = api.pass_on(&per.g, &per.p, 0, &skims_for(&per.g, &per.p, &api.want), &per.xi);
+        let s = api.pass_streamed(&per.g, &per.p, 0, &per.xi, 0);
+        assert_eq!((p.rail.to_bits(), p.c_rail.to_bits(), p.e_rail.to_bits()), (s.rail.to_bits(), s.c_rail.to_bits(), s.e_rail.to_bits()));
+        (p.rail, p.c_rail)
+    };
+    let base = figures(&mut api);
+    assert!(base.0 > 0. && base.1 > 0.);
+    for same in [r#"{"JP": 1}"#, r#"{"US": 2}"#, "{}"] {
+        api.set_fare_factors(same).unwrap();
+        let f = figures(&mut api);
+        assert_eq!((f.0.to_bits(), f.1.to_bits()), (base.0.to_bits(), base.1.to_bits()), "{same}");
+    }
+    api.set_fare_factors(r#"{"JP": 2}"#).unwrap();
+    let dear = figures(&mut api);
+    assert!(dear.0 < base.0 && dear.1 < base.1, "{dear:?} against {base:?}");
+    api.set_fare_factors(r#"{"JP": 0.5}"#).unwrap();
+    let cheap = figures(&mut api);
+    assert!(cheap.0 > base.0 && cheap.1 > base.1, "{cheap:?} against {base:?}");
+    assert!(api.set_fare_factors(r#"{"JP": 0}"#).is_err());
+    // T-1300: the rail trips' fare sensitivity is what a dearer base fare does (it moves no route),
+    // with a fare factor too; on the base and rate's line, since a bent curve sets every fare itself
+    api.set_fare_curve(&[]).unwrap();
+    for fx in ["{}", r#"{"JP": 2}"#] {
+        api.set_fare_factors(fx).unwrap();
+        api.set_fares(1.5, 0.1, &[8.; 18]).unwrap();
+        assert!(api.solve(0));
+        let (r0, d) = (api.summary(0)[2], api.summary(0)[10]);
+        api.set_fares(1.55, 0.1, &[8.; 18]).unwrap();
+        assert!(api.solve(0));
+        let r1 = api.summary(0)[2];
+        let want = (r1 - r0) / (0.05 * api.base.fare_w as f64);
+        assert!(d < 0. && (d - want).abs() < 0.03 * want.abs(), "{fx}: sensitivity {d}, a dearer base fare gives {want}");
+    }
+}
 /// T-761: the market's pass on a captured network natively, by phase, with its tables' sizes.
 /// `TW_T761_NET=<checks/t761-plain-net.mjs's output> cargo test --release --features demand t761_market_bench -- --ignored --nocapture`
 #[test]
@@ -1183,7 +1241,7 @@ fn t761_market_bench() {
     }
     eprintln!("a sweep: {n} searches {:.0} ms, {:.0} MB of strategies (estimate {:.0} MB)", now_ms() - t, bytes as f64 / 1048576., (n * strategy_bytes(g)) as f64 / 1048576.);
     let t = now_ms();
-    let d = a.demand(&r, s, p, 0);
+    let d = a.demand(g, &r, p, 0, &[]);
     eprintln!("demand {:.0} ms; od non-zero {}, od_c non-zero {}", now_ms() - t, d.od.iter().filter(|&&v| v != 0.).count(), d.od_c.v.len());
 }
 /// T-1175: the market's solve with and without the everyday pairs across zone lines, on scratch
@@ -1404,7 +1462,7 @@ fn t780_census() {
     }
     eprintln!("logsums alone {:.0} ms ({x:.0})", now_ms() - t);
     let t = now_ms();
-    let d = a.demand(&r, s, p, 1);
+    let d = a.demand(g, &r, p, 1, &[]);
     eprintln!("demand {:.0} ms, rail {:.0}", now_ms() - t, d.rail);
 }
 /// T-780: the market's period 1 at free flow with its pairs sampled in chunks, against every pair.

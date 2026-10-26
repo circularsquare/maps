@@ -214,6 +214,9 @@ export type FromDemand =
       /** DemandApi.summary(): round, trips, rail, walk, ms, pairs, crowding stats; driving is
        * trips less rail and walk */
       summary: number[];
+      /** T-1300: rail trips per curve dollar dearer on every fare (negative), local and the market's,
+       * then each one's reach: its sensitivity-weighted mean trip km over its rider-weighted one */
+      fareSense?: [number, number, number, number];
       citySummary: Record<CityId, number[]>;
       /** T-260: per city, trips, rail trips and walked trips of each purpose (`parts.keys` order,
        * the market's longer trips left out), so a weekend's split can be worked out */

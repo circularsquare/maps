@@ -31,5 +31,15 @@ export function fareScale(country: string | undefined, scales: Record<string, nu
   const own = country ? scales?.[country] : undefined;
   return own !== undefined && Number.isFinite(own) ? tenth(own) : incomeScale(country);
 }
+/** T-1286: per country the player set a scale for, that scale over its income's, where not 1: the
+ * factor the regional market weighs fares from there at. */
+export function fareFactors(scales: Record<string, number> | undefined): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const c of Object.keys(scales ?? {})) {
+    const f = fareScale(c, scales) / incomeScale(c);
+    if (f !== 1) out[c] = f;
+  }
+  return out;
+}
 /** A player's scale as kept: a tenth within range. */
 export const tidyScale = tenth;

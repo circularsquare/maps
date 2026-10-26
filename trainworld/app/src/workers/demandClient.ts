@@ -2958,8 +2958,12 @@ class DemandClient {
     const summary = r.summary.slice();
     summary[1] = summary[2] = summary[3] = 0;
     for (const v of [...Object.values(citySummary), intercitySummary]) for (const k of [1, 2, 3]) summary[k] += v[k] ?? 0;
+    // T-1300: the fare sensitivity follows the rail trips, local and the market's
+    const railOf = (s: Record<CityId, number[]>) => Object.values(s).reduce((a, v) => a + (v[2] ?? 0), 0);
+    const by = (day: number, raw: number) => (raw > 0 ? day / raw : 1);
+    const fareSense = r.fareSense && [r.fareSense[0] * by(railOf(citySummary), railOf(r.citySummary)), r.fareSense[1] * by(intercitySummary[2] ?? 0, r.intercitySummary[2] ?? 0), r.fareSense[2], r.fareSense[3]] as [number, number, number, number];
     // the corridors keep the weekday's numbers and their factors, applied as `dayCorridors` adds them (T-789)
-    return { ...r, seg, board, alight, arrive, loadOfCrush, fareX, citySummary, intercitySummary, intercityParts, corridorDay: [fl, fw], elsewhere, summary, parts: { keys: p.keys, seg: ps, board: pb, alight: pa } };
+    return { ...r, fareSense, seg, board, alight, arrive, loadOfCrush, fareX, citySummary, intercitySummary, intercityParts, corridorDay: [fl, fw], elsewhere, summary, parts: { keys: p.keys, seg: ps, board: pb, alight: pa } };
   }
 
   /** The views of one kind of day from its period results. */
@@ -3047,6 +3051,12 @@ class DemandClient {
       interTrips += r.intercitySummary[1]; interRail += r.intercitySummary[2];
       if (r.intercityParts && r.intercityParts.length >= 4) { commuteTrips += r.intercityParts[2]; commuteRail += r.intercityParts[3]; }
       r.elsewhere?.forEach((v, p) => { if (p < elsewhere.length) elsewhere[p] += v; });
+    }
+    // T-1300: the day's fare sensitivity, with the rail trips it is of
+    if (res.every((r) => r.fareSense)) {
+      const sum = (i: number) => res.reduce((a, r) => a + r.fareSense![i], 0);
+      const reach = (i: number, j: number) => { const d = sum(i); return d < 0 ? res.reduce((a, r) => a + r.fareSense![i] * (r.fareSense![j] ?? 1), 0) / d : 1; };
+      network.fareSense = { local: sum(0), market: sum(1), localReach: reach(0, 2), marketReach: reach(1, 3), marketRail: interRail };
     }
     return { view: network, cities, intercity: {version: s.version, round, tripsPerDay: interTrips, railTripsPerDay: interRail, commuteTripsPerDay: commuteTrips, commuteRailPerDay: commuteRail, corridors: noCorridors ? NO_CORRIDORS : this.dayCorridors(res), elsewhere} };
   }

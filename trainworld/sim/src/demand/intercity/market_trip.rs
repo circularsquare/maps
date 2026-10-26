@@ -179,6 +179,8 @@ impl IntercityApi {
             }
         }
         let sk = skims_for(g, p, &want);
+        let km = self.pair_km(g, &want, |dst| (sk.slot[dst] != u32::MAX).then(|| sk.strategy(sk.slot[dst] as usize)));
+        let fx = self.fare_x(g, p, &km);
         let sh = share_out(day as usize, LONGER, q) as f64;
         let (mut all, mut rail, mut air, mut car) = (0f64, 0f64, 0f64, 0f64);
         let (mut rc, mut rc_w, mut cc, mut cc_w, mut ref_c, mut km, mut served, mut n) = (0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64);
@@ -214,7 +216,7 @@ impl IntercityApi {
                 if self.solvable(a, bb) {
                     let band = self.base.band_of_d2(d * d * 1e6);
                     let (ra, rb) = (&self.access[a], &self.access_work[bb]);
-                    let (rail_c, sum) = rail_logsum(&sk.r, s, p.fare_min, ra, rb, p.beta, p.soften(p.band_unsoftened(band), car_c), &mut terms);
+                    let (rail_c, sum) = rail_logsum_x(&sk.r, s, p.fare_min, ra, rb, p.beta, p.soften(p.band_unsoftened(band), car_c), self.fx_of(&fx, a), &mut terms);
                     if sum > 0. {
                         let bt = p.mode_beta(car_c);
                         let v = ((-bt * (rail_c - drive)).clamp(-80., 80.) as f64).exp();
@@ -262,7 +264,7 @@ impl IntercityApi {
             let ep = &self.epairs[ei as usize];
             let (hz, az) = self.epair_zones(ep);
             let home = if ep.ride { &self.access_c[hz] } else { &self.access_c_walk[hz] };
-            let (_, sum) = rail_logsum(&sk.r, s, p.fare_min, home, &self.access_ew[az], pe.beta, p.soften(pe.band_unsoftened(ep.band as usize), ep.car), &mut terms);
+            let (_, sum) = rail_logsum_x(&sk.r, s, p.fare_min, home, &self.access_ew[az], pe.beta, p.soften(pe.band_unsoftened(ep.band as usize), ep.car), self.fx_of(&fx, hz), &mut terms);
             if sum > 0. {
                 for &(sa, sb, v) in &terms {
                     let x = rail_legs * v / sum;

@@ -25,7 +25,7 @@ import { loadAttractions, type Attraction } from "../game/attractions";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
 import { scaledKnots } from "../game/fareCurve";
-import { FARE_BASELINE, fareScale, fareWeight } from "../game/income";
+import { FARE_BASELINE, fareFactors, fareScale, fareWeight } from "../game/income";
 import type { CorridorTable } from "../game/demand";
 import { TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
@@ -295,7 +295,7 @@ function solveBare(a: DemandApi, e: EverydayApi | null) {
     e?.solve(q);
     const own = Array.from(a.summary(q)), s = own.slice();
     const v = e?.summary(q);
-    if (v) for (const k of [1, 2, 3, 5, 10]) s[k] += v[k] ?? 0;
+    if (v) for (const k of [1, 2, 3, 5, 10, 11, 12]) s[k] += v[k] ?? 0;
     const p = new Array(3 * keys.length).fill(0);
     for (let k = 0; k < 3; k++) p[k] = own[1 + k] ?? 0;
     const kt = e?.kind_totals(q);
@@ -887,8 +887,9 @@ function marketFigures(parts: IntercityApi[], q: number) {
     }
     return out;
   };
-  // round, trips, rail, 0, ms, pairs, segments over seats, then the worst loads: the largest part's
-  const summary = of((p) => p.summary(q), (i) => i === 2 || i === 4 || i === 6);
+  // round, trips, rail, 0, ms, pairs, segments over seats, then the worst loads: the largest part's;
+  // then the fare sensitivity (T-1300)
+  const summary = of((p) => p.summary(q), (i) => i === 2 || i === 4 || i === 6 || i >= 10);
   if (parts.length > 1 && summary.length) for (const i of [7, 8, 9]) summary[i] = Math.max(...parts.map((p) => p.summary(q)[i] ?? 0));
   // the longer trips, the commutes, the everyday pairs (T-1175), then (T-1229) the pairs by purpose,
   // four each: only the rail is a part's own
@@ -1095,10 +1096,12 @@ async function run() {
           p.set_passages(m.passages ?? new Uint32Array(0));
           p.set_span(m.span ?? new Float32Array(0));
           // T-1277: riders weigh fares by their country's income and pay the curve times its scale;
-          // the market takes the curve as set, at the baseline country's weight
+          // the market takes the curve as set, at the baseline country's weight, and (T-1286) each
+          // trip's at its origin's scale over its income's
           let scale = 1;
           if (p instanceof IntercityApi) {
             p.set_fare_weight(fareWeight(FARE_BASELINE));
+            p.set_fare_factors(JSON.stringify(fareFactors(m.fare.scales)));
             p.set_sampled(!job.exactMarket);
             // T-377: the market takes stations as longitude and latitude, each zone in its own frame
             const ll = new Float64Array(m.stXY.length);
@@ -1230,10 +1233,22 @@ async function run() {
         const arrive = comeOf(cs, q), rounds = sumAll(cs, (a) => boardsOf(a).rounds[q] ?? a.board(q));
         for (let k = 0; k < arrive.length; k++) arrive[k] = board[k] < 0.999 * rounds[k] ? Math.max(arrive[k], board[k]) : board[k];
         const citySummary = Object.fromEntries(ids.map((id) => [id, Array.from(cities.get(id)!.summary(q))])) as Record<CityId, number[]>;
-        for (const [id, a] of jobEveryday) if (citySummary[id]) { const v = a.summary(q); for (const k of [1, 2, 3, 5, 10]) citySummary[id][k] += v[k] ?? 0; }
+        for (const [id, a] of jobEveryday) if (citySummary[id]) { const v = a.summary(q); for (const k of [1, 2, 3, 5, 10, 11, 12]) citySummary[id][k] += v[k] ?? 0; }
         const intercitySummary = market ? market.summary : [];
         const summary = [round, 0, 0, 0, ms, 0, 0, 0, 0, 0];
         for (const v of [...Object.values(citySummary), intercitySummary]) for (const k of [1, 2, 3, 5]) summary[k] += v[k] ?? 0;
+        // T-1300: rail trips per curve dollar dearer on every fare, local and the market's (each
+        // population's per perceived minute, summary slot 10, times its minutes a curve dollar), and
+        // how far the trips' sensitivity reaches as against their riders: the sensitivity-weighted
+        // mean km over the rider-weighted one (slots 11 and 12)
+        const perDollar = (id: CityId) => { const c = cityById(id).country; return fareWeight(c) * fareScale(c, n.fare.scales); };
+        const reach = (d: number, dKm: number, rail: number, km: number) => (d < 0 && km > 0 && rail > 0 ? (dKm / d) / (km / rail) : 1);
+        const ls = ids.reduce((a, id) => {
+          const v = citySummary[id], w = perDollar(id);
+          return [a[0] + (v[10] ?? 0) * w, a[1] + (v[11] ?? 0) * w, a[2] + (v[2] ?? 0), a[3] + (v[12] ?? 0)];
+        }, [0, 0, 0, 0]);
+        const im = intercitySummary;
+        const fareSense: [number, number, number, number] = [ls[0], (im[10] ?? 0) * fareWeight(FARE_BASELINE), reach(ls[0], ls[1], ls[2], ls[3]), reach(im[10] ?? 0, im[11] ?? 0, im[2] ?? 0, im[12] ?? 0)];
         const parts = purposeParts(q, jobNodes, cs, !!market);
         // T-260: each city's trips, rail and walked trips by purpose, `parts.keys` order less the
         // market, so the main thread can work out a weekend's mode split
@@ -1245,7 +1260,7 @@ async function run() {
           if (e) for (let k = 0; k < Math.min(e.length, 3 * (local - 1)); k++) v[3 + k] = e[k];
           return [id, v];
         })) as Record<CityId, number[]>;
-        const msg = { version: job.version, period: q, summary, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
+        const msg = { version: job.version, period: q, summary, fareSense, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
         const t = market?.corridorTable;
         const big = [market?.corridorRail?.buffer, market?.corridorModes?.buffer, ...(t ? [t.from, t.to, t.longer, t.commutes, t.air, t.car].map((a) => a.buffer) : [])].filter((b): b is ArrayBuffer => !!b);
         return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, arrive.buffer, loadOfCrush.buffer, fareX.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...big] };

@@ -2881,20 +2881,26 @@ fn walk_column_in<I: Id>(g: &Graph, p: &Params, st: Strategy, dst: usize, next: 
 /// the riders split, and a boarding rides a stop first (T-1055). Read in settle order, so every
 /// next node is done first. Needs `g.rn_km` (a curve that is not a straight line).
 pub fn trip_km(g: &Graph, st: Strategy, dst: usize, km: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
+    trip_km_on(g, st, dst, &g.rn_km, km, dep)
+}
+
+/// `trip_km` with each route node's fare km to the next stop given (`Graph::rn_km`'s layout).
+pub fn trip_km_on(g: &Graph, st: Strategy, dst: usize, hop_km: &[f32], km: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
     match (st.next, st.order) {
-        (NodeIds::Short(next), NodeIds::Short(order)) => trip_km_in(g, st, dst, next, order, km, dep),
-        (NodeIds::Long(next), NodeIds::Long(order)) => trip_km_in(g, st, dst, next, order, km, dep),
+        (NodeIds::Short(next), NodeIds::Short(order)) => trip_km_in(g, st, dst, next, order, hop_km, km, dep),
+        (NodeIds::Long(next), NodeIds::Long(order)) => trip_km_in(g, st, dst, next, order, hop_km, km, dep),
         _ => unreachable!("a destination's ids in two widths"),
     }
 }
 
-fn trip_km_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &[I], order: &[I], km: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
+#[allow(clippy::too_many_arguments)]
+fn trip_km_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &[I], order: &[I], hop_km: &[f32], km: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
     let (s, n) = (g.n_st, g.n);
     let end = n + st.change.len();
     km.clear();
     km.resize(end, 0.0);
     let on_train = |v: usize| (s..n).contains(&next[v].ix());
-    let hop = |r: usize| g.rn_km.get(r).copied().unwrap_or(0.0);
+    let hop = |r: usize| hop_km.get(r).copied().unwrap_or(0.0);
     for &id in order {
         let id = id.ix();
         if id == dst {
@@ -3717,10 +3723,38 @@ pub fn dist_band(d_m: f32) -> usize {
     DIST_BANDS_KM.iter().position(|&e| d_m < e * 1000.0).unwrap_or(N_BANDS - 1)
 }
 
+/// T-1300: the step of the riders' fare sensitivity (`FareSense`), perceived minutes.
+pub const FARE_D_MIN: f32 = 1.0;
+
+/// T-1300: a population's fare sensitivity: rail trips per perceived minute dearer on every fare
+/// (negative), the same with each trip weighed by its straight-line km, and its rail trips weighed so.
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
+pub struct FareSense {
+    pub d: f64,
+    pub d_km: f64,
+    pub km: f64,
+}
+
+impl FareSense {
+    /// Averaged in as a round's figures are (`w` the new round's weight).
+    pub fn toward(&mut self, new: FareSense, w: f64) {
+        self.d += (new.d - self.d) * w;
+        self.d_km += (new.d_km - self.d_km) * w;
+        self.km += (new.km - self.km) * w;
+    }
+    pub fn scale(&mut self, f: f64) {
+        self.d *= f;
+        self.d_km *= f;
+        self.km *= f;
+    }
+}
+
 pub struct ModeOut {
     /// Rail trips by (access station, egress station), S x S, in the home -> work direction.
     pub od: Vec<f32>,
     pub rail: f64,
+    /// T-1300: how `rail` moves with the fare.
+    pub sense: FareSense,
     /// Rail trips by straight-line distance from home (subzone centroid) to the boarding station,
     /// bands `DIST_BANDS_KM`.
     pub rail_band: [f64; N_BANDS],
@@ -3863,6 +3897,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
     let mut out = ModeOut {
         od: vec![0.0; s * s],
         rail: 0.0,
+        sense: FareSense::default(),
         rail_band: [0.0; N_BANDS],
         trips_access: 0.0,
         trips_total: gr.total * share,
@@ -4075,6 +4110,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
             let mw = if rule { acc_from[walk.start..ride.end].iter().copied().fold(0.0, f32::max) } else { 0.0 };
             let (ux8, uy8, lu08, lu18) = (F8::splat(sz.cx[u]), F8::splat(sz.cy[u]), F8::splat(local[u].0), F8::splat(local[u].1));
             let mut rail_sum = 0.0f32;
+            let (mut d_sum, mut dk_sum, mut rk_sum) = (0.0f32, 0.0f32, 0.0f32);
             let mut walk_sum = 0.0f32;
             let mut all_sum = 0.0f32;
             let mut n_pairs = 0usize;
@@ -4264,7 +4300,6 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
                 let rail = mo8 + m8 + F8::splat(p.fare_min) - ssum.ln() / th8 + off8;
                 // `Params::mode_beta`
                 let bt = F8::splat(p.beta) * (F8::splat(p.damp_min) / road).min(F8::splat(1.0)).sqrt();
-                let util = bt * (road - rail) + F8::splat(p.asc_rail);
                 // T-558: and walking the whole way, against the same driver
                 let uw = bt * (road - cw8) + F8::splat(p.asc_walk());
                 // T-380: rail's share among drivers parking free, and among those paying for a
@@ -4273,26 +4308,33 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
                 // `Params::ratio_share` (T-918)
                 let (zero, one) = (F8::splat(0.0), F8::splat(1.0));
                 let (hi, kf) = (F8::splat(p.ratio_fade_hi), F8::splat(1.0 / (p.ratio_fade_hi - p.ratio_fade_lo)));
-                let rail_c = rail.max(F8::splat(0.01));
-                let ratio = |car: F8| {
-                    let qr = rail_c / car;
-                    let s = one / (one + qr * qr * qr);
-                    let fr = ((hi - qr) * kf).max(zero).min(one);
-                    let fc = ((hi - one / qr) * kf).max(zero).min(one);
-                    one - (one - s * fr) * fc
+                let paying = paid8.lt_mask(F8::splat(1e-30)) != 0xff;
+                let free8 = if paying { F8::transpose(std::array::from_fn(|l| dd[q[l]][2]))[0] } else { zero };
+                let share = |rail: F8| {
+                    let util = bt * (road - rail) + F8::splat(p.asc_rail);
+                    let rail_c = rail.max(F8::splat(0.01));
+                    let ratio = |car: F8| {
+                        let qr = rail_c / car;
+                        let s = one / (one + qr * qr * qr);
+                        let fr = ((hi - qr) * kf).max(zero).min(one);
+                        let fc = ((hi - one / qr) * kf).max(zero).min(one);
+                        one - (one - s * fr) * fc
+                    };
+                    let e = (uw - util).exp();
+                    let w0 = e / (one + util.neg().exp() + e);
+                    let s0 = (one - w0) * ratio(road);
+                    if !paying {
+                        s0
+                    } else {
+                        let w1 = e / (one + (util + bt * paid8).neg().exp() + e);
+                        let s1 = (one - w1) * ratio(road + paid8);
+                        s0 + (one - free8) * (s1 - s0)
+                    }
                 };
-                let e = (uw - util).exp();
-                let w0 = e / (one + util.neg().exp() + e);
-                let s0 = (one - w0) * ratio(road);
-                let r = if paid8.lt_mask(F8::splat(1e-30)) == 0xff {
-                    s0
-                } else {
-                    let [free8, _, _, _] = F8::transpose(std::array::from_fn(|l| dd[q[l]][2]));
-                    let w1 = e / (one + (util + bt * paid8).neg().exp() + e);
-                    let s1 = (one - w1) * ratio(road + paid8);
-                    s0 + (one - free8) * (s1 - s0)
-                };
-                let x = tu8 * dv8 * r;
+                let x = tu8 * dv8 * share(rail);
+                // T-1300: and at a fare `FARE_D_MIN` dearer, for the riders' fare sensitivity
+                let xd = (tu8 * dv8 * share(rail + F8::splat(FARE_D_MIN)) - x).to_array();
+                let dk = (d * F8::splat(0.001)).to_array();
                 let g = x / ssum;
                 // trips by egress station y, and y x the row: what reaches each egress entry
                 let mut ya = [[0f32; 8]; K];
@@ -4315,6 +4357,9 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
                         continue;
                     }
                     rail_sum += xa[l];
+                    d_sum += xd[l];
+                    dk_sum += xd[l] * dk[l];
+                    rk_sum += xa[l] * dk[l];
                     walk_sum += wl[l];
                     lost_q[q[l]] += wl[l];
                     if whole >> l & 1 == 0 {
@@ -4356,6 +4401,9 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
             out.rail_walk += walk_sum as f64;
             out.walk_lost_by_sub[u] = walk_sum;
             out.rail += rail_sum as f64;
+            out.sense.d += d_sum as f64 / FARE_D_MIN as f64;
+            out.sense.d_km += dk_sum as f64 / FARE_D_MIN as f64;
+            out.sense.km += rk_sum as f64;
             out.rail_by_sub[u] = rail_sum;
             // split this subzone's rail trips back onto its access stations, band by band: a walk
             // entry carries its share of both rows' trips, a ride entry of the long commutes' only
