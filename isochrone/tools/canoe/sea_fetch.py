@@ -35,6 +35,7 @@ VARS = {"hs": "significant_height_of_combined_wind_waves_and_swell",
 SEASON = {6: "jja", 7: "jja", 8: "jja", 12: "djf", 1: "djf", 2: "djf"}
 STRIDE_H = 73
 SLOW_EVERY = 3                              # ice and sst on every third wave sample
+ICE_STRIDE_H = 49
 
 
 def get(url, tries=5):
@@ -72,25 +73,32 @@ def drifter():
         print("%s %.1f MB %.0f s" % (name, len(data) / 1e6, time.time() - t0), flush=True)
 
 
-def era5(threads=4):
+def era5(threads=4, ice_only=False):
+    """ice_only: sea ice alone for the least-ice months (aug, feb), one hour every 49 h,
+    to data/raw/era5_summer/clim_ice.npz."""
     from numcodecs import Blosc
     codec = Blosc()
     out = os.path.join(RAW, "era5_summer")
     os.makedirs(out, exist_ok=True)
     t_start = int((datetime.datetime(1991, 1, 1) - EPOCH).total_seconds() // 3600)
     t_end = int((datetime.datetime(2021, 1, 1) - EPOCH).total_seconds() // 3600)
+    seasons = {8: "aug", 2: "feb"} if ice_only else SEASON
+    names = sorted(set(seasons.values()))
     jobs = []                                   # (season, var, hour index)
     n = 0
-    for t in range(t_start, t_end, STRIDE_H):
-        season = SEASON.get((EPOCH + datetime.timedelta(hours=t)).month)
+    for t in range(t_start, t_end, ICE_STRIDE_H if ice_only else STRIDE_H):
+        season = seasons.get((EPOCH + datetime.timedelta(hours=t)).month)
         if not season:
+            continue
+        if ice_only:
+            jobs.append((season, "ice", t))
             continue
         jobs.append((season, "hs", t))
         if n % SLOW_EVERY == 0:
             jobs += [(season, "ice", t), (season, "sst", t)]
         n += 1
-    sums = {(s, v): np.zeros((721, 1440), np.float64) for s in ("jja", "djf") for v in VARS}
-    cnts = {(s, v): np.zeros((721, 1440), np.int32) for s in ("jja", "djf") for v in VARS}
+    sums = {(s, v): np.zeros((721, 1440), np.float64) for s in names for v in VARS}
+    cnts = {(s, v): np.zeros((721, 1440), np.int32) for s in names for v in VARS}
     lock = threading.Lock()
     done = [0, 0]
     t0 = time.time()
@@ -115,11 +123,14 @@ def era5(threads=4):
     res = {}
     for (s, v), sm in sums.items():
         c = cnts[s, v]
+        if not c.any():
+            continue
         with np.errstate(invalid="ignore", divide="ignore"):
             res["%s_%s" % (v, s)] = np.where(c > 0, sm / np.maximum(c, 1), np.nan).astype(np.float32)
         res["n_%s_%s" % (v, s)] = c
-    np.savez_compressed(os.path.join(out, "clim.npz.tmp.npz"), **res)
-    os.replace(os.path.join(out, "clim.npz.tmp.npz"), os.path.join(out, "clim.npz"))
+    name = "clim_ice.npz" if ice_only else "clim.npz"
+    np.savez_compressed(os.path.join(out, name + ".tmp.npz"), **res)
+    os.replace(os.path.join(out, name + ".tmp.npz"), os.path.join(out, name))
     print("done: %d chunks, %.2f GB streamed, %.0f s" % (done[0], done[1] / 1e9, time.time() - t0), flush=True)
 
 
@@ -129,3 +140,5 @@ if __name__ == "__main__":
         drifter()
     elif what == "era5":
         era5(int(sys.argv[2]) if len(sys.argv) > 2 else 4)
+    elif what == "era5ice":
+        era5(int(sys.argv[2]) if len(sys.argv) > 2 else 4, ice_only=True)

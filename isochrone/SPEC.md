@@ -50,8 +50,9 @@ cover and GMTED2010 elevation with each layer kept apart, is built but not yet r
   (for Anita's review, T-005); model and sources: research/canoe.md.
 - **Eras.** Today, and later 10,000 BC (no roads, no cleared land, lower sea level, ice sheets,
   Beyer 2020 biomes at 12 ka for land cover). Sources: research/friction.md.
-- **Season.** Annual averages on land; local summer at sea (waves, currents, sea ice), the season a
-  paddler would choose. A season switch is a later extra.
+- **Season.** Annual averages on land; local summer at sea (waves and currents June-August north of
+  the equator, December-February south; sea ice from the least-ice month, August or February),
+  the season a paddler would choose. A season switch is a later extra.
 
 ## 4. Resolution
 

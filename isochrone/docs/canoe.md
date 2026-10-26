@@ -55,7 +55,8 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
 - **Sea current** c is the mean of the edge's two cells from the drifter climatology, x0.5 within
   5 km of shore. Along the edge direction d: s = c·d + sqrt(p² - (c×d)²); no edge when the
   cross-current exceeds p or s <= 0.
-- **Ice**: sea cells with local-summer ice cover above 15% have no canoe node.
+- **Ice**: sea cells with mean ice cover above 15% in the least-ice month (August north of the
+  equator, February south) have no canoe node.
 - **Moves on water**: 8 neighbours; the 8 knight moves only where all four cells involved are
   open water (walking needs all four on land). At L3 and L10 a canoe edge exists only where the
   two cells' L1 water touches across their shared border (`links`, section 5): a strait narrower
@@ -154,8 +155,8 @@ Water hazard can land first: its inputs exist once T-020 and T-021 do.
   symmetric (a cell's bit k equals its neighbour's opposite bit) and wrap at 180°.
 - **Sea grid**: 1440 x 580 cells of 0.25° from 180W, 85N. Local summer: June-August north of the
   equator, December-February south. Currents: the drifter monthly means over those months, else
-  the annual mean, else 0 (40% of cells, mostly land). Wave height, ice and sea temperature: the
-  mean of the four ERA5 points round the cell centre; cells with no ERA5 value (land, waves
+  the annual mean, else 0 (40% of cells, mostly land). Wave height and sea temperature: the
+  summer mean; ice: the August (north) or February (south) mean. Each is the mean of the four ERA5 points round the cell centre; cells with no ERA5 value (land, waves
   under ice) hold the nearest cell's, so a lookup anywhere returns a sea value.
 - **River steps**: one record per downstream step, stored with the tile of the upstream cell, in
   columns: cell (uint32 within the tile), direction to the next cell (0-7), length (uint16, 10 m),
@@ -173,7 +174,8 @@ Water hazard can land first: its inputs exist once T-020 and T-021 do.
   `sgr_dk_rav`, and monthly minimum discharge for later; CC BY 4.0), HydroLAKES (local;
   `Lake_type` 2 = reservoir, its pour point = the dam), OSM `waterway=waterfall|dam|weir` by
   Overpass, the Natural Earth 10 m ocean polygon (public domain), the GDP drifter monthly
-  climatology, ARCO-ERA5 sampled to a local-summer mean of wave height, ice and sea temperature,
+  climatology, ARCO-ERA5 sampled to a local-summer mean of wave height and sea temperature and a
+  least-ice-month mean of ice,
   NSIDC median ice edges as a check. SWORD's obstruction flags are a later check (1.6 GB).
 
 ## 5. Search

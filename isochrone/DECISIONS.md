@@ -5,6 +5,10 @@ reasoning and what it replaced.
 
 ## 2026-10-26
 
+- **Sea ice from the least-ice month** (T-033, orchestrator's call under "the season a paddler
+  would choose"): August north of the equator, February south. The June-August mean closed
+  Hudson Bay (37%) and the whole Arctic coast. Waves, currents and sea temperature keep the
+  3-month summer mean.
 - **Straits MAP walks over get a canoe node** (T-021): MAP's 1 km surface is land along the
   Bosporus and across the Dardanelles, so an L1 land pixel touched by the NE 10 m ocean polygon
   keeps its land node and gets a sea canoe node. Costs a ~1 km canoe fringe on most coasts;

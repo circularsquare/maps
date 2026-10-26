@@ -45,7 +45,7 @@ Canoe water and sea (`docs/canoe.md` 4, layouts in `notes/T-021.md`), into `data
 | File | What | Time |
 |---|---|---|
 | `tools/canoe/water.py` | The speed tiles' water, NE ocean and HydroLAKES to `kind`, `shore`, `links` at L10 (`water.bin.gz`), L3 and L1 tiles, `index.json`; `--cache DIR` keeps the L1 arrays | ~11 min, ~6 GB |
-| `tools/canoe/sea_fetch.py` | `drifter`: GDP drifter climatology from ERDDAP; `era5 [threads]`: streams ARCO-ERA5 to a summer climatology `data/raw/era5_summer/clim.npz` (needs `numcodecs`) | 30 s; ~7 min |
+| `tools/canoe/sea_fetch.py` | `drifter`: GDP drifter climatology from ERDDAP; `era5 [threads]`: streams ARCO-ERA5 to a summer climatology `data/raw/era5_summer/clim.npz`; `era5ice`: August and February sea ice to `clim_ice.npz` (needs `numcodecs`) | 30 s; ~7 min; ~1.5 min |
 | `tools/canoe/sea.py` | Those to the 0.25° local-summer grid `sea.bin.gz` (currents, waves, ice, sea temperature) | seconds |
 | `tools/canoe/water_plots.py` | Strait and link checks, PNGs `maps/artifacts/isochrone/t021_*.png` | ~1 min |
 

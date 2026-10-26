@@ -4,8 +4,9 @@
 
 Local summer everywhere: June-August for cells north of the equator, December-February south.
 Currents: the drifter monthly climatology averaged over those months (months without data
-skipped), else the annual mean, else 0. Wave height, sea ice and sea temperature: the ERA5
-summer climatology (sea_fetch.py era5), the mean of the four ERA5 points round each cell centre;
+skipped), else the annual mean, else 0. Wave height and sea temperature: the ERA5 summer
+climatology (sea_fetch.py era5); sea ice: the least-ice month, August north and February south
+(sea_fetch.py era5ice). Each is the mean of the four ERA5 points round each cell centre;
 cells with no ERA5 value (land, or waves under ice) take the nearest cell that has one.
 Layout: notes/T-021.md.
 """
@@ -74,7 +75,10 @@ class _quiet:
 
 
 def era5():
-    c = np.load(os.path.join(RAW, "era5_summer", "clim.npz"))
+    c = dict(np.load(os.path.join(RAW, "era5_summer", "clim.npz")))
+    # sea ice from the least-ice month instead (sea_fetch.py era5ice): August north, February south
+    ci = np.load(os.path.join(RAW, "era5_summer", "clim_ice.npz"))
+    c["ice_jja"], c["ice_djf"] = ci["ice_aug"], ci["ice_feb"]
     # ERA5 points: lat 90 - 0.25 i, lon 0.25 j (0..359.75). Our cell centre sits between four.
     i0 = np.rint((90 - (LAT + STEP / 2)) / STEP).astype(int)
     j0 = np.rint(((LON - STEP / 2) % 360) / STEP).astype(int)

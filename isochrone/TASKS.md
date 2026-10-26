@@ -22,7 +22,6 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 
 - T-024 [P2] Canoe hover: time paddled and carried, the route line traced across levels (docs/canoe.md 6). After T-022.
 - T-008 [P2] Mode panel: walking or canoe start, later K, the other toggles and the era switch. After T-022.
-- T-033 [P2] Summer sea ice: the June-August mean closes Hudson Bay (37%), Baffin Bay and the whole Arctic coast to the canoe, while NSIDC's August edge leaves much open. Decide with Anita: keep the 3-month mean, or use the least-ice month (August / February); `sea_fetch.py era5` per month is ~7 min (notes/T-021.md).
 - T-023 [P2] M1 doc tidy: spec against code, prune TASKS, fold notes. Last in M1.
 
 ## M2: survival
