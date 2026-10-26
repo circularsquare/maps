@@ -273,7 +273,7 @@ capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boar
 
 Web first, so it can be shared as a link. TypeScript, Vite and Preact with signals for the app;
 MapLibre GL 6 for the basemap, flat or as a globe (Settings, T-033), with our own WebGL2 renderer on a canvas over it for track,
-stations and trains, drawn in the same frame as MapLibre's. Rust compiled to WebAssembly in Web
+stations and trains, drawn in the same frame as MapLibre's, as are the canvases and DOM marks over it (faces, names, tags; T-1418). Rust compiled to WebAssembly in Web
 Workers: one clock worker (track model, lines, money, boarding account, autosave) and a pool of
 demand workers that each own a fixed set of the five periods. Threads talk by transferring
 versioned snapshots. The page opens on a start menu (New game, then the saved games); the workers

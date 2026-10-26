@@ -19,7 +19,7 @@ import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
 import { cancelLink, linkPicked, linking } from "./game/links";
 import { ACTION_KEYS, pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/toolKeys";
-import { constructBlueprints, newLineKey, toggleEditStopsSelected } from "./game/lineActions";
+import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsSelected } from "./game/lineActions";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { world } from "./game/world";
 import { redo, undo } from "./game/fareUndo";
@@ -425,6 +425,7 @@ window.addEventListener("keydown", (e) => {
     edgeEditor.cancel();
     if (act === "newLine") void newLineKey();
     else if (act === "editStops") toggleEditStopsSelected();
+    else if (act === "addPassed") void addAllPassedSelected();
     else void constructBlueprints();
     return;
   }

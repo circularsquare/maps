@@ -73,11 +73,12 @@ export class GpuTimer {
 /** Size a canvas laid over the map's: its backing store at the map's pixel ratio, its CSS size the
  * map canvas's. Returns the CSS size. */
 export function sizeCanvasLike(canvas: HTMLCanvasElement, map: { getPixelRatio(): number; getCanvas(): HTMLCanvasElement }): [number, number] {
+  // MapLibre's own buffer and CSS size, which can be a fraction of a px off w (T-1418)
   const dpr = map.getPixelRatio(), c = map.getCanvas(), w = c.clientWidth, h = c.clientHeight;
-  canvas.width = Math.round(w * dpr);
-  canvas.height = Math.round(h * dpr);
-  canvas.style.width = w + "px";
-  canvas.style.height = h + "px";
+  canvas.width = c.width || Math.round(w * dpr);
+  canvas.height = c.height || Math.round(h * dpr);
+  canvas.style.width = c.style.width || w + "px";
+  canvas.style.height = c.style.height || h + "px";
   return [w, h];
 }
 

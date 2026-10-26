@@ -69,7 +69,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 ## Interface
 Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "feels nice", Traffic view "looks pretty good", related lines "looks great", adding local games to the account worked.
 - T-1407 [P2] After a click the ghost stalls about 160 ms at 1x on the real save (0.3-0.6 s at 6x): the clock worker works the edit (stroke buffers 67 ms, the boarding hour 54) before the previews asked meanwhile. Answer waiting previews first, or put the boarding hour after them. Clock worker's state path, so after T-1028/T-1029. Open; notes/T-1394.md.
-- T-1392 [P3] Traffic view: station bubbles sit about half a pixel to a pixel off the line's centre (older than this round). Not reproduced on a straight or diagonal line at pixel ratios 1-2 (notes/T-1394.md); waits on where Anita saw it.
+Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
+- T-1411 [P2] Is the airport against train comparison fair (Anita)? Look for inconsistencies between the plane and long-distance rail in the market, starting with hers: flights may be taken whenever while trains need frequency; perhaps relax the frequency penalty a lot for long trips (a 2-hour wait is fine, you leave at another time). Analysis written 2026-10-26, waits on Anita; notes/T-1411.md.
+- T-1412 [P3] General brainstorming (Anita): look around the project and propose what to add or change, ranked, for her to pick from. Ideas written 2026-10-26; notes/T-1412.md
 - T-1270 [P3] Terrain, stage 4 (stages 1-3 built, ARCHIVE): optional, not recommended first, a 120 km/h cap on mountain-class track at -1 and up. Open; notes/T-1270.md.
 - T-676 [P2] A cuter base map (warm paper land, soft teal water, sage parks, 3 road weights, most POIs gone); the ground tinted by density as a switch, off. Anita judges the palette. Open: stage 1 done, palette waits on Anita; stage 2 (density tint) not built; notes/T-676.md.
 - T-330 [P3] Line chips without a symbol show the name's first letter (every New York subway chip reads "S"); default to the line's short name ("subway 6X" to "6X"). Open. Detail in notes/T-330.md.

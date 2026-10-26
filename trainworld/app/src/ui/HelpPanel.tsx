@@ -30,6 +30,7 @@ const SECTIONS: [string, [string, string][]][] = [
     [TRIP_KEY.toUpperCase(), "Explore a trip"],
     [keyOf("newLine"), "Make a new line"],
     [keyOf("editStops"), "Edit the selected line's stops"],
+    [keyOf("addPassed"), "Add every station the selected line passes as a stop"],
     [keyOf("construct"), "Construct blueprints"],
     ["Space", "Pause or carry on"],
     ["Ctrl Z, Ctrl Y", "Undo or redo blueprint edits"],

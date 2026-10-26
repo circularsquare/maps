@@ -7,6 +7,7 @@
 
 import { computed, signal } from "@preact/signals";
 import { activeCity, REGISTRY, viewedZone, type CityId } from "./cities";
+import { carryLoads, type StopKey } from "./carryLoads";
 import { DEMAND_DAYS, type DemandDay } from "./days";
 import { shownDay } from "./ui";
 import type { PurposeFilter, PurposeKey } from "./purposes";
@@ -38,6 +39,9 @@ export interface LineDemand {
   /** T-324: from the free-flow estimate of a solve still running. A line new or changed since the
    * shown final result gets these first figures early, and the final round replaces them. */
   estimate?: boolean;
+  /** T-1419: the stops (station ids) the figures above are for, so they can be carried onto the
+   * line's stops after an edit (`lineLoadsFor`); absent from a cached result */
+  stops?: string[];
 }
 
 export interface StationDemand {
@@ -90,14 +94,24 @@ export function lineFiguresIn(dv: DemandView | null, lineId: string, stops: numb
   return !!loads?.length && stops >= 2 && loads.every((p) => p.length === 2 * (stops - 1));
 }
 
-/** A line's riders per segment and period as the map draws them: one purpose's, or all. */
-export function lineLoadsFor(dv: DemandView | null, lineId: string, purpose: PurposeFilter = "all"): Float32Array[] | undefined {
+/** A line's riders per segment and period as the map draws them: one purpose's, or all. With
+ * `now`, the line's stops as they are, and figures for other stops than those, the figures carried
+ * onto `now` (T-1419, `carryLoads`) while demand solves for the edit; `key` makes a station and its
+ * complex one place. */
+export function lineLoadsFor(dv: DemandView | null, lineId: string, purpose: PurposeFilter = "all", now?: readonly string[], key?: StopKey): Float32Array[] | undefined {
   if (!dv) return undefined;
-  if (purpose === "all") return dv.lines.get(lineId)?.loads;
+  const d = dv.lines.get(lineId);
   // a purpose with no riders anywhere has no entry: zeros, not "unknown"
-  const own = dv.purposes?.get(purpose)?.lines.get(lineId)?.loads;
-  return own ?? dv.lines.get(lineId)?.loads.map((p) => new Float32Array(p.length));
+  const loads = purpose === "all" ? d?.loads : dv.purposes?.get(purpose)?.lines.get(lineId)?.loads ?? d?.loads.map((p) => new Float32Array(p.length));
+  if (!now || !d?.stops || !loads?.length || loads.every((p) => p.length === 2 * (now.length - 1))) return loads;
+  const id = now.join(",");
+  const had = carried.get(loads);
+  if (had?.now === id) return had.out ?? undefined;
+  const out = carryLoads(loads, d.stops, now, key);
+  carried.set(loads, { now: id, out });
+  return out ?? undefined;
 }
+const carried = new WeakMap<Float32Array[], { now: string; out: Float32Array[] | null }>();
 
 /** The regional layer (T-117, T-276): trips a day include the commutes between zones; each
  * corridor's trips and rail are both parts together, `commutes` and `commuteRail` the commute legs;

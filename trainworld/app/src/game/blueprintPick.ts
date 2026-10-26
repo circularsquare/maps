@@ -77,6 +77,15 @@ export async function switchPicked(off: boolean) {
   await edit({ op: "blueprintOff", edges: p.edges, stations: p.stations, off }, true);
 }
 
+/** T-1420: switch every disabled blueprint piece on again, picked or not: one undoable edit. */
+export async function enableAll() {
+  const w = world.peek();
+  if (!w) return;
+  const edges = w.edges.filter((e) => !e.built && e.off).map((e) => e.id);
+  const stations = w.save.stations.filter((s) => !s.built && s.off).map((s) => s.num);
+  if (edges.length + stations.length) await edit({ op: "blueprintOff", edges, stations, off: false }, true);
+}
+
 const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /** T-815: the picked blueprint track on one elevation, one undoable edit; pieces that cannot

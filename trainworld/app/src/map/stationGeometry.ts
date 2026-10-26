@@ -379,6 +379,69 @@ export function insideStation(s: StationShape, x: number, y: number, padding = 0
   return stationDistance(s, x, y) <= padding;
 }
 
+/** A station's upgrades as drawn, in its flags (network.ts, T-1416): a waiting room, its annexes
+ * on the + side of the platform (annexSide.ts), a park and ride, a terminal. */
+export const ST_ROOM = 32, ST_FLIP = 64, ST_PARK = 128, ST_TERMINAL = 256;
+/** The annexes joined to a box (T-1416): the waiting room and the park and ride's P tile. */
+export const ANNEX_ROOM = 1, ANNEX_PARK = 2;
+/** A P tile's half size as a share of the box's half width: big enough for a legible P where boxes
+ * are narrowest (zoom 14-15). */
+export const PARK_HALF = 1.4;
+/** A terminal's box ends are dark bars this many rims thick (T-1416), a buffer stop at each end,
+ * reaching this many rims past the box's sides so they show beside a train standing in it. */
+export const TERMINAL_CAP = 2.5, TERMINAL_EAR = 1.5;
+/** An annex's inner edge lies this many rims inside the box's edge, so its white meets the box's
+ * and the two read as one shape with one outline. */
+const ANNEX_SINK = 2;
+
+/** The point of a centre line (PLATFORM_POINTS points, evenly spaced along it) `t` along it from
+ * its middle, straight on past its ends. As the station shader's `centreAt`. */
+function centreAt(q: ArrayLike<number>, t: number): [number, number] {
+  let total = 0;
+  for (let i = 0; i + 1 < PLATFORM_POINTS; i++) total += Math.hypot(q[i * 2 + 2] - q[i * 2], q[i * 2 + 3] - q[i * 2 + 1]);
+  const step = total / (PLATFORM_POINTS - 1);
+  if (step < 1e-6) return [q[(PLATFORM_POINTS >> 1) * 2], q[(PLATFORM_POINTS >> 1) * 2 + 1]];
+  const f = Math.max(0, Math.min(PLATFORM_POINTS - 2, Math.floor(t / step + (PLATFORM_POINTS - 1) / 2)));
+  const r = t / step + (PLATFORM_POINTS - 1) / 2 - f;
+  return [q[f * 2] + (q[f * 2 + 2] - q[f * 2]) * r, q[f * 2 + 1] + (q[f * 2 + 3] - q[f * 2 + 1]) * r];
+}
+
+/** A station's annexes on screen (T-1416), the CPU twin of STATION_VS's `u_room` draws: each a
+ * straight box joined to the platform's side at its middle, the waiting room then the P tile along
+ * the platform's way. `flags`: the station's (ST_*); `ring`: the rim, CSS px. */
+export function stationAnnexes(s: StationShape, flags: number, ring: number): { kind: number; shape: StationShape }[] {
+  const room = (flags & ST_ROOM) !== 0, park = (flags & ST_PARK) !== 0;
+  if (s.dot > 0 || (!room && !park)) return [];
+  const q = shapePoints(s), m = PLATFORM_POINTS >> 1, qx = q[m * 2], qy = q[m * 2 + 1];
+  let dx = q[m * 2 + 2] - q[m * 2 - 2], dy = q[m * 2 + 3] - q[m * 2 - 1];
+  const dl = Math.hypot(dx, dy);
+  [dx, dy] = dl > 1e-6 ? [dx / dl, dy / dl] : [1, 0];
+  let nx = -dy, ny = dx;
+  if (ny * ((flags & ST_FLIP) !== 0 ? 1 : -1) < 0) [nx, ny] = [-nx, -ny];
+  const hw = s.halfWidth, rl = Math.min(Math.max(0.35 * s.halfLength, 1.2 * hw), 2.5 * hw), pa = PARK_HALF * hw, gap = 2 * ring;
+  const span = (room ? 2 * rl : 0) + (park ? 2 * pa : 0) + (room && park ? gap : 0);
+  const out: { kind: number; shape: StationShape }[] = [];
+  for (const [kind, l, d, c] of [
+    ...(room ? [[ANNEX_ROOM, rl, hw, -span / 2 + rl]] : []),
+    ...(park ? [[ANNEX_PARK, pa, pa, span / 2 - pa]] : []),
+  ]) {
+    // the box's edge on this side under the annex, at its nearest to the centre line
+    let edge = Infinity;
+    for (const t of [c - l, c, c + l]) {
+      const [px, py] = centreAt(q, t);
+      edge = Math.min(edge, (px - qx) * nx + (py - qy) * ny);
+    }
+    const off = edge + hw - ANNEX_SINK * ring - 1 + d;
+    const fx = qx + dx * c + nx * off, fy = qy + dy * c + ny * off;
+    out.push({ kind, shape: {
+      x: s.x + fx * s.ux + fy * s.nx, y: s.y + fx * s.uy + fy * s.ny,
+      ux: dx * s.ux + dy * s.nx, uy: dx * s.uy + dy * s.ny, nx: nx * s.ux + ny * s.nx, ny: nx * s.uy + ny * s.ny,
+      halfLength: l, halfWidth: d, dot: 0,
+    } });
+  }
+  return out;
+}
+
 /** A link's bridge (T-217, Anita: "if we manually link, this white shape should include a thin
  * bridge"): the white of it is this half width at BOX_WIDTH_ZOOM, CSS px, fixed on the ground like
  * the boxes (a plain box's white is 2.5 px there), with the station rim along both sides. */

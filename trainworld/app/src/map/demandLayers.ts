@@ -12,6 +12,7 @@ import type { Complexes } from "../game/complexes";
 import { lineLoadsFor, type DemandView } from "../game/demand";
 import { loadFailure } from "../game/loading";
 import { PERIODS } from "../game/periods";
+import type { StopKey } from "../game/carryLoads";
 import type { PurposeFilter } from "../game/purposes";
 import type { WorldView } from "../game/types";
 import type { NetworkBuffers } from "./network";
@@ -31,6 +32,9 @@ export interface LayerSwitches {
   /** every kind of day's view (T-260): the widest line is the busiest stretch-day of any of
    * them, so a weekend's lines are drawn thinner than a weekday's rather than rescaled */
   days?: (DemandView | null)[];
+  /** a station and its complex are one place when a line's riders are carried onto stops it was
+   * not solved for (T-1419) */
+  stopKey?: StopKey;
 }
 
 /**
@@ -63,9 +67,11 @@ export function stationScale(ridersPerDay: number): number {
 export const PENDING = -2;
 
 /** Riders a day on each stop-to-stop stretch of run 0, both directions, every period (the purpose
- * filter's purpose only); null when demand has no answer that fits the line's `n` stops. */
-function stretchDay(dv: DemandView | null, lineId: string, n: number, purpose: PurposeFilter): Float32Array | null {
-  const all = dv ? lineLoadsFor(dv, lineId, purpose) : undefined;
+ * filter's purpose only); null when demand has no answer that fits the line's `stops`, its last
+ * answer for other stops carried onto them (T-1419). */
+function stretchDay(dv: DemandView | null, lineId: string, stops: readonly string[], purpose: PurposeFilter, key?: StopKey): Float32Array | null {
+  const n = stops.length;
+  const all = dv ? lineLoadsFor(dv, lineId, purpose, stops, key) : undefined;
   if (!all?.length || n < 2) return null;
   const day = new Float32Array(n - 1);
   for (const shown of all) {
@@ -79,8 +85,10 @@ function stretchDay(dv: DemandView | null, lineId: string, n: number, purpose: P
 /** Per line id: per stop-to-stop stretch of run 0, riders a day (both directions; the purpose
  * filter's purpose only) and the two runs' gauges in the period in force (everyone aboard); absent
  * when demand has no answer for it that fits its stops. */
-function lineNumbers(w: WorldView, dv: DemandView | null, period: number, purpose: PurposeFilter = "all") {
-  const out = new Map<number, { perDay: Float32Array; g0: Float32Array; g1: Float32Array }>();
+function lineNumbers(w: WorldView, dv: DemandView | null, period: number, purpose: PurposeFilter = "all", key?: StopKey) {
+  // gauges are null for a line whose riders are carried from before its edit (T-1419): its trains
+  // stay unknown, as the boarding account has not run them yet
+  const out = new Map<number, { perDay: Float32Array; g0: Float32Array | null; g1: Float32Array | null }>();
   if (!dv) return out;
   const P = PERIODS[period];
   const hours = P.to - P.from;
@@ -89,8 +97,9 @@ function lineNumbers(w: WorldView, dv: DemandView | null, period: number, purpos
     const dm = dv.lines.get(l.id);
     const n = l.stops.length;
     const loads = dm?.loads[period];
-    const perDay = stretchDay(dv, l.id, n, purpose);
-    if (!st || st.status !== "running" || !loads || !perDay || n < 2 || loads.length !== 2 * (n - 1)) continue;
+    const perDay = stretchDay(dv, l.id, l.stops, purpose, key);
+    if (!st || st.status !== "running" || !perDay || n < 2) continue;
+    if (!loads || loads.length !== 2 * (n - 1)) { out.set(l.num, { perDay, g0: null, g1: null }); continue; }
     const trains = l.tph[P.demand] * hours;
     const factor = dv.peakHourFactor[period] ?? 1;
     const g0 = new Float32Array(n - 1), g1 = new Float32Array(n - 1);
@@ -106,12 +115,12 @@ function lineNumbers(w: WorldView, dv: DemandView | null, period: number, purpos
 
 /** The network's busiest stretch, riders a day both directions together (the purpose shown): the
  * widest line (T-227, T-274). */
-export function busiestDay(w: WorldView, dv: DemandView | null, purpose: PurposeFilter = "all"): number {
+export function busiestDay(w: WorldView, dv: DemandView | null, purpose: PurposeFilter = "all", key?: StopKey): number {
   let best = 0;
   if (!dv) return best;
   for (const l of w.save.lines) {
     if (w.lineStats[l.id]?.status !== "running") continue;
-    const day = stretchDay(dv, l.id, l.stops.length, purpose);
+    const day = stretchDay(dv, l.id, l.stops, purpose, key);
     if (day) for (const v of day) best = Math.max(best, v);
   }
   return best;
@@ -122,7 +131,7 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
   const L = net.lines;
   const nSeg = L.count;
   const nSamples = net.samples.length / 2;
-  const nums = lineNumbers(w, dv, period, on.purpose);
+  const nums = lineNumbers(w, dv, period, on.purpose, on.stopKey);
   const stretchOf = L.stretch;
 
   // The segments of one line along one edge are consecutive and share everything below: work per
@@ -138,7 +147,7 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
   // widths per stroke segment, the day's riders against the busiest stretch-day (T-227, T-274)
   const lineWidth = new Float32Array(nSeg).fill(1);
   if (on.lineLoad && stretchOf) {
-    const busiest = Math.max(busiestDay(w, dv, on.purpose), ...(on.days ?? []).map((d) => busiestDay(w, d, on.purpose)));
+    const busiest = Math.max(busiestDay(w, dv, on.purpose, on.stopKey), ...(on.days ?? []).map((d) => busiestDay(w, d, on.purpose, on.stopKey)));
     for (let r = 0; r < runs.length; r += 2) {
       const i = runs[r];
       const v = nums.get(L.colour[i]);
@@ -151,7 +160,7 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
   const fill = new Float32Array(nSamples * 2).fill(-1);
   const strokeOf = net.sampleStroke;
   const pending = new Set<number>();
-  if (on.trainLoad && !loadFailure.peek()) for (const l of w.save.lines) if (w.lineStats[l.id]?.status === "running" && l.stops.length >= 2 && !nums.has(l.num)) pending.add(l.num);
+  if (on.trainLoad && !loadFailure.peek()) for (const l of w.save.lines) if (w.lineStats[l.id]?.status === "running" && l.stops.length >= 2 && !nums.get(l.num)?.g0) pending.add(l.num);
   let lastLine = -1;
   let v: ReturnType<typeof nums.get>;
   if (strokeOf && on.trainLoad && stretchOf)
@@ -162,7 +171,7 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
         lastLine = L.colour[i];
         v = nums.get(lastLine);
       }
-      if (!v) {
+      if (!v?.g0 || !v.g1) {
         if (pending.has(lastLine)) fill[k * 2] = fill[k * 2 + 1] = PENDING;
         continue;
       }

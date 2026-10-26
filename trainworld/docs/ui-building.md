@@ -352,7 +352,8 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   hovers), each greyed when it would change nothing. For either kind: Remove (key Delete) and
   Clear. The Build tab shows only "N disabled" while any blueprint is disabled, whatever the tool,
   and beside the blueprint total, in small muted type, what the disabled pieces would cost ("$1.54B
-  disabled"; hover: the pieces and the exact sum, left out of the total) [T-1296]: the clock's
+  disabled"; hover: the pieces and the exact sum, left out of the total, then "Double click to enable
+  them all", which switches every disabled piece on in one undoable edit) [T-1296, T-1420]: the clock's
   `blueprintCost` (everything unbuilt, disabled pieces, their junctions and crossings in it) less the
   quote's rows other than new cars.
   Disabling and enabling are one undoable edit each (Ctrl+Z). Esc clears the pick, then leaves the
@@ -473,13 +474,13 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
   row), and the round trip gains a "Reversing partway" row counting both.
 - **Stations passed** [T-646, `TrackApi::passed_stations`]: while editing, the stop list shows,
   between two stops whose stretch of the line's own path runs through other stations, a row
-  "+ 2 stations passed" (its hover lists them: "Add Foo, Bar and Baz") [T-814]; whenever the line
-  passes any station, "Add all 5 stations the line passes" heads the list, right under the Stops
-  heading, so it is in the same place for every line [T-1297]. A click on either shows those
-  stations in the list as faint "+ Name" rows, in path order, with Add and Cancel in that same row,
-  Add exactly where "Add all" was [T-855]; Add makes them stops in one undoable edit. A double
-  click on "Add all" or on a gap's row adds them at once (the second click lands on Add, or, if the
-  panel has not redrawn yet, the old control's dblclick adds; the hovers say "Double-click to add
-  them at once") [T-1297]. Only stations on the line's path count: a quad twin on the pair beside, or a
+  "+ 2 stations passed" (its hover lists them: "Add Foo, Bar and Baz") [T-814]. A click on it
+  shows those stations in its place as faint "+ Name" rows, in path order, with Add and Cancel in a
+  row after them; Add makes them stops in one undoable edit. A double click on the gap's row adds
+  them at once (the first "+ Name" row takes the clicked row's place, so the second click lands on
+  it, or, if the panel has not redrawn yet, the old row's dblclick adds; the hover says
+  "Double-click to add them at once") [T-1297]. **A** adds every station the open line panel's
+  line passes, whether or not its stops are being edited; there is no "Add all" row (T-1297's was
+  clutter, T-1417). Only stations on the line's path count: a quad twin on the pair beside, or a
   station on a branch, is not offered. The passed stations come in the clock state with each line
   (`ClockLine.passed`), so the list never shows new stops with the old gaps (T-648).

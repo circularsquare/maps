@@ -100,6 +100,19 @@ export function toggleEditStopsSelected() {
   if (l) toggleEditStops(l);
 }
 
+/** The A key (T-1417): every station the selected line's path passes becomes a stop; nothing when
+ * no line panel is open or the line passes none. */
+export async function addAllPassedSelected() {
+  const s = selection.peek();
+  const w = world.peek();
+  const l = s?.kind === "line" ? lineById(s.line) : undefined;
+  const passed = l && w?.lineStats[l.id]?.passed;
+  if (!l || !passed?.length) return;
+  const stops = l.stops.flatMap((x, i) => [Number(x), ...passed.filter((p) => p.gap === i).map((p) => p.node)]);
+  const a = await edit({ op: "setStops", line: l.num, stops });
+  if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
+}
+
 /** Construct every blueprint piece (the Build tab's button and the C key); nothing to build does nothing. */
 export async function constructBlueprints() {
   const items = world.value?.money.blueprintItems ?? [];

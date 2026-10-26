@@ -3,7 +3,7 @@ import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import type { Level } from "../game/types";
 import { distance, levelLabel, levelName, money, moneyExact, plural, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeep } from "../game/regionMoney";
-import { clearBpPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
+import { clearBpPicked, enableAll, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
 import { liveMoney, moneyState } from "../game/money";
 import { tool } from "../game/ui";
 import type { BlueprintItem } from "../game/types";
@@ -71,7 +71,7 @@ function OffCost() {
   const on = w.money.blueprintItems.reduce((sum, r) => sum + (r.kind === 5 ? 0 : r.cost), 0);
   const cost = w.money.blueprintCost - on;
   if (!(cost >= 0.5e6)) return null;
-  return <span class="small muted num off-cost" data-tip={`Disabled blueprint: ${pieces(off.edges, off.stations)}, ${moneyExact(cost)}, left out of the total`}>{money(cost)} disabled</span>;
+  return <span class="small muted num off-cost" onDblClick={() => void enableAll()} data-tip={`Disabled blueprint: ${pieces(off.edges, off.stations)}, ${moneyExact(cost)}, left out of the total\nDouble click to enable them all`}>{money(cost)} disabled</span>;
 }
 
 /** How many blueprint pieces are switched off (T-333), whatever the tool, since Construct and the

@@ -184,7 +184,10 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   junction with no flyover and no station, a cross for a flat crossing, each with a hover naming it and
   the lines that use or cross it ("Flat crossing near Harbour", "Crosses Cross"); **in the Traffic
   track display** [T-1272] (not while stops are edited) each stretch of the diagram's bar is as wide as
-  its riders over the day shown (both directions, the map's purpose filter, `dailyRiders`), from 2 px
+  its riders over the day shown (both directions, the map's purpose filter, `dailyRiders`; after an
+  edit, until demand has riders for the new stops, the last figures carried onto them by station or
+  complex, 0 for a new stop's stretch, blank when under half the stops remain, `carryLoads`
+  [T-1419], as on the map's line widths and hover), from 2 px
   for none to 14 px for the line's own busiest stretch (`STRETCH_MIN_PX`, `STRETCH_MAX_PX`), so a quiet
   line varies as much as a busy one; a stretch the map marks as crowded (`Renderer.fullStretch`,
   read every half second) has its darkening and red edges 2 px each side, 1 px of the panel's colour
@@ -327,7 +330,8 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   list]: every inspector's buttons sit in one row (`Actions` in `ui/widgets.tsx`) right under its
   header, above all rows and lists. A station has Trip from here in one row (what placing a passage
   asks, when picking, is under it) and, in station view, Construct station (a blueprint only) and
-  Remove station in a second, then the **upgrade row** [T-1281, `ui/inspector/StationUpgrades.tsx`]:
+  Remove station in a second, then the **upgrade row** under a "Station upgrades" heading
+  [T-1281, T-1415, `ui/inspector/StationUpgrades.tsx`]:
   icons for the terminal (two sidings), park and ride (P), waiting room (a bench under a roof) and
   passage (two platforms and a walkway); in complex view only the passage. Each is outlined when
   not built, dashed in the blueprint, filled when built; its hover gives its name, what it does

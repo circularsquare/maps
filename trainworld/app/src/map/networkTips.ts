@@ -18,6 +18,7 @@ import { exact, forecast } from "../game/format";
 import { PERIODS, periodAt } from "../game/periods";
 import { stationUse, useFigure } from "../game/stationUse";
 import type { WorldView } from "../game/types";
+import { UPGRADE, UPGRADE_TEXT } from "../game/upgrades";
 import { display, purposeFilter, shownDayPhrase, type StationUseMode } from "../game/ui";
 import { stationScale } from "./demandLayers";
 import { tripAt } from "./network";
@@ -151,6 +152,18 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): TipLine[] | nu
     out.push(...(c ? circleLines(c.riders) : ["Calculating demand"]));
   }
   if (s.built) out.push(...crowdLines(ov, w, id, i));
+  return out;
+}
+
+/** The tag for an upgrade drawn on station `i`'s box (T-1416): its name and the station's; a
+ * waiting room's riders too, as it is drawn filled with them. */
+export function upgradeTip(ov: Overlay, w: WorldView, i: number, bit: number): TipLine[] | null {
+  const id = ov.renderer.net?.stationIds[i];
+  const s = w.save.stations.find((x) => x.id === id);
+  const u = UPGRADE_TEXT.find((x) => x.bit === bit);
+  if (!s || !u || id === undefined) return null;
+  const out: TipLine[] = [u.name, s.name];
+  if (bit === UPGRADE.waitingRoom && s.built) out.push(...crowdLines(ov, w, id, i));
   return out;
 }
 

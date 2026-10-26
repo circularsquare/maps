@@ -131,11 +131,12 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `markData.ts` and `gradeMarks.ts` (the crossing, junction, ramp and portal marks: their data, and
   their draw pass, hit test and tag; T-629, T-655), `stationLife.ts` (from zoom 14, arrivals found
   by a timer of eight samples a second, feeding `stationSound.ts`, the WebAudio chime and pops, and
-  `faces.ts`, the rising faces on a 2D canvas of its own; T-686), `buildSound.ts` (the clink on
-  constructing and the tones on placing blueprint, T-1282), `audioOut.ts` (the one audio context
+  `faces.ts`, the rising faces on a 2D canvas of its own; T-686), `buildSound.ts` (which edit
+  plays which building sound, T-1282) with `buildVoices.ts` (the three voices, T-1413), `audioOut.ts` (the one audio context
   both share), `transferBubbles.ts` (riders changing trains walking between stations as bubbles, drawn by the renderer after the stations, T-1124).
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the
-  ghost, T-189, T-254), `stationNames.ts` (a station's name suggestions: cross street,
+  ghost, T-189, T-254; the upgrade annexes, `stationAnnexes`, T-1416), `annexSide.ts` (which side
+  of its platform a station's annexes go, in the clock worker, T-1416), `stationNames.ts` (a station's name suggestions: cross street,
   neighbourhood, city or town, T-534), `stationLabels.ts` (names
   keep their elements across edits unless their text changes, T-496), `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
   for names and tags: `BoxGrid`, `tagLines`, `tipBeside`, `TAG_OFFSET_PX`, `screenBounds`).
@@ -257,7 +258,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   a new game's save and the real save naming them load with Hartford in their place (T-1053, about
   a minute).
 - Node, no browser: `t133-picking-check` (picking order), `t671-station-snap-check` (the station tool's choice among overlapping tracks and the layout's guess; given a dev server URL it also runs `t671-ghost-hover`, the ghost's first frame against the worker on the real save in headless Chrome), `t144-check` (station geometry, line
-  widths), `t145-check` (the route preview contract), `t146-check` (complexes), `t1053-zone-ids` (removed zones have successors; `zoneNow` and `currentZones`; in smoke), `t125-frame-check`
+  widths), `t145-check` (the route preview contract), `t146-check` (complexes), `t1419-carry` (an edited line's riders carried onto its new stops), `t1053-zone-ids` (removed zones have successors; `zoneNow` and `currentZones`; in smoke), `t125-frame-check`
   (world frames against PROJ), `t116-save-check` (save format), `t285-merge-check` (needs
   `--experimental-strip-types`), `t066-wasm-check` (demand WASM contract), `t066-worker-check` and
   `t149-worker-check` (the real demand worker in Node over New York, Philadelphia and Boston, a few
@@ -352,7 +353,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t1265-hk-preview.mjs` (a line in Hong Kong's northwest, nearer Shenzhen's centre, saved: the slot
   names Hong Kong only and the line keeps Hong Kong's holidays; port 6167 by default),
   `t1372-superholidays.mjs` (the calendar against the last commit's: only days away and Obon change kind; China's and Japan's runs; the real save's ordinary days equal 8800's to the bit, the away day a Sunday times `AWAY_RATE` by purpose, the day views timed; PORT 6172 by default, about three minutes; T-1372),
-  `t1281-upgrades.mjs` (the real save's rail trips as saved, with a waiting room at every station and with a park and ride too, in one edit each; screenshots of the station panel's upgrade row and a terminal's sidings, `SHOTS_ONLY=1` for those alone; T-1281),
+  `t1281-upgrades.mjs` (the real save's rail trips as saved, with a waiting room at every station and with a park and ride too, in one edit each; screenshots of the station panel's upgrade row and a terminal's sidings, `SHOTS_ONLY=1` for those alone; T-1281), `t1416-annexes.mjs` (the upgrades drawn on a box: every combination at zoom 14.5 and 16, light and dark, Grand Central with all three, the hover over each; `ONLY=all,terminal` for some combinations; screenshots in artifacts/trainworld/t1416/; T-1416),
   `t883-fare-curve.mjs` (the real save: the default fare's rail trips against smoke's last run on the same url, and again after the changes below, the same line through other nodes and an old two-node curve changing nothing, a doubled rate and a curve steeper past 20 km losing rail trips, the weekday's income being the base, the rate and demand's extra; the Money tab's hover arrows, one-way drags sending once on release, undo, zoom keeping the slope, the off-plot arrows and their click; fare graph screenshots in t1143/), `t1201-fare-rows.mjs` (a new game's Money tab at the dock's narrowest: the rows as rates, none wrapping, a rate's whole-cent step or typed value moving later fares together, never below 0, the base and a stretch's end keeping the rates, a drag's fare followed by the rows; screenshots in t1201/; about a minute), `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
   rides and running costs, with the largest hour-to-hour change beside the flat booking's),
   `t872-holidays.mjs` (the real save over the next Thanksgiving: that day's boarding account, fares
@@ -439,6 +440,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   the Node figures), `t1168-layout.mjs` (the diagram's layout of the real save's 2, 4 and 6X against
   the mockups), `t1168-shots.mjs <port>` (the line panel's related-lines view, light and dark,
   desktop and 390 px, into artifacts/trainworld/t1168s1/, with its hover, click and toggle),
+  `t1414-ui.mjs [url]` (the real save in headless Chrome: a station with a train on it picks the station, the "Station upgrades" heading, the stop list without "Add all" and the A key, the disabled blueprint total's double click; screenshots in `artifacts/trainworld/t1414/`; T-1414, T-1415, T-1417, T-1420),
   `t1391-related.mjs <port> [prefix] [desktop|phone]` (the related-lines view on a new game built
   for the edge cases: a line beside another ending at a shared station, a two-stop interline, a
   line going on past the other's end, a line through one station twice, a loop with a line beside

@@ -2898,6 +2898,8 @@ class DemandClient {
     const got = (await this.inSums<PackedDays | DayViews[]>({ kind: "days", input }, [], () => dayViews(input)))!;
     const views = Array.isArray(got) ? got : unpackDays(got, layout, res.length);
     return views.map((v, day) => {
+      // T-1419: the stops each line's figures are for, to carry them onto an edited line
+      for (const l of layout) { const d = v.view?.lines.get(l.id); if (d) d.stops = l.stops; }
       // T-325: and the zones open bare, from their own figures
       for (const id of this.bareIds()) if (!v.cities.has(id)) v.cities.set(id, this.bareView(id, day as DemandDay, v.view));
       return { view: v.view, cities: v.cities, intercity: { ...v.intercity, corridors: this.corridorsOf(v.intercity.corridors) } };

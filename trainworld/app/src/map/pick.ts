@@ -310,6 +310,10 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   const reach = Math.max(SLOP_PX, ov.renderer.laneReachPx);
   const slop = reach * reach + 1;
 
+  // a station wins over a train at the same spot (T-1414)
+  const station=ov.renderer.stationAt(px,py,(x,y)=>ov.toScreen(x,y),SLOP_PX);
+  if (station>=0) return {kind:"station",station:n.stationIds[station]};
+
   // trains are not drawn zoomed far out (T-205)
   if (trainsShown && !ov.renderer.trainsHidden) {
     const t = clock.now();
@@ -348,9 +352,6 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
       }
     }
   }
-
-  const station=ov.renderer.stationAt(px,py,(x,y)=>ov.toScreen(x,y),SLOP_PX);
-  if (station>=0) return {kind:"station",station:n.stationIds[station]};
 
   // Height/speed views do not draw line strokes; their hidden line buffers cannot win a hit.
   // A selected line has a final highlight pass above the other line strokes. Preserve the

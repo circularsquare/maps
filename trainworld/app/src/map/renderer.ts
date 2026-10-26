@@ -11,9 +11,10 @@
 // re-uploaded. Phase tables change only on edits.
 
 import { BAD_RED, LEVEL_COLOURS, NET_INK, rgbf } from "../game/palette";
-import { BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationHaloRadius, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { ANNEX_PARK, ANNEX_ROOM, stationAnnexes, stationCoords, ST_PARK, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationHaloRadius, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 import { shadeColours } from "../game/shades";
 import { readBoardHour, type BoardHour } from "../game/boarding";
+import { UPGRADE } from "../game/upgrades";
 import { PlatformCrowds } from "./platformCrowds";
 import { TransferBubbles } from "./transferBubbles";
 import { MOVING_PLACE_MS } from "./moving";
@@ -321,13 +322,15 @@ export class NetworkRenderer {
       let best = -1, bestD = Infinity;
       for (let i = n.stationCount - 1; i >= 0; i--) {
         if (this.drawnSelected(i) !== sel) continue;
+        const annexed = !dots && (n.stations[i * 3 + 2] & (ST_ROOM | ST_PARK)) !== 0;
         if (reach) {
-          const x = n.stations[i * 3], y = n.stations[i * 3 + 1], r = reach.r[i] * perLoc + extra;
+          // an annex reaches about two box widths past the box (T-1416)
+          const x = n.stations[i * 3], y = n.stations[i * 3 + 1], r = reach.r[i] * perLoc + extra * (annexed ? 3 : 1);
           const sx = ox + a * x + b * y, sy = oy + c * x + e * y;
           if (Math.abs(sx - px) > r || Math.abs(sy - py) > r) continue;
         }
         const s = this.drawnShapeOf(i, project);
-        if (!insideStation(s, px, py, padding)) continue;
+        if (!insideStation(s, px, py, padding) && !(annexed && this.annexesOf(i, s).some((x) => insideStation(x.shape, px, py, padding)))) continue;
         if (!dots) return i;
         const d = Math.hypot(px - s.x, py - s.y);
         if (d < bestD) [best, bestD] = [i, d];
@@ -368,8 +371,28 @@ export class NetworkRenderer {
    * show above (T-189). */
   selectedShapes(project: Project): StationShape[] {
     const out: StationShape[] = [];
-    for (const i of this.selectedDrawn()) out.push(this.drawnShapeOf(i, project));
+    for (const i of this.selectedDrawn()) {
+      const s = this.drawnShapeOf(i, project);
+      out.push(s, ...this.annexesOf(i, s).map((x) => x.shape));
+    }
     return out.concat(this.selectedBridges(project));
+  }
+  /** Station `i`'s annexes on screen (T-1416), `s` its shape as drawn: none zoomed out. */
+  private annexesOf(i: number, s: StationShape) {
+    return this.stationStyle.boxes ? stationAnnexes(s, Math.round(this.net!.stations[i * 3 + 2]), this.stationStyle.ringPx) : [];
+  }
+  /** The upgrade drawn at a point on station `i` (T-1416), its UPGRADE bit, or 0: an annex, or a
+   * terminal's thick end. */
+  upgradeAt(i: number, px: number, py: number, project: Project): number {
+    const n = this.net;
+    if (!n || !this.stationStyle.boxes || i < 0 || i >= n.stationCount) return 0;
+    const s = this.drawnShapeOf(i, project);
+    for (const x of this.annexesOf(i, s)) if (insideStation(x.shape, px, py, 1)) return x.kind === ANNEX_ROOM ? UPGRADE.waitingRoom : UPGRADE.parkRide;
+    if ((Math.round(n.stations[i * 3 + 2]) & ST_TERMINAL) && insideStation(s, px, py, 2)) {
+      const [a] = stationCoords(s, px, py);
+      if (Math.abs(a) > s.halfLength - TERMINAL_CAP * this.stationStyle.ringPx - 2) return UPGRADE.terminal;
+    }
+    return 0;
   }
   /** A selected station drawn at a point, or -1 (picking: it is above the demand bubbles). */
   selectedStationAt(px: number, py: number, project: Project, padding = 2): number {
@@ -395,8 +418,8 @@ export class NetworkRenderer {
   lineWidths: Float32Array | null = null;
   /** the network has blueprint track: it and its lines are drawn after the rest (T-695) */
   hasBlueprint = false;
-  /** some station has a waiting room (T-1287), drawn in a second station draw */
-  private rooms = false;
+  /** ST_ROOM and ST_PARK if some station has one (T-1416), each drawn in a station draw of its own */
+  private annexes = 0;
   private levelColours = new Float32Array([3, 2, 1, 0, -1, -2, -3].flatMap((l) => [...rgbf(LEVEL_COLOURS[l as 3])]));
   private ink = rgbf(NET_INK);
   private timer!: GpuTimer;
@@ -699,8 +722,8 @@ export class NetworkRenderer {
     this.turnback = n.turnbacks?.count ? this.strokes(n.turnbacks) : null;
     // blueprint track sorts last (network.ts)
     this.hasBlueprint = n.track.count > 0 && (n.track.flags[n.track.count - 1] & F_BLUEPRINT) !== 0;
-    this.rooms = false;
-    for (let i = 0; i < n.stationCount && !this.rooms; i++) this.rooms = (n.stations[i * 3 + 2] & 32) !== 0;
+    this.annexes = 0;
+    for (let i = 0; i < n.stationCount; i++) this.annexes |= n.stations[i * 3 + 2] & (ST_ROOM | ST_PARK);
     this.lineWidths = null;
     const same = new Set(patch?.same ?? []);
     const put = (name: keyof typeof this.tex, field: string | null, make: () => [ArrayBufferView, "r32f" | "rg32f" | "rgba32f" | "rgba8", number]) => {
@@ -1220,16 +1243,20 @@ export class NetworkRenderer {
         gl.clearStencil(0);
         gl.clear(gl.STENCIL_BUFFER_BIT);
       }
-      // waiting rooms (T-1287) are their own shape beside the platform: no track runs through them
-      const layerDraw = (pass: number, layer: number, withBridges: boolean, rooms = true) => {
+      // the annexes joined to the boxes (T-1416), in the same layers so box and annex are one
+      // shape; no track runs through them
+      const layerDraw = (pass: number, layer: number, withBridges: boolean, annexes = true) => {
         gl.useProgram(this.stationProg);
         gl.uniform1i(su.u_pass, pass);
         gl.uniform1i(su.u_layer, layer);
         gl.bindVertexArray(this.stationVao);
         gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n.stationCount);
-        if (rooms && boxes && this.rooms) {
-          gl.uniform1i(su.u_room, 1);
-          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n.stationCount);
+        if (annexes && boxes && this.annexes) {
+          for (const [kind, bit] of [[ANNEX_ROOM, ST_ROOM], [ANNEX_PARK, ST_PARK]]) {
+            if (!(this.annexes & bit)) continue;
+            gl.uniform1i(su.u_room, kind);
+            gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n.stationCount);
+          }
           gl.uniform1i(su.u_room, 0);
         }
         if (bridges && withBridges) {

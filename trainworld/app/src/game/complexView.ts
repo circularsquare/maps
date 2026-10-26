@@ -47,6 +47,12 @@ export const dotGroups = computed(() => {
 /** The stations in `id`'s complex, itself included (just [id] for a station on its own). */
 export const complexOf = (id: StationId): StationId[] => membersOf(complexes.value, id);
 
+/** A station and the stations of its complex are one place to a line's carried figures (T-1419). */
+export const stopKey = (id: StationId): string => {
+  const c = complexes.peek().of.get(id);
+  return c === undefined ? id : `c${c}`;
+};
+
 /** A station opened on its own from its complex's station list (T-246, Anita: "clicking a station
  * should take us to that specific station view"). Any other selection, a new click on the same
  * station included (every selection is a new object), clears it: a click on a station always

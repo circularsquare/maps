@@ -35,7 +35,11 @@ const n = {
 const ov = { camMatrix: [], toScreen: (x, y) => [x, y], toScreenInto: (x, y, out, at = 0) => { out[at] = x; out[at + 1] = y; }, renderer: Object.assign(new NetworkRenderer(), {
   net: n, slotPx: 6, trips: F([0, 0, 6, 0]), tripEpoch: 0, tripCount: 2, detailedTrains: false,
 }) };
+// a station under the pointer wins over a train there (T-1414); trains stay clickable elsewhere
+assert.equal(pick(ov, 0, 0, true).station, 'under', 'a station wins over a train at the same spot');
+n.stationCount = 0;
 assert.equal(pick(ov, 0, 0, true).line, '1', 'last train wins even if another is closer');
+n.stationCount = 2;
 // overlapping platforms: the last drawn wins; overlapping dots: the nearest centre (T-313)
 assert.equal(pick(ov, 0, 0, false).station, 'under', 'dots: the nearest centre wins');
 assert.equal(pick(ov, 3, 0, false).station, 'over', 'dots: each picks its own station');

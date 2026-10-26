@@ -363,13 +363,17 @@ those who got on, less the load carried on.
   the note only, and none beyond 3; panned by where the station is on screen. At the second speed
   only the note and two pops; none at the third.
 - Both are on by default and set in Settings (Stations up close).
-- **Building sounds** [T-1282; `map/buildSound.ts`]: under the same Sound switch and volume, at the
-  station sounds' master level and with no zoom gain, as the player's edit is taken (`setAfterEdit`
-  in `game/world.ts`): a little metallic clink on any construct (1760 Hz a semitone either way at
-  random, with a bar's partials at 2.76 and 5.4 times, the upper ones dying first, 0.32 s); placing
-  track as blueprint a soft rising sine blip (620 to 930 Hz, 0.09 s, under half the clink's
-  level); placing a station two soft triangle notes a fourth apart (G6, C7, 65 ms apart). The same
-  sound twice within 70 ms plays once. One audio context serves both (`map/audioOut.ts`).
+- **Building sounds** [T-1282, T-1413; `map/buildSound.ts`, voices in `map/buildVoices.ts`]: under
+  the same Sound switch and volume, at the station sounds' master level and with no zoom gain, as
+  the player's edit is taken (`setAfterEdit` in `game/world.ts`), one sound per edit however many
+  pieces it places, none when it is refused. Three voices, all synthesised: "ke-cha" on any construct
+  (a 14 ms bright tick, then 75 ms later a lower clack of band-passed noise and a falling triangle,
+  gone by 120 ms; half a semitone either way at random); "bung" on placing a station, adding or
+  building a station upgrade, and a passage (one Karplus-Strong string at A3, 220 Hz, 5% sharp at the
+  start and settling in 60 ms, low-passed at 2.4 kHz, with a 110 Hz sine thump; under 0.4 s); "tsh"
+  on placing track as blueprint (noise through a band falling from 6 to 3 kHz, 1.5 ms attack, 0.12 s).
+  The same sound twice within 0.3 s (track 0.1 s) plays once. One audio context serves both
+  (`map/audioOut.ts`).
 
 ## Station names and capacity tags
 
@@ -460,8 +464,8 @@ first: editing handles (a selected stretch's corner squares, which take their ow
 select tool's squares on blueprint points, which pass over the bubbles, their hover tags and the
 trains beneath, `map/endMarkers.ts`); the selected station (cut out of the bubbles); demand
 discs (commuter bubbles over longer-trip discs); capacity tags (under
-the discs; one that opens nothing selects what is under it); trains (the selected one first), then
-stations, lines, junctions and track; within a layer the last drawn wins; hidden layers do not
+the discs; one that opens nothing selects what is under it); stations, so a station with a train on
+it is picked, not the train [T-1414]; trains (the selected one first), then lines, junctions and track; within a layer the last drawn wins; hidden layers do not
 intercept. Station names, airport badges, attraction marks (T-263, docs/ui-demand-views.md
 "Attractions") and the stop editor's markers take no clicks: a click on
 one reaches what is under it (a badge sits on its airport's destination bubble; the stop markers' station

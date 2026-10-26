@@ -21,23 +21,25 @@ import { markAt, markTip } from "./gradeMarks";
 import { hoverHeld } from "../ui/blurHold";
 import { live } from "./live";
 import type { NetworkBuffers } from "./network";
-import { circleTip, stationTip, trainTip, type TipLine } from "./networkTips";
+import { circleTip, stationTip, trainTip, upgradeTip, type TipLine } from "./networkTips";
 import type { Overlay } from "./overlay";
 import { pick, SLOP_PX, topSeg } from "./pick";
 import { hiddenRealmTip } from "./realmOverlay";
 import { terrainTip } from "./terrainTint";
 import { setPointerNet, type Hot } from "./hovered";
 import { TAG_OFFSET_PX, tagLines } from "./labelLayout";
-import { complexOf } from "../game/complexView";
+import { complexOf, stopKey } from "../game/complexView";
 import { forecast } from "../game/format";
 import { chip, elevationFact, factRow, lineBullets, speedFact, trainSpeedFact } from "./trackTagRows";
 import { crowdColour } from "../game/palette";
 
-/** Daily riders on run 0's stretch `k` of a line, both directions: every period's load summed;
- * null when demand has no answer for it that fits its stops. `purpose`: the map's purpose
- * filter (T-158), that purpose's riders only. */
-export function dailyRiders(dv: DemandView | null, lineId: string, stops: number, k: number, purpose: PurposeFilter = "all"): number | null {
-  const loads = lineLoadsFor(dv, lineId, purpose);
+/** Daily riders on run 0's stretch `k` of a line with these `stops`, both directions: every
+ * period's load summed; null when demand has no answer for it that fits its stops (T-1419: after an
+ * edit, the last result's figures carried onto the new stops until the new one lands).
+ * `purpose`: the map's purpose filter (T-158), that purpose's riders only. */
+export function dailyRiders(dv: DemandView | null, lineId: string, stopIds: readonly string[], k: number, purpose: PurposeFilter = "all"): number | null {
+  const stops = stopIds.length;
+  const loads = lineLoadsFor(dv, lineId, purpose, stopIds, stopKey);
   if (!loads?.length || stops < 2 || k < 0 || k > stops - 2) return null;
   let sum = 0;
   for (const p of loads) {
@@ -60,7 +62,7 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   if (!dv) return [name, "Calculating demand"];
   const k = n.lines.stretch ? n.lines.stretch[i] : -1;
   const purpose = purposeFilter.peek();
-  const day = dailyRiders(dv, l.id, l.stops.length, k, purpose);
+  const day = dailyRiders(dv, l.id, l.stops, k, purpose);
   if (day === null) return [name, "Calculating demand"];
   const count = `${day < 0.5 ? "0" : forecast(day)} riders ${shownDayPhrase.peek()}`;
   // the purpose filter (T-158) says what it counted
@@ -104,7 +106,9 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
   if (w && hit?.kind === "station") {
     const i = n.stationIds.indexOf(hit.station);
     if (i >= 0 && out) out.hot = { stations: complexOf(hit.station) };
-    return i < 0 ? null : stationTip(ov, w, i);
+    if (i < 0) return null;
+    const bit = ov.renderer.upgradeAt(i, px, py, (x, y) => ov.toScreen(x, y));
+    return bit ? upgradeTip(ov, w, i, bit) : stationTip(ov, w, i);
   }
   // the marks for crossings, junctions, ramps and portals sit on the track, under stations and trains (T-629)
   if (n.marks) {

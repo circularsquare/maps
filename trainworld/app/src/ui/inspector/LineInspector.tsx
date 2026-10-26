@@ -351,7 +351,7 @@ function stretchLooks(l: LineInput, names: string[], waits: number[]): StretchLo
   if (n < 2) return null;
   const day: number[] = [];
   for (let k = 0; k < n - 1; k++) {
-    const v = dailyRiders(dv, l.id, n, k, purpose);
+    const v = dailyRiders(dv, l.id, l.stops, k, purpose);
     if (v === null) return null;
     day.push(v);
   }
@@ -685,8 +685,6 @@ export function LineInspector({ id }: { id: string }) {
   const passed = editingStops ? st.passed : [];
   const pending = pendingAt && pendingAt.v === w.version ? pendingAt.gaps : null;
   const setPending = (gaps: number[] | null) => setPendingAt(gaps && { v: w.version, gaps });
-  const gaps = [...new Set(passed.map((p) => p.gap))];
-  const adding = pending ? passed.filter((p) => pending.includes(p.gap)) : [];
   const setStops = async (stops: number[]) => {
     const a = await edit({ op: "setStops", line: l.num, stops });
     if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
@@ -699,7 +697,6 @@ export function LineInspector({ id }: { id: string }) {
   };
   const addPassed = () => addGaps(pending ?? []);
   const stationsText = (n: number) => plural(n, "station");
-  const allLabel = <><Icon.plus />Add all {stationsText(passed.length)} the line passes</>;
   const removeStop = (i: number) => setStops(l.stops.filter((_, k) => k !== i).map(Number));
   const remove = () => {
     ask.value = { text: `Delete ${l.name}? Track and stations stay.`, yes: "Delete line", no: "Keep line", run: () => {
@@ -766,10 +763,18 @@ export function LineInspector({ id }: { id: string }) {
   const afterStop = (i: number) => {
     const here = editingStops ? passed.filter((p) => p.gap === i) : [];
     if (!here.length || i + 1 >= l.stops.length) return null;
+    // Add and Cancel come after the rows, so the first "+ Name" row takes the clicked row's place and a
+    // double click lands on it
     return pending?.includes(i)
-      ? here.map((p) => (
-        <li class="adding"><span class="grow"><span class="stop-name">+ {name.get(String(p.node)) ?? ""}</span></span></li>
-      ))
+      ? <>
+        {here.map((p) => (
+          <li class="adding"><span class="grow"><span class="stop-name">+ {name.get(String(p.node)) ?? ""}</span></span></li>
+        ))}
+        <li class="passed confirm">
+          <button class="btn text mini" onClick={() => void addPassed()}>Add {stationsText(here.length)}</button>
+          <button class="btn text mini" onClick={() => setPending(null)}>Cancel</button>
+        </li>
+      </>
       : !pending && (
         <li class="passed">
           <button class="btn text mini" data-tip={`Add ${andList(here.map((p) => name.get(String(p.node)) ?? ""))}\nDouble-click to add them at once`} onClick={() => setPending([i])} onDblClick={() => void addGaps([i])}>
@@ -792,24 +797,6 @@ export function LineInspector({ id }: { id: string }) {
         )}
         <span class="right muted small">boardings in past 24 h</span>
       </div>
-      {/* T-1297: Add all heads the list whenever the line passes stations, and Add takes its place,
-          so a double click there adds them, as one on a gap's row adds its own. The second click
-          lands on Add or, before the panel has redrawn, on the old control, whose dblclick adds */}
-      {editingStops && passed.length > 0 && (
-        <div class="passed-row">
-          {pending && adding.length > 0
-            ? <>
-              {/* as wide as Add all (its label kept hidden inside), so a double click's second click lands on Add, not Cancel */}
-              <button key="add" class="btn text passed-add" onClick={() => void addPassed()}>
-                <span>Add {stationsText(adding.length)}</span>
-                <span class="sizer" aria-hidden="true">{allLabel}</span>
-              </button>
-              <button key="cancel" class="btn text" onClick={() => setPending(null)}>Cancel</button>
-            </>
-            : <button key="all" class="btn text" data-tip="Show them as stops to add. Double-click to add them at once"
-              onClick={() => setPending(gaps)} onDblClick={() => void addGaps(gaps)}>{allLabel}</button>}
-        </div>
-      )}
       {related ? (
         <div onDblClick={onListDblClick}>
           <RelatedStops l={l} stopS={st.stopS[0]} colour={shown} loop={loopOnce} lRow={stopRow} after={editingStops ? afterStop : undefined}

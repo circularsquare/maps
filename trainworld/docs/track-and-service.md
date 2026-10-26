@@ -311,14 +311,20 @@ Full design, numbers and sources: `notes/T-008.md`.
   - **Terminal** (turnback sidings): a line turning there holds its platforms only for the dwell
     and turns in two sidings past the platform (6.2): 30 an hour at the default turnaround. The
     map draws the two sidings between the running tracks past each platform end with track
-    beyond, from where the tracks part (zoom 14).
+    beyond, from where the tracks part (zoom 14), and the box's two ends as thick dark bars
+    reaching a little past its sides, like buffer stops (T-1416).
   - **Park and ride**: a ride to or from the station costs 10 perceived minutes less ([demand-mode.md](demand-mode.md),
-    `kernel::ride_fixed`); a P after the station's name.
+    `kernel::ride_fixed`); a P after the station's name, and on the box a square tile with a P.
   - **Waiting room**: a wait for a train there counts at 0.8 of its minutes in route and mode
-    choice (`kernel::wait_factor`, [demand-mode.md](demand-mode.md)). Drawn where platforms are (from
-    zoom 14) as a small box in the station's style beside the platform's middle, on the outside of
-    its bend, with the platform's waiting riders (its fuller side) filling it from the middle out
-    (T-1287; station flag 32, a second station draw with `u_room`).
+    choice (`kernel::wait_factor`, [demand-mode.md](demand-mode.md)). Drawn on the box as an annex
+    as deep as the box is wide, with the platform's waiting riders (its fuller side) filling it
+    from the middle out.
+  - **How the annexes sit** (T-1416, `stationAnnexes` in stationGeometry.ts, `annexSide.ts`): from
+    zoom 14, the waiting room and the P tile join the box's side at its middle, the room first along
+    the platform's way, with one outline and one white round box and annexes. Both go on the side
+    with fewer other platforms and tracks where they would be, else outside the platform's bend.
+    Each has its own hover, naming the upgrade and the station (a terminal's on its ends). Station
+    flags 32, 64 (the other side), 128 and 256; one station draw per annex kind (`u_room`).
   - **Passage**: the link above, priced US$10M plus US$90M a km of the straight line between the
     two stations (`upgrades::passage_price`); paid at once between constructed stations, else
     built and paid with the second of them (`Network::passages`, quote row "Passages").

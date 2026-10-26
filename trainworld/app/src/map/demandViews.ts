@@ -14,7 +14,7 @@ import { computed, effect, signal } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity } from "../game/cities";
 import { clock } from "../game/clock";
-import { complexes, selectedScope } from "../game/complexView";
+import { complexes, selectedScope, stopKey } from "../game/complexView";
 import { cityCells, demandByDay, demandView, stationRiders, type CityCells, type DemandView, type StationRiders } from "../game/demand";
 import { wholeDistance } from "../game/format";
 import { compass } from "../game/places";
@@ -80,7 +80,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     const dv = demandView.peek(), mode = editing ? "none" : d.stationUse;
     const on = { lineLoad: d.trackColour === "traffic" && !editing, stationFigure: mode === "none" ? null : (id: string) => useFigure(dv, mode, id),
       trainLoad: d.trainLoad,
-      complexes: d.complexView ? complexes.peek() : null, purpose: purposeFilter.peek(), days: demandByDay.peek().map((x) => x.view) };
+      stopKey, complexes: d.complexView ? complexes.peek() : null, purpose: purposeFilter.peek(), days: demandByDay.peek().map((x) => x.view) };
     // an edit changes the network and then the world: one build for both when nothing else moved
     const now = [n, w, dv, period.peek(), on.lineLoad, mode, mode === "origins" || mode === "transfers" ? stationUse.peek() : null, on.trainLoad, on.complexes, on.purpose, demandByDay.peek()];
     if (now.every((v, i) => v === inputs[i])) return;

@@ -249,9 +249,15 @@ export class Overlay {
     this.rafId = 0;
     // MapLibre draws the overlay itself in a frame it renders (camera layer); ours would be a
     // second draw of the same frame.
-    if (NO_DOUBLE && (this.map as unknown as { _frameRequest?: unknown })._frameRequest) return this.scheduleNext();
+    if (NO_DOUBLE && this.mapFrameQueued()) return this.scheduleNext();
     this.draw();
     this.scheduleNext();
+  }
+
+  /** MapLibre has a frame queued: anything drawn now with the camera of its last frame is redrawn
+   * by `afterMapFrame` in that frame, maybe with a moved camera. */
+  mapFrameQueued(): boolean {
+    return !!(this.map as unknown as { _frameRequest?: unknown })._frameRequest;
   }
 
   private frameNow() {

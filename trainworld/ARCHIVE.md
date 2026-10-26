@@ -1,5 +1,16 @@
 # Archive
 
+- T-1418 [P2] Marks coming apart from the map under load. Done 2026-10-26: the network canvas stays glued (6x, one core, DPR 1-2); the platform faces lagged a frame (up to 86 px at 6x), now drawn in MapLibre's frame; overlay canvases copy MapLibre's exact size. notes/T-1418.md.
+- T-1392 [P3] Station circles off their line. Not reproduced 2026-10-26: dots lie on their lines' strokes (real save, all stations), Beijing at ratios 1-2 within 0.3 px (once 1 px, antialiasing). Reopen with her screenshot's place and zoom. notes/T-1418.md.
+- T-1419 [P3] Edited line keeps its old Traffic figures. Done 2026-10-26: until demand has riders for the new stops, the last result is carried onto them (map widths, panel diagram, hover, 24 h boardings and riders); new stops 0; blank when under half the stops remain. `checks/t1419-carry.mjs`, artifacts/trainworld/t1419/.
+- T-1416 [P2] Station upgrades drawn on the box. Done 2026-10-26: waiting room and a P tile as annexes sharing the box's outline and white, on the less crowded side; a terminal's ends as wide dark bars; hovers name each. `checks/t1416-annexes.mjs`, artifacts/trainworld/t1416/.
+- T-1414 [P3] Station over train on a click. Done 2026-10-26: `pick` tries stations before trains (`checks/t133-picking-check.mjs` updated).
+- T-1415 [P3] "Station upgrades" heading above the upgrade row in the station panel. Done 2026-10-26.
+- T-1417 [P3] Undo T-1297's "Add all" row. Done 2026-10-26: the row is gone; Add and Cancel follow the "+ Name" rows, a double click on a gap's row still adds, and the A key adds every station the open line passes. `checks/t1414-ui.mjs`.
+- T-1420 [P3] Double click the disabled blueprint total to enable every disabled piece. Done 2026-10-26: one undoable edit, hover says so (`enableAll`, `checks/t1414-ui.mjs`).
+
+- T-1413 [P3] New building sounds. Done 2026-10-26: "ke-cha" on construct, "bung" (plucked string) on a station placed or an upgrade added or built, "tsh" on track placed; `map/buildVoices.ts`, WAVs in artifacts/trainworld/t1413/. DECISIONS.md.
+
 - T-279 [P3] Routed drives for the regional market. Done 2026-10-26: `pipeline/market_drives.py`, a raster router (GRIP4, GEDTM30, world water), 344,704 place pairs as ratios to the rule plus ferries; real save rail 12,188,988 to 12,186,850. notes/T-279.md.
 
 - T-1410 [P3] t743-slots "two rotating backups" failing. Done 2026-10-26: the worker's rule matches architecture.md (a backup only when the newest is backupMs old by its stamp, taken after the write's encode); the check's fixed waits fell short under load, so it now waits on the newest backup's stamp. Could not reproduce the failure in 4 runs, 1 under 8 busy cores.

@@ -282,6 +282,9 @@ export class Faces {
 
   constructor(private map: MlMap, private overlay: Overlay) {
     map.on("resize", () => this.canvas && this.size());
+    overlay.afterMapFrame.push(() => {
+      if (this.faces.length) this.draw();
+    });
   }
 
   /** Faces alive on one platform now. */
@@ -340,8 +343,15 @@ export class Faces {
     }
   }
 
+  /** The animation loop: a draw on each frame while faces are alive, but on MapLibre's frames from
+   * `afterMapFrame`, so the faces move with the camera of the frame they are shown in (T-1418). */
   private frame() {
     this.raf = 0;
+    if (!this.overlay.mapFrameQueued()) this.draw();
+    if (this.faces.length) this.raf = requestAnimationFrame(() => this.frame());
+  }
+
+  private draw() {
     const ctx = this.ctx, sp = this.sprites;
     if (!ctx || !this.canvas) return;
     const now = performance.now(), dpr = this.map.getPixelRatio(), zoom = this.map.getZoom();
@@ -368,6 +378,5 @@ export class Faces {
       ctx.drawImage(img, x - s / 2, y - s / 2 - (4 * s) / SPRITE, s, s);
     }
     ctx.globalAlpha = 1;
-    this.raf = requestAnimationFrame(() => this.frame());
   }
 }

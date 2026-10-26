@@ -12,6 +12,7 @@ import { clock } from "./clock";
 import { world } from "./world";
 import { queryClock } from "../workers/clockClient";
 import { accountVersion } from "./boarding";
+import { demandView, lineFiguresIn } from "./demand";
 import { moneyState } from "./money";
 import { trainKind } from "./format";
 import { PERIODS, periodAt } from "./periods";
@@ -147,6 +148,9 @@ function ask(force = false) {
     for (const l of w?.save.lines ?? []) {
       const t = next.get(l.id), p = prev.get(l.id);
       if (t && t.stops.length !== l.stops.length && p?.stops.length === l.stops.length) next.set(l.id, { ...t, stops: p.stops });
+      // T-1419: no account at all for a running line yet (new riders for its new stops are being
+      // solved): the last counts stand, moved onto its stops above
+      else if (!t && p && !lineFiguresIn(demandView.peek(), l.id, l.stops.length) && w?.lineStats[l.id]?.status === "running") next.set(l.id, p);
     }
     today.value = next;
   });

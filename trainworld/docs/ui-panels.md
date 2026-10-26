@@ -242,7 +242,7 @@ past 24 hours' riders and the panels' Today counts always follow the clock.
 
 ## Keys and focus
 
-[T-183, `ui/keys.ts`] One rule for the game's keys (the tool numbers, T, N, L, C, Esc, Space, Ctrl+Z/Y, the line tool's
+[T-183, `ui/keys.ts`] One rule for the game's keys (the tool numbers, T, N, L, A, C, Esc, Space, Ctrl+Z/Y, the line tool's
 Enter and Backspace) and search's `/`, Ctrl+K and Ctrl+F. A text field keeps every key (search's
 own box gives Ctrl+K and Ctrl+F to selecting its text). Another form control keeps only its own
 keys (arrows, Home, End, Page Up and Down, Enter, Space, and in a select a letter); the rest reach
@@ -255,7 +255,7 @@ reached with Tab keeps it. Buttons show the browser's focus ring for keyboard fo
 map beside the dock, under the tab row, listing only the controls no button shows: the bubble
 gestures (Shift+drag box, hold then drag, Shift+click, Shift+drag over far bubbles), building
 modifiers (Shift+click, double click or Enter, Backspace, Caps Lock, right drag and D, E, Delete in
-the blueprint tool), the keys (tool numbers, T, N, L, C, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
+the blueprint tool), the keys (tool numbers, T, N, L, A, C, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
 the letters read from `TOOL_KEYS`, `ACTION_KEYS` and `TRIP_KEY`) and panel gestures (double click
 a fare node, a name, a list row; Shift or Ctrl on the train stepper). Esc (before the game's own
 Esc, so the selection stays), a press outside or the button again closes it. A control added or
