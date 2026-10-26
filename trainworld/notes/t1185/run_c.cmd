@@ -1,0 +1,9 @@
+@echo off
+rem T-1185, run C: centre (147 Chinese zone rows), no join
+cd /d C:\Users\anita\projects\maps
+set PYTHONIOENCODING=utf-8
+set TW_QUIET_S=3600
+set TW_SIM_DIR=C:\Users\anita\projects\maps\trainworld\notes\t1150\run\simroot\sim
+set TW_CARGO_TARGET_DIR=C:\Users\anita\projects\maps\trainworld\notes\t1150\run\simroot\sim\target
+set PATH=%USERPROFILE%\.cargo\bin;%PATH%
+venv\Scripts\python.exe -I trainworld\pipeline\world_run.py run --rows hah,liy,hab,huo,wol,ley,xic,run,yoh,lsa,guu,zoz,yas,jiq,def,lyi,hni,enh,jyu,lgy,bhx,xnz,hch,hnd,jnl,ynh,snu,fag,zox,cnc,puh,tne,soy,mux,lgs,yex,scg,hsa,xon,ycn,ycu,niu,xca,lwe,qaj,soz,qaa,lgh,tka,ceq,xsh,haq,ynx,yya,xaz,lga,syg,bta,xhx,wax,qax,xat,huc,hgn,gch,lti,llx,gop,wga,xae,feu,sbc,tnh,dnc,mlo,lgu,yup,xzh,xai,lyn,qdo,axx,goy,lxg,sod,nni,fpi,gia,nxx,xya,sim,lbd,pug,sgc,yoz,xab,lyu,hey,xpn,xgf,hno,gsh,lll,xnp,tyu,hnp,lhx,wns,wul,yaf,ruz,hnm,tny,zya,qsh,yey,xfu,hgj,ycx,sid,xup,hgh,pna,yzc,xyn,jar,gga,dlh,axa,pij,lhn,hxi,syf,sde,xmi,lzx,wis,seu,bdn,cig,dyx,xgu,wzh,hir,yyg,dgn,xir --no-join --jobs 2 --port 6173 --coarse 1000 > C:\Users\anita\projects\maps\artifacts\trainworld\t1185-c.log 2>&1
