@@ -3,7 +3,7 @@
 import { distUnit, length, levelName, perDistance, speed } from "../game/format";
 import type { Level } from "../game/types";
 import { batch } from "@preact/signals";
-import { autoLevel, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, keepPlacing, setTrackType, snapReal, tool, trackType, type TrackType } from "../game/ui";
+import { autoLevel, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, display, keepPlacing, setDisplay, setTrackType, snapReal, tool, trackType, type TrackType } from "../game/ui";
 import { stepPlatform } from "../game/boarding";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
 import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
@@ -41,9 +41,15 @@ export function BuildTab() {
             data-tip="Draw at the elevation of the track you extend. On open ground, at the elevation picked."
             onClick={() => (autoLevel.value = !autoLevel.peek())}><Icon.autoLevel /></button>
         </div>
-        <p class="muted small price" data-tip={`${levelName(lv)}${hsrF === 1 ? "" : ", high-speed track"}`}>
-          ${Math.round(perDistance(BASE_M_PER_KM * mult) * 10) / 10}M per {distUnit()} (<span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{mult.toFixed(hsrF === 1 ? 1 : 2)}x cost</span>)
-        </p>
+        {/* T-1394: the Terrain switch beside the price it changes */}
+        <div class="build-track-row price-row">
+          <p class="muted small price" data-tip={`${levelName(lv)}${hsrF === 1 ? "" : ", high-speed track"}`}>
+            ${Math.round(perDistance(BASE_M_PER_KM * mult) * 10) / 10}M per {distUnit()} (<span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{mult.toFixed(hsrF === 1 ? 1 : 2)}x cost</span>)
+          </p>
+          <button class={"btn icon" + (display.value.hillshade ? " on" : "")} aria-label="Show terrain" aria-pressed={display.value.hillshade}
+            data-tip="Show terrain. Track costs more on slopes, hills and mountains."
+            onClick={() => setDisplay("hillshade", !display.peek().hillshade)}><Icon.terrain /></button>
+        </div>
         <div class="h">Track</div>
         <div class="build-track-row">
           <Segmented<TrackType> options={[[2, "Double"], [4, "Quad"], ["hsr", "High speed"]]} value={trackType.value} onChange={setTrackType} />

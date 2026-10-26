@@ -34,7 +34,8 @@ there is no high-speed class and no hover yet.
 
 ## Terrain (hill shading)
 
-Settings > Show > **Terrain**, off by default [T-1270]: MapLibre's hillshade over the land cover and
+**Terrain**, off by default [T-1270], switched by the mountain button beside the Build tab's price per km
+(T-1394) or Settings > Show: MapLibre's hillshade over the land cover and
 under roads, from the Terrain Tiles on AWS Open Data (Terrarium PNG, 256 px, fetched to zoom 12 and
 stretched past it; `map/basemap.ts`). The water is drawn again over it (`water_over_shade`), so the
 sea floor's relief stays hidden. Shadow and highlight follow the theme (light: warm brown shadow,
@@ -45,15 +46,15 @@ for use by an app are stated; for a published game the fallback is our own Terra
 cut from GEDTM30 (notes/T-1270.md).
 
 **The class tint** [T-1270 stage 3]: with Terrain on and a build tool on (track, station, delete,
-blueprint), rolling, hilly and mountain ground get a faint brown wash, stronger by class (light:
+blueprint), gentle slopes, hills and mountains get a faint brown wash, stronger by class (light:
 brown at 8%, 15%, 24%; dark: a lighter tan at 6%, 11%, 18%); flat ground is bare. It is drawn from
 the grids the clock worker put in the track model (a "terrain" message per zone, `game/terrain.ts`),
 so it shows exactly what is charged and nothing for a zone not loaded. `map/terrainTint.ts` draws
 one image over the view and half its size again round it, rows even in mercator, each cell its
 lattice class (nearest, no smoothing), redrawn when the camera stops; above the hillshade, under the
 water, roads and labels; hidden below zoom 7. The lighter map hides the hillshade but keeps
-`water_over_shade` while Terrain is on, so the tint stays off the water there too. The hover on washed ground, in the map's tag: "Hilly
-ground, 1.6x the price".
+`water_over_shade` while Terrain is on, so the tint stays off the water there too. The hover on washed ground, in the map's tag, names
+the class under the pointer: "Hills, track costs 1.6x".
 
 ## Zoom bands
 

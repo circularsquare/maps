@@ -374,7 +374,9 @@ async function exploreMarket(end: "home" | "work", cells: Uint32Array, fars: Mar
   const names = new Map((world.peek()?.save.stations ?? []).map((s) => [s.id, s.name]));
   const periods = all.length === 1 ? all[0] : all[0].map((_, q) => mergeMarketPeriods(all.map((a) => a[q]), routeLabel(names)));
   let busiest: number | null = null;
-  periods.forEach((p, q) => { if (p && p.trips > 0 && (busiest === null || p.trips > periods[busiest]!.trips)) busiest = q; });
+  // T-880: every kind of trip between the two ends counts
+  const n = (p: MarketPeriod) => p.trips + p.commute.legs + p.everyday.legs;
+  periods.forEach((p, q) => { if (p && n(p) > 0 && (busiest === null || n(p) > n(periods[busiest]!))) busiest = q; });
   return { trip: null, mix: null, purpose: "longer", busiest, market: { far: fars[0], periods, end, ...(fars.length > 1 ? { fars } : {}), ...(near ? { near } : {}), ...(asked === rows ? { unbuilt: bare } : {}) } };
 }
 

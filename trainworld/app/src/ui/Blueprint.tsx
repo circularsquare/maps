@@ -145,7 +145,7 @@ export function BlueprintBreakdown() {
                   {rows.map((r) => (
                     <li>
                       <span class="what">
-                        <span>{r.kind === 5 ? "New cars" : r.kind === 6 ? `${TERRAIN_NAMES[r.level as number] ?? "Rough"} ground` : r.kind === 9 ? "Between stations" : `${levelName(r.level)} (${levelLabel(r.level)})`}</span>
+                        <span>{r.kind === 5 ? "New cars" : r.kind === 6 ? TERRAIN_NAMES[r.level as number] ?? "Rough ground" : r.kind === 9 ? "Between stations" : `${levelName(r.level)} (${levelLabel(r.level)})`}</span>
                         <span class="small muted">{description(r)}</span>
                       </span>
                       <span class="val" data-tip={moneyExact(r.cost)}>{money(r.cost)}</span>

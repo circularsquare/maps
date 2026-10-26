@@ -1510,8 +1510,9 @@ export class Tools {
       else put(this.el(k++, "pi-mark"), ...toLocal(this.start.lng, this.start.lat));
       if (pv) {
         // only those on screen: a snapped route can have thousands of curves (T-727d)
-        // and none over another, so zoomed out a long route keeps a few
-        const { clientWidth: W, clientHeight: H } = this.map.getContainer();
+        // and none over another, so zoomed out a long route keeps a few; the overlay's size, since
+        // reading the container's would lay the page out again after this move's writes (T-1394)
+        const W = this.overlay.cssW, H = this.overlay.cssH;
         const shown: [number, number][] = [];
         for (const c of curveLabels(pv.verts)) {
           const [x, y] = this.screen(c.x, c.y);

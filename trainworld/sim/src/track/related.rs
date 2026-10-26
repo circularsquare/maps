@@ -282,54 +282,84 @@ fn group_and_emit(l: &Route, o: &Route, mut ms: Vec<Meet>, all_shared: bool, cx:
         g.meets.push(m);
         g
     };
-    let mut groups: Vec<Group> = vec![];
-    let mut it = ms.into_iter();
-    groups.push(new_group(it.next().unwrap(), [f64::NAN; 3]));
-    for m in it {
-        let g = groups.last_mut().unwrap();
+    // whether `m` joins group `g`, and the gap it leaves after the group's last meeting
+    let mut join = |g: &Group, m: &Meet| -> (bool, Option<[f64; 3]>) {
         let p = g.meets.last().unwrap();
         let step = m.sl - p.sl2;
         let inner = m.sl2 - m.sl;
         let mono = g.dir == 0.0 || (step * g.dir >= -EPS_M && inner * g.dir >= -EPS_M);
         let run = m.so - p.so2;
-        let mut together = false;
-        let mut gap = None;
         if !mono {
-            gap = Some([f64::NAN, run.max(0.0), step.abs()]);
-        } else if run <= EPS_M {
-            together = true;
-        } else {
-            let (st, at) = stray(o, p.so2, m.so, l, p.sl2, m.sl, chunks);
-            let st = st / k(o.at(at)[1]);
-            together = all_shared || st <= stray_allowed(run);
-            gap = Some([st, run, step.abs()]);
+            return (false, Some([f64::NAN, run.max(0.0), step.abs()]));
         }
+        if run <= EPS_M {
+            return (true, None);
+        }
+        let (st, at) = stray(o, p.so2, m.so, l, p.sl2, m.sl, chunks);
+        let st = st / k(o.at(at)[1]);
+        (all_shared || st <= stray_allowed(run), Some([st, run, step.abs()]))
+    };
+    let add = |g: &mut Group, m: Meet, gap: Option<[f64; 3]>| {
+        if let Some([st, run, ls]) = gap {
+            g.gaps.push(Gap { la: g.meets.last().unwrap().sl2, lb: m.sl, stray: st, run, lstep: ls });
+        }
+        if g.dir == 0.0 {
+            let d = m.sl2.max(m.sl) - g.first_sl;
+            let e = m.sl2.min(m.sl) - g.first_sl;
+            if d > EPS_M && e > -EPS_M {
+                g.dir = 1.0;
+            } else if e < -EPS_M && d < EPS_M {
+                g.dir = -1.0;
+            }
+        }
+        g.meets.push(m);
+    };
+    // a loop's first station is also its last: a line beside it across that seam leaves at one end
+    // and joins again at the other, so its second group starts there (T-1391)
+    let last = l.nodes.len().saturating_sub(1);
+    let seam_of = |p: &Meet| -> Option<Meet> {
+        if last < 2 || l.nodes[0] != l.nodes[last] || p.track() || p.cx != cx(l.nodes[0]) {
+            return None;
+        }
+        let other = if p.alts[0] == 0 { last } else if p.alts[0] == last { 0 } else { return None };
+        Some(Meet { sl: l.node_s[other], sl2: l.node_s[other], alts: vec![other], ..p.clone() })
+    };
+    let mut groups: Vec<Group> = vec![];
+    let mut it = ms.into_iter();
+    groups.push(new_group(it.next().unwrap(), [f64::NAN; 3]));
+    for m in it {
+        let g = groups.last_mut().unwrap();
+        let (together, gap) = join(g, &m);
         if together {
-            if let Some([st, run, ls]) = gap {
-                g.gaps.push(Gap { la: p.sl2, lb: m.sl, stray: st, run, lstep: ls });
-            }
-            if g.dir == 0.0 {
-                let d = m.sl2.max(m.sl) - g.first_sl;
-                let e = m.sl2.min(m.sl) - g.first_sl;
-                if d > EPS_M && e > -EPS_M {
-                    g.dir = 1.0;
-                } else if e < -EPS_M && d < EPS_M {
-                    g.dir = -1.0;
-                }
-            }
-            g.meets.push(m);
-        } else {
-            groups.push(new_group(m, gap.unwrap_or([f64::NAN; 3])));
+            add(g, m, gap);
+            continue;
         }
+        if let Some(seam) = g.meets.last().and_then(seam_of) {
+            let mut ng = new_group(seam, [f64::NAN; 3]);
+            let (t, gap2) = join(&ng, &m);
+            if t {
+                add(&mut ng, m, gap2);
+                groups.push(ng);
+                continue;
+            }
+        }
+        groups.push(new_group(m, gap.unwrap_or([f64::NAN; 3])));
     }
     // a line that only touches twice gets no short-run allowance (Anita: higher on short runs
     // that touch often): two stations on its own track with the gap past STRAY_FAR of the run
-    // are two crossings (Broadway's N beside Lexington's 6X from Canal St to Union Sq, 7% of 2 km)
+    // are two crossings (Broadway's N beside Lexington's 6X from Canal St to Union Sq, 7% of 2 km),
+    // unless neither line stops between them: the two run from one station to the next side by side
+    // (Anita's Shanghai 6 ending beside the orange line, T-1391)
+    let stops_between = |r: &Route, a: f64, b: f64| {
+        let (a, b) = (a.min(b) + EPS_M, a.max(b) - EPS_M);
+        r.stop_at.iter().zip(&r.node_s).any(|(&st, &s)| st >= 0 && s > a && s < b)
+    };
     if !all_shared {
         let mut split: Vec<Group> = vec![];
         for mut g in groups {
             let pair = g.meets.len() == 2 && g.meets.iter().all(|m| !m.track()) && g.gaps.len() == 1;
-            if pair && g.gaps[0].stray > STRAY_FLOOR_M + STRAY_FAR * g.gaps[0].run {
+            let adjacent = pair && !stops_between(l, g.meets[0].sl, g.meets[1].sl) && !stops_between(o, g.meets[0].so, g.meets[1].so);
+            if pair && !adjacent && g.gaps[0].stray > STRAY_FLOOR_M + STRAY_FAR * g.gaps[0].run {
                 let gp = g.gaps.pop().unwrap();
                 let second = g.meets.pop().unwrap();
                 split.push(g);

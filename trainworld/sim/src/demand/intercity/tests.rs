@@ -1203,6 +1203,51 @@ fn fare_factors_weigh_trips_by_their_origin() {
         assert!(d < 0. && (d - want).abs() < 0.03 * want.abs(), "{fx}: sensitivity {d}, a dearer base fare gives {want}");
     }
 }
+/// T-880: the trip explorer between zones counts the commutes between zones as a selection's
+/// bubbles do: a selection of every Tokyo site against Gunma, legs and rail legs a day, each way.
+#[test]
+fn the_explorer_counts_commutes_as_the_selection() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let mut api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
+    let ll = [139.7671, 35.6812, 139.7006, 35.6896, 139.7774, 35.7138, 139.6239, 35.9064, 139.0124, 36.3221];
+    let mut t = vec![0f32; 6 * 5];
+    for lev in 0..3 {
+        for k in 0..4 {
+            t[lev * 5 + k] = 600.;
+            t[(3 + lev) * 5 + k + 1] = 600.;
+        }
+    }
+    api.set_network_ll(&ll, &[5], &[0, 1, 2, 3, 4], &t, &[12., 12., 12.], &[10.]).unwrap();
+    api.set_fares(1.5, 0.1, &[8.; 10]).unwrap();
+    solve_all(&mut api);
+    let m = api.m.clone();
+    let place_of = |g: &Group| m.zones[m.cell_zone[g.lo]].place;
+    let gnm = m.zones[m.cell_zone[m.groups.last().unwrap().lo]].place;
+    let tyo = place_of(&m.groups[0]);
+    assert_ne!(tyo, gnm);
+    let (mut xy, mut share) = (vec![], vec![]);
+    for g in m.groups.iter().filter(|g| place_of(g) == tyo) {
+        for i in 0..g.city.len() {
+            xy.extend([g.city.x[i], g.city.y[i]]);
+            share.push(1f32);
+        }
+    }
+    let (np, ng) = (m.places.len(), m.n_gid);
+    let tail = 1 + 8 * np + 7 * ng;
+    let sel = api.selection_flows_day(tyo as u32, &xy, &share, WEEKDAY as u32);
+    for dir in 0..2usize {
+        let (legs, rail) = (sel[tail + 4 * gnm + 2 * dir], sel[tail + 4 * gnm + 2 * dir + 1]);
+        let (mut e_legs, mut e_rail) = (0., 0.);
+        for q in 0..PERIODS {
+            let h = api.market_trip(q, WEEKDAY as u32, tyo as u32, &xy, &share, dir as u32, gnm as u32, -1);
+            e_legs += h[22];
+            e_rail += h[23];
+        }
+        assert!(legs > 0. && rail > 0., "dir {dir}: commutes {legs}, rail {rail}");
+        assert!((e_legs - legs).abs() < 1e-6 * legs, "dir {dir}: explorer legs {e_legs}, selection {legs}");
+        assert!((e_rail - rail).abs() < 1e-6 * rail.max(1.), "dir {dir}: explorer rail {e_rail}, selection {rail}");
+    }
+}
 /// T-761: the market's pass on a captured network natively, by phase, with its tables' sizes.
 /// `TW_T761_NET=<checks/t761-plain-net.mjs's output> cargo test --release --features demand t761_market_bench -- --ignored --nocapture`
 #[test]

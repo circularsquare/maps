@@ -9,7 +9,8 @@ Output: data/grid.bin.gz, uint8, row-major, FACTOR-times coarser:
 
 A coarse cell's speed comes from the mean of the land pixels' friction (time per
 distance averages correctly across a stretch of ground), turned back into km/h.
-A cell counts as land when at least MIN_LAND of its pixels are land.
+A cell counts as land when at least MIN_LAND of its pixels are land. Water patches
+under 5 km2 count as land, at the 0.06 they have (smallwater.py).
 """
 import gzip
 import json
@@ -20,6 +21,8 @@ os.environ.setdefault("OMP_NUM_THREADS", "4")
 import numpy as np
 import rasterio
 
+from smallwater import SmallWater, STRIP
+
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(HERE, "data", "raw", "unzipped", "2020_walking_only_friction_surface.geotiff")
 OUT = os.path.join(HERE, "data", "grid.bin.gz")
@@ -29,7 +32,6 @@ FACTOR = 10
 SCALE = 40          # stored value = km/h * 40, so 5 km/h -> 200
 MIN_LAND = 0.25
 WATER = np.float32(0.06)
-STRIP = 1000        # source rows per read, a multiple of FACTOR
 
 
 def main():
@@ -38,10 +40,12 @@ def main():
         assert w % FACTOR == 0 and h % FACTOR == 0 and STRIP % FACTOR == 0
         gw, gh = w // FACTOR, h // FACTOR
         out = np.zeros((gh, gw), dtype=np.uint8)
+        sw = SmallWater(ds, log=lambda *a: None)
+        print("small water: %d patches (%.0f km2) become land" % (sw.small_components, sw.small_area_km2), flush=True)
         for r0 in range(0, h, STRIP):
             rows = min(STRIP, h - r0)
             a = ds.read(1, window=((r0, r0 + rows), (0, w)))
-            land = (a != WATER) & (a > 0)
+            land = ((a != WATER) & (a > 0)) | sw.mask(r0 // STRIP, a)
             f = np.where(land, a, 0).astype(np.float64)
             # block sums
             fs = f.reshape(rows // FACTOR, FACTOR, gw, FACTOR).sum(axis=(1, 3))

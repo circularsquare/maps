@@ -106,14 +106,14 @@ export type ToClock =
    * saves a copy; `fresh` also does not read one. `newSlot`: the start menu's New game beside
    * saved games (T-677): an empty game in a new slot of that name, written once something changes.
    * `backupMs`: wall ms between a slot's backups (T-744; `?backupMs=` for checks). `game`: how a
-   * new game (`fresh` or `newSlot`) starts (T-728). */
-  | { kind: "init"; city: string; pack: string; outlines: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean }
+   * new game (`fresh` or `newSlot`) starts (T-728). `patch`: `?patch=` (T-1029: "0" every state
+   * whole, "check" changes compared with whole builds). */
+  | { kind: "init"; city: string; pack: string; outlines: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean; patch?: string }
+  /** T-1029: the client could not take a state as changes to the last: post the next whole */
+  | { kind: "wholeState" }
   /** T-1196: the page reloads into another game: save the one in hand, keep `pending` (the game the
    * reloaded page opens, when not a slot) and let go of the slot; answered with "left" */
   | { kind: "leave"; pending?: PendingLoad }
-  /** T-1214: copy every save slot into this folder now and each slot again whenever it is written
-   * (null: stop); answered with "copied" */
-  | { kind: "copyFolder"; dir: FileSystemDirectoryHandle | null }
   /** the view's bounds in degrees after a move (T-302): water masks near it are fetched ahead, but
    * not those of `skip`, the zones of realms not shown (T-975) */
   | { kind: "view"; w: number; s: number; e: number; n: number; skip?: string[] }
@@ -348,10 +348,14 @@ export interface ClockLine {
 
 /** Everything drawn, in local units (map/geo.ts). */
 export interface ClockRender {
-  /** per edge in `ClockState.edges` order: x, y, height (m) triples, concatenated */
-  edgePts: Float32Array;
+  /** per edge in `ClockState.edges` order: x, y, height (m) triples, concatenated; or `edgeParts` */
+  edgePts?: Float32Array;
   /** start of each edge's points (in triples), edges + 1 entries */
-  edgeOff: Uint32Array;
+  edgeOff?: Uint32Array;
+  /** T-1029: each edge's points on its own, in `ClockState.edges` order (in the clock worker only:
+   * the same arrays while an edge is unchanged, never posted), with its speeds as `edgeSpeed`'s */
+  edgeParts?: Float32Array[];
+  edgeSpeedParts?: (Float32Array | undefined)[];
   /** keyframes (notes/T-040.md): phases (t, s, v, a), per profile (first, count, trip s, length
    * m), run 0 of each line resampled (x, y, local units), per line id (first sample, count,
    * length m, step m) */
@@ -379,6 +383,11 @@ export interface CapacityMarker {
   held: boolean;
 }
 
+export interface RowsDelta<T> {
+  ids: number[] | null;
+  rows: T[];
+}
+
 export interface ClockState {
   version: number;
   /** busy resources per demand level (high, medium, low) */
@@ -396,11 +405,13 @@ export interface ClockState {
   canRedo: boolean;
   edges: ClockEdge[];
   nodes: ClockNode[];
-  /** T-648: posted empty when as in the last state posted (most line edits); the client puts its
-   * last ones back before anything reads the state */
-  sameEdges?: boolean;
-  sameNodes?: boolean;
   lines: ClockLine[];
+  /** T-1029: the edges, nodes and lines that changed since the last state posted, with every id in
+   * order (null: as last posted); `edges`, `nodes` and `lines` are then posted empty and the client
+   * rebuilds them from its last ones before anything reads the state */
+  delta?: { edges: RowsDelta<ClockEdge>; nodes: RowsDelta<ClockNode>; lines: RowsDelta<ClockLine> };
+  /** `?patch=check`: the rows in full, for the client to compare its rebuilt ones with */
+  checkRows?: { edges: ClockEdge[]; nodes: ClockNode[]; lines: ClockLine[] };
   /** stations the player linked into one complex (T-197): node id pairs, flat */
   links: number[];
   render: ClockRender;
@@ -482,8 +493,6 @@ export type FromClock =
   | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string; converted?: boolean; game: number }
   /** T-1196: "leave" done (the page may reload), or why the game in hand could not be saved */
   | { kind: "left"; error?: string }
-  /** T-1214: the slots' copies in the folder: written at `at` (Date.now()), or why they could not be */
-  | { kind: "copied"; at?: number; error?: string }
   /** T-889: a save being loaded: its built stations' x, y in `frame`, before its network is worked out */
   | { kind: "stationsAhead"; frame: FrameSpec; xy: Float64Array }
   /** T-1270: a zone's terrain grid just put in the track model (a `.terrain` file), for the map's tint */

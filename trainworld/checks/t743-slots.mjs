@@ -1,8 +1,8 @@
-// T-743, T-744: New game, Load a file and a backup's restore never write over a saved game, and each
+// T-743, T-744: New game, Open a file and a backup's restore never write over a saved game, and each
 // slot keeps two rotating backups. Through the saves panel's own buttons (each reloads the page into
 // its game, T-1196): the real save loaded from a
 // file opens in a slot of its own; fares changed there twice, the backups (every 4 s here, `?backupMs=`)
-// rotate; "Restore as a copy" opens the older backup in a new slot; New game opens an empty game in a
+// rotate; "Open as a copy" (under Earlier versions) opens the older backup in a new slot; New game opens an empty game in a
 // new slot; recovered-day26.save loads into another; every slot left behind keeps its bytes. Deleting a
 // slot deletes its backups. A panel screenshot with the backups goes to artifacts/trainworld/.
 //   node trainworld/checks/t743-slots.mjs [url]     (from the maps root; default localhost:6150)
@@ -62,7 +62,7 @@ try {
   const loadFile = async (path) => {
     const from = (await state()).active;
     await panel();
-    const [fc] = await Promise.all([page.waitForEvent('filechooser'), page.click('.saves-panel .save-files button:has-text("Load a file")')]);
+    const [fc] = await Promise.all([page.waitForEvent('filechooser'), page.click('.saves-panel .save-files button:has-text("Open a file")')]);
     await fc.setFiles(path);
     const key = await switched(from);
     await page.waitForFunction(() => window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
@@ -79,7 +79,7 @@ try {
   await wait(1500);
   const first = (await state()).active;
 
-  // 1. Load a file: the real save in a slot of its own, named after the file
+  // 1. Open a file: the real save in a slot of its own, named after the file
   const A = await loadFile(REAL_SAVE);
   let s = await state();
   const aSlot = s.slots.find((x) => x.key === A);
@@ -88,9 +88,18 @@ try {
     `(from ${first} to ${A}, named "${aSlot?.name}", ${lines} lines)`);
 
   // 2. backups: the first at the slot's first write, then one per change at least BACKUP_MS apart, the older replaced
-  await wait(BACKUP_MS + 500);
+  // a change is backed up only when the newest backup is BACKUP_MS old by its own stamp, taken after the
+  // write's encode and picture, so wait on the stamp and not on the clock (T-1410: under load a fixed wait fell short)
+  const aged = async () => {
+    for (const end = Date.now() + 60000; Date.now() < end; await wait(250)) {
+      const newest = (await state()).backups[0];
+      if (newest && await page.evaluate((at) => Date.now() - at > 500, newest.at + BACKUP_MS)) return;
+    }
+    throw new Error('no backup aged past the interval');
+  };
+  await aged();
   await fares(2);
-  await wait(BACKUP_MS + 500);
+  await aged();
   await fares(2.5);
   s = await state();
   const keys = await allKeys();
@@ -100,13 +109,14 @@ try {
     && !s.slots.some((x) => x.key.startsWith('backup:')) && keys.filter((k) => String(k).startsWith(`backup:${A}:`)).length === 2,
     `(backups ${s.backups.map((b, i) => `${b.key} fares ${bk[i]?.base}`).join(', ')}; slot fares ${aNow.base}; listed slots ${s.slots.length})`);
 
-  // the panel shows them under the playing card
+  // the panel shows them under the playing card, once its earlier versions are open (T-1395)
   await panel();
+  await page.click('.save-slots li.on .save-versions');
   const rows = await page.locator('.save-slots li.on .save-backup').count();
   await page.screenshot({ path: join(ART, 't743-backups.png') });
   report('panel lists the backups', rows === 2, `(${rows} rows; ${join(ART, 't743-backups.png')})`);
 
-  // 3. Restore as a copy: the older backup opens in a new slot, the original untouched
+  // 3. Open as a copy: the older backup opens in a new slot, the original untouched
   const aBefore = await stored(A);
   const older = s.backups[1].key;
   await page.click(`.save-backup[data-backup="${older}"] button`);
@@ -131,7 +141,7 @@ try {
   report('new game opens a new slot', B !== E && B.startsWith('slot-') && eAfter?.hash === eBefore.hash && s.slots.some((x) => x.key === E) && (await stored(A)).hash === aBefore.hash,
     `(from ${E} to ${B}; left game ${eBefore.hash} -> ${eAfter?.hash}; ${s.slots.length} slots listed)`);
 
-  // 5. Load a file again, from the new game: Anita's recovered game in another slot, named after its file
+  // 5. Open a file again, from the new game: Anita's recovered game in another slot, named after its file
   const C = await loadFile(RECOVERED);
   await flush();
   const c = await stored(C);

@@ -152,7 +152,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   8 cars"), which the label's hover also gives (the schedule's rows, Trains, Average speed and
   Train length are one run of rows with no rules between, their controls 4 px apart [T-1159]); stepping up to the cap stores the default (the most
   that fits, `cars` 0), so the trains follow the platforms again; when full track holds trains back, an alert under the table names it ("Platform at
-  Akabane is full", the station name a link that moves the camera there [T-669]) with the trains
+  Akabane is full", the station name a link that moves the camera there and selects the station [T-669, T-1393]) with the trains
   held per level beneath it ("Medium demand: 1 train held out of service"), one alert for each
   full place. Alerts are a plain list, each with a red (bad) or yellow (warning) circled
   exclamation point (`Alert` in `ui/widgets.tsx`, `--bad`, `--yellow`), no box [T-748]; a broken
@@ -171,9 +171,14 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   (the only other rule is above Stops) [T-692]; the stops (above Schedule while being edited [T-670]) with their time from
   the start (its hover: "Trains reach 320 km/h" from the stop before, then what limits them there:
   the trains' top speed, ordinary track, curves or a crossover, and when the stops are too close
-  to reach it [T-817]) and boardings in the past 24 hours, each transfer stop (any station of its complex
-  served by another line) showing the two other lines with most boardings there in the past
-  24 hours as bullets and, when there are more, a "+" whose hover names the rest [T-549]; **flat junctions and
+  to reach it [T-817]; dropped from a row whose name, time and bullets do not all fit, T-1391) and
+  boardings in the past 24 hours, each transfer stop (any station of its complex
+  served by another line, or by the line itself at a stop other than the next or the one before,
+  so a line coming back through a station shows its own bullet there [T-1391]) showing the two lines with most boardings there in the past
+  24 hours as bullets and, when there are more, a "+" whose hover names the rest [T-549]; a **loop**
+  shows each station once, its bar going on past the first and last stops and curving round to
+  the right at both ends (its last stop, the first again, stays while stops are edited, holding
+  "Open the loop") [T-1391]; **flat junctions and
   flat crossings on the route** [T-629, `TrackApi.line_marks`] as small marks on the diagram's bar between the
   two stops they lie between, spread evenly in the gap (the diagram is not to scale): a white diamond for a
   junction with no flyover and no station, a cross for a flat crossing, each with a hover naming it and
@@ -187,26 +192,33 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   strength at the map's faintest to full (`PANEL_MARK_FLOOR`; on the panel's background the map's
   15% cannot be seen); each stretch's hover: "3 Av to 14 St-Union Sq", "334,700 riders per day", and
   "Average 1.1 minute wait for a train with room" where marked; **related lines** [T-1168,
-  notes/T-1168.md]: an icon after "Stops" (hover "Show related lines" / "Hide related lines", one
-  setting for every line, off at first and kept while the page is open, hidden while stops are
-  edited) draws the stops with the lines related to the line (`TrackApi.line_related`,
+  notes/T-1168.md, T-1391]: an icon after "Stops" (two lines crossing at a station; hover "Show
+  related lines" / "Hide related lines", one setting for every line, off at first and kept while
+  the page is open, kept while stops are edited, the stations passed then between the rows) draws
+  the stops with the lines related to the line (`TrackApi.line_related`,
   `game/relatedLayout.ts`, `RelatedStops.tsx`): the line straight down the middle of the drawing; each
   line running beside it (shared track, or its track within 100 m + 3.5% of the first 5 km of its own
   run + 2% of the rest of the line's between stations both reach; a line meeting only twice gets 2%
-  throughout; a line whose stops are all on the line's route always) in a column 8 px out a step,
+  throughout unless neither line stops between the two; a line whose stops are all on the line's
+  route always) in a 3 px column (as thin as a crossing line's bar) 7 px out a step,
   3 px further for one on its own track, right for one stopping more often over the span and left
-  otherwise, at most 3 a side and only as many as fit in 40% of the panel; a column turns out to
-  its gutter half a row past where the line leaves, ending in its bullet, bullets stacked 17 px
-  apart; a span under three rows, or a line with no column left, is drawn as crossings; rows are
-  the line's stops (as in the plain list, bullets leaving out the lines drawn there) and the side
-  lines' own stops at the nearest point of the line, names muted and nothing else; a white pill
-  with the dark rim over each run of neighbouring columns stopping at a row (10 px at a row with
-  crossings, else 8); the first two crossing lines as 3 px bars across the drawing. Hovers: a
-  column ("1 runs beside 2 from Chambers St to 96 St", stops in common, stops of its own, "On the
-  same track", its own-track km beside the line's and how far it strays at most), a pill ("6, 6 and
-  6X stop at 23 St", "4 and 5 pass"), a turn's bullet ("4 goes on to Woodlawn", "14 more stops", or
-  "5 leaves here", "Back beside 2 at 149 St after 10 stops of its own"), a bar ("4 crosses at 149
-  St", and for a line met before with too wide a gap, where it left and how far its track strays).
+  otherwise, at most 3 a side and only as many as fit in 40% of the panel; where the other line goes
+  on, its column goes straight on 13 px past the line's own first or last row, and elsewhere turns
+  out to its side half a row past where it leaves (turns at one gap 6 px apart); where it ends, the
+  column ends at its stop; a span over one row only, or a line with no column left, is drawn as
+  crossings; beside a loop, a line running on across the loop's first stop goes on past the last
+  row; rows are the line's stops (as in the plain list, bullets leaving out the lines drawn there)
+  and the side lines' own stops at the nearest point of the line, names muted and nothing else; a
+  side line's bullet shows after the crossing lines' at the first and last rows both stop at, and
+  at each row both stop at next to one only one of them does (where an express's stops part from a
+  local's); a white pill with the dark rim over each run of neighbouring columns stopping at a row
+  (10 px at a row with crossings, else 8); the first two crossing lines as 3 px bars across the
+  drawing. Hovers: a column ("1 runs beside 2 from Chambers St to 96 St", stops in common, stops of
+  its own, "On the same track", its own-track km beside the line's and how far it strays at most), a
+  pill ("6, 6 and 6X stop at 23 St", "4 and 5 pass"), a column's turn or straight end ("4 goes on to
+  Woodlawn", "14 more stops", or "5 leaves here", "Back beside 2 at 149 St after 10 stops of its
+  own"), a bar ("4 crosses at 149 St", and for a line met before with too wide a gap, where it left
+  and how far its track strays; "Hook stops at Union Sq twice" for the line's own).
   A click on a column, bullet or bar selects that line; the round trip split into running, dwell, turning and waiting,
   naming where it waits most [T-031]. A **loop** [T-798] shows its lap (one way round, the longer way's)
   in place of the round trip, split the same way, with no turning row for a circle and "Turning at
@@ -433,12 +445,19 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   market between the two places, every 6 km area pair counted whole (`market_trip_between`);
   a zone selected, then bubbles of the focused zone zoomed in, is the market between them and that
   zone. It shows the regional
-  market's inter-city trips (commutes between zones left out, as the hover says): every 6 km
+  market's inter-city trips: every 6 km
   area pair between the two ends, the selection's areas weighted as the bubbles weigh them,
   each pair's choice worked out as the solve does (every pair rail can serve, sampled or not),
-  added up by its trips. The panel: the trips a day and the distance (between two places both
-  ways, as the city view's corridors count them; from a selection one way, as its bubbles count
-  them [T-1148]), a Train / Plane / Car bar and rows (no Train when no period offers rail); then,
+  added up by its trips; and the commutes between zones and everyday outings between them, so the
+  total is the inter-city bubble's count [T-880]. The panel: the trips a day and the distance
+  (between two places both ways, as the city view's corridors count them; from a selection one
+  way, as its bubbles count them [T-1148]; with commutes or everyday outings the count is all
+  three added up, the hover giving each, and the inter-city trips get their own **Inter-city
+  trips** head with their count), a Train / Plane / Car bar and rows (no Train when no period
+  offers rail); then, where the two ends have commutes between zones [T-880], **Commutes** with
+  its legs a day and a Train / Car bar and rows (`CPair`'s choice in the solve; from a selection
+  the commuters living there, or working there, between two places both ways), their train
+  riders in the routes below; then,
   where the two ends have everyday outings across a zone line [T-1229], **Everyday trips** with
   its legs a day and a Train / Walking / Car bar and rows (errands, visits, school and medical
   trips as the market chooses them, the walkers rail takes out; between two places both ways, from

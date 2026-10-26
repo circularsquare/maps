@@ -66,10 +66,10 @@ for (const [label, size] of [['desktop', [1400, 2000]], ['phone', [390, 2400]]])
     const one = await page.evaluate(() => { const l = window.tw.world.value.save.lines.find((x) => x.name === 'subway 1'); return l.colour; });
     // a point on the column itself, between two stop pills
     const pt = await page.evaluate((c) => {
-      const p = document.querySelector(`.related-draw g.link path[stroke="${c}"]`);
+      const p = document.querySelector(`.related-draw g.link[data-tip^="subway 1 runs beside"] path[stroke="${c}"]:not([data-tip])`);
       p.scrollIntoView({ block: 'center' });
       const r = p.getBoundingClientRect();
-      for (let y = r.y + r.height / 2; y < r.y + r.height; y += 2) for (let x = r.x; x < r.x + r.width; x++) if (document.elementFromPoint(x, y) === p) return { x, y };
+      for (let y = r.y + r.height / 2; y < r.y + r.height; y += 2) for (let x = r.x - 3; x <= r.x + r.width + 3; x += 0.5) if (document.elementFromPoint(x, y) === p) return { x, y };
       return null;
     }, one);
     const box = { x: pt.x - 3, y: pt.y - 3, width: 6, height: 6 };
