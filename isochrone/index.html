@@ -48,6 +48,21 @@ html, body { margin: 0; height: 100%; background: #0a0a0a; color: #ccc;
     font-variant-numeric: tabular-nums; }
 #tip .split { color: #999; }
 
+#speeds { left: 10px; top: 38px; padding: 6px 10px; font-variant-numeric: tabular-nums; }
+#speeds h2 { margin: 0; cursor: pointer; user-select: none; }
+#speeds h2::after { content: ' \25BE'; }
+#speeds.closed h2::after { content: ' \25B8'; }
+#speeds.closed #speedRows { display: none; }
+#speedRows { margin-top: 4px; display: grid; grid-template-columns: auto auto auto; column-gap: 10px; }
+#speedRows > div { display: contents; }
+#speedRows span { color: #aaa; line-height: 1.5; text-align: right; }
+#speedRows span:first-child { text-align: left; }
+#speedRows .sec span { color: #777; padding-top: 3px; }
+body:not(.canoe) #speedRows .boat { display: none; }
+@media (hover: hover) { #speedRows > div:hover span { color: #eee; } }
+#stip { position: absolute; z-index: 4; pointer-events: none; display: none; background: rgba(10,10,10,.95);
+    border: 1px solid #333; border-radius: 4px; padding: 4px 7px; color: #ccc; max-width: 250px; }
+
 #origin { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #000;
     box-sizing: border-box; }
 body.busy, body.busy .maplibregl-canvas { cursor: progress !important; }
@@ -57,6 +72,8 @@ body.busy, body.busy .maplibregl-canvas { cursor: progress !important; }
 <div id="map"></div>
 <div id="title">Walking time</div>
 <div id="tip"></div>
+<div id="stip"></div>
+<div id="speeds" class="panel"><h2>Speed in km/h</h2><div id="speedRows"></div></div>
 
 <div id="legend" class="panel">
     <h2>Time on foot</h2>
@@ -67,11 +84,15 @@ body.busy, body.busy .maplibregl-canvas { cursor: progress !important; }
 <div id="controls">
     <button data-mode="walk" title="Walking"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="4" r="2" fill="currentColor" stroke="none"/><path d="M12.5 8.5 11 14.5 8 21M11 14.5l3.5 3 1 3.5M12.5 8.5 9 11.5 8.5 14M12.5 8.5l3 3 3 1"/></svg></button>
     <button data-mode="canoe" title="Canoe"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12.5c2 6.5 18 6.5 20 0-6 2-14 2-20 0z" fill="currentColor"/><path d="M16.5 3 10 17"/><path d="M10.6 15.7 9 19.2" stroke-width="3.2"/></svg></button>
+    <button id="corrbtn" title="Routes most trips share"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c4-3 6-6 8-10" stroke-width="3"/><path d="M11 11c2-3 4-5 8-7M11 11c3 0 6 1 9 3" stroke-width="1.8"/><path d="M7 16.5c-1.5-.5-3-2-4-4" stroke-width="1.2"/></svg></button>
+    <button id="terrainbtn" title="Hills and mountains"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20 9 7l4 7 2.5-3.5L22 20z"/></svg></button>
+    <button id="riversbtn" title="Rivers"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8c3-2 6 2 9 0s6-2 9 0M3 15c3-2 6 2 9 0s6-2 9 0"/></svg></button>
 </div>
 <div id="info" class="panel">
     <p>Click anywhere to set the start. <span class="walk-only">Each colour is how long it takes to walk there. A day is 8 hours of walking.</span><span class="canoe-only" hidden>Each colour is how long it takes to get there with a canoe. A day is 8 hours of paddling or carrying.</span></p>
     <p>Speeds come from the Malaria Atlas Project walking-only friction surface (Weiss et al., Nature Medicine 2020, CC BY 4.0), which sets a pace for every square kilometre from roads, land cover and slope. It was made to measure how far people live from health care. The whole world is worked out on cells of about 10 km, and the area in view on cells of 3 km and then 1 km as you zoom in.</p>
     <p id="canoeCredits" hidden>The canoe goes 5 km/h on still water and is carried overland at half walking speed. Rivers come from RiverATLAS and lakes from HydroLAKES (HydroSHEDS, CC BY 4.0). Falls, dams and weirs are from OpenStreetMap (ODbL), the coast from Natural Earth. Sea currents are from the NOAA Global Drifter Program, and summer waves and sea ice from ERA5 (Copernicus Climate Change Service, CC BY 4.0).</p>
+    <p>Hill shading is from the <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank">Terrain Tiles on AWS</a>, built by Mapzen from SRTM, GMTED2010 and 3DEP (USGS), ETOPO1 (NOAA), EU-DEM (Copernicus) and national models, <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank">credited in full here</a>. River lines are the ones the canoe uses, wider for more water and faint where it has to be carried.</p>
     <p><span class="walk-only">Seas and lakes cannot be crossed.</span> Ponds under 5 km² are waded at 1 km/h. Danger, weather, borders and rest are not counted. Basemap from <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> and <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>, drawn with <a href="https://maplibre.org" target="_blank">MapLibre GL</a>.</p>
 </div>
 
@@ -107,6 +128,7 @@ function showMode(m) {
     document.title = document.getElementById('title').textContent = canoe ? 'Canoe time' : 'Walking time';
     document.querySelector('#legend h2').textContent = canoe ? 'Time by canoe' : 'Time on foot';
     document.getElementById('canoeCredits').hidden = !canoe;
+    document.body.classList.toggle('canoe', canoe);
     for (const el of document.querySelectorAll('.walk-only')) el.hidden = canoe;
     for (const el of document.querySelectorAll('.canoe-only')) el.hidden = !canoe;
 }
@@ -138,7 +160,7 @@ document.getElementById('infobtn').onclick = () => {
 const map = new maplibregl.Map({
     container: 'map',
     style: 'https://tiles.openfreemap.org/styles/dark',
-    center: [24, 46], zoom: 3.2, minZoom: 1.5, maxZoom: 9,
+    center: [24, 46], zoom: 3.2, minZoom: 1.5, maxZoom: 14,
     attributionControl: { compact: true },
 });
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
@@ -152,7 +174,7 @@ window.solveLog = [];       // timings, for checking from the console
 const worker = new Worker('worker.js', { type: 'module' });
 const workerReady = new Promise(res => {
     worker.addEventListener('message', function once(e) {
-        if (e.data.type === 'ready') { worker.removeEventListener('message', once); res(); }
+        if (e.data.type === 'ready') { worker.removeEventListener('message', once); res(e.data); }
     });
 });
 
@@ -163,8 +185,87 @@ async function loadGrid() {
     const stream = resp.body.pipeThrough(new DecompressionStream('gzip'));
     const bytes = await new Response(stream).arrayBuffer();
     worker.postMessage({ type: 'init', meta, tiles, bytes, bands: BANDS, alpha: OVERLAY_ALPHA,
-                         maxHours: MAX_HOURS, canoeBase: CANOE_BASE }, [bytes]);
+                         maxHours: MAX_HOURS, canoeBase: CANOE_BASE, corridors: corrOn }, [bytes]);
     await workerReady;
+}
+
+// ---- speeds panel: the model's speeds, sent by the worker with `ready` (js/speeds.js) ----
+const store = {   // per-session switches; storage may be missing
+    get(k, d) { try { const v = sessionStorage.getItem('iso.' + k); return v === null ? d : v === '1'; } catch { return d; } },
+    set(k, v) { try { sessionStorage.setItem('iso.' + k, v ? '1' : '0'); } catch { /* not kept */ } },
+};
+const kmh = x => x.toFixed(1);
+const fac = x => '×' + x.toFixed(2);
+function drawSpeeds(s) {
+    const rows = [];
+    const row = (cells, hint, cls) => rows.push({ cells, hint, cls });
+    row(['On foot', '', ''], `The Malaria Atlas Project's walking surface: for each kind of ground, the median answer of 407 people asked how long 1 km takes. Height and slope slow it: ${s.elev.map(([m, f]) => `${fac(f)} at ${m} m`).join(', ')}; ${s.slope.map(([d, f]) => `${fac(f)} on a ${d}° slope`).join(', ')}.`, 'sec');
+    for (const w of s.walk) {
+        const v = w.min === w.max ? kmh(w.min) : kmh(w.min) + '-' + kmh(w.max);
+        const hint = w.label.startsWith('Ponds') ? 'Water patches under 5 km² are waded at 1 km/h, MAP’s rate for crossing a wetland or swimming.'
+            : w.label.startsWith('Roads') ? 'Every road and path is walked at 5 km/h. Towns were not in the survey and are set to 5 km/h too.'
+            : w.parts.map(([n, k]) => `${n} ${kmh(k)}`).join(', ');
+        row([w.label, v, ''], hint);
+    }
+    row(['By canoe', 'with', 'against'], `With and against the current. Paddling hours count like walking hours, 8 to a day.`, 'sec boat');
+    row(['Still water', kmh(s.paddle), ''], 'Lakes and seas without a current: a steady touring pace.', 'boat');
+    for (const r of s.rivers) row([r.label, kmh(r.down), kmh(r.up)],
+        `${r.q.toLocaleString('en')} m³/s of water, flowing ${kmh(r.v)} km/h (from its mean flow, Moody and Troutman 2002). Upstream loses ${s.upShare} of the current, never below ${kmh(s.upMin)} km/h, towing from the bank.`, 'boat');
+    row(['Sea, strong current', kmh(s.sea.with), kmh(s.sea.against)],
+        `A ${kmh(s.sea.c)} km/h current, as in the Gulf Stream. Half as strong within 5 km of the shore. A current from the side pushes the canoe off course and slows it.`, 'boat');
+    row(['Carried, on grass', kmh(s.walk.find(w => w.label.startsWith('Grass')).max / s.carry), ''],
+        `Half walking speed on any ground. The canoe is never left behind.`, 'boat');
+    row(['Getting in or out', Math.round(s.transfer * 60) + ' min', ''], 'At every shore and every carry round a fall, dam or weir.', 'boat');
+    const box = document.getElementById('speedRows');
+    box.innerHTML = '';
+    for (const r of rows) {
+        const d = document.createElement('div');
+        if (r.cls) d.className = r.cls;
+        for (const c of r.cells) { const sp = document.createElement('span'); sp.textContent = c; d.appendChild(sp); }
+        d.onmouseenter = () => { stip.textContent = r.hint; stip.style.display = 'block'; };
+        d.onmousemove = e => { stip.style.left = (e.clientX + 14) + 'px'; stip.style.top = (e.clientY + 14) + 'px'; };
+        d.onmouseleave = () => { stip.style.display = 'none'; };
+        box.appendChild(d);
+    }
+}
+const stip = document.getElementById('stip');
+const speedsPanel = document.getElementById('speeds');
+speedsPanel.classList.toggle('closed', !store.get('speeds', innerWidth >= 600));
+speedsPanel.querySelector('h2').onclick = () => {
+    speedsPanel.classList.toggle('closed');
+    store.set('speeds', !speedsPanel.classList.contains('closed'));
+};
+workerReady.then(m => drawSpeeds(m.speeds));
+
+// ---- hill shading and river lines, each with a switch ----
+let terrainOn = store.get('terrain', true), riversOn = store.get('rivers', true), rivers = null;
+const terrainBtn = document.getElementById('terrainbtn'), riversBtn = document.getElementById('riversbtn');
+terrainBtn.classList.toggle('active', terrainOn);
+riversBtn.classList.toggle('active', riversOn);
+terrainBtn.onclick = () => {
+    terrainOn = !terrainOn; store.set('terrain', terrainOn);
+    terrainBtn.classList.toggle('active', terrainOn);
+    if (map.getLayer('hillshade')) map.setLayoutProperty('hillshade', 'visibility', terrainOn ? 'visible' : 'none');
+};
+riversBtn.onclick = () => {
+    riversOn = !riversOn; store.set('rivers', riversOn);
+    riversBtn.classList.toggle('active', riversOn);
+    if (rivers) rivers.set(riversOn);
+};
+// Under the basemap's water, so the sea floor stays hidden, and under the time colours.
+function addRelief(firstSymbol) {
+    map.addSource('dem', { type: 'raster-dem', encoding: 'terrarium', tileSize: 256, maxzoom: 12,
+        tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+        attribution: '<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank">Terrain Tiles</a>' });
+    map.addLayer({ id: 'hillshade', type: 'hillshade', source: 'dem',
+        layout: { visibility: terrainOn ? 'visible' : 'none' },
+        paint: { 'hillshade-exaggeration': 0.5, 'hillshade-shadow-color': '#000',
+                 'hillshade-highlight-color': 'rgba(255,255,255,0.5)', 'hillshade-accent-color': '#000' } },
+        map.getLayer('water') ? 'water' : firstSymbol);
+    import('./js/riverlines.js').then(m => {
+        rivers = m.riverLines(map, CANOE_BASE, map.getLayer('corridors') ? 'corridors' : firstSymbol);
+        rivers.set(riversOn);
+    });
 }
 
 // ---- overlays ----
@@ -173,12 +274,12 @@ async function loadGrid() {
 // a canvas between its corners. Where a finer window is shown, the coarser canvas has a hole
 // cut in it, so the coarse colours do not show through the window's water.
 const merc = lat => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360));
-const LEVELS = [10, 3, 1];
+const LEVELS = [10, 3, 1, 0.1];
 const layers = {};
 for (const k of LEVELS) {
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 1;
-    layers[k] = { id: 'walk' + (k === 10 ? '' : k), canvas, ctx: canvas.getContext('2d'),
+    layers[k] = { id: 'walk' + (k === 10 ? '' : String(k).replace('.', '')), canvas, ctx: canvas.getContext('2d'),
                   img: null, m: null, shown: false, holeRect: null, holes: [] };
 }
 
@@ -228,6 +329,16 @@ function addLayers() {
             paint: { 'raster-opacity': 1, 'raster-fade-duration': 0, 'raster-resampling': 'nearest' } },
             firstSymbol && firstSymbol.id);
     }
+    // corridors: routes many trips share, stronger and wider the more they carry (s, 0-7)
+    map.addSource('corridors', { type: 'geojson', data: EMPTY, tolerance: 0.2 });
+    map.addLayer({ id: 'corridors', type: 'line', source: 'corridors',
+        layout: { 'line-join': 'round', 'line-cap': 'round', visibility: corrOn ? 'visible' : 'none' },
+        paint: { 'line-color': '#f4f1ea',
+                 'line-opacity': ['interpolate', ['linear'], ['get', 's'], 0, 0.12, 7, 0.6],
+                 'line-width': ['interpolate', ['linear'], ['zoom'],
+                     2, ['interpolate', ['linear'], ['get', 's'], 0, 0.5, 7, 2.6],
+                     8, ['interpolate', ['linear'], ['get', 's'], 0, 1, 7, 4.5]] } },
+        firstSymbol && firstSymbol.id);
     // the route to the pointer: paddled solid, carried dashed, walked solid
     map.addSource('route', { type: 'geojson', data: EMPTY });
     map.addLayer({ id: 'route-halo', type: 'line', source: 'route',
@@ -238,6 +349,7 @@ function addLayers() {
         paint: { 'line-color': '#fff', 'line-width': 1.4 } });
     map.addLayer({ id: 'route-carry', type: 'line', source: 'route', filter: ['==', ['get', 'kind'], 1],
         paint: { 'line-color': '#fff', 'line-width': 1.4, 'line-dasharray': [2, 1.5] } });
+    addRelief(firstSymbol && firstSymbol.id);
 }
 const EMPTY = { type: 'FeatureCollection', features: [] };
 
@@ -302,9 +414,71 @@ function setHole(lv, rect) {
 function refresh(changed) {
     const ch = new Set(changed);
     const rect = k => layers[k].shown ? layers[k].m : null;
-    if (layers[10].shown && setHole(layers[10], rect(3) || rect(1))) ch.add(10);
-    if (layers[3].shown && setHole(layers[3], rect(1))) ch.add(3);
+    if (layers[10].shown && setHole(layers[10], rect(3) || rect(1) || rect(0.1))) ch.add(10);
+    if (layers[3].shown && setHole(layers[3], rect(1) || rect(0.1))) ch.add(3);
+    if (layers[1].shown && setHole(layers[1], rect(0.1))) ch.add(1);
     for (const k of ch) if (layers[k].shown) upload(layers[k]);
+    drawCorridors();
+}
+
+// ---- corridors: lines per level from the worker; each level's cut where a finer window shows ----
+let corrOn = true;
+const corr = {};              // level -> { originId, xy, off, s }
+window.corrLog = [];          // { level, ms, lines }, for checks
+const corrBtn = document.getElementById('corrbtn');
+corrBtn.classList.toggle('active', corrOn);
+corrBtn.onclick = () => {
+    corrOn = !corrOn;
+    corrBtn.classList.toggle('active', corrOn);
+    if (map.getLayer('corridors')) map.setLayoutProperty('corridors', 'visibility', corrOn ? 'visible' : 'none');
+    worker.postMessage({ type: 'corridors', on: corrOn });
+    drawCorridors();
+};
+
+// The parts of a line outside a rectangle (Liang-Barsky on each segment).
+function clipOut(line, w, e, s, n) {
+    const out = [];
+    let cur = null;
+    for (let i = 1; i < line.length; i++) {
+        const [x0, y0] = line[i - 1], [x1, y1] = line[i];
+        const dx = x1 - x0, dy = y1 - y0;
+        let a = 0, b = 1, hit = true;
+        for (const [p, q] of [[-dx, x0 - w], [dx, e - x0], [-dy, y0 - s], [dy, n - y0]]) {
+            if (p === 0) { if (q < 0) { hit = false; break; } continue; }
+            const r = q / p;
+            if (p < 0) { if (r > b) { hit = false; break; } if (r > a) a = r; }
+            else { if (r < a) { hit = false; break; } if (r < b) b = r; }
+        }
+        if (!hit || a >= b) {
+            if (!cur) { cur = [line[i - 1]]; out.push(cur); }
+            cur.push(line[i]);
+            continue;
+        }
+        if (a > 0) { if (!cur) { cur = [line[i - 1]]; out.push(cur); } cur.push([x0 + a * dx, y0 + a * dy]); }
+        cur = null;
+        if (b < 1) { cur = [[x0 + b * dx, y0 + b * dy], line[i]]; out.push(cur); }
+    }
+    return out;
+}
+
+function drawCorridors() {
+    const src = map.getSource('corridors');
+    if (!src || !corrOn) return;
+    // levels with lines for this start; each is cut where the next finer one shows
+    const has = LEVELS.filter(k => layers[k].shown && corr[k] && corr[k].originId === originId);
+    const features = [];
+    for (const [i0, k] of has.entries()) {
+        const c = corr[k];
+        const h = i0 + 1 < has.length ? layers[has[i0 + 1]].m : null;
+        for (let i = 0; i < c.s.length; i++) {
+            let parts = [[]];
+            for (let j = c.off[i]; j < c.off[i + 1]; j++) parts[0].push([c.xy[2 * j], c.xy[2 * j + 1]]);
+            if (h) for (const sh of [-360, 0, 360]) parts = parts.flatMap(p => clipOut(p, h.west + sh, h.east + sh, h.south, h.north));
+            for (const p of parts) if (p.length > 1) features.push({ type: 'Feature', properties: { s: c.s[i] },
+                geometry: { type: 'LineString', coordinates: p } });
+        }
+    }
+    src.setData({ type: 'FeatureCollection', features });
 }
 
 worker.addEventListener('message', (e) => {
@@ -315,7 +489,7 @@ worker.addEventListener('message', (e) => {
         document.body.classList.remove('busy');
         originId = m.originId;
         showMode(m.mode);
-        hide(3); hide(1);
+        hide(3); hide(1); hide(0.1);
         show(10, m);
         refresh([10]);
         const { lng, lat } = m.origin;
@@ -328,6 +502,12 @@ worker.addEventListener('message', (e) => {
         hover();
     } else if (m.type === 'route') {
         gotRoute(m);
+    } else if (m.type === 'corridors') {
+        if (m.originId !== originId) return;
+        corr[m.level] = m;
+        corrLog.push({ level: m.level, ms: m.ms, countMs: m.countMs, lines: m.s.length });
+        console.log('L' + m.level, 'corridors', m.s.length, 'lines,', m.ms, 'ms (count', m.countMs + ')');
+        drawCorridors();
     } else if (m.type === 'win') {
         if (m.originId !== originId) return;
         show(m.level, m);
@@ -373,7 +553,7 @@ function fmt(h) {
 
 // Walking hours at a point, from the finest shown level that covers it.
 function timeAt(lng, lat) {
-    for (const k of [1, 3, 10]) {
+    for (const k of [0.1, 1, 3, 10]) {
         const lv = layers[k];
         if (!lv.shown) continue;
         const m = lv.m;

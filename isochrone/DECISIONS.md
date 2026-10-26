@@ -5,6 +5,14 @@ reasoning and what it replaced.
 
 ## 2026-10-26
 
+- **River lines are the canoe's own river steps**, not the basemap's waterways (T-045): the
+  basemap draws only some rivers when zoomed out and has no size, and ours show exactly what the
+  canoe can use. Cost: 4.2 MB for the world view and 100-300 ms per rebuild on the page (T-048).
+  **Hill shading sits under the basemap's water and the time colours**: above them at low
+  opacity it also shaded the sea floor (Terrain Tiles include ETOPO1 bathymetry).
+- **Canoe speed rows show only on canoe starts** in the speeds panel (T-044); walking rows always.
+  A 1 m/s current stands for "strong" (the top 0.2% of the drifter grid; Gulf Stream ~1.3).
+
 - **K stays 1000 h** after the check trips (T-006): it is the lowest tried that sends Brest to
   A Coruña round the coast; 3000 and up send Bergen to Iceland round by Denmark and England.
 - **Exposure x3 counts every water term past 20 km**, supplies included, since rates are per real

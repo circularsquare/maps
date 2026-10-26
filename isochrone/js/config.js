@@ -20,6 +20,7 @@ export const cfg = {
     },
     paddle: 5,                   // km/h on still water
     upMin: 1.5,                  // km/h, the slowest upstream paddling (lining)
+    upShare: 0.6,                // upstream speed is paddle - upShare x river speed
     transfer: 0.25,              // hours to get in or out of the canoe
     carry: 2,                    // carrying the canoe takes this many times the walking time
     iceMax: 15,                  // % summer ice cover above which a sea cell has no canoe node
