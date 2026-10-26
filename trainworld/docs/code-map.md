@@ -15,7 +15,8 @@ tests natively.
   the clock worker's API, with the drawing tool's routes and the crossover tool's edit, T-338; its
   exports are split by area into `wasm/money.rs`, `edits.rs`, `draw.rs`, `crossings.rs`, `links.rs`,
   `lines.rs`, `snapshot.rs`, `service.rs` and `upgrades.rs`, the shared helpers staying in `wasm.rs`). In the default build.
-  `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network.
+  `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network;
+  `--bin edit_bench -- <track bytes>` times headway and count edits on a real save's network (T-1283).
   notes/T-040.md. Methods only tests and bins call (`set_line`, `set_edge`, `to_lonlat` and the
   like) sit in plain `impl` blocks, not in the WASM exports; the same holds for `DemandApi`,
   `EverydayApi` and `IntercityApi`. A big file's tests are in its own `<file>/tests.rs`.
@@ -303,6 +304,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   ledger days after its clock gets their running cost and the hours' upkeep back; port 6165 by default),
   `t975-realms.mjs` (first the location button refused, in Lyon and in Sydney, and a map start showing every realm until its first station; then realms in a fresh profile: no bubbles behind the start menu, a Tokyo start shows Japan only with the shade cut around its zones, a click shows France, a reload hides it again, stations in two realms show both; a click on a hidden realm shows it, a drag does not, no circles at the world view; the zoomed-out frame and a pan across France and Germany measured; port 6165 by default),
   `t1071-train-count.mjs` (the real save's busiest line, its train count raised and lowered four times with the clock running: every train of every line placed each frame from the renderer's own buffers may move no further than top speed allows and come or go only at a terminal, and where new buffers arrive the old and new draw the same trains in the same places; `SPEED` 0 to 2 or -1 paused, `OP=headway`, `KEEP_FRAMES=1`; about 2 minutes; Rust side `sim/src/track/transition_tests.rs`),
+  `t1283-edit-time.mjs` (the real save's busiest line switched to headways, stepped and set by hand: the clock worker's apply and total per edit, failing past 1 s; about a minute),
   `t1276-headway-steady.mjs` (the real save's busiest line on headways, its Medium headway stepped fast and slow both ways and typed with the clock running: every inspector change sampled, the schedule's three rows keep their order and never blank, and one headway shows one train count throughout, give or take the one train the landed edit may settle by; about 2 minutes),
   `t1277-fare-scale.mjs` (Node, no browser: a rider in New York and one in Mumbai on a small fixture line, set up as the demand worker sets up each zone, pay the starting curve times their own scale, a player's scale replaces the income's, and a fare weighs about the same at the default scales; seconds; run after any change to fare weights or scales),
   `t1148-market-rule.mjs` (Node, no browser: `game/marketRule.ts`, the main thread's copy of the market's place-pair rule, against the sim's on about 2,000 pairs of places, near, far, across the Channel, to Hokkaido and across seas: distance, car minutes, reference minutes, plane and car shares, trips; and the longer trips' period shares on every kind of day; about 20 s; run after any change to the market's car, plane, crossing or trip rule on either side),

@@ -261,12 +261,32 @@ fn hop_time(limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)], mids
     hop(limits, a, b, zones, mids, 0.0, scratch)
 }
 
+/// Each hop's motion with no holds, standstill to standstill, timed from 0, and its duration:
+/// `run_with` takes these for every hop no hold falls in (T-1283: a line's profiles are worked out
+/// again whenever its holds move, mostly over hops the holds leave alone).
+#[derive(Clone, Debug, Default)]
+pub struct Hops(Vec<(Vec<Phase>, f64)>);
+
+pub fn hops(limits: &[[f64; 2]], stops: &[f64], jump: &[f64]) -> Hops {
+    let leave = |i: usize| stops[i] + jump.get(i).copied().unwrap_or(0.0);
+    Hops((0..stops.len().saturating_sub(1)).map(|i| {
+        let mut out = vec![];
+        let d = hop(limits, leave(i), stops[i + 1], &[], &[], 0.0, &mut out);
+        (out, d)
+    }).collect())
+}
+
 /// The trip's profile. `limits` are speed-limit breakpoints `[s, v]` from 0 (already widened by
 /// half the train length); `stops` are the stop offsets in order; `jump[i]` (empty for none)
 /// moves stop i's departure on from its arrival (a reversal, T-797: the train is drawn jumping
 /// once as it stops); `dwell[i]` is the standing time at stop i (extra at the first stop delays
 /// departure; the last is ignored); `holds` are capacity delays at track points, sorted by offset.
 pub fn run(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64], holds: &[Hold]) -> Profile {
+    run_with(limits, stops, jump, dwell, holds, &Hops::default())
+}
+
+/// `run`, with `hops` from `hops` over the same limits, stops and jumps (or none).
+pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64], holds: &[Hold], hops: &Hops) -> Profile {
     let n = stops.len();
     let mut p = Profile::default();
     if n < 2 {
@@ -338,7 +358,15 @@ pub fn run(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64], hold
             }
             p.hold += h.delay;
         }
-        t = hop(limits, a, b, &zones, &mids, t, &mut out);
+        match hops.0.get(i).filter(|_| per_hop[i].is_empty() && hops.0.len() == n - 1) {
+            Some((ph, d)) => {
+                for q in ph {
+                    push(&mut out, t + q.t, q.s, q.v, q.a);
+                }
+                t += d;
+            }
+            None => t = hop(limits, a, b, &zones, &mids, t, &mut out),
+        }
         p.arr.push(t);
         if i + 1 < n - 1 {
             let at = leave(i + 1);

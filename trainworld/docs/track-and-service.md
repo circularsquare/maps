@@ -507,7 +507,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   High is the two peaks, medium midday and evening, low night. New lines start at 0 / 0 / 0;
   zero means no new departures. The panel shows the integer allocation and resulting headway.
   Frequency is derived from the capacity-adjusted round trip, with a bounded solve on edits (at
-  most 80 rounds, ending at the first round that changes no rate or round trip, T-747);
+  most 80 rounds, ending at the first round that changes no rate or round trip, T-747; a line
+  within 0.05 trains of its fleet whose shortfall has changed sign three times without halving,
+  as where its round trip jumps when a hold comes and goes, is settled on the side with trains to
+  spare and stays so while its rate and round trip are unchanged, T-1283);
   extending track or changing congestion adjusts the headway while preserving the allocation.
   It never exceeds what the line's track can carry (6.2): trains beyond that wait at the ends.
   A loop's lap is a run and its closing stand; its round trip is twice the longer lap, and its count
