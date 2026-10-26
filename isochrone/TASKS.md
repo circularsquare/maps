@@ -3,21 +3,29 @@
 Open agent work. Format and rules in `CLAUDE.md`. P1 = now or blocking, P2 = this milestone,
 P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
-**Where things stand (2026-10-26).** Walking works worldwide at ~10 km (T-001), refined to 3 km
-and 1 km round the view when zoomed in (T-002). Research for the canoe (T-003) and for our own
-walking surface and 10,000 BC (T-004) is done, and our own walking surface is built (T-009),
-not yet on the page (T-028). Now: the canoe design (T-005). The smoke check (T-017) and small water (T-013) are in.
+**Where things stand (2026-10-26, end of session; paused by Anita).** Walking and canoe both
+work worldwide (L10 world, L3 and L1 view windows, 100 m in New York and Cluj). The canoe paddles
+rivers, lakes and sea with currents and carries overland; water danger is on with K = 1000 h and
+the hover shows survival. Corridors, a speeds panel, hill shading and river lines are on the page.
+Our own 1 km walking surface is built but not on the page. Smoke passes 15/15; all work committed,
+nothing running.
+
+**Next up** (orchestrator's proposal; Anita has not picked yet): OSM roads at 1 km worldwide,
+fetched region by region since the planet won't fit on C: (T-010), then our own surface on the
+page (T-028), which fixes rural walking times 18-52% too short; then 10,000 BC land (T-012);
+then land danger (T-042). Open questions for Anita: `notes/for-anita.md`.
 
 Milestones answer Anita's question, "if you just have a canoe in 10,000 BC, how far can you
 get?", in order: the canoe in today's world, survival, then 10,000 BC.
 
 ## In progress
 
-- T-030 [P1] Finer than 1 km when zoomed in: design a 100 m level (LC100 land cover, roads, GLO-90 terrain) for windows from zoom ~10, with sizes, times and what it means for publishing; for Anita's review. Design ready for Anita's review, docs/fine.md (notes/T-030.md).
-- T-037 [P3] Window edge strip: with nearest resampling, the coarser canvas shows as a brighter strip (up to one coarser cell, ~5 px at zoom 9) along a finer window's north and south edges, since the hole is rounded inwards to whole canvas rows. Off screen once the view settles; fix by aligning hole rows to the finer window or painting the coarse edge row clear.
+(none)
 
 ## M1: canoe, today
 
+- T-052 [P3] Canoe look: on canoe starts the blue river lines sit just under the corridors and weaken them (Amazon); pale corridors are low-contrast on the 1-4 h yellow band near the start; over uniform land (Sahara, steppe) corridor trunks fan out as straight rays along grid directions. Try fainter rivers on canoe starts and a darker corridor edge (notes/T-046 screenshots t046_*).
+- T-037 [P3] Window edge strip: with nearest resampling, the coarser canvas shows as a brighter strip (up to one coarser cell, ~5 px at zoom 9) along a finer window's north and south edges, since the hole is rounded inwards to whole canvas rows. Off screen once the view settles; fix by aligning hole rows to the finer window or painting the coarse edge row clear.
 - T-031 [P2] River gradient south of 60N: `sgr_dk_rav` closes 24% of paddleable length (mostly Q < 10 streams over 5 m/km) and reads lowland Amazon streams as rapids (Manaus to the sea sums to 140 m, real ~20). Once canoe routes show on the page (T-022), compare a few basins with the GMTED drop-over-10 km used north of 60N (`rivers.py north_gradient`) and pick per region by eye; the Livingstone Falls stretch between OSM rapids points still runs (notes/T-020.md).
 - T-036 [P3] Canoe: L1 river water no river step crosses (ponds and side channels HydroLAKES lacks, e.g. round the Danube mouth) has no canoe node, so it stays unreached and unpainted on a canoe start. Decide: still water when no step touches the patch, or leave (notes/T-022.md).
 - T-023 [P2] M1 doc tidy: spec against code, prune TASKS, fold notes. Last in M1.

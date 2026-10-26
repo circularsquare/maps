@@ -1,5 +1,6 @@
 # Archive
 
+- T-030 [P1] Finer than 1 km: design. Done 2026-10-26: docs/fine.md, a 100 m level from LC100, OSM roads and bridges, GLO-90; hexes rejected; Anita approved OSM and test regions, built as T-038; where it goes worldwide is T-047. notes/T-030.md.
 - T-046 [P1] Corridors. Done 2026-10-26: area-weighted path-tree counts drawn as pale lines by log(count), at L10 and in every window (coarse flux at edges, coarse lines where seeds own the window); a switch in the button row, default on. docs/corridors.md.
 - T-038 [P2] Fine level stage 1. Done 2026-10-26: 100 m tiles for New York and Cluj (3 MB, `tools/fine/build.py`); walking L0.1 windows from zoom ~9.4, seeded from L1, painted, hovered; 0.1-1.5 s; smoke checks it. notes/T-038.md.
 - T-045 [P1] Topography and rivers. Done 2026-10-26: AWS Terrain Tiles hill shading under the basemap water and time colours; the canoe's own river steps as blue lines by discharge (L10/L3/L1 by zoom, faint where unrunnable); two buttons, kept per session. SPEC 5.
