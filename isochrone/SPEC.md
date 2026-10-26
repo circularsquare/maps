@@ -26,7 +26,7 @@ Cluj-Napoca.
 
 A canoe start (the mode buttons, or `?mode=canoe`) searches carrying on land and the
 canoe on sea, lakes and rivers with currents (`docs/canoe.md`), and paints the sea; ~0.8 s a
-click at 10 km. The search minimises time + K x hazard, and keeps each node's move for tracing
+click at 10 km. The search minimises time + K x hazard (water hazard only so far), and keeps each node's move for tracing
 the route to the pointer.
 
 Our own off-road walking surface, MAP's recipe rebuilt at 1 km from Copernicus LC100 2019 land
@@ -38,7 +38,9 @@ cover and GMTED2010 elevation with each layer kept apart, is built but not yet r
 - **Time and danger both count.** The search minimises time + K x hazard, one K for every mode,
   so a path pays extra hours to avoid risk (K = 1000 h: 10 hours to cut death risk by 1%). Hazard
   is a rate per cell and mode; survival along the chosen path is exp(-sum of hazard x time), shown
-  in the hover. Until hazard data exists (T-006) the search is time only.
+  in the hover. Water hazard is built (rivers, rapids, waves offshore, cold water, supplies far
+  from land; `docs/canoe.md` 3), so a canoe hugs coasts where a crossing is risky and the open
+  ocean is not crossed. Land hazard is 0 until the land band (T-042).
 - **Modes are layers of one graph.** Each mode (walking, canoe, later bike, car) is a layer of
   cells with its own speeds; switching between layers is an edge with a time cost. Turning a mode
   or a kind of infrastructure off removes its layer or its edges, so toggles do not multiply the

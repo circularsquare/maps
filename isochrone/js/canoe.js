@@ -1,7 +1,7 @@
 // The canoe layer of a level (docs/canoe.md 1, 2): which cells have a canoe node, the per-cell
 // word the search reads (water kind, links, flags), the river steps as out-edges, and the current.
 import { cfg } from './config.js';
-import { FILE_DIRS, CLOSED } from './canoedata.js';
+import { FILE_DIRS, CLOSED, CLS } from './canoedata.js';
 import { plainMove, P_DOWN, P_UP, NEAR_LAND, NEAR_CANOE, FAR, ON_RIVER } from './search.js';
 
 // file direction -> plain move, and link bits from file order to plain move order
@@ -13,6 +13,24 @@ for (let b = 0; b < 256; b++) {
     LINK_LUT[b] = o;
 }
 const OPP = [1, 0, 3, 2, 7, 6, 5, 4];   // plain move -> its reverse (search.js order)
+
+// shore code -> km (docs/canoe.md 4)
+const SHORE_KM = new Float32Array(256);
+for (let s = 0; s < 256; s++) SHORE_KM[s] = s <= 20 ? s : 20 + 10 * (Math.min(s, 78) - 20);
+
+// Hazard per paddling hour on open water (cfg.hz), from distance to shore d (km), wave height
+// Hs (m) and sea temperature (C): exposure x (water + waves(Hs) x min(d / waveKm, 1) x cold +
+// supplies(d)), exposure being cfg.hz.exposure real hours an hour past farKm.
+function waterRate(d, hs, sst) {
+    const h = cfg.hz;
+    let wave = 0;
+    for (const [top, r] of h.waves) if (hs < top) { wave = r; break; }
+    let cold = 1;
+    for (const [below, m] of h.cold) if (sst < below) { cold = m; break; }
+    const [s0, s1] = h.supplyKm;
+    const supply = d <= s0 ? 0 : h.supply * Math.min(1, (d - s0) / (s1 - s0));
+    return (d > h.farKm ? h.exposure : 1) * (h.water + wave * Math.min(1, d / h.waveKm) * cold + supply);
+}
 
 // Set where any cell of the 3 x 3 round it is set (wrapping at 180 degrees when L wraps).
 function dilate3(a, W, H, wrap) {
@@ -39,7 +57,8 @@ function dilate3(a, W, H, wrap) {
 }
 
 // data: { kind, shore, links, steps } from canoedata.js; sea: the 0.25 degree sea grid.
-// Sets and returns L.cn = { E, canoeOf, cellOf, info, curr, curKmh, shore, rOff, rTo, rDt, rCode }.
+// Sets and returns L.cn = { E, canoeOf, cellOf, info, curr, curKmh, shore, hzr, rOff, rTo, rDt,
+// rCode, rHz }.
 export function buildCanoe(L, data, sea) {
     const { grid, W, H } = L;
     const N = W * H;
@@ -64,6 +83,7 @@ export function buildCanoe(L, data, sea) {
     // nodes, water kind and current
     const info = new Int32Array(N), curr = new Int32Array(N), canoeOf = new Int32Array(N).fill(-1);
     const hasNode = new Uint8Array(N), isLand = new Uint8Array(N);
+    const hzr = new Float32Array(N);   // hazard per paddling hour of each open-water cell
     let E = 0;
     for (let r = 0; r < H; r++) {
         const so = seaRow[r] * sea.W;
@@ -81,6 +101,10 @@ export function buildCanoe(L, data, sea) {
                     curr[i] = ((sea.u[s] * m) & 0xFFFF) | ((sea.v[s] * m) << 16);
                 }
             }
+            if (ok) {
+                const s = so + seaCol[c];
+                hzr[i] = waterRate(SHORE_KM[shore[i]], k === 1 ? sea.hs[s] * 0.05 : (k - 3) * 0.05, sea.sst[s]);
+            }
             if (land) isLand[i] = 1;
             if (ok || onRiver[i]) { canoeOf[i] = land ? N + E++ : i; hasNode[i] = 1; }
             info[i] = (ok ? k : 0) | (LINK_LUT[data.links[i]] << 8) | (shore[i] >= 20 ? FAR : 0) |
@@ -97,17 +121,19 @@ export function buildCanoe(L, data, sea) {
     for (let i = 0; i < N; i++) rOff[i + 1] += rOff[i];
     const fill = rOff.slice(0, N);
     const rTo = new Int32Array(2 * nOpen), rDt = new Float32Array(2 * nOpen), rCode = new Uint8Array(2 * nOpen);
+    const rHz = new Float32Array(2 * nOpen);
     const p = cfg.paddle;
     for (let s = 0; s < steps.n; s++) {
         if (!open[s]) continue;
         const a = steps.a[s], b = steps.b[s], m = DIR_MOVE[steps.dir[s]];
         const v = steps.v[s] * 3.6, km = steps.km[s];
+        const rate = steps.cls[s] === CLS.rapids ? cfg.hz.rapids : cfg.hz.river;
         let e = fill[a]++;
-        rTo[e] = b; rDt[e] = km / (p + v); rCode[e] = P_DOWN + m;
+        rTo[e] = b; rDt[e] = km / (p + v); rCode[e] = P_DOWN + m; rHz[e] = rDt[e] * rate;
         e = fill[b]++;
-        rTo[e] = a; rDt[e] = km / Math.max(p - 0.6 * v, cfg.upMin); rCode[e] = P_UP + OPP[m];
+        rTo[e] = a; rDt[e] = km / Math.max(p - 0.6 * v, cfg.upMin); rCode[e] = P_UP + OPP[m]; rHz[e] = rDt[e] * rate;
     }
-    L.cn = { E, canoeOf, cellOf, info, curr, curKmh: sea.unit * 0.5 * 3.6, shore, rOff, rTo, rDt, rCode };
+    L.cn = { E, canoeOf, cellOf, info, curr, curKmh: sea.unit * 0.5 * 3.6, shore, hzr, rOff, rTo, rDt, rCode, rHz };
     return L.cn;
 }
 

@@ -76,3 +76,4 @@ is `data/raw/unzipped/2020_walking_only_friction_surface.geotiff` (726 MB), LC10
 | File | What |
 |---|---|
 | `checks/smoke.mjs` | Headless Chrome on the served page (`node isochrone/checks/smoke.mjs [url] [--canoe=<folder>]`, ~30 s): default solve, a click, L3 and L1 windows, hover; when canoe data is served, a canoe start from Constanta, the sea painted, a hover at sea with its route and split, an L1 window with sea, the mode buttons; no console errors. One PASS or FAIL line each; exit 1 on a fail. |
+| `checks/ktrips.mjs` | The K check trips in node over the real L10 data (`trips <K...>`, ~30 s a K; `time`): each trip's time, survival, hours past 20 km and route waypoints, and canoe solve times with hazard off and on (notes/T-006.md). |

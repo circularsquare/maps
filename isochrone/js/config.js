@@ -6,7 +6,18 @@ export const cfg = {
     canoeBase: 'data/canoe/',    // canoe data folder, relative to worker.js
     // the canoe model (docs/canoe.md 2, 3)
     K: 1000,                     // hours of weight per unit of hazard
-    hazard: false,               // edges carry hazard (T-006); off, the search keeps weight = time
+    hazard: true,                // water edges carry hazard on a canoe start; off, weight = time
+    // water hazard, per real hour on the water (docs/canoe.md 3, research/canoe.md 5)
+    hz: {
+        river: 1e-5, rapids: 1e-4,   // flat river; runnable rapids
+        water: 2e-5,                 // sea or lake, anywhere
+        // summer wave height (m, upper bound of each step) -> rate offshore
+        waves: [[0.5, 0], [1, 2e-4], [1.5, 1e-3], [2, 3e-3], [3, 1e-2], [Infinity, 3e-2]],
+        waveKm: 20,                  // the wave rate grows from 0 at the shore to full here
+        cold: [[5, 3], [15, 2]],     // sea temperature below (C) -> wave rate multiplier
+        supplyKm: [250, 600], supply: 0.05,  // supplies: 0 at the first distance, rising to this
+        farKm: 20, exposure: 3,      // past farKm a paddling hour is this many real hours out
+    },
     paddle: 5,                   // km/h on still water
     upMin: 1.5,                  // km/h, the slowest upstream paddling (lining)
     transfer: 0.25,              // hours to get in or out of the canoe

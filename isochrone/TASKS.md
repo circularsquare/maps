@@ -27,7 +27,9 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 
 ## M2: survival
 
-- T-006 [P2] Danger and survival: per-cell hazard for walking and canoe (research/friction.md 6, canoe.md 5), the search's cost becomes time + K x hazard (SPEC 3), survival along the path in the hover. Climate from CHELSA (stage E). Stage 1, water hazard (the table from data the canoe already has; K switched on), taking, 2026-10-26 (agent); the land band is a later stage.
+- T-006 [P2] Danger and survival: per-cell hazard for walking and canoe (research/friction.md 6, canoe.md 5), the search's cost becomes time + K x hazard (SPEC 3), survival along the path in the hover. Climate from CHELSA (stage E). Stage 1 done 2026-10-26: water hazard on canoe starts, K = 1000 kept after the check trips (notes/T-006.md). Next: the land band (T-042), then re-run the check trips with walking and carrying paying hazard (the Saharan walk, Cluj walking).
+- T-042 [P2] Land hazard band: a uint8 log-coded rate per cell in every level's tiles and the L10 grid (heat, cold, altitude, distance to water, ice; CHELSA climate; research/friction.md 6), read by walking and carrying (x their time) and by getting in and out; walking starts leave the walking-only loop. After T-006 stage 1 (docs/canoe.md 3).
+- T-043 [P3] Lake water temperature: lakes take the nearest sea's summer temperature for the cold factor of their wave hazard (docs/canoe.md 3), so a big cold lake far from a cold sea reads warm. Try ERA5 lake mix-layer temperature for lakes over ~100 km².
 
 ## M3: 10,000 BC
 

@@ -46,7 +46,7 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
 | river up | the reverse | length / max(p - 0.6 v, 1.5 km/h) | yes |
 | lake | canoe node to neighbouring lake canoe nodes | length / p | no |
 | sea | canoe node to neighbouring sea canoe nodes | length / s, s from the current | yes |
-| transfer | land node to the canoe node in its own cell or one of its 8 neighbours | 0.25 h + half the step at each side's speed | both ways |
+| transfer | land node to the canoe node in its own cell or one of its 8 neighbours | 0.25 h + half the step at each side's speed; the whole step carried when the canoe node is on a land cell (a river or strait node) | both ways |
 
 - **River speed** v = 0.51 Q^0.11 m/s from mean discharge Q, from hydraulic geometry W = 7.2 Q^0.5,
   D = 0.27 Q^0.39 (Moody and Troutman 2002). A reach is paddleable at Q >= 1 m³/s.
@@ -79,46 +79,43 @@ one K. Hazard on an edge is its rate x real hours (research/canoe.md 5, friction
 along the chosen path is exp(-hazard sum). The painted time is the time of the chosen route, not
 the fastest possible.
 
-**Starting K = 1000 h**: 10 hours (1.25 days of travel) to cut the death risk by 1%. What it does,
-worked by hand with research/canoe.md 5's rates, summer:
+**K = 1000 h**: 10 hours (1.25 days of travel) to cut the death risk by 1%.
 
-- **Brest to A Coruña.** Straight across the Bay of Biscay is 635 km, ~127 paddling hours
-  (16 days), up to ~250 km from land in 1-2 m waves: hazard 0.4-1.1, survival 35-70%. Round the
-  coast is ~1,150 km, ~230 h (29 days), hazard ~0.005, survival ~99.5%. The coast wins for any
-  K above 100-300 h. At K = 1000 the map says 29 days and you arrive; time alone would have said
-  16 days and a hover saying you probably drown.
-- **Taiwan to Yonaguni** (110 km, no safer way round): the crossing is taken at any K, ~22
-  paddling hours, survival ~90%. K never makes a place unreachable; it changes the route only
-  where a safer one exists within K x (hazard saved) hours.
-- **A 20 km strait** (hazard ~0.001) costs 1 h of weight: crossed unless the way round is
-  under an hour longer.
-- **Open ocean.** Past 600 km from land the supplies term (0.05 an hour) weighs each paddling
-  hour as ~50, so the search hardly goes there unless it must.
-- **Walking** barely changes: background 1e-6 an hour adds 0.1%; forest or swamp (1e-5) 1%;
-  a hot desert with water or high altitude (1e-4) 10%, so a path skirts them when the detour is
-  under 10%; above 8,000 m or a waterless desert (1e-2) weighs x11, so it is avoided.
+**Water hazard** (built, T-006 stage 1; `cfg.hz` in `js/config.js`). No new files: the worker
+works it out from the canoe data when it builds a level's canoe layer. Rates are per real hour
+(research/canoe.md 5); a paddling hour more than 20 km from shore counts as 3 real hours
+(exposure: out there day and night), applied to every term below.
 
-**Tuning K.** A set of check trips in notes/T-005.md (Biscay round the coast, a 20 km strait
-crossed, Taiwan-Yonaguni crossed, the Gulf of Lion, a Saharan walk) is run at K = 300, 1000,
-3000 and 10000 once hazard exists; K is the value where they all read right. Above ~10,000 a
-desert walk with wells goes far round, and every crossing over a day starts to look like a
-detour candidate.
+| Where | Hazard per real hour |
+|---|---|
+| river, flat (class 0) | 1e-5 |
+| river, rapids (class 1) | 1e-4 |
+| sea or lake, anywhere | 2e-5, plus waves and supplies |
+| waves, by summer Hs: under 0.5 m / 0.5-1 / 1-1.5 / 1.5-2 / 2-3 / over 3 m | 0 / 2e-4 / 1e-3 / 3e-3 / 1e-2 / 3e-2, x min(d / 20 km, 1), x the cold factor |
+| cold factor, by sea temperature | x1 from 15 C, x2 at 5-15 C, x3 under 5 C |
+| supplies, by distance from shore d | 0 to 250 km, rising linearly to 0.05 at 600 km and beyond |
+
+- d is the cell's `shore` distance; Hs and sea temperature come from the sea grid at the cell
+  (sea) or Hs from the lake's `kind` code with the sea grid's temperature there (lakes: the
+  nearest sea's, a stand-in).
+- A sea or lake edge's hazard is its time x the mean of its two cells' rates; a river step's is
+  its time x its class rate. Carrying, walking and getting in or out are 0 until the land band.
+
+**Land hazard** is 0 for now, so a walking start runs the walking loop unchanged. Next stage
+(T-042): a hazard band in every level's tiles and the L10 grid (uint8, a log-coded rate per
+cell; heat, cold, altitude, distance to water, ice, from CHELSA), carried at its rate x walking
+time; carrying the canoe counts the same rate over its doubled time.
+
+**What K = 1000 does** on the check trips (notes/T-006.md): Brest to A Coruña goes round the
+coast (30 days, survival ~99%, against 16 days straight across at ~73%); Marseille to Barcelona
+follows the Gulf of Lion; Dover-Calais, Tarifa-Tangier and Taiwan-Yonaguni are crossed as before;
+Bergen to Iceland hops by Shetland, Orkney and the Faroes (~7% survival); the open North
+Atlantic is not crossed. K never makes a place unreachable by itself; the survival stop rule
+(section 5) does, in open ocean.
 
 **A slider later.** K is one number in the worker; changing it re-solves (~0.3-0.8 s at L10),
 with no new data. A slider in the mode panel (T-008), log steps from 0 ("fastest, whatever the
-risk") to 10,000, costs nothing extra. It stays off the first panel until the checks settle K.
-
-**Staged.** The search carries weight and hazard from T-022 on, with every hazard rate 0 until
-T-006: time only, exactly the old map. Then the search needs from T-006:
-
-- **water**: a table from what the canoe data already holds (kind, rapids class, distance to
-  shore, summer wave height, sea temperature, exposure x3 past 20 km, supplies by distance) to a
-  rate per hour. No new files; the worker computes it per edge.
-- **land**: a hazard band in every level's tiles and the L10 grid (uint8, a log-coded rate per
-  cell; heat, cold, altitude, distance to water, ice), since walking now pays for danger too.
-  Roughly the size of the speed tiles at worst, likely far less (it is smooth).
-
-Water hazard can land first: its inputs exist once T-020 and T-021 do.
+risk") to 10,000, costs nothing extra.
 
 ## 4. Data per level
 
@@ -220,8 +217,9 @@ Water hazard can land first: its inputs exist once T-020 and T-021 do.
 - **Arrays per node**: weight, time and hazard (Float32), and the move it was reached by (Uint8:
   1-16 a grid move of its own layer, 17-25 a transfer from the other layer at offset (dc, dr),
   26-33 a river step down and 34-41 up by move direction, 255 a window seed, 0 the start; the
-  predecessor's cell is this cell minus the move). While every hazard rate is 0 (`cfg.hazard`
-  off, until T-006) time is weight and both share one array.
+  predecessor's cell is this cell minus the move). `cfg.hazard` is on for canoe starts; with it
+  off, time is weight and both share one array. A walking start runs the walking loop (land
+  hazard is 0 until T-042).
 - **K** is one worker constant, `cfg.K` = 1000 h.
 - **Stop rule**: a node is not expanded once its time passes the 128-day limit or its survival
   falls below 1%. The search ends at the first weight past 128 days + K ln 100 (128 days while
@@ -262,8 +260,10 @@ Measurements: notes/T-022.md (and the first estimates, notes/T-005.md).
   coast at L10, not the 5.3 M sea cells of the world. No coarser open-sea grid is used.
 - **8 moves past 20 km from shore** (`cfg.sea8`), 16 nearer: with 16 everywhere a canoe click at
   L10 took 1.0-1.1 s, over the 1 s limit; with 8 it takes **~0.75-0.85 s** (Cluj, Lisbon,
-  Jakarta), against ~0.2 s walking. Open-sea bands run up to 8% long on diagonals. K cuts the
-  sea-heavy cases once hazard exists (the search stays near coasts).
+  Jakarta), against ~0.2 s walking. Open-sea bands run up to 8% long on diagonals. Water hazard
+  makes no click slower: the survival stop rule leaves open ocean unexpanded, so an ocean-coast
+  start does about half the work (0.5-0.7 M nodes against 1.1 M) and an inland or enclosed-sea
+  start about the same (notes/T-006.md).
 - **Window caps** on a canoe start: 1.5 M cells at L3 (3 M walking), 2 M at L1 as walking, each
   ~1.1-1.3 s at the cap. A 1400 x 900 view's windows take 0.1-0.35 s each.
 - **Memory** at L10 on a canoe start: ~8.25 M nodes; the per-cell canoe tables ~130 MB, the
@@ -293,4 +293,4 @@ currents, waves and ice are reused.
 | T-022 | Search with layers: node ids, transfers, directed river and sea edges, weight = time + K x hazard (hazard 0 until T-006), seeding by layer, painting the sea; measure speed | T-019; T-020 and T-021 data (synthetic files meanwhile) |
 | T-024 | Canoe hover: time by kind and the route line, traced across levels (done) | T-022 |
 | T-008 | Mode panel: walking or canoe start (done); later K, the other toggles and the era switch | T-022 |
-| T-006 | Hazard rates: the water table first, then the land hazard band; then tune K on the check trips | T-022 |
+| T-006 | Hazard rates: the water table and K tuned on the check trips (stage 1, built); then the land hazard band (T-042) | T-022 |

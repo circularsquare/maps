@@ -9,7 +9,8 @@ export const FILE_DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1
 export const CLS = { flat: 0, rapids: 1, unrunnable: 2, fall: 3, dam: 4, weir: 5, reservoir: 6 };
 export const CLOSED = new Uint8Array(256);
 for (const k of ['unrunnable', 'fall', 'dam', 'weir', 'reservoir']) CLOSED[CLS[k]] = 1;
-// sea.bin.gz: bands u, v (int8, 0.02 m/s, east and north), wave height, ice (%), sst; its grid in
+// sea.bin.gz: bands u, v (int8, 0.02 m/s, east and north), wave height (0.05 m), ice (%), sst
+// (int8, degrees C); its grid in
 // index.json `sea`
 const SEA_UNIT = 0.02;
 
@@ -57,7 +58,8 @@ function parseSea(b, g) {
     const n = g.width * g.height;
     return { W: g.width, H: g.height, deg: g.step, west: g.west, north: g.north, unit: SEA_UNIT,
              u: new Int8Array(b.buffer, b.byteOffset, n), v: new Int8Array(b.buffer, b.byteOffset + n, n),
-             ice: b.subarray(3 * n, 4 * n) };
+             hs: b.subarray(2 * n, 3 * n), ice: b.subarray(3 * n, 4 * n),
+             sst: new Int8Array(b.buffer, b.byteOffset + 4 * n, n) };
 }
 
 // The world at L10: water bands, sea grid and river steps. Loaded once.

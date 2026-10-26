@@ -5,6 +5,12 @@ reasoning and what it replaced.
 
 ## 2026-10-26
 
+- **K stays 1000 h** after the check trips (T-006): it is the lowest tried that sends Brest to
+  A Coruña round the coast; 3000 and up send Bergen to Iceland round by Denmark and England.
+- **Exposure x3 counts every water term past 20 km**, supplies included, since rates are per real
+  hour (T-006). **Getting into a canoe node on a land cell costs the whole step carried**, not
+  half paddled: half a step paddled let paths hop from river cell to river cell overland faster
+  than carrying (Constanta to Izmir went over Thrace that way; T-006).
 - **Roads come from OSM** (Anita: "yes can use osm"), for the 100 m level and for the 1 km roads
   layer (T-010) alike; published road tiles fall under ODbL. GRIP4 dropped: no bridges or paths.
 - **No 100 m world at 15-30 GB** (Anita: "lets stop before we get there"). The fine level goes

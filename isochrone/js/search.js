@@ -149,10 +149,11 @@ const zeros = (n) => zeroArr.length >= n ? zeroArr.subarray(0, n) : (zeroArr = n
 // canoe layer too (L.cn must be built). Returns { w, t, hz, pred } per node, or null if alive()
 // went false.
 //
-// Every edge's hazard is 0 until T-006: where an edge has hazard dh, its weight (nw) gains K x dh
-// and the node's hazard (hu in each inlined relax) gains dh.
+// An edge with hazard dh adds K x dh to the weight (nw) and dh to the node's hazard (hu in each
+// inlined relax). Water edges carry hazard (cn.hzr, cn.rHz); land and transfers are 0 until the
+// land band (T-042), so a walking start keeps the walking loop.
 export async function solve(L, seeds, alive, canoe) {
-    if (!canoe && !cfg.hazard) return solveWalk(L, seeds, alive);
+    if (!canoe) return solveWalk(L, seeds, alive);
     const { grid, W, H, wrap, dxKm, dyKm } = L;
     const cn = canoe ? L.cn : null;
     const { inv, maxHours, K, hzStop } = cfg;
@@ -167,7 +168,7 @@ export async function solve(L, seeds, alive, canoe) {
         const len = Math.sqrt(dx * dx + dy * dy);
         stepKm[r * 16 + k] = len; ux[r * 16 + k] = dx / len; uy[r * 16 + k] = -dy / len;
     }
-    // With every hazard rate 0 (cfg.hazard off, until T-006) weight is time: t is w and hz stays 0.
+    // With cfg.hazard off weight is time: t is w and hz stays 0.
     const split = cfg.hazard;
     // past this weight no node can pass both stop rules
     const wStop = split ? maxHours + K * hzStop : maxHours;
@@ -218,6 +219,7 @@ export async function solve(L, seeds, alive, canoe) {
     // canoe tables
     const canoeOf = cn && cn.canoeOf, cellOf = cn && cn.cellOf, info = cn && cn.info, curr = cn && cn.curr;
     const rOff = cn && cn.rOff, rTo = cn && cn.rTo, rDt = cn && cn.rDt, rCode = cn && cn.rCode;
+    const hzr = cn && cn.hzr, rHz = cn && cn.rHz;
     const cur = cn ? cn.curKmh * 0.5 : 0;
     const p = cfg.paddle, p2 = p * p, invP = 1 / p, xfer = cfg.transfer, sea8 = cfg.sea8;
 
@@ -276,10 +278,13 @@ export async function solve(L, seeds, alive, canoe) {
                 if (r2 < 0 || r2 >= H) continue;
                 let c2 = c + j % 3 - 1;
                 if (c2 < 0 || c2 >= W) { if (!wrap) continue; c2 = (c2 + W) % W; }
-                const v = canoeOf[r2 * W + c2];
+                const cell2 = r2 * W + c2, v = canoeOf[cell2];
                 if (v < 0 || pos[v] === -2) continue;
                 const len = j === 4 ? 0 : stepKm[sr + JK[j]];
-                const dt = xfer + 0.5 * len * (f * invU + invP);
+                // a canoe node on a land cell (a river, a strait) is reached overland the whole step:
+                // half a step paddled would let a path hop from river cell to river cell (T-006)
+                const s2 = grid[cell2];
+                const dt = xfer + 0.5 * len * (s2 ? f * (invU + inv[s2]) : f * invU + invP);
                 { const nw = wu + dt;   // relax, inlined
                   if (nw < w[v]) {
                     w[v] = nw; pred[v] = P_XFER + j;
@@ -293,6 +298,7 @@ export async function solve(L, seeds, alive, canoe) {
         // ---- canoe node ----
         const iu = info[cell];
         if (iu & NEAR_LAND) {
+            const su = grid[cell], fInvU = su ? f * inv[su] : invP;
             // get out: the land node of this cell or a neighbour
             for (let j = 0; j < 9; j++) {
                 const r2 = r + ((j / 3) | 0) - 1;
@@ -302,7 +308,7 @@ export async function solve(L, seeds, alive, canoe) {
                 const v = r2 * W + c2, s = grid[v];
                 if (!s || pos[v] === -2) continue;
                 const len = j === 4 ? 0 : stepKm[sr + JK[j]];
-                const dt = xfer + 0.5 * len * (f * inv[s] + invP);
+                const dt = xfer + 0.5 * len * (f * inv[s] + fInvU);
                 { const nw = wu + dt;   // relax, inlined
                   if (nw < w[v]) {
                     w[v] = nw; pred[v] = P_XFER + j;
@@ -316,7 +322,7 @@ export async function solve(L, seeds, alive, canoe) {
         const k0 = iu & 0xFF;
         if (k0) {
             const lk = iu >> 8;     // link bits (and flags above them, never tested here)
-            const cu = curr[cell], ucx = (cu << 16) >> 16, ucy = cu >> 16;
+            const cu = curr[cell], ucx = (cu << 16) >> 16, ucy = cu >> 16, hzu = hzr[cell];
             const nk = sea8 && (iu & FAR) ? 8 : 16;
             for (let k = 0; k < nk; k++) {
                 const r2 = r + MDR[k];
@@ -353,10 +359,11 @@ export async function solve(L, seeds, alive, canoe) {
                         dt = len / s;
                     }
                 }
-                { const nw = wu + dt;   // relax, inlined
+                const dh = split ? dt * 0.5 * (hzu + hzr[cell2]) : 0;
+                { const nw = wu + dt + K * dh;   // relax, inlined
                   if (nw < w[v]) {
                     w[v] = nw; pred[v] = P_GRID + k;
-                    if (split) { t[v] = tu + dt; hz[v] = hu; }
+                    if (split) { t[v] = tu + dt; hz[v] = hu + dh; }
                     const pv = pos[v];
                     up(pv === -1 ? size++ : pv, v, w[v]);
                   } }
@@ -366,11 +373,11 @@ export async function solve(L, seeds, alive, canoe) {
         for (let e = rOff[cell], e1 = rOff[cell + 1]; e < e1; e++) {
             const v = canoeOf[rTo[e]];
             if (pos[v] === -2) continue;
-            const dt = rDt[e];
-            { const nw = wu + dt;   // relax, inlined
+            const dt = rDt[e], dh = split ? rHz[e] : 0;
+            { const nw = wu + dt + K * dh;   // relax, inlined
               if (nw < w[v]) {
                 w[v] = nw; pred[v] = rCode[e];
-                if (split) { t[v] = tu + dt; hz[v] = hu; }
+                if (split) { t[v] = tu + dt; hz[v] = hu + dh; }
                 const pv = pos[v];
                 up(pv === -1 ? size++ : pv, v, w[v]);
               } }
