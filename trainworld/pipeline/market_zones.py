@@ -353,7 +353,8 @@ groups = None  # Groups, set in main
 # T-929: market_pack works out only the rows a change can reach. A row reads its own pack and the
 # packs of places whose centres are under near_km from it, so the rows redone are those of the
 # changed (or new, or gone) packs and of places near them, each from a composition of the places
-# near it. A changed pack's centre is estimated here, so both reach MARGIN_KM further.
+# near it and those its commutes and everyday outings reach. A changed pack's centre is estimated
+# here, so both reach MARGIN_KM further.
 INPUTS = ROOT / "data/work/market_rows.inputs.json"
 MARGIN_KM = 25.0
 
@@ -402,6 +403,9 @@ def plan_rows(reg, have, code, full=False):
     gone = [i for i in was if i not in cur]
     at = {i: (was[i]["lon"], was[i]["lat"]) for i in cur if i not in changed}
     to = {}
+
+    def reached(z):  # the places a row's commutes and everyday outings across zone lines (T-1175) read
+        return set(z.get("commute_place", [])) | set(z.get("everyday_place", []))
     for i in changed:
         z = json.loads((PACKS / f"{i}.market.json").read_text(encoding="utf-8"))
         c = pack_centre(z)
@@ -409,7 +413,7 @@ def plan_rows(reg, have, code, full=False):
             print(f"market rows: {i}'s centre is not estimated here (its frame), so every row", flush=True)
             return None, None, record
         at[i] = c
-        to[i] = set(z.get("commute_place", []))
+        to[i] = reached(z)
     near = float(reg["market"]["rule"]["near_km"]) + MARGIN_KM
     ids = list(cur)
     lon, lat = np.array([at[i][0] for i in ids]), np.array([at[i][1] for i in ids])
@@ -424,7 +428,8 @@ def plan_rows(reg, have, code, full=False):
     of_place = {pl: i for i, (pl, _, _) in cur.items()}
     compose = around([at[i] for i in rows])
     for i in rows:
-        places = to[i] if i in to else {int(p) for p, _ in have[i].get("commute", [])}
+        # a row keeps no everyday places, so an unchanged row's come from its pack (T-1256)
+        places = to[i] if i in to else reached(json.loads((PACKS / f"{i}.market.json").read_text(encoding="utf-8")))
         compose |= {of_place[p] for p in places if p in of_place}
     print(f"market rows: {len(rows)} of {len(cur)} places' rows from {len(compose)} packs "
           f"({len(changed)} changed, {len(gone)} gone)", flush=True)
