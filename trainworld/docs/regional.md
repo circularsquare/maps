@@ -95,14 +95,28 @@ damped mode choice. Each zone's access weights (built at 0.10, 5.3) are taken to
 that scale by raising them to the power of the scale over 0.10. Rail's resulting share against
 air by hours on the train: notes/T-712.md.
 
-- *Car*: 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus 15 cents a road km
-  and the destination's parking (the local rule, docs/demand-mode.md 4.3, baked into the market pack's
-  `site_park`), both split over two occupants; no tolls (T-270). Only within a
-  landmass. Where the car is carried over water (T-712, `crossing_min`) it also pays the crossing's
-  fare per car (shared by the two) and its minutes beyond the straight drive: the Channel, $150 and
-  60 minutes, between a place in Great Britain and one elsewhere; the Tsugaru Strait's ferry, $170
-  and 240 minutes, between Hokkaido (Japan north of 41.4°) and elsewhere. Commutes between zones
-  pay it too.
+- *Car*: the rule is 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus 15 cents
+  a road km and the destination's parking (the local rule, docs/demand-mode.md 4.3, baked into the
+  market pack's `site_park`), both split over two occupants; no tolls, at borders or anywhere
+  (T-270), and North Korea's roads are open like any other's. Only within a landmass.
+  *Routed drives* (T-279, `market-drives.bin` from `pipeline/market_drives.py`): per pair of places
+  on one landmass within 1,500 km, a least-cost path on the world's 1/60 degree lattice, each cell's
+  speed from GRIP4 road density (110 km/h with at least 25 m of highway a km², else 85 with 25 m of
+  highway and primary road, 55 with 100 m of any road, 20 with less) slowed by GEDTM30 slope (divided
+  by 1 + (slope - 3°) / 6, highways excepted), open water at 6 km/h within 12 km of a shore, Wikidata's
+  fixed links as land; the drive is 24 + 1.252 x the path's minutes and its road 1.107 x the path's km.
+  The table keeps each as a ratio to the rule's at the places' centres, and every drive between the
+  two places (the corridor split, each zone pair, commutes between zones, the trip explorer) is the
+  rule's at its own distance times those ratios. Within one place, beyond 1,500 km, across the
+  Channel or the Tsugaru Strait, or with no table, the rule. Where the path crosses open water the
+  landmass has no road over (the Gulf of Finland, the Baltic to Sweden), it takes a *ferry*: 30
+  minutes plus the crossing at 35 km/h, and a fare of $50 plus 50 cents a km per car, shared by the
+  two (the path uses the ferry where that costs less than going round). Where the car is carried
+  over water by the market's own crossings (T-712, `crossing_min`) it pays the crossing's fare per
+  car (shared by the two) and its minutes beyond the straight drive: the Channel, $150 and 60
+  minutes, between a place in Great Britain and one elsewhere; the Tsugaru Strait's ferry, $170 and
+  240 minutes, between Hokkaido (Japan north of 41.4°) and elsewhere. Commutes between zones pay
+  them too. Airports' access drives keep the rule.
 - *Plane*: between places whose centres are at least 250 km apart (the far pairs) and that both
   have airports. Door to door: the drive to an airport at each end (the car's drive time,
   people-weighted over the place's zones), 90 minutes at the airports, the flight at 750 km/h on
@@ -124,8 +138,8 @@ choose rail or car as local commutes do, on the ratio curve of their costs (dema
 T-918; no walking between zones), the drive weighted 1.33 plus the work end's parking; their loads are the work purpose's [T-158]. Inter-city trips' period
 shares are 20/35/25/15/5%; their weekend factor 1.58.
 
-Not modelled yet: coach, ferries other than the two car crossings, induced travel, routed drives
-between zones (T-279; routes inside packs are T-275's).
+Not modelled yet: coach, a car between landmasses (a ferry where the market has no car at all,
+T-1396), induced travel, traffic on routed drives.
 
 ## 5.2 Where a long-distance trip starts and ends
 

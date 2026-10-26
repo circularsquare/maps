@@ -8,7 +8,7 @@ import { activeCity, cityById } from "../../game/cities";
 import { count, distance, distUnit, exact, perDistance, roughDistance, speed } from "../../game/format";
 import {
   AIR_FARE_USD, AIR_FIXED_MIN, AIR_KMH, AIR_NO_DIRECT_MIN, AIR_TERMINAL_MIN, AIR_USD_PER_KM, CAR_KMH, CAR_SHARED_BY, CAR_USD_PER_KM, carPartsOf, corridorOf,
-  crossingsOf, DRIVE_FIXED_MIN, loadMarketRows, marketRow, marketRowsReady, MIN_PER_USD, ROAD_DETOUR, type CarCost, type Crossing, type FlightCost,
+  crossingsOf, DRIVE_FIXED_MIN, driveOf, loadMarketRows, marketRow, marketRowsReady, MIN_PER_USD, ROAD_DETOUR, type CarCost, type Crossing, type Drive, type FlightCost,
 } from "../../game/marketRule";
 import { fareScale } from "../../game/income";
 import { moneyState } from "../../game/money";
@@ -30,6 +30,7 @@ const perKm = (usdPerKm: number) => `${Math.round(100 * perDistance(usdPerKm))} 
 const CROSSING: Record<Crossing["kind"], { label: string; tip: (c: Crossing) => string }> = {
   channel: { label: "Channel crossing", tip: (c) => `Le Shuttle or a ferry across the Channel: $${c.usd} a car, split between the ${CAR_SHARED_BY} people in it, and ${c.min} minutes on top of the drive` },
   tsugaru: { label: "Ferry to Hokkaido", tip: (c) => `The ferry between Aomori and Hakodate: $${c.usd} a car, split between the ${CAR_SHARED_BY} people in it, and ${c.min / 60} hours on top of the drive. Cars cannot use the Seikan Tunnel.` },
+  ferry: { label: "Ferry", tip: (c) => `A car ferry over ${distance(1000 * (c.km ?? 0))} of open water with no road across: $${Math.round(c.usd)} a car, split between the ${CAR_SHARED_BY} people in it, and ${minText(c.min)} waiting and on board` },
 };
 
 /** The car's effective time as an equation, its parts in the order of the rows. */
@@ -54,7 +55,9 @@ function CarRows({ total, parts, where }: { total: number; parts: CarCost | null
     <ul class="rows">
       {c && (
         <>
-          <li data-tip={`About ${distance(1000 * c.roadKm)} of road at ${speed(CAR_KMH)}, taken as ${ROAD_DETOUR} times the straight line, and ${DRIVE_FIXED_MIN} minutes more for setting off and arriving`}>
+          <li data-tip={c.routed
+            ? `About ${distance(1000 * c.roadKm)} of road, routed over a map of roads, hills and water, setting off and arriving included`
+            : `About ${distance(1000 * c.roadKm)} of road at ${speed(CAR_KMH)}, taken as ${ROAD_DETOUR} times the straight line, and ${DRIVE_FIXED_MIN} minutes more for setting off and arriving`}>
             <span class="grow">Drive</span>
             <span class="val">{minText(c.driveMin)}</span>
           </li>
@@ -186,18 +189,19 @@ function EverydayModes({ legs, rail, walk, day }: { legs: number; rail: number; 
   );
 }
 
-/** The crossings between the near place and every far one, or null when they differ (or a row is
- * missing). */
-function crossingSet({ near, fars }: { near: number; fars: number[] }): Crossing[] | null {
+/** The crossings and the drive between the near place and every far one, or null when they differ
+ * (or a row is missing). */
+function crossingSet({ near, fars }: { near: number; fars: number[] }): { crossings: Crossing[]; drive: Drive } | null {
   const a = marketRow(near);
   if (!a) return null;
-  let out: Crossing[] | null = null;
+  let out: { crossings: Crossing[]; drive: Drive } | null = null;
+  const key = (c: Crossing[]) => c.map((x) => `${x.kind}${x.km ?? ""}`).join();
   for (const f of fars) {
     const b = marketRow(f);
     if (!b) return null;
-    const c = crossingsOf(a, b);
-    if (out && out.map((x) => x.kind).join() !== c.map((x) => x.kind).join()) return null;
-    out = c;
+    const c = crossingsOf(a, b), drive = driveOf(near, f);
+    if (out && (key(out.crossings) !== key(c) || out.drive.rt !== drive.rt || out.drive.rk !== drive.rk)) return null;
+    out = { crossings: c, drive };
   }
   return out;
 }
@@ -337,7 +341,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   const corridor = one >= 0 && marketRowsReady.value ? (m.end === "work" ? corridorOf(one, ends.near) : corridorOf(ends.near, one)) : null;
   // the crossings when every far place shares them; the car's parts then follow from the sim's minutes
   const cross = marketRowsReady.value ? crossingSet(ends) : null;
-  const carParts = cross && Number.isFinite(t.carPerceived) ? carPartsOf(t.km, t.carPerceived, cross) : null;
+  const carParts = cross && Number.isFinite(t.carPerceived) ? carPartsOf(t.km, t.carPerceived, cross.crossings, cross.drive) : null;
   // T-1148: from a selection or a 6 km area, the whole places' trips as the solve split them, beside it
   const pair = one >= 0 && !(m.near && m.near.gid < 0) ? pairFigures(ends.near, one) : null;
   const bare = m.unbuilt ?? [];

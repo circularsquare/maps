@@ -26,7 +26,7 @@ tests natively.
   `TrackApi::trace_route` and the real-network snap; `Tracer` runs it in steps (`RouteTrace` in
   WASM, T-754); notes/T-727.md.
 - `src/demand/`: the demand kernel, behind feature `demand` (on in the app's build): `api.rs`
-  (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market; `intercity/market_trip.rs` its trip explorer query, T-866; on a big cluster its pass searches destinations one at a time,
+  (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market; `intercity/market_trip.rs` its trip explorer query, T-866; `intercity/drives.rs` the routed drives between places and the ferry, T-279; on a big cluster its pass searches destinations one at a time,
   `pass_streamed` with `kernel::DestSearch` and `DestAssign`, T-761), `warm.rs` (the
   everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (Saturday's and Sunday's factors per
   purpose and period, T-260, T-262), `routes.rs` (routed walks over water and drives over OSM roads from
@@ -640,6 +640,10 @@ rows into app/src/game/market-rows.json and each zone's `country` into the regis
 `market_rows.py`, which also drops the rows of unregistered zones, T-776; seconds a zone, T-377;
 only the rows of zones whose market pack changed, came or went and of places within 250 km of
 them, from `data/work/market_rows.inputs.json`, `market_pack --only`; `--rows --full` for every row, T-929),
+`market_drives.py build` for new or moved places (the routed drives between places,
+`data/packs/market-drives.bin`; each place's paths cached in `data/work/market_drives/sources/`, so
+only new places are routed, minutes; the first run makes the world slope grid there, about 5
+minutes on 4 cores, and routes every place, about 80 minutes on 4; T-279),
 `zones.py --trips`, `routes.py <ids>` for any pack whose zones changed (T-275), and last
 `merge_cells.py --all` (T-044; the chain runs on res-9 packs, so `merge_cells.py <ids> --undo`
 first, or one step through `merge_cells.py <ids> --through`).

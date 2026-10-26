@@ -263,3 +263,9 @@ export const workerPack = (id) => ({ id, header: readFileSync(new URL(`../data/p
 export const marketPacks = (ids) => ids.map((id) => ({ id, pack: readFileSync(new URL(`../data/packs/${id}.market.json`, import.meta.url), 'utf8') }));
 /** the world market's rows, which the page sends with the first market pack (T-776) */
 export const marketRows = () => readFileSync(new URL('../app/src/game/market-rows.json', import.meta.url), 'utf8');
+/** T-279: the market's routed drives (data/packs/market-drives.bin, or TW_MARKET_DRIVES as the dev
+ * server takes it), null where there are none */
+export const marketDrives = () => {
+  const f = process.env.TW_MARKET_DRIVES || fileURLToPath(new URL('../data/packs/market-drives.bin', import.meta.url));
+  return existsSync(f) ? new Uint8Array(readFileSync(f)) : null;
+};

@@ -8,6 +8,7 @@
 
 import { signal } from "@preact/signals";
 import { CITIES, REGISTRY, widenBox, zoneBox, ZONE_REACH_M } from "./cities";
+import { dataUrl } from "./dataBase";
 import { fareWeight } from "./income";
 import { PERIODS } from "./periods";
 import type { MarketEnd, MarketPeriod } from "./trip";
@@ -58,10 +59,62 @@ const OPEN_AREA = new Set(["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI",
 const OPEN_AREA_BORDER = 0.5;
 const HOKKAIDO_LAT = 41.4;
 
-/** A car carried over water: the fare per car in dollars and the minutes beyond the straight drive. */
-export interface Crossing { kind: "channel" | "tsugaru"; usd: number; min: number }
+/** A car carried over water: the fare per car in dollars and the minutes beyond the straight drive
+ * (a ferry's `km` of open water, T-279). */
+export interface Crossing { kind: "channel" | "tsugaru" | "ferry"; usd: number; min: number; km?: number }
 const CHANNEL: Crossing = { kind: "channel", usd: 150, min: 60 };
 const TSUGARU: Crossing = { kind: "tsugaru", usd: 170, min: 240 };
+/** T-279: a car ferry over open water the landmass has no road across, a base plus per km. */
+export const FERRY_MIN = 30, FERRY_KMH = 35, FERRY_USD = 50, FERRY_USD_PER_KM = 0.5;
+const ferry = (km: number, n: number): Crossing => ({ kind: "ferry", usd: n * FERRY_USD + FERRY_USD_PER_KM * km, min: n * FERRY_MIN + (km / FERRY_KMH) * 60, km });
+
+/** T-279: a pair of places' routed drive against the rule (market-drives.bin, pipeline/market_drives.py):
+ * minutes and road km as ratios, and the ferries over open water. */
+export interface Drive { rt: number; rk: number; ferryKm: number; ferries: number }
+export const RULE_DRIVE: Drive = { rt: 1, rk: 1, ferryKm: 0, ferries: 0 };
+let drives: Map<number, Drive> | null = null;
+const pairKey = (a: number, b: number) => Math.min(a, b) * 65536 + Math.max(a, b);
+
+/** Use this drives table (the bytes of market-drives.bin; null: every drive the rule's), as the sim's
+ * `MarketPacks::set_drives` reads it. */
+export function setMarketDrives(bytes: Uint8Array | null) {
+  drives = null;
+  if (!bytes || bytes.byteLength < 8) return;
+  const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (String.fromCharCode(...bytes.subarray(0, 4)) !== "TWD1") return;
+  const placeOf = new Map(CITIES.map((c) => [c.id as string, c.place]));
+  const dec = new TextDecoder();
+  let p = 4;
+  const n = v.getUint32(p, true);
+  p += 4;
+  const ids: (number | undefined)[] = [];
+  for (let i = 0; i < n; i++) {
+    const len = bytes[p++];
+    ids.push(placeOf.get(dec.decode(bytes.subarray(p, p + len))));
+    p += len;
+  }
+  const counts: number[] = [];
+  for (let i = 0; i < n; i++, p += 2) counts.push(v.getUint16(p, true));
+  const out = new Map<number, Drive>(), keys: (number | null)[] = [];
+  const ratio = (q: number) => Math.fround(Math.exp(Math.fround(q / 64)));
+  for (let a = 0; a < n; a++)
+    for (let k = 0; k < counts[a]; k++, p += 4) {
+      const pa = ids[a], pb = ids[v.getUint16(p, true)];
+      const key = pa !== undefined && pb !== undefined && pa !== pb ? pairKey(pa, pb) : null;
+      keys.push(key);
+      if (key !== null && !out.has(key)) out.set(key, { rt: ratio(v.getInt8(p + 2)), rk: ratio(v.getInt8(p + 3)), ferryKm: 0, ferries: 0 });
+    }
+  const nf = v.getUint32(p, true);
+  p += 4;
+  for (let i = 0; i < nf; i++, p += 7) {
+    const key = keys[v.getUint32(p, true)];
+    const d = key != null ? out.get(key) : undefined;
+    if (d) { d.ferryKm = v.getUint16(p + 4, true); d.ferries = bytes[p + 6]; }
+  }
+  drives = out;
+}
+/** Places a and b's drive: the table's, else the rule's. */
+export const driveOf = (a: number, b: number): Drive => (a === b ? undefined : drives?.get(pairKey(a, b))) ?? RULE_DRIVE;
 
 /** Longer trips' period shares on a weekday, and a Saturday's and a Sunday's trips per weekday's
  * with their own shares (days.rs `DAY_RATE`, `DAY_OUT`). */
@@ -93,11 +146,20 @@ export function setMarketRows(byZone: Record<string, MarketRow>) {
   }
   marketRowsReady.value = true;
 }
-/** Fetch the rows once (the same file the demand pool sends its workers). */
+/** T-279: the routed drives' bytes, fetched once; null where the file is missing (every drive the
+ * rule's). The demand pool sends its workers the same. */
+let drivesLoading: Promise<Uint8Array | null> | null = null;
+export function fetchMarketDrives(): Promise<Uint8Array | null> {
+  return (drivesLoading ??= fetch(dataUrl("market-drives.bin"))
+    .then((r) => (r.ok ? r.arrayBuffer().then((b) => new Uint8Array(b)) : null))
+    .catch(() => null));
+}
+/** Fetch the rows once (the same file the demand pool sends its workers), with the drives. */
 export function loadMarketRows(): Promise<boolean> {
-  return (loading ??= fetch(new URL("./market-rows.json", import.meta.url).href)
-    .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`market rows: ${r.status}`))))
-    .then((j) => (setMarketRows(j), true), (err) => { console.error(err); loading = null; return false; }));
+  return (loading ??= Promise.all([
+    fetch(new URL("./market-rows.json", import.meta.url).href).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`market rows: ${r.status}`)))),
+    fetchMarketDrives(),
+  ]).then(([j, d]) => (setMarketDrives(d), setMarketRows(j), true), (err) => { console.error(err); loading = null; return false; }));
 }
 export const marketRow = (place: number): MarketRow | undefined => rows?.get(place);
 
@@ -120,6 +182,8 @@ export function crossingsOf(a: MarketRow, b: MarketRow): Crossing[] {
   const out: Crossing[] = [];
   if ((a.country === "GB") !== (b.country === "GB")) out.push(CHANNEL);
   if (hokkaido(a) !== hokkaido(b)) out.push(TSUGARU);
+  const d = driveOf(a.place, b.place);
+  if (d.ferries) out.push(ferry(d.ferryKm, d.ferries));
   return out;
 }
 
@@ -129,6 +193,8 @@ export function crossingsOf(a: MarketRow, b: MarketRow): Crossing[] {
 export interface CarCost {
   km: number;
   roadKm: number;
+  /** the drive routed (T-279), not the rule's */
+  routed: boolean;
   /** minutes on the road, the fixed minutes included */
   driveMin: number;
   /** running the car, each person's dollars */
@@ -139,19 +205,19 @@ export interface CarCost {
   /** perceived minutes in all */
   total: number;
 }
-export function carCost(km: number, park: number, crossings: Crossing[]): CarCost {
-  const roadKm = km * ROAD_DETOUR;
-  const driveMin = DRIVE_FIXED_MIN + (roadKm / CAR_KMH) * 60;
+export function carCost(km: number, park: number, crossings: Crossing[], drive: Drive = RULE_DRIVE): CarCost {
+  const roadKm = km * ROAD_DETOUR * drive.rk;
+  const driveMin = (DRIVE_FIXED_MIN + ((km * ROAD_DETOUR) / CAR_KMH) * 60) * drive.rt;
   const runUsd = (roadKm * CAR_USD_PER_KM) / CAR_SHARED_BY;
   const parkMin = park / CAR_SHARED_BY;
   const total = driveMin + runUsd * MIN_PER_USD + parkMin + crossings.reduce((s, c) => s + crossingMin(c), 0);
-  return { km, roadKm, driveMin, runUsd, parkMin, crossings, total };
+  return { km, roadKm, routed: drive !== RULE_DRIVE, driveMin, runUsd, parkMin, crossings, total };
 }
 /** The parts of a car cost the sim gave as `total` perceived minutes over a mean distance of `km`
- * (its 6 km area pairs trip weighted): the drive, its running and the crossings by the rule, which
- * is linear in the distance, and parking (the far areas' mean) the rest. */
-export function carPartsOf(km: number, total: number, crossings: Crossing[]): CarCost {
-  const c = carCost(km, 0, crossings);
+ * (its 6 km area pairs trip weighted): the drive, its running and the crossings by the rule and the
+ * places' `drive`, which are linear in the distance, and parking (the far areas' mean) the rest. */
+export function carPartsOf(km: number, total: number, crossings: Crossing[], drive: Drive = RULE_DRIVE): CarCost {
+  const c = carCost(km, 0, crossings, drive);
   return { ...c, parkMin: Math.max(0, total - c.total), total };
 }
 /** A crossing's perceived minutes: its minutes and each person's share of the fare. */
@@ -216,7 +282,7 @@ export function corridorOf(a: number, b: number): Corridor | null {
   const near = km < RULE.near_km;
   const road = p.road === q.road;
   const flight = near ? null : flightOf(p, q, km);
-  const car = road ? carCost(km, 0.5 * (parkOf(p) + parkOf(q)), crossingsOf(p, q)) : null;
+  const car = road ? carCost(km, 0.5 * (parkOf(p) + parkOf(q)), crossingsOf(p, q), driveOf(a, b)) : null;
   let air = 0;
   if (car && flight) {
     const w = Math.exp(Math.max(-80, Math.min(80, -modeBeta(car.total) * (flight.total - car.total))));
@@ -232,7 +298,7 @@ const parkOf = (r: MarketRow) => (Number.isFinite(r.park) ? Math.max(0, r.park) 
 export function carBetween(from: number, to: number): CarCost | null {
   const p = marketRow(from), q = marketRow(to);
   if (!p || !q || from === to || p.road !== q.road) return null;
-  return carCost(placeKm(p, q), parkOf(q), crossingsOf(p, q));
+  return carCost(placeKm(p, q), parkOf(q), crossingsOf(p, q), driveOf(from, to));
 }
 
 const ground = (d: number) => {

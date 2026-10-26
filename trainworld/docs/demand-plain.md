@@ -151,9 +151,13 @@ There is no built-in liking for the train. Rail and the car are compared on time
   Walk and Drive rows say so in their hovers.
 
 **Between cities** (the car and the plane against the train)
-- Car: 15 minutes plus the drive at 85 km/h on a road 1.25 times the straight line, plus $0.15 a
-  km and parking, shared by two people. Across the Channel it also pays $150 a car and an hour for the shuttle or
-  ferry; to Hokkaido $170 and 4 hours for the ferry (the Seikan Tunnel takes no cars).
+- Car: between places up to 1,500 km apart, the drive is routed over a world map of roads, hills
+  and water (motorways fast, mountain roads slow, inlets driven round); farther, 15 minutes plus the
+  drive at 85 km/h on a road 1.25 times the straight line. Plus $0.15 a km of road and parking,
+  shared by two people. Over open water with no road (Helsinki to Tallinn) it takes a ferry: 30
+  minutes plus the crossing at 35 km/h, $50 plus 50 cents a km a car. Across the Channel it pays $150
+  a car and an hour for the shuttle or ferry; to Hokkaido $170 and 4 hours for the ferry (the Seikan
+  Tunnel takes no cars). No tolls anywhere, borders included.
 - Plane, between cities 250 km apart or more that both have airports: the drive to each airport,
   90 minutes at the airports, the flight at 750 km/h plus 30 minutes (an hour more with no direct
   flight), and a fare of $100 plus 5 cents a km, so $125 at 500 km and $150 at 1,000 km, its

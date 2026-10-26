@@ -46,6 +46,8 @@ const EVERYDAY_PURPOSES = EVERYDAY_NAMES;
 let marketPacks: MarketPacks | null = null;
 /** T-776: the world market's rows until `marketPacks` is made from them */
 let marketRows: MarketRows | null = null;
+/** T-279: the routed drives that came with them */
+let marketDrives: Uint8Array | null = null;
 let intercity: IntercityApi | null = null;
 /** T-409: the market's parts by `Cluster.marketKey`, one per cluster the market reaches, each on its
  * cluster's network alone (`IntercityApi.beside`). A part keeps the composition it was made from
@@ -247,7 +249,13 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
         return opened(packs, isBare, rejected);
       }
       marketPacks = new MarketPacks(marketWorld(typeof marketRows === "string" ? marketRows : new TextDecoder().decode(marketRows)));
-      marketRows = null;
+      try {
+        if (marketDrives) marketPacks.set_drives(marketDrives);
+      } catch (err) {
+        if (isPanic(err)) throw err;
+        console.warn("market drives:", err); // the rule's drives everywhere
+      }
+      marketRows = marketDrives = null;
     }
     const have = new Set(marketPacks.places());
     const added: CityId[] = [];
@@ -458,7 +466,7 @@ function openQueued(epoch: number): Promise<void> {
     if (!started || dead) return;
     try {
       const t0 = performance.now();
-      for (const m of batch) if (m.rows && !marketPacks) marketRows = m.rows;
+      for (const m of batch) if (m.rows && !marketPacks) [marketRows, marketDrives] = [m.rows, m.drives ?? null];
       const packs = batch.flatMap((m) => m.packs), market = batch.flatMap((m) => m.intercity ?? []);
       const rejected: OpenRejected[] = [];
       const cityInfo = openPacks(packs, market, isBare, rejected);

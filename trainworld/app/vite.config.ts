@@ -13,6 +13,8 @@ const CITIES = REGISTRY.cities.map((c) => c.id);
 const TERRAIN = resolve(here, "../data/terrain");
 /** T-1285: the world's coarse water (pipeline/world_water.py), served at `packs/world.water`; TW_WORLD_WATER: another copy. */
 const WORLD_WATER = process.env.TW_WORLD_WATER ? resolve(process.env.TW_WORLD_WATER) : join(TERRAIN, "world.water");
+/** T-279: the market's routed drives (pipeline/market_drives.py), served at `packs/market-drives.bin`; TW_MARKET_DRIVES: another copy. */
+const MARKET_DRIVES = process.env.TW_MARKET_DRIVES ? resolve(process.env.TW_MARKET_DRIVES) : join(PACKS, "market-drives.bin");
 
 /**
  * City packs at `packs/<city>.json`, `.bin`, `.boundary.geojson`, `.market.json` (T-377) and `.places.json` (the OSM place
@@ -25,6 +27,17 @@ function packs(): Plugin {
   return {
     name: "trainworld-packs",
     configureServer(server) {
+      server.middlewares.use("/packs/market-drives.bin", (_req, res) => {
+        // missing, a 404: every drive in the market is then the rule's
+        if (!existsSync(MARKET_DRIVES)) {
+          res.statusCode = 404;
+          res.end();
+          return;
+        }
+        res.setHeader("Content-Type", "application/octet-stream");
+        res.setHeader("Content-Length", statSync(MARKET_DRIVES).size);
+        createReadStream(MARKET_DRIVES).pipe(res);
+      });
       server.middlewares.use("/packs", (req, res, next) => {
         const file = join(PACKS, (req.url ?? "").split("?")[0].replace(/^\/+/, ""));
         if (!file.startsWith(PACKS) || !existsSync(file)) return next();
@@ -93,6 +106,8 @@ function packs(): Plugin {
       if (noTerrain) this.warn(`${noTerrain} zones have no terrain file: run pipeline/zone_terrain.py build`);
       if (existsSync(WORLD_WATER)) copyFileSync(WORLD_WATER, join(out, "world.water"));
       else this.warn("world water mask missing: run pipeline/world_water.py build");
+      if (existsSync(MARKET_DRIVES)) copyFileSync(MARKET_DRIVES, join(out, "market-drives.bin"));
+      else this.warn("market drives missing: run pipeline/market_drives.py build");
       // T-800: every zone's coarse outline (pipeline/zone_outlines.py); without it every zone shows (T-1006)
       const outlines = join(PACKS, "outlines.json");
       if (existsSync(outlines)) copyFileSync(outlines, join(out, "outlines.json"));

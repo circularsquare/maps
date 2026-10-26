@@ -6,7 +6,7 @@
 // any change to the market's rule on either side.
 //   node trainworld/checks/t1148-market-rule.mjs
 import { readFileSync } from 'node:fs';
-import { loadApp, marketRows, registry } from './lib.mjs';
+import { loadApp, marketDrives, marketRows, registry } from './lib.mjs';
 import init, { MarketPacks, day_factors } from '../app/src/wasm/demand/sim.js';
 
 await init({ module_or_path: readFileSync(new URL('../app/src/wasm/demand/sim_bg.wasm', import.meta.url)) });
@@ -16,10 +16,15 @@ const rule = await loadApp("export * from '@app/src/game/marketRule.ts'; export 
 const reg = registry();
 const rowsText = marketRows();
 const rows = JSON.parse(rowsText);
+// T-279: the routed drives on both sides, as the game gives them
+const drives = marketDrives();
+rule.setMarketDrives(drives);
 rule.setMarketRows(rows);
 // T-1277: the world as the game gives it the sim, its rows carrying each country's fare weight
 const world = rule.marketWorld(rowsText);
-const api = new MarketPacks(world).market();
+const packs = new MarketPacks(world);
+const routed = drives ? packs.set_drives(drives) : 0;
+const api = packs.market();
 // a market with no network, so `market_trip_between` answers from the rows
 api.set_network_ll(new Float64Array(0), new Uint32Array(0), new Uint32Array(0), new Float32Array(0), new Float32Array(0), new Float32Array(0));
 api.solve(0);
@@ -37,18 +42,19 @@ const row = new Map(Object.values(rows).map((r) => [r.place, r]));
 let seed = 1148;
 const rnd = () => ((seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) / 2 ** 32);
 const pick = () => places[Math.floor(rnd() * places.length)];
-const kinds = { near: [], far: [], channel: [], hokkaido: [], sea: [] };
+const kinds = { near: [], far: [], channel: [], hokkaido: [], sea: [], ...(routed ? { ferry: [] } : {}) };
 const want = 400;
 const named = (n) => reg.market.places.findIndex((p) => p.name === n);
-const fixed = [['London', 'Paris'], ['Paris', 'London'], ['Tokyo', 'Sapporo'], ['New York', 'Boston'], ['New York', 'Philadelphia']].map(([a, b]) => [named(a), named(b)]).filter(([a, b]) => a >= 0 && b >= 0);
-for (let tries = 0; tries < 2e6 && Object.values(kinds).some((k) => k.length < want); tries++) {
+const fixed = [['London', 'Paris'], ['Paris', 'London'], ['Tokyo', 'Sapporo'], ['New York', 'Boston'], ['New York', 'Philadelphia'], ['Helsinki', 'Põhja-Eesti'], ['Berlin', 'Hamburg'], ['Taipei', 'Kaohsiung']].map(([a, b]) => [named(a), named(b)]).filter(([a, b]) => row.has(a) && row.has(b));
+// near and far pairs within 1,500 km mostly routed (T-279); a ferry is rare, so up to 4e6 tries
+for (let tries = 0; tries < 4e6 && Object.values(kinds).some((k) => k.length < want); tries++) {
   const a = pick(), b = pick();
   if (a === b) continue;
   const p = row.get(a), q = row.get(b);
   const km = rule.placeKm(p, q);
   const hk = (r) => r.country === 'JP' && r.lat > 41.4;
-  const k = p.road !== q.road ? 'sea' : (p.country === 'GB') !== (q.country === 'GB') ? 'channel' : hk(p) !== hk(q) ? 'hokkaido' : km < 250 ? 'near' : 'far';
-  if (kinds[k].length < want) kinds[k].push([a, b]);
+  const k = p.road !== q.road ? 'sea' : (p.country === 'GB') !== (q.country === 'GB') ? 'channel' : hk(p) !== hk(q) ? 'hokkaido' : rule.driveOf(a, b).ferries ? 'ferry' : km < 250 ? 'near' : 'far';
+  if (kinds[k] && kinds[k].length < want) kinds[k].push([a, b]);
 }
 const pairs = [...fixed, ...Object.values(kinds).flat()];
 let worst = { car: 0, ref: 0, air: 0, trips: 0 };
@@ -72,7 +78,8 @@ for (const [a, b] of pairs) {
   worst.air = Math.max(worst.air, Math.abs(air - modes[2 * k]));
   worst.trips = Math.max(worst.trips, trips[k] > 0 ? Math.abs(2 * t - trips[k]) / trips[k] : 0);
 }
-console.log(`${fails ? 'FAIL' : 'PASS'} t1148 place pairs: ${pairs.length} (${Object.entries(kinds).map(([k, v]) => `${v.length} ${k}`).join(', ')}), worst car ${worst.car.toFixed(4)} min, reference ${worst.ref.toFixed(4)} min, plane share ${worst.air.toExponential(1)}, trips ${worst.trips.toExponential(1)} of theirs`);
+const nRouted = pairs.filter(([a, b]) => rule.driveOf(a, b) !== rule.RULE_DRIVE).length;
+console.log(`${fails ? 'FAIL' : 'PASS'} t1148 place pairs: ${pairs.length} (${Object.entries(kinds).map(([k, v]) => `${v.length} ${k}`).join(', ')}; ${nRouted} routed, of ${routed} in the drives table), worst car ${worst.car.toFixed(4)} min, reference ${worst.ref.toFixed(4)} min, plane share ${worst.air.toExponential(1)}, trips ${worst.trips.toExponential(1)} of theirs`);
 
 // the longer trips' period shares (days.rs share_out = SHARES x load factor for them)
 // day_factors is [4 days][purposes][5 periods] then [4 days][purposes] rates; the longer trips are the last purpose

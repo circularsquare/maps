@@ -34,7 +34,9 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
+mod drives;
 mod market_trip;
+use drives::{Drive, Drives};
 
 pub const SHARES: [f32; PERIODS] = [0.20, 0.35, 0.25, 0.15, 0.05];
 
@@ -363,13 +365,20 @@ struct PairRule {
     air: f32,
     rest: f32,
     refm: f32,
-    /// the car's perceived minutes for water it is carried over (`crossing_min`)
+    /// the car's perceived minutes for water it is carried over (`crossing_min`, a ferry)
     cross: f32,
+    /// T-279: the routed drive's minutes and road km over the rule's (`Drive`)
+    rt: f32,
+    rk: f32,
 }
 impl PairRule {
     /// A pair the solve may build: a car or a plane to compete with.
     fn has_alt(&self) -> bool {
         self.car || self.air > 0.
+    }
+    /// A longer trip's car over a zone pair of this place pair, `d` km apart, to parking `park`.
+    fn car_min(&self, d: f32, park: f32) -> f32 {
+        routed_car_min(d, park, self.rt, self.rk) + self.cross
     }
 }
 /// The ordered pair (i, j)'s border factor, the tail's income factor, near or not, and the
@@ -389,16 +398,16 @@ fn pair_trip_rule(places: &[Place], countries: &[String], rule: &Rule, ground: b
     (b, rel, km < rule.near_km, km)
 }
 /// The ordered pair (i, j)'s rule (`PairRule`).
-fn pair_rule(places: &[Place], countries: &[String], rule: &Rule, ground: bool, mp: &Params, i: usize, j: usize) -> PairRule {
+fn pair_rule(places: &[Place], countries: &[String], rule: &Rule, ground: bool, mp: &Params, drives: &Drives, i: usize, j: usize) -> PairRule {
     let (b, rel, near, km) = pair_trip_rule(places, countries, rule, ground, i, j);
-    let (car, air, rest, refm, cross) = pair_mode_rule(places, countries, mp, i, j, near, km);
-    PairRule { b, rel, near, km, car, air, rest, refm, cross }
+    let (car, air, rest, refm, cross, d) = pair_mode_rule(places, countries, mp, drives, i, j, near, km);
+    PairRule { b, rel, near, km, car, air, rest, refm, cross, rt: d.rt, rk: d.rk }
 }
 /// `pair_rule`'s modes for the ordered pair (i, j), near or not, `km` apart: whether a car can go,
 /// the share of the trips not by rail that fly, the weight of every mode but rail, the reference
-/// minutes and the crossings' minutes.
+/// minutes, the crossings' minutes and the routed drive.
 #[inline]
-fn pair_mode_rule(places: &[Place], countries: &[String], mp: &Params, i: usize, j: usize, near: bool, km: f64) -> (bool, f32, f32, f32, f32) {
+fn pair_mode_rule(places: &[Place], countries: &[String], mp: &Params, drives: &Drives, i: usize, j: usize, near: bool, km: f64) -> (bool, f32, f32, f32, f32, Drive) {
     let (p, q) = (&places[i], &places[j]);
     // T-378: a car within a landmass; a plane between far places each with an airport;
     // both by place, the same whoever builds what (very far pairs coarse, T-362)
@@ -417,8 +426,9 @@ fn pair_mode_rule(places: &[Place], countries: &[String], mp: &Params, i: usize,
         }
         best.map(|v| v as f32)
     };
-    let cross = if car && i != j { crossing_min((&countries[p.country as usize], p.lat), (&countries[q.country as usize], q.lat)) } else { 0. };
-    let car_m = car_min(km as f32, (0.5 * (p.park + q.park)) as f32) + cross;
+    let d = if car { drives.get(i, j) } else { Drive::RULE };
+    let cross = if car && i != j { crossing_min((&countries[p.country as usize], p.lat), (&countries[q.country as usize], q.lat)) + d.ferry_min() } else { 0. };
+    let car_m = routed_car_min(km as f32, (0.5 * (p.park + q.park)) as f32, d.rt, d.rk) + cross;
     let (air, rest, refm) = match (car, flight) {
         (true, Some(f)) => {
             let w = (-mp.mode_beta(car_m) * (f - car_m)).clamp(-80., 80.).exp();
@@ -427,7 +437,7 @@ fn pair_mode_rule(places: &[Place], countries: &[String], mp: &Params, i: usize,
         (false, Some(f)) => (1., 1., f),
         _ => (0., 1., car_m),
     };
-    (car, air, rest, refm, cross)
+    (car, air, rest, refm, cross, d)
 }
 struct Zone {
     /// centre in the output frame, and on the unit sphere (zeros in a plane pack)
@@ -475,6 +485,8 @@ struct Market {
     rules: Rules,
     /// `market_params()`, for the pair rules worked out when asked
     mp: Params,
+    /// T-279: the routed drives between places
+    drives: Rc<Drives>,
     near: HashMap<(u32, u32), f64>,
     zones: Vec<Zone>,
     n_gid: usize,
@@ -800,8 +812,13 @@ const ROAD_DETOUR: f32 = 1.25;
 const CAR_USD_PER_KM: f32 = 0.15;
 const LONG_OCCUPANCY: f32 = 2.;
 /// T-276: a longer trip's car as perceived minutes over `d` km to a zone where parking costs `park`.
+#[cfg(test)]
 fn car_min(d: f32, park: f32) -> f32 {
-    drive_min(d) + (d * ROAD_DETOUR * CAR_USD_PER_KM * FARE_MIN_PER_USD + park) / LONG_OCCUPANCY
+    routed_car_min(d, park, 1., 1.)
+}
+/// `car_min` with the rule's minutes and road km times `rt` and `rk` (T-279, `Drive`).
+fn routed_car_min(d: f32, park: f32, rt: f32, rk: f32) -> f32 {
+    drive_min(d) * rt + (d * ROAD_DETOUR * rk * CAR_USD_PER_KM * FARE_MIN_PER_USD + park) / LONG_OCCUPANCY
 }
 /// A car carried over water by a shuttle or ferry where the landmass's fixed link takes no cars
 /// at its own price (T-712): the fare per car in dollars and the minutes beyond the straight drive.
@@ -861,7 +878,7 @@ impl Market {
         } else if sj != u32::MAX {
             r.inn[sj as usize * np + i]
         } else {
-            pair_rule(&self.places, &self.countries, &self.rule, self.ground, &self.mp, i, j)
+            pair_rule(&self.places, &self.countries, &self.rule, self.ground, &self.mp, &self.drives, i, j)
         }
     }
     /// Trips a day from zone-like sums `(g, t)` at place `i` to `(a, ta)` at place `j`, `d` km.
@@ -1107,6 +1124,7 @@ struct Built {
     closed: bool,
     /// legacy: each pack site's place and index in its place's input (commutes name pack sites)
     legacy_commutes: Vec<(u32, u32, f32)>,
+    drives: Rc<Drives>,
 }
 fn single_pack(pack: LegacyPack) -> Result<Built, String> {
     let zm = pack.zone_m;
@@ -1156,7 +1174,7 @@ fn single_pack(pack: LegacyPack) -> Result<Built, String> {
     // the commutes name pack sites: keep each site's place and place-local index for them
     let site_at = at;
     let zones = zones.into_iter().map(Rc::new).collect();
-    let mut built = Built { zones, rule: Rule::closed(pack.trip_rate), out: pack.frame.clone(), places: markets, rows: None, world: false, closed: true, legacy_commutes: vec![] };
+    let mut built = Built { zones, rule: Rule::closed(pack.trip_rate), out: pack.frame.clone(), places: markets, rows: None, world: false, closed: true, legacy_commutes: vec![], drives: Rc::default() };
     built.legacy_commutes = legacy_commutes
         .into_iter()
         .map(|(h, w, n)| {
@@ -1173,7 +1191,7 @@ fn compose(c: ComposeIn) -> Result<Built, String> {
         return Err("invalid market rule".into());
     }
     make_frame(&c.world.frame)?;
-    Ok(Built { zones: c.zones.into_iter().map(Rc::new).collect(), rule: c.world.rule, out: Some(c.world.frame), places: c.world.places, rows: c.world.rows, world: true, closed: false, legacy_commutes: vec![] })
+    Ok(Built { zones: c.zones.into_iter().map(Rc::new).collect(), rule: c.world.rule, out: Some(c.world.frame), places: c.world.places, rows: c.world.rows, world: true, closed: false, legacy_commutes: vec![], drives: Rc::default() })
 }
 
 fn build(b: Built) -> Result<Market, String> {
@@ -1183,7 +1201,7 @@ fn build(b: Built) -> Result<Market, String> {
 /// (indexed by place), and only those places' commutes (T-929: the rows of those places alone).
 /// `reuse`: the corridors' figures of an earlier composition of the same world with rows.
 fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) -> Result<Market, String> {
-    let Built { mut zones, rule, out, places: np, rows, world, closed, legacy_commutes } = b;
+    let Built { mut zones, rule, out, places: np, rows, world, closed, legacy_commutes, drives } = b;
     let out_frame = match &out {
         Some(f) => Some(make_frame(f)?),
         None => None,
@@ -1532,8 +1550,8 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
     rules.out.reserve_exact(rules.open.len() * np);
     rules.inn.reserve_exact(rules.open.len() * np);
     for &i in &rules.open {
-        rules.out.extend((0..np).map(|j| pair_rule(&places, &countries, &rule, ground, &mp, i, j)));
-        rules.inn.extend((0..np).map(|j| pair_rule(&places, &countries, &rule, ground, &mp, j, i)));
+        rules.out.extend((0..np).map(|j| pair_rule(&places, &countries, &rule, ground, &mp, &drives, i, j)));
+        rules.inn.extend((0..np).map(|j| pair_rule(&places, &countries, &rule, ground, &mp, &drives, j, i)));
     }
     let mut m = Market {
         rule,
@@ -1545,6 +1563,7 @@ fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) 
         countries,
         rules,
         mp,
+        drives,
         near,
         zones: mz,
         n_gid,
@@ -1720,6 +1739,7 @@ pub struct MarketPacks {
     /// T-1204, T-1220: the corridors' figures, worked out at the first composition and kept for
     /// the others (with rows they depend on the places alone)
     corridors: RefCell<Option<Rc<Corridors>>>,
+    drives: Rc<Drives>,
 }
 #[wasm_bindgen]
 impl MarketPacks {
@@ -1731,7 +1751,17 @@ impl MarketPacks {
             return Err("invalid market rule".into());
         }
         make_frame(&world.frame)?;
-        Ok(MarketPacks { world, zones: BTreeMap::new(), corridors: RefCell::new(None) })
+        Ok(MarketPacks { world, zones: BTreeMap::new(), corridors: RefCell::new(None), drives: Rc::default() })
+    }
+    /// T-279: the routed drives between places (`market-drives.bin`, pipeline/market_drives.py),
+    /// for the compositions after; the pairs placed. Without them every drive is the rule's.
+    pub fn set_drives(&mut self, bytes: &[u8]) -> Result<u32, String> {
+        let rows = self.world.rows.as_deref().unwrap_or(&[]);
+        let place_of: HashMap<&str, usize> = rows.iter().map(|r| (r.zone.as_str(), r.place)).collect();
+        let d = Drives::decode(bytes, &place_of, self.world.places)?;
+        let n = d.len() as u32;
+        self.drives = Rc::new(d);
+        Ok(n)
     }
     /// Add (or replace) a place's pack; its place.
     pub fn add(&mut self, pack: &str) -> Result<u32, String> {
@@ -1759,7 +1789,7 @@ impl MarketPacks {
     pub fn market(&self) -> Result<IntercityApi, String> {
         let w = self.world.clone();
         let rows = w.rows.is_some();
-        let b = Built { zones: self.zones.values().cloned().collect(), rule: w.rule, out: Some(w.frame), places: w.places, rows: w.rows, world: true, closed: false, legacy_commutes: vec![] };
+        let b = Built { zones: self.zones.values().cloned().collect(), rule: w.rule, out: Some(w.frame), places: w.places, rows: w.rows, world: true, closed: false, legacy_commutes: vec![], drives: self.drives.clone() };
         let m = build_for(b, None, self.corridors.borrow().clone())?;
         if rows {
             *self.corridors.borrow_mut() = Some(m.cw.clone());
@@ -2606,7 +2636,7 @@ impl IntercityApi {
                 let trips = next.next().unwrap();
                 let d = m.zone_km(za, zb) as f32;
                 let corridor = m.open_corridor(za.place, zb.place) as u32;
-                let car = |park: f32| car_min(d, park) + r.cross;
+                let car = |park: f32| r.car_min(d, park);
                 let drive = |park: f32| if r.car { car(park) } else { r.refm };
                 let (a, b) = (a as u32, b as u32);
                 let band = self.base.band_of_d2(d * d * 1e6) as u8;
@@ -2633,7 +2663,8 @@ impl IntercityApi {
             }
             let (zh, zw) = (&m.zones[h], &m.zones[w]);
             let km = m.zone_km(zh, zw) as f32;
-            let car = drive_min(km) * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * pc.car_own_km_min() + m.pr(zh.place, zw.place).cross;
+            let r = m.pr(zh.place, zw.place);
+            let car = drive_min(km) * r.rt * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * r.rk * pc.car_own_km_min() + r.cross;
             let corridor = m.open_corridor(zh.place, zw.place);
             self.cpair_of[c] = self.cpairs.len() as u32;
             let band = pc.band_of_d2(km * km * 1e6) as u8;
@@ -2654,7 +2685,8 @@ impl IntercityApi {
             }
             let (zh, za) = (&m.zones[h], &m.zones[a]);
             let km = m.zone_km(zh, za) as f32;
-            let car = drive_min(km) * pc.w_drive + za.park + pc.car_own_min() + km * ROAD_DETOUR * pc.car_own_km_min() + m.pr(zh.place, za.place).cross;
+            let r = m.pr(zh.place, za.place);
+            let car = drive_min(km) * r.rt * pc.w_drive + za.park + pc.car_own_min() + km * ROAD_DETOUR * r.rk * pc.car_own_km_min() + r.cross;
             let w = ep.walk.min(0.999);
             self.epair_of[e] = self.epairs.len() as u32;
             self.epairs.push(EPairOn { e: e as u32, car, walk_e: w / (1. - w), ride: km >= pc.ride_min_km, band: pc.band_of_d2(km * km * 1e6) as u8 });
@@ -3276,7 +3308,7 @@ impl IntercityApi {
                 } else {
                     ((p.x - q.x).hypot(p.y - q.y) / 1000.) as f64
                 };
-                let (car, air, ..) = pair_mode_rule(&m.places, &m.countries, &m.mp, a, b, km < m.rule.near_km, km);
+                let (car, air, ..) = pair_mode_rule(&m.places, &m.countries, &m.mp, &m.drives, a, b, km < m.rule.near_km, km);
                 (car, air)
             }
         };

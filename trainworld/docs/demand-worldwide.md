@@ -838,11 +838,13 @@ notes/T-420.md has the tables.
   US cents a road km (AAA 2024 fuel and upkeep) and the local parking rule at the destination,
   both split over two occupants, at 3 perceived minutes a dollar. Fuel prices, tolls (T-270),
   motorway speeds, occupancy and car ownership all vary by country; Europe's fuel costs about twice
-  the US's per km, so cars there would cost more. Against routed drives on 43 pairs (T-279,
-  notes/T-279.md) the 1.25 is about the median road (1.19), but the rule runs 15-38% slow on flat
-  motorway corridors and up to twice too fast across old mountain roads and round inlets (Taipei -
-  Hualien, Athens - Thessaloniki, Denmark's straits, Shikoku). Check: a fuel price and toll regime
-  per country; a few routed drives between its biggest places.
+  the US's per km, so cars there would cost more. Within 1,500 km the drive is routed (T-279,
+  docs/regional.md 5.1) on three world layers: GRIP4 road density (roads as of its 2018 release, so
+  newer motorways are missing), GEDTM30 slope and the world water
+  mask, fitted to 13,470 OSRM drives in 43 countries (6.8% off at the median, held out by region;
+  the rule 10.0%). Free flow: dense corridors come out 10-13% fast against traffic. A ferry over open
+  water, one simple price everywhere. Check: a fuel price and toll regime per country; a few routed
+  drives between its biggest places against OSRM's.
 - **Commutes between zones** (T-276, docs/zones.md 4). One gravity over every zone pack, each
   pack's own curve and border factor inside it, region pairs across packs from the pack holding
   both, else the country's admin-1 default (US 0.23, Japan 0.5), else the pack-line default 0.5

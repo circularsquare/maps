@@ -74,6 +74,7 @@ import { readMarketPeriod, readTripPeriod, setMarketTripQuery, setTripQuery, tri
 import { demandTestSnapshot } from "./demandTest";
 import type { NetworkSnapshot } from "./protocol";
 import { dataUrl } from "../game/dataBase";
+import { fetchMarketDrives } from "../game/marketRule";
 import { saveSlotsState } from "./clockClient";
 import { readDemandCache, writeDemandCache } from "./saveFile";
 import { BUILD, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
@@ -1073,10 +1074,12 @@ class DemandClient {
       // thread up while the player could already pan. The aux worker never opens one: empty bytes.
       const own = <T extends Uint8Array>(b: T) => (i === this.computeN ? new Uint8Array(0) : i === this.computeN - 1 ? b : b.slice());
       const ms = open.intercity?.map((m) => ({ id: m.id, pack: own(m.bytes) })), r = rows && own(rows);
-      const msg: ToDemand = { kind: "open", packs: pack ? [pack] : [], ...(ms ? { intercity: ms } : {}), ...(r?.byteLength ? { rows: r } : {}) };
+      const dr = r?.byteLength && this.drives ? this.drives.slice() : undefined;
+      const msg: ToDemand = { kind: "open", packs: pack ? [pack] : [], ...(ms ? { intercity: ms } : {}), ...(r?.byteLength ? { rows: r } : {}), ...(dr ? { drives: dr } : {}) };
       const transfer: Transferable[] = pack ? [pack.bin] : [];
       for (const m of ms ?? []) if (m.pack.byteLength) transfer.push(m.pack.buffer as ArrayBuffer);
       if (r?.byteLength) transfer.push(r.buffer as ArrayBuffer);
+      if (dr) transfer.push(dr.buffer as ArrayBuffer);
       const send = () => w.postMessage(msg, transfer);
       if (pack && i > 0 && i < this.computeN && this.held) this.held.push(send);
       else send();
@@ -1134,7 +1137,8 @@ class DemandClient {
       log.downloadedAt = performance.now();
       this.recovered(item);
       this.bytes.set(item, bytes.byteLength);
-      this.hashPack(item, [bytes]);
+      // T-279: the routed drives change the market's figures as its packs do
+      this.hashPack(item, this.drives ? [bytes, this.drives] : [bytes]);
       this.marketsDownloading.delete(id);
       this.marketsHeld.push({ id, bytes });
       this.heldRows = rows;
@@ -1163,8 +1167,13 @@ class DemandClient {
    * its size, so in before it; preloading them with a zone's city pack cost a new game 0.2 s). */
   private rows: Promise<Uint8Array> | null = null;
   private rowsSent = false;
+  /** T-279: the routed drives (market-drives.bin), in with the rows and sent beside them; null
+   * where the file is missing, every drive then the rule's */
+  private drives: Uint8Array | null = null;
   private marketRows(): Promise<Uint8Array> {
-    return (this.rows ??= this.download(MARKET_ROWS).catch((err) => { this.rows = null; throw err; }));
+    return (this.rows ??= Promise.all([this.download(MARKET_ROWS), fetchMarketDrives()])
+      .then(([rows, drives]) => ((this.drives = drives), rows))
+      .catch((err) => { this.rows = null; throw err; }));
   }
 
   // --- T-484: a pack that could not be downloaded --------------------------------------------------
@@ -1830,13 +1839,14 @@ class DemandClient {
         Promise.all(markets.map(async (id) => ({ id, pack: await this.download(`${id}.market.json`) }))),
         markets.length ? this.download(MARKET_ROWS) : Promise.resolve(undefined),
       ]);
+      const drives = this.drives?.slice();
       if (this.respawn.get(i) !== r || this.status.startsWith("failed")) return;
       // closed meanwhile: left out
       const full = packs.filter((p) => this.fetching.has(p.id)), mk = intercity.filter((m) => this.fetching.has(marketItem(m.id)));
       const bares = barePacks.filter((p) => this.fetchingBare.has(p.id));
       r.left = new Set([...full.map((p) => p.id as string), ...mk.map((m) => marketItem(m.id)), ...bares.map((p) => p.id as string)]);
       const w = this.workers[i];
-      if (full.length || mk.length) w.postMessage({ kind: "open", packs: full, ...(mk.length ? { intercity: mk, rows } : {}) } satisfies ToDemand, [...full.map((p) => p.bin), ...mk.map((m) => m.pack.buffer as ArrayBuffer), ...(mk.length && rows ? [rows.buffer as ArrayBuffer] : [])]);
+      if (full.length || mk.length) w.postMessage({ kind: "open", packs: full, ...(mk.length ? { intercity: mk, rows, ...(drives ? { drives } : {}) } : {}) } satisfies ToDemand, [...full.map((p) => p.bin), ...mk.map((m) => m.pack.buffer as ArrayBuffer), ...(mk.length && rows ? [rows.buffer as ArrayBuffer] : []), ...(mk.length && drives ? [drives.buffer as ArrayBuffer] : [])]);
       if (bares.length) w.postMessage({ kind: "open", packs: bares, bare: true } satisfies ToDemand, bares.map((p) => p.bin));
       if (!r.left.size) this.reopened(i);
     } catch (err) {
