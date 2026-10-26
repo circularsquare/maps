@@ -12,6 +12,7 @@ reasoning and what it replaced.
 - **Our surface stores uint16 km/h x 1000** (T-009), not the page's uint8 x 40: steep high
   ground goes under 0.1 km/h, where x 40 steps are 25% errors. 1 km pixels with half or more
   water are water; GMTED30" mean for elevation until T-011.
+- **The basemap is quieted in the page, by layer type** (T-029): road lines (casings hidden) stay dark but at 0.3 opacity and half width, labels (not water) shrink to 0.85x in grey. Dark faint roads read better under the colours than light ones would; the numbers are `ROAD` and `LABEL` in `index.html`.
 - **The canoe is always carried overland**, at twice the walking time, never left (Anita, T-005).
 - **The search counts time and danger**: cost = time + K x hazard, a linear combination, on every
   mode (Anita: "count both time and danger, can use linear combination"). Replaces 2026-10-14's

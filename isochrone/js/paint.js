@@ -16,15 +16,11 @@ export function paint(L) {
     for (let y = 0; y < ch; y++) {
         const my = yTop - (y + 0.5) / ch * (yTop - yBot);
         const lat = (2 * Math.atan(Math.exp(my)) - Math.PI / 2) * 180 / Math.PI;
-        const v = (north - lat) / L.cellDeg - 0.5;
-        let r0 = Math.floor(v); const fy = v - r0;
-        let r1 = r0 + 1;
-        if (r0 < 0) r0 = 0; if (r1 > H - 1) r1 = H - 1; if (r0 > H - 1) r0 = H - 1;
-        const o0 = r0 * W, o1 = r1 * W;
-        // Blend the two rows when both cells were reached, else take the nearer.
+        // The cell row this canvas row falls in, so cells are square blocks (same rule as hover).
+        const r = Math.min(H - 1, Math.max(0, Math.floor((north - lat) / L.cellDeg)));
+        const o0 = r * W;
         for (let x = 0; x < cw; x++) {
-            const a = dist[o0 + x], c = dist[o1 + x];
-            const h = (a !== Infinity && c !== Infinity) ? a * (1 - fy) + c * fy : (fy < 0.5 ? a : c);
+            const h = dist[o0 + x];
             if (!(h <= edges[nb - 1])) continue;
             let k = 0;
             while (h > edges[k]) k++;

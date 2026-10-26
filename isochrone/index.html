@@ -9,34 +9,36 @@
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
 <style>
 html, body { margin: 0; height: 100%; background: #0a0a0a; color: #ccc;
-    font: 400 14px/1.45 'Nunito', system-ui, sans-serif; }
+    font: 400 12px/1.4 'Nunito', system-ui, sans-serif; }
 #map { position: absolute; inset: 0; }
 .maplibregl-control-container { z-index: 2; }
+.maplibregl-ctrl-group button { width: 26px; height: 26px; }
+.maplibregl-ctrl-attrib { font-size: 10px; }
 
-#title { position: absolute; top: 14px; left: 16px; z-index: 3; font-weight: 700; font-size: 20px;
+#title { position: absolute; top: 10px; left: 12px; z-index: 3; font-weight: 700; font-size: 16px;
     color: #ddd; text-shadow: 0 1px 4px #000; pointer-events: none; }
 
 .panel { position: absolute; z-index: 3; background: rgba(10,10,10,.85); border: 1px solid #333;
-    border-radius: 8px; padding: 10px 12px; }
-.panel h2 { margin: 0 0 6px; font-size: 11px; letter-spacing: .08em; font-weight: 700; color: #888; }
+    border-radius: 8px; padding: 8px 10px; }
+.panel h2 { margin: 0 0 4px; font-size: 11px; letter-spacing: .06em; font-weight: 700; color: #888; }
 
-#legend { right: 12px; bottom: 28px; min-width: 132px; }
-#legend .row { display: flex; align-items: center; gap: 8px; color: #aaa; font-variant-numeric: tabular-nums;
-    line-height: 1.7; }
-#legend .sw { width: 22px; height: 10px; border-radius: 2px; flex: none; }
+#legend { right: 10px; bottom: 34px; min-width: 112px; }
+#legend .row { display: flex; align-items: center; gap: 7px; color: #aaa; font-variant-numeric: tabular-nums;
+    line-height: 1.55; }
+#legend .sw { width: 18px; height: 8px; border-radius: 2px; flex: none; }
 
-#infobtn { position: absolute; z-index: 3; left: 12px; bottom: 28px; width: 30px; height: 30px;
-    background: none; border: 1px solid #555; color: #ccc; border-radius: 6px; cursor: pointer;
-    font: italic 700 17px 'Times New Roman', Times, serif; padding: 0; }
+#infobtn { position: absolute; z-index: 3; left: 10px; bottom: 24px; width: 26px; height: 26px;
+    background: none; border: 1px solid #555; color: #ccc; border-radius: 4px; cursor: pointer;
+    font: italic 700 15px 'Times New Roman', Times, serif; padding: 0; }
 #infobtn.active { border-color: #6889a8; color: #6889a8; }
-#info { left: 12px; bottom: 66px; width: 330px; max-width: calc(100vw - 48px); display: none; }
+#info { left: 10px; bottom: 56px; width: 290px; max-width: calc(100vw - 40px); display: none; }
 #info.open { display: block; }
-#info p { margin: 0 0 8px; color: #ccc; }
+#info p { margin: 0 0 6px; color: #ccc; }
 #info p:last-child { margin-bottom: 0; }
 #info a { color: #89b4fa; }
 
 #tip { position: absolute; z-index: 4; pointer-events: none; display: none; background: rgba(10,10,10,.9);
-    border: 1px solid #333; border-radius: 6px; padding: 3px 8px; color: #ddd; white-space: nowrap;
+    border: 1px solid #333; border-radius: 4px; padding: 2px 6px; color: #ddd; white-space: nowrap;
     font-variant-numeric: tabular-nums; }
 
 #origin { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #000;
@@ -136,14 +138,50 @@ for (const k of LEVELS) {
                   img: null, m: null, shown: false, holeRect: null, holes: [] };
 }
 
+// Quiet the OpenFreeMap dark style so the colours lead: roads thin and faint, labels small and
+// grey. Done by layer type and source layer, so it follows whatever the style holds. Water and
+// its label stay as drawn.
+const ROAD = { widthScale: 0.5, opacity: 0.3, color: '#000' };
+const LABEL = { sizeScale: 0.85, color: 'rgba(190,190,190,0.6)', halo: 'rgba(0,0,0,0.5)' };
+
+// Multiply the output values of a zoom-interpolated number (or a plain one) by f.
+function scaleNum(v, f) {
+    if (typeof v === 'number') return v * f;
+    if (Array.isArray(v) && v[0] === 'interpolate') {
+        const out = v.slice();
+        for (let i = 4; i < out.length; i += 2) out[i] = scaleNum(out[i], f);
+        return out;
+    }
+    return v;
+}
+
+function quietBasemap() {
+    for (const l of map.getStyle().layers) {
+        const sl = l['source-layer'];
+        if (l.type === 'line' && (sl === 'transportation' || sl === 'aeroway')) {
+            if (/casing/.test(l.id)) { map.setLayoutProperty(l.id, 'visibility', 'none'); continue; }
+            map.setPaintProperty(l.id, 'line-width', scaleNum(l.paint['line-width'], ROAD.widthScale));
+            map.setPaintProperty(l.id, 'line-color', ROAD.color);
+            map.setPaintProperty(l.id, 'line-opacity', ROAD.opacity);
+        } else if (l.type === 'symbol' && l.layout['text-field'] && !/^water/.test(l.id)) {
+            map.setLayoutProperty(l.id, 'text-size', scaleNum(l.layout['text-size'] ?? 16, LABEL.sizeScale));
+            map.setPaintProperty(l.id, 'text-color', LABEL.color);
+            map.setPaintProperty(l.id, 'text-halo-color', LABEL.halo);
+            map.setPaintProperty(l.id, 'text-halo-width', 1);
+            if (l.layout['icon-image']) map.setPaintProperty(l.id, 'icon-opacity', 0.4);
+        }
+    }
+}
+
 function addLayers() {
+    quietBasemap();
     const firstSymbol = map.getStyle().layers.find(l => l.type === 'symbol');
     for (const k of LEVELS) {
         const lv = layers[k];
         map.addSource(lv.id, { type: 'canvas', canvas: lv.canvas, animate: false,
             coordinates: [[-180, 85], [180, 85], [180, -60], [-180, -60]] });
         map.addLayer({ id: lv.id, type: 'raster', source: lv.id, layout: { visibility: 'none' },
-            paint: { 'raster-opacity': 1, 'raster-fade-duration': 0, 'raster-resampling': 'linear' } },
+            paint: { 'raster-opacity': 1, 'raster-fade-duration': 0, 'raster-resampling': 'nearest' } },
             firstSymbol && firstSymbol.id);
     }
 }

@@ -45,10 +45,12 @@ All of this runs in the worker (`worker.js`, `js/`); the page only shows what it
 7. **Cancelling.** The search yields every ~30 ms; a newer click or view stops an older window
    solve at the next yield. A camera move does not stop a click's L10 solve; the windows for the
    newest view follow it.
-8. **Painting.** The worker paints each level into an RGBA buffer, linear in Web Mercator y with
-   one column per cell column (as the L10 paint always was), and sends it with its corners. The
+8. **Painting.** The worker paints each level into an RGBA buffer, laid out linear in Web Mercator
+   y with one column per cell column (as the L10 paint always was), each canvas row taking the
+   value of the cell row it falls in, and sends it with its corners. The
    page puts each into its own MapLibre canvas source (`walk`, `walk3`, `walk1`, finest on top,
-   all below the basemap's first label layer, `raster-fade-duration: 0`, linear resampling). The
+   all below the basemap's first label layer, `raster-fade-duration: 0`, nearest resampling, so
+   cells are sharp squares). The
    canvas is uploaded to the GPU once per change, not every frame.
 9. **Holes.** Where a finer window is shown, the coarser canvas has that rectangle cleared, so
    coarse colours do not show through the window's water or unreached land. The hole is rounded
@@ -77,8 +79,9 @@ The page's longest frame gap during an L1 window solve was ~20 ms.
 the coarse answer at the border. The coarse answer can also be a little early or late at the
 border (half a coarse cell). Both show up as small seams at the window edge, not as wrong times
 inside it. In checks near Cluj and in the Alps the bands carry on across window edges with only
-small steps. Linear resampling also leaves a faint 1-3 px line along each window edge, where the
-coarser canvas's hole edge is blended; the edges sit in the margin, off screen once the view has
+small steps. Along a window's north and south edges a strip up to one coarser cell tall (about 5
+px at zoom 9) shows both levels at once and so reads a little brighter, because the hole is
+rounded inwards to whole canvas rows; the edges sit in the margin, off screen once the view has
 settled.
 
 **Small water.** MAP gives exactly 0.06 min/m (1 km/h) to seas and lakes alike, including ponds

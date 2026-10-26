@@ -16,8 +16,8 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 - T-020 [P1] Canoe data, rivers: RiverATLAS to river step records at L1, L3 and L10 (Q >= 1 m³/s, v from Q, gradient classes), OSM falls, dams and weirs, HydroLAKES reservoirs (docs/canoe.md 4). Taking, 2026-10-26 (agent).
 - T-021 [P1] Canoe data, lakes and sea: water tiles (kind, shore, links) at all levels and the 0.25° sea grid from drifter currents and ERA5 summer waves, ice and sea temperature (docs/canoe.md 4). Taking, 2026-10-26 (agent).
 - T-022 [P1] Search with layers: canoe + carrying nodes, transfers, directed river and sea edges, weight = time + K x hazard (hazard 0 until T-006), seeding by layer, the sea painted; measure speed (docs/canoe.md 5, 7). Synthetic data until T-020/T-021. Taking, 2026-10-26 (agent).
-- T-029 [P1] Look up close: crisp cells instead of blurred (nearest resampling), smaller panels and fonts, a quieter basemap (thinner, fainter roads; smaller, fainter labels). Taking, 2026-10-26 (agent).
 - T-030 [P1] Finer than 1 km when zoomed in: design a 100 m level (LC100 land cover, roads, GLO-90 terrain) for windows from zoom ~10, with sizes, times and what it means for publishing; for Anita's review. Taking, 2026-10-26 (agent).
+- T-037 [P3] Window edge strip: with nearest resampling, the coarser canvas shows as a brighter strip (up to one coarser cell, ~5 px at zoom 9) along a finer window's north and south edges, since the hole is rounded inwards to whole canvas rows. Off screen once the view settles; fix by aligning hole rows to the finer window or painting the coarse edge row clear.
 
 ## M1: canoe, today
 

@@ -1,5 +1,6 @@
 # Archive
 
+- T-029 [P1] Look up close. Done 2026-10-26: nearest resampling (cells are sharp squares; paint takes the cell row, no row blend), UI 12 px body and 16 px title, basemap roads 0.5x width at 0.3 opacity and labels 0.85x in faint grey, applied by layer type in `quietBasemap()`. Edge strip follow-up is T-037.
 - T-005 [P1] Canoe design. Done 2026-10-26: docs/canoe.md, approved by Anita ("looks good, lets try it"), sea coloured on a canoe start, K = 1000 h to start. Build is T-020 to T-024. notes/T-005.md.
 - T-009 [P1] Own walking surface, stage A. Done 2026-10-26: MAP's recipe rebuilt at 1 km from LC100 2019 + GMTED (`tools/surface/`, layers in `data/surface/`); off-road median ratio to MAP 1.00, terrain alone within 2%, land cover flips give p10-p90 0.72-1.18. docs/surface.md, notes/T-009.md.
 - T-019 [P2] Split worker.js into ES modules. Done 2026-10-26: `worker.js` is a thin module-worker entry over `js/` (session, levels, search, windows, tiles, paint, config); screenshots at default and zoom 8 pixel-identical, smoke passes, timings unchanged.
