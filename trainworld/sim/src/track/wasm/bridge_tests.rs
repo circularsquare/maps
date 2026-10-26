@@ -153,6 +153,50 @@ fn a_traced_line_goes_in_as_one_route() {
     }
 }
 
+/// T-1290: a real high-speed line traced at a design speed of 320 keeps its 7,500 m curve for
+/// over 300 km/h, previewed and built; at 160 every curve is capped at 1,796 m as before.
+#[test]
+fn a_traced_line_keeps_its_wide_curves_at_a_high_design_speed() {
+    for kmh in [160.0, 320.0] {
+        let mut a = merc();
+        a.set_design_speed(kmh);
+        a.set_route_hsr(true);
+        let (bx, by) = base(&a);
+        let k = crate::track::frame::merc_k(by);
+        // 3 km straight, a 7,500 m curve through 40 degrees, 3 km straight, every 10 ground m
+        let mut xy: Vec<(f64, f64)> = (0..=300).map(|i| (bx + i as f64 * 10.0 * k, by)).collect();
+        let (r, turn) = (7500.0, 40f64.to_radians());
+        for i in 1..=(r * turn / 10.0) as usize {
+            let t = i as f64 * 10.0 / r;
+            xy.push((bx + (3000.0 + r * t.sin()) * k, by + (r - r * t.cos()) * k));
+        }
+        let (ex, ey) = *xy.last().unwrap();
+        for i in 1..=300 {
+            xy.push((ex + i as f64 * 10.0 * k * turn.cos(), ey + i as f64 * 10.0 * k * turn.sin()));
+        }
+        let lonlat: Vec<f64> = xy.iter().flat_map(|&(x, y)| a.to_lonlat(x, y)).collect();
+        let t = a.trace_route(&lonlat, 25.0, 2, 0);
+        assert!(!t.is_empty() && t[0] <= 25.0, "{kmh}: worst {:?}", t.first());
+        let (sx, sy) = xy[0];
+        let (fx, fy) = *xy.last().unwrap();
+        let e = [0.0, 0.0, sx, sy, 0.0, 0.0, 0.0, fx, fy, 0.0];
+        assert_eq!(a.preview_route(&e, &t[3..], 2, false)[0], 1.0, "{kmh}: {}", a.issue_kinds());
+        let slowest = a.preview_render_speeds().iter().copied().fold(f32::INFINITY, f32::min);
+        assert_eq!(a.add_route(&e, &t[3..], 2, false), 0, "{kmh}: {}", a.issue_kinds());
+        let edges = alive(&a);
+        assert_eq!(a.hsr_edges(), edges, "{kmh}: high-speed track");
+        let radii: Vec<f64> = edges.iter().flat_map(|&e| a.w.net.edge_pieces(e).iter().filter(|p| p.k != 0.0).map(|p| p.ground_radius()).collect::<Vec<_>>()).collect();
+        assert!(!radii.is_empty());
+        if kmh == 160.0 {
+            assert!(radii.iter().all(|&r| r <= R_CAP + 1.0), "{kmh}: {radii:?}");
+            assert!(slowest < 160.5, "{kmh}: {slowest}");
+        } else {
+            assert!(radii.iter().all(|&r| r > design_radius(300.0) && r <= design_radius(320.0) + 1.0), "{kmh}: {radii:?}");
+            assert!(slowest > 300.0, "{kmh}: slowest {slowest} km/h");
+        }
+    }
+}
+
 #[test]
 fn a_long_route_bridges_each_river_on_its_own() {
     // a gentle zigzag with a corner every km; then corners 10 km apart, a river mid-leg

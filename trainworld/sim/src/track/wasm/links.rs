@@ -421,7 +421,36 @@ impl TrackApi {
         }
         ops.extend(st.iter().map(|&node| Op::Station { node, data: None }));
         ops.extend(tail);
+        let joins = self.station_joins(&ops, &st);
+        ops.extend(joins);
         Some((ops, built, st))
+    }
+
+    /// T-1299: the ops joining the two pieces left at each removed station's node into one where
+    /// they simply join (`unjoin_near`'s rules: on one straight, alike in kind and state), planned
+    /// on the track as `ops` leave it. A piece already joined at another station is left as it is.
+    fn station_joins(&mut self, ops: &[Op], st: &[u32]) -> Vec<Op> {
+        let Ok(inv) = self.w.sketch(Op::Batch(ops.to_vec()), false) else { return vec![] };
+        let mut out = vec![];
+        let mut used: Vec<u32> = vec![];
+        for &n in st {
+            let net = &self.w.net;
+            if !net.node_ok(n) || net.node_ports[n as usize].n != 2 || net.node_platform[n as usize] > 0 {
+                continue;
+            }
+            let ends: Vec<u32> = net.node_ports[n as usize].ends().iter().map(|&c| c >> 1).collect();
+            let e = ends[0];
+            if ends.iter().any(|x| used.contains(x)) || net.edge_a[e as usize] == net.edge_b[e as usize] {
+                continue;
+            }
+            let s = if net.edge_a[e as usize] == n { 0.0 } else { net.edge_len[e as usize] };
+            if let Some((j, _)) = self.unjoin_near(e, s, 1e-6) {
+                used.extend(ends);
+                out.extend(j);
+            }
+        }
+        self.w.unsketch(inv);
+        out
     }
 
     /// Construct what a line needs to run: its path's edges and its stops.

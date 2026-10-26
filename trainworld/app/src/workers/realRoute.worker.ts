@@ -27,8 +27,8 @@ export type ToRouter =
   | { kind: "init"; page: string; graphs: string }
   /** the view: the graphs of the regions in it are fetched ahead of a click */
   | { kind: "view"; w: number; s: number; e: number; n: number }
-  /** `ra`, `rb`: the snap radius at each click, ground m */
-  | { kind: "route"; seq: number; a: [number, number]; b: [number, number]; ra: number; rb: number; tracks: number; level: number; tol: number }
+  /** `ra`, `rb`: the snap radius at each click, ground m; `design` the target max speed, km/h (T-1290) */
+  | { kind: "route"; seq: number; a: [number, number]; b: [number, number]; ra: number; rb: number; tracks: number; level: number; tol: number; design: number }
   /** the route asked as `seq` is no longer wanted (the pointer left real track, the run ended): a
    * search or fit still running for it stops at its next look (T-1039) */
   | { kind: "drop"; seq: number }
@@ -619,6 +619,7 @@ async function handle(m: ToRouter) {
     await apiReady;
     if (m.seq !== latest) return;
     const t1 = performance.now();
+    api!.set_design_speed(m.design);
     const out = await traceLatest(m.seq, line, m.tol, m.tracks, m.level);
     if (!out) return;
     const ms = performance.now() - t1;

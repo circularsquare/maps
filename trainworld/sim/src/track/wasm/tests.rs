@@ -2447,6 +2447,61 @@ fn a_free_station_lays_its_own_track() {
     assert_eq!(live_edges(&b).len(), 1);
 }
 
+/// T-1299: removing a station on its own piece of track (laid on open ground, or splitting a
+/// piece) leaves one piece where the two either side simply join, built or not, with the lines
+/// over it still running; one undo brings back the station and both pieces. Pieces unlike each
+/// other (built beside blueprint) stay two.
+#[test]
+fn removing_a_station_joins_the_pieces_either_side() {
+    let station = |t: &TrackApi| (0..t.w.net.node_count() as u32).find(|&k| t.w.net.node_ok(k) && t.w.net.node_platform[k as usize] > 0).unwrap();
+    // on open ground
+    let mut a = api();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(240.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_free_station(&ends, 2, 200, "Open".into()), 0, "{}", a.issues());
+    let (st, before) = (station(&a), live_edges(&a));
+    assert_eq!(before.len(), 2);
+    assert_eq!(a.remove_station(st), 0, "{}", a.issues());
+    let left = live_edges(&a);
+    assert_eq!(left.len(), 1, "one piece left");
+    assert!(!a.w.net.node_ok(st), "the joint went too");
+    assert!((a.w.net.edge_len[left[0] as usize] - 240.0).abs() < 0.01);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(live_edges(&a), before);
+    assert_eq!(a.w.net.node_platform[st as usize], 200);
+    // splitting a constructed piece, a line stopping there and running through
+    let mut b = api();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
+    assert_eq!(b.add_route(&ends, &[], 2, false), 0);
+    let end = |t: &TrackApi, x: f64| t.nodes_info().chunks(10).find(|c| (c[1] - x).abs() < 1e-6).unwrap()[0] as u32;
+    let (w, east) = (end(&b, 0.0), end(&b, 3000.0));
+    assert_eq!(b.add_station(1, w, 0.0, 0.0, 200, "West".into()), 0);
+    assert_eq!(b.add_station(1, east, 0.0, 0.0, 200, "East".into()), 0);
+    assert_eq!(b.add_station(2, live_edges(&b)[0], 1500.0, 0.0, 200, "Middle".into()), 0, "{}", b.issues());
+    let mid = end(&b, 1500.0);
+    let id = b.new_line_id();
+    assert_eq!(b.set_line(id, &[w, mid, east], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", b.issues());
+    assert_eq!(b.construct_line(id), 0, "{}", b.issues());
+    assert_eq!(live_edges(&b).len(), 2);
+    assert_eq!(b.remove_station(mid), 0, "{}", b.issues());
+    let left = live_edges(&b);
+    assert_eq!(left.len(), 1, "one piece left");
+    assert!(b.w.net.edge_built[left[0] as usize]);
+    assert!((b.w.net.edge_len[left[0] as usize] - 3000.0).abs() < 0.01);
+    assert!(!b.w.net.line_broken[id as usize]);
+    assert_eq!(b.w.net.line_stops(id), &[w, east]);
+    // built track beside blueprint: two pieces stay
+    let mut c = api();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1000.0, 0.0).iter()).copied().collect();
+    assert_eq!(c.add_route(&ends, &[], 2, false), 0);
+    let j = end(&c, 1000.0);
+    assert_eq!(c.add_station(1, j, 0.0, 0.0, 200, "Joint".into()), 0, "{}", c.issues());
+    assert_eq!(c.construct(&live_edges(&c), &[j]), 0, "{}", c.issues());
+    let on = [1.0, j as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 2000.0, 0.0, 0.0];
+    assert_eq!(c.add_route(&on, &[], 2, false), 0, "{}", c.issues());
+    assert_eq!(c.remove_station(j), 0, "{}", c.issues());
+    assert_eq!(live_edges(&c).len(), 2, "built and blueprint stay apart");
+}
+
 /// T-255: quad track is the drawn double track and an express double track beside it, end to
 /// end; a station on one pair gets its twin on the other.
 #[test]

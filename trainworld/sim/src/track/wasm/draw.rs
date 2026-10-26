@@ -323,7 +323,8 @@ impl TrackApi {
 
     /// A real railway's line as corners for `add_route` (T-727, `trace.rs`): `lonlat` the line as
     /// lon, lat pairs from one end to the other, `tol` how far the track may lie from it (ground
-    /// m), quad track (`tracks` 4) keeping its inner pair at 100 m. Returns [worst, mean distance
+    /// m), quad track (`tracks` 4) keeping its inner pair at 100 m, curves laid out for the design
+    /// speed (`set_design_speed`, T-1290). Returns [worst, mean distance
     /// (m), corner count, then each corner's x, y, radius (0 auto), level], or empty if it cannot
     /// be fitted.
     pub fn trace_route(&self, lonlat: &[f64], tol: f64, tracks: u8, level: i8) -> Vec<f64> {
@@ -337,7 +338,7 @@ impl TrackApi {
         let f = self.w.net.frame();
         let line: Vec<(f64, f64)> = lonlat.chunks_exact(2).map(|p| f.from_lonlat(p[0], p[1])).collect();
         let r_min = if tracks == 4 { MIN_RADIUS + QUAD_SPACING } else { MIN_RADIUS };
-        RouteTrace { t: crate::track::trace::Tracer::new(&line, f.scaled(), tol, r_min, level) }
+        RouteTrace { t: crate::track::trace::Tracer::new(&line, f.scaled(), tol, r_min, self.route_cap, level) }
     }
 
     /// The node the last `add_route` ended at, so the next segment can start from it (T-418).

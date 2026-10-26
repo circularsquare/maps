@@ -45,8 +45,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   7,183 at 320 (`design_radius`, `TrackApi::set_design_speed`). It also sizes the lead-in curves of
   a drawn segment (`lead_in_capped`). Above 160, a corner the tool makes whose curve comes out
   wider than 1,796 m gets that radius set, since an auto radius is always capped at 1,796 m; so
-  drawn track keeps its shape, existing track is untouched, and a corner of a real line's snapped
-  route (fitted at 1,796 m) stays auto. Trains still run at most their top speed. A segment from a free point is straight. A segment ending on track or a node joins
+  drawn track keeps its shape and existing track is untouched. A real line's snapped route is
+  fitted with its auto radii capped at the design radius too, and its corners wider than 1,796 m
+  get theirs set the same way (T-1290). Trains still run at most their top speed. A segment from a free point is straight. A segment ending on track or a node joins
   it like a turnout, so it has the lead-in shape (a lead-in PI at each end). Refused: a curve under
   100 m (the ghost and circle red), a click within 5 degrees of straight behind the start ("turn
   back on itself": the circle grows without bound), and anything the edit refuses (water, crossing
@@ -430,7 +431,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   deleting one reroutes by the fastest path, unless that path reverses where the old one did not,
   or marks the line broken. Removing a station a line stops at takes it out of the line's stops
   and routes the line through the rest the same way, else leaves it broken (T-859); one undo
-  restores both. A line may pass a station without stopping, and may stop at a station
+  restores both. The two pieces left either side of a removed station become one where they
+  would join under a platform (on one straight, alike in track count, type and built state;
+  `unjoin_near`), in the same edit (T-1299). A line may pass a station without stopping, and may stop at a station
   twice, never twice in a row: stops that would repeat in a row count once (`distinct_stops` in
   `sim/src/track/wasm/lines.rs`), so taking out a loop's only middle stop leaves a one-stop line.
   A line with one stop or none is inactive: no route, no trains, nothing refused (T-1242).

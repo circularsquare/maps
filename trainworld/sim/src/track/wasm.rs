@@ -14,7 +14,7 @@ use super::boarding::Boarding;
 use super::bridge;
 use super::cost::{GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask};
 use super::frame::FrameKind;
-use super::geom::{self, GeomIssue, Pi};
+use super::geom::{self, design_radii, GeomIssue, Pi};
 use super::net::{CrossKind, EdgeData, Issue, LineData, LoopKind, Network, NodeData, StationData};
 use super::params::*;
 use super::profile;
@@ -1025,33 +1025,6 @@ fn tangent_arc(x: f64, y: f64, level: i8, level_to: i8, dir: f64, to: (f64, f64)
         pis.push(Pi::new(px, py, 0.0, if j < n / 2 { level } else { level_to }).quantised());
     }
     (Ok(pis), circle)
-}
-
-/// T-817: at a design radius `cap` above `R_CAP`, each auto corner of `verts` named in `made`
-/// whose curve under that cap is wider than `R_CAP` gets that radius set, since every later fit
-/// caps an auto radius at `R_CAP`. Floored to the millimetre and eased like `stroke_pieces` where
-/// the scale at the arc's middle leaves it a hair too long for its legs.
-fn design_radii(verts: &mut [Pi], made: &[usize], cap: f64, scaled: bool) {
-    if cap <= R_CAP || made.is_empty() {
-        return;
-    }
-    let f = geom::fit_capped(verts, scaled, cap);
-    let mut set = vec![];
-    for &i in made {
-        if verts[i].radius == 0.0 && f.radius[i] > R_CAP {
-            verts[i].radius = (f.radius[i] / QUANT).floor() * QUANT;
-            set.push(i);
-        }
-    }
-    for _ in 0..4 {
-        let over: Vec<usize> = geom::fit_in(verts, scaled).issues.iter().filter_map(|g| if let GeomIssue::ArcDoesNotFit(j) = g { Some(*j) } else { None }).filter(|j| set.contains(j)).collect();
-        if over.is_empty() {
-            break;
-        }
-        for j in over {
-            verts[j].radius = quant(verts[j].radius * (1.0 - 1e-4));
-        }
-    }
 }
 
 /// A lead-in PI leaving (x, y) on heading `dir` towards `toward` (`lead_in`), or None when the

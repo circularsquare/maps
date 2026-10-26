@@ -4,6 +4,7 @@
 // meet) is refused with "No real track joins these points"; a second click away from real track
 // draws an ordinary segment. Brussels to Rotterdam snaps across the Belgian-Dutch border; in
 // Mumbai, with coverage switched off as if no graph were built, there is no ring and the clicks draw an ordinary segment (T-913).
+// With High speed picked, Hongqiao to Hangzhou is fitted for 320 km/h and placed as high-speed track (T-1290).
 // Reports the router's and the fit's times and the page's longest task.
 //   node trainworld/checks/t727-snap.mjs [url]     (from the maps root; about 2 minutes)
 // Writes artifacts/trainworld/t727-snap.json and t727d-*.png screenshots.
@@ -132,6 +133,38 @@ try {
     await page.waitForTimeout(500);
     const e2 = (await count()).edges;
     result(u && e2 === e0, `${name}: one undo takes it all away`, `${e2} pieces after, ${e0} before`);
+  }
+
+  // ---- T-1290: with High speed picked (320 km/h), Hongqiao to Hangzhou is fitted for it: most of
+  // its length previewed above 160 km/h, placed as high-speed track
+  {
+    await page.evaluate(async () => { window.tw.tools.reset(); (await import('/src/game/ui.ts')).setTrackType('hsr'); });
+    const a = [121.31702, 31.19403], b = [120.2122, 30.29045];
+    const e0 = (await count()).edges;
+    await go(...a, 13);
+    await click(...a);
+    await go(...b, 13);
+    const s = await settle();
+    const fast = await page.evaluate(() => {
+      const pv = window.tw.tools.lastPreview;
+      if (!pv?.speeds) return null;
+      let all = 0, over = 0, top = 0;
+      for (let i = 0; i < pv.speeds.length && 3 * i + 5 < pv.pts.length; i++) {
+        const d = Math.hypot(pv.pts[3 * i + 3] - pv.pts[3 * i], pv.pts[3 * i + 4] - pv.pts[3 * i + 1]);
+        all += d;
+        if (pv.speeds[i] > 160.5) over += d;
+        top = Math.max(top, pv.speeds[i]);
+      }
+      return { share: all > 0 ? over / all : 0, top };
+    });
+    report.highSpeed = { ...s, fast };
+    await click(...b);
+    await waitEdges(e0);
+    await page.waitForTimeout(500);
+    const placed = await page.evaluate((e0) => { const es = window.tw.world.value.edges; return { n: es.length - e0, hsr: es.filter((e) => e.hsr).length }; }, e0);
+    result(s.phase === 'done' && fast && fast.share > 0.8 && fast.top > 250 && placed.n > 20 && placed.hsr === placed.n, 'hongqiao-hangzhou at high speed: fitted for 320 km/h', `${((fast?.share ?? 0) * 100).toFixed(0)}% of its length over 160 km/h, top ${fast?.top?.toFixed(0)} km/h; ${placed.hsr} of ${placed.n} pieces high speed; tag "${s.tag}"`);
+    await undo();
+    await page.evaluate(async () => { window.tw.tools.reset(); (await import('/src/game/ui.ts')).setTrackType(2); });
   }
 
   // ---- no route: Tokyo to London

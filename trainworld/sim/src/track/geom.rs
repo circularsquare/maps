@@ -382,6 +382,33 @@ pub fn fit_capped(v: &[Pi], scaled: bool, cap: f64) -> Fit {
     f
 }
 
+/// T-817: at a design radius `cap` above `R_CAP`, each auto corner of `verts` named in `made`
+/// whose curve under that cap is wider than `R_CAP` gets that radius set, since every later fit
+/// caps an auto radius at `R_CAP`. Floored to the millimetre and eased like `stroke_pieces` where
+/// the scale at the arc's middle leaves it a hair too long for its legs.
+pub fn design_radii(verts: &mut [Pi], made: &[usize], cap: f64, scaled: bool) {
+    if cap <= R_CAP || made.is_empty() {
+        return;
+    }
+    let f = fit_capped(verts, scaled, cap);
+    let mut set = vec![];
+    for &i in made {
+        if verts[i].radius == 0.0 && f.radius[i] > R_CAP {
+            verts[i].radius = (f.radius[i] / QUANT).floor() * QUANT;
+            set.push(i);
+        }
+    }
+    for _ in 0..4 {
+        let over: Vec<usize> = fit_in(verts, scaled).issues.iter().filter_map(|g| if let GeomIssue::ArcDoesNotFit(j) = g { Some(*j) } else { None }).filter(|j| set.contains(j)).collect();
+        if over.is_empty() {
+            break;
+        }
+        for j in over {
+            verts[j].radius = quant(verts[j].radius * (1.0 - 1e-4));
+        }
+    }
+}
+
 /// Height breakpoints: level at every vertex, a ramp of 200 m per level centred between two
 /// vertices of different levels (so the result does not depend on the drawing direction).
 fn vertical(v: &[Pi], vs: &[f64], issues: &mut Vec<GeomIssue>) -> Vec<[f64; 2]> {

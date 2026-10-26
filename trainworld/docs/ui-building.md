@@ -199,7 +199,9 @@ switch on, the track tool follows the real network the layer draws.
   (`TrackApi.trace_start`, run in the router worker's own track model in steps of a few ms, with a
   look at its messages every 25 ms so a newer rest, or the pointer leaving real track, drops a search
   or fit still running) are previewed by the clock worker and replace it with the usual tag. A search
-  or fit over 300 ms shows the small spinner in the tag. Changing the elevation or double and quad fits the route again.
+  or fit over 300 ms shows the small spinner in the tag. The fit lays the curves out for the
+  target max speed, as drawn track is (with High speed picked, 320 km/h) [T-1290]; changing the
+  elevation, the track or the target max speed fits the route again.
 - **The second click** places the route as one segment: one edit, one undo step, Shift or keep
   placing carrying on from its end. A click before the route is ready waits for it. It ends on the
   player's own track when the pointer is on it, else at the real line's snap point.
@@ -311,7 +313,8 @@ inspectors' Remove buttons and the Select tool's Remove ask the same way. A remo
 line asks too, built or not [T-859]: a row per line under the question, its bullet then what
 happens ("subway 4 will lose its stop at Nevins St and stop running until you fix its route."),
 from the track model's trial of the removal (`TrackApi.removal_lines`). Lines are removed from the
-line panel.
+line panel. A removed station's two pieces of track become one where they simply join
+([track-and-service.md](track-and-service.md) "Lines", T-1299).
 
 ## The Select tool
 
