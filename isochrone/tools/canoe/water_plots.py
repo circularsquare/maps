@@ -252,8 +252,8 @@ def sea():
     seaice = np.where(dbg["ice_has"], ice, np.nan)
     fig, axes = plt.subplots(2, 1, figsize=(20, 14))
     raw_dir = os.path.join(HERE, "data", "raw", "nsidc_g02135")
-    for ax, (name, ylim, files) in zip(axes, (("Arctic, JJA mean ice (ERA5) and NSIDC median edges: Jun yellow, Jul green, Aug magenta", (50, 85), "N"),
-                                                ("Southern edge of the grid, DJF mean ice (ERA5) and NSIDC Dec/Jan/Feb median edges", (-60, -50), "S"))):
+    for ax, (name, ylim, files) in zip(axes, (("Arctic, August mean ice (ERA5) and NSIDC median edges: Jun yellow, Jul green, Aug magenta", (50, 85), "N"),
+                                                ("Southern edge of the grid, February mean ice (ERA5) and NSIDC Dec/Jan/Feb median edges", (-60, -50), "S"))):
         im = ax.imshow(seaice, extent=ext, cmap="Blues_r", vmin=0, vmax=100, interpolation="nearest", aspect="auto")
         ax.set_facecolor("#999")
         ax.contour(np.linspace(-180 + 0.125, 180 - 0.125, w), np.linspace(85 - 0.125, -60 + 0.125, h), np.nan_to_num(seaice), [15], colors="r", linewidths=0.8)

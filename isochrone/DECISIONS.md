@@ -5,6 +5,15 @@ reasoning and what it replaced.
 
 ## 2026-10-26
 
+- **River gradient north of 60N comes from GMTED, not RiverATLAS** (T-020): `sgr_dk_rav` there
+  (HYDRO1k-based) sums to a 13 km drop down the lower Yukon and closed most Alaskan main stems;
+  GMTED's drop over 10 km gives the Yukon 109 m from Fort Yukon (about 130 real). South of 60N
+  `sgr_dk_rav` is kept as designed.
+- **OSM rapids close a step on rivers of 1000 m³/s or more** (T-020): the DEM gradient misses the
+  Livingstone Falls (the Congo reads 0-1 m/km below Kinshasa), and a named rapids on a river that
+  big is not run with a laden canoe. Smaller rivers' OSM rapids are only the rapids class.
+- **A dam or weir outranks the gradient on its step** (T-020): the DEM drop at a dam is the dam
+  itself, so with the gradient first the Iron Gates stayed closed in 10,000 BC.
 - **Sea ice from the least-ice month** (T-033, orchestrator's call under "the season a paddler
   would choose"): August north of the equator, February south. The June-August mean closed
   Hudson Bay (37%) and the whole Arctic coast. Waves, currents and sea temperature keep the

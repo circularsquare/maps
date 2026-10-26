@@ -49,9 +49,21 @@ Canoe water and sea (`docs/canoe.md` 4, layouts in `notes/T-021.md`), into `data
 | `tools/canoe/sea.py` | Those to the 0.25° local-summer grid `sea.bin.gz` (currents, waves, ice, sea temperature) | seconds |
 | `tools/canoe/water_plots.py` | Strait and link checks, PNGs `maps/artifacts/isochrone/t021_*.png` | ~1 min |
 
+Canoe rivers (`docs/canoe.md` 4, layouts in `notes/T-020.md`), into `data/canoe/rivers.bin.gz`,
+`data/canoe/rivers/` and the `rivers` key of `data/canoe/index.json`; work files in
+`data/raw/rivers_work/`:
+
+| File | What | Time |
+|---|---|---|
+| `tools/canoe/rivers_osm.py` | OSM waterfalls, dams, weirs and rapids worldwide from QLever to `data/raw/osm_barriers/*.tsv` | ~1 min |
+| `tools/canoe/rivers.py` | Stages: `reaches` (RiverATLAS gdb to Q >= 1 reaches), `lakes` (HydroLAKES to an L1 lake/reservoir raster, pour points), `snap` (barriers to reaches), `build` (river steps at L10, L3, L1; GMTED gradient north of 60N), `index` (re-adds the `rivers` key) | ~3.5, 4, 1, 4 min; build peaks ~8 GB |
+| `tools/canoe/rivers_check.py` | `stats`: steps, km and classes per level and continent, read back from the files; `png`: river PNGs `maps/artifacts/isochrone/t020_*.png` | ~1 min each |
+
 Run with plain `python` (C:\Python39). Raw downloads: `data/raw/` (gitignored); the MAP surface
 is `data/raw/unzipped/2020_walking_only_friction_surface.geotiff` (726 MB), LC100 is
-`data/raw/lc100/` (2.3 GB), GMTED `data/raw/gmted/mn30_grd/` (0.4 GB).
+`data/raw/lc100/` (2.3 GB), GMTED `data/raw/gmted/mn30_grd/` (0.4 GB). RiverATLAS is not kept
+(6.8 GB unpacked): `rivers.py reaches` needs it back in `data/raw/riveratlas/` (figshare file
+20087321, ~13 min); its output `data/raw/rivers_work/reaches.npz` and `all_lines.npz` are kept.
 
 ## Checks
 

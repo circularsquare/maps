@@ -356,11 +356,12 @@ def main():
                             "bands": ["kind", "shore"], "tiles": found}
     log("L1: %d tiles, %.2f MB" % (len(found), sizes[1] / 1e6))
     ip = os.path.join(OUT, "index.json")
-    if os.path.exists(ip):                  # keep sea.py's entry
+    if os.path.exists(ip):                  # keep sea.py's and rivers.py's entries
         with open(ip) as fh:
-            index["sea"] = json.load(fh).get("sea")
-        if index["sea"] is None:
-            del index["sea"]
+            old = json.load(fh)
+        for key in ("sea", "rivers"):
+            if old.get(key) is not None:
+                index[key] = old[key]
     with open(ip + ".tmp", "w") as fh:
         json.dump(index, fh, separators=(",", ":"))
     os.replace(ip + ".tmp", ip)

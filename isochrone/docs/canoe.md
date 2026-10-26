@@ -58,14 +58,15 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
 - **Ice**: sea cells with mean ice cover above 15% in the least-ice month (August north of the
   equator, February south) have no canoe node.
 - **Moves on water**: 8 neighbours; the 8 knight moves only where all four cells involved are
-  open water (walking needs all four on land). At L3 and L10 a canoe edge exists only where the
+  open water and linked along both two-step paths (walking needs all four on land); past 20 km
+  from shore 8 neighbours only (section 7). At L3 and L10 a canoe edge exists only where the
   two cells' L1 water touches across their shared border (`links`, section 5): a strait narrower
   than a cell (the Bosporus, the Danish straits, fjords) stays open at L10, and two waters a few
   km apart are not joined. Inside one coarse cell all its water counts as joined, so an isthmus
   narrower than a cell can be crossed at L10 where one cell holds water of both sides; the L1
   window corrects it. (Corinth is not: no L10 or L3 cell holds both gulfs.)
 - **Portage has no edges of its own.** Unrunnable river steps are dropped: a fall, a dam, a weir,
-  or a reach steeper than 5 m/km (2 m/km where Q >= 1000). The search gets off (0.25 h), carries
+  a reach steeper than 5 m/km (2 m/km where Q >= 1000), or OSM-mapped rapids where Q >= 1000. The search gets off (0.25 h), carries
   along the bank at walking x 2 and gets back on (0.25 h), about the research's "1 h plus the
   carry" for a fall. Watersheds between rivers are crossed the same way. Upstream on a fast river,
   carrying along the bank can beat lining at 1.5 km/h; the search takes the quicker.
@@ -127,11 +128,13 @@ Water hazard can land first: its inputs exist once T-020 and T-021 do.
 | `data/canoe/l3/<r>_<c>.bin.gz` | L3, 5° tiles | the same 3 bands | 4.1 MB, 1130 tiles |
 | `data/canoe/l1/<r>_<c>.bin.gz` | L1, 5° tiles | `kind`, `shore` (links implicit at L1) | 15.0 MB, 1141 tiles |
 | `data/canoe/sea.bin.gz` | 0.25°, whole world | current U, V (int8, 0.02 m/s), summer wave height (uint8, 0.05 m), ice (uint8, %), sea temperature (int8, °C) | 0.6 MB |
-| `data/canoe/rivers.bin.gz` | L10, whole world | ~1.1 M river steps | ~5 MB |
-| `data/canoe/rivers/l3/`, `l1/` | 5° tiles | ~4 M and ~12 M river steps | ~15 MB, ~40-60 MB |
+| `data/canoe/rivers.bin.gz` | L10, whole world | 1.04 M river steps | 4.2 MB |
+| `data/canoe/rivers/l3/`, `l1/` | 5° tiles | 3.7 M and 11.3 M river steps | 15.4 MB, 941 tiles; 39.2 MB, 945 tiles |
 
 - Tiles share the speed tiles' grid and names (`docs/resolution.md`); `data/canoe/index.json`
-  lists them, and the sea grid. A tile with no land and only sea is not written (the same tiles
+  lists them, and the sea grid, and under `rivers` the river tiles (`{"1": {"tile", "path":
+  "rivers/l1", "tiles"}, "3": ...}`, written by `tools/canoe/rivers.py`; a copy is
+  `data/canoe/rivers/index.json`). A tile with no river steps is not written. A tile with no land and only sea is not written (the same tiles
   as the speed tiles): the worker treats it as open sea, `shore` sampled from the next coarser
   level (off by up to one coarse cell, only near a coast just outside the tile). Every file is
   gzip of whole bands one after another (band-sequential), each row-major from the north-west
@@ -158,42 +161,80 @@ Water hazard can land first: its inputs exist once T-020 and T-021 do.
   the annual mean, else 0 (40% of cells, mostly land). Wave height and sea temperature: the
   summer mean; ice: the August (north) or February (south) mean. Each is the mean of the four ERA5 points round the cell centre; cells with no ERA5 value (land, waves
   under ice) hold the nearest cell's, so a lookup anywhere returns a sea value.
-- **River steps**: one record per downstream step, stored with the tile of the upstream cell, in
-  columns: cell (uint32 within the tile), direction to the next cell (0-7), length (uint16, 10 m),
-  v (uint8, 0.01 m/s), class (uint8: flat, rapids, unrunnable, fall, dam, weir, in a reservoir).
-  The worker makes the upstream twin and drops the classes it closes, so a toggle (dams, era)
-  needs no new data. Length and v, not time, are stored, so p stays a worker constant (a heavy
-  dugout or a big crew later). If L1 comes out over 40 MB, T-020 stores reaches as chains (start
-  cell, then 3-bit directions).
-- **Rasterising.** Each reach with Q >= 1 is densified and walked through the cells of each
-  level; back-and-forth steps along a cell border are folded (A B A becomes A; 5% of L10 steps);
-  consecutive cells are 8-neighbours. A coarse step stores the total fine length and the
-  length-weighted mean v. Reaches inside lakes and the sea are dropped (the water cells join
-  inflow to outflow); reaches inside a reservoir are kept with that class.
+- **River steps**: one record per downstream step, stored with the tile of the upstream cell.
+  File: gzip of uint32 n, then columns cell (uint32[n]; row x 4320 + col at L10, local row x T +
+  col in a tile), length (uint16[n], 10 m), direction to the next cell (uint8[n], 0-7 as `links`),
+  v (uint8[n], 0.01 m/s), class (uint8[n]), little-endian, sorted by cell then direction. The
+  next cell may lie in a neighbouring tile or across 180°. Class: 0 flat, 1 rapids, 2
+  unrunnable, 3 fall, 4 dam, 5 weir, 6 in a reservoir. A step holding several takes the first
+  of fall, dam, weir, unrunnable, reservoir, rapids, flat: a dam goes before the gradient, since
+  the DEM's drop at a dam is mostly the dam. The worker makes the upstream twin and drops the
+  classes it closes, so a toggle (dams, era) needs no new data; an opened dam, weir or reservoir
+  step runs as flat. Length and v, not time, are stored, so p stays a worker constant (a heavy
+  dugout or a big crew later).
+- **Rasterising.** Each reach with Q >= 1 is cut into pieces of at most 0.002° and each piece
+  goes to the cell of its midpoint, per level; the reach's `LENGTH_KM` is spread over its pieces.
+  A step holds the length of its upstream cell's run. A run back into a cell already on the reach
+  folds the loop into that cell; a cell clipped only at a corner (under 0.3 of a cell's length)
+  between two diagonal neighbours is folded into the one before, so the step goes diagonally.
+  Consecutive cells are 8-neighbours. A reach's last cell runs on into its downstream reach's
+  first step; where several reaches meet there, the one with the most discharge carries on. Two
+  rivers on the same (cell, direction) keep one record: an open class first, then dam, weir or
+  reservoir, then a closed one, the bigger river among equals. A coarse step stores the total
+  fine length and the length-weighted mean v. A step whose two cells are water at that level
+  (speed 0) and half of whose length lies in a HydroLAKES lake is dropped (the water cells join
+  inflow to outflow); in a reservoir it is kept with class 6. On land cells the step is kept
+  whatever it crosses.
+- **Gradient classes**: flat under 1 m/km, rapids 1-5, unrunnable above 5 (above 2 where Q >=
+  1000 m³/s); a fall or an OSM rapids on a river of Q >= 1000 also closes the step (smaller
+  rivers' OSM rapids are class rapids). Gradient is RiverATLAS `sgr_dk_rav`; north of 60N, where
+  HydroSHEDS comes from HYDRO1k and that field is noise, it is the drop over at least 10 km
+  downstream of the reach start in GMTED (`data/surface/elev.tif`), from the lowest of the 3 x 3
+  pixels round each reach end, made never to rise downstream.
+- **Snapping** OSM points and reservoir pour points: to the nearest HydroRIVERS reach of any
+  size, kept only if that reach has Q >= 1 and lies within half its width (W = 7.2 Q^0.5 m) plus
+  0.5 km (falls, rapids), 0.3 km (dams, weirs; many are on ponds beside rivers) or 1 km (pour
+  points); the piece of the reach nearest the point takes it.
 - **Sources** (stage 1): RiverATLAS v1.0 (HydroRIVERS reaches with discharge, reach gradient
   `sgr_dk_rav`, and monthly minimum discharge for later; CC BY 4.0), HydroLAKES (local;
-  `Lake_type` 2 = reservoir, its pour point = the dam), OSM `waterway=waterfall|dam|weir` by
-  Overpass, the Natural Earth 10 m ocean polygon (public domain), the GDP drifter monthly
+  `Lake_type` 2 = reservoir, its pour point = the dam), OSM `waterway=waterfall|dam|weir|rapids`
+  and `natural=waterfall` (from QLever's OSM planet endpoint), GMTED2010 north of 60N, the Natural Earth 10 m ocean polygon (public domain), the GDP drifter monthly
   climatology, ARCO-ERA5 sampled to a local-summer mean of wave height and sea temperature and a
   least-ice-month mean of ice,
   NSIDC median ice edges as a check. SWORD's obstruction flags are a later check (1.6 GB).
 
 ## 5. Search
 
-- **One Dijkstra over the node ids**, as now, over each node's out-edges: grid moves of its
-  layer, its river steps (a per-level index built at load from the records), and transfers.
-  Directed edges need only that a cost is always worked out from u to v.
-- **Arrays per node**: weight and hazard (Float32), heap and position (Int32), and the move it was
-  reached by (Uint8: from-layer and move 0-16, for tracing the path). Time = weight - K x hazard.
+- **One Dijkstra over the node ids** (`js/search.js`), over each node's out-edges: grid moves of
+  its layer, its river steps, and transfers. Directed edges need only that a cost is always
+  worked out from u to v. The heap is indexed, 4 children a node, each entry's weight kept
+  beside it. A walking start with no hazard runs a separate small loop (the old walking search),
+  which the general one matches cell for cell.
+- **Per level** (`js/canoe.js`, built when a level is loaded on a canoe start): `canoeOf`, one
+  32-bit word a cell (water kind for grid edges, links, and flags: a land cell or a canoe node in
+  the 3 x 3 round it, 20 km or more from shore, river edges leave it), the current a cell (0.01
+  m/s, halved within 5 km of shore), and the river steps as out-edges by cell (each open step and
+  its upstream twin, with its time). Steps of the closed classes are left out. A water cell the
+  canoe data calls land (kind 0 where the speed is 0) is sea. Iced sea cells get no canoe node
+  unless a river step ends there.
+- **Arrays per node**: weight, time and hazard (Float32), and the move it was reached by (Uint8:
+  1-16 a grid move of its own layer, 17-25 a transfer from the other layer at offset (dc, dr),
+  26-33 a river step down and 34-41 up by move direction, 255 a window seed, 0 the start; the
+  predecessor's cell is this cell minus the move). While every hazard rate is 0 (`cfg.hazard`
+  off, until T-006) time is weight and both share one array.
+- **K** is one worker constant, `cfg.K` = 1000 h.
 - **Stop rule**: a node is not expanded once its time passes the 128-day limit or its survival
-  falls below 1%.
+  falls below 1%. The search ends at the first weight past 128 days + K ln 100 (128 days while
+  hazard is off).
 - **Windows**: each layer's ring is seeded from the same layer of the coarser level (land from
-  coarse land, canoe from the reached coarse canoe nodes round the point), with weight and
+  coarse land, canoe from the reached coarse canoe nodes round the point), with weight, time and
   hazard. A fine canoe node with no coarse canoe node near (a small river L10 lacks) is not
-  seeded; the search reaches it inside the window by a transfer. Reuse, cancelling and caps stay
-  as in `docs/resolution.md`.
+  seeded; the search reaches it inside the window by a transfer. Reuse and cancelling stay as in
+  `docs/resolution.md`; caps in section 7.
 - **Painting** a cell takes the least time of its nodes. On a canoe start sea and lakes are
   painted too, since where the canoe gets at sea is the answer; walking keeps water unpainted.
+  River water no river step crosses has no node and stays unpainted.
+- **Start mode** until the mode panel (T-008): the page's URL, `?mode=canoe`.
 
 ## 6. Hover and legend
 
@@ -205,27 +246,19 @@ Water hazard can land first: its inputs exist once T-020 and T-021 do.
 
 ## 7. Speed and memory
 
-Measured in node on the L10 grid (sea at 5 km/h, carrying x 2, 0.25 h transfers, no currents or
-rivers, 128-day limit; notes/T-005.md):
+Measurements: notes/T-022.md (and the first estimates, notes/T-005.md).
 
-| Start | Walking | Canoe, 16 moves at sea | Canoe, 8 moves at sea |
-|---|---|---|---|
-| Cluj | 0.23 s | 0.23 s | 0.21 s |
-| Lisbon | 0.07 s | 0.52 s | 0.42 s |
-| Jakarta | Java only | 0.50 s | 0.29 s |
-
-- The 128-day limit bounds the work: at 5 km/h a canoe covers ~5,000 km, ~1 M cells, not the
-  5.3 M sea cells of the world. No coarser open-sea grid is needed.
-- Currents (a square root per sea edge), river steps and the hazard array should add 20-50%:
-  **~0.3-0.8 s per canoe click at L10**, against 0.2-0.3 s walking. K cuts the sea-heavy cases
-  once hazard exists (the search stays near coasts).
-- **16 moves at sea** keep bands round (8 moves run up to 8% long on diagonals). If a normal
-  browser takes over 1 s, 8 moves past 20 km from shore is the fallback.
-- **Windows** now solve their water too, so a coastal window costs up to twice what it did at the
-  same size; the caps (2 M cells at L1, ~1-1.5 s) still bound it. T-022 measures and lowers the
-  L1 cap for canoe starts if needed.
-- **Memory** at L10: ~8.6 M nodes x 17 bytes plus `canoeOf` (4 bytes a cell), ~175 MB, against
-  ~90 MB now.
+- The 128-day limit bounds the work: at 5 km/h a canoe covers ~5,000 km, ~1.1 M nodes from a
+  coast at L10, not the 5.3 M sea cells of the world. No coarser open-sea grid is used.
+- **8 moves past 20 km from shore** (`cfg.sea8`), 16 nearer: with 16 everywhere a canoe click at
+  L10 took 1.0-1.1 s, over the 1 s limit; with 8 it takes **~0.75-0.85 s** (Cluj, Lisbon,
+  Jakarta), against ~0.2 s walking. Open-sea bands run up to 8% long on diagonals. K cuts the
+  sea-heavy cases once hazard exists (the search stays near coasts).
+- **Window caps** on a canoe start: 1.5 M cells at L3 (3 M walking), 2 M at L1 as walking, each
+  ~1.1-1.3 s at the cap. A 1400 x 900 view's windows take 0.1-0.35 s each.
+- **Memory** at L10 on a canoe start: ~8.25 M nodes; the per-cell canoe tables ~130 MB, the
+  search ~21 bytes a node while it runs (~175 MB) and 9 a node kept for seeding and tracing,
+  against ~90 MB walking.
 
 ## 8. Known approximations
 

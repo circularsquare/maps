@@ -20,10 +20,10 @@ Contents: 1 rivers, 2 lakes, 3 sea, 4 speeds and costs, 5 hazard, 6 10,000 BC,
 | **SWORD v16 / v17c** (SWOT River Database) | Rivers >= 30 m wide: ~10 km reaches and 200 m nodes with **width, slope (m/km), water surface elevation, number of channels, obstruction type (0 none, 1 dam, 2 lock, 3 low-permeable dam, 4 waterfall from HydroFALLS), lakeflag, daily climatological river ice flag**, up to 4 upstream and 4 downstream neighbours (so braids and some distributaries exist) | vector | CC BY 4.0 | v16: 1.6 GB netCDF zip (all continents); v17c: 3.9 GB netCDF zip |
 | **GRWL** (Global River Widths from Landsat) | Centrelines and widths at mean discharge, rivers >= 30 m | 30 m | CC BY 4.0 | vector 3.1 GB, mask 394 MB, summary stats 43 MB |
 | **GloRiC** | Classes for every HydroRIVERS reach (hydrologic, physio-climatic, geomorphic; 127 reach types) | same reaches as HydroRIVERS | HydroSHEDS licence | 575 MB global shapefile |
-| **RiverATLAS** | HydroRIVERS plus 281 attributes, incl. stream gradient and monthly min/max discharge | same reaches | CC BY 4.0 | 2.55 GB |
+| **RiverATLAS** | HydroRIVERS plus 281 attributes, incl. stream gradient and monthly min/max discharge | same reaches | CC BY 4.0 | 2.5 GB gdb zip (6.8 GB unpacked); data.hydrosheds.org sits behind a Cloudflare challenge, the figshare record 10.6084/m9.figshare.9890531 does not |
 | **Andreadis et al. 2013** width/depth | Bankfull width and depth per HydroSHEDS river from hydraulic geometry | per reach | see Zenodo record | small |
 | **MERIT Hydro** | 3 arc-second flow direction, width, upstream area; best Arctic coverage | 90 m | CC BY-NC 4.0 or ODbL (dual) | tens of GB global |
-| **OSM** | `waterway=waterfall` 89,576 objects, `waterway=rapids` 127,046 (taginfo, 2026-10-13); dams, weirs, canoe portage tags | point/line | ODbL | per-tag Overpass pulls are small; the planet is not |
+| **OSM** | `waterway=waterfall` 89,576 objects, `waterway=rapids` 127,046 (taginfo, 2026-10-13); dams, weirs, canoe portage tags | point/line | ODbL | per-tag Overpass pulls are small; the planet is not. QLever's OSM planet SPARQL endpoint (qlever.dev/api/osm-planet) gives each tag worldwide with centroids in seconds, when Overpass is full |
 | **GROD** | ~30k human obstructions (dams, locks, weirs) on the GRWL network | point | CC BY 4.0 | small; already folded into SWORD |
 | **HydroFALLS** | ~4,000 checked waterfalls | point | not yet released standalone (licence "coming 2024" on the product page); its points are inside SWORD as `obstr_type = 4` | n/a |
 
