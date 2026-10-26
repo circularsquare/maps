@@ -975,12 +975,17 @@ crowding rounds. There are no signals (SPEC 2.1).
 
 ### 6.7 Bus lines
 
-A bus line (T-1464; design notes/T-1445.md) is a line with no track: the player clicks points and
-the route runs straight between them. It shares lines' ids, schedules (buses or a headway per
+A bus line (T-1464, T-1465; design notes/T-1445.md) is a line with no track: the player clicks points
+and between two clicks the route follows the basemap's roads, or runs straight where they do not
+serve. It shares lines' ids, schedules (buses or a headway per
 demand level), trips, the boarding account and the fare curve; a bus is one 12 m vehicle.
 
-- **Road length**: the drawn ground length times 1.2. It sets the run time, the price and the
-  running cost; the bus is drawn along the drawn route.
+- **The route** is points, each with two bits: a corner (the player clicked it) and a road stretch
+  (the stretch ending at it follows roads). The app lays the roads (ui-building.md, "Drawing a bus
+  line"); the sim takes the points as they come. At most 8,000 points.
+- **Road length**: a road stretch counts at its drawn ground length, a straight one at 1.2 times it
+  (`bus::ROAD_FACTOR`). It sets the run time, the price and the running cost; the bus is drawn along
+  the route. Stops, crossings and each stop's stretch of route (`cover`) are in road metres.
 - **Stops place themselves** (`bus::plan`), never saved: every train station within 200 m of the
   route (two within 100 m of each other along it: the nearer to the route), both ends (an end within
   200 m of a station is that station), a stop where it crosses another bus route, and about one
@@ -997,4 +1002,5 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   shared between bus lines; running US$3 a bus-km and upkeep US$30 a road-km a day (real figures,
   `ECONOMY` times in the game). Removing or redrawing a constructed route is final and refunds
   nothing. A new bus line starts at a bus every 8, 10 and 20 minutes by level. A copy is planned.
-- **Saves**: a trailing `LBS1` block holds each bus line's route and whether it is constructed.
+- **Saves**: a trailing `LBS2` block holds each bus line's route (points and their bits) and whether it
+  is constructed; an `LBS1` block (T-1464) loads with every stretch straight.

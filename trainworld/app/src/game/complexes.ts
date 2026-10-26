@@ -16,7 +16,8 @@
 // each other form a complex too.
 //
 // Pure geometry, no signals (checks/t146-check.mjs runs it in node); the world's complexes and the
-// complex view are in game/complexView.ts.
+// complex view are in game/complexView.ts. `buildComplexes` builds from nothing and is the reference;
+// the world and the clock worker keep the same result up to date with game/complexBuilder.ts (T-1380).
 
 import type { StationId, StationInput } from "./types";
 

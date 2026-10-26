@@ -133,8 +133,8 @@ impl TrackApi {
             return None;
         }
         if net.is_bus(line) {
-            let pts = &net.line_bus[line as usize].as_ref().unwrap().points;
-            let stops = crate::track::bus::plan(net, line, pts, false).stops.iter().filter_map(|s| s.station).collect();
+            let r = net.line_bus[line as usize].as_ref().unwrap();
+            let stops = crate::track::bus::plan(net, line, &r.points, &r.kinds, false).stops.iter().filter_map(|s| s.station).collect();
             return Some((vec![], stops, vec![line]));
         }
         Some((net.line_path(line).iter().map(|&p| p >> 1).collect(), net.line_stops(line).to_vec(), vec![]))

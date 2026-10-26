@@ -73,8 +73,8 @@ export type EditOp =
   | { op: "removeStation"; node: NodeId }
   /** `buses` (T-1464): bus lines whose routes to construct */
   | { op: "construct"; edges: EdgeId[]; stations: NodeId[]; buses?: number[] }
-  /** T-1464: a planned bus line over a route (world metres, x, y flat), its stops placed by the
-   * sim; answered with its `line` */
+  /** T-1464: a planned bus line over a route (world metres, x, y and the point's kind per point, flat),
+   * its stops placed by the sim; answered with its `line` */
   | { op: "addBusLine"; route: number[]; name: string; colour: string }
   /** T-1464: a bus line's route drawn again (final and charged when it is constructed) */
   | { op: "busRoute"; line: number; route: number[] }
@@ -374,9 +374,12 @@ export interface ClockLine {
 export interface ClockBus {
   /** constructed: paid for and running */
   built: boolean;
-  /** the route as drawn, x, y flat */
+  /** the route, x, y flat: along the roads where they were found, straight elsewhere */
   route: number[];
-  /** road length, m: the drawn length times `BUS_ROAD_FACTOR` */
+  /** per route point, `bus::K_CORNER` (1: a point the player clicked) and `K_ROAD` (2: the route up to
+   * it follows roads) */
+  kinds: number[];
+  /** road length, m: the drawn length, times 1.2 on the straight stretches */
   roadM: number;
   /** the stops demand sees, in run 0's order: kind 0 an end, 1 a train station (`station` its
    * node), 2 a stop between, 3 where it crosses another bus route; `station` -1 for no station */

@@ -121,17 +121,43 @@ function pairsOf(flat: number[]): [string, string][] {
   return out;
 }
 
+/** T-1380: a node's or line's row gives the same view object for as long as the row stays (the worker
+ * posts only the rows that changed, T-1029), and the lists are the last ones when no object in them
+ * changed: what builds from the stations and lines (complexes, station names) then finds at once that
+ * nothing differs. */
+const stationViews = new WeakMap<object, StationInput>();
+const lineViews = new WeakMap<object, LineInput>();
+let lastStations: StationInput[] = [];
+let lastLines: LineInput[] = [];
+function sameObjects<T>(a: readonly T[], b: readonly T[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+
 /** The UI's world view from the worker's state. */
 function toWorld(s: ClockState, city: { population: number; jobs: number }): WorldView {
-  const stations: StationInput[] = s.nodes
+  let stations: StationInput[] = s.nodes
     .filter((n) => n.platform > 0)
-    .map((n) => ({
-      id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading,
-    }));
-  const lines: LineInput[] = s.lines.map((l) => ({
-    id: String(l.id), num: l.id, letter: l.letter || letterOf(l.name), symbol: l.letter, name: l.name, colour: l.colour, stops: l.stops.map(String),
-    tph: { high: l.tph[0], medium: l.tph[1], low: l.tph[2] },
-  }));
+    .map((n) => {
+      let v = stationViews.get(n);
+      if (!v) stationViews.set(n, v = {
+        id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading,
+      });
+      return v;
+    });
+  if (sameObjects(stations, lastStations)) stations = lastStations;
+  else lastStations = stations;
+  let lines: LineInput[] = s.lines.map((l) => {
+    let v = lineViews.get(l);
+    if (!v) lineViews.set(l, v = {
+      id: String(l.id), num: l.id, letter: l.letter || letterOf(l.name), symbol: l.letter, name: l.name, colour: l.colour, stops: l.stops.map(String),
+      tph: { high: l.tph[0], medium: l.tph[1], low: l.tph[2] },
+    });
+    return v;
+  });
+  if (sameObjects(lines, lastLines)) lines = lastLines;
+  else lastLines = lines;
   const lineStats: Record<string, LineStats> = {};
   const edgeLines = new Map<number, string[]>();
   for (const l of s.lines) {

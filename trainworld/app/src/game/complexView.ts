@@ -5,29 +5,42 @@
 
 import { computed, effect, signal } from "@preact/signals";
 import { buildComplexes, membersOf, type Complexes } from "./complexes";
-import type { StationId } from "./types";
+import { ComplexBuilder } from "./complexBuilder";
+import { PATCH_MODE } from "./patchMode";
+import type { StationId, StationInput } from "./types";
 import { selection } from "./ui";
 import { world } from "./world";
 import { groundScale } from "./coords";
 import { getWorldFrame } from "./cities";
 
-let lastKey = "";
-let last: Complexes = { of: new Map(), members: [] };
+/** The two builders keep their complexes up to date from the stations that changed (T-1380). */
+const builder = new ComplexBuilder();
+const nearBuilder = new ComplexBuilder();
+const same = (a: Complexes, b: Complexes) => a.members.length === b.members.length && a.of.size === b.of.size
+  && [...b.of].every(([id, c]) => a.of.get(id) === c) && b.members.every((m, i) => m.join() === a.members[i].join());
+
+/** `?patch=0`: built whole when the stations' key changes */
+let wholeKey = "";
+let whole: Complexes = { of: new Map(), members: [] };
+let nearWholeKey = "";
+let nearWhole: Complexes = { of: new Map(), members: [] };
+const keyOf = (st: readonly StationInput[]) => getWorldFrame().kind + st.map((s) => `${s.id}:${s.x}:${s.y}:${s.heading}:${s.length}`).join("|");
+
 /** The world's complexes; the same object while no station moved, appeared or changed length and
  * no link (T-197) was made or undone. */
 export const complexes = computed<Complexes>(() => {
   const st = world.value?.save.stations ?? [];
   const links = world.value?.save.links ?? [];
-  const k = getWorldFrame().kind + st.map((s) => `${s.id}:${s.x}:${s.y}:${s.heading}:${s.length}`).join("|") + "/" + links.join("|");
-  if (k !== lastKey) {
-    lastKey = k;
-    last = buildComplexes(st, links, groundScale);
+  if (PATCH_MODE === "0") {
+    const k = keyOf(st) + "/" + links.join("|");
+    if (k !== wholeKey) { wholeKey = k; whole = buildComplexes(st, links, groundScale); }
+    return whole;
   }
-  return last;
+  const out = builder.update(st, links, groundScale, getWorldFrame().kind);
+  if (PATCH_MODE === "check" && !same(out, buildComplexes(st, links, groundScale))) console.error("T-1380 check: the complexes patched from changes differ from a whole build");
+  return out;
 });
 
-let nearKey = "";
-let near: Complexes = { of: new Map(), members: [] };
 /** The stations the distance rule groups, the player's links left out: zoomed out each station is
  * its own dot, and each group's dots are joined by the shortest set of connectors, each link by one
  * more between its two stations' dots (T-313, map/renderer.ts `syncGroups`). The same object while
@@ -36,12 +49,14 @@ export const dotGroups = computed(() => {
   // with no links the two are the same grouping: built once (T-496)
   if (!(world.value?.save.links ?? []).length) return complexes.value;
   const st = world.value?.save.stations ?? [];
-  const k = getWorldFrame().kind + st.map((s) => `${s.id}:${s.x}:${s.y}:${s.heading}:${s.length}`).join("|");
-  if (k !== nearKey) {
-    nearKey = k;
-    near = buildComplexes(st, [], groundScale);
+  if (PATCH_MODE === "0") {
+    const k = keyOf(st);
+    if (k !== nearWholeKey) { nearWholeKey = k; nearWhole = buildComplexes(st, [], groundScale); }
+    return nearWhole;
   }
-  return near;
+  const out = nearBuilder.update(st, [], groundScale, getWorldFrame().kind);
+  if (PATCH_MODE === "check" && !same(out, buildComplexes(st, [], groundScale))) console.error("T-1380 check: the distance groups patched from changes differ from a whole build");
+  return out;
 });
 
 /** The stations in `id`'s complex, itself included (just [id] for a station on its own). */

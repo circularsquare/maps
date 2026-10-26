@@ -13,9 +13,10 @@
 
 import type { FeatureCollection } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
-import type { Complexes } from "../game/complexes";
 import { complexes } from "../game/complexView";
-import type { StationInput, WorldView } from "../game/types";
+import { PATCH_MODE } from "../game/patchMode";
+import type { WorldView } from "../game/types";
+import { NameIndex, labelGroups, linesAt, type NameGroup, type NameOp } from "./labelNames";
 import { anchor, toLocal } from "./geo";
 import type { Overlay } from "./overlay";
 import { PlaceThrottle } from "./moving";
@@ -23,7 +24,6 @@ import { perfOff, perfTry } from "../perfFlags";
 import { BoxGrid, MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
 import { styleUp } from "./styleReady";
 import { plainBoxHalfPx } from "./stationGeometry";
-import { hasUpgrade, UPGRADE } from "../game/upgrades";
 import { afterPaint } from "../game/busy";
 import { ribbonColours } from "../game/openingDay";
 
@@ -63,7 +63,11 @@ export class StationLabels {
   private shown = false;
   private shadow: FeatureCollection = { type: "FeatureCollection", features: [] };
   private deferred: WorldView | null = null;
-  private key: { av: number; links: (readonly [string, string])[]; stations: { id: string; name: string; built: boolean; lng: number; lat: number; heading: number; length: number; upgrades: number; lines: string[]; rib: string }[] } | null = null;
+  /** the names to draw, kept up to date from the stations that changed (T-1380); `labels` and the
+   * shadow's features follow it index for index */
+  private names = new NameIndex();
+  /** the shadow's features' text, the same order as `labels`, to tell a change from none */
+  private shadowKeys: string[] = [];
   private shadowKey = "";
   private placedMatrix: number[] | null = null;
   private placedSize: [number, number] = [0, 0];
@@ -138,99 +142,132 @@ export class StationLabels {
     // the build waiting for the paint takes the latest world
     if (this.deferred) { this.deferred = w; return; }
     const stations = w.save.stations;
-    const lines = new Map<string, Set<string>>();
-    for (const l of w.save.lines) for (const s of l.stops) {
-      const set = lines.get(s);
-      if (set) set.add(l.id);
-      else lines.set(s, new Set([l.id]));
-    }
-    // Most edits leave the stations as they were: keep the labels and the shadow layer then
-    // (rebuilding 470 labels and the shadow source took ~100 ms an edit on a 2,000 km network, T-063).
-    // Length and the player's links are in the key because they decide complexes (T-209).
-    const links = w.save.links ?? [];
-    // and the draw anchor: the names' positions are in its local units (T-307)
+    // Most edits leave the stations as they were, or change a few: only the names those are in or
+    // join are worked out again, and only their labels and shadow features change (T-063, T-1380).
+    // The names are per complex, so the world's complexes (game/complexView.ts, built once for every
+    // user of this world) and the player's links count (T-209); so do the draw anchor, since the
+    // names' positions are in its local units (T-307), and the opening-day bunting.
     const rib = ribbonColours(w);
-    if (!this.changed(anchor().version, stations, lines, links, rib)) return;
+    const cx = complexes.peek();
+    const plan = this.names.plan(stations, w.save.lines, cx, rib, anchor().version);
+    if (!plan) return;
+    if (PATCH_MODE === "0") plan.full = true;
     // T-1357: many names not drawn before (a game's first network) are built once the network has
     // been painted
     let fresh = 0;
-    if (!painted && stations.length - this.labels.length > DEFER_NAMES) {
+    if (plan.full && !painted && stations.length - this.labels.length > DEFER_NAMES) {
       const had = new Set(this.labels.map((l) => l.el.textContent));
       for (const s of stations) if (!had.has(s.name) && ++fresh > DEFER_NAMES) break;
     }
     if (fresh > DEFER_NAMES) {
       this.deferred = w;
-      this.key = null;
       afterPaint(() => { const d = this.deferred!; this.deferred = null; this.set(d, true); });
       return;
     }
-    // the world's complexes (game/complexView.ts), built once for every user of this world
-    const names = labelGroups(stations, lines, complexes.peek(), rib);
+    const patch = this.names.apply(plan, cx, rib);
+    if (patch.full) this.rebuild();
+    else if (patch.ops.length) this.patch(patch.ops);
+    else return;
     this.needsPlacement = true;
-    // A label whose text and look are unchanged keeps its element and measured size (T-496): a new
-    // station then costs one new element, not a rebuild and a layout of every name. Shown labels
-    // never overlap, so their order in the DOM draws nothing differently.
-    const spare = new Map<string, Label[]>();
-    for (const l of this.labels) {
-      const k = l.el.className + "\u0000" + l.el.textContent + "\u0000" + l.rib;
-      const v = spare.get(k);
-      if (v) v.push(l);
-      else spare.set(k, [l]);
-    }
-    this.labels = names.map((g) => {
-      const cls = "stn-label" + (g.built ? "" : " plan") + (g.park ? " park" : "") + (g.rib ? " opening" : "");
-      const [x, y] = toLocal(g.lng, g.lat);
-      const below = Math.abs(Math.cos(g.heading)) > Math.abs(Math.sin(g.heading));
-      const old = spare.get(cls + "\u0000" + g.name + "\u0000" + g.rib)?.pop();
-      if (old) return { ...old, x, y, below };
-      const el = document.createElement("div");
-      el.className = cls;
-      if (LAYERED) el.style.willChange = "transform"; // ?perfTry=labelLayers (T-045)
-      if (g.rib) el.style.setProperty("--rib", g.rib);
-      el.textContent = g.name;
-      this.plane.appendChild(el);
-      return { el, x, y, below, w: 0, h: 0, rib: g.rib };
-    });
-    for (const v of spare.values()) for (const l of v) l.el.remove();
-    // A stop edit changes a station's lines and so the key, mostly not the shadow: MapLibre then
-    // keeps its layout instead of tiling and placing every name again (T-648).
-    const shadowKey = names.map((g, i) => `${g.name}|${g.lng}|${g.lat}|${this.labels[i].below}`).join("\n");
-    if (shadowKey !== this.shadowKey) {
-      this.shadowKey = shadowKey;
-      this.shadow = {
-        type: "FeatureCollection",
-        features: names.map((g, i) => ({
-          type: "Feature",
-          geometry: { type: "Point", coordinates: [g.lng, g.lat] },
-          properties: { name: g.name, anchor: this.labels[i].below ? "top" : "left", offset: this.labels[i].below ? [0, 0.6] : [0.7, 0] },
-        })),
-      };
-      (this.map.getSource(SHADOW) as GeoJSONSource | undefined)?.setData(this.shadow);
-    }
+    if (PATCH_MODE === "check") this.check(w, rib);
     this.place();
   }
 
-  /** Whether anything the labels are built from differs from the last call's, which it then keeps
-   * (field by field: the joined string key was 15 ms an edit at 6x throttling, T-1348). */
-  private changed(av: number, stations: readonly StationInput[], lines: ReadonlyMap<string, ReadonlySet<string>>, links: readonly (readonly [string, string])[], rib: ReadonlyMap<string, string> | null): boolean {
-    const k = this.key;
-    let same = !!k && k.av === av && k.stations.length === stations.length && k.links.length === links.length && links.every((l, i) => l[0] === k.links[i][0] && l[1] === k.links[i][1]);
-    for (let i = 0; same && i < stations.length; i++) {
-      const s = stations[i], p = k!.stations[i];
-      if (s.id !== p.id || s.name !== p.name || s.built !== p.built || s.lng !== p.lng || s.lat !== p.lat || s.heading !== p.heading || s.length !== p.length || (s.upgrades ?? 0) !== p.upgrades || (rib?.get(s.id) ?? "") !== p.rib) same = false;
-      else {
-        const ls = lines.get(s.id), pl = p.lines;
-        if ((ls?.size ?? 0) !== pl.length) same = false;
-        else if (ls) { let j = 0; for (const l of ls) if (l !== pl[j++]) { same = false; break; } }
-      }
+  /** The label for a name, from a removed one with the same text and look if there is one. A label
+   * whose text and look are unchanged keeps its element and measured size (T-496): a new station
+   * then costs one new element, not a rebuild and a layout of every name. Shown labels never
+   * overlap, so their order in the DOM draws nothing differently. */
+  private labelFor(g: NameGroup, spare: Map<string, Label[]>): Label {
+    const cls = "stn-label" + (g.built ? "" : " plan") + (g.park ? " park" : "") + (g.rib ? " opening" : "");
+    const [x, y] = toLocal(g.lng, g.lat);
+    const below = Math.abs(Math.cos(g.heading)) > Math.abs(Math.sin(g.heading));
+    const old = spare.get(cls + "\u0000" + g.name + "\u0000" + g.rib)?.pop();
+    if (old) return { ...old, x, y, below };
+    const el = document.createElement("div");
+    el.className = cls;
+    if (LAYERED) el.style.willChange = "transform"; // ?perfTry=labelLayers (T-045)
+    if (g.rib) el.style.setProperty("--rib", g.rib);
+    el.textContent = g.name;
+    this.plane.appendChild(el);
+    return { el, x, y, below, w: 0, h: 0, rib: g.rib };
+  }
+
+  private keepSpare(spare: Map<string, Label[]>, l: Label) {
+    const k = l.el.className + "\u0000" + l.el.textContent + "\u0000" + l.rib;
+    const v = spare.get(k);
+    if (v) v.push(l);
+    else spare.set(k, [l]);
+  }
+
+  /** Every label and the shadow made again from the whole list of names. */
+  private rebuild() {
+    const names = this.names.list;
+    const spare = new Map<string, Label[]>();
+    for (const l of this.labels) this.keepSpare(spare, l);
+    this.labels = names.map((g) => this.labelFor(g, spare));
+    for (const v of spare.values()) for (const l of v) l.el.remove();
+    // A stop edit changes a station's lines, mostly not the shadow: MapLibre then keeps its layout
+    // instead of tiling and placing every name again (T-648). The features kept then keep their ids,
+    // which are those the source holds.
+    const keys = names.map((g, i) => shadowText(g, this.labels[i].below));
+    const shadowKey = keys.join("\n");
+    if (shadowKey !== this.shadowKey) {
+      this.shadowKey = shadowKey;
+      this.shadowKeys = keys;
+      this.shadow = { type: "FeatureCollection", features: names.map((g, i) => shadowFeature(g, this.labels[i].below)) };
+      (this.map.getSource(SHADOW) as GeoJSONSource | undefined)?.setData(this.shadow);
     }
-    if (same) return false;
-    this.key = {
-      av,
-      links: links.map(([a, b]) => [a, b] as const),
-      stations: stations.map((s) => ({ id: s.id, name: s.name, built: s.built, lng: s.lng, lat: s.lat, heading: s.heading, length: s.length, upgrades: s.upgrades ?? 0, lines: [...(lines.get(s.id) ?? [])], rib: rib?.get(s.id) ?? "" })),
-    };
-    return true;
+  }
+
+  /** The labels and shadow features followed through the names that left and entered (T-1380). */
+  private patch(ops: NameOp[]) {
+    const features = this.shadow.features, spare = new Map<string, Label[]>();
+    type Moved = { at: number; text: string; feature: (typeof features)[number] };
+    const left: Moved[] = [], entered: Moved[] = [];
+    for (const op of ops) {
+      if (op.kind !== "remove") continue;
+      const [l] = this.labels.splice(op.at, 1);
+      this.keepSpare(spare, l);
+      left.push({ at: op.at, text: this.shadowKeys.splice(op.at, 1)[0], feature: features.splice(op.at, 1)[0] });
+    }
+    for (const op of ops) {
+      if (op.kind !== "insert") continue;
+      const l = this.labelFor(op.group, spare), text = shadowText(op.group, l.below), feature = shadowFeature(op.group, l.below);
+      this.labels.splice(op.at, 0, l);
+      this.shadowKeys.splice(op.at, 0, text);
+      features.splice(op.at, 0, feature);
+      entered.push({ at: op.at, text, feature });
+    }
+    for (const v of spare.values()) for (const l of v) l.el.remove();
+    left.reverse();
+    if (left.length === entered.length && left.every((x, i) => x.at === entered[i].at && x.text === entered[i].text)) {
+      // the same features in the same places: the source keeps the ones it has
+      entered.forEach((x, i) => { features[x.at] = left[i].feature; });
+      return;
+    }
+    this.shadowKey = "";
+    const src = this.map.getSource(SHADOW) as GeoJSONSource | undefined;
+    if (!src) return;
+    const refill = () => { src.setData(this.shadow); };
+    try {
+      src.updateData({ remove: left.map((x) => x.feature.id!), add: entered.map((x) => x.feature) }).catch(refill);
+    } catch {
+      refill();
+    }
+  }
+
+  /** `?patch=check`: the labels and shadow features against the names worked out from nothing. */
+  private check(w: WorldView, rib: ReadonlyMap<string, string> | null) {
+    const want = labelGroups(w.save.stations, linesAt(w.save.lines), complexes.peek(), rib);
+    const feats = this.shadow.features;
+    let bad = this.labels.length !== want.length || feats.length !== want.length || this.shadowKeys.length !== want.length ? "lengths" : "";
+    for (let i = 0; !bad && i < want.length; i++) {
+      const g = want[i], l = this.labels[i], below = Math.abs(Math.cos(g.heading)) > Math.abs(Math.sin(g.heading));
+      const f = feats[i] as unknown as { properties: { name: string }; geometry: { coordinates: number[] } };
+      if (l.el.textContent !== g.name || l.rib !== g.rib || l.below !== below || l.el.className.includes("plan") === g.built || l.el.className.includes("park") !== g.park) bad = `label ${i} (${g.name})`;
+      else if (f.properties.name !== g.name || f.geometry.coordinates[0] !== g.lng || f.geometry.coordinates[1] !== g.lat || this.shadowKeys[i] !== shadowText(g, below)) bad = `shadow feature ${i} (${g.name})`;
+    }
+    if (bad) console.error(`T-1380 check: the station names patched from changes differ from a whole build: ${bad}`);
   }
 
   setVisible(on: boolean) {
@@ -331,44 +368,15 @@ export class StationLabels {
   }
 }
 
-interface NameGroup {
-  name: string;
-  lng: number;
-  lat: number;
-  heading: number;
-  built: boolean;
-  /** a member has a park and ride (T-1281): a P beside the name */
-  park: boolean;
-  /** the opening-day bunting's background (T-1434), "" for none */
-  rib: string;
-  /** distinct lines stopping at any of its stations */
-  lines: number;
+function shadowText(g: Omit<NameGroup, "uid">, below: boolean): string {
+  return `${g.name}|${g.lng}|${g.lat}|${below}`;
 }
 
-/** One label per distinct name per station complex (T-169): stations of one complex that share a
- * name (three Times Sq platforms) get one label at their mean position, oriented like the member
- * with the most lines; differently named members keep their own. Most important first: most
- * lines, then constructed, then save order. The player's links count, as everywhere a complex is
- * used (T-197, T-209). */
-function labelGroups(stations: readonly StationInput[], lines: ReadonlyMap<string, ReadonlySet<string>>, cx: Complexes, rib: ReadonlyMap<string, string> | null): NameGroup[] {
-  const groups = new Map<string, StationInput[]>();
-  for (const s of stations) {
-    const k = `${cx.of.get(s.id)}\u0000${s.name}`;
-    const g = groups.get(k);
-    if (g) g.push(s);
-    else groups.set(k, [s]);
-  }
-  const out: NameGroup[] = [];
-  for (const members of groups.values()) {
-    const ids = new Set<string>();
-    let lng = 0, lat = 0, lead = members[0];
-    for (const s of members) {
-      lng += s.lng;
-      lat += s.lat;
-      for (const l of lines.get(s.id) ?? []) ids.add(l);
-      if ((lines.get(s.id)?.size ?? 0) > (lines.get(lead.id)?.size ?? 0)) lead = s;
-    }
-    out.push({ name: lead.name, lng: lng / members.length, lat: lat / members.length, heading: lead.heading, built: members.some((s) => s.built), park: members.some((s) => hasUpgrade(s.upgrades, UPGRADE.parkRide)), rib: rib ? members.map((s) => rib.get(s.id)).find(Boolean) ?? "" : "", lines: ids.size });
-  }
-  return out.sort((a, b) => b.lines - a.lines || Number(b.built) - Number(a.built));
+function shadowFeature(g: NameGroup, below: boolean) {
+  return {
+    type: "Feature" as const,
+    id: g.uid,
+    geometry: { type: "Point" as const, coordinates: [g.lng, g.lat] },
+    properties: { name: g.name, anchor: below ? "top" : "left", offset: below ? [0, 0.6] : [0.7, 0] },
+  };
 }
