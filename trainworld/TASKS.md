@@ -3,7 +3,7 @@
 Open agent work, one line a task; detail in `notes/T-###.md`. Format and rules in `CLAUDE.md`.
 P1 = now or blocking, P2 = this milestone, P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
-**Orchestrator handoff: start with `notes/handoff-2026-10-24d.md`** (state as of 2026-10-24 night).
+**Orchestrator handoff: start with `notes/handoff-2026-10-25.md`** (state as of 2026-10-25 night).
 
 **Where things stand (2026-10-24).** The whole world is the goal, with demand simple on purpose
 (CLAUDE.md "Working here"; plain account in docs/demand-plain.md, kept current). Covered whole:
