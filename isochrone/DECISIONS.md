@@ -5,6 +5,13 @@ reasoning and what it replaced.
 
 ## 2026-10-26
 
+- **Our surface's land cover table follows MODIS where no class matches** (T-009): shrubs 4.2,
+  open broadleaf forest 4.86, moss and lichen 4.86, the speeds MAP mostly gives those pixels,
+  replacing the draft guesses in research/friction.md 3. Wetland stays 2.0 and Greenland keeps
+  the terrain factors although MAP differs in both, since ours follows MAP's stated recipe.
+- **Our surface stores uint16 km/h x 1000** (T-009), not the page's uint8 x 40: steep high
+  ground goes under 0.1 km/h, where x 40 steps are 25% errors. 1 km pixels with half or more
+  water are water; GMTED30" mean for elevation until T-011.
 - **The canoe is always carried overland**, at twice the walking time, never left (Anita, T-005).
 - **The search counts time and danger**: cost = time + K x hazard, a linear combination, on every
   mode (Anita: "count both time and danger, can use linear combination"). Replaces 2026-10-14's

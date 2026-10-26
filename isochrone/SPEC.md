@@ -24,6 +24,10 @@ land cover and slope; Weiss et al. 2020, CC BY 4.0), averaged onto a global grid
 to 128 days, a day being 8 hours of walking. Water cannot be crossed. The default start is
 Cluj-Napoca.
 
+Our own off-road walking surface, MAP's recipe rebuilt at 1 km from Copernicus LC100 2019 land
+cover and GMTED2010 elevation with each layer kept apart, is built but not yet read by the page
+(`docs/surface.md`; T-028).
+
 ## 3. Travel model
 
 - **Time and danger both count.** The search minimises time + K x hazard, one K for every mode,

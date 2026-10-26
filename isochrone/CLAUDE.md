@@ -74,7 +74,8 @@ Briefs carry only the task; these hold for every agent.
 - **Python**: plain `python` (C:\Python39 has rasterio, numpy, scipy; the maps venv does not have
   rasterio). Set `OMP_NUM_THREADS` before importing numpy.
 - **CPU**: at most 4 of 16 cores in all, every isochrone agent together, day and night (Anita,
-  2026-10-26: other projects run at the same time).
+  2026-10-26: other projects run at the same time). Long jobs claim their cores in the shared
+  ledger first: `python cores.py claim <n> <name> --pid <pid>` at the maps root (see maps/CLAUDE.md).
 - **Downloads** go under `data/raw/<source>/` (gitignored). Big raw files go once the layer built
   from them is checked, without asking. A download behind bot protection or a login: stop and give
   the orchestrator the URL for Anita. Never register accounts; never put her name or email in a

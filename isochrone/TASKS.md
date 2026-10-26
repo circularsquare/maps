@@ -5,8 +5,8 @@ P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
 **Where things stand (2026-10-26).** Walking works worldwide at ~10 km (T-001), refined to 3 km
 and 1 km round the view when zoomed in (T-002). Research for the canoe (T-003) and for our own
-walking surface and 10,000 BC (T-004) is done. Now: the canoe design (T-005) and our own
-walking surface (T-009), which 10,000 BC needs. The smoke check (T-017) and small water (T-013) are in.
+walking surface and 10,000 BC (T-004) is done, and our own walking surface is built (T-009),
+not yet on the page (T-028). Now: the canoe design (T-005). The smoke check (T-017) and small water (T-013) are in.
 
 Milestones answer Anita's question, "if you just have a canoe in 10,000 BC, how far can you
 get?", in order: the canoe in today's world, survival, then 10,000 BC.
@@ -14,7 +14,6 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 ## In progress
 
 - T-005 [P1] Canoe, stage 1: the design, from research/canoe.md, for Anita's review → docs/canoe.md. Design ready for Anita's review, docs/canoe.md; notes/T-005.md.
-- T-009 [P1] Own walking surface, stage A: reproduce MAP at 1 km from LC100 land cover with MAP's speeds and formulas (research/friction.md 1, 3, 7), checked against MAP's surface. ~4 GB download. Taking, 2026-10-26 (agent).
 
 ## M1: canoe, today
 
@@ -33,6 +32,7 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 
 - T-012 [P2] 10,000 BC land: ICE-6G sea level and ice, glacial lakes (drawn outlines first), Beyer 2020 biomes (research/friction.md 4, stage D). After T-009.
 - T-010 [P2] Roads as their own layer from GRIP4 (research/friction.md 5, stage B), so "no roads" is a toggle and 10,000 BC has none. After T-009.
+- T-028 [P2] Feed the page from our own surface: build_grid.py and build_tiles.py read `data/surface/walk_today.tif` (uint16 km/h x 1000, 0 = water) plus the roads layer (T-010) instead of MAP's tif; decide the water rule from `lc_water.tif` shares with T-013's small-water rule; smoke passes. After T-010 (docs/surface.md).
 
 ## Later
 
