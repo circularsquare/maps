@@ -451,8 +451,15 @@ rect.now { fill-opacity: .45; }
 .stops li.passed::after { display: none; }
 .stops li.adding { color: var(--muted); }
 .stops li.adding::after { opacity: 0.45; }
-.passed-all { margin: 2px 0 4px; }
-.passed-confirm { display: flex; gap: 6px; margin: 2px 0 4px; }
+/* T-1297: Add all and its Add/Cancel share one row and one spot, so a double click there adds */
+.passed-row { display: flex; gap: 6px; margin: 2px 0 4px; }
+.passed-add { grid-auto-flow: row; }
+.passed-add > span { grid-area: 1 / 1; }
+.passed-add .sizer { visibility: hidden; display: inline-grid; grid-auto-flow: column; gap: 6px; align-items: center; }
+/* T-1293: the schedule's copy and paste, small and muted beside the heading */
+.h .sched-copy { display: inline-flex; align-self: center; margin-left: 6px; font-weight: 400; }
+.sched-copy .btn { color: var(--muted); }
+.sched-copy .btn:hover:not(:disabled) { color: var(--text); }
 .stops .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stops .t { margin-left: 8px; }
 /* T-797: trains reverse at this stop; the map's reversal icon in small */
@@ -663,6 +670,7 @@ rect.now { fill-opacity: .45; }
 .blueprint-panel { margin-top: 14px; }
 .blueprint-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
 .blueprint-head .num.bad { color: var(--bad); }
+.blueprint-head .bp-total { display: inline-flex; align-items: baseline; gap: 6px; }
 .blueprint-breakdown summary { cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; }
 .blueprint-category { margin-top: 8px; }
 /* T-1159: the Track row, Target max speed and Platform length the same 6 px apart */

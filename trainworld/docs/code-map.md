@@ -84,7 +84,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Stations and lines: `complexes.ts` (station complexes from platform geometry and the player's
   links, T-146), `complexView.ts` (a click selecting the complex, a station opened alone, the
   zoomed-out dot groups; T-217, T-249), `links.ts` (the player's links, T-197), `lineActions.ts`
-  (new and copied lines, Edit stops, construct blueprints: the N, L and C keys, T-670), `remove.ts` (removing things, with the question asked before removing
+  (new and copied lines, Edit stops, construct blueprints: the N, L and C keys, T-670), `scheduleCopy.ts`
+  (a line's schedule settings copied and pasted, kept in localStorage, T-1293), `remove.ts` (removing things, with the question asked before removing
   anything constructed, T-096).
 - `realGraph.ts`: a region's real-network routing graph (`packs/realgraph/<cc>.rgr`, fetched once
   and decoded), for snapping track to the real network (T-727); read by `workers/realRoute.worker.ts`.

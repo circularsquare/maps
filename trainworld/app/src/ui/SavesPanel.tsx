@@ -153,7 +153,8 @@ function Backups({ backups, now }: { backups: SlotBackup[]; now: number }) {
 }
 
 function Saves({ onNewGame }: { onNewGame: () => void }) {
-  const [newName, setNewName] = useState("");
+  // T-1295: the name a copy is saved under, asked only once Save a copy is clicked (null: not asked)
+  const [newName, setNewName] = useState<string | null>(null);
   const [rename, setRename] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   // "2 min ago" moves on while the panel is open
@@ -179,12 +180,11 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
         <button class="btn text" data-tip="Download this game as a .save file" onClick={exportGame}>Save to a file</button>
         <button class="btn text" data-tip="Open a .save file as a new saved game. The game you are playing is saved first." onClick={pick}>Load a file</button>
         <button class="btn text" data-tip="Start a new game as a new saved game. The game you are playing is saved first." onClick={onNewGame}>New game</button>
+        <button class={"btn text" + (newName !== null ? " on" : "")} data-tip="Save a copy of this game under a new name and carry on playing the copy"
+          onClick={() => setNewName(newName !== null ? null : copyName(saves.slots.find((s) => s.key === saves.active)?.name))}>Save a copy</button>
       </div>
+      {newName !== null && <CopyName name={newName} setName={setNewName} />}
       <SaveSafety />
-      <form class="save-slot-new" onSubmit={(e) => { e.preventDefault(); manageSaveSlot("create", undefined, newName); setNewName(""); }}>
-        <input type="text" aria-label="New save slot name" placeholder="Name for a copy of this game" maxLength={80} value={newName} onInput={(e) => setNewName((e.target as HTMLInputElement).value)} />
-        <button class="btn text" type="submit" data-tip="Save a copy of this game under a new name and carry on playing the copy">Save as a copy</button>
-      </form>
       <ul class="save-slots">
         {saves.slots.map((slot) => <li data-slot={slot.key} class={slot.key === saves.active ? "on" : ""}>
           <SlotCard slot={slot} playing={slot.key === saves.active} now={Math.max(now, at)} writable={saves.writable} renaming={rename === slot.key}
@@ -197,6 +197,25 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
         </li>)}
       </ul>
     </>
+  );
+}
+
+/** "New York copy" for the game being played; "" when it has no slot (a test page). */
+const copyName = (name: string | undefined) => (name ? `${name} copy`.slice(0, 80) : "");
+
+/** T-1295: the name for Save a copy, prefilled and selected; Save or Enter saves, Cancel or Escape
+ * closes it. */
+function CopyName({ name, setName }: { name: string; setName: (n: string | null) => void }) {
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => { input.current?.focus(); input.current?.select(); }, []);
+  return (
+    <form class="save-slot-new" onSubmit={(e) => { e.preventDefault(); manageSaveSlot("create", undefined, name.trim()); setName(null); }}>
+      <input ref={input} type="text" aria-label="Name of the copy" placeholder="Name" maxLength={80} value={name}
+        onInput={(e) => setName((e.target as HTMLInputElement).value)}
+        onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setName(null); } }} />
+      <button class="btn text" type="submit">Save</button>
+      <button class="btn text" type="button" onClick={() => setName(null)}>Cancel</button>
+    </form>
   );
 }
 

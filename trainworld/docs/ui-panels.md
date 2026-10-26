@@ -118,9 +118,14 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   before that), and over dead space [T-318]. The hover says "on a weekday", "on a Saturday", "on a Sunday" or "on average" for the
   day shown. The zone named is the focused zone ([ui-demand-views.md](ui-demand-views.md)).
   **Zoomed out below zoom 5** (a few countries on screen) the bar names "World" instead [T-1110]:
-  the split and rides summed over every city with a built station and a demand view, as the Cities
-  tab's World row sums them (`game/worldTotals.ts`; hover: the city and station counts), whatever
-  lies under the view's centre.
+  the train rides summed over every city with a built station and a demand view, as the Cities
+  tab's World row sums them (`game/worldTotals.ts`; the name's hover: the city and station counts),
+  whatever lies under the view's centre, as a share of a fixed 25 billion rides a day in the world
+  (8.2 billion people at about 3 rides each, `WORLD_RIDES`), so it is usually well under 1% [T-1301].
+  Under 1% it shows two significant figures ("0.052%", `smallPct`); the bar's walking and driving
+  take the rest in the cities' own proportions. Its hover gives the share of the world's rides and
+  how they are reached, the train rides a day and in how many cities, then the cities' own split
+  as a city's hover gives it. A city's share is unchanged.
 - **Status** [T-349, `ui/StatusTag.tsx`]: a small tag (small type style, background, thin border)
   on the map's top row, to the right of the demand buttons and centred with them (`ui/DemandSelector.tsx`;
   the buttons stay at the top left). It appears and goes in one step and moves nothing; the whole
@@ -427,7 +432,9 @@ reads "No stations yet."
 - Under the Playing card, its backups [T-744], newest first: "Backup 4 min ago · Day 26" (exact
   time on hover) and Restore as a copy, which closes the panel and opens the backup in a new slot.
 - Above the cards [T-1131]: Save to a file
-  (`anitabuilder-nyc-day-12.save`), Load a file, New game, then Save as a copy (with a name). Load a file asks nothing: it closes the
+  (`anitabuilder-nyc-day-12.save`), Load a file, New game, then Save a copy, which opens a row
+  under the buttons with the name (prefilled "<game> copy", focused and selected), Save and Cancel;
+  Enter saves, Escape cancels, and a second click on Save a copy closes it [T-1295]. Load a file asks nothing: it closes the
   panel and opens its game in a new slot, the game being played saved first [T-743; the slot rules
   in architecture.md]. New game shows the new game sheet (below) in the panel, headed "New game";
   its Start closes the panel and opens the new game the same way, its Back returns to the cards.
@@ -449,7 +456,7 @@ reads "No stations yet."
 - A page opened with `?new=1`, `?synth=1` or `?demandTest=1` does not autosave: the top bar says
   "Autosave is off in this test page. Save a copy to keep the game." (the only place it is said,
   [T-971]), a `?new=1` page marks no
-  card Playing, and Save as a copy gives the game a slot of its own, which autosaves from then on.
+  card Playing, and Save a copy gives the game a slot of its own, which autosaves from then on.
 
 **A new game** starts on day 1 at 07:00 with $6B, empty or (a sandbox) from a real network, on its
 start city's registry centre and zoom, or on the world map (centre 20° E 30° N, zoom 1.8: the

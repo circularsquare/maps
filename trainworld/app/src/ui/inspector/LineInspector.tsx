@@ -30,6 +30,7 @@ import { locateLine, locateStation } from "../locate";
 import { demandPending, Spinner } from "../Spinner";
 import { demandView, lineFiguresIn } from "../../game/demand";
 import { useClockQuery } from "../useClockQuery";
+import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText } from "../../game/scheduleCopy";
 
 const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
 
@@ -531,6 +532,21 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
 
 const NO_LIMITS: (Limit | null)[] = [null, null, null];
 
+/** T-1293: copy the line's schedule settings, and paste the copy on it (game/scheduleCopy.ts). */
+function ScheduleCopyButtons({ l, st }: { l: LineInput; st: LineStats }) {
+  const c = scheduleCopy.value;
+  const fit = carsCap(l);
+  const cut = c && fit && c.cars > fit.cap ? `\nTrains of ${carsText(fit.cap)} here: the platform at ${fit.name} fits no more` : "";
+  return (
+    <span class="sched-copy">
+      <button class="btn icon mini" aria-label="Copy the schedule" data-tip={`Copy the schedule: ${scheduleText(scheduleOf(l, st))}`}
+        onClick={() => copySchedule(l, st)}><Icon.copy /></button>
+      <button class="btn icon mini" aria-label="Paste the schedule" disabled={!c} data-tip={c ? `Paste the schedule copied from ${c.from}: ${scheduleText(c)}${cut}` : "Paste a schedule copied from a line"}
+        onClick={() => void pasteSchedule(l, st)}><Icon.paste /></button>
+    </span>
+  );
+}
+
 /** T-672: dragging a colour shows it at once (`setPreview`), and the line on the map follows with
  * one edit every 0.2 s at most; letting go sends the last colour. */
 function useLiveColour(l: LineInput | undefined, setPreview: (hex: string | null) => void) {
@@ -645,12 +661,15 @@ export function LineInspector({ id }: { id: string }) {
     const a = await edit({ op: "setStops", line: l.num, stops });
     if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
   };
-  const addPassed = () => {
-    const stops = l.stops.flatMap((s, i) => [Number(s), ...adding.filter((p) => p.gap === i).map((p) => p.node)]);
+  const addGaps = (gs: number[]) => {
+    const add = passed.filter((p) => gs.includes(p.gap));
+    const stops = l.stops.flatMap((s, i) => [Number(s), ...add.filter((p) => p.gap === i).map((p) => p.node)]);
     setPending(null);
     return setStops(stops);
   };
+  const addPassed = () => addGaps(pending ?? []);
   const stationsText = (n: number) => plural(n, "station");
+  const allLabel = <><Icon.plus />Add all {stationsText(passed.length)} the line passes</>;
   const removeStop = (i: number) => setStops(l.stops.filter((_, k) => k !== i).map(Number));
   const remove = () => {
     ask.value = { text: `Delete ${l.name}? Track and stations stay.`, yes: "Delete line", no: "Keep line", run: () => {
@@ -684,18 +703,25 @@ export function LineInspector({ id }: { id: string }) {
       <div class="h divided">
         Stops<span class="right muted small">boardings in past 24 h</span>
       </div>
-      {editingStops && gaps.length > 1 && !pending && (
-        <button class="btn text mini passed-all" onClick={() => setPending(gaps)}>
-          <Icon.plus />Add all {stationsText(passed.length)} the line passes
-        </button>
-      )}
-      {editingStops && pending && adding.length > 0 && (
-        <div class="passed-confirm">
-          <button class="btn text" onClick={() => void addPassed()}>Add {stationsText(adding.length)}</button>
-          <button class="btn text" onClick={() => setPending(null)}>Cancel</button>
+      {/* T-1297: Add all heads the list whenever the line passes stations, and Add takes its place,
+          so a double click there adds them, as one on a gap's row adds its own. The second click
+          lands on Add or, before the panel has redrawn, on the old control, whose dblclick adds */}
+      {editingStops && passed.length > 0 && (
+        <div class="passed-row">
+          {pending && adding.length > 0
+            ? <>
+              {/* as wide as Add all (its label kept hidden inside), so a double click's second click lands on Add, not Cancel */}
+              <button key="add" class="btn text passed-add" onClick={() => void addPassed()}>
+                <span>Add {stationsText(adding.length)}</span>
+                <span class="sizer" aria-hidden="true">{allLabel}</span>
+              </button>
+              <button key="cancel" class="btn text" onClick={() => setPending(null)}>Cancel</button>
+            </>
+            : <button key="all" class="btn text" data-tip="Show them as stops to add. Double-click to add them at once"
+              onClick={() => setPending(gaps)} onDblClick={() => void addGaps(gaps)}>{allLabel}</button>}
         </div>
       )}
-      <ul class={"stops" + (looks ? " traffic" : "")} style={{ "--c": shown }}>
+      <ul class={"stops" + (looks ? " traffic" : "")} style={{ "--c": shown }} onDblClick={(e) => { if (pending && (e.target as Element).closest("li.adding")) void addPassed(); }}>
         {l.stops.map((s, i) => {
           const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id));
           const here = editingStops ? passed.filter((p) => p.gap === i) : [];
@@ -706,7 +732,7 @@ export function LineInspector({ id }: { id: string }) {
             ))
             : !pending && (
               <li class="passed">
-                <button class="btn text mini" data-tip={`Add ${andList(here.map((p) => name.get(String(p.node)) ?? ""))}`} onClick={() => setPending([i])}>
+                <button class="btn text mini" data-tip={`Add ${andList(here.map((p) => name.get(String(p.node)) ?? ""))}\nDouble-click to add them at once`} onClick={() => setPending([i])} onDblClick={() => void addGaps([i])}>
                   <Icon.plus />{stationsText(here.length)} passed
                 </button>
               </li>
@@ -784,6 +810,7 @@ export function LineInspector({ id }: { id: string }) {
 
       <div class="h">
         Schedule
+        {canAuto && <ScheduleCopyButtons l={l} st={st} />}
         {canAuto && (
           <span class="right">
             <Segmented<boolean>

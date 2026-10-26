@@ -283,7 +283,7 @@ A pastel style in Zen Maru Gothic, light or dark (Settings, Theme) with three co
 Panels take CSS tokens (`ui/style.css`); the map's light and dark colours (basemap, line casing, map
 ink) are one table, `game/shades.ts`, whose basemap palette is warm paper land, soft teal water and sage parks [T-676]. The network takes the line colours, the same in both themes. One dock on the left holds the icon tabs (Build, Lines, Stations, Money, Cities), the
 saved games button and the Settings gear, with the inspector under them, whose top edge never
-moves. The top bar holds the mode split (the goal number) of the city in view, or of the world when zoomed far out, the cash, the local time and date beside or over
+moves. The top bar holds the mode split (the goal number) of the city in view, or zoomed far out the world's (train rides over a fixed 25 billion rides a day, so well under 1%; T-1301), the cash, the local time and date beside or over
 a moving sky and a band in the demand level's colours (T-861), pause and three speeds. **Panels show what can change**: labels, numbers and states,
 no explanatory notes [T-253]. **Everything drawn that encodes a number has a hover**, always the
 game's own tag, never a browser tooltip [T-194, T-210]. No CSS transitions; trains are the only

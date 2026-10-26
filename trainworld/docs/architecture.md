@@ -290,7 +290,7 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   after anything paid for, else once a wall minute if something changed, and when the page is
   hidden; a game running in the background keeps saving once a wall minute [T-826]. On start the player picks a slot or New game on the start menu [T-677]; `?continue=1`
   opens the slot opened last. `?new=1` starts a game that reads no slot and owns none, and
-  does not autosave until "Save as a copy" gives it one [T-320]; `?synth=1` and `?demandTest=1`
+  does not autosave until "Save a copy" gives it one [T-320]; `?synth=1` and `?demandTest=1`
   load the last game but never autosave it.
 - **No slot is written over with another game** [T-743]: New game (the start menu's beside saved
   games, and the saves panel's), Load a file and a backup's Restore as a copy each put the game in a

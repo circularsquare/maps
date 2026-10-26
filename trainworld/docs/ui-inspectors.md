@@ -99,7 +99,15 @@ purpose filter the purpose drawn is ringed in the bar.
   Incomplete lines stay planned and run no trains.
 - **Sections**, in order: Schedule (trains for each demand level, with the resulting headway;
   [track-and-service.md](track-and-service.md) 6.3; columns Demand, Trains and Headway, every
-  cell one line, the Demand column cut with an ellipsis when short of room [T-692]; a Trains / Headway switch in the heading
+  cell one line, the Demand column cut with an ellipsis when short of room [T-692]; beside the
+  heading two small muted icon buttons, copy and paste [T-1293, `game/scheduleCopy.ts`]: copy keeps
+  the line's trains or headways per level, train length and kind of train in the browser
+  (`localStorage` "anitabuilder-schedule-copy", so it outlasts the game and the visit; hover: the
+  settings, "Headways 3 min, 5 min and 10 min, 6 cars, high speed"), and paste puts them on the line
+  shown as separate edits (kind, length, then the trains or headways; a refusal stops the rest), the
+  length cut to what its shortest platform fits (the paste hover and a notice say so), a loop's
+  counts rounded up to even; paste is off until something is copied, its hover naming the line
+  copied from; a Trains / Headway switch in the heading
   chooses what the player sets [T-625]: with Headway the headway column holds a stepper (30 s steps
   under 5 minutes, 1 minute under 15, 5 above; none, or 1 to 120 minutes; a click on the number types
   it in minutes) and the trains column the count it gives, 10 px clear of the stepper [T-1159]; while a

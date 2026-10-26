@@ -38,7 +38,10 @@ export function BlueprintControls() {
     <div class="blueprint-controls">
       <div class="blueprint-head">
         <span class="b">Blueprint</span>
-        <b class={"num" + (m?.mode !== "sandbox" && total > liveMoney.value.cash * 1e6 ? " bad" : "")} data-tip="Total construction cost">{money(total)}</b>
+        <span class="bp-total">
+          <b class={"num" + (m?.mode !== "sandbox" && total > liveMoney.value.cash * 1e6 ? " bad" : "")} data-tip="Total construction cost">{money(total)}</b>
+          <OffCost />
+        </span>
         <div class="group">
           <button class="btn icon" data-tip="Undo (Ctrl+Z)" aria-label="Undo" disabled={!w?.canUndo} onClick={() => void undo()}><Icon.undo /></button>
           <button class="btn icon" data-tip="Redo (Ctrl+Y)" aria-label="Redo" disabled={!w?.canRedo} onClick={() => void redo()}><Icon.redo /></button>
@@ -55,6 +58,17 @@ export function BlueprintControls() {
 }
 
 const pieces = (e: number, st: number) => [e ? `${e} track` : "", st ? plural(st, "station") : ""].filter(Boolean).join(", ");
+
+/** T-1296: what the disabled blueprint would cost, beside the total: everything unbuilt
+ * (`blueprintCost`, disabled pieces in it) less the quote's rows other than new cars. */
+function OffCost() {
+  const w = world.value, off = offTotals.value;
+  if (!w || !(off.edges + off.stations)) return null;
+  const on = w.money.blueprintItems.reduce((sum, r) => sum + (r.kind === 5 ? 0 : r.cost), 0);
+  const cost = w.money.blueprintCost - on;
+  if (!(cost >= 0.5e6)) return null;
+  return <span class="small muted num off-cost" data-tip={`Disabled blueprint: ${pieces(off.edges, off.stations)}, ${moneyExact(cost)}, left out of the total`}>{money(cost)} disabled</span>;
+}
 
 /** How many blueprint pieces are switched off (T-333), whatever the tool, since Construct and the
  * total leave them out. Selecting, disabling and enabling are in the map's BlueprintBar (T-353). */
