@@ -22,7 +22,8 @@ import { shiftAt, timeZoneTable } from "../game/localTime";
 import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } from "../game/moneyTiming";
 import { networkFromState, newNetCache, runsTrains, type NetworkBuffers } from "../map/network";
 import { readOutlinesForPlaces } from "../map/coarseOutlines";
-import { buildComplexes } from "../game/complexes";
+import { buildComplexes, type Complexes } from "../game/complexes";
+import { ComplexBuilder } from "../game/complexBuilder";
 import { UPGRADE_BITS } from "../game/upgrades";
 import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
@@ -2213,6 +2214,23 @@ function upgradesOf(a: TrackApi): Map<number, number> {
 
 // ---------------------------------------------------------------- the snapshot demand runs on
 
+/** T-1380: the complexes of the snapshot's built stations and of every station (`complexOfNodes`),
+ * each kept up to date from the stations that changed since it was last asked for. */
+const snapshotComplexes = new ComplexBuilder();
+const nodeComplexes = new ComplexBuilder();
+const groundK = (y: number) => (frame.kind === "merc" ? mercK(y) : 1);
+function complexesOf(builder: ComplexBuilder, geo: { id: string; x: number; y: number; heading: number; length: number }[], links: [string, string][]): Complexes {
+  if (patchMode === "0") return buildComplexes(geo, links, groundK);
+  const cx = builder.update(geo, links, groundK, frame.kind);
+  if (patchMode === "check") {
+    const full = buildComplexes(geo, links, groundK);
+    if (cx.of.size !== full.of.size || cx.members.length !== full.members.length || [...full.of].some(([id, c]) => cx.of.get(id) !== c) || full.members.some((m, i) => m.join() !== cx.members[i].join())) {
+      console.error("T-1380 check: the complexes patched from changes differ from a whole build");
+    }
+  }
+  return cx;
+}
+
 function buildSnapshot(): NetworkSnapshot {
   const a = api!;
   const ni = a.nodes_info();
@@ -2230,7 +2248,7 @@ function buildSnapshot(): NetworkSnapshot {
   // platform carries nobody, so it joins nothing), with the player's links (T-197)
   const fl = a.station_links(), links: [string, string][] = [];
   for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
-  const cx = buildComplexes(geo, links, (y) => (frame.kind === "merc" ? mercK(y) : 1));
+  const cx = complexesOf(snapshotComplexes, geo, links);
   stations.forEach((s) => (s.complex = cx.of.get(String(s.id))));
   // T-1281: the links are passages, walked faster; between constructed stations only
   const built = new Set(geo.map((g) => g.id));
@@ -2366,7 +2384,7 @@ function complexOfNodes(): Uint32Array {
   }
   const fl = a.station_links(), links: [string, string][] = [];
   for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
-  const cx = buildComplexes(geo, links, (y) => (frame.kind === "merc" ? mercK(y) : 1));
+  const cx = complexesOf(nodeComplexes, geo, links);
   const of = new Uint32Array(top + 1).fill(0xffffffff);
   for (const g of geo) of[Number(g.id)] = cx.of.get(g.id)!;
   complexNodes = { version, of };

@@ -86,7 +86,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `realms.ts` and the hand-edited `realms.json` (the country-sized realms: each zone's, which are shown, each realm's circle point from the registry, and `hiddenRealmAt` for a click on its land, T-975, T-1006), `search.ts` (the search box's matching, `cityMatch` for zones by name or alias, T-148), `walks.ts` (walking minutes to the
   closest stations on the demand model's walking barrier, T-312).
 - Stations and lines: `complexes.ts` (station complexes from platform geometry and the player's
-  links, T-146), `relatedLines.ts` (the clock query `lineRelated` decoded: the lines beside or
+  links, T-146), `complexBuilder.ts` (`ComplexBuilder`: the same complexes kept up to date from the
+  stations that changed, the world's in `complexView.ts` and the clock worker's snapshot in
+  `clock.worker.ts`, T-1380), `patchMode.ts` (`?patch=` on the main thread), `relatedLines.ts` (the clock query `lineRelated` decoded: the lines beside or
   crossing a line, T-1168) and `relatedLayout.ts` (their diagram's rows, columns, turns, pills and
   hovers, drawn by `ui/inspector/RelatedStops.tsx`), `complexView.ts` (a click selecting the complex, a station opened alone, the
   zoomed-out dot groups; T-217, T-249), `links.ts` (the player's links, T-197), `lineActions.ts`
@@ -141,7 +143,10 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   ghost, T-189, T-254; the upgrade annexes, `stationAnnexes`, T-1416), `annexSide.ts` (which side
   of its platform a station's annexes go, in the clock worker, T-1416), `stationNames.ts` (a station's name suggestions: cross street,
   neighbourhood, city or town, T-534), `stationLabels.ts` (names
-  keep their elements across edits unless their text changes, T-496), `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
+  keep their elements across edits unless their text changes, T-496; the labels and the shadow
+  layer's features follow the changes `labelNames.ts` reports, T-1380), `labelNames.ts` (`NameIndex`: the names to
+  draw, one per name per complex, kept in order and patched from the stations and lines that changed;
+  `labelGroups` is the whole list for checks), `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
   for names and tags: `BoxGrid`, `tagLines`, `tipBeside`, `TAG_OFFSET_PX`, `screenBounds`).
 - Bus lines (T-1464): `busLayer.ts` (a bus line on the map: its route, stops, corridor shade on
   selection, tags and pick, drawn by the renderer under rail), `busDraw.ts` (the bus tool: clicked
@@ -316,6 +321,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t975-realms.mjs` (first the location button refused, in Lyon and in Sydney, and a map start showing every realm until its first station; then realms in a fresh profile: no bubbles behind the start menu, a Tokyo start shows Japan only with the shade cut around its zones, a click shows France, a reload hides it again, stations in two realms show both; a click on a hidden realm shows it, a drag does not, no circles at the world view; the zoomed-out frame and a pan across France and Germany measured; port 6165 by default),
   `t1071-train-count.mjs` (the real save's busiest line, its train count raised and lowered four times with the clock running: every train of every line placed each frame from the renderer's own buffers may move no further than top speed allows and come or go only at a terminal, and where new buffers arrive the old and new draw the same trains in the same places; `SPEED` 0 to 2 or -1 paused, `OP=headway`, `KEEP_FRAMES=1`; about 2 minutes; Rust side `sim/src/track/transition_tests.rs`),
   `t1029-edit.mjs` (a series of track, station, service and undo edits on the real save or Japan's network at 6x throttling: the worker's and main thread's ms per edit under a CPU profile; `DUMP=1` hashes of the world, the drawn network and the GPU stroke buffers to compare across code or `?patch=` settings; 4-5 minutes for Japan),
+  `t1380-edit.mjs` (a series of station edits on Japan or the real save at 6x throttling: stations added, moved, constructed, linked, removed, a line's stops, undo and redo; the worker's and main thread's ms, `StationLabels.set` and the complexes named, page and clock worker both under a CPU profile; `TOP=1`; about 6 minutes for Japan), `t1380-complexes.mjs` and `t1380-labels.mjs` (random edits: the patched complexes and station names against a whole build, node only, seconds; in smoke),
   `t1283-edit-time.mjs` (the real save's busiest line switched to headways, stepped and set by hand: the clock worker's apply and total per edit, failing past 1 s; about a minute),
   `t1276-headway-steady.mjs` (the real save's busiest line on headways, its Medium headway stepped fast and slow both ways and typed with the clock running: every inspector change sampled, the schedule's three rows keep their order and never blank, and one headway shows one train count throughout, give or take the one train the landed edit may settle by; about 2 minutes),
   `t1286-market-scale.mjs <url> [country] [factor]` (the real save's weekday at the income's scales and with one country's scale at `factor` times its income's: each zone's local rail trips and the market's, by corridors touching that country; run on a build without the change too and compare the JSON in `artifacts/trainworld/t1286/`; about 3 minutes),
