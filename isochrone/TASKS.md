@@ -18,15 +18,15 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 
 ## M1: canoe, today
 
-- T-024 [P2] Canoe hover: time paddled and carried, the route line traced across levels (docs/canoe.md 6). After T-022.
-- T-008 [P2] Mode panel: walking or canoe start, later K, the other toggles and the era switch. After T-022.
+- T-024 [P1] Canoe hover: time paddled and carried, the route line traced across levels (docs/canoe.md 6). Taking, 2026-10-26 (agent, with T-008).
+- T-008 [P1] Mode panel: walking or canoe start, later K, the other toggles and the era switch. Taking, 2026-10-26 (agent, with T-024).
 - T-031 [P2] River gradient south of 60N: `sgr_dk_rav` closes 24% of paddleable length (mostly Q < 10 streams over 5 m/km) and reads lowland Amazon streams as rapids (Manaus to the sea sums to 140 m, real ~20). Once canoe routes show on the page (T-022), compare a few basins with the GMTED drop-over-10 km used north of 60N (`rivers.py north_gradient`) and pick per region by eye; the Livingstone Falls stretch between OSM rapids points still runs (notes/T-020.md).
 - T-036 [P3] Canoe: L1 river water no river step crosses (ponds and side channels HydroLAKES lacks, e.g. round the Danube mouth) has no canoe node, so it stays unreached and unpainted on a canoe start. Decide: still water when no step touches the patch, or leave (notes/T-022.md).
 - T-023 [P2] M1 doc tidy: spec against code, prune TASKS, fold notes. Last in M1.
 
 ## M2: survival
 
-- T-006 [P2] Danger and survival: per-cell hazard for walking and canoe (research/friction.md 6, canoe.md 5), the search's cost becomes time + K x hazard (SPEC 3), survival along the path in the hover. Climate from CHELSA (stage E). After T-022.
+- T-006 [P2] Danger and survival: per-cell hazard for walking and canoe (research/friction.md 6, canoe.md 5), the search's cost becomes time + K x hazard (SPEC 3), survival along the path in the hover. Climate from CHELSA (stage E). Stage 1, water hazard (the table from data the canoe already has; K switched on), taking, 2026-10-26 (agent); the land band is a later stage.
 
 ## M3: 10,000 BC
 
