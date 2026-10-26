@@ -345,7 +345,7 @@ impl IntercityApi {
             let cp = &self.cpairs[ci as usize];
             let (hz, wz) = (hz as usize, m.comp_of_gid[wg as usize] as usize);
             let home = if cp.ride { &self.access_c[hz] } else { &self.access_c_walk[hz] };
-            let (_, sum) = rail_logsum(&sk.r, s, p.fare_min, home, &self.access_cw[wz], pc.beta, p.soften(pc.band_unsoftened(cp.band as usize), cp.car), &mut terms);
+            let (_, sum) = rail_logsum_x(&sk.r, s, p.fare_min, home, &self.access_cw[wz], pc.beta, p.soften(pc.band_unsoftened(cp.band as usize), cp.car), self.fx_of(&fx, hz), &mut terms);
             if sum > 0. {
                 for &(sa, sb, v) in &terms {
                     let x = rail_legs * v / sum;
