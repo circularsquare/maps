@@ -92,7 +92,9 @@ There is no built-in liking for the train. Rail and the car are compared on time
 - Changing trains: a fixed 2 minutes, plus the walk from the platform you arrive at to the one you
   leave from (centre to centre, at an easy walking pace, each minute counted 1.39), plus the wait
   for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Nobody
-  changes back onto the line they just left: on a full line people wait at their station.
+  changes back onto the line they just left to go back the way they came: on a full line people
+  wait at their station. Where a line comes back through a station (a loop on a stalk), people may
+  change there onto the same line heading somewhere else, like any change.
 - If the train is full when it arrives, the wait for one with room counts too, minute for minute,
   up to an hour.
 - No more riders than the trains take: once the rest is worked out, everyone who would ride if

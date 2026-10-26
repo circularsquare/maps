@@ -121,9 +121,11 @@ fn a_circle_rides_the_short_way_through_its_first_stop() {
     assert_eq!((loads.rn_board[12], loads.rn_alight[8]), (40.0, 40.0));
     // nobody boards at a wrapped last stop: the first stop's route node has the same trains
     assert_eq!(loads.rn_board[6] + loads.rn_board[13], 0.0);
-    // without the wrap the trip is the long way: four stops
+    // without the wrap trains turn back at 0: riders split between the long way (four stops, 8
+    // from boarding) and a change at 0 onto the line out to 1 (2, 2 + 2.5, 2: T-1268)
     let plain = skims(&build_graph(&ring(false), &p), &p);
-    assert!((plain.r[5 * s + 1] - (2.5 + 8.0)).abs() < 1e-4, "{}", plain.r[5 * s + 1]);
+    let want = (8.0 + 8.5) / 2.0 + 1.25;
+    assert!((plain.r[5 * s + 1] - want).abs() < 1e-4, "{} against {want}", plain.r[5 * s + 1]);
 }
 
 #[test]
@@ -437,6 +439,75 @@ fn a_change_off_a_line_takes_the_stations_other_lines() {
     }
     let via_m = r.iter().find(|x| x.1[1].st_from == 2).unwrap();
     assert!((via_m.1[1].wait_min - 7.5).abs() < 1e-4, "M's own headway: {}", via_m.1[1].wait_min);
+}
+
+/// T-1268: a lollipop line, out along a trunk T0-T1-J, round a loop of eight stops L1..L8 and back
+/// to J (and, as a balloon, back down the trunk to T0), 12 tph, 2 minutes a stop. A rider may
+/// change onto the same line at J where it leaves for a stop that is neither the one they came
+/// from nor the one their train goes on to: from L1 to L8 (or L8 to T0) they ride to J and take the
+/// line on, rather than ride round the loop.
+#[test]
+fn a_lollipop_line_changes_onto_itself_at_its_junction() {
+    let p = common_test_params();
+    // stations: T0 0, T1 1, J 2, L1..L8 3..=10
+    let lolly = |balloon: bool| {
+        let mut stops: Vec<u32> = (0..=10).collect();
+        stops.push(2);
+        if balloon {
+            stops.extend([1, 0]);
+        }
+        let n = stops.len();
+        let mut st: Vec<(f32, f32)> = vec![(-4000.0, 0.0), (-2000.0, 0.0), (0.0, 0.0)];
+        st.extend((0..8).map(|i| { let a = (i as f32 + 0.5) * std::f32::consts::PI / 4.0 - std::f32::consts::PI; (3000.0 + 3000.0 * a.cos(), 3000.0 * a.sin()) }));
+        Network {
+            st_x: st.iter().map(|s| s.0).collect(), st_y: st.iter().map(|s| s.1).collect(),
+            line_name: vec![String::new()], line_off: vec![0, n as u32], line_stops: stops,
+            hop_min: (0..n).map(|k| if k + 1 < n { 2.0 } else { 0.0 }).collect(), hop_back: vec![], line_speed_kmh: vec![0.0],
+            line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_crush: vec![200.0],
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![],
+        }
+    };
+    let g = build_graph(&lolly(true), &p);
+    let s = g.n_st;
+    let sk = skims(&g, &p);
+    // L1 to L8: 2.5 waiting, 2 to J, the change's 2 and 2.5, 2 to L8; round the loop it is 16.5
+    let across = 2.5 + 2.0 + 2.0 + 2.5 + 2.0;
+    assert!((sk.r[3 * s + 10] - across).abs() < 1e-4, "{} against {across}", sk.r[3 * s + 10]);
+    // trips with a direct train do not change: T0 to L1, L8 to T0 through J, T1 to T0 on both
+    assert!((sk.r[3] - (2.5 + 6.0)).abs() < 1e-4, "{}", sk.r[3]);
+    assert!((sk.r[10 * s] - (2.5 + 6.0)).abs() < 1e-4, "{}", sk.r[10 * s]);
+    assert!((sk.r[s] - (1.25 + 2.0)).abs() < 1e-4, "{}", sk.r[s]);
+    let mut od = vec![0.0; s * s];
+    od[3 * s + 10] = 100.0;
+    od[10 * s] = 30.0;
+    od[3] = 20.0;
+    let loads = assign(&g, &sk, &od);
+    // route nodes: run 0 = 0..14 (T0 T1 J L1..L8 J T1 T0), run 1 = 14..28 (T0 T1 J L8..L1 J T1 T0)
+    let (l1_back, j_on_to_l8) = (24, 16);
+    assert_eq!((loads.rn_board[l1_back], loads.rn_board[j_on_to_l8]), (100.0, 100.0));
+    assert_eq!(loads.rn_board.iter().sum::<f32>(), 250.0, "a change for L1 to L8 only");
+    assert_eq!(loads.seg[3] + loads.seg[4], 0.0, "nobody rides round to L8");
+    let r = super::super::trip::routes(&g, &sk, &p, 3, 10, 0.005);
+    assert_eq!(r.len(), 1);
+    let legs = &r[0].1;
+    assert_eq!((legs.len(), legs[0].change, legs[1].change), (2, 0.0, 2.0));
+    assert_eq!((legs[0].st_to, legs[1].st_from), (2, 2));
+
+    // as a 6, ending at J: L8 to T0 rides to J and takes the line back down the trunk; round
+    // the loop it is 22.5
+    let g6 = build_graph(&lolly(false), &p);
+    let sk6 = skims(&g6, &p);
+    let down = 2.5 + 2.0 + 2.0 + 2.5 + 4.0;
+    assert!((sk6.r[10 * s] - down).abs() < 1e-4, "{} against {down}", sk6.r[10 * s]);
+
+    // no riding out to board upstream on the line (T-575): the trains in from T1 leave riders
+    // behind for 20 minutes, and riding out to J for a train back in would cost 13
+    let mut g = g;
+    let (in_run0, in_run1) = (12, 14 + 12);
+    g.rn_left[in_run0] = 20.0;
+    g.rn_left[in_run1] = 20.0;
+    let sk = skims(&g, &p);
+    assert!((sk.r[s] - (1.25 + 20.0 + 2.0)).abs() < 1e-3, "{}", sk.r[s]);
 }
 
 #[test]

@@ -564,7 +564,9 @@ notes/T-420.md has the tables.
   arrivals peaking mid-period at the US busiest-hour factors, trains taking riders up to crush
   (160 a 20 m car, a New York car), the extra wait in plain minutes like any wait (T-585) and
   capped at 60 minutes. Riders left behind wait at their station: nobody changes onto the line
-  they left, so nobody rides a full line the other way to board upstream (Anita, T-575), though
+  they left back towards the stop they came from, so nobody rides a full line the other way to
+  board upstream (Anita, T-575; a line passing a station twice may be changed onto there towards
+  other stops, T-1268), though
   Tokyo riders do (gyaku-nori), and riding out on another line and back stays open. Why it may
   not carry over: crush loads differ (Tokyo and Mumbai pack far more than 160 into a car, pushers
   included, so "full" comes later; many European systems run emptier); where riders are

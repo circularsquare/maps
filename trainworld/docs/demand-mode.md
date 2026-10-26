@@ -14,7 +14,9 @@ the car and every other way of getting about (bus, taxi, bike).
 
 - rail = walk to a station + wait (half the headway, capped) + ride + walks between platforms +
   walk from station + fare / value of time (a change costs a fixed 2 perceived minutes, its wait
-  and the walk between the two platforms' centres: T-717)
+  and the walk between the two platforms' centres: T-717; onto the line just left only where it
+  passes the station again towards other stops, as at a lollipop's junction: T-1268,
+  demand-kernel.md 4)
 - driving = door-to-door road time (below; a few constants, real road travel times are not a
   priority) + its cost
 

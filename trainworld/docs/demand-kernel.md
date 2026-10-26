@@ -130,14 +130,19 @@ levels:
    they worsen that cost. Lines are offered to a station cheapest first by their cost from
    boarding, which includes the extra wait where full trains leave riders behind (step 7): a full
    train is weighed after the lines that beat it, never kept ahead of them (T-552). **A rider
-   never changes onto the line they left**, in either direction (Anita, T-575): where full trains
-   leave riders behind they wait at their station, and the trip explorer shows that wait in the
-   boarding, rather than ride the other way to board upstream. A station whose strategy boards a
-   line has a change node for riders reaching it off that line (by alighting or by a walk), with
-   its own strategy over the station's other lines; a station with no other line has none, and
-   the alighting there leads nowhere for this destination. A rider may still ride out on one line
-   and back on another (another line from the stop upstream, or one parallel to the full line), as
-   any change is allowed. A rider leaving
+   never changes onto the line they left towards the stop they came from** (Anita, T-575), **nor
+   towards the one their train goes on to**: where full trains leave riders behind they wait at
+   their station, and the trip explorer shows that wait in the boarding, rather than ride the
+   other way to board upstream. Where the line passes the station again (a lollipop's junction, a
+   line turning back at a stop it passed before) its departures towards other stops are open, at
+   the cost of any change (T-1268, Anita 2026-10-25): off a lollipop's loop a rider changes at the
+   junction onto the line on round the other side, or back down the trunk where the line ends at
+   the junction. A walk from another station boards none of the line it left. A station whose
+   strategy boards a departure barred to some arrival has a change node for those arrivals (one
+   per line, and per pair of stops for a line passing it twice), with its own strategy over the
+   departures left; one with no other departure has none, and the alighting there leads nowhere
+   for this destination. A rider may still ride out on one line and back on another (another line
+   from the stop upstream, or one parallel to the full line), as any change is allowed. A rider leaving
    a train may walk to another station within 300 m straight line and board there (walk at its
    weight). **A boarding rides at least one stop** (T-1055, T-200): a route node is offered to its
    station at the cost of riding on to the next stop, even where riders already on board do
