@@ -305,6 +305,8 @@ pub(crate) struct Period {
     /// Loads averaged over the rounds so far.
     avg: Loads,
     rail: f64,
+    /// T-1300: `ModeOut::sense`, averaged like `rail`
+    rail_d: FareSense,
     walk: f64,
     trips: f64,
     pub(crate) round: usize,
@@ -524,9 +526,9 @@ impl DemandApi {
 
     /// Mode choice and assignment for one period on the graph as it stands (free flow, or with
     /// the crowding factors already set). Returns the rail trips (both directions), the walk
-    /// trips rail took, the loads, the pairs and the rail trips by place. Adds the transfers into
-    /// `xfer` when given (T-176).
-    fn pass(&self, g: &Graph, p: &Params, q: usize, xfer: Option<(&XferIndex, &mut [f32])>) -> (f64, f64, Loads, u64, SubOut) {
+    /// trips rail took, the loads, the pairs, the rail trips by place and (T-1300) the rail trips'
+    /// fare sensitivity (`ModeOut::sense`). Adds the transfers into `xfer` when given (T-176).
+    fn pass(&self, g: &Graph, p: &Params, q: usize, xfer: Option<(&XferIndex, &mut [f32])>) -> (f64, f64, Loads, u64, SubOut, FareSense) {
         let sz = self.sz.as_ref().unwrap();
         // the strategies are shared with the other populations on the same service (T-119)
         let (mo, l) = with_skims(g, p, &self.want, |sk| {
@@ -561,7 +563,7 @@ impl DemandApi {
             acc_work: mo.acc_work,
             od: self.compact_od(&mo.od, g.n_st),
         };
-        (mo.rail, mo.rail_walk, l, mo.pairs, sub)
+        (mo.rail, mo.rail_walk, l, mo.pairs, sub, mo.sense)
     }
 
     /// An S x S station-pair table over `od_st` only (`SubOut::od`).
@@ -1076,12 +1078,12 @@ impl DemandApi {
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);
         let mut xfer = vec![0.0; xi.len];
-        let (rail, rail_walk, avg, pairs, sub) = if self.sz.is_some() {
+        let (rail, rail_walk, avg, pairs, sub, rail_d) = if self.sz.is_some() {
             self.pass(&g, &p, q, Some((&xi, &mut xfer)))
         } else {
-            (0.0, 0.0, Loads::zero(g.n_st, g.n - g.n_st), 0, SubOut::empty())
+            (0.0, 0.0, Loads::zero(g.n_st, g.n - g.n_st), 0, SubOut::empty(), FareSense::default())
         };
-        self.per[q] = Some(Period { net, p, g, avg, rail, walk: walk0 - rail_walk, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac: no_crowding, uniform: true, seen: vec![], xi, xfer });
+        self.per[q] = Some(Period { net, p, g, avg, rail, rail_d, walk: walk0 - rail_walk, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac: no_crowding, uniform: true, seen: vec![], xi, xfer });
         true
     }
 
@@ -1116,7 +1118,7 @@ impl DemandApi {
             st.uniform = false;
             st.fac = fac;
             let mut xfer = vec![0.0; st.xi.len];
-            let (rail, rail_walk, l, _, sub) = self.pass(&st.g, &st.p, q, Some((&st.xi, &mut xfer)));
+            let (rail, rail_walk, l, _, sub, rail_d) = self.pass(&st.g, &st.p, q, Some((&st.xi, &mut xfer)));
             st.round += 1;
             let r = st.round;
             msa(&mut st.xfer, &xfer, r);
@@ -1131,6 +1133,7 @@ impl DemandApi {
             st.sub.msa(&sub, r);
             let w = 1.0 / (r as f64 + 1.0);
             st.rail += (rail - st.rail) * w;
+            st.rail_d.toward(rail_d, w);
             let walk = self.walk_all * st.p.period_share as f64 - rail_walk;
             st.walk += (walk - st.walk) * w;
         } else {
@@ -1202,6 +1205,7 @@ impl DemandApi {
             }
         }
         st.rail *= all as f64;
+        st.rail_d.scale(all as f64);
         let rail_walk = self.walk_all * st.p.period_share as f64 - st.walk;
         st.walk += rail_walk * (1.0 - if lost0 > 0.0 { lost1 / lost0 } else { all as f64 });
         true
@@ -1209,7 +1213,8 @@ impl DemandApi {
 
     /// Period `q`: round (0 = free flow), trips, rail trips, walked trips, ms of the last stage,
     /// subzone pairs, segments over seats at the busiest hour, worst load as a share of crush,
-    /// rider-weighted p50 and p90 crowding penalty. Empty if `q` has no solve.
+    /// rider-weighted p50 and p90 crowding penalty, and (T-1300) the fare sensitivity
+    /// (`FareSense`: d, d_km, km). Empty if `q` has no solve.
     pub fn summary(&self, q: usize) -> Vec<f64> {
         let Some(Some(st)) = self.per.get(q) else { return vec![] };
         let (_, cs) = crowd_factors(&st.g, &st.net, &st.avg, &st.p);
@@ -1224,6 +1229,9 @@ impl DemandApi {
             cs.max_load_of_crush as f64,
             cs.p50 as f64,
             cs.p90 as f64,
+            st.rail_d.d,
+            st.rail_d.d_km,
+            st.rail_d.km,
         ]
     }
 

@@ -393,7 +393,12 @@ type it, Enter or leaving the box applying and Escape cancelling [T-626, `TypedV
 row's value, so a base fare or rate change moves that node's fare and every later one's by the same
 amount, and a stretch's end keeps both rates; a rate never goes below $0. Fares show whole cents; a
 rate shows two decimals when it is whole cents and three otherwise (typed or dragged). Dragging on
-the graph sets fares, and the rows' rates follow. Then cars
+the graph sets fares, and the rows' rates follow. While a drag is under way, or from a fare edit until
+demand has solved it, two more rows follow: "Riders a day" with the estimated change in rail trips
+("-6%") and "Fares a day" with the estimated change in fare income ("+$1.2M"), each hover giving
+the estimate and today's figure; otherwise neither shows [T-1300, `game/fareEstimate.ts`: each
+layer's rail trips times exp(its fare sensitivity over its rail trips x the curve's change at its
+riders' mean trip length, line by line), fare income as the riders kept pay the new fares]. Then cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
 
@@ -419,11 +424,25 @@ reads "No stations yet."
 
 ## Saved games
 
-[T-068, T-241, T-251, T-320; `ui/SavesPanel.tsx`; save format and slot rules in
+[T-068, T-241, T-251, T-320, T-1395; `ui/SavesPanel.tsx`; save format and slot rules in
 [architecture.md](architecture.md) "Saves"]
 
 - The floppy disk button left of the gear, or the top bar's Autosave off notice, opens a centred
   panel over a dimmed page, closed by Esc, its close button or a click outside.
+- **The head**: "Saved games", one icon, then Close [T-1395]. Where accounts are on, signed out a
+  crossed cloud (hover "Kept in this browser only. Sign in to keep your games on your account."; a
+  click opens Sign in), signed in a cloud (hover "Signed in as anita"; a click opens the account
+  panel over this one). Where they are not (a localhost page, or no answer), no icon, except a
+  crossed cloud with the hover "These saves can be lost if the disk fills up." while the browser
+  refuses to keep the site's storage (`navigator.storage.persist`, asked once a slot is written,
+  which Chrome grants or refuses without a prompt) [T-1214; `game/saveSafety.ts`].
+- **Above the cards**, two buttons [T-1131, T-1395]: New game (accent border) shows the new game
+  sheet (below) in the panel, headed "New game"; its Start closes the panel and opens the new game,
+  its Back returns to the cards. Open a file (hover "Open a .save file as a new saved game") asks
+  nothing: it closes the panel and opens the file's game in a new slot, the game being played saved
+  first [T-743; the slot rules in architecture.md]. On a test page, whose game has no card, a copy
+  icon (hover "Make a copy") follows them. Each of these, and Open and Open as a copy, reloads the
+  page into its game ("Loading" below).
 - One card per browser slot: a 240 x 160 picture of its network, drawn by the clock worker when the
   slot is saved, at twice that resolution, on the land colour of the theme it was saved in [T-543].
   The picture is one panel per city with stations (each station in its zone by the coarse outlines,
@@ -437,68 +456,59 @@ reads "No stations yet."
   left in that theme's ink with a land-coloured halo, and with two or more panels its station
   count under it; the hover gives both. A network with no station in a city is one unnamed panel
   over all of it. Then its name, "Autosaved 2 min ago"
-  for the game being played or "Saved ..." for the others (exact time on hover), the game day, the
-  cities its stations are in, lines, stations and cash. The game being played is marked Playing;
-  every other card has Open (closes the panel and loads it) and Delete (asked first); every card
-  has Rename. A slot with no stored picture shows "No picture yet" until it is next saved.
-- **Rename** [T-1247]: the Rename button or a double click on a card's name puts a box in its
+  for the game being played ("Saved just now" after a save by hand, while it is the last write) or
+  "Saved ..." for the others (exact time on hover), the game day, the cities its stations are in,
+  lines, stations and cash. A slot with no stored picture shows "No picture yet" until it is next
+  saved. Buttons sit at the card's bottom right, icons first, each icon with its hover [T-1395]:
+  - **The Playing card**: a pencil after the name (hover "Rename"), the Playing mark, then copy
+    (hover "Make a copy"), download (hover "Download as a file", `anitabuilder-nyc-day-12.save`),
+    clock (hover "Earlier versions"), and Save.
+  - **Every other card in this browser**: download (its last save in this browser, read from
+    storage) and bin (hover "Delete", asked first), then Open (accent border; closes the panel and
+    loads it).
+- **Rename** [T-1247]: the pencil or a double click on a card's name (any card) puts a box in its
   place with the name selected; Enter or leaving the box renames, Escape puts the name back.
+- **Make a copy** [T-1395]: the copy is made at once, named "<game> copy", and becomes the Playing
+  card with its name box open and selected; Enter or leaving keeps what is typed, Escape keeps
+  "<game> copy". The page does not reload.
 - **Save** [T-1251]: the Playing card's Save, or Ctrl+S anywhere in the game, writes the slot now,
-  autosave on or off; then "Saved 9:41 PM" stands left of the card's buttons (the full date on
-  hover) and the tool notes say the same. In a tab whose autosave is off because the slot is open
+  autosave on or off; then the facts line reads "Saved just now" and the tool notes say "Saved
+  9:41 PM". In a tab whose autosave is off because the slot is open
   in another, Save takes the slot over: this tab autosaves from then on, and the other says
   "Autosave is off here because this game was saved in another tab." until a save by hand there
   takes it back (architecture.md "One writer per slot").
 - **Games on the account** [T-988; architecture.md 11 "Games on the account"], only while signed
-  in to a server that keeps games: under the Playing card's facts "Saved to your account 9:41 PM"
-  (the time the account's copy was saved; "Oct 24" form after a day; the full date on hover) or
-  "Not on your account yet" (the reason on hover: "Offline", "The server could not be reached",
-  "Your account is full. Delete a game to make room.", "This game is too big to keep on your
-  account."); nothing while another device has the game (the panel's callout and the top bar say
-  "Autosave is off here because this game was opened on another device.", and Save takes it
-  back, its hover saying autosave stops on the other device). Another card whose game another
-  device opened or saved in the last 10 minutes says "Open on another device" (the time on
-  hover). A game not tied to the account (kept here only, made signed out, or another account's)
-  has a crossed cloud after its name (hover "Only in this browser"); on one tied to no account it
-  is a button (hover "Only in this browser. Click to add it to your account.") that adds the game,
-  which goes up at once [T-988 stage 3; the start menu's cloud is not a button]. After the browser's cards,
-  the account's games not in this browser: the server's picture and facts, a cloud after the name
-  (hover "On your account"), Open (downloads it into a new slot and opens it as Open does) and
-  Delete, asked first: "Delete "Tokyo" from your account?". Deleting a tied slot asks "Delete
+  in to a server that keeps games: after the Playing card's "Autosaved" a small cloud, hover "On
+  your account, saved 3:31 PM" (the time the account's copy was saved; "Oct 24 at 3:31 PM" after a
+  day), or a crossed cloud in the warn colour, hover "Not on your account yet" plus the reason
+  ("Offline", "The server could not be reached", "Your account is full. Delete a game to make
+  room.", "This game is too big to keep on your account.") [T-1395]; nothing while another device
+  has the game (the panel's callout and the top bar say "Autosave is off here because this game
+  was opened on another device.", and Save takes it back, its hover saying autosave stops on the
+  other device). Another card whose game another device opened or saved in the last 10 minutes
+  says "Open on another device" (the time on hover). A game not tied to the account (kept here
+  only, made signed out, or another account's) has a crossed cloud after its name (hover "Only in
+  this browser"); on one tied to no account it is a button (hover "Only in this browser. Click to
+  add it to your account.") that adds the game, which goes up at once [T-988 stage 3; the start
+  menu's cloud is not a button]. After the browser's cards, the account's games not in this
+  browser: the server's picture and facts, a cloud after the name (hover "On your account. Open
+  downloads it here."), bin (hover "Delete", asked first: "Delete "Tokyo" from your account?") and
+  Open (downloads it into a new slot and opens it as Open does). Deleting a tied slot asks "Delete
   "Tokyo" from this browser and your account?".
-- Under the Playing card, its backups [T-744], newest first: "Backup 4 min ago · Day 26" (exact
-  time on hover) and Restore as a copy, which closes the panel and opens the backup in a new slot.
-  Signed in, the account's two backups of the game join them in time order [T-988 stage 3], each
-  with a cloud before "Backup today at 14:05" (no game day: the account keeps none for a backup;
-  hover "A backup of this game on your account from ..."); its Restore as a copy downloads it and
-  opens it as Load a file does, named "<game> at 2:05 PM" (an earlier restore's time dropped), a new game on the account. A failed download
-  says "This backup could not be downloaded."
-- Above the cards [T-1131]: Save to a file
-  (`anitabuilder-nyc-day-12.save`), Load a file, New game, then Save a copy, which opens a row
-  under the buttons with the name (prefilled "<game> copy", focused and selected), Save and Cancel;
-  Enter saves, Escape cancels, and a second click on Save a copy closes it [T-1295]. Load a file asks nothing: it closes the
-  panel and opens its game in a new slot, the game being played saved first [T-743; the slot rules
-  in architecture.md]. New game shows the new game sheet (below) in the panel, headed "New game";
-  its Start closes the panel and opens the new game the same way, its Back returns to the cards.
-  Each of these, and Open and Restore as a copy, reloads the page into its game ("Loading" below).
-- Under those buttons, keeping the saves when browser storage goes [T-1214; `game/saveSafety.ts`]:
-  once a slot is written the browser is asked to keep the site's storage (`navigator.storage.persist`,
-  which Chrome grants or refuses without a prompt); while it is refused the panel says "These saves
-  can be lost if the disk fills up." Where the browser can write to a folder (Chrome, Edge), "Save
-  on this computer" opens the browser's folder picker, in Documents the first time and where the
-  last pick was after that (`startIn: "documents"`, `id: "anitabuilder-saves"`) [T-1235]. The copies
-  go in a `trainworld` folder inside the one picked, made if missing (the picked folder itself when
-  it is named `trainworld`). From then on the clock worker copies every slot there at once and each
-  slot again at every save, one `<name> (<4 letters of its key>).save` per slot written over each
-  time, and the panel says "Saved to <folder>/trainworld at 14:05" with Stop. The picked folder is
-  remembered beside the saves; on a later visit the browser wants it allowed again, so the line is
-  "Save to <folder> again" until the player clicks it. A failure says "Saving to
-  <folder>/trainworld failed" (the reason on hover). Elsewhere Save to a file is the copy outside
-  the browser.
+- **Earlier versions** [T-744, T-988 stage 3, T-1395]: the clock icon lists them under the Playing
+  card (the icon lit while open; open or shut is kept for the visit), newest first, each "Today at
+  2:58 PM" ("Oct 24 at 2:58 PM" before today; "· Day 26" after a browser backup; exact time on
+  hover) with Open as a copy, which closes the panel and opens it in a new slot, named "<game> at
+  2:05 PM" (an earlier restore's time dropped). One list only: the account's two backups when the
+  game is on the account signed in and the account listed it (its Open as a copy downloads it and
+  opens it as Open a file does, a new game on the account; a failed download says "This backup
+  could not be downloaded."), otherwise this browser's two. The browser keeps writing its own for
+  every game; signed in they are hidden, and they show again when the account cannot be reached
+  or after signing out. With none yet the list says "No earlier versions yet".
 - A page opened with `?new=1`, `?synth=1` or `?demandTest=1` does not autosave: the top bar says
-  "Autosave is off in this test page. Save a copy to keep the game." (the only place it is said,
-  [T-971]), a `?new=1` page marks no
-  card Playing, and Save a copy gives the game a slot of its own, which autosaves from then on.
+  "Autosave is off in this test page. Make a copy to keep the game." (the only place it is said,
+  [T-971]), a `?new=1` page marks no card Playing, and the copy icon above the cards gives the game
+  a slot of its own, which autosaves from then on.
 
 **A new game** starts on day 1 at 07:00 with $6B, empty or (a sandbox) from a real network, on its
 start city's registry centre and zoom, or on the world map (centre 20° E 30° N, zoom 1.8: the
@@ -649,14 +659,14 @@ registry centre and zoom, or over New York with none [T-310].
   Nothing else animates. The figures behind it are the solve's estimates, or the last
   final result kept beside the save when there is one (T-328; the split's hover ends "(from the
   last time this game was open)").
-- **Another game replaces this one by reloading the page into it** [T-1196]: Open, Load a file,
-  Restore as a copy and New game in the saves panel save the game in hand, let go of its slot, then
+- **Another game replaces this one by reloading the page into it** [T-1196]: Open, Open a file,
+  Open as a copy and New game in the saves panel save the game in hand, let go of its slot, then
   reload with `?slot=<key>` or `?load=file|restore|new` (a file, a backup or a new game's spec waits in
   browser storage for the reloaded page's clock worker). Demand's workers never give memory back
   while they live (about 2.5 GB each after all of China), so this is the one way the last game's
   memory goes. The switch leaves the address bar, so reloading from there opens the start menu.
 - **A game too big for the device is refused** [T-1197; `game/memoryCheck.ts`]: before a saved game
-  opens (the start menu, Open, Load a file, Restore), its zones (the save's opened zones, else its
+  opens (the start menu, Open, Open a file, Open as a copy), its zones (the save's opened zones, else its
   slot's cities) give each solving worker's memory, 0.7 GB plus 1.2 GB per billion local trips a day
   of those zones, and the whole game's, 1.5 GB plus 15 MB a zone plus the workers'. A worker over
   3.5 GB (a browser worker cannot pass 4) or, on a device reporting under 8 GB, a game over three

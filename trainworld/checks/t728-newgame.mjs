@@ -128,7 +128,7 @@ try {
     `(button "${lLabel}", real box ${lReal}, centre ${g.lng.toFixed(2)}, ${g.lat.toFixed(2)}, top bar "${g.bar}", Tokyo slot left at ${tLeft.hash})`);
 
   // 3. the real New York save from a file: normal, refuses the order; Settings makes it a sandbox once
-  const [fc] = await Promise.all([page.waitForEvent('filechooser'), (async () => { await panel(); await page.click('.saves-panel .save-files button:has-text("Load a file")'); })()]);
+  const [fc] = await Promise.all([page.waitForEvent('filechooser'), (async () => { await panel(); await page.click('.saves-panel .save-files button:has-text("Open a file")'); })()]);
   await fc.setFiles(REAL_SAVE);
   const N = await switched(L);
   await page.waitForFunction(() => window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });

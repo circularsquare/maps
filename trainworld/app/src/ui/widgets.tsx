@@ -31,6 +31,8 @@ export const Icon = {
   keepPlacing: () => <svg viewBox="0 0 16 16"><path d="M2 12.5l4-6 3 3 5-6.5" /><circle class="solid" cx="6" cy="6.5" r="1.4" /><circle class="solid" cx="9" cy="9.5" r="1.4" /><circle class="solid" cx="14" cy="3" r="1.4" /></svg>,
   // a magnet over a curving line
   snapReal: () => <svg viewBox="0 0 16 16"><path d="M1.5 14.5c4-.5 9-3 13-8" /><path d="M5 2.5v3.5a3 3 0 006 0V2.5M5 4.5h2M9 4.5h2" /></svg>,
+  // two peaks, the track tag's terrain mark (T-1394)
+  terrain: () => <svg viewBox="0 0 16 16"><path d="M1.5 13.5L6 6l2.4 3.4L10.6 6.5l3.9 7z" /></svg>,
   // track carried on at its own height: a raised piece, then an arrow along the same level (T-1161)
   autoLevel: () => <svg viewBox="0 0 16 16"><path d="M1.5 13.5h3M4.5 13.5l3-6h7M12 5l2.5 2.5L12 10" /><path d="M7.5 10.5v3M11 10.5v3" /></svg>,
   undo: () => <svg viewBox="0 0 16 16"><path d="M5.5 4L2.5 7l3 3M3 7h6.5a3.5 3.5 0 010 7H7" /></svg>,
@@ -40,8 +42,8 @@ export const Icon = {
   help: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" /><path d="M6.2 6.3a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.6-.8 1.1v.6" /><circle class="solid" cx="8" cy="11.6" r=".5" /></svg>,
   // trains reverse at this stop
   uturn: () => <svg viewBox="0 0 16 16"><path d="M5 13.5V7a3.25 3.25 0 0 1 6.5 0v4.5M8.8 9.2l2.7 2.8 2.7-2.8" /></svg>,
-  // the line panel's related lines (T-1168): three lines splitting from one
-  related: () => <svg viewBox="0 0 16 16"><path d="M8 1.5v13M8 4.5c0 2.5-4 2.5-4 5v5M8 4.5c0 2.5 4 2.5 4 5v5" /></svg>,
+  // the line panel's related lines (T-1168): two lines crossing at a station (T-1391)
+  related: () => <svg viewBox="0 0 16 16"><path d="M8 .8v4.5M8 10.7v4.5M.8 8h4.5M10.7 8h4.5" /><circle cx="8" cy="8" r="2.7" /></svg>,
   // two parallel tracks with an express pair added beside them
   doubleUp: () => <svg viewBox="0 0 16 16"><path d="M1.5 3h13M1.5 6h13M8 9v6M5 12h6" /></svg>,
   bin: () => <svg viewBox="0 0 16 16"><path d="M2.5 4.5h11M6.5 4.5V2.5h3v2M4 4.5l.8 9h6.4l.8-9M6.8 7v4M9.2 7v4" /></svg>,
@@ -79,6 +81,8 @@ export const Icon = {
   // T-988: a game on the account, and one only in this browser
   cloud: () => <svg viewBox="0 0 16 16"><path d="M4.6 12.5h7a2.6 2.6 0 00.3-5.2 3.9 3.9 0 00-7.5-.9 2.9 2.9 0 00.2 6.1z" /></svg>,
   cloudOff: () => <svg viewBox="0 0 16 16"><path d="M4.6 12.5h7a2.6 2.6 0 00.3-5.2 3.9 3.9 0 00-7.5-.9 2.9 2.9 0 00.2 6.1zM2.5 2.5l11 11" /></svg>,
+  download: () => <svg viewBox="0 0 16 16"><path d="M8 2.5v7.5M4.8 7l3.2 3.2L11.2 7M2.5 11v2.5h11V11" /></svg>,
+  history: () => <svg viewBox="0 0 16 16"><path d="M2.9 9.2a5.2 5.2 0 1 0 .9-4.6M3 2.5v2.6h2.6M8 5.2V8.3l2.1 1.4" /></svg>,
   person: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="5.2" r="2.9" /><path d="M2.4 14.2c.6-3 2.9-4.6 5.6-4.6s5 1.6 5.6 4.6" /></svg>,
   trophy: () => <svg viewBox="0 0 16 16"><path d="M4.5 2.5h7v3.5a3.5 3.5 0 01-7 0zM4.5 3.8H2.5c0 2 .8 3.2 2.3 3.4M11.5 3.8h2c0 2-.8 3.2-2.3 3.4M8 9.5v2.5M5.5 13.5h5" /></svg>,
   gear: () => (

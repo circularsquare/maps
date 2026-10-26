@@ -101,29 +101,140 @@ export class CellIndex {
   }
 }
 
+/** A grid carried over an edit (T-1030): an older grid with its items renumbered (`map`, -1 where
+ * the item went), and a small grid of the items added since (`extra`, their numbers in `ids`). */
+class PatchedIndex {
+  constructor(readonly base: CellIndex, readonly map: Int32Array, readonly extra: CellIndex | null, readonly ids: Int32Array) {}
+  near(x: number, y: number, reach: number, take: (i: number) => void) {
+    const m = this.map, ids = this.ids;
+    this.base.near(x, y, reach, (i) => {
+      const j = m[i];
+      if (j >= 0) take(j);
+    });
+    this.extra?.near(x, y, reach, (k) => take(ids[k]));
+  }
+}
+type Grid = CellIndex | PatchedIndex;
+
 /** Runs `job` when the main thread is idle: a build takes 5-20 ms, which a pointer move never waits for. */
 export function whenIdle(job: () => void) {
   if (typeof requestIdleCallback === "function") requestIdleCallback(job, { timeout: 1000 });
   else setTimeout(job, 50);
 }
 
+/** How a set of items came from an older one over an edit (T-1030), for `CellLevels.carried`. */
+interface CarriedFrom {
+  old: CellLevels;
+  runs: Int32Array;
+  itemBox?: (i: number, out: Float64Array, at: number) => void;
+  /** each old item's new number or -1, and the new items, worked out when first needed */
+  step?: Int32Array;
+  fresh?: number[];
+}
+
 /** The CellIndex levels of one set of boxes (`box()` gives them), each built in idle time once a
- * query has wanted it. */
+ * query has wanted it, or carried over from the set before an edit (`carried`). */
 export class CellLevels {
-  private levels: (CellIndex | "asked" | undefined)[] = [];
+  private levels: (Grid | "asked" | undefined)[] = [];
   private boxes: ArrayLike<number> | null = null;
+  private from: CarriedFrom | null = null;
   constructor(private box: () => ArrayLike<number>, readonly count: number) {}
   /** The level for a query of this reach, or null to scan everything: when the reach is too wide
    * for any level, or the level is not built yet (it is then built when the thread is idle). */
-  for(reach: number): CellIndex | null {
+  for(reach: number): Grid | null {
     const L = CELL_SIDES.findIndex((side) => 2 * reach <= side);
     if (L < 0 || !(reach >= 0)) return null;
-    const had = this.levels[L];
-    if (had instanceof CellIndex) return had;
-    if (!had) {
+    const had = this.level(L);
+    if (had) return had;
+    if (!this.levels[L]) {
       this.levels[L] = "asked";
       whenIdle(() => (this.levels[L] = new CellIndex((this.boxes ??= this.box()), this.count, CELL_SIDES[L])));
     }
     return null;
+  }
+
+  /** Level L if built or carried over (carrying it now if the older set has it), else null. */
+  private level(L: number): Grid | null {
+    const had = this.levels[L];
+    if (had && had !== "asked") return had;
+    if (had || !this.from) return null;
+    const g = this.carry(L);
+    if (g) this.levels[L] = g;
+    return g;
+  }
+
+  /**
+   * T-1030: these items' grids carried over from `old`'s, the set before an edit, instead of built
+   * again: `runs` (start, count, old start or -1, as `NetPatch`) make the new items from the old;
+   * `itemBox(i)` writes new item i's box where `box()` would build all of them. Each level is carried
+   * when a query first asks for it; one whose added items pass a share of the whole is built anew.
+   */
+  static carried(old: CellLevels, runs: Int32Array, box: () => ArrayLike<number>, count: number, itemBox?: (i: number, out: Float64Array, at: number) => void): CellLevels {
+    const out = new CellLevels(box, count);
+    // edits with no query between: the older set's levels are carried now, so only one older set
+    // (and its boxes) is ever held
+    if (old.from) {
+      for (let L = 0; L < CELL_SIDES.length; L++) if (old.from.old.levels[L] instanceof CellIndex || old.from.old.levels[L] instanceof PatchedIndex) old.level(L);
+      old.from = null;
+    }
+    if (old.levels.some((g) => g && g !== "asked")) out.from = { old, runs, itemBox };
+    return out;
+  }
+
+  private carry(L: number): Grid | null {
+    const f = this.from!;
+    const g = f.old.levels[L];
+    if (!g || g === "asked") return null;
+    if (!f.step) {
+      const step = new Int32Array(f.old.count).fill(-1), fresh: number[] = [], r = f.runs;
+      for (let k = 0; k < r.length; k += 3) {
+        const start = r[k], n = r[k + 1], from = r[k + 2];
+        if (from >= 0) for (let j = 0; j < n; j++) step[from + j] = start + j;
+        else for (let j = 0; j < n; j++) fresh.push(start + j);
+      }
+      f.step = step;
+      f.fresh = fresh;
+    }
+    const step = f.step;
+    const base = g instanceof PatchedIndex ? g.base : g;
+    const was = g instanceof PatchedIndex ? g.map : null;
+    const ids: number[] = [];
+    if (g instanceof PatchedIndex) for (const i of g.ids) if (step[i] >= 0) ids.push(step[i]);
+    for (const i of f.fresh!) ids.push(i);
+    if (ids.length > Math.max(4096, this.count / 8)) return null;
+    const map = new Int32Array(was ? was.length : f.old.count);
+    for (let i = 0; i < map.length; i++) {
+      const j = was ? was[i] : i;
+      map[i] = j >= 0 ? step[j] : -1;
+    }
+    const all = f.itemBox ? null : (this.boxes ??= this.box());
+    const b = new Float64Array(ids.length * 4);
+    ids.forEach((i, k) => {
+      if (all) for (let c = 0; c < 4; c++) b[k * 4 + c] = all[i * 4 + c];
+      else f.itemBox!(i, b, k * 4);
+    });
+    return new PatchedIndex(base, map, ids.length ? new CellIndex(b, ids.length, CELL_SIDES[L]) : null, Int32Array.from(ids));
+  }
+
+  /** `?patch=check`: every level that can be carried over, carried, answering as grids built from
+   * scratch would at the boxes of up to `samples` items spread over all; the levels that do not. */
+  verify(samples = 64): string[] {
+    const bad: string[] = [];
+    for (let L = 0; L < CELL_SIDES.length; L++) {
+      const g = this.level(L);
+      if (!(g instanceof PatchedIndex)) continue;
+      const all = (this.boxes ??= this.box());
+      const fresh = new CellIndex(all, this.count, CELL_SIDES[L]);
+      for (let s = 0; s < samples && this.count; s++) {
+        const i = Math.floor((s * this.count) / samples);
+        const x = (all[i * 4] + all[i * 4 + 2]) / 2, y = (all[i * 4 + 1] + all[i * 4 + 3]) / 2, reach = CELL_SIDES[L] / 4;
+        const a = new Set<number>(), b = new Set<number>();
+        // the same cells hold the same items, so the answers match exactly
+        g.near(x, y, reach, (j) => a.add(j));
+        fresh.near(x, y, reach, (j) => b.add(j));
+        if (a.size !== b.size || [...b].some((j) => !a.has(j))) { bad.push(`level ${L}`); break; }
+      }
+    }
+    return bad;
   }
 }

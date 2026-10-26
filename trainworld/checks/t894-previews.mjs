@@ -67,7 +67,7 @@ try {
   const [fc] = await Promise.all([page.waitForEvent('filechooser'), page.evaluate(async () => {
     (await import('/src/ui/SavesPanel.tsx')).savesOpen.value = true;
     await new Promise((r) => setTimeout(r, 500));
-    [...document.querySelectorAll('.saves-panel .save-files button')].find((b) => b.textContent === 'Load a file').click();
+    [...document.querySelectorAll('.saves-panel .save-files button')].find((b) => b.textContent === 'Open a file').click();
   })]);
   // T-1196: the page reloads into the loaded game
   await Promise.all([page.waitForNavigation({ timeout: 120000 }), fc.setFiles(REAL_SAVE)]);

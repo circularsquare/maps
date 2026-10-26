@@ -21,8 +21,9 @@ export function useModalDialog(ref: RefObject<HTMLDialogElement | null>, open: b
 }
 
 /** A centred modal: Esc, the close button or a click outside its box closes it. Keys stop at the
- * dialog, since the map clears its selection on Esc. `cls` adds to the panel's classes. */
-export function Modal({ open, onClose, title, cls = "", children }: { open: boolean; onClose: () => void; title: string; cls?: string; children: ComponentChildren }) {
+ * dialog, since the map clears its selection on Esc. `cls` adds to the panel's classes; `head` goes
+ * before the close button. */
+export function Modal({ open, onClose, title, cls = "", head, children }: { open: boolean; onClose: () => void; title: string; cls?: string; head?: ComponentChildren; children: ComponentChildren }) {
   const dialog = useRef<HTMLDialogElement>(null);
   useModalDialog(dialog, open);
   if (!open) return null;
@@ -33,7 +34,8 @@ export function Modal({ open, onClose, title, cls = "", children }: { open: bool
     <div class="saves-inner">
       <div class="saves-head">
         <h2>{title}</h2>
-        <button class="btn icon" aria-label="Close" data-tip="Close (Esc)" onClick={onClose}><Icon.cross /></button>
+        {head}
+        <button class="btn icon" autofocus aria-label="Close" data-tip="Close (Esc)" onClick={onClose}><Icon.cross /></button>
       </div>
       {children}
     </div>

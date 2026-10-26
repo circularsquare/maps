@@ -15,6 +15,7 @@ Both levels use 5 degree tiles: 72 x 29 of them. Values are uint8, row-major:
 Same rule as build_grid.py: a cell's speed comes from the mean of its land
 pixels' friction (time per metre), and it is land when at least MIN_LAND of its
 pixels are land. For L1 a cell is one pixel. All-water tiles are not written.
+Water patches under 5 km2 count as land (smallwater.py), at the 0.06 they have.
 """
 import gzip
 import json
@@ -25,6 +26,8 @@ os.environ.setdefault("OMP_NUM_THREADS", "4")
 
 import numpy as np
 import rasterio
+
+from smallwater import SmallWater, STRIP
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(HERE, "data", "raw", "unzipped", "2020_walking_only_friction_surface.geotiff")
@@ -62,15 +65,17 @@ def main():
     with rasterio.open(SRC) as ds:
         w, h = ds.width, ds.height
         strip = LEVELS[1]                      # one row of 5 degree tiles
-        assert w % strip == 0 and h % strip == 0
+        assert w % strip == 0 and h % strip == 0 and strip == STRIP
         tx, ty = w // strip, h // strip
+        sw = SmallWater(ds, log=lambda *a: None)    # strips are SmallWater's STRIP rows, as here
+        print("small water: %d patches (%.0f km2) become land" % (sw.small_components, sw.small_area_km2), flush=True)
         found = {f: [] for f in LEVELS}
         nbytes = {f: 0 for f in LEVELS}
         for f in LEVELS:
             os.makedirs(os.path.join(OUT, "l%d" % f), exist_ok=True)
         for tr in range(ty):
             a = ds.read(1, window=((tr * strip, (tr + 1) * strip), (0, w)))
-            land = (a != WATER) & (a > 0)
+            land = ((a != WATER) & (a > 0)) | sw.mask(tr, a)
             for factor, size in LEVELS.items():
                 g = encode(a, land, factor)
                 assert g.shape == (size, tx * size)

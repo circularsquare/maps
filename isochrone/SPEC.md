@@ -24,23 +24,34 @@ land cover and slope; Weiss et al. 2020, CC BY 4.0), averaged onto a global grid
 to 128 days, a day being 8 hours of walking. Water cannot be crossed. The default start is
 Cluj-Napoca.
 
+Our own off-road walking surface, MAP's recipe rebuilt at 1 km from Copernicus LC100 2019 land
+cover and GMTED2010 elevation with each layer kept apart, is built but not yet read by the page
+(`docs/surface.md`; T-028).
+
 ## 3. Travel model
 
-- **Fastest path, survival reported.** The search minimises time only. Survival is worked out
-  along the fastest path afterwards, from a hazard rate per cell and mode: survival =
-  exp(-sum of hazard x time). (Anita, 2026-10-14; a search that trades time against risk is a
-  possible later extra, not planned.)
+- **Time and danger both count.** The search minimises time + K x hazard, one K for every mode,
+  so a path pays extra hours to avoid risk (K = 1000 h: 10 hours to cut death risk by 1%). Hazard
+  is a rate per cell and mode; survival along the chosen path is exp(-sum of hazard x time), shown
+  in the hover. Until hazard data exists (T-006) the search is time only.
 - **Modes are layers of one graph.** Each mode (walking, canoe, later bike, car) is a layer of
   cells with its own speeds; switching between layers is an edge with a time cost. Turning a mode
   or a kind of infrastructure off removes its layer or its edges, so toggles do not multiply the
   data to prepare.
 - **Directed edges.** Water flows: paddling downstream is faster than upstream, so the graph is
-  directed. Walking stays symmetric.
-- **Canoe** is the next mode (Anita, 2026-10-14). Model: research T-003.
-  **open**: whether the canoe can be left behind and picked up, or carried overland (portage).
-  Proposed default: you carry it overland at a slower walking pace, never leave it.
-- **Eras.** Today, and later 10,000 BC (no roads, no cleared land, lower sea level, ice sheets).
-  Sources: research T-004.
+  directed. Walking is symmetric while speeds come from the MAP surface; once slopes come from
+  our own elevation (T-011) walking is directed too, downhill faster than uphill (directed Tobler,
+  research/friction.md 2).
+- **Small water.** Water patches under 5 km² at L1 are walked at MAP's 1 km/h instead of blocking
+  (T-013).
+- **Canoe** is the next mode (Anita, 2026-10-14): a canoe start searches the canoe layer (sea,
+  lakes, paddleable rivers from 1 m³/s, with currents) and carrying on land. The canoe is never
+  left behind: overland it is carried, at twice the walking time. Design: `docs/canoe.md`
+  (for Anita's review, T-005); model and sources: research/canoe.md.
+- **Eras.** Today, and later 10,000 BC (no roads, no cleared land, lower sea level, ice sheets,
+  Beyer 2020 biomes at 12 ka for land cover). Sources: research/friction.md.
+- **Season.** Annual averages on land; local summer at sea (waves, currents, sea ice), the season a
+  paddler would choose. A season switch is a later extra.
 
 ## 4. Resolution
 

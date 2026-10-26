@@ -540,7 +540,8 @@ notes/T-420.md has the tables.
   value-of-time literature (0.5-1 between countries: UK meta-analysis 0.9, HEATCO 0.7). Fares are
   charged in local terms, the player's curve times each country's scale (its income over India's to
   the same power, or the player's own), so at the default scales a fare weighs the same everywhere
-  and a poorer country brings in less per rider. The car's money (ownership, parking, running) stays
+  and a poorer country brings in less per rider; a scale the player sets moves inter-city riders
+  from that country too (T-1286). The car's money (ownership, parking, running) stays
   at 3 minutes a dollar everywhere. Why it may not carry over: incomes differ within a country as
   much as between (a Mumbai suburb against Bandra), and the car's money should scale too. Check: a
   country's transit fares against its income, and its fare elasticity where a survey publishes one.

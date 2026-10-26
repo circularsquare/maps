@@ -70,6 +70,10 @@ export interface DemandView {
    * purposes add up to `lines` and `stations`. Absent purposes carried no riders. Keyed by the
    * shown purposes (game/purposes.ts `PURPOSES`): "school" counts university too (T-192). */
   purposes?: Map<PurposeKey, PurposeDemand>;
+  /** T-1300: rail trips a day per curve dollar dearer on every fare (negative), the local layers'
+   * and the market's; each one's reach (its sensitivity-weighted mean trip km over its
+   * rider-weighted one); and the market's rail trips a day (the rest of `railTripsPerDay` is local) */
+  fareSense?: { local: number; market: number; localReach: number; marketReach: number; marketRail: number };
 }
 
 /** One purpose's share of `DemandView.lines` and `.stations` (T-158). */

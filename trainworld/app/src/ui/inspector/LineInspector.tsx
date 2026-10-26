@@ -25,7 +25,7 @@ import { AUTO_SLACK, autoTrainsFor, edit, headwayFromMinutes, headwayShown, line
 import { live } from "../../map/live";
 import { Alert, Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
-import { RelatedStops } from "./RelatedStops";
+import { RelatedStops, useTightTimes } from "./RelatedStops";
 import { NameEdit } from "./NameEdit";
 import { locateLine, locateStation } from "../locate";
 import { demandPending, Spinner } from "../Spinner";
@@ -68,7 +68,7 @@ function spotsFrom(d: Float64Array): { text: string; s: number }[] {
 }
 
 /** Where full track holds a line's fleet back, per level (T-517): from `TrackApi.line_held`. */
-interface Held { d: Demand; wait: number; place: string; head: string; name: string; tail: string; at: { lng: number; lat: number } | null; tip: string }
+interface Held { d: Demand; wait: number; place: string; head: string; name: string; tail: string; at: { id: string; lng: number; lat: number } | null; tip: string }
 function heldFrom(v: Float64Array): Held[] {
   const st = stationsNow();
   const out: Held[] = [];
@@ -77,7 +77,7 @@ function heldFrom(v: Float64Array): Held[] {
     if (!(wait > 0)) return;
     const s = (node >= 0 ? st.get(node) : undefined) ?? nearestStation(x, y);
     const name = s?.name ?? "";
-    out.push({ d, wait, place: fullTitle(kind, name), ...fullParts(kind, name), name, at: s ? { lng: s.lng, lat: s.lat } : null, tip: fullTip(kind, most) });
+    out.push({ d, wait, place: fullTitle(kind, name), ...fullParts(kind, name), name, at: s ? { id: s.id, lng: s.lng, lat: s.lat } : null, tip: fullTip(kind, most) });
   });
   return out;
 }
@@ -281,21 +281,31 @@ function CrowdDots({ v, d, stops }: { v: Float64Array; d: Demand; stops: string[
 /** Bullets shown at a transfer stop; the rest sit behind a "+". */
 const STOP_CHIPS = 2;
 
-/** The other lines at a stop's station complex (T-549), the busiest two as bullets by their
- * boardings there in the past 24 hours, the rest behind a "+" whose hover names them. */
-/** The other lines stopping at a stop's complex, busiest there first, leaving out `drawn` (line
+/** T-1391: the line stops at stop `i`'s complex again further along or before (not the next or
+ * previous stop, nor a loop's first stop at its end), so it is a transfer to itself there. */
+function selfTransfer(l: LineInput, i: number): boolean {
+  const members = new Set(complexOf(l.stops[i]));
+  const n = l.stops.length, loop = n > 2 && l.stops[0] === l.stops[n - 1];
+  const seam = (a: number, b: number) => loop && a === 0 && b === n - 1;
+  return l.stops.some((s, j) => Math.abs(j - i) > 1 && members.has(s) && !seam(i, j) && !seam(j, i));
+}
+
+/** The lines stopping at stop `i`'s complex (T-549), busiest there first by their boardings in the
+ * past 24 hours, the line itself where it comes back there (T-1391), leaving out `drawn` (line
  * numbers drawn beside the line there, T-1168). */
-function transferLines(line: string, stop: string, drawn?: ReadonlySet<number>): LineInput[] {
+function transferLines(l: LineInput, i: number, drawn?: ReadonlySet<number>): LineInput[] {
   const w = world.value;
-  const members = new Set(complexOf(stop));
+  const members = new Set(complexOf(l.stops[i]));
   const d = today.value;
-  const riders = (o: LineInput) => o.stops.reduce((n, s, i) => n + (members.has(s) ? (d.get(o.id)?.stops[i] ?? 0) : 0), 0);
-  return (w?.save.lines ?? []).filter((o) => o.id !== line && !drawn?.has(o.num) && o.stops.some((s) => members.has(s)))
+  const riders = (o: LineInput) => o.stops.reduce((n, s, k) => n + (members.has(s) ? (d.get(o.id)?.stops[k] ?? 0) : 0), 0);
+  return (w?.save.lines ?? []).filter((o) => !drawn?.has(o.num) && (o.id === l.id ? selfTransfer(l, i) : o.stops.some((s) => members.has(s))))
     .map((o) => ({ o, n: riders(o) })).sort((a, b) => b.n - a.n).map((x) => x.o);
 }
 
-function StopTransfers({ line, stop, drawn }: { line: string; stop: string; drawn?: ReadonlySet<number> }) {
-  const others = transferLines(line, stop, drawn);
+/** The busiest two as bullets, then `extra` (lines drawn beside it whose bullet shows at this row,
+ * T-1391), the rest behind a "+" whose hover names them. */
+function StopTransfers({ l, i, drawn, extra = [] }: { l: LineInput; i: number; drawn?: ReadonlySet<number>; extra?: LineInput[] }) {
+  const others = [...transferLines(l, i, drawn), ...extra];
   if (!others.length) return null;
   const rest = others.slice(STOP_CHIPS);
   return (
@@ -369,6 +379,19 @@ const PANEL_MARK_FLOOR = 0.5;
 function StopToday({ line, i }: { line: string; i: number }) {
   const d = today.value.get(line);
   return <span class="n num" data-tip={d ? `${count(d.stops[i] ?? 0)} boardings in the past 24 hours` : undefined}>{d ? count(d.stops[i] ?? 0) : ""}</span>;
+}
+
+/** The plain stops strip; a loop's bar goes on past its ends and curves round (T-1391). */
+function PlainStops({ looks, colour, loop, onDblClick, children }: { looks: boolean; colour: string; loop: boolean; onDblClick: (e: MouseEvent) => void; children: ComponentChildren }) {
+  const ul = useRef<HTMLUListElement>(null);
+  useTightTimes(ul);
+  return (
+    <ul ref={ul} class={"stops" + (looks ? " traffic" : "") + (loop ? " loop" : "")} style={{ "--c": colour }} onDblClick={onDblClick}>
+      {loop && <li class="loop-end top" aria-hidden="true" />}
+      {children}
+      {loop && <li class="loop-end bottom" aria-hidden="true" />}
+    </ul>
+  );
 }
 
 const carsText = (n: number) => plural(n, "car");
@@ -704,12 +727,13 @@ export function LineInspector({ id }: { id: string }) {
   };
 
   const shown = preview ?? l.colour;
-  // T-1168: stop `i`'s row; `drawn` (in the related-lines view) are the lines drawn beside the line there
-  const stopRow = (i: number, drawn?: ReadonlySet<number>) => {
+  // T-1168: stop `i`'s row; `drawn` (in the related-lines view) are the lines drawn beside the line
+  // there, `bullets` those of them whose bullet shows here
+  const stopRow = (i: number, drawn?: ReadonlySet<number>, bullets?: LineInput[]) => {
     const s = l.stops[i];
-    const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id));
+    const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id)) || selfTransfer(l, i);
     return (
-      <li class={xfer ? "xfer" : ""}>
+      <li class={xfer ? "xfer" : ""} data-r={drawn ? true : undefined}>
         {looks && !drawn && i > 0 && <StretchHalf s={looks[i - 1]} down={false} />}
         {looks && !drawn && i < looks.length && <StretchHalf s={looks[i]} down />}
         <span class="grow">
@@ -723,7 +747,7 @@ export function LineInspector({ id }: { id: string }) {
             </span>
           )}
         </span>
-        <StopTransfers line={l.id} stop={s} drawn={drawn} />
+        <StopTransfers l={l} i={i} drawn={drawn} extra={bullets} />
         <StopToday line={l.id} i={i} />
         <RouteMarks marks={marks.filter((m) => m.gap === i)} />
         {editingStops && (
@@ -734,13 +758,33 @@ export function LineInspector({ id }: { id: string }) {
       </li>
     );
   };
-  const related = relatedLines.value && !editingStops && l.stops.length >= 2;
+  const related = relatedLines.value && l.stops.length >= 2;
+  // T-1391: a loop shows each station once, its bar going on past both ends; while its stops are
+  // edited the last row stays, holding the button that opens the loop
+  const loopOnce = !!st.loop && !editingStops && l.stops.length > 2;
+  // T-646: after stop `i`, while stops are edited, the stations the line passes before the next
+  const afterStop = (i: number) => {
+    const here = editingStops ? passed.filter((p) => p.gap === i) : [];
+    if (!here.length || i + 1 >= l.stops.length) return null;
+    return pending?.includes(i)
+      ? here.map((p) => (
+        <li class="adding"><span class="grow"><span class="stop-name">+ {name.get(String(p.node)) ?? ""}</span></span></li>
+      ))
+      : !pending && (
+        <li class="passed">
+          <button class="btn text mini" data-tip={`Add ${andList(here.map((p) => name.get(String(p.node)) ?? ""))}\nDouble-click to add them at once`} onClick={() => setPending([i])} onDblClick={() => void addGaps([i])}>
+            <Icon.plus />{stationsText(here.length)} passed
+          </button>
+        </li>
+      );
+  };
+  const onListDblClick = (e: MouseEvent) => { if (pending && (e.target as Element).closest("li.adding")) void addPassed(); };
   // T-670: the stops editor sits at the top while stops are being edited, else after the day's figures
   const stopsBlock = (
     <>
       <div class="h divided">
         Stops
-        {!editingStops && l.stops.length >= 2 && (
+        {l.stops.length >= 2 && (
           <button class={"btn icon mini related-toggle" + (related ? " on" : "")} data-tip={related ? "Hide related lines" : "Show related lines"}
             aria-label={related ? "Hide related lines" : "Show related lines"} aria-pressed={related} onClick={() => (relatedLines.value = !relatedLines.value)}>
             <Icon.related />
@@ -767,28 +811,16 @@ export function LineInspector({ id }: { id: string }) {
         </div>
       )}
       {related ? (
-        <RelatedStops l={l} stopS={st.stopS[0]} colour={shown} lRow={stopRow} transfers={(i, drawn) => transferLines(l.id, l.stops[i], drawn)} />
-      ) : <ul class={"stops" + (looks ? " traffic" : "")} style={{ "--c": shown }} onDblClick={(e) => { if (pending && (e.target as Element).closest("li.adding")) void addPassed(); }}>
-        {l.stops.map((s, i) => {
-          const here = editingStops ? passed.filter((p) => p.gap === i) : [];
-          const shownHere = pending?.includes(i);
-          const after = here.length > 0 && i + 1 < l.stops.length && (shownHere
-            ? here.map((p) => (
-              <li class="adding"><span class="grow"><span class="stop-name">+ {name.get(String(p.node)) ?? ""}</span></span></li>
-            ))
-            : !pending && (
-              <li class="passed">
-                <button class="btn text mini" data-tip={`Add ${andList(here.map((p) => name.get(String(p.node)) ?? ""))}\nDouble-click to add them at once`} onClick={() => setPending([i])} onDblClick={() => void addGaps([i])}>
-                  <Icon.plus />{stationsText(here.length)} passed
-                </button>
-              </li>
-            ));
-          return (<>
-            {stopRow(i)}
-            {after}
-          </>);
-        })}
-      </ul>}
+        <div onDblClick={onListDblClick}>
+          <RelatedStops l={l} stopS={st.stopS[0]} colour={shown} loop={loopOnce} lRow={stopRow} after={editingStops ? afterStop : undefined}
+            transfers={(i, drawn) => transferLines(l, i, drawn)} />
+        </div>
+      ) : <PlainStops looks={!!looks} colour={shown} loop={loopOnce} onDblClick={onListDblClick}>
+        {l.stops.map((_, i) => (loopOnce && i === l.stops.length - 1 ? null : <>
+          {stopRow(i)}
+          {afterStop(i)}
+        </>))}
+      </PlainStops>}
     </>
   );
 
@@ -869,7 +901,7 @@ export function LineInspector({ id }: { id: string }) {
             const hs = held.filter((h) => h.place === place), h0 = hs[0];
             return (
               <Alert tip={h0.tip}>
-                {h0.head}{h0.at ? <span class="place-link" onClick={() => locateStation(h0.at!.lng, h0.at!.lat)}>{h0.name}</span> : h0.name}{h0.tail}
+                {h0.head}{h0.at ? <span class="place-link" onClick={() => { locateStation(h0.at!.lng, h0.at!.lat); selection.value = { kind: "station", station: h0.at!.id }; }}>{h0.name}</span> : h0.name}{h0.tail}
                 {hs.map((h) => <div class="detail" data-tip={h.tip + "\n" + heldTip}>{DEMAND_LABEL[h.d]} demand: {heldText(h.wait)}</div>)}
               </Alert>
             );

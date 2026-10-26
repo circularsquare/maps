@@ -227,3 +227,76 @@ fn a_loop_meets_at_its_seam_once() {
     assert_eq!(g.len(), 1, "{g:?}");
     assert_eq!(g[0].kind, 2);
 }
+
+// ---- T-1391: Anita's edge cases
+
+#[test]
+fn parallel_line_ending_at_a_shared_station() {
+    // her Shanghai 6: in from the south to Dongfang Rd (2), beside L to N Nanquan Rd (3), ends there
+    let l = local();
+    let o = route(1, &[(70, 1000.0, -1000.0), (22, 2000.0, 80.0), (23, 3000.0, 80.0)], &[900, 902], &[0, 1, 2]);
+    let g = run(&l, &[o], &[(22, 2), (23, 3)]);
+    assert_eq!(g.len(), 1, "{g:?}");
+    assert_eq!((g[0].kind, g[0].shared), (1, false));
+    assert_eq!(g[0].sl, [2000.0, 3000.0]);
+    assert_eq!((g[0].before, g[0].after), (1, 0));
+}
+
+#[test]
+fn adjacent_pair_keeps_the_short_run_allowance() {
+    // 130 m off over 1 km between two stations neither line stops between: past 100 m + 2%, within
+    // 100 m + 3.5%, and still beside
+    let l = local();
+    let o = route(1, &[(70, 1000.0, -1000.0), (22, 2000.0, 30.0), (80, 2500.0, 130.0), (23, 3000.0, 30.0)], &[900, 902, 904], &[0, 1, 3]);
+    let g = run(&l, &[o], &[(22, 2), (23, 3)]);
+    assert_eq!(g.len(), 1, "{g:?}");
+    assert_eq!(g[0].kind, 1);
+}
+
+#[test]
+fn two_stop_interline() {
+    // on L's track from station 2 to station 3 only, its own track either side
+    let l = local();
+    let o = route(1, &[(70, 1000.0, -800.0), (2, 2000.0, 0.0), (3, 3000.0, 0.0), (71, 4000.0, 800.0)], &[900, 204, 902], &[0, 1, 2, 3]);
+    let g = run(&l, &[o], &[]);
+    assert_eq!(g.len(), 1, "{g:?}");
+    assert_eq!((g[0].kind, g[0].shared), (1, true));
+    assert_eq!(g[0].sl, [2000.0, 3000.0]);
+    assert_eq!((g[0].before, g[0].after), (1, 1));
+}
+
+#[test]
+fn parallel_line_going_on_past_the_terminus() {
+    let l = local();
+    let o = route(1, &[(23, 3000.0, 80.0), (24, 4000.0, 80.0), (25, 5000.0, 80.0), (26, 6000.0, 80.0), (27, 7000.0, 80.0)], &[900, 902, 904, 906], &[0, 1, 2, 3, 4]);
+    let g = run(&l, &[o], &[(23, 3), (24, 4), (25, 5)]);
+    assert_eq!(g.len(), 1, "{g:?}");
+    assert_eq!(g[0].kind, 1);
+    assert_eq!(g[0].sl, [3000.0, 5000.0]);
+    assert_eq!((g[0].before, g[0].after), (0, 2));
+}
+
+#[test]
+fn a_line_through_one_station_twice_meets_a_crossing_line_once() {
+    // L comes back to station 1's complex at its last stop 5; O crosses there
+    let path = [(0, 0.0, 0.0), (1, 1000.0, 0.0), (2, 2000.0, 0.0), (3, 2000.0, 1000.0), (4, 1000.0, 1000.0), (5, 1000.0, 60.0)];
+    let l = route(0, &path, &[200, 202, 204, 206, 208], &[0, 1, 2, 3, 4, 5]);
+    let o = route(1, &[(60, 1030.0, -2000.0), (61, 1030.0, 30.0), (62, 1500.0, 3000.0)], &[900, 902], &[0, 1, 2]);
+    let g = run(&l, &[o], &[(5, 1), (61, 1)]);
+    assert_eq!(g.len(), 1, "{g:?}");
+    assert_eq!((g[0].kind, g[0].meets.len()), (2, 1));
+}
+
+#[test]
+fn a_line_beside_a_loop_across_its_seam() {
+    // L round a square from station 0; O on its own track beside it from 3 through 0 to 1
+    let path = [(0, 0.0, 0.0), (1, 2000.0, 0.0), (2, 2000.0, 2000.0), (3, 0.0, 2000.0), (0, 0.0, 0.0)];
+    let l = route(0, &path, &[200, 202, 204, 206], &[0, 1, 2, 3, 4]);
+    let o = route(1, &[(90, -1000.0, 2800.0), (13, -60.0, 2000.0), (10, -60.0, -60.0), (11, 2000.0, -60.0), (91, 2800.0, -1000.0)], &[900, 902, 904, 906], &[0, 1, 2, 3, 4]);
+    let g = run(&l, &[o], &[(13, 3), (10, 0), (11, 1)]);
+    assert_eq!(g.len(), 2, "{g:?}");
+    assert!(g.iter().all(|x| x.kind == 1), "{g:?}");
+    assert_eq!(g[0].meets.iter().map(|m| m[3] as i32).collect::<Vec<_>>(), vec![3, 4], "the first to the seam at the end");
+    assert_eq!(g[1].meets.iter().map(|m| m[3] as i32).collect::<Vec<_>>(), vec![0, 1], "the second from the seam at the start");
+    assert!(g[1].split[0].is_nan());
+}

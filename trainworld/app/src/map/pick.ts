@@ -59,6 +59,22 @@ let MARK = new Uint8Array(0);
 /** the widest drawn line of a width array (topSeg's reach), worked out once per array */
 const widest = new WeakMap<Float32Array, number>();
 
+/** T-1030: the grids built for the network drawn before an edit, carried over to the one after it
+ * (posted as changes to it, `NetPatch`) instead of built again. */
+export function carryGrids(was: NetworkBuffers | null, n: NetworkBuffers, check = false) {
+  const p = n.patch;
+  if (!was || !p || was.serial !== p.base) return;
+  for (const [name, a, b, runs] of [["track", was.track, n.track, p.track], ["lines", was.lines, n.lines, p.lines]] as const) {
+    const g = grids.get(a.seg);
+    if (!g || g.count !== a.count || grids.has(b.seg)) continue;
+    const seg = b.seg;
+    const levels = CellLevels.carried(g.levels, runs, () => seg, b.count);
+    grids.set(seg, { count: b.count, levels });
+    const bad = check ? levels.verify() : [];
+    if (bad.length) console.error(`T-1030 check: the ${name} pick grid carried over differs from one built anew at ${bad.join(", ")}`);
+  }
+}
+
 /** Every segment whose box comes within `reach` (local units) of (lx, ly), into NEAR highest index
  * first, perhaps with others; their number, or -1 when the caller is to scan them all. */
 function segsNear(seg: Float32Array, count: number, lx: number, ly: number, reach: number): number {

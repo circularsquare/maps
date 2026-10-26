@@ -97,7 +97,9 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
     const to = w?.save.lines.find((x) => x.num === bub.line)?.name ?? `Line ${bub.line}`;
     return [`${forecast(bub.riders)} riders changing to ${to}`];
   }
-  const hit = pick(ov, px, py, d.trains);
+  // a build tool is about the track: no train under the pointer, a search through every train on
+  // each pointer move (T-1394)
+  const hit = pick(ov, px, py, d.trains && !isBuildTool(tool.peek()));
   if (w && hit?.kind === "train") return trainTip(ov, w, hit.line, hit.profile, hit.dep);
   if (w && hit?.kind === "station") {
     const i = n.stationIds.indexOf(hit.station);
@@ -220,8 +222,15 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
 
   // On the container, not MapLibre's events: capacity tags and handles are DOM targets above the
   // canvas that MapLibre does not hear, and they must hide the tag too.
+  // the container's place on the page, read again only when it may have moved: reading it on each
+  // move lays the page out again after the build tool's writes (T-1394)
+  let rect: DOMRect | null = null;
+  const stale = () => (rect = null);
+  new ResizeObserver(stale).observe(box);
+  addEventListener("resize", stale);
+  addEventListener("scroll", stale, { capture: true, passive: true });
   box.addEventListener("mousemove", (e) => {
-    const r = box.getBoundingClientRect();
+    const r = (rect ??= box.getBoundingClientRect());
     const px = e.clientX - r.left, py = e.clientY - r.top;
     if (restHolds(px, py)) return; // on the way to the resting hover's list (T-732)
     // anything but the bare map canvas (a capacity tag, a handle, a control) is above the track

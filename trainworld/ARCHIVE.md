@@ -1,5 +1,33 @@
 # Archive
 
+- T-279 [P3] Routed drives for the regional market. Done 2026-10-26: `pipeline/market_drives.py`, a raster router (GRIP4, GEDTM30, world water), 344,704 place pairs as ratios to the rule plus ferries; real save rail 12,188,988 to 12,186,850. notes/T-279.md.
+
+- T-1410 [P3] t743-slots "two rotating backups" failing. Done 2026-10-26: the worker's rule matches architecture.md (a backup only when the newest is backupMs old by its stamp, taken after the write's encode); the check's fixed waits fell short under load, so it now waits on the newest backup's stamp. Could not reproduce the failure in 4 runs, 1 under 8 busy cores.
+
+- T-1394 [P2] Laggy track placing, terrain names and switch. Done 2026-10-26: the stall after a click is the clock worker's edit and the first moves without grids (T-1407, T-1030), not the round or the tint; classes renamed Gentle slope, Hills, Mountains; the tag names the roughest; a Terrain button in the Build tab. notes/T-1394.md.
+
+- T-1390 [P2] Fare sensitivity only when needed. Abandoned 2026-10-26: measured, it costs about 1-2% of a solve (the 7-8% was load noise); computing it in the final round alone came out dearer (+4.7% CPU), since most finals are skipped and need their mode choice redone. notes/T-1300.md.
+
+- T-1030 [P2] Pick and snap grids patched, not rebuilt, per edit. Done 2026-10-26: carried over through the stroke runs; Japan at 6x 2.5-3.6 s of grid building per edit and moves to under 10 ms after the first. notes/T-1029.md.
+
+- T-1028 [P2] Track edits upload only the changed strokes. Done 2026-10-26: unchanged runs copied on the GPU, textures kept when their data is the same; Japan `setNetwork` at 6x 663 to 335 ms (median). notes/T-1029.md.
+
+- T-1029 [P2] The clock worker's state on a big network. Done 2026-10-26: changed rows only, the network posted as stroke runs, per-line speeds and samples kept; Japan worker at 6x 1579 to 1110 ms, main thread busy 12.0 to 4.3 s per edit with moves. notes/T-1029.md.
+
+- T-1391 [P2] Related lines round 2. Done 2026-10-26: all ten of Anita's points; short spans and adjacent pairs drawn beside, side bullets in the rows, straight-on and short-turn ends, thin columns, new icon, self transfers, loops once round, kept while editing, tight rows drop times. notes/T-1391.md; artifacts/trainworld/t1391/.
+
+- T-1393 [P3] A station name in a line alert selects that station on click (and still moves the camera). Done 2026-10-26.
+
+- T-1372 [P2] Superholidays stage 1. Done 2026-10-26: runs found from the calendar (holidays_json.py `SUPER`, Obon added), their days away a scaled Sunday (errands and outings 0.7, attractions 1.5), a calendar icon by the clock, sky marks and Money ticks. notes/T-264.md
+
+- T-1395 [P2] A saves panel a new player understands. Done 2026-10-26: the head's account icon, New game and Open a file on top, icons on the cards (copy, download, earlier versions, bin), one list of earlier versions; folder copies dropped. notes/T-1395.md; artifacts/trainworld/t1395/built-*.png.
+
+- T-880 [P3] The trip explorer between zones shows commutes too. Done 2026-10-26: `market_trip` counts the commutes between zones (`CPair`'s choice) as a selection does, a Commutes block in the panel, its count all kinds together; on the real save the explorer's total is the inter-city bubble's in all 12 pairs tried. Screenshots in artifacts/trainworld/t880/.
+
+- T-922 [P3] A selected station's far-end bubbles grouped into 10+ trips each. Abandoned 2026-10-26: nothing to group; since T-519 a selected station draws no far-end bubbles (`stationRiders`' cells are read for totals only), and its inspector lists places by name.
+
+- T-1368 [P2] Demand kept removed stations. Done 2026-10-26: the clock sent a snapshot only when a line's service changed, so a station removed after its line (or built on no line) never reached demand unless a debounced snapshot was still pending (fast on New York, not on all-China). It now also sends one when the built stations change; `checks/t1368-station-snapshot.mjs`.
+
 - T-1225 [P3] Three checks failing on master. Done 2026-10-26: t066 reads the app's purpose list and builds its worker without `import.meta.env`; t1148 indexed `day_factors()` for 8 purposes, not 9 (sim and app rules agree); t328 passes in 26 reloads, its clock line now follows T-421, and the figure diff found is in T-1354. notes/T-1204.md.
 
 - T-1205 [P2] Give back a demand worker's memory; size the pool by memory. Done 2026-10-26: idle workers 384 MB and 15% over their need restart together, figures the same (shown on New York); the pool drops solving workers past 8 GB projected (all-China 10.1 to 7.3 GB, 3 to 2). The all-China restart run waits on T-1367/T-1368; notes/T-1205.md.
