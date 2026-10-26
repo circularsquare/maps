@@ -56,6 +56,7 @@ import { ReversalMarks } from "./map/reversalMarks";
 import { startTrackHover } from "./map/trackHover";
 import { startRestList } from "./map/hoverRest";
 import { startStationLife } from "./map/stationLife";
+import { startBuildSounds } from "./map/buildSound";
 import { perfOff, perfTry } from "./perfFlags";
 import { DEMAND_INDEX, type Selection } from "./game/types";
 import { anchor, kAtY, toLngLat, toLocal } from "./map/geo";
@@ -310,6 +311,7 @@ if (!SYNTH) startRestList(map, overlay, (x, y) => demandClick?.(x, y, false, tru
 // T-686: from the platforms' zoom, chimes, pops and faces as trains let riders off and on
 const stationLife = SYNTH ? null : startStationLife(map, overlay, (notes) => client.post({ kind: "lineNotes", notes }));
 if (DEBUG && stationLife) (window as any).twLife = stationLife;
+if (!SYNTH) startBuildSounds(); // T-1282: placing and constructing blueprint
 map.on("load", () => {
   effect(() => setBasemapLabels(map, display.value.basemapLabels, choosing.value)); // T-974: no city names behind the start menu
   const contrast = computed(() => display.value.basemapContrast);

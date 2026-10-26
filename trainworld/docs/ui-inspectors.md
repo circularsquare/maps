@@ -91,6 +91,8 @@ purpose filter the purpose drawn is ringed in the bar.
   panel at once; the map's line follows by one colour edit every 0.2 s at most (longer on a slow
   machine: 6 times the last edit's round trip), and the final colour goes as one edit on release, a
   swatch click, an arrow key step or a typed hex.
+- **Under the title** a muted line gives the stop count and length, "24 stops, 16.3 km", led by
+  "High-speed, " on a line of high-speed trains [T-1280].
 - **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key L), Copy line (duplicates route and settings with no trains, T-1161, then opens
   naming and editing), and Delete line (asked first). While stops are being edited the Stops list (with a remove
   button on each stop) follows them there, above Schedule; otherwise it sits after the day's figures.
@@ -100,7 +102,11 @@ purpose filter the purpose drawn is ringed in the bar.
   cell one line, the Demand column cut with an ellipsis when short of room [T-692]; a Trains / Headway switch in the heading
   chooses what the player sets [T-625]: with Headway the headway column holds a stepper (30 s steps
   under 5 minutes, 1 minute under 15, 5 above; none, or 1 to 120 minutes; a click on the number types
-  it in minutes) and the trains column the count it gives, 10 px clear of the stepper [T-1159]; each button's hover names the train
+  it in minutes) and the trains column the count it gives, 10 px clear of the stepper [T-1159]; while a
+headway or count is still on its way to the worker (an edit takes seconds on a big network), the other
+cell shows what it gives (the headway's count by `autoTrainsFor` with the level's limit, a count's
+headway over the round trip), and the muted running headway waits for the edit, so stepping fast never
+shows an earlier edit's figures [T-1276]; each button's hover names the train
   count it leads to and, on a running line, the cars it buys at the car price, takes from the
   depot, or frees [T-631]; a line whose track holds it just over the headway set shows the headway
   it runs at, muted, left of the stepper, with a hover naming what limits it as the capacity alerts
@@ -163,7 +169,15 @@ purpose filter the purpose drawn is ringed in the bar.
   flat crossings on the route** [T-629, `TrackApi.line_marks`] as small marks on the diagram's bar between the
   two stops they lie between, spread evenly in the gap (the diagram is not to scale): a white diamond for a
   junction with no flyover and no station, a cross for a flat crossing, each with a hover naming it and
-  the lines that use or cross it ("Flat crossing near Harbour", "Crosses Cross"); the round trip split into running, dwell, turning and waiting,
+  the lines that use or cross it ("Flat crossing near Harbour", "Crosses Cross"); **in the Traffic
+  track display** [T-1272] (not while stops are edited) each stretch of the diagram's bar is as wide as
+  its riders over the day shown (both directions, the map's purpose filter, `dailyRiders`), from 2 px
+  for none to 14 px for the line's own busiest stretch (`STRETCH_MIN_PX`, `STRETCH_MAX_PX`), so a quiet
+  line varies as much as a busy one; a stretch the map marks as crowded (`Renderer.fullStretch`,
+  read every half second) has its darkening and red edges 2 px each side, the edges from half
+  strength at the map's faintest to full (`PANEL_MARK_FLOOR`; on the panel's background the map's
+  15% cannot be seen); each stretch's hover: "3 Av to 14 St-Union Sq", "334,700 riders per day", and
+  "Average 1.1 minute wait for a train with room" where marked; the round trip split into running, dwell, turning and waiting,
   naming where it waits most [T-031]. A **loop** [T-798] shows its lap (one way round, the longer way's)
   in place of the round trip, split the same way, with no turning row for a circle and "Turning at
   the end" for a balloon; its average speed is once round over the lap (a balloon's less its

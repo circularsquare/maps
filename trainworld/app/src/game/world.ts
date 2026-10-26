@@ -30,12 +30,20 @@ export function say(text: string, bad = false) {
  * still (T-1130, game/fareUndo.ts). */
 export const editsSent = signal(0);
 
+/** Told of every answered edit the player made (map/buildSound.ts, T-1282); checks that send edits
+ * to the client directly are not. */
+let afterEdit: ((op: EditOp, a: EditAnswer) => void) | null = null;
+export function setAfterEdit(f: (op: EditOp, a: EditAnswer) => void) {
+  afterEdit = f;
+}
+
 /** Send an edit; a refusal is explained in `notice`. Resolves with the answer either way. */
 export async function edit(op: EditOp, quiet = false): Promise<EditAnswer> {
   if (!sink) return { ok: false, issues: [], charge: 0 };
   if (op.op !== "fares" && op.op !== "undo" && op.op !== "redo") editsSent.value++;
   const a = await sink(op);
   if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues), true);
+  afterEdit?.(op, a);
   return a;
 }
 

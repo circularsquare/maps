@@ -99,10 +99,10 @@ export function SettingsTab() {
           <span data-tip="A small face rises from the platform for every 20 or so riders who get off. Tired where riders have waited 10 minutes on average, sad where the last train left 20 or more behind. From street zooms.">Faces</span>
         </Check>
         <Check checked={d.sound} onChange={(v) => setDisplay("sound", v)}>
-          <span data-tip="A chime as a train pulls in and soft pops as riders get on and off. From street zooms, louder the closer you are. Starts after your first click.">Sound</span>
+          <span data-tip="A chime as a train pulls in and soft pops as riders get on and off. From street zooms, louder the closer you are. Small sounds as you place and construct blueprint. Starts after your first click.">Sound</span>
         </Check>
       </div>
-      {d.sound && <Slider label="Volume" min={0.1} max={1} step={0.05} value={d.soundVolume} tip={`Station sounds at ${Math.round(d.soundVolume * 100)}% volume`} set={(v) => setDisplay("soundVolume", v)} />}
+      {d.sound && <Slider label="Volume" min={0.1} max={1} step={0.05} value={d.soundVolume} tip={`Sounds at ${Math.round(d.soundVolume * 100)}% volume`} set={(v) => setDisplay("soundVolume", v)} />}
       <div class="h">Map</div>
       <div class="stack" data-tip="Zoomed in to a city, the globe becomes the flat map">
         <Segmented<Projection> options={PROJECTION_OPTIONS} value={d.projection === "globe" ? "globe" : "flat"} onChange={(v) => setDisplay("projection", v)} />

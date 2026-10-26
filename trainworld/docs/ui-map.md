@@ -335,6 +335,13 @@ those who got on, less the load carried on.
   the note only, and none beyond 3; panned by where the station is on screen. At the second speed
   only the note and two pops; none at the third.
 - Both are on by default and set in Settings (Stations up close).
+- **Building sounds** [T-1282; `map/buildSound.ts`]: under the same Sound switch and volume, at the
+  station sounds' master level and with no zoom gain, as the player's edit is taken (`setAfterEdit`
+  in `game/world.ts`): a little metallic clink on any construct (1760 Hz a semitone either way at
+  random, with a bar's partials at 2.76 and 5.4 times, the upper ones dying first, 0.32 s); placing
+  track as blueprint a soft rising sine blip (620 to 930 Hz, 0.09 s, under half the clink's
+  level); placing a station two soft triangle notes a fourth apart (G6, C7, 65 ms apart). The same
+  sound twice within 70 ms plays once. One audio context serves both (`map/audioOut.ts`).
 
 ## Station names and capacity tags
 

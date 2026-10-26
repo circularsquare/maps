@@ -465,6 +465,20 @@ rect.now { fill-opacity: .45; }
 .stops .route-mark.crossing::before, .stops .route-mark.crossing::after { content: ""; position: absolute; left: 0; top: 4px; width: 12px; height: 4px; background: var(--net-ink); border-radius: 1px; box-shadow: 0 0 0 1px #fff; }
 .stops .route-mark.crossing::before { transform: rotate(45deg); }
 .stops .route-mark.crossing::after { transform: rotate(-45deg); }
+/* T-1272: the Traffic view's diagram, each stretch as wide as its load (--w), in halves below a stop's
+   dot and above the next; a crowded stretch has the map's darkening at strength --f and red edges
+   at --e (the map's fullTrack colours, game/shadeTable.ts) */
+:root { --full-mark: #c0392b; }
+:root[data-shade="dark"] { --full-mark: #f0584f; }
+.stops.traffic li::before { display: none; }
+.stops .stretch { position: absolute; left: 2px; width: 16px; }
+.stops .stretch.down { top: 50%; bottom: 0; }
+.stops .stretch.up { top: 0; bottom: 50%; }
+.stops .stretch::before { content: ""; position: absolute; top: 0; bottom: 0; left: calc(8px - var(--w) / 2); width: var(--w); background: var(--c); }
+.stops .stretch.full::before {
+  background: color-mix(in srgb, var(--c), #000 calc(var(--f) * 14%));
+  box-shadow: -2px 0 0 color-mix(in srgb, var(--full-mark) calc(var(--e) * 100%), transparent), 2px 0 0 color-mix(in srgb, var(--full-mark) calc(var(--e) * 100%), transparent);
+}
 
 /* ---------- main: top bar, map, tools ---------- */
 

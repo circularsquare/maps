@@ -4,7 +4,7 @@ import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { demandAt, lineSeconds } from "../../game/clock";
-import { andList, clockTime, count, distance, duration, headway, length, money, plural, runCostRule, speed, trainKind, trainRunCost } from "../../game/format";
+import { andList, clockTime, count, distance, duration, forecast, headway, length, money, plural, runCostRule, speed, trainKind, trainRunCost } from "../../game/format";
 import { crowdColour, LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS } from "../../game/periods";
 import { crowdGrade, crowding, runningToday, today, useToday, waitText } from "../../game/today";
@@ -13,7 +13,10 @@ import { complexOf } from "../../game/complexView";
 import { DAY_KIND_NAME } from "../../game/days";
 import { kindIn, lineCountry } from "../../game/holidays";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats, type StationInput } from "../../game/types";
-import { ask, lineDraft, renameLinePrompt, selection, tool } from "../../game/ui";
+import { ask, display, lineDraft, purposeFilter, renameLinePrompt, selection, shownDayPhrase, tool } from "../../game/ui";
+import { purposeName } from "../../game/purposes";
+import { dailyRiders } from "../../map/trackHover";
+import { FULL_FLOOR, FULL_WAIT_FROM, FULL_WAIT_STRONG } from "../../map/rendererShaders";
 import { liveMoney, moneyState } from "../../game/money";
 import { fullParts, fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
 import { toggleEditStops } from "../../game/lineActions";
@@ -295,6 +298,65 @@ function StopTransfers({ line, stop }: { line: string; stop: string }) {
   );
 }
 
+/** T-1272: in the Traffic view, the stops diagram's stretch widths, px: riders a day against the
+ * line's own busiest stretch, so a quiet line varies as much as a busy one. */
+const STRETCH_MIN_PX = 2, STRETCH_MAX_PX = 14;
+
+/** One stretch of the stops diagram in the Traffic view: its width, px, the strength of its
+ * crowding mark (0 for none, as the map's, `FULL_FLOOR`), and its hover. */
+interface StretchLook { w: number; full: number; tip: string }
+
+/** The map's full-stretch marks on line `num` (T-1160, `Renderer.fullStretch`): each stretch's
+ * riders' wait for a train with room, min, or NaN for none. They change with the boarding account's
+ * hour, so they are read again every half second and the panel re-renders only when one changes. */
+function useFullWaits(num: number, stretches: number, on: boolean): number[] {
+  const read = () => Array.from({ length: on ? Math.max(0, stretches) : 0 }, (_, k) => live.overlay?.renderer.fullStretch(num, k)?.wait ?? NaN);
+  const [waits, setWaits] = useState<number[]>(read);
+  useEffect(() => {
+    let key = "";
+    const tick = () => {
+      const w = read(), k = w.map((x) => (Number.isNaN(x) ? "" : x.toFixed(2))).join(",");
+      if (k !== key) { key = k; setWaits(w); }
+    };
+    tick();
+    if (!on) return;
+    const h = setInterval(tick, 500);
+    return () => clearInterval(h);
+  }, [num, stretches, on]);
+  return waits;
+}
+
+/** The stretches' looks in the Traffic view, or null outside it or before demand has riders for the
+ * line (the plain bar then). */
+function stretchLooks(l: LineInput, names: string[], waits: number[]): StretchLook[] | null {
+  const n = l.stops.length, purpose = purposeFilter.value, dv = demandView.value;
+  if (n < 2) return null;
+  const day: number[] = [];
+  for (let k = 0; k < n - 1; k++) {
+    const v = dailyRiders(dv, l.id, n, k, purpose);
+    if (v === null) return null;
+    day.push(v);
+  }
+  const most = Math.max(...day);
+  const per = shownDayPhrase.value;
+  return day.map((v, k) => {
+    const wait = waits[k] ?? NaN;
+    const full = Number.isNaN(wait) ? 0 : FULL_FLOOR + (1 - FULL_FLOOR) * Math.min(1, Math.max(0, (wait - FULL_WAIT_FROM) / (FULL_WAIT_STRONG - FULL_WAIT_FROM)));
+    const tip = `${names[k]} to ${names[k + 1]}\n${v < 0.5 ? "0" : forecast(v)} riders ${per}` + (purpose === "all" ? "" : `, ${purposeName(purpose)} trips only`)
+      + (Number.isNaN(wait) ? "" : `\nAverage ${wait < 10 ? wait.toFixed(1) : Math.round(wait)} minute wait for a train with room`);
+    return { w: STRETCH_MIN_PX + (STRETCH_MAX_PX - STRETCH_MIN_PX) * (most > 0 ? v / most : 0), full, tip };
+  });
+}
+
+/** One half of a stretch of the diagram, below a stop's dot (`down`) or above the next one's. */
+function StretchHalf({ s, down }: { s: StretchLook; down: boolean }) {
+  // the red edges start at PANEL_MARK_FLOOR, not the map's FULL_FLOOR: with no casing to mix from,
+  // a 15% edge on the panel's background cannot be seen
+  const edge = s.full > 0 ? PANEL_MARK_FLOOR + ((1 - PANEL_MARK_FLOOR) * (s.full - FULL_FLOOR)) / (1 - FULL_FLOOR) : 0;
+  return <span class={"stretch " + (down ? "down" : "up") + (s.full > 0 ? " full" : "")} style={{ "--w": `${s.w.toFixed(1)}px`, "--f": s.full.toFixed(3), "--e": edge.toFixed(3) }} data-tip={s.tip} />;
+}
+const PANEL_MARK_FLOOR = 0.5;
+
 /** One stop's boardings in the past 24 hours (T-446), in the stops list. */
 function StopToday({ line, i }: { line: string; i: number }) {
   const d = today.value.get(line);
@@ -410,10 +472,19 @@ const SHAKE_MS = 300;
 /** One demand level's trains and headway cells: a count stepper and the headway it gives, or (T-625)
  * the headway stepper and the count it gives. A count an edit was refused for cash is red, and
  * its control shakes once; a headway shorter than `limit` allows is red (T-625, T-679). */
-function LevelCells({ l, st, d, auto, limit }: { l: LineInput; st: LineStats; d: Demand; auto: [number, number, number] | null; limit: Limit | null }) {
+function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d: Demand; auto: [number, number, number] | null; limits: (Limit | null)[] }) {
   const lev = DEMAND_INDEX[d];
-  const counts = auto ? st.trainsNeeded : (trainsShown(l.id) ?? st.trainsNeeded);
   const trip = st.roundTripByLevel[lev];
+  const limit = limits[lev];
+  const lim = limit?.s ?? 0;
+  const loop = !!st.loop;
+  // T-1276: a headway or count still on its way to the worker (an edit takes seconds on a big
+  // network) shows the other cell as it will be, not the world's from an edit or two before
+  const autoPending = auto ? auto.map((s, i) => s !== st.autoS?.[i]) : null;
+  const counts = (auto
+    ? st.trainsNeeded.map((n, i) => (autoPending![i] ? autoTrainsFor(st.roundTripByLevel[i], auto[i], limits[i]?.s ?? 0, loop) : n))
+    : (trainsShown(l.id) ?? st.trainsNeeded)) as [number, number, number];
+  const countPending = !auto && counts[lev] !== st.trainsNeeded[lev];
   const r = refusedForCash.value;
   const refused = r && r.id === l.id && r.levs[lev] ? r : null;
   const broke = refused !== null && liveMoney.value.cash < refused.need;
@@ -422,23 +493,23 @@ function LevelCells({ l, st, d, auto, limit }: { l: LineInput; st: LineStats; d:
   const n = <span class={broke ? "bad" : undefined}>{counts[lev]}</span>;
   // T-798: a loop's trains are half each way, so its count steps by two
   const k = st.loop ? 2 : 1;
-  const loop = !!st.loop;
   if (!auto) {
     const over = limit !== null && counts[lev] > 0 && counts[lev] - trip / limit.s > 0.01;
+    const tph = countPending ? (trip > 0 ? (counts[lev] * 3600) / trip : 0) : l.tph[d];
     return (
       <>
         <td>
           {wrap(<Stepper value={n} label="trains on the line" jump onStep={(s) => stepTrainCount(l.id, d, s)}
             tipDown={changeTip(counts, lev, Math.max(0, counts[lev] - k), st)} tipUp={changeTip(counts, lev, counts[lev] + k, st)} />)}
         </td>
-        <td>{over ? <span class="bad" data-tip={`${limitText(limit)}, so the trains past that wait at the ends`}>{headway(l.tph[d])}</span> : headway(l.tph[d])}</td>
+        <td>{over ? <span class="bad" data-tip={`${limitText(limit)}, so the trains past that wait at the ends`}>{headway(tph)}</span> : headway(tph)}</td>
       </>
     );
   }
-  const lim = limit?.s ?? 0;
   const short = limit !== null && auto[lev] > 0 && auto[lev] * AUTO_SLACK < limit.s;
   const real = l.tph[d] > 0 ? 3600 / l.tph[d] : 0;
-  const clamped = !short && limit !== null && auto[lev] > 0 && real > auto[lev] * AUTO_SLACK + 0.5;
+  // the world's running headway belongs to the headway it last took, so it waits for the edit
+  const clamped = !autoPending![lev] && !short && limit !== null && auto[lev] > 0 && real > auto[lev] * AUTO_SLACK + 0.5;
   const typeTip = "Click to type a headway in minutes. 0 is no service.";
   return (
     <>
@@ -550,9 +621,13 @@ export function LineInspector({ id }: { id: string }) {
   useEffect(() => setPendingAt(null), [l?.num, editingStops]);
   // its day so far (T-293), kept fresh while the panel is open
   useToday();
+  // T-1272: the Traffic view draws the stops diagram by load, with the map's crowding marks
+  const traffic = display.value.trackColour === "traffic" && !editingStops;
+  const waits = useFullWaits(l?.num ?? -1, (l?.stops.length ?? 1) - 1, traffic && display.value.fullMarks);
   if (!w || !l) return null;
   const st = w.lineStats[l.id];
   const name = stationNames(w);
+  const looks = traffic && st.status === "running" ? stretchLooks(l, l.stops.map((s) => name.get(s) ?? ""), waits) : null;
   const times = st.fromStartByLevel[lev] ?? st.fromStartS;
   const auto = headwayShown(l.id);
   const canAuto = l.stops.length >= 2 && st.status !== "broken";
@@ -620,7 +695,7 @@ export function LineInspector({ id }: { id: string }) {
           <button class="btn text" onClick={() => setPending(null)}>Cancel</button>
         </div>
       )}
-      <ul class="stops" style={{ "--c": shown }}>
+      <ul class={"stops" + (looks ? " traffic" : "")} style={{ "--c": shown }}>
         {l.stops.map((s, i) => {
           const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id));
           const here = editingStops ? passed.filter((p) => p.gap === i) : [];
@@ -638,6 +713,8 @@ export function LineInspector({ id }: { id: string }) {
             ));
           return (<>
             <li class={xfer ? "xfer" : ""}>
+              {looks && i > 0 && <StretchHalf s={looks[i - 1]} down={false} />}
+              {looks && i < looks.length && <StretchHalf s={looks[i]} down />}
               <span class="grow">
                 <span class="stop-name" onClick={() => (selection.value = { kind: "station", station: s })}>
                   {name.get(s)}
@@ -684,7 +761,7 @@ export function LineInspector({ id }: { id: string }) {
         </div>
       )}
       <div class="sub muted">
-        {plural(l.stops.length - (st.loop ? 1 : 0), "stop")}, {distance(st.km * 1000)}
+        {st.fast && "High-speed, "}{plural(l.stops.length - (st.loop ? 1 : 0), "stop")}, {distance(st.km * 1000)}
       </div>
       {st.status === "planned" && l.stops.length >= 2 && (
         <div class="callout">
@@ -729,7 +806,7 @@ export function LineInspector({ id }: { id: string }) {
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
             <td>{st.status === "running" && (periods && lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} d={d} stops={l.stops.map((s) => name.get(s) ?? "")} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d) + "\nHow many trains run in this time interval. (Which time interval a scheduled train falls into is determined by when the train reaches the midpoint of its route.)"}>{DEMAND_LABEL[d]}</span></td>
-            <LevelCells l={l} st={st} d={d} auto={auto} limit={limits[DEMAND_INDEX[d]]} />
+            <LevelCells l={l} st={st} d={d} auto={auto} limits={limits} />
           </tr>
         ))}
       </table>
