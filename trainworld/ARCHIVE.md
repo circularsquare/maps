@@ -1,5 +1,6 @@
 # Archive
 
+- T-1380 [P2] Station edits on a big network. Done 2026-10-26: complexes (page, distance groups, worker snapshot) and station names are patched from the stations that changed, equal to a whole build; Japan at 6x, a station edit's state 1337 to 589 ms. `checks/t1380-*.mjs`; notes/T-1029.md.
 - T-1373 [P2] Superholidays stage 2. Done 2026-10-26: going-out and coming-back days, longer trips twice a weekday's leaning to smaller, sparser places (one more market column), made only near a run; Out and Back in the Day choice; the calendar shows going out. `checks/t1373-rush-days.mjs`; notes/T-264.md.
 - T-1465 [P2] Buses stage B2: routes along roads. Done 2026-10-26: between clicks the route takes the shortest path over the basemap's zoom 14 roads, length at 1.0; straight where over 3 times the line or no road within 100 m. `checks/t1465-bus-roads.mjs`; notes/T-1465.md.
 - T-1480 [P2] Brazil's circle over Wuhan. Done 2026-10-26: the far-side test used the overlay's frame-old camera, which hides nothing below 20% globe while `map.project` stays a pure globe, so the antipode showed mid-screen at zoom 11.8-12; it now asks MapLibre's own camera. `checks/t1480-antipode.mjs`; notes/T-1479.md.
