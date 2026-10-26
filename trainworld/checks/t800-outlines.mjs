@@ -47,7 +47,7 @@ const settle = (ms) => page.waitForTimeout(ms);
 try {
   await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
   await page.waitForSelector('.start-menu .start-new', { timeout: 60000 });
-  await page.click('.start-menu .start-new');
+  if (await page.$('.start-menu .start-new:not(.new-game-start)')) await page.click('.start-menu .start-new:not(.new-game-start)'); // T-1441: a first visit opens on the sheet
   await page.click('.start-menu .new-game .start-new');
   await page.waitForFunction(() => window.tw?.world?.value && !document.querySelector('.start-menu'), undefined, { timeout: 180000 });
   await settle(4000);

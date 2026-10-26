@@ -90,7 +90,7 @@ try {
   const labels = await page.locator('.start-menu .thumb-label').count();
   await page.locator('.start-box').screenshot({ path: join(ART, `start-${SHADE}.png`) });
   report('start menu names the cities', labels === 4, `(${labels} names over pictures)`);
-  await page.click('.start-menu .start-new');
+  if (await page.$('.start-menu .start-new:not(.new-game-start)')) await page.click('.start-menu .start-new:not(.new-game-start)'); // T-1441: a first visit opens on the sheet
   await page.click('.start-menu .new-game .start-new');
   await page.waitForFunction(() => window.tw?.world?.value && window.tw.world.value.save.lines.length === 0, undefined, { timeout: 180000 });
   await wait(2000);

@@ -7,7 +7,7 @@
 import { activeCity, cityById } from "../../game/cities";
 import { count, distance, distUnit, exact, perDistance, roughDistance, speed } from "../../game/format";
 import {
-  AIR_FARE_USD, AIR_FIXED_MIN, AIR_KMH, AIR_NO_DIRECT_MIN, AIR_TERMINAL_MIN, AIR_USD_PER_KM, CAR_KMH, CAR_SHARED_BY, CAR_USD_PER_KM, carPartsOf, corridorOf,
+  AIR_FARE_USD, AIR_FIXED_MIN, AIR_KMH, AIR_NO_DIRECT_MIN, AIR_TERMINAL_MIN, AIR_USD_PER_KM, AIR_WAIT_MIN, CAR_KMH, CAR_SHARED_BY, CAR_USD_PER_KM, carPartsOf, corridorOf,
   crossingsOf, DRIVE_FIXED_MIN, driveOf, loadMarketRows, marketRow, marketRowsReady, MIN_PER_USD, ROAD_DETOUR, type CarCost, type Crossing, type Drive, type FlightCost,
 } from "../../game/marketRule";
 import { fareScale } from "../../game/income";
@@ -93,6 +93,7 @@ function PlaneRows({ f, km }: { f: FlightCost; km: number }) {
   const terms: Term[] = [
     { label: "airport drives", real: num1(f.accessFrom + f.accessTo), weight: 1, perceived: f.accessFrom + f.accessTo },
     { label: "at the airports", real: String(AIR_TERMINAL_MIN), weight: 1, perceived: AIR_TERMINAL_MIN },
+    { label: "until the flight", real: String(AIR_WAIT_MIN), weight: 1, perceived: AIR_WAIT_MIN },
     { label: "flight", real: num1(f.flightMin), weight: 1, perceived: f.flightMin },
     { label: "fare", real: usd(f.fareUsd), weight: Math.round(f.fw * 10) / 10, perceived: f.fareUsd * f.fw },
   ];
@@ -105,6 +106,10 @@ function PlaneRows({ f, km }: { f: FlightCost; km: number }) {
       <li data-tip="Check-in, security and boarding, then getting off and out at the other end">
         <span class="grow">At the airports</span>
         <span class="val">{minText(AIR_TERMINAL_MIN)}</span>
+      </li>
+      <li data-tip="Flights go every few hours, so a trip leaves a bit before or after the time it wanted">
+        <span class="grow">Until the flight</span>
+        <span class="val">{minText(AIR_WAIT_MIN)}</span>
       </li>
       <li data-tip={`${distance(1000 * km)} at ${speed(AIR_KMH)}, and ${AIR_FIXED_MIN} minutes for taking off and landing` + (f.direct ? "" : `. No direct flight joins the two places, so a change adds ${AIR_NO_DIRECT_MIN / 60 === 1 ? "an hour" : `${AIR_NO_DIRECT_MIN} minutes`}.`)}>
         <span class="grow">Flight</span>

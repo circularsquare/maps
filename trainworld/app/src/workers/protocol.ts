@@ -161,8 +161,9 @@ export type ToClock =
   /** T-684: each running line's points per game hour by region, `[region, perHour[dayKind][period]]`
    * (game/points.ts) */
   | { kind: "points"; lines: { line: number; regions: [string, number[][]][] }[] }
-  /** T-685: region `zone`'s rail share has reached the star's mark; kept from the first time */
-  | { kind: "star"; zone: string }
+  /** T-685: region `zone`'s rail share has reached the star's mark, or with `share` (T-1437) that
+   * higher goal; kept from the first time */
+  | { kind: "star"; zone: string; share?: number }
   /** T-706: notes chosen for lines that had none; kept from the first time */
   | { kind: "lineNotes"; notes: Record<string, [number, string]> }
   /** T-531: how edit `seq`'s charge divides between regions */
@@ -250,6 +251,8 @@ export interface MoneyState {
   regions: Record<string, { ledger: DayLedger[]; hours: HourLedger[] }>;
   /** T-685: stars earned, per region the game second it was earned */
   stars: Record<string, number>;
+  /** T-1437: the higher goals reached, per region and share (%) the game second it was reached */
+  goals: Record<string, Record<string, number>>;
   /** T-706: each line's station note and the city it was chosen in (see `SaveHeader.notes`) */
   notes: Record<string, [number, string]>;
 }

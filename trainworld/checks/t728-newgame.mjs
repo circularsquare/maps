@@ -71,7 +71,7 @@ try {
   // 1. the start menu's sheet, in a profile with nothing saved
   await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
   await page.waitForSelector('.start-menu .start-new', { timeout: 120000 });
-  await page.click('.start-menu .start-new');
+  if (await page.$('.start-menu .start-new:not(.new-game-start)')) await page.click('.start-menu .start-new:not(.new-game-start)'); // T-1441: a first visit opens on the sheet
   await page.waitForSelector('.start-menu .new-game');
   const cities = await page.$$eval('.new-game-cities button[data-city]', (b) => b.map((x) => x.textContent));
   const hague = await find('hague'), haag = await find('den haag'), sao = await find('sao'), none = await find('qqqzz'), aom = await find('AOMO');
@@ -172,7 +172,7 @@ try {
   await wait(800);
   const marks = await page.$$eval('.start-save', (b) => b.map((x) => `${x.querySelector('strong')?.textContent}`));
   await page.screenshot({ path: shot('menu-dark') });
-  await page.click('.start-menu .start-new');
+  if (await page.$('.start-menu .start-new:not(.new-game-start)')) await page.click('.start-menu .start-new:not(.new-game-start)'); // T-1441: a first visit opens on the sheet
   await page.click('.new-game-mode [data-mode="sandbox"]');
   await page.click('.new-game-cities [data-city="par"]');
   await page.screenshot({ path: shot('sheet-dark') });

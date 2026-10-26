@@ -27,6 +27,8 @@ export interface ShadeColours {
   /** a selected track, a selected bubble's outline, walk legs, the map's tags' text, a selected
    * train's outline, ring and glow */
   mapInk: string;
+  /** the station boxes' outline, terminal end bars, upgrade marks and the selection outline (T-1432): a lighter grey in dark, where NET_INK vanishes into the land */
+  stationInk: string;
   /** a switched-off blueprint's rails and the middle between them */
   offRail: string;
   offMid: string;
@@ -63,7 +65,7 @@ export interface ShadeColours {
 export const SHADES: Record<Shade, ShadeColours> = {
   light: {
     land: LIGHT_LAND, water: LIGHT_WATER, park: LIGHT_PARK, road: LIGHT_ROAD, label: LIGHT_LABEL, basemapMix: LIGHT_WARM,
-    casing: "#ffffff", mapInk: NET_INK,
+    casing: "#ffffff", mapInk: NET_INK, stationInk: NET_INK,
     offRail: "#9aa3ae", offMid: "#f2f4f7", offFade: "#ffffff",
     outside: "#182536", outsideOpacity: 0.075, inactive: "#182536", inactiveOpacity: 0.11, thumbTrack: "#b9b4ad",
     markInk: NET_INK, markBlueprint: "#2f62b3",
@@ -74,7 +76,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
   },
   dark: {
     land: DARK_LAND, water: DARK_WATER, park: DARK_PARK, road: DARK_ROAD, label: DARK_LABEL, basemapMix: DARK_WARM,
-    casing: "#141517", mapInk: "#e6e4e0",
+    casing: "#141517", mapInk: "#e6e4e0", stationInk: "#8f8b85",
     offRail: "#6c747e", offMid: "#383e46", offFade: "#383e46",
     outside: "#000000", outsideOpacity: 0.35, inactive: "#000000", inactiveOpacity: 0.225, thumbTrack: "#6f6b66",
     markInk: "#e6e4e0", markBlueprint: "#8db6ee",

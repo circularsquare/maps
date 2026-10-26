@@ -11,7 +11,7 @@ import { hiddenZones, setGameStart } from "../game/realms";
 import { fitView, holdForGameLoad, loadCannotFinish, markAlive } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, moneyState, setMoneyState } from "../game/money";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
-import { linePoints, STAR_SHARE } from "../game/points";
+import { GOAL_SHARES, linePoints, STAR_SHARE } from "../game/points";
 import { AVERAGE_DAY, AWAY_DAY, awaySoon, DAY_KINDS } from "../game/days";
 import { demandByDay, demandView, platformTransfers } from "../game/demand";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
@@ -105,11 +105,14 @@ export function onStationsAhead(f: (frame: FrameSpec, xy: Float64Array) => void)
 }
 
 
+/** The chip of a line with no symbol set (T-330): the number of "Line 7", a short code as it is ("6X",
+ * "SIR", "HBLR", "c2c"), else the name's first letter. */
 function letterOf(name: string): string {
   const m = /^Line (\S{1,2})$/.exec(name);
   if (m) return m[1];
-  const c = name.trim()[0] ?? "?";
-  return c.toUpperCase();
+  const t = name.trim();
+  if (/^[A-Z0-9]{1,5}$/.test(t) || /^(?=.*\d)[A-Za-z0-9]{1,5}$/.test(t)) return t;
+  return (t[0] ?? "?").toUpperCase();
 }
 
 type StateKind = "load" | "redraw" | "network" | "state";
@@ -463,7 +466,10 @@ export class ClockClient {
       const m = moneyState.value;
       if (!m) return;
       for (const [id, v] of demandByDay.value[AVERAGE_DAY]?.cities ?? []) {
-        if (v.final && v.split.train >= STAR_SHARE && m.stars?.[id] === undefined) this.post({ kind: "star", zone: id });
+        if (!v.final) continue;
+        if (v.split.train >= STAR_SHARE && m.stars?.[id] === undefined) this.post({ kind: "star", zone: id });
+        // T-1437: the higher goals the same way
+        for (const g of GOAL_SHARES) if (g !== STAR_SHARE && v.split.train >= g && m.goals?.[id]?.[g] === undefined) this.post({ kind: "star", zone: id, share: g });
       }
     });
     // Demand's riders for the boarding account (T-164): each new result, every kind of day's

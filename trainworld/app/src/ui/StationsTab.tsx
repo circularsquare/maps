@@ -8,12 +8,12 @@ import { count } from "../game/format";
 import { type LineInput, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
-import { display, selection, setDisplay, shownDayPhrase, stationSort, type StationUseMode } from "../game/ui";
+import { display, selection, shownDayPhrase, stationSort, type StationUseMode } from "../game/ui";
 import { world } from "../game/world";
 import { scopedLists } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
 import { stationsToday, todayLoaded, useToday } from "../game/today";
-import { Check, Chip, Segmented, SortHead } from "./widgets";
+import { Chip, SortHead } from "./widgets";
 import { locateStation } from "./locate";
 import { byNear, natural, Near, ScopeToggle } from "./listParts";
 
@@ -181,22 +181,6 @@ export function StationsTab() {
   return (
     <>
       <div class="line-list-actions"><ScopeToggle /></div>
-      <div class="h">Show station ridership</div>
-      <div class="station-use"><Segmented<StationUseMode>
-        options={[
-          ["none", "None"],
-          ["origins", <span data-tip="Entries per day: riders starting a rail trip at the station">Origins</span>],
-          ["transfers", <span data-tip="Transfers per day: riders changing lines at the station">Transfers</span>],
-          ["total", <span data-tip="Entries and transfers per day: every boarding at the station">Total</span>],
-        ]}
-        value={d.stationUse}
-        onChange={(v) => setDisplay("stationUse", v)}
-      /></div>
-      {d.stationUse !== "none" && <div class="checks">
-        <Check checked={d.complexView} onChange={(v) => setDisplay("complexView", v)}>
-          One circle per station complex
-        </Check>
-      </div>}
       {st.length === 0 && <p class="muted">{w.save.stations.length === 0 ? "No stations yet." : "No stations here."}</p>}
       {st.length > 0 && <SortHead sort={stationSort} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },

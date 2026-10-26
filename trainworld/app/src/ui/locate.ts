@@ -41,8 +41,8 @@ export function viewStart(start?: string) {
     viewedZone.value = c.id;
   }
   live.map?.jumpTo(at ?? (c ? { center: c.center, zoom: c.zoom } : WORLD_VIEW));
-  // T-801: a start on the map is picked from the zones' zoomed-out bubbles, so Homes goes on
-  if (!c) display.value = { ...display.peek(), commuters: true, commuterEnd: "home" };
+  // T-801: a start on the map is picked from the zones' zoomed-out bubbles, so Destinations goes on (T-1441)
+  if (!c) display.value = { ...display.peek(), commuters: true, commuterEnd: "work" };
 }
 
 /** Furthest in a saved game opens: a district, so a lone station is not shown at street level (T-895). */

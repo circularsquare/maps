@@ -26,9 +26,10 @@ and the regional layer. Changing zone clears cell-indexed selections and cached 
 
 **Mode colours**, Subway Builder's (Anita) [T-097, T-099; `game/palette.ts`]: driving red #e61e1e,
 train blue #1e3ce6, walking green #1eaa3c, near-pure so a mix reads as RGB (all car red, all train
-blue, half and half magenta). A bubble's mix is pulled towards a grey (190, 190, 190) as its smallest
+blue, half and half magenta). A bubble's mix is pulled towards a grey (190, 190, 190 in the dark theme,
+170, 170, 170 in the light one) as its smallest
 mode share rises to a third (`modeMix`; fully grey at a third each, unchanged when a mode has none), so an
-even three-way mix is not white [T-653]. Bars and swatches by mode follow the bubble colours chosen
+even three-way mix is not white [T-653, T-1450]. Bars and swatches by mode follow the bubble colours chosen
 (the Colours setting, "Local trip bubbles"; `modeColours()` in `game/palette.ts`, the CSS
 variables `--mode-*`): under Mode mix they are the colours above with planes muted grey, under Train share (the
 default) car is #ff4d4d and train #4d4dff (the default ramp's ends, lighter than the mode colours,
@@ -43,14 +44,20 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
 ## The demand selector and purpose filter
 
 - **None / Homes / Destinations** [T-132, `ui/DemandSelector.tsx`], always at the map's upper left,
-  remembered per browser, None by default [T-1101] (a start on the world map turns Homes on, T-801). Destinations is every activity end (work, shopping, social, school and
-  university, airport, medical, attractions). Before the buttons, joined to them, a cell with a hint icon (not a
-  button) [T-1137]: a selected demand bubble, filled with the default Train share ramp's middle
-  purple (`color-mix(in oklab, #ff4d4d, #4d4dff)`) in a 2 px map ink outline, hover "Show demand
-  bubbles".
-- **Track display** [T-703, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in the
-  same style, four buttons (Line, Traffic, Elevation, Speed; [ui-map.md](ui-map.md) "Lines and
-  track") after a hint cell with the track icon (hover "Colour the track", T-1137), with the key of the last two (height colours, speeds) beside them.
+  remembered per browser, None by default [T-1101]; starting a new game turns Destinations on, a start on the world map included [T-801, T-1441], and opening a saved game leaves the setting as it is. Destinations is every activity end (work, shopping, social, school and
+  university, airport, medical, attractions). Before the buttons, joined to them, the row's icon [T-1137]: a selected
+  demand bubble, filled with the default Train share ramp's middle purple
+  (`color-mix(in oklab, #ff4d4d, #4d4dff)`) in a 2 px map ink outline; a click folds the row (Folding, below).
+- **Station ridership** [T-1448, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in
+  the same style, None, Origins, Transfers and Total ("Station ridership circles" below; each hover
+  says what it counts), after the interchange icon: two station boxes crossing, one outline.
+- **Track display** [T-703, `ui/DemandSelector.tsx`]: below the station ridership, in the same style,
+  four buttons (Line, Traffic, Elevation, Speed; [ui-map.md](ui-map.md) "Lines and track") after the
+  track icon, with the key of the last two (height colours, speeds) beside them.
+- **Folding** [T-1448]: each row's icon is a button that folds the row down to the icon and opens it
+  again (its hover "Hide demand bubble choices" or "Show ...", likewise "station ridership" and
+  "track colour"); folded rows are remembered per browser (`foldedRows`) and the choices in them
+  stay in force.
 - **Day** [T-464, T-703]: a Settings choice under the bubbles' Opacity, not on the map; see "Demand
   shown for" in [ui-panels.md](ui-panels.md).
 - **Readiness** [T-143]: while the focused zone has no published result, Homes and Destinations fade
@@ -81,22 +88,36 @@ shown, the larger of the days, so a weekend's or the average's lines are thinner
 change as the periods pass. At zoom 15 the widest line is 44 px. Stations keep their own width
 [T-239].
 
-## Station use circles
+## Station ridership circles
 
-[T-144, T-146, T-209, T-213, T-482; `game/stationUse.ts`] A choice at the top of the Stations tab,
-"Show station ridership": None (default), Origins, Transfers or Total, remembered per browser. Large
-translucent circles behind stations, area proportional to riders per day with no cap (the radius
-is the zoom's circle radius, 18 to 56 px, times the square root of riders over 140,000, and a
-circle with any riders is never under a tenth of that radius) [T-722]: **origins** are riders
-starting their rail trip at the station, **transfers** riders changing lines there, **total** every
-boarding there (origins plus transfers). From the demand solve shown, for the day shown, every purpose whatever the purpose filter: boardings are the solve's per station, transfers
-its transfer pairs over every station (`complexTransfers`) counted at the station the rider boards,
-origins the rest. Origins and Transfers keep the last split while a new solve's is asked for. The
-circle's hover and the station's say the figure and never the number of stations in a complex:
-"12,400 entries per day" (origins), "464,000 transfers per day", "476,400 entries and transfers per
-day" (total), "per weekday", "per Saturday" or "per Sunday" for those days. They do not enlarge the station's click target. Below zoom 9, where stations hide, the circles and their hover hide too [T-1274]. With "One circle per station
-complex" (on by default, shown while circles are) a complex has one circle at the mean position of
-its constructed stations, grouped exactly as the complexes are, the player's links included.
+[T-144, T-146, T-209, T-213, T-482, T-1448; `game/stationUse.ts`, `map/stationCircles.ts`] The
+station ridership row on the map ("The demand selector" above): None (default), Origins, Transfers or
+Total, remembered per browser. One circle per station complex, at the mean position of its
+constructed stations, grouped exactly as the complexes are, the player's links included [T-1449: no
+longer a setting]. Area proportional to riders per day with no cap (the radius is the zoom's circle
+radius, 18 to 56 px, times the square root of riders over 140,000, and a circle with any riders is
+never under a tenth of that radius) [T-722]: **origins** are riders starting their rail trip at the
+station, **transfers** riders changing lines there, **total** every boarding there (origins plus
+transfers). From the demand solve shown, for the day shown, every purpose whatever the purpose
+filter: boardings are the solve's per station, transfers its transfer pairs over every station
+(`complexTransfers`) counted at the station the rider boards, origins the rest; the last split
+stays while a new solve's is asked for.
+
+Drawn on a canvas of their own over the demand bubbles and under the station names, biggest first,
+redrawn with each map frame. Entries are blue and transfers green (light #2456e0 and #169a50, dark
+#8aa6ff and #52d68e): Origins draws blue discs, Transfers green ones, Total a blue disc with a green
+inner disc of the transfers' share of the area, sharing its centre. Each disc is translucent (blue
+14%, green 26%; dark 20% and 30%) with a 1.75 px edge in its colour over a 3.5 px casing of the land
+colour, so it holds against the bubbles (DECISIONS 2026-10-26). Under a build tool they go beneath
+the network with the bubbles; while stops are edited they are not drawn. Below zoom 9, where
+stations hide, the circles and their hover hide too [T-1274].
+
+The hover (the circle's and the station's, the game's own tag) never gives the number of stations in
+a complex: under Total "1,133,500 riders per weekday", then a row per part, each after a dot in its
+colour: "186,100 entries", "947,400 transfers"; under Origins or Transfers one row with its dot,
+"12,400 entries per day" or "464,000 transfers per day". The circles take the hover and clicks
+before the demand bubbles; the network under them (stations, trains, marks, lines) keeps its own
+hover and clicks. They do not enlarge the station's click target.
 
 ## Local trip bubbles
 
@@ -341,9 +362,11 @@ with the zoom the same way [T-525, T-530]: 1,400 trips a day per px² at zoom 6.
 others: "N trips a day between A and B" and a bar), a fading line from each other bubble toward
 it (Lines to the selection, above), under the bubbles with no hover, so the
 selection shows from afar [T-520, T-858], and the city
-inspector (`ui/inspector/CityInspector.tsx`, T-600) has, under its title, a "Go to Philadelphia"
-button that moves the camera to its centre and clears the selection [T-220, T-1134], then two figures, each with a thin mode bar
+inspector (`ui/inspector/CityInspector.tsx`, T-600) has, under its title, an icon button (hover "Go to Philadelphia"; T-1439)
+that moves the camera to its centre and clears the selection [T-220, T-1134], then the city view's
+own rows ([ui-inspectors.md](ui-inspectors.md#the-city-view), T-1438), then two figures, each with a thin mode bar
 under it (the game's mode colours; every segment and number has a hover with its count and share):
 "Within Philadelphia" (train, walking, car from the open zone's split; the count alone for a zone
 not loaded) and "To other places" (the inter-city trips, both directions, train blue and the rest
-red), then the three places with the most trips, name and trips a day. No table of every place and no purpose split.
+red), then the three places with the most trips, name and trips a day. No table of every place.
+For a zone with stations the city view goes on with its boardings by purpose and its top lines and stations.

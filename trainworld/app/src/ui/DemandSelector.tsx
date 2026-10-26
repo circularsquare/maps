@@ -7,14 +7,15 @@ import { LEVEL_COLOURS, SPEED_STOPS } from "../game/palette";
 import { LEVELS } from "../game/types";
 import { asFilter, FILTER_PURPOSES, purposeColour } from "../game/purposes";
 import { useState } from "preact/hooks";
-import { display, purposeFilter, setDisplay } from "../game/ui";
+import { display, purposeFilter, setDisplay, type MapRow } from "../game/ui";
+import type { JSX } from "preact";
 import { DemandStopped } from "./DemandStopped";
 import { StatusTag } from "./StatusTag";
 import { BusyTag } from "./BusyTag";
 import { Icon } from "./widgets";
 
 /** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
- * them the track display and the demand alert. */
+ * them the station ridership (T-1448), the track display and the demand alert. */
 export function MapTopLeft() {
   return <div class="map-top-left">
     <div class="map-top-row">
@@ -22,6 +23,7 @@ export function MapTopLeft() {
       <StatusTag />
       <BusyTag />
     </div>
+    <StationRidership />
     <TrackDisplay />
     <DemandStopped />
   </div>;
@@ -37,8 +39,9 @@ export function DemandSelector() {
   const pending = !viewedZone.value ? "Nothing modelled here" // T-318: dead space
     : load?.cities.includes(activeCity.value) ? `Loading ${cityById(activeCity.value).name}, ${Math.floor(load.fraction * 100)}%` : "Calculating demand";
   const selected = d.commuters ? d.commuterEnd : "none";
+  if (folded("bubbles")) return <div class="demand-selector" role="group" aria-label="Demand on the map"><FoldCell row="bubbles" /></div>;
   return <div class="demand-selector" role="group" aria-label="Demand on the map">
-    <span class="hint-cell" data-tip="Show demand bubbles"><Icon.bubble /></span>
+    <FoldCell row="bubbles" />
     {([ ["none", "None"], ["home", "Homes"], ["work", "Destinations"] ] as const).map(([value, label]) =>
       <button type="button" class={`btn${selected === value ? " on" : ""}${!ready && value !== "none" ? " demand-pending" : ""}`} aria-pressed={selected === value}
         aria-disabled={!ready && value !== "none"} data-tip={!ready && value !== "none" ? pending : undefined}
@@ -58,13 +61,49 @@ const TRACK_OPTIONS = [
   ["speed", "Speed", "Track coloured by the speed its trains reach, or by its speed limit where none run"],
 ] as const;
 
+/** The row's icon, a button folding the row down to it and opening it again (T-1448). */
+const FOLDS: Record<MapRow, { icon: () => JSX.Element; what: string }> = {
+  bubbles: { icon: Icon.bubble, what: "demand bubble" },
+  stations: { icon: Icon.interchange, what: "station ridership" },
+  track: { icon: Icon.track, what: "track colour" },
+};
+const folded = (row: MapRow) => display.value.foldedRows.includes(row);
+function FoldCell({ row }: { row: MapRow }) {
+  const shut = folded(row), f = FOLDS[row];
+  return <button type="button" class="hint-cell" aria-expanded={!shut} data-tip={`${shut ? "Show" : "Hide"} ${f.what} choices`}
+    onClick={() => {
+      const rows = display.peek().foldedRows;
+      setDisplay("foldedRows", shut ? rows.filter((r) => r !== row) : [...rows, row]);
+    }}><f.icon /></button>;
+}
+
+const STATION_OPTIONS = [
+  ["none", "None", undefined],
+  ["origins", "Origins", "Riders starting a trip at each station"],
+  ["transfers", "Transfers", "Riders changing lines at each station"],
+  ["total", "Total", "Riders starting a trip (blue) and changing lines (green) at each station"],
+] as const;
+
+/** Station ridership (T-482, on the map since T-1448): circles by the riders a day boarding at each
+ * station complex, starting a trip there, changing lines there, or both. */
+function StationRidership() {
+  const mode = display.value.stationUse;
+  return <div class="demand-selector" role="group" aria-label="Station ridership">
+    <FoldCell row="stations" />
+    {!folded("stations") && STATION_OPTIONS.map(([value, label, tip]) =>
+      <button type="button" class={`btn${mode === value ? " on" : ""}`} aria-pressed={mode === value} data-tip={tip}
+        onClick={() => setDisplay("stationUse", value)}>{label}</button>)}
+  </div>;
+}
+
 /** The track display (T-703): the four ways the network is coloured, switched often, so on the map
  * under the demand buttons; the key of the height and speed colours sits under it. */
 function TrackDisplay() {
   const mode = display.value.trackColour;
+  if (folded("track")) return <div class="demand-selector" role="group" aria-label="Track display"><FoldCell row="track" /></div>;
   return <div class="track-row">
     <div class="demand-selector" role="group" aria-label="Track display">
-      <span class="hint-cell" data-tip="Colour the track"><Icon.track /></span>
+      <FoldCell row="track" />
       {TRACK_OPTIONS.map(([value, label, tip]) =>
         <button type="button" class={`btn${mode === value ? " on" : ""}`} aria-pressed={mode === value} data-tip={tip}
           onClick={() => setDisplay("trackColour", value)}>{label}</button>)}

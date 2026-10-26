@@ -69,12 +69,19 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 ## Interface
 Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "feels nice", Traffic view "looks pretty good", related lines "looks great", adding local games to the account worked.
 - T-1407 [P2] After a click the ghost stalls about 160 ms at 1x on the real save (0.3-0.6 s at 6x): the clock worker works the edit (stroke buffers 67 ms, the boarding hour 54) before the previews asked meanwhile. Answer waiting previews first, or put the boarding hour after them. Clock worker's state path, so after T-1028/T-1029. Open; notes/T-1394.md.
+Anita's answers on T-1411 and T-1412's ideas, 2026-10-26 (afternoon). Not wanted: riders before you pay ("people can just build it and find out"), growth near good stations (confusing), flights or freight you run.
+- T-1431 [P3] Retune the plane's fare against published rail and air shares (T-712's), separately from T-1430 (Anita: yes); it is a cliff (a $50 base sends Tokyo - Fukuoka to 49% rail, $25 flies London - Edinburgh 62%). notes/T-1411.md. Open.
+- T-1434 [P3] Opening day: when a line opens its stations get a small ribbon for the first game day and its riders count up (Anita: the ribbon might be a bit much, try it). Open.
+- T-1435 [P3] Where people drive: a view of the biggest car flows between 2 km zones as arcs, thickest where a train would win most (Anita: interesting, try it). Days. Open.
+- T-1444 [P3] A game mode with a city's real network run as a rival to win riders from (Anita: a new game mode). After T-1305. Open.
+- T-1464 [P2] Buses stage B1 (notes/T-1445.md; Anita 2026-10-26: build it, free-drawn first, one fare curve with bus km included, flat 18 km/h, bus-only trips count in the train share): a bus line kind with no track in the sim, the corridor stops in demand (gated on the 30-bus-line measurement), drawing, map style, panel and prices. Taking, 2026-10-26, agent in tree t1445.
+- T-1463 [P3] Rename "train share" and the like now that bus-only trips count in it (Anita: later). Open.
+- T-1445 [P2] Buses, design first (Anita): draw a line (along roads if that is easy) and stops place themselves, where it meets a train station and otherwise every 400 m or so; maybe no concept of stops at all. A cheap slow feeder; a demand change, so the design goes to her. Design written 2026-10-26, waits on Anita; notes/T-1445.md
+- T-1446 [P3] Share a game by link, read only (Anita: yes). Open.
+- T-1447 [P3] Copy and paste blueprints between saves (Anita: yes). Open.
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
-- T-1411 [P2] Is the airport against train comparison fair (Anita)? Look for inconsistencies between the plane and long-distance rail in the market, starting with hers: flights may be taken whenever while trains need frequency; perhaps relax the frequency penalty a lot for long trips (a 2-hour wait is fine, you leave at another time). Analysis written 2026-10-26, waits on Anita; notes/T-1411.md.
-- T-1412 [P3] General brainstorming (Anita): look around the project and propose what to add or change, ranked, for her to pick from. Ideas written 2026-10-26; notes/T-1412.md
 - T-1270 [P3] Terrain, stage 4 (stages 1-3 built, ARCHIVE): optional, not recommended first, a 120 km/h cap on mountain-class track at -1 and up. Open; notes/T-1270.md.
 - T-676 [P2] A cuter base map (warm paper land, soft teal water, sage parks, 3 road weights, most POIs gone); the ground tinted by density as a switch, off. Anita judges the palette. Open: stage 1 done, palette waits on Anita; stage 2 (density tint) not built; notes/T-676.md.
-- T-330 [P3] Line chips without a symbol show the name's first letter (every New York subway chip reads "S"); default to the line's short name ("subway 6X" to "6X"). Open. Detail in notes/T-330.md.
 - T-751 [P3] "Expand all platforms on this line" in the line panel, so a line can run longer trains (Anita 2026-10-19, after T-733). Open.
 - T-993 [P3] noritetsu's account delete question (`noritetsu/dist/account.js`, "Delete your account? Local saves will stay.") should say anitabuilder's leaderboard entries go too, since the account is shared (T-972); its privacy page could mention anitabuilder. Open.
 

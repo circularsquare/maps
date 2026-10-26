@@ -25,6 +25,8 @@ export const Icon = {
   play3: () => <svg viewBox="0 0 16 16"><path class="solid" d="M1.5 5l4 3-4 3zM6 5l4 3-4 3zM10.5 5l4 3-4 3z" /></svg>,
   track: () => <svg viewBox="0 0 16 16"><path d="M2.5 10.5l8-8M5.5 13.5l8-8M3 9l4 4M6 6l4 4M9 3l4 4" /></svg>,
   station: () => <svg viewBox="0 0 16 16"><path d="M1.5 8h3.5M11 8h3.5" /><circle cx="8" cy="8" r="3" /></svg>,
+  // an interchange (T-1448): two station boxes crossing, one shape with one outline
+  interchange: () => <svg viewBox="0 0 16 16"><path d="M4.5 1.5h3v7h7v3h-7v3h-3v-3h-3v-3h3z" /></svg>,
   // a selected demand bubble (T-1137): the ramp's middle purple in the map ink's outline (style.css)
   bubble: () => <svg viewBox="0 0 16 16"><circle class="bubble" cx="8" cy="8" r="5.5" /></svg>,
   // a run of segments, each starting where the last ended

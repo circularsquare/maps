@@ -10,7 +10,8 @@ const mod=await loadApp(`
  export * from '@app/src/map/stationGeometry.ts';
  export { networkFromState } from '@app/src/map/network.ts';
  export { NetworkRenderer } from '@app/src/map/renderer.ts';
- export { buildLayers, stationScale, widthFor } from '@app/src/map/demandLayers.ts';
+ export { buildLayers, widthFor } from '@app/src/map/demandLayers.ts';
+ export { stationScale } from '@app/src/map/stationCircles.ts';
  export { topSeg } from '@app/src/map/pick.ts';`);
 const {stationDistance,boxHalfPxAtBoxZoom,platformShape,waysFrom,stationShape,stationCoords,insideStation,stationPath,stationRadii,stationHaloRadius,STATION_BOX_ZOOM,BOX_WIDTH_ZOOM,STATIONS_ZOOM,plainBoxHalfPx,networkFromState,NetworkRenderer,buildLayers,stationScale}=mod;
 const F=a=>new Float32Array(a),near=(a,b,msg,eps=1e-4)=>assert.ok(Math.abs(a-b)<eps,`${msg??''} ${a} != ${b}`);
@@ -208,15 +209,8 @@ renderer.selectedStation=-1;
  assert.equal(topSeg(ov,seg,1,50,5,slop,undefined,0,undefined,F([0.5]),6.6)[0],0,'a thin line keeps the 7 px reach');
 }
 
-// --- station use circles (T-482)
-const world={save:{lines:[]},edges:[]};
-const demand={lines:new Map(),stations:new Map()};
-const use=new Map([['under',140000],['over',35000]]);
-const switches={lineLoad:false,stationFigure:(id)=>use.get(id),trainLoad:false};
-const layers=buildLayers(net,world,demand,0,switches);
-near(layers.stationSize[0],1);near(layers.stationSize[1],.5);
-near(layers.stationSize[0]**2,4*layers.stationSize[1]**2,'circle area proportional to riders a day');
-assert.ok(buildLayers(net,world,demand,0,{...switches,stationFigure:null}).stationSize.every(v=>v===0));
+// --- station ridership circles (T-482, T-722): area proportional to riders a day
+near(stationScale(140000),1);near(stationScale(35000),.5);
 near(stationScale(0),0);
 // T-722: no cap (4 x the full riders is twice the radius), and a floor of a tenth of the radius for any riders
 near(stationScale(560000),2);near(stationScale(681200)**2,681200/140000,'area proportional to riders above the old cap');

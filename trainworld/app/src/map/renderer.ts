@@ -10,8 +10,8 @@
 // each hour's trips (and the next hour's, ahead); when the hour turns, only that buffer is
 // re-uploaded. Phase tables change only on edits.
 
-import { BAD_RED, LEVEL_COLOURS, NET_INK, rgbf } from "../game/palette";
-import { ANNEX_PARK, ANNEX_ROOM, stationAnnexes, stationCoords, ST_PARK, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationHaloRadius, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { BAD_RED, LEVEL_COLOURS, rgbf } from "../game/palette";
+import { ANNEX_PARK, ANNEX_ROOM, stationAnnexes, stationCoords, ST_PARK, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 import { shadeColours } from "../game/shades";
 import { readBoardHour, type BoardHour } from "../game/boarding";
 import { UPGRADE } from "../game/upgrades";
@@ -148,7 +148,7 @@ const STROKE_ATTRIBS = ["seg", "colour", "edge", "level", "flags", "speed", "lan
 
 /**
  * The demand views drawn by the network renderer (T-084, map/demandLayers.ts), one value per
- * line stroke segment, train sample or station; null = drawn as without demand.
+ * line stroke segment or train sample; null = drawn as without demand.
  */
 export interface NetworkLayers {
   /** per line stroke segment: width multiple */
@@ -156,11 +156,6 @@ export interface NetworkLayers {
   /** per train sample: how full run 0's and run 1's trains are (2 each: 0-1 of the gauge, 2 over
    * full, -1 not known) */
   fill: Float32Array;
-  /** per station: its demand circle's size, 0-1 of the largest (map/demandLayers.ts `stationScale`) */
-  stationSize: Float32Array;
-  /** per station: its demand circle's offset from the station, local units (2 each); a station
-   * complex's circle sits at the complex's mean position (T-146). Absent = none moved. */
-  stationHalo?: Float32Array;
 }
 
 export class NetworkRenderer {
@@ -218,8 +213,6 @@ export class NetworkRenderer {
   private maxCars = 8;
   /** Used by picking to follow the same close-up representation. */
   detailedTrains = false;
-  private stationSizeBuf: WebGLBuffer | null = null;
-  private stationHaloBuf: WebGLBuffer | null = null;
   private stationShapeBuf: WebGLBuffer | null = null;
   /** how the last draw sized stations, CSS px (picking, the cut-out above the demand bubbles) */
   stationStyle: StationStyle = { boxes: false, radius: stationRadii(12), linePx: 0, ringPx: stationRing(12), boxLinePx: interp(BOX_WIDTH_ZOOM, LINE_PX), boxRingPx: stationRing(BOX_WIDTH_ZOOM) };
@@ -421,7 +414,7 @@ export class NetworkRenderer {
   /** ST_ROOM and ST_PARK if some station has one (T-1416), each drawn in a station draw of its own */
   private annexes = 0;
   private levelColours = new Float32Array([3, 2, 1, 0, -1, -2, -3].flatMap((l) => [...rgbf(LEVEL_COLOURS[l as 3])]));
-  private ink = rgbf(NET_INK);
+  private get ink() { return rgbf(shadeColours().stationInk); }
   private timer!: GpuTimer;
   /** the canvas has a stencil buffer: the track is drawn through station boxes (T-236) */
   private hasStencil = false;
@@ -461,9 +454,9 @@ export class NetworkRenderer {
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
     this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr"]);
-    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room"]);
+    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
-    this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
+    this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
     this.selProg = compile(gl, SEL_VS, SEL_FS);
     this.selU = uniforms(gl, this.selProg, ["u_bbox", "u_css", "u_shapes", "u_count", "u_dpr", "u_height", "u_ink", "u_outline", "u_glow"]);
     this.selTex = this.texture(this.selData, "rgba32f", SEL_MAX * SEL_STRIDE, []);
@@ -644,8 +637,6 @@ export class NetworkRenderer {
       gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, TEX_W, height, kind === "r32f" ? gl.RED : gl.RG, gl.FLOAT, padded);
     };
     upload(this.tex.fill, l ? l.fill : new Float32Array(samples * 2), "rg32f");
-    if (this.stationSizeBuf && n.stationCount) this.rewrite(this.stationSizeBuf, l ? l.stationSize : new Float32Array(n.stationCount));
-    if (this.stationHaloBuf && n.stationCount) this.rewrite(this.stationHaloBuf, l?.stationHalo ?? new Float32Array(n.stationCount * 2));
   }
 
   /** T-819, T-1125: in the traffic view (`traffic`), the edges whose track is at capacity, drawn
@@ -772,10 +763,6 @@ export class NetworkRenderer {
     }
     put("stationLine", "stationLine", () => [n.stationLine!.length ? n.stationLine! : new Float32Array(2), "rg32f", TEX_W]);
     this.attrib(this.stationProg, "a_shape", this.stationShapeBuf, 4, gl.FLOAT, 1);
-    this.stationSizeBuf = this.buffer(new Float32Array(Math.max(1, n.stationCount)));
-    this.attrib(this.stationProg, "a_sz", this.stationSizeBuf, 1, gl.FLOAT, 1);
-    this.stationHaloBuf = this.buffer(new Float32Array(Math.max(1, n.stationCount) * 2));
-    this.attrib(this.stationProg, "a_halo", this.stationHaloBuf, 2, gl.FLOAT, 1);
     this.stationSelBuf = this.buffer(new Float32Array(Math.max(1, n.stationCount)));
     this.attrib(this.stationProg, "a_sel", this.stationSelBuf, 1, gl.FLOAT, 1);
     this.groupSrc = { groups: null, net: null };
@@ -1180,16 +1167,8 @@ export class NetworkRenderer {
       const unitAtBox = unitPerPxAt(BOX_WIDTH_ZOOM) / dpr;
       gl.uniform2f(su.u_fixed, boxHalfPxAtBoxZoom({ boxLinePx, boxRingPx }) * dpr, unitAtBox);
       gl.bindVertexArray(this.stationVao);
-      // Analytical circles behind the normal, still-selectable platform boxes; none where stations
-      // hide (T-1274).
-      gl.uniform1f(su.u_halo_radius, stationHaloRadius(zoom) * dpr);
       gl.uniform1f(su.u_pixel, dpr);
       gl.uniform1i(su.u_layer, 0);
-      if (!hidden) {
-        gl.uniform1i(su.u_halo, 1);
-        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n.stationCount);
-      }
-      gl.uniform1i(su.u_halo, 0);
       // the player's links as bridges between platforms (T-217)
       const bridges = boxes && this.bridgeProg ? (n.stationLinkIdx?.length ?? 0) / 2 : 0;
       if (bridges) {
@@ -1397,7 +1376,6 @@ export class NetworkRenderer {
     gl.uniform2f(bu.u_viewport, vp[0], vp[1]);
     gl.uniform1f(bu.u_ring, ring);
     gl.uniform1f(bu.u_bridge, half);
-    gl.uniform1i(bu.u_halo, 0);
     gl.uniform3fv(bu.u_ink, this.ink);
     gl.uniform3fv(bu.u_bad, BAD_RGB);
     gl.uniform3fv(bu.u_crowd_rgb, CROWD_RGB);

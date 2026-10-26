@@ -11,6 +11,7 @@ import { live } from "../../map/live";
 import { tripAt } from "../../map/network";
 import { CRUSH_PER_CAR, SEATS_PER_CAR, tripLoad } from "../../game/boarding";
 import { Chip, Row } from "../widgets";
+import { OneRider } from "./OneRider";
 import { TrainStops } from "./TrainStops";
 
 export function TrainInspector({ line, profile, dep }: { line: string; profile: number; dep: number }) {
@@ -114,6 +115,7 @@ function OnBoard({ line, run, s, stopS, cars, profile, dep }: { line: LineInput;
         <Row label="Full at">{exact(crush)}</Row>
       </ul>
       {!atEnd && dm && <TrainStops line={line} dm={dm} board={b} trip={i} run={run} seg={seg} stopS={stopS} profile={profile} dep={dep} />}
+      {!atEnd && dm && aboard > 0.5 && <OneRider key={`${profile}:${dep}`} line={line} dm={dm} run={run} seg={seg} p={p} />}
     </>
   );
 }

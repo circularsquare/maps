@@ -263,8 +263,9 @@ using it [T-867]. The fare is a curve of trip length through three points, never
 **Points** measure each city's network: what it earned in the past 24 game hours, recomputed
 once a game hour, at 20 a rail trip (a rider's whole journey, changes included, counted in the
 city it starts in) and 1 a passenger-km; not a running total, and they unlock nothing yet [T-684,
-T-694]. A city whose train share reaches 10% earns a star in the Cities list,
-kept once earned [T-685].
+T-694]. A city's goals are train shares of 10%, 20%, 30% and 40%, each kept once reached: the 10%
+one is a star in the Cities list [T-685], and all are ticks on the top bar's split and listed as
+goals reached in the city view [T-1437, T-1438].
 
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2
 capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boarding account).
@@ -291,13 +292,13 @@ A pastel style in Zen Maru Gothic, light or dark (Settings, Theme) with three co
 Panels take CSS tokens (`ui/style.css`); the map's light and dark colours (basemap, line casing, map
 ink) are one table, `game/shades.ts`, whose basemap palette is warm paper land, soft teal water and sage parks [T-676]. The network takes the line colours, the same in both themes. One dock on the left holds the icon tabs (Build, Lines, Stations, Money, Cities), the
 saved games button and the Settings gear, with the inspector under them, whose top edge never
-moves. The top bar holds the mode split (the goal number) of the city in view, or zoomed far out the world's (train rides over a fixed 25 billion rides a day, so well under 1%; T-1301), the cash, the local time and date beside or over
+moves. The top bar holds the mode split (the goal number) of the city in view, or zoomed far out the world's train trips a day ("11.8M trips/day", T-1440), the cash, the local time and date beside or over
 a moving sky and a band in the demand level's colours (T-861), pause and three speeds. **Panels show what can change**: labels, numbers and states,
 no explanatory notes [T-253]. **Everything drawn that encodes a number has a hover**, always the
 game's own tag, never a browser tooltip [T-194, T-210]. No CSS transitions; trains are the only
 motion. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
 count the past 24 hours from the boarding account, while the map's demand views (Homes and Destinations bubbles
-coloured by mode share, line widths by riders, station use circles, inter-city trips) show demand's
+coloured by mode share, line widths by riders, station ridership circles, inter-city trips) show demand's
 whole day: the average day by default, or a weekday, a Saturday or a Sunday [T-464, T-262]. On the map, lines sharing track are drawn over each other,
 stations are dots from zoom 9 and their true platforms from 14, and trains fill like a gauge with
 their riders.

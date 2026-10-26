@@ -122,11 +122,18 @@ air by hours on the train: notes/T-712.md.
   them too. Airports' access drives keep the rule.
 - *Plane*: between places whose centres are at least 250 km apart (the far pairs) and that both
   have airports. Door to door: the drive to an airport at each end (the car's drive time,
-  people-weighted over the place's zones), 90 minutes at the airports, the flight at 750 km/h on
+  people-weighted over the place's zones), 90 minutes at the airports, 25 minutes until the flight
+  (its frequency is not modelled: rail's planned first wait at a flight every 2 hours, T-1430), the flight at 750 km/h on
   the great circle between the places' centres plus 30 minutes, 60 more with no direct flight, and
   a fare of $100 plus 5 cents a km (T-712) at the departing place's country's minutes a dollar (T-1277; the corridor's split is the mean of its two ways); the best pair of the two places' airports. Not built by
   the player, no capacity, not drawn.
-- *Rail*: the player's network. Fares, service, transfers and shared crowding affect it.
+- *Rail*: the player's network. Fares, service, transfers and shared crowding affect it. An
+  inter-city trip is planned, so its first boarding waits the least of half the headway, 5 minutes
+  plus a sixth of the headway, and 30 minutes, with no tolerance penalty (T-1430; the same as the
+  local wait up to a train every 15 minutes, 15 at an hourly train, 25 at one every 2 hours). A
+  change of trains on the way waits half the headway as in the local layers, and commutes and
+  everyday outings between zones wait as they do. The search costs each station as a trip's start
+  both ways (`Skims::entry_r`); the riders' loads follow the station's ordinary strategy.
 
 The car's and the plane's costs are by place (the car's at the places' centres and their mean
 parking), so a pair's split of its trips not by rail between car and plane is the same whoever

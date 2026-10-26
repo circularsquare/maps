@@ -81,6 +81,8 @@ export interface SaveHeader {
   regions?: Record<string, { ledger: DayLedger[]; hours: HourLedger[] }>;
   /** T-685: each region's star, the game second it was earned; absent in older saves */
   stars?: Record<string, number>;
+  /** T-1437: each region's higher goals by share (%), the game second each was reached; absent in older saves */
+  goals?: Record<string, Record<string, number>>;
   /** T-706: each line's station note (semitones above C5) and the city it was chosen in, kept for the
    * line's life and after it so the others keep theirs; absent in older saves (map/stationLife.ts) */
   notes?: Record<string, [number, string]>;
@@ -149,6 +151,16 @@ export function currentZones(h: SaveHeader, now: (id: string) => string | null =
       if (to !== null) stars[to] = Math.min(stars[to] ?? Infinity, t);
     }
     out.stars = stars;
+  }
+  if (h.goals) {
+    const goals: Record<string, Record<string, number>> = {};
+    for (const [k, g] of Object.entries(h.goals)) {
+      const to = now(k);
+      if (to === null) continue;
+      const e = (goals[to] ??= {});
+      for (const [share, t] of Object.entries(g)) e[share] = Math.min(e[share] ?? Infinity, t);
+    }
+    out.goals = goals;
   }
   if (h.notes) out.notes = Object.fromEntries(Object.entries(h.notes).map(([line, [note, city]]) => [line, [note, now(city) ?? city]]));
   return out;

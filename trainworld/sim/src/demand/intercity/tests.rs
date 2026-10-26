@@ -1286,7 +1286,7 @@ fn t761_market_bench() {
     }
     eprintln!("a sweep: {n} searches {:.0} ms, {:.0} MB of strategies (estimate {:.0} MB)", now_ms() - t, bytes as f64 / 1048576., (n * strategy_bytes(g)) as f64 / 1048576.);
     let t = now_ms();
-    let d = a.demand(g, &r, p, 0, &[]);
+    let d = a.demand(g, &r, &r, p, 0, &[]);
     eprintln!("demand {:.0} ms; od non-zero {}, od_c non-zero {}", now_ms() - t, d.od.iter().filter(|&&v| v != 0.).count(), d.od_c.v.len());
 }
 /// T-1175: the market's solve with and without the everyday pairs across zone lines, on scratch
@@ -1410,7 +1410,7 @@ pub(crate) fn real_world(root: &str, ids: Option<&[&str]>) -> String {
 fn regional_station_pairs_take_the_local_scale() {
     // stations 0 and 1 near the home, 2 at work: 0 -> 2 costs 30, 1 -> 2 costs 33
     let inf = f32::INFINITY;
-    let sk = Skims { s: 3, n: 3, r: vec![0., inf, 30., inf, 0., 33., inf, inf, 0.], walk: vec![], walk_max: vec![], slot: vec![], next: vec![], board: vec![], order: vec![], change: vec![] };
+    let sk = Skims { s: 3, n: 3, r: vec![0., inf, 30., inf, 0., 33., inf, inf, 0.], walk: vec![], walk_max: vec![], slot: vec![], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![] };
     let p = Params::default();
     // a pair whose car takes 60 perceived minutes, past 12 km: the band's scale, not softened
     let th = p.soften(p.band_unsoftened(p.band_of_d2(20e3 * 20e3)), 60.);
@@ -1507,7 +1507,7 @@ fn t780_census() {
     }
     eprintln!("logsums alone {:.0} ms ({x:.0})", now_ms() - t);
     let t = now_ms();
-    let d = a.demand(g, &r, p, 1, &[]);
+    let d = a.demand(g, &r, &r, p, 1, &[]);
     eprintln!("demand {:.0} ms, rail {:.0}", now_ms() - t, d.rail);
 }
 /// T-780: the market's period 1 at free flow with its pairs sampled in chunks, against every pair.

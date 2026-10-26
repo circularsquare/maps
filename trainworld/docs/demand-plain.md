@@ -164,9 +164,15 @@ There is no built-in liking for the train. Rail and the car are compared on time
   a car and an hour for the shuttle or ferry; to Hokkaido $170 and 4 hours for the ferry (the Seikan
   Tunnel takes no cars). No tolls anywhere, borders included.
 - Plane, between cities 250 km apart or more that both have airports: the drive to each airport,
-  90 minutes at the airports, the flight at 750 km/h plus 30 minutes (an hour more with no direct
+  90 minutes at the airports, 25 minutes until the flight (the train's planned wait below at a
+  flight every 2 hours), the flight at 750 km/h plus 30 minutes (an hour more with no direct
   flight), and a fare of $100 plus 5 cents a km, so $125 at 500 km and $150 at 1,000 km, its
   dollars counted at the starting country's minutes a dollar (the fare line above).
+- Train: a trip between cities is planned, so its first train's wait is half the time between
+  trains, but at most 5 minutes plus a sixth of it, and at most 30 minutes, and the "no train for
+  hours" extra does not apply: 5 at a train every 10 minutes, 15 at an hourly train, 25 at one
+  every 2 hours, 30 at anything sparser. A change of trains on the way waits as on any trip, and
+  commutes and outings between cities wait as local trips do.
 
 **Walking the whole way**
 - 13 real minutes a km, every minute counted 1.5. So 1 km costs 19.5 minutes, 2 km 39, 3 km 58.5.

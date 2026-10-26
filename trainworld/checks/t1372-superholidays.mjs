@@ -67,7 +67,7 @@ async function realSave(url, mine) {
   collectErrors(page, errors, NOISE, /\/fonts\/[^/]+\/\d+-\d+\.pbf$/);
   await page.goto(`${url}${url.includes('?') ? '&' : '?'}debug=1&v=${Date.now()}`);
   await page.waitForSelector('.start-menu .start-new', { timeout: 60000 });
-  await page.click('.start-menu .start-new');
+  if (await page.$('.start-menu .start-new:not(.new-game-start)')) await page.click('.start-menu .start-new:not(.new-game-start)'); // T-1441: a first visit opens on the sheet
   await page.click('.start-menu .new-game-cities [data-city="nyc"]');
   await page.click('.start-menu .new-game .start-new');
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client && !document.querySelector('.start-menu'), undefined, { timeout: 180000 });

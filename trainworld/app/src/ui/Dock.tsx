@@ -48,7 +48,7 @@ const paneHeight = (h: number) => Math.round(Math.max(PANE_MIN, Math.min(h, inne
 /** the tab area's share of a phone's width beside the inspector (T-1259) */
 const paneShare = (f: number) => Math.max(0.3, Math.min(0.7, f));
 /** the tabs the inspector stands beside on a phone (T-1259) */
-const BESIDE = new Set<Tab>(["build", "lines", "stations"]);
+const BESIDE = new Set<Tab>(["build", "lines", "stations", "cities"]);
 /** a phone held upright: the dock under the map (T-951), the same query as style.css */
 const PHONE = matchMedia("(max-width: 600px) and (min-height: 560px)");
 

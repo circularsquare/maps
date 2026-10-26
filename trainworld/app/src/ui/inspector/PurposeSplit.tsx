@@ -28,7 +28,7 @@ function sum(dv: DemandView, scope: SplitScope, key?: PurposeKey): number {
 }
 
 /** Each purpose's share of `scope`'s riders (or boardings), and the total; null before demand. */
-function purposeSplit(dv: DemandView | null, scope: SplitScope): { parts: { key: PurposeKey; n: number }[]; total: number } | null {
+export function purposeSplit(dv: DemandView | null, scope: SplitScope): { parts: { key: PurposeKey; n: number }[]; total: number } | null {
   if (!dv?.purposes || !scope.some(({ line }) => dv.lines.has(line))) return null;
   return { parts: PURPOSES.map(({ key }) => ({ key, n: sum(dv, scope, key) })), total: sum(dv, scope) };
 }

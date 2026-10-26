@@ -7,7 +7,7 @@
 // older than a day sit in the temp folder); Playwright from PLAYWRIGHT_MODULE,
 // else `playwright`, else the npx cache.
 //
-// Browser: a plain load shows the start menu and its New game starts a game (T-677); a ?new=1 game
+// Browser: a plain load with no saved game shows the new game sheet, which starts a game with Destinations on (T-677, T-1441); a ?new=1 game
 // (no menu) loads; in another ?new=1 game a line over dead space and one in Tokyo reach a final (T-845); the real save (T-007-real-nyc.save) imported into it has 109 lines,
 // 1,756 stations and about 4,498.6 km of track; demand reaches a final result; Homes draws local
 // bubbles in the bare new game and on the real save (T-994); a click on a station
@@ -89,15 +89,15 @@ async function browserChecks(BASE) {
     // 0. the start menu (T-677): a plain load waits on it with no worker started; New game starts one
     try {
       await page.goto(`${BASE}${sep}debug=1&v=${Date.now()}`);
-      await page.waitForSelector('.start-menu .start-new', { timeout: 60000 });
+      await page.waitForSelector('.start-menu .new-game', { timeout: 60000 });
       const before = await page.evaluate(() => performance.getEntriesByType('resource').filter((e) => /clock\.worker|demand\.worker/.test(e.name)).length);
-      // T-728: New game opens the new game sheet; a normal game in New York
-      await page.click('.start-menu .start-new');
+      // T-1441: with no saved game the menu opens on the new game sheet; a normal game in New York
       await page.click('.start-menu .new-game-cities [data-city="nyc"]');
       await page.click('.start-menu .new-game .start-new');
       await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client && !document.querySelector('.start-menu'), undefined, { timeout: 180000 });
       const n = await page.evaluate(() => window.tw.world.value.save.stations.length);
-      report('start menu', before === 0 && n === 0, `(${before} workers before the pick, ${n} stations after New game)`);
+      const bubbles = await page.evaluate(() => window.tw.display.value.commuters && window.tw.display.value.commuterEnd === 'work');
+      report('start menu', before === 0 && n === 0 && bubbles, `(${before} workers before the pick, ${n} stations after New game, Destinations ${bubbles ? 'on' : 'off'})`);
     } catch (e) {
       report('start menu', false, e.message.split('\n')[0]);
     }

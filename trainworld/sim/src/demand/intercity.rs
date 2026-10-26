@@ -882,11 +882,14 @@ const AIR_FIXED_MIN: f64 = 30.;
 const AIR_NO_DIRECT_MIN: f64 = 60.;
 const AIR_FARE_USD: f64 = 100.;
 const AIR_USD_PER_KM: f64 = 0.05;
+/// T-1430: the wait for a flight, whose frequency is not modelled: rail's planned first wait
+/// (`kernel::planned_board_cost`) at a flight every 2 hours.
+const AIR_WAIT_MIN: f64 = 25.;
 /// A flight's perceived minutes over `km` with `access` minutes of driving at the two ends, its
 /// fare at `fw` perceived minutes a dollar, the departing place's (T-1277; 0: `FARE_MIN_PER_USD`).
 fn air_min(km: f64, access: f64, direct: bool, fw: f64) -> f64 {
     let fw = if fw > 0. { fw } else { FARE_MIN_PER_USD as f64 };
-    access + AIR_TERMINAL_MIN + km / AIR_KMH * 60. + AIR_FIXED_MIN + if direct { 0. } else { AIR_NO_DIRECT_MIN } + (AIR_FARE_USD + AIR_USD_PER_KM * km) * fw
+    access + AIR_TERMINAL_MIN + AIR_WAIT_MIN + km / AIR_KMH * 60. + AIR_FIXED_MIN + if direct { 0. } else { AIR_NO_DIRECT_MIN } + (AIR_FARE_USD + AIR_USD_PER_KM * km) * fw
 }
 
 impl Market {
@@ -2391,7 +2394,7 @@ impl IntercityApi {
     fn pass_on(&self, g: &Graph, p: &Params, q: usize, sk: &Skims, ix: &XferIndex) -> Pass {
         let s = g.n_st;
         let km = self.pair_km(g, &self.want, |dst| (sk.slot[dst] != u32::MAX).then(|| sk.strategy(sk.slot[dst] as usize)));
-        let d = self.demand(g, &sk.r, p, q, &km);
+        let d = self.demand(g, &sk.r, &sk.entry_r(), p, q, &km);
         self.assigned(g, ix, d, |dst| {
             let slot = sk.slot[dst];
             debug_assert!(slot != u32::MAX, "flow towards station {dst}, which was not searched");
@@ -2490,17 +2493,28 @@ impl IntercityApi {
         let mut held = 0;
         let mut km = if self.zone_fx.is_empty() { vec![] } else { vec![0f32; s * s] };
         let (mut col, mut dep) = (vec![], vec![]);
+        let mut entry: Vec<(u32, u32, f32)> = vec![];
         for dst in (0..s).filter(|&d| self.want[d]) {
             let d = search.run(dst, Some(&mut r));
             if !km.is_empty() {
                 self.put_km(g, d.view(), dst, &mut col, &mut dep, &mut km);
             }
+            entry.extend(d.entry.iter().map(|&(src, c)| (src, dst as u32, c)));
             if held + d.bytes() <= keep_bytes {
                 held += d.bytes();
                 kept[dst] = Some(d);
             }
         }
-        let d = self.demand(g, &r, p, q, &km);
+        let re = (!entry.is_empty()).then(|| {
+            let mut re = r.clone();
+            for &(src, dst, c) in &entry {
+                re[src as usize * s + dst as usize] = c;
+            }
+            re
+        });
+        drop(entry);
+        let d = self.demand(g, &r, re.as_deref().unwrap_or(&r), p, q, &km);
+        drop(re);
         drop(r);
         drop(km);
         self.assigned(g, ix, d, |dst| {
@@ -2542,8 +2556,10 @@ impl IntercityApi {
     }
     /// The market's rail trips in period `q` from the route costs `r` (S x S, `Skims::r`): the
     /// station to station trips of the longer trips and of the commutes, and the pair, corridor and
-    /// station figures. `km`: `pair_km` on `g`.
-    fn demand(&self, g: &Graph, r: &[f32], p: &Params, q: usize, km: &[f32]) -> Demand {
+    /// station figures. The longer trips cost their first boarding at the planned wait, `re`
+    /// (`Skims::entry_r`, T-1430); the commutes and everyday outings as the local layer, `r`.
+    /// `km`: `pair_km` on `g`.
+    fn demand(&self, g: &Graph, r: &[f32], re: &[f32], p: &Params, q: usize, km: &[f32]) -> Demand {
         let s = g.n_st;
         let fx = self.fare_x(g, p, km);
         let fx_of = |zone: usize| self.fx_of(&fx, zone);
@@ -2572,7 +2588,7 @@ impl IntercityApi {
         for (pi, pair) in self.pairs.iter().enumerate() {
             let trips = pair.trips * SHARES[q] as f64;
             let (a, b) = (&self.access[pair.a as usize], &self.access_work[pair.b as usize]);
-            let (rail_c, sum) = rail_logsum_x(r, s, p.fare_min, a, b, p.beta, p.soften(p.band_unsoftened(pair.band as usize), pair.car), fx_of(pair.a as usize), &mut terms);
+            let (rail_c, sum) = rail_logsum_x(re, s, p.fare_min, a, b, p.beta, p.soften(p.band_unsoftened(pair.band as usize), pair.car), fx_of(pair.a as usize), &mut terms);
             let bt = p.mode_beta(pair.car);
             let v_rail = if sum > 0. { ((-bt * (rail_c - pair.drive)).clamp(-80., 80.) as f64).exp() } else { 0. };
             let fraction = v_rail / (pair.rest as f64 + v_rail);

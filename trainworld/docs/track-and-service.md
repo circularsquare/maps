@@ -298,7 +298,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot,
   and platforms within 100 m of each other count as one station (4.4). Stations whose platforms
   come within 50 m form a station complex, which a click on a station selects as one (T-249) and
-  the demand circles can show as one (8, T-146); the player can join any two stations up to 1 km
+  the station ridership circles show as one (8, T-146, T-1449); the player can join any two stations up to 1 km
   apart into one complex by a **passage** and remove it (T-197, T-1281; saved with the network as
   `Network::links`, not in the undo history; links from older saves are passages, never charged).
   Riders change between any two stations of a complex on foot, however far apart (4.4, T-161),

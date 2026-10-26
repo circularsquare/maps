@@ -67,7 +67,7 @@ try {
   // Part 1: the real save, loaded into a slot of its own (T-743)
   await page.goto(`${BASE}?debug=1`);
   await page.waitForSelector('.start-menu .start-new', { timeout: 60000 });
-  await page.click('.start-menu .start-new');
+  if (await page.$('.start-menu .start-new:not(.new-game-start)')) await page.click('.start-menu .start-new:not(.new-game-start)'); // T-1441: a first visit opens on the sheet
   await page.click('.start-menu .new-game-cities [data-city="nyc"]'); // T-728: the new game sheet
   await page.click('.start-menu .new-game .start-new');
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });

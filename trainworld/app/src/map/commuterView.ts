@@ -17,13 +17,13 @@ import { lngLatToPack } from "../game/coords";
 import { nearbyZones } from "../game/zones";
 import { cellModes, cityCells, demandUpdating, demandView, flows, type CellModes, type CityCells, type DemandView, type FarEnd, type Flows, type PurposeTrips } from "../game/demand";
 import { count, wholeDistance } from "../game/format";
-import { BUBBLE_ALPHA, bubbleSchemeKey, setBubbleColours } from "../game/palette";
+import { BUBBLE_ALPHA, bubbleSchemeKey, setBubbleColours, setBubbleShade } from "../game/palette";
 import { dealFlows } from "../game/farChunks";
 import { GROUP_SAMPLE_SIDE, openFarTrip, tripOpenedFrom, type TripPlaces } from "../game/trip";
 import { compass, stationNameNear } from "../game/places";
 import { purposeWords, type PurposeFilter } from "../game/purposes";
 import type { Selection } from "../game/types";
-import { display, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
+import { display, purposeFilter, selection, shade, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { BUBBLE_DENSITY, DISC, RES_AREA_M2, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
 import { aggregate, discs, recolour, type Groups } from "./bubbles";
@@ -381,6 +381,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   effect(() => {
     colourKey.value;
     const d = display.peek();
+    setBubbleShade(shade.value);
     setBubbleColours(d.bubbleColours, d.rampFrom, d.rampTo);
     for (const [id, z] of zones) if (z.shown) view.setNearbyBubbles(id, painted(z.shown.bubbles).levels.map((l) => l.discs), z.shown.bubbles.anchor);
     if (!shown) return;

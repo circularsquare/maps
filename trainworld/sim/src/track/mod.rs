@@ -18,6 +18,7 @@
 //! - `boarding`: the boarding account (T-164): demand's riders per period turned into each
 //!   train's load and each platform's crowd, a day at a time.
 //! - `localtime`: each region's local time (T-309): the zone table and a place's shift.
+//! - `names`: station and line names from a real network, tidied (T-1442); on load and in `realsave`.
 //! - `save`: the network part of a save (varints, mm deltas).
 //! - `trace`: a real railway's line as the corners the track tool places (T-727c).
 //! - `upgrades`: station upgrades (T-1281): their bits, prices and turning rules.
@@ -35,6 +36,7 @@ pub mod cross;
 pub mod frame;
 pub mod geom;
 pub mod localtime;
+pub mod names;
 pub mod net;
 pub mod params;
 pub mod profile;

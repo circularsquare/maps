@@ -8,6 +8,7 @@ import { zoneHolding } from "../game/realms";
 import { cityMatch, normalise } from "../game/search";
 import type { GameMode, NewGameSpec } from "../workers/saveFile";
 import { dataUrl } from "../game/dataBase";
+import { display } from "../game/ui";
 import { setStartAt } from "./locate";
 
 /** The suggested starts (T-728): the cities the demand model was checked on, each with a real
@@ -133,6 +134,8 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
       }
     }
     setStartAt(located ? { center: located.at, zoom: city ? city.zoom : LOCATED_WORLD_ZOOM } : null);
+    // T-1441: a new game opens with the Destinations bubbles on
+    display.value = { ...display.peek(), commuters: true, commuterEnd: "work" };
     onStart(spec);
   };
   const modeBtn = (m: GameMode, label: string, tip: string, ref?: typeof first) => (

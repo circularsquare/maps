@@ -49,6 +49,9 @@ export const CAR_USD_PER_KM = 0.15;
 export const CAR_SHARED_BY = 2;
 export const MIN_PER_USD = 3;
 export const AIR_TERMINAL_MIN = 90;
+/** T-1430: the wait for a flight, whose frequency is not modelled (rail's planned first wait at a
+ * flight every 2 hours) */
+export const AIR_WAIT_MIN = 25;
 export const AIR_KMH = 750;
 export const AIR_FIXED_MIN = 30;
 export const AIR_NO_DIRECT_MIN = 60;
@@ -248,7 +251,7 @@ function flightOf(a: MarketRow, b: MarketRow, km: number): FlightCost | null {
       const fareUsd = AIR_FARE_USD + AIR_USD_PER_KM * km;
       // T-1277: at the departing country's minutes a dollar
       const fw = fareWeight(a.country);
-      const total = x[0] + y[0] + AIR_TERMINAL_MIN + flightMin + fareUsd * fw;
+      const total = x[0] + y[0] + AIR_TERMINAL_MIN + AIR_WAIT_MIN + flightMin + fareUsd * fw;
       if (!best || total < best.total) best = { accessFrom: x[0], accessTo: y[0], direct, flightMin, fareUsd, fw, total };
     }
   }
