@@ -738,7 +738,7 @@ async function ensureTerrain(ids: Iterable<string>): Promise<void> {
     if (!g || terrainIn.has(id)) return;
     terrainIn.add(id);
     // a server that answers a missing file with a page instead of a 404 gives no grid either
-    if (g.b) a.add_terrain(new Uint8Array(g.b));
+    if (g.b && a.add_terrain(new Uint8Array(g.b))) send({ kind: "terrain", id, bytes: g.b.slice(0) }); // the tint (T-1270)
   });
   if (Math.abs(a.blueprint_cost() - before) > 1e-9) sendState();
 }
@@ -1768,8 +1768,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
       if (!key || !isBackupOf(key, from)) throw new Error("That backup no longer exists.");
       const backup = await readStored(key), slot = await readStored(from);
       if (!backup) throw new Error("That backup no longer exists.");
-      const time = new Date(backup.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      await intoNewSlot(`${slotName(from, slot)} at ${time}`, () => loadGame(backup.bytes, "file"), true);
+      await intoNewSlot(forkName(slotName(from, slot), backup.at), () => loadGame(backup.bytes, "file"), true);
       return;
     } else {
       const key = msg.key;
@@ -2098,6 +2097,28 @@ function buildSnapshot(): NetworkSnapshot {
     });
   }
   return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: { ...fares }, ...(passages.length ? { passages } : {}) };
+}
+
+/** T-1168: each node's station complex for `line_related`, over every station (blueprints too,
+ * unlike the snapshot's: a planned express is related before it is built), 0xffffffff for none;
+ * worked out again when the world changes. */
+let complexNodes: { version: number; of: Uint32Array } | null = null;
+function complexOfNodes(): Uint32Array {
+  if (complexNodes?.version === version) return complexNodes.of;
+  const a = api!, ni = a.nodes_info();
+  const geo: { id: string; x: number; y: number; heading: number; length: number }[] = [];
+  let top = 0;
+  for (let i = 0; i < ni.length; i += 10) {
+    top = Math.max(top, ni[i]);
+    if (ni[i + 7] > 0) geo.push({ id: String(ni[i]), x: ni[i + 1], y: ni[i + 2], heading: ni[i + 9], length: ni[i + 7] });
+  }
+  const fl = a.station_links(), links: [string, string][] = [];
+  for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
+  const cx = buildComplexes(geo, links, (y) => (frame.kind === "merc" ? mercK(y) : 1));
+  const of = new Uint32Array(top + 1).fill(0xffffffff);
+  for (const g of geo) of[Number(g.id)] = cx.of.get(g.id)!;
+  complexNodes = { version, of };
+  return of;
 }
 
 function scheduleSnapshot() {
@@ -2616,6 +2637,7 @@ async function handle(msg: ToClock) {
       : q.what === "today" ? today()
       : q.what === "lineHeld" ? api.line_held(q.line)
       : q.what === "lineMarks" ? api.line_marks(q.line)
+      : q.what === "lineRelated" ? api.line_related(q.line, complexOfNodes())
       : q.what === "removal" ? new Float64Array(api.removal_lines(new Uint32Array(q.edges), new Uint32Array(q.stations)))
       : api.line_delays(q.line, q.level);
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);

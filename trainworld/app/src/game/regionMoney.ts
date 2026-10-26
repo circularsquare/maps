@@ -10,9 +10,9 @@
 // region (its stations go with it), new trains by the line the edit started.
 
 import { computed } from "@preact/signals";
-import { demandByDay } from "./demand";
+import { demandByDay, type DemandView } from "./demand";
 import { stationZone } from "./listScope";
-import { liveMoney, moneyState, stopScales } from "./money";
+import { lineGeo, liveMoney, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
 import { placeAt, zonesLoaded } from "./zones";
 import { stationsById, world } from "./world";
 import type { WorldView } from "./types";
@@ -29,22 +29,27 @@ function norm(m: Map<string, number>): Shares {
 }
 const add = (m: Map<string, number>, k: string, v: number) => m.set(k, (m.get(k) ?? 0) + v);
 
+type LineShares = Map<number, { fare: Shares; ride: Shares; run: Shares }>;
+let sharesMemo: { w: WorldView; m: MoneyTerms; zl: number; dv: DemandView | null; out: LineShares } | null = null;
 /** Each running line's split of its fares, its train rides (by where they board, T-565) and its
- * running cost between regions, by line number. */
+ * running cost between regions, by line number; redone only when the weekday's view, the network,
+ * the fares or the zone boundaries change (T-1209). */
 export const lineShares = computed(() => {
-  const w = world.value, m = moneyState.value;
-  const out = new Map<number, { fare: Shares; ride: Shares; run: Shares }>();
+  const w = moneyWorld.value, m = moneyTerms.value;
+  const out: LineShares = new Map();
   if (!w || !m) return out;
-  void zonesLoaded.value; // boundaries arriving re-place the stations
+  const zl = zonesLoaded.value; // boundaries arriving re-place the stations
   const dv = demandByDay.value[0]?.view ?? null;
+  const was = sharesMemo;
+  if (was && was.w === w && was.m === m && was.zl === zl && was.dv === dv) return was.out;
+  sharesMemo = { w, m, zl, dv, out };
   const byId = stationsById(w);
-  const zone = (id: string) => { const s = byId.get(id); return (s && stationZone(s)) ?? ""; };
   const boardingsAll = w.save.lines.reduce((a, l) => a + (dv?.lines.get(l.id)?.ridersPerDay ?? 0), 0);
   const tripsPerBoarding = dv && boardingsAll > 0 ? Math.min(1, dv.railTripsPerDay / boardingsAll) : 1;
   for (const l of w.save.lines) {
     const st = w.lineStats[l.id], n = l.stops.length;
     if (!st || st.status !== "running" || n < 2) continue;
-    const z = l.stops.map(zone);
+    const g = lineGeo(w, l, byId), z = g.zones;
     const s0 = st.stopS[0] ?? [];
     const km = new Map<string, number>();
     for (let k = 0; k + 1 < n; k++) {
@@ -63,8 +68,7 @@ export const lineShares = computed(() => {
         for (let k = 0; k + 1 < n; k++) ends.push([zz[k], zz[k + 1], Math.abs(s[k + 1] - s[k]) / 1000]);
       }
       // T-1277: a stretch pays its starting stop's fare scale, the base its boarding stop's
-      const sc = stopScales(l.stops, byId, m.fares.scales);
-      const from = [...sc.slice(0, n - 1), ...[...sc].reverse().slice(0, n - 1)];
+      const { sc, from } = scalesOf(g, l, byId, m.fares.scales);
       const pkm = new Map<string, number>(), board = new Map<string, number>(), paid = new Map<string, number>();
       let pkmAll = 0;
       for (const per of dm.loads) {
@@ -92,27 +96,43 @@ export const lineShares = computed(() => {
 });
 
 /** T-867: a constructed edge's upkeep a game day, US$ (0 for blueprint and crossovers). */
-export function edgeUpkeep(e: { built: boolean; crossover?: boolean; tracks: number; hsr?: boolean; lengthM: number }, m: MoneyState): number {
+export function edgeUpkeep(e: { built: boolean; crossover?: boolean; tracks: number; hsr?: boolean; lengthM: number }, m: Pick<MoneyState, "upkeepTrackKm" | "upkeepSingle" | "upkeepHsr" | "economy">): number {
   if (!e.built || e.crossover) return 0;
   return (e.lengthM / 1000) * m.upkeepTrackKm * (e.tracks === 1 ? m.upkeepSingle : e.hsr ? m.upkeepHsr : 1) * m.economy;
 }
 /** T-867: a constructed station's upkeep a game day, US$. */
-export const stationUpkeep = (m: MoneyState) => m.upkeepStation * m.economy;
+export const stationUpkeep = (m: Pick<MoneyState, "upkeepStation" | "economy">) => m.upkeepStation * m.economy;
+
+/** Each edge midpoint's zone, kept while the edge's ends and the zone boundaries stay (T-1209). */
+const midZones = new Map<number, { lng: number; lat: number; zone: string }>();
+let midZonesAt = -1;
+function midZone(id: number, lng: number, lat: number, zl: number): string {
+  if (midZonesAt !== zl) { midZones.clear(); midZonesAt = zl; }
+  const c = midZones.get(id);
+  if (c && c.lng === lng && c.lat === lat) return c.zone;
+  const zone = placeAt(lng, lat) ?? "";
+  midZones.set(id, { lng, lat, zone });
+  return zone;
+}
+const sameShares = (a: Shares, b: Shares) => a.length === b.length && a.every(([k, v], i) => k === b[i][0] && v === b[i][1]);
+let lastUpkeep: Shares = [];
 
 /** T-867: how the network's upkeep divides between regions: each constructed edge by its midpoint,
- * each constructed station by its own region. */
+ * each constructed station by its own region. The last shares while they come out the same. */
 export const upkeepShares = computed<Shares>(() => {
-  const w = world.value, m = moneyState.value;
-  if (!w || !m || m.upkeepTrackKm === undefined) return [];
-  void zonesLoaded.value;
+  const w = world.value, m = moneyTerms.value;
+  if (!w || !m || m.upkeepTrackKm === undefined) return (lastUpkeep = []);
+  const zl = zonesLoaded.value;
   const out = new Map<string, number>();
   for (const e of w.edges) {
     const u = edgeUpkeep(e, m);
     const a = u > 0 && w.nodes.get(e.a), b = u > 0 && w.nodes.get(e.b);
-    if (a && b) add(out, placeAt((a.lng + b.lng) / 2, (a.lat + b.lat) / 2) ?? "", u);
+    if (a && b) add(out, midZone(e.id, (a.lng + b.lng) / 2, (a.lat + b.lat) / 2, zl), u);
   }
   for (const s of w.save.stations) if (s.built) add(out, stationZone(s) ?? "", stationUpkeep(m));
-  return norm(out);
+  const next = norm(out);
+  if (!sameShares(next, lastUpkeep)) lastUpkeep = next;
+  return lastUpkeep;
 });
 
 /** How the last paid edit's charge divides: construction by the cost of the track it built in each

@@ -59,6 +59,7 @@ off, since Vite serves only this tree.
 import ast
 import contextlib
 import datetime
+import hashlib
 import importlib
 import importlib.abc
 import importlib.machinery
@@ -1009,6 +1010,8 @@ class Run:
                 self.park(i, f"register failed: {str(tail)[-300:]}")
             return []
         env = {"TW_EVERYDAY_EXE": str(self.everyday)} if self.everyday else {}
+        # a region gate of 100+ rows can sit quiet longer than the default while others share the machine (T-1308)
+        env["TW_QUIET_S"] = str(max(int(os.environ.get("TW_QUIET_S", QUIET_S)), 30 * len(ids)))
         if self.browser:
             env.update(BASE=self.start_vite(L), WORKERS="1")
         args = ids + ["--since", str(snap), "--out", str(gd)] + (["--browser"] if self.browser else [])
@@ -1189,6 +1192,11 @@ class Run:
         print(f"  joint group {name}{' again' if again else ''}: {' '.join(g)} (new: {' '.join(new)})"
               f"{'; fixed: ' + ' '.join(fixed) if fixed else ''}", flush=True)
         self.check_sim()
+        stale = [i for i in g if self.stale_stamp(i)]
+        if stale:
+            raise RunFault(f"joint group {name}: {' '.join(stale)} changed after merging, so the solve's --undo would "
+                           f"drop that change; rerun the step on the res-9 pack (merge_cells.py <ids> --through "
+                           f"\"<module> {{id}} <args>\" --force, T-1261), then this run again")
         bak = Path(f"{tag}-backup")
         self.backup(g, bak)
         # the re-gate compares against the packs just before this solve (an earlier group's solve changed its own)
@@ -1235,6 +1243,18 @@ class Run:
             why = f"after the joint solve: {bad[i]}" if only_new else fail
             self.park(i, f"joint group {g[0]} ({' '.join(g)}): {why}"[:600])
         return parked, ([i for i in new if i not in parked] if only_new else [])
+
+    def stale_stamp(self, cid):
+        """merge_cells.stale without numpy: a merged pack whose bytes are not the ones merge_cells
+        stamped (T-1261)."""
+        if "merged" not in json.loads((self.packs / f"{cid}.json").read_text(encoding="utf-8")):
+            return False
+        p = self.work / f"res9/{cid}.merged.json"
+        if not p.exists():
+            return True
+        got = {f"{ext}_sha256": hashlib.sha256((self.packs / f"{cid}.{ext}").read_bytes()).hexdigest()
+               for ext in ("json", "bin")}
+        return json.loads(p.read_text()) != got
 
     def group_files(self, g):
         out = []

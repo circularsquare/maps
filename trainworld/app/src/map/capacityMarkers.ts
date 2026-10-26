@@ -21,6 +21,7 @@ import { perfOff, perfTry } from "../perfFlags";
 import type { Map as MlMap } from "maplibre-gl";
 import { BoxGrid, MIN_LABEL_ZOOM, labelPadding, tipBeside } from "./labelLayout";
 import type { StationLabels } from "./stationLabels";
+import { overlayCamera, PanPlane } from "./moving";
 
 /** ?perfOff=markers (T-045, measurement only). */
 const NO_MARKERS = perfOff("markers");
@@ -36,11 +37,14 @@ export class CapacityMarkers {
    * own: the station, train or track under the tag is selected as if the tag were not there (T-256). */
   selectClick: ((px: number, py: number, add: boolean) => void) | null = null;
   private box: HTMLDivElement;
+  /** the tags' parent, moved as one between full placements while the camera pans (T-1207) */
+  private plane: HTMLDivElement;
   private items: { el: HTMLDivElement; x: number; y: number; w: number; h: number; shown?: boolean; transform?: string }[] = [];
   private visible = true;
   private placedMatrix: number[] | null = null;
   private placedSize = "";
   private placedLabels = -1;
+  private pan: PanPlane;
   private key = "";
 
   private tip: HTMLDivElement;
@@ -51,6 +55,10 @@ export class CapacityMarkers {
     this.box = document.createElement("div");
     this.box.className = "cap-marks";
     container.appendChild(this.box);
+    this.plane = document.createElement("div");
+    this.plane.className = "cap-plane";
+    this.box.appendChild(this.plane);
+    this.pan = new PanPlane(overlayCamera(overlay), this.plane);
     this.tip = document.createElement("div");
     this.tip.className = "tool-tag demand-tag";
     this.tip.style.display = "none";
@@ -82,7 +90,7 @@ export class CapacityMarkers {
     const key = level + "|" + sorted.map((m, i) => `${m.kind},${m.rho},${m.delayS},${m.tph},${m.held},${m.x},${m.y},${junctions[i]}`).join("|");
     if (key === this.key) return;
     this.key = key;
-    this.box.textContent = "";
+    this.plane.textContent = "";
     this.tip.style.display = "none";
     this.placedMatrix = null;
     this.items = sorted.map((m, i) => {
@@ -137,7 +145,7 @@ export class CapacityMarkers {
       el.onmouseenter = hover;
       el.onmousemove = hover;
       el.onmouseleave = () => hoverHeld() || (this.tip.style.display = "none");
-      this.box.appendChild(el);
+      this.plane.appendChild(el);
       return { el, x: m.x, y: m.y, w: 0, h: 0 };
     });
     this.place();
@@ -164,6 +172,8 @@ export class CapacityMarkers {
     const size = `${W},${H},${zoom < 14}`;
     const labelsAt = this.labels?.version ?? 0;
     if (size === this.placedSize && labelsAt === this.placedLabels && this.placedMatrix?.every((v, i) => v === m[i])) return;
+    if (!this.pan.due()) return;
+    this.pan.placed();
     this.placedMatrix = Array.from(m);
     this.placedSize = size;
     this.placedLabels = labelsAt;

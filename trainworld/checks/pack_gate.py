@@ -27,6 +27,7 @@ import math
 import re
 import subprocess
 import sys
+import time
 import urllib.parse
 
 import numpy as np
@@ -843,6 +844,18 @@ def browser_run(rows, out_dir):
         p = subprocess.Popen(["node", os.path.join(HERE, "city-browser.mjs")], cwd=maps, env=env,
                              stdout=log, stderr=subprocess.STDOUT)
         runs.append((part, lst, log, p))
+    # each row's result printed as it lands, so the gate's log keeps growing for the runner's quiet watch (T-1308)
+    seen, beat = set(), time.time()
+    while any(p.poll() is None for *_, p in runs):
+        for part, *_ in runs:
+            for r in part:
+                if r["id"] not in seen and os.path.exists(r["json"]):
+                    seen.add(r["id"])
+                    print(f"  browser {r['id']}: result in ({len(seen)} of {len(rows)})", flush=True)
+        if time.time() - beat > 300:
+            beat = time.time()
+            print(f"  browser: {len(seen)} of {len(rows)} rows in", flush=True)
+        time.sleep(5)
     out = {}
     for part, lst, log, p in runs:
         p.wait()

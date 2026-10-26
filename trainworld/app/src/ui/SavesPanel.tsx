@@ -14,8 +14,8 @@ import { allowCopyFolder, canCopyToFolder, copyFolder, pickCopyFolder, stopCopie
 import { exportGame, importGame, newGame, manageSaveSlot, savedByHand, saveSlotsState } from "../workers/clockClient";
 import type { SaveSlot, SlotBackup } from "../workers/saveFile";
 import { accountConfig, accountState, cloudContext, session } from "../game/account";
-import { accountList, accountOnly, cardOf, deleteAccountGame, downloadAccountGame, elsewhereAt, refreshAccountGames } from "../game/accountGames";
-import { tiedTo, type CloudContext } from "../workers/cloud";
+import { accountBackups, accountList, accountOnly, addToAccount, cardOf, deleteAccountGame, downloadAccountGame, elsewhereAt, refreshAccountGames, restoreAccountBackup } from "../game/accountGames";
+import { tiedTo, type AccountBackup, type CloudContext } from "../workers/cloud";
 import { Icon } from "./widgets";
 import { viewStart } from "./locate";
 import { Modal } from "./Modal";
@@ -89,8 +89,8 @@ export function SlotFacts({ slot, now, autosaved }: { slot: SaveSlot; now: numbe
 /** A saved game's name, with a mark when it is a sandbox (T-728); also the start menu's. While the
  * account keeps games (T-988), a cloud marks a game only on the account and a crossed cloud one only
  * in this browser. */
-export function SlotTitle({ slot }: { slot: SaveSlot }) {
-  return <strong>{slot.name}{slot.mode === "sandbox" && <span class="save-sandbox small" data-tip="Infinite money">Sandbox</span>}<CloudMark slot={slot} /></strong>;
+export function SlotTitle({ slot, add }: { slot: SaveSlot; add?: boolean }) {
+  return <strong>{slot.name}{slot.mode === "sandbox" && <span class="save-sandbox small" data-tip="Infinite money">Sandbox</span>}<CloudMark slot={slot} add={add} /></strong>;
 }
 
 /** T-988: the account's games are in use here (signed in, a server that keeps them); read as signals. */
@@ -100,11 +100,16 @@ function useGamesOn(): CloudContext | null {
   return ctx?.on ? ctx : null;
 }
 
-function CloudMark({ slot }: { slot: SaveSlot }) {
+/** `add`: a game tied to no account is added to this one by a click on its crossed cloud (the saves
+ * panel's; the start menu's cards are buttons themselves). */
+function CloudMark({ slot, add }: { slot: SaveSlot; add?: boolean }) {
   const ctx = useGamesOn();
   if (!ctx) return null;
   if (slot.key.startsWith("account:")) return <span class="save-cloud" data-tip="On your account"><Icon.cloud /></span>;
+  const noAccount = !slot.cloud?.acct;
   if (tiedTo(slot.cloud, ctx)) return null;
+  if (add && noAccount) return <button class="save-cloud save-add" data-tip="Only in this browser. Click to add it to your account." aria-label={`Add ${slot.name} to your account`}
+    onClick={(e) => { e.stopPropagation(); void addToAccount([slot]); }}><Icon.cloudOff /></button>;
   return <span class="save-cloud" data-tip="Only in this browser"><Icon.cloudOff /></span>;
 }
 
@@ -167,7 +172,7 @@ function SlotCard({ slot, playing, now, writable, renaming, onRename, onRenamed,
       <SlotThumb slot={slot} />
       <div class="save-info">
         <div class="save-slot-title">
-          {renaming ? <NameField slot={slot} onDone={onRenamed} /> : <span class="save-name" onDblClick={onRename}><SlotTitle slot={slot} /></span>}
+          {renaming ? <NameField slot={slot} onDone={onRenamed} /> : <span class="save-name" onDblClick={onRename}><SlotTitle slot={slot} add /></span>}
           {playing && <span class="save-playing small">Playing</span>}
         </div>
         <SlotFacts slot={slot} now={now} autosaved={playing && writable} />
@@ -184,15 +189,29 @@ function SlotCard({ slot, playing, now, writable, renaming, onRename, onRenamed,
   );
 }
 
-/** The playing slot's backups (T-744), each restored into a new slot. */
-function Backups({ backups, now }: { backups: SlotBackup[]; now: number }) {
+const RESTORE_TIP = "Open this backup as a new saved game. The game you are playing is saved first.";
+
+/** The playing slot's backups, newest first, each restored into a new slot: this browser's (T-744) and
+ * the account's (T-988, marked with a cloud; they keep no game day). */
+function Backups({ slot, backups, account, now }: { slot: SaveSlot; backups: SlotBackup[]; account: AccountBackup[]; now: number }) {
+  const [msg, setMsg] = useState("");
+  const rows = [
+    ...backups.map((b) => ({ at: b.at, row: <div class="save-backup small" data-backup={b.key}>
+      <span class="muted num" data-tip={`A backup of this game from ${fullDate(b.at)}, game day ${b.day}`}>{savedWhen(b.at, now).replace("Saved", "Backup")} · Day {b.day}</span>
+      <button class="btn text" data-tip={RESTORE_TIP} onClick={() => { manageSaveSlot("restore", b.key); savesOpen.value = false; }}>Restore as a copy</button>
+    </div> })),
+    ...account.map((b) => ({ at: b.savedAt * 1000, row: <div class="save-backup small" data-account-backup={b.rev}>
+      <span class="muted num" data-tip={`A backup of this game on your account from ${fullDate(b.savedAt * 1000)}`}><span class="save-cloud"><Icon.cloud /></span>{savedWhen(b.savedAt * 1000, now).replace("Saved", "Backup")}</span>
+      <button class="btn text" data-tip={RESTORE_TIP} onClick={async () => {
+        setMsg("");
+        if (await restoreAccountBackup(slot, b)) savesOpen.value = false;
+        else setMsg("This backup could not be downloaded.");
+      }}>Restore as a copy</button>
+    </div> })),
+  ].sort((x, y) => y.at - x.at);
   return <div class="save-backups">
-    {backups.map((b) => {
-      return <div class="save-backup small" data-backup={b.key}>
-        <span class="muted num" data-tip={`A backup of this game from ${fullDate(b.at)}, game day ${b.day}`}>{savedWhen(b.at, now).replace("Saved", "Backup")} · Day {b.day}</span>
-        <button class="btn text" data-tip="Open this backup as a new saved game. The game you are playing is saved first." onClick={() => { manageSaveSlot("restore", b.key); savesOpen.value = false; }}>Restore as a copy</button>
-      </div>;
-    })}
+    {rows.map((r) => r.row)}
+    {msg && <div class="small bad">{msg}</div>}
   </div>;
 }
 
@@ -235,7 +254,7 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
         {saves.slots.map((slot) => <li data-slot={slot.key} class={slot.key === saves.active ? "on" : ""}>
           <SlotCard slot={slot} playing={slot.key === saves.active} now={Math.max(now, at)} writable={saves.writable} renaming={rename === slot.key}
             onRename={() => setRename(slot.key)} onRenamed={() => setRename(null)} onDelete={() => setRemoving(slot.key)} />
-          {slot.key === saves.active && saves.backups.length > 0 && <Backups backups={saves.backups} now={Math.max(now, at)} />}
+          {slot.key === saves.active && (saves.backups.length > 0 || accountBackups(slot).length > 0) && <Backups slot={slot} backups={saves.backups} account={accountBackups(slot)} now={Math.max(now, at)} />}
           {removing === slot.key && <div class="callout bad">
             <p>{onAccount(slot) ? `Delete "${slot.name}" from this browser and your account?` : `Delete "${slot.name}" from this browser?`}</p>
             <div class="pane-foot"><button class="btn text" onClick={() => { manageSaveSlot("delete", slot.key); setRemoving(null); }}>Delete saved game</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>

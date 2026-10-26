@@ -13,7 +13,7 @@ import { complexOf } from "../../game/complexView";
 import { DAY_KIND_NAME } from "../../game/days";
 import { kindIn, lineCountry } from "../../game/holidays";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats, type StationInput } from "../../game/types";
-import { ask, display, lineDraft, purposeFilter, renameLinePrompt, selection, shownDayPhrase, tool } from "../../game/ui";
+import { ask, display, lineDraft, purposeFilter, relatedLines, renameLinePrompt, selection, shownDayPhrase, tool } from "../../game/ui";
 import { purposeName } from "../../game/purposes";
 import { dailyRiders } from "../../map/trackHover";
 import { FULL_FLOOR, FULL_WAIT_FROM, FULL_WAIT_STRONG } from "../../map/rendererShaders";
@@ -25,6 +25,7 @@ import { AUTO_SLACK, autoTrainsFor, edit, headwayFromMinutes, headwayShown, line
 import { live } from "../../map/live";
 import { Alert, Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
+import { RelatedStops } from "./RelatedStops";
 import { NameEdit } from "./NameEdit";
 import { locateLine, locateStation } from "../locate";
 import { demandPending, Spinner } from "../Spinner";
@@ -282,13 +283,19 @@ const STOP_CHIPS = 2;
 
 /** The other lines at a stop's station complex (T-549), the busiest two as bullets by their
  * boardings there in the past 24 hours, the rest behind a "+" whose hover names them. */
-function StopTransfers({ line, stop }: { line: string; stop: string }) {
+/** The other lines stopping at a stop's complex, busiest there first, leaving out `drawn` (line
+ * numbers drawn beside the line there, T-1168). */
+function transferLines(line: string, stop: string, drawn?: ReadonlySet<number>): LineInput[] {
   const w = world.value;
   const members = new Set(complexOf(stop));
   const d = today.value;
   const riders = (o: LineInput) => o.stops.reduce((n, s, i) => n + (members.has(s) ? (d.get(o.id)?.stops[i] ?? 0) : 0), 0);
-  const others = (w?.save.lines ?? []).filter((o) => o.id !== line && o.stops.some((s) => members.has(s)))
+  return (w?.save.lines ?? []).filter((o) => o.id !== line && !drawn?.has(o.num) && o.stops.some((s) => members.has(s)))
     .map((o) => ({ o, n: riders(o) })).sort((a, b) => b.n - a.n).map((x) => x.o);
+}
+
+function StopTransfers({ line, stop, drawn }: { line: string; stop: string; drawn?: ReadonlySet<number> }) {
+  const others = transferLines(line, stop, drawn);
   if (!others.length) return null;
   const rest = others.slice(STOP_CHIPS);
   return (
@@ -697,11 +704,49 @@ export function LineInspector({ id }: { id: string }) {
   };
 
   const shown = preview ?? l.colour;
+  // T-1168: stop `i`'s row; `drawn` (in the related-lines view) are the lines drawn beside the line there
+  const stopRow = (i: number, drawn?: ReadonlySet<number>) => {
+    const s = l.stops[i];
+    const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id));
+    return (
+      <li class={xfer ? "xfer" : ""}>
+        {looks && !drawn && i > 0 && <StretchHalf s={looks[i - 1]} down={false} />}
+        {looks && !drawn && i < looks.length && <StretchHalf s={looks[i]} down />}
+        <span class="grow">
+          <span class="stop-name" onClick={() => (selection.value = { kind: "station", station: s })}>
+            {name.get(s)}
+          </span>
+          {i > 0 && times[i] !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[i - 1])}>{duration(times[i])}</span>}
+          {st.reversals?.includes(i) && (
+            <span class="rev-stop" data-tip={`Trains reverse here and stand ${duration(st.turnaroundS)}\nAt most 12 trains an hour reverse on each side`}>
+              <Icon.uturn />
+            </span>
+          )}
+        </span>
+        <StopTransfers line={l.id} stop={s} drawn={drawn} />
+        <StopToday line={l.id} i={i} />
+        <RouteMarks marks={marks.filter((m) => m.gap === i)} />
+        {editingStops && (
+          <button class="btn icon mini danger" data-tip={st.loop && i > 0 && i === l.stops.length - 1 ? "Open the loop" : "Take this stop out of the line"} aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
+            <Icon.cross />
+          </button>
+        )}
+      </li>
+    );
+  };
+  const related = relatedLines.value && !editingStops && l.stops.length >= 2;
   // T-670: the stops editor sits at the top while stops are being edited, else after the day's figures
   const stopsBlock = (
     <>
       <div class="h divided">
-        Stops<span class="right muted small">boardings in past 24 h</span>
+        Stops
+        {!editingStops && l.stops.length >= 2 && (
+          <button class={"btn icon mini related-toggle" + (related ? " on" : "")} data-tip={related ? "Hide related lines" : "Show related lines"}
+            aria-label={related ? "Hide related lines" : "Show related lines"} aria-pressed={related} onClick={() => (relatedLines.value = !relatedLines.value)}>
+            <Icon.related />
+          </button>
+        )}
+        <span class="right muted small">boardings in past 24 h</span>
       </div>
       {/* T-1297: Add all heads the list whenever the line passes stations, and Add takes its place,
           so a double click there adds them, as one on a gap's row adds its own. The second click
@@ -721,9 +766,10 @@ export function LineInspector({ id }: { id: string }) {
               onClick={() => setPending(gaps)} onDblClick={() => void addGaps(gaps)}>{allLabel}</button>}
         </div>
       )}
-      <ul class={"stops" + (looks ? " traffic" : "")} style={{ "--c": shown }} onDblClick={(e) => { if (pending && (e.target as Element).closest("li.adding")) void addPassed(); }}>
+      {related ? (
+        <RelatedStops l={l} stopS={st.stopS[0]} colour={shown} lRow={stopRow} transfers={(i, drawn) => transferLines(l.id, l.stops[i], drawn)} />
+      ) : <ul class={"stops" + (looks ? " traffic" : "")} style={{ "--c": shown }} onDblClick={(e) => { if (pending && (e.target as Element).closest("li.adding")) void addPassed(); }}>
         {l.stops.map((s, i) => {
-          const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id));
           const here = editingStops ? passed.filter((p) => p.gap === i) : [];
           const shownHere = pending?.includes(i);
           const after = here.length > 0 && i + 1 < l.stops.length && (shownHere
@@ -738,33 +784,11 @@ export function LineInspector({ id }: { id: string }) {
               </li>
             ));
           return (<>
-            <li class={xfer ? "xfer" : ""}>
-              {looks && i > 0 && <StretchHalf s={looks[i - 1]} down={false} />}
-              {looks && i < looks.length && <StretchHalf s={looks[i]} down />}
-              <span class="grow">
-                <span class="stop-name" onClick={() => (selection.value = { kind: "station", station: s })}>
-                  {name.get(s)}
-                </span>
-                {i > 0 && times[i] !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[i - 1])}>{duration(times[i])}</span>}
-                {st.reversals?.includes(i) && (
-                  <span class="rev-stop" data-tip={`Trains reverse here and stand ${duration(st.turnaroundS)}\nAt most 12 trains an hour reverse on each side`}>
-                    <Icon.uturn />
-                  </span>
-                )}
-              </span>
-              <StopTransfers line={l.id} stop={s} />
-              <StopToday line={l.id} i={i} />
-              <RouteMarks marks={marks.filter((m) => m.gap === i)} />
-              {editingStops && (
-                <button class="btn icon mini danger" data-tip={st.loop && i > 0 && i === l.stops.length - 1 ? "Open the loop" : "Take this stop out of the line"} aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
-                  <Icon.cross />
-                </button>
-              )}
-            </li>
+            {stopRow(i)}
             {after}
           </>);
         })}
-      </ul>
+      </ul>}
     </>
   );
 

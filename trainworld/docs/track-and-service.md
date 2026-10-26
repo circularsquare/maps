@@ -313,7 +313,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   - **Park and ride**: a ride to or from the station costs 10 perceived minutes less ([demand-mode.md](demand-mode.md),
     `kernel::ride_fixed`); a P after the station's name.
   - **Waiting room**: a wait for a train there counts at 0.8 of its minutes in route and mode
-    choice (`kernel::wait_factor`, [demand-mode.md](demand-mode.md)).
+    choice (`kernel::wait_factor`, [demand-mode.md](demand-mode.md)). Drawn where platforms are (from
+    zoom 14) as a small box in the station's style beside the platform's middle, on the outside of
+    its bend, with the platform's waiting riders (its fuller side) filling it from the middle out
+    (T-1287; station flag 32, a second station draw with `u_room`).
   - **Passage**: the link above, priced US$10M plus US$90M a km of the straight line between the
     two stations (`upgrades::passage_price`); paid at once between constructed stations, else
     built and paid with the second of them (`Network::passages`, quote row "Passages").

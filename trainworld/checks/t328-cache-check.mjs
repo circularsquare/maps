@@ -4,7 +4,7 @@
 //   node trainworld/checks/t328-cache-check.mjs            (from the maps root)
 // prepare: imports T-007-real-nyc.save into the profile's autosave slot.
 // reload: RUNS page loads; each records when the network was drawn, when the clock was released
-//   (T-347: not before the fresh final, with or without the cache),
+//   (T-347, T-421: not before the fresh solve's first estimate, with or without the cache),
 //   every change of the shown view (version:round:final, version 0 = the cache) and a signature of
 //   every figure in the first final view shown and in the fresh solve's final. PASS when the
 //   fresh final's signature is the same on every run and the cached view's equals it.
@@ -32,24 +32,42 @@ await ctx.addInitScript(([bubbles]) => {
   } catch { /* */ }
   // a signature of every figure a view holds: lines, stations, purposes, the split, city views, the market
   window.__sig = () => {
-    const d = window.twDemand, v = d.view(), nums = [];
+    const d = window.twDemand, v = d.view(), nums = [], marks = [];
     const put = (x) => { if (x == null) nums.push(-1e300); else if (typeof x === 'number') nums.push(x); else for (const y of x) put(y); };
+    const mark = (k) => marks.push([k, nums.length]);
+    mark('view');
     put([v.split.train, v.split.walk, v.split.drive, v.tripsPerDay, v.railTripsPerDay, v.peakHourFactor, v.trainShareByPeriod.map((p) => p[1])]);
+    mark('lines');
     for (const [, l] of [...v.lines].sort((a, b) => +a[0] - +b[0])) put([l.ridersPerDay, l.fullestPct, l.boardings, ...l.loads, ...(l.board ?? []), ...(l.alight ?? [])]);
+    mark('stations');
     for (const [, s] of [...v.stations].sort((a, b) => +a[0] - +b[0])) put([s.boardings, s.alightings]);
+    mark('purposes');
     for (const [k, p] of [...(v.purposes ?? [])].sort()) {
       nums.push(k.length);
       for (const [, l] of [...p.lines].sort((a, b) => +a[0] - +b[0])) put([l.ridersPerDay, l.boardings, ...l.loads]);
       for (const [, s] of [...p.stations].sort((a, b) => +a[0] - +b[0])) put([s.boardings, s.alightings]);
     }
+    mark('cities');
     const cities = [...d.cities()].sort();
     for (const [, c] of cities) put([c.split.train, c.split.walk, c.split.drive, c.tripsPerDay, c.railTripsPerDay, c.trainShareByPeriod.map((p) => p[1])]);
     const ic = d.intercity();
-    if (ic) { put([ic.tripsPerDay, ic.railTripsPerDay, ic.commuteTripsPerDay ?? 0, ic.commuteRailPerDay ?? 0]); const c = ic.corridors; nums.push(c.table.n, c.longerScale, c.commuteScale); for (const ch of c.table.key) nums.push(ch.charCodeAt(0)); put([...c.railAt, ...c.longerRail, ...c.commuteRail]); }
+    if (ic) {
+      mark('market');
+      put([ic.tripsPerDay, ic.railTripsPerDay, ic.commuteTripsPerDay ?? 0, ic.commuteRailPerDay ?? 0]);
+      const c = ic.corridors;
+      mark('corridorTable');
+      nums.push(c.table.n, c.longerScale, c.commuteScale); for (const ch of c.table.key) nums.push(ch.charCodeAt(0));
+      mark('railAt'); put([...c.railAt]);
+      mark('longerRail'); put([...c.longerRail]);
+      mark('commuteRail'); put([...c.commuteRail]);
+    }
+    mark('end');
     const f = new Float64Array(nums), b = new Uint32Array(f.buffer);
-    let h = 0x811c9dc5;
-    for (let i = 0; i < b.length; i++) h = Math.imul(h ^ b[i], 0x01000193);
-    return { hash: (h >>> 0).toString(16), n: nums.length, lines: v.lines.size, stations: v.stations.size, cities: cities.map((c) => c[0]).join('+'), train: +v.split.train.toFixed(3), rail: Math.round(v.railTripsPerDay) };
+    const fnv = (lo, hi) => { let h = 0x811c9dc5; for (let i = 2 * lo; i < 2 * hi; i++) h = Math.imul(h ^ b[i], 0x01000193); return (h >>> 0).toString(16); };
+    // each section's own hash, so two differing hashes point at the figures that differ
+    const sections = Object.fromEntries(marks.slice(0, -1).map(([k, at], i) => [k, fnv(at, marks[i + 1][1])]));
+    window.__lastNums = nums; // DUMP=1 reads these to diff two runs
+    return { hash: fnv(0, nums.length), sections, marks, n: nums.length, lines: v.lines.size, stations: v.stations.size, cities: cities.map((c) => c[0]).join('+'), train: +v.split.train.toFixed(3), rail: Math.round(v.railTripsPerDay) };
   };
   // the bubbles' legs per cell (weekday, all purposes) of the view shown
   window.__modesSig = async () => {
@@ -87,12 +105,24 @@ collectErrors(page, errors, null);
 
 const waitSolved = (timeout = 180000) => demandFinal(page, { timeout, polling: 100 });
 
+let dumps = 0;
+/** DUMP=1: the shown figures as float64 in OUT/t328-dump-<n>.f64 (sections: the `marks` of the run's json), to diff two runs */
+async function dump() {
+  if (!process.env.DUMP) return;
+  const b64 = await page.evaluate(() => {
+    const f = new Float64Array(window.__sig() && window.__lastNums), u = new Uint8Array(f.buffer);
+    let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000));
+    return btoa(s);
+  });
+  await writeFile(join(OUT, `t328-dump-${dumps++}.f64`), Buffer.from(b64, 'base64'));
+}
 /** one page load: events, the first final view's signature, the fresh final's */
 async function reload() {
   await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
   await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
   await waitSolved();
   await page.waitForTimeout(1500); // the cache write after the final
+  await dump();
   return page.evaluate(async () => {
     const c = window.twDemand.client;
     return { ev: window.__ev, first: window.__firstSig, fresh: window.__sig(), cache: c.cacheLog ?? null, firstModes: window.__firstModes ?? null, freshModes: await window.__modesSig(),
@@ -120,7 +150,9 @@ try {
     await page.waitForFunction((b) => window.tw.lastSaved.peek() > b, before, { timeout: 60000 });
     await waitSolved();
     await page.waitForTimeout(2000);
-    log('save stored');
+    const sig = await page.evaluate(() => window.__sig());
+    await dump();
+    log(`save stored; first final after the import: ${sig.hash} rail ${sig.rail} n ${sig.n} ${JSON.stringify(sig.sections)}`);
   } else if (MODE === 'reload') {
     for (let i = 0; i < RUNS; i++) {
       const r = await reload();
@@ -132,11 +164,17 @@ try {
     const cachedSame = out.runs.filter((r) => r.cached).every((r) => r.first.hash === r.fresh.hash && (!r.firstModes || r.firstModes.hash === r.freshModes?.hash));
     ok = fresh.size === 1 && cachedSame;
     console.log(`${fresh.size === 1 ? 'PASS' : 'FAIL'}  fresh finals agree on every run (${[...fresh].join(', ')})`);
+    if (fresh.size > 1) {
+      const names = Object.keys(out.runs[0].fresh.sections);
+      console.log('  sections that differ between runs: ' + (names.filter((k) => new Set(out.runs.map((r) => r.fresh.sections[k])).size > 1).join(', ') || 'none'));
+    }
     console.log(`${cachedSame ? 'PASS' : 'FAIL'}  the cached view equals the fresh final (${out.runs.filter((r) => r.cached).length} cached runs)`);
-    // T-347: the clock stays held, the card up, until the fresh final lands, cache or not
-    const heldToFinal = out.runs.every((r) => r.clock !== undefined && r.freshFinal !== undefined && r.clock >= r.freshFinal);
+    // T-347: the clock stays held, the card up, through the cached view and the fresh solve's first
+    // estimate; it runs once the zone in view has its fresh final (T-421), which can come a few hundred
+    // ms before the solve's last round (`refined`)
+    const heldToFinal = out.runs.every((r) => r.clock !== undefined && r.freshFinal !== undefined && r.clock >= r.solves.at(-1).first && r.clock <= r.freshFinal + 1000);
     ok &&= heldToFinal;
-    console.log(`${heldToFinal ? 'PASS' : 'FAIL'}  the clock is held until the fresh final (clock ${out.runs.map((r) => r.clock).join('/')}, final ${out.runs.map((r) => r.freshFinal).join('/')})`);
+    console.log(`${heldToFinal ? 'PASS' : 'FAIL'}  the clock is held until the zone in view has its fresh final (clock ${out.runs.map((r) => r.clock).join('/')}, first estimate ${out.runs.map((r) => r.solves.at(-1).first).join('/')}, final ${out.runs.map((r) => r.freshFinal).join('/')})`);
   } else if (MODE === 'stale') {
     // the cache entry, as the page stores it (IndexedDB "anitabuilder", store "saves", keys "demand:...")
     const tamper = (field) => page.evaluate((field) => new Promise((res, rej) => {

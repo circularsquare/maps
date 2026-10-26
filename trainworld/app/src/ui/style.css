@@ -479,6 +479,20 @@ rect.now { fill-opacity: .45; }
 .stops .route-mark.crossing::before, .stops .route-mark.crossing::after { content: ""; position: absolute; left: 0; top: 4px; width: 12px; height: 4px; background: var(--net-ink); border-radius: 1px; box-shadow: 0 0 0 1px #fff; }
 .stops .route-mark.crossing::before { transform: rotate(45deg); }
 .stops .route-mark.crossing::after { transform: rotate(-45deg); }
+/* T-1168: the stops with the related lines; the drawing (--gw wide, the line at --spine) is one SVG
+   beside the rows, so the rows draw no bar or dot of their own */
+.h .related-toggle { align-self: center; margin-left: 6px; color: var(--muted); }
+.h .related-toggle:hover { color: var(--text); }
+.h .btn.related-toggle.on { background: var(--tint); color: var(--text); }
+.related { position: relative; }
+.related-draw { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 1; }
+.related-draw > * { pointer-events: visiblePainted; }
+.related-draw .link { cursor: pointer; }
+.related-draw .pill { fill: #fff; stroke: var(--net-ink); stroke-width: 2; }
+.related-bullet { position: absolute; z-index: 2; transform: translate(-50%, -50%); line-height: 0; }
+.stops.related-rows li { padding-left: calc(var(--gw) + 4px); }
+.stops.related-rows li::before, .stops.related-rows li::after { display: none; }
+.stops.related-rows .route-mark { left: calc(var(--spine) - 6px); z-index: 2; }
 /* T-1272: the Traffic view's diagram, each stretch as wide as its load (--w), in halves below a stop's
    dot and above the next; a crowded stretch has the map's darkening at strength --f and red edges
    at --e (the map's fullTrack colours, game/shadeTable.ts) */
@@ -491,7 +505,13 @@ rect.now { fill-opacity: .45; }
 .stops .stretch::before { content: ""; position: absolute; top: 0; bottom: 0; left: calc(8px - var(--w) / 2); width: var(--w); background: var(--c); }
 .stops .stretch.full::before {
   background: color-mix(in srgb, var(--c), #000 calc(var(--f) * 14%));
-  box-shadow: -2px 0 0 color-mix(in srgb, var(--full-mark) calc(var(--e) * 100%), transparent), 2px 0 0 color-mix(in srgb, var(--full-mark) calc(var(--e) * 100%), transparent);
+}
+/* T-1284: the red edges are dashes with 1px of the panel's colour between them and the stretch, so they read on a red line */
+.stops .stretch.full::after {
+  --edge: color-mix(in srgb, var(--full-mark) calc(var(--e) * 100%), transparent);
+  --dash: repeating-linear-gradient(to bottom, var(--edge) 0 4px, transparent 4px 7px);
+  content: ""; position: absolute; top: 0; bottom: 0; left: calc(8px - var(--w) / 2 - 3px); width: calc(var(--w) + 6px);
+  background: var(--dash) left / 2px 100% no-repeat, var(--dash) right / 2px 100% no-repeat;
 }
 
 /* ---------- main: top bar, map, tools ---------- */
@@ -635,6 +655,9 @@ rect.now { fill-opacity: .45; }
 /* T-988: a game only on the account (cloud) or only in this browser (crossed cloud), after its name */
 .save-cloud { display: inline-flex; vertical-align: -2px; margin-left: 6px; color: var(--muted); }
 .save-cloud svg { width: 15px; height: 15px; }
+button.save-add { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
+button.save-add:hover { color: var(--text); }
+.save-backup .save-cloud { margin: 0 5px 0 0; }
 .cash.sandbox { color: var(--muted); }
 .game-mode { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 /* T-927: the dock and top bar take no room either, so the world map fills the page behind the menu */
@@ -768,6 +791,7 @@ rect.now { fill-opacity: .45; }
 .speed-key li { display: flex; align-items: center; gap: 6px; }
 .speed-key i { display: inline-block; width: 16px; height: 4px; }
 .cap-marks { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.cap-plane, .mark-plane { position: absolute; inset: 0; }
 .cap-mark { position: absolute; left: 0; top: 0; padding: 0 4px; font-size: 12px;
             color: #fff; white-space: nowrap; pointer-events: auto; cursor: default; }
 .cap-mark.link { cursor: pointer; }
@@ -1012,6 +1036,11 @@ rect.now { fill-opacity: .45; }
 .save-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .save-actions { display: flex; gap: 6px; margin-top: auto; padding-top: 8px; justify-content: flex-end; }
 .save-thumb.empty { display: grid; place-items: center; text-align: center; padding: 4px; }
+/* a phone: the picture above the facts, at its own 3:2 */
+@media (max-width: 520px) {
+  .save-card { flex-direction: column; gap: 8px; }
+  .save-card .save-thumb { width: 100%; height: auto; aspect-ratio: 3 / 2; }
+}
 .save-slot-title { display: flex; gap: 8px; justify-content: space-between; align-items: baseline; overflow-wrap: anywhere; }
 .save-playing { flex: none; padding: 0 5px; color: var(--bg); background: var(--accent); }
 .save-slots .pane-foot { margin-top: 6px; }

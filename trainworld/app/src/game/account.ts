@@ -41,6 +41,8 @@ export interface Board { board: string; count: number; rows: BoardRow[]; me?: Bo
 const MAX_CITIES = 64;
 /** Wall ms between two sends of a game's figures. */
 const SEND_GAP_MS = 120_000;
+/** T-988: wall ms between two asks for the config while the server cannot be reached */
+const CONFIG_RETRY_MS = 120_000;
 const API_KEY = "trainworld.acct-api";
 const GAMES_KEY = "trainworld.score-games.v1";
 /** T-988: this browser profile's random device id, nothing about the machine */
@@ -258,6 +260,14 @@ export async function sendScores(now = false) {
   }
 }
 
+/** T-988: slots removed from this browser at sign-out whose games stay on the account, figures and all:
+ * forgotten here, so they are not taken off as deleted. */
+export function forgetScoreSlots(keys: string[]) {
+  const all = games();
+  for (const k of keys) delete all[k];
+  lsSet(GAMES_KEY, all);
+}
+
 /** Slots gone from this browser take their figures off the account they were sent to. */
 async function dropDeleted() {
   const s = session.peek(), st = saveSlotsState.peek();
@@ -293,15 +303,32 @@ export function startAccount() {
     posted = k;
     postAccount(c);
   });
-  void (async () => {
+  const askConfig = async () => {
     try {
       const cfg = await api<AccountConfig>("GET", "noritetsu/config", undefined, { auth: false });
       lsSet(GAMES_ON_KEY, !!cfg.trainworldGames);
       accountConfig.value = cfg;
       accountState.value = cfg.signIn && cfg.trainworld ? "on" : "unavailable";
+      return true;
     } catch {
       accountState.value = "unavailable";
+      return false;
     }
+  };
+  void (async () => {
+    // T-988: a page opened while the server could not be reached asks again, back online or every
+    // CONFIG_RETRY_MS, so its account comes back without a reload
+    if (!await askConfig()) await new Promise<void>((done) => {
+      let busy = false;
+      const again = async () => {
+        if (busy) return;
+        busy = true;
+        if (await askConfig()) { clearInterval(t); removeEventListener("online", again); done(); }
+        busy = false;
+      };
+      const t = setInterval(again, CONFIG_RETRY_MS);
+      addEventListener("online", again);
+    });
     if (accountState.peek() !== "on") return;
     if (session.peek()) {
       try { storeSession(await api("POST", "noritetsu/refresh")); }

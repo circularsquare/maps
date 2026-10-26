@@ -40,6 +40,8 @@ export const Icon = {
   help: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" /><path d="M6.2 6.3a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.6-.8 1.1v.6" /><circle class="solid" cx="8" cy="11.6" r=".5" /></svg>,
   // trains reverse at this stop
   uturn: () => <svg viewBox="0 0 16 16"><path d="M5 13.5V7a3.25 3.25 0 0 1 6.5 0v4.5M8.8 9.2l2.7 2.8 2.7-2.8" /></svg>,
+  // the line panel's related lines (T-1168): three lines splitting from one
+  related: () => <svg viewBox="0 0 16 16"><path d="M8 1.5v13M8 4.5c0 2.5-4 2.5-4 5v5M8 4.5c0 2.5 4 2.5 4 5v5" /></svg>,
   // two parallel tracks with an express pair added beside them
   doubleUp: () => <svg viewBox="0 0 16 16"><path d="M1.5 3h13M1.5 6h13M8 9v6M5 12h6" /></svg>,
   bin: () => <svg viewBox="0 0 16 16"><path d="M2.5 4.5h11M6.5 4.5V2.5h3v2M4 4.5l.8 9h6.4l.8-9M6.8 7v4M9.2 7v4" /></svg>,
@@ -89,7 +91,7 @@ export const Icon = {
 /** A line's bullet (T-521). Everywhere it is drawn a hover names the line and a click selects it,
  * except `plain` (the selected line's own panel, a search row that is the line). `pick` replaces
  * the selecting. `gone`: hidden but keeping its space (a station row's bullets past its "+", T-530). */
-export function Chip({ line, size = "", plain, pick, gone }: { line: LineInput; size?: "" | "sm" | "lg"; plain?: boolean; pick?: (l: LineInput) => void; gone?: boolean }) {
+export function Chip({ line, size = "", plain, pick, gone, tip }: { line: LineInput; size?: "" | "sm" | "lg"; plain?: boolean; pick?: (l: LineInput) => void; gone?: boolean; tip?: string }) {
   const click = plain ? undefined : (e: MouseEvent) => {
     e.stopPropagation();
     if (pick) pick(line);
@@ -100,7 +102,7 @@ export function Chip({ line, size = "", plain, pick, gone }: { line: LineInput; 
   const b = bulletText(line.letter, size, zoom.value);
   return (
     <span ref={zoom.ref} class={"chip " + size + (plain ? "" : " link")} style={{ "--c": line.colour, "--ct": inkOn(line.colour), visibility: gone ? "hidden" : undefined }}
-      data-tip={plain ? undefined : line.name} onClick={click}>
+      data-tip={plain ? undefined : tip ?? line.name} onClick={click}>
       {b ? (
         <svg style={{ width: b.w + "px", height: b.h + "px" }}>
           <rect y={b.top} width={b.w} height={b.h} rx={b.h / 2} />

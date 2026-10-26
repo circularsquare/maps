@@ -16,6 +16,7 @@ import { shadeColours } from "../game/shades";
 import { readBoardHour, type BoardHour } from "../game/boarding";
 import { PlatformCrowds } from "./platformCrowds";
 import { TransferBubbles } from "./transferBubbles";
+import { MOVING_PLACE_MS } from "./moving";
 import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, pxPerUnitAt, unitPerPxAt, type Anchor } from "./geo";
 import { clipToCss, compile, GpuTimer, interp, localCamera, mercToCss, PROJECT_UNIFORMS, setCamera, uniforms, type Camera, type LocalCamera } from "./gl";
 import { GradeMarks } from "./gradeMarks";
@@ -199,6 +200,11 @@ export class NetworkRenderer {
   /** whether the last draw drew platform crowds (on, riders known, zoomed in to CROWD_ZOOM), for
    * the crowd hover */
   crowdsShown = false;
+  /** The camera is moving (set by the overlay): the crowds are worked out at most every
+   * MOVING_PLACE_MS meanwhile (T-1207). */
+  moving = false;
+  private crowdsAt = 0;
+  private crowdsAny = false;
   private maxCars = 8;
   /** Used by picking to follow the same close-up representation. */
   detailedTrains = false;
@@ -380,6 +386,8 @@ export class NetworkRenderer {
   lineWidths: Float32Array | null = null;
   /** the network has blueprint track: it and its lines are drawn after the rest (T-695) */
   hasBlueprint = false;
+  /** some station has a waiting room (T-1287), drawn in a second station draw */
+  private rooms = false;
   private levelColours = new Float32Array([3, 2, 1, 0, -1, -2, -3].flatMap((l) => [...rgbf(LEVEL_COLOURS[l as 3])]));
   private ink = rgbf(NET_INK);
   private timer!: GpuTimer;
@@ -420,8 +428,8 @@ export class NetworkRenderer {
     this.bubbles.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr"]);
-    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n"]);
+    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr"]);
+    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
     this.selProg = compile(gl, SEL_VS, SEL_FS);
@@ -611,6 +619,8 @@ export class NetworkRenderer {
     this.turnback = n.turnbacks?.count ? this.strokes(n.turnbacks) : null;
     // blueprint track sorts last (network.ts)
     this.hasBlueprint = n.track.count > 0 && (n.track.flags[n.track.count - 1] & F_BLUEPRINT) !== 0;
+    this.rooms = false;
+    for (let i = 0; i < n.stationCount && !this.rooms; i++) this.rooms = (n.stations[i * 3 + 2] & 32) !== 0;
     this.lineWidths = null;
     this.tex.phases = this.texture(n.phases.length ? n.phases : new Float32Array(4), "rgba32f", TEX_W);
     this.tex.meta = this.texture(n.meta.length ? n.meta : new Float32Array(4), "rgba32f", TEX_W);
@@ -897,10 +907,12 @@ export class NetworkRenderer {
     const shades = shadeColours();
     gl.uniform3fv(u.u_sel, rgbf(shades.mapInk));
     gl.uniform3fv(u.u_casing_rgb, rgbf(shades.casing));
-    // T-819: 1.5 px of red either side, outside the casing, of a line on full track
+    // T-819, T-1284: 2 px of red dashes either side, outside the casing, of a line on full track, 1 px of casing colour round them
     const fullPass = this.anyFull;
     gl.uniform1i(u.u_full_pass, 0);
-    gl.uniform1f(u.u_full_px, 3 * dpr);
+    gl.uniform1f(u.u_full_px, 4 * dpr);
+    gl.uniform1f(u.u_full_out, 2 * dpr);
+    gl.uniform1f(u.u_full_dash, 8 * dpr);
     gl.uniform3fv(u.u_full_rgb, rgbf(shades.fullTrack));
     gl.uniform1i(u.u_ghost, 0);
     gl.uniform3fv(u.u_ghost_rgb, rgbf(shades.ghost));
@@ -933,9 +945,9 @@ export class NetworkRenderer {
       gl.uniform3f(u.u_width, width, wSel, lanes.share * G * width / wLine);
       gl.uniform1f(u.u_cap, cap);
       gl.bindVertexArray(s.vao);
-      // [casing px, selected only, T-819's red band under the lines on full track]
+      // [casing px, selected only, T-819's red band under the lines on full track (1), and under it (2) its outline in the casing's colour, T-1284]
       const passes: [number, number, number][] = cap > 0 ? [[0, 0, 0]] : [[casing, 0, 0], [0, 0, 0]];
-      if (kind === 1 && fullPass && cap === 0) passes.unshift([casing, 0, 1]);
+      if (kind === 1 && fullPass && cap === 0) passes.unshift([casing, 0, 2], [casing, 0, 1]);
       if (sel) passes.push(...(cap > 0 ? [[0, 1, 0]] as [number, number, number][] : [[casing, 1, 0], [0, 1, 0]] as [number, number, number][]));
       for (const [cas, only, full] of passes) {
         gl.uniform1f(u.u_casing, cas);
@@ -1085,10 +1097,18 @@ export class NetworkRenderer {
       // Riders waiting on the platforms (T-164, T-219), where platforms are drawn; zoomed out a pie
       // in each dot (T-228, T-553).
       this.crowdsShown = !!opt.crowds && !!this.board && !hidden;
-      const any = this.crowdsShown && this.crowds.update(n, this.board!, uTime, (c, dc) => {
-        if (this.crowdBuf) this.rewrite(this.crowdBuf, c);
-        if (this.dotCrowdBuf) this.rewrite(this.dotCrowdBuf, dc);
-      });
+      let any = false;
+      if (this.crowdsShown) {
+        const now = performance.now();
+        if (this.moving && now - this.crowdsAt < MOVING_PLACE_MS) any = this.crowdsAny;
+        else {
+          this.crowdsAt = now;
+          any = this.crowdsAny = this.crowds.update(n, this.board!, uTime, (c, dc) => {
+            if (this.crowdBuf) this.rewrite(this.crowdBuf, c);
+            if (this.dotCrowdBuf) this.rewrite(this.dotCrowdBuf, dc);
+          });
+        }
+      }
       const fills = any && boxes;
       gl.useProgram(this.stationProg);
       gl.uniform1f(su.u_tint, any && !boxes ? 1 : 0);
@@ -1104,12 +1124,18 @@ export class NetworkRenderer {
         gl.clearStencil(0);
         gl.clear(gl.STENCIL_BUFFER_BIT);
       }
-      const layerDraw = (pass: number, layer: number, withBridges: boolean) => {
+      // waiting rooms (T-1287) are their own shape beside the platform: no track runs through them
+      const layerDraw = (pass: number, layer: number, withBridges: boolean, rooms = true) => {
         gl.useProgram(this.stationProg);
         gl.uniform1i(su.u_pass, pass);
         gl.uniform1i(su.u_layer, layer);
         gl.bindVertexArray(this.stationVao);
         gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n.stationCount);
+        if (rooms && boxes && this.rooms) {
+          gl.uniform1i(su.u_room, 1);
+          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n.stationCount);
+          gl.uniform1i(su.u_room, 0);
+        }
         if (bridges && withBridges) {
           gl.useProgram(this.bridgeProg);
           gl.uniform1i(this.bridgeU.u_pass, pass);
@@ -1147,7 +1173,7 @@ export class NetworkRenderer {
             gl.useProgram(this.bridgeProg);
             gl.uniform1f(this.bridgeU.u_mask, 1);
           }
-          layerDraw(pass, 1, true);
+          layerDraw(pass, 1, true, false);
           gl.useProgram(this.stationProg);
           gl.uniform1f(su.u_mask, 0);
           if (bridges) {

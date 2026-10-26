@@ -517,6 +517,7 @@ mod lines;
 mod snapshot;
 mod service;
 mod upgrades;
+mod related;
 
 /// What buying the cars the running lines need beyond `fleet` costs, US$M.
 fn trains_to_buy(w: &TrackWorld, fleet: [u32; 2]) -> f64 {
@@ -1326,6 +1327,9 @@ mod branch_tests;
 /// T-1273: stop edits leave a line's ends as termini.
 #[cfg(test)]
 mod stop_edit_tests;
+
+#[cfg(test)]
+mod related_tests;
 
 /// T-1281: station upgrades.
 #[cfg(test)]

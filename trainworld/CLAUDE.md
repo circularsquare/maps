@@ -42,7 +42,9 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
   Ids are never reused (next after the highest in TASKS.md and ARCHIVE.md). With several agents
   at once, the orchestrator hands out ids: a brief names the ids its agent may file, or the agent
   asks (two agents picking "the next id" at once collided, 2026-10-22). P1 = blocking or
-  now, P2 = this milestone, P3 = later or ideas. Add `taking, <date>` before starting. More than
+  now, P2 = this milestone, P3 = later or ideas. Tasks under TASKS.md's "Someday" are real open tasks at a lower
+  priority (Anita, 2026-10-26): include them when asked what is open, and bring them up when
+  nothing else can go ahead. Add `taking, <date>` before starting. More than
   ~3 lines of context goes in `notes/T-###.md`.
 - **A task is done when** the work runs, the spec matches it, any decision is in DECISIONS.md, and
   its line has moved from TASKS.md to the top of ARCHIVE.md. Abandoned tasks move the same way,

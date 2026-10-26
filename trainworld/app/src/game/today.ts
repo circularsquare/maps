@@ -16,6 +16,7 @@ import { moneyState } from "./money";
 import { trainKind } from "./format";
 import { PERIODS, periodAt } from "./periods";
 import type { LineInput, LineStats } from "./types";
+import { cameraMoving } from "./ui";
 
 export interface LineToday {
   /** riders boarded in the past 24 hours, or yesterday (a change of line boards again), the line's own stops */
@@ -126,7 +127,8 @@ const ASK_MS = 250;
 let users = 0, timer = 0, busy = false, askedAt = NaN, askedVersion = -1;
 
 function ask(force = false) {
-  if (busy) return;
+  // T-1207: the Lines tab's rows re-rendered four times a second while the map was dragged
+  if (busy || (!force && cameraMoving.now)) return;
   // the network or the account (new riders, the hour turning) changed
   const t = clock.now(), v = (world.peek()?.version ?? -1) * 1e6 + accountVersion.peek();
   // nothing moves while the clock stands, unless the network or the account changed

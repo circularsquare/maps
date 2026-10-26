@@ -1848,6 +1848,36 @@ def city_units(units, ids, city_pop=None):
     return {ids[int(k)] for k in hit}
 
 
+def city_fuas(zby, ids, city_pop=None):
+    """T-1239: the units of `ids` with FUA_SHARE of their free people in the GHSL functional urban area
+    of a city, the biggest urban centre (UCDB R2024A) inside it, of `city_pop` (CITY_POP) or more:
+    {unit: (the FUA's name, the centre's centroid)}. Mission is in Abbotsford's."""
+    lay = "GHS_UCDB_THEME_GENERAL_CHARACTERISTICS_GLOBE_R2024A"
+    uc = pyogrio.read_dataframe(UCDB, layer=lay, columns=["ID_UC_G0", "GC_POP_TOT_2025"], read_geometry=False)
+    upop = dict(zip(uc.ID_UC_G0, uc.GC_POP_TOT_2025))
+    cen = pyogrio.read_dataframe(UCDB, layer="UC_centroids")
+    cid, cpt = list(cen.ID_UC_G0), list(cen.geometry)
+    ctree = STRtree(cpt)
+    fua, fgeom = load_fua()
+    ftree = STRtree(fgeom)
+    city, out = {}, {}
+    for i in ids:
+        u = zby[i]
+        x, y, p = u.px if u.px is not None else (np.zeros(0),) * 3
+        if not p.sum():
+            continue
+        for f in ftree.query(u.geom, predicate="intersects"):
+            f = int(f)
+            if f not in city:
+                inside = [(upop.get(cid[int(c)], 0), int(c)) for c in ctree.query(fgeom[f], predicate="contains")]
+                top = max(inside, default=(0, None))
+                city[f] = (fua.eFUA_name[f], cpt[top[1]]) if top[0] >= (city_pop or CITY_POP) else None
+            if city[f] and p[contains_xy(fgeom[f], x, y)].sum() >= FUA_SHARE * p.sum():
+                out[i] = city[f]
+                break
+    return out
+
+
 def group_units(units, free, level, gap_m):
     """T-1191: the free units grouped by their parent at `level` (an index into `parents`), a parent's
     units split into pieces that touch or lie within `gap_m` of each other: [(group, [unit ids])],
@@ -1948,7 +1978,7 @@ def metro_belts(flows, by, free, grow, areas, cap=CAP):
     return out
 
 
-def metro_remnants(zby, free, members, by, grow, fixed, fixed_units, travel, level, gap_m):
+def metro_remnants(zby, free, members, by, grow, fixed, fixed_units, travel, level, gap_m, fuas=None):
     """T-1191 (orchestrator, 2026-10-24, under Anita's "built cities are not fixed"): unbuilt metro rows
     take the remnants round them before zoning, where travel is gravity's. First, with a `level`, the
     free pieces of a city whose people the row mostly holds (its parent at `level`: Gwangsan-gu's rest
@@ -1958,7 +1988,8 @@ def metro_remnants(zby, free, members, by, grow, fixed, fixed_units, travel, lev
     then, so that a grown row does not reach on from unit to unit. Each join only when the unit touches
     the row by land (an island: within `gap_m` across water) and the grown row wraps no other unit or
     fixed area it did not wrap before (`zone_groups`' wrap test), units under ZONE_MIN_POP it would
-    enclose coming with it. Built rows and packs never grow; a unit that would join one is noted. `fixed` and
+    enclose coming with it. A unit of `fuas` (city_fuas) never joins by gravity a row not holding its
+    city's centre (T-1239: Mission stays with Abbotsford). Built rows and packs never grow; a unit that would join one is noted. `fixed` and
     `fixed_units` are updated in place. Returns ({row id: [units or groups]}, [log lines])."""
     ids = [f["id"] for f in fixed]
     shp = {i: polygonal(zby[i].geom.simplify(500)) for i in free}
@@ -2068,7 +2099,10 @@ def metro_remnants(zby, free, members, by, grow, fixed, fixed_units, travel, lev
         a, share = best[i]
         if not a or a[0] != "f" or i not in left:  # gone with a unit enclosing it
             continue
-        if a[1] in grow:
+        if a[1] in grow and i in (fuas or {}) and not near[a[1]][1].contains(fuas[i][1]):
+            notes[i] = (f"  {zby[i].name} ({zby[i].free:,.0f}) stays out of {names[a[1]]} (biggest partner, {share:.0%}): "
+                        f"it is in {fuas[i][0]}'s functional urban area")
+        elif a[1] in grow:
             join(i, a[1], f"biggest partner, {share:.0%} of its travel", near)
         elif ("f", a[1]) in adj.get(i, {}):
             notes[i] = f"  {zby[i].name} ({zby[i].free:,.0f}): biggest partner the built {names[a[1]]} ({share:.0%}), which never grows here"
@@ -2078,6 +2112,32 @@ def metro_remnants(zby, free, members, by, grow, fixed, fixed_units, travel, lev
         if f["id"] in out:
             f["geom"] = shp[("f", f["id"])]
     return dict(out), lines + list(notes.values())
+
+
+# gate checks whose relaxation describes the ground or the country's data, so a regrouped zone on the
+# same units inherits it (T-1307); the rest are about the row's own figures (pop_vs_plan, a town's jobs
+# share, the browser's test line, a named station) and stay with it
+CARRY_RELAX = ("drive_factor_median", "water_points_in_water", "university_rate", "mean_commute_km")
+# a big zone's long commutes: carried only to a zone of at least as many units as the old row
+CARRY_IF_NO_SMALLER = ("mean_commute_km",)
+
+
+def carried_relax(units, iso, old):
+    """A regrouped zone row's gate relaxations (T-1307): each CARRY_RELAX check that one of the `old`
+    rows sharing any of its `units` had relaxed, with the reason of the one sharing the most (then the
+    earlier in plan order)."""
+    mine = set(units)
+    out = {}
+    for check in CARRY_RELAX:
+        best = max(((len(mine & set(o["units"].get(iso, []))), -o.get("order", 0), o["id"], o) for o in old
+                    if check in (o.get("gate_relax") or {})
+                    and (check not in CARRY_IF_NO_SMALLER or len(mine) >= len(o["units"].get(iso, [])))),
+                   key=lambda t: t[:3], default=None)
+        if best and best[0]:
+            n, _, oid, o = best
+            why = o["gate_relax"][check].split(" (carried by")[0]
+            out[check] = f"{why} (carried by a replan from {oid}, which shared {n} of this zone's {len(mine)} units)"
+    return out
 
 
 def plan_zones(isos3, out_path=None, replan=False):
@@ -2264,8 +2324,9 @@ def plan_zones(isos3, out_path=None, replan=False):
             travel = gravity_flows(points)
             # T-1191: with no commuting table for belts, unbuilt metro rows take their remnants by gravity
             if grow:
+                fuas = city_fuas(zby, [g for g in zfree if zby[g].free < ZONE_MIN_POP], rule.get("city_pop", CITY_POP))
                 remnants, rl = metro_remnants(zby, zfree, members, by, grow, fixed, fixed_units, travel, level,
-                                              WATER_GAP_KM * 1000 if rule.get("contiguous") else 1000.0)
+                                              WATER_GAP_KM * 1000 if rule.get("contiguous") else 1000.0, fuas)
                 for ln in rl:
                     log(ln)
                 for k, add in remnants.items():
@@ -2353,6 +2414,8 @@ def plan_zones(isos3, out_path=None, replan=False):
                 for k in ("status", "run", "gate_relax"):
                     if k in prev:
                         row[k] = prev[k]
+            elif relax := carried_relax(row["units"][iso], iso, list(old.values())):
+                row["gate_relax"] = relax
             out.append(row)
             feats.append({"type": "Feature", "properties": {"id": cid, "name": name, "people": row["people"], "kind": "zone"},
                           "geometry": mapping(shapely.set_precision(ll, 1e-5))})
@@ -2361,7 +2424,8 @@ def plan_zones(isos3, out_path=None, replan=False):
                 order += 1
                 r["order"] = order
             log(f"  {r['order']:>4} {r['id']} {r['name']}: {r['people'] / 1e6:.2f}M, {len(r['units'][iso])} units "
-                f"{r['units'][iso]}, extracts {r['extracts']}, origin {r['origin']}{', status ' + r['status'] if r['status'] != 'planned' else ''}")
+                f"{r['units'][iso]}, extracts {r['extracts']}, origin {r['origin']}{', status ' + r['status'] if r['status'] != 'planned' else ''}"
+                + (f", gate relaxed {sorted(r['gate_relax'])}" if r.get("gate_relax") else ""))
         gone = [r["id"] for r in old.values() if r["id"] not in {o["id"] for o in out}]
         if gone:
             log(f"  earlier zone rows with no successor, removed: {gone}")

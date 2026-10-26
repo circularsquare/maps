@@ -1,5 +1,88 @@
 # Archive
 
+- T-1225 [P3] Three checks failing on master. Done 2026-10-26: t066 reads the app's purpose list and builds its worker without `import.meta.env`; t1148 indexed `day_factors()` for 8 purposes, not 9 (sim and app rules agree); t328 passes in 26 reloads, its clock line now follows T-421, and the figure diff found is in T-1354. notes/T-1204.md.
+
+- T-1205 [P2] Give back a demand worker's memory; size the pool by memory. Done 2026-10-26: idle workers 384 MB and 15% over their need restart together, figures the same (shown on New York); the pool drops solving workers past 8 GB projected (all-China 10.1 to 7.3 GB, 3 to 2). The all-China restart run waits on T-1367/T-1368; notes/T-1205.md.
+
+- T-1357 [P3] What T-1348 left of the load's first state. Done 2026-10-26: a first network's station labels build after the paint (New York at 6x, 785/545 to 675/452 ms); `followTrack` stays in the state (its zones feed demand), T-1358. notes/T-1357.md.
+- T-1308 [P3] Region gates tripping the runner's quiet timer. Done 2026-10-26: world_run's gate gets TW_QUIET_S of at least 30 s a row; pack_gate's browser check prints each row's result as it lands and a line every 5 minutes.
+- T-1144 [P2] Kwai Chung missing from Hong Kong. Done 2026-10-26: hon rebuilt with the territory-whole outline rule (18 districts, 1,109 km2, 5,979 cells, 7.30M, pop_vs_plan 1.175) and shipped; the first run kept old cells from tier0's signals cache. notes/T-1144.md.
+- T-1168 [P2] A line diagram with related lines (stages 1-3 as T-1168, T-1369, T-1370). Done 2026-10-26: a toggle in the line panel's Stops heading draws the line down the middle with lines beside it in columns that turn out where they leave, stop pills, crossing bars and hovers, from the Rust query `line_related`; [notes/T-1168.md](notes/T-1168.md), screenshots in artifacts/trainworld/t1168s1/.
+- T-1348 [P2] The load's first clock state. Done 2026-10-26: place lookups find the holding zone from a cell grid per outline before measuring, `zonesTouching` grids each margin; New York at 6x 835 to 572-661 ms, figures and screenshots identical. notes/T-1348.md.
+- T-1363 [P3] Restored copies doubled the time in their names. Done 2026-10-26: local and account restores and forks share `forkName`, which drops an earlier " at <time>" first and writes one format ("T-007-real-nyc at 3:28 AM").
+- T-1287 [P3] The waiting room's drawing. Done 2026-10-26: from zoom 14 a small box beside the platform's middle, outside its bend, filled by the platform's waiting riders; station flag 32, a second station draw; screenshots in artifacts/trainworld/t1270s3/.
+- T-1270 stage 3 [P3] Terrain class tint. Done 2026-10-26: with Terrain and a build tool on, rolling, hilly and mountain ground washed faint brown from the grids the price reads (sent from the clock worker), with a hover; stage 4 stays open. docs/ui-map.md.
+- T-1174 [P2] A demand worker panicked. Done 2026-10-26: a trap (most likely out of memory composing the market) was swallowed as a pack rejection, then "recursive use" surfaced; a panicking worker now reports `dead` with its cause and is replaced, its packs reopened and the solve resent; notes/T-1174.md.
+- T-988 [P2] Games synced between devices on the account. Done 2026-10-26: server (stage 1, deployed), page sync (stage 2), and stage 3: account backups listed and restored as copies, the sign-out question, Add on the crossed cloud, the panel's games and MB. notes/T-988.md.
+- T-1262 [P2] Daegu (dae) parked on an osm_units GEOS error. Done 2026-10-26: shells unioned when invalid; dae rebuilt (1 part, 5,843 km2) and too gated with top_zone_jobs_share relaxed; both shipped, Korea's unit re-gated clean. notes/T-1191.md 4a.
+- T-1261 [P1] res-9 packs out of step after T-1182. Done 2026-10-26: 991 packs walked on the res-9 pack and remerged (-17,380 cells), market redone, stamp audit 0; merge_cells `--through`, stale-stamp refusals in undo and joins, merged packs refused by routes and enrichments. notes/T-1261.md.
+- T-1300 [P3] The fare panel's estimate. Done 2026-10-26: "Riders a day" and "Fares a day" while a fare is dragged or unsolved, from demand's own fare sensitivity; on the real save riders within 3.2% and fares within 7.6% of the re-solve; notes/T-1300.md.
+- T-1286 [P3] Inter-city riders follow the player's fare scale. Done 2026-10-26: each market trip's fare weighed by its origin's scale over its income's; default figures the same bits; US at 2x, inter-city rail -31% (was +4%); notes/T-1300.md.
+- T-957 [P3] MapLibre style calls while its context is lost. Done 2026-10-26: they skip until the style is back (`styleUp`, map/styleReady.ts) and basemap, real network, zone shade, labels and projection reapply on `style.load`; checked by losing and restoring a context.
+- T-663 [P3] Select handle over a fork badge; quiet marks on big networks. Done 2026-10-26: a junction with a badge has no square (the badge is the handle); the real save's 340 quiet marks are sparse at zoom 11-14, left as they are. artifacts/trainworld/qw-map/.
+- T-987 [P3] Region buttons over land on screen. Abandoned 2026-10-26: T-1142 (2026-10-24) already decided a hidden realm's circle sits at its point and leaves the screen with it; no circle is pinned at a box corner any more.
+- T-1284 [P3] Crowding marks on red or orange lines. Done 2026-10-26: the red edge is dashed (2 px, 8 px period) inside 1 px of the casing's colour on the map, and dashed with a 1 px panel-coloured gap in the line panel's diagram; before/after in artifacts/trainworld/qw-map/crowd-*.
+- T-1209 [P2] A clock state's effects on the main thread. Done 2026-10-26: money, points and region sums redone only for what a state changed; an edit's state at 6x 183-268 ms to 52-96, the load's first 1,394 to 1,029, figures byte-identical; notes/T-1209.md.
+- T-1207 [P2] Panning on a slow CPU. Done 2026-10-26: placers, crowds and the Lines tab's counts wait while the camera moves (ours at 6x 13.7 to 9.0 ms a frame); a lighter map, Settings Auto/On/Off; notes/T-1207.md.
+- T-1208 [P2] Demand results added up off the main thread. Done 2026-10-26: a sums worker builds each round's day views, sent packed; an edit's final at 6x 653-974 ms of main thread to 126-358, figures byte-identical; notes/T-1208.md.
+- T-1210 [P2] A selection's sums off the main thread. Done 2026-10-26: station and bubble longer trips, a bubble's commuters and its far-end dealing in the sums worker; longest task at 6x 600-1,870 ms to 186-505; notes/T-1208.md.
+- T-638 [P3] Market packs on the 7-minute parking base. Done 2026-10-26, already rebuilt by later joins: all 1748 market packs hold 7.0 (smallest `site_park` in each); notes/T-605.md.
+- T-605 [P3] Measurement trails out of demand-mode.md. Done 2026-10-26: before/after figures and fitting history moved to notes/T-605.md; the doc states current rules only.
+- T-384 [P3] Paris population from Filosofi squares. Folded 2026-10-26 into T-1344 (one-city data sources); line in notes/T-1344.md.
+- T-385 [P3] Paris schools from the ministry's directory. Folded 2026-10-26 into T-1344; line in notes/T-1344.md.
+- T-503 [P3] Everyday destinations from sector totals (Paris Flores, Shanghai). Folded 2026-10-26 into T-1344; line in notes/T-1344.md.
+- T-382 [P3] London universities from HESA. Folded 2026-10-26 into T-1344; line in notes/T-1344.md.
+- T-282 [P3] Toronto from official StatCan files. Folded 2026-10-26 into T-1344; line in notes/T-1344.md.
+- T-357 [P3] Toronto's outline hugs Lake Ontario. Folded 2026-10-26 into T-1344; line in notes/T-1344.md.
+- T-504 [P3] Seoul from KOSIS. Folded 2026-10-26 into T-1344; line in notes/T-1344.md.
+- T-388 [P3] Mumbai jobs from the 6th Economic Census. Folded 2026-10-26 into T-1344; line in notes/T-1344.md.
+- T-546 [P3] Refit Mumbai's curve with merged short bands. Folded 2026-10-26 into T-1344; line in notes/T-1344.md.
+- T-240 [P3] Central Park may draw too few visits. Folded 2026-10-26 into T-1345 (one-city calibration checks); line in notes/T-1345.md.
+- T-216 [P3] Subway peak loads against MTA busiest-hour figures. Folded 2026-10-26 into T-1345; line in notes/T-1345.md.
+- T-271 [P3] Commuter rail over on commutes alone (LIRR, Metro-North). Folded 2026-10-26 into T-1345; line in notes/T-1345.md.
+- T-273 [P3] Border factor fade near the line (Hudson, Camden). Folded 2026-10-26 into T-1345; line in notes/T-1345.md.
+- T-043 [P3] County and school-district head-office lumps in LODES. Folded 2026-10-26 into T-1345; line in notes/T-1345.md.
+- T-214 [P3] Intercity observations (New Haven - Hartford). Folded 2026-10-26 into T-1345; line in notes/T-1345.md, observations still in notes/T-214.md.
+- T-1158 [P3] calib's area files out of step with rebuilt packs. Folded 2026-10-26 into T-1345; line in notes/T-1345.md.
+- T-769 [P3] Nice parks on drive_factor_median 2.51. Folded 2026-10-26 into T-1345; line in notes/T-1345.md.
+- T-283 [P3] Toronto's Yonge test line lost its airport riders. Folded 2026-10-26 into T-1345; line in notes/T-1345.md.
+- T-058 [P3] Fit commute timing and walking on ACS and NHTS. Folded 2026-10-26 into T-1345; line in notes/T-1345.md.
+- T-497 [P3] Japan's joint commute gravity, the rest. Folded 2026-10-26 into T-1345; line in notes/T-1345.md.
+- T-522 [P3] Everyday survey gaps (France medical, NHTS 2022, London social). Folded 2026-10-26 into T-1345; line in notes/T-1345.md.
+- T-1307 [P2] A replan carries the old rows' gate relaxations. Done 2026-10-26: `world_plan.carried_relax` (ground and data checks, from any old row sharing a unit; mean_commute_km only to zones no smaller). China re-derived: all 96 of T-1185's carried drive-factor relaxations; US dry replan carries 9. docs/zones.md.
+- T-657 [P3] Turnback capacity on a through platform. Closed 2026-10-26 by Anita: the plain turn stays 4 minutes; T-1281's terminal upgrade gives 30 trains an hour where more is needed.
+- T-1141 [P2] TASKS.md and notes/ tidy. Done 2026-10-26: 235 open to 216 (61 in area sections, 155 under Someday), 19 archived, 177 notes of archived tasks moved to notes/archive/; Anita's shortlist in notes/for-anita.md, Someday tasks' full lines in notes/someday.md.
+- T-1163 [P1] Short trips across zone lines. Done 2026-10-24 in stages T-1175 to T-1177: everyday trips across a pack line as a third regional list, commutes across packs damped 0.5. Leftovers are T-1233. notes/T-1163.md.
+- T-1178 [P2] Continuous metros split by a zone line. Done 2026-10-24: 19 pairs found by a GHS-POP seam rule, built as T-1192's seamless pairs; the reruns are T-1193. notes/T-1178.md.
+- T-1206 [P1] Level of detail for demand, the design. Done 2026-10-24: design written and answered by Anita; stages 0-1 built as T-1222, stages 2-4 are T-1223. notes/T-1206.md.
+- T-1156 [P2] Big networks smoothly, measured. Done 2026-10-24: the ranked list on the all-China save is in notes/T-1156.md; the work is T-1169 to T-1174, T-1205 to T-1211 and T-1028 to T-1030.
+- T-1166 [P3] Light income dependence in mode choice. Done 2026-10-25 with T-1277 (commit 0b11d224): minutes a fare dollar scale by national GDP per head. notes/T-1277.md.
+- T-1275 [P3] Could a transatlantic line pay. Answered 2026-10-25: no, it loses on running costs alone at any fare; the open-ocean-as-land fault it found was fixed by T-1285. notes/T-1277.md.
+- T-903 [P2] Small European zones and Bergen. Done: Trondheim, Oulu, Bergen (ves) and Inverness (hih) stand as zones; the merges moved to T-1189's replan. notes/T-903.md, notes/T-1189.md.
+- T-1002 [P2] Split Taiwan's Zhubei zone. Moot 2026-10-26: folded into T-1189's replan, whose rule splits it; the split's figures are in notes/T-1189.md.
+- T-1005 [P2] Zones that wrap another. Part 1, the planner guard, done 2026-10-23; part 2 (built regroups) moot 2026-10-26, folded into T-1189's replan. notes/T-1005.md, notes/T-1189.md.
+- T-1089 [P3] Ring repair of built rows. Moot 2026-10-26: part of T-1189's replan, where T-1140's rule runs the ring cut. notes/T-1087.md section 5, notes/T-1189.md.
+- T-543 [P2] Dark theme legibility. Done 2026-10-25: Anita played in dark and her spots were fixed as T-1288 to T-1298. notes/T-543.md.
+- T-682 [P3] Real-world rail layer and a trace tool. Done: the layer 2026-10-19, the trace tool as T-727a-f, real networks on real track as T-1303. notes/T-682.md.
+- T-683 [P3] Accounts, cloud saves and leaderboards. Done as T-972 and T-973 (2026-10-23) and T-988 stages 1-2 (2026-10-25); stage 3 stays on T-988. notes/T-684.md.
+- T-1001 [P2] Track placement stuck after a first click. Closed 2026-10-26 unreproduced: four defensive fixes and the likely causes (T-1007, T-1008) landed; reopen with a DevTools recording if it recurs. notes/T-1001.md.
+- T-561 [P3] Page freeze at 1,500x with lines in Toronto and Boston. Closed 2026-10-26: not seen since 2026-10-16; reopen with steps if it recurs. notes/T-561.md.
+- T-762 [P3] Blueprint cost trial on every clock state. Moot 2026-10-26: the same work as T-1171. notes/perf-survey.md.
+- T-759 [P3] The clock state on a big network. Moot 2026-10-26: the same work as T-1029. notes/T-737.md.
+- T-356 [P3] A move far from the draw anchor rebuilds the world. Moot 2026-10-26: the same work as T-1170. notes/T-356.md.
+- T-1283 [P1] Service edits took seconds on the real save. Done 2026-10-26 (tree t1283): one line's count solve circled to the 80-round cap; circling lines now settle with trains to spare, hops without holds cached. Edits 5-6 s -> 0.2-0.7 s in the worker. notes/T-1283.md.
+- T-1285 [P2] Open sea outside the zones' masks was land. Done 2026-10-26 (tree t1285): a world water mask (OSM sea, Natural Earth lakes, 1/60 degree, 0.58 MB) decides where no pack raster does; New York to Lisbon now US$1.47T bridged, ground refused; real save priced unchanged. notes/T-1285.md.
+- T-358 [P3] Water between city packs for intercity track. Done 2026-10-26 by T-1285's world mask (sea and large lakes; rivers outside every zone left out). notes/T-1285.md.
+- T-1250 [P1] Crowding no longer red on the schedule. Done 2026-10-25: Anita picked option (a), built as T-1255. notes/T-1250.md.
+- T-1255 [P1] Crowding as waiting. Done 2026-10-25 (commit 7f4e6036): riders join a platform only while a train with room is due within 30 minutes; the schedule's dot turns red at a 15 minute wait. notes/T-1250.md section 4.
+- T-1220 [P2] Composing the market is slow. Done 2026-10-24 with T-1204 (corridor figures built once a worker).
+- T-1277 [P2] How fares balance. Done 2026-10-25 (commit 0b11d224): minutes a fare dollar = 5 x (GDP per head PPP / $60k)^-0.5 by country, a fare scale per country in the Money tab; New York's best fare now 4-5x the start. Inter-city riders follow as T-1286. notes/T-1277.md.
+- T-1303 [P2] Real networks on real track. Done 2026-10-25 (commit 5c1bed77): hops routed and traced on real track, lines side by side; the saves shipped to data/packs/real/. Shared track is T-1305. notes/T-1303.md.
+- T-1140 [P1] Compact zones. Done 2026-10-24 (commit 1de5b11f): the merge rule in the zone planner for new plans, whole-state names; replans of built countries are T-1189. notes/T-1140.md.
+- T-1256 [P2] Market composition takes everyday targets. Done 2026-10-25 (commit 4b7d77af). notes/T-1150.md "Finish".
+- T-1192 [P2] Seamless pairs across zone lines. Done 2026-10-24 (commit 6ff1374c): 41 pairs in borders.json, factor 1 from 0.2M shared centre each side, easing to 0.5. The reruns are T-1193. notes/T-1178.md section 4.
+- T-1204 [P1] Market pair tables only for open places, with T-1220. Done 2026-10-24 (commit 1ff9ed4e): a solving worker 1,045 to 131 MB after four selections, first longer trips 13.3 to 3.1 s. notes/T-1204.md.
+- T-1222 [P1] Demand level per zone (T-1206 stages 0-1). Done 2026-10-24 (commit 1ff9ed4e): coarse zones 25-35% less memory, rail +0.05% against fine, fine bit-identical. Stages 2-4 are T-1223. notes/T-1206.md section 9.
 - T-1185 [P2] China's zones on the township census, with T-1189's China replan. Done 2026-10-25: 660 zones replanned to 638, all built and shipped; they hold 987M against the census's 986M (GHSL 1,013M). notes/T-1185.md "Result".
 - T-1189 (China part) Replan China's zones by T-1140's compact rule. Done 2026-10-25 with T-1185; the other countries stay on T-1189's line.
 - T-1302 [P2] Real network start off by default. Done 2026-10-25 (tree t1302): the new game sheet's "Real network" box starts unticked, so a sandbox starts from a real network only when ticked; t728-newgame checks it.

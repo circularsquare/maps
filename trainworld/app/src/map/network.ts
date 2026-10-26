@@ -64,7 +64,7 @@ export interface NetworkBuffers {
   /** per line id: r, g, b, 255 */
   lineColours: Uint8Array;
   /** per station: x, y, flags (1 transfer, 2 blueprint, 4 a line runs through, 8 switched off, 16
-   * on double track: a platform each side close in, T-658) */
+   * on double track: a platform each side close in, T-658; 32 a waiting room, T-1287) */
   stations: Float32Array;
   /** Per station: half the platform along its track at the platform's middle, local units (T-144). */
   stationAxis?: Float32Array;
@@ -706,7 +706,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     stationAxis.set([c.ax, c.ay], i * 2);
     stationShape.set(c.shape, i * 4);
     stationLine.set(c.line, i * 2 * PLATFORM_POINTS);
-    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 ? 16 : 0)], i * 3);
+    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 ? 16 : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? 32 : 0)], i * 3);
   });
   cache.stations = stationsSeen;
   // the player's links as bridges between the two platforms' nearest points (T-217)

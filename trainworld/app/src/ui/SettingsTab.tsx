@@ -6,6 +6,7 @@ import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, tool, UI_S
 import { moneyState } from "../game/money";
 import type { BubbleScheme } from "../game/palette";
 import { DETAIL_RANGE, finestFromZoom } from "../map/demandOverlay";
+import { liteDetected } from "../map/lite";
 import { RES_AREA_M2 } from "../workers/commutersProtocol";
 import { makeSandbox } from "../workers/clockClient";
 import { pickTool, TRIP_KEY } from "./toolKeys";
@@ -21,6 +22,8 @@ const SCHEME_OPTIONS: [BubbleScheme, string][] = [["mode", "Mode mix"], ["ramp",
 const DAY_OPTIONS: [DayShown, string][] = [["average", "Average"], ["weekday", "Weekday"], ["saturday", "Sat"], ["sunday", "Sun"]];
 type Projection = "flat" | "globe";
 const PROJECTION_OPTIONS: [Projection, string][] = [["flat", "Flat"], ["globe", "Globe"]];
+type LighterMap = "auto" | "on" | "off";
+const LIGHTER_OPTIONS: [LighterMap, string][] = [["auto", "Auto"], ["on", "On"], ["off", "Off"]];
 
 export function SettingsTab() {
   const d = display.value;
@@ -136,6 +139,10 @@ export function SettingsTab() {
         <Check checked={d.runInBackground} onChange={(v) => setDisplay("runInBackground", v)}>
           <span data-tip="The clock, fares and running costs carry on at the chosen speed while this tab is hidden. Off, the game pauses until the tab is shown again.">Run in background</span>
         </Check>
+      </div>
+      <div class="slider" data-tip={"Fewer roads, buildings and place names, drawn at a lower resolution. Auto turns it on if the map moves slowly." + (d.lighterMap === "auto" && liteDetected.value ? "\nOn now" : "")}>
+        <span>Lighter map</span>
+        <Segmented<LighterMap> options={LIGHTER_OPTIONS} value={d.lighterMap ?? "auto"} onChange={(v) => setDisplay("lighterMap", v)} />
       </div>
       <GameMode />
       <AccountSection />

@@ -32,6 +32,7 @@ order; zones themselves are the pack's (`zone`, `zone_gx`, `zone_gy`).
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "2")  # before numpy; Anita is using the machine
 
+import json
 import sys
 import time
 
@@ -651,6 +652,12 @@ def zones_check(zs):
     return h % (1 << 52)
 
 
+def refuse_merged(city, header):
+    if "merged" in header:
+        sys.exit(f"{city}: merged; routes runs on the res-9 pack: merge_cells.py {city} --through "
+                 f"\"routes {{id}} <args>\" (T-1261)")
+
+
 def write_arrays(city, arrays, block_key, block, drop=()):
     """Replace or add `arrays` {name: (np array, dtype name, per)} and header[block_key] = block
     in data/packs/<city>, reading the pack fresh first (other steps may have written it). Arrays
@@ -658,6 +665,7 @@ def write_arrays(city, arrays, block_key, block, drop=()):
     import packio
     from read_pack import load_pack
     header, _ = load_pack(city, PACKS)
+    refuse_merged(city, header)
     stem = os.path.join(PACKS, city)
     with open(stem + ".bin", "rb") as f:
         buf = bytearray(f.read())
@@ -683,6 +691,8 @@ def build(city, ex_arg=None, keep=False, workers=2, stage="all"):
     the first stage's raster in the pack)."""
     from read_pack import load_pack
     t_all = time.time()
+    with open(os.path.join(PACKS, f"{city}.json"), encoding="utf-8") as f:
+        refuse_merged(city, json.load(f))
     if stage == "walk":
         return walk_stage(city, t_all)
     header, a = load_pack(city, PACKS)

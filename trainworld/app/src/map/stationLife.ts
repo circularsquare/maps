@@ -135,8 +135,12 @@ export function startStationLife(map: MlMap, overlay: Overlay, post: (notes: Rec
   /** the time spent sampling, for ?debug=1 */
   const stats = { n: 0, ms: 0, max: 0 };
 
+  let sampledAt = 0;
   const sample = () => {
     const t0 = performance.now();
+    // T-1207: half as often while the camera moves; arrivals since are still caught, a little later
+    if (overlay.moving && t0 - sampledAt < 2 * SAMPLE_MS - 10) return;
+    sampledAt = t0;
     read();
     const ms = performance.now() - t0;
     stats.n++;

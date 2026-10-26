@@ -1749,6 +1749,12 @@ impl MarketPacks {
     pub fn places(&self) -> Vec<u32> {
         self.zones.keys().map(|&p| p as u32).collect()
     }
+    /// T-1174: drop the corridors kept from the first composition, so the next composition works
+    /// them out from the packs held now, as a worker that opened them all at once does (they differ
+    /// with the packs open at the first composition: T-1354).
+    pub fn forget_corridors(&self) {
+        *self.corridors.borrow_mut() = None;
+    }
     /// The market of every pack held, with no network yet.
     pub fn market(&self) -> Result<IntercityApi, String> {
         let w = self.world.clone();

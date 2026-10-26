@@ -203,7 +203,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "removal"; edges: number[]; stations: number[] };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineRelated"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "removal"; edges: number[]; stations: number[] };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -486,6 +486,8 @@ export type FromClock =
   | { kind: "copied"; at?: number; error?: string }
   /** T-889: a save being loaded: its built stations' x, y in `frame`, before its network is worked out */
   | { kind: "stationsAhead"; frame: FrameSpec; xy: Float64Array }
+  /** T-1270: a zone's terrain grid just put in the track model (a `.terrain` file), for the map's tint */
+  | { kind: "terrain"; id: string; bytes: ArrayBuffer }
   /** T-729: the opened zones of the game in hand, sent before its snapshot; null for a save from
    * before T-729; `start`, its start zone (T-728), whose realm shows (T-975) */
   | { kind: "opened"; zones: string[] | null; start?: string }

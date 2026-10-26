@@ -28,6 +28,7 @@ import { dataUrl } from "../game/dataBase";
 import { saveRefusal } from "../game/memoryCheck";
 import { copied, keepStorage } from "../game/saveSafety";
 import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "../game/busy";
+import { addTerrainGrid } from "../game/terrain";
 
 export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[] }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
 /** When the game was last saved by hand in this page (T-1251). */
@@ -237,6 +238,13 @@ export function pageWith(params: Record<string, string>): string {
 export function switchGame(params: Record<string, string>, pending?: PendingLoad) {
   current?.leave(pending, () => location.replace(pageWith(params)));
 }
+/** T-988: the page goes to the start menu, the game in hand saved and let go first; `then` runs just
+ * before the reload, and only if the game could be saved. */
+export function leaveToMenu(then: () => void) {
+  const go = () => { then(); location.replace(pageWith({})); };
+  if (current) current.leave(undefined, go);
+  else go();
+}
 /** T-1197: whether the save fits in this device's memory; if not the player is told why. `then` runs if it does. */
 async function ifItFits(src: { bytes: Uint8Array } | { key: string }, then?: () => void): Promise<boolean> {
   const why = await saveRefusal(src);
@@ -424,9 +432,11 @@ export class ClockClient {
         this.post({ kind: "points", lines });
       }
     });
+    // the view each kind of day's riders were last sent from; the same view is not sent again (T-1209)
+    let ridersSent: unknown[] = [];
     // T-715: a load clears the worker's income, shares and points; the next round sends them again
     // even when they match the last game's
-    this.forgetSent = () => { lastIncome = lastShares = lastPoints = ""; };
+    this.forgetSent = () => { lastIncome = lastShares = lastPoints = ""; ridersSent = []; };
     // T-685: a region's star, the first time its rail share on the average day (never the day
     // shown, so switching it earns nothing) reaches the mark in a final result
     effect(() => {
@@ -440,6 +450,8 @@ export class ClockClient {
     // (T-260); the trains and platforms of each hour read their own day's.
     effect(() => {
       demandByDay.value.slice(0, DAY_KINDS.length).forEach((d, day) => {
+        if (d.view && d.view === ridersSent[day]) return;
+        ridersSent[day] = d.view;
         const packed = d.view ? packRiders(d.view) : null;
         // T-1255: with the riders who come to the platforms
         const arrive = packed && d.view ? packArrivals(d.view) : null;
@@ -634,6 +646,9 @@ export class ClockClient {
         break;
       case "stationsAhead":
         stationsAheadSink?.(msg.frame, msg.xy);
+        break;
+      case "terrain":
+        addTerrainGrid(msg.id, msg.bytes);
         break;
       case "loaded":
         // the game now in the worker may be in the other frame (T-125); first, before anything reads positions

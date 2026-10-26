@@ -11,7 +11,7 @@ tests natively.
 - `src/track/`: the track model (T-040): geometry, costs, crossings, world frames (`frame.rs`,
   T-125), the network and its edits with undo (`world.rs`; blueprint and construct, T-055),
   run-time profiles, capacity, the boarding account (`boarding.rs`: each train's load and each
-  platform's crowd, T-164), each stop's service span for demand (`span.rs`, T-842), station upgrades (`upgrades.rs`, T-1281), saves, local time (`localtime.rs`, T-309), and `wasm.rs` (`TrackApi`,
+  platform's crowd, T-164), each stop's service span for demand (`span.rs`, T-842), the lines related to a line for the line panel's diagram (`related.rs`, T-1168; `wasm/related.rs` builds its routes), station upgrades (`upgrades.rs`, T-1281), saves, local time (`localtime.rs`, T-309), and `wasm.rs` (`TrackApi`,
   the clock worker's API, with the drawing tool's routes and the crossover tool's edit, T-338; its
   exports are split by area into `wasm/money.rs`, `edits.rs`, `draw.rs`, `crossings.rs`, `links.rs`,
   `lines.rs`, `snapshot.rs`, `service.rs` and `upgrades.rs`, the shared helpers staying in `wasm.rs`). In the default build.
@@ -84,7 +84,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `realms.ts` and the hand-edited `realms.json` (the country-sized realms: each zone's, which are shown, each realm's circle point from the registry, and `hiddenRealmAt` for a click on its land, T-975, T-1006), `search.ts` (the search box's matching, `cityMatch` for zones by name or alias, T-148), `walks.ts` (walking minutes to the
   closest stations on the demand model's walking barrier, T-312).
 - Stations and lines: `complexes.ts` (station complexes from platform geometry and the player's
-  links, T-146), `complexView.ts` (a click selecting the complex, a station opened alone, the
+  links, T-146), `relatedLines.ts` (the clock query `lineRelated` decoded: the lines beside or
+  crossing a line, T-1168) and `relatedLayout.ts` (their diagram's rows, columns, turns, pills and
+  hovers, drawn by `ui/inspector/RelatedStops.tsx`), `complexView.ts` (a click selecting the complex, a station opened alone, the
   zoomed-out dot groups; T-217, T-249), `links.ts` (the player's links, T-197), `lineActions.ts`
   (new and copied lines, Edit stops, construct blueprints: the N, L and C keys, T-670), `scheduleCopy.ts`
   (a line's schedule settings copied and pasted, kept in localStorage, T-1293), `remove.ts` (removing things, with the question asked before removing
@@ -97,7 +99,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   T-988, games on the account: `accountGames.ts` (the main thread's side: the account's list and
   pictures, the start menu's settling, downloads and deletions, the sign-in question) over
   `workers/cloud.ts`.
-- Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
+- Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028; `moneyTerms`, `moneyWorld` and `lineGeo`, what income, points and region shares read, kept while unchanged so a state redoes only what it changed, T-1209),
   `fareCurve.ts` (the fare curve through the player's three nodes, the first the base fare at 0 km: fare at a length, the first stretch's base and rate, the knots the sim takes, old saves' lines as three nodes, T-883, T-1112, T-1143), `income.ts` and `countryIncome.json` (fares by national income, T-1277: a fare dollar's perceived minutes by country, each country's fare scale by income or the player's, GDP per head at PPP from notes/T-1277/income_table.py), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
@@ -116,8 +118,10 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 ### src/map/: the map and what is drawn on it
 
 - `mapView.ts` (the MapLibre map; its scroll zoom told wheel gaps by event time, T-675; the flat map or globe setting, T-033), `basemap.ts` (the Positron style: warm paper repaint, three road weights, light or dark,
-  labels in Zen Maru Gothic from `public/fonts/`; the Terrain hillshade, T-1270), `realNetwork.ts` (the Real network reference layer: noritetsu's
+  labels in Zen Maru Gothic from `public/fonts/`; the Terrain hillshade, T-1270), `terrainTint.ts` (the terrain classes' wash while building, from `game/terrain.ts`'s grids, T-1270), `realNetwork.ts` (the Real network reference layer: noritetsu's
   PMTiles per region, read from `../noritetsu/` or R2; vite.config.ts proxies `/noritetsu` to 8800 in dev, T-682),
+  `styleReady.ts` (`styleUp`: MapLibre style calls are skipped while it has no style, a lost context, and reapplied on `style.load`, T-957),
+  `moving.ts` (what runs at most every 100 ms while the camera moves: `PlaceThrottle`, `PanPlane`, T-1207), `lite.ts` (the lighter map and its auto switch, T-1207),
   `overlay.ts` (the overlay canvas and frame loop,
   notes/T-015.md), `renderer.ts` (WebGL2 track, stations, trains; its shaders and their shared constants are in `rendererShaders.ts`, the platform crowds' sums in `platformCrowds.ts`), `gl.ts` (shader compile, uniform lookup, zoom interpolation, the GPU timer, canvas sizing, and the camera: `Camera` for the flat map or the globe, `PROJECT_GLSL` and `setCamera` for the shaders, `mercToCss` and `clipToCss` to CSS px, `behindHorizon`; T-033; shared by the renderer, `demandOverlay.ts`, `gradeMarks.ts`, `transferBubbles.ts`, `shadeLayer.ts`, `overlay.ts` and the 2D overlays), `network.ts` (the renderer's
   buffers, built in the clock worker from per-edge, line and station pieces kept between edits,
@@ -157,7 +161,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   shade, T-131, T-139, T-400, T-871), `coarseOutlines.ts` (reads
   `packs/outlines.json`, which `pipeline/zone_outlines.py` writes: every registered zone's coarse
   outline, read once for the outlines and the realms' shade, T-800, with the sea off each coast from
-  `pipeline/zone_water.py` and that sea alone (`coarseWater`) for the focused zone's shade, T-1145; `inOutline` is the point-in-outline test over its bands of latitude, for realms and the track's zones; it also gives `cityWithin` a place's zone by these outlines, and `readOutlinesForPlaces` is the clock worker's lean copy for that, T-1265), `zoneLoading.ts` (zones still loading drawn grey with a loading
+  `pipeline/zone_water.py` and that sea alone (`coarseWater`) for the focused zone's shade, T-1145; `inOutline` is the point-in-outline test (a cell of the outline's grid no edge meets answers alone, `cellSays` in `workers/cityReach.ts`, T-1348; else its bands of latitude), for realms and the track's zones; it also gives `cityWithin` a place's zone by these outlines, and `readOutlinesForPlaces` is the clock worker's lean copy for that, T-1265), `zoneLoading.ts` (zones still loading drawn grey with a loading
   bar, T-343), `realmOverlay.ts` (the realms not shown: one world shade with the shown zones cut out
   by `boundaryGeometry.ts`'s `ShadeCut` as triangles in `workers/shade.worker.ts` (T-1026), drawn by
   the custom layer `shadeLayer.ts` (T-1025), and a button each, T-975, T-1006), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and
@@ -191,9 +195,10 @@ and IndexedDB, T-029; slots' backups, T-744; removed zone ids taken as their suc
 (the last final demand result kept beside the save, T-328),
 `demandProtocol.ts`, `cacheWrite.worker.ts` (the demand cache's IndexedDB write, off the main thread, T-789), `demandClusters.ts` (the network split into clusters that share no rider,
 each a sub-network, T-326; `reachView`, a city's own network inside its cluster, T-756; `marketReaches`, which stations the market's riders use, T-396), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
-reach, T-149; the footprints fetched on demand by registry box, T-404; `distanceTo` through a grid of each outline's edges, T-889), `commuters.worker.ts` and `commutersProtocol.ts` (the commuter bubbles' sums,
+reach, T-149; the footprints fetched on demand by registry box, T-404; `distanceTo` through a grid of each outline's edges, T-889; `atZero`, whether a place is in an outline, from a grid of cells each crossed by an edge or wholly in or out, so `placeAt` and `cityWithin` find the zone holding a place before measuring any distance, T-1348), `commuters.worker.ts` and `commutersProtocol.ts` (the commuter bubbles' sums,
 T-097), `selectionMerge.ts` (a bubble selection's everyday far end added up over the workers,
-T-285), `shade.worker.ts` (the realm shade's cut, T-1026), `focusShade.worker.ts` (the focused
+T-285), `demandSums.ts` and `demandSums.worker.ts` (demand's sums off the main thread: each round's
+views of every kind of day, a selection's commuters and longer trips, a station's, T-1208, T-1210), `shade.worker.ts` (the realm shade's cut, T-1026), `focusShade.worker.ts` (the focused
 zone's own outline joined with its sea, for the shade outside it, T-1145).
 
 ### URL switches
@@ -279,7 +284,12 @@ Run from the maps root (`node trainworld/checks/<file>`).
   memory, open packs, reopening times; `SAVE=1` on the real save), `t1198-tour.mjs` (a new game
   viewing and selecting 16 unbuilt European cities, then 75 s out over the sea: Chrome's private
   memory, workers' WASM, open zones; fails if anything stays open or a solving worker passes 1.3 GB
-  of WASM; about 6 minutes), `t801-no-grey.mjs` (no grey
+  of WASM; about 6 minutes), `t1174-panic-recover.mjs` (the real save: a demand worker made to panic
+  idle, mid-solve and in the aux worker is replaced, the rail trips a day equal the first final's and
+  a station is answered; dev server only; about 4 minutes), `t1205-memory.mjs` (a save, default
+  all-China: lines built in three far zones and removed; once the zones close the workers well above
+  their need restart, WASM falls, figures equal; `QS=&memFree=64` for New York; about 20 minutes on
+  all-China), `t801-no-grey.mjs` (no grey
   cities: a map start in a fresh profile turning Homes on, its zoomed-out bubbles, a click selecting
   one; a new New York game's Philadelphia an ordinary bubble zoomed out, loaded by a pan with no
   market pack; screenshots `t801-*.png`), `t800-outlines.mjs` (a game started on the map, then a jump to Europe, shows
@@ -414,7 +424,13 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t1007-panic.mjs` (forced panics in the clock worker, dev server only: an edit that panics is undone,
   an idle or read panic keeps the state, the fourth in a minute leaves the model down; about 2
   minutes), `t161-complexes.mjs` (the real save's complexes for the native
-  comparison), `city-browser.mjs <id>` (a tier 0
+  comparison), `t1168-related.mjs [save] [line ...]` (the related-lines query on every line of a
+  save in Node, timed, with the named lines' groups listed), `t1168-related-page.mjs <port>` (the
+  same query through the clock worker: a copied line made an express, and the real save against
+  the Node figures), `t1168-layout.mjs` (the diagram's layout of the real save's 2, 4 and 6X against
+  the mockups), `t1168-shots.mjs <port>` (the line panel's related-lines view, light and dark,
+  desktop and 390 px, into artifacts/trainworld/t1168s1/, with its hover, click and toggle),
+  `city-browser.mjs <id>` (a tier 0
   city: open, boundary, the top bar's split, a water crossing refused, a test line to a final solve,
   T-364; a row from its table, or from the file in `ROW`, which `pack_gate.py` writes for any pack;
   `ROWS`, a list of rows, checks them all in one sandbox game, `ZONES_PER_PAGE` (8) to a page load,
@@ -486,8 +502,12 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `merge_cells.py <ids> | --all` is every pack's last step (T-044): sparse res-9 cells into their
   res-8 parent within a zone, touching sparse children of busier parents together (T-466), and
   sparse cells still alone into a touching merged cell across the parent's edge (T-510), the
-  res-9 pack kept in `data/work/res9/`; `--undo` puts it back
-  before any step that rewrites a pack (enrichments, routes, `intercity.py`), `--stats` only counts;
+  res-9 pack kept in `data/work/res9/` with a stamp of the merged pack; `--undo` puts it back
+  before any step that rewrites a pack (enrichments, routes, `intercity.py`), refusing a merged pack
+  changed since its stamp unless `--force` (T-1261); `<ids> --through "<module> {id} <args>"
+  [--workers N] [--force]` reruns one step on finished packs (per id: undo, the step, merge; stops at
+  the first failure); `routes.py` and `packio.replace_cell_arrays` (every enrichment) refuse a merged
+  pack, and `world_run`'s joint solve stops with a run fault on a member out of step; `--stats` only counts;
   cells still under `FLOOR` (50) trip ends join their zone part's nearest busier cell (T-850b);
   `--stats --floor N` counts another floor.
 - `nocar.py <ids> | --all` (not read by demand since T-854) adds `nocar` (people in households with no car, per cell; T-511) to
@@ -616,7 +636,7 @@ only the rows of zones whose market pack changed, came or went and of places wit
 them, from `data/work/market_rows.inputs.json`, `market_pack --only`; `--rows --full` for every row, T-929),
 `zones.py --trips`, `routes.py <ids>` for any pack whose zones changed (T-275), and last
 `merge_cells.py --all` (T-044; the chain runs on res-9 packs, so `merge_cells.py <ids> --undo`
-first).
+first, or one step through `merge_cells.py <ids> --through`).
 
 Vite serves and copies all registered packs. Zone packs stay separate; demand workers share a
 regional pool. Registry market places keep NYC0/PHL1/Mercer2 (no zone since T-276)/BOS3/WDC4,

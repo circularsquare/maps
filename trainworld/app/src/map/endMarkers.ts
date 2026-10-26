@@ -5,11 +5,12 @@
 // take no presses; the tools and the node drag work on the nodes underneath as before.
 
 import type { Map as MlMap } from "maplibre-gl";
-import { tool } from "../game/ui";
+import { display, tool } from "../game/ui";
 import { world } from "../game/world";
 import { effect } from "@preact/signals";
 import { toLocal } from "./geo";
 import { live } from "./live";
+import { M_JUNCTION, MARK_STRIDE } from "./markData";
 import type { Overlay } from "./overlay";
 
 type Kind = "loose" | "drag";
@@ -19,6 +20,8 @@ const MIN_ZOOM = 9;
 const MAX_MARKS = 400;
 /** a point's reach for a click, px: nodeDrag's, so a press that drags and one that clicks agree */
 const HIT_PX = 9;
+/** a badge and the node it sits on agree to within this, local units (the cells are looked up with their neighbours) */
+const BADGE_CELL = 3;
 
 export class EndMarkers {
   private box: HTMLDivElement;
@@ -77,6 +80,24 @@ export class EndMarkers {
     return this.map.getZoom() >= MIN_ZOOM && !live.nodeDrag?.dragging;
   }
 
+  /** T-663: a blueprint junction's fork badge is its own handle, and the square would cover it. The
+   * badges' places in cells of BADGE_CELL, found again when the network's marks are replaced. */
+  private badges: { marks: Float32Array | undefined; cells: Set<string> } = { marks: undefined, cells: new Set() };
+  private badged(lx: number, ly: number): boolean {
+    const marks = this.overlay.renderer.net?.marks;
+    if (!marks || !display.peek().flatMarks) return false;
+    if (marks !== this.badges.marks) {
+      const cells = new Set<string>();
+      for (let i = 0; i < marks.length; i += MARK_STRIDE) {
+        if (marks[i + 2] === M_JUNCTION && marks[i + 4] > 0.5) cells.add(`${Math.round(marks[i] / BADGE_CELL)},${Math.round(marks[i + 1] / BADGE_CELL)}`);
+      }
+      this.badges = { marks, cells };
+    }
+    const cx = Math.round(lx / BADGE_CELL), cy = Math.round(ly / BADGE_CELL);
+    for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) if (this.badges.cells.has(`${cx + dx},${cy + dy}`)) return true;
+    return false;
+  }
+
   place() {
     const kind = this.wanted();
     let k = 0;
@@ -86,6 +107,7 @@ export class EndMarkers {
       for (const p of this.pts) {
         const [x, y] = this.overlay.toScreen(p.lx, p.ly);
         if (x < -8 || y < -8 || x > w + 8 || y > h + 8) continue;
+        if (kind === "drag" && this.badged(p.lx, p.ly)) continue;
         if (k >= MAX_MARKS) break;
         let m = this.marks[k];
         if (!m) {

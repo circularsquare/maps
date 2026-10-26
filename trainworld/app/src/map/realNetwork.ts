@@ -20,6 +20,7 @@ import { Protocol } from "pmtiles";
 import { SHADES, type ShadeColours } from "../game/shadeTable";
 import { display, shade, snapping } from "../game/ui";
 import { firstSymbolId } from "./basemap";
+import { styleUp } from "./styleReady";
 
 const LOCAL_BASE = new URL("../noritetsu/", document.baseURI).href;
 const R2_BASE = "https://data.anita.garden/noritetsu/";
@@ -114,11 +115,13 @@ export function startRealNetwork(map: maplibregl.Map) {
       console.warn("Real network: noritetsu's data is not reachable");
     })());
 
-  const layerIds = () => [...added].map((cc) => ID + cc);
+  /** every region's layer ever added: a style restored after a lost context has them still (T-957), `added` starts over */
+  const everAdded = new Set<string>();
+  const layerIds = () => [...everAdded].map((cc) => ID + cc).filter((id) => map.getLayer(id));
 
   const setShade = () => {
     const s = shade.peek();
-    if (s === painted) return;
+    if (s === painted || !styleUp(map)) return;
     painted = s;
     for (const id of layerIds()) map.setPaintProperty(id, "line-color", colour(SHADES[s]) as never);
   };
@@ -127,8 +130,7 @@ export function startRealNetwork(map: maplibregl.Map) {
     if (!on || map.getZoom() < MIN_ZOOM) return;
     await load();
     if (!on || !regions) return;
-    // not isStyleLoaded(), as in showReach
-    if (!map.getStyle()) return void map.once("style.load", ensure);
+    if (!styleUp(map)) return; // style.load runs it again
     const b = map.getBounds(), c = map.getCenter();
     const dist = (r: Region) => Math.min(...r.parts.map((p) => Math.hypot(Math.max(0, p[0] - c.lng, c.lng - p[2]), Math.max(0, p[1] - c.lat, c.lat - p[3]))));
     const hits = regions
@@ -140,8 +142,14 @@ export function startRealNetwork(map: maplibregl.Map) {
     const colours = colour(SHADES[shade.peek()]);
     for (const { cc } of hits) {
       added.add(cc);
+      everAdded.add(cc);
       // MapLibre's restored style after a lost context already has them (T-953)
-      if (map.getLayer(ID + cc)) continue;
+      if (map.getLayer(ID + cc)) {
+        map.setLayoutProperty(ID + cc, "visibility", "visible");
+        map.setPaintProperty(ID + cc, "line-opacity", opacity);
+        map.setPaintProperty(ID + cc, "line-color", colours as never);
+        continue;
+      }
       if (!map.getSource(ID + cc)) map.addSource(ID + cc, { type: "vector", url: `pmtiles://${base}data/${cc}.pmtiles`, attribution: OSM_ATTRIBUTION });
       map.addLayer(
         {
@@ -159,8 +167,7 @@ export function startRealNetwork(map: maplibregl.Map) {
 
   const showReach = () => {
     const r = snapping.peek() ? realReach.peek() : null;
-    // not isStyleLoaded(): that waits on every tile, which can be seconds
-    if (!map.getStyle()) return void map.once("style.load", showReach);
+    if (!styleUp(map)) return; // style.load runs it again
     const src = map.getSource(REACH) as maplibregl.GeoJSONSource | undefined;
     if (!src) {
       if (!r) return;
@@ -179,24 +186,27 @@ export function startRealNetwork(map: maplibregl.Map) {
     map.setPaintProperty(REACH, "line-color", reachColour(SHADES[shade.peek()]) as never);
   };
 
+  const apply = () => {
+    if (on) setShade(), void ensure();
+    if (styleUp(map))
+      for (const id of layerIds()) {
+        map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+        map.setPaintProperty(id, "line-opacity", opacity);
+      }
+    showReach();
+  };
   effect(() => {
     // snapping shows the layer even when Settings has it off: nothing unseen is snapped to
     const snap = snapping.value;
     const reach = snap && !!realReach.value;
     on = display.value.realNetwork || snap;
     opacity = snap ? (reach ? OPACITY_DIM : OPACITY_SNAP) : SHADES[shade.value].realOpacity;
-    if (on) setShade(), void ensure();
-    for (const id of layerIds()) {
-      map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
-      map.setPaintProperty(id, "line-opacity", opacity);
-    }
-    showReach();
+    apply();
   });
   map.on("moveend", ensure);
   map.on("style.load", () => {
     added.clear();
     painted = null;
-    void ensure();
-    showReach();
+    apply();
   });
 }

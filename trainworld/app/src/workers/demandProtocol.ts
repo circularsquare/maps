@@ -100,7 +100,10 @@ export type ToDemand =
       /** T-124 `?perfOff=periods`: a cluster solved solves every period, none kept */
       fresh?: boolean;
       /** T-393: the city in view: its cluster is solved first */
-      first?: CityId }
+      first?: CityId;
+      /** T-1174: every market part made afresh from the newest composition, as a worker started
+       * now has them (sent after a worker is replaced, so all workers' parts are alike again) */
+      freshParts?: boolean }
   /** T-327: every worker has finished `round - 1` of `version`, so this worker may start `round`.
    * A worker ahead waits at the boundary holding its last round, so every worker holds the round
    * after the published one at some moment, and a question about it can be answered (the final
@@ -109,6 +112,11 @@ export type ToDemand =
   | { kind: "go"; version: number; round: number; group?: number }
   /** T-1008: the page has lost the corridor tables sent: the next results carry theirs again */
   | { kind: "corridorsAgain" }
+  /** T-1174, dev server only (`twDemand.client.debugPanic`): make this worker's WASM panic, `now`
+   * or in the running solve's next step */
+  | { kind: "debugPanic"; when: "now" | "solve" }
+  /** T-1205: the pool has shrunk: this worker's periods from now on (`init`'s `periods`, `groups`) */
+  | { kind: "periods"; periods: number[]; groups?: number[][] }
   /**
    * Queries for the demand views (T-078, notes/T-078.md), answered between periods. `id` matches
    * the reply; `version` is the solve they ask about: a worker that has moved on to a newer
@@ -171,6 +179,10 @@ export type ToDemand =
    * solving workers' `icSel` */
   | { kind: "bareSquares"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array };
 
+/** T-1205: the WASM heap in use and the most it has been since the worker's last solve began
+ * (`wasm_heap_bytes`, `wasm_heap_peak`), bytes */
+export type Heap = [live: number, peak: number];
+
 /** T-325: a bare zone's figures per period (index q), as a solve's `result` would carry them:
  * `citySummary`'s numbers and `cityParts`'s, the latter in the order of its own `keys`. */
 export interface BareFigures { summary: number[][]; parts: number[][]; keys: string[] }
@@ -194,19 +206,23 @@ export type FromDemand =
       days: number[];
       /** WASM linear memory, bytes */
       memBytes: number;
+      heap?: Heap;
     }
   /** T-1195: one pack of an `open` is in (a zone's, or with `market` its market pack): the loading
    * bar's progress through a batch, which may take minutes */
   | { kind: "packOpened"; id: CityId; market?: boolean }
   /** an `open` is done: its cities' info as `ready`'s, and the zones whose market packs it opened */
-  | { kind: "opened"; cityInfo: Record<CityId, number[]>; markets: CityId[]; openMs: number; warmMs: number; memBytes: number;
+  | { kind: "opened"; cityInfo: Record<CityId, number[]>; markets: CityId[]; openMs: number; warmMs: number; memBytes: number; heap?: Heap;
       /** T-325: the packs were opened bare (aux worker), with each one's figures */
       bare?: Record<CityId, BareFigures>;
       /** T-492: packs of this `open` that did not open (left out of `cityInfo`, `markets`, `bare`) */
       rejected?: OpenRejected[] }
   /** T-301: a `close` is done (WASM memory never shrinks: the freed space is reused) */
-  | { kind: "closed"; memBytes: number }
+  | { kind: "closed"; memBytes: number; heap?: Heap }
   | { kind: "failed"; error: string }
+  /** T-1174: the WASM panicked (or ran out of memory): every object it holds may be left borrowed,
+   * so the worker does nothing more and the page replaces it. `panic`: `last_panic()`'s text */
+  | { kind: "dead"; error: string; panic: string; memBytes: number }
   | {
       kind: "result";
       version: number;
@@ -273,7 +289,7 @@ export type FromDemand =
   | { kind: "plan"; version: number; solving: CityId[][]; kept: CityId[]; ahead?: CityId[] }
   /** `clusters` (T-326): how many kept their result, and how many were solved; `periods` (T-124):
    * of this worker's periods in the clusters solved, how many were kept and how many solved */
-  | { kind: "done"; version: number; memBytes: number; clusters?: [number, number]; periods?: [number, number] }
+  | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number] }
   /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119) */
   | { kind: "sums"; version: number; round: number; city: CityId; mask: number; sums: Float32Array; everyday: Float32Array | null }
   | { kind: "cells"; id: number; city: CityId; xy: Float32Array; h3: BigUint64Array; zone: Uint32Array; zoneXY: Float32Array }

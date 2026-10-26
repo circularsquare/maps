@@ -44,7 +44,7 @@ for(const final of results){
   assert.deepEqual(covered.filter(c=>finalCities.includes(c)),finalCities,`period ${final.period}: clusters cover the final's cities`);
 }
 assert.equal(messages.find(m=>m.kind==='done'&&m.version===1).clusters?.[1],plan.solving.length);
-// Every city has the six everyday purposes: for each, a selection's purpose/mode/period counts
+// Every city has every everyday purpose (EVERYDAY_NAMES): for each, a selection's purpose/mode/period counts
 // reconcile with its bubble cell sums. The test line is in Manhattan, so the other cities' trips walk
 // or drive.
 const everydayLegs={};let id=1;

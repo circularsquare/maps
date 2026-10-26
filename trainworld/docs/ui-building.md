@@ -394,7 +394,8 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   the bubble [T-486]; a blueprint station has no square, so a click on one under a bubble selects
   the bubble.
   With the select tool every blueprint track end, corner and junction without a station shows the
-  same white square as a corner [T-416; `map/endMarkers.ts`], so draggable points can be seen.
+  same white square as a corner [T-416; `map/endMarkers.ts`], so draggable points can be seen; a
+  junction with a fork badge (flat junction marks on) has no square, the badge is its handle [T-663].
   A drag previews the new shape with each curve's speed (or why not); letting go is one
   undoable edit, Escape puts it back.
 - **With the track tool** [T-734] the same node drag works: a press on a blueprint node that moves

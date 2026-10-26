@@ -105,6 +105,15 @@ Web first, so it can be shared as a link.
   frames and once after a change to what is drawn. The demand views have a canvas of their own over
   it, drawn only on MapLibre's frames and after their data changes, never by the clock; bubbles and
   a selection's far end are summed in their own worker (`workers/commuters.worker.ts`).
+- **While the camera moves** [T-1207; `map/moving.ts`]: work done for each MapLibre frame that need
+  not be runs at most every 100 ms (`MOVING_PLACE_MS`) and in full on the frame after the move ends:
+  the DOM placers (station names, capacity tags, attraction marks, zone loading bars), whose marks
+  move as one with a flat pan in between; the platform crowds; the station sounds and faces sample
+  half as often; the Lines tab's live counts wait. The lighter map (`map/lite.ts`): the basemap
+  without buildings, the residential tint, minor roads, airfields, small rivers and minor names, no
+  hillshade, and a pixel ratio of at most 1; Settings has it Auto (the default), On or Off. Auto turns
+  it on for the rest of the page load once the median gap between frames drawn while the camera moves,
+  over the last 40 (gaps over 250 ms and frames while a game loads left out), is over 40 ms.
 - **A hidden page** [T-826; notes/T-826.md]: the browser stops animation frames and slows the main
   thread's timers to once a second (once a minute after five hidden minutes); worker timers run on
   at nearly full rate. With "Run in background" off (the default) the clock freezes while hidden, so
@@ -129,7 +138,7 @@ Web first, so it can be shared as a link.
   when a newer route is asked or the pointer leaves real track.
 - **The demand pool** [T-149, T-173, `workers/demandClient.ts`][T-381]: 3 solving workers on 12 or more
   logical threads, 2 on 6 to 11, 1 on fewer; then `navigator.deviceMemory` 4 GB or less gives 1, and
-  unreported memory at most 2. The Settings "Use more cores" restores half the threads less one, 1 to 5
+  unreported memory at most 2; a big game may then drop some by memory [T-1205, below]. The Settings "Use more cores" restores half the threads less one, 1 to 5
   (one per period), at the next load; `?demandWorkers=N` overrides both. Plus one auxiliary worker with no periods
   that answers at once what needs no period's result (a city's cells, each bubble's commuters by
   mode). Worker i owns periods i, i + n, .... Every worker opens only the packs the game needs, each
@@ -147,7 +156,11 @@ Web first, so it can be shared as a link.
   small synthetic everyday layer (`warm.rs`) and the others get packs only once it is ready, so
   every worker opens on optimised code [T-173]. The clock worker's network snapshot after each
   service change goes to every worker; a worker takes a newer one between populations. Messages:
-  `workers/demandProtocol.ts`; results land in `game/demand.ts`. Timings:
+  `workers/demandProtocol.ts`; results land in `game/demand.ts`. A sums worker with no WASM
+  (`workers/demandSums.worker.ts`) adds up what the main thread used to [T-1208, T-1210]: each
+  published round's views of the four kinds of day, applied on the main thread in the order published,
+  and a selection's commuters (dealt for the display, `game/farChunks.ts`) and longer trips and a
+  station's; the main thread does the same sums itself only if that worker fails. Timings:
   notes/demand-measurements.md, notes/demand-kernel-history.md.
 - **Only final results replace final results** [T-232, T-324]: after an edit every figure keeps the
   last finished forecast until the new solve's last round lands; earlier rounds are shown only where
@@ -192,7 +205,7 @@ Web first, so it can be shared as a link.
   does not open in a worker (a parse or WASM error, or a market pack whose zone count disagrees
   with its market row) is treated the same way: the worker answers its `open` naming the pack
   in `rejected`, every worker drops it, the zone is left out and flagged, and it is tried again
-  once after 10 s; a second failure is final until the page is reloaded (T-492). Only an error outside opening a pack stops the pool ("Demand could not load" at startup, the
+  once after 10 s; a second failure is final until the page is reloaded (T-492). Only an error outside opening a pack, other than a panic (below), stops the pool ("Demand could not load" at startup, the
   "Demand stopped" alert later, the figures shown kept [T-757]). T-950: a clock worker that fails
   before its first game (its init throws and posts `failed`, or its script errors) stops the pool
   too, as does an uncaught error in main.ts's setup before `setupDone()`; the loading gate's
@@ -207,6 +220,30 @@ Web first, so it can be shared as a link.
   history and the draft in hand are gone, as after a load. A fourth panic in a minute, or a ninth in all, leaves it down
   with a notice to reload (the autosave holds the game). `?debug=1` on the dev server has
   `tw.client.debugPanic("now" | "read" | "afterEdit")`.
+- **A Rust panic in a demand worker** [T-1174] (out of memory aborts the same way) leaves the
+  objects it was in borrowed, so the worker posts `dead` with `last_panic()`'s text (the panic
+  message, or the allocation that failed) and does nothing more; a pack that fails to open with a
+  panic is never taken for a broken pack. The page terminates it, starts a new worker in its place,
+  downloads again and reopens everything it held, then sends the newest network again under a new
+  version (`freshParts`: every worker composes its market afresh from the packs open, as the
+  replacement did, so all hold the same corridor table, T-1354); the shown figures stay until that final. A second panic before the replacement has seen
+  a solve through, or a fifth replacement in the page, stops the pool as before. `?debug=1` on the
+  dev server has `twDemand.client.debugPanic(worker, "now" | "solve")`; check `t1174-panic-recover.mjs`.
+- **Demand workers' memory** [T-1205] (`demandClient.ts` "T-1205: memory"): WASM memory never
+  shrinks, so each worker reports its memory with its heap in use and its last solve's heap peak
+  (`wasm_heap_bytes`, `wasm_heap_peak`; the peak is reset as each solve starts and forgotten when
+  anything closes). A worker's need, what a worker started afresh reaches, is the larger of its heap
+  at rest times 1.38 and that peak times 1.07, plus 64 MB. Once nothing is in flight (no solve, load,
+  open, close or question, no replacement) and the network has been still for 20 s, every worker
+  whose memory is at least 384 MB and 15% above its need is restarted through the panic path above,
+  together and without counting as a panic; the network is solved once more, questions wait for that
+  final, and a worker is not restarted again until its memory or need has moved by 384 MB. Before
+  each solve the pool drops solving workers while 0.6 GB for the page, each worker's need plus 0.7 GB
+  for its JS heap (or, on a cross-origin isolated page, `measureUserAgentSpecificMemory`'s measure of
+  everything outside the WASM) would pass `memBudget`: 8 GB (Anita's target, T-1199), `deviceMemory`
+  x 0.75 under 8, 6 GB where it is not reported. The periods are dealt again (`periods`, taken up
+  between solves) and every worker composes afresh; no figure changes. It never grows back in a page
+  (T-1366). `?perfOff=restart,cap` turns either off; check `t1205-memory.mjs`.
 - **Threads talk by snapshots**: a worker transfers a finished buffer with a version number; the
   main thread swaps it in. Works on any host. SharedArrayBuffer is a later option; it needs
   cross-origin isolation headers, which GitHub Pages (Anita's website) cannot send and Cloudflare
@@ -299,7 +336,8 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   on if taken; T-728) and written once something changes, or at once when it starts from a real
   network; a loaded file's is
   named after the file without `.save` and written at once; a restored backup's is the slot's name
-  and the backup's time. A tab without its slot's lock must save a copy before leaving a changed
+  and the backup's time, "<name> at 3:28 AM", any such time already on the name dropped first
+  (`forkName` in workers/cloud.ts, also for account restores and forks; T-1363). A tab without its slot's lock must save a copy before leaving a changed
   game. On a test page the game is replaced in the page and owns no slot. A slot that cannot be
   read on start stays as it is (its bytes also under `unreadable-<time>`) and the new game gets a
   slot of its own ("Game N"). The start menu's New game always takes a new slot, even with nothing
@@ -400,7 +438,14 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
     a game the account deleted, under a tombstone, never comes back under its id (410): a kept
     copy gets a new id. A game opened unchanged after another device deleted it is kept in this
     browser only.
+  - **The account's backups** (two a game, made by the server) are listed under the playing game
+    and restored as copies through Load a file's path (`restoreAccountBackup`); the route names a
+    backup by place, so the page checks its `X-Rev`.
+  - **Signing out with Remove** marks the account in sessionStorage (`trainworld.signout-remove`),
+    goes to the start menu if a game is open, and there settles, deletes every slot of the account
+    not changed since its last sync (never from the account; its score entry is forgotten here so
+    its figures stay), then signs out (`removeOnStart`).
+  - A page whose `/noritetsu/config` did not answer asks again on `online` and every 2 minutes.
   - `?new=1`, `?synth=1`, `?demandTest=1` sync nothing; localhost syncs only with `?acct=local` or
     `?acct=live` given once. `checks/t988-cloud.mjs` runs it against a local server.
-- **Later**: sharing a game by link (T-989); the account's backups listed and restored, the
-  sign-out question (T-988 stage 3).
+- **Later**: sharing a game by link (T-989).

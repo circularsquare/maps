@@ -5,7 +5,10 @@
     python pipeline/merge_cells.py <id> --stats      counts only, nothing written
     python pipeline/merge_cells.py <id> --stats --child 500   the same with another sparse-child threshold
     python pipeline/merge_cells.py <id> --stats --floor 100   counts with the floor rule at 100 trip ends (0 off)
-    python pipeline/merge_cells.py <id> --undo       put the res-9 pack back in data/packs
+    python pipeline/merge_cells.py <id> --undo       put the res-9 pack back in data/packs (--force: also
+                                                     when the merged pack changed after merging)
+    python pipeline/merge_cells.py <ids> --through "<module> {id} <args>" [--workers N] [--force]
+                                                     per id: --undo, that step on the res-9 pack, merge
 
 A res-8 parent whose present children make under THRESHOLD trip ends a weekday merges; only the
 children inside one 2 km zone merge together (a parent cut by a zone edge gives one merged cell
@@ -25,7 +28,8 @@ as a zone here: a merged cell never spans two banks (T-725). The merged pack als
 
 The res-9 pack is kept in data/work/res9/<id>.json/.bin: the first merge of a pack copies it there,
 and a rerun (or --undo) starts from it. Steps that rewrite a pack (enrichments, routes.py) run on
-the res-9 pack: `--undo`, the step, then this again. Cells come out sorted by their index with the
+the res-9 pack: `--undo`, the step, then this again (`--through` does the three); `routes.write_arrays`
+and `packio.replace_cell_arrays` refuse a merged pack (T-1261). Cells come out sorted by their index with the
 resolution field cleared (a merged cell right after where its children were), then by zone.
 """
 import os
@@ -462,10 +466,27 @@ def res9_copy(city, copy=True):
             os.replace(os.path.join(WORK, city + ext + ".part"), os.path.join(WORK, city + ext))
     elif not os.path.exists(os.path.join(WORK, f"{city}.json")):
         sys.exit(f"{city}: data/packs holds a merged pack and data/work/res9 has no res-9 copy")
-    elif written(city) != stamp(PACKS, city):
-        sys.exit(f"{city}: the merged pack in data/packs was changed after merging (a step run on it?); "
-                 f"the res-9 copy in data/work/res9 lacks that change, so neither is merged nor undone")
+    elif stale(city):
+        sys.exit(STALE.format(city=city))
     return WORK
+
+
+STALE = ("{city}: the merged pack in data/packs was changed after merging (a step run on it?); the res-9 copy "
+         "in data/work/res9 lacks that change, so neither is merged nor undone. Rerun that step on the res-9 "
+         "pack: merge_cells.py {city} --through \"<module> {{id}} <args>\" --force (T-1261)")
+
+
+def stale(city, packs=PACKS, work=WORK):
+    """Whether data/packs holds a merged pack that no longer matches the stamp merge_cells wrote for
+    it, so its res-9 copy lacks a later change (T-1261)."""
+    with open(os.path.join(packs, f"{city}.json"), encoding="utf-8") as f:
+        if "merged" not in json.load(f):
+            return False
+    p = os.path.join(work, f"{city}.merged.json")
+    if not os.path.exists(p):
+        return True
+    with open(p) as f:
+        return json.load(f) != stamp(packs, city)
 
 
 def stamp(d, city):
@@ -534,14 +555,55 @@ def run(city, stats=False, child=None, floor=None):
     return info
 
 
-def undo(city):
+def undo(city, force=False):
     for ext in (".json", ".bin"):
         if not os.path.exists(os.path.join(WORK, city + ext)):
             sys.exit(f"{city}: no res-9 copy in data/work/res9")
+    if not force and stale(city):
+        sys.exit(STALE.format(city=city) + "; --undo --force drops the merged pack's change")
     for ext in (".bin", ".json"):
         shutil.copyfile(os.path.join(WORK, city + ext), os.path.join(PACKS, city + ext + ".part"))
         os.replace(os.path.join(PACKS, city + ext + ".part"), os.path.join(PACKS, city + ext))
     print(f"{city}: res-9 pack back in data/packs")
+
+
+def through(ids, template, workers=1, force=False):
+    """Per id: --undo, the step `template` names ("<module> {id} <args>", run through world_run.py
+    step), then merge again; on a failure no new id starts, and the failed pack's res-9 version stays in
+    data/packs. Returns the failed ids."""
+    import shlex
+    import subprocess
+    import threading
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+    runner = os.path.join(os.path.dirname(os.path.abspath(__file__)), "world_run.py")
+    stop, lock, failed = threading.Event(), threading.Lock(), []
+
+    def one(cid):
+        if stop.is_set():
+            return
+        t, out = time.time(), []
+        steps = [["merge_cells", cid, "--undo"] + (["--force"] if force else []),
+                 [x.replace("{id}", cid) for x in shlex.split(template)],
+                 ["merge_cells", cid]]
+        for st in steps:
+            r = subprocess.run([sys.executable, "-I", runner, "step"] + st, capture_output=True, text=True,
+                               encoding="utf-8", errors="replace")
+            out.append(f"$ {' '.join(st)}\n{r.stdout}{r.stderr}")
+            if r.returncode:
+                stop.set()
+                break
+        ok = not r.returncode
+        with lock:
+            if not ok:
+                failed.append(cid)
+            print("".join(out).rstrip() + f"\n{'DONE' if ok else 'FAILED'} {cid} {time.time() - t:.0f}s", flush=True)
+
+    with ThreadPoolExecutor(workers) as pool:
+        list(pool.map(one, ids))
+    print(f"through: {len(ids)} ids, {len(failed)} failed {' '.join(failed)}"
+          + ("; stopped at the first failure, ids not yet started left as they were" if failed else ""), flush=True)
+    return failed
 
 
 def registered():
@@ -561,15 +623,26 @@ if __name__ == "__main__":
         i = args.index("--floor")
         floor = float(args.pop(i + 1))
         args.pop(i)
+    tmpl = workers = None
+    if "--through" in args:
+        i = args.index("--through")
+        tmpl = args.pop(i + 1)
+        args.pop(i)
+    if "--workers" in args:
+        i = args.index("--workers")
+        workers = int(args.pop(i + 1))
+        args.pop(i)
     ids = registered() if "--all" in args else [x for x in args if not x.startswith("--")]
     if not ids:
         sys.exit(__doc__)
+    if tmpl is not None:
+        sys.exit(1 if through(ids, tmpl, workers or 1, force="--force" in args) else 0)
     if child is not None and "--stats" not in args:
         sys.exit("--child is for --stats")
     if floor is not None and "--stats" not in args and floor != (FLOOR or 0):
         sys.exit("--floor other than FLOOR is for --stats: nocar.py remerges by FLOOR")
     for cid in ids:
         if "--undo" in args:
-            undo(cid)
+            undo(cid, force="--force" in args)
         else:
             run(cid, stats="--stats" in args, child=child, floor=floor)

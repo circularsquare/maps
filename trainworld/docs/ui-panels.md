@@ -294,7 +294,10 @@ prices per mile. All go through the distance functions in `game/format.ts`; the 
 metric. "Use more cores" (off by default) allows up to 5 demand workers instead of 3 at most; its
 hover says it takes effect after a reload ([architecture.md](architecture.md) 7). "Run in background"
 (off by default) keeps the clock running while the tab is hidden (the top bar's clock, above;
-[architecture.md](architecture.md) "A hidden page") [T-826].
+[architecture.md](architecture.md) "A hidden page") [T-826]. "Lighter map" (Auto, On, Off; Auto by
+default) draws the basemap with fewer layers at a lower resolution; Auto turns it on when frames run
+slow while the map moves, and its hover then adds "On now" ([architecture.md](architecture.md)
+"While the camera moves") [T-1207].
 
 **Game** [T-728], last before Explore a trip: the game's mode, "Normal" or "Sandbox" (hover: what
 it means). A normal game has "Switch to sandbox mode", which asks first ("Confirm?", then
@@ -446,13 +449,20 @@ reads "No stations yet."
   back, its hover saying autosave stops on the other device). Another card whose game another
   device opened or saved in the last 10 minutes says "Open on another device" (the time on
   hover). A game not tied to the account (kept here only, made signed out, or another account's)
-  has a crossed cloud after its name (hover "Only in this browser"). After the browser's cards,
+  has a crossed cloud after its name (hover "Only in this browser"); on one tied to no account it
+  is a button (hover "Only in this browser. Click to add it to your account.") that adds the game,
+  which goes up at once [T-988 stage 3; the start menu's cloud is not a button]. After the browser's cards,
   the account's games not in this browser: the server's picture and facts, a cloud after the name
   (hover "On your account"), Open (downloads it into a new slot and opens it as Open does) and
   Delete, asked first: "Delete "Tokyo" from your account?". Deleting a tied slot asks "Delete
   "Tokyo" from this browser and your account?".
 - Under the Playing card, its backups [T-744], newest first: "Backup 4 min ago · Day 26" (exact
   time on hover) and Restore as a copy, which closes the panel and opens the backup in a new slot.
+  Signed in, the account's two backups of the game join them in time order [T-988 stage 3], each
+  with a cloud before "Backup today at 14:05" (no game day: the account keeps none for a backup;
+  hover "A backup of this game on your account from ..."); its Restore as a copy downloads it and
+  opens it as Load a file does, named "<game> at 2:05 PM" (an earlier restore's time dropped), a new game on the account. A failed download
+  says "This backup could not be downloaded."
 - Above the cards [T-1131]: Save to a file
   (`anitabuilder-nyc-day-12.save`), Load a file, New game, then Save a copy, which opens a row
   under the buttons with the name (prefilled "<game> copy", focused and selected), Save and Cancel;
@@ -532,11 +542,21 @@ registry centre and zoom, or over New York with none [T-310].
 - **Account panel**: the account button (top of Settings, start menu; not in the tab bar, T-1106), or Settings' Account row (T-1139), opens a centred modal like the
   saves panel. Signed out: Google's button, then username and password with Sign in, Create
   account and Forgot password; Privacy and Terms (`public/privacy.html`, `terms.html`). Signed in:
-  "Signed in as alice" (or with Google), for a password account the recovery email ("No recovery
+  "Signed in as alice" (or with Google); under it, while the server keeps games, "3 games on your
+  account · 1.2 MB of 64 MB" (hovers: "Your account keeps up to 50 games", "Backups count too")
+  [T-988 stage 3]; for a password account the recovery email ("No recovery
   email" in red when there is none) with Save email, Remove and Change password, then Sign out and
   Delete account (asked first: "Delete your account? Its games, its leaderboard entries and its
   noritetsu rides go too. Games in this browser stay."; the browser's slots are then tied to no
   account).
+- **Signing out** [T-988 stage 3] with games of this account in the browser (and a server that keeps
+  games) asks "Remove your games from this browser?" with Keep games (lit; signs out, the games stay
+  tied and sync again at the next sign-in) and Remove games. Remove goes to the start menu first when
+  a game is open (saved first, as leaving any game; the hover says the game closes), uploads what has
+  not gone up, then deletes from this browser every slot of the account whose latest version is on
+  it, keeping its leaderboard figures, and signs out. A slot with changes the server could not take,
+  or open in another tab, stays. Closing the panel instead leaves the player signed in. Without such
+  games Sign out signs out at once.
 - **The sign-in question** [T-988]: signing in, or a load already signed in, with slots tied to no
   account (made signed out, never answered) opens the account panel on "Add the 3 games in this
   browser to your account?" ("Add Tokyo to your account?" for one) with Add (lit) and Don't add;

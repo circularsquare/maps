@@ -37,3 +37,4 @@
 .lb-open svg { width: 14px; height: 14px; }
 .lb-open:hover { color: var(--text); }
 .acct-merge { margin-bottom: 10px; }
+.acct-signout { margin-top: 10px; }

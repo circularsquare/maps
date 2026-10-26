@@ -83,7 +83,9 @@ uniform vec3 u_bp_off_rail;  // middle in the light theme, dim in the dark one (
 uniform vec3 u_bp_off_fade;  // what its other colours are mixed towards
 uniform highp sampler2D u_line_colours;
 uniform int u_full_pass;     // T-819: 1 the pass drawing a red band this much (px) wider than the
-uniform float u_full_px;     // casing under the lines on track at capacity, nothing else
+uniform float u_full_px;     // casing under the lines on track at capacity, nothing else; 2 (T-1284) the
+uniform float u_full_out;    // casing's colour this much (px) wider again, and the red band in dashes
+uniform float u_full_dash;   // of this period (px), so it reads on a red line
 uniform vec3 u_full_rgb;
 uniform int u_ghost;         // T-1038: 1 for the preview pass, whose placement strokes are the ghost
 uniform int u_ghost_layer;   // T-1054: -1 the other strokes; 0 a ghost's outline, 1 its rails, 2 its middle
@@ -105,11 +107,13 @@ out float v_alpha;
 out vec4 v_cap;             // px: along from the segment's start, along to its end, across, half the width
 flat out vec4 v_stripe;     // T-817: high-speed track's centre line, its colour and half width (px), 0 none
 flat out float v_stripe_only; // 1: only that line is drawn (bare track between its parted tracks)
+flat out float v_dash;      // T-1284: the red band's dash period (px), 0 for every other stroke
 void main() {
   int flags = int(a_flags + 0.5);
   bool hsr = (flags & 256) != 0;
   v_stripe = vec4(0.0);
   v_stripe_only = 0.0;
+  v_dash = u_full_pass == 1 ? u_full_dash : 0.0;
   bool sel = (u_kind == 1 && int(a_colour) == u_sel_line) || (u_kind == 0 && int(a_edge) == u_sel_edge);
   bool blueprint = (flags & 1) != 0;
   bool placement = (flags & 32) != 0;
@@ -135,10 +139,11 @@ void main() {
   float core = bpShape ? u_bp.x + 2.0 * u_bp.y : u_width.x;
   float grow = u_lanes.z * max(0.0, lfm * (G + lt) - core * (bpShape ? 1.0 : a_wmul));
   float extra = sel ? u_width.y : 0.0;
-  bool full = u_full_pass == 1;
+  bool full = u_full_pass > 0;
+  bool fullOut = u_full_pass == 2;
   if (full && !(u_kind == 1 && a_full != 0.0)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float fs = a_full < 0.0 ? 1.0 : a_full > 0.0 ? ${FULL_FLOOR.toFixed(3)} + ${(1 - FULL_FLOOR).toFixed(3)} * clamp((a_full - ${FULL_WAIT_FROM.toFixed(3)}) / ${(FULL_WAIT_STRONG - FULL_WAIT_FROM).toFixed(3)}, 0.0, 1.0) : 0.0;
-  float cas = full ? u_casing + u_full_px : u_casing;
+  float cas = full ? u_casing + u_full_px + (fullOut ? u_full_out : 0.0) : u_casing;
   float w, lane_off = 0.0;
   if (u_lane_mode == 0) {
     w = (ghost ? core
@@ -206,7 +211,7 @@ void main() {
   bool bpMid = false;
   if (ghost && u_ghost_layer < 2) v_color = u_ghost_layer == 0 ? u_ghost_rgb : u_bp_rail;
   // T-1152: a weaker edge towards the casing's colour, not see-through, which would bead at the joints
-  else if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement && !ghost ? u_sel : full ? mix(u_casing_rgb, u_full_rgb, fs) : u_casing_rgb;
+  else if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement && !ghost ? u_sel : fullOut ? u_casing_rgb : full ? mix(u_casing_rgb, u_full_rgb, fs) : u_casing_rgb;
   else if ((flags & 16) != 0) v_color = u_bad;
   else if ((u_kind == 2 && !placement) || u_by_level == 1) v_color = lc;
   else if (u_by_speed == 1) {
@@ -245,10 +250,12 @@ in float v_alpha;
 in vec4 v_cap;
 flat in vec4 v_stripe;
 flat in float v_stripe_only;
+flat in float v_dash;
 out vec4 o;
 void main() {
   float past = -min(v_cap.x, v_cap.y);
   float a = past > 0.0 ? clamp(0.5 - (length(vec2(past, v_cap.z)) - v_cap.w), 0.0, 1.0) * v_alpha : v_alpha;
+  if (v_dash > 0.0 && mod(v_cap.x, v_dash) > 0.6 * v_dash) discard;
   vec3 c = v_color;
   if (v_stripe.w > 0.0) {
     float s = clamp(v_stripe.w + 0.5 - abs(v_cap.z), 0.0, 1.0);
@@ -280,6 +287,7 @@ uniform vec2 u_fixed;    // a box's half width (T-204, T-239): px at BOX_WIDTH_Z
 uniform highp int u_halo;
 uniform highp int u_pass; // stations: 0 every one but the selected, 1 the selected only
 uniform highp int u_layer; // 0 the dark shape, 1 the white inside the rim, 2 riders waiting (T-219)
+uniform highp int u_room; // 1: the waiting rooms beside the platforms instead (T-1287)
 uniform float u_halo_radius;
 uniform float u_pixel;
 in vec3 a_st;
@@ -329,7 +337,7 @@ void main() {
   bool boxes = u_boxes > 0.5;
   bool sel = a_sel > 0.5;
   bool noCrowd = !boxes || (flags & 2) != 0 || max(a_crowd.x, a_crowd.y) <= 0.0;
-  if ((u_pass == 1) != sel || (u_layer == 2 && noCrowd)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  if ((u_pass == 1) != sel || (u_layer == 2 && noCrowd) || (u_room == 1 && (!boxes || (flags & 32) == 0))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   // zoomed out a dot's pie is its platforms' crowd (T-228, T-553): the fullest side's share, and
   // whether it is full
   if (!boxes) v_crowd = vec4(a_dcrowd, 0.0, 0.0);
@@ -355,6 +363,8 @@ void main() {
   // zoomed out every station is its own dot at its platform's middle (T-313)
   if (!boxes) v_dot = max((flags & 1) != 0 ? u_radius.y : u_radius.x, cover);
   float lo, hi, xl, xh;
+  // the quad's offset from the platform's middle and its axes on screen (a waiting room's own)
+  vec2 shift = vec2(0.0), ra = along, rn = across;
   ${qZero}
   if (v_dot > 0.0) {
     v_size = vec3(hl, hw, 0.0);
@@ -378,7 +388,6 @@ void main() {
       mn = min(mn, q[i]);
       mx = max(mx, q[i]);
     }
-    ${qPack}
     hl = max(0.5 * total, hw);
     // never shorter than it is wide: the end stretches carry on
     float ext = hl - 0.5 * total;
@@ -387,9 +396,32 @@ void main() {
     hi = mx.y + hw + ext + 1.0;
     xl = mn.x - hw - ext - 1.0;
     xh = mx.x + hw + ext + 1.0;
+    if (u_room == 1) {
+      // T-1287: a waiting room, a small box beside the platform's middle on the outside of its
+      // bend, as wide as a plain platform; its riders stand in it from its middle out (T-219's fill)
+      vec2 qm = q[${PLATFORM_POINTS >> 1}];
+      vec2 dl = q[${(PLATFORM_POINTS >> 1) + 1}] - q[${(PLATFORM_POINTS >> 1) - 1}];
+      dl = length(dl) > 1e-6 ? normalize(dl) : vec2(1.0, 0.0);
+      vec2 nl = vec2(-dl.y, dl.x);
+      if (nl.y > 0.0) nl = -nl;
+      float rh = max(u_fixed.x * u_fixed.y * perLoc, u_fixed.x), rl = clamp(0.35 * hl, 1.2 * rh, 2.5 * rh);
+      vec2 rc = qm + nl * (hw + 0.6 * rh + rh);
+      shift = along * rc.x + across * rc.y;
+      ra = along * dl.x + across * dl.y;
+      rn = along * nl.x + across * nl.y;
+      for (int i = 0; i < ${PLATFORM_POINTS}; i++) q[i] = vec2(-rl + 2.0 * rl * float(i) / ${(PLATFORM_POINTS - 1).toFixed(1)}, 0.0);
+      v_size = vec3(rl, rh, 0.0);
+      lo = -rh - 1.0;
+      hi = rh + 1.0;
+      xl = -rl - 1.0;
+      xh = rl + 1.0;
+      v_lane = 0.0;
+      v_crowd = vec4(vec2(max(a_crowd.x, a_crowd.y)), vec2(max(a_crowd.z, a_crowd.w)));
+    }
+    ${qPack}
   }
   v_p = vec2(corner.x < 0.0 ? xl : xh, corner.y < 0.0 ? lo : hi);
-  c.xy += (along * v_p.x + across * v_p.y) / half_vp * c.w;
+  c.xy += (shift + ra * v_p.x + rn * v_p.y) / half_vp * c.w;
   gl_Position = c;
 }`;
 

@@ -19,9 +19,11 @@ export interface GameFacts {
   at: number; day: number; city?: string; mode?: GameMode; cities?: string[]; lines?: number; stations?: number; cash?: number;
   panels?: ThumbPanel[]; shade?: "light" | "dark";
 }
+/** One of a game's account backups (newest first in `backups`): no picture or facts, only its bytes. */
+export interface AccountBackup { rev: number; savedAt: number; bytes: number; writer: string }
 export interface AccountGame {
   id: string; name: string; rev: number; writer: string; writerAt: number; savedAt: number;
-  facts?: Partial<GameFacts>; saveBytes: number; pictureRev?: number;
+  facts?: Partial<GameFacts>; saveBytes: number; pictureRev?: number; backups?: AccountBackup[];
 }
 export interface AccountList { games: AccountGame[]; tombstones: { id: string; at: number }[]; used: number; limit: number; maxGames: number }
 
@@ -136,6 +138,16 @@ export async function downloadGame(ctx: CloudContext, g: AccountGame): Promise<s
   return await takeInto(ctx, key, g) ? key : null;
 }
 
+/** The bytes of game `id`'s account backup of rev `rev`; null if it has gone. The route names a backup
+ * by its place (0 the newest), which a save meanwhile shifts, so the rev picks between the two. */
+export async function fetchBackup(ctx: CloudContext, id: string, rev: number): Promise<Uint8Array | null> {
+  for (const i of [0, 1]) {
+    const a = await call(ctx, "GET", `trainworld/games/${id}/backups/${i}`, undefined, "bytes");
+    if (a.status === 200 && a.bytes && Number(a.headers?.get("X-Rev")) === rev) return a.bytes;
+  }
+  return null;
+}
+
 /** Delete a game from the account (its backups and figures go too); true once it is gone. */
 export async function deleteGame(ctx: CloudContext, id: string): Promise<boolean> {
   const a = await call(ctx, "DELETE", `trainworld/games/${id}`);
@@ -228,8 +240,15 @@ export async function claim(ctx: CloudContext, rec: SyncRecord): Promise<"ok" | 
 
 // ---------------------------------------------------------------- settling
 
-/** A fork's name: the slot's and its own save time, as a restored backup is named. */
-export const forkName = (name: string, at: number) => `${name} at ${new Date(at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+/** A trailing " at 3:28 AM" (or "at 03:28", "at 15:28") that a fork or restore added before. */
+const AT_TIME = /\s+at\s+\d{1,2}[:.]\d{2}(?:[\s  ]*[ap]\.?\s?m\.?)?$/i;
+/** A fork's or a restored backup's name (local or account): the slot's, less any time an earlier
+ * fork or restore gave it, and the copy's own save time. */
+export function forkName(name: string, at: number): string {
+  let base = name;
+  while (AT_TIME.test(base)) base = base.replace(AT_TIME, "");
+  return `${base || name} at ${new Date(at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+}
 
 /** This browser's version of slot `key` copied into a new slot as a new account game (a fork), and
  * uploaded; the new key. */

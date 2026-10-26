@@ -111,7 +111,14 @@ Rows built before the floor keep their size: Spain, Italy, France, Portugal and 
 first wave (Germany, the UK, Ireland and the Benelux at 0.1-1.2M); rows built before the merge rule
 (every country zoned by 2026-10-24) keep their groups until Anita asks for their replan (T-1189):
 `zones --countries CN --replan` regroups a country's built zone rows too, their packs then counted
-as free land; a new zone with an old row's exact units keeps its id, order and status.
+as free land; a new zone with an old row's exact units keeps its id, order, status and gate
+relaxations. Any other new zone (in any zones rerun, not only `--replan`) inherits each relaxation of a
+check about the ground or the country's data (`world_plan.CARRY_RELAX`: drive_factor_median,
+water_points_in_water, university_rate, and mean_commute_km when the new zone has at least as many units
+as the old row) that an old row sharing at least one of its units held, with the reason of the old row
+sharing the most units, marked "carried by a replan from <id>" (T-1307). Relaxations about a row's
+own figures (pop_vs_plan, top_zone_jobs_share, the browser's test line, a named station on land) are
+not carried; the gate decides them afresh.
 A European country's units outside Europe (France's
 overseas départements) are not zoned. A zone row has `kind` "zone", is named after its most populous unit (before
 any "/"), and has its origin at its densest square km. A replan of the metros keeps zone rows as
@@ -162,7 +169,9 @@ then each free unit under **100,000** whose biggest gravity travel partner is th
 stands (every other unit, metro, pack and dead space as one area counted), judged once so the row
 does not reach on from unit to unit. Each joins only when it touches the row by land (an island:
 within 10 km across water) and the grown row wraps nothing it did not wrap before (the wrap test
-below). Built metros and packs never grow this way; the log notes each unit that would join one.
+below). A unit with half its people in the GHSL functional urban area of another city (the FUA's
+biggest urban centre, of **100,000** or more, outside the row) never joins this way (T-1239: Mission
+stays with Abbotsford). Built metros and packs never grow this way; the log notes each unit that would join one.
 Recorded in the row's `remnants` source and the country's `remnants`. notes/T-1191.md.
 **China and Taiwan** (Anita, 2026-10-22, T-897) have their own rules (`world_plan.ZONE_RULES`):
 zones of at least **1M** (cap 2.5M) from geoBoundaries counties merged within their province, no
