@@ -5,6 +5,11 @@ reasoning and what it replaced.
 
 ## 2026-10-26
 
+- **Roads come from OSM** (Anita: "yes can use osm"), for the 100 m level and for the 1 km roads
+  layer (T-010) alike; published road tiles fall under ODbL. GRIP4 dropped: no bridges or paths.
+- **No 100 m world at 15-30 GB** (Anita: "lets stop before we get there"). The fine level goes
+  only where it adds something (T-047); test regions first (T-038).
+
 - **8 moves at sea past 20 km from shore is on** (T-022): with 16 everywhere a canoe click at L10
   took 1.0-1.1 s on real data, over the design's 1 s limit; 8 gives ~0.8 s, with open-sea bands
   up to 8% long on diagonals. Back to 16 if the search gets faster (T-035).
