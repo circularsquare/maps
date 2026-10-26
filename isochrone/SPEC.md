@@ -89,3 +89,8 @@ and against, carrying on grass and getting in or out. The worker sends them with
 (Terrain Tiles on AWS, under the basemap's water and the time colours) and river lines (the
 canoe's own river steps, L10 world view below zoom 5, L3 tiles to 7, L1 above; wider for more
 water, faint where unrunnable); both default on, kept for the browser session.
+
+Corridors (default on, a button in the same row): pale lines over the colours, below the labels,
+where many trips from the start share a route, wider and stronger the more area they lead to, so
+trunks along rivers, valleys, roads and coasts branch and fade toward the tips. Counted from each
+solve's path tree in the worker, at L10 for the world and again in each window (`docs/corridors.md`).

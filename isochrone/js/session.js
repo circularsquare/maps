@@ -48,7 +48,8 @@ function postCorridors(L, level) {
     if (level !== 10 && !(coarse.corr && coarse.corrSent === originId)) postCorridors(coarse, 10);
     const t0 = performance.now();
     const canoe = mode === 'canoe';
-    const coarser = level === 10 ? null : [last[3], coarse].filter(C => C && C !== L && C.corr);
+    // the coarser counted levels, finest first
+    const coarser = level === 10 ? null : [last[1], last[3], coarse].filter(C => C && C.corr && C.cellDeg > L.cellDeg);
     corridors.count(L, canoe, coarser);
     const t1 = performance.now();
     const { xy, off, s } = corridors.lines(L, canoe, coarse.corr.total, coarser);
@@ -63,6 +64,7 @@ export function setCorridors(on) {
     postCorridors(coarse, 10);
     if (last[3]) postCorridors(last[3], 3);
     if (last[1]) postCorridors(last[1], 1);
+    if (last[0.1]) postCorridors(last[0.1], 0.1);
 }
 
 export function click(lng, lat, m) {
@@ -181,4 +183,5 @@ async function refine() {
     if (!L01) return;
     last[0.1] = L01;
     post('win', L01, { level: 0.1, fetchMs: L01.fetchMs, solveMs: L01.solveMs, cells: L01.W * L01.H });
+    postCorridors(L01, 0.1);
 }

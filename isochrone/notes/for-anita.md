@@ -3,10 +3,7 @@
 Questions that outlive a session. The orchestrator keeps this list; answered ones move to
 DECISIONS.md and leave here.
 
-- **Review the 100 m design** (T-030): `docs/fine.md`. Test tiles for New York and Cluj (T-038)
-  wait on it.
-- **OSM roads** (ODbL share-alike on published road tiles): yes? Recommended: yes, and T-010 uses
-  OSM too, so there is one road source.
-- **Where 100 m goes after the test regions**: the world is 15-30 GB, which does not fit on C:.
-- **Zoom 9-10**: stay with crisp 1 km cells, smooth the band edges by colouring an interpolated
-  time (no new data, every level), or a 100 m patch round the view centre.
+- **Where 100 m goes** (T-047, `docs/fine.md` "Where the fine level goes"): the proposed ~2.8 GB
+  rule (towns, mountains, water-cut land), a wider one, or more test regions first.
+- **Zoom 9-10**: crisp 1 km cells as now, smoothed band edges, or a 100 m patch round the centre.
+  (Partly moot: 100 m now starts at ~9.4 where tiles exist.)

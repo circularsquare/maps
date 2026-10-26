@@ -6,9 +6,10 @@ Where things live. Update the line for a file you add, move or change the job of
 
 | File | What |
 |---|---|
-| `index.html` | Map, legend, info panel, the mode buttons (`#controls`, room for later toggles; `showMode` sets the wording), hover with the route line (GeoJSON source `route`, one request in flight), click. Holds `BANDS` (time bands and colours) and `quietBasemap()` (roads and labels of the OpenFreeMap style, numbers in `ROAD` and `LABEL`). One MapLibre canvas source per level (`walk`, `walk3`, `walk1`, `walk01`), holes cut where a finer window shows. |
-| `worker.js` | Entry of the module worker (`new Worker('worker.js', { type: 'module' })`): routes `init`, `run`, `view`, `route` to `js/session.js`. The worker owns the grids and does all searching and painting. Kept at the root so data URLs stay relative to it. |
-| `js/session.js` | State of one session (solved start and its mode, last windows, generations) and the flows: `runClick` (L10 world solve; loads the canoe world data once on the first canoe start), `refine` (L3, L1 and L0.1 view windows, reuse, cancelling), `post` (paint and send), `route` (a hover's route over the solved levels). |
+| `index.html` | Map, legend, info panel, the mode buttons (`#controls`, room for later toggles; `showMode` sets the wording), hover with the route line (GeoJSON source `route`, one request in flight), click. Holds `BANDS` (time bands and colours) and `quietBasemap()` (roads and labels of the OpenFreeMap style, numbers in `ROAD` and `LABEL`). One MapLibre canvas source per level (`walk`, `walk3`, `walk1`, `walk01`), holes cut where a finer window shows. Corridors: the `#corrbtn` switch, GeoJSON source and layer `corridors` (below labels), `drawCorridors` (each level's lines cut by `clipOut` where the next finer level with lines shows). |
+| `worker.js` | Entry of the module worker (`new Worker('worker.js', { type: 'module' })`): routes `init`, `run`, `view`, `route`, `corridors` to `js/session.js`. The worker owns the grids and does all searching and painting. Kept at the root so data URLs stay relative to it. |
+| `js/session.js` | State of one session (solved start and its mode, last windows, generations) and the flows: `runClick` (L10 world solve; loads the canoe world data once on the first canoe start), `refine` (L3, L1 and L0.1 view windows, reuse, cancelling), `post` (paint and send), `route` (a hover's route over the solved levels), `postCorridors` (after each posted level) and `setCorridors` (the switch). |
+| `js/corridors.js` | Corridors (docs/corridors.md): `count` (area-weighted subtree counts over the predecessor tree, flux from the coarser level at a window's edge, which nodes lead back to the start), `lines` (polylines of edges past the threshold, 8 strength steps, the coarser level's lines where a window's routes do not reach the start). |
 | `js/route.js` | `trace`: the route to a point back along the predecessor codes, finest level first and on through coarser ones at window seeds; time split into walked, carried, paddled (docs/canoe.md 6). |
 | `js/levels.js` | `makeLevel` (a block of cells with its geometry), `snap`, `sampleNode` (weight, time, hazard of one layer at a point, for window seeds). |
 | `js/search.js` | `solve`: Dijkstra over land and canoe nodes (docs/canoe.md 5), weight = time + K x hazard, predecessor codes `P_*`, yields every ~30 ms; `solveWalk`, the small walking loop; `cellTimes` (least time of each cell's nodes, what is painted). |
@@ -21,12 +22,13 @@ Where things live. Update the line for a file you add, move or change the job of
 | `js/riverlines.js` | Page side (dynamic import from `index.html`): `riverLines` adds the `rivers` line layer from the canoe river files, L10 / L3 / L1 by zoom, steps joined between confluences and smoothed; `window.riverLog` has each rebuild's time. The hill shading (`addRelief`, source `dem`) is in `index.html`. |
 | `js/config.js` | What `init` sends (bands, alpha, time limit, the speed to hours table, canoe data folder) and the canoe model constants (K, paddling speed, upstream share and floor, transfer, carry factor, ice limit, `sea8`, `hazard`). |
 
-Messages, page to worker: `init {..., canoeBase}`, `run {lng, lat, mode}` (mode `walk` or
-`canoe`), `view {west, east, north, south, zoom}`, `route {lng, lat, seq}`.
+Messages, page to worker: `init {..., canoeBase, corridors}`, `run {lng, lat, mode}` (mode `walk` or
+`canoe`), `view {west, east, north, south, zoom}`, `route {lng, lat, seq}`, `corridors {on}`.
 Worker to page: `ready {speeds}`, `none`, `error {message}`, `coarse {mode}`, `win {level}`,
 `clear {levels}`, `route {seq, mode, t, hz, survival, parts, lng, lat, kind}` (no `lng` when the
-point is not reached), each with the `originId` of its click. `window.solveLog` on the page holds
-every solve's timings, `window.lastRoute` the last route's figures.
+point is not reached), `corridors {level, xy, off, s, ms, countMs}`, each with the `originId` of
+its click. `window.solveLog` on the page holds every solve's timings, `window.corrLog` each
+level's corridor time and line count, `window.lastRoute` the last route's figures.
 
 ## Data build
 
@@ -83,5 +85,5 @@ is `data/raw/unzipped/2020_walking_only_friction_surface.geotiff` (726 MB), LC10
 
 | File | What |
 |---|---|
-| `checks/smoke.mjs` | Headless Chrome on the served page (`node isochrone/checks/smoke.mjs [url] [--canoe=<folder>]`, ~30 s): default solve, a click, L3 and L1 windows, hover; when `data/fine/` has New York, a start in Midtown at zoom 12 with an L0.1 window, Brooklyn reached over the bridges and hover from L0.1; when canoe data is served, a canoe start from Constanta, the sea painted, a hover at sea with its route and split, an L1 window with sea, the mode buttons; no console errors. One PASS or FAIL line each; exit 1 on a fail. |
+| `checks/smoke.mjs` | Headless Chrome on the served page (`node isochrone/checks/smoke.mjs [url] [--canoe=<folder>]`, ~30 s): default solve, its corridors arriving with lines and the corridors switch, a click, L3 and L1 windows, hover; when `data/fine/` has New York, a start in Midtown at zoom 12 with an L0.1 window, Brooklyn reached over the bridges and hover from L0.1; when canoe data is served, a canoe start from Constanta, the sea painted, a hover at sea with its route and split, an L1 window with sea, the mode buttons; no console errors. One PASS or FAIL line each; exit 1 on a fail. |
 | `checks/ktrips.mjs` | The K check trips in node over the real L10 data (`trips <K...>`, ~30 s a K; `time`): each trip's time, survival, hours past 20 km and route waypoints, and canoe solve times with hazard off and on (notes/T-006.md). |

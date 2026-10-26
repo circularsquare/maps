@@ -14,7 +14,6 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 ## In progress
 
 - T-030 [P1] Finer than 1 km when zoomed in: design a 100 m level (LC100 land cover, roads, GLO-90 terrain) for windows from zoom ~10, with sizes, times and what it means for publishing; for Anita's review. Design ready for Anita's review, docs/fine.md (notes/T-030.md).
-- T-046 [P1] Corridors: from the start's path tree, draw where many trips share a route (a river, a pass) as medium-opacity lines that branch and fade as trips split. Taking, 2026-10-26 (agent).
 - T-037 [P3] Window edge strip: with nearest resampling, the coarser canvas shows as a brighter strip (up to one coarser cell, ~5 px at zoom 9) along a finer window's north and south edges, since the hole is rounded inwards to whole canvas rows. Off screen once the view settles; fix by aligning hole rows to the finer window or painting the coarse edge row clear.
 
 ## M1: canoe, today
