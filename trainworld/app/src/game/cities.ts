@@ -9,6 +9,7 @@ import { signal } from "@preact/signals";
 import registryJson from "./registry.json";
 import { M_PER_DEG, makeFrame, type Frame, type FrameSpec } from "./frame";
 import { zoneAliases, zoneName } from "./zoneNames";
+import { fareWeight } from "./income";
 
 export type CityId = string;
 /** A zone of the world (T-276, docs/zones.md): a city zone, or a non-city zone (`kind` "zone").
@@ -49,8 +50,10 @@ export const MARKET_FRAME = makeFrame({ ...REGISTRY.market.frame, kind: "equirec
 /** T-377: the world market's frame, rule, places and every registered zone's row in registry order,
  * as `MarketPacks` reads it; `rowsText` is market-rows.json ({zone id: row}, T-776). */
 export function marketWorld(rowsText: string): string {
-  const rows = JSON.parse(rowsText) as Record<CityId, unknown>;
-  return JSON.stringify({ frame: REGISTRY.market.frame, rule: REGISTRY.market.rule, places: REGISTRY.market.places.length, rows: CITIES.flatMap((c) => (rows[c.id] ? [rows[c.id]] : [])) });
+  const rows = JSON.parse(rowsText) as Record<CityId, { country?: string } | undefined>;
+  // T-1277: a plane's fare weighs the departing country's minutes a dollar
+  const withFw = (r: { country?: string }) => ({ ...r, fw: fareWeight(r.country) });
+  return JSON.stringify({ frame: REGISTRY.market.frame, rule: REGISTRY.market.rule, places: REGISTRY.market.places.length, rows: CITIES.flatMap((c) => { const r = rows[c.id]; return r ? [withFw(r)] : []; }) });
 }
 
 export const activeCity = signal<CityId>(HOME_CITY);
@@ -215,8 +218,26 @@ export const CENTRE_REACH_M = 120_000;
  * Past it the view is over dead space. */
 export const ZONE_REACH_M = 40_000;
 
-/** The nearest zone whose centre is within `CENTRE_REACH_M`, else null (dead space). */
+/** T-1265: the zone a place is in by the coarse outlines, set by map/coarseOutlines.ts in each thread
+ * that has read them. */
+let byOutline: ((lon: number, lat: number) => CityId | null) | null = null;
+/** Bumped when the coarse outlines arrive, so answers kept from before them are worked out again. */
+export const outlinesIn = signal(0);
+export function setOutlineLookup(f: (lon: number, lat: number) => CityId | null) {
+  byOutline = f;
+  outlinesIn.value++;
+}
+
+/** The zone whose coarse outline holds (lon, lat) or is within `ZONE_REACH_M` of it; before the
+ * outlines are in, or where none is near, the nearest zone whose centre is within `CENTRE_REACH_M`;
+ * else null (dead space). A nearest centre alone named Shenzhen for Yuen Long (T-1265). */
 export function cityWithin(lon: number, lat: number): CityId | null {
+  return byOutline?.(lon, lat) ?? centreWithin(lon, lat);
+}
+
+/** The nearest zone whose centre is within `CENTRE_REACH_M`, else null: the track model's rule for a
+ * place's local time (sim/src/track/localtime.rs), which has no outlines. */
+export function centreWithin(lon: number, lat: number): CityId | null {
   const id = cityNear(lon, lat), c = cityById(id);
   const kx = M_PER_DEG * Math.cos(lat * Math.PI / 180);
   return Math.hypot((lon - c.center[0]) * kx, (lat - c.center[1]) * M_PER_DEG) <= CENTRE_REACH_M ? id : null;

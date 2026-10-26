@@ -12,7 +12,7 @@
 import { computed } from "@preact/signals";
 import { demandByDay } from "./demand";
 import { stationZone } from "./listScope";
-import { liveMoney, moneyState } from "./money";
+import { liveMoney, moneyState, stopScales } from "./money";
 import { placeAt, zonesLoaded } from "./zones";
 import { stationsById, world } from "./world";
 import type { WorldView } from "./types";
@@ -62,21 +62,26 @@ export const lineShares = computed(() => {
         const s = st.stopS[r], zz = r === 0 ? z : [...z].reverse();
         for (let k = 0; k + 1 < n; k++) ends.push([zz[k], zz[k + 1], Math.abs(s[k + 1] - s[k]) / 1000]);
       }
-      const pkm = new Map<string, number>(), board = new Map<string, number>();
+      // T-1277: a stretch pays its starting stop's fare scale, the base its boarding stop's
+      const sc = stopScales(l.stops, byId, m.fares.scales);
+      const from = [...sc.slice(0, n - 1), ...[...sc].reverse().slice(0, n - 1)];
+      const pkm = new Map<string, number>(), board = new Map<string, number>(), paid = new Map<string, number>();
       let pkmAll = 0;
       for (const per of dm.loads) {
         if (per.length !== ends.length) continue;
-        ends.forEach(([a, b, d], k) => { const v = per[k] * d; add(pkm, a, v / 2); add(pkm, b, v / 2); pkmAll += v; });
+        ends.forEach(([a, b, d], k) => { const v = per[k] * d * from[k]; add(pkm, a, v / 2); add(pkm, b, v / 2); pkmAll += v; });
       }
-      dm.boardings.forEach((v, k) => add(board, z[k] ?? "", v));
-      const byBoarding = norm(board);
+      dm.boardings.forEach((v, k) => { add(board, z[k] ?? "", v); add(paid, z[k] ?? "", v * (sc[k] ?? 1)); });
+      const byBoarding = norm(board), byPaid = norm(paid);
       if (byBoarding.length) ride = byBoarding;
       // a bent curve's extra goes with the base, by where its trips board (T-1143)
       const fx = dm.fareX?.reduce((a, b) => a + b, 0) ?? 0;
-      const base = Math.max(0, m.fares.base * dm.ridersPerDay * tripsPerBoarding + fx), perKm = m.fares.perKm * pkmAll;
+      const boarded = dm.boardings.reduce((a, b) => a + b, 0);
+      const baseScale = boarded > 0 ? dm.boardings.reduce((a, b, k) => a + b * (sc[k] ?? 1), 0) / boarded : 1;
+      const base = Math.max(0, m.fares.base * dm.ridersPerDay * tripsPerBoarding * baseScale + fx), perKm = m.fares.perKm * pkmAll;
       if (base + perKm > 0) {
         const mix = new Map<string, number>();
-        for (const [k, v] of byBoarding) add(mix, k, v * base);
+        for (const [k, v] of byPaid) add(mix, k, v * base);
         for (const [k, v] of norm(pkm)) add(mix, k, v * perKm);
         fare = norm(mix);
       }

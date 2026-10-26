@@ -12,24 +12,38 @@ import { anchor, makeAnchor, setAnchor, toLocal } from "../map/geo";
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
-import { faresOf, type Fares } from "../game/fareCurve";
+import { faresOf, START_FARE, type Fares } from "../game/fareCurve";
+import { FARE_BASELINE, incomeScale, tidyScale } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf } from "../game/days";
 import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
 import { shiftAt, timeZoneTable } from "../game/localTime";
 import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } from "../game/moneyTiming";
 import { networkFromState, newNetCache, runsTrains } from "../map/network";
+import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes } from "../game/complexes";
-import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
+import { UPGRADE_BITS } from "../game/upgrades";
+import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
+import { changedHere, claim, fetchGame, forgetSlot, forkName, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, sendDeletes, settle as settleCloud, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
 const SAMPLE_STEP = 50;
 const SNAPSHOT_DEBOUNCE_MS = 500;
 /** Whole trains on a new line across both directions, high/medium/low demand. */
 const NEW_LINE_TRAINS: [number, number, number] = [0, 0, 0];
-/** Default fare curve (T-028, T-883): US$ a ride plus US$ a km, as two nodes. */
-const START_FARES: Fares = faresOf(undefined, { base: 1.5, perKm: 0.1 });
+/** Default fare curve: `START_FARE` as three nodes. */
+const START_FARES: Fares = { ...faresOf(undefined, START_FARE), scales: {}, baseline: FARE_BASELINE };
+/** A save's fares (T-1277): one from before the baseline was New York's fares, so its curve is
+ * divided by the home country's scale; the player's scales kept. */
+function loadFares(f: SaveHeader["fares"] | undefined): Fares {
+  if (!f) return { ...START_FARES };
+  const s = f.baseline ? 1 : incomeScale(cityById(HOME_CITY).country);
+  const g = s === 1 ? f : { base: f.base / s, perKm: f.perKm / s, nodes: f.nodes?.map(([k, v]) => [k, v / s] as [number, number]) };
+  const scales: Record<string, number> = {};
+  for (const [c, v] of Object.entries(f.scales ?? {})) if (Number.isFinite(v)) scales[c] = tidyScale(v);
+  return { ...faresOf(g, START_FARES), scales, baseline: FARE_BASELINE };
+}
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
 const AUTOSAVE_MS = 60_000;
@@ -81,10 +95,21 @@ const fareHour = (per: number[][] | undefined, tl: number, kindOf?: KindOf) => l
 const rideHour = (per: number[][] | undefined, tl: number, kindOf?: KindOf) => between(table(per), peakC, tl, tl + 3600, kindOf);
 
 /** T-872: the holiday calendar (its own chunk, fetched once), and each line's country: its first
- * stop's zone's, as its local time is ("" outside every zone). Its holidays and own weekend decide
+ * stop's zone's (`cityWithin`; "" outside every zone). Its holidays and own weekend decide
  * its kinds of day (T-262). */
 let holidayData: HolidayData | null = null;
 let lineCountries = new Map<number, string>();
+/** each line's first stop, lng and lat (null with none), as the last state was built */
+let lineFirstStops = new Map<number, [number, number] | null>();
+function placeLineCountries() {
+  lineCountries = new Map([...lineFirstStops].map(([id, p]) => {
+    const z = p ? cityWithin(p[0], p[1]) : null;
+    return [id, z ? cityById(z).country ?? "" : ""];
+  }));
+}
+/** T-1265: the coarse outlines name each station's zone (game/cities.ts `cityWithin`); read once
+ * from init, and the lines' countries placed again when they are in */
+let outlinesRead: Promise<void> = Promise.resolve();
 let holidaysSent = "";
 const kindOfLine = (id: number): KindOf => kindOfIn(holidayData, lineCountries.get(id));
 function loadHolidays() {
@@ -169,6 +194,8 @@ let sentCash = NaN, sentFares = NaN;
 let dirty = false;
 let savedAt = Date.now();
 let saveInFlight: Promise<boolean> | null = null;
+/** the next autosave is a save by hand: it goes to the account at once, with `force` (T-988) */
+let byHandNext = false;
 let activeSlot = ORIGINAL_SLOT;
 let activeLease: SlotLease | null = null;
 /** another tab saved this slot by hand and took its lease (T-1251): autosave stays off here */
@@ -213,8 +240,10 @@ async function publishSlots(error?: string) {
     slots = await listSlots(); storageReady = true;
     if (activeSlot) backups = await listBackups(activeSlot);
   } catch { storageReady = false; }
-  const writable = !!activeLease && storageReady && !saveFailure;
+  const taken = !!activeSlot && cloudTaken === activeSlot;
+  const writable = !!activeLease && storageReady && !saveFailure && !taken;
   const reason = saveFailure || (!storageReady ? "Browser storage is unavailable. Save to a file to keep this game."
+    : taken ? "Autosave is off here because this game was opened on another device."
     : !activeLease ? testPage ? "Autosave is off in this test page. Save a copy to keep the game."
       : leaseTaken ? "Autosave is off here because this game was saved in another tab."
       : navigator.locks ? "Autosave is off here because this slot was opened in another tab. Save to a new slot, or close the other tab and reload."
@@ -223,7 +252,7 @@ async function publishSlots(error?: string) {
 }
 
 async function flushBeforeSwitch() {
-  if (dirty && !activeLease) throw new Error("Save this game to a new slot before leaving it. You can also download a file and reload this page.");
+  if (dirty && (!activeLease || cloudTaken === activeSlot)) throw new Error("Save this game to a new slot before leaving it. You can also download a file and reload this page.");
   if (!await autosave()) throw new Error("This game could not be saved. Save to a file before leaving it.");
 }
 
@@ -283,6 +312,161 @@ async function setCopyFolder(dir: FileSystemDirectoryHandle | null) {
   for (const s of await listSlots().catch(() => [])) {
     const stored = await readStored(s.key);
     if (stored) await copyOut(s.key, stored.bytes, s.name);
+  }
+}
+
+// T-988: games on the account (workers/cloud.ts, notes/T-988.md). The main thread posts the account;
+// each slot write goes up after it (a save by hand at once, autosaves at most every GAP_MS), and the
+// game opened is claimed on the account. All of it runs in one queue of its own, so the game's
+// messages never wait on the network; only the swap of the game in hand goes through theirs.
+let cloudCtx: CloudContext | null = null;
+/** the slot whose game this page has claimed (or uploaded) on the account */
+let cloudClaimed = "";
+/** the slot another device opened: autosave is off here until a save by hand takes it back */
+let cloudTaken = "";
+let cloudQueue: Promise<unknown> = Promise.resolve();
+const cloudTimers = new Map<string, ReturnType<typeof setTimeout>>();
+/** the game's first load is done: the claim can follow */
+let initDone = false;
+function cloudRun(f: () => Promise<unknown>): Promise<unknown> {
+  cloudQueue = cloudQueue.then(f).catch(() => {});
+  return cloudQueue;
+}
+onTokenGone(() => send({ kind: "accountGone" }));
+
+/** After slot `key` was written: up now (`force`, a save by hand), or once the gap since its last
+ * upload has passed. `fresh`: the slot's first write, which ties it to the account signed in. */
+async function cloudAfterWrite(key: string, force: boolean, fresh: boolean) {
+  const ctx = cloudCtx;
+  if (!ctx || testPage) return;
+  let rec = await readSync(key);
+  if (!rec && fresh) rec = await tieNew(ctx, key);
+  if (!tiedTo(rec, ctx) || !ctx.on) return;
+  const wait = force ? 0 : (rec.upAt ?? 0) + GAP_MS - Date.now();
+  if (wait > 0) {
+    if (!cloudTimers.has(key)) cloudTimers.set(key, setTimeout(() => { cloudTimers.delete(key); void cloudUp(key); }, wait));
+    return;
+  }
+  clearTimeout(cloudTimers.get(key));
+  cloudTimers.delete(key);
+  await cloudUp(key, force);
+}
+
+/** Slot `key` up as stored. The game in hand is claimed first; a 409 "elsewhere" on it means another
+ * device opened it, and this page gives way (a save by hand sends `force` and takes it back). */
+function cloudUp(key: string, force = false): Promise<unknown> {
+  return cloudRun(() => upNow(key, force));
+}
+async function upNow(key: string, force: boolean) {
+  const ctx = cloudCtx;
+  if (!ctx?.on || testPage) return;
+  if (key === activeSlot && !force && cloudClaimed !== key) { await openOnAccount(ctx); await publishSlots(); return; }
+  if (!force) {
+    const [s, r] = await Promise.all([readStored(key), readSync(key)]);
+    if (!s || !r || !changedHere(s, r)) return; // went up already
+  }
+  const r = await upload(ctx, key, force);
+  if (key === activeSlot && r === "ok") { cloudClaimed = key; if (cloudTaken === key) cloudTaken = ""; }
+  if (key === activeSlot && r === "elsewhere") await giveWay(key);
+  await publishSlots();
+}
+
+async function giveWay(key: string) {
+  cloudTaken = key;
+  cloudClaimed = "";
+  const rec = await readSync(key);
+  if (rec) await writeSync(key, { ...rec, gaveWay: true });
+}
+
+/** The page hides: anything waiting for the gap goes now (best effort, a closing page can cut it). */
+function cloudFlush() {
+  for (const [key, t] of cloudTimers) { clearTimeout(t); cloudTimers.delete(key); void cloudUp(key); }
+  if (activeSlot && cloudTaken !== activeSlot) void cloudUp(activeSlot);
+}
+
+/** Settle every other slot this page can lock, then claim the game in hand. */
+function cloudKick(): Promise<unknown> {
+  return cloudRun(async () => {
+    const ctx = cloudCtx;
+    if (!ctx?.on || testPage || !initDone) return;
+    await settleCloud(ctx, activeSlot);
+    await openOnAccount(ctx);
+    await publishSlots();
+  });
+}
+
+/** The game in hand claimed on the account. A newer account copy replaces it if nothing changed here
+ * (the page loads it in place), else this browser's version carries on as a fork in a new slot and
+ * the old slot takes the account's. Offline it plays on and claims when back. */
+async function openOnAccount(ctx: CloudContext) {
+  const key = activeSlot;
+  if (!key || !activeLease || cloudClaimed === key || cloudTaken === key) return;
+  let [stored, rec] = await Promise.all([readStored(key), readSync(key)]);
+  if (!stored || !tiedTo(rec, ctx)) return; // a new game not written yet, or not on this account
+  const list = await listGames(ctx);
+  const changed = () => (changedHere(stored!, rec!) || dirty) && !rec!.gaveWay;
+  if (!list) {
+    // unreachable: the game plays on, "Not on your account yet" while it has changed here
+    if (activeSlot === key && changedHere(stored, rec)) { await writeSync(key, { ...rec, error: lastListFailure() }); await publishSlots(); }
+    return;
+  }
+  if (activeSlot !== key) return;
+  const g = list.games.find((x) => x.id === rec!.id);
+  if (!g) {
+    if (list.tombstones.some((t) => t.id === rec!.id)) {
+      // deleted on another device: a game changed here is kept as a new account game; one not
+      // changed stays in this browser only, so playing it brings back nothing the player deleted
+      if (!changed()) { await writeSync(key, { ...rec, acct: undefined, local: true }); return; }
+      rec = { ...rec, id: newGameId(), rev: 0, syncedAt: 0 };
+      await writeSync(key, rec);
+    }
+    if (await upload(ctx, key) === "ok") cloudClaimed = key;
+    return;
+  }
+  if (g.rev < rec.rev) { rec = { ...rec, rev: g.rev }; await writeSync(key, rec); }
+  if (g.rev === rec.rev) {
+    const c = await claim(ctx, rec);
+    if (c !== "ok") return; // tried again at the next save
+    cloudClaimed = key;
+    rec = (await readSync(key)) ?? rec;
+    if (rec.gaveWay) await writeSync(key, rec = { ...rec, gaveWay: undefined });
+    if (changedHere((await readStored(key)) ?? stored, rec)) await upload(ctx, key);
+    return;
+  }
+  const got = await fetchGame(ctx, g);
+  if (!got) return;
+  let fork = "";
+  // through the game's own queue: nothing edits the game while it is swapped
+  messages = messages.then(async () => {
+    if (activeSlot !== key || !activeLease) return;
+    stored = (await readStored(key)) ?? stored;
+    if (!changed()) {
+      await writeFetched(ctx, key, got);
+      switching = true;
+      try { await loadGame(got.stored.bytes, "autosave"); } finally { switching = false; }
+      dirty = false;
+      savedAt = got.stored.at;
+      return;
+    }
+    // changed on both sides: the game in hand moves to a fork's slot, the account copy into this one
+    fork = "slot-" + crypto.randomUUID();
+    const lease = await leaseSlot(fork);
+    if (!lease) { fork = ""; return; }
+    await writeSlot(fork, { ...stored!, name: forkName(stored!.name || "Saved game", stored!.at) });
+    await writeSync(fork, { id: newGameId(), acct: ctx.acct, rev: 0, syncedAt: 0 });
+    await writeFetched(ctx, key, got);
+    activeLease.release();
+    activeSlot = fork;
+    hold(lease);
+    dirty = true; // what changed since the last write goes to the fork's slot
+    slotChanges?.postMessage({ key: fork });
+  }).catch((err) => send({ kind: "error", message: String(err) }));
+  await messages;
+  if (fork) {
+    if (activeSlot === fork && await upload(ctx, fork) === "ok") cloudClaimed = fork;
+  } else if (activeSlot === key) {
+    const now = await readSync(key);
+    if (now && await claim(ctx, now) === "ok") cloudClaimed = key;
   }
 }
 
@@ -496,7 +680,10 @@ function fetchWater(id: string): Promise<WaterRaster | null> {
 /** Install the masks of `ids` (fetching those not fetched); resolves once each is in or failed. The
  * raster is laid out in the pack's own frame; the track model puts it in the game's (T-125). */
 async function ensureMasks(ids: Iterable<string>): Promise<void> {
-  const todo = [...new Set(ids)].filter((id) => !masksIn.has(id));
+  const all = [...new Set(ids)];
+  // T-1270: each zone's terrain comes with its mask, but nothing waits for it
+  void ensureTerrain(all);
+  const todo = all.filter((id) => !masksIn.has(id));
   if (!todo.length) return;
   const got = await Promise.all(todo.map((id) => fetchWater(id).then((r) => ({ r }), () => null)));
   todo.forEach((id, k) => {
@@ -506,6 +693,68 @@ async function ensureMasks(ids: Iterable<string>): Promise<void> {
     const r = g.r;
     if (r) api!.add_pack_water(r.cell, r.x0, r.y0, r.w, r.h, r.rows, r.runs, r.lon, r.lat);
   });
+}
+
+// ---------------------------------------------------------------- terrain classes (T-1270)
+//
+// A zone's terrain grid (`<id>.terrain` in the folder beside the packs, pipeline/zone_terrain.py) is
+// fetched with its water mask. It only prices track, so no preview or edit waits for it: track drawn
+// before it lands is priced on flat ground and priced again when it does. Construct waits for the
+// grids under what it builds, so nothing is paid on a guess.
+
+const terrainFetches = new Map<string, Promise<ArrayBuffer | null>>();
+/** zones whose terrain is in the track model (or that have none) */
+const terrainIn = new Set<string>();
+
+function fetchTerrain(id: string): Promise<ArrayBuffer | null> {
+  let p = terrainFetches.get(id);
+  if (!p) {
+    p = (async () => {
+      const res = await fetch(new URL(`../terrain/${id}.terrain`, packBase).href);
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error(`${res.status}`);
+      return await res.arrayBuffer();
+    })();
+    terrainFetches.set(id, p);
+    // a failed fetch is tried again by the next view or edit that needs it
+    p.catch(() => {
+      if (terrainFetches.get(id) === p) terrainFetches.delete(id);
+    });
+  }
+  return p;
+}
+
+/** Install the terrain of `ids` (fetching those not fetched); resolves once each is in or failed. A
+ * grid that reprices the blueprint sends the new state, so the quote follows. */
+async function ensureTerrain(ids: Iterable<string>): Promise<void> {
+  const todo = [...new Set(ids)].filter((id) => !terrainIn.has(id));
+  if (!todo.length || !api) return;
+  const got = await Promise.all(todo.map((id) => fetchTerrain(id).then((b) => ({ b }), () => null)));
+  const a = api;
+  if (!a) return;
+  const before = a.blueprint_cost();
+  todo.forEach((id, k) => {
+    const g = got[k];
+    if (!g || terrainIn.has(id)) return;
+    terrainIn.add(id);
+    // a server that answers a missing file with a page instead of a 404 gives no grid either
+    if (g.b) a.add_terrain(new Uint8Array(g.b));
+  });
+  if (Math.abs(a.blueprint_cost() - before) > 1e-9) sendState();
+}
+
+/** Before Construct: the terrain under every blueprint piece. */
+async function terrainForBlueprint() {
+  const a = api!;
+  const xy: number[] = [];
+  const ei = a.edges_info();
+  for (let i = 0; i < ei.length; i += 10) {
+    if (ei[i + 4] === 1) continue;
+    const r = a.edge_render(ei[i]);
+    for (let k = 0; k + 2 < r.length; k += 3) xy.push(r[k], r[k + 1]);
+  }
+  const need = zonesOfPoints(xy).filter((id) => !terrainIn.has(id));
+  if (need.length) await ensureTerrain(need);
 }
 
 /** The zones within TRACK_MARGIN_M of any of these world-metre points (x, y every `stride`). */
@@ -711,11 +960,12 @@ function buildState(): ClockState {
   drawn.reduce((o, d) => (pts.set(d, o), o + d.length), 0);
   const ni = a.nodes_info();
   const nodes: ClockNode[] = [];
+  const ups = upgradesOf(a);
   for (let i = 0; i < ni.length; i += 10) {
     const [lng, lat] = packLngLat(ni[i + 1], ni[i + 2]);
     nodes.push({
       id: ni[i], x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying: ni[i + 6] === 1,
-      platform: ni[i + 7], stationBuilt: ni[i + 8] === 1, stationOff: offStations.has(ni[i]), name: ni[i + 7] > 0 ? a.node_name(ni[i]) : "", heading: ni[i + 9],
+      platform: ni[i + 7], stationBuilt: ni[i + 8] === 1, stationOff: offStations.has(ni[i]), upgrades: ups.get(ni[i]) ?? 0, name: ni[i + 7] > 0 ? a.node_name(ni[i]) : "", heading: ni[i + 9],
     });
   }
   const li = a.lines_info();
@@ -746,10 +996,11 @@ function buildState(): ClockState {
     });
   }
   const nodeAt = new Map(nodes.map((n) => [n.id, n]));
-  lineCountries = new Map(lines.map((l) => {
-    const n = nodeAt.get(l.stops[0]), z = n ? cityWithin(n.lng, n.lat) : null;
-    return [l.id, z ? cityById(z).country ?? "" : ""];
+  lineFirstStops = new Map(lines.map((l) => {
+    const n = nodeAt.get(l.stops[0]);
+    return [l.id, n ? [n.lng, n.lat] : null];
   }));
+  placeLineCountries();
   syncHolidays();
   // Keyframes: phase tables, profile meta, and run 0 of every line resampled.
   const meta = a.profile_meta();
@@ -1274,6 +1525,8 @@ const THUMB_GAP = 4, THUMB_PAD = 14, THUMB_TOP = 34;
 /** the theme the page is in (main.ts sends it): a thumbnail is drawn on that theme's land (T-543) */
 let thumbShade: "light" | "dark" = "light";
 async function slotSummary(): Promise<SlotSummary> {
+  // a save never waits long on them: without them a station takes the nearest centre's name
+  await Promise.race([outlinesRead, new Promise((go) => setTimeout(go, 3000))]);
   const a = api!;
   // stations and the cities they are in
   const ni = a.nodes_info();
@@ -1398,13 +1651,15 @@ async function slotSummary(): Promise<SlotSummary> {
 function autosave(): Promise<boolean> {
   if (saveInFlight) return saveInFlight.then(ok => dirty && ok ? autosave() : ok);
   if (!api || !dirty) return Promise.resolve(true);
-  if (!activeLease || switching) return Promise.resolve(false);
+  if (!activeLease || switching || cloudTaken === activeSlot) return Promise.resolve(false);
   // T-677: a new game whose slot was never written is not kept while its network is empty
   if (unwritten === activeSlot && !api.nodes_info().length && !api.lines_info().length) {
     dirty = false;
     return Promise.resolve(true);
   }
   const key = activeSlot; // an in-flight write must never move to the next slot
+  const force = byHandNext;
+  byHandNext = false;
   dirty = false;
   saveInFlight = (async () => {
     try {
@@ -1416,12 +1671,13 @@ function autosave(): Promise<boolean> {
       const summary = await summaryP;
       const at = Date.now();
       const name = newSlotName?.key === key ? newSlotName.name : undefined;
-      await writeSlot(key, { bytes, at, day, city, ...summary, name });
+      const fresh = await writeSlot(key, { bytes, at, day, city, ...summary, name });
       if (name) newSlotName = null;
       if (unwritten === key) unwritten = null;
       const backups = await listBackups(key).catch(() => null);
       if (backups && !(at - (backups[0]?.at ?? -Infinity) < backupMs)) await writeBackup(key, { bytes, at, day, city, ...summary });
       void copyOut(key, bytes); // T-1214
+      void cloudAfterWrite(key, force, fresh); // T-988
       savedAt = at;
       saveFailure = undefined;
       send({ kind: "saved", at, bytes: bytes.length, encodeMs, totalMs: performance.now() - t0 });
@@ -1450,9 +1706,12 @@ async function saveByHand() {
       if (!lease) throw new Error("This browser cannot protect save slots. Save to a file instead.");
       hold(lease);
     }
+    // T-988: a game another device opened is taken back, the account's copy kept there as a backup
+    if (cloudTaken === activeSlot) cloudTaken = "";
     if (unwritten === activeSlot) unwritten = null;
     saveFailure = undefined;
     dirty = true;
+    byHandNext = true;
     if (!await autosave()) throw new Error(saveFailure ?? "This game could not be saved. Save to a file to keep it.");
     send({ kind: "savedByHand", at: savedAt });
   } catch (err) {
@@ -1473,6 +1732,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         const bytesP = saveBytes(), summaryP = slotSummary();
         const bytes = await bytesP;
         await writeSlot(key, { bytes, at: Date.now(), day: Math.floor(gameNow() / 86400), city, name: msg.name?.trim() || "Saved game", ...await summaryP });
+        void cloudAfterWrite(key, false, true); // T-988: a new game on the account
         // Finish earlier writes before releasing the old slot's guard. The new copy is already safe.
         if (activeLease) await autosave();
         activeLease?.release();
@@ -1519,8 +1779,15 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
       if (key === activeSlot ? !activeLease : !temporary) throw new Error("That slot is open in another tab. Close it before changing this save.");
       try {
         if (msg.action === "rename") await renameSlot(key, msg.name ?? "");
-        else await deleteSlot(key);
+        else {
+          await forgetSlot(key); // T-988: from the account too
+          await deleteSlot(key);
+        }
       } finally { temporary?.release(); }
+      // T-988: a rename goes up at once; a deletion now, or at the next chance
+      const ctx = cloudCtx;
+      if (ctx && msg.action === "rename") void cloudRun(async () => { if (await upload(ctx, key) === "ok" && key === activeSlot) cloudClaimed = key; await publishSlots(); });
+      else if (ctx) void cloudRun(() => sendDeletes(ctx));
     }
     await publishSlots();
     slotChanges?.postMessage({ key: activeSlot });
@@ -1556,7 +1823,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   await openNetwork(net);
   api!.set_fleet(h.fleet ?? 0);
   api!.set_fleet_fast(h.fleetFast ?? 0);
-  fares = faresOf(h.fares, START_FARES);
+  fares = loadFares(h.fares);
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
   loadRegions(h.regions);
@@ -1683,7 +1950,7 @@ function sendState(service = false, effectiveAt?: number) {
   const r = s.render;
   const bufs = new Set<ArrayBufferLike>([r.edgePts.buffer, r.edgeOff.buffer, r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
   if (r.edgeSpeed) bufs.add(r.edgeSpeed.buffer);
-  for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.speed, st.lane]) if (v) bufs.add(v.buffer);
+  for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.speed, st.trainSpeed, st.lane]) if (v) bufs.add(v.buffer);
   for (const v of [n.lineColours, n.lineCars, n.stations, n.stationAxis, n.stationShape, n.junctions, n.marks]) if (v) bufs.add(v.buffer);
   postState(s, [...bufs] as Transferable[]);
   sendTrips();
@@ -1762,6 +2029,25 @@ function sendTrips() {
   }
 }
 
+/** An edit's charge (US$M, `trains` of it for trains) into the money record of the hour and day. */
+function bookCharge(seq: number, charge: number, trains: number) {
+  const d = dayEntry(Math.floor(moneyNow() / 86400));
+  const e = hourEntry(Math.floor(moneyNow() / 3600));
+  d.trains += trains;
+  d.build += charge - trains;
+  e.trains += trains;
+  e.build += charge - trains;
+  for (const x of regionEntries("", d.day, e.hour)) { x.trains += trains; x.build += charge - trains; }
+  heldCharges.set(seq, { day: d.day, hour: e.hour, build: charge - trains, trains });
+}
+
+/** Each station's upgrade bits (T-1281), by node; stations without any are left out. */
+function upgradesOf(a: TrackApi): Map<number, number> {
+  const u = a.station_upgrades(), out = new Map<number, number>();
+  for (let k = 0; k + 1 < u.length; k += 2) out.set(u[k], u[k + 1]);
+  return out;
+}
+
 // ---------------------------------------------------------------- the snapshot demand runs on
 
 function buildSnapshot(): NetworkSnapshot {
@@ -1769,9 +2055,11 @@ function buildSnapshot(): NetworkSnapshot {
   const ni = a.nodes_info();
   const stations: NetworkSnapshot["stations"] = [];
   const geo: { id: string; x: number; y: number; heading: number; length: number }[] = [];
+  const ups = upgradesOf(a);
   for (let i = 0; i < ni.length; i += 10) {
     if (ni[i + 7] > 0 && ni[i + 8] === 1) {
-      stations.push({ id: ni[i], name: a.node_name(ni[i]), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7] });
+      const u = ups.get(ni[i]);
+      stations.push({ id: ni[i], name: a.node_name(ni[i]), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7], ...(u ? { upgrades: u } : {}) });
       geo.push({ id: String(ni[i]), x: ni[i + 1], y: ni[i + 2], heading: ni[i + 9], length: ni[i + 7] });
     }
   }
@@ -1781,6 +2069,9 @@ function buildSnapshot(): NetworkSnapshot {
   for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
   const cx = buildComplexes(geo, links, (y) => (frame.kind === "merc" ? mercK(y) : 1));
   stations.forEach((s) => (s.complex = cx.of.get(String(s.id))));
+  // T-1281: the links are passages, walked faster; between constructed stations only
+  const built = new Set(geo.map((g) => g.id));
+  const passages = links.filter(([p, q]) => built.has(p) && built.has(q)).map(([p, q]) => [Number(p), Number(q)] as [number, number]);
   const li = a.lines_info();
   const lines: NetworkSnapshot["lines"] = [];
   for (let i = 0; i < li.length; i += 22) {
@@ -1806,7 +2097,7 @@ function buildSnapshot(): NetworkSnapshot {
       ...(span.some((v) => v !== 1) ? { span: Array.from(span) } : {}),
     });
   }
-  return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: { ...fares } };
+  return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: { ...fares }, ...(passages.length ? { passages } : {}) };
 }
 
 function scheduleSnapshot() {
@@ -1859,6 +2150,8 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
       return { r: a.delete_pieces(new Uint32Array(op.edges), new Uint32Array(op.stations)) };
     case "flying":
       return { r: a.set_flying(op.node, op.flying) };
+    case "stationUpgrade":
+      return { r: a.set_station_upgrade(new Uint32Array(op.nodes), op.bit, op.on) };
     case "addStation":
       return op.at.kind === "node"
         ? { r: a.add_station(1, op.at.node, 0, 0, op.platform, op.name) }
@@ -1922,8 +2215,15 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
     case "lineFast":
       return { r: a.set_line_fast(op.line, op.fast) };
     case "fares":
-      fares = op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares);
+      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE };
       return { r: 0 };
+    case "fareScale": {
+      const scales = { ...fares.scales };
+      if (op.scale === null || !Number.isFinite(op.scale)) delete scales[op.country];
+      else scales[op.country] = tidyScale(op.scale);
+      fares = { ...fares, scales };
+      return { r: 0 };
+    }
     case "link":
       return { r: op.on ? a.link_stations(op.a, op.b) : a.unlink_stations(op.a, op.b) };
     case "undo":
@@ -1975,6 +2275,12 @@ onmessage = (e: MessageEvent<ToClock>) => {
     thumbShade = msg.shade;
     return;
   }
+  if (msg.kind === "account") {
+    const before = cloudCtx;
+    cloudCtx = msg.ctx;
+    if (msg.ctx?.on && (msg.settle || !before?.on || before.acct !== msg.ctx.acct)) void cloudKick();
+    return;
+  }
   if (msg.kind === "previewStale") {
     previewStaleSeq = Math.max(previewStaleSeq, msg.seq);
     wakeStale?.();
@@ -1987,6 +2293,11 @@ async function processMessage(msg: ToClock) {
     // World identity and coordinates never follow the map's focused city.
     city = HOME_CITY;
     packBase = msg.pack;
+    outlinesRead = readOutlinesForPlaces(msg.outlines).then(() => {
+      if (!api) return;
+      placeLineCountries();
+      if (syncHolidays()) sendTrips();
+    });
     ready = (async () => {
       const t0 = performance.now();
       await init();
@@ -2076,6 +2387,9 @@ async function processMessage(msg: ToClock) {
       sendState();
       send({ kind: "snapshot", snapshot: buildSnapshot() });
     })().catch((err) => send({ kind: "failed", error: String(err) }));
+    // T-988: the game in hand claimed on the account, the other slots settled
+    void ready.then(() => { initDone = true; void cloudKick(); });
+    addEventListener("online", () => void cloudKick());
     setInterval(tick, 1000);
     setInterval(liveMoney, LIVE_MONEY_MS);
     return;
@@ -2176,7 +2490,7 @@ async function handle(msg: ToClock) {
     sendMoney();
     void autosave(); // the slot's card shows the mark at once
   } else if (msg.kind === "edit") {
-    if (msg.op.op === "fares") {
+    if (msg.op.op === "fares" || msg.op.op === "fareScale") {
       apply(msg.op);
       dirty = true;
       sendMoney();
@@ -2188,16 +2502,20 @@ async function handle(msg: ToClock) {
       // T-197: a setting outside the undo history, like fares; the complexes change, so the
       // drawing (links in the state) and demand (the snapshot's complexes) both follow
       const { r } = apply(msg.op);
+      // T-1281: a passage between constructed stations is paid at once
+      const charge = r === 0 && msg.op.on ? api.link_charge() : 0;
       if (r === 0) {
         dirty = true;
+        if (charge > 0) bookCharge(msg.seq, charge, 0);
         sendState();
         scheduleSnapshot();
         keep();
       }
-      send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : msg.op.on ? issues() : [], charge: 0 });
+      send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : msg.op.on ? issues() : [], charge });
       return;
     }
     await masksFor(msg.op);
+    if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine") await terrainForBlueprint();
     const tA = performance.now();
     // T-1071: a train count takes effect a moment ahead, once its trips are on screen
     const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway";
@@ -2214,17 +2532,7 @@ async function handle(msg: ToClock) {
     // The new state first, so the world is up to date when the edit's answer arrives.
     if (r === 0) {
       dirty = true;
-      if (charge > 0) {
-        const d = dayEntry(Math.floor(moneyNow() / 86400));
-        const e = hourEntry(Math.floor(moneyNow() / 3600));
-        const trains = api.last_train_charge();
-        d.trains += trains;
-        d.build += charge - trains;
-        e.trains += trains;
-        e.build += charge - trains;
-        for (const x of regionEntries("", d.day, e.hour)) { x.trains += trains; x.build += charge - trains; }
-        heldCharges.set(msg.seq, { day: d.day, hour: e.hour, build: charge - trains, trains });
-      }
+      if (charge > 0) bookCharge(msg.seq, charge, api.last_train_charge());
       forget();
       const demand = api.dirty_demand_lines();
       sendState(service, service ? api.edit_time() : undefined);
@@ -2287,7 +2595,7 @@ async function handle(msg: ToClock) {
     api.set_transfers(msg.packed);
     sendTrips();
   } else if (msg.kind === "flush") {
-    void autosave();
+    void autosave().then(cloudFlush);
   } else if (import.meta.env.DEV && msg.kind === "debugPanic") {
     if (msg.when === "afterEdit") panicAfterEdit = true;
     else if (msg.when === "read") api.edge_polyline(0xffffffff, 0);
@@ -2301,6 +2609,7 @@ async function handle(msg: ToClock) {
       : q.what === "junction" ? api.junction_info(q.node)
       : q.what === "edgePis" ? api.edge_pis(q.edge)
       : q.what === "flyover" ? new Float64Array([api.flyover_cost(q.node)])
+      : q.what === "upgradeCost" ? new Float64Array(UPGRADE_BITS.map((b) => api!.station_upgrade_cost(q.node, b)))
       : q.what === "doubleUp" ? doubleUpAnswer(q.edge)
       : q.what === "lineAccount" ? api.line_account(q.line, q.day ?? 0)
       : q.what === "linePeriods" ? api.line_periods(q.line, q.day)
@@ -2363,7 +2672,8 @@ async function handle(msg: ToClock) {
     const speeds = (api as TrackApi & { preview_render_speeds(): Float32Array }).preview_render_speeds();
     if (speeds.length !== Math.max(0, pts.length / 3 - 1)) throw new Error("Preview speed/point length mismatch");
     const marks = markPoints((api as TrackApi & { preview_marks(): Float64Array }).preview_marks(), 3);
-    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], issues: ok ? [] : issues(), verts, pts, speeds, arc, anchor: anchor().version, marks }, [verts.buffer, pts.buffer, speeds.buffer, marks.buffer]);
+    const ground = msg.kind === "preview" ? Array.from(a.preview_ground()) : undefined;
+    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], ground, issues: ok ? [] : issues(), verts, pts, speeds, arc, anchor: anchor().version, marks }, [verts.buffer, pts.buffer, speeds.buffer, marks.buffer]);
   } else if (msg.kind === "epoch") {
     if (msg.epoch !== epoch) {
       epoch = msg.epoch;

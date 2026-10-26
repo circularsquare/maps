@@ -4,8 +4,8 @@
 import { signal } from "@preact/signals";
 import type { Level } from "./types";
 
-/** Default line colours: a normal saturated metro palette (SPEC 8), a new line taking a random unused
- * one (T-856). Every pair is at least 19 apart in CIEDE2000 (T-223, T-856) and at least 17 from the
+/** Default line colours: a normal saturated metro palette (SPEC 8), a new line taking the one
+ * farthest from the lines near it (T-1278, `nextFreeColour`). Every pair is at least 19 apart in CIEDE2000 (T-223, T-856) and at least 17 from the
  * map's land, water and parks in both themes (the closest, light blue on light water); yellow-green,
  * pink, light blue and lavender are light enough that their chips take dark letters (`inkOn`). */
 export const LINE_PALETTE = ["#d7263d", "#1f6fd1", "#1a9a4a", "#f08a00", "#8a3fb8", "#f2c200", "#8f5a2a", "#0e9a9a",
@@ -25,7 +25,7 @@ export const LEVEL_COLOURS: Record<Level, string> = {
   [-3]: "#c2351c",
 };
 
-/** The Max speed display's key, km/h and colour; renderer.ts builds its stroke shader's blend from the
+/** The Speed display's key, km/h and colour; renderer.ts builds its stroke shader's blend from the
  * same stops. Warm red to blue up to 160 (ordinary track), then indigo and violet up to high-speed
  * track's 320 (T-843). */
 export const SPEED_STOPS: [number, string][] = [[40, "#d85b4b"], [80, "#d9a437"], [120, "#55a886"], [160, "#397bc1"], [240, "#5b4fc9"], [320, "#a03fc2"]];
@@ -43,7 +43,7 @@ function rampColour(stops: [number, string][], v: number): string {
   return s[s.length - 1][1];
 }
 
-/** The colour the Max speed display gives `kmh`. */
+/** The colour the Speed display gives `kmh`. */
 export const speedColour = (kmh: number) => rampColour(SPEED_STOPS, kmh);
 
 /** T-673, T-692, T-1160, T-1255: crowding's colour by the average wait for a train with room (min;
@@ -160,6 +160,16 @@ function fromOklab([L, a, b]: [number, number, number]): [number, number, number
   return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s]
     .map((v) => Math.round(255 * fromLinear(Math.min(1, Math.max(0, v))))) as [number, number, number];
 }
+/** Distance in OKLab from `hex` to another colour (T-1278: a new line's colour). */
+export function colourDistanceFrom(hex: string): (other: string) => number {
+  const a = HEX.test(hex) ? toOklab(hex) : null;
+  return (other) => {
+    if (!a) return Infinity;
+    const b = toOklab(other);
+    return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+  };
+}
+
 function buildRamp(from: string, to: string): Uint8ClampedArray {
   const a = toOklab(from), b = toOklab(to), out = new Uint8ClampedArray(256 * 3);
   for (let i = 0; i < 256; i++) {

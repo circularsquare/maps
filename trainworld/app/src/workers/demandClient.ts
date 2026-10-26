@@ -155,11 +155,13 @@ export function poolSize(): number {
 /** The service demand reads, with the UI's ids. */
 interface Service {
   frame: FrameSpec;
-  fare: { base: number; perKm: number; nodes?: [number, number][] };
+  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number> };
   /** `complex`: the station's complex (T-161); absent = a complex of its own */
-  stations: { id: string; x: number; y: number; complex?: number }[];
+  stations: { id: string; x: number; y: number; complex?: number; upgrades?: number }[];
   /** `wrapS`: a circle's stand at its first stop, riding on round (T-798) */
   lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[] }[];
+  /** station pairs joined by a passage (T-1281) */
+  passages?: [string, string][];
 }
 
 /** `corridorDay`: a kind of day's factors for the corridors' longer trips and commutes (`dayResult`) */
@@ -470,8 +472,9 @@ function serviceFromSnapshot(s: NetworkSnapshot): Service {
   return {
     frame: s.frame ?? LEGACY_FRAME,
     fare: s.fare ?? { base: 2, perKm: 0 }, // legacy fixed 6 perceived minutes
-    stations: s.stations.map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex })),
+    stations: s.stations.map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex, ...(st.upgrades ? { upgrades: st.upgrades } : {}) })),
     lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span && !perfOff("span") ? { span: l.span } : {}) })),
+    ...(s.passages?.length ? { passages: s.passages.map(([a, b]) => [String(a), String(b)] as [string, string]) } : {}),
   };
 }
 
@@ -485,6 +488,8 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     stXY: new Float32Array(svc.stations.flatMap((s) => [s.x, s.y])),
     // a station without a complex number is one of its own: numbered past every complex
     complex: new Uint32Array(svc.stations.map((s, i) => s.complex ?? svc.stations.length + i)),
+    ...(svc.stations.some((s) => s.upgrades) ? { ups: Uint8Array.from(svc.stations, (s) => s.upgrades ?? 0) } : {}),
+    ...(svc.passages?.length ? { passages: Uint32Array.from(svc.passages.filter(([p, q]) => index.has(p) && index.has(q)).flatMap(([p, q]) => [index.get(p)!, index.get(q)!])) } : {}),
     lineN: new Uint32Array(lines.map((l) => l.stops.length)),
     stops: new Uint32Array(nStops),
     times: new Float32Array(6 * nStops),

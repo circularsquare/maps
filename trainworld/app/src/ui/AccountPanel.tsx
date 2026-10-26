@@ -9,6 +9,7 @@ import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { accountConfig, accountOpen, accountState, api, deleteAccount, session, signIn, signOut, startAccount, storeSession, type AccountView } from "../game/account";
 import { shade } from "../game/ui";
+import { answerMergeAsk, mergeAsk, watchMerge } from "../game/accountGames";
 import { Leaderboard } from "./Leaderboard";
 import { Modal } from "./Modal";
 import { Icon } from "./widgets";
@@ -109,6 +110,7 @@ function SignedIn({ a }: { a: AccountView }) {
   </form>;
   return <>
     <p>{who}</p>
+    <MergeQuestion />
     {password && <form class="acct-form acct-sec" onSubmit={(e) => { e.preventDefault(); const email = val(e.currentTarget, "email").trim(); run(async () => setAccount((await api<{ account: AccountView }>("PUT", "noritetsu/email", { email })).account)); }}>
       <input name="email" type="email" placeholder="Recovery email" aria-label="Recovery email" autocomplete="email" value={a.pendingEmail || a.email || ""} key={a.pendingEmail || a.email} />
       {a.pendingEmail ? <p class="small muted">Confirm your email at {a.pendingEmail}.</p>
@@ -123,11 +125,28 @@ function SignedIn({ a }: { a: AccountView }) {
       <button class="btn text" data-tip="Signs out of anitabuilder and noritetsu in this browser" onClick={() => { signOut(); accountOpen.value = false; }}>Sign out</button>      <button class="btn text danger" onClick={() => setPanel("delete")}>Delete account</button>
     </div>
     {panel === "delete" && <div class="callout bad">
-      <p>Delete your account? Its leaderboard entries and its noritetsu rides go too. Games in this browser stay.</p>
+      <p>Delete your account? Its games, its leaderboard entries and its noritetsu rides go too. Games in this browser stay.</p>
       <div class="pane-foot"><button class="btn text danger" onClick={() => run(async () => { await deleteAccount(); accountOpen.value = false; })}>Delete account</button><button class="btn text" onClick={() => setPanel("")}>Keep it</button></div>
     </div>}
     {msg && <p class="acct-msg">{msg}</p>}
   </>;
+}
+
+/** T-988: signing in with games in this browser asks whether they go on the account. */
+function MergeQuestion() {
+  const ask = mergeAsk.value;
+  const [sure, setSure] = useState(false);
+  if (!ask) return null;
+  const one = ask.length === 1;
+  return <div class="callout acct-merge">
+    {!sure ? <>
+      <p>{one ? `Add ${ask[0].name} to your account?` : `Add the ${ask.length} games in this browser to your account?`}</p>
+      <div class="acct-btns"><button class="btn text acct-go" onClick={() => void answerMergeAsk(true)}>Add</button><button class="btn text" onClick={() => setSure(true)}>Don't add</button></div>
+    </> : <>
+      <p>Are you sure? Games kept only in this browser are lost if its storage is cleared.</p>
+      <div class="acct-btns"><button class="btn text" onClick={() => { setSure(false); void answerMergeAsk(false); }}>{one ? "Keep it here only" : "Keep them here only"}</button><button class="btn text acct-go" onClick={() => { setSure(false); void answerMergeAsk(true); }}>{one ? "Add it" : "Add them"}</button></div>
+    </>}
+  </div>;
 }
 
 export function AccountPanel() {
@@ -165,6 +184,7 @@ let mounted = false;
  * both call it. */
 export function startAccountUi() {
   startAccount();
+  watchMerge(); // T-988
   if (mounted || accountState.peek() === "off") return;
   mounted = true;
   const root = document.createElement("div");

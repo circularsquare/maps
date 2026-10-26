@@ -1,9 +1,9 @@
 // The sound at stations (T-686, T-696): one soft note, the line's own, when a train pulls in and
 // small pops as riders get off and on, made with WebAudio (no files). Quiet by design: a low master level, the volume rising
 // with the zoom past the one where platforms are drawn, and fewer sounds the more arrivals are
-// already sounding. Browsers keep audio silent until the page has had a click or a key, so the
-// context is made on the first one and nothing plays before it.
+// already sounding. The audio context is the game's one (audioOut.ts).
 
+import { audioOut } from "./audioOut";
 import { STATION_BOX_ZOOM } from "./stationGeometry";
 
 /** The master level at volume 1; the pops and the chime sit under it. */
@@ -89,47 +89,14 @@ export function popsFor(riders: number): number {
 
 export class StationSound {
   private ctx: AudioContext | null = null;
-  private out: DynamicsCompressorNode | null = null;
   private recent: number[] = [];
-
-  /** the page has had a press or a key, so a context may start */
-  private armed = false;
-  private failed = false;
-
-  constructor() {
-    const arm = () => {
-      window.removeEventListener("pointerdown", arm, true);
-      window.removeEventListener("keydown", arm, true);
-      this.armed = true;
-    };
-    window.addEventListener("pointerdown", arm, true);
-    window.addEventListener("keydown", arm, true);
-  }
-
-  /** Made at the first sound, not on the press: opening the audio device took 60-210 ms, a freeze on
-   * the page's first click (T-1162). After a gesture the page may start a context from any task. */
-  private open() {
-    if (this.ctx || this.failed || !this.armed) return;
-    try {
-      const C = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!C) { this.failed = true; return; }
-      this.ctx = new C();
-      const comp = this.ctx.createDynamicsCompressor();
-      comp.connect(this.ctx.destination);
-      this.out = comp;
-    } catch {
-      this.ctx = null;
-      this.failed = true;
-    }
-  }
 
   play(a: Arrival) {
     if (a.speed >= 2 || a.volume <= 0) return;
-    this.open();
-    const ctx = this.ctx, out = this.out;
-    if (!ctx || !out || a.speed >= 2 || a.volume <= 0) return;
-    if (ctx.state === "suspended") void ctx.resume();
-    if (ctx.state !== "running") return;
+    const o = audioOut();
+    if (!o) return;
+    const { ctx, out } = o;
+    this.ctx = ctx;
     const now = ctx.currentTime;
     this.recent = this.recent.filter((t) => now - t < RECENT_S);
     if (this.recent.length >= MAX_RECENT) return;

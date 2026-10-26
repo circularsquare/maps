@@ -91,16 +91,30 @@ purpose filter the purpose drawn is ringed in the bar.
   panel at once; the map's line follows by one colour edit every 0.2 s at most (longer on a slow
   machine: 6 times the last edit's round trip), and the final colour goes as one edit on release, a
   swatch click, an arrow key step or a typed hex.
+- **Under the title** a muted line gives the stop count and length, "24 stops, 16.3 km", led by
+  "High-speed, " on a line of high-speed trains [T-1280].
 - **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key L), Copy line (duplicates route and settings with no trains, T-1161, then opens
   naming and editing), and Delete line (asked first). While stops are being edited the Stops list (with a remove
   button on each stop) follows them there, above Schedule; otherwise it sits after the day's figures.
   Incomplete lines stay planned and run no trains.
 - **Sections**, in order: Schedule (trains for each demand level, with the resulting headway;
   [track-and-service.md](track-and-service.md) 6.3; columns Demand, Trains and Headway, every
-  cell one line, the Demand column cut with an ellipsis when short of room [T-692]; a Trains / Headway switch in the heading
+  cell one line, the Demand column cut with an ellipsis when short of room [T-692]; beside the
+  heading two small muted icon buttons, copy and paste [T-1293, `game/scheduleCopy.ts`]: copy keeps
+  the line's trains or headways per level, train length and kind of train in the browser
+  (`localStorage` "anitabuilder-schedule-copy", so it outlasts the game and the visit; hover: the
+  settings, "Headways 3 min, 5 min and 10 min, 6 cars, high speed"), and paste puts them on the line
+  shown as separate edits (kind, length, then the trains or headways; a refusal stops the rest), the
+  length cut to what its shortest platform fits (the paste hover and a notice say so), a loop's
+  counts rounded up to even; paste is off until something is copied, its hover naming the line
+  copied from; a Trains / Headway switch in the heading
   chooses what the player sets [T-625]: with Headway the headway column holds a stepper (30 s steps
   under 5 minutes, 1 minute under 15, 5 above; none, or 1 to 120 minutes; a click on the number types
-  it in minutes) and the trains column the count it gives, 10 px clear of the stepper [T-1159]; each button's hover names the train
+  it in minutes) and the trains column the count it gives, 10 px clear of the stepper [T-1159]; while a
+headway or count is still on its way to the worker (an edit takes seconds on a big network), the other
+cell shows what it gives (the headway's count by `autoTrainsFor` with the level's limit, a count's
+headway over the round trip), and the muted running headway waits for the edit, so stepping fast never
+shows an earlier edit's figures [T-1276]; each button's hover names the train
   count it leads to and, on a running line, the cars it buys at the car price, takes from the
   depot, or frees [T-631]; a line whose track holds it just over the headway set shows the headway
   it runs at, muted, left of the stepper, with a hover naming what limits it as the capacity alerts
@@ -163,7 +177,15 @@ purpose filter the purpose drawn is ringed in the bar.
   flat crossings on the route** [T-629, `TrackApi.line_marks`] as small marks on the diagram's bar between the
   two stops they lie between, spread evenly in the gap (the diagram is not to scale): a white diamond for a
   junction with no flyover and no station, a cross for a flat crossing, each with a hover naming it and
-  the lines that use or cross it ("Flat crossing near Harbour", "Crosses Cross"); the round trip split into running, dwell, turning and waiting,
+  the lines that use or cross it ("Flat crossing near Harbour", "Crosses Cross"); **in the Traffic
+  track display** [T-1272] (not while stops are edited) each stretch of the diagram's bar is as wide as
+  its riders over the day shown (both directions, the map's purpose filter, `dailyRiders`), from 2 px
+  for none to 14 px for the line's own busiest stretch (`STRETCH_MIN_PX`, `STRETCH_MAX_PX`), so a quiet
+  line varies as much as a busy one; a stretch the map marks as crowded (`Renderer.fullStretch`,
+  read every half second) has its darkening and red edges 2 px each side, the edges from half
+  strength at the map's faintest to full (`PANEL_MARK_FLOOR`; on the panel's background the map's
+  15% cannot be seen); each stretch's hover: "3 Av to 14 St-Union Sq", "334,700 riders per day", and
+  "Average 1.1 minute wait for a train with room" where marked; the round trip split into running, dwell, turning and waiting,
   naming where it waits most [T-031]. A **loop** [T-798] shows its lap (one way round, the longer way's)
   in place of the round trip, split the same way, with no turning row for a circle and "Turning at
   the end" for a balloon; its average speed is once round over the lap (a balloon's less its
@@ -243,9 +265,9 @@ purpose filter the purpose drawn is ringed in the bar.
     and stations of its own name are left out, and each name is listed once. The walk is the
     demand model's routed walk ([demand-mode.md](demand-mode.md) 4.3) x the 1.3 detour at the model's 6 km/h; a station
     water cuts off shows "no walk", only when fewer than three can be walked to within 10 km.
-  - **Linked by you**: each link touching the complex, with Unlink. The buttons **Trip from here**
-    [T-221] (the trip tool with the station as the start) and **Link to another station** (below)
-    are in the row under the subtitle, above everything else [T-1134].
+  - **Passages**: each passage touching the complex, its length (price on hover) and Remove. The
+    button **Trip from here** [T-221] (the trip tool with the station as the start) is in the row
+    under the subtitle, above everything else [T-1134], and under it the upgrade row (below).
   - **Commuters**: "Live nearby" and "Work nearby" (commuters a day who live, or work, within its
     reach and ride from it); the larger is picked first, a click picks the other; then the top
     eight far-end places ("Where they work" or "Where they live"). Not drawn on the map [T-519,
@@ -269,9 +291,15 @@ purpose filter the purpose drawn is ringed in the bar.
   trips) is as in complex view, for the station alone.
 - **Buttons come first** [T-1134, Anita: never put stuff at the bottom after an arbitrarily long
   list]: every inspector's buttons sit in one row (`Actions` in `ui/widgets.tsx`) right under its
-  header, above all rows and lists. A station has Trip from here and Link to another station in one
-  row (what linking asks, when picking, is under it) and, in station view, Construct station (a
-  blueprint only) and Remove station in a second; a track has Construct for its price (a blueprint
+  header, above all rows and lists. A station has Trip from here in one row (what placing a passage
+  asks, when picking, is under it) and, in station view, Construct station (a blueprint only) and
+  Remove station in a second, then the **upgrade row** [T-1281, `ui/inspector/StationUpgrades.tsx`]:
+  icons for the terminal (two sidings), park and ride (P), waiting room (a bench under a roof) and
+  passage (two platforms and a walkway); in complex view only the passage. Each is outlined when
+  not built, dashed in the blueprint, filled when built; its hover gives its name, what it does
+  in a sentence, its price and what a click does. A click adds it to the blueprint, or on a built
+  station builds it at once for its price (a notice says so), or takes it away again (nothing
+  refunded once built); the passage's click starts picking the other station (below). A track has Construct for its price (a blueprint
   only) and Remove track; a junction has Construct a flyover (built) or Add a flyover (blueprint), with "Paid at once"
   or "Added to the blueprint" beside it, or, for a blueprint flyover, Remove the flyover; a city has Go to its name; a trip
   opened from a selection has Back.
@@ -288,55 +316,41 @@ purpose filter the purpose drawn is ringed in the bar.
 
 ## The complex map
 
-[T-147, `ui/inspector/ComplexMap.tsx`; T-176, T-246, T-250]
+[T-147, T-1289, `ui/inspector/ComplexMap.tsx`; T-176, T-246]
 
-- The inspector's width, 120-240 px tall, north up, positions and headings true at one scale (at
-  most 1.2 px a metre; a round scale bar in a corner).
-- Each platform is drawn with its lines through it in their colours, each as wide as the riders on
-  its trains there a day (each direction the busier of arriving and leaving loads, every period
-  summed), 1.5 to 6 px by square root against the complex's busiest. Platforms on top of each other
-  (parallel within 15 degrees, centre lines within 12 m) are one bundle, lines side by side in the
-  order the platforms lie. Bundles have a thin dark outline, dashed for blueprint; the selected
-  station's a heavier one. A line's hover gives station, line, boardings, riders on its trains
-  there, and how many change to or from other lines there with its three biggest partners; a click
-  opens that station alone.
+- **Drawn by the map's own renderer** [T-1289, Anita: "could we just copy the view in the world"]:
+  the complex as the map draws it close in, whatever the map is looking at: platform boxes, the
+  lines and track through them, trains, platform crowds, riders walking between platforms, the
+  player's links as bridges, the selection's outline, on the map's land colour (no roads, water or
+  names of the base map). The network renderer draws it with a flat camera of its own into a corner
+  of the map's overlay canvas before each map frame, and the panel's canvas copies it before that
+  frame clears it (`Overlay.setSnapshot`, map/overlay.ts), so it moves whenever the map's trains do.
+- The inspector's width, 120-240 px tall, north up, every platform's ends inside a 24 px margin, at
+  zoom 14 (where the map's platform boxes begin) to 17.5; a round scale bar in a corner.
+- **Hover** on a platform: the station, then each line stopping there with its boardings and riders
+  on its trains there a day (each direction the busier of arriving and leaving loads, every period
+  summed) and how many change to or from other lines with its three biggest partners (T-176,
+  `complexTransfers(members)` asked at each published round, [demand-views.md](demand-views.md)
+  "Transfers"), then the riders waiting now and the room (T-246, `game/complexLive.ts`). Platforms on
+  top of each other (parallel within 15 degrees, centre lines within 12 m) share one hover listing
+  them all. A click opens that station alone. The player's links have a hover giving the distance.
 - When the complex has more than one name, each name (the part before a slash) has one label beside
   its platforms wherever it is clear, else none.
-- The player's links are dashed lines between the two stations, their hover giving the distance.
-- **Now** [T-246, `game/complexLive.ts`]: after each station's lines its bundle has a 5 px platform
-  strip, white between two lines of the platform blue, filling like the map's platform boxes (each
-  direction's half from the middle out by its riders' share of the room, grey, or red once full); its hover
-  gives the riders waiting (by line name when more than one stops there) and the room. Trains on their line's band in the darker train shade: one at the
-  platform along it; one pulling in (stopping within 60 game seconds) paler, coming in from the end
-  it arrives by and slowing to its stop, and one pulling out (left within 60 game seconds) paler,
-  gathering speed out of the other end; a train ending its trip there turns back rather than
-  pulling out. Hover gives line, destination and seconds to its stop. Read from the renderer's hour
-  of the boarding account; worked out every 10 game seconds (at most every 150 ms), each train with
-  the times it stops and leaves, looking ahead twice the game time between workings-out; the trains
-  are moved on every animation frame from the clock's `now()`, straight on their SVG rects, and the
-  view re-renders only when the trains or riders waiting change [T-1096].
-- **Transfers** [T-176, `complexTransfers(members)`, [demand-views.md](demand-views.md) "Transfers"]: asked of the demand
-  workers when the map shows and at each published round, the last answer kept meanwhile. Both
-  directions of a line pair added. Changes between lines in different bundles are grey curves (ink
-  at 55% over a thin halo of the land colour), across the gap where the two lines' bands come
-  nearest, or middle to middle when they cross or come within 16 px: the busiest 8, none under 2%
-  of the complex's changes, 1.5 to 8 px by square root. Each curve bows gently to one side; two
-  middles at one spot get a small loop. Hover gives the riders per day and each direction. Changes
-  within one bundle and walks to stations outside the complex are not drawn. Why line to line:
-  notes/T-147.md.
-- No notes under the map: the widths, the curves and the dashed links are in their hovers [T-1095, T-1106].
+- No notes under the map [T-1095, T-1106].
 
-## Linking stations
+## Passages: linking stations
 
-[T-197, `game/links.ts`] The station inspector's button row has "Link to another station". After a click
-on it the next station clicked is linked with the selected one (the pointer a crosshair, a hand
-over a station); a click on anything else, Esc, "Stop linking", another selection or a tool stops
-it. Refused with a notice, still picking: the same station, one already in this complex, or one
-more than 1 km away centre to centre. "Linked by you", above the commuters, lists each link
-touching the complex with its two stations, their chips and Unlink. Only the player's links can be
-undone: stations the distance rule groups cannot be split. Linking is not in the Ctrl+Z history
-(a setting, like fares); removing a station drops its links. Blueprint stations can be linked;
-demand counts a link once both are constructed.
+[T-197, T-1281, `game/links.ts`] The passage icon in the station panel's upgrade row starts a
+passage. After a click on it the next station clicked is joined to the selected one (the pointer a
+crosshair, a hand over a station); a click on anything else, Esc, the icon again, another
+selection or a tool stops it. Refused with a notice, still picking: the same station, one already
+in this complex, or one more than 1 km away centre to centre. Between two constructed stations it
+is paid at once (US$10M plus US$90M a km, a notice), else it is built with the second of them.
+"Passages", above the commuters, lists each passage touching the complex with its two stations,
+their chips, its length and Remove (nothing refunded once built). Only the player's passages can be
+removed: stations the distance rule groups cannot be split. Passages are not in the Ctrl+Z history
+(a setting, like fares); removing a station drops its passages. Demand counts a passage once both
+stations are constructed.
 
 ## The trip explorer
 

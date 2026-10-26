@@ -7,7 +7,9 @@
 //! its worst point as a corner, until none is. Then every curve under the minimum radius (the
 //! route changing between two parallel tracks, a station throat) is widened to it where its legs
 //! have room, else its corner is dropped, or a neighbour with it, whichever leaves the line
-//! nearest. Distances are ground metres; in a scaled frame the plane ones are divided by `k`.
+//! nearest. Auto radii are capped at the drawing tool's design radius (T-817, T-1290), and the
+//! corners whose curve is wider than `R_CAP` carry it as a set radius, as drawn corners do.
+//! Distances are ground metres; in a scaled frame the plane ones are divided by `k`.
 
 use super::frame::merc_k;
 use super::geom::{self, Fit, Pi};
@@ -25,7 +27,8 @@ const MAX_ROUNDS: usize = 40;
 /// What `trace` made of a real line.
 #[derive(Clone, Debug)]
 pub struct Traced {
-    /// The corners between the two ends, at `level`; radius 0 (auto) except where widened.
+    /// The corners between the two ends, at `level`; radius 0 (auto) except where widened or
+    /// wider than `R_CAP`.
     pub pis: Vec<Pi>,
     /// The fit's largest and mean distance from the real line, ground m.
     pub worst: f64,
@@ -37,10 +40,10 @@ pub struct Traced {
 
 /// `line`: the real line in plane metres, its first and last points the route's two ends. `tol`
 /// the distance the fit may lie from it (ground m), `r_min` the smallest radius (ground m; 100,
-/// or 108 for quad track's inner pair). None if the line is too short to fit or the result does
-/// not fit (it never should).
-pub fn trace(line: &[(f64, f64)], scaled: bool, tol: f64, r_min: f64, level: i8) -> Option<Traced> {
-    let mut t = Tracer::new(line, scaled, tol, r_min, level);
+/// or 108 for quad track's inner pair), `cap` the design radius (ground m, `R_CAP` at 160 km/h).
+/// None if the line is too short to fit or the result does not fit (it never should).
+pub fn trace(line: &[(f64, f64)], scaled: bool, tol: f64, r_min: f64, cap: f64, level: i8) -> Option<Traced> {
+    let mut t = Tracer::new(line, scaled, tol, r_min, cap, level);
     while !t.step() {}
     t.take()
 }
@@ -53,6 +56,7 @@ pub struct Tracer {
     scaled: bool,
     tol: f64,
     r_min: f64,
+    cap: f64,
     level: i8,
     keep: Vec<usize>,
     rounds: usize,
@@ -73,9 +77,9 @@ enum Eased {
 }
 
 impl Tracer {
-    pub fn new(line: &[(f64, f64)], scaled: bool, tol: f64, r_min: f64, level: i8) -> Tracer {
+    pub fn new(line: &[(f64, f64)], scaled: bool, tol: f64, r_min: f64, cap: f64, level: i8) -> Tracer {
         let line = dedup(line);
-        let mut t = Tracer { line, samples: vec![], scaled, tol, r_min, level, keep: vec![], rounds: 0, corners: None, tried: 0, widened: 0, dropped: 0, sweep: None, pis: vec![], done: None };
+        let mut t = Tracer { line, samples: vec![], scaled, tol, r_min, cap: cap.max(R_CAP), level, keep: vec![], rounds: 0, corners: None, tried: 0, widened: 0, dropped: 0, sweep: None, pis: vec![], done: None };
         if t.line.len() < 2 {
             t.done = Some(None);
             return t;
@@ -118,7 +122,7 @@ impl Tracer {
         }
         let Some(c) = &self.corners else {
             let v: Vec<Pi> = self.keep.iter().map(|&i| Pi::new(self.line[i].0, self.line[i].1, 0.0, self.level).quantised()).collect();
-            self.sweep = Some(Sweep::new(&geom::fit_in(&v, self.scaled), SWEEP_CHUNK));
+            self.sweep = Some(Sweep::new(&geom::fit_capped(&v, self.scaled, self.cap), SWEEP_CHUNK));
             return false;
         };
         if self.tried >= c.keep.len() {
@@ -151,8 +155,8 @@ impl Tracer {
 
     /// The tightest curve under the minimum radius widened to it, or its corners dropped or merged.
     fn ease(&self, c: &Corners) -> Eased {
-        let (line, samples, scaled, level, r_min, tol) = (&self.line[..], &self.samples[..], self.scaled, self.level, self.r_min, self.tol);
-        let f = c.fit(line, scaled, level);
+        let (line, samples, scaled, level, r_min, tol, cap) = (&self.line[..], &self.samples[..], self.scaled, self.level, self.r_min, self.tol, self.cap);
+        let f = c.fit(line, scaled, cap, level);
         let tight_at = |f: &Fit, j: usize| f.radius[j] > 0.0 && f.radius[j] < r_min - 1e-6;
         let Some(i) = (1..c.keep.len() - 1).filter(|&j| tight_at(&f, j)).min_by(|&a, &b| f.radius[a].total_cmp(&f.radius[b])) else { return Eased::Done };
         // widen in place when the legs have room beside the neighbours' tangents
@@ -163,7 +167,7 @@ impl Tracer {
         if turn < PI - 1e-3 && need + f.tangent[i - 1] <= leg(i - 1, i) - FIT_TOL && need + f.tangent[i + 1] <= leg(i, i + 1) - FIT_TOL {
             let mut c2 = c.clone();
             c2.radius[i] = r_min + 1e-3;
-            if c2.near(line, scaled, level, i).issues(|_| true) == 0 && c2.worst_near(line, samples, scaled, level, i) <= 2.0 * tol {
+            if c2.near(line, scaled, cap, level, i).issues(|_| true) == 0 && c2.worst_near(line, samples, scaled, cap, level, i) <= 2.0 * tol {
                 return Eased::Widened(c2);
             }
         }
@@ -179,11 +183,11 @@ impl Tracer {
             for merge in [false, true] {
                 let Some(c2) = (if merge { c.merged(&v, lo, hi, r_min + 1e-3) } else { Some(c.without(lo, hi)) }) else { continue };
                 let at = lo.min(c2.keep.len() - 2).max(1);
-                let w2 = c2.near(line, scaled, level, at);
+                let w2 = c2.near(line, scaled, cap, level, at);
                 if w2.tight(at.saturating_sub(6), at + 7, r_min) >= before || w2.issues(|g| !matches!(g, geom::GeomIssue::RadiusTooSmall(_))) > 0 {
                     continue;
                 }
-                let w = c2.worst_near(line, samples, scaled, level, at);
+                let w = c2.worst_near(line, samples, scaled, cap, level, at);
                 if best.as_ref().map_or(true, |bst| w < bst.0) {
                     best = Some((w, c2));
                 }
@@ -198,7 +202,9 @@ impl Tracer {
     /// Checks the eased alignment and starts measuring it; true if it does not fit.
     fn finish(&mut self) -> bool {
         let Some(c) = &self.corners else { return true };
-        let v = c.verts(&self.line, self.level);
+        let mut v = c.verts(&self.line, self.level);
+        let made: Vec<usize> = (1..v.len() - 1).collect();
+        geom::design_radii(&mut v, &made, self.cap, self.scaled);
         let f = geom::fit_in(&v, self.scaled);
         if !f.issues.is_empty() {
             self.done = Some(None);
@@ -228,15 +234,15 @@ impl Corners {
             })
             .collect()
     }
-    fn fit(&self, line: &[(f64, f64)], scaled: bool, level: i8) -> Fit {
-        geom::fit_in(&self.verts(line, level), scaled)
+    fn fit(&self, line: &[(f64, f64)], scaled: bool, cap: f64, level: i8) -> Fit {
+        geom::fit_capped(&self.verts(line, level), scaled, cap)
     }
     /// The fit of the corners around corner `at` alone: a corner's arc depends only on its two
     /// legs, so away from the slice's ends it is the whole alignment's.
-    fn near(&self, line: &[(f64, f64)], scaled: bool, level: i8, at: usize) -> Near {
+    fn near(&self, line: &[(f64, f64)], scaled: bool, cap: f64, level: i8, at: usize) -> Near {
         let last = self.keep.len() - 1;
         let (a, b) = (at.saturating_sub(NEAR), (at + NEAR).min(last));
-        let fit = geom::fit_in(&self.slice(a, b).verts(line, level), scaled);
+        let fit = geom::fit_capped(&self.slice(a, b).verts(line, level), scaled, cap);
         // the slice's first and last corners are its ends, so the corners beside them lose the
         // half-leg rule, and an arc set beside those may then be blamed
         let lo = if a == 0 { 1 } else { a + 3 };
@@ -274,7 +280,7 @@ impl Corners {
         Some(c)
     }
     /// The worst offset over the samples between the corners two either side of corner `at`.
-    fn worst_near(&self, line: &[(f64, f64)], samples: &[((f64, f64), usize)], scaled: bool, level: i8, at: usize) -> f64 {
+    fn worst_near(&self, line: &[(f64, f64)], samples: &[((f64, f64), usize)], scaled: bool, cap: f64, level: i8, at: usize) -> f64 {
         let lo = at.saturating_sub(4);
         let hi = (at + 4).min(self.keep.len() - 1);
         let (a, b) = (self.keep[at.saturating_sub(2)], self.keep[(at + 2).min(self.keep.len() - 1)]);
@@ -286,7 +292,7 @@ impl Corners {
         v[n - 1].radius = 0.0;
         // samples are in order along the line
         let (from, to) = (samples.partition_point(|s| s.1 < a), samples.partition_point(|s| s.1 < b));
-        sweep(&geom::fit_in(&v, scaled), &samples[from..to], scaled).into_iter().fold(0.0, f64::max)
+        sweep(&geom::fit_capped(&v, scaled, cap), &samples[from..to], scaled).into_iter().fold(0.0, f64::max)
     }
 }
 
@@ -541,7 +547,7 @@ mod tests {
 
     #[test]
     fn a_bend_within_tolerance() {
-        let t = trace(&bend(), false, 25.0, MIN_RADIUS, 0).unwrap();
+        let t = trace(&bend(), false, 25.0, MIN_RADIUS, R_CAP, 0).unwrap();
         assert!(t.worst <= 25.0, "worst {}", t.worst);
         assert!(t.pis.len() <= 6, "{} corners", t.pis.len());
         let mut v = vec![Pi::new(0.0, 0.0, 0.0, 0)];
@@ -553,13 +559,37 @@ mod tests {
         assert!(rmin > 400.0, "tightest {rmin}");
     }
 
+    /// T-1290: a 7,500 m curve fitted at the 320 km/h design radius keeps curves wider than
+    /// `R_CAP`, set on the corners so a later fit at `R_CAP` keeps them.
+    #[test]
+    fn a_wide_curve_at_a_high_design_speed() {
+        let r = 7500.0;
+        let mut l: Vec<(f64, f64)> = (0..=300).map(|i| (i as f64 * 10.0, 0.0)).collect();
+        for i in 1..=523 {
+            let a = i as f64 * 10.0 / r;
+            l.push((3000.0 + r * a.sin(), r - r * a.cos()));
+        }
+        let at160 = trace(&l, false, 25.0, MIN_RADIUS, R_CAP, 0).unwrap();
+        let at320 = trace(&l, false, 25.0, MIN_RADIUS, design_radius(320.0), 0).unwrap();
+        assert!(at160.pis.iter().all(|p| p.radius == 0.0));
+        assert!(at320.worst <= 25.0, "worst {}", at320.worst);
+        let (e0, e1) = (l[0], *l.last().unwrap());
+        let mut v = vec![Pi::new(e0.0, e0.1, 0.0, 0)];
+        v.extend(at320.pis.iter().cloned());
+        v.push(Pi::new(e1.0, e1.1, 0.0, 0));
+        let f = geom::fit_in(&v, false);
+        assert!(f.issues.is_empty(), "{:?}", f.issues);
+        let tight = f.radius.iter().copied().filter(|&r| r > 0.0).fold(f64::INFINITY, f64::min);
+        assert!(tight > design_radius(300.0), "tightest {tight}");
+    }
+
     #[test]
     fn a_jog_between_tracks_is_smoothed() {
         // two straights 4 m apart joined by a 15 m sideways step, as a route changing track does
         let mut l: Vec<(f64, f64)> = (0..=100).map(|i| (i as f64 * 10.0, 0.0)).collect();
         l.push((1015.0, 4.0));
         l.extend((1..=100).map(|i| (1015.0 + i as f64 * 10.0, 4.0)));
-        let t = trace(&l, false, 25.0, MIN_RADIUS, 0).unwrap();
+        let t = trace(&l, false, 25.0, MIN_RADIUS, R_CAP, 0).unwrap();
         let mut v = vec![Pi::new(0.0, 0.0, 0.0, 0)];
         v.extend(t.pis.iter().cloned());
         v.push(Pi::new(2015.0, 4.0, 0.0, 0));

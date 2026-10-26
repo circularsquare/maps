@@ -17,9 +17,29 @@ export interface Fares {
   base: number;
   perKm: number;
   nodes: FareNode[];
+  /** T-1277: the player's fare scales by country (ISO alpha-2); the rest follow income
+   * (game/income.ts) */
+  scales?: Record<string, number>;
+  /** T-1277: the country the curve is set for; absent in a save from before, whose curve was
+   * New York's fares */
+  baseline?: string;
+}
+
+/** The curve as charged in a country whose fare scale is `s`. */
+export function scaleNodes(nodes: FareNode[], s: number): FareNode[] {
+  return nodes.map(([k, f]) => [k, f * s]);
+}
+/** `curveKnots` times a country's scale. */
+export function scaledKnots(f: { base: number; perKm: number; nodes?: FareNode[] }, s: number): Float32Array {
+  const k = curveKnots(f);
+  for (let i = 1; i < k.length; i += 2) k[i] *= s;
+  return k;
 }
 
 export const NODE_KM = [0, 20, 100];
+/** A new game's curve (T-028, T-883), for the baseline country (T-1277, game/income.ts): New York,
+ * at its income's scale of 2.8, starts at $1.50 plus $0.10 a km. */
+export const START_FARE = { base: 0.5357, perKm: 0.03571 };
 /** Nodes keep at least this far apart, km (so f32 keeps them in order in the sim). */
 export const NODE_GAP_KM = 0.1;
 export const MAX_KM = 5000;
@@ -48,8 +68,12 @@ export function firstStretch(nodes: FareNode[]): { base: number; perKm: number }
 }
 
 const cents = (v: number) => Math.round(v * 100) / 100;
+/** T-1277: the curve's fares are kept finer than cents, so a fare typed in a country with a scale
+ * reads back as typed */
+const fine = (v: number) => Math.round(v * 1e4) / 1e4;
 
-/** Three nodes, the first at 0 km: in order and apart by `NODE_GAP_KM` within range, cents, and
+/** Three nodes, the first at 0 km: in order and apart by `NODE_GAP_KM` within range, fares to a
+ * hundredth of a cent, and
  * never falling in fare. Any other curve (an older save's two nodes, or more) becomes its line
  * through its first and last node, at `NODE_KM`. */
 export function tidyNodes(nodes: FareNode[]): FareNode[] {
@@ -64,8 +88,8 @@ export function tidyNodes(nodes: FareNode[]): FareNode[] {
   out[0][0] = 0;
   out[1][0] = Math.min(MAX_KM - NODE_GAP_KM, Math.max(NODE_GAP_KM, cents(out[1][0])));
   out[2][0] = Math.min(MAX_KM, Math.max(out[1][0] + NODE_GAP_KM, cents(out[2][0])));
-  out[0][1] = Math.max(0, cents(out[0][1]));
-  for (let i = 1; i < 3; i++) out[i][1] = Math.max(out[i - 1][1], cents(out[i][1]));
+  out[0][1] = Math.max(0, fine(out[0][1]));
+  for (let i = 1; i < 3; i++) out[i][1] = Math.max(out[i - 1][1], fine(out[i][1]));
   return out;
 }
 

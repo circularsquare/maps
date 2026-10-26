@@ -8,17 +8,15 @@ impl TrackApi {
     /// Add a line with a whole-line fleet at each demand level.
     #[allow(clippy::too_many_arguments)]
     pub fn set_line_with_trains(&mut self, id: u32, stops: &[u32], high: u32, medium: u32, low: u32, dwell_s: f32, turnaround_s: f32, cars: u8, colour: u32, name: String) -> u32 {
-        let stops = &distinct_stops(stops);
-        let Some(path) = self.w.net.route(stops) else {
+        let Some((stops, path)) = edited_stops(&self.w.net, stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, stops: stops.to_vec(), path, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, dwell_s, turnaround_s, cars, fast: false }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
-        let stops = distinct_stops(stops);
-        let Some(path) = self.w.net.route(&stops) else { return self.refuse(Issue::LinePath { line: id }) };
+        let Some((stops, path)) = edited_stops(&self.w.net, stops) else { return self.refuse(Issue::LinePath { line: id }) };
         d.stops = stops;
         d.path = path;
         self.run(Op::Line { id, data: Some(d) })
@@ -251,4 +249,22 @@ fn distinct_stops(stops: &[u32]) -> Vec<u32> {
     let mut s = stops.to_vec();
     s.dedup();
     s
+}
+
+/// The stops a stop edit leaves and their path. Stops closed into a loop whose path only goes
+/// out and back the same way (a lollipop's loop stops taken out) make no loop (T-1273): the line
+/// ends where it turns, a terminus, rather than reversing partway there.
+fn edited_stops(net: &Network, stops: &[u32]) -> Option<(Vec<u32>, Vec<u32>)> {
+    let stops = distinct_stops(stops);
+    let path = net.route(&stops)?;
+    let n = path.len();
+    if !closed(&stops) || n == 0 || (0..n).any(|i| path[i] != path[n - 1 - i] ^ 1) {
+        return Some((stops, path));
+    }
+    let nodes: Vec<u32> = std::iter::once(net.path_nodes(path[0]).0).chain(path.iter().map(|&p| net.path_nodes(p).1)).collect();
+    let at = super::super::net::match_stops(&nodes, &stops, &net.stop_reversals(&path))?;
+    let kept: Vec<u32> = stops.iter().zip(&at).filter(|x| *x.1 <= n / 2).map(|x| *x.0).collect();
+    let kept = distinct_stops(&kept);
+    let path = net.route(&kept)?;
+    Some((kept, path))
 }

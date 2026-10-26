@@ -49,6 +49,15 @@ const HIDDEN = new Set([
   "aeroway-runway-casing", "highway-name-path", "highway-name-minor",
 ]);
 
+/** T-1270: the optional hillshade (Settings, Terrain), from the Terrain Tiles on AWS Open Data
+ * (Terrarium encoding, public, no key; Mapterhorn's hosted tiles have no stated terms for an app). For
+ * a published game the fallback is our own Terrarium tiles on R2 from GEDTM30 (notes/T-1270.md). */
+const DEM = "terrain-dem";
+const HILLSHADE = "hillshade";
+const WATER_OVER_SHADE = "water_over_shade";
+const TERRAIN_TILES = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
+const TERRAIN_CREDIT = '<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank">Terrain Tiles</a>';
+
 /** Positron's place layers that name a settlement, each with a black dot icon. */
 const CITY_LABELS = new Set(["label_city", "label_city_capital", "label_town", "label_village"]);
 
@@ -73,19 +82,29 @@ function paintFor(c: ShadeColours, dark: boolean): Paint {
     landcover_ice_shelf: { "fill-color": mix(land, dark ? warm : "#ffffff", dark ? 0.08 : 0.55) },
   };
   p.landcover_glacier = p.landcover_ice_shelf;
+  // T-1270: the hillshade, and the water drawn again over it so the sea floor's relief stays hidden
+  p[HILLSHADE] = dark
+    ? { "hillshade-shadow-color": "#000000", "hillshade-accent-color": "#000000", "hillshade-highlight-color": mix(land, "#ffffff", 0.12), "hillshade-exaggeration": 0.45 }
+    : { "hillshade-shadow-color": "#5e4c33", "hillshade-accent-color": "#5e4c33", "hillshade-highlight-color": "#ffffff", "hillshade-exaggeration": 0.35 };
+  p[WATER_OVER_SHADE] = { "fill-color": c.water };
   for (const [id, weight] of Object.entries(ROADS)) p[id] = { "line-color": c.road, "line-opacity": id === "tunnel_motorway_inner" ? 0.5 : 1, "line-width": ROAD_WEIGHT[weight] };
   for (const id of ["boundary_2", "boundary_3", "boundary_disputed"]) p[id] = { "line-color": mix(land, warm, 0.25) };
   return p;
 }
 
-/** Each restyled layer's paint values in either theme: the keys that differ, and every plain colour
- * the contrast setting mutes (`mute`, T-1249). */
-let themed: { id: string; key: string; light: unknown; dark: unknown; mute: boolean }[] = [];
+/** Each restyled layer's paint values in either theme: the keys that differ, every plain colour the
+ * contrast setting mutes (`mute`, T-1249), and every label opacity it fades (`fade`). */
+type Fade = "mute" | "fade" | null;
+let themed: { id: string; key: string; light: unknown; dark: unknown; how: Fade }[] = [];
 /** Water is never muted (Anita, T-1249). */
-const UNMUTED = new Set(["water", "waterway", "background"]);
+const UNMUTED = new Set(["water", "waterway", "background", WATER_OVER_SHADE]);
 const HEX = /^#[0-9a-f]{6}$/i;
-/** A paint value at a contrast: a plain colour mixed toward the land by what the contrast lacks. */
-const muted = (v: unknown, land: string, contrast: number) => contrast < 1 && typeof v === "string" && HEX.test(v) ? mix(v, land, 1 - contrast) : v;
+/** A paint value at a contrast: a plain colour mixed toward the land by what the contrast lacks; a
+ * label's opacity scaled by it, since a label mixed toward the land reads as a pale patch on water
+ * (T-1266). */
+const atContrast = (v: unknown, how: Fade, land: string, contrast: number) =>
+  how === "fade" ? (typeof v === "number" ? v * contrast : v)
+  : how === "mute" && contrast < 1 && typeof v === "string" && HEX.test(v) ? mix(v, land, 1 - contrast) : v;
 /** Basemap symbol layers (not ours), whose visibility the "map labels" setting controls. */
 let basemapSymbols: string[] = [];
 
@@ -106,6 +125,16 @@ function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecific
   basemapSymbols = [];
   themed = [];
   const light = paintFor(SHADES.light, false), dark = paintFor(SHADES.dark, true);
+  // T-1270: the hillshade over the land cover and under the roads, off unless Settings has Terrain on
+  const at = style.layers.findIndex((l) => l.id === "waterway");
+  const water = style.layers.find((l) => l.id === "water");
+  if (at >= 0 && water) {
+    style.sources[DEM] = { type: "raster-dem", tiles: [TERRAIN_TILES], encoding: "terrarium", tileSize: 256, maxzoom: 12, attribution: TERRAIN_CREDIT };
+    const visibility = display.peek().hillshade ? "visible" : "none";
+    style.layers.splice(at, 0,
+      { id: HILLSHADE, type: "hillshade", source: DEM, layout: { visibility }, paint: {} },
+      { ...(JSON.parse(JSON.stringify(water)) as typeof water), id: WATER_OVER_SHADE, layout: { visibility } } as maplibregl.LayerSpecification);
+  }
   for (const layer of style.layers) {
     const paint = ((layer as any).paint ??= {});
     const layout = ((layer as any).layout ??= {});
@@ -131,14 +160,16 @@ function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecific
         L["text-color"] = SHADES.light.label, L["text-halo-color"] = SHADES.light.land;
         D["text-color"] = SHADES.dark.label, D["text-halo-color"] = SHADES.dark.land;
       }
+      for (const k of ["text-opacity", "icon-opacity"]) if (paint[k] === undefined) paint[k] = 1;
     }
     const s = shade.peek(), land = SHADES[s].land, contrast = display.peek().basemapContrast;
     for (const key of new Set([...Object.keys(L), ...Object.keys(D), ...Object.keys(paint)])) {
       const l = key in L ? L[key] : paint[key], d = key in D ? D[key] : paint[key];
-      const mute = !UNMUTED.has(layer.id) && key.endsWith("color");
-      if (l !== d || mute) themed.push({ id: layer.id, key, light: l, dark: d, mute });
+      const how: Fade = layer.type === "symbol" ? (key.endsWith("opacity") ? "fade" : null)
+        : !UNMUTED.has(layer.id) && key.endsWith("color") ? "mute" : null;
+      if (l !== d || how) themed.push({ id: layer.id, key, light: l, dark: d, how });
       const v = s === "dark" ? d : l;
-      if (v !== undefined) paint[key] = mute ? muted(v, land, contrast) : v;
+      if (v !== undefined) paint[key] = atContrast(v, how, land, contrast);
     }
   }
   return style;
@@ -151,7 +182,7 @@ export function setBasemapShade(map: maplibregl.Map, s: Shade, contrast: number)
   for (const t of themed) {
     if (!map.getLayer(t.id)) continue;
     const v = s === "dark" ? t.dark : t.light;
-    map.setPaintProperty(t.id, t.key as any, t.mute ? muted(v, land, contrast) : v);
+    map.setPaintProperty(t.id, t.key as any, atContrast(v, t.how, land, contrast));
   }
 }
 
@@ -165,6 +196,11 @@ function guardEnglishName(e: unknown): unknown {
     return ["case", [">=", ["length", ["to-string", ["coalesce", ["get", "name_en"], ""]]], 3],
       ["get", "name_en"], ["coalesce", ["get", "name:latin"], ["get", "name"]]];
   return e.map(guardEnglishName);
+}
+
+/** T-1270: the hillshade on or off (and the water drawn over it with it). */
+export function setHillshade(map: maplibregl.Map, on: boolean) {
+  for (const id of [HILLSHADE, WATER_OVER_SHADE]) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
 }
 
 /** `noCities`: the names of cities, towns and villages hidden whatever `on` says (the start menu's map, T-974). */

@@ -14,6 +14,7 @@ import { blockKeysOutside } from "./keys";
 import { NewGameSheet } from "./NewGame";
 import { AccountButton, startAccountUi } from "./AccountPanel";
 import { SlotFacts, SlotThumb, SlotTitle } from "./SavesPanel";
+import { accountList, accountOnly, cardOf, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
 
 /** The game the URL chooses, or null for the menu: `?new=1` a new game that owns no slot (T-320),
  * normal in New York unless `&mode=sandbox` or `&city=<zone id>` say otherwise (T-728);
@@ -52,13 +53,29 @@ export function worldCover(el: HTMLElement): { center: [number, number]; zoom: n
   return { center: [10, 20], zoom: Math.max(0, Math.log2(w / 512), Math.log2(h / (512 * 3.345 / (2 * Math.PI)))) };
 }
 
-function Menu({ slots, pick }: { slots: SaveSlot[]; pick: (c: GameChoice) => void }) {
+/** T-988: the start menu waits this long at most for the account before opening a game anyway. */
+const SETTLE_WAIT_MS = 10_000;
+
+function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: GameChoice) => void; settling: Promise<void> }) {
   const first = useRef<HTMLButtonElement>(null);
   const [sheet, setSheet] = useState(false);
   useEffect(() => { if (!sheet) first.current?.focus(); }, [sheet]);
+  // T-988: the slots again once the account has settled them (downloads, deletions, forks)
+  const [slots, setSlots] = useState(first0);
+  const changed = slotsChanged.value;
+  useEffect(() => { if (changed) void listSlots().then(setSlots, () => {}); }, [changed]);
+  const account = accountOnly(slots).map(cardOf);
   // T-1197: a saved game too big for this device is refused with the reason
   const [refused, setRefused] = useState<string | null>(null);
   const open = async (key: string) => {
+    await Promise.race([settling, new Promise((r) => setTimeout(r, SETTLE_WAIT_MS))]);
+    // T-988: an account game is downloaded into a new slot first
+    const g = key.startsWith("account:") ? accountList.peek()?.games.find((x) => "account:" + x.id === key) : null;
+    if (g) {
+      const k = await downloadAccountGame(g);
+      if (!k) { setRefused("This game could not be downloaded."); return; }
+      key = k;
+    }
     const why = await saveRefusal({ key });
     setRefused(why);
     if (!why) pick({ slot: key });
@@ -77,11 +94,11 @@ function Menu({ slots, pick }: { slots: SaveSlot[]; pick: (c: GameChoice) => voi
       <h1 id="start-title" class="big">Welcome to anitabuilder!</h1>
       <p class="start-tag">Build trains around the world!</p>
       <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>New game</button>
-      {slots.length > 0 && <>
+      {slots.length + account.length > 0 && <>
         <h2 class="start-head">Saved games</h2>
         {refused && <p class="muted small start-refused" role="alert">{refused}</p>}
         <ul class="start-saves">
-          {slots.map((s) => <li key={s.key}>
+          {[...slots, ...account].map((s) => <li key={s.key}>
             <button class="start-save" data-slot={s.key} onClick={() => void open(s.key)}>
               <SlotThumb slot={s} />
               <span class="save-info"><SlotTitle slot={s} /><SlotFacts slot={s} now={now} /></span>
@@ -106,6 +123,7 @@ export function showStartMenu(onPick: (c: GameChoice) => void) {
   const pick = (c: GameChoice) => {
     if (done) return;
     done = true;
+    stopStartSettle();
     unblock();
     render(null, root);
     root.remove();
@@ -113,6 +131,8 @@ export function showStartMenu(onPick: (c: GameChoice) => void) {
     choosing.value = false;
     onPick(c);
   };
+  // T-988: the slots settled against the account (signed in) while the menu is up
+  const settling = settleOnStart().catch(() => {});
   // storage blocked (a private window): no saved games, New game alone
-  void listSlots().catch(() => [] as SaveSlot[]).then((slots) => { if (!done) render(h(Menu, { slots, pick }), root); });
+  void listSlots().catch(() => [] as SaveSlot[]).then((slots) => { if (!done) render(h(Menu, { slots, pick, settling }), root); });
 }

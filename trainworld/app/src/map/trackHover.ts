@@ -29,7 +29,7 @@ import { setPointerNet, type Hot } from "./hovered";
 import { TAG_OFFSET_PX, tagLines } from "./labelLayout";
 import { complexOf } from "../game/complexView";
 import { forecast } from "../game/format";
-import { chip, elevationFact, factRow, lineBullets, speedFact } from "./trackTagRows";
+import { chip, elevationFact, factRow, lineBullets, speedFact, trainSpeedFact } from "./trackTagRows";
 import { crowdColour } from "../game/palette";
 
 /** Daily riders on run 0's stretch `k` of a line, both directions: every period's load summed;
@@ -145,12 +145,17 @@ function linesOn(w: WorldView | null, edge: number): LineInput[] {
 
 /** The elevation and speed limit at a point of an edge's track stroke, a row each (T-473,
  * T-526); none off the stroke. */
-function trackFacts(ov: Overlay, edge: number, px: number, py: number, slop: number): HTMLElement[] {
+function trackFacts(ov: Overlay, edge: number, px: number, py: number, slop: number): TipLine[] {
   const T = ov.renderer.net!.track;
   const [i] = topSeg(ov, T.seg, T.count, px, py, slop, undefined, 0, (j) => T.edge[j] === edge);
   if (i < 0) return [];
-  const rows = [factRow(elevationFact(T.level[i]))];
+  const rows: TipLine[] = [factRow(elevationFact(T.level[i]))];
   if (T.speed?.[i] !== undefined) rows.push(factRow(speedFact(T.speed[i])));
+  // T-1271: the Speed view draws the trains' speed where they run, the limit elsewhere; say which
+  if (display.peek().trackColour === "speed") {
+    const v = T.trainSpeed?.[i] ?? -1;
+    rows.unshift(v >= 0 ? factRow(trainSpeedFact(v)) : "No trains run here");
+  }
   return rows;
 }
 

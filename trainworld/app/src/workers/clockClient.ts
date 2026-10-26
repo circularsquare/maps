@@ -22,6 +22,7 @@ import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd,
 import { anchorVersion } from "../map/anchorVersion";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
 import type { NewGameSpec, PendingLoad } from "./saveFile";
+import type { CloudContext } from "./cloud";
 import type { FrameSpec } from "../game/frame";
 import { dataUrl } from "../game/dataBase";
 import { saveRefusal } from "../game/memoryCheck";
@@ -37,6 +38,16 @@ export function manageSaveSlot(action: "refresh" | "save" | "create" | "open" | 
   if (action === "restore" && key) return void ifItFits({ key }, () => switchGame({ load: "restore" }, { kind: "restore", key, from: saveSlotsState.peek().active }));
   current?.post({ kind: "saveSlot", action, key, name });
 }
+
+/** T-988: the account the clock worker syncs the slots with; `settle` settles them all again. */
+export function postAccount(ctx: CloudContext | null, settle = false) {
+  current?.post({ kind: "account", ctx, settle });
+}
+let accountGone = () => {};
+/** T-988: what to do when the worker's upload finds the session's token dead */
+export function onAccountGone(f: () => void) { accountGone = f; }
+/** Whether the clock worker has started (not on the start menu). */
+export const clockRunning = () => !!current?.running;
 
 export const clockWorkerStatus = signal("loading");
 /** The newest network snapshot (what demand runs on); null until the worker has started. */
@@ -61,6 +72,8 @@ export interface PreviewAnswer {
   lengthM: number;
   /** cost multiplier: the track's price over its length at the base price (T-085) */
   mult: number;
+  /** metres on flat, rolling, hilly and mountain ground where the terrain is charged (T-1270) */
+  ground?: number[];
   issues: string[];
   verts: Float64Array;
   pts: Float32Array;
@@ -117,7 +130,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
   const stations: StationInput[] = s.nodes
     .filter((n) => n.platform > 0)
     .map((n) => ({
-      id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, heading: n.heading,
+      id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading,
     }));
   const lines: LineInput[] = s.lines.map((l) => ({
     id: String(l.id), num: l.id, letter: l.letter || letterOf(l.name), symbol: l.letter, name: l.name, colour: l.colour, stops: l.stops.map(String),
@@ -349,7 +362,7 @@ export class ClockClient {
     let slot = choice.slot ?? "autosave";
     if (!choice.slot) try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
     const backupMs = Number(q.get("backupMs")) || undefined;
-    this.worker.postMessage({ kind: "init", city: this.cityId, pack: dataUrl(this.cityId), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
+    this.worker.postMessage({ kind: "init", city: this.cityId, pack: dataUrl(this.cityId), outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
     for (const [msg, transfer] of this.waiting) this.worker.postMessage(msg, transfer);
     this.waiting = [];
   }
@@ -480,6 +493,8 @@ export class ClockClient {
     this.onLeft = then;
     this.post({ kind: "leave", pending });
   }
+
+  get running() { return !!this.worker; }
 
   post(msg: ToClock, transfer: Transferable[] = []) {
     if (this.worker) this.worker.postMessage(msg, transfer);
@@ -681,6 +696,9 @@ export class ClockClient {
       case "saved":
         lastSaved.value = msg.at;
         break;
+      case "accountGone":
+        accountGone();
+        break;
       case "savedByHand":
         // a refusal is said with the saveSlots message that follows it
         if (msg.at) {
@@ -720,7 +738,7 @@ export class ClockClient {
           this.toCurrentAnchor(msg.anchor, msg.verts, msg.pts);
           if (msg.arc) this.toCurrentAnchor(msg.anchor, msg.arc, new Float32Array(0));
           if (msg.marks) this.toCurrentAnchor(msg.anchor, new Float64Array(0), msg.marks);
-          this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts, arc: msg.arc, marks: msg.marks });
+          this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, ground: msg.ground, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts, arc: msg.arc, marks: msg.marks });
         } finally {
           const n = this.previewNext;
           this.previewNext = null;

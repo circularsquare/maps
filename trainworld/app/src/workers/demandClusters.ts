@@ -304,8 +304,22 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
     cars[i] = n.cars[l];
     o += p;
   });
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, lineN, stops, times, tph, cars, fare: n.fare, hopKm, span: spanOf(n, nodeGlobal) };
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, span: spanOf(n, nodeGlobal) };
   return { net, stLocal, nodeGlobal, pads: Uint32Array.from(pads) };
+}
+
+/** T-1281: the upgrades of `stations` (whole-network indices), where any of them has one, and the
+ * passages with both ends among them, renumbered by `stLocal`. */
+function upsOf(n: DemandNetwork, stations: number[], stLocal: Int32Array): { ups?: Uint8Array; passages?: Uint32Array } {
+  const out: { ups?: Uint8Array; passages?: Uint32Array } = {};
+  if (n.ups && stations.some((s) => n.ups![s])) out.ups = Uint8Array.from(stations, (s) => n.ups![s]);
+  const pairs: number[] = [];
+  for (let k = 0; k + 1 < (n.passages?.length ?? 0); k += 2) {
+    const a = stLocal[n.passages![k]], b = stLocal[n.passages![k + 1]];
+    if (a >= 0 && b >= 0) pairs.push(a, b);
+  }
+  if (pairs.length) out.passages = Uint32Array.from(pairs);
+  return out;
 }
 
 /** T-842: the whole network's span for the route nodes `nodeGlobal` names, period by period. */
@@ -352,9 +366,11 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
     o += m;
   });
   const span = spanOf(n, nodeGlobal);
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, lineN, stops, times, tph, cars, fare: n.fare, hopKm, span };
-  const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}`;
-  const sig = hashOf([head, stXY, complex, lineN, stops, times, tph, cars, hopKm, span]);
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, span };
+  const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}`;
+  // station upgrades and passages (T-1281) only where there are any, so other networks keep their signatures
+  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : [])];
+  const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);
   const levelSig = [0, 1, 2].map((lev) => {
     const lt = new Float32Array(2 * nStops), lp = new Float32Array(lines.length);
     let a = 0;
@@ -364,7 +380,7 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
       lp[i] = tph[3 * i + lev];
       a += m;
     });
-    return hashOf([`${head}|level ${lev}`, stXY, complex, lineN, stops, lt, lp, cars, hopKm]);
+    return hashOf([`${head}|level ${lev}`, stXY, complex, ...ups, lineN, stops, lt, lp, cars, hopKm]);
   });
   // T-842: a period's own span, where there is one
   const nr = 2 * nStops;

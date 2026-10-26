@@ -86,15 +86,24 @@ pub const HSR_COST: f64 = 1.5;
 /// The track count a blueprint quote row gives high-speed track (`blueprint_cost_items`).
 pub const HSR_ROW: u8 = 3;
 pub const WATER_COST: f64 = 2.0;
-/// 200 m station with two platform tracks, per level, index `level + 3`: about 1.5 km of track at
-/// its level underground and 0.7 km above (T-1245).
-pub const STATION_COST_200: [f64; 7] = [180.0, 150.0, 120.0, 30.0, 60.0, 80.0, 110.0];
+/// 200 m station with two platform tracks: the part every station has wherever it is (platforms,
+/// halls, systems), plus its structure's part by level, index `level + 3`: 50 + 25 a level down,
+/// 25 + 15 a level up. Ground to -2 is 75 to 150, half, where track is 0.45 (T-1267).
+pub const STATION_FIXED_200: f64 = 50.0;
+pub const STATION_LEVEL_200: [f64; 7] = [125.0, 100.0, 75.0, 25.0, 40.0, 55.0, 70.0];
 pub const SINGLE_TRACK_STATION: f64 = 0.7;
 pub const JUNCTION_KM: f64 = 0.25;
 pub const FLYOVER_KM: f64 = 0.6;
 pub const FLAT_CROSSING_KM: f64 = 0.1;
 /// Water mask sampling step along track, m: half the pack mask's 25 m pixel (notes/T-004.md).
 pub const WATER_STEP: f64 = 12.5;
+/// Price factor per terrain class (T-1270, Anita 2026-10-25): flat, rolling, hilly, mountain. Set so
+/// ground track stays cheaper than a bored tunnel until the mountain class.
+pub const TERRAIN_FACTOR: [f64; 4] = [1.0, 1.25, 1.6, 2.5];
+/// The lowest level the terrain factor applies to: bored tunnels (-2, -3) cost the same anywhere.
+pub const TERRAIN_MIN_LEVEL: i8 = -1;
+/// Terrain sampling step along track, m: under a quarter of the class grid's ~460 m cell.
+pub const TERRAIN_STEP: f64 = 100.0;
 /// Price of one 20 m car, US$M (T-028; a New York R211 car is about 2.6). Trains are bought when
 /// the running lines need more cars than the network owns; spare cars are kept, never sold.
 pub const CAR_PRICE: f64 = 2.5;

@@ -26,7 +26,7 @@ import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
 import { incomeByDay, lastSaved, moneyState } from "./game/money";
 import { live } from "./map/live";
-import { setBasemapLabels, setBasemapShade } from "./map/basemap";
+import { setBasemapLabels, setBasemapShade, setHillshade } from "./map/basemap";
 import { createMap } from "./map/mapView";
 import { startRealNetwork } from "./map/realNetwork";
 import { startCityBoundaries } from "./map/cityBoundaries";
@@ -56,6 +56,7 @@ import { ReversalMarks } from "./map/reversalMarks";
 import { startTrackHover } from "./map/trackHover";
 import { startRestList } from "./map/hoverRest";
 import { startStationLife } from "./map/stationLife";
+import { startBuildSounds } from "./map/buildSound";
 import { perfOff, perfTry } from "./perfFlags";
 import { DEMAND_INDEX, type Selection } from "./game/types";
 import { anchor, kAtY, toLngLat, toLocal } from "./map/geo";
@@ -310,10 +311,12 @@ if (!SYNTH) startRestList(map, overlay, (x, y) => demandClick?.(x, y, false, tru
 // T-686: from the platforms' zoom, chimes, pops and faces as trains let riders off and on
 const stationLife = SYNTH ? null : startStationLife(map, overlay, (notes) => client.post({ kind: "lineNotes", notes }));
 if (DEBUG && stationLife) (window as any).twLife = stationLife;
+if (!SYNTH) startBuildSounds(); // T-1282: placing and constructing blueprint
 map.on("load", () => {
   effect(() => setBasemapLabels(map, display.value.basemapLabels, choosing.value)); // T-974: no city names behind the start menu
   const contrast = computed(() => display.value.basemapContrast);
   effect(() => setBasemapShade(map, shade.value, contrast.value));
+  effect(() => setHillshade(map, display.value.hillshade)); // T-1270
   startRealNetwork(map); // T-682
 });
 effect(() => client.setShade(shade.value)); // save thumbnails are drawn in it (T-543)

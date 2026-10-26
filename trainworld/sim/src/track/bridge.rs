@@ -32,8 +32,8 @@ const MIN_CUT: f64 = 5.0;
 #[derive(Debug, PartialEq, Eq)]
 pub struct NoRoom;
 
-/// A ramp centred at `c`, with its vertices `d` either side. It goes up from the level before it
-/// (even index: 0, odd: 1).
+/// A ramp centred at `c`, with its vertices `d` either side. Ramps alternate up and down from the
+/// level at the start (`level_after`).
 #[derive(Clone, Copy, Debug)]
 struct Ramp {
     c: f64,
@@ -57,19 +57,36 @@ struct V {
     level: Option<i8>,
 }
 
-/// `verts` (all at level 0) with a bridge over each stretch of water, as the same alignment.
-/// Ok(None) where nothing needs doing: no water, any other level, or an alignment that is
-/// invalid anyway.
-pub fn bridge(verts: &[Pi], scaled: bool, mask: &dyn WaterMask) -> Result<Option<Vec<Pi>>, NoRoom> {
-    bridge_in(verts, scaled, mask, false)
+/// The level after `k` ramps, from a start at the bridge's level where `up`.
+fn level_after(k: usize, up: bool) -> i8 {
+    ((k + usize::from(up)) % 2) as i8 * BRIDGE_LEVEL
+}
+
+/// Which ends of `verts` are up at the bridge's level already (T-1269: drawn on from an end a bridge
+/// left up), the vertices next to them that the drawing tool gave their level included; the rest
+/// must be at level 0. None for any other levels, or none at 0.
+fn ends_up(verts: &[Pi]) -> Option<[bool; 2]> {
+    let a = verts.iter().take_while(|p| p.level == BRIDGE_LEVEL).count();
+    let b = verts.iter().rev().take_while(|p| p.level == BRIDGE_LEVEL).count();
+    (a + b < verts.len() && verts[a..verts.len() - b].iter().all(|p| p.level == 0)).then_some([a > 0, b > 0])
+}
+
+/// `verts` (at level 0, an end perhaps up at the bridge's level) with a bridge over each stretch of
+/// water, as the same alignment. Ok(None) where nothing needs doing: no water, any other level, or
+/// an alignment that is invalid anyway. An end up already stays up to the water, or comes down
+/// at once where there is room to go up again before it. `lift`: an end over water may stay at the
+/// bridge's level (a new node, not track already there), with no ramp on its side (T-1269).
+pub fn bridge(verts: &[Pi], scaled: bool, mask: &dyn WaterMask, lift: [bool; 2]) -> Result<Option<Vec<Pi>>, NoRoom> {
+    bridge_in(verts, scaled, mask, false, lift)
 }
 
 /// `bridge`, reading the water as `fine_spans` does where `fine`: a window of a long route is cut
 /// into pieces later, each checked at its own phase, so it must clear the slivers they can find.
-fn bridge_in(verts: &[Pi], scaled: bool, mask: &dyn WaterMask, fine: bool) -> Result<Option<Vec<Pi>>, NoRoom> {
-    if mask.is_empty() || verts.len() < 2 || verts.iter().any(|p| p.level != 0) {
+fn bridge_in(verts: &[Pi], scaled: bool, mask: &dyn WaterMask, fine: bool, lift: [bool; 2]) -> Result<Option<Vec<Pi>>, NoRoom> {
+    if mask.is_empty() || verts.len() < 2 {
         return Ok(None);
     }
+    let Some(fixed) = ends_up(verts) else { return Ok(None) };
     let f = geom::fit_in(verts, scaled);
     if !f.issues.is_empty() || f.pieces.is_empty() {
         return Ok(None);
@@ -94,15 +111,31 @@ fn bridge_in(verts: &[Pi], scaled: bool, mask: &dyn WaterMask, fine: bool) -> Re
             _ => zones.push(z),
         }
     }
+    let up = fixed[0] || lift[0] && wet[0][0] <= 1e-6;
+    let down = fixed[1] || lift[1] && wet[wet.len() - 1][1] >= f.len - 1e-6;
     let mut shift = 0.0;
     while shift <= MAX_SHIFT {
         // the ramp up ends at the zone's start and the ramp down starts at its end, moved out
-        let centres: Vec<f64> = zones.iter().flat_map(|z| [z[0] - shift - RAMP / 2.0, z[1] + shift + RAMP / 2.0]).collect();
-        if centres[0] < RAMP / 2.0 - 1e-9 || centres[centres.len() - 1] > f.len - RAMP / 2.0 + 1e-9 {
+        let mut centres: Vec<f64> = zones.iter().flat_map(|z| [z[0] - shift - RAMP / 2.0, z[1] + shift + RAMP / 2.0]).collect();
+        let n = centres.len();
+        if down && fixed[1] && centres[n - 1] <= f.len - 1.5 * RAMP + 1e-9 {
+            centres.push(f.len - RAMP / 2.0);
+        } else if down {
+            centres.pop();
+        }
+        if up && fixed[0] && centres[0] >= 1.5 * RAMP - 1e-9 {
+            centres.insert(0, RAMP / 2.0);
+        } else if up {
+            centres.remove(0);
+        }
+        if centres.first().is_some_and(|&c| c < RAMP / 2.0 - 1e-9) || centres.last().is_some_and(|&c| c > f.len - RAMP / 2.0 + 1e-9) {
             break;
         }
-        if let Some(nv) = place(&f, verts, scaled, &centres, &wet) {
+        if let Some(nv) = place(&f, verts, scaled, &centres, &wet, up) {
             return Ok(Some(nv));
+        }
+        if centres.is_empty() {
+            break;
         }
         shift += SHIFT_STEP;
     }
@@ -118,9 +151,9 @@ const LONG_REACH: f64 = 4000.0;
 /// route as it is. `bridge` on the whole tries every vertex for every ramp and fits the whole
 /// alignment for each try, minutes over hundreds of corners, and one river it cannot bridge
 /// moves every ramp on the route. Such a stretch is raised whole; NoRoom only where even that has
-/// no leg for a ramp, as with water just past an end of the route.
-pub fn bridge_long(verts: &[Pi], scaled: bool, mask: &dyn WaterMask) -> Result<Option<Vec<Pi>>, NoRoom> {
-    if mask.is_empty() || verts.len() < 2 || verts.iter().any(|p| p.level != 0) {
+/// no leg for a ramp, as with water just past an end of the route. `lift` as for `bridge`.
+pub fn bridge_long(verts: &[Pi], scaled: bool, mask: &dyn WaterMask, lift: [bool; 2]) -> Result<Option<Vec<Pi>>, NoRoom> {
+    if mask.is_empty() || verts.len() < 2 || ends_up(verts).is_none() {
         return Ok(None);
     }
     let f = geom::fit_in(verts, scaled);
@@ -168,18 +201,28 @@ pub fn bridge_long(verts: &[Pi], scaled: bool, mask: &dyn WaterMask) -> Result<O
                 pis[i - a].radius = floor_mm(f.radius[i]);
             }
         }
-        let mut nv = match bridge_in(&pis, scaled, mask, true) {
+        // only the route's own ends may stay up
+        let lift = [lift[0] && a == 0, lift[1] && b == n - 1];
+        let mut nv = match bridge_in(&pis, scaled, mask, true, lift) {
             Ok(Some(v)) if held(&v, scaled, mask) => v,
             // no room for ramps beside the water (Lake Hamana's islands), or the window alone does
             // not fit: the stretch goes up whole, rather than one lake refusing 500 km (T-727d)
-            _ => raised(&sub, s0, s1).ok_or(NoRoom)?,
+            _ => {
+                let up = |end: usize, wet_there: bool| lift[end] && wet_there || pis[if end == 0 { 0 } else { pis.len() - 1 }].level == BRIDGE_LEVEL;
+                raised(&sub, s0, s1, [up(0, s0 <= 1e-6), up(1, s1 >= f.len - 1e-6)]).ok_or(NoRoom)?
+            }
         };
         // the window's ends are the route's own corners, radius and all
         let last = nv.len() - 1;
-        nv[0] = verts[a];
-        nv[last] = verts[b];
+        nv[0] = Pi { level: nv[0].level, ..verts[a] };
+        nv[last] = Pi { level: nv[last].level, ..verts[b] };
         out.extend_from_slice(&nv[..last]);
         next = b;
+        // the route's own end stays up with its window
+        if b == n - 1 {
+            out.push(nv[last]);
+            return Ok(Some(out));
+        }
     }
     out.extend_from_slice(&verts[next..]);
     Ok(Some(out))
@@ -227,21 +270,22 @@ fn held(v: &[Pi], scaled: bool, mask: &dyn WaterMask) -> bool {
 }
 
 /// A window raised whole: up on the last leg before the water long enough for a ramp, down on the
-/// first such leg after it, each ramp centred between its leg's two corners. None where there is
-/// no such leg.
-fn raised(sub: &[(Pi, f64)], s0: f64, s1: f64) -> Option<Vec<Pi>> {
+/// first such leg after it, each ramp centred between its leg's two corners; from its start or to
+/// its end where `stay_up` says so. None where there is no such leg.
+fn raised(sub: &[(Pi, f64)], s0: f64, s1: f64, stay_up: [bool; 2]) -> Option<Vec<Pi>> {
     let mut v: Vec<Pi> = sub.iter().map(|p| p.0).collect();
     let fits = |j: usize| sub[j + 1].1 - sub[j].1 >= RAMP + 2.0 * SHORE;
-    let u = (0..sub.len() - 1).rev().find(|&j| fits(j) && sub[j + 1].1 <= s0 - SHORE)?;
-    let d = (0..sub.len() - 1).find(|&j| fits(j) && sub[j].1 >= s1 + SHORE)?;
-    for p in &mut v[u + 1..=d] {
+    let lo = if stay_up[0] { 0 } else { (0..sub.len() - 1).rev().find(|&j| fits(j) && sub[j + 1].1 <= s0 - SHORE)? + 1 };
+    let hi = if stay_up[1] { sub.len() - 1 } else { (0..sub.len() - 1).find(|&j| fits(j) && sub[j].1 >= s1 + SHORE)? };
+    for p in &mut v[lo..=hi] {
         p.level = BRIDGE_LEVEL;
     }
     Some(v)
 }
 
-/// The ramps one after another, each with the nearest vertices that hold it; then the whole.
-fn place(f: &Fit, verts: &[Pi], scaled: bool, centres: &[f64], wet: &[[f64; 2]]) -> Option<Vec<Pi>> {
+/// The ramps one after another, each with the nearest vertices that hold it; then the whole. The
+/// start is at the bridge's level where `up`.
+fn place(f: &Fit, verts: &[Pi], scaled: bool, centres: &[f64], wet: &[[f64; 2]], up: bool) -> Option<Vec<Pi>> {
     let mut ramps: Vec<Ramp> = vec![];
     for &c in centres {
         let cap = c.min(f.len - c);
@@ -260,7 +304,7 @@ fn place(f: &Fit, verts: &[Pi], scaled: bool, centres: &[f64], wet: &[[f64; 2]])
             }
             tried.push(d);
             ramps.push(Ramp { c, d });
-            if build(f, verts, scaled, &ramps).is_some_and(|(_, g)| ramp_in_place(&g, c, ramps.len() % 2 == 0)) {
+            if build(f, verts, scaled, &ramps, up).is_some_and(|(_, g)| ramp_in_place(&g, c, level_after(ramps.len(), up) == 0)) {
                 found = true;
                 break;
             }
@@ -270,7 +314,7 @@ fn place(f: &Fit, verts: &[Pi], scaled: bool, centres: &[f64], wet: &[[f64; 2]])
             return None;
         }
     }
-    let (nv, g) = build(f, verts, scaled, &ramps)?;
+    let (nv, g) = build(f, verts, scaled, &ramps, up)?;
     water_held(&g, wet).then_some(nv)
 }
 
@@ -286,10 +330,9 @@ fn floor_mm(v: f64) -> f64 {
 }
 
 /// The alignment with the ramps `ramps` (in order along it) and no others, fitted.
-fn build(f: &Fit, verts: &[Pi], scaled: bool, ramps: &[Ramp]) -> Option<(Vec<Pi>, Fit)> {
+fn build(f: &Fit, verts: &[Pi], scaled: bool, ramps: &[Ramp], up: bool) -> Option<(Vec<Pi>, Fit)> {
     let n = verts.len();
-    // the level after k ramps is 0 or 1
-    let after = |k: usize| (k % 2) as i8 * BRIDGE_LEVEL;
+    let after = |k: usize| level_after(k, up);
     let mut reqs: Vec<Req> = vec![];
     for (k, r) in ramps.iter().enumerate() {
         let (u, v) = (r.c - r.d, r.c + r.d);
@@ -333,7 +376,7 @@ fn build(f: &Fit, verts: &[Pi], scaled: bool, ramps: &[Ramp]) -> Option<(Vec<Pi>
     }
     items.sort_by(|a, b| a.0.total_cmp(&b.0));
     let level_at = |m: f64| after(ramps.iter().filter(|r| r.c < m).count());
-    let mut nv = vec![Pi::new(verts[0].x, verts[0].y, 0.0, 0)];
+    let mut nv = vec![Pi::new(verts[0].x, verts[0].y, 0.0, after(0))];
     for (_, vs) in &items {
         for v in vs {
             nv.push(Pi { level: v.level.unwrap_or_else(|| level_at(v.mid)), ..v.pi });

@@ -45,6 +45,8 @@ export interface StationInput {
   built: boolean;
   /** a blueprint switched off (T-333): Construct skips it */
   off?: boolean;
+  /** its upgrades, `UPGRADE` bits (game/upgrades.ts, T-1281) */
+  upgrades?: number;
   /** track heading through it, rad, counter-clockwise from east */
   heading: number;
 }

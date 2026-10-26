@@ -19,8 +19,9 @@ through `game/shades.ts`) [T-543].
 
 ## Real network (reference layer)
 
-Settings > Show > **Real network**, on by default: faint lines (15% opaque, T-727) where railways run
-in the real world, for reference, view only; 40% (T-697) while the track tool snaps to them (the
+Settings > Show > **Real network**, on by default: faint lines (15% opaque in the light theme, T-727;
+30% in the dark one, in lighter colours, T-1291) where railways run in the real world, for
+reference, view only, whatever the Base map slider says [T-1291]; 40% (T-697) while the track tool snaps to them (the
 Build tab's snap switch, [ui-building.md](ui-building.md)), which also shows them with the setting off (`map/realNetwork.ts`, T-682). They sit above the basemap's
 roads and under its labels, so under our own network (which is drawn on the overlay canvas above
 everything). Three classes by colour and width, in both themes (`realMain`, `realOther`, `realMetro`
@@ -31,12 +32,25 @@ nothing is fetched while it is hidden. The lines are noritetsu's per-region tile
 the national registers, one `track` layer); the tiles carry no line type or name at low zoom, so
 there is no high-speed class and no hover yet.
 
+## Terrain (hill shading)
+
+Settings > Show > **Terrain**, off by default [T-1270]: MapLibre's hillshade over the land cover and
+under roads, from the Terrain Tiles on AWS Open Data (Terrarium PNG, 256 px, fetched to zoom 12 and
+stretched past it; `map/basemap.ts`). The water is drawn again over it (`water_over_shade`), so the
+sea floor's relief stays hidden. Shadow and highlight follow the theme (light: warm brown shadow,
+white highlight, exaggeration 0.35; dark: black shadow, 0.45) and the base map contrast slider mutes
+them with the rest. Off, no layer draws and no tile is fetched. Its hover in Settings gives the
+terrain price factors (track-and-service.md 6.4). Mapterhorn's hosted tiles were left aside: no terms
+for use by an app are stated; for a published game the fallback is our own Terrarium tiles on R2
+cut from GEDTM30 (notes/T-1270.md).
+
 ## Zoom bands
 
 - **Below zoom 9** (about 160 km across, a whole region) only the lines are drawn [T-205, T-542,
   `STATIONS_ZOOM`]. Stations and trains are neither drawn nor picked, so a click or hover finds the
-  line. A selected station or complex is still drawn and clickable. Demand drawings and capacity
-  tags are unchanged.
+  line. A selected station or complex is still drawn and clickable. The station use circles hide
+  with the stations, hover and all [T-1274]; the other demand drawings and capacity tags are
+  unchanged.
 - **Zoom 9 to 10**: every station is its own dot, drawn and picked; trains are not.
 - **Zoom 10 to 14** [`TRAINS_ZOOM`]: stations are dots; trains are pills, drawn and picked from 10.
 - **From zoom 14** (`STATION_BOX_ZOOM`, T-553): a station is its platform, trains show their cars, and
@@ -117,22 +131,28 @@ there is no high-speed class and no hover yet.
     at ground, warm below (deep): +3 #4a2c9a, +2 #2f6fd0, +1 #16a39a, 0 #58b04a, -1 #f0b928, -2 #ee7a1a,
     -3 #c2351c (`LEVEL_COLOURS`, T-413, T-478, T-480; neighbours at least 30 apart in CIELAB). The same table colours
     the Build tab's elevation buttons, the Settings key and the elevation in the track tags.
-  - **Max speed**: the geometry's allowed speed at each section, curve limits included (not a
-    train's speed): 160 km/h on ordinary track, up to 320 on high-speed track. Keyed 40/80/120/160/240/320 km/h
+  - **Speed** [T-1271]: built track a running line with trains uses is coloured by the trains'
+    speed there, the rest by its speed limit (the geometry's, curve limits included: 160 km/h on
+    ordinary track, up to 320 on high-speed track). The trains' speed at a stroke segment's middle
+    is the run profiles' (speed against distance along each run, the medium demand level's; the
+    levels differ only in standing time), the fastest of every such line in either direction, so
+    shared track shows its fastest service and a station its trains' slowest (`trainSpeeds` in
+    `map/network.ts`). Keyed 40/80/120/160/240/320 km/h
     from warm red through ochre and green to blue, then indigo (#5b4fc9) and violet (#a03fc2)
     (`SPEED_STOPS`; the stroke shader is built from the same stops, and the key beside the display
-    buttons lists them).
-  In Elevation and Max speed the width is uniform and trains keep their line colours.
+    buttons lists them); under 40 is the red. The track hover says which it shows ("Track" under
+    "Hover tags on the network").
+  In Elevation and Speed the width is uniform and trains keep their line colours.
 - **Blueprint track** [T-311, T-322, T-331, T-333] is drawn solid and opaque as two rails in every
   track view: a light blue middle (#a9cdf3) between dark blue rails (#2f62b3). The whole width is 75%
   (`BP_NARROW`) of a line plus a rail of 16% of a line width (at least 1 px) either side, the rails
   never under 1 px: 6.5 px at zoom 15 (4.5 middle), 4.4 at zoom 12. A line planned along it fills
-  the middle (not a full line width) in its colour mixed 45% towards white; in Elevation and Max
-  speed the middle is the view's colour mixed the same, and a selected blueprint's middle the
+  the middle (not a full line width) in its colour mixed 45% towards white; in Elevation and
+  Speed (the limit: no trains run on a blueprint) the middle is the view's colour mixed the same, and a selected blueprint's middle the
   selection ink mixed so. Lines that do not run stay see-through at 55%. **Switched off** [T-333,
   T-543]: grey rails (#9aa3ae) round a nearly white middle (#f2f4f7) in the light theme, a dim
   middle (#383e46) between lighter grey rails (#6c747e) in the dark one, and a station at 30%
-  instead of 60%; a planned line's colour and the Elevation and Max speed colours are mixed 80%
+  instead of 60%; a planned line's colour and the Elevation and Speed colours are mixed 80%
   towards white (towards #383e46 in the dark theme) in place of 45%. **Picked** with the blueprint
   tool: an ink band 3 px beyond the rails, drawn under the track, and the stations' selection
   outline. All rails are drawn before any middle, as the casing is, so curves and joints join
@@ -143,7 +163,10 @@ there is no high-speed class and no hover yet.
   palette, sixteen defaults: red, blue, green, orange, purple, yellow, brown, teal, gray,
   yellow-green, pink, magenta, light blue, olive, coral and lavender, every pair at least 19 apart in
   CIEDE2000 and at least 17 from the land, water and parks of both themes; chips on
-  the light ones take dark letters. A new line takes a random default no line in its city uses [T-856].
+  the light ones take dark letters. A new line takes the default farthest in OKLab from the
+  colours of the lines near where it starts (its first stop, else the middle of the map): those
+  with a stop within 15 km, topped up with the next nearest to six, ties at random
+  (`nextFreeColour` in `game/lineActions.ts`, T-1278).
 - **Marks on the track** [T-629, T-655; `map/gradeMarks.ts`, data in `map/markData.ts`], drawn by the
   renderer over the track and under stations and trains, from zoom 9 (blueprint and drawing) or 11
   (built):
@@ -271,8 +294,8 @@ game second, only while drawn.
 
 **Riders changing trains** [T-1124; `map/transferBubbles.ts`]: with the crowds, from zoom 14, the
 riders who change from a train at one station to a line at another station of its complex leave as
-it stops, as one bubble per train and platform they go to: a disc of the crowd grey with a rim in
-the casing's colour, moving in a straight line from the middle of the platform left to the middle
+it stops, as one bubble per train and platform they go to: a disc of the crowd grey (a lighter
+#b8b3ac in the dark theme, `walkers` in game/shadeTable.ts, T-1288) with a rim in the casing's colour, moving in a straight line from the middle of the platform left to the middle
 of the one they go to over demand's walk between the two stations (the boarding account's,
 track-and-service.md 6.6), and joining that platform's crowd at once on arrival. Its radius is the
 platform box's white half width times the square root of its riders over 250 (`BUBBLE_RIDERS`),
@@ -325,6 +348,13 @@ those who got on, less the load carried on.
   the note only, and none beyond 3; panned by where the station is on screen. At the second speed
   only the note and two pops; none at the third.
 - Both are on by default and set in Settings (Stations up close).
+- **Building sounds** [T-1282; `map/buildSound.ts`]: under the same Sound switch and volume, at the
+  station sounds' master level and with no zoom gain, as the player's edit is taken (`setAfterEdit`
+  in `game/world.ts`): a little metallic clink on any construct (1760 Hz a semitone either way at
+  random, with a bar's partials at 2.76 and 5.4 times, the upper ones dying first, 0.32 s); placing
+  track as blueprint a soft rising sine blip (620 to 930 Hz, 0.09 s, under half the clink's
+  level); placing a station two soft triangle notes a fourth apart (G6, C7, 65 ms apart). The same
+  sound twice within 70 ms plays once. One audio context serves both (`map/audioOut.ts`).
 
 ## Station names and capacity tags
 
@@ -362,8 +392,10 @@ those who got on, less the load carried on.
   directions together, for the day shown (counts to the nearest 100 above 1,000), with a third line under the purpose filter
   ("Errands trips only"), and on track at capacity "Track at capacity at high demand" in red [T-819]. Whatever the display [T-473], the tag also carries a row
   for the elevation at that point (an up and down arrow, then "+1" on its Elevation colour) and one
-  for the speed limit (two right chevrons, then "120 km/h" on its Max speed colour), each colour at
-  half strength behind dark text (`map/trackTagRows.ts`), and last every line using the track as
+  for the speed limit (two right chevrons, then "120 km/h" on its Speed colour), each colour at
+  half strength behind dark text (`map/trackTagRows.ts`); in the Speed view a first row says what
+  the colour there is: "Fastest train 85 km/h" (on its colour) where trains run, "No trains run
+  here" where the limit is shown [T-1271]; and last every line using the track as
   line bullets, in the save's order, wrapping, over a line as over bare track (the markup and CSS of
   the `Chip` in `ui/widgets.tsx`, built as plain DOM by `lineBullets`; no row when none runs
   there) [T-532, T-559]. A planned line adds
@@ -464,7 +496,7 @@ Everything outside the realms shown (those the game has built in, starts in or t
 is covered by one shade, a little darker than the outside shade and over it (11% of the outside shade's colour, 22.5% black in the dark theme: together about 18% and 50%), on land and water alike, under
 labels and the network, taking no clicks. Its edge is the shown zones' coarse outline, the line the
 zone outlines draw, never a coast; nothing of a hidden realm's zones is drawn. Each hidden realm has
-one floating circle, 16 px across, filled and outlined like an unopened zone's dot (white, a 1 px map ink outline), at its point (the centre of the zone nearest the
+one floating circle, 16 px across, filled and outlined like an unopened zone's dot (white, a 1 px map ink outline; in the dark theme toned down to a mid grey #8a857f with a near-black rim, T-1298), at its point (the centre of the zone nearest the
 mean of its zones' centres, so on its land), moving with the map and leaving the screen with that
 point, never pinned at the edge [T-1142] (hover: the realm's name over "Click the shaded area to show the cities there").
 Circles that would overlap give way to the realm with more zones. A click on the circle, or a plain

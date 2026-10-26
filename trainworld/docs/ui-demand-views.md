@@ -49,8 +49,8 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   purple (`color-mix(in oklab, #ff4d4d, #4d4dff)`) in a 2 px map ink outline, hover "Show demand
   bubbles".
 - **Track display** [T-703, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in the
-  same style, four buttons (Line, Traffic, Elevation, Max speed; [ui-map.md](ui-map.md) "Lines and
-  track") after a hint cell with the track icon (hover "Colour the track", T-1137), with the key of the last two (height colours, speed limits) beside them.
+  same style, four buttons (Line, Traffic, Elevation, Speed; [ui-map.md](ui-map.md) "Lines and
+  track") after a hint cell with the track icon (hover "Colour the track", T-1137), with the key of the last two (height colours, speeds) beside them.
 - **Day** [T-464, T-703]: a Settings choice under the bubbles' Opacity, not on the map; see "Demand
   shown for" in [ui-panels.md](ui-panels.md).
 - **Readiness** [T-143]: while the focused zone has no published result, Homes and Destinations fade
@@ -94,7 +94,7 @@ its transfer pairs over every station (`complexTransfers`) counted at the statio
 origins the rest. Origins and Transfers keep the last split while a new solve's is asked for. The
 circle's hover and the station's say the figure and never the number of stations in a complex:
 "12,400 entries per day" (origins), "464,000 transfers per day", "476,400 entries and transfers per
-day" (total), "per weekday", "per Saturday" or "per Sunday" for those days. They do not enlarge the station's click target. With "One circle per station
+day" (total), "per weekday", "per Saturday" or "per Sunday" for those days. They do not enlarge the station's click target. Below zoom 9, where stations hide, the circles and their hover hide too [T-1274]. With "One circle per station
 complex" (on by default, shown while circles are) a complex has one circle at the mean position of
 its constructed stations, grouped exactly as the complexes are, the player's links included.
 
@@ -108,8 +108,10 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   15.4, 13.6, 11.8 (default) or 10, and each coarser level (8, 7, 6) 1.8 zoom levels further out
   (`bubbleLevel`). Resolution 9 is the finest at any step. All levels are built at
   once, so the setting costs no rebuild.
-- **Area is trip legs**, outward and return, at a fixed density: 50,000 legs/km² for homes and
-  160,000 for destinations, times the Bubble size setting (0.5-2x width). No minimum size; nobody
+- **Area is trip legs**, outward and return, at a fixed density: 88,900 legs/km² for homes
+  (50,000 with the radius then cut by a quarter, T-1294) and 160,000 for destinations, so a home
+  bubble is 1.34 times the radius of a destination bubble of the same legs; times the Bubble size
+  setting (0.5-2x width). No minimum size; nobody
   means no bubble.
 - **Colour** by the **Colours** setting: **Train share** (default since T-833; a stored Mode mix
   from before settings version 6 is reset once) colours by the train share of the bubble's legs along a ramp from a start colour

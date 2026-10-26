@@ -96,6 +96,9 @@ export interface TripPair {
 
 /** Why the train is not a choice for a trip. */
 export type NoRail = "" | "noStationStart" | "noStationEnd" | "walksTooLong" | "noRoute" | "walkFurther";
+/** Perceived minutes a dollar of the car's money (ownership, parking, a ride to a station): the
+ * sim's `api::FARE_MIN_PER_USD`, whatever the country (T-1277). */
+export const CAR_MIN_PER_USD = 3;
 const WHY: NoRail[] = ["", "noStationStart", "noStationEnd", "walksTooLong", "noRoute", "walkFurther"];
 
 /** The trip in one period. Minutes are perceived where named so, else real. */
@@ -136,6 +139,8 @@ export interface TripPeriod {
   pTrain: number;
   pDrive: number;
   baseFarePerceived: number;
+  /** perceived minutes a fare dollar, the riders' country's (T-1277); the car's money is at
+   * `CAR_MIN_PER_USD` */
   minPerUsd: number;
   /** the cheapest perceived walk at each end */
   walkStartPerceived: number;
@@ -428,7 +433,7 @@ export function routeTerms(t: TripPeriod, r: TripRoute): CostTerm[] {
       out.push({ label: "drive", real: pair.accessMin, weight: pair.accessMin > 0 ? drive / pair.accessMin : 1, perceived: drive, unit: "min" });
       out.push({ label: pair.rideDropOff ? "drop-off" : "parking at the station", real: 0, weight: 1, perceived: pair.rideStation, unit: "min" });
       out.push({ label: "parking at home", real: 0, weight: 1, perceived: pair.rideHome, unit: "min" });
-      out.push({ label: "car", real: pair.rideCar / t.minPerUsd, weight: t.minPerUsd, perceived: pair.rideCar, unit: "usd" });
+      out.push({ label: "car", real: pair.rideCar / CAR_MIN_PER_USD, weight: CAR_MIN_PER_USD, perceived: pair.rideCar, unit: "usd" });
     }
     const walkPerc = pair.egressPerceived + (pair.accessRide ? 0 : pair.accessPerceived);
     if (tot.walkMin > 0) out.push({ label: "walk", real: tot.walkMin, weight: walkPerc / tot.walkMin, perceived: walkPerc, unit: "min" });

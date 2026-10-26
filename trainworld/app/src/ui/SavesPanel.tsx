@@ -13,6 +13,10 @@ import { lastSaved } from "../game/money";
 import { allowCopyFolder, canCopyToFolder, copyFolder, pickCopyFolder, stopCopies, storageKept, SUBFOLDER } from "../game/saveSafety";
 import { exportGame, importGame, newGame, manageSaveSlot, savedByHand, saveSlotsState } from "../workers/clockClient";
 import type { SaveSlot, SlotBackup } from "../workers/saveFile";
+import { accountConfig, accountState, cloudContext, session } from "../game/account";
+import { accountList, accountOnly, cardOf, deleteAccountGame, downloadAccountGame, elsewhereAt, refreshAccountGames } from "../game/accountGames";
+import { tiedTo, type CloudContext } from "../workers/cloud";
+import { Icon } from "./widgets";
 import { viewStart } from "./locate";
 import { Modal } from "./Modal";
 import { Money } from "./MoneyText";
@@ -82,9 +86,48 @@ export function SlotFacts({ slot, now, autosaved }: { slot: SaveSlot; now: numbe
   </>;
 }
 
-/** A saved game's name, with a mark when it is a sandbox (T-728); also the start menu's. */
+/** A saved game's name, with a mark when it is a sandbox (T-728); also the start menu's. While the
+ * account keeps games (T-988), a cloud marks a game only on the account and a crossed cloud one only
+ * in this browser. */
 export function SlotTitle({ slot }: { slot: SaveSlot }) {
-  return <strong>{slot.name}{slot.mode === "sandbox" && <span class="save-sandbox small" data-tip="Infinite money">Sandbox</span>}</strong>;
+  return <strong>{slot.name}{slot.mode === "sandbox" && <span class="save-sandbox small" data-tip="Infinite money">Sandbox</span>}<CloudMark slot={slot} /></strong>;
+}
+
+/** T-988: the account's games are in use here (signed in, a server that keeps them); read as signals. */
+function useGamesOn(): CloudContext | null {
+  void session.value; void accountState.value; void accountConfig.value;
+  const ctx = cloudContext();
+  return ctx?.on ? ctx : null;
+}
+
+function CloudMark({ slot }: { slot: SaveSlot }) {
+  const ctx = useGamesOn();
+  if (!ctx) return null;
+  if (slot.key.startsWith("account:")) return <span class="save-cloud" data-tip="On your account"><Icon.cloud /></span>;
+  if (tiedTo(slot.cloud, ctx)) return null;
+  return <span class="save-cloud" data-tip="Only in this browser"><Icon.cloudOff /></span>;
+}
+
+/** "9:41 PM" today, "Oct 24" before. */
+function shortWhen(at: number, now: number): string {
+  const d = new Date(at);
+  return d.toDateString() === new Date(now).toDateString() ? clockTime(at) : d.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+/** T-988: under the playing game's facts, whether its last save reached the account. */
+function CloudLine({ slot, now }: { slot: SaveSlot; now: number }) {
+  const ctx = useGamesOn(), c = slot.cloud;
+  if (!ctx || !tiedTo(c, ctx) || c.gaveWay) return null;
+  if (c.error || !c.okAt) return <div class="small muted save-account" data-tip={c.error ?? "Not sent yet"}>Not on your account yet</div>;
+  return <div class="small muted save-account" data-tip={`Saved to your account ${fullDate(c.okAt)}`}>Saved to your account {shortWhen(c.okAt, now)}</div>;
+}
+
+/** T-988: another device opened or saved this game in the last ten minutes. */
+function Elsewhere({ slot }: { slot: SaveSlot }) {
+  const ctx = useGamesOn();
+  void accountList.value;
+  const at = ctx ? elsewhereAt(slot) : 0;
+  return at ? <div class="small muted save-account" data-tip={`Opened or saved on another device ${fullDate(at)}`}>Open on another device</div> : null;
 }
 
 /** T-1247: a save's name typed over in place; Enter or leaving the box renames, Escape cancels. */
@@ -128,9 +171,10 @@ function SlotCard({ slot, playing, now, writable, renaming, onRename, onRenamed,
           {playing && <span class="save-playing small">Playing</span>}
         </div>
         <SlotFacts slot={slot} now={now} autosaved={playing && writable} />
+        {playing ? <CloudLine slot={slot} now={now} /> : <Elsewhere slot={slot} />}
         <div class="save-actions">
           {playing && byHand && <span class="small muted save-by-hand num" data-tip={`Saved by hand ${fullDate(byHand)}`}>Saved {clockTime(byHand)}</span>}
-          {playing && <button class="btn text save-now" data-tip={writable ? "Save this game now (Ctrl+S)" : "Save this game now (Ctrl+S). Autosave stops in the other tab that has it open."} onClick={() => manageSaveSlot("save")}>Save</button>}
+          {playing && <button class="btn text save-now" data-tip={writable ? "Save this game now (Ctrl+S)" : /another device/.test(saveSlotsState.value.reason ?? "") ? "Save this game now (Ctrl+S). Autosave stops on the other device." : "Save this game now (Ctrl+S). Autosave stops in the other tab that has it open."} onClick={() => manageSaveSlot("save")}>Save</button>}
           {!playing && <button class="btn text save-open" data-tip="Play this game. The game you are playing is saved first." onClick={() => { manageSaveSlot("open", slot.key); savesOpen.value = false; }}>Open</button>}
           <button class="btn text" data-tip="Double click the name to rename it too"onClick={onRename}>Rename</button>
           {!playing && <button class="btn text" onClick={onDelete}>Delete</button>}
@@ -153,7 +197,8 @@ function Backups({ backups, now }: { backups: SlotBackup[]; now: number }) {
 }
 
 function Saves({ onNewGame }: { onNewGame: () => void }) {
-  const [newName, setNewName] = useState("");
+  // T-1295: the name a copy is saved under, asked only once Save a copy is clicked (null: not asked)
+  const [newName, setNewName] = useState<string | null>(null);
   const [rename, setRename] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   // "2 min ago" moves on while the panel is open
@@ -164,6 +209,8 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
   }, []);
   const saves = saveSlotsState.value;
   const at = lastSaved.value ?? 0;
+  const ctx = useGamesOn();
+  void accountList.value;
   const pick = () => {
     const input = document.createElement("input");
     input.type = "file";
@@ -179,25 +226,86 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
         <button class="btn text" data-tip="Download this game as a .save file" onClick={exportGame}>Save to a file</button>
         <button class="btn text" data-tip="Open a .save file as a new saved game. The game you are playing is saved first." onClick={pick}>Load a file</button>
         <button class="btn text" data-tip="Start a new game as a new saved game. The game you are playing is saved first." onClick={onNewGame}>New game</button>
+        <button class={"btn text" + (newName !== null ? " on" : "")} data-tip="Save a copy of this game under a new name and carry on playing the copy"
+          onClick={() => setNewName(newName !== null ? null : copyName(saves.slots.find((s) => s.key === saves.active)?.name))}>Save a copy</button>
       </div>
+      {newName !== null && <CopyName name={newName} setName={setNewName} />}
       <SaveSafety />
-      <form class="save-slot-new" onSubmit={(e) => { e.preventDefault(); manageSaveSlot("create", undefined, newName); setNewName(""); }}>
-        <input type="text" aria-label="New save slot name" placeholder="Name for a copy of this game" maxLength={80} value={newName} onInput={(e) => setNewName((e.target as HTMLInputElement).value)} />
-        <button class="btn text" type="submit" data-tip="Save a copy of this game under a new name and carry on playing the copy">Save as a copy</button>
-      </form>
       <ul class="save-slots">
         {saves.slots.map((slot) => <li data-slot={slot.key} class={slot.key === saves.active ? "on" : ""}>
           <SlotCard slot={slot} playing={slot.key === saves.active} now={Math.max(now, at)} writable={saves.writable} renaming={rename === slot.key}
             onRename={() => setRename(slot.key)} onRenamed={() => setRename(null)} onDelete={() => setRemoving(slot.key)} />
           {slot.key === saves.active && saves.backups.length > 0 && <Backups backups={saves.backups} now={Math.max(now, at)} />}
           {removing === slot.key && <div class="callout bad">
-            <p>Delete "{slot.name}" from this browser?</p>
+            <p>{onAccount(slot) ? `Delete "${slot.name}" from this browser and your account?` : `Delete "${slot.name}" from this browser?`}</p>
             <div class="pane-foot"><button class="btn text" onClick={() => { manageSaveSlot("delete", slot.key); setRemoving(null); }}>Delete saved game</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
           </div>}
         </li>)}
+        {ctx && accountOnly(saves.slots).map((g) => {
+          const card = cardOf(g);
+          return <li data-account={g.id}>
+            <AccountCard slot={card} now={Math.max(now, at)} onDelete={() => setRemoving(card.key)} />
+            {removing === card.key && <div class="callout bad">
+              <p>Delete "{g.name}" from your account?</p>
+              <div class="pane-foot"><button class="btn text" onClick={() => { void deleteAccountGame(g.id); setRemoving(null); }}>Delete from your account</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
+            </div>}
+          </li>;
+        })}
       </ul>
     </>
   );
+}
+
+/** "New York copy" for the game being played; "" when it has no slot (a test page). */
+const copyName = (name: string | undefined) => (name ? `${name} copy`.slice(0, 80) : "");
+
+/** T-1295: the name for Save a copy, prefilled and selected; Save or Enter saves, Cancel or Escape
+ * closes it. */
+function CopyName({ name, setName }: { name: string; setName: (n: string | null) => void }) {
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => { input.current?.focus(); input.current?.select(); }, []);
+  return (
+    <form class="save-slot-new" onSubmit={(e) => { e.preventDefault(); manageSaveSlot("create", undefined, name.trim()); setName(null); }}>
+      <input ref={input} type="text" aria-label="Name of the copy" placeholder="Name" maxLength={80} value={name}
+        onInput={(e) => setName((e.target as HTMLInputElement).value)}
+        onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setName(null); } }} />
+      <button class="btn text" type="submit">Save</button>
+      <button class="btn text" type="button" onClick={() => setName(null)}>Cancel</button>
+    </form>
+  );
+}
+
+/** T-988: a game on the account and not in this browser; Open downloads it into a new slot. */
+function AccountCard({ slot, now, onDelete }: { slot: SaveSlot; now: number; onDelete: () => void }) {
+  const [msg, setMsg] = useState("");
+  const g = accountList.value?.games.find((x) => "account:" + x.id === slot.key);
+  return (
+    <div class="save-card">
+      <SlotThumb slot={slot} />
+      <div class="save-info">
+        <div class="save-slot-title"><span class="save-name"><SlotTitle slot={slot} /></span></div>
+        <SlotFacts slot={slot} now={now} />
+        {msg && <div class="small bad">{msg}</div>}
+        <div class="save-actions">
+          <button class="btn text save-open" data-tip="Play this game. The game you are playing is saved first." onClick={async () => {
+            if (!g) return;
+            setMsg("");
+            const key = await downloadAccountGame(g);
+            if (!key) { setMsg("This game could not be downloaded."); return; }
+            manageSaveSlot("open", key);
+            savesOpen.value = false;
+          }}>Open</button>
+          <button class="btn text" onClick={onDelete}>Delete</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** T-988: a slot whose game is also on the account signed in. */
+function onAccount(slot: SaveSlot): boolean {
+  const ctx = cloudContext();
+  return !!ctx?.on && tiedTo(slot.cloud, ctx);
 }
 
 /** T-1214: whether the browser keeps these saves if the disk fills, and the folder they are copied to. */
@@ -225,7 +333,7 @@ export function SavesPanel() {
   // T-728: New game shows the new game sheet in the panel's place
   const [sheet, setSheet] = useState(false);
   useEffect(() => { if (!open) setSheet(false); }, [open]);
-  useEffect(() => { if (open) manageSaveSlot("refresh"); }, [open]);
+  useEffect(() => { if (open) { manageSaveSlot("refresh"); void refreshAccountGames(); } }, [open]);
   return (
     <Modal open={open} onClose={() => (savesOpen.value = false)} title={sheet ? "New game" : "Saved games"}>
       {sheet

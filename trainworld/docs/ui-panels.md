@@ -53,7 +53,7 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 - **Every drawn quantity has a tooltip** (Anita) [T-194, notes/T-194.md]: bubbles,
   inter-city and city bubbles, line widths and track colours, trains, stations, crowds, demand
   circles, capacity tags, and in the panels the purpose split, pie and timing bars, the trip
-  explorer's bars, the complex map's lines and transfer curves, the junction map's routes and the
+  explorer's bars, the complex map's platforms, the junction map's routes and the
   train's load bar.
 
 ## The dock
@@ -88,7 +88,8 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
   and the controls panel covers the dock's width. Nothing changes above 600 px wide or on a short
   (landscape) screen. On a touch screen the buttons show no key hints, and a press held on a control
   for half a second shows its hover tag above the finger, the tap it ends in doing nothing [T-1260,
-  `ui/tip.ts`].
+  `ui/tip.ts`]. The Select tool's selection bar leaves the top of the map for its bottom edge
+  [T-1263, [ui-building.md](ui-building.md) "The Select tool"].
 
 ## The top bar
 
@@ -117,9 +118,14 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   before that), and over dead space [T-318]. The hover says "on a weekday", "on a Saturday", "on a Sunday" or "on average" for the
   day shown. The zone named is the focused zone ([ui-demand-views.md](ui-demand-views.md)).
   **Zoomed out below zoom 5** (a few countries on screen) the bar names "World" instead [T-1110]:
-  the split and rides summed over every city with a built station and a demand view, as the Cities
-  tab's World row sums them (`game/worldTotals.ts`; hover: the city and station counts), whatever
-  lies under the view's centre.
+  the train rides summed over every city with a built station and a demand view, as the Cities
+  tab's World row sums them (`game/worldTotals.ts`; the name's hover: the city and station counts),
+  whatever lies under the view's centre, as a share of a fixed 25 billion rides a day in the world
+  (8.2 billion people at about 3 rides each, `WORLD_RIDES`), so it is usually well under 1% [T-1301].
+  Under 1% it shows two significant figures ("0.052%", `smallPct`); the bar's walking and driving
+  take the rest in the cities' own proportions. Its hover gives the share of the world's rides and
+  how they are reached, the train rides a day and in how many cities, then the cities' own split
+  as a city's hover gives it. A city's share is unchanged.
 - **Status** [T-349, `ui/StatusTag.tsx`]: a small tag (small type style, background, thin border)
   on the map's top row, to the right of the demand buttons and centred with them (`ui/DemandSelector.tsx`;
   the buttons stay at the top left). It appears and goes in one step and moves nothing; the whole
@@ -261,7 +267,7 @@ choice (Train share by default [T-833], which shows two colour pickers labelled 
 100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), the Day choice (Average, Weekday, Sat, Sun;
 "Demand shown for", below) [T-703], Show (trains, station names, capacity markers, full stretches [T-1152: the Traffic view's red edges, on by default, its hover saying so; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
-[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, place names, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, and the real network's faint opacity scales with it, though not while track snaps to it; `map/basemap.ts`) [T-1249], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, Game (normal or sandbox, T-728), then,
+[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266]; the real network is left as it is, T-1291; `map/basemap.ts`) [T-1249], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, Game (normal or sandbox, T-728), then,
 when accounts are on, Account [T-1139]: who is signed in ("Signed in as alice", "Signed in with
 Google" or "Not signed in") and a button, Account settings or Sign in, that opens the same account
 panel as the icon at the top and the start menu's (sign in, recovery email, change password, sign
@@ -324,9 +330,12 @@ day or hour now is drawn as it fills (a dashed last segment, a paler bar) and mo
 Under the charts the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
 day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
 costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
-charts are saved with the game and are there after a reload [T-567]. Then, for the whole
-network whatever the toggle: the fare curve (rule: [track-and-service.md](track-and-service.md),
-fares), drawn as a graph of the fare against trip length, both axes linear
+charts are saved with the game and are there after a reload [T-567]. Then, whatever the toggle,
+the fares of one country [T-1277]: the selected station's or city's, else the zone in view's, else
+the home city's. The graph and rows show the network's curve times that country's fare scale, and
+an edit there sets the curve (divided back by the scale), so every country's fares move with it.
+The fare curve (rule: [track-and-service.md](track-and-service.md), fares) is drawn as a graph of
+the fare against trip length, both axes linear
 [T-864, T-883, T-1112, T-1143, `ui/FareGraph.tsx`]. "Nice" below means 1, 2 or 5 times a power of
 ten. The distance shown starts as the smallest nice one holding 1.2 times the last node's distance
 with every node's fare below 90% of the fare shown (200 km for the default curve) and is kept while
@@ -354,10 +363,14 @@ the sim's edit history holds track, lines and schedules, so fare steps are kept 
 and any other edit drops them]. A node past the plot is an arrow
 on the plot's edge pointing toward it, with its hover; a click on the arrow zooms out to show it. A
 hover anywhere on the graph names the fare at that distance, a node's hover its distance and fare
-and the ways it drags. The axis labels are 11 px in the graph's own units. Below the graph one row
+and the ways it drags. The axis labels are 11 px in the graph's own units. Below the graph, first
+"Fares here" with the country's scale in a stepper, "2.8x", stepping by 0.1 from 0.1 to 9.9 (a
+click types one), its hover naming the country, the multiple of India's and the scale by income;
+once the player has set one, an undo icon beside it ("Back to 2.8x, the scale by income")
+returns to the income's [T-1277]. Then one row
 per node [T-1201, T-1234], no rules between them and none wrapping at the dock's narrowest width,
 their steppers lined up in one column: "Base fare" with its fare in a stepper, then each stretch as
-`0-` [20] `km`, only its end distance in a box (typed, no steps), and its rate in a stepper,
+`0 -` [20] `km` [T-1264], only its end distance in a box (typed, no steps), and its rate in a stepper,
 [+$0.07] `per km`, the unit outside the box; the second "Past 20 km" with its rate only (following
 the first's end; the last node's distance changes no fare, so it is only dragged). The base fare
 steps by $0.25; a rate to the next whole cent above or below ($0.138 to $0.14 or $0.13), or by a
@@ -365,7 +378,7 @@ cent of fare where a stretch is too short for that to move it. A click on any va
 type it, Enter or leaving the box applying and Escape cancelling [T-626, `TypedValue` in
 `ui/widgets.tsx`]; a stretch's end is kept in order as a drag is. A row's change keeps every other
 row's value, so a base fare or rate change moves that node's fare and every later one's by the same
-amount, and a stretch's end keeps both rates; a rate never goes below $0. Fares stay whole cents; a
+amount, and a stretch's end keeps both rates; a rate never goes below $0. Fares show whole cents; a
 rate shows two decimals when it is whole cents and three otherwise (typed or dragged). Dragging on
 the graph sets fares, and the rows' rates follow. Then cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
@@ -400,7 +413,8 @@ reads "No stations yet."
   panel over a dimmed page, closed by Esc, its close button or a click outside.
 - One card per browser slot: a 240 x 160 picture of its network, drawn by the clock worker when the
   slot is saved, at twice that resolution, on the land colour of the theme it was saved in [T-543].
-  The picture is one panel per city with stations, the most stations first, at most four, leaving
+  The picture is one panel per city with stations (each station in its zone by the coarse outlines,
+  [zones.md](zones.md) "A place's zone", T-1265), the most stations first, at most four, leaving
   out a city with under 8% of the biggest one's stations (a fringe of its network) [T-894]:
   one fills it; two sit side by side; three are a large panel on the left (60%) and two stacked on
   the right; four are a 2 x 2 grid. Panels are split by a thin rule in the casing colour. Each panel
@@ -422,10 +436,27 @@ reads "No stations yet."
   in another, Save takes the slot over: this tab autosaves from then on, and the other says
   "Autosave is off here because this game was saved in another tab." until a save by hand there
   takes it back (architecture.md "One writer per slot").
+- **Games on the account** [T-988; architecture.md 11 "Games on the account"], only while signed
+  in to a server that keeps games: under the Playing card's facts "Saved to your account 9:41 PM"
+  (the time the account's copy was saved; "Oct 24" form after a day; the full date on hover) or
+  "Not on your account yet" (the reason on hover: "Offline", "The server could not be reached",
+  "Your account is full. Delete a game to make room.", "This game is too big to keep on your
+  account."); nothing while another device has the game (the panel's callout and the top bar say
+  "Autosave is off here because this game was opened on another device.", and Save takes it
+  back, its hover saying autosave stops on the other device). Another card whose game another
+  device opened or saved in the last 10 minutes says "Open on another device" (the time on
+  hover). A game not tied to the account (kept here only, made signed out, or another account's)
+  has a crossed cloud after its name (hover "Only in this browser"). After the browser's cards,
+  the account's games not in this browser: the server's picture and facts, a cloud after the name
+  (hover "On your account"), Open (downloads it into a new slot and opens it as Open does) and
+  Delete, asked first: "Delete "Tokyo" from your account?". Deleting a tied slot asks "Delete
+  "Tokyo" from this browser and your account?".
 - Under the Playing card, its backups [T-744], newest first: "Backup 4 min ago · Day 26" (exact
   time on hover) and Restore as a copy, which closes the panel and opens the backup in a new slot.
 - Above the cards [T-1131]: Save to a file
-  (`anitabuilder-nyc-day-12.save`), Load a file, New game, then Save as a copy (with a name). Load a file asks nothing: it closes the
+  (`anitabuilder-nyc-day-12.save`), Load a file, New game, then Save a copy, which opens a row
+  under the buttons with the name (prefilled "<game> copy", focused and selected), Save and Cancel;
+  Enter saves, Escape cancels, and a second click on Save a copy closes it [T-1295]. Load a file asks nothing: it closes the
   panel and opens its game in a new slot, the game being played saved first [T-743; the slot rules
   in architecture.md]. New game shows the new game sheet (below) in the panel, headed "New game";
   its Start closes the panel and opens the new game the same way, its Back returns to the cards.
@@ -447,7 +478,7 @@ reads "No stations yet."
 - A page opened with `?new=1`, `?synth=1` or `?demandTest=1` does not autosave: the top bar says
   "Autosave is off in this test page. Save a copy to keep the game." (the only place it is said,
   [T-971]), a `?new=1` page marks no
-  card Playing, and Save as a copy gives the game a slot of its own, which autosaves from then on.
+  card Playing, and Save a copy gives the game a slot of its own, which autosaves from then on.
 
 **A new game** starts on day 1 at 07:00 with $6B, empty or (a sandbox) from a real network, on its
 start city's registry centre and zoom, or on the world map (centre 20° E 30° N, zoom 1.8: the
@@ -477,7 +508,7 @@ registry centre and zoom, or over New York with none [T-310].
   is picked: the game starts on the world map with Homes on and every realm shown (zones.md
   "Realms"), so the zones' zoomed-out bubbles show and take a click as anywhere (ui-demand-views.md
   "Zoomed far out").
-- **Real network** (ticked to begin with): only for a sandbox in New York, London, Paris, Tokyo,
+- **Real network** (unticked to begin with, so the player picks it on purpose [T-1302]): only for a sandbox in New York, London, Paris, Tokyo,
   Seoul, Toronto or Sendai, the cities with a real network (`REAL_NETWORKS`; architecture.md 11). The
   game starts from that network, built and running.
 - **Start in Tokyo** (the zone picked or located) or **Start**, bigger than the other buttons (36 px
@@ -487,8 +518,9 @@ registry centre and zoom, or over New York with none [T-310].
 
 ## Account and leaderboards
 
-[T-972, T-973; `game/account.ts`, `ui/AccountPanel.tsx`, `ui/Leaderboard.tsx`; server routes in
-shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
+[T-972, T-973, T-988; `game/account.ts`, `game/accountGames.ts`, `ui/AccountPanel.tsx`,
+`ui/Leaderboard.tsx`; server routes in shonei-server's `trainworld.go`, `trainworld_games.go` and
+`docs/trainworld-api.md`; notes/T-972.md, notes/T-988.md]
 
 - **Optional.** Signing in is never needed to play. The account is noritetsu's (Google, or a
   username and password with an optional recovery email), kept under noritetsu's storage key, so on
@@ -502,13 +534,21 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   account and Forgot password; Privacy and Terms (`public/privacy.html`, `terms.html`). Signed in:
   "Signed in as alice" (or with Google), for a password account the recovery email ("No recovery
   email" in red when there is none) with Save email, Remove and Change password, then Sign out and
-  Delete account (asked first; the account's leaderboard entries and noritetsu rides go
-  too, games in this browser stay).
+  Delete account (asked first: "Delete your account? Its games, its leaderboard entries and its
+  noritetsu rides go too. Games in this browser stay."; the browser's slots are then tied to no
+  account).
+- **The sign-in question** [T-988]: signing in, or a load already signed in, with slots tied to no
+  account (made signed out, never answered) opens the account panel on "Add the 3 games in this
+  browser to your account?" ("Add Tokyo to your account?" for one) with Add (lit) and Don't add;
+  Don't add asks "Are you sure? Games kept only in this browser are lost if its storage is
+  cleared." with Keep them here only and Add them ("Keep it here only", "Add it" for one). Added
+  games go up at once; kept ones are never asked about again and carry the crossed cloud.
 - **Scores**: while signed in, each normal game in a browser slot sends its points (the past 24
   game hours, the World row's figure) and its best 64 cities' points, when they change and at
   most every 2 wall minutes (at once on the first send and when the page is hidden), joined or not.
   A `?new=1` page or one whose slot is open elsewhere sends nothing. Each slot has a random game id
-  in localStorage (`trainworld.score-games.v1`). A game that turns sandbox sends that once and is
+  in localStorage (`trainworld.score-games.v1`), or the id of its game on the account when it has
+  one (T-988), so one id names a game's save and its figures. A game that turns sandbox sends that once and is
   never listed again; one that was always a sandbox sends nothing. A slot deleted in this browser
   takes its figures off (on the next signed-in load if signed out then).
 - **Leaderboards**: the trophy opens a centred modal: a picker (World, then the cities in this
@@ -527,6 +567,9 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   anitabuilder!" with "Build trains around the world!" under it [T-1242] (the account button at
   its top right when accounts are on [T-972]), New game, then "Saved games", one button per browser slot, the most recent first, each with the
   saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash).
+  Signed in (T-988), the slots are first settled against the account (a click on a card waits for
+  that, 10 s at most), and the account's games not in this browser follow the browser's as cards
+  with a cloud (hover "On your account"); a click downloads one into a new slot and opens it.
   With no saved game it is New game alone. The dock and top bar are taken out of the page and the
   map controls hidden, so the map fills the page; it shows the world from 60° S to 75° N covering
   the page (all of it on a wide screen, its centre around 10° E, 20° N on a narrow one) [T-927;
@@ -570,7 +613,9 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   it before the status tag's text; a small ring turning (`.spin`, 1.2 s a turn, 8 px, grey) in place
   of each line's crowding dot per demand level in the line panel until the line has figures
   (while no final result is shown or a solve is updating it; not after a failure or over dead
-  space), and in a clicked bubble's panel in place of each line that waited ("Trip purposes", the far ends, "Inter-city trips") while they load.
+  space); a line whose shown result has no riders for it as its stops are now (just given trains,
+  its stops just changed) has the ring, never a dot, until one that does lands, since its trains run
+  empty in the boarding account till then (`lineFiguresIn` in `game/demand.ts`, T-1279); and in a clicked bubble's panel in place of each line that waited ("Trip purposes", the far ends, "Inter-city trips") while they load.
   Nothing else animates. The figures behind it are the solve's estimates, or the last
   final result kept beside the save when there is one (T-328; the split's hover ends "(from the
   last time this game was open)").

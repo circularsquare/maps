@@ -22,7 +22,7 @@ import { display, purposeFilter, shownDayPhrase, type StationUseMode } from "../
 import { stationScale } from "./demandLayers";
 import { tripAt } from "./network";
 import type { Overlay } from "./overlay";
-import { stationHaloRadius } from "./stationGeometry";
+import { stationHaloRadius, STATIONS_ZOOM } from "./stationGeometry";
 import { factRow, lineBullet, lineBullets } from "./trackTagRows";
 
 /** A line of a tag: plain text, or a row built as DOM. */
@@ -157,7 +157,7 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): TipLine[] | nu
 /** The tag for a station use circle under the point (circles are behind the network), or null. */
 export function circleTip(ov: Overlay, w: WorldView, px: number, py: number, zoom: number): string[] | null {
   const net = ov.renderer.net, dv = demandView.peek(), mode = display.peek().stationUse;
-  if (!net || !dv || mode === "none") return null;
+  if (!net || !dv || mode === "none" || zoom < STATIONS_ZOOM) return null;
   const R = stationHaloRadius(zoom);
   const list = circleList(net, w, dv, mode);
   let best: Circle | null = null, bestF = 1;

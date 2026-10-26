@@ -78,7 +78,9 @@ There is no built-in liking for the train. Rail and the car are compared on time
   band of walking to it (0-15, 15-30, over 30) share one walk, an average leaning to the nearer
   homes. Without the bands a short line's group could mix 2 and 28 minute walks, and rail came out
   7-21% too high. The trip explorer works out its own two places exactly.
-- Wait on the platform: half the time between trains, in plain minutes.
+- Wait on the platform: half the time between trains, in plain minutes; at a station with a
+  waiting room (a station upgrade the player buys) each of those minutes counts 0.8, so a few
+  more people take the train there.
 - No train for hours: people differ in how long they would wait for the next train rather than go
   another way, from half an hour to 6 hours (half of them up to about 1 hour 45). At each stop and
   time of day the game works out what share of that period's riders have a train coming within
@@ -91,8 +93,12 @@ There is no built-in liking for the train. Rail and the car are compared on time
   it counts 5.4. Below 70% nobody minds the crowd.
 - Changing trains: a fixed 2 minutes, plus the walk from the platform you arrive at to the one you
   leave from (centre to centre, at an easy walking pace, each minute counted 1.39), plus the wait
-  for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Nobody
-  changes back onto the line they just left: on a full line people wait at their station.
+  for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Between
+  two stations the player joined by a passage the walk is the straight line at 2 m/s, moving
+  walkways: 300 m takes 2.5 minutes rather than 5.4. Nobody changes back onto the line they just
+  left to go back the way they came: on a full line people wait at their station. Where a line
+  comes back through a station (a loop on a stalk), people may change there onto the same line
+  heading somewhere else, like any change.
 - If the train is full when it arrives, the wait for one with room counts too, minute for minute,
   up to an hour.
 - No more riders than the trains take: once the rest is worked out, everyone who would ride if
@@ -107,8 +113,11 @@ There is no built-in liking for the train. Rail and the car are compared on time
   last add up to more than walking between the two ends (over water, each metre of it counts as
   3 metres of walking). A trip left with no such pair has no train. It takes about 3% of rail trips away, nearly
   all under 2 km, to walking and the car.
-- Fare: in the US $1 counts as 3 minutes. The fare is the player's curve of trip length, paid
-  once a trip; choosing between routes sees only its first stretch.
+- Fare: a dollar of fare counts more minutes where people earn less: 4.4 in the US, 5.3 in the UK,
+  12.2 in India (by GDP per head, to the power -0.5). The fare is the player's curve of trip length
+  times the country's fare scale (2.8 in the US, 1.0 in India, where the curve is set, or the
+  player's own), paid once a trip; choosing between routes sees only its first stretch. At the
+  default scales a fare weighs the same everywhere; poorer countries just pay less per ride.
 - Which stations: riders share the pairs of stations near each end by how much slower each option
   is compared with the trip's length. Of two options 1 minute apart the faster gets 66% on a short
   trip and 58% on one of an hour; 5 minutes apart, 97% and 84%; 10 minutes apart, nearly everyone
@@ -116,7 +125,8 @@ There is no built-in liking for the train. Rail and the car are compared on time
   length: on a 4 hour trip 5 minutes apart is 70%. The trips between cities choose their stations
   the same way, their length being the drive's. At a station, riders take the first
   train that helps.
-- Or drive to the station: 15 minutes to start, the drive (counted 2.66 a minute, twice a minute of
+- Or drive to the station: 15 minutes to start (5 at a station with a park and ride, a station
+  upgrade the player buys), the drive (counted 2.66 a minute, twice a minute of
   driving the whole way, so a short drive to the station is common and a long one rare), the car's
   cost per trip (below), the cheaper of parking there or a 10 minute drop-off, and the parking at
   home (below). Only for trips of 5 km or more. A drive of 10 km to a station counts about
@@ -146,7 +156,8 @@ There is no built-in liking for the train. Rail and the car are compared on time
   ferry; to Hokkaido $170 and 4 hours for the ferry (the Seikan Tunnel takes no cars).
 - Plane, between cities 250 km apart or more that both have airports: the drive to each airport,
   90 minutes at the airports, the flight at 750 km/h plus 30 minutes (an hour more with no direct
-  flight), and a fare of $100 plus 5 cents a km, so $125 at 500 km and $150 at 1,000 km.
+  flight), and a fare of $100 plus 5 cents a km, so $125 at 500 km and $150 at 1,000 km, its
+  dollars counted at the starting country's minutes a dollar (the fare line above).
 
 **Walking the whole way**
 - 13 real minutes a km, every minute counted 1.5. So 1 km costs 19.5 minutes, 2 km 39, 3 km 58.5.

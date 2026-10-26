@@ -1526,6 +1526,14 @@ impl EverydayApi {
     pub fn set_complexes(&mut self, complex: &[u32]) {
         self.engine.set_complexes(complex);
     }
+    /// `DemandApi::set_upgrades` (T-1281).
+    pub fn set_upgrades(&mut self, ups: &[u8]) {
+        self.engine.set_upgrades(ups);
+    }
+    /// `DemandApi::set_passages` (T-1281).
+    pub fn set_passages(&mut self, pairs: &[u32]) {
+        self.engine.set_passages(pairs);
+    }
     /// `DemandApi::set_span` (T-842).
     pub fn set_span(&mut self, span: &[f32]) {
         self.engine.set_span(span);
@@ -1580,6 +1588,14 @@ impl EverydayApi {
         }
         Ok(())
     }
+    /// T-1277: `DemandApi::set_fare_weight`.
+    pub fn set_fare_weight(&mut self, w: f32) -> Result<(), String> {
+        self.engine.set_fare_weight(w)?;
+        if self.engine.same == 0 {
+            self.per.iter_mut().for_each(|v| *v = None);
+        }
+        Ok(())
+    }
     pub fn set_fare_curve(&mut self, knots: &[f32]) -> Result<(), String> {
         self.engine.set_fare_curve(knots)?;
         if self.engine.same == 0 {
@@ -1608,7 +1624,7 @@ impl EverydayApi {
         for (r, fare) in g.rn_fare.iter_mut().enumerate() {
             *fare = self.engine.fare_km.get(r).copied().unwrap_or(0.0) * self.engine.fare_per_km;
         }
-        put_fare_curve(&mut g, &self.engine.fare_curve, &self.engine.fare_km, self.engine.base.fare_min, self.engine.fare_per_km);
+        put_fare_curve(&mut g, &self.engine.fare_curve, &self.engine.fare_km, self.engine.base.fare_min, self.engine.fare_per_km, self.engine.base.fare_w);
         let fac = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &fac);
         let xi = xfer_index(&g);
@@ -1796,7 +1812,7 @@ impl EverydayApi {
     }
     /// As `DemandApi::fare_extra`.
     pub fn fare_extra(&self, q: usize) -> Vec<f32> {
-        self.per.get(q).and_then(|v| v.as_ref()).map_or(vec![], |s| fare_x_usd(&s.loads.rn_fare_x))
+        self.per.get(q).and_then(|v| v.as_ref()).map_or(vec![], |s| fare_x_usd(&s.loads.rn_fare_x, self.engine.base.fare_w))
     }
     pub fn load_of_crush(&self, q: usize) -> Vec<f32> {
         let Some(Some(st)) = self.per.get(q) else {

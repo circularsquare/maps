@@ -78,6 +78,8 @@ p { margin: 0; }
 /* ---------- buttons ---------- */
 
 button, input, select, textarea { font: inherit; color: inherit; }
+/* T-1292: a dropdown's list is drawn on the option's own background, white unless set */
+select, option, optgroup { background-color: var(--bg); color: var(--text); }
 .btn {
   height: 28px; min-width: 28px; padding: 0 8px;
   border: 1px solid var(--rule); border-radius: 0;
@@ -87,6 +89,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn:hover { background: var(--shade); }
 .btn.on { background: var(--tint); border-color: var(--accent); position: relative; z-index: 1; }
 .btn.icon { width: 28px; padding: 0; }
+/* station upgrades (T-1281): outlined, dashed in the blueprint, filled when built */
+.upgrades { display: flex; gap: 6px; margin: 6px 0; }
+.btn.upgrade { color: var(--muted); }
+.btn.upgrade.planned { color: var(--text); border-style: dashed; border-color: var(--accent); }
+.btn.upgrade.on { color: var(--text); }
 .btn:disabled { color: var(--rule); cursor: default; background: var(--bg); }
 .btn.text { gap: 6px; grid-auto-flow: column; white-space: nowrap; }
 .btn.text svg { width: 14px; height: 14px; }
@@ -449,8 +456,15 @@ rect.now { fill-opacity: .45; }
 .stops li.passed::after { display: none; }
 .stops li.adding { color: var(--muted); }
 .stops li.adding::after { opacity: 0.45; }
-.passed-all { margin: 2px 0 4px; }
-.passed-confirm { display: flex; gap: 6px; margin: 2px 0 4px; }
+/* T-1297: Add all and its Add/Cancel share one row and one spot, so a double click there adds */
+.passed-row { display: flex; gap: 6px; margin: 2px 0 4px; }
+.passed-add { grid-auto-flow: row; }
+.passed-add > span { grid-area: 1 / 1; }
+.passed-add .sizer { visibility: hidden; display: inline-grid; grid-auto-flow: column; gap: 6px; align-items: center; }
+/* T-1293: the schedule's copy and paste, small and muted beside the heading */
+.h .sched-copy { display: inline-flex; align-self: center; margin-left: 6px; font-weight: 400; }
+.sched-copy .btn { color: var(--muted); }
+.sched-copy .btn:hover:not(:disabled) { color: var(--text); }
 .stops .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stops .t { margin-left: 8px; }
 /* T-797: trains reverse at this stop; the map's reversal icon in small */
@@ -465,6 +479,20 @@ rect.now { fill-opacity: .45; }
 .stops .route-mark.crossing::before, .stops .route-mark.crossing::after { content: ""; position: absolute; left: 0; top: 4px; width: 12px; height: 4px; background: var(--net-ink); border-radius: 1px; box-shadow: 0 0 0 1px #fff; }
 .stops .route-mark.crossing::before { transform: rotate(45deg); }
 .stops .route-mark.crossing::after { transform: rotate(-45deg); }
+/* T-1272: the Traffic view's diagram, each stretch as wide as its load (--w), in halves below a stop's
+   dot and above the next; a crowded stretch has the map's darkening at strength --f and red edges
+   at --e (the map's fullTrack colours, game/shadeTable.ts) */
+:root { --full-mark: #c0392b; }
+:root[data-shade="dark"] { --full-mark: #f0584f; }
+.stops.traffic li::before { display: none; }
+.stops .stretch { position: absolute; left: 2px; width: 16px; }
+.stops .stretch.down { top: 50%; bottom: 0; }
+.stops .stretch.up { top: 0; bottom: 50%; }
+.stops .stretch::before { content: ""; position: absolute; top: 0; bottom: 0; left: calc(8px - var(--w) / 2); width: var(--w); background: var(--c); }
+.stops .stretch.full::before {
+  background: color-mix(in srgb, var(--c), #000 calc(var(--f) * 14%));
+  box-shadow: -2px 0 0 color-mix(in srgb, var(--full-mark) calc(var(--e) * 100%), transparent), 2px 0 0 color-mix(in srgb, var(--full-mark) calc(var(--e) * 100%), transparent);
+}
 
 /* ---------- main: top bar, map, tools ---------- */
 
@@ -604,6 +632,9 @@ rect.now { fill-opacity: .45; }
 .new-game-foot > :not(.new-game-start) { grid-column: 1; grid-row: 1; justify-self: start; }
 .new-game-start { grid-column: 2; grid-row: 1; height: 36px; padding: 0 28px; font-weight: 700; background: var(--tint); }
 .save-sandbox { margin-left: 6px; padding: 0 5px; border: 1px solid var(--rule); font-weight: 400; color: var(--muted); }
+/* T-988: a game only on the account (cloud) or only in this browser (crossed cloud), after its name */
+.save-cloud { display: inline-flex; vertical-align: -2px; margin-left: 6px; color: var(--muted); }
+.save-cloud svg { width: 15px; height: 15px; }
 .cash.sandbox { color: var(--muted); }
 .game-mode { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 /* T-927: the dock and top bar take no room either, so the world map fills the page behind the menu */
@@ -623,6 +654,9 @@ rect.now { fill-opacity: .45; }
 .realm-button button { display: block; box-sizing: border-box; width: 16px; height: 16px; padding: 0; border-radius: 50%;
   border: 1px solid var(--map-ink); background: #fff; cursor: pointer; }
 .realm-button button:hover { background: #d9d9d9; }
+/* T-1298: toned down in dark, a mid grey with a dark rim */
+:root[data-shade="dark"] .realm-button button { background: #8a857f; border-color: #141517; }
+:root[data-shade="dark"] .realm-button button:hover { background: #a39e98; }
 /* MapLibre sets Helvetica on its container. Map UI must use the same font as the dock. */
 #map, #map .maplibregl-ctrl { font-family: var(--font); }
 #map canvas.overlay { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 1; }
@@ -644,6 +678,7 @@ rect.now { fill-opacity: .45; }
 .blueprint-panel { margin-top: 14px; }
 .blueprint-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
 .blueprint-head .num.bad { color: var(--bad); }
+.blueprint-head .bp-total { display: inline-flex; align-items: baseline; gap: 6px; }
 .blueprint-breakdown summary { cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; }
 .blueprint-category { margin-top: 8px; }
 /* T-1159: the Track row, Target max speed and Platform length the same 6 px apart */
@@ -724,6 +759,9 @@ rect.now { fill-opacity: .45; }
 .touch-handle::after { content: ""; position: absolute; left: 15px; top: 15px; width: 10px; height: 10px; border-radius: 50%;
   background: #fff; border: 2px solid var(--net-ink); }
 .stn-label.plan { opacity: 0.6; }
+/* T-1281: a park and ride's P after the name */
+.stn-label.park::after { content: "P"; display: inline-block; margin-left: 4px; padding: 0 3px; border-radius: 2px;
+  background: var(--map-ink); color: var(--bg); font-weight: 700; font-size: 0.85em; line-height: 1.25; vertical-align: 1px; }
 .track-modes .group { display: grid; grid-template-columns: 1fr 1fr; }
 .track-modes .btn { white-space: normal; height: auto; min-height: 40px; line-height: 1.35; padding: 4px 6px; }
 .station-use { margin-bottom: 6px; }
@@ -1069,6 +1107,24 @@ rect.now { fill-opacity: .45; }
 @container map-column (max-width: 360px) {
   .map-search { top: 142px; }
 }
+/* T-1263: on a phone the Select tool's bar sits on the map's bottom edge in one row that fits a 390 px
+   screen and scrolls sideways only below about 360 px; the count has the tool's icon, the elevation is
+   one button that opens the seven above the bar (as the touch bar's does), the actions are icons
+   (names in the hovers); under the tool notes (z-index 3), which share that corner */
+.blueprint-bar .bp-level, .blueprint-bar .bp-ico, .blueprint-levels { display: none; }
+@media (max-width: 600px) and (min-height: 560px) {
+  .blueprint-bar { top: auto; bottom: 0; left: 0; right: 0; transform: none; z-index: 2; width: auto; max-width: none;
+    flex-wrap: nowrap; justify-content: flex-start; gap: 4px; overflow-x: auto; scrollbar-width: none; border-width: 1px 0 0; padding: 4px 6px; }
+  .blueprint-bar > * { flex: none; }
+  .blueprint-bar .bp-label { display: none; }
+  .blueprint-bar .count { min-width: 0; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; }
+  .blueprint-bar .bp-ico { display: inline-flex; }
+  .blueprint-bar .bp-levels { display: none; }
+  .blueprint-bar .btn, .blueprint-bar .btn.bp-level { height: calc(36px / var(--ui, 1)); min-width: calc(36px / var(--ui, 1)); padding: 0; }
+  .blueprint-bar .btn.bp-level { display: inline-grid; }
+  .blueprint-levels .btn.lv { min-width: calc(40px / var(--ui, 1)); }
+  .blueprint-levels { display: block; position: absolute; left: 50%; bottom: calc(46px / var(--ui, 1)); transform: translateX(-50%); z-index: 4; }
+}
 
 /* T-195: the trip explorer's inspector and its canvas over the demand views' */
 #map canvas.overlay.trip { z-index: 2; }
@@ -1089,6 +1145,6 @@ rect.now { fill-opacity: .45; }
 /* T-247: the UI scale (Settings, --ui from game/ui.ts). Panels are zoomed whole (every size here is
    px); the map's own DOM tags keep their placement and only their text is sized, since their
    positions come from the map. The WebGL map is never scaled. Dock.tsx divides its drags by it. */
-#dock, #topbar, .save-notice, #tools, .map-top-left, .map-search, .blueprint-bar, .loading-card, .loading-box, #debug { zoom: var(--ui, 1); }
+#dock, #topbar, .save-notice, #tools, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .loading-card, .loading-box, #debug { zoom: var(--ui, 1); }
 .loading-card-wrap { top: calc(var(--bar-h) * var(--ui, 1)); }
 .stn-label, .pi-label, .tool-tag, .cap-mark, .intercity-label { font-size: calc(12px * var(--ui, 1)); }

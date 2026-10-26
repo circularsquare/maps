@@ -31,6 +31,18 @@ const NO_DOUBLE = !perfOff("noDouble");
 /** Frame interval while the window is visible but does not have focus. */
 const UNFOCUSED_MS = 100;
 
+/** A view of the network drawn into another canvas (T-1289, ui/inspector/ComplexMap.tsx). */
+export interface Snapshot {
+  canvas: HTMLCanvasElement;
+  /** its size, CSS px */
+  w: number;
+  h: number;
+  /** its centre, Mercator 0..1, and its zoom */
+  mx: number;
+  my: number;
+  zoom: number;
+}
+
 const RING = 120;
 export class Ring {
   a = new Float64Array(RING);
@@ -149,22 +161,64 @@ export class Overlay {
   cssW = 0;
   cssH = 0;
 
+  /** T-1289: a second view drawn with each frame, the station panel's complex map; null for none. */
+  private snap: Snapshot | null = null;
+
+  /** Draw `s` along with every frame from now on (null: stop). The caller sizes nothing: the
+   * target's backing store is set here, at the map's pixel ratio unless the map's canvas is smaller. */
+  setSnapshot(s: Snapshot | null) {
+    this.snap = s;
+    if (s) this.invalidate();
+  }
+
   /** Draw now with the camera MapLibre last drew. */
   draw() {
     if (!this.cam || !this.renderer.net) return;
     const a = performance.now();
     const gl = this.gl;
+    clock.tick();
+    const opt = this.options();
+    // the snapshot first, so the main draw leaves the renderer's picking state as the map's
+    if (this.snap && !NO_DRAW && !gl.isContextLost()) this.drawSnapshot(this.snap, opt);
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    clock.tick();
-    if (!NO_DRAW && !gl.isContextLost()) this.renderer.draw(this.cam, clock.now(), this.map.getZoom(), this.map.getPixelRatio(), this.options());
+    if (!NO_DRAW && !gl.isContextLost()) this.renderer.draw(this.cam, clock.now(), this.map.getZoom(), this.map.getPixelRatio(), opt);
     this.lastDrawnMatrix = this.camMatrix;
     const now = performance.now();
     this.drawMs.push(now - a);
     if (this.lastFrame && clock.ticking && now - this.lastFrame < 1000) this.frameGap.push(now - this.lastFrame);
     this.lastFrame = now;
     this.frames++;
+  }
+
+  /** The snapshot drawn by the network renderer with a flat camera of its own into the bottom left of
+   * this canvas, copied to its target while the frame is still unpresented, then cleared by the
+   * frame's own draw: the same shaders, antialiasing and stencil as the map, no second context. */
+  private drawSnapshot(s: Snapshot, opt: DrawOptions) {
+    const gl = this.gl, cv = this.canvas;
+    const dpr = Math.min(this.map.getPixelRatio(), cv.width / s.w, cv.height / s.h);
+    const w = Math.floor(s.w * dpr), h = Math.floor(s.h * dpr);
+    if (w < 2 || h < 2) return;
+    // Mercator 0..1 to clip space, as MapLibre's flat camera at `zoom` (512 px tiles), north up
+    const S = 512 * 2 ** s.zoom, kx = (2 * S) / s.w, ky = (2 * S) / s.h;
+    const merc = [kx, 0, 0, 0, 0, -ky, 0, 0, 0, 0, 1, 0, -s.mx * kx, s.my * ky, 0, 1];
+    gl.viewport(0, 0, w, h);
+    gl.enable(gl.SCISSOR_TEST);
+    gl.scissor(0, 0, w, h);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    this.renderer.draw({ merc, globe: null, plane: [0, 0, 0, 1], t: 0 }, clock.now(), s.zoom, dpr, opt, [w, h]);
+    gl.disable(gl.SCISSOR_TEST);
+    const t = s.canvas;
+    if (t.width !== w || t.height !== h) {
+      t.width = w;
+      t.height = h;
+    }
+    const ctx = t.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(cv, 0, cv.height - h, w, h, 0, 0, w, h);
   }
 
   /** Something drawn changed (selection, settings, network): redraw once if no loop is running. */

@@ -12,6 +12,7 @@ import type { EdgeId, Level, NodeId } from "../game/types";
 import type { FrameSpec } from "../game/frame";
 import type { DayLedger, GameMode, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup } from "./saveFile";
 import type { NetworkBuffers } from "../map/network";
+import type { CloudContext } from "./cloud";
 
 export type { DayLedger, HourLedger };
 
@@ -62,6 +63,7 @@ export type EditOp =
   /** remove several pieces at once (T-829): undoable when all blueprint, else final */
   | { op: "removePieces"; edges: EdgeId[]; stations: NodeId[] }
   | { op: "flying"; node: NodeId; flying: boolean }
+  | { op: "stationUpgrade"; nodes: NodeId[]; bit: number; on: boolean }
   | { op: "addStation"; at: StationAt; platform: number; name: string }
   /** a crossover on track `edge` near x, y and the track running beside it (T-338) */
   | { op: "crossover"; edge: EdgeId; x: number; y: number }
@@ -90,6 +92,8 @@ export type EditOp =
   | { op: "lineFast"; line: number; fast: boolean }
   /** the fare curve (T-883, game/fareCurve.ts): its nodes, or a base and rate as two nodes; not undoable, a setting */
   | { op: "fares"; base?: number; perKm?: number; nodes?: [number, number][] }
+  /** T-1277: a country's fare scale (ISO alpha-2), null for its income's again; not undoable, a setting */
+  | { op: "fareScale"; country: string; scale: number | null }
   /** link two stations into one complex, or undo a link (T-197): node ids; not undoable, a setting */
   | { op: "link"; a: NodeId; b: NodeId; on: boolean }
   | { op: "undo" }
@@ -103,7 +107,7 @@ export type ToClock =
    * saved games (T-677): an empty game in a new slot of that name, written once something changes.
    * `backupMs`: wall ms between a slot's backups (T-744; `?backupMs=` for checks). `game`: how a
    * new game (`fresh` or `newSlot`) starts (T-728). */
-  | { kind: "init"; city: string; pack: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean }
+  | { kind: "init"; city: string; pack: string; outlines: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean }
   /** T-1196: the page reloads into another game: save the one in hand, keep `pending` (the game the
    * reloaded page opens, when not a slot) and let go of the slot; answered with "left" */
   | { kind: "leave"; pending?: PendingLoad }
@@ -171,6 +175,9 @@ export type ToClock =
   | { kind: "transfers"; packed: Float32Array }
   /** write the autosave now if anything changed (the page is being hidden or closed) */
   | { kind: "flush" }
+  /** T-988: the account the slots sync with (null: signed out, or no server); `settle` asks the
+   * worker to settle every slot again (after the sign-in question's Add) */
+  | { kind: "account"; ctx: CloudContext | null; settle?: boolean }
   /** T-1007, dev server only: make the track model panic, now (`now` holds its borrow, `read`
    * does not) or on the next edit once it is applied */
   | { kind: "debugPanic"; when: "now" | "read" | "afterEdit" }
@@ -196,7 +203,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "removal"; edges: number[]; stations: number[] };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "removal"; edges: number[]; stations: number[] };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -231,7 +238,7 @@ export interface MoneyState {
   upkeep: { track: number; stations: number; km: number; count: number };
   /** fares and running costs count this many times over in a game day (T-081, `ECONOMY`) */
   economy: number;
-  fares: { base: number; perKm: number; nodes: [number, number][] };
+  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string };
   /** running cost per game hour at high, medium, low demand */
   runningPerHour: [number, number, number];
   /** recent game days, oldest first; the last is today so far (as of the last whole hour; the
@@ -283,6 +290,8 @@ export interface ClockNode {
   stationBuilt: boolean;
   /** a blueprint station switched off (T-333) */
   stationOff: boolean;
+  /** the station's upgrades, `UPGRADE` bits (T-1281) */
+  upgrades: number;
   name: string;
   /** track heading through it, rad, counter-clockwise from east */
   heading: number;
@@ -428,8 +437,11 @@ export type FromClock =
       /** US$M */
       cost: number;
       lengthM: number;
-      /** the track's price over its length at the base price (level and water averaged, T-085) */
+      /** the track's price over its length at the base price (level, water and terrain averaged, T-085) */
       mult: number;
+      /** metres of a route preview on flat, rolling, hilly and mountain ground where the terrain is
+       * charged (T-1270, `TrackApi.preview_ground`) */
+      ground?: number[];
       issues: string[];
       /** per vertex: x, y (local units; the middle of its curve), radius m (0 = no arc), speed
        * limit km/h */
@@ -494,6 +506,8 @@ export type FromClock =
   /** `backups`: the active slot's (T-744), newest first */
   | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[] }
   | { kind: "error"; message: string }
+  /** T-988: the server refused the session's token (the main thread signs out) */
+  | { kind: "accountGone" }
   /** T-1007: the track model panicked and was rebuilt from the game's last edit (or, `down`, could
    * not be: the player is asked to reload). `detail` is for the console, `notice` for the player. */
   | { kind: "recovered"; detail: string; notice: string; down?: boolean }
@@ -521,7 +535,9 @@ export interface NetworkSnapshot {
   stations: SnapshotStation[];
   lines: SnapshotLine[];
   /** The player's fare curve (game/fareCurve.ts): its first stretch as a base and rate, and its nodes. */
-  fare?: { base: number; perKm: number; nodes?: [number, number][] };
+  fare?: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number> };
+  /** station pairs joined by a passage (T-1281), node ids; absent when there are none */
+  passages?: [number, number][];
 }
 
 export interface SnapshotStation {
@@ -538,6 +554,8 @@ export interface SnapshotStation {
    * player's links): stations with the same number are one complex, and demand lets riders change
    * between any two of them on foot. Absent in snapshots made before T-161: no complexes. */
   complex?: number;
+  /** its upgrades, `UPGRADE` bits (T-1281), only where it has any */
+  upgrades?: number;
 }
 
 export interface SnapshotLine {

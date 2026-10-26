@@ -627,6 +627,7 @@ impl TrackApi {
         };
         let base = BASE_COST_PER_KM * f.len / 1000.0 * crate::track::cost::track_factor(tracks, hsr);
         let mult = if base > 0.0 { track / base } else { 0.0 };
+        self.preview_ground = self.w.ground_metres(&f);
         self.done(r.map(|mut r| {
             r.dirty = Default::default();
             r

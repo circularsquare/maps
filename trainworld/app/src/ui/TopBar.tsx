@@ -6,8 +6,8 @@ import type { ComponentChildren } from "preact";
 import { clock, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandView, modeRides, modeSplit, viewFinal, viewUpdating } from "../game/demand";
-import { worldTotals, worldView } from "../game/worldTotals";
-import { clockTime, dayOf, exact, money, moneyCash } from "../game/format";
+import { RIDES_PER_PERSON, smallPct, WORLD_PEOPLE, WORLD_RIDES, worldTotals, worldView } from "../game/worldTotals";
+import { clockTime, count, dayOf, exact, money, moneyCash } from "../game/format";
 import { dateName, dateOf, MONTH_LONG, weekdayOf } from "../game/days";
 import { PERIODS, periodAt } from "../game/periods";
 import { SkyBanner } from "./SkyBanner";
@@ -128,6 +128,19 @@ function Speed() {
   );
 }
 
+/** T-1301: the world's bar hover: the train share of the world's fixed rides a day, how that is
+ * reached, then the cities' own split. */
+function worldShareTip(t: ReturnType<typeof worldTotals>, where: string, note: string): string {
+  const world = `${WORLD_RIDES / 1e9} billion rides a day in the world (${WORLD_PEOPLE / 1e9} billion people, about ${RIDES_PER_PERSON} rides each)`;
+  if (!t.split || !t.rides) return `Train share of the ${world}${note}`;
+  const cities = `${t.cities} ${t.cities === 1 ? "city" : "cities"}`;
+  return [
+    `Train ${smallPct(t.split.train)} of the ${world}${note}`,
+    `${count(t.rides.train)} train rides a day in ${cities}`,
+    splitTip(where.replace(" in the world", ` in the ${cities} with stations`), t.citySplit, t.rides, ""),
+  ].join("\n");
+}
+
 function SaveNotice() {
   const state = saveSlotsState.value;
   if (state.writable) return null;
@@ -148,7 +161,8 @@ export function TopBar() {
   // T-318: no name over dead space (the focus stays on the last zone, which is not where the view is)
   const city = !far && viewedZone.value ? cityById(activeCity.value) : null;
   // T-172: no figures until the city has opened (the game is playable while it loads)
-  const pct = (v: number) => (known ? v.toFixed(1) + "%" : "–");
+  // T-1301: the world's share is of every ride in the world, so small shares get two figures
+  const pct = (v: number) => (!known ? "–" : far ? smallPct(v) : v.toFixed(1) + "%");
   // T-342: the shares are of rides (trip legs) a day; the train's count beside its share, all in the hover
   const rides = total ? total.rides : modeRides.value;
   const where = [far ? " in the world" : city ? " in " + city.name : "", [" on a weekday", " on a Saturday", " on a Sunday", ""][shownDay.value]].join("");
@@ -159,7 +173,7 @@ export function TopBar() {
       {/* T-1108: the name takes what it needs up to a cap, on two lines at most, the whole name on hover */}
       {far ? <CityName id={null} name="World" tip={worldTip} /> : <CityName id={city?.id ?? null} name={city?.name ?? ""} />}
       <div class="split">
-        <div data-tip={splitTip(where, known, rides, note)} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
+        <div data-tip={total ? worldShareTip(total, where, note) : splitTip(where, known, rides, note)} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
           <span class="bar-box">
             <span class="bar">
               <i class="seg seg-train" style={{ width: s.train + "%" }} />

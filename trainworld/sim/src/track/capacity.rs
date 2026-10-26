@@ -14,6 +14,7 @@ use super::net::{path_dir, path_edge, CrossKind, Crossing, LoopKind, Network};
 use super::params::*;
 use super::profile::{self, Hold};
 use super::service::LineSvc;
+use super::upgrades;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ResKind {
@@ -74,6 +75,8 @@ enum Tag {
     Turnback { turns: u32 },
     /// The limiter on lines reversing partway at `Resource::node`, one per arrival side (T-797).
     Reversal,
+    /// A terminal's turnback sidings at `Resource::node` (T-1281), pooled.
+    Sidings,
     /// A flat crossing of `Resource::edge` with `other`.
     Crossing { other: u32 },
 }
@@ -121,13 +124,14 @@ impl Capacity {
     /// The kind the app words alerts by (`ResKind as u8` for 0 to 5), finer where the cause differs:
     /// 6 a line reversing on a through station's platform, 7 track several lines run over, 8 a
     /// reversal crossing the other track at a through station, 9 lines reversing partway at a
-    /// station (T-797).
+    /// station (T-797), 10 a terminal's sidings (T-1281).
     pub fn wire_kind(&self, r: usize) -> u8 {
         let kind = self.res[r].kind;
         match self.tag[r] {
             Tag::Platform { reverses: true } => 6,
             Tag::Turnback { .. } => 8,
             Tag::Reversal => 9,
+            Tag::Sidings => 10,
             Tag::Section { .. } if kind == ResKind::Section => {
                 let users = self.users_of(r);
                 if users.iter().any(|u| u.line != users[0].line) { 7 } else { 0 }
@@ -448,13 +452,46 @@ fn active_node_tracks(net: &Network, node: u32) -> u8 {
     }).max().unwrap_or(1)
 }
 
+type PlatUse = (u32, u8, u32, u8, i32, f64, f64, bool);
+type TermUse = (u32, u32, u8, f64, f64);
+type TurnUse = (u32, u8, u32, u8, f64);
+
+/// What a train of line `l`'s run `r` turning at node `n` uses (SPEC 6.2), arriving on side
+/// `side_in`, approaching from `at`. A through station turns it on its arrival platform for the
+/// turnaround, or with a terminal (T-1281) holds both platforms for the dwell and its sidings for
+/// the turnaround; a dead end pools the turnaround over its platform tracks. Either way on double
+/// track the turn crosses the other track.
+#[allow(clippy::too_many_arguments)]
+fn turn_at(net: &Network, n: u32, l: usize, r: u8, side_in: u8, at: f64, dwell: f64, plat: &mut Vec<PlatUse>, term: &mut Vec<TermUse>, sidings: &mut Vec<TermUse>, turns: &mut Vec<TurnUse>) {
+    let tracks = active_node_tracks(net, n);
+    let turn = net.line_turn[l] as f64;
+    if net.built_ports(n) <= 1 {
+        term.push((n, l as u32, r, at, upgrades::pooled_turn_s(turn, TERMINUS_MARGIN_S, tracks as f64)));
+        return;
+    }
+    let track = if tracks == 1 { 0 } else { side_in };
+    if net.node_platform[n as usize] > 0 && net.node_upgrades[n as usize] & upgrades::TERMINAL != 0 {
+        let out = if tracks == 1 { 0 } else { 1 - side_in };
+        plat.push((n, track, l as u32, r, -1, at, dwell + PLATFORM_MARGIN_S, false));
+        plat.push((n, out, l as u32, r, -1, at, dwell + PLATFORM_MARGIN_S, false));
+        sidings.push((n, l as u32, r, at, upgrades::pooled_turn_s(turn, TERMINUS_MARGIN_S, upgrades::TERMINAL_SIDINGS)));
+    } else {
+        // the arrival platform is held through the turnaround: through trains on it queue behind
+        plat.push((n, track, l as u32, r, -1, at, turn + TERMINUS_MARGIN_S, true));
+    }
+    if tracks > 1 {
+        turns.push((n, track, l as u32, r, at));
+    }
+}
+
 /// Platforms, termini and junction moves at the nodes `in_n` accepts, from the runs of `cand`
 /// (which must hold every running line through those nodes).
 fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32) -> bool, cap: &mut Capacity) {
-    let mut plat: Vec<(u32, u8, u32, u8, i32, f64, f64, bool)> = vec![]; // node, track, line, run, stop, at, occ, reverses here
-    let mut term: Vec<(u32, u32, u8, f64, f64)> = vec![]; // node, line, run, at, occ
+    let mut plat: Vec<PlatUse> = vec![]; // node, track, line, run, stop, at, occ, reverses here
+    let mut term: Vec<TermUse> = vec![]; // node, line, run, at, occ
+    let mut sidings: Vec<TermUse> = vec![]; // as term, at a terminal (T-1281)
     let mut moves: Vec<(u32, f64, f64, u32, u8, f64)> = vec![]; // node, pA, pB, line, run, at
-    let mut turns: Vec<(u32, u8, u32, u8, f64)> = vec![]; // node, arrival track, line, incoming run, approach
+    let mut turns: Vec<TurnUse> = vec![]; // node, arrival track, line, incoming run, approach
     let mut through: Vec<(u32, u8, u32, u8, i32, f64)> = vec![]; // node, track, line, run, stop, approach
     let mut limiter: Vec<(u32, u8, u32, u8, f64)> = vec![]; // node, arrival side, line, run, approach
     for &l in cand {
@@ -486,15 +523,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                     let side_in = net.port_side(path_edge(prev), 1 - path_dir(prev)).unwrap_or(0);
                     let reach = net.node_platform[n as usize] as f64;
                     let at = stand - reach.max(ls.train_len) - HOLD_MARGIN_M;
-                    let tracks = active_node_tracks(net, n);
-                    let occ_s = net.line_turn[l] as f64 + TERMINUS_MARGIN_S;
-                    if net.built_ports(n) > 1 {
-                        let track = if tracks == 1 { 0 } else { side_in };
-                        plat.push((n, track, l as u32, r as u8, -1, at, occ_s, true));
-                        if tracks > 1 { turns.push((n, track, l as u32, r as u8, at)); }
-                    } else {
-                        term.push((n, l as u32, r as u8, at, occ_s / tracks as f64));
-                    }
+                    turn_at(net, n, l, r as u8, side_in, at, dwell, &mut plat, &mut term, &mut sidings, &mut turns);
                     limiter.push((n, side_in, l as u32, r as u8, at));
                     continue;
                 }
@@ -546,20 +575,9 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
             } else if in_n(n) {
                 let reach = net.node_platform[n as usize] as f64;
                 let at = run.stop_s.last().unwrap() - reach.max(ls.train_len) - HOLD_MARGIN_M;
-                let tracks = active_node_tracks(net, n);
-                let occ_s = net.line_turn[l] as f64 + TERMINUS_MARGIN_S;
-                if net.built_ports(n) > 1 {
-                    // A short turn occupies its arrival platform throughout the turnaround.
-                    // Through trains using that platform must not bypass its layover.
-                    let prev = *run.segs.last().unwrap();
-                    let side_in = net.port_side(path_edge(prev), 1 - path_dir(prev)).unwrap_or(0);
-                    let track = if tracks == 1 { 0 } else { side_in };
-                    plat.push((n, track, l as u32, r as u8, -1, at, occ_s, true));
-                    if tracks > 1 { turns.push((n, track, l as u32, r as u8, at)); }
-                } else {
-                    // A true dead end retains the pooled platform-track turnaround capacity.
-                    term.push((n, l as u32, r as u8, at, occ_s / tracks as f64));
-                }
+                let prev = *run.segs.last().unwrap();
+                let side_in = net.port_side(path_edge(prev), 1 - path_dir(prev)).unwrap_or(0);
+                turn_at(net, n, l, r as u8, side_in, at, dwell, &mut plat, &mut term, &mut sidings, &mut turns);
             }
         }
     }
@@ -574,21 +592,24 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
         push_res(cap, ResKind::Platform, net.node_x[n], net.node_y[n], n as u32, u32::MAX, &users, Tag::Platform { reverses });
         i = end;
     }
-    term.sort_by(|a, b| (a.0, a.1, a.2).cmp(&(b.0, b.1, b.2)));
-    let mut i = 0;
-    while i < term.len() {
-        let end = term[i..].partition_point(|x| x.0 == term[i].0) + i;
-        users = term[i..end].iter().map(|x| User { line: x.1, run: x.2, owner: true, occ: x.4, at: x.3, stop: -1 }).collect();
-        let n = term[i].0 as usize;
-        push_res(cap, ResKind::Terminus, net.node_x[n], net.node_y[n], n as u32, u32::MAX, &users, Tag::Node);
-        i = end;
+    for (term, tag) in [(&mut term, Tag::Node), (&mut sidings, Tag::Sidings)] {
+        term.sort_by(|a, b| (a.0, a.1, a.2).cmp(&(b.0, b.1, b.2)));
+        let mut i = 0;
+        while i < term.len() {
+            let end = term[i..].partition_point(|x| x.0 == term[i].0) + i;
+            users = term[i..end].iter().map(|x| User { line: x.1, run: x.2, owner: true, occ: x.4, at: x.3, stop: -1 }).collect();
+            let n = term[i].0 as usize;
+            push_res(cap, ResKind::Terminus, net.node_x[n], net.node_y[n], n as u32, u32::MAX, &users, tag);
+            i = end;
+        }
     }
     limiter.sort_by(|a, b| (a.0, a.1, a.2, a.3).cmp(&(b.0, b.1, b.2, b.3)));
     let mut i = 0;
     while i < limiter.len() {
         let end = limiter[i..].partition_point(|x| (x.0, x.1) == (limiter[i].0, limiter[i].1)) + i;
-        users = limiter[i..end].iter().map(|x| User { line: x.2, run: x.3, owner: true, occ: REVERSAL_LIMIT_S, at: x.4, stop: -1 }).collect();
         let n = limiter[i].0 as usize;
+        let occ = if net.node_platform[n] > 0 && net.node_upgrades[n] & upgrades::TERMINAL != 0 { upgrades::TERMINAL_REVERSAL_S } else { REVERSAL_LIMIT_S };
+        users = limiter[i..end].iter().map(|x| User { line: x.2, run: x.3, owner: true, occ, at: x.4, stop: -1 }).collect();
         push_res(cap, ResKind::Terminus, net.node_x[n], net.node_y[n], n as u32, u32::MAX, &users, Tag::Reversal);
         i = end;
     }
@@ -845,7 +866,7 @@ impl Capacity {
                         false
                     }
                 }
-                Tag::Node | Tag::Platform { .. } | Tag::Turnback { .. } | Tag::Reversal => flag(&dn, self.res[r].node),
+                Tag::Node | Tag::Platform { .. } | Tag::Turnback { .. } | Tag::Reversal | Tag::Sidings => flag(&dn, self.res[r].node),
                 Tag::Crossing { other } => flag(&de, self.res[r].edge) || flag(&de, other),
             };
             if dead {

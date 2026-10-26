@@ -120,7 +120,7 @@ pub fn synth(km: f64, stations: usize, lines: usize, seed: u64) -> Network {
             run += leg;
             if run >= spacing && a.2 == V::Pi && b.2 == V::Pi && cor.pts[i - 1].2 == V::Pi && cor.pts[i + 2].2 == V::Pi {
                 let n = new_node(&mut net, (a.0 + b.0) / 2.0, (a.1 + b.1) / 2.0, cor.level);
-                net.set_station(n, Some(StationData { platform: 160, name: format!("S{n}"), built: true, off: false })).unwrap();
+                net.set_station(n, Some(StationData { platform: 160, name: format!("S{n}"), built: true, off: false, upgrades: 0 })).unwrap();
                 cor.pts.insert(i + 1, (net.node_x[n as usize], net.node_y[n as usize], V::Node(n)));
                 run = 0.0;
                 i += 1;
@@ -138,7 +138,7 @@ pub fn synth(km: f64, stations: usize, lines: usize, seed: u64) -> Network {
         for p in ends {
             if let V::Node(n) = p.2 {
                 if net.node_platform[n as usize] == 0 {
-                    net.set_station(n, Some(StationData { platform: 160, name: format!("S{n}"), built: true, off: false })).unwrap();
+                    net.set_station(n, Some(StationData { platform: 160, name: format!("S{n}"), built: true, off: false, upgrades: 0 })).unwrap();
                 }
             }
         }

@@ -616,7 +616,8 @@ impl TrackWorld {
         let f = self.net.fit(vertices);
         let mut wet = vec![];
         super::cost::water_spans(f.len, |s| { let (x, y, _) = super::geom::pos_at(&f.pieces, s); (x, y) }, self.net.water_mask.as_ref(), &mut wet);
-        let c = super::cost::track_cost(f.len, &f.vert, &wet, tracks, hsr);
+        let ground = self.ground_of(&f);
+        let c = super::cost::track_cost_t(f.len, &f.vert, &wet, &ground, tracks, hsr);
         let ground_wet = wet.iter().any(|w| {
             let mut s = w[0];
             while s <= w[1] {
@@ -629,6 +630,32 @@ impl TrackWorld {
         });
         let ok = f.issues.is_empty() && !ground_wet;
         (f, c, ok)
+    }
+
+    /// The terrain spans of a fitted alignment (T-1270, `cost::terrain_spans`).
+    pub fn ground_of(&self, f: &super::geom::Fit) -> Vec<[f64; 3]> {
+        let mut ground = vec![];
+        let frame = self.net.frame();
+        super::cost::terrain_spans(f.len, |s| { let (x, y, _) = super::geom::pos_at(&f.pieces, s); frame.to_lonlat(x, y) }, &self.net.terrain, &mut ground);
+        ground
+    }
+
+    /// Metres of a fitted alignment in each terrain class where the class is charged (T-1270: off
+    /// water, at elevation -1 and above), for the track tool's tag.
+    pub fn ground_metres(&self, f: &super::geom::Fit) -> [f64; 4] {
+        let mut out = [0.0; 4];
+        let ground = self.ground_of(f);
+        if ground.is_empty() {
+            return out;
+        }
+        let mut wet = vec![];
+        super::cost::water_spans(f.len, |s| { let (x, y, _) = super::geom::pos_at(&f.pieces, s); (x, y) }, self.net.water_mask.as_ref(), &mut wet);
+        super::cost::track_cost_parts_t(f.len, &f.vert, &wet, &ground, 2, false, |level, _, _, class, m, _| {
+            if level >= TERRAIN_MIN_LEVEL {
+                out[class.min(3) as usize] += m;
+            }
+        });
+        out
     }
 
     /// Resources at or above 75% for a level (what T-031 marks on the map).

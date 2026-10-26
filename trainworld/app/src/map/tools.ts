@@ -47,7 +47,7 @@ import { strokesFromParts, strokesFromPreview } from "./network";
 import { pairBeside, PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
 import type { StopMarkers, StopTier } from "./stopMarkers";
-import { chip, costTint, elevationFact, factRow, speedFact } from "./trackTagRows";
+import { chip, costTint, elevationFact, factRow, speedFact, terrainFact } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
@@ -1717,6 +1717,8 @@ function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
   }
   const [first, ...more] = placedLevels(pv.pts, level);
   out.push(factRow(elevationFact(first, ...more), speedFact(top)));
+  const ground = terrainFact(pv.ground);
+  if (ground) out.push(factRow(ground));
   return out;
 }
 

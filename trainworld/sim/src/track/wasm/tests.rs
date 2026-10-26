@@ -7,6 +7,56 @@ fn free(x: f64, y: f64) -> [f64; 5] {
     [0.0, 0.0, x, y, 0.0]
 }
 
+/// A terrain file (`cost::ClassGrid`) of one class over the lattice cells round a point.
+fn terrain_round(lon: f64, lat: f64, cells: u32, class: u8) -> Vec<u8> {
+    let (c0, r0) = (((lon + 180.0) * 240.0).floor() as i32 - cells as i32 / 2, ((lat + 90.0) * 240.0).floor() as i32 - cells as i32 / 2);
+    let mut b = crate::track::cost::TERRAIN_MAGIC.to_vec();
+    for v in [cells, cells, c0 as u32, r0 as u32, 240] {
+        b.extend(v.to_le_bytes());
+    }
+    b.push(class);
+    let mut n = (cells * cells) as usize;
+    loop {
+        let x = (n & 0x7f) as u8;
+        n >>= 7;
+        if n == 0 { b.push(x); break; }
+        b.push(x | 0x80);
+    }
+    b
+}
+
+#[test]
+fn terrain_reprices_blueprints_and_spares_bored_tunnels() {
+    // T-1270: 3 km at ground and 3 km at -2, then a mountain grid lands under both
+    let mut a = api();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let deep: Vec<f64> = [0.0, 0.0, 0.0, 2000.0, -2.0, 0.0, 0.0, 3000.0, 2000.0, -2.0].to_vec();
+    assert_eq!(a.add_route(&deep, &[], 2, false), 0, "{}", a.issues());
+    let before = a.blueprint_cost();
+    assert!((before - (3.0 * 45.0 + 3.0 * 99.0)).abs() < 1e-6, "{before}");
+    let ll = a.to_lonlat(1500.0, 1000.0);
+    assert!(!a.add_terrain(b"TWT1"));
+    assert!(a.add_terrain(&terrain_round(ll[0], ll[1], 120, 3)));
+    let after = a.blueprint_cost();
+    assert!((after - (3.0 * 112.5 + 3.0 * 99.0)).abs() < 1e-6, "{after}");
+    let rows = a.blueprint_cost_items();
+    let extra: f64 = rows.chunks_exact(7).filter(|r| r[0] == 6.0).map(|r| r[6]).sum();
+    assert!((extra - 3.0 * 67.5).abs() < 1e-6 && rows.chunks_exact(7).any(|r| r[0] == 6.0 && r[1] == 3.0), "{rows:?}");
+    assert!((rows.chunks_exact(7).map(|r| r[6]).sum::<f64>() - after).abs() < 1e-6);
+    // the tool's preview prices the same and says how much ground it crosses in each class
+    let more: Vec<f64> = free(0.0, -1000.0).iter().chain(free(2000.0, -1000.0).iter()).copied().collect();
+    let out = a.preview_route(&more, &[], 2, false);
+    assert_eq!(out[0], 1.0);
+    assert!((out[1] - 2.0 * 112.5).abs() < 1e-6 && (out[4] - 1.25).abs() < 1e-9, "{:?}", &out[..5]);
+    let g = a.preview_ground();
+    assert!(g[3] > 1999.0 && g[0] < 1.0, "{g:?}");
+    // a loaded network keeps the terrain in force
+    let saved = a.save();
+    assert!(a.load(&saved));
+    assert!((a.blueprint_cost() - after).abs() < 1e-6);
+}
+
 #[test]
 fn upkeep_of_a_ten_km_line_and_its_shares() {
     // T-867: 10 km of double track with a station every km: $30k a km and $50k a station a day
@@ -624,9 +674,9 @@ fn blueprint_construct_run() {
     // Construction plus the trains its busiest schedule needs (T-028).
     assert_eq!(a.fleet(), a.cars_needed());
     assert!((a.fleet() as f64 * CAR_PRICE - trains).abs() < 1e-9);
-    // three stations at grade, 30 each (T-1245)
-    assert!((6000.0 - a.cash() - (135.0 + 90.0 + trains)).abs() < 0.5, "paid {}", 6000.0 - a.cash());
-    assert!((a.last_charge() - (135.0 + 90.0 + trains)).abs() < 0.5);
+    // three stations at grade, 75 each (T-1267)
+    assert!((6000.0 - a.cash() - (135.0 + 225.0 + trains)).abs() < 0.5, "paid {}", 6000.0 - a.cash());
+    assert!((a.last_charge() - (135.0 + 225.0 + trains)).abs() < 0.5);
     assert!(!a.can_undo(), "construct is final");
     // More trains an hour buys more trains; short of money it is refused and nothing changes.
     let (fleet, cash) = (a.fleet(), a.cash());
@@ -1251,11 +1301,12 @@ fn branch_leaves_along_the_heading() {
     assert_eq!(a.edges_info().len() / 10, 1);
     assert_eq!(a.redo(), 0);
     assert_eq!(a.edges_info().len() / 10, 3);
-    // A segment that ends in water has no land for a bridge (T-656): refused with a kind the UI can word.
+    // A segment that ends 100 m short of water has no land for a bridge (T-656): refused with a kind
+    // the UI can word.
     let mut w = api();
     w.w.net.set_water_mask(Box::new(|x: f64, _y: f64| x > 1000.0 && x < 1500.0));
     w.w.reload();
-    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1200.0, 0.0).iter()).copied().collect();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1600.0, 0.0).iter()).copied().collect();
     assert_ne!(w.add_route(&ends, &[], 2, false), 0);
     assert!(w.issue_kinds().contains("BridgeNoRoom"), "{}", w.issue_kinds());
 }
@@ -1554,7 +1605,7 @@ fn stations_go_anywhere_on_a_curve() {
                     let off = live_edges(&a).iter().map(|&k| a.w.net.project(k, q[0], q[1]).1).fold(f64::INFINITY, f64::min);
                     assert!(off < 0.01, "split at {s}: {off} m off");
                 }
-                let station = 30.0 * (0.4 + 0.6 * 200.0 / 200.0) * 1.0;
+                let station = 75.0 * (0.4 + 0.6 * 200.0 / 200.0) * 1.0;
                 assert!((a.total_cost() - cost - station).abs() < 0.05, "split at {s}: {} against {}", a.total_cost() - station, cost);
                 assert_eq!(a.undo(), 0);
                 assert_eq!(a.edge_render(e), before);
@@ -2444,6 +2495,61 @@ fn a_free_station_lays_its_own_track() {
     assert_ne!(b.preview_free_station(&ends, 2, 200), 0);
     assert!(b.issue_kinds().contains("PlatformCrossing"), "{}", b.issue_kinds());
     assert_eq!(live_edges(&b).len(), 1);
+}
+
+/// T-1299: removing a station on its own piece of track (laid on open ground, or splitting a
+/// piece) leaves one piece where the two either side simply join, built or not, with the lines
+/// over it still running; one undo brings back the station and both pieces. Pieces unlike each
+/// other (built beside blueprint) stay two.
+#[test]
+fn removing_a_station_joins_the_pieces_either_side() {
+    let station = |t: &TrackApi| (0..t.w.net.node_count() as u32).find(|&k| t.w.net.node_ok(k) && t.w.net.node_platform[k as usize] > 0).unwrap();
+    // on open ground
+    let mut a = api();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(240.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_free_station(&ends, 2, 200, "Open".into()), 0, "{}", a.issues());
+    let (st, before) = (station(&a), live_edges(&a));
+    assert_eq!(before.len(), 2);
+    assert_eq!(a.remove_station(st), 0, "{}", a.issues());
+    let left = live_edges(&a);
+    assert_eq!(left.len(), 1, "one piece left");
+    assert!(!a.w.net.node_ok(st), "the joint went too");
+    assert!((a.w.net.edge_len[left[0] as usize] - 240.0).abs() < 0.01);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(live_edges(&a), before);
+    assert_eq!(a.w.net.node_platform[st as usize], 200);
+    // splitting a constructed piece, a line stopping there and running through
+    let mut b = api();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
+    assert_eq!(b.add_route(&ends, &[], 2, false), 0);
+    let end = |t: &TrackApi, x: f64| t.nodes_info().chunks(10).find(|c| (c[1] - x).abs() < 1e-6).unwrap()[0] as u32;
+    let (w, east) = (end(&b, 0.0), end(&b, 3000.0));
+    assert_eq!(b.add_station(1, w, 0.0, 0.0, 200, "West".into()), 0);
+    assert_eq!(b.add_station(1, east, 0.0, 0.0, 200, "East".into()), 0);
+    assert_eq!(b.add_station(2, live_edges(&b)[0], 1500.0, 0.0, 200, "Middle".into()), 0, "{}", b.issues());
+    let mid = end(&b, 1500.0);
+    let id = b.new_line_id();
+    assert_eq!(b.set_line(id, &[w, mid, east], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", b.issues());
+    assert_eq!(b.construct_line(id), 0, "{}", b.issues());
+    assert_eq!(live_edges(&b).len(), 2);
+    assert_eq!(b.remove_station(mid), 0, "{}", b.issues());
+    let left = live_edges(&b);
+    assert_eq!(left.len(), 1, "one piece left");
+    assert!(b.w.net.edge_built[left[0] as usize]);
+    assert!((b.w.net.edge_len[left[0] as usize] - 3000.0).abs() < 0.01);
+    assert!(!b.w.net.line_broken[id as usize]);
+    assert_eq!(b.w.net.line_stops(id), &[w, east]);
+    // built track beside blueprint: two pieces stay
+    let mut c = api();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1000.0, 0.0).iter()).copied().collect();
+    assert_eq!(c.add_route(&ends, &[], 2, false), 0);
+    let j = end(&c, 1000.0);
+    assert_eq!(c.add_station(1, j, 0.0, 0.0, 200, "Joint".into()), 0, "{}", c.issues());
+    assert_eq!(c.construct(&live_edges(&c), &[j]), 0, "{}", c.issues());
+    let on = [1.0, j as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 2000.0, 0.0, 0.0];
+    assert_eq!(c.add_route(&on, &[], 2, false), 0, "{}", c.issues());
+    assert_eq!(c.remove_station(j), 0, "{}", c.issues());
+    assert_eq!(live_edges(&c).len(), 2, "built and blueprint stay apart");
 }
 
 /// T-255: quad track is the drawn double track and an express double track beside it, end to

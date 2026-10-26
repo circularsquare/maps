@@ -1,14 +1,47 @@
 //! Station links, deleting, constructing and what removing track costs.
 
 use super::*;
+use crate::track::upgrades;
 
 #[wasm_bindgen]
 impl TrackApi {
-    // ---- station links (T-197): stations the player joins into one complex
-    /// Link two stations into one complex. 0 done (or already linked); otherwise one of them is
-    /// not a station, or they are the same. Not undoable (a setting, like fares).
+    // ---- station links (T-197): stations the player joins into one complex by a passage (T-1281)
+    /// Join two stations by a passage, into one complex. Between two constructed stations it is
+    /// paid at once, else it is built with the second of them (`Network::passages`). Not undoable
+    /// (a setting, like fares). 0 done (or already linked); otherwise one of them is not a
+    /// station, they are the same or further apart than a passage reaches, or cash is short.
     pub fn link_stations(&mut self, a: u32, b: u32) -> u32 {
-        if self.w.net.link(a, b) { 0 } else { self.refuse(Issue::NoSuchNode { node: if self.w.net.is_station(a) { b } else { a } }) }
+        self.link_charge = 0.0;
+        let net = &self.w.net;
+        if a == b || !net.is_station(a) || !net.is_station(b) || net.passage_m(a, b) > upgrades::PASSAGE_MAX_M + 1e-6 {
+            return self.refuse(Issue::NoSuchNode { node: if net.is_station(a) { b } else { a } });
+        }
+        if net.links.contains(&[a.min(b), a.max(b)]) {
+            return 0;
+        }
+        let price = if net.node_built[a as usize] && net.node_built[b as usize] { upgrades::passage_price(net.passage_m(a, b)) } else { 0.0 };
+        let cash = self.spendable();
+        if price > cash + 1e-6 {
+            self.issues.clear();
+            self.money_short = Some((price, cash));
+            return 1;
+        }
+        self.w.net.link(a, b);
+        self.cash -= price;
+        self.link_charge = price;
+        self.money_short = None;
+        self.issues.clear();
+        0
+    }
+    /// What the last `link_stations` paid, US$M.
+    pub fn link_charge(&self) -> f64 {
+        self.link_charge
+    }
+    /// A passage's price between two stations, US$M (T-1281), paid at once when both are
+    /// constructed; 0 when they cannot be joined.
+    pub fn passage_cost(&self, a: u32, b: u32) -> f64 {
+        let net = &self.w.net;
+        if a == b || !net.is_station(a) || !net.is_station(b) { 0.0 } else { upgrades::passage_price(net.passage_m(a, b)) }
     }
     /// Undo a link between two stations. 0 done; 1 if they were not linked.
     pub fn unlink_stations(&mut self, a: u32, b: u32) -> u32 {
@@ -421,7 +454,36 @@ impl TrackApi {
         }
         ops.extend(st.iter().map(|&node| Op::Station { node, data: None }));
         ops.extend(tail);
+        let joins = self.station_joins(&ops, &st);
+        ops.extend(joins);
         Some((ops, built, st))
+    }
+
+    /// T-1299: the ops joining the two pieces left at each removed station's node into one where
+    /// they simply join (`unjoin_near`'s rules: on one straight, alike in kind and state), planned
+    /// on the track as `ops` leave it. A piece already joined at another station is left as it is.
+    fn station_joins(&mut self, ops: &[Op], st: &[u32]) -> Vec<Op> {
+        let Ok(inv) = self.w.sketch(Op::Batch(ops.to_vec()), false) else { return vec![] };
+        let mut out = vec![];
+        let mut used: Vec<u32> = vec![];
+        for &n in st {
+            let net = &self.w.net;
+            if !net.node_ok(n) || net.node_ports[n as usize].n != 2 || net.node_platform[n as usize] > 0 {
+                continue;
+            }
+            let ends: Vec<u32> = net.node_ports[n as usize].ends().iter().map(|&c| c >> 1).collect();
+            let e = ends[0];
+            if ends.iter().any(|x| used.contains(x)) || net.edge_a[e as usize] == net.edge_b[e as usize] {
+                continue;
+            }
+            let s = if net.edge_a[e as usize] == n { 0.0 } else { net.edge_len[e as usize] };
+            if let Some((j, _)) = self.unjoin_near(e, s, 1e-6) {
+                used.extend(ends);
+                out.extend(j);
+            }
+        }
+        self.w.unsketch(inv);
+        out
     }
 
     /// Construct what a line needs to run: its path's edges and its stops.

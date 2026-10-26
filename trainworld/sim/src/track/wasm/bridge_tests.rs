@@ -153,6 +153,50 @@ fn a_traced_line_goes_in_as_one_route() {
     }
 }
 
+/// T-1290: a real high-speed line traced at a design speed of 320 keeps its 7,500 m curve for
+/// over 300 km/h, previewed and built; at 160 every curve is capped at 1,796 m as before.
+#[test]
+fn a_traced_line_keeps_its_wide_curves_at_a_high_design_speed() {
+    for kmh in [160.0, 320.0] {
+        let mut a = merc();
+        a.set_design_speed(kmh);
+        a.set_route_hsr(true);
+        let (bx, by) = base(&a);
+        let k = crate::track::frame::merc_k(by);
+        // 3 km straight, a 7,500 m curve through 40 degrees, 3 km straight, every 10 ground m
+        let mut xy: Vec<(f64, f64)> = (0..=300).map(|i| (bx + i as f64 * 10.0 * k, by)).collect();
+        let (r, turn) = (7500.0, 40f64.to_radians());
+        for i in 1..=(r * turn / 10.0) as usize {
+            let t = i as f64 * 10.0 / r;
+            xy.push((bx + (3000.0 + r * t.sin()) * k, by + (r - r * t.cos()) * k));
+        }
+        let (ex, ey) = *xy.last().unwrap();
+        for i in 1..=300 {
+            xy.push((ex + i as f64 * 10.0 * k * turn.cos(), ey + i as f64 * 10.0 * k * turn.sin()));
+        }
+        let lonlat: Vec<f64> = xy.iter().flat_map(|&(x, y)| a.to_lonlat(x, y)).collect();
+        let t = a.trace_route(&lonlat, 25.0, 2, 0);
+        assert!(!t.is_empty() && t[0] <= 25.0, "{kmh}: worst {:?}", t.first());
+        let (sx, sy) = xy[0];
+        let (fx, fy) = *xy.last().unwrap();
+        let e = [0.0, 0.0, sx, sy, 0.0, 0.0, 0.0, fx, fy, 0.0];
+        assert_eq!(a.preview_route(&e, &t[3..], 2, false)[0], 1.0, "{kmh}: {}", a.issue_kinds());
+        let slowest = a.preview_render_speeds().iter().copied().fold(f32::INFINITY, f32::min);
+        assert_eq!(a.add_route(&e, &t[3..], 2, false), 0, "{kmh}: {}", a.issue_kinds());
+        let edges = alive(&a);
+        assert_eq!(a.hsr_edges(), edges, "{kmh}: high-speed track");
+        let radii: Vec<f64> = edges.iter().flat_map(|&e| a.w.net.edge_pieces(e).iter().filter(|p| p.k != 0.0).map(|p| p.ground_radius()).collect::<Vec<_>>()).collect();
+        assert!(!radii.is_empty());
+        if kmh == 160.0 {
+            assert!(radii.iter().all(|&r| r <= R_CAP + 1.0), "{kmh}: {radii:?}");
+            assert!(slowest < 160.5, "{kmh}: {slowest}");
+        } else {
+            assert!(radii.iter().all(|&r| r > design_radius(300.0) && r <= design_radius(320.0) + 1.0), "{kmh}: {radii:?}");
+            assert!(slowest > 300.0, "{kmh}: slowest {slowest} km/h");
+        }
+    }
+}
+
 #[test]
 fn a_long_route_bridges_each_river_on_its_own() {
     // a gentle zigzag with a corner every km; then corners 10 km apart, a river mid-leg
@@ -234,7 +278,7 @@ fn a_long_route_bridges_slivers_beside_a_river() {
         let ends: Vec<Pi> = vec![Pi::new(e[2], e[3], 0.0, 0), Pi::new(e[7], e[8], 0.0, 0)];
         let verts: Vec<Pi> = std::iter::once(ends[0]).chain(pis.chunks(4).map(|p| Pi::new(p[0], p[1], 0.0, 0))).chain(std::iter::once(ends[1])).collect();
         let scaled = a.w.net.frame().scaled();
-        let b = bridge::bridge_long(&verts, scaled, a.w.net.water_mask.as_ref()).unwrap().unwrap();
+        let b = bridge::bridge_long(&verts, scaled, a.w.net.water_mask.as_ref(), [true, true]).unwrap().unwrap();
         // bridged with ramps beside the water, not the window raised whole between its corners
         assert!(b.len() > verts.len(), "phase {k}: {} vertices, {} before", b.len(), verts.len());
         let g = geom::fit_in(&b, scaled);
@@ -289,16 +333,109 @@ fn no_room_on_land_is_refused_and_says_so() {
     let e = ends(&b, (0.0, 0.0), (3000.0, 0.0));
     assert_ne!(b.add_route(&e, &[], 2, false), 0);
     assert_eq!(b.issue_kinds(), "BridgeNoRoom");
-    // the end in the water
-    let e = ends(&b, (0.0, 0.0), (2700.0, 0.0));
-    assert_ne!(b.add_route(&e, &[], 2, false), 0);
-    assert_eq!(b.issue_kinds(), "BridgeNoRoom");
     // just enough: 200 m of land each side
     let mut c = api();
     water(&mut c, &[(300.0, 400.0)]);
     let e = ends(&c, (0.0, 0.0), (700.0, 0.0));
     assert_eq!(c.add_route(&e, &[], 2, false), 0, "{}", c.issue_kinds());
     bridge_ok(&c, alive(&c)[0]);
+}
+
+/// The level of the node at x from `base`.
+fn level_at_x(a: &TrackApi, x: f64) -> i8 {
+    let n = (0..a.w.net.node_count()).find(|&n| a.w.net.node_ok(n as u32) && (a.w.net.node_x[n] - base(a).0 - x).abs() < 1.0).unwrap();
+    a.w.net.node_level[n]
+}
+
+/// T-1269: a new end over water stays up on the bridge, with the one ramp on the land side.
+#[test]
+fn an_end_over_water_stays_up() {
+    for world in [false, true] {
+        for tracks in [2u8, 4] {
+            for (from, to) in [(0.0, 2700.0), (2700.0, 0.0)] {
+                let mut a = if world { merc() } else { api() };
+                water(&mut a, &[(2600.0, 2900.0)]);
+                let e = ends(&a, (from, 0.0), (to, 0.0));
+                let name = format!("world {world}, {tracks} tracks, {from} to {to}");
+                let pv = a.preview_route(&e, &[], tracks, false);
+                assert_eq!(pv[0], 1.0, "{name}: {}", a.issue_kinds());
+                assert_eq!(a.add_route(&e, &[], tracks, false), 0, "{name}: {}", a.issue_kinds());
+                assert!((pv[1] - first_edge_cost(&a)).abs() < 1e-6, "{name}: {} against {}", pv[1], first_edge_cost(&a));
+                assert_eq!((level_at_x(&a, 0.0), level_at_x(&a, 2700.0)), (0, 1), "{name}");
+                for e in alive(&a) {
+                    bridge_ok(&a, e);
+                }
+                assert!(problems(&a).is_empty(), "{name}: {:?}", problems(&a));
+            }
+        }
+    }
+    // both ends over the water: all of it up, no ramp
+    let mut a = api();
+    water(&mut a, &[(1000.0, 1500.0)]);
+    assert_eq!(a.add_route(&ends(&a, (1100.0, 0.0), (1400.0, 0.0)), &[], 2, false), 0, "{}", a.issue_kinds());
+    let edge = alive(&a)[0];
+    assert!(a.w.net.edge_vert(edge).iter().all(|p| p[1] == LEVEL_H));
+    // a long route (the real-network snap's) ending in a lake
+    let mut l = merc();
+    water(&mut l, &[(59_500.0, 61_000.0)]);
+    let (e, pis) = zigzag(&l, 100);
+    assert_eq!(l.add_route(&e, &pis, 2, false), 0, "{}", l.issue_kinds());
+    assert_eq!(level_at_x(&l, 60_000.0), 1);
+    assert!(problems(&l).is_empty(), "{:?}", problems(&l));
+}
+
+/// T-1269: drawing on at ground level from an end left up over the water stays up across it, and
+/// drawing back into it from the far bank ramps up on the land side only; from an end up on land
+/// with room before the water, the track comes down and goes up again.
+#[test]
+fn drawing_on_from_an_end_left_up() {
+    for world in [false, true] {
+        for back in [false, true] {
+            let name = if back { "back" } else { "on" };
+            let mut b = if world { merc() } else { api() };
+            water(&mut b, &[(2600.0, 2900.0)]);
+            assert_eq!(b.add_route(&ends(&b, (0.0, 0.0), (2700.0, 0.0)), &[], 2, false), 0, "{}", b.issue_kinds());
+            let mid = (0..b.w.net.node_count() as u32).find(|&n| b.w.net.node_ok(n) && (b.w.net.node_x[n as usize] - base(&b).0 - 2700.0).abs() < 1.0).unwrap();
+            let (bx, by) = base(&b);
+            let on = if back { [0.0, 0.0, bx + 3500.0, by, 0.0, 1.0, mid as f64, 0.0, 0.0, 0.0] } else { [1.0, mid as f64, 0.0, 0.0, 0.0, 0.0, 0.0, bx + 3500.0, by, 0.0] };
+            let pv = b.preview_route(&on, &[], 2, false);
+            assert_eq!(pv[0], 1.0, "world {world} {name}: {}", b.issue_kinds());
+            assert_eq!(b.add_route(&on, &[], 2, false), 0, "world {world} {name}: {}", b.issue_kinds());
+            assert_eq!(level_at_x(&b, 3500.0), 0);
+            for e in alive(&b) {
+                bridge_ok(&b, e);
+            }
+            assert!(problems(&b).is_empty(), "world {world} {name}: {:?}", problems(&b));
+        }
+    }
+    // an end up on land, 1.5 km short of the water
+    let mut a = api();
+    let mut e = ends(&a, (-1000.0, 0.0), (0.0, 0.0));
+    (e[4], e[9]) = (1.0, 1.0);
+    assert_eq!(a.add_route(&e, &[], 2, false), 0);
+    water(&mut a, &[(1500.0, 1800.0)]);
+    let node = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - base(&a).0).abs() < 1.0).unwrap();
+    let (bx, by) = base(&a);
+    assert_eq!(a.add_route(&[1.0, node as f64, 0.0, 0.0, 0.0, 0.0, 0.0, bx + 3000.0, by, 0.0], &[], 2, false), 0, "{}", a.issue_kinds());
+    let new = *alive(&a).iter().max_by(|&&p, &&q| a.w.net.edge_len[p as usize].total_cmp(&a.w.net.edge_len[q as usize])).unwrap();
+    assert_eq!((height(&a, new, 0.0), height(&a, new, 700.0), height(&a, new, 1650.0)), (8.0, 0.0, 8.0));
+    assert!(problems(&a).is_empty(), "{:?}", problems(&a));
+}
+
+/// T-1269: track already there keeps its level, so water at it still leaves no room.
+#[test]
+fn an_end_on_track_over_water_is_still_refused() {
+    let mut a = api();
+    assert_eq!(a.add_route(&ends(&a, (0.0, 0.0), (1000.0, 0.0)), &[], 2, false), 0);
+    // a newer water mask puts the track's end in a river
+    water(&mut a, &[(900.0, 1500.0)]);
+    let node = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - base(&a).0 - 1000.0).abs() < 1.0).unwrap();
+    let (bx, by) = base(&a);
+    let e = [1.0, node as f64, 0.0, 0.0, 0.0, 0.0, 0.0, bx + 3000.0, by, 0.0];
+    assert_eq!(a.preview_route(&e, &[], 2, false)[0], 0.0);
+    assert_eq!(a.issue_kinds(), "BridgeNoRoom");
+    assert_ne!(a.add_route(&e, &[], 2, false), 0);
+    assert_eq!(a.issue_kinds(), "BridgeNoRoom");
 }
 
 #[test]

@@ -14,7 +14,9 @@ the car and every other way of getting about (bus, taxi, bike).
 
 - rail = walk to a station + wait (half the headway, capped) + ride + walks between platforms +
   walk from station + fare / value of time (a change costs a fixed 2 perceived minutes, its wait
-  and the walk between the two platforms' centres: T-717)
+  and the walk between the two platforms' centres: T-717; onto the line just left only where it
+  passes the station again towards other stops, as at a lollipop's junction: T-1268,
+  demand-kernel.md 4)
 - driving = door-to-door road time (below; a few constants, real road travel times are not a
   priority) + its cost
 
@@ -43,11 +45,15 @@ perceived minutes of the car's trip T the scale is 0.10 x sqrt(60 / T) (0.058 at
 13), T the car's perceived minutes door to door including parking. Rail and the car split the rest
 by the ratio. The regional market damps the same way (docs/regional.md 5.1). **Catchment is soft** (T-090): there
 is no circle the player sees. A farther station makes the walk, and so the whole trip, worse, and
-the station loses riders where that trip gets worse than driving. Value of time is one constant everywhere,
-$20/hour (`FARE_MIN_PER_USD`: 3 perceived minutes per dollar, a gameplay judgement), so fares
-compare across countries. The fare is the player's curve of trip length (T-883, T-1112,
-T-1143, track-and-service.md, fares), charged once per trip including transfers on actual track
-length. Route choice sees its first stretch as a base plus a rate per km on each ride; mode choice
+the station loses riders where that trip gets worse than driving. **A fare dollar weighs by
+national income** (T-1277, with T-1166): 5 x (GDP per head at PPP / $60,000)^-0.5 perceived
+minutes, by the trip's country (each zone population's pack country, `Params::fare_w`, set by the
+demand worker through `set_fare_weight`; `app/src/game/income.ts`, `countryIncome.json`): the US
+4.4, India 12.2. The car's money stays at `FARE_MIN_PER_USD`, 3 minutes a dollar ($20 an hour). The
+fare is the player's curve of trip length (T-883, T-1112, T-1143, track-and-service.md, fares)
+times the trip's country's fare scale, charged once per trip including transfers on actual track
+length. The regional market takes the curve unscaled at India's weight (the same perceived fare as
+every country at its default scale), and the plane's fare at the departing country's weight. Route choice sees its first stretch as a base plus a rate per km on each ride; mode choice
 sees the whole curve, each station pair's cost corrected to the curve's fare at the expected km of
 its strategy (the riders' split over lines by their departures), and the assignment counts that
 correction where the trips first board, for fare income. Crowding multiplies ride time

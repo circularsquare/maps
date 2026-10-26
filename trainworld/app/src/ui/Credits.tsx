@@ -14,6 +14,7 @@ const LINES = [
   <>Processed from Japan's 2020 census and 2021 economic census (Statistics Bureau of Japan, e-Stat) and National Land Numerical Information (MLIT).</>,
   <>IBGE. Metrô de São Paulo origin and destination survey 2017. Ministry of the Interior and Safety (Korea). Census of India 2011. Shanghai Municipal Statistics Bureau.</>,
   <>World Bank (CC BY 4.0), Maddison Project Database 2023 (CC BY 4.0), Eurostat, Wikidata and OurAirports.</>,
+  <>Terrain classes from GEDTM30 (OpenGeoHub, CC BY 4.0). Hill shading from <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Terrain Tiles</a> on AWS Open Data.</>,
   <>Fonts Zen Maru Gothic, Noto Sans and Nunito, under the SIL Open Font License 1.1.</>,
   <>All data was adapted for this game.</>,
   <>The game's data files are under the <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">Open Database License (ODbL)</a>, as the OpenStreetMap data they come from is.</>,

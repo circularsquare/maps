@@ -3,6 +3,9 @@
 // the outlines and the realms' shade (T-1006) share it.
 import type { MultiPolygon } from "geojson";
 import { dataUrl } from "../game/dataBase";
+import { setOutlineLookup, zonesTouching, ZONE_REACH_M, type CityId } from "../game/cities";
+import { M_PER_DEG } from "../game/frame";
+import { distanceTo, type Footprint } from "../workers/cityReach";
 
 /** `water` (T-1145): each coastal zone's sea, a little into its own land, for the focused zone's shade */
 export type OutlineFile = { q: number; zones: Record<string, number[][]>; water?: Record<string, number[][]> };
@@ -55,10 +58,61 @@ async function load() {
     for (const id in zones) out.zones.set(id, polygons(zones[id]));
     for (const id in water ?? {}) out.water.set(id, polygons(water![id]));
     text = body;
+    placeBy((id) => out.zones.get(id)?.coordinates.flatMap((p) => p.map((r) => Float64Array.from(r.flat()))));
   } catch (error) {
     console.warn("Coarse zone outlines unavailable", error);
   }
   return out;
+}
+
+/** T-1265: name places by the outlines (game/cities.ts `cityWithin`): the zone whose outline holds the
+ * place, else the one whose outline is nearest within `ZONE_REACH_M`, else null. `rings` gives a
+ * zone's rings as flat lon, lat pairs; each becomes a footprint when a place near it is first asked. */
+function placeBy(rings: (id: string) => Float64Array[] | undefined) {
+  const fps = new Map<string, Footprint | null>();
+  const fp = (id: CityId): Footprint | null => {
+    let f = fps.get(id);
+    if (f !== undefined) return f;
+    const rs = rings(id);
+    f = null;
+    if (rs?.length) {
+      const bbox: Footprint["bbox"] = [Infinity, Infinity, -Infinity, -Infinity];
+      for (const r of rs) for (let k = 0; k < r.length; k += 2) {
+        bbox[0] = Math.min(bbox[0], r[k]); bbox[1] = Math.min(bbox[1], r[k + 1]);
+        bbox[2] = Math.max(bbox[2], r[k]); bbox[3] = Math.max(bbox[3], r[k + 1]);
+      }
+      f = { id, rings: rs, bbox };
+    }
+    fps.set(id, f);
+    return f;
+  };
+  setOutlineLookup((lon, lat) => {
+    let best: CityId | null = null, bd = ZONE_REACH_M;
+    const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180);
+    for (const c of zonesTouching(lon, lat, lon, lat, ZONE_REACH_M)) {
+      const f = fp(c.id);
+      if (!f) continue;
+      const [w, s, e, n] = f.bbox;
+      if (Math.hypot(Math.max(0, w - lon, lon - e) * kx, Math.max(0, s - lat, lat - n) * M_PER_DEG) > bd) continue;
+      const d = distanceTo(f, lon, lat);
+      if (d === 0) return c.id;
+      if (d <= bd) (bd = d), (best = c.id);
+    }
+    return best;
+  });
+}
+
+/** The clock worker's copy (T-1265): only the zones' rings, kept as the file has them and decoded
+ * per zone when a place near it is first asked about. */
+export async function readOutlinesForPlaces(url: string): Promise<void> {
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`${r.status} ${r.url}`);
+    const { q, zones } = (await r.json()) as OutlineFile;
+    placeBy((id) => zones[id]?.map((flat) => decodeRing(flat, q)));
+  } catch (error) {
+    console.warn("Coarse zone outlines unavailable", error);
+  }
 }
 
 /** An outline's edges by band of latitude (x0, y0, x1, y1 each), so the crossing test reads only the

@@ -13,13 +13,11 @@ export const RES_AREA_M2 = [105333, 737327, 5161293, 36129062];
 export const DISC = 8;
 
 /**
- * Bubble area per commuter, per end: a bubble covers its commuters at this density (per m²), so
- * the bubbles' total area is the same at every aggregation level. Homes at 25,000 a km², about
- * Manhattan's: dense home areas touch. Jobs at 80,000: job centres are several times denser than
- * any home area, and at the homes' scale Midtown's bubbles covered half of Manhattan.
+ * Trip legs per m² of bubble, per end, so the bubbles' total area is the same at every aggregation
+ * level. Destinations at 160,000 a km²: job centres are several times denser than any home area.
+ * Homes at 50,000 a km² with the radius then cut by a quarter (T-1294, Anita), so about 88,900.
  */
-// Two trip legs per former commuter: retain the old commute bubble area when converting units.
-export const BUBBLE_DENSITY = { home: 50000 / 1e6, work: 160000 / 1e6 } as const;
+export const BUBBLE_DENSITY = { home: 50000 / 0.75 ** 2 / 1e6, work: 160000 / 1e6 } as const;
 
 export type ToCommuters =
   /** `anchor`: the draw anchor positions are measured from (T-317, map/geo.ts); every answer says

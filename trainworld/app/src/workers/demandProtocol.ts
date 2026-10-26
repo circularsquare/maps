@@ -26,6 +26,10 @@ export interface DemandNetwork {
   stXY: Float32Array;
   /** each station's complex (T-161, `DemandApi.set_complexes`): equal numbers are one complex */
   complex: Uint32Array;
+  /** each station's upgrades (T-1281, `DemandApi.set_upgrades`), absent where none has any */
+  ups?: Uint8Array;
+  /** station pairs joined by a passage, flat (T-1281, `DemandApi.set_passages`), absent where none */
+  passages?: Uint32Array;
   /** stops per line */
   lineN: Uint32Array;
   /** station index of every stop, line after line */
@@ -41,7 +45,7 @@ export interface DemandNetwork {
   tph: Float32Array;
   /** cars per train, per line */
   cars: Float32Array;
-  fare: { base: number; perKm: number; nodes?: [number, number][] };
+  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number> };
   /** km per route node: each line's forward stops then reverse stops, 0 at each end */
   hopKm: Float32Array;
   /** T-842 (`DemandApi.set_span`): per period and route node (`q * route nodes + r`, route nodes

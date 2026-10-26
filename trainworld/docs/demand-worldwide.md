@@ -533,8 +533,17 @@ notes/T-420.md has the tables.
   bonus also stands for how much a short drive costs beyond its road time, which differs with car
   ownership and parking. Check: a country's travel survey walk shares by distance (NHTS,
   England's NTS, France's EMP, Japan's person-trip surveys) and its census walk-to-work share.
-- **Value of time and fare sensitivity.** One value for everyone, from US figures. Incomes differ
-  hugely between and within countries (see Anita's "income dependence" idea in her TODO).
+- **Value of time and fare sensitivity** (T-1277, T-1166). A fare dollar costs 5 x (GDP per head /
+  $60,000)^-0.5 perceived minutes, by the country the trip starts in: the US 4.4, the UK 5.3, Japan
+  5.6, China 7.7, Brazil 8.7, India 12.2, Nigeria 13.6. GDP per head at PPP (World Bank
+  NY.GDP.PCAP.PP.KD, `app/src/game/countryIncome.json`). The exponent is the gentle end of the
+  value-of-time literature (0.5-1 between countries: UK meta-analysis 0.9, HEATCO 0.7). Fares are
+  charged in local terms, the player's curve times each country's scale (its income over India's to
+  the same power, or the player's own), so at the default scales a fare weighs the same everywhere
+  and a poorer country brings in less per rider. The car's money (ownership, parking, running) stays
+  at 3 minutes a dollar everywhere. Why it may not carry over: incomes differ within a country as
+  much as between (a Mumbai suburb against Bandra), and the car's money should scale too. Check: a
+  country's transit fares against its income, and its fare elasticity where a survey publishes one.
 - **Waiting and crowding penalties.** A wait counts as plain minutes, half the headway, with no
   weight (Anita, T-585), where the literature (mostly US and European) weighs a platform wait
   1.5-2.5 times a minute aboard and a long wait at home before a known departure less. The
@@ -564,7 +573,9 @@ notes/T-420.md has the tables.
   arrivals peaking mid-period at the US busiest-hour factors, trains taking riders up to crush
   (160 a 20 m car, a New York car), the extra wait in plain minutes like any wait (T-585) and
   capped at 60 minutes. Riders left behind wait at their station: nobody changes onto the line
-  they left, so nobody rides a full line the other way to board upstream (Anita, T-575), though
+  they left back towards the stop they came from, so nobody rides a full line the other way to
+  board upstream (Anita, T-575; a line passing a station twice may be changed onto there towards
+  other stops, T-1268), though
   Tokyo riders do (gyaku-nori), and riding out on another line and back stays open. Why it may
   not carry over: crush loads differ (Tokyo and Mumbai pack far more than 160 into a car, pushers
   included, so "full" comes later; many European systems run emptier); where riders are
@@ -741,6 +752,21 @@ notes/T-420.md has the tables.
   perceived minutes a change). Check: published
   interchange times for a few big hubs (London's TfL interchange walk times, Tokyo station transfer
   guides) against what the rule gives for the same platforms.
+- **Passages** (T-1281). A change between two stations the player joined by a passage walks the
+  straight line between the platforms' centres at 2 m/s (moving walkways, no detour), weighted
+  1.39 like any transfer walk, with the boarding's wait and the fixed 2 perceived minutes. Set by
+  judgement (Anita's yes, 2026-10-25), not fitted. Why it may not carry over: real long passages
+  (Paris's Chatelet, Tokyo's Otemachi, Hong Kong's Central-Hong Kong walkway) have stairs, gates
+  and crowds that slow them below 2 m/s, and riders dislike them more than their minutes say.
+  Check: a few published passage times against the rule.
+- **Station upgrades in demand** (T-1281, Anita's yes, 2026-10-25). A park and ride takes 10
+  perceived minutes off a ride's fixed 15 to or from that station; a waiting room counts the
+  half-headway wait there at 0.8 of its minutes, in route choice as in mode choice. Both are flat
+  judgement figures, the player's to buy, and read nothing local. Why they may not carry over: the
+  value of a car park depends on car ownership and parking elsewhere (in a city where few drive
+  it does little, which the ride's other costs already show); the shelter discount stands for
+  seats, heat and cover, worth more in harsh climates. Check: rail shares at a city's park and
+  ride stations against nearby ones without.
 - **No train that walks further than walking there** (Anita, T-1059; docs/demand-kernel.md step
   5). A pair of stations is no rail option for a trip when the walks to, between and from its
   stations, in straight metres, are longer than the trip's own walking distance (over water
@@ -787,8 +813,9 @@ notes/T-420.md has the tables.
   (T-378); near ones (under 250 km) keep their trips fixed; a ferry is no link.
 - **Air door to door** (T-378, docs/regional.md 5.1). Between far places (250 km and more) that both
   have airports: drives to the airports, 90 minutes there (T-712, Anita 2026-10-20), 750 km/h plus
-  30 minutes, 60 more with no direct flight, and a fare of $100 + 5 cents a km at 3 perceived
-  minutes a dollar. The fare is one simple rule on purpose (Anita: predictable for the player),
+  30 minutes, 60 more with no direct flight, and a fare of $100 + 5 cents a km at the departing
+  country's minutes a dollar (T-1277, Mode choice above; a corridor's split between car and plane is
+  the mean of its two ways). The fare is one simple rule on purpose (Anita: predictable for the player),
   checked against published averages (notes/T-712.md): $150 at 1,000 km sits between the US and
   Japan and Germany, all of which barely rise with distance, so the base is large and the per-km
   small. On ideal access rail holds far more of rail and air at 3 to 5 hours on the train than

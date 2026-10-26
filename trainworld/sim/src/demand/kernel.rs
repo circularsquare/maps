@@ -21,6 +21,7 @@
 use super::lanes::{F4, F8};
 use super::network::Network;
 use super::pack::{City, PackGravity};
+use crate::track::upgrades;
 use std::collections::HashMap;
 
 /// Stations kept per cell and per subzone.
@@ -65,6 +66,9 @@ pub struct Params {
     /// wait and the walk between the two platforms.
     pub transfer_min: f32,
     pub fare_min: f32,
+    /// Perceived minutes a fare dollar costs the riders of this population (T-1277: by their
+    /// country's income, set by the app; the car's money stays at `api::FARE_MIN_PER_USD`).
+    pub fare_w: f32,
     /// Logit scale per perceived minute, and the rail propensity: the worldwide value plus
     /// `country_asc_rail`, which `set_extra` keeps in step (setting `asc_rail` by name sets the
     /// worldwide part).
@@ -271,6 +275,7 @@ impl Default for Params {
             w_walk: 1.5,
             transfer_min: 2.0,
             fare_min: 6.0,
+            fare_w: super::api::FARE_MIN_PER_USD,
             // T-636: Anita's set (notes/T-636.md)
             beta: 0.10,
             asc_rail: super::api::ASC_RAIL,
@@ -373,6 +378,8 @@ impl Params {
             "w_drive" => self.w_drive = v,
             "park_min" => self.park_min = v,
             "fare_min" => self.fare_min = v,
+            // before `set_fares`, which reads it
+            "fare_w" => self.fare_w = v,
             "transfer_min" => self.transfer_min = v,
             "crowd_alpha" => self.crowd_alpha = v,
             "xfer_walk_m" => self.xfer_walk_m = v,
@@ -1991,6 +1998,18 @@ pub enum End {
     Far,
 }
 
+/// A ride's fixed cost to or from station `s` (`p_ride`), less `PARK_RIDE_MIN` where it has a park
+/// and ride (T-1281).
+pub fn ride_fixed(p: &Params, net: &Network, s: usize) -> f32 {
+    if net.ups(s) & upgrades::PARK_RIDE != 0 { (p.p_ride - upgrades::PARK_RIDE_MIN).max(0.0) } else { p.p_ride }
+}
+
+/// How much of its minutes a wait at station `s` counts in mode choice (T-1281): less in a
+/// waiting room.
+pub fn wait_factor(net: &Network, s: usize) -> f32 {
+    if net.ups(s) & upgrades::WAITING_ROOM != 0 { upgrades::WAITING_ROOM_WAIT } else { 1.0 }
+}
+
 /// The ride options from each place (its zone, x, y), CSR, for every layer (local commutes and
 /// everyday trips, the regional market, T-362's long trips): walks come from `build_access` per
 /// cell, rides from here. For each line, its station with the cheapest ride within `ride_max_m`;
@@ -2042,7 +2061,7 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
                 let j = st_zone[s];
                 let f = j.map_or(p.road_detour, |j| p.drive_factor(i, j));
                 let t = p.drive_min_f(d, f, a, place(j));
-                let cost = p.p_ride + p.ride_w() * t + own(d * 0.001 * f) + station_end(j);
+                let cost = ride_fixed(p, net, s) + p.ride_w() * t + own(d * 0.001 * f) + station_end(j);
                 for &l in &st_lines[s] {
                     let b = &mut best[l as usize];
                     if b.1 == NONE {
@@ -2389,6 +2408,8 @@ pub struct Graph {
     pub rn_dy: Vec<f32>,
     /// Stations with a platform away from their position, where a change can walk.
     pub st_spread: Vec<bool>,
+    /// Per station, how much of its minutes a wait there counts (`wait_factor`, T-1281).
+    pub st_wait: Vec<f32>,
     /// Incoming edges, CSR, for destination-based strategy search.
     pub rev_off: Vec<u32>,
     pub rev_from: Vec<u32>,
@@ -2439,9 +2460,9 @@ impl FareCurve {
     }
 }
 
-/// A wait is plain minutes, half the headway (Anita, T-585).
-pub fn board_cost(headway_min: f32, p: &Params) -> f32 {
-    headway_min / 2.0 + p.transfer_min
+/// A wait is plain minutes, half the headway (Anita, T-585), times the station's `wait_factor`.
+pub fn board_cost(headway_min: f32, wait_f: f32, p: &Params) -> f32 {
+    wait_f * headway_min / 2.0 + p.transfer_min
 }
 
 pub fn build_graph(net: &Network, p: &Params) -> Graph {
@@ -2452,6 +2473,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     let mut rn_next = vec![];
     let (mut rn_dx, mut rn_dy) = (vec![], vec![]);
     let mut st_spread = vec![false; s];
+    let st_wait: Vec<f32> = (0..s).map(|v| wait_factor(net, v)).collect();
     let platforms = net.stop_x.len() == net.line_stops.len() && net.stop_y.len() == net.line_stops.len();
     // route nodes where a circle's train rides on round to the first stop (T-798): nobody boards
     // there, since the first stop's own route node has the same trains
@@ -2499,7 +2521,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         let l = rn_line[r] as usize;
         if rn_next[r] != NONE {
             if !rn_wrap[r] {
-                edges.push((st, node, board_cost(net.line_headway_min[l][p.period], p), NONE));
+                edges.push((st, node, board_cost(net.line_headway_min[l][p.period], st_wait[st as usize], p), NONE));
             }
             edges.push((node, rn_next[r], rn_ride[r], node));
         }
@@ -2533,11 +2555,14 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
             }
         }
     }
+    // a passage (T-1281) walks the straight line, on moving walkways
+    let passage = |a: u32, b: u32| !net.st_passage.is_empty() && net.st_passage.binary_search(&[a.min(b), a.max(b)]).is_ok();
     for (r, &st) in rn_station.iter().enumerate() {
         let (x, y) = (net.st_x[st as usize] + rn_dx[r], net.st_y[st as usize] + rn_dy[r]);
         for &b in &near[st as usize] {
             let d = ((net.st_x[b as usize] - x).powi(2) + (net.st_y[b as usize] - y).powi(2)).sqrt();
-            edges.push(((s + r) as u32, b, p.xfer_min(d) * p.w_xfer, NONE));
+            let walk = if passage(st, b) { d / upgrades::PASSAGE_MPS / 60.0 } else { p.xfer_min(d) };
+            edges.push(((s + r) as u32, b, walk * p.w_xfer, NONE));
         }
     }
     edges.sort_by_key(|e| e.0);
@@ -2567,6 +2592,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         rn_dx,
         rn_dy,
         st_spread,
+        st_wait,
         rn_tph,
         rev_off,
         rev_from: incoming.iter().map(|x| x.1).collect(),
@@ -2642,9 +2668,10 @@ pub struct Skims {
 }
 
 /// A station as reached off one of the lines its own strategy boards (T-575): a rider never changes
-/// onto the line they left, in either direction, so arriving on that line they choose among the
-/// station's other lines. Change node k is node `n + k`; a route node of the line that leaves the
-/// train there, or walks there, has it as its next node. Each holds its station and a bit per
+/// onto the line they left towards the stop they came from or the one their train goes on to, so
+/// arriving on that line they choose among the station's other lines and, where the line passes
+/// the station again, its departures towards other stops (T-1268). Change node k is node `n + k`;
+/// a route node of the line that leaves the train there, or walks there, has it as its next node. Each holds its station and a bit per
 /// boarding edge of the station for the departures it accepts, `bits[off[k]..off[k + 1]]` (bit i
 /// of word w is the station's edge 64 w + i).
 #[derive(Clone, Default)]
@@ -3070,13 +3097,15 @@ impl IdHeap {
     }
 }
 
-/// A change node being searched (`ChangeNodes`): its station and the line it was reached off, the
-/// pooled frequency and frequency-weighted cost of the lines it accepts, its cost, settled, its
-/// arrivals (a range of `Search::cn_feed`: the station's incoming edges off that line) and where
-/// its accepted departures' bits start in `Search::cn_bits`.
+/// A change node being searched (`ChangeNodes`): its station, the line it was reached off and which
+/// of that line's departures it bars (`barred`), the pooled frequency and frequency-weighted cost
+/// of the lines it accepts, its cost, settled, its arrivals (a range of `Search::cn_feed`: the
+/// station's incoming edges off that line) and where its accepted departures' bits start in
+/// `Search::cn_bits`.
 struct Change {
     st: u32,
     line: u32,
+    ban: [u32; 2],
     frequency: f32,
     weighted: f32,
     dist: f32,
@@ -3115,8 +3144,13 @@ struct Search<'a> {
     cn_bits: Vec<u64>,
     cn_feed: Vec<u32>,
     lines: Vec<u32>,
-    /// (index in `lines`, incoming edge) for a settling station's arrivals off its own lines.
+    /// A settling station's change nodes to be, (line, `ban`), and (index in `keys`, incoming
+    /// edge) for its arrivals that need one.
+    keys: Vec<(u32, [u32; 2])>,
     feed: Vec<(u32, u32)>,
+    /// Each route node's next and previous stop, past a circle's stand at its own station.
+    nst: Vec<u32>,
+    pst: Vec<u32>,
     cand: Vec<(f32, u32)>,
     /// Per station, the one line with departures from it, `MANY` for several, `NONE` for none.
     lone: Vec<u32>,
@@ -3127,11 +3161,35 @@ struct Search<'a> {
 }
 
 const MANY: u32 = NONE - 1;
+/// A change node's `ban` barring every departure of its line.
+const WHOLE: [u32; 2] = [MANY, MANY];
+
+/// Whether a change node off `line` with `ban` bars route node `r`: every departure of the line
+/// for `WHOLE`, else those whose next stop is in `ban` (T-1268).
+#[inline(always)]
+fn barred(g: &Graph, nst: &[u32], r: usize, line: u32, ban: [u32; 2]) -> bool {
+    g.rn_line[r] == line && (ban == WHOLE || ban.contains(&nst[r]))
+}
 
 impl Search<'_> {
     fn new<'a>(g: &'a Graph, p: &'a Params) -> Search<'a> {
         let (s, n) = (g.n_st, g.n);
         let nr = n - s;
+        let fwd: Vec<u32> = g.rn_next.iter().map(|&x| if x == NONE { NONE } else { x - s as u32 }).collect();
+        let mut back = vec![NONE; nr];
+        for (r, &x) in fwd.iter().enumerate() {
+            if x != NONE { back[x as usize] = r as u32; }
+        }
+        let stop = |step: &[u32], r: usize| {
+            let mut x = step[r];
+            for _ in 0..2 {
+                if x == NONE || g.rn_station[x as usize] != g.rn_station[r] { break; }
+                x = step[x as usize];
+            }
+            if x == NONE || g.rn_station[x as usize] == g.rn_station[r] { NONE } else { g.rn_station[x as usize] }
+        };
+        let nst: Vec<u32> = (0..nr).map(|r| stop(&fwd, r)).collect();
+        let pst: Vec<u32> = (0..nr).map(|r| stop(&back, r)).collect();
         let mut edge_ix = vec![NONE; nr];
         let mut lone = vec![NONE; s];
         for v in 0..s {
@@ -3170,7 +3228,10 @@ impl Search<'_> {
             cn_bits: vec![],
             cn_feed: vec![],
             lines: vec![],
+            keys: vec![],
             feed: vec![],
+            nst,
+            pst,
             cand: vec![],
             lone,
             edge_ix,
@@ -3264,13 +3325,13 @@ impl Search<'_> {
     }
 
     /// Route node `r`'s departures, at cost `d` from boarding, offered to its station's strategy,
-    /// or once that is settled, to the station's change nodes off other lines.
+    /// or once that is settled, to the station's change nodes that do not bar it.
     fn offer_line(&mut self, r: usize, d: f32) {
         let g = self.g;
         let (from, f) = (g.rn_station[r] as usize, g.rn_tph[r]);
         self.offer[r] = d;
         if !self.done[from] {
-            if let Some(cost) = join_line(&mut self.frequency[from], &mut self.weighted[from], self.dist[from], f, d, self.p) {
+            if let Some(cost) = join_line(&mut self.frequency[from], &mut self.weighted[from], self.dist[from], f, d, g.st_wait[from], self.p) {
                 self.board[r >> 6] |= 1 << (r & 63);
                 self.dist[from] = cost;
                 self.next[from] = (self.s + r) as u32;
@@ -3283,8 +3344,8 @@ impl Search<'_> {
         for k in a as usize..b as usize {
             let c = &mut self.cn[k];
             // a line costing more from boarding than the pool does already never joins it
-            if c.done || d >= c.dist || c.line == g.rn_line[r] { continue; }
-            if let Some(cost) = join_line(&mut c.frequency, &mut c.weighted, c.dist, f, d, self.p) {
+            if c.done || d >= c.dist || barred(g, &self.nst, r, c.line, c.ban) { continue; }
+            if let Some(cost) = join_line(&mut c.frequency, &mut c.weighted, c.dist, f, d, g.st_wait[from], self.p) {
                 c.dist = cost;
                 self.cn_bits[c.bits as usize + i / 64] |= 1 << (i % 64);
                 self.heap.push(cost, (self.n + self.nr + k) as u32);
@@ -3292,9 +3353,35 @@ impl Search<'_> {
         }
     }
 
-    /// Station `v` is settled with its strategy. Riders reach it off the lines that strategy does
-    /// not board as they would start there; off one it boards, they come to its change node off
-    /// that line, made here from the departures offered so far less that line's (T-575).
+    /// The departures of its own line that an arrival at `v` off route node `a` may not take, as a
+    /// change node's (line, `ban`), or `None` where it may take every one the strategy boards.
+    /// Nobody changes onto the line they left towards the stop they came from (T-575), or towards
+    /// the one their train goes on to; a line passing `v` again leaves it for other stops, so a rider
+    /// off a lollipop's loop may change at its junction onto the line on round (T-1268). A walk from
+    /// another station boards none of the line.
+    fn ban(&self, a: usize, v: usize) -> Option<(u32, [u32; 2])> {
+        let g = self.g;
+        let line = g.rn_line[a];
+        if !self.lines.contains(&line) { return None; }
+        if g.rn_station[a] as usize != v { return Some((line, WHOLE)); }
+        let (x, y) = (self.pst[a], self.nst[a]);
+        let ban = [x.min(y), x.max(y)];
+        let (mut boarded, mut all) = (false, true);
+        for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+            let r = g.adj_to[e] as usize - self.s;
+            if g.rn_line[r] != line || g.rn_tph[r] == 0.0 { continue; }
+            if ban.contains(&self.nst[r]) {
+                boarded |= self.board[r >> 6] >> (r & 63) & 1 == 1;
+            } else {
+                all = false;
+            }
+        }
+        if !boarded { None } else if all { Some((line, WHOLE)) } else { Some((line, ban)) }
+    }
+
+    /// Station `v` is settled with its strategy. Riders reach it as they would start there unless
+    /// the strategy boards a departure `ban` bars them; those come to a change node, made here
+    /// from the departures offered so far less the barred ones.
     fn settle_station(&mut self, v: usize) {
         let (g, s) = (self.g, self.s);
         let d = self.dist[v];
@@ -3316,13 +3403,20 @@ impl Search<'_> {
                 }
             }
         }
-        // one pass over the arrivals: those off other lines go on, those off its own wait
+        // one pass over the arrivals: those free to take the strategy go on, the others wait
         self.feed.clear();
+        self.keys.clear();
         for j in g.rev_off[v] as usize..g.rev_off[v + 1] as usize {
             let from = g.rev_from[j] as usize;
             if self.done[from] { continue; }
-            match self.lines.iter().position(|&l| l == g.rn_line[from - s]) {
-                Some(li) => self.feed.push((li as u32, j as u32)),
+            match self.ban(from - s, v) {
+                Some(key) => {
+                    let k = self.keys.iter().position(|&x| x == key).unwrap_or_else(|| {
+                        self.keys.push(key);
+                        self.keys.len() - 1
+                    });
+                    self.feed.push((k as u32, j as u32));
+                }
                 None => {
                     let walk = if spread { platform_walk(g, self.p, &self.pool, from, v) } else { 0.0 };
                     self.relax(from, d + g.adj_cost[g.rev_edge[j] as usize] + walk, v as u32)
@@ -3330,19 +3424,19 @@ impl Search<'_> {
             }
         }
         let first = self.cn.len() as u32;
-        // a station with no other line has no change node
+        // a station with no other line has no change node barring that line whole
         let lone = self.lone[v];
         if !self.feed.is_empty() && lone != NONE {
-            for li in 0..self.lines.len() {
-                let line = self.lines[li];
-                if lone == line { continue; }
+            for ki in 0..self.keys.len() {
+                let (line, ban) = self.keys[ki];
+                if lone == line && ban == WHOLE { continue; }
                 let f0 = self.cn_feed.len();
-                self.cn_feed.extend(self.feed.iter().filter(|f| f.0 == li as u32).map(|f| f.1));
+                self.cn_feed.extend(self.feed.iter().filter(|f| f.0 == ki as u32).map(|f| f.1));
                 if self.cn_feed.len() == f0 { continue; }
                 self.cand.clear();
                 for e in e0..e1 {
                     let r = g.adj_to[e] as usize - s;
-                    if g.rn_line[r] != line && self.offer[r].is_finite() {
+                    if !barred(g, &self.nst, r, line, ban) && self.offer[r].is_finite() {
                         self.cand.push((self.offer[r], r as u32));
                     }
                 }
@@ -3352,9 +3446,9 @@ impl Search<'_> {
                 let k = self.cn.len();
                 let b0 = self.cn_bits.len();
                 self.cn_bits.resize(b0 + (e1 - e0).div_ceil(64), 0);
-                let mut c = Change { st: v as u32, line, frequency: 0.0, weighted: 0.0, dist: f32::INFINITY, done: false, feed: (f0 as u32, self.cn_feed.len() as u32), bits: b0 as u32 };
+                let mut c = Change { st: v as u32, line, ban, frequency: 0.0, weighted: 0.0, dist: f32::INFINITY, done: false, feed: (f0 as u32, self.cn_feed.len() as u32), bits: b0 as u32 };
                 for &(od, r) in &self.cand {
-                    if let Some(cost) = join_line(&mut c.frequency, &mut c.weighted, c.dist, g.rn_tph[r as usize], od, self.p) {
+                    if let Some(cost) = join_line(&mut c.frequency, &mut c.weighted, c.dist, g.rn_tph[r as usize], od, g.st_wait[v], self.p) {
                         c.dist = cost;
                         let i = self.edge_ix[r as usize] as usize;
                         self.cn_bits[b0 + i / 64] |= 1 << (i % 64);
@@ -3412,9 +3506,9 @@ impl Search<'_> {
 /// lowers the expected cost there below `cur`: the new cost, with the station's pooled frequency
 /// and frequency-weighted cost updated.
 #[inline(always)]
-fn join_line(frequency: &mut f32, weighted: &mut f32, cur: f32, f: f32, d: f32, p: &Params) -> Option<f32> {
+fn join_line(frequency: &mut f32, weighted: &mut f32, cur: f32, f: f32, d: f32, wait_f: f32, p: &Params) -> Option<f32> {
     let sum = *frequency + f;
-    let cost = (*weighted + f * d) / sum + board_cost(60.0 / sum, p);
+    let cost = (*weighted + f * d) / sum + board_cost(60.0 / sum, wait_f, p);
     if cost >= cur {
         return None;
     }
@@ -3479,18 +3573,20 @@ struct SkimKey {
     rn_dx: Vec<f32>,
     rn_dy: Vec<f32>,
     transfer_min: f32,
+    st_wait: Vec<f32>,
     fare_curve: FareCurve,
     rn_km: Vec<f32>,
 }
 
 impl SkimKey {
     fn of(g: &Graph, p: &Params) -> SkimKey {
-        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.transfer_min, fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone() }
+        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.transfer_min, st_wait: g.st_wait.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone() }
     }
     fn same(&self, g: &Graph, p: &Params) -> bool {
         self.n_st == g.n_st
             && self.n == g.n
             && self.transfer_min == p.transfer_min
+            && self.st_wait == g.st_wait
             && self.fare_curve == g.fare_curve
             && self.rn_km == g.rn_km
             && self.rn_dx == g.rn_dx

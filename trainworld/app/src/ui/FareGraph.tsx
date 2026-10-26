@@ -9,10 +9,15 @@
 
 import { signal } from "@preact/signals";
 import { useRef, useState } from "preact/hooks";
-import { fareAt, MAX_KM, NODE_GAP_KM, type FareNode } from "../game/fareCurve";
+import type { ComponentChildren } from "preact";
+import { fareAt, MAX_KM, NODE_GAP_KM, scaleNodes, type FareNode } from "../game/fareCurve";
 import { unitMetres, unitShort } from "../game/format";
-import { canUndoFares, changeFares as setFares, undo } from "../game/fareUndo";
+import { canUndoFares, changeFares, undo } from "../game/fareUndo";
 import { Icon, Stepper, TypedValue } from "./widgets";
+
+/** T-1277: the graph shows the curve as charged where the player is looking (times that country's
+ * scale); an edit goes to the game as the curve itself. */
+const sendFares = (shown: FareNode[], scale: number) => changeFares(scale === 1 ? shown : scaleNodes(shown, 1 / scale));
 
 /** The nodes as shown during a drag (km, US$): null when nothing is dragged. */
 export const farePreview = signal<FareNode[] | null>(null);
@@ -98,7 +103,8 @@ function limits(nodes: FareNode[], i: number, gap = NODE_GAP_KM) {
 }
 
 const cents = (v: number) => Math.round(v * 100) / 100;
-const wholeCents = (r: number) => Math.abs(r * 100 - Math.round(r * 100)) < 1e-6;
+// T-1277: a rate scaled from the curve is whole cents to within a hundredth of a cent
+const wholeCents = (r: number) => Math.abs(r * 100 - Math.round(r * 100)) < 0.01;
 /** a rate in whole cents reads as cents, a typed or dragged one to a tenth of a cent */
 const rateNum = (r: number) => r.toFixed(wholeCents(r) ? 2 : 3);
 const rateText = (r: number) => "$" + rateNum(r);
@@ -121,7 +127,8 @@ function fromRows(base: number, stretches: [number, number][]): FareNode[] {
  * rate per unit (stepped by whole cents, or typed). A row's change keeps the other rows' values, so a
  * rate or base change moves every later node's fare by the same amount; a drag on the graph sets
  * fares instead. One grid across the rows, so the steppers line up. */
-export function FareNodeRows({ nodes }: { nodes: FareNode[] }) {
+export function FareNodeRows({ nodes, scale, first }: { nodes: FareNode[]; scale: number; first?: ComponentChildren }) {
+  const setFares = (ns: FareNode[]) => sendFares(ns, scale);
   const kpu = unitMetres() / 1000;
   const unit = unitShort();
   const stretches = nodes.slice(1).map((n, j) => [n[0], rateOf(nodes, j + 1)] as [number, number]);
@@ -130,6 +137,7 @@ export function FareNodeRows({ nodes }: { nodes: FareNode[] }) {
   const setBase = (v: number) => put(v, stretches);
   return (
     <ul class="rows fare-rows">
+      {first}
       <li>
         <span class="fr-what">Base fare</span>
         <Stepper value={usd(base)} wide label="base fare" onStep={(s) => setBase(cents(base + s * 0.25))}
@@ -149,7 +157,7 @@ export function FareNodeRows({ nodes }: { nodes: FareNode[] }) {
         // a step goes to the next whole cent above or below
         const stepRate = (s: number) => {
           const at = rateU * 100;
-          const next = withRate((s > 0 ? Math.floor(at + 1e-6) + 1 : Math.ceil(at - 1e-6) - 1) / 100);
+          const next = withRate((s > 0 ? Math.floor(at + 0.01) + 1 : Math.ceil(at - 0.01) - 1) / 100);
           // a stretch too short for the step to move its fare a cent moves it a cent
           if (next[i][1] === nodes[i][1] && (s > 0 || nodes[i][1] > nodes[i - 1][1])) {
             const dc = s > 0 ? 0.01 : -0.01;
@@ -163,7 +171,7 @@ export function FareNodeRows({ nodes }: { nodes: FareNode[] }) {
             {/* the last node's distance changes no fare, since its rate holds past it: it is only dragged */}
             {last
               ? <span class="fr-what">Past {fromText} {unit}</span>
-              : <span class="fr-what">{fromText}-<TypedValue label={`end of stretch ${i}`}
+              : <span class="fr-what">{`${fromText} -`}<TypedValue label={`end of stretch ${i}`}
                   type={{ text: distText(u), set: setU, tip: `Where this rate ends and the next begins, ${unit}. Click to type a distance.` }}>{distText(u)}</TypedValue>{unit}</span>}
             <Stepper value={`+${rateText(rateU)}`} wide label={`rate of stretch ${i}`} onStep={stepRate}
               type={{ text: rateNum(rateU), set: setRate, tip: `The fare rises ${rateText(rateU)} for each ${unit} ${span}. Click to type a rate.` }} />
@@ -185,7 +193,8 @@ interface Drag {
   span: number; y0: number; h: number;
 }
 
-export function FareGraph({ nodes }: { nodes: FareNode[] }) {
+export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }) {
+  const setFares = (ns: FareNode[]) => sendFares(ns, scale);
   const svg = useRef<SVGSVGElement>(null);
   const drag = useRef<Drag | null>(null);
   const pinch = useRef<{ ids: Map<number, { x: number; y: number }>; d0: number; span0: number } | null>(null);

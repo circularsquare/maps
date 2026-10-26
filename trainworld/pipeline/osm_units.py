@@ -296,8 +296,10 @@ def build(cid, row, sources):
                   f"({len(idx)} OSM relations, overlap {iou:.2f})", flush=True)
     out_units = [{"type": "Feature", "properties": props, "geometry": mapping(g)} for props, g in zip(feats, geoms)]
     whole = union_all([shape(f["geometry"]) for f in out_units]).buffer(0)
-    filled = shapely.MultiPolygon([shapely.Polygon(p.exterior) for p in shapely.get_parts(whole)
-                                   if p.geom_type == "Polygon"])  # holes are water or enclaves; cut below if packs
+    shells = [shapely.Polygon(p.exterior) for p in shapely.get_parts(whole) if p.geom_type == "Polygon"]
+    filled = shapely.MultiPolygon(shells)  # holes are water or enclaves; cut below if packs
+    if not filled.is_valid:  # a part inside another's hole: the shells overlap (Daegu, T-1262)
+        filled = union_all(shells)
     enc = enclaves(row, sources, make_valid(filled.difference(whole)))
     whole = make_valid(filled.difference(enc)) if not enc.is_empty else filled
     whole = cut_packs(whole, {cid, row.get("test_of")})

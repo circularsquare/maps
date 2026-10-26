@@ -41,6 +41,20 @@ pub struct Network {
     /// numbers them), the share of the riders arriving there whose wait for the next train is within
     /// their tolerance (`track::span`). Empty: 1 everywhere.
     pub span: Vec<f32>,
+    /// Each station's upgrades, `track::upgrades` bits (T-1281): park and ride cuts a ride's fixed
+    /// cost (`access_options`), a waiting room the perceived wait (`build_graph`). Empty: none.
+    pub st_ups: Vec<u8>,
+    /// Station pairs joined by a passage (T-1281), smaller first, sorted: a change between them
+    /// walks the straight line at `PASSAGE_MPS` (`build_graph`). Empty: none.
+    pub st_passage: Vec<[u32; 2]>,
+}
+
+impl Network {
+    /// Station `s`'s upgrade bits (T-1281).
+    #[inline]
+    pub fn ups(&self, s: usize) -> u8 {
+        self.st_ups.get(s).copied().unwrap_or(0)
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -145,6 +159,8 @@ pub fn synth_network() -> Network {
         stop_y: vec![],
         line_wrap: vec![],
         span: vec![],
+        st_ups: vec![],
+        st_passage: vec![],
     };
     for &(name, kind, pts) in LINES {
         let mut stops: Vec<u32> = vec![];

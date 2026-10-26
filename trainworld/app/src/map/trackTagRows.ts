@@ -4,6 +4,7 @@
 import { levelLabel, speed } from "../game/format";
 import { bulletNode } from "../ui/bullet";
 import { inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
+import { TERRAIN_COLOURS, TERRAIN_FACTORS, TERRAIN_NAMES } from "../game/terrain";
 import type { Level, LineInput } from "../game/types";
 
 /** An up and down arrow: elevation. */
@@ -63,11 +64,35 @@ export function elevationFact(level: number, ...also: number[]): HTMLSpanElement
   return s;
 }
 
-/** The icon and chip for a speed limit, on the Max speed display's colour. */
+/** The icon and chip for a speed limit, on the Speed display's colour. */
 export function speedFact(kmh: number): HTMLSpanElement {
   const s = document.createElement("span");
   s.className = "tag-fact";
   s.append(icon(SPEED_PATH, "Speed limit"), chip(speed(kmh), speedColour(kmh)));
+  return s;
+}
+
+/** The Speed view's train speed (T-1271): words, since the chip beside it is a limit. */
+export function trainSpeedFact(kmh: number): HTMLSpanElement {
+  const s = document.createElement("span");
+  s.className = "tag-fact";
+  s.append("Fastest train ", chip(speed(kmh), speedColour(kmh)));
+  return s;
+}
+
+/** A mountain: the ground's terrain class (T-1270). */
+const TERRAIN_PATH = "M1.5 13.5L6 6l2.4 3.4L10.6 6.5l3.9 7z";
+
+/** The icon and a chip per terrain class a route crosses where it is charged, from the preview's
+ * metres per class (flat, rolling, hilly, mountain); null on flat ground only. */
+export function terrainFact(ground: ArrayLike<number> | undefined): HTMLSpanElement | null {
+  if (!ground) return null;
+  const classes = [1, 2, 3].filter((k) => (ground[k] ?? 0) >= 1);
+  if (!classes.length) return null;
+  const s = document.createElement("span");
+  s.className = "tag-fact";
+  s.append(icon(TERRAIN_PATH, "Terrain"));
+  for (const k of classes) s.append(chip(`${TERRAIN_NAMES[k]} ${TERRAIN_FACTORS[k]}x`, TERRAIN_COLOURS[k], 0.6));
   return s;
 }
 

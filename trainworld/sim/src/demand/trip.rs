@@ -17,7 +17,7 @@
 //! An everyday purpose's trip (T-586, `EverydayApi::trip`) is answered the same way, as the
 //! everyday pass chooses: its own period graph, the subzone pair's mean distance, the cells' walk.
 
-use super::api::{DemandApi, FARE_MIN_PER_USD};
+use super::api::DemandApi;
 use super::everyday::{EverydayApi, TripInputs};
 use super::kernel::*;
 use super::network::PERIODS;
@@ -446,7 +446,7 @@ fn walk(at: &At, v: usize, came: Option<usize>, share: f32, legs: &mut Vec<Leg>,
         // due within their tolerance (T-842) weigh on the perceived wait only
         let (left, span) = (g.rn_left[r0 - s], g.rn_span[r0 - s]);
         let change = if came.is_some() { p.transfer_min } else { 0.0 };
-        legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, km, wait_min: wait_min + left - span, wait_perc: wait_min + left, full_wait: left - span, stops, change });
+        legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, km, wait_min: wait_min + left - span, wait_perc: g.st_wait[v] * wait_min + left, full_wait: left - span, stops, change });
         pushed += 1;
         let to = if (nx as usize) < s { nx } else { cn.st[nx as usize - g.n] };
         if to != here {
@@ -562,7 +562,7 @@ impl DemandApi {
             h[34] = ev.pair.map_or(0.0, |x| x.1 as f64);
         }
         h[22] = p.fare_min as f64;
-        h[23] = FARE_MIN_PER_USD as f64;
+        h[23] = p.fare_w as f64;
         h[27] = city.x[o] as f64;
         h[28] = city.y[o] as f64;
         h[29] = city.x[d] as f64;
@@ -682,7 +682,8 @@ impl DemandApi {
                 let (end, money, drop) = p.ride_station_end(&self.z, sz_j, End::Home);
                 let extra = sz.acc_w[ka] - p.ride_w() * sz.acc_t[ka];
                 // the car's cost is what is left: its per-trip part and its part by distance on the road there
-                parts = [extra, p.p_ride, end, money, drop as u8 as f32, ride_home_park, extra - p.p_ride - end - ride_home_park];
+                let fixed = if svc.ups.get(a).is_some_and(|&u| u & crate::track::upgrades::PARK_RIDE != 0) { (p.p_ride - crate::track::upgrades::PARK_RIDE_MIN).max(0.0) } else { p.p_ride };
+                parts = [extra, fixed, end, money, drop as u8 as f32, ride_home_park, extra - fixed - end - ride_home_park];
             }
             body.extend([a as f64, t as f64, rep[a], rep[t], sz.acc_d[ka] as f64, sz.acc_w[ka] as f64, sz.acc_d[kt] as f64, sz.acc_w[kt] as f64, sk.r[a * s + t] as f64, share as f64, sz.acc_t[ka] as f64, sz.acc_t[kt] as f64, ride as u8 as f64]);
             body.extend(parts.iter().map(|&x| x as f64));

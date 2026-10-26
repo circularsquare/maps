@@ -30,6 +30,30 @@ export function sumModes(views: Iterable<DemandView | undefined>): { split: Mode
   return { split: { train: 100 * train / all, walk: 100 * walk / all, drive: 100 * drive / all }, rides: { all, train, walk, drive } };
 }
 
+/** T-1301: the world's rides a day by every mode the split counts (train, walking, driving, the
+ * last holding buses and the rest), fixed, so the world's train share is of all of them: 8.2
+ * billion people (UN World Population Prospects 2024, for 2025) at 3 rides a person a day
+ * (household travel surveys mostly find 2.5 to 4 trips a person a day), rounded to 25 billion. */
+export const WORLD_PEOPLE = 8.2e9;
+export const RIDES_PER_PERSON = 3;
+export const WORLD_RIDES = 25e9;
+
+/** The world's split: train rides over `WORLD_RIDES`, the rest walking and driving in the
+ * proportions of the cities' own. */
+export function worldSplit(rides: SplitRides): ModeSplit {
+  const train = Math.min(100, (100 * rides.train) / WORLD_RIDES);
+  const rest = rides.walk + rides.drive;
+  return rest > 0
+    ? { train, walk: ((100 - train) * rides.walk) / rest, drive: ((100 - train) * rides.drive) / rest }
+    : { train, walk: 0, drive: 100 - train };
+}
+
+/** A share in percent to two significant figures under 1% ("0.43%", "0.043%"), else one decimal. */
+export function smallPct(v: number): string {
+  if (v >= 1 || v <= 0) return v.toFixed(1) + "%";
+  return v.toFixed(Math.min(6, 1 - Math.floor(Math.log10(v)))) + "%";
+}
+
 /** Every city with a built station, and how many stations it has. */
 export function builtCities(): Map<CityId, number> {
   const built = new Map<CityId, number>();
@@ -41,12 +65,12 @@ export function builtCities(): Map<CityId, number> {
   return built;
 }
 
-/** The world's figures for the top bar: the sums over `builtCities()` with the day's demand views,
- * and the counts the name's hover gives. */
+/** The world's figures for the top bar: the sums over `builtCities()` with the day's demand views
+ * (`citySplit` their own split), the world's split from them, and the counts the name's hover gives. */
 export function worldTotals() {
   const built = builtCities(), views = cityDemandViews.value;
   let stations = 0;
   for (const n of built.values()) stations += n;
   const sum = sumModes([...built.keys()].map((id) => views.get(id)));
-  return { cities: built.size, stations, split: sum?.split ?? null, rides: sum?.rides ?? null };
+  return { cities: built.size, stations, split: sum ? worldSplit(sum.rides) : null, citySplit: sum?.split ?? null, rides: sum?.rides ?? null };
 }

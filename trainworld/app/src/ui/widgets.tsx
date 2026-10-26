@@ -54,6 +54,9 @@ export const Icon = {
   building: () => <svg viewBox="0 0 16 16"><path d="M1.5 5.5h13l-2-3h-9zM4 5.5v5M12 5.5v5M1.5 10.5h13M1.5 13.5h13" /></svg>,
   money: () => <svg viewBox="0 0 16 16"><rect x="1.5" y="3.5" width="10" height="6.5" /><circle cx="6.5" cy="6.75" r="1.4" /><circle class="bg" cx="11.5" cy="11.5" r="3" /><circle cx="11.5" cy="11.5" r="1.2" /></svg>,
   save: () => <svg viewBox="0 0 16 16"><path d="M2.5 2.5h9l2 2v9h-11zM5 2.5v3.5h5v-3.5M4.5 13.5v-4.5h7v4.5" /></svg>,
+  // copying a line's schedule and pasting it on another (T-1293)
+  copy: () => <svg viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="8" height="8" rx="1" /><path d="M10.5 3.5v-1h-8v8h1" /></svg>,
+  paste: () => <svg viewBox="0 0 16 16"><path d="M5.5 3h-2v11.5h9V3h-2" /><rect x="5.5" y="1.5" width="5" height="3" rx="0.5" /><path d="M6 8h4M6 10.5h4" /></svg>,
   // the Lines and Stations tabs' scope toggle (the viewed place, the whole world)
   pin: () => <svg viewBox="0 0 16 16"><path d="M8 14.5s4.5-4.2 4.5-7.6a4.5 4.5 0 00-9 0c0 3.4 4.5 7.6 4.5 7.6z" /><circle cx="8" cy="6.8" r="1.6" /></svg>,
   globe: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" /><path d="M2 8h12M8 2c-2.2 2-2.2 10 0 12M8 2c2.2 2 2.2 10 0 12" /></svg>,
@@ -70,6 +73,9 @@ export const Icon = {
   // a city's star in the Cities list
   star: () => <svg viewBox="0 0 16 16"><path class="solid" d="M8 1.5l1.9 4.1 4.5.5-3.4 3 1 4.4L8 11.3l-4 2.2 1-4.4-3.4-3 4.5-.5z" /></svg>,
   // the account (head and shoulders) and the leaderboards
+  // T-988: a game on the account, and one only in this browser
+  cloud: () => <svg viewBox="0 0 16 16"><path d="M4.6 12.5h7a2.6 2.6 0 00.3-5.2 3.9 3.9 0 00-7.5-.9 2.9 2.9 0 00.2 6.1z" /></svg>,
+  cloudOff: () => <svg viewBox="0 0 16 16"><path d="M4.6 12.5h7a2.6 2.6 0 00.3-5.2 3.9 3.9 0 00-7.5-.9 2.9 2.9 0 00.2 6.1zM2.5 2.5l11 11" /></svg>,
   person: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="5.2" r="2.9" /><path d="M2.4 14.2c.6-3 2.9-4.6 5.6-4.6s5 1.6 5.6 4.6" /></svg>,
   trophy: () => <svg viewBox="0 0 16 16"><path d="M4.5 2.5h7v3.5a3.5 3.5 0 01-7 0zM4.5 3.8H2.5c0 2 .8 3.2 2.3 3.4M11.5 3.8h2c0 2-.8 3.2-2.3 3.4M8 9.5v2.5M5.5 13.5h5" /></svg>,
   gear: () => (

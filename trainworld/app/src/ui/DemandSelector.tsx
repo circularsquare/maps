@@ -55,7 +55,7 @@ const TRACK_OPTIONS = [
   ["line", "Line", "Lines in their own colours"],
   ["traffic", "Traffic", "Line colours, thickness by traffic"],
   ["height", "Elevation", "Track coloured by its height"],
-  ["speed", "Max speed", "Track coloured by its speed limit"],
+  ["speed", "Speed", "Track coloured by the speed its trains reach, or by its speed limit where none run"],
 ] as const;
 
 /** The track display (T-703): the four ways the network is coloured, switched often, so on the map

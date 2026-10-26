@@ -25,7 +25,7 @@ pub fn edge(w: &mut TrackWorld, a: u32, b: u32, pis: &[(f64, f64)], level: i8) -
 }
 
 pub fn station(w: &mut TrackWorld, n: u32, platform: u16) {
-    w.apply(Op::Station { node: n, data: Some(StationData { platform, name: format!("S{n}"), built: true, off: false }) }).unwrap();
+    w.apply(Op::Station { node: n, data: Some(StationData { platform, name: format!("S{n}"), built: true, off: false, upgrades: 0 }) }).unwrap();
 }
 
 pub fn line(w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]) -> u32 {

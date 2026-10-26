@@ -10,6 +10,8 @@ import {
   AIR_FARE_USD, AIR_FIXED_MIN, AIR_KMH, AIR_NO_DIRECT_MIN, AIR_TERMINAL_MIN, AIR_USD_PER_KM, CAR_KMH, CAR_SHARED_BY, CAR_USD_PER_KM, carPartsOf, corridorOf,
   crossingsOf, DRIVE_FIXED_MIN, loadMarketRows, marketRow, marketRowsReady, MIN_PER_USD, ROAD_DETOUR, type CarCost, type Crossing, type FlightCost,
 } from "../../game/marketRule";
+import { fareScale } from "../../game/income";
+import { moneyState } from "../../game/money";
 import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { eachCorridor, intercityDemand, intercityPlaceName } from "../../game/demand";
@@ -89,7 +91,7 @@ function PlaneRows({ f, km }: { f: FlightCost; km: number }) {
     { label: "airport drives", real: num1(f.accessFrom + f.accessTo), weight: 1, perceived: f.accessFrom + f.accessTo },
     { label: "at the airports", real: String(AIR_TERMINAL_MIN), weight: 1, perceived: AIR_TERMINAL_MIN },
     { label: "flight", real: num1(f.flightMin), weight: 1, perceived: f.flightMin },
-    { label: "fare", real: usd(f.fareUsd), weight: MIN_PER_USD, perceived: f.fareUsd * MIN_PER_USD },
+    { label: "fare", real: usd(f.fareUsd), weight: Math.round(f.fw * 10) / 10, perceived: f.fareUsd * f.fw },
   ];
   return (
     <ul class="rows">
@@ -109,7 +111,7 @@ function PlaneRows({ f, km }: { f: FlightCost; km: number }) {
         <span class="grow">Fare</span>
         <span class="val">{usd(f.fareUsd)}</span>
       </li>
-      <li data-tip={`${equation(terms, f.total)}\nEach dollar counts as ${MIN_PER_USD} minutes.`}>
+      <li data-tip={`${equation(terms, f.total)}\nEach dollar of the fare counts as ${num1(f.fw)} minutes, by the income of the country the trip starts in.`}>
         <span class="grow">Effective time</span>
         <span class="val">{minText(f.total)}</span>
       </li>
@@ -351,7 +353,10 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   const of = all >= 0.5 ? `the ${count(all)} inter-city trips ${day} between the two ends` : `the inter-city trips ${day} between the two ends`;
   const main = t.routes[0];
   const tm = main ? stationTimes(main) : null;
-  const fare = main ? (t.baseFarePerceived + main.legs.reduce((s, l) => s + l.farePerceived, 0)) / t.minPerUsd : 0;
+  // T-1277: the market prices the curve as set; a trip pays it times its starting country's scale
+  const start = m.end === "work" ? one : ends.near;
+  const sc = fareScale(start >= 0 ? marketRow(start)?.country : undefined, moneyState.value?.fares.scales);
+  const fare = main ? (sc * (t.baseFarePerceived + main.legs.reduce((s, l) => s + l.farePerceived, 0))) / t.minPerUsd : 0;
   const repTip = `Inter-city trips in the ${period.toLowerCase()}: every pair of 6 km areas between the two ends, added up by its trips${tripPeriod.value === null ? "; the period with most of them" : ""}`;
   // T-991: an end that is not open has no trips worked out, but the distance and the car are known
   // from the places' centres; with no distance at all, neither is shown
@@ -388,7 +393,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
         <>
           <Legs t={t} r={main} />
           <ul class="rows">
-            <li data-tip={`Base fare $${(t.baseFarePerceived / t.minPerUsd).toFixed(2)} once a trip, plus the distance fare`}>
+            <li data-tip={`Base fare $${((sc * t.baseFarePerceived) / t.minPerUsd).toFixed(2)} once a trip, plus the distance fare`}>
               <span class="grow">Fare</span>
               <span class="val">${fare.toFixed(2)}</span>
             </li>

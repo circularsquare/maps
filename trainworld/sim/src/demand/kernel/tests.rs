@@ -19,7 +19,7 @@ fn common_test_net(lines: &[&[u32]], tph: &[f32], ride: &[f32]) -> Network {
         hop_min: vec![], hop_back: vec![], line_speed_kmh: vec![0.0; lines.len()],
         line_headway_min: tph.iter().map(|t| [if *t > 0.0 { 60.0 / t } else { f32::INFINITY }; network::PERIODS]).collect(),
         line_seats: vec![100.0; lines.len()], line_crush: vec![200.0; lines.len()],
-        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![], span: vec![],
+        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![], span: vec![], st_ups: vec![], st_passage: vec![],
     };
     for (l, stops) in lines.iter().enumerate() {
         net.line_stops.extend_from_slice(stops);
@@ -98,7 +98,7 @@ fn a_circle_rides_the_short_way_through_its_first_stop() {
             line_name: vec![String::new()], line_off: vec![0, 7], line_stops: stops.to_vec(),
             hop_min: ride, hop_back: back, line_speed_kmh: vec![0.0],
             line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_crush: vec![200.0],
-            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![],
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], st_ups: vec![], st_passage: vec![],
         }
     };
     let g = build_graph(&ring(true), &p);
@@ -121,9 +121,11 @@ fn a_circle_rides_the_short_way_through_its_first_stop() {
     assert_eq!((loads.rn_board[12], loads.rn_alight[8]), (40.0, 40.0));
     // nobody boards at a wrapped last stop: the first stop's route node has the same trains
     assert_eq!(loads.rn_board[6] + loads.rn_board[13], 0.0);
-    // without the wrap the trip is the long way: four stops
+    // without the wrap trains turn back at 0: riders split between the long way (four stops, 8
+    // from boarding) and a change at 0 onto the line out to 1 (2, 2 + 2.5, 2: T-1268)
     let plain = skims(&build_graph(&ring(false), &p), &p);
-    assert!((plain.r[5 * s + 1] - (2.5 + 8.0)).abs() < 1e-4, "{}", plain.r[5 * s + 1]);
+    let want = (8.0 + 8.5) / 2.0 + 1.25;
+    assert!((plain.r[5 * s + 1] - want).abs() < 1e-4, "{} against {want}", plain.r[5 * s + 1]);
 }
 
 #[test]
@@ -343,6 +345,41 @@ fn common_lines_pool_wait_and_split_by_frequency() {
     assert_eq!(one.r, two.r);
 }
 
+/// T-1281: a wait in a waiting room counts at 0.8 of its minutes, and changing there too; a park
+/// and ride takes 10 minutes off a ride's fixed cost.
+#[test]
+fn a_waiting_room_shortens_perceived_waits_and_a_park_and_ride_rides() {
+    let p = common_test_params();
+    let mut net = common_test_net(&[&[0, 1, 2], &[1, 3]], &[6.0, 6.0], &[2.0, 2.0]);
+    let plain = skims(&build_graph(&net, &p), &p);
+    assert!((plain.r[1] - 7.0).abs() < 1e-5);
+    net.st_ups = vec![upgrades::WAITING_ROOM, upgrades::WAITING_ROOM, 0, 0];
+    let room = skims(&build_graph(&net, &p), &p);
+    assert!((room.r[1] - 6.0).abs() < 1e-5, "{}", room.r[1]);
+    assert!((plain.r[3] - room.r[3] - 2.0).abs() < 1e-4, "both 5-minute waits a minute shorter: {} {}", plain.r[3], room.r[3]);
+    assert_eq!(room.r[2 * 4], plain.r[2 * 4], "a wait elsewhere is as it was");
+    assert_eq!(ride_fixed(&p, &net, 0), p.p_ride);
+    net.st_ups[2] = upgrades::PARK_RIDE;
+    assert_eq!(ride_fixed(&p, &net, 2), p.p_ride - 10.0);
+}
+
+/// T-1281: a change through a passage walks the straight line at 2 m/s; between other stations
+/// of a complex, the line x 1.3 at the transfer pace.
+#[test]
+fn a_passage_walks_the_straight_line_faster() {
+    let p = common_test_params();
+    let mut net = common_test_net(&[&[0, 2]], &[6.0], &[2.0]);
+    net.st_group = vec![0, 0, 2, 3];
+    let walk = |net: &Network| {
+        let g = build_graph(net, &p);
+        let rn = g.rn_station.iter().position(|&s| s == 0).unwrap() + g.n_st;
+        (g.adj_off[rn] as usize..g.adj_off[rn + 1] as usize).find(|&e| g.adj_to[e] == 1).map(|e| g.adj_cost[e]).unwrap()
+    };
+    assert!((walk(&net) - p.xfer_min(2000.0) * p.w_xfer).abs() < 1e-4);
+    net.st_passage = vec![[0, 1]];
+    assert!((walk(&net) - 2000.0 / 2.0 / 60.0 * p.w_xfer).abs() < 1e-4, "{}", walk(&net));
+}
+
 #[test]
 fn common_lines_are_destination_specific_and_ignore_unhelpful_service() {
     let p = common_test_params();
@@ -437,6 +474,75 @@ fn a_change_off_a_line_takes_the_stations_other_lines() {
     }
     let via_m = r.iter().find(|x| x.1[1].st_from == 2).unwrap();
     assert!((via_m.1[1].wait_min - 7.5).abs() < 1e-4, "M's own headway: {}", via_m.1[1].wait_min);
+}
+
+/// T-1268: a lollipop line, out along a trunk T0-T1-J, round a loop of eight stops L1..L8 and back
+/// to J (and, as a balloon, back down the trunk to T0), 12 tph, 2 minutes a stop. A rider may
+/// change onto the same line at J where it leaves for a stop that is neither the one they came
+/// from nor the one their train goes on to: from L1 to L8 (or L8 to T0) they ride to J and take the
+/// line on, rather than ride round the loop.
+#[test]
+fn a_lollipop_line_changes_onto_itself_at_its_junction() {
+    let p = common_test_params();
+    // stations: T0 0, T1 1, J 2, L1..L8 3..=10
+    let lolly = |balloon: bool| {
+        let mut stops: Vec<u32> = (0..=10).collect();
+        stops.push(2);
+        if balloon {
+            stops.extend([1, 0]);
+        }
+        let n = stops.len();
+        let mut st: Vec<(f32, f32)> = vec![(-4000.0, 0.0), (-2000.0, 0.0), (0.0, 0.0)];
+        st.extend((0..8).map(|i| { let a = (i as f32 + 0.5) * std::f32::consts::PI / 4.0 - std::f32::consts::PI; (3000.0 + 3000.0 * a.cos(), 3000.0 * a.sin()) }));
+        Network {
+            st_x: st.iter().map(|s| s.0).collect(), st_y: st.iter().map(|s| s.1).collect(),
+            line_name: vec![String::new()], line_off: vec![0, n as u32], line_stops: stops,
+            hop_min: (0..n).map(|k| if k + 1 < n { 2.0 } else { 0.0 }).collect(), hop_back: vec![], line_speed_kmh: vec![0.0],
+            line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_crush: vec![200.0],
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![],
+        }
+    };
+    let g = build_graph(&lolly(true), &p);
+    let s = g.n_st;
+    let sk = skims(&g, &p);
+    // L1 to L8: 2.5 waiting, 2 to J, the change's 2 and 2.5, 2 to L8; round the loop it is 16.5
+    let across = 2.5 + 2.0 + 2.0 + 2.5 + 2.0;
+    assert!((sk.r[3 * s + 10] - across).abs() < 1e-4, "{} against {across}", sk.r[3 * s + 10]);
+    // trips with a direct train do not change: T0 to L1, L8 to T0 through J, T1 to T0 on both
+    assert!((sk.r[3] - (2.5 + 6.0)).abs() < 1e-4, "{}", sk.r[3]);
+    assert!((sk.r[10 * s] - (2.5 + 6.0)).abs() < 1e-4, "{}", sk.r[10 * s]);
+    assert!((sk.r[s] - (1.25 + 2.0)).abs() < 1e-4, "{}", sk.r[s]);
+    let mut od = vec![0.0; s * s];
+    od[3 * s + 10] = 100.0;
+    od[10 * s] = 30.0;
+    od[3] = 20.0;
+    let loads = assign(&g, &sk, &od);
+    // route nodes: run 0 = 0..14 (T0 T1 J L1..L8 J T1 T0), run 1 = 14..28 (T0 T1 J L8..L1 J T1 T0)
+    let (l1_back, j_on_to_l8) = (24, 16);
+    assert_eq!((loads.rn_board[l1_back], loads.rn_board[j_on_to_l8]), (100.0, 100.0));
+    assert_eq!(loads.rn_board.iter().sum::<f32>(), 250.0, "a change for L1 to L8 only");
+    assert_eq!(loads.seg[3] + loads.seg[4], 0.0, "nobody rides round to L8");
+    let r = super::super::trip::routes(&g, &sk, &p, 3, 10, 0.005);
+    assert_eq!(r.len(), 1);
+    let legs = &r[0].1;
+    assert_eq!((legs.len(), legs[0].change, legs[1].change), (2, 0.0, 2.0));
+    assert_eq!((legs[0].st_to, legs[1].st_from), (2, 2));
+
+    // as a 6, ending at J: L8 to T0 rides to J and takes the line back down the trunk; round
+    // the loop it is 22.5
+    let g6 = build_graph(&lolly(false), &p);
+    let sk6 = skims(&g6, &p);
+    let down = 2.5 + 2.0 + 2.0 + 2.5 + 4.0;
+    assert!((sk6.r[10 * s] - down).abs() < 1e-4, "{} against {down}", sk6.r[10 * s]);
+
+    // no riding out to board upstream on the line (T-575): the trains in from T1 leave riders
+    // behind for 20 minutes, and riding out to J for a train back in would cost 13
+    let mut g = g;
+    let (in_run0, in_run1) = (12, 14 + 12);
+    g.rn_left[in_run0] = 20.0;
+    g.rn_left[in_run1] = 20.0;
+    let sk = skims(&g, &p);
+    assert!((sk.r[s] - (1.25 + 20.0 + 2.0)).abs() < 1e-3, "{}", sk.r[s]);
 }
 
 #[test]

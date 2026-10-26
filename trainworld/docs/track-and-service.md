@@ -6,8 +6,9 @@ Full design, numbers and sources: `notes/T-008.md`.
 
 ### 6.1 Track and stations
 
-- **One track type**, anywhere: over roads at normal cost, over water dearer (6.4). No buildings to
-  demolish, no yards, no depots. Ground is flat (no terrain in M1).
+- **One track type**, anywhere: over roads at normal cost, over water and rough ground dearer
+  (6.4). No buildings to demolish, no yards, no depots. Ground is flat in shape: levels are heights
+  above or below the local ground, and the terrain only prices track (6.4, T-1270).
 - **Geometry: straights and circular arcs**, tangent-continuous, no transition curves or splines
   (exact lengths, one speed per curve, parallel tracks stay arcs). **Track is stored as points of
   intersection (PIs)**: it runs straight between them and cuts the corner at each with a circular
@@ -24,8 +25,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   clicks never change it; Shift held chains the next segment from its end, Backspace takes the last
   segment of a chain back (one undo step each), Escape or Enter stops. While drawing, the ghost
   shows the segment with its curve's radius and speed limit, the curve's whole circle faintly, and
-  the cursor the segment's length, average cost multiplier (level and water over its length),
-  price and tightest curve, the level placed and the lowest speed limit (T-085, T-411), or why it
+  the cursor the segment's length, average cost multiplier (level, water and terrain over its length),
+  price and tightest curve, the level placed and the lowest speed limit (T-085, T-411), the
+  terrain classes it crosses where they are charged (T-1270), or why it
   cannot be built; a click on a refused segment does nothing.
 - **The segment's shape**: from a track end, a node or track to open ground it is **one circular
   arc through the click, leaving along the track's heading** (a tangent arc; from a node or track,
@@ -45,8 +47,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   7,183 at 320 (`design_radius`, `TrackApi::set_design_speed`). It also sizes the lead-in curves of
   a drawn segment (`lead_in_capped`). Above 160, a corner the tool makes whose curve comes out
   wider than 1,796 m gets that radius set, since an auto radius is always capped at 1,796 m; so
-  drawn track keeps its shape, existing track is untouched, and a corner of a real line's snapped
-  route (fitted at 1,796 m) stays auto. Trains still run at most their top speed. A segment from a free point is straight. A segment ending on track or a node joins
+  drawn track keeps its shape and existing track is untouched. A real line's snapped route is
+  fitted with its auto radii capped at the design radius too, and its corners wider than 1,796 m
+  get theirs set the same way (T-1290). Trains still run at most their top speed. A segment from a free point is straight. A segment ending on track or a node joins
   it like a turnout, so it has the lead-in shape (a lead-in PI at each end). Refused: a curve under
   100 m (the ghost and circle red), a click within 5 degrees of straight behind the start ("turn
   back on itself": the circle grows without bound), and anything the edit refuses (water, crossing
@@ -273,8 +276,13 @@ Full design, numbers and sources: `notes/T-008.md`.
   ramping on the last leg before the water and the first after it that are long enough for a
   ramp, and with no such leg (water just past an end) the route is refused as below
   [T-727d, T-1187; `bridge::bridge_long`].
-  With no room on land (water within 200 m of the segment's start or end, so of a station or
-  junction it leaves, or one a curve leaves no vertex room for) the edit is refused as
+  A new end over water (a free click, not track already there) stays up at level 1, with no ramp
+  on its side, so a segment may end or start mid-river with one ramp, on the land side; quad
+  track's express pair, sharing that end, must stay up there too. A segment drawn at ground level
+  from or to an end already at level 1 is bridged the same way: it stays up to the water, or comes
+  down at once where there is room (400 m) to go up again before it [T-1269].
+  With no room on land otherwise (water within 200 m of the segment's start or end, so of a
+  station or junction it leaves, or one a curve leaves no vertex room for) the edit is refused as
   `BridgeNoRoom`: "There is not enough land for the bridge ramps, which are 200 m long."
 - **Stations** are nodes on a route, platform length 60-400 m in 20 m steps, level and free of
   other nodes along it; curved platforms are fine. Through a station the platform is centred on
@@ -288,10 +296,27 @@ Full design, numbers and sources: `notes/T-008.md`.
   Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot,
   and platforms within 100 m of each other count as one station (4.4). Stations whose platforms
   come within 50 m form a station complex, which a click on a station selects as one (T-249) and
-  the demand circles can show as one (8, T-146); the player can link any two stations up to 1 km
-  apart into one complex and unlink them (T-197, saved with the network as `Network::links`, not in
-  the undo history). Riders change between any two stations of a complex on foot, however far
-  apart (4.4, T-161).
+  the demand circles can show as one (8, T-146); the player can join any two stations up to 1 km
+  apart into one complex by a **passage** and remove it (T-197, T-1281; saved with the network as
+  `Network::links`, not in the undo history; links from older saves are passages, never charged).
+  Riders change between any two stations of a complex on foot, however far apart (4.4, T-161),
+  through a passage along the straight line at 2 m/s.
+- **Station upgrades** (T-1281, `track/upgrades.rs`, notes/T-1281.md), bought from the station
+  panel's row of icons like a flyover: into the blueprint with a blueprint station (built with
+  it, in the quote as "Station upgrades"), paid at once on a constructed one; removing one is
+  final and refunds nothing. Saved as bits 4 to 6 of the station's node flags (old readers ignore
+  them), on `StationData::upgrades`, so undo, renames and platform changes keep them. No upkeep.
+  - **Terminal** (turnback sidings): a line turning there holds its platforms only for the dwell
+    and turns in two sidings past the platform (6.2): 30 an hour at the default turnaround. The
+    map draws the two sidings between the running tracks past each platform end with track
+    beyond, from where the tracks part (zoom 14).
+  - **Park and ride**: a ride to or from the station costs 10 perceived minutes less ([demand-mode.md](demand-mode.md),
+    `kernel::ride_fixed`); a P after the station's name.
+  - **Waiting room**: a wait for a train there counts at 0.8 of its minutes in route and mode
+    choice (`kernel::wait_factor`, [demand-mode.md](demand-mode.md)).
+  - **Passage**: the link above, priced US$10M plus US$90M a km of the straight line between the
+    two stations (`upgrades::passage_price`); paid at once between constructed stations, else
+    built and paid with the second of them (`Network::passages`, quote row "Passages").
 - **Train length** (T-733, `TrackApi::set_line_cars`, `build_line` in `service.rs`): each line
   stores its cars, 0 for the most its shortest platform fits; a new line starts at the length last
   set on any line in the game (0 until one is set; the save keeps it, `newCars` in its header) [T-1094]; a set length
@@ -324,9 +349,16 @@ route conflict with every move on the other.
   160, 16 at 320 (T-517)
 - single-track section between passing points: run time + 60 s, counting both directions
 - platform track: dwell + 60 s per stopping train, 40 s per passing one, turnaround + 60 s
-  for a short-turn ending at a through station. A single-track platform shares both directions.
-- dead-end terminus: (layover + 60 s) / constructed platform tracks (a two-track terminus
-  with 3 min turnaround: 30/h). Unused blueprint extensions add no active platform capacity.
+  for a short-turn ending at a through station (15 an hour at the default 3 minutes). A
+  single-track platform shares both directions.
+- dead-end terminus: max(layover + 60 s, 200 s) / constructed platform tracks (a two-track
+  terminus with 3 min turnaround: 30/h; never more than 18 an hour on one track or 36 on two,
+  the Victoria line's best, however short the turnaround; `upgrades::pooled_turn_s`). Unused
+  blueprint extensions add no active platform capacity.
+- a station with a **terminal** (T-1281): a line turning there (ending, or reversing partway)
+  holds its arrival and departure platforms for dwell + 60 s each, and the terminal's sidings
+  for max(turnaround + 60 s, 200 s) / 2, pooled: 30 an hour at 3 minutes, 36 at 2. It still
+  crosses the other track (the 90 s move below). A dead end keeps its pooled rule.
 - double-track station reversal: 90 s per crossing move. Reversals share their arrival
   platform with same-direction traffic and cross opposite-direction through trains or reversals.
   Each move receives only the extra queue from crossing traffic, subtracting its own-move
@@ -337,7 +369,8 @@ route conflict with every move on the other.
   pooled terminus, and at a bare track end the same pooled terminus over the stub's tracks, with one
   side for the limiter below. It is no junction move and no through train there, and no track section joins
   across it. On top, a stopgap limiter per station and arrival side (`REVERSAL_LIMIT_S`): 300 s per
-  reversing train, so at most 12 reversals an hour a side. Both directions of a line reversing at a
+  reversing train, so at most 12 reversals an hour a side; 120 s (30 a side) at a station with a
+  terminal (`TERMINAL_REVERSAL_S`). Both directions of a line reversing at a
   station usually arrive on the same side, so one such line runs every 10 minutes each way at best;
   in its queueing delay a line's two directions count as one stream (one timetable), so a line
   alone there waits only once it is over the limit.
@@ -393,9 +426,9 @@ of service at its ends", "Each train waits 1m03s here at high demand", and for a
 see the junction and its flyover"). Each resource has a kind the app words by (`Capacity::wire_kind`,
 `game/capacityKinds.ts`): track, single track, platform, terminus, junction, flat crossing, a line
 turning on a through station's platform (the line ends there and holds the platform for its
-turnaround plus 60 s; helped by ending the line at a dead-end terminus), track several lines run
-over, a turn across the other track at a through station, and the limiter on reversing partway
-("Reversing at Nerul Village is full"). A line whose fleet is cut shows an
+turnaround plus 60 s; helped by building a terminal there), track several lines run
+over, a turn across the other track at a through station, the limiter on reversing partway
+("Reversing at Nerul Village is full"), and a terminal's sidings (T-1281). A line whose fleet is cut shows an
 alert under its schedule naming the full resource ("Turning on the platform at Nerul Village is
 full") and, per demand level, how many of its trains are held out of service (they wait at the
 ends of the line instead of running), with the resource's limit in trains an hour and what helps on
@@ -425,7 +458,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   deleting one reroutes by the fastest path, unless that path reverses where the old one did not,
   or marks the line broken. Removing a station a line stops at takes it out of the line's stops
   and routes the line through the rest the same way, else leaves it broken (T-859); one undo
-  restores both. A line may pass a station without stopping, and may stop at a station
+  restores both. The two pieces left either side of a removed station become one where they
+  would join under a platform (on one straight, alike in track count, type and built state;
+  `unjoin_near`), in the same edit (T-1299). A line may pass a station without stopping, and may stop at a station
   twice, never twice in a row: stops that would repeat in a row count once (`distinct_stops` in
   `sim/src/track/wasm/lines.rs`), so taking out a loop's only middle stop leaves a one-stop line.
   A line with one stop or none is inactive: no route, no trains, nothing refused (T-1242).
@@ -452,7 +487,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   a deletion never turns a circle into a balloon (the closing turn counts as a reversal). Run 0 goes
   round one way and run 1 the other, each from A to A with its own trains; a circle stands the dwell
   at A between laps, a balloon the turnaround. Every loop runs both ways (one-way loops are T-798's
-  stage L3).
+  stage L3). Stops closed into a loop whose path only runs out and back the same way (a
+  lollipop's loop stops taken out, leaving A, M, A) make no loop: a stop edit keeps the stops up
+  to where the path turns, which becomes the line's end, a terminus rather than a reversal
+  partway (T-1273, `edited_stops` in `sim/src/track/wasm/lines.rs`).
   Empty and one-stop lines are valid inactive drafts with an empty path. Stop edits use the same
   turn-valid route search for every insertion position, choosing minimum total path length plus
   the reversal penalty (append wins ties). Copying preserves stops, exact path, dwell, turnaround, cars,
@@ -570,13 +608,40 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
 - **Over or under water: 2x** the level's price. **Level 0 cannot be built over water**; a
   ground-level segment drawn across it becomes a bridge (6.1). Water comes from a mask in the
   pack (T-030).
+- **Terrain** (T-1270, Anita 2026-10-25, design notes/T-1270.md): each zone's ground is in four
+  classes, and track at elevation -1 to +3 costs the class's factor more; bored tunnels (-2, -3)
+  cost the same anywhere, so in the mountain class a -2 tunnel (US$99M a km) is cheaper than track
+  at ground level (US$112.5M) or a viaduct (US$225M). Over water the water's 2x stands alone. A ramp
+  is charged at the dearer of its two levels with the factor counted. Stations, junctions,
+  crossings and upkeep take no factor; nothing is refused for steep ground; grades do not slow trains.
+
+  | Class | Flat | Rolling | Hilly | Mountain |
+  |---|---|---|---|---|
+  | Mean slope | under 2° | 2-5° | 5-10° | 10° and over |
+  | Factor (`TERRAIN_FACTOR`) | 1 | 1.25 | 1.6 | 2.5 |
+
+  The classes come from GEDTM30 (OpenGeoHub's bare-earth terrain model at 240 m, CC BY 4.0) by
+  `pipeline/zone_terrain.py`: the mean slope over each cell of a world lattice of 1/240 degree
+  (about 460 m north-south), then a 3 x 3 majority filter, one file per zone
+  (`data/terrain/<id>.terrain`, a median of 13 KB, 56 MB for all 1,770 zones; `cost::ClassGrid`). The clock worker fetches a zone's
+  file with its water mask (zones.md 6), but no preview or edit waits for it: track drawn before it
+  lands is priced on flat ground and priced again when it lands, the blueprint quote following;
+  Construct waits for the files under the blueprint, so nothing is paid on a guess. Each edge keeps
+  its spans of rough ground (`Network::edge_terrain`, sampled every 100 m, `TERRAIN_STEP`); a file
+  landing reprices only the track inside its box. The track tool's tag gives the classes a segment
+  crosses ("Mountain 2.5x"), its multiplier includes the factor, and the blueprint breakdown has a
+  Terrain row per class with what the ground adds.
 - The Build tab shows only the multiplier and price of the level currently selected, not the
   whole table.
-- Stations (200 m, two platform tracks), US$M: 30 at grade, 60/80/110 at +1/+2/+3, 120/150/180 at
-  -1/-2/-3, about 1.5 km of track at their level underground and 0.7 km above (T-1245); scaled by
+- Stations (200 m, two platform tracks), US$M: a fixed 50 that every station has wherever it is
+  (platforms, halls, systems), plus a part by level, 25 at grade, 25 + 15 a level up, 50 + 25 a
+  level down: 75 at grade, 90/105/120 at +1/+2/+3, 125/150/175 at -1/-2/-3 (T-1267). So a ground
+  station costs half a -2 one, where ground track costs 0.45 of -2 track. Scaled by
   `0.4 + 0.6 x length / 200`.
 - Junction: 0.25 km of track at its level; a flyover adds 0.6 km one level away; flat
-  crossing 0.1 km (cheap to build, dear in delay). A crossover: two junctions, all told (6.1,
+  crossing 0.1 km (cheap to build, dear in delay). Station upgrades (6.1, T-1281): a terminal
+  1 km of track at the station's level (US$45M at grade, US$99M at -2, 2x over water), park and
+  ride US$20M, waiting room US$5M, a passage US$10M plus US$90M a km. A crossover: two junctions, all told (6.1,
   T-338); the blueprint breakdown counts it as two junction switches.
 - **Blueprint, then construct** (Anita, 2026-10-09). New track, stations and junctions are drawn
   as a **blueprint**: free, freely edited and undone, drawn faded, shown with its total cost. The
@@ -666,10 +731,21 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   follows one curve of trip length for the network, set in the Money tab [T-883, T-1112, T-1143,
   `app/src/game/fareCurve.ts`]: straight stretches through the player's three nodes, carried on
   past the last at its slope. The first node is the base fare at 0 km; each later one is farther and
-  never cheaper, so no fare is below the base or falls with distance. It starts as $1.50 + $0.10 a
-  km (nodes at 0, 20 and 100 km); an older save's two nodes, or a base and rate, load as the three
-  nodes on their line (one below $0 at 0 km starting at $0 instead), any other curve as the line
-  through its first and last node. A trip that changes lines pays it once on its whole length. In
+  never cheaper, so no fare is below the base or falls with distance. **Fares by country**
+  (T-1277, `app/src/game/income.ts`): the curve is set for India, the baseline, and each country
+  charges it times its fare scale: by default (its GDP per head at PPP over India's)^0.5 in tenths
+  (the US 2.8, the UK 2.3, China 1.6), or the player's own, 0.1 to 9.9 (`Fares.scales`, saved
+  with the fares; only the player's are kept). The curve starts as $0.5357 + $0.03571 a km (nodes at 0,
+  20 and 100 km), so New York starts at $1.50 + $0.10. A save from before carries no
+  `baseline` and its curve, New York's fares, is divided by the home country's scale as it loads.
+  An older save's two nodes, or a base and rate, load as the three nodes on their line (one below
+  $0 at 0 km starting at $0 instead), any other curve as the line through its first and last node.
+  The curve's fares are kept to a hundredth of a cent, so a fare typed where the scale is not 1
+  reads back as typed. A trip that changes lines pays it once on its whole length, at the scale of
+  the country it starts in: each zone's populations get the curve times their country's scale, and
+  the regional market the curve itself. Fare income takes each stretch at its starting stop's
+  country's scale and the base at the boarding stop's (`stopScales`, game/money.ts), and so does
+  the split between regions. In
   demand, route search charges the first stretch as a base and a rate per km on each ride
   (`set_fares`), and each station pair's cost adds what the rest of the curve adds at the expected
   km of its strategy (the riders' split over lines by their departures; `set_fare_curve`,

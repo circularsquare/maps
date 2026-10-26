@@ -152,7 +152,9 @@ institutions** (prisons, nursing homes and the like, T-234).
   the rest on the ratio of their costs [T-918]: rail's share is 1 / (1 + (rail / car)^3), so twice
   as dear gets 1 in 9, symmetric for the car, fading to nothing from 3 to 4 times either way; no
   rail constant (time and money alone), car ownership $2.00 a trip plus $0.13 a km and 7 minutes to
-  park [T-636, T-637, T-938]. The regional market keeps a damped logit with the plane [T-495, T-502].
+  park [T-636, T-637, T-938]. A fare dollar costs 5 x (GDP per head at PPP / $60,000)^-0.5
+  perceived minutes in the trip's country (the US 4.4, India 12.2), the car's money 3 everywhere
+  [T-1277, T-1166]. The regional market keeps a damped logit with the plane [T-495, T-502].
 - **No car ownership** [T-854]: everyone can drive, and the car stands for every way about but
   rail and walking. Instead, every car trip from a home pays parking at the home end, 0.4 of the
   destination's paid-space rule on the home zone's residents per km², so dense places drive less.
@@ -230,7 +232,7 @@ track is not offered (saves and imports keep theirs, which run as before) [T-733
 a train length in cars, by default the most its shortest platform fits (20 m cars) and never more
 [T-733], and ordinary trains (160 km/h) or high-speed trains (320 km/h on high-speed track, cars
 1.5x the price, dearer to run, a fleet of their own), the player's choice [T-817]. A line may reverse partway at a stop or a bare track end, standing its turnaround there, at most 12 reversals an
-hour per station side or track end, and a large icon marks the place [T-797]. A line whose last stop is its first
+hour per station side or track end, and a large icon marks the place [T-797]. A line ending at a through station turns on its platform, 15 an hour; a dead end pools its turns over its platform tracks, 30 an hour on two and never more than 36 [T-1281]. Stations take **upgrades** from a row of icons in their panel, into the blueprint or paid at once on a built station, none refunded [T-1281]: a terminal (turnback sidings past the platform, 30 an hour, the platforms free for other trains, reversing partway there 30 an hour a side; 1 km of track at its level), a park and ride (a ride to the station costs 10 perceived minutes less; US$20M), a waiting room (waits there count at 0.8 of their minutes; US$5M), and a passage to another station up to 1 km away (one complex, changes along the straight line at 2 m/s; US$10M plus US$90M a km), the one way to link stations. A line whose last stop is its first
 is a loop, closed and opened by clicking its first stop while editing stops: a circle carries on round
 through it, a balloon turns back there; both run both ways with half their (even) trains each way,
 holding at the first stop to the headway, and riders ride through a circle's first stop the short
@@ -246,12 +248,14 @@ running train: added ones enter at a terminal, removed ones leave at one, and th
 effect a moment ahead so it is drawn in step at any clock speed [T-206, T-1071]. A new game starts
 with $6B in an empty New York [T-805]; double track costs a base of US$90M a km times a
 multiplier per elevation (US$45M at grade), priced against cheap-country metros such as Korea's
-[T-805], a 200 m station about 1.5 km of track at its level underground (US$150M at -2) and 0.7 km
-above (US$30M at grade, US$60M at +1) [T-1245], a 20 m car costs US$2.5M, bought as a line's fleet grows and kept in the depot for any line
+[T-805], times the ground's terrain class (flat 1x, rolling 1.25x, hilly 1.6x, mountain 2.5x) at
+every elevation but the bored -2 and -3, so in mountains a tunnel is the cheaper way; Settings can
+shade the hills on the map [T-1270], a 200 m station a fixed US$50M plus a part by level (US$75M at grade, US$90M at +1,
+US$150M at -2) [T-1267], a 20 m car costs US$2.5M, bought as a line's fleet grows and kept in the depot for any line
 when it shrinks [T-028, T-631], and running costs are US$4 a train-km plus US$2 a car-km [T-807]. Constructed
 track and stations cost upkeep whether trains run or not, US$30k a km of double track and US$50k a station a game
 day, draining evenly; a line's profit takes off its share, each piece's split by the trains a day of the lines
-using it [T-867]. The fare is a curve of trip length through three points, never falling with distance: in the Money tab the player drags the points on a graph to set fares, or sets a base fare at 0 km and, for each of the two stretches after it, its end distance and its rate per km (at least $0) [T-626, T-1112, T-1143, T-1201].
+using it [T-867]. The fare is a curve of trip length through three points, never falling with distance: in the Money tab the player drags the points on a graph to set fares, or sets a base fare at 0 km and, for each of the two stretches after it, its end distance and its rate per km (at least $0) [T-626, T-1112, T-1143, T-1201]. The curve is set for India (a lower-middle-income baseline) and each country charges it times its fare scale, by default its GDP per head over India's to the power 0.5 in tenths (the US 2.8), or the player's own, set in the Money tab for the country of the selected station or city, else the one in view; a trip pays its starting country's [T-1277].
 **Points** measure each city's network: what it earned in the past 24 game hours, recomputed
 once a game hour, at 20 a rail trip (a rider's whole journey, changes included, counted in the
 city it starts in) and 1 a passenger-km; not a running total, and they unlock nothing yet [T-684,
@@ -283,7 +287,7 @@ A pastel style in Zen Maru Gothic, light or dark (Settings, Theme) with three co
 Panels take CSS tokens (`ui/style.css`); the map's light and dark colours (basemap, line casing, map
 ink) are one table, `game/shades.ts`, whose basemap palette is warm paper land, soft teal water and sage parks [T-676]. The network takes the line colours, the same in both themes. One dock on the left holds the icon tabs (Build, Lines, Stations, Money, Cities), the
 saved games button and the Settings gear, with the inspector under them, whose top edge never
-moves. The top bar holds the mode split (the goal number) of the city in view, or of the world when zoomed far out, the cash, the local time and date beside or over
+moves. The top bar holds the mode split (the goal number) of the city in view, or zoomed far out the world's (train rides over a fixed 25 billion rides a day, so well under 1%; T-1301), the cash, the local time and date beside or over
 a moving sky and a band in the demand level's colours (T-861), pause and three speeds. **Panels show what can change**: labels, numbers and states,
 no explanatory notes [T-253]. **Everything drawn that encodes a number has a hover**, always the
 game's own tag, never a browser tooltip [T-194, T-210]. No CSS transitions; trains are the only
