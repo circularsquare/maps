@@ -109,6 +109,29 @@ export interface NetworkBuffers {
   /** The draw anchor every position here is relative to (T-307, geo.ts): the clock worker's when
    * it built them. Absent (a synthetic network): the current one. */
   anchor?: Anchor;
+  /** per train sample, its stop-to-stop stretch (`Strokes.stretch` of its stroke, -1 none) */
+  sampleStretch?: Float32Array;
+  /** T-1029: the clock worker's number for this build, and `patch` when it was posted as changes to
+   * the build numbered `patch.base` (`NetPatch`) */
+  serial?: number;
+  patch?: NetPatch;
+}
+
+/**
+ * How a build differs from the one before it (T-1029, T-1028). `track` and `lines`: runs of
+ * (start, count, start in the old strokes or -1 where the segments are new), covering the new
+ * strokes in order. `same`: the fields left out of the message as identical to the old build's
+ * (the client puts them back, `mergeNet`). `edgeIds`: the edges in `edgePts` order, with `edgePts`
+ * then holding only the edges whose points changed.
+ */
+export interface NetPatch {
+  base: number;
+  track: Int32Array;
+  lines: Int32Array;
+  oldTrack: number;
+  oldLines: number;
+  same: string[];
+  edgeIds: Uint32Array;
 }
 
 /** Stroke segments into typed arrays that grow by doubling (number[] pushes cost ~25 ms for a
@@ -425,37 +448,55 @@ function speedAt(ph: Float32Array, first: number, count: number, x: number): num
   return Math.sqrt(Math.max(0, v * v + 2 * a * Math.max(0, x - s))) * 3.6;
 }
 
-/** `Strokes.trainSpeed` for the track (T-1271): at each built segment's middle, the fastest of
- * every running line with trains, in either direction. */
-function trainSpeeds(s: ClockState, edgeBase: Map<number, [number, Strokes]>, count: number): Float32Array {
-  const out = new Float32Array(count).fill(-1);
-  const r = s.render, edgeLen = new Map(s.edges.map((e) => [e.id, e.lengthM]));
-  const built = new Set(s.edges.filter((e) => e.built).map((e) => e.id));
-  for (const l of s.lines) {
-    if (!l.ok || !l.running || Math.max(...l.trains) <= 0) continue;
-    const runs = [0, 1].map((run) => {
-      const m = ((l.id * 2 + run) * 3 + SPEED_LEVEL) * 4;
-      return { first: r.meta[m], count: r.meta[m + 1], len: r.meta[m + 3] };
-    });
-    if (runs.some((p) => !(p.count > 0))) continue;
-    let off = 0;
-    for (const p of l.path) {
-      const e = p >> 1, len = edgeLen.get(e) ?? 0;
-      const at = edgeBase.get(e);
-      if (at && built.has(e)) {
-        const [base, st] = at;
-        const n = st.count;
-        const segLen = (j: number) => Math.hypot(st.seg[j * 4 + 2] - st.seg[j * 4], st.seg[j * 4 + 3] - st.seg[j * 4 + 1]);
-        const total = n ? st.dist[n - 1] + segLen(n - 1) : 0;
-        for (let j = 0; j < n; j++) {
-          const f = total > 0 ? (st.dist[j] + segLen(j) / 2) / total : 0.5;
-          const x0 = off + ((p & 1) === 1 ? 1 - f : f) * len;
-          const v = Math.max(speedAt(r.phases, runs[0].first, runs[0].count, x0), speedAt(r.phases, runs[1].first, runs[1].count, runs[1].len - x0));
-          if (v > out[base + j]) out[base + j] = v;
-        }
+/** A running line's train speeds (T-1271), per entry of its path: at the middle of each stroke
+ * segment of that edge, the faster of its two runs there, km/h; null where the edge is not built.
+ * Null for a line with no trains. */
+function lineTrainSpeeds(l: ClockState["lines"][number], r: ClockState["render"], strokesOf: (e: number) => Strokes | undefined, lens: number[], built: (e: number) => boolean): (Float32Array | null)[] | null {
+  if (!l.ok || !l.running || Math.max(...l.trains) <= 0) return null;
+  const runs = [0, 1].map((run) => {
+    const m = ((l.id * 2 + run) * 3 + SPEED_LEVEL) * 4;
+    return { first: r.meta[m], count: r.meta[m + 1], len: r.meta[m + 3] };
+  });
+  if (runs.some((p) => !(p.count > 0))) return null;
+  let off = 0;
+  return l.path.map((p, k) => {
+    const e = p >> 1, len = lens[k];
+    const st = strokesOf(e);
+    let out: Float32Array | null = null;
+    if (st && built(e)) {
+      const n = st.count;
+      out = new Float32Array(n);
+      const segLen = (j: number) => Math.hypot(st.seg[j * 4 + 2] - st.seg[j * 4], st.seg[j * 4 + 3] - st.seg[j * 4 + 1]);
+      const total = n ? st.dist[n - 1] + segLen(n - 1) : 0;
+      for (let j = 0; j < n; j++) {
+        const f = total > 0 ? (st.dist[j] + segLen(j) / 2) / total : 0.5;
+        const x0 = off + ((p & 1) === 1 ? 1 - f : f) * len;
+        out[j] = Math.max(speedAt(r.phases, runs[0].first, runs[0].count, x0), speedAt(r.phases, runs[1].first, runs[1].count, runs[1].len - x0));
       }
-      off += len;
     }
+    off += len;
+    return out;
+  });
+}
+
+/** The phase tables `lineTrainSpeeds` reads for a line, one after the other with each run's length. */
+function speedPhases(id: number, r: ClockState["render"]): Float32Array {
+  const parts: number[] = [];
+  let n = 0;
+  const at: [number, number][] = [];
+  for (const run of [0, 1]) {
+    const m = ((id * 2 + run) * 3 + SPEED_LEVEL) * 4;
+    const first = r.meta[m], count = r.meta[m + 1];
+    parts.push(r.meta[m + 1], r.meta[m + 3]);
+    at.push([first, count > 0 ? count : 0]);
+    n += count > 0 ? count * 4 : 0;
+  }
+  const out = new Float32Array(4 + n);
+  out.set(parts);
+  let o = 4;
+  for (const [first, count] of at) {
+    out.set(r.phases.subarray(first * 4, (first + count) * 4), o);
+    o += count * 4;
   }
   return out;
 }
@@ -518,20 +559,116 @@ function laneAlong(dr: LanePoints, f: number): number {
 }
 
 /**
- * What the last build made, per edge, line and station, so an edit rebuilds only the pieces whose
- * inputs changed (T-496). Every entry is checked against its inputs, never trusted, so a reused
- * piece is exactly what a full build would make; entries not seen in a build are dropped.
+ * A track edge's piece of a build: its strokes, ramps and speeds. A new object whenever any of them
+ * changes, so its identity says whether its segments are as in the build before (T-1028).
  */
-export interface NetCache {
-  edges: Map<number, { pts: Float32Array; a: number; b: number; flags: number; lanes: number; strokes: Strokes; ramps: number[] } & LanePoints>;
-  lines: Map<number, { path: number[]; stops: number[]; running: boolean; strokes: Strokes; firstStroke: number[] }>;
-  stations: Map<number, { platform: number; lat: number; first: number; ways: number[]; ax: number; ay: number; shape: [number, number, number, number]; line: ArrayLike<number> }>;
+interface EdgeEntry extends LanePoints {
+  /** the points as given (the clock worker's own array, the same object while the edge is unchanged) */
+  given: Float32Array;
+  /** a copy of them, kept */
+  pts: Float32Array;
+  a: number;
+  b: number;
+  flags: number;
+  lanes: number;
+  strokes: Strokes;
+  ramps: number[];
+  /** the edge speeds given, and per segment of `strokes` its speed limit (`Strokes.speed`) */
+  speedGiven: ArrayLike<number> | undefined;
+  vmin: number;
+  speed: Float32Array;
+  /** per segment, `Strokes.trainSpeed` */
+  train: Float32Array;
+}
+interface LineEntry {
+  path: number[];
+  stops: number[];
+  running: boolean;
+  strokes: Strokes;
+  firstStroke: number[];
+}
+/** A line's `lineTrainSpeeds` and what they were worked out from. */
+interface LineSpeeds {
+  path: number[];
+  lens: number[];
+  ph: Float32Array | null;
+  strokes: (Strokes | undefined)[];
+  built: boolean[];
+  out: (Float32Array | null)[] | null;
+}
+/** A line's train samples' strokes and lanes (`sampleStroke` less its base, `sampleLane`). */
+interface LineSamples {
+  c: LineEntry;
+  count: number;
+  step: number;
+  lens: number[];
+  rel: Int32Array;
+  lane: Float32Array;
 }
 
-export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map(), stations: new Map() });
+/**
+ * What the last build made, per edge, line and station, so an edit rebuilds only the pieces whose
+ * inputs changed (T-496), and the per-line work on them (T-1029). Every entry is checked against its
+ * inputs, never trusted, so a reused piece is exactly what a full build would make; entries not seen
+ * in a build are dropped. `last`: the build before, its pieces in stroke order, for `NetPatch`.
+ */
+export interface NetCache {
+  edges: Map<number, EdgeEntry>;
+  lines: Map<number, LineEntry>;
+  stations: Map<number, { platform: number; lat: number; first: number; ways: number[]; ax: number; ay: number; shape: [number, number, number, number]; line: ArrayLike<number> }>;
+  speeds: Map<number, LineSpeeds>;
+  samples: Map<number, LineSamples>;
+  serial: number;
+  last: { serial: number; track: EdgeEntry[]; lines: LineEntry[]; trackCount: number; lineCount: number; pts: Map<number, Float32Array> } | null;
+}
+
+export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map(), stations: new Map(), speeds: new Map(), samples: new Map(), serial: 0, last: null });
+
+/**
+ * A network posted as changes (`NetPatch`) made whole from the one before it, `prev`, in place: the
+ * fields left out taken from it (the run profiles from `service` when a train count came between),
+ * its edges' points from both. False, changing nothing that matters, when `prev` is not the build the
+ * changes are to.
+ */
+export function mergeNet(prev: NetworkBuffers | null, n: NetworkBuffers, service?: { phases: Float32Array; meta: Float32Array } | null): boolean {
+  const p = n.patch;
+  if (!p) return true;
+  if (!prev || prev.serial !== p.base || prev.track.count !== p.oldTrack || prev.lines.count !== p.oldLines) return false;
+  const from: Record<string, unknown> = { ...prev, ...(service ?? {}) };
+  for (const k of p.same) if (from[k] === undefined) return false;
+  const pts = new Map<number, Float32Array>();
+  for (const id of p.edgeIds) {
+    const v = n.edgePts.get(id) ?? prev.edgePts.get(id);
+    if (!v) return false;
+    pts.set(id, v);
+  }
+  for (const k of p.same) (n as unknown as Record<string, unknown>)[k] = from[k];
+  n.edgePts = pts;
+  return true;
+}
+
+/** Runs (start, count, old start or -1) making `parts` (in order, `count` of each) from `old`. */
+function strokeRuns<P extends object>(parts: P[], count: (p: P) => number, old: P[] | undefined): Int32Array {
+  const at = new Map<P, number>();
+  let o = 0;
+  for (const p of old ?? []) at.set(p, o), (o += count(p));
+  const runs: number[] = [];
+  let n = 0;
+  for (const p of parts) {
+    const c = count(p);
+    if (!c) continue;
+    const from = at.get(p) ?? -1;
+    const k = runs.length - 3;
+    if (k >= 0 && (from < 0 ? runs[k + 2] < 0 : runs[k + 2] >= 0 && runs[k + 2] + runs[k + 1] === from)) runs[k + 1] += c;
+    else runs.push(n, c, from);
+    n += c;
+  }
+  return new Int32Array(runs);
+}
 
 /** The renderer's buffers from a state. With `cache` (the clock worker's), pieces whose inputs are
- * as in the last build are reused; the result is the same either way. */
+ * as in the last build are reused, and `patch` says how the strokes differ from it; the buffers are
+ * the same either way. */
 export function networkFromState(s: ClockState, cache: NetCache = newNetCache()): NetworkBuffers {
   const r = s.render;
   const edgePts = new Map<number, Float32Array>();
@@ -540,13 +677,9 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   const hsrEdge = new Set<number>(s.edges.filter((e) => e.hsr).map((e) => e.id));
   /** edges whose polyline, ends and flags are as in the last build */
   const kept = new Set<number>();
-  const trackParts: Strokes[] = [];
   const edgesSeen: NetCache["edges"] = new Map();
-  // a taper adds at most two points to an edge
-  const speeds = new Float32Array(Math.max(0, r.edgePts.length / 3 + s.edges.length));
-  let speedAt = 0;
-  /** per edge id: its first track stroke segment and its strokes */
-  const edgeBase = new Map<number, [number, Strokes]>();
+  /** the edges in drawing order */
+  const trackOrder: number[] = [];
   const marks: number[] = [];
   // double track narrows to single track where the two meet at a plain node (T-658)
   const endCount = new Map<number, number>(), singleAt = new Set<number>();
@@ -562,45 +695,56 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   const order = s.edges.map((_, i) => i).sort((i, j) => Number(!s.edges[i].built) - Number(!s.edges[j].built) || i - j);
   for (const i of order) {
     const e = s.edges[i];
-    const pts = r.edgePts.subarray(r.edgeOff[i] * 3, r.edgeOff[i + 1] * 3);
-    edgePts.set(e.id, pts);
+    const given = r.edgeParts ? r.edgeParts[i] : r.edgePts!.subarray(r.edgeOff![i] * 3, r.edgeOff![i + 1] * 3);
+    // as in one zero-filled array of every edge's speeds (`ClockRender.edgeSpeed`)
+    const sg: ArrayLike<number> | undefined = r.edgeParts ? r.edgeSpeedParts?.[i] : r.edgeSpeed?.subarray(r.edgeOff![i], r.edgeOff![i + 1]);
     builtEdge.set(e.id, e.built);
     const flags = (e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0)) | (e.hsr ? F_HSR : 0);
     const lanes = (e.tracks === 2 ? 1 : 0) | (e.tracks === 2 && taperAt(e.a) ? 2 : 0) | (e.tracks === 2 && taperAt(e.b) ? 4 : 0);
     let c = cache.edges.get(e.id);
-    if (c && c.a === e.a && c.b === e.b && c.flags === flags && c.lanes === lanes && sameFloats(c.pts, pts)) kept.add(e.id);
-    else {
-      const own = pts.slice();
+    if (c && c.a === e.a && c.b === e.b && c.flags === flags && c.lanes === lanes && (c.given === given || sameFloats(c.pts, given))) {
+      kept.add(e.id);
+      if (c.given !== given) c = { ...c, given };
+    } else {
+      const own = given.slice();
       const lp = lanePoints(own, lanes);
       const b = new StrokeBuilder();
       b.add(lp.lpts, TRACK, e.id, flags, false, 0, undefined, lp.lane);
       const ramps: number[] = [];
-      rampMarks(pts, e.built ? 0 : 1, ramps);
-      c = { pts: own, a: e.a, b: e.b, flags, lanes, ...lp, strokes: b.build(), ramps };
+      rampMarks(own, e.built ? 0 : 1, ramps);
+      const strokes = b.build();
+      c = { given, pts: own, a: e.a, b: e.b, flags, lanes, ...lp, strokes, ramps, speedGiven: undefined, vmin: NaN, speed: new Float32Array(0), train: new Float32Array(strokes.count).fill(-1) };
+    }
+    if (c.speedGiven !== sg || (!sg && c.vmin !== e.vminKmh) || c.speed.length !== c.strokes.count) {
+      const n = c.strokes.count, speed = new Float32Array(n), src = c.src;
+      for (let j = 0; j < n; j++) {
+        const k = src ? src[j] : j;
+        speed[j] = sg ? (sg[k] ?? 0) : e.vminKmh;
+      }
+      c = sameFloats(speed, c.speed) ? { ...c, speedGiven: sg, vmin: e.vminKmh } : { ...c, speedGiven: sg, vmin: e.vminKmh, speed };
     }
     edgesSeen.set(e.id, c);
+    edgePts.set(e.id, c.pts);
     drawn.set(e.id, c);
-    trackParts.push(c.strokes);
+    trackOrder.push(e.id);
     for (const v of c.ramps) marks.push(v);
-    edgeBase.set(e.id, [speedAt, c.strokes]);
-    const src = c.src;
-    if (src) for (const k of src) speeds[speedAt++] = r.edgeSpeed?.[r.edgeOff[i] + k] ?? e.vminKmh;
-    else for (let k = r.edgeOff[i]; k < r.edgeOff[i + 1] - 1; k++) speeds[speedAt++] = r.edgeSpeed?.[k] ?? e.vminKmh;
   }
-  cache.edges = edgesSeen;
   const maxLine = s.lines.reduce((m, l) => Math.max(m, l.id), -1);
   const lineColours = new Uint8Array(Math.max(1, maxLine + 1) * 4);
   const lineCars = new Float32Array(r.lineTable.length / 4).fill(8);
   for (const l of s.lines) lineCars[l.id] = Math.max(1, l.cars);
-  const lineParts: Strokes[] = [];
+  const lineParts: LineEntry[] = [];
   let lineCount = 0;
   const linesSeen: NetCache["lines"] = new Map();
+  const samplesSeen: NetCache["samples"] = new Map();
   const lineIds: string[] = [];
   const onEdge = linesOnEdges(s);
   const edgeLen = new Map(s.edges.map((e) => [e.id, e.lengthM]));
   const edgeEnds = new Map(s.edges.map((e) => [e.id, e]));
-  const sampleStroke = new Int32Array(r.samples.length / 2).fill(-1);
-  const sampleLane = new Float32Array(r.samples.length / 2).fill(1);
+  const nSamples = r.samples.length / 2;
+  const sampleStroke = new Int32Array(nSamples).fill(-1);
+  const sampleLane = new Float32Array(nSamples).fill(1);
+  const sampleStretch = new Float32Array(Math.max(1, nSamples)).fill(-1);
   for (const l of s.lines) lineColours.set([...rgb(l.colour), 255], l.id * 4);
   for (const l of lineDrawOrder(s.lines)) {
     if (!l.ok) continue;
@@ -633,27 +777,71 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
       c = { path: l.path.slice(), stops: l.stops.slice(), running: l.running, strokes: lines.build(), firstStroke };
     }
     linesSeen.set(l.id, c);
-    lineParts.push(c.strokes);
+    lineParts.push(c);
     const base = lineCount;
     lineCount += c.strokes.count;
-    // each train sample's stroke segment (run 0 resampled every `step` m)
-    const firstStroke = c.firstStroke;
+    // each train sample's stroke segment (run 0 resampled every `step` m) and lane, per line (T-1029)
     const first = r.lineTable[l.id * 4], count = r.lineTable[l.id * 4 + 1], step = r.lineTable[l.id * 4 + 3];
-    let j = 0, end = edgeLen.get(l.path[0] >> 1) ?? 0;
-    for (let k = 0; k < count; k++) {
-      const at = k * step;
-      while (j < l.path.length - 1 && at > end) end += edgeLen.get(l.path[++j] >> 1) ?? 0;
-      const f = firstStroke[j] ?? -1;
-      sampleStroke[first + k] = f < 0 ? -1 : base + f;
-      // how far apart the tracks are there (T-658), along the edge's drawn points when it tapers
-      const p = l.path[j], dr = drawn.get(p >> 1), len = edgeLen.get(p >> 1) ?? 0;
-      if (dr) {
-        const along = len > 0 ? Math.max(0, Math.min(1, 1 - (end - at) / len)) : 0;
-        sampleLane[first + k] = laneAlong(dr, (p & 1) === 1 ? 1 - along : along);
+    const lens = l.path.map((p) => edgeLen.get(p >> 1) ?? 0);
+    let sm = cache.samples.get(l.id);
+    if (!sm || sm.c !== c || sm.count !== count || sm.step !== step || !sameArray(sm.lens, lens)) {
+      const firstStroke = c.firstStroke;
+      const rel = new Int32Array(count), lane = new Float32Array(count).fill(1);
+      let j = 0, end = lens[0] ?? 0;
+      for (let k = 0; k < count; k++) {
+        const at = k * step;
+        while (j < l.path.length - 1 && at > end) end += lens[++j];
+        rel[k] = firstStroke[j] ?? -1;
+        // how far apart the tracks are there (T-658), along the edge's drawn points when it tapers
+        const p = l.path[j], dr = drawn.get(p >> 1), len = lens[j] ?? 0;
+        if (dr) {
+          const along = len > 0 ? Math.max(0, Math.min(1, 1 - (end - at) / len)) : 0;
+          lane[k] = laneAlong(dr, (p & 1) === 1 ? 1 - along : along);
+        }
       }
+      sm = { c, count, step, lens, rel, lane };
     }
+    samplesSeen.set(l.id, sm);
+    const stretchOf = c.strokes.stretch!;
+    for (let k = 0; k < count; k++) {
+      const f = sm.rel[k];
+      sampleStroke[first + k] = f < 0 ? -1 : base + f;
+      if (f >= 0) sampleStretch[first + k] = stretchOf[f];
+    }
+    sampleLane.set(sm.lane, first);
   }
   cache.lines = linesSeen;
+  cache.samples = samplesSeen;
+  // the fastest train over each built segment (T-1271), from each line's speeds, kept per line
+  const speedsSeen: NetCache["speeds"] = new Map();
+  const trainOf = new Map<number, Float32Array>();
+  for (const l of s.lines) {
+    const lens = l.path.map((p) => edgeLen.get(p >> 1) ?? 0);
+    const ph = l.ok && l.running && Math.max(...l.trains) > 0 ? speedPhases(l.id, r) : null;
+    const strokes = l.path.map((p) => edgesSeen.get(p >> 1)?.strokes), built = l.path.map((p) => builtEdge.get(p >> 1) === true);
+    let sp = cache.speeds.get(l.id);
+    if (!sp || (sp.ph === null) !== (ph === null) || (ph && !sameFloats(sp.ph!, ph)) || !sameArray(sp.path, l.path) || !sameArray(sp.lens, lens) || strokes.some((x, k) => x !== sp!.strokes[k]) || built.some((x, k) => x !== sp!.built[k]))
+      sp = { path: l.path.slice(), lens, ph, strokes, built, out: ph ? lineTrainSpeeds(l, r, (e) => edgesSeen.get(e)?.strokes, lens, (e) => builtEdge.get(e) === true) : null };
+    speedsSeen.set(l.id, sp);
+    sp.out?.forEach((v, k) => {
+      if (!v) return;
+      const e = l.path[k] >> 1;
+      let t = trainOf.get(e);
+      if (!t) trainOf.set(e, (t = new Float32Array(v.length).fill(-1)));
+      for (let j = 0; j < v.length; j++) if (v[j] > t[j]) t[j] = v[j];
+    });
+  }
+  cache.speeds = speedsSeen;
+  const trackParts: EdgeEntry[] = [];
+  let trackCount = 0;
+  for (const id of trackOrder) {
+    let c = edgesSeen.get(id)!;
+    const t = trainOf.get(id);
+    if (t ? !sameFloats(t, c.train) : c.train.some((v) => v !== -1)) edgesSeen.set(id, (c = { ...c, train: t ?? new Float32Array(c.strokes.count).fill(-1) }));
+    trackParts.push(c);
+    trackCount += c.strokes.count;
+  }
+  cache.edges = edgesSeen;
   const served = new Map<number, number>();
   for (const l of s.lines) for (const st of new Set(l.stops)) served.set(st, (served.get(st) ?? 0) + 1);
   // whether a line runs through each node, so a station's box covers it (one line width since T-190)
@@ -683,11 +871,11 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   // The station dot sits on the track: its node position, from the local polyline of an edge
   // that ends there (exact), else converted from lng/lat by the label code.
   const nodeLocal = new Map<number, [number, number]>();
-  s.edges.forEach((e, i) => {
-    const a = r.edgeOff[i], b = r.edgeOff[i + 1] - 1;
-    nodeLocal.set(e.a, [r.edgePts[a * 3], r.edgePts[a * 3 + 1]]);
-    nodeLocal.set(e.b, [r.edgePts[b * 3], r.edgePts[b * 3 + 1]]);
-  });
+  for (const e of s.edges) {
+    const p = edgePts.get(e.id)!, b = p.length / 3 - 1;
+    nodeLocal.set(e.a, [p[0], p[1]]);
+    nodeLocal.set(e.b, [p[b * 3], p[b * 3 + 1]]);
+  }
   const stationsSeen: NetCache["stations"] = new Map();
   st.forEach((n, i) => {
     const p = nodeLocal.get(n.id) ?? toLocal(n.lng, n.lat);
@@ -729,9 +917,22 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   });
   const cx = s.crossings;
   if (cx) for (let k = 0; k + 4 < cx.length; k += 5) marks.push(cx[k], cx[k + 1], cx[k + 2] === 1 ? M_BAD : M_CROSSING, 0, cx[k + 4] === 1 ? 0 : 1, cx[k + 3]);
+  const speed = new Float32Array(trackCount), trainSpeed = new Float32Array(trackCount);
+  for (let i = 0, at = 0; i < trackParts.length; at += trackParts[i++].strokes.count) {
+    speed.set(trackParts[i].speed, at);
+    trainSpeed.set(trackParts[i].train, at);
+  }
+  const serial = ++cache.serial, last = cache.last;
+  const patch: NetPatch | undefined = last ? {
+    base: last.serial,
+    track: strokeRuns(trackParts, (p) => p.strokes.count, last.track),
+    lines: strokeRuns(lineParts, (p) => p.strokes.count, last.lines),
+    oldTrack: last.trackCount, oldLines: last.lineCount, same: [], edgeIds: Uint32Array.from(trackOrder),
+  } : undefined;
+  cache.last = { serial, track: trackParts, lines: lineParts, trackCount, lineCount, pts: edgePts };
   return {
-    track: { ...concatStrokes(trackParts, false), speed: speeds.subarray(0, speedAt), trainSpeed: trainSpeeds(s, edgeBase, speedAt) },
-    lines: concatStrokes(lineParts, true),
+    track: { ...concatStrokes(trackParts.map((p) => p.strokes), false), speed, trainSpeed },
+    lines: concatStrokes(lineParts.map((p) => p.strokes), true),
     lineIds,
     lineColours,
     stations,
@@ -753,9 +954,12 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     stationLine,
     sampleStroke,
     sampleLane,
+    sampleStretch,
     turnbacks,
     edgePts,
     anchor: anchor(),
+    serial,
+    ...(patch ? { patch } : {}),
   };
 }
 

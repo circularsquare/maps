@@ -747,9 +747,9 @@ function query(msg: Query) {
           for (const c of mcs) {
             const v = near ? c.part!.market_trip_between(q, day, near.place, near.gid, msg.end, msg.far, msg.farGid) : c.part!.market_trip(q, day, place, sq!.xy, sq!.share, msg.end, msg.far, msg.farGid);
             if (v[0] !== 1) continue;
-            if (!best || v[3] + v[20] > best[3] + best[20]) { marketTripNodesGlobal(v, viewOf(c, c.part!).nodeGlobal); best = v; }
+            if (!best || v[3] + v[20] + v[23] > best[3] + best[20] + best[23]) { marketTripNodesGlobal(v, viewOf(c, c.part!).nodeGlobal); best = v; }
           }
-          if (!best) { best = new Float64Array(22); best[0] = 1; best[14] = 2; best[13] = 1; best[6] = best[7] = -1; }
+          if (!best) { best = new Float64Array(24); best[0] = 1; best[14] = 2; best[13] = 1; best[6] = best[7] = -1; }
           answers.push(best);
           periods.push(q);
         }
@@ -988,9 +988,9 @@ function tripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
   }
 }
 
-/** The same for an `IntercityApi.market_trip` answer (T-866: head 22 since T-1229, pairs of 7, legs of 12). */
+/** The same for an `IntercityApi.market_trip` answer (T-866: head 24 since T-880, pairs of 7, legs of 12). */
 function marketTripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
-  const HEAD = 22, PAIR_LEN = 7, { LEG_LEN } = TRIP_LAYOUT;
+  const HEAD = 24, PAIR_LEN = 7, { LEG_LEN } = TRIP_LAYOUT;
   const g = (i: number) => { if (v[i] >= 0) v[i] = nodeGlobal[v[i]]; };
   const np = v[11], nr = v[12];
   for (let k = 0; k < np; k++) { g(HEAD + k * PAIR_LEN); g(HEAD + k * PAIR_LEN + 1); }

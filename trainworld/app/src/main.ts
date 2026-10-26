@@ -36,9 +36,10 @@ import { startRealmOverlay } from "./map/realmOverlay";
 import { openedZones } from "./game/openedZones";
 import { startZoneFocus } from "./map/zoneFocus";
 import { StationLabels } from "./map/stationLabels";
-import { networkFromState, stationIndexOf, tripAt } from "./map/network";
+import { stationIndexOf, tripAt } from "./map/network";
 import { Overlay } from "./map/overlay";
-import { pick } from "./map/pick";
+import { carryGrids, pick } from "./map/pick";
+import { carryEdgeGrid } from "./map/snapIndex";
 import { NetworkRenderer } from "./map/renderer";
 import { followTrain } from "./map/trainFollow";
 import { makeSynth } from "./map/synth";
@@ -136,6 +137,7 @@ map.getContainer().appendChild(blueprintBarRoot);
 render(h(BlueprintBar, null), blueprintBarRoot); // T-353: the Select tool's Disable and Enable at the top centre
 startSearch(map.getContainer()); // T-148: the search box at the map's upper right
 const renderer = new NetworkRenderer();
+renderer.checkPatch = params.get("patch") === "check"; // T-1029
 /** A click on the commuter bubbles (T-097; set below once the demand views start). */
 let demandClick: ((x: number, y: number, add: boolean, under?: boolean) => Selection | undefined) | null = null;
 let demandHover: ((x: number, y: number) => string[] | null) | null = null;
@@ -184,7 +186,7 @@ const client = new ClockClient();
 // T-895, T-1196: a game opened from the saves panel (the page reloaded into it) fits its network
 if (urlChoice?.slot || (urlChoice?.pending && !urlChoice.game)) client.fitNextGame();
 if (urlChoice) client.start(urlChoice);
-void startSaveSafety((dir) => client.post({ kind: "copyFolder", dir })); // T-1214: copies outside browser storage
+startSaveSafety();
 if (SYNTH) {
   const s = makeSynth(Math.round(num("lines", 500)), Math.round(num("trains", 10000)));
   renderer.setNetwork(s);
@@ -198,8 +200,11 @@ if (SYNTH) {
     const put = () => {
       // a train count: the same buffers with the new run profiles (T-229)
       if (s.service && renderer.net) renderer.setService(s.render.phases, s.render.meta);
-      else {
-        renderer.setNetwork(s.net ?? networkFromState(s)); // built in the worker (T-063)
+      else if (s.net) {
+        const was = renderer.net;
+        renderer.setNetwork(s.net); // built in the worker (T-063)
+        carryGrids(was, s.net, renderer.checkPatch); // T-1030
+        carryEdgeGrid(was, s.net, renderer.checkPatch);
         followTrack(renderer.net, world.peek()); // T-1047
       }
       views.networkChanged();

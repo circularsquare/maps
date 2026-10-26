@@ -155,11 +155,14 @@ export async function addToAccount(slots: SaveSlot[]) {
 
 // ---------------------------------------------------------------- account backups
 
-/** The account's backups of slot's game, newest first; none when it is not on this account. */
-export function accountBackups(slot: SaveSlot | undefined): AccountBackup[] {
+/** The account's backups of slot's game, newest first, when the account listed it (T-1395: then the
+ * saves panel shows these and not this browser's); null when it is not on this account or the
+ * account did not answer. */
+export function accountBackups(slot: SaveSlot | undefined): AccountBackup[] | null {
   const ctx = cloudContext();
-  if (!slot || !ctx?.on || !tiedTo(slot.cloud, ctx)) return [];
-  return accountList.value?.games.find((g) => g.id === slot.cloud!.id)?.backups ?? [];
+  if (!slot || !ctx?.on || !tiedTo(slot.cloud, ctx)) return null;
+  const g = accountList.value?.games.find((x) => x.id === slot.cloud!.id);
+  return g ? g.backups ?? [] : null;
 }
 
 /** An account backup opened as a new saved game, named as a restored backup is ("Tokyo at 9:41 AM"),

@@ -47,7 +47,7 @@ const layoutOf = (name, width = 340) => {
   const ms = performance.now() - t;
   const nm = (i) => opts(l, width).stopName(lay.rows[i].ref.line, lay.rows[i].ref.stop);
   console.log(`\n== ${name}: ${lay.rows.length} rows (${lay.rows.filter((r) => r.lStop < 0).length} side-only), ${lay.columns.length} columns, ${lay.width} px wide, ${ms.toFixed(1)} ms`);
-  for (const c of lay.columns) console.log(`  ${short(api.line_name(c.line)).padEnd(4)} ${c.side}${Math.floor(Math.abs(c.x - lay.spineX) / 8)} rows ${c.r0}-${c.r1} ${nm(c.r0)} .. ${nm(c.r1)}${c.up ? ' up' : ''}${c.down ? ' down' : ''}`);
+  for (const c of lay.columns) console.log(`  ${short(api.line_name(c.line)).padEnd(4)} ${c.side}${Math.floor(Math.abs(c.x - lay.spineX) / 7)} rows ${c.r0}-${c.r1} ${nm(c.r0)} .. ${nm(c.r1)}${c.up ? ' up' : ''}${c.down ? ' down' : ''}`);
   return { lay, col: (n) => lay.columns.filter((c) => short(api.line_name(c.line)) === n), nm };
 };
 
@@ -68,7 +68,7 @@ const layoutOf = (name, width = 340) => {
   const { col } = layoutOf('subway 6X');
   check(col('6').length === 2 && col('6').every((c) => c.side === 'R'), 'the 6X: both 6 locals on the right');
   check(col('4').length === 1 && col('5').length === 1 && col('4')[0].side === 'L' && col('5')[0].side === 'L', 'the 6X: the 4 and 5 on the left');
-  check(!col('J').length && !col('Z').length && !col('N').length, 'the 6X: the J, Z and N under three rows, so crossings');
+  check(col('J').length === 1 && col('Z').length === 1 && !col('N').length, 'the 6X: the J and Z beside for two rows (T-1391), the N crossing twice');
 }
 {
   const { lay, col } = layoutOf('subway 4');
@@ -77,6 +77,6 @@ const layoutOf = (name, width = 340) => {
 }
 {
   const { lay } = layoutOf('subway 4', 280);
-  check(Math.max(...lay.columns.map((c) => Math.floor(Math.abs(c.x - lay.spineX) / 8))) <= 2, 'the 4 at the narrowest dock (280 px): two columns a side at most');
+  check(lay.width <= 0.4 * 280 + 1, `the 4 at the narrowest dock (280 px): the drawing in 40% of the panel (${lay.width} px)`);
 }
 process.exit(fail ? 1 : 0);

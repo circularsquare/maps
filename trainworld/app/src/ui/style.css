@@ -481,7 +481,9 @@ rect.now { fill-opacity: .45; }
 .stops .route-mark.crossing::after { transform: rotate(-45deg); }
 /* T-1168: the stops with the related lines; the drawing (--gw wide, the line at --spine) is one SVG
    beside the rows, so the rows draw no bar or dot of their own */
-.h .related-toggle { align-self: center; margin-left: 6px; color: var(--muted); }
+.h .related-toggle { align-self: center; margin-left: 6px; color: var(--muted); width: 22px; min-width: 22px; height: 22px; }
+.h .related-toggle svg { width: 16px; height: 16px; stroke-width: 1.6; }
+.h .related-toggle svg path { stroke-width: 2.4; stroke-linecap: butt; }
 .h .related-toggle:hover { color: var(--text); }
 .h .btn.related-toggle.on { background: var(--tint); color: var(--text); }
 .related { position: relative; }
@@ -493,6 +495,15 @@ rect.now { fill-opacity: .45; }
 .stops.related-rows li { padding-left: calc(var(--gw) + 4px); }
 .stops.related-rows li::before, .stops.related-rows li::after { display: none; }
 .stops.related-rows .route-mark { left: calc(var(--spine) - 6px); z-index: 2; }
+/* T-1391: a stop row too tight for its name, time and bullets drops the time; a loop's bar goes on
+   past its first and last stops and curves round */
+.stops li[data-tight] .t { display: none; }
+.stops li.loop-end { min-height: 0; height: 12px; }
+.stops li.loop-end::after { display: none; }
+.stops li.loop-end::before { top: 0; bottom: 0; width: 8px; background: none; border: 6px solid var(--c); border-right: 0; }
+.stops li.loop-end.top::before { top: 2px; border-bottom: 0; border-top-left-radius: 11px; }
+.stops li.loop-end.bottom::before { bottom: 2px; border-top: 0; border-bottom-left-radius: 11px; }
+.stops.traffic li.loop-end::before { display: block; }
 /* T-1272: the Traffic view's diagram, each stretch as wide as its load (--w), in halves below a stop's
    dot and above the next; a crowded stretch has the map's darkening at strength --f and red edges
    at --e (the map's fullTrack colours, game/shadeTable.ts) */
@@ -657,7 +668,6 @@ rect.now { fill-opacity: .45; }
 .save-cloud svg { width: 15px; height: 15px; }
 button.save-add { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
 button.save-add:hover { color: var(--text); }
-.save-backup .save-cloud { margin: 0 5px 0 0; }
 .cash.sandbox { color: var(--muted); }
 .game-mode { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 /* T-927: the dock and top bar take no room either, so the world map fills the page behind the menu */
@@ -740,6 +750,8 @@ button.save-add:hover { color: var(--text); }
 .group.tool-pick > .btn:nth-child(n+3) { margin-top: -1px; }
 .group.tool-pick > .btn:nth-child(odd) { margin-left: 0; }
 .pane .price { margin-top: 4px; }
+.price-row { flex-wrap: nowrap; justify-content: space-between; margin-top: 4px; }
+.price-row .price { margin: 0; }
 #tool-notes { max-width: 640px; padding: 6px 10px; background: var(--bg); width: max-content;
               border-top: 1px solid var(--rule); border-right: 1px solid var(--rule); }
 #tool-notes p + p { margin-top: 4px; }
@@ -1010,8 +1022,6 @@ button.save-add:hover { color: var(--text); }
 }
 
 /* Browser save slots (T-068). */
-.save-slot-new { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
-.save-slot-new input { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--rule); background: var(--bg); }
 .save-slots { list-style: none; padding: 0; margin: 8px 0; }
 .save-slots > li { padding: 8px; margin: 0 0 6px; border: 1px solid var(--rule); }
 /* T-241: the game being played is marked with the accent, the others have an Open button */
@@ -1022,8 +1032,13 @@ button.save-add:hover { color: var(--text); }
 .saves-panel[open] { display: flex; flex-direction: column; }
 .saves-panel::backdrop { background: rgb(0 0 0 / 28%); }
 .saves-inner { padding: 16px 20px 20px; overflow-y: auto; min-height: 0; }
-.saves-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.saves-head h2 { font-size: 18px; margin: 0; }
+.saves-head { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.saves-head h2 { font-size: 18px; margin: 0; flex: 1; }
+/* T-1395: where the games are kept, beside Close */
+.save-head-mark { display: inline-grid; place-items: center; width: 28px; height: 28px; color: var(--muted); }
+.btn.save-head-mark { border-color: transparent; background: transparent; }
+.btn.save-head-mark:hover { color: var(--text); }
+.save-head-mark svg { width: 16px; height: 16px; }
 .save-card { display: flex; gap: 14px; align-items: stretch; }
 .save-thumb { flex: none; width: 240px; height: 160px; position: relative; overflow: hidden; background: var(--map-land); border: 1px solid var(--rule); }
 .save-thumb img { display: block; width: 100%; height: 100%; }
@@ -1044,16 +1059,19 @@ button.save-add:hover { color: var(--text); }
 .save-slot-title { display: flex; gap: 8px; justify-content: space-between; align-items: baseline; overflow-wrap: anywhere; }
 .save-playing { flex: none; padding: 0 5px; color: var(--bg); background: var(--accent); }
 .save-slots .pane-foot { margin-top: 6px; }
-.save-actions .save-open { border-color: var(--accent); }
-.save-by-hand { align-self: center; }
+.save-actions .save-open, .save-files .save-new { border-color: var(--accent); }
+.save-actions { align-items: center; }
 .save-name { cursor: text; }
+.save-pen { display: inline-grid; place-items: center; margin-left: 6px; padding: 0; border: 0; background: none; color: var(--muted); cursor: pointer; vertical-align: -2px; }
+.save-pen:hover { color: var(--text); }
+.save-pen svg { width: 14px; height: 14px; }
 .save-name-field { flex: 1; min-width: 0; padding: 1px 5px; font: inherit; font-weight: bold; border: 1px solid var(--rule); background: var(--bg); color: inherit; }
-.save-files { flex-wrap: wrap; justify-content: flex-start; }
-.save-safety { margin-top: 4px; }
-.save-safety p { margin: 2px 0; }
-/* T-744: the playing slot's backups, under its card */
-.save-backups { margin-top: 10px; }
-.save-backup { display: flex; gap: 8px; justify-content: space-between; align-items: baseline; }
+.save-files { display: flex; flex-wrap: wrap; gap: 8px; }
+.save-when { display: flex; align-items: center; }
+.save-account.warn { color: var(--warn); }
+/* T-744, T-1395: the playing slot's earlier versions, under its card */
+.save-backups { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.save-backup { display: flex; gap: 8px; justify-content: space-between; align-items: center; }
 .purpose-scope { display: flex; gap: 6px; margin: 8px 0; }
 .purpose-scope button { background: transparent; border: 1px solid currentColor; border-radius: 4px; padding: 4px 8px; color: inherit; opacity: .65; cursor: pointer; }
 .purpose-scope button.on { opacity: 1; background: #8882; }

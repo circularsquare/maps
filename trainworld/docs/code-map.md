@@ -109,7 +109,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   the clock hold, T-149, T-172; whether the start menu is up, T-677), `loadBar.ts` (the loading bar's
   stages, their shares and texts, each slot's remembered stage times and this browser's pace, T-1195),
   `memoryCheck.ts` (a save's memory estimate and the refusal when it will not fit, T-1197),
-  `saveSafety.ts` (persistent storage and the copies' folder, T-1214), `busy.ts` (the busy tag's
+  `saveSafety.ts` (persistent storage, T-1214), `busy.ts` (the busy tag's
   text, and work held a painted frame when it should take over 150 ms here, each kind's time per
   unit learnt as it runs; the clock client's big states, T-1200), `palette.ts`, `shades.ts` over `shadeTable.ts` (the light and dark themes' map
   colours: basemap, line casing, map ink, blueprint off, outside shade, thumbnails; the table has no
@@ -126,7 +126,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `overlay.ts` (the overlay canvas and frame loop,
   notes/T-015.md), `renderer.ts` (WebGL2 track, stations, trains; its shaders and their shared constants are in `rendererShaders.ts`, the platform crowds' sums in `platformCrowds.ts`), `gl.ts` (shader compile, uniform lookup, zoom interpolation, the GPU timer, canvas sizing, and the camera: `Camera` for the flat map or the globe, `PROJECT_GLSL` and `setCamera` for the shaders, `mercToCss` and `clipToCss` to CSS px, `behindHorizon`; T-033; shared by the renderer, `demandOverlay.ts`, `gradeMarks.ts`, `transferBubbles.ts`, `shadeLayer.ts`, `overlay.ts` and the 2D overlays), `network.ts` (the renderer's
   buffers, built in the clock worker from per-edge, line and station pieces kept between edits,
-  T-496), `geo.ts` (the draw anchor, T-307; `pxPerUnitAt` and `unitPerPxAt` for the zoom's scale), `anchorVersion.ts` (its version as a signal, T-317),
+  T-496, and posted as changes to the last, `NetPatch` and `mergeNet`, T-1029), `geo.ts` (the draw anchor, T-307; `pxPerUnitAt` and `unitPerPxAt` for the zoom's scale), `anchorVersion.ts` (its version as a signal, T-317),
   `live.ts` (the live map objects for UI code, set by main.ts; `hiddenOnGlobe` for DOM marks, T-033), `synth.ts` (stress network),
   `markData.ts` and `gradeMarks.ts` (the crossing, junction, ramp and portal marks: their data, and
   their draw pass, hit test and tag; T-629, T-655), `stationLife.ts` (from zoom 14, arrivals found
@@ -141,7 +141,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   for names and tags: `BoxGrid`, `tagLines`, `tipBeside`, `TAG_OFFSET_PX`, `screenBounds`).
 - Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
   second click's route, T-727d; only where a graph covers the click, `covers`, T-913), `pick.ts`, `cellIndex.ts` and `snapIndex.ts` (grids built in idle time that narrow a pick
-  and the build tools' snap to what is near the pointer, T-724), `tools.ts` (drawing track, placing stations, the line tool; on touch the tap, preview and confirm and the control bar's place, T-1260), `touch.ts` (whether the last press was a finger, and what the touch control bar offers), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
+  and the build tools' snap to what is near the pointer, T-724, and carried over an edit, T-1030), `tools.ts` (drawing track, placing stations, the line tool; on touch the tap, preview and confirm and the control bar's place, T-1260), `touch.ts` (whether the last press was a finger, and what the touch control bar offers), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
   (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `curveCircle.ts` (the circle of the segment being drawn, T-418),
   `blueprintBox.ts` (the Select tool's drag box, T-333, and dragging its pick, T-475; its state is `game/blueprintPick.ts`),
   `stopMarkers.ts` (the toggle markers of stop editing, T-233), `reversalMarks.ts` (the icon over
@@ -290,7 +290,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   a station is answered; dev server only; about 4 minutes), `t1205-memory.mjs` (a save, default
   all-China: lines built in three far zones and removed; once the zones close the workers well above
   their need restart, WASM falls, figures equal; `QS=&memFree=64` for New York; about 20 minutes on
-  all-China), `t801-no-grey.mjs` (no grey
+  all-China), `t1368-station-snapshot.mjs` (a new game: a line's stations removed one by one after
+  the line, then a station built on no line; demand's network has the save's stations after each;
+  about a minute), `t801-no-grey.mjs` (no grey
   cities: a map start in a fresh profile turning Homes on, its zoomed-out bubbles, a click selecting
   one; a new New York game's Philadelphia an ordinary bubble zoomed out, loaded by a pan with no
   market pack; screenshots `t801-*.png`), `t800-outlines.mjs` (a game started on the map, then a jump to Europe, shows
@@ -304,6 +306,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   ledger days after its clock gets their running cost and the hours' upkeep back; port 6165 by default),
   `t975-realms.mjs` (first the location button refused, in Lyon and in Sydney, and a map start showing every realm until its first station; then realms in a fresh profile: no bubbles behind the start menu, a Tokyo start shows Japan only with the shade cut around its zones, a click shows France, a reload hides it again, stations in two realms show both; a click on a hidden realm shows it, a drag does not, no circles at the world view; the zoomed-out frame and a pan across France and Germany measured; port 6165 by default),
   `t1071-train-count.mjs` (the real save's busiest line, its train count raised and lowered four times with the clock running: every train of every line placed each frame from the renderer's own buffers may move no further than top speed allows and come or go only at a terminal, and where new buffers arrive the old and new draw the same trains in the same places; `SPEED` 0 to 2 or -1 paused, `OP=headway`, `KEEP_FRAMES=1`; about 2 minutes; Rust side `sim/src/track/transition_tests.rs`),
+  `t1029-edit.mjs` (a series of track, station, service and undo edits on the real save or Japan's network at 6x throttling: the worker's and main thread's ms per edit under a CPU profile; `DUMP=1` hashes of the world, the drawn network and the GPU stroke buffers to compare across code or `?patch=` settings; 4-5 minutes for Japan),
   `t1283-edit-time.mjs` (the real save's busiest line switched to headways, stepped and set by hand: the clock worker's apply and total per edit, failing past 1 s; about a minute),
   `t1276-headway-steady.mjs` (the real save's busiest line on headways, its Medium headway stepped fast and slow both ways and typed with the clock running: every inspector change sampled, the schedule's three rows keep their order and never blank, and one headway shows one train count throughout, give or take the one train the landed edit may settle by; about 2 minutes),
   `t1277-fare-scale.mjs` (Node, no browser: a rider in New York and one in Mumbai on a small fixture line, set up as the demand worker sets up each zone, pay the starting curve times their own scale, a player's scale replaces the income's, and a fare weighs about the same at the default scales; seconds; run after any change to fare weights or scales),
@@ -329,15 +332,16 @@ Run from the maps root (`node trainworld/checks/<file>`).
   real track an ordinary segment; router, fit and preview times and the longest main-thread task;
   t727-snap.json, t727d-*.png; about 2 minutes, port 6170 by default),
   `t1196-switch.mjs` (two slots of the real save: Open reloads the page into the other, the card's
-  three stages in order, all of China refused, the copies' folder filled,
+  three stages in order, all of China refused,
   persistent storage asked; port 6146 by default), `t1251-save-by-hand.mjs` (two tabs on one slot:
   Save with autosave on, Save in the tab without the lock takes it and the other stops autosaving,
-  Ctrl+S takes it back, a double click renames in place and Escape cancels; port 6161 by default),
+  Ctrl+S takes it back, a double click or the pencil renames in place and Escape cancels; port 6161 by default),
   `t988-cloud.mjs` (games on the account against a local shonei-server it builds and runs, two
   profiles as two devices: the sign-in question, saved on A and opened on B, A stops, a save by
-  hand takes it back, offline play, a fork, a delete crossing over, a game kept here only;
-  t988-question-*.png, t988-saves-*.png; about 5 minutes, port 6169 by default),
-  `t743-slots.mjs` (through the saves panel: Load a file, New game and a backup's Restore as a copy
+  hand takes it back, offline play, a fork, a delete crossing over, a game kept here only, Make a
+  copy naming the copy in place, earlier versions as the account's list only;
+  t988-question-*.png, t988-saves-*.png, t1395/built-*.png; about 5 minutes, port 6169 by default),
+  `t743-slots.mjs` (through the saves panel: Open a file, New game and a backup's Open as a copy
   each open a new slot and leave every other slot's bytes as they were, the real save and
   artifacts/trainworld/recovered-day26.save both; two backups rotate at `?backupMs=4000`; a deleted
   slot's backups go; port 6150 by default), `t894-previews.mjs` (save pictures: a game in New York,
@@ -432,6 +436,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   the Node figures), `t1168-layout.mjs` (the diagram's layout of the real save's 2, 4 and 6X against
   the mockups), `t1168-shots.mjs <port>` (the line panel's related-lines view, light and dark,
   desktop and 390 px, into artifacts/trainworld/t1168s1/, with its hover, click and toggle),
+  `t1391-related.mjs <port> [prefix] [desktop|phone]` (the related-lines view on a new game built
+  for the edge cases: a line beside another ending at a shared station, a two-stop interline, a
+  line going on past the other's end, a line through one station twice, a loop with a line beside
+  it across its seam, an express, editing stops; screenshots into artifacts/trainworld/t1391/),
   `city-browser.mjs <id>` (a tier 0
   city: open, boundary, the top bar's split, a water crossing refused, a test line to a final solve,
   T-364; a row from its table, or from the file in `ROW`, which `pack_gate.py` writes for any pack;

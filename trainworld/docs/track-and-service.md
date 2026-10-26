@@ -27,7 +27,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   shows the segment with its curve's radius and speed limit, the curve's whole circle faintly, and
   the cursor the segment's length, average cost multiplier (level, water and terrain over its length),
   price and tightest curve, the level placed and the lowest speed limit (T-085, T-411), the
-  terrain classes it crosses where they are charged (T-1270), or why it
+  roughest terrain class it crosses where it is charged (T-1270, T-1394), or why it
   cannot be built; a click on a refused segment does nothing.
 - **The segment's shape**: from a track end, a node or track to open ground it is **one circular
   arc through the click, leaving along the track's heading** (a tangent arc; from a node or track,
@@ -623,7 +623,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   is charged at the dearer of its two levels with the factor counted. Stations, junctions,
   crossings and upkeep take no factor; nothing is refused for steep ground; grades do not slow trains.
 
-  | Class | Flat | Rolling | Hilly | Mountain |
+  | Class | Flat | Gentle slope | Hills | Mountains |
   |---|---|---|---|---|
   | Mean slope | under 2° | 2-5° | 5-10° | 10° and over |
   | Factor (`TERRAIN_FACTOR`) | 1 | 1.25 | 1.6 | 2.5 |
@@ -636,8 +636,8 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   lands is priced on flat ground and priced again when it lands, the blueprint quote following;
   Construct waits for the files under the blueprint, so nothing is paid on a guess. Each edge keeps
   its spans of rough ground (`Network::edge_terrain`, sampled every 100 m, `TERRAIN_STEP`); a file
-  landing reprices only the track inside its box. The track tool's tag gives the classes a segment
-  crosses ("Mountain 2.5x"), its multiplier includes the factor, and the blueprint breakdown has a
+  landing reprices only the track inside its box. The track tool's tag gives the roughest class a
+  segment crosses ("Mountains 2.5x", T-1394), its multiplier includes the factor, and the blueprint breakdown has a
   Terrain row per class with what the ground adds.
 - The Build tab shows only the multiplier and price of the level currently selected, not the
   whole table.

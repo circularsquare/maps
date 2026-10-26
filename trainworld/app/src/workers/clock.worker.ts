@@ -19,7 +19,7 @@ import { DAY_KINDS, dayKindOf } from "../game/days";
 import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
 import { shiftAt, timeZoneTable } from "../game/localTime";
 import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } from "../game/moneyTiming";
-import { networkFromState, newNetCache, runsTrains } from "../map/network";
+import { networkFromState, newNetCache, runsTrains, type NetworkBuffers } from "../map/network";
 import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes } from "../game/complexes";
 import { UPGRADE_BITS } from "../game/upgrades";
@@ -242,21 +242,21 @@ async function publishSlots(error?: string) {
   } catch { storageReady = false; }
   const taken = !!activeSlot && cloudTaken === activeSlot;
   const writable = !!activeLease && storageReady && !saveFailure && !taken;
-  const reason = saveFailure || (!storageReady ? "Browser storage is unavailable. Save to a file to keep this game."
+  const reason = saveFailure || (!storageReady ? "Browser storage is unavailable. Download this game as a file to keep it."
     : taken ? "Autosave is off here because this game was opened on another device."
-    : !activeLease ? testPage ? "Autosave is off in this test page. Save a copy to keep the game."
+    : !activeLease ? testPage ? "Autosave is off in this test page. Make a copy to keep the game."
       : leaseTaken ? "Autosave is off here because this game was saved in another tab."
-      : navigator.locks ? "Autosave is off here because this slot was opened in another tab. Save to a new slot, or close the other tab and reload."
-      : "This browser cannot protect save slots. Save to a file to keep this game." : undefined);
+      : navigator.locks ? "Autosave is off here because this slot was opened in another tab. Make a copy, or close the other tab and reload."
+      : "This browser cannot protect save slots. Download this game as a file to keep it." : undefined);
   send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups });
 }
 
 async function flushBeforeSwitch() {
-  if (dirty && (!activeLease || cloudTaken === activeSlot)) throw new Error("Save this game to a new slot before leaving it. You can also download a file and reload this page.");
-  if (!await autosave()) throw new Error("This game could not be saved. Save to a file before leaving it.");
+  if (dirty && (!activeLease || cloudTaken === activeSlot)) throw new Error("Make a copy of this game before leaving it, or download it as a file and reload this page.");
+  if (!await autosave()) throw new Error("This game could not be saved. Download it as a file before leaving it.");
 }
 
-/** T-743: New game, Load a file and a backup's restore each put the game in a slot of its own,
+/** T-743: New game, Open a file and a backup's restore each put the game in a slot of its own,
  * named `name`; the game being played is saved first and keeps its slot. `load` replaces the game
  * (throwing changes nothing). A new game's slot is written once something changes, a loaded one's
  * at once. A test page has no slot to keep: the game is replaced in the page and owns none. */
@@ -288,33 +288,6 @@ async function intoNewSlot(name: string, load: () => Promise<unknown> | void, wr
   if (!writeNow || !await autosave()) await publishSlots();
   slotChanges?.postMessage({ key });
 }
-/** T-1214: a folder the player picked outside browser storage, which a full disk once emptied: each
- * slot's last save is copied there as a .save file, written over at each save */
-let copyDir: FileSystemDirectoryHandle | null = null;
-const copyName = (key: string, name: string) => `${name.replace(/[\\/:*?"<>|]/g, "-").trim() || "Saved game"}${key.startsWith("slot-") ? ` (${key.slice(5, 9)})` : ""}.save`;
-async function copyOut(key: string, bytes: Uint8Array, name?: string) {
-  const dir = copyDir;
-  if (!dir) return;
-  try {
-    const file = await dir.getFileHandle(copyName(key, name ?? slotName(key, await readStored(key))), { create: true });
-    const w = await file.createWritable();
-    await w.write(bytes as Uint8Array<ArrayBuffer>);
-    await w.close();
-    send({ kind: "copied", at: Date.now() });
-  } catch (err) {
-    send({ kind: "copied", error: (err as Error).message });
-  }
-}
-/** T-1214: the folder picked (or let go): every slot is copied into it at once */
-async function setCopyFolder(dir: FileSystemDirectoryHandle | null) {
-  copyDir = dir;
-  if (!dir) return;
-  for (const s of await listSlots().catch(() => [])) {
-    const stored = await readStored(s.key);
-    if (stored) await copyOut(s.key, stored.bytes, s.name);
-  }
-}
-
 // T-988: games on the account (workers/cloud.ts, notes/T-988.md). The main thread posts the account;
 // each slot write goes up after it (a save by hand at once, autosaves at most every GAP_MS), and the
 // game opened is claimed on the account. All of it runs in one queue of its own, so the game's
@@ -486,7 +459,7 @@ async function pendingGame(p: Exclude<PendingLoad, { kind: "new" }>): Promise<{ 
 async function leave(msg: Extract<ToClock, { kind: "leave" }>) {
   try {
     if (!testPage) await flushBeforeSwitch();
-    if (msg.pending && !await writePending(msg.pending)) throw new Error("Browser storage is unavailable. Save to a file to keep this game.");
+    if (msg.pending && !await writePending(msg.pending)) throw new Error("Browser storage is unavailable. Download this game as a file to keep it.");
     activeLease?.release();
     activeLease = null;
     send({ kind: "left" });
@@ -940,6 +913,7 @@ function forget(all = false) {
     edgeDrawn.clear();
     edgeSpeedDrawn.clear();
     lineDrawn.clear();
+    postWhole();
     return;
   }
   for (const e of api!.dirty_edges()) { edgeDrawn.delete(e); edgeSpeedDrawn.delete(e); }
@@ -958,6 +932,7 @@ function markPoints(rows: Float64Array, stride: number): Float32Array {
 }
 
 function buildState(): ClockState {
+  const tq0 = performance.now();
   const a = api!;
   const ei = a.edges_info();
   const offEdges = new Set<number>(a.off_edges());
@@ -967,8 +942,6 @@ function buildState(): ClockState {
   const offStations = new Set<number>(a.off_stations());
   const edges: ClockEdge[] = [];
   const drawn: Float32Array[] = [];
-  const off: number[] = [0];
-  let total = 0;
   for (let i = 0; i < ei.length; i += 10) {
     const id = ei[i];
     edges.push({
@@ -989,13 +962,9 @@ function buildState(): ClockState {
       edgeSpeedDrawn.set(id, a.edge_render_speeds(id));
     }
     drawn.push(d);
-    total += d.length;
-    off.push(total / 3);
   }
-  const pts = new Float32Array(total);
-  const edgeSpeed = new Float32Array(total / 3);
-  edges.forEach((e, i) => edgeSpeed.set(edgeSpeedDrawn.get(e.id) ?? [], off[i]));
-  drawn.reduce((o, d) => (pts.set(d, o), o + d.length), 0);
+  const speedParts = edges.map((e) => edgeSpeedDrawn.get(e.id));
+  const tq1 = performance.now(); timing.sEdges = tq1 - tq0;
   const ni = a.nodes_info();
   const nodes: ClockNode[] = [];
   const ups = upgradesOf(a);
@@ -1006,6 +975,7 @@ function buildState(): ClockState {
       platform: ni[i + 7], stationBuilt: ni[i + 8] === 1, stationOff: offStations.has(ni[i]), upgrades: ups.get(ni[i]) ?? 0, name: ni[i + 7] > 0 ? a.node_name(ni[i]) : "", heading: ni[i + 9],
     });
   }
+  const tq2 = performance.now(); timing.sNodes = tq2 - tq1;
   const li = a.lines_info();
   const lines: ClockLine[] = [];
   const lu = a.line_upkeep(LEVEL_HOURS), upkeepOf = new Map<number, number>();
@@ -1033,6 +1003,7 @@ function buildState(): ClockState {
       loopKind: a.line_loop(id),
     });
   }
+  const tq3 = performance.now(); timing.sLines = tq3 - tq2;
   const nodeAt = new Map(nodes.map((n) => [n.id, n]));
   lineFirstStops = new Map(lines.map((l) => {
     const n = nodeAt.get(l.stops[0]);
@@ -1071,6 +1042,7 @@ function buildState(): ClockState {
     return out;
   });
   const crossings = markPoints(a.crossings_info(), 5);
+  timing.sRest = performance.now() - tq3;
   return {
     version: ++version,
     markers,
@@ -1087,9 +1059,8 @@ function buildState(): ClockState {
     lines,
     links: Array.from(a.station_links()),
     render: {
-      edgePts: pts,
-      edgeSpeed,
-      edgeOff: new Uint32Array(off),
+      edgeParts: drawn,
+      edgeSpeedParts: speedParts,
       phases: a.phases(),
       meta,
       samples,
@@ -1714,7 +1685,6 @@ function autosave(): Promise<boolean> {
       if (unwritten === key) unwritten = null;
       const backups = await listBackups(key).catch(() => null);
       if (backups && !(at - (backups[0]?.at ?? -Infinity) < backupMs)) await writeBackup(key, { bytes, at, day, city, ...summary });
-      void copyOut(key, bytes); // T-1214
       void cloudAfterWrite(key, force, fresh); // T-988
       savedAt = at;
       saveFailure = undefined;
@@ -1726,7 +1696,7 @@ function autosave(): Promise<boolean> {
       dirty = true;
       if (isPanic(err)) { panicLater(err, "autosave"); return false; } // not the browser's fault, and rebuilt then saved
       savedAt = Date.now(); // retry on the next autosave interval, rather than every tick
-      saveFailure = "The browser could not save this game. Save to a file to keep your changes.";
+      saveFailure = "The browser could not save this game. Download it as a file to keep your changes.";
       await publishSlots(saveFailure);
       return false;
     } finally { saveInFlight = null; }
@@ -1738,10 +1708,10 @@ function autosave(): Promise<boolean> {
  * the tab holding it, whose autosave then stops; an empty new game is written too. */
 async function saveByHand() {
   try {
-    if (testPage || !activeSlot) throw new Error("This test page keeps no saved game. Save a copy to keep it.");
+    if (testPage || !activeSlot) throw new Error("This test page keeps no saved game. Make a copy to keep it.");
     if (!activeLease) {
       const lease = await leaseSlot(activeSlot, true);
-      if (!lease) throw new Error("This browser cannot protect save slots. Save to a file instead.");
+      if (!lease) throw new Error("This browser cannot protect save slots. Download the game as a file instead.");
       hold(lease);
     }
     // T-988: a game another device opened is taken back, the account's copy kept there as a backup
@@ -1750,7 +1720,7 @@ async function saveByHand() {
     saveFailure = undefined;
     dirty = true;
     byHandNext = true;
-    if (!await autosave()) throw new Error(saveFailure ?? "This game could not be saved. Save to a file to keep it.");
+    if (!await autosave()) throw new Error(saveFailure ?? "This game could not be saved. Download it as a file to keep it.");
     send({ kind: "savedByHand", at: savedAt });
   } catch (err) {
     send({ kind: "savedByHand", error: (err as Error).message });
@@ -1765,7 +1735,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
     if (msg.action === "create") {
       const key = "slot-" + crypto.randomUUID();
       const lease = await leaseSlot(key);
-      if (!lease) throw new Error("This browser cannot protect save slots. Save to a file instead.");
+      if (!lease) throw new Error("This browser cannot protect save slots. Download the game as a file instead.");
       try {
         const bytesP = saveBytes(), summaryP = slotSummary();
         const bytes = await bytesP;
@@ -1968,52 +1938,190 @@ function sendState(service = false, effectiveAt?: number) {
   moneyLag = runLag(s.lines.filter((l) => l.ok && l.running).map((l) => ({ tph: l.tph[1], lengthM: l.lengthM, cars: l.cars, oneWayS: l.roundTrip[1] / 2 - l.turnaround })));
   // a line gaining its first train or losing its last changes the draw order (T-533)
   const running = s.lines.filter((l) => l.ok && runsTrains(l)).map((l) => l.id).join();
-  if (service && running === runningLines) {
+  const r = s.render;
+  // the per-edge arrays stay here (T-1029): the network carries what the main thread needs of them
+  s.render = { phases: r.phases, meta: r.meta, samples: r.samples, lineTable: r.lineTable };
+  if (service && running === runningLines && posted.net) {
     s.service = true;
     s.ms = [t1 - t0, 0];
     timing.state = t1 - t0;
-    const r = s.render;
-    postState(s, [r.edgePts.buffer, r.edgeOff.buffer, r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer, ...(r.edgeSpeed ? [r.edgeSpeed.buffer] : [])] as Transferable[]);
+    keepPosted("phases", r.phases);
+    keepPosted("meta", r.meta);
+    postState(s, [r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
+    timing.post = performance.now() - t1;
     sendTrips();
     return;
   }
   // The renderer's buffers are built here too, so the main thread only uploads them (T-063).
   runningLines = running;
-  const n = networkFromState(s, netCache);
-  s.net = n;
-  s.ms = [t1 - t0, performance.now() - t1];
+  const n = networkFromState({ ...s, render: r }, netCache);
+  const t2 = performance.now();
+  if (patchMode === "check") checkNet(n, networkFromState({ ...s, render: r }));
+  const out = (s.net = netForPost(n));
+  s.ms = [t1 - t0, t2 - t1];
   timing.state = t1 - t0;
-  timing.buffers = performance.now() - t1;
-  const r = s.render;
-  const bufs = new Set<ArrayBufferLike>([r.edgePts.buffer, r.edgeOff.buffer, r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
-  if (r.edgeSpeed) bufs.add(r.edgeSpeed.buffer);
-  for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.speed, st.trainSpeed, st.lane]) if (v) bufs.add(v.buffer);
-  for (const v of [n.lineColours, n.lineCars, n.stations, n.stationAxis, n.stationShape, n.junctions, n.marks]) if (v) bufs.add(v.buffer);
+  timing.buffers = t2 - t1;
+  const bufs = new Set<ArrayBufferLike>([r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
+  for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.speed, st.trainSpeed, st.lane, st.stretch]) if (v) bufs.add(v.buffer);
+  for (const k of SAME_FIELDS) { const v = out[k]; if (v) bufs.add(v.buffer); }
+  for (const v of out.edgePts.values()) bufs.add(v.buffer);
+  if (out.patch) for (const v of [out.patch.track, out.patch.lines, out.patch.edgeIds]) bufs.add(v.buffer);
   postState(s, [...bufs] as Transferable[]);
+  timing.post = performance.now() - t2;
   sendTrips();
 }
 
-/** the edges and nodes of the last state posted */
-let postedEdges: ClockEdge[] = [], postedNodes: ClockNode[] = [];
+// ---------------------------------------------------------------- posting only what changed (T-1029)
 
-/** Rows of plain fields, field for field. */
-function sameRows<T extends object>(a: T[], b: T[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    const x = a[i] as Record<string, unknown>, y = b[i] as Record<string, unknown>;
-    for (const k in x) if (x[k] !== y[k]) return false;
+/** `?patch=` of the page: "0" posts every state and network whole, "check" also builds each network
+ * from scratch and compares (the client compares the merged state too); otherwise changes only */
+let patchMode = "1";
+/** the network's typed arrays that, when as last posted, are left out of the message (`NetPatch.same`) */
+const SAME_FIELDS = ["phases", "meta", "samples", "lineTable", "lineCars", "lineColours", "sampleLane", "sampleStretch", "sampleStroke", "stations", "stationAxis", "stationShape", "stationLine", "stationLength", "stationLinkIdx", "stationLinks", "junctions", "marks"] as const;
+type SameField = (typeof SAME_FIELDS)[number];
+/** What the client holds: the last network posted (its serial, draw anchor, a copy of each
+ * `SAME_FIELDS` array and its edges' points) and the rows of the last state, by id. Cleared to post
+ * the next state whole. */
+const posted = {
+  net: null as null | { serial: number; anchor: number; pts: Map<number, Float32Array> },
+  arrays: new Map<string, ArrayBufferView>(),
+  edges: new Map<number, ClockEdge>(), nodes: new Map<number, ClockNode>(), lines: new Map<number, ClockLine>(),
+  edgeIds: [] as number[], nodeIds: [] as number[], lineIds: [] as number[],
+};
+function postWhole() {
+  posted.net = null;
+  posted.arrays.clear();
+  posted.edges.clear(); posted.nodes.clear(); posted.lines.clear();
+  posted.edgeIds = []; posted.nodeIds = []; posted.lineIds = [];
+}
+
+const bytesOf = (v: ArrayBufferView) => new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
+function sameBytes(a: ArrayBufferView | undefined, b: ArrayBufferView): boolean {
+  if (!a || a.byteLength !== b.byteLength || a.constructor !== b.constructor) return false;
+  if (a.byteLength % 4 === 0 && a.byteOffset % 4 === 0 && b.byteOffset % 4 === 0) {
+    const x = new Int32Array(a.buffer, a.byteOffset, a.byteLength / 4), y = new Int32Array(b.buffer, b.byteOffset, b.byteLength / 4);
+    for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return false;
+    return true;
   }
+  const x = bytesOf(a), y = bytesOf(b);
+  for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return false;
+  return true;
+}
+function keepPosted(k: string, v: ArrayBufferView) {
+  posted.arrays.set(k, (v as Float32Array).slice());
+}
+
+/** The network as it is posted: whole (a copy of its edges' points in one buffer), or with
+ * `patch` and the fields the client already has left out. */
+function netForPost(n: NetworkBuffers): NetworkBuffers {
+  const anchorNow = anchor().version;
+  const pts = n.edgePts;
+  const whole = patchMode === "0" || !n.patch || !posted.net || posted.net.serial !== n.patch.base || posted.net.anchor !== anchorNow;
+  const out: NetworkBuffers = { ...n };
+  if (whole) {
+    delete out.patch;
+    let total = 0;
+    for (const p of pts.values()) total += p.length;
+    const all = new Float32Array(total), mine = new Map<number, Float32Array>();
+    let at = 0;
+    for (const [id, p] of pts) {
+      all.set(p, at);
+      mine.set(id, all.subarray(at, at + p.length));
+      at += p.length;
+    }
+    out.edgePts = mine;
+    for (const k of SAME_FIELDS) { const v = n[k]; if (v) keepPosted(k, v); }
+  } else {
+    const patch = { ...n.patch!, same: [] as string[] };
+    for (const k of SAME_FIELDS) {
+      const v = n[k];
+      if (!v) continue;
+      if (sameBytes(posted.arrays.get(k), v)) {
+        patch.same.push(k);
+        (out as Record<SameField, unknown>)[k] = undefined;
+      } else keepPosted(k, v);
+    }
+    const changed = new Map<number, Float32Array>();
+    const was = posted.net!.pts;
+    for (const [id, p] of pts) if (was.get(id) !== p) changed.set(id, p.slice());
+    out.edgePts = changed;
+    out.patch = patch;
+  }
+  posted.net = { serial: n.serial!, anchor: anchorNow, pts };
+  return out;
+}
+
+/** T-1029's check (`?patch=check`): the network built from the cache against one built from scratch. */
+function checkNet(n: NetworkBuffers, full: NetworkBuffers) {
+  const bad: string[] = [];
+  const cmp = (k: string, a: unknown, b: unknown) => {
+    if (ArrayBuffer.isView(a) && ArrayBuffer.isView(b)) { if (!sameBytes(a, b)) bad.push(k); }
+    else if (JSON.stringify(a) !== JSON.stringify(b)) bad.push(k);
+  };
+  for (const k of Object.keys(full) as (keyof NetworkBuffers & string)[]) {
+    if (k === "serial" || k === "patch" || k === "anchor") continue;
+    const a = n[k], b = full[k];
+    if (k === "edgePts") {
+      const x = a as Map<number, Float32Array>, y = b as Map<number, Float32Array>;
+      if (x.size !== y.size || [...x.keys()].join() !== [...y.keys()].join() || [...y].some(([id, p]) => !sameBytes(x.get(id), p))) bad.push(k);
+    } else if (b && typeof b === "object" && "seg" in b) for (const f of Object.keys(b)) cmp(`${k}.${f}`, (a as any)?.[f], (b as any)[f]);
+    else cmp(k, a, b);
+  }
+  // the patch's runs rebuild the strokes from the last build's
+  if (bad.length) console.error(`T-1029 check: the network built from the cache differs from a full build in ${bad.join(", ")}`);
+}
+
+/** Rows field for field, arrays and typed arrays by value. */
+function sameValue(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== "object" || typeof b !== "object" || !a || !b) return Number.isNaN(a) && Number.isNaN(b);
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (!sameValue(a[i], b[i])) return false;
+    return true;
+  }
+  if (ArrayBuffer.isView(a)) return ArrayBuffer.isView(b) && sameBytes(a, b);
+  const x = a as Record<string, unknown>, y = b as Record<string, unknown>;
+  const kx = Object.keys(x);
+  if (kx.length !== Object.keys(y).length) return false;
+  for (const k of kx) if (!sameValue(x[k], y[k])) return false;
   return true;
 }
 
-/** Post a state, leaving out the edges and nodes when they are as last posted (T-648): copying
- * them to the main thread and back into objects was about half of the state's ~12 ms trip there on
- * New York's real network, and a line edit changes neither. */
+/** The rows that differ from those last posted, with every row's id in order (null when the ids
+ * are as last posted); `posted` takes the new rows. */
+function rowsDelta<T extends { id: number }>(rows: T[], by: Map<number, T>, ids: number[]): { ids: number[] | null; rows: T[] } {
+  const changed: T[] = [];
+  let sameIds = rows.length === ids.length;
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if (sameIds && ids[i] !== r.id) sameIds = false;
+    if (!sameValue(by.get(r.id), r)) changed.push(r);
+  }
+  const out = { ids: sameIds ? null : rows.map((r) => r.id), rows: changed };
+  by.clear();
+  for (const r of rows) by.set(r.id, r);
+  return out;
+}
+
+/** Post a state, its edges, nodes and lines as only those that changed since the last state posted
+ * (T-648, T-1029: copying them to the main thread and back into objects was most of a state's time
+ * there on a big network). */
 function postState(s: ClockState, transfer: Transferable[]) {
-  const sameEdges = sameRows(s.edges, postedEdges), sameNodes = sameRows(s.nodes, postedNodes);
-  postedEdges = s.edges;
-  postedNodes = s.nodes;
-  send({ kind: "state", state: { ...s, edges: sameEdges ? [] : s.edges, nodes: sameNodes ? [] : s.nodes, sameEdges, sameNodes } }, transfer);
+  if (patchMode === "0" || !posted.edgeIds.length && !posted.nodeIds.length && !posted.lineIds.length) {
+    rowsDelta(s.edges, posted.edges, posted.edgeIds);
+    rowsDelta(s.nodes, posted.nodes, posted.nodeIds);
+    rowsDelta(s.lines, posted.lines, posted.lineIds);
+    posted.edgeIds = s.edges.map((e) => e.id); posted.nodeIds = s.nodes.map((n) => n.id); posted.lineIds = s.lines.map((l) => l.id);
+    send({ kind: "state", state: s }, transfer);
+    return;
+  }
+  const de = rowsDelta(s.edges, posted.edges, posted.edgeIds), dn = rowsDelta(s.nodes, posted.nodes, posted.nodeIds), dl = rowsDelta(s.lines, posted.lines, posted.lineIds);
+  if (de.ids) posted.edgeIds = de.ids;
+  if (dn.ids) posted.nodeIds = dn.ids;
+  if (dl.ids) posted.lineIds = dl.ids;
+  const full = patchMode === "check" ? { edges: s.edges, nodes: s.nodes, lines: s.lines } : undefined;
+  send({ kind: "state", state: { ...s, edges: [], nodes: [], lines: [], delta: { edges: de, nodes: dn, lines: dl }, ...(full ? { checkRows: full } : {}) } }, transfer);
 }
 
 /** Lines of the boarding account worked out per step: a few ms on New York's real network, so an
@@ -2134,7 +2242,18 @@ function buildSnapshot(): NetworkSnapshot {
       ...(span.some((v) => v !== 1) ? { span: Array.from(span) } : {}),
     });
   }
+  snapStations = stationsKey(ni);
   return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: { ...fares }, ...(passages.length ? { passages } : {}) };
+}
+
+/** T-1368: the built stations as the last snapshot had them. An edit that changes only them (a
+ * station removed after its line, one built or moved on no line) changes no line's service for
+ * demand, yet demand's reach and nearby markets read them. */
+let snapStations = "";
+function stationsKey(ni = api!.nodes_info()): string {
+  const out: number[] = [];
+  for (let i = 0; i < ni.length; i += 10) if (ni[i + 7] > 0 && ni[i + 8] === 1) out.push(ni[i], ni[i + 1], ni[i + 2], ni[i + 3], ni[i + 7], ni[i + 9]);
+  return `${out.join(",")}|${api!.station_upgrades().join(",")}`;
 }
 
 /** T-1168: each node's station complex for `line_related`, over every station (blueprints too,
@@ -2349,6 +2468,7 @@ onmessage = (e: MessageEvent<ToClock>) => {
 };
 async function processMessage(msg: ToClock) {
   if (msg.kind === "init") {
+    if (msg.patch) patchMode = msg.patch;
     // World identity and coordinates never follow the map's focused city.
     city = HOME_CITY;
     packBase = msg.pack;
@@ -2456,7 +2576,6 @@ async function processMessage(msg: ToClock) {
   }
   await ready;
   if (msg.kind === "leave") return await leave(msg);
-  if (msg.kind === "copyFolder") return await setCopyFolder(msg.dir);
   if (!api) return;
   if (modelDown) return failAnswer(msg);
   if (isPreview(msg) && stale(msg.seq)) return sendStale(msg.seq);
@@ -2598,7 +2717,7 @@ async function handle(msg: ToClock) {
       const demand = api.dirty_demand_lines();
       sendState(service, service ? api.edit_time() : undefined);
       if (service) serviceEditMs = performance.now() - tA;
-      if (demand.length || msg.op.op === "undo" || msg.op.op === "redo") scheduleSnapshot();
+      if (demand.length || msg.op.op === "undo" || msg.op.op === "redo" || stationsKey() !== snapStations) scheduleSnapshot();
     }
     send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });
     if (r === 0) keep();
@@ -2741,6 +2860,10 @@ async function handle(msg: ToClock) {
       epoch = msg.epoch;
       sendTrips();
     }
+  } else if (msg.kind === "wholeState") {
+    // the client could not take a state as changes to the last (T-1029)
+    postWhole();
+    if (api) sendState();
   } else if (msg.kind === "anchor") {
     // the view travelled far (T-307): every drawn position again, relative to the new anchor
     if (msg.version !== anchor().version) {

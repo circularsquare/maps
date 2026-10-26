@@ -20,13 +20,14 @@ import { say, setEditSink, world } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd, StationAt, ToClock } from "./protocol";
 import { anchorVersion } from "../map/anchorVersion";
+import { mergeNet, type NetworkBuffers } from "../map/network";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
-import type { NewGameSpec, PendingLoad } from "./saveFile";
+import { readStored, type NewGameSpec, type PendingLoad, type SaveSlot } from "./saveFile";
 import type { CloudContext } from "./cloud";
 import type { FrameSpec } from "../game/frame";
 import { dataUrl } from "../game/dataBase";
 import { saveRefusal } from "../game/memoryCheck";
-import { copied, keepStorage } from "../game/saveSafety";
+import { keepStorage } from "../game/saveSafety";
 import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "../game/busy";
 import { addTerrainGrid } from "../game/terrain";
 
@@ -210,6 +211,24 @@ let current: ClockClient | null = null;
 export function exportGame() {
   current?.post({ kind: "export" });
 }
+/** A save's bytes downloaded as "anitabuilder-<name>-day-<day>.save". */
+function downloadSave(bytes: Uint8Array, name: string, day: number) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([bytes as BlobPart], { type: "application/octet-stream" }));
+  const named = name.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  a.download = `anitabuilder-${named || "game"}-day-${day}.save`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+}
+/** T-1395: a saved game not being played downloaded as its last save in this browser; false if it
+ * could not be read. */
+export async function exportSlot(slot: SaveSlot): Promise<boolean> {
+  const stored = await readStored(slot.key).catch(() => null);
+  if (!stored) return false;
+  downloadSave(stored.bytes, slot.name, stored.day);
+  return true;
+}
 /** Load a save file the player picked, into a new slot named after the file (T-743). */
 export async function importGame(file: File) {
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -370,7 +389,8 @@ export class ClockClient {
     let slot = choice.slot ?? "autosave";
     if (!choice.slot) try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
     const backupMs = Number(q.get("backupMs")) || undefined;
-    this.worker.postMessage({ kind: "init", city: this.cityId, pack: dataUrl(this.cityId), outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
+    this.patchMode = q.get("patch") ?? "1";
+    this.worker.postMessage({ kind: "init", city: this.cityId, pack: dataUrl(this.cityId), outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
     for (const [msg, transfer] of this.waiting) this.worker.postMessage(msg, transfer);
     this.waiting = [];
   }
@@ -516,9 +536,67 @@ export class ClockClient {
   /** A state waiting for its trips (T-648), and how long it may wait. */
   private held: Extract<FromClock, { kind: "state" }> | null = null;
   private holdTimer = 0;
-  /** the last state's edges and nodes, which the worker leaves out when unchanged (T-648) */
+  /** `?patch=` (T-1029) */
+  patchMode = "1";
+  /** the last state's edges, nodes and lines, by id and in order, which the worker posts as changes to
+   * them (T-648, T-1029) */
+  private rows = { edges: new Map<number, ClockState["edges"][number]>(), nodes: new Map<number, ClockState["nodes"][number]>(), lines: new Map<number, ClockState["lines"][number]>() };
   private lastEdges: ClockState["edges"] = [];
   private lastNodes: ClockState["nodes"] = [];
+  private lastLines: ClockState["lines"] = [];
+  /** the last network posted, as merged (`mergeNet`), and the run profiles posted since */
+  private lastNet: NetworkBuffers | null = null;
+  private lastService: { phases: Float32Array; meta: Float32Array } | null = null;
+
+  /** A state's edges, nodes and lines back in full from the last ones and its `delta` (T-1029);
+   * false when they cannot be (the worker is then asked for a whole state). */
+  private takeRows(st: ClockState): boolean {
+    const d = st.delta;
+    const put = <K extends "edges" | "nodes" | "lines">(k: K, last: ClockState[K], delta: { ids: number[] | null; rows: ClockState[K] } | undefined): ClockState[K] | null => {
+      const by = this.rows[k] as Map<number, ClockState[K][number]>;
+      if (!delta) {
+        by.clear();
+        for (const r of st[k]) by.set(r.id, r);
+        return st[k];
+      }
+      if (!delta.ids && !delta.rows.length) return last;
+      for (const r of delta.rows) by.set(r.id, r);
+      const ids = delta.ids ?? last.map((r) => r.id);
+      const out = ids.map((id) => by.get(id));
+      if (out.some((r) => !r)) return null;
+      if (delta.ids) {
+        by.clear();
+        for (const r of out) by.set(r!.id, r!);
+      }
+      return out as ClockState[K];
+    };
+    const edges = put("edges", this.lastEdges, d?.edges), nodes = put("nodes", this.lastNodes, d?.nodes), lines = put("lines", this.lastLines, d?.lines);
+    if (!edges || !nodes || !lines) return false;
+    st.edges = this.lastEdges = edges;
+    st.nodes = this.lastNodes = nodes;
+    st.lines = this.lastLines = lines;
+    if (st.checkRows) {
+      const bad = (["edges", "nodes", "lines"] as const).filter((k) => JSON.stringify(st[k]) !== JSON.stringify(st.checkRows![k]));
+      if (bad.length) console.error(`T-1029 check: the ${bad.join(", ")} rebuilt from changes differ from the whole state's`);
+      delete st.checkRows;
+    }
+    delete st.delta;
+    return true;
+  }
+
+  /** The state's network made whole from the last (`mergeNet`); false when it cannot be. */
+  private takeNet(st: ClockState): boolean {
+    if (st.service) {
+      this.lastService = { phases: st.render.phases, meta: st.render.meta };
+      return true;
+    }
+    const n = st.net;
+    if (!n) return true;
+    if (!mergeNet(this.lastNet, n, this.lastService)) return false;
+    this.lastNet = n;
+    this.lastService = null;
+    return true;
+  }
 
   private release() {
     window.clearTimeout(this.holdTimer);
@@ -538,7 +616,7 @@ export class ClockClient {
     if (this.deferred) { this.deferred.push(msg); return; }
     if (msg.kind === "state" && !this.stateBusy) {
       const st = msg.state;
-      const units = (st.sameEdges ? this.lastEdges.length : st.edges.length) + (st.sameNodes ? this.lastNodes.length : st.nodes.length) + 1;
+      const units = (st.delta ? st.delta.edges.rows.length + st.delta.nodes.rows.length : st.edges.length + st.nodes.length) + 1;
       const kind = this.stateKind(st);
       if (expectedMs(kind, units, STATE_MS_GUESS[kind]) > BUSY_MS) {
         this.deferred = [msg];
@@ -622,10 +700,13 @@ export class ClockClient {
         break;
       case "state": {
         const st = msg.state;
-        if (st.sameEdges) st.edges = this.lastEdges;
-        else this.lastEdges = st.edges;
-        if (st.sameNodes) st.nodes = this.lastNodes;
-        else this.lastNodes = st.nodes;
+        // T-1029: a state that cannot be made whole is dropped, and the worker posts the next whole
+        if (!this.takeRows(st) || !this.takeNet(st)) {
+          console.error("T-1029: a state could not be taken as changes to the last; asking for it whole");
+          this.lastNet = null;
+          this.post({ kind: "wholeState" });
+          break;
+        }
         const a = st.anchor ? this.anchorOf(st.anchor) : anchor();
         if (a === anchor() && world.peek()) {
           this.held = msg;
@@ -673,9 +754,6 @@ export class ClockClient {
         if (msg.from === "file") say(`Game loaded, day ${Math.floor(msg.clock / 86400)}.`);
         if (msg.from === "new" && !msg.error) say("New game started.");
         break;
-      case "copied":
-        copied(msg.at, msg.error);
-        break;
       case "left": {
         const then = this.onLeft;
         this.onLeft = null;
@@ -684,14 +762,8 @@ export class ClockClient {
         break;
       }
       case "exported": {
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(new Blob([msg.bytes as BlobPart], { type: "application/octet-stream" }));
         const { slots, active } = saveSlotsState.value;
-        const named = (slots.find((s) => s.key === active)?.name ?? "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "")
-          .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
-        a.download = `anitabuilder-${named || this.cityId}-day-${msg.day}.save`;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+        downloadSave(msg.bytes, slots.find((s) => s.key === active)?.name || this.cityId, msg.day);
         break;
       }
       case "saveSlots": {

@@ -87,7 +87,7 @@ export function SettingsTab() {
           <span data-tip="Draw real-world railways on the base map">Real network</span>
         </Check>
         <Check checked={d.hillshade} onChange={(v) => setDisplay("hillshade", v)}>
-          <span data-tip="Shade hills and mountains on the base map. Track on rolling ground costs 1.25 times as much, on hilly ground 1.6 and on mountains 2.5, except in bored tunnels (elevation -2 and -3).">Terrain</span>
+          <span data-tip="Shade hills and mountains on the base map. Track on gentle slopes costs 1.25 times as much, on hills 1.6 and on mountains 2.5, except in bored tunnels (elevation -2 and -3).">Terrain</span>
         </Check>
       </div>
       <div class="h">Riders on trains and platforms</div>

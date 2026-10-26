@@ -100,8 +100,8 @@ try {
       for (const s of left) log.push(['station', s.num, (await c.edit({ op: 'removeStation', node: s.num }))?.ok]);
       await new Promise((r) => setTimeout(r, 2000));
     }
-    // (on the all-China save the demand network kept two zones' removed stations, 2026-10-26: an edit
-    // on a line of the save's, made and undone, sends the network again)
+    // (T-1368: demand kept removed stations until another edit; fails below, and an edit on a line of
+    // the save's, made and undone, sends the network again so the rest can run)
     await new Promise((r) => setTimeout(r, 5000));
     if (window.twDemand.client.latest().stations.length > window.tw.world.value.save.stations.length) {
       const w = window.tw.world.value, l = w.save.lines.find((l) => w.lineStats[l.id]?.status === 'running');
@@ -154,6 +154,7 @@ try {
   out.inSolve = await page.evaluate(() => window.__t1205.inSolve);
 
   const sum = (r) => r.memory.reduce((a, m) => a + m.wasm, 0);
+  report('removed stations reached demand', !out.removed.some((e) => e[0] === 'nudge'));
   report('restart once the zones closed', began, infos.filter((s) => /restarted/.test(s)).join(' | ').slice(0, 500));
   report('no restart inside a solve', out.inSolve.length === 0, JSON.stringify(out.inSolve));
   report('memory given back', sum(after) < sum(closed) - 256, `(workers' WASM ${sum(first)} MB loaded, ${sum(built)} with ${added.length} more items open, ${sum(closed)} closed, ${sum(after)} after; Chrome ${first.chromeMB}, ${built.chromeMB}, ${closed.chromeMB}, ${after.chromeMB} MB)`);
