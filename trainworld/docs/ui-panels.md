@@ -262,7 +262,7 @@ choice (Train share by default [T-833], which shows two colour pickers labelled 
 100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), the Day choice (Average, Weekday, Sat, Sun;
 "Demand shown for", below) [T-703], Show (trains, station names, capacity markers, full stretches [T-1152: the Traffic view's red edges, on by default, its hover saying so; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
-[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, place names, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, and the real network's faint opacity scales with it, though not while track snaps to it; `map/basemap.ts`) [T-1249], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, Game (normal or sandbox, T-728), then,
+[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266], and the real network's faint opacity scales with it, though not while track snaps to it; `map/basemap.ts`) [T-1249], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, Game (normal or sandbox, T-728), then,
 when accounts are on, Account [T-1139]: who is signed in ("Signed in as alice", "Signed in with
 Google" or "Not signed in") and a button, Account settings or Sign in, that opens the same account
 panel as the icon at the top and the start menu's (sign in, recovery email, change password, sign
@@ -358,7 +358,7 @@ hover anywhere on the graph names the fare at that distance, a node's hover its 
 and the ways it drags. The axis labels are 11 px in the graph's own units. Below the graph one row
 per node [T-1201, T-1234], no rules between them and none wrapping at the dock's narrowest width,
 their steppers lined up in one column: "Base fare" with its fare in a stepper, then each stretch as
-`0-` [20] `km`, only its end distance in a box (typed, no steps), and its rate in a stepper,
+`0 -` [20] `km` [T-1264], only its end distance in a box (typed, no steps), and its rate in a stepper,
 [+$0.07] `per km`, the unit outside the box; the second "Past 20 km" with its rate only (following
 the first's end; the last node's distance changes no fare, so it is only dragged). The base fare
 steps by $0.25; a rate to the next whole cent above or below ($0.138 to $0.14 or $0.13), or by a
@@ -401,7 +401,8 @@ reads "No stations yet."
   panel over a dimmed page, closed by Esc, its close button or a click outside.
 - One card per browser slot: a 240 x 160 picture of its network, drawn by the clock worker when the
   slot is saved, at twice that resolution, on the land colour of the theme it was saved in [T-543].
-  The picture is one panel per city with stations, the most stations first, at most four, leaving
+  The picture is one panel per city with stations (each station in its zone by the coarse outlines,
+  [zones.md](zones.md) "A place's zone", T-1265), the most stations first, at most four, leaving
   out a city with under 8% of the biggest one's stations (a fringe of its network) [T-894]:
   one fills it; two sit side by side; three are a large panel on the left (60%) and two stacked on
   the right; four are a 2 x 2 grid. Panels are split by a thin rule in the casing colour. Each panel

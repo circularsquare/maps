@@ -1,5 +1,5 @@
 // T-1201, T-1234: the Money tab's fare rows as rates, at the dock's narrowest width (280 px). On a
-// new game (default nodes 0, 20 and 100 km on $1.50 + $0.10 a km): the rows read "0-[20]km +$0.10 per
+// new game (default nodes 0, 20 and 100 km on $1.50 + $0.10 a km): the rows read "0 - [20] km +$0.10 per
 // km" and "Past 20 km" (the end distance a typed box with no steps, the last row's none); no row
 // wraps; no "10 km ride" line; a rate's step goes to the next whole cent ($0.138 to $0.14 or $0.13);
 // stepping or typing a stretch's rate moves its node's fare and every later node's by the same

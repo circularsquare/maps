@@ -5,15 +5,15 @@
 // bar shows the local time of the place in view.
 //
 // A place's offset is its zone's `utcOffset` (the registry, a whole hour of standard time, no
-// daylight saving), the zone being the nearest registered centre within reach (`cityWithin`, the
-// same rule as the track model's `localtime.rs`); a place in no zone takes its longitude's nominal
-// offset, `round(lon / 15)`, until its region is registered. A line runs on the local time of its
+// daylight saving), the zone being the nearest registered centre within reach (`centreWithin`,
+// the track model's `localtime.rs` rule, which has no outlines); a place in no zone takes its
+// longitude's nominal offset, `round(lon / 15)`, until its region is registered. A line runs on the local time of its
 // first stop (sim/src/track/localtime.rs).
 //
 // Plain data and one signal: the clock worker imports it too.
 
 import { signal } from "@preact/signals";
-import { CENTRE_REACH_M, CITIES, cityById, cityWithin, REGISTRY } from "./cities";
+import { CENTRE_REACH_M, CITIES, cityById, centreWithin, REGISTRY } from "./cities";
 
 /** The UTC offset of the game clock, hours. */
 export const CLOCK_UTC_OFFSET = REGISTRY.clockUtcOffset ?? -5;
@@ -23,7 +23,7 @@ export const lonOffset = (lon: number): number => Math.round(lon / 15);
 
 /** Whole-hour standard UTC offset at (lon, lat), hours. */
 export function utcOffsetAt(lon: number, lat: number): number {
-  const id = cityWithin(lon, lat);
+  const id = centreWithin(lon, lat);
   return (id ? cityById(id).utcOffset : undefined) ?? lonOffset(lon);
 }
 

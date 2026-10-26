@@ -10,7 +10,7 @@
 
 import { computed, signal } from "@preact/signals";
 import { clock } from "./clock";
-import { cityById, cityWithin } from "./cities";
+import { cityById, cityWithin, outlinesIn } from "./cities";
 import { holidayName, kindOfIn, type HolidayData } from "./holidayCalendar";
 import { shiftAt, viewShift } from "./localTime";
 import { world } from "./world";
@@ -56,9 +56,10 @@ export const railCountries = computed<string[]>(() => {
   const w = world.value;
   if (!w) return [];
   const out = new Set<string>();
+  const outlines = outlinesIn.value;
   for (const n of w.nodes.values()) {
     if (n.builtPorts <= 0) continue;
-    const key = `${n.lng} ${n.lat}`;
+    const key = `${n.lng} ${n.lat} ${outlines}`;
     let p = placeOf.get(n.id);
     if (!p || p.key !== key) {
       const z = cityWithin(n.lng, n.lat);

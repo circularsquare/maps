@@ -255,9 +255,10 @@ pub fn track_cost_parts(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks:
     }
 }
 
-/// Station cost, US$M: the 200 m price for its level scaled by `0.4 + 0.6 x length / 200`.
+/// Station cost, US$M: the 200 m price for its level (a fixed part and a part by level) scaled by
+/// `0.4 + 0.6 x length / 200`.
 pub fn station_cost(level: i8, platform: u16, tracks: u8, wet: bool) -> f64 {
-    let base = STATION_COST_200[(level.clamp(MIN_LEVEL, MAX_LEVEL) + 3) as usize];
+    let base = STATION_FIXED_200 + STATION_LEVEL_200[(level.clamp(MIN_LEVEL, MAX_LEVEL) + 3) as usize];
     base * (0.4 + 0.6 * platform as f64 / 200.0)
         * if tracks == 1 { SINGLE_TRACK_STATION } else { 1.0 }
         * if wet { WATER_COST } else { 1.0 }
@@ -349,7 +350,10 @@ mod tests {
 
     #[test]
     fn stations_junctions_crossings() {
-        assert!((station_cost(0, 200, 2, false) - 30.0).abs() < 1e-12);
+        // T-1267: a fixed 50 plus the level's part
+        assert!((station_cost(0, 200, 2, false) - 75.0).abs() < 1e-12);
+        assert!((station_cost(1, 200, 2, false) - 90.0).abs() < 1e-12);
+        assert!((station_cost(-3, 200, 2, false) - 175.0).abs() < 1e-12);
         assert!((station_cost(-2, 100, 2, false) - 105.0).abs() < 1e-9);
         assert!((station_cost(-2, 400, 2, false) - 240.0).abs() < 1e-9);
         assert!((junction_cost(0, false, false) - 0.25 * 45.0).abs() < 1e-9);

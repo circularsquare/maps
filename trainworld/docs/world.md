@@ -191,7 +191,8 @@ player is looking.
   models). Half-hour offsets round to a whole hour so period boundaries stay on the hour; India's
   +5:30 is +5, which puts the game's 6-10 morning peak on Mumbai's real 6:30-10:30, nearer its late
   office peak than +6 would (5:30-9:30). A place is in the nearest registered zone whose centre is
-  within 120 km (`cityWithin`, the same rule in `game/localTime.ts` and `sim/src/track/localtime.rs`);
+  within 120 km (`centreWithin`, the same rule in `game/localTime.ts` and `sim/src/track/localtime.rs`,
+  which has no outlines; a place's zone for anything else is by the coarse outlines, `cityWithin`);
   a place in no zone takes its longitude's nominal offset, `round(lon / 15)`, until its region is
   registered (London 0, but Paris also 0 until it has its +1 entry).
 - **What runs on local time.** Demand's five periods are abstract (a solve has no clock), so
@@ -248,7 +249,8 @@ player is looking.
   `kindOfIn`): a holiday is a Sunday, except the few most people work through (in the US and its
   territories: Columbus Day, Veterans Day, Martin Luther King Jr. Day, Washington's Birthday,
   Juneteenth; `working` in holidays.json), which keep their weekday; a weekend day it works is a weekday; others take the
-  country's week. A line's country is its first stop's zone's, as its local time is; a line outside
+  country's week. A line's country is its first stop's zone's (by the coarse outlines, so a Yuen Long line keeps Hong
+  Kong's holidays, not Shenzhen's: T-1265); a line outside
   every zone has none and keeps Saturday and Sunday. On such days the line's boarding account reads
   that kind's riders (`TrackApi` `set_line_holidays`: the clock worker sends each line's days whose
   kind is not the day number's, with their kind, from yesterday to 8 days ahead), and its fares,

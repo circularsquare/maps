@@ -163,7 +163,7 @@ export function FareNodeRows({ nodes }: { nodes: FareNode[] }) {
             {/* the last node's distance changes no fare, since its rate holds past it: it is only dragged */}
             {last
               ? <span class="fr-what">Past {fromText} {unit}</span>
-              : <span class="fr-what">{fromText}-<TypedValue label={`end of stretch ${i}`}
+              : <span class="fr-what">{`${fromText} -`}<TypedValue label={`end of stretch ${i}`}
                   type={{ text: distText(u), set: setU, tip: `Where this rate ends and the next begins, ${unit}. Click to type a distance.` }}>{distText(u)}</TypedValue>{unit}</span>}
             <Stepper value={`+${rateText(rateU)}`} wide label={`rate of stretch ${i}`} onStep={stepRate}
               type={{ text: rateNum(rateU), set: setRate, tip: `The fare rises ${rateText(rateU)} for each ${unit} ${span}. Click to type a rate.` }} />

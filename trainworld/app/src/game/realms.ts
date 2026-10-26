@@ -12,7 +12,7 @@
 import { computed, effect, signal } from "@preact/signals";
 import type { MultiPolygon } from "geojson";
 import realmsJson from "./realms.json";
-import { CITIES, cityById, cityNear, zoneBox, zonesTouching, type CityId } from "./cities";
+import { CITIES, cityById, cityNear, cityWithin, outlinesIn, zoneBox, zonesTouching, type CityId } from "./cities";
 import { world } from "./world";
 import { trackZones } from "./trackZones";
 import { coarseOutlines, inOutline } from "../map/coarseOutlines";
@@ -82,10 +82,10 @@ export async function loadRealms() {
   else realmsOff.value = true;
 }
 
-/** The realm a station at (lon, lat) builds in: the zone whose coarse outline holds it, else (dead
- * space, or before the outlines are in) the zone with the nearest centre. */
+/** The realm a station at (lon, lat) builds in: its zone's (`cityWithin`, by the coarse outlines once
+ * they are in), else the zone with the nearest centre. */
 export function realmOfPlace(lon: number, lat: number): string | null {
-  return zoneRealm(zoneHolding(lon, lat) ?? cityNear(lon, lat));
+  return zoneRealm(cityWithin(lon, lat) ?? cityNear(lon, lat));
 }
 
 /** The zone whose coarse outline holds (lon, lat); null outside them all or before they are in. */
@@ -176,9 +176,9 @@ let waitFor: unknown;
 /** The realms with a station, from each world snapshot (stations placed by position, kept by id). */
 export function followStations(): () => void {
   const at = new Map<string, { lng: number; lat: number; realm: string | null }>();
-  let outlinesSeen: unknown = null;
+  let outlinesSeen = -1;
   return effect(() => {
-    const w = world.value, outlines = zoneOutlines.value;
+    const w = world.value, outlines = outlinesIn.value;
     if (startRealm.peek() !== undefined && w !== waitFor && !gameIn.peek()) gameIn.value = true;
     if (outlines !== outlinesSeen) {
       outlinesSeen = outlines;

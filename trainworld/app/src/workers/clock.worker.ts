@@ -19,6 +19,7 @@ import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
 import { shiftAt, timeZoneTable } from "../game/localTime";
 import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } from "../game/moneyTiming";
 import { networkFromState, newNetCache, runsTrains } from "../map/network";
+import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { buildComplexes } from "../game/complexes";
 import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, takePending, writePending, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
@@ -81,10 +82,21 @@ const fareHour = (per: number[][] | undefined, tl: number, kindOf?: KindOf) => l
 const rideHour = (per: number[][] | undefined, tl: number, kindOf?: KindOf) => between(table(per), peakC, tl, tl + 3600, kindOf);
 
 /** T-872: the holiday calendar (its own chunk, fetched once), and each line's country: its first
- * stop's zone's, as its local time is ("" outside every zone). Its holidays and own weekend decide
+ * stop's zone's (`cityWithin`; "" outside every zone). Its holidays and own weekend decide
  * its kinds of day (T-262). */
 let holidayData: HolidayData | null = null;
 let lineCountries = new Map<number, string>();
+/** each line's first stop, lng and lat (null with none), as the last state was built */
+let lineFirstStops = new Map<number, [number, number] | null>();
+function placeLineCountries() {
+  lineCountries = new Map([...lineFirstStops].map(([id, p]) => {
+    const z = p ? cityWithin(p[0], p[1]) : null;
+    return [id, z ? cityById(z).country ?? "" : ""];
+  }));
+}
+/** T-1265: the coarse outlines name each station's zone (game/cities.ts `cityWithin`); read once
+ * from init, and the lines' countries placed again when they are in */
+let outlinesRead: Promise<void> = Promise.resolve();
 let holidaysSent = "";
 const kindOfLine = (id: number): KindOf => kindOfIn(holidayData, lineCountries.get(id));
 function loadHolidays() {
@@ -746,10 +758,11 @@ function buildState(): ClockState {
     });
   }
   const nodeAt = new Map(nodes.map((n) => [n.id, n]));
-  lineCountries = new Map(lines.map((l) => {
-    const n = nodeAt.get(l.stops[0]), z = n ? cityWithin(n.lng, n.lat) : null;
-    return [l.id, z ? cityById(z).country ?? "" : ""];
+  lineFirstStops = new Map(lines.map((l) => {
+    const n = nodeAt.get(l.stops[0]);
+    return [l.id, n ? [n.lng, n.lat] : null];
   }));
+  placeLineCountries();
   syncHolidays();
   // Keyframes: phase tables, profile meta, and run 0 of every line resampled.
   const meta = a.profile_meta();
@@ -1274,6 +1287,8 @@ const THUMB_GAP = 4, THUMB_PAD = 14, THUMB_TOP = 34;
 /** the theme the page is in (main.ts sends it): a thumbnail is drawn on that theme's land (T-543) */
 let thumbShade: "light" | "dark" = "light";
 async function slotSummary(): Promise<SlotSummary> {
+  // a save never waits long on them: without them a station takes the nearest centre's name
+  await Promise.race([outlinesRead, new Promise((go) => setTimeout(go, 3000))]);
   const a = api!;
   // stations and the cities they are in
   const ni = a.nodes_info();
@@ -1987,6 +2002,11 @@ async function processMessage(msg: ToClock) {
     // World identity and coordinates never follow the map's focused city.
     city = HOME_CITY;
     packBase = msg.pack;
+    outlinesRead = readOutlinesForPlaces(msg.outlines).then(() => {
+      if (!api) return;
+      placeLineCountries();
+      if (syncHolidays()) sendTrips();
+    });
     ready = (async () => {
       const t0 = performance.now();
       await init();

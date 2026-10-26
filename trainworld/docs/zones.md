@@ -447,8 +447,8 @@ name; the code word is "realm" because "region" already means a zone in the code
 country the realm whose land holds its centre) and `packs/realms.geojson`, each realm's land
 (Natural Earth admin 0 cut along geoBoundaries ADM1 or the Census states), which only that
 assignment uses: the app reads no realm shapes. A realm is **shown** while the game has a station or
-track in it (blueprint or built; a station in the zone whose coarse outline holds it, else the zone
-with the nearest centre; track in the zones it crosses, "Track" below), it holds the start zone, or the player showed it this session (its circle, a click on its land, a
+track in it (blueprint or built; a station in its zone by the coarse outlines, "A place's zone" below,
+else the zone with the nearest centre; track in the zones it crosses, "Track" below), it holds the start zone, or the player showed it this session (its circle, a click on its land, a
 search pick of a city or place in it, or the view resting 0.4 s at zoom 10 or closer with its centre
 on its land after a move [T-1151, `AUTO_SHOW_ZOOM`]); a click is not saved, so a reload hides a realm again unless
 the game has built there. A game started on the map (no start zone) shows every realm while it has
@@ -544,9 +544,16 @@ is known without its files (T-302, T-400):
   (the view's centre, a station, a search hit) fetches the boundaries of the zones whose boxes lie
   within 40 km of it (`ZONE_REACH_M`), and the zones beside the view those whose boxes meet the
   screen; a network's stations fetch those whose boxes lie within 4.5 km of one (`REACH_M`).
-  Until all of a place's candidates are in, it is placed by the nearest centre as before any
-  boundary loads, so its zone never flips as boundaries arrive one by one. A place no box comes
-  within 40 km of is dead space at once, with nothing fetched.
+  Until all of a place's candidates are in, it is placed as "A place's zone" below says, so its
+  zone never flips as boundaries arrive one by one. A place no box comes within 40 km of is dead
+  space at once, with nothing fetched.
+- **A place's zone** without exact boundaries (T-1265, `cityWithin` in `game/cities.ts`, the lookup
+  in `map/coarseOutlines.ts`): the zone whose coarse outline holds it, else the one whose coarse
+  outline is nearest within 40 km, else (dead space, or before `outlines.json` is in) the nearest
+  zone whose centre is within 120 km. It names a save's cities in the saves panel, a station's realm,
+  a line's country for holidays and the start before boundaries load. The clock worker reads its own
+  copy of the outlines for a save's cities and its lines' countries. Local time alone keeps the centre rule, as the track model
+  has it (world.md "Local time"). A nearest centre alone put Yuen Long in Shenzhen.
 
 ## 7. Other countries and borders
 

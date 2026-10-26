@@ -624,9 +624,9 @@ fn blueprint_construct_run() {
     // Construction plus the trains its busiest schedule needs (T-028).
     assert_eq!(a.fleet(), a.cars_needed());
     assert!((a.fleet() as f64 * CAR_PRICE - trains).abs() < 1e-9);
-    // three stations at grade, 30 each (T-1245)
-    assert!((6000.0 - a.cash() - (135.0 + 90.0 + trains)).abs() < 0.5, "paid {}", 6000.0 - a.cash());
-    assert!((a.last_charge() - (135.0 + 90.0 + trains)).abs() < 0.5);
+    // three stations at grade, 75 each (T-1267)
+    assert!((6000.0 - a.cash() - (135.0 + 225.0 + trains)).abs() < 0.5, "paid {}", 6000.0 - a.cash());
+    assert!((a.last_charge() - (135.0 + 225.0 + trains)).abs() < 0.5);
     assert!(!a.can_undo(), "construct is final");
     // More trains an hour buys more trains; short of money it is refused and nothing changes.
     let (fleet, cash) = (a.fleet(), a.cash());
@@ -1554,7 +1554,7 @@ fn stations_go_anywhere_on_a_curve() {
                     let off = live_edges(&a).iter().map(|&k| a.w.net.project(k, q[0], q[1]).1).fold(f64::INFINITY, f64::min);
                     assert!(off < 0.01, "split at {s}: {off} m off");
                 }
-                let station = 30.0 * (0.4 + 0.6 * 200.0 / 200.0) * 1.0;
+                let station = 75.0 * (0.4 + 0.6 * 200.0 / 200.0) * 1.0;
                 assert!((a.total_cost() - cost - station).abs() < 0.05, "split at {s}: {} against {}", a.total_cost() - station, cost);
                 assert_eq!(a.undo(), 0);
                 assert_eq!(a.edge_render(e), before);
