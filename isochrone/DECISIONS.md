@@ -3,6 +3,41 @@
 Newest first. One entry per decision: what, and why. The spec states the result; this keeps the
 reasoning and what it replaced.
 
+## 2026-10-26
+
+- **The canoe is always carried overland**, at twice the walking time, never left (Anita, T-005).
+- **The search counts time and danger**: cost = time + K x hazard, a linear combination, on every
+  mode (Anita: "count both time and danger, can use linear combination"). Replaces 2026-10-14's
+  fastest path with survival only reported; a time-only search took deadly sea shortcuts.
+- **The orchestrator commits `isochrone/` paths as it goes** (Anita); pushing still needs her word.
+- **Small water counts as 1 km/h land in the L3 and L10 means too** (T-013), so L10 times from
+  Cluj rise 3-8% (ponds were dropped from the mean before). Kept for one rule at every level;
+  to undo, leave converted pixels out of the L3/L10 means only. notes/T-013.md.
+- **Canoe design choices** (T-005, docs/canoe.md): portage is not its own edge (unrunnable river
+  steps are dropped and the search carries round); wide rivers MAP marks as water get no grid
+  edges, only river edges, so they never become a current-free channel; 16 moves at sea, as the
+  128-day limit keeps L10 sea work to ~1 M cells (8 moves is the fallback); RiverATLAS over
+  HydroRIVERS plus a DEM, for its reach gradient; the sea is painted on a canoe start; K starts
+  at 1000 h, tuned on check trips in notes/T-005.md.
+
+- **Orchestrator setup** (Anita asked to work on it "more seriously", like trainworld): CLAUDE.md
+  brought up to trainworld's current rules, milestones in TASKS.md, TODO.md hers only, open
+  questions in notes/for-anita.md. Answers left open for 12 days were decided below, to show after.
+- **Walking becomes directed** (downhill faster, directed Tobler) once our own elevation lands
+  (T-011); research/friction.md recommended it, and the canoe needs a directed graph anyway.
+- **Small water under 5 km² is walkable** at MAP's 1 km/h (T-013): paths barely change; it removes
+  the dark specks at L1 and the false "pond blocks walking". Easy to revisit.
+- **10,000 BC land cover from Beyer 2020** (era-correct, 0.5 degree) over Hengl PNV (sharp, but
+  today's climate puts forest over Younger Dryas Europe). Hengl stays the pick for a "today
+  without clearing" toggle.
+- **Season: annual on land, local summer at sea** (research/canoe.md 3 and friction.md 6 each
+  recommended one; this joins them). A switch later.
+- **The page stays build-free; worker.js splits into ES modules** (T-019) before the canoe graph
+  lands, rather than moving to Vite and TypeScript: 8800 keeps serving the working tree live, no
+  snapshot build as in trainworld. Revisit if the toggle panel needs components.
+- **Big downloads run detached by an agent** (stage C's 100-130 GB of GLO-90, T-011), overnight,
+  per Anita's standing "run long jobs yourself".
+
 ## 2026-10-14
 
 - **View refine thresholds and sizes** (T-002): L3 from zoom 5, L1 from zoom 7; windows are the
