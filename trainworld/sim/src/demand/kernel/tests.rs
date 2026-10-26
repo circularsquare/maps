@@ -363,6 +363,34 @@ fn a_waiting_room_shortens_perceived_waits_and_a_park_and_ride_rides() {
     assert_eq!(ride_fixed(&p, &net, 2), p.p_ride - 10.0);
 }
 
+/// T-1430: a trip's first boarding at the planned wait (the least of half the headway, 5 + a sixth
+/// and 30, no tolerance penalty) pools fewer slow lines; a change keeps half the headway, and a
+/// train every 10 minutes waits as before.
+#[test]
+fn an_inter_city_start_waits_the_planned_wait() {
+    let p = common_test_params();
+    let entry = |sk: &Skims| sk.entry_r().into_owned();
+    // hourly: 30 plus the tolerance penalty at the platform, 15 planned
+    let mut net = common_test_net(&[&[0, 1]], &[1.0], &[2.0]);
+    net.span = vec![0.5; network::PERIODS * 4];
+    let sk = skims(&build_graph(&net, &p), &p);
+    assert!((sk.r[1] - (32.0 + 2f32.ln() / p.beta)).abs() < 1e-4, "{}", sk.r[1]);
+    assert!((entry(&sk)[1] - 17.0).abs() < 1e-4, "{}", entry(&sk)[1]);
+    // an hourly fast line and an hourly slow one: pooled at the platform (a 30 minute headway,
+    // 15 waited, an average ride of 11), the fast one alone when planned
+    let sk = skims(&build_graph(&common_test_net(&[&[0, 1], &[0, 1]], &[1.0, 1.0], &[2.0, 20.0]), &p), &p);
+    assert!((sk.r[1] - 26.0).abs() < 1e-4, "{}", sk.r[1]);
+    assert!((entry(&sk)[1] - 17.0).abs() < 1e-4, "{}", entry(&sk)[1]);
+    assert!((planned_board_cost(240.0, 1.0, &p) - p.transfer_min - 30.0).abs() < 1e-5);
+    // every 10 minutes, then a change onto an hourly line: the change waits 30 as before
+    let sk = skims(&build_graph(&common_test_net(&[&[0, 1], &[1, 2]], &[6.0, 1.0], &[2.0, 2.0]), &p), &p);
+    let s = sk.s;
+    assert!((sk.r[2] - (5.0 + 2.0 + p.transfer_min + 30.0 + 2.0)).abs() < 1e-4, "{}", sk.r[2]);
+    assert_eq!(entry(&sk)[2], sk.r[2]);
+    assert!(sk.entry.iter().flatten().all(|&(src, _)| src != 0), "only starts on the hourly line are cheaper");
+    assert!((entry(&sk)[s + 2] - 17.0).abs() < 1e-4);
+}
+
 /// T-1281: a change through a passage walks the straight line at 2 m/s; between other stations
 /// of a complex, the line x 1.3 at the transfer pace.
 #[test]

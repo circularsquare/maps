@@ -185,6 +185,14 @@ which changes `SPEC.md` section 3 ("Walking stays symmetric"); see "For Anita". 
 on steep descents: walking down 45 deg is not faster than up, so treat |g| over ~1 (45 deg) as
 impassable on foot in both directions.
 
+**Hill shading on the page (T-045, display only).** The Terrain Tiles on AWS
+(https://registry.opendata.aws/terrain-tiles/, Mapzen's joerd build, terrarium PNGs at
+`s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png`, z0-15, sea floor included,
+CORS `*`). Open data; attribution required per source (SRTM, GMTED2010, 3DEP: USGS; ETOPO1: NOAA;
+EU-DEM: Copernicus; ArcticDEM; and Canada, Mexico, Norway, Austria, UK, Australia, New Zealand),
+listed at https://github.com/tilezen/joerd/blob/master/docs/attribution.md. The info panel names
+them and links that list; the map attribution links it too. Not used by the model.
+
 ---
 
 ## 3. Land cover today

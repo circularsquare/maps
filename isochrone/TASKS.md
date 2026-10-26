@@ -14,9 +14,6 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 ## In progress
 
 - T-030 [P1] Finer than 1 km when zoomed in: design a 100 m level (LC100 land cover, roads, GLO-90 terrain) for windows from zoom ~10, with sizes, times and what it means for publishing; for Anita's review. Design ready for Anita's review, docs/fine.md (notes/T-030.md).
-- T-044 [P1] Speeds panel, top left: every speed the map uses (walking by ground, roads, carrying, paddling still water, rivers down and up by size, sea with and against currents), from the worker's constants. Taking, 2026-10-26 (agent, with T-045).
-- T-045 [P1] Topography and rivers on the map: hillshade under the colours and rivers drawn as lines (our river steps or the basemap's waterways). Taking, 2026-10-26 (agent, with T-044).
-- T-046 [P1] Corridors: from the start's path tree, draw where many trips share a route (a river, a pass) as medium-opacity lines that branch and fade as trips split. Taking, 2026-10-26 (agent).
 - T-037 [P3] Window edge strip: with nearest resampling, the coarser canvas shows as a brighter strip (up to one coarser cell, ~5 px at zoom 9) along a finer window's north and south edges, since the hole is rounded inwards to whole canvas rows. Off screen once the view settles; fix by aligning hole rows to the finer window or painting the coarse edge row clear.
 
 ## M1: canoe, today
@@ -39,14 +36,16 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 
 ## Later
 
-- T-038 [P2] Fine level stage 1: 100 m tiles for New York (40-42 N, 75-73 W) and Cluj (46-48 N, 23-25 E) from LC100 classes, OSM roads and bridges (Geofabrik extracts) and the L1 terrain factor; the L0.1 window in the worker, seeded from L1, painted; smoke passes (docs/fine.md). Taking, 2026-10-26 (agent).
-- T-047 [P1] Fine level only where it matters: design which 1-degree tiles get 100 m (cities, road-dense land, rugged terrain, straits and bridges) and which stay 1 km (flat farmland, desert, ice), with the world total under a few GB; for Anita's review. With T-038 (same agent).
-- T-039 [P3] Fine level stage 2: GLO-90 elevation in the 100 m tiles, directed slope per move with the street grade cap, a bucket queue in the search for every level, times in a real browser (docs/fine.md). After T-038.
+- T-047 [P1] Fine level only where it matters: design which 1-degree tiles get 100 m (cities, road-dense land, rugged terrain, straits and bridges) and which stay 1 km (flat farmland, desert, ice), with the world total under a few GB; for Anita's review. Design ready for Anita's review, docs/fine.md "Where the fine level goes" (notes/T-047.md).
+- T-039 [P3] Fine level stage 2: GLO-90 elevation in the 100 m tiles, directed slope per move with the street grade cap, a bucket queue in the search for every level, times in a real browser (docs/fine.md).
+- T-050 [P3] Fine level stage 3: the canoe at L0.1 (LC100 water kinds, bridge cells as both land and canoe nodes, RiverATLAS steps at 1/1200 degree); until then a canoe start stops at L1 (docs/fine.md).
+- T-051 [P2] Rural seams at L0.1 window edges: MAP's L1 walks a whole 1 km pixel at road speed when a road crosses it, so outside towns 100 m times are 18-52% longer than L1 (notes/T-047.md) and an L0.1 window's ring is seeded early. Check how it looks round Cluj at zoom 10-11; the real fix is L1 from our own surface with roads as a share of each cell (T-010, T-028).
 - T-035 [P3] Canoe search speed: a canoe click at L10 is ~0.8 s with 8 moves past 20 km from shore (16 everywhere was 1.0-1.1 s), and canoe L3 windows are capped at 1.5 M cells. Try the bucket queue of T-039 and fewer tables read per sea edge, then go back to 16 moves at sea if it gets under 1 s (notes/T-022.md).
 - T-011 [P3] 90 m terrain: stream Copernicus GLO-90 tile by tile, directed crossing costs per cell (research/friction.md 7, stage C); makes walking directed. 100-130 GB streamed, run detached overnight. After T-009.
 - T-007 [P3] Coarse solve with portals (docs/resolution.md, thin barriers). After T-011.
 - T-014 [P3] Window edges: fade the finer window into the coarser one over a few cells instead of a hard hole edge, to remove the faint 1-3 px line (docs/resolution.md).
 - T-015 [P3] Big screens: L1 windows of ~2M cells take ~1-1.5 s in headless tests. Try painting the inner view first, or a smaller L1 margin above 2560 px wide; measure in a normal browser first.
+- T-048 [P3] River lines off the main thread: `js/riverlines.js` rebuilds its lines on the page at each zoom step or new tiles, 100-300 ms in headless tests (`window.riverLog`). Move the parse and joining into a small worker, or build once per tile and cache the features.
 - T-016 [P3] Publishing: data/tiles is 135 MB (L1 117.5 MB); goes to R2 with the page. Try a tighter encoding (row deltas, brotli) before publishing.
 
 ## Someday

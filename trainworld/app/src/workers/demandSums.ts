@@ -3,6 +3,7 @@
 // selection's commuters and longer trips and a station's from the workers' answers. Pure functions
 // of their inputs, so the figures are the same wherever they run.
 
+import type { DriveInput } from "../game/drives";
 import { makeFrame, type FrameSpec } from "../game/frame";
 import { EVERYDAY_KEYS, membersOf, PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "../game/purposes";
 import { PERIODS } from "../game/periods";
@@ -655,7 +656,9 @@ export type ToSums =
    * every filter with the city's cells (`cells.key`; their `xy` the first time) */
   | { kind: "flows"; id: number; packed: Float32Array; parts: PurposePart[]; cells: { key: string; xy?: Float32Array } | null }
   /** a solve's views of each kind of day */
-  | { kind: "days"; id: number; input: DayInput };
+  | { kind: "days"; id: number; input: DayInput }
+  /** T-1435: a zone's drive arcs at every level (game/drives.ts `driveLevels`) */
+  | { kind: "drives"; id: number; input: DriveInput };
 export type SumsAsk = ToSums extends infer M ? (M extends unknown ? Omit<M, "id"> : never) : never;
 export interface FromSums { id: number; result: unknown; error?: string }
 /** A "flows" answer: the far end, and per filter its far end dealt (`dealtCells`; null for none) */

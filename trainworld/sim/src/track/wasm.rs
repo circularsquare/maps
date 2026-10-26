@@ -461,6 +461,8 @@ impl TrackApi {
         let (bytes, eras) = split_eras(bytes);
         match save::decode(bytes) {
             Ok(mut net) => {
+                // saves made from a real network before T-1442 carry its untidy names
+                super::names::tidy_network(&mut net);
                 std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
                 net.time_zones = self.w.net.time_zones.clone();
                 net.terrain = self.w.net.terrain.clone();

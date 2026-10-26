@@ -60,6 +60,7 @@ import { startTerrainTint } from "./map/terrainTint";
 import { startRestList } from "./map/hoverRest";
 import { startStationLife } from "./map/stationLife";
 import { startBuildSounds } from "./map/buildSound";
+import { openings, startOpeningDay } from "./game/openingDay";
 import { perfOff, perfTry } from "./perfFlags";
 import { DEMAND_INDEX, type Selection } from "./game/types";
 import { anchor, kAtY, toLngLat, toLocal } from "./map/geo";
@@ -70,6 +71,7 @@ import { TopBar } from "./ui/TopBar";
 import { MapTopLeft } from "./ui/DemandSelector";
 import { BlueprintBar } from "./ui/Blueprint";
 import { startSearch } from "./ui/Search";
+import { startTroubleList } from "./ui/TroubleList";
 import { startTips } from "./ui/tip";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
 import { choosing, startGameWait } from "./game/loading";
@@ -136,6 +138,7 @@ const blueprintBarRoot = document.createElement("div");
 map.getContainer().appendChild(blueprintBarRoot);
 render(h(BlueprintBar, null), blueprintBarRoot); // T-353: the Select tool's Disable and Enable at the top centre
 startSearch(map.getContainer()); // T-148: the search box at the map's upper right
+startTroubleList(map.getContainer()); // T-1433: what is wrong on the network, at the lower right
 const renderer = new NetworkRenderer();
 renderer.checkPatch = params.get("patch") === "check"; // T-1029
 /** A click on the commuter bubbles (T-097; set below once the demand views start). */
@@ -301,6 +304,12 @@ effect(() => {
   if (w && !SYNTH) labels.set(w);
 });
 effect(() => labels.setVisible(display.value.stationNames && !SYNTH));
+startOpeningDay(); // T-1434
+effect(() => {
+  openings.value;
+  const w = world.peek();
+  if (w && !SYNTH) labels.set(w);
+});
 const capacity = new CapacityMarkers(map.getContainer(), overlay, map, labels); // tags keep off names (T-184)
 capacity.demandClick = demandOnTop;
 effect(() => {

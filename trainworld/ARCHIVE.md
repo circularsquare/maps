@@ -1,5 +1,26 @@
 # Archive
 
+- T-1435 [P3] Where people drive. Done 2026-10-26: a Drives row on the map draws the biggest car flows as amber arcs, width car trips, opacity minutes a straight-line train would save; zone squares zoomed in, corridors zoomed out. DECISIONS.md; docs/ui-demand-views.md; artifacts/trainworld/t1435/.
+- T-1434 [P3] Opening day. Done 2026-10-26: a line's first game day puts a string of tiny pennants in its colour under its stations' names, counts its Lines tab riders up from 0 (eased out) and plays "bung"; not saved. DECISIONS.md; docs/ui-map.md; `checks/t1434-opening.mjs`; artifacts/trainworld/t1434/.
+- T-1448 [P2] Station traffic visuals. Done 2026-10-26: ridership circles drawn over the bubbles, blue entries with a green inner disc for transfers, both in the hover; the ridership row on the map; each row's icon folds it. DECISIONS.md; artifacts/trainworld/t1448/.
+- T-1449 [P3] One circle per station complex, always. Done 2026-10-26: the setting is gone; stored values are dropped.
+- T-1436 [P3] One rider's trip. Done 2026-10-26: the train inspector's "One rider" block draws a rider from the train's boardings and alighting shares, with from, to, purpose and effective minutes by train and car; buttons pick another and open the explorer for the pair. DECISIONS.md; docs/ui-inspectors.md; artifacts/trainworld/t1436/.
+- T-1438 [P2] A city view. Done 2026-10-26: a Cities row click opens it (double click goes there): train share, points, profit a day, goals reached, the bubble view's figures, boardings by purpose, top 5 lines and stations, clickable. docs/ui-inspectors.md; artifacts/trainworld/t1438/.
+- T-1437 [P2] City goals on the top bar. Done 2026-10-26: ticks at 10% (star, 7 px under it), 20%, 30%, 40%, reached ones solid, kept once reached in the save's `goals`. DECISIONS.md.
+- T-1440 [P3] World trips a day. Done 2026-10-26: zoomed out the top bar reads "11.8M trips/day"; the share is in the hover. DECISIONS.md.
+
+- T-1432 [P3] Lighter station outline in dark. Done 2026-10-26: `stationInk` #8f8b85 in dark for the box rim, terminal end bars and selection outline; light unchanged. artifacts/trainworld/t1432/.
+- T-1439 [P3] Go-to-city icon. Done 2026-10-26: the city inspector's "Go to Beijing" button is the crosshair icon button with that hover.
+- T-1441 [P3] New games open on Destinations. Done 2026-10-26: any new game sets Destinations on (world-map starts too); a first visit with no saves opens on the new game sheet. DECISIONS.md.
+- T-1443 [P3] Profit row shows the net. Done 2026-10-26: the line panel's row is one figure (red when negative); fares, running trains and upkeep are in its hover.
+- T-1450 [P3] Darker even bubble mix in light mode. Done 2026-10-26: the mode mix's grey is 170 on the light map, 190 in dark; `setBubbleShade` in `game/palette.ts`. artifacts/trainworld/t1432/.
+- T-1411 [P2] Plane against rail fairness. Done 2026-10-26: the plane takes ~0% (its fare), rail loses to the car; Anita approved the planned first wait and the plane's 25 minutes (built as T-1430) and a separate fare retune (T-1431). notes/T-1411.md.
+- T-1412 [P3] General brainstorming. Done 2026-10-26: 22 ideas, Anita's picks filed as T-1430 to T-1450. notes/T-1412.md.
+- T-1430 [P2] Build T-1411's planned wait and the plane's 25. Done 2026-10-26: inter-city first boardings cost min(h/2, 5 + h/6, 30) with no tolerance penalty (`Search::entry_costs`, `Skims::entry_r`); the plane +25 in Rust and marketRule.ts. Real save 12,186,850 to 12,187,774 rail trips. notes/T-1411.md.
+
+- T-1433 [P2] A trouble list. Done 2026-10-26: a quiet button with a count at the map's lower right opens a list, worst first, of broken lines, reversals, orange and red capacity tags, riders left behind and full trains; a click goes there. 20 rows on the real save. docs/ui-panels.md; artifacts/trainworld/t1433/.
+- T-1442 [P3] Tidy imported names, with T-330. Done 2026-10-26: lines lose their feed word ("subway 6X" to "6X"), chips with no symbol show a short code whole ("6X", "HBLR"), station names in capitals get title case without "STATION" ("Port Imperial HBLR"); `sim/src/track/names.rs`, on load and in `realsave`. DECISIONS.md; artifacts/trainworld/t1442/.
+- T-330 [P3] Line chips without a symbol showed the first letter. Done 2026-10-26 with T-1442.
 - T-1418 [P2] Marks coming apart from the map under load. Done 2026-10-26: the network canvas stays glued (6x, one core, DPR 1-2); the platform faces lagged a frame (up to 86 px at 6x), now drawn in MapLibre's frame; overlay canvases copy MapLibre's exact size. notes/T-1418.md.
 - T-1392 [P3] Station circles off their line. Not reproduced 2026-10-26: dots lie on their lines' strokes (real save, all stations), Beijing at ratios 1-2 within 0.3 px (once 1 px, antialiasing). Reopen with her screenshot's place and zoom. notes/T-1418.md.
 - T-1419 [P3] Edited line keeps its old Traffic figures. Done 2026-10-26: until demand has riders for the new stops, the last result is carried onto them (map widths, panel diagram, hover, 24 h boardings and riders); new stops 0; blank when under half the stops remain. `checks/t1419-carry.mjs`, artifacts/trainworld/t1419/.

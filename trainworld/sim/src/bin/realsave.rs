@@ -9,6 +9,9 @@
 //! its level (a station node takes one route's track, SPEC 6.1); lines meet at a station complex
 //! by the demand side's merging and walking transfers. Everything is constructed.
 //!
+//! Station and line names are tidied as they go in (T-1442, `track::names`): the lines lose their
+//! feed ("subway 6X" is "6X"), the stations their capitals and "STATION".
+//!
 //! Writes `nyc_real.twt2` (the network part of a save, uncompressed; the lines get whole trains
 //! from the real trains per hour when the network is derived, T-1146) and
 //! `nyc_real_track.json`: the stations and lines with the run times the track model gives them,
@@ -16,6 +19,7 @@
 
 use serde_json::{json, Value};
 use trainworld_sim::track::geom::Pi;
+use trainworld_sim::track::names;
 use trainworld_sim::track::net::{EdgeData, LineData, Network, NodeData, StationData};
 use trainworld_sim::track::params::*;
 use trainworld_sim::track::save;
@@ -96,7 +100,8 @@ fn main() {
             let id = net.alloc_node();
             net.set_node(id, Some(NodeData { x: quant(x), y: quant(y), level, flying: false })).unwrap();
             let s = &stations[stops[k]];
-            let name = s["name"].as_str().unwrap().to_string();
+            let raw = s["name"].as_str().unwrap();
+            let name = names::tidy_station(raw).unwrap_or_else(|| raw.to_string());
             net.set_station(id, Some(StationData { platform, name: name.clone(), built: true, off: false, upgrades: 0 })).unwrap();
             node_key.push(s["key"].as_str().unwrap().to_string());
             node_names.push(name);
@@ -158,6 +163,7 @@ fn main() {
         let tph: Vec<f32> = l["tph"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap() as f32).collect();
         let id = net.alloc_line();
         let name = format!("{} {}", l["feed"].as_str().unwrap(), l["name"].as_str().unwrap());
+        let name = names::tidy_line(&name, "").unwrap_or(name);
         let r = net.set_line(id, Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour: PALETTE[li % PALETTE.len()], stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: false, bus: None }));
         if r.is_ok() {
             n_lines_ok += 1;

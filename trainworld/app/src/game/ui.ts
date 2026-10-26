@@ -5,7 +5,7 @@
 import { batch, computed, effect, signal } from "@preact/signals";
 import { AVERAGE_DAY, AWAY_DAY, awayNear, DEMAND_DAY_ON, DEMAND_DAY_PHRASE, type DemandDay } from "./days";
 import { DEFAULT_FONT, FONT_KEYS, fontStack, loadFont, type FontKey } from "./fonts";
-import { DEFAULT_RAMP, setBubbleColours, type BubbleScheme } from "./palette";
+import { DEFAULT_RAMP, setBubbleColours, setBubbleShade, type BubbleScheme } from "./palette";
 import type { PurposeFilter } from "./purposes";
 import { LEVELS, type Level, type Selection } from "./types";
 
@@ -21,6 +21,7 @@ export const SHADE_NAMES: Shade[] = ["light", "dark"];
 const OLD_THEME: Record<string, Theme> = { cream: "pink", sky: "blue", matcha: "green" };
 
 export type StationUseMode = "none" | "origins" | "transfers" | "total";
+export type MapRow = "bubbles" | "stations" | "drives" | "track";
 
 export interface DisplaySettings {
   /** Track display: plain lines, traffic-weighted lines, height, or geometry speed limit. */
@@ -38,9 +39,10 @@ export interface DisplaySettings {
   /** station use circles (T-482): translucent circles behind platforms, area by the riders a day
    * starting a rail trip there, changing lines there, or both (all boardings); or none */
   stationUse: StationUseMode;
-  /** station complexes (T-146): the station inspector and the demand circles take each complex
-   * (stations whose platforms nearly touch, game/complexes.ts) as one */
-  complexView: boolean;
+  /** T-1435: the biggest car flows drawn as arcs, ranked by what a train would win (map/driveArcs.ts) */
+  drives: boolean;
+  /** T-1448: the map's upper left rows folded down to their icon ("bubbles", "stations", "track") */
+  foldedRows: MapRow[];
   /** trains filled by how full they are: each train's own load from the boarding account (T-164) */
   trainLoad: boolean;
   /** riders waiting on platforms (T-164), drawn as each platform filling up (T-219), or not
@@ -112,8 +114,8 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   // T-727: faint by default, so the track to snap to is always in sight
   realNetwork: true,
   stationUse: "none",
-  // T-192 (Anita): one circle per station complex by default
-  complexView: true,
+  drives: false,
+  foldedRows: [],
   trainLoad: true,
   platformCrowds: "patch",
   sound: true,
@@ -163,12 +165,12 @@ function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partia
   }
 }
 const saved = load();
-const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string; trainLoadBasis?: string }) | undefined;
+const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string; trainLoadBasis?: string; complexView?: boolean }) | undefined;
 // `lineLoad` (the old width checkbox) and `intercity` (hide the longer-trip bubbles) are no longer settings (T-222), nor `stationRiders`
-// (the demand circles, T-482), nor `unbuiltColour` (T-1120), nor `trainLoadBasis` (T-164): dropped
+// (the demand circles, T-482), nor `unbuiltColour` (T-1120), nor `trainLoadBasis` (T-164), nor
+// `complexView` (one ridership circle per station complex is the only way since T-1449): dropped
 // from storage
-const { lineLoad: _lineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, trainLoadBasis: _trainLoadBasis, ...migratedDisplay } = oldDisplay ?? {};
-if ((saved.v ?? 1) < 2) delete migratedDisplay.complexView;
+const { lineLoad: _lineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, trainLoadBasis: _trainLoadBasis, complexView: _complexView, ...migratedDisplay } = oldDisplay ?? {};
 // T-703: the font and size defaults changed, and settings stored before had saved the old ones with
 // everything else, so both are dropped once
 if ((saved.v ?? 1) < 3) delete migratedDisplay.font, delete migratedDisplay.uiScale;
@@ -198,6 +200,7 @@ export const dockLayout = signal<DockLayout>({ dockW: saved.dock?.dockW ?? null,
 const savedTheme = OLD_THEME[saved.theme as string] ?? saved.theme;
 export const theme = signal<Theme>(THEMES.includes(savedTheme as Theme) ? (savedTheme as Theme) : "pink");
 export const shade = signal<Shade>(saved.shade === "dark" ? "dark" : "light");
+effect(() => setBubbleShade(shade.value));
 
 /** What a click on the map does: select (pick), draw track, place a station, add stops to a line,
  * remove what is clicked (T-096), pick a trip's two ends (T-195). */

@@ -24,6 +24,14 @@ export const POINTS_PER_TRIP = 20;
 export const POINTS_PER_KM = 1;
 /** T-685: the rail share (%) a region's star is earned at */
 export const STAR_SHARE = 10;
+/** T-1437: a region's goals, rail shares (%): the star's first, each kept once reached */
+export const GOAL_SHARES = [STAR_SHARE, 20, 30, 40];
+
+/** The game second region `zone` reached each goal (`GOAL_SHARES` order), undefined where not yet. */
+export function goalsReached(zone: string): (number | undefined)[] {
+  const m = moneyState.value;
+  return GOAL_SHARES.map((g) => (g === STAR_SHARE ? m?.stars?.[zone] : m?.goals?.[zone]?.[g]));
+}
 
 const PERIOD_HOURS = PERIODS.map((p) => p.to - p.from);
 

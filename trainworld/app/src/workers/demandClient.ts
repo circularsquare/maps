@@ -70,6 +70,7 @@ import { viewCentre } from "../game/listScope";
 import type { BareFigures, DemandNetwork, FromDemand, Heap, OpenRejected, ToDemand } from "./demandProtocol";
 import { dayFactor, dayResultOf, dayViews, flowsBody, selectionFlows, signature, stationFlows, sumParts, unpackDays, type CorridorRail, type DayInput, type DayViews, type FlowsAnswer, type FromSums, type PackedDays, type PurposePart, type SumsAsk, type SumsCtx, type ToSums } from "./demandSums";
 import { primeDealt } from "../game/farChunks";
+import { driveLevels, type DriveInput, type DriveLevel, type DriveSquares } from "../game/drives";
 import { readMarketPeriod, readTripPeriod, setMarketTripQuery, setTripQuery, tripKey, type MarketPeriod, type RouteNodes, type Trip } from "../game/trip";
 import { demandTestSnapshot } from "./demandTest";
 import type { NetworkSnapshot } from "./protocol";
@@ -160,7 +161,7 @@ interface Service {
 
 /** `corridorDay`: a kind of day's factors for the corridors' longer trips and commutes (`dayResult`) */
 type Result = Extract<FromDemand, { kind: "result" }> & { corridorDay?: [number, number] };
-type QueryKind = "cells" | "subSums" | "cellModes" | "station" | "flowRail" | "flows" | "purposes" | "icSel" | "icStation" | "purposeModes" | "transfers" | "trip" | "icTrip" | "bare" | "bareFlows" | "bareSquares";
+type QueryKind = "cells" | "subSums" | "cellModes" | "station" | "flowRail" | "flows" | "purposes" | "icSel" | "icStation" | "purposeModes" | "transfers" | "trip" | "icTrip" | "bare" | "bareFlows" | "bareSquares" | "driveRail" | "driveBase";
 type Reply = Extract<FromDemand, { kind: QueryKind }>;
 type QueryMessage = Extract<ToDemand, { kind: QueryKind }>;
 type WithoutCity<T> = T extends unknown ? Omit<T, "city" | "round"> : never;
@@ -214,6 +215,12 @@ function byMask(parts: Reply[]): Reply[] {
 /** A bare zone's everyday legs per solving worker's periods (T-325), in `byMask`'s order. */
 function bareParts(r: Extract<FromDemand, { kind: "bare" }>): Float32Array[] {
   return r.parts.map((p, i) => [r.masks[i], p] as const).sort((a, b) => a[0] - b[0]).map(([, p]) => p);
+}
+
+/** T-1435: a sparse table (`[m, index.., value..]`) added into a dense one. */
+function addSparse(into: Float32Array, v: Float32Array) {
+  const m = v[0];
+  for (let k = 0; k < m; k++) into[v[1 + k]] += v[1 + m + k];
 }
 
 function concat(parts: Float32Array[]): Float32Array {
@@ -2041,7 +2048,7 @@ class DemandClient {
       if (i < this.computeN) this.packAcks.set(item, (this.packAcks.get(item) ?? 0) + 1);
       return this.progressSoon();
     }
-    if (msg.kind === "cells" || msg.kind === "subSums" || msg.kind === "cellModes" || msg.kind === "station" || msg.kind === "flowRail" || msg.kind === "flows" || msg.kind === "purposes" || msg.kind === "icSel" || msg.kind === "icStation" || msg.kind === "purposeModes" || msg.kind === "transfers" || msg.kind === "trip" || msg.kind === "icTrip" || msg.kind === "bare" || msg.kind === "bareFlows" || msg.kind === "bareSquares") {
+    if (msg.kind === "cells" || msg.kind === "subSums" || msg.kind === "cellModes" || msg.kind === "station" || msg.kind === "flowRail" || msg.kind === "flows" || msg.kind === "purposes" || msg.kind === "icSel" || msg.kind === "icStation" || msg.kind === "purposeModes" || msg.kind === "transfers" || msg.kind === "trip" || msg.kind === "icTrip" || msg.kind === "bare" || msg.kind === "bareFlows" || msg.kind === "bareSquares" || msg.kind === "driveRail" || msg.kind === "driveBase") {
       const w = this.pendingQueries.get(msg.id);
       if (!w) return;
       const t = msg as { qStart?: number; qMs?: number };
@@ -2436,6 +2443,72 @@ class DemandClient {
     for (const k of this.purposeP.keys()) if (!k.startsWith(`${version}:${round}:`)) this.purposeP.delete(k);
     this.purposeP.set(key, p);
     p.then((v) => { if (!v && this.purposeP.get(key) === p) this.purposeP.delete(key); });
+    return p;
+  }
+
+  /** T-1435: the focused zone's drive arcs for the result shown (game/drives.ts), put together in
+   * the sums worker from the tables with no rail (asked for once per zone and day) and
+   * every solving worker's car legs rail takes. Cached per solve, round and day; null while not
+   * known. */
+  driveArcs(): Promise<DriveLevel[] | null> {
+    this.syncFocus();
+    const dv = demandView.peek();
+    if (!dv) return Promise.resolve(null);
+    const city = activeCity.peek(), day = shownDay.peek(), { version, round } = dv;
+    const src = this.cityVersion.get(city); // T-392, as in cellModes
+    const at: Target = src !== undefined ? { version: src, round: ROUNDS, view: version, wait: false } : { version, round, view: version, wait: false };
+    const key = `${city}:${version}:${round}:${day}:${src ?? ""}`;
+    if (this.drivesP?.key === key) return this.drivesP.p;
+    let partial = false;
+    const p = (async (): Promise<DriveLevel[] | null> => {
+      const base = await this.driveBase(city, day);
+      if (!base) return null;
+      // without the everyday layer's table (not there, or not held yet) the answer is not kept
+      partial = !base.everyday;
+      const n = base.squares.n, pairs = (n * (n - 1)) / 2;
+      const commuteRail = new Float32Array(pairs), everydayRail = new Float32Array(pairs);
+      if (!this.isBare(city)) {
+        let mask = 0;
+        for (const r of byMask(await this.ask((id) => ({ kind: "driveRail", id, version: at.version }), undefined, [], city, at))) {
+          if (r.kind !== "driveRail" || !r.commute) return null;
+          mask |= r.mask;
+          addSparse(commuteRail, r.commute);
+          if (r.everyday) addSparse(everydayRail, r.everyday);
+        }
+        if (mask !== ALL_PERIODS) return null;
+      }
+      if (activeCity.peek() !== city || demandView.peek()?.version !== version || demandView.peek()?.round !== round || shownDay.peek() !== day) return null;
+      const input: DriveInput = { ...base, commuteRail, everydayRail };
+      return this.inSums<DriveLevel[]>({ kind: "drives", input }, [commuteRail.buffer, everydayRail.buffer], () => driveLevels(input));
+    })();
+    this.drivesP = { key, p };
+    p.then((v) => { if ((!v || partial) && this.drivesP?.p === p) this.drivesP = null; });
+    return p;
+  }
+  private drivesP: { key: string; p: Promise<DriveLevel[] | null> } | null = null;
+  /** T-1435: the squares and the tables with no rail, from `driveTable`. */
+  private async driveBase(city: CityId, day: DemandDay): Promise<Omit<DriveInput, "commuteRail" | "everydayRail"> | null> {
+    const [c, e] = await Promise.all([this.driveTable(city, day, 0), this.driveTable(city, day, 1)]);
+    if (!c) return null;
+    const q = c.squares, n = q[2];
+    const squares: DriveSquares = { side: q[0], zoneM: q[1], n, x: q.slice(3, 3 + n), y: q.slice(3 + n, 3 + 2 * n), sx: Int32Array.from(q.subarray(3 + 2 * n, 3 + 3 * n)), sy: Int32Array.from(q.subarray(3 + 3 * n, 3 + 4 * n)) };
+    return { squares, commute: c.base, everyday: e?.base ?? null };
+  }
+  /** T-1435: per zone, day and part (0 the commutes', 1 the everyday layer's), a table with no rail
+   * and the squares; an answer is kept only when it came (a worker may not hold the zone yet, and a
+   * zone without the everyday layer is asked again, which costs nothing). */
+  private driveTables = new Map<string, Promise<{ squares: Float64Array; base: Float32Array } | null>>();
+  private driveTable(city: CityId, day: DemandDay, part: 0 | 1): Promise<{ squares: Float64Array; base: Float32Array } | null> {
+    const key = `${city}:${day}:${part}`;
+    let p = this.driveTables.get(key);
+    if (p) return p;
+    // the commutes' from the aux worker, which holds every zone open; the everyday layer's from a
+    // solving worker (only they hold it for a solved zone), or the aux worker's for a zone open bare
+    const at = part === 0 || this.isBare(city) ? this.computeN : 0;
+    p = this.ask((id) => ({ kind: "driveBase", id, version: 0, part }), [at], [], city).then(([r]) => (r?.kind === "driveBase" && r.squares && r.base ? { squares: r.squares, base: r.base } : null));
+    this.driveTables.set(key, p);
+    if (this.driveTables.size > 8) this.driveTables.delete(this.driveTables.keys().next().value!);
+    p.then((v) => { if (!v && this.driveTables.get(key) === p) this.driveTables.delete(key); });
     return p;
   }
 
@@ -3150,7 +3223,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   onLoadStop((why) => c.fail(why));
   setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
   setMarketTripQuery((end, cells, far, farGid, near) => c.marketTrip(end, cells, far, farGid, near)); // T-866, T-885
-  setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members) });
+  setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members), drives: () => c.driveArcs() });
   if (TEST) c.submitNetwork(demandTestSnapshot());
   if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose) };
   return c;

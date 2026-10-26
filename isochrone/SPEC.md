@@ -68,6 +68,11 @@ the view is re-solved at 3 km cells, and from zoom 7 also at 1 km, each seeded a
 the next coarser answer and drawn over it. Hover reads the finest level shown. Full design,
 measured times and the thin-ridge question: `docs/resolution.md`.
 
+On walking starts, where 100 m tiles are built (New York and Cluj so far), a 100 m window is
+solved once the view fits in 1.5 M cells (from about zoom 9.4): LC100 land cover, OSM roads and
+bridges, the 1 km terrain factor (`docs/fine.md`). Which tiles get 100 m worldwide: open
+(T-047, `docs/fine.md`, "Where the fine level goes").
+
 ## 5. Interface
 
 House style (nycriders): bare title, legend panel bottom right, `i` panel bottom left with the
@@ -75,3 +80,17 @@ sources, and beside it the mode buttons (walking, canoe; icons with hovers), whi
 the same start and keep `?mode=canoe` in the URL. Click sets the start. Hover shows the time to
 the point, on a canoe start how much was paddled and carried, survival while hazard is on, and
 the route from the start as a thin line, dashed where carried (`docs/canoe.md` 6).
+
+Top left, under the title, a collapsible speeds panel lists the model's speeds in km/h, each row
+with a hover giving its basis: walking by ground type (MAP's land cover table), and on a canoe
+start still water, small, big and huge rivers (1, 100, 10,000 m³/s) and a 1 m/s sea current with
+and against, carrying on grass and getting in or out. The worker sends them with `ready`
+(`js/speeds.js`), worked out from the model constants. Two buttons in the row switch hill shading
+(Terrain Tiles on AWS, under the basemap's water and the time colours) and river lines (the
+canoe's own river steps, L10 world view below zoom 5, L3 tiles to 7, L1 above; wider for more
+water, faint where unrunnable); both default on, kept for the browser session.
+
+Corridors (default on, a button in the same row): pale lines over the colours, below the labels,
+where many trips from the start share a route, wider and stronger the more area they lead to, so
+trunks along rivers, valleys, roads and coasts branch and fade toward the tips. Counted from each
+solve's path tree in the worker, at L10 for the world and again in each window (`docs/corridors.md`).

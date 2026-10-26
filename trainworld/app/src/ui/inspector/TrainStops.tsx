@@ -24,7 +24,7 @@ const AHEAD = 4;
 /** The share of the riders arriving at each stop of run `r` who get off there, in period `p`
  * (travel order): demand's alightings over the riders it has arriving, the day's where none
  * arrive in the period. A port of `alight_shares` in boarding.rs. */
-function alightShares(dm: LineDemand, n: number, r: number, wrap: boolean): number[][] {
+export function alightShares(dm: LineDemand, n: number, r: number, wrap: boolean): number[][] {
   const out: number[][] = [];
   const dayIn = new Array(n).fill(0), dayOff = new Array(n).fill(0);
   for (let p = 0; p < PERIODS.length; p++) {

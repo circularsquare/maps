@@ -117,15 +117,22 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   (a solve's, or the bare pass's for a zone no station reaches; not the no-rail split a pack gives
   before that), and over dead space [T-318]. The hover says "on a weekday", "on a Saturday", "on a Sunday" or "on average" for the
   day shown. The zone named is the focused zone ([ui-demand-views.md](ui-demand-views.md)).
+  **The zone's goals** [T-1437, `ui/GoalTicks.tsx`] are ticks over the bar at train shares of 10%,
+  20%, 30% and 40% (`GOAL_SHARES`), laid over it so nothing moves: a reached goal's tick is 2 px in
+  the text colour, an unreached one 1 px muted; under the 10% tick is the star, 7 px, filled in the
+  accent colour once earned, an outline before. Each tick's hover names the goal and, once reached,
+  when ("Goal: 20% train share, reached on Monday, day 71, at 14:08", the zone's local time). A
+  goal is reached the first time the zone's train share on the average day reaches it in a final
+  result, and kept from then (the save's `stars` for 10%, `goals` for the rest).
   **Zoomed out below zoom 5** (a few countries on screen) the bar names "World" instead [T-1110]:
   the train rides summed over every city with a built station and a demand view, as the Cities
   tab's World row sums them (`game/worldTotals.ts`; the name's hover: the city and station counts),
-  whatever lies under the view's centre, as a share of a fixed 25 billion rides a day in the world
-  (8.2 billion people at about 3 rides each, `WORLD_RIDES`), so it is usually well under 1% [T-1301].
-  Under 1% it shows two significant figures ("0.052%", `smallPct`); the bar's walking and driving
-  take the rest in the cities' own proportions. Its hover gives the share of the world's rides and
-  how they are reached, the train rides a day and in how many cities, then the cities' own split
-  as a city's hover gives it. A city's share is unchanged.
+  whatever lies under the view's centre. The figure is those train trips a day, "11.8M trips/day"
+  (three significant figures) [T-1440]; the bar is their share of a fixed 25 billion rides a day in
+  the world (8.2 billion people at about 3 rides each, `WORLD_RIDES`), so it is usually well under
+  1% [T-1301], the walking and driving taking the rest in the cities' own proportions. No goal ticks.
+  Its hover gives the train trips a day and in how many cities, the share of the world's rides and
+  how they are reached, then the cities' own split as a city's hover gives it.
 - **Status** [T-349, `ui/StatusTag.tsx`]: a small tag (small type style, background, thin border)
   on the map's top row, to the right of the demand buttons and centred with them (`ui/DemandSelector.tsx`;
   the buttons stay at the top left). It appears and goes in one step and moves nothing; the whole
@@ -212,6 +219,31 @@ so nothing jumps when the clock enters a weekend. Hovers state the day beside ev
 once. The trains, platforms, the
 past 24 hours' riders and the panels' Today counts always follow the clock.
 
+## Trouble list
+
+[T-1433, `ui/TroubleList.tsx`] What is wrong on the network, in one list at the map's lower right,
+just above the attribution button. Shut, it is a small square button in the muted colour with an
+alert mark and the count; open, the list stands above it (300 px wide, scrolling past 260 px or half
+the window), and the button shows as on. Open or shut is remembered per browser
+(`anitabuilder-trouble-open`); it never opens by itself and makes no sound. With nothing on the list
+the button is gone.
+
+- **Rows, worst first** (12 px type, one row each, the whole row's hover giving the figures):
+  lines whose track is gone (its chip, a red alert mark); places where lines reverse partway (an
+  amber U-turn disc, the station or "Track end", up to three of the lines' chips); orange and red
+  capacity tags, the map's tags at 90% and up (`NEAR_RHO`) at the demand level in force, one row per
+  kind by one station with the worst delay, red ones first ("Flat crossing near 14 St/6 Av", then
+  the tag's "+3:40" or "104%"); lines leaving riders at the platform (a person and the count) where
+  at least 3% of those who wanted their trains and 10 riders were left in the past 24 hours; lines
+  whose trains left full at least a quarter of the time with fewer left behind (a train and
+  "26/81"). Within a kind the bigger figure goes first.
+- **A click** moves the camera as search does: a line to its stops, a place to zoom 14 or closer.
+  With the select tool it also selects the line, the reversal's first line, a capacity tag's
+  junction or station (a tag on plain track selects nothing).
+- **Cheap on big networks**: the capacity tags and reversals come with the world as the map draws
+  them; the past 24 hours' counts are asked once a game hour and when riders are worked out again
+  (`accountVersion`), not the panels' four times a second.
+
 ## Search
 
 [T-148, T-177, T-183, T-211; `game/search.ts`, `ui/Search.tsx`]
@@ -281,8 +313,8 @@ and platforms ("How full each train is", "How full each platform is", both on by
 when accounts are on, Account [T-1139]: who is signed in ("Signed in as alice", "Signed in with
 Google" or "Not signed in") and a button, Account settings or Sign in, that opens the same account
 panel as the icon at the top and the start menu's (sign in, recovery email, change password, sign
-out, delete; [Account and leaderboards](#account-and-leaderboards)), and Explore a trip at the bottom [T-220]. Station demand
-circles are at the top of the Stations tab instead [T-213].
+out, delete; [Account and leaderboards](#account-and-leaderboards)), and Explore a trip at the bottom [T-220]. Station ridership
+circles are a row on the map instead, under the demand buttons [T-1448].
 
 **Panel and text size** [T-247]: 80% to 120% in 5% steps, 90% by default (T-703), no reset button. It
 zooms the dock, top bar, map buttons, search, loading card, tool notes and dialogs, and sizes the
@@ -417,10 +449,13 @@ riders now on the day shown, and the rule) [T-684, T-694]. A star after the name
 whose train share has reached 10% (hover: when it was earned, "Monday, day 71, at 14:08" in the
 region's local time) [T-685]. The top bar's city name has the same points in its hover. A narrow
 list keeps about six characters of each name (60 px): below that the star goes first, then the
-profit column (container queries on `.cities-box`) [T-693]. Sorted by rides, largest first; a click on a header sorts by that
-column (name, train share, rides, profit, points) as in the Lines tab; a click on a row moves the camera to
-the region as search does, and the viewed region's row is tinted. With no built station the tab
-reads "No stations yet."
+profit column, then (beside the city view on a phone) the points and the bar (container queries on
+`.cities-box`) [T-693, T-1438]. Sorted by rides, largest first; a click on a header sorts by that
+column (name, train share, rides, profit, points) as in the Lines tab. A click on a row opens the
+city view ([ui-inspectors.md](ui-inspectors.md#the-city-view)) and a double click moves the camera
+to the region as search does, as the Stations tab's rows do [T-1438]; the selected city's row is
+tinted, or with no city selected the viewed region's. On a phone the inspector stands beside the
+tab, as beside Lines and Stations. With no built station the tab reads "No stations yet."
 
 ## Saved games
 
@@ -610,7 +645,7 @@ registry centre and zoom, or over New York with none [T-310].
   Signed in (T-988), the slots are first settled against the account (a click on a card waits for
   that, 10 s at most), and the account's games not in this browser follow the browser's as cards
   with a cloud (hover "On your account"); a click downloads one into a new slot and opens it.
-  With no saved game it is New game alone. The dock and top bar are taken out of the page and the
+  With no saved game (a first visit) it opens straight on the new game sheet [T-1441]. The dock and top bar are taken out of the page and the
   map controls hidden, so the map fills the page; it shows the world from 60° S to 75° N covering
   the page (all of it on a wide screen, its centre around 10° E, 20° N on a narrow one) [T-927;
   `worldCover`], with the zone outlines, outside shade and the basemap's city, town and village names hidden until the pick [T-974]. The menu takes every key outside itself, and nothing loads behind it but the map.

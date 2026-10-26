@@ -645,7 +645,7 @@ export interface MarketShown {
 export const tripView = signal<TripShown | null>(null);
 /** A trip opened from a bubble selection by clicking a far-end bubble (T-208): the trip selection,
  * the one it came from (for the inspector's way back) and the two places it counts between. */
-export const tripOpenedFrom = signal<{ trip: Selection; from: Selection; places: TripPlaces } | null>(null);
+export const tripOpenedFrom = signal<{ trip: Selection; from: Selection; places: TripPlaces | null } | null>(null);
 
 /** Open the trip explorer between a bubble selection's near end (`near`, world metres) and a far
  * place at `at` (T-208, T-866), from the selection `from`; `fars` more than one are counted as a

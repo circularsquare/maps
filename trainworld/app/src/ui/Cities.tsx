@@ -1,7 +1,8 @@
 // The Cities tab (T-550, its own tab since T-749): a World row, then one row for every region (a city pack or a zone, the
 // regions of the Lines tab's place toggle) where the player has a station, with its mode split bar
 // as the top bar draws it, its train rides a day, its profit a day (fares less running trains and upkeep), its
-// points over the past 24 game hours (T-684, T-694) and its star once earned (T-685). A click moves the camera to the region.
+// points over the past 24 game hours (T-684, T-694) and its star once earned (T-685). A click opens
+// the city view (T-1438), a double click moves the camera to the region.
 
 import { activeCity, cityById, viewedZone, type City, type CityId } from "../game/cities";
 import { cityDemandViews, type DemandView } from "../game/demand";
@@ -31,12 +32,12 @@ export function goToCity(city: City) {
 }
 
 /** Fares less running trains and upkeep (T-867): the figure of a row, so a build day does not swamp it. */
-const net = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0);
+export const net = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0);
 const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const collate = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" }).compare;
 
 /** A region's profit for the figure: yesterday's ledger once there is one, before that today so far. */
-function figures(zone: CityId, m: MoneyState): { d: DayLedger; yesterday: boolean } | null {
+export function figures(zone: CityId, m: MoneyState): { d: DayLedger; yesterday: boolean } | null {
   const todayDay = m.ledger.at(-1)?.day;
   if (todayDay === undefined) return null;
   if (m.ledger.some((d) => d.day === todayDay - 1)) {
@@ -48,7 +49,7 @@ function figures(zone: CityId, m: MoneyState): { d: DayLedger; yesterday: boolea
 }
 
 /** The hover of a row's profit: fares and running trains, then new trains and construction (not in the figure) when there were any. */
-function moneyTip(name: string, f: { d: DayLedger; yesterday: boolean }): string {
+export function moneyTip(name: string, f: { d: DayLedger; yesterday: boolean }): string {
   const { d } = f;
   const rows = [
     `Profit ${f.yesterday ? "yesterday" : "today so far"} in ${name}: ${money(net(d) * 1e6)} a day, fares minus running trains and upkeep`,
@@ -62,15 +63,17 @@ function moneyTip(name: string, f: { d: DayLedger; yesterday: boolean }): string
 }
 
 /** T-694: a region's points, what it earned in the past 24 game hours (moves once a game hour). */
-function PointsCell({ id, name }: { id: CityId; name: string }) {
+export function pointsTip(id: CityId, name: string): string {
   const past = pointsPast24h.value.get(id) ?? 0;
   const rate = pointsPerDay.value.get(id)?.[shownDay.value] ?? 0;
-  const tip = [
+  return [
     `${exact(past)} points in ${name} in the past 24 hours`,
     `${exact(rate)} points ${shownDayOn.value} with the riders now`,
     `${POINTS_PER_TRIP} for each train trip that starts here, changes included, and ${POINTS_PER_KM} for each km ridden`,
   ].join("\n");
-  return <span class="val w-points c-cities" data-tip={tip}>{pointsShort(past)}</span>;
+}
+function PointsCell({ id, name }: { id: CityId; name: string }) {
+  return <span class="val w-points c-cities" data-tip={pointsTip(id, name)}>{pointsShort(pointsPast24h.value.get(id) ?? 0)}</span>;
 }
 
 /** T-685: the star beside a region that has reached the mark, with when (its local time, as the
@@ -157,6 +160,9 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
   });
   const day = (shownDay.value === AVERAGE_DAY ? "" : " " + shownDayOn.value);
   const here = viewedZone.value;
+  // T-1438: a click opens the city view (as a station row opens the station's), and the selected
+  // city's row is the one tinted; with none selected, the viewed region's
+  const sel = selection.value, picked = sel?.kind === "city" ? sel.city : null;
   // T-693: a container, so a narrow dock hides the star and then the money before the names go
   return (
     <div class="cities-box">
@@ -176,7 +182,8 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
           const s = v?.split ?? { train: 0, walk: 0, drive: 0 };
           const f = r.money;
           return (
-            <li class={here === r.id ? "on" : ""} onClick={() => goToCity(cityById(r.id))}>
+            <li class={(picked ?? here) === r.id ? "on" : ""} onClick={() => (selection.value = { kind: "city", city: r.id })}
+              onDblClick={() => { goToCity(cityById(r.id)); selection.value = { kind: "city", city: r.id }; }}>
               <span class="grow" data-tip={`${r.name}\n${r.stations} ${r.stations === 1 ? "station" : "stations"}`}>{r.name}</span>
               {m?.stars?.[r.id] !== undefined && <Star city={cityById(r.id)} at={m.stars[r.id]} />}
               <span class="city-bar" data-tip={splitTip(where, v?.split ?? null, rides, "")}>

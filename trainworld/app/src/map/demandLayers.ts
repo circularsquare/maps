@@ -1,14 +1,12 @@
-// The demand views the network renderer draws itself (T-084, SPEC 8): line width by riders, station
-// use circles (T-482), trains filled by how full they are. Built on the main thread from the
+// The demand views the network renderer draws itself (T-084, SPEC 8): line width by riders and
+// trains filled by how full they are. Built on the main thread from the
 // network now drawn, the world and the demand result, whenever one of them, the period in force
-// or a display setting changes: one pass over the line stroke segments, train samples and
-// stations (a few ms on New York's real network, notes/T-084.md), never per frame.
+// or a display setting changes: one pass over the line stroke segments and train samples (a few ms on New York's real network, notes/T-084.md), never per frame.
 //
 // Lines sharing track are drawn over each other (T-190), so a line's width moves nothing else; a
 // station's box covers the widest line through it.
 
 import { gauge } from "../game/boarding";
-import type { Complexes } from "../game/complexes";
 import { lineLoadsFor, type DemandView } from "../game/demand";
 import { loadFailure } from "../game/loading";
 import { PERIODS } from "../game/periods";
@@ -20,14 +18,9 @@ import type { NetworkLayers } from "./renderer";
 
 export interface LayerSwitches {
   lineLoad: boolean;
-  /** riders a day a station's use circle stands for (T-482, game/stationUse.ts `useFigure`), or
-   * absent for no circles */
-  stationFigure?: ((id: string) => number | undefined) | null;
   trainLoad: boolean;
-  /** station complexes (T-146): one use circle per complex, at its stations' mean position */
-  complexes?: Complexes | null;
-  /** the map's purpose filter (T-158): line widths count this purpose only; train fill and the
-   * station circles count everyone */
+  /** the map's purpose filter (T-158): line widths count this purpose only; train fill counts
+   * everyone */
   purpose?: PurposeFilter;
   /** every kind of day's view (T-260): the widest line is the busiest stretch-day of any of
    * them, so a weekend's lines are drawn thinner than a weekday's rather than rescaled */
@@ -50,16 +43,6 @@ export interface LayerSwitches {
 export const W_MIN = 0.5, W_MAX = 6.6;
 export function widthFor(ridersPerDay: number, busiest: number): number {
   return W_MIN + (W_MAX - W_MIN) * (busiest > 0 ? Math.min(1, Math.max(0, ridersPerDay) / busiest) : 0);
-}
-
-/** Station use circle area is proportional to its riders a day (T-482: origins, transfers or both;
- * T-722, no cap). The radius is `stationHaloRadius(zoom)` times this scale, so STATION_FULL riders
- * have that radius at any zoom; a circle with any riders is never smaller than STATION_MIN_SCALE of
- * it, so tiny stations stay visible. 140,000 puts the real New York save's biggest total (Penn
- * Station's complex, 681,000) at 100 px radius at zoom 13 (Anita: the largest about 200 px across). */
-export const STATION_FULL = 140000, STATION_MIN_SCALE = 0.1;
-export function stationScale(ridersPerDay: number): number {
-  return ridersPerDay > 0 ? Math.max(STATION_MIN_SCALE, Math.sqrt(ridersPerDay / STATION_FULL)) : 0;
 }
 
 /** A train's fill when its line runs and train loads are shown but demand has no figures for it
@@ -180,46 +163,5 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
       fill[k * 2 + 1] = v.g1[s] ?? -1;
     }
 
-  // stations: riders
-  const stationSize = new Float32Array(net.stationCount);
-  const fig = on.stationFigure;
-  if (fig) for (let i = 0; i < net.stationCount; i++) stationSize[i] = stationScale(fig(net.stationIds[i]) ?? 0);
-  const stationHalo = fig && on.complexes ? complexCircles(net, fig, on.complexes, stationSize) : undefined;
-
-  return { lineWidth, fill, stationSize, stationHalo };
-}
-
-/**
- * One use circle per station complex (T-146): its stations' figures (`fig`) together, drawn by
- * one constructed station (the first in the network's order) and moved to the mean position of
- * the complex's constructed stations. Rewrites the circle scale in `stationSize`; returns the
- * per-station circle offset, local units. Blueprint stations have no demand and draw no circle
- * (renderer.ts), so they neither hold nor place one.
- */
-export function complexCircles(net: Pick<NetworkBuffers, "stationCount" | "stations" | "stationIds">, fig: (id: string) => number | undefined, cx: Complexes, stationSize: Float32Array): Float32Array {
-  const halo = new Float32Array(net.stationCount * 2);
-  const groups = new Map<number, number[]>();
-  for (let i = 0; i < net.stationCount; i++) {
-    if ((Math.round(net.stations[i * 3 + 2]) & 2) !== 0) continue;
-    const c = cx.of.get(net.stationIds[i]);
-    if (c === undefined) continue;
-    const g = groups.get(c);
-    if (g) g.push(i);
-    else groups.set(c, [i]);
-  }
-  for (const g of groups.values()) {
-    if (g.length < 2) continue;
-    let riders = 0, x = 0, y = 0;
-    for (const i of g) {
-      riders += fig(net.stationIds[i]) ?? 0;
-      x += net.stations[i * 3];
-      y += net.stations[i * 3 + 1];
-      stationSize[i] = 0;
-    }
-    const a = g[0];
-    stationSize[a] = riders > 0 ? stationScale(riders) : 0;
-    halo[a * 2] = x / g.length - net.stations[a * 3];
-    halo[a * 2 + 1] = y / g.length - net.stations[a * 3 + 1];
-  }
-  return halo;
+  return { lineWidth, fill };
 }

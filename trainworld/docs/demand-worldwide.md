@@ -553,7 +553,7 @@ notes/T-420.md has the tables.
   places a car); riders in Tokyo or Mumbai tolerate crowding very differently. A change costs a
   fixed 2 perceived minutes beyond its wait and walk (Anita, T-717), where the literature puts
   5-15 perceived minutes on one, wait and walk often included. Why it may not carry over: where trains are
-  sparse and timetabled (rural lines, intercity) riders plan for the departure and the half
+  sparse and timetabled (rural lines; the market's inter-city trips have a planned wait, T-1430) riders plan for the departure and the half
   headway overstates the wait, while on unreliable or exposed platforms a minute feels longer.
   Check: station entries against the counts, where a wait weight shows up as too much or too
   little pull to frequent lines.
@@ -828,11 +828,22 @@ notes/T-420.md has the tables.
   a pack counts as many people as the world field around it, its jobs only moving where in it trips
   end. Where Kontur and a pack's census differ (the Northeast's near pairs rose 2-7% on the switch
   from the zones' own normaliser) the pack's near pairs move by the gap.
+- **An inter-city trip's planned wait** (T-1430, docs/regional.md 5.1). The market's inter-city
+  trips wait at their first boarding the least of half the headway, 5 minutes plus a sixth of the
+  headway, and 30 minutes, with no tolerance penalty: a planned trip leaves on average a quarter of
+  the headway from the time wanted, weighted two thirds of a platform wait, plus a few minutes of
+  arriving early; past a train every 3 hours one leaves at another time. Changes, commutes and
+  outings across zone lines keep the half headway. Set by reasoning on Anita's call ("a 2 hour wait
+  is fine"), not fitted (notes/T-1411.md). Why it may not carry over: where long-distance trains
+  need booking days ahead, or run once a day, a 30 minute cap undersells the cost of a sparse
+  timetable; where trains are late often, arriving early costs more. Check: rail's share on
+  corridors served every 2 hours or less often against published shares.
 - **No car between landmasses** (T-377, T-375's fixed links). Far pairs on two landmasses fly
   (T-378); near ones (under 250 km) keep their trips fixed; a ferry is no link.
 - **Air door to door** (T-378, docs/regional.md 5.1). Between far places (250 km and more) that both
-  have airports: drives to the airports, 90 minutes there (T-712, Anita 2026-10-20), 750 km/h plus
-  30 minutes, 60 more with no direct flight, and a fare of $100 + 5 cents a km at the departing
+  have airports: drives to the airports, 90 minutes there (T-712, Anita 2026-10-20), 25 minutes
+  until the flight (its frequency unmodelled: rail's planned first wait at a flight every 2 hours,
+  T-1430), 750 km/h plus 30 minutes, 60 more with no direct flight, and a fare of $100 + 5 cents a km at the departing
   country's minutes a dollar (T-1277, Mode choice above; a corridor's split between car and plane is
   the mean of its two ways). The fare is one simple rule on purpose (Anita: predictable for the player),
   checked against published averages (notes/T-712.md): $150 at 1,000 km sits between the US and

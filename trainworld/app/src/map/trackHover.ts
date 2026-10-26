@@ -129,8 +129,8 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
       return busLineTip(w, Number(hit.line));
     }
   }
-  // the demand circles are drawn under the network
-  if (!hit) return w && !isBuildTool(tool.peek()) ? circleTip(ov, w, px, py, zoom) : null;
+  // the ridership circles: over the bubbles, but the network beneath them keeps the hover (T-1448)
+  if (!hit) return w && !isBuildTool(tool.peek()) ? circleTip(px, py) : null;
   const reach = Math.max(SLOP_PX, ov.renderer.laneReachPx);
   const slop = reach * reach + 1;
   if (hit.kind === "line") {

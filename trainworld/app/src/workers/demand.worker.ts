@@ -20,7 +20,7 @@
 // covers goes when that solve ends.
 
 import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
-import { CITIES, cityById, cityToMarket, cityToWorld, HOME_CITY, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
+import { CITIES, cityById, cityToLonLat, cityToMarket, cityToWorld, HOME_CITY, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
 import { loadAttractions, type Attraction } from "../game/attractions";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
@@ -93,7 +93,7 @@ const cityGroup = (city: CityId) => { const c = jobClusters.find((c) => c.cities
 /** a paused round boundary's resume (a `go` or a newer network) */
 let wake: (() => void) | null = null;
 /** the questions whose answer reads the periods' state at a round (the others read none) */
-const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip", "icTrip"]);
+const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip", "icTrip", "driveRail"]);
 type Population = DemandApi | EverydayApi | IntercityApi;
 /** T-326: the network in hand's clusters, each with its populations (cities, their everyday
  * layers, the market: the order their loads are added in), and the whole network's route nodes */
@@ -788,6 +788,23 @@ function query(msg: Query) {
       const b = bare.get(msg.city);
       const sq = b ? selectionSquares(msg.city, b.a, msg.end, msg.cells) : null;
       sendMessage({ kind: "bareSquares", id: msg.id, xy: sq?.xy ?? null, share: sq?.share ?? null });
+    } else if (msg.kind === "driveRail") {
+      const commute = live ? a!.drive_rail_day(day) : null;
+      const everydayRail = live ? everyday.get(msg.city)?.drive_rail_day(day) ?? null : null;
+      sendMessage({ kind: "driveRail", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, commute, everyday: everydayRail }, [...(commute ? [commute.buffer] : []), ...(everydayRail ? [everydayRail.buffer] : [])]);
+    } else if (msg.kind === "driveBase") {
+      // no network in it: a zone open bare answers from the aux worker's copy (T-325)
+      const b = bare.get(msg.city);
+      const api = cities.get(msg.city) ?? b?.a;
+      const layer = everyday.get(msg.city) ?? b?.e;
+      const base = !api ? null : msg.part === 0 ? api.drive_base_day(day) : layer?.drive_base_day(day) ?? null;
+      let squares: Float64Array | null = null;
+      if (api && base) {
+        squares = Float64Array.from(api.drive_squares());
+        const n = squares[2];
+        for (let i = 0; i < n; i++) [squares[3 + i], squares[3 + n + i]] = cityToLonLat(squares[3 + i], squares[3 + n + i], msg.city);
+      }
+      sendMessage({ kind: "driveBase", id: msg.id, squares, base }, [...(squares ? [squares.buffer] : []), ...(base ? [base.buffer] : [])]);
     }
   } catch (err) {
     // a failed query answers with nothing; the pool itself carries on (after a panic, with this
@@ -807,6 +824,8 @@ function query(msg: Query) {
     else if (msg.kind === "bare") sendMessage({ kind: "bare", id: msg.id, commute: null, masks: [], parts: [] });
     else if (msg.kind === "bareFlows") sendMessage({ kind: "bareFlows", id: msg.id, packed: null, masks: [], work: [], everyday: [], names: [] });
     else if (msg.kind === "bareSquares") sendMessage({ kind: "bareSquares", id: msg.id, xy: null, share: null });
+    else if (msg.kind === "driveRail") sendMessage({ kind: "driveRail", id: msg.id, version: msg.version, mask: 0, commute: null, everyday: null });
+    else if (msg.kind === "driveBase") sendMessage({ kind: "driveBase", id: msg.id, squares: null, base: null });
   }
 }
 

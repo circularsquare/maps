@@ -2,7 +2,8 @@
 
 import { demandAt, lineSeconds } from "../game/clock";
 import { PERIODS, periodAt } from "../game/periods";
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
+import { COUNT_MS, countingRiders, openings } from "../game/openingDay";
 import { createLine, newBusLine } from "../game/lineActions";
 import { busesText, count, money } from "../game/format";
 import { DEMAND_INDEX, type LineInput, type LineStats } from "../game/types";
@@ -25,7 +26,22 @@ const BUS_ICON = <svg viewBox="0 0 16 16"><rect x="3" y="2.5" width="10" height=
 /** T-446: one line's riders in the past 24 hours, its own component so only it re-renders as the count moves. */
 function RidersToday({ line }: { line: string }) {
   const d = today.value.get(line);
-  return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in the past 24 hours` : undefined}>{d ? count(d.riders) : ""}</span>;
+  const o = openings.value.get(line);
+  const [, frame] = useState(0);
+  // T-1434: on its opening day the figure counts up from 0 once, a frame at a time
+  useEffect(() => {
+    if (!o?.landed) return;
+    let raf = 0;
+    const step = () => {
+      frame((n) => n + 1);
+      if (performance.now() - o.landed < COUNT_MS) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [o?.landed]);
+  const shown = countingRiders(o, d?.riders ?? 0);
+  const text = shown !== null ? count(shown) : d ? count(d.riders) : "";
+  return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in the past 24 hours` : undefined}>{text}</span>;
 }
 
 /** T-735, T-867: a line's fares less running cost and its share of upkeep over the past 24 hours. */

@@ -165,6 +165,8 @@ let upkeepRegions: [string, number][] = [];
 let linePoints = new Map<number, [string, number[][]][]>();
 /** T-685: each region's star, the game second it was earned */
 let stars = new Map<string, number>();
+/** T-1437: each region's higher goals, by share (%), the game second each was reached */
+let goals = new Map<string, Record<string, number>>();
 /** T-706: each line's station note and the city it was chosen in */
 let lineNotes = new Map<string, [number, string]>();
 /** T-1094: the train length last set on any line (0 for the most the platforms fit), a new line's start */
@@ -1301,6 +1303,7 @@ function moneyState(): MoneyState {
     hours: hourLedger.map((d) => ({ ...d })),
     regions: savedRegions(),
     stars: Object.fromEntries(stars),
+    goals: Object.fromEntries(goals),
     notes: Object.fromEntries(lineNotes),
   };
 }
@@ -1519,7 +1522,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], newCars: newLineCars };
+  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], newCars: newLineCars };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -1824,7 +1827,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   const decoded = await decodeSave(bytes);
   const { track } = decoded;
   const h: SaveHeader = currentZones(fresh
-    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, ledger: [], hours: [], regions: undefined, stars: undefined, notes: undefined, newCars: undefined, ...newGameHeader(fresh) }
+    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, ledger: [], hours: [], regions: undefined, stars: undefined, goals: undefined, notes: undefined, newCars: undefined, ...newGameHeader(fresh) }
     : decoded.header);
   if (!isNortheastSave(h)) throw new Error("This save is for another world.");
   if (isRetiredTrackFormat(track)) throw new Error("This save is from an older version of the game and no longer opens.");
@@ -1846,6 +1849,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
   loadRegions(h.regions);
   stars = new Map(Object.entries(h.stars ?? {}));
+  goals = new Map(Object.entries(h.goals ?? {}));
   lineNotes = new Map(Object.entries(h.notes ?? {}));
   newLineCars = h.newCars ?? 0;
   api!.set_cash(h.cash + unsettleAfter(h.clock));
@@ -1904,6 +1908,7 @@ async function newGame(spec?: NewGameSpec) {
   hourLedger = [];
   loadRegions(undefined);
   stars = new Map();
+  goals = new Map();
   lineNotes = new Map();
   newLineCars = 0;
   restart(startClock(spec), "new");
@@ -2809,6 +2814,13 @@ async function handle(msg: ToClock) {
     upkeepRegions = msg.upkeep ?? [];
   } else if (msg.kind === "points") {
     linePoints = new Map(msg.lines.map((l) => [l.line, l.regions]));
+  } else if (msg.kind === "star" && msg.share !== undefined) {
+    const g = goals.get(msg.zone) ?? {};
+    if (g[msg.share] === undefined) {
+      goals.set(msg.zone, { ...g, [msg.share]: Math.floor(gameNow()) });
+      dirty = true;
+      sendMoney();
+    }
   } else if (msg.kind === "star") {
     if (!stars.has(msg.zone)) {
       stars.set(msg.zone, Math.floor(gameNow()));

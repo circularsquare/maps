@@ -1,32 +1,39 @@
 // A city picked on the map zoomed far out (T-186, SPEC 8): its trips within the zone and its longer
 // trips to and from other places, each a figure with a mode bar, and the three biggest places
 // (T-600, Anita: brief statistics of what the hover has, no table of every place). The map draws
-// the city outlined and one bubble per other city (map/intercityView.ts).
+// the city outlined and one bubble per other city (map/intercityView.ts). A click on the city in the
+// Cities tab opens it too, the city view (T-1438), with CityDetails.tsx's rows around these.
 
 import { cityById, type CityId } from "../../game/cities";
 import { cityDemandViews, eachCorridor, intercityDemand, INTERCITY_PLACES } from "../../game/demand";
 import { count, exact } from "../../game/format";
 import { zoneLoads } from "../../game/loading";
-import { BUBBLE_ALPHA, bubbleColour, setBubbleColours } from "../../game/palette";
-import { display, purposeFilter, shownDayPhrase } from "../../game/ui";
+import { BUBBLE_ALPHA, bubbleColour, setBubbleColours, setBubbleShade } from "../../game/palette";
+import { display, purposeFilter, shade, shownDayPhrase } from "../../game/ui";
 import { localModes } from "../../map/modeBar";
 import { goTo } from "../Search";
-import { Actions, SegBar } from "../widgets";
+import { Actions, Icon, SegBar } from "../widgets";
 import { pctOf } from "./tripText";
+import type { City } from "../../game/cities";
+import { builtCities } from "../../game/worldTotals";
+import { GoalTicks } from "../GoalTicks";
+import { CityFigures, CityNetwork } from "./CityDetails";
 
 type Part = { name: string; n: number; cls: string };
 
 /** A figure with its mode bar: train blue, walking green, car red, as the map's bubbles. */
-function TripsBar({ label, tip, what, parts }: { label: string; tip?: string; what: string; parts: Part[] }) {
+function TripsBar({ label, tip, what, parts, goals }: { label: string; tip?: string; what: string; parts: Part[]; goals?: City }) {
   const all = parts.reduce((s, p) => s + p.n, 0);
+  const bar = <SegBar kind="split-bar" label={parts.map((p) => `${p.name} ${pctOf(p.n, all)}`).join(", ")}
+    parts={parts.map((p) => ({ share: p.n / all, cls: p.cls, tip: `${p.name}: ${exact(p.n)} ${what} ${shownDayPhrase.value}, ${pctOf(p.n, all)}` }))} />;
   return (
-    <li class="zone-trips">
+    <li class={"zone-trips" + (goals ? " with-goals" : "")}>
       <div class="line">
         <span class="grow" data-tip={tip}>{label}</span>
         <span class="val" data-tip={`${exact(all)} ${what} ${shownDayPhrase.value}`}>{count(all)}</span>
       </div>
-      <SegBar kind="split-bar" label={parts.map((p) => `${p.name} ${pctOf(p.n, all)}`).join(", ")}
-        parts={parts.map((p) => ({ share: p.n / all, cls: p.cls, tip: `${p.name}: ${exact(p.n)} ${what} ${shownDayPhrase.value}, ${pctOf(p.n, all)}` }))} />
+      {/* T-1437: the goals over the city's own split, as on the top bar */}
+      {goals ? <div class="goal-bar">{bar}<GoalTicks city={goals} /></div> : bar}
     </li>
   );
 }
@@ -58,11 +65,13 @@ export function CityInspector({ id }: { id: string }) {
   const walk = lm?.walk ?? 0;
   const rail = interRail + (lm?.train ?? 0);
   const d = display.value;
+  setBubbleShade(shade.value);
   setBubbleColours(d.bubbleColours, d.rampFrom, d.rampTo);
   const mix = bubbleColour(rail, walk, Math.max(0, interAll + localAll - rail - walk));
   const filter = purposeFilter.value;
   const drawn = filter === "all";
   const top = places.slice(0, 3);
+  const built = builtCities().has(city.id);
   return (
     <>
       <div class="title">
@@ -70,8 +79,11 @@ export function CityInspector({ id }: { id: string }) {
         <span class="name">{city.name}</span>
       </div>
       <Actions>
-        <button class="btn text" onClick={() => goTo({ kind: "city", name: city.name, city })}>Go to {city.name}</button>
+        <button class="btn icon" data-tip={`Go to ${city.name}`} aria-label={`Go to ${city.name}`} onClick={() => goTo({ kind: "city", name: city.name, city })}>
+          <Icon.locate />
+        </button>
       </Actions>
+      <CityFigures city={city} built={built} />
       {!market ? (
         <p class="muted">Calculating demand</p>
       ) : (
@@ -86,6 +98,7 @@ export function CityInspector({ id }: { id: string }) {
                   { name: "Walk", n: lm.walk, cls: "seg-walk" },
                   { name: "Car", n: lm.drive, cls: "seg-drive" },
                 ]}
+                goals={city}
               />
             ) : localAll > 0 ? (
               <li class="zone-trips">
@@ -120,6 +133,7 @@ export function CityInspector({ id }: { id: string }) {
           {!drawn && <p class="muted small">Not drawn under this purpose filter.</p>}
         </>
       )}
+      {built && <CityNetwork city={city} />}
     </>
   );
 }

@@ -131,7 +131,7 @@ export function buildCanoe(L, data, sea) {
         let e = fill[a]++;
         rTo[e] = b; rDt[e] = km / (p + v); rCode[e] = P_DOWN + m; rHz[e] = rDt[e] * rate;
         e = fill[b]++;
-        rTo[e] = a; rDt[e] = km / Math.max(p - 0.6 * v, cfg.upMin); rCode[e] = P_UP + OPP[m]; rHz[e] = rDt[e] * rate;
+        rTo[e] = a; rDt[e] = km / Math.max(p - cfg.upShare * v, cfg.upMin); rCode[e] = P_UP + OPP[m]; rHz[e] = rDt[e] * rate;
     }
     L.cn = { E, canoeOf, cellOf, info, curr, curKmh: sea.unit * 0.5 * 3.6, shore, hzr, rOff, rTo, rDt, rCode, rHz };
     return L.cn;

@@ -2,6 +2,7 @@
 // (`choiceFromUrl`): New game (the new game sheet, T-728), then the saved games in this browser, the
 // most recent first, each a card as in the saves panel. Nothing heavy has started under it: main.ts
 // starts the clock and demand workers with the pick. It covers the page and takes every key until then.
+// With no saved game it opens on the new game sheet (T-1441).
 
 import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -58,7 +59,8 @@ const SETTLE_WAIT_MS = 10_000;
 
 function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: GameChoice) => void; settling: Promise<void> }) {
   const first = useRef<HTMLButtonElement>(null);
-  const [sheet, setSheet] = useState(false);
+  // T-1441: a first visit, with no saved game to pick, opens on the new game sheet
+  const [sheet, setSheet] = useState(first0.length + accountOnly(first0).length === 0);
   useEffect(() => { if (!sheet) first.current?.focus(); }, [sheet]);
   // T-988: the slots again once the account has settled them (downloads, deletions, forks)
   const [slots, setSlots] = useState(first0);

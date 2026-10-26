@@ -272,8 +272,7 @@ void main() {
 // drawn over each other make one white shape with one outline round it (T-217): every station's dark shape is drawn first (u_layer 0), then every station's white
 // inside its rim (u_layer 1), so a rim inside another station is painted over; then the riders
 // waiting on each platform (u_layer 2, T-219). Selected ones are drawn in a pass of their own, after
-// the others (u_pass), over one outline and glow round all of them (SEL_FS). The same program draws
-// the demand circles (u_halo 1).
+// the others (u_pass), over one outline and glow round all of them (SEL_FS).
 export const STATION_VS = `#version 300 es
 precision highp float;
 ${PROJECT_GLSL}
@@ -284,17 +283,13 @@ uniform float u_ring;    // its dark rim (px)
 uniform float u_boxes;   // 1: platforms along the track; 0: dots (zoomed out)
 uniform vec2 u_fixed;    // a box's half width (T-204, T-239): px at BOX_WIDTH_ZOOM, and local
                          // units per px there; the width on the ground, and the least on screen (T-553)
-uniform highp int u_halo;
 uniform highp int u_pass; // stations: 0 every one but the selected, 1 the selected only
 uniform highp int u_layer; // 0 the dark shape, 1 the white inside the rim, 2 riders waiting (T-219)
 uniform highp int u_room; // the annexes joined to the boxes instead (T-1416): 1 waiting rooms, 2 P tiles
-uniform float u_halo_radius;
 uniform float u_pixel;
 in vec3 a_st;
 in vec2 a_axis;          // half the platform along its track at its middle, local units
 in vec4 a_shape;         // the platform's middle from the node (xy), half the turn along it (z, not read), half its true width (w), local units
-in float a_sz;           // daily riders' square-root scale
-in vec2 a_halo;          // demand circle's offset, local units (a station complex's, T-146)
 in float a_sel;          // 1 drawn selected
 in vec4 a_crowd;         // riders waiting (T-219): how full the platform's + and - side is (0-1),
                          // and whether that side is full (zw)
@@ -302,7 +297,7 @@ in vec2 a_dcrowd;        // zoomed out (T-228): the station's fullest platform s
                          // it is full
 uniform highp sampler2D u_stline; // RG32F, per station ${PLATFORM_POINTS} texels: its track's centre line from the node (T-254)
 out vec2 v_p;            // in the platform's frame at its middle, px
-flat out vec3 v_size;    // half length, half width, (0); a demand circle's radius
+flat out vec3 v_size;    // half length, half width; 1 a waiting room, 2 a P tile, 3 a terminal
 flat out float v_dot;    // the dot's radius, 0 for a platform
 flat out float v_alpha;
 flat out vec4 v_crowd;
@@ -335,15 +330,6 @@ void main() {
   v_alpha = (flags & 8) != 0 ? 0.3 : (flags & 2) != 0 ? 0.6 : 1.0; // 8: a blueprint switched off (T-333)
   vec2 half_vp = u_viewport * 0.5;
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
-  if (u_halo == 1) {
-    vec4 h = project(a_st.xy + a_halo);
-    float r = u_halo_radius * a_sz;
-    v_size = vec3(r, r, 0.0);
-    v_p = corner * (r + 1.0);
-    h.xy += v_p / half_vp * h.w;
-    gl_Position = h;
-    return;
-  }
   bool boxes = u_boxes > 0.5;
   bool sel = a_sel > 0.5;
   bool noCrowd = !boxes || (flags & 2) != 0 || max(a_crowd.x, a_crowd.y) <= 0.0;
@@ -506,7 +492,6 @@ uniform float u_ring;
 uniform vec3 u_ink;
 uniform vec3 u_bad;
 uniform vec3 u_crowd_rgb;
-uniform highp int u_halo;
 uniform highp int u_layer;
 uniform float u_tint;    // 1: dots show their crowds as pies (T-228, T-553)
 uniform float u_mask;    // 1: the white only marks the stencil (the track drawn through it, T-236)
@@ -527,14 +512,6 @@ float sdSeg(vec2 p, vec2 a, vec2 b) {
   return length(p - a - ab * clamp(dot(p - a, ab) / max(dot(ab, ab), 1e-6), 0.0, 1.0));
 }
 void main() {
-  if (u_halo == 1) {
-    if (v_size.x < 0.5 || v_alpha < 0.9) discard;
-    float d = length(v_p);
-    float a = clamp(v_size.x - d + 0.5, 0.0, 1.0) * (d > v_size.x - u_ring ? 0.48 : 0.22);
-    vec3 blue = vec3(0.118, 0.235, 0.902);
-    o = vec4(blue * a, a);
-    return;
-  }
   // along and across the platform's own centre line (T-254); a dot's own frame
   ${qUnpack("v_q")}
   vec2 f = v_dot > 0.0 ? v_p : polyFrame(v_p, q);

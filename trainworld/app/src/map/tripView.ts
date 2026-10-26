@@ -339,11 +339,8 @@ async function explore(from: [number, number], to: [number, number], filter: Pur
   const purpose: PurposeKey = filter !== "all" ? filter : top && top.rail + top.walk + top.drive > 0 ? top.key : "work";
   let trip = commute;
   if (purpose !== "work") {
-    // school counts university too: the kind with more trips between the two areas
-    const asked = await Promise.all(kindsOf(purpose).map((k) => askTrip(from, to, k)));
-    if (asked.some((t) => !t)) return null;
-    const trips = (t: Trip) => Math.max(0, ...t.periods.map((p) => p?.pairTrips ?? 0));
-    const best = (asked as Trip[]).filter((t) => t.periods.some((p) => p)).sort((a, b) => trips(b) - trips(a))[0];
+    const best = await bestKind(from, to, purpose);
+    if (best === null) return null;
     if (best) trip = best;
   }
   // T-865: an end of several bubbles: the same purpose over the sampled cell pairs, averaged
@@ -356,6 +353,55 @@ async function explore(from: [number, number], to: [number, number], filter: Pur
     if (ok.length) trip = averageTrips(ok, routeLabel(names));
   }
   return { trip, mix, purpose: trip.purpose < 0 ? "work" : purpose, busiest: f ? busiestPeriod(f, trip.purpose < 0 ? "work" : purpose) : null };
+}
+
+/** An everyday purpose's trip between two points; school counts university too, so the kind with
+ * more trips between the two areas. Null while the workers move on, undefined where no kind has one. */
+async function bestKind(from: [number, number], to: [number, number], purpose: PurposeKey): Promise<Trip | null | undefined> {
+  const asked = await Promise.all(kindsOf(purpose).map((k) => askTrip(from, to, k)));
+  if (asked.some((t) => !t)) return null;
+  const trips = (t: Trip) => Math.max(0, ...t.periods.map((p) => p?.pairTrips ?? 0));
+  return (asked as Trip[]).filter((t) => t.periods.some((p) => p)).sort((a, b) => trips(b) - trips(a))[0];
+}
+
+/** T-1436: one sampled rider's trip as the explorer reads it, in perceived minutes (its "Effective
+ * time" by train and by car), for a trip of purpose `key` in period `q`. */
+export interface RiderTrip {
+  /** the two ends are in different zones: the regional market's figures, averaged over the zones */
+  market: boolean;
+  train: number | null;
+  car: number | null;
+  /** the chances of each mode for this trip (0-1) */
+  pTrain: number | null;
+  pDrive: number | null;
+  pWalk: number | null;
+}
+
+/** Undefined while the workers move on (ask again); null where the two points have no answer. */
+export async function riderTrip(from: [number, number], to: [number, number], key: PurposeKey, q: number): Promise<RiderTrip | null | undefined> {
+  const commute = await askTrip(from, to);
+  if (!commute) return undefined;
+  const fin = (x: number) => (Number.isFinite(x) ? x : null);
+  if (commute.outside) {
+    const between = await farEnd(from, to);
+    if (between === undefined) return undefined;
+    if (!between) return null;
+    const shown = await exploreMarket(between.end, between.cells, [between.far], between.near);
+    if (!shown) return undefined;
+    const m = shown.market?.periods[q];
+    if (!m) return null;
+    const all = m.rail + m.air + m.car;
+    return { market: true, train: fin(m.railPerceived), car: fin(m.carPerceived), pTrain: all > 0 ? m.rail / all : null, pDrive: all > 0 ? m.car / all : null, pWalk: null };
+  }
+  let trip = commute;
+  if (key !== "work" && key !== "longer") {
+    const best = await bestKind(from, to, key);
+    if (best === null) return undefined;
+    if (best) trip = best;
+  }
+  const t = trip.periods[q] ?? trip.periods.find((p) => p);
+  if (!t) return null;
+  return { market: false, train: t.railOffered ? fin(t.railPerceived) : null, car: fin(t.roadPerceived), pTrain: t.pTrain, pDrive: t.pDrive, pWalk: t.pWalk };
 }
 
 /** T-866: the longer trips between a selection's cells and a far place or 6 km zone, every period,

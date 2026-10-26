@@ -95,3 +95,21 @@ the purpose's samples), and walking is the two cells' own no-rail share less the
 for one sample of every pair (`everyday_choice_reproduces_the_pass`). The answer adds the whole walk's real minutes
 and the subzone pair's trips a day. The explorer's headline is not this answer but the selection's
 far end summed over the two places (ui-inspectors.md); this answer is its representative trip.
+
+**Car trips by pair of squares** (T-1435, the drives view, [ui-demand-views.md](ui-demand-views.md);
+`sim/src/demand/api/drives.rs`, `everyday/drives.rs`). A zone's grid of 2 km zones in squares of
+`side` zones (the smallest of 2, 3, 4, 6... with at most 800 squares), every unordered pair of two
+squares one entry. Two parts, so a new result costs only the second. With no rail, needing no
+network: `DemandApi.drive_base_day(day)`, the commutes' legs, their car legs (the zone pair's
+walking with no rail left out) and those times each zone pair's train gain (`train_gain`: its drive
+by `drive_min_f` between the zones' centres less 15 minutes and the straight line at 100 km/h);
+`EverydayApi.drive_base_day(day)`, every sample's car legs and the same times its gain, the drive
+between its two cells. Zone pairs under a hundredth of a leg a day are left out (0.25% of New
+York's commutes). Over a worker's solved periods: `drive_rail_day(day)` on each, the car legs rail
+takes, sparse. The everyday layer's are exact per sample (rail takes from walking and the car in
+proportion, T-558). The commutes' rail is spread through the station pairs as `flow_rail` reads
+them (each station's boarders over the squares they come from, its alighters over those they go
+to): exact in total, blurred per pair; a pair's car legs are its car legs with no rail less its rail
+times their share of its legs. The client (`driveArcs`) asks for the first part once per zone and
+day and for the second with each demand result, and the sums worker makes the view's groupings
+(`game/drives.ts`). Display only: demand is untouched.

@@ -1,14 +1,9 @@
 // Run from maps: node trainworld/checks/t146-check.mjs
-// Station complexes (T-146): grouping by platform gap, the demand-merge rule, and one demand
-// circle per complex at its constructed stations' mean position.
+// Station complexes (T-146): grouping by platform gap and the demand-merge rule.
 import assert from 'node:assert/strict';
 import {loadApp} from './lib.mjs';
-// game/ui.ts (through demandLayers -> game/demand) sets the theme on the page at import
-globalThis.location??={search:''};
-globalThis.document??={documentElement:{dataset:{},style:{setProperty(){},removeProperty(){}}},addEventListener(){}};
-const {buildComplexes,membersOf,segmentGap,PLATFORM_GAP_M,DEMAND_MERGE_M,complexCircles,stationScale}=await loadApp(`
- export * from '@app/src/game/complexes.ts';
- export { complexCircles, stationScale } from '@app/src/map/demandLayers.ts';`);
+const {buildComplexes,membersOf,segmentGap,PLATFORM_GAP_M,DEMAND_MERGE_M}=await loadApp(`
+ export * from '@app/src/game/complexes.ts';`);
 const near=(a,b,m='')=>assert.ok(Math.abs(a-b)<1e-6,`${m} ${a} != ${b}`);
 assert.equal(PLATFORM_GAP_M,50);assert.equal(DEMAND_MERGE_M,100);
 
@@ -53,15 +48,4 @@ assert.deepEqual(groups(buildComplexes(far,[['3','9']])),['1,2','3','4'],'a link
 assert.deepEqual(groups(buildComplexes(far,[['1','2']])),['1,2','3','4'],'a link inside a complex');
 assert.deepEqual(groups(buildComplexes(far,[['4','3'],['2','3']])),['1,2,3,4'],'chained links');
 
-// one demand circle per complex
-const net={stationCount:4,stationIds:['1','2','3','4'],stations:new Float32Array([0,0,0, 10,0,0, 20,0,2, 500,0,0])};
-const use=new Map([['1',2000],['2',4000],['4',1000]]);
-const cx={of:new Map([['1',0],['2',0],['3',0],['4',1]]),members:[['1','2','3'],['4']]};
-const size=new Float32Array([stationScale(2000),stationScale(4000),0,stationScale(1000)]);
-const halo=complexCircles(net,(id)=>use.get(id),cx,size);
-near(size[0],stationScale(6000),'the complex circle sums its stations');
-near(size[1],0,'other stations draw none');near(size[2],0,'blueprint none');
-near(size[3],stationScale(1000),'a station on its own keeps its circle');
-near(halo[0],5,'at the constructed stations\' mean');near(halo[1],0);
-near(halo[6],0);near(halo[7],0);
 console.log('t146 ok');

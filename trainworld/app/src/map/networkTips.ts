@@ -4,11 +4,11 @@
 //
 // - A train: its line, and the riders aboard against seats and packed full (the gauge its core is
 //   filled with), from the boarding account as the train inspector counts them.
-// - A station: its name; with use circles on, the riders a day its circle stands for (its
-//   complex's in complex view); where platform crowds are drawn, the riders
+// - A station: its name; with ridership circles on, the riders a day its complex's circle stands
+//   for; where platform crowds are drawn, the riders
 //   waiting per line and direction, red where that platform side is full (T-219). Zoomed out, a complex's one dot is its
 //   busiest station's, and says so (T-217).
-// - A use circle away from any station: the same count, for the circle's station or complex.
+// - A ridership circle away from any station: the same count, for the circle's complex.
 
 import { CRUSH_PER_CAR, crowdAt, QUEUE_STRIDE, SEATS_PER_CAR, tripLoad } from "../game/boarding";
 import { clock } from "../game/clock";
@@ -16,49 +16,44 @@ import { complexes } from "../game/complexView";
 import { demandView } from "../game/demand";
 import { exact, forecast } from "../game/format";
 import { PERIODS, periodAt } from "../game/periods";
-import { stationUse, useFigure } from "../game/stationUse";
 import type { WorldView } from "../game/types";
 import { UPGRADE, UPGRADE_TEXT } from "../game/upgrades";
-import { display, purposeFilter, shownDayPhrase, type StationUseMode } from "../game/ui";
-import { stationScale } from "./demandLayers";
+import { display, purposeFilter, shownDayPhrase } from "../game/ui";
 import { tripAt } from "./network";
 import type { Overlay } from "./overlay";
-import { stationHaloRadius, STATIONS_ZOOM } from "./stationGeometry";
+import { circleColours, circleList, stationCircles, type Circle } from "./stationCircles";
 import { factRow, lineBullet, lineBullets } from "./trackTagRows";
 
 /** A line of a tag: plain text, or a row built as DOM. */
 export type TipLine = string | HTMLElement;
 
-/** "12,400 entries per day" (T-482, T-722), as the station use selector counts, whatever the number
- * of stations in a complex. The circles count every purpose, whatever the purpose filter says. */
-function circleLines(riders: number): string[] {
-  const m = display.peek().stationUse;
-  const what = m === "origins" ? "entries" : m === "transfers" ? "transfers" : "entries and transfers";
-  const out = [`${forecast(riders)} ${what} ${shownDayPhrase.peek()}`];
+/** A ridership circle's riders (T-482, T-722, T-1448), as the station ridership choice counts: under
+ * Total its entries and transfers apart, each by its colour on the map. The circles count every
+ * purpose, whatever the purpose filter says. */
+function circleLines(c: Pick<Circle, "riders" | "transfers">): TipLine[] {
+  const m = display.peek().stationUse, day = shownDayPhrase.peek(), col = circleColours();
+  const out: TipLine[] = m === "total"
+    ? [`${forecast(c.riders)} riders ${day}`, part(col.entries, `${forecast(c.riders - c.transfers)} entries`), part(col.transfers, `${forecast(c.transfers)} transfers`)]
+    : [part(m === "origins" ? col.entries : col.transfers, `${forecast(c.riders)} ${m === "origins" ? "entries" : "transfers"} ${day}`)];
   if (purposeFilter.peek() !== "all") out.push("All purposes");
   return out;
 }
 
-/** The use circle's members and riders for station `id`: its complex's in complex view; null
- * while the figure is not known. */
-function circleOf(w: WorldView, id: string): { members: string[]; riders: number } | null {
-  const dv = demandView.peek(), mode = display.peek().stationUse;
-  if (!dv) return null;
-  let members = [id];
-  if (display.peek().complexView) {
-    const cx = complexes.peek();
-    const k = cx.of.get(id);
-    if (k !== undefined) {
-      const built = new Set(w.save.stations.filter((s) => s.built).map((s) => s.id));
-      members = cx.members[k].filter((m) => built.has(m));
-    }
-  }
-  let riders = 0, known = false;
-  for (const m of members) {
-    const v = useFigure(dv, mode, m);
-    if (v !== undefined) (riders += v), (known = true);
-  }
-  return known ? { members, riders } : null;
+/** A tag row: a dot in a circle's colour, then its count. */
+function part(colour: string, text: string): HTMLDivElement {
+  const dot = document.createElement("span");
+  dot.className = "tag-dot";
+  dot.style.background = colour;
+  return factRow(dot, Object.assign(document.createElement("span"), { textContent: text }));
+}
+
+/** The ridership circle of station `id`'s complex; null while its figure is not known. */
+function circleOf(ov: Overlay, w: WorldView, id: string): Circle | null {
+  const net = ov.renderer.net, dv = demandView.peek(), mode = display.peek().stationUse;
+  if (!net || !dv || mode === "none") return null;
+  const k = complexes.peek().of.get(id);
+  const members = new Set(k === undefined ? [id] : complexes.peek().members[k]);
+  return circleList(net, w, dv, mode).find((c) => members.has(c.station)) ?? null;
 }
 
 /** The tag for a train (`pick`'s train hit). */
@@ -148,8 +143,8 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): TipLine[] | nu
   if (serving.length) out.push(lineBullets(serving));
   if (!s.built) out.push("Blueprint");
   else if (display.peek().stationUse !== "none") {
-    const c = circleOf(w, id);
-    out.push(...(c ? circleLines(c.riders) : ["Calculating demand"]));
+    const c = circleOf(ov, w, id);
+    out.push(...(c ? circleLines(c) : ["Calculating demand"]));
   }
   if (s.built) out.push(...crowdLines(ov, w, id, i));
   return out;
@@ -167,68 +162,9 @@ export function upgradeTip(ov: Overlay, w: WorldView, i: number, bit: number): T
   return out;
 }
 
-/** The tag for a station use circle under the point (circles are behind the network), or null. */
-export function circleTip(ov: Overlay, w: WorldView, px: number, py: number, zoom: number): string[] | null {
-  const net = ov.renderer.net, dv = demandView.peek(), mode = display.peek().stationUse;
-  if (!net || !dv || mode === "none" || zoom < STATIONS_ZOOM) return null;
-  const R = stationHaloRadius(zoom);
-  const list = circleList(net, w, dv, mode);
-  let best: Circle | null = null, bestF = 1;
-  for (const c of list) {
-    const r = R * c.scale;
-    const [sx, sy] = ov.toScreen(c.x, c.y);
-    const dx = sx - px, dy = sy - py;
-    if (dx > r || dx < -r || dy > r || dy < -r) continue;
-    const f = Math.hypot(dx, dy) / r;
-    // the circle whose centre the pointer is relatively nearest, of those it is inside
-    if (f <= bestF) [best, bestF] = [c, f];
-  }
-  if (!best) return null;
-  return [best.name, ...circleLines(best.riders)];
-}
-
-interface Circle { x: number; y: number; scale: number; riders: number; name: string }
-let circleKey: unknown[] = [];
-let circles: Circle[] = [];
-
-/** Every use circle with riders (T-630): its centre (its stations' mean position, local units), size,
- * riders and its busiest station's name; kept until the network, world, solve or display changes,
- * since working it out is a pass over every station's complex (tens of ms on a world save). */
-function circleList(net: NonNullable<Overlay["renderer"]["net"]>, w: WorldView, dv: NonNullable<ReturnType<typeof demandView.peek>>, mode: StationUseMode): Circle[] {
-  const key = [net, w, dv, mode, display.peek().complexView, complexes.peek(), stationUse.peek()];
-  if (key.every((v, i) => v === circleKey[i])) return circles;
-  circleKey = key;
-  const index = new Map(net.stationIds.map((id, i) => [id, i]));
-  const names = new Map(w.save.stations.map((s) => [s.id, s.name]));
-  const built = new Set(w.save.stations.filter((s) => s.built).map((s) => s.id));
-  const cx = display.peek().complexView ? complexes.peek() : null;
-  const seen = new Set<string>();
-  const out: Circle[] = [];
-  for (const s of w.save.stations) {
-    if (!s.built || seen.has(s.id)) continue;
-    const k0 = cx?.of.get(s.id);
-    const members = k0 !== undefined && cx ? cx.members[k0].filter((m) => built.has(m)) : [s.id];
-    let riders = 0, known = false, top = s.id, topV = -1;
-    for (const m of members) {
-      seen.add(m);
-      const v = useFigure(dv, mode, m);
-      if (v === undefined) continue;
-      riders += v;
-      known = true;
-      if (v > topV) (topV = v), (top = m);
-    }
-    if (!known || riders <= 0) continue;
-    let x = 0, y = 0, k = 0;
-    for (const m of members) {
-      const j = index.get(m);
-      if (j === undefined) continue;
-      x += net.stations[j * 3];
-      y += net.stations[j * 3 + 1];
-      k++;
-    }
-    if (!k) continue;
-    out.push({ x: x / k, y: y / k, scale: stationScale(riders), riders, name: names.get(top) ?? "Station" });
-  }
-  circles = out;
-  return out;
+/** The tag for a ridership circle under the point, or null. */
+export function circleTip(px: number, py: number): TipLine[] | null {
+  if (display.peek().stationUse === "none") return null;
+  const c = stationCircles.now?.at(px, py);
+  return c ? [c.name, ...circleLines(c)] : null;
 }

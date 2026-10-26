@@ -208,6 +208,9 @@ body.resizing, body.resizing * { user-select: none; }
 .cities-box { container-type: inline-size; container-name: cities; }
 @container cities (max-width: 298px) { .cities-box .rows.cities .city-star { display: none; } }
 @container cities (max-width: 277px) { .cities-box .c-money { display: none; } }
+/* T-1438: beside the city view on a phone, then the points and the bar */
+@container cities (max-width: 215px) { .cities-box .w-points { display: none; } }
+@container cities (max-width: 167px) { .cities-box .w-citybar, .cities-box .city-bar { display: none; } }
 .rows.cities .bar { height: 10px; }
 .rows.pick.cities > li.total { cursor: default; margin-bottom: 10px; }
 .rows.pick.cities > li.total:hover { background: none; }
@@ -290,6 +293,10 @@ body.resizing, body.resizing * { user-select: none; }
 .train-stops .stop-name { display: flex; align-items: center; gap: 3px; }
 .train-stops .stop-name .name { flex: 0 1 auto; min-width: 24px; overflow: hidden; text-overflow: ellipsis; margin-right: 3px; }
 .train-stops .stop-name .chip { flex: none; }
+.h .one-rider-acts { display: inline-flex; align-self: center; margin-left: auto; font-weight: 400; }
+.one-rider .grow { flex: none; }
+.one-rider .val { min-width: 0; margin-left: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.one-rider .val .mk { margin-right: 4px; }
 .badge-edit { display: inline-flex; padding: 0; border: 0; background: transparent; cursor: pointer; flex: none; font: inherit; }
 .badge-edit:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .line-list-actions, .line-stop-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
@@ -562,6 +569,23 @@ rect.now { fill-opacity: .45; }
 .split-row.updating .bar, .split-row.updating .pct { opacity: 0.6; }
 .bar-box { flex: 1; min-width: 80px; position: relative; display: block; height: 10px; }
 .pct { display: inline-block; width: 5ch; text-align: left; }
+/* T-1440: zoomed out the figure is the train trips a day ("11.8M trips/day") */
+.pct.trips { width: auto; }
+/* T-1437: a region's goals over its split bar, the star small under its tick; laid over the bar so
+   nothing moves. Reached ticks are the text colour, the rest muted; a wider transparent strip takes
+   the hover. */
+.goal-tick { position: absolute; top: -2px; bottom: -2px; width: 1px; margin-left: -0.5px; background: var(--muted); z-index: 1; }
+.goal-tick::before { content: ""; position: absolute; top: 0; bottom: 0; left: -4px; right: -4px; }
+.goal-tick.reached { width: 2px; margin-left: -1px; background: var(--text); }
+.goal-star { position: absolute; top: 100%; left: 50%; width: 7px; height: 7px; margin-left: -3.5px; display: block; color: var(--muted); }
+.goal-star svg { display: block; width: 7px; height: 7px; }
+.goal-tick:not(.reached) .goal-star svg .solid { fill: none; stroke: currentColor; stroke-width: 2; }
+.goal-tick.reached .goal-star { color: var(--accent); }
+.goal-bar { position: relative; }
+.zone-trips.with-goals { padding-bottom: 12px; }
+.goals-reached { display: inline-flex; gap: 8px; }
+.goal-mark { display: inline-flex; align-items: center; gap: 2px; }
+.goal-mark svg { width: 12px; height: 12px; color: var(--accent); }
 /* T-349: the status is a small tag on the map's top row, right of the demand buttons (StatusTag.tsx), so
    the top bar makes no room for it. T-180: in a narrow column the text ends in an ellipsis; the whole
    text is its hover. */
@@ -624,6 +648,9 @@ rect.now { fill-opacity: .45; }
 .demand-selector .hint-cell { flex: none; display: grid; place-items: center; width: 28px; height: 28px;
   border: 1px solid var(--rule); background: var(--bg); color: var(--text); }
 .hint-cell .bubble { fill: color-mix(in oklab, #ff4d4d, #4d4dff); stroke: var(--map-ink); stroke-width: 2; }
+/* T-1448: the icon cell is a button folding its row down to it */
+.demand-selector button.hint-cell { padding: 0; font: inherit; cursor: pointer; }
+.demand-selector button.hint-cell:hover { background: var(--shade); }
 /* T-703: the track display under the demand buttons, its key (height, speed) beside it */
 .track-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; max-width: 100%; }
 .track-row .track-key { margin: 0; padding: 0 8px; height: 28px; box-sizing: border-box; align-items: center; background: var(--bg); border: 1px solid var(--rule); }
@@ -714,6 +741,10 @@ button.save-add:hover { color: var(--text); }
 /* the demand views' canvas (T-084, T-097): over the network and its capacity markers (T-099),
    under the station names and the drawing tool's marks, which come later in the map at z 2 */
 #map canvas.overlay.demand { z-index: 2; }
+/* T-1448: the station ridership circles, over the bubbles (later in the map, the same z) */
+#map canvas.overlay.stations { z-index: 2; }
+/* T-1435: where people drive, between the bubbles and the circles (the same z) */
+#map canvas.overlay.drives { z-index: 2; }
 #map .maplibregl-control-container { position: relative; z-index: 3; }
 .stn-labels { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
 .stn-label-plane { position: absolute; inset: 0; }
@@ -816,9 +847,13 @@ button.save-add:hover { color: var(--text); }
 /* T-1281: a park and ride's P after the name */
 .stn-label.park::after { content: "P"; display: inline-block; margin-left: 4px; padding: 0 3px; border-radius: 2px;
   background: var(--map-ink); color: var(--bg); font-weight: 700; font-size: 0.85em; line-height: 1.25; vertical-align: 1px; }
+/* T-1434: a line's opening day, a string of small pennants under each of its stations' names, in its colour */
+.stn-label.opening::before { content: ""; position: absolute; left: 0; top: 100%; width: min(100%, 63px); height: 6px; margin-top: -1px; opacity: 0.85;
+  background: var(--rib);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 6'%3E%3Cpath d='M0 0h7v1H0zM.8 1h5.4L3.5 5.6z'/%3E%3C/svg%3E") 0 0 / 7px 6px repeat-x;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 6'%3E%3Cpath d='M0 0h7v1H0zM.8 1h5.4L3.5 5.6z'/%3E%3C/svg%3E") 0 0 / 7px 6px repeat-x; }
 .track-modes .group { display: grid; grid-template-columns: 1fr 1fr; }
 .track-modes .btn { white-space: normal; height: auto; min-height: 40px; line-height: 1.35; padding: 4px 6px; }
-.station-use { margin-bottom: 6px; }
 .speed-key li { display: flex; align-items: center; gap: 6px; }
 .speed-key i { display: inline-block; width: 16px; height: 4px; }
 .cap-marks { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
@@ -925,7 +960,7 @@ button.save-add:hover { color: var(--text); }
    on, the demand views are drawn beneath the network */
 .track-tag, .build-tag { z-index: 5; }
 .build-tag { position: absolute; left: 0; top: 0; pointer-events: none; }
-.building #map canvas.overlay.demand, .building .airport-marks, .building .attraction-marks, .building .intercity-labels { z-index: 0; }
+.building #map canvas.overlay.demand, .building #map canvas.overlay.stations, .building #map canvas.overlay.drives, .building .airport-marks, .building .attraction-marks, .building .intercity-labels { z-index: 0; }
 /* T-732: what else is under a resting pointer, under the hover tag; its entries take clicks */
 .rest-list { z-index: 6; pointer-events: auto; padding: 1px 0; }
 .rest-entry { display: flex; gap: 5px; align-items: center; padding: 1px 4px; cursor: pointer; }
@@ -937,6 +972,8 @@ button.save-add:hover { color: var(--text); }
 .rest-bub { flex: none; box-sizing: border-box; width: 12px; height: 12px; margin: 0 2px; border-radius: 50%;
             border: 1.5px solid var(--map-ink); background: color-mix(in srgb, var(--map-ink) 15%, transparent); }
 .tag-facts { display: flex; gap: 8px; align-items: center; }
+/* a ridership circle's two parts in its tag (T-1448), each after a dot in its map colour */
+.tag-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; }
 .tag-fact { display: inline-flex; gap: 3px; align-items: center; }
 .tag-lines { display: flex; flex-wrap: wrap; gap: 2px; }
 .tag-icon { width: calc(12px * var(--ui, 1)); height: calc(12px * var(--ui, 1)); flex: none; }
@@ -1158,6 +1195,29 @@ button.save-add:hover { color: var(--text); }
 .search-mark { width: 10px; height: 10px; margin: 0 3px; flex: none; border-radius: 50%; background: #fff; border: 2px solid var(--net-ink); }
 .search-mark.city { border-radius: 0; background: var(--muted); border-color: var(--muted); }
 .search-mark.place { background: none; border-color: var(--muted); }
+/* T-1433: the trouble list at the map's lower right, over the attribution button; quiet when shut */
+.trouble { position: absolute; right: 10px; bottom: 34px; z-index: 4; zoom: var(--ui, 1);
+  display: flex; flex-direction: column; align-items: flex-end; max-width: calc(100% - 20px); }
+.choosing .trouble { visibility: hidden; }
+.trouble-btn { grid-auto-flow: column; gap: 4px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.trouble-btn svg { width: 14px; height: 14px; }
+.trouble-btn.on { color: var(--text); }
+.rows.pick.trouble-list { width: 300px; max-width: 100%; max-height: min(260px, 50vh); overflow-y: auto; margin: 0 0 -1px;
+  padding: 2px 6px; border: 1px solid var(--rule); background: var(--bg); font-size: 12px; }
+.rows.pick.trouble-list > li { margin: 0 -6px; }
+.trouble-list .val { display: inline-flex; align-items: center; }
+.trouble-fig { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); }
+.trouble-fig svg, .trouble-mark svg { width: 14px; height: 14px; }
+.trouble-mark { display: inline-flex; flex: none; }
+.trouble-mark.near { color: #d0601c; }
+.trouble-mark.over { color: #c0392b; }
+.trouble-tag { padding: 0 4px; color: #fff; }
+.trouble-tag.near { background: #d0601c; }
+.trouble-tag.over { background: #c0392b; }
+.trouble-rev { display: inline-grid; place-items: center; flex: none; width: 16px; height: 16px; border-radius: 50%;
+  background: #f2b705; color: #1a1a1a; }
+.trouble-rev svg { width: 13px; height: 13px; stroke-width: 2; }
+.trouble-chips { display: inline-flex; gap: 2px; }
 @container map-column (max-width: 680px) {
   .map-search { left: 10px; right: auto; top: 80px; }
   /* T-231: the alert sits beside the search glass, which is under the demand buttons here */

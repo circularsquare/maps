@@ -102,11 +102,15 @@ export function modeMix(train: number, walk: number, drive: number): [number, nu
   const b = (t[2] * train + w[2] * walk + d[2] * drive) / all;
   const k = MIX_TOP / Math.max(r, gg, b, 1);
   // T-653: an even three-way mix would come out near white; the smallest share, from nothing up to a
-  // third, pulls the colour towards one grey (the same in both themes, so baked bubble colours stay valid)
+  // third, pulls the colour towards one grey. T-1450: a darker grey on the light map.
   const g = Math.min(1, 3 * Math.min(train, walk, drive) / all);
-  return [Math.round(r * k + (MIX_GREY - r * k) * g), Math.round(gg * k + (MIX_GREY - gg * k) * g), Math.round(b * k + (MIX_GREY - b * k) * g)];
+  const grey = lightMap ? MIX_GREY_LIGHT : MIX_GREY;
+  return [Math.round(r * k + (grey - r * k) * g), Math.round(gg * k + (grey - gg * k) * g), Math.round(b * k + (grey - b * k) * g)];
 }
 const MIX_GREY = 190;
+const MIX_GREY_LIGHT = 170;
+let lightMap = false;
+let lastScheme: [BubbleScheme, string, string] = ["mode", "", ""];
 let MIX: [number, number, number][] | null = null;
 const MIX_TOP = Math.max(...rgb(MODE_COLOURS.train), ...rgb(MODE_COLOURS.walk), ...rgb(MODE_COLOURS.drive));
 
@@ -124,11 +128,20 @@ let rampLut: Uint8ClampedArray | null = null;
 /** Set the bubble colouring for everything built from now on (the map views, the inspectors'
  * swatches); the same arguments again change nothing. */
 export function setBubbleColours(s: BubbleScheme, from: string, to: string) {
-  const key = s === "ramp" ? `ramp${from}${to}` : "mode";
+  lastScheme = [s, from, to];
+  const key = s === "ramp" ? `ramp${from}${to}` : lightMap ? "mode-light" : "mode";
   modeScheme.value = s === "ramp" ? "ramp" : "mode";
   if (key === schemeKey) return;
   schemeKey = key;
   rampLut = s === "ramp" ? buildRamp(HEX.test(from) ? from : DEFAULT_RAMP.from, HEX.test(to) ? to : DEFAULT_RAMP.to) : null;
+}
+/** T-1450: the mode mix's grey is darker on the light map; views call this with the shade beside
+ * `setBubbleColours`, and a changed shade is a changed scheme key, so built discs are painted again. */
+export function setBubbleShade(shade: "light" | "dark") {
+  const light = shade === "light";
+  if (light === lightMap) return;
+  lightMap = light;
+  setBubbleColours(...lastScheme);
 }
 /** Names the scheme set now ("mode", or "ramp" with its two colours), to tell built discs apart. */
 export const bubbleSchemeKey = () => schemeKey;

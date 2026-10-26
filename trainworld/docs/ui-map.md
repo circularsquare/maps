@@ -60,7 +60,7 @@ the class under the pointer: "Hills, track costs 1.6x".
 
 - **Below zoom 9** (about 160 km across, a whole region) only the lines are drawn [T-205, T-542,
   `STATIONS_ZOOM`]. Stations and trains are neither drawn nor picked, so a click or hover finds the
-  line. A selected station or complex is still drawn and clickable. The station use circles hide
+  line. A selected station or complex is still drawn and clickable. The station ridership circles hide
   with the stations, hover and all [T-1274]; the other demand drawings and capacity tags are
   unchanged.
 - **Zoom 9 to 10**: every station is its own dot, drawn and picked; trains are not.
@@ -212,7 +212,7 @@ under the pointer. A bus is one short narrow car. A bus line's badge is a rounde
 everywhere, a rail line's a circle.
 ## Stations
 
-- **Dots, zoom 9 to 14** [T-189, T-313, T-322, T-542; `map/stationGeometry.ts`]: white with a dark rim (in both themes, T-039) at
+- **Dots, zoom 9 to 14** [T-189, T-313, T-322, T-542; `map/stationGeometry.ts`]: white with a dark rim (in both themes, T-039; the rim, the terminal end bars and the selection outline are the map's dark grey in light and a warm grey #8f8b85 in dark, `stationInk` in `game/shadeTable.ts`, T-1432) at
   the platform's middle. Radius 1.7/4.3/5/7.4 px at zoom 9/11/12/15 for an ordinary station, 2.4/5.6/6.6/9.5
   px for one served by more than one line (`stationRadii`; linear between, held outside), never narrower than the lines through
   it, the rim 1.5 px at zoom 13. A complex's dots are one shape: every dark disc is drawn first,
@@ -396,6 +396,15 @@ those who got on, less the load carried on.
   layer; placement and the greedy overlap pass run on other camera changes, edits, font loading,
   showing labels again and after movement ends. A 256 px margin prepares names entering the
   screen, and a pan re-places them after 128 px of travel (notes/T-074.md).
+- **Opening day** [T-1434; `game/openingDay.ts`]: a line opens when it first runs with trains in
+  this page's session (running, and some level's trains above 0), having been in the world before.
+  For one game day (86,400 s of the clock, from the moment it opens) its stations' names carry a
+  string of tiny pennants under them, 7 px each up to 63 px, in the line's colour (the lines' colours
+  in turn where two or three opening lines share a station; `.stn-label.opening`). It also
+  plays "bung" 250 ms after the construct's own sound, and the line's Riders cell in the Lines tab
+  counts up from 0 to its figure over 2.4 s, eased out, starting when the figure first reads above 0
+  with the tab open ([ui-inspectors.md](ui-inspectors.md) Lines tab). Not saved: a loaded game
+  shows no opening days, and one in progress ends with the page.
 - **Capacity tags** [T-184, T-224, T-256; `map/capacityMarkers.ts`; what they mean in
   [track-and-service.md](track-and-service.md) 6.2]: placed after names, which never move for a
   tag. Each takes the first of six spots round its resource clear of names (3 px) and earlier tags
@@ -431,8 +440,9 @@ those who got on, less the load carried on.
   "Not running yet", a broken one "Not running"; before the first solve the traffic view says
   "Calculating demand". The tag follows the pointer along the track; leaving, pressing, dragging or
   zooming hides it. It follows the pick order: with the select tool, bubbles, capacity tags and
-  handles above the network keep it hidden; with a build tool it sits above the pointer, clear of
-  the tool's own tag below, and leaves out the station demand circles. A mark on the track names itself
+  handles above the network keep it hidden, except inside a station ridership circle, which comes
+  before the bubbles [T-1448]; with a build tool it sits above the pointer, clear of
+  the tool's own tag below, and leaves out the station ridership circles. A mark on the track names itself
   ("Flat crossing" or "Flat junction" with the elevation, "Ramp up to +1", "Tunnel portal down to −1",
   "Blueprint" on blueprint track), over the track's own tag; a junction without a mark says nothing. The
   stop editor and the trip tool have no track tag. The track tag and the build tools' tags are
@@ -440,12 +450,12 @@ those who got on, less the load carried on.
 - **Trains and stations** [T-194, T-305, T-313; `map/networkTips.ts`]: the same tag (wrapping at 320
   px). A train: "Line 1 train", "340 riders aboard" and "352 seats, 1,280 full". A station:
   its name, then its lines as bullets, each once (a station drawn as its own dot or box lists its
-  own lines) [T-559]; with demand circles on, "41,200 entries and transfers per day" (or entries, or transfers, as the station ridership choice says) [T-722]; where crowds
+  own lines) [T-559]; with ridership circles on, its complex's circle's count rows ([ui-demand-views.md](ui-demand-views.md) "Station ridership circles": under Total the riders, then entries and transfers apart, each after a dot in its colour) [T-722, T-1448]; where crowds
   are drawn a row per line and direction with anyone waiting (the line's bullet, "to Van Cortlandt
   Park-242 St", "120 waiting"), the count in the alert red while that platform side is full, or
   "Nobody waiting on the platforms". On a dot, the crowd lines are its pie's numbers ("1,257
   waiting", red when full, then "Fullest platform 45% full"). A
-  demand circle away from any station gives its busiest station's name and count. Refreshed each
+  ridership circle away from the network gives its busiest station's name and the same rows. Refreshed each
   game minute while shown.
 - **What else is here** [T-732, `map/hoverRest.ts`]: with the select tool, when the pointer rests
   250 ms on the map, a list under the hover tag names what else is under it, at most one demand
@@ -463,7 +473,7 @@ those who got on, less the load carried on.
   drawn lighter at once, mixed toward white in both themes: a demand bubble 30% (the disc whose tag
   shows, any disc layer), a line 30% along its whole length, bare track that edge, and a station's
   dark rim 60% over its whole complex (with the bridges and connectors between its members). A
-  train, a mark, an airport badge and the station demand circles light nothing; build tools light
+  train, a mark, an airport badge and the station ridership circles light nothing; build tools light
   nothing. It is a uniform in the shaders: a change redraws once and rebuilds nothing.
 
 ## Picking

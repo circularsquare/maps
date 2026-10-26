@@ -4,6 +4,7 @@ import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { demandAt, lineSeconds } from "../../game/clock";
+import { Money } from "../MoneyText";
 import { andList, clockTime, count, distance, duration, forecast, headway, length, money, plural, runCostRule, speed, trainKind, trainRunCost } from "../../game/format";
 import { crowdColour, LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS } from "../../game/periods";
@@ -211,9 +212,9 @@ function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; period
       <ul class="rows">
         <Row label="Riders">{count(d.riders)}</Row>
         <PurposeSplit scope={[{ line: l.id }]} unit="riders" />
-        <li data-tip={`Fares ${money(d.fares)} minus running cost ${money(run)} for the trains and upkeep of its track and stations ${money(st.upkeep)}: ${money(d.fares - run - st.upkeep)} net${rule}\nUpkeep of track and stations several lines use is shared by their trains a day.`}>
+        <li data-tip={`Profit in the past 24 hours: ${money(d.fares - run - st.upkeep)}, fares minus running trains and upkeep\nFares ${money(d.fares)}\nRunning trains ${money(-run)}\nUpkeep ${money(-st.upkeep)}${rule}\nUpkeep of track and stations several lines use is shared by their trains a day.`}>
           <span class="grow">Profit</span>
-          <span class="val">{money(d.fares)} −<span class="crowd-bad">{money(run + st.upkeep)}</span></span>
+          <span class="val"><Money dollars={d.fares - run - st.upkeep} /></span>
         </li>
         {load !== null && (
           <li data-tip={`Riders aboard on average, as a share of the ${(st.cars * CRUSH_PER_CAR).toLocaleString("en-US")} a train holds at crush, over every trip on a ${DAY_KIND_NAME[kind].toLowerCase()}. Each trip counts for as long as it runs.`}>

@@ -2599,6 +2599,15 @@ pub fn board_cost(headway_min: f32, wait_f: f32, p: &Params) -> f32 {
     wait_f * headway_min / 2.0 + p.transfer_min
 }
 
+/// T-1430: an inter-city trip's first wait, planned around the timetable: half the headway, but at
+/// most `PLANNED_EARLY_MIN` plus a sixth of it (on average a quarter of the headway from the time
+/// wanted, at two thirds of a platform wait's weight) and at most `PLANNED_WAIT_CAP_MIN`.
+pub const PLANNED_EARLY_MIN: f32 = 5.0;
+pub const PLANNED_WAIT_CAP_MIN: f32 = 30.0;
+pub fn planned_board_cost(headway_min: f32, wait_f: f32, p: &Params) -> f32 {
+    wait_f * (headway_min / 2.0).min(PLANNED_EARLY_MIN + headway_min / 6.0).min(PLANNED_WAIT_CAP_MIN) + p.transfer_min
+}
+
 pub fn build_graph(net: &Network, p: &Params) -> Graph {
     let s = net.n_stations();
     let mut rn_station = vec![];
@@ -2799,6 +2808,9 @@ pub struct Skims {
     pub order: Vec<NodeIds>,
     /// Per searched destination, its change nodes (`ChangeNodes`): node ids from `n` on.
     pub change: Vec<ChangeNodes>,
+    /// Per searched destination, the stations whose cost as an inter-city trip's start
+    /// (`DestStrategy::entry`) is below `r`'s, (station, cost); `entry_r` puts them in.
+    pub entry: Vec<Box<[(u32, f32)]>>,
 }
 
 /// A station as reached off one of the lines its own strategy boards (T-575): a rider never changes
@@ -2878,7 +2890,22 @@ fn accepted(bits: &[u64], g: &Graph, r: usize) -> f32 {
 
 impl Skims {
     pub fn empty(g: &Graph) -> Skims {
-        Skims { s: g.n_st, n: g.n, r: vec![f32::INFINITY; g.n_st * g.n_st], walk: vec![u16::MAX; g.n_st * g.n_st], walk_max: vec![0; g.n_st], slot: vec![NONE; g.n_st], next: vec![], board: vec![], order: vec![], change: vec![] }
+        Skims { s: g.n_st, n: g.n, r: vec![f32::INFINITY; g.n_st * g.n_st], walk: vec![u16::MAX; g.n_st * g.n_st], walk_max: vec![0; g.n_st], slot: vec![NONE; g.n_st], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![] }
+    }
+    /// `r` with the first boarding at the planned wait (T-1430), as the inter-city trips cost it.
+    pub fn entry_r(&self) -> std::borrow::Cow<'_, [f32]> {
+        if self.entry.iter().all(|e| e.is_empty()) {
+            return std::borrow::Cow::Borrowed(&self.r);
+        }
+        let mut r = self.r.clone();
+        for (dst, &slot) in self.slot.iter().enumerate() {
+            if slot != NONE {
+                for &(src, c) in self.entry[slot as usize].iter() {
+                    r[src as usize * self.s + dst] = c;
+                }
+            }
+        }
+        std::borrow::Cow::Owned(r)
     }
     /// The most change nodes of any searched destination.
     pub fn most_change_nodes(&self) -> usize {
@@ -2932,6 +2959,7 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
         sk.board.push(d.board);
         sk.order.push(d.order);
         sk.change.push(d.change);
+        sk.entry.push(d.entry);
     }
 }
 
@@ -3094,6 +3122,10 @@ pub struct DestStrategy {
     pub board: Box<[u64]>,
     pub order: NodeIds,
     pub change: ChangeNodes,
+    /// The stations whose route cost as an inter-city trip's start, the first boarding at the
+    /// planned wait (`planned_board_cost`, T-1430), is below the plain one, (station, cost in
+    /// `Skims::r`'s terms); empty unless the search wrote route costs.
+    pub entry: Box<[(u32, f32)]>,
 }
 
 /// A destination's strategy, borrowed from a `Skims` slot or a `DestStrategy`.
@@ -3116,7 +3148,7 @@ impl NodeIds {
 
 impl DestStrategy {
     pub fn bytes(&self) -> usize {
-        self.next.bytes() + self.order.bytes() + 8 * self.board.len() + 4 * (self.change.st.len() + self.change.off.len()) + 8 * self.change.bits.len()
+        self.next.bytes() + self.order.bytes() + 8 * self.board.len() + 4 * (self.change.st.len() + self.change.off.len()) + 8 * self.change.bits.len() + 8 * self.entry.len()
     }
     pub fn view(&self) -> Strategy<'_> {
         Strategy { next: &self.next, board: &self.board, order: &self.order, change: &self.change }
@@ -3155,17 +3187,28 @@ impl<'a> DestSearch<'a> {
         let (s, n) = (q.s, q.n);
         q.run(dst);
         let ids = n + q.cn.len();
-        let d = DestStrategy { next: NodeIds::of(&q.next, ids), board: std::mem::take(&mut q.board), order: NodeIds::of(&q.order, ids), change: q.change_nodes() };
+        let mut d = DestStrategy { next: NodeIds::of(&q.next, ids), board: std::mem::take(&mut q.board), order: NodeIds::of(&q.order, ids), change: q.change_nodes(), entry: Box::new([]) };
         if let Some(r) = r {
             let curve = &q.g.fare_curve;
             let bent = !curve.is_line();
             if bent {
                 trip_km(q.g, d.view(), dst, &mut self.km, &mut self.dep);
             }
+            q.entry_costs(dst);
+            let mut entry = vec![];
             for src in 0..s {
+                if src == dst {
+                    r[src * s + dst] = 0.0;
+                    continue;
+                }
                 // The first boarding is not a transfer; the trip's base fare is added later.
-                r[src * s + dst] = if src == dst { 0.0 } else { q.dist[src] - q.p.transfer_min + if bent { curve.extra(self.km[src]) } else { 0.0 } };
+                let x = if bent { curve.extra(self.km[src]) } else { 0.0 };
+                r[src * s + dst] = q.dist[src] - q.p.transfer_min + x;
+                if q.entry[src] < q.dist[src] - 1e-4 {
+                    entry.push((src as u32, q.entry[src] - q.p.transfer_min + x));
+                }
             }
+            d.entry = entry.into_boxed_slice();
         }
         d
     }
@@ -3298,6 +3341,8 @@ struct Search<'a> {
     edge_ix: Vec<u32>,
     /// The platforms (relative to the station) and frequencies a settling node boards (T-717).
     pool: Vec<(f32, f32, f32)>,
+    /// Each station's cost as an inter-city trip's start (`entry_costs`).
+    entry: Vec<f32>,
 }
 
 const MANY: u32 = NONE - 1;
@@ -3376,6 +3421,41 @@ impl Search<'_> {
             lone,
             edge_ix,
             pool: vec![],
+            entry: vec![],
+        }
+    }
+
+    /// T-1430: after `run`, each station's cost towards `dst` as an inter-city trip's start: the
+    /// departures offered to it, less their tolerance penalty (`Graph::rn_span`), pooled as
+    /// `join_line` pools them but at the planned wait (`planned_board_cost`). Every departure was
+    /// offered by the search's end; the pool takes them cheapest first and stops at the first that
+    /// would not lower it, as `join_line` would refuse every later one too.
+    fn entry_costs(&mut self, dst: usize) {
+        let (g, s) = (self.g, self.s);
+        self.entry.clear();
+        self.entry.resize(s, f32::INFINITY);
+        for v in 0..s {
+            if v == dst || !self.dist[v].is_finite() {
+                continue;
+            }
+            self.cand.clear();
+            for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+                let r = g.adj_to[e] as usize - s;
+                if g.rn_tph[r] > 0.0 && self.offer[r].is_finite() {
+                    self.cand.push((self.offer[r] - g.rn_span[r], r as u32));
+                }
+            }
+            self.cand.sort_unstable_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+            let (mut f, mut w, mut cost) = (0f32, 0f32, f32::INFINITY);
+            for &(d, r) in &self.cand {
+                let sum = f + g.rn_tph[r as usize];
+                let c = (w + g.rn_tph[r as usize] * d) / sum + planned_board_cost(60.0 / sum, g.st_wait[v], self.p);
+                if c >= cost {
+                    break;
+                }
+                (f, w, cost) = (sum, w + g.rn_tph[r as usize] * d, c);
+            }
+            self.entry[v] = cost;
         }
     }
 

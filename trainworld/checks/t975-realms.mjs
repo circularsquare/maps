@@ -122,7 +122,7 @@ async function europePan(page) {
       await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
       await page.waitForSelector('.start-menu .start-new', { timeout: 60000 });
       await settle(page, 2000);
-      await page.click('.start-menu .start-new');
+      if (await page.$('.start-menu .start-new:not(.new-game-start)')) await page.click('.start-menu .start-new:not(.new-game-start)'); // T-1441: a first visit opens on the sheet
       await page.waitForSelector('.start-menu .new-game');
     };
     const label = () => page.textContent('.new-game .start-new');
@@ -195,7 +195,7 @@ try {
   const menuBubbles = await page.evaluate(() => document.querySelectorAll('.intercity-label').length);
   report('no city bubbles behind the start menu', menuBubbles === 0, `(${menuBubbles})`);
   const tPick = Date.now();
-  await page.click('.start-menu .start-new');
+  if (await page.$('.start-menu .start-new:not(.new-game-start)')) await page.click('.start-menu .start-new:not(.new-game-start)'); // T-1441: a first visit opens on the sheet
   await page.click('.start-menu .new-game-cities [data-city="tyo"]');
   await page.click('.start-menu .new-game .start-new');
   await ready(page);

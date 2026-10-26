@@ -34,7 +34,8 @@ let ask = 0;
 effect(() => {
   const dv = demandView.value;
   const mode = display.value.stationUse;
-  if (!dv || mode === "none" || mode === "total") return;
+  // under Total too: its circles show the transfers apart (T-1448)
+  if (!dv || mode === "none") return;
   const cur = stationUse.peek();
   if (cur?.dv === dv) return;
   const ids = [...dv.stations.keys()];

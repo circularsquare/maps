@@ -8,7 +8,26 @@ one station), a stretch of track, a junction, a train, bubbles, a city or zone, 
 selected leaves it blank, with no text. An empty click on the map or Escape clears the selection.
 One component per kind in `ui/inspector/` (`StationInspector.tsx`, `TrainInspector.tsx`, `TrackInspector.tsx` and `JunctionInspector.tsx` hold station, train, track and junction). The track and junction inspectors are in [ui-building.md](ui-building.md) and
 [track-and-service.md](track-and-service.md) 6.2; a bubble selection's and a city's (their
-inter-city trips by train, car and plane) in [ui-demand-views.md](ui-demand-views.md).
+inter-city trips by train, car and plane) in [ui-demand-views.md](ui-demand-views.md), the city
+view's own rows below.
+
+## The city view
+
+[T-1438; `ui/inspector/CityInspector.tsx` with `CityDetails.tsx`] A city or zone picked by its
+inter-city bubble zoomed out, or by a click on its row in the Cities tab (a double click there moves
+the camera, as in the Stations tab). Under the title and the go-to icon, rows: **Train share** (the
+zone's, as the top bar gives it; hover the split with counts), and for a zone with a built station
+**Points** (the past 24 game hours, hover as the Cities tab's), **Profit** ("$389M a day", the Cities
+tab's figure and hover, losses red) and **Goals reached** (each goal reached, the star's as a small
+star before "10%", then "20%" and on; hover when it was reached; "None" before the first)
+[T-1437]. Then what a bubble click showed before ([ui-demand-views.md](ui-demand-views.md)): within
+the zone, with the goal ticks over its mode bar as on the top bar, to other places, the top three
+destinations. Then, for a zone with a built station: **By purpose**, the purpose bar of the
+inspectors (`PurposeSplit`, no key) over the boardings at the zone's stations on every line;
+**Top lines**, the five lines with most boardings at the zone's stations in the past 24 hours
+(bullet, name, count with hover); **Top stations**, the five complexes (or lone stations) in the
+zone with most boardings in the past 24 hours, named after the member with most lines. A click on a
+line or station row opens its view.
 
 ## The past 24 hours, not a forecast
 
@@ -41,7 +60,10 @@ purpose filter the purpose drawn is ringed in the bar.
   dock is too narrow, then the City column beside Near [T-746]. Lines default to by riders, most first [T-905]. The sort is kept while the page is open and re-runs each game hour.
   A double click on a row fits the map to the line's stops (a jump, as search does) after the
   single click selected it [T-569, `ui/locate.ts`]; the line inspector's locate button (cross
-  hairs, hover "Show on the map", beside the pencil) does the same.
+  hairs, hover "Show on the map", beside the pencil) does the same. On a line's opening day
+  [T-1434, [ui-map.md](ui-map.md) "Opening day"] its Riders cell reads 0 until its figure first
+  shows, then counts up to it over 2.4 s, fast at first and slowing to the end; the hover always
+  gives the real figure.
 - **Trains to add** [T-472, T-491, T-818, T-1255]: a row's train count (the trains its level needs now, the bare
   number under the "Trains" header [T-532]) is coloured by the crowding score of the line's period now, otherwise muted. The score is the
   average extra wait for a train with room of the riders at the platforms where trains come full
@@ -87,7 +109,8 @@ purpose filter the purpose drawn is ringed in the bar.
   keeps the name and leaves the editor open; Enter in it, the check button (hover "Done") that
   replaces the pencil, a click anywhere outside the title and editor, or Esc closes it (Esc in the name box
   drops the typed name). A symbol with several characters widens the rounded badge; a blank symbol
-  restores name-derived initials. Dragging in the picker changes the badge and the stop dots in the
+  restores the default: a name that is a short code (up to five capitals or digits, "6X", "HBLR") whole,
+  "Line 7" as 7, else the name's first letter [T-330]. Dragging in the picker changes the badge and the stop dots in the
   panel at once; the map's line follows by one colour edit every 0.2 s at most (longer on a slow
   machine: 6 times the last edit's round trip), and the final colour goes as one edit on release, a
   swatch click, an arrow key step or a typed hex.
@@ -159,8 +182,8 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   line's "Track this line ran on is gone" is one too;
   Today for a running line:
   riders by purpose,
-  one Profit row (fares, a minus sign, then the running cost over the 24 hours plus the line's share
-  of upkeep in red; the hover gives fares, running cost, upkeep share and the net, T-867), the **Average load** in a percentage [T-820] (rider-seconds
+  one Profit row (the net over the 24 hours, fares less running cost and the line's share of upkeep,
+  in the alert red when negative; the hover gives the net, fares, running trains and upkeep share, T-867, T-1443), the **Average load** in a percentage [T-820] (rider-seconds
   aboard over the seconds each trip is under way times the riders a train holds at crush, 160 a car,
   over every trip of today's kind of day from `linePeriods`; `averageLoad` in `LineInspector.tsx`; the hover says so),
   how many trains left full as "x/y" of the trips that
@@ -259,6 +282,22 @@ the Build tab's quote has rows for bus routes and new buses.
   alighting share at that stop in the period it arrives in, as the account lets them off; everyone
   at the end of the line. The row's hover: "61 of the 1,440 riders aboard get off at Grand St, and
   40 get on". The list moves on at each stop and the minutes each game minute.
+- **One rider** [T-1436, `ui/inspector/OneRider.tsx`, `game/riderSample.ts`]: under Next stops, while
+  riders are aboard, one rider drawn from them, with two icon buttons in its heading (Pick another
+  rider, Open this trip in the trip explorer). The account holds no per-rider data, so the draw
+  follows how it lets people on and off: where the rider got on is a stop at or behind the train,
+  weighted by what boarded there in the period and is still aboard (stayed on through each later
+  stop by the line's alighting shares, as Next stops uses them); where they get off, a stop ahead
+  weighted by those shares; the purpose, by this stretch's riders by purpose. Rows: **From** and
+  **To** (station names; hover: the homes and places around it, as a station picked in the trip
+  tool stands for them), **Purpose** (its colour; hover: the stretch's top purposes by share),
+  **By train** and **By car** (the trip explorer's Effective time in minutes, asked of the demand
+  workers for the two stations' points as the explorer would, in the period of the clock; the lower
+  one bold; hover with the people making the trip who take the train and who drive). Between two zones the minutes
+  are the regional market's. The rider stays the same until the train passes their stop, then a new
+  one is drawn; a pair with no answer is redrawn up to six times. The explorer button selects a trip
+  between the same two stations (Back returns to the train), sets the purpose filter to the rider's
+  purpose and the explorer's period to the rider's.
 - **A selected train is followed** [T-245, `map/trainFollow.ts`]: when its trip ends and the track
   model hands it to the next departure there (`Trip::next`), the selection moves to that trip as it
   leaves, so inspector and highlight carry on. A train leaving service stays selected where it
@@ -266,9 +305,8 @@ the Build tab's quote has rows for bus routes and new buses.
 
 ## Stations tab and the station inspector
 
-- **The Stations tab** has, above its list, the "Show station ridership" choice (None, Origins, Transfers,
-  Total, each described in its hover) and, while circles are drawn, "One circle per station
-  complex" [T-213, T-482; [ui-demand-views.md](ui-demand-views.md)]. The list sorts like the Lines
+- **The Stations tab** follows the map's station ridership row (on the map since T-1448;
+  [ui-demand-views.md](ui-demand-views.md) "Station ridership circles"). The list sorts like the Lines
   tab's [T-310], by Name, Riders or Near, Riders by default. Riders follows the ridership choice
   [T-905]: under Origins or Transfers it is the map circle's own figure (riders starting a rail trip,
   or changing lines, a day from the demand solve shown, `game/stationUse.ts`); under None or Total it
@@ -350,7 +388,7 @@ the Build tab's quote has rows for bus routes and new buses.
   station builds it at once for its price (a notice says so), or takes it away again (nothing
   refunded once built); the passage's click starts picking the other station (below). A track has Construct for its price (a blueprint
   only) and Remove track; a junction has Construct a flyover (built) or Add a flyover (blueprint), with "Paid at once"
-  or "Added to the blueprint" beside it, or, for a blueprint flyover, Remove the flyover; a city has Go to its name; a trip
+  or "Added to the blueprint" beside it, or, for a blueprint flyover, Remove the flyover; a city has an icon button (the crosshair, hover "Go to Philadelphia") [T-1439]; a trip
   opened from a selection has Back.
 - **Renaming** [T-534, `ui/inspector/NameEdit.tsx`]: a station's and a line's name both edit in
   place from a double click on the name or the pencil beside it (hover "Rename, or double click the

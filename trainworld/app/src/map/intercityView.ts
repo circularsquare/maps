@@ -35,7 +35,7 @@ import { openFarTrip, tripOpenedFrom } from "../game/trip";
 import { cityDemandViews, demandView, eachCorridor, intercityDemand, INTERCITY_PLACES, intercitySelection, intercityStation, type Corridors, type CorridorTable, type IntercitySelection, type IntercityStation, type PlaceFlows } from "../game/demand";
 import { selectedScope } from "../game/complexView";
 import { count } from "../game/format";
-import { BUBBLE_ALPHA, bubbleColour, rgb, setBubbleColours, UNBUILT_FILL } from "../game/palette";
+import { BUBBLE_ALPHA, bubbleColour, rgb, setBubbleColours, setBubbleShade, UNBUILT_FILL } from "../game/palette";
 import { openedZones } from "../game/openedZones";
 import { purposeWords, type PurposeKey } from "../game/purposes";
 import { display, purposeFilter, selection, shade, shownDayPhrase } from "../game/ui";
@@ -442,6 +442,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     display.value.commuters;
     shade.value;
     openedZones.value; // T-976: a zone opening turns its dot into a bubble
+    setBubbleShade(shade.value);
     setBubbleColours(display.value.bubbleColours, display.value.rampFrom, display.value.rampTo);
     purposeFilter.value;
     anchorVersion.value; // the discs are measured from the draw anchor (T-317)

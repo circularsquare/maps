@@ -1,7 +1,7 @@
 // The world's station complexes (T-146, game/complexes.ts) and the complex view: a selected station
-// is shown as its complex unless opened on its own (T-249). The demand circles take a complex as
-// one by their own setting (`display.complexView`, demandViews.ts). Zoomed out, the distance groups
-// whose dots are joined by connectors (T-313).
+// is shown as its complex unless opened on its own (T-249). The ridership circles take a complex as
+// one (map/stationCircles.ts). Zoomed out, the distance groups whose dots are joined by connectors
+// (T-313).
 
 import { computed, effect, signal } from "@preact/signals";
 import { buildComplexes, membersOf, type Complexes } from "./complexes";
@@ -70,8 +70,7 @@ export function openAlone(id: StationId) {
   singleStation.value = id;
 }
 
-/** Whether selected station `id` is shown as its complex: always, unless opened on its own (T-249;
- * `display.complexView` is now only the demand circles' "One circle per station complex"). */
+/** Whether selected station `id` is shown as its complex: always, unless opened on its own (T-249). */
 export function inComplexView(id: StationId): boolean {
   return singleStation.value !== id;
 }

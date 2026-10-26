@@ -219,7 +219,7 @@ export class CapacityMarkers {
 
 /** The junction a marker at (x, y) (local units) belongs to: the nearest node where three or
  * more tracks meet. */
-function nearestJunction(w: WorldView, x: number, y: number): number | null {
+export function nearestJunction(w: WorldView, x: number, y: number): number | null {
   let best = Infinity, id: number | null = null;
   for (const n of w.nodes.values()) {
     if (n.ports < 3) continue;
