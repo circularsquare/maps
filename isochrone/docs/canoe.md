@@ -27,8 +27,11 @@ along the chosen path.
   at L10 (section 7).
 - **Water** is as now: MAP's water value; a coarse cell is water when under a quarter of its L1
   pixels are land. Water is **sea** inside the ocean (Natural Earth 10 m ocean polygon for
-  today), **lake** inside a HydroLAKES polygon, else **river water** (wide rivers MAP marks as
-  water: the Amazon, the lower Danube). River water has no grid edges; the canoe uses only the
+  today, and water joined to it within 8 L1 pixels where NE's coast and MAP's differ), **lake**
+  inside a HydroLAKES polygon, else **river water** (wide rivers MAP marks as water: the Amazon,
+  the lower Danube). An L1 land pixel that NE's ocean touches keeps its land node and gets a sea
+  canoe node too: MAP walks over some straits (the Bosporus, a gap in the Dardanelles), and this
+  keeps them open. River water has no grid edges; the canoe uses only the
   river edges running through it, so a wide river is never a current-free channel beside its own
   current.
 
@@ -57,8 +60,9 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
   open water (walking needs all four on land). At L3 and L10 a canoe edge exists only where the
   two cells' L1 water touches across their shared border (`links`, section 5): a strait narrower
   than a cell (the Bosporus, the Danish straits, fjords) stays open at L10, and two waters a few
-  km apart are not joined. Inside one coarse cell all its water counts as joined (an isthmus
-  under ~10 km, like Corinth, is crossable at L10; the L1 window corrects it).
+  km apart are not joined. Inside one coarse cell all its water counts as joined, so an isthmus
+  narrower than a cell can be crossed at L10 where one cell holds water of both sides; the L1
+  window corrects it. (Corinth is not: no L10 or L3 cell holds both gulfs.)
 - **Portage has no edges of its own.** Unrunnable river steps are dropped: a fall, a dam, a weir,
   or a reach steeper than 5 m/km (2 m/km where Q >= 1000). The search gets off (0.25 h), carries
   along the bank at walking x 2 and gets back on (0.25 h), about the research's "1 h plus the
@@ -116,27 +120,43 @@ Water hazard can land first: its inputs exist once T-020 and T-021 do.
 
 ## 4. Data per level
 
-| File | Level | Holds | Size (est.) |
+| File | Level | Holds | Size |
 |---|---|---|---|
-| `data/canoe/water.bin.gz` | L10, whole world | 3 bytes a cell: `kind`, `shore`, `links` | ~2 MB |
-| `data/canoe/l3/<r>_<c>.bin.gz` | L3, 5° tiles | the same 3 bands | ~5 MB |
-| `data/canoe/l1/<r>_<c>.bin.gz` | L1, 5° tiles | `kind`, `shore` (links implicit at L1) | ~20 MB |
-| `data/canoe/sea.bin.gz` | 0.25°, whole world | current U, V (int8, 0.02 m/s), summer wave height (0.05 m), ice (%), sea temperature (°C) | ~3 MB |
+| `data/canoe/water.bin.gz` | L10, whole world | 3 bytes a cell: `kind`, `shore`, `links` | 1.1 MB |
+| `data/canoe/l3/<r>_<c>.bin.gz` | L3, 5° tiles | the same 3 bands | 4.1 MB, 1130 tiles |
+| `data/canoe/l1/<r>_<c>.bin.gz` | L1, 5° tiles | `kind`, `shore` (links implicit at L1) | 15.0 MB, 1141 tiles |
+| `data/canoe/sea.bin.gz` | 0.25°, whole world | current U, V (int8, 0.02 m/s), summer wave height (uint8, 0.05 m), ice (uint8, %), sea temperature (int8, °C) | 0.6 MB |
 | `data/canoe/rivers.bin.gz` | L10, whole world | ~1.1 M river steps | ~5 MB |
 | `data/canoe/rivers/l3/`, `l1/` | 5° tiles | ~4 M and ~12 M river steps | ~15 MB, ~40-60 MB |
 
 - Tiles share the speed tiles' grid and names (`docs/resolution.md`); `data/canoe/index.json`
-  lists them. A tile with no land is not written: the worker treats it as open sea, `shore`
-  sampled from the next coarser level (off by up to one coarse cell, only near a coast just
-  outside the tile).
+  lists them, and the sea grid. A tile with no land and only sea is not written (the same tiles
+  as the speed tiles): the worker treats it as open sea, `shore` sampled from the next coarser
+  level (off by up to one coarse cell, only near a coast just outside the tile). Every file is
+  gzip of whole bands one after another (band-sequential), each row-major from the north-west
+  corner; byte layouts in notes/T-021.md.
 - **kind** (uint8): 0 land, 1 sea, 2 river water, 3+ lake, coding the lake's wave height (fetch
-  formula, U = 7 m/s, F = sqrt(area), research/canoe.md 2) in 0.05 m steps. A coarse land cell
-  with any sea or lake pixel stores 1 or 3+ for its extra canoe node.
-- **shore** (uint8): distance to the nearest land at L1; 1 km steps to 20 km, then 10 km steps,
-  78 = 600 km and beyond. A coarse cell stores the least over its water pixels (a coastal
-  paddler hugs the coast).
-- **links** (uint8, L3 and L10): bit k set when L1 sea or lake water connects the cell to
-  neighbour k across their border (a diagonal through the shared corner).
+  formula, U = 7 m/s, F = sqrt(area), research/canoe.md 2) in 0.05 m steps: Hs = (kind - 3) x
+  0.05 m, 4 to 24 in the data. kind 1 or 3+ on a land cell (speed > 0) is its extra canoe node:
+  at L3 and L10 any sea or lake pixel gives one, at L1 NE's ocean touching the pixel (section
+  1). A coarse water cell is sea or lake when those pixels are at least its river-water pixels,
+  sea when it has at least as many sea as lake pixels; a lake cell takes the largest lake code
+  among its pixels.
+- **shore** (uint8): great-circle distance from the pixel centre to the nearest L1 land pixel
+  centre: 1-20 = km (rounded, at least 1), 21-78 = 20 + 10 x (code - 20) km, 78 = 600 km and
+  beyond; 0 on land, 1 on a land pixel with a canoe node. A coarse cell stores the least over
+  its water pixels (a coastal paddler hugs the coast). The grid ends at 60S, so Antarctica does
+  not count as land.
+- **links** (uint8, L3 and L10): bit k set when L1 sea or lake pixels of the cell and of
+  neighbour k are 8-neighbours across their border (a diagonal: the two corner pixels), and both
+  cells have a canoe node. k follows `js/search.js`'s moves as (dc, dr), dr down: 0 (1,0) E,
+  1 (-1,0) W, 2 (0,1) S, 3 (0,-1) N, 4 (1,1) SE, 5 (1,-1) NE, 6 (-1,1) SW, 7 (-1,-1) NW. Bits are
+  symmetric (a cell's bit k equals its neighbour's opposite bit) and wrap at 180°.
+- **Sea grid**: 1440 x 580 cells of 0.25° from 180W, 85N. Local summer: June-August north of the
+  equator, December-February south. Currents: the drifter monthly means over those months, else
+  the annual mean, else 0 (40% of cells, mostly land). Wave height, ice and sea temperature: the
+  mean of the four ERA5 points round the cell centre; cells with no ERA5 value (land, waves
+  under ice) hold the nearest cell's, so a lookup anywhere returns a sea value.
 - **River steps**: one record per downstream step, stored with the tile of the upstream cell, in
   columns: cell (uint32 within the tile), direction to the next cell (0-7), length (uint16, 10 m),
   v (uint8, 0.01 m/s), class (uint8: flat, rapids, unrunnable, fall, dam, weir, in a reservoir).

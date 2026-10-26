@@ -1,5 +1,6 @@
 # Archive
 
+- T-021 [P1] Canoe data, lakes and sea. Done 2026-10-26: `data/canoe/` water tiles at L10/L3/L1 (20 MB) and the 0.25° summer sea grid (0.6 MB); Bosporus, Dardanelles, Messina, Øresund open via NE-ocean canoe nodes on MAP land; Gulf Stream 1.33 m/s. notes/T-021.md.
 - T-029 [P1] Look up close. Done 2026-10-26: nearest resampling (cells are sharp squares; paint takes the cell row, no row blend), UI 12 px body and 16 px title, basemap roads 0.5x width at 0.3 opacity and labels 0.85x in faint grey, applied by layer type in `quietBasemap()`. Edge strip follow-up is T-037.
 - T-005 [P1] Canoe design. Done 2026-10-26: docs/canoe.md, approved by Anita ("looks good, lets try it"), sea coloured on a canoe start, K = 1000 h to start. Build is T-020 to T-024. notes/T-005.md.
 - T-009 [P1] Own walking surface, stage A. Done 2026-10-26: MAP's recipe rebuilt at 1 km from LC100 2019 + GMTED (`tools/surface/`, layers in `data/surface/`); off-road median ratio to MAP 1.00, terrain alone within 2%, land cover flips give p10-p90 0.72-1.18. docs/surface.md, notes/T-009.md.

@@ -5,6 +5,10 @@ reasoning and what it replaced.
 
 ## 2026-10-26
 
+- **Straits MAP walks over get a canoe node** (T-021): MAP's 1 km surface is land along the
+  Bosporus and across the Dardanelles, so an L1 land pixel touched by the NE 10 m ocean polygon
+  keeps its land node and gets a sea canoe node. Costs a ~1 km canoe fringe on most coasts;
+  the alternative, editing the walking land mask, would change walking times.
 - **Our surface's land cover table follows MODIS where no class matches** (T-009): shrubs 4.2,
   open broadleaf forest 4.86, moss and lichen 4.86, the speeds MAP mostly gives those pixels,
   replacing the draft guesses in research/friction.md 3. Wetland stays 2.0 and Greenland keeps

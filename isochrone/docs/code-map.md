@@ -6,7 +6,7 @@ Where things live. Update the line for a file you add, move or change the job of
 
 | File | What |
 |---|---|
-| `index.html` | Map, legend, info panel, hover, click. Holds `BANDS` (time bands and colours). One MapLibre canvas source per level (`walk`, `walk3`, `walk1`), holes cut where a finer window shows. |
+| `index.html` | Map, legend, info panel, hover, click. Holds `BANDS` (time bands and colours) and `quietBasemap()` (roads and labels of the OpenFreeMap style, numbers in `ROAD` and `LABEL`). One MapLibre canvas source per level (`walk`, `walk3`, `walk1`), holes cut where a finer window shows. |
 | `worker.js` | Entry of the module worker (`new Worker('worker.js', { type: 'module' })`): routes `init`, `run`, `view` to `js/session.js`. The worker owns the grids and does all searching and painting. Kept at the root so data URLs stay relative to it. |
 | `js/session.js` | State of one session (solved start, last windows, generations) and the flows: `runClick` (L10 world solve), `refine` (L3 and L1 view windows, reuse, cancelling), `post` (paint and send). |
 | `js/levels.js` | `makeLevel` (a block of cells with its geometry), `snap`, `sample`. |
@@ -39,6 +39,15 @@ grid in `data/surface/` (gitignored).
 | `tools/surface/landcover.py` | LC100 100 m to `lc_speed.tif`, `lc_water.tif`, `lc_class.tif` by exact area overlap; `[workers]` argument | ~25 min on 4 |
 | `tools/surface/combine.py` | The layers to `terrain_factor.tif` and `walk_today.tif` (off-road km/h x 1000) | ~4 min |
 | `tools/surface/compare.py` | `walk_today.tif` against MAP off-road: tables, `compare.json`, PNGs to `maps/artifacts/isochrone/t009_*.png` | ~4 min |
+
+Canoe water and sea (`docs/canoe.md` 4, layouts in `notes/T-021.md`), into `data/canoe/`:
+
+| File | What | Time |
+|---|---|---|
+| `tools/canoe/water.py` | The speed tiles' water, NE ocean and HydroLAKES to `kind`, `shore`, `links` at L10 (`water.bin.gz`), L3 and L1 tiles, `index.json`; `--cache DIR` keeps the L1 arrays | ~11 min, ~6 GB |
+| `tools/canoe/sea_fetch.py` | `drifter`: GDP drifter climatology from ERDDAP; `era5 [threads]`: streams ARCO-ERA5 to a summer climatology `data/raw/era5_summer/clim.npz` (needs `numcodecs`) | 30 s; ~7 min |
+| `tools/canoe/sea.py` | Those to the 0.25° local-summer grid `sea.bin.gz` (currents, waves, ice, sea temperature) | seconds |
+| `tools/canoe/water_plots.py` | Strait and link checks, PNGs `maps/artifacts/isochrone/t021_*.png` | ~1 min |
 
 Run with plain `python` (C:\Python39). Raw downloads: `data/raw/` (gitignored); the MAP surface
 is `data/raw/unzipped/2020_walking_only_friction_surface.geotiff` (726 MB), LC100 is
