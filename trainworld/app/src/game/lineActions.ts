@@ -4,8 +4,8 @@ import { live } from "../map/live";
 import { money } from "./format";
 import { viewedZone, type CityId } from "./cities";
 import { stationZone } from "./listScope";
-import { LINE_PALETTE } from "./palette";
-import type { LineInput, TrackEdge } from "./types";
+import { colourDistanceFrom, LINE_PALETTE } from "./palette";
+import type { LineInput, StationInput, TrackEdge } from "./types";
 
 /** The lines that share a new line's city: a line's city is its first stop's zone (the Lines tab's
  * City column); a line with no stops yet counts in the city being viewed. */
@@ -25,14 +25,38 @@ export function nextLineName(city: CityId | null): string {
   for (let k = 1; ; k++) if (!taken.has(`Line ${k}`)) return `Line ${k}`;
 }
 
-/** T-813, T-856: a random palette colour no line in the city uses, else a random one of the least used. */
-export function nextFreeColour(city: CityId | null): string {
-  const uses = new Map<string, number>();
-  for (const l of lineMates(city)) uses.set(l.colour.toLowerCase(), (uses.get(l.colour.toLowerCase()) ?? 0) + 1);
-  const n = (c: string) => uses.get(c.toLowerCase()) ?? 0;
-  const least = Math.min(...LINE_PALETTE.map(n));
-  const pool = LINE_PALETTE.filter((c) => n(c) === least);
+/** T-1278: lines with a stop this near where a new line starts set its colour, m ... */
+const NEAR_M = 15_000;
+/** ... topped up with the nearest lines beyond to this many. */
+const NEAR_MIN = 6;
+
+/** T-1278: the palette colour farthest in OKLab from the colours of the lines near `at` (lng, lat;
+ * none: every line), ties at random. */
+export function nextFreeColour(at: [number, number] | null): string {
+  const w = world.peek();
+  const lines = w?.save.lines ?? [];
+  const pos = w ? stationsById(w) : new Map<string, StationInput>();
+  const kx = at ? 111_320 * Math.cos((at[1] * Math.PI) / 180) : 0;
+  const near = lines.map((l) => {
+    let d = Infinity;
+    if (at) for (const s of l.stops) {
+      const p = pos.get(s);
+      if (p) d = Math.min(d, Math.hypot((p.lng - at[0]) * kx, (p.lat - at[1]) * 111_320));
+    }
+    return { colour: l.colour, d: at ? d : 0 };
+  }).sort((a, b) => a.d - b.d);
+  const used = near.filter((x, i) => x.d <= NEAR_M || i < NEAR_MIN).map((x) => colourDistanceFrom(x.colour));
+  const score = LINE_PALETTE.map((c) => used.reduce((m, f) => Math.min(m, f(c)), Infinity));
+  const best = Math.max(...score);
+  const pool = LINE_PALETTE.filter((_, i) => score[i] >= best - 1e-6);
   return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/** Where a new line starts: its first stop, else the middle of the map. */
+function startOf(first: StationInput | undefined): [number, number] | null {
+  if (first) return [first.lng, first.lat];
+  const c = live.map?.getCenter();
+  return c ? [c.lng, c.lat] : null;
 }
 
 /** Reveal the line before asking for stops, so even an empty line can be named and edited. Given a
@@ -42,7 +66,7 @@ export async function createLine(on?: Pick<TrackEdge, "a" | "b">) {
   const ends = on ? (world.value?.save.stations ?? []).filter((s) => s.num === on.a || s.num === on.b).sort((p, q) => (p.num === on!.a ? 0 : 1) - (q.num === on!.a ? 0 : 1)).map((s) => s.num) : [];
   const first = ends.length ? world.value?.save.stations.find((s) => s.num === ends[0]) : undefined;
   const city = first ? stationZone(first) : viewedZone.peek();
-  const name = nextLineName(city), colour = nextFreeColour(city);
+  const name = nextLineName(city), colour = nextFreeColour(startOf(first));
   let a = ends.length ? await edit({ op: "addLine", stops: ends, name, colour }, true) : null;
   if (!a?.ok) { ends.length = 0; a = await edit({ op: "addLine", stops: [], name, colour }); }
   if (!a.ok || a.line === undefined) return;

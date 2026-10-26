@@ -1698,7 +1698,7 @@ function sendState(service = false, effectiveAt?: number) {
   const r = s.render;
   const bufs = new Set<ArrayBufferLike>([r.edgePts.buffer, r.edgeOff.buffer, r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
   if (r.edgeSpeed) bufs.add(r.edgeSpeed.buffer);
-  for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.speed, st.lane]) if (v) bufs.add(v.buffer);
+  for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.speed, st.trainSpeed, st.lane]) if (v) bufs.add(v.buffer);
   for (const v of [n.lineColours, n.lineCars, n.stations, n.stationAxis, n.stationShape, n.junctions, n.marks]) if (v) bufs.add(v.buffer);
   postState(s, [...bufs] as Transferable[]);
   sendTrips();

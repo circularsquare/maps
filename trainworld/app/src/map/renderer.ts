@@ -48,6 +48,13 @@ const LINE_PX: [number, number][] = [[9, 0.85], [12, 3.9], [15, 6.6]];
  * (css px, coming in between the two) */
 const HSR_WIDTH: [number, number][] = [[9, 1.4], [11, 1.25], [13, 1]];
 const HSR_STRIPE_PX = [3, 5] as const;
+
+/** The Speed view's value per segment (T-1271): the trains' speed where a line with trains runs,
+ * else the limit. */
+function shownSpeed(limit: Float32Array, trains?: Float32Array): Float32Array {
+  if (!trains || trains.length !== limit.length) return limit;
+  return limit.map((v, i) => (trains[i] >= 0 ? trains[i] : v));
+}
 /** The ghost of track being placed (T-1038, Anita: "a decent minimum width ... see the track in full
  * length"), drawn as blueprint track with a thin dark outline (T-1054): never thinner than this
  * across its rails, CSS px, with this much outline either side. */
@@ -489,7 +496,7 @@ export class NetworkRenderer {
     this.attrib(p, "a_edge", this.buffer(s.count ? s.edge : new Uint32Array(1), list), 1, gl.UNSIGNED_INT, 1, true);
     this.attrib(p, "a_level", this.buffer(one(s.level, 1), list), 1, gl.FLOAT, 1);
     this.attrib(p, "a_flags", this.buffer(one(s.flags, 1), list), 1, gl.FLOAT, 1);
-    this.attrib(p, "a_speed", this.buffer(s.count && s.speed ? s.speed : new Float32Array(Math.max(1, s.count)).fill(160), list), 1, gl.FLOAT, 1);
+    this.attrib(p, "a_speed", this.buffer(s.count && s.speed ? shownSpeed(s.speed, s.trainSpeed) : new Float32Array(Math.max(1, s.count)).fill(160), list), 1, gl.FLOAT, 1);
     const wmulBuf = this.buffer(new Float32Array(Math.max(1, s.count)).fill(1), list);
     this.attrib(p, "a_wmul", wmulBuf, 1, gl.FLOAT, 1);
     const fullBuf = this.buffer(new Float32Array(Math.max(1, s.count)), list);
@@ -1041,12 +1048,15 @@ export class NetworkRenderer {
       const unitAtBox = unitPerPxAt(BOX_WIDTH_ZOOM) / dpr;
       gl.uniform2f(su.u_fixed, boxHalfPxAtBoxZoom({ boxLinePx, boxRingPx }) * dpr, unitAtBox);
       gl.bindVertexArray(this.stationVao);
-      // Analytical circles behind the normal, still-selectable platform boxes.
+      // Analytical circles behind the normal, still-selectable platform boxes; none where stations
+      // hide (T-1274).
       gl.uniform1f(su.u_halo_radius, stationHaloRadius(zoom) * dpr);
       gl.uniform1f(su.u_pixel, dpr);
-      gl.uniform1i(su.u_halo, 1);
       gl.uniform1i(su.u_layer, 0);
-      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n.stationCount);
+      if (!hidden) {
+        gl.uniform1i(su.u_halo, 1);
+        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n.stationCount);
+      }
       gl.uniform1i(su.u_halo, 0);
       // the player's links as bridges between platforms (T-217)
       const bridges = boxes && this.bridgeProg ? (n.stationLinkIdx?.length ?? 0) / 2 : 0;

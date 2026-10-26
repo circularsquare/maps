@@ -159,7 +159,7 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 - **The ghost** is drawn as blueprint track (dark blue rails round a light blue middle) with a thin
   outline outside the rails (black; the map's ink, near white, in the dark theme; `ghost` in
   `game/shadeTable.ts`) [T-1054]. The middle is coloured
-  by the Elevation or Max speed view from the preview's fitted geometry; red when invalid. It is never
+  by the Elevation or Speed view (the limit) from the preview's fitted geometry; red when invalid. It is never
   thinner than 4 px across its rails with 1 px of outline either side, so a route hundreds of km long
   shows in full zoomed out [T-1038]. The same holds
   for every placement ghost: a dragged corner or node, a moved pick, a crossover, a station's own

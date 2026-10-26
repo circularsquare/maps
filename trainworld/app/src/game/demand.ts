@@ -79,6 +79,13 @@ export interface PurposeDemand {
   stations: Map<string, StationDemand>;
 }
 
+/** T-1279: whether `dv` has riders for the line as its stops are now; until it does, the boarding
+ * account runs its trains empty, so their crowding is not known (the map draws them striped). */
+export function lineFiguresIn(dv: DemandView | null, lineId: string, stops: number): boolean {
+  const loads = dv?.lines.get(lineId)?.loads;
+  return !!loads?.length && stops >= 2 && loads.every((p) => p.length === 2 * (stops - 1));
+}
+
 /** A line's riders per segment and period as the map draws them: one purpose's, or all. */
 export function lineLoadsFor(dv: DemandView | null, lineId: string, purpose: PurposeFilter = "all"): Float32Array[] | undefined {
   if (!dv) return undefined;

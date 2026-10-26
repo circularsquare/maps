@@ -39,6 +39,9 @@ export interface Strokes {
   flags: Float32Array;
   /** Geometry speed limit km/h, per stroke segment (bare track). */
   speed?: Float32Array;
+  /** Built track only (T-1271): per segment, the fastest speed a running line's trains reach at its
+   * middle, km/h, either direction; -1 where no line with trains runs. */
+  trainSpeed?: Float32Array;
   /** per segment: distance along its edge or line at its start, local units (read on the CPU only) */
   dist: Float32Array;
   /** line strokes only, per segment (T-084, demand views): the stop-to-stop stretch of run 0 it is
@@ -402,6 +405,59 @@ function turnbackStrokes(s: ClockState, lines: NetCache["lines"], endCount: Map<
   return b.build();
 }
 
+/** The demand level whose run profiles give the Speed view's train speeds (T-1271): the levels
+ * differ in how long trains stand, not in how fast they move between stops. */
+const SPEED_LEVEL = 1;
+
+/** A run profile's speed at `x` m along its path, km/h: the moving phase holding `x` (phases are
+ * t, s, v, a, notes/T-040.md "Keyframes"; a stop's standing phase spans no distance). */
+function speedAt(ph: Float32Array, first: number, count: number, x: number): number {
+  let lo = first, hi = first + count - 1;
+  if (count <= 0) return 0;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (ph[mid * 4 + 1] <= x) lo = mid;
+    else hi = mid - 1;
+  }
+  const s = ph[lo * 4 + 1], v = ph[lo * 4 + 2], a = ph[lo * 4 + 3];
+  return Math.sqrt(Math.max(0, v * v + 2 * a * Math.max(0, x - s))) * 3.6;
+}
+
+/** `Strokes.trainSpeed` for the track (T-1271): at each built segment's middle, the fastest of
+ * every running line with trains, in either direction. */
+function trainSpeeds(s: ClockState, edgeBase: Map<number, [number, Strokes]>, count: number): Float32Array {
+  const out = new Float32Array(count).fill(-1);
+  const r = s.render, edgeLen = new Map(s.edges.map((e) => [e.id, e.lengthM]));
+  const built = new Set(s.edges.filter((e) => e.built).map((e) => e.id));
+  for (const l of s.lines) {
+    if (!l.ok || !l.running || Math.max(...l.trains) <= 0) continue;
+    const runs = [0, 1].map((run) => {
+      const m = ((l.id * 2 + run) * 3 + SPEED_LEVEL) * 4;
+      return { first: r.meta[m], count: r.meta[m + 1], len: r.meta[m + 3] };
+    });
+    if (runs.some((p) => !(p.count > 0))) continue;
+    let off = 0;
+    for (const p of l.path) {
+      const e = p >> 1, len = edgeLen.get(e) ?? 0;
+      const at = edgeBase.get(e);
+      if (at && built.has(e)) {
+        const [base, st] = at;
+        const n = st.count;
+        const segLen = (j: number) => Math.hypot(st.seg[j * 4 + 2] - st.seg[j * 4], st.seg[j * 4 + 3] - st.seg[j * 4 + 1]);
+        const total = n ? st.dist[n - 1] + segLen(n - 1) : 0;
+        for (let j = 0; j < n; j++) {
+          const f = total > 0 ? (st.dist[j] + segLen(j) / 2) / total : 0.5;
+          const x0 = off + ((p & 1) === 1 ? 1 - f : f) * len;
+          const v = Math.max(speedAt(r.phases, runs[0].first, runs[0].count, x0), speedAt(r.phases, runs[1].first, runs[1].count, runs[1].len - x0));
+          if (v > out[base + j]) out[base + j] = v;
+        }
+      }
+      off += len;
+    }
+  }
+  return out;
+}
+
 /** The lane value (0-1) a fraction `f` of the way along an edge's drawn points. */
 function laneAlong(dr: LanePoints, f: number): number {
   if (typeof dr.lane === "number") return dr.lane / 255;
@@ -449,6 +505,8 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   // a taper adds at most two points to an edge
   const speeds = new Float32Array(Math.max(0, r.edgePts.length / 3 + s.edges.length));
   let speedAt = 0;
+  /** per edge id: its first track stroke segment and its strokes */
+  const edgeBase = new Map<number, [number, Strokes]>();
   const marks: number[] = [];
   // double track narrows to single track where the two meet at a plain node (T-658)
   const endCount = new Map<number, number>(), singleAt = new Set<number>();
@@ -484,6 +542,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     drawn.set(e.id, c);
     trackParts.push(c.strokes);
     for (const v of c.ramps) marks.push(v);
+    edgeBase.set(e.id, [speedAt, c.strokes]);
     const src = c.src;
     if (src) for (const k of src) speeds[speedAt++] = r.edgeSpeed?.[r.edgeOff[i] + k] ?? e.vminKmh;
     else for (let k = r.edgeOff[i]; k < r.edgeOff[i + 1] - 1; k++) speeds[speedAt++] = r.edgeSpeed?.[k] ?? e.vminKmh;
@@ -631,7 +690,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   const cx = s.crossings;
   if (cx) for (let k = 0; k + 4 < cx.length; k += 5) marks.push(cx[k], cx[k + 1], cx[k + 2] === 1 ? M_BAD : M_CROSSING, 0, cx[k + 4] === 1 ? 0 : 1, cx[k + 3]);
   return {
-    track: { ...concatStrokes(trackParts, false), speed: speeds.subarray(0, speedAt) },
+    track: { ...concatStrokes(trackParts, false), speed: speeds.subarray(0, speedAt), trainSpeed: trainSpeeds(s, edgeBase, speedAt) },
     lines: concatStrokes(lineParts, true),
     lineIds,
     lineColours,

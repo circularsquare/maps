@@ -25,6 +25,7 @@ import { PurposeSplit } from "./PurposeSplit";
 import { NameEdit } from "./NameEdit";
 import { locateLine, locateStation } from "../locate";
 import { demandPending, Spinner } from "../Spinner";
+import { demandView, lineFiguresIn } from "../../game/demand";
 import { useClockQuery } from "../useClockQuery";
 
 const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
@@ -727,7 +728,7 @@ export function LineInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && (periods ? <CrowdDots v={periods} d={d} stops={l.stops.map((s) => name.get(s) ?? "")} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d) + "\nHow many trains run in this time interval. (Which time interval a scheduled train falls into is determined by when the train reaches the midpoint of its route.)"}>{DEMAND_LABEL[d]}</span></td>
+            <td>{st.status === "running" && (periods && lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} d={d} stops={l.stops.map((s) => name.get(s) ?? "")} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d) + "\nHow many trains run in this time interval. (Which time interval a scheduled train falls into is determined by when the train reaches the midpoint of its route.)"}>{DEMAND_LABEL[d]}</span></td>
             <LevelCells l={l} st={st} d={d} auto={auto} limit={limits[DEMAND_INDEX[d]]} />
           </tr>
         ))}

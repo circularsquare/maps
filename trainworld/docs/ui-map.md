@@ -35,8 +35,9 @@ there is no high-speed class and no hover yet.
 
 - **Below zoom 9** (about 160 km across, a whole region) only the lines are drawn [T-205, T-542,
   `STATIONS_ZOOM`]. Stations and trains are neither drawn nor picked, so a click or hover finds the
-  line. A selected station or complex is still drawn and clickable. Demand drawings and capacity
-  tags are unchanged.
+  line. A selected station or complex is still drawn and clickable. The station use circles hide
+  with the stations, hover and all [T-1274]; the other demand drawings and capacity tags are
+  unchanged.
 - **Zoom 9 to 10**: every station is its own dot, drawn and picked; trains are not.
 - **Zoom 10 to 14** [`TRAINS_ZOOM`]: stations are dots; trains are pills, drawn and picked from 10.
 - **From zoom 14** (`STATION_BOX_ZOOM`, T-553): a station is its platform, trains show their cars, and
@@ -117,22 +118,28 @@ there is no high-speed class and no hover yet.
     at ground, warm below (deep): +3 #4a2c9a, +2 #2f6fd0, +1 #16a39a, 0 #58b04a, -1 #f0b928, -2 #ee7a1a,
     -3 #c2351c (`LEVEL_COLOURS`, T-413, T-478, T-480; neighbours at least 30 apart in CIELAB). The same table colours
     the Build tab's elevation buttons, the Settings key and the elevation in the track tags.
-  - **Max speed**: the geometry's allowed speed at each section, curve limits included (not a
-    train's speed): 160 km/h on ordinary track, up to 320 on high-speed track. Keyed 40/80/120/160/240/320 km/h
+  - **Speed** [T-1271]: built track a running line with trains uses is coloured by the trains'
+    speed there, the rest by its speed limit (the geometry's, curve limits included: 160 km/h on
+    ordinary track, up to 320 on high-speed track). The trains' speed at a stroke segment's middle
+    is the run profiles' (speed against distance along each run, the medium demand level's; the
+    levels differ only in standing time), the fastest of every such line in either direction, so
+    shared track shows its fastest service and a station its trains' slowest (`trainSpeeds` in
+    `map/network.ts`). Keyed 40/80/120/160/240/320 km/h
     from warm red through ochre and green to blue, then indigo (#5b4fc9) and violet (#a03fc2)
     (`SPEED_STOPS`; the stroke shader is built from the same stops, and the key beside the display
-    buttons lists them).
-  In Elevation and Max speed the width is uniform and trains keep their line colours.
+    buttons lists them); under 40 is the red. The track hover says which it shows ("Track" under
+    "Hover tags on the network").
+  In Elevation and Speed the width is uniform and trains keep their line colours.
 - **Blueprint track** [T-311, T-322, T-331, T-333] is drawn solid and opaque as two rails in every
   track view: a light blue middle (#a9cdf3) between dark blue rails (#2f62b3). The whole width is 75%
   (`BP_NARROW`) of a line plus a rail of 16% of a line width (at least 1 px) either side, the rails
   never under 1 px: 6.5 px at zoom 15 (4.5 middle), 4.4 at zoom 12. A line planned along it fills
-  the middle (not a full line width) in its colour mixed 45% towards white; in Elevation and Max
-  speed the middle is the view's colour mixed the same, and a selected blueprint's middle the
+  the middle (not a full line width) in its colour mixed 45% towards white; in Elevation and
+  Speed (the limit: no trains run on a blueprint) the middle is the view's colour mixed the same, and a selected blueprint's middle the
   selection ink mixed so. Lines that do not run stay see-through at 55%. **Switched off** [T-333,
   T-543]: grey rails (#9aa3ae) round a nearly white middle (#f2f4f7) in the light theme, a dim
   middle (#383e46) between lighter grey rails (#6c747e) in the dark one, and a station at 30%
-  instead of 60%; a planned line's colour and the Elevation and Max speed colours are mixed 80%
+  instead of 60%; a planned line's colour and the Elevation and Speed colours are mixed 80%
   towards white (towards #383e46 in the dark theme) in place of 45%. **Picked** with the blueprint
   tool: an ink band 3 px beyond the rails, drawn under the track, and the stations' selection
   outline. All rails are drawn before any middle, as the casing is, so curves and joints join
@@ -143,7 +150,10 @@ there is no high-speed class and no hover yet.
   palette, sixteen defaults: red, blue, green, orange, purple, yellow, brown, teal, gray,
   yellow-green, pink, magenta, light blue, olive, coral and lavender, every pair at least 19 apart in
   CIEDE2000 and at least 17 from the land, water and parks of both themes; chips on
-  the light ones take dark letters. A new line takes a random default no line in its city uses [T-856].
+  the light ones take dark letters. A new line takes the default farthest in OKLab from the
+  colours of the lines near where it starts (its first stop, else the middle of the map): those
+  with a stop within 15 km, topped up with the next nearest to six, ties at random
+  (`nextFreeColour` in `game/lineActions.ts`, T-1278).
 - **Marks on the track** [T-629, T-655; `map/gradeMarks.ts`, data in `map/markData.ts`], drawn by the
   renderer over the track and under stations and trains, from zoom 9 (blueprint and drawing) or 11
   (built):
@@ -362,8 +372,10 @@ those who got on, less the load carried on.
   directions together, for the day shown (counts to the nearest 100 above 1,000), with a third line under the purpose filter
   ("Errands trips only"), and on track at capacity "Track at capacity at high demand" in red [T-819]. Whatever the display [T-473], the tag also carries a row
   for the elevation at that point (an up and down arrow, then "+1" on its Elevation colour) and one
-  for the speed limit (two right chevrons, then "120 km/h" on its Max speed colour), each colour at
-  half strength behind dark text (`map/trackTagRows.ts`), and last every line using the track as
+  for the speed limit (two right chevrons, then "120 km/h" on its Speed colour), each colour at
+  half strength behind dark text (`map/trackTagRows.ts`); in the Speed view a first row says what
+  the colour there is: "Fastest train 85 km/h" (on its colour) where trains run, "No trains run
+  here" where the limit is shown [T-1271]; and last every line using the track as
   line bullets, in the save's order, wrapping, over a line as over bare track (the markup and CSS of
   the `Chip` in `ui/widgets.tsx`, built as plain DOM by `lineBullets`; no row when none runs
   there) [T-532, T-559]. A planned line adds

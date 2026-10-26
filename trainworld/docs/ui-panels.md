@@ -572,7 +572,9 @@ shonei-server's `trainworld.go` and `docs/trainworld-api.md`; notes/T-972.md]
   it before the status tag's text; a small ring turning (`.spin`, 1.2 s a turn, 8 px, grey) in place
   of each line's crowding dot per demand level in the line panel until the line has figures
   (while no final result is shown or a solve is updating it; not after a failure or over dead
-  space), and in a clicked bubble's panel in place of each line that waited ("Trip purposes", the far ends, "Inter-city trips") while they load.
+  space); a line whose shown result has no riders for it as its stops are now (just given trains,
+  its stops just changed) has the ring, never a dot, until one that does lands, since its trains run
+  empty in the boarding account till then (`lineFiguresIn` in `game/demand.ts`, T-1279); and in a clicked bubble's panel in place of each line that waited ("Trip purposes", the far ends, "Inter-city trips") while they load.
   Nothing else animates. The figures behind it are the solve's estimates, or the last
   final result kept beside the save when there is one (T-328; the split's hover ends "(from the
   last time this game was open)").

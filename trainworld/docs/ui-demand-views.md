@@ -49,8 +49,8 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   purple (`color-mix(in oklab, #ff4d4d, #4d4dff)`) in a 2 px map ink outline, hover "Show demand
   bubbles".
 - **Track display** [T-703, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in the
-  same style, four buttons (Line, Traffic, Elevation, Max speed; [ui-map.md](ui-map.md) "Lines and
-  track") after a hint cell with the track icon (hover "Colour the track", T-1137), with the key of the last two (height colours, speed limits) beside them.
+  same style, four buttons (Line, Traffic, Elevation, Speed; [ui-map.md](ui-map.md) "Lines and
+  track") after a hint cell with the track icon (hover "Colour the track", T-1137), with the key of the last two (height colours, speeds) beside them.
 - **Day** [T-464, T-703]: a Settings choice under the bubbles' Opacity, not on the map; see "Demand
   shown for" in [ui-panels.md](ui-panels.md).
 - **Readiness** [T-143]: while the focused zone has no published result, Homes and Destinations fade
@@ -94,7 +94,7 @@ its transfer pairs over every station (`complexTransfers`) counted at the statio
 origins the rest. Origins and Transfers keep the last split while a new solve's is asked for. The
 circle's hover and the station's say the figure and never the number of stations in a complex:
 "12,400 entries per day" (origins), "464,000 transfers per day", "476,400 entries and transfers per
-day" (total), "per weekday", "per Saturday" or "per Sunday" for those days. They do not enlarge the station's click target. With "One circle per station
+day" (total), "per weekday", "per Saturday" or "per Sunday" for those days. They do not enlarge the station's click target. Below zoom 9, where stations hide, the circles and their hover hide too [T-1274]. With "One circle per station
 complex" (on by default, shown while circles are) a complex has one circle at the mean position of
 its constructed stations, grouped exactly as the complexes are, the player's links included.
 
