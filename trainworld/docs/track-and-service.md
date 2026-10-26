@@ -6,8 +6,9 @@ Full design, numbers and sources: `notes/T-008.md`.
 
 ### 6.1 Track and stations
 
-- **One track type**, anywhere: over roads at normal cost, over water dearer (6.4). No buildings to
-  demolish, no yards, no depots. Ground is flat (no terrain in M1).
+- **One track type**, anywhere: over roads at normal cost, over water and rough ground dearer
+  (6.4). No buildings to demolish, no yards, no depots. Ground is flat in shape: levels are heights
+  above or below the local ground, and the terrain only prices track (6.4, T-1270).
 - **Geometry: straights and circular arcs**, tangent-continuous, no transition curves or splines
   (exact lengths, one speed per curve, parallel tracks stay arcs). **Track is stored as points of
   intersection (PIs)**: it runs straight between them and cuts the corner at each with a circular
@@ -24,8 +25,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   clicks never change it; Shift held chains the next segment from its end, Backspace takes the last
   segment of a chain back (one undo step each), Escape or Enter stops. While drawing, the ghost
   shows the segment with its curve's radius and speed limit, the curve's whole circle faintly, and
-  the cursor the segment's length, average cost multiplier (level and water over its length),
-  price and tightest curve, the level placed and the lowest speed limit (T-085, T-411), or why it
+  the cursor the segment's length, average cost multiplier (level, water and terrain over its length),
+  price and tightest curve, the level placed and the lowest speed limit (T-085, T-411), the
+  terrain classes it crosses where they are charged (T-1270), or why it
   cannot be built; a click on a refused segment does nothing.
 - **The segment's shape**: from a track end, a node or track to open ground it is **one circular
   arc through the click, leaving along the track's heading** (a tangent arc; from a node or track,
@@ -581,6 +583,29 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
 - **Over or under water: 2x** the level's price. **Level 0 cannot be built over water**; a
   ground-level segment drawn across it becomes a bridge (6.1). Water comes from a mask in the
   pack (T-030).
+- **Terrain** (T-1270, Anita 2026-10-25, design notes/T-1270.md): each zone's ground is in four
+  classes, and track at elevation -1 to +3 costs the class's factor more; bored tunnels (-2, -3)
+  cost the same anywhere, so in the mountain class a -2 tunnel (US$99M a km) is cheaper than track
+  at ground level (US$112.5M) or a viaduct (US$225M). Over water the water's 2x stands alone. A ramp
+  is charged at the dearer of its two levels with the factor counted. Stations, junctions,
+  crossings and upkeep take no factor; nothing is refused for steep ground; grades do not slow trains.
+
+  | Class | Flat | Rolling | Hilly | Mountain |
+  |---|---|---|---|---|
+  | Mean slope | under 2° | 2-5° | 5-10° | 10° and over |
+  | Factor (`TERRAIN_FACTOR`) | 1 | 1.25 | 1.6 | 2.5 |
+
+  The classes come from GEDTM30 (OpenGeoHub's bare-earth terrain model at 240 m, CC BY 4.0) by
+  `pipeline/zone_terrain.py`: the mean slope over each cell of a world lattice of 1/240 degree
+  (about 460 m north-south), then a 3 x 3 majority filter, one file per zone
+  (`data/terrain/<id>.terrain`, a median of 13 KB, 56 MB for all 1,770 zones; `cost::ClassGrid`). The clock worker fetches a zone's
+  file with its water mask (zones.md 6), but no preview or edit waits for it: track drawn before it
+  lands is priced on flat ground and priced again when it lands, the blueprint quote following;
+  Construct waits for the files under the blueprint, so nothing is paid on a guess. Each edge keeps
+  its spans of rough ground (`Network::edge_terrain`, sampled every 100 m, `TERRAIN_STEP`); a file
+  landing reprices only the track inside its box. The track tool's tag gives the classes a segment
+  crosses ("Mountain 2.5x"), its multiplier includes the factor, and the blueprint breakdown has a
+  Terrain row per class with what the ground adds.
 - The Build tab shows only the multiplier and price of the level currently selected, not the
   whole table.
 - Stations (200 m, two platform tracks), US$M: a fixed 50 that every station has wherever it is

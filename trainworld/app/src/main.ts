@@ -26,7 +26,7 @@ import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
 import { incomeByDay, lastSaved, moneyState } from "./game/money";
 import { live } from "./map/live";
-import { setBasemapLabels, setBasemapShade } from "./map/basemap";
+import { setBasemapLabels, setBasemapShade, setHillshade } from "./map/basemap";
 import { createMap } from "./map/mapView";
 import { startRealNetwork } from "./map/realNetwork";
 import { startCityBoundaries } from "./map/cityBoundaries";
@@ -316,6 +316,7 @@ map.on("load", () => {
   effect(() => setBasemapLabels(map, display.value.basemapLabels, choosing.value)); // T-974: no city names behind the start menu
   const contrast = computed(() => display.value.basemapContrast);
   effect(() => setBasemapShade(map, shade.value, contrast.value));
+  effect(() => setHillshade(map, display.value.hillshade)); // T-1270
   startRealNetwork(map); // T-682
 });
 effect(() => client.setShade(shade.value)); // save thumbnails are drawn in it (T-543)

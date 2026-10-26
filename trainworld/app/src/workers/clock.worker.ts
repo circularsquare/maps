@@ -508,7 +508,10 @@ function fetchWater(id: string): Promise<WaterRaster | null> {
 /** Install the masks of `ids` (fetching those not fetched); resolves once each is in or failed. The
  * raster is laid out in the pack's own frame; the track model puts it in the game's (T-125). */
 async function ensureMasks(ids: Iterable<string>): Promise<void> {
-  const todo = [...new Set(ids)].filter((id) => !masksIn.has(id));
+  const all = [...new Set(ids)];
+  // T-1270: each zone's terrain comes with its mask, but nothing waits for it
+  void ensureTerrain(all);
+  const todo = all.filter((id) => !masksIn.has(id));
   if (!todo.length) return;
   const got = await Promise.all(todo.map((id) => fetchWater(id).then((r) => ({ r }), () => null)));
   todo.forEach((id, k) => {
@@ -518,6 +521,68 @@ async function ensureMasks(ids: Iterable<string>): Promise<void> {
     const r = g.r;
     if (r) api!.add_pack_water(r.cell, r.x0, r.y0, r.w, r.h, r.rows, r.runs, r.lon, r.lat);
   });
+}
+
+// ---------------------------------------------------------------- terrain classes (T-1270)
+//
+// A zone's terrain grid (`<id>.terrain` in the folder beside the packs, pipeline/zone_terrain.py) is
+// fetched with its water mask. It only prices track, so no preview or edit waits for it: track drawn
+// before it lands is priced on flat ground and priced again when it does. Construct waits for the
+// grids under what it builds, so nothing is paid on a guess.
+
+const terrainFetches = new Map<string, Promise<ArrayBuffer | null>>();
+/** zones whose terrain is in the track model (or that have none) */
+const terrainIn = new Set<string>();
+
+function fetchTerrain(id: string): Promise<ArrayBuffer | null> {
+  let p = terrainFetches.get(id);
+  if (!p) {
+    p = (async () => {
+      const res = await fetch(new URL(`../terrain/${id}.terrain`, packBase).href);
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error(`${res.status}`);
+      return await res.arrayBuffer();
+    })();
+    terrainFetches.set(id, p);
+    // a failed fetch is tried again by the next view or edit that needs it
+    p.catch(() => {
+      if (terrainFetches.get(id) === p) terrainFetches.delete(id);
+    });
+  }
+  return p;
+}
+
+/** Install the terrain of `ids` (fetching those not fetched); resolves once each is in or failed. A
+ * grid that reprices the blueprint sends the new state, so the quote follows. */
+async function ensureTerrain(ids: Iterable<string>): Promise<void> {
+  const todo = [...new Set(ids)].filter((id) => !terrainIn.has(id));
+  if (!todo.length || !api) return;
+  const got = await Promise.all(todo.map((id) => fetchTerrain(id).then((b) => ({ b }), () => null)));
+  const a = api;
+  if (!a) return;
+  const before = a.blueprint_cost();
+  todo.forEach((id, k) => {
+    const g = got[k];
+    if (!g || terrainIn.has(id)) return;
+    terrainIn.add(id);
+    // a server that answers a missing file with a page instead of a 404 gives no grid either
+    if (g.b) a.add_terrain(new Uint8Array(g.b));
+  });
+  if (Math.abs(a.blueprint_cost() - before) > 1e-9) sendState();
+}
+
+/** Before Construct: the terrain under every blueprint piece. */
+async function terrainForBlueprint() {
+  const a = api!;
+  const xy: number[] = [];
+  const ei = a.edges_info();
+  for (let i = 0; i < ei.length; i += 10) {
+    if (ei[i + 4] === 1) continue;
+    const r = a.edge_render(ei[i]);
+    for (let k = 0; k + 2 < r.length; k += 3) xy.push(r[k], r[k + 1]);
+  }
+  const need = zonesOfPoints(xy).filter((id) => !terrainIn.has(id));
+  if (need.length) await ensureTerrain(need);
 }
 
 /** The zones within TRACK_MARGIN_M of any of these world-metre points (x, y every `stride`). */
@@ -2218,6 +2283,7 @@ async function handle(msg: ToClock) {
       return;
     }
     await masksFor(msg.op);
+    if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine") await terrainForBlueprint();
     const tA = performance.now();
     // T-1071: a train count takes effect a moment ahead, once its trips are on screen
     const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway";
@@ -2383,7 +2449,8 @@ async function handle(msg: ToClock) {
     const speeds = (api as TrackApi & { preview_render_speeds(): Float32Array }).preview_render_speeds();
     if (speeds.length !== Math.max(0, pts.length / 3 - 1)) throw new Error("Preview speed/point length mismatch");
     const marks = markPoints((api as TrackApi & { preview_marks(): Float64Array }).preview_marks(), 3);
-    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], issues: ok ? [] : issues(), verts, pts, speeds, arc, anchor: anchor().version, marks }, [verts.buffer, pts.buffer, speeds.buffer, marks.buffer]);
+    const ground = msg.kind === "preview" ? Array.from(a.preview_ground()) : undefined;
+    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], ground, issues: ok ? [] : issues(), verts, pts, speeds, arc, anchor: anchor().version, marks }, [verts.buffer, pts.buffer, speeds.buffer, marks.buffer]);
   } else if (msg.kind === "epoch") {
     if (msg.epoch !== epoch) {
       epoch = msg.epoch;

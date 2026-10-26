@@ -12,7 +12,7 @@
 
 use super::boarding::Boarding;
 use super::bridge;
-use super::cost::{GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask};
+use super::cost::{ClassGrid, GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask};
 use super::frame::FrameKind;
 use super::geom::{self, design_radii, GeomIssue, Pi};
 use super::net::{CrossKind, EdgeData, Issue, LineData, LoopKind, Network, NodeData, StationData};
@@ -72,6 +72,8 @@ pub struct TrackApi {
     /// The pack rasters installed with `add_pack_water`, kept so the water mask can be rebuilt
     /// when a loaded save is in another frame (T-125).
     rasters: Vec<PackWater>,
+    /// Metres of the last preview in each terrain class (`preview_ground`).
+    preview_ground: [f64; 4],
     /// The boarding account (T-164): demand's riders per period, and each train's load and each
     /// platform's crowd worked out from them. Never saved.
     boarding: Boarding,
@@ -235,6 +237,7 @@ impl TrackApi {
             route_junctions: vec![],
             station_cost: 0.0,
             rasters: vec![],
+            preview_ground: [0.0; 4],
             boarding: Boarding::default(),
             spans: vec![],
             now: f64::NAN,
@@ -321,6 +324,7 @@ impl TrackApi {
         let mut net = Network::new_in(kind, n.origin_lon, n.origin_lat, n.right_hand);
         std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
         net.time_zones = self.w.net.time_zones.clone();
+        net.terrain = self.w.net.terrain.clone();
         self.w = TrackWorld::new(net);
         self.rebuild_water();
         true
@@ -389,6 +393,34 @@ impl TrackApi {
         self.w.net.add_water(Box::new(set), b);
     }
 
+    /// Add a zone's terrain grid (T-1270, a `.terrain` file's bytes, `cost::ClassGrid`): the
+    /// blueprint and built track it reaches is priced again. False if the bytes are not one.
+    pub fn add_terrain(&mut self, bytes: &[u8]) -> bool {
+        let Some(g) = ClassGrid::decode(bytes) else { return false };
+        let [w, s, e, n] = g.bounds();
+        let frame = self.w.net.frame();
+        let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        const STEPS: usize = 32;
+        for i in 0..=STEPS {
+            let t = i as f64 / STEPS as f64;
+            let (lon, lat) = (w + (e - w) * t, s + (n - s) * t);
+            for (lo, la) in [(lon, s), (lon, n), (w, lat), (e, lat)] {
+                let (x, y) = frame.from_lonlat(lo, la);
+                b = [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)];
+            }
+        }
+        // the boundary's sampled curve bows inward by far less than this between samples
+        let m = 0.01 * (b[2] - b[0]).max(b[3] - b[1]) + 1000.0;
+        self.w.net.add_terrain(Arc::new(g), [b[0] - m, b[1] - m, b[2] + m, b[3] + m]);
+        true
+    }
+
+    /// Metres of the last route or edge preview in each terrain class where it is charged (flat,
+    /// rolling, hilly, mountain; T-1270), for the track tool's tag.
+    pub fn preview_ground(&self) -> Vec<f64> {
+        self.preview_ground.to_vec()
+    }
+
     fn mask_set(&self) -> MaskSet {
         MaskSet(self.rasters.iter().map(|r| r.seen.clone()).collect())
     }
@@ -400,6 +432,7 @@ impl TrackApi {
             Ok(mut net) => {
                 std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
                 net.time_zones = self.w.net.time_zones.clone();
+                net.terrain = self.w.net.terrain.clone();
                 self.w = TrackWorld::new(net);
                 // lines saved at a frequency, not trains, are given trains (T-1146)
                 self.w.allocate_unallocated();

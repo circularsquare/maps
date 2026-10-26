@@ -9,6 +9,8 @@ const PACKS = process.env.TW_PACKS ? resolve(process.env.TW_PACKS) : resolve(her
 /** The packs the game opens: the registry's cities (T-125), and its regional market. Pipeline output, gitignored. */
 const REGISTRY = JSON.parse(readFileSync(resolve(here, "src/game/registry.json"), "utf8")) as { cities: { id: string }[]; market: { pack: string } };
 const CITIES = REGISTRY.cities.map((c) => c.id);
+/** T-1270: each zone's terrain classes (pipeline/zone_terrain.py), served at `terrain/<id>.terrain` beside `packs/`. */
+const TERRAIN = resolve(here, "../data/terrain");
 
 /**
  * City packs at `packs/<city>.json`, `.bin`, `.boundary.geojson`, `.market.json` (T-377) and `.places.json` (the OSM place
@@ -39,6 +41,18 @@ function packs(): Plugin {
           createReadStream(file).pipe(res);
         }
       });
+      server.middlewares.use("/terrain", (req, res) => {
+        const file = join(TERRAIN, (req.url ?? "").split("?")[0].replace(/^\/+/, ""));
+        // a zone without a file is a 404, never the page (the clock worker reads it as no terrain)
+        if (!file.startsWith(TERRAIN) || !existsSync(file)) {
+          res.statusCode = 404;
+          res.end();
+          return;
+        }
+        res.setHeader("Content-Type", "application/octet-stream");
+        res.setHeader("Content-Length", statSync(file).size);
+        createReadStream(file).pipe(res);
+      });
     },
     writeBundle(opts) {
       const out = join(opts.dir ?? resolve(here, "dist"), "packs");
@@ -54,6 +68,16 @@ function packs(): Plugin {
       const intercity = join(PACKS, REGISTRY.market.pack + ".json");
       if (existsSync(intercity)) copyFileSync(intercity, join(out, REGISTRY.market.pack + ".json"));
       else this.warn("intercity market missing: build pipeline/intercity.py");
+      // T-1270: the zones' terrain classes; a zone without one prices its track on flat ground
+      const terrain = join(opts.dir ?? resolve(here, "dist"), "terrain");
+      mkdirSync(terrain, { recursive: true });
+      let noTerrain = 0;
+      for (const c of CITIES) {
+        const src = join(TERRAIN, c + ".terrain");
+        if (existsSync(src)) copyFileSync(src, join(terrain, c + ".terrain"));
+        else noTerrain++;
+      }
+      if (noTerrain) this.warn(`${noTerrain} zones have no terrain file: run pipeline/zone_terrain.py build`);
       // T-800: every zone's coarse outline (pipeline/zone_outlines.py); without it every zone shows (T-1006)
       const outlines = join(PACKS, "outlines.json");
       if (existsSync(outlines)) copyFileSync(outlines, join(out, "outlines.json"));

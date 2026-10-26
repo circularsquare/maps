@@ -246,7 +246,9 @@ running train: added ones enter at a terminal, removed ones leave at one, and th
 effect a moment ahead so it is drawn in step at any clock speed [T-206, T-1071]. A new game starts
 with $6B in an empty New York [T-805]; double track costs a base of US$90M a km times a
 multiplier per elevation (US$45M at grade), priced against cheap-country metros such as Korea's
-[T-805], a 200 m station a fixed US$50M plus a part by level (US$75M at grade, US$90M at +1,
+[T-805], times the ground's terrain class (flat 1x, rolling 1.25x, hilly 1.6x, mountain 2.5x) at
+every elevation but the bored -2 and -3, so in mountains a tunnel is the cheaper way; Settings can
+shade the hills on the map [T-1270], a 200 m station a fixed US$50M plus a part by level (US$75M at grade, US$90M at +1,
 US$150M at -2) [T-1267], a 20 m car costs US$2.5M, bought as a line's fleet grows and kept in the depot for any line
 when it shrinks [T-028, T-631], and running costs are US$4 a train-km plus US$2 a car-km [T-807]. Constructed
 track and stations cost upkeep whether trains run or not, US$30k a km of double track and US$50k a station a game

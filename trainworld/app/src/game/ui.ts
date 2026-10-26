@@ -90,6 +90,8 @@ export interface DisplaySettings {
   /** T-1249: the basemap's contrast, 0-1: below 1 everything but water and the land is mixed that
    * much less toward the land colour (map/basemap.ts, map/realNetwork.ts) */
   basemapContrast: number;
+  /** T-1270: hills and mountains shaded on the basemap (map/basemap.ts `setHillshade`) */
+  hillshade: boolean;
 }
 
 /** T-247: the UI scale setting's steps */
@@ -131,6 +133,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   projection: "flat",
   lineWidth: 1,
   basemapContrast: 1,
+  hillshade: false,
 };
 
 const STORE = "trainworld-ui";

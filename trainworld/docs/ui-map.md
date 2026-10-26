@@ -32,6 +32,18 @@ nothing is fetched while it is hidden. The lines are noritetsu's per-region tile
 the national registers, one `track` layer); the tiles carry no line type or name at low zoom, so
 there is no high-speed class and no hover yet.
 
+## Terrain (hill shading)
+
+Settings > Show > **Terrain**, off by default [T-1270]: MapLibre's hillshade over the land cover and
+under roads, from the Terrain Tiles on AWS Open Data (Terrarium PNG, 256 px, fetched to zoom 12 and
+stretched past it; `map/basemap.ts`). The water is drawn again over it (`water_over_shade`), so the
+sea floor's relief stays hidden. Shadow and highlight follow the theme (light: warm brown shadow,
+white highlight, exaggeration 0.35; dark: black shadow, 0.45) and the base map contrast slider mutes
+them with the rest. Off, no layer draws and no tile is fetched. Its hover in Settings gives the
+terrain price factors (track-and-service.md 6.4). Mapterhorn's hosted tiles were left aside: no terms
+for use by an app are stated; for a published game the fallback is our own Terrarium tiles on R2
+cut from GEDTM30 (notes/T-1270.md).
+
 ## Zoom bands
 
 - **Below zoom 9** (about 160 km across, a whole region) only the lines are drawn [T-205, T-542,

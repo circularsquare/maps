@@ -61,6 +61,8 @@ export interface PreviewAnswer {
   lengthM: number;
   /** cost multiplier: the track's price over its length at the base price (T-085) */
   mult: number;
+  /** metres on flat, rolling, hilly and mountain ground where the terrain is charged (T-1270) */
+  ground?: number[];
   issues: string[];
   verts: Float64Array;
   pts: Float32Array;
@@ -720,7 +722,7 @@ export class ClockClient {
           this.toCurrentAnchor(msg.anchor, msg.verts, msg.pts);
           if (msg.arc) this.toCurrentAnchor(msg.anchor, msg.arc, new Float32Array(0));
           if (msg.marks) this.toCurrentAnchor(msg.anchor, new Float64Array(0), msg.marks);
-          this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts, arc: msg.arc, marks: msg.marks });
+          this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, ground: msg.ground, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts, arc: msg.arc, marks: msg.marks });
         } finally {
           const n = this.previewNext;
           this.previewNext = null;

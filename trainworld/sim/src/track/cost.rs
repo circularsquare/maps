@@ -203,16 +203,139 @@ pub fn water_spans(len: f64, at: impl Fn(f64) -> (f64, f64), mask: &dyn WaterMas
     }
 }
 
+/// Terrain classes on a grid of whole fractions of a degree (T-1270, `pipeline/zone_terrain.py`):
+/// 0 flat, 1 rolling, 2 hilly, 3 mountain, row after row from the south-west corner. Every zone's
+/// grid sits on one world lattice, so overlapping grids agree cell for cell.
+pub struct ClassGrid {
+    /// lattice cells a degree
+    pub per_deg: f64,
+    /// lattice column and row of the south-west cell, counted from 180 W and 90 S
+    pub col0: i64,
+    pub row0: i64,
+    pub w: u32,
+    pub h: u32,
+    pub cls: Vec<u8>,
+}
+
+/// A terrain file's magic: `TWT1`, then u32 w, h, i32 col0, row0, u32 cells a degree, then
+/// (class u8, run length as LEB128) runs covering the grid row-major.
+pub const TERRAIN_MAGIC: &[u8; 4] = b"TWT1";
+
+impl ClassGrid {
+    pub fn decode(b: &[u8]) -> Option<ClassGrid> {
+        if b.len() < 24 || &b[0..4] != TERRAIN_MAGIC {
+            return None;
+        }
+        let u = |i: usize| u32::from_le_bytes([b[i], b[i + 1], b[i + 2], b[i + 3]]);
+        let (w, h) = (u(4), u(8));
+        let (col0, row0) = (u(12) as i32 as i64, u(16) as i32 as i64);
+        let per_deg = u(20) as f64;
+        let n = w as usize * h as usize;
+        if per_deg <= 0.0 || n == 0 || n > 64 << 20 {
+            return None;
+        }
+        let mut cls = Vec::with_capacity(n);
+        let mut i = 24;
+        while i < b.len() && cls.len() < n {
+            let c = b[i].min(3);
+            i += 1;
+            let (mut run, mut shift) = (0usize, 0);
+            loop {
+                let x = *b.get(i)?;
+                i += 1;
+                run |= ((x & 0x7f) as usize) << shift;
+                if x & 0x80 == 0 { break; }
+                shift += 7;
+                if shift > 35 { return None; }
+            }
+            cls.extend(std::iter::repeat(c).take(run.min(n - cls.len())));
+        }
+        (cls.len() == n).then_some(ClassGrid { per_deg, col0, row0, w, h, cls })
+    }
+
+    /// `[west, south, east, north]` in degrees.
+    pub fn bounds(&self) -> [f64; 4] {
+        let d = 1.0 / self.per_deg;
+        let (w, s) = (self.col0 as f64 * d - 180.0, self.row0 as f64 * d - 90.0);
+        [w, s, w + self.w as f64 * d, s + self.h as f64 * d]
+    }
+
+    /// The class at a point, or `None` outside the grid.
+    pub fn at(&self, lon: f64, lat: f64) -> Option<u8> {
+        let c = ((lon + 180.0) * self.per_deg).floor() as i64 - self.col0;
+        let r = ((lat + 90.0) * self.per_deg).floor() as i64 - self.row0;
+        if c < 0 || r < 0 || c >= self.w as i64 || r >= self.h as i64 {
+            return None;
+        }
+        Some(self.cls[r as usize * self.w as usize + c as usize])
+    }
+}
+
+/// The terrain grids installed (one per zone near the view or the track). A point no grid covers is
+/// flat. Cheap to clone: the grids are shared.
+#[derive(Clone, Default)]
+pub struct Terrain {
+    pub grids: Vec<Arc<ClassGrid>>,
+}
+
+impl Terrain {
+    pub fn class_at(&self, lon: f64, lat: f64) -> u8 {
+        self.grids.iter().find_map(|g| g.at(lon, lat)).unwrap_or(0)
+    }
+    pub fn is_empty(&self) -> bool {
+        self.grids.is_empty()
+    }
+}
+
+/// Chainage spans `[s0, s1, class]` of terrain that is not flat along an alignment, sampled every
+/// `TERRAIN_STEP` m; `at` gives longitude and latitude at a chainage.
+pub fn terrain_spans(len: f64, at: impl Fn(f64) -> (f64, f64), t: &Terrain, out: &mut Vec<[f64; 3]>) {
+    if t.is_empty() || len <= 0.0 {
+        return;
+    }
+    let n = (len / TERRAIN_STEP).ceil().max(1.0) as usize;
+    let step = len / n as f64;
+    let mut open: Option<(f64, u8)> = None;
+    for j in 0..n {
+        let (lon, lat) = at((j as f64 + 0.5) * step);
+        let c = t.class_at(lon, lat);
+        let s = j as f64 * step;
+        match open {
+            Some((_, k)) if k == c => {}
+            Some((s0, k)) => {
+                out.push([s0, s, k as f64]);
+                open = (c > 0).then_some((s, c));
+            }
+            None if c > 0 => open = Some((s, c)),
+            None => {}
+        }
+    }
+    if let Some((s0, k)) = open {
+        out.push([s0, len, k as f64]);
+    }
+}
+
+/// The terrain factor at a level: none for bored tunnels.
+pub fn terrain_factor(level: i8, class: u8) -> f64 {
+    if level >= TERRAIN_MIN_LEVEL { TERRAIN_FACTOR[class.min(3) as usize] } else { 1.0 }
+}
+
 /// Level of a height, rounded.
 pub fn level_of(z: f64) -> i8 {
     (z / LEVEL_H).round() as i8
 }
 
-/// Cost of one edge's track, US$M: per sub-interval, the level's multiplier (a ramp at the dearer
-/// of its two levels), 2x over water, `track_factor` for the track type.
+/// Cost of one edge's track on flat ground, US$M (`track_cost_t` with no terrain).
 pub fn track_cost(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks: u8, hsr: bool) -> f64 {
+    track_cost_t(len, vert, water, &[], tracks, hsr)
+}
+
+/// Cost of one edge's track, US$M: per sub-interval, the level's multiplier (a ramp at the dearer
+/// of its two levels), 2x over water, the terrain's factor (`terrain_factor`), `track_factor` for
+/// the track type.
+pub fn track_cost_t(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], terrain: &[[f64; 3]], tracks: u8, hsr: bool) -> f64 {
     let mut c = 0.0;
-    track_cost_parts(len, vert, water, tracks, hsr, |_, _, _, _, cost| c += cost);
+    track_cost_parts_t(len, vert, water, terrain, tracks, hsr, |_, _, _, _, _, cost| c += cost);
     c
 }
 
@@ -221,16 +344,25 @@ pub fn track_factor(tracks: u8, hsr: bool) -> f64 {
     if tracks == 1 { SINGLE_TRACK_COST } else if hsr { HSR_COST } else { 1.0 }
 }
 
-/// Visit each priced interval: charged level, water, ramp, metres, US$M.
-/// Shared by the price and its explanation, including the dearer end of a ramp.
+/// Visit each priced interval on flat ground: charged level, water, ramp, metres, US$M.
 pub fn track_cost_parts(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks: u8, hsr: bool, mut part: impl FnMut(i8, bool, bool, f64, f64)) {
-    let mut cuts: Vec<f64> = Vec::with_capacity(vert.len() + 2 * water.len() + 2);
+    track_cost_parts_t(len, vert, water, &[], tracks, hsr, |l, wet, ramp, _, m, c| part(l, wet, ramp, m, c));
+}
+
+/// Visit each priced interval: charged level, water, ramp, terrain class, metres, US$M.
+/// Shared by the price and its explanation, including the dearer end of a ramp (terrain counted).
+pub fn track_cost_parts_t(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], terrain: &[[f64; 3]], tracks: u8, hsr: bool, mut part: impl FnMut(i8, bool, bool, u8, f64, f64)) {
+    let mut cuts: Vec<f64> = Vec::with_capacity(vert.len() + 2 * water.len() + 2 * terrain.len() + 2);
     cuts.push(0.0);
     cuts.push(len);
     cuts.extend(vert.iter().map(|p| p[0]));
     for w in water {
         cuts.push(w[0]);
         cuts.push(w[1]);
+    }
+    for t in terrain {
+        cuts.push(t[0]);
+        cuts.push(t[1]);
     }
     cuts.sort_by(|a, b| a.total_cmp(b));
     cuts.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
@@ -241,17 +373,20 @@ pub fn track_cost_parts(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], tracks:
             continue;
         }
         let m = 0.5 * (u + v);
+        let wet = water.iter().any(|s| m >= s[0] && m < s[1]);
+        // over water the water's 2x stands for the crossing; the ground's class does not add to it
+        let class = if wet { 0 } else { terrain.iter().find(|s| m >= s[0] && m < s[1]).map_or(0, |s| s[2] as u8) };
+        let dear = |l: i8| level_mult(l) * terrain_factor(l, class);
         let i = vert.partition_point(|p| p[0] <= m).clamp(1, vert.len().max(2) - 1);
         let (level, ramp) = if vert.len() < 2 {
             (level_of(vert.first().map_or(0.0, |p| p[1])), false)
         } else {
             let a = level_of(vert[i - 1][1]);
             let b = level_of(vert[i][1]);
-            (if level_mult(a) >= level_mult(b) { a } else { b }, (vert[i - 1][1] - vert[i][1]).abs() > 1e-9)
+            (if dear(a) >= dear(b) { a } else { b }, (vert[i - 1][1] - vert[i][1]).abs() > 1e-9)
         };
-        let wet = water.iter().any(|s| m >= s[0] && m < s[1]);
-        let c = (v - u) / 1000.0 * BASE_COST_PER_KM * level_mult(level) * if wet { WATER_COST } else { 1.0 } * track_f;
-        part(level, wet, ramp, v - u, c);
+        let c = (v - u) / 1000.0 * BASE_COST_PER_KM * dear(level) * if wet { WATER_COST } else { 1.0 } * track_f;
+        part(level, wet, ramp, class, v - u, c);
     }
 }
 
@@ -372,6 +507,82 @@ mod tests {
         assert_eq!(rows.iter().filter(|r| r.2).map(|r| r.3).sum::<f64>(), 400.0);
         assert!(rows.iter().filter(|r| r.2).all(|r| r.0 == -2));
         assert!((rows.iter().map(|r| r.4).sum::<f64>() - 73.44).abs() < 1e-9);
+    }
+
+    /// A terrain file of `w` x `h` cells at 240 a degree from its south-west lattice cell, by runs.
+    fn terrain_file(w: u32, h: u32, col0: i32, row0: i32, runs: &[(u8, usize)]) -> Vec<u8> {
+        let mut b = TERRAIN_MAGIC.to_vec();
+        for v in [w, h, col0 as u32, row0 as u32, 240] {
+            b.extend(v.to_le_bytes());
+        }
+        for &(c, mut n) in runs {
+            b.push(c);
+            loop {
+                let x = (n & 0x7f) as u8;
+                n >>= 7;
+                if n == 0 { b.push(x); break; }
+                b.push(x | 0x80);
+            }
+        }
+        b
+    }
+
+    #[test]
+    fn terrain_grid_decodes_and_finds_cells() {
+        // 3 x 2 cells at 0..3/240 E, 45..45+2/240 N: south row flat, hilly, mountain; north row 200
+        // cells long in all by a run that overruns (clipped)
+        let b = terrain_file(3, 2, 180 * 240, 135 * 240, &[(0, 1), (2, 1), (3, 1), (1, 300)]);
+        let g = ClassGrid::decode(&b).unwrap();
+        let d = 1.0 / 240.0;
+        assert_eq!(g.at(0.5 * d, 45.0 + 0.5 * d), Some(0));
+        assert_eq!(g.at(1.5 * d, 45.0 + 0.5 * d), Some(2));
+        assert_eq!(g.at(2.5 * d, 45.0 + 0.5 * d), Some(3));
+        assert_eq!(g.at(1.5 * d, 45.0 + 1.5 * d), Some(1));
+        assert_eq!(g.at(3.5 * d, 45.0 + 0.5 * d), None);
+        assert_eq!(g.at(-0.5 * d, 45.0), None);
+        let bb = g.bounds();
+        assert!((bb[0] - 0.0).abs() < 1e-9 && (bb[1] - 45.0).abs() < 1e-9 && (bb[2] - 3.0 * d).abs() < 1e-9);
+        assert!(ClassGrid::decode(&b[..b.len() - 2]).is_none(), "a short file is refused");
+        assert!(ClassGrid::decode(b"TWT0").is_none());
+    }
+
+    #[test]
+    fn terrain_prices_surface_track_not_bored_tunnels() {
+        // T-1270: 1 km at each level in the mountain class (2.5x), the tunnels at their flat price
+        let mtn = [[0.0, 1000.0, 3.0]];
+        let at = |l: f64| [[0.0, l * 8.0], [1000.0, l * 8.0]];
+        assert!((track_cost_t(1000.0, &at(0.0), &[], &mtn, 2, false) - 112.5).abs() < 1e-9);
+        assert!((track_cost_t(1000.0, &at(1.0), &[], &mtn, 2, false) - 225.0).abs() < 1e-9);
+        assert!((track_cost_t(1000.0, &at(-1.0), &[], &mtn, 2, false) - 225.0).abs() < 1e-9);
+        assert!((track_cost_t(1000.0, &at(-2.0), &[], &mtn, 2, false) - 99.0).abs() < 1e-9);
+        assert!((track_cost_t(1000.0, &at(-3.0), &[], &mtn, 2, false) - 108.0).abs() < 1e-9);
+        // so in mountains the tunnel is the cheaper way, in hilly ground the surface still is
+        let hilly = [[0.0, 1000.0, 2.0]];
+        assert!((track_cost_t(1000.0, &at(0.0), &[], &hilly, 2, false) - 72.0).abs() < 1e-9);
+        // half the edge rolling, over water nothing on top of the water's 2x
+        let half = [[500.0, 1000.0, 1.0]];
+        assert!((track_cost_t(1000.0, &at(0.0), &[], &half, 2, false) - (22.5 + 22.5 * 1.25)).abs() < 1e-9);
+        assert!((track_cost_t(1000.0, &at(1.0), &[[0.0, 1000.0]], &mtn, 2, false) - 180.0).abs() < 1e-9);
+        // a ramp from ground down to -2 in mountains is charged at the dearer end: ground's 2.5x
+        let ramp = [[0.0, 0.0], [400.0, -16.0]];
+        assert!((track_cost_t(400.0, &ramp, &[], &mtn, 2, false) - 0.4 * 112.5).abs() < 1e-9);
+        let mut classes = vec![];
+        track_cost_parts_t(1000.0, &at(0.0), &[], &half, 2, false, |_, _, _, c, m, _| classes.push((c, m)));
+        assert_eq!(classes, vec![(0, 500.0), (1, 500.0)]);
+    }
+
+    #[test]
+    fn terrain_spans_merge_runs_and_skip_flat() {
+        let b = terrain_file(4, 1, 180 * 240, 135 * 240, &[(0, 1), (2, 2), (0, 1)]);
+        let t = Terrain { grids: vec![Arc::new(ClassGrid::decode(&b).unwrap())] };
+        let d = 1.0 / 240.0;
+        let mut out = vec![];
+        // 4 cells along a parallel, about 1.3 km at 45 N
+        terrain_spans(4000.0, |s| (4.0 * d * s / 4000.0, 45.0 + 0.5 * d), &t, &mut out);
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0][2], 2.0);
+        assert!((out[0][0] - 1000.0).abs() <= 100.0 && (out[0][1] - 3000.0).abs() <= 100.0, "{out:?}");
+        assert_eq!(t.class_at(10.0, 10.0), 0, "outside every grid is flat");
     }
 
     #[test]

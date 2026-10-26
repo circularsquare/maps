@@ -428,8 +428,11 @@ export type FromClock =
       /** US$M */
       cost: number;
       lengthM: number;
-      /** the track's price over its length at the base price (level and water averaged, T-085) */
+      /** the track's price over its length at the base price (level, water and terrain averaged, T-085) */
       mult: number;
+      /** metres of a route preview on flat, rolling, hilly and mountain ground where the terrain is
+       * charged (T-1270, `TrackApi.preview_ground`) */
+      ground?: number[];
       issues: string[];
       /** per vertex: x, y (local units; the middle of its curve), radius m (0 = no arc), speed
        * limit km/h */

@@ -11,13 +11,16 @@ import { constructBlueprints } from "../game/lineActions";
 import { world } from "../game/world";
 import { redo, undo } from "../game/fareUndo";
 import { Icon, LevelButtons } from "./widgets";
+import { TERRAIN_FACTORS, TERRAIN_NAMES } from "../game/terrain";
 
-const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "Trains"];
+const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "Trains", "Terrain"];
 /** a quote row's track count for high-speed track (sim `HSR_ROW`, T-817) */
 const HSR_ROW = 3;
 
 function description(r: BlueprintItem) {
   if (r.kind === 5) return `${r.quantity} new ${r.quantity === 1 ? "car" : "cars"}, after spare cars`;
+  // T-1270: what the ground adds to track, its class in the level field
+  if (r.kind === 6) return `${distance(r.quantity)} of track, ${TERRAIN_FACTORS[r.level as number] ?? 1}x the price`;
   const quantity = r.kind === 0 ? distance(r.quantity) : plural(r.quantity, r.kind === 1 ? "station" : "item");
   return [quantity, r.ramp ? "ramp" : "", r.tracks ? (r.tracks === 1 ? "single track" : r.tracks === HSR_ROW ? "high-speed track" : "double track") : "", r.wet ? "over water" : "on land"].filter(Boolean).join(", ");
 }
@@ -141,7 +144,7 @@ export function BlueprintBreakdown() {
                   {rows.map((r) => (
                     <li>
                       <span class="what">
-                        <span>{r.kind === 5 ? "New cars" : `${levelName(r.level)} (${levelLabel(r.level)})`}</span>
+                        <span>{r.kind === 5 ? "New cars" : r.kind === 6 ? `${TERRAIN_NAMES[r.level as number] ?? "Rough"} ground` : `${levelName(r.level)} (${levelLabel(r.level)})`}</span>
                         <span class="small muted">{description(r)}</span>
                       </span>
                       <span class="val" data-tip={moneyExact(r.cost)}>{money(r.cost)}</span>
