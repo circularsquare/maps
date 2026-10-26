@@ -64,6 +64,8 @@ purpose filter the purpose drawn is ringed in the bar.
   [T-1434, [ui-map.md](ui-map.md) "Opening day"] its Riders cell reads 0 until its figure first
   shows, then counts up to it over 2.4 s, fast at first and slowing to the end; the hover always
   gives the real figure.
+  The "+N daily rides" after a stop edit is not in this tab: it is on the map
+  ([ui-map.md](ui-map.md) "Opening day").
 - **Trains to add** [T-472, T-491, T-818, T-1255]: a row's train count (the trains its level needs now, the bare
   number under the "Trains" header [T-532]) is coloured by the crowding score of the line's period now, otherwise muted. The score is the
   average extra wait for a train with room of the riders at the platforms where trains come full
@@ -117,7 +119,7 @@ purpose filter the purpose drawn is ringed in the bar.
 - **Under the title** a muted line gives the stop count and length, "24 stops, 16.3 km", led by
   "High-speed, " on a line of high-speed trains [T-1280].
 - **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key L), Copy line (duplicates route and settings with no trains, T-1161, then opens
-  naming and editing), and Delete line (asked first). While stops are being edited the Stops list (with a remove
+  naming and editing; the copy keeps the symbol its line shows, T-1475), and Delete line (asked first). While stops are being edited the Stops list (with a remove
   button on each stop) follows them there, above Schedule; otherwise it sits after the day's figures.
   Incomplete lines stay planned and run no trains.
 - **Sections**, in order: Schedule (trains for each demand level, with the resulting headway;
@@ -183,7 +185,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   Today for a running line:
   riders by purpose,
   one Profit row (the net over the 24 hours, fares less running cost and the line's share of upkeep,
-  in the alert red when negative; the hover gives the net, fares, running trains and upkeep share, T-867, T-1443), the **Average load** in a percentage [T-820] (rider-seconds
+  in the alert red when negative; the hover gives the net, fares, running trains and upkeep share, T-867, T-1443; the running cost is at the trains and cars the fares' demand result was solved with, so after a train count change both move when the new result lands, T-1492), the **Average load** in a percentage [T-820] (rider-seconds
   aboard over the seconds each trip is under way times the riders a train holds at crush, 160 a car,
   over every trip of today's kind of day from `linePeriods`; `averageLoad` in `LineInspector.tsx`; the hover says so),
   how many trains left full as "x/y" of the trips that
@@ -522,7 +524,9 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   midday") with the main route ("To Astor Pl" and "From Stratford" carry the areas' felt minutes
   to and from the stations, muted, since the market knows no single walk), Fare, Time (station to
   station), Effective time (the pairs' felt cost, averaged over the pairs the train serves), the
-  main route's share and up to four other routes; **By car** [T-1148]: Drive (15 minutes plus the
+  main route's share and up to four other routes (routes under 0.5% of the riders are left out,
+  but while any rail rider is counted the biggest route stays, so riders spread thin over many
+  station pairs still show their trip [T-1500]); **By car** [T-1148]: Drive (15 minutes plus the
   road at 85 km/h), Running costs (each person's dollars), Parking, any Channel crossing or Ferry
   to Hokkaido (each person's fare and its minutes) and Effective time, whose hover is the sum; the
   parts follow from the sim's minutes and mean distance by the rule (`carPartsOf` in

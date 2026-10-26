@@ -110,14 +110,23 @@ try {
   };
   await stopsShot('stops-editing.png');
   // a gap's row, once: the stations show with Add and Cancel
-  await page.click('li.passed button');
+  const g1 = await (await page.$('li.passed button')).boundingBox();
+  const px = g1.x + g1.width / 2, py = g1.y + g1.height / 2;
+  await page.mouse.click(px, py);
   await page.waitForSelector('li.adding', { timeout: 10000 });
   await page.waitForTimeout(300);
-  check(!!(await page.$('li.confirm')), 'a click on a gap row shows Add and Cancel');
+  // T-1489: Add and Cancel take the clicked row's place, under the pointer; the stations are listed below
+  const where = await page.evaluate(([x, y]) => {
+    const c = document.querySelector('li.confirm'), a = document.querySelector('li.adding');
+    if (!c || !a) return null;
+    const hit = document.elementFromPoint(x, y);
+    return { confirmFirst: !!(c.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING), underPointer: hit?.textContent ?? '' };
+  }, [px, py]);
+  check(!!where?.confirmFirst && /^Add \d+ stations?$/.test(where.underPointer), `a click on a gap row puts Add under the pointer with the stations below (${JSON.stringify(where)})`);
   await stopsShot('stops-pending.png');
   await page.click('li.confirm >> text=Cancel');
   await page.waitForTimeout(300);
-  check(!(await page.$('li.adding')), 'Cancel puts the rows back');
+  check(!(await page.$('li.adding')) && !!(await page.$('li.passed button')), 'Cancel puts the rows back');
   // a gap's row, twice: adds at once
   const n0 = await page.evaluate((id) => window.tw.world.value.save.lines.find((l) => l.id === id).stops.length, one.id);
   // as a hand does it: the panel redraws between the two clicks

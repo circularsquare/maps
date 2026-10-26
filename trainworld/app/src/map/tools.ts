@@ -54,6 +54,7 @@ import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
 import { snapping } from "../game/ui";
 import { SAME_TAP_PX, touchActions, touchCtl, touchInput, type TouchCtl } from "./touch";
 import { BusDraw } from "./busDraw";
+import { playBuild } from "./buildSound";
 
 /** the touch control bar's gap from the point it serves, so the finger does not cover it (px) */
 const TOUCH_GAP_PX = 44;
@@ -742,7 +743,9 @@ export class Tools {
       // T-830: the quote of this very request; an answer for an earlier pointer position (a slow
       // preview landing late) would give another segment's length and cost
       p = this.previewKey === JSON.stringify(req) ? this.lastPreview : null;
-      a = await edit({ op: "route", ...req });
+      // T-1474: heard at the click, not at the worker's answer; not when the ghost already shows a refusal
+      if (p?.ok !== false) playBuild("track");
+      a = await edit({ op: "route", ...req }, false, true);
     } finally {
       this.placing = false;
       this.place();
@@ -889,6 +892,8 @@ export class Tools {
     }
     // T-671, T-695: the spot the ghost shows, else the first the track model takes of what is under the pointer
     const v = this.verdict();
+    // T-1474: heard at the click, not when the edit is answered; not when the ghost shows a refusal
+    if (!(v && !v.ok && !v.held)) playBuild("snap");
     const tries = [...(v?.ok && v.spot && !v.held ? [v.spot] : []), ...this.alts];
     const key = this.nameKey(e.point.x, e.point.y);
     const ahead = this.named?.key === key && this.map.areTilesLoaded() ? this.named.name : null;
@@ -896,7 +901,7 @@ export class Tools {
     const name = await (ahead ?? this.nameFor(e.point.x, e.point.y));
     const platform = buildPlatform.peek();
     const stationAt = (p: Exclude<Snap, { kind: "free" }>) => ({ op: "addStation" as const, at: p.kind === "node" ? { kind: "node" as const, node: p.node } : { kind: "edge" as const, edge: p.edge, ...this.pack(p.lx, p.ly) }, platform, name });
-    const r = await firstAccepted(tries, async (p) => { const a = await edit(stationAt(p), true); return a.ok ? null : a.issues; }, (p) => (p.kind === "edge" ? this.endSnap(p) : null), () => false);
+    const r = await firstAccepted(tries, async (p) => { const a = await edit(stationAt(p), true, true); return a.ok ? null : a.issues; }, (p) => (p.kind === "edge" ? this.endSnap(p) : null), () => false);
     if (r.spot) {
       this.lastPlaced = toLngLat(r.spot.lx, r.spot.ly); // T-312: the hover tag's "km from" (found again by position)
       say(`${name} added as a blueprint station.`);
@@ -909,12 +914,13 @@ export class Tools {
     this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
     const { phi, plat } = this.freeSpan(h);
     const p = this.freePiece(h, phi, plat);
+    if (!(this.freeAns?.key === p.key && this.freeAns.ok === false)) playBuild("snap");
     this.freeAt = null;
     this.lastHeading = phi;
     this.clearFree();
     this.place();
     const name = await this.nameFor(...this.screen(p.mid.lx, p.mid.ly));
-    const a = await edit({ op: "addStation", at: p.stationAt, platform: plat, name }, true);
+    const a = await edit({ op: "addStation", at: p.stationAt, platform: plat, name }, true, true);
     if (a.ok) {
       this.lastPlaced = toLngLat(p.mid.lx, p.mid.ly);
       say(`${name} added as a blueprint station.`);

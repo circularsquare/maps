@@ -31,20 +31,28 @@ export function say(text: string, bad = false) {
  * still (T-1130, game/fareUndo.ts). */
 export const editsSent = signal(0);
 
-/** Told of every answered edit the player made (map/buildSound.ts, T-1282); checks that send edits
- * to the client directly are not. */
-let afterEdit: ((op: EditOp, a: EditAnswer) => void) | null = null;
-export function setAfterEdit(f: (op: EditOp, a: EditAnswer) => void) {
-  afterEdit = f;
+/** What the player's click is about to do; a click behind folded or pasted edits names only the op. */
+export type Intent = EditOp | { op: "setTrainCount" | "setHeadway" | "lineCars" };
+
+/** Told of every edit the player makes the moment they make it, before the worker answers
+ * (map/buildSound.ts, T-1474): its sound plays at the click. Checks that send edits to the client
+ * directly are not heard. */
+let beforeEdit: ((i: Intent) => void) | null = null;
+export function setBeforeEdit(f: (i: Intent) => void) {
+  beforeEdit = f;
+}
+export function clickSound(i: Intent) {
+  beforeEdit?.(i);
 }
 
-/** Send an edit; a refusal is explained in `notice`. Resolves with the answer either way. */
-export async function edit(op: EditOp, quiet = false): Promise<EditAnswer> {
+/** Send an edit; a refusal is explained in `notice`. Resolves with the answer either way. `silent`:
+ * its sound was played already (the click that sent it, or the one sound of a run of edits). */
+export async function edit(op: EditOp, quiet = false, silent = false): Promise<EditAnswer> {
+  if (!silent) beforeEdit?.(op);
   if (!sink) return { ok: false, issues: [], charge: 0 };
   if (op.op !== "fares" && op.op !== "undo" && op.op !== "redo") editsSent.value++;
   const a = await sink(op);
   if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues), true);
-  afterEdit?.(op, a);
   return a;
 }
 
@@ -128,12 +136,18 @@ function folded<V>(pending: Signal<ReadonlyMap<LineId, V>>, send: (id: LineId, v
   };
 }
 
-const setTrainCounts = folded(pendingTrains, async (id, trains) => {
+const sendTrainCounts = folded(pendingTrains, async (id, trains) => {
   const had = world.peek()?.lineStats[id]?.trainsNeeded;
-  const a = await edit({ op: "setTrainCount", line: num(id), trains });
+  const a = await edit({ op: "setTrainCount", line: num(id), trains }, false, true);
   noteAnswer(id, a, trains, had);
   return a.ok;
 });
+/** Each click is heard as it is made, however the edits behind it are folded. */
+const setTrainCounts = (id: LineId, trains: [number, number, number]) => {
+  const was = trainsShown(id);
+  if (!was || trains.some((n, i) => n !== was[i])) clickSound({ op: "setTrainCount" });
+  sendTrainCounts(id, trains);
+};
 
 /** T-625: a line whose trains follow a headway. The headways asked for but not yet in `world`,
  * folded like the train counts above; null is a switch back to counts set by hand (T-747). */
@@ -179,12 +193,16 @@ export function setHeadway(id: LineId, demand: Demand, seconds: number) {
   queueHeadway(id, h);
 }
 
-const queueHeadway = folded(pendingHeadway, async (id, secs) => {
+const sendHeadway = folded(pendingHeadway, async (id, secs) => {
   const had = world.peek()?.lineStats[id]?.autoS;
-  const a = await edit({ op: "setHeadway", line: num(id), seconds: secs });
+  const a = await edit({ op: "setHeadway", line: num(id), seconds: secs }, false, true);
   if (secs) noteAnswer(id, a, secs, had);
   return a.ok;
 });
+const queueHeadway = (id: LineId, secs: [number, number, number] | null) => {
+  if (JSON.stringify(secs) !== JSON.stringify(headwayShown(id))) clickSound({ op: "setHeadway" });
+  sendHeadway(id, secs);
+};
 
 export function stepHeadway(id: LineId, demand: Demand, dir: number) {
   const base = headwayShown(id);

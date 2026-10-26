@@ -23,6 +23,8 @@ export interface LoadProgress {
   step: string;
   /** the startup load (the first game's) */
   startup: boolean;
+  /** T-1479: the time still expected, ms, counting down; null while there is no estimate */
+  leftMs?: number | null;
 }
 
 /** What the demand pool is loading now; null when nothing is. */

@@ -63,17 +63,40 @@ export function rememberWait(key: string, rec: WaitRecord) {
 /** T-1195: how this browser's last game load compared with the model, for a game it has not loaded
  * before: its data stage's time over the modelled one, and its game stage's time over GAME_MS */
 const LOAD_PACE = "anitabuilder-load-pace";
-export interface Pace { data: number; game: number }
+/** T-1479: and `solve`, its solve's time over the solve model's; `later`, each crowding round's time
+ * over the first round's (notes/T-1479.md: 0.26 on all-China, 0.6 on New York, 0.8 on Japan) */
+export interface Pace { data: number; game: number; solve: number; later: number }
+export const LATER_GUESS = 0.5;
 export function loadPace(): Pace {
   try {
     const p = JSON.parse(localStorage.getItem(LOAD_PACE) || "null");
-    if (p && p.data > 0 && p.game > 0) return p;
+    if (p && p.data > 0 && p.game > 0) return { data: p.data, game: p.game, solve: p.solve > 0 ? p.solve : 1, later: p.later > 0 ? p.later : LATER_GUESS };
   } catch { /* storage unavailable */ }
-  return { data: 1, game: 1 };
+  return { data: 1, game: 1, solve: 1, later: LATER_GUESS };
 }
 export function rememberPace(p: Pace) {
   const clamp = (x: number) => Math.min(10, Math.max(0.3, x));
-  try { localStorage.setItem(LOAD_PACE, JSON.stringify({ data: clamp(p.data), game: clamp(p.game) })); } catch { /* storage unavailable */ }
+  try { localStorage.setItem(LOAD_PACE, JSON.stringify({ data: clamp(p.data), game: clamp(p.game), solve: clamp(p.solve), later: Math.min(1.5, Math.max(0.1, p.later)) })); } catch { /* storage unavailable */ }
+}
+
+/** T-1479: the time left as the card says it, rough on purpose */
+export function leftText(ms: number): string {
+  const s = ms / 1000;
+  if (s < 10) return "A few seconds left";
+  if (s < 55) return `${Math.round(s / 10) * 10} s left`;
+  if (s < 90) return "1 min left";
+  return `${Math.round(s / 60)} min left`;
+}
+
+/** T-1479: the time left shown, from `prev` (shown `dt` ms ago) toward the estimate `target`: down with
+ * the clock or faster, up only at RISE_RATE a ms and only while the estimate is over a fifth above it,
+ * so a late stage slows the count instead of throwing it back */
+export const RISE_RATE = 0.5;
+export function nextLeft(prev: number | null, target: number, dt: number): number {
+  if (prev === null) return target;
+  const counted = Math.max(0, prev - dt);
+  if (target <= counted) return target;
+  return target > counted * 1.2 ? counted + Math.min(target - counted, (1 + RISE_RATE) * dt) : counted;
 }
 
 /** a remembered wait still describes the game: its network has not changed by over a fifth */

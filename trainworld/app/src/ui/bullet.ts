@@ -96,9 +96,10 @@ export function bulletText(text: string, size: BulletSize, zoom = 1): BulletText
   return ok ? v : null;
 }
 
-/** T-1464: a bus line's bullet is a rounded square, a rail line's a circle (or pill): the corner
- * radius of a bullet of height `h`. */
-export const bulletRadius = (h: number, square: boolean) => (square ? h * 0.25 : h / 2);
+/** T-1464, T-1475: a bus line's bullet is a rounded square, a rail line's a circle (or pill): the
+ * corner radius of a bus bullet as a share of its side, which the map's end squares use too. */
+export const BUS_CORNER = 0.18;
+export const bulletRadius = (h: number, square: boolean) => (square ? h * BUS_CORNER : h / 2);
 
 /** Whether line `id` is a bus line, read as the world stands now. */
 export const isBusLine = (id: string): boolean => !!world.peek()?.lineStats[id]?.bus;

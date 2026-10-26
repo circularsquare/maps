@@ -13,6 +13,7 @@ import type { ComponentChildren } from "preact";
 import { fareAt, MAX_KM, NODE_GAP_KM, scaleNodes, type FareNode } from "../game/fareCurve";
 import { unitMetres, unitShort } from "../game/format";
 import { canUndoFares, changeFares, undo } from "../game/fareUndo";
+import { playBuild } from "../map/buildSound";
 import { Icon, Stepper, TypedValue } from "./widgets";
 
 /** T-1277: the graph shows the curve as charged where the player is looking (times that country's
@@ -253,6 +254,8 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
     const d = drag.current, f = farePreview.value;
     drag.current = null;
     if (!d || !f || JSON.stringify(f) === JSON.stringify(nodes)) { farePreview.value = null; return; }
+    // T-1490: the quiet pop on release, at the pointer like the other build sounds
+    playBuild("pop");
     // the figures keep the dragged values until the game has taken them
     void setFares(f).then(() => { if (!drag.current) farePreview.value = null; });
   };

@@ -1,8 +1,8 @@
-// Point markers on the map (T-416). While the track or station tool is on, a round marker at each
-// loose end (a node with one piece of track and no station), blueprint or built: where a line is
-// continued or a station goes at the end of one. With the select tool, a square marker at every
-// blueprint point that can be dragged (map/nodeDrag.ts): track ends, corners and junctions. They
-// take no presses; the tools and the node drag work on the nodes underneath as before.
+// Point markers on the map (T-416). While the track or station tool is on, a ring at each loose end
+// (a node with one piece of track and no station), blueprint or built, near the pointer: where a
+// line is continued or a station goes at the end of one. With the select tool, a square marker at
+// every blueprint point that can be dragged (map/nodeDrag.ts): track ends, corners and junctions.
+// They take no presses; the tools and the node drag work on the nodes underneath as before.
 
 import type { Map as MlMap } from "maplibre-gl";
 import { display, tool } from "../game/ui";
@@ -22,6 +22,11 @@ const MAX_MARKS = 400;
 const HIT_PX = 9;
 /** a badge and the node it sits on agree to within this, local units (the cells are looked up with their neighbours) */
 const BADGE_CELL = 3;
+/** T-1485: loose ends show within this of the pointer, CSS px; every one in a city at once, many on
+ * faint unserved or switched-off track, read as stray stations */
+const NEAR_PX = 160;
+/** a screen with no hovering pointer (touch) shows them all */
+const NO_HOVER = typeof matchMedia === "function" && matchMedia("(hover: none)").matches;
 
 export class EndMarkers {
   private box: HTMLDivElement;
@@ -29,12 +34,23 @@ export class EndMarkers {
   private pts: { lx: number; ly: number }[] = [];
   private kind: Kind | null = null;
   private version = -1;
+  private net: unknown = null;
+  /** the pointer over the map, CSS px, or null when it is off the map */
+  private pointer: [number, number] | null = null;
 
   constructor(private map: MlMap, private overlay: Overlay) {
     this.box = document.createElement("div");
     this.box.className = "tool-marks";
     map.getContainer().appendChild(this.box);
     overlay.afterMapFrame.push(() => this.place());
+    map.on("mousemove", (e) => {
+      this.pointer = [e.point.x, e.point.y];
+      if (this.wanted() === "loose") this.place();
+    });
+    map.getContainer().addEventListener("mouseleave", () => {
+      this.pointer = null;
+      this.place();
+    });
     effect(() => {
       tool.value;
       world.value;
@@ -49,15 +65,19 @@ export class EndMarkers {
 
   /** The points to mark, found again only when the tool or the world changes. */
   private refresh(kind: Kind) {
-    const w = world.peek();
+    const w = world.peek(), net = this.overlay.renderer.net;
     const v = w?.version ?? -1;
-    if (kind === this.kind && v === this.version) return;
+    if (kind === this.kind && v === this.version && net === this.net) return;
     this.kind = kind;
     this.version = v;
+    this.net = net;
     this.pts = [];
     if (!w) return;
+    // only where the network draws the track: a mark is never left on its own (T-1485)
+    const drawnAt = new Set<number>();
+    for (const e of w.edges) if (net?.edgePts.has(e.id)) drawnAt.add(e.a).add(e.b);
     for (const n of w.nodes.values()) {
-      if (n.platform > 0 || n.bus) continue;
+      if (n.platform > 0 || n.bus || !drawnAt.has(n.id)) continue;
       if (kind === "loose" ? n.ports !== 1 : n.builtPorts !== 0) continue;
       const [lx, ly] = toLocal(n.lng, n.lat);
       this.pts.push({ lx, ly });
@@ -104,9 +124,12 @@ export class EndMarkers {
     if (kind && this.shown()) {
       this.refresh(kind);
       const w = this.overlay.cssW, h = this.overlay.cssH;
+      const near = kind === "loose" && !NO_HOVER ? this.pointer : undefined;
       for (const p of this.pts) {
+        if (near === null) break;
         const [x, y] = this.overlay.toScreen(p.lx, p.ly);
         if (x < -8 || y < -8 || x > w + 8 || y > h + 8) continue;
+        if (near && (x - near[0]) ** 2 + (y - near[1]) ** 2 > NEAR_PX * NEAR_PX) continue;
         if (kind === "drag" && this.badged(p.lx, p.ly)) continue;
         if (k >= MAX_MARKS) break;
         let m = this.marks[k];

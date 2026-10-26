@@ -10,7 +10,7 @@ import { h, render } from "preact";
 import { clock } from "../game/clock";
 import { world } from "../game/world";
 import { choosing, continueWithoutDemand, demandIdle, gameFailed, lastAlive, loadCannotFinish, loadFailure, loadProgress, startup } from "../game/loading";
-import { STAGE_TEXT } from "../game/loadBar";
+import { leftText, STAGE_TEXT } from "../game/loadBar";
 import { blockKeysOutside } from "./keys";
 import { BunnyTrain } from "./Spinner";
 
@@ -53,11 +53,15 @@ function LoadingCard() {
   if (!loadingCardShown()) return null;
   const load = loadProgress.value;
   const step = load?.step ?? STAGE_TEXT.game;
+  const fraction = load?.fraction ?? 0;
+  const left = load?.leftMs;
+  // T-1479: the share done and, once there is an estimate, the time left
   return <div class="loading-card-wrap">
     <div class="loading-card" role="status">
       <BunnyTrain />
       <p class="big">{step}</p>
-      <LoadBar fraction={load?.fraction ?? 0} step={step} />
+      <LoadBar fraction={fraction} step={step} />
+      <p class="load-left small muted num"><span>{Math.floor(fraction * 100)}%</span>{left != null && <span>{leftText(left)}</span>}</p>
     </div>
   </div>;
 }

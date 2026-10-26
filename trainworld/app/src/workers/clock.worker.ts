@@ -12,6 +12,7 @@ import { anchor, makeAnchor, setAnchor, toLocal } from "../map/geo";
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
+import { letterOf } from "../game/lineLetter";
 import { faresOf, START_FARE, type Fares } from "../game/fareCurve";
 import { FARE_BASELINE, incomeScale, tidyScale } from "../game/income";
 import { SHADES } from "../game/shadeTable";
@@ -2283,6 +2284,17 @@ function busRow(a: TrackApi, id: number, nodes: ClockNode[]): ClockBus {
   return { built: r[0] === 1, route, roadM: a.bus_road_m(id), stops, street, routeLL: ll(route), streetLL: ll(street) };
 }
 
+/** T-1475: a new bus line's name, "Bus n" with n the sim's next free line number. */
+function nextBusName(a: TrackApi): string {
+  const taken = new Set<string>();
+  const info = a.lines_info();
+  for (let i = 0; i < info.length; i += 22) taken.add(a.line_name(info[i]));
+  for (;;) {
+    const name = a.next_line_name().replace(/^Line /, "Bus ");
+    if (!taken.has(name)) return name;
+  }
+}
+
 /** T-1464: `TrackApi.bus_quote` with each stop's and street stop's longitude and latitude after
  * its x, y: [road m, US$M, 1 if it makes a line, n, then x, y, kind, lng, lat per stop, then m and
  * x, y, lng, lat per street stop]. */
@@ -2427,7 +2439,7 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
     case "addBusLine": {
       const id = a.new_line_id();
       const [h, m, l] = NEW_BUS_HEADWAYS;
-      return { r: a.set_bus_line(id, Float64Array.from(op.route), h, m, l, 30, 120, colourInt(op.colour), op.name || a.next_line_name()), line: id };
+      return { r: a.set_bus_line(id, Float64Array.from(op.route), h, m, l, 30, 120, colourInt(op.colour), op.name || nextBusName(a)), line: id };
     }
     case "busRoute":
       return { r: a.set_bus_route(op.line, Float64Array.from(op.route)) };
@@ -2440,11 +2452,19 @@ function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?:
       const id = a.new_line_id();
       const existing = new Set<string>();
       const info = a.lines_info();
-      for (let i = 0; i < info.length; i += 22) existing.add(a.line_name(info[i]));
+      let colour = 0;
+      for (let i = 0; i < info.length; i += 22) {
+        existing.add(a.line_name(info[i]));
+        if (info[i] === op.line) colour = info[i + 1];
+      }
       const base = op.name?.trim() || `${a.line_name(op.line)} copy`;
       let name = base, n = 2;
       while (existing.has(name)) name = `${base} ${n++}`;
-      return { r: a.copy_line(op.line, id, name), line: id };
+      const r = a.copy_line(op.line, id, name);
+      // T-1475: a line with no symbol of its own shows its name's, which a copy's name would change:
+      // the copy gets the symbol its line shows
+      if (r === 0 && !a.line_symbol(op.line)) a.set_line_badge(id, name, colour, letterOf(a.line_name(op.line)));
+      return { r, line: id };
     }
     case "setStops":
       return { r: a.set_stops(op.line, new Uint32Array(op.stops)) };

@@ -590,6 +590,8 @@ interface LineEntry {
   path: number[];
   stops: number[];
   running: boolean;
+  /** high-speed trains: only such a line is drawn in the high-speed look (T-1494) */
+  fast: boolean;
   strokes: Strokes;
   firstStroke: number[];
 }
@@ -756,7 +758,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     if (!l.ok) continue;
     lineIds.push(String(l.id));
     let c = cache.lines.get(l.id);
-    if (!c || c.running !== l.running || !sameArray(c.path, l.path) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1))) {
+    if (!c || c.running !== l.running || c.fast !== l.fast || !sameArray(c.path, l.path) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1))) {
       const lines = new StrokeBuilder(true);
       let d = 0;
       // the first stroke segment of each path entry (in this line's strokes), and the stop-to-stop
@@ -768,7 +770,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
         const dr = drawn.get(e);
         const ends = edgeEnds.get(e);
         if (dr) {
-          const flags = (l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (hsrEdge.has(e) ? F_HSR : 0);
+          const flags = (l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (l.fast && hsrEdge.has(e) ? F_HSR : 0);
           const stretchOf = Math.min(stretch, Math.max(0, l.stops.length - 2));
           if (dr.lpts.length >= 6) firstStroke[k] = lines.count;
           d = lines.add(dr.lpts, l.id, e, flags, (p & 1) === 1, d, stretchOf, dr.lane);
@@ -780,7 +782,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
           next++;
         }
       });
-      c = { path: l.path.slice(), stops: l.stops.slice(), running: l.running, strokes: lines.build(), firstStroke };
+      c = { path: l.path.slice(), stops: l.stops.slice(), running: l.running, fast: l.fast, strokes: lines.build(), firstStroke };
     }
     linesSeen.set(l.id, c);
     lineParts.push(c);

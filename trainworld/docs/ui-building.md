@@ -139,9 +139,10 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   node dragged (`setCurveLabel`, `map/tools.ts`). They show only for curves on screen and never
   over one another (64 by 22 px), at most 300, so a long snapped route zoomed out keeps a few
   [T-727d].
-- **Loose ends** [T-416; `map/endMarkers.ts`]: while the track or station tool is on, a small white
-  circle with a dark border marks every loose end (a node with one piece of track and no
-  station), blueprint or built. A track click on one starts or continues the route from it; the
+- **Loose ends** [T-416, T-1485; `map/endMarkers.ts`]: while the track or station tool is on, a
+  small hollow ring in the accent colour marks each loose end (a node with one piece of track and
+  no station), blueprint or built, within 160 px of the pointer, and only where the network draws
+  that track (a screen with no hovering pointer shows them all). A track click on one starts or continues the route from it; the
   station tool's pointer snaps to it, so the station goes at the line's end, its platform running
   back along the track through the joints of a drawn route as a platform on a piece does [T-860].
   The markers take no presses, and show from zoom 9.
@@ -486,11 +487,11 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
 - **Stations passed** [T-646, `TrackApi::passed_stations`]: while editing, the stop list shows,
   between two stops whose stretch of the line's own path runs through other stations, a row
   "+ 2 stations passed" (its hover lists them: "Add Foo, Bar and Baz") [T-814]. A click on it
-  shows those stations in its place as faint "+ Name" rows, in path order, with Add and Cancel in a
-  row after them; Add makes them stops in one undoable edit. A double click on the gap's row adds
-  them at once (the first "+ Name" row takes the clicked row's place, so the second click lands on
-  it, or, if the panel has not redrawn yet, the old row's dblclick adds; the hover says
-  "Double-click to add them at once") [T-1297]. **A** adds every station the open line panel's
+  puts Add and Cancel in its place, Add stretched wide so it is under the pointer, with the stations
+  listed below as faint "+ Name" rows in path order; Add makes them stops in one undoable edit. A
+  double click on the gap's row adds them at once (the second click lands on Add, or, if the panel
+  has not redrawn yet, the old row's dblclick adds; the hover says "Double-click to add them at
+  once") [T-1297, T-1489]. **A** adds every station the open line panel's
   line passes, whether or not its stops are being edited; there is no "Add all" row (T-1297's was
   clutter, T-1417). Only stations on the line's path count: a quad twin on the pair beside, or a
   station on a branch, is not offered. The passed stations come in the clock state with each line

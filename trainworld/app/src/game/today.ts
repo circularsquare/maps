@@ -73,19 +73,23 @@ export function crowdClass(score: number): "" | "crowd-warn" | "crowd-bad" {
 export const waitText = (min: number) => (min < 0.05 ? "under 0.1 min" : `${min < 10 ? min.toFixed(1) : Math.round(min)} min`);
 
 /** US$ of running cost over the past 24 hours (T-446): each hour's trains at its demand level, the
- * hours at either end in part, as the worker drains the cash (T-284). */
+ * hours at either end in part, as the worker drains the cash (T-284). T-1492: at the trains and cars
+ * the fares beside it were worked out for (`todayService`), so a train count change moves both
+ * when its demand lands. */
 export function runningToday(l: LineInput, st: LineStats): number {
   const m = moneyState.value;
   if (!m) return 0;
   // T-309: in the line's own local time
   const t = (clock.now() + st.shift) / 3600, t0 = t - 24;
-  const tph = { high: l.tph.high, medium: l.tph.medium, low: l.tph.low };
+  const held = todayService.value.get(l.id);
+  const tph = held ? { high: held.tph[0], medium: held.tph[1], low: held.tph[2] } : { high: l.tph.high, medium: l.tph.medium, low: l.tph.low };
+  const cars = held?.cars ?? st.cars;
   const k = trainKind(m, st.fast);
   let cost = 0;
   for (let h = Math.floor(t0); h < t; h++) {
     const lev = PERIODS[periodAt(h * 3600)].demand;
     // T-1464: a bus line's buses cost a bus-km each
-    const perKm = st.bus ? m.runCostBusKm : k.runCostTrainKm + st.cars * k.runCostCarKm;
+    const perKm = st.bus ? m.runCostBusKm : k.runCostTrainKm + cars * k.runCostCarKm;
     cost += tph[lev] * 2 * st.km * perKm * m.economy *(Math.min(h + 1, t) - Math.max(h, t0));
   }
   return cost;
@@ -93,6 +97,9 @@ export function runningToday(l: LineInput, st: LineStats): number {
 
 /** Per line id; empty until the first answer (and for a line with no riders yet). */
 export const today = signal<Map<string, LineToday>>(new Map());
+/** T-1492: per line id, the service the demand result in force when `today` was asked had solved:
+ * the fares in the answer come from that result's riders */
+export const todayService = signal<Map<string, { tph: [number, number, number]; cars: number }>>(new Map());
 /** whether any line has counts: lists sorted by today's figures re-sort when it turns */
 export const todayLoaded = computed(() => today.value.size > 0);
 
@@ -128,17 +135,23 @@ export const stationsToday = computed(() => {
 
 const ASK_MS = 250;
 let users = 0, timer = 0, busy = false, askedAt = NaN, askedVersion = -1;
+let askedDv: unknown = null;
 
 function ask(force = false) {
   // T-1207: the Lines tab's rows re-rendered four times a second while the map was dragged
   if (busy || (!force && cameraMoving.now)) return;
   // the network or the account (new riders, the hour turning) changed
   const t = clock.now(), v = (world.peek()?.version ?? -1) * 1e6 + accountVersion.peek();
-  // nothing moves while the clock stands, unless the network or the account changed
-  if (!force && t === askedAt && v === askedVersion) return;
+  // the income the worker holds as it answers came from this result (clockClient posts it on each new one)
+  const dv = demandView.peek();
+  // nothing moves while the clock stands, unless the network, the account or the demand result changed
+  if (!force && t === askedAt && v === askedVersion && dv === askedDv) return;
   busy = true;
   askedAt = t;
   askedVersion = v;
+  askedDv = dv;
+  const service = new Map<string, { tph: [number, number, number]; cars: number }>();
+  for (const [id, ld] of dv?.lines ?? []) if (ld.tph && ld.cars !== undefined) service.set(id, { tph: ld.tph, cars: ld.cars });
   void queryClock({ what: "today" }).then((d) => {
     busy = false;
     if (!d) return;
@@ -154,6 +167,7 @@ function ask(force = false) {
       // solved): the last counts stand, moved onto its stops above
       else if (!t && p && !lineFiguresIn(demandView.peek(), l.id, l.stops.length) && w?.lineStats[l.id]?.status === "running") next.set(l.id, p);
     }
+    todayService.value = service;
     today.value = next;
   });
 }

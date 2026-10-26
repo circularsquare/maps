@@ -64,7 +64,7 @@ export const Icon = {
   copy: () => <svg viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="8" height="8" rx="1" /><path d="M10.5 3.5v-1h-8v8h1" /></svg>,
   paste: () => <svg viewBox="0 0 16 16"><path d="M5.5 3h-2v11.5h9V3h-2" /><rect x="5.5" y="1.5" width="5" height="3" rx="0.5" /><path d="M6 8h4M6 10.5h4" /></svg>,
   // the Lines and Stations tabs' scope toggle (the viewed place, the whole world)
-  calendar: () => <svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="10" rx="1" /><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3" /></svg>,
+  calendar: () => <svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="11.5" rx="1" /><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3" /></svg>,
   pin: () =><svg viewBox="0 0 16 16"><path d="M8 14.5s4.5-4.2 4.5-7.6a4.5 4.5 0 00-9 0c0 3.4 4.5 7.6 4.5 7.6z" /><circle cx="8" cy="6.8" r="1.6" /></svg>,
   globe: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" /><path d="M2 8h12M8 2c-2.2 2-2.2 10 0 12M8 2c2.2 2 2.2 10 0 12" /></svg>,
   // how commuters reach a station: on foot, or by a ride (car, bus, bike or lift)

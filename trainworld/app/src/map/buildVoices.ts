@@ -1,7 +1,7 @@
-// The three building voices (T-1413), made with WebAudio and no files: "ke-cha" (a tick and a clack),
-// "bung" (a plucked string) and "tsh" (a burst of filtered noise). Pure functions of a context, so
-// the same code plays in the game and renders to WAV offline (checks/t1413-render.mjs).
-// `level` is the master level the sound sits under (buildSound.ts).
+// The synthesised building voices (T-1413), made with WebAudio and no files: "ke-cha" (a tick and a
+// clack) and "bung" (a plucked string); and `sampleVoice`, which plays a recorded sound (T-1474). Pure
+// functions of a context, so the same code plays in the game and renders to WAV offline
+// (checks/t1413-render.mjs). `level` is the master level the sound sits under (buildSound.ts).
 
 export type Rnd = () => number;
 
@@ -74,10 +74,13 @@ export function keCha(ctx: BaseAudioContext, dest: AudioNode, t: number, level: 
   thunk(ctx, dest, c, { type: "triangle", f: 520 * k, fTo: 300 * k, glide: 0.05, peak: 0.3 * level, decay: 0.12 });
 }
 
-/** "tsh", track placed: noise through a band that falls from 6 kHz to 3 kHz, 1.5 ms attack and a
- * quick fall to silence at 120 ms (40 dB down by about 65 ms). */
-export function tsh(ctx: BaseAudioContext, dest: AudioNode, t: number, level: number) {
-  burst(ctx, dest, t, { type: "bandpass", f: 6000, fTo: 3000, q: 0.8, peak: 0.34 * level, attack: 0.0015, decay: 0.12 });
+/** A recorded sound (samples.ts) from `t`, scaled so its loudest sample is `peak`. */
+export function sampleVoice(ctx: BaseAudioContext, dest: AudioNode, t: number, s: { buf: AudioBuffer; peak: number }, peak: number) {
+  const src = ctx.createBufferSource(), g = ctx.createGain();
+  src.buffer = s.buf;
+  g.gain.value = peak / s.peak;
+  src.connect(g).connect(dest);
+  src.start(t);
 }
 
 /** The bung's string: Karplus-Strong at `f0`, a noise burst in a loop of one period that each pass

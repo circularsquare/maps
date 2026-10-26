@@ -21,7 +21,7 @@ export const SHADE_NAMES: Shade[] = ["light", "dark"];
 const OLD_THEME: Record<string, Theme> = { cream: "pink", sky: "blue", matcha: "green" };
 
 export type StationUseMode = "none" | "origins" | "transfers" | "total";
-export type MapRow = "bubbles" | "stations" | "drives" | "track";
+export type MapRow = "bubbles" | "stations" | "track";
 
 export interface DisplaySettings {
   /** Track display: plain lines, traffic-weighted lines, height, or geometry speed limit. */

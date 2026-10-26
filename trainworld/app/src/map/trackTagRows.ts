@@ -18,7 +18,8 @@ export function chip(text: string, colour: string | null, alpha = 0.5): HTMLSpan
   s.textContent = text;
   if (colour) {
     const [r, g, b] = rgb(colour);
-    s.style.background = `rgba(${r},${g},${b},${alpha})`;
+    s.className = "tag-chip";
+    s.style.setProperty("--chip-bg",`rgba(${r},${g},${b},${alpha})`);
     s.style.padding = "0 3px";
     s.style.borderRadius = "2px";
   }

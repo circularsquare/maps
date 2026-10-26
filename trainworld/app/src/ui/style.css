@@ -258,10 +258,6 @@ body.resizing, body.resizing * { user-select: none; }
 .check input:checked { border-color: var(--accent); background: var(--tint); }
 .check input:checked::after { content: ""; width: 6px; height: 6px; background: var(--accent); }
 
-.levels-key { list-style: none; margin: 8px 0 0; padding: 0; display: flex; gap: 10px; font-size: 12px; }
-.levels-key li { display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
-.levels-key i { width: 10px; height: 10px; display: inline-block; }
-
 .chip {
   display: inline-grid; place-items: center; flex: none;
   min-width: 20px; width: max-content; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 999px;
@@ -274,8 +270,8 @@ body.resizing, body.resizing * { user-select: none; }
 .chip > svg { display: block; overflow: visible; stroke: none; }
 .chip > svg rect { fill: var(--c); }
 /* T-1464: a bus line's bullet is a rounded square */
-.chip.bus { border-radius: 4px; }
-.chip.lg.bus { border-radius: 7px; }
+.chip.bus { border-radius: 3px; }
+.chip.lg.bus { border-radius: 5px; }
 .chip > svg text { fill: currentColor; }
 .chip.link { cursor: pointer; }
 .place-link { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
@@ -621,11 +617,12 @@ rect.now { fill-opacity: .45; }
 .sky-hit { top: 0; height: 18px; }
 .band-hit { top: 18px; height: 6px; }
 /* T-862: today is a holiday in a country with the player's stations; SkyBanner.tsx HOLIDAY_COLOUR */
-/* T-264: the calendar icon left of the time: a dot while a long holiday is near, pink while one is
-   under way */
-.clock .cal { position: relative; align-self: center; margin-right: 6px; }
-.cal-dot { position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; background: #ff5fa2; }
-.cal.under svg { stroke: #ff5fa2; }
+/* T-1476: the calendar icon left of the time, a bare calendar (no button box) with a pink dot in its
+   body; shown only near a long holiday. The dot sits in the body below the header line (y 6.5-15 of 16). */
+.clock .cal { position: relative; align-self: center; margin-right: 8px; display: inline-flex; padding: 0; border: 0; background: none; color: var(--text); cursor: pointer; }
+.cal svg { width: 22px; height: 22px; }
+.cal.on svg rect { fill: var(--tint); stroke: var(--accent); }
+.cal-dot { position: absolute; left: 50%; top: 67%; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: #ff5fa2; }
 .day-away { display: inline-flex; vertical-align: middle; }
 .holiday-dot { display: inline-block; width: 6px; height: 6px; margin: 0 5px 2px 0; border-radius: 50%; background: #ff5fa2; vertical-align: middle; }
 .save-notice { flex: none; padding: 6px 10px; border-bottom: 1px solid var(--accent);
@@ -651,10 +648,6 @@ rect.now { fill-opacity: .45; }
 /* T-1448: the icon cell is a button folding its row down to it */
 .demand-selector button.hint-cell { padding: 0; font: inherit; cursor: pointer; }
 .demand-selector button.hint-cell:hover { background: var(--shade); }
-/* T-703: the track display under the demand buttons, its key (height, speed) beside it */
-.track-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; max-width: 100%; }
-.track-row .track-key { margin: 0; padding: 0 8px; height: 28px; box-sizing: border-box; align-items: center; background: var(--bg); border: 1px solid var(--rule); }
-.track-row .speed-key { display: flex; gap: 10px; font-size: 12px; }
 /* T-158: one trip purpose on the map; a swatch in its purpose colour while one is chosen */
 .demand-selector .purpose-filter { display: flex; align-items: center; gap: 5px; height: 28px; margin-left: 6px;
   padding: 0 0 0 6px; border: 1px solid var(--rule); background: var(--bg); font-size: 12px; }
@@ -675,6 +668,8 @@ rect.now { fill-opacity: .45; }
 .loading-card { background: var(--bg); border: 1px solid var(--rule); padding: 14px 20px;
   min-width: min(260px, 100%); max-width: 100%; text-align: center; }
 .loading-card p + p { margin-top: 2px; }
+/* T-1479: the share done at the bar's left end, the time left at its right */
+.loading-card .load-left { display: flex; justify-content: space-between; gap: 12px; margin-top: 0; }
 /* T-677: the start menu, over the bare map until the player picks a game; the game's own chrome
    waits under it */
 .start-menu { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px;
@@ -813,10 +808,14 @@ button.save-add:hover { color: var(--text); }
 .tool-marks { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
 .tool-marks > div { position: absolute; left: 0; top: 0; white-space: nowrap; }
 .pi-mark { width: 9px; height: 9px; margin: -5px 0 0 -5px; background: #fff; border: 2px solid var(--net-ink); z-index: 1; }
-.end-mark { width: 9px; height: 9px; margin: -5px 0 0 -5px; background: #fff; border: 2px solid var(--net-ink); border-radius: 50%; z-index: 1; }
+/* T-1485: a hollow ring in the accent, the snap ring's colour, so a loose end never reads as a station */
+.end-mark { width: 10px; height: 10px; margin: -5px 0 0 -5px; border: 2px solid var(--accent); border-radius: 50%; z-index: 1; }
 .pi-label, .tool-tag { font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);
                        padding: 0 4px; border: 1px solid var(--rule); }
-.tool-tag { max-width: 340px; white-space: normal !important; }
+.tool-tag { max-width: 340px; white-space: normal !important; padding: 3px 6px; }
+/* T-1495: a coloured span in a tag stops 2 px short at the bottom, so the spans of rows below one another leave a gap
+   (its colour is the --chip-bg that `chip` in map/trackTagRows.ts sets) */
+.tag-chip { background: linear-gradient(var(--chip-bg), var(--chip-bg)) no-repeat 0 0 / 100% calc(100% - 2px); }
 /* T-210: the same tag for the panels and controls (ui/tip.ts), over everything, never in the way */
 .ui-tag { position: fixed; left: 0; top: 0; z-index: 1000; pointer-events: none; width: max-content; }
 .pi-mark.drag { width: 11px; height: 11px; margin: -6px 0 0 -6px; pointer-events: auto; cursor: grab; }
@@ -854,8 +853,6 @@ button.save-add:hover { color: var(--text); }
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 6'%3E%3Cpath d='M0 0h7v1H0zM.8 1h5.4L3.5 5.6z'/%3E%3C/svg%3E") 0 0 / 7px 6px repeat-x; }
 .track-modes .group { display: grid; grid-template-columns: 1fr 1fr; }
 .track-modes .btn { white-space: normal; height: auto; min-height: 40px; line-height: 1.35; padding: 4px 6px; }
-.speed-key li { display: flex; align-items: center; gap: 6px; }
-.speed-key i { display: inline-block; width: 16px; height: 4px; }
 .cap-marks { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
 .cap-plane, .mark-plane { position: absolute; inset: 0; }
 .cap-mark { position: absolute; left: 0; top: 0; padding: 0 4px; font-size: 12px;
@@ -1199,6 +1196,14 @@ button.save-add:hover { color: var(--text); }
 .trouble { position: absolute; right: 10px; bottom: 34px; z-index: 4; zoom: var(--ui, 1);
   display: flex; flex-direction: column; align-items: flex-end; max-width: calc(100% - 20px); }
 .choosing .trouble { visibility: hidden; }
+/* T-1499 (from T-1478): a line's "+N daily rides" for a few seconds after its stops changed, under the
+   Select tool's bar at the map's top centre */
+.rides-notes { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); z-index: 4; zoom: var(--ui, 1);
+  display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: calc(100% - 520px); pointer-events: none; }
+.choosing .rides-notes { visibility: hidden; }
+.rides-note { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; box-sizing: border-box; pointer-events: auto;
+  background: var(--bg); border: 1px solid var(--rule); font-size: 12px; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rides-note.down { color: var(--muted); }
 .trouble-btn { grid-auto-flow: column; gap: 4px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .trouble-btn svg { width: 14px; height: 14px; }
 .trouble-btn.on { color: var(--text); }
@@ -1274,3 +1279,6 @@ button.save-add:hover { color: var(--text); }
 #dock, #topbar, .save-notice, #tools, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .loading-card, .loading-box, #debug { zoom: var(--ui, 1); }
 .loading-card-wrap { top: calc(var(--bar-h) * var(--ui, 1)); }
 .stn-label, .pi-label, .tool-tag, .cap-mark, .intercity-label { font-size: calc(12px * var(--ui, 1)); }
+
+/* T-1491: F2 hides the interface for screenshots (ui/hideUi.ts); the map, network, bubbles, labels and hover tags stay */
+html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .trouble, .rides-notes, .help-panel, .touch-bar-host, .loading-card-wrap, #map .maplibregl-control-container) { display: none !important; }

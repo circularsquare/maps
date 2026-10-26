@@ -12,7 +12,7 @@
 
 import { computed, effect, signal } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
-import { activeCity, cityById, getWorldFrame, worldFrameEpoch, type CityId } from "../game/cities";
+import { activeCity, cityById, getWorldFrame, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import { lngLatToPack } from "../game/coords";
 import { nearbyZones } from "../game/zones";
 import { cellModes, cityCells, demandUpdating, demandView, flows, type CellModes, type CityCells, type DemandView, type FarEnd, type Flows, type PurposeTrips } from "../game/demand";
@@ -46,6 +46,15 @@ export const commuterPick = signal<{ sel: Selection; totals: [number, number, nu
   purpose?: PurposeFilter;
   /** the selection's centre, longitude and latitude (T-323) */
   at?: [number, number] } | null>(null);
+
+/** T-1493: the focused zone's own bubbles are drawn */
+const focusShown = signal(false);
+/** T-1493: Homes or Destinations is on over a zone with figures whose bubbles are not drawn yet
+ * (being asked for or built): the status tag says it is loading, as it does for the figures. */
+export const bubblesWaiting = computed(() => display.value.commuters && !cityOverview.value && selection.value?.kind !== "commuters"
+  && viewedZone.value !== null && viewedZone.value === activeCity.value && !focusShown.value && !!demandView.value
+  && !loadFailure.value && !zoneFailures.value.has(activeCity.value));
+const RETRY_MS = 1000, RETRY_MAX_MS = 8000;
 
 /** "trips", or the purpose filter's trips (T-158), for the hover tags. */
 const tripWords = () => {
@@ -186,6 +195,19 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   let built: { dv: DemandView; purpose: PurposeFilter; modes: CellModes; ends: Map<string, Bubbles> } | null = null;
   commuterStats.probe = () => (shown ? { anchor: shown.bubbles.anchor, levels: shown.bubbles.levels.map((l) => ({ discs: l.discs, group: l.group })) } : null);
   let wanted = 0;
+  // T-1493: an ask that ended without bubbles, and is still the newest, is made again after a wait
+  // that doubles up to RETRY_MAX_MS, so the zone in view's bubbles always arrive
+  const retry = signal(0);
+  let tries = 0, retryTimer = 0;
+  const again = (ask: number) => {
+    if (ask !== wanted || retryTimer) return;
+    retryTimer = window.setTimeout(() => {
+      retryTimer = 0;
+      if (ask !== wanted || shown) return;
+      tries++;
+      retry.value++;
+    }, Math.min(RETRY_MAX_MS, RETRY_MS * 2 ** tries));
+  };
 
   // ---- nearby zones' bubbles (T-276, docs/zones.md 6) ----
   // Up to three zones beside the focused one (game/zones.ts `nearbyZones`) show their bubbles too,
@@ -230,6 +252,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       focusSeen = focus; frameSeen = frameNow; focusEpoch++; wanted++;
       worker = null; workerReady = null; city = null; cellsWorld = null;
       shown = built = null;
+      focusShown.value = false;
       near = far = null; nearDiscs = farDiscs = null; farCells = null;
       view.setBubbles([]); view.setDiscs("near", null); view.setDiscs("far", null); view.setLines("far", null);
       if (adopted?.worker && adopted.city && adopted.cellsWorld) {
@@ -257,6 +280,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     if (shown && shown.purpose !== purpose) {
       // another purpose's bubbles would mislead while this one's are asked for: none meanwhile
       shown = null;
+      focusShown.value = false;
       view.setBubbles([]);
       drawPick();
     }
@@ -264,21 +288,23 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const end = d.commuterEnd;
     // a solve's first estimate, and its refined result once the crowding rounds are done
     if (shown && isCurrent(shown, dv, end, purpose, updating)) return;
+    retry.value; // T-1493: asked again after an answer that did not come
     const ask = ++wanted;
     void (async () => {
       const same = built?.dv === dv && built.purpose === purpose;
       let modes = same ? built!.modes : null;
       if (!modes) {
-        if (!(await startWorker())) return;
+        if (!(await startWorker())) return again(ask);
         modes = await cellModes(purpose);
-        // null: the workers moved on; the next demandView asks again and the last bubbles stay
-        if (!modes || ask !== wanted) return;
+        // null: the workers moved on (the next demandView asks again and the last bubbles stay), or
+        // the zone is not in the result yet, or a worker was replaced meanwhile: asked again soon
+        if (!modes || ask !== wanted) return again(ask);
         built = { dv, purpose, modes, ends: new Map() };
       }
       let b = built?.modes === modes ? built.ends.get(end) : undefined;
       if (b && b.anchor.version !== anchor().version) b = undefined;
       if (!b) {
-        if (!(await startWorker())) return;
+        if (!(await startWorker())) return again(ask);
         const t0 = performance.now();
         b = await buildOn(worker!, end, endCells(modes, end));
         commuterStats.workerMs = b.ms;
@@ -366,6 +392,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   });
   const showBubbles = (s: NonNullable<typeof shown>) => {
     shown = s;
+    focusShown.value = true;
+    tries = 0;
     view.setBubbles(painted(s.bubbles).levels.map((l) => l.discs), s.bubbles.anchor);
     commuterStats.uploadMs = view.uploadMs;
   };

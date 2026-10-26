@@ -13,6 +13,7 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
 | `DECISIONS.md` | Dated choices someone might revisit, and why | agents, add only |
 | `ARCHIVE.md` | Finished and abandoned tasks, newest first | agents, add only |
 | `notes/T-###.md` | Working notes for a task too big for one line; analysis scripts a note cites | the task's agent |
+| `notes/handoff.md` | The orchestrator's live state, kept current so a new one can take over any time (`/takeover`, `/handoff`; maps/CLAUDE.md) | orchestrator |
 | `checks/` | Standing checks, `smoke.mjs` first (code-map.md lists them) | agents |
 | `research/` | Background reports with sources, one file per topic | agents |
 | `TODO.md` | Anita's own list, where her playtest notes land: read it and file new items as tasks | Anita only; agents never edit it |

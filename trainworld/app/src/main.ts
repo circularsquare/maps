@@ -20,6 +20,7 @@ import { hot, onHot } from "./map/hovered";
 import { cancelLink, linkPicked, linking } from "./game/links";
 import { ACTION_KEYS, pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/toolKeys";
 import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsSelected } from "./game/lineActions";
+import { hideUiKey } from "./ui/hideUi";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { world } from "./game/world";
 import { redo, undo } from "./game/fareUndo";
@@ -61,6 +62,7 @@ import { startRestList } from "./map/hoverRest";
 import { startStationLife } from "./map/stationLife";
 import { startBuildSounds } from "./map/buildSound";
 import { openings, startOpeningDay } from "./game/openingDay";
+import { startRidesNote } from "./game/ridesNote";
 import { perfOff, perfTry } from "./perfFlags";
 import { DEMAND_INDEX, type Selection } from "./game/types";
 import { anchor, kAtY, toLngLat, toLocal } from "./map/geo";
@@ -72,6 +74,7 @@ import { MapTopLeft } from "./ui/DemandSelector";
 import { BlueprintBar } from "./ui/Blueprint";
 import { startSearch } from "./ui/Search";
 import { startTroubleList } from "./ui/TroubleList";
+import { startRidesNotes } from "./ui/RidesNotes";
 import { startTips } from "./ui/tip";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
 import { choosing, startGameWait } from "./game/loading";
@@ -139,6 +142,7 @@ map.getContainer().appendChild(blueprintBarRoot);
 render(h(BlueprintBar, null), blueprintBarRoot); // T-353: the Select tool's Disable and Enable at the top centre
 startSearch(map.getContainer()); // T-148: the search box at the map's upper right
 startTroubleList(map.getContainer()); // T-1433: what is wrong on the network, at the lower right
+startRidesNotes(map.getContainer()); // T-1499: "+N daily rides" at the top centre after a line's stops change
 const renderer = new NetworkRenderer();
 renderer.checkPatch = params.get("patch") === "check"; // T-1029
 /** A click on the commuter bubbles (T-097; set below once the demand views start). */
@@ -305,6 +309,7 @@ effect(() => {
 });
 effect(() => labels.setVisible(display.value.stationNames && !SYNTH));
 startOpeningDay(); // T-1434
+startRidesNote(); // T-1478
 effect(() => {
   openings.value;
   const w = world.peek();
@@ -400,6 +405,7 @@ if (!SYNTH && !perfOff("hover")) // ?perfOff=hover: T-045 measurement only
 // Space in a select (ui/keys.ts, T-183, the same rule as the search box's "/").
 releaseSelectsAfterMousePick();
 followCapsLock();
+hideUiKey(); // F2 hides the interface for screenshots (T-1491)
 // Ctrl+S saves the game now (T-1251), in any panel or field, instead of the browser saving the page
 window.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "s") {

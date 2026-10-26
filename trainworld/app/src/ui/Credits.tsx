@@ -16,6 +16,7 @@ const LINES = [
   <>World Bank (CC BY 4.0), Maddison Project Database 2023 (CC BY 4.0), Eurostat, Wikidata and OurAirports.</>,
   <>Large lakes from Natural Earth. Terrain classes from GEDTM30 (OpenGeoHub, CC BY 4.0). Hill shading from <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Terrain Tiles</a> on AWS Open Data.</>,
   <>Fonts Zen Maru Gothic, Noto Sans and Nunito, under the SIL Open Font License 1.1.</>,
+  <>Finger snap recording by freesound_community, from <a href="https://freesound.org/" target="_blank" rel="noopener">freesound.org</a>. Cork pop by Universfield, from <a href="https://pixabay.com/" target="_blank" rel="noopener">Pixabay</a>.</>,
   <>All data was adapted for this game.</>,
   <>The game's data files are under the <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">Open Database License (ODbL)</a>, as the OpenStreetMap data they come from is.</>,
 ];

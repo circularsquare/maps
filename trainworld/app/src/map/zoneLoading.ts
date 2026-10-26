@@ -13,7 +13,7 @@ import { h, render } from "preact";
 import type { FeatureCollection, MultiPolygon } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { cityBoundary } from "../game/boundaries";
-import { activeCity, cityById, type CityId } from "../game/cities";
+import { activeCity, cityById, viewedZone, type CityId } from "../game/cities";
 import { cityDemandViews } from "../game/demand";
 import { loadFailure, mapBlank, zoneLoads } from "../game/loading";
 import { nearbyZones } from "../game/zones";
@@ -160,6 +160,12 @@ export function startZoneLoading(map: MlMap): () => void {
     grey = blank ? [] : [...ids].filter((id) => id === focus);
     draw();
   });
+
+  // ?debug=1 (T-1493's check): what says the zone in view is loading
+  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twZoneLoading = () => {
+    const focus = activeCity.peek();
+    return { focus, viewed: viewedZone.peek(), realmShown: zoneShown(focus), grey: grey.includes(focus), bar: bars.has(focus) && bars.get(focus)!.style.display !== "none", bars: bars.size, loading: loads.has(focus) };
+  };
 
   const disposeShade = followShade(map, SHADE);
   return () => {

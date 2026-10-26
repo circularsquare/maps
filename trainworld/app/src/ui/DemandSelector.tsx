@@ -1,10 +1,7 @@
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { cityDemandViews } from "../game/demand";
 import { zoomedOut } from "../map/intercityView";
-import { levelLabel, speed } from "../game/format";
 import { loadProgress } from "../game/loading";
-import { LEVEL_COLOURS, SPEED_STOPS } from "../game/palette";
-import { LEVELS } from "../game/types";
 import { asFilter, FILTER_PURPOSES, purposeColour } from "../game/purposes";
 import { useState } from "preact/hooks";
 import { display, purposeFilter, setDisplay, type MapRow } from "../game/ui";
@@ -15,7 +12,7 @@ import { BusyTag } from "./BusyTag";
 import { Icon } from "./widgets";
 
 /** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
- * them the station ridership (T-1448), the track display and the demand alert. */
+ * them the track display, the station ridership (T-1448, T-1477) and the demand alert. */
 export function MapTopLeft() {
   return <div class="map-top-left">
     <div class="map-top-row">
@@ -23,9 +20,8 @@ export function MapTopLeft() {
       <StatusTag />
       <BusyTag />
     </div>
-    <StationRidership />
-    <Drives />
     <TrackDisplay />
+    <StationRidership />
     <DemandStopped />
   </div>;
 }
@@ -66,7 +62,6 @@ const TRACK_OPTIONS = [
 const FOLDS: Record<MapRow, { icon: () => JSX.Element; what: string }> = {
   bubbles: { icon: Icon.bubble, what: "demand bubble" },
   stations: { icon: Icon.interchange, what: "station ridership" },
-  drives: { icon: Icon.ride, what: "drive" },
   track: { icon: Icon.track, what: "track colour" },
 };
 const folded = (row: MapRow) => display.value.foldedRows.includes(row);
@@ -98,36 +93,15 @@ function StationRidership() {
   </div>;
 }
 
-/** Where people drive (T-1435): the biggest car flows as arcs, ranked by what a train would win
- * (map/driveArcs.ts). */
-function Drives() {
-  const on = display.value.drives;
-  return <div class="demand-selector" role="group" aria-label="Where people drive">
-    <FoldCell row="drives" />
-    {!folded("drives") && ([[false, "None", undefined], [true, "Drives", "Car trips a train would speed up most"]] as const).map(([value, label, tip]) =>
-      <button type="button" class={`btn${on === value ? " on" : ""}`} aria-pressed={on === value} data-tip={tip}
-        onClick={() => setDisplay("drives", value)}>{label}</button>)}
-  </div>;
-}
-
 /** The track display (T-703): the four ways the network is coloured, switched often, so on the map
- * under the demand buttons; the key of the height and speed colours sits under it. */
+ * under the demand buttons. No key for the height and speed colours (T-1499): the track's hover says. */
 function TrackDisplay() {
   const mode = display.value.trackColour;
-  if (folded("track")) return <div class="demand-selector" role="group" aria-label="Track display"><FoldCell row="track" /></div>;
-  return <div class="track-row">
-    <div class="demand-selector" role="group" aria-label="Track display">
-      <FoldCell row="track" />
-      {TRACK_OPTIONS.map(([value, label, tip]) =>
-        <button type="button" class={`btn${mode === value ? " on" : ""}`} aria-pressed={mode === value} data-tip={tip}
-          onClick={() => setDisplay("trackColour", value)}>{label}</button>)}
-    </div>
-    {mode === "speed" && <ul class="track-key speed-key">
-      {SPEED_STOPS.map(([v, colour]) => <li><i style={{ background: colour }} />{speed(v, 5)}</li>)}
-    </ul>}
-    {mode === "height" && <ul class="track-key levels-key">
-      {LEVELS.map((l) => <li><i style={{ background: LEVEL_COLOURS[l] }} />{levelLabel(l)}</li>)}
-    </ul>}
+  return <div class="demand-selector" role="group" aria-label="Track display">
+    <FoldCell row="track" />
+    {!folded("track") && TRACK_OPTIONS.map(([value, label, tip]) =>
+      <button type="button" class={`btn${mode === value ? " on" : ""}`} aria-pressed={mode === value} data-tip={tip}
+        onClick={() => setDisplay("trackColour", value)}>{label}</button>)}
   </div>;
 }
 

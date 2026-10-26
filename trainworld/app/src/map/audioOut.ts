@@ -3,6 +3,7 @@
 
 import { display } from "../game/ui";
 import { live } from "./live";
+import { decodeSamples, fetchSamples } from "./samples";
 
 let ctx: AudioContext | null = null;
 let out: DynamicsCompressorNode | null = null;
@@ -17,9 +18,20 @@ function open() {
     const C = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!C) failed = true;
     else {
-      ctx = new C();
+      // the smallest buffer the device allows: a sound starts as near the click as it can (T-1474)
+      ctx = new C({ latencyHint: "interactive" });
       out = ctx.createDynamicsCompressor();
       out.connect(ctx.destination);
+      void ctx.resume();
+      const c = ctx, o = out;
+      // the files decoded, then a silent buffer played through the graph, so the first real sound
+      // does not meet a cold audio thread
+      void decodeSamples(c).then(() => {
+        const s = c.createBufferSource();
+        s.buffer = c.createBuffer(1, 1, c.sampleRate);
+        s.connect(o);
+        s.start();
+      });
     }
   } catch {
     ctx = null;
@@ -47,6 +59,8 @@ if (typeof window !== "undefined") {
     ["keyup", () => later()],
   ];
   for (const [type, f] of listeners) window.addEventListener(type, f, true);
+  // the files are fetched once the page is idle, so they are in by the time the context opens
+  if (display.peek().sound) idle(fetchSamples);
 }
 
 /** The context and its output (a compressor), running; null before it is opened (above), where audio

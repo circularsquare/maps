@@ -106,9 +106,10 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
-  (the track model's refusals in plain words), `openingDay.ts` (the lines on their opening day: bunting on their stations' names, the Lines tab's riders count-up and a "bung", not saved, T-1434; `checks/t1434-opening.mjs`), `openedZones.ts` (the zones the game has started in, reached or crossed with track, kept for the save, T-729, T-801), `trackZones.ts` (the zones built and blueprint track crosses, by coarse outline, from each network state, T-1047), `loading.ts` (what is loading, the startup gate and
+  (the track model's refusals in plain words), `ridesNote.ts` (the "+N daily rides" the map shows after a line's stops change, T-1478; drawn by ui/RidesNotes.tsx, T-1499), `openingDay.ts` (the lines on their opening day: bunting on their stations' names, the Lines tab's riders count-up and a "bung", not saved, T-1434; `checks/t1434-opening.mjs`), `openedZones.ts` (the zones the game has started in, reached or crossed with track, kept for the save, T-729, T-801), `trackZones.ts` (the zones built and blueprint track crosses, by coarse outline, from each network state, T-1047), `loading.ts` (what is loading, the startup gate and
   the clock hold, T-149, T-172; whether the start menu is up, T-677), `loadBar.ts` (the loading bar's
-  stages, their shares and texts, each slot's remembered stage times and this browser's pace, T-1195),
+  stages, their shares and texts, each slot's remembered stage times and this browser's pace, T-1195;
+  the time left's count and text, T-1479),
   `memoryCheck.ts` (a save's memory estimate and the refusal when it will not fit, T-1197),
   `saveSafety.ts` (persistent storage, T-1214), `busy.ts` (the busy tag's
   text, and work held a painted frame when it should take over 150 ms here, each kind's time per
@@ -132,9 +133,10 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `markData.ts` and `gradeMarks.ts` (the crossing, junction, ramp and portal marks: their data, and
   their draw pass, hit test and tag; T-629, T-655), `stationLife.ts` (from zoom 14, arrivals found
   by a timer of eight samples a second, feeding `stationSound.ts`, the WebAudio chime and pops, and
-  `faces.ts`, the rising faces on a 2D canvas of its own; T-686), `buildSound.ts` (which edit
-  plays which building sound, T-1282) with `buildVoices.ts` (the three voices, T-1413), `audioOut.ts` (the one audio context
-  both share), `transferBubbles.ts` (riders changing trains walking between stations as bubbles, drawn by the renderer after the stations, T-1124).
+  `faces.ts`, the rising faces on a 2D canvas of its own; T-686), `buildSound.ts` (which click
+  plays which building sound, T-1282, T-1474) with `buildVoices.ts` (the synthesised voices, T-1413, and the sample player),
+  `samples.ts` (the recordings in `public/sounds/`, decoded when the context opens, T-1474), `audioOut.ts` (the one audio context
+  all share), `transferBubbles.ts` (riders changing trains walking between stations as bubbles, drawn by the renderer after the stations, T-1124).
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the
   ghost, T-189, T-254; the upgrade annexes, `stationAnnexes`, T-1416), `annexSide.ts` (which side
   of its platform a station's annexes go, in the clock worker, T-1416), `stationNames.ts` (a station's name suggestions: cross street,
@@ -142,7 +144,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   keep their elements across edits unless their text changes, T-496), `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
   for names and tags: `BoxGrid`, `tagLines`, `tipBeside`, `TAG_OFFSET_PX`, `screenBounds`).
 - Bus lines (T-1464): `busLayer.ts` (a bus line on the map: its route, stops, corridor shade on
-  hover, tags and pick, drawn by the renderer under rail), `busDraw.ts` (the bus tool: clicked
+  selection, tags and pick, drawn by the renderer under rail), `busDraw.ts` (the bus tool: clicked
   points, the worker's `busQuote` preview and price tag, `busDraft`).
 - Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
   second click's route, T-727d; only where a graph covers the click, `covers`, T-913), `pick.ts`, `cellIndex.ts` and `snapIndex.ts` (grids built in idle time that narrow a pick
@@ -179,10 +181,10 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 `Dock.tsx` (the dock, its icon tabs and resizing, T-252); `AccountPanel.tsx` (the account panel,
 the person icon, and `startAccountUi`, which mounts both account panels in a root of their
 own so the start menu opens them too; styles in `account.css`, T-972); `Leaderboard.tsx` (the
-leaderboards and the All cities row's trophy, T-973); `HelpPanel.tsx` (the "?" button's list of controls no button shows, T-908); `BuildTab.tsx`, `LinesTab.tsx`, `StationsTab.tsx`, `MoneyTab.tsx` (the tabs; the Cities tab is `Cities.tsx` mounted in `Dock.tsx`); `listParts.tsx` (the scope toggle, the Near column and the name order the Lines and Stations tabs share); `toolKeys.ts` (the build tools, the number and letter keys and `pickTool`); `Modal.tsx` (the native modal dialog behind the saves, account and leaderboard panels and the confirmation question, with `useModalDialog`); `useClockQuery.ts` (`useClockQuery`, a panel's question to the clock worker, and `useLatestAnswer`);
+leaderboards and the All cities row's trophy, T-973); `HelpPanel.tsx` (the "?" button's list of controls no button shows, T-908); `BuildTab.tsx`, `LinesTab.tsx`, `StationsTab.tsx`, `MoneyTab.tsx` (the tabs; the Cities tab is `Cities.tsx` mounted in `Dock.tsx`); `listParts.tsx` (the scope toggle, the Near column and the name order the Lines and Stations tabs share); `toolKeys.ts` (the build tools, the number and letter keys and `pickTool`); `hideUi.ts` (F2 hides the interface for screenshots, T-1491); `Modal.tsx` (the native modal dialog behind the saves, account and leaderboard panels and the confirmation question, with `useModalDialog`); `useClockQuery.ts` (`useClockQuery`, a panel's question to the clock worker, and `useLatestAnswer`);
 `MoneyHistory.tsx` (the Money tab's history charts, T-447); `FareGraph.tsx` (the fare curve graph, linear and zoomable at one fixed ratio of its scales, its three nodes each dragged one way at a time with hover arrows, an arrow for one past the plot, and rows of steppers under it, the base fare then each stretch's end and rate per km, T-864, T-883, T-1112, T-1143, T-1201); `Cities.tsx` (the Cities list, T-550, T-749); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251; `SlotThumb`, a save's picture with each panel's city named over it, T-894); `bullet.ts` (`bulletText`, `bulletNode`: a line bullet as one SVG, its circle and its symbol placed from the canvas-measured ink box with the baseline on a whole device pixel, per font, symbol, size and scale, T-705, T-745; the sizes in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
 checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `GoalTicks.tsx` (a region's goals as ticks over its split bar, the top bar's and the city view's, T-1437); `SkyBanner.tsx` (the clock's sky and demand band, a canvas, T-861); `StatusTag.tsx` (the demand status tag on the map's top row); `BusyTag.tsx` (the busy tag after it, T-1200); `TroubleList.tsx` (the trouble list at the map's lower right, T-1433); `TouchBar.tsx` (the touch control bar's buttons, T-1260); `ToolNotes.tsx` (tool hints, the notice and the confirmation
-dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter, the station ridership, drives and track display rows); `Blueprint.tsx`
+dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter, the track display and station ridership rows; Drives is a Settings check, T-1477); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
 per selection kind: `StationInspector.tsx` (its upgrade row `StationUpgrades.tsx`, T-1281), `TrainInspector.tsx`, `TrackInspector.tsx` and `JunctionInspector.tsx`; `LineInspector.tsx`, handing a bus line to `BusInspector.tsx` (T-1464); `CityInspector.tsx` with `CityDetails.tsx`, the city view's own rows (T-1438); the trip panels share `tripText.ts` and `RouteParts.tsx`;
 `ComplexMap.tsx` the complex map; `TrainStops.tsx` a train's next stops and who gets off, T-868; `OneRider.tsx` one sampled rider of a train (`game/riderSample.ts` draws it, `riderTrip` in `map/tripView.ts` reads its minutes), T-1436; `NameEdit.tsx` a station's or line's name edited in place, T-534); `LoadingScreen.tsx` (the clock hold at startup, the loading card,
@@ -286,7 +288,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
   menu, timed from the pick), `t326-clusters.mjs` (the real save plus a Toronto line: edits in each cluster
   timed to their final, every final figure hashed against `?perfOff=clusters`), `t409-split.mjs` (a
   Boston and a Philadelphia line, in a new game or on the real save, edits timed, against
-  `?perfOff=split`), `t301-pan.mjs` (a long pan, Washington to Toronto and back, bubbles on: worker
+  `?perfOff=split`), `t1493-bubbles-or-loading.mjs` (jumps between cities at several zooms with Destinations on, a new game and with `SAVE=1` the real save: FAIL when a zone in view shows neither bubbles nor a loading state, or its bubbles never come; about 3 minutes, 6 with the save), `t301-pan.mjs` (a long pan, Washington to Toronto and back, bubbles on: worker
   memory, open packs, reopening times; `SAVE=1` on the real save), `t1198-tour.mjs` (a new game
   viewing and selecting 16 unbuilt European cities, then 75 s out over the sea: Chrome's private
   memory, workers' WASM, open zones; fails if anything stays open or a solving worker passes 1.3 GB
@@ -421,6 +423,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t884-loadbar.mjs` (the loading card's bar through the start menu: a new game, the real save and
   the world save, each slot twice: fails over 25% of a wait above 90%, a bar going back, or a fill
   over 30 points from the share of the wait gone; about 5 minutes),
+  `t1480-antipode.mjs` (a new Wuhan game on the globe zoomed 6 to 13: fails if a far realm's circle,
+  Brazil at the antipode, shows over Wuhan, or the near realms' circles go zoomed out; about a minute),
   `t724-hover.mjs` (what a pointer move costs on the real save with the select and station tools,
   timers and the station name included, then a wheel zoom's frame placers: fails over 8 ms at the
   95th percentile in any view),
@@ -444,8 +448,13 @@ Run from the maps root (`node trainworld/checks/<file>`).
   the Node figures), `t1168-layout.mjs` (the diagram's layout of the real save's 2, 4 and 6X against
   the mockups), `t1168-shots.mjs <port>` (the line panel's related-lines view, light and dark,
   desktop and 390 px, into artifacts/trainworld/t1168s1/, with its hover, click and toggle),
+  `t1485-end-marks.mjs [url]` (the track tool's loose-end rings: only near the pointer, on drawn track ends, none with the pointer off the map; about a minute, port 6152 by default; T-1485),
+  `t1500-change-trip.mjs [url]` (Shanghai - Wuhan and Wuhan - Beijing sharing a station, metro lines at both ends: the trip explorer between Shanghai and Beijing finds the change at Wuhan in every period, new game and after a save and load; about 4 minutes; T-1500),
   `t1464-bus.mjs [url]` (a feeder bus to a rail line in a new game and two on the real save: riders, the rail line's gain, Construct's price, demand's corridor, the save's route; about 6 minutes, port 6164 by default; T-1464),
   `t1414-ui.mjs [url]` (the real save in headless Chrome: a station with a train on it picks the station, the "Station upgrades" heading, the stop list without "Add all" and the A key, the disabled blueprint total's double click; screenshots in `artifacts/trainworld/t1414/`; T-1414, T-1415, T-1417, T-1420),
+  `t1491-hide-ui.mjs [url]` (F2 and Esc hide and bring back the interface, the map taking the room, the Controls panel's F2 row, light and dark; screenshots in `artifacts/trainworld/t1491/`; T-1491), `t1494-hsr-line.mjs <label> [url]` (a high-speed route with a line of high-speed then ordinary trains, and bare high-speed track, shot at 3x; T-1494), `t1495-tags.mjs <label> [url]` (a station tag and the track tool's tag on the real save, light and dark, `BEFORE=1` for the old style; T-1495),
+  `t1475-shots.mjs <port> <before|after>` (a new game in New York with a rail line and bus lines: the bus hover, the Lines tab and panel bullets and the map's end squares, light and dark, into artifacts/trainworld/t1475/; the "after" run checks "Bus n" names, copies keeping their symbol and the hover; about 2 minutes; T-1475),
+  `t1476-controls.mjs <port>` (the calendar icon's days, the map's rows and the Drives setting, the "+N daily rides" indicator on the map after a stop edit on the real save, light and dark into artifacts/trainworld/t1476/; needs the real save's demand final, about 4 minutes; T-1476, T-1477, T-1478), `t1499-legends-note.mjs <port>` (no key beside the Speed and Elevation track views, the daily rides indicator at the map's top centre and not in the Lines tab, light and dark into artifacts/trainworld/t1499/; about 4 minutes; T-1499),
   `t1435-shots.mjs <port>` (the drives view on the real save and a new game in London, a line built there for the corridors, light and dark at three zooms, with a hover each, into artifacts/trainworld/t1435/; uses the Vite already on the port; about 4 minutes),
   `t1436-shots.mjs <port>` (the train inspector's One rider block on the real save at 08:30, light and dark, desktop and 390 px, into artifacts/trainworld/t1436/, with Pick another rider and the explorer button),
   `t1391-related.mjs <port> [prefix] [desktop|phone]` (the related-lines view on a new game built

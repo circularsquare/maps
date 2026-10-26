@@ -85,6 +85,9 @@ export function SettingsTab() {
         <Check checked={d.flatMarks} onChange={(v) => setDisplay("flatMarks", v)}>
           <span data-tip="The round marks where track meets or crosses at one level">Flat junctions and crossings</span>
         </Check>
+        <Check checked={d.drives} onChange={(v) => setDisplay("drives", v)}>
+          <span data-tip="Arcs for the car trips a train would speed up most. Wider for more car trips a day, stronger for more minutes saved.">Drives</span>
+        </Check>
         <Check checked={d.basemapLabels} onChange={(v) => setDisplay("basemapLabels", v)}>
           Map labels
         </Check>

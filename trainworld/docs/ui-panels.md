@@ -192,10 +192,10 @@ else); narrower, it sits over the sky, 148 px wide [T-1109, T-861].
   each, right for out, left for back; its days away a pink ribbon. The sky's hover adds
   "Tomorrow: going out for Golden Week, China", "Today: coming back from Golden Week, China",
   and the run's name on a day away that is no holiday. **The calendar icon** left of the time
-  [T-264]: a pink dot while a superholiday where the player has built goes out within 21 days, the
-  icon pink while one is under way. Its hover gives each run ("Golden Week in China, in 5 days",
-  then "Out Wed Sep 30", "Away Thu Oct 1 to Tue Oct 6", "Back Wed Oct 7 and Thu Oct 8"), or "No
-  long holidays in the next 3 weeks". A click sets the Day choice (Settings) to the run's days
+  [T-264, T-1476]: a bare calendar (no button box) with a pink dot in its body, there only while a
+  superholiday where the player has built is under way or goes out within 2 game days, and not
+  there otherwise. Its hover gives each run within 21 days ("Golden Week in China, in 5 days",
+  then "Out Wed Sep 30", "Away Thu Oct 1 to Tue Oct 6", "Back Wed Oct 7 and Thu Oct 8"). A click sets the Day choice (Settings) to the run's days
   away (its calendar option there while one is within 21 days), and a second click back to the day
   shown before. In the dark theme the
   scene is mixed 15% towards the background. Pause and three
@@ -288,10 +288,17 @@ map beside the dock, under the tab row, listing only the controls no button show
 gestures (Shift+drag box, hold then drag, Shift+click, Shift+drag over far bubbles), building
 modifiers (Shift+click, double click or Enter, Backspace, Caps Lock, right drag and D, E, Delete in
 the blueprint tool), the keys (tool numbers, T, N, L, A, C, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
-the letters read from `TOOL_KEYS`, `ACTION_KEYS` and `TRIP_KEY`) and panel gestures (double click
+the letters read from `TOOL_KEYS`, `ACTION_KEYS` and `TRIP_KEY`; F2 hides the interface, below) and panel gestures (double click
 a fare node, a name, a list row; Shift or Ctrl on the train stepper). Esc (before the game's own
 Esc, so the selection stays), a press outside or the button again closes it. A control added or
 changed that a button does not show gets its row here.
+
+**Hiding the interface** [T-1491, `ui/hideUi.ts`]: F2 (`HIDE_UI_KEY`, any panel or field, with no
+modifier) puts `ui-hidden` on the page, whose rule in `style.css` hides the dock, the top bar, the tool
+notes, the map's control rows, search, blueprint bars, trouble list, loading card, touch bar, debug
+panel and MapLibre's controls; the map, network, bubbles, station labels and hover tags stay, and the
+map takes the room. F2 or Esc brings it back (Esc first, before every other Esc). Listed in the
+Controls panel as "F2".
 
 **Confirmations** [T-113]: a centred dialog headed "Confirm?" [T-1242] with operation-specific text, cancel
 and action buttons. Cancel has initial focus, Tab stays inside, Escape cancels, focus returns when
@@ -307,7 +314,7 @@ commuter and longer-trip bubbles, not station discs; ignored while a bubble is s
 the third by default; its hover names the zoom the finest bubbles start at; [T-795]), the Colours
 choice (Train share by default [T-833], which shows two colour pickers labelled 0% train and
 100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), the Day choice (Average, Weekday, Sat, Sun;
-"Demand shown for", below) [T-703], Show (trains, station names, capacity markers, full stretches [T-1152: the Traffic view's red edges, on by default, its hover saying so; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings, map labels), Riders on trains
+"Demand shown for", below) [T-703], Show (trains, station names, capacity markers, full stretches [T-1152: the Traffic view's red edges, on by default, its hover saying so; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings, Drives [T-1435, T-1477: the car-flow arcs, off by default; [ui-demand-views.md](ui-demand-views.md) "Where people drive"], map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
 [T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266]; the real network is left as it is, T-1291; `map/basemap.ts`) [T-1249], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, Game (normal or sandbox, T-728), then,
 when accounts are on, Account [T-1139]: who is signed in ("Signed in as alice", "Signed in with
@@ -401,7 +408,7 @@ fare shown (at least $0.01), within the plot; each node stays at least 2% of the
 0.1 km) beyond the one before and short of the one after, and its fare between theirs, so fares never
 fall with distance. The scale holds still during a drag. A drag changes the graph and the figures
 below it as the pointer moves, and sends the fare to the game once on release (each change restarts
-demand). While fare changes are the last edits sent, Ctrl+Z takes them back one
+demand), with the quiet pop of the build sounds [T-1490]; a release with no change is silent. While fare changes are the last edits sent, Ctrl+Z takes them back one
 at a time, and Ctrl+Y or Ctrl+Shift+Z puts them back, in order with the track's own undo and redo; the
 undo button left of the zoom buttons does the same, enabled only then [T-1130, `game/fareUndo.ts`:
 the sim's edit history holds track, lines and schedules, so fare steps are kept on the main thread
@@ -717,13 +724,23 @@ registry centre and zoom, or over New York with none [T-310].
   With none remembered, until the network is in: 6% the game, 24% the data, 70% the solve, the game
   expected to take 4 s; then the game stage as it took, the data as modelled (each city pack 450 ms
   plus 220 ms per MB, market packs 20 ms per MB and 1.5 s for their composition, downloads at their
-  rate; times how this browser's last load compared with the model), the solve as the first estimate
-  about 1 s plus 3.5 ms per line stop, scaled by this browser's last solve of the zone in view, its
-  crowding rounds weighted 1, 0.28, 0.28, 0.28. The bar never goes back: when the
+  rate; times how this browser's last load compared with the model), the solve 34 s plus 148 ms a
+  zone it covers plus 7.88 ms times the square of its line stops, times how this browser's last game solve compared with that
+  [T-1479]. The solve's first round and its later ones are timed apart: before the first lands the
+  later ones are expected at this browser's last ratio of the two (0.5 with none), after it at that
+  ratio times the first, from the second on at their own mean; a round running late stretches the
+  rounds after it too. The bar never goes back: when the
   shares change (the network arrives and the guess gives way to the model) it keeps its place and the
   rest is spread over the rest of it. It is never full before the card goes. The pick and the game it
   opens are one wait. A game loaded in place while the last one's bar is still up (a check's direct
   load; the player's loads reload the page) starts the bar over from empty [T-840].
+- **Under the bar, the share done and the time left** [T-1479]: "42%" at its left, "2 min left" at its
+  right. The time left is each stage's expected time less its time so far; a stage past its expected
+  time is guessed to go on a share of its time so far (a data stage 0.3 of it times the part not yet
+  landed, a solve round 0.2). It shows once the game's network is in (from the start when the slot's
+  last load is remembered). It counts down with the clock or faster, and rises only while the estimate
+  is over a fifth above it, at half a second a second. Under 10 s "A few seconds left", under 55 s in
+  tens of seconds, under 90 s "1 min left", then whole minutes.
 - A city opened later (a pan, construction) shows its estimate at once and the crowding rounds
   refine it with the clock running; the status says "Estimate, refining 2/4…" (hover: the figures
   are an early estimate) until the zone in view's cluster has its final [T-421].
@@ -738,6 +755,11 @@ registry centre and zoom, or over New York with none [T-310].
   status says "Loading data" with a thin bar after it, its hover naming the cities and step
   ("Loading Boston, 37%. Loading city data"); in a narrow bar the thin bar goes first, then the
   text ends in an ellipsis.
+- **Bubbles on their way** [T-1493]: with Homes or Destinations on, a zone in view that has its
+  figures but whose own bubbles are not drawn yet (being asked for, waiting behind a solve, built)
+  has the status "Loading data…", its hover "Loading the bubbles for Boston". An ask that ends with
+  no bubbles is made again after 1 s, doubling to 8 s, until they come, so the bubbles of a zone in
+  view always arrive.
 - If demand cannot load, a screen says "Demand could not load" with the reason and two buttons, Try
   again (reload) and Play without demand, and takes every key until one is pressed. If the game
   itself never started (the clock worker failed to start, or the page's setup threw before its end),

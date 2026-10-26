@@ -144,6 +144,13 @@ export const supersNear = computed<NearRun[]>(() => {
   return lastRuns;
 });
 
+/** The local game day now in each of `supersNear`'s runs' countries, joined: changes when a day turns
+ * anywhere, so the calendar icon (ui/TopBar.tsx) re-renders daily without the clock's minutes. */
+export const superDays = computed(() => {
+  const now = clock.local.value * 60 - viewShift.value;
+  return supersNear.value.map((r) => Math.floor((now + r.shift) / 86400)).join();
+});
+
 /** The local game day now in a run's country. */
 export const runToday = (r: NearRun) => Math.floor((clock.local.peek() * 60 - viewShift.peek() + r.shift) / 86400);
 

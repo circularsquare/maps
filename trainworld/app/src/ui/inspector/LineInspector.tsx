@@ -765,17 +765,17 @@ function RailLineInspector({ id }: { id: string }) {
   const afterStop = (i: number) => {
     const here = editingStops ? passed.filter((p) => p.gap === i) : [];
     if (!here.length || i + 1 >= l.stops.length) return null;
-    // Add and Cancel come after the rows, so the first "+ Name" row takes the clicked row's place and a
-    // double click lands on it
+    // Add and Cancel take the clicked row's place, Add stretched over where the pointer is, so a double
+    // click lands on Add; the stations are listed below (T-1489)
     return pending?.includes(i)
       ? <>
+        <li class="passed confirm">
+          <button class="btn text mini grow" onClick={() => void addPassed()}>Add {stationsText(here.length)}</button>
+          <button class="btn text mini" onClick={() => setPending(null)}>Cancel</button>
+        </li>
         {here.map((p) => (
           <li class="adding"><span class="grow"><span class="stop-name">+ {name.get(String(p.node)) ?? ""}</span></span></li>
         ))}
-        <li class="passed confirm">
-          <button class="btn text mini" onClick={() => void addPassed()}>Add {stationsText(here.length)}</button>
-          <button class="btn text mini" onClick={() => setPending(null)}>Cancel</button>
-        </li>
       </>
       : !pending && (
         <li class="passed">

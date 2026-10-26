@@ -396,18 +396,21 @@ impl IntercityApi {
             body.extend([rep[sa as usize], rep[sb as usize], xa / x, xb / x, sk.r[sa as usize * s + sb as usize] as f64, x / rail_all, 0.]);
         }
         let mut all_routes: Vec<(usize, f32, Vec<Leg>)> = vec![];
+        // T-1500: the biggest pair is always walked and its biggest route kept, so riders spread thin
+        // over many station pairs (big networks at both ends) still show a route
         for (pi, &((sa, sb), (x, _, _))) in pairs.iter().enumerate() {
             let share = (x / rail_all) as f32;
-            if (share as f64) < PAIR_MIN {
+            if pi > 0 && (share as f64) < PAIR_MIN {
                 break;
             }
-            for (rs, legs) in routes(g, &sk, p, sa as usize, sb as usize, ROUTE_MIN / share) {
+            let min = if (share as f64) < PAIR_MIN { ROUTE_MIN } else { ROUTE_MIN / share };
+            for (rs, legs) in routes(g, &sk, p, sa as usize, sb as usize, min) {
                 all_routes.push((pi, rs * share, legs));
             }
         }
         all_routes.sort_by(|x, y| y.1.total_cmp(&x.1));
-        all_routes.truncate(MAX_ROUTES);
-        all_routes.retain(|r| r.1 >= ROUTE_MIN);
+        let kept = all_routes.iter().take_while(|r| r.1 >= ROUTE_MIN).count().clamp(1, MAX_ROUTES);
+        all_routes.truncate(kept);
         h[11] = pairs.len() as f64;
         h[12] = all_routes.len() as f64;
         h[13] = (1. - all_routes.iter().map(|r| r.1 as f64).sum::<f64>()).max(0.);

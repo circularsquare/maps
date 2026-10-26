@@ -107,7 +107,8 @@ the class under the pointer: "Hills, track costs 1.6x".
 - **High-speed track** [T-817, `F_HSR` in `map/network.ts`, the stroke shaders in
   `map/renderer.ts`]: double track's colours with a thin centre line along the stroke, 18% of its
   width: the casing colour on built track (light, dark in the dark theme), the rail colour on
-  blueprint and on the drawing ghost (at least 0.6 px there); lines over it carry it too. Built
+  blueprint and on the drawing ghost (at least 0.6 px there); lines of high-speed trains over it carry
+  it too, a line of ordinary trains is drawn as an ordinary line there [T-1494]. Built
   high-speed track and its lines are wider while drawn as one stroke, 1.4 times at zoom 9 and
   below, 1.25 at 11, as wide from 13 (`HSR_WIDTH`), and their centre line comes in only as the
   stroke widens from 3 to 5 px (`HSR_STRIPE_PX`), so far out they are a solid stroke a little
@@ -153,9 +154,10 @@ the class under the pointer: "Hills, track costs 1.6x".
     shared track shows its fastest service and a station its trains' slowest (`trainSpeeds` in
     `map/network.ts`). Keyed 40/80/120/160/240/320 km/h
     from warm red through ochre and green to blue, then indigo (#5b4fc9) and violet (#a03fc2)
-    (`SPEED_STOPS`; the stroke shader is built from the same stops, and the key beside the display
-    buttons lists them); under 40 is the red. The track hover says which it shows ("Track" under
-    "Hover tags on the network").
+    (`SPEED_STOPS`; the stroke shader is built from the same stops); under 40 is the red. No key
+    sits beside the display buttons for the speed or the elevation colours (T-1499): the track hover
+    says the speed and the elevation, and which speed it shows ("Track" under "Hover tags on the
+    network").
   In Elevation and Speed the width is uniform and trains keep their line colours.
 - **Blueprint track** [T-311, T-322, T-331, T-333] is drawn solid and opaque as two rails in every
   track view: a light blue middle (#a9cdf3) between dark blue rails (#2f62b3). The whole width is 75%
@@ -205,11 +207,15 @@ the class under the pointer: "Hills, track costs 1.6x".
 A bus line (T-1464) is drawn by its own pass under rail track: half a rail line's width in its
 colour on a casing (white in light, dark in the dark theme), a planned one as rail blueprints are.
 Street stops are small rings from zoom 14, ends small rounded squares from zoom 12; where it meets
-a train station the station's own circle stands for the stop. Hovering or selecting the line shades
-its 400 m corridor lightly. Its tags: the line's badge and name ("Not running yet" while planned),
-"Bus stop" or "End of the line" on a stop. A click selects the line; rail wins where both are
-under the pointer. A bus is one short narrow car. A bus line's badge is a rounded square
-everywhere, a rail line's a circle.
+a train station the station's own circle stands for the stop. Selecting the line draws its 400 m
+corridor as a 1 px outline in the line's colour at 75% (the outline of the union of its segments, made
+with the stencil; `busLayer.ts`, T-1490); hovering draws nothing, and nothing is shaded. Hovering the route gives a rail line's tag: the line's
+badge and name, "Bus line", then "Not running yet" while planned or, with the Traffic track
+display, the riders on the stretch between the stops under the pointer; "Bus stop" or "End of the
+line" on a stop. A click selects the line; rail wins where both are under the pointer. A bus is one
+short narrow car. A bus line's badge is a rounded square everywhere (corner 18% of its side, the
+map's end squares too), a rail line's a circle. A new bus line is named "Bus n" (the next free
+number) and shows n as its symbol.
 ## Stations
 
 - **Dots, zoom 9 to 14** [T-189, T-313, T-322, T-542; `map/stationGeometry.ts`]: white with a dark rim (in both themes, T-039; the rim, the terminal end bars and the selection outline are the map's dark grey in light and a warm grey #8f8b85 in dark, `stationInk` in `game/shadeTable.ts`, T-1432) at
@@ -373,17 +379,29 @@ those who got on, less the load carried on.
   the note only, and none beyond 3; panned by where the station is on screen. At the second speed
   only the note and two pops; none at the third.
 - Both are on by default and set in Settings (Stations up close).
-- **Building sounds** [T-1282, T-1413; `map/buildSound.ts`, voices in `map/buildVoices.ts`]: under
-  the same Sound switch and volume, at the station sounds' master level and with no zoom gain, as
-  the player's edit is taken (`setAfterEdit` in `game/world.ts`), one sound per edit however many
-  pieces it places, none when it is refused. Three voices, all synthesised: "ke-cha" on any construct
-  (a 14 ms bright tick, then 75 ms later a lower clack of band-passed noise and a falling triangle,
-  gone by 120 ms; half a semitone either way at random); "bung" on placing a station, adding or
-  building a station upgrade, and a passage (one Karplus-Strong string at A3, 220 Hz, 5% sharp at the
-  start and settling in 60 ms, low-passed at 2.4 kHz, with a 110 Hz sine thump; under 0.4 s); "tsh"
-  on placing track as blueprint (noise through a band falling from 6 to 3 kHz, 1.5 ms attack, 0.12 s).
-  The same sound twice within 0.3 s (track 0.1 s) plays once. One audio context serves both
-  (`map/audioOut.ts`).
+- **Building sounds** [T-1282, T-1413, T-1474; `map/buildSound.ts`, voices in `map/buildVoices.ts`,
+  recordings in `map/samples.ts`]: under the same Sound switch and volume, with no zoom gain. They
+  play at the click itself, before the clock worker answers: `edit()` in `game/world.ts` tells
+  `setBeforeEdit` as it sends, and the track and station tools play theirs in their click handlers.
+  A click the ghost already shows refused is silent; any other that the worker then refuses has
+  sounded. One sound per click however many pieces it places (a pasted schedule or a folded train
+  count is one sound per click, not per edit). Five sounds. Recordings (`app/public/sounds/`, with
+  their leading silence cut, decoded when the audio context opens; peaks at volume 1 in
+  `buildSound.ts` `PEAK`): the fft, Anita's own, on placing track as blueprint (0.25); a finger snap
+  on placing a station (0.3); a cork pop, quiet (0.09), on a panel click that changes the world: train
+  count, headway or switch to headways, train length, ordinary or high speed, a stop added, moved or
+  removed in a line, a station's platform length, a station upgrade or a passage taken out, double
+  up, a track's elevation, a junction's flying switch, a line copied or removed, a schedule pasted.
+  Synthesised: "ke-cha" on any construct (a 14 ms bright tick, then 75 ms later a lower clack of
+  band-passed noise and a falling triangle, gone by 120 ms; half a semitone either way at random);
+  "bung" on adding or building a station upgrade or a passage, and on a line's opening day (one
+  Karplus-Strong string at A3, 220 Hz, 5% sharp at the start and settling in 60 ms, low-passed at
+  2.4 kHz, with a 110 Hz sine thump; under 0.4 s). Silent: opening a panel, hovering, tabs, names,
+  colours, fares, undo, the remove tools, drags. The same sound twice within 0.3 s (track 0.1, snap
+  0.15, pop 0.05) plays once. The opening day's "bung" comes 250 ms after the start of the construct's
+  "ke-cha", less the time the worker took to answer. One audio context serves all (`map/audioOut.ts`):
+  opened with `latencyHint: "interactive"`, resumed at once, a silent buffer played through it once
+  the files are decoded.
 
 ## Station names and capacity tags
 
@@ -405,6 +423,14 @@ those who got on, less the load carried on.
   counts up from 0 to its figure over 2.4 s, eased out, starting when the figure first reads above 0
   with the tab open ([ui-inspectors.md](ui-inspectors.md) Lines tab). Not saved: a loaded game
   shows no opening days, and one in progress ends with the page.
+- **Daily rides note** [T-1478, T-1499; `game/ridesNote.ts`, `ui/RidesNotes.tsx`]: after a line's
+  stops change and demand has answered with final figures for the new stops, a small label at the
+  map's top centre, under the Select tool's bar, shows the line's chip and "+5,226 daily rides" (a
+  fall: "−1,920 daily rides", in the muted text colour) for 5 s, the number easing up from 0 over
+  0.9 s, fast at first and slowing to the end. Lines edited together stack. The hover gives the
+  line's riders a day before and after. It is the change in the line's `ridersPerDay` (the day
+  shown), nothing new summed; a change that rounds to 0, a line with no earlier figure and a switch
+  of the shown day make none. Hidden with the rest of the interface (F2). Not saved.
 - **Capacity tags** [T-184, T-224, T-256; `map/capacityMarkers.ts`; what they mean in
   [track-and-service.md](track-and-service.md) 6.2]: placed after names, which never move for a
   tag. Each takes the first of six spots round its resource clear of names (3 px) and earlier tags
@@ -431,7 +457,8 @@ those who got on, less the load carried on.
   ("Errands trips only"), and on track at capacity "Track at capacity at high demand" in red [T-819]. Whatever the display [T-473], the tag also carries a row
   for the elevation at that point (an up and down arrow, then "+1" on its Elevation colour) and one
   for the speed limit (two right chevrons, then "120 km/h" on its Speed colour), each colour at
-  half strength behind dark text (`map/trackTagRows.ts`); in the Speed view a first row says what
+  half strength behind dark text, 2 px short at the bottom so rows' colours leave a gap
+  (`map/trackTagRows.ts`, `.tag-chip`, T-1495); in the Speed view a first row says what
   the colour there is: "Fastest train 85 km/h" (on its colour) where trains run, "No trains run
   here" where the limit is shown [T-1271]; and last every line using the track as
   line bullets, in the save's order, wrapping, over a line as over bare track (the markup and CSS of

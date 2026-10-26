@@ -3,7 +3,7 @@
 
 import { signal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
-import { ACTION_KEYS, BUS_KEY, TOOL_KEYS, TRIP_KEY } from "./toolKeys";
+import { ACTION_KEYS, BUS_KEY, HIDE_UI_KEY, TOOL_KEYS, TRIP_KEY } from "./toolKeys";
 
 export const helpOpen = signal(false);
 
@@ -37,6 +37,7 @@ const SECTIONS: [string, [string, string][]][] = [
     ["Ctrl Z, Ctrl Y", "Undo or redo blueprint edits"],
     ["Ctrl S", "Save the game now"],
     ["/, Ctrl K", "Search"],
+    [HIDE_UI_KEY, "Hide the interface, or bring it back (Esc too)"],
     ["Esc", "Back out one step, then clear the selection"],
   ]],
   ["Panels", [

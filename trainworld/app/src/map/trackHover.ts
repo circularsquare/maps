@@ -84,6 +84,20 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   return out;
 }
 
+/** A running bus line's riders on the stretch between its stops under the pointer, as a rail line's
+ * tag says them (`lineTip`); nothing unless the track display is traffic. */
+function busRiders(ov: Overlay, w: WorldView, line: number, px: number, py: number, traffic: boolean): TipLine[] {
+  const l = w.save.lines.find((x) => x.num === line);
+  if (!l || !traffic) return [];
+  const dv = demandView.peek();
+  if (!dv) return ["Calculating demand"];
+  const purpose = purposeFilter.peek();
+  const day = dailyRiders(dv, l.id, l.stops, ov.renderer.buses.stretchAt(ov, px, py, line), purpose);
+  if (day === null) return ["Calculating demand"];
+  const count = `${day < 0.5 ? "0" : forecast(day)} riders ${shownDayPhrase.peek()}`;
+  return purpose === "all" ? [count] : [count, `${purposeName(purpose)} trips only`];
+}
+
 /** The tag's lines at a point (CSS px in the map), or null: what the current track display draws
  * on the line or track `pick` finds there; for a train, a station, a platform's crowd or a station
  * demand circle, what they stand for (T-194, networkTips.ts); for a crossing, junction, ramp or
@@ -125,8 +139,9 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
       return busStopTip(w, stop.line, stop.end);
     }
     if (hit) {
-      if (out) out.hot = { line: Number(hit.line) };
-      return busLineTip(w, Number(hit.line));
+      const num = Number(hit.line);
+      if (out) out.hot = { line: num };
+      return busLineTip(w, num, busRiders(ov, w, num, px, py, d.trackColour === "traffic"));
     }
   }
   // the ridership circles: over the bubbles, but the network beneath them keeps the hover (T-1448)

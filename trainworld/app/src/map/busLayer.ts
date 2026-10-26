@@ -2,7 +2,7 @@
 // A bus line has no track, so the network buffers hold no strokes for it; this layer draws its drawn
 // route from `lineStats[id].bus` instead, in the renderer's own pass (renderer.ts calls `draw` before
 // the track): half a rail line's width in the line's colour on the casing, a planned route as rail
-// blueprint is, the 400 m corridor of the hovered or selected line shaded under everything, small
+// blueprint is, the 400 m corridor of the selected line as a thin outline under everything, small
 // rings for its street stops from zoom 14 and rounded squares for its ends. A stop at a train station
 // draws nothing: the station's own circle is there.
 //
@@ -28,7 +28,9 @@ const WIDTH_SHARE = 0.5;
 const CASING_SHARE = 0.6;
 /** Ground metres each side of the route that its riders walk from (demand's corridor). */
 export const CORRIDOR_M = 400;
-const CORRIDOR_ALPHA = 0.16;
+/** The selected line's corridor outline: opacity of the line's colour, and thickness in CSS px (T-1490). */
+const OUTLINE_ALPHA = 0.75;
+const OUTLINE_PX = 1;
 const HOT_MIX = 0.3;
 /** Bus stop sizes as shares of the bus line's width, and the least radius, device px */
 const RING_SHARE = 1.15, END_SHARE = 1.5, MIN_RING_PX = 2.6;
@@ -63,6 +65,12 @@ interface Built {
   stopEnd: Uint8Array;
   /** per line id, local units a ground metre spans there */
   k: Map<number, number>;
+  /** per route segment: local units along its line's route at its start */
+  cum: Float64Array;
+  /** per line id, its first segment and their number */
+  range: Map<number, [number, number]>;
+  /** per line id, each of its stops' place along the route, in `cum`'s units (made when asked) */
+  stopAlong: Map<number, number[]>;
 }
 
 /** What the last draw drew, CSS px, for the hit tests; null when it drew nothing. */
@@ -73,9 +81,9 @@ precision highp float;
 precision highp int;
 ${PROJECT_GLSL}
 uniform vec2 u_viewport;
-uniform float u_width;       // device px across (the corridor's whole width in pass 2)
+uniform float u_width;       // device px across (the corridor's edge in pass 2)
 uniform float u_extra;       // added to the selected line
-uniform int u_pass;          // 0 casing, 1 colour, 2 corridor
+uniform int u_pass;          // 0 casing, 1 colour, 2 corridor outline (drawn three times, see draw())
 uniform int u_sel;
 uniform int u_hot;
 uniform int u_only;          // -1 every line, -2 the selected line, else that line only
@@ -141,6 +149,7 @@ out vec4 o;
 void main() {
   float past = -min(v_cap.x, v_cap.y);
   float a = past > 0.0 ? clamp(0.5 - (length(vec2(past, v_cap.z)) - v_cap.w), 0.0, 1.0) * v_alpha : v_alpha;
+  if (a <= 0.0) discard;   // the stencil passes must not mark a cap's empty corners
   o = vec4(v_color * a, a);
 }`;
 
@@ -185,7 +194,7 @@ out vec4 o;
 void main() {
   float d;
   if (v_end > 0.5) {
-    float cr = 0.3 * v_r;
+    float cr = 0.36 * v_r;       // the bus bullet's corner share of the side (BUS_CORNER, ui/bullet.ts) x 2
     vec2 q = abs(v_p) - vec2(v_r - cr);
     d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - cr;
   } else d = length(v_p) - v_r;
@@ -289,21 +298,26 @@ export class BusLayer {
     const seg = new Float32Array(nSeg * 4), info = new Float32Array(nSeg * 3);
     const rings: number[] = [], ends: number[] = [], ringLine: number[] = [], endLine: number[] = [];
     const k = new Map<number, number>();
+    const cum = new Float64Array(nSeg), range = new Map<number, [number, number]>();
     let at = 0;
     for (const l of this.lines) {
       const col = pack(l.colour), flags = l.built ? 0 : FLAG_BLUEPRINT, code = l.built ? 0 : 2;
-      let px = NaN, py = NaN, sumY = 0;
+      let px = NaN, py = NaN, sumY = 0, run = 0;
+      const first = at;
       for (let i = 0; i + 1 < l.route.length; i += 2) {
         const [x, y] = toLocal(l.route[i], l.route[i + 1], a);
         sumY += y;
         if (i > 0) {
           seg.set([px, py, x, y], at * 4);
           info.set([l.id, flags, col], at * 3);
+          cum[at] = run;
+          run += Math.hypot(x - px, y - py);
           at++;
         }
         px = x;
         py = y;
       }
+      range.set(l.id, [first, at - first]);
       k.set(l.id, kAtY(sumY / (l.route.length / 2), a));
       for (let i = 0; i + 1 < l.street.length; i += 2) {
         const [x, y] = toLocal(l.street[i], l.street[i + 1], a);
@@ -324,7 +338,7 @@ export class BusLayer {
       a, seg, info, count: at, stops: Float32Array.from([...rings, ...ends]), stopCount,
       stopLine: Int32Array.from([...ringLine, ...endLine]),
       stopEnd: Uint8Array.from([...ringLine.map(() => 0), ...endLine.map(() => 1)]),
-      k,
+      k, cum, range, stopAlong: new Map(),
     };
     return this.built;
   }
@@ -376,20 +390,33 @@ export class BusLayer {
     gl.uniform3fv(u.u_rail_rgb, s.rail);
     gl.uniform1f(u.u_rail, Math.max(1 * dpr, s.railShare * bus));
     gl.bindVertexArray(this.segVao);
-    // the corridor of the hovered and the selected line, a pale band; MAX blending makes where its
-    // segments and caps overlap one band, edges included
-    const lit = [...new Set([s.hot, s.sel].filter((id) => this.byId.has(id)))];
-    if (lit.length) {
-      gl.blendEquation(gl.MAX);
+    // The selected line's corridor as an outline of its union (T-1490): the stencil gets 1 inside the
+    // corridor widened by half the outline and 0 inside it narrowed by half, so what stays 1 is a ring
+    // along the edge, however the segments and caps overlap; the colour pass then draws the ring once
+    // (the stencil goes to 0 where it draws).
+    if (this.byId.has(s.sel) && (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0) {
+      const edge = 2 * CORRIDOR_M * (b.k.get(s.sel) ?? 1) * pxPerUnitAt(zoom) * dpr, half = 0.5 * OUTLINE_PX * dpr;
       gl.uniform1i(u.u_pass, 2);
-      gl.uniform1f(u.u_alpha, CORRIDOR_ALPHA);
-      const perM = pxPerUnitAt(zoom) * dpr;
-      for (const id of lit) {
-        gl.uniform1i(u.u_only, id);
-        gl.uniform1f(u.u_width, 2 * CORRIDOR_M * (b.k.get(id) ?? 1) * perM);
+      gl.uniform1i(u.u_only, s.sel);
+      gl.uniform1f(u.u_alpha, 1);
+      gl.enable(gl.STENCIL_TEST);
+      gl.clearStencil(0);
+      gl.clear(gl.STENCIL_BUFFER_BIT);
+      gl.colorMask(false, false, false, false);
+      gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+      for (const [ref, width] of [[1, edge + half * 2], [0, Math.max(0, edge - half * 2)]] as const) {
+        if (width <= 0) continue;
+        gl.stencilFunc(gl.ALWAYS, ref, 0xff);
+        gl.uniform1f(u.u_width, width);
         gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, b.count);
       }
-      gl.blendEquation(gl.FUNC_ADD);
+      gl.colorMask(true, true, true, true);
+      gl.stencilFunc(gl.EQUAL, 1, 0xff);
+      gl.stencilOp(gl.KEEP, gl.KEEP, gl.ZERO);
+      gl.uniform1f(u.u_alpha, OUTLINE_ALPHA);
+      gl.uniform1f(u.u_width, edge + half * 2);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, b.count);
+      gl.disable(gl.STENCIL_TEST);
     }
     const body = (only: number) => {
       gl.uniform1i(u.u_only, only);
@@ -446,6 +473,36 @@ export class BusLayer {
     return out;
   }
 
+  /** The stretch between the line's demand stops that the pointer (CSS px) is over, counted from its
+   * first stop as the line's riders are; -1 where it cannot tell. */
+  stretchAt(ov: Overlay, px: number, py: number, line: number): number {
+    const l = this.byId.get(line);
+    if (!l) return -1;
+    const b = this.local(anchor());
+    const r = b.range.get(line), at = ov.screenToLocal(px, py);
+    if (!r || !r[1] || !at) return -1;
+    const along = (x: number, y: number) => {
+      let best = Infinity, s = 0;
+      for (let i = r[0]; i < r[0] + r[1]; i++) {
+        const x0 = b.seg[i * 4], y0 = b.seg[i * 4 + 1], dx = b.seg[i * 4 + 2] - x0, dy = b.seg[i * 4 + 3] - y0, len2 = dx * dx + dy * dy;
+        const t = len2 ? Math.max(0, Math.min(1, ((x - x0) * dx + (y - y0) * dy) / len2)) : 0;
+        const d = Math.hypot(x0 + t * dx - x, y0 + t * dy - y);
+        if (d < best) { best = d; s = b.cum[i] + t * Math.sqrt(len2); }
+      }
+      return s;
+    };
+    let stops = b.stopAlong.get(line);
+    if (!stops) {
+      stops = [];
+      for (let i = 0; i + 2 < l.stops.length; i += 3) stops.push(along(...toLocal(l.stops[i], l.stops[i + 1], b.a)));
+      b.stopAlong.set(line, stops);
+    }
+    const p = along(at[0], at[1]);
+    let k = -1;
+    for (const s of stops) if (s <= p) k++;
+    return Math.max(0, Math.min(stops.length - 2, k));
+  }
+
   /** The stop drawn under the pointer: its line, and whether it is an end. */
   stopAt(ov: Overlay, px: number, py: number): { line: number; end: boolean } | null {
     const L = this.last, b = this.built;
@@ -472,11 +529,12 @@ function nameRow(w: WorldView, line: number): HTMLElement | string {
   return factRow(lineBullet(l, true), name);
 }
 
-/** The tag for a bus line (hovering its route). */
-export function busLineTip(w: WorldView, line: number): TipLine[] {
+/** The tag for a bus line (hovering its route): as a rail line's, its name, that it is a bus, and
+ * `rows` (its riders there) once it runs. */
+export function busLineTip(w: WorldView, line: number, rows: TipLine[] = []): TipLine[] {
   const l = w.save.lines.find((x) => x.num === line);
   const built = l ? w.lineStats[l.id]?.bus?.built : true;
-  return built ? [nameRow(w, line)] : [nameRow(w, line), "Not running yet"];
+  return built ? [nameRow(w, line), "Bus line", ...rows] : [nameRow(w, line), "Bus line", "Not running yet"];
 }
 
 /** The tag for one of its stops. */

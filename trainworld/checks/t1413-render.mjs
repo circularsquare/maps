@@ -1,4 +1,4 @@
-// T-1413: renders the building sounds (map/buildVoices.ts) offline in headless Chrome, through the same
+// T-1413: renders the synthesised building sounds (map/buildVoices.ts; the recordings of T-1474 are not) offline in headless Chrome, through the same
 // compressor the game uses, to WAV files in artifacts/trainworld/t1413/, and prints each one's peak,
 // level and where it sounds (so lengths and envelopes can be checked against the design).
 //   node trainworld/checks/t1413-render.mjs [url]     (from the maps root; a running dev server)
@@ -32,8 +32,7 @@ try {
     return {
       'build-kecha': await render(0.6, (c, d) => v.keCha(c, d, 1, LEVEL, rnd)),
       'station-bung': await render(0.7, (c, d) => v.bung(c, d, 1, LEVEL)),
-      'track-tsh': await render(0.4, (c, d) => v.tsh(c, d, 1, LEVEL)),
-      'all-in-a-row': await render(2.4, (c, d) => { v.keCha(c, d, 1.05, LEVEL, rnd); v.bung(c, d, 1.85, LEVEL); v.tsh(c, d, 2.65, LEVEL); }),
+      'all-in-a-row': await render(1.8, (c, d) => { v.keCha(c, d, 1.05, LEVEL, rnd); v.bung(c, d, 1.85, LEVEL); }),
     };
   }, { SR });
 

@@ -43,6 +43,10 @@ export interface LineDemand {
   /** T-1419: the stops (station ids) the figures above are for, so they can be carried onto the
    * line's stops after an edit (`lineLoadsFor`); absent from a cached result */
   stops?: string[];
+  /** T-1492: the trains an hour (high, medium, low) and cars the figures were solved with; absent
+   * from a cached result */
+  tph?: [number, number, number];
+  cars?: number;
 }
 
 export interface StationDemand {

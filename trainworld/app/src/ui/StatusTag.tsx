@@ -8,6 +8,7 @@ import { cityNames, demandIdle, demandStopped, loadFailure, loadProgress, zoneFa
 import { CACHE_VERSION } from "../workers/demandCache";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
 import { BunnyTrain } from "./Spinner";
+import { bubblesWaiting } from "../map/commuterView";
 
 export function StatusTag() {
   const step = demandStep.value;
@@ -26,6 +27,8 @@ export function StatusTag() {
     // T-243: a thin bar after it, not a percentage
     : load ? "Loading data"
     : !demandView.value ? (demandIdle.value ? null : "Loading data…") // T-318: nothing to load over dead space
+    // T-1493: the zone in view has figures but its bubbles are still on their way
+    : bubblesWaiting.value ? "Loading data…"
     // T-232: figures before a solve's final round are shown only where nothing final is, and say so
     // T-421: and the zone in view counts as final once its own cluster is, whatever else still solves
     : !viewFinal.value ? `Estimate, refining ${Math.min(step.done + 1, step.of)}/${step.of}…`
@@ -33,6 +36,7 @@ export function StatusTag() {
   if (!busy) return null;
   const tip = loadFailure.value ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
     : !demandView.value ? busy
+    : bubblesWaiting.value ? `Loading the bubbles for ${cityById(activeCity.value).name}`
     : !viewFinal.value ? "These figures are an early estimate. They settle when the forecast is finished."
     // T-328: the figures kept from the last time this game was open, while it is worked out again
     : demandView.value.version === CACHE_VERSION ? "These figures are from the last time this game was open. They are being worked out again."

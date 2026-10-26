@@ -30,6 +30,7 @@ import { saveRefusal } from "../game/memoryCheck";
 import { keepStorage } from "../game/saveSafety";
 import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "../game/busy";
 import { addTerrainGrid } from "../game/terrain";
+import { letterOf } from "../game/lineLetter";
 
 export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[] }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
 /** When the game was last saved by hand in this page (T-1251). */
@@ -104,16 +105,6 @@ export function onStationsAhead(f: (frame: FrameSpec, xy: Float64Array) => void)
   stationsAheadSink = f;
 }
 
-
-/** The chip of a line with no symbol set (T-330): the number of "Line 7", a short code as it is ("6X",
- * "SIR", "HBLR", "c2c"), else the name's first letter. */
-function letterOf(name: string): string {
-  const m = /^Line (\S{1,2})$/.exec(name);
-  if (m) return m[1];
-  const t = name.trim();
-  if (/^[A-Z0-9]{1,5}$/.test(t) || /^(?=.*\d)[A-Za-z0-9]{1,5}$/.test(t)) return t;
-  return (t[0] ?? "?").toUpperCase();
-}
 
 type StateKind = "load" | "redraw" | "network" | "state";
 /** T-1200: ms a state takes on the main thread per edge and node, before this page has taken one of

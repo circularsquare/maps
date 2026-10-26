@@ -48,18 +48,18 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   university, airport, medical, attractions). Before the buttons, joined to them, the row's icon [T-1137]: a selected
   demand bubble, filled with the default Train share ramp's middle purple
   (`color-mix(in oklab, #ff4d4d, #4d4dff)`) in a 2 px map ink outline; a click folds the row (Folding, below).
-- **Station ridership** [T-1448, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in
-  the same style, None, Origins, Transfers and Total ("Station ridership circles" below; each hover
-  says what it counts), after the interchange icon: two station boxes crossing, one outline.
-- **Where people drive** [T-1435, `ui/DemandSelector.tsx`]: below the station ridership, in the same
-  style, None (default) and Drives (hover "Car trips a train would speed up most"), after the car
-  icon (`Icon.ride`), remembered per browser (`display.drives`); see "Where people drive" below.
-- **Track display** [T-703, `ui/DemandSelector.tsx`]: below the drives row, in the same style,
-  four buttons (Line, Traffic, Elevation, Speed; [ui-map.md](ui-map.md) "Lines and track") after the
-  track icon, with the key of the last two (height colours, speeds) beside them.
+- **Track display** [T-703, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in the
+  same style, four buttons (Line, Traffic, Elevation, Speed; [ui-map.md](ui-map.md) "Lines and track")
+  after the track icon; no key for the height or speed colours (T-1499), the track hover says.
+- **Station ridership** [T-1448, T-1477, `ui/DemandSelector.tsx`]: below the track display, in the same style, None, Origins, Transfers and Total ("Station ridership circles" below; each
+  hover says what it counts), after the interchange icon: two station boxes crossing, one outline.
+- **Where people drive** [T-1435, T-1477] is no row on the map: a Drives check in Settings > Show
+  (hover "Arcs for the car trips a train would speed up most. Wider for more car trips a day,
+  stronger for more minutes saved."), off by default, remembered per browser (`display.drives`); see
+  "Where people drive" below.
 - **Folding** [T-1448]: each row's icon is a button that folds the row down to the icon and opens it
-  again (its hover "Hide demand bubble choices" or "Show ...", likewise "station ridership", "drive"
-  and "track colour"); folded rows are remembered per browser (`foldedRows`) and the choices in them
+  again (its hover "Hide demand bubble choices" or "Show ...", likewise "station ridership" and
+  "track colour"); folded rows are remembered per browser (`foldedRows`) and the choices in them
   stay in force.
 - **Day** [T-464, T-703]: a Settings choice under the bubbles' Opacity, not on the map; see "Demand
   shown for" in [ui-panels.md](ui-panels.md).

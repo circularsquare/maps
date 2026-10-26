@@ -11,7 +11,7 @@ import { clockTime, dayOf, exact, money, moneyCash } from "../game/format";
 import { AVERAGE_DAY, awayNear, dateName, dateOf, MONTH_LONG, weekdayOf } from "../game/days";
 import { PERIODS, periodAt } from "../game/periods";
 import { SkyBanner } from "./SkyBanner";
-import { countryName, groupHolidays, holidaysNear, loadHolidays, rushNear, runToday, supersNear, type HolidaySpan, type RushSpan } from "../game/holidays";
+import { countryName, groupHolidays, holidaysNear, loadHolidays, rushNear, runToday, superDays, supersNear, type HolidaySpan, type RushSpan } from "../game/holidays";
 import { useEffect } from "preact/hooks";
 import { display, setDisplay, shownDay, shownDayOn } from "../game/ui";
 import { splitTip } from "../game/splitTip";
@@ -94,15 +94,20 @@ function daysLine(label: string, from: number, to: number): string | null {
   return `${label} ${dateName(from)}${to - from === 2 ? ` and ${dateName(from + 1)}` : to - from > 2 ? ` to ${dateName(to - 1)}` : ""}`;
 }
 
-/** T-264: the calendar icon by the clock. A dot while a superholiday goes out within 21 days where the
- * player has built, pink while one is under way; its hover has each run's days, and a click shows
- * demand on a day away (the Day choice's own option) or back to the day shown before. */
+/** How many days ahead of a superholiday's going-out day the calendar icon appears (T-1476). */
+const CAL_AHEAD = 2;
+
+/** T-264, T-1476: the calendar icon by the clock, a bare calendar with a pink dot, there only while a
+ * superholiday where the player has built is under way or goes out within `CAL_AHEAD` days. Its hover
+ * has each run's days within 21 days, and a click shows demand on a day away (the Day choice's own
+ * option) or back to the day shown before. */
 function Calendar() {
   const runs = supersNear.value;
+  void superDays.value; // a day turning, for `runToday` below
   const away = awayNear.value;
   const d = display.value;
   const showing = d.dayShown === "away" && away !== null;
-  const under = runs.some((r) => runToday(r) >= r.out);
+  if (!runs.some((r) => r.out - runToday(r) <= CAL_AHEAD)) return null;
   const lines: string[] = [];
   for (const r of runs) {
     const n = r.out - runToday(r);
@@ -110,7 +115,6 @@ function Calendar() {
     lines.push(`${r.name} in ${countryName(r.country)}, ${n > 1 ? `in ${n} days` : n === 1 ? "tomorrow" : "now"}`);
     for (const l of [daysLine("Out", r.out, r.away), daysLine("Away", r.away, r.back), daysLine("Back", r.back, r.end)]) if (l) lines.push(l);
   }
-  if (!runs.length) lines.push("No long holidays in the next 3 weeks");
   if (away) lines.push("", showing ? `Click to show demand on ${DAY_SHOWN_ON[dayBefore] ?? DAY_SHOWN_ON.average} again` : `Click to show demand on a day of ${away}`);
   const click = () => {
     if (!away) return;
@@ -118,9 +122,9 @@ function Calendar() {
     else { dayBefore = d.dayShown; setDisplay("dayShown", "away"); }
   };
   return (
-    <button class={"btn icon cal" + (showing ? " on" : "") + (under ? " under" : "")} data-tip={lines.join("\n")} aria-label="Long holidays" onClick={click}>
+    <button class={"cal" + (showing ? " on" : "")} data-tip={lines.join("\n")} aria-label="Long holidays" onClick={click}>
       <Icon.calendar />
-      {runs.length > 0 && <i class="cal-dot" />}
+      <i class="cal-dot" />
     </button>
   );
 }
