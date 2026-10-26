@@ -25,7 +25,8 @@ import { fareScale } from "./income";
 import { stationZone } from "./listScope";
 import { PERIODS } from "./periods";
 import { stationsById, world } from "./world";
-import type { StationInput } from "./types";
+import { zonesLoaded } from "./zones";
+import type { LineInput, StationInput, WorldView } from "./types";
 import type { MoneyState, RegionNow } from "../workers/protocol";
 import type { DayLedger, HourLedger } from "../workers/saveFile";
 
@@ -61,12 +62,67 @@ export interface Income {
   lines: Map<string, LineMoney>;
 }
 
-/** Fare income on each kind of day; the worker settles each hour by its own day's (T-260). The
- * average day (T-464) is a view only, so it has none. */
-export const incomeByDay = computed<Income[]>(() => demandByDay.value.slice(0, DAY_KINDS.length).map((d) => incomeFor(d.view)));
+/** What the money, points and region figures read of `moneyState`: the same object while these are
+ * the same, so a state or an hour's money that leaves them alone redoes no sums (T-1209). */
+export type MoneyTerms = Pick<MoneyState, "fares" | "economy" | "upkeepTrackKm" | "upkeepStation" | "upkeepSingle" | "upkeepHsr">;
+let termsKey = "", terms: MoneyTerms | null = null;
+export const moneyTerms = computed<MoneyTerms | null>(() => {
+  const m = moneyState.value;
+  if (!m) return (termsKey = "", terms = null);
+  const t: MoneyTerms = { fares: m.fares, economy: m.economy, upkeepTrackKm: m.upkeepTrackKm, upkeepStation: m.upkeepStation, upkeepSingle: m.upkeepSingle, upkeepHsr: m.upkeepHsr };
+  const key = JSON.stringify(t);
+  if (key !== termsKey || !terms) { termsKey = key; terms = t; }
+  return terms;
+});
 
-function incomeFor(dv: DemandView | null): Income {
-  const w = world.value, m = moneyState.value;
+const sameList = (a: readonly unknown[] | undefined, b: readonly unknown[] | undefined) => {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+};
+/** The same network as these figures read it: each line's id, number, stops, status and stop
+ * positions, each station's place and whether it is built. */
+function sameShape(a: WorldView, b: WorldView): boolean {
+  const la = a.save.lines, lb = b.save.lines, sa = a.save.stations, sb = b.save.stations;
+  if (la.length !== lb.length || sa.length !== sb.length) return false;
+  for (let i = 0; i < sa.length; i++) {
+    const x = sa[i], y = sb[i];
+    if (x.id !== y.id || x.lng !== y.lng || x.lat !== y.lat || x.built !== y.built) return false;
+  }
+  for (let i = 0; i < la.length; i++) {
+    const x = la[i], y = lb[i];
+    if (x.id !== y.id || x.num !== y.num || !sameList(x.stops, y.stops)) return false;
+    const p = a.lineStats[x.id], q = b.lineStats[y.id];
+    if (!p || !q) { if (p !== q) return false; continue; }
+    if (p.status !== q.status || !sameList(p.stopS[0], q.stopS[0]) || !sameList(p.stopS[1], q.stopS[1])) return false;
+  }
+  return true;
+}
+let shaped: WorldView | null = null;
+/** `world` for the money, points and region figures: the last world while its network is the same
+ * as they read it (`sameShape`), so the clock's states redo their sums only when that changes. */
+export const moneyWorld = computed<WorldView | null>(() => {
+  const w = world.value;
+  if (!w || !shaped || !sameShape(shaped, w)) shaped = w;
+  return shaped;
+});
+
+let incomeMemo: { w: WorldView | null; t: MoneyTerms | null; zl: number; views: (DemandView | null)[]; out: Income[] } | null = null;
+/** Fare income on each kind of day; the worker settles each hour by its own day's (T-260). The
+ * average day (T-464) is a view only, so it has none. A day whose view, network and fares are as
+ * before keeps its figures. */
+export const incomeByDay = computed<Income[]>(() => {
+  const w = moneyWorld.value, t = moneyTerms.value, zl = zonesLoaded.value;
+  const views = demandByDay.value.slice(0, DAY_KINDS.length).map((d) => d.view);
+  const was = incomeMemo, same = !!was && was.w === w && was.t === t && was.zl === zl;
+  if (same && sameList(views, was.views)) return was.out;
+  const out = views.map((v, k) => (same && v === was.views[k] ? was.out[k] : incomeFor(w, t, v)));
+  incomeMemo = { w, t, zl, views, out };
+  return out;
+});
+
+function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | null): Income {
   const perPeriod = PERIODS.map(() => 0), ridesPeriod = PERIODS.map(() => 0);
   const lines = new Map<string, LineMoney>();
   if (!w || !m) return { perHour: perPeriod, rides: ridesPeriod, lines };
@@ -82,18 +138,22 @@ function incomeFor(dv: DemandView | null): Income {
     const dm = dv?.lines.get(l.id);
     const n = l.stops.length;
     if (dm && st.stopS[0]?.length === n && st.stopS[1]?.length === n) {
-      // segment lengths, km: run 0's segments, then run 1's in its own order (as `loads`)
-      const km: number[] = [];
-      for (const s of st.stopS) for (let k = 0; k + 1 < n; k++) km.push((s[k + 1] - s[k]) / 1000);
-      // T-1277: each stop's fare scale; a stretch pays its starting stop's, the base its boarding stop's
-      const sc = stopScales(l.stops, byId, m.fares.scales);
-      const from = [...sc.slice(0, n - 1), ...[...sc].reverse().slice(0, n - 1)];
-      const pkm = dm.loads.map((seg) => (seg.length === km.length ? seg.reduce((a, v, k) => a + v * km[k], 0) : 0));
-      const pkmPaid = dm.loads.map((seg) => (seg.length === km.length ? seg.reduce((a, v, k) => a + v * km[k] * from[k], 0) : 0));
-      const total = pkm.reduce((a, b) => a + b, 0);
+      const g = lineGeo(w, l, byId), km = g.km;
+      // T-1277: a stretch pays its starting stop's fare scale, the base its boarding stop's
+      const { sc, from } = scalesOf(g, l, byId, m.fares.scales);
+      const pkm: number[] = [], pkmPaid: number[] = [];
+      for (const seg of dm.loads) {
+        let a = 0, b = 0;
+        if (seg.length === km.length) for (let k = 0; k < seg.length; k++) { a += seg[k] * km[k]; b += seg[k] * km[k] * from[k]; }
+        pkm.push(a);
+        pkmPaid.push(b);
+      }
+      let total = 0;
+      for (const v of pkm) total += v;
       const rides = dm.ridersPerDay * tripsPerBoarding;
-      const boarded = dm.boardings.reduce((a, b) => a + b, 0);
-      const baseScale = boarded > 0 ? dm.boardings.reduce((a, b, k) => a + b * (sc[k] ?? 1), 0) / boarded : (sc[0] ?? 1);
+      let boarded = 0, scaled = 0;
+      for (let k = 0; k < dm.boardings.length; k++) { boarded += dm.boardings[k]; scaled += dm.boardings[k] * (sc[k] ?? 1); }
+      const baseScale = boarded > 0 ? scaled / boarded : (sc[0] ?? 1);
       pkm.forEach((pk, p) => {
         const share = total > 0 ? pk / total : 0;
         const r = (faresFor(fares, rides * share * baseScale, pkmPaid[p]) + (dm.fareX?.[p] ?? 0)) * x;
@@ -106,6 +166,36 @@ function incomeFor(dv: DemandView | null): Income {
     lines.set(l.id, { perHour: linePer.map((v, p) => v / PERIOD_HOURS[p] / 1e6), rides: lineRides.map((v, p) => v / PERIOD_HOURS[p]) });
   }
   return { perHour: perPeriod.map((v, p) => v / PERIOD_HOURS[p] / 1e6), rides: ridesPeriod.map((v, p) => v / PERIOD_HOURS[p]), lines };
+}
+
+/** What the figures read of a running line with both runs' stop positions: its stretches' km, run
+ * 0's then run 1's in its own order (as `LineDemand.loads`), signed and not, and its stops' zones
+ * ("" outside every zone); built once per network and zone boundaries (T-1209). */
+export interface LineGeo {
+  km: number[];
+  kmAbs: number[];
+  zones: string[];
+  scales?: { of: Record<string, number> | undefined; sc: number[]; from: number[] };
+}
+let geoOf: { w: WorldView; zl: number; lines: Map<string, LineGeo> } | null = null;
+export function lineGeo(w: WorldView, l: LineInput, byId: Map<string, StationInput>): LineGeo {
+  const zl = zonesLoaded.peek();
+  if (!geoOf || geoOf.w !== w || geoOf.zl !== zl) geoOf = { w, zl, lines: new Map() };
+  let g = geoOf.lines.get(l.id);
+  if (g) return g;
+  const n = l.stops.length, km: number[] = [], kmAbs: number[] = [];
+  for (const s of w.lineStats[l.id]?.stopS ?? []) for (let k = 0; k + 1 < n; k++) { km.push((s[k + 1] - s[k]) / 1000); kmAbs.push(Math.abs(s[k + 1] - s[k]) / 1000); }
+  const zones = l.stops.map((id) => { const s = byId.get(id); return (s && stationZone(s)) ?? ""; });
+  geoOf.lines.set(l.id, (g = { km, kmAbs, zones }));
+  return g;
+}
+/** A line's stops' fare scales (`stopScales`) and each stretch's, its starting stop's (T-1277). */
+export function scalesOf(g: LineGeo, l: LineInput, byId: Map<string, StationInput>, of: Record<string, number> | undefined) {
+  if (g.scales?.of !== of || !g.scales) {
+    const sc = stopScales(l.stops, byId, of), n = l.stops.length;
+    g.scales = { of, sc, from: [...sc.slice(0, n - 1), ...[...sc].reverse().slice(0, n - 1)] };
+  }
+  return g.scales;
 }
 
 /** T-1277: the country of the zone a station is in (null outside every zone). */

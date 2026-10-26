@@ -19,7 +19,7 @@
 // T-301: `close` frees packs (and the market) the page no longer needs; one the solve in hand
 // covers goes when that solve ends.
 
-import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, release_skims, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
+import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
 import { CITIES, cityById, cityToMarket, cityToWorld, HOME_CITY, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
 import { loadAttractions, type Attraction } from "../game/attractions";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
@@ -27,7 +27,7 @@ import { PERIODS } from "../game/periods";
 import { scaledKnots } from "../game/fareCurve";
 import { FARE_BASELINE, fareFactors, fareScale, fareWeight } from "../game/income";
 import type { CorridorTable } from "../game/demand";
-import { TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
+import { TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
 
 /** WASM started (and the market opened if `init` carried it): `open` and solves wait for this. */
@@ -56,7 +56,7 @@ const marketParts = new Map<string, IntercityApi>();
  * clusters are joined by */
 let marketZones: Float64Array | null = null;
 let mine: number[] = [];
-let pending: { version: number; net: DemandNetwork; rounds: number; barrier?: boolean; whole?: boolean; oneMarket?: boolean; wide?: boolean; exactMarket?: boolean; fresh?: boolean; first?: CityId } | null = null;
+let pending: Extract<ToDemand, { kind: "solve" }> | null = null;
 let busy = false;
 /** the version whose network `api` holds (queries about any other get nulls) */
 let current = -1;
@@ -74,7 +74,7 @@ let stageRound = -1;
 /** T-327: questions marked `wait` about a round (or version) this worker has not reached yet,
  * answered the moment it has, before it starts the next round */
 let waiting: Query[] = [];
-type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "close" | "corridorsAgain" }>;
+type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "close" | "corridorsAgain" | "debugPanic" | "periods" }>;
 /** T-327: the round every worker may start, by version and group (a solve marked `barrier` waits
  * for it) */
 let go = { version: -1, group: 0, round: 0 };
@@ -148,6 +148,54 @@ function sendMessage(msg: FromDemand, transfer: Transferable[] = []) {
   postMessage(msg, { transfer });
 }
 
+/**
+ * T-1174: a Rust panic (or an allocation the memory cannot grow for) aborts the WASM call as a trap,
+ * never unwinding it, so the borrow wasm-bindgen took on the object stays held and every later call
+ * on it throws "recursive use of an object". No call here awaits inside WASM, so two calls never
+ * overlap: that error always means an earlier call aborted. The instance is then not to be trusted
+ * (its allocator may be mid-change too): the worker stops and the page replaces it.
+ */
+let dead = false;
+function isPanic(err: unknown): boolean {
+  return err instanceof WebAssembly.RuntimeError || (err instanceof Error && /recursive use of an object|null pointer passed to rust|attempted to take ownership of Rust value/.test(err.message));
+}
+function died(err: unknown) {
+  if (dead) return;
+  dead = true;
+  let panic = "", memBytes = 0;
+  try { panic = last_panic(); memBytes = wasm_memory_bytes(); } catch { /* the instance is past reading */ }
+  sendMessage({ kind: "dead", error: String(err), panic, memBytes });
+}
+/** T-1205: `done`'s peak is its solve's (reset as each job starts) */
+const heap = (): Heap => [wasm_heap_bytes(), wasm_heap_peak(false)];
+/** T-1205: the periods the pool dealt this worker when it shrank, taken up between solves; nothing
+ * kept is trusted after (a period dealt anew was never solved here) */
+let dealt: Extract<ToDemand, { kind: "periods" }> | null = null;
+let solvedOnce = false;
+function deal() {
+  mine = dealt!.periods;
+  groupMasks = (dealt!.groups ?? []).map((g) => g.reduce((m, q) => m | (1 << q), 0));
+  dealt = null;
+  held.clear();
+  heldQ.clear();
+}
+/** `debugPanic` (dev server only): the next step of a solve panics */
+let panicInSolve = false;
+/** `debugPanic` now: a panic swallowed (as a pack's rejection once swallowed one), then the next
+ * call on the object finds its borrow held: the pair of errors T-1174 saw, in that order */
+function panicNow() {
+  const a = cities.values().next().value ?? bare.values().next().value?.a;
+  if (!a) throw new Error("no pack is open");
+  try { a.debug_panic(); } catch { /* swallowed */ }
+  a.info();
+}
+/** A panic ends the worker (`died`); any other error is `failed`, as before. */
+function failed(err: unknown) {
+  if (dead) return;
+  if (isPanic(err)) died(err);
+  else sendMessage({ kind: "failed", error: String(err) });
+}
+
 /** Yield to the event loop so a waiting message (a newer network) is delivered. */
 function yieldNow(): Promise<void> {
   return new Promise((resolve) => {
@@ -188,6 +236,7 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
       if (e) everyday.set(pack.id, e);
       sendMessage({ kind: "packOpened", id: pack.id }); // T-1195
     } catch (err) {
+      if (isPanic(err)) throw err;
       reject(pack.id, false, err);
     }
   }
@@ -211,6 +260,7 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
         added.push(m.id);
         sendMessage({ kind: "packOpened", id: m.id, market: true }); // T-1195
       } catch (err) {
+        if (isPanic(err)) throw err;
         reject(m.id, true, err);
       }
     }
@@ -218,6 +268,7 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
       try {
         recompose();
       } catch (err) {
+        if (isPanic(err)) throw err;
         // composing checks each pack against the registry's row for its zone (the zone count) and
         // names no pack: the ones just added are taken out again, the market stays as it was
         for (const id of added) { marketPacks.remove(MARKET_OF[id]); reject(id, true, err); }
@@ -376,7 +427,7 @@ function closePacks(msg: Extract<ToDemand, { kind: "close" }>) {
     for (const id of msg.ids) if (busy && jobCities.has(id)) closeLater.ids.add(id); else dropCity(id);
     if (msg.markets?.length) { if (busy) for (const id of msg.markets) closeLater.markets.add(id); else dropMarkets(msg.markets); }
   }
-  sendMessage({ kind: "closed", memBytes: wasm_memory_bytes() });
+  sendMessage({ kind: "closed", memBytes: wasm_memory_bytes(), heap: heap() });
 }
 
 function closeDeferred() {
@@ -404,7 +455,7 @@ function openQueued(epoch: number): Promise<void> {
     let n = 1;
     while (!oneByOne && n < openQueue.length && openQueue[n].epoch === epoch && (!!openQueue[n].msg.bare && aux) === isBare) n++;
     const batch = openQueue.splice(0, n).map((q) => q.msg);
-    if (!started) return;
+    if (!started || dead) return;
     try {
       const t0 = performance.now();
       for (const m of batch) if (m.rows && !marketPacks) marketRows = m.rows;
@@ -415,9 +466,9 @@ function openQueued(epoch: number): Promise<void> {
       const warmMs = warmUp();
       const figures = isBare ? Object.fromEntries(packs.filter(({ id }) => bare.has(id)).map(({ id }) => [id, bare.get(id)!.figures])) : undefined;
       const markets = market.map((m) => m.id).filter((id) => !rejected.some((r) => r.market && r.id === id));
-      sendMessage({ kind: "opened", cityInfo, markets, openMs, warmMs, memBytes: wasm_memory_bytes(), ...(figures ? { bare: figures } : {}), ...(rejected.length ? { rejected } : {}) });
+      sendMessage({ kind: "opened", cityInfo, markets, openMs, warmMs, memBytes: wasm_memory_bytes(), heap: heap(), ...(figures ? { bare: figures } : {}), ...(rejected.length ? { rejected } : {}) });
     } catch (err) {
-      sendMessage({ kind: "failed", error: String(err) });
+      failed(err);
     }
   });
 }
@@ -431,6 +482,7 @@ function warmUp(): number {
 
 onmessage = (e: MessageEvent<ToDemand>) => {
   const msg = e.data;
+  if (dead) return;
   if (msg.kind === "init") {
     opening = opening.then(async () => {
       try {
@@ -450,9 +502,9 @@ onmessage = (e: MessageEvent<ToDemand>) => {
         const t2 = performance.now();
         const warmMs = warmUp() + everydayWarmMs;
         started = true;
-        sendMessage({ kind: "ready", cityInfo, wasmMs: t1 - t0, openMs: t2 - t1, warmMs, info: cityInfo[HOME_CITY], periods: Array.from(demand_periods()), days: Array.from(day_factors()), memBytes: wasm_memory_bytes() });
+        sendMessage({ kind: "ready", cityInfo, wasmMs: t1 - t0, openMs: t2 - t1, warmMs, info: cityInfo[HOME_CITY], periods: Array.from(demand_periods()), days: Array.from(day_factors()), memBytes: wasm_memory_bytes(), heap: heap() });
       } catch (err) {
-        sendMessage({ kind: "failed", error: String(err) });
+        failed(err);
       }
     });
   } else if (msg.kind === "open") {
@@ -466,11 +518,12 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     closeEpoch++;
     // in the opening chain, so a close and a reopen of the same pack keep their order
     opening = opening.then(() => {
-      if (!started) return;
-      try { closePacks(msg); } catch (err) { sendMessage({ kind: "failed", error: String(err) }); }
+      if (!started || dead) return;
+      try { closePacks(msg); } catch (err) { failed(err); }
     });
   } else if (msg.kind === "solve") {
-    pending = msg;
+    // (a `freshParts` not yet taken up carries over to the solve that supersedes it)
+    pending = pending?.freshParts && !msg.freshParts ? { ...msg, freshParts: true } : msg;
     wake?.();
     void opening.then(() => { if (started && !busy) run(); });
   } else if (msg.kind === "go") {
@@ -479,6 +532,13 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     wake?.();
   } else if (msg.kind === "corridorsAgain") {
     sentTables.clear();
+  } else if (msg.kind === "periods") {
+    dealt = msg;
+    if (!busy) deal();
+  } else if (msg.kind === "debugPanic") {
+    if (!import.meta.env.DEV) return;
+    if (msg.when === "solve") panicInSolve = true;
+    else try { panicNow(); } catch (err) { failed(err); }
   } else {
     query(msg);
   }
@@ -722,7 +782,9 @@ function query(msg: Query) {
       sendMessage({ kind: "bareSquares", id: msg.id, xy: sq?.xy ?? null, share: sq?.share ?? null });
     }
   } catch (err) {
-    // a failed query answers with nothing; the pool itself carries on
+    // a failed query answers with nothing; the pool itself carries on (after a panic, with this
+    // worker replaced)
+    if (isPanic(err)) return died(err);
     console.error("demand query:", err);
     if (msg.kind === "subSums" || msg.kind === "station") sendMessage({ kind: msg.kind, id: msg.id, version: msg.version, mask: 0, ...(msg.kind === "subSums" ? { sums: null, everyday: null } : { packed: null }) } as FromDemand);
     else if (msg.kind === "purposes") sendMessage({kind: "purposes", id: msg.id, version: msg.version, mask: 0, work: null, everyday: null, names: []});
@@ -1021,8 +1083,10 @@ function assignParts(regional: IntercityApi, split: Cluster[]) {
 async function run() {
   busy = true;
   try {
-    while (pending && started) {
+    while (pending && started && !dead) {
       closeDeferred();
+      if (dealt) deal();
+      wasm_heap_peak(true);
       const job = pending;
       pending = null;
       const n = job.net;
@@ -1035,6 +1099,19 @@ async function run() {
       const jobLocal = byRegistry([...cities]);
       const jobEveryday = byRegistry([...everyday].filter(([id]) => cities.has(id)));
       jobCities = new Set(jobLocal.map(([id]) => id));
+      // T-1174: after a worker is replaced, every worker composes its market afresh from the packs
+      // open now, as the replacement did, so all hold the same market and corridor table
+      // (T-1205: not in a worker started since, whose one composition is already from every pack open:
+      // a second, fresh corridors and all, left a replacement's memory about 30% above its need)
+      if (job.freshParts && marketPacks && solvedOnce) {
+        const old = [...new Set([...marketParts.values(), ...(intercity ? [intercity] : [])])];
+        marketParts.clear();
+        intercity = null;
+        marketZones = null;
+        forget(old);
+        marketPacks.forget_corridors();
+        recompose();
+      }
       const regional = intercity;
       // T-326: each cluster on its own network; one this worker has solved on the same network
       // keeps its populations' results, untouched
@@ -1187,6 +1264,7 @@ async function run() {
         };
         const total = round > 0 ? loads() : null;
         for (const a of c.solveOrder) {
+          if (import.meta.env.DEV && panicInSolve && a instanceof DemandApi) { panicInSolve = false; a.debug_panic(); }
           if (total === null) a.solve(q);
           else if (!a.crowd_with_external(q, ownOf(a, total))) throw new Error("shared crowding layout disagrees");
           // a population's pass is up to a second of one call: let a waiting query or a newer
@@ -1367,12 +1445,13 @@ async function run() {
         if (!stale) for (const c of late) solved(c);
       }
       if (!stale) {
-        sendMessage({ kind: "done", version: job.version, memBytes: wasm_memory_bytes(), clusters: [jobClusters.length - dirty.length, dirty.length], periods: [periodsKept, periodsSolved] });
+        solvedOnce = true;
+        sendMessage({ kind: "done", version: job.version, memBytes: wasm_memory_bytes(), heap: heap(), clusters: [jobClusters.length - dirty.length, dirty.length], periods: [periodsKept, periodsSolved] });
       }
     }
   } catch (err) {
-    sendMessage({ kind: "failed", error: String(err) });
+    failed(err);
   }
   busy = false;
-  closeDeferred();
+  if (!dead) closeDeferred();
 }

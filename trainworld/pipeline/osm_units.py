@@ -29,6 +29,10 @@ import build_city as b
 
 MATCH = 0.5            # overlap / union an OSM relation needs to stand for a plan unit
 INSIDE = 0.5           # share of an OSM relation that must lie inside a plan unit to be one of its several
+# a territory whole (no geoBoundaries) is Natural Earth's 1:10m outline, which misses reclaimed land and
+# islets, and has no sibling unit a relation could belong to instead (T-1144: Kwai Tsing, 0.44 inside)
+TERRITORY = "Natural Earth admin 0"
+TERRITORY_INSIDE = 0.25
 REST_MIN = 0.1         # share of a plan unit OSM leaves uncovered at which the unit's own polygon fills it
 MULTI_LEVEL = 8        # finest admin level that may combine into one plan unit
 SEA_PAD = 0.25         # degrees around the plan's box over which the OSM sea is read
@@ -111,8 +115,9 @@ def match(units, admin, lat0):
     tree = STRtree(loc)
     levels = [int(x) for x in admin.admin_level]
     out = []
-    for _, _, g, _ in units:
+    for _, _, g, kind in units:
         gl = _local(g, lat0)
+        share = TERRITORY_INSIDE if kind == TERRITORY else INSIDE
         best = (None, 0.0)
         near = [int(i) for i in tree.query(gl, predicate="intersects")]
         over = {}
@@ -123,7 +128,7 @@ def match(units, admin, lat0):
                 best = (i, iou)
         # coarsest levels first, a relation only when mostly inside the unit and not mostly under
         # one already taken
-        inside = sorted((i for i in near if levels[i] <= MULTI_LEVEL and over[i] >= INSIDE * loc[i].area),
+        inside = sorted((i for i in near if levels[i] <= MULTI_LEVEL and over[i] >= share * loc[i].area),
                         key=lambda i: (levels[i], -loc[i].area))
         taken, cover = [], shapely.Polygon()
         for i in inside:

@@ -98,13 +98,17 @@ export class TransferBubbles {
     if (board === this.src.board && net === this.src.net) return;
     this.src = { board, net };
     const t0 = performance.now();
-    const out: number[] = [];
+    // T-1207: written straight into typed arrays, sized by a first pass over the pulses (a growing
+    // number array and its copies took 40-47 ms at 4x CPU throttling each game hour)
+    let count = 0, data = new Float32Array(0), path = new Float32Array(4), when = new Float32Array(4);
     if (board && net && station && board.pulseFrom.length === board.pulses.length) {
       const index = new Map<number, number>();
       net.stationIds.forEach((id, i) => index.set(Number(id), i));
       const S = net.stations, sh = net.stationShape;
       const mx = (i: number) => S[i * 3] + (sh?.[i * 4] ?? 0), my = (i: number) => S[i * 3 + 1] + (sh?.[i * 4 + 1] ?? 0);
       const P = board.pulses, F = board.pulseFrom, Q = board.queues;
+      /** each pulse's walk from station (index in the station buffer), -1 for none drawn */
+      const fromOf = new Int32Array(P.length / 2).fill(-1);
       for (let q = 0; q < board.queueCount; q++) {
         const to = station[q];
         if (to < 0) continue;
@@ -114,19 +118,38 @@ export class TransferBubbles {
           if (!(walk >= MIN_WALK_S) || !(P[p * 2 + 1] >= 1)) continue;
           const from = index.get(F[p * 2]);
           if (from === undefined || from === to) continue;
-          out.push(mx(from), my(from), mx(to), my(to), P[p * 2] - walk, P[p * 2], P[p * 2 + 1], Q[base + 1]);
+          fromOf[p] = from;
+          count++;
+        }
+      }
+      data = new Float32Array(count * STRIDE);
+      path = new Float32Array(Math.max(1, count) * 4);
+      when = new Float32Array(Math.max(1, count) * 4);
+      let i = 0;
+      for (let q = 0; q < board.queueCount; q++) {
+        const to = station[q];
+        if (to < 0) continue;
+        const base = q * QUEUE_STRIDE, first = Q[base + 10], end = first + Q[base + 11];
+        for (let p = first; p < end; p++) {
+          const from = fromOf[p];
+          if (from < 0) continue;
+          const walk = F[p * 2 + 1], o = i * STRIDE, k = i * 4;
+          data[o] = path[k] = mx(from);
+          data[o + 1] = path[k + 1] = my(from);
+          data[o + 2] = path[k + 2] = mx(to);
+          data[o + 3] = path[k + 3] = my(to);
+          data[o + 4] = when[k] = P[p * 2] - walk;
+          data[o + 5] = when[k + 1] = P[p * 2];
+          data[o + 6] = when[k + 2] = P[p * 2 + 1];
+          data[o + 7] = when[k + 3] = Q[base + 1];
+          i++;
         }
       }
     }
-    this.data = Float32Array.from(out);
-    this.count = out.length / STRIDE;
+    this.data = data;
+    this.count = count;
     const gl = this.gl;
     if (gl && this.pathBuf && this.whenBuf) {
-      const path = new Float32Array(Math.max(1, this.count) * 4), when = new Float32Array(Math.max(1, this.count) * 4);
-      for (let i = 0; i < this.count; i++) {
-        path.set(this.data.subarray(i * STRIDE, i * STRIDE + 4), i * 4);
-        when.set(this.data.subarray(i * STRIDE + 4, i * STRIDE + 8), i * 4);
-      }
       gl.bindBuffer(gl.ARRAY_BUFFER, this.pathBuf);
       gl.bufferData(gl.ARRAY_BUFFER, path, gl.DYNAMIC_DRAW);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.whenBuf);

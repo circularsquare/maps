@@ -61,7 +61,8 @@ const container = new Element();
 const map = { getContainer: () => container, getZoom: () => 13, on() {}, unproject: () => ({ lng: -73.98, lat: 40.73 }) };
 const markers = new CapacityMarkers(container, { ...ov, afterMapFrame: [], canvas: { clientWidth: 1000, clientHeight: 1000 } }, map);
 markers.set({ capacity: [[{ x: 100, y: 100, rho: 0.95, delayS: 60, kind: 4 }]], nodes: new Map([[42, { id: 42, ports: 3, lng: -73.98, lat: 40.73 }]]) }, 0);
-const mark = container.children[0].children[0];
+// the tags sit in the box's pan plane (T-1207)
+const mark = container.children[0].children[0].children[0];
 const event = { clientX: 145, clientY: 140, shiftKey: true, buttons: 0, target: { closest: () => mark }, stopPropagation() { this.stopped = true; } };
 let covered = true;
 addFinder(100, () => covered ? ['Top bubble'] : null);

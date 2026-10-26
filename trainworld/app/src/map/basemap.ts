@@ -13,6 +13,7 @@
 import * as maplibregl from "maplibre-gl";
 import { SHADES, type ShadeColours } from "../game/shades";
 import { display, shade, type Shade } from "../game/ui";
+import { styleUp } from "./styleReady";
 
 const POSITRON = "https://tiles.openfreemap.org/styles/positron";
 /** The one font stack every basemap label uses: Regular only, Zen Maru has no italic. */
@@ -117,13 +118,25 @@ export function loadBasemap(map: maplibregl.Map) {
   // only once such a label is on screen (memory reference_maplibre_rtl_and_name_en).
   if (maplibregl.getRTLTextPluginStatus() === "unavailable") maplibregl.setRTLTextPlugin(RTL_PLUGIN, true).catch(() => {});
   map.setStyle(POSITRON, { transformStyle: (_previous, next) => restyle(next) });
+  // T-957: changes that came while there was no style (a lost context) are painted when it is back
+  map.on("style.load", () => {
+    if (!missed) return;
+    missed = false;
+    setBasemapShade(map, ...shadeAs);
+    applyLite(map);
+  });
 }
+
+/** set when a basemap change found no style; `restyle` paints from the current values, so it clears it */
+let missed = false;
+let shadeAs: [Shade, number] = ["light", 1];
 
 function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecification {
   // Absolute, from the page's own URL, so it works under /trainworld/ and on any host.
   style.glyphs = new URL("fonts/", document.baseURI).href + "{fontstack}/{range}.pbf";
   basemapSymbols = [];
   themed = [];
+  missed = false;
   const light = paintFor(SHADES.light, false), dark = paintFor(SHADES.dark, true);
   // T-1270: the hillshade over the land cover and under the roads, off unless Settings has Terrain on
   const at = style.layers.findIndex((l) => l.id === "waterway");
@@ -178,6 +191,8 @@ function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecific
 /** Repaints the basemap in the light or dark theme and at a contrast (T-1249), without reloading
  * the style or its tiles. */
 export function setBasemapShade(map: maplibregl.Map, s: Shade, contrast: number) {
+  shadeAs = [s, contrast];
+  if (!styleUp(map)) return void (missed = true);
   const land = SHADES[s].land;
   for (const t of themed) {
     if (!map.getLayer(t.id)) continue;
@@ -198,12 +213,45 @@ function guardEnglishName(e: unknown): unknown {
   return e.map(guardEnglishName);
 }
 
-/** T-1270: the hillshade on or off (and the water drawn over it with it). */
+/** T-1270: the hillshade on or off (and the water drawn over it with it); the shade never on the lighter map. */
 export function setHillshade(map: maplibregl.Map, on: boolean) {
-  for (const id of [HILLSHADE, WATER_OVER_SHADE]) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+  hillshadeOn = on;
+  if (!styleUp(map)) return void (missed = true);
+  if (map.getLayer(HILLSHADE)) map.setLayoutProperty(HILLSHADE, "visibility", on && !lite ? "visible" : "none");
+  // kept on the lighter map too: the terrain tint (map/terrainTint.ts) sits under it, and water is never charged
+  if (map.getLayer(WATER_OVER_SHADE)) map.setLayoutProperty(WATER_OVER_SHADE, "visibility", on ? "visible" : "none");
 }
+let hillshadeOn = false;
 
 /** `noCities`: the names of cities, towns and villages hidden whatever `on` says (the start menu's map, T-974). */
 export function setBasemapLabels(map: maplibregl.Map, on: boolean, noCities = false) {
-  for (const id of basemapSymbols) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on && !(noCities && CITY_LABELS.has(id)) ? "visible" : "none");
+  labelsAs = [on, noCities];
+  if (!styleUp(map)) return void (missed = true);
+  for (const id of basemapSymbols) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on && !(noCities && CITY_LABELS.has(id)) && !(lite && LITE_HIDDEN.has(id)) ? "visible" : "none");
+}
+let labelsAs: [boolean, boolean] = [true, false];
+
+/** T-1207: the Positron layers the lighter map leaves out: buildings, the residential tint, minor
+ * roads and paths, airfields, small rivers' and minor places' and roads' names. */
+const LITE_HIDDEN = new Set([
+  "building", "landuse_residential", "highway_minor", "highway_path", "aeroway-taxiway", "aeroway-runway", "aeroway-area",
+  "waterway", "waterway_line_label", "airport", "highway-name-major", "label_other", "label_village", "water_name_line_label",
+]);
+let lite = false;
+
+/** T-1207: the lighter map's basemap on or off (the pixel ratio is map/lite.ts's). */
+export function setBasemapLite(map: maplibregl.Map, on: boolean) {
+  if (on === lite) return;
+  lite = on;
+  applyLite(map);
+}
+
+function applyLite(map: maplibregl.Map) {
+  if (!styleUp(map)) return void (missed = true);
+  for (const id of LITE_HIDDEN) {
+    if (!map.getLayer(id) || basemapSymbols.includes(id)) continue;
+    map.setLayoutProperty(id, "visibility", lite ? "none" : "visible");
+  }
+  setBasemapLabels(map, ...labelsAs);
+  setHillshade(map, hillshadeOn);
 }

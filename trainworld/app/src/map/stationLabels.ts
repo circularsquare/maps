@@ -18,10 +18,13 @@ import { complexes } from "../game/complexView";
 import type { StationInput, WorldView } from "../game/types";
 import { anchor, toLocal } from "./geo";
 import type { Overlay } from "./overlay";
+import { PlaceThrottle } from "./moving";
 import { perfOff, perfTry } from "../perfFlags";
 import { BoxGrid, MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
+import { styleUp } from "./styleReady";
 import { plainBoxHalfPx } from "./stationGeometry";
 import { hasUpgrade, UPGRADE } from "../game/upgrades";
+import { afterPaint } from "../game/busy";
 
 /** ?perfOff=labels (T-045, measurement only): DOM labels never placed. */
 const NO_LABELS = perfOff("labels");
@@ -42,6 +45,8 @@ interface Label {
 }
 
 const GAP = 10; // px from the station centre
+/** more stations than this named unlike every label drawn wait for the paint (T-1357) */
+const DEFER_NAMES = 200;
 /** side of the screen grid the collision pass files placed names in, CSS px */
 const SHADOW = "tw-station-shadow";
 // Keep names beyond the viewport ready to enter during a pan. Rebase before this runs out.
@@ -54,7 +59,8 @@ export class StationLabels {
   private visible = true;
   private shown = false;
   private shadow: FeatureCollection = { type: "FeatureCollection", features: [] };
-  private key = "";
+  private deferred: WorldView | null = null;
+  private key: { av: number; links: (readonly [string, string])[]; stations: { id: string; name: string; built: boolean; lng: number; lat: number; heading: number; length: number; upgrades: number; lines: string[] }[] } | null = null;
   private shadowKey = "";
   private placedMatrix: number[] | null = null;
   private placedSize: [number, number] = [0, 0];
@@ -68,7 +74,10 @@ export class StationLabels {
   /** Called after the names change place outside a pan (capacity tags follow, T-184). */
   onPlace: (() => void) | null = null;
 
+  private throttle: PlaceThrottle;
+
   constructor(container: HTMLElement, private overlay: Overlay, private map: MlMap) {
+    this.throttle = new PlaceThrottle(() => overlay.moving);
     this.box = document.createElement("div");
     this.box.className = "stn-labels";
     this.box.style.display = "none";
@@ -116,12 +125,15 @@ export class StationLabels {
         "text-allow-overlap": true,
         "text-ignore-placement": false,
         "text-padding": 4,
+        visibility: this.visible ? "visible" : "none",
       },
       paint: { "text-opacity": 0 },
     });
   }
 
-  set(w: WorldView) {
+  set(w: WorldView, painted = false) {
+    // the build waiting for the paint takes the latest world
+    if (this.deferred) { this.deferred = w; return; }
     const stations = w.save.stations;
     const lines = new Map<string, Set<string>>();
     for (const l of w.save.lines) for (const s of l.stops) {
@@ -134,9 +146,20 @@ export class StationLabels {
     // Length and the player's links are in the key because they decide complexes (T-209).
     const links = w.save.links ?? [];
     // and the draw anchor: the names' positions are in its local units (T-307)
-    const key = `${anchor().version}\n` + stations.map((s) => `${s.id}|${s.name}|${s.built}|${s.lng}|${s.lat}|${s.heading}|${s.length}|${s.upgrades ?? 0}|${[...(lines.get(s.id) ?? [])].join(",")}`).join("\n") + "\n" + links.join("|");
-    if (key === this.key) return;
-    this.key = key;
+    if (!this.changed(anchor().version, stations, lines, links)) return;
+    // T-1357: many names not drawn before (a game's first network) are built once the network has
+    // been painted
+    let fresh = 0;
+    if (!painted && stations.length - this.labels.length > DEFER_NAMES) {
+      const had = new Set(this.labels.map((l) => l.el.textContent));
+      for (const s of stations) if (!had.has(s.name) && ++fresh > DEFER_NAMES) break;
+    }
+    if (fresh > DEFER_NAMES) {
+      this.deferred = w;
+      this.key = null;
+      afterPaint(() => { const d = this.deferred!; this.deferred = null; this.set(d, true); });
+      return;
+    }
     // the world's complexes (game/complexView.ts), built once for every user of this world
     const names = labelGroups(stations, lines, complexes.peek());
     this.needsPlacement = true;
@@ -182,9 +205,32 @@ export class StationLabels {
     this.place();
   }
 
+  /** Whether anything the labels are built from differs from the last call's, which it then keeps
+   * (field by field: the joined string key was 15 ms an edit at 6x throttling, T-1348). */
+  private changed(av: number, stations: readonly StationInput[], lines: ReadonlyMap<string, ReadonlySet<string>>, links: readonly (readonly [string, string])[]): boolean {
+    const k = this.key;
+    let same = !!k && k.av === av && k.stations.length === stations.length && k.links.length === links.length && links.every((l, i) => l[0] === k.links[i][0] && l[1] === k.links[i][1]);
+    for (let i = 0; same && i < stations.length; i++) {
+      const s = stations[i], p = k!.stations[i];
+      if (s.id !== p.id || s.name !== p.name || s.built !== p.built || s.lng !== p.lng || s.lat !== p.lat || s.heading !== p.heading || s.length !== p.length || (s.upgrades ?? 0) !== p.upgrades) same = false;
+      else {
+        const ls = lines.get(s.id), pl = p.lines;
+        if ((ls?.size ?? 0) !== pl.length) same = false;
+        else if (ls) { let j = 0; for (const l of ls) if (l !== pl[j++]) { same = false; break; } }
+      }
+    }
+    if (same) return false;
+    this.key = {
+      av,
+      links: links.map(([a, b]) => [a, b] as const),
+      stations: stations.map((s) => ({ id: s.id, name: s.name, built: s.built, lng: s.lng, lat: s.lat, heading: s.heading, length: s.length, upgrades: s.upgrades ?? 0, lines: [...(lines.get(s.id) ?? [])] })),
+    };
+    return true;
+  }
+
   setVisible(on: boolean) {
     this.visible = on;
-    if (this.map.getLayer(SHADOW)) this.map.setLayoutProperty(SHADOW, "visibility", on ? "visible" : "none");
+    if (styleUp(this.map) && this.map.getLayer(SHADOW)) this.map.setLayoutProperty(SHADOW, "visibility", on ? "visible" : "none");
     this.needsPlacement = true;
     this.place();
   }
@@ -214,18 +260,23 @@ export class StationLabels {
     // A flat mercator pan changes only translation. Zoom, rotation, pitch, padding and resize
     // fall back to individual placement, using the same camera as the network's draw.
     const same = (a: number, b: number) => Math.abs(a - b) <= 1e-10 * Math.max(1, Math.abs(a), Math.abs(b));
-    if (PAN && !this.needsPlacement && prev && W === this.placedSize[0] && H === this.placedSize[1]
+    // while the camera moves, a full placement at most every MOVING_PLACE_MS (T-1207); a pan between
+    // them moves the names as one, past the margin if need be
+    const due = this.throttle.due();
+    if (PAN && (!this.needsPlacement || !due) && prev && W === this.placedSize[0] && H === this.placedSize[1]
       && m[3] === 0 && m[7] === 0
       && prev.every((v, i) => i === 12 || i === 13 || i === 14 || same(v, m[i]))) {
       const [x, y] = this.overlay.toScreen(0, 0);
       const dx = x - this.anchor[0], dy = y - this.anchor[1];
-      if (Math.abs(dx) < PAN_MARGIN / 2 && Math.abs(dy) < PAN_MARGIN / 2) {
+      if (!due || (Math.abs(dx) < PAN_MARGIN / 2 && Math.abs(dy) < PAN_MARGIN / 2)) {
         const transform = `translate(${dx}px, ${dy}px)`;
         if (this.plane.style.transform !== transform) this.plane.style.transform = transform;
         this.offset = [dx, dy];
         return;
       }
     }
+    if (!due) return;
+    this.throttle.done();
     this.needsPlacement = false;
     this.placedMatrix = Array.from(m);
     this.placedSize = [W, H];

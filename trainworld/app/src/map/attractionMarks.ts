@@ -18,6 +18,7 @@ import { modeBar } from "./modeBar";
 import { cityOverview } from "./intercityView";
 import { hiddenOnGlobe } from "./live";
 import type { Overlay } from "./overlay";
+import { overlayCamera, PanPlane } from "./moving";
 
 /** A classical front: a pediment on three columns. */
 const MARK_PATH = "M8 1 15 5H1ZM2.5 6h2.2v6H2.5ZM6.9 6h2.2v6H6.9ZM11.3 6h2.2v6h-2.2ZM1 13h14v2H1Z";
@@ -37,6 +38,10 @@ export function startAttractionMarks(map: MlMap, overlay: Overlay) {
   const box = document.createElement("div");
   box.className = "attraction-marks";
   map.getContainer().appendChild(box);
+  const plane = document.createElement("div");
+  plane.className = "mark-plane";
+  box.appendChild(plane);
+  const pan = new PanPlane(overlayCamera(overlay), plane);
   let all: Attraction[] = [];
   void loadAttractions().then((a) => { all = a; place(); });
   /** each zone's attractions with the cell the demand layer gave them, -1 none (not in the zone) */
@@ -104,6 +109,8 @@ export function startAttractionMarks(map: MlMap, overlay: Overlay) {
   let drawn = 0;
   const placed: string[] = [];
   const place = () => {
+    if (!pan.due()) return; // T-1207
+    pan.placed();
     shown = [];
     const z = map.getZoom();
     if (all.length && z >= minZoom() && !cityOverview.peek()) {
@@ -124,7 +131,7 @@ export function startAttractionMarks(map: MlMap, overlay: Overlay) {
         m = marks[k] = document.createElement("div");
         m.className = "attraction-mark";
         m.innerHTML = `<svg viewBox="0 0 16 16"><path d="${MARK_PATH}" /></svg>`;
-        box.appendChild(m);
+        plane.appendChild(m);
       }
       if (k >= drawn) m.style.display = "";
       const t = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;

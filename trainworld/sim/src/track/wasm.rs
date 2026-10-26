@@ -12,7 +12,7 @@
 
 use super::boarding::Boarding;
 use super::bridge;
-use super::cost::{ClassGrid, GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask};
+use super::cost::{ClassGrid, GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask, WorldWater};
 use super::frame::FrameKind;
 use super::geom::{self, design_radii, GeomIssue, Pi};
 use super::net::{CrossKind, EdgeData, Issue, LineData, LoopKind, Network, NodeData, StationData};
@@ -72,6 +72,8 @@ pub struct TrackApi {
     /// The pack rasters installed with `add_pack_water`, kept so the water mask can be rebuilt
     /// when a loaded save is in another frame (T-125).
     rasters: Vec<PackWater>,
+    /// The world's coarse water (`add_world_water`, T-1285), deciding where no pack raster does.
+    world_water: Option<Arc<RunMask>>,
     /// Metres of the last preview in each terrain class (`preview_ground`).
     preview_ground: [f64; 4],
     /// The boarding account (T-164): demand's riders per period, and each train's load and each
@@ -239,6 +241,7 @@ impl TrackApi {
             route_junctions: vec![],
             station_cost: 0.0,
             rasters: vec![],
+            world_water: None,
             preview_ground: [0.0; 4],
             boarding: Boarding::default(),
             spans: vec![],
@@ -364,10 +367,11 @@ impl TrackApi {
     }
 
 
-    /// Reset coverage before installing the region's pack rasters.
+    /// Reset coverage before installing the region's pack rasters (the world's coarse water stays).
     pub fn clear_water(&mut self) {
         self.rasters.clear();
-        self.w.net.set_water_mask(Box::new(NoWater));
+        let set = self.mask_set();
+        self.w.net.set_water_mask(Box::new(set));
         self.w.reload();
     }
 
@@ -424,8 +428,23 @@ impl TrackApi {
         self.preview_ground.to_vec()
     }
 
+    /// Install the world's coarse water mask (T-1285, a `world.water` file's bytes,
+    /// `cost::WorldWater`): every edge's water and price is worked out again. False if the bytes are
+    /// not one.
+    pub fn add_world_water(&mut self, bytes: &[u8]) -> bool {
+        let Some(m) = WorldWater::decode(bytes) else { return false };
+        self.world_water = Some(Arc::new(m));
+        let set = self.mask_set();
+        self.w.net.add_water(Box::new(set), [f64::NEG_INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::INFINITY]);
+        true
+    }
+
     fn mask_set(&self) -> MaskSet {
-        MaskSet(self.rasters.iter().map(|r| r.seen.clone()).collect())
+        let frame = self.w.net.frame();
+        MaskSet {
+            rasters: self.rasters.iter().map(|r| r.seen.clone()).collect(),
+            world: self.world_water.as_ref().map(|m| Arc::new(WorldWater { mask: m.clone(), frame }) as Arc<dyn WaterMask>),
+        }
     }
 
     /// Replace the network with a saved one. False if the bytes are not a save.
@@ -446,7 +465,7 @@ impl TrackApi {
                         self.w.svc.shifts.clear();
                     }
                 }
-                if !self.rasters.is_empty() {
+                if !self.rasters.is_empty() || self.world_water.is_some() {
                     self.rebuild_water();
                 }
                 true
@@ -517,6 +536,7 @@ mod lines;
 mod snapshot;
 mod service;
 mod upgrades;
+mod related;
 
 /// What buying the cars the running lines need beyond `fleet` costs, US$M.
 fn trains_to_buy(w: &TrackWorld, fleet: [u32; 2]) -> f64 {
@@ -1326,6 +1346,9 @@ mod branch_tests;
 /// T-1273: stop edits leave a line's ends as termini.
 #[cfg(test)]
 mod stop_edit_tests;
+
+#[cfg(test)]
+mod related_tests;
 
 /// T-1281: station upgrades.
 #[cfg(test)]

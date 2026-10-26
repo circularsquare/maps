@@ -44,6 +44,17 @@ terrain price factors (track-and-service.md 6.4). Mapterhorn's hosted tiles were
 for use by an app are stated; for a published game the fallback is our own Terrarium tiles on R2
 cut from GEDTM30 (notes/T-1270.md).
 
+**The class tint** [T-1270 stage 3]: with Terrain on and a build tool on (track, station, delete,
+blueprint), rolling, hilly and mountain ground get a faint brown wash, stronger by class (light:
+brown at 8%, 15%, 24%; dark: a lighter tan at 6%, 11%, 18%); flat ground is bare. It is drawn from
+the grids the clock worker put in the track model (a "terrain" message per zone, `game/terrain.ts`),
+so it shows exactly what is charged and nothing for a zone not loaded. `map/terrainTint.ts` draws
+one image over the view and half its size again round it, rows even in mercator, each cell its
+lattice class (nearest, no smoothing), redrawn when the camera stops; above the hillshade, under the
+water, roads and labels; hidden below zoom 7. The lighter map hides the hillshade but keeps
+`water_over_shade` while Terrain is on, so the tint stays off the water there too. The hover on washed ground, in the map's tag: "Hilly
+ground, 1.6x the price".
+
 ## Zoom bands
 
 - **Below zoom 9** (about 160 km across, a whole region) only the lines are drawn [T-205, T-542,
@@ -116,7 +127,9 @@ cut from GEDTM30 (notes/T-1270.md).
     `TrackApi.full_track`; platforms, termini and junctions keep only their tags) has a red band
     1.5 px each side outside its casing (#c0392b, #f0584f in the dark theme; `fullTrack` in
     `game/shadeTable.ts`), drawn in a pass of its own before the lines' casings, so a red line keeps
-    its casing between and a neighbouring line's casing covers the band where they touch, and its
+    its casing between and a neighbouring line's casing covers the band where they touch, with
+    1 px of the casing's colour outside the band (a pass under it, `u_full_out`; T-1284) so the red
+    reads as a stripe on a red or orange line, and its
     body darker by 14% (`FULL_DARKEN`). A stretch between two stops where riders wait for a train
     with room [T-1125, T-1160] (in either direction, at least 0.2 min on average over the day,
     from the boarding account of the hour's kind of day, track-and-service.md 6.6) has the same
@@ -343,7 +356,8 @@ those who got on, less the load carried on.
   of three lengths at random [T-1153]: short at 45% (the note rings 0.6 as long, then one group of
   pops, getting off or getting on, at most 2, straight after it), medium at 35% (both groups, at
   most 2 each), full otherwise. Silent
-  until the first click or key. Volume is the setting times a zoom gain (a quarter at 14, full from
+  until the first click or key: the audio context opens once it is over, with no button held and the
+  camera still, when the page is next idle [T-1207] (`map/audioOut.ts`). Volume is the setting times a zoom gain (a quarter at 14, full from
   17), shared down by the arrivals sounding in the last second; a second one sounding together gets
   the note only, and none beyond 3; panned by where the station is on screen. At the second speed
   only the note and two pops; none at the third.

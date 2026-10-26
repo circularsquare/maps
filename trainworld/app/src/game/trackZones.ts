@@ -28,10 +28,11 @@ export const trackZones = signal<TrackZones>({ built: new Set(), planned: new Se
 
 let outlines: Map<string, MultiPolygon> | null = null;
 let waiting: { net: NetworkBuffers; w: WorldView } | null = null;
-/** per edge id: the shape its zones were worked out for, and the zones */
-const byEdge = new Map<number, { sig: string; zones: CityId[] }>();
+/** per edge id: the shape its zones were worked out for (points, length to 0.1 m, end positions), and the zones */
+const byEdge = new Map<number, { n: number; len: string; alng: number; alat: number; blng: number; blat: number; zones: CityId[] }>();
 
-/** A new network state (not a train count alone): work out the zones its track crosses. */
+/** A new network state (not a train count alone): work out the zones its track crosses. Not put off
+ * past the paint: the zones it opens feed demand's rounds (T-1357). */
 export function followTrack(net: NetworkBuffers | null, w: WorldView | null) {
   if (!net || !w) return;
   if (!outlines) {
@@ -47,9 +48,11 @@ export function followTrack(net: NetworkBuffers | null, w: WorldView | null) {
     if (!pts || pts.length < 3 || !na || !nb) continue;
     seen.add(e.id);
     // (the drawn line's own points move with the draw anchor)
-    const sig = `${pts.length}:${e.lengthM.toFixed(1)}:${na.lng},${na.lat}:${nb.lng},${nb.lat}`;
+    const len = e.lengthM.toFixed(1);
     let k = byEdge.get(e.id);
-    if (k?.sig !== sig) byEdge.set(e.id, (k = { sig, zones: crossed(pts, a) }));
+    if (!k || k.n !== pts.length || k.len !== len || k.alng !== na.lng || k.alat !== na.lat || k.blng !== nb.lng || k.blat !== nb.lat) {
+      byEdge.set(e.id, (k = { n: pts.length, len, alng: na.lng, alat: na.lat, blng: nb.lng, blat: nb.lat, zones: crossed(pts, a) }));
+    }
     for (const z of k.zones) (e.built ? built : planned).add(z);
   }
   for (const id of byEdge.keys()) if (!seen.has(id)) byEdge.delete(id);

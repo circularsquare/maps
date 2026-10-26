@@ -31,14 +31,12 @@ share falls linearly to nothing, and the car's the same where it costs 3 to 4 ti
 useless detour line cannot be farmed. Drivers parking free and those paying for a space take the
 curve apart, each on their own car cost (below). One rule for commutes, everyday trips, the trip
 explorer and the regional layer's commutes between zones; the regional market (rail, car and air
-between regions) keeps its damped logit (docs/regional.md 5.1). It replaced the logistic in the
-difference (0.10 a perceived minute, T-636), its damping past an hour and the 5% floor and
-ceiling (T-854); the ceiling tests pass with room (notes/T-918.md). **No rail propensity**:
+between regions) keeps its damped logit (docs/regional.md 5.1). The ceiling tests pass with room
+(T-918, notes/T-918.md). **No rail propensity**:
 `asc_rail` is 0 in every country and does not enter the ratio, so rail and the car are judged on
 time and money alone (`everyday_asc_rail` and `api::COUNTRY_ASC_RAIL` remain, at 0 and empty,
-moving only the walking share). T-509 had fitted 0.4 (-0.7 for everyday trips, Japan +0.5) to six
-real networks; T-636 dropped the fit so that the game is sensible and building a line has a clear
-effect, and the real cities are loose checks (notes/T-636.md).
+moving only the walking share). The game aims at sensible, with a clear effect from building a
+line, and the real cities are loose checks (T-636, notes/T-636.md).
 **Walking's share** (T-558, below) still comes from a logit among rail, walking and the car at
 `beta` 0.10 a perceived minute, with **cost damping** (T-495, `Params::mode_beta`): past 60
 perceived minutes of the car's trip T the scale is 0.10 x sqrt(60 / T) (0.058 at 3 hours, 0.028 at
@@ -67,8 +65,7 @@ line (13 minutes a straight km); every minute weighs 1.5 (`walk_trip_w`, one rat
 bonus of **10 perceived minutes** (`walk_bonus_min`; the logit's `asc_walk` is that times `beta`, so
 1.0 at 0.10, and it follows `beta`): what a short drive costs beyond its road time, which the car
 side does not otherwise carry (getting to the car, the walk from the space). One constant for
-commutes and everyday trips alike, and for every country (T-636; before it the constant was 2.80 and
-3.21, worth 56 minutes at 0.05, and the cost rose to 4 a minute after 10). Walks over 10 km straight
+commutes and everyday trips alike, and for every country (T-636). Walks over 10 km straight
 line are not offered (`WALK_REACH_KM`, a computational bound).
 
 Commutes walk between cells (T-587, `Gravity::set_walk_fine`): each zone's homes and its jobs are
@@ -99,8 +96,8 @@ is open highway at 110 km/h (T-370, T-938); a road too short for all that splits
 ends (at most half each for the local streets, then half the rest each for the main roads). Each
 place has a speed for its streets and main roads, by its density (commuters living and working per
 km² of land in its 2 km zone): local streets 44 km/h and main roads 88 km/h in open country, both
-falling towards 16.5 km/h where it is dense, half way at 5,000 per km² (T-090's fit, every speed
-10% quicker since T-938). So a dense end slows only its
+falling towards 16.5 km/h where it is dense, half way at 5,000 per km² (T-090's fit with every
+speed 10% quicker, T-938). So a dense end slows only its
 own last 10 km: 3 km inside Manhattan takes about 12 minutes, Brooklyn to Midtown (10 km) about
 27, 25 km between suburbs about 25, and 60 km from a suburb into a 30,000/km² centre about 65.
 
@@ -130,8 +127,7 @@ T-636, T-938), so a typical trip pays $2.90-5.25 and a driver's day about $13. T
 three layers: the commutes and the everyday layer call `park_parts` (both take the mix of the two
 drivers' choices per pair, `Params::car_choice`); the regional layer's market pack holds each
 site's mean over drivers (`site_park`), written by `pipeline/intercity.py park_by_cell`, which
-mirrors `park_parts` and `cordon_by_zone` and is used for every zone's pack (packs built before
-T-636 hold the earlier base of 3 minutes until they are next rebuilt).
+mirrors `park_parts` and `cordon_by_zone` and is used for every zone's pack.
 
 **Routed walking and driving** (T-275, notes/T-275.md). Drives go over bridges and tunnels,
 walks over bridges or across water at a cost, from data that exists for any city: OpenStreetMap roads and bridges (Geofabrik
@@ -168,11 +164,10 @@ them, or with them made for other zones, has every walk and drive straight x 1.3
   every public road but service ways; each place joins its nearest road point whose straight
   line crosses no water, at 1.3x that line. The speeds stay the density model's above: only the
   road's length comes from the routes. The factor is multiplied by `road_routed_scale`,
-  1.3 / 1.210: shortest-distance routes come to 1.17-1.26x the straight line, commute- and
-  distance-weighted (New York 1.210), while the density speeds were fitted on New York with 1.3,
-  so New York keeps its fitted level and other places their difference from it (and the longer,
-  faster roads drivers really take are covered). Hoboken to Midtown is now 7.5 km by road (5.0
-  before), St George to Wall St 22 km (12), Stamford to Huntington 83 km (30).
+  1.3 / 1.210 (New York's commute- and distance-weighted routed factor): the density speeds were
+  fitted on New York with 1.3, so New York keeps its fitted level and other places their
+  difference from it (and the longer, faster roads drivers really take are covered). Hoboken to
+  Midtown is 7.5 km by road, St George to Wall St 22 km, Stamford to Huntington 83 km.
 - **Not routed**: walking transfers between stations (300 m and complexes) stay straight x 1.3,
   because every population must build the same graph from the same stations to share its
   strategy searches (T-119) and none of the real New York network's 80 pairs within 300 m has

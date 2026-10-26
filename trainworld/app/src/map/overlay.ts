@@ -17,6 +17,7 @@ import type { DrawOptions, NetworkRenderer } from "./renderer";
 import { anchor, EARTH_C, toLocal } from "./geo";
 import { cameraFrom, clipToCss, mercToCss, sizeCanvasLike, type Camera } from "./gl";
 import { perfOff } from "../perfFlags";
+import { cameraMoving } from "../game/ui";
 
 /** ?perfOff=overlay (T-045, measurement only): skip the WebGL draw. */
 const NO_DRAW = perfOff("overlay");
@@ -27,10 +28,11 @@ const NO_DRAW = perfOff("overlay");
  */
 const IDLE = !perfOff("idle");
 const NO_DOUBLE = !perfOff("noDouble");
+/** ?perfOff=moving (T-1207, measurement only): nothing waits while the camera moves. */
+const THROTTLE = !perfOff("moving");
 
 /** Frame interval while the window is visible but does not have focus. */
 const UNFOCUSED_MS = 100;
-
 /** A view of the network drawn into another canvas (T-1289, ui/inspector/ComplexMap.tsx). */
 export interface Snapshot {
   canvas: HTMLCanvasElement;
@@ -90,6 +92,12 @@ export class Overlay {
   lastDrawnMatrix: ArrayLike<number> | null = null;
   /** called after each MapLibre frame (the camera may have moved), e.g. to move DOM labels */
   readonly afterMapFrame: (() => void)[] = [];
+  /** The camera is moving (MapLibre's movestart to moveend): DOM placers re-place at most every
+   * `MOVING_PLACE_MS` meanwhile (`placeDue`), and once more on the frame after it stops (T-1207). */
+  moving = false;
+  /** MapLibre frames drawn while the camera moves: their gaps, ms (the lighter map's auto switch). */
+  onMovingFrame: ((gapMs: number) => void) | null = null;
+  private lastMapFrame = 0;
 
   constructor(
     private map: MlMap,
@@ -126,6 +134,9 @@ export class Overlay {
           this.cam = cameraFrom(args.defaultProjectionData);
           this.camMatrix = this.cam.merc;
           this.mapFrames++;
+          const t = performance.now();
+          if (this.moving && this.lastMapFrame) this.onMovingFrame?.(t - this.lastMapFrame);
+          this.lastMapFrame = this.moving ? t : 0;
           this.draw();
           for (const f of this.afterMapFrame) f();
         },
@@ -135,6 +146,14 @@ export class Overlay {
     else map.on("load", addCamera);
     // MapLibre restores its style after a lost context without custom layers (T-953)
     map.on("style.load", addCamera);
+    map.on("movestart", () => {
+      if (THROTTLE) this.moving = this.renderer.moving = cameraMoving.now = true;
+    });
+    // the frame after the move: every placer places in full again
+    map.on("moveend", () => {
+      this.moving = this.renderer.moving = cameraMoving.now = false;
+      map.triggerRepaint();
+    });
 
     window.addEventListener("blur", () => {
       this.focused = false;

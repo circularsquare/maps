@@ -9,7 +9,9 @@ import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { accountConfig, accountOpen, accountState, api, deleteAccount, session, signIn, signOut, startAccount, storeSession, type AccountView } from "../game/account";
 import { shade } from "../game/ui";
-import { answerMergeAsk, mergeAsk, watchMerge } from "../game/accountGames";
+import { accountList, answerMergeAsk, gamesOn, mergeAsk, refreshAccountGames, signOutRemoving, tiedHere, watchMerge } from "../game/accountGames";
+import { plural } from "../game/format";
+import { clockRunning } from "../workers/clockClient";
 import { Leaderboard } from "./Leaderboard";
 import { Modal } from "./Modal";
 import { Icon } from "./widgets";
@@ -92,7 +94,9 @@ function SignInForms() {
 }
 
 function SignedIn({ a }: { a: AccountView }) {
-  const [panel, setPanel] = useState<"" | "password" | "delete">("");
+  const [panel, setPanel] = useState<"" | "password" | "delete" | "signout">("");
+  const open = accountOpen.value;
+  useEffect(() => { if (!open) setPanel(""); }, [open]);
   const [msg, setMsg] = useState("");
   const run = (f: () => Promise<unknown>) => { setMsg(""); f().catch((e) => setMsg(e.message)); };
   const password = a.logins.includes("password");
@@ -110,6 +114,7 @@ function SignedIn({ a }: { a: AccountView }) {
   </form>;
   return <>
     <p>{who}</p>
+    <AccountGames />
     <MergeQuestion />
     {password && <form class="acct-form acct-sec" onSubmit={(e) => { e.preventDefault(); const email = val(e.currentTarget, "email").trim(); run(async () => setAccount((await api<{ account: AccountView }>("PUT", "noritetsu/email", { email })).account)); }}>
       <input name="email" type="email" placeholder="Recovery email" aria-label="Recovery email" autocomplete="email" value={a.pendingEmail || a.email || ""} key={a.pendingEmail || a.email} />
@@ -122,14 +127,44 @@ function SignedIn({ a }: { a: AccountView }) {
       </div>
     </form>}
     <div class="acct-btns acct-sec">
-      <button class="btn text" data-tip="Signs out of anitabuilder and noritetsu in this browser" onClick={() => { signOut(); accountOpen.value = false; }}>Sign out</button>      <button class="btn text danger" onClick={() => setPanel("delete")}>Delete account</button>
+      <button class={"btn text" + (panel === "signout" ? " on" : "")} data-tip="Signs out of anitabuilder and noritetsu in this browser" onClick={async () => {
+        // T-988: with this account's games in this browser, whether they stay is asked first
+        if (gamesOn() && await tiedHere()) { setPanel("signout"); return; }
+        signOut();
+        accountOpen.value = false;
+      }}>Sign out</button>
+      <button class="btn text danger" onClick={() => setPanel("delete")}>Delete account</button>
     </div>
+    {panel === "signout" && <div class="callout acct-signout">
+      <p>Remove your games from this browser?</p>
+      <div class="acct-btns">
+        <button class="btn text acct-go" data-tip="Your games stay in this browser and sync again when you sign in" onClick={() => { signOut(); accountOpen.value = false; }}>Keep games</button>
+        <button class="btn text" data-tip={`Games saved to your account leave this browser. A game with changes not on your account yet stays.${clockRunning() ? " The game you are playing closes." : ""}`}
+          onClick={() => { setPanel(""); accountOpen.value = false; signOutRemoving(); }}>Remove games</button>
+      </div>
+    </div>}
     {panel === "delete" && <div class="callout bad">
       <p>Delete your account? Its games, its leaderboard entries and its noritetsu rides go too. Games in this browser stay.</p>
       <div class="pane-foot"><button class="btn text danger" onClick={() => run(async () => { await deleteAccount(); accountOpen.value = false; })}>Delete account</button><button class="btn text" onClick={() => setPanel("")}>Keep it</button></div>
     </div>}
     {msg && <p class="acct-msg">{msg}</p>}
   </>;
+}
+
+/** "0.2 MB", "12 MB". */
+const mb = (bytes: number) => { const v = bytes / 1048576; return `${v >= 10 ? Math.round(v) : Math.max(v, bytes ? 0.1 : 0).toFixed(1).replace(/\.0$/, "")} MB`; };
+
+/** T-988: how many games the account keeps and the room they take. */
+function AccountGames() {
+  void accountState.value; void accountConfig.value; void session.value;
+  const list = accountList.value, open = accountOpen.value;
+  useEffect(() => { if (open) void refreshAccountGames(); }, [open]);
+  if (!gamesOn() || !list) return null;
+  return <p class="small muted num acct-games">
+    <span data-tip={`Your account keeps up to ${list.maxGames} games`}>{plural(list.games.length, "game")} on your account</span>
+    {" · "}
+    <span data-tip="Backups count too">{mb(list.used)} of {mb(list.limit)}</span>
+  </p>;
 }
 
 /** T-988: signing in with games in this browser asks whether they go on the account. */

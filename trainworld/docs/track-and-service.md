@@ -252,7 +252,9 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **No track at ground level over water** (level 0 is invalid where the water mask says water);
   bridges and tunnels over or under water cost 2x (6.4). The mask is 25 m pixels in the city
   pack; water narrower than ~50 m (creeks, ditches, small ponds) is not in it, since a railway
-  crosses those at grade (notes/T-030.md). Ground level means within half a level (4 m) of the
+  crosses those at grade (notes/T-030.md). Outside every pack's mask the world's coarse mask
+  decides (T-1285, zones.md 6): the sea and large lakes in cells of 1/60 degree, so open sea between
+  zones is water like water inside them. Ground level means within half a level (4 m) of the
   ground, so the low end of a ramp counts too: bridge and tunnel approaches start on land.
 - **A bridge by itself** (T-656, `track/bridge.rs`): a segment drawn through points at level 0
   (every vertex level 0, no clicked corners) that crosses water is raised to level 1 over each
@@ -313,7 +315,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   - **Park and ride**: a ride to or from the station costs 10 perceived minutes less ([demand-mode.md](demand-mode.md),
     `kernel::ride_fixed`); a P after the station's name.
   - **Waiting room**: a wait for a train there counts at 0.8 of its minutes in route and mode
-    choice (`kernel::wait_factor`, [demand-mode.md](demand-mode.md)).
+    choice (`kernel::wait_factor`, [demand-mode.md](demand-mode.md)). Drawn where platforms are (from
+    zoom 14) as a small box in the station's style beside the platform's middle, on the outside of
+    its bend, with the platform's waiting riders (its fuller side) filling it from the middle out
+    (T-1287; station flag 32, a second station draw with `u_room`).
   - **Passage**: the link above, priced US$10M plus US$90M a km of the straight line between the
     two stations (`upgrades::passage_price`); paid at once between constructed stations, else
     built and paid with the second of them (`Network::passages`, quote row "Passages").
@@ -502,7 +507,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   High is the two peaks, medium midday and evening, low night. New lines start at 0 / 0 / 0;
   zero means no new departures. The panel shows the integer allocation and resulting headway.
   Frequency is derived from the capacity-adjusted round trip, with a bounded solve on edits (at
-  most 80 rounds, ending at the first round that changes no rate or round trip, T-747);
+  most 80 rounds, ending at the first round that changes no rate or round trip, T-747; a line
+  within 0.05 trains of its fleet whose shortfall has changed sign three times without halving,
+  as where its round trip jumps when a hold comes and goes, is settled on the side with trains to
+  spare and stays so while its rate and round trip are unchanged, T-1283);
   extending track or changing congestion adjusts the headway while preserving the allocation.
   It never exceeds what the line's track can carry (6.2): trains beyond that wait at the ends.
   A loop's lap is a run and its closing stand; its round trip is twice the longer lap, and its count
@@ -607,7 +615,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
 
 - **Over or under water: 2x** the level's price. **Level 0 cannot be built over water**; a
   ground-level segment drawn across it becomes a bridge (6.1). Water comes from a mask in the
-  pack (T-030).
+  pack (T-030), and outside every pack's mask from the world's coarse mask (T-1285).
 - **Terrain** (T-1270, Anita 2026-10-25, design notes/T-1270.md): each zone's ground is in four
   classes, and track at elevation -1 to +3 costs the class's factor more; bored tunnels (-2, -3)
   cost the same anywhere, so in the mountain class a -2 tunnel (US$99M a km) is cheaper than track

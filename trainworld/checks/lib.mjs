@@ -194,7 +194,7 @@ export async function bundleDemandWorker(name) {
   const compiled = join(dir, 'demand-worker.mjs'), wrapper = join(dir, 'worker-adapter.mjs');
   const wasm = fileURLToPath(new URL('../app/src/wasm/demand/sim_bg.wasm', import.meta.url));
   const { rolldown } = await import(pathToFileURL(join(HERE, '../app/node_modules/rolldown/dist/index.mjs')).href);
-  const bundle = await rolldown({ input: fileURLToPath(new URL('../app/src/workers/demand.worker.ts', import.meta.url)), platform: 'browser' });
+  const bundle = await rolldown({ input: fileURLToPath(new URL('../app/src/workers/demand.worker.ts', import.meta.url)), platform: 'browser', transform: { define: { 'import.meta.env.DEV': 'false' } } });
   await bundle.write({ file: compiled, format: 'esm', codeSplitting: false });
   await bundle.close();
   writeFileSync(wrapper, `import {parentPort} from 'node:worker_threads';

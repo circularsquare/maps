@@ -92,7 +92,8 @@ background and wait once for the process.
   `routes --keep-pbf`, `merge_cells` (which runs `read_pack`'s checks on its output before it
   replaces the pack, and fails the step otherwise), `nocar`, `everyday_rates`, each its own process
   and log; a failed step runs once more after a minute (a timed-out one does not), then the row
-  parks. A step whose log has not grown for 20 minutes (`QUIET_S`; `TW_QUIET_S` to change it) dumps
+  parks. A step whose log has not grown for 20 minutes (`QUIET_S`; `TW_QUIET_S` to change it; a region's gate gets at least 30 s a row, and its
+  browser check prints each row's result as it lands, T-1308) dumps
   every thread's stack into its log, again after each further 20 silent minutes, and the runner
   prints a line saying so. Status `built`.
 - **Gate**: the rates test the gate runs (`every_pack_everyday`) is built once at
@@ -253,7 +254,9 @@ sources. Each field comes from the row or a rule:
   relation (any admin level, from the row's extracts, cached in `data/raw/osm/<extract>.admin.fgb`)
   whose overlap with it is at least half their union, both taken on land less inland water, or the
   several relations of level 8 or coarser that lie mostly inside it when together they overlap it
-  better (a NUTS-3 unit is often two or three districts). Whatever of a unit no relation covers keeps
+  better (a NUTS-3 unit is often two or three districts). For a territory whole (Hong Kong, Macau:
+  Natural Earth's 1:10m outline, which misses reclaimed land and islets) a quarter inside is enough
+  (T-1144). Whatever of a unit no relation covers keeps
   the unit's own polygon when that is at least a tenth of it, and the build prints each such unit
   (T-610). Units are clipped to the OSM coastline, holes filled, the outline cut along every
   existing pack, and pieces under 0.05 km2 or with nobody in them (GHSL 100 m) dropped. Units with
@@ -360,8 +363,9 @@ trainworld\pipeline\merge_cells.py wor`, seconds. It keeps the res-9 pack in
 become one cell, in busier parents the sparse children that touch merge among themselves (T-466), and
 a sparse cell left alone joins a touching merged cell of its zone across its parent's edge (T-510).
 Every other step reads and writes the res-9 pack: to rerun one on a merged pack,
-`merge_cells.py wor --undo` first, then the step, then `merge_cells.py wor` again (it refuses a
-merged pack some step has changed since). `merge_cells.py --all` remerges every registered pack.
+`merge_cells.py wor --through "routes {id} --stage walk"` (any module and its arguments; it undoes, runs
+the step, merges again; `--workers N` for many ids). Routes and the enrichments refuse a merged pack,
+and `--undo` refuses one some step has changed since merging (T-1261). `merge_cells.py --all` remerges every registered pack.
 Then `nocar.py wor` (homes without a car, T-511; demand has not read it since T-854, so it may be skipped;
 docs/data-register.md "Car ownership") and
 `everyday_rates.py wor` (the country's everyday rates, T-509; a worldwide median without a survey),

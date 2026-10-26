@@ -57,11 +57,12 @@ export function distFromCentre(lng: number, lat: number, c: [number, number]): n
 
 /** What a tab shows: the stations in the scope, each line with any stop in it, and each station's and
  * line's distance from the centre (a line's is its nearest stop's; null for a line with no stops).
- * A line with no stops, and the selected row, stay listed so nothing just made or opened vanishes. */
-export function scopedLists(stations: readonly StationInput[], lines: readonly LineInput[], keep: (kind: "line" | "station", id: string) => boolean) {
+ * A line with no stops, and the selected row, stay listed so nothing just made or opened vanishes.
+ * Without `near` no distances, and the caller does not re-render as the view moves (T-1207). */
+export function scopedLists(stations: readonly StationInput[], lines: readonly LineInput[], keep: (kind: "line" | "station", id: string) => boolean, near = true) {
   void zonesLoaded.value; // boundaries arriving re-place everything
   const zone = scopeZone();
-  const c = viewCentre.value;
+  const c = near ? viewCentre.value : null;
   const byId = new Map(stations.map((s) => [s.id, s]));
   const dist = new Map<string, number>();
   for (const s of stations) if (c) dist.set(s.id, distFromCentre(s.lng, s.lat, c));

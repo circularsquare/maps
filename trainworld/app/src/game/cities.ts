@@ -225,14 +225,30 @@ let byOutline: ((lon: number, lat: number) => CityId | null) | null = null;
 export const outlinesIn = signal(0);
 export function setOutlineLookup(f: (lon: number, lat: number) => CityId | null) {
   byOutline = f;
+  within.clear();
+  withinSize = 0;
   outlinesIn.value++;
 }
+
+/** cityWithin's answers by lon then lat, so the stations and nodes several modules place on each
+ * state are looked up once (T-1209); dropped when the outlines arrive or it grows past WITHIN_MAX */
+const within = new Map<number, Map<number, CityId | null>>();
+let withinSize = 0;
+const WITHIN_MAX = 50_000;
 
 /** The zone whose coarse outline holds (lon, lat) or is within `ZONE_REACH_M` of it; before the
  * outlines are in, or where none is near, the nearest zone whose centre is within `CENTRE_REACH_M`;
  * else null (dead space). A nearest centre alone named Shenzhen for Yuen Long (T-1265). */
 export function cityWithin(lon: number, lat: number): CityId | null {
-  return byOutline?.(lon, lat) ?? centreWithin(lon, lat);
+  let row = within.get(lon);
+  const got = row?.get(lat);
+  if (got !== undefined) return got;
+  const id = byOutline?.(lon, lat) ?? centreWithin(lon, lat);
+  if (withinSize >= WITHIN_MAX) { within.clear(); withinSize = 0; row = undefined; }
+  if (!row) within.set(lon, (row = new Map()));
+  row.set(lat, id);
+  withinSize++;
+  return id;
 }
 
 /** The nearest zone whose centre is within `CENTRE_REACH_M`, else null: the track model's rule for a
@@ -257,14 +273,41 @@ export function widenBox([w, s, e, n]: readonly number[], marginM: number): [num
   return [w - dx, s - dy, e + dx, n + dy];
 }
 
-/** The zones whose boxes, widened by `marginM` metres, meet the box [w, s, e, n] in degrees. */
+/** Every zone's box widened by one margin, and the grid of those boxes (T-1348: every station of a
+ * load asked with `ZONE_REACH_M`, whose candidates by the unwidened grid were most of a region). */
+interface Widened { box: Float64Array; grid: Grid; always: number[] }
+const widened = new Map<number, Widened>();
+function widenedBy(marginM: number): Widened {
+  let wb = widened.get(marginM);
+  if (wb) return wb;
+  const box = new Float64Array(4 * CITIES.length);
+  CITIES.forEach((c, i) => box.set(widenBox(zoneBox(c), marginM), 4 * i));
+  const always: number[] = [];
+  const grid = makeGrid((i) => { const c = boxCells(box[4 * i], box[4 * i + 1], box[4 * i + 2], box[4 * i + 3]); if (!c) always.push(i); return c ?? []; });
+  widened.set(marginM, (wb = { box, grid, always }));
+  return wb;
+}
+
+/** The zones whose boxes, widened by `marginM` metres, meet the box [w, s, e, n] in degrees, in
+ * registry order. */
 export function zonesTouching(w: number, s: number, e: number, n: number, marginM = 0): City[] {
-  // the candidates by the box widened by the most any zone's margin can be (at 85 degrees)
-  const my = marginM / M_PER_DEG, mx = my / Math.cos(85 * Math.PI / 180);
-  return zonesNearBox(w - mx, s - my, e + mx, n + my).map((i) => CITIES[i]).filter((c) => {
-    const [bw, bs, be, bn] = widenBox(zoneBox(c), marginM);
-    return w <= be && e >= bw && s <= bn && n >= bs;
-  });
+  const { box, grid, always } = widenedBy(marginM);
+  const meets = (i: number) => w <= box[4 * i + 2] && e >= box[4 * i] && s <= box[4 * i + 3] && n >= box[4 * i + 1];
+  const cells = boxCells(w, s, e, n);
+  if (!cells) return CITIES.filter((_, i) => meets(i));
+  let ids: number[];
+  if (cells.length === 1 && !always.length) {
+    const c = cells[0];
+    ids = Array.from(grid.ids.subarray(grid.start[c], grid.start[c + 1]));
+  } else {
+    const set = new Set(always);
+    for (const c of cells) for (let q = grid.start[c]; q < grid.start[c + 1]; q++) set.add(grid.ids[q]);
+    ids = [...set];
+  }
+  ids.sort((a, b) => a - b);
+  const out: City[] = [];
+  for (const i of ids) if (meets(i)) out.push(CITIES[i]);
+  return out;
 }
 
 /** The view in the URL hash (`#zoom/lat/lng`), before MapLibre reads it. */

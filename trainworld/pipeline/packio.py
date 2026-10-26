@@ -32,7 +32,10 @@ def write_header(path, header):
 def replace_cell_arrays(header, buf, replacements, per="cell"):
     """The .bin with the arrays named in `replacements` ({name: per-cell f32 values, or per `per`})
     dropped and written again at its end, every other array's bytes kept exactly; header["arrays"]
-    to match."""
+    to match. Per-cell arrays of a merged pack are refused: the step runs on the res-9 pack (T-1261)."""
+    if per == "cell" and "merged" in header:
+        raise SystemExit(f"{header.get('city')}: merged; this step runs on the res-9 pack: merge_cells.py "
+                         f"<id> --through \"<module> {{id}} <args>\" (T-1261)")
     out, arrays = bytearray(), []
     for a in header["arrays"]:
         if a["name"] in replacements:

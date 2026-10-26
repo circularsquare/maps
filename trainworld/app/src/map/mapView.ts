@@ -6,6 +6,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 // MapLibre 6 looks for its worker beside its own module, which Vite bundles away; hand it the URL.
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { loadBasemap } from "./basemap";
+import { styleUp } from "./styleReady";
 import { cityById, cityWithin, hashView } from "../game/cities";
 import { display } from "../game/ui";
 import { effect } from "@preact/signals";
@@ -57,7 +58,7 @@ export function createMap(container: HTMLElement): maplibregl.Map {
 function followProjection(map: maplibregl.Map) {
   let styled = false;
   const apply = () => {
-    if (!styled) return;
+    if (!styled || !styleUp(map)) return;
     const want = display.peek().projection === "globe" ? "globe" : "mercator";
     if ((map.getProjection()?.type ?? "mercator") !== want) map.setProjection({ type: want });
   };

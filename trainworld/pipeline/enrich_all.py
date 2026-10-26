@@ -4,7 +4,7 @@ and gravity are untouched.
 
     enrich_all.py bos wdc bal      (US and Canadian hand-built packs; tier 0 packs take theirs as they build)
 
-On a merged pack, `merge_cells.py <ids> --undo` first and merge again after.
+A merged pack is refused (packio.replace_cell_arrays): `merge_cells.py <ids> --through "enrich_all {id}"`.
 """
 import sys
 import time

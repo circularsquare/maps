@@ -7,10 +7,10 @@
 // answer falls back to the nearest centre, so it never flips as boundaries arrive one by one.
 
 import { signal } from "@preact/signals";
-import { CITIES, cityNear, cityWithin, hashView, widenBox, zoneBox, zonesTouching, ZONE_REACH_M, type CityId } from "./cities";
+import { cityNear, cityWithin, hashView, zonesTouching, ZONE_REACH_M, type CityId } from "./cities";
 import { perfOff } from "../perfFlags";
 import { M_PER_DEG } from "./frame";
-import { distanceTo, footprintOf, loadFootprints, touchesBox, type Footprint } from "../workers/cityReach";
+import { atZero, distanceTo, footprintOf, loadFootprints, touchesBox, type Footprint } from "../workers/cityReach";
 
 /** Zones beside the focused one that show their bubbles, at most this many. */
 export const NEARBY = 3;
@@ -51,20 +51,7 @@ function footprintsOf(ids: CityId[]): Footprint[] | null {
 
 /** The zones whose boundary (lon, lat) can be within `ZONE_REACH_M` of: their boxes say. */
 function around(lon: number, lat: number): CityId[] {
-  const b = (reachBoxes ??= reachBoxesOf());
-  const out: CityId[] = [];
-  for (let i = 0; i < CITIES.length; i++) if (lon <= b[4 * i + 2] && lon >= b[4 * i] && lat <= b[4 * i + 3] && lat >= b[4 * i + 1]) out.push(CITIES[i].id);
-  return out;
-}
-/** T-889: each zone's box widened by `ZONE_REACH_M` as `zonesTouching` widens it (west, south, east,
- * north), worked out once: `around` runs for every station and track edge a game places. */
-let reachBoxes: Float64Array | null = null;
-function reachBoxesOf(): Float64Array {
-  const b = new Float64Array(4 * CITIES.length);
-  CITIES.forEach((c, i) => {
-    b.set(widenBox(zoneBox(c), ZONE_REACH_M), 4 * i);
-  });
-  return b;
+  return zonesTouching(lon, lat, lon, lat, ZONE_REACH_M).map((c) => c.id);
 }
 
 /** The zone whose boundary holds (lon, lat); else the nearest boundary within reach; else the
@@ -76,6 +63,9 @@ export function zoneAt(lon: number, lat: number): CityId {
 }
 
 function nearestZone(fs: Footprint[], lon: number, lat: number): { id: CityId; d: number } | null {
+  // T-1348: the first zone at distance 0 wins (none before it can, and the walk below stops there),
+  // so look for it before measuring any distance
+  for (const f of fs) if (atZero(f, lon, lat)) return { id: f.id, d: 0 };
   let best: CityId | null = null, bestD = Infinity;
   // T-348: a zone whose bounding box is no nearer than the best so far cannot win, so its outline
   // is not walked (with a millimetre to spare for rounding, so the answer is exactly the full walk's)

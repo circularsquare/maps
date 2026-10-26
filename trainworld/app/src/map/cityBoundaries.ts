@@ -16,6 +16,7 @@ import { shade } from "../game/ui";
 import { cityGeometry, footprintRings, OutlineEdges, outsideCity, outsideOutline, unionOutline } from "./boundaryGeometry";
 import { coarseOutlines, coarseWater } from "./coarseOutlines";
 import { firstSymbolId } from "./basemap";
+import { styleUp } from "./styleReady";
 import { shownRealms, zoneShown } from "../game/realms";
 import type { FocusShadeIn, FocusShadeOut } from "../workers/focusShade.worker";
 
@@ -38,12 +39,15 @@ const everywhere = outsideCity({ type: "MultiPolygon", coordinates: [] });
 export const shadePaint = () => ({ ...outsidePaint(shadeColours()) });
 /** Keeps layer `id`'s fill in the current theme's shade, from now on. */
 export function followShade(map: MlMap, id: string): () => void {
-  return effect(() => {
-    const paint = outsidePaint(SHADES[shade.value]);
-    if (!map.getLayer(id)) return;
+  const apply = () => {
+    const paint = outsidePaint(SHADES[shade.peek()]);
+    if (!styleUp(map) || !map.getLayer(id)) return;
     map.setPaintProperty(id, "fill-color", paint["fill-color"]);
     map.setPaintProperty(id, "fill-opacity", paint["fill-opacity"]);
-  });
+  };
+  const stop = effect(() => { void shade.value; apply(); });
+  map.on("style.load", apply);
+  return () => (stop(), void map.off("style.load", apply));
 }
 
 export function startCityBoundaries(map: MlMap): () => void {
@@ -254,6 +258,7 @@ export function startCityBoundaries(map: MlMap): () => void {
   // T-927, T-1051: a clean world map behind the start menu and while a game loads
   const showUnlessBlank = () => {
     const visibility = mapBlank.peek() ? "none" : "visible";
+    if (!styleUp(map)) return;
     for (const id of [SHADE, OUTLINES, INNER, OUTER]) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", visibility);
   };
   const disposeBlank = effect(() => { void mapBlank.value; showUnlessBlank(); });

@@ -34,6 +34,8 @@ pub struct Run {
     pub ends: Vec<(u32, f64, f64)>,
     /// Speed-limit breakpoints `[s, v]`, widened by half the train length.
     pub limits: Vec<[f64; 2]>,
+    /// The hops between stops and ends with no holds (`run_profile`).
+    pub hops: profile::Hops,
     /// No capacity delay.
     pub free: Profile,
     /// Per demand level: track holds and extra dwell per stop from the capacity pass.
@@ -432,6 +434,10 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
     run.limits = profile::widen(&raw, run.len, train_len / 2.0);
     let turn = net.line_turn[l as usize] as f64;
     let dw = stand_times(&run, dwell, turn);
+    run.hops = match with_ends(&run, &dw, turn) {
+        None => profile::hops(&run.limits, &run.stop_s, &run.jump),
+        Some((s, jump, ..)) => profile::hops(&run.limits, &s, &jump),
+    };
     run.free = run_profile(&run, &dw, turn, &[]);
     Some(run)
 }
@@ -439,8 +445,21 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
 /// `profile::run` over a run's stops and the bare track ends it reverses at, standing `turn` at
 /// each end; `arr`/`dep` keep the stops only.
 fn run_profile(run: &Run, dw: &[f64], turn: f64, holds: &[Hold]) -> Profile {
+    let Some((s, jump, stand, keep)) = with_ends(run, dw, turn) else {
+        return profile::run_with(&run.limits, &run.stop_s, &run.jump, dw, holds, &run.hops);
+    };
+    let mut p = profile::run_with(&run.limits, &s, &jump, &stand, holds, &run.hops);
+    let pick = |v: &[f64]| v.iter().zip(&keep).filter(|x| *x.1).map(|x| *x.0).collect::<Vec<f64>>();
+    (p.arr, p.dep) = (pick(&p.arr), pick(&p.dep));
+    p
+}
+
+/// A run's stops with the bare track ends it reverses at put in: offsets, jumps, standing times
+/// and whether each is a stop. None for a run with no such ends.
+#[allow(clippy::type_complexity)]
+fn with_ends(run: &Run, dw: &[f64], turn: f64) -> Option<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<bool>)> {
     if run.ends.is_empty() {
-        return profile::run(&run.limits, &run.stop_s, &run.jump, dw, holds);
+        return None;
     }
     let n = run.stop_s.len() + run.ends.len();
     let (mut s, mut jump, mut stand, mut keep) = (Vec::with_capacity(n), Vec::with_capacity(n), Vec::with_capacity(n), Vec::with_capacity(n));
@@ -458,10 +477,7 @@ fn run_profile(run: &Run, dw: &[f64], turn: f64, holds: &[Hold]) -> Profile {
         stand.push(dw.get(j).copied().unwrap_or(0.0));
         keep.push(true);
     }
-    let mut p = profile::run(&run.limits, &s, &jump, &stand, holds);
-    let pick = |v: &[f64]| v.iter().zip(&keep).filter(|x| *x.1).map(|x| *x.0).collect::<Vec<f64>>();
-    (p.arr, p.dep) = (pick(&p.arr), pick(&p.dep));
-    p
+    Some((s, jump, stand, keep))
 }
 
 /// Scheduled standing time per stop: the dwell, or the turnaround where trains reverse (T-797);

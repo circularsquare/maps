@@ -182,10 +182,32 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   its riders over the day shown (both directions, the map's purpose filter, `dailyRiders`), from 2 px
   for none to 14 px for the line's own busiest stretch (`STRETCH_MIN_PX`, `STRETCH_MAX_PX`), so a quiet
   line varies as much as a busy one; a stretch the map marks as crowded (`Renderer.fullStretch`,
-  read every half second) has its darkening and red edges 2 px each side, the edges from half
+  read every half second) has its darkening and red edges 2 px each side, 1 px of the panel's colour
+  between them and the stretch (T-1284), the edges from half
   strength at the map's faintest to full (`PANEL_MARK_FLOOR`; on the panel's background the map's
   15% cannot be seen); each stretch's hover: "3 Av to 14 St-Union Sq", "334,700 riders per day", and
-  "Average 1.1 minute wait for a train with room" where marked; the round trip split into running, dwell, turning and waiting,
+  "Average 1.1 minute wait for a train with room" where marked; **related lines** [T-1168,
+  notes/T-1168.md]: an icon after "Stops" (hover "Show related lines" / "Hide related lines", one
+  setting for every line, off at first and kept while the page is open, hidden while stops are
+  edited) draws the stops with the lines related to the line (`TrackApi.line_related`,
+  `game/relatedLayout.ts`, `RelatedStops.tsx`): the line straight down the middle of the drawing; each
+  line running beside it (shared track, or its track within 100 m + 3.5% of the first 5 km of its own
+  run + 2% of the rest of the line's between stations both reach; a line meeting only twice gets 2%
+  throughout; a line whose stops are all on the line's route always) in a column 8 px out a step,
+  3 px further for one on its own track, right for one stopping more often over the span and left
+  otherwise, at most 3 a side and only as many as fit in 40% of the panel; a column turns out to
+  its gutter half a row past where the line leaves, ending in its bullet, bullets stacked 17 px
+  apart; a span under three rows, or a line with no column left, is drawn as crossings; rows are
+  the line's stops (as in the plain list, bullets leaving out the lines drawn there) and the side
+  lines' own stops at the nearest point of the line, names muted and nothing else; a white pill
+  with the dark rim over each run of neighbouring columns stopping at a row (10 px at a row with
+  crossings, else 8); the first two crossing lines as 3 px bars across the drawing. Hovers: a
+  column ("1 runs beside 2 from Chambers St to 96 St", stops in common, stops of its own, "On the
+  same track", its own-track km beside the line's and how far it strays at most), a pill ("6, 6 and
+  6X stop at 23 St", "4 and 5 pass"), a turn's bullet ("4 goes on to Woodlawn", "14 more stops", or
+  "5 leaves here", "Back beside 2 at 149 St after 10 stops of its own"), a bar ("4 crosses at 149
+  St", and for a line met before with too wide a gap, where it left and how far its track strays).
+  A click on a column, bullet or bar selects that line; the round trip split into running, dwell, turning and waiting,
   naming where it waits most [T-031]. A **loop** [T-798] shows its lap (one way round, the longer way's)
   in place of the round trip, split the same way, with no turning row for a circle and "Turning at
   the end" for a balloon; its average speed is once round over the lap (a balloon's less its

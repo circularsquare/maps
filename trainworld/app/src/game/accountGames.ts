@@ -1,12 +1,13 @@
 // T-988: the account's games on the main thread (notes/T-988.md): the list the start menu and the
 // saves panel draw the account's other games from, their pictures, the start menu's settling before
-// the clock worker starts, downloading and deleting an account game, and the sign-in question.
+// the clock worker starts, downloading and deleting an account game, the sign-in question, adding a
+// game kept here only, the account's backups, and removing the account's games here at sign-out.
 
 import { effect, signal } from "@preact/signals";
-import { accountOpen, accountState, cloudContext, deviceId, session } from "./account";
-import { answerMerge, deleteGame, downloadGame, ELSEWHERE_MS, gamePicture, listGames, settle, tiedTo, untied, type AccountGame, type AccountList } from "../workers/cloud";
-import { listSlots, type SaveSlot } from "../workers/saveFile";
-import { clockRunning, postAccount, saveSlotsState } from "../workers/clockClient";
+import { accountOpen, accountState, cloudContext, deviceId, forgetScoreSlots, session, signOut } from "./account";
+import { answerMerge, changedHere, deleteGame, downloadGame, ELSEWHERE_MS, fetchBackup, forkName, gamePicture, listGames, settle, tiedTo, untied, type AccountBackup, type AccountGame, type AccountList } from "../workers/cloud";
+import { deleteSlot, leaseSlot, listSlots, readStored, readSync, type SaveSlot } from "../workers/saveFile";
+import { clockRunning, importGame, leaveToMenu, postAccount, saveSlotsState } from "../workers/clockClient";
 
 /** The account's games and tombstones, as last listed; null signed out or unreachable. */
 export const accountList = signal<AccountList | null>(null);
@@ -95,6 +96,7 @@ export function settleOnStart(again = false): Promise<void> {
 let settling: Promise<void> | null = null, settlingFor = "";
 async function settleNow(): Promise<void> {
   await accountKnown();
+  if (removing()) return removeOnStart();
   const ctx = cloudContext();
   if (!ctx?.on || picked) return;
   // once a game is picked no other slot is locked here, so the clock worker can take the picked one
@@ -135,10 +137,93 @@ export async function answerMergeAsk(add: boolean) {
   const ctx = cloudContext(), slots = mergeAsk.peek();
   mergeAsk.value = null;
   if (!ctx || !slots) return;
-  await answerMerge(ctx, slots, add);
-  if (!add) { slotsChanged.value++; return; }
+  if (add) return addToAccount(slots);
+  await answerMerge(ctx, slots, false);
+  slotsChanged.value++;
+}
+
+/** Games kept only in this browser (or never asked about) added to the account; they go up now. */
+export async function addToAccount(slots: SaveSlot[]) {
+  const ctx = cloudContext();
+  if (!ctx?.on) return;
+  const keys = new Set(slots.map((s) => s.key)), ask = mergeAsk.peek()?.filter((s) => !keys.has(s.key));
+  if (ask) mergeAsk.value = ask.length ? ask : null;
+  await answerMerge(ctx, slots, true);
   if (clockRunning()) postAccount(ctx, true);
   else await settleOnStart(true);
+}
+
+// ---------------------------------------------------------------- account backups
+
+/** The account's backups of slot's game, newest first; none when it is not on this account. */
+export function accountBackups(slot: SaveSlot | undefined): AccountBackup[] {
+  const ctx = cloudContext();
+  if (!slot || !ctx?.on || !tiedTo(slot.cloud, ctx)) return [];
+  return accountList.value?.games.find((g) => g.id === slot.cloud!.id)?.backups ?? [];
+}
+
+/** An account backup opened as a new saved game, named as a restored backup is ("Tokyo at 9:41 AM"),
+ * the game in hand saved first; the copy goes on the account as a game of its own. False if the backup
+ * could not be downloaded. */
+export async function restoreAccountBackup(slot: SaveSlot, b: AccountBackup): Promise<boolean> {
+  const ctx = cloudContext();
+  if (!ctx?.on || !slot.cloud) return false;
+  const bytes = await fetchBackup(ctx, slot.cloud.id, b.rev);
+  if (!bytes) return false;
+  await importGame(new File([bytes as BlobPart], `${forkName(slot.name, b.savedAt * 1000)}.save`));
+  return true;
+}
+
+// ---------------------------------------------------------------- signing out
+
+/** sessionStorage: the account whose games leave this browser at the start menu, then signs out */
+const REMOVE_KEY = "trainworld.signout-remove";
+const removing = (): string => { try { return sessionStorage.getItem(REMOVE_KEY) ?? ""; } catch { return ""; } };
+
+/** How many slots in this browser are tied to the account signed in (the sign-out question's). */
+export async function tiedHere(): Promise<number> {
+  const acct = session.peek()?.account.id;
+  if (!acct) return 0;
+  return (await listSlots().catch(() => [] as SaveSlot[])).filter((s) => s.cloud?.acct === acct && !s.cloud.local).length;
+}
+
+/** Sign out, removing this account's games from this browser: from a game the page goes to the start
+ * menu first (the game saved), where `removeOnStart` finishes. */
+export function signOutRemoving() {
+  const acct = session.peek()?.account.id;
+  if (!acct) return;
+  const mark = () => { try { sessionStorage.setItem(REMOVE_KEY, acct); } catch { /* removed here, now */ } };
+  if (clockRunning()) { leaveToMenu(mark); return; }
+  mark();
+  void settleOnStart(true);
+}
+
+/** The removal at sign-out: unsent changes go up first, then every slot of the account whose latest
+ * version is on it leaves this browser (one with changes the server could not take stays, tied, for the
+ * next sign-in), its figures kept on the account; then the page signs out. */
+async function removeOnStart() {
+  const acct = removing(), ctx = cloudContext();
+  if (ctx?.acct === acct) {
+    if (ctx.on) await settle(ctx).catch(() => null);
+    const gone: string[] = [];
+    for (const s of await listSlots().catch(() => [] as SaveSlot[])) {
+      if (s.cloud?.acct !== acct || s.cloud.local) continue;
+      const lease = await leaseSlot(s.key);
+      if (!lease) continue; // open in another tab
+      try {
+        const [stored, rec] = await Promise.all([readStored(s.key), readSync(s.key)]);
+        if (!stored || !rec || rec.acct !== acct || (changedHere(stored, rec) && !rec.gaveWay)) continue;
+        await deleteSlot(s.key);
+        gone.push(s.key);
+      } catch { /* stays */ } finally { lease.release(); }
+    }
+    forgetScoreSlots(gone);
+    mergeAsk.value = null;
+    signOut();
+  }
+  try { sessionStorage.removeItem(REMOVE_KEY); } catch { /* blocked */ }
+  accountList.value = null;
+  slotsChanged.value++;
 }
 
 let watching = false;
@@ -150,7 +235,7 @@ export function watchMerge() {
   effect(() => {
     const acct = session.value?.account.id ?? "", on = accountState.value === "on";
     if (!acct) asked = "";
-    if (!acct || !on || acct === asked) return;
+    if (!acct || !on || acct === asked || removing()) return;
     asked = acct;
     void checkMerge();
     // signed in on the start menu: the account's games come in now

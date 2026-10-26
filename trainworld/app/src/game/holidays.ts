@@ -48,7 +48,7 @@ const regionNames = typeof Intl !== "undefined" && "DisplayNames" in Intl ? new 
 export const countryName = (cc: string): string => regionNames?.of(cc) ?? cc;
 
 /** per station node: its zone's country and local time, kept while the node stays put */
-const placeOf = new Map<number, { key: string; country: string | null; shift: number }>();
+const placeOf = new Map<number, { lng: number; lat: number; outlines: number; country: string | null; shift: number }>();
 
 /** The countries the player has built track or stations in (blueprint left out, T-1098), each with
  * the local times (seconds ahead of the game clock) its built nodes keep: "country shift" keys. */
@@ -59,11 +59,10 @@ export const railCountries = computed<string[]>(() => {
   const outlines = outlinesIn.value;
   for (const n of w.nodes.values()) {
     if (n.builtPorts <= 0) continue;
-    const key = `${n.lng} ${n.lat} ${outlines}`;
     let p = placeOf.get(n.id);
-    if (!p || p.key !== key) {
+    if (!p || p.lng !== n.lng || p.lat !== n.lat || p.outlines !== outlines) {
       const z = cityWithin(n.lng, n.lat);
-      p = { key, country: z ? cityById(z).country ?? null : null, shift: shiftAt(n.lng, n.lat) };
+      p = { lng: n.lng, lat: n.lat, outlines, country: z ? cityById(z).country ?? null : null, shift: shiftAt(n.lng, n.lat) };
       placeOf.set(n.id, p);
     }
     if (p.country) out.add(`${p.country} ${p.shift}`);

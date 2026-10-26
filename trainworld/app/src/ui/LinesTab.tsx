@@ -79,7 +79,7 @@ export function LinesTab() {
   const trains = (id: string) => (w.lineStats[id]?.status === "running" ? w.lineStats[id].trainsNeeded[levOf(id)] : 0);
   const { key, dir } = lineSort.value;
   // T-332: only the viewed place unless the world is chosen
-  const sc = scopedLists(w.save.stations, w.save.lines, (k, id) => (k === "line" && (sel?.kind === "line" || sel?.kind === "train") && sel.line === id));
+  const sc = scopedLists(w.save.stations, w.save.lines, (k, id) => (k === "line" && (sel?.kind === "line" || sel?.kind === "train") && sel.line === id), key === "near");
   // T-670: on the whole world, a city column once lines start in two or more cities (a line's city is where its first stop is)
   const cityOf = new Map<string, string>();
   if (sc.zone === null) {

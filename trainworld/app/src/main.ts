@@ -28,6 +28,7 @@ import { incomeByDay, lastSaved, moneyState } from "./game/money";
 import { live } from "./map/live";
 import { setBasemapLabels, setBasemapShade, setHillshade } from "./map/basemap";
 import { createMap } from "./map/mapView";
+import { startLite } from "./map/lite";
 import { startRealNetwork } from "./map/realNetwork";
 import { startCityBoundaries } from "./map/cityBoundaries";
 import { startZoneLoading } from "./map/zoneLoading";
@@ -54,6 +55,7 @@ import { hoverAbove } from "./map/demandHover";
 import { CapacityMarkers } from "./map/capacityMarkers";
 import { ReversalMarks } from "./map/reversalMarks";
 import { startTrackHover } from "./map/trackHover";
+import { startTerrainTint } from "./map/terrainTint";
 import { startRestList } from "./map/hoverRest";
 import { startStationLife } from "./map/stationLife";
 import { startBuildSounds } from "./map/buildSound";
@@ -317,6 +319,8 @@ map.on("load", () => {
   const contrast = computed(() => display.value.basemapContrast);
   effect(() => setBasemapShade(map, shade.value, contrast.value));
   effect(() => setHillshade(map, display.value.hillshade)); // T-1270
+  startTerrainTint(map); // T-1270 stage 3
+  startLite(map, overlay); // T-1207
   startRealNetwork(map); // T-682
 });
 effect(() => client.setShade(shade.value)); // save thumbnails are drawn in it (T-543)

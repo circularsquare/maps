@@ -30,6 +30,11 @@ required-features = ["demand"]
 name = "track_bench"
 path = "src/bin/track_bench.rs"
 
+# T-1283: service edits timed on a real save.
+[[bin]]
+name = "edit_bench"
+path = "src/bin/edit_bench.rs"
+
 # T-019: the pipeline's gravity step (pipeline/build_city.py runs it).
 [[bin]]
 name = "pack_gravity"

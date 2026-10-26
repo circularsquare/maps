@@ -1,7 +1,9 @@
 // T-909: a selection's far end grouped for the display, so no far bubble stands for a speck of a
 // trip (notes/T-909.md). Display only: demand and every figure outside the far end are untouched.
+// T-1210: the demand sums worker deals a selection's far ends as it answers (`dealtCells`), and
+// `primeDealt` keeps them here, so `dealFlows` on the main thread only looks them up.
 import type { FarEnd, Flows } from "./demand";
-import type { PurposeFilter } from "./purposes";
+import type { PurposeFilter, PurposeKey } from "./purposes";
 
 /** Trips a day (as a far bubble's hover counts them) that a far cell under it is grouped into. */
 export const FAR_CHUNK = 10;
@@ -10,7 +12,7 @@ const ranks = new WeakMap<Float32Array, Uint32Array>();
 
 /** Each cell's place along a Hilbert curve over the city's cells (`xy` pairs), so cells near on
  * the curve are near on the map. */
-function curveRank(xy: Float32Array): Uint32Array {
+export function curveRank(xy: Float32Array): Uint32Array {
   const had = ranks.get(xy);
   if (had) return had;
   const n = xy.length / 2;
@@ -92,7 +94,10 @@ function plan(fe: FarEnd, rank: Uint32Array): Plan | null {
   return { keep, to };
 }
 
-function apply(fe: FarEnd, p: Plan): FarEnd {
+/** A far end's cells and their trips by mode. */
+export type FarCells = Pick<FarEnd, "cells" | "farRail" | "farWalk" | "farDrive">;
+
+function apply(fe: FarEnd, p: Plan): FarCells {
   const sum = new Map<number, [number, number, number]>();
   const add = (c: number, f: number, k: number) => {
     if (f <= 0) return;
@@ -107,7 +112,6 @@ function apply(fe: FarEnd, p: Plan): FarEnd {
   }
   const cells = [...sum.keys()].filter((c) => { const s = sum.get(c)!; return s[0] + s[1] + s[2] > 0; });
   return {
-    ...fe,
     cells: Uint32Array.from(cells),
     farRail: Float32Array.from(cells, (c) => sum.get(c)![0]),
     farWalk: Float32Array.from(cells, (c) => sum.get(c)![1]),
@@ -115,7 +119,36 @@ function apply(fe: FarEnd, p: Plan): FarEnd {
   };
 }
 
+/** `dealFlows`' new far ends for `filter`: the whole far end's, then each purpose's in
+ * `f.byPurpose` order; null when nothing is grouped (the far end is shown as it is). */
+export interface DealtCells { all: FarCells; byPurpose: FarCells[] | null }
+export function dealtCells(f: FarEnd & { byPurpose?: Map<PurposeKey, FarEnd> }, filter: PurposeFilter, rank: Uint32Array): DealtCells | null {
+  const shown = filter === "all" ? f : f.byPurpose?.get(filter);
+  const p = shown ? plan(shown, rank) : null;
+  if (!p) return null;
+  return { all: apply(f, p), byPurpose: f.byPurpose ? [...f.byPurpose.values()].map((fe) => apply(fe, p)) : null };
+}
+
 const dealt = new WeakMap<Flows, Map<PurposeFilter, Flows>>();
+
+function remember(f: Flows, filter: PurposeFilter, d: DealtCells | null): Flows {
+  let out = f;
+  if (d) {
+    out = { ...f, ...d.all };
+    if (f.byPurpose) {
+      const parts = d.byPurpose!;
+      out.byPurpose = new Map([...f.byPurpose].map(([k, fe], i) => [k, { ...fe, ...parts[i] }]));
+    }
+  }
+  if (!dealt.has(f)) dealt.set(f, new Map());
+  dealt.get(f)!.set(filter, out);
+  return out;
+}
+
+/** T-1210: `f` dealt for `filter` elsewhere (`dealtCells`, in the sums worker), kept for `dealFlows`. */
+export function primeDealt(f: Flows, filter: PurposeFilter, d: DealtCells | null) {
+  remember(f, filter, d);
+}
 
 /**
  * `f` with its far end grouped (`plan`) as shown under the purpose filter: the cells are drawn
@@ -128,13 +161,5 @@ export function dealFlows(f: Flows, filter: PurposeFilter, xy: Float32Array): Fl
   const memo = dealt.get(f)?.get(filter);
   if (memo) return memo;
   const shown = filter === "all" ? f : f.byPurpose?.get(filter);
-  const p = shown ? plan(shown, curveRank(xy)) : null;
-  let out = f;
-  if (p) {
-    out = { ...f, ...apply(f, p) };
-    if (f.byPurpose) out.byPurpose = new Map([...f.byPurpose].map(([k, fe]) => [k, apply(fe, p)]));
-  }
-  if (!dealt.has(f)) dealt.set(f, new Map());
-  dealt.get(f)!.set(filter, out);
-  return out;
+  return remember(f, filter, shown ? dealtCells(f, filter, curveRank(xy)) : null);
 }

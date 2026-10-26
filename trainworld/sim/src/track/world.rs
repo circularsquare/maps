@@ -32,6 +32,11 @@ pub enum Op {
     Batch(Vec<Op>),
 }
 
+/// Within this many trains of its fleet, a line whose shortfall keeps turning is settled (T-1283).
+const SWING_NEAR: f64 = 0.05;
+/// Turns that do not shrink the shortfall by half before it counts as circling (T-1283).
+const SWING_TURNS: u8 = 3;
+
 /// Most rounds of "count from round trip, settle" a headway line's counts get per edit (T-625).
 const AUTO_ROUNDS: usize = 5;
 
@@ -94,6 +99,9 @@ pub struct TrackWorld {
     redo: Vec<Op>,
     /// T-752: a line switching between counts and headways, whose counts this edit's settle keeps
     switching: Option<u32>,
+    /// T-1283: the lines and levels the last settle left circling, with the rate and round trip
+    /// (bits) they were left at; one found just so again stays settled, so the level keeps its bits
+    kept: Vec<(u32, usize, u32, u64)>,
 }
 
 /// Why an edit that changes what is constructed was refused.
@@ -106,7 +114,7 @@ pub enum ChargeError {
 
 impl TrackWorld {
     pub fn new(net: Network) -> TrackWorld {
-        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], switching: None };
+        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], switching: None, kept: vec![] };
         w.reload();
         w
     }
@@ -224,10 +232,16 @@ impl TrackWorld {
         }
         let before = self.net.line_tph.clone();
         let mut affected = vec![];
+        // T-1283: per line and level, the sign its shortfall last had, how often it has turned
+        // without shrinking by half, and its size at the last turn
+        let mut swings: Vec<[(i8, u8, f64); LEVELS]> = vec![[(0, 0, 0.0); LEVELS]; ids.len()];
+        let mut kept_now = vec![[false; LEVELS]; ids.len()];
         for _ in 0..80 {
             let trips: Vec<[f64; 3]> = ids.iter().map(|&id| self.svc.lines[id as usize].round_trip).collect();
             let rates: Vec<[f32; 3]> = ids.iter().map(|&id| self.net.line_tph[id as usize]).collect();
             let mut active = [false; LEVELS];
+            let keep = &mut kept_now;
+            keep.iter_mut().for_each(|k| *k = [false; LEVELS]);
             let worst = self.svc.cap.bottlenecks(self.net.line_count());
             for (j, &id) in ids.iter().enumerate() {
                 let counts = self.net.line_trains[id as usize].unwrap();
@@ -235,7 +249,22 @@ impl TrackWorld {
                     let short = counts[lev] as f64 - rates[j][lev] as f64 * trips[j][lev] / 3600.0;
                     // T-517: a line short of its fleet's rate is settled when a track it uses is full
                     let held = short > 0.0 && worst[id as usize][lev].0 >= FULL_RHO;
-                    if short.abs() >= 0.0001 && !held { active[lev] = true; }
+                    // T-1283: a round trip that jumps as the rate passes a threshold (a hold coming
+                    // and going) has no rate that fits the fleet exactly, and the steps below circle
+                    // it to the cap, each a pass over every line. Near the fit, a shortfall that
+                    // keeps turning without shrinking is settled on its side with trains to spare.
+                    let sign = if short >= 0.0001 { 1 } else if short <= -0.0001 { -1 } else { 0 };
+                    let sw = &mut swings[j][lev];
+                    if short.abs() >= SWING_NEAR {
+                        *sw = (0, 0, 0.0);
+                    } else if sign != 0 && sw.0 != 0 && sign != sw.0 {
+                        if short.abs() >= 0.5 * sw.2 { sw.1 = sw.1.saturating_add(1); }
+                        sw.2 = short.abs();
+                    }
+                    if sign != 0 { sw.0 = sign; }
+                    let left = (id, lev, rates[j][lev].to_bits(), trips[j][lev].to_bits());
+                    keep[j][lev] = (sw.1 >= SWING_TURNS && short > 0.0) || self.kept.contains(&left);
+                    if sign != 0 && !held && !keep[j][lev] { active[lev] = true; }
                 }
             }
             if !active.contains(&true) { break; }            // A common 1% upward probe measures the sum of positive congestion derivatives.
@@ -249,6 +278,10 @@ impl TrackWorld {
                 let i = id as usize;
                 let counts = self.net.line_trains[i].unwrap();
                 for lev in (0..LEVELS).filter(|&lev| active[lev]) {
+                    if keep[j][lev] {
+                        self.net.line_tph[i][lev] = rates[j][lev];
+                        continue;
+                    }
                     let trip = trips[j][lev];
                     let rise = ((self.svc.lines[i].round_trip[lev] - trip) / 0.01).max(0.0);
                     let old = rates[j][lev] as f64;
@@ -273,6 +306,12 @@ impl TrackWorld {
             if still { break; }
         }
         for &id in &ids { self.svc.lines[id as usize].trains = self.net.line_trains[id as usize].unwrap(); }
+        self.kept.clear();
+        for (j, &id) in ids.iter().enumerate() {
+            for lev in (0..LEVELS).filter(|&lev| kept_now[j][lev]) {
+                self.kept.push((id, lev, self.net.line_tph[id as usize][lev].to_bits(), self.svc.lines[id as usize].round_trip[lev].to_bits()));
+            }
+        }
         affected.extend(ids.into_iter().filter(|&id| before[id as usize] != self.net.line_tph[id as usize]));
         affected.sort_unstable(); affected.dedup(); affected
     }

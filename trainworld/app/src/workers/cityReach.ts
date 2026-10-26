@@ -221,6 +221,145 @@ function gridDistance(f: Footprint, g: EdgeGrid, lon: number, lat: number): numb
   return best === Infinity ? Infinity : Math.hypot(bx0, by0);
 }
 
+/** T-1348: a footprint's bbox in cells, each either crossed by an edge (its box, padded by `PAD`
+ * degrees, meets the cell) or wholly in or out; a row's in and out are worked out when a place in it
+ * is first asked about, by the crossings along the row's middle. */
+interface ZeroGrid { nx: number; ny: number; cw: number; ch: number; status: Uint8Array; rowStart: Uint32Array; rowSeg: Uint32Array }
+const OUT = 0, IN = 1, EDGE = 2, UNKNOWN = 3;
+/** far more than the rounding of any test here, far less than any outline's detail */
+const PAD = 1e-9;
+const zeroGrids = new WeakMap<Footprint, ZeroGrid | null>();
+
+function zeroGrid(f: Footprint): ZeroGrid | null {
+  let z = zeroGrids.get(f);
+  if (z !== undefined) return z;
+  const [w, s, e, n] = f.bbox;
+  let edges = 0;
+  for (const r of f.rings) edges += r.length / 2;
+  if (!(e > w) || !(n > s) || !edges) { zeroGrids.set(f, null); return null; }
+  const side = Math.max(16, Math.min(512, Math.round(2 * Math.sqrt(edges))));
+  const nx = side, ny = side, cw = (e - w) / nx, ch = (n - s) / ny;
+  const col = (x: number) => Math.min(nx - 1, Math.max(0, Math.floor((x - w) / cw)));
+  const row = (y: number) => Math.min(ny - 1, Math.max(0, Math.floor((y - s) / ch)));
+  const status = new Uint8Array(nx * ny).fill(UNKNOWN);
+  const rowCount = new Uint32Array(ny + 1);
+  const each = (fn: (y0: number, y1: number, ri: number, k: number) => void) => {
+    f.rings.forEach((ring, ri) => {
+      for (let k = 0, m = ring.length / 2; k < m; k++) {
+        const j = (k + 1) % m;
+        const x0 = col(Math.min(ring[2 * k], ring[2 * j]) - PAD), x1 = col(Math.max(ring[2 * k], ring[2 * j]) + PAD);
+        const y0 = row(Math.min(ring[2 * k + 1], ring[2 * j + 1]) - PAD), y1 = row(Math.max(ring[2 * k + 1], ring[2 * j + 1]) + PAD);
+        for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) status[y * nx + x] = EDGE;
+        fn(y0, y1, ri, k);
+      }
+    });
+  };
+  each((y0, y1) => { for (let y = y0; y <= y1; y++) rowCount[y + 1]++; });
+  for (let y = 0; y < ny; y++) rowCount[y + 1] += rowCount[y];
+  const fill = rowCount.slice(0, ny), rowSeg = new Uint32Array(2 * rowCount[ny]);
+  // (the second pass marks the same cells again)
+  each((y0, y1, ri, k) => { for (let y = y0; y <= y1; y++) { const at = fill[y]++; rowSeg[2 * at] = ri; rowSeg[2 * at + 1] = k; } });
+  zeroGrids.set(f, (z = { nx, ny, cw, ch, status, rowStart: rowCount, rowSeg }));
+  return z;
+}
+
+/** Settle row `y`'s cells no edge meets: in or out by how many edges cross the row's middle line to
+ * the right of the cell's middle. Every edge crossing that line has its box in the row. */
+function fillRow(f: Footprint, z: ZeroGrid, y: number) {
+  const [w, s] = f.bbox;
+  const ym = s + (y + 0.5) * z.ch, xs: number[] = [];
+  for (let q = z.rowStart[y]; q < z.rowStart[y + 1]; q++) {
+    const ring = f.rings[z.rowSeg[2 * q]], k = z.rowSeg[2 * q + 1], m = ring.length / 2, j = (k + 1) % m;
+    const xi = ring[2 * k], yi = ring[2 * k + 1], xj = ring[2 * j], yj = ring[2 * j + 1];
+    if ((yi > ym) !== (yj > ym)) xs.push(xi + ((ym - yi) * (xj - xi)) / (yj - yi));
+  }
+  xs.sort((a, b) => a - b);
+  let p = 0;
+  for (let x = 0, c = y * z.nx; x < z.nx; x++, c++) {
+    const xm = w + (x + 0.5) * z.cw;
+    while (p < xs.length && xs[p] <= xm) p++;
+    if (z.status[c] === UNKNOWN) z.status[c] = (xs.length - p) % 2 ? IN : OUT;
+  }
+}
+
+/** Whether `distanceTo(f, lon, lat)` is 0 (inside, or exactly on an edge). A place in a cell no edge
+ * meets is more than `PAD` from every edge, so its cell's in or out is its answer (T-1348). */
+export function atZero(f: Footprint, lon: number, lat: number): boolean {
+  const [w, s, e, n] = f.bbox;
+  if (!(lon >= w && lon <= e && lat >= s && lat <= n)) return false;
+  return cellSays(f, lon, lat) ?? atZeroExact(f, lon, lat);
+}
+
+/** Inside (true) or outside (false) by the even-odd rule when (lon, lat) is in a cell no edge meets,
+ * so more than `PAD` from every edge; null in a cell an edge meets (the caller tests exactly). */
+export function cellSays(f: Footprint, lon: number, lat: number): boolean | null {
+  const [w, s, e, n] = f.bbox;
+  if (!(lon >= w && lon <= e && lat >= s && lat <= n)) return false;
+  const z = zeroGrid(f);
+  if (!z) return null;
+  const c = Math.min(z.ny - 1, Math.max(0, Math.floor((lat - s) / z.ch))) * z.nx + Math.min(z.nx - 1, Math.max(0, Math.floor((lon - w) / z.cw)));
+  if (z.status[c] === UNKNOWN) fillRow(f, z, Math.floor(c / z.nx));
+  return z.status[c] === IN ? true : z.status[c] === OUT ? false : null;
+}
+
+/** `atZero` by the same arithmetic as `distanceTo` but measuring no distance: only an edge whose box
+ * holds the place can be at 0 from it. */
+function atZeroExact(f: Footprint, lon: number, lat: number): boolean {
+  const [w, s] = f.bbox;
+  const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180), ky = M_PER_DEG;
+  const onEdge = (ring: Float64Array, k: number) => {
+    const m = ring.length / 2, j = (k + 1) % m;
+    const ax = (ring[2 * k] - lon) * kx, ay = (ring[2 * k + 1] - lat) * ky;
+    const bx = (ring[2 * j] - lon) * kx, by = (ring[2 * j + 1] - lat) * ky;
+    if ((ax > 0 && bx > 0) || (ax < 0 && bx < 0) || (ay > 0 && by > 0) || (ay < 0 && by < 0)) return false;
+    const dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
+    const t = len > 0 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len)) : 0;
+    const px = ax + t * dx, py = ay + t * dy;
+    return px * px + py * py === 0;
+  };
+  const g = edgeGrid(f);
+  if (!g) {
+    let inside = false;
+    for (const ring of f.rings) {
+      for (let k = 0, m = ring.length / 2; k < m; k++) {
+        const j = (k + 1) % m;
+        const ay = (ring[2 * k + 1] - lat) * ky, by = (ring[2 * j + 1] - lat) * ky;
+        if ((ay > 0) !== (by > 0)) {
+          const ax = (ring[2 * k] - lon) * kx, bx = (ring[2 * j] - lon) * kx;
+          if (ax - (ay * (bx - ax)) / (by - ay) > 0) inside = !inside;
+        }
+        if (onEdge(ring, k)) return true;
+      }
+    }
+    return inside;
+  }
+  const { nx, ny, cw, ch, start, seg, stamp } = g;
+  const base = ringBase(f);
+  if (++g.visit === 0xffffffff) { stamp.fill(0); g.visit = 1; }
+  const visit = g.visit;
+  let inside = false;
+  const y = Math.min(ny - 1, Math.max(0, Math.floor((lat - s) / ch)));
+  for (let c = y * nx, end = c + nx; c < end; c++) {
+    for (let q = start[c]; q < start[c + 1]; q++) {
+      const ri = seg[2 * q], k = seg[2 * q + 1], id = base[ri] + k;
+      if (stamp[id] === visit) continue;
+      stamp[id] = visit;
+      const ring = f.rings[ri], m = ring.length / 2, j = (k + 1) % m;
+      const ay = (ring[2 * k + 1] - lat) * ky, by = (ring[2 * j + 1] - lat) * ky;
+      if ((ay > 0) !== (by > 0)) {
+        const ax = (ring[2 * k] - lon) * kx, bx = (ring[2 * j] - lon) * kx;
+        const dx = bx - ax, dy = by - ay;
+        if (ax - (ay * dx) / dy > 0) inside = !inside;
+      }
+    }
+  }
+  if (inside) return true;
+  // an edge whose box holds the place is filed in the place's cell
+  const c = y * nx + Math.min(nx - 1, Math.max(0, Math.floor((lon - w) / cw)));
+  for (let q = start[c]; q < start[c + 1]; q++) if (onEdge(f.rings[seg[2 * q]], seg[2 * q + 1])) return true;
+  return false;
+}
+
 const ringBases = new WeakMap<Footprint, Uint32Array>();
 function ringBase(f: Footprint): Uint32Array {
   let b = ringBases.get(f);

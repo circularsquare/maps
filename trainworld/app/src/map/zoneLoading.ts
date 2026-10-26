@@ -23,7 +23,8 @@ import { cityGeometry } from "./boundaryGeometry";
 import { firstSymbolId } from "./basemap";
 import { screenBounds } from "./labelLayout";
 import { followShade, shadePaint } from "./cityBoundaries";
-import { hiddenOnGlobe } from "./live";
+import { hiddenOnGlobe, live } from "./live";
+import { mapCamera, PanPlane } from "./moving";
 
 const SHADE = "tw-zone-loading";
 /** how far a bar keeps from the map's edges, px */
@@ -41,9 +42,14 @@ export function startZoneLoading(map: MlMap): () => void {
   let grey: CityId[] = [];
   let loads: ReadonlyMap<CityId, number> = new Map();
 
+  const box = document.createElement("div");
+  box.className = "zone-loads";
+  map.getContainer().appendChild(box);
   const layer = document.createElement("div");
-  layer.className = "zone-loads";
-  map.getContainer().appendChild(layer);
+  layer.className = "mark-plane";
+  box.appendChild(layer);
+  // T-1207: placed in full at most every MOVING_PLACE_MS while the camera moves
+  const pan = new PanPlane(mapCamera(map, () => live.overlay?.moving ?? false), layer);
   const bars = new Map<CityId, HTMLDivElement>();
 
   const shape = (id: CityId) => {
@@ -65,7 +71,9 @@ export function startZoneLoading(map: MlMap): () => void {
   };
 
   /** Each bar at its zone's centre, held inside the part of the zone's extent that is on screen. */
-  const place = () => {
+  const place = (force?: unknown) => {
+    if (force !== true && !pan.due()) return;
+    pan.placed();
     const c = map.getContainer(), w = c.clientWidth, ht = c.clientHeight;
     for (const [id, el] of bars) {
       const s = shapes.get(id);
@@ -116,7 +124,7 @@ export function startZoneLoading(map: MlMap): () => void {
       const tip = `Loading ${cityById(id).name}, ${Math.floor(f * 100)}%`;
       render(h(LoadBar, { fraction: f, step: tip, thin: true, tip }), el);
     }
-    place();
+    place(true);
   };
 
   const add = () => {
@@ -135,7 +143,7 @@ export function startZoneLoading(map: MlMap): () => void {
   if (map.isStyleLoaded()) add();
   map.on("move", place);
   map.on("resize", place);
-  const repick = () => { if (loads.size > MAX_BARS) draw(); };
+  const repick = () => { if (loads.size > MAX_BARS) draw(); else place(true); };
   map.on("moveend", repick);
 
   const dispose = effect(() => {
@@ -163,7 +171,7 @@ export function startZoneLoading(map: MlMap): () => void {
     map.off("resize", place);
     map.off("moveend", repick);
     for (const el of bars.values()) render(null, el);
-    layer.remove();
+    box.remove();
     if (map.getLayer(SHADE)) map.removeLayer(SHADE);
     if (map.getSource(SHADE)) map.removeSource(SHADE);
   };

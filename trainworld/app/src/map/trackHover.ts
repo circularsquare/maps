@@ -25,6 +25,7 @@ import { circleTip, stationTip, trainTip, type TipLine } from "./networkTips";
 import type { Overlay } from "./overlay";
 import { pick, SLOP_PX, topSeg } from "./pick";
 import { hiddenRealmTip } from "./realmOverlay";
+import { terrainTip } from "./terrainTint";
 import { setPointerNet, type Hot } from "./hovered";
 import { TAG_OFFSET_PX, tagLines } from "./labelLayout";
 import { complexOf } from "../game/complexView";
@@ -195,7 +196,7 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
     const out: { hot?: Partial<Hot> } = {};
     const lines = trackTip(ov, px, py, map.getZoom(), out);
     setPointerNet(lines && t === "select" ? out.hot ?? null : null);
-    return lines ?? hiddenRealmTip(map, px, py); // T-1151
+    return lines ?? hiddenRealmTip(map, px, py) ?? terrainTip(map, px, py); // T-1151, T-1270
   };
   const show = (lines: TipLine[], px: number, py: number) => {
     const key = lines.map((s) => (typeof s === "string" ? s : s.outerHTML)).join("\n");

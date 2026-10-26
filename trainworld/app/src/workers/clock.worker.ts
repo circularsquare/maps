@@ -562,6 +562,7 @@ function panicNow() {
 function newModel(): TrackApi {
   const a = new TrackApi(NEW_GAME_FRAME.lon, NEW_GAME_FRAME.lat, true);
   api = a;
+  worldWaterIn = false;
   // T-309: each region's local time, kept across loads
   a.set_time_zones(timeZoneTable());
   a.set_empty_frame(frameKindNumber(NEW_GAME_FRAME.kind));
@@ -738,9 +739,44 @@ async function ensureTerrain(ids: Iterable<string>): Promise<void> {
     if (!g || terrainIn.has(id)) return;
     terrainIn.add(id);
     // a server that answers a missing file with a page instead of a 404 gives no grid either
-    if (g.b) a.add_terrain(new Uint8Array(g.b));
+    if (g.b && a.add_terrain(new Uint8Array(g.b))) send({ kind: "terrain", id, bytes: g.b.slice(0) }); // the tint (T-1270)
   });
   if (Math.abs(a.blueprint_cost() - before) > 1e-9) sendState();
+}
+
+// ---------------------------------------------------------------- the world's coarse water (T-1285)
+//
+// One file for the whole world (`world.water` among the packs, pipeline/world_water.py, about 1 MB),
+// deciding water wherever no zone's mask does: the open sea between zones. Fetched once at start;
+// previews, edits and loads wait for it as for a zone's mask. A server without it (a 404) leaves the
+// sea outside the zones as land, as before.
+
+let worldWaterFetch: Promise<ArrayBuffer | null> | null = null;
+/** the current track model has the world's water (or there is none to have) */
+let worldWaterIn = false;
+
+function worldWaterIntoModel(): Promise<void> {
+  if (worldWaterIn) return Promise.resolve();
+  if (!worldWaterFetch) {
+    const p = (async () => {
+      const res = await fetch(new URL("world.water", packBase).href);
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error(`${res.status}`);
+      return await res.arrayBuffer();
+    })();
+    worldWaterFetch = p;
+    // a failed fetch is tried again by the next edit; the sea outside the zones is land until then
+    p.catch((err) => {
+      if (worldWaterFetch === p) worldWaterFetch = null;
+      send({ kind: "error", message: `world water mask not loaded: ${err}` });
+    });
+  }
+  return worldWaterFetch.then((b) => {
+    if (worldWaterIn || !api) return;
+    // a server that answers a missing file with a page gives no mask either
+    if (b) api.add_world_water(new Uint8Array(b));
+    worldWaterIn = true;
+  }, () => {});
 }
 
 /** Before Construct: the terrain under every blueprint piece. */
@@ -802,6 +838,7 @@ let masksComplete = false;
  * still come in). */
 async function withMasks(run: () => Float64Array, points: (out: Float64Array) => number[], seq?: number): Promise<Float64Array | null> {
   masksComplete = false;
+  await worldWaterIntoModel();
   for (;;) {
     const out = run();
     const need = zonesOfPoints(points(out)).filter((id) => !masksIn.has(id));
@@ -856,6 +893,7 @@ async function masksBeforeLoad(net: Uint8Array) {
 
 /** Put a network (in the world frame) in the track model, with the masks of the zones it meets. */
 async function openNetwork(net: Uint8Array) {
+  await worldWaterIntoModel();
   await masksBeforeLoad(net);
   if (!api!.load(net)) throw new Error("This save is damaged.");
   await masksForLoaded(net);
@@ -1768,8 +1806,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
       if (!key || !isBackupOf(key, from)) throw new Error("That backup no longer exists.");
       const backup = await readStored(key), slot = await readStored(from);
       if (!backup) throw new Error("That backup no longer exists.");
-      const time = new Date(backup.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      await intoNewSlot(`${slotName(from, slot)} at ${time}`, () => loadGame(backup.bytes, "file"), true);
+      await intoNewSlot(forkName(slotName(from, slot), backup.at), () => loadGame(backup.bytes, "file"), true);
       return;
     } else {
       const key = msg.key;
@@ -2100,6 +2137,28 @@ function buildSnapshot(): NetworkSnapshot {
   return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: { ...fares }, ...(passages.length ? { passages } : {}) };
 }
 
+/** T-1168: each node's station complex for `line_related`, over every station (blueprints too,
+ * unlike the snapshot's: a planned express is related before it is built), 0xffffffff for none;
+ * worked out again when the world changes. */
+let complexNodes: { version: number; of: Uint32Array } | null = null;
+function complexOfNodes(): Uint32Array {
+  if (complexNodes?.version === version) return complexNodes.of;
+  const a = api!, ni = a.nodes_info();
+  const geo: { id: string; x: number; y: number; heading: number; length: number }[] = [];
+  let top = 0;
+  for (let i = 0; i < ni.length; i += 10) {
+    top = Math.max(top, ni[i]);
+    if (ni[i + 7] > 0) geo.push({ id: String(ni[i]), x: ni[i + 1], y: ni[i + 2], heading: ni[i + 9], length: ni[i + 7] });
+  }
+  const fl = a.station_links(), links: [string, string][] = [];
+  for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
+  const cx = buildComplexes(geo, links, (y) => (frame.kind === "merc" ? mercK(y) : 1));
+  const of = new Uint32Array(top + 1).fill(0xffffffff);
+  for (const g of geo) of[Number(g.id)] = cx.of.get(g.id)!;
+  complexNodes = { version, of };
+  return of;
+}
+
 function scheduleSnapshot() {
   clearTimeout(snapTimer);
   snapTimer = setTimeout(() => send({ kind: "snapshot", snapshot: buildSnapshot() }), SNAPSHOT_DEBOUNCE_MS) as unknown as number;
@@ -2306,6 +2365,7 @@ async function processMessage(msg: ToClock) {
       emptyTrack = model.save();
       moneyParams = [...model.money_params()];
       void viewMasks(); // the view sent before the track model was up
+      void worldWaterIntoModel();
       send({ kind: "ready", initMs: performance.now() - t0, frame: frameSpec() });
       // The last game, unless the page asked for a new one (T-029).
       testPage = !!(msg.fresh || msg.testPage);
@@ -2514,6 +2574,7 @@ async function handle(msg: ToClock) {
       send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : msg.op.on ? issues() : [], charge });
       return;
     }
+    await worldWaterIntoModel();
     await masksFor(msg.op);
     if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine") await terrainForBlueprint();
     const tA = performance.now();
@@ -2616,6 +2677,7 @@ async function handle(msg: ToClock) {
       : q.what === "today" ? today()
       : q.what === "lineHeld" ? api.line_held(q.line)
       : q.what === "lineMarks" ? api.line_marks(q.line)
+      : q.what === "lineRelated" ? api.line_related(q.line, complexOfNodes())
       : q.what === "removal" ? new Float64Array(api.removal_lines(new Uint32Array(q.edges), new Uint32Array(q.stations)))
       : api.line_delays(q.line, q.level);
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);

@@ -4,14 +4,17 @@
 // autosaving; a save by hand on A takes it back and B stops. A then plays with the server out of
 // reach ("Not on your account yet") while B saves, and on its next save keeps its version as a fork
 // ("<name> at <time>") and catches up. A deletes the old game and B's copy goes at its next start
-// menu. Last, a game made signed out and kept "here only" at the next sign-in shows the crossed cloud.
-// Screenshots of the sign-in question and the saves panel, light and dark, go to artifacts/trainworld/.
+// menu. A game made signed out and kept "here only" at the next sign-in shows the crossed cloud.
+// Stage 3: that cloud's click adds the game; the playing game's account backup is listed and restored
+// as a copy; the account panel counts games and room; signing out with Remove clears the browser.
+// Screenshots of the sign-in question and the saves panel, light and dark, go to artifacts/trainworld/;
+// stage 3's, light and dark at desktop and phone width, to artifacts/trainworld/t988s3/.
 //   node trainworld/checks/t988-cloud.mjs [app url] [--server]     (from the maps root; default localhost:6169)
 // Without --server it builds ../shonei-server and runs it on 127.0.0.1:8083 in a temp folder (the
 // page's `?acct=local`); with --server one is already running there in dev mode (no SHONEI_SECRET).
 // Prints PASS or FAIL lines and exits 1 on a failure. A few minutes.
 import { spawn, spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { launchChrome, REAL_SAVE, ANGLE, ARTIFACTS, MAPS, NOISE } from './lib.mjs';
@@ -230,6 +233,8 @@ try {
   await a.waitForTimeout(1500);
   await accountPanel(a);
   await a.click('dialog.acct-panel button:has-text("Sign out")');
+  // stage 3: the account's games are in this browser, so whether they stay is asked first
+  await a.click('dialog.acct-panel .acct-signout button:has-text("Keep games")');
   await panel(a);
   // the copy's name is asked only once Save a copy is clicked (T-1295)
   await a.click('button:text-is("Save a copy")');
@@ -259,8 +264,74 @@ try {
   await shot(a, 't988-saves-dark.png');
   await theme(a, 'light');
   const listed = (await account()).games.map((g) => g.name);
-  report('kept here only: the crossed cloud', q3 === 'Add Kept here to your account?' && mark === 'Only in this browser' && !listed.includes('Kept here') && /^Saved to your account/.test(playingLine ?? ''),
+  report('kept here only: the crossed cloud', q3 === 'Add Kept here to your account?' && /^Only in this browser/.test(mark ?? '') && !listed.includes('Kept here') && /^Saved to your account/.test(playingLine ?? ''),
     `("${q3}", mark "${mark}", playing "${playingLine}", account ${JSON.stringify(listed)})`);
+
+  // ---- stage 3
+  const S3 = join(ARTIFACTS, 't988s3');
+  mkdirSync(S3, { recursive: true });
+  const shots = async (name, before = async () => {}) => {
+    for (const size of [[1300, 900, 'desktop'], [390, 844, 'phone']]) {
+      await a.setViewportSize({ width: size[0], height: size[1] });
+      for (const sh of ['light', 'dark']) {
+        await theme(a, sh);
+        await a.waitForTimeout(500);
+        await before();
+        await a.screenshot({ path: join(S3, `${name}-${size[2]}-${sh}.png`) });
+      }
+    }
+    await theme(a, 'light');
+    await a.setViewportSize({ width: 1300, height: 900 });
+  };
+  // 10. the crossed cloud on a game kept here only is a button: a click adds it to the account
+  await shots('add', () => a.locator(`.save-slots li[data-slot="${kept?.key}"]`).scrollIntoViewIfNeeded());
+  await a.click(`.save-slots li[data-slot="${kept?.key}"] button.save-add`);
+  const added = await until(async () => (await account()).games.find((g) => g.name === 'Kept here'), 30000);
+  const markGone = await until(async () => (await a.locator(`.save-slots li[data-slot="${kept?.key}"] .save-cloud`).count()) === 0, 15000);
+  report('Add on a kept-here card', !!added && !!markGone, `(account ${JSON.stringify((await account()).games.map((g) => g.name))})`);
+  await panel(a, false);
+
+  // 11. the playing game's account backups listed under it beside this browser's, one restored as a copy
+  const fid = fork?.cloud?.id;
+  await change(a);
+  await saveByHand(a);
+  const withBackup = await until(async () => { const g = (await account()).games.find((x) => x.id === fid); return g?.backups?.length ? g : null; }, 30000);
+  await panel(a);
+  const row = await until(() => a.locator('.save-slots li.on .save-backup[data-account-backup]').count(), 10000);
+  const rowTip = row ? await a.locator('.save-slots li.on .save-backup[data-account-backup] > span').first().getAttribute('data-tip') : '';
+  await shots('saves', () => a.locator('.save-slots li.on').scrollIntoViewIfNeeded());
+  report('account backups listed', !!withBackup && !!row && /on your account from/.test(rowTip ?? ''), `(backups ${JSON.stringify(withBackup?.backups?.map((b) => b.rev))}, rows ${row}, "${rowTip}")`);
+  const before3 = (await account()).games.length;
+  await a.locator('.save-slots li.on .save-backup[data-account-backup] button').first().click();
+  const restored = await until(async () => { const s = await state(a); const x = s.slots.find((y) => y.key === s.active); return x && x.key !== fork?.key && x.name.startsWith(`${fork?.name} at `) ? x : null; }, 120000, 600);
+  await inGame(a);
+  const restoredUp = await until(async () => { const l = await account(); return l.games.length === before3 + 1 && l.games.some((g) => g.name === restored?.name) ? l : null; }, 30000);
+  report('account backup restored as a copy', !!restored && !!restoredUp, `(playing "${restored?.name}", account ${JSON.stringify(restoredUp?.games.map((g) => g.name))})`);
+
+  // 12. the account panel counts the account's games and the room they take; Sign out asks
+  await a.waitForTimeout(1500);
+  await accountPanel(a);
+  const usage = await until(() => a.locator('dialog.acct-panel .acct-games').textContent(), 15000);
+  await a.click('dialog.acct-panel button:has-text("Sign out")');
+  const outQ = await until(() => a.locator('dialog.acct-panel .acct-signout p').textContent(), 10000);
+  await shots('signout');
+  report('account panel: games and room; the sign-out question', /^\d+ games on your account · [\d.]+ MB of 64 MB$/.test(usage ?? '') && outQ === 'Remove your games from this browser?', `("${usage}", "${outQ}")`);
+
+  // 13. Remove: the page goes to the start menu, the account's games leave this browser (none is
+  // deleted from the account) and the page is signed out
+  const onAccount = (await account()).games.length;
+  await a.click('dialog.acct-panel .acct-signout button:has-text("Remove games")');
+  await a.waitForURL((u) => !/paused=1/.test(u.search) && !/slot=|load=/.test(u.search), { timeout: 60000 }).catch(() => {});
+  await a.waitForSelector('.start-menu', { timeout: 60000 });
+  const removed = await until(async () => {
+    const r = await a.evaluate(async () => ({
+      slots: (await (await import('/src/workers/saveFile.ts')).listSlots()).map((s) => ({ name: s.name, acct: s.cloud?.acct ?? null })),
+      signedIn: !!(await import('/src/game/account.ts')).session.value,
+    }));
+    return !r.signedIn && !r.slots.some((s) => s.acct) ? r : null;
+  }, 60000, 600);
+  const kept3 = (await account()).games.length;
+  report('Remove at sign-out', !!removed && kept3 === onAccount, `(slots left ${JSON.stringify(removed?.slots)}, account ${kept3} of ${onAccount})`);
 
   report('no page errors', errors.length === 0, errors.slice(0, 4).join(' | '));
 } catch (err) {

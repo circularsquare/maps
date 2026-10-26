@@ -92,6 +92,9 @@ export interface DisplaySettings {
   basemapContrast: number;
   /** T-1270: hills and mountains shaded on the basemap (map/basemap.ts `setHillshade`) */
   hillshade: boolean;
+  /** T-1207: the lighter map (fewer basemap layers, pixel ratio 1): on, off, or on by itself once
+   * frames run slow while the camera moves (map/lite.ts) */
+  lighterMap: "auto" | "on" | "off";
 }
 
 /** T-247: the UI scale setting's steps */
@@ -134,6 +137,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   lineWidth: 1,
   basemapContrast: 1,
   hillshade: false,
+  lighterMap: "auto",
 };
 
 const STORE = "trainworld-ui";
@@ -199,6 +203,8 @@ export const shade = signal<Shade>(saved.shade === "dark" ? "dark" : "light");
  * remove what is clicked (T-096), pick a trip's two ends (T-195). */
 export type Tool = "select" | "track" | "station" | "line" | "delete" | "trip" | "blueprint";
 export const tool = signal<Tool>("select");
+/** T-1207: the map's camera is moving (set by map/overlay.ts); live counts in panels wait for it. */
+export const cameraMoving = { now: false };
 /** The Build tab's tools: while one is on, the demand views draw beneath the network (T-526). */
 export const isBuildTool = (t: Tool) => t === "track" || t === "station" || t === "delete" || t === "blueprint";
 /** A question waiting in a centered modal (T-096/T-113: removing something
@@ -222,6 +228,9 @@ export const citySort = signal<ListSort<"name" | "train" | "rides" | "money" | "
 /** The map's demand drawn for one trip purpose only, or all (T-158). Not remembered: a page
  * load starts on all purposes, so nobody returns to a map that silently leaves riders out. */
 export const purposeFilter = signal<PurposeFilter>("all");
+/** T-1168: the line panel's stops drawn with the lines related to the line; one setting for every
+ * line, kept while the page is open. */
+export const relatedLines = signal(false);
 /** Platform length for new stations, m. */
 export const buildPlatform = signal(200);
 /** T-468: the three Build tab track settings below are remembered per browser with the rest of the

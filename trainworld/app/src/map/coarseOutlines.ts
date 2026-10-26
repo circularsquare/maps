@@ -5,7 +5,7 @@ import type { MultiPolygon } from "geojson";
 import { dataUrl } from "../game/dataBase";
 import { setOutlineLookup, zonesTouching, ZONE_REACH_M, type CityId } from "../game/cities";
 import { M_PER_DEG } from "../game/frame";
-import { distanceTo, type Footprint } from "../workers/cityReach";
+import { atZero, cellSays, distanceTo, type Footprint } from "../workers/cityReach";
 
 /** `water` (T-1145): each coastal zone's sea, a little into its own land, for the focused zone's shade */
 export type OutlineFile = { q: number; zones: Record<string, number[][]>; water?: Record<string, number[][]> };
@@ -89,7 +89,13 @@ function placeBy(rings: (id: string) => Float64Array[] | undefined) {
   setOutlineLookup((lon, lat) => {
     let best: CityId | null = null, bd = ZONE_REACH_M;
     const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180);
-    for (const c of zonesTouching(lon, lat, lon, lat, ZONE_REACH_M)) {
+    const near = zonesTouching(lon, lat, lon, lat, ZONE_REACH_M);
+    // T-1348: the first zone at distance 0 wins, so look for it before measuring any distance
+    for (const c of near) {
+      const f = fp(c.id);
+      if (f && atZero(f, lon, lat)) return c.id;
+    }
+    for (const c of near) {
       const f = fp(c.id);
       if (!f) continue;
       const [w, s, e, n] = f.bbox;
@@ -117,15 +123,16 @@ export async function readOutlinesForPlaces(url: string): Promise<void> {
 
 /** An outline's edges by band of latitude (x0, y0, x1, y1 each), so the crossing test reads only the
  * edges of the point's band: a whole network's points against prefecture outlines took 0.6 s. */
-interface Bands { s: number; h: number; start: Uint32Array; seg: Float64Array }
-const BANDS = 64;
+interface Bands { s: number; h: number; nb: number; start: Uint32Array; seg: Float64Array }
 const bands = new Map<string, Bands>();
 
 function bandsOf(id: string, g: MultiPolygon): Bands {
   let b = bands.get(id);
   if (b) return b;
-  let s = Infinity, n = -Infinity;
-  for (const poly of g.coordinates) for (const r of poly) for (const [, y] of r) { s = Math.min(s, y); n = Math.max(n, y); }
+  let s = Infinity, n = -Infinity, edges = 0;
+  for (const poly of g.coordinates) for (const r of poly) { edges += r.length; for (const [, y] of r) { s = Math.min(s, y); n = Math.max(n, y); } }
+  // about four edges a band (T-1348), at least 64
+  const BANDS = Math.max(64, Math.min(4096, Math.ceil(edges / 4)));
   const h = (n - s) / BANDS || 1;
   const band = (y: number) => Math.min(BANDS - 1, Math.max(0, Math.floor((y - s) / h)));
   const lists: number[][] = Array.from({ length: BANDS }, () => []);
@@ -139,15 +146,31 @@ function bandsOf(id: string, g: MultiPolygon): Bands {
   lists.forEach((l, q) => { start[q + 1] = start[q] + l.length; });
   const seg = new Float64Array(start[BANDS]);
   lists.forEach((l, q) => seg.set(l, start[q]));
-  bands.set(id, (b = { s, h, start, seg }));
+  bands.set(id, (b = { s, h, nb: BANDS, start, seg }));
   return b;
+}
+
+const cellFootprints = new Map<string, Footprint>();
+function cellFootprint(id: string, g: MultiPolygon): Footprint {
+  let f = cellFootprints.get(id);
+  if (f) return f;
+  const bbox: Footprint["bbox"] = [Infinity, Infinity, -Infinity, -Infinity];
+  const rings = g.coordinates.flatMap((p) => p.map((r) => {
+    for (const [x, y] of r) { bbox[0] = Math.min(bbox[0], x); bbox[1] = Math.min(bbox[1], y); bbox[2] = Math.max(bbox[2], x); bbox[3] = Math.max(bbox[3], y); }
+    return Float64Array.from(r.flat());
+  }));
+  cellFootprints.set(id, (f = { id, rings, bbox }));
+  return f;
 }
 
 /** Whether (lon, lat) is inside zone `id`'s coarse outline `g` (even-odd), reading only the edges of
  * its band of latitude. */
 export function inOutline(id: string, g: MultiPolygon, lon: number, lat: number): boolean {
+  // T-1348: most places are in a cell of the outline's grid that no edge meets
+  const said = cellSays(cellFootprint(id, g), lon, lat);
+  if (said !== null) return said;
   const b = bandsOf(id, g), q = Math.floor((lat - b.s) / b.h);
-  if (q < 0 || q >= BANDS) return false;
+  if (q < 0 || q >= b.nb) return false;
   let inside = false;
   for (let k = b.start[q], end = b.start[q + 1]; k < end; k += 4) {
     const xi = b.seg[k], yi = b.seg[k + 1], xj = b.seg[k + 2], yj = b.seg[k + 3];

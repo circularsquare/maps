@@ -14,10 +14,9 @@ import { CITIES, type CityId } from "./cities";
 import { AVERAGE_DAY, DAY_KINDS, DEMAND_DAYS } from "./days";
 import { demandByDay, type DayDemand } from "./demand";
 import { sig3 } from "./format";
-import { stationZone } from "./listScope";
-import { moneyState } from "./money";
+import { lineGeo, moneyState, moneyWorld } from "./money";
 import { PERIODS } from "./periods";
-import { stationsById, world } from "./world";
+import { stationsById } from "./world";
 import { zonesLoaded } from "./zones";
 import type { WorldView } from "./types";
 
@@ -65,54 +64,75 @@ function dayPoints(w: WorldView, d: DayDemand): Map<number, Map<string, number[]
   const dv = d.view;
   if (!dv) return out;
   const byId = stationsById(w);
-  const zone = (id: string) => { const s = byId.get(id); return (s && stationZone(s)) ?? ""; };
   const running = w.save.lines.filter((l) => w.lineStats[l.id]?.status === "running" && l.stops.length >= 2 && dv.lines.has(l.id));
   // boardings a day at each region's stations, to spread its trips over
   const board = new Map<string, number>();
-  for (const l of running) dv.lines.get(l.id)!.boardings.forEach((v, k) => add(board, zone(l.stops[k]), v));
+  for (const l of running) {
+    const z = lineGeo(w, l, byId).zones, b = dv.lines.get(l.id)!.boardings;
+    for (let k = 0; k < b.length; k++) add(board, z[k] ?? "", b[k]);
+  }
   const trips = railTripsByRegion(d);
   const perBoarding = new Map<string, number>();
   for (const [z, b] of board) if (b > 0) perBoarding.set(z, (trips.get(z) ?? 0) / b);
+  const at: number[] = [];
   for (const l of running) {
     const st = w.lineStats[l.id], dm = dv.lines.get(l.id)!, n = l.stops.length;
     if (st.stopS[0]?.length !== n || st.stopS[1]?.length !== n) continue;
-    const z = l.stops.map(zone);
-    // run 0's stretches, then run 1's in its own order, as `loads`
-    const km: number[] = [];
-    for (const s of st.stopS) for (let k = 0; k + 1 < n; k++) km.push(Math.abs(s[k + 1] - s[k]) / 1000);
-    const pkm = dm.loads.map((seg) => (seg.length === km.length ? seg.reduce((a, v, k) => a + v * km[k], 0) : 0));
-    const pkmAll = pkm.reduce((a, b) => a + b, 0);
+    const { zones: z, kmAbs: km } = lineGeo(w, l, byId);
+    const pkm: number[] = [];
+    for (const seg of dm.loads) {
+      let a = 0;
+      if (seg.length === km.length) for (let k = 0; k < seg.length; k++) a += seg[k] * km[k];
+      pkm.push(a);
+    }
+    let pkmAll = 0;
+    for (const v of pkm) pkmAll += v;
     const regs = new Map<string, number[]>();
-    PERIODS.forEach((_, p) => {
+    for (let p = 0; p < PERIODS.length; p++) {
       // boardings at each stop in the period: both runs' (stop k is node k on run 0, 2n - 1 - k on
       // run 1), or the day's spread by the period's passenger-km when the solve kept no periods
-      const bp = dm.board?.[p];
-      const at = l.stops.map((_, k) => (bp && bp.length === 2 * n ? bp[k] + bp[2 * n - 1 - k] : pkmAll > 0 ? dm.boardings[k] * pkm[p] / pkmAll : 0));
-      const all = at.reduce((a, b) => a + b, 0);
-      if (!(all > 0)) return;
+      const bp = dm.board?.[p], both = !!bp && bp.length === 2 * n;
+      let all = 0;
+      for (let k = 0; k < n; k++) {
+        at[k] = both ? bp![k] + bp![2 * n - 1 - k] : pkmAll > 0 ? dm.boardings[k] * pkm[p] / pkmAll : 0;
+        all += at[k];
+      }
+      if (!(all > 0)) continue;
       const kmEach = (pkm[p] ?? 0) / all;
-      at.forEach((b, k) => {
-        if (!(b > 0)) return;
+      for (let k = 0; k < n; k++) {
+        const b = at[k];
+        if (!(b > 0)) continue;
         let r = regs.get(z[k]);
         if (!r) regs.set(z[k], (r = PERIODS.map(() => 0)));
         r[p] += b * (POINTS_PER_TRIP * (perBoarding.get(z[k]) ?? 0) + POINTS_PER_KM * kmEach) / PERIOD_HOURS[p];
-      });
-    });
+      }
+    }
     if (regs.size) out.set(l.num, regs);
   }
   return out;
 }
 
+type LinePoints = { line: number; regions: [string, number[][]][] }[];
+let pointsMemo: { w: WorldView; zl: number; days: DayDemand[]; per: Map<number, Map<string, number[]>>[]; out: LinePoints } | null = null;
+const sameDay = (a: DayDemand, b: DayDemand) => a.view === b.view && a.cities === b.cities && a.intercity === b.intercity;
 /** Every running line's points per game hour, `[region, perHour[dayKind][period]]` by line number,
- * as the clock worker settles them. A kind of day not solved yet takes the weekday's. */
-export const linePoints = computed<{ line: number; regions: [string, number[][]][] }[]>(() => {
-  const w = world.value;
+ * as the clock worker settles them. A kind of day not solved yet takes the weekday's. A day is
+ * redone only when its views, the network or the zone boundaries change (T-1209). */
+export const linePoints = computed<LinePoints>(() => {
+  const w = moneyWorld.value;
   if (!w) return [];
-  void zonesLoaded.value; // boundaries arriving re-place the stations
+  const zl = zonesLoaded.value; // boundaries arriving re-place the stations
   const days = DAY_KINDS.map((k) => demandByDay.value[k]);
-  const per = days.map((d) => dayPoints(w, d));
+  const was = pointsMemo, same = !!was && was.w === w && was.zl === zl;
+  if (same && days.every((d, k) => sameDay(d, was.days[k]))) return was.out;
+  const per = days.map((d, k) => (same && sameDay(d, was.days[k]) ? was.per[k] : dayPoints(w, d)));
   const base = days.findIndex((d) => d.view);
-  if (base < 0) return [];
+  const out = base < 0 ? [] : assemble(days, per, base);
+  pointsMemo = { w, zl, days, per, out };
+  return out;
+});
+
+function assemble(days: DayDemand[], per: Map<number, Map<string, number[]>>[], base: number): LinePoints {
   const lines = new Set(per.flatMap((m) => [...m.keys()]));
   return [...lines].map((line) => {
     const zones = new Set(per.flatMap((m) => [...(m.get(line)?.keys() ?? [])]));
@@ -122,7 +142,7 @@ export const linePoints = computed<{ line: number; regions: [string, number[][]]
       regions: [...zones].map((z): [string, number[][]] => [z, DAY_KINDS.map((k) => (days[k].view ? per[k] : per[base]).get(line)?.get(z) ?? zero)]),
     };
   });
-});
+}
 
 /** T-694: each region's points, the measure shown: what it earned in the past 24 whole game hours,
  * from the hour ledgers, so it moves once a game hour (fewer hours while the ledger is younger). */

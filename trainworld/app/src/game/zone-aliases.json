@@ -706,7 +706,6 @@
 "poj": ["Oulu", "Raahe"],
 "ves": ["Bergen", "Bjørgvin", "Kleppestø"],
 "hih": ["Inverness", "Elgin"],
-"hon": ["香港 Hong Kong", "Discovery Bay", "愉景灣 Discovery Bay"],
 "tai": ["New Taipei", "新北市", "台北縣 (Taipei County)", "臺北市", "台北", "Taoyuan", "桃園市", "桃園縣", "Taoyuan District", "桃園區", "Zhongli District", "中壢區", "中壢市", "Keelung", "基隆市", "基隆"],
 "tac": ["臺中市", "Changhua City", "彰化市", "Yuanlin City", "員林市", "員林鎮", "Nantou City", "南投市", "Caotun Township", "草屯鎮", "Hemei Township", "和美鎮"],
 "kao": ["高雄市", "Pingtung City", "屏東市", "Wandan", "萬丹鄉", "Dongang", "東港鎮", "Xinyuan", "新園鄉", "Changzhi", "長治鄉", "Changjhih"],
@@ -1659,5 +1658,8 @@
 "xhn": ["Jinping", "锦屏县", "锦屏", "Tianzhu", "天柱县", "新晃县", "新晃", "新晃侗族自治县", "Sansui", "三穗县", "Zhenyuan", "镇远县", "Cengong", "岑巩县"],
 "lzo": ["Guangyuan", "广元市", "广元", "Ningqiang", "宁强县", "宁强", "Qingchuan", "青川县", "青川"],
 "nji": ["南江县", "南江", "南江镇", "Wangcang", "旺苍县", "旺苍"],
-"qie": ["Qinzhou", "钦州市", "钦州", "Fangchenggang", "防城港市", "防城港", "Móng Cái", "Thành phố Móng Cái", "Dongxing", "东兴市", "东兴", "东兴镇"]
+"qie": ["Qinzhou", "钦州市", "钦州", "Fangchenggang", "防城港市", "防城港", "Móng Cái", "Thành phố Móng Cái", "Dongxing", "东兴市", "东兴", "东兴镇"],
+"dae": ["대구광역시", "대구", "Gyeongsan", "경산시", "Yeongcheon", "영천시"],
+"too": ["통영시"],
+"hon": ["香港 Hong Kong", "Discovery Bay", "愉景灣 Discovery Bay"]
 }

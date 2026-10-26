@@ -8,6 +8,10 @@ use std::sync::Arc;
 /// point water?" in local metres works here.
 pub trait WaterMask {
     fn is_water(&self, x: f64, y: f64) -> bool;
+    /// True where this mask's raster says land or water, so a coarser one does not decide (T-1285).
+    fn covers(&self, _x: f64, _y: f64) -> bool {
+        false
+    }
     /// True when there is no water anywhere (lets the model skip sampling).
     fn is_empty(&self) -> bool {
         false
@@ -35,6 +39,9 @@ pub struct TransformedMask {
 impl WaterMask for TransformedMask {
     fn is_water(&self, x: f64, y: f64) -> bool {
         self.mask.is_water((x - self.offset[0]) / self.scale[0], (y - self.offset[1]) / self.scale[1])
+    }
+    fn covers(&self, x: f64, y: f64) -> bool {
+        self.mask.covers((x - self.offset[0]) / self.scale[0], (y - self.offset[1]) / self.scale[1])
     }
 }
 
@@ -112,6 +119,9 @@ impl WaterMask for GeoMask {
             None => false,
         }
     }
+    fn covers(&self, x: f64, y: f64) -> bool {
+        self.to_pack(x, y).is_some_and(|(px, py)| self.mask.covers(px, py))
+    }
 }
 
 /// Keep overlapping city rasters as a union: an uncovered point in one is not evidence of land.
@@ -123,16 +133,91 @@ impl WaterMask for UnionMask {
     fn is_empty(&self) -> bool { self.0.is_empty() && self.1.is_empty() }
 }
 
-/// Several rasters as one union (T-1039), each with its bounds in the network frame
-/// (`[xmin, ymin, xmax, ymax]`), outside which it is land; a point is tested only against the
-/// rasters around it.
-pub struct MaskSet(pub Vec<(Arc<dyn WaterMask>, [f64; 4])>);
+/// The packs' rasters as one union (T-1039), each with its bounds in the network frame
+/// (`[xmin, ymin, xmax, ymax]`); a point is tested only against the rasters around it. A point no
+/// raster covers is what the world's coarse mask says (T-1285), land without one.
+pub struct MaskSet {
+    pub rasters: Vec<(Arc<dyn WaterMask>, [f64; 4])>,
+    pub world: Option<Arc<dyn WaterMask>>,
+}
 impl WaterMask for MaskSet {
     fn is_water(&self, x: f64, y: f64) -> bool {
-        self.0.iter().any(|(m, b)| x >= b[0] && y >= b[1] && x <= b[2] && y <= b[3] && m.is_water(x, y))
+        let mut covered = false;
+        for (m, b) in &self.rasters {
+            if x >= b[0] && y >= b[1] && x <= b[2] && y <= b[3] {
+                if m.is_water(x, y) {
+                    return true;
+                }
+                covered = covered || m.covers(x, y);
+            }
+        }
+        !covered && self.world.as_ref().is_some_and(|w| w.is_water(x, y))
     }
     fn is_empty(&self) -> bool {
-        self.0.is_empty()
+        self.rasters.is_empty() && self.world.is_none()
+    }
+}
+
+/// The world's coarse water (T-1285, `pipeline/world_water.py`): a `RunMask` whose cells are
+/// fractions of a degree from 180 W and 90 S, read through the network's frame.
+pub struct WorldWater {
+    pub mask: Arc<RunMask>,
+    pub frame: Frame,
+}
+
+/// A world water file's magic: `TWW1`, then u32 width, height, cells a degree, then per row from the
+/// south a LEB128 count of boundaries and the boundaries as LEB128 gaps (water starts and ends in
+/// turn).
+pub const WORLD_WATER_MAGIC: &[u8; 4] = b"TWW1";
+
+impl WorldWater {
+    pub fn decode(b: &[u8]) -> Option<RunMask> {
+        if b.len() < 16 || &b[0..4] != WORLD_WATER_MAGIC {
+            return None;
+        }
+        let u = |i: usize| u32::from_le_bytes([b[i], b[i + 1], b[i + 2], b[i + 3]]);
+        let (w, h, per) = (u(4), u(8), u(12));
+        if per == 0 || w != 360 * per || h != 180 * per || w > u16::MAX as u32 {
+            return None;
+        }
+        let mut i = 16;
+        let mut leb = || -> Option<u32> {
+            let (mut v, mut shift) = (0u32, 0);
+            loop {
+                let x = *b.get(i)?;
+                i += 1;
+                v |= ((x & 0x7f) as u32) << shift;
+                if x & 0x80 == 0 { return Some(v); }
+                shift += 7;
+                if shift > 28 { return None; }
+            }
+        };
+        let mut row = Vec::with_capacity(h as usize + 1);
+        let mut xs: Vec<u16> = vec![];
+        row.push(0);
+        for _ in 0..h {
+            let n = leb()?;
+            if n % 2 == 1 || n > w + 1 {
+                return None;
+            }
+            let mut at = 0u32;
+            for _ in 0..n {
+                at = at.checked_add(leb()?)?;
+                if at > w {
+                    return None;
+                }
+                xs.push(at as u16);
+            }
+            row.push(xs.len() as u32);
+        }
+        Some(RunMask { x0: -180.0, y0: -90.0, cell: 1.0 / per as f64, w, h, row, xs })
+    }
+}
+
+impl WaterMask for WorldWater {
+    fn is_water(&self, x: f64, y: f64) -> bool {
+        let (lon, lat) = self.frame.to_lonlat(x, y);
+        self.mask.is_water((lon + 180.0).rem_euclid(360.0) - 180.0, lat)
     }
 }
 
@@ -175,6 +260,10 @@ impl WaterMask for RunMask {
         let r = r as usize;
         let row = &self.xs[self.row[r] as usize..self.row[r + 1] as usize];
         row.partition_point(|&v| (v as f64) <= c) % 2 == 1
+    }
+    fn covers(&self, x: f64, y: f64) -> bool {
+        let (c, r) = ((x - self.x0) / self.cell, (y - self.y0) / self.cell);
+        c >= 0.0 && r >= 0.0 && c < self.w as f64 && r < self.h as f64
     }
 }
 
@@ -583,6 +672,67 @@ mod tests {
         assert_eq!(out[0][2], 2.0);
         assert!((out[0][0] - 1000.0).abs() <= 100.0 && (out[0][1] - 3000.0).abs() <= 100.0, "{out:?}");
         assert_eq!(t.class_at(10.0, 10.0), 0, "outside every grid is flat");
+    }
+
+    /// A world water file at one cell a degree: `runs` per row index, (first water column, first land
+    /// column after it).
+    fn world_file(runs: &[(u32, &[(u32, u32)])]) -> Vec<u8> {
+        let leb = |mut n: u32, b: &mut Vec<u8>| loop {
+            let x = (n & 0x7f) as u8;
+            n >>= 7;
+            if n == 0 { b.push(x); break; }
+            b.push(x | 0x80);
+        };
+        let mut b = WORLD_WATER_MAGIC.to_vec();
+        for v in [360u32, 180, 1] {
+            b.extend(v.to_le_bytes());
+        }
+        for r in 0..180 {
+            let row = runs.iter().find(|x| x.0 == r).map_or(&[][..], |x| x.1);
+            leb(2 * row.len() as u32, &mut b);
+            let mut last = 0;
+            for &(a, z) in row {
+                leb(a - last, &mut b);
+                leb(z - a, &mut b);
+                last = z;
+            }
+        }
+        b
+    }
+
+    #[test]
+    fn world_water_decodes_and_wraps() {
+        // 40-41 N: water from 70 W to 10 W, and from 175 E to 180
+        let b = world_file(&[(130, &[(110, 170), (355, 360)])]);
+        let m = Arc::new(WorldWater::decode(&b).unwrap());
+        let frame = Frame::equirect(-40.0, 40.0);
+        let w = WorldWater { mask: m.clone(), frame };
+        let at = |lon: f64, lat: f64| { let (x, y) = frame.from_lonlat(lon, lat); w.is_water(x, y) };
+        assert!(at(-40.0, 40.5) && at(-69.9, 40.5) && at(-10.1, 40.5));
+        assert!(!at(-9.9, 40.5) && !at(-40.0, 41.1) && !at(-40.0, 39.9));
+        assert!(m.is_water(179.5, 40.5) && m.is_water(-180.0 + 359.5, 40.5));
+        assert!(WorldWater::decode(&b[..b.len() - 1]).is_none(), "a short file is refused");
+        let mut odd = b.clone();
+        odd[12] = 2;
+        assert!(WorldWater::decode(&odd).is_none(), "the size must be the whole world at its cells a degree");
+    }
+
+    #[test]
+    fn a_pack_raster_decides_inside_itself_and_the_world_outside() {
+        // T-1285: the world says water everywhere; a 100 m x 100 m pack raster at the origin says
+        // land but for its east half
+        struct Sea;
+        impl WaterMask for Sea {
+            fn is_water(&self, _: f64, _: f64) -> bool { true }
+        }
+        let pack = RunMask { x0: 0.0, y0: 0.0, cell: 50.0, w: 2, h: 2, row: vec![0, 2, 4], xs: vec![1, 2, 1, 2] };
+        let set = MaskSet { rasters: vec![(Arc::new(pack), [0.0, 0.0, 100.0, 100.0])], world: Some(Arc::new(Sea)) };
+        assert!(!set.is_water(25.0, 25.0), "the pack's land wins over the world's water");
+        assert!(set.is_water(75.0, 25.0));
+        assert!(set.is_water(150.0, 25.0) && set.is_water(-1.0, 50.0), "outside the pack the world decides");
+        assert!(!set.is_empty());
+        let none = MaskSet { rasters: vec![], world: None };
+        assert!(none.is_empty() && !none.is_water(0.0, 0.0));
     }
 
     #[test]
