@@ -508,7 +508,7 @@ registry centre and zoom, or over New York with none [T-310].
   is picked: the game starts on the world map with Homes on and every realm shown (zones.md
   "Realms"), so the zones' zoomed-out bubbles show and take a click as anywhere (ui-demand-views.md
   "Zoomed far out").
-- **Real network** (ticked to begin with): only for a sandbox in New York, London, Paris, Tokyo,
+- **Real network** (unticked to begin with, so the player picks it on purpose [T-1302]): only for a sandbox in New York, London, Paris, Tokyo,
   Seoul, Toronto or Sendai, the cities with a real network (`REAL_NETWORKS`; architecture.md 11). The
   game starts from that network, built and running.
 - **Start in Tokyo** (the zone picked or located) or **Start**, bigger than the other buttons (36 px

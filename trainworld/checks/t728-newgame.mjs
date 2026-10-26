@@ -1,6 +1,6 @@
 // T-728, T-731: the new game sheet, sandbox money and real-network starts, through the game's own
 // buttons in a fresh profile. The start menu's sheet: the search ("hague", "sao", nonsense), then a
-// sandbox in Tokyo from its real network (slot "Tokyo sandbox", lines running, cash hidden, a $10B+
+// sandbox in Tokyo from its real network, the box unticked until ticked (T-1302; slot "Tokyo sandbox", lines running, cash hidden, a $10B+
 // train order allowed). The saves panel's sheet: a normal game in London (slot "London", no real
 // network box, cash shown) and a map start (slot "World", zoomed out). The real New York save loaded
 // from a file refuses the same order, Settings makes it a sandbox after the confirmation, and the
@@ -88,9 +88,11 @@ try {
   await page.click('.new-game-mode [data-mode="sandbox"]');
   const realNormal = await page.locator('.new-game-real').count();
   await page.click('.new-game-cities [data-city="tyo"]');
-  const realBox = await page.locator('.new-game-real input').isChecked().catch(() => false);
+  // T-1302: offered unticked, so a real-network start is always chosen on purpose
+  const realBox = await page.locator('.new-game-real input').isChecked().catch(() => null);
+  await page.check('.new-game-real input');
   const label = await page.textContent('.new-game .start-new');
-  report('real network box', realNormal === 0 && realBox && label === 'Start in Tokyo', `(before a city ${realNormal}, Tokyo sandbox ticked ${realBox}, button "${label}")`);
+  report('real network box', realNormal === 0 && realBox === false && label === 'Start in Tokyo', `(before a city ${realNormal}, Tokyo sandbox ticked to begin with ${realBox}, button "${label}")`);
   await page.click('.new-game .start-new');
   await page.waitForFunction(() => window.tw?.world?.value?.save.lines.length > 0 && window.twDemand?.view?.()?.final && !window.tw.clock.held.peek(), undefined, { timeout: 300000, polling: 500 });
   await wait(1500);

@@ -80,7 +80,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
   const [start, setStart] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [cursor, setCursor] = useState(0);
-  const [real, setReal] = useState(true);
+  const [real, setReal] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // T-1132: the start from the player's location, the browser asking for it; a refusal or no answer only marks the button

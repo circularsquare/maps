@@ -1,10 +1,11 @@
 //! T-007: New York's real network as a track-model save, and the snapshot demand would get from it.
 //!
-//!   cargo run --release --features demand --bin realsave -- [--dir data/work/realnet] [--city nyc]
+//!   cargo run --release --features demand --bin realsave -- [--dir data/work/realnet] [--city nyc] [--out DIR]
 //!
 //! Reads `nyc_real.json` (stations, lines, trains per hour, cars: `pipeline/realnet.py net`) and
 //! `nyc_real_geom.json` (per line a node per stop and the GTFS shape between stops, simplified, and
-//! a level: `realnet.py geom`). Every line gets its own double track and its own station nodes at
+//! a level: `realnet.py geom`), and `nyc_real_route.json` where there is one (`realnet.py route`,
+//! T-1303: the hops routed over the real track, which are traced here). Every line gets its own double track and its own station nodes at
 //! its level (a station node takes one route's track, SPEC 6.1); lines meet at a station complex
 //! by the demand side's merging and walking transfers. Everything is constructed.
 //!
@@ -18,7 +19,12 @@ use trainworld_sim::track::geom::Pi;
 use trainworld_sim::track::net::{EdgeData, LineData, Network, NodeData, StationData};
 use trainworld_sim::track::params::*;
 use trainworld_sim::track::save;
+use trainworld_sim::track::trace;
 use trainworld_sim::track::world::TrackWorld;
+
+/// The fit's tolerance: well under the 6 m between lines set side by side (`realnet.py spread`),
+/// so that two lines on one real track do not cross over and back (the track tool's is 25 m).
+const TRACE_TOL_M: f64 = 3.0;
 
 const PALETTE: [u32; 10] = [0xd7263d, 0x1b998b, 0x2e86de, 0xf46036, 0x7d3c98, 0x2ca02c, 0xe1a100, 0x8c564b, 0x17becf, 0xe377c2];
 
@@ -29,8 +35,19 @@ fn main() {
     let dir = get("--dir").unwrap_or(format!("{root}/data/work/realnet"));
     // any realnet.py city (T-509): <city>_real.json, <city>_real_geom.json, its pack's origin
     let city = get("--city").unwrap_or("nyc".into());
+    // T-1303: `--out` stages the outputs elsewhere; the geometry and routes are read from there first
+    let out_dir = get("--out").unwrap_or(dir.clone());
+    let first = |name: String| {
+        let p = format!("{out_dir}/{name}");
+        if std::path::Path::new(&p).exists() { p } else { format!("{dir}/{name}") }
+    };
     let net_j: Value = serde_json::from_str(&std::fs::read_to_string(format!("{dir}/{city}_real.json")).unwrap()).unwrap();
-    let geo_j: Value = serde_json::from_str(&std::fs::read_to_string(format!("{dir}/{city}_real_geom.json")).unwrap()).unwrap();
+    let geo_j: Value = serde_json::from_str(&std::fs::read_to_string(first(format!("{city}_real_geom.json"))).unwrap()).unwrap();
+    let route_j: Option<Value> = std::fs::read_to_string(first(format!("{city}_real_route.json"))).ok().map(|s| serde_json::from_str(&s).unwrap());
+    if route_j.is_none() {
+        eprintln!("no {city}_real_route.json: every hop from its shape or straight (realnet.py route lays them on real track)");
+    }
+    let (mut n_traced, mut n_untraced, mut worst_fit, mut trace_s) = (0usize, 0usize, 0f64, 0f64);
     let pack_name = net_j["pack"].as_str().unwrap_or(&city).to_string();
     let pack: Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/data/packs/{pack_name}.json")).unwrap()).unwrap();
     let (lon0, lat0) = (pack["origin"]["lon"].as_f64().unwrap(), pack["origin"]["lat"].as_f64().unwrap());
@@ -47,14 +64,22 @@ fn main() {
     let mut n_lines_ok = 0;
     for (li, (l, g)) in lines.iter().zip(geoms).enumerate() {
         let stops: Vec<usize> = l["stops"].as_array().unwrap().iter().map(|v| v.as_u64().unwrap() as usize).collect();
-        let level = g["level"].as_i64().unwrap() as i8;
-        let pts: Vec<(f64, f64)> = g["nodes"].as_array().unwrap().iter().map(|p| (p[0].as_f64().unwrap(), p[1].as_f64().unwrap())).collect();
+        let xy = |p: &Value| (p[0].as_f64().unwrap(), p[1].as_f64().unwrap());
+        // T-1303: the line routed over the real track (`realnet.py route`): its stations where the
+        // routes reach the track, the track's heading there, per hop the real line or null, and a
+        // level chosen on that geometry
+        let route = route_j.as_ref().map(|r| &r["lines"][li]);
+        let level = route.unwrap_or(g)["level"].as_i64().unwrap() as i8;
+        let pts: Vec<(f64, f64)> = route.unwrap_or(g)["nodes"].as_array().unwrap().iter().map(xy).collect();
         let cars = l["cars"].as_u64().unwrap().clamp(1, 20) as u8;
         let platform = ((cars as u16 * CAR_LEN as u16).clamp(PLATFORM_MIN, PLATFORM_MAX) / PLATFORM_STEP) * PLATFORM_STEP;
         let n = stops.len();
-        // headings: along the line through each stop
+        // headings: the track's through each stop, else along the line through it
         let head: Vec<f64> = (0..n)
             .map(|k| {
+                if let Some(h) = route.and_then(|r| r["heads"][k].as_f64()) {
+                    return h;
+                }
                 let (a, b) = (pts[k.saturating_sub(1)], pts[(k + 1).min(n - 1)]);
                 (b.1 - a.1).atan2(b.0 - a.0)
             })
@@ -86,14 +111,46 @@ fn main() {
             // lead out of and into the station along its heading, so the track runs straight
             // through the platform; then the shape's points, those near the ends dropped
             let lead = (len / 4.0).min(80.0);
-            let mut pis = vec![Pi::new(ax + lead * head[k].cos(), ay + lead * head[k].sin(), 0.0, level).quantised()];
-            for p in g["hops"][k].as_array().unwrap() {
-                let (x, y) = (p[0].as_f64().unwrap(), p[1].as_f64().unwrap());
-                if (x - ax).hypot(y - ay) > lead + 30.0 && (x - bx).hypot(y - by) > lead + 30.0 {
-                    pis.push(Pi::new(x, y, 0.0, level).quantised());
+            let lead_a = (ax + lead * head[k].cos(), ay + lead * head[k].sin());
+            let lead_b = (bx - lead * head[k + 1].cos(), by - lead * head[k + 1].sin());
+            let mut pis = vec![Pi::new(lead_a.0, lead_a.1, 0.0, level).quantised()];
+            // T-1303: the real line between the two leads, traced as the track tool traces a snap
+            let real = route.and_then(|r| r["hops"][k].as_array()).map(|h| h.iter().map(xy).collect::<Vec<_>>());
+            let traced = real.and_then(|h| {
+                let mut line = vec![lead_a];
+                let (mut at, total) = (0.0, h.windows(2).map(|w| (w[1].0 - w[0].0).hypot(w[1].1 - w[0].1)).sum::<f64>());
+                for (i, &p) in h.iter().enumerate() {
+                    if i > 0 {
+                        at += (p.0 - h[i - 1].0).hypot(p.1 - h[i - 1].1);
+                    }
+                    if at > lead + 10.0 && at < total - lead - 10.0 {
+                        line.push(p);
+                    }
+                }
+                line.push(lead_b);
+                let t = std::time::Instant::now();
+                // not high speed: the design radius at 160 km/h (T-1290)
+                let r = trace::trace(&line, false, TRACE_TOL_M, MIN_RADIUS, R_CAP, level);
+                trace_s += t.elapsed().as_secs_f64();
+                r
+            });
+            match traced {
+                Some(t) => {
+                    n_traced += 1;
+                    worst_fit = worst_fit.max(t.worst);
+                    pis.extend(t.pis);
+                }
+                None => {
+                    n_untraced += 1;
+                    for p in g["hops"][k].as_array().unwrap() {
+                        let (x, y) = xy(p);
+                        if (x - ax).hypot(y - ay) > lead + 30.0 && (x - bx).hypot(y - by) > lead + 30.0 {
+                            pis.push(Pi::new(x, y, 0.0, level).quantised());
+                        }
+                    }
                 }
             }
-            pis.push(Pi::new(bx - lead * head[k + 1].cos(), by - lead * head[k + 1].sin(), 0.0, level).quantised());
+            pis.push(Pi::new(lead_b.0, lead_b.1, 0.0, level).quantised());
             let e = net.alloc_edge();
             net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr: false })).unwrap();
             path.push(e << 1);
@@ -109,15 +166,17 @@ fn main() {
     }
     let t0 = std::time::Instant::now();
     let mut w = TrackWorld::new(net);
+    eprintln!("derive {:.0} ms", t0.elapsed().as_secs_f64() * 1000.0);
     w.allocate_unallocated();
     let bytes = save::encode(&w.net);
-    std::fs::write(format!("{dir}/{city}_real.twt2"), &bytes).unwrap();
+    std::fs::write(format!("{out_dir}/{city}_real.twt2"), &bytes).unwrap();
     // the game converts a legacy-frame save to its Mercator frame on load, and refuses it silently
     // when that fails
     if let Err(e) = save::convert_frame(&bytes, trainworld_sim::track::frame::FrameKind::Merc) {
         eprintln!("the save does not convert to the game's frame: {e}");
     }
     eprintln!("save: {} bytes, {} nodes, {} lines set ({} ok); load + derive {:.0} ms", bytes.len(), node_key.len(), lines.len(), n_lines_ok, t0.elapsed().as_secs_f64() * 1000.0);
+    eprintln!("hops traced on real track {n_traced} (fit within {worst_fit:.1} m), from a shape or straight {n_untraced}; traced in {:.0} ms", trace_s * 1000.0);
     let issues = w.net.validate(&(0..w.net.edge_count() as u32).collect::<Vec<_>>(), &(0..w.net.node_count() as u32).collect::<Vec<_>>(), &[]);
     let mut kinds = std::collections::BTreeMap::new();
     for i in &issues {
@@ -184,6 +243,6 @@ fn main() {
         "fleet": fleet,
         "demand": {"st_xy": st_xy, "line_n": line_n, "stops": stops, "times": times, "tph": tph, "cars": cars},
     });
-    std::fs::write(format!("{dir}/{city}_real_track.json"), serde_json::to_string(&out).unwrap()).unwrap();
-    eprintln!("-> {dir}/{city}_real.twt2, {dir}/{city}_real_track.json");
+    std::fs::write(format!("{out_dir}/{city}_real_track.json"), serde_json::to_string(&out).unwrap()).unwrap();
+    eprintln!("-> {out_dir}/{city}_real.twt2, {out_dir}/{city}_real_track.json");
 }

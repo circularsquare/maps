@@ -575,8 +575,12 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - Real networks and calibration (T-007, T-509): `realnet.py net <city>` turns a city's sources
   (GTFS, OSM route relations from `realnet.py fetch-osm <city>`, or a CSV of timetabled trips;
   `CITIES` lists each city's) into a demand test network in `data/work/realnet/`; `realnet.py`
-  also has New York's older targets and the save (`geom`, `gamesave`; `ship` copies the
-  seven game files a sandbox starts from to `data/packs/real/<id>.save`, T-731); `realnet_n02.py` is
+  also has New York's older targets and the save: `geom` (GTFS shapes per hop), `route` (each hop
+  over the real-network graph with `realroute.py`, the track tool's router ported, lines on the same
+  track set side by side and levels chosen on that geometry, T-1303), the sim's `realsave` bin (the
+  track model's network, routed hops traced with `trace.rs` at 3 m), `gamesave` (the game file
+  `<city>_real.save`); `ship` copies the seven a sandbox starts from to `data/packs/real/<id>.save`
+  (T-731). `REALNET_OUT` stages geom, route and gamesave outside data/. `realnet_n02.py` is
   its N02 adapter, all of Japan's lines (cities `jpn`, `jpn7`: T-737's stress saves). `calib.py
   targets <city>` writes the city's targets (`data/work/calib/<city>/`), `calib.py run <city>
   [--set k=v,..] [--params p.json] [--tag t]` runs the sim's `calib` bin (a weekday, commutes and

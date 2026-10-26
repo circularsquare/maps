@@ -4,9 +4,14 @@
     python pipeline/realnet.py fetch-osm <city>    # OSM route relations in the pack's box -> data/raw/t509/
     python pipeline/realnet.py targets    # measured ridership and mode share -> targets.json
     python pipeline/realnet.py counties   # county of every pack cell -> cell_county.u8
-    python pipeline/realnet.py geom       # track geometry from GTFS shapes, for the `realsave` bin
-    python pipeline/realnet.py gamesave   # the `realsave` output as a game file (T-007-real-nyc.save)
+    python pipeline/realnet.py geom <city>      # track geometry from GTFS shapes, for the `realsave` bin
+    python pipeline/realnet.py route <city>     # each hop routed over the real-network graph (T-1303)
+    (sim) cargo run --release --features demand --bin realsave -- --city <city> [--out DIR]
+    python pipeline/realnet.py gamesave <city>  # the `realsave` output as a game file, <city>_real.save
     python pipeline/realnet.py ship       # the game files a sandbox starts from -> data/packs/real/<id>.save (T-731)
+
+geom, route and gamesave write to $REALNET_OUT when set (else data/work/realnet) and read each
+other's files there first, so a rebuild can be staged while something else owns data/.
 
 The converter (T-509): each city in CITIES lists its sources; an adapter turns each source into
 stations and trips (route, direction, stops, departure times), and the rest is common. Adapters:
@@ -43,6 +48,7 @@ import os
 os.environ.setdefault("OMP_NUM_THREADS", "2")
 
 import json
+import math
 import sys
 from collections import Counter, defaultdict
 
@@ -53,6 +59,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MAPS = os.path.dirname(ROOT)
 RAW = os.path.join(ROOT, "data", "raw")
 WORK = os.path.join(ROOT, "data", "work", "realnet")
+# where geom, route and gamesave write (and read each other's files first): REALNET_OUT stages a
+# rebuild elsewhere while something else owns data/ (T-1303)
+OUT = os.environ.get("REALNET_OUT", WORK)
 PACKS = os.path.join(ROOT, "data", "packs")
 R_EARTH = 6371008.8
 
@@ -1072,16 +1081,34 @@ def cmd_geom():
                 if i is None or j is None:
                     n_straight += 1
         out.append({"nodes": nodes, "hops": hops})
-    # one level per line, chosen so that as few line pairs as possible cross on the same level
-    # (each line has its own track here; a same-level crossing would be a flat crossing)
-    from shapely import STRtree
+    levels, pairs, left = assign_levels(out)
+    for g, lv in zip(out, levels):
+        g["level"] = lv
+    print(f"{pairs} crossing line pairs; {left} crossing points left on one level")
+    os.makedirs(OUT, exist_ok=True)
+    p = os.path.join(OUT, f"{city}_real_geom.json")
+    json.dump({"lines": out}, open(p, "w"))
+    print(f"{len(out)} lines, {n_straight} hops straight for want of a shape -> {p}")
+
+
+def line_geoms(lines):
+    """Each line's whole track as a LineString: its nodes with each hop's points between."""
     from shapely.geometry import LineString
     geoms = []
-    for g in out:
+    for g in lines:
         pts = [g["nodes"][0]]
         for k, h in enumerate(g["hops"]):
-            pts += h + [g["nodes"][k + 1]]
+            pts += (list(h) if h is not None else []) + [g["nodes"][k + 1]]
         geoms.append(LineString(pts))
+    return geoms
+
+
+def assign_levels(lines):
+    """One level per line, chosen so that as few line pairs as possible cross on the same level
+    (each line has its own track here; a same-level crossing would be a flat crossing). Returns
+    the levels, the crossing line pairs and the crossing points left on one level."""
+    from shapely import STRtree
+    geoms = line_geoms(lines)
     tree = STRtree(geoms)
     cross = defaultdict(int)
     for i, g in enumerate(geoms):
@@ -1097,18 +1124,159 @@ def cmd_geom():
     nbr = defaultdict(list)
     for (i, j), n in cross.items():
         nbr[i].append((j, n))
-    levels = [None] * len(out)
+    levels = [None] * len(lines)
     palette = [-1, -2, -3, 1, 2, 3]
-    for i in sorted(range(len(out)), key=lambda i: -sum(n for _, n in nbr[i])):
+    for i in sorted(range(len(lines)), key=lambda i: -sum(n for _, n in nbr[i])):
         cost = {lv: sum(n for j, n in nbr[i] if levels[j] == lv) for lv in palette}
         levels[i] = min(palette, key=lambda lv: (cost[lv], palette.index(lv)))
     left = sum(n for (i, j), n in cross.items() if i < j and levels[i] == levels[j])
-    for g, lv in zip(out, levels):
-        g["level"] = lv
-    print(f"{sum(1 for (i, j) in cross if i < j)} crossing line pairs; {left} crossing points left on one level")
-    p = os.path.join(WORK, f"{city}_real_geom.json")
+    return levels, sum(1 for (i, j) in cross if i < j), left
+
+
+def out_or_work(name):
+    p = os.path.join(OUT, name)
+    return p if os.path.exists(p) else os.path.join(WORK, name)
+
+
+# T-1303: each real network's region in data/packs/realgraph/ (noritetsu's region codes)
+REGION = {"nyc": "us", "lon": "gb", "par": "fr", "tyo": "jp", "seo": "kr", "tor": "ca", "sdj": "jp"}
+ROUTE_R = 150.0
+ROUTE_SLACK = 1.5
+ROUTE_SLACK_M = 400.0
+ROUTE_SHAPE_M = 120.0
+HEAD_M = 60.0
+
+
+def cmd_route():
+    """Each hop of each line routed over the real-network graph (T-1303; pipeline/realroute.py, the
+    track tool's router): from the station's node on the line (`geom`) to the next one's, the line's
+    own family (metro or rail, by its stations' nearest track) preferred. A route is kept when it is
+    at most 1.5 times the straight distance plus 400 m and, where the hop has a GTFS shape, passes
+    within 120 m of every shape point; else the hop keeps its shape or straight line. Per station,
+    the node moves to where the routes reach the track and gets the track's heading there. Writes
+    `<city>_real_route.json` (plane metres, 1 m Douglas-Peucker) for the `realsave` bin to trace."""
+    import time
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from realroute import Graph, length, far_from
+    city = sys.argv[2] if len(sys.argv) > 2 else "nyc"
+    t0 = time.time()
+    o = origin(CITIES[city]["pack"])
+    net = json.load(open(CITIES[city]["out"], encoding="utf-8"))
+    geo = json.load(open(out_or_work(f"{city}_real_geom.json")))["lines"]
+    assert len(geo) == len(net["lines"]) and all(len(g["nodes"]) == len(l["stops"]) for g, l in zip(geo, net["lines"])), \
+        f"{city}_real_geom.json does not match {city}_real.json: run geom first"
+    xy = np.array([p for g in geo for p in g["nodes"]])
+    box = (*(xy.min(0) - 5000), *(xy.max(0) + 5000))
+    graph = Graph(os.path.join(PACKS, "realgraph", f"{REGION[city]}.rgr"), o, box, R_EARTH)
+    print(f"{city}: graph {len(graph.pts):,} chains in the box, {time.time() - t0:.1f} s")
+    out, n_hops, n_real, why = [], 0, 0, Counter()
+    for l, g in zip(net["lines"], geo):
+        nodes = [np.array(p) for p in g["nodes"]]
+        fams = [f for f in (graph.family_near(p, ROUTE_R) for p in nodes) if f is not None]
+        fam = Counter(fams).most_common(1)[0][0] if fams else (1 if l.get("kind") == "metro" else 0)
+        hops, snaps = [], []
+        for k in range(len(nodes) - 1):
+            a, b = nodes[k], nodes[k + 1]
+            n_hops += 1
+            r = graph.route(a, b, ROUTE_R, fam)
+            if r is None or len(r[0]) < 2:
+                why["no track near a station" if not (graph.candidates(a, ROUTE_R) and graph.candidates(b, ROUTE_R)) else "no route"] += 1
+                r = None
+            elif length(r[0]) > ROUTE_SLACK * np.hypot(*(b - a)) + ROUTE_SLACK_M:
+                why["detour"] += 1
+                r = None
+            elif g["hops"][k] and far_from(np.array(g["hops"][k]), r[0]) > ROUTE_SHAPE_M:
+                why["off its shape"] += 1
+                r = None
+            if r is None:
+                hops.append(None)
+                snaps.append(None)
+                continue
+            n_real += 1
+            hops.append(simplify(r[0], 1.0))
+            snaps.append((r[1], r[2]))
+        # each station's node where its routes reach the track, and the track's heading there
+        out_nodes, heads = [], []
+        for k, p in enumerate(nodes):
+            at = [s for s in ((snaps[k - 1][1] if k > 0 and snaps[k - 1] else None), (snaps[k][0] if k < len(snaps) and snaps[k] else None)) if s is not None]
+            q = np.mean(at, 0) if at else p
+            before = hops[k - 1] if k > 0 and hops[k - 1] is not None else None
+            after = hops[k] if k < len(hops) and hops[k] is not None else None
+            u = along(after, HEAD_M) if after is not None else q
+            v = along(before[::-1], HEAD_M) if before is not None else q
+            d = u - v
+            out_nodes.append(q.round(1).tolist())
+            heads.append(round(float(np.arctan2(d[1], d[0])), 4) if np.hypot(*d) > 1 else None)
+        out.append({"nodes": out_nodes, "heads": heads, "hops": hops, "shapes": g["hops"]})
+    spread(out)
+    levels, pairs, left = assign_levels([{"nodes": l["nodes"], "hops": [h if h is not None else s for h, s in zip(l["hops"], l.pop("shapes"))]} for l in out])
+    for l, lv in zip(out, levels):
+        l["level"] = lv
+        l["hops"] = [h.round(1).tolist() if h is not None else None for h in l["hops"]]
+    os.makedirs(OUT, exist_ok=True)
+    p = os.path.join(OUT, f"{city}_real_route.json")
     json.dump({"lines": out}, open(p, "w"))
-    print(f"{len(out)} lines, {n_straight} hops straight for want of a shape -> {p}")
+    print(f"{city}: {n_real:,} of {n_hops:,} hops on real track ({100 * n_real / max(n_hops, 1):.0f}%), left as before: {dict(why)}; "
+          f"{pairs} crossing line pairs, {left} crossing points left on one level; {time.time() - t0:.1f} s -> {p}")
+
+
+# T-1303: lines on the same real track are set side by side, this far apart (m), so that each
+# line's own double track does not wind over and under another's
+SLOTS = [0.0, -6.0, 6.0, -12.0, 12.0, -18.0, 18.0]
+SLOT_NEAR = 8.0
+
+
+def spread(lines):
+    """Give each line a sideways offset (`SLOTS`) so that lines running over the same track (within
+    `SLOT_NEAR`) lie side by side: the lines sharing most track first, each the slot it shares least
+    with lines already placed. The offset is to the right of the line's way from its first stop to
+    its last, flipped for lines heading west, so lines run either way along a track keep apart.
+    Only routed hops and the stations beside them move."""
+    from shapely import STRtree
+    from shapely.geometry import LineString
+    geoms = line_geoms([{"nodes": l["nodes"], "hops": [h if h is not None else [] for h in l["hops"]]} for l in lines])
+    near = [g.buffer(SLOT_NEAR) for g in geoms]
+    tree = STRtree(geoms)
+    shared = defaultdict(float)
+    for i, b in enumerate(near):
+        for j in tree.query(b):
+            j = int(j)
+            if j != i:
+                shared[(i, j)] += geoms[j].intersection(b).length
+    nbr = defaultdict(list)
+    for (i, j), s in shared.items():
+        if s > 0:
+            nbr[i].append((j, s))
+    slot = [None] * len(lines)
+    for i in sorted(range(len(lines)), key=lambda i: -sum(s for _, s in nbr[i])):
+        cost = {k: sum(s for j, s in nbr[i] if slot[j] == k) for k in range(len(SLOTS))}
+        slot[i] = min(range(len(SLOTS)), key=lambda k: (cost[k], k))
+    for l, k in zip(lines, slot):
+        a, b = np.array(l["nodes"][0]), np.array(l["nodes"][-1])
+        off = SLOTS[k] * (1 if (b[0] - a[0], b[1] - a[1]) > (0, 0) else -1)
+        if off == 0:
+            continue
+        for k2, h in enumerate(l["heads"]):
+            if h is not None:
+                p = np.array(l["nodes"][k2]) + off * np.array([math.sin(h), -math.cos(h)])
+                l["nodes"][k2] = p.round(1).tolist()
+        for k2, h in enumerate(l["hops"]):
+            if h is None:
+                continue
+            c = LineString(h).offset_curve(-off)
+            if c.geom_type == "LineString" and len(c.coords) >= 2:
+                l["hops"][k2] = np.array(c.coords)
+
+
+def along(line, d):
+    """The point d m along a polyline (its end if shorter)."""
+    seg = np.hypot(*np.diff(line, axis=0).T)
+    cum = np.concatenate([[0.0], np.cumsum(seg)])
+    if d >= cum[-1]:
+        return line[-1]
+    i = int(np.searchsorted(cum, d))
+    t = (d - cum[i - 1]) / seg[i - 1] if seg[i - 1] > 0 else 0.0
+    return line[i - 1] + (line[i] - line[i - 1]) * t
 
 
 def cmd_gamesave():
@@ -1118,8 +1286,8 @@ def cmd_gamesave():
     import gzip
     import struct
     city = sys.argv[2] if len(sys.argv) > 2 else "nyc"
-    track = open(os.path.join(WORK, f"{city}_real.twt2"), "rb").read()
-    tj = json.load(open(os.path.join(WORK, f"{city}_real_track.json"), encoding="utf-8"))
+    track = open(out_or_work(f"{city}_real.twt2"), "rb").read()
+    tj = json.load(open(out_or_work(f"{city}_real_track.json"), encoding="utf-8"))
     # a save's "city" is the world's first registry city whatever city it shows (saveFile.ts
     # isNortheastSave refuses anything else)
     reg = json.load(open(os.path.join(ROOT, "app", "src", "game", "registry.json"), encoding="utf-8"))
@@ -1127,7 +1295,8 @@ def cmd_gamesave():
               "fleet": int(tj["fleet"]), "fares": {"base": 1.5, "perKm": 0.1}, "ledger": []}
     hj = json.dumps(header).encode()
     raw = b"TWG1" + struct.pack("<I", len(hj)) + hj + track
-    p = os.path.join(ROOT, "T-007-real-nyc.save") if city == "nyc" else os.path.join(WORK, f"{city}_real.save")
+    # T-1303: New York's too goes beside the others; T-007-real-nyc.save is the smoke test's own copy
+    p = os.path.join(OUT, f"{city}_real.save")
     with open(p, "wb") as f:
         f.write(gzip.compress(raw, mtime=0))
     print(f"{len(raw):,} bytes raw, {os.path.getsize(p):,} gzipped, fleet {header['fleet']:,} cars -> {p}")
@@ -1147,8 +1316,7 @@ def cmd_ship():
     out = os.path.join(ROOT, "data", "packs", "real")
     os.makedirs(out, exist_ok=True)
     for city in SHIPPED:
-        src = os.path.join(ROOT, "T-007-real-nyc.save") if city == "nyc" else os.path.join(WORK, f"{city}_real.save")
-        raw = gzip.decompress(open(src, "rb").read())
+        raw = gzip.decompress(open(out_or_work(f"{city}_real.save"), "rb").read())
         n = struct.unpack("<I", raw[4:8])[0]
         header = json.loads(raw[8:8 + n])
         header["city"] = reg["cities"][0]["id"]
@@ -1193,4 +1361,4 @@ out body;"""
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "net"
-    {"net": cmd_net, "fetch-osm": cmd_fetch_osm, "counties": cmd_counties, "targets": cmd_targets, "geom": cmd_geom, "gamesave": cmd_gamesave, "ship": cmd_ship}[cmd]()
+    {"net": cmd_net, "fetch-osm": cmd_fetch_osm, "counties": cmd_counties, "targets": cmd_targets, "geom": cmd_geom, "route": cmd_route, "gamesave": cmd_gamesave, "ship": cmd_ship}[cmd]()

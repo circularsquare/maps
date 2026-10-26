@@ -306,7 +306,12 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   saved (T-728); the original slot `autosave` is only ever an old one.
 - **Real networks** [T-731]: `packs/real/<id>.save` for New York, London, Paris, Tokyo, Seoul,
   Toronto and Sendai (`pipeline/realnet.py ship` copies them from realnet's game
-  files into `data/packs/real/`, and the build copies that folder). A sandbox started from one loads
+  files into `data/packs/real/`, and the build copies that folder). Each line has its own double
+  track at its own level. Between stations it follows the real track [T-1303]: each hop routed over
+  the real-network graph (the track tool's router and fit, run when the saves are built, never in
+  the game), lines over the same track set 6 m apart side by side; a hop with no real track near
+  (trams, monorails, people movers: about a sixth in Paris and Tokyo, most of Toronto's streetcars)
+  keeps its GTFS shape or a straight line. A sandbox started from one loads
   it as a new game: its network, fleet and fares, with the clock, cash, ledgers and stars of a new
   game. They are in older frames and converted as they load (above).
 - **Backups** [T-744]: two per slot in the same store, `backup:<slot>:0` and `:1`, the slot's record
