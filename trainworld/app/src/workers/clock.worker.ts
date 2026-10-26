@@ -562,6 +562,7 @@ function panicNow() {
 function newModel(): TrackApi {
   const a = new TrackApi(NEW_GAME_FRAME.lon, NEW_GAME_FRAME.lat, true);
   api = a;
+  worldWaterIn = false;
   // T-309: each region's local time, kept across loads
   a.set_time_zones(timeZoneTable());
   a.set_empty_frame(frameKindNumber(NEW_GAME_FRAME.kind));
@@ -743,6 +744,41 @@ async function ensureTerrain(ids: Iterable<string>): Promise<void> {
   if (Math.abs(a.blueprint_cost() - before) > 1e-9) sendState();
 }
 
+// ---------------------------------------------------------------- the world's coarse water (T-1285)
+//
+// One file for the whole world (`world.water` among the packs, pipeline/world_water.py, about 1 MB),
+// deciding water wherever no zone's mask does: the open sea between zones. Fetched once at start;
+// previews, edits and loads wait for it as for a zone's mask. A server without it (a 404) leaves the
+// sea outside the zones as land, as before.
+
+let worldWaterFetch: Promise<ArrayBuffer | null> | null = null;
+/** the current track model has the world's water (or there is none to have) */
+let worldWaterIn = false;
+
+function worldWaterIntoModel(): Promise<void> {
+  if (worldWaterIn) return Promise.resolve();
+  if (!worldWaterFetch) {
+    const p = (async () => {
+      const res = await fetch(new URL("world.water", packBase).href);
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error(`${res.status}`);
+      return await res.arrayBuffer();
+    })();
+    worldWaterFetch = p;
+    // a failed fetch is tried again by the next edit; the sea outside the zones is land until then
+    p.catch((err) => {
+      if (worldWaterFetch === p) worldWaterFetch = null;
+      send({ kind: "error", message: `world water mask not loaded: ${err}` });
+    });
+  }
+  return worldWaterFetch.then((b) => {
+    if (worldWaterIn || !api) return;
+    // a server that answers a missing file with a page gives no mask either
+    if (b) api.add_world_water(new Uint8Array(b));
+    worldWaterIn = true;
+  }, () => {});
+}
+
 /** Before Construct: the terrain under every blueprint piece. */
 async function terrainForBlueprint() {
   const a = api!;
@@ -802,6 +838,7 @@ let masksComplete = false;
  * still come in). */
 async function withMasks(run: () => Float64Array, points: (out: Float64Array) => number[], seq?: number): Promise<Float64Array | null> {
   masksComplete = false;
+  await worldWaterIntoModel();
   for (;;) {
     const out = run();
     const need = zonesOfPoints(points(out)).filter((id) => !masksIn.has(id));
@@ -856,6 +893,7 @@ async function masksBeforeLoad(net: Uint8Array) {
 
 /** Put a network (in the world frame) in the track model, with the masks of the zones it meets. */
 async function openNetwork(net: Uint8Array) {
+  await worldWaterIntoModel();
   await masksBeforeLoad(net);
   if (!api!.load(net)) throw new Error("This save is damaged.");
   await masksForLoaded(net);
@@ -2327,6 +2365,7 @@ async function processMessage(msg: ToClock) {
       emptyTrack = model.save();
       moneyParams = [...model.money_params()];
       void viewMasks(); // the view sent before the track model was up
+      void worldWaterIntoModel();
       send({ kind: "ready", initMs: performance.now() - t0, frame: frameSpec() });
       // The last game, unless the page asked for a new one (T-029).
       testPage = !!(msg.fresh || msg.testPage);
@@ -2535,6 +2574,7 @@ async function handle(msg: ToClock) {
       send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : msg.op.on ? issues() : [], charge });
       return;
     }
+    await worldWaterIntoModel();
     await masksFor(msg.op);
     if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine") await terrainForBlueprint();
     const tA = performance.now();

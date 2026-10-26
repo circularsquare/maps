@@ -319,7 +319,7 @@ Rough on purpose: the bar is the right order (section 1).
 
 - **M0, spikes** and **M1, New York sandbox**: done.
 - **M2, Northeast**: nine cities, the regional market, zones, commutes between them and
-  park-and-ride are in; water between packs for intercity track remains (T-358).
+  park-and-ride are in; between packs a coarse world mask holds the sea and large lakes (T-1285).
 - **M3, world** (under way): whole countries from the world plan by the unattended runner, the
   world market with air, clusters that re-solve only what an edit touched, and the game published
   by direct link (T-924). Covered so far: section 3.

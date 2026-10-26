@@ -252,7 +252,9 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **No track at ground level over water** (level 0 is invalid where the water mask says water);
   bridges and tunnels over or under water cost 2x (6.4). The mask is 25 m pixels in the city
   pack; water narrower than ~50 m (creeks, ditches, small ponds) is not in it, since a railway
-  crosses those at grade (notes/T-030.md). Ground level means within half a level (4 m) of the
+  crosses those at grade (notes/T-030.md). Outside every pack's mask the world's coarse mask
+  decides (T-1285, zones.md 6): the sea and large lakes in cells of 1/60 degree, so open sea between
+  zones is water like water inside them. Ground level means within half a level (4 m) of the
   ground, so the low end of a ramp counts too: bridge and tunnel approaches start on land.
 - **A bridge by itself** (T-656, `track/bridge.rs`): a segment drawn through points at level 0
   (every vertex level 0, no clicked corners) that crosses water is raised to level 1 over each
@@ -610,7 +612,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
 
 - **Over or under water: 2x** the level's price. **Level 0 cannot be built over water**; a
   ground-level segment drawn across it becomes a bridge (6.1). Water comes from a mask in the
-  pack (T-030).
+  pack (T-030), and outside every pack's mask from the world's coarse mask (T-1285).
 - **Terrain** (T-1270, Anita 2026-10-25, design notes/T-1270.md): each zone's ground is in four
   classes, and track at elevation -1 to +3 costs the class's factor more; bored tunnels (-2, -3)
   cost the same anywhere, so in the mountain class a -2 tunnel (US$99M a km) is cheaper than track
