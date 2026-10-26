@@ -11,6 +11,8 @@ const REGISTRY = JSON.parse(readFileSync(resolve(here, "src/game/registry.json")
 const CITIES = REGISTRY.cities.map((c) => c.id);
 /** T-1270: each zone's terrain classes (pipeline/zone_terrain.py), served at `packs/terrain/<id>.terrain`, so they publish with the packs. */
 const TERRAIN = resolve(here, "../data/terrain");
+/** T-1285: the world's coarse water (pipeline/world_water.py), served at `packs/world.water`; TW_WORLD_WATER: another copy. */
+const WORLD_WATER = process.env.TW_WORLD_WATER ? resolve(process.env.TW_WORLD_WATER) : join(TERRAIN, "world.water");
 
 /**
  * City packs at `packs/<city>.json`, `.bin`, `.boundary.geojson`, `.market.json` (T-377) and `.places.json` (the OSM place
@@ -40,6 +42,17 @@ function packs(): Plugin {
           res.setHeader("Content-Length", size);
           createReadStream(file).pipe(res);
         }
+      });
+      server.middlewares.use("/packs/world.water", (_req, res) => {
+        // missing, a 404: the clock worker then leaves the sea outside the zones as land
+        if (!existsSync(WORLD_WATER)) {
+          res.statusCode = 404;
+          res.end();
+          return;
+        }
+        res.setHeader("Content-Type", "application/octet-stream");
+        res.setHeader("Content-Length", statSync(WORLD_WATER).size);
+        createReadStream(WORLD_WATER).pipe(res);
       });
       server.middlewares.use("/packs/terrain", (req, res) => {
         const file = join(TERRAIN, (req.url ?? "").split("?")[0].replace(/^\/+/, ""));
@@ -78,6 +91,8 @@ function packs(): Plugin {
         else noTerrain++;
       }
       if (noTerrain) this.warn(`${noTerrain} zones have no terrain file: run pipeline/zone_terrain.py build`);
+      if (existsSync(WORLD_WATER)) copyFileSync(WORLD_WATER, join(out, "world.water"));
+      else this.warn("world water mask missing: run pipeline/world_water.py build");
       // T-800: every zone's coarse outline (pipeline/zone_outlines.py); without it every zone shows (T-1006)
       const outlines = join(PACKS, "outlines.json");
       if (existsSync(outlines)) copyFileSync(outlines, join(out, "outlines.json"));

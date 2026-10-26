@@ -533,6 +533,12 @@ is known without its files (T-302, T-400):
   its geometry comes within 2 km of a zone whose mask is not in, it waits for the mask and is worked
   out again, so ground over water is never accepted because a mask was late. A mask that cannot be
   fetched is reported, and the edit is worked out without it.
+- **The world's coarse water** (clock worker, T-1285): `packs/world.water` (`pipeline/world_water.py`,
+  about 0.6 MB, published with the packs) holds the sea (OSM's coastline water polygons) and large
+  lakes (Natural Earth 1:10m) for the whole world in cells of 1/60 degree, a cell water when half of
+  it is. It decides wherever no installed pack mask covers the point (inside a pack's raster the pack
+  decides, land or water). Fetched once at start; previews, edits and loads wait for it as for a
+  zone's mask. Without it (a 404) the sea outside the zones is land.
 - **Terrain classes** (clock worker, T-1270): a zone's `packs/terrain/<id>.terrain` (published with the packs, a
   median of 13 KB, at most 1.9 MB) is asked for whenever its mask is, by the same rules, but nothing waits for it except
   Construct: track priced before it lands is priced again when it does (track-and-service.md 6.4).

@@ -503,6 +503,10 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   (never `data/packs`, so joins do not see them); `build [ids]` skips files already made, `probe
   lon lat km` prints slopes and class shares round a point. About 33 minutes for every zone; a tile
   the local file lacks (a download under way) comes from Zenodo by a range request.
+- `world_water.py` (T-1285): the world's coarse water mask, `data/terrain/world.water` (served and
+  published as `packs/world.water`), from the OSM coastline polygons and Natural Earth's 1:10m lakes
+  at 1/60 degree; `build` takes about 6 minutes on one core. The sim reads it as `cost::WorldWater`
+  (`TrackApi::add_world_water`), deciding where no pack raster covers a point (`MaskSet`).
 - `osm_water.py` is the water source for cities outside the US (OSM coastline sea plus Geofabrik
   inland water, T-041; `source(extracts)` for a config's `water_source`, `mask <id>` for a
   water-only pack in `data/work/osm_water/`; docs/adding-a-city.md). `sea` reads the coastline
